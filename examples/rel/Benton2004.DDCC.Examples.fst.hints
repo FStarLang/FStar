@@ -12,7 +12,7 @@
         "equation_Benton2004.op_abs", "lemma_Benton2004.DDCC.holds_ns_singl"
       ],
       0,
-      "1f9a765aaa71668da9f29df6a7414a24"
+      "f52123f41f2f2a7c6fdad2ba7c349716"
     ],
     [
       "Benton2004.DDCC.Examples.d_op_singl",
@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "1537c3707dc3cf449c8070a131e6532c"
+      "55fb26f35893df46629c899fe74769e5"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d1",
@@ -50,7 +50,7 @@
         "typing_Benton2004.evar"
       ],
       0,
-      "20ae7dfc5aeeb5760e83d1d40cc61883"
+      "5de1519adcd4f6a8a2832891f9fef91a"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d2",
@@ -99,7 +99,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "a7b555caa4ffda7262643e9e95452a97"
+      "08cfa430868f2dda9c12d5f04bf6a880"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d3",
@@ -140,7 +140,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "d517d9f645f2014eb44a4d3e814344f6"
+      "ba984ba29e727e4ddf9a73c83519aad2"
     ],
     [
       "Benton2004.DDCC.Examples.fig3",
@@ -191,7 +191,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "6bbb232d6e36f9649071dff3ff31bdbf"
+      "a4d9b769f2b7dd92b682654f400d6b24"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d1",
@@ -200,7 +200,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8f2b3c9e94f4369764ef3f596b9d90cb"
+      "4124a3976a4455117e0ab1fd02b21b60"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d2",
@@ -234,7 +234,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "e8999edbd810f933b5673a090665f709"
+      "22ced8b1d2f36d18eaeabdfb5f0b1139"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d3",
@@ -268,7 +268,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "5e486c92cade9a09edbfa6c72d7d1435"
+      "b04fdf241d5d3ce59208f054533fd87d"
     ],
     [
       "Benton2004.DDCC.Examples.fig3",
@@ -302,7 +302,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "f90574f3fa489b2263c7d002e4b93ea8"
+      "b46502589ead5d1db267c77a891b710b"
     ]
   ]
 ]

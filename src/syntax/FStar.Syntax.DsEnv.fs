@@ -184,8 +184,8 @@ let set_bv_range bv r =
 
 let bv_to_name bv r = bv_to_name (set_bv_range bv r)
 
-let unmangleMap = [("op_ColonColon", "Cons", Delta_constant, Some Data_ctor);
-                   ("not", "op_Negation", Delta_equational, None)]
+let unmangleMap = [("op_ColonColon", "Cons", delta_constant, Some Data_ctor);
+                   ("not", "op_Negation", delta_equational, None)]
 
 let unmangleOpName (id:ident) : option<(term * bool)> =
   let t =
@@ -539,8 +539,8 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       | (_, true) when exclude_interf -> None
       | (se, _) ->
         begin match se.sigel with
-          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid Delta_constant None, false, se.sigattrs))
-          | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid Delta_constant (fv_qual_of_se se), false, se.sigattrs))
+          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid delta_constant None, false, se.sigattrs))
+          | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid delta_constant (fv_qual_of_se se), false, se.sigattrs))
           | Sig_let((_, lbs), _) ->
             let fv = lb_fv lbs source_lid in
             Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false, se.sigattrs))
@@ -551,8 +551,8 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
                  let dd = if U.is_primop_lid lid
                           || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
-                          then Delta_equational
-                          else Delta_constant in
+                          then delta_equational
+                          else delta_constant in
                  let dd = if quals |> BU.for_some (function Abstract -> true | _ -> false) then Delta_abstract dd else dd in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
@@ -561,9 +561,12 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                  | _ -> Some (Term_name(fvar lid dd (fv_qual_of_se se), false, se.sigattrs))
                  end
             else None
-          | Sig_new_effect_for_free (ne) | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
-          | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
-          | _ -> None
+            | Sig_new_effect_for_free (ne) | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
+            | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
+            | Sig_splice (lids, t) ->
+                // TODO: This depth is probably wrong
+                Some (Term_name (S.fvar source_lid (Delta_constant_at_level 1) None, false, []))
+            | _ -> None
         end in
 
   let k_local_binding r = let (t, mut) = found_local_binding (range_of_lid lid) r in Some (Term_name (t, mut, []))
@@ -714,12 +717,15 @@ let try_lookup_doc (env: env) (l:lid) =
   BU.smap_try_find env.docs l.str
 
 let try_lookup_datacon env (lid:lident) =
-  let k_global_def lid = function
+  let k_global_def lid se =
+      match se with
       | ({ sigel = Sig_declare_typ(_, _, _); sigquals = quals }, _) ->
         if quals |> BU.for_some (function Assumption -> true | _ -> false)
-        then Some (lid_as_fv lid Delta_constant None)
+        then Some (lid_as_fv lid delta_constant None)
         else None
-      | ({ sigel = Sig_datacon _ }, _) -> Some (lid_as_fv lid Delta_constant (Some Data_ctor))
+      | ({ sigel = Sig_datacon _ }, _) ->
+         let qual = fv_qual_of_se (fst se) in
+         Some (lid_as_fv lid delta_constant qual)
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 

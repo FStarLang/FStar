@@ -95,15 +95,9 @@ type quote_kind =
   | Quote_dynamic
 
 ///[@ PpxDerivingShow ]
-type quoteinfo     = {
-    qkind : quote_kind;
- }
-
-///[@ PpxDerivingShow ]
 type delta_depth =
-  | Delta_constant                  //A defined constant, e.g., int, list, etc.
-  | Delta_defined_at_level of int   //A symbol that can be unfolded n times to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
-  | Delta_equational                //A symbol that may be equated to another by extensional reasoning
+  | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
+  | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
 ///[@ PpxDerivingShow ]
@@ -159,6 +153,11 @@ and letbinding = {  //[@ attrs] let f : forall u1..un. M t = e
     lbdef  :term;            //e
     lbattrs:list<attribute>; //attrs
     lbpos  :range;           //original position of 'e'
+}
+and antiquotations = list<(bv * bool * term)>
+and quoteinfo = {
+    qkind      : quote_kind;
+    antiquotes : antiquotations;
 }
 and comp_typ = {
   comp_univs:universes;
@@ -406,7 +405,7 @@ type sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
-  | Sig_splice         of term
+  | Sig_splice         of list<lident> * term
 and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
@@ -454,6 +453,17 @@ let range_of_lbname (l:lbname) = match l with
     | Inr fv -> range_of_lid fv.fv_name.v
 let range_of_bv x = x.ppname.idRange
 let set_range_of_bv x r = {x with ppname=Ident.mk_ident(x.ppname.idText, r)}
+
+
+(* Helpers *)
+let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
+    let aq = List.map (fun (bv, b, t) -> (bv, b, f t)) qi.antiquotes in
+    { qi with antiquotes = aq }
+
+let lookup_aq (bv : bv) (aq : antiquotations) : option<(bool * term)> =
+    match List.tryFind (fun (bv', _, _) -> bv_eq bv bv') aq with
+    | Some (_, b, e) -> Some (b, e)
+    | None -> None
 
 (*********************************************************************************)
 (* Syntax builders *)
@@ -629,9 +639,11 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
 ///////////////////////////////////////////////////////////////////////
 //Some common constants
 ///////////////////////////////////////////////////////////////////////
-let tconst l = mk (Tm_fvar(lid_as_fv l Delta_constant None)) None Range.dummyRange
-let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_defined_at_level 1) None)) None Range.dummyRange
-let tdataconstr l = fv_to_tm (lid_as_fv l Delta_constant (Some Data_ctor))
+let delta_constant = Delta_constant_at_level 0
+let delta_equational = Delta_equational_at_level 0
+let tconst l = mk (Tm_fvar(lid_as_fv l delta_constant None)) None Range.dummyRange
+let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_constant_at_level 1) None)) None Range.dummyRange
+let tdataconstr l = fv_to_tm (lid_as_fv l delta_constant (Some Data_ctor))
 let t_unit      = tconst PC.unit_lid
 let t_bool      = tconst PC.bool_lid
 let t_int       = tconst PC.int_lid
@@ -640,6 +652,7 @@ let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid
 let t_term      = tconst PC.term_lid
+let t_order     = tconst PC.order_lid
 let t_decls     = tabbrev PC.decls_lid
 let t_binder    = tconst PC.binder_lid
 let t_binders   = tconst PC.binders_lid

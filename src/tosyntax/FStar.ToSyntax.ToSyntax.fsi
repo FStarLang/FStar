@@ -46,3 +46,5 @@ val add_modul_to_env: Syntax.modul
                     -> module_inclusion_info
                     -> erase_univs:(S.term -> S.term)
                     -> withenv<unit>
+
+val get_fail_attr : bool -> S.term -> option<list<int>>

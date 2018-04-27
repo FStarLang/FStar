@@ -19,10 +19,13 @@ let lemma_size (x:int) : Lemma (requires (UInt.size x n))
 				     [SMTPat (UInt.size x n)]
   = ()
 
+let lseq (a: Type) (l: nat) : Type =
+  (s: seq a { Seq.length s == l } )
+
 (* Buffer general type, fully implemented on FStar's arrays *)
 noeq private type _buffer (a:Type) =
   | MkBuffer: max_length:UInt32.t
-    -> content:reference (s:seq a{Seq.length s == v max_length})
+    -> content:reference (s: lseq a (v max_length))
     -> idx:UInt32.t
     -> length:UInt32.t{v idx + v length <= v max_length}
     -> _buffer a
@@ -44,7 +47,7 @@ let idx #a (b:buffer a) : GTot nat = v b.idx
 
 //17-01-04 rename to container or ref? 
 let content #a (b:buffer a) :
-  GTot (reference (s:seq a{Seq.length s == v b.max_length})) = b.content
+  GTot (reference (lseq a (max_length b))) = b.content
 
 (* Lifting from buffer to reference *)
 let as_ref #a (b:buffer a) = as_ref (content b)
@@ -795,7 +798,7 @@ val create: #a:Type -> init:a -> len:UInt32.t -> StackInline (buffer a)
      /\ modifies_0 h0 h1
      /\ as_seq h1 b == Seq.create (v len) init))
 let create #a init len =
-  let content: reference (s:seq a{Seq.length s == v len}) =
+  let content: reference (lseq a (v len)) =
      salloc (Seq.create (v len) init) in
   let b = MkBuffer len content 0ul len in
   let h = HST.get() in
@@ -830,7 +833,7 @@ let createL #a init =
   let len = UInt32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.of_list init in
   lemma_of_list_length s init;
-  let content: reference (s:seq a{Seq.length s == v len}) =
+  let content: reference (lseq a (v len)) =
     salloc (Seq.of_list init) in
   let b = MkBuffer len content 0ul len in
   let h = HST.get() in
@@ -860,7 +863,7 @@ private let rcreate_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (mm:bool)
 		                        is_mm b.content == mm))
   = let h0 = HST.get() in
     let s = Seq.create (v len) init in
-    let content: reference (s:seq a{Seq.length s == v len}) =
+    let content: reference (lseq a (v len)) =
       if mm then ralloc_mm r s else ralloc r s
     in
     let b = MkBuffer len content 0ul len in
@@ -878,17 +881,28 @@ val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
   (ensures (fun (h0:mem) b h1 -> rcreate_post_common r init len b h0 h1 /\ ~(is_mm b.content)))
 let rcreate #a r init len = rcreate_common r init len false
 
-(** This function allocates a buffer into a manually-managed region, meaning that the client must
-//  * call rfree in order to avoid memory leaks. It translates to C as a straight malloc. *)
+(** This predicate tells whether a buffer can be `rfree`d. The only
+    way to produce it should be `rcreate_mm`, and the only way to
+    consume it should be `rfree.` Rationale: a buffer can be `rfree`d
+    only if it is the result of `rcreate_mm`. Subbuffers should not. *)
+abstract
+let freeable (#a: Type) (b: buffer a) : GTot Type0 =
+  is_mm b.content /\ is_eternal_region (frameOf b) /\ idx b == 0
+
+(** This function allocates a buffer into a manually-managed buffer in a heap
+ * region, meaning that the client must call rfree in order to avoid memory
+ * leaks. It translates to C as a straight malloc. *)
 let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
   :ST (buffer a) (requires (fun h0      -> is_eternal_region r))
-                 (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm b.content))
+                 (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm (content b) /\ freeable b))
   = rcreate_common r init len true
+
+#reset-options
 
 (** This function frees a buffer allocated with `rcreate_mm`. It translates to C as a regular free. *)
 let rfree (#a:Type) (b:buffer a)
-  :ST unit (requires (fun h0      -> live h0 b /\ is_mm b.content /\ is_eternal_region (frameOf b)))
-           (ensures  (fun h0 _ h1 -> h1 == HS.free b.content h0))
+  :ST unit (requires (fun h0      -> live h0 b /\ freeable b))
+           (ensures  (fun h0 _ h1 -> is_mm (content b) /\ is_eternal_region (frameOf b) /\ h1 == HS.free (content b) h0))
   = rfree b.content
 
 (* #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0" *)

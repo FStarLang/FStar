@@ -651,6 +651,7 @@ let destruct typ lid =
 
 let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_let(_, lids)
+  | Sig_splice(lids, _)
   | Sig_bundle(_, lids) -> lids
   | Sig_inductive_typ (lid, _,  _, _, _, _)
   | Sig_effect_abbrev(lid, _, _,  _, _)
@@ -661,8 +662,7 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
-  | Sig_main _
-  | Sig_splice _ -> []
+  | Sig_main _ -> []
 
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
@@ -682,15 +682,18 @@ let range_of_args args r =
    args |> List.fold_left (fun r a -> Range.union_ranges r (range_of_arg a)) r
 
 let mk_app f args =
-  let r = range_of_args args f.pos in
-  mk (Tm_app(f, args)) None r
+  match args with
+  | [] -> f
+  | _ ->
+      let r = range_of_args args f.pos in
+      mk (Tm_app(f, args)) None r
 
 let mk_data l args =
   match args with
     | [] ->
-      mk (fvar l Delta_constant (Some Data_ctor)) None (range_of_lid l)
+      mk (fvar l delta_constant (Some Data_ctor)) None (range_of_lid l)
     | _ ->
-      let e = mk_app (fvar l Delta_constant (Some Data_ctor)) args in
+      let e = mk_app (fvar l delta_constant (Some Data_ctor)) args in
       mk e None e.pos
 
 let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
@@ -753,6 +756,16 @@ let mk_field_projector_name lid (x:bv) i =
     let y = {x with ppname=nm} in
     mk_field_projector_name_from_ident lid nm, y
 
+let ses_of_sigbundle (se:sigelt) :list<sigelt> =
+  match se.sigel with
+  | Sig_bundle (ses, _) -> ses
+  | _                   -> failwith "ses_of_sigbundle: not a Sig_bundle"
+
+let eff_decl_of_new_effect (se:sigelt) :eff_decl =
+  match se.sigel with
+  | Sig_new_effect ne -> ne
+  | _                 -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
+
 let set_uvar uv t =
   match Unionfind.find uv with
     | Some _ -> failwith (U.format1 "Changing a fixed uvar! ?%s\n" (U.string_of_int <| Unionfind.uvar_id uv))
@@ -813,9 +826,9 @@ let rec arrow_formals_comp k =
     match k.n with
         | Tm_arrow(bs, c) ->
             let bs, c = Subst.open_comp bs c in
-            if is_tot_or_gtot_comp c
+            if is_total_comp c
             then let bs', k = arrow_formals_comp (comp_result c) in
-                bs@bs', k
+                 bs@bs', k
             else bs, c
         | Tm_refine ({ sort = k }, _) -> arrow_formals_comp k
         | _ -> [], Syntax.mk_Total k
@@ -975,7 +988,7 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) Delta_constant None)) None Range.dummyRange
+mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) delta_constant None)) None Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
@@ -985,11 +998,11 @@ let exp_int s : term = mk (Tm_constant (Const_int (s,None))) None dummyRange
 let exp_char c : term = mk (Tm_constant (Const_char c)) None dummyRange
 let exp_string s : term = mk (Tm_constant (Const_string (s, dummyRange))) None dummyRange
 
-let fvar_const l = fvar l Delta_constant None
+let fvar_const l = fvar l delta_constant None
 let tand    = fvar_const PC.and_lid
 let tor     = fvar_const PC.or_lid
-let timp    = fvar PC.imp_lid (Delta_defined_at_level 1) None
-let tiff    = fvar PC.iff_lid (Delta_defined_at_level 2) None
+let timp    = fvar PC.imp_lid (Delta_constant_at_level 1) None
+let tiff    = fvar PC.iff_lid (Delta_constant_at_level 2) None
 let t_bool  = fvar_const PC.bool_lid
 let b2t_v   = fvar_const PC.b2t_lid
 let t_not   = fvar_const PC.not_lid
@@ -998,6 +1011,7 @@ let t_false = fvar_const PC.false_lid
 let t_true  = fvar_const PC.true_lid
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
+let fail_attr = fvar_const PC.fail_attr
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
@@ -1006,7 +1020,7 @@ let mk_binop op_t phi1 phi2 = mk (Tm_app(op_t, [as_arg phi1; as_arg phi2])) None
 let mk_neg phi = mk (Tm_app(t_not, [as_arg phi])) None phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l phi = match phi with
-    | [] -> fvar PC.true_lid Delta_constant None
+    | [] -> fvar PC.true_lid delta_constant None
     | hd::tl -> List.fold_right mk_conj tl hd
 let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_disj_l phi = match phi with
@@ -1028,15 +1042,15 @@ let mk_has_type t x t' =
     mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) None dummyRange
 
 let mk_with_type u t e =
-    let t_with_type = fvar PC.with_type_lid Delta_equational None in
+    let t_with_type = fvar PC.with_type_lid delta_equational None in
     let t_with_type = mk (Tm_uinst(t_with_type, [u])) None dummyRange in
     mk (Tm_app(t_with_type, [iarg t; as_arg e])) None dummyRange
 
 let lex_t    = fvar_const PC.lex_t_lid
-let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid Delta_constant (Some Data_ctor), [U_zero])) None dummyRange
-let lex_pair = fvar PC.lexcons_lid Delta_constant (Some Data_ctor)
-let tforall  = fvar PC.forall_lid (Delta_defined_at_level 1) None
-let t_haseq   = fvar PC.haseq_lid Delta_constant None
+let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid delta_constant (Some Data_ctor), [U_zero])) None dummyRange
+let lex_pair = fvar PC.lexcons_lid delta_constant (Some Data_ctor)
+let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None
+let t_haseq   = fvar PC.haseq_lid delta_constant None
 
 let lcomp_of_comp c0 =
     let eff_name, flags =
@@ -1096,11 +1110,11 @@ let if_then_else b t1 t2 =
 // Operations on squashed and other irrelevant/sub-singleton types
 //////////////////////////////////////////////////////////////////////////////////////
 let mk_squash u p =
-    let sq = fvar PC.squash_lid (Delta_defined_at_level 1) None in
+    let sq = fvar PC.squash_lid (Delta_constant_at_level 1) None in
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let mk_auto_squash u p =
-    let sq = fvar PC.auto_squash_lid (Delta_defined_at_level 2) None in
+    let sq = fvar PC.auto_squash_lid (Delta_constant_at_level 2) None in
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let un_squash t =
@@ -1388,7 +1402,7 @@ let action_as_lb eff_lid a pos =
   let lb =
     close_univs_and_mk_letbinding None
       (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
-      (Inr (lid_as_fv a.action_name Delta_equational None))
+      (Inr (lid_as_fv a.action_name delta_equational None))
       a.action_univs
       (arrow a.action_params (mk_Total a.action_typ))
       PC.effect_Tot_lid
@@ -1420,11 +1434,11 @@ let rec delta_qualifier t =
         | Tm_name _
         | Tm_match _
         | Tm_uvar _
-        | Tm_unknown -> Delta_equational
+        | Tm_unknown -> delta_equational
         | Tm_type _
         | Tm_quoted _
         | Tm_constant _
-        | Tm_arrow _ -> Delta_constant
+        | Tm_arrow _ -> delta_constant
         | Tm_uinst(t, _)
         | Tm_refine({sort=t}, _)
         | Tm_meta(t, _)
@@ -1435,10 +1449,9 @@ let rec delta_qualifier t =
 
 let rec incr_delta_depth d =
     match d with
-    | Delta_equational -> d
-    | Delta_constant -> Delta_defined_at_level 1
-    | Delta_defined_at_level i -> Delta_defined_at_level (i + 1)
-    | Delta_abstract d -> incr_delta_depth d
+    | Delta_constant_at_level i   -> Delta_constant_at_level (i + 1)
+    | Delta_equational_at_level i -> Delta_equational_at_level (i + 1)
+    | Delta_abstract d            -> incr_delta_depth d
 
 let incr_delta_qualifier t =
     incr_delta_depth (delta_qualifier t)
@@ -1467,7 +1480,7 @@ let dm4f_lid ed name : lident =
     lid_of_path p' Range.dummyRange
 
 let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
-    let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) None rng in
+    let ctor l = mk (Tm_fvar (lid_as_fv l delta_constant (Some Data_ctor))) None rng in
     let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.cons_lid) [U_zero]) args None pos in
     let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.nil_lid)  [U_zero]) args None pos in
     List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
@@ -1661,21 +1674,6 @@ let term_eq t1 t2 =
     debug_term_eq := false;
     r
 
-let rec bottom_fold (f : term -> term) (t : term) : term =
-    let ff = bottom_fold f in
-    let tn = (compress t).n in
-    let tn = match tn with
-             | Tm_app (f, args) -> Tm_app (ff f, List.map (fun (a,q) -> (ff a, q)) args)
-             // TODO: We ignore the types. Bug or feature?
-             | Tm_abs (bs, t, k) -> let bs, t' = open_term bs t in
-                                    let t'' = ff t' in
-                                    Tm_abs (bs, close bs t'', k)
-             | Tm_arrow (bs, k) -> tn //TODO
-             | Tm_uinst (t, us) ->
-                Tm_uinst (ff t, us)
-             | _ -> tn in
-    f ({ t with n = tn })
-
 // An estimation of the size of a term, only for debugging
 let rec sizeof (t:term) : int =
     match t.n with
@@ -1728,3 +1726,109 @@ let process_pragma p r =
       match sopt with
       | None -> ()
       | Some s -> set_options Options.Reset s
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+let rec unbound_variables tm :  list<bv> =
+    let t = Subst.compress tm in
+    match t.n with
+      | Tm_delayed _ -> failwith "Impossible"
+
+      | Tm_name x ->
+        []
+
+      | Tm_uvar (x, t) ->
+        []
+
+      | Tm_type u ->
+        []
+
+      | Tm_bvar x ->
+        [x]
+
+      | Tm_fvar _
+      | Tm_constant _
+      | Tm_lazy _
+      | Tm_unknown ->
+        []
+
+      | Tm_uinst(t, us) ->
+        unbound_variables t
+
+      | Tm_abs(bs, t, _) ->
+        let bs, t = Subst.open_term bs t in
+        List.collect (fun (b, _) -> unbound_variables b.sort) bs
+        @ unbound_variables t
+
+      | Tm_arrow (bs, c) ->
+        let bs, c = Subst.open_comp bs c in
+        List.collect (fun (b, _) -> unbound_variables b.sort) bs
+        @ unbound_variables_comp c
+
+      | Tm_refine(b, t) ->
+        let bs, t = Subst.open_term [b, None] t in
+        List.collect (fun (b, _) -> unbound_variables b.sort) bs
+        @ unbound_variables t
+
+      | Tm_app(t, args) ->
+        List.collect (fun (x, _) -> unbound_variables x) args
+        @ unbound_variables t
+
+      | Tm_match(t, pats) ->
+        unbound_variables t
+        @ (pats |> List.collect (fun br ->
+                 let p, wopt, t = Subst.open_branch br in
+                 unbound_variables t
+                 @ (match wopt with None -> [] | Some t -> unbound_variables t)))
+
+      | Tm_ascribed(t1, asc, _) ->
+        unbound_variables t1
+        @ (match fst asc with
+           | Inl t2 -> unbound_variables t2
+           | Inr c2 -> unbound_variables_comp c2)
+        @ (match snd asc with
+           | None -> []
+           | Some tac -> unbound_variables tac)
+
+      | Tm_let ((false, [lb]), t) ->
+        unbound_variables lb.lbtyp
+        @ unbound_variables lb.lbdef
+        @ (match lb.lbname with
+           | Inr _ -> unbound_variables t
+           | Inl bv -> let _, t= Subst.open_term [bv, None] t in
+                       unbound_variables t)
+
+      | Tm_let ((_, lbs), t) ->
+        let lbs, t = Subst.open_let_rec lbs t in
+        unbound_variables t
+        @ List.collect (fun lb -> unbound_variables lb.lbtyp @ unbound_variables lb.lbdef) lbs
+
+      | Tm_quoted (tm, qi) ->
+        begin match qi.qkind with
+        | Quote_static  -> []
+        | Quote_dynamic -> unbound_variables tm
+        end
+
+      | Tm_meta(t, m) ->
+        unbound_variables t
+        @ (match m with
+           | Meta_pattern args ->
+             List.collect (List.collect (fun (a, _) -> unbound_variables a)) args
+
+           | Meta_monadic_lift(_, _, t')
+           | Meta_monadic(_, t') ->
+             unbound_variables t'
+
+           | Meta_labeled _
+           | Meta_desugared _
+           | Meta_named _ -> [])
+
+
+and unbound_variables_comp c =
+    match c.n with
+    | GTotal (t, _)
+    | Total (t, _) ->
+      unbound_variables t
+
+    | Comp ct ->
+      unbound_variables ct.result_typ
+      @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args

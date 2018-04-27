@@ -36,14 +36,14 @@ Guidelines for the changelog:
    ```
 
   In the second case, this version is also supported and is preferred:
-   
+
   ```
     let g1 (f:int{f > 0}) = ()
   ```
 
   See the following diffs for some of the changes that were made to
   existing code:
-  
+
   https://github.com/FStarLang/FStar/commit/6bcaedef6d91726540e8969c5f7a6a08ee21b73c
   https://github.com/FStarLang/FStar/commit/03a7a1be23a904807fa4c92ee006ab9c738375dc
   https://github.com/FStarLang/FStar/commit/442cf7e4a99acb53fc653ebeaa91306c12c69969
@@ -147,6 +147,23 @@ Guidelines for the changelog:
 
   Only `ulib/FStar.Algebra.Monoid.fst` needed to be tweaked like this.
 
+## IDE
+
+* F* now prints `progress` messages while loading dependencies in `--ide` mode
+  (https://github.com/FStarLang/FStar/commit/084638c12ae83ecfa975abd6bbc990f6a784a873)
+
+* Sending an interrupt (C-c / SIGINT) to F* in `--ide` mode does not kill the
+  process any more.  Instead, it interrupts the currently running query or
+  computation.  Not all queries support this (at the moment only `compute` and
+  `push` do); others simply ignore interrupts
+  (https://github.com/FStarLang/FStar/commit/417750b70ae0d0796a480627149dc0a09f9437d2).
+  This feature is experimental.
+
+* The `segment` query can now be used to split a document into a list of
+  top-level forms.
+
+* Some `proof-state` messages now contain location information.
+
 ## Standard library
 
 * [commit FStar@f73f295e](https://github.com/FStarLang/FStar/commit/f73f295ed0661faec205fdf7b76bdd85a2a94a32)
@@ -236,7 +253,7 @@ Guidelines for the changelog:
      18. `MR.ex_rid_of_rid` --> `HST.witness_region`
 
      See the following commits for examples:
-     
+
      https://github.com/mitls/mitls-fstar/commit/be1b8899a344e885bd3a83a26b099ffb4184fd06
      https://github.com/mitls/mitls-fstar/commit/73299b71075aca921aad6fbf78faeafe893731db
      https://github.com/mitls/hacl-star/commit/1fb9727e8193e798fe7a6091ad8b16887a72b98d
@@ -289,7 +306,7 @@ Guidelines for the changelog:
   5. `HH.modifies_just` --> `HS.modifies`
   6. `HH.modifies_one` --> `HS.modifies_one`
   7. ...
-  
+
   For a complete list of the mapping implemented as a crude script to
   rewrite source files, see:
   https://github.com/mitls/mitls-fstar/blob/quic2c/src/tls/renamings.sh
@@ -329,9 +346,26 @@ Guidelines for the changelog:
 
 * Pure terms are extracted while preserving their local `let`-structure.
 This avoids code blow-up problems observed in both HACL and miTLS.
-To recover the old behavior, at the cost of larger code size, 
+To recover the old behavior, at the cost of larger code size,
 use the option `--normalize_pure_terms_for_extraction`.
 Changed since 45a120988381de410d2c1c5c99bcac17f00bd36e
+
+* Since 393835080377fff79baeb0db5405157e8b7d4da2, erasure for
+  extraction is substantially revised. We now make use of a notion of
+  "must_erase" types, defined as follows:
+
+   ```
+   must_erase ::= unit
+               | Type
+               | FStar.Ghost.erased t
+               | x:must_erase{t'}            //any refinement of a must_erase type
+               | t1..tn -> PURE must_erase _ //any pure function returning a must_erase type
+               | t1..tn -> GHOST t' _        //any ghost function
+   ```
+
+  Any must_erase type is extracted to `unit`.
+  Any must_erase computation is extracted as `()`.
+  A top-level must_erase computation is not extracted at all.
 
 ## Command line options
 
@@ -392,7 +426,7 @@ Changed since 45a120988381de410d2c1c5c99bcac17f00bd36e
   imposed by an interface of `A`.
 
   In such a situation, you can run:
-  
+
      `fstar --expose_interfaces A.fsti A.fst B.fst`
 
   Note, this explicitly breaks the abstraction of the interface
@@ -440,10 +474,10 @@ Expected changes in the near future:
 ```
 
   Notice the `19`: that's the unique error number.
-  
+
   Warnings can be silenced or turned into errors using the new
   `--warn_error` option.
-   
+
 ## Miscellaneous
 
 * A file can now contain at most one module or interface

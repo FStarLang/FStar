@@ -280,7 +280,7 @@ let gen_wps_for_free
     let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
-      let l_ite = fvar PC.ite_lid (S.Delta_defined_at_level 2) None in
+      let l_ite = fvar PC.ite_lid (S.Delta_constant_at_level 2) None in
       U.ascribe (
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
@@ -297,7 +297,7 @@ let gen_wps_for_free
   let wp_assert =
     let q = S.gen_bv "q" None U.ktype in
     let wp = S.gen_bv "wp" None wp_a in
-    let l_and = fvar PC.and_lid (S.Delta_defined_at_level 1) None in
+    let l_and = fvar PC.and_lid (S.Delta_constant_at_level 1) None in
     let body =
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_pure (List.map S.as_arg [
@@ -315,7 +315,7 @@ let gen_wps_for_free
   let wp_assume =
     let q = S.gen_bv "q" None U.ktype in
     let wp = S.gen_bv "wp" None wp_a in
-    let l_imp = fvar PC.imp_lid (S.Delta_defined_at_level 1) None in
+    let l_imp = fvar PC.imp_lid (S.Delta_constant_at_level 1) None in
     let body =
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_pure (List.map S.as_arg [
@@ -371,7 +371,7 @@ let gen_wps_for_free
   in
   let rec mk_rel rel t x y =
     let mk_rel = mk_rel rel in
-    let t = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.Delta_constant ] env t in
+    let t = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.delta_constant ] env t in
     match (SS.compress t).n with
     | Tm_type _ ->
         (* BU.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
@@ -410,13 +410,13 @@ let gen_wps_for_free
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
     let rec mk_stronger t x y =
-        let t = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.Delta_constant ] env t in
+        let t = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.delta_constant ] env t in
         match (SS.compress t).n with
         | Tm_type _ -> U.mk_imp x y
         | Tm_app (head, args) when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
-            let projector = S.fvar (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level 1) None in
+            let projector = S.fvar (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_constant_at_level 1) None in
             mk_app projector [tuple, None]
           in
           let (rel0,rels) =
@@ -453,7 +453,7 @@ let gen_wps_for_free
         match U.destruct_typ_as_formula eq with
         | Some (QAll (binders, [], body)) ->
           let k_app = U.mk_app k_tm (args_of_binders binders) in
-          let guard_free =  S.fv_to_tm (S.lid_as_fv PC.guard_free Delta_constant None) in
+          let guard_free =  S.fv_to_tm (S.lid_as_fv PC.guard_free delta_constant None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body = mk (Tm_meta (body, Meta_pattern [[as_arg pat]])) in
           U.close_forall_no_univs binders pattern_guarded_body
@@ -657,7 +657,7 @@ and star_type' env t =
              if is_non_dependent_arrow ty (List.length args)
              then
                // We need to check that the result of the application is a datatype
-                let res = N.normalize [N.EraseUniverses; N.Inlining ; N.UnfoldUntil S.Delta_constant] env.env t in
+                let res = N.normalize [N.EraseUniverses; N.Inlining ; N.UnfoldUntil S.delta_constant] env.env t in
                 begin match (SS.compress res).n with
                   | Tm_app _ -> true
                   | _ ->
@@ -905,7 +905,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 and infer (env: env) (e: term): nm * term * term =
   // BU.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
-  let normalize = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.Delta_constant; N.EraseUniverses ] env.env in
+  let normalize = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.delta_constant; N.EraseUniverses ] env.env in
   match (SS.compress e).n with
   | Tm_bvar bv ->
       failwith "I failed to open a binder... boo"
@@ -1304,7 +1304,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         failwith "mismatch";
       mk (Tm_app (head, List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_implicit q then "implicit" else "explicit" in
-        if q <> q' then Errors.log_issue head.pos (Errors.Warning_IncoherentImplicitQualifier, (BU.format2 "Incoherent implicit qualifiers %b %b\n" (print_implicit q) (print_implicit q'))) ;
+        if q <> q' then Errors.log_issue head.pos (Errors.Warning_IncoherentImplicitQualifier, (BU.format2 "Incoherent implicit qualifiers %s %s\n" (print_implicit q) (print_implicit q'))) ;
         trans_F_ env arg wp_arg, q)
       args wp_args))
   | Tm_arrow (binders, comp) ->
@@ -1345,7 +1345,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 // A helper --------------------------------------------------------------------
 
 (* KM : why is there both NoDeltaSteps and UnfoldUntil Delta_constant ? *)
-let n = N.normalize [ N.Beta; N.UnfoldUntil Delta_constant; N.NoDeltaSteps; N.Eager_unfolding; N.EraseUniverses ]
+let n = N.normalize [ N.Beta; N.UnfoldUntil delta_constant; N.DoNotUnfoldPureLets; N.Eager_unfolding; N.EraseUniverses ]
 
 // Exported definitions -------------------------------------------------------
 

@@ -38,6 +38,7 @@ val tacprint1 : string -> string -> unit
 val tacprint2 : string -> string -> string -> unit
 val tacprint3 : string -> string -> string -> string -> unit
 val print           : string -> tac<unit>
+val debug           : string -> tac<unit>
 val dump_proofstate : proofstate -> string -> unit
 val print_proof_state1 : string -> tac<unit>
 val print_proof_state  : string -> tac<unit>
@@ -73,7 +74,7 @@ val is_irrelevant : goal -> bool
 val prune : string -> tac<unit>
 val addns : string -> tac<unit>
 val set_options : string -> tac<unit>
-val launch_process : string -> string -> string -> tac<string>
+val launch_process : string -> list<string> -> string -> tac<string>
 
 val fresh_bv_named : string -> typ -> tac<bv>
 

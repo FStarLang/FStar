@@ -201,7 +201,7 @@ val va_lemma_weakest_pre_norm (inss:list ins) (s0:state) (sN:state) : PURE unit
         mem0 == s0.mem ==>
         s0.ok /\
         eval_code (va_Block (normalize_term (inss_to_codes inss))) s0 sN /\
-        Prims.norm [delta_only wp_code_delta; zeta; iota; primops]
+        norm [delta_only wp_code_delta; zeta; iota; primops]
                    (wp_code (normalize_term inss) (augment sN post)
                      ({ok=ok0; regs=regs0; flags=flags0; mem=mem0})))
 		     

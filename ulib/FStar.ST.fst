@@ -30,7 +30,7 @@ let gst_post' (a:Type) (pre:Type) = st_post_h' heap a pre
 let gst_post  (a:Type) = st_post_h heap a
 let gst_wp (a:Type)   = st_wp_h heap a
 
-unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:heap) = wp (fun a -> p a h)
+unfold let lift_div_gst (a:Type) (wp:pure_wp a) (p:gst_post a) (h:heap) = wp (fun a -> p a h)
 sub_effect DIV ~> GST = lift_div_gst
 
 let heap_rel (h1:heap) (h2:heap) =
@@ -64,7 +64,7 @@ let st_wp    = gst_wp
 
 new_effect STATE = GST
 
-unfold let lift_gst_state (a:Type0) (wp:gst_wp a) = wp
+unfold let lift_gst_state (a:Type) (wp:gst_wp a) = wp
 sub_effect GST ~> STATE = lift_gst_state
 
 effect State (a:Type) (wp:st_wp a) = STATE a wp
@@ -93,6 +93,7 @@ abstract let alloc (#a:Type) (#rel:preorder a) (init:a)
 abstract let read (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE a (fun p h -> p (sel h r) h)
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
+    Heap.lemma_sel_equals_sel_tot_for_contained_refs h0 r;
     sel_tot h0 r
 
 abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
@@ -106,6 +107,7 @@ abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
     let h1 = upd_tot h0 r v in
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
+    Heap.lemma_upd_equals_upd_tot_for_contained_refs h0 r v;
     gst_put h1
 
 abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()

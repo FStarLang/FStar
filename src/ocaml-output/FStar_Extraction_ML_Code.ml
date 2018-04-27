@@ -339,8 +339,8 @@ let (escape_char_hex : FStar_BaseTypes.char -> Prims.string) =
 let (escape_or :
   (FStar_Char.char -> Prims.string) -> FStar_Char.char -> Prims.string) =
   fun fallback  ->
-    fun uu___61_1042  ->
-      match uu___61_1042 with
+    fun uu___63_1042  ->
+      match uu___63_1042 with
       | c when c = 92 -> "\\\\"
       | c when c = 32 -> " "
       | c when c = 8 -> "\\b"
@@ -465,6 +465,7 @@ let rec (doc_of_mltype' :
             if uu____1260
             then FStar_Format.text "obj"
             else FStar_Format.text "Obj.t"
+        | FStar_Extraction_ML_Syntax.MLTY_Erased  -> FStar_Format.text "unit"
 
 and (doc_of_mltype :
   FStar_Extraction_ML_Syntax.mlsymbol ->
@@ -1181,8 +1182,9 @@ and (doc_of_loc : FStar_Extraction_ML_Syntax.mlloc -> FStar_Format.doc) =
     match uu____2418 with
     | (lineno,file) ->
         let uu____2421 =
-          (FStar_Options.no_location_info ()) ||
-            (FStar_Extraction_ML_Util.codegen_fsharp ())
+          ((FStar_Options.no_location_info ()) ||
+             (FStar_Extraction_ML_Util.codegen_fsharp ()))
+            || (file = "<dummy>")
            in
         if uu____2421
         then FStar_Format.empty

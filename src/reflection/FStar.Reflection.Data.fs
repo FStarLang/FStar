@@ -55,6 +55,8 @@ type bv_view = {
     bv_sort : typ;
 }
 
+type binder_view = bv * aqualv
+
 type comp_view =
     | C_Total of typ * option<term> //optional decreases clause
     | C_Lemma of term * term
@@ -100,8 +102,8 @@ let mk_refl_data_lid_as_term   (s:string) = tconst (fstar_refl_data_lid s)
 let mk_inspect_pack_pair s =
     let inspect_lid = fstar_refl_basic_lid ("inspect" ^ s) in
     let pack_lid    = fstar_refl_basic_lid ("pack" ^ s) in
-    let inspect     = { lid = inspect_lid ; t = fvar inspect_lid (Delta_defined_at_level 1) None } in
-    let pack        = { lid = pack_lid    ; t = fvar pack_lid (Delta_defined_at_level 1) None } in
+    let inspect     = { lid = inspect_lid ; t = fvar inspect_lid (Delta_constant_at_level 1) None } in
+    let pack        = { lid = pack_lid    ; t = fvar pack_lid (Delta_constant_at_level 1) None } in
     (inspect, pack)
 
 let fstar_refl_inspect_ln     , fstar_refl_pack_ln     = mk_inspect_pack_pair "_ln"
@@ -112,21 +114,24 @@ let fstar_refl_inspect_comp   , fstar_refl_pack_comp   = mk_inspect_pack_pair "_
 let fstar_refl_inspect_sigelt , fstar_refl_pack_sigelt = mk_inspect_pack_pair "_sigelt"
 
 (* assumed types *)
-let fstar_refl_env       = mk_refl_types_lid_as_term "env"
-let fstar_refl_bv        = mk_refl_types_lid_as_term "bv"
-let fstar_refl_fv        = mk_refl_types_lid_as_term "fv"
-let fstar_refl_comp      = mk_refl_types_lid_as_term "comp"
-let fstar_refl_binder    = mk_refl_types_lid_as_term "binder"
-let fstar_refl_sigelt    = mk_refl_types_lid_as_term "sigelt"
-let fstar_refl_term      = mk_refl_types_lid_as_term "term"
+let fstar_refl_env              = mk_refl_types_lid_as_term "env"
+let fstar_refl_bv               = mk_refl_types_lid_as_term "bv"
+let fstar_refl_fv               = mk_refl_types_lid_as_term "fv"
+let fstar_refl_comp             = mk_refl_types_lid_as_term "comp"
+let fstar_refl_binder           = mk_refl_types_lid_as_term "binder"
+let fstar_refl_sigelt           = mk_refl_types_lid_as_term "sigelt"
+let fstar_refl_term             = mk_refl_types_lid_as_term "term"
 
 (* auxiliary types *)
-let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
-let fstar_refl_comp_view = mk_refl_data_lid_as_term "comp_view"
-let fstar_refl_term_view = mk_refl_data_lid_as_term "term_view"
-let fstar_refl_pattern   = mk_refl_data_lid_as_term "pattern"
-let fstar_refl_branch    = mk_refl_data_lid_as_term "branch"
-let fstar_refl_bv_view   = mk_refl_data_lid_as_term "bv_view"
+let fstar_refl_aqualv           = mk_refl_data_lid_as_term "aqualv"
+let fstar_refl_comp_view        = mk_refl_data_lid_as_term "comp_view"
+let fstar_refl_term_view        = mk_refl_data_lid_as_term "term_view"
+let fstar_refl_pattern          = mk_refl_data_lid_as_term "pattern"
+let fstar_refl_branch           = mk_refl_data_lid_as_term "branch"
+let fstar_refl_bv_view          = mk_refl_data_lid_as_term "bv_view"
+let fstar_refl_vconst           = mk_refl_data_lid_as_term "vconst"
+let fstar_refl_sigelt_view      = mk_refl_data_lid_as_term "sigelt_view"
+let fstar_refl_exp              = mk_refl_data_lid_as_term "exp"
 
 (* bv_view, this is a record constructor *)
 
@@ -136,7 +141,7 @@ let ref_Mk_bv =
                                 Ident.mk_ident ("bv_ppname", Range.dummyRange);
                                 Ident.mk_ident ("bv_index" , Range.dummyRange);
                                 Ident.mk_ident ("bv_sort"  , Range.dummyRange)]) in
-    { lid = lid ; t = fvar lid Delta_constant (Some attr) }
+    { lid = lid ; t = fvar lid delta_constant (Some attr) }
 
 (* quals *)
 let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"

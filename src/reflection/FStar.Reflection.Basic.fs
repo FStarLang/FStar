@@ -66,7 +66,7 @@ let pack_fv (ns:list<string>) : fv =
         if Ident.lid_equals lid PC.none_lid then Some Data_ctor else
         None
     in
-    lid_as_fv (PC.p2l ns) (Delta_defined_at_level 999) attr
+    lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) attr
 
 // TODO: move to library?
 let rec last (l:list<'a>) : 'a =
@@ -353,6 +353,10 @@ let inspect_binder (b:binder) : bv * aqualv =
 
 let pack_binder (bv:bv) (aqv:aqualv) : binder =
     bv, pack_aqual aqv
+
+open FStar.TypeChecker.Env
+let moduleof (e : Env.env) : list<string> =
+    Ident.path_of_lid e.curmodule
 
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
 let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed

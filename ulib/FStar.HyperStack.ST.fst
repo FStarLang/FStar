@@ -70,7 +70,7 @@ let gst_post' (a:Type) (pre:Type) = st_post_h' mem a pre
 let gst_post (a:Type) = st_post_h mem a
 let gst_wp (a:Type)   = st_wp_h mem a
 
-unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
+unfold let lift_div_gst (a:Type) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
 sub_effect DIV ~> GST = lift_div_gst
 
 (*
@@ -108,7 +108,7 @@ let st_wp    = gst_wp
 
 new_effect STATE = GST
 
-unfold let lift_gst_state (a:Type0) (wp:gst_wp a) = wp
+unfold let lift_gst_state (a:Type) (wp:gst_wp a) = wp
 sub_effect GST ~> STATE = lift_gst_state
 
 (* effect State (a:Type) (wp:st_wp a) = *)
@@ -393,12 +393,16 @@ let salloc (#a:Type) (#rel:preorder a) (init:a)
   (ensures salloc_post init)
   = salloc_common init false
   
+// JP, AR: these are not supported in C, and `salloc` already benefits from
+// automatic memory management.
+[@ (deprecated "use salloc instead") ]
 let salloc_mm (#a:Type) (#rel:preorder a) (init:a)
   : StackInline (mmmstackref a rel)
   (requires (fun m -> is_stack_region m.tip))
   (ensures salloc_post init)
   = salloc_common init true
 
+[@ (deprecated "use salloc instead") ]
 let sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
   :StackInline unit
    (requires (fun m0 -> frameOf r = m0.tip /\ m0 `contains` r))
@@ -523,7 +527,8 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
     gst_recall (ref_contains_pred r);
     let m1 = HS.upd_tot m0 r v in
     Heap.lemma_distinct_addrs_distinct_preorders ();
-    Heap.lemma_distinct_addrs_distinct_mm ();    
+    Heap.lemma_distinct_addrs_distinct_mm ();
+    Heap.lemma_upd_equals_upd_tot_for_contained_refs (Map.sel m0.h (HS.frameOf r)) (HS.as_ref r) v;
     gst_put m1
 
 unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) m0 x m1 =
@@ -539,6 +544,7 @@ let op_Bang (#a:Type) (#rel:preorder a) (r:mreference a rel)
   = let m0 = gst_get () in
     gst_recall (region_contains_pred (HS.frameOf r));
     gst_recall (ref_contains_pred r);
+    Heap.lemma_sel_equals_sel_tot_for_contained_refs (Map.sel m0.h (HS.frameOf r)) (HS.as_ref r);
     HS.sel_tot m0 r
 
 let modifies_none (h0:mem) (h1:mem) = modifies Set.empty h0 h1

@@ -702,7 +702,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                 | _ -> failwith "mutable_alloc should have let term with no qualifier"
               end
           | Mutable_rval ->
-              let fv = S.lid_as_fv C.sread_lid Delta_constant None in
+              let fv = S.lid_as_fv C.sread_lid delta_constant None in
               begin match (SS.compress e).n with
                 | Tm_app({n=Tm_fvar fv}, [(term, _)])-> resugar_term' env term
                 | _ -> failwith "mutable_rval should have app term"
@@ -1164,8 +1164,8 @@ let resugar_sigelt' env se : option<A.decl> =
       in
       Some (decl'_to_decl se (A.Val (lid.ident,t')))
 
-  | Sig_splice t ->
-    Some (decl'_to_decl se (A.Splice (resugar_term' env t)))
+  | Sig_splice (ids, t) ->
+    Some (decl'_to_decl se (A.Splice (List.map (fun l -> l.ident) ids, resugar_term' env t)))
 
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _

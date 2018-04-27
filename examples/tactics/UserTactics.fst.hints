@@ -1,5 +1,5 @@
 [
-  "0³,·ÖÞÛÐ\u0011œµ*Ä\f€\r",
+  "ußéPü”¢¾P+Ýii®¯ÿ",
   [
     [
       "UserTactics.test_print_goal",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c3b74131d61a37c94a6f736255d732cf"
+      "b3dbc1078096b83ed0418b29cf7d8fc7"
     ],
     [
       "UserTactics.f",
@@ -21,7 +21,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "30b43b648786925ee0c4f0c993087628"
+      "138fda9b424393bb05d1b7a76ad7c37b"
     ],
     [
       "UserTactics.implicitly_unfolfed_before_preprocessing",
@@ -33,7 +33,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ab4b5fefc4f217d109a3066ca9589f01"
+      "950c91118dd0b1240e572526be6f4aaa"
     ],
     [
       "UserTactics.lemma_mul_comm",
@@ -42,7 +42,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "43c03af2d7a1ccfdcc6be3422b75a184"
+      "544e8d4563556ae18996754d3cfdfe73"
     ],
     [
       "UserTactics.sqintro",
@@ -51,7 +51,7 @@
       1,
       [ "@query" ],
       0,
-      "48798d2bac590d915bce3ef3753ac4ea"
+      "cb456bea0b89009ce406516a82cdd748"
     ],
     [
       "UserTactics.test_apply_ascription'",
@@ -60,7 +60,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "0b043115a059893205e01ed1a53ad44d"
+      "f9a37a14a07615d60b8b488c40efb028"
     ],
     [
       "UserTactics.test_apply_ascription",
@@ -69,7 +69,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "1900cae1b27298ba20e05f7a78a14c04"
+      "da360e73be374c87b82c0e4b28770934"
     ],
     [
       "UserTactics.f",
@@ -82,7 +82,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "c73ccdfd037debe57c049038b7b0794d"
+      "290d26f5329ddeeaba3d89a0806ca8f1"
     ],
     [
       "UserTactics.sqintro",
@@ -91,7 +91,7 @@
       1,
       [ "@query" ],
       0,
-      "a4f049dcc8f579a9fd40f984adaec330"
+      "94d54b9591e0273a1f5a90ec0a86480f"
     ]
   ]
 ]

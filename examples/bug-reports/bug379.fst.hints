@@ -15,7 +15,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2242ab34808035878f78ef31535d1196"
+      "7b209c727c5833afc904ae69ac6b0063"
     ],
     [
       "Bug379.test3",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "586a90ad37acc7d27b84b2b589c9b873"
+      "c2c352adf736cada8f6f9545d2ad6ac4"
     ]
   ]
 ]

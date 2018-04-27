@@ -107,6 +107,7 @@ type env = {
   check_type_of  :bool -> env -> term -> typ -> guard_t;
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
+  normalized_eff_names:BU.smap<lident>;              (* cache for normalized effect names, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth_hook          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
   splice         :env -> term -> list<sigelt>;       (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
@@ -207,6 +208,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     universe_of=universe_of;
     use_bv_sorts=false;
     qtbl_name_and_index=BU.smap_create 10, None;  //10?
+    normalized_eff_names=BU.smap_create 20;  //20?
     proof_ns = Options.using_facts_from ();
     synth_hook = (fun e g tau -> failwith "no synthesizer available");
     splice = (fun e tau -> failwith "no splicer available");
@@ -244,7 +246,8 @@ let push_stack env =
     {env with sigtab=BU.smap_copy (sigtab env);
               gamma_cache=BU.smap_copy (gamma_cache env);
               identifier_info=BU.mk_ref !env.identifier_info;
-              qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd}
+              qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd;
+              normalized_eff_names=BU.smap_copy env.normalized_eff_names}
 
 let pop_stack () =
     match !stack with
@@ -687,7 +690,6 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
     | _ -> None
 
 let norm_eff_name =
-   let cache = BU.smap_create 20 in
    fun env (l:lident) ->
        let rec find l =
            match lookup_effect_abbrev env [U_unknown] l with //universe doesn't matter here; we're just normalizing the name
@@ -697,12 +699,12 @@ let norm_eff_name =
                 match find l with
                     | None -> Some l
                     | Some l' -> Some l' in
-       let res = match BU.smap_try_find cache l.str with
+       let res = match BU.smap_try_find env.normalized_eff_names l.str with
             | Some l -> l
             | None ->
               begin match find l with
                         | None -> l
-                        | Some m -> BU.smap_add cache l.str m;
+                        | Some m -> BU.smap_add env.normalized_eff_names l.str m;
                                     m
               end in
        Ident.set_lid_range res (range_of_lid l)
@@ -771,7 +773,9 @@ let is_interpreted =
     fun (env:env) head ->
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-            fv.fv_delta=Delta_equational
+            (match fv.fv_delta with
+             | Delta_equational_at_level _ -> true
+             | _ -> false)
             //U.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
         | _ -> false
 
@@ -915,7 +919,7 @@ let build_lattice env se = match se.sigel with
     (* For debug purpose... *)
     let print_mlift l =
       (* A couple of bogus constants, just for printing *)
-      let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) Delta_constant None) in
+      let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) delta_constant None) in
       let arg = bogus_term "ARG" in
       let wp = bogus_term "WP" in
       let e = bogus_term "COMP" in
@@ -1118,6 +1122,9 @@ let push_sigelt_inst env s us =
 let push_local_binding env b = {env with gamma=b::env.gamma}
 
 let push_bv env x = push_local_binding env (Binding_var x)
+
+let push_bvs env bvs =
+    List.fold_left (fun env bv -> push_bv env bv) env bvs
 
 let pop_bv env =
     match env.gamma with

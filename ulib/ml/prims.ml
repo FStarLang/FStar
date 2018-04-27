@@ -1,6 +1,107 @@
-(** The [int] type and the various default operators. *)
-type int      = Z.t
-type nonzero  = int
+type int = Z.t
+let parse_int = Z.of_string
+let to_string = Z.to_string
+
+type attribute = unit
+let (cps : attribute) = ()
+type 'Auu____5 hasEq = unit
+type eqtype = unit
+type nonrec bool = bool
+type c_False = unit
+(*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
+       are no constructors and generate this type abbreviation*)
+type c_True =
+  | T
+let (uu___is_T : c_True -> bool) = fun projectee  -> true
+type nonrec unit = unit
+type 'Ap squash = unit
+type 'Ap auto_squash = unit
+type l_True = unit
+type l_False = unit
+type ('Aa,'Ax,'dummyV0) equals =
+  | Refl
+let uu___is_Refl : 'Aa . 'Aa -> 'Aa -> ('Aa,unit,unit) equals -> bool =
+  fun x  -> fun uu____65  -> fun projectee  -> true
+type ('Aa,'Ax,'Ay) eq2 = unit
+type ('Aa,'Ax,'dummyV0,'dummyV1) h_equals =
+  | HRefl
+let uu___is_HRefl :
+  'Aa . 'Aa -> unit -> Obj.t -> ('Aa,unit,Obj.t,unit) h_equals -> bool
+  = fun x  -> fun b  -> fun uu____141  -> fun projectee  -> true
+type ('Aa,'Ab,'Ax,'Ay) eq3 = unit
+type ('Aa,'Ab,'Ax,'Ay) op_Equals_Equals_Equals = unit
+type 'Ab b2t = unit
+type ('Ap,'Aq) c_and =
+  | And of 'Ap * 'Aq
+let uu___is_And : 'Ap 'Aq . ('Ap,'Aq) c_and -> bool =
+  fun projectee  -> true
+let __proj__And__item___0 : 'Ap 'Aq . ('Ap,'Aq) c_and -> 'Ap =
+  fun projectee  -> match projectee with | And (_0,_1) -> _0
+let __proj__And__item___1 : 'Ap 'Aq . ('Ap,'Aq) c_and -> 'Aq =
+  fun projectee  -> match projectee with | And (_0,_1) -> _1
+type ('Ap,'Aq) l_and = unit
+type ('Ap,'Aq) c_or =
+  | Left of 'Ap
+  | Right of 'Aq
+let uu___is_Left : 'Ap 'Aq . ('Ap,'Aq) c_or -> bool =
+  fun projectee  ->
+    match projectee with | Left _0 -> true | uu____344 -> false
+
+let __proj__Left__item___0 : 'Ap 'Aq . ('Ap,'Aq) c_or -> 'Ap =
+  fun projectee  -> match projectee with | Left _0 -> _0
+let uu___is_Right : 'Ap 'Aq . ('Ap,'Aq) c_or -> bool =
+  fun projectee  ->
+    match projectee with | Right _0 -> true | uu____404 -> false
+
+let __proj__Right__item___0 : 'Ap 'Aq . ('Ap,'Aq) c_or -> 'Aq =
+  fun projectee  -> match projectee with | Right _0 -> _0
+type ('Ap,'Aq) l_or = unit
+type ('Ap,'Aq) l_imp = unit
+type ('Ap,'Aq) l_iff = unit
+type 'Ap l_not = unit
+type ('Ap,'Aq,'Ar) l_ITE = unit
+type ('Aa,'Ab,'Auu____484,'Auu____485) precedes = unit
+type ('Aa,'Auu____490,'Auu____491) has_type = unit
+type ('Aa,'Ap) l_Forall = unit
+type prop = unit
+type ('Aa,'Ab) dtuple2 =
+  | Mkdtuple2 of 'Aa * 'Ab
+let uu___is_Mkdtuple2 : 'Aa 'Ab . ('Aa,'Ab) dtuple2 -> bool =
+  fun projectee  -> true
+let __proj__Mkdtuple2__item___1 : 'Aa 'Ab . ('Aa,'Ab) dtuple2 -> 'Aa =
+  fun projectee  -> match projectee with | Mkdtuple2 (_1,_2) -> _1
+let __proj__Mkdtuple2__item___2 : 'Aa 'Ab . ('Aa,'Ab) dtuple2 -> 'Ab =
+  fun projectee  -> match projectee with | Mkdtuple2 (_1,_2) -> _2
+type ('Aa,'Ap) l_Exists = unit
+type _pos = int * int
+type _rng = string * _pos * _pos
+type range = _rng * _rng
+type nonrec string = string
+type pure_pre = unit
+type ('Aa,'Apre) pure_post' = unit
+type 'Aa pure_post = unit
+type 'Aa pure_wp = unit
+type 'Auu____655 guard_free = unit
+type ('Aa,'Ax,'Ap) pure_return = unit
+type ('Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap) pure_bind_wp = 'Awp1
+type ('Aa,'Ap,'Awp_then,'Awp_else,'Apost) pure_if_then_else = unit[@@deriving
+                                                                    show]
+type ('Aa,'Awp,'Apost) pure_ite_wp = unit
+type ('Aa,'Awp1,'Awp2) pure_stronger = unit
+type ('Aa,'Ab,'Awp,'Ap) pure_close_wp = unit
+type ('Aa,'Aq,'Awp,'Ap) pure_assert_p = unit
+type ('Aa,'Aq,'Awp,'Ap) pure_assume_p = unit
+type ('Aa,'Ap) pure_null_wp = unit
+type ('Aa,'Awp) pure_trivial = 'Awp
+type ('Aa,'Awp,'Auu____878) purewp_id = 'Awp
+let mk_range f a b c d : range = let r = (f, (a, b), (c, d)) in (r, r)
+let range_0 : range = let z = parse_int "0" in mk_range "<dummy>" z z z z
+
+
+let op_AmpAmp x y = x && y
+let op_BarBar x y  = x || y
+let op_Negation x = not x
+
 let ( + )     = Z.add
 let ( - )     = Z.sub
 let ( * )     = Z.mul
@@ -12,167 +113,82 @@ let ( > )     = Z.gt
 let ( mod )   = Z.erem
 let ( ~- )    = Z.neg
 let abs       = Z.abs
-let parse_int = Z.of_string
-let to_string = Z.to_string
 
-(** Some misc. types defined in Prims *)
-type nonrec unit = unit
-type nonrec bool = bool
-type nonrec string = string
-type nonrec 'a array = 'a array
+let op_Multiply x y = x * y
+let op_Subtraction x y = x - y
+let op_Addition x y = x + y
+let op_Minus x = -x
+let op_LessThan x y = x < y
+let op_LessThanOrEqual x y = x <= y
+let op_GreaterThan x y = x > y
+let op_GreaterThanOrEqual x y = x >= y
+let op_Equality x y = x = y
+let op_disEquality x y = x<>y
+
 type nonrec exn = exn
+type nonrec 'Auu____1137 array = 'Auu____1137 array
+let strcat x y = x ^ y
+
 type nonrec 'a list = 'a list
-type nonrec 'a option = 'a option
+let uu___is_Nil : 'Aa . 'Aa list -> bool =
+  fun projectee  -> match projectee with | []  -> true | uu____1190 -> false
+let uu___is_Cons : 'Aa . 'Aa list -> bool =
+  fun projectee  ->
+    match projectee with | hd::tl -> true | uu____1216 -> false
 
-type _pos = int * int
-type _rng = string * _pos * _pos
-type range = _rng * _rng
-
-type nat       = int
-type pos       = int
-type 'd b2t    = unit
-
-type 'a squash = unit
-
-type (' p, ' q) c_or =
-  | Left of ' p
-  | Right of ' q
-
-type (' p, ' q) l_or = ('p, 'q) c_or squash
-
-let uu___is_Left = function Left _ -> true | Right _ -> false
-
-let uu___is_Right = function Left _ -> false | Right _ -> true
-
-type (' p, ' q) c_and =
-| And of ' p * ' q
-
-type (' p, ' q) l_and = ('p, 'q) c_and squash
-
-let uu___is_And _ = true
+let __proj__Cons__item__hd : 'Aa . 'Aa list -> 'Aa =
+  fun projectee  -> match projectee with | hd::tl -> hd
+let __proj__Cons__item__tl : 'Aa . 'Aa list -> 'Aa list =
+  fun projectee  -> match projectee with | hd::tl -> tl
+type pattern = unit
 
 
-type c_True =
-  | T
-
-type l_True = c_True squash
-
-let uu___is_T _ = true
-
-type c_False = unit
-(*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
-       are no constructors and generate this type abbreviation*)
-type l_False = c_False squash
-
-type (' p, ' q) l_imp = ('p -> 'q) squash
-
-type (' p, ' q) l_iff = ((' p, ' q) l_imp, (' q, ' p) l_imp) l_and
-
-type ' p l_not = (' p, l_False) l_imp
-
-type (' a, ' p) l_Forall = unit
-
-type (' a, ' p) l_Exists = unit
-
-
-type (' p, ' q, 'dummyP) eq2 =  unit
-type (' p, ' q, 'dummyP, 'dummyQ) eq3 =  unit
-
-type prop     = Obj.t
-
+type ('Aa,'Auu____1278) decreases = unit
+let returnM : 'Aa . 'Aa -> 'Aa = fun x  -> x
 type lex_t =
   | LexTop
   | LexCons of unit * Obj.t * lex_t
 let (uu___is_LexTop : lex_t -> bool) =
   fun projectee  ->
-    match projectee with | LexTop  -> true | uu____18 -> false
+    match projectee with | LexTop  -> true | uu____1313 -> false
 
 let (uu___is_LexCons : lex_t -> bool) =
   fun projectee  ->
-    match projectee with | LexCons (a,_1,_2) -> true | uu____30 -> false
+    match projectee with | LexCons (a,_1,_2) -> true | uu____1327 -> false
 
 type 'Aprojectee __proj__LexCons__item__a = Obj.t
-let (__proj__LexCons__item___1 :
-  lex_t -> unit __proj__LexCons__item__a) =
+let (__proj__LexCons__item___1 : lex_t -> Obj.t) =
   fun projectee  -> match projectee with | LexCons (a,_1,_2) -> _1
 let (__proj__LexCons__item___2 : lex_t -> lex_t) =
   fun projectee  -> match projectee with | LexCons (a,_1,_2) -> _2
+type ('Aa,'Awp) as_requires = 'Awp
+type ('Aa,'Awp,'Ax) as_ensures = unit
+let admit () = failwith "Prims.admit: cannot be executed"
+let magic () = failwith "Prims.magic: cannot be executed"
+let unsafe_coerce : 'Aa 'Ab . 'Aa -> 'Ab =
+  fun x -> Obj.magic x
 
-let cut = ()
-let admit () = failwith "no admits"
-let _assume () = ()
-let _assert x = ()
-let magic () = failwith "no magic"
-let unsafe_coerce x = Obj.magic x
-let op_Negation x = not x
+type 'Ap spinoff = 'Ap
 
-let mk_range f a b c d : range = let r = (f, (a, b), (c, d)) in (r, r)
-let range_0 : range = let z = parse_int "0" in mk_range "<dummy>" z z z z
 
-(* These two cannot be (reasonably) implemented in extracted code *)
-let range_of _ = range_0
-let set_range_of x = x
+type nat = int
+type pos = int
+type nonzero = int
+let op_Modulus x y = x mod y
+let op_Division x y = x / y
+let rec (pow2 : nat -> pos) =
+  fun x  ->
+    match x with
+    | _0_2 when _0_2 = (parse_int "0") -> (parse_int "1")
+    | uu____1577 ->
+        op_Multiply (parse_int "2")
+          (pow2 (op_Subtraction x (parse_int "1")))
 
-(* for partially variants of the operators *)
-let op_Multiply x y = x * y
-let op_Subtraction x y = x - y
-let op_Addition x y = x + y
-let op_LessThanOrEqual x y = x <= y
-let op_LessThan x y = x < y
-let op_GreaterThanOrEqual x y = x >= y
-let op_GreaterThan x y = x > y
-
-let op_Equality x y = x = y
-let op_disEquality x y = x<>y
-let op_AmpAmp x y = x && y
-let op_BarBar x y  = x || y
-let uu___is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
-let uu___is_Cons l = not (uu___is_Nil l)
-let strcat x y = x ^ y
-
+let (min : int -> int -> int) =
+  fun x  -> fun y  -> if x <= y then x else y
+let (abs : int -> int) =
+  fun x  -> if x >= (parse_int "0") then x else op_Minus x
 let string_of_bool = string_of_bool
 let string_of_int = to_string
 
-type ('a, 'b) dtuple2 =
-  | Mkdtuple2 of 'a * 'b
-
-let __proj__Mkdtuple2__item___1 x = match x with
-  | Mkdtuple2 (x, _) -> x
-let __proj__Mkdtuple2__item___2 x = match x with
-  | Mkdtuple2 (_, x) -> x
-
-let rec pow2 n =
-  let open Z in
-  if n = ~$0 then
-    ~$1
-  else
-    ~$2 * pow2 (n - ~$1)
-
-let __proj__Cons__item__hd = List.hd
-
-let __proj__Cons__item__tl = List.tl
-
-let min = min
-
-type norm_step =
-    | Simpl
-    | Weak
-    | HNF
-    | Primops
-    | Delta
-    | Zeta
-    | Iota
-    | UnfoldOnly : string list -> norm_step
-
-let simplify : norm_step = Simpl
-let weak    : norm_step = Weak
-let hnf     : norm_step = HNF
-let primops : norm_step = Primops
-let delta   : norm_step = Delta
-let zeta    : norm_step = Zeta
-let iota    : norm_step = Iota
-let delta_only (s:string list) : norm_step = UnfoldOnly s
-
-type ('a, 'b) admit = unit
-
-let singleton x = x
+type ('Ar,'Amsg,'Ab) labeled = 'Ab

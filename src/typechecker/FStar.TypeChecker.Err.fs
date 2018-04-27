@@ -89,10 +89,6 @@ let expected_expression_of_type env t1 e t2 =
   (Errors.Fatal_UnexpectedExpressionType, (format3 "Expected expression of type \"%s\"; got expression \"%s\" of type \"%s\""
     s1 (Print.term_to_string e) s2))
 
-let expected_function_with_parameter_of_type env t1 t2 =
-  let s1, s2 = err_msg_type_strings env t1 t2 in
-  (format3 "Expected a function with a parameter of type \"%s\"; this function has a parameter of type \"%s\"" s1 s2)
-
 let expected_pattern_of_type env t1 e t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   (Errors.Fatal_UnexpectedPattern, (format3 "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\""

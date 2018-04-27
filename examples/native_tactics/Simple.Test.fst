@@ -1,7 +1,7 @@
 module Simple.Test
 open Simple
-type t = | This | That
 #set-options "--use_two_phase_tc false"
+type t = | This | That
 let test0 = assert_norm (id 1000000 = 1000000)
 let test1 = assert_norm (poly_id 1000000 This = This)
 let test2 = assert_norm (mk_n_list 10 This = [This;This;This;This;This;This;This;This;This;This])

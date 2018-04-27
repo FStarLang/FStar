@@ -78,14 +78,9 @@ type quote_kind =
   | Quote_static
   | Quote_dynamic
 
-type quoteinfo = {
-    qkind : quote_kind;
-}
-
 type delta_depth =
-  | Delta_constant                  //A defined constant, e.g., int, list, etc.
-  | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
-  | Delta_equational                //A symbol that may be equated to another by extensional reasoning
+  | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
+  | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
 ///[@ PpxDerivingShow ]
@@ -140,6 +135,11 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbdef  :term;            //e
     lbattrs:list<attribute>; //attrs
     lbpos  :range;           //original position of 'e'
+}
+and antiquotations = list<(bv * bool * term)>
+and quoteinfo = {
+    qkind      : quote_kind;
+    antiquotes : antiquotations;
 }
 and comp_typ = {
   comp_univs:universes;
@@ -247,6 +247,10 @@ and lazyinfo = {
     typ   : typ;
     rng   : Range.range;
  }
+
+
+val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
+val lookup_aq : bv -> antiquotations -> option<(bool * term)>
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 val lazy_chooser : ref<option<(lazy_kind -> lazyinfo-> term)>>
@@ -395,7 +399,7 @@ type sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
-  | Sig_splice         of term
+  | Sig_splice         of list<lident> * term
 
 and sigelt = {
     sigel:    sigelt';
@@ -455,7 +459,7 @@ val order_bv:        bv -> bv -> Tot<int>
 val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
 val set_range_of_bv: bv -> range -> bv
-val order_univ_name: univ_name -> univ_name -> Tot<int>
+val order_univ_name: univ_name -> univ_name -> int
 
 val tun:      term
 val teff:     term
@@ -511,23 +515,27 @@ val eq_pat : pat -> pat -> bool
 //Some common constants
 ///////////////////////////////////////////////////////////////////////
 module C = FStar.Parser.Const
-val tconst        : lident -> term
-val tabbrev       : lident -> term
-val tdataconstr   : lident -> term
-val t_unit        : term
-val t_bool        : term
-val t_int         : term
-val t_string      : term
-val t_float       : term
-val t_char        : term
-val t_range       : term
-val t_term        : term
-val t_decls       : term
-val t_binder      : term
-val t_bv          : term
-val t_tactic_unit : term
-val t_tac_unit    : term
-val t_list_of     : term -> term
-val t_option_of   : term -> term
-val t_tuple2_of   : term -> term -> term
-val unit_const    : term
+val delta_constant  : delta_depth
+val delta_equational: delta_depth
+val tconst          : lident -> term
+val tabbrev         : lident -> term
+val tdataconstr     : lident -> term
+val t_unit          : term
+val t_bool          : term
+val t_int           : term
+val t_string        : term
+val t_float         : term
+val t_char          : term
+val t_range         : term
+val t_norm_step     : term
+val t_term          : term
+val t_order         : term
+val t_decls         : term
+val t_binder        : term
+val t_bv            : term
+val t_tactic_unit   : term
+val t_tac_unit      : term
+val t_list_of       : term -> term
+val t_option_of     : term -> term
+val t_tuple2_of     : term -> term -> term
+val unit_const      : term

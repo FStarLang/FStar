@@ -179,18 +179,19 @@ val mkBvMul   : (int -> (term * term) -> Range.range -> term)
 
 val mkITE: (term * term * term) -> Range.range -> term
 val mkCases : list<term> -> Range.range -> term
-val mkForall: (list<list<pat>> * fvs * term) -> Range.range -> term
-val mkForall': (list<list<pat>> * option<int> * fvs * term) -> Range.range -> term
-val mkForall'': (list<list<pat>> * option<int> * list<sort> * term) -> Range.range -> term
-val mkExists: (list<list<pat>> * fvs * term) -> Range.range -> term
+val check_pattern_ok: term -> option<term>
+val mkForall:  Range.range -> (list<list<pat>> * fvs * term) -> term
+val mkForall': Range.range -> (list<list<pat>> * option<int> * fvs * term)  -> term
+val mkForall'': Range.range -> (list<list<pat>> * option<int> * list<sort> * term) -> term
+val mkExists: Range.range -> (list<list<pat>> * fvs * term) -> term
 val mkLet: (list<term> * term) -> Range.range -> term
 val mkLet': (list<(fv * term)> * term) -> Range.range -> term
 
 val fresh_token: (string * sort) -> int -> decl
-val injective_constructor : (string * list<constructor_field> * sort) -> decls_t
-val fresh_constructor : (string * list<sort> * sort * int) -> decl
+val injective_constructor : Range.range -> (string * list<constructor_field> * sort) -> decls_t
+val fresh_constructor : Range.range -> (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
-val constructor_to_decl: constructor_t -> decls_t
+val constructor_to_decl: Range.range -> constructor_t -> decls_t
 val mkBvConstructor: int -> decls_t
 val declToSmt: string -> decl -> string
 val declToSmt_no_caps: string -> decl -> string
@@ -233,6 +234,7 @@ val fuel_100:term
 val n_fuel: int -> term
 
 val mk_haseq: term -> term
+val kick_partial_app: term -> term
 
 val op_to_string: op -> string
 val print_smt_term: term -> string

@@ -556,6 +556,7 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   Math.paren_mul_right a_h (pow2 64) (pow2 s);
   ()
 
+#reset-options "--normalize_pure_terms_for_extraction"
 #set-options "--z3rlimit 300"
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))

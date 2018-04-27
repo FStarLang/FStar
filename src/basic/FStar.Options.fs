@@ -204,7 +204,7 @@ let defaults =
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("warn_error"                   , String "");
-      ("use_extracted_interfaces"     , Bool false);]
+      ("use_extracted_interfaces"     , Bool false)]
 
 let init () =
    let o = peek () in
@@ -1220,6 +1220,7 @@ let codegen                      () =
             | _ -> failwith "Impossible")
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
+let debug_module        modul       = (get_debug () |> List.contains modul)
 let debug_at_level      modul level = (get_debug () |> List.contains modul) && debug_level_geq level
 let defensive                    () = get_defensive () <> "no"
 let defensive_fail               () = get_defensive () = "fail"

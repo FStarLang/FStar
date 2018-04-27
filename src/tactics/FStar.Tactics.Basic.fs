@@ -69,6 +69,10 @@ let bind (t1:tac<'a>) (t2:'a -> tac<'b>) : tac<'b> =
             | Success (a, q)  -> run (t2 a) q
             | Failed (msg, q) -> Failed (msg, q))
 
+(* get : get the current proof state *)
+let get : tac<proofstate> =
+    mk_tac (fun p -> Success (p, p))
+
 let idtac : tac<unit> = ret ()
 
 let goal_to_string (g:goal) =
@@ -96,6 +100,13 @@ let is_irrelevant (g:goal) : bool =
 let print (msg:string) : tac<unit> =
     tacprint msg;
     ret ()
+
+let debug (msg:string) : tac<unit> =
+    bind get (fun ps ->
+    if Options.debug_module (Ident.string_of_lid ps.main_context.curmodule)
+    then tacprint msg
+    else ();
+    ret ())
 
 let dump_goal ps goal =
     tacprint (goal_to_string goal);
@@ -156,10 +167,6 @@ let print_proof_state (msg:string) : tac<unit> =
                    let subst = N.psc_subst psc in
                    dump_proofstate (subst_proof_state subst ps) msg;
                    Success ((), ps))
-
-(* get : get the current proof state *)
-let get : tac<proofstate> =
-    mk_tac (fun p -> Success (p, p))
 
 let tac_verb_dbg : ref<option<bool>> = BU.mk_ref None
 let rec log ps f : unit =
@@ -228,48 +235,47 @@ let set (p:proofstate) : tac<unit> =
     mk_tac (fun _ -> Success ((), p))
 
 let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
-    let debug_on () =
-        let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
-        ()
-    in
-    let debug_off () =
-        let _ = Options.set_options Options.Reset "" in
-        ()
-    in
-
-    let _ = if Env.debug env (Options.Other "1346")
-            then let _ = debug_on () in
+    let _ = if Env.debug env (Options.Other "1346") then
                   BU.print2 "%%%%%%%%do_unify %s =? %s\n"
                             (Print.term_to_string t1)
                             (Print.term_to_string t2) in
     try
             let res = Rel.teq_nosmt env t1 t2 in
-            debug_off();
             if Env.debug env (Options.Other "1346")
-            then BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
-                            (string_of_bool res)
-                            (Print.term_to_string t1)
-                            (Print.term_to_string t2);
+            then (BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
+                                  (string_of_bool res)
+                                  (Print.term_to_string t1)
+                                  (Print.term_to_string t2));
             ret res
     with | Errors.Err (_, msg) -> begin
-            debug_off();
             mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
             ret false)
             end
          | Errors.Error (_, msg, r) -> begin
-            debug_off();
             mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
                                 msg (Range.string_of_range r)) (fun _ ->
             ret false)
             end
 
 let do_unify env t1 t2 : tac<bool> =
-    bind (__do_unify env t1 t2) (fun b ->
-    if not b
-    then let t1 = N.normalize [] env t1 in
-         let t2 = N.normalize [] env t2 in
-         __do_unify env t1 t2
-    else ret b)
+    bind idtac (fun () ->
+    if Env.debug env (Options.Other "1346") then (
+        Options.push ();
+        let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
+        ()
+    );
+
+    bind (
+        bind (__do_unify env t1 t2) (fun b ->
+        if not b
+        then let t1 = N.normalize [] env t1 in
+             let t2 = N.normalize [] env t2 in
+             __do_unify env t1 t2
+        else ret b)) (fun r ->
+
+    if Env.debug env (Options.Other "1346") then
+        Options.pop ();
+    ret r))
 
 let trysolve (goal : goal) (solution : term) : tac<bool> =
     do_unify goal.context solution goal.witness
@@ -431,7 +437,7 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
            end))
 
 let istrivial (e:env) (t:term) : bool =
-    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
+    let steps = [N.Reify; N.UnfoldUntil delta_constant; N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
     let t = normalize steps e t in
     is_true t
 
@@ -1068,6 +1074,8 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
                  bind (ff hd) (fun hd ->
                  let ffb br =
                     let (pat, w, e) = SS.open_branch br in
+                    let bvs = S.pat_bvs pat in
+                    let ff = tac_fold_env d f (Env.push_bvs env bvs) in
                     bind (ff e) (fun e ->
                     let br = SS.close_branch (pat, w, e) in
                     ret br)
@@ -1087,6 +1095,7 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
                 in
                 bind (fflb lb) (fun lb ->
                 let bs, e = SS.open_term [S.mk_binder bv] e in
+                let ff = tac_fold_env d f (Env.push_binders env bs) in
                 bind (ff e) (fun e ->
                 let e = SS.close bs e in
                 ret (Tm_let ((false, [lb]), e))))
@@ -1264,11 +1273,11 @@ let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
     in
     let gt = g.goal_ty in
     log ps (fun () ->
-        BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt));
+        BU.print1 "Topdown_rewrite starting with %s\n" (Print.term_to_string gt));
     bind dismiss_all (fun _ ->
     bind (ctrl_tac_fold (rewrite_rec ps ctrl rewriter g.opts) g.context keepGoing gt) (fun (gt', _) ->
     log ps (fun () ->
-        BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
+        BU.print1 "Topdown_rewrite seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
     add_goals [{g with goal_ty = gt'}]))))
 
@@ -1412,11 +1421,11 @@ let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->
     do_unify ps.main_context t1 t2)
 
-let launch_process (prog : string) (args : string) (input : string) : tac<string> =
+let launch_process (prog : string) (args : list<string>) (input : string) : tac<string> =
     // The `bind idtac` thunks the tactic
     bind idtac (fun () ->
     if Options.unsafe_tactic_exec () then
-        let s = BU.launch_process true "tactic_launch" prog args input (fun _ _ -> false) in
+        let s = BU.run_process "tactic_launch" prog args (Some input) in // FIXME
         ret s
     else
         fail "launch_process: will not run anything unless --unsafe_tactic_exec is provided"
@@ -1442,7 +1451,7 @@ let change (ty : typ) : tac<unit> = wrap_err "change" <|
          * we use the original one as the new goal. This is sometimes needed
          * since the unifier has some bugs. *)
         let steps =
-            [N.Reify; N.UnfoldUntil Delta_constant;
+            [N.Reify; N.UnfoldUntil delta_constant;
              N.AllowUnboundUniverses;
              N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
         let ng  = normalize steps g.context g.goal_ty in
