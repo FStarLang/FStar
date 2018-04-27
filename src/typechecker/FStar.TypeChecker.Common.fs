@@ -34,6 +34,14 @@ type rel =
   | SUB
   | SUBINV  (* sub-typing/sub-kinding, inverted *)
 
+type rank_t =
+    | Rigid_rigid
+    | Flex_rigid_eq
+    | Flex_flex_pattern_eq
+    | Flex_rigid
+    | Rigid_flex
+    | Flex_flex
+
 type problem<'a> = {                  //Try to prove: lhs rel rhs ~> guard
     pid:int;
     lhs:'a;
@@ -44,7 +52,7 @@ type problem<'a> = {                  //Try to prove: lhs rel rhs ~> guard
     logical_guard_uvar:binders * ctx_uvar;
     reason: list<string>;             //why we generated this problem, for error reporting
     loc: Range.range;                 //and the source location where this arose
-    rank: option<int>;
+    rank: option<rank_t>;
 }
 
 type prob =

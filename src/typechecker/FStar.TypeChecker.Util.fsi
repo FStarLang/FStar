@@ -36,7 +36,7 @@ val check_uvars: Range.range -> typ -> unit
 val close_guard_implicits: env -> binders -> guard_t -> guard_t
 
 //extracting annotations from a term
-val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * bool * guard_t
+val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * bool
 
 //pattern utilities
 val pat_as_exp: bool -> env -> pat -> (env -> term -> term * guard_t) -> (list<bv> * term * guard_t * pat)

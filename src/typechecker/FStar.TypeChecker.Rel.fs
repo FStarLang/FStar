@@ -965,11 +965,14 @@ let kind_type (binders:binders) (r:Range.range) =
 (* ----------------------------------------------------- *)
 (* Ranking problems for the order in which to solve them *)
 (* ----------------------------------------------------- *)
-let rigid_rigid       = 0
-let flex_rigid_eq     = 1
-let flex_rigid        = 4
-let rigid_flex        = 5
-let flex_flex         = 7
+let rank_t_num = function
+    | Rigid_rigid -> 0
+    | Flex_rigid_eq -> 1
+    | Flex_flex_pattern_eq -> 2
+    | Flex_rigid -> 3
+    | Rigid_flex -> 4
+    | Flex_flex -> 5
+let rank_leq r1 r2 = rank_t_num r1 <= rank_t_num r2
 let compress_tprob tcenv p = {p with lhs=whnf tcenv p.lhs; rhs=whnf tcenv p.rhs}
 
 let compress_prob tcenv p =
@@ -978,56 +981,68 @@ let compress_prob tcenv p =
     | CProb _ -> p
 
 
-let rank tcenv pr : int    //the rank
+let rank tcenv pr : rank_t    //the rank
                  * prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
                  =
    let prob = compress_prob tcenv pr |> maybe_invert_p in
    match prob with
     | TProb tp ->
-      let lh, _ = U.head_and_args tp.lhs in
-      let rh, _ = U.head_and_args tp.rhs in
+      let lh, lhs_args = U.head_and_args tp.lhs in
+      let rh, rhs_args = U.head_and_args tp.rhs in
       let rank = begin
         match lh.n, rh.n with
         | Tm_uvar _, Tm_uvar _ ->
-          flex_flex
+          begin
+          match lhs_args, rhs_args with
+          | [], [] when tp.relation=EQ ->
+            Flex_flex_pattern_eq
+          | _ -> Flex_flex
+          end
 
         | Tm_uvar _, _
         | _, Tm_uvar _ when (tp.relation=EQ || Options.eager_inference()) ->
-          flex_rigid_eq
+          Flex_rigid_eq
 
         | Tm_uvar _, _ ->
-          flex_rigid
+          Flex_rigid
 
         | _, Tm_uvar _ ->
-          rigid_flex
+          Rigid_flex
 
         | _, _ ->
-          rigid_rigid
+          Rigid_rigid
       end in
       rank, {tp with rank=Some rank} |> TProb
 
     | CProb cp ->
-      rigid_rigid, {cp with rank=Some rigid_rigid} |> CProb
+      Rigid_rigid, {cp with rank=Some Rigid_rigid} |> CProb
 
-let next_prob wl : option<prob>  //a problem with the lowest rank, or a problem whose rank <= flex_rigid_eq, if any
-                 * list<prob>    //all the other problems in wl
-                 * int           //the rank of the first problem, or the minimum rank in the wl
+let next_prob wl : option<(prob          //a problem with the lowest rank, or a problem whose rank <= flex_rigid_eq, if any
+                          * list<prob>    //all the other problems in wl
+                          * rank_t)>      //the rank of the first problem, or the minimum rank in the wl
                  =
-    let rec aux (min_rank, min, out) probs = match probs with
-        | [] -> min, out, min_rank
+    let rec aux (min_rank, min, out) probs =
+        match probs with
+        | [] ->
+          begin
+          match min, min_rank with
+          | Some p, Some r -> Some (p, out, r)
+          | _ -> None
+          end
         | hd::tl ->
           let rank, hd = rank wl.tcenv hd in
-          if rank <= flex_rigid_eq
+          if rank_leq rank Flex_rigid_eq
           then match min with
-            | None -> Some hd, out@tl, rank
-            | Some m -> Some hd, out@m::tl, rank
-          else if rank < min_rank
+            | None -> Some (hd, out@tl, rank)
+            | Some m -> Some (hd, out@m::tl, rank)
+          else if min_rank = None
+          || rank_leq rank (Option.get min_rank)
           then match min with
-                | None -> aux (rank, Some hd, out) tl
-                | Some m -> aux (rank, Some hd, m::out) tl
-          else aux (min_rank, min, hd::out) tl in
-
-   aux (flex_flex + 1, None, []) wl.attempting
+                | None -> aux (Some rank, Some hd, out) tl
+                | Some m -> aux (Some rank, Some hd, m::out) tl
+          else aux (min_rank, min, hd::out) tl
+    in
+    aux (None, None, []) wl.attempting
 
 let flex_prob_closing tcenv (bs:binders) (p:prob) =
     let flex_will_be_closed t =
@@ -1036,20 +1051,22 @@ let flex_prob_closing tcenv (bs:binders) (p:prob) =
         bs |> BU.for_some (fun (x, _) -> S.bv_eq x y))
     in
     let r, p = rank tcenv p in
-    if r = rigid_rigid
-    || r = flex_rigid_eq
-    then true
-    else match p with
-         | CProb _ ->
-           failwith "Impossible"
-         | TProb p ->
-           if r=flex_flex
-           then flex_will_be_closed p.lhs || flex_will_be_closed p.rhs
-           else if r=flex_rigid
-           then flex_will_be_closed p.lhs
-           else flex_will_be_closed p.rhs
-
-
+    match p with
+    | CProb _ ->
+      true
+    | TProb p ->
+      match r with
+      | Rigid_rigid
+      | Flex_rigid_eq
+      | Flex_flex_pattern_eq ->
+        true
+      | Flex_rigid ->
+        flex_will_be_closed p.lhs
+      | Rigid_flex ->
+        flex_will_be_closed p.rhs
+      | Flex_flex ->
+        flex_will_be_closed p.lhs
+        || flex_will_be_closed p.rhs
 
 (* ----------------------------------------------------- *)
 (* Solving universe equalities                           *)
@@ -1189,6 +1206,10 @@ let match_num_binders (bc1: (list<'a> * (list<'a> -> 'b)))
     in
     aux bs1 bs2
 
+let is_flex_pat = function
+    | _, _, [] -> true
+    | _ -> false
+
 (* <quasi_pattern>:
         Given a term (?u_(bs;t) e1..en)
         returns None in case the arity of the type t is less than n
@@ -1312,25 +1333,25 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
     if Env.debug env <| Options.Other "RelCheck"
     then BU.print1 "solve:\n\t%s\n" (wl_to_string probs);
     match next_prob probs with
-    | Some hd, tl, rank ->
+    | Some (hd, tl, rank) ->
       let probs = {probs with attempting=tl} in
       begin match hd with
       | CProb cp ->
             solve_c env (maybe_invert cp) probs
 
       | TProb tp ->
-            if BU.physical_equality tp.lhs tp.rhs then solve env (solve_prob hd None [] probs) else
-            if tp.relation = EQ
-            || rank=rigid_rigid
-            then solve_t' env tp probs
-            else if probs.defer_ok
-            then solve env (defer "deferring flex_rigid or flex_flex subtyping" hd probs)
-            else if rank=flex_flex
-            then solve_t' env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
-            else solve_rigid_flex_or_flex_rigid_subtyping rank env tp probs
+        if BU.physical_equality tp.lhs tp.rhs then solve env (solve_prob hd None [] probs) else
+        if rank=Rigid_rigid
+        || (tp.relation = EQ && rank <> Flex_flex)
+        then solve_t' env tp probs
+        else if probs.defer_ok
+        then solve env (defer "deferring flex_rigid or flex_flex subtyping" hd probs)
+        else if rank=Flex_flex
+        then solve_t' env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
+        else solve_rigid_flex_or_flex_rigid_subtyping rank env tp probs
       end
 
-    | None, _, _ ->
+    | None ->
          begin
          match probs.wl_deferred with
          | [] ->
@@ -1400,9 +1421,9 @@ and giveup_or_defer (env:Env.env) (orig:prob) (wl:worklist) (msg:string) : solut
 (* The case where u < t1, .... u < tn: we solve this by taking u=t1/\.../\tn                          *)
 (******************************************************************************************************)
 and solve_rigid_flex_or_flex_rigid_subtyping
-    (rank:int)
+    (rank:rank_t)
     (env:Env.env) (tp:tprob) (wl:worklist) : solution =
-  let flip = rank = flex_rigid in
+  let flip = rank = Flex_rigid in
   let this_flex, this_rigid = if flip then tp.lhs, tp.rhs else tp.rhs, tp.lhs in
   begin
   match (SS.compress this_rigid).n with
@@ -1748,57 +1769,61 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       else solve_t_flex_flex env (make_prob_eq orig) wl lhs rhs
 
     | EQ ->
-      match quasi_pattern env lhs, quasi_pattern env rhs with
-      | Some (binders_lhs, t_res_lhs), Some (binders_rhs, t_res_rhs) ->
-        let ({pos=range}, u_lhs, _) = lhs in
-        let (_, u_rhs, _) = rhs in
-        if UF.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
-        && binders_eq binders_lhs binders_rhs
-        then solve env (solve_prob orig None [] wl)
-        else (* Given a flex-flex instance:
-                (x1..xn ..X  |- ?u : ts  -> tres) [y1  ... ym ]
-             ~  (x1..xn ..X'| - ?v : ts' -> tres) [y1' ... ym']
+      if wl.defer_ok
+      && (not (is_flex_pat lhs)|| not (is_flex_pat rhs))
+      then giveup_or_defer env orig wl "flex-flex non-pattern"
+      else
+          match quasi_pattern env lhs, quasi_pattern env rhs with
+          | Some (binders_lhs, t_res_lhs), Some (binders_rhs, t_res_rhs) ->
+            let ({pos=range}, u_lhs, _) = lhs in
+            let (_, u_rhs, _) = rhs in
+            if UF.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
+            && binders_eq binders_lhs binders_rhs
+            then solve env (solve_prob orig None [] wl)
+            else (* Given a flex-flex instance:
+                    (x1..xn ..X  |- ?u : ts  -> tres) [y1  ... ym ]
+                 ~  (x1..xn ..X'| - ?v : ts' -> tres) [y1' ... ym']
 
-                let ctx_w = x1..xn in
-                let z1..zk = (..X..y1..ym intersect ...X'...y1'..ym') in
-                (ctx_w |- ?w : z1..zk -> tres) [z1..zk]
+                    let ctx_w = x1..xn in
+                    let z1..zk = (..X..y1..ym intersect ...X'...y1'..ym') in
+                    (ctx_w |- ?w : z1..zk -> tres) [z1..zk]
 
-                ?u := (fun y1..ym -> ?w z1...zk)
-                ?v := (fun y1'..ym' -> ?w z1...zk)
-             *)
-             let sub_prob, wl =
-                //is it strictly necessary to add this sub problem?
-                //we don't in other cases
-                  mk_t_problem wl [] orig t_res_lhs EQ t_res_rhs None "flex-flex typing"
-             in
-             let ctx_w, (ctx_l, ctx_r) =
-                maximal_prefix u_lhs.ctx_uvar_binders
-                               u_rhs.ctx_uvar_binders
-             in
-             let gamma_w = gamma_until u_lhs.ctx_uvar_gamma ctx_w in
-             let zs = intersect_binders (ctx_l @ binders_lhs) (ctx_r @ binders_rhs) in
-             let _, w, wl = new_uvar ("flex-flex quasi: lhs=" ^u_lhs.ctx_uvar_reason^ ", rhs=" ^u_rhs.ctx_uvar_reason)
-                                     wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs))
-                                     (u_lhs.ctx_uvar_should_check || u_rhs.ctx_uvar_should_check) in
-             let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) None w.pos in
-             let _ =
-                if Env.debug env <| Options.Other "RelCheck"
-                then BU.print3 "flex-flex quasi:\n\tlhs=%s\n\trhs=%s\n\tsol=%s"
-                        (flex_t_to_string lhs)
-                        (flex_t_to_string rhs)
-                        (flex_t_to_string (destruct_flex_t w))
-             in
-             let sol =
-                 let s1 = TERM(u_lhs, U.abs binders_lhs w_app (Some (U.residual_tot t_res_lhs))) in
-                 if Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
-                 then [s1]
-                 else let s2 = TERM(u_rhs, U.abs binders_rhs w_app (Some (U.residual_tot t_res_lhs))) in
-                      [s1;s2]
-             in
-             solve env (attempt [sub_prob] (solve_prob orig None sol wl))
+                    ?u := (fun y1..ym -> ?w z1...zk)
+                    ?v := (fun y1'..ym' -> ?w z1...zk)
+                 *)
+                 let sub_prob, wl =
+                    //is it strictly necessary to add this sub problem?
+                    //we don't in other cases
+                      mk_t_problem wl [] orig t_res_lhs EQ t_res_rhs None "flex-flex typing"
+                 in
+                 let ctx_w, (ctx_l, ctx_r) =
+                    maximal_prefix u_lhs.ctx_uvar_binders
+                                   u_rhs.ctx_uvar_binders
+                 in
+                 let gamma_w = gamma_until u_lhs.ctx_uvar_gamma ctx_w in
+                 let zs = intersect_binders (ctx_l @ binders_lhs) (ctx_r @ binders_rhs) in
+                 let _, w, wl = new_uvar ("flex-flex quasi: lhs=" ^u_lhs.ctx_uvar_reason^ ", rhs=" ^u_rhs.ctx_uvar_reason)
+                                         wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs))
+                                         (u_lhs.ctx_uvar_should_check || u_rhs.ctx_uvar_should_check) in
+                 let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) None w.pos in
+                 let _ =
+                    if Env.debug env <| Options.Other "RelCheck"
+                    then BU.print3 "flex-flex quasi:\n\tlhs=%s\n\trhs=%s\n\tsol=%s"
+                            (flex_t_to_string lhs)
+                            (flex_t_to_string rhs)
+                            (flex_t_to_string (destruct_flex_t w))
+                 in
+                 let sol =
+                     let s1 = TERM(u_lhs, U.abs binders_lhs w_app (Some (U.residual_tot t_res_lhs))) in
+                     if Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
+                     then [s1]
+                     else let s2 = TERM(u_rhs, U.abs binders_rhs w_app (Some (U.residual_tot t_res_lhs))) in
+                          [s1;s2]
+                 in
+                 solve env (attempt [sub_prob] (solve_prob orig None sol wl))
 
-      | _ ->
-        giveup_or_defer env orig wl "flex-flex: non-patterns"
+          | _ ->
+            giveup_or_defer env orig wl "flex-flex: non-patterns"
 
 and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     def_check_prob "solve_t'.1" (TProb problem);

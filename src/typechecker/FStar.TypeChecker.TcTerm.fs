@@ -2123,7 +2123,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
      )
    in
    let lbs, env = List.fold_left (fun (lbs, env) lb ->
-        let univ_vars, t, check_t, guard = TcUtil.extract_let_rec_annotation env lb in
+        let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
         let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes
         let e = U.unascribe lb.lbdef in
         let t =

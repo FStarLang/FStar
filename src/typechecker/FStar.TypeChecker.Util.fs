@@ -146,17 +146,10 @@ let check_uvars r t =
 (************************************************************************)
 (* Extracting annotations from a term *)
 (************************************************************************)
-//let force_sort' s = match !s.tk with
-//    | None -> failwith (BU.format2 "(%s) Impossible: Forced tk not present on %s" (Range.string_of_range s.pos) (Print.term_to_string s))
-//    | Some tk -> tk
-//
-//let force_sort s = mk (force_sort' s) None s.pos
-
 let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; lbdef=e} :
     list<univ_name>
    * typ
-   * bool
-   * guard_t //true indicates that the type needs to be checked; false indicates that it is already checked
+   * bool //true indicates that the type needs to be checked; false indicates that it is already checked
    =
   let rng = S.range_of_lbname lbname in
   let t = SS.compress t in
@@ -166,71 +159,46 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
      let univ_vars, e = SS.open_univ_vars univ_vars e in
      let env = Env.push_univ_vars env univ_vars in
      let r = Env.get_range env in
-     let mk_binder env a =
-        match (SS.compress a.sort).n with
-        | Tm_unknown ->
-          let k, _ = U.type_u() in
-          let t, _, guard = new_implicit_var "" e.pos env k in
-          {a with sort=t}, false, guard
-        | _ -> a, true, Rel.trivial_guard
-     in
-
-    let rec aux must_check_ty env e g : either<typ,comp> * bool * guard_t =
-      let e = SS.compress e in
-      match e.n with
-      | Tm_meta(e, _) -> aux must_check_ty env e g
-      | Tm_ascribed(e, t, _) -> fst t, true, g
-
-      | Tm_abs(bs, body, _) ->
-        let env, bs, must_check_ty, g =
-            bs |> List.fold_left
-            (fun (env, bs, must_check_ty, g) (a, imp) ->
-                  let tb, must_check_ty, g_a =
-                    if must_check_ty
-                    then a, true, Rel.trivial_guard
-                    else mk_binder env a in
-                  let b = (tb, imp) in
-                  let bs = bs@[b] in
-                  let env = Env.push_binders env [b] in
-                  env, bs, must_check_ty, Rel.conj_guard g_a g)
-           (env, [], must_check_ty, g) in
-
-        let res, must_check_ty, g = aux must_check_ty env body g in
-        let c = match res with
-            | Inl t ->
-              if Options.ml_ish()
-              then U.ml_comp t r
-              else S.mk_Total t //let rec without annotations default to Tot, except if --MLish
-            | Inr c -> c in
-        let t = U.arrow bs c in
-        if debug env Options.High
-        then BU.print3 "(%s) Using type %s .... must check = %s\n"
-                (Range.string_of_range r) (Print.term_to_string t) (BU.string_of_bool must_check_ty);
-        Inl t, must_check_ty, g
-
-      | _ ->
-        if must_check_ty
-        then Inl S.tun, true, g
-        else let t, _, g' = new_implicit_var "" r env U.ktype0 in
-             Inl t, false, Rel.conj_guard g g'
+     let rec aux e : either<typ,comp> =
+        let e = SS.compress e in
+        match e.n with
+        | Tm_meta(e, _) ->
+          aux e
+        | Tm_ascribed(e, t, _) ->
+          fst t
+        | Tm_abs(bs, body, _) ->
+          let res = aux body in
+          let c =
+              match res with
+              | Inl t ->
+                if Options.ml_ish()
+                then U.ml_comp t r
+                else S.mk_Total t //let rec without annotations default to Tot, except if --MLish
+              | Inr c -> c in
+          let t = S.mk (Tm_arrow(bs, c)) None c.pos in
+          if debug env Options.High
+          then BU.print2 "(%s) Using type %s\n"
+                    (Range.string_of_range r) (Print.term_to_string t);
+          Inl t
+        | _ ->
+          Inl S.tun
     in
-
-    let t, b, g = aux false env e Rel.trivial_guard in
     let t =
-       match t with
+       match aux e with
        | Inr c ->
-             if U.is_tot_or_gtot_comp c
-             then U.comp_result c
-             else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec,
-                               BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
-                                           (Print.comp_to_string c))
-                               rng
-       | Inl t -> t in
-    univ_vars, t, b, g
+         if U.is_tot_or_gtot_comp c
+         then U.comp_result c
+         else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                           BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+                                       (Print.comp_to_string c))
+                           rng
+       | Inl t -> t
+    in
+    univ_vars, t, true
 
   | _ ->
     let univ_vars, t = open_univ_vars univ_vars t in
-    univ_vars, t, false, Rel.trivial_guard
+    univ_vars, t, false
 
 (************************************************************************)
 (* Utilities on patterns  *)
