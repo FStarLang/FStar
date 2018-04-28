@@ -260,7 +260,10 @@ let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
     | []    -> ()
 
 private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
-private let __witness #a x #p _ = ()
+private let __witness #a x #p _ =
+  let x : squash (exists x. p x) = () in //an eta-expansion to tickle the SMT encoding
+  x
+
 
 let witness (t : term) : Tac unit =
     apply_raw (`__witness);
