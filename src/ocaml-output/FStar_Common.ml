@@ -12,17 +12,17 @@ let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
   fun s  ->
     if has_cygpath && (FStar_Util.starts_with s "/")
     then
-      let uu____15 = FStar_Util.smap_try_find cache s  in
-      match uu____15 with
+      let uu____17 = FStar_Util.smap_try_find cache s  in
+      match uu____17 with
       | FStar_Pervasives_Native.Some s1 -> s1
       | FStar_Pervasives_Native.None  ->
           let label = "try_convert_file_name_to_mixed"  in
           let out =
-            let uu____21 =
+            let uu____23 =
               FStar_Util.run_process label "cygpath" ["-m"; s]
                 FStar_Pervasives_Native.None
                in
-            FStar_All.pipe_right uu____21 FStar_Util.trim_string  in
+            FStar_All.pipe_right uu____23 FStar_Util.trim_string  in
           (FStar_Util.smap_add cache s out; out)
     else s
   
