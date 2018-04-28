@@ -453,10 +453,10 @@ val modifies_1_modifies
   (b: B.buffer a)
   (h1 h2: HS.mem)
 : Lemma
-  (requires ((not (B.g_is_null b)) /\ B.modifies_1 #(B.frameOf b) #(B.as_addr b) (B.abuffer_of_buffer b) h1 h2))
+  (requires (B.modifies_1 b h1 h2))
   (ensures (modifies (loc_buffer b) h1 h2))
   [SMTPatOr [
-    [SMTPat (B.modifies_1 #(B.frameOf b) #(B.as_addr b) (B.abuffer_of_buffer b) h1 h2)];
+    [SMTPat (B.modifies_1 b h1 h2)];
     [SMTPat (modifies (loc_buffer b) h1 h2)];
   ]]
 

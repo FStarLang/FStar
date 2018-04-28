@@ -977,14 +977,19 @@ let modifies_0_modifies h1 h2
   in
   Classical.forall_intro_3 g
 
-let modifies_1_modifies #a b h1 h2 =
+let modifies_1_modifies #t b h1 h2 =
+ if B.g_is_null b
+ then begin
+  B.modifies_1_null b h1 h2;
+  modifies_0_modifies h1 h2
+ end else begin
   let r = B.frameOf b in
   let a = B.as_addr b in
   let s = loc_buffer b in
   assert (regions_of_loc s == Set.singleton r);
   assert (addrs_of_loc s r `Set.equal` Set.singleton a);
-  modifies_preserves_mreferences_intro s h1 h2 (fun t pre p ->
-    B.modifies_1_mreference #r #a (B.abuffer_of_buffer b) h1 h2 #t #pre p
+  modifies_preserves_mreferences_intro s h1 h2 (fun t' pre p ->
+    B.modifies_1_mreference #t b h1 h2 #t' #pre p
   );
   let g
     (r' : HS.rid)
@@ -994,11 +999,12 @@ let modifies_1_modifies #a b h1 h2 =
     (requires ((r == r' /\ a == a') ==> B.abuffer_disjoint #r #a (B.abuffer_of_buffer b) b'))
     (ensures (B.abuffer_preserved b' h1 h2))
   = if r = r' && a = a'
-    then B.modifies_1_abuffer #r #a (B.abuffer_of_buffer b) h1 h2 b'
+    then B.modifies_1_abuffer #t b h1 h2 b'
     else B.same_mreference_abuffer_preserved #r' #a' b' h1 h2 (fun a_ pre_ r_ -> ())
   in
   modifies_preserves_buffers_intro s h1 h2 (fun r a b -> g r a b)
-
+ end
+ 
 let mreference_live_buffer_unused_in_disjoint #t1 #pre #t2 h b1 b2 =
   if B.g_is_null b2
   then ()

@@ -331,24 +331,30 @@ let modifies_0_abuffer
   (ensures (abuffer_preserved b h1 h2))
 = same_mreference_abuffer_preserved b h1 h2 (fun a' pre r' -> modifies_0_mreference h1 h2 r')
 
-val modifies_1 (#r: HS.rid) (#a: nat) (b: abuffer r a) (h1 h2: HS.mem) : GTot Type0
+val modifies_1 (#a: Type) (b: buffer a) (h1 h2: HS.mem) : GTot Type0
 
 val modifies_1_mreference
-  (#r : HS.rid) (#a: nat) (b: abuffer r a)
+  (#a: Type) (b: buffer a)
   (h1 h2: HS.mem)
   (#a': Type) (#pre: Preorder.preorder a') (r' : HS.mreference a' pre)
 : Lemma
-  (requires (modifies_1 b h1 h2 /\ (r <> HS.frameOf r' \/ a <> HS.as_addr r') /\ h1 `HS.contains` r'))
+  (requires (modifies_1 b h1 h2 /\ (frameOf b <> HS.frameOf r' \/ as_addr b <> HS.as_addr r') /\ h1 `HS.contains` r'))
   (ensures (h2 `HS.contains` r' /\ h1 `HS.sel` r' == h2 `HS.sel` r'))
 
 val modifies_1_abuffer
-  (#r: HS.rid) (#a : nat) (b : abuffer r a)
+  (#a: Type) (b : buffer a)
   (h1 h2: HS.mem)
-  (b' : abuffer r a)
+  (b' : abuffer (frameOf b) (as_addr b))
 : Lemma
-  (requires (modifies_1 b h1 h2 /\ abuffer_disjoint b b'))
-  (ensures (abuffer_preserved b' h1 h2))
+  (requires (modifies_1 b h1 h2 /\ (not (g_is_null b)) /\ abuffer_disjoint #(frameOf b) #(as_addr b) (abuffer_of_buffer b) b'))
+  (ensures (abuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2))
 
+val modifies_1_null
+  (#a: Type) (b: buffer a)
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (modifies_1 b h1 h2 /\ g_is_null b))
+  (ensures (modifies_0 h1 h2))
 
 (* Basic stateful operations *)
 
@@ -379,7 +385,7 @@ val upd
   (requires (fun h -> live h b /\ U32.v i < length b))
   (ensures (fun h _ h' ->
     (not (g_is_null b)) /\
-    modifies_1 #(frameOf b) #(as_addr b) (abuffer_of_buffer b) h h' /\
+    modifies_1 b h h' /\
     live h' b /\
     as_seq h' b == Seq.upd (as_seq h b) (U32.v i) v
   ))
@@ -417,7 +423,7 @@ val rfree
     (not (g_is_null b)) /\
     Map.domain h1.HS.h `Set.equal` Map.domain h0.HS.h /\ 
     h1.HS.tip == h0.HS.tip /\
-    modifies_1 #(frameOf b) #(as_addr b) (abuffer_of_buffer b) h0 h1
+    modifies_1 b h0 h1
   ))
 
 

@@ -334,22 +334,22 @@ let modifies_0 = modifies_0'
 let modifies_0_mreference #a #pre h1 h2 r = ()
 
 let modifies_1_preserves_mreferences
-  (#r: HS.rid) (#a: nat) (b: abuffer r a)
+  (#a: Type) (b: buffer a)
   (h1 h2: HS.mem)
 : GTot Type0
 = forall (a' : Type) (pre: Preorder.preorder a') (r' : HS.mreference  a' pre) .
-  ((r <> HS.frameOf r' \/ a <> HS.as_addr r') /\ h1 `HS.contains` r') ==>
+  ((frameOf b <> HS.frameOf r' \/ as_addr b <> HS.as_addr r') /\ h1 `HS.contains` r') ==>
   (h2 `HS.contains` r' /\ HS.sel h1 r' == HS.sel h2 r')
 
 let modifies_1_preserves_abuffers
-  (#r: HS.rid) (#a: nat) (b: abuffer r a)
+  (#a: Type) (b: buffer a)
   (h1 h2: HS.mem)
 : GTot Type0
-= forall (b' : abuffer r a) .
-  abuffer_disjoint b b' ==> abuffer_preserved b' h1 h2
+= forall (b' : abuffer (frameOf b) (as_addr b)) .
+  ((not (g_is_null b)) ==> abuffer_disjoint #(frameOf b) #(as_addr b) (abuffer_of_buffer b) b') ==> abuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2
 
 let modifies_1' 
-  (#r: HS.rid) (#a: nat) (b: abuffer r a)
+  (#a: Type) (b: buffer a)
   (h1 h2: HS.mem)
 : GTot Type0
 = modifies_1_preserves_mreferences b h1 h2 /\
@@ -357,9 +357,11 @@ let modifies_1'
 
 let modifies_1 = modifies_1'
 
-let modifies_1_mreference #r #a b h1 h2 #a' #pre r' = ()
+let modifies_1_mreference #a b h1 h2 #a' #pre r' = ()
 
-let modifies_1_abuffer #r #a b h1 h2 b' = ()
+let modifies_1_abuffer #a b h1 h2 b' = ()
+
+let modifies_1_null #a b h1 h2 = ()
 
 (* Basic stateful operations *)
 
