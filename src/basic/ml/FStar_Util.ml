@@ -40,12 +40,19 @@ type sigint_handler = Sys.signal_behavior
 let sigint_ignore: sigint_handler =
   Sys.Signal_ignore
 
+let sigint_delay = ref 0
+let sigint_pending = ref false
+
+let raise_sigint _ =
+  if !sigint_delay = 0 then raise SigInt
+  else sigint_pending := true
+
 let sigint_raise: sigint_handler =
   (* This function should not do anything complicated, lest it cause deadlocks.
    * Calling print_string, for example, can cause a deadlock (print_string →
    * caml_flush → process_pending_signals → caml_execute_signal → raise_sigint →
    * print_string → caml_io_mutex_lock ⇒ deadlock) *)
-  Sys.Signal_handle (fun _ -> raise SigInt)
+  Sys.Signal_handle raise_sigint
 
 let set_sigint_handler sigint_handler =
   cur_sigint_handler := sigint_handler;
@@ -84,10 +91,13 @@ let with_monitor _ f x =
   monitor_enter ();
   BatPervasives.finally monitor_exit f x
 
-let atomically =
-  (* let mutex = Mutex.create () in *)
-  fun f -> f ()
-(*fun f -> Mutex.lock mutex; let r = f () in Mutex.unlock mutex; r*)
+let atomically f =
+  incr sigint_delay;
+  BatPervasives.finally (fun () ->
+      decr sigint_delay;
+      if !sigint_pending && !sigint_delay = 0 then
+        raise SigInt)
+    f ()
 
 let spawn f =
   let _ = Thread.create f () in ()
