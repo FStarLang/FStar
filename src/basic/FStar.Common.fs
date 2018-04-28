@@ -57,9 +57,9 @@ let snapshot (push: 'a -> 'b) (stackref: ref<list<'c>>) (arg: 'a) : (int * 'b) =
 
 let rollback (pop: unit -> 'a) (stackref: ref<list<'c>>) (depth: option<int>) =
   let rec aux n =
-    if n <= 0 then (failwith "Too many pops" <: 'a)
+    if n <= 0 then failwith "Too many pops"
     else if n = 1 then pop ()
-    else (pop (); aux (n - 1)) in
+    else (ignore (pop ()); aux (n - 1)) in
   let curdepth = List.length !stackref in
   let n = match depth with Some d -> curdepth - d | None -> 1 in
   BU.atomically (fun () -> aux n)
