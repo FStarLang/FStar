@@ -703,22 +703,25 @@ let solve_prob (prob : prob) (logical_guard : option<term>) (uvis : list<uvi>) (
 (* ------------------------------------------------ *)
 (* <variable ops> common ops on variables           *)
 (* ------------------------------------------------ *)
-let occurs_check (uk:ctx_uvar) t =
+let occurs (uk:ctx_uvar) t =
     let uvars =
         Free.uvars t
         |> BU.set_elements
     in
-    let occurs_ok =
-        not (uvars
-             |> BU.for_some (fun uv ->
-                UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head))
+    let occurs =
+        (uvars
+        |> BU.for_some (fun uv ->
+           UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head))
     in
+    uvars, occurs
+let occurs_check (uk:ctx_uvar) t =
+    let uvars, occurs = occurs uk t in
     let msg =
-        if occurs_ok then None
+        if not occurs then None
         else Some (BU.format2 "occurs-check failed (%s occurs in %s)"
                         (Print.uvar_to_string uk.ctx_uvar_head)
                         (Print.term_to_string t)) in
-    uvars, occurs_ok, msg
+    uvars, not occurs, msg
 
 let rec maximal_prefix (bs:binders) (bs':binders) : binders * (binders * binders) =
   match bs, bs' with
@@ -1440,17 +1443,20 @@ and solve_rigid_flex_or_flex_rigid_subtyping
   let this_flex, this_rigid = if flip then tp.lhs, tp.rhs else tp.rhs, tp.lhs in
   begin
   match (SS.compress this_rigid).n with
-  | Tm_arrow _ ->
-    let flex = destruct_flex_t this_flex in
-    begin
-    match quasi_pattern env flex with
-    | None -> giveup env "flex-arrow subtyping, not a quasi pattern" (TProb tp)
-    | Some (flex_bs, flex_t) ->
-      if Env.debug env <| Options.Other "RelCheck"
-      then BU.print1 "Trying to solve by imitating arrow:%s\n" (string_of_int tp.pid);
-      imitate_arrow (TProb tp) env wl flex flex_bs flex_t tp.relation this_rigid
-    end
-
+  | Tm_arrow (_bs, comp) ->
+    //BEWARE: special treatment of Tot and GTot here
+    if U.is_tot_or_gtot_comp comp
+    then let flex = destruct_flex_t this_flex in
+         begin
+         match quasi_pattern env flex with
+         | None -> giveup env "flex-arrow subtyping, not a quasi pattern" (TProb tp)
+         | Some (flex_bs, flex_t) ->
+           if Env.debug env <| Options.Other "RelCheck"
+           then BU.print1 "Trying to solve by imitating arrow:%s\n" (string_of_int tp.pid);
+           imitate_arrow (TProb tp) env wl flex flex_bs flex_t tp.relation this_rigid
+         end
+    else //imitating subtyping with WPs is hopeless
+         solve env (attempt [TProb ({tp with relation=EQ})] wl)
   | _ ->
     if Env.debug env <| Options.Other "RelCheck"
     then BU.print1 "Trying to solve by meeting refinements:%s\n" (string_of_int tp.pid);
@@ -1494,7 +1500,20 @@ and solve_rigid_flex_or_flex_rigid_subtyping
           meet_or_join (if flip then U.mk_conj else U.mk_disj) bounds_typs env wl
       in
       let eq_prob, wl =
-            new_problem wl env bound EQ this_flex None tp.loc
+          let _, flex_u, _ = destruct_flex_t this_flex in
+          let bound =
+            //We get constraints of the form (x:?u{phi} <: ?u)
+            //This cannot be solved with an equality constraints
+            //So, turn the bound on the LHS to just ?u
+            match (SS.compress bound).n with
+            | Tm_refine (x, phi)
+              when tp.relation=SUB
+                && snd (occurs flex_u x.sort) ->
+              x.sort
+            | _ ->
+              bound
+          in
+          new_problem wl env bound EQ this_flex None tp.loc
                 (if flip then "joining refinements" else "meeting refinements")
       in
       let _ = if Env.debug env <| Options.Other "RelCheck"
@@ -2128,49 +2147,54 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | _, Tm_app({n=Tm_uvar _}, _) when (problem.relation = EQ) ->
         solve_t env (invert problem) wl
 
-      (* flex-rigid: ?u _ <: Type _ *)
       (* flex-rigid: ?u _ <: t1 -> t2 *)
-      | Tm_uvar _, Tm_type _
-      | Tm_app({n=Tm_uvar _}, _), Tm_type _
       | Tm_uvar _, Tm_arrow _
       | Tm_app({n=Tm_uvar _}, _), Tm_arrow _ ->
+        //FIXME! This is weird; it should be handled by imitate_arrow
         //this case is so common, that even though we could delay, it is almost always ok to solve it immediately as an equality
         //besides, in the case of arrows, if we delay it, the arity of various terms built by the unifier goes awry
         //so, don't delay!
         solve_t' env ({problem with relation=EQ}) wl
 
-      (* flex-rigid: subtyping *)
-      | Tm_uvar _, _
-      | Tm_app({n=Tm_uvar _}, _), _ -> (* equate with the base type of the refinement on the RHS, and add a logical guard for the refinement formula *)
-        if wl.defer_ok
-        then solve env (defer "flex-rigid subtyping deferred" orig wl)
-        else
-            let new_rel = problem.relation in
-            if not <| is_top_level_prob orig //If it's not top-level and t2 is refined, then we should not try to prove that t2's refinement is saturated
-            then solve_t_flex_rigid_eq env (TProb <| {problem with relation=new_rel}) wl (destruct_flex_t t1) t2
-            else let t_base, ref_opt = base_and_refinement env t2 in
-                 begin
-                 match ref_opt with
-                 | None -> //no useful refinement on the RHS, so just equate and solve
-                    solve_t_flex_rigid_eq env (TProb <| {problem with relation=new_rel}) wl (destruct_flex_t t1) t_base
-
-                 | Some (y, phi) ->
-                    let y' = {y with sort = t1} in
-                    let impl = guard_on_element wl problem y' phi in
-                    let base_prob, wl =
-                        mk_t_problem wl [] orig t1 new_rel y.sort problem.element "flex-rigid: base type" in
-                    let guard = U.mk_conj (p_guard base_prob) impl in //FIXME! does y' escape?
-                    let wl = solve_prob orig (Some guard) [] wl in
-                    solve env (attempt [base_prob] wl)
-                 end
-
-      (* rigid-flex: subtyping *)
       | _, Tm_uvar _
-      | _, Tm_app({n=Tm_uvar _}, _) -> (* widen immediately, by forgetting the top-level refinement and equating *)
-        if wl.defer_ok
-        then solve env (defer "rigid-flex subtyping deferred" orig wl)
-        else let t_base, _ = base_and_refinement env t1 in
-             solve_t env ({problem with lhs=t_base; relation=EQ}) wl
+      | _, Tm_app({n=Tm_uvar _}, _)
+      | Tm_uvar _, _
+      | Tm_app({n=Tm_uvar _}, _), _ ->
+        //flex-rigid subtyping is handled in the top-loop
+        solve env (attempt [TProb problem] wl)
+
+      // (* flex-rigid: subtyping *)
+      // | Tm_uvar _, _
+      // | Tm_app({n=Tm_uvar _}, _), _ -> (* equate with the base type of the refinement on the RHS, and add a logical guard for the refinement formula *)
+      //   if wl.defer_ok
+      //   then solve env (defer "flex-rigid subtyping deferred" orig wl)
+      //   else
+      //       let new_rel = problem.relation in
+      //       if not <| is_top_level_prob orig //If it's not top-level and t2 is refined, then we should not try to prove that t2's refinement is saturated
+      //       then solve_t_flex_rigid_eq env (TProb <| {problem with relation=new_rel}) wl (destruct_flex_t t1) t2
+      //       else let t_base, ref_opt = base_and_refinement env t2 in
+      //            begin
+      //            match ref_opt with
+      //            | None -> //no useful refinement on the RHS, so just equate and solve
+      //               solve_t_flex_rigid_eq env (TProb <| {problem with relation=new_rel}) wl (destruct_flex_t t1) t_base
+
+      //            | Some (y, phi) ->
+      //               let y' = {y with sort = t1} in
+      //               let impl = guard_on_element wl problem y' phi in
+      //               let base_prob, wl =
+      //                   mk_t_problem wl [] orig t1 new_rel y.sort problem.element "flex-rigid: base type" in
+      //               let guard = U.mk_conj (p_guard base_prob) impl in //FIXME! does y' escape?
+      //               let wl = solve_prob orig (Some guard) [] wl in
+      //               solve env (attempt [base_prob] wl)
+      //            end
+
+      // (* rigid-flex: subtyping *)
+      // | _, Tm_uvar _
+      // | _, Tm_app({n=Tm_uvar _}, _) -> (* widen immediately, by forgetting the top-level refinement and equating *)
+      //   if wl.defer_ok
+      //   then solve env (defer "rigid-flex subtyping deferred" orig wl)
+      //   else let t_base, _ = base_and_refinement env t1 in
+      //        solve_t env ({problem with lhs=t_base; relation=EQ}) wl
 
       | Tm_refine _, _ ->
         let t2 = force_refinement <| base_and_refinement env t2 in
@@ -2824,7 +2848,7 @@ let force_trivial_guard env g =
            raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                         BU.format4 "Failed to resolve implicit argument %s of type %s introduced for %s (should check=%s)"
                                     (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                                    (Print.term_to_string ctx_u.ctx_uvar_typ)
+                                    (N.term_to_string env ctx_u.ctx_uvar_typ)
                                     reason
                                     (BU.string_of_bool should_check)) r
 
