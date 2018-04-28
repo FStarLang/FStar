@@ -282,8 +282,12 @@ let rollback solver msg depth = BU.atomically (fun () ->
     let () = rollback_query_indices query_indices_depth in
     let tcenv = rollback_stack stack_depth in
     let dsenv = DsEnv.rollback dsenv_depth in
-    // CPC FIXME if not (BU.physical_equality tcenv.dsenv dsenv) then failwith "Inconsistent stack state";
-    { tcenv with dsenv = dsenv })
+    // Because of the way ``snapshot`` is implemented, the `tcenv` and `dsenv`
+    // that we rollback to should be consistent:
+    FStar.Common.runtime_assert
+      (BU.physical_equality tcenv.dsenv dsenv)
+      "Inconsistent stack state";
+    tcenv)
 
 let push env msg = snd (snapshot env msg)
 let pop env msg = rollback env.solver msg None

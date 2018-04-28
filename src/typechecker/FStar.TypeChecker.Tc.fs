@@ -1010,7 +1010,7 @@ let tc_inductive env ses quals lids =
               else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env
             in
             sig_bndle, ses@data_ops_ses in  //append hasEq axiom lids and data projectors and discriminators lids
-    ignore (Env.pop env "tc_inductive");
+    ignore (Env.pop env "tc_inductive"); // OK to ignore: caller will reuse original env
     res
 
 //when we process a reset-options pragma, we need to restart z3 etc.
