@@ -3,7 +3,6 @@ module FStar.Pointer.Base
 module DM = FStar.DependentMap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-open FStar.HyperStack.ST // for := , !
 
 (*** Definitions *)
 
@@ -1923,7 +1922,7 @@ let equal
   HS.aref_equal (Pointer?.contents p1) (Pointer?.contents p2) &&
   path_equal (Pointer?.p p1) (Pointer?.p p2)
 
-let as_addr (#t: typ) (p: pointer t): GTot nat =
+let as_addr (#t: typ) (p: pointer t) =
   HS.aref_as_addr (Pointer?.contents p)
 
 let _field
@@ -4613,7 +4612,7 @@ let is_null
   | NullPtr -> true
   | _ -> false
 
-#set-options "--z3rlimit 100"
+#reset-options "--z3rlimit 256 --max_fuel 4 --max_ifuel 4"
 let owrite
   (#a: typ)
   (b: pointer a)
@@ -4668,8 +4667,23 @@ let owrite
     HS.lemma_sel_same_addr h1 r grefp;
     path_sel_upd_other' (Pointer?.p b) c0 z (Pointer?.p p)
   in
-  Classical.forall_intro_2 (fun t -> Classical.move_requires (f t))
-#set-options "--z3rlimit 40"
+  let f'
+    (t: typ)
+    (p: pointer t)
+  : Lemma
+    ( (
+      frameOf p == frameOf b /\
+      as_addr p == as_addr b /\
+      live h0 p /\
+      disjoint b p
+    ) ==> (
+      equal_values h0 p h1 p
+    ))
+  = Classical.move_requires (f t) p
+  in
+  Classical.forall_intro_2 f'
+
+#set-options "--z3rlimit 40 --max_fuel 1 --max_ifuel 1"
 
 let write #a b z =
   owrite b (ovalue_of_value a z)

@@ -213,7 +213,7 @@ abstract let as_ref #a #rel (x:mreference a rel)
 
 //And make this one abstract
 let as_addr #a #rel (x:mreference a rel)
-  : GTot nat
+  : GTot (x: nat { x > 0 } )
   = Heap.addr_of (as_ref x)
 
 let lemma_as_ref_inj (#a:Type) (#rel:preorder a) (r:mreference a rel)
@@ -572,7 +572,7 @@ abstract let frameOf_aref_of
 
 abstract let aref_as_addr
   (a: aref)
-: GTot nat
+: GTot (x: nat { x > 0 } )
 = Heap.addr_of_aref a.aref_aref
 
 abstract let aref_as_addr_aref_of
