@@ -565,10 +565,12 @@ let base_and_refinement_maybe_delta should_delta env t1 =
         | Tm_refine(x, phi) ->
             if norm
             then (x.sort, Some(x, phi))
-            else begin match norm_refinement env t1 with
-                | {n=Tm_refine(x, phi)} -> (x.sort, Some(x, phi))
-                | tt -> failwith (BU.format2 "impossible: Got %s ... %s\n" (Print.term_to_string tt) (Print.tag_of_term tt))
-            end
+            else (match norm_refinement env t1 with
+                 | {n=Tm_refine(x, phi)} -> (x.sort, Some(x, phi))
+                 | tt -> failwith (BU.format2 "impossible: Got %s ... %s\n"
+                                               (Print.term_to_string tt)
+                                               (Print.tag_of_term tt))
+                 )
 
         | Tm_lazy i -> aux norm (U.unfold_lazy i)
 
@@ -1300,28 +1302,29 @@ let meet_or_join op ts env wl =
               | Some (t1, t2) -> SS.compress t1, SS.compress t2
               | None -> SS.compress t1, SS.compress t2
           in
-          begin
-          match t1, t2 with
-          | {n=Tm_refine(x, phi1)}, {n=Tm_refine(y, phi2)} ->
-            let p, wl = eq_prob x.sort y.sort wl in
-            let x = freshen_bv x in
-            let subst = [DB(0, x)] in
-            let phi1 = SS.subst subst phi1 in
-            let phi2 = SS.subst subst phi2 in
-            (U.refine x (op phi1 phi2), [p], wl)
+          let t1, p1_opt = base_and_refinement_maybe_delta true env t1 in
+          let t2, p2_opt = base_and_refinement_maybe_delta true env t2 in
+          let p, wl = eq_prob t1 t2 wl in
+          let t =
+              match p1_opt, p2_opt with
+              | Some (x, phi1), Some(y, phi2) ->
+                let x = freshen_bv x in
+                let subst = [DB(0, x)] in
+                let phi1 = SS.subst subst phi1 in
+                let phi2 = SS.subst subst phi2 in
+                U.refine x (op phi1 phi2)
 
-          | t, {n=Tm_refine(x, phi)}
-          | {n=Tm_refine(x, phi)}, t ->
-            let p, wl = eq_prob x.sort t wl in
-            let x = freshen_bv x in
-            let subst = [DB(0, x)] in
-            let phi = SS.subst subst phi in
-            (U.refine x (op U.t_true phi), [p], wl)
+              | None, Some (x, phi)
+              | Some(x, phi), None ->
+                let x = freshen_bv x in
+                let subst = [DB(0, x)] in
+                let phi = SS.subst subst phi in
+                U.refine x (op U.t_true phi)
 
-          | _ ->
-            let p, wl = eq_prob t1 t2 wl in
-            (t1, [p], wl)
-          end
+              | _ ->
+                t1
+          in
+          (t1, [p], wl)
     in
     let rec aux (out, probs, wl) ts =
         match ts with
@@ -1497,15 +1500,19 @@ and solve_rigid_flex_or_flex_rigid_subtyping
       let _ = if Env.debug env <| Options.Other "RelCheck"
               then let wl' = {wl with attempting=TProb eq_prob::sub_probs} in
                    BU.print1 "After meet/join refinements: %s\n" (wl_to_string wl') in
+
+      let tx = UF.new_transaction () in
       begin
       match solve_t env eq_prob ({wl with attempting=sub_probs}) with
       | Success _ ->
          let wl = {wl with attempting=rest} in
          let wl = solve_prob' false (TProb tp) None [] wl in
          let _ = List.fold_left (fun wl p -> solve_prob' true p None [] wl) wl bounds_probs in
+         UF.commit tx;
          solve env wl
       | Failed (p, msg) ->
-         giveup env ("failed to solve sub-problems: " ^msg) (TProb tp)
+         UF.rollback tx;
+         giveup env ("failed to solve sub-problems: " ^msg) p
       end
 
     | _ when flip -> failwith (BU.format1 "Impossible: Not a flex-rigid: %s" (prob_to_string env (TProb tp)))
