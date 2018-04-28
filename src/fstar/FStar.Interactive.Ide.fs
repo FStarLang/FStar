@@ -41,22 +41,34 @@ module CTable = FStar.Interactive.CompletionTable
 type repl_depth_t = TcEnv.tcenv_depth_t * int
 
 (** Checkpoint the current (typechecking and desugaring) environment **)
-let snapshot env msg : repl_depth_t * env_t =
+let snapshot_env env msg : repl_depth_t * env_t =
   let ctx_depth, env = TypeChecker.Tc.snapshot_context env msg in
   let opt_depth, () = Options.snapshot () in
   (ctx_depth, opt_depth), env
 
-(** Revert to the last checkpoint.
+(** Revert to a previous checkpoint.
 
-Usage note: [pop] alters the value returned by [push], but not the value that
-[push] operated on.  That is, a proper push/pop pair looks like this:
+Usage note: A proper push/pop pair looks like this:
 
-  let noop = // CPC FIXME push should have returned the fresh environment, not the old one
-    let env_snapshot = push env in
-    // [Do stuff with env]
-    pop env_snapshot;
-    env_snapshot // Discard env **)
-let rollback solver msg (ctx_depth, opt_depth) =
+  let noop =
+    let env', depth = snapshot_env env in
+    // [Do stuff with env']
+    let env'' = rollback_env env'.solver depth in
+    env''
+
+In most cases, the invariant should hold that ``env'' === env`` (look for
+assertions of the form ``physical_equality _ _`` in the sources).
+
+You may be wondering why we need ``snapshot`` and ``rollback``.  Aren't ``push``
+and ``pop`` sufficient?  They are not.  The issue is that the typechecker's code
+can encounter (fatal) errors at essentially any point, and was not written to
+clean up after itself in these cases.  Fatal errors are handled by raising an
+exception, skipping all code that would ``pop`` previously pushed state.
+
+That's why we need ``rollback``: all that rollback does is call ``pop``
+sufficiently many times to get back into the state we were before the
+corresponding ``pop``. **)
+let rollback_env solver msg (ctx_depth, opt_depth) =
   let env = TypeChecker.Tc.rollback_context solver msg (Some ctx_depth) in
   Options.rollback (Some opt_depth);
   env
@@ -141,6 +153,7 @@ type repl_task =
   | LDSingle of timed_fname (* interface or implementation *)
   | LDInterfaceOfCurrentFile of timed_fname (* interface *)
   | PushFragment of input_frag (* code fragment *)
+  | Noop (* Used by compute *)
 
 type env_t = TcEnv.env
 
@@ -156,19 +169,23 @@ and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
 let repl_current_qid : ref<option<string>> = Util.mk_ref None // For messages
 let repl_stack: ref<repl_stack_t> = Util.mk_ref []
 
-let pop_repl st =
+let pop_repl msg st =
   match !repl_stack with
   | [] -> failwith "Too many pops"
-  | (depth, (_, st')) :: stack ->
-    let env = rollback st.repl_env.solver "REPL pop_repl" depth in
-    repl_stack := stack;
-    // CPC FIXME if not (Util.physical_equality env st'.repl_env) then failwith "Inconsistent stack state";
+  | (depth, (_, st')) :: stack_tl ->
+    let env = rollback_env st.repl_env.solver msg depth in
+    repl_stack := stack_tl;
+    // Because of the way ``snapshot`` is implemented, the `st'` and `env`
+    // that we rollback to should be consistent:
+    FStar.Common.runtime_assert
+      (Util.physical_equality env st'.repl_env)
+      "Inconsistent stack state";
     st'
 
-let push_repl push_kind task st =
-  let depth, env = snapshot (set_check_kind st.repl_env push_kind) "REPL push_repl" in
+let push_repl msg push_kind task st =
+  let depth, env = snapshot_env st.repl_env msg in
   repl_stack := (depth, (task, st)) :: !repl_stack;
-  env
+  { st with repl_env = set_check_kind env push_kind } // repl_env is the only mutable part of st
 
 (** Check whether users can issue further ``pop`` commands. **)
 let nothing_left_to_pop st =
@@ -275,6 +292,7 @@ let string_of_repl_task = function
     Util.format1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
   | PushFragment frag ->
     Util.format1 "PushFragment { code = %s }" frag.frag_text
+  | Noop -> "Noop {}"
 
 (** Like ``tc_one_file``, but only return the new environment **)
 let tc_one env intf_opt modf =
@@ -295,6 +313,8 @@ let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t *
     curmod, Universal.load_interface_decls env intf.tf_fname
   | PushFragment frag ->
     tc_one_fragment curmod env frag
+  | Noop ->
+    curmod, env
 
 (** Build a list of dependency loading tasks from a list of dependencies **)
 let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =
@@ -356,15 +376,15 @@ let update_task_timestamps = function
     LDSingle (tf_of_fname intf_or_impl.tf_fname)
   | LDInterfaceOfCurrentFile intf ->
     LDInterfaceOfCurrentFile (tf_of_fname intf.tf_fname)
-  | PushFragment frag -> PushFragment frag
+  | other -> other
 
 (** Push, run `task`, and pop if it fails.
 
 If `must_rollback` is set, always pop.  Returns a pair: a boolean indicating
 success, and a new REPL state. **)
 let run_repl_transaction st push_kind must_rollback task =
-  let env = push_repl push_kind task st in
-  let env, finish_name_tracking = track_name_changes env in // begin name tracking…
+  let st = push_repl "run_repl_transaction" push_kind task st in
+  let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking…
 
   let check_success () =
     get_err_count () = 0 && not must_rollback in
@@ -385,13 +405,13 @@ let run_repl_transaction st push_kind must_rollback task =
     | Some (curmod, env) when check_success () -> curmod, env, true
     | _ -> st.repl_curmod, env, false in
 
-  let env', name_events = finish_name_tracking env in // …end name tracking
+  let env, name_events = finish_name_tracking env in // …end name tracking
   let st =
-    { st with repl_env = env'; repl_curmod = curmod } in // FIXME CPC env'
-  let st =
-    if success
-    then commit_name_tracking st name_events
-    else pop_repl st in
+    if success then
+      let st = { st with repl_env = env; repl_curmod = curmod } in
+      commit_name_tracking st name_events
+    else
+      pop_repl "run_repl_transaction" st in
 
   (success, st)
 
@@ -423,7 +443,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>)
     | (_id, (task, _st')) :: entries ->
       assert (task = fst (snd (List.hd !repl_stack)));
       debug "Reverting" task;
-      revert_many (pop_repl st) entries in
+      revert_many (pop_repl "run_repl_ls_transactions" st) entries in
 
   let rec aux (st: repl_state)
               (tasks: list<repl_task>)
@@ -869,7 +889,7 @@ let json_of_repl_state st =
     | LDInterleaved (intf, impl) -> [intf.tf_fname; impl.tf_fname]
     | LDSingle intf_or_impl -> [intf_or_impl.tf_fname]
     | LDInterfaceOfCurrentFile intf -> [intf.tf_fname]
-    | PushFragment _ -> [] in
+    | _ -> [] in
 
   JsonAssoc
     [("loaded-dependencies",
@@ -938,7 +958,7 @@ let run_pop st =
   if nothing_left_to_pop st then
     ((QueryNOK, JsonStr "Too many pops"), Inl st)
   else
-    let st' = pop_repl st in
+    let st' = pop_repl "pop_query" st in
     ((QueryOK, JsonNull), Inl st')
 
 let write_progress stage contents_alist =
@@ -951,7 +971,7 @@ let write_repl_ld_task_progress task =
   | LDInterleaved (_, tf) | LDSingle tf | LDInterfaceOfCurrentFile tf ->
     let modname = Parser.Dep.module_name_of_file tf.tf_fname in
     write_progress (Some "loading-dependency") [("modname", JsonStr modname)]
-  | PushFragment frag -> ()
+  | _ -> ()
 
 (** Compute and load all dependencies of `filename`.
 
@@ -1194,14 +1214,14 @@ let run_autocomplete st search_term context =
 //   |> Util.concat_l "\n"
 
 let run_and_rewind st sigint_default task =
-  let depth, env' = snapshot st.repl_env "REPL run_and_rewind" in
+  let st = push_repl "run_and_rewind" FullCheck Noop st in
   let results =
     try Util.with_sigint_handler Util.sigint_raise (fun _ -> Inl <| task st)
     with | Util.SigInt -> Inl sigint_default
          | e -> Inr e in
-  let _env'' = rollback env'.solver "REPL run_and_rewind" depth in // CPC FIXME no env''?
+  let st = pop_repl "run_and_rewind" st in
   match results with
-  | Inl results -> (results, Inl ({ st with repl_env = env' }))
+  | Inl results -> (results, Inl st)
   | Inr e -> raise e // CPC fixme add a test with two computations
 
 let run_with_parsed_and_tc_term st term line column continuation =
