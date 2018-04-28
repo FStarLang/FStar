@@ -389,18 +389,9 @@ let run_repl_transaction st push_kind must_rollback task =
   let check_success () =
     get_err_count () = 0 && not must_rollback in
 
-  let sigint_handler =
-    // Ideally we'd want everything to be interruptible, but in practice the
-    // code in Typechecker.Tc does not ensure that each ‘push_context’ in
-    // ‘finish_partial_modul’ is always followed by a corresponding
-    // ‘pop_context’ (that's only true if no exceptions occur).
-    match task with
-    | PushFragment _ -> Util.sigint_raise
-    | _ -> Util.sigint_ignore in
-
   // Run the task (and capture errors)
   let curmod, env, success =
-    match with_captured_errors env sigint_handler
+    match with_captured_errors env Util.sigint_raise
               (fun env -> Some <| run_repl_task st.repl_curmod env task) with
     | Some (curmod, env) when check_success () -> curmod, env, true
     | _ -> st.repl_curmod, env, false in
