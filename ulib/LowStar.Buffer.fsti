@@ -25,7 +25,13 @@ val live (#a: Type) (h: HS.mem) (b: buffer a) : GTot Type0
 
 val live_null (a: Type) (h: HS.mem) : Lemma
   (live h (null #a))
-  [SMTPat (live h (null #a))]
+
+let live_is_null (#a: Type) (h: HS.mem) (b: buffer a) : Lemma
+  (requires (g_is_null b == true))
+  (ensures (live h b))
+  [SMTPat (live h b)]
+= null_unique b;
+  live_null a h
 
 val live_not_unused_in (#a: Type) (h: HS.mem) (b: buffer a) : Lemma
   (requires (live h b /\ b `unused_in` h))
@@ -56,10 +62,20 @@ let length (#a: Type) (b: buffer a) : GTot nat = U32.v (len b)
 
 val len_null (a: Type) : Lemma
   (len (null #a) == 0ul)
-  [SMTPatOr [
-    [SMTPat (len (null #a))];
-    [SMTPat (length (null #a))];
-  ]]
+
+let length_null_1 (#a: Type) (b: buffer a) : Lemma
+  (requires (length b <> 0))
+  (ensures (g_is_null b == false))
+  [SMTPat (length b)]
+= len_null a;
+  null_unique b
+
+let length_null_2 (#a: Type) (b: buffer a) : Lemma
+  (requires (g_is_null b == true))
+  (ensures (length b == 0))
+  [SMTPat (g_is_null b)]
+= len_null a;
+  null_unique b
 
 val as_seq (#a: Type) (h: HS.mem) (b: buffer a) : GTot (Seq.seq a)
 
@@ -180,6 +196,23 @@ val gsub_disjoint (#a: Type) (b: buffer a) (i1 len1 i2 len2: U32.t) : Lemma
   ))
   (ensures (disjoint (gsub b i1 len1) (gsub b i2 len2)))
   [SMTPat (disjoint (gsub b i1 len1) (gsub b i2 len2))]
+
+val pointer_distinct_sel_disjoint
+  (#a: Type)
+  (b1: buffer a)
+  (b2: buffer a)
+  (h: HS.mem)
+: Lemma
+  (requires (
+    live h b1 /\
+    live h b2 /\
+    length b1 == 1 /\
+    length b2 == 1 /\
+    Seq.index (as_seq h b1) 0 =!= Seq.index (as_seq h b2) 0
+  ))
+  (ensures (
+    disjoint b1 b2
+  ))
 
 
 (* Untyped view of buffers, used only to implement the generic modifies clause. DO NOT USE in client code. *)
@@ -348,7 +381,7 @@ val upd
   (ensures (fun h _ h' ->
     (not (g_is_null b)) /\
     modifies_1 #(frameOf b) #(as_addr b) (abuffer_of_buffer b) h h' /\
-    live h b /\
+    live h' b /\
     as_seq h' b == Seq.upd (as_seq h b) (U32.v i) v
   ))
 
