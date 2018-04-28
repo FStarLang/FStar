@@ -1020,8 +1020,17 @@ let z3_reset_options (en:env) :env =
   env
 
 
-let get_fail_se (se:sigelt) : option<list<int>> =
-    List.tryPick (ToSyntax.get_fail_attr true) se.sigattrs
+let get_fail_se (se:sigelt) : option<(list<int> * bool)> =
+    let comb f1 f2 =
+        match f1, f2 with
+        | Some (e1, l1), Some (e2, l2) ->
+            Some (e1@e2, l1 || l2)
+        | Some (e, l), None
+        | None, Some (e, l) ->
+            Some (e, l)
+        | _ -> None
+    in
+    List.fold_right (fun at acc -> comb (ToSyntax.get_fail_attr true at) acc) se.sigattrs None
 
 let list_of_option = function
     | None -> []
@@ -1076,11 +1085,11 @@ let rec tc_decl env se: list<sigelt> * list<sigelt> =
   then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
   TcUtil.check_sigelt_quals env se;
   match get_fail_se se with
-  | Some _ when not (Env.should_verify env) ->
-    (* If we're --laxing, then just ignore the definition *)
+  | Some (_, false) when not (Env.should_verify env) ->
+    (* If we're --laxing, and we didn't find fail_lax, then just ignore the definition *)
     [], []
 
-  | Some errnos ->
+  | Some (errnos, _) ->
     if Env.debug env Options.Low then
         BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
     let errs = Errors.catch_errors (fun () -> tc_decl' env se) in
