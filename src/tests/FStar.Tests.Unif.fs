@@ -54,7 +54,7 @@ let unify i x y g' check =
     BU.print1 "%s ..." (BU.string_of_int i);
     FStar.Main.process_args () |> ignore; //set options
     BU.print2 "Unify %s\nand %s\n" (FStar.Syntax.Print.term_to_string x) (FStar.Syntax.Print.term_to_string y);
-    let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
+    let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) |> Rel.simplify_guard (tcenv()) in
     guard_eq i g.guard_f g';
     check();
     Options.init()    //reset them; exceptions are fatal, so don't worry about resetting them in case guard_eq fails
@@ -114,7 +114,6 @@ let run_all () =
     unify 4 id id' Trivial; //(NonTrivial (pars "True /\ (forall x. True)"));
 
     //alpha equivalence 2
-
     unify 5 (tc "fun x y -> x")
             (tc "fun a b -> a")
             Trivial;
@@ -181,7 +180,7 @@ let run_all () =
         tm1, tm2
     in
 
-    unify 13 tm1 tm2 (NonTrivial (tc "Prims.l_True"));
+    unify 13 tm1 tm2 Trivial;
 
     let tm1, tm2 =
         let int_typ = tc "int" in
@@ -200,7 +199,7 @@ let run_all () =
         tm1, tm2
     in
 
-    unify 14 tm1 tm2 (NonTrivial (tc "Prims.l_True"));
+    unify 14 tm1 tm2 Trivial;
 
     Options.__clear_unit_tests();
 
