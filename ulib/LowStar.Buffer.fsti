@@ -46,12 +46,11 @@ let live_not_unused_in' (#a: Type) (h: HS.mem) (b: buffer a) : Lemma
 
 (* Regions and addresses, for allocation purposes *)
 
-val frameOf (#a: Type) (b: buffer a) : Ghost HS.rid (requires (not (g_is_null b))) (ensures (fun _ -> True))
+val frameOf (#a: Type) (b: buffer a) : GTot HS.rid
 
-val as_addr (#a: Type) (b: buffer a) : Ghost nat (requires (not (g_is_null b))) (ensures (fun _ -> True))
+val as_addr (#a: Type) (b: buffer a) : GTot nat
 
 val unused_in_equiv (#a: Type) (b: buffer a) (h: HS.mem) : Lemma
-  (requires (not (g_is_null b)))
   (ensures (unused_in b h <==> (HS.live_region h (frameOf b) ==> as_addr b `Heap.addr_unused_in` (Map.sel h.HS.h (frameOf b)))))
 
 (* Contents *)
@@ -109,7 +108,7 @@ val includes_trans (#a: Type) (x y z: buffer a) : Lemma
 
 val includes_frameOf_as_addr (#a: Type) (larger smaller: buffer a) : Lemma
   (requires (larger `includes` smaller))
-  (ensures (g_is_null larger == g_is_null smaller /\ ((not (g_is_null larger)) ==> frameOf larger == frameOf smaller /\ as_addr larger == as_addr smaller)))
+  (ensures (g_is_null larger == g_is_null smaller /\ frameOf larger == frameOf smaller /\ as_addr larger == as_addr smaller))
   [SMTPat (larger `includes` smaller)]
 
 (* Sub-buffers *)
@@ -180,7 +179,7 @@ val live_unused_in_disjoint (#a1 #a2: Type) (h: HS.mem) (b1: buffer a1) (b2: buf
   ]]
 
 val as_addr_disjoint (#a1 #a2: Type) (b1: buffer a1) (b2: buffer a2) : Lemma
-  (requires (((not (g_is_null b1)) /\ not (g_is_null b2)) ==> (frameOf b1 <> frameOf b2 \/ as_addr b1 <> as_addr b2)))
+  (requires (frameOf b1 <> frameOf b2 \/ as_addr b1 <> as_addr b2))
   (ensures (disjoint b1 b2))
   [SMTPatOr [
     [SMTPat (disjoint b1 b2)];

@@ -48,11 +48,12 @@ let live_not_unused_in #a h b = ()
 
 (* Regions and addresses, for allocation purposes *)
 
-let frameOf #a b = HS.frameOf (Buffer?.content b)
+let frameOf #a b = if g_is_null b then HS.root else HS.frameOf (Buffer?.content b)
 
-let as_addr #a b = HS.as_addr (Buffer?.content b)
+let as_addr #a b = if g_is_null b then 0 else HS.as_addr (Buffer?.content b)
 
-let unused_in_equiv #a b h = ()
+let unused_in_equiv #a b h =
+  if g_is_null b then Heap.not_addr_unused_in_nullptr (Map.sel h.HS.h HS.root) else ()
 
 (* Contents *)
 

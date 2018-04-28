@@ -132,7 +132,7 @@ val loc_includes_addresses_buffer
   (s: Set.set nat)
   (p: B.buffer t)
 : Lemma
-  (requires ((not (B.g_is_null p)) /\ B.frameOf p == r /\ Set.mem (B.as_addr p) s))
+  (requires (B.frameOf p == r /\ Set.mem (B.as_addr p) s))
   (ensures (loc_includes (loc_addresses r s) (loc_buffer p)))
   [SMTPat (loc_includes (loc_addresses r s) (loc_buffer p))]
 
@@ -141,7 +141,7 @@ val loc_includes_region_buffer
   (s: Set.set HS.rid)
   (b: B.buffer t)
 : Lemma
-  (requires ((not (B.g_is_null b)) /\ Set.mem (B.frameOf b) s))
+  (requires (Set.mem (B.frameOf b) s))
   (ensures (loc_includes (loc_regions s) (loc_buffer b)))
   [SMTPat (loc_includes (loc_regions s) (loc_buffer b))]
 
@@ -253,7 +253,7 @@ val loc_disjoint_buffer_addresses
   (r: HS.rid)
   (n: Set.set nat)
 : Lemma
-  (requires ((not (B.g_is_null p)) ==> (r <> B.frameOf p \/ (~ (Set.mem (B.as_addr p) n)))))
+  (requires (r <> B.frameOf p \/ (~ (Set.mem (B.as_addr p) n))))
   (ensures (loc_disjoint (loc_buffer p) (loc_addresses r n)))
   [SMTPat (loc_disjoint (loc_buffer p) (loc_addresses r n))]
   
