@@ -52,6 +52,10 @@ module BU = FStar.Util
 (* should wrap them in [with_fs_typ_app] *)
 let should_print_fs_typ_app = BU.mk_ref false
 
+(* Tuples which come from a resugared AST, via term_to_document are already flattened *)
+(* This reference is set to false in term_to_document and checked in p_tmNoEqWith'    *)
+let unfold_tuples = BU.mk_ref true
+
 let with_fs_typ_app b printer t =
   let b0 = !should_print_fs_typ_app in
   should_print_fs_typ_app := b ;
@@ -1276,14 +1280,13 @@ and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
       let left, mine, right = levels op in
       let p_dsumfst b = p_binder false b ^^ space ^^ str op ^^ break1 in
       paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEqWith' false p_X right res)
-  | Op({idText = "*"}, [e1; e2]) ->
+  | Op({idText = "*"}, [e1; e2]) when !unfold_tuples ->
       let op = "*" in
       let left, mine, right = levels op in
-      (match inside_tuple with
-       | false ->
-           paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
-       | true ->
-           infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
+      if inside_tuple then
+        infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2)
+      else
+        paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
   | Op (op, [ e1; e2]) when is_operatorInfix34 op ->
       let op = Ident.text_of_id op in
       let left, mine, right = levels op in
@@ -1541,7 +1544,9 @@ and p_atomicUniverse u = match u.tm with
   | App _ -> soft_parens_with_nesting (p_universeFrom u)
   | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
-let term_to_document e = p_term false false e
+let term_to_document e =
+  unfold_tuples := false;
+  p_term false false e
 
 let signature_to_document e = p_justSig e
 
