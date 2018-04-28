@@ -25,6 +25,7 @@ open System.IO.Compression
 open System.Security.Cryptography
 open System.Runtime.Serialization
 open System.Runtime.Serialization.Json
+open System.Text.RegularExpressions
 
 let return_all x = x
 
@@ -48,6 +49,14 @@ exception HardError of string
 
 let max_int = System.Int32.MaxValue
 
+// Interrupts are only handled in OCaml
+exception SigInt
+type sigint_handler = { placeholder: unit } // F* doesn't want hidden abbreviations
+let sigint_ignore = { placeholder = () }
+let sigint_raise = { placeholder = () }
+let with_sigint_handler (_: sigint_handler) f = f ()
+let set_sigint_handler (_: sigint_handler) = ()
+
 type proc = {m:Object;
              outbuf:StringBuilder;
              proc:Process;
@@ -62,15 +71,26 @@ let monitor_wait m = ignore <| System.Threading.Monitor.Wait(m)
 let monitor_pulse m = System.Threading.Monitor.Pulse(m)
 let current_tid () = System.Threading.Thread.CurrentThread.ManagedThreadId
 let sleep n = System.Threading.Thread.Sleep(0+n)
+let with_monitor m f x =
+    try
+        System.Threading.Monitor.Enter(m);
+        f x
+    finally
+        System.Threading.Monitor.Exit(m)
 let atomically (f:unit -> 'a) =
-    System.Threading.Monitor.Enter(global_lock);
-    let result = f () in
-    System.Threading.Monitor.Exit(global_lock);
-    result
+    with_monitor global_lock f ()
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
 
-let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
+// https://stackoverflow.com/questions/5510343/escape-command-line-arguments-in-c-sharp
+let quote_arg arg =
+  let arg = Regex.Replace(arg, @"(\\*)" + "\"", @"$1$1\" + "\"") in
+  "\"" + Regex.Replace(arg, @"(\\+)$", @"$1$1") + "\""
+
+let quote_args args =
+  String.concat " " (List.map quote_arg args)
+
+let start_process (id:string) (prog:string) (args: list<string>) (cond:string -> bool) : proc =
     let signal = new Object() in
     let startInfo = new ProcessStartInfo() in
     let driverOutput = new StringBuilder() in
@@ -84,30 +104,30 @@ let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:strin
                         id=prog ^ ":" ^id^ "-" ^ (string_of_int !ctr)} in
 
     startInfo.FileName <- prog;
-    startInfo.Arguments <- args;
+    startInfo.Arguments <- quote_args args;
     startInfo.UseShellExecute <- false;
     startInfo.RedirectStandardOutput <- true;
+    startInfo.RedirectStandardError <- true;
     startInfo.RedirectStandardInput <- true;
     proc.EnableRaisingEvents <- true;
-    proc.OutputDataReceived.AddHandler(
-            DataReceivedEventHandler(
-                fun _ args ->
-                    if !killed then ()
-                    else
-                        ignore <| driverOutput.Append(args.Data);
-                        if not raw then (
-                            ignore <| driverOutput.Append("\n");
-                            if null = args.Data
-                                then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
-                        );
-                        if null = args.Data || cond id args.Data
-                        then
-                            System.Threading.Monitor.Enter(signal);
-                            ignore (proc_wrapper.outbuf.Clear());
-                            ignore (proc_wrapper.outbuf.Append(driverOutput.ToString()));
-                            ignore (driverOutput.Clear());
-                            System.Threading.Monitor.Pulse(signal);
-                            System.Threading.Monitor.Exit(signal)));
+    let handler _ (args:DataReceivedEventArgs) =
+        if !killed then ()
+        else
+            ignore <| driverOutput.Append(args.Data);
+            ignore <| driverOutput.Append("\n");
+            if null = args.Data
+                then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
+            if null = args.Data || cond args.Data
+            then
+                System.Threading.Monitor.Enter(signal);
+                ignore (proc_wrapper.outbuf.Clear());
+                ignore (proc_wrapper.outbuf.Append(driverOutput.ToString()));
+                ignore (driverOutput.Clear());
+                System.Threading.Monitor.Pulse(signal);
+                System.Threading.Monitor.Exit(signal);
+    in
+    proc.OutputDataReceived.AddHandler(DataReceivedEventHandler handler);
+    proc.ErrorDataReceived.AddHandler(DataReceivedEventHandler handler);
     proc.Exited.AddHandler(
             EventHandler(fun _ _ ->
             if !killed then ()
@@ -121,12 +141,13 @@ let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:strin
     proc.StartInfo <- startInfo;
     proc.Start() |> ignore;
     proc.BeginOutputReadLine();
+    proc.BeginErrorReadLine();
     all_procs := proc_wrapper::!all_procs;
 //        Printf.printf "Started process %s\n" (proc.id);
     proc_wrapper
 let tid () = System.Threading.Thread.CurrentThread.ManagedThreadId |> string_of_int
 
-let ask_process (p:proc) (input:string) : string =
+let ask_process (p:proc) (input:string) (exn_handler: unit -> string): string =
     System.Threading.Monitor.Enter(p.m);
     //Printf.printf "Thread %s is asking process %s\n" (tid()) p.id;
     //Printf.printf "Thread %s is writing to process %s ... responding?=%A\n" (tid()) p.id p.proc.Responding;
@@ -152,15 +173,10 @@ let kill_process (p:proc) =
     System.Threading.Monitor.Exit(p.m);
     p.proc.WaitForExit()
 
-let launch_process (raw:bool) (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
-  let proc = start_process raw id prog args cond in
-  let output = ask_process proc input in
-  kill_process proc; output
-
 let kill_all () = !all_procs |> List.iter (fun p -> if not !p.killed then kill_process p)
 
-let run_proc (name:string) (args:string) (stdin:string) : bool * string * string =
-  let pinfo = new ProcessStartInfo(name, args) in
+let run_process (id: string) (prog: string) (args: list<string>) (stdin: option<string>) : string =
+  let pinfo = new ProcessStartInfo(prog, quote_args args) in
   pinfo.RedirectStandardOutput <- true;
   pinfo.RedirectStandardError <- true;
   pinfo.UseShellExecute <- false;
@@ -168,10 +184,10 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   let proc = new Process() in
   proc.StartInfo <- pinfo;
   let result = proc.Start() in
-  proc.StandardInput.Write(stdin);
+  (match stdin with Some s -> proc.StandardInput.Write(s) | None -> ());
   let stdout = proc.StandardOutput.ReadToEnd() in
   let stderr = proc.StandardError.ReadToEnd() in
-  result, stdout, stderr
+  stdout ^ stderr
 
 let get_file_extension (fn: string) :string = (Path.GetExtension fn).[1..]
 let is_path_absolute p = System.IO.Path.IsPathRooted(p)

@@ -407,14 +407,14 @@ let (mk_inspect_pack_pair :
     let inspect =
       let uu____1226 =
         FStar_Syntax_Syntax.fvar inspect_lid
-          (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
+          (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.parse_int "1"))
           FStar_Pervasives_Native.None
          in
       { lid = inspect_lid; t = uu____1226 }  in
     let pack =
       let uu____1228 =
         FStar_Syntax_Syntax.fvar pack_lid
-          (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
+          (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.parse_int "1"))
           FStar_Pervasives_Native.None
          in
       { lid = pack_lid; t = uu____1228 }  in
@@ -528,7 +528,7 @@ let (ref_Mk_bv : refl_constant) =
       (uu____1286, uu____1287)  in
     FStar_Syntax_Syntax.Record_ctor uu____1279  in
   let uu____1301 =
-    FStar_Syntax_Syntax.fvar lid FStar_Syntax_Syntax.Delta_constant
+    FStar_Syntax_Syntax.fvar lid FStar_Syntax_Syntax.delta_constant
       (FStar_Pervasives_Native.Some attr)
      in
   { lid; t = uu____1301 } 

@@ -45,7 +45,7 @@ module BU      = FStar.Util
 module Dep     = FStar.Parser.Dep
 
 (* we write this version number to the cache files, and detect when loading the cache that the version number is same *)
-let cache_version_number = 1
+let cache_version_number = 2
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -282,7 +282,7 @@ let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and 
       let fmod, env = parse env pre_fn fn in
       let check_mod () =
           let (tcmod, tcmod_iface_opt, env), time =
-            FStar.Util.record_time (fun () -> Tc.check_module env fmod) in
+            FStar.Util.record_time (fun () -> Tc.check_module env fmod (is_some pre_fn)) in
           (tcmod, time), tcmod_iface_opt, env
       in
       let tcmod, tcmod_iface_opt, env =

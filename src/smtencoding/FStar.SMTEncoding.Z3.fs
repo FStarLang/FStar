@@ -78,12 +78,12 @@ let parse_z3_version_lines out =
 let z3hash_warning_message () =
     let run_proc_result =
         try
-            Some (BU.run_proc (Options.z3_exe()) "-version" "")
+            Some (BU.run_process "z3_version" (Options.z3_exe()) ["-version"] None)
         with _ -> None
     in
     match run_proc_result with
     | None -> Some (FStar.Errors.Error_Z3InvocationError, "Could not run Z3")
-    | Some (_, out, _) ->
+    | Some out ->
         begin match parse_z3_version_lines out with
         | None -> None
         | Some msg -> Some (FStar.Errors.Warning_Z3InvocationWarning, msg)
@@ -109,11 +109,10 @@ let check_z3hash () =
 
 let ini_params () =
   check_z3hash ();
-  (String.concat " "
-                (List.append
-                 [ "-smt2 -in auto_config=false model=true smt.relevancy=2 smt.case_split=3";
-                   (Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed()))) ]
-                 (Options.z3_cliopt())))
+  List.append ["-smt2"; "-in"; "auto_config=false";
+               "model=true"; "smt.relevancy=2"; "smt.case_split=3";
+               (Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed ())))]
+              (Options.z3_cliopt ())
 
 type label = string
 type unsat_core = option<list<string>>
@@ -142,11 +141,7 @@ let status_string_and_errors s =
 
 let tid () = BU.current_tid() |> BU.string_of_int
 let new_z3proc id =
-   let cond pid (s:string) =
-    (let x = BU.trim_string s = "Done!" in
-//     BU.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
-     x) in
-   BU.start_process false id ((Options.z3_exe())) (ini_params()) cond
+    BU.start_process id (Options.z3_exe ()) (ini_params ()) (fun s -> s = "Done!")
 
 type bgproc = {
     ask: string -> string;
@@ -235,27 +230,20 @@ let bg_z3_proc =
         the_z3proc := Some (new_proc ());
       must (!the_z3proc) in
     let x : list<unit> = [] in
-    let grab () = BU.monitor_enter x; z3proc () in
-    let release () = BU.monitor_exit(x) in
     let ask input =
-        let proc = grab() in
-        let stdout = BU.ask_process proc input in
-        release (); stdout in
+        let kill_handler () = "\nkilled\n" in
+        BU.ask_process (z3proc ()) input kill_handler in
     let refresh () =
-        let proc = grab() in
-        BU.kill_process proc;
+        BU.kill_process (z3proc ());
         the_z3proc := Some (new_proc ());
-        query_logging.close_log();
-        release() in
+        query_logging.close_log() in
     let restart () =
-        BU.monitor_enter();
         query_logging.close_log();
         the_z3proc := None;
-        the_z3proc := Some (new_proc ());
-        BU.monitor_exit() in
-    BU.mk_ref ({ask=ask;
-                refresh=refresh;
-                restart=restart})
+        the_z3proc := Some (new_proc ()) in
+    BU.mk_ref ({ask = BU.with_monitor x ask;
+                refresh = BU.with_monitor x refresh;
+                restart = BU.with_monitor x restart})
 
 let set_bg_z3_proc bgp =
     bg_z3_proc := bgp
@@ -387,13 +375,9 @@ let doZ3Exe (r:Range.range) (fresh:bool) (input:string) (label_messages:error_la
     in
     status, statistics
   in
-  let cond pid (s:string) =
-    (let x = BU.trim_string s = "Done!" in
-      //     BU.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
-     x) in
   let stdout =
     if fresh then
-      BU.launch_process false (tid()) ((Options.z3_exe())) (ini_params()) input cond
+      BU.run_process (tid ()) (Options.z3_exe ()) (ini_params ()) (Some input)
     else
       (!bg_z3_proc).ask input
   in
@@ -426,19 +410,14 @@ type z3job = job<z3result>
 let job_queue : ref<list<z3job>> = BU.mk_ref []
 
 let pending_jobs = BU.mk_ref 0
-let with_monitor m f =
-    BU.monitor_enter(m);
-    let res = f () in
-    BU.monitor_exit(m);
-    res
 
 let z3_job (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
   let start = BU.now() in
   let status, statistics =
     try doZ3Exe r fresh input label_messages
-    with _ when not (Options.trace_error()) ->
+    with e when not (Options.trace_error()) ->
          (!bg_z3_proc).refresh();
-         UNKNOWN([], Some "Z3 raised an exception"), BU.smap_create 0
+         raise e
   in
   let _, elapsed_time = BU.time_diff start (BU.now()) in
   { z3result_status     = status;
@@ -458,7 +437,7 @@ let rec dequeue' () =
     incr pending_jobs;
     BU.monitor_exit job_queue;
     run_job j;
-    with_monitor job_queue (fun () -> decr pending_jobs); dequeue (); ()
+    BU.with_monitor job_queue (fun () -> decr pending_jobs) (); dequeue (); ()
 
 and dequeue () = match !running with
   | true ->
@@ -488,14 +467,13 @@ let init () =
     else ()
 
 let enqueue j =
-    BU.monitor_enter job_queue;
-    job_queue := !job_queue@[j];
-    BU.monitor_pulse job_queue;
-    BU.monitor_exit job_queue
+    BU.with_monitor job_queue (fun () ->
+        job_queue := !job_queue@[j];
+        BU.monitor_pulse job_queue) ()
 
 let finish () =
     let rec aux () =
-        let n, m = with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue)  in
+        let n, m = BU.with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue) () in
         //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
         if n+m=0
         then running := false

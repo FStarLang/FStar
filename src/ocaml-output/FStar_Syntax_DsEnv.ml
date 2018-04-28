@@ -816,9 +816,9 @@ let (unmangleMap :
                                                                FStar_Pervasives_Native.option)
     FStar_Pervasives_Native.tuple4 Prims.list)
   =
-  [("op_ColonColon", "Cons", FStar_Syntax_Syntax.Delta_constant,
+  [("op_ColonColon", "Cons", FStar_Syntax_Syntax.delta_constant,
      (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor));
-  ("not", "op_Negation", FStar_Syntax_Syntax.Delta_equational,
+  ("not", "op_Negation", FStar_Syntax_Syntax.delta_equational,
     FStar_Pervasives_Native.None)]
   
 let (unmangleOpName :
@@ -1470,7 +1470,7 @@ let (try_lookup_name :
                        let uu____4640 =
                          let uu____4649 =
                            FStar_Syntax_Syntax.fvar source_lid
-                             FStar_Syntax_Syntax.Delta_constant
+                             FStar_Syntax_Syntax.delta_constant
                              FStar_Pervasives_Native.None
                             in
                          (uu____4649, false,
@@ -1484,7 +1484,7 @@ let (try_lookup_name :
                          let uu____4677 =
                            let uu____4678 = fv_qual_of_se se  in
                            FStar_Syntax_Syntax.fvar source_lid
-                             FStar_Syntax_Syntax.Delta_constant uu____4678
+                             FStar_Syntax_Syntax.delta_constant uu____4678
                             in
                          (uu____4677, false,
                            (se.FStar_Syntax_Syntax.sigattrs))
@@ -1538,8 +1538,8 @@ let (try_lookup_name :
                                       | uu____4743 -> false)))
                             in
                          if uu____4731
-                         then FStar_Syntax_Syntax.Delta_equational
-                         else FStar_Syntax_Syntax.Delta_constant  in
+                         then FStar_Syntax_Syntax.delta_equational
+                         else FStar_Syntax_Syntax.delta_constant  in
                        let dd1 =
                          let uu____4746 =
                            FStar_All.pipe_right quals
@@ -1617,7 +1617,7 @@ let (try_lookup_name :
                        let uu____4831 =
                          let uu____4840 =
                            FStar_Syntax_Syntax.fvar source_lid
-                             (FStar_Syntax_Syntax.Delta_defined_at_level
+                             (FStar_Syntax_Syntax.Delta_constant_at_level
                                 (Prims.parse_int "1"))
                              FStar_Pervasives_Native.None
                             in
@@ -2103,7 +2103,7 @@ let (try_lookup_datacon :
             then
               let uu____6109 =
                 FStar_Syntax_Syntax.lid_as_fv lid1
-                  FStar_Syntax_Syntax.Delta_constant
+                  FStar_Syntax_Syntax.delta_constant
                   FStar_Pervasives_Native.None
                  in
               FStar_Pervasives_Native.Some uu____6109
@@ -2119,7 +2119,7 @@ let (try_lookup_datacon :
             let qual1 = fv_qual_of_se (FStar_Pervasives_Native.fst se)  in
             let uu____6138 =
               FStar_Syntax_Syntax.lid_as_fv lid1
-                FStar_Syntax_Syntax.Delta_constant qual1
+                FStar_Syntax_Syntax.delta_constant qual1
                in
             FStar_Pervasives_Native.Some uu____6138
         | uu____6139 -> FStar_Pervasives_Native.None  in

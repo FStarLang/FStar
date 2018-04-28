@@ -65,10 +65,6 @@ let mkBvUext sz = norng (mkBvUext sz)
 let mkBvToNat = norng mkBvToNat
 let mkITE = norng mkITE
 let mkCases = norng mkCases
-let mkForall = norng mkForall
-let mkForall' = norng mkForall'
-let mkForall'' = norng mkForall''
-let mkExists = norng mkExists
 
 let norng2 f = fun x y -> f x y Range.dummyRange
 let mk_Term_app  = norng2 mk_Term_app

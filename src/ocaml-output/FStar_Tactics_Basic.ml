@@ -1075,7 +1075,7 @@ let (istrivial : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
       let steps =
         [FStar_TypeChecker_Normalize.Reify;
         FStar_TypeChecker_Normalize.UnfoldUntil
-          FStar_Syntax_Syntax.Delta_constant;
+          FStar_Syntax_Syntax.delta_constant;
         FStar_TypeChecker_Normalize.Primops;
         FStar_TypeChecker_Normalize.Simplify;
         FStar_TypeChecker_Normalize.UnfoldTac;
@@ -4343,18 +4343,19 @@ let (unify :
         (fun ps  -> do_unify ps.FStar_Tactics_Types.main_context t1 t2)
   
 let (launch_process :
-  Prims.string -> Prims.string -> Prims.string -> Prims.string tac) =
+  Prims.string -> Prims.string Prims.list -> Prims.string -> Prims.string tac)
+  =
   fun prog  ->
     fun args  ->
       fun input  ->
         bind idtac
-          (fun uu____8910  ->
-             let uu____8911 = FStar_Options.unsafe_tactic_exec ()  in
-             if uu____8911
+          (fun uu____8914  ->
+             let uu____8915 = FStar_Options.unsafe_tactic_exec ()  in
+             if uu____8915
              then
                let s =
-                 FStar_Util.launch_process true "tactic_launch" prog args
-                   input (fun uu____8917  -> fun uu____8918  -> false)
+                 FStar_Util.run_process "tactic_launch" prog args
+                   (FStar_Pervasives_Native.Some input)
                   in
                ret s
              else
@@ -4418,7 +4419,7 @@ let (change : FStar_Reflection_Data.typ -> unit tac) =
                                      (let steps =
                                         [FStar_TypeChecker_Normalize.Reify;
                                         FStar_TypeChecker_Normalize.UnfoldUntil
-                                          FStar_Syntax_Syntax.Delta_constant;
+                                          FStar_Syntax_Syntax.delta_constant;
                                         FStar_TypeChecker_Normalize.AllowUnboundUniverses;
                                         FStar_TypeChecker_Normalize.Primops;
                                         FStar_TypeChecker_Normalize.Simplify;

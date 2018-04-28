@@ -388,7 +388,7 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
     let t = N.normalize [
       N.EraseUniverses;
       N.AllowUnboundUniverses;
-      N.UnfoldUntil S.Delta_constant // unfold abbreviations such as nat
+      N.UnfoldUntil S.delta_constant // unfold abbreviations such as nat
     ] tcenv t in
     let w = with_ty MLTY_Top in
     let lid_to_name l     = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident l) in

@@ -11,7 +11,7 @@ let (fail_exp :
           let uu____21 =
             let uu____36 =
               FStar_Syntax_Syntax.fvar FStar_Parser_Const.failwith_lid
-                FStar_Syntax_Syntax.Delta_constant
+                FStar_Syntax_Syntax.delta_constant
                 FStar_Pervasives_Native.None
                in
             let uu____37 =
@@ -469,7 +469,7 @@ let bundle_as_inductive_families :
                             let env2 =
                               let uu____1019 =
                                 FStar_Syntax_Syntax.lid_as_fv l
-                                  FStar_Syntax_Syntax.Delta_constant
+                                  FStar_Syntax_Syntax.delta_constant
                                   FStar_Pervasives_Native.None
                                  in
                               FStar_Extraction_ML_UEnv.extend_type_name env1
@@ -508,7 +508,7 @@ let (extract_bundle :
         let steps =
           [FStar_TypeChecker_Normalize.Inlining;
           FStar_TypeChecker_Normalize.UnfoldUntil
-            FStar_Syntax_Syntax.Delta_constant;
+            FStar_Syntax_Syntax.delta_constant;
           FStar_TypeChecker_Normalize.EraseUniverses;
           FStar_TypeChecker_Normalize.AllowUnboundUniverses]  in
         let names1 =
@@ -744,7 +744,7 @@ let rec (extract_sig :
              let uu____2054 =
                let uu____2059 =
                  FStar_Syntax_Syntax.lid_as_fv lid
-                   FStar_Syntax_Syntax.Delta_equational
+                   FStar_Syntax_Syntax.delta_equational
                    FStar_Pervasives_Native.None
                   in
                FStar_Extraction_ML_UEnv.extend_fv' g1 uu____2059 ml_name tysc
@@ -982,7 +982,7 @@ let rec (extract_sig :
               | (bs,uu____2462) ->
                   let fv =
                     FStar_Syntax_Syntax.lid_as_fv lid
-                      FStar_Syntax_Syntax.Delta_constant
+                      FStar_Syntax_Syntax.delta_constant
                       FStar_Pervasives_Native.None
                      in
                   let uu____2480 =
@@ -1011,7 +1011,7 @@ let rec (extract_sig :
                   FStar_TypeChecker_Normalize.normalize
                     [FStar_TypeChecker_Normalize.Beta;
                     FStar_TypeChecker_Normalize.UnfoldUntil
-                      FStar_Syntax_Syntax.Delta_constant] tcenv lbtyp
+                      FStar_Syntax_Syntax.delta_constant] tcenv lbtyp
                    in
                 let lbdef1 =
                   FStar_TypeChecker_Normalize.eta_expand_with_type tcenv
@@ -1308,7 +1308,7 @@ let rec (extract_sig :
                          let uu____2961 =
                            let uu____2966 =
                              FStar_Syntax_Syntax.lid_as_fv lid
-                               FStar_Syntax_Syntax.Delta_constant
+                               FStar_Syntax_Syntax.delta_constant
                                FStar_Pervasives_Native.None
                               in
                            FStar_Util.Inr uu____2966  in

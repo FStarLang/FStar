@@ -89,7 +89,7 @@ let (mkFvvar :
   FStar_Ident.lident -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.fv) =
   fun l  ->
     fun t  ->
-      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
+      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.delta_constant
         FStar_Pervasives_Native.None
   
 let (erasedContent : FStar_Extraction_ML_Syntax.mlty) =
@@ -701,7 +701,7 @@ let (mkContext : FStar_TypeChecker_Env.env -> env) =
       let uu____1779 =
         let uu____1780 =
           FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.failwith_lid
-            FStar_Syntax_Syntax.Delta_constant FStar_Pervasives_Native.None
+            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
            in
         FStar_Util.Inr uu____1780  in
       extend_lb env uu____1779 FStar_Syntax_Syntax.tun failwith_ty false

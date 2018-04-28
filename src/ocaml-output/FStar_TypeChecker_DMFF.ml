@@ -635,7 +635,7 @@ let (gen_wps_for_free :
                     let uu____1360 =
                       let l_ite =
                         FStar_Syntax_Syntax.fvar FStar_Parser_Const.ite_lid
-                          (FStar_Syntax_Syntax.Delta_defined_at_level
+                          (FStar_Syntax_Syntax.Delta_constant_at_level
                              (Prims.parse_int "2"))
                           FStar_Pervasives_Native.None
                          in
@@ -678,7 +678,7 @@ let (gen_wps_for_free :
                        in
                     let l_and =
                       FStar_Syntax_Syntax.fvar FStar_Parser_Const.and_lid
-                        (FStar_Syntax_Syntax.Delta_defined_at_level
+                        (FStar_Syntax_Syntax.Delta_constant_at_level
                            (Prims.parse_int "1"))
                         FStar_Pervasives_Native.None
                        in
@@ -731,7 +731,7 @@ let (gen_wps_for_free :
                        in
                     let l_imp =
                       FStar_Syntax_Syntax.fvar FStar_Parser_Const.imp_lid
-                        (FStar_Syntax_Syntax.Delta_defined_at_level
+                        (FStar_Syntax_Syntax.Delta_constant_at_level
                            (Prims.parse_int "1"))
                         FStar_Pervasives_Native.None
                        in
@@ -898,7 +898,7 @@ let (gen_wps_for_free :
                         [FStar_TypeChecker_Normalize.Beta;
                         FStar_TypeChecker_Normalize.Eager_unfolding;
                         FStar_TypeChecker_Normalize.UnfoldUntil
-                          FStar_Syntax_Syntax.Delta_constant] env1 t
+                          FStar_Syntax_Syntax.delta_constant] env1 t
                        in
                     let uu____1869 =
                       let uu____1870 = FStar_Syntax_Subst.compress t1  in
@@ -1098,7 +1098,7 @@ let (gen_wps_for_free :
                           [FStar_TypeChecker_Normalize.Beta;
                           FStar_TypeChecker_Normalize.Eager_unfolding;
                           FStar_TypeChecker_Normalize.UnfoldUntil
-                            FStar_Syntax_Syntax.Delta_constant] env1 t
+                            FStar_Syntax_Syntax.delta_constant] env1 t
                          in
                       let uu____2189 =
                         let uu____2190 = FStar_Syntax_Subst.compress t1  in
@@ -1123,7 +1123,7 @@ let (gen_wps_for_free :
                                   uu____2236 i
                                  in
                               FStar_Syntax_Syntax.fvar uu____2235
-                                (FStar_Syntax_Syntax.Delta_defined_at_level
+                                (FStar_Syntax_Syntax.Delta_constant_at_level
                                    (Prims.parse_int "1"))
                                 FStar_Pervasives_Native.None
                                in
@@ -1282,7 +1282,7 @@ let (gen_wps_for_free :
                                 let uu____2555 =
                                   FStar_Syntax_Syntax.lid_as_fv
                                     FStar_Parser_Const.guard_free
-                                    FStar_Syntax_Syntax.Delta_constant
+                                    FStar_Syntax_Syntax.delta_constant
                                     FStar_Pervasives_Native.None
                                    in
                                 FStar_Syntax_Syntax.fv_to_tm uu____2555  in
@@ -1827,7 +1827,7 @@ and (star_type' :
                            [FStar_TypeChecker_Normalize.EraseUniverses;
                            FStar_TypeChecker_Normalize.Inlining;
                            FStar_TypeChecker_Normalize.UnfoldUntil
-                             FStar_Syntax_Syntax.Delta_constant] env.env t1
+                             FStar_Syntax_Syntax.delta_constant] env.env t1
                           in
                        let uu____3609 =
                          let uu____3610 = FStar_Syntax_Subst.compress res  in
@@ -2318,7 +2318,7 @@ and (infer :
           [FStar_TypeChecker_Normalize.Beta;
           FStar_TypeChecker_Normalize.Eager_unfolding;
           FStar_TypeChecker_Normalize.UnfoldUntil
-            FStar_Syntax_Syntax.Delta_constant;
+            FStar_Syntax_Syntax.delta_constant;
           FStar_TypeChecker_Normalize.EraseUniverses] env.env
          in
       let uu____5305 =
@@ -3754,7 +3754,7 @@ let (n :
   FStar_TypeChecker_Normalize.normalize
     [FStar_TypeChecker_Normalize.Beta;
     FStar_TypeChecker_Normalize.UnfoldUntil
-      FStar_Syntax_Syntax.Delta_constant;
+      FStar_Syntax_Syntax.delta_constant;
     FStar_TypeChecker_Normalize.DoNotUnfoldPureLets;
     FStar_TypeChecker_Normalize.Eager_unfolding;
     FStar_TypeChecker_Normalize.EraseUniverses]
