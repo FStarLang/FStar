@@ -1040,6 +1040,9 @@ let list_of_option = function
  * same amount. Returns None when everything is OK, and Some (e, n1, n2)
  * when `e` occurs `n1` times in `l1` but `n2` (<> n1) times in `l2`. *)
 let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
+    (* If there are no expected errors, we don't check anything *)
+    match l1 with | [] -> None | _ ->
+
     let rec collect (l : list<'a>) : list<('a * int)> =
         match l with
         | [] -> []
@@ -1060,16 +1063,17 @@ let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
     let l2 = summ l2 in
     let rec aux l1 l2 =
         match l1, l2 with
-        | [], _ -> None
+        | [], [] -> None
 
         | (e, n) :: _, [] ->
             Some (e, n, 0)
 
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 > hd2 ->
-            aux l1 tl2
+        | [], (e, n) :: _ ->
+            Some (e, 0, n)
 
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 < hd2 ->
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 <> hd2 ->
             Some (hd1, n1, 0)
+
         | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 = hd2 ->
             if n1 <> n2
             then Some (hd1, n1, n2)
