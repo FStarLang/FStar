@@ -49,3 +49,17 @@ let try_convert_file_name_to_mixed =
           out
     else
       s
+
+let snapshot (push: 'a -> 'b) (stackref: ref<list<'c>>) (arg: 'a) : (int * 'b) = BU.atomically (fun () ->
+  let len = List.length !stackref in
+  let arg' = push arg in
+  (len, arg'))
+
+let rollback (pop: unit -> 'a) (stackref: ref<list<'c>>) (depth: option<int>) =
+  let rec aux n =
+    if n <= 0 then (failwith "Too many pops" <: 'a)
+    else if n = 1 then pop ()
+    else (pop (); aux (n - 1)) in
+  let curdepth = List.length !stackref in
+  let n = match depth with Some d -> curdepth - d | None -> 1 in
+  BU.atomically (fun () -> aux n)

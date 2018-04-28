@@ -1893,17 +1893,16 @@ let extract_interface (en:env) (m:modul) :modul =
 
   { m with declarations = m.declarations |> List.map extract_sigelt |> List.flatten; is_interface = true }
 
-//AR: moving these push and pop functions from Universal, using them in extracting interface etc.
-let pop_context env msg =
-    Syntax.DsEnv.pop () |> ignore;
-    let en = TypeChecker.Env.pop env msg in
-    env.solver.refresh();
-    en
+let snapshot_context env msg = BU.atomically (fun () ->
+    TypeChecker.Env.snapshot env msg)
 
-let push_context env msg =
-    let dsenv = Syntax.DsEnv.push env.dsenv in
-    let env = TypeChecker.Env.push env msg in
-    {env with dsenv=dsenv}
+let rollback_context solver msg depth : env = BU.atomically (fun () ->
+    let env = TypeChecker.Env.rollback solver msg depth in
+    solver.refresh ();
+    env)
+
+let push_context env msg = snd (snapshot_context env msg)
+let pop_context env msg = rollback_context env.solver msg None
 
 let tc_partial_modul env modul =
   let verify = Options.should_verify modul.name.str in

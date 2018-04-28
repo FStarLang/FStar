@@ -1338,26 +1338,33 @@ let set_env env = match !last_env with
 let push_env () = match !last_env with
     | [] -> failwith "Empty env stack"
     | hd::tl ->
-      let refs = BU.smap_copy hd.cache  in
-      let top = {hd with cache=refs} in
+      let top = {hd with cache = BU.smap_copy hd.cache} in
       last_env := top::hd::tl
 let pop_env () = match !last_env with
     | [] -> failwith "Popping an empty stack"
     | _::tl -> last_env := tl
+let snapshot_env () = FStar.Common.snapshot push_env last_env ()
+let rollback_env depth = FStar.Common.rollback pop_env last_env depth
 (* TOP-LEVEL API *)
 
 let init tcenv =
     init_env tcenv;
     Z3.init ();
     Z3.giveZ3 [DefPrelude]
-let push msg =
-    push_env ();
-    varops.push();
-    Z3.push msg
-let pop msg   =
-    let _ = pop_env() in
-    varops.pop();
-    Z3.pop msg
+let snapshot msg = BU.atomically (fun () ->
+    let env_depth, () = snapshot_env () in
+    let varops_depth, () = varops.snapshot () in
+    let z3_depth, () = Z3.snapshot msg in
+    (env_depth, varops_depth, z3_depth), ())
+let rollback msg depth = BU.atomically (fun () ->
+    let env_depth, varops_depth, z3_depth = match depth with
+        | Some (s1, s2, s3) -> Some s1, Some s2, Some s3
+        | None -> None, None, None in
+    rollback_env env_depth;
+    varops.rollback varops_depth;
+    Z3.rollback msg z3_depth)
+let push msg = snd (snapshot msg)
+let pop msg = ignore (rollback msg None)
 
 //////////////////////////////////////////////////////////////////////////
 //guarding top-level terms with fact database triggers

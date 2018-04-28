@@ -117,10 +117,13 @@ type env = {
   dsenv          : FStar.Syntax.DsEnv.env;           (* The desugaring environment from the front-end *)
   dep_graph      : FStar.Parser.Dep.deps             (* The result of the dependency analysis *)
 }
+and solver_depth_t = int * int * int
 and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
+    snapshot     :string -> (solver_depth_t * unit);
+    rollback     :string -> option<solver_depth_t> -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
@@ -226,13 +229,16 @@ let gamma_cache env = env.gamma_cache
 (* Marking and resetting the environment, for the interactive mode *)
 
 let query_indices: ref<(list<(list<(lident * int)>)>)> = BU.mk_ref [[]]
-let push_query_indices () = match !query_indices with
+let push_query_indices () = match !query_indices with // already signal-atmoic
   | [] -> failwith "Empty query indices!"
   | _ -> query_indices := (List.hd !query_indices)::!query_indices
 
-let pop_query_indices () = match !query_indices with
+let pop_query_indices () = match !query_indices with // already signal-atmoic
   | [] -> failwith "Empty query indices!"
   | hd::tl -> query_indices := tl
+
+let snapshot_query_indices () = Common.snapshot push_query_indices query_indices ()
+let rollback_query_indices depth = Common.rollback pop_query_indices query_indices depth
 
 let add_query_index (l, n) = match !query_indices with
   | hd::tl -> query_indices := ((l,n)::hd)::tl
@@ -256,15 +262,31 @@ let pop_stack () =
       env
     | _ -> failwith "Impossible: Too many pops"
 
-let push env msg =
-    push_query_indices ();
-    env.solver.push msg;
-    push_stack env
+let snapshot_stack env = Common.snapshot push_stack stack env
+let rollback_stack depth = Common.rollback pop_stack stack depth
 
-let pop env msg =
-    env.solver.pop msg;
-    pop_query_indices ();
-    pop_stack ()
+type tcenv_depth_t = int * int * solver_depth_t * int
+
+let snapshot env msg = BU.atomically (fun () ->
+    let stack_depth, env = snapshot_stack env in
+    let query_indices_depth, () = snapshot_query_indices () in
+    let solver_depth, () = env.solver.snapshot msg in
+    let dsenv_depth, dsenv = DsEnv.snapshot env.dsenv in
+    (stack_depth, query_indices_depth, solver_depth, dsenv_depth), { env with dsenv=dsenv })
+
+let rollback solver msg depth = BU.atomically (fun () ->
+    let stack_depth, query_indices_depth, solver_depth, dsenv_depth = match depth with
+        | Some (s1, s2, s3, s4) -> Some s1, Some s2, Some s3, Some s4
+        | None -> None, None, None, None in
+    let () = solver.rollback msg solver_depth in
+    let () = rollback_query_indices query_indices_depth in
+    let tcenv = rollback_stack stack_depth in
+    let dsenv = DsEnv.rollback dsenv_depth in
+    // CPC FIXME if not (BU.physical_equality tcenv.dsenv dsenv) then failwith "Inconsistent stack state";
+    { tcenv with dsenv = dsenv })
+
+let push env msg = snd (snapshot env msg)
+let pop env msg = rollback env.solver msg None
 
 let incr_query_index env =
   let qix = peek_query_indices () in
@@ -1318,6 +1340,8 @@ let dummy_solver = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
+    snapshot=(fun _ -> (0, 0, 0), ());
+    rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
@@ -1326,8 +1350,3 @@ let dummy_solver = {
     refresh=(fun () -> ());
 }
 (* </Move> *)
-
-let mk_copy en =
-  { en with gamma_cache = BU.smap_copy en.gamma_cache;
-            sigtab = BU.smap_copy en.sigtab;
-            dsenv = Syntax.DsEnv.mk_copy en.dsenv }

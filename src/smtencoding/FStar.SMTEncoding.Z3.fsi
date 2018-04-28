@@ -60,6 +60,8 @@ val mk_fresh_scope: unit -> scope_t
 val init : unit -> unit
 val push : msg:string -> unit
 val pop : msg:string -> unit
+val snapshot : msg:string -> (int * unit)
+val rollback : msg:string -> option<int> -> unit
 
 type query_log = {
     get_module_name: unit -> string;

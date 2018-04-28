@@ -113,10 +113,13 @@ type env = {
   dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
   dep_graph      : FStar.Parser.Dep.deps          (* The result of the dependency analysis *)
 }
+and solver_depth_t = int * int * int
 and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
+    snapshot     :string -> (solver_depth_t * unit);
+    rollback     :string -> option<solver_depth_t> -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
@@ -155,9 +158,13 @@ val dep_graph: env -> FStar.Parser.Dep.deps
 
 val dsenv : env -> FStar.Syntax.DsEnv.env
 
-(* Marking and resetting the environment, for the interactive mode *)
-val push               : env -> string -> env
-val pop                : env -> string -> env
+(* Marking and resetting the environment *)
+val push : env -> string -> env
+val pop : env -> string -> env
+
+type tcenv_depth_t = int * int * solver_depth_t * int
+val snapshot : env -> string -> (tcenv_depth_t * env)
+val rollback : solver_t -> string -> option<tcenv_depth_t> -> env
 
 (* Checking the per-module debug level and position info *)
 val debug          : env -> Options.debug_level_t -> bool
@@ -278,5 +285,3 @@ val string_of_proof_ns : env -> string
 val unbound_vars    : env -> term -> BU.set<bv>
 val closed          : env -> term -> bool
 val closed'         : term -> bool
-
-val mk_copy: env -> env

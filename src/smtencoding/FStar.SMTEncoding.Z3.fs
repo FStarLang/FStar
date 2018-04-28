@@ -500,13 +500,16 @@ let bg_scope : ref<list<decl>> = BU.mk_ref []
 // fresh_scope is a mutable reference; this pushes a new list at the front;
 // then, givez3 modifies the reference so that within the new list at the front,
 // new queries are pushed
-let push msg    =
+let push msg    = BU.atomically (fun () ->
     fresh_scope := [Caption msg; Push]::!fresh_scope;
-    bg_scope := !bg_scope @ [Push; Caption msg]
+    bg_scope := !bg_scope @ [Push; Caption msg])
 
-let pop msg      =
+let pop msg      = BU.atomically (fun () ->
     fresh_scope := List.tl !fresh_scope;
-    bg_scope := !bg_scope @ [Caption msg; Pop]
+    bg_scope := !bg_scope @ [Caption msg; Pop])
+
+let snapshot msg = Common.snapshot push fresh_scope msg
+let rollback msg depth = Common.rollback (fun () -> pop msg) fresh_scope depth
 
 //giveZ3 decls: adds decls to the stack of declarations
 //              to be actually given to Z3 only when the next

@@ -38,25 +38,28 @@ module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
+type repl_depth_t = TcEnv.tcenv_depth_t * int
+
 (** Checkpoint the current (typechecking and desugaring) environment **)
-let push env msg =
-  let res = push_context env msg in
-  Options.push();
-  res
+let snapshot env msg : repl_depth_t * env_t =
+  let ctx_depth, env = TypeChecker.Tc.snapshot_context env msg in
+  let opt_depth, () = Options.snapshot () in
+  (ctx_depth, opt_depth), env
 
 (** Revert to the last checkpoint.
 
 Usage note: [pop] alters the value returned by [push], but not the value that
 [push] operated on.  That is, a proper push/pop pair looks like this:
 
-  let noop =
+  let noop = // CPC FIXME push should have returned the fresh environment, not the old one
     let env_snapshot = push env in
     // [Do stuff with env]
     pop env_snapshot;
     env_snapshot // Discard env **)
-let pop env msg =
-  pop_context env msg;
-  Options.pop()
+let rollback solver msg (ctx_depth, opt_depth) =
+  let env = TypeChecker.Tc.rollback_context solver msg (Some ctx_depth) in
+  Options.rollback (Some opt_depth);
+  env
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 
@@ -147,8 +150,8 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_env: env_t;
                     repl_stdin: stream_reader;
                     repl_names: CTable.table }
-and repl_stack_t = list<completed_repl_task>
-and completed_repl_task = repl_task * repl_state
+and repl_stack_t = list<repl_stack_entry_t>
+and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
 
 let repl_current_qid : ref<option<string>> = Util.mk_ref None // For messages
 let repl_stack: ref<repl_stack_t> = Util.mk_ref []
@@ -156,14 +159,16 @@ let repl_stack: ref<repl_stack_t> = Util.mk_ref []
 let pop_repl st =
   match !repl_stack with
   | [] -> failwith "Too many pops"
-  | (_, st') :: stack ->
-    pop st.repl_env "REPL pop_repl";
+  | (depth, (_, st')) :: stack ->
+    let env = rollback st.repl_env.solver "REPL pop_repl" depth in
     repl_stack := stack;
+    // CPC FIXME if not (Util.physical_equality env st'.repl_env) then failwith "Inconsistent stack state";
     st'
 
 let push_repl push_kind task st =
-  repl_stack := (task, st) :: !repl_stack;
-  push (set_check_kind st.repl_env push_kind) "REPL push_repl"
+  let depth, env = snapshot (set_check_kind st.repl_env push_kind) "REPL push_repl" in
+  repl_stack := (depth, (task, st)) :: !repl_stack;
+  env
 
 (** Check whether users can issue further ``pop`` commands. **)
 let nothing_left_to_pop st =
@@ -382,7 +387,7 @@ let run_repl_transaction st push_kind must_rollback task =
 
   let env', name_events = finish_name_tracking env in // …end name tracking
   let st =
-    { st with repl_env = env; repl_curmod = curmod } in
+    { st with repl_env = env'; repl_curmod = curmod } in // FIXME CPC env'
   let st =
     if success
     then commit_name_tracking st name_events
@@ -415,14 +420,14 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>)
   ``!repl_stack`` *)
   let rec revert_many st = function
     | [] -> st
-    | (task, _st') :: entries ->
-      assert (task = fst (List.hd !repl_stack));
+    | (_id, (task, _st')) :: entries ->
+      assert (task = fst (snd (List.hd !repl_stack)));
       debug "Reverting" task;
       revert_many (pop_repl st) entries in
 
   let rec aux (st: repl_state)
               (tasks: list<repl_task>)
-              (previous: list<completed_repl_task>) =
+              (previous: list<repl_stack_entry_t>) =
     match tasks, previous with
     // All done: return the final state.
     | [], [] ->
@@ -442,7 +447,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>)
 
     // We've already run ``task`` previously, and no update is needed: skip.
     | task :: tasks, prev :: previous
-        when (fst prev) = (update_task_timestamps task) ->
+        when fst (snd prev) = update_task_timestamps task ->
       debug "Skipping" task;
       aux st tasks previous
 
@@ -859,7 +864,7 @@ let trim_option_name opt_name =
 (*************************)
 
 let json_of_repl_state st =
-  let filenames (task, _) =
+  let filenames (_, (task, _)) =
     match task with
     | LDInterleaved (intf, impl) -> [intf.tf_fname; impl.tf_fname]
     | LDSingle intf_or_impl -> [intf_or_impl.tf_fname]
@@ -1189,15 +1194,15 @@ let run_autocomplete st search_term context =
 //   |> Util.concat_l "\n"
 
 let run_and_rewind st sigint_default task =
-  let env' = push st.repl_env "REPL run_and_rewind" in
+  let depth, env' = snapshot st.repl_env "REPL run_and_rewind" in
   let results =
     try Util.with_sigint_handler Util.sigint_raise (fun _ -> Inl <| task st)
     with | Util.SigInt -> Inl sigint_default
          | e -> Inr e in
-  pop env' "REPL run_and_rewind";
+  let _env'' = rollback env'.solver "REPL run_and_rewind" depth in // CPC FIXME no env''?
   match results with
   | Inl results -> (results, Inl ({ st with repl_env = env' }))
-  | Inr e -> raise e
+  | Inr e -> raise e // CPC fixme add a test with two computations
 
 let run_with_parsed_and_tc_term st term line column continuation =
   let dummy_let_fragment term =
