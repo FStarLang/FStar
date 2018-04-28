@@ -236,7 +236,7 @@ Read on for the more complete solution involving Visual Studio itself.
     - On Arch
 
             $ pacman -S mono
-            $ aura -A fsharp msbuild-bin
+            $ aura -A fsharp msbuild-stable
 
     - For other Linux distributions check out these links:
       - http://www.mono-project.com/download/#download-lin
