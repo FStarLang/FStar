@@ -815,8 +815,11 @@ and mkPrelude z3options =
                      (! (iff (Valid (Precedes t1 t2)) \n\
                              (< (Rank t1) (Rank t2)))\n\
                         :pattern ((Precedes t1 t2)))))\n\
-                (define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
-                         (Precedes t1 t2))\n\
+                (declare-fun Prims.precedes (Term Term Term Term) Term)\n\
+                (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
+                                (! (= (Precedes e1 e2)\n\
+                                      (Prims.precedes t1 t2 e1 e2))\n\
+                                   :pattern ((Prims.precedes t1 t2 e1 e2)))))\n\
                 (declare-fun Range_const (Int) Term)\n\
                 (declare-fun _mul (Int Int) Int)\n\
                 (declare-fun _div (Int Int) Int)\n\
