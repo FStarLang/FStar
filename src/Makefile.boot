@@ -89,7 +89,7 @@ ocaml-output/%.ml:
 		   $(EXTRACT)		      \
 		   --codegen OCaml > ._depend
 	mv ._depend .depend
-        mkdir -p $(CACHE_DIR)
+	mkdir -p $(CACHE_DIR)
 
 depend: .depend
 
