@@ -1276,72 +1276,6 @@ let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
       let formals, t_res = U.arrow_formals t_hd in
       aux [] formals t_res args
 
-let meet_or_join op ts env wl =
-    let eq_prob t1 t2 wl =
-        let p, wl =
-        new_problem wl env t1 EQ t2 None t1.pos
-                    "join/meet refinements"
-        in
-        TProb p, wl
-    in
-    let pairwise t1 t2 wl =
-        let mr, ts = head_matches_delta env () t1 t2 in
-        match mr with
-        | MisMatch _ ->
-          let p, wl = eq_prob t1 t2 wl in
-          (t1, [p], wl)
-
-        | FullMatch ->
-          begin
-          match ts with
-          | None ->
-            (t1, [], wl)
-          | Some (t1, t2) ->
-            (t1, [], wl)
-          end
-
-        | HeadMatch ->
-          let t1, t2 =
-              match ts with
-              | Some (t1, t2) -> SS.compress t1, SS.compress t2
-              | None -> SS.compress t1, SS.compress t2
-          in
-          let t1, p1_opt = base_and_refinement_maybe_delta true env t1 in
-          let t2, p2_opt = base_and_refinement_maybe_delta true env t2 in
-          let p, wl = eq_prob t1 t2 wl in
-          let t =
-              match p1_opt, p2_opt with
-              | Some (x, phi1), Some(y, phi2) ->
-                let x = freshen_bv x in
-                let subst = [DB(0, x)] in
-                let phi1 = SS.subst subst phi1 in
-                let phi2 = SS.subst subst phi2 in
-                U.refine x (op phi1 phi2)
-
-              | None, Some (x, phi)
-              | Some(x, phi), None ->
-                let x = freshen_bv x in
-                let subst = [DB(0, x)] in
-                let phi = SS.subst subst phi in
-                U.refine x (op U.t_true phi)
-
-              | _ ->
-                t1
-          in
-          (t1, [p], wl)
-    in
-    let rec aux (out, probs, wl) ts =
-        match ts with
-        | [] -> (out, probs, wl)
-        | t::ts ->
-          let out, probs', wl = pairwise out t wl in
-         aux (out, probs@probs', wl) ts
-    in
-    aux (List.hd ts, [], wl) (List.tl ts)
-let conjoin = meet_or_join U.mk_conj
-let disjoin = meet_or_join U.mk_disj
-
-
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
 (******************************************************************************************************)
@@ -1440,6 +1374,102 @@ and giveup_or_defer (env:Env.env) (orig:prob) (wl:worklist) (msg:string) : solut
 and solve_rigid_flex_or_flex_rigid_subtyping
     (rank:rank_t)
     (env:Env.env) (tp:tprob) (wl:worklist) : solution =
+    let meet_or_join op ts env wl =
+        let eq_prob t1 t2 wl =
+            let p, wl =
+            new_problem wl env t1 EQ t2 None t1.pos
+                        "join/meet refinements"
+            in
+            TProb p, wl
+        in
+        let pairwise t1 t2 wl =
+            let mr, ts = head_matches_delta env () t1 t2 in
+            match mr with
+            | MisMatch _ ->
+              let p, wl = eq_prob t1 t2 wl in
+              (t1, [p], wl)
+
+            | FullMatch ->
+              begin
+              match ts with
+              | None ->
+                (t1, [], wl)
+              | Some (t1, t2) ->
+                (t1, [], wl)
+              end
+
+            | HeadMatch ->
+              let t1, t2 =
+                  match ts with
+                  | Some (t1, t2) -> SS.compress t1, SS.compress t2
+                  | None -> SS.compress t1, SS.compress t2
+              in
+              let fallback () =
+                  let t1, p1_opt = base_and_refinement_maybe_delta true env t1 in
+                  let t2, p2_opt = base_and_refinement_maybe_delta true env t2 in
+                  let p, wl = eq_prob t1 t2 wl in
+                  let t =
+                      match p1_opt, p2_opt with
+                      | Some (x, phi1), Some(y, phi2) ->
+                        let x = freshen_bv x in
+                        let subst = [DB(0, x)] in
+                        let phi1 = SS.subst subst phi1 in
+                        let phi2 = SS.subst subst phi2 in
+                        U.refine x (op phi1 phi2)
+
+                      | None, Some (x, phi)
+                      | Some(x, phi), None ->
+                        let x = freshen_bv x in
+                        let subst = [DB(0, x)] in
+                        let phi = SS.subst subst phi in
+                        U.refine x (op U.t_true phi)
+
+                      | _ ->
+                        t1
+                  in
+                  (t, [p], wl)
+              in
+              let try_eq wl =
+                  if U.term_eq t1 t2 then Some wl else
+                  let _t1_hd, t1_args = U.head_and_args t1 in
+                  let _t2_hd, t2_args = U.head_and_args t2 in
+                  if List.length t1_args <> List.length t2_args then None else
+                  let probs, wl =
+                          List.fold_left2 (fun (probs, wl) (a1, _) (a2, _) ->
+                             let p, wl = eq_prob a1 a2 wl in
+                             p::probs, wl)
+                          ([], wl)
+                          t1_args
+                          t2_args
+                  in
+                  let wl' = {wl with defer_ok=false;
+                                        smt_ok=false;
+                                        attempting=probs;
+                                        wl_deferred=[];
+                                        wl_implicits=[]} in
+                  let tx = UF.new_transaction () in
+                  match solve env wl' with
+                  | Success (_, imps) ->
+                    UF.commit tx;
+                    Some ({wl with wl_implicits=wl.wl_implicits@imps})
+
+                  | Failed _ ->
+                    UF.rollback tx;
+                    None
+              in
+              match try_eq wl with
+              | Some wl -> t1, [], wl
+              | None -> fallback()
+        in
+        let rec aux (out, probs, wl) ts =
+            match ts with
+            | [] -> (out, probs, wl)
+            | t::ts ->
+              let out, probs', wl = pairwise out t wl in
+              aux (out, probs@probs', wl) ts
+        in
+        aux (List.hd ts, [], wl) (List.tl ts)
+    in
   let flip = rank = Flex_rigid in
   let this_flex, this_rigid = if flip then tp.lhs, tp.rhs else tp.rhs, tp.lhs in
   begin
