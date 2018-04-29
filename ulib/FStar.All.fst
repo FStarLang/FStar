@@ -19,27 +19,35 @@ include FStar.ST
 include FStar.Exn
 
 let all_pre = all_pre_h heap
-let all_post' (a : Type) (pre:Type) = all_post_h' heap a pre
-let all_post (a : Type) = all_post_h heap a
-let all_wp (a : Type) = all_wp_h heap a
-new_effect ALL  = ALL_h heap
+let all_post' (a: Type) (pre: Type) = all_post_h' heap a pre
+let all_post (a: Type) = all_post_h heap a
+let all_wp (a: Type) = all_wp_h heap a
+new_effect ALL = ALL_h heap
 
-unfold let lift_state_all (a : Type) (wp : st_wp a) (p : all_post a) = wp (fun a -> p (V a))
+unfold
+let lift_state_all (a: Type) (wp: st_wp a) (p: all_post a) = wp (fun a -> p (V a))
 sub_effect STATE ~> ALL { lift_wp = lift_state_all }
 
 unfold
-let lift_exn_all (a : Type) (wp : ex_wp a) (p : all_post a) (h : heap) = wp (fun ra -> p ra h)
+let lift_exn_all (a: Type) (wp: ex_wp a) (p: all_post a) (h: heap) = wp (fun ra -> p ra h)
 sub_effect EXN ~> ALL { lift_wp = lift_exn_all }
 
-effect All (a:Type) (pre:all_pre) (post:(h:heap -> Tot (all_post' a (pre h)))) =
-  ALL a
-    (fun (p : all_post a) (h : heap) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1))
-effect ML (a:Type) = ALL a (all_null_wp heap a)
+effect All (a: Type) (pre: all_pre) (post: (h: heap -> Tot (all_post' a (pre h)))) =
+  ALL a (fun (p: all_post a) (h: heap) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1))
+effect ML (a: Type) = ALL a (all_null_wp heap a)
 
-assume val pipe_right : 'a -> ('a -> ML 'b) -> ML 'b
-assume val pipe_left : ('a -> ML 'b) -> 'a -> ML 'b
-assume val exit : int -> ML 'a
-assume val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a
+assume
+val pipe_right: 'a -> ('a -> ML 'b) -> ML 'b
+assume
+val pipe_left: ('a -> ML 'b) -> 'a -> ML 'b
+assume
+val exit: int -> ML 'a
+assume
+val try_with: (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a
 
-assume exception Failure of string
-assume val failwith : string -> All 'a (fun h -> True) (fun h a h' -> Err? a /\ h == h')
+assume
+exception Failure
+of string
+assume
+val failwith: string -> All 'a (fun h -> True) (fun h a h' -> Err? a /\ h == h')
+

@@ -8,13 +8,15 @@ module FStar.Tactics.Result
 // definition of proofstate.
 open FStar.Tactics.Types
 
-noeq type __result a =
-    | Success : a -> proofstate -> __result a
-    | Failed  : string    //error message
-              -> proofstate //the proofstate at time of failure
-              -> __result a
-              
-val result_split : #a:Type -> r:(__result a) ->
-                        Lemma (Success? r \/ Failed? r) [SMTPat (Success? r);
-                                                         SMTPat (Failed? r)]
+noeq
+type __result a =
+  | Success : a -> proofstate -> __result a
+  //error message
+  | Failed : string -> proofstate ->
+    //the proofstate at time of failure
+    __result a
+
+val result_split: #a: Type -> r: (__result a) ->
+  Lemma (Success? r \/ Failed? r) [SMTPat (Success? r); SMTPat (Failed? r)]
 let result_split #a r = ()
+
