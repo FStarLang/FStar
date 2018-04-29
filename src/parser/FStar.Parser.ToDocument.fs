@@ -879,6 +879,10 @@ and p_atomicPattern p = match p.pat with
 
 (* Skipping patternOrMultibinder since it would need retro-engineering the flattening of binders *)
 
+and is_typ_tuple e = match e.tm with
+  | Op({idText = "*"}, _) -> true
+  | _ -> false
+
 (* is_atomic is true if the binder must be parsed atomically *)
 and p_binder is_atomic b = match b.b with
   | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid
@@ -888,7 +892,12 @@ and p_binder is_atomic b = match b.b with
         | Refine ({b = Annotated (lid', t)}, phi) when lid.idText = lid'.idText ->
           p_refinement b.aqual (p_lident lid) t phi
         | _ ->
-          optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^/^ p_tmFormula t
+          let t' = if is_typ_tuple t then
+            soft_parens_with_nesting (p_tmFormula t)
+          else
+            p_tmFormula t
+          in
+          optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^/^ t'
       in
       if is_atomic
       then group (lparen ^^ doc ^^ rparen)
@@ -1287,7 +1296,7 @@ and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
         infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2)
       else
         paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
-  | Op (op, [ e1; e2]) when is_operatorInfix34 op ->
+  | Op (op, [e1; e2]) when is_operatorInfix34 op ->
       let op = Ident.text_of_id op in
       let left, mine, right = levels op in
       paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' false p_X left e1) (p_tmNoEqWith' false p_X right e2))
