@@ -657,7 +657,7 @@ let logor_disjoint #n a b m =
   assert (from_vec #(n - m) (slice (to_vec a) 0 (n - m)) * pow2 m == a);
   slice_right_lemma #n (to_vec b) m;
   small_modulo_lemma_1 b (pow2 m);
-  assert (from_vec #m (slice (to_vec b) (n - m) n) === b)
+  assert (from_vec #m (slice (to_vec b) (n - m) n) == b)
 
 val logand_mask: #n:pos -> a:uint_t n -> m:pos{m < n} ->
   Lemma (pow2 m < pow2 n /\ logand #n a (pow2 m - 1) == a % pow2 m)
