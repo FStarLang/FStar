@@ -977,6 +977,7 @@ let rank_t_num = function
     | Flex_rigid -> 3
     | Rigid_flex -> 4
     | Flex_flex -> 5
+let rank_less_than r1 r2 = rank_t_num r1 < rank_t_num r2
 let rank_leq r1 r2 = rank_t_num r1 <= rank_t_num r2
 let compress_tprob tcenv p = {p with lhs=whnf tcenv p.lhs; rhs=whnf tcenv p.rhs}
 
@@ -1051,7 +1052,7 @@ let next_prob wl : option<(prob * list<prob> * rank_t)> =
                | None -> Some (hd, out@tl, rank)
                | Some m -> Some (hd, out@m::tl, rank)
           else if min_rank = None
-               || rank_leq rank (Option.get min_rank)
+               || rank_less_than rank (Option.get min_rank)
           then match min with
                | None -> aux (Some rank, Some hd, out) tl
                | Some m -> aux (Some rank, Some hd, m::out) tl
