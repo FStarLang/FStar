@@ -1384,6 +1384,8 @@ and solve_rigid_flex_or_flex_rigid_subtyping
             TProb p, wl
         in
         let pairwise t1 t2 wl =
+            if Env.debug env <| Options.Other "RelCheck"
+            then BU.print2 "pairwise: %s and %s" (Print.term_to_string t1) (Print.term_to_string t2);
             let mr, ts = head_matches_delta env () t1 t2 in
             match mr with
             | MisMatch _ ->
@@ -1405,54 +1407,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                   | Some (t1, t2) -> SS.compress t1, SS.compress t2
                   | None -> SS.compress t1, SS.compress t2
               in
-              let fallback2 () =
-                  let t1, p1_opt = base_and_refinement_maybe_delta true env t1 in
-                  let t2, p2_opt = base_and_refinement_maybe_delta true env t2 in
-                  let p, wl = eq_prob t1 t2 wl in
-                  let t =
-                      match p1_opt, p2_opt with
-                      | Some (x, phi1), Some(y, phi2) ->
-                        let x = freshen_bv x in
-                        let subst = [DB(0, x)] in
-                        let phi1 = SS.subst subst phi1 in
-                        let phi2 = SS.subst subst phi2 in
-                        U.refine x (op phi1 phi2)
-
-                      | None, Some (x, phi)
-                      | Some(x, phi), None ->
-                        let x = freshen_bv x in
-                        let subst = [DB(0, x)] in
-                        let phi = SS.subst subst phi in
-                        U.refine x (op U.t_true phi)
-
-                      | _ ->
-                        t1
-                  in
-                  (t, [p], wl)
-              in
-              let fallback () =
-                  match t1, t2 with
-                  | {n=Tm_refine(x, phi1)}, {n=Tm_refine(y, phi2)} ->
-                    let p, wl = eq_prob x.sort y.sort wl in
-                    let x = freshen_bv x in
-                    let subst = [DB(0, x)] in
-                    let phi1 = SS.subst subst phi1 in
-                    let phi2 = SS.subst subst phi2 in
-                    (U.refine x (op phi1 phi2), [p], wl)
-
-                  | t, {n=Tm_refine(x, phi)}
-                  | {n=Tm_refine(x, phi)}, t ->
-                    let p, wl = eq_prob x.sort t wl in
-                    let x = freshen_bv x in
-                    let subst = [DB(0, x)] in
-                    let phi = SS.subst subst phi in
-                    (U.refine x (op U.t_true phi), [p], wl)
-
-                  | _ ->
-                    let p, wl = eq_prob t1 t2 wl in
-                    (t1, [p], wl)
-              in
-              let try_eq wl =
+              let try_eq t1 t2 wl =
                   if U.term_eq t1 t2 then Some wl else
                   let _t1_hd, t1_args = U.head_and_args t1 in
                   let _t2_hd, t2_args = U.head_and_args t2 in
@@ -1480,9 +1435,47 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                     UF.rollback tx;
                     None
               in
-              match try_eq wl with
-              | Some wl -> t1, [], wl
-              | None -> fallback2()
+              let combine t1 t2 wl =
+                  if U.term_eq t1 t2 then (t1, [], wl) else
+                  let t1_base, p1_opt = base_and_refinement_maybe_delta false env t1 in
+                  let t2_base, p2_opt = base_and_refinement_maybe_delta false env t2 in
+                  let combine_refinements t_base p1_opt p2_opt =
+                      match p1_opt, p2_opt with
+                      | Some (x, phi1), Some(y, phi2) ->
+                        let x = freshen_bv x in
+                        let subst = [DB(0, x)] in
+                        let phi1 = SS.subst subst phi1 in
+                        let phi2 = SS.subst subst phi2 in
+                        U.refine x (op phi1 phi2)
+
+                      | None, Some (x, phi)
+                      | Some(x, phi), None ->
+                        let x = freshen_bv x in
+                        let subst = [DB(0, x)] in
+                        let phi = SS.subst subst phi in
+                        U.refine x (op U.t_true phi)
+
+                      | _ ->
+                        t_base
+                  in
+                  match try_eq t1_base t2_base wl with
+                  | Some wl ->
+                    combine_refinements t1_base p1_opt p2_opt,
+                    [],
+                    wl
+
+                  | None ->
+                    let t1_base, p1_opt = base_and_refinement_maybe_delta true env t1 in
+                    let t2_base, p2_opt = base_and_refinement_maybe_delta true env t2 in
+                    let p, wl = eq_prob t1_base t2_base wl in
+                    let t = combine_refinements t1_base p1_opt p2_opt in
+                    (t, [p], wl)
+              in
+              let t1, ps, wl = combine t1 t2 wl in
+              if Env.debug env <| Options.Other "RelCheck"
+              then BU.print1 "pairwise fallback2 succeeded: %s"
+                            (Print.term_to_string t1);
+              t1, ps, wl
         in
         let rec aux (out, probs, wl) ts =
             match ts with
