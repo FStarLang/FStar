@@ -1374,6 +1374,7 @@ and giveup_or_defer (env:Env.env) (orig:prob) (wl:worklist) (msg:string) : solut
 and solve_rigid_flex_or_flex_rigid_subtyping
     (rank:rank_t)
     (env:Env.env) (tp:tprob) (wl:worklist) : solution =
+    let flip = rank = Flex_rigid in
     let meet_or_join op ts env wl =
         let eq_prob t1 t2 wl =
             let p, wl =
@@ -1405,29 +1406,26 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                   | None -> SS.compress t1, SS.compress t2
               in
               let fallback () =
-                  let t1, p1_opt = base_and_refinement_maybe_delta true env t1 in
-                  let t2, p2_opt = base_and_refinement_maybe_delta true env t2 in
-                  let p, wl = eq_prob t1 t2 wl in
-                  let t =
-                      match p1_opt, p2_opt with
-                      | Some (x, phi1), Some(y, phi2) ->
-                        let x = freshen_bv x in
-                        let subst = [DB(0, x)] in
-                        let phi1 = SS.subst subst phi1 in
-                        let phi2 = SS.subst subst phi2 in
-                        U.refine x (op phi1 phi2)
+                  match t1, t2 with
+                  | {n=Tm_refine(x, phi1)}, {n=Tm_refine(y, phi2)} ->
+                    let p, wl = eq_prob x.sort y.sort wl in
+                    let x = freshen_bv x in
+                    let subst = [DB(0, x)] in
+                    let phi1 = SS.subst subst phi1 in
+                    let phi2 = SS.subst subst phi2 in
+                    (U.refine x (op phi1 phi2), [p], wl)
 
-                      | None, Some (x, phi)
-                      | Some(x, phi), None ->
-                        let x = freshen_bv x in
-                        let subst = [DB(0, x)] in
-                        let phi = SS.subst subst phi in
-                        U.refine x (op U.t_true phi)
+                  | t, {n=Tm_refine(x, phi)}
+                  | {n=Tm_refine(x, phi)}, t ->
+                    let p, wl = eq_prob x.sort t wl in
+                    let x = freshen_bv x in
+                    let subst = [DB(0, x)] in
+                    let phi = SS.subst subst phi in
+                    (U.refine x (op U.t_true phi), [p], wl)
 
-                      | _ ->
-                        t1
-                  in
-                  (t, [p], wl)
+                  | _ ->
+                    let p, wl = eq_prob t1 t2 wl in
+                    (t1, [p], wl)
               in
               let try_eq wl =
                   if U.term_eq t1 t2 then Some wl else
@@ -1457,9 +1455,10 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                     UF.rollback tx;
                     None
               in
-              match try_eq wl with
-              | Some wl -> t1, [], wl
-              | None -> fallback()
+              // match try_eq wl with
+              // | Some wl -> t1, [], wl
+              // | None ->
+              fallback()
         in
         let rec aux (out, probs, wl) ts =
             match ts with
@@ -1470,7 +1469,6 @@ and solve_rigid_flex_or_flex_rigid_subtyping
         in
         aux (List.hd ts, [], wl) (List.tl ts)
     in
-  let flip = rank = Flex_rigid in
   let this_flex, this_rigid = if flip then tp.lhs, tp.rhs else tp.rhs, tp.lhs in
   begin
   match (SS.compress this_rigid).n with
