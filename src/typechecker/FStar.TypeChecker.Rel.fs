@@ -1405,6 +1405,31 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                   | Some (t1, t2) -> SS.compress t1, SS.compress t2
                   | None -> SS.compress t1, SS.compress t2
               in
+              let fallback2 () =
+                  let t1, p1_opt = base_and_refinement_maybe_delta true env t1 in
+                  let t2, p2_opt = base_and_refinement_maybe_delta true env t2 in
+                  let p, wl = eq_prob t1 t2 wl in
+                  let t =
+                      match p1_opt, p2_opt with
+                      | Some (x, phi1), Some(y, phi2) ->
+                        let x = freshen_bv x in
+                        let subst = [DB(0, x)] in
+                        let phi1 = SS.subst subst phi1 in
+                        let phi2 = SS.subst subst phi2 in
+                        U.refine x (op phi1 phi2)
+
+                      | None, Some (x, phi)
+                      | Some(x, phi), None ->
+                        let x = freshen_bv x in
+                        let subst = [DB(0, x)] in
+                        let phi = SS.subst subst phi in
+                        U.refine x (op U.t_true phi)
+
+                      | _ ->
+                        t1
+                  in
+                  (t, [p], wl)
+              in
               let fallback () =
                   match t1, t2 with
                   | {n=Tm_refine(x, phi1)}, {n=Tm_refine(y, phi2)} ->
@@ -1455,10 +1480,9 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                     UF.rollback tx;
                     None
               in
-              // match try_eq wl with
-              // | Some wl -> t1, [], wl
-              // | None ->
-              fallback()
+              match try_eq wl with
+              | Some wl -> t1, [], wl
+              | None -> fallback2()
         in
         let rec aux (out, probs, wl) ts =
             match ts with
