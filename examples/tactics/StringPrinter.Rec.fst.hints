@@ -17,16 +17,19 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "bb8138f873892558300424fa7ce27f42"
+      "f53a0f52d23462859f6da5f07cc8122d"
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_StringPrinter.Rec_Tm_refine_632c45b0a0bb44e12be5f467a06c3783"
+      ],
       0,
-      "1c38d60b95fccdae05ccee45b493edc9"
+      "adb39e799795171bfec3d3fd7ca35684"
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -43,7 +46,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "d182d651d03e0ea3937ad46d1a713b73"
+      "ae257f4043e4bca8313a125bbcfdd273"
     ],
     [
       "StringPrinter.Rec.do_while_correct",
@@ -89,7 +92,7 @@
         "unit_typing"
       ],
       0,
-      "84ce1259aa53f07b191a103857899203"
+      "d1fd13890ef76d52274acb9e7a1c5e71"
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -118,7 +121,7 @@
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "7221b58a35859097baefeedaef5d1b88"
+      "aaec53772aaa9c3f64504aee9fc9974f"
     ],
     [
       "StringPrinter.Rec.do_while_body_post",
@@ -136,16 +139,19 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "1edc331a02b2b6316386928b993911cc"
+      "1dd7b29badc57db8e2ab77fe84300003"
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
       2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_StringPrinter.Rec_Tm_refine_632c45b0a0bb44e12be5f467a06c3783"
+      ],
       0,
-      "6b86954390407ef333177765a44700b4"
+      "ab79789223b162b15f31096e6cb6ccb0"
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -162,7 +168,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "3a5241b9e68c435a04b552e3e67ef8e0"
+      "50f9530e40eb2879122cbf5153e326ac"
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -191,7 +197,7 @@
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "ea1d788fc6b986730dfe97b49f99106c"
+      "9ef00b79113fca9b8c16e581561e6c8e"
     ]
   ]
 ]

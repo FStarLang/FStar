@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "05165b50f91125d9007e1d740626980f"
+      "3e5819f6307d6665889f3995cfb8599d"
     ],
     [
       "BinarySearchTree.__proj__Node__item___0",
@@ -22,7 +22,7 @@
         "refinement_interpretation_BinarySearchTree_Tm_refine_8ee25ada3e510d97b9ca9d5eea1548fd"
       ],
       0,
-      "923a3e9568bc7d2327e9d146f0fb606e"
+      "916890b3eb70d2ed3ec11fd7daae62f8"
     ],
     [
       "BinarySearchTree.__proj__Node__item___1",
@@ -36,7 +36,7 @@
         "refinement_interpretation_BinarySearchTree_Tm_refine_8ee25ada3e510d97b9ca9d5eea1548fd"
       ],
       0,
-      "f85b19471b5c4e4e55065b10fd60ddae"
+      "da34cd976b427ab2954748df4437a10d"
     ],
     [
       "BinarySearchTree.__proj__Node__item___2",
@@ -50,7 +50,7 @@
         "refinement_interpretation_BinarySearchTree_Tm_refine_8ee25ada3e510d97b9ca9d5eea1548fd"
       ],
       0,
-      "3446c512eddfe1c74c6df37cce038288"
+      "cf1456318dfb215d3429e3124988404c"
     ],
     [
       "BinarySearchTree.in_tree",
@@ -68,7 +68,7 @@
         "subterm_ordering_BinarySearchTree.Node"
       ],
       0,
-      "81b7b12b0b88d1f684f3badf11f0464a"
+      "56b0c577983d7f271c1be8d3da3aedcc"
     ],
     [
       "BinarySearchTree.all",
@@ -105,7 +105,7 @@
         "typing_BinarySearchTree.all", "typing_BinarySearchTree.in_tree"
       ],
       0,
-      "2a5969192ec57005d2823d529f009fc2"
+      "561a581e84dff63ad2e9db3004a97eef"
     ],
     [
       "BinarySearchTree.is_bst",
@@ -121,7 +121,7 @@
         "subterm_ordering_BinarySearchTree.Node"
       ],
       0,
-      "46bc23cea57b078a1175f8a3f3133c00"
+      "72747067e5cf0f5f605b4fd5e0d6cb92"
     ],
     [
       "BinarySearchTree.search",
@@ -168,7 +168,7 @@
         "typing_BinarySearchTree_Tm_abs_07d54406df86a0f1fa6b7e73e17b87bd"
       ],
       0,
-      "ab1ead135d6216518498be6de8f1525b"
+      "1985c3497d7aad50b273c0873a98f920"
     ],
     [
       "BinarySearchTree.insert",
@@ -177,7 +177,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "cd3f0728fa49e5acda7ab9510558ea2f"
+      "53c76b052596dde18975ac8671f6f6cb"
     ],
     [
       "BinarySearchTree.insert",
@@ -233,7 +233,7 @@
         "typing_tok_BinarySearchTree.Leaf@tok"
       ],
       0,
-      "c5d49e44d325244964951829615d5fbe"
+      "58289ac346bf2ab7e34a7bb5af08fd61"
     ],
     [
       "BinarySearchTree.tree",
@@ -242,7 +242,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a67996de738e5deee34defad74fadc2d"
+      "9859513fa082ce8b25ee9b60ca840aa5"
     ],
     [
       "BinarySearchTree.__proj__Node__item___0",
@@ -256,7 +256,7 @@
         "refinement_interpretation_BinarySearchTree_Tm_refine_8ee25ada3e510d97b9ca9d5eea1548fd"
       ],
       0,
-      "c514457f5c27c22736baa91fe83ab89b"
+      "53f82155dcbe373c43557b8d2b62bbc5"
     ],
     [
       "BinarySearchTree.__proj__Node__item___1",
@@ -270,7 +270,7 @@
         "refinement_interpretation_BinarySearchTree_Tm_refine_8ee25ada3e510d97b9ca9d5eea1548fd"
       ],
       0,
-      "a68e6525b6812e1a6a3e31750f743032"
+      "468701f34cae74fba6d84f5bfcee5c3f"
     ],
     [
       "BinarySearchTree.__proj__Node__item___2",
@@ -284,7 +284,7 @@
         "refinement_interpretation_BinarySearchTree_Tm_refine_8ee25ada3e510d97b9ca9d5eea1548fd"
       ],
       0,
-      "2bbb6d6e04a94d4725032dc717059ff8"
+      "d39f1b54cb35ac2714ed28268253046c"
     ],
     [
       "BinarySearchTree.in_tree",
@@ -302,7 +302,7 @@
         "subterm_ordering_BinarySearchTree.Node"
       ],
       0,
-      "ced87402c17457026331b26bd176e93c"
+      "cd4b386afe9e3bc056968f209cddcab7"
     ],
     [
       "BinarySearchTree.all",
@@ -338,7 +338,7 @@
         "typing_BinarySearchTree.all", "typing_BinarySearchTree.in_tree"
       ],
       0,
-      "45a8b5c00e0d59ab999aa2d4fd516d4c"
+      "254dc2fcdc1a8d0ec18138e6c290efec"
     ],
     [
       "BinarySearchTree.is_bst",
@@ -354,7 +354,7 @@
         "subterm_ordering_BinarySearchTree.Node"
       ],
       0,
-      "2d2abbbf9f923e50ed93f65aa42a0e78"
+      "cdb151f7777639f0ee551e706a96013b"
     ],
     [
       "BinarySearchTree.search",
@@ -400,7 +400,7 @@
         "typing_BinarySearchTree_Tm_abs_07d54406df86a0f1fa6b7e73e17b87bd"
       ],
       0,
-      "21b5ac2427d82583793985809ec40ecd"
+      "54c6be8498653caefad158e5214ce17e"
     ],
     [
       "BinarySearchTree.insert",
@@ -456,7 +456,7 @@
         "typing_tok_BinarySearchTree.Leaf@tok"
       ],
       0,
-      "2e61f659294fc6ce570f80348104639a"
+      "e82baddb1d0504a2045f0ff3c12c3e21"
     ]
   ]
 ]

@@ -8,16 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "15af9dc2a049f0be2f7643ce8407c7c7"
-    ],
-    [
-      "TestBV.test1",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "9ba5960bb9aca715ab0f497067dbfc02"
+      "ee78a21b9de32e6128647fda2af8261e"
     ],
     [
       "TestBV.test2",
@@ -26,16 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "fda8a6d4f4cafa1d96cf50b770bf4580"
-    ],
-    [
-      "TestBV.test2",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c3ffed0295a9978087ce5fc52281b866"
+      "1f17562481dcdc88e31e3e42536c9f24"
     ],
     [
       "TestBV.test3",
@@ -44,16 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "fc0758b9f6d3c912ddc568823cad5f19"
-    ],
-    [
-      "TestBV.test3",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "9c8e25425a05faa73d16d695f17f22a5"
+      "e6edf43913ca6bd63ae6bc1851dac6ca"
     ],
     [
       "TestBV.test4",
@@ -62,16 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "e9edf61fe34c557c37665e17567ccb0b"
-    ],
-    [
-      "TestBV.test4",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "014433cfa26cc04b3d5207c784812171"
+      "131b2c94d850d97b11896515d1f01f39"
     ],
     [
       "TestBV.test5",
@@ -80,16 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "e05f60091827cfab9f8a57d3c922a75d"
-    ],
-    [
-      "TestBV.test5",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d2bad3192cafde7bf0dcee9767a82e1f"
+      "ce49be67f2b4f4813dd2c818ed30761e"
     ],
     [
       "TestBV.v64_eq",
@@ -98,7 +53,7 @@
       1,
       [ "@query", "lemma_FStar.UInt64.uv_inv" ],
       0,
-      "ef40b3e85248024745334079bed591b9"
+      "d0b350d0bff8058f83c7384bc7f1911c"
     ],
     [
       "TestBV.unfold_logand64",
@@ -112,7 +67,7 @@
         "typing_FStar.UInt64.logand"
       ],
       0,
-      "f393e62be077bf4748a648b699e973d3"
+      "a7eacd110ffbfa7ff17e7c83c12e7786"
     ],
     [
       "TestBV.unfold_logor64",
@@ -126,7 +81,7 @@
         "typing_FStar.UInt64.logor"
       ],
       0,
-      "170a6fbe039b9f0081a286b7c63f1bd6"
+      "2b83ab6f2590492b687fdacfc5814e79"
     ],
     [
       "TestBV.unfold_logxor64",
@@ -140,7 +95,7 @@
         "typing_FStar.UInt64.logxor"
       ],
       0,
-      "8b0abde399a61f74941f44c1990171eb"
+      "ec0f91402971c7e77a02555c3dcb246e"
     ],
     [
       "TestBV.test6",
@@ -149,7 +104,7 @@
       1,
       [ "@query" ],
       0,
-      "a562672c936d8c65dbf254882c95e4aa"
+      "962fba2df1d789424742ae122acd4065"
     ],
     [
       "TestBV.test7",
@@ -158,16 +113,7 @@
       1,
       [ "@query" ],
       0,
-      "1615ff9a093fedede1114013feca2d97"
-    ],
-    [
-      "TestBV.v64_eq",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b3bbad38ff113443b356c5a25493a164"
+      "5448107ead79feef55c4362e521d30b0"
     ]
   ]
 ]

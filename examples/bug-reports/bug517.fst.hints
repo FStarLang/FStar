@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d4077564ab86d4b5ec9b48cf5766f0a2"
+      "ad0b9c3fbf1b38f095ce34f557a352ed"
     ],
     [
       "Bug517.add",
@@ -21,7 +21,7 @@
         "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
       ],
       0,
-      "19f29ef0f9988d1fec966a55fef10695"
+      "3ab306a83a905cfb2c0dc944478ae7ec"
     ],
     [
       "Bug517.add'",
@@ -34,7 +34,7 @@
         "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
       ],
       0,
-      "0a6294f9b5da27783792c5a3a87cfecb"
+      "9aa6a0722346cf59b8b1d36c19b2f968"
     ]
   ]
 ]

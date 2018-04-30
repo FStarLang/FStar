@@ -1,1 +1,29 @@
-[ "k‘±ø\u001dáR²(\u001b#Ú@œË™", [] ]
+[
+  "k‘±ø\u001dáR²(\u001b#Ú@œË™",
+  [
+    [
+      "Bug209b.foo",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "85652d93eb19b0ecefda3981c53d8ff1"
+    ],
+    [
+      "Bug209b.foo2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "099660c75c0ae716b892fcc1e39a2108"
+    ]
+  ]
+]
