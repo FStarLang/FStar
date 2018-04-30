@@ -1085,8 +1085,10 @@ let flex_prob_closing tcenv (bs:binders) (p:prob) =
       | Rigid_flex ->
         flex_will_be_closed p.rhs
       | Flex_flex ->
-        flex_will_be_closed p.lhs
-        || flex_will_be_closed p.rhs
+        p.relation=EQ
+        &&
+        (flex_will_be_closed p.lhs
+        || flex_will_be_closed p.rhs)
 
 (* ----------------------------------------------------- *)
 (* Solving universe equalities                           *)

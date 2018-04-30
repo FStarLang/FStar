@@ -82,7 +82,7 @@ let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
         else match FStar.Syntax.Unionfind.find ctx_u.ctx_uvar_head with
         | Some _ ->
           if Env.debug env <| Options.Other "Rel"
-          then BU.print1 "%s already solved; nothing to do" (Print.ctx_uvar_to_string ctx_u);
+          then BU.print1 "%s already solved; nothing to do\n" (Print.ctx_uvar_to_string ctx_u);
           i //already solved; nothing to do
         | None ->
           begin
@@ -110,6 +110,14 @@ let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
     let solve_now, defer =
         g.deferred |> List.partition (fun (_, p) -> Rel.flex_prob_closing env xs p)
     in
+    if Env.debug env <| Options.Other "Rel"
+    then begin
+      BU.print_string "SOLVE BEFORE CLOSING:\n";
+      List.iter (fun (s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) solve_now;
+      BU.print_string " ...DEFERRED THE REST:\n";
+      List.iter (fun (s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) defer;
+      BU.print_string "END\n";
+    end;
     let g = Rel.solve_deferred_constraints env ({g with deferred=solve_now}) in
     let g = {g with deferred=defer} in
     if Env.debug env <| Options.Other "Rel"

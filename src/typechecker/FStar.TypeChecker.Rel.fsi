@@ -26,6 +26,7 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 
+val prob_to_string: env -> prob -> string
 val flex_prob_closing         : env -> binders -> prob -> bool
 val close_guard_univs         : universes -> binders -> guard_t -> guard_t
 val close_guard               : env -> binders -> guard_t -> guard_t
