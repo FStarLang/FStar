@@ -137,15 +137,14 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
          Util.mkAssume(mkForall_fuel (Env.get_range env)
                                      ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxBoolFun) x)), Some "bool inversion", "bool_inversion")] in
     let mk_int : env -> string -> term -> decls_t  = fun env nm tt ->
-
+        let lex_t = mkFreeV (text_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
         let typing_pred_y = mk_HasType y tt in
         let aa = ("a", Int_sort) in
         let a = mkFreeV aa in
         let bb = ("b", Int_sort) in
         let b = mkFreeV bb in
-        let precedes = mk_Valid <| mkApp("Prims.Precedes", [tt;tt;Term.boxInt a; Term.boxInt b]) in
-        let precedes_y_x = mk_Valid <| mkApp("Precedes", [y; x]) in
+        let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [lex_t; lex_t;y;x]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[Term.boxInt b]], [bb], mk_HasType (Term.boxInt b) tt), Some "int typing", "int_typing");
          Util.mkAssume(mkForall_fuel (Env.get_range env) ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxIntFun) x)), Some "int inversion", "int_inversion");
          Util.mkAssume(mkForall_fuel (Env.get_range env) ([[typing_pred; typing_pred_y;precedes_y_x]],
@@ -996,7 +995,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | Term.DeclFun _ -> true
         | _ -> false) in
        decls@rest@inversions, env
-
+    
      | Sig_inductive_typ(t, _, tps, k, _, datas) ->
         let quals = se.sigquals in
         let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
@@ -1073,7 +1072,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                                         Some "name-token correspondence",
                                                         ("token_correspondence_"^ttok)) in
                         [ttok_decl; ttok_fresh; name_tok_corr], env in
-            tname_decl@tok_decls, env in
+            if lid_equals t Const.lex_t_lid then tok_decls, env  //AR: for lex_t, we add the declaration in the prelude itself
+            else tname_decl@tok_decls, env in
         let kindingAx =
             let k, decls = encode_term_pred None res env' tapp in
             let karr =
@@ -1196,11 +1196,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                Some "data constructor typing elim",
                                ("data_elim_" ^ ddconstrsym)) in
                   let subterm_ordering =
+                    let lex_t = mkFreeV (text_of_lid Const.lex_t_lid, Term_sort) in
                     if lid_equals d Const.lextop_lid
                     then let x = varops.fresh "x", Term_sort in
                          let xtm = mkFreeV x in
                          Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                                ([[mk_Precedes xtm dapp]], [x], mkImp(mk_tester "LexCons" xtm, mk_Precedes xtm dapp)),
+                                                ([[mk_Precedes lex_t lex_t xtm dapp]], [x], mkImp(mk_tester "LexCons" xtm, mk_Precedes lex_t lex_t xtm dapp)),
                                      Some "lextop is top",
                                      (varops.mk_unique "lextop"))
                     else (* subterm ordering *)
@@ -1210,7 +1211,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
                                 if i < n_tps
                                 then []
-                                else [mk_Precedes (mkFreeV v) dapp])
+                                else [mk_Precedes lex_t lex_t (mkFreeV v) dapp])
                           |> List.flatten
                       in
                       Util.mkAssume(mkForall (Ident.range_of_lid d)
