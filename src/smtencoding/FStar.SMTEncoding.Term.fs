@@ -804,22 +804,13 @@ and mkPrelude z3options =
                 (declare-fun Closure (Term) Term)\n\
                 (declare-fun ConsTerm (Term Term) Term)\n\
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
-                (declare-fun Precedes (Term Term) Term)\n\
                 (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
                 (assert (forall ((t Term))\n\
                             (! (iff (exists ((e Term)) (HasType e t))\n\
                                     (Valid t))\n\
                                 :pattern ((Valid t)))))\n\
-                (assert (forall ((t1 Term) (t2 Term))\n\
-                     (! (iff (Valid (Precedes t1 t2)) \n\
-                             (< (Rank t1) (Rank t2)))\n\
-                        :pattern ((Precedes t1 t2)))))\n\
                 (declare-fun Prims.precedes (Term Term Term Term) Term)\n\
-                (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
-                                (! (= (Precedes e1 e2)\n\
-                                      (Prims.precedes t1 t2 e1 e2))\n\
-                                   :pattern ((Prims.precedes t1 t2 e1 e2)))))\n\
                 (declare-fun Range_const (Int) Term)\n\
                 (declare-fun _mul (Int Int) Int)\n\
                 (declare-fun _div (Int Int) Int)\n\
@@ -836,15 +827,25 @@ and mkPrelude z3options =
                                  (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
                                  (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
                                  (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
-                                 ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true)], Term_sort, 11, true)] in
+                                 ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true); ("LexCons_2", Term_sort, true)], Term_sort, 11, true)] in
    let bcons = constrs |> List.collect (constructor_to_decl norng) |> List.map (declToSmt z3options) |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
                                    (is-LexCons t))\n\
-                       (assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
-                                    (iff (Valid (Precedes (LexCons x1 x2) (LexCons y1 y2)))\n\
-                                         (or (Valid (Precedes x1 y1))\n\
+                       (declare-fun Prims.lex_t () Term)\n\
+                       (assert (forall ((t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
+                                    (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n\
+                                         (or (Valid (Prims.precedes t1 t2 x1 y1))\n\
                                              (and (= x1 y1)\n\
-                                                  (Valid (Precedes x2 y2)))))))\n" in
+                                                  (Valid (Prims.precedes Prims.lex_t Prims.lex_t x2 y2)))))))\n\
+                      (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
+					                  (! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n\
+					                          (Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n\
+					                  :pattern (Prims.precedes t1 t2 e1 e2))))\n\
+                      (assert (forall ((t1 Term) (t2 Term))\n\
+                                      (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
+                                      (< (Rank t1) (Rank t2)))\n\
+                                      :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
+
    basic ^ bcons ^ lex_ordering
 
 
@@ -944,8 +945,8 @@ let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
 let kick_partial_app t  = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid
 let mk_String_const i r = mkApp("FString_const", [ mkInteger' i norng]) r
-let mk_Precedes x1 x2 r = mkApp("Precedes", [x1;x2])  r|> mk_Valid
-let mk_LexCons x1 x2 r  = mkApp("LexCons", [x1;x2]) r
+let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_Valid
+let mk_LexCons x1 x2 x3 r  = mkApp("LexCons", [x1;x2;x3]) r
 let rec n_fuel n =
     if n = 0 then mkApp("ZFuel", []) norng
     else mkApp("SFuel", [n_fuel (n - 1)]) norng
