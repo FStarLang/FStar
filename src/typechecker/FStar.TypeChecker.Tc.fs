@@ -1020,8 +1020,17 @@ let z3_reset_options (en:env) :env =
   env
 
 
-let get_fail_se (se:sigelt) : option<list<int>> =
-    List.tryPick (ToSyntax.get_fail_attr true) se.sigattrs
+let get_fail_se (se:sigelt) : option<(list<int> * bool)> =
+    let comb f1 f2 =
+        match f1, f2 with
+        | Some (e1, l1), Some (e2, l2) ->
+            Some (e1@e2, l1 || l2)
+        | Some (e, l), None
+        | None, Some (e, l) ->
+            Some (e, l)
+        | _ -> None
+    in
+    List.fold_right (fun at acc -> comb (ToSyntax.get_fail_attr true at) acc) se.sigattrs None
 
 let list_of_option = function
     | None -> []
@@ -1031,6 +1040,9 @@ let list_of_option = function
  * same amount. Returns None when everything is OK, and Some (e, n1, n2)
  * when `e` occurs `n1` times in `l1` but `n2` (<> n1) times in `l2`. *)
 let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
+    (* If there are no expected errors, we don't check anything *)
+    match l1 with | [] -> None | _ ->
+
     let rec collect (l : list<'a>) : list<('a * int)> =
         match l with
         | [] -> []
@@ -1051,16 +1063,17 @@ let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
     let l2 = summ l2 in
     let rec aux l1 l2 =
         match l1, l2 with
-        | [], _ -> None
+        | [], [] -> None
 
         | (e, n) :: _, [] ->
             Some (e, n, 0)
 
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 > hd2 ->
-            aux l1 tl2
+        | [], (e, n) :: _ ->
+            Some (e, 0, n)
 
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 < hd2 ->
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 <> hd2 ->
             Some (hd1, n1, 0)
+
         | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 = hd2 ->
             if n1 <> n2
             then Some (hd1, n1, n2)
@@ -1076,7 +1089,11 @@ let rec tc_decl env se: list<sigelt> * list<sigelt> =
   then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
   TcUtil.check_sigelt_quals env se;
   match get_fail_se se with
-  | Some errnos ->
+  | Some (_, false) when not (Env.should_verify env) ->
+    (* If we're --laxing, and we didn't find fail_lax, then just ignore the definition *)
+    [], []
+
+  | Some (errnos, _) ->
     if Env.debug env Options.Low then
         BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
     let errs = Errors.catch_errors (fun () -> tc_decl' env se) in
