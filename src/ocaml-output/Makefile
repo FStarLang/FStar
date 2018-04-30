@@ -211,9 +211,9 @@ endif
 
 # Install the opam package
 install-opam: install-common
-	pushd ../../bin/fstarlib && ocamlfind install fstarlib * && popd
-	pushd ../../bin/fstar-compiler-lib && ocamlfind install fstar-compiler-lib * && popd
-	pushd ../../bin/fstar-tactics-lib && ocamlfind install fstar-tactics-lib * && popd
+	cd ../../bin/fstarlib && ocamlfind install fstarlib *
+	cd ../../bin/fstar-compiler-lib && ocamlfind install fstar-compiler-lib *
+	cd ../../bin/fstar-tactics-lib && ocamlfind install fstar-tactics-lib *
 
 NAME=fstar_$(VERSION)_$(PLATFORM)
 
