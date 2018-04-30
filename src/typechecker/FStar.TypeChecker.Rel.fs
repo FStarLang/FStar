@@ -2568,7 +2568,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             giveup env "Tm_match branches don't match" orig
         | Some sub_probs ->
             let sub_probs = sc_prob::sub_probs in
-            let wl = solve_prob orig None [] wl in
+            let formula = U.mk_conj_l (List.map (fun p -> fst (p_guard p)) sub_probs) in
+            let wl = solve_prob orig (Some formula) [] wl in
             solve env (attempt sub_probs wl)
         end
 
