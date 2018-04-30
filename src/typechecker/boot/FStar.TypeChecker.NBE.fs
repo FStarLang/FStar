@@ -61,8 +61,11 @@ type constant =
 type atom = //JUST FSHARP
   | Var of var
   | Match of t * (* the scutinee *)
-             (t -> t) (* the closure that pattern matches the scrutiny *)
-             //NS: add a thunked pattern translations here
+             (t -> t) * (* the closure that pattern matches the scrutiny *)
+             list<branch> 
+             // ZP: Keep the original branches to reconstruct just the patterns
+             // NS: add a thunked pattern translations here ZP: Not entirely sure that this is needed, trying something simpler first.
+             
   | Rec of letbinding * list<letbinding> * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
   (* Zoe : a recursive function definition together with its block of mutually recursive function definitions and its environment *)
 //IN F*: and t : Type0 =
@@ -113,7 +116,7 @@ let rec t_to_string (x:t) =
 and atom_to_string (a: atom) =
     match a with
     | Var v -> "Var " ^ (P.bv_to_string v)
-    | Match (t, _) -> "Match " ^ (t_to_string t)
+    | Match (t, _, _) -> "Match " ^ (t_to_string t)
     | Rec (_,_, l) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
 let is_not_accu (x:t) =
@@ -124,7 +127,7 @@ let is_not_accu (x:t) =
 let mkConstruct i us ts = Construct(i, us, ts)
 
 let mkAccuVar (v:var) = Accu(Var v, [])
-let mkAccuMatch (s : t) (c : t -> t) = Accu(Match (s, c), [])
+let mkAccuMatch (s : t) (c : t -> t) (bs:list<branch>) = Accu(Match (s, c, bs), [])
 let mkAccuRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = Accu(Rec(b, bs, env), [])
 
 let isAccu (trm:t) =
@@ -132,7 +135,8 @@ let isAccu (trm:t) =
   | Accu _ -> true
   | _ -> false
 
-let rec pickBranch (scrut : t) (branches : list<branch>) : option<(term * list<t>)>  =
+let pickBranch (scrut : t) (branches : list<branch>) : option<(term * list<t>)> =
+  let rec pickBranch_aux (scrut : t) (branches : list<branch>) (branches0 : list<branch>) : option<(term * list<t>)> =
     //NS: adapted from FStar.TypeChecker.Normalize: rebuild_match
     let rec matches_pat (scrutinee:t) (p:pat)
         : BU.either<list<t>, bool> =
@@ -186,10 +190,11 @@ let rec pickBranch (scrut : t) (branches : list<branch>) : option<(term * list<t
       match matches_pat scrut p with
       | BU.Inl matches -> Some (e, matches)
       | BU.Inr false -> //definitely did not match
-        pickBranch scrut branches
+        pickBranch_aux scrut branches branches0
       | BU.Inr true -> //maybe matches; stop
         None
-
+  in pickBranch_aux scrut branches branches
+  
 (* Tests is the application is full and if none of the arguments is symbolic *)
 let rec test_args ts cnt =
   match ts with
@@ -365,6 +370,24 @@ and translate_letbinding (env:Env.env) (bs:list<t>) (lb:letbinding) : t =
   in
   make_univ_abst lb.lbunivs bs lb.lbdef
 
+
+and translate_constant (c : sconst) : constant = 
+    match c with
+    | C.Const_unit -> Unit 
+    | C.Const_bool b -> Bool b
+    | C.Const_int (s, None) -> (Int (Z.big_int_of_string s))
+    | C.Const_string (s, r) -> String (s,r)
+    | C.Const_char c -> (Char c)
+    | _ -> failwith ("Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented")
+
+and translate_pat (p : pat) : t =
+    match p.v with 
+    | Pat_constant c -> Constant (translate_constant c)
+    | Pat_cons (cfv, pats) -> iapp (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat p, None)) pats)
+    | Pat_var bvar -> mkAccuVar bvar
+    | Pat_wild bvar -> mkAccuVar bvar
+    | Pat_dot_term (bvar, t) -> failwith "Pat_dot_term not implemented" 
+
 and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
     debug (fun () -> BU.print1 "BS list: %s\n" (String.concat ";; " (List.map (fun x -> t_to_string x) bs)));
@@ -376,24 +399,8 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_unknown ->
       failwith "Tm_unknown: Impossible"
 
-    | Tm_constant (C.Const_unit) ->
-      Constant Unit
-
-    | Tm_constant (C.Const_bool b) ->
-      Constant (Bool b)
-
-    | Tm_constant (C.Const_int (s, None)) ->
-      Constant (Int (Z.big_int_of_string s))
-
-    | Tm_constant (C.Const_string (s, r)) ->
-      Constant (String (s,r))
-
-    | Tm_constant (C.Const_char c) ->
-      Constant (Char c)
-
     | Tm_constant c ->
-      let err = "Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented" in
-      debug_term e; failwith err
+      Constant (translate_constant c)
 
     | Tm_bvar db -> //de Bruijn
       List.nth bs db.index
@@ -462,7 +469,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
           | Some (branch, args) ->
             translate env (List.fold_left (fun bs x -> x::bs) bs args) branch
           | None -> //no branch is determined
-            mkAccuMatch scrut case
+            mkAccuMatch scrut case branches
           end
         | Constant c ->
           (* same as for construted values, but args are either empty or is a singleton list (for wildcard patterns) *)
@@ -472,11 +479,11 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
            | Some (branch, [arg]) ->
              translate env (arg::bs) branch
            | None -> //no branch is determined
-             mkAccuMatch scrut case
+             mkAccuMatch scrut case branches
            | Some (_, hd::tl) -> failwith "Impossible: Matching on constants cannot bind more than one variable")
 
         | _ ->
-          mkAccuMatch scrut case
+          mkAccuMatch scrut case branches
       in
       case (translate env bs scrut)
 
@@ -526,8 +533,16 @@ and readback (env:Env.env) (x:t) : term =
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
       U.mk_app (S.bv_to_name bv) args
 
-    | Accu (Match (scrut, cases), ts) ->
+    | Accu (Match (scrut, cases, branches), ts) ->
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
+      let head = 
+        let scrut_new = readback env scrut in
+        let branches_new = 
+          List.map (fun (pat, when_clause, _) -> pat, when_clause, readback env (cases (translate_pat pat))) 
+                   branches 
+        in
+        S.mk (Tm_match (scrut_new, branches_new)) None Range.dummyRange
+      in
       (*  When `cases scrut` returns a Accu(Match ..))
           we need to reconstruct a source match node.
 
@@ -551,9 +566,9 @@ and readback (env:Env.env) (x:t) : term =
           match (readback [[x]])
                 branches
        *)
-      let head = readback env (cases scrut) in
+     
       (match ts with
-       | [] -> head
+       | [] -> head 
        | _ -> U.mk_app head args)
 
     | Accu (Rec(lb, lbs, bs), ts) ->
