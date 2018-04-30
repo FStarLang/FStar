@@ -25,9 +25,10 @@ lowparse \
 vale \
 seplogic \
 hello \
-native_tactics \
 extraction \
 demos
+
+#native_tactics \
 
 # low-level \  ... NS: removing from CI for this branch
 
