@@ -1,2 +1,2 @@
-type double = float[@@deriving show]
-type float = double[@@deriving show]
+type double = float[@@deriving yojson,show]
+type float = double[@@deriving yojson,show]

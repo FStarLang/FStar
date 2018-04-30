@@ -2,14 +2,21 @@ type int = Z.t[@printer Z.pp_print][@@deriving show]
 let parse_int = Z.of_string
 let to_string = Z.to_string
 
+type tmp = string [@@deriving yojson]
+let int_to_yojson x = tmp_to_yojson (to_string x)
+let int_of_yojson x = 
+  match tmp_of_yojson x with
+  | Ok x -> Ok (parse_int x)
+  | Error x -> Error x
+
 type attribute = unit
 let (cps : attribute) = ()
 type 'Auu____5 hasEq = unit
 type eqtype = unit
 type bool' = bool
-[@@deriving show]
+[@@deriving yojson,show]
 type bool = bool'
-[@@deriving show]
+[@@deriving yojson,show]
 type c_False = unit
 (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
        are no constructors and generate this type abbreviation*)
@@ -79,8 +86,8 @@ type ('Aa,'Ap) l_Exists = unit
 type _pos = int * int
 type _rng = string * _pos * _pos
 type range = _rng * _rng
-type string' = string[@@deriving show]
-type string = string'[@@deriving show]
+type string' = string[@@deriving yojson,show]
+type string = string'[@@deriving yojson,show]
 type pure_pre = unit
 type ('Aa,'Apre) pure_post' = unit
 type 'Aa pure_post = unit
@@ -88,7 +95,7 @@ type 'Aa pure_wp = unit
 type 'Auu____655 guard_free = unit
 type ('Aa,'Ax,'Ap) pure_return = unit
 type ('Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap) pure_bind_wp = 'Awp1
-type ('Aa,'Ap,'Awp_then,'Awp_else,'Apost) pure_if_then_else = unit[@@deriving show]
+type ('Aa,'Ap,'Awp_then,'Awp_else,'Apost) pure_if_then_else = unit[@@deriving yojson,show]
 type ('Aa,'Awp,'Apost) pure_ite_wp = unit
 type ('Aa,'Awp1,'Awp2) pure_stronger = unit
 type ('Aa,'Ab,'Awp,'Ap) pure_close_wp = unit
@@ -129,12 +136,12 @@ let op_Equality x y = x = y
 let op_disEquality x y = x<>y
 
 type nonrec exn = exn
-type 'a array' = 'a array[@@deriving show]
-type 'a array = 'a array'[@@deriving show]
+type 'a array' = 'a array[@@deriving yojson,show]
+type 'a array = 'a array'[@@deriving yojson,show]
 let strcat x y = x ^ y
 
-type 'a list' = 'a list[@@deriving show]
-type 'a list = 'a list'[@@deriving show]
+type 'a list' = 'a list[@@deriving yojson,show]
+type 'a list = 'a list'[@@deriving yojson,show]
 let uu___is_Nil : 'Aa . 'Aa list -> bool =
   fun projectee  -> match projectee with | []  -> true | uu____1190 -> false
 let uu___is_Cons : 'Aa . 'Aa list -> bool =

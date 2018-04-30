@@ -1,7 +1,7 @@
-type uint8 = int[@@deriving show]
-type byte = uint8[@@deriving show]
-type t = uint8[@@deriving show]
-type t' = t[@@deriving show]
+type uint8 = int[@@deriving yojson,show]
+type byte = uint8[@@deriving yojson,show]
+type t = uint8[@@deriving yojson,show]
+type t' = t[@@deriving yojson,show]
               
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 

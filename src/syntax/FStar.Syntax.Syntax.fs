@@ -53,9 +53,6 @@ type pragma =
 // IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]
 type memo<'a> = ref<option<'a>>
 
-// IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "<<ref>>") ]
-type serializable_ref<'a> = ref<'a>
-
 //versioning for unification variables
 // IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type version = {
@@ -247,12 +244,6 @@ and free_vars = {
     free_univs:list<universe_uvar>;
     free_univ_names:list<univ_name>; //fifo
 }
-and lcomp = {
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflags>;
-    comp_thunk: serializable_ref<(either<(unit -> comp), comp>)>
-}
 
 (* Residual of a computation type after typechecking *)
 and residual_comp = {
@@ -269,6 +260,13 @@ and lazyinfo = {
  }
 
 and attribute = term
+
+type lcomp = {
+    eff_name: lident;
+    res_typ: typ;
+    cflags: list<cflags>;
+    comp_thunk: ref<(either<(unit -> comp), comp>)>
+}
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref<option<(lazy_kind -> lazyinfo -> term)>> = mk_ref None

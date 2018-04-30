@@ -1,6 +1,6 @@
 module UChar = BatUChar
 
-type char = int[@@deriving show]
+type char = int[@@deriving yojson,show]
 
 (* FIXME(adl) UChar.lowercase/uppercase removed from recent Batteries. Use Camomile? *)
 let lowercase x = 

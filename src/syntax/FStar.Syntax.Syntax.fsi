@@ -225,12 +225,6 @@ and free_vars = {
     free_univs:list<universe_uvar>;
     free_univ_names:list<univ_name>; //fifo
 }
-and lcomp = { //a lazy computation
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflags>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
-}
 
 (* Residual of a computation type after typechecking *)
 and residual_comp = {
@@ -247,6 +241,13 @@ and lazyinfo = {
     typ   : typ;
     rng   : Range.range;
  }
+
+type lcomp = { //a lazy computation
+    eff_name: lident;
+    res_typ: typ;
+    cflags: list<cflags>;
+    comp_thunk: ref<(either<(unit -> comp), comp>)>
+}
 
 
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
