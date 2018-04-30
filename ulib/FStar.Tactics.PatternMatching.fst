@@ -849,21 +849,29 @@ let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
 /// tried in succession, until one succeeds.  The whole process is repeated as
 /// long as at least one tactic succeeds.
 
-//NS: FIXME! This one fails with what seems to be a trivial goal remaining
-// let example #a #b #c: unit =
-//   assert_by_tactic (a /\ b ==> c == b ==> c)
-//     (fun () -> repeat' (fun () ->
-//                  gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
-//                               clear h <: Tac unit) `or_else`
-//                  (fun () -> gpm #unit (fun (a b: Type0) (g: goal (squash (a ==> b))) ->
-//                               implies_intro' () <: Tac unit) `or_else`
-//                  (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a /\ b)) ->
-//                               and_elim' h <: Tac unit) `or_else`
-//                  (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: goal (squash a)) ->
-//                               rewrite h <: Tac unit) `or_else`
-//                  (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: goal (squash a)) ->
-//                               exact_hyp a h <: Tac unit) ())))));
-//                qed ())
+let example #a #b #c: unit =
+  assert_by_tactic (a /\ b ==> c == b ==> c)
+    (fun () -> repeat' (fun () ->
+                 gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
+                              clear h <: Tac unit) `or_else`
+                 (fun () -> gpm #unit (fun (a b: Type0) (g: goal (squash (a ==> b))) ->
+                              implies_intro' () <: Tac unit) `or_else`
+                 (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a /\ b)) ->
+                              and_elim' h <: Tac unit) `or_else`
+                 (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: goal (squash a)) ->
+                              rewrite h <: Tac unit) `or_else`
+                 (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: goal (squash a)) ->
+                              exact_hyp a h <: Tac unit) ())))));
+               smt (); //needed to send this to SMT; NS 04/29
+               //Otherwise I get:
+               // proof-state: State dump @ depth 0 (at the time of failure):
+               // Location: FStar.Tactics.PatternMatching.fst(866,15-866,21)
+               // ACTIVE goals (1):
+               // (a:Type0), (b:Type0), (c:Type0), (uu___133218:c == b), (uu___153285:a), (uu___161757:b) |- (*?u1381*) _ : Prims.squash b
+               // SMT goals (0):
+               // FStar.Tactics.PatternMatching.fst(853,22-854,2): (Error 23) user tactic failed: Not done! (see also FStar.Tactics.Effect.fst(86,32-86,42))
+               // 1 error was reported (see above)
+               qed ())
 
 /// Possible extensions
 /// ===================
