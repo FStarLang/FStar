@@ -33,6 +33,7 @@ module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
 module Print = FStar.Syntax.Print
+module Env = FStar.TypeChecker.Env
 
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
@@ -248,7 +249,8 @@ let detail_hint_replay settings z3result =
          | _failed ->
            let ask_z3 label_assumptions =
                let res = BU.mk_ref None in
-               Z3.ask (filter_assertions settings.query_env settings.query_hint)
+               Z3.ask settings.query_range
+                      (filter_assertions settings.query_env settings.query_hint)
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
@@ -264,26 +266,7 @@ let find_localized_errors errs =
 let has_localized_errors errs = Option.isSome (find_localized_errors errs)
 
 let report_errors settings : unit =
-    if Options.detail_errors()
-    && Options.n_cores() = 1
-    then let initial_fuel = {
-                settings with query_fuel=Options.initial_fuel();
-                              query_ifuel=Options.initial_ifuel();
-                              query_hint=None
-            }
-         in
-         let ask_z3 label_assumptions =
-            let res = BU.mk_ref None in
-            Z3.ask (filter_facts_without_core settings.query_env)
-                    settings.query_hash
-                    settings.query_all_labels
-                    (with_fuel_and_diagnostics initial_fuel label_assumptions)
-                    None
-                    (fun r -> res := Some r);
-            Option.get (!res)
-            in
-         detail_errors false settings.query_env settings.query_all_labels ask_z3
-    else begin
+    let _basic_error_report =
         match find_localized_errors settings.query_errors with
         | Some err ->
           settings.query_errors |> List.iter (fun e ->
@@ -298,7 +281,27 @@ let report_errors settings : unit =
                    settings.query_env
                    [(Errors.Error_UnknownFatal_AssertionFailure, BU.format1 "Unknown assertion failed (%s)" err_detail,
                      settings.query_range)]
-    end
+    in
+    if Options.detail_errors()
+    && Options.n_cores() = 1
+    then let initial_fuel = {
+                settings with query_fuel=Options.initial_fuel();
+                              query_ifuel=Options.initial_ifuel();
+                              query_hint=None
+            }
+         in
+         let ask_z3 label_assumptions =
+            let res = BU.mk_ref None in
+            Z3.ask  settings.query_range
+                    (filter_facts_without_core settings.query_env)
+                    settings.query_hash
+                    settings.query_all_labels
+                    (with_fuel_and_diagnostics initial_fuel label_assumptions)
+                    None
+                    (fun r -> res := Some r);
+            Option.get (!res)
+            in
+         detail_errors false settings.query_env settings.query_all_labels ask_z3
 
 let query_info settings z3result =
     if Options.hint_info()
@@ -471,7 +474,8 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
     let check_one_config config (k:z3result -> unit) : unit =
           if used_hint config || Options.z3_refresh() then Z3.refresh();
-          Z3.ask (filter_assertions config.query_env config.query_hint)
+          Z3.ask config.query_range
+                  (filter_assertions config.query_env config.query_hint)
                   config.query_hash
                   config.query_all_labels
                   (with_fuel_and_diagnostics config [])
@@ -526,6 +530,8 @@ let solver = {
     init=Encode.init;
     push=Encode.push;
     pop=Encode.pop;
+    snapshot=Encode.snapshot;
+    rollback=Encode.rollback;
     encode_sig=Encode.encode_sig;
     encode_modul=Encode.encode_modul;
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
@@ -537,6 +543,8 @@ let dummy = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
+    snapshot=(fun _ -> (0, 0, 0), ());
+    rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);

@@ -1,5 +1,5 @@
 [
-  "Òb\u0010\u000e„m:CÛZÖÛç0ˆu",
+  "ÙrsLé:\u001c\u0002’Ë5„û\ró´",
   [
     [
       "NegativeTests.BST.tree",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "aa8bf88476cb76856242b77c2e7cc126"
+      "97403d7d840f34e3b00affab8847623d"
     ],
     [
       "NegativeTests.BST.tree",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5f75eb8efc0944efa7a46990fece9d0f"
+      "74f9743edf1cbb0f73010cae263e8c53"
     ],
     [
       "NegativeTests.BST.tree",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "71d662513431a4f0403e23bdbf682fde"
+      "5577d4f4f04adf1526c60706fdef9a35"
     ],
     [
       "NegativeTests.BST.tree",
@@ -41,7 +41,7 @@
         "int_inversion", "kinding_NegativeTests.BST.tree@tok"
       ],
       0,
-      "83e96fe3f3c75af0d9f40913a3a0c241"
+      "78af70cf902ca57f623045ff789c91f4"
     ],
     [
       "NegativeTests.BST.__proj__Leaf__item__n",
@@ -55,7 +55,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_c89ea22d08945e60fddbf2e1bfa3e94f"
       ],
       0,
-      "451a630fe17c32ae98d2a6c45d1681ff"
+      "12f90e07a5f4bf56e7dcc99ea19be27f"
     ],
     [
       "NegativeTests.BST.uu___is_Node",
@@ -64,7 +64,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c9fa8d70cef227b0b27b4ab16a13f05d"
+      "6c17c4e6df0874e2bafdef6d645c7e2c"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__l",
@@ -78,7 +78,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-      "245c625644f68e1e4587be3c00d56182"
+      "830c86b4d66f7a2e957b51e62115bdbd"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__left",
@@ -94,7 +94,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-      "f09864589914aaa998f8117736f24d13"
+      "dca4acac2d2710d409ca2ac8ef3aef08"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__n",
@@ -108,7 +108,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-      "3044bf6b7b708fa68b9fe35c0c5dc7ac"
+      "eb7b8abc6f2daa5745204aa509552e2f"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__r",
@@ -122,7 +122,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-      "96a78765f242c2df5b2220f19bb84142"
+      "553fe72492ede69a2f2eac855693beb2"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__right",
@@ -131,7 +131,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "be5c5a020fa61c9c86f0a63bd387b245"
+      "a4ac9cf2e88f3a3664f10f02389eab86"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__right",
@@ -158,7 +158,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "c08c1beca29dff64230a75ccbd8c993c"
+      "41fa378a3c0c08f7fc40815d4111eedc"
     ],
     [
       "NegativeTests.BST.test_node_1",
@@ -172,7 +172,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "1809a2d9990b217ff104387a57ea31fb"
+      "42744d0574bcca24eb4e43869d9fcd41"
     ],
     [
       "NegativeTests.BST.test_node_2",
@@ -189,7 +189,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "f7493e341c625ab4feb4c6efc81e32cb"
+      "3d3b3a2c5be9ee4a178fbde944e6a46f"
     ],
     [
       "NegativeTests.BST.test_node_3",
@@ -204,7 +204,212 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "aaf5fac00cb7efd60995161bf4548413"
+      "9d1e8f5ce37f32d9824d29156af31693"
+    ],
+    [
+      "NegativeTests.BST.tree",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "3907700e1c406dc15239a2be6c49493d"
+    ],
+    [
+      "NegativeTests.BST.tree",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "70fe75fd13b496cdb45a1831a7d92aad"
+    ],
+    [
+      "NegativeTests.BST.tree",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "b0e0c013e9b4c9b0e7ae709e3e6ec176"
+    ],
+    [
+      "NegativeTests.BST.tree",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_Prims.HasEq_int",
+        "haseqNegativeTests.BST_Tm_refine_7b1de022dd98e3cefdde3a41e40ebd18",
+        "int_inversion", "kinding_NegativeTests.BST.tree@tok"
+      ],
+      0,
+      "11562060b33f75874af5c0a9a0c526f6"
+    ],
+    [
+      "NegativeTests.BST.__proj__Leaf__item__n",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.BST.Leaf",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_NegativeTests.BST_Tm_refine_c89ea22d08945e60fddbf2e1bfa3e94f"
+      ],
+      0,
+      "67cf2e034344c979a8baea059614a7aa"
+    ],
+    [
+      "NegativeTests.BST.uu___is_Node",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "9e9aff5ee27f5c947e0d908320f77a98"
+    ],
+    [
+      "NegativeTests.BST.__proj__Node__item__l",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "disc_equation_NegativeTests.BST.Node",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
+      ],
+      0,
+      "e2d5ea3ee724daa9ec7fdb4185229b14"
+    ],
+    [
+      "NegativeTests.BST.__proj__Node__item__left",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "disc_equation_NegativeTests.BST.Node", "int_inversion",
+        "proj_equation_NegativeTests.BST.Node_l",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_NegativeTests.BST.Node_l",
+        "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
+      ],
+      0,
+      "626f352bdf274046eec88189976cd212"
+    ],
+    [
+      "NegativeTests.BST.__proj__Node__item__n",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "disc_equation_NegativeTests.BST.Node",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
+      ],
+      0,
+      "47bf02fe6fe458f7a49f0b49eddeb4d2"
+    ],
+    [
+      "NegativeTests.BST.__proj__Node__item__r",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "disc_equation_NegativeTests.BST.Node",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
+      ],
+      0,
+      "98041cab2810fa476cd3bed9d07fae6a"
+    ],
+    [
+      "NegativeTests.BST.__proj__Node__item__right",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "4af1447c75ea2ec450fdf401154c8c2a"
+    ],
+    [
+      "NegativeTests.BST.__proj__Node__item__right",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "bool_inversion", "data_elim_NegativeTests.BST.Node",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_NegativeTests.BST.Node", "int_inversion",
+        "kinding_NegativeTests.BST.tree@tok",
+        "proj_equation_NegativeTests.BST.Node_l",
+        "proj_equation_NegativeTests.BST.Node_left",
+        "proj_equation_NegativeTests.BST.Node_n",
+        "proj_equation_NegativeTests.BST.Node_r",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_NegativeTests.BST.Node_l",
+        "projection_inverse_NegativeTests.BST.Node_left",
+        "projection_inverse_NegativeTests.BST.Node_n",
+        "projection_inverse_NegativeTests.BST.Node_r",
+        "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4",
+        "refinement_interpretation_NegativeTests.BST_Tm_refine_7b1de022dd98e3cefdde3a41e40ebd18",
+        "typing_FStar.Pervasives.Native.uu___is_None"
+      ],
+      0,
+      "23d382e3b768d38f1b92fcf5e4f19a94"
+    ],
+    [
+      "NegativeTests.BST.test_node_1",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a"
+      ],
+      0,
+      "1302f2bda361a818bb31d128c49af823"
+    ],
+    [
+      "NegativeTests.BST.test_node_2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.None", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a"
+      ],
+      0,
+      "9923737b92d4d093ef800fa2575311f7"
+    ],
+    [
+      "NegativeTests.BST.test_node_3",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.None", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "c5fd7a4c025f780461a556f48a022c8c"
     ]
   ]
 ]

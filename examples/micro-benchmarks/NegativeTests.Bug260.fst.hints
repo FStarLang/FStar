@@ -1,5 +1,5 @@
 [
-  "Ä:îSü®ÕO2\u001cì\u0005ê#",
+  "Ø#Õm&’ï\u001bC§oé¿\"œ–",
   [
     [
       "NegativeTests.Bug260.pnat",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "6e3591d388e3680d644d148359c36487"
+      "3431881d6490e58ce6e2424a3d13a18c"
     ],
     [
       "NegativeTests.Bug260.__proj__S__item___0",
@@ -22,7 +22,7 @@
         "refinement_interpretation_NegativeTests.Bug260_Tm_refine_c7798980fdaa69b62544817f36c3402f"
       ],
       0,
-      "314394b68192711634468baedd34f55e"
+      "4e6119abcc86bbd63d58497db15469aa"
     ],
     [
       "NegativeTests.Bug260.validity",
@@ -31,7 +31,39 @@
       1,
       [ "@query", "assumption_NegativeTests.Bug260.pnat__uu___haseq" ],
       0,
-      "985ad2ad7b50b2695dfa8b141e68f05f"
+      "e60fd3b9d0018f9f6265caf90117d981"
+    ],
+    [
+      "NegativeTests.Bug260.pnat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b77a5fd94e9fcc4fbb3eabfc25e748f5"
+    ],
+    [
+      "NegativeTests.Bug260.__proj__S__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Bug260.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_NegativeTests.Bug260_Tm_refine_c7798980fdaa69b62544817f36c3402f"
+      ],
+      0,
+      "dff114fecb7b2f3ca6649f6740aa6f8b"
+    ],
+    [
+      "NegativeTests.Bug260.validity",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_NegativeTests.Bug260.pnat__uu___haseq" ],
+      0,
+      "6fe4f6dd44c9f702f6556e7dc2288246"
     ]
   ]
 ]

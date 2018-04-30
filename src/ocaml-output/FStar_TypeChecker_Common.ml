@@ -3,13 +3,13 @@ type rel =
   | EQ 
   | SUB 
   | SUBINV [@@deriving show]
-let uu___is_EQ : rel -> Prims.bool =
-  fun projectee  -> match projectee with | EQ  -> true | uu____4 -> false 
-let uu___is_SUB : rel -> Prims.bool =
-  fun projectee  -> match projectee with | SUB  -> true | uu____8 -> false 
-let uu___is_SUBINV : rel -> Prims.bool =
+let (uu___is_EQ : rel -> Prims.bool) =
+  fun projectee  -> match projectee with | EQ  -> true | uu____6 -> false 
+let (uu___is_SUB : rel -> Prims.bool) =
+  fun projectee  -> match projectee with | SUB  -> true | uu____12 -> false 
+let (uu___is_SUBINV : rel -> Prims.bool) =
   fun projectee  ->
-    match projectee with | SUBINV  -> true | uu____12 -> false
+    match projectee with | SUBINV  -> true | uu____18 -> false
   
 type ('a,'b) problem =
   {
@@ -128,125 +128,126 @@ let __proj__Mkproblem__item__rank :
   
 type prob =
   | TProb of (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem 
-  | CProb of (FStar_Syntax_Syntax.comp,Prims.unit) problem [@@deriving show]
-let uu___is_TProb : prob -> Prims.bool =
+  | CProb of (FStar_Syntax_Syntax.comp,unit) problem [@@deriving show]
+let (uu___is_TProb : prob -> Prims.bool) =
   fun projectee  ->
-    match projectee with | TProb _0 -> true | uu____475 -> false
+    match projectee with | TProb _0 -> true | uu____535 -> false
   
-let __proj__TProb__item___0 :
-  prob -> (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem =
+let (__proj__TProb__item___0 :
+  prob -> (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem) =
   fun projectee  -> match projectee with | TProb _0 -> _0 
-let uu___is_CProb : prob -> Prims.bool =
+let (uu___is_CProb : prob -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CProb _0 -> true | uu____503 -> false
+    match projectee with | CProb _0 -> true | uu____565 -> false
   
-let __proj__CProb__item___0 :
-  prob -> (FStar_Syntax_Syntax.comp,Prims.unit) problem =
+let (__proj__CProb__item___0 :
+  prob -> (FStar_Syntax_Syntax.comp,unit) problem) =
   fun projectee  -> match projectee with | CProb _0 -> _0 
-let as_tprob :
-  prob -> (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem =
-  fun uu___28_529  ->
-    match uu___28_529 with
+let (as_tprob :
+  prob -> (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem) =
+  fun uu___54_593  ->
+    match uu___54_593 with
     | TProb p -> p
-    | uu____539 -> failwith "Expected a TProb"
+    | uu____603 -> failwith "Expected a TProb"
   
 type probs = prob Prims.list[@@deriving show]
 type guard_formula =
   | Trivial 
   | NonTrivial of FStar_Syntax_Syntax.formula [@@deriving show]
-let uu___is_Trivial : guard_formula -> Prims.bool =
+let (uu___is_Trivial : guard_formula -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Trivial  -> true | uu____553 -> false
+    match projectee with | Trivial  -> true | uu____620 -> false
   
-let uu___is_NonTrivial : guard_formula -> Prims.bool =
+let (uu___is_NonTrivial : guard_formula -> Prims.bool) =
   fun projectee  ->
-    match projectee with | NonTrivial _0 -> true | uu____558 -> false
+    match projectee with | NonTrivial _0 -> true | uu____627 -> false
   
-let __proj__NonTrivial__item___0 :
-  guard_formula -> FStar_Syntax_Syntax.formula =
+let (__proj__NonTrivial__item___0 :
+  guard_formula -> FStar_Syntax_Syntax.formula) =
   fun projectee  -> match projectee with | NonTrivial _0 -> _0 
 type deferred = (Prims.string,prob) FStar_Pervasives_Native.tuple2 Prims.list
 [@@deriving show]
 type univ_ineq =
   (FStar_Syntax_Syntax.universe,FStar_Syntax_Syntax.universe)
     FStar_Pervasives_Native.tuple2[@@deriving show]
-let mk_by_tactic :
+let (mk_by_tactic :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun tac  ->
     fun f  ->
       let t_by_tactic =
-        let uu____585 =
+        let uu____658 =
           FStar_Syntax_Syntax.tabbrev FStar_Parser_Const.by_tactic_lid  in
-        FStar_Syntax_Syntax.mk_Tm_uinst uu____585
+        FStar_Syntax_Syntax.mk_Tm_uinst uu____658
           [FStar_Syntax_Syntax.U_zero]
          in
       let t_reify_tactic =
-        let uu____587 =
+        let uu____660 =
           FStar_Syntax_Syntax.tabbrev FStar_Parser_Const.reify_tactic_lid  in
-        FStar_Syntax_Syntax.mk_Tm_uinst uu____587
+        FStar_Syntax_Syntax.mk_Tm_uinst uu____660
           [FStar_Syntax_Syntax.U_zero]
          in
       let tac1 =
-        let uu____591 =
-          let uu____592 =
-            let uu____593 =
+        let uu____664 =
+          let uu____669 =
+            let uu____670 =
               FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit  in
-            let uu____594 =
-              let uu____597 = FStar_Syntax_Syntax.as_arg tac  in [uu____597]
+            let uu____671 =
+              let uu____674 = FStar_Syntax_Syntax.as_arg tac  in [uu____674]
                in
-            uu____593 :: uu____594  in
-          FStar_Syntax_Syntax.mk_Tm_app t_reify_tactic uu____592  in
-        uu____591 FStar_Pervasives_Native.None FStar_Range.dummyRange  in
-      let uu____600 =
-        let uu____601 =
-          let uu____602 = FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit
+            uu____670 :: uu____671  in
+          FStar_Syntax_Syntax.mk_Tm_app t_reify_tactic uu____669  in
+        uu____664 FStar_Pervasives_Native.None FStar_Range.dummyRange  in
+      let uu____677 =
+        let uu____682 =
+          let uu____683 = FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit
              in
-          let uu____603 =
-            let uu____606 = FStar_Syntax_Syntax.as_arg tac1  in
-            let uu____607 =
-              let uu____610 = FStar_Syntax_Syntax.as_arg f  in [uu____610]
+          let uu____684 =
+            let uu____687 = FStar_Syntax_Syntax.as_arg tac1  in
+            let uu____688 =
+              let uu____691 = FStar_Syntax_Syntax.as_arg f  in [uu____691]
                in
-            uu____606 :: uu____607  in
-          uu____602 :: uu____603  in
-        FStar_Syntax_Syntax.mk_Tm_app t_by_tactic uu____601  in
-      uu____600 FStar_Pervasives_Native.None FStar_Range.dummyRange
+            uu____687 :: uu____688  in
+          uu____683 :: uu____684  in
+        FStar_Syntax_Syntax.mk_Tm_app t_by_tactic uu____682  in
+      uu____677 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
-let rec delta_depth_greater_than :
+let rec (delta_depth_greater_than :
   FStar_Syntax_Syntax.delta_depth ->
-    FStar_Syntax_Syntax.delta_depth -> Prims.bool
+    FStar_Syntax_Syntax.delta_depth -> Prims.bool)
   =
   fun l  ->
     fun m  ->
       match (l, m) with
-      | (FStar_Syntax_Syntax.Delta_constant ,uu____619) -> false
-      | (FStar_Syntax_Syntax.Delta_equational ,uu____620) -> true
-      | (uu____621,FStar_Syntax_Syntax.Delta_equational ) -> false
-      | (FStar_Syntax_Syntax.Delta_defined_at_level
-         i,FStar_Syntax_Syntax.Delta_defined_at_level j) -> i > j
-      | (FStar_Syntax_Syntax.Delta_defined_at_level
-         uu____624,FStar_Syntax_Syntax.Delta_constant ) -> true
-      | (FStar_Syntax_Syntax.Delta_abstract d,uu____626) ->
+      | (FStar_Syntax_Syntax.Delta_equational_at_level
+         i,FStar_Syntax_Syntax.Delta_equational_at_level j) ->
+          (i > (Prims.parse_int "1")) && (i > j)
+      | (FStar_Syntax_Syntax.Delta_constant_at_level
+         i,FStar_Syntax_Syntax.Delta_constant_at_level j) -> i > j
+      | (FStar_Syntax_Syntax.Delta_equational_at_level uu____708,uu____709)
+          -> true
+      | (uu____710,FStar_Syntax_Syntax.Delta_equational_at_level uu____711)
+          -> false
+      | (FStar_Syntax_Syntax.Delta_abstract d,uu____713) ->
           delta_depth_greater_than d m
-      | (uu____627,FStar_Syntax_Syntax.Delta_abstract d) ->
+      | (uu____714,FStar_Syntax_Syntax.Delta_abstract d) ->
           delta_depth_greater_than l d
   
-let rec decr_delta_depth :
+let rec (decr_delta_depth :
   FStar_Syntax_Syntax.delta_depth ->
-    FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option
+    FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option)
   =
-  fun uu___29_633  ->
-    match uu___29_633 with
-    | FStar_Syntax_Syntax.Delta_constant  -> FStar_Pervasives_Native.None
-    | FStar_Syntax_Syntax.Delta_equational  -> FStar_Pervasives_Native.None
-    | FStar_Syntax_Syntax.Delta_defined_at_level _0_27 when
-        _0_27 = (Prims.parse_int "1") ->
-        FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Delta_constant
-    | FStar_Syntax_Syntax.Delta_defined_at_level i ->
+  fun uu___55_722  ->
+    match uu___55_722 with
+    | FStar_Syntax_Syntax.Delta_constant_at_level _0_4 when
+        _0_4 = (Prims.parse_int "0") -> FStar_Pervasives_Native.None
+    | FStar_Syntax_Syntax.Delta_equational_at_level uu____725 ->
+        FStar_Pervasives_Native.None
+    | FStar_Syntax_Syntax.Delta_constant_at_level i ->
         FStar_Pervasives_Native.Some
-          (FStar_Syntax_Syntax.Delta_defined_at_level
+          (FStar_Syntax_Syntax.Delta_constant_at_level
              (i - (Prims.parse_int "1")))
     | FStar_Syntax_Syntax.Delta_abstract d -> decr_delta_depth d
   
@@ -256,9 +257,9 @@ type identifier_info =
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either ;
   identifier_ty: FStar_Syntax_Syntax.typ ;
   identifier_range: FStar_Range.range }[@@deriving show]
-let __proj__Mkidentifier_info__item__identifier :
+let (__proj__Mkidentifier_info__item__identifier :
   identifier_info ->
-    (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either
+    (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either)
   =
   fun projectee  ->
     match projectee with
@@ -267,8 +268,8 @@ let __proj__Mkidentifier_info__item__identifier :
         identifier_range = __fname__identifier_range;_} ->
         __fname__identifier
   
-let __proj__Mkidentifier_info__item__identifier_ty :
-  identifier_info -> FStar_Syntax_Syntax.typ =
+let (__proj__Mkidentifier_info__item__identifier_ty :
+  identifier_info -> FStar_Syntax_Syntax.typ) =
   fun projectee  ->
     match projectee with
     | { identifier = __fname__identifier;
@@ -276,8 +277,8 @@ let __proj__Mkidentifier_info__item__identifier_ty :
         identifier_range = __fname__identifier_range;_} ->
         __fname__identifier_ty
   
-let __proj__Mkidentifier_info__item__identifier_range :
-  identifier_info -> FStar_Range.range =
+let (__proj__Mkidentifier_info__item__identifier_range :
+  identifier_info -> FStar_Range.range) =
   fun projectee  ->
     match projectee with
     | { identifier = __fname__identifier;
@@ -286,11 +287,11 @@ let __proj__Mkidentifier_info__item__identifier_range :
         __fname__identifier_range
   
 let insert_col_info :
-  'Auu____696 .
+  'Auu____799 .
     Prims.int ->
-      'Auu____696 ->
-        (Prims.int,'Auu____696) FStar_Pervasives_Native.tuple2 Prims.list ->
-          (Prims.int,'Auu____696) FStar_Pervasives_Native.tuple2 Prims.list
+      'Auu____799 ->
+        (Prims.int,'Auu____799) FStar_Pervasives_Native.tuple2 Prims.list ->
+          (Prims.int,'Auu____799) FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun col  ->
     fun info  ->
@@ -303,20 +304,20 @@ let insert_col_info :
               then (aux, ((col, info) :: rest))
               else __insert ((c, i) :: aux) rest'
            in
-        let uu____864 = __insert [] col_infos  in
-        match uu____864 with
+        let uu____974 = __insert [] col_infos  in
+        match uu____974 with
         | (l,r) -> FStar_List.append (FStar_List.rev l) r
   
 let find_nearest_preceding_col_info :
-  'Auu____928 .
+  'Auu____1041 .
     Prims.int ->
-      (Prims.int,'Auu____928) FStar_Pervasives_Native.tuple2 Prims.list ->
-        'Auu____928 FStar_Pervasives_Native.option
+      (Prims.int,'Auu____1041) FStar_Pervasives_Native.tuple2 Prims.list ->
+        'Auu____1041 FStar_Pervasives_Native.option
   =
   fun col  ->
     fun col_infos  ->
-      let rec aux out uu___30_967 =
-        match uu___30_967 with
+      let rec aux out uu___56_1086 =
+        match uu___56_1086 with
         | [] -> out
         | (c,i)::rest ->
             if c > col
@@ -335,8 +336,8 @@ type id_info_table =
   id_info_enabled: Prims.bool ;
   id_info_db: row_info_by_file ;
   id_info_buffer: identifier_info Prims.list }[@@deriving show]
-let __proj__Mkid_info_table__item__id_info_enabled :
-  id_info_table -> Prims.bool =
+let (__proj__Mkid_info_table__item__id_info_enabled :
+  id_info_table -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | { id_info_enabled = __fname__id_info_enabled;
@@ -344,16 +345,16 @@ let __proj__Mkid_info_table__item__id_info_enabled :
         id_info_buffer = __fname__id_info_buffer;_} ->
         __fname__id_info_enabled
   
-let __proj__Mkid_info_table__item__id_info_db :
-  id_info_table -> row_info_by_file =
+let (__proj__Mkid_info_table__item__id_info_db :
+  id_info_table -> row_info_by_file) =
   fun projectee  ->
     match projectee with
     | { id_info_enabled = __fname__id_info_enabled;
         id_info_db = __fname__id_info_db;
         id_info_buffer = __fname__id_info_buffer;_} -> __fname__id_info_db
   
-let __proj__Mkid_info_table__item__id_info_buffer :
-  id_info_table -> identifier_info Prims.list =
+let (__proj__Mkid_info_table__item__id_info_buffer :
+  id_info_table -> identifier_info Prims.list) =
   fun projectee  ->
     match projectee with
     | { id_info_enabled = __fname__id_info_enabled;
@@ -361,54 +362,54 @@ let __proj__Mkid_info_table__item__id_info_buffer :
         id_info_buffer = __fname__id_info_buffer;_} ->
         __fname__id_info_buffer
   
-let id_info_table_empty : id_info_table =
-  let uu____1050 = FStar_Util.psmap_empty ()  in
-  { id_info_enabled = false; id_info_db = uu____1050; id_info_buffer = [] } 
-let id_info__insert :
+let (id_info_table_empty : id_info_table) =
+  let uu____1178 = FStar_Util.psmap_empty ()  in
+  { id_info_enabled = false; id_info_db = uu____1178; id_info_buffer = [] } 
+let (id_info__insert :
   (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) ->
     (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
       FStar_Util.pimap FStar_Util.psmap ->
       identifier_info ->
         (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
-          FStar_Util.pimap FStar_Util.psmap
+          FStar_Util.pimap FStar_Util.psmap)
   =
   fun ty_map  ->
     fun db  ->
       fun info  ->
         let range = info.identifier_range  in
         let use_range1 =
-          let uu____1097 = FStar_Range.use_range range  in
-          FStar_Range.set_def_range range uu____1097  in
+          let uu____1231 = FStar_Range.use_range range  in
+          FStar_Range.set_def_range range uu____1231  in
         let info1 =
-          let uu___31_1099 = info  in
-          let uu____1100 = ty_map info.identifier_ty  in
+          let uu___57_1233 = info  in
+          let uu____1234 = ty_map info.identifier_ty  in
           {
-            identifier = (uu___31_1099.identifier);
-            identifier_ty = uu____1100;
+            identifier = (uu___57_1233.identifier);
+            identifier_ty = uu____1234;
             identifier_range = use_range1
           }  in
         let fn = FStar_Range.file_of_range use_range1  in
         let start = FStar_Range.start_of_range use_range1  in
-        let uu____1103 =
-          let uu____1108 = FStar_Range.line_of_pos start  in
-          let uu____1109 = FStar_Range.col_of_pos start  in
-          (uu____1108, uu____1109)  in
-        match uu____1103 with
+        let uu____1237 =
+          let uu____1242 = FStar_Range.line_of_pos start  in
+          let uu____1243 = FStar_Range.col_of_pos start  in
+          (uu____1242, uu____1243)  in
+        match uu____1237 with
         | (row,col) ->
             let rows =
-              let uu____1131 = FStar_Util.pimap_empty ()  in
-              FStar_Util.psmap_find_default db fn uu____1131  in
+              let uu____1265 = FStar_Util.pimap_empty ()  in
+              FStar_Util.psmap_find_default db fn uu____1265  in
             let cols = FStar_Util.pimap_find_default rows row []  in
-            let uu____1171 =
-              let uu____1180 = insert_col_info col info1 cols  in
-              FStar_All.pipe_right uu____1180 (FStar_Util.pimap_add rows row)
+            let uu____1305 =
+              let uu____1314 = insert_col_info col info1 cols  in
+              FStar_All.pipe_right uu____1314 (FStar_Util.pimap_add rows row)
                in
-            FStar_All.pipe_right uu____1171 (FStar_Util.psmap_add db fn)
+            FStar_All.pipe_right uu____1305 (FStar_Util.psmap_add db fn)
   
-let id_info_insert :
+let (id_info_insert :
   id_info_table ->
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either ->
-      FStar_Syntax_Syntax.typ -> FStar_Range.range -> id_info_table
+      FStar_Syntax_Syntax.typ -> FStar_Range.range -> id_info_table)
   =
   fun table  ->
     fun id1  ->
@@ -417,89 +418,89 @@ let id_info_insert :
           let info =
             { identifier = id1; identifier_ty = ty; identifier_range = range
             }  in
-          let uu___32_1254 = table  in
+          let uu___58_1396 = table  in
           {
-            id_info_enabled = (uu___32_1254.id_info_enabled);
-            id_info_db = (uu___32_1254.id_info_db);
+            id_info_enabled = (uu___58_1396.id_info_enabled);
+            id_info_db = (uu___58_1396.id_info_db);
             id_info_buffer = (info :: (table.id_info_buffer))
           }
   
-let id_info_insert_bv :
+let (id_info_insert_bv :
   id_info_table ->
-    FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.typ -> id_info_table
+    FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.typ -> id_info_table)
   =
   fun table  ->
     fun bv  ->
       fun ty  ->
         if table.id_info_enabled
         then
-          let uu____1264 = FStar_Syntax_Syntax.range_of_bv bv  in
-          id_info_insert table (FStar_Util.Inl bv) ty uu____1264
+          let uu____1412 = FStar_Syntax_Syntax.range_of_bv bv  in
+          id_info_insert table (FStar_Util.Inl bv) ty uu____1412
         else table
   
-let id_info_insert_fv :
+let (id_info_insert_fv :
   id_info_table ->
-    FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.typ -> id_info_table
+    FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.typ -> id_info_table)
   =
   fun table  ->
     fun fv  ->
       fun ty  ->
         if table.id_info_enabled
         then
-          let uu____1275 = FStar_Syntax_Syntax.range_of_fv fv  in
-          id_info_insert table (FStar_Util.Inr fv) ty uu____1275
+          let uu____1429 = FStar_Syntax_Syntax.range_of_fv fv  in
+          id_info_insert table (FStar_Util.Inr fv) ty uu____1429
         else table
   
-let id_info_toggle : id_info_table -> Prims.bool -> id_info_table =
+let (id_info_toggle : id_info_table -> Prims.bool -> id_info_table) =
   fun table  ->
     fun enabled  ->
-      let uu___33_1283 = table  in
-      let uu____1284 = enabled && (FStar_Options.ide ())  in
+      let uu___59_1441 = table  in
+      let uu____1442 = enabled && (FStar_Options.ide ())  in
       {
-        id_info_enabled = uu____1284;
-        id_info_db = (uu___33_1283.id_info_db);
-        id_info_buffer = (uu___33_1283.id_info_buffer)
+        id_info_enabled = uu____1442;
+        id_info_db = (uu___59_1441.id_info_db);
+        id_info_buffer = (uu___59_1441.id_info_buffer)
       }
   
-let id_info_promote :
+let (id_info_promote :
   id_info_table ->
-    (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) -> id_info_table
+    (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) -> id_info_table)
   =
   fun table  ->
     fun ty_map  ->
-      let uu___34_1296 = table  in
-      let uu____1297 =
+      let uu___60_1458 = table  in
+      let uu____1459 =
         FStar_List.fold_left (id_info__insert ty_map) table.id_info_db
           table.id_info_buffer
          in
       {
-        id_info_enabled = (uu___34_1296.id_info_enabled);
-        id_info_db = uu____1297;
+        id_info_enabled = (uu___60_1458.id_info_enabled);
+        id_info_db = uu____1459;
         id_info_buffer = []
       }
   
-let id_info_at_pos :
+let (id_info_at_pos :
   id_info_table ->
     Prims.string ->
       Prims.int ->
-        Prims.int -> identifier_info FStar_Pervasives_Native.option
+        Prims.int -> identifier_info FStar_Pervasives_Native.option)
   =
   fun table  ->
     fun fn  ->
       fun row  ->
         fun col  ->
           let rows =
-            let uu____1325 = FStar_Util.pimap_empty ()  in
-            FStar_Util.psmap_find_default table.id_info_db fn uu____1325  in
+            let uu____1495 = FStar_Util.pimap_empty ()  in
+            FStar_Util.psmap_find_default table.id_info_db fn uu____1495  in
           let cols = FStar_Util.pimap_find_default rows row []  in
-          let uu____1331 = find_nearest_preceding_col_info col cols  in
-          match uu____1331 with
+          let uu____1501 = find_nearest_preceding_col_info col cols  in
+          match uu____1501 with
           | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
           | FStar_Pervasives_Native.Some info ->
               let last_col =
-                let uu____1338 =
+                let uu____1508 =
                   FStar_Range.end_of_range info.identifier_range  in
-                FStar_Range.col_of_pos uu____1338  in
+                FStar_Range.col_of_pos uu____1508  in
               if col <= last_col
               then FStar_Pervasives_Native.Some info
               else FStar_Pervasives_Native.None

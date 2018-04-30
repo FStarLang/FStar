@@ -172,6 +172,7 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
      Typ.mk (Ptyp_constr (p, c_tys))
   | MLTY_Tuple tys -> Typ.mk (Ptyp_tuple (map build_core_type tys))
   | MLTY_Top -> Typ.mk (Ptyp_constr (mk_lident "Obj.t", []))
+  | MLTY_Erased -> Typ.mk (Ptyp_constr (mk_lident "unit", []))
   in
   if annots = []
   then t
@@ -274,9 +275,11 @@ and resugar_app f args es: expression =
              assert (length branches == 1);
              (match (hd branches) with
               | (_, _, x) -> build_expr x)
-          | _ -> failwith "Cannot resugar FStar.All.try_with"
+          | _ -> failwith ("Cannot resugar FStar.All.try_with (1)" ^
+                           (FStar_Extraction_ML_Code.string_of_mlexpr ([], "?") s))
+
          )
-      | _ -> failwith "Cannot resugar FStar.All.try_with" in
+      | _ -> failwith "Cannot resugar FStar.All.try_with (2)" in
     let variants = match cs.expr with
       | MLE_Fun (_, e) ->
          (match e.expr with
@@ -284,7 +287,7 @@ and resugar_app f args es: expression =
              map build_case branches
           | _ -> [build_case (MLP_Wild, None, e)]
          )
-      | _ -> failwith "Cannot resugar FStar.All.try_with" in
+      | _ -> failwith "Cannot resugar FStar.All.try_with (3)" in
     Exp.try_ body variants
   | _ -> Exp.apply f args
 

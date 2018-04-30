@@ -16,3 +16,7 @@ assume val h : int -> Tot int
 val l'' : unit -> Lemma (requires (f 0 == h))
                        (ensures (f 0 1 == h 1))
 let l'' () = () (* this fails too *)
+
+assume val i0: int -> Tot int
+assume val i1: int -> Tot int
+let test_i () : Lemma (requires i0==i1) (ensures i0 0 == i1 0) = ()

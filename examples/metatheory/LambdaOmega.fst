@@ -25,7 +25,7 @@ open FStar.Classical
 open FStar.FunctionalExtensionality
 open FStar.StrongExcludedMiddle
 
-#set-options "--max_fuel 1 --max_ifuel 1"
+#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1"
 
 
 (* Chapter 29 of TAPL: "Type Operators and Kinding",

@@ -92,3 +92,5 @@ val maybe_monadic: env -> term -> lident -> typ -> term
 
 //qualifiers
 val check_sigelt_quals: env -> sigelt -> unit
+
+val must_erase_for_extraction: env -> term -> bool

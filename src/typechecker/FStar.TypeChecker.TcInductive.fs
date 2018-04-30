@@ -76,7 +76,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
          let tps, k = SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
-         let fv_tc = S.lid_as_fv tc Delta_constant None in
+         let fv_tc = S.lid_as_fv tc delta_constant None in
          Env.push_let_binding env0 (Inr fv_tc) (uvs, t_tc),
          { s with sigel = Sig_inductive_typ(tc, uvs, tps, k, mutuals, data) },
          u,
@@ -275,7 +275,7 @@ let already_unfolded (ilid:lident) (arrghs:args) (unfolded:unfolded_memo_t) (env
 let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfolded_memo_t) (env:env_t) :bool =
   debug_log env ("Checking strict positivity in type: " ^ (PP.term_to_string btype));
   //normalize the type to unfold any type abbreviations, TODO: what steps?
-  let btype = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env btype in
+  let btype = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env btype in
   debug_log env ("Checking strict positivity in type, after normalization: " ^ (PP.term_to_string btype));
   not (ty_occurs_in ty_lid btype) ||  //true if ty does not occur in btype
     (debug_log env ("ty does occur in this type, pressing ahead");
@@ -294,7 +294,11 @@ let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfo
          ty_nested_positive_in_inductive ty_lid fv.fv_name.v us args unfolded env
      | Tm_arrow (sbs, c) ->  //binder type is an arrow type
        debug_log env ("Checking strict positivity in Tm_arrow");
-       if not (is_pure_or_ghost_comp c) then
+       let check_comp =
+         let c = Env.unfold_effect_abbrev env c |> mk_Comp in
+         is_pure_or_ghost_comp c || (Env.lookup_effect_quals env (U.comp_effect_name c) |> List.existsb (fun q -> q = S.TotalEffect))
+       in
+       if not check_comp then
          let _ = debug_log env ("Checking strict positivity , the arrow is impure, so return true") in
          true
        else
@@ -366,7 +370,7 @@ and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:u
      | _          -> failwith "Impossible! Expected universe unification variables") univ_unif_vars us);
 
   //normalize it, TODO: as before steps?
-  let dt = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env dt in
+  let dt = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env dt in
 
   debug_log env ("Checking nested positivity in the data constructor type: " ^ (PP.term_to_string dt));
   match (SS.compress dt).n with
@@ -525,7 +529,7 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list<subst_elt>) (us:
   //open the ibs binders
   let ibs = SS.open_binders ibs in
   //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
-  let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
+  let ind = mk_Tm_uinst (S.fvar lid delta_constant None) (List.map (fun u -> U_name u) us) in
   //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
   let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None Range.dummyRange in
   //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
@@ -746,7 +750,7 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list<sigelt>) (mutuals:list<li
   //open the ibs binders
   let ibs = SS.open_binders ibs in
   //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
-  let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
+  let ind = mk_Tm_uinst (S.fvar lid delta_constant None) (List.map (fun u -> U_name u) us) in
   //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
   let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None Range.dummyRange in
   //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
@@ -998,7 +1002,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let inst_univs = List.map (fun u -> U_name u) uvs in
     let tps = inductive_tps in //List.map2 (fun (x,_) (_,imp) -> ({x,imp)) implicit_tps inductive_tps in
     let arg_typ =
-        let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc Delta_constant None), inst_univs)) None p in
+        let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc delta_constant None), inst_univs)) None p in
         let args = tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp) in
         S.mk_Tm_app inst_tc args None p
     in
@@ -1009,7 +1013,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
         else let disc_name = U.mk_discriminator lid in
              let x = S.new_bv (Some p) arg_typ in
              let sort =
-                 let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) Delta_equational None in
+                 let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) delta_equational None in
                  U.refine x (U.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] None p))
              in
              S.mk_binder ({projectee arg_typ with sort = sort})
@@ -1047,7 +1051,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             (* Type of the discriminator *)
             let binders = imp_binders@[unrefined_arg_binder] in
             let t =
-                let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
+                let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid delta_constant None))) in
                 SS.close_univ_vars uvs <| U.arrow binders bool_typ
             in
             let decl = { sigel = Sig_declare_typ(discriminator_name, uvs, t);
@@ -1072,15 +1076,15 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                             then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
                             else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
                         in
-                        let pat_true = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, U.exp_true_bool in
+                        let pat_true = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, U.exp_true_bool in
                         let pat_false = pos (Pat_wild (S.new_bv None tun)), None, U.exp_false_bool in
                         let arg_exp = S.bv_to_name (fst unrefined_arg_binder) in
                         mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) None p
                 in
                 let dd =
                     if quals |> List.contains S.Abstract
-                    then Delta_abstract Delta_equational
-                    else Delta_equational
+                    then Delta_abstract delta_equational
+                    else delta_equational
                 in
                 let imp = U.abs binders body None in
                 let lbtyp = if no_decl then t else tun in
@@ -1112,7 +1116,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let subst = fields |> List.mapi (fun i (a, _) ->
             let field_name, _ = U.mk_field_projector_name lid a i in
-            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name Delta_equational None)) inst_univs in
+            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name delta_equational None)) inst_univs in
             let proj = mk_Tm_app field_proj_tm [arg] None p in
             NT(a, proj))
     in
@@ -1161,13 +1165,13 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
                   else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
               in
-              let pat = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
+              let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
               let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
               let imp = U.abs binders body None in
               let dd =
                   if quals |> List.contains S.Abstract
-                  then Delta_abstract Delta_equational
-                  else Delta_equational
+                  then Delta_abstract delta_equational
+                  else delta_equational
               in
               let lbtyp = if no_decl then t else tun in
               let lb = {

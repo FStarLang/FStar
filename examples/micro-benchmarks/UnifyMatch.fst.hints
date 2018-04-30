@@ -1,0 +1,47 @@
+[
+  "Ž{n©yÎ,Rb\u001c>¹bVy",
+  [
+    [
+      "UnifyMatch.t",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "c739c9e48fe20ccca2c818f2c7eccc37"
+    ],
+    [
+      "UnifyMatch.test1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "c5f69debea4f9fa2e3180bb0263dade9"
+    ],
+    [
+      "UnifyMatch.t",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "8226a19dcec88f60f16861d07ebbd5d8"
+    ],
+    [
+      "UnifyMatch.test1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "4c193d3745c8493373caffa9786f08da"
+    ]
+  ]
+]

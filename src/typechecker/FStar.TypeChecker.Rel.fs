@@ -491,7 +491,7 @@ let base_and_refinement_maybe_delta should_delta env t1 =
    let norm_refinement env t =
        let steps =
          if should_delta
-         then [N.Weak; N.HNF; N.UnfoldUntil Delta_constant]
+         then [N.Weak; N.HNF; N.UnfoldUntil delta_constant]
          else [N.Weak; N.HNF] in
        N.normalize_refinement steps env t
    in
@@ -617,7 +617,7 @@ let extend_solution pid sol wl =
     commit sol;
     {wl with ctr=wl.ctr+1}
 
-let solve_prob prob logical_guard uvis wl =
+let solve_prob (prob : prob) (logical_guard : option<term>) (uvis : list<uvi>) (wl:worklist) : worklist =
     def_check_prob "solve_prob.prob" prob;
     BU.iter_opt logical_guard (def_check_scoped "solve_prob.guard" prob);
     let conj_guard t g = match t, g with
@@ -815,10 +815,10 @@ let fv_delta_depth env fv = match fv.fv_delta with
       if env.curmodule.str = fv.fv_name.v.nsstr && not env.is_iface  //AR: TODO: this is to prevent unfolding of abstract symbols in the extracted interface
                                                                      //    a better way would be create new fvs with appripriate delta_depth at extraction time
       then d //we're in the defining module
-      else Delta_constant
-    | Delta_defined_at_level _ ->
-      begin match Env.lookup_definition [Unfold Delta_constant] env fv.fv_name.v with
-            | None -> Delta_constant //there's no definition to unfold, e.g., because it's marked irreducible
+      else delta_constant
+    | Delta_constant_at_level i when i > 0 ->
+      begin match Env.lookup_definition [Unfold delta_constant] env fv.fv_name.v with
+            | None -> delta_constant //there's no definition to unfold, e.g., because it's marked irreducible
             | _ -> fv.fv_delta
       end
     | d ->
@@ -844,7 +844,7 @@ let rec delta_depth_of_term env t =
     | Tm_type _
     | Tm_arrow _
     | Tm_quoted _
-    | Tm_abs _ -> Some Delta_constant
+    | Tm_abs _ -> Some delta_constant
     | Tm_fvar fv -> Some (fv_delta_depth env fv)
 
 
@@ -865,17 +865,6 @@ let rec head_matches env t1 t2 : match_result =
 
     | Tm_type _, Tm_type _
     | Tm_arrow _, Tm_arrow _ -> HeadMatch
-
-    | Tm_match _, Tm_match _ ->
-    begin
-      (* This flags causes a bunch of messages to be printed when `term_eq` fails,
-       * useful to find the actual discrepancy. *)
-      if debug env (Options.Other "RelDelta") then
-          U.debug_term_eq := true;
-      if U.term_eq t1 t2
-      then FullMatch
-      else MisMatch (None, None)
-    end
 
     | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head' |> head_match
     | Tm_app(head, _), _ -> head_matches env head t2 |> head_match
@@ -898,9 +887,32 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let fail r = (r, None) in
     let rec aux retry n_delta t1 t2 =
         let r = head_matches env t1 t2 in
+
+        let reduce_one_and_try_again (d1:delta_depth) (d2:delta_depth) =
+          let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
+          let t1, t2 = if d1_greater_than_d2
+                       then let t1' = normalize_refinement [N.UnfoldUntil d2; N.Weak; N.HNF] env wl t1 in
+                            t1', t2
+                       else let t2' = normalize_refinement [N.UnfoldUntil d1; N.Weak; N.HNF] env wl t2 in
+                            t1, t2' in
+          aux retry (n_delta + 1) t1 t2
+        in
+
+        let reduce_both_and_try_again (d:delta_depth) (r:match_result) =
+          match Common.decr_delta_depth d with
+          | None -> fail r
+          | Some d ->
+            let t1 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t1 in
+            let t2 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t2 in
+            aux retry (n_delta + 1) t1 t2
+        in
+
         match r with
-            | MisMatch(Some Delta_equational, _)
-            | MisMatch(_, Some Delta_equational) ->
+            | MisMatch (Some (Delta_equational_at_level i), Some (Delta_equational_at_level j)) when (i > 1 || j > 1) && i <> j ->
+              reduce_one_and_try_again (Delta_equational_at_level i) (Delta_equational_at_level j)
+
+            | MisMatch(Some (Delta_equational_at_level _), _)
+            | MisMatch(_, Some (Delta_equational_at_level _)) ->
               if not retry then fail r
               else begin match maybe_inline t1, maybe_inline t2 with
                    | None, None -> fail r
@@ -910,34 +922,21 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                    end
 
             | MisMatch(Some d1, Some d2) when (d1=d2) -> //incompatible
-              begin match Common.decr_delta_depth d1 with
-                | None ->
-                  fail r
-
-                | Some d ->
-                  let t1 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t1 in
-                  let t2 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t2 in
-                  aux retry (n_delta + 1) t1 t2
-              end
-
+              reduce_both_and_try_again d1 r
+ 
             | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
-              let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
-              let t1, t2 = if d1_greater_than_d2
-                           then let t1' = normalize_refinement [N.UnfoldUntil d2; N.Weak; N.HNF] env wl t1 in
-                                t1', t2
-                           else let t2' = normalize_refinement [N.UnfoldUntil d1; N.Weak; N.HNF] env wl t2 in
-                                t1, t2' in
-              aux retry (n_delta + 1) t1 t2
+              reduce_one_and_try_again d1 d2
 
             | MisMatch _ -> fail r
 
             | _ -> success n_delta r t1 t2 in
     let r = aux true 0 t1 t2 in
     if Env.debug env <| Options.Other "RelDelta" then
-        BU.print3 "head_matches (%s, %s) = %s\n"
+        BU.print4 "head_matches (%s, %s) = %s (%s)\n"
             (Print.term_to_string t1)
             (Print.term_to_string t2)
-            (string_of_match_result (fst r));
+            (string_of_match_result (fst r))
+            (if snd r = None then "None" else snd r |> must |> (fun (t1, t2) -> Print.term_to_string t1 ^ "; " ^ Print.term_to_string t2));
     r
 
 type tc =
@@ -1298,7 +1297,6 @@ let solve_universe_eq orig wl u1 u2 =
     then USolved wl
     else really_solve_universe_eq orig wl u1 u2
 
-
 (* This balances two lists.  Given (xs, f) (ys, g), it will
  * take a maximal same-length prefix from each list, getting
  *   (xs1, xs2) and (ys1, ys2)  /  where length xs1 == length xs2 (and ys1 = [] \/ ys2 = [])
@@ -1456,10 +1454,10 @@ and solve_rigid_flex_meet (env:Env.env) (tp:tprob) (wl:worklist) : option<workli
                 | _ ->
                   let head1, _ = U.head_and_args t1 in
                   begin match (U.un_uinst head1).n with
-                    | Tm_fvar {fv_delta=Delta_defined_at_level i} ->
+                    | Tm_fvar {fv_delta=Delta_constant_at_level i} when i > 0 ->
                       let prev = if i > 1
-                                 then Delta_defined_at_level (i - 1)
-                                 else Delta_constant in
+                                 then Delta_constant_at_level (i - 1)
+                                 else Delta_constant_at_level 0 in
                       let t1 = N.normalize [N.Weak; N.HNF; N.UnfoldUntil prev] env t1 in
                       let t2 = N.normalize [N.Weak; N.HNF; N.UnfoldUntil prev] env t2 in
                       disjoin t1 t2
@@ -1701,7 +1699,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     match (SS.compress head).n with
                     | Tm_name _
                     | Tm_match _ -> true
-                    | Tm_fvar ({fv_delta=Delta_equational}) ->
+                    | Tm_fvar ({fv_delta=Delta_equational_at_level _}) ->
                       true
                     | Tm_fvar ({fv_delta=Delta_abstract _}) ->
                       //these may be relatable via a logical theory
@@ -1735,7 +1733,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
             | (_, None) -> //head1 matches head1, without delta
                 if debug env <| Options.Other "Rel"
-                then BU.print4 "Head matches: %s (%s) and %s (%s)\n"
+                then BU.print4 "Head matches after call to head_matches_delta: %s (%s) and %s (%s)\n"
                     (Print.term_to_string t1) (Print.tag_of_term t1)
                     (Print.term_to_string t2) (Print.tag_of_term t2);
                 let head1, args1 = U.head_and_args t1 in
@@ -1770,6 +1768,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                 | UDeferred wl -> solve env (defer "universe constraints" orig wl)
                                 | USolved wl ->
                                     let subprobs = List.map2 (fun (a, _) (a', _) -> TProb <| mk_problem (p_scope orig) orig a EQ a' None "index") args1 args2 in
+                                    if debug env <| Options.Other "Rel" then
+                                    BU.print1 "Adding subproblems for arguments: %s" (Print.list_to_string (prob_to_string env) subprobs);
                                     let formula = U.mk_conj_l (List.map (fun p -> fst (p_guard p)) subprobs) in
                                     let wl = solve_prob orig (Some formula) [] wl in
                                     solve env (attempt subprobs wl)
@@ -2311,8 +2311,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let _ =
         if debug env (Options.Other "RelCheck")
         then BU.print3 "Attempting %s (%s - %s)\n" (string_of_int problem.pid)
-                            (Print.tag_of_term t1)
-                            (Print.tag_of_term t2)
+                            (Print.term_to_string t1)
+                            (Print.term_to_string t2)
                             in
     let r = Env.get_range env in
     match t1.n, t2.n with
@@ -2416,8 +2416,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
           && (match head_matches env x1.sort x2.sort with
               | MisMatch(Some d1, Some d2) ->
                 let is_unfoldable = function
-                    | Delta_constant
-                    | Delta_defined_at_level _ -> true
+                    | Delta_constant_at_level _ -> true
                     | _ -> false
                 in
                 is_unfoldable d1 && is_unfoldable d2
@@ -2529,6 +2528,50 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let t1 = force_refinement <| base_and_refinement env t1 in
         solve_t env ({problem with lhs=t1}) wl
 
+      | Tm_match (t1, brs1), Tm_match (t2, brs2) ->
+        let sc_prob = TProb <| mk_problem (p_scope orig) orig t1 EQ t2 None "match scrutinee" in
+        let rec solve_branches brs1 brs2 : option<list<prob>> =
+            match brs1, brs2 with
+            | br1::rs1, br2::rs2 ->
+                let (p1, w1, _) = br1 in
+                let (p2, w2, _) = br2 in
+                (* If the patterns differ in shape, just fail *)
+                if not (eq_pat p1 p2) then None else
+
+                (* Open the first branch, and use that same substitution for the second branch *)
+                let (p1, w1, e1), s = SS.open_branch' br1 in
+                let (p2, w2, e2) = br2 in
+                let w2 = BU.map_opt w2 (SS.subst s) in
+                let e2 = SS.subst s e2 in
+
+                let scope = p_scope orig @ (List.map S.mk_binder <| S.pat_bvs p1) in
+
+                (* Subproblem for then `when` clause *)
+                BU.bind_opt (
+                    match w1, w2 with
+                    | Some _, None
+                    | None, Some _ -> None
+                    | None, None -> Some []
+                    | Some w1, Some w2 -> Some [TProb <| mk_problem scope orig w1 EQ w2 None "when clause"])
+                (fun wprobs ->
+
+                (* Branch body *)
+                let prob = TProb <| mk_problem scope orig e1 EQ e2 None "branch body" in
+                BU.bind_opt (solve_branches rs1 rs2) (fun r ->
+                Some (prob::(wprobs @ r))))
+
+            | [], [] -> Some []
+            | _ -> None
+        in
+        begin match solve_branches brs1 brs2 with
+        | None ->
+            giveup env "Tm_match branches don't match" orig
+        | Some sub_probs ->
+            let sub_probs = sc_prob::sub_probs in
+            let wl = solve_prob orig None [] wl in
+            solve env (attempt sub_probs wl)
+        end
+
       | Tm_match _, _
       | Tm_uinst _, _
       | Tm_name _, _
@@ -2639,11 +2682,11 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              else let c2_decl, qualifiers = must (Env.effect_decl_opt env c2.effect_name) in
                   if qualifiers |> List.contains Reifiable
                   then let c1_repr =
-                           N.normalize [N.UnfoldUntil Delta_constant; N.Weak; N.HNF] env
+                           N.normalize [N.UnfoldUntil delta_constant; N.Weak; N.HNF] env
                                        (Env.reify_comp env (S.mk_Comp (lift_c1 ())) (env.universe_of env c1.result_typ))
                        in
                        let c2_repr =
-                           N.normalize [N.UnfoldUntil Delta_constant; N.Weak; N.HNF] env
+                           N.normalize [N.UnfoldUntil delta_constant; N.Weak; N.HNF] env
                                        (Env.reify_comp env (S.mk_Comp c2) (env.universe_of env c2.result_typ))
                        in
                        let prob =
@@ -2848,9 +2891,9 @@ let subtype_fail env e t1 t2 =
     Errors.log_issue (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
 
 let sub_comp env c1 c2 =
-  if debug env <| Options.Other "Rel"
-  then BU.print2 "sub_comp of %s and %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2);
   let rel = if env.use_eq then EQ else SUB in
+  if debug env <| Options.Other "Rel"
+  then BU.print3 "sub_comp of %s --and-- %s --with-- %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB");
   let prob = CProb <| new_problem env c1 rel c2 None (Env.get_range env) "sub_comp" in
   with_guard env prob <| solve_and_commit env (singleton env prob)  (fun _ -> None)
 
@@ -2998,13 +3041,14 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                 then begin
                     Options.with_saved_options (fun () ->
                         ignore <| Options.set_options Options.Set "--no_tactics";
-                        env.solver.preprocess env vc
+                        let vcs = env.solver.preprocess env vc in
+                        vcs |> List.map (fun (env, goal, opts) ->
+                        env, N.normalize [N.Simplify; N.Primops] env goal, opts)
                     )
                 end
                 else [env,vc,FStar.Options.peek ()]
             in
             vcs |> List.iter (fun (env, goal, opts) ->
-                    let goal = N.normalize [N.Simplify; N.Primops] env goal in
                     match check_trivial goal with
                     | Trivial ->
                         if debug
@@ -3057,10 +3101,10 @@ let resolve_implicits' must_total forcelax g =
                if Env.debug env <| Options.Other "RelCheck"
                then BU.print3 "Checking uvar %s resolved to %s at type %s\n"
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
-               let g = 
-                 try 
+               let g =
+                 try
                    env.check_type_of must_total env tm k
-                 with | e ->
+                 with e when Errors.handleable e ->
                     Errors.add_errors [Error_BadImplicit,
                                        BU.format2 "Failed while checking implicit %s set to %s"
                                                (Print.uvar_to_string u)

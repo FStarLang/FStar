@@ -691,9 +691,9 @@ let mk_app f args =
 let mk_data l args =
   match args with
     | [] ->
-      mk (fvar l Delta_constant (Some Data_ctor)) None (range_of_lid l)
+      mk (fvar l delta_constant (Some Data_ctor)) None (range_of_lid l)
     | _ ->
-      let e = mk_app (fvar l Delta_constant (Some Data_ctor)) args in
+      let e = mk_app (fvar l delta_constant (Some Data_ctor)) args in
       mk e None e.pos
 
 let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
@@ -826,9 +826,9 @@ let rec arrow_formals_comp k =
     match k.n with
         | Tm_arrow(bs, c) ->
             let bs, c = Subst.open_comp bs c in
-            if is_tot_or_gtot_comp c
+            if is_total_comp c
             then let bs', k = arrow_formals_comp (comp_result c) in
-                bs@bs', k
+                 bs@bs', k
             else bs, c
         | Tm_refine ({ sort = k }, _) -> arrow_formals_comp k
         | _ -> [], Syntax.mk_Total k
@@ -988,7 +988,7 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) Delta_constant None)) None Range.dummyRange
+mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) delta_constant None)) None Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
@@ -998,11 +998,11 @@ let exp_int s : term = mk (Tm_constant (Const_int (s,None))) None dummyRange
 let exp_char c : term = mk (Tm_constant (Const_char c)) None dummyRange
 let exp_string s : term = mk (Tm_constant (Const_string (s, dummyRange))) None dummyRange
 
-let fvar_const l = fvar l Delta_constant None
+let fvar_const l = fvar l delta_constant None
 let tand    = fvar_const PC.and_lid
 let tor     = fvar_const PC.or_lid
-let timp    = fvar PC.imp_lid (Delta_defined_at_level 1) None
-let tiff    = fvar PC.iff_lid (Delta_defined_at_level 2) None
+let timp    = fvar PC.imp_lid (Delta_constant_at_level 1) None
+let tiff    = fvar PC.iff_lid (Delta_constant_at_level 2) None
 let t_bool  = fvar_const PC.bool_lid
 let b2t_v   = fvar_const PC.b2t_lid
 let t_not   = fvar_const PC.not_lid
@@ -1019,7 +1019,7 @@ let mk_binop op_t phi1 phi2 = mk (Tm_app(op_t, [as_arg phi1; as_arg phi2])) None
 let mk_neg phi = mk (Tm_app(t_not, [as_arg phi])) None phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l phi = match phi with
-    | [] -> fvar PC.true_lid Delta_constant None
+    | [] -> fvar PC.true_lid delta_constant None
     | hd::tl -> List.fold_right mk_conj tl hd
 let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_disj_l phi = match phi with
@@ -1041,15 +1041,15 @@ let mk_has_type t x t' =
     mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) None dummyRange
 
 let mk_with_type u t e =
-    let t_with_type = fvar PC.with_type_lid Delta_equational None in
+    let t_with_type = fvar PC.with_type_lid delta_equational None in
     let t_with_type = mk (Tm_uinst(t_with_type, [u])) None dummyRange in
     mk (Tm_app(t_with_type, [iarg t; as_arg e])) None dummyRange
 
 let lex_t    = fvar_const PC.lex_t_lid
-let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid Delta_constant (Some Data_ctor), [U_zero])) None dummyRange
-let lex_pair = fvar PC.lexcons_lid Delta_constant (Some Data_ctor)
-let tforall  = fvar PC.forall_lid (Delta_defined_at_level 1) None
-let t_haseq   = fvar PC.haseq_lid Delta_constant None
+let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid delta_constant (Some Data_ctor), [U_zero])) None dummyRange
+let lex_pair = fvar PC.lexcons_lid delta_constant (Some Data_ctor)
+let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None
+let t_haseq   = fvar PC.haseq_lid delta_constant None
 
 let lcomp_of_comp c0 =
     let eff_name, flags =
@@ -1109,11 +1109,11 @@ let if_then_else b t1 t2 =
 // Operations on squashed and other irrelevant/sub-singleton types
 //////////////////////////////////////////////////////////////////////////////////////
 let mk_squash u p =
-    let sq = fvar PC.squash_lid (Delta_defined_at_level 1) None in
+    let sq = fvar PC.squash_lid (Delta_constant_at_level 1) None in
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let mk_auto_squash u p =
-    let sq = fvar PC.auto_squash_lid (Delta_defined_at_level 2) None in
+    let sq = fvar PC.auto_squash_lid (Delta_constant_at_level 2) None in
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let un_squash t =
@@ -1401,7 +1401,7 @@ let action_as_lb eff_lid a pos =
   let lb =
     close_univs_and_mk_letbinding None
       (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
-      (Inr (lid_as_fv a.action_name Delta_equational None))
+      (Inr (lid_as_fv a.action_name delta_equational None))
       a.action_univs
       (arrow a.action_params (mk_Total a.action_typ))
       PC.effect_Tot_lid
@@ -1433,11 +1433,11 @@ let rec delta_qualifier t =
         | Tm_name _
         | Tm_match _
         | Tm_uvar _
-        | Tm_unknown -> Delta_equational
+        | Tm_unknown -> delta_equational
         | Tm_type _
         | Tm_quoted _
         | Tm_constant _
-        | Tm_arrow _ -> Delta_constant
+        | Tm_arrow _ -> delta_constant
         | Tm_uinst(t, _)
         | Tm_refine({sort=t}, _)
         | Tm_meta(t, _)
@@ -1448,10 +1448,9 @@ let rec delta_qualifier t =
 
 let rec incr_delta_depth d =
     match d with
-    | Delta_equational -> d
-    | Delta_constant -> Delta_defined_at_level 1
-    | Delta_defined_at_level i -> Delta_defined_at_level (i + 1)
-    | Delta_abstract d -> incr_delta_depth d
+    | Delta_constant_at_level i   -> Delta_constant_at_level (i + 1)
+    | Delta_equational_at_level i -> Delta_equational_at_level (i + 1)
+    | Delta_abstract d            -> incr_delta_depth d
 
 let incr_delta_qualifier t =
     incr_delta_depth (delta_qualifier t)
@@ -1480,7 +1479,7 @@ let dm4f_lid ed name : lident =
     lid_of_path p' Range.dummyRange
 
 let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
-    let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) None rng in
+    let ctor l = mk (Tm_fvar (lid_as_fv l delta_constant (Some Data_ctor))) None rng in
     let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.cons_lid) [U_zero]) args None pos in
     let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.nil_lid)  [U_zero]) args None pos in
     List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
@@ -1832,4 +1831,3 @@ and unbound_variables_comp c =
     | Comp ct ->
       unbound_variables ct.result_typ
       @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args
-

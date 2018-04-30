@@ -45,7 +45,7 @@ module BU      = FStar.Util
 module Dep     = FStar.Parser.Dep
 
 (* we write this version number to the cache files, and detect when loading the cache that the version number is same *)
-let cache_version_number = 1
+let cache_version_number = 2
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -183,6 +183,40 @@ let load_module_from_cache
     : env -> string -> option<(Syntax.modul * option<Syntax.modul> * DsEnv.module_inclusion_info)> =
     let some_cache_invalid = BU.mk_ref None in
     let invalidate_cache fn = some_cache_invalid := Some fn in
+    let load env source_file cache_file =
+        match BU.load_value_from_file cache_file with
+        | None ->
+            Inl "Corrupt"
+        | Some (vnum, digest, tcmod, tcmod_iface_opt, mii) ->
+            if vnum <> cache_version_number then Inl "Stale, because inconsistent cache version"
+            else
+            match FStar.Parser.Dep.hash_dependences env.dep_graph source_file with
+            | Some digest' ->
+                if digest=digest'
+                then Inr (tcmod, tcmod_iface_opt, mii)
+                else begin
+                if Options.debug_any()
+                then begin
+                    BU.print4 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
+                            (BU.string_of_int (List.length digest'))
+                            (FStar.Parser.Dep.print_digest digest')
+                            (BU.string_of_int (List.length digest))
+                            (FStar.Parser.Dep.print_digest digest);
+                    if List.length digest = List.length digest'
+                    then List.iter2
+                        (fun (x,y) (x', y') ->
+                        if x<>x' || y<>y'
+                        then BU.print2 "Differ at: Expected %s\n Got %s\n"
+                                        (FStar.Parser.Dep.print_digest [(x,y)])
+                                        (FStar.Parser.Dep.print_digest [(x',y')]))
+                        digest
+                        digest'
+                end;
+                Inl "Stale"
+                end
+            | _ ->
+                Inl "Stale"
+    in
     fun env fn ->
         let cache_file = Dep.cache_file_name fn in
         let fail tag =
@@ -196,39 +230,22 @@ let load_module_from_cache
         | Some _ -> None
         | _ ->
           if BU.file_exists cache_file then
-            match BU.load_value_from_file cache_file with
-            | None ->
-              fail "Corrupt"
-            | Some (vnum, digest, tcmod, tcmod_iface_opt, mii) ->
-              if vnum <> cache_version_number then fail "Stale, because inconsistent cache version"
-              else
-                match FStar.Parser.Dep.hash_dependences env.dep_graph fn with
-                | Some digest' ->
-                  if digest=digest'
-                  then Some (tcmod, tcmod_iface_opt, mii)
-                  else begin
-                    if Options.debug_any()
-                    then begin
-                      BU.print4 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
-                                (BU.string_of_int (List.length digest'))
-                                (FStar.Parser.Dep.print_digest digest')
-                                (BU.string_of_int (List.length digest))
-                                (FStar.Parser.Dep.print_digest digest);
-                      if List.length digest = List.length digest'
-                      then List.iter2
-                           (fun (x,y) (x', y') ->
-                            if x<>x' || y<>y'
-                            then BU.print2 "Differ at: Expected %s\n Got %s\n"
-                                           (FStar.Parser.Dep.print_digest [(x,y)])
-                                           (FStar.Parser.Dep.print_digest [(x',y')]))
-                           digest
-                           digest'
-                    end;
-                    fail "Stale"
-                  end
-                | _ ->
-                  fail "Stale"
-          else fail "Absent"
+            match load env fn cache_file with
+            | Inl msg -> fail msg
+            | Inr res -> Some res
+          else
+            match FStar.Options.find_file (FStar.Util.basename cache_file) with
+            | None -> fail "Absent"
+            | Some alt_cache_file ->
+              match load env fn alt_cache_file with
+              | Inl msg -> fail msg
+              | Inr res ->
+                //found a valid .checked file somewhere else in the include path
+                //copy it to the destination, if we are supposed to be verifying this file
+                if Options.should_verify_file fn
+                then FStar.Util.copy_file alt_cache_file cache_file;
+                Some res
+
 
 let store_module_to_cache env fn (m:modul) (modul_iface_opt:option<modul>) (mii:DsEnv.module_inclusion_info) =
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
@@ -247,14 +264,25 @@ let store_module_to_cache env fn (m:modul) (modul_iface_opt:option<modul>) (mii:
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
-let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its elapsed checking time
-                              * TcEnv.env =
+type delta_env = option<(env -> env)>
+let apply_delta_env env (f:delta_env) =
+    match f with
+    | None -> env
+    | Some f -> f env
+let extend_delta_env (f:delta_env) (g:env->env) =
+    match f with
+    | None -> Some g
+    | Some f -> Some (fun e -> g (f e))
+let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and its elapsed checking time
+                                    * TcEnv.env
+                                    * delta_env =
   Syntax.reset_gensym();
   let tc_source_file () =
+      let env = apply_delta_env env delta in
       let fmod, env = parse env pre_fn fn in
       let check_mod () =
           let (tcmod, tcmod_iface_opt, env), time =
-            FStar.Util.record_time (fun () -> Tc.check_module env fmod) in
+            FStar.Util.record_time (fun () -> Tc.check_module env fmod (is_some pre_fn)) in
           (tcmod, time), tcmod_iface_opt, env
       in
       let tcmod, tcmod_iface_opt, env =
@@ -277,27 +305,32 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
          //but we will not write out a .checked file for an unverified dependence
          //of some file that should be checked
          then store_module_to_cache env fn (fst tcmod) tcmod_iface_opt mii;
-         tcmod, env
+         tcmod, env, None
        | Some (tcmod, tcmod_iface_opt, mii) ->
          let tcmod =
            if tcmod.is_interface then tcmod
            else
-             if Options.use_extracted_interfaces () then
+             let use_interface_from_the_cache = Options.use_extracted_interfaces () &&
+                                                (not (Options.expose_interfaces ()  && Options.should_verify tcmod.name.str)) in
+             if use_interface_from_the_cache then
                if tcmod_iface_opt = None then
                  Errors.raise_error (Errors.Fatal_ModuleNotFound, "use_extracted_interfaces option is set but could not find it in the cache for: " ^ tcmod.name.str)
                                     Range.dummyRange
                else tcmod_iface_opt |> must
              else tcmod
          in
-         let _, env =
-            with_tcenv env <|
-            FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii (FStar.TypeChecker.Normalize.erase_universes env)
+         let delta_env env =
+             let _, env =
+                with_tcenv env <|
+                FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii (FStar.TypeChecker.Normalize.erase_universes env)
+             in
+             FStar.TypeChecker.Tc.load_checked_module env tcmod
          in
-         let env = FStar.TypeChecker.Tc.load_checked_module env tcmod in
-         (tcmod,0), env
-  else let tcmod, tcmod_iface_opt, _, env = tc_source_file () in
+         (tcmod,0), env, extend_delta_env delta delta_env
+  else let env = apply_delta_env env delta in
+       let tcmod, tcmod_iface_opt, _, env = tc_source_file () in
        let tcmod = if is_some tcmod_iface_opt then (tcmod_iface_opt |> must, snd tcmod) else tcmod in  //AR: TODO: does it matter what we return here?
-       tcmod, env
+       tcmod, env, None
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)
@@ -309,30 +342,26 @@ let needs_interleaving intf impl =
   List.mem (FStar.Util.get_file_extension intf) ["fsti"; "fsi"] &&
   List.mem (FStar.Util.get_file_extension impl) ["fst"; "fs"]
 
-let pop_context env msg = Tc.pop_context env msg |> ignore
-
-let push_context env msg = Tc.push_context env msg
-
-let tc_one_file_from_remaining (remaining:list<string>) (env:TcEnv.env) =
-  let remaining, (nmods, env) =
+let tc_one_file_from_remaining (remaining:list<string>) (env:TcEnv.env) (delta_env:delta_env) =
+  let remaining, (nmods, env, delta_env) =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let m, env = tc_one_file env (Some intf) impl in
-          remaining, ([m], env)
+          let m, env, delta_env = tc_one_file env delta_env (Some intf) impl in
+          remaining, ([m], env, delta_env)
         | intf_or_impl :: remaining ->
-          let m, env = tc_one_file env None intf_or_impl in
-          remaining, ([m], env)
-        | [] -> [], ([], env)
+          let m, env, delta_env = tc_one_file env delta_env None intf_or_impl in
+          remaining, ([m], env, delta_env)
+        | [] -> [], ([], env, delta_env)
   in
-  remaining, nmods, env
+  remaining, nmods, env, delta_env
 
-let rec tc_fold_interleave (acc:list<(modul * int)> * TcEnv.env) (remaining:list<string>) =
+let rec tc_fold_interleave (acc:list<(modul * int)> * TcEnv.env * delta_env) (remaining:list<string>) =
   match remaining with
     | [] -> acc
     | _  ->
-      let mods, env = acc in
-      let remaining, nmods, env = tc_one_file_from_remaining remaining env in
-      tc_fold_interleave (mods@nmods, env) remaining
+      let mods, env, delta_env = acc in
+      let remaining, nmods, env, delta_env = tc_one_file_from_remaining remaining env delta_env in
+      tc_fold_interleave (mods@nmods, env, delta_env) remaining
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
@@ -346,9 +375,14 @@ let batch_mode_tc filenames dep_graph =
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
   let env = init_env dep_graph in
-  let all_mods, env = tc_fold_interleave ([], env) filenames in
-  if Options.interactive()
-  && FStar.Errors.get_err_count () = 0
-  then env.solver.refresh()
-  else env.solver.finish();
-  all_mods, env
+  let all_mods, env, delta = tc_fold_interleave ([], env, None) filenames in
+  let solver_refresh env =
+      begin
+      if Options.interactive()
+      && FStar.Errors.get_err_count () = 0
+      then env.solver.refresh()
+      else env.solver.finish()
+      end;
+      env
+  in
+  all_mods, env, extend_delta_env delta solver_refresh

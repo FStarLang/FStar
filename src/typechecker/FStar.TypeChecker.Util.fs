@@ -1027,7 +1027,7 @@ let maybe_return_e2_and_bind
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
    bind r env e1opt lc1 (x, lc2)
 
-let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) Delta_constant None
+let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) delta_constant None
 
 let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflags> * (bool -> lcomp))>) : lcomp =
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
@@ -1102,7 +1102,7 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
         when S.fv_eq_lid fv C.bool_lid
           && is_type t ->
       let _ = Env.lookup_lid env C.b2t_lid in  //check that we have Prims.b2t in the context
-      let b2t = S.fvar (Ident.set_lid_range C.b2t_lid e.pos) (Delta_defined_at_level 1) None in
+      let b2t = S.fvar (Ident.set_lid_range C.b2t_lid e.pos) (Delta_constant_at_level 1) None in
       let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (U.ktype0)) in
       let e = mk_Tm_app b2t [S.as_arg e] None e.pos in
       e, lc
@@ -1214,8 +1214,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let us_r, _ = fst <| Env.lookup_lid env C.as_requires in
                               let us_e, _ = fst <| Env.lookup_lid env C.as_ensures in
                               let r = ct.result_typ.pos in
-                              let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) Delta_equational None) us_r in
-                              let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) Delta_equational None) us_e in
+                              let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) delta_equational None) us_r in
+                              let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) delta_equational None) us_e in
                               let req = mk_Tm_app as_req [(ct.result_typ, Some S.imp_tag); S.as_arg wp] None ct.result_typ.pos in
                               let ens = mk_Tm_app as_ens [(ct.result_typ, Some S.imp_tag); S.as_arg wp] None ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
@@ -1377,7 +1377,7 @@ let check_universe_generalization
                       ^ Print.term_to_string t)) t.pos
 
 let generalize_universes (env:env) (t0:term) : tscheme =
-    let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
+    let t = N.normalize [N.NoFullNorm; N.Beta; N.DoNotUnfoldPureLets] env t0 in
     let univnames = gather_free_univnames env t in
     if Env.debug env <| Options.Other "Gen"
     then BU.print2 "generalizing universes in the term (post norm): %s with univnames: %s\n" (Print.term_to_string t) (Print.univ_names_to_string univnames);
@@ -1614,7 +1614,7 @@ let check_top_level env g lc : (bool * comp) =
   if U.is_total_lcomp lc
   then discharge g, lcomp_comp lc
   else let c = lcomp_comp lc in
-       let steps = [Normalize.Beta; Normalize.NoFullNorm] in
+       let steps = [Normalize.Beta; Normalize.NoFullNorm; N.DoNotUnfoldPureLets] in
        let c = Env.unfold_effect_abbrev env c
               |> S.mk_Comp
               |> Normalize.normalize_comp steps env
@@ -1877,7 +1877,43 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         then err' ()
       | _ -> ()
 
-
-
-
-
+let must_erase_for_extraction (g:env) (t:typ) =
+    let rec aux_whnf env t = //t is expected to b in WHNF
+        match (SS.compress t).n with
+        | Tm_type _ -> true
+        | Tm_fvar fv -> fv_eq_lid fv C.unit_lid ||
+          (fv |> lid_of_fv |> Env.lookup_attrs_of_lid g |> (fun l_opt -> is_some l_opt && l_opt |> must |> List.existsb (fun t ->
+            match (SS.compress t).n with
+            | Tm_fvar fv when lid_equals fv.fv_name.v C.must_erase_for_extraction_attr -> true
+            | _ -> false)))
+        | Tm_arrow _ ->
+          let bs, c = U.arrow_formals_comp t in
+          let env = FStar.TypeChecker.Env.push_binders env bs in
+          if U.is_pure_comp c
+          then (//printfn "t is %s; %s is pure!" (Print.term_to_string t) (Print.comp_to_string c);
+                aux env (U.comp_result c))
+          else U.is_pure_or_ghost_comp c //erase it if it is ghost
+        | Tm_refine({sort=t}, _)
+        | Tm_ascribed(t, _, _) ->
+          aux env t
+        | Tm_app(head, [_]) ->
+          (match (U.un_uinst head).n with
+           | Tm_fvar fv -> fv_eq_lid fv C.erased_lid
+           | _ -> false)
+        | _ ->
+          false
+    and aux env t =
+        let t = N.normalize [N.Primops;
+                             N.Weak;
+                             N.HNF;
+                             N.UnfoldUntil delta_constant;
+                             N.Beta;
+                             N.AllowUnboundUniverses;
+                             N.Zeta;
+                             N.Iota] env t in
+//        debug g (fun () -> BU.print1 "aux %s\n" (Print.term_to_string t));
+        let res = aux_whnf env t in
+        if Env.debug env <| Options.Other "Extraction" then BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (Print.term_to_string t);
+        res
+    in
+    aux g t
