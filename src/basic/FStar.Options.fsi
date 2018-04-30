@@ -54,6 +54,8 @@ type optionstate = Util.smap<option_val>
 (* Control the option stack *)
 val push                        : unit -> unit
 val pop                         : unit -> unit
+val snapshot                    : unit -> (int * unit)
+val rollback                    : option<int> -> unit
 val peek                        : unit -> optionstate
 val set                         : optionstate -> unit
 

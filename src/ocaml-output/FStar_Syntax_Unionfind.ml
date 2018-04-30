@@ -96,11 +96,11 @@ let (new_transaction : unit -> tx) =
   fun uu____494  ->
     let tx = let uu____496 = get ()  in TX uu____496  in
     (let uu____498 =
-       let uu___25_499 = get ()  in
+       let uu___51_499 = get ()  in
        let uu____500 = vops.next_minor ()  in
        {
-         term_graph = (uu___25_499.term_graph);
-         univ_graph = (uu___25_499.univ_graph);
+         term_graph = (uu___51_499.term_graph);
+         univ_graph = (uu___51_499.univ_graph);
          version = uu____500
        }  in
      set uu____498);
@@ -118,11 +118,11 @@ let (get_version : unit -> FStar_Syntax_Syntax.version) =
 let (set_term_graph : tgraph -> unit) =
   fun tg  ->
     let uu____583 =
-      let uu___26_584 = get ()  in
+      let uu___52_584 = get ()  in
       {
         term_graph = tg;
-        univ_graph = (uu___26_584.univ_graph);
-        version = (uu___26_584.version)
+        univ_graph = (uu___52_584.univ_graph);
+        version = (uu___52_584.version)
       }  in
     set uu____583
   
@@ -213,11 +213,11 @@ let (get_univ_graph : unit -> ugraph) =
 let (set_univ_graph : ugraph -> unit) =
   fun ug  ->
     let uu____821 =
-      let uu___27_822 = get ()  in
+      let uu___53_822 = get ()  in
       {
-        term_graph = (uu___27_822.term_graph);
+        term_graph = (uu___53_822.term_graph);
         univ_graph = ug;
-        version = (uu___27_822.version)
+        version = (uu___53_822.version)
       }  in
     set uu____821
   

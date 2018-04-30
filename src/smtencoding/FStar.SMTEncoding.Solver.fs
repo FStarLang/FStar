@@ -266,6 +266,22 @@ let find_localized_errors errs =
 let has_localized_errors errs = Option.isSome (find_localized_errors errs)
 
 let report_errors settings : unit =
+    let _basic_error_report =
+        match find_localized_errors settings.query_errors with
+        | Some err ->
+          settings.query_errors |> List.iter (fun e ->
+          FStar.Errors.diag settings.query_range ("SMT solver says: " ^ error_to_short_string e));
+          FStar.TypeChecker.Err.add_errors settings.query_env err.error_messages
+        | None ->
+          let err_detail =
+            settings.query_errors |>
+            List.map (fun e -> "SMT solver says: " ^ error_to_short_string e) |>
+            String.concat "; " in
+          FStar.TypeChecker.Err.add_errors
+                   settings.query_env
+                   [(Errors.Error_UnknownFatal_AssertionFailure, BU.format1 "Unknown assertion failed (%s)" err_detail,
+                     settings.query_range)]
+    in
     if Options.detail_errors()
     && Options.n_cores() = 1
     then let initial_fuel = {
@@ -286,22 +302,6 @@ let report_errors settings : unit =
             Option.get (!res)
             in
          detail_errors false settings.query_env settings.query_all_labels ask_z3
-    else begin
-        match find_localized_errors settings.query_errors with
-        | Some err ->
-          settings.query_errors |> List.iter (fun e ->
-          FStar.Errors.diag settings.query_range ("SMT solver says: " ^ error_to_short_string e));
-          FStar.TypeChecker.Err.add_errors settings.query_env err.error_messages
-        | None ->
-          let err_detail =
-            settings.query_errors |>
-            List.map (fun e -> "SMT solver says: " ^ error_to_short_string e) |>
-            String.concat "; " in
-          FStar.TypeChecker.Err.add_errors
-                   settings.query_env
-                   [(Errors.Error_UnknownFatal_AssertionFailure, BU.format1 "Unknown assertion failed (%s)" err_detail,
-                     settings.query_range)]
-    end
 
 let query_info settings z3result =
     if Options.hint_info()
@@ -530,6 +530,8 @@ let solver = {
     init=Encode.init;
     push=Encode.push;
     pop=Encode.pop;
+    snapshot=Encode.snapshot;
+    rollback=Encode.rollback;
     encode_sig=Encode.encode_sig;
     encode_modul=Encode.encode_modul;
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
@@ -541,6 +543,8 @@ let dummy = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
+    snapshot=(fun _ -> (0, 0, 0), ());
+    rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
