@@ -26,3 +26,57 @@ let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
           (FStar_Util.smap_add cache s out; out)
     else s
   
+let snapshot :
+  'a 'b 'c .
+    ('a -> 'b) ->
+      'c Prims.list FStar_ST.ref ->
+        'a -> (Prims.int,'b) FStar_Pervasives_Native.tuple2
+  =
+  fun push  ->
+    fun stackref  ->
+      fun arg  ->
+        FStar_Util.atomically
+          (fun uu____102  ->
+             let len =
+               let uu____104 = FStar_ST.op_Bang stackref  in
+               FStar_List.length uu____104  in
+             let arg' = push arg  in (len, arg'))
+  
+let rollback :
+  'a 'c .
+    (unit -> 'a) ->
+      'c Prims.list FStar_ST.ref ->
+        Prims.int FStar_Pervasives_Native.option -> 'a
+  =
+  fun pop  ->
+    fun stackref  ->
+      fun depth  ->
+        let rec aux n1 =
+          if n1 <= (Prims.parse_int "0")
+          then failwith "Too many pops"
+          else
+            if n1 = (Prims.parse_int "1")
+            then pop ()
+            else
+              ((let uu____236 = pop ()  in ());
+               aux (n1 - (Prims.parse_int "1")))
+           in
+        let curdepth =
+          let uu____238 = FStar_ST.op_Bang stackref  in
+          FStar_List.length uu____238  in
+        let n1 =
+          match depth with
+          | FStar_Pervasives_Native.Some d -> curdepth - d
+          | FStar_Pervasives_Native.None  -> (Prims.parse_int "1")  in
+        FStar_Util.atomically (fun uu____299  -> aux n1)
+  
+let raise_failed_assertion : 'Auu____304 . Prims.string -> 'Auu____304 =
+  fun msg  ->
+    let uu____310 = FStar_Util.format1 "Assertion failed: %s" msg  in
+    failwith uu____310
+  
+let (runtime_assert : Prims.bool -> Prims.string -> unit) =
+  fun b  ->
+    fun msg  ->
+      if Prims.op_Negation b then raise_failed_assertion msg else ()
+  

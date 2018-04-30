@@ -1875,8 +1875,8 @@ let path_sel_upd_other
 = path_disjoint_ind
   (fun #v1 #v2 p1_ p2_ -> forall (m: otype_of_typ from) (v: otype_of_typ v1) . path_sel (path_upd m p1_ v) p2_ == path_sel m p2_)
   (fun #through #to1_ #to2_ p s1 s2 ->
-      FStar.Classical.forall_intro' #_ #(fun m -> forall  (v: otype_of_typ to1_) . path_sel (path_upd m (PathStep through to1_ p s1) v) (PathStep through to2_ p s2) == path_sel m (PathStep through to2_ p s2)) (fun m ->
-	  FStar.Classical.forall_intro' #_ #(fun v -> path_sel (path_upd m (PathStep through to1_ p s1) v) (PathStep through to2_ p s2) == path_sel m (PathStep through to2_ p s2)) (fun v ->
+      FStar.Classical.forall_intro_sub #_ #(fun m -> forall  (v: otype_of_typ to1_) . path_sel (path_upd m (PathStep through to1_ p s1) v) (PathStep through to2_ p s2) == path_sel m (PathStep through to2_ p s2)) (fun m ->
+	  FStar.Classical.forall_intro_sub #_ #(fun v -> path_sel (path_upd m (PathStep through to1_ p s1) v) (PathStep through to2_ p s2) == path_sel m (PathStep through to2_ p s2)) (fun v ->
 	  let m0 = path_sel m p in
           let m1 = step_sel m0 s1 in
           let m2 = step_sel m0 s2 in
@@ -1887,8 +1887,8 @@ let path_sel_upd_other
   (fun #v1 #v2 p1 p2 #v1' #v2' p1' p2' ->
     let h1: squash (exists r1 . p1' == path_concat p1 r1) = path_includes_exists_concat p1 p1' in
     let h2: squash (exists r2 . p2' == path_concat p2 r2) = path_includes_exists_concat p2 p2' in
-    FStar.Classical.forall_intro' #_ #(fun (m: otype_of_typ from) -> forall v . path_sel (path_upd m p1' v) p2' == path_sel m p2') (fun (m: otype_of_typ from) ->
-      FStar.Classical.forall_intro' #_ #(fun (v: otype_of_typ v1') -> path_sel (path_upd m p1' v) p2' == path_sel m p2') (fun (v: otype_of_typ v1') ->
+    FStar.Classical.forall_intro_sub #_ #(fun (m: otype_of_typ from) -> forall v . path_sel (path_upd m p1' v) p2' == path_sel m p2') (fun (m: otype_of_typ from) ->
+      FStar.Classical.forall_intro_sub #_ #(fun (v: otype_of_typ v1') -> path_sel (path_upd m p1' v) p2' == path_sel m p2') (fun (v: otype_of_typ v1') ->
       FStar.Classical.exists_elim (path_sel (path_upd m p1' v) p2' == path_sel m p2') h1 (fun r1 ->
 	FStar.Classical.exists_elim (path_sel (path_upd m p1' v) p2' == path_sel m p2') h2 (fun r2 ->
 	  path_upd_concat m p1 r1 v;

@@ -65,6 +65,8 @@ let mk_data_tester env l x = mk_tester (escape l.str) x
 type varops_t = {
     push: unit -> unit;
     pop: unit -> unit;
+    snapshot: unit -> (int * unit);
+    rollback: option<int> -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
     fresh:string -> string;
@@ -96,10 +98,14 @@ let varops =
             let top_scope = snd <| List.hd !scopes in
             BU.smap_add top_scope s f;
             f in
-    let push () = scopes := new_scope()::!scopes in
-    let pop () = scopes := List.tl !scopes in
+    let push () = scopes := new_scope() :: !scopes in // already signal-atomic
+    let pop () = scopes := List.tl !scopes in // already signal-atomic
+    let snapshot () = FStar.Common.snapshot push scopes () in
+    let rollback depth = FStar.Common.rollback pop scopes depth in
     {push=push;
      pop=pop;
+     snapshot=snapshot;
+     rollback=rollback;
      new_var=new_var;
      new_fvar=new_fvar;
      fresh=fresh;

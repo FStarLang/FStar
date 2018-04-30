@@ -46,8 +46,8 @@ let rec heap_merge_pairs :
       'Auu____262 heap Prims.list -> 'Auu____262 heap
   =
   fun cmp  ->
-    fun uu___31_284  ->
-      match uu___31_284 with
+    fun uu___57_284  ->
+      match uu___57_284 with
       | [] -> EmptyHeap
       | h::[] -> h
       | h1::h2::hh ->
@@ -59,8 +59,8 @@ let heap_peek :
   'Auu____327 .
     'Auu____327 heap -> 'Auu____327 FStar_Pervasives_Native.option
   =
-  fun uu___32_336  ->
-    match uu___32_336 with
+  fun uu___58_336  ->
+    match uu___58_336 with
     | EmptyHeap  -> FStar_Pervasives_Native.None
     | Heap (v1,uu____340) -> FStar_Pervasives_Native.Some v1
   
@@ -72,8 +72,8 @@ let heap_pop :
           FStar_Pervasives_Native.option
   =
   fun cmp  ->
-    fun uu___33_381  ->
-      match uu___33_381 with
+    fun uu___59_381  ->
+      match uu___59_381 with
       | EmptyHeap  -> FStar_Pervasives_Native.None
       | Heap (v1,hh) ->
           let uu____404 =
@@ -95,8 +95,8 @@ let push_nodup :
   =
   fun key_fn  ->
     fun x  ->
-      fun uu___34_487  ->
-        match uu___34_487 with
+      fun uu___60_487  ->
+        match uu___60_487 with
         | [] -> [x]
         | h::t ->
             let uu____496 =
@@ -116,8 +116,8 @@ let rec add_priorities :
   =
   fun n1  ->
     fun acc  ->
-      fun uu___35_541  ->
-        match uu___35_541 with
+      fun uu___61_541  ->
+        match uu___61_541 with
         | [] -> acc
         | h::t ->
             add_priorities (n1 + (Prims.parse_int "1")) ((n1, h) :: acc) t
@@ -544,8 +544,8 @@ let trie_mutate_leaf :
              fun uu____2931  ->
                fun uu____2932  ->
                  fun namespaces  ->
-                   let uu___37_2941 = tr1  in
-                   { bindings = (uu___37_2941.bindings); namespaces })
+                   let uu___63_2941 = tr1  in
+                   { bindings = (uu___63_2941.bindings); namespaces })
   
 let trie_insert : 'a . 'a trie -> query -> Prims.string -> 'a -> 'a trie =
   fun tr  ->
@@ -555,11 +555,11 @@ let trie_insert : 'a . 'a trie -> query -> Prims.string -> 'a -> 'a trie =
           trie_mutate_leaf tr ns_query
             (fun tr1  ->
                fun uu____2988  ->
-                 let uu___38_2991 = tr1  in
+                 let uu___64_2991 = tr1  in
                  let uu____2994 = names_insert tr1.bindings id1 v1  in
                  {
                    bindings = uu____2994;
-                   namespaces = (uu___38_2991.namespaces)
+                   namespaces = (uu___64_2991.namespaces)
                  })
   
 let trie_import :
@@ -587,11 +587,11 @@ let trie_include : 'a . 'a trie -> query -> query -> 'a trie =
           (fun tr1  ->
              fun inc  ->
                fun label  ->
-                 let uu___39_3121 = tr1  in
+                 let uu___65_3121 = tr1  in
                  {
                    bindings = ((ImportedNames (label, (inc.bindings))) ::
                      (tr1.bindings));
-                   namespaces = (uu___39_3121.namespaces)
+                   namespaces = (uu___65_3121.namespaces)
                  })
   
 let trie_open_namespace : 'a . 'a trie -> query -> query -> 'a trie =
@@ -602,9 +602,9 @@ let trie_open_namespace : 'a . 'a trie -> query -> query -> 'a trie =
           (fun tr1  ->
              fun inc  ->
                fun label  ->
-                 let uu___40_3169 = tr1  in
+                 let uu___66_3169 = tr1  in
                  {
-                   bindings = (uu___40_3169.bindings);
+                   bindings = (uu___66_3169.bindings);
                    namespaces = ((ImportedNames (label, (inc.namespaces))) ::
                      (tr1.namespaces))
                  })
@@ -640,8 +640,8 @@ let names_revmap :
       let rec aux acc imports name_collections1 =
         FStar_List.fold_left
           (fun acc1  ->
-             fun uu___36_3361  ->
-               match uu___36_3361 with
+             fun uu___62_3361  ->
+               match uu___62_3361 with
                | Names bt ->
                    let uu____3383 =
                      let uu____3390 = fn bt  in (imports, uu____3390)  in
@@ -854,28 +854,28 @@ let (insert : table -> query -> Prims.string -> lid_symbol -> table) =
     fun host_query  ->
       fun id1  ->
         fun c  ->
-          let uu___41_4139 = tbl  in
+          let uu___67_4139 = tbl  in
           let uu____4140 = trie_insert tbl.tbl_lids host_query id1 c  in
-          { tbl_lids = uu____4140; tbl_mods = (uu___41_4139.tbl_mods) }
+          { tbl_lids = uu____4140; tbl_mods = (uu___67_4139.tbl_mods) }
   
 let (register_alias : table -> Prims.string -> query -> query -> table) =
   fun tbl  ->
     fun key  ->
       fun host_query  ->
         fun included_query  ->
-          let uu___42_4163 = tbl  in
+          let uu___68_4163 = tbl  in
           let uu____4164 =
             trie_add_alias tbl.tbl_lids key host_query included_query  in
-          { tbl_lids = uu____4164; tbl_mods = (uu___42_4163.tbl_mods) }
+          { tbl_lids = uu____4164; tbl_mods = (uu___68_4163.tbl_mods) }
   
 let (register_include : table -> query -> query -> table) =
   fun tbl  ->
     fun host_query  ->
       fun included_query  ->
-        let uu___43_4182 = tbl  in
+        let uu___69_4182 = tbl  in
         let uu____4183 = trie_include tbl.tbl_lids host_query included_query
            in
-        { tbl_lids = uu____4183; tbl_mods = (uu___43_4182.tbl_mods) }
+        { tbl_lids = uu____4183; tbl_mods = (uu___69_4182.tbl_mods) }
   
 let (register_open : table -> Prims.bool -> query -> query -> table) =
   fun tbl  ->
@@ -885,10 +885,10 @@ let (register_open : table -> Prims.bool -> query -> query -> table) =
           if is_module
           then register_include tbl host_query included_query
           else
-            (let uu___44_4207 = tbl  in
+            (let uu___70_4207 = tbl  in
              let uu____4208 =
                trie_open_namespace tbl.tbl_lids host_query included_query  in
-             { tbl_lids = uu____4208; tbl_mods = (uu___44_4207.tbl_mods) })
+             { tbl_lids = uu____4208; tbl_mods = (uu___70_4207.tbl_mods) })
   
 let (register_module_path :
   table -> Prims.bool -> Prims.string -> query -> table) =
@@ -927,7 +927,7 @@ let (register_module_path :
             match q with
             | [] -> ins_mod id1 bindings name loaded1
             | uu____4380 -> ins_ns id1 bindings name loaded1  in
-          let uu___45_4386 = tbl  in
+          let uu___71_4386 = tbl  in
           let uu____4387 =
             trie_mutate tbl.tbl_mods mod_query []
               (fun tr  ->
@@ -935,13 +935,13 @@ let (register_module_path :
                    fun q  ->
                      fun revq  ->
                        fun namespaces  ->
-                         let uu___46_4409 = tr  in
+                         let uu___72_4409 = tr  in
                          let uu____4412 = ins id1 q revq tr.bindings loaded
                             in
                          { bindings = uu____4412; namespaces })
               (fun tr  -> fun uu____4423  -> tr)
              in
-          { tbl_lids = (uu___45_4386.tbl_lids); tbl_mods = uu____4387 }
+          { tbl_lids = (uu___71_4386.tbl_lids); tbl_mods = uu____4387 }
   
 let (string_of_path : path -> Prims.string) =
   fun path  ->

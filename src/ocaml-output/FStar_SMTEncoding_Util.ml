@@ -170,6 +170,23 @@ let norng2 :
     ('Auu____505 -> 'Auu____506 -> FStar_Range.range -> 'Auu____507) ->
       'Auu____505 -> 'Auu____506 -> 'Auu____507
   = fun f  -> fun x  -> fun y  -> f x y FStar_Range.dummyRange 
+let norng3 :
+  'Auu____554 'Auu____555 'Auu____556 'Auu____557 .
+    ('Auu____554 ->
+       'Auu____555 -> 'Auu____556 -> FStar_Range.range -> 'Auu____557)
+      -> 'Auu____554 -> 'Auu____555 -> 'Auu____556 -> 'Auu____557
+  = fun f  -> fun x  -> fun y  -> fun z  -> f x y z FStar_Range.dummyRange 
+let norng4 :
+  'Auu____618 'Auu____619 'Auu____620 'Auu____621 'Auu____622 .
+    ('Auu____618 ->
+       'Auu____619 ->
+         'Auu____620 -> 'Auu____621 -> FStar_Range.range -> 'Auu____622)
+      ->
+      'Auu____618 -> 'Auu____619 -> 'Auu____620 -> 'Auu____621 -> 'Auu____622
+  =
+  fun f  ->
+    fun x  -> fun y  -> fun z  -> fun w  -> f x y z w FStar_Range.dummyRange
+  
 let (mk_Term_app :
   FStar_SMTEncoding_Term.term ->
     FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
@@ -190,9 +207,12 @@ let (mk_String_const : Prims.int -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mk_String_const 
 let (mk_Precedes :
   FStar_SMTEncoding_Term.term ->
-    FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
-  = norng2 FStar_SMTEncoding_Term.mk_Precedes 
+    FStar_SMTEncoding_Term.term ->
+      FStar_SMTEncoding_Term.term ->
+        FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
+  = norng4 FStar_SMTEncoding_Term.mk_Precedes 
 let (mk_LexCons :
   FStar_SMTEncoding_Term.term ->
-    FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
-  = norng2 FStar_SMTEncoding_Term.mk_LexCons 
+    FStar_SMTEncoding_Term.term ->
+      FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
+  = norng3 FStar_SMTEncoding_Term.mk_LexCons 
