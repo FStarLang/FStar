@@ -162,6 +162,10 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
              (uu___54_250.FStar_TypeChecker_Env.push);
            FStar_TypeChecker_Env.pop =
              (uu___54_250.FStar_TypeChecker_Env.pop);
+           FStar_TypeChecker_Env.snapshot =
+             (uu___54_250.FStar_TypeChecker_Env.snapshot);
+           FStar_TypeChecker_Env.rollback =
+             (uu___54_250.FStar_TypeChecker_Env.rollback);
            FStar_TypeChecker_Env.encode_modul =
              (uu___54_250.FStar_TypeChecker_Env.encode_modul);
            FStar_TypeChecker_Env.encode_sig =
@@ -929,15 +933,6 @@ let (needs_interleaving : Prims.string -> Prims.string -> Prims.bool) =
         (let uu____2046 = FStar_Util.get_file_extension impl  in
          FStar_List.mem uu____2046 ["fst"; "fs"])
   
-let (pop_context : FStar_TypeChecker_Env.env -> Prims.string -> unit) =
-  fun env  ->
-    fun msg  ->
-      let uu____2057 = FStar_TypeChecker_Tc.pop_context env msg  in
-      FStar_All.pipe_right uu____2057 (fun a239  -> ())
-  
-let (push_context :
-  FStar_TypeChecker_Env.env -> Prims.string -> FStar_TypeChecker_Env.env) =
-  fun env  -> fun msg  -> FStar_TypeChecker_Tc.push_context env msg 
 let (tc_one_file_from_remaining :
   Prims.string Prims.list ->
     FStar_TypeChecker_Env.env ->
@@ -949,24 +944,24 @@ let (tc_one_file_from_remaining :
   fun remaining  ->
     fun env  ->
       fun delta_env  ->
-        let uu____2105 =
+        let uu____2084 =
           match remaining with
           | intf::impl::remaining1 when needs_interleaving intf impl ->
-              let uu____2147 =
+              let uu____2126 =
                 tc_one_file env delta_env (FStar_Pervasives_Native.Some intf)
                   impl
                  in
-              (match uu____2147 with
+              (match uu____2126 with
                | (m,env1,delta_env1) -> (remaining1, ([m], env1, delta_env1)))
           | intf_or_impl::remaining1 ->
-              let uu____2223 =
+              let uu____2202 =
                 tc_one_file env delta_env FStar_Pervasives_Native.None
                   intf_or_impl
                  in
-              (match uu____2223 with
+              (match uu____2202 with
                | (m,env1,delta_env1) -> (remaining1, ([m], env1, delta_env1)))
           | [] -> ([], ([], env, delta_env))  in
-        match uu____2105 with
+        match uu____2084 with
         | (remaining1,(nmods,env1,delta_env1)) ->
             (remaining1, nmods, env1, delta_env1)
   
@@ -983,13 +978,13 @@ let rec (tc_fold_interleave :
     fun remaining  ->
       match remaining with
       | [] -> acc
-      | uu____2441 ->
-          let uu____2444 = acc  in
-          (match uu____2444 with
+      | uu____2420 ->
+          let uu____2423 = acc  in
+          (match uu____2423 with
            | (mods,env,delta_env) ->
-               let uu____2484 =
+               let uu____2463 =
                  tc_one_file_from_remaining remaining env delta_env  in
-               (match uu____2484 with
+               (match uu____2463 with
                 | (remaining1,nmods,env1,delta_env1) ->
                     tc_fold_interleave
                       ((FStar_List.append mods nmods), env1, delta_env1)
@@ -1006,35 +1001,35 @@ let (batch_mode_tc :
   =
   fun filenames  ->
     fun dep_graph1  ->
-      (let uu____2579 = FStar_Options.debug_any ()  in
-       if uu____2579
+      (let uu____2558 = FStar_Options.debug_any ()  in
+       if uu____2558
        then
          (FStar_Util.print_endline "Auto-deps kicked in; here's some info.";
           FStar_Util.print1
             "Here's the list of filenames we will process: %s\n"
             (FStar_String.concat " " filenames);
-          (let uu____2582 =
-             let uu____2583 =
+          (let uu____2561 =
+             let uu____2562 =
                FStar_All.pipe_right filenames
                  (FStar_List.filter FStar_Options.should_verify_file)
                 in
-             FStar_String.concat " " uu____2583  in
+             FStar_String.concat " " uu____2562  in
            FStar_Util.print1
-             "Here's the list of modules we will verify: %s\n" uu____2582))
+             "Here's the list of modules we will verify: %s\n" uu____2561))
        else ());
       (let env = init_env dep_graph1  in
-       let uu____2592 =
+       let uu____2571 =
          tc_fold_interleave ([], env, FStar_Pervasives_Native.None) filenames
           in
-       match uu____2592 with
+       match uu____2571 with
        | (all_mods,env1,delta1) ->
            let solver_refresh env2 =
-             (let uu____2662 =
+             (let uu____2641 =
                 (FStar_Options.interactive ()) &&
-                  (let uu____2664 = FStar_Errors.get_err_count ()  in
-                   uu____2664 = (Prims.parse_int "0"))
+                  (let uu____2643 = FStar_Errors.get_err_count ()  in
+                   uu____2643 = (Prims.parse_int "0"))
                  in
-              if uu____2662
+              if uu____2641
               then
                 (env2.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
                   ()

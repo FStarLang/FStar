@@ -342,10 +342,6 @@ let needs_interleaving intf impl =
   List.mem (FStar.Util.get_file_extension intf) ["fsti"; "fsi"] &&
   List.mem (FStar.Util.get_file_extension impl) ["fst"; "fs"]
 
-let pop_context env msg = Tc.pop_context env msg |> ignore
-
-let push_context env msg = Tc.push_context env msg
-
 let tc_one_file_from_remaining (remaining:list<string>) (env:TcEnv.env) (delta_env:delta_env) =
   let remaining, (nmods, env, delta_env) =
     match remaining with

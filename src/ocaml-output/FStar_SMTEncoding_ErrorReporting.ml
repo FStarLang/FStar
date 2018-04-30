@@ -736,7 +736,8 @@ let (detail_errors :
                 if success
                 then
                   let uu____2117 = FStar_Range.string_of_range r  in
-                  FStar_Util.print1 "OK: proof obligation at %s was proven\n"
+                  FStar_Util.print1
+                    "OK: proof obligation at %s was proven in isolation\n"
                     uu____2117
                 else
                   if hint_replay
@@ -814,5 +815,12 @@ let (detail_errors :
             (FStar_Options.Int (Prims.parse_int "5"));
           (let res = linear_check [] [] all_labels  in
            FStar_Util.print_string "\n";
-           FStar_All.pipe_right res (FStar_List.iter print_result))
+           FStar_All.pipe_right res (FStar_List.iter print_result);
+           (let uu____2385 =
+              FStar_Util.for_all FStar_Pervasives_Native.snd res  in
+            if uu____2385
+            then
+              FStar_Util.print_string
+                "Failed: the heuristic of trying each proof in isolation failed to identify a precise error\n"
+            else ()))
   

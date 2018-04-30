@@ -2742,10 +2742,9 @@ let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modu
     then as_interface m
     else m
   in
-  let x, y, pop_when_done = desugar_modul_common curmod env m in
-  if pop_when_done then
-    ignore (pop ());
-  x,y
+  let env, modul, pop_when_done = desugar_modul_common curmod env m in
+  if pop_when_done then Env.pop (), modul
+  else env, modul
 
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
   let env, modul, pop_when_done = desugar_modul_common None env m in

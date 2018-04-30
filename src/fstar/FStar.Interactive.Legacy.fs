@@ -58,12 +58,12 @@ type stack_t = list<(env_t * modul_t)>
 // pop).
 
 let pop env msg =
-    pop_context env msg;
+    ignore (TypeChecker.Tc.pop_context env msg);
     Options.pop()
 
 let push_with_kind env lax restore_cmd_line_options msg =
     let env = { env with lax = lax } in
-    let res = push_context env msg in
+    let res = TypeChecker.Tc.push_context env msg in
     Options.push();
     if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
     res
