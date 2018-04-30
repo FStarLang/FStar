@@ -196,7 +196,7 @@ install: all
 	$(call install_dir,ulib-install,lib/fstar)
 	rm -rf ../../ulib-install
 	# Then the binary library
-	$(INSTALL_EXEC) -m 755 -D ../../fstarlib/* $(PREFIX)/lib/fstar/
+	$(INSTALL_EXEC) -m 755 -D ../../bin/fstarlib/* $(PREFIX)/lib/fstar/
 	$(call install_fstarlib,ulib/ml,fstarlib.mllib)
         # Then the rest of the static files.
 	$(call install_dir,examples,share/fstar/examples)
