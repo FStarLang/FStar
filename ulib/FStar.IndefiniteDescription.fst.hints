@@ -80,7 +80,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "b044a5502f192321709d4ec5835e17ec"
+      "e46d1a4946c88b43fa4d4516cdcd7432"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
@@ -89,7 +89,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "f428242d4e5c9d57c499fbc5402b772d"
+      "af7aa0e1721d315278b6b4d447e31f10"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
