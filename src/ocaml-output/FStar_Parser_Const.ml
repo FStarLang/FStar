@@ -196,6 +196,7 @@ let (dm4f_bind_range_attr : FStar_Ident.lident) =
 let (must_erase_for_extraction_attr : FStar_Ident.lident) =
   psconst "must_erase_for_extraction" 
 let (fail_attr : FStar_Ident.lident) = pconst "fail" 
+let (fail_lax_attr : FStar_Ident.lident) = pconst "fail_lax" 
 let (fail_errs_attr : FStar_Ident.lident) = pconst "fail_errs" 
 let (gen_reset :
   (unit -> Prims.int,unit -> unit) FStar_Pervasives_Native.tuple2) =
