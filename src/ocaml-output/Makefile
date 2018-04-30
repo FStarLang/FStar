@@ -210,7 +210,7 @@ endif
 	$(call install_dir,doc/tutorial,share/fstar/tutorial)
 
 # Install the opam package
-opam: install-common
+install-opam: install-common
 	pushd ../../bin/fstarlib && ocamlfind install fstarlib * && popd
 	pushd ../../bin/fstar-compiler-lib && ocamlfind install fstar-compiler-lib * && popd
 	pushd ../../bin/fstar-tactics-lib && ocamlfind install fstar-tactics-lib * && popd
