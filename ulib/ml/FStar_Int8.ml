@@ -1,6 +1,6 @@
-type int8 = int
-type t = int8
-type t' = t
+type int8 = int[@@deriving show]
+type t = int8[@@deriving show]
+type t' = t[@@deriving show]
            
 let v (x:int8) : Prims.int = Prims.parse_int (string_of_int x)
 

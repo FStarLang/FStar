@@ -1,8 +1,8 @@
 open Prims
-type goal = FStar_Tactics_Types.goal[@@deriving show]
-type name = FStar_Syntax_Syntax.bv[@@deriving show]
-type env = FStar_TypeChecker_Env.env[@@deriving show]
-type implicits = FStar_TypeChecker_Env.implicits[@@deriving show]
+type goal = FStar_Tactics_Types.goal
+type name = FStar_Syntax_Syntax.bv
+type env = FStar_TypeChecker_Env.env
+type implicits = FStar_TypeChecker_Env.implicits
 let (normalize :
   FStar_TypeChecker_Normalize.step Prims.list ->
     FStar_TypeChecker_Env.env ->
@@ -24,7 +24,6 @@ let (tts :
 type 'a tac =
   {
   tac_f: FStar_Tactics_Types.proofstate -> 'a FStar_Tactics_Result.__result }
-[@@deriving show]
 let __proj__Mktac__item__tac_f :
   'a .
     'a tac ->
@@ -3556,16 +3555,15 @@ let (pointwise_rec :
                         | FStar_Util.Inl e -> fail e
                         | FStar_Util.Inr x1 -> ret x1))
   
-type ctrl = FStar_BigInt.t[@@deriving show]
+type ctrl = FStar_BigInt.t
 let (keepGoing : ctrl) = FStar_BigInt.zero 
 let (proceedToNextSubtree : FStar_BigInt.bigint) = FStar_BigInt.one 
 let (globalStop : FStar_BigInt.bigint) =
   FStar_BigInt.succ_big_int FStar_BigInt.one 
-type rewrite_result = Prims.bool[@@deriving show]
+type rewrite_result = Prims.bool
 let (skipThisTerm : Prims.bool) = false 
 let (rewroteThisTerm : Prims.bool) = true 
-type 'a ctrl_tac = ('a,ctrl) FStar_Pervasives_Native.tuple2 tac[@@deriving
-                                                                 show]
+type 'a ctrl_tac = ('a,ctrl) FStar_Pervasives_Native.tuple2 tac
 let rec (ctrl_tac_fold :
   (env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term ctrl_tac) ->
     env ->

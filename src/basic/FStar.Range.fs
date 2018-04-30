@@ -21,8 +21,10 @@ open FStar.All
 open FStar.BaseTypes
 open FStar.Util
 
+// IN F*: [@ PpxDerivingShow ]
 type file_name = string
 
+// IN F*: [@ PpxDerivingShow ]
 type pos = {
   line:int;
   col: int
@@ -31,11 +33,14 @@ let max i j = if i < j then j else i
 let pos_geq p1 p2 =
    (p1.line >= p2.line ||
    (p1.line = p2.line && p1.col >= p2.col))
+
+// IN F*: [@ PpxDerivingShow ]
 type rng = {
   file_name:file_name;
   start_pos:pos;
   end_pos:pos;
 }
+// IN F*: [@ PpxDerivingShow ]
 type range = {
   def_range:rng;
   use_range:rng

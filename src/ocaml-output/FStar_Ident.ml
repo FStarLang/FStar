@@ -14,7 +14,7 @@ let (__proj__Mkident__item__idRange : ident -> FStar_Range.range) =
     | { idText = __fname__idText; idRange = __fname__idRange;_} ->
         __fname__idRange
   
-type path = Prims.string Prims.list[@@deriving show]
+type path = Prims.string Prims.list
 type lident =
   {
   ns: ident Prims.list ;

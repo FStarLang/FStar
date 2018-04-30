@@ -33,8 +33,12 @@ let (uu___is_LightOff : pragma -> Prims.bool) =
   fun projectee  ->
     match projectee with | LightOff  -> true | uu____102 -> false
   
-type 'a memo = 'a FStar_Pervasives_Native.option FStar_ST.ref[@@deriving
-                                                               show]
+type 'a memo =
+  (('a FStar_Pervasives_Native.option FStar_ST.ref)[@printer
+                                                     fun fmt  ->
+                                                       fun _  ->
+                                                         Format.pp_print_string
+                                                           fmt "None"])
 type version = {
   major: Prims.int ;
   minor: Prims.int }[@@deriving show]
@@ -1087,10 +1091,9 @@ let (lcomp_comp : lcomp -> comp) =
     | FStar_Util.Inr c -> c
   
 type tscheme = (univ_name Prims.list,typ) FStar_Pervasives_Native.tuple2
-[@@deriving show]
-type freenames_l = bv Prims.list[@@deriving show]
-type formula = typ[@@deriving show]
-type formulae = typ Prims.list[@@deriving show]
+type freenames_l = bv Prims.list
+type formula = typ
+type formulae = typ Prims.list
 type qualifier =
   | Assumption 
   | New 
@@ -1119,7 +1122,7 @@ type qualifier =
   | ExceptionConstructor 
   | HasMaskedEffect 
   | Effect 
-  | OnlyName [@@deriving show]
+  | OnlyName 
 let (uu___is_Assumption : qualifier -> Prims.bool) =
   fun projectee  ->
     match projectee with | Assumption  -> true | uu____4452 -> false
@@ -1241,11 +1244,10 @@ let (uu___is_OnlyName : qualifier -> Prims.bool) =
     match projectee with | OnlyName  -> true | uu____4718 -> false
   
 type tycon = (FStar_Ident.lident,binders,typ) FStar_Pervasives_Native.tuple3
-[@@deriving show]
 type monad_abbrev = {
   mabbrev: FStar_Ident.lident ;
   parms: binders ;
-  def: typ }[@@deriving show]
+  def: typ }
 let (__proj__Mkmonad_abbrev__item__mabbrev :
   monad_abbrev -> FStar_Ident.lident) =
   fun projectee  ->
@@ -1270,7 +1272,7 @@ type sub_eff =
   source: FStar_Ident.lident ;
   target: FStar_Ident.lident ;
   lift_wp: tscheme FStar_Pervasives_Native.option ;
-  lift: tscheme FStar_Pervasives_Native.option }[@@deriving show]
+  lift: tscheme FStar_Pervasives_Native.option }
 let (__proj__Mksub_eff__item__source : sub_eff -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
@@ -1307,7 +1309,7 @@ type action =
   action_univs: univ_names ;
   action_params: binders ;
   action_defn: term ;
-  action_typ: typ }[@@deriving show]
+  action_typ: typ }
 let (__proj__Mkaction__item__action_name : action -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
@@ -1391,7 +1393,7 @@ type eff_decl =
   return_repr: tscheme ;
   bind_repr: tscheme ;
   actions: action Prims.list ;
-  eff_attrs: attribute Prims.list }[@@deriving show]
+  eff_attrs: attribute Prims.list }
 let (__proj__Mkeff_decl__item__cattributes : eff_decl -> cflags Prims.list) =
   fun projectee  ->
     match projectee with
@@ -1696,7 +1698,7 @@ let (__proj__Mkeff_decl__item__eff_attrs : eff_decl -> attribute Prims.list)
 type sig_metadata =
   {
   sigmeta_active: Prims.bool ;
-  sigmeta_fact_db_ids: Prims.string Prims.list }[@@deriving show]
+  sigmeta_fact_db_ids: Prims.string Prims.list }
 let (__proj__Mksig_metadata__item__sigmeta_active :
   sig_metadata -> Prims.bool) =
   fun projectee  ->
@@ -1738,14 +1740,14 @@ type sigelt' =
   FStar_Pervasives_Native.tuple5 
   | Sig_pragma of pragma 
   | Sig_splice of (FStar_Ident.lident Prims.list,term)
-  FStar_Pervasives_Native.tuple2 [@@deriving show]
+  FStar_Pervasives_Native.tuple2 
 and sigelt =
   {
   sigel: sigelt' ;
   sigrng: FStar_Range.range ;
   sigquals: qualifier Prims.list ;
   sigmeta: sig_metadata ;
-  sigattrs: attribute Prims.list }[@@deriving show]
+  sigattrs: attribute Prims.list }
 let (uu___is_Sig_inductive_typ : sigelt' -> Prims.bool) =
   fun projectee  ->
     match projectee with | Sig_inductive_typ _0 -> true | uu____5906 -> false
@@ -1883,13 +1885,13 @@ let (__proj__Mksigelt__item__sigattrs : sigelt -> attribute Prims.list) =
         sigquals = __fname__sigquals; sigmeta = __fname__sigmeta;
         sigattrs = __fname__sigattrs;_} -> __fname__sigattrs
   
-type sigelts = sigelt Prims.list[@@deriving show]
+type sigelts = sigelt Prims.list
 type modul =
   {
   name: FStar_Ident.lident ;
   declarations: sigelts ;
   exports: sigelts ;
-  is_interface: Prims.bool }[@@deriving show]
+  is_interface: Prims.bool }
 let (__proj__Mkmodul__item__name : modul -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
@@ -1919,12 +1921,11 @@ let (__proj__Mkmodul__item__is_interface : modul -> Prims.bool) =
         -> __fname__is_interface
   
 let (mod_name : modul -> FStar_Ident.lident) = fun m  -> m.name 
-type path = Prims.string Prims.list[@@deriving show]
-type subst_t = subst_elt Prims.list[@@deriving show]
+type path = Prims.string Prims.list
+type subst_t = subst_elt Prims.list
 type 'a mk_t_a =
   unit FStar_Pervasives_Native.option -> FStar_Range.range -> 'a syntax
-[@@deriving show]
-type mk_t = term' mk_t_a[@@deriving show]
+type mk_t = term' mk_t_a
 let (contains_reflectable : qualifier Prims.list -> Prims.bool) =
   fun l  ->
     FStar_Util.for_some
