@@ -157,6 +157,7 @@ type meta =
   | GCType
   | PpxDerivingShow
   | PpxDerivingShowConstant of string
+  | PpxDerivingYoJson
   | Comment of string
   | StackInline
   | CPrologue of string

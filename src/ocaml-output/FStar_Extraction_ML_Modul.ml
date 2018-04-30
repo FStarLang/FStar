@@ -92,6 +92,9 @@ let rec (extract_meta :
          | "FStar.Pervasives.PpxDerivingShow" ->
              FStar_Pervasives_Native.Some
                FStar_Extraction_ML_Syntax.PpxDerivingShow
+         | "FStar.Pervasives.PpxDerivingYoJson" ->
+             FStar_Pervasives_Native.Some
+               FStar_Extraction_ML_Syntax.PpxDerivingYoJson
          | "FStar.Pervasives.CInline" ->
              FStar_Pervasives_Native.Some FStar_Extraction_ML_Syntax.CInline
          | "FStar.Pervasives.Substitute" ->

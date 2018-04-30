@@ -366,9 +366,23 @@ let skip_type_defn (current_module:string) (type_name:string) :bool =
   current_module = "FStar_Pervasives" && type_name = "option"
 
 let type_attrs (attrs: metadata): attributes option =
-  if List.exists (function PpxDerivingShow | PpxDerivingShowConstant _ -> true | _ -> false) attrs then
-    let deriving_show = (mk_sym "deriving", PStr [Str.eval (Exp.ident (mk_lident "show"))]) in
-    Some [ deriving_show ]
+  let show = 
+    if List.exists (function PpxDerivingShow | PpxDerivingShowConstant _ -> true | _ -> false) attrs then
+      let deriving_show = (mk_sym "deriving", PStr [Str.eval (Exp.ident (mk_lident "show"))]) in
+      [ deriving_show ]
+    else
+      []
+  in
+  let yojson =
+    if List.mem PpxDerivingYoJson attrs then
+      let deriving_yojson = (mk_sym "deriving", PStr [Str.eval (Exp.ident (mk_lident "yojson"))]) in
+      [ deriving_yojson ]
+    else
+      []
+  in
+  let attrs = show @ yojson in
+  if List.length attrs > 0 then
+    Some attrs
   else
     None
 
