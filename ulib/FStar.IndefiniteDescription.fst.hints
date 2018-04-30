@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "78388c97de5e317ebbb020a2fc8411f8"
+      "f3e341c09910551df01e730ec64b5e3e"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
@@ -22,7 +22,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "45bc6efeca93ae8f206e446667b4518f"
+      "4a736c6b092107a6f85e6fcb787cc935"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
@@ -31,29 +31,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "cd25ba4e96603c573a81051bd40439b2"
-    ],
-    [
-      "FStar.IndefiniteDescription.stronger_markovs_principle",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "projection_inverse_Prims.Mkdtuple2__1",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "ae5ab92dc00ffc95ea203326d02b7532"
-    ],
-    [
-      "FStar.IndefiniteDescription.aux",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "5bcec137645e591fa22856a032f1114a"
+      "717a12db5beec4ac2c9224f848f99ec9"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
@@ -62,7 +40,29 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "d3f190588f0ca61393d530dac8f8e8da"
+      "99443869fdb7466f44c3937a3fe9fbf5"
+    ],
+    [
+      "FStar.IndefiniteDescription.stronger_markovs_principle",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "projection_inverse_Prims.Mkdtuple2__1",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "54986e7a2c772d5c57da4b1c0e77a123"
+    ],
+    [
+      "FStar.IndefiniteDescription.aux",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "7086aebafad58702ea828283d3cd5b83"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
@@ -71,7 +71,25 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "8bca6c9eff3ff3819fafb8b9bf863d74"
+      "eed0248363bbf473e2f47aa48bbdaee2"
+    ],
+    [
+      "FStar.IndefiniteDescription.strong_excluded_middle",
+      5,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "b044a5502f192321709d4ec5835e17ec"
+    ],
+    [
+      "FStar.IndefiniteDescription.strong_excluded_middle",
+      6,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "f428242d4e5c9d57c499fbc5402b772d"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -84,7 +102,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ef7ef1583b173c8a92ef2bdafe2a767e"
+      "4c92834adea13fa082284b1cae637da0"
     ]
   ]
 ]

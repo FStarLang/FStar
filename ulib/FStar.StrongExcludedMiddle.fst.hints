@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "7a9c88d0bb1601f5d08768f4dc257f98"
+      "42f91925cbbef504663cb1574ccb6c69"
     ],
     [
       "FStar.StrongExcludedMiddle.strong_excluded_middle",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "d26d03ed8fd9c2a5252bb41d25f06f66"
+      "1c137766dc75918d45168e8828a7a4f0"
     ]
   ]
 ]
