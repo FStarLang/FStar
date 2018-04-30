@@ -13,7 +13,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7934bf9f4bf57d2ab043fbeb5fa9d32b"
+      "5f24eedd375a2fe4de5b86d184f610d7"
     ],
     [
       "Problem01.prefix",
@@ -47,7 +47,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9ff14fd6dcdd34efc9d95925c9476034"
+      "da17d753894112ac0b20dd18493091ca"
     ],
     [
       "Problem01.remove_elem_from_list",
@@ -74,7 +74,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a59436fedcc3f0e1804f44e80856fa6c"
+      "44ce3234b2f750bf728439dd613d49f7"
     ],
     [
       "Problem01.test_prefix",
@@ -86,7 +86,7 @@
         "refinement_interpretation_Problem01_Tm_refine_5ec69b392d18c536c7a2f6f1921608e0"
       ],
       0,
-      "a36707cbe1dd2a2d2166820f30a00726"
+      "3e326d08ac3267011d0991edb9e6154d"
     ],
     [
       "Problem01.test_prefix",
@@ -98,7 +98,8 @@
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_Problem01.prefix.fuel_instrumented",
         "@fuel_correspondence_Problem01.remove_elem_from_list.fuel_instrumented",
-        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@fuel_irrelevance_Problem01.prefix.fuel_instrumented", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "binder_x_323b8b24dedcbcde84b47deb8aeac554_1",
         "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_0",
@@ -115,14 +116,14 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Problem01_Tm_refine_0cd02d3668e595465349893e1d20cfec",
         "refinement_interpretation_Problem01_Tm_refine_5ec69b392d18c536c7a2f6f1921608e0",
+        "refinement_interpretation_Problem01_Tm_refine_8508dccf444a834a57818ebb6ff640b4",
         "refinement_interpretation_Problem01_Tm_refine_86501a336fc39c0d1f9c79f2564f9d82",
-        "refinement_interpretation_Problem01_Tm_refine_cd1d74dccff74659c1b11eed35a25134",
         "refinement_interpretation_Problem01_Tm_refine_f7573449ea0b46750daf28bc877f6c46",
         "typing_Problem01.prefix", "typing_Problem01.remove_elem_from_list",
         "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
       ],
       0,
-      "486a279aed854983aa3660d91b61b47e"
+      "07dc785239076aa3a182fb8c2ca68b78"
     ],
     [
       "Problem01.test_relaxed_prefix",
@@ -154,7 +155,7 @@
         "typing_Problem01.test_prefix"
       ],
       0,
-      "8c442fa3d6d34357c4cb9b210a091b77"
+      "d6c976ec42e56716a45df6296617a972"
     ]
   ]
 ]
