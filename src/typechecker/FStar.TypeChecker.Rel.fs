@@ -1325,6 +1325,20 @@ let match_num_binders (bc1: (list<'a> * (list<'a> -> 'b)))
     in
     aux bs1 bs2
 
+let guard_of_prob (env:Env.env) (problem:tprob) (t1 : term) (t2 : term) : option<term> =
+    let has_type_guard t1 t2 =
+        match problem.element with
+        | Some t ->
+            U.mk_has_type t1 t t2
+        | None ->
+            let x = S.new_bv None t1 in
+            let u_x = env.universe_of env t1 in
+            U.mk_forall u_x x (U.mk_has_type t1 (S.bv_to_name x) t2)
+    in
+    match problem.relation with
+    | EQ     -> Some <| mk_eq2 (TProb problem) t1 t2
+    | SUB    -> Some <| has_type_guard t1 t2
+    | SUBINV -> Some <| has_type_guard t2 t1
 
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
@@ -1717,20 +1731,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     | _ -> false
                 in
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
-                then let guard =
-                        if problem.relation = EQ
-                        then mk_eq2 orig t1 t2
-                        else let has_type_guard t1 t2 =
-                                match problem.element with
-                                    | Some t -> U.mk_has_type t1 t t2
-                                    | None ->
-                                    let x = S.new_bv None t1 in
-                                    let u_x = env.universe_of env t1 in
-                                    U.mk_forall u_x x (U.mk_has_type t1 (S.bv_to_name x) t2) in
-                             if problem.relation = SUB
-                             then has_type_guard t1 t2
-                             else has_type_guard t2 t1 in
-                    solve env (solve_prob orig (Some guard) [] wl)
+                then let guard = guard_of_prob env problem t1 t2 in
+                     solve env (solve_prob orig guard [] wl)
                 else giveup env (BU.format2 "head mismatch (%s vs %s)" (Print.term_to_string head1) (Print.term_to_string head2)) orig
 
             | (_, Some (t1, t2)) -> //heads match after some delta steps
@@ -2455,7 +2457,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         then let ref_prob = TProb <| mk_problem (p_scope orig @ [mk_binder x1]) orig phi1 EQ phi2 None "refinement formula" in
              begin match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
                    | Failed _ -> fallback()
-                     | Success _ ->
+                   | Success _ ->
                        let guard =
                          U.mk_conj (p_guard base_prob |> fst)
                                    (p_guard ref_prob |> fst |> guard_on_element wl problem x1) in
@@ -2533,8 +2535,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let t1 = force_refinement <| base_and_refinement env t1 in
         solve_t env ({problem with lhs=t1}) wl
 
-      | Tm_match (t1, brs1), Tm_match (t2, brs2) ->
-        let sc_prob = TProb <| mk_problem (p_scope orig) orig t1 EQ t2 None "match scrutinee" in
+      | Tm_match (s1, brs1), Tm_match (s2, brs2) ->
+        let sc_prob = TProb <| mk_problem (p_scope orig) orig s1 EQ s2 None "match scrutinee" in
         let rec solve_branches brs1 brs2 : option<list<prob>> =
             match brs1, brs2 with
             | br1::rs1, br2::rs2 ->
@@ -2561,6 +2563,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 (fun wprobs ->
 
                 (* Branch body *)
+                // GM: Could use problem.relation here instead of EQ?
                 let prob = TProb <| mk_problem scope orig e1 EQ e2 None "branch body" in
                 BU.bind_opt (solve_branches rs1 rs2) (fun r ->
                 Some (prob::(wprobs @ r))))
@@ -2568,14 +2571,28 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | [], [] -> Some []
             | _ -> None
         in
+        let by_smt () =
+            let guard = guard_of_prob env problem t1 t2 in
+            solve env (solve_prob orig guard [] wl)
+        in
         begin match solve_branches brs1 brs2 with
         | None ->
-            giveup env "Tm_match branches don't match" orig
+            if wl.smt_ok
+            then by_smt ()
+            else giveup env "Tm_match branches don't match" orig
         | Some sub_probs ->
             let sub_probs = sc_prob::sub_probs in
             let formula = U.mk_conj_l (List.map (fun p -> fst (p_guard p)) sub_probs) in
+            let tx = UF.new_transaction () in
             let wl = solve_prob orig (Some formula) [] wl in
-            solve env (attempt sub_probs wl)
+            begin match solve env (attempt sub_probs ({wl with smt_ok = false})) with
+            | Success ds ->
+                UF.commit tx;
+                Success ds
+            | Failed _ ->
+                UF.rollback tx;
+                by_smt ()
+            end
         end
 
       | Tm_match _, _
