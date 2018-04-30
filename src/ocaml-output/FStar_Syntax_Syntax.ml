@@ -1,7 +1,7 @@
 open Prims
 type 'a withinfo_t = {
   v: 'a ;
-  p: FStar_Range.range }[@@deriving show]
+  p: FStar_Range.range }[@@deriving yojson,show]
 let __proj__Mkwithinfo_t__item__v : 'a . 'a withinfo_t -> 'a =
   fun projectee  ->
     match projectee with | { v = __fname__v; p = __fname__p;_} -> __fname__v
@@ -10,12 +10,12 @@ let __proj__Mkwithinfo_t__item__p : 'a . 'a withinfo_t -> FStar_Range.range =
   fun projectee  ->
     match projectee with | { v = __fname__v; p = __fname__p;_} -> __fname__p
   
-type var = FStar_Ident.lident withinfo_t[@@deriving show]
-type sconst = FStar_Const.sconst[@@deriving show]
+type var = FStar_Ident.lident withinfo_t[@@deriving yojson,show]
+type sconst = FStar_Const.sconst[@@deriving yojson,show]
 type pragma =
   | SetOptions of Prims.string 
   | ResetOptions of Prims.string FStar_Pervasives_Native.option 
-  | LightOff [@@deriving show]
+  | LightOff [@@deriving yojson,show]
 let (uu___is_SetOptions : pragma -> Prims.bool) =
   fun projectee  ->
     match projectee with | SetOptions _0 -> true | uu____67 -> false
@@ -39,15 +39,15 @@ type 'a memo =
                                                        fun _  ->
                                                          Format.pp_print_string
                                                            fmt "None"])
-[@@deriving show]
+[@@deriving yojson,show]
 type 'a serializable_ref =
   (('a FStar_ST.ref)[@printer
                       fun fmt  ->
                         fun _  -> Format.pp_print_string fmt "<<ref>>"])
-[@@deriving show]
+[@@deriving yojson,show]
 type version = {
   major: Prims.int ;
-  minor: Prims.int }[@@deriving show]
+  minor: Prims.int }[@@deriving yojson,show]
 let (__proj__Mkversion__item__major : version -> Prims.int) =
   fun projectee  ->
     match projectee with
@@ -60,7 +60,7 @@ let (__proj__Mkversion__item__minor : version -> Prims.int) =
   
 type arg_qualifier =
   | Implicit of Prims.bool 
-  | Equality [@@deriving show]
+  | Equality [@@deriving yojson,show]
 let (uu___is_Implicit : arg_qualifier -> Prims.bool) =
   fun projectee  ->
     match projectee with | Implicit _0 -> true | uu____152 -> false
@@ -71,7 +71,8 @@ let (uu___is_Equality : arg_qualifier -> Prims.bool) =
   fun projectee  ->
     match projectee with | Equality  -> true | uu____165 -> false
   
-type aqual = arg_qualifier FStar_Pervasives_Native.option[@@deriving show]
+type aqual = arg_qualifier FStar_Pervasives_Native.option[@@deriving
+                                                           yojson,show]
 type universe =
   | U_zero 
   | U_succ of universe 
@@ -81,7 +82,7 @@ type universe =
   | U_unif of
   (universe FStar_Pervasives_Native.option FStar_Unionfind.p_uvar,version)
   FStar_Pervasives_Native.tuple2 
-  | U_unknown [@@deriving show]
+  | U_unknown [@@deriving yojson,show]
 let (uu___is_U_zero : universe -> Prims.bool) =
   fun projectee  ->
     match projectee with | U_zero  -> true | uu____208 -> false
@@ -123,16 +124,16 @@ let (uu___is_U_unknown : universe -> Prims.bool) =
   fun projectee  ->
     match projectee with | U_unknown  -> true | uu____324 -> false
   
-type univ_name = FStar_Ident.ident[@@deriving show]
+type univ_name = FStar_Ident.ident[@@deriving yojson,show]
 type universe_uvar =
   (universe FStar_Pervasives_Native.option FStar_Unionfind.p_uvar,version)
-    FStar_Pervasives_Native.tuple2[@@deriving show]
-type univ_names = univ_name Prims.list[@@deriving show]
-type universes = universe Prims.list[@@deriving show]
-type monad_name = FStar_Ident.lident[@@deriving show]
+    FStar_Pervasives_Native.tuple2[@@deriving yojson,show]
+type univ_names = univ_name Prims.list[@@deriving yojson,show]
+type universes = universe Prims.list[@@deriving yojson,show]
+type monad_name = FStar_Ident.lident[@@deriving yojson,show]
 type quote_kind =
   | Quote_static 
-  | Quote_dynamic [@@deriving show]
+  | Quote_dynamic [@@deriving yojson,show]
 let (uu___is_Quote_static : quote_kind -> Prims.bool) =
   fun projectee  ->
     match projectee with | Quote_static  -> true | uu____342 -> false
@@ -144,7 +145,7 @@ let (uu___is_Quote_dynamic : quote_kind -> Prims.bool) =
 type delta_depth =
   | Delta_constant_at_level of Prims.int 
   | Delta_equational_at_level of Prims.int 
-  | Delta_abstract of delta_depth [@@deriving show]
+  | Delta_abstract of delta_depth [@@deriving yojson,show]
 let (uu___is_Delta_constant_at_level : delta_depth -> Prims.bool) =
   fun projectee  ->
     match projectee with
@@ -176,7 +177,7 @@ type lazy_kind =
   | Lazy_comp 
   | Lazy_env 
   | Lazy_proofstate 
-  | Lazy_sigelt [@@deriving show]
+  | Lazy_sigelt [@@deriving yojson,show]
 let (uu___is_BadLazy : lazy_kind -> Prims.bool) =
   fun projectee  ->
     match projectee with | BadLazy  -> true | uu____411 -> false
@@ -254,7 +255,7 @@ type term' =
   | Tm_meta of (term' syntax,metadata) FStar_Pervasives_Native.tuple2 
   | Tm_lazy of lazyinfo 
   | Tm_quoted of (term' syntax,quoteinfo) FStar_Pervasives_Native.tuple2 
-  | Tm_unknown [@@deriving show]
+  | Tm_unknown [@@deriving yojson,show]
 and pat' =
   | Pat_constant of sconst 
   | Pat_cons of
@@ -263,7 +264,7 @@ and pat' =
   | Pat_var of bv 
   | Pat_wild of bv 
   | Pat_dot_term of (bv,term' syntax) FStar_Pervasives_Native.tuple2 
-[@@deriving show]
+[@@deriving yojson,show]
 and letbinding =
   {
   lbname: (bv,fv) FStar_Util.either ;
@@ -272,26 +273,26 @@ and letbinding =
   lbeff: FStar_Ident.lident ;
   lbdef: term' syntax ;
   lbattrs: term' syntax Prims.list ;
-  lbpos: FStar_Range.range }[@@deriving show]
+  lbpos: FStar_Range.range }[@@deriving yojson,show]
 and quoteinfo =
   {
   qkind: quote_kind ;
   antiquotes:
     (bv,Prims.bool,term' syntax) FStar_Pervasives_Native.tuple3 Prims.list }
-[@@deriving show]
+[@@deriving yojson,show]
 and comp_typ =
   {
   comp_univs: universes ;
   effect_name: FStar_Ident.lident ;
   result_typ: term' syntax ;
   effect_args: (term' syntax,aqual) FStar_Pervasives_Native.tuple2 Prims.list ;
-  flags: cflags Prims.list }[@@deriving show]
+  flags: cflags Prims.list }[@@deriving yojson,show]
 and comp' =
   | Total of (term' syntax,universe FStar_Pervasives_Native.option)
   FStar_Pervasives_Native.tuple2 
   | GTotal of (term' syntax,universe FStar_Pervasives_Native.option)
   FStar_Pervasives_Native.tuple2 
-  | Comp of comp_typ [@@deriving show]
+  | Comp of comp_typ [@@deriving yojson,show]
 and cflags =
   | TOTAL 
   | MLEFFECT 
@@ -302,7 +303,7 @@ and cflags =
   | SHOULD_NOT_INLINE 
   | LEMMA 
   | CPS 
-  | DECREASES of term' syntax [@@deriving show]
+  | DECREASES of term' syntax [@@deriving yojson,show]
 and metadata =
   | Meta_pattern of (term' syntax,aqual) FStar_Pervasives_Native.tuple2
   Prims.list Prims.list 
@@ -313,40 +314,40 @@ and metadata =
   | Meta_monadic of (monad_name,term' syntax) FStar_Pervasives_Native.tuple2
   
   | Meta_monadic_lift of (monad_name,monad_name,term' syntax)
-  FStar_Pervasives_Native.tuple3 [@@deriving show]
+  FStar_Pervasives_Native.tuple3 [@@deriving yojson,show]
 and meta_source_info =
   | Sequence 
   | Primop 
   | Masked_effect 
   | Meta_smt_pat 
   | Mutable_alloc 
-  | Mutable_rval [@@deriving show]
+  | Mutable_rval [@@deriving yojson,show]
 and fv_qual =
   | Data_ctor 
   | Record_projector of (FStar_Ident.lident,FStar_Ident.ident)
   FStar_Pervasives_Native.tuple2 
   | Record_ctor of (FStar_Ident.lident,FStar_Ident.ident Prims.list)
-  FStar_Pervasives_Native.tuple2 [@@deriving show]
+  FStar_Pervasives_Native.tuple2 [@@deriving yojson,show]
 and subst_elt =
   | DB of (Prims.int,bv) FStar_Pervasives_Native.tuple2 
   | NM of (bv,Prims.int) FStar_Pervasives_Native.tuple2 
   | NT of (bv,term' syntax) FStar_Pervasives_Native.tuple2 
   | UN of (Prims.int,universe) FStar_Pervasives_Native.tuple2 
   | UD of (univ_name,Prims.int) FStar_Pervasives_Native.tuple2 [@@deriving
-                                                                 show]
+                                                                 yojson,show]
 and 'a syntax = {
   n: 'a ;
   pos: FStar_Range.range ;
-  vars: free_vars memo }[@@deriving show]
+  vars: free_vars memo }[@@deriving yojson,show]
 and bv = {
   ppname: FStar_Ident.ident ;
   index: Prims.int ;
-  sort: term' syntax }[@@deriving show]
+  sort: term' syntax }[@@deriving yojson,show]
 and fv =
   {
   fv_name: var ;
   fv_delta: delta_depth ;
-  fv_qual: fv_qual FStar_Pervasives_Native.option }[@@deriving show]
+  fv_qual: fv_qual FStar_Pervasives_Native.option }[@@deriving yojson,show]
 and free_vars =
   {
   free_names: bv Prims.list ;
@@ -356,7 +357,7 @@ and free_vars =
       FStar_Pervasives_Native.tuple2 Prims.list
     ;
   free_univs: universe_uvar Prims.list ;
-  free_univ_names: univ_name Prims.list }[@@deriving show]
+  free_univ_names: univ_name Prims.list }[@@deriving yojson,show]
 and lcomp =
   {
   eff_name: FStar_Ident.lident ;
@@ -364,18 +365,18 @@ and lcomp =
   cflags: cflags Prims.list ;
   comp_thunk:
     (unit -> comp' syntax,comp' syntax) FStar_Util.either serializable_ref }
-[@@deriving show]
+[@@deriving yojson,show]
 and residual_comp =
   {
   residual_effect: FStar_Ident.lident ;
   residual_typ: term' syntax FStar_Pervasives_Native.option ;
-  residual_flags: cflags Prims.list }[@@deriving show]
+  residual_flags: cflags Prims.list }[@@deriving yojson,show]
 and lazyinfo =
   {
   blob: FStar_Dyn.dyn ;
   lkind: lazy_kind ;
   typ: term' syntax ;
-  rng: FStar_Range.range }[@@deriving show]
+  rng: FStar_Range.range }[@@deriving yojson,show]
 let (uu___is_Tm_bvar : term' -> Prims.bool) =
   fun projectee  ->
     match projectee with | Tm_bvar _0 -> true | uu____1270 -> false
@@ -1037,44 +1038,45 @@ let (__proj__Mklazyinfo__item__rng : lazyinfo -> FStar_Range.range) =
     | { blob = __fname__blob; lkind = __fname__lkind; typ = __fname__typ;
         rng = __fname__rng;_} -> __fname__rng
   
-type pat = pat' withinfo_t[@@deriving show]
-type term = term' syntax[@@deriving show]
+type pat = pat' withinfo_t[@@deriving yojson,show]
+type term = term' syntax[@@deriving yojson,show]
 type branch =
   (pat' withinfo_t,term' syntax FStar_Pervasives_Native.option,term' syntax)
-    FStar_Pervasives_Native.tuple3[@@deriving show]
-type comp = comp' syntax[@@deriving show]
+    FStar_Pervasives_Native.tuple3[@@deriving yojson,show]
+type comp = comp' syntax[@@deriving yojson,show]
 type ascription =
   ((term' syntax,comp' syntax) FStar_Util.either,term' syntax
                                                    FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2[@@deriving show]
+    FStar_Pervasives_Native.tuple2[@@deriving yojson,show]
 type antiquotations =
   (bv,Prims.bool,term' syntax) FStar_Pervasives_Native.tuple3 Prims.list
-[@@deriving show]
-type typ = term' syntax[@@deriving show]
+[@@deriving yojson,show]
+type typ = term' syntax[@@deriving yojson,show]
 type arg = (term' syntax,aqual) FStar_Pervasives_Native.tuple2[@@deriving
-                                                                show]
+                                                                yojson,show]
 type args = (term' syntax,aqual) FStar_Pervasives_Native.tuple2 Prims.list
-[@@deriving show]
-type binder = (bv,aqual) FStar_Pervasives_Native.tuple2[@@deriving show]
+[@@deriving yojson,show]
+type binder = (bv,aqual) FStar_Pervasives_Native.tuple2[@@deriving
+                                                         yojson,show]
 type binders = (bv,aqual) FStar_Pervasives_Native.tuple2 Prims.list[@@deriving
-                                                                    show]
+                                                                    yojson,show]
 type uvar =
   (term' syntax FStar_Pervasives_Native.option FStar_Unionfind.p_uvar,
-    version) FStar_Pervasives_Native.tuple2[@@deriving show]
-type lbname = (bv,fv) FStar_Util.either[@@deriving show]
+    version) FStar_Pervasives_Native.tuple2[@@deriving yojson,show]
+type lbname = (bv,fv) FStar_Util.either[@@deriving yojson,show]
 type letbindings =
   (Prims.bool,letbinding Prims.list) FStar_Pervasives_Native.tuple2[@@deriving
-                                                                    show]
+                                                                    yojson,show]
 type subst_ts =
   (subst_elt Prims.list Prims.list,FStar_Range.range
                                      FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2[@@deriving show]
-type freenames = bv FStar_Util.set[@@deriving show]
+    FStar_Pervasives_Native.tuple2[@@deriving yojson,show]
+type freenames = bv FStar_Util.set[@@deriving yojson,show]
 type uvars =
   ((term' syntax FStar_Pervasives_Native.option FStar_Unionfind.p_uvar,
      version) FStar_Pervasives_Native.tuple2,term' syntax)
-    FStar_Pervasives_Native.tuple2 FStar_Util.set[@@deriving show]
-type attribute = term' syntax[@@deriving show]
+    FStar_Pervasives_Native.tuple2 FStar_Util.set[@@deriving yojson,show]
+type attribute = term' syntax[@@deriving yojson,show]
 let (lazy_chooser :
   (lazy_kind -> lazyinfo -> term) FStar_Pervasives_Native.option FStar_ST.ref)
   = FStar_Util.mk_ref FStar_Pervasives_Native.None 
