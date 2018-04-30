@@ -53,6 +53,9 @@ type pragma =
 // IN F*: [@ (PpxDerivingShowConstant "None") ]
 type memo<'a> = ref<option<'a>>
 
+// IN F*: [@ (PpxDerivingShowConstant "<<ref>>") ]
+type serializable_ref<'a> = ref<'a>
+
 //versioning for unification variables
 // IN F*: [@ PpxDerivingShow ]
 type version = {
@@ -248,7 +251,7 @@ and lcomp = {
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflags>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
+    comp_thunk: serializable_ref<(either<(unit -> comp), comp>)>
 }
 
 (* Residual of a computation type after typechecking *)
