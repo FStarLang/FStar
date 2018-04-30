@@ -21,7 +21,7 @@ INCLUDE_PATHS = \
 	typechecker \
 	tests
 
-CACHE_DIR?=../cache_fsharp
+CACHE_DIR?=./.cache.boot
 
 FSTAR_C=$(FSTAR) $(OTHERFLAGS) --cache_checked_modules	        	\
         --lax --MLish --no_location_info              \
