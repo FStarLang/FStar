@@ -782,7 +782,7 @@ let destruct_flex_pattern env t =
 
 type match_result =
   | MisMatch of option<delta_depth> * option<delta_depth>
-  | HeadMatch
+  | HeadMatch of bool // true iff the heads MAY match after further unification, false if already the same
   | FullMatch
 
 let string_of_option f = function
@@ -794,22 +794,23 @@ let string_of_match_result = function
         "MisMatch ("
         ^ string_of_option Print.delta_depth_to_string d1 ^ ") ("
         ^ string_of_option Print.delta_depth_to_string d2 ^ ")"
-    | HeadMatch -> "HeadMatch"
+    | HeadMatch u -> "HeadMatch " ^ string_of_bool u
     | FullMatch -> "FullMatch"
 
 let head_match = function
     | MisMatch(i, j) -> MisMatch(i, j)
-    | _ -> HeadMatch
+    | HeadMatch true -> HeadMatch true
+    | _ -> HeadMatch false
 
 // GM: This is unused, maybe delete
-let and_match m1 m2 =
-    match m1 with
-    | MisMatch (i, j) -> MisMatch (i, j)
-    | HeadMatch -> begin match m2 () with
-                   | MisMatch (i,j) -> MisMatch (i, j)
-                   | _ -> HeadMatch
-                   end
-    | FullMatch -> m2 ()
+(* let and_match m1 m2 = *)
+(*     match m1 with *)
+(*     | MisMatch (i, j) -> MisMatch (i, j) *)
+(*     | HeadMatch u -> begin match m2 () with *)
+(*                      | MisMatch (i,j) -> MisMatch (i, j) *)
+(*                      | _ -> HeadMatch *)
+(*                      end *)
+(*     | FullMatch -> m2 () *)
 
 let fv_delta_depth env fv = match fv.fv_delta with
     | Delta_abstract d ->
@@ -865,11 +866,14 @@ let rec head_matches env t1 t2 : match_result =
     | _, Tm_refine(x, _)  -> head_matches env t1 x.sort |> head_match
 
     | Tm_type _, Tm_type _
-    | Tm_arrow _, Tm_arrow _ -> HeadMatch
+    | Tm_arrow _, Tm_arrow _ -> HeadMatch false
 
     | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head' |> head_match
     | Tm_app(head, _), _ -> head_matches env head t2 |> head_match
     | _, Tm_app(head, _) -> head_matches env t1 head |> head_match
+
+    | Tm_let _, Tm_let _
+    | Tm_match _, Tm_match _ -> HeadMatch true
 
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
@@ -879,13 +883,18 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
         let head, _ = U.head_and_args t in
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-          if Env.lookup_definition [Env.Eager_unfolding_only] env fv.fv_name.v |> Option.isSome
-          then N.normalize [N.Beta; N.Eager_unfolding] env t |> Some
-          else None
+          begin match Env.lookup_definition [Env.Eager_unfolding_only] env fv.fv_name.v with
+          | None -> None
+          | Some _ ->
+            let t' = N.normalize [N.Beta; N.Eager_unfolding] env t in
+            if Env.debug env <| Options.Other "RelDelta" then
+                BU.print2 "inlined %s to %s\n" (Print.term_to_string t) (Print.term_to_string t');
+            Some t'
+          end
         | _ -> None
     in
     let success d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
-    let fail r = (r, None) in
+    let fail d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
     let rec aux retry n_delta t1 t2 =
         let r = head_matches env t1 t2 in
         if Env.debug env <| Options.Other "RelDelta" then
@@ -905,7 +914,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
 
         let reduce_both_and_try_again (d:delta_depth) (r:match_result) =
           match Common.decr_delta_depth d with
-          | None -> fail r
+          | None -> fail n_delta r t1 t2
           | Some d ->
             let t1 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t1 in
             let t2 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t2 in
@@ -918,11 +927,11 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
 
             | MisMatch(Some (Delta_equational_at_level _), _)
             | MisMatch(_, Some (Delta_equational_at_level _)) ->
-              if not retry then fail r
+              if not retry then fail n_delta r t1 t2
               else begin match maybe_inline t1, maybe_inline t2 with
-                   | None, None -> fail r
-                   | Some t1, None -> aux false (n_delta + 1) t1 t2
-                   | None, Some t2 -> aux false (n_delta + 1) t1 t2
+                   | None, None       -> fail n_delta r t1 t2
+                   | Some t1, None    -> aux false (n_delta + 1) t1 t2
+                   | None, Some t2    -> aux false (n_delta + 1) t1 t2
                    | Some t1, Some t2 -> aux false (n_delta + 1) t1 t2
                    end
 
@@ -932,9 +941,11 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
             | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
               reduce_one_and_try_again d1 d2
 
-            | MisMatch _ -> fail r
+            | MisMatch _ ->
+              fail n_delta r t1 t2
 
-            | _ -> success n_delta r t1 t2 in
+            | _ ->
+              success n_delta r t1 t2 in
     let r = aux true 0 t1 t2 in
     if Env.debug env <| Options.Other "RelDelta" then
         BU.print4 "head_matches_delta (%s, %s) = %s (%s)\n"
@@ -1444,6 +1455,7 @@ and solve_rigid_flex_meet (env:Env.env) (tp:tprob) (wl:worklist) : option<workli
     let rec disjoin t1 t2 : option<(term * list<prob>)> =
         let mr, ts = head_matches_delta env () t1 t2 in
         match mr with
+            | HeadMatch true
             | MisMatch _ ->
               None
 
@@ -1454,7 +1466,7 @@ and solve_rigid_flex_meet (env:Env.env) (tp:tprob) (wl:worklist) : option<workli
                   Some (t1, [])
               end
 
-            | HeadMatch ->
+            | HeadMatch false ->
               let t1, t2 = match ts with
                 | Some (t1, t2) -> SS.compress t1, SS.compress t2
                 | None -> SS.compress t1, SS.compress t2 in
@@ -1707,10 +1719,78 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     def_check_prob "solve_t'.1" (TProb problem);
     let giveup_or_defer orig msg = giveup_or_defer env orig wl msg in
 
+    let rigid_heads_match (env:Env.env) (need_unif:bool) (orig:prob) (wl:worklist) (t1:term) (t2:term) : solution =
+        if debug env <| Options.Other "Rel"
+        then BU.print5 "Heads %s: %s (%s) and %s (%s)\n"
+            (if need_unif then "need unification" else "match")
+            (Print.term_to_string t1) (Print.tag_of_term t1)
+            (Print.term_to_string t2) (Print.tag_of_term t2);
+        let head1, args1 = U.head_and_args t1 in
+        let head2, args2 = U.head_and_args t2 in
+        let nargs = List.length args1 in
+        if nargs <> List.length args2
+        then giveup env (BU.format4 "unequal number of arguments: %s[%s] and %s[%s]"
+                    (Print.term_to_string head1)
+                    (args_to_string args1)
+                    (Print.term_to_string head2)
+                    (args_to_string args2))
+                    orig
+        else if nargs=0 || U.eq_args args1 args2=U.Equal //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
+        then if need_unif then
+                 solve_t env ({problem with lhs=head1; rhs=head2}) wl
+             else match solve_maybe_uinsts env orig head1 head2 wl with
+             | USolved wl -> solve env (solve_prob orig None [] wl)
+             | UFailed msg -> giveup env msg orig
+             | UDeferred wl -> solve env (defer "universe constraints" orig wl)
+        else//Given T t1 ..tn REL T s1..sn
+            //  if T expands to a refinement, then normalize it and recurse
+            //  This allows us to prove things like
+            //         type T (x:int) (y:int) = z:int{z = x + y}
+            //         T 0 1 <: T 1 0
+            //  By expanding out the definitions
+            //
+            //Otherwise, we reason extensionally about T and try to prove the arguments equal, i.e, ti = si, for all i
+            let base1, refinement1 = base_and_refinement env t1 in
+            let base2, refinement2 = base_and_refinement env t2 in
+            begin match refinement1, refinement2 with
+            | None, None ->  //neither side is a refinement; reason extensionally
+                if need_unif then
+                    let subprobs = List.map2 (fun (a, _) (a', _) -> TProb <| mk_problem (p_scope orig) orig a EQ a' None "index")
+                                        ((head1, None)::args1) ((head2, None)::args2) in
+                    if debug env <| Options.Other "Rel" then
+                        BU.print1 "Adding subproblems for arguments: %s" (Print.list_to_string (prob_to_string env) subprobs);
+                    let formula = U.mk_conj_l (List.map (fun p -> fst (p_guard p)) subprobs) in
+                    let wl = solve_prob orig (Some formula) [] wl in
+                    solve env (attempt subprobs wl)
+                else begin match solve_maybe_uinsts env orig head1 head2 wl with
+                | UFailed msg -> giveup env msg orig
+                | UDeferred wl -> solve env (defer "universe constraints" orig wl)
+                | USolved wl ->
+                    let subprobs = List.map2 (fun (a, _) (a', _) -> TProb <| mk_problem (p_scope orig) orig a EQ a' None "index") args1 args2 in
+                    if debug env <| Options.Other "Rel" then
+                        BU.print1 "Adding subproblems for arguments: %s" (Print.list_to_string (prob_to_string env) subprobs);
+                    let formula = U.mk_conj_l (List.map (fun p -> fst (p_guard p)) subprobs) in
+                    let wl = solve_prob orig (Some formula) [] wl in
+                    solve env (attempt subprobs wl)
+                end
+
+            | _ ->
+                let lhs = force_refinement (base1, refinement1) in
+                let rhs = force_refinement (base2, refinement2) in
+                solve_t env ({problem with lhs=lhs; rhs=rhs}) wl
+            end
+    in
+
     (* <rigid_rigid_delta>: are t1 and t2, with head symbols head1 and head2, compatible after some delta steps? *)
     let rigid_rigid_delta (env:Env.env) (orig:prob) (wl:worklist)
                           (head1:term) (head2:term) (t1:term) (t2:term)
         : solution =
+        if Env.debug env <| Options.Other "RelDelta" then
+            BU.print4 "rigid_rigid_delta of %s-%s (%s, %s)\n"
+                        (Print.tag_of_term t1)
+                        (Print.tag_of_term t2)
+                        (Print.term_to_string t1)
+                        (Print.term_to_string t2);
         let m, o = head_matches_delta env wl t1 t2 in
         match m, o  with
             | (MisMatch _, _) -> //heads definitely do not match
@@ -1735,58 +1815,17 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                      solve env (solve_prob orig guard [] wl)
                 else giveup env (BU.format2 "head mismatch (%s vs %s)" (Print.term_to_string head1) (Print.term_to_string head2)) orig
 
-            | (_, Some (t1, t2)) -> //heads match after some delta steps
+            // heads match, but we unfolded, so we should unify again
+            | (HeadMatch _, Some (t1, t2))
+            | (FullMatch, Some (t1, t2)) -> //heads match after some delta steps
                 solve_t env ({problem with lhs=t1; rhs=t2}) wl
 
-            | (_, None) -> //head1 matches head1, without delta
-                if debug env <| Options.Other "Rel"
-                then BU.print4 "Head matches after call to head_matches_delta: %s (%s) and %s (%s)\n"
-                    (Print.term_to_string t1) (Print.tag_of_term t1)
-                    (Print.term_to_string t2) (Print.tag_of_term t2);
-                let head1, args1 = U.head_and_args t1 in
-                let head2, args2 = U.head_and_args t2 in
-                let nargs = List.length args1 in
-                if nargs <> List.length args2
-                then giveup env (BU.format4 "unequal number of arguments: %s[%s] and %s[%s]"
-                            (Print.term_to_string head1)
-                            (args_to_string args1)
-                            (Print.term_to_string head2)
-                            (args_to_string args2))
-                            orig
-                else if nargs=0 || U.eq_args args1 args2=U.Equal //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
-                then match solve_maybe_uinsts env orig head1 head2 wl with
-                        | USolved wl -> solve env (solve_prob orig None [] wl)
-                        | UFailed msg -> giveup env msg orig
-                        | UDeferred wl -> solve env (defer "universe constraints" orig wl)
-                else//Given T t1 ..tn REL T s1..sn
-                    //  if T expands to a refinement, then normalize it and recurse
-                    //  This allows us to prove things like
-                    //         type T (x:int) (y:int) = z:int{z = x + y}
-                    //         T 0 1 <: T 1 0
-                    //  By expanding out the definitions
-                    //
-                    //Otherwise, we reason extensionally about T and try to prove the arguments equal, i.e, ti = si, for all i
-                    let base1, refinement1 = base_and_refinement env t1 in
-                    let base2, refinement2 = base_and_refinement env t2 in
-                    begin match refinement1, refinement2 with
-                            | None, None ->  //neither side is a refinement; reason extensionally
-                              begin match solve_maybe_uinsts env orig head1 head2 wl with
-                                | UFailed msg -> giveup env msg orig
-                                | UDeferred wl -> solve env (defer "universe constraints" orig wl)
-                                | USolved wl ->
-                                    let subprobs = List.map2 (fun (a, _) (a', _) -> TProb <| mk_problem (p_scope orig) orig a EQ a' None "index") args1 args2 in
-                                    if debug env <| Options.Other "Rel" then
-                                    BU.print1 "Adding subproblems for arguments: %s" (Print.list_to_string (prob_to_string env) subprobs);
-                                    let formula = U.mk_conj_l (List.map (fun p -> fst (p_guard p)) subprobs) in
-                                    let wl = solve_prob orig (Some formula) [] wl in
-                                    solve env (attempt subprobs wl)
-                              end
+            (* Need to maybe reunify the heads *)
+            | (HeadMatch unif, None) ->
+                rigid_heads_match env unif orig wl t1 t2
 
-                            | _ ->
-                                let lhs = force_refinement (base1, refinement1) in
-                                let rhs = force_refinement (base2, refinement2) in
-                                solve_t env ({problem with lhs=lhs; rhs=rhs}) wl
-                    end
+            | (FullMatch, None) -> //head1 matches head2, without delta
+                rigid_heads_match env false orig wl t1 t2
     in
     (* <rigid_rigid_delta> *)
 
