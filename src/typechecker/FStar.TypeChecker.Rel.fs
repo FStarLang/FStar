@@ -1415,23 +1415,25 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                   | None -> SS.compress t1, SS.compress t2
               in
               let try_eq t1 t2 wl =
-                  if U.term_eq t1 t2 then Some wl else
-                  let _t1_hd, t1_args = U.head_and_args t1 in
-                  let _t2_hd, t2_args = U.head_and_args t2 in
+                  let t1_hd, t1_args = U.head_and_args t1 in
+                  let t2_hd, t2_args = U.head_and_args t2 in
                   if List.length t1_args <> List.length t2_args then None else
                   let probs, wl =
                           List.fold_left2 (fun (probs, wl) (a1, _) (a2, _) ->
                              let p, wl = eq_prob a1 a2 wl in
                              p::probs, wl)
                           ([], wl)
-                          t1_args
-                          t2_args
+                   //don't forget to prove t1_hd = t2_hd
+                   //as they may have universe variables to equate
+                   //as well
+                          (as_arg t1_hd::t1_args)
+                          (as_arg t2_hd::t2_args)
                   in
                   let wl' = {wl with defer_ok=false;
-                                        smt_ok=false;
-                                        attempting=probs;
-                                        wl_deferred=[];
-                                        wl_implicits=[]} in
+                                     smt_ok=false;
+                                     attempting=probs;
+                                     wl_deferred=[];
+                                     wl_implicits=[]} in
                   let tx = UF.new_transaction () in
                   match solve env wl' with
                   | Success (_, imps) ->
@@ -1443,7 +1445,6 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                     None
               in
               let combine t1 t2 wl =
-                  if U.term_eq t1 t2 then (t1, [], wl) else
                   let t1_base, p1_opt = base_and_refinement_maybe_delta false env t1 in
                   let t2_base, p2_opt = base_and_refinement_maybe_delta false env t2 in
                   let combine_refinements t_base p1_opt p2_opt =
