@@ -977,8 +977,12 @@ let rank_t_num = function
     | Flex_rigid -> 3
     | Rigid_flex -> 4
     | Flex_flex -> 5
-let rank_less_than r1 r2 = rank_t_num r1 < rank_t_num r2
 let rank_leq r1 r2 = rank_t_num r1 <= rank_t_num r2
+let rank_less_than r1 r2 =
+    //writing it as `rank_t_num r1 < rank_t_num r2`
+    //doesn't parse in the F# build of F* with #light "off" (!)
+    r1 <> r2 &&
+    rank_t_num r1 <= rank_t_num r2
 let compress_tprob tcenv p = {p with lhs=whnf tcenv p.lhs; rhs=whnf tcenv p.rhs}
 
 let compress_prob tcenv p =
@@ -1242,7 +1246,8 @@ let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
     let rec aux pat_binders formals t_res args =
         match formals, args with
         | [], []
-        |  _, [] -> Some (List.rev pat_binders, t_res)
+        |  _, [] ->
+          Some (List.rev pat_binders, U.arrow formals (S.mk_Total t_res))
 
         | (formal, _)::formals, (a, _)::args ->
             begin
@@ -1740,10 +1745,20 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                     (lhs:flex_t) (bs_lhs:binders) (t_res_lhs:term)
                     (rhs:term)
         : solution =
+        //if Env.debug env <| Options.Other "RelCheck"
+        //then printfn "imitate_app 1:\n\tlhs=%s\n\tbs_lhs=%s\n\tt_res_lhs=%s\n\trhs=%s\n"
+        //    (flex_t_to_string lhs)
+        //    (Print.binders_to_string ", " bs_lhs)
+        //    (Print.term_to_string t_res_lhs)
+        //    (Print.term_to_string rhs);
         let bs_lhs_args = List.map (fun (x, i) -> S.bv_to_name x, i) bs_lhs in
         let rhs_hd, args = U.head_and_args rhs in
         let args_rhs, last_arg_rhs = BU.prefix args in
         let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
+        //if Env.debug env <| Options.Other "RelCheck"
+        //then printfn "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
+        //            (Print.term_to_string rhs')
+        //            (Print.args_to_string [last_arg_rhs]);
         let t_lhs, u_lhs, _lhs_args = lhs in
         let lhs', lhs'_last_arg, wl =
               let _, t_last_arg, wl = copy_uvar u_lhs (fst <| U.type_u()) wl in
@@ -1754,6 +1769,10 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
               let lhs'_last_arg = S.mk_Tm_app u_lhs'_last_arg bs_lhs_args None t_lhs.pos in
               lhs', lhs'_last_arg, wl
         in
+        //if Env.debug env <| Options.Other "RelCheck"
+        //then printfn "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
+        //            (Print.term_to_string lhs')
+        //            (Print.term_to_string lhs'_last_arg);
         let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] None t_lhs.pos)
                                             (Some (U.residual_tot t_res_lhs)))]
         in
