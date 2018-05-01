@@ -116,7 +116,7 @@ let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
       List.iter (fun (s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) solve_now;
       BU.print_string " ...DEFERRED THE REST:\n";
       List.iter (fun (s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) defer;
-      BU.print_string "END\n";
+      BU.print_string "END\n"
     end;
     let g = Rel.solve_deferred_constraints env ({g with deferred=solve_now}) in
     let g = {g with deferred=defer} in
