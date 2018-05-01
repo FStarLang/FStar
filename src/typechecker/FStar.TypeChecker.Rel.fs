@@ -883,12 +883,15 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
         let head, _ = U.head_and_args t in
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-          begin match Env.lookup_definition [Env.Eager_unfolding_only] env fv.fv_name.v with
-          | None -> None
-          | Some _ ->
-            let t' = N.normalize [N.Beta; N.Eager_unfolding] env t in
+          begin match Env.lookup_definition [Env.Unfold delta_constant; Env.Eager_unfolding_only] env fv.fv_name.v with
+          | None ->
             if Env.debug env <| Options.Other "RelDelta" then
-                BU.print2 "inlined %s to %s\n" (Print.term_to_string t) (Print.term_to_string t');
+                BU.print1 "No definition found for %s\n" (Print.term_to_string head);
+            None
+          | Some _ ->
+            let t' = N.normalize [N.UnfoldUntil delta_constant; N.Weak; N.HNF; N.Beta; N.Eager_unfolding] env t in
+            if Env.debug env <| Options.Other "RelDelta" then
+                BU.print2 "Inlined %s to %s\n" (Print.term_to_string t) (Print.term_to_string t');
             Some t'
           end
         | _ -> None
