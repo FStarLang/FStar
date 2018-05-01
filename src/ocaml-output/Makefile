@@ -185,8 +185,11 @@ install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {}
 # install the standard library binary files
 install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar/$(2)
 
-# Install FStar into $(PREFIX) using the standard Unix directory structure.
-install-common: all
+# Install FStar into $(PREFIX) using the standard Unix directory
+# structure.  NOTE: this rule needs ocamlfind to install the fstarlib,
+# fstar-tactics-lib and fstar-compiler-lib packages. It works with the
+# opam package, but it has not been tested in any other settings.
+install: all
         # Install the binary
 	$(INSTALL_EXEC) -m 755 -D _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
 	# Then the standard library, but not the ml or fs files
@@ -195,25 +198,20 @@ install-common: all
 	rm -rf ../../ulib-install/fs
 	$(call install_dir,ulib-install,lib/fstar)
 	rm -rf ../../ulib-install
-
-install: install-common
 	# Then the binary library
-	$(INSTALL_EXEC) -m 755 -D ../../bin/fstarlib/* $(PREFIX)/lib/fstar/
-	$(call install_fstarlib,ulib/ml,fstarlib.mllib)
+	cd ../../bin/fstarlib && ocamlfind install fstarlib *
+	cd ../../bin/fstar-compiler-lib && ocamlfind install fstar-compiler-lib *
+	cd ../../bin/fstar-tactics-lib && ocamlfind install fstar-tactics-lib *
         # Then the rest of the static files.
+	# (those are not used in the opam package, not sure if their Makefiles work)
 	$(call install_dir,examples,share/fstar/examples)
 	$(call install_dir,ucontrib,share/fstar/contrib)
+	# Then the tutorial
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial first
 	$(MAKE) -C ../../doc/tutorial
 endif
 	$(call install_dir,doc/tutorial,share/fstar/tutorial)
-
-# Install the opam package
-install-opam: install-common
-	cd ../../bin/fstarlib && ocamlfind install fstarlib *
-	cd ../../bin/fstar-compiler-lib && ocamlfind install fstar-compiler-lib *
-	cd ../../bin/fstar-tactics-lib && ocamlfind install fstar-tactics-lib *
 
 NAME=fstar_$(VERSION)_$(PLATFORM)
 
