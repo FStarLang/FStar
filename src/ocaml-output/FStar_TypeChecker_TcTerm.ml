@@ -4994,7 +4994,7 @@ and (check_application_args :
                                        FStar_TypeChecker_Rel.solve_deferred_constraints
                                          env ghead2
                                         in
-                                     aux norm1 solve ghead3 tres1
+                                     aux norm1 true ghead3 tres1
                                  | uu____12692 ->
                                      let uu____12693 =
                                        let uu____12698 =
