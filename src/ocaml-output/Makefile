@@ -255,6 +255,8 @@ package: all
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
 	$(call fexport-all,bin/fstarlib)
+	$(call fexport-all,bin/fstar-compiler-lib)
+	$(call fexport-all,bin/fstar-tactics-lib)
 
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
