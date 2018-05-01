@@ -8,7 +8,7 @@ type prims_t =
                                                  Prims.list)
           FStar_Pervasives_Native.tuple3
     ;
-  is: FStar_Ident.lident -> Prims.bool }[@@deriving show]
+  is: FStar_Ident.lident -> Prims.bool }
 let (__proj__Mkprims_t__item__mk :
   prims_t ->
     FStar_Ident.lident ->

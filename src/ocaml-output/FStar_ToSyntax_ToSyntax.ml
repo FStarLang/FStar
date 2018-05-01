@@ -680,7 +680,7 @@ type bnd =
   (FStar_Ident.lident,(FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term
                                                   FStar_Pervasives_Native.option)
                         FStar_Pervasives_Native.tuple2)
-  FStar_Pervasives_Native.tuple2 [@@deriving show]
+  FStar_Pervasives_Native.tuple2 
 let (uu___is_LocalBinder : bnd -> Prims.bool) =
   fun projectee  ->
     match projectee with | LocalBinder _0 -> true | uu____1626 -> false
@@ -739,8 +739,8 @@ let (as_binder :
                       FStar_Syntax_Syntax.sort = k
                     }), (trans_aqual imp)), env1))
   
-type env_t = FStar_Syntax_DsEnv.env[@@deriving show]
-type lenv_t = FStar_Syntax_Syntax.bv Prims.list[@@deriving show]
+type env_t = FStar_Syntax_DsEnv.env
+type lenv_t = FStar_Syntax_Syntax.bv Prims.list
 let (mk_lb :
   (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax Prims.list,(FStar_Syntax_Syntax.bv,
                                                                     FStar_Syntax_Syntax.fv)

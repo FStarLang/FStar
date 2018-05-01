@@ -9,7 +9,8 @@
 true: \
   annot, bin_annot, thread, -traverse, \
   package(batteries), \
-  package(zarith)
+  package(zarith), \
+  package(ppx_deriving.std), package(ppx_deriving_yojson)
 
 # ADL: the new unicode lexer
 "src/parser/ml/FStar_Parser_LexFStar.ml": syntax(camlp4o)

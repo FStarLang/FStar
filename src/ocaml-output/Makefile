@@ -103,7 +103,7 @@ endif
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
 fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
 fstar.exe: $(GENERATED_FILES)
-	$(OCAMLBUILD) main.native
+	$(OCAMLBUILD) main.native src/ocaml-output/FStar_Syntax_Syntax.inferred.mli
 	cp -f _build/src/fstar/ml/main.native ../../bin/$@
 	cp -f _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
 
