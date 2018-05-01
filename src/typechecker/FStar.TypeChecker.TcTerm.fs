@@ -1464,7 +1464,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
                 | _ when not solve ->
                     let ghead = Rel.solve_deferred_constraints env ghead in
-                    aux norm solve ghead tres
+                    aux norm true ghead tres
 
                 | _ ->
                     raise_error (Errors.Fatal_ToManyArgumentToFunction,
