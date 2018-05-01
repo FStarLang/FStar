@@ -58,9 +58,6 @@ diag "*** Clean up log files ***"
 if [[ -f src/ocaml-output/fstar/HelloOcamlOutput.log ]]; then
   rm src/ocaml-output/fstar/HelloOcamlOutput.log
 fi
-if [[ -f src/ocaml-output/fstar/AllExamples.log ]]; then
-  rm src/ocaml-output/fstar/AllExamples.log
-fi
 
 diag "*** Make package (clean build directory first) ***"
 cd src/ocaml-output
@@ -91,20 +88,23 @@ fi
 
 diag "*** Make the examples ***"
 cd fstar
-make -C examples/hello ocaml | tee HelloOcamlOutput.log
-make -j6 -C examples | tee AllExamples.log
 
-diag "-- Verify hello ocaml -- should output Hello F*! *"
-if ! egrep 'Hello F\*!' HelloOcamlOutput.log; then
+diag "-- Verify hello ocaml -- should output Hello F*! --"
+make -C examples/hello ocaml | tee HelloOcamlOutput.log
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for examples/hello ocaml - make failed withexit code $?"
+  exit 1
+elif ! egrep -q 'Hello F\*!' HelloOcamlOutput.log; then
   echo -e "* ${RED}FAIL!${NC} for examples/hello ocaml - 'Hello F*!' was not found in HelloOcamlOutput.log"
   exit 1
 else
   echo -e "* ${GREEN}PASSED!${NC} for examples/hello ocaml"
 fi
 
-echo "-- Verify all examples -- Look for Success:"
-if ! egrep 'Success:' AllExamples.log; then
-  echo -e "* ${RED}FAIL!${NC} for all examples - Success: was not found in AllExamples.log"
+diag "-- Verify all examples --"
+make -j6 -C examples
+if [ $? -ne 0 ]; then
+  echo -e "* ${RED}FAIL!${NC} for all examples - make returned $?"
   exit 1
 else
   echo -e "* ${GREEN}PASSED!${NC} for all examples"
