@@ -925,7 +925,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
         in
 
         match r with
-            | MisMatch (Some (Delta_equational_at_level i), Some (Delta_equational_at_level j)) when (i > 1 || j > 1) && i <> j ->
+            | MisMatch (Some (Delta_equational_at_level i), Some (Delta_equational_at_level j)) when (i > 0 || j > 0) && i <> j ->
               reduce_one_and_try_again (Delta_equational_at_level i) (Delta_equational_at_level j)
 
             | MisMatch(Some (Delta_equational_at_level _), _)
