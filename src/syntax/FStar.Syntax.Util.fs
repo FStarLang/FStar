@@ -1831,3 +1831,28 @@ and unbound_variables_comp c =
     | Comp ct ->
       unbound_variables ct.result_typ
       @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args
+
+let dump_types_as_json (m:modul) =
+    let rec sigelt_as_json se =
+        match se.sigel with
+        | Sig_declare_typ(lid, univs, t) ->
+          [JSON.decl_as_json (lid, univs, t)]
+        | Sig_bundle (ses, _) ->
+          List.collect sigelt_as_json ses
+        | Sig_datacon(lid, univs, t, _, _, _) ->
+          [JSON.decl_as_json (lid, univs, t)]
+        | Sig_inductive_typ(lid, univs, bs, t, _, _) ->
+          let t =
+            match bs with
+            | [] -> t
+            | _ -> mk (Tm_arrow(bs, mk_Total t)) None t.pos
+          in
+          [JSON.decl_as_json (lid, univs, t)]
+        | Sig_let((_, lbs), _) ->
+          lbs |> List.collect (fun lb ->
+          [JSON.decl_as_json ((FStar.Util.right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp)])
+        | _ ->
+          []
+    in
+    List.collect sigelt_as_json m.exports
+    |> String.concat "\n"

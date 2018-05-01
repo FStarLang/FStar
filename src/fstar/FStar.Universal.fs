@@ -295,42 +295,47 @@ let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and 
       let mii = FStar.Syntax.DsEnv.inclusion_info env.dsenv (fst tcmod).name in
       tcmod, tcmod_iface_opt, mii, env
   in
-  if Options.cache_checked_modules ()
-  then match load_module_from_cache env fn with
-       | None ->
-         let tcmod, tcmod_iface_opt, mii, env = tc_source_file () in
-         if FStar.Errors.get_err_count() = 0
-         && (Options.lax()  //we'll write out a .checked.lax file
-             || Options.should_verify (fst tcmod).name.str) //we'll write out a .checked file
-         //but we will not write out a .checked file for an unverified dependence
-         //of some file that should be checked
-         then store_module_to_cache env fn (fst tcmod) tcmod_iface_opt mii;
-         tcmod, env, None
-       | Some (tcmod, tcmod_iface_opt, mii) ->
-         let tcmod =
-           if tcmod.is_interface then tcmod
-           else
-             let use_interface_from_the_cache = Options.use_extracted_interfaces () &&
-                                                (not (Options.expose_interfaces ()  && Options.should_verify tcmod.name.str)) in
-             if use_interface_from_the_cache then
-               if tcmod_iface_opt = None then
-                 Errors.raise_error (Errors.Fatal_ModuleNotFound, "use_extracted_interfaces option is set but could not find it in the cache for: " ^ tcmod.name.str)
-                                    Range.dummyRange
-               else tcmod_iface_opt |> must
-             else tcmod
-         in
-         let delta_env env =
-             let _, env =
-                with_tcenv env <|
-                FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii (FStar.TypeChecker.Normalize.erase_universes env)
+  let tcmod, env, delta =
+      if Options.cache_checked_modules ()
+      then match load_module_from_cache env fn with
+           | None ->
+             let tcmod, tcmod_iface_opt, mii, env = tc_source_file () in
+             if FStar.Errors.get_err_count() = 0
+             && (Options.lax()  //we'll write out a .checked.lax file
+                 || Options.should_verify (fst tcmod).name.str) //we'll write out a .checked file
+             //but we will not write out a .checked file for an unverified dependence
+             //of some file that should be checked
+             then store_module_to_cache env fn (fst tcmod) tcmod_iface_opt mii;
+             tcmod, env, None
+           | Some (tcmod, tcmod_iface_opt, mii) ->
+             let tcmod =
+               if tcmod.is_interface then tcmod
+               else
+                 let use_interface_from_the_cache = Options.use_extracted_interfaces () &&
+                                                    (not (Options.expose_interfaces ()  && Options.should_verify tcmod.name.str)) in
+                 if use_interface_from_the_cache then
+                   if tcmod_iface_opt = None then
+                     Errors.raise_error (Errors.Fatal_ModuleNotFound, "use_extracted_interfaces option is set but could not find it in the cache for: " ^ tcmod.name.str)
+                                        Range.dummyRange
+                   else tcmod_iface_opt |> must
+                 else tcmod
              in
-             FStar.TypeChecker.Tc.load_checked_module env tcmod
-         in
-         (tcmod,0), env, extend_delta_env delta delta_env
-  else let env = apply_delta_env env delta in
-       let tcmod, tcmod_iface_opt, _, env = tc_source_file () in
-       let tcmod = if is_some tcmod_iface_opt then (tcmod_iface_opt |> must, snd tcmod) else tcmod in  //AR: TODO: does it matter what we return here?
-       tcmod, env, None
+             let delta_env env =
+                 let _, env =
+                    with_tcenv env <|
+                    FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii (FStar.TypeChecker.Normalize.erase_universes env)
+                 in
+                 FStar.TypeChecker.Tc.load_checked_module env tcmod
+             in
+             (tcmod,0), env, extend_delta_env delta delta_env
+      else let env = apply_delta_env env delta in
+           let tcmod, tcmod_iface_opt, _, env = tc_source_file () in
+           let tcmod = if is_some tcmod_iface_opt then (tcmod_iface_opt |> must, snd tcmod) else tcmod in  //AR: TODO: does it matter what we return here?
+           tcmod, env, None
+     in
+     if Options.dump_types_as_json (fst tcmod).name.str
+     then BU.print1 "%s\n" (FStar.Syntax.Util.dump_types_as_json (fst tcmod));
+     tcmod, env, delta
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)

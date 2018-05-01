@@ -129,6 +129,7 @@ let defaults =
       ("detail_hint_replay"           , Bool false);
       ("doc"                          , Bool false);
       ("dump_module"                  , List []);
+      ("dump_types_as_json"           , List []);
       ("eager_inference"              , Bool false);
       ("expose_interfaces"            , Bool false);
       ("extract"                      , Unset);
@@ -244,6 +245,7 @@ let get_detail_errors           ()      = lookup_opt "detail_errors"            
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
+let get_dump_types_as_json      ()      = lookup_opt "dump_types_as_json"       (as_list as_string)
 let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
@@ -564,7 +566,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "dump_module",
         Accumulated (SimpleStr "module_name"),
-        "");
+        "Print a module after desugaring and after type-checking");
+
+       ( noshort,
+        "dump_types_as_json",
+        Accumulated (SimpleStr "module_name"),
+        "Print the types of top-level symbols in a module as json");
 
        ( noshort,
         "eager_inference",
@@ -1232,6 +1239,7 @@ let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
+let dump_types_as_json           s  = get_dump_types_as_json() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
 let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files

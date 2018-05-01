@@ -4069,3 +4069,61 @@ and (unbound_variables_comp :
             ct.FStar_Syntax_Syntax.effect_args
            in
         FStar_List.append uu____12914 uu____12917
+
+let (dump_types_as_json : FStar_Syntax_Syntax.modul -> Prims.string) =
+  fun m  ->
+    let rec sigelt_as_json se =
+      match se.FStar_Syntax_Syntax.sigel with
+      | FStar_Syntax_Syntax.Sig_declare_typ (lid,univs1,t) ->
+          let uu____12954 = FStar_Syntax_JSON.decl_as_json (lid, univs1, t)
+             in
+          [uu____12954]
+      | FStar_Syntax_Syntax.Sig_bundle (ses,uu____12956) ->
+          FStar_List.collect sigelt_as_json ses
+      | FStar_Syntax_Syntax.Sig_datacon
+          (lid,univs1,t,uu____12968,uu____12969,uu____12970) ->
+          let uu____12975 = FStar_Syntax_JSON.decl_as_json (lid, univs1, t)
+             in
+          [uu____12975]
+      | FStar_Syntax_Syntax.Sig_inductive_typ
+          (lid,univs1,bs,t,uu____12980,uu____12981) ->
+          let t1 =
+            match bs with
+            | [] -> t
+            | uu____12995 ->
+                let uu____12996 =
+                  let uu____13003 =
+                    let uu____13004 =
+                      let uu____13017 = FStar_Syntax_Syntax.mk_Total t  in
+                      (bs, uu____13017)  in
+                    FStar_Syntax_Syntax.Tm_arrow uu____13004  in
+                  FStar_Syntax_Syntax.mk uu____13003  in
+                uu____12996 FStar_Pervasives_Native.None
+                  t.FStar_Syntax_Syntax.pos
+             in
+          let uu____13021 = FStar_Syntax_JSON.decl_as_json (lid, univs1, t1)
+             in
+          [uu____13021]
+      | FStar_Syntax_Syntax.Sig_let ((uu____13022,lbs),uu____13024) ->
+          FStar_All.pipe_right lbs
+            (FStar_List.collect
+               (fun lb  ->
+                  let uu____13046 =
+                    let uu____13047 =
+                      let uu____13054 =
+                        let uu____13055 =
+                          let uu____13058 =
+                            FStar_Util.right lb.FStar_Syntax_Syntax.lbname
+                             in
+                          uu____13058.FStar_Syntax_Syntax.fv_name  in
+                        uu____13055.FStar_Syntax_Syntax.v  in
+                      (uu____13054, (lb.FStar_Syntax_Syntax.lbunivs),
+                        (lb.FStar_Syntax_Syntax.lbtyp))
+                       in
+                    FStar_Syntax_JSON.decl_as_json uu____13047  in
+                  [uu____13046]))
+      | uu____13063 -> []  in
+    let uu____13064 =
+      FStar_List.collect sigelt_as_json m.FStar_Syntax_Syntax.exports  in
+    FStar_All.pipe_right uu____13064 (FStar_String.concat "\n")
+  
