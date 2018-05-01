@@ -82,7 +82,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "eb4c73cdb386ec540906e2530e650736"
+      "00e0b3b968db771cc7d148e07600c1f2"
     ],
     [
       "Bug422.fails",
@@ -117,7 +117,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "8b5d58b462a6f169827b48df265f6474"
+      "51a0532feeb7a9612e6ea11598b2cd92"
     ],
     [
       "Bug422.box'",
@@ -308,7 +308,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0bfd3f6914af60218168ad551775ecd2"
+      "1c7ff73fd987a031ea1f711e5cc47007"
     ],
     [
       "Bug422.works",
@@ -343,7 +343,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "a3f1828dd732908f309fb7cc9a26cf4d"
+      "281d7d4902f0e3723a80f76950d1674a"
     ]
   ]
 ]

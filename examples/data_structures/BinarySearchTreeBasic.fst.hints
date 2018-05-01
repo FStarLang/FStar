@@ -694,7 +694,7 @@
         "typing_tok_BinarySearchTreeBasic.Leaf@tok"
       ],
       0,
-      "f0afc9560522fcbc2442609b8d16aeaa"
+      "1126bcf54e9dbc0488cd86e304fd5d94"
     ],
     [
       "BinarySearchTreeBasic.delete'",
@@ -808,7 +808,7 @@
         "unit_typing"
       ],
       0,
-      "1a1d4a4239ecd61aa935847c386d618d"
+      "72954cc57fb13c511dffeb433f784aa6"
     ],
     [
       "BinarySearchTreeBasic.tree",
@@ -1293,7 +1293,7 @@
         "typing_tok_BinarySearchTreeBasic.Leaf@tok"
       ],
       0,
-      "06e87a13ee809389486830a50c3deb22"
+      "cbf1e9c9b7caa1fa24f53fba56b3b946"
     ],
     [
       "BinarySearchTreeBasic.delete'",

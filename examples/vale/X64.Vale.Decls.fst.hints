@@ -898,7 +898,7 @@
         "typing_X64.Vale.State_i.eval_operand", "unit_typing"
       ],
       0,
-      "dc6b5add1d8fdfb61fa3d885b6152ff8"
+      "30776bc5912ba5ed6eacb1d47e08e8fb"
     ],
     [
       "X64.Vale.Decls.va_lemma_Store64",
@@ -2983,7 +2983,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1c2c357eb6ea2e7fadf936399e3a08b3"
+      "e284893de168c514db1ffb7b0f98db7b"
     ],
     [
       "X64.Vale.Decls.va_lemma_Store64",
@@ -2992,7 +2992,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2f763a1b935df8e5ddbdd933874fc87d"
+      "32c868824ca32a41d6bd2d720dbf92fc"
     ]
   ]
 ]

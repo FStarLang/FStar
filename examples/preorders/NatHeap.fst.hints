@@ -261,7 +261,7 @@
         "typing_NatHeap.upd"
       ],
       0,
-      "fb5e08be0b1f9936320173806a3da43e"
+      "2d98c65b5e8f9c48617e6f69d3bb7efa"
     ],
     [
       "NatHeap.alloc_ref_consistent",
@@ -460,7 +460,7 @@
         "typing_NatHeap_Tm_abs_196d63e44c75f54af8c8d29a3f42c172"
       ],
       0,
-      "204d367460b59a202f1a34b1f2005838"
+      "ac3fd4c702a7d05aadf2d51e4d7d8790"
     ],
     [
       "NatHeap.contains_concat1",
