@@ -55,7 +55,8 @@ type squash (p:Type) : Type0 = x:unit{p}
 
    It's marked `private` so that users cannot write it themselves.
 *)   
-private let auto_squash (p:Type) = squash p
+private
+let auto_squash (p:Type) = squash p
 
 (*
  * Squashed versions of truth and falsehood
@@ -85,7 +86,8 @@ type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type =
 [@ "tac_opaque"]
 type eq3 (#a:Type) (#b:Type) (x:a) (y:b) = squash (h_equals x y)
 
-unfold let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
+unfold
+let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
 
 (* bool-to-type coercion *)
 type b2t (b:bool) = (b == true)
@@ -118,13 +120,16 @@ type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
 (* prefix unary '~' *)
 type l_not (p:Type) = l_imp p False
 
-unfold type l_ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
+unfold
+type l_ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
 
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
-assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
+assume
+type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 
 (* internalizing the typing relation for the SMT encoding: (has_type x t) *)
-assume type has_type : #a:Type -> a -> Type -> Type0
+assume
+type has_type : #a:Type -> a -> Type -> Type0
   
 (* forall (x:a). p x : specialized to Type#0 *)
 [@ "tac_opaque"]
@@ -134,7 +139,8 @@ type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
 type prop = a:Type0{ forall (x:a). x === () }
 
 (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
-unopteq type dtuple2 (a:Type)
+unopteq
+type dtuple2 (a:Type)
              (b:(a -> GTot Type)) =
   | Mkdtuple2: _1:a
             -> _2:b _1
@@ -150,9 +156,12 @@ type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
          we do not allow destructing them, since that would reveal
          that internally, set_range_of is not an identity function.
 *)
-assume new type range : Type0
+assume new
+type range : Type0
 
-assume new type string : Type0
+assume new
+type string : Type0
+
 assume HasEq_string: hasEq string
 
 (* PURE effect *)
@@ -161,33 +170,50 @@ let pure_post' (a:Type) (pre:Type) = (_:a{pre}) -> GTot Type0 // c.f. #57
 let pure_post  (a:Type) = pure_post' a True
 let pure_wp    (a:Type) = pure_post a -> GTot pure_pre
 
-assume type guard_free: Type0 -> Type0
+assume
+type guard_free: Type0 -> Type0
 
-unfold let pure_return (a:Type) (x:a) (p:pure_post a) =
+unfold
+let pure_return (a:Type) (x:a) (p:pure_post a) =
      forall (return_val:a). return_val==x ==> p return_val
 
-unfold let pure_bind_wp (r1:range) (a:Type) (b:Type)
+unfold
+let pure_bind_wp (r1:range) (a:Type) (b:Type)
                    (wp1:pure_wp a) (wp2: (a -> GTot (pure_wp b)))
                    (p : pure_post b) =
 	wp1 (fun (bind_result_1:a) -> wp2 bind_result_1 p)
-unfold let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
+
+unfold
+let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
      l_ITE p (wp_then post) (wp_else post)
 
-unfold let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
+unfold
+let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
      forall (k:pure_post a).
 	 (forall (x:a).{:pattern (guard_free (k x))} post x ==> k x)
 	 ==> wp k
 
-unfold let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =
-        forall (p:pure_post a). wp1 p ==> wp2 p
+unfold
+let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =
+     forall (p:pure_post a). wp1 p ==> wp2 p
 
-unfold let pure_close_wp (a:Type) (b:Type) (wp:(b -> GTot (pure_wp a))) (p:pure_post a) = forall (b:b). wp b p
-unfold let pure_assert_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q /\ wp p
-unfold let pure_assume_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q ==> wp p
-unfold let pure_null_wp  (a:Type) (p:pure_post a) = forall (any_result:a). p any_result
-unfold let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (trivial_result:a) -> True)
+unfold
+let pure_close_wp (a:Type) (b:Type) (wp:(b -> GTot (pure_wp a))) (p:pure_post a) = forall (b:b). wp b p
 
-total new_effect { (* The definition of the PURE effect is fixed; no user should ever change this *)
+unfold
+let pure_assert_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q /\ wp p
+
+unfold
+let pure_assume_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q ==> wp p
+
+unfold
+let pure_null_wp  (a:Type) (p:pure_post a) = forall (any_result:a). p any_result
+
+unfold
+let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (trivial_result:a) -> True)
+
+total
+new_effect { (* The definition of the PURE effect is fixed; no user should ever change this *)
   PURE : a:Type -> wp:pure_wp a -> Effect
   with return_wp    = pure_return
      ; bind_wp      = pure_bind_wp
@@ -211,9 +237,11 @@ effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)
 effect Tot (a:Type) = PURE a (pure_null_wp a)
 
-total new_effect GHOST = PURE
+total
+new_effect GHOST = PURE
 
-unfold let purewp_id (a:Type) (wp:pure_wp a) = wp
+unfold
+let purewp_id (a:Type) (wp:pure_wp a) = wp
 
 sub_effect
   PURE ~> GHOST = purewp_id
@@ -224,45 +252,87 @@ effect GTot (a:Type) = GHOST a (pure_null_wp a)
 effect Ghost (a:Type) (pre:Type) (post:pure_post' a pre) =
        GHOST a (fun (p:pure_post a) -> pre /\ (forall (ghost_result:a). post ghost_result ==> p ghost_result))
 
-assume new type int : Type0
+assume new
+type int : Type0
 
 assume HasEq_int: hasEq int
 
-assume val range_0 : range
+assume
+val range_0 : range
+
 (* A total function to obtain the range of a term x *)
 (* assume val range_of : #a:Type -> x:a -> Tot range *)
 (* Building a range constant *)
-assume val mk_range : file:string -> from_line:int -> from_col:int -> to_line:int -> to_col:int -> Tot range
+assume
+val mk_range : file:string -> from_line:int -> from_col:int -> to_line:int -> to_col:int -> Tot range
+
 (* Tagging a term x with the range r *)
 (* let set_range_of (#a:Type) (x:a) (r:range) = x *)
 
-assume val op_AmpAmp             : bool -> bool -> Tot bool
-assume val op_BarBar             : bool -> bool -> Tot bool
-assume val op_Negation           : bool -> Tot bool
-assume val op_Multiply           : int -> int -> Tot int
-assume val op_Subtraction        : int -> int -> Tot int
-assume val op_Addition           : int -> int -> Tot int
-assume val op_Minus              : int -> Tot int
-assume val op_LessThanOrEqual    : int -> int -> Tot bool
-assume val op_GreaterThan        : int -> int -> Tot bool
-assume val op_GreaterThanOrEqual : int -> int -> Tot bool
-assume val op_LessThan           : int -> int -> Tot bool
-assume val op_Equality :    #a:Type{hasEq a} -> a -> a -> Tot bool
-assume val op_disEquality : #a:Type{hasEq a} -> a -> a -> Tot bool
-assume new type exn : Type0
-assume new type array : Type -> Type0
-assume val strcat : string -> string -> Tot string
+assume
+val op_AmpAmp             : bool -> bool -> Tot bool
+
+assume
+val op_BarBar             : bool -> bool -> Tot bool
+
+assume
+val op_Negation           : bool -> Tot bool
+
+assume
+val op_Multiply           : int -> int -> Tot int
+
+assume
+val op_Subtraction        : int -> int -> Tot int
+
+assume
+val op_Addition           : int -> int -> Tot int
+
+assume
+val op_Minus              : int -> Tot int
+
+assume
+val op_LessThanOrEqual    : int -> int -> Tot bool
+
+assume
+val op_GreaterThan        : int -> int -> Tot bool
+
+assume
+val op_GreaterThanOrEqual : int -> int -> Tot bool
+
+assume
+val op_LessThan           : int -> int -> Tot bool
+
+assume
+val op_Equality :    #a:Type{hasEq a} -> a -> a -> Tot bool
+
+assume
+val op_disEquality : #a:Type{hasEq a} -> a -> a -> Tot bool
+
+assume new
+type exn : Type0
+
+assume new
+type array : Type -> Type0
+
+assume
+val strcat : string -> string -> Tot string
 
 type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
 
-abstract type pattern :Type0 = unit
-// SMTPat and SMTPatOr desugar to these two
-irreducible let smt_pat (#a:Type) (x:a) : pattern = ()
-irreducible let smt_pat_or (x:list (list pattern)) : pattern = ()
+abstract
+type pattern :Type0 = unit
 
-assume type decreases : #a:Type -> a -> Type0
+// SMTPat and SMTPatOr desugar to these two
+irreducible
+let smt_pat (#a:Type) (x:a) : pattern = ()
+
+irreducible
+let smt_pat_or (x:list (list pattern)) : pattern = ()
+
+assume
+type decreases : #a:Type -> a -> Type0
 
 (*
    Lemma is desugared specially. The valid forms are:
@@ -301,17 +371,30 @@ type lex_t =
 let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
 let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
 
-assume val _assume : p:Type -> Pure unit (requires (True)) (ensures (fun x -> p))
-assume val admit   : #a:Type -> unit -> Admit a
-assume val magic   : #a:Type -> unit -> Tot a
-irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
+assume
+val _assume : p:Type -> Pure unit (requires (True)) (ensures (fun x -> p))
+
+assume
+val admit   : #a:Type -> unit -> Admit a
+
+assume
+val magic   : #a:Type -> unit -> Tot a
+
+irreducible
+val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
+
 let unsafe_coerce #a #b x = admit(); x
-assume val admitP  : p:Type -> Pure unit True (fun x -> p)
+
+assume
+val admitP  : p:Type -> Pure unit True (fun x -> p)
+
 val _assert : p:Type -> Pure unit (requires p) (ensures (fun x -> p))
+
 let _assert p = ()
 
 // Can be used to mark a query for a separate SMT invocation
-abstract let spinoff (p:Type) : Type = p
+abstract
+let spinoff (p:Type) : Type = p
 
 // Logically equivalent to assert, but spins off separate query
 val assert_spinoff : (p:Type) -> Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
@@ -328,8 +411,11 @@ type nonzero = i:int{i<>0}
 (*    in OCaml and to .NET BigInteger in F#. Both these operations are *)
 (*    Euclidean and are mapped to the corresponding theory symbols in  *)
 (*    the SMT encoding *)
-assume val op_Modulus            : int -> nonzero -> Tot int
-assume val op_Division           : int -> nonzero -> Tot int
+assume
+val op_Modulus            : int -> nonzero -> Tot int
+
+assume
+val op_Division           : int -> nonzero -> Tot int
 
 let rec pow2 (x:nat) : Tot pos =
   match x with
@@ -340,23 +426,30 @@ let min x y = if x <= y then x else y
 
 let abs (x:int) : Tot int = if x >= 0 then x else -x
 
-assume val string_of_bool: bool -> Tot string
-assume val string_of_int: int -> Tot string
+assume
+val string_of_bool: bool -> Tot string
 
-irreducible let labeled (r:range) (msg:string) (b:Type) :Type = b
+assume
+val string_of_int: int -> Tot string
+
+irreducible
+let labeled (r:range) (msg:string) (b:Type) :Type = b
 
 (** When attached a top-level definition, the typechecker will succeed if and
  * only if checking the definition results in an error. *)
-assume val fail : attribute
+assume
+val fail : attribute
 
 (** Like fail, but allows to present a list of error numbers that need to be exactly
  * those raised. All errors should be listed in the exact multiplicity, but order
  * does not matter. *)
-assume val fail_errs : list int -> Tot attribute
+assume
+val fail_errs : list int -> Tot attribute
 
 (** When --lax is present, we ignore both previous attributes since some definitions
  * only fail when verification is turned on. With this attribute, one can ensure
  * that a definition fails lax-checking too. This can be combined with `fail_errs`.
  *
  * (Note: this will NOT turn on --lax for you.) *)
-assume val fail_lax : attribute
+assume
+val fail_lax : attribute

@@ -153,7 +153,7 @@ ocaml-unit-tests:
 	$(BIN)/tests.exe
 
 # Getting parallelism from this target
-uregressions: fstarlib ulib tutorial uexamples interactive-test
+uregressions: fstarlib ulib tutorial uexamples interactive-test prettyprinting-tests
 
 # Getting parallelism from this target as well
 uregressions-ulong: uregressions ulib-extra
@@ -177,6 +177,9 @@ uexamples: fstarlib
 # Interactive mode regressions
 interactive-test:
 	$(MAKE) -C tests/interactive
+
+prettyprinting-tests:
+	$(MAKE) -C tests/prettyprinting
 
 ulong:
 	+$(MAKE) utest-prelude
