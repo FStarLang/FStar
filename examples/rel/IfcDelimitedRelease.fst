@@ -57,7 +57,7 @@ private val verify_test (x y z: ref int):
     let l = [x ; y ; z] in
     let y_add = addr_of y in
     let z_add = addr_of z in
-    let env r =  //AR: in the extracted interface, y_add and z_add are inlined in the following,
+    let env (r: nat) =  //AR: in the extracted interface, y_add and z_add are inlined in the following,
                  //    which means the effect is now GTot, so i had to make env as ref int -> GTot label
       if r = y_add || r = z_add then High
       else Low
