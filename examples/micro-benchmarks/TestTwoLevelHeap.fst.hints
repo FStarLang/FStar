@@ -11,7 +11,11 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
+<<<<<<< HEAD
       "4743db7956e2359c8dca9fd523fcbe1c"
+=======
+      "d89a3835500830393725e9deb0c3b9b1"
+>>>>>>> origin/master
     ],
     [
       "TestTwoLevelHeap.test0",
@@ -20,7 +24,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "94a271d761b0815b15ca64680f4bf487"
+=======
+      "29d2e3f780543800c6d300ca898404d7"
+>>>>>>> origin/master
     ],
     [
       "TestTwoLevelHeap.test0",
@@ -32,7 +40,11 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
+<<<<<<< HEAD
       "7572202166a60595db23cd031c1f96d0"
+=======
+      "f6890ef1c37e89ae45cd3023ffe07ac2"
+>>>>>>> origin/master
     ],
     [
       "TestTwoLevelHeap.test0",
@@ -76,7 +88,11 @@
         "typing_FStar.Set.union"
       ],
       0,
+<<<<<<< HEAD
       "c3269bc9417bf1447f8c274e7e79c872"
+=======
+      "8670a08e77c2fa5287610cae7b2e5c4c"
+>>>>>>> origin/master
     ],
     [
       "TestTwoLevelHeap.test0",
@@ -88,7 +104,11 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
+<<<<<<< HEAD
       "75ed8696d16c17786e2bd449b4b2a078"
+=======
+      "d007e2e4f4d9ba02ee7a86e268ff2a82"
+>>>>>>> origin/master
     ]
   ]
 ]

@@ -1,5 +1,5 @@
 [
-  "½\u001djì1\u001e´hÙë{\f\u0013\u001d•F",
+  "ü-1\u0012\u000eUÙíE:\u0006Ë¶oØ0",
   [
     [
       "CPS.DoubleDefun.cont",
@@ -11,7 +11,11 @@
         "assumption_Prims.HasEq_int"
       ],
       0,
+<<<<<<< HEAD
       "6de266c45c22f8046cbc6e27e78f4bcd"
+=======
+      "389836342b6323b23b52ccae521bddb5"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.__proj__C1__item___0",
@@ -24,7 +28,11 @@
         "refinement_interpretation_CPS.DoubleDefun_Tm_refine_b1d4de3cb1cee3ac5aafed034e069035"
       ],
       0,
+<<<<<<< HEAD
       "60856677ff683a4eb5a8f794f84531e1"
+=======
+      "edd6c6ff2c2671871f9d3e894dff17d4"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.__proj__C1__item___1",
@@ -37,7 +45,11 @@
         "refinement_interpretation_CPS.DoubleDefun_Tm_refine_b1d4de3cb1cee3ac5aafed034e069035"
       ],
       0,
+<<<<<<< HEAD
       "e2793779f875b22ce2778c8985a1825e"
+=======
+      "80ec87544e26e277bd5c3941b554a59c"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.__proj__C2__item___0",
@@ -50,7 +62,11 @@
         "refinement_interpretation_CPS.DoubleDefun_Tm_refine_470d7912c558796d2a0ae83a2d7f54a2"
       ],
       0,
+<<<<<<< HEAD
       "1f78f2534f9521e13f2dbd4ee5fc3ad0"
+=======
+      "2a731792b61186b388449843cf0fac1d"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.__proj__C2__item___1",
@@ -63,7 +79,11 @@
         "refinement_interpretation_CPS.DoubleDefun_Tm_refine_470d7912c558796d2a0ae83a2d7f54a2"
       ],
       0,
+<<<<<<< HEAD
       "c55e63b05feff1650a0f7eb393d22a7a"
+=======
+      "097edbc5365070ff636698fa325f97ff"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.stack",
@@ -81,7 +101,11 @@
         "subterm_ordering_CPS.DoubleDefun.C2"
       ],
       0,
+<<<<<<< HEAD
       "e0fab3b0247922f37f975dbc555d3788"
+=======
+      "828ac2cdd2e2cd10dc8dd0ac0f0d043d"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.apply",
@@ -110,7 +134,11 @@
         "subterm_ordering_CPS.DoubleDefun.C1", "typing_CPS.DoubleDefun.stack"
       ],
       0,
+<<<<<<< HEAD
       "30de0994111b1f2199c99c2c288d9e88"
+=======
+      "8f5ff804ac5566bcec2296c3cf82f328"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.apply",
@@ -136,7 +164,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "f16484f7eee4de5a0d40d1fc555c796c"
+=======
+      "ed7a1233254e5f665bfec4c40835a48a"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.cont",
@@ -148,7 +180,11 @@
         "assumption_Prims.HasEq_int"
       ],
       0,
+<<<<<<< HEAD
       "8068d736c02e087f3b8600ccbc5eac12"
+=======
+      "220defb1ef1d06f7282dce392403d86c"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.__proj__C1__item___0",
@@ -161,7 +197,11 @@
         "refinement_interpretation_CPS.DoubleDefun_Tm_refine_b1d4de3cb1cee3ac5aafed034e069035"
       ],
       0,
+<<<<<<< HEAD
       "4c3d94b039ef8e372b8e55bf35a09e09"
+=======
+      "f7f0bcb8f986a9f7b30d4e9efcff01cc"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.__proj__C1__item___1",
@@ -174,7 +214,11 @@
         "refinement_interpretation_CPS.DoubleDefun_Tm_refine_b1d4de3cb1cee3ac5aafed034e069035"
       ],
       0,
+<<<<<<< HEAD
       "74ccdbafa8c5e6d3fa2a47fc4c88642d"
+=======
+      "8fdca2e909991f4356f8b29a16547bc7"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.__proj__C2__item___0",
@@ -187,7 +231,11 @@
         "refinement_interpretation_CPS.DoubleDefun_Tm_refine_470d7912c558796d2a0ae83a2d7f54a2"
       ],
       0,
+<<<<<<< HEAD
       "60e18f769ec628d358f38d12cee297be"
+=======
+      "01a2d35b395836850622b8aee0cd9da5"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.__proj__C2__item___1",
@@ -200,7 +248,11 @@
         "refinement_interpretation_CPS.DoubleDefun_Tm_refine_470d7912c558796d2a0ae83a2d7f54a2"
       ],
       0,
+<<<<<<< HEAD
       "1b0622c21db4ae33096dcf14f2776a7f"
+=======
+      "b4dc02cb073e7f942f3a2281b8ea2c9a"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.stack",
@@ -218,7 +270,11 @@
         "subterm_ordering_CPS.DoubleDefun.C2"
       ],
       0,
+<<<<<<< HEAD
       "f07de866a9d59c6de3daa2fa1f584425"
+=======
+      "66decc513df77cd5bfbed6bd80c63fd9"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.apply",
@@ -247,7 +303,11 @@
         "subterm_ordering_CPS.DoubleDefun.C1", "typing_CPS.DoubleDefun.stack"
       ],
       0,
+<<<<<<< HEAD
       "64796de071bc3cbbd7f1de7b17d0a71b"
+=======
+      "9efbeb60d82c00e60783aac396efa2b1"
+>>>>>>> origin/master
     ],
     [
       "CPS.DoubleDefun.apply",
@@ -273,7 +333,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "de891ca490a952af8c217b54cc5f66e0"
+=======
+      "94fed9f377774244ed788dc79ac8d3ad"
+>>>>>>> origin/master
     ]
   ]
 ]

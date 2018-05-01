@@ -379,7 +379,7 @@ and translate_decl env d: list<decl> =
       failwith "todo: translate_decl [MLM_Top]"
 
   | MLM_Exn (m, _) ->
-      BU.print1_warning "Skipping the translation of exception: %s\n" m;
+      BU.print1_warning "Not extracting exception %s to KreMLin (exceptions unsupported)\n" m;
       []
 
 and translate_let env flavor lb: option<decl> =
@@ -423,7 +423,7 @@ and translate_let env flavor lb: option<decl> =
           if List.length tvars = 0 then
             Some (DExternal (None, meta, name, translate_type env t0))
           else begin
-            BU.print1_warning "No writing anything for %s (polymorphic assume)\n" (Syntax.string_of_mlpath name);
+            BU.print1_warning "Not extracting %s to KreMLin (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
             None
           end
         else begin
@@ -433,7 +433,8 @@ and translate_let env flavor lb: option<decl> =
           with e ->
             // JP: TODO: figure out what are the remaining things we don't extract
             let msg = BU.print_exn e in
-            Errors. log_issue Range.dummyRange (Errors.Warning_FunctionNotExtacted, (BU.format2 "Writing a stub for %s (%s)\n" (Syntax.string_of_mlpath name) msg));
+            Errors. log_issue Range.dummyRange
+            (Errors.Warning_FunctionNotExtacted, (BU.format2 "Error while extracting %s to KreMLin (%s)\n" (Syntax.string_of_mlpath name) msg));
             let msg = "This function was not extracted:\n" ^ msg in
             Some (DFunction (None, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
@@ -456,13 +457,13 @@ and translate_let env flavor lb: option<decl> =
           let expr = translate_expr env expr in
           Some (DGlobal (meta, name, List.length tvars, t, expr))
         with e ->
-          Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Not translating definition for %s (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
+          Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Error extracting %s to KreMLin (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
           Some (DGlobal (meta, name, List.length tvars, t, EAny))
         end
 
   | { mllb_name = name; mllb_tysc = ts } ->
       // TODO JP: figure out what exactly we're hitting here...?
-      Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Not translating definition for %s\n" name));
+      Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Not extracting %s to KreMLin\n" name));
       begin match ts with
       | Some (idents, t) ->
           BU.print2 "Type scheme is: forall %s. %s\n"
@@ -475,38 +476,42 @@ and translate_let env flavor lb: option<decl> =
 
 
 and translate_type_decl env ty: option<decl> =
-  match ty with
-  | (assumed, name, _mangled_name, args, flags, Some (MLTD_Abbrev t)) ->
-      let name = env.module_name, name in
-      let env = List.fold_left (fun env name -> extend_t env name) env args in
-      if assumed then
-        let name = string_of_mlpath name in
-        BU.print1_warning "Not translating type definition (assumed) for %s\n" name;
-        // JP: TODO: shall we be smarter here?
+  let _, _, _, _, flags, _ = ty in
+  if List.mem Syntax.NoExtract flags then
+    None
+  else
+    match ty with
+    | (assumed, name, _mangled_name, args, flags, Some (MLTD_Abbrev t)) ->
+        let name = env.module_name, name in
+        let env = List.fold_left (fun env name -> extend_t env name) env args in
+        if assumed then
+          let name = string_of_mlpath name in
+          BU.print1_warning "Not extracting type definition %s to KreMLin (assumed type)\n" name;
+          // JP: TODO: shall we be smarter here?
+          None
+        else
+          Some (DTypeAlias (name, translate_flags flags, List.length args, translate_type env t))
+
+    | (_, name, _mangled_name, args, flags, Some (MLTD_Record fields)) ->
+        let name = env.module_name, name in
+        let env = List.fold_left (fun env name -> extend_t env name) env args in
+        Some (DTypeFlat (name, translate_flags flags, List.length args, List.map (fun (f, t) ->
+          f, (translate_type env t, false)) fields))
+
+    | (_, name, _mangled_name, args, flags, Some (MLTD_DType branches)) ->
+        let name = env.module_name, name in
+        let flags = translate_flags flags in
+        let env = List.fold_left extend_t env args in
+        Some (DTypeVariant (name, flags, List.length args, List.map (fun (cons, ts) ->
+          cons, List.map (fun (name, t) ->
+            name, (translate_type env t, false)
+          ) ts
+        ) branches))
+
+    | (_, name, _mangled_name, _, _, _) ->
+        // JP: TODO: figure out why and how this happens
+        Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Error extracting type definition %s to KreMLin\n" name));
         None
-      else
-        Some (DTypeAlias (name, translate_flags flags, List.length args, translate_type env t))
-
-  | (_, name, _mangled_name, args, flags, Some (MLTD_Record fields)) ->
-      let name = env.module_name, name in
-      let env = List.fold_left (fun env name -> extend_t env name) env args in
-      Some (DTypeFlat (name, translate_flags flags, List.length args, List.map (fun (f, t) ->
-        f, (translate_type env t, false)) fields))
-
-  | (_, name, _mangled_name, args, flags, Some (MLTD_DType branches)) ->
-      let name = env.module_name, name in
-      let flags = translate_flags flags in
-      let env = List.fold_left extend_t env args in
-      Some (DTypeVariant (name, flags, List.length args, List.map (fun (cons, ts) ->
-        cons, List.map (fun (name, t) ->
-          name, (translate_type env t, false)
-        ) ts
-      ) branches))
-
-  | (_, name, _mangled_name, _, _, _) ->
-      // JP: TODO: figure out why and how this happens
-      Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Not translating type definition for %s\n" name));
-      None
 
 and translate_type env t: typ =
   match t with

@@ -12,7 +12,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "9da9a4025680fb6425efd4d14abb0265"
+=======
+      "ae6b808d1728c18709b027c46c5407bd"
+>>>>>>> origin/master
     ],
     [
       "Vector.vector",
@@ -28,7 +32,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "22468d04a35f867cad13cc2a757c8289"
+=======
+      "04388e44e2fe947bc2173ae314a6d0ab"
+>>>>>>> origin/master
     ],
     [
       "Vector.__proj__VCons__item__hd",
@@ -41,7 +49,11 @@
         "refinement_interpretation_Vector_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
+<<<<<<< HEAD
       "d182a7af588488bfc3e194df9fcf5829"
+=======
+      "bac3c2621bffda826ff88d4aa6e18dca"
+>>>>>>> origin/master
     ],
     [
       "Vector.__proj__VCons__item__n",
@@ -54,7 +66,11 @@
         "refinement_interpretation_Vector_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
+<<<<<<< HEAD
       "bcd9e30da1dcd9fc95f1094506962016"
+=======
+      "2afeedf9466a9e30651fe4c64f168e49"
+>>>>>>> origin/master
     ],
     [
       "Vector.__proj__VCons__item__tl",
@@ -70,7 +86,11 @@
         "refinement_interpretation_Vector_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
+<<<<<<< HEAD
       "d6b587a5053f2e359cb91fcab93683e5"
+=======
+      "e543e282124c28bc3d7828a94b97a3ed"
+>>>>>>> origin/master
     ],
     [
       "Vector.head",
@@ -79,7 +99,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "6ba0675e0c9193f5d14b34cc25a2618f"
+=======
+      "8d7c3d89efae09480fe3ff5a1ff450b0"
+>>>>>>> origin/master
     ],
     [
       "Vector.head",
@@ -92,7 +116,11 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
+<<<<<<< HEAD
       "0498521731855c7fcf4d54012480e339"
+=======
+      "f75a155531ef80a658eafbfca2a47490"
+>>>>>>> origin/master
     ],
     [
       "Vector.nth",
@@ -116,7 +144,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "73d50851c65ce95ab484052029bebd8d"
+=======
+      "58433d8350b72329ef5cf95b14663747"
+>>>>>>> origin/master
     ],
     [
       "Vector.append",
@@ -129,7 +161,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "a5cd0a47e6188b546160fd18d2a6bf10"
+=======
+      "b3c0efa931ae1cc4b3ac05a95333b684"
+>>>>>>> origin/master
     ],
     [
       "Vector.append",
@@ -152,7 +188,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "e4486d6e5a80912b5b1335f1741c4ede"
+=======
+      "1f932245d069c53a31bdd327cc12686f"
+>>>>>>> origin/master
     ],
     [
       "Vector.reverse",
@@ -173,7 +213,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "663826eb900a7718518b0a17716ac01d"
+=======
+      "ecc738e0d7a241704f51ff6a7d288af1"
+>>>>>>> origin/master
     ],
     [
       "Vector.mapT",
@@ -194,7 +238,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "e0bb6e08211fc1f4358568d60fff1b27"
+=======
+      "d3f70129f804b21a999d36b711d56f83"
+>>>>>>> origin/master
     ],
     [
       "Vector.fold_left",
@@ -215,7 +263,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "2c92abd29f7d5c66d2c6ec2086638dad"
+=======
+      "a5070ebe2ca04b42586190058fde105c"
+>>>>>>> origin/master
     ],
     [
       "Vector.fold_right",
@@ -235,7 +287,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "898e901679087065fe5d73e04405e8d6"
+=======
+      "596ec61751a3552eb6fb7d9d31a2f2bd"
+>>>>>>> origin/master
     ],
     [
       "Vector.find",
@@ -256,7 +312,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "79a98c90f9f52205a87ba472c8040438"
+=======
+      "f3db467463b9c5f934b6e2fe3dc471f2"
+>>>>>>> origin/master
     ],
     [
       "Vector.zip'",
@@ -278,7 +338,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "90fa7da932b4b415a1b350248259f3c7"
+=======
+      "9df0fad3e3296c6b5cd7a8aecaacac6d"
+>>>>>>> origin/master
     ],
     [
       "Vector.vector",
@@ -291,7 +355,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "bc91782fb3555bedcfc23a50e8e57a2f"
+=======
+      "4c68c68f350c073d818394b3553f55c1"
+>>>>>>> origin/master
     ],
     [
       "Vector.vector",
@@ -307,7 +375,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "3db97643095444155db0a885585e6ea2"
+=======
+      "ea96a43f1ca5a7c87a1061a64a9b6b6e"
+>>>>>>> origin/master
     ],
     [
       "Vector.__proj__VCons__item__hd",
@@ -320,7 +392,11 @@
         "refinement_interpretation_Vector_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
+<<<<<<< HEAD
       "84a6613cb93f37a5a64d5feed4f1c9e4"
+=======
+      "cb1194a2e26ea355dfd59904cda2a901"
+>>>>>>> origin/master
     ],
     [
       "Vector.__proj__VCons__item__n",
@@ -333,7 +409,11 @@
         "refinement_interpretation_Vector_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
+<<<<<<< HEAD
       "440a61e8d309b6a4180a9f5fce3ad778"
+=======
+      "6139aa8b43c48e0102dce2741c719bad"
+>>>>>>> origin/master
     ],
     [
       "Vector.__proj__VCons__item__tl",
@@ -349,7 +429,11 @@
         "refinement_interpretation_Vector_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
+<<<<<<< HEAD
       "97a498999365e01f1d2ed82eb203fce6"
+=======
+      "1721e8a13850e89866b9cada97c21313"
+>>>>>>> origin/master
     ],
     [
       "Vector.head",
@@ -362,7 +446,11 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
+<<<<<<< HEAD
       "99a02ba2b1f3b89ed4eeadaa92e0daa7"
+=======
+      "9ba3186ac68932f38ef361c14d63eba2"
+>>>>>>> origin/master
     ],
     [
       "Vector.nth",
@@ -386,7 +474,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "ba0f947b22d7f0b1111c1fd115b1ef75"
+=======
+      "2dc0ae9aeb60c0d76e0f535f44c5df63"
+>>>>>>> origin/master
     ],
     [
       "Vector.append",
@@ -409,7 +501,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "08763b36649533ddbc8e88f72678f917"
+=======
+      "9eecd1df32ec8f51ff3b2f1add4b7934"
+>>>>>>> origin/master
     ],
     [
       "Vector.reverse",
@@ -430,7 +526,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "5710cbae0f001ba62dd6cdd5fc12e1db"
+=======
+      "31c76cd674e4d4632f484aa177f810d2"
+>>>>>>> origin/master
     ],
     [
       "Vector.mapT",
@@ -451,7 +551,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "2be6eb06d1f77f4892fb1334eb418f38"
+=======
+      "5d8a42f8156b1d9caeac7b6ab9f5dc34"
+>>>>>>> origin/master
     ],
     [
       "Vector.fold_left",
@@ -472,7 +576,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "b9384753183e2ee76be13c01372375e9"
+=======
+      "277275ff62ddd424c52526dc3e12a4e3"
+>>>>>>> origin/master
     ],
     [
       "Vector.fold_right",
@@ -492,7 +600,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "706efa94bfe4e385743889273a3a080a"
+=======
+      "e266cd4562e2fa87e7bd8ae616f5a949"
+>>>>>>> origin/master
     ],
     [
       "Vector.find",
@@ -513,7 +625,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "8a0b7c941a889b5e8a6c7c96ad20d483"
+=======
+      "457bd44c523df712f6095c4122ce8244"
+>>>>>>> origin/master
     ],
     [
       "Vector.zip'",
@@ -535,7 +651,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "508ba0222d9daa7fe421861267f44bf4"
+=======
+      "8dcc97f2a1b1c99cdfdce5505f86af66"
+>>>>>>> origin/master
     ]
   ]
 ]

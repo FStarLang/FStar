@@ -17,7 +17,11 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
+<<<<<<< HEAD
       "88e94e7674cf543170e6dcbc0da823ca"
+=======
+      "151050af9f9f4b912e51b1a98f0a3b94"
+>>>>>>> origin/master
     ],
     [
       "FStar.DM4F.ExnSt.bind",
@@ -35,7 +39,11 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
+<<<<<<< HEAD
       "457ebeb3428336660d97dacede3d8d59"
+=======
+      "1f0457996839839f481a24cdfedab1e4"
+>>>>>>> origin/master
     ]
   ]
 ]

@@ -48,7 +48,11 @@
         "typing_FStar.Reflection.Basic.inspect", "unit_inversion"
       ],
       0,
+<<<<<<< HEAD
       "d6c2eda48b4ffe0357eabf049db36e0c"
+=======
+      "89d52ef152c5c3e710df9b0d984b6614"
+>>>>>>> origin/master
     ],
     [
       "Syntax.blah",
@@ -97,7 +101,11 @@
         "typing_FStar.Reflection.Basic.inspect", "unit_inversion"
       ],
       0,
+<<<<<<< HEAD
       "e226bbad71b08f9aa99cef6775b9bf27"
+=======
+      "9c2d622147979f42bdf219c8e002e7c8"
+>>>>>>> origin/master
     ]
   ]
 ]

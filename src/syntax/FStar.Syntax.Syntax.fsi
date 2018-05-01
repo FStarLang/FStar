@@ -79,9 +79,8 @@ type quote_kind =
   | Quote_dynamic
 
 type delta_depth =
-  | Delta_constant                  //A defined constant, e.g., int, list, etc.
-  | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
-  | Delta_equational                //A symbol that may be equated to another by extensional reasoning
+  | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
+  | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
 ///[@ PpxDerivingShow ]
@@ -528,25 +527,27 @@ val eq_pat : pat -> pat -> bool
 //Some common constants
 ///////////////////////////////////////////////////////////////////////
 module C = FStar.Parser.Const
-val tconst        : lident -> term
-val tabbrev       : lident -> term
-val tdataconstr   : lident -> term
-val t_unit        : term
-val t_bool        : term
-val t_int         : term
-val t_string      : term
-val t_float       : term
-val t_char        : term
-val t_range       : term
-val t_norm_step   : term
-val t_term        : term
-val t_order       : term
-val t_decls       : term
-val t_binder      : term
-val t_bv          : term
-val t_tactic_unit : term
-val t_tac_unit    : term
-val t_list_of     : term -> term
-val t_option_of   : term -> term
-val t_tuple2_of   : term -> term -> term
-val unit_const    : term
+val delta_constant  : delta_depth
+val delta_equational: delta_depth
+val tconst          : lident -> term
+val tabbrev         : lident -> term
+val tdataconstr     : lident -> term
+val t_unit          : term
+val t_bool          : term
+val t_int           : term
+val t_string        : term
+val t_float         : term
+val t_char          : term
+val t_range         : term
+val t_norm_step     : term
+val t_term          : term
+val t_order         : term
+val t_decls         : term
+val t_binder        : term
+val t_bv            : term
+val t_tactic_unit   : term
+val t_tac_unit      : term
+val t_list_of       : term -> term
+val t_option_of     : term -> term
+val t_tuple2_of     : term -> term -> term
+val unit_const      : term

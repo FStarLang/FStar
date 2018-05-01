@@ -1,5 +1,5 @@
 [
-  "Ë!\u001eV\u0018IÂí–Q€¹y$%ê",
+  "WZûd?’à\u0007Ò§£·G×›R",
   [
     [
       "NegativeTests.Neg.test_label",
@@ -8,7 +8,29 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "0a255868555250c146c734e561b95829"
+=======
+      "9e6171a6a8a892af9d5fc2482371516d"
+    ],
+    [
+      "NegativeTests.Neg.test",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "38de928a60fc0832e5e8732e6572bd70"
+    ],
+    [
+      "NegativeTests.Neg.test_label",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "08da597708952c03e1efb7bec0a0cefb"
+>>>>>>> origin/master
     ]
   ]
 ]

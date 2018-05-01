@@ -12,7 +12,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "15a6799a339f6cc496faa3d352f464d3"
+=======
+      "7f464d7b9c33799c81f7147fd752da7d"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__Const__item___0",
@@ -25,7 +29,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_733535f472f5bce64316080d16cf1692"
       ],
       0,
+<<<<<<< HEAD
       "8c8788e42b0b6c8531ccec9ede480d7b"
+=======
+      "a0cfbc8fb85567cadb43c633168ca521"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__Binop__item___0",
@@ -38,7 +46,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_e48d81fdfb07e4d145eded198c44af89"
       ],
       0,
+<<<<<<< HEAD
       "b587a959e5e25286a85c55f5964e133c"
+=======
+      "d8c3453a3916a81e208f7283f3c89d3b"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__Binop__item___1",
@@ -51,7 +63,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_e48d81fdfb07e4d145eded198c44af89"
       ],
       0,
+<<<<<<< HEAD
       "ae352c71f9ea7c0e965db9918665a112"
+=======
+      "0da3e98345baf5992788f4461216f471"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__Binop__item___2",
@@ -64,7 +80,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_e48d81fdfb07e4d145eded198c44af89"
       ],
       0,
+<<<<<<< HEAD
       "31611c4858f4ddc84181cd150dd894cf"
+=======
+      "1617fe7bb9c4190628821fcaef4d77b8"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.add_nat",
@@ -77,7 +97,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "53f913d74205762fcc9487a53ed26773"
+=======
+      "0c7cb4ccf7b072024640f1ebd459fb0e"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.mul_nat",
@@ -90,7 +114,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "ec6f7fa8f431e09939bb8d3dbe6e68d9"
+=======
+      "2afc3330e26de9b4a501010a8685a438"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.eq_nat",
@@ -102,7 +130,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "e718e31b4d8250c5db24eda8101027ff"
+=======
+      "5f1554ce02ff5fdd7f73b55c59352842"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.eq_bool",
@@ -111,7 +143,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
+<<<<<<< HEAD
       "b5a241b39c79c78996702bd7179e8495"
+=======
+      "84459121c349ef026cc5e2dfaf937024"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.binopDenote",
@@ -124,7 +160,11 @@
         "fuel_guarded_inversion_StackMachine.binop"
       ],
       0,
+<<<<<<< HEAD
       "42c9c9a3e53e3a84f50a287bde3d3a5e"
+=======
+      "d4bc9e450feda815643e8196d550983f"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.expDenote",
@@ -140,7 +180,11 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
+<<<<<<< HEAD
       "a1cf7a3da848b6f8172b4f14e897705b"
+=======
+      "ac6312d61d7803f0ca8c503fb484f210"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.instr",
@@ -153,7 +197,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "4fbc383836d40a7e799018fa40dc3f0b"
+=======
+      "dc87490d0e01c5ea1ef717b64201df1d"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__IConst__item___0",
@@ -167,7 +215,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_a31651c68d304738b29495c5aeb6aa44"
       ],
       0,
+<<<<<<< HEAD
       "c3eaa739568eb9a2bf3c8dda98e27749"
+=======
+      "394448a30531295edb5d94af5f9731aa"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__IBinop__item___0",
@@ -181,7 +233,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_94dbe5757f232f1d6a06d4d6dfaafd34"
       ],
       0,
+<<<<<<< HEAD
       "c4fda81bb91d28e975d901cf005d989d"
+=======
+      "eaf22c35ec5dcaed2ea7ec5f45bc7a7b"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.instrDenote",
@@ -195,7 +251,11 @@
         "fuel_guarded_inversion_StackMachine.instr"
       ],
       0,
+<<<<<<< HEAD
       "ff0ec691c8990ae53a5f2a7b861ffc77"
+=======
+      "af5f96081c4f57ef9aa536de3afa0796"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.progDenote",
@@ -218,7 +278,11 @@
         "typing_StackMachine.instrDenote"
       ],
       0,
+<<<<<<< HEAD
       "6fadff28f4a052953bff2c8709421c92"
+=======
+      "a26e505e9bff72ce03dbb66c646ab762"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.compile",
@@ -234,7 +298,11 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
+<<<<<<< HEAD
       "94a2fd95865c94b8d12fe9523f8efdff"
+=======
+      "a4d4a383cd4110b194a10301530628c0"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.app_assoc_reverse",
@@ -259,7 +327,11 @@
         "token_correspondence_FStar.List.Tot.Base.op_At"
       ],
       0,
+<<<<<<< HEAD
       "ba9937904cc287cfee9f84a3c8670192"
+=======
+      "d755ec372990ae0db64945cec49e27d1"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.compile_correct'",
@@ -329,7 +401,11 @@
         "typing_StackMachine.expDenote", "typing_StackMachine.progDenote"
       ],
       0,
+<<<<<<< HEAD
       "5b0a459e2c97055a34137506ea20496a"
+=======
+      "8423947df67da5d4276702d6fa4cdd88"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.app_nil_end",
@@ -346,7 +422,11 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
+<<<<<<< HEAD
       "45b577f9f7f4215ba49de669c2def288"
+=======
+      "c140956349c218fe3cd2e36a6d798d8c"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.compile_correct",
@@ -369,7 +449,11 @@
         "projection_inverse_Prims.Nil_a", "typing_StackMachine.compile"
       ],
       0,
+<<<<<<< HEAD
       "a07e30cd87f9b0e86e873e94407ad67c"
+=======
+      "039987e78fcc60d5a314e17d6602edb2"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tbinop",
@@ -378,7 +462,11 @@
       1,
       [ "@query", "assumption_StackMachine.typ__uu___haseq" ],
       0,
+<<<<<<< HEAD
       "4fba933a857fee67d051ad717d83d6e5"
+=======
+      "0d287e4546b893133f6d7e983bc0ded6"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TEq__item__t",
@@ -391,7 +479,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_013f03405ee56e2bee5ec40dee6f6602"
       ],
       0,
+<<<<<<< HEAD
       "23f645ef064a27b6139221df670edb5f"
+=======
+      "7b8a369423308eb4826faabbda2ca460"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.texp",
@@ -406,7 +498,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "f493b57dda9e0f6df1150eb73ee6d1b9"
+=======
+      "d8e71d0b653aabb595e1637b8b03ab72"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TNConst__item___0",
@@ -420,7 +516,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_6dd4891ce41bb7d9b26ab7b05113bdd5"
       ],
       0,
+<<<<<<< HEAD
       "d6db4a5f7034b7599e2876164b916f1c"
+=======
+      "375690d09410bf0d146dde098684c505"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBConst__item___0",
@@ -434,7 +534,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_9da0b8f720646900d62e529141346f6a"
       ],
       0,
+<<<<<<< HEAD
       "e148c8693b93d1d84568f08ed41a16fb"
+=======
+      "d11e014c5da0a5ace998d0e39e93b06f"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBinop__item__t1",
@@ -448,7 +552,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
+<<<<<<< HEAD
       "7f73ef4f0a8e7e3a051ff3cd06181ea2"
+=======
+      "7f9a42218c418e94d0ba82c5f4e39dac"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBinop__item__t2",
@@ -462,7 +570,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
+<<<<<<< HEAD
       "6a5844b801bfecb5d0b10fc387c68b44"
+=======
+      "934dcb52616e93c8e5a27a32853c64dd"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBinop__item__t",
@@ -476,7 +588,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
+<<<<<<< HEAD
       "3c5bc47c4bc084170635a8335c75d039"
+=======
+      "d0809b496f874f75178ccc4d6acc3704"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBinop__item___3",
@@ -496,7 +612,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
+<<<<<<< HEAD
       "7699caee682ea02eb0e374cdbc3ea13c"
+=======
+      "1834343bc6e3312c6131a16df7290c30"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBinop__item___4",
@@ -512,7 +632,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
+<<<<<<< HEAD
       "039e8be823e8078dd0a96bbda7c28321"
+=======
+      "e523706f674d72680a4aef8a73801712"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBinop__item___5",
@@ -528,7 +652,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
+<<<<<<< HEAD
       "479178dce1c679c3ef753cd3b4ef8fd1"
+=======
+      "57d076c5cdf34990ad827fad7973096b"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.typeDenote",
@@ -541,7 +669,11 @@
         "fuel_guarded_inversion_StackMachine.typ"
       ],
       0,
+<<<<<<< HEAD
       "7b39a6b606ad9ba5bdd1d8c95ae08c72"
+=======
+      "4f1cbb5beef5cb8d92d1fe1602154763"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tbinopDenote",
@@ -573,7 +705,11 @@
         "typing_tok_StackMachine.TTimes@tok"
       ],
       0,
+<<<<<<< HEAD
       "fab50b1f03834daefb8cb9b86506d3e8"
+=======
+      "11fc66c3319fc49f72971cdd5d698826"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.texpDenote",
@@ -600,7 +736,11 @@
         "subterm_ordering_StackMachine.TBinop"
       ],
       0,
+<<<<<<< HEAD
       "84e58f230d0006bfe04f5b109ff0bf51"
+=======
+      "62cea1c0e83a86cb32404325eb5428b3"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tinstr",
@@ -619,7 +759,11 @@
         "kinding_StackMachine.typ@tok"
       ],
       0,
+<<<<<<< HEAD
       "759bcc2f092c824b4d37517514d0b4b3"
+=======
+      "b57e5f83118646d91617d2657e65adb7"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiNConst__item__s",
@@ -633,7 +777,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_a56f6ca6150cb01114a8fab36ff93703"
       ],
       0,
+<<<<<<< HEAD
       "39d90a80987d24c6e256cf6d71630acb"
+=======
+      "4601689831c3b0bbae82d2a0f8e1c9e4"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiNConst__item___1",
@@ -647,7 +795,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_a56f6ca6150cb01114a8fab36ff93703"
       ],
       0,
+<<<<<<< HEAD
       "06a60206ebb2183d5f44a5ab4fb153da"
+=======
+      "595b3f62ef2f40d0f1d9b901131f8210"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBConst__item__s",
@@ -661,7 +813,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_55dae19a239461194000bc379645c48e"
       ],
       0,
+<<<<<<< HEAD
       "4d81de0dbddfc5b97719c3a415551062"
+=======
+      "424093eb676dec8e447931810701ef02"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBConst__item___1",
@@ -675,7 +831,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_55dae19a239461194000bc379645c48e"
       ],
       0,
+<<<<<<< HEAD
       "242a8f715934be4a7631a811c0c4dc3f"
+=======
+      "348049f1356dd5c75ee76600cbe290db"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBinop__item__arg1",
@@ -689,7 +849,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
+<<<<<<< HEAD
       "425c9621b15e8baca4ba11385cf35ab2"
+=======
+      "b8426e091c5db9a9da0a3bc73e711fec"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBinop__item__arg2",
@@ -703,7 +867,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
+<<<<<<< HEAD
       "e169acfcee1d06106135452407d139dd"
+=======
+      "435899949269971f325a563559ffa9d2"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBinop__item__res",
@@ -717,7 +885,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
+<<<<<<< HEAD
       "460077d0af0a3e7154db26528d1d625a"
+=======
+      "6cfb37447746408c999d20f7bf4312ed"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBinop__item__s",
@@ -731,7 +903,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
+<<<<<<< HEAD
       "e26172917f0fc6243dd3b015d5e4c62e"
+=======
+      "c1a4e796e36947be37cbe166cc6f3d6d"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBinop__item___4",
@@ -751,7 +927,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
+<<<<<<< HEAD
       "574f2dc6bfc20a3052168a6166cd9fba"
+=======
+      "2db439978dc10814937a2d9357d66513"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tprog",
@@ -767,7 +947,11 @@
         "equation_StackMachine.tstack", "kinding_StackMachine.typ@tok"
       ],
       0,
+<<<<<<< HEAD
       "3a949792921920da9453cbee555ecdc1"
+=======
+      "166bd56ebec4170f887b338e4a792549"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TNil__item__s",
@@ -780,7 +964,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_f199955d1c0a09a2e1c2187aa1c27dfb"
       ],
       0,
+<<<<<<< HEAD
       "a8d9a0d922c35436a3e8899467ee67ae"
+=======
+      "fbb204f9dc08ce8e62a07c540e5160db"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TCons__item__s1",
@@ -793,7 +981,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
+<<<<<<< HEAD
       "8daf13b5cea44b9ac346ca8cb05a2fa5"
+=======
+      "d27041d71cd970d5795eca0b19b2c081"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TCons__item__s2",
@@ -806,7 +998,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
+<<<<<<< HEAD
       "07f905f2b76e8b305b21978bcac7e184"
+=======
+      "4351c953221f9099bfe749468dd2ed3b"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TCons__item__s3",
@@ -819,7 +1015,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
+<<<<<<< HEAD
       "500e3a3471bc517d9749610a30995227"
+=======
+      "875c4784db096127d4413982237b2768"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TCons__item___3",
@@ -836,7 +1036,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
+<<<<<<< HEAD
       "47e1f2d1bbc238b76b9a42e4fa6fe0c4"
+=======
+      "56b78a57b5cb30275d3f5d102e531bcc"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TCons__item___4",
@@ -853,7 +1057,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
+<<<<<<< HEAD
       "643863b51267eff1cad3aac6276f3ad2"
+=======
+      "22ca9fafa4d765ece203dccbfa1d4188"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.vstack",
@@ -870,7 +1078,11 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
+<<<<<<< HEAD
       "c783156249fcb01e26bb23fa60c8063a"
+=======
+      "70a653eab905bdbb732ede8df1398638"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tinstrDenote",
@@ -917,7 +1129,11 @@
         "typing_StackMachine.vstack", "typing_tok_StackMachine.Nat@tok"
       ],
       0,
+<<<<<<< HEAD
       "7d8dbec11481e03aeb81ee06ac6cb13c"
+=======
+      "d0396a30d62b268730f57ad4c0f8458c"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tprogDenote",
@@ -934,7 +1150,11 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
+<<<<<<< HEAD
       "96b390184102f1ac600d19d2aabcbfde"
+=======
+      "f5cf359bec58471a71db2402634ecf4a"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tconcat",
@@ -951,7 +1171,11 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
+<<<<<<< HEAD
       "c14871dbc5f724f1720dfb8520f49a15"
+=======
+      "efbc36244f68e0c001012a774c7a8b98"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tcompile",
@@ -972,7 +1196,11 @@
         "subterm_ordering_StackMachine.TBinop"
       ],
       0,
+<<<<<<< HEAD
       "5c484afe2f143a3323eb7d37347b78f6"
+=======
+      "a61981fc1c69478d2f070a21bb89cf1d"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tconcat_correct",
@@ -1004,7 +1232,11 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
+<<<<<<< HEAD
       "6cf6f27e37625f2e4945fafcbafb4081"
+=======
+      "04790cafe93480987593e09ca5ad2c42"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tcompile_correct'",
@@ -1094,7 +1326,11 @@
         "typing_StackMachine.vstack"
       ],
       0,
+<<<<<<< HEAD
       "789b6536ec6edb82833396670eb73abd"
+=======
+      "b90b00a5ad01a1ff39d43c44014c1525"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tcompile_correct",
@@ -1118,7 +1354,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "e780b6db72fe459d664fbcafa12bdb8d"
+=======
+      "2f461486a6cb7e8a8d232c5807f56807"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.exp",
@@ -1131,7 +1371,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "f1b8ba32a2515194bfc0fdca75a7ac67"
+=======
+      "24ccd9526fafd1a8d0946742e8d6a065"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__Const__item___0",
@@ -1144,7 +1388,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_733535f472f5bce64316080d16cf1692"
       ],
       0,
+<<<<<<< HEAD
       "dd120f881b607441f5c5a006351e146b"
+=======
+      "dcb015660196418cd5ae2c6351e43e92"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__Binop__item___0",
@@ -1157,7 +1405,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_e48d81fdfb07e4d145eded198c44af89"
       ],
       0,
+<<<<<<< HEAD
       "b5f7e133da456ed42fa2919ff314907b"
+=======
+      "f1df42361906149a25d07cf4792eebeb"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__Binop__item___1",
@@ -1170,7 +1422,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_e48d81fdfb07e4d145eded198c44af89"
       ],
       0,
+<<<<<<< HEAD
       "7c34eab6a644332b2fb9af50107107de"
+=======
+      "09f862b3c15804ac9e156c58f957fd8c"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__Binop__item___2",
@@ -1183,7 +1439,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_e48d81fdfb07e4d145eded198c44af89"
       ],
       0,
+<<<<<<< HEAD
       "99cb5eb1e01e29f9ddb5c1412ca936af"
+=======
+      "ba7fd286b3d74d00c72d521739045bb6"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.add_nat",
@@ -1196,7 +1456,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "eff1b22a1535144115aa1cdb2f0fef6e"
+=======
+      "d839ef90c8d29965835257745bd8e6d2"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.mul_nat",
@@ -1209,7 +1473,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "de051d86a5f05b829b47f4d3be08e7bd"
+=======
+      "45a61d3cd4abe5baa3eba0fb05443d0b"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.eq_nat",
@@ -1221,7 +1489,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "d29861877145a9ee7d48179934032041"
+=======
+      "b3de2e0b5cda8f367898c5583b9fe348"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.eq_bool",
@@ -1230,7 +1502,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
+<<<<<<< HEAD
       "2b571b17074051cd1bab1ab3de0f322c"
+=======
+      "5d5fa6e3a2a889a56cabafdef6686674"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.binopDenote",
@@ -1243,7 +1519,11 @@
         "fuel_guarded_inversion_StackMachine.binop"
       ],
       0,
+<<<<<<< HEAD
       "ddfd7a39da01acad7c831b36ba74e6a5"
+=======
+      "8d1917f4d868745f4607935896713b02"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.expDenote",
@@ -1259,7 +1539,11 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
+<<<<<<< HEAD
       "5c4979a6986f8abe29ae39eb99128302"
+=======
+      "59ec3416b4eff5996973975223c680cb"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.instr",
@@ -1272,7 +1556,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "7ca06147b763a9657733598f767d9d0e"
+=======
+      "d984b520d380e3a2ee4ac201b8e2f04e"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__IConst__item___0",
@@ -1286,7 +1574,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_a31651c68d304738b29495c5aeb6aa44"
       ],
       0,
+<<<<<<< HEAD
       "98648a8d4dfc6a40c08354bdc8e097eb"
+=======
+      "469d8fbc48b30279b6d0ab6edfe80d9a"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__IBinop__item___0",
@@ -1300,7 +1592,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_94dbe5757f232f1d6a06d4d6dfaafd34"
       ],
       0,
+<<<<<<< HEAD
       "4ffda8310642334d914a892759867bb0"
+=======
+      "eb6c20092d67633f488bef19991d9679"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.instrDenote",
@@ -1314,7 +1610,11 @@
         "fuel_guarded_inversion_StackMachine.instr"
       ],
       0,
+<<<<<<< HEAD
       "039f46c0d90aea2a4c47617607b0d0b2"
+=======
+      "8b64e6b3bde3932a7f94dcc01495a105"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.progDenote",
@@ -1337,7 +1637,11 @@
         "typing_StackMachine.instrDenote"
       ],
       0,
+<<<<<<< HEAD
       "89602a9188dfd85957ff0492e884624c"
+=======
+      "6753f7fffbb1e168ed26dec77319dfbb"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.compile",
@@ -1353,7 +1657,11 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
+<<<<<<< HEAD
       "b7561e8493c9680ca5150462ab341061"
+=======
+      "1dd2b924a0ac3e1cb7b9cd3e54f94ef3"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.compile_correct'",
@@ -1369,7 +1677,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "a16c60ea56d9ad13de27e61987cf2999"
+=======
+      "f54a6ea31384090010d96e5b5d1ce6ce"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.compile_correct",
@@ -1385,7 +1697,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "ffb023af6a4d37174ad559f6aa4d9ee4"
+=======
+      "1f00ebd9b2330c9594a1b301b5ef2431"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tbinop",
@@ -1394,7 +1710,11 @@
       1,
       [ "@query", "assumption_StackMachine.typ__uu___haseq" ],
       0,
+<<<<<<< HEAD
       "9d904e4986a588cd86c6677753409263"
+=======
+      "6dc19d27ca30a86996fd343d73b2e871"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TEq__item__t",
@@ -1407,7 +1727,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_013f03405ee56e2bee5ec40dee6f6602"
       ],
       0,
+<<<<<<< HEAD
       "c580152fa0ec64590fda75f807fa96ae"
+=======
+      "016405f5d71667e0d0b173d214044662"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.texp",
@@ -1422,7 +1746,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "911f8086d3dec697ca03cfaf124b51a2"
+=======
+      "9bfe19adc60944cdef1524f0fb014e54"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TNConst__item___0",
@@ -1436,7 +1764,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_6dd4891ce41bb7d9b26ab7b05113bdd5"
       ],
       0,
+<<<<<<< HEAD
       "0afc8ceda0ef47e113e35ced3147a10b"
+=======
+      "c99ed7d6e050f4a640631739f31c0ed6"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBConst__item___0",
@@ -1450,7 +1782,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_9da0b8f720646900d62e529141346f6a"
       ],
       0,
+<<<<<<< HEAD
       "9935f0b0ac66a2f8bf5fe7aec5852e99"
+=======
+      "ce246848c3adba52f958db39e7b27549"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBinop__item__t1",
@@ -1464,7 +1800,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
+<<<<<<< HEAD
       "9d035d4ed4ce71249afb42595edd0c9e"
+=======
+      "dfd3493cc47ebfe4c6240da92d467528"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBinop__item__t2",
@@ -1478,7 +1818,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
+<<<<<<< HEAD
       "7ba9aba5b9517f9169a35173cd50c01e"
+=======
+      "fc99b9355e419ab6ced9c8a085f9cf1b"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBinop__item__t",
@@ -1492,7 +1836,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
+<<<<<<< HEAD
       "55eb79859ebc4c9eb1629201fa7abbc9"
+=======
+      "18df04a130432fe3c564edb5a51424c6"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBinop__item___3",
@@ -1512,7 +1860,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
+<<<<<<< HEAD
       "2b7d8b7e073caaef403cd240fef2c464"
+=======
+      "0e440535c88dedf964e6cd2e746f04a2"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBinop__item___4",
@@ -1528,7 +1880,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
+<<<<<<< HEAD
       "bb44a68b7585bb4d4f67485c0a394e13"
+=======
+      "823304932c3aef128bd620efb76f8926"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TBinop__item___5",
@@ -1544,7 +1900,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_363d878c15cc50c209fe3698ceb285cf"
       ],
       0,
+<<<<<<< HEAD
       "d132482eeb9c9a394393b7f6103b6790"
+=======
+      "662312dcafad3a03b8ad901eddc2f809"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.typeDenote",
@@ -1557,7 +1917,11 @@
         "fuel_guarded_inversion_StackMachine.typ"
       ],
       0,
+<<<<<<< HEAD
       "1557e38fe658a513ff64642e9765a913"
+=======
+      "9c72fa71b5814d1bca21f22c5473065a"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tbinopDenote",
@@ -1590,7 +1954,11 @@
         "typing_tok_StackMachine.TTimes@tok"
       ],
       0,
+<<<<<<< HEAD
       "826a9638f228ccad8bb087c2376410c8"
+=======
+      "d73713ce61879045b0d052a5e7221d92"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.texpDenote",
@@ -1617,7 +1985,11 @@
         "subterm_ordering_StackMachine.TBinop"
       ],
       0,
+<<<<<<< HEAD
       "bc04e55a13e0f50277246640713ec65e"
+=======
+      "3a64e1cd9c3eb1ba59c97a669d8275f2"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tinstr",
@@ -1636,7 +2008,11 @@
         "kinding_StackMachine.typ@tok"
       ],
       0,
+<<<<<<< HEAD
       "70865647989a3c40264aff7b5786e90b"
+=======
+      "e5aa8d2b0e3e5b92c093151b0da4de32"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiNConst__item__s",
@@ -1650,7 +2026,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_a56f6ca6150cb01114a8fab36ff93703"
       ],
       0,
+<<<<<<< HEAD
       "881b7fa3e51eb4c8f42f734064f64f99"
+=======
+      "c92dc8731ae6943ca2a2cb51712d4fe6"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiNConst__item___1",
@@ -1664,7 +2044,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_a56f6ca6150cb01114a8fab36ff93703"
       ],
       0,
+<<<<<<< HEAD
       "375b2858f352b4093cf0875aa3559af0"
+=======
+      "6b915bafe6d60b36e4d9c87b1ddc658d"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBConst__item__s",
@@ -1678,7 +2062,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_55dae19a239461194000bc379645c48e"
       ],
       0,
+<<<<<<< HEAD
       "ec08c6880eb6712b2becb4b88e7fd287"
+=======
+      "c71f67106b83eef309a28cf4f8013a14"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBConst__item___1",
@@ -1692,7 +2080,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_55dae19a239461194000bc379645c48e"
       ],
       0,
+<<<<<<< HEAD
       "2d3848bec44df5c8847534885c55021b"
+=======
+      "40d52c197c1732713c1040c6f684b23b"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBinop__item__arg1",
@@ -1706,7 +2098,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
+<<<<<<< HEAD
       "90f615e29404be441732495e350cae54"
+=======
+      "af10ea231da25fde112f7ac78f2946f6"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBinop__item__arg2",
@@ -1720,7 +2116,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
+<<<<<<< HEAD
       "d44e79dcf6664814b1813c458eb6ea5b"
+=======
+      "ef616cc6b14318d099646a02c99975db"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBinop__item__res",
@@ -1734,7 +2134,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
+<<<<<<< HEAD
       "9f0df40a62db65672303dc0b53e34832"
+=======
+      "a03a97f23772c80017b5db5b004f2a0a"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBinop__item__s",
@@ -1748,7 +2152,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
+<<<<<<< HEAD
       "6300af5e9c3cf12c8d65570e8b8bb73c"
+=======
+      "422d68a712a6099cadd4015a1908c285"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TiBinop__item___4",
@@ -1768,7 +2176,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0,
+<<<<<<< HEAD
       "f2ad1863360392dcf7890f895a43d0bd"
+=======
+      "d321d461e8348cc88f50da6572c44e89"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tprog",
@@ -1784,7 +2196,11 @@
         "equation_StackMachine.tstack", "kinding_StackMachine.typ@tok"
       ],
       0,
+<<<<<<< HEAD
       "5ed43ab3ae1a35ca398a95e84b6a0266"
+=======
+      "c4cd67c357fcb85870b3a267c6d18029"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TNil__item__s",
@@ -1797,7 +2213,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_f199955d1c0a09a2e1c2187aa1c27dfb"
       ],
       0,
+<<<<<<< HEAD
       "838eca2c4416550fdef753fa9c96812d"
+=======
+      "7ae8f17341817f71d034ba04f26c94ef"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TCons__item__s1",
@@ -1810,7 +2230,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
+<<<<<<< HEAD
       "999418f287e433158fb7bd8bf806a204"
+=======
+      "db8bc70b5cea241bfa54e378d9f2e33d"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TCons__item__s2",
@@ -1823,7 +2247,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
+<<<<<<< HEAD
       "2890dccea6f1734e2887a53f636c9432"
+=======
+      "77a2cef6ebcaeda538d49a710c58be6a"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TCons__item__s3",
@@ -1836,7 +2264,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
+<<<<<<< HEAD
       "e53b8dd6ed4fdc1528ad846539ac3b95"
+=======
+      "92acc89eab55a4641d9aff8013484792"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TCons__item___3",
@@ -1853,7 +2285,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
+<<<<<<< HEAD
       "656edfba2bc6f5ce164575a9387eb0f2"
+=======
+      "d54f5161c7215dfc59785159af167b42"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.__proj__TCons__item___4",
@@ -1870,7 +2306,11 @@
         "refinement_interpretation_StackMachine_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0,
+<<<<<<< HEAD
       "9e19e67156db93ecebf21c5232af6fbe"
+=======
+      "6293b2c0af4c1ce5f6bfe6ab845146df"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.vstack",
@@ -1887,7 +2327,11 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
+<<<<<<< HEAD
       "d12e4bf50e6322234803fa996dc4de35"
+=======
+      "83a198bbfaa2430b9b33da329f02d879"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tinstrDenote",
@@ -1934,7 +2378,11 @@
         "typing_StackMachine.vstack", "typing_tok_StackMachine.Nat@tok"
       ],
       0,
+<<<<<<< HEAD
       "1ed9f0fc51e2f793270a21c9317d1cc3"
+=======
+      "1b17fcb5d9b53ffcb0e3941dd6a58589"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tprogDenote",
@@ -1951,7 +2399,11 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
+<<<<<<< HEAD
       "87a1617d4c8a57411f135b25c527fa6c"
+=======
+      "dd8eb43758adac84d448f3168237786d"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tconcat",
@@ -1968,7 +2420,11 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
+<<<<<<< HEAD
       "cdea364ca8d0d1c5043c4379aff51e30"
+=======
+      "a964b16c8870f01060dc7654e8cb591f"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tcompile",
@@ -1989,7 +2445,11 @@
         "subterm_ordering_StackMachine.TBinop"
       ],
       0,
+<<<<<<< HEAD
       "0ec3c436d05e3bc6f34327848b668ea1"
+=======
+      "dc3519fcd972112d92f5b20b70998360"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tcompile_correct'",
@@ -2009,7 +2469,11 @@
         "typing_StackMachine.typeDenote", "typing_StackMachine.vstack"
       ],
       0,
+<<<<<<< HEAD
       "1a42d07d865763267da830819f7d2d12"
+=======
+      "d0a4ea70f8d965a6647e0ef2a3c84e55"
+>>>>>>> origin/master
     ],
     [
       "StackMachine.tcompile_correct",
@@ -2034,7 +2498,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "2879b43d23eee040c32169cc833570ff"
+=======
+      "6ecd081467e9ae9593335fb183d41166"
+>>>>>>> origin/master
     ]
   ]
 ]

@@ -12,7 +12,11 @@
         "refinement_interpretation_SnapshotST_Tm_refine_abc8984d7fb6dc87dbd65572f74bda11"
       ],
       0,
+<<<<<<< HEAD
       "aceb12d2506e3f187109d8f25c181214"
+=======
+      "d4126e7086c3bb97b0f316854c3afba2"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.__proj__Tmp__item___0",
@@ -25,7 +29,11 @@
         "refinement_interpretation_SnapshotST_Tm_refine_8373c0a53fce8bd921acbd00ee47726c"
       ],
       0,
+<<<<<<< HEAD
       "74fc03c8bf1c16aea1465a05d94864ce"
+=======
+      "d231ed521baf1a81c731d64a014d89af"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.__proj__Tmp__item___1",
@@ -38,7 +46,11 @@
         "refinement_interpretation_SnapshotST_Tm_refine_8373c0a53fce8bd921acbd00ee47726c"
       ],
       0,
+<<<<<<< HEAD
       "db61f0b3582c80d41ccfbf9f838d91f8"
+=======
+      "378e5e11a11af4320a7a1b30aced22ba"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.rel_t",
@@ -56,7 +68,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
+<<<<<<< HEAD
       "970495993c2b13251096dcf87bcbf5a4"
+=======
+      "98c27e53758c2f3e28452881aa1697a2"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.lift_predicate",
@@ -68,7 +84,11 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
+<<<<<<< HEAD
       "651627ad47efecd5a76ae8cae18e9bd2"
+=======
+      "ce4e613bbf7f1885466cadc228cfe868"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.lift_stability",
@@ -87,7 +107,11 @@
         "refinement_interpretation_SnapshotST_Tm_refine_99f53608a2d93ee6ac1800c4e882081f"
       ],
       0,
+<<<<<<< HEAD
       "69c05b7dc45f0ed7f521e617667c1975"
+=======
+      "378107714a2e6f2633b1e9952e8d84ab"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.witnessed",
@@ -108,7 +132,11 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
+<<<<<<< HEAD
       "0b1b717877a84306d840a716ad2c343d"
+=======
+      "76e8c4b1c06b8b8c89574f4ce7513def"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.witness",
@@ -129,7 +157,11 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
+<<<<<<< HEAD
       "ab03eb2bb189cf30a3f34622236e50d5"
+=======
+      "20121c2d628baea794d5342b72fc9268"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.recall",
@@ -150,7 +182,11 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
+<<<<<<< HEAD
       "cf459f500df47fef885a67aa46756cb1"
+=======
+      "8b4ab244a6937cc7511fa1678f044e0e"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.get_s",
@@ -162,7 +198,11 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
+<<<<<<< HEAD
       "60db8d9bef37ce0dea0d13b2c77032ce"
+=======
+      "45462e6955115f73fd0bd3f7b493fe48"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.get_s",
@@ -180,7 +220,11 @@
         "projection_inverse_SnapshotST.Tmp__1"
       ],
       0,
+<<<<<<< HEAD
       "ec75688fbbe5a415dcbbff2e387a5520"
+=======
+      "17a715066ae19c00f8ba49cab2502f28"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.put_s",
@@ -192,7 +236,11 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
+<<<<<<< HEAD
       "eb504d7b5944ff0535205dc709603c2d"
+=======
+      "12d71a5784adcc31161a7e6f5c8e041a"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.put_s",
@@ -216,7 +264,11 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
+<<<<<<< HEAD
       "c8de938a66956d76bb56e814b362a1fd"
+=======
+      "8c28ac36681c4ff200461d78a2d3e3c1"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.witness_s",
@@ -228,7 +280,11 @@
         "disc_equation_SnapshotST.Ok", "typing_SnapshotST.uu___is_Ok"
       ],
       0,
+<<<<<<< HEAD
       "ec9f729704853a1dfb56ec5501abd0d7"
+=======
+      "d224659b728ed9c50b84356a6f05071e"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.witness_s",
@@ -250,7 +306,11 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
+<<<<<<< HEAD
       "1235abf26902a0fbdf90d7111003ad00"
+=======
+      "85547470e8e69001dfeef41204a76244"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.recall_s",
@@ -262,7 +322,11 @@
         "typing_SnapshotST.uu___is_Ok"
       ],
       0,
+<<<<<<< HEAD
       "8962648d93725f3f2a13f2774fa10eea"
+=======
+      "160b8200dfcd96c8ae8745e68245a492"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.recall_s",
@@ -285,7 +349,11 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
+<<<<<<< HEAD
       "bb2576f55e86dc20c46b5334ee066568"
+=======
+      "fad58b0e1de8957d3b004ba9e99f30a3"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.break",
@@ -297,7 +365,11 @@
         "disc_equation_SnapshotST.Ok", "typing_SnapshotST.uu___is_Ok"
       ],
       0,
+<<<<<<< HEAD
       "1f501092b5bfda10122ada18b66d78dd"
+=======
+      "efa4ceb216e729ca829ee5c6a05e5d85"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.break",
@@ -321,7 +393,11 @@
         "typing_SnapshotST.uu___is_Ok"
       ],
       0,
+<<<<<<< HEAD
       "b634746d63fd16e604ad47fed7b90479"
+=======
+      "f0aa4f0ebb6685e23e92ca046169a8bc"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.restore",
@@ -333,7 +409,11 @@
         "disc_equation_SnapshotST.Tmp", "typing_SnapshotST.uu___is_Tmp"
       ],
       0,
+<<<<<<< HEAD
       "093252038c91f9d7a88513840ba8ea06"
+=======
+      "f9ad24dba91390862de30cde2b37fa18"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.restore",
@@ -351,7 +431,11 @@
         "projection_inverse_SnapshotST.Tmp__1"
       ],
       0,
+<<<<<<< HEAD
       "f5c6e9fefd13b5c24045bef6d8eb938f"
+=======
+      "3960319c4e30d6c18fcc9265d459534e"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.__proj__Ok__item___0",
@@ -364,7 +448,11 @@
         "refinement_interpretation_SnapshotST_Tm_refine_abc8984d7fb6dc87dbd65572f74bda11"
       ],
       0,
+<<<<<<< HEAD
       "7817b8e1802c19d16e840881320b3ee0"
+=======
+      "97c1945443855ab9bfed0521d8953a28"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.__proj__Tmp__item___0",
@@ -377,7 +465,11 @@
         "refinement_interpretation_SnapshotST_Tm_refine_8373c0a53fce8bd921acbd00ee47726c"
       ],
       0,
+<<<<<<< HEAD
       "450b248ea4df9176bef9a6a3fc6f5b53"
+=======
+      "babd42275acd8a51a3a7942714a9af89"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.__proj__Tmp__item___1",
@@ -390,7 +482,11 @@
         "refinement_interpretation_SnapshotST_Tm_refine_8373c0a53fce8bd921acbd00ee47726c"
       ],
       0,
+<<<<<<< HEAD
       "7a513daa5bc256f9fc211fdb888b7b49"
+=======
+      "7f7c4be53abb25eb5636eadf1e166a9a"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.rel_t",
@@ -408,7 +504,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
+<<<<<<< HEAD
       "0708c49a227b9c7045007543cf9c768c"
+=======
+      "5e11d92ca9b549611d9a5e0b676147d6"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.lift_predicate",
@@ -420,7 +520,11 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
+<<<<<<< HEAD
       "7b2967e27449d668eabf38c39fbe32a9"
+=======
+      "68d210933edad48cd9fa8594cc55576d"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.witnessed",
@@ -441,7 +545,11 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
+<<<<<<< HEAD
       "4d586ae140970dabe878f87235e3fab5"
+=======
+      "abc224e219340909d1cc3678bf9ab055"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.witness",
@@ -462,7 +570,11 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
+<<<<<<< HEAD
       "3a1d21e5d5f746588d7282c501df50bf"
+=======
+      "3958a47f7d71890be0109f0e9a924c10"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.recall",
@@ -483,7 +595,11 @@
         "token_correspondence_SnapshotST.rel_t"
       ],
       0,
+<<<<<<< HEAD
       "42f534c8a6d3e43ebdad0f81a4129005"
+=======
+      "7b9719955476fc5d7a48d479517c9a5b"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.get_s",
@@ -495,7 +611,11 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
+<<<<<<< HEAD
       "cb05014affe0f4c15a23c856113a8b73"
+=======
+      "079e8e809de6325dd5959258a6f2edf0"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.put_s",
@@ -507,7 +627,11 @@
         "disc_equation_SnapshotST.Tmp", "fuel_guarded_inversion_SnapshotST.t"
       ],
       0,
+<<<<<<< HEAD
       "f30baa94b0178dcbb690500d5b0e275d"
+=======
+      "eaf293e19717c8b13df7bd2c1bd5b4e8"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.witness_s",
@@ -519,7 +643,11 @@
         "disc_equation_SnapshotST.Ok", "typing_SnapshotST.uu___is_Ok"
       ],
       0,
+<<<<<<< HEAD
       "8817c91011c25ca73338104e4da7c92b"
+=======
+      "961bf868afa5d9938bf27a96a6b52a0a"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.recall_s",
@@ -531,7 +659,11 @@
         "typing_SnapshotST.uu___is_Ok"
       ],
       0,
+<<<<<<< HEAD
       "642159a59b86b803add73d51af09d6e9"
+=======
+      "c7d7d8005fb7234ab830b573e1683226"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.break",
@@ -543,7 +675,11 @@
         "disc_equation_SnapshotST.Ok", "typing_SnapshotST.uu___is_Ok"
       ],
       0,
+<<<<<<< HEAD
       "c43e81cc7b399c7e5d1cc00099acda7f"
+=======
+      "ec6c62bbb3318815073ae0dc40f5b361"
+>>>>>>> origin/master
     ],
     [
       "SnapshotST.restore",
@@ -555,7 +691,11 @@
         "disc_equation_SnapshotST.Tmp", "typing_SnapshotST.uu___is_Tmp"
       ],
       0,
+<<<<<<< HEAD
       "7e66fb10405dd5909fa8eeb6ad7a9b63"
+=======
+      "0f2f6f8e79cbee5e281d92c854205f8c"
+>>>>>>> origin/master
     ]
   ]
 ]

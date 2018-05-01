@@ -1,5 +1,5 @@
 [
-  "–„“O±Rv\u001d\u0014Ó\u0011Ä£\u0004Íd",
+  "-'V+:⁄ˇòü>’\u0017\fùô°",
   [
     [
       "NegativeTests.False.foo",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "fadf1175756718e91976d16e536e0df0"
+      "50b9185ca956a7d4c2b5642e55ded025"
     ],
     [
       "NegativeTests.False.foo",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "41b683d6788d0a1e9df0cc9758afdabf"
+      "677de1f09e0a75eb35378155c3e8e026"
     ],
     [
       "NegativeTests.False.foo",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "3c99f1495cd64b5a2290abf02ae47568"
+      "bbcf40eb8ac7cb9f2a82dc26437ed0b2"
     ],
     [
       "NegativeTests.False.foo",
@@ -38,7 +38,7 @@
         "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "84d9ac9b04e220b1a243ab705c228a8f"
+      "e9200eac11c213a0f2a4e8ccfc143d8f"
     ],
     [
       "NegativeTests.False.f",
@@ -50,7 +50,7 @@
         "haseqNegativeTests.False_Tm_refine_bcb7d7b02fc420eb5dd6ef8d59203102"
       ],
       0,
-      "00a6f88c6cbbba85810618ce9631b102"
+      "e1d61f6f73297535b3d3bd67ee46e4f1"
     ],
     [
       "NegativeTests.False.f",
@@ -59,7 +59,40 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
       0,
-      "38436526b36e0c857579c3ceb774f6d1"
+      "393c42bcf9e9d016d7e2e19319266935"
+    ],
+    [
+      "NegativeTests.False.foo",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
+        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+      ],
+      0,
+      "3efbdd816cb1bbea68383853b1ae5a25"
+    ],
+    [
+      "NegativeTests.False.foo",
+      6,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "929f5a6bb2d0cfc3fcdb111bd551d0f6"
+    ],
+    [
+      "NegativeTests.False.f",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_unit", "equation_Prims.l_True",
+        "haseqNegativeTests.False_Tm_refine_bcb7d7b02fc420eb5dd6ef8d59203102"
+      ],
+      0,
+      "eed9b9dde541a396cd282c9cabe59e21"
     ]
   ]
 ]

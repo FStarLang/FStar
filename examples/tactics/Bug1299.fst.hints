@@ -26,7 +26,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "e0cfa453173d542c77a99d8aba470c24"
+=======
+      "37d10cd588bf76c04409a8584f6aeda1"
+>>>>>>> origin/master
     ],
     [
       "Bug1299.should_fail",
@@ -53,7 +57,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "e52102eecc44af570727009127285af6"
+=======
+      "2d4cccd8cd84d5fb291478ab28edf05a"
+>>>>>>> origin/master
     ]
   ]
 ]

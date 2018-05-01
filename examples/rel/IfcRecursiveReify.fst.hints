@@ -8,7 +8,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "9ab03b25b3d574ecae595ac203e7b7b9"
+=======
+      "eb05b665de75de12d8aa6f8ca0b55ef6"
+>>>>>>> origin/master
     ],
     [
       "IfcRecursiveReify.p1",
@@ -34,7 +38,11 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "0d00d8ab98a74ae2b892ad2ed5dfddc9"
+=======
+      "53b967c5c2eb62c0ec178abddfa687e7"
+>>>>>>> origin/master
     ],
     [
       "IfcRecursiveReify.ni_p1",
@@ -93,7 +101,11 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "7c72c8102983a7dcfa8aedead34bf18b"
+=======
+      "13bd4ab1f98b7ed6736efa506440fb21"
+>>>>>>> origin/master
     ],
     [
       "IfcRecursiveReify.p2",
@@ -119,7 +131,11 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "8215e55f81cf276dc5cc90ef2726702c"
+=======
+      "99bb7e8d406d1c16663b2ec66c9243bb"
+>>>>>>> origin/master
     ],
     [
       "IfcRecursiveReify.ni_p2",
@@ -179,7 +195,11 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "eaa820326ffa5cd3076d56e99024350a"
+=======
+      "0be9da2478a9f74e92787ee601090be6"
+>>>>>>> origin/master
     ],
     [
       "IfcRecursiveReify.ni_p3",
@@ -201,7 +221,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "548510a4209ebb9d2381a28947d13424"
+=======
+      "46ed0730330c9be86c9380d95d4b547f"
+>>>>>>> origin/master
     ],
     [
       "IfcRecursiveReify.low_equiv",
@@ -210,7 +234,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "628c9438eb45e193ec22f7377d569187"
+=======
+      "9d56b9b64308ce0140da3e379231b384"
+>>>>>>> origin/master
     ],
     [
       "IfcRecursiveReify.p1",
@@ -236,7 +264,11 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "bf72f24d7920fea4306a835d3ae9c33e"
+=======
+      "ac8458e5200ac3bb0eef0f834cedc3bb"
+>>>>>>> origin/master
     ],
     [
       "IfcRecursiveReify.p2",
@@ -262,7 +294,11 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "3945249ea1ab3740ec72d4eb650c67e5"
+=======
+      "5177c2a932c0adf6490d214a8f36b442"
+>>>>>>> origin/master
     ]
   ]
 ]

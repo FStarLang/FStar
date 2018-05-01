@@ -88,16 +88,19 @@ type optionstate = Util.smap<option_val>
 
 let fstar_options : ref<list<optionstate> > = Util.mk_ref []
 let peek () = List.hd !fstar_options
-let pop  () =
+let pop  () = // already signal-atomic
     match !fstar_options with
     | []
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
-let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
+let push () = // already signal-atomic
+    fstar_options := Util.smap_copy (peek()) :: !fstar_options
 let set o =
     match !fstar_options with
     | [] -> failwith "set on empty option stack"
     | _::os -> fstar_options := (o::os)
+let snapshot () = Common.snapshot push fstar_options ()
+let rollback depth = Common.rollback pop fstar_options depth
 
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v

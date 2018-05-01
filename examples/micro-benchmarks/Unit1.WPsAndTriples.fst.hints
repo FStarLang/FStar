@@ -8,7 +8,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "c0b23d198b240e66d4e8b36d4f9489f2"
+=======
+      "8d439051fffb57d503687ff11b91dcd8"
+>>>>>>> origin/master
     ],
     [
       "Unit1.WPsAndTriples.h",
@@ -17,7 +21,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "64ec4600466144d3d0704b57ed784590"
+=======
+      "ec9eda4663c474efc0a653060e5b27ee"
+>>>>>>> origin/master
     ],
     [
       "Unit1.WPsAndTriples.f",
@@ -26,7 +34,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "4ffa928cf85ff56845f45c6608532b92"
+=======
+      "8729fa18e499b6b738aade749a0f68fa"
+>>>>>>> origin/master
     ],
     [
       "Unit1.WPsAndTriples.h",
@@ -35,7 +47,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "56f7f2b118cc66f1889e22c6f6a9d543"
+=======
+      "ea0f8ac3c26a4e88ea12229d2b7d15a6"
+>>>>>>> origin/master
     ]
   ]
 ]

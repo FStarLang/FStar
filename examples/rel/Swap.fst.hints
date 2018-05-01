@@ -11,7 +11,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "e78bb88fec03e1d6fc7e957274b89c6b"
+=======
+      "7ae0a045e3acd90e13d9eb2697d46a0b"
+>>>>>>> origin/master
     ],
     [
       "Swap.heap_equiv_on",
@@ -23,7 +27,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "5de29f8c816f50eeee898e40700e1c8e"
+=======
+      "ef55dfaea80956bd37cb17bc8d974415"
+>>>>>>> origin/master
     ],
     [
       "Swap.seq'",
@@ -32,7 +40,11 @@
       0,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "aa8686dfc370ee4bf0effb36d739fcd7"
+=======
+      "789522c1ef6d02afe11fd166e8f720a2"
+>>>>>>> origin/master
     ],
     [
       "Swap.seq'_lem",
@@ -64,7 +76,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "d9f37239bb010bfb83fb60fb7b20e451"
+=======
+      "48eae8b8fbb1fb6966b3badcc42b66b7"
+>>>>>>> origin/master
     ],
     [
       "Swap.op_Greater_Greater",
@@ -78,7 +94,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_typing"
       ],
       0,
+<<<<<<< HEAD
       "df473400edd77d6043518d37cc13f409"
+=======
+      "63fbd4ee33fd8ead5c6b2c489d8964fe"
+>>>>>>> origin/master
     ],
     [
       "Swap.swap",
@@ -113,7 +133,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "d7cbc6681784b69b2209e6070696d7ad"
+=======
+      "6d9516d60433f090e2b19ea3912c3034"
+>>>>>>> origin/master
     ],
     [
       "Swap.idem",
@@ -146,7 +170,11 @@
         "typing_Swap.op_Greater_Greater", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "664c4aa5256643cf36215d6696dfe00b"
+=======
+      "41d7820c36bf4c84f84286406259d7c4"
+>>>>>>> origin/master
     ],
     [
       "Swap.cond",
@@ -155,7 +183,11 @@
       0,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "402456eeac5d3f1de0ec98ae5f0afd96"
+=======
+      "74f019ce370e555b690149800fd92c90"
+>>>>>>> origin/master
     ],
     [
       "Swap.lemma_replace_cond",
@@ -176,7 +208,11 @@
         "token_correspondence_Swap.cond", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "826ac26729c53b8fb67875e5824c37c9"
+=======
+      "65fef5d9462bfeb204b848fc1ea6eb3f"
+>>>>>>> origin/master
     ],
     [
       "Swap.lemma_skip_c1",
@@ -211,7 +247,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "6dad4e76d667bfff3362e6872eb96aa4"
+=======
+      "96fbb67548d2e855983860f51b32b094"
+>>>>>>> origin/master
     ],
     [
       "Swap.swap_old",
@@ -223,7 +263,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "fe32082592c27a71562b56b30768fac8"
+=======
+      "e77469d2654eb8da7d67015be81161ae"
+>>>>>>> origin/master
     ],
     [
       "Swap.swap_old",
@@ -235,7 +279,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "efd3cf5fa3e65b6651cd7b2ddc24b785"
+=======
+      "d3621710cfab0868d252964568ccbd05"
+>>>>>>> origin/master
     ],
     [
       "Swap.swap_old",
@@ -247,7 +295,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "67d7aaa47378a6acf99366aaf9336ec4"
+=======
+      "d5e341d242da0d6199a3910bc269bd81"
+>>>>>>> origin/master
     ],
     [
       "Swap.swap_old",
@@ -270,7 +322,11 @@
         "typing_FStar.DM4F.Heap.addr_of"
       ],
       0,
+<<<<<<< HEAD
       "dac113d03383b0460092b93bfa289a4e"
+=======
+      "2f9a7dba1db47188a5bdc62bf6543b44"
+>>>>>>> origin/master
     ],
     [
       "Swap.idem_old",
@@ -293,7 +349,11 @@
         "typing_FStar.DM4F.Heap.addr_of", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "646fa6339672188f3698b1d9164aa4e2"
+=======
+      "ba9d9470bcfd483b1f7e100e81f608f7"
+>>>>>>> origin/master
     ],
     [
       "Swap.addr_set",
@@ -305,7 +365,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "97bf931c267180f9038e1f48b27165bd"
+=======
+      "b68917aed936b48ae5566efcad27daa9"
+>>>>>>> origin/master
     ],
     [
       "Swap.heap_equiv_on",
@@ -317,7 +381,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "752d05ecca5ca9e2956f1ae88f1d8121"
+=======
+      "89c28e27551aa4c8998dc1c189301e0d"
+>>>>>>> origin/master
     ],
     [
       "Swap.seq'",
@@ -326,7 +394,11 @@
       0,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "bfda09c570818a71cc1e2e4cf84cf9b2"
+=======
+      "e8a9b3b340034bf02a8f164f6132497b"
+>>>>>>> origin/master
     ],
     [
       "Swap.seq'_lem",
@@ -338,7 +410,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "a97e61fb8ff17578122ed037c65b5f74"
+=======
+      "807eab68de8a5ce98566e8118328a6ea"
+>>>>>>> origin/master
     ],
     [
       "Swap.op_Greater_Greater",
@@ -350,7 +426,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "a31839fda55cf04588412640b8345730"
+=======
+      "e7eb3a58c58a3f2137f1162fa4e41abb"
+>>>>>>> origin/master
     ],
     [
       "Swap.op_Greater_Greater",
@@ -362,7 +442,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "0ccfea77d7cfe54e9f39874af793bcf5"
+=======
+      "1f30bd58426172bf7b3d26bf75aa52d1"
+>>>>>>> origin/master
     ],
     [
       "Swap.swap",
@@ -374,7 +458,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "c3cd241b5ff1c30e00bb496fa1822c4c"
+=======
+      "273a208bc38eba7dd7aaffe069e28369"
+>>>>>>> origin/master
     ],
     [
       "Swap.idem",
@@ -386,7 +474,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "a5f2a2a3d3fd3f94aa3982a372d32bdf"
+=======
+      "38cde03ea3ceada584772b64ba18bced"
+>>>>>>> origin/master
     ],
     [
       "Swap.cond",
@@ -395,7 +487,11 @@
       0,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "e9c3c0557532ca14b50eabe2d3f75253"
+=======
+      "144ef6714a53e19ae6efa417b8c1c1c8"
+>>>>>>> origin/master
     ],
     [
       "Swap.lemma_skip_c1",
@@ -407,7 +503,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "e563a98296b8603330daafd878120eb7"
+=======
+      "6de8011c323cb9561e0b02a5fbd0f26e"
+>>>>>>> origin/master
     ],
     [
       "Swap.swap_old",
@@ -419,7 +519,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "f455fecaf8f82b04a6c4873222779c56"
+=======
+      "feb54945ed0a6817bd1f81d1df6dd7da"
+>>>>>>> origin/master
     ],
     [
       "Swap.idem_old",
@@ -431,7 +535,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "dd47e8fa6926ada0ae8877d5da7aa923"
+=======
+      "aa4c2321c5149b2c7950247aa509ae25"
+>>>>>>> origin/master
     ]
   ]
 ]

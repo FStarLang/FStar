@@ -1,5 +1,5 @@
 [
-  "t;×\u001aúä”\u0006\bÎù\u0015bsêf",
+  "¶æÔÄ“ÑÇb;î¥°n?*Â",
   [
     [
       "NegativeTests.Termination.sumto",
@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6a01ad2adfaeb5f04ab545ba300bca97"
+      "bda259780e95352d285813c2cae23661"
     ],
     [
       "NegativeTests.Termination.snat",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "0258ccc4280891533fe9aaeb1617b332"
+      "59527a2f3593cfb27981d80f5c7d0e5f"
     ],
     [
       "NegativeTests.Termination.__proj__S__item___0",
@@ -39,7 +39,47 @@
         "refinement_interpretation_NegativeTests.Termination_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
       0,
-      "44a0dbf3fba0f45414c884fe4eaeebd3"
+      "1f24f0070a27bc2e016c11e0fde9e333"
+    ],
+    [
+      "NegativeTests.Termination.sumto",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "68457f9df643147211b031a7b3f4a320"
+    ],
+    [
+      "NegativeTests.Termination.snat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2237241478ac762f631f798e225d9511"
+    ],
+    [
+      "NegativeTests.Termination.__proj__S__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Termination.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_NegativeTests.Termination_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
+      ],
+      0,
+      "9ad31c876df60bf81131cd16146613a8"
     ]
   ]
 ]

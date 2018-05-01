@@ -8,7 +8,11 @@
       1,
       [ "@query", "equation_FStar.UInt8.byte", "equation_Slice.byte" ],
       0,
+<<<<<<< HEAD
       "524c33dd2b1c68d3ff2148fe301084a7"
+=======
+      "61e93a84c6c7c6eb79c01ae89ba07dae"
+>>>>>>> origin/master
     ],
     [
       "PureParser.parse_abstract_store",
@@ -25,7 +29,11 @@
         "typing_FStar.UInt32.v"
       ],
       0,
+<<<<<<< HEAD
       "4b643709982970b1d9f3d48f7bf57c2d"
+=======
+      "0c8dea4d94cf623c8082d80ac172e22a"
+>>>>>>> origin/master
     ],
     [
       "PureParser.parse_entries",
@@ -42,7 +50,11 @@
         "typing_FStar.UInt32.v"
       ],
       0,
+<<<<<<< HEAD
       "3e885651ca38862b04d3b9b55191c592"
+=======
+      "131b1d530cc18fa6269583fa5dada096"
+>>>>>>> origin/master
     ],
     [
       "PureParser.parse_entry",
@@ -51,7 +63,11 @@
       1,
       [ "@query", "equation_FStar.UInt8.byte", "equation_Slice.byte" ],
       0,
+<<<<<<< HEAD
       "c2a1c9853ee58a0da1fd5699a3f39553"
+=======
+      "5d4c69dc9833fe4e1c67ca0361ff1a2e"
+>>>>>>> origin/master
     ],
     [
       "PureParser.parse_abstract_store",
@@ -68,7 +84,11 @@
         "typing_FStar.UInt32.v"
       ],
       0,
+<<<<<<< HEAD
       "3a82d1898cb8dac56f44c589d8fae16c"
+=======
+      "6f9c36821901e1c7893dfb0dae6b7605"
+>>>>>>> origin/master
     ],
     [
       "PureParser.parse_entries",
@@ -85,7 +105,11 @@
         "typing_FStar.UInt32.v"
       ],
       0,
+<<<<<<< HEAD
       "57514eb7e39f8767c67051463d9acc4a"
+=======
+      "5ac6f09ac0fd1cb44fc30c6554a9414d"
+>>>>>>> origin/master
     ]
   ]
 ]

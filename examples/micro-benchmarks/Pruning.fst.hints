@@ -32,7 +32,11 @@
         "typing_FStar.Seq.Base.slice"
       ],
       0,
+<<<<<<< HEAD
       "5c7cd01c1ea800293b062846c3a751a2"
+=======
+      "3ae79d2f2f64a5803b010de97e058373"
+>>>>>>> origin/master
     ],
     [
       "Pruning.lemma",
@@ -48,7 +52,11 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
+<<<<<<< HEAD
       "e2a3487b99020f62a2d00c5302fa6ad0"
+=======
+      "caafbf5ed22f6b319efd0f7c27b703c1"
+>>>>>>> origin/master
     ]
   ]
 ]

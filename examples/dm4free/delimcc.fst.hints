@@ -18,7 +18,11 @@
         "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0"
       ],
       0,
+<<<<<<< HEAD
       "b6b0fc0952759e17e2546a6abc0cb68d"
+=======
+      "7df7a58f1e9fb98acb5c0e533c40ea01"
+>>>>>>> origin/master
     ],
     [
       "DelimCC.left_unit",
@@ -33,7 +37,11 @@
         "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6"
       ],
       0,
+<<<<<<< HEAD
       "d51fdcbfa62606f2c9a7a2acb15d952c"
+=======
+      "3a02d389ffbcfc722e18ce6dc55a13d7"
+>>>>>>> origin/master
     ],
     [
       "DelimCC.associativity",
@@ -51,7 +59,11 @@
         "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0"
       ],
       0,
+<<<<<<< HEAD
       "afd1d16a3a3f70a271054961c53f64ac"
+=======
+      "55edf1ae0679fbb63d7c43b5d2a53af7"
+>>>>>>> origin/master
     ],
     [
       "DelimCC.right_unit2",
@@ -70,7 +82,11 @@
         "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0"
       ],
       0,
+<<<<<<< HEAD
       "33adf62dae18697296f26e78bc866810"
+=======
+      "7b2c855a2cfcc5dc9cd553ace5817ed5"
+>>>>>>> origin/master
     ],
     [
       "DelimCC.left_unit2",
@@ -85,7 +101,11 @@
         "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6"
       ],
       0,
+<<<<<<< HEAD
       "60d67d8242d00e9e437c1458d835d9df"
+=======
+      "1499a13c71204a22f5405472f70a36f4"
+>>>>>>> origin/master
     ],
     [
       "DelimCC.associativity2",
@@ -103,7 +123,11 @@
         "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0"
       ],
       0,
+<<<<<<< HEAD
       "479279b237ca1ced78e10e38c487bcc3"
+=======
+      "0357623895801c2f6a77a242999db2cc"
+>>>>>>> origin/master
     ],
     [
       "DelimCC.ext",
@@ -112,7 +136,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "26387a45de7778b69d84aecc4ce9027c"
+=======
+      "19e92d7a4baa6a823c14a6e8db5d996a"
+>>>>>>> origin/master
     ],
     [
       "DelimCC.left_unit3",
@@ -121,7 +149,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "0620d29fc74b4890892acc16333dfd00"
+=======
+      "5186a182bba6ca6abe85df167b18bd8f"
+>>>>>>> origin/master
     ],
     [
       "DelimCC.right_unit3",
@@ -130,7 +162,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "6caa83c5eee1c9a607e71cc980870cf8"
+=======
+      "4151e2708f87fe0510198cc8d962329d"
+>>>>>>> origin/master
     ],
     [
       "DelimCC.associativity3",
@@ -139,7 +175,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "375f81e91f33930d568d690bf5f8d69c"
+=======
+      "6e3710762883bbd481682beaccc60f08"
+>>>>>>> origin/master
     ]
   ]
 ]

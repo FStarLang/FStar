@@ -210,11 +210,25 @@ let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.Lazy_sigelt     -> FStar.Reflection.Embeddings.unfold_lazy_sigelt      i
     | FStar.Syntax.Syntax.Lazy_proofstate -> FStar.Tactics.Embedding.unfold_lazy_proofstate i
 
-let main () =
-  try
+// This is called directly by the Javascript port (it doesn't call Main)
+let setup_hooks () =
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
-    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;
+    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder
+
+let handle_error e =
+    if FStar.Errors.handleable e then
+      FStar.Errors.err_exn e;
+    if Options.trace_error() then
+      Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+    else if not (FStar.Errors.handleable e) then
+      Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
+    cleanup();
+    report_errors []
+
+let main () =
+  try
+    setup_hooks ();
     let _, time = FStar.Util.record_time go in
     if FStar.Options.query_stats()
     then FStar.Util.print2 "TOTAL TIME %s ms: %s\n"
@@ -222,15 +236,6 @@ let main () =
               (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();
     exit 0
-  with | e ->
-    let trace = Util.trace_of_exn e in
-    begin
-      if FStar.Errors.handleable e then FStar.Errors.err_exn e;
-      if (Options.trace_error()) then
-        Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) trace
-      else if not (FStar.Errors.handleable e) then
-        Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
-    end;
-    cleanup();
-    report_errors [];
-    exit 1
+  with
+  | e -> handle_error e;
+        exit 1

@@ -11,7 +11,11 @@
         "disc_equation_Eta_expand.B", "fuel_guarded_inversion_Eta_expand.t"
       ],
       0,
+<<<<<<< HEAD
       "55c9f1655bcd818234d50a6b74a358bf"
+=======
+      "575802816cdcc358a9fca1cf70c9d2dd"
+>>>>>>> origin/master
     ],
     [
       "Eta_expand.choose",
@@ -27,21 +31,28 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
+<<<<<<< HEAD
       "235167bd17938718ca356128ff767a1b"
+=======
+      "e39d51cc510d6c5275e64c02fa5665d6"
+>>>>>>> origin/master
     ],
     [
-      "Eta_expand.uu___15",
+      "Eta_expand.uu___67",
       1,
       2,
       1,
       [
         "@query", "constructor_distinct_Eta_expand.A",
-        "equality_tok_Eta_expand.A@tok", "equation_Eta_expand.choose",
-        "equation_Eta_expand.dec", "equation_Eta_expand.fun_a", "int_typing",
-        "token_correspondence_Eta_expand.fun_a"
+        "equality_tok_Eta_expand.A@tok", "equation_Eta_expand.dec",
+        "int_typing"
       ],
       0,
+<<<<<<< HEAD
       "5ba9a3cac024ac63eca84e1e25cfa672"
+=======
+      "a38742fdebde6e01c2e5134b5e47673a"
+>>>>>>> origin/master
     ]
   ]
 ]

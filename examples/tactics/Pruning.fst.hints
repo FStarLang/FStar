@@ -23,10 +23,14 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
+<<<<<<< HEAD
       "d0f43d457c2b5c4e1ce90d58054167f5"
+=======
+      "adabc5845b425177a52d83a4018089d5"
+>>>>>>> origin/master
     ],
     [
-      "Pruning.uu___39",
+      "Pruning.uu___66",
       1,
       4,
       2,
@@ -41,10 +45,14 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
+<<<<<<< HEAD
       "292276f885b1c6f0d70e4dca9a48ff76"
+=======
+      "6c5d8436035dd950361c26615e5ec5df"
+>>>>>>> origin/master
     ],
     [
-      "Pruning.uu___40",
+      "Pruning.uu___67",
       1,
       4,
       2,
@@ -59,7 +67,11 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
+<<<<<<< HEAD
       "7528602bd19dad238758bc2d762c34b6"
+=======
+      "a2e0752f3ca9e98b60b00ab078ac6b42"
+>>>>>>> origin/master
     ]
   ]
 ]

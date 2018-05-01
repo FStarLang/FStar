@@ -74,7 +74,7 @@ val is_irrelevant : goal -> bool
 val prune : string -> tac<unit>
 val addns : string -> tac<unit>
 val set_options : string -> tac<unit>
-val launch_process : string -> string -> string -> tac<string>
+val launch_process : string -> list<string> -> string -> tac<string>
 
 val fresh_bv_named : string -> typ -> tac<bv>
 

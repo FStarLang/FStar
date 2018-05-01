@@ -8,7 +8,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "e316eba3e4d974d3b8fdb62be996177f"
+=======
+      "71180147328de67e084f067dff8fceeb"
+>>>>>>> origin/master
     ],
     [
       "ReifyLong.bidule",
@@ -32,7 +36,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "0dbb71b16ee36784a6ee1be63c1f00e1"
+=======
+      "44c6b859ca68bbb45c8e226531402af6"
+>>>>>>> origin/master
     ],
     [
       "ReifyLong.is_x",
@@ -41,7 +49,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "b01fa0ecd5fba1a9dfda0b3ec3407755"
+=======
+      "a586596527ca12d2958eee3f6807fc27"
+>>>>>>> origin/master
     ],
     [
       "ReifyLong.is_x",
@@ -50,7 +62,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "68e246eeba56f90c13f75836b915f3d4"
+=======
+      "3193a22d298f36c55dc7b2976bdbbfc7"
+>>>>>>> origin/master
     ],
     [
       "ReifyLong.p1",
@@ -59,7 +75,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "dea6634346f6198442980a19a89f867f"
+=======
+      "a1b8a6448638f40c2eeda5def9118f15"
+>>>>>>> origin/master
     ],
     [
       "ReifyLong.bidule",
@@ -70,7 +90,11 @@
         "@query", "assumption_Prims.HasEq_int", "assumption_Prims.HasEq_unit"
       ],
       0,
+<<<<<<< HEAD
       "7111a2dd2a1883a45bfb4c43912cd047"
+=======
+      "8b54e542663016a3b6904dbdec8302c3"
+>>>>>>> origin/master
     ]
   ]
 ]

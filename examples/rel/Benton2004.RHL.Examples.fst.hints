@@ -57,7 +57,11 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
+<<<<<<< HEAD
       "d488000561c276fb73c5c9959ef80202"
+=======
+      "0ca348581b4b5d9b65712503bb669494"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -106,7 +110,11 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
+<<<<<<< HEAD
       "1d199072812db826ba05eac894c680af"
+=======
+      "350fc37e57edab13da9fb58fc01fafaf"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex3",
@@ -136,7 +144,11 @@
         "typing_Benton2004.RHL_Tm_abs_3f7e5aeb06b289102e285de2b7bf9058"
       ],
       0,
+<<<<<<< HEAD
       "7fd09519141e8f8d51ea785468d62565"
+=======
+      "79d20e3d40414c1da7d24670347cd299"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex4",
@@ -167,7 +179,11 @@
         "typing_Benton2004.eop", "typing_Benton2004.evar"
       ],
       0,
+<<<<<<< HEAD
       "c55d340c110619c54f2dafb4b72823b1"
+=======
+      "655e2b98928bbf714c43cc3933dd8db2"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex5",
@@ -197,7 +213,11 @@
         "typing_Benton2004.eop", "typing_Benton2004.evar"
       ],
       0,
+<<<<<<< HEAD
       "b652d7c6744ece7ca737e0cd64072b52"
+=======
+      "e9987643b3c2d5d1694e859e011fa254"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec43_phi",
@@ -206,7 +226,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "7689b5389fa633e7a46a7cd9b5e714c2"
+=======
+      "6860374984d2e2845b76d6ba870a824e"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.r_ass",
@@ -224,7 +248,11 @@
         "typing_Benton2004.assign"
       ],
       0,
+<<<<<<< HEAD
       "bdeef2f8679e38aac301d6620f0e5458"
+=======
+      "2f0943c18bcea39b15ca60db6d7b01d0"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.r_dassl",
@@ -242,7 +270,11 @@
         "typing_Benton2004.assign"
       ],
       0,
+<<<<<<< HEAD
       "6df77d1683491703c78d33349cf706a6"
+=======
+      "688440054b4ba34b2e5946d37116c353"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.flip_flip",
@@ -258,7 +290,11 @@
         "token_correspondence_Benton2004.RHL.flip"
       ],
       0,
+<<<<<<< HEAD
       "21e31cdf9c9b77bf5cb8f8bb2caff4c4"
+=======
+      "70dfdf58332a0ad94fc83b7317bdca6c"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.r_dassr",
@@ -287,7 +323,11 @@
         "typing_Benton2004.assign"
       ],
       0,
+<<<<<<< HEAD
       "281c26bb63a52cc5c00bc9af81f8bcfd"
+=======
+      "0b7ea2733af93464eeae1131b72df912"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.d_su1'_flip",
@@ -300,7 +340,11 @@
         "lemma_Benton2004.RHL.exec_equiv_flip", "typing_Benton2004.seq"
       ],
       0,
+<<<<<<< HEAD
       "7b221bfa2978381eb8cf2b3eff9af577"
+=======
+      "a3d0276b2b16aef06364ffab8efc8404"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -387,7 +431,11 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
+<<<<<<< HEAD
       "32c00a0c78b6b832b8e5c6878ad7a6ec"
+=======
+      "fcf2cdabfefb60d56d56e3ada2e109f3"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec43'_precond",
@@ -396,7 +444,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "942649f7944606aa3876a73a89c3cd8e"
+=======
+      "4b34bb3dab024c0e145c7be6444225c7"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec43'",
@@ -453,7 +505,11 @@
         "typing_tok_Benton2004.RHL.Left@tok"
       ],
       0,
+<<<<<<< HEAD
       "fd40e18209823f0a6bc265087e13725e"
+=======
+      "5b84d52fd5c0cdadf8b69a7ec9531cad"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex1",
@@ -462,7 +518,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "1ca5da527ca255a2326f0da9a2c91fdb"
+=======
+      "6ad594f9663f44bae003e29d9dcda9d9"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -476,7 +536,11 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
+<<<<<<< HEAD
       "5f3ba4b6e8774ef7d4803d1376ae9147"
+=======
+      "b4df0b13f4e2242a48686c5caa99b591"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex3",
@@ -485,7 +549,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "daf8ce75b851550137576b371535c963"
+=======
+      "1f9a9649e2c9b4ce84d0d5f7969b0579"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex4",
@@ -499,7 +567,11 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
+<<<<<<< HEAD
       "ebfd93c227885d519a36970ea577717b"
+=======
+      "cdbf9526334177acc1694e8055a9e4e5"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex5",
@@ -513,7 +585,11 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
+<<<<<<< HEAD
       "8d6b8f2d5724966504d0d2b90d655fff"
+=======
+      "f1f1015b27ab63a23eda6444e6bf9c16"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec43_phi",
@@ -522,7 +598,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "13cfd2b0df87e360f328713182b6ee32"
+=======
+      "587e3cc957c60e8c6dc153034bc56f02"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -536,7 +616,11 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
+<<<<<<< HEAD
       "d4e2578a5aca4d995cbd7444a97655da"
+=======
+      "8dde0ebf8f880fff0c5f52c069fa31e7"
+>>>>>>> origin/master
     ],
     [
       "Benton2004.RHL.Examples.sec43'_precond",
@@ -545,7 +629,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "4db18f8f7128bab214425db987d7754c"
+=======
+      "f5d336ee70ea2afc6421a7aed63d9b00"
+>>>>>>> origin/master
     ]
   ]
 ]

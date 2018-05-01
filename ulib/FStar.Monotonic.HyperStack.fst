@@ -373,6 +373,24 @@ let lemma_upd_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1 r2:mreference a
       lemma_sel_same_addr h r1 r2
     else lemma_sel_same_addr h r2 r1
 
+(* Two references with different reads are disjoint. *)
+
+let mreference_distinct_sel_disjoint
+  (#a:Type0) (#rel1: preorder a) (#rel2: preorder a) (h: mem) (r1: mreference a rel1) (r2:mreference a rel2)
+: Lemma
+  (requires (
+    h `contains` r1 /\
+    h `contains` r2 /\
+    frameOf r1 == frameOf r2 /\
+    as_addr r1 == as_addr r2
+  ))
+  (ensures (
+    sel h r1 == sel h r2
+  ))
+= Heap.lemma_distinct_addrs_distinct_preorders ();
+  Heap.lemma_distinct_addrs_distinct_mm ();
+  Heap.lemma_sel_same_addr #a #rel1 (Map.sel h.h (frameOf r1)) (as_ref r1) (as_ref r2)
+
 (*
 // //  * AR: 12/26: modifies clauses
 // //  *            NOTE: the modifies clauses used to have a m0.tip == m1.tip conjunct too

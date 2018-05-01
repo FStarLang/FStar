@@ -203,7 +203,8 @@ let e_list (ea:embedding<'a>) =
         | Tm_fvar fv, _
             when S.fv_eq_lid fv PC.nil_lid -> Some []
 
-        | Tm_fvar fv, [_t; (hd, _); (tl, _)]
+        | Tm_fvar fv, [(_, Some (Implicit _)); (hd, None); (tl, None)]
+        | Tm_fvar fv, [(hd, None); (tl, None)]
             when S.fv_eq_lid fv PC.cons_lid ->
             BU.bind_opt (unembed ea hd) (fun hd ->
             BU.bind_opt (un w tl) (fun tl ->

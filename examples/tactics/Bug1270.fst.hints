@@ -28,7 +28,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "7d6b490e5b9a00a655361505ef4f8482"
+=======
+      "03dd90c39f35bde325a35b115ad278de"
+>>>>>>> origin/master
     ],
     [
       "Bug1270.test",
@@ -57,7 +61,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "0fff27a8372cc77b0ac71768d9eeae65"
+=======
+      "ec5c9c17e46bf0e461ffbd3b6c093dfa"
+>>>>>>> origin/master
     ]
   ]
 ]

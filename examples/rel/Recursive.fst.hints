@@ -16,7 +16,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "53b3000642dfc1c0f58585f2101b756c"
+=======
+      "c5b7ecd5df3316e78ca3927c72fae05c"
+>>>>>>> origin/master
     ],
     [
       "Recursive.fac_mon",
@@ -43,7 +47,11 @@
         "typing_Recursive.fac", "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "5dbafce8deec49b8f3a119b27ca523ba"
+=======
+      "c23c61058aab1bfd757b2063815173ce"
+>>>>>>> origin/master
     ],
     [
       "Recursive.fac_sum",
@@ -59,7 +67,11 @@
         "typing_Recursive.fac"
       ],
       0,
+<<<<<<< HEAD
       "eb587c79d72597bd40f36849908bcb07"
+=======
+      "84fb3a8545af23a7cae86f2117f2bf51"
+>>>>>>> origin/master
     ],
     [
       "Recursive.fac_sum_mon",
@@ -72,7 +84,11 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
+<<<<<<< HEAD
       "d567473c13be2a43117de70ca210d4c2"
+=======
+      "a57d5a792d01378fc67a3f65b24f3567"
+>>>>>>> origin/master
     ],
     [
       "Recursive.fac",
@@ -89,7 +105,11 @@
         "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "ea72281b7423730d1d7b73a543717ab0"
+=======
+      "3bb65c332c2cef81cb4eac1def73a046"
+>>>>>>> origin/master
     ],
     [
       "Recursive.fac_sum",
@@ -105,7 +125,11 @@
         "typing_Recursive.fac"
       ],
       0,
+<<<<<<< HEAD
       "c66eda74e28fd50ce7594f75c2aeee39"
+=======
+      "b94f28773f52e6b3744c8947af78b250"
+>>>>>>> origin/master
     ]
   ]
 ]

@@ -38,7 +38,11 @@
         "typing_IfcRulesReify.uu___is_Low"
       ],
       0,
+<<<<<<< HEAD
       "942fb635f3717ce0a316db1b4e901255"
+=======
+      "16f6c0696d3f5b073ff60900b9ca7694"
+>>>>>>> origin/master
     ],
     [
       "IfcTypechecker.tc_com",
@@ -91,7 +95,11 @@
         "typing_tok_IfcTypechecker.Not_well_typed@tok", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "05f6af339e095d106a3cd3eac89c66d7"
+=======
+      "ed9c15b080d5a29c58a735d36d0a34e7"
+>>>>>>> origin/master
     ],
     [
       "IfcTypechecker.tc_com_hybrid",
@@ -158,6 +166,7 @@
         "typing_tok_WhileReify.Skip@tok", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "aa2bf174e94c0dfd0cca08a9ef02f37a"
     ],
     [
@@ -235,6 +244,9 @@
       [ "@query", "assumption_WhileReify.com__uu___haseq" ],
       0,
       "09c241c3b11fefb14daff5aa8468471b"
+=======
+      "8c70cee59d5f2757d96c9c7e834a5b28"
+>>>>>>> origin/master
     ],
     [
       "IfcTypechecker.tc_exp",
@@ -273,7 +285,11 @@
         "typing_IfcRulesReify.uu___is_Low"
       ],
       0,
+<<<<<<< HEAD
       "93858c33e35d0fcebfd169fbe37c355d"
+=======
+      "d24fad63da8f5d1919dc42ffa0e64ab9"
+>>>>>>> origin/master
     ],
     [
       "IfcTypechecker.tc_com",
@@ -326,7 +342,11 @@
         "typing_tok_IfcTypechecker.Not_well_typed@tok", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "a83a82594417aa52007e7536acaebc8a"
+=======
+      "0ef23386de73da30999994df0df1bea1"
+>>>>>>> origin/master
     ],
     [
       "IfcTypechecker.tc_com_hybrid",
@@ -393,6 +413,7 @@
         "typing_tok_WhileReify.Skip@tok", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "7cec6401a475abedabf4f35f503df2b6"
     ],
     [
@@ -412,6 +433,9 @@
       [ "@query", "assumption_WhileReify.com__uu___haseq" ],
       0,
       "f9237da02e3b7a43eb2f8645dc11bc22"
+=======
+      "4fba87110159d98b4d040a2030bef511"
+>>>>>>> origin/master
     ]
   ]
 ]

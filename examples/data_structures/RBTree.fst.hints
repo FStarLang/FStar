@@ -12,7 +12,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "c6aa7e8d7d6a13c970249c7a36f4a316"
+=======
+      "c224093f4d1fde7184b64ee2721a0f2d"
+>>>>>>> origin/master
     ],
     [
       "RBTree.__proj__T__item__col",
@@ -25,7 +29,11 @@
         "refinement_interpretation_RBTree_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd"
       ],
       0,
+<<<<<<< HEAD
       "a73bedef0c35ffe40c3a1fee2eaa0991"
+=======
+      "35ecab207495f988e97e00ccd6f81cb5"
+>>>>>>> origin/master
     ],
     [
       "RBTree.__proj__T__item__left",
@@ -38,7 +46,11 @@
         "refinement_interpretation_RBTree_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd"
       ],
       0,
+<<<<<<< HEAD
       "51d377c2ff08ba92e66384a1e8369be1"
+=======
+      "ccb30a98928a6f59ed6f1cea9b9d15ff"
+>>>>>>> origin/master
     ],
     [
       "RBTree.__proj__T__item__key",
@@ -51,7 +63,11 @@
         "refinement_interpretation_RBTree_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd"
       ],
       0,
+<<<<<<< HEAD
       "cc5733dc932766fb56ee744f8748fe3c"
+=======
+      "250e46ff617684c6074e9f7fefb7239f"
+>>>>>>> origin/master
     ],
     [
       "RBTree.__proj__T__item__right",
@@ -64,7 +80,11 @@
         "refinement_interpretation_RBTree_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd"
       ],
       0,
+<<<<<<< HEAD
       "65f55cc191ecde25eceea8e81e5c2bdd"
+=======
+      "18c5d2e283bdae99a9d019c808833229"
+>>>>>>> origin/master
     ],
     [
       "RBTree.color_of",
@@ -76,7 +96,11 @@
         "disc_equation_RBTree.T", "fuel_guarded_inversion_RBTree.rbtree_"
       ],
       0,
+<<<<<<< HEAD
       "d0648877858d65dec511aec3a20b56fc"
+=======
+      "d3514027f3f420d9ea593347ab22f95f"
+>>>>>>> origin/master
     ],
     [
       "RBTree.black_height",
@@ -98,7 +122,11 @@
         "subterm_ordering_RBTree.T"
       ],
       0,
+<<<<<<< HEAD
       "59e84c46a296d72dfdb217c9875a6516"
+=======
+      "2444bf49f9e5bdecf91fd462948714a7"
+>>>>>>> origin/master
     ],
     [
       "RBTree.min_elt",
@@ -115,7 +143,11 @@
         "typing_RBTree.uu___is_T"
       ],
       0,
+<<<<<<< HEAD
       "c4ba0c67d8de4b7ece2feff7d372a894"
+=======
+      "e74d1a1cbf440241d4bcc938d4dea2c8"
+>>>>>>> origin/master
     ],
     [
       "RBTree.max_elt",
@@ -132,7 +164,11 @@
         "typing_RBTree.uu___is_T"
       ],
       0,
+<<<<<<< HEAD
       "92a9649c6ce0219a7558a6cf76e7162b"
+=======
+      "534c03780b1260eb2bc99788124a9860"
+>>>>>>> origin/master
     ],
     [
       "RBTree.r_inv",
@@ -141,7 +177,11 @@
       1,
       [ "@query", "assumption_RBTree.color__uu___haseq" ],
       0,
+<<<<<<< HEAD
       "7d3b439698d2c0efcbe320f945289721"
+=======
+      "726def249c2794a9e5ac5d6197f4ca9d"
+>>>>>>> origin/master
     ],
     [
       "RBTree.c_inv",
@@ -162,7 +202,11 @@
         "subterm_ordering_RBTree.T", "typing_RBTree.__proj__T__item__col"
       ],
       0,
+<<<<<<< HEAD
       "762877d12e1bd93e2997f6dbce1f56a6"
+=======
+      "d6d49f96fd4fff449ea5734ed5bae0ab"
+>>>>>>> origin/master
     ],
     [
       "RBTree.k_inv",
@@ -180,7 +224,11 @@
         "projection_inverse_RBTree.T_right", "subterm_ordering_RBTree.T"
       ],
       0,
+<<<<<<< HEAD
       "e11f535f9b229641fe124b9c513d481a"
+=======
+      "b4f10a52f0a77efcd0758aea4ecddaa0"
+>>>>>>> origin/master
     ],
     [
       "RBTree.in_tree",
@@ -200,7 +248,11 @@
         "subterm_ordering_RBTree.T"
       ],
       0,
+<<<<<<< HEAD
       "9c138d76c37bef80709e706e29a0d5d9"
+=======
+      "19a9f8a1cdd76a3fed8f35dbcdac8f1c"
+>>>>>>> origin/master
     ],
     [
       "RBTree.not_c_inv",
@@ -209,7 +261,11 @@
       1,
       [ "@query", "assumption_RBTree.color__uu___haseq" ],
       0,
+<<<<<<< HEAD
       "750be46df854efc858cecfd99756269b"
+=======
+      "6472f7829019c142aa95e781ce41d581"
+>>>>>>> origin/master
     ],
     [
       "RBTree.lr_c_inv",
@@ -218,7 +274,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "b190c724472c549ceac372f6b64a7393"
+=======
+      "86ea1ad3ae79b89a7d73fca0a2bf1647"
+>>>>>>> origin/master
     ],
     [
       "RBTree.pre_balance",
@@ -232,7 +292,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "8f7e3559bca99f2c50d1795d5affa2bf"
+=======
+      "4856da4ae6cbadfa840e1abb3a7c1c94"
+>>>>>>> origin/master
     ],
     [
       "RBTree.post_balance",
@@ -248,7 +312,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "8d47d66c7378f7be448e94f47eeb893b"
+=======
+      "7eb2aea0cd63b492893722bc241ed054"
+>>>>>>> origin/master
     ],
     [
       "RBTree.balance",
@@ -336,7 +404,11 @@
         "typing_tok_RBTree.B@tok", "typing_tok_RBTree.E@tok"
       ],
       0,
+<<<<<<< HEAD
       "12ad4da5ed7f5accce2488b71dbcd76f"
+=======
+      "9595884438bc3b958b57e58743e96f32"
+>>>>>>> origin/master
     ],
     [
       "RBTree.ins",
@@ -348,7 +420,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "38b827d43c9efccd5b464fe63c9d9785"
+=======
+      "5ae5fdd425a6db3b5a1b6923abff05a5"
+>>>>>>> origin/master
     ],
     [
       "RBTree.ins",
@@ -360,7 +436,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "3741d201d1f39c97630c3d2ad5312843"
+=======
+      "e7c55820afc74c939ed7e7a97f990636"
+>>>>>>> origin/master
     ],
     [
       "RBTree.ins",
@@ -372,7 +452,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "afb55901f07c5536a65a1538bef08d53"
+=======
+      "25967a74c6b259496e54fd491f6aa228"
+>>>>>>> origin/master
     ],
     [
       "RBTree.ins",
@@ -384,7 +468,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "ec6114f2dbcf08ade2fee70acc382b06"
+=======
+      "166dfafe3b4e5580d114e898db860567"
+>>>>>>> origin/master
     ],
     [
       "RBTree.ins",
@@ -398,7 +486,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "f338bd84ac52809a371d5e7d89366908"
+=======
+      "947c50c9c6cd9e7fde62daed035c0d31"
+>>>>>>> origin/master
     ],
     [
       "RBTree.ins",
@@ -407,7 +499,11 @@
       1,
       [ "@query", "assumption_RBTree.color__uu___haseq" ],
       0,
+<<<<<<< HEAD
       "765c21f9f729754887bb4764fc98cea4"
+=======
+      "49183ccab5cb49d2e034f44956840878"
+>>>>>>> origin/master
     ],
     [
       "RBTree.ins",
@@ -416,7 +512,11 @@
       1,
       [ "@query", "assumption_RBTree.color__uu___haseq" ],
       0,
+<<<<<<< HEAD
       "13d23ea83ca1eb9168546a6e81b1bcf8"
+=======
+      "6cc645c40d00fdee7b0291f002a56cbf"
+>>>>>>> origin/master
     ],
     [
       "RBTree.ins",
@@ -428,7 +528,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "16a5416a27c4f3d2253211d24d878947"
+=======
+      "01874281b66fd56abe9ee70e5758217d"
+>>>>>>> origin/master
     ],
     [
       "RBTree.ins",
@@ -437,7 +541,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "00f053c05aa3459ee78c6af6142375a9"
+=======
+      "d567e186734478012f0992f5c2934de1"
+>>>>>>> origin/master
     ],
     [
       "RBTree.ins",
@@ -516,7 +624,11 @@
         "typing_RBTree.k_inv", "typing_tok_RBTree.E@tok"
       ],
       0,
+<<<<<<< HEAD
       "7b774d1cb3bf666e90dfe15f9f3d6739"
+=======
+      "832ff0781192effb05e6cc5e193509e5"
+>>>>>>> origin/master
     ],
     [
       "RBTree.make_black",
@@ -568,7 +680,11 @@
         "typing_RBTree.uu___is_T"
       ],
       0,
+<<<<<<< HEAD
       "5bdbce4fe51233b59266d170d0e7e8dc"
+=======
+      "309beee2c5f83da20d67b4c24c2b38f5"
+>>>>>>> origin/master
     ],
     [
       "RBTree.insert",
@@ -580,7 +696,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "31e751f6a40b8066ec51fd7931cee0a3"
+=======
+      "5e112e42386f3830c044eda6d5f43cc6"
+>>>>>>> origin/master
     ],
     [
       "RBTree.insert",
@@ -601,7 +721,11 @@
         "typing_RBTree.make_black"
       ],
       0,
+<<<<<<< HEAD
       "27036af2ad41654bcee15cfa1f884634"
+=======
+      "32e9f97f1284b599473f4903c249e5d9"
+>>>>>>> origin/master
     ],
     [
       "RBTree.proj",
@@ -613,7 +737,11 @@
         "refinement_interpretation_RBTree_Tm_refine_b9a9fc64f3ae46074f41960b319aa53f"
       ],
       0,
+<<<<<<< HEAD
       "9082bf23b1d7009fa9d762661eb12d40"
+=======
+      "19903f4ab6d27ccfa8e7f96891a34413"
+>>>>>>> origin/master
     ],
     [
       "RBTree.rbtree'",
@@ -626,7 +754,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "fd8e6f16b3bfc5cfa3ea8fa222142979"
+=======
+      "b86fab251b4b21645b37bf6ac765c508"
+>>>>>>> origin/master
     ],
     [
       "RBTree.__proj__T__item__col",
@@ -639,7 +771,11 @@
         "refinement_interpretation_RBTree_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd"
       ],
       0,
+<<<<<<< HEAD
       "70dd45aaaefd31045cc2bc7675a53370"
+=======
+      "f77e2b08eea33db784a2d706ce41fdce"
+>>>>>>> origin/master
     ],
     [
       "RBTree.__proj__T__item__left",
@@ -652,7 +788,11 @@
         "refinement_interpretation_RBTree_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd"
       ],
       0,
+<<<<<<< HEAD
       "d284149b891db79dae8576d0bc64d111"
+=======
+      "5fb550d615667621c0b7cd048926b111"
+>>>>>>> origin/master
     ],
     [
       "RBTree.__proj__T__item__key",
@@ -665,7 +805,11 @@
         "refinement_interpretation_RBTree_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd"
       ],
       0,
+<<<<<<< HEAD
       "8e80f2639b1c13b21d2c6b0e728cde01"
+=======
+      "62751b66968d8d7fba1780dec5fd8ab6"
+>>>>>>> origin/master
     ],
     [
       "RBTree.__proj__T__item__right",
@@ -678,7 +822,11 @@
         "refinement_interpretation_RBTree_Tm_refine_ae4fd622eeb7394a3dd765700312c1fd"
       ],
       0,
+<<<<<<< HEAD
       "4a7d09e2d15606cf8bf3968dbf6a3bd5"
+=======
+      "cc3281ff1214187fc3a21a37586b35eb"
+>>>>>>> origin/master
     ],
     [
       "RBTree.color_of",
@@ -690,7 +838,11 @@
         "disc_equation_RBTree.T", "fuel_guarded_inversion_RBTree.rbtree_"
       ],
       0,
+<<<<<<< HEAD
       "efb6699072c35614437333d459f3a4f1"
+=======
+      "c07f51510f119b1f613c7ea91800bd11"
+>>>>>>> origin/master
     ],
     [
       "RBTree.black_height",
@@ -712,7 +864,11 @@
         "subterm_ordering_RBTree.T"
       ],
       0,
+<<<<<<< HEAD
       "ce267144b695ed75d63eca29346d9d6e"
+=======
+      "30a0e2e58cc635c7de3a04f9162fc4bc"
+>>>>>>> origin/master
     ],
     [
       "RBTree.min_elt",
@@ -729,7 +885,11 @@
         "typing_RBTree.uu___is_T"
       ],
       0,
+<<<<<<< HEAD
       "33f5e8d4e6bfdc1cd843b2bb9ddc8cf9"
+=======
+      "28ec0fe444fc207d5f5f93bd3a11388c"
+>>>>>>> origin/master
     ],
     [
       "RBTree.max_elt",
@@ -746,7 +906,11 @@
         "typing_RBTree.uu___is_T"
       ],
       0,
+<<<<<<< HEAD
       "d42f37375633dbd4926895a7c96d3279"
+=======
+      "7f0cf604ef2d0dd84e6e025926f0956d"
+>>>>>>> origin/master
     ],
     [
       "RBTree.r_inv",
@@ -755,7 +919,11 @@
       1,
       [ "@query", "assumption_RBTree.color__uu___haseq" ],
       0,
+<<<<<<< HEAD
       "2d0f2e01d53d85fe9dfd181d1bc5bae6"
+=======
+      "b0bc7f4cc8f48db52ca0169306d948bf"
+>>>>>>> origin/master
     ],
     [
       "RBTree.c_inv",
@@ -776,7 +944,11 @@
         "subterm_ordering_RBTree.T", "typing_RBTree.__proj__T__item__col"
       ],
       0,
+<<<<<<< HEAD
       "0e5cf8514cb7e5e3349133a45a9b7c59"
+=======
+      "83137958ab1d1205c7947d5c792c2ca4"
+>>>>>>> origin/master
     ],
     [
       "RBTree.k_inv",
@@ -794,7 +966,11 @@
         "projection_inverse_RBTree.T_right", "subterm_ordering_RBTree.T"
       ],
       0,
+<<<<<<< HEAD
       "7871a29dd5c571352b5d36f1cfc0a135"
+=======
+      "6c04e6ab457b2f73ae8a3c00dab9c945"
+>>>>>>> origin/master
     ],
     [
       "RBTree.in_tree",
@@ -814,7 +990,11 @@
         "subterm_ordering_RBTree.T"
       ],
       0,
+<<<<<<< HEAD
       "6a7c03db5299226db0f788a93eb3a3ac"
+=======
+      "32d575d08cdc8eb2979a240cdd4adab2"
+>>>>>>> origin/master
     ],
     [
       "RBTree.not_c_inv",
@@ -823,7 +1003,11 @@
       1,
       [ "@query", "assumption_RBTree.color__uu___haseq" ],
       0,
+<<<<<<< HEAD
       "9f1afa3fb3403f7f8115493c9f8ae904"
+=======
+      "4f35dce3efc2ca90caa8acda9cb2c65c"
+>>>>>>> origin/master
     ],
     [
       "RBTree.lr_c_inv",
@@ -832,7 +1016,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "295381156569603191816767286d2a7e"
+=======
+      "df908faeb566e2a4e3a3c159c881fb92"
+>>>>>>> origin/master
     ],
     [
       "RBTree.pre_balance",
@@ -846,7 +1034,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "a164016c74364222f8032cfa8e7d45e8"
+=======
+      "dc57783d238eb6964d4542fda2784da5"
+>>>>>>> origin/master
     ],
     [
       "RBTree.post_balance",
@@ -862,7 +1054,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "0009713ec0905cc6791f829abe5e5d6d"
+=======
+      "5364d1e0920bcc6912cd26f18fd9d724"
+>>>>>>> origin/master
     ],
     [
       "RBTree.balance",
@@ -951,7 +1147,11 @@
         "typing_tok_RBTree.B@tok", "typing_tok_RBTree.E@tok"
       ],
       0,
+<<<<<<< HEAD
       "ddc54694b2248a8b38ab26cca1169fe5"
+=======
+      "8380dc0ff5a1bafb2c330dcd45c98f3d"
+>>>>>>> origin/master
     ],
     [
       "RBTree.ins",
@@ -1032,7 +1232,11 @@
         "typing_RBTree.k_inv", "typing_tok_RBTree.E@tok"
       ],
       0,
+<<<<<<< HEAD
       "b4d5cfd0117bb1ed82f43ee39089a322"
+=======
+      "20628be9f482515f2d6745648e2f5337"
+>>>>>>> origin/master
     ],
     [
       "RBTree.make_black",
@@ -1084,7 +1288,11 @@
         "typing_RBTree.uu___is_T"
       ],
       0,
+<<<<<<< HEAD
       "a90792842203974d641811bc679c9f35"
+=======
+      "b5681b9dde20e04a0e72354d7ed3e6f6"
+>>>>>>> origin/master
     ],
     [
       "RBTree.insert",
@@ -1105,7 +1313,11 @@
         "typing_RBTree.make_black"
       ],
       0,
+<<<<<<< HEAD
       "9ed8e0aa2c9fd5f10ade078711c33658"
+=======
+      "b0d07621eac495ed1ba6f97f74247479"
+>>>>>>> origin/master
     ],
     [
       "RBTree.insert",
@@ -1117,7 +1329,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "43562dc56dff3c94a6a1685e9eb422d4"
+=======
+      "d37bbe60bd9c849378689e439d7d73e4"
+>>>>>>> origin/master
     ],
     [
       "RBTree.proj",
@@ -1129,7 +1345,11 @@
         "refinement_interpretation_RBTree_Tm_refine_b9a9fc64f3ae46074f41960b319aa53f"
       ],
       0,
+<<<<<<< HEAD
       "a61bb14c5ea7d8b0b0e605c2e6058a27"
+=======
+      "ed4366465ba631445f12b4d05303e487"
+>>>>>>> origin/master
     ]
   ]
 ]

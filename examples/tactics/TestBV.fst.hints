@@ -8,7 +8,20 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "ee78a21b9de32e6128647fda2af8261e"
+=======
+      "ed3a5482ead6b7ce88bf8fd593a1f1d5"
+    ],
+    [
+      "TestBV.test1",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2851bba68565d3800d83d186e185efc4"
+>>>>>>> origin/master
     ],
     [
       "TestBV.test2",
@@ -17,7 +30,20 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "1f17562481dcdc88e31e3e42536c9f24"
+=======
+      "ec04fb86f5ee713cbaaea8d701e1955d"
+    ],
+    [
+      "TestBV.test2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "079cd5bb0c1244565dd3ca0ba7acfc18"
+>>>>>>> origin/master
     ],
     [
       "TestBV.test3",
@@ -26,7 +52,20 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "e6edf43913ca6bd63ae6bc1851dac6ca"
+=======
+      "08bd506236fa397c7dcf9824c025513b"
+    ],
+    [
+      "TestBV.test3",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "998831f4cc945c83ea1d2fd7ac8d3260"
+>>>>>>> origin/master
     ],
     [
       "TestBV.test4",
@@ -35,7 +74,20 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "131b2c94d850d97b11896515d1f01f39"
+=======
+      "2097a10f5a5482928ce56e2fb0cd57db"
+    ],
+    [
+      "TestBV.test4",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e769f826143da79056e964de81582549"
+>>>>>>> origin/master
     ],
     [
       "TestBV.test5",
@@ -44,7 +96,20 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "ce49be67f2b4f4813dd2c818ed30761e"
+=======
+      "9dfcf5f857360811d144249548615de9"
+    ],
+    [
+      "TestBV.test5",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "aa085f4858d39f2609ca2a9f31435fd6"
+>>>>>>> origin/master
     ],
     [
       "TestBV.v64_eq",
@@ -53,7 +118,11 @@
       1,
       [ "@query", "lemma_FStar.UInt64.uv_inv" ],
       0,
+<<<<<<< HEAD
       "d0b350d0bff8058f83c7384bc7f1911c"
+=======
+      "7a3cd0d5853cf25aebe1d418ff7bfe1f"
+>>>>>>> origin/master
     ],
     [
       "TestBV.unfold_logand64",
@@ -67,7 +136,11 @@
         "typing_FStar.UInt64.logand"
       ],
       0,
+<<<<<<< HEAD
       "a7eacd110ffbfa7ff17e7c83c12e7786"
+=======
+      "8d93968c6b06b7303d02526f2b244d1b"
+>>>>>>> origin/master
     ],
     [
       "TestBV.unfold_logor64",
@@ -81,7 +154,11 @@
         "typing_FStar.UInt64.logor"
       ],
       0,
+<<<<<<< HEAD
       "2b83ab6f2590492b687fdacfc5814e79"
+=======
+      "ea249145cd669966b09a0f811ff045fb"
+>>>>>>> origin/master
     ],
     [
       "TestBV.unfold_logxor64",
@@ -95,7 +172,11 @@
         "typing_FStar.UInt64.logxor"
       ],
       0,
+<<<<<<< HEAD
       "ec0f91402971c7e77a02555c3dcb246e"
+=======
+      "f9c535e1b63f9c2db3edb9977a23b773"
+>>>>>>> origin/master
     ],
     [
       "TestBV.test6",
@@ -104,7 +185,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "962fba2df1d789424742ae122acd4065"
+=======
+      "72cc342e0ad7f2c241f790744b60c6f9"
+>>>>>>> origin/master
     ],
     [
       "TestBV.test7",
@@ -113,7 +198,20 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "5448107ead79feef55c4362e521d30b0"
+=======
+      "8b74df1e0851b247b420cc11b12b7501"
+    ],
+    [
+      "TestBV.v64_eq",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "61803c42a03e4a363cb0619528ec9e78"
+>>>>>>> origin/master
     ]
   ]
 ]

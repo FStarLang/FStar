@@ -14,7 +14,11 @@
         "subterm_ordering_CPS.Expr.Plus"
       ],
       0,
+<<<<<<< HEAD
       "7ab48a30fae0e65b52f3cb22e33fb00c"
+=======
+      "6e9b8dedd4537435e7f93b6be97dbebe"
+>>>>>>> origin/master
     ],
     [
       "CPS.Double.eval_cps",
@@ -29,7 +33,11 @@
         "subterm_ordering_CPS.Expr.Plus"
       ],
       0,
+<<<<<<< HEAD
       "f0f5ae1a3815b38e318cba4557f98493"
+=======
+      "e1af0cdc9e635d614fa4f00a9fd2e667"
+>>>>>>> origin/master
     ]
   ]
 ]

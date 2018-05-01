@@ -43,6 +43,8 @@ module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module TcInductive = FStar.TypeChecker.TcInductive
 module PC = FStar.Parser.Const
+module EMB = FStar.Syntax.Embeddings
+module ToSyntax = FStar.ToSyntax.ToSyntax
 
 
 //set the name of the query so that we can correlate hints to source program fragments
@@ -306,7 +308,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
             | _ -> failwith "Unexpected repr type" in
 
         let bind_repr =
-            let r = S.lid_as_fv PC.range_0 Delta_constant None |> S.fv_to_tm in
+            let r = S.lid_as_fv PC.range_0 delta_constant None |> S.fv_to_tm in
             let b, wp_b = fresh_effect_signature () in
             let a_wp_b = U.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
             let wp_f = S.gen_bv "wp_f" None wp_a in
@@ -410,8 +412,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
               (Print.term_to_string act_typ);
           let act_defn, _, g_a = tc_tot_or_gtot_term env' act.action_defn in
 
-          let act_defn = N.normalize [ N.UnfoldUntil S.Delta_constant ] env act_defn in
-          let act_typ = N.normalize [ N.UnfoldUntil S.Delta_constant; N.Eager_unfolding; N.Beta ] env act_typ in
+          let act_defn = N.normalize [ N.UnfoldUntil S.delta_constant ] env act_defn in
+          let act_typ = N.normalize [ N.UnfoldUntil S.delta_constant; N.Eager_unfolding; N.Beta ] env act_typ in
           // 2) This implies that [action_typ] has Type(k): good for us!
 
           // 3) Unify [action_typ] against [expected_k], because we also need
@@ -696,7 +698,7 @@ let cps_and_elaborate env ed =
     match (SS.compress bind_wp).n with
     | Tm_abs (binders, body, what) ->
         // TODO: figure out how to deal with ranges
-        let r = S.lid_as_fv PC.range_lid (S.Delta_defined_at_level 1) None in
+        let r = S.lid_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
         U.abs ([ S.null_binder (mk (Tm_fvar r)) ] @ binders) body what
     | _ ->
         raise_error (Errors.Fatal_UnexpectedBindShape, "unexpected shape for bind")
@@ -722,7 +724,7 @@ let cps_and_elaborate env ed =
       if Options.debug_any () then
           BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
       // TODO: GM: get exact delta depth, needs a change of interfaces
-      fv_to_tm (lid_as_fv l' Delta_equational None)
+      fv_to_tm (lid_as_fv l' delta_equational None)
       end
     | None ->
       let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
@@ -912,7 +914,7 @@ let tc_lex_t env ses quals lids =
                    sigattrs = [] } in
 
         let utop = S.new_univ_name (Some r1) in
-        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
+        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) delta_constant None, [U_name utop])) None r1 in
         let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
         let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, PC.lex_t_lid, 0, []);
                           sigquals = [];
@@ -925,8 +927,8 @@ let tc_lex_t env ses quals lids =
         let lex_cons_t =
             let a = S.new_bv (Some r2) (mk (Tm_type(U_name ucons1)) None r2) in
             let hd = S.new_bv (Some r2) (S.bv_to_name a) in
-            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) Delta_constant None, [U_name ucons2])) None r2) in
-            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) Delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
+            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_name ucons2])) None r2) in
+            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
             U.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, PC.lex_t_lid, 0, []);
@@ -1008,7 +1010,7 @@ let tc_inductive env ses quals lids =
               else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env
             in
             sig_bndle, ses@data_ops_ses in  //append hasEq axiom lids and data projectors and discriminators lids
-    ignore (Env.pop env "tc_inductive");
+    ignore (Env.pop env "tc_inductive"); // OK to ignore: caller will reuse original env
     res
 
 //when we process a reset-options pragma, we need to restart z3 etc.
@@ -1017,11 +1019,104 @@ let z3_reset_options (en:env) :env =
   env.solver.refresh ();
   env
 
+
+let get_fail_se (se:sigelt) : option<(list<int> * bool)> =
+    let comb f1 f2 =
+        match f1, f2 with
+        | Some (e1, l1), Some (e2, l2) ->
+            Some (e1@e2, l1 || l2)
+        | Some (e, l), None
+        | None, Some (e, l) ->
+            Some (e, l)
+        | _ -> None
+    in
+    List.fold_right (fun at acc -> comb (ToSyntax.get_fail_attr true at) acc) se.sigattrs None
+
+let list_of_option = function
+    | None -> []
+    | Some x -> [x]
+
+(* Checks that all of the elements of l1 appear in l2 in the exact
+ * same amount. Returns None when everything is OK, and Some (e, n1, n2)
+ * when `e` occurs `n1` times in `l1` but `n2` (<> n1) times in `l2`. *)
+let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
+    (* If there are no expected errors, we don't check anything *)
+    match l1 with | [] -> None | _ ->
+
+    let rec collect (l : list<'a>) : list<('a * int)> =
+        match l with
+        | [] -> []
+        | hd :: tl ->
+            begin match collect tl with
+            | [] -> [(hd, 1)]
+            | (h, n) :: t ->
+                if h = hd
+                then (h, n+1) :: t
+                else (hd, 1) :: (h, n) :: t
+            end
+    in
+    let summ l =
+        let l = List.sortWith (fun x y -> x - y) l in
+        collect l
+    in
+    let l1 = summ l1 in
+    let l2 = summ l2 in
+    let rec aux l1 l2 =
+        match l1, l2 with
+        | [], [] -> None
+
+        | (e, n) :: _, [] ->
+            Some (e, n, 0)
+
+        | [], (e, n) :: _ ->
+            Some (e, 0, n)
+
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 <> hd2 ->
+            Some (hd1, n1, 0)
+
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 = hd2 ->
+            if n1 <> n2
+            then Some (hd1, n1, n2)
+            else aux tl1 tl2
+    in
+    aux l1 l2
+
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
 (* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
-let tc_decl env se: list<sigelt> * list<sigelt> =
+let rec tc_decl env se: list<sigelt> * list<sigelt> =
   let env = set_hint_correlator env se in
+  if Env.debug env Options.Low
+  then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
   TcUtil.check_sigelt_quals env se;
+  match get_fail_se se with
+  | Some (_, false) when not (Env.should_verify env) ->
+    (* If we're --laxing, and we didn't find fail_lax, then just ignore the definition *)
+    [], []
+
+  | Some (errnos, _) ->
+    if Env.debug env Options.Low then
+        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
+    let errs = Errors.catch_errors (fun () -> tc_decl' env se) in
+    if Env.debug env Options.Low then begin
+        BU.print_string ">> Got issues:\n";
+        List.iter Errors.print_issue errs;
+        BU.print_string ">> //Got issues:\n"
+    end;
+    begin match errs, check_multi_contained errnos (List.concatMap (fun i -> list_of_option i.issue_number) errs) with
+    | [], _ ->
+        List.iter Errors.print_issue errs;
+        raise_error (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded") se.sigrng
+    | _, Some (e, n1, n2) ->
+        List.iter Errors.print_issue errs;
+        raise_error (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
+                                                (string_of_int e) (string_of_int n1) (string_of_int n2)) se.sigrng
+    | _, None -> [], []
+    end
+
+  | None ->
+    tc_decl' env se
+
+and tc_decl' env se: list<sigelt> * list<sigelt> =
   let r = se.sigrng in
   match se.sigel with
   | Sig_inductive_typ _
@@ -1728,7 +1823,7 @@ let extract_interface (en:env) (m:modul) :modul =
 
   let val_of_lb (s:sigelt) (lid:lident) ((uvs, t): (univ_names * typ)) (lbdef:term) :sigelt =
     let attrs =
-      if TcUtil.must_erase_for_extraction en lbdef then (lid_as_fv PC.must_erase_for_extraction_attr Delta_constant None |> fv_to_tm)::s.sigattrs
+      if TcUtil.must_erase_for_extraction en lbdef then (lid_as_fv PC.must_erase_for_extraction_attr delta_constant None |> fv_to_tm)::s.sigattrs
       else s.sigattrs
     in
     { s with sigel = Sig_declare_typ (lid, uvs, t); sigquals = Assumption::(filter_out_abstract_and_inline s.sigquals); sigattrs = attrs }
@@ -1815,17 +1910,16 @@ let extract_interface (en:env) (m:modul) :modul =
 
   { m with declarations = m.declarations |> List.map extract_sigelt |> List.flatten; is_interface = true }
 
-//AR: moving these push and pop functions from Universal, using them in extracting interface etc.
-let pop_context env msg =
-    Syntax.DsEnv.pop () |> ignore;
-    let en = TypeChecker.Env.pop env msg in
-    env.solver.refresh();
-    en
+let snapshot_context env msg = BU.atomically (fun () ->
+    TypeChecker.Env.snapshot env msg)
 
-let push_context env msg =
-    let dsenv = Syntax.DsEnv.push env.dsenv in
-    let env = TypeChecker.Env.push env msg in
-    {env with dsenv=dsenv}
+let rollback_context solver msg depth : env = BU.atomically (fun () ->
+    let env = TypeChecker.Env.rollback solver msg depth in
+    solver.refresh ();
+    env)
+
+let push_context env msg = snd (snapshot_context env msg)
+let pop_context env msg = rollback_context env.solver msg None
 
 let tc_partial_modul env modul =
   let verify = Options.should_verify modul.name.str in
@@ -1845,16 +1939,22 @@ let tc_more_partial_modul env modul decls =
   let modul = {modul with declarations=modul.declarations@ses} in
   modul, exports, env
 
-let rec tc_modul (env0:env) (m:modul) :(modul * option<modul> * env) =
+let rec tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * option<modul> * env) =
   let msg = "Internals for " ^ m.name.str in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, non_private_decls, env = tc_partial_modul env0 m in
-  finish_partial_modul false env modul non_private_decls
+  finish_partial_modul false iface_exists env modul non_private_decls
 
-and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
+and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) (exports:list<sigelt>) :(modul * option<modul> * env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
-  if (not loading_from_cache) && Options.use_extracted_interfaces () && not m.is_interface then begin //if we are using extracted interfaces and this is not already an interface
+  let should_extract_interface =
+    (not loading_from_cache)            &&
+    (not iface_exists)                  &&
+    Options.use_extracted_interfaces () &&
+    (not m.is_interface)
+  in
+  if should_extract_interface then begin //if we are using extracted interfaces and this is not already an interface
     //extract the interface in the new environment, this helps us figure out things like if an effect is reifiable
     let modul_iface = extract_interface en m in
     if Env.debug en <| Options.Low then
@@ -1877,7 +1977,8 @@ and finish_partial_modul (loading_from_cache:bool) (en:env) (m:modul) (exports:l
       else en0
     in
 
-    let modul_iface, must_be_none, env = tc_modul en0 modul_iface in
+    //AR: the third flag 'true' is for iface_exists for the current file, since it's an iface already, pass true
+    let modul_iface, must_be_none, env = tc_modul en0 modul_iface true in
     if must_be_none <> None then failwith "Impossible! finish_partial_module: expected the second component to be None"
     else { m with exports = modul_iface.exports }, Some modul_iface, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
@@ -1921,15 +2022,16 @@ let load_checked_module (en:env) (m:modul) :env =
              m.declarations in
   //And then call finish_partial_modul, which is the normal workflow of tc_modul below
   //except with the flag `must_check_exports` set to false, since this is already a checked module
-  let _, _, env = finish_partial_modul true env m m.exports in
+  //the second true flag is for iface_exists, used to determine whether should extract interface or not
+  let _, _, env = finish_partial_modul true true env m m.exports in
   env
 
-let check_module env m =
+let check_module env m b =
   if Options.debug_any()
   then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
 
   let env = {env with lax=not (Options.should_verify m.name.str)} in
-  let m, m_iface_opt, env = tc_modul env m in
+  let m, m_iface_opt, env = tc_modul env m b in
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
   if Options.dump_module m.name.str
@@ -1938,7 +2040,7 @@ let check_module env m =
   then begin
     let normalize_toplevel_lets = fun se -> match se.sigel with
         | Sig_let ((b, lbs), ids) ->
-            let n = N.normalize [N.Beta ; N.Eager_unfolding; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
+            let n = N.normalize [N.Beta ; N.Eager_unfolding; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.delta_constant ; N.AllowUnboundUniverses ] in
             let update lb =
                 let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
                 { lb with lbdef = n (Env.push_univ_vars env univnames) e }

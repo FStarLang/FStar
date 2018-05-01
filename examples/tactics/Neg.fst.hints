@@ -12,7 +12,11 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
+<<<<<<< HEAD
       "9d7db43ee3406e1acc366cee1ce4fecd"
+=======
+      "d6ec74af79504d9817d79c0548612a0a"
+>>>>>>> origin/master
     ],
     [
       "Neg.c3",
@@ -25,7 +29,11 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
+<<<<<<< HEAD
       "210beff9463ecf1af8603eba3e08ae2a"
+=======
+      "9d0a067eae9f3f1833e46dd9c056ef34"
+>>>>>>> origin/master
     ],
     [
       "Neg.c4",
@@ -34,7 +42,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "bd76d372568a02c369ac7dbcd601ddcf"
+=======
+      "70c0b403b646d84338acccc73660c671"
+>>>>>>> origin/master
     ]
   ]
 ]

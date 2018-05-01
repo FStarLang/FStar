@@ -1,5 +1,5 @@
 [
-  "Ä:îSü®ÕO2\u001cì\u0005ê#",
+  "Ø#Õm&’ï\u001bC§oé¿\"œ–",
   [
     [
       "NegativeTests.Bug260.pnat",
@@ -8,7 +8,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "2c2f2df6b6fb25a792bcb1ab6798ccee"
+=======
+      "3912035f8d655d5797778b305d5f32b7"
+>>>>>>> origin/master
     ],
     [
       "NegativeTests.Bug260.__proj__S__item___0",
@@ -22,7 +26,11 @@
         "refinement_interpretation_NegativeTests.Bug260_Tm_refine_c7798980fdaa69b62544817f36c3402f"
       ],
       0,
+<<<<<<< HEAD
       "a2860102187c7c0e40aa757fca60cc28"
+=======
+      "8f25fa02bcc408cc4da71dc76d3076dd"
+>>>>>>> origin/master
     ],
     [
       "NegativeTests.Bug260.validity",
@@ -31,7 +39,43 @@
       1,
       [ "@query", "assumption_NegativeTests.Bug260.pnat__uu___haseq" ],
       0,
+<<<<<<< HEAD
       "f5cc951669f2f69076e836811bd5c138"
+=======
+      "88c20b9fbbcea0087fffee7cbf91449b"
+    ],
+    [
+      "NegativeTests.Bug260.pnat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "27c18cabb0c84a60aae7c23d12fc020a"
+    ],
+    [
+      "NegativeTests.Bug260.__proj__S__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Bug260.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_NegativeTests.Bug260_Tm_refine_c7798980fdaa69b62544817f36c3402f"
+      ],
+      0,
+      "026b83df5a1dd040e9bc58fabd3c3b80"
+    ],
+    [
+      "NegativeTests.Bug260.validity",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_NegativeTests.Bug260.pnat__uu___haseq" ],
+      0,
+      "1d121e9e01e4ff70b1acf17d9a08a908"
+>>>>>>> origin/master
     ]
   ]
 ]

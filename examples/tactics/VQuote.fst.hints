@@ -10,7 +10,11 @@
         "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
       ],
       0,
+<<<<<<< HEAD
       "6707d6ae4740c384f66ffb74d98cb834"
+=======
+      "eacf85016d40ff1fda41fc21e98dc63d"
+>>>>>>> origin/master
     ],
     [
       "VQuote.myrec",
@@ -21,7 +25,11 @@
         "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
       ],
       0,
+<<<<<<< HEAD
       "1065195b0728d90ebac760eb14e1eeae"
+=======
+      "057f24e4d41bee000779caac97ce3b13"
+>>>>>>> origin/master
     ]
   ]
 ]

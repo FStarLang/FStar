@@ -19,7 +19,11 @@
         "token_correspondence_FStar.DM4F.MonadLaws.return_st"
       ],
       0,
+<<<<<<< HEAD
       "13af0d1c948b58f831cd77e627a2d17b"
+=======
+      "fff939a1f731aed6a59fd53a928b2f86"
+>>>>>>> origin/master
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit_st",
@@ -36,7 +40,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
+<<<<<<< HEAD
       "a68d678f9b1f037456a4b0a6f398a547"
+=======
+      "d5f5f3a7c3f8f708a20483c21ffbbc1e"
+>>>>>>> origin/master
     ],
     [
       "FStar.DM4F.MonadLaws.assoc_st",
@@ -50,7 +58,11 @@
         "interpretation_FStar.DM4F.MonadLaws_Tm_abs_f541716cfedab030d3e5d803d0c6034f"
       ],
       0,
+<<<<<<< HEAD
       "a7e410133976c348a596d636c6cb5884"
+=======
+      "0d0490782ce5126eee18dbcde0106e63"
+>>>>>>> origin/master
     ],
     [
       "FStar.DM4F.MonadLaws.bind_ifc",
@@ -73,7 +85,11 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
+<<<<<<< HEAD
       "dd71a44075e5450c5d8ac7a64e2bdad9"
+=======
+      "7e768761cb06685931d2d35554282cbd"
+>>>>>>> origin/master
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit",
@@ -111,7 +127,11 @@
         "typing_FStar.DM4F.MonadLaws.return_ifc"
       ],
       0,
+<<<<<<< HEAD
       "e8de189e763c6f66398f6afffd63e681"
+=======
+      "7cf1daf672f1a9dd352289beb5493eb7"
+>>>>>>> origin/master
     ],
     [
       "FStar.DM4F.MonadLaws.right_unit",
@@ -135,7 +155,11 @@
         "token_correspondence_FStar.DM4F.MonadLaws.return_ifc"
       ],
       0,
+<<<<<<< HEAD
       "10af57cd7c53164592576aff315c3f54"
+=======
+      "9f6a65963a408ceacb636ddcaa6c6a66"
+>>>>>>> origin/master
     ],
     [
       "FStar.DM4F.MonadLaws.associativity",
@@ -177,7 +201,11 @@
         "typing_tok_FStar.DM4F.MonadLaws.Low@tok"
       ],
       0,
+<<<<<<< HEAD
       "30cc5fbc6e021ab5fb177cad10786648"
+=======
+      "6d9b5fa9b566e1dbefc370e18d7c4993"
+>>>>>>> origin/master
     ],
     [
       "FStar.DM4F.MonadLaws.bind_ifc",
@@ -200,7 +228,11 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
+<<<<<<< HEAD
       "530345bc4def5ad1bc972cd272aa19a0"
+=======
+      "5dc243e1eb4354fc9c2f20c0ad34f9bf"
+>>>>>>> origin/master
     ]
   ]
 ]

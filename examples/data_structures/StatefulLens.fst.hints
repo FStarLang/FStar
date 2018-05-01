@@ -22,7 +22,11 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
+<<<<<<< HEAD
       "1ef731a75e802953ab4d76446998e7d1"
+=======
+      "c6970894b917a80dc338295ef2723f4e"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.as_stlens",
@@ -44,7 +48,11 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
+<<<<<<< HEAD
       "026aea4eed9ae55777ba9e63ca54abfa"
+=======
+      "f916d83786c74eefcd7b9ec4e3340a5c"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.stlens_ref",
@@ -70,7 +78,11 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
+<<<<<<< HEAD
       "6d0f7b59bd59cc0ccacae65ef5f637a1"
+=======
+      "6c9d7fcc874324882a3bbaa0a1f95240"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.test0",
@@ -90,7 +102,11 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__get"
       ],
       0,
+<<<<<<< HEAD
       "97b034066b7c45d001624e16573f2200"
+=======
+      "b80fe9c205a0a0879230e504bc4cf7cf"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.test1",
@@ -125,7 +141,11 @@
         "typing_FStar.ST.ref"
       ],
       0,
+<<<<<<< HEAD
       "f609049c0c4ad075825c0cb4c57b4d95"
+=======
+      "1b4971e0dfddefe6739488840d5a118c"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.test2",
@@ -160,7 +180,11 @@
         "typing_FStar.ST.ref"
       ],
       0,
+<<<<<<< HEAD
       "51b14fc5ea3ad29acc0050defe144798"
+=======
+      "4d573b7bc414fe7044fff79c2703cedb"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.test4",
@@ -195,7 +219,11 @@
         "typing_FStar.ST.ref"
       ],
       0,
+<<<<<<< HEAD
       "c5868805e6df5bbb33b929d3e356678b"
+=======
+      "83f87e948d65c366ac3708933f67eeb0"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.move_x",
@@ -241,7 +269,11 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
+<<<<<<< HEAD
       "da263f98a9c7d03e08bf64d74a9674b3"
+=======
+      "b01d54238e82cc8b503944019ce25cf1"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.move_x2",
@@ -282,7 +314,11 @@
         "token_correspondence_StatefulLens.__proj__Mkpoint__item__x"
       ],
       0,
+<<<<<<< HEAD
       "df3ecf789b875545e55f4bb4f5aa6032"
+=======
+      "978579ae7f9100c5ddfd37371e1254ae"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.compose_stlens",
@@ -305,7 +341,11 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
+<<<<<<< HEAD
       "9a5aae7f306765729d53e081298b6411"
+=======
+      "5d21c377d25d3d8c1277ddbc5a2c5f13"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.as_stlens",
@@ -327,7 +367,11 @@
         "token_correspondence_StatefulLens.__proj__Mkhlens__item__put"
       ],
       0,
+<<<<<<< HEAD
       "ee51c0f5060d66e8103164cd509434d4"
+=======
+      "63eef6e859993fd0bd6fd2eeaa8d5185"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.stlens_ref",
@@ -353,7 +397,11 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
+<<<<<<< HEAD
       "c436eda21d8f6bc67dc15551f33b1bf5"
+=======
+      "13d87bc413c55c0a400b0f7786c8d4c7"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.test1",
@@ -374,7 +422,11 @@
         "typing_FStar.Heap.trivial_preorder", "typing_FStar.ST.ref"
       ],
       0,
+<<<<<<< HEAD
       "68f779283cd3a5a79bdeba644795aee5"
+=======
+      "91363cb119900392049de9af5ba043bf"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.test2",
@@ -396,7 +448,11 @@
         "typing_FStar.Heap.trivial_preorder", "typing_FStar.ST.ref"
       ],
       0,
+<<<<<<< HEAD
       "4f6d395f694edad5bc9a133e332cad06"
+=======
+      "8b5b9e7a2c6dde3e1c7b9cd00d50e7fa"
+>>>>>>> origin/master
     ],
     [
       "StatefulLens.test4",
@@ -410,7 +466,11 @@
         "haseqStatefulLens_Tm_refine_e20aad72df3ad7c2ec6e3bc0c07a2cae"
       ],
       0,
+<<<<<<< HEAD
       "68b6bb16ca0d69566236a333b78ea4f4"
+=======
+      "e89cec9095ca550d43bc5b82496d3569"
+>>>>>>> origin/master
     ]
   ]
 ]

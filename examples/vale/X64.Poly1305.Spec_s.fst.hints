@@ -2,13 +2,13 @@
   "`@ÔþtÏ¶½l3U#Ü£-r",
   [
     [
-      "X64.Poly1305.Spec_s.uu___49",
+      "X64.Poly1305.Spec_s.uu___101",
       1,
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "075121bf4651f82735fc8ca98d30ca96"
+      "8519eb76c158ba2c6bb42240794da516"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",
@@ -20,7 +20,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "79ff3245d494c24d6e2f173297fb4a1d"
+      "c873905ecdb00c51900964a1b8014dd4"
     ],
     [
       "X64.Poly1305.Spec_s.and128",
@@ -47,7 +47,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "cb870cb7eee31195f608aa236c6746f4"
+      "62a9292053298170455b417b16d31fb5"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -67,7 +67,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8cc842aaac0e6687e65d5d226b24ed15"
+      "93ae5127fddcf7e43b42587ea90e4aaf"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -98,7 +98,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "603550275e09c86673592ff202bf6f85"
+      "97e70c4b95b5c9524139d7c58e1e0246"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",
@@ -110,7 +110,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "e4056e90ad716ce761a1ca6427c7e258"
+      "0b9db383688acbf9a6bb57235485849f"
     ],
     [
       "X64.Poly1305.Spec_s.and128",
@@ -137,7 +137,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "093f11fa165718c395f2d13f0cc6990b"
+      "7604e720d5728c569e4b677bd5307bed"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -157,7 +157,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0e3999ac4234161844bc209da7174a06"
+      "c0e973ea22ff762a23e96b1494736322"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -188,7 +188,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "3e28dc48842178360a77996ebec75b9b"
+      "c365f2302f89d06dd86d0be8c55dd8d4"
     ]
   ]
 ]

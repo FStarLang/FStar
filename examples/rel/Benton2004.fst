@@ -394,7 +394,7 @@ let exec_equiv_trans
   [SMTPatOr [
     [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c2 c3)];
     [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c1 c3)];
-    [SMTPat (exec_equiv p p' c2 c3); SMTPat (exec_equiv p p' c2 c3)];
+    [SMTPat (exec_equiv p p' c2 c3); SMTPat (exec_equiv p p' c1 c3)];
   ]]
 = let z1 = reify_computation c1 in
   let z2 = reify_computation c2 in

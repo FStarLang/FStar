@@ -102,8 +102,8 @@ let mk_refl_data_lid_as_term   (s:string) = tconst (fstar_refl_data_lid s)
 let mk_inspect_pack_pair s =
     let inspect_lid = fstar_refl_basic_lid ("inspect" ^ s) in
     let pack_lid    = fstar_refl_basic_lid ("pack" ^ s) in
-    let inspect     = { lid = inspect_lid ; t = fvar inspect_lid (Delta_defined_at_level 1) None } in
-    let pack        = { lid = pack_lid    ; t = fvar pack_lid (Delta_defined_at_level 1) None } in
+    let inspect     = { lid = inspect_lid ; t = fvar inspect_lid (Delta_constant_at_level 1) None } in
+    let pack        = { lid = pack_lid    ; t = fvar pack_lid (Delta_constant_at_level 1) None } in
     (inspect, pack)
 
 let fstar_refl_inspect_ln     , fstar_refl_pack_ln     = mk_inspect_pack_pair "_ln"
@@ -141,7 +141,7 @@ let ref_Mk_bv =
                                 Ident.mk_ident ("bv_ppname", Range.dummyRange);
                                 Ident.mk_ident ("bv_index" , Range.dummyRange);
                                 Ident.mk_ident ("bv_sort"  , Range.dummyRange)]) in
-    { lid = lid ; t = fvar lid Delta_constant (Some attr) }
+    { lid = lid ; t = fvar lid delta_constant (Some attr) }
 
 (* quals *)
 let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"

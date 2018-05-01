@@ -13,7 +13,11 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
+<<<<<<< HEAD
       "ccf35c4112eb44171f569653a5c54357"
+=======
+      "3ead574b14454de0ac31fe31e6aa8c15"
+>>>>>>> origin/master
     ],
     [
       "Equivalence.if_left_wp",
@@ -30,7 +34,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "3a4fbcd7670e8ec9bae8560060635056"
+=======
+      "5a20a16a8e6b1f1447ac3750a576abe9"
+>>>>>>> origin/master
     ],
     [
       "Equivalence.if_left_wp'",
@@ -47,7 +55,11 @@
         "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
       ],
       0,
+<<<<<<< HEAD
       "97d868c334c3a052347e5139d10e7c58"
+=======
+      "5c1d92108ed74244e38146081b447927"
+>>>>>>> origin/master
     ],
     [
       "Equivalence.if_left_wp",
@@ -61,7 +73,11 @@
         "refinement_interpretation_Equivalence_Tm_refine_3bb8de9165e5ea42e5e07a8efedd0281"
       ],
       0,
+<<<<<<< HEAD
       "fb1e09e93e67b5bc8c44ec08ad71e808"
+=======
+      "206c6b192f0ec1abfcb02b33743c7b7f"
+>>>>>>> origin/master
     ],
     [
       "Equivalence.if_left_wp'",
@@ -73,7 +89,11 @@
         "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
       ],
       0,
+<<<<<<< HEAD
       "815484df859f9956a18d02fb554fb58a"
+=======
+      "6746b0a8c1bcdfcd975d72cf1539b31b"
+>>>>>>> origin/master
     ]
   ]
 ]

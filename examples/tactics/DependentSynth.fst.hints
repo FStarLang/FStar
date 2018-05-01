@@ -11,7 +11,11 @@
         "equation_DependentSynth.myty", "int_typing", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "de05824a8065269bf90887db5170df25"
+=======
+      "d15e533dccd05a723389b97221c31108"
+>>>>>>> origin/master
     ],
     [
       "DependentSynth.f",
@@ -23,7 +27,11 @@
         "equation_DependentSynth.myty", "int_typing", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "9ed903d6f5af0be80ee6fc2e279fae14"
+=======
+      "d25b948bd532e49750d7f3450198bc79"
+>>>>>>> origin/master
     ]
   ]
 ]

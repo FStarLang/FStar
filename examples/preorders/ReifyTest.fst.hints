@@ -34,7 +34,11 @@
         "token_correspondence_MRefST.heap_rel", "typing_MRefHeap.upd"
       ],
       0,
+<<<<<<< HEAD
       "a12f35c580aa84904faa60515584cbd2"
+=======
+      "e8439acfab43e4132bec324150bc2431"
+>>>>>>> origin/master
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -71,7 +75,11 @@
         "typing_MRefHeap.upd"
       ],
       0,
+<<<<<<< HEAD
       "e9f4396dee0cf2c1b3adc8e49443cfcc"
+=======
+      "302c164b339595490e40d6c752034c03"
+>>>>>>> origin/master
     ]
   ]
 ]

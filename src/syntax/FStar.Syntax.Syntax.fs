@@ -96,9 +96,8 @@ type quote_kind =
 
 ///[@ PpxDerivingShow ]
 type delta_depth =
-  | Delta_constant                  //A defined constant, e.g., int, list, etc.
-  | Delta_defined_at_level of int   //A symbol that can be unfolded n times to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
-  | Delta_equational                //A symbol that may be equated to another by extensional reasoning
+  | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
+  | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
 ///[@ PpxDerivingShow ]
@@ -654,9 +653,11 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
 ///////////////////////////////////////////////////////////////////////
 //Some common constants
 ///////////////////////////////////////////////////////////////////////
-let tconst l = mk (Tm_fvar(lid_as_fv l Delta_constant None)) None Range.dummyRange
-let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_defined_at_level 1) None)) None Range.dummyRange
-let tdataconstr l = fv_to_tm (lid_as_fv l Delta_constant (Some Data_ctor))
+let delta_constant = Delta_constant_at_level 0
+let delta_equational = Delta_equational_at_level 0
+let tconst l = mk (Tm_fvar(lid_as_fv l delta_constant None)) None Range.dummyRange
+let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_constant_at_level 1) None)) None Range.dummyRange
+let tdataconstr l = fv_to_tm (lid_as_fv l delta_constant (Some Data_ctor))
 let t_unit      = tconst PC.unit_lid
 let t_bool      = tconst PC.bool_lid
 let t_int       = tconst PC.int_lid

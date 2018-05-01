@@ -8,7 +8,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "4c3f2cede60717657e3458296e628fff"
+=======
+      "d99ffb598019709c9781ff406987fc18"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.__proj__Left__item___0",
@@ -22,7 +26,11 @@
         "refinement_interpretation_StringPrinter.Base_Tm_refine_31f46a64729594f0c4e206f1f50b72a5"
       ],
       0,
+<<<<<<< HEAD
       "0473857f321339e01c8dff66e75d2ce8"
+=======
+      "02b1f3d1ae97b9db1015650cfc389104"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.__proj__Right__item___0",
@@ -36,7 +44,11 @@
         "refinement_interpretation_StringPrinter.Base_Tm_refine_4902a0d7f1d936b9fb5f0286e9e6b699"
       ],
       0,
+<<<<<<< HEAD
       "0c2635e9f63b58b93d9e8733aa213db0"
+=======
+      "8a24bd7ccdc7a1f177b0a641da0ee863"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.s_append",
@@ -45,7 +57,11 @@
       1,
       [ "@query", "lemma_FStar.Seq.Base.lemma_len_append" ],
       0,
+<<<<<<< HEAD
       "eba13863704077628f3683681110d908"
+=======
+      "576480f74831179c1c91d195323d4d0c"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.m_sz_res_pred",
@@ -54,7 +70,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "b7e79cabe9d3ef273c612328fd0a77c1"
+=======
+      "6c6447fb68f82cd6f702c9dbab756700"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.m_sz_correct",
@@ -86,7 +106,11 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
+<<<<<<< HEAD
       "a59247bc06c055b0c1eb6dec3f79f44a"
+=======
+      "d5a8cd13a8971a9331a72f8b5b53bbc2"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.add_overflow",
@@ -123,7 +147,11 @@
         "typing_FStar.UInt32.v"
       ],
       0,
+<<<<<<< HEAD
       "248abadf727f16f41bf4db9e82391baa"
+=======
+      "4515540ff7662ceba05669d57b6372df"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.ret_sz",
@@ -162,7 +190,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "3c4dbe8c555c482481e384a0382b97e5"
+=======
+      "e8df42f8f59a7d4295e395dea497d201"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.m_sz_res_pred_bind",
@@ -213,7 +245,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "c9407632c849df126c17a716ff192015"
+=======
+      "28690829bba793ad4e2677c8edab9074"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.bind_sz",
@@ -275,7 +311,11 @@
         "typing_StringPrinter.Base.log", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "4b27b897026dbc3a13e808eeb2f757e2"
+=======
+      "70c9507e6ec55d41465ca68425707da2"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.seq_sz",
@@ -284,7 +324,11 @@
       1,
       [ "@query", "equation_StringPrinter.Base.seq" ],
       0,
+<<<<<<< HEAD
       "84842fb2f0b3bd2c153b5c333c92b2e7"
+=======
+      "520b1003987def218b81fbcaef80761e"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.print_char_sz",
@@ -331,7 +375,11 @@
         "typing_StringPrinter.Base.print_char", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "c080928abdbb31d1238c73bce3d33260"
+=======
+      "98c84a0e6216fb6a958ca39eb348f2a4"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.ifthenelse_sz",
@@ -340,7 +388,11 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
       0,
+<<<<<<< HEAD
       "377aff5b7330816f0d8a7faafe3e993b"
+=======
+      "d8cb24c64d675de8ffc5d54d6f2bb9b3"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.destruct_pair_sz",
@@ -358,7 +410,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "0a4b2322b1c9ab864d19a19ab7aa7d20"
+=======
+      "d87679fadbab71ec2f350ee04955750c"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.log_size",
@@ -406,7 +462,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "c8855e2b9c18feef63fedffe2bcf20c7"
+=======
+      "1f6acd2caee104c615651e1e176ee8d6"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.app_head_rev_tail",
@@ -418,7 +478,11 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
+<<<<<<< HEAD
       "43923ebc0503d849d77c505ebebeeb73"
+=======
+      "a8bf6ef0ba226980f2ef034e37ca5728"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.coerce_sz",
@@ -438,7 +502,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "7a61991d209cad4f0b46d0386375f621"
+=======
+      "e7ac066e2749d3e5ecbe2874188b8eb2"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.compile_ret",
@@ -458,7 +526,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "8224a75b0cd6fd2c26ebc84c11b1ba26"
+=======
+      "437ec280a71ff39280078f1e7eb70208"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.compile_bind",
@@ -484,7 +556,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "29207d404d9af365885888e5de7690b8"
+=======
+      "cc84e486853248be9870c9d807ac7468"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.compile_print_char",
@@ -504,7 +580,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "facf9707e35e6665384d76d07608e84c"
+=======
+      "047bf3791899b7b0e360f3b8ccff8a3a"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.compile_fvar",
@@ -530,7 +610,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "acfa834c60d552fd75b2670fba89372c"
+=======
+      "4ed41f1319d3c3812dff31dae94948ad"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.first",
@@ -542,7 +626,11 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
+<<<<<<< HEAD
       "61dc4120a08723be73a1eaec9087e926"
+=======
+      "9f08ace040da68d7ca3a8cd065f8d7ab"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.m_st_post",
@@ -578,7 +666,11 @@
         "typing_StringPrinter.Base.log"
       ],
       0,
+<<<<<<< HEAD
       "6ecfd3b2fbda4b1867a74d25f09ad3ac"
+=======
+      "7a3d847bfd4a5363e5e109284d126f13"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.ret_st",
@@ -654,7 +746,11 @@
         "typing_StringPrinter.Base.ret"
       ],
       0,
+<<<<<<< HEAD
       "6f73fdc9367570112dbdb7d7dc963f43"
+=======
+      "e796e0c64cfed4eeb732b5ca9661f3b8"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.bind_st",
@@ -798,7 +894,11 @@
         "typing_StringPrinter.Base.s_append", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "6b37e763e4d02a0ca9f155247584dfd3"
+=======
+      "e1c6cd6b50b86b59319fd2ab290e8028"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.seq_st",
@@ -807,7 +907,11 @@
       1,
       [ "@query", "equation_StringPrinter.Base.seq" ],
       0,
+<<<<<<< HEAD
       "df79df399c64fc35de9f937143301412"
+=======
+      "c40e1fafcd818c15efee37448ebf3998"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.print_char_st",
@@ -887,7 +991,11 @@
         "typing_StringPrinter.Base.print_char", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "2d33cb6b483de805a58d768c2342c80a"
+=======
+      "8f61ca31230e7f71d12edce3b97e97cc"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.ifthenelse_st",
@@ -907,7 +1015,11 @@
         "refinement_interpretation_StringPrinter.Base_Tm_refine_a921e7acea5890c30ed7580b94b6ee10"
       ],
       0,
+<<<<<<< HEAD
       "a98cce70ded3dbf972a40f62ac56a807"
+=======
+      "5727f0095030363369868ab72d40c547"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.coerce_st",
@@ -929,6 +1041,7 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "974efb9ed48a00cd87761463083e0956"
     ],
     [
@@ -939,6 +1052,9 @@
       [ "@query" ],
       0,
       "deb8d241bd5810925fbcb5aaac04b910"
+=======
+      "862f865fdb17062eabc70b1f93f69297"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.buffer_create_mm_post",
@@ -950,7 +1066,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "c2ebe9ef258b4130f89bb886e11aaaf5"
+=======
+      "2ca71759c40b49491fd796604c522ea6"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.alloc_and_fill_in",
@@ -959,20 +1079,19 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Monotonic.Heap_interpretation_Tm_arrow_058dfeb1dc42e7f78546f9327812ea56",
-        "FStar.Monotonic.Heap_interpretation_Tm_arrow_e6944771f2adaf916ba7d29b69a8c8b0",
         "FStar.UInt32_pretyping_041e3a67a2d2b51fd702f1f88cfc3b44",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "StringPrinter.Base_interpretation_Tm_arrow_e399938126b1035c0ddca38172d3c37e",
         "b2t_def", "bool_inversion", "bool_typing",
-        "data_elim_FStar.Buffer.MkBuffer",
         "data_elim_FStar.Monotonic.HyperStack.HS", "eq2-interp",
         "equation_FStar.Buffer.as_ref", "equation_FStar.Buffer.buffer",
         "equation_FStar.Buffer.content", "equation_FStar.Buffer.frameOf",
         "equation_FStar.Buffer.idx", "equation_FStar.Buffer.length",
-        "equation_FStar.Buffer.live", "equation_FStar.Buffer.modifies_buf_1",
-        "equation_FStar.Buffer.sub", "equation_FStar.Buffer.unused_in",
+        "equation_FStar.Buffer.live", "equation_FStar.Buffer.lseq",
+        "equation_FStar.Buffer.max_length",
+        "equation_FStar.Buffer.modifies_buf_1", "equation_FStar.Buffer.sub",
+        "equation_FStar.Buffer.unused_in",
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.HyperStack.ST.equal_domains",
         "equation_FStar.HyperStack.ST.equal_stack_domains",
@@ -993,7 +1112,6 @@
         "equation_FStar.Monotonic.HyperStack.modifies",
         "equation_FStar.Monotonic.HyperStack.modifies_one",
         "equation_FStar.Monotonic.HyperStack.modifies_ref",
-        "equation_FStar.Monotonic.HyperStack.mreference",
         "equation_FStar.Monotonic.HyperStack.unused_in",
         "equation_FStar.Reflection.Data.var", "equation_FStar.Set.eqtype",
         "equation_FStar.Set.subset", "equation_FStar.UInt.fits",
@@ -1008,11 +1126,8 @@
         "equation_StringPrinter.Base.string",
         "fuel_guarded_inversion_FStar.Buffer._buffer",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
-        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mreference_",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_FStar.Monotonic.Heap.contains",
         "function_token_typing_FStar.Monotonic.Heap.heap",
-        "function_token_typing_FStar.Monotonic.Heap.unused_in",
         "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_FStar.Monotonic.HyperHeap.root",
         "function_token_typing_FStar.Reflection.Data.var",
@@ -1040,16 +1155,14 @@
         "lemma_FStar.UInt32.uv_inv", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Negation",
         "proj_equation_FStar.Buffer.MkBuffer_content",
         "proj_equation_FStar.Buffer.MkBuffer_idx",
         "proj_equation_FStar.Buffer.MkBuffer_length",
         "proj_equation_FStar.Buffer.MkBuffer_max_length",
         "proj_equation_FStar.Monotonic.HyperStack.HS_h",
-        "proj_equation_FStar.Monotonic.HyperStack.MkRef_frame",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Buffer.MkBuffer_content",
         "projection_inverse_FStar.Buffer.MkBuffer_idx",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -1064,18 +1177,17 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_StringPrinter.Base_Tm_refine_46980c4c82bab7895833c170995fc909",
-        "refinement_kinding_FStar.Buffer_Tm_refine_ba20691c598b7aba0d11d91ead0d6da1",
-        "token_correspondence_FStar.Monotonic.Heap.contains",
-        "token_correspondence_FStar.Monotonic.Heap.unused_in",
-        "typing_FStar.Buffer.__proj__MkBuffer__item__content",
         "typing_FStar.Buffer.__proj__MkBuffer__item__idx",
         "typing_FStar.Buffer.__proj__MkBuffer__item__length",
-        "typing_FStar.Buffer.sub", "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Map.concat", "typing_FStar.Map.contains",
-        "typing_FStar.Map.domain", "typing_FStar.Map.restrict",
-        "typing_FStar.Map.sel", "typing_FStar.Monotonic.Heap.addr_of",
+        "typing_FStar.Buffer.content", "typing_FStar.Buffer.lseq",
+        "typing_FStar.Buffer.max_length", "typing_FStar.Buffer.sub",
+        "typing_FStar.Heap.trivial_preorder", "typing_FStar.Map.concat",
+        "typing_FStar.Map.contains", "typing_FStar.Map.domain",
+        "typing_FStar.Map.restrict", "typing_FStar.Map.sel",
+        "typing_FStar.Monotonic.Heap.addr_of",
+        "typing_FStar.Monotonic.Heap.contains",
+        "typing_FStar.Monotonic.Heap.unused_in",
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h",
-        "typing_FStar.Monotonic.HyperStack.__proj__MkRef__item__frame",
         "typing_FStar.Monotonic.HyperStack.as_ref",
         "typing_FStar.Monotonic.HyperStack.frameOf",
         "typing_FStar.Monotonic.HyperStack.is_mm",
@@ -1086,7 +1198,11 @@
         "typing_FStar.UInt32.v", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "b39fdb2aed4fcff2d636777704638650"
+=======
+      "678fba804c8c43d8f3e1ff97f92bac4c"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.phi_post",
@@ -1102,7 +1218,11 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
+<<<<<<< HEAD
       "5661c849386196316e52d93ad1109e55"
+=======
+      "622be9c21375a538eca5b6ffa83824c5"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.phi",
@@ -1136,7 +1256,11 @@
         "typing_FStar.Pervasives.Native.uu___is_Some", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "71ef775a0128e79ba057ca9f4d89b512"
+=======
+      "e8f8c48571967d3c6e512d930f45aaa0"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.c_or",
@@ -1145,7 +1269,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "6a47fc35de1b17aa1b0085dedd38b6c2"
+=======
+      "2c7622cbae047714033243a8dd9ecec4"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.__proj__Left__item___0",
@@ -1159,7 +1287,11 @@
         "refinement_interpretation_StringPrinter.Base_Tm_refine_31f46a64729594f0c4e206f1f50b72a5"
       ],
       0,
+<<<<<<< HEAD
       "c34d0169c7e91103acd83f4d2832871d"
+=======
+      "b41abb3320448852a32ff6e02aac662e"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.__proj__Right__item___0",
@@ -1173,7 +1305,11 @@
         "refinement_interpretation_StringPrinter.Base_Tm_refine_4902a0d7f1d936b9fb5f0286e9e6b699"
       ],
       0,
+<<<<<<< HEAD
       "6d1f417a5e127e5dd3b725db2da02b22"
+=======
+      "52be0933b91872ae9f3ddbfae3025ba3"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.s_append",
@@ -1182,7 +1318,11 @@
       1,
       [ "@query", "lemma_FStar.Seq.Base.lemma_len_append" ],
       0,
+<<<<<<< HEAD
       "0ee908569b6f8dd27c2acbe0e026557c"
+=======
+      "1b6e55dc7556e71d36b8361566cf0674"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.m_sz_res_pred",
@@ -1191,7 +1331,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "fda68559aa3999a880599a68a282d83f"
+=======
+      "103b61f085f25e8dc3edc92d0917970d"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.m_sz_correct",
@@ -1223,7 +1367,11 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
+<<<<<<< HEAD
       "055cafcdf43ab01a3ad1d18275cb024b"
+=======
+      "2aae46e5bd65b55dadae029f5fce7886"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.add_overflow",
@@ -1260,7 +1408,11 @@
         "typing_FStar.UInt32.v"
       ],
       0,
+<<<<<<< HEAD
       "1a642585fd4997abb275a0d4c656f04c"
+=======
+      "449cb89bf66ffc02954cb4e15a3b594a"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.add_overflow",
@@ -1274,7 +1426,11 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
+<<<<<<< HEAD
       "8bbe014078d9433e34c4948e19f569d9"
+=======
+      "7bff116bed62042c5b1fd1356b2a254a"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.ret_sz",
@@ -1313,7 +1469,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "27010d8fea50e4c2c5ed1cf1debba597"
+=======
+      "bb0ac35be544e4157b04bdd260388e8e"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.m_sz_res_pred_bind",
@@ -1340,7 +1500,11 @@
         "typing_FStar.UInt32.v"
       ],
       0,
+<<<<<<< HEAD
       "cd79eeece61ca7b561ff34caa8a07db0"
+=======
+      "126db30c74194e86e8ee9d023073d86c"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.bind_sz",
@@ -1402,7 +1566,11 @@
         "typing_StringPrinter.Base.log", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "4446b5c061fa336fb6b24c7bc285e211"
+=======
+      "e9de4d39f56a6e96506fe6382104c9de"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.seq_sz",
@@ -1411,7 +1579,11 @@
       1,
       [ "@query", "equation_StringPrinter.Base.seq" ],
       0,
+<<<<<<< HEAD
       "45f3cd1a475b0e2e1c7af790a611c3a3"
+=======
+      "a2f2173e4665e9f8f4de30235475487e"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.print_char_sz",
@@ -1458,7 +1630,11 @@
         "typing_StringPrinter.Base.print_char", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "7c5e2bd1587e6d33f1ae91b69a598ecc"
+=======
+      "67f04ad638308ae345a6a8450872c38b"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.ifthenelse_sz",
@@ -1467,7 +1643,11 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
       0,
+<<<<<<< HEAD
       "36f597b36a83dd7dc8691e073cad5587"
+=======
+      "c1aa270aeec66d42443c1d90d0a63104"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.destruct_pair_sz",
@@ -1485,7 +1665,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "5fcae03a11322b3b97d4a9b8218962ef"
+=======
+      "ec889d70ccbbaf8938be044eb62caf7e"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.log_size",
@@ -1533,7 +1717,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "c8caa9a0d4564c1a5445dd9f918f5303"
+=======
+      "c5ba58bab6257419eb2a0484cba49cd6"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.log_size",
@@ -1547,7 +1735,11 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
+<<<<<<< HEAD
       "8736efe78f736a1d33c63db776e294e1"
+=======
+      "d920dcef049a9ae22a69cb3e20b7ac37"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.app_head_rev_tail",
@@ -1559,7 +1751,11 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
+<<<<<<< HEAD
       "18909f9c6cc9aea403d85e4108c402b0"
+=======
+      "e8955e12bbdee59f1c81c6f86ec7236b"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.coerce_sz",
@@ -1579,7 +1775,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "6876210676839aa1951e715e6a2a3cf0"
+=======
+      "d7ca2a0f918fa7ad9443acbf3d7ef032"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.compile_ret",
@@ -1599,7 +1799,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "17e73671634bc686dd2753b3e2a9c94f"
+=======
+      "83cf75039ebdefb869928ff33f781304"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.compile_bind",
@@ -1625,7 +1829,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "cf97a3d2a4dcaac24fa6d0094f02e552"
+=======
+      "31c0740c0a9177e482b8e0293b116c4c"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.compile_print_char",
@@ -1645,7 +1853,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "a2f5ebb14f3490ddd5217932edb0f44c"
+=======
+      "2b4d8b0e9dc5cadeb267e7316833dc1e"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.compile_fvar",
@@ -1671,7 +1883,11 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "1ed62c6c8a4d3302bbcd203f27913b39"
+=======
+      "490d66a1a02c48af54e7d9071849ce43"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.first",
@@ -1683,7 +1899,11 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
+<<<<<<< HEAD
       "dae82e15a9c9368450e6f08b35fe038f"
+=======
+      "06345c4a2fc17d3797ab68417fa19761"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.m_st_post",
@@ -1719,7 +1939,11 @@
         "typing_StringPrinter.Base.log"
       ],
       0,
+<<<<<<< HEAD
       "8520e7cab214a324656034e4e9b58a2b"
+=======
+      "2fc367054362e89f9075246335cf5dc9"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.ret_st",
@@ -1807,7 +2031,11 @@
         "typing_StringPrinter.Base.ret"
       ],
       0,
+<<<<<<< HEAD
       "99df909fda60d7bce3f697df2b867889"
+=======
+      "70e0488385efdefe564d56a25228d10a"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.bind_st",
@@ -1954,7 +2182,11 @@
         "typing_StringPrinter.Base.s_append", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "1723aab0e2fbadab07d4681d47b8613b"
+=======
+      "527579aee351e964b73b198dfedb40db"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.seq_st",
@@ -1963,7 +2195,11 @@
       1,
       [ "@query", "equation_StringPrinter.Base.seq" ],
       0,
+<<<<<<< HEAD
       "68efb7cdc6e8c921fce6b08b9bb27642"
+=======
+      "8051e10db41f8e8a9e0b095b39a72ee3"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.print_char_st",
@@ -2043,7 +2279,11 @@
         "typing_StringPrinter.Base.print_char", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "5ef0d38bc9785757e8d32bf9ee329b37"
+=======
+      "cf37f7e833f190bdd6308770e5596fa5"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.ifthenelse_st",
@@ -2063,7 +2303,11 @@
         "refinement_interpretation_StringPrinter.Base_Tm_refine_a921e7acea5890c30ed7580b94b6ee10"
       ],
       0,
+<<<<<<< HEAD
       "f874f13078f97f74862092a2b3d0ca26"
+=======
+      "64872517bf8557279a860a2e541a3722"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.ifthenelse_st",
@@ -2072,7 +2316,11 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
       0,
+<<<<<<< HEAD
       "4b6e320b84bb64cf6fddce2054a40b24"
+=======
+      "9dbe35cdec4d1f7a93d50147d83a5852"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.coerce_st",
@@ -2094,6 +2342,7 @@
         "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "eae7339e11b72e160e387cba77474b9e"
     ],
     [
@@ -2104,6 +2353,9 @@
       [ "@query" ],
       0,
       "cb29c13a8565a1877c69f5256030b254"
+=======
+      "a2cb37aba35b51ef46d7c3c4c755a31c"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.buffer_create_mm_post",
@@ -2115,7 +2367,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
+<<<<<<< HEAD
       "77769c1fb410664b0a1c3a46b993daf1"
+=======
+      "47be44091d6c67f2e3d4ac26ac2cc46c"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.alloc_and_fill_in",
@@ -2124,7 +2380,11 @@
       1,
       [ "@query" ],
       0,
+<<<<<<< HEAD
       "6ee977fcb74334e76c61281f9e1f956b"
+=======
+      "b234734e0f99930a1846869c07d45a3d"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.phi_post",
@@ -2140,7 +2400,11 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
+<<<<<<< HEAD
       "cde653aae6afb937e712c07b952e29f2"
+=======
+      "b3efc92f09b25dd818096c3257373099"
+>>>>>>> origin/master
     ],
     [
       "StringPrinter.Base.phi",
@@ -2174,7 +2438,11 @@
         "typing_FStar.Pervasives.Native.uu___is_Some", "unit_typing"
       ],
       0,
+<<<<<<< HEAD
       "93f35c440557f9f275885e427e6bd09c"
+=======
+      "ae40e6e218d39de30be4e57748db488e"
+>>>>>>> origin/master
     ]
   ]
 ]

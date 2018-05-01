@@ -11,7 +11,11 @@
         "assumption_Prims.HasEq_int"
       ],
       0,
+<<<<<<< HEAD
       "51a728e258bda122107fb52deff5ed42"
+=======
+      "58f5fc0be6fc798648aa18f36511ecd0"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.ni_exp",
@@ -20,7 +24,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "d9f828404ab70d41ac4fbf20a7114678"
+=======
+      "47aece1ac9fd69afa8210bd793a81cb3"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.ni_com'",
@@ -36,7 +44,11 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
+<<<<<<< HEAD
       "bdc23f2288526b04e63dd17ada34d7ab"
+=======
+      "4ad29c47fd315a43db8d99d625452b0a"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.sub_exp",
@@ -58,7 +70,11 @@
         "typing_IfcRules.uu___is_Low"
       ],
       0,
+<<<<<<< HEAD
       "65069c1d4a1cce8b3eb5a9d870fb8b47"
+=======
+      "b612c7d30176299087ade946c40d41e4"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.avar_exp",
@@ -78,7 +94,11 @@
         "projection_inverse_While.AVar__0"
       ],
       0,
+<<<<<<< HEAD
       "42acb86f2765be183a60ddcbbc45b6a6"
+=======
+      "0b2a5411e17944394dc6c87f38068c44"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.aint_exp",
@@ -95,7 +115,11 @@
         "projection_inverse_While.AInt__0"
       ],
       0,
+<<<<<<< HEAD
       "cf9e0b25e333fdaed0e7f5eb4ac369bb"
+=======
+      "179e5f07cfb2ebcbbe83f276749df1d3"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.binop_exp",
@@ -113,7 +137,11 @@
         "projection_inverse_While.AOp__2"
       ],
       0,
+<<<<<<< HEAD
       "0c486c8c89fc47fa249d21987e461921"
+=======
+      "71aab2f0a3fc079c05eb1cda8f7f3186"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.sub_com",
@@ -138,7 +166,11 @@
         "typing_IfcRules.op_Less_Equals", "typing_tok_IfcRules.Low@tok"
       ],
       0,
+<<<<<<< HEAD
       "8a44e79dabdf0ea9e2fbedd0ac8a8d89"
+=======
+      "b5adef408f767411043306972dbe2556"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.assign_com",
@@ -190,7 +222,11 @@
         "typing_While.interpret_exp"
       ],
       0,
+<<<<<<< HEAD
       "7f0c2f35522eb490e4b5f3ab606d155f"
+=======
+      "e35e2b90f75ad1ffdeff3d61422df77b"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.seq_com'",
@@ -236,7 +272,11 @@
         "typing_While.interpret_com"
       ],
       0,
+<<<<<<< HEAD
       "ea52a153ecc3bd5a4c375ef25e8da678"
+=======
+      "b03dd119649976bcb9cb8b594e219f08"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.seq_com",
@@ -245,7 +285,11 @@
       1,
       [ "@query", "equation_IfcRules.ni_com" ],
       0,
+<<<<<<< HEAD
       "32a46f10f7ecf8db1e52824b84e3d725"
+=======
+      "46e32dea9ce8ef9814898f37cce32b65"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.cond_com",
@@ -292,7 +336,11 @@
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r"
       ],
       0,
+<<<<<<< HEAD
       "1c6480677a615a87f6adc0daa4d7e82a"
+=======
+      "4a1ca3a2e3d6cf1aa289e1da28990da0"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.skip_com",
@@ -313,7 +361,11 @@
         "projection_inverse_Rel.R_l", "projection_inverse_Rel.R_r"
       ],
       0,
+<<<<<<< HEAD
       "5281e92b83d72de1f298a05975cd16fc"
+=======
+      "ec079474fe4cee9f73d42106e443c1b6"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.decr_while",
@@ -331,7 +383,11 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
+<<<<<<< HEAD
       "ac9062ed176344203e238fcd051e77b5"
+=======
+      "320004b9e1b7035f9a19425524116cfd"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.while_com'",
@@ -416,7 +472,11 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
+<<<<<<< HEAD
       "5f885fce377457984374288152aa9bef"
+=======
+      "431e221cfd404c69e1ad283c84966e01"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.while_com",
@@ -425,7 +485,11 @@
       1,
       [ "@query", "equation_IfcRules.ni_com" ],
       0,
+<<<<<<< HEAD
       "03ffa00c2f4c6afc96b310a5f25a648c"
+=======
+      "b6e63f74d334976ec0e4ae393ee5f380"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.low_equiv",
@@ -437,7 +501,11 @@
         "assumption_Prims.HasEq_int"
       ],
       0,
+<<<<<<< HEAD
       "dd3c0c88819d90003f354b0b51536168"
+=======
+      "d420aba0469539d41e90bd887e37fbfb"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.ni_exp",
@@ -446,7 +514,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
+<<<<<<< HEAD
       "25a55b6d2404bfa4796045f193e70e0e"
+=======
+      "76f6582d7ae710ed434f356e87a12879"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.ni_com'",
@@ -462,7 +534,11 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
+<<<<<<< HEAD
       "96eb2df0077a236a891e7f36699e5f48"
+=======
+      "700f785e9b37fa10c9e8ac10b3f528b4"
+>>>>>>> origin/master
     ],
     [
       "IfcRules.decr_while",
@@ -480,7 +556,11 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
+<<<<<<< HEAD
       "5d4f623bc92eca0fc21cf2e299cec5ee"
+=======
+      "188b0ea3126b187f09c6040d55c0a142"
+>>>>>>> origin/master
     ]
   ]
 ]

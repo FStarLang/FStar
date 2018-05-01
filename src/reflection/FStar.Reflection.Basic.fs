@@ -66,7 +66,7 @@ let pack_fv (ns:list<string>) : fv =
         if Ident.lid_equals lid PC.none_lid then Some Data_ctor else
         None
     in
-    lid_as_fv (PC.p2l ns) (Delta_defined_at_level 999) attr
+    lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) attr
 
 // TODO: move to library?
 let rec last (l:list<'a>) : 'a =

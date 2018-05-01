@@ -147,6 +147,23 @@ Guidelines for the changelog:
 
   Only `ulib/FStar.Algebra.Monoid.fst` needed to be tweaked like this.
 
+## IDE
+
+* F* now prints `progress` messages while loading dependencies in `--ide` mode
+  (https://github.com/FStarLang/FStar/commit/084638c12ae83ecfa975abd6bbc990f6a784a873)
+
+* Sending an interrupt (C-c / SIGINT) to F* in `--ide` mode does not kill the
+  process any more.  Instead, it interrupts the currently running query or
+  computation.  Not all queries support this (at the moment only `compute` and
+  `push` do); others simply ignore interrupts
+  (https://github.com/FStarLang/FStar/commit/417750b70ae0d0796a480627149dc0a09f9437d2).
+  This feature is experimental.
+
+* The `segment` query can now be used to split a document into a list of
+  top-level forms.
+
+* Some `proof-state` messages now contain location information.
+
 ## Standard library
 
 * [commit FStar@f73f295e](https://github.com/FStarLang/FStar/commit/f73f295ed0661faec205fdf7b76bdd85a2a94a32)
