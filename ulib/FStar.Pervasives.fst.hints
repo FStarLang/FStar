@@ -234,13 +234,13 @@
       "380ef46f3e5eedbcdac9f539b70bafeb"
     ],
     [
-      "FStar.Pervasives.__proj__PpxDerivingShowConstant__item___0",
+      "FStar.Pervasives.__proj__PpxDerivingYoJson PpxDerivingShowConstant__item___0",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.PpxDerivingShowConstant",
+        "disc_equation_FStar.Pervasives.PpxDerivingYoJson PpxDerivingShowConstant",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Pervasives_Tm_refine_564db2f0aa0878b4d96c60508be3dd36"
       ],
@@ -495,13 +495,13 @@
       "fff1eb164ae52b0685007dee4caf7b7b"
     ],
     [
-      "FStar.Pervasives.__proj__PpxDerivingShowConstant__item___0",
+      "FStar.Pervasives.__proj__PpxDerivingYoJson PpxDerivingShowConstant__item___0",
       2,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.PpxDerivingShowConstant",
+        "disc_equation_FStar.Pervasives.PpxDerivingYoJson PpxDerivingShowConstant",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Pervasives_Tm_refine_564db2f0aa0878b4d96c60508be3dd36"
       ],

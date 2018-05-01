@@ -1,7 +1,7 @@
 open Prims
 type repl_depth_t =
   (FStar_TypeChecker_Env.tcenv_depth_t,Prims.int)
-    FStar_Pervasives_Native.tuple2[@@deriving show]
+    FStar_Pervasives_Native.tuple2
 let (snapshot_env :
   FStar_TypeChecker_Env.env ->
     Prims.string ->
@@ -39,7 +39,7 @@ let (rollback_env :
 type push_kind =
   | SyntaxCheck 
   | LaxCheck 
-  | FullCheck [@@deriving show]
+  | FullCheck 
 let (uu___is_SyntaxCheck : push_kind -> Prims.bool) =
   fun projectee  ->
     match projectee with | SyntaxCheck  -> true | uu____160 -> false
@@ -199,7 +199,7 @@ let with_captured_errors :
   
 type timed_fname = {
   tf_fname: Prims.string ;
-  tf_modtime: FStar_Util.time }[@@deriving show]
+  tf_modtime: FStar_Util.time }
 let (__proj__Mktimed_fname__item__tf_fname : timed_fname -> Prims.string) =
   fun projectee  ->
     match projectee with
@@ -238,7 +238,7 @@ type push_query =
   push_code: Prims.string ;
   push_line: Prims.int ;
   push_column: Prims.int ;
-  push_peek_only: Prims.bool }[@@deriving show]
+  push_peek_only: Prims.bool }
 let (__proj__Mkpush_query__item__push_kind : push_query -> push_kind) =
   fun projectee  ->
     match projectee with
@@ -276,14 +276,13 @@ let (__proj__Mkpush_query__item__push_peek_only : push_query -> Prims.bool) =
         __fname__push_peek_only
   
 type optmod_t = FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option
-[@@deriving show]
 type repl_task =
   | LDInterleaved of (timed_fname,timed_fname) FStar_Pervasives_Native.tuple2
   
   | LDSingle of timed_fname 
   | LDInterfaceOfCurrentFile of timed_fname 
   | PushFragment of FStar_Parser_ParseIt.input_frag 
-  | Noop [@@deriving show]
+  | Noop 
 let (uu___is_LDInterleaved : repl_task -> Prims.bool) =
   fun projectee  ->
     match projectee with | LDInterleaved _0 -> true | uu____484 -> false
@@ -314,7 +313,7 @@ let (__proj__PushFragment__item___0 :
   fun projectee  -> match projectee with | PushFragment _0 -> _0 
 let (uu___is_Noop : repl_task -> Prims.bool) =
   fun projectee  -> match projectee with | Noop  -> true | uu____551 -> false 
-type env_t = FStar_TypeChecker_Env.env[@@deriving show]
+type env_t = FStar_TypeChecker_Env.env
 type repl_state =
   {
   repl_line: Prims.int ;
@@ -327,7 +326,7 @@ type repl_state =
   repl_curmod: optmod_t ;
   repl_env: env_t ;
   repl_stdin: FStar_Util.stream_reader ;
-  repl_names: FStar_Interactive_CompletionTable.table }[@@deriving show]
+  repl_names: FStar_Interactive_CompletionTable.table }
 let (__proj__Mkrepl_state__item__repl_line : repl_state -> Prims.int) =
   fun projectee  ->
     match projectee with
@@ -416,10 +415,10 @@ let (__proj__Mkrepl_state__item__repl_names :
   
 type repl_stack_entry_t =
   (repl_depth_t,(repl_task,repl_state) FStar_Pervasives_Native.tuple2)
-    FStar_Pervasives_Native.tuple2[@@deriving show]
+    FStar_Pervasives_Native.tuple2
 type repl_stack_t =
   (repl_depth_t,(repl_task,repl_state) FStar_Pervasives_Native.tuple2)
-    FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
+    FStar_Pervasives_Native.tuple2 Prims.list
 let (repl_current_qid :
   Prims.string FStar_Pervasives_Native.option FStar_ST.ref) =
   FStar_Util.mk_ref FStar_Pervasives_Native.None 
@@ -483,7 +482,7 @@ type name_tracking_event =
   FStar_Pervasives_Native.tuple2 
   | NTInclude of (FStar_Ident.lid,FStar_Ident.lid)
   FStar_Pervasives_Native.tuple2 
-  | NTBinding of FStar_TypeChecker_Env.binding [@@deriving show]
+  | NTBinding of FStar_TypeChecker_Env.binding 
 let (uu___is_NTAlias : name_tracking_event -> Prims.bool) =
   fun projectee  ->
     match projectee with | NTAlias _0 -> true | uu____1303 -> false
@@ -1086,7 +1085,7 @@ type completion_context =
   | CKCode 
   | CKOption of Prims.bool 
   | CKModuleOrNamespace of (Prims.bool,Prims.bool)
-  FStar_Pervasives_Native.tuple2 [@@deriving show]
+  FStar_Pervasives_Native.tuple2 
 let (uu___is_CKCode : completion_context -> Prims.bool) =
   fun projectee  ->
     match projectee with | CKCode  -> true | uu____2867 -> false
@@ -1132,7 +1131,7 @@ type lookup_context =
   | LKSymbolOnly 
   | LKModule 
   | LKOption 
-  | LKCode [@@deriving show]
+  | LKCode 
 let (uu___is_LKSymbolOnly : lookup_context -> Prims.bool) =
   fun projectee  ->
     match projectee with | LKSymbolOnly  -> true | uu____2929 -> false
@@ -1171,8 +1170,7 @@ let (js_optional_lookup_context :
                k1)
   
 type position =
-  (Prims.string,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3[@@deriving
-                                                                    show]
+  (Prims.string,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3
 type query' =
   | Exit 
   | DescribeProtocol 
@@ -1193,10 +1191,10 @@ type query' =
   FStar_Pervasives_Native.tuple2 
   | Search of Prims.string 
   | GenericError of Prims.string 
-  | ProtocolViolation of Prims.string [@@deriving show]
+  | ProtocolViolation of Prims.string 
 and query = {
   qq: query' ;
-  qid: Prims.string }[@@deriving show]
+  qid: Prims.string }
 let (uu___is_Exit : query' -> Prims.bool) =
   fun projectee  ->
     match projectee with | Exit  -> true | uu____3056 -> false
@@ -1345,7 +1343,7 @@ let (__proj__InvalidQuery__item__uu___ : Prims.exn -> Prims.string) =
 type query_status =
   | QueryOK 
   | QueryNOK 
-  | QueryViolatesProtocol [@@deriving show]
+  | QueryViolatesProtocol 
 let (uu___is_QueryOK : query_status -> Prims.bool) =
   fun projectee  ->
     match projectee with | QueryOK  -> true | uu____3408 -> false
@@ -1644,7 +1642,7 @@ type symbol_lookup_result =
   slr_def_range: FStar_Range.range FStar_Pervasives_Native.option ;
   slr_typ: Prims.string FStar_Pervasives_Native.option ;
   slr_doc: Prims.string FStar_Pervasives_Native.option ;
-  slr_def: Prims.string FStar_Pervasives_Native.option }[@@deriving show]
+  slr_def: Prims.string FStar_Pervasives_Native.option }
 let (__proj__Mksymbol_lookup_result__item__slr_name :
   symbol_lookup_result -> Prims.string) =
   fun projectee  ->
@@ -1734,7 +1732,7 @@ let (alist_of_protocol_info :
 type fstar_option_permission_level =
   | OptSet 
   | OptReset 
-  | OptReadOnly [@@deriving show]
+  | OptReadOnly 
 let (uu___is_OptSet : fstar_option_permission_level -> Prims.bool) =
   fun projectee  ->
     match projectee with | OptSet  -> true | uu____4203 -> false
@@ -1764,7 +1762,7 @@ type fstar_option =
   opt_type: FStar_Options.opt_type ;
   opt_snippets: Prims.string Prims.list ;
   opt_documentation: Prims.string FStar_Pervasives_Native.option ;
-  opt_permission_level: fstar_option_permission_level }[@@deriving show]
+  opt_permission_level: fstar_option_permission_level }
 let (__proj__Mkfstar_option__item__opt_name : fstar_option -> Prims.string) =
   fun projectee  ->
     match projectee with
@@ -3298,10 +3296,10 @@ let run_compute :
   
 type search_term' =
   | NameContainsStr of Prims.string 
-  | TypeContainsLid of FStar_Ident.lid [@@deriving show]
+  | TypeContainsLid of FStar_Ident.lid 
 and search_term = {
   st_negate: Prims.bool ;
-  st_term: search_term' }[@@deriving show]
+  st_term: search_term' }
 let (uu___is_NameContainsStr : search_term' -> Prims.bool) =
   fun projectee  ->
     match projectee with | NameContainsStr _0 -> true | uu____8471 -> false
@@ -3339,7 +3337,7 @@ type search_candidate =
   sc_fvars:
     FStar_Ident.lid FStar_Util.set FStar_Pervasives_Native.option
       FStar_ST.ref
-    }[@@deriving show]
+    }
 let (__proj__Mksearch_candidate__item__sc_lid :
   search_candidate -> FStar_Ident.lid) =
   fun projectee  ->

@@ -6,7 +6,7 @@ type 'a embedding =
     Prims.bool ->
       FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option
     ;
-  typ: FStar_Syntax_Syntax.typ }[@@deriving show]
+  typ: FStar_Syntax_Syntax.typ }
 let __proj__Mkembedding__item__em :
   'a . 'a embedding -> FStar_Range.range -> 'a -> FStar_Syntax_Syntax.term =
   fun projectee  ->
@@ -53,13 +53,10 @@ let try_unembed :
   = fun e  -> fun t  -> e.un false t 
 let type_of : 'a . 'a embedding -> FStar_Syntax_Syntax.typ = fun e  -> e.typ 
 type 'a raw_embedder = FStar_Range.range -> 'a -> FStar_Syntax_Syntax.term
-[@@deriving show]
 type 'a raw_unembedder' =
   Prims.bool -> FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option
-[@@deriving show]
 type 'a raw_unembedder =
-  FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option[@@deriving
-                                                                 show]
+  FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option
 let mk_emb :
   'a .
     'a raw_embedder ->
@@ -493,7 +490,7 @@ type norm_step =
   | Iota 
   | UnfoldOnly of Prims.string Prims.list 
   | UnfoldFully of Prims.string Prims.list 
-  | UnfoldAttr of FStar_Syntax_Syntax.attribute [@@deriving show]
+  | UnfoldAttr of FStar_Syntax_Syntax.attribute 
 let (uu___is_Simpl : norm_step -> Prims.bool) =
   fun projectee  ->
     match projectee with | Simpl  -> true | uu____1602 -> false

@@ -92,6 +92,9 @@ let rec (extract_meta :
          | "FStar.Pervasives.PpxDerivingShow" ->
              FStar_Pervasives_Native.Some
                FStar_Extraction_ML_Syntax.PpxDerivingShow
+         | "FStar.Pervasives.PpxDerivingYoJson" ->
+             FStar_Pervasives_Native.Some
+               FStar_Extraction_ML_Syntax.PpxDerivingYoJson
          | "FStar.Pervasives.CInline" ->
              FStar_Pervasives_Native.Some FStar_Extraction_ML_Syntax.CInline
          | "FStar.Pervasives.Substitute" ->
@@ -298,7 +301,7 @@ let (extract_typ_abbrev :
 type data_constructor =
   {
   dname: FStar_Ident.lident ;
-  dtyp: FStar_Syntax_Syntax.typ }[@@deriving show]
+  dtyp: FStar_Syntax_Syntax.typ }
 let (__proj__Mkdata_constructor__item__dname :
   data_constructor -> FStar_Ident.lident) =
   fun projectee  ->
@@ -318,7 +321,7 @@ type inductive_family =
   ityp: FStar_Syntax_Syntax.term ;
   idatas: data_constructor Prims.list ;
   iquals: FStar_Syntax_Syntax.qualifier Prims.list ;
-  imetadata: FStar_Extraction_ML_Syntax.metadata }[@@deriving show]
+  imetadata: FStar_Extraction_ML_Syntax.metadata }
 let (__proj__Mkinductive_family__item__iname :
   inductive_family -> FStar_Ident.lident) =
   fun projectee  ->
@@ -507,7 +510,7 @@ let bundle_as_inductive_families :
           match uu____784 with
           | (env1,ifams) -> (env1, (FStar_List.flatten ifams))
   
-type env_t = FStar_Extraction_ML_UEnv.env[@@deriving show]
+type env_t = FStar_Extraction_ML_UEnv.env
 let (extract_bundle :
   env_t ->
     FStar_Syntax_Syntax.sigelt ->

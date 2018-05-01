@@ -1,6 +1,6 @@
-type uint16 = int
-type t = uint16
-type t' = t
+type uint16 = int[@@deriving yojson,show]
+type t = uint16[@@deriving yojson,show]
+type t' = t[@@deriving yojson,show]
            
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 

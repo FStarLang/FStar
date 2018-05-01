@@ -292,6 +292,8 @@ let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
 [@@deriving show]
+let set_to_yojson _ _ = `Null
+let set_of_yojson _ _ = failwith "cannot readback"
 
 let set_is_empty ((s, _):'a set) =
   match s with
@@ -549,7 +551,7 @@ let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
-[@@deriving show]
+[@@deriving yojson,show]
 
 let is_left = function
   | Inl _ -> true

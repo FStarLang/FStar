@@ -2159,7 +2159,7 @@ let (run_tactic_on_typ :
 type pol =
   | Pos 
   | Neg 
-  | Both [@@deriving show]
+  | Both 
 let (uu___is_Pos : pol -> Prims.bool) =
   fun projectee  -> match projectee with | Pos  -> true | uu____3500 -> false 
 let (uu___is_Neg : pol -> Prims.bool) =
@@ -2173,7 +2173,7 @@ type 'a tres_m =
   | Simplified of ('a,FStar_Tactics_Basic.goal Prims.list)
   FStar_Pervasives_Native.tuple2 
   | Dual of ('a,'a,FStar_Tactics_Basic.goal Prims.list)
-  FStar_Pervasives_Native.tuple3 [@@deriving show]
+  FStar_Pervasives_Native.tuple3 
 let uu___is_Unchanged : 'a . 'a tres_m -> Prims.bool =
   fun projectee  ->
     match projectee with | Unchanged _0 -> true | uu____3567 -> false
@@ -2199,7 +2199,7 @@ let __proj__Dual__item___0 :
       ('a,'a,FStar_Tactics_Basic.goal Prims.list)
         FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Dual _0 -> _0 
-type tres = FStar_Syntax_Syntax.term tres_m[@@deriving show]
+type tres = FStar_Syntax_Syntax.term tres_m
 let tpure : 'Auu____3702 . 'Auu____3702 -> 'Auu____3702 tres_m =
   fun x  -> Unchanged x 
 let (flip : pol -> pol) =
