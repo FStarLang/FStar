@@ -230,7 +230,7 @@ let pat_as_exp (allow_implicits:bool)
               match (SS.compress x.sort) with
               | {n=Tm_unknown} ->
                 let t, _ = U.type_u() in
-                let t, _, g = new_implicit_var "" (S.range_of_bv x) env t in
+                let t, _, g = new_implicit_var "pattern bv type" (S.range_of_bv x) env t in
                 t, g
               | t -> //user-decorated type
                 tc_annot env t
@@ -258,9 +258,9 @@ let pat_as_exp (allow_implicits:bool)
 
            | Pat_dot_term(x, _) ->
              let k, _ = U.type_u () in
-             let t, _, g = new_implicit_var "" (S.range_of_bv x) env k in
+             let t, _, g = new_implicit_var "pat_dot_term type" (S.range_of_bv x) env k in
              let x = {x with sort=t} in
-             let e, _,  g' = new_implicit_var "" (S.range_of_bv x) env t in
+             let e, _,  g' = new_implicit_var "pat_dot_term" (S.range_of_bv x) env t in
              let p = {p with v=Pat_dot_term(x, e)} in
              ([], [], [], env, e, Rel.conj_guard g g', p)
 
