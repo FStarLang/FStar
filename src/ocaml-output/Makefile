@@ -186,7 +186,7 @@ install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {}
 install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar/$(2)
 
 # Install FStar into $(PREFIX) using the standard Unix directory structure.
-install: all
+install-common: all
         # Install the binary
 	$(INSTALL_EXEC) -m 755 -D _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
 	# Then the standard library, but not the ml or fs files
@@ -195,9 +195,10 @@ install: all
 	rm -rf ../../ulib-install/fs
 	$(call install_dir,ulib-install,lib/fstar)
 	rm -rf ../../ulib-install
+
+install: install-common
 	# Then the binary library
-	$(call install_fstarlib,bin/fstarlib,fstarlib.cma)
-	$(call install_fstarlib,bin/fstarlib,fstarlib.cmxa)
+	$(INSTALL_EXEC) -m 755 -D ../../bin/fstarlib/* $(PREFIX)/lib/fstar/
 	$(call install_fstarlib,ulib/ml,fstarlib.mllib)
         # Then the rest of the static files.
 	$(call install_dir,examples,share/fstar/examples)
@@ -207,6 +208,12 @@ ifeq ($(MADOKO),Madoko)
 	$(MAKE) -C ../../doc/tutorial
 endif
 	$(call install_dir,doc/tutorial,share/fstar/tutorial)
+
+# Install the opam package
+install-opam: install-common
+	cd ../../bin/fstarlib && ocamlfind install fstarlib *
+	cd ../../bin/fstar-compiler-lib && ocamlfind install fstar-compiler-lib *
+	cd ../../bin/fstar-tactics-lib && ocamlfind install fstar-tactics-lib *
 
 NAME=fstar_$(VERSION)_$(PLATFORM)
 
