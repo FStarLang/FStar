@@ -228,7 +228,8 @@ Z3_LICENSE=$(shell dirname $(Z3_DIR))/LICENSE.txt
 
 .PHONY: ulib
 ulib:
-	make -C ../../ulib/ml
+	make -C ../../ulib install-fstarlib
+	make -C ../../ulib install-fstar-tactics
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
