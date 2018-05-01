@@ -8,11 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "9657122dcaa33d3ab55cbe4a9e6bd476"
-=======
       "03ba1224f9289ae479d5216583be7a5e"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.tree",
@@ -21,11 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "239b9d1f525f1e2d0a34690c65bc24cd"
-=======
       "f6fefc9d3650f7fde6251e3480fa2da5"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.tree",
@@ -34,11 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "033b3ffc324dc565c0d764fe4c1f43d3"
-=======
       "4e1155e095baa96ee99852b55d6c4989"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.tree",
@@ -53,11 +41,7 @@
         "int_inversion", "kinding_NegativeTests.BST.tree@tok"
       ],
       0,
-<<<<<<< HEAD
-      "d41c0c44d275e8d26f62b74ad66d6436"
-=======
       "4d56304062e1beb1bc28799ff7255917"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.__proj__Leaf__item__n",
@@ -71,11 +55,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_c89ea22d08945e60fddbf2e1bfa3e94f"
       ],
       0,
-<<<<<<< HEAD
-      "f5fc10021fe2f844ad9caf289b6f2c6c"
-=======
       "d0f75b3172188523b96269534aeb983f"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.uu___is_Node",
@@ -84,11 +64,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "f3baa3b215d85b47242169a98e6896d5"
-=======
       "756375e70af8cac4548e242d15f3f582"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.__proj__Node__item__l",
@@ -102,11 +78,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-<<<<<<< HEAD
-      "27615d16f4e3b79cf9eaed732ee6d523"
-=======
       "b63f92a190aa102eed71aa052b6d08c0"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.__proj__Node__item__left",
@@ -122,11 +94,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-<<<<<<< HEAD
-      "69ff37cf9115886b1a623c6ca146ce03"
-=======
       "eb842cbff6c7fe0744eadeb9be4784dc"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.__proj__Node__item__n",
@@ -140,11 +108,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-<<<<<<< HEAD
-      "fdbbf9c9fcbe071668a4221630614149"
-=======
       "2a22cac295adbaac9130d1a6ad705be0"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.__proj__Node__item__r",
@@ -158,11 +122,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-<<<<<<< HEAD
-      "b74aee18758ea6e70020839ed9afbada"
-=======
       "71b010da9dd556e38587b3f874b37181"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.__proj__Node__item__right",
@@ -171,11 +131,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "ee4d86f6dfeadc5e6349d35890b29519"
-=======
       "3406f90fb337c4db5864f79ed494bd44"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.__proj__Node__item__right",
@@ -202,11 +158,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-<<<<<<< HEAD
-      "8b57f955d782bd9bac3f31e18b4d9c09"
-=======
       "0a6a1e35ec74a88ddae1a7d908919b67"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.test_node_1",
@@ -220,11 +172,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-<<<<<<< HEAD
-      "bbd5ef9903f4e64a5d336d85ad834493"
-=======
       "43841b3195754b4c297f7b9917aad3a8"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.test_node_2",
@@ -241,11 +189,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-<<<<<<< HEAD
-      "655ea27158c739394555cac1ff5e3596"
-=======
       "d4ce5550944f096071270a080a6f4144"
->>>>>>> origin/master
     ],
     [
       "NegativeTests.BST.test_node_3",
@@ -260,9 +204,6 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-<<<<<<< HEAD
-      "7aa34d5706d525aec9e3fb2cb67ce97b"
-=======
       "40ddca8346fe8903bd90eee76588ef90"
     ],
     [
@@ -469,7 +410,6 @@
       ],
       0,
       "a247b367f8e3355c608189d6321222d6"
->>>>>>> origin/master
     ]
   ]
 ]

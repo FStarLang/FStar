@@ -62,11 +62,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.singleton"
       ],
       0,
-<<<<<<< HEAD
-      "b17ff0ea7b92eb34b445d2b22f3e3e0c"
-=======
       "036543c47c26b357fadd84f60c8859e2"
->>>>>>> origin/master
     ],
     [
       "Inlining.create_add_1'",
@@ -129,11 +125,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.singleton"
       ],
       0,
-<<<<<<< HEAD
-      "1a5bff25a4ed9c525ea45fe3d4668e6f"
-=======
       "59e390fbe3887b97a474f6a6c84940bb"
->>>>>>> origin/master
     ],
     [
       "Inlining.create_and_set",
@@ -180,11 +172,7 @@
         "typing_FStar.Monotonic.HyperStack.poppable"
       ],
       0,
-<<<<<<< HEAD
-      "67ac1eed3be42ebf2a3d7dea859aad1d"
-=======
       "cbc99edf70134485c4f427c2226076a9"
->>>>>>> origin/master
     ],
     [
       "Inlining.create_and_set'",
@@ -231,11 +219,7 @@
         "typing_FStar.Monotonic.HyperStack.poppable"
       ],
       0,
-<<<<<<< HEAD
-      "611ce22a5f8539f1ada126c40c08e0d1"
-=======
       "7d713de5b4221bbfddcd6d7137a5fc65"
->>>>>>> origin/master
     ],
     [
       "Inlining.set_to_1",
@@ -264,11 +248,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-<<<<<<< HEAD
-      "f9c7df34ebd08ab163cb89f61e03ea17"
-=======
       "fd759982800ec5a5d04e6696bf33aa99"
->>>>>>> origin/master
     ]
   ]
 ]

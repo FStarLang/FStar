@@ -15,11 +15,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-<<<<<<< HEAD
-      "1bcfd2377ca712a68c826bb372d652dd"
-=======
       "4db99d141c74848cdc4d4a1d39966afa"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.IntStoreExcFixed.bind_is",
@@ -35,11 +31,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-<<<<<<< HEAD
-      "0f51d06f6a68303889b80fc7ffdd3aa4"
-=======
       "ee81ac064586bf6c1c3ff66f4218c337"
->>>>>>> origin/master
     ]
   ]
 ]

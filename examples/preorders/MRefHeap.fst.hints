@@ -8,11 +8,7 @@
       1,
       [ "@query", "equation_FStar.Pervasives.dfst" ],
       0,
-<<<<<<< HEAD
-      "f43301297be13f6f5c7a501f034634fd"
-=======
       "d34bc5cded508bb50b68f008e5a61cc9"
->>>>>>> origin/master
     ],
     [
       "MRefHeap.sel",
@@ -33,11 +29,7 @@
         "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-<<<<<<< HEAD
-      "43e4e77174229229c2573f5c076293d9"
-=======
       "1cd6c491338f75ce84eb9760c65059f9"
->>>>>>> origin/master
     ],
     [
       "MRefHeap.alloc_ref",
@@ -49,11 +41,7 @@
         "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-<<<<<<< HEAD
-      "dfc4b964173d5d1e615d70d521bbd890"
-=======
       "2f32daab0ba637d5dd3a4843564a94a2"
->>>>>>> origin/master
     ],
     [
       "MRefHeap.alloc_ref",
@@ -106,11 +94,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-<<<<<<< HEAD
-      "f1a43e0cf24384d94e7345445d291a8b"
-=======
       "8354dd49758e23ad3c156d76a5319539"
->>>>>>> origin/master
     ],
     [
       "MRefHeap.upd",
@@ -122,11 +106,7 @@
         "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-<<<<<<< HEAD
-      "8c39e45ac174c1f6cef4b99f540952b0"
-=======
       "7492d14e18a8f1e0ab8293a3b5975506"
->>>>>>> origin/master
     ],
     [
       "MRefHeap.upd",
@@ -174,11 +154,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-<<<<<<< HEAD
-      "60953e9986943ed0411820ad0a140a04"
-=======
       "7bfa7b0f1e1c68da2841dd9347d15e3b"
->>>>>>> origin/master
     ],
     [
       "MRefHeap.emp",
@@ -199,11 +175,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-<<<<<<< HEAD
-      "cf16dfae7b619fa1ffd14c17fa253262"
-=======
       "c6c7f373c436714f7c7902fa68964f79"
->>>>>>> origin/master
     ],
     [
       "MRefHeap.alloc_ref",
@@ -215,11 +187,7 @@
         "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-<<<<<<< HEAD
-      "86c254be9c78108a3ef852b9d37287d8"
-=======
       "8daccdbaf46f9bcb7873677c0936d6ad"
->>>>>>> origin/master
     ],
     [
       "MRefHeap.upd",
@@ -231,11 +199,7 @@
         "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-<<<<<<< HEAD
-      "d943a1498b0be05fb83efc6a23f1f1ed"
-=======
       "c7031f962eb7c109d8a315fc37c271a6"
->>>>>>> origin/master
     ]
   ]
 ]

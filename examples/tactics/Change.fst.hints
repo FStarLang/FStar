@@ -8,11 +8,7 @@
       1,
       [ "@query", "equation_Change.id" ],
       0,
-<<<<<<< HEAD
-      "23a614c44eede9278a5b000e833e8588"
-=======
       "1e2ef5a4c7e542eb78a010a020f7c4db"
->>>>>>> origin/master
     ],
     [
       "Change.uu___61",
@@ -21,11 +17,7 @@
       1,
       [ "@query", "equation_Change.id" ],
       0,
-<<<<<<< HEAD
-      "3bf878ed61ff26c6f8e0b0c8919e1ca6"
-=======
       "276a7dee702cba3cd4480019c10c665e"
->>>>>>> origin/master
     ]
   ]
 ]

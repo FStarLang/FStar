@@ -12,11 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-<<<<<<< HEAD
-      "19acb45fd023cd8a83e975ada13ce618"
-=======
       "f527c626f36ff275995a4a4453b7dd3e"
->>>>>>> origin/master
     ],
     [
       "Rewrite.Monoid.monoid_reflect_rhs",
@@ -29,11 +25,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-<<<<<<< HEAD
-      "82bcabf5b830e644f4805c6c88135064"
-=======
       "ed00b996c645045c824c6453099e259b"
->>>>>>> origin/master
     ],
     [
       "Rewrite.Monoid.elim_implies",
@@ -45,11 +37,7 @@
         "refinement_interpretation_Rewrite.Monoid_Tm_refine_be8d4c3a4018f7bc07ddbce3645c57d4"
       ],
       0,
-<<<<<<< HEAD
-      "7a483e5504969576cc5df32b473adb7b"
-=======
       "44b79922f86d1dc8eb52af6f517dcccf"
->>>>>>> origin/master
     ],
     [
       "Rewrite.Monoid.elim_implies",
@@ -61,11 +49,7 @@
         "refinement_interpretation_Rewrite.Monoid_Tm_refine_be8d4c3a4018f7bc07ddbce3645c57d4"
       ],
       0,
-<<<<<<< HEAD
-      "7ceb27351d8319db7d7339485740916e"
-=======
       "0002d2e60ba9bb62ca5501e466ed23e0"
->>>>>>> origin/master
     ],
     [
       "Rewrite.Monoid.apply_imp",
@@ -84,11 +68,7 @@
         "typing_FStar.Tactics.Result.uu___is_Success"
       ],
       0,
-<<<<<<< HEAD
-      "aec8bd7a0b8f7dc9f23f5578704927cf"
-=======
       "b17e1b94b57db3e5857c3569f483fd88"
->>>>>>> origin/master
     ]
   ]
 ]

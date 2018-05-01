@@ -35,11 +35,7 @@
         "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "2a65564e5b0b56f5a0ae591abb040b62"
-=======
       "4528435530aa239371f6c5bb207b3156"
->>>>>>> origin/master
     ],
     [
       "IfcReificationRegressionTest.bidule1",
@@ -76,11 +72,7 @@
         "token_correspondence_IfcReificationRegressionTest.x1", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "23638a4424c43a1fd3729e891748decc"
-=======
       "46fabc936353b5b5ffd8151a211966eb"
->>>>>>> origin/master
     ],
     [
       "IfcReificationRegressionTest.bidule2",
@@ -118,11 +110,7 @@
         "token_correspondence_IfcReificationRegressionTest.x2", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "f09664c904b8fa01c72e3c60c8e647c0"
-=======
       "32e70a7178a26f80b819522dbdce8358"
->>>>>>> origin/master
     ],
     [
       "IfcReificationRegressionTest.bidule3",
@@ -157,11 +145,7 @@
         "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "ef5515a022597a8617aa4619c13a84ed"
-=======
       "cb4d2d5b397ea725f1fda80b031a0f6e"
->>>>>>> origin/master
     ]
   ]
 ]

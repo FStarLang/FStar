@@ -17,27 +17,16 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-<<<<<<< HEAD
-      "f53a0f52d23462859f6da5f07cc8122d"
-=======
       "37a895746db8dccc3824405f5729b5ed"
->>>>>>> origin/master
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_632c45b0a0bb44e12be5f467a06c3783"
-      ],
+      [ "@query" ],
       0,
-<<<<<<< HEAD
-      "86cb1e9607fde572233242f229041982"
-=======
       "427437f64c2c1faa4566410fa69e6d7a"
->>>>>>> origin/master
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -54,11 +43,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-<<<<<<< HEAD
-      "ae257f4043e4bca8313a125bbcfdd273"
-=======
       "72cdebd79d9da9f4d9ba6e4ffe3ed9cf"
->>>>>>> origin/master
     ],
     [
       "StringPrinter.Rec.do_while_correct",
@@ -104,11 +89,7 @@
         "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "d1fd13890ef76d52274acb9e7a1c5e71"
-=======
       "af746b77e21795c3d2239d2f671cb3ff"
->>>>>>> origin/master
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -137,11 +118,7 @@
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "aaec53772aaa9c3f64504aee9fc9974f"
-=======
       "75bde49cdf09cea570cce010c4382a0b"
->>>>>>> origin/master
     ],
     [
       "StringPrinter.Rec.do_while_body_post",
@@ -159,27 +136,16 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-<<<<<<< HEAD
-      "1dd7b29badc57db8e2ab77fe84300003"
-=======
       "cc3084cc37f59b6e78b4e12cd4edda95"
->>>>>>> origin/master
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
       2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_632c45b0a0bb44e12be5f467a06c3783"
-      ],
+      [ "@query" ],
       0,
-<<<<<<< HEAD
-      "61f7e76aa5e51426921f52d7a059411a"
-=======
       "4ae60080af6cbb90618c892305c7fdd7"
->>>>>>> origin/master
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -196,11 +162,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-<<<<<<< HEAD
-      "50f9530e40eb2879122cbf5153e326ac"
-=======
       "86d284a66c3b12ea46452a0cb695843b"
->>>>>>> origin/master
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -229,11 +191,7 @@
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "9ef00b79113fca9b8c16e581561e6c8e"
-=======
       "60dde6597a9535b1d52bd68cf510a128"
->>>>>>> origin/master
     ]
   ]
 ]

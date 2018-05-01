@@ -13,11 +13,7 @@
         "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_8445d79c1f764e59f2958fa0cdffa351"
       ],
       0,
-<<<<<<< HEAD
-      "238ac6410ee85ead70f3760c7346407e"
-=======
       "bbf7bd46df4309a77e90d466a633288f"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.Continuations.__proj__L__item__b",
@@ -31,11 +27,7 @@
         "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_8445d79c1f764e59f2958fa0cdffa351"
       ],
       0,
-<<<<<<< HEAD
-      "20d4ab96fb1bf2a64a98c6eb522fe71c"
-=======
       "f750b3d903b3021957d3b709a5d3edc3"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.Continuations.__proj__L__item___2",
@@ -51,11 +43,7 @@
         "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_8445d79c1f764e59f2958fa0cdffa351"
       ],
       0,
-<<<<<<< HEAD
-      "dcb30a062d8492d79712ab365f24e87d"
-=======
       "f0ebf864622c611f093f030eedd070c9"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.Continuations.__proj__R__item__a",
@@ -69,11 +57,7 @@
         "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_a6a39bffc11b264d9749ffb3bf1e08d0"
       ],
       0,
-<<<<<<< HEAD
-      "f333c21ac74c0140cc6284964570d7c3"
-=======
       "53569967dfa27d893c2729b960170f4e"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.Continuations.__proj__R__item__b",
@@ -87,11 +71,7 @@
         "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_a6a39bffc11b264d9749ffb3bf1e08d0"
       ],
       0,
-<<<<<<< HEAD
-      "1d9df69f23e137de7d676ff2de222e46"
-=======
       "f0560846085e51cb05055e4f0206c466"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.Continuations.__proj__R__item___2",
@@ -107,11 +87,7 @@
         "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_a6a39bffc11b264d9749ffb3bf1e08d0"
       ],
       0,
-<<<<<<< HEAD
-      "cc6c1e2b8725476493483bd429b91fde"
-=======
       "97acc28b4ce6c057b3053949f35bcffa"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.Continuations.__proj__L__item__a",
@@ -125,11 +101,7 @@
         "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_8445d79c1f764e59f2958fa0cdffa351"
       ],
       0,
-<<<<<<< HEAD
-      "5770b4b2bebc4cfc6cbfc835cbf6a997"
-=======
       "5aea6701c000b751b5cfeb0c16210b07"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.Continuations.__proj__L__item__b",
@@ -143,11 +115,7 @@
         "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_8445d79c1f764e59f2958fa0cdffa351"
       ],
       0,
-<<<<<<< HEAD
-      "4386ca70c6cf8090d58564a4db22a935"
-=======
       "f33fbb69b6be5fbd0f4f933d03be98a7"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.Continuations.__proj__L__item___2",
@@ -163,11 +131,7 @@
         "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_8445d79c1f764e59f2958fa0cdffa351"
       ],
       0,
-<<<<<<< HEAD
-      "666f59e9e6d6c5598981ee778960c44b"
-=======
       "53801c44e63f6e188228861fc7603928"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.Continuations.__proj__R__item__a",
@@ -181,11 +145,7 @@
         "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_a6a39bffc11b264d9749ffb3bf1e08d0"
       ],
       0,
-<<<<<<< HEAD
-      "13f7a5258c94fcf6625df11347783357"
-=======
       "5cd7aa046f4eb61472c6390e40ef41df"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.Continuations.__proj__R__item__b",
@@ -199,11 +159,7 @@
         "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_a6a39bffc11b264d9749ffb3bf1e08d0"
       ],
       0,
-<<<<<<< HEAD
-      "60f73c13a08f3c01eb0c65ff89b83d76"
-=======
       "a4bc531c2acbdb73c4b7908fee12bf9a"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.Continuations.__proj__R__item___2",
@@ -219,11 +175,7 @@
         "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_a6a39bffc11b264d9749ffb3bf1e08d0"
       ],
       0,
-<<<<<<< HEAD
-      "f23638ac80160eec32f5fafe63b85dfb"
-=======
       "511161699a03700482260c51dc0aa311"
->>>>>>> origin/master
     ]
   ]
 ]

@@ -16,11 +16,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-<<<<<<< HEAD
-      "48559fb7eda77d720ef65e4dfe64e2c5"
-=======
       "adbaaae64609b5f567c81b94485145c2"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.prog",
@@ -32,11 +28,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "d619d455b0a848c921a700184c72f786"
-=======
       "c7e4b5bdbd4ac9d3eb5c7887a4695368"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.low_equiv",
@@ -45,11 +37,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "f78db0d7ec043dd24ea63598bdae0740"
-=======
       "925a8403cb19f2b4cb164d4ef74ed7b2"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.iexpr_eq",
@@ -58,11 +46,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "a676587022c47ff605ae58b12ef60744"
-=======
       "8ef8e51e18dea8dc06a67be3082f25f2"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.bexpr_eq",
@@ -71,11 +55,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-<<<<<<< HEAD
-      "da35994e5c7a608849364bb7514a76f2"
-=======
       "a8cc2583b66c6b22193390dcf138dd70"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.g_for_all",
@@ -89,11 +69,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-<<<<<<< HEAD
-      "6cc9cfe4594e786c6aac3583da32be43"
-=======
       "e6ba1ada971b0a4052129384bb035926"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.del_rel",
@@ -110,11 +86,7 @@
         "typing_FStar.Heap.ref", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "6d3f9025cc5cc6b1da70d2810a15b7cb"
-=======
       "08a8b3116a840c95bebad6a3fc4ff6ca"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.del_rel",
@@ -131,11 +103,7 @@
         "typing_FStar.Heap.ref", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "cb02c3bbecf932963a5594726cd86fd1"
-=======
       "b5f8ce9a9d9636da87604f4d2310d60b"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.test",
@@ -163,11 +131,7 @@
         "typing_FStar.Heap.ref"
       ],
       0,
-<<<<<<< HEAD
-      "52d0ca0791eb9e41145bf8a1cae489ed"
-=======
       "f237f605d3cba7343f89dc79fbdbc277"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_test",
@@ -179,11 +143,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "a963ef3c2e9dfeaa55fc1a00bbca8b2e"
-=======
       "8b662763a0e1248a60ec5e1f6815cfb4"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_test",
@@ -195,11 +155,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "89121b00894e582c81a6411241c620c0"
-=======
       "6efda5ea32baace3ab8a4f9d68c52d2e"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_test",
@@ -224,11 +180,7 @@
         "typing_FStar.Heap.ref", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "85bc6d18457706ebe2e9862819ee747b"
-=======
       "86307cfe9484aa6b16233c9aaea69760"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_test",
@@ -284,11 +236,7 @@
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r"
       ],
       0,
-<<<<<<< HEAD
-      "8ffaf972af89e0f127abfce99fb534dd"
-=======
       "e3f367e9868fe74c2d5f8a482ba5e689"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.sum",
@@ -328,11 +276,7 @@
         "typing_FStar.Heap.ref", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-<<<<<<< HEAD
-      "bc1c2a46165627c100b68bb865a3686e"
-=======
       "c3ec575b5c0df76835597df4597546ec"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_sum",
@@ -344,11 +288,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "230309850dbfca53c4b54cd71ee6735f"
-=======
       "9e26a641fcd85b9b38a065f8dbc94469"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_sum",
@@ -360,11 +300,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "e0181aa89344caf595e6540ac5756af9"
-=======
       "d244f6d4371088e6d3071b06802de198"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_sum",
@@ -389,11 +325,7 @@
         "typing_FStar.Heap.ref", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "4d88f8b076ab1ffdefbc22aeec89d149"
-=======
       "5162cb1b1872162b4c51242ef0c89d9d"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_sum",
@@ -444,11 +376,7 @@
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r"
       ],
       0,
-<<<<<<< HEAD
-      "55b827b83ed648fcd8e7246ac5d3c52c"
-=======
       "b0b2d9ebc908534ad964990be904a5b5"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.sum_swap",
@@ -488,11 +416,7 @@
         "typing_FStar.Heap.ref", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-<<<<<<< HEAD
-      "c8e9ac6e4fc6b4d23e1b24d70cd16864"
-=======
       "918c01e04c0d473a875599534862f891"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_sum_swap",
@@ -504,11 +428,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "ee27a8a0b702be7b65bbfa3a8d1a9407"
-=======
       "760fe4c0852b53618b59de628bb2a5ca"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_sum_swap",
@@ -520,11 +440,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "18a20f464dc43d768370d8a28d4f2a8b"
-=======
       "c1bbf45b0beaf305b0486c6841502940"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_sum_swap",
@@ -549,11 +465,7 @@
         "typing_FStar.Heap.ref", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "17f06102809041c35dccb477b39e6f89"
-=======
       "e36c7b4f5c8da19daabea8566f8ca538"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_sum_swap",
@@ -632,11 +544,7 @@
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r"
       ],
       0,
-<<<<<<< HEAD
-      "9117765feaaeef933d6b613deb451ffa"
-=======
       "b06754493d812de66514507be08d7e1c"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.sum_att",
@@ -676,11 +584,7 @@
         "typing_FStar.Heap.ref", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-<<<<<<< HEAD
-      "094a5d79ef617e04220cff13f3c54aec"
-=======
       "5500a1dce5b442c69fe3b734060f0fb5"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.wallet",
@@ -708,11 +612,7 @@
         "typing_FStar.Heap.ref"
       ],
       0,
-<<<<<<< HEAD
-      "0d22ae61a12d601bc6b8411ef7af8e15"
-=======
       "632cc97abf91b8dfc83a788f34e0508f"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_wallet",
@@ -724,11 +624,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "11f78987445f9d4108158d9d8fc13a9d"
-=======
       "0a5b06f05714bfca574c2697d5dfd2b7"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_wallet",
@@ -753,11 +649,7 @@
         "typing_FStar.Heap.ref", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "42a6e21234cbc5084c7410b53f3e35da"
-=======
       "3d52fab93809ad8695ca66c47b9a7e8a"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_wallet",
@@ -819,11 +711,7 @@
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r"
       ],
       0,
-<<<<<<< HEAD
-      "bae1be0c00f1887893a065f7b3128ef7"
-=======
       "a278952da323e459d2df06f4bad3a0b6"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.wallet_attack_loop",
@@ -832,11 +720,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "1f2621ed9b9139a563e7c84ff87badc4"
-=======
       "f6872570febfd210a07825b4aa51e789"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.wallet_attack_loop",
@@ -854,11 +738,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-<<<<<<< HEAD
-      "e1efb7f1ea61525a910d8a994febb713"
-=======
       "6fc4032b564dcfa8dd6c61bb75981cab"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.wallet_attack_loop",
@@ -914,11 +794,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "a67aaf24dcc87e2199b72e10049854ea"
-=======
       "cdd2cf2c914d1cb3ce83b9bba490b9bd"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.wallet_attack",
@@ -958,11 +834,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-<<<<<<< HEAD
-      "bfefad44e6ffedc61c26b00858c52bfd"
-=======
       "d36724a078c81d42e99af8b7cf991277"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.refs_invariant",
@@ -979,11 +851,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-<<<<<<< HEAD
-      "0b06197e4d4a273308d3f3a600908417"
-=======
       "8cdb804c01b4c893b1dbba5dc9344077"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.prog",
@@ -995,11 +863,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "4c26b358458cfceab5437d839b476442"
-=======
       "9f4226c153f6c4a277a904623a70d0bc"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.low_equiv",
@@ -1008,11 +872,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "cce432a98cb966b85e983767f4b4655e"
-=======
       "55430be1860f51b84a0bf3f9db92d38c"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.iexpr_eq",
@@ -1021,11 +881,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "9b8dc81a6ee4e14c6fd23ace2afd110e"
-=======
       "8cab48d366f0089438e9e56e4d50580d"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.bexpr_eq",
@@ -1034,11 +890,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-<<<<<<< HEAD
-      "a0114ece3a355d8bc1655aba9faacdbb"
-=======
       "230772d2981edfb04df8a1592d414194"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.g_for_all",
@@ -1052,11 +904,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-<<<<<<< HEAD
-      "7412467206e2b6059b6694be944b3b0a"
-=======
       "c2e86f672550f6504ca9698ebade82d5"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.del_rel",
@@ -1073,11 +921,7 @@
         "typing_FStar.Heap.ref", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "bbc45c0436f9049aeada9c73eed5f894"
-=======
       "3b18ac23ec10bf6e6d7b8c8543f78a44"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.del_rel",
@@ -1094,11 +938,7 @@
         "typing_FStar.Heap.ref", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "6916013c077d64783e415bd6b221350c"
-=======
       "8b8c679fcbb1005ba9f3082b49e7a6cc"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.test",
@@ -1126,11 +966,7 @@
         "typing_FStar.Heap.ref"
       ],
       0,
-<<<<<<< HEAD
-      "66ef905f100c7cc82e885e30ec5a631e"
-=======
       "efcf6a3a102c4505f4a8dc8f46b95599"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.test",
@@ -1142,11 +978,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "43c9fd75ef14b8d35bbc63c7fc01dc52"
-=======
       "8ff649c5c146992dcd591496089f7139"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_test",
@@ -1173,11 +1005,7 @@
         "typing_FStar.Heap.ref", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "9b23dd238bc957f67dd2a2bceeb1b595"
-=======
       "97682f33dbbb34a708fc40647431144c"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.sum",
@@ -1217,11 +1045,7 @@
         "typing_FStar.Heap.ref", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-<<<<<<< HEAD
-      "7be89b08b9150f2f711aca0f64a70beb"
-=======
       "bec75e5d8f749eb959207f162a5e1ad0"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.sum",
@@ -1233,11 +1057,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "7c7c9fd295f8570ffaaf508e2c1f387f"
-=======
       "db446761fe979633fff6a09270e2f478"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_sum",
@@ -1264,11 +1084,7 @@
         "typing_FStar.Heap.ref", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "3741ca98e6d3459bb01101001fa4589b"
-=======
       "9af0f1bbdd8bc95c3b981a2f5dfdefe1"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.sum_swap",
@@ -1308,11 +1124,7 @@
         "typing_FStar.Heap.ref", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-<<<<<<< HEAD
-      "7f08920cf9e28372158d2425b5ba5de9"
-=======
       "5d76b887e05db6c8a221025336ec2260"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.sum_swap",
@@ -1324,11 +1136,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "f7ae14cdc6e41ff56db8d58935748ba3"
-=======
       "5be3baa23e3bcb4a427aaa777a2f8948"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_sum_swap",
@@ -1355,11 +1163,7 @@
         "typing_FStar.Heap.ref", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "2b4452374ad64b11f41a024087ea61b0"
-=======
       "87b18d374f6a025d3b5c7c71860842ed"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.sum_att",
@@ -1399,11 +1203,7 @@
         "typing_FStar.Heap.ref", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-<<<<<<< HEAD
-      "5995f1d5a07f88d4131de6726a5f543b"
-=======
       "76918bfc485c66d8552c40117e81b8a3"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.sum_att",
@@ -1415,11 +1215,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "f8202eb455f99c9187252879b0a5b9da"
-=======
       "45d46c3b6864a706efba919d8340a577"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.wallet",
@@ -1447,11 +1243,7 @@
         "typing_FStar.Heap.ref"
       ],
       0,
-<<<<<<< HEAD
-      "4e3b97427a016e8bcdadc137c48b54d7"
-=======
       "4d363d2dfed8a721808c919a94e8eda8"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.wallet",
@@ -1463,11 +1255,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "d469c2b12eb0d996d87903b58368b187"
-=======
       "6680ce9899d7ed9bf5ee74453b65b307"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.verify_wallet",
@@ -1494,11 +1282,7 @@
         "typing_FStar.Heap.ref", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "83a096032634bb4a6f1323b41b51a396"
-=======
       "35e2973d3842e6bca46da40b7894f767"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.wallet_attack_loop",
@@ -1554,11 +1338,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "ddde00d07d04b71c769f1bbeabecdd78"
-=======
       "cff77ff793c10493b9802cb620d1bff0"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.wallet_attack",
@@ -1598,11 +1378,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-<<<<<<< HEAD
-      "eab1f569c3960a0c4748b62348c89947"
-=======
       "bcaa401874563f933f51e10cff464df2"
->>>>>>> origin/master
     ],
     [
       "IfcDelimitedRelease.wallet_attack",
@@ -1614,11 +1390,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "104a66aa303d95577f03a80fed07f53a"
-=======
       "cc74293803d807385ae3c71a6c3340fc"
->>>>>>> origin/master
     ]
   ]
 ]

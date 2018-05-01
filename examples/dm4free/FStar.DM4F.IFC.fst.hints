@@ -21,11 +21,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-<<<<<<< HEAD
-      "0b02a2512aa96815c51fc4caaa6957d5"
-=======
       "8abcdb8073bff1a7478b42703a101cd6"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.IFC.join",
@@ -34,11 +30,7 @@
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
       0,
-<<<<<<< HEAD
-      "fbb1c214d8da87ae789fecfda07d297e"
-=======
       "70ea3edf0ddfd79ab481bca74152184a"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.IFC.flows",
@@ -47,11 +39,7 @@
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
       0,
-<<<<<<< HEAD
-      "d421357734946fe6f9ba629defa3e76b"
-=======
       "1589f647ba373c6861c471703244c0d9"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.IFC.bind_ifc",
@@ -73,11 +61,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-<<<<<<< HEAD
-      "1e97911b87f10bbb9d71f306098f0bcc"
-=======
       "3fe048e001e06b3e25956ee652715faf"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.IFC.join",
@@ -86,11 +70,7 @@
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
       0,
-<<<<<<< HEAD
-      "cc55d3f07fd7fd60ee0e072b7eb80586"
-=======
       "e857cfe245a6b96830c1a506d800b3bf"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.IFC.flows",
@@ -99,11 +79,7 @@
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label__uu___haseq" ],
       0,
-<<<<<<< HEAD
-      "0d57d542d2625de8461585ab6a8ed64c"
-=======
       "e3214e2e273b8120a1b800ca41a378a9"
->>>>>>> origin/master
     ]
   ]
 ]

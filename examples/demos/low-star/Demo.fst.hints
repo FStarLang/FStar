@@ -44,11 +44,7 @@
         "typing_FStar.Buffer.length", "typing_FStar.UInt32.v"
       ],
       0,
-<<<<<<< HEAD
-      "b2ee3ba81ba514c9ae6efc017ddbd8b4"
-=======
       "ffaeb2bf1344ddfbb059d5d890cbf47c"
->>>>>>> origin/master
     ],
     [
       "Demo.copy3",
@@ -129,11 +125,7 @@
         "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "8cf36de0139cf351fabf0c106f2957f1"
-=======
       "5c9a18c22f49b00f71c63c223e969abe"
->>>>>>> origin/master
     ],
     [
       "Demo.copy4",
@@ -205,11 +197,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-<<<<<<< HEAD
-      "48ad40b4d0333a2fad1366e8060251b0"
-=======
       "3b6188495ec250b7ff3a3a0ea755e89f"
->>>>>>> origin/master
     ],
     [
       "Demo.copy4",
@@ -222,11 +210,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-<<<<<<< HEAD
-      "37c4f968b1232196529b512a9c63f4c4"
-=======
       "16ac0947f8da03ea3a87061e46f70b90"
->>>>>>> origin/master
     ]
   ]
 ]

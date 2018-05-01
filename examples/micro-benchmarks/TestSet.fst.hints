@@ -15,11 +15,7 @@
         "typing_FStar.TSet.singleton", "typing_FStar.TSet.union"
       ],
       0,
-<<<<<<< HEAD
-      "ce650951af2bc24c3fde5cfe4797b1f3"
-=======
       "73535c17b027bbb6edbaa659e67590f1"
->>>>>>> origin/master
     ]
   ]
 ]

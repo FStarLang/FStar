@@ -37,11 +37,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-<<<<<<< HEAD
-      "3fc84ded70fe74290516a502f7baf2b7"
-=======
       "e3cb5bb99359954fdfd6d66cb63cf4f3"
->>>>>>> origin/master
     ],
     [
       "Test.flip",
@@ -122,17 +118,10 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_9560ef23f44dd048af58f1767cc19bc8",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-<<<<<<< HEAD
-        "refinement_interpretation_Test_Tm_refine_26f9f3dae6df0f6210299d6e2b957c14",
-        "refinement_interpretation_Test_Tm_refine_6f9aa66937ca4c204e459d01042299f6",
-        "refinement_interpretation_Test_Tm_refine_aa64be050942276fe56b153e43b7203f",
-        "refinement_interpretation_Test_Tm_refine_b1ef3f73dcaae3db4d9523385afe79cf",
-=======
         "refinement_interpretation_Test_Tm_refine_1bc4fe418f730757243eb243c1ec84db",
         "refinement_interpretation_Test_Tm_refine_6f9aa66937ca4c204e459d01042299f6",
         "refinement_interpretation_Test_Tm_refine_8ee86a11ec47ac3cc036d37ede3aae4d",
         "refinement_interpretation_Test_Tm_refine_f6a537aa852bdcec458678d9c4175053",
->>>>>>> origin/master
         "string_typing",
         "token_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
@@ -144,11 +133,7 @@
         "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-<<<<<<< HEAD
-      "d7c04d689f6968c65cedfbf6f8bae47b"
-=======
       "73d4bc725f90f0853df47f9152a65fad"
->>>>>>> origin/master
     ],
     [
       "Test.flip'",
@@ -229,17 +214,10 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_9560ef23f44dd048af58f1767cc19bc8",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-<<<<<<< HEAD
-        "refinement_interpretation_Test_Tm_refine_26f9f3dae6df0f6210299d6e2b957c14",
-        "refinement_interpretation_Test_Tm_refine_6f9aa66937ca4c204e459d01042299f6",
-        "refinement_interpretation_Test_Tm_refine_aa64be050942276fe56b153e43b7203f",
-        "refinement_interpretation_Test_Tm_refine_b1ef3f73dcaae3db4d9523385afe79cf",
-=======
         "refinement_interpretation_Test_Tm_refine_1bc4fe418f730757243eb243c1ec84db",
         "refinement_interpretation_Test_Tm_refine_6f9aa66937ca4c204e459d01042299f6",
         "refinement_interpretation_Test_Tm_refine_8ee86a11ec47ac3cc036d37ede3aae4d",
         "refinement_interpretation_Test_Tm_refine_f6a537aa852bdcec458678d9c4175053",
->>>>>>> origin/master
         "string_typing",
         "token_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
@@ -251,11 +229,7 @@
         "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-<<<<<<< HEAD
-      "054ad0b920dbdba170dec80b1e51d796"
-=======
       "63a5318f74c1e9adbf1015fc7afe3ea1"
->>>>>>> origin/master
     ]
   ]
 ]

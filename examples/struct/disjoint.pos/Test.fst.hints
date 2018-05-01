@@ -47,11 +47,7 @@
         "typing_tok_FStar.Pointer.Base.TBool@tok"
       ],
       0,
-<<<<<<< HEAD
-      "b639a720505a037936c8d6aa42a0e4dd"
-=======
       "298ee4b129d6fb89b886667a66472244"
->>>>>>> origin/master
     ],
     [
       "Test.callee",
@@ -88,7 +84,7 @@
         "equation_with_fuel_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
         "function_token_typing_Test.struct",
-        "function_token_typing_Test.struct_t", "int_typing",
+        "function_token_typing_Test.struct_t", "int_inversion", "int_typing",
         "lemma_FStar.Pointer.Base.gread_gfield",
         "lemma_FStar.Pointer.Base.live_gfield",
         "lemma_FStar.Pointer.Base.modifies_pointer_elim",
@@ -112,22 +108,14 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_9560ef23f44dd048af58f1767cc19bc8",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
-<<<<<<< HEAD
-        "refinement_interpretation_Test_Tm_refine_4b2f407b6bacf8cb972e5c4709efb1c2",
-=======
         "refinement_interpretation_Test_Tm_refine_87402315bebb350f3312f54fae4f4180",
->>>>>>> origin/master
         "refinement_interpretation_Test_Tm_refine_abc25e0ebc5f7440fde89b32fc79589b",
         "string_typing", "token_correspondence_FStar.Pervasives.Native.fst",
         "typing_FStar.Pointer.Base.loc_pointer",
         "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-<<<<<<< HEAD
-      "144cba1cad3ddd780a826b8c88d96b23"
-=======
       "7d4a5cc4cdb9ff924ff10da1335cecb2"
->>>>>>> origin/master
     ],
     [
       "Test.more_struct",
@@ -184,11 +172,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-<<<<<<< HEAD
-      "f89ba2480cbe8c9b0fc43f763382f007"
-=======
       "cda5d1a06876f02c6aed5f5b05a39c40"
->>>>>>> origin/master
     ],
     [
       "Test.caller",
@@ -363,11 +347,7 @@
         "typing_FStar.Set.union", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "d62ca0cf4c86a0aa0df91f7d8e8a7c72"
-=======
       "69cab1aad554b7c631c01cc1dab8537a"
->>>>>>> origin/master
     ]
   ]
 ]

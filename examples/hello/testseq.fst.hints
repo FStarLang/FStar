@@ -21,11 +21,7 @@
         "typing_FStar.Seq.Base.length", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "1fc280719a27ecf6e5d5146eeba19bb8"
-=======
       "3abaa189f051de7b2d442662de44ad08"
->>>>>>> origin/master
     ],
     [
       "TestSeq.main",
@@ -41,11 +37,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-<<<<<<< HEAD
-      "cafaea05002d811597e0fd9c4aad468d"
-=======
       "633338c9a7026fcc34a2fc7fd2e2f7ce"
->>>>>>> origin/master
     ]
   ]
 ]

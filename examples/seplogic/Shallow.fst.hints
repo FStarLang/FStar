@@ -15,11 +15,7 @@
         "refinement_interpretation_Shallow_Tm_refine_05cfe18b0b860e90eeb56625b596df8e"
       ],
       0,
-<<<<<<< HEAD
-      "fd2455042658cff587d91f70825c5650"
-=======
       "08b5e90c056f00608782aaa22058f588"
->>>>>>> origin/master
     ],
     [
       "Shallow.return_with_binding",
@@ -35,11 +31,7 @@
         "refinement_interpretation_Shallow_Tm_refine_3f37abd0c5d90ec869c8ef5652af0c04"
       ],
       0,
-<<<<<<< HEAD
-      "e36dae4fa69d6a1dbbb8278541292f6b"
-=======
       "f743a6e1e038c51fbf046adbf0561ac3"
->>>>>>> origin/master
     ],
     [
       "Shallow.frame_post",
@@ -48,11 +40,7 @@
       1,
       [ "@query", "lemma_SepLogic.Heap.lemma_sep_defined_disjoint_heaps" ],
       0,
-<<<<<<< HEAD
-      "315d4a23cbe16dfc8f854dc07ff332b9"
-=======
       "eaf02b60c734d9fc300b95cd2ce182c8"
->>>>>>> origin/master
     ],
     [
       "Shallow.frame",
@@ -82,11 +70,7 @@
         "token_correspondence_Shallow.frame_post"
       ],
       0,
-<<<<<<< HEAD
-      "c8eebdc7db110966cdc7dd62dcee9b55"
-=======
       "6fb2733b196d77fba04739120e7f0253"
->>>>>>> origin/master
     ],
     [
       "Shallow.bind_without_framing",
@@ -108,11 +92,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-<<<<<<< HEAD
-      "688c19ea4deb91fa6589b8ce87be9945"
-=======
       "20327db00638c76213814aeb201b0b50"
->>>>>>> origin/master
     ],
     [
       "Shallow.bind_with_framing",
@@ -138,11 +118,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-<<<<<<< HEAD
-      "eb91a12f3d653fd496c1cef4ac0dfe9d"
-=======
       "79577ab7459a7f06d757c32380976256"
->>>>>>> origin/master
     ],
     [
       "Shallow.read_without_framing",
@@ -161,11 +137,7 @@
         "refinement_interpretation_Shallow_Tm_refine_94f4b929f73c633a2a1e325f4de54949"
       ],
       0,
-<<<<<<< HEAD
-      "40ea0ab3460556c2664f0236f201fcfb"
-=======
       "a0981d1df4b42a4397e7e18be057fb94"
->>>>>>> origin/master
     ],
     [
       "Shallow.read_with_framing",
@@ -178,11 +150,7 @@
         "token_correspondence_Shallow.frame_read_wp"
       ],
       0,
-<<<<<<< HEAD
-      "ecb9d9bbda076ba0aa03696002cb08e9"
-=======
       "fcf910ae67470ceaf95941b45041d938"
->>>>>>> origin/master
     ],
     [
       "Shallow.write_wp",
@@ -194,11 +162,7 @@
         "lemma_SepLogic.Heap.lemma_points_to_mcontains"
       ],
       0,
-<<<<<<< HEAD
-      "b89716b62627483ef3968cd6472e3309"
-=======
       "34985b6f6257002c8c45cc938536292e"
->>>>>>> origin/master
     ],
     [
       "Shallow.write_without_framing",
@@ -221,11 +185,7 @@
         "token_correspondence_Shallow.write_wp", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "921f29d9d321d56293a42e36959aae59"
-=======
       "3b6912b11c324f9797f3fc61cfca6600"
->>>>>>> origin/master
     ],
     [
       "Shallow.write_with_framing",
@@ -240,11 +200,7 @@
         "token_correspondence_Shallow.frame_write_wp", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "959fad90aa1b2bf55e28a9f1c5e609d8"
-=======
       "21900dcd6d12f36fe7c797533c9302f3"
->>>>>>> origin/master
     ],
     [
       "Shallow.alloc_without_framing",
@@ -260,11 +216,7 @@
         "token_correspondence_Shallow.alloc_wp"
       ],
       0,
-<<<<<<< HEAD
-      "fcce5196d61e3af3218094a1842ee430"
-=======
       "738943661ee66fe43b60f4fac7eacf44"
->>>>>>> origin/master
     ],
     [
       "Shallow.alloc_with_framing",
@@ -277,11 +229,7 @@
         "token_correspondence_Shallow.frame_alloc_wp"
       ],
       0,
-<<<<<<< HEAD
-      "d5a769f0842f653ba781e93cec408e90"
-=======
       "79116129bbc4b7bc1c823592e1456439"
->>>>>>> origin/master
     ],
     [
       "Shallow.dealloc_wp",
@@ -293,11 +241,7 @@
         "lemma_SepLogic.Heap.lemma_points_to_mcontains"
       ],
       0,
-<<<<<<< HEAD
-      "f119ddb45b23d149c1aa78c62d1ca536"
-=======
       "07e09a32e1be2036f8e01583d20c81db"
->>>>>>> origin/master
     ],
     [
       "Shallow.dealloc_without_framing",
@@ -320,11 +264,7 @@
         "token_correspondence_Shallow.dealloc_wp", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "0f6954814ca5208b7b33d965cfde86b5"
-=======
       "8251b1d5dcd209aea3024ded32328561"
->>>>>>> origin/master
     ],
     [
       "Shallow.dealloc_with_framing",
@@ -339,11 +279,7 @@
         "token_correspondence_Shallow.frame_dealloc_wp", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "7a227335420638d54a88377db8d30992"
-=======
       "208aeec81b6bbd398462f81931134d04"
->>>>>>> origin/master
     ],
     [
       "Shallow.return_without_binding",
@@ -359,11 +295,7 @@
         "refinement_interpretation_Shallow_Tm_refine_05cfe18b0b860e90eeb56625b596df8e"
       ],
       0,
-<<<<<<< HEAD
-      "7e269ac801d552396bd873ad929f7630"
-=======
       "7a3ad255a1a7b8ad4e8da7e0b7f4f2d4"
->>>>>>> origin/master
     ],
     [
       "Shallow.return_with_binding",
@@ -379,11 +311,7 @@
         "refinement_interpretation_Shallow_Tm_refine_3f37abd0c5d90ec869c8ef5652af0c04"
       ],
       0,
-<<<<<<< HEAD
-      "566fb6c418819b3d6cc0f918c3fa2da3"
-=======
       "6da882bea147d2c98aa55fad13275042"
->>>>>>> origin/master
     ],
     [
       "Shallow.frame_post",
@@ -392,11 +320,7 @@
       1,
       [ "@query", "lemma_SepLogic.Heap.lemma_sep_defined_disjoint_heaps" ],
       0,
-<<<<<<< HEAD
-      "eaef5fa58e3dc5016921572fa3891c2e"
-=======
       "16bcd57add36db9eccb1b85273de6fce"
->>>>>>> origin/master
     ],
     [
       "Shallow.frame",
@@ -426,11 +350,7 @@
         "token_correspondence_Shallow.frame_post"
       ],
       0,
-<<<<<<< HEAD
-      "08e73b4efe7897b1806560962272ea81"
-=======
       "98c6ca4be21039d252b63c8cf8858ca7"
->>>>>>> origin/master
     ],
     [
       "Shallow.bind_without_framing",
@@ -452,11 +372,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-<<<<<<< HEAD
-      "54dd1601e2b433f22606ead2f16926ea"
-=======
       "69801d7571909c6e0168218bdd196337"
->>>>>>> origin/master
     ],
     [
       "Shallow.bind_with_framing",
@@ -482,11 +398,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-<<<<<<< HEAD
-      "b4bf0476563d821d2942d7ff12336f4f"
-=======
       "fc91b04c884b8a5c2b5f0b357eccdd9a"
->>>>>>> origin/master
     ],
     [
       "Shallow.read_without_framing",
@@ -505,11 +417,7 @@
         "refinement_interpretation_Shallow_Tm_refine_94f4b929f73c633a2a1e325f4de54949"
       ],
       0,
-<<<<<<< HEAD
-      "91cd5f5b886b46e6dc0fe61afeb745de"
-=======
       "ce15860826ee1c9dec7c9cb9c7395774"
->>>>>>> origin/master
     ],
     [
       "Shallow.read_with_framing",
@@ -522,11 +430,7 @@
         "token_correspondence_Shallow.frame_read_wp"
       ],
       0,
-<<<<<<< HEAD
-      "31a79bb5cb1a1d5bb856fff7c564ad8d"
-=======
       "cc3fdc2a3f6fe8e6fd2144f9962e3eab"
->>>>>>> origin/master
     ],
     [
       "Shallow.write_wp",
@@ -538,11 +442,7 @@
         "lemma_SepLogic.Heap.lemma_points_to_mcontains"
       ],
       0,
-<<<<<<< HEAD
-      "69dd5a9107e8764189cd9b815b6f9bb0"
-=======
       "57101ab320b1d10e313dcdf39a90cb79"
->>>>>>> origin/master
     ],
     [
       "Shallow.write_without_framing",
@@ -565,11 +465,7 @@
         "token_correspondence_Shallow.write_wp", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "475b4a725bd611512b99ac90e73626f3"
-=======
       "c2f591f0b18d5b911f37f72c9b4fe0df"
->>>>>>> origin/master
     ],
     [
       "Shallow.write_with_framing",
@@ -584,11 +480,7 @@
         "token_correspondence_Shallow.frame_write_wp", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "191075c9ffe40daa47175a7f9395fb5e"
-=======
       "f04847cef52e1b88090678a835ede8e1"
->>>>>>> origin/master
     ],
     [
       "Shallow.alloc_without_framing",
@@ -604,11 +496,7 @@
         "token_correspondence_Shallow.alloc_wp"
       ],
       0,
-<<<<<<< HEAD
-      "07f7989c6b98c96872d24c9b18d97151"
-=======
       "85074b28da52e66de463625b19bfd106"
->>>>>>> origin/master
     ],
     [
       "Shallow.alloc_with_framing",
@@ -621,11 +509,7 @@
         "token_correspondence_Shallow.frame_alloc_wp"
       ],
       0,
-<<<<<<< HEAD
-      "13b0e809117a3cae3923aac6b292d175"
-=======
       "39848782fa58a5e32578510c79898371"
->>>>>>> origin/master
     ],
     [
       "Shallow.dealloc_wp",
@@ -637,11 +521,7 @@
         "lemma_SepLogic.Heap.lemma_points_to_mcontains"
       ],
       0,
-<<<<<<< HEAD
-      "229bb0c84f4673f2074a1dd012a1a73e"
-=======
       "54a29a094be430085b60e3414fff6d98"
->>>>>>> origin/master
     ],
     [
       "Shallow.dealloc_without_framing",
@@ -664,11 +544,7 @@
         "token_correspondence_Shallow.dealloc_wp", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "7802d972deee2ef771477a323791476a"
-=======
       "fdc94b76e0af8be03e826c2796d9c5b6"
->>>>>>> origin/master
     ],
     [
       "Shallow.dealloc_with_framing",
@@ -683,11 +559,7 @@
         "token_correspondence_Shallow.frame_dealloc_wp", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "611f5f56d2f9d400db3e555b7c23f6d9"
-=======
       "cf18a71cc65f8503abdb1f3efdbb5b0f"
->>>>>>> origin/master
     ]
   ]
 ]

@@ -12,11 +12,7 @@
         "disc_equation_While.Times", "fuel_guarded_inversion_While.binop"
       ],
       0,
-<<<<<<< HEAD
-      "a2797a00390215d57b7bb82fe9b629dc"
-=======
       "c46e7a7d9b9df55bd9292c8b39b2d3f1"
->>>>>>> origin/master
     ],
     [
       "While.__proj__AInt__item___0",
@@ -29,11 +25,7 @@
         "refinement_interpretation_While_Tm_refine_94ebaa80e9cf95cffc242c7914de3c00"
       ],
       0,
-<<<<<<< HEAD
-      "d512ab84188481ce2b940ecfecadd563"
-=======
       "36294a332badb617ec768ee2b8d2fe64"
->>>>>>> origin/master
     ],
     [
       "While.__proj__AVar__item___0",
@@ -46,11 +38,7 @@
         "refinement_interpretation_While_Tm_refine_be67e6dd42460413742cd5885f052b86"
       ],
       0,
-<<<<<<< HEAD
-      "0d9f90d0b995faa3ff0435b9cfdc1dba"
-=======
       "156d06cc59f213cb1046a6edf3dfd522"
->>>>>>> origin/master
     ],
     [
       "While.__proj__AOp__item___0",
@@ -63,11 +51,7 @@
         "refinement_interpretation_While_Tm_refine_a075d9df1f5c243dba503141508929bb"
       ],
       0,
-<<<<<<< HEAD
-      "98497e16e60f238c5205c203ee746c20"
-=======
       "09e44d6182fe8791f3cb8bfc776a9f44"
->>>>>>> origin/master
     ],
     [
       "While.__proj__AOp__item___1",
@@ -80,11 +64,7 @@
         "refinement_interpretation_While_Tm_refine_a075d9df1f5c243dba503141508929bb"
       ],
       0,
-<<<<<<< HEAD
-      "0d2688dd3a536f74f6be816761a9fec3"
-=======
       "17fc4401eb2bc6d9993e129fd805be37"
->>>>>>> origin/master
     ],
     [
       "While.__proj__AOp__item___2",
@@ -97,11 +77,7 @@
         "refinement_interpretation_While_Tm_refine_a075d9df1f5c243dba503141508929bb"
       ],
       0,
-<<<<<<< HEAD
-      "9649d3c52df92ca204795622dcb3d906"
-=======
       "f4c46b9bfa590a85d3b6ea17b614362d"
->>>>>>> origin/master
     ],
     [
       "While.interpret_exp",
@@ -116,11 +92,7 @@
         "fuel_guarded_inversion_While.exp", "subterm_ordering_While.AOp"
       ],
       0,
-<<<<<<< HEAD
-      "d8137e57f6d0a5b79ff65b885050765b"
-=======
       "0c9900abc73ff508bbc373d2976f38bf"
->>>>>>> origin/master
     ],
     [
       "While.__proj__Assign__item__var",
@@ -133,11 +105,7 @@
         "refinement_interpretation_While_Tm_refine_b9111ee85b655c8456fbdffc10913247"
       ],
       0,
-<<<<<<< HEAD
-      "3ce18f857b43f6448c8a477f5bfd75e7"
-=======
       "643b24d6b872ad83350ca34e890521cd"
->>>>>>> origin/master
     ],
     [
       "While.__proj__Assign__item__term",
@@ -150,11 +118,7 @@
         "refinement_interpretation_While_Tm_refine_b9111ee85b655c8456fbdffc10913247"
       ],
       0,
-<<<<<<< HEAD
-      "2f7b36e89a7cbe090298cbd6176b00d0"
-=======
       "f3d84913ac67dbff4ec0b12147c9acef"
->>>>>>> origin/master
     ],
     [
       "While.__proj__Seq__item__first",
@@ -167,11 +131,7 @@
         "refinement_interpretation_While_Tm_refine_e301b9284cf53dcfdd19d29aff2de799"
       ],
       0,
-<<<<<<< HEAD
-      "bff184b29018ba1ef4cb5e362aad08c0"
-=======
       "a52e7cd9aae11bd097db44a0cdec3aab"
->>>>>>> origin/master
     ],
     [
       "While.__proj__Seq__item__second",
@@ -184,11 +144,7 @@
         "refinement_interpretation_While_Tm_refine_e301b9284cf53dcfdd19d29aff2de799"
       ],
       0,
-<<<<<<< HEAD
-      "88a72d29ec624abf78225936f21135c9"
-=======
       "c8b60bbcbecfdf4de390b5333a3e7c3c"
->>>>>>> origin/master
     ],
     [
       "While.__proj__If__item__cond",
@@ -201,11 +157,7 @@
         "refinement_interpretation_While_Tm_refine_11047f422339fc49495ea91916ee701e"
       ],
       0,
-<<<<<<< HEAD
-      "85b46fa74460996a6ab7aa12c5913a6d"
-=======
       "4eab060bd10e900074df85fd70e577eb"
->>>>>>> origin/master
     ],
     [
       "While.__proj__If__item__then_branch",
@@ -218,11 +170,7 @@
         "refinement_interpretation_While_Tm_refine_11047f422339fc49495ea91916ee701e"
       ],
       0,
-<<<<<<< HEAD
-      "600ed544b027f870c75c17e5a7ed2d1a"
-=======
       "30e4cb20d2f6ec458f4bca628caca4b0"
->>>>>>> origin/master
     ],
     [
       "While.__proj__If__item__else_branch",
@@ -235,11 +183,7 @@
         "refinement_interpretation_While_Tm_refine_11047f422339fc49495ea91916ee701e"
       ],
       0,
-<<<<<<< HEAD
-      "5f005c085a646bb0ed6fb8ec5f70a628"
-=======
       "1f6bf92fb7d0cb7e874f07ad45182914"
->>>>>>> origin/master
     ],
     [
       "While.__proj__While__item__cond",
@@ -252,11 +196,7 @@
         "refinement_interpretation_While_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d"
       ],
       0,
-<<<<<<< HEAD
-      "ba90d988c402cddb910a15254c365097"
-=======
       "1a8ec3b4b7c33ebdb275b1a63b55deac"
->>>>>>> origin/master
     ],
     [
       "While.__proj__While__item__body",
@@ -269,11 +209,7 @@
         "refinement_interpretation_While_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d"
       ],
       0,
-<<<<<<< HEAD
-      "240a0e52e77ff3870a3ac30ef1c3d7bf"
-=======
       "2a168ff8735df957df63da56fe4219ed"
->>>>>>> origin/master
     ],
     [
       "While.__proj__While__item__variant",
@@ -286,11 +222,7 @@
         "refinement_interpretation_While_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d"
       ],
       0,
-<<<<<<< HEAD
-      "777d8c6730124401f403af369b124489"
-=======
       "e037eb903bd8f38d2bed32e0b527a0fd"
->>>>>>> origin/master
     ],
     [
       "While.interpret_while",
@@ -321,11 +253,7 @@
         "typing_While.interpret_exp", "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "6faf090a369efb42ff472073ad67455a"
-=======
       "edf270924c3529366d26314580fe72b5"
->>>>>>> origin/master
     ],
     [
       "While.interpret_while",
@@ -349,11 +277,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "ecdc92f8b44b019b22a1dd3fbb734b29"
-=======
       "fb0fad22f5f452ab6a63c8c39a763282"
->>>>>>> origin/master
     ],
     [
       "While.interpret_exp_st",
@@ -362,11 +286,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "ea5f62824994d91c359305ac2b981fcb"
-=======
       "3765e92547698b4eaba30856b11f53e9"
->>>>>>> origin/master
     ],
     [
       "While.interpret_exp_st",
@@ -396,11 +316,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-<<<<<<< HEAD
-      "feb1c4c46a6ad22fa0511ff9fe485866"
-=======
       "0941cd54004617a5e91c2ad258c626f3"
->>>>>>> origin/master
     ],
     [
       "While.interpret_com_st",
@@ -417,11 +333,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-<<<<<<< HEAD
-      "438a1b294048c98e31a44f7965be1a83"
-=======
       "0c128fd2e75486187c7476cd0d6e054d"
->>>>>>> origin/master
     ],
     [
       "While.interpret_binop",
@@ -434,11 +346,7 @@
         "disc_equation_While.Times", "fuel_guarded_inversion_While.binop"
       ],
       0,
-<<<<<<< HEAD
-      "0132fe6bb0a53418b4579a220474c7e0"
-=======
       "f9ce88f0bcb70dc843a0ea393163e579"
->>>>>>> origin/master
     ],
     [
       "While.__proj__AInt__item___0",
@@ -451,11 +359,7 @@
         "refinement_interpretation_While_Tm_refine_94ebaa80e9cf95cffc242c7914de3c00"
       ],
       0,
-<<<<<<< HEAD
-      "b9b48041bb993bd67fe395bbdefc0655"
-=======
       "9af050c20b7c9ce97adafef327aca37e"
->>>>>>> origin/master
     ],
     [
       "While.__proj__AVar__item___0",
@@ -468,11 +372,7 @@
         "refinement_interpretation_While_Tm_refine_be67e6dd42460413742cd5885f052b86"
       ],
       0,
-<<<<<<< HEAD
-      "13c9383b730b6e77d9fd23f199973779"
-=======
       "05047ab0092387070bf64301168dddca"
->>>>>>> origin/master
     ],
     [
       "While.__proj__AOp__item___0",
@@ -485,11 +385,7 @@
         "refinement_interpretation_While_Tm_refine_a075d9df1f5c243dba503141508929bb"
       ],
       0,
-<<<<<<< HEAD
-      "52297131f3b7ba51b8aca9b2ddff96a0"
-=======
       "b14d91823203c069e0ee3c54c51b7dd1"
->>>>>>> origin/master
     ],
     [
       "While.__proj__AOp__item___1",
@@ -502,11 +398,7 @@
         "refinement_interpretation_While_Tm_refine_a075d9df1f5c243dba503141508929bb"
       ],
       0,
-<<<<<<< HEAD
-      "33bc39e52dde7b9bed976e04325a9a5a"
-=======
       "2b95d1df8dcd1e28a7db1dcaaa9b5e0f"
->>>>>>> origin/master
     ],
     [
       "While.__proj__AOp__item___2",
@@ -519,11 +411,7 @@
         "refinement_interpretation_While_Tm_refine_a075d9df1f5c243dba503141508929bb"
       ],
       0,
-<<<<<<< HEAD
-      "b3c543c94284dc6d2cc1034ddf195611"
-=======
       "d512922658d0a9e187c11922e13c6a46"
->>>>>>> origin/master
     ],
     [
       "While.interpret_exp",
@@ -538,11 +426,7 @@
         "fuel_guarded_inversion_While.exp", "subterm_ordering_While.AOp"
       ],
       0,
-<<<<<<< HEAD
-      "d893f77ebdfdb8bf7cc2c1a08b75fd03"
-=======
       "e130e9820eb3fa0157c42355798ab506"
->>>>>>> origin/master
     ],
     [
       "While.__proj__Assign__item__var",
@@ -555,11 +439,7 @@
         "refinement_interpretation_While_Tm_refine_b9111ee85b655c8456fbdffc10913247"
       ],
       0,
-<<<<<<< HEAD
-      "4ac9fd90df16dd2c672a010734172342"
-=======
       "07ce9620742c156cb7a98bced783e33a"
->>>>>>> origin/master
     ],
     [
       "While.__proj__Assign__item__term",
@@ -572,11 +452,7 @@
         "refinement_interpretation_While_Tm_refine_b9111ee85b655c8456fbdffc10913247"
       ],
       0,
-<<<<<<< HEAD
-      "a7e7194cfc17ddc526828f69e6acf0ad"
-=======
       "173511af50018fcae7344421fa0a0491"
->>>>>>> origin/master
     ],
     [
       "While.__proj__Seq__item__first",
@@ -589,11 +465,7 @@
         "refinement_interpretation_While_Tm_refine_e301b9284cf53dcfdd19d29aff2de799"
       ],
       0,
-<<<<<<< HEAD
-      "de1a2bf0135fa0dd9c4c9658c62c16c2"
-=======
       "10bbc9664ec597b9e843482e82959fc7"
->>>>>>> origin/master
     ],
     [
       "While.__proj__Seq__item__second",
@@ -606,11 +478,7 @@
         "refinement_interpretation_While_Tm_refine_e301b9284cf53dcfdd19d29aff2de799"
       ],
       0,
-<<<<<<< HEAD
-      "ad8a9e99eb967a32db6f735e7db71aef"
-=======
       "976dcb06bed5c1f5584922598426328d"
->>>>>>> origin/master
     ],
     [
       "While.__proj__If__item__cond",
@@ -623,11 +491,7 @@
         "refinement_interpretation_While_Tm_refine_11047f422339fc49495ea91916ee701e"
       ],
       0,
-<<<<<<< HEAD
-      "161ec6a10056d92047566bae265f96e7"
-=======
       "3188ef8be3c1d2a3894ece22ba359850"
->>>>>>> origin/master
     ],
     [
       "While.__proj__If__item__then_branch",
@@ -640,11 +504,7 @@
         "refinement_interpretation_While_Tm_refine_11047f422339fc49495ea91916ee701e"
       ],
       0,
-<<<<<<< HEAD
-      "80878a6a781de048593121b11b0ce254"
-=======
       "a9efbd8d2a93025b5646cffae01e922a"
->>>>>>> origin/master
     ],
     [
       "While.__proj__If__item__else_branch",
@@ -657,11 +517,7 @@
         "refinement_interpretation_While_Tm_refine_11047f422339fc49495ea91916ee701e"
       ],
       0,
-<<<<<<< HEAD
-      "ef947e52f5e87ead84dbbdc6a5c39a19"
-=======
       "82c48c588731dab8a6106ead5c0478cc"
->>>>>>> origin/master
     ],
     [
       "While.__proj__While__item__cond",
@@ -674,11 +530,7 @@
         "refinement_interpretation_While_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d"
       ],
       0,
-<<<<<<< HEAD
-      "1d939b611400c1ad85a26f165feef1d5"
-=======
       "9379ee05eff722876d53b5dce0ba7b7f"
->>>>>>> origin/master
     ],
     [
       "While.__proj__While__item__body",
@@ -691,11 +543,7 @@
         "refinement_interpretation_While_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d"
       ],
       0,
-<<<<<<< HEAD
-      "339a7ce11714fbd455939a7b766f0047"
-=======
       "1aaf6357e6a1094714b9625e7017888f"
->>>>>>> origin/master
     ],
     [
       "While.__proj__While__item__variant",
@@ -708,11 +556,7 @@
         "refinement_interpretation_While_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d"
       ],
       0,
-<<<<<<< HEAD
-      "3c0cca674362e7752798bcb4ecb3c290"
-=======
       "a4703cdf3007df0c0526f1f1f77b64d0"
->>>>>>> origin/master
     ],
     [
       "While.interpret_while",
@@ -743,11 +587,7 @@
         "typing_While.interpret_exp", "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "a57ad7ea5348d1a10f3cf60b934dc8db"
-=======
       "5c6c293e14f471f8f8f5c6d9e63dc525"
->>>>>>> origin/master
     ],
     [
       "While.interpret_while",
@@ -771,11 +611,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "f824b3d148d1765520f1782da0e154ef"
-=======
       "c8daa2a79cadfb4998e5c3222f202bd8"
->>>>>>> origin/master
     ],
     [
       "While.interpret_exp_st",
@@ -784,11 +620,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "85cf3f6b4d9b5914e198ab8cf13dcaba"
-=======
       "ec06d89b1886ed1ecd4a077aa5288c34"
->>>>>>> origin/master
     ]
   ]
 ]

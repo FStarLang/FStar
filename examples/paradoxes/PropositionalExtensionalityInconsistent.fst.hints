@@ -8,11 +8,7 @@
       0,
       [ "@MaxIFuel_assumption", "@query", "int_inversion", "unit_typing" ],
       0,
-<<<<<<< HEAD
-      "cb61981742a0d0ad7c8f6e618591afa4"
-=======
       "ba04369932cdfcaffaa366537b768d05"
->>>>>>> origin/master
     ],
     [
       "PropositionalExtensionalityInconsistent.clearly_wrong'",
@@ -33,11 +29,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "c130f84b01a141d6e3af613a1fe1abcd"
-=======
       "6b5d7365b6360f355c47c6b1cb29c8eb"
->>>>>>> origin/master
     ],
     [
       "PropositionalExtensionalityInconsistent.predicateExtensionality",
@@ -58,11 +50,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "4e0246d62d559ddec97a12ed506f99d4"
-=======
       "da012e88de51c90b5aecc5ff68d4a738"
->>>>>>> origin/master
     ],
     [
       "PropositionalExtensionalityInconsistent.proof",
@@ -80,11 +68,7 @@
         "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "918f8869fef3c63bebc13f9d1f1de6e7"
-=======
       "d5a261bbef319d200546b10d33671c64"
->>>>>>> origin/master
     ],
     [
       "PropositionalExtensionalityInconsistent.zarb",
@@ -93,11 +77,7 @@
       0,
       [ "@query" ],
       0,
-<<<<<<< HEAD
-      "d4e446a4aa0f22663cded8de79f478a2"
-=======
       "caddbe4f2d00913af726b5f3d1f8863e"
->>>>>>> origin/master
     ],
     [
       "PropositionalExtensionalityInconsistent.clearly_wrong",
@@ -109,11 +89,7 @@
         "equation_PropositionalExtensionalityInconsistent.p2"
       ],
       0,
-<<<<<<< HEAD
-      "c33c5d889e3760aecb8dad7c4d209351"
-=======
       "9e5ac3d004682a80a4526a04333fb58c"
->>>>>>> origin/master
     ],
     [
       "PropositionalExtensionalityInconsistent.test",
@@ -125,11 +101,7 @@
         "constructor_distinct_Prims.unit"
       ],
       0,
-<<<<<<< HEAD
-      "9182065dd1c66f421a6fd181ec02445d"
-=======
       "09f186b1948e7b681dd29750c7428d62"
->>>>>>> origin/master
     ],
     [
       "PropositionalExtensionalityInconsistent.unit_contractible",
@@ -138,11 +110,7 @@
       0,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
       0,
-<<<<<<< HEAD
-      "3e6bad3e8798032acd5fa3325ac4a65f"
-=======
       "2619e56563fbeb763e6f382c649cd9d9"
->>>>>>> origin/master
     ],
     [
       "PropositionalExtensionalityInconsistent.ahahah",
@@ -151,11 +119,7 @@
       0,
       [ "@query", "int_typing", "projection_inverse_BoxInt_proj_0" ],
       0,
-<<<<<<< HEAD
-      "48a2a4058929de946ae63f7351bd078e"
-=======
       "3ab32f6dfe63b3ebfa71fbb8c169228a"
->>>>>>> origin/master
     ]
   ]
 ]

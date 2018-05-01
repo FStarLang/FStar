@@ -8,11 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-<<<<<<< HEAD
-      "73cc4d15b2b1e55945a2e04d22cb1e9b"
-=======
       "9d3d78f2bd6d5e8eceb96a875abfe457"
->>>>>>> origin/master
     ],
     [
       "ShortCircuit.test2",
@@ -21,11 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-<<<<<<< HEAD
-      "9c7ef12bea3371ea8296eb7db9a8d77d"
-=======
       "650d871c341f51005fe84c8857860975"
->>>>>>> origin/master
     ],
     [
       "ShortCircuit.test3",
@@ -34,11 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-<<<<<<< HEAD
-      "1604156c49447fb2f0fa1b4386303c82"
-=======
       "0b34ed4f0422b35bcf9d39719a50b210"
->>>>>>> origin/master
     ],
     [
       "ShortCircuit.test4",
@@ -47,11 +35,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-<<<<<<< HEAD
-      "aaaf0f07214ffaeb63e159ff8d216a6f"
-=======
       "36bddfc87e45985f3fddae84a195f6ad"
->>>>>>> origin/master
     ],
     [
       "ShortCircuit.test1'",
@@ -60,11 +44,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-<<<<<<< HEAD
-      "617af10735f5fe25a031ff7e6be3430e"
-=======
       "babc0ce2061ea3d77ac8d1eb7f465b56"
->>>>>>> origin/master
     ],
     [
       "ShortCircuit.test2'",
@@ -73,11 +53,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-<<<<<<< HEAD
-      "b4a4f1ed47775927ae211efdb6d2b95e"
-=======
       "080da0ff9e9d4a1d43f16c9230cb4448"
->>>>>>> origin/master
     ],
     [
       "ShortCircuit.test3'",
@@ -86,11 +62,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-<<<<<<< HEAD
-      "bfa812f47ec53771263ad29bafa49f29"
-=======
       "55690d7ebf6537cdf4152ad8f7dc0507"
->>>>>>> origin/master
     ],
     [
       "ShortCircuit.test4'",
@@ -99,11 +71,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-<<<<<<< HEAD
-      "1b5dfe44bd365fc9dfe4b27ff3a8eda3"
-=======
       "55d041516d53705bfeefa7d4f958dd27"
->>>>>>> origin/master
     ]
   ]
 ]

@@ -34,11 +34,7 @@
         "typing_Validator_Tm_abs_97608c9ed219c04a162143d32175364e"
       ],
       0,
-<<<<<<< HEAD
-      "4da22ac96a5bb24c279f5f228b50104b"
-=======
       "74964776ae3630465052fa1869683201"
->>>>>>> origin/master
     ],
     [
       "Validator.validate_entry_st",
@@ -64,11 +60,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-<<<<<<< HEAD
-      "3359f19ad922c79b1bd7b84794681d54"
-=======
       "fbd3b2fb4a6f6e814e3d66a2ecde28d5"
->>>>>>> origin/master
     ],
     [
       "Validator.validate_entries_st",
@@ -168,11 +160,7 @@
         "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "3982d0e7fe2708b8d74d7ba169706a55"
-=======
       "be4aa4548d096262f72f0fa40fb44dde"
->>>>>>> origin/master
     ],
     [
       "Validator.validate_store_st",
@@ -324,11 +312,7 @@
         "typing_Slice.u32_add_overflows", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "0cb48a0c5e9b77de25fe6c2afd1b0214"
-=======
       "1a9c590a261dfbce02eaa8f9b8a8d75a"
->>>>>>> origin/master
     ],
     [
       "Validator.validate_store_st",
@@ -354,11 +338,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-<<<<<<< HEAD
-      "e133cc4911201334059835a94e18a27e"
-=======
       "e60714ce4fb59c916b191582b60714e0"
->>>>>>> origin/master
     ],
     [
       "Validator.validate_entry_st",
@@ -390,11 +370,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-<<<<<<< HEAD
-      "848bf7af117ced718c4361c1efc3bddf"
-=======
       "eacd7f3549009a724aeafb7b0c3f57b1"
->>>>>>> origin/master
     ],
     [
       "Validator.validate_entries_st",
@@ -494,11 +470,7 @@
         "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "b22e374b94c92a1ba99825adf6e8c287"
-=======
       "2b9e0627cbe0fcbe2a75cb80c100fe86"
->>>>>>> origin/master
     ],
     [
       "Validator.validate_store_st",
@@ -530,11 +502,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-<<<<<<< HEAD
-      "2013449a10d407926a21c0fe21c0ecc1"
-=======
       "f2f686211b885164dedade8de41791da"
->>>>>>> origin/master
     ]
   ]
 ]

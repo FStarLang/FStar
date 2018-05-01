@@ -1,5 +1,5 @@
 [
-  "j9\u001f˜¢ÒÊI¨≥Y™’‚NØ",
+  "cä\u00064‹¿Âpú\u0003\u0005∏∏s»“",
   [
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.inj",
@@ -14,11 +14,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "3c77e6493cf53c949dd39a91c6e2c071"
-=======
       "3d25e067f14b08c4e8e2697896188629"
->>>>>>> origin/master
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.inj_injective",
@@ -33,11 +29,7 @@
         "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.inj"
       ],
       0,
-<<<<<<< HEAD
-      "4cf9987bf55d7b774a608f39aac9c41a"
-=======
       "502a3edd362e86975c91617826a21ba4"
->>>>>>> origin/master
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.f_injective",
@@ -50,11 +42,7 @@
         "projection_inverse_PropImpredicativeAndNonStrictlyPositiveInductives.IntroA__0"
       ],
       0,
-<<<<<<< HEAD
-      "8352232ef4d01128149b087aa3637e1a"
-=======
       "57c64296e98ef85296b18749901ea24b"
->>>>>>> origin/master
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.p0",
@@ -69,11 +57,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "478b6f3e00601cb28facf9ca9ee6c7d1"
-=======
       "3850ebc92d7185a0cef4b255c4df3b00"
->>>>>>> origin/master
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad1",
@@ -88,11 +72,7 @@
         "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.p0"
       ],
       0,
-<<<<<<< HEAD
-      "160ebff78b51faa803216e8b2bdd1bf3"
-=======
       "32d6e1a306445ab2de962afac8dbfd81"
->>>>>>> origin/master
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad2",
@@ -107,11 +87,7 @@
         "l_quant_interp__2421"
       ],
       0,
-<<<<<<< HEAD
-      "36b7691f54be31e23b8cb2ed9a8e15f3"
-=======
       "cd4da1554f17a3f1fa2b7edf6b9fb0bd"
->>>>>>> origin/master
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad",
@@ -120,11 +96,7 @@
       1,
       [ "@query" ],
       0,
-<<<<<<< HEAD
-      "f1c57ff047fbe294f67ddb28f5ab8adf"
-=======
       "a2b9ba68b2e127275b072f22975d7046"
->>>>>>> origin/master
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.worse",
@@ -133,11 +105,7 @@
       1,
       [ "@query" ],
       0,
-<<<<<<< HEAD
-      "0ed7c5928366a86b2248a5ea6a2d4657"
-=======
       "459d0b255c6545ae2438bac13608f601"
->>>>>>> origin/master
     ]
   ]
 ]

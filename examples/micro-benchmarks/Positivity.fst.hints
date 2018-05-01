@@ -8,11 +8,7 @@
       1,
       [ "@query" ],
       0,
-<<<<<<< HEAD
-      "8d4e39be705fbd9b55df250480127a41"
-=======
       "ce0b82ff0b14690d323ca06d070d49b8"
->>>>>>> origin/master
     ],
     [
       "Positivity.__proj__MCons__item___0",
@@ -25,11 +21,7 @@
         "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0,
-<<<<<<< HEAD
-      "e82253ee8fa8bae96a45b36f5c05a293"
-=======
       "4a754e7a40e4387ef74d5c74ada9028a"
->>>>>>> origin/master
     ],
     [
       "Positivity.__proj__MCons__item___1",
@@ -42,11 +34,7 @@
         "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0,
-<<<<<<< HEAD
-      "4907d899cc87c5a1539fb0a3db7239dc"
-=======
       "e6face21e9bac8a982f9390e7a2fe6ed"
->>>>>>> origin/master
     ],
     [
       "Positivity.__proj__NCons__item___0",
@@ -59,11 +47,7 @@
         "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0,
-<<<<<<< HEAD
-      "af2d8bb63e1a87ad3593690f16c84881"
-=======
       "a99e41597b127bf2bdee17979d13915f"
->>>>>>> origin/master
     ],
     [
       "Positivity.__proj__NCons__item___1",
@@ -76,11 +60,7 @@
         "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0,
-<<<<<<< HEAD
-      "21d7ceb42e049ef2da5fa1f27251487b"
-=======
       "7c62c68f8bc546f76a8ee867b8131efb"
->>>>>>> origin/master
     ],
     [
       "Positivity.mlist",
@@ -89,11 +69,7 @@
       1,
       [ "@query" ],
       0,
-<<<<<<< HEAD
-      "581a5b98614b752db56c6c1b078ecaed"
-=======
       "8716d57f135b0ab2209bf04235d41320"
->>>>>>> origin/master
     ],
     [
       "Positivity.__proj__MCons__item___0",
@@ -106,11 +82,7 @@
         "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0,
-<<<<<<< HEAD
-      "7216362f2a27b5c86b4fc0a2fb251590"
-=======
       "3eb5d7c62ab5f999d918bc59912cd1a5"
->>>>>>> origin/master
     ],
     [
       "Positivity.__proj__MCons__item___1",
@@ -123,11 +95,7 @@
         "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0,
-<<<<<<< HEAD
-      "6c78c9dbc857229233e090be80c08c65"
-=======
       "5610bd8179dc8ef0573030e6745b8411"
->>>>>>> origin/master
     ],
     [
       "Positivity.__proj__NCons__item___0",
@@ -140,11 +108,7 @@
         "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0,
-<<<<<<< HEAD
-      "18407e52e12f24f04080ba7ef970c143"
-=======
       "3d18b7352961a4f33b230fef86c68234"
->>>>>>> origin/master
     ],
     [
       "Positivity.__proj__NCons__item___1",
@@ -157,11 +121,7 @@
         "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0,
-<<<<<<< HEAD
-      "bd68da9318905c01a7f48f6c7d69be1a"
-=======
       "da3938ff498f99e1c29484327f6e910e"
->>>>>>> origin/master
     ]
   ]
 ]

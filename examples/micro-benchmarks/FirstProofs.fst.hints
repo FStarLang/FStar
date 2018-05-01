@@ -16,11 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "24cdaed45277381af65e0360d7530978"
-=======
       "65bd35d39491915d427a27f0dea7229a"
->>>>>>> origin/master
     ],
     [
       "FirstProofs.factorial_is_positive",
@@ -42,11 +38,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "ca9d621d63fbbad3ee41fd41c42d9c95"
-=======
       "e3123c40cbc45c857fcf2fa4b9866ded"
->>>>>>> origin/master
     ],
     [
       "FirstProofs.factorial_is_increasing",
@@ -69,11 +61,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "0cebdda1e720b10f7b72dcd019c5e968"
-=======
       "c5c6e3b3f5c0b519871d726910d79e5b"
->>>>>>> origin/master
     ],
     [
       "FirstProofs.factorial_is_doubling",
@@ -97,11 +85,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "35dbf77c0081fe437b315a964378687a"
-=======
       "eace2ebc1f428e86ebca92afefe99119"
->>>>>>> origin/master
     ],
     [
       "FirstProofs.fibonacci",
@@ -118,11 +102,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "2ef87f6ae033ebf0bb86fc4a609a3a1a"
-=======
       "82f21d7fde7b4b6cd61bf1bcf6605ae0"
->>>>>>> origin/master
     ],
     [
       "FirstProofs.fibonacci_is_increasing",
@@ -145,11 +125,7 @@
         "typing_FirstProofs.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "099793909cf111e9923ce33e3d95c674"
-=======
       "a5f71105e6cf1e60ea712c1ef8382c4f"
->>>>>>> origin/master
     ],
     [
       "FirstProofs.factorial",
@@ -166,11 +142,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "fe1fc09b9732841fc989fc7cb694cef7"
-=======
       "ed5c9d78829d38493255517cba733d04"
->>>>>>> origin/master
     ],
     [
       "FirstProofs.fibonacci",
@@ -187,11 +159,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-<<<<<<< HEAD
-      "d10057fd9c5f0d1963fd8445b98829f3"
-=======
       "a198601c19bc1e0e692368e450363472"
->>>>>>> origin/master
     ]
   ]
 ]

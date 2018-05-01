@@ -23,11 +23,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-<<<<<<< HEAD
-      "8c78a770a6f07f6c35271dc356bb6621"
-=======
       "81e9230a6fc1ad6c8a55f3409e385109"
->>>>>>> origin/master
     ],
     [
       "StRel.f2",
@@ -45,11 +41,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-<<<<<<< HEAD
-      "b58a6a56101c25a1fc4d907ee7f5f63e"
-=======
       "4780425c723ef4dda76ecb373731a715"
->>>>>>> origin/master
     ],
     [
       "StRel.f1_ni",
@@ -68,11 +60,7 @@
         "token_correspondence_StRel.f1_hp"
       ],
       0,
-<<<<<<< HEAD
-      "4c61f215dfdd47332b357f40ee1d5abf"
-=======
       "16d44af78e00856b39ff2027049cdcd5"
->>>>>>> origin/master
     ],
     [
       "StRel.f2_ni",
@@ -92,11 +80,7 @@
         "token_correspondence_StRel.f2_hp"
       ],
       0,
-<<<<<<< HEAD
-      "c67ad2518309d95891b014893341b711"
-=======
       "b26c48f1861f7d502fed631702be38d0"
->>>>>>> origin/master
     ]
   ]
 ]

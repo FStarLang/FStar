@@ -8,11 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "edadad549eb4b3b8f2357e5723bdcbba"
-=======
       "8937078fab1b5718dc5357d7d450529c"
->>>>>>> origin/master
     ],
     [
       "Gcd.times_one",
@@ -26,11 +22,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-<<<<<<< HEAD
-      "290d1020c75811d13db17af1e1abd2ac"
-=======
       "fb930aff038759e2c094c5be50b9863a"
->>>>>>> origin/master
     ],
     [
       "Gcd.a_divides_a'",
@@ -39,11 +31,7 @@
       1,
       [ "@query" ],
       0,
-<<<<<<< HEAD
-      "3a248197df988e561f460d93e8f126ac"
-=======
       "7aa23d896fb86bedb45b757f36b065c3"
->>>>>>> origin/master
     ],
     [
       "Gcd.gcd_triv",
@@ -52,11 +40,7 @@
       1,
       [ "@query", "equation_Gcd.is_gcd" ],
       0,
-<<<<<<< HEAD
-      "bdfef9a3b1d2248ca56104ccbf966b69"
-=======
       "6bf0781f92560149ee3fdc02d8ad1077"
->>>>>>> origin/master
     ],
     [
       "Gcd.times_one",
@@ -65,11 +49,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "49f56999f0059fbfe7d6e4d3aed070a5"
-=======
       "53e677a0df4567b1b38b79e23e54399f"
->>>>>>> origin/master
     ],
     [
       "Gcd.a_divides_a'",
@@ -78,11 +58,7 @@
       1,
       [ "@query" ],
       0,
-<<<<<<< HEAD
-      "66c9b0cd0e9416a443050cd52d9ef540"
-=======
       "4b3d821f49f62e42d7e0341ed89dc7f7"
->>>>>>> origin/master
     ]
   ]
 ]

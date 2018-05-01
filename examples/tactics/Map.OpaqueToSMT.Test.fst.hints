@@ -8,11 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "1de5acdb006e20aaaea8317dfa32a747"
-=======
       "a354cbf7e1b1e0a0d2dbfde99c5110f4"
->>>>>>> origin/master
     ],
     [
       "Map.OpaqueToSMT.Test.upd",
@@ -21,11 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "bf86a96b06ab700bb962d728fce171e7"
-=======
       "dfad82d287db8dc6f356e708fda49f34"
->>>>>>> origin/master
     ],
     [
       "Map.OpaqueToSMT.Test.sel",
@@ -34,11 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "f09a3f98f797017148386c0f18e52918"
-=======
       "7fa2a9de9e3b0fab71f555fe9055dc5e"
->>>>>>> origin/master
     ],
     [
       "Map.OpaqueToSMT.Test.test1",
@@ -47,11 +35,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "021ff40ecb2a1f88a4813172064ad83b"
-=======
       "ce778127273d3027e2219bc6cb452620"
->>>>>>> origin/master
     ],
     [
       "Map.OpaqueToSMT.Test.test2",
@@ -60,11 +44,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "8ffe6285af5d1330364322f4d02c4b6e"
-=======
       "9b56506ed0562209edd0c411ae7dfef4"
->>>>>>> origin/master
     ],
     [
       "Map.OpaqueToSMT.Test.imap",
@@ -73,11 +53,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "24052c37b3118ba576d884af25aede99"
-=======
       "5927d42b29d25f889e83565559a18bcf"
->>>>>>> origin/master
     ],
     [
       "Map.OpaqueToSMT.Test.upd",
@@ -86,11 +62,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "c75d1aa9d5bffbfac0c6c40f13d427a8"
-=======
       "7b4571ed7c0a02b2013f9a6e29b98c18"
->>>>>>> origin/master
     ],
     [
       "Map.OpaqueToSMT.Test.upd",
@@ -99,11 +71,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "ecf81be2c12283ac40bd2dc9687c534b"
-=======
       "645a7c6bbc932ddca4392a19d0739dc0"
->>>>>>> origin/master
     ],
     [
       "Map.OpaqueToSMT.Test.sel",
@@ -112,11 +80,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "4aa8cefef55a399831063da92a95af90"
-=======
       "de1679828985529b906dcde3a055a9c1"
->>>>>>> origin/master
     ]
   ]
 ]

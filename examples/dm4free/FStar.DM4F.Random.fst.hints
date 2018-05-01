@@ -15,11 +15,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-<<<<<<< HEAD
-      "797414f4b2e1510c4c638539018e8f16"
-=======
       "c20ced69f95f53dfb0218826afbf7e7f"
->>>>>>> origin/master
     ],
     [
       "FStar.DM4F.Random.bind",
@@ -35,11 +31,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-<<<<<<< HEAD
-      "2c9e1c929841836921f114e38b0ca31f"
-=======
       "d6c4545765a86c1b009544799fb42ac6"
->>>>>>> origin/master
     ]
   ]
 ]

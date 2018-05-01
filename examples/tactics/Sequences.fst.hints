@@ -12,11 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-<<<<<<< HEAD
-      "542cb2ae609f477833c7f471ffe4590a"
-=======
       "561cf45600601c118858f0889d9053e6"
->>>>>>> origin/master
     ],
     [
       "Sequences.test",
@@ -38,11 +34,7 @@
         "typing_FStar.Seq.Base.create"
       ],
       0,
-<<<<<<< HEAD
-      "2e6d9798f05a829852d4722fdd4963ec"
-=======
       "20a1fa0c69ad3a86d106bb9b1002d96a"
->>>>>>> origin/master
     ],
     [
       "Sequences.test",
@@ -62,11 +54,7 @@
         "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "f6cf70cabd79ac84285628f5754da0ec"
-=======
       "f7b5f9c3c0712e3ee02b478bec74e012"
->>>>>>> origin/master
     ],
     [
       "Sequences.test",
@@ -86,11 +74,7 @@
         "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "cad7053574654ea15af0a645c063b807"
-=======
       "a70700521d785c45aecd4b3b2c900ea8"
->>>>>>> origin/master
     ],
     [
       "Sequences.test",
@@ -123,11 +107,7 @@
         "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "afa85710061c41bef9abd8b15d1e17b9"
-=======
       "d29c0c4cb49c686d89c6fa9c072a7505"
->>>>>>> origin/master
     ]
   ]
 ]

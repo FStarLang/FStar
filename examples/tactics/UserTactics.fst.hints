@@ -8,11 +8,7 @@
       1,
       [ "@query" ],
       0,
-<<<<<<< HEAD
-      "05f4ce8f39ae3f7fd7ee6c134af61f01"
-=======
       "066317aae859dc6894c1c5090e1e1c67"
->>>>>>> origin/master
     ],
     [
       "UserTactics.f",
@@ -25,11 +21,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-<<<<<<< HEAD
-      "526f14023a9b39114b224dbb6c80e13c"
-=======
       "6859fcb5c28f4f0ed4328f249c4bd895"
->>>>>>> origin/master
     ],
     [
       "UserTactics.implicitly_unfolfed_before_preprocessing",
@@ -41,11 +33,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-<<<<<<< HEAD
-      "ba14e3a5e8e4fdcaa49607f1ad15f0b4"
-=======
       "0e3a6229d5121b8be37e44d130bc2f3d"
->>>>>>> origin/master
     ],
     [
       "UserTactics.lemma_mul_comm",
@@ -54,11 +42,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-<<<<<<< HEAD
-      "9c1f463b630d1f9e81086750e4dd2a74"
-=======
       "792a233c9811958d2d83f94b41a32fb4"
->>>>>>> origin/master
     ],
     [
       "UserTactics.sqintro",
@@ -67,11 +51,7 @@
       1,
       [ "@query" ],
       0,
-<<<<<<< HEAD
-      "72a9380da3556f1895215fb214ea6bf7"
-=======
       "a9a71b94868b600d101d89ce03b0c272"
->>>>>>> origin/master
     ],
     [
       "UserTactics.test_apply_ascription'",
@@ -80,11 +60,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-<<<<<<< HEAD
-      "c97c7721c2235444510e39364455565f"
-=======
       "8835b99519a1b4b54bb4f7a232cc0677"
->>>>>>> origin/master
     ],
     [
       "UserTactics.test_apply_ascription",
@@ -93,11 +69,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-<<<<<<< HEAD
-      "e0adb76aac8faa2bccccf7f46b178d40"
-=======
       "1db6e7d7b1bd090abb65c40e955f3186"
->>>>>>> origin/master
     ],
     [
       "UserTactics.f",
@@ -110,11 +82,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-<<<<<<< HEAD
-      "6af1f48cfe48aa0b66d3d7a368faf3b4"
-=======
       "f0fa2d0f07b1a8743ab4e23ea88a2fb7"
->>>>>>> origin/master
     ],
     [
       "UserTactics.sqintro",
@@ -123,11 +91,7 @@
       1,
       [ "@query" ],
       0,
-<<<<<<< HEAD
-      "964f3c75d5713db5fadb559fedbb3e09"
-=======
       "23856ae5d2a36b4121b1c3357afc0331"
->>>>>>> origin/master
     ]
   ]
 ]

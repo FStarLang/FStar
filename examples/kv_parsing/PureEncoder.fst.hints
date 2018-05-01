@@ -8,11 +8,7 @@
       1,
       [ "@query", "equation_FStar.UInt8.byte", "equation_Slice.byte" ],
       0,
-<<<<<<< HEAD
-      "8538ca73386901e0072cc900190f001d"
-=======
       "72bfc9f1febb90f028fff177d3b26372"
->>>>>>> origin/master
     ],
     [
       "PureEncoder.encode_store",
@@ -34,11 +30,7 @@
         "typing_KeyValue.__proj__Store__item__num_entries"
       ],
       0,
-<<<<<<< HEAD
-      "77dc963062349ab03d3af38806e50aa9"
-=======
       "fb20558232a9ab22decf4b14b6b830d4"
->>>>>>> origin/master
     ],
     [
       "PureEncoder.encode_entry",
@@ -47,11 +39,7 @@
       1,
       [ "@query", "equation_FStar.UInt8.byte", "equation_Slice.byte" ],
       0,
-<<<<<<< HEAD
-      "81eebf1449ad976c4b56c5d8e644c5df"
-=======
       "e7688bf6b30b4854339824824d0979f5"
->>>>>>> origin/master
     ],
     [
       "PureEncoder.encode_store",
@@ -73,11 +61,7 @@
         "typing_KeyValue.__proj__Store__item__num_entries"
       ],
       0,
-<<<<<<< HEAD
-      "4a5275a3e7c77a1e890f8ccd23ef6a9d"
-=======
       "99508f0f4d9f335a4a91e23b78b6a107"
->>>>>>> origin/master
     ]
   ]
 ]

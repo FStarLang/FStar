@@ -12,11 +12,7 @@
         "primitive_Prims.op_Equality"
       ],
       0,
-<<<<<<< HEAD
-      "6a6056e9bf564f45853e62e99db858e4"
-=======
       "4e0f3e6e4f0ab9a723dc197291bf1955"
->>>>>>> origin/master
     ],
     [
       "Map.sel_upd2",
@@ -29,11 +25,7 @@
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-<<<<<<< HEAD
-      "bcd98afddca0c98ef89c0da21626adeb"
-=======
       "0f5eee6a88d32d8de936229a1147398f"
->>>>>>> origin/master
     ]
   ]
 ]

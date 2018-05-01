@@ -53,11 +53,7 @@
         "typing_FStar.List.Tot.Base.noRepeats", "typing_FStar.UInt32.v"
       ],
       0,
-<<<<<<< HEAD
-      "ded3b828dd65317c5f1e3b46f2a788f6"
-=======
       "b5bc914a86abe5b1e5dcd91010de413a"
->>>>>>> origin/master
     ],
     [
       "Test.ty",
@@ -106,11 +102,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-<<<<<<< HEAD
-      "19f8799327dc1b73284f60972fd12b18"
-=======
       "10f9e4fa92d128f3e44ac5ff45aa1a10"
->>>>>>> origin/master
     ],
     [
       "Test.f",
@@ -271,11 +263,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt32@tok"
       ],
       0,
-<<<<<<< HEAD
-      "ec20cac127c4d6891267cc7202176c1f"
-=======
       "6725cc227941abf123eaeef7b51ca24d"
->>>>>>> origin/master
     ]
   ]
 ]

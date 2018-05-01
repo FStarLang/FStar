@@ -8,11 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "5b2edb2795d7418406b86713ccc429e1"
-=======
       "4ac1bd98003c892add9255d84b9452fc"
->>>>>>> origin/master
     ],
     [
       "UnifyMatch.test1",
@@ -24,11 +20,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-<<<<<<< HEAD
-      "75a3da5cd64e440b4d47fcfe74ed2310"
-=======
       "e78cf5a5385de4bfd41b721ac9ca5de6"
->>>>>>> origin/master
     ],
     [
       "UnifyMatch.t",
@@ -37,11 +29,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-<<<<<<< HEAD
-      "2146ddf62a15a8e4650984d4498c424b"
-=======
       "bc1c846b3ad33c9e75e53b3a4faf506f"
->>>>>>> origin/master
     ],
     [
       "UnifyMatch.test1",
@@ -53,11 +41,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-<<<<<<< HEAD
-      "bcbf51077f5b6a237100e670b63a2a46"
-=======
       "7055e4eac921fde29d64d509791e88cb"
->>>>>>> origin/master
     ]
   ]
 ]

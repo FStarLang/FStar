@@ -11,11 +11,7 @@
         "projection_inverse_Point.C_inv"
       ],
       0,
-<<<<<<< HEAD
-      "5b21e37dbbca6e36cd86159a5645dac6"
-=======
       "4406f712831b2ea220e24990f98b6230"
->>>>>>> origin/master
     ],
     [
       "Point.move",
@@ -29,11 +25,7 @@
         "token_correspondence_Point.__proj__C__item__inv"
       ],
       0,
-<<<<<<< HEAD
-      "ea8556a0bee526d85055c489635936b6"
-=======
       "7e9e04153e40ca92e777fcf9e6509a6c"
->>>>>>> origin/master
     ],
     [
       "Point.get",
@@ -47,11 +39,7 @@
         "token_correspondence_Point.__proj__C__item__inv"
       ],
       0,
-<<<<<<< HEAD
-      "3d464431c5d6ff5cfa6cb6f58ae38bc1"
-=======
       "7625fceb1d96eefe5c80b5bbcdbe1c07"
->>>>>>> origin/master
     ],
     [
       "Point.inv_point",
@@ -74,11 +62,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-<<<<<<< HEAD
-      "f22f2ab3188aaae58b315ad16212038f"
-=======
       "1896e8db4b7db0aee96aa385e0900635"
->>>>>>> origin/master
     ],
     [
       "Point.get_point",
@@ -109,11 +93,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-<<<<<<< HEAD
-      "bf333be8af6dfe2f9f57c33453940a5a"
-=======
       "b4a39973ba64de2dbcc73d819456bcb4"
->>>>>>> origin/master
     ],
     [
       "Point.move_point",
@@ -144,11 +124,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-<<<<<<< HEAD
-      "4c119d9045c84b052997ca9f33ce6627"
-=======
       "86b1fa40371e316f7b0ccf34112e11a2"
->>>>>>> origin/master
     ],
     [
       "Point.init_point",
@@ -192,11 +168,7 @@
         "typing_Point.__proj__C__item__fp"
       ],
       0,
-<<<<<<< HEAD
-      "b7690a453022a138b099b93216fd2db3"
-=======
       "9e8985c71d7ce8f5164aa5118481ac79"
->>>>>>> origin/master
     ],
     [
       "Point.inv_colored_point",
@@ -220,11 +192,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-<<<<<<< HEAD
-      "2f2a4c51637b97d840be4ec5c3b55caa"
-=======
       "d30728edc91deb3ed13ade18f2af1c31"
->>>>>>> origin/master
     ],
     [
       "Point.move_colored_point",
@@ -252,11 +220,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "a735726fbc8574cf9d74f9354a4e8d7b"
-=======
       "65ec91e80e7fadc96c34115f7517088e"
->>>>>>> origin/master
     ],
     [
       "Point.get_colored_point",
@@ -281,11 +245,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-<<<<<<< HEAD
-      "2b48fb3a13587c11f41b02b8ad753d89"
-=======
       "b2b0c60628b358d0d7803fce90f90680"
->>>>>>> origin/master
     ],
     [
       "Point.init_colored_point",
@@ -329,11 +289,7 @@
         "typing_Point.__proj__C__item__fp"
       ],
       0,
-<<<<<<< HEAD
-      "5b5a6eb8ebb7d36db11c80ddd544c47f"
-=======
       "2a4251b184c6173da1d688bf26315857"
->>>>>>> origin/master
     ],
     [
       "Point.ref_not_in_fp",
@@ -345,11 +301,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "d01831e68c6c94da55b7d8a072cdfe47"
-=======
       "38d5825fb5099dde223e318fb5ae02a0"
->>>>>>> origin/master
     ],
     [
       "Point.lemma",
@@ -444,11 +396,7 @@
         "typing_Point.__proj__C__item__fp", "unit_typing"
       ],
       0,
-<<<<<<< HEAD
-      "ac1ad14ea142b2ce4e325eb6e1c7dae3"
-=======
       "f854ae1f91c1ea5aca5da6a7471d1b4c"
->>>>>>> origin/master
     ],
     [
       "Point.__proj__C__item__p",
@@ -460,11 +408,7 @@
         "projection_inverse_Point.C_inv"
       ],
       0,
-<<<<<<< HEAD
-      "cefffe83289fc6fcaa6939bde25d971a"
-=======
       "d34229fb6145351c4bded6dfd347a163"
->>>>>>> origin/master
     ],
     [
       "Point.move",
@@ -478,11 +422,7 @@
         "token_correspondence_Point.__proj__C__item__inv"
       ],
       0,
-<<<<<<< HEAD
-      "b79efd7a1de51631908e0a50e0c550bf"
-=======
       "669c1646065822d1a11a47d4b015bb5d"
->>>>>>> origin/master
     ],
     [
       "Point.get",
@@ -496,11 +436,7 @@
         "token_correspondence_Point.__proj__C__item__inv"
       ],
       0,
-<<<<<<< HEAD
-      "6a495fdac5ee69b7bd6a937d77111c8c"
-=======
       "7edcd6ae508d2d42f81e18276a9e48a0"
->>>>>>> origin/master
     ],
     [
       "Point.inv_point",
@@ -523,11 +459,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-<<<<<<< HEAD
-      "4f9095c20074ec8c92cfe4e8354b580a"
-=======
       "9585e3bb348934536e8d12ed3645eb11"
->>>>>>> origin/master
     ],
     [
       "Point.get_point",
@@ -558,11 +490,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-<<<<<<< HEAD
-      "27ff72858b912898afe42b35f87bbb4b"
-=======
       "6d1d5ac435904a0be5f4d50aeef3c82c"
->>>>>>> origin/master
     ],
     [
       "Point.move_point",
@@ -593,11 +521,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-<<<<<<< HEAD
-      "f40f45022a8d6ceb4341e2cbcf61acfb"
-=======
       "d6caf73bb6023ad2a5aa5e3d6c80175c"
->>>>>>> origin/master
     ],
     [
       "Point.init_point",
@@ -641,11 +565,7 @@
         "typing_Point.__proj__C__item__fp"
       ],
       0,
-<<<<<<< HEAD
-      "6c5bf891737e3a5b160d300ef7a34cfd"
-=======
       "0a410bc572d9f00615352efd5d37ca4f"
->>>>>>> origin/master
     ],
     [
       "Point.inv_colored_point",
@@ -669,11 +589,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-<<<<<<< HEAD
-      "b5da00084e82bb3e7d07653e5078ea0f"
-=======
       "bf1761d244ed4b6e1dec4f24efc6c618"
->>>>>>> origin/master
     ],
     [
       "Point.move_colored_point",
@@ -701,11 +617,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "515c327cdd28cb487e1884c346f2e817"
-=======
       "4b1130cfdcf57fea39c3714f8715d1d5"
->>>>>>> origin/master
     ],
     [
       "Point.get_colored_point",
@@ -730,11 +642,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-<<<<<<< HEAD
-      "09cd9f6fb7112271893d43a57ff5f83a"
-=======
       "9c823043545403be8270804038460d2c"
->>>>>>> origin/master
     ],
     [
       "Point.init_colored_point",
@@ -778,11 +686,7 @@
         "typing_Point.__proj__C__item__fp"
       ],
       0,
-<<<<<<< HEAD
-      "e17850dd6373b2f00dc6fcd726586ce9"
-=======
       "ea35f198cd49d0c918098f20255b49b5"
->>>>>>> origin/master
     ],
     [
       "Point.ref_not_in_fp",
@@ -794,11 +698,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-<<<<<<< HEAD
-      "0bc41464997adbf3156c533c80279097"
-=======
       "6cefcfc9bca9f8a157a8033df3e042da"
->>>>>>> origin/master
     ]
   ]
 ]

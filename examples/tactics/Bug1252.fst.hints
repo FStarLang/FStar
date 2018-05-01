@@ -8,11 +8,7 @@
       1,
       [ "@query", "function_token_typing_Bug1252.p1" ],
       0,
-<<<<<<< HEAD
-      "3d916b528eaf86019a2c1ba52a5869ed"
-=======
       "b6c50d1e131aff7088669f9054a80b50"
->>>>>>> origin/master
     ],
     [
       "Bug1252.f",
@@ -21,11 +17,7 @@
       1,
       [ "@query", "function_token_typing_Bug1252.p1" ],
       0,
-<<<<<<< HEAD
-      "db85e3832f61a5a6f9258490b4b24eba"
-=======
       "7ad572825c22bd2dff69c0f5d0ad4d90"
->>>>>>> origin/master
     ]
   ]
 ]
