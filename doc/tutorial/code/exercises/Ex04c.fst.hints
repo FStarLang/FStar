@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "386f130a04c00b1f3fda451dbb9d67eb"
+      "924166f23f7ceaf74604382ec1b5a525"
     ],
     [
       "Ex04c.mem",
@@ -28,7 +28,43 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cd1b739ebcb0ce8eb2a9d23c76b5ff29"
+      "a8be4d7d13cd7e619e52e7fa338d7171"
+    ],
+    [
+      "Ex04c.append_mem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "eeb8e077fdad98b926d47ae4402afbe5"
+    ],
+    [
+      "Ex04c.append_mem",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "eb5f0a8567aab25f8cc76df108f60a83"
+    ],
+    [
+      "Ex04c.append_mem",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "3d82a154662a0acd612e2bcc60baa25d"
     ],
     [
       "Ex04c.append",
@@ -42,7 +78,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c6029328d74498010a4fc3f277661762"
+      "965d273fce65d5a947514a5d27d3a0b6"
     ],
     [
       "Ex04c.mem",
@@ -57,7 +93,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "16dc15adac4d2a0c2dea69b0d0d4ec4a"
+      "f65a425db403e427bffa5ba2bb05bf5f"
     ]
   ]
 ]

@@ -7,6 +7,18 @@
       2,
       1,
       [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "24d3154409a7f7858cad3dbc907e038a"
+    ],
+    [
+      "Bug463b.move_refinement",
+      2,
+      2,
+      1,
+      [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
@@ -24,7 +36,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "01bafb7462e10c3535b8ba409e12525d"
+      "cbb9d2a11ddb63ba478b538e3c329b3a"
     ],
     [
       "Bug463b.eq1",
@@ -32,15 +44,27 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c2d22794b546398b4cd050ea76d3ab59"
+      "8526b57786334d83514526fe7670ac50"
     ],
     [
       "Bug463b.eq1",
       2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "f36f56fa8175a4cf9a2a614cf8057d47"
+    ],
+    [
+      "Bug463b.eq1",
+      3,
       2,
       1,
       [
@@ -57,14 +81,14 @@
         "refinement_interpretation_Bug463b_Tm_refine_ef7eb83a49ce6a32191bfdac025ba8ad",
         "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.List.Tot.Base.mem"
+        "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented"
       ],
       0,
-      "b53120a26af287f27ef4d666dec65193"
+      "1a4ea16cee88414604ac06a88219c008"
     ],
     [
       "Bug463b.eq1",
-      3,
+      4,
       2,
       1,
       [
@@ -78,20 +102,32 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "20a551e8d28092924a13eaea452985e9"
+      "92923c366a4d7df176ea30daed301258"
     ],
     [
       "Bug463b.eq2",
       1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "5d96cc2a4346e963a41496dc6ab4d83a"
+    ],
+    [
+      "Bug463b.eq2",
+      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0a71270daa6fe90f9c88269e1509cc6b"
+      "292f35a047969a63054746c8b4616474"
     ],
     [
       "Bug463b.eq2",
-      2,
+      3,
       2,
       1,
       [
@@ -105,7 +141,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "481683a707c98be76cce6c34875ace56"
+      "e498f4620ecc989d0e714562563451bf"
     ],
     [
       "Bug463b.lemma_move_refinement_length",
@@ -113,15 +149,27 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "339f93c84d4576ef33c99d783ef1cbb3"
+      "555391e94ff144645fda58f4aec69ece"
     ],
     [
       "Bug463b.lemma_move_refinement_length",
       2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "282990813d425cd8313ed5b1f3f10a00"
+    ],
+    [
+      "Bug463b.lemma_move_refinement_length",
+      3,
       2,
       1,
       [
@@ -145,7 +193,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "c06135d2d597346ed6878290d3ec0bc6"
+      "35b7186777a1b3760d8ef5b12c059dbf"
     ]
   ]
 ]

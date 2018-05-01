@@ -14,7 +14,7 @@
         "binder_x_8f0dca50757ca4d3234278fe85ba50f4_1",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
         "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
-        "haseqBug058b_Tm_refine_ad02706b0e44fd70b15c27c862d543aa",
+        "haseqBug058b_Tm_refine_168d47edc382eb44a1bb9f73ed9ce867",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
@@ -23,7 +23,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d9b713c0486a5e4aa391ec7c0abc68d0"
+      "7fce63b5a4f4af7da0c5c9afde9d1bc8"
     ],
     [
       "Bug058b.fibonacci",
@@ -37,7 +37,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b05e906501b2f1a7790a5e2192b06a4c"
+      "0b4cf168317818c99773d1b5de790d1b"
     ]
   ]
 ]

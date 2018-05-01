@@ -47,7 +47,7 @@
         "typing_tok_FStar.Pointer.Base.TUnit@tok"
       ],
       0,
-      "033986847638915b1b7ef51b1b7d38ed"
+      "d61e693ee383d908f91f32160f3f29af"
     ],
     [
       "Test.u",
@@ -100,7 +100,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "e9aabbc93255c4487936e788fed12e3b"
+      "86f7be3fc7b67fcd1cdd40bd5e902725"
     ],
     [
       "Test.f",
@@ -125,12 +125,13 @@
         "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Prims.HasEq_string", "b2t_def", "bool_inversion",
-        "constructor_distinct_FStar.Pointer.Base.TBase",
+        "bool_typing", "constructor_distinct_FStar.Pointer.Base.TBase",
         "constructor_distinct_FStar.Pointer.Base.TBool",
         "constructor_distinct_FStar.Pointer.Base.TUInt32",
         "constructor_distinct_FStar.Pointer.Base.TUnit",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_elim_FStar.Pointer.Base.Mkstruct_typ", "data_elim_Prims.Cons",
+        "disc_equation_Prims.Cons",
         "equality_tok_FStar.Pointer.Base.TBool@tok",
         "equality_tok_FStar.Pointer.Base.TUInt32@tok",
         "equality_tok_FStar.Pointer.Base.TUnit@tok",
@@ -141,7 +142,6 @@
         "equation_FStar.Pointer.Base.modifies_1",
         "equation_FStar.Pointer.Base.struct_field",
         "equation_FStar.Pointer.Base.struct_field_",
-        "equation_FStar.Pointer.Base.struct_typ_",
         "equation_FStar.Pointer.Base.typ_of_struct_field",
         "equation_FStar.Pointer.Base.typ_of_struct_field_",
         "equation_FStar.Pointer.Base.type_of_base_typ",
@@ -203,10 +203,10 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Test_Tm_refine_0b1ea826a473e1560951f6ecd6950263",
+        "refinement_interpretation_Test_Tm_refine_00c56832bc2dc78a551563977addc778",
         "refinement_interpretation_Test_Tm_refine_35927a15e9516018e6643fa65a3f830c",
-        "refinement_interpretation_Test_Tm_refine_6e5a613641e573d4fa0960b46f7504c5",
-        "refinement_interpretation_Test_Tm_refine_b3ec26d014d0ef346857e15942925c0f",
+        "refinement_interpretation_Test_Tm_refine_37add96bc7035cb79b348f39b8ec21c5",
+        "refinement_interpretation_Test_Tm_refine_e36cbcccc2c66609ce8e01925228dd67",
         "string_inversion", "string_typing",
         "token_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
@@ -219,7 +219,7 @@
         "typing_FStar.UInt32.uint_to_t", "unit_typing"
       ],
       0,
-      "770cac1efa12a32f2400b494b270d1c3"
+      "d5cc9aba97354597d7457f9c9073c213"
     ]
   ]
 ]
