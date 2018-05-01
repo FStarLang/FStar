@@ -1060,7 +1060,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                                              false) in
             let tok_decls, env =
                 match vars with
-                | [] -> [], replace_free_var env t arity tname (Some <| mkApp(tname, []))
+                | [] -> [], push_free_var env t arity tname (Some <| mkApp(tname, []))
                 | _ ->
                         let ttok_decl = Term.DeclFun(ttok, [], Term_sort, Some "token") in
                         let ttok_fresh = Term.fresh_token (ttok, Term_sort) (varops.next_id()) in

@@ -2045,7 +2045,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                         if debug env <| Options.Other "Rel"
                         then BU.print1 "Adding subproblems for arguments: %s\n"
                                            (Print.list_to_string (prob_to_string env) subprobs);
-                        let formula = U.mk_conj_l (List.map (fun p -> fst (p_guard p)) subprobs) in
+                        let formula = U.mk_conj_l (List.map p_guard subprobs) in
                         let wl = solve_prob orig (Some formula) [] wl in
                         solve env (attempt subprobs wl)
                       end
