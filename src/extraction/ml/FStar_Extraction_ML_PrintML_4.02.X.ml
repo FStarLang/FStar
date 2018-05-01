@@ -363,11 +363,19 @@ let skip_type_defn (current_module:string) (type_name:string) :bool =
   current_module = "FStar_Pervasives" && type_name = "option"
 
 let type_metadata (metadata: metadata): attributes option =
-  let deriving_show = (mk_sym "deriving", PStr [Str.eval (Exp.ident (mk_lident "show"))]) in
-  if BatList.is_empty metadata then None else (Some [deriving_show])
-
+  let deriving = BatList.filter_map (function
+    | PpxDerivingShow | PpxDerivingShowConstant _ -> Some "show"
+    | PpxDerivingYoJson -> Some "yojson"
+    | _ -> None
+  ) metadata in
+  if List.length deriving > 0 then
+    let str = String.concat "," deriving in
+    Some [ mk_sym "deriving", PStr [Str.eval (Exp.ident (mk_lident str))] ]
+  else
+    None
+  
 let add_deriving_const (md: metadata) (ptype_manifest: core_type option): core_type option =
-  match md with
+  match List.filter (function PpxDerivingShowConstant _ -> true | _ -> false) md with
   | [PpxDerivingShowConstant s] ->
       let e = Exp.apply (Exp.ident (path_to_ident (["Format"], "pp_print_string"))) [(no_label, Exp.ident (mk_lident "fmt")); (no_label, Exp.constant (Const_string(s, None)))] in
       let deriving_const = (mk_sym "printer", PStr [Str.eval (Exp.fun_ "" None (build_binding_pattern "fmt") (Exp.fun_ "" None (Pat.any ()) e))]) in
