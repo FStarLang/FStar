@@ -958,7 +958,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
 
             | MisMatch(Some d1, Some d2) when (d1=d2) -> //incompatible
               reduce_both_and_try_again d1 r
- 
+
             | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
               reduce_one_and_try_again d1 d2
 
@@ -975,9 +975,9 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
              then "None"
              else snd r
                  |> must
-                 |> (fun (t1, t2) -> 
-                     Print.term_to_string t1 
-                     ^ "; " 
+                 |> (fun (t1, t2) ->
+                     Print.term_to_string t1
+                     ^ "; "
                      ^ Print.term_to_string t2));
     r
 
@@ -1031,6 +1031,7 @@ let rank tcenv pr : rank_t    //the rank
         | _, Tm_uvar _ when (tp.relation=EQ || Options.eager_inference()) ->
           Flex_rigid_eq, tp
 
+        | Tm_uvar _, Tm_arrow _
         | Tm_uvar _, Tm_type _
         | Tm_type _, Tm_uvar _ ->
           //this case is so common, that even though we could delay, it is almost always ok to solve it immediately as an equality
