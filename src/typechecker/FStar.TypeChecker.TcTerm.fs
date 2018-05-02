@@ -1764,7 +1764,7 @@ and tc_eqn scrutinee env branch
                     match Env.try_lookup_lid env discriminator with
                         | None -> []  // We don't use the discriminator if we are typechecking it
                         | _ ->
-                            let disc = S.fvar discriminator delta_equational None in
+                            let disc = S.fvar discriminator (Delta_equational_at_level 1) None in
                             let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
                             [U.mk_eq2 U_zero U.t_bool disc U.exp_true_bool]
                 else []
@@ -1803,7 +1803,7 @@ and tc_eqn scrutinee env branch
                             match Env.try_lookup_lid env projector with
                              | None -> []
                              | _ ->
-                                let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) delta_equational None) [as_arg scrutinee_tm] None f.p in
+                                let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) (Delta_equational_at_level 1) None) [as_arg scrutinee_tm] None f.p in
                                 build_branch_guard sub_term ei) |> List.flatten in
                          discriminate scrutinee_tm f @ sub_term_guards
                 | _ -> [] //a non-pattern sub-term: must be from a dot pattern

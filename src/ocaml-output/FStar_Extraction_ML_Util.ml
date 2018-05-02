@@ -77,7 +77,7 @@ let (mlexpr_of_range :
             (uu____133, FStar_Pervasives_Native.None)  in
           FStar_Extraction_ML_Syntax.MLC_Int uu____122  in
         FStar_All.pipe_right uu____121
-          (fun _0_18  -> FStar_Extraction_ML_Syntax.MLE_Const _0_18)
+          (fun _0_17  -> FStar_Extraction_ML_Syntax.MLE_Const _0_17)
          in
       FStar_All.pipe_right uu____120
         (FStar_Extraction_ML_Syntax.with_ty
@@ -86,7 +86,7 @@ let (mlexpr_of_range :
     let cstr s =
       let uu____150 =
         FStar_All.pipe_right (FStar_Extraction_ML_Syntax.MLC_String s)
-          (fun _0_19  -> FStar_Extraction_ML_Syntax.MLE_Const _0_19)
+          (fun _0_18  -> FStar_Extraction_ML_Syntax.MLE_Const _0_18)
          in
       FStar_All.pipe_right uu____150
         (FStar_Extraction_ML_Syntax.with_ty
@@ -214,8 +214,8 @@ let (udelta_unfold :
       FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option)
   =
   fun g  ->
-    fun uu___87_363  ->
-      match uu___87_363 with
+    fun uu___84_363  ->
+      match uu___84_363 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
           let uu____372 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1  in
           (match uu____372 with
@@ -257,8 +257,8 @@ let (eff_leq :
       | uu____405 -> false
   
 let (eff_to_string : FStar_Extraction_ML_Syntax.e_tag -> Prims.string) =
-  fun uu___88_414  ->
-    match uu___88_414 with
+  fun uu___85_414  ->
+    match uu___85_414 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -421,8 +421,8 @@ let rec (type_leq_c :
                            let uu____738 =
                              let uu____741 = mk_fun xs body  in
                              FStar_All.pipe_left
-                               (fun _0_20  ->
-                                  FStar_Pervasives_Native.Some _0_20)
+                               (fun _0_19  ->
+                                  FStar_Pervasives_Native.Some _0_19)
                                uu____741
                               in
                            type_leq_c unfold_ty uu____738 t2 t2'  in
@@ -508,8 +508,8 @@ let is_type_abstraction :
     (('a,'b) FStar_Util.either,'c) FStar_Pervasives_Native.tuple2 Prims.list
       -> Prims.bool
   =
-  fun uu___89_1001  ->
-    match uu___89_1001 with
+  fun uu___86_1001  ->
+    match uu___86_1001 with
     | (FStar_Util.Inl uu____1012,uu____1013)::uu____1014 -> true
     | uu____1037 -> false
   
@@ -549,8 +549,8 @@ let (resugar_exp :
   
 let (record_field_path :
   FStar_Ident.lident Prims.list -> Prims.string Prims.list) =
-  fun uu___90_1109  ->
-    match uu___90_1109 with
+  fun uu___87_1109  ->
+    match uu___87_1109 with
     | f::uu____1115 ->
         let uu____1118 = FStar_Util.prefix f.FStar_Ident.ns  in
         (match uu____1118 with
@@ -1021,7 +1021,7 @@ let (interpret_plugin_as_term_fun :
                                let head2 =
                                  mk_basic_embedding loc_embedding nm  in
                                (match t_arity with
-                                | _0_21 when _0_21 = (Prims.parse_int "0") ->
+                                | _0_20 when _0_20 = (Prims.parse_int "0") ->
                                     head2
                                 | n1 ->
                                     FStar_All.pipe_left w
