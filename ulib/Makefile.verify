@@ -1,9 +1,9 @@
 .PHONY: indent extra arraystruct
 
 FSTAR_HOME=..
-include $(FSTAR_HOME)/src/gmake/z3.mk
-include $(FSTAR_HOME)/src/gmake/fstar.mk
-include $(FSTAR_HOME)/src/gmake/Makefile.tmpl
+include gmake/z3.mk
+include gmake/fstar.mk
+include gmake/Makefile.tmpl
 
 EXTRA=
 FLAKY=$(EXTRA) FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst

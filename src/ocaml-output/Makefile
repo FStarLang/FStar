@@ -267,10 +267,6 @@ endif
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
 	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
 
-        # Some new things used by examples/Makefile
-	mkdir -p $(PREFIX)/src/gmake/
-	cp ../../src/gmake/*.mk ../../src/gmake/*.tmpl $(PREFIX)/src/gmake/
-
 	# Z3
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin

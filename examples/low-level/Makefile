@@ -3,7 +3,7 @@ FSTAR_HOME=../..
 # using the hyperstack memory model, ulib/ml/Makefile.include used this variable to use appropriate ST files
 MEM=HST
 
-include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/ulib/gmake/fstar.mk
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
 FSTAR_ARGS=$(OTHERFLAGS)
