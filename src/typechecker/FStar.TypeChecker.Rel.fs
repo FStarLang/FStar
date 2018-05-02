@@ -1572,7 +1572,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
       let (bound, sub_probs, wl) =
           meet_or_join (if flip then U.mk_conj else U.mk_disj) bounds_typs env wl
       in
-      let eq_prob, wl =
+      let bound_typ, (eq_prob, wl) =
           let _, flex_u, _ = destruct_flex_t this_flex in
           let bound =
             //We get constraints of the form (x:?u{phi} <: ?u)
@@ -1586,6 +1586,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
             | _ ->
               bound
           in
+          bound,
           new_problem wl env bound EQ this_flex None tp.loc
                 (if flip then "joining refinements" else "meeting refinements")
       in
@@ -1595,16 +1596,42 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
       let tx = UF.new_transaction () in
       begin
-      match solve_t env eq_prob ({wl with attempting=sub_probs}) with
+      match solve_t env eq_prob ({wl with defer_ok=false; attempting=sub_probs}) with
       | Success _ ->
          let wl = {wl with attempting=rest} in
          let wl = solve_prob' false (TProb tp) None [] wl in
          let _ = List.fold_left (fun wl p -> solve_prob' true p None [] wl) wl bounds_probs in
          UF.commit tx;
          solve env wl
+
       | Failed (p, msg) ->
          UF.rollback tx;
-         giveup env ("failed to solve sub-problems: " ^msg) p
+         if Env.debug env <| Options.Other "RelCheck"
+         then BU.print1 "meet/join attempted and failed to solve problems:\n%s\n"
+                        (List.map (prob_to_string env) (TProb eq_prob::sub_probs) |> String.concat "\n");
+         (match rank, base_and_refinement env bound_typ with
+          | Rigid_flex, (t_base, Some _) ->
+              //We failed to solve (x:t_base{p} <: ?u) while computing a precise join of all the lower bounds
+              //Rather than giving up, try again with a widening heuristic
+              //i.e., try to solve ?u = t and proceed
+            let eq_prob, wl =
+                new_problem wl env t_base EQ this_flex None tp.loc "widened subtyping" in
+            let wl = solve_prob' false (TProb tp) (Some (p_guard (TProb eq_prob))) [] wl in
+            solve env (attempt [TProb eq_prob] wl)
+
+          | Flex_rigid, (t_base, Some (x, phi)) ->
+              //We failed to solve (?u = x:t_base{phi}) while computing
+              //a precise meet of all the upper bounds
+              //Rather than giving up, try again with a narrowing heuristic
+              //i.e., solve ?u = t_base, with the guard formula phi
+            let eq_prob, wl =
+                new_problem wl env t_base EQ this_flex None tp.loc "widened subtyping" in
+            let phi = guard_on_element wl tp x phi in
+            let wl = solve_prob' false (TProb tp) (Some (U.mk_conj phi (p_guard (TProb eq_prob)))) [] wl in
+            solve env (attempt [TProb eq_prob] wl)
+
+          | _ ->
+            giveup env ("failed to solve sub-problems: " ^msg) p)
       end
 
     | _ when flip -> failwith (BU.format1 "Impossible: Not a flex-rigid: %s" (prob_to_string env (TProb tp)))
