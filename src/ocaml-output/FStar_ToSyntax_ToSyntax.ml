@@ -3643,7 +3643,8 @@ and (desugar_term_maybe_top :
                                    uu____11369
                                   in
                                FStar_Syntax_Syntax.fvar uu____11368
-                                 FStar_Syntax_Syntax.delta_equational qual
+                                 (FStar_Syntax_Syntax.Delta_equational_at_level
+                                    (Prims.parse_int "1")) qual
                                 in
                              let uu____11370 =
                                let uu____11373 =
@@ -4689,9 +4690,11 @@ let (mk_indexed_projector_names :
                                       if uu____14424
                                       then
                                         FStar_Syntax_Syntax.Delta_abstract
-                                          FStar_Syntax_Syntax.delta_equational
+                                          (FStar_Syntax_Syntax.Delta_equational_at_level
+                                             (Prims.parse_int "1"))
                                       else
-                                        FStar_Syntax_Syntax.delta_equational
+                                        FStar_Syntax_Syntax.Delta_equational_at_level
+                                          (Prims.parse_int "1")
                                        in
                                     let lb =
                                       let uu____14429 =
