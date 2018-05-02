@@ -73,6 +73,54 @@ https://github.com/FStarLang/FStar/issues/360
 (error "line 1990 column 4: unknown function/constant Prims.hasEq")
 (error "line 2350 column 7: named expression already defined")
 (error "line 5738 column 7: named expression already defined")
+* TODO P1 Type inference doesn't work so well for prop
+** There are many examples but here is one from FStar.Seq.Base.fst,
+the prop annotation is currently needed!
+
+abstract type equal (#a:Type) (s1:seq a) (s2:seq a) : prop =
+  (length s1 = length s2
+   /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
+
+abstract val eq: #a:eqtype -> s1:seq a -> s2:seq a -> Tot (r:bool{r <==> equal s1 s2})
+
+** Same thing in FStar.Seq.Properties.fst:
+type permutation (a:eqtype) (s1:seq a) (s2:seq a) =
+       (forall i. count i s1 = count i s2)
+val lemma_swap_permutes: #a:eqtype -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> Lemma
+  (permutation a s (swap s i j))
+* TODO P1 Refinement of eqtype no longer an eqtype?
+** From ulib/FStar.DependentMap.fst (fails with both Type0 and prop):
+abstract let restrict
+  (#key: eqtype)
+  (#value: (key -> Tot Type))
+  (p: (key -> Tot prop))
+  (m: t key value)
+: Tot (t (k: key {p k}) value)
+= { mappings = m.mappings }
+* TODO P1 Make b2p insertion more resilient to naming
+Needed to add extra b2p in FStar.Uint32.fst (and 8, 16, ...):
+
+(* Shift operators *)
+abstract
+let shift_right (a:t) (s:t) : Pure t
+  (requires (b2p (v s < n)))
+  (ensures (fun c -> FStar.UInt.shift_right (v a) (v s) = v c))
+  = Mk (shift_right (v a) (v s))
+
+abstract
+let shift_left (a:t) (s:t) : Pure t
+  (requires (b2p (v s < n)))
+  (ensures (fun c -> FStar.UInt.shift_left (v a) (v s) = v c))
+  = Mk (shift_left (v a) (v s))
+
+This is especially bad in FStar.UInt128.fst
+
+* TODO P2 Bootstrapping works for `... -> Type` but not `... -> prop`
+Needed to explicitly add a `... -> Tot prop`
+Need more unfolding in maybe_coerce_bool_to_prop,
+but not for prop itself
+
+* TODO P1 Minimize prims to end once we've defined GTot
 * TODO P1 Carefully review all the uses of Type(0) in the type-checker
 
 There are 20+ hard-coded uses of `Type0` in the type-checker and my
@@ -123,54 +171,6 @@ typechecker/FStar.TypeChecker.TcTerm.fs:      | Const_effect -> U.ktype0 //NS: r
 typechecker/FStar.TypeChecker.TcTerm.fs:   | Tm_quoted _ -> U.ktype0
 smtencoding/FStar.SMTEncoding.Encode.fs:                | None -> FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst
 tests/FStar.Tests.Unif.fs:    else let t, _ = Rel.new_uvar dummyRange [] U.ktype0 in
-* TODO P1 Type inference doesn't work so well for prop
-** There are many examples but here is one from FStar.Seq.Base.fst,
-the prop annotation is currently needed!
-
-abstract type equal (#a:Type) (s1:seq a) (s2:seq a) : prop =
-  (length s1 = length s2
-   /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
-
-abstract val eq: #a:eqtype -> s1:seq a -> s2:seq a -> Tot (r:bool{r <==> equal s1 s2})
-
-** Same thing in FStar.Seq.Properties.fst:
-type permutation (a:eqtype) (s1:seq a) (s2:seq a) =
-       (forall i. count i s1 = count i s2)
-val lemma_swap_permutes: #a:eqtype -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> Lemma
-  (permutation a s (swap s i j))
-* TODO P1 Refinement of eqtype no longer an eqtype?
-** From ulib/FStar.DependentMap.fst (fails with both Type0 and prop):
-abstract let restrict
-  (#key: eqtype)
-  (#value: (key -> Tot Type))
-  (p: (key -> Tot prop))
-  (m: t key value)
-: Tot (t (k: key {p k}) value)
-= { mappings = m.mappings }
-* TODO P1 Make b2p insertion more resilient to naming
-Needed to add extra b2p in FStar.Uint32.fst (and 8, 16, ...):
-
-(* Shift operators *)
-abstract
-let shift_right (a:t) (s:t) : Pure t
-  (requires (b2p (v s < n)))
-  (ensures (fun c -> FStar.UInt.shift_right (v a) (v s) = v c))
-  = Mk (shift_right (v a) (v s))
-
-abstract
-let shift_left (a:t) (s:t) : Pure t
-  (requires (b2p (v s < n)))
-  (ensures (fun c -> FStar.UInt.shift_left (v a) (v s) = v c))
-  = Mk (shift_left (v a) (v s))
-
-This is especially bad in FStar.UInt128.fst
-
-* TODO P1 Bootstrapping works for `... -> Type` but not `... -> prop`
-Needed to explicitly add a `... -> Tot prop`
-Need more unfolding in maybe_coerce_bool_to_prop,
-but not for prop itself
-
-* TODO Minimize prims to end once we've defined GTot
 * DONE Some severe performance degradation in FStar.Array.fst
 Z3 takes 6GB+ of RAM here!
 Verified module: FStar.UInt128 (215850 milliseconds)
