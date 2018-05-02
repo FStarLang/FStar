@@ -566,12 +566,13 @@ let intro () : tac<binder> = wrap_err "intro" <|
         then fail "Codomain is effectful"
         else let env' = Env.push_binders goal.context [b] in
              let typ' = comp_to_typ c in
-             bind (new_uvar "intro" env' typ') (fun u ->
-             bind (trysolve goal (U.abs [b] u None)) (fun bb ->
+             bind (new_uvar "intro" goal.context (U.arrow [b] (S.mk_Total typ'))) (fun u ->
+             let body = S.mk_Tm_app u [S.bv_to_name (fst b), snd b] None u.pos in
+             bind (trysolve goal (U.abs [b] body None)) (fun bb ->
              if bb
              then bind (replace_cur ({ goal with context = env';
                                                  goal_ty = bnorm env' typ';
-                                                 witness = bnorm env' u})) (fun _ ->
+                                                 witness = bnorm env' body})) (fun _ ->
                   ret b)
              else fail "unification failed"
              ))
