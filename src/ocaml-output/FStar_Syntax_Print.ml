@@ -1659,5 +1659,7 @@ let (ctx_uvar_to_string : FStar_Syntax_Syntax.ctx_uvar -> Prims.string) =
       uvar_to_string ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_head  in
     let uu____3148 = term_to_string ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ
        in
-    FStar_Util.format3 "(%s |- %s : %s)" uu____3146 uu____3147 uu____3148
+    FStar_Util.format4 "(* %s *)\n(%s |- %s : %s)"
+      ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_reason uu____3146 uu____3147
+      uu____3148
   
