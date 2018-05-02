@@ -608,6 +608,14 @@ let rec unrefine t =
   | Tm_ascribed(t, _, _) -> unrefine t
   | _ -> t
 
+let rec is_uvar t =
+  match (compress t).n with
+  | Tm_uvar _ -> true
+  | Tm_uinst (t, _) -> is_uvar t
+  | Tm_app _ -> t |> head_and_args |> fst |> is_uvar
+  | Tm_ascribed (t, _, _) -> is_uvar t
+  | _ -> false
+
 let rec is_unit t =
     match (unrefine t).n with
     | Tm_fvar fv ->
