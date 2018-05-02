@@ -1,6 +1,5 @@
 .PHONY: indent extra arraystruct
 
-FSTAR_HOME=..
 include gmake/z3.mk
 include gmake/fstar.mk
 include gmake/Makefile.tmpl
