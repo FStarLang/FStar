@@ -168,8 +168,13 @@ let print_env e =
         BU.pimap_fold pi (fun _i (x, _term) acc ->
             Print.bv_to_string x :: acc) acc) [] in
     let allvars = BU.psmap_fold e.fvar_bindings (fun _k fvb acc ->
-        Print.lid_to_string fvb.fvar_lid :: acc) bvars in
-    String.concat ", " allvars
+        fvb.fvar_lid :: acc) [] in
+    let last_fvar =
+      match List.rev allvars with
+      | [] -> ""
+      | l::_ -> "...," ^ Print.lid_to_string l
+    in
+    String.concat ", " (last_fvar :: bvars)
 
 let lookup_bvar_binding env bv =
     match BU.psmap_try_find env.bvar_bindings bv.ppname.idText with
