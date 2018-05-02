@@ -185,7 +185,7 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
          ctx_uvar_should_check=should_check;
          ctx_uvar_range=r
        } in
-    check_uvar_ctx_invariant reason r should_check gamma binders;
+    check_uvar_ctx_invariant reason r true gamma binders;
     let t = mk (Tm_uvar ctx_uvar) None r in
     ctx_uvar, t, {wl with wl_implicits=(reason, t, ctx_uvar, r, should_check)::wl.wl_implicits}
 
@@ -232,11 +232,13 @@ let term_to_string t =
 
 let prob_to_string env = function
   | TProb p ->
-    BU.format "\n%s:\t%s \n\t\t%s\n\t%s" //  (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
+    BU.format "\n%s:\t%s \n\t\t%s\n\t%s\n\twith guard %s\n\telement= %s\n" //  (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
         [(BU.string_of_int p.pid);
          (term_to_string p.lhs);
          (rel_to_string p.relation);
-         (term_to_string p.rhs)
+         (term_to_string p.rhs);
+         (term_to_string p.logical_guard);
+         (match p.element with None -> "none" | Some t -> term_to_string t)
          (* (N.term_to_string env (fst p.logical_guard)); *)
          (* (p.reason |> String.concat "\n\t\t\t") *)]
   | CProb p ->
@@ -367,7 +369,8 @@ let mk_eq2 wl prob t1 t2 =
             Sadly, it seems to be way too expensive to call env.type_of here.
     *)
     let t_type, u = U.type_u () in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma [] t_type false in
+    let binders = Env.all_binders wl.tcenv in
+    let _, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma binders t_type false in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -419,7 +422,6 @@ let mk_c_problem wl scope orig lhs rel rhs elt reason =
   CProb p, wl
 
 let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
-  let scope = Env.all_binders env in
   let bs, lg_ty, elt =
     match subject with
     | None -> [], U.ktype0, None
@@ -434,7 +436,7 @@ let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
                ({wl with tcenv=env})
                loc
                env.gamma
-               scope
+               (Env.all_binders env)
                lg_ty
                false
   in
@@ -638,6 +640,22 @@ let wl_to_string wl =
 (* </printing worklists>                             *)
 (* ------------------------------------------------ *)
 
+type flex_t = (term * ctx_uvar * args)
+
+let flex_t_to_string (_, c, args) =
+    BU.format2 "%s [%s]" (print_ctx_uvar c) (Print.args_to_string args)
+
+let is_flex t = match (SS.compress t).n with
+    | Tm_uvar _
+    | Tm_app({n=Tm_uvar _}, _) -> true
+    | _ -> false
+
+let destruct_flex_t t : flex_t =
+    match t.n with
+    | Tm_uvar uv -> (t, uv, [])
+    | Tm_app({n=Tm_uvar uv}, args) -> (t, uv, args)
+    | _ -> failwith "Not a flex-uvar"
+
 (* ------------------------------------------------ *)
 (* <solving problems>                               *)
 (* ------------------------------------------------ *)
@@ -663,18 +681,39 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let phi = match logical_guard with
       | None -> U.t_true
       | Some phi -> phi in
-    let xs, uv = p_guard_uvar prob in
-    let _ = match Unionfind.find uv.ctx_uvar_head with
-        | None ->
-          if Env.debug wl.tcenv <| Options.Other "Rel"
-          then BU.print3 "Solving %s (%s) with formula %s\n"
+    let assign_solution xs uv phi =
+        if Env.debug wl.tcenv <| Options.Other "Rel"
+        then BU.print3 "Solving %s (%s) with formula %s\n"
                             (string_of_int (p_pid prob))
                             (print_ctx_uvar uv)
                             (Print.term_to_string phi);
-          let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
-          def_check_closed (p_loc prob) "solve_prob'" phi;
-          U.set_uvar uv.ctx_uvar_head phi
-        | Some _ -> if not resolve_ok then failwith "Impossible: this instance has already been assigned a solution" in
+        let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
+        def_check_closed (p_loc prob) "solve_prob'" phi;
+        U.set_uvar uv.ctx_uvar_head phi
+    in
+    let xs, uv = p_guard_uvar prob in
+    let fail () =
+        failwith (BU.format2 "Impossible: this instance %s has already been assigned a solution\n%s\n"
+                              (Print.ctx_uvar_to_string uv)
+                              (Print.term_to_string (p_guard prob)))
+    in
+    let args_as_binders args =
+        args |>
+        List.collect (fun (a, i) ->
+            match (SS.compress a).n with
+            | Tm_name x -> [x, i]
+            | _ ->
+              fail();
+              [])
+    in
+    let _ =
+        let g = whnf wl.tcenv (p_guard prob) in
+        if not (is_flex g)
+        then if resolve_ok then ()
+             else fail()
+        else let _, uv, args = destruct_flex_t g in
+             assign_solution (args_as_binders args) uv phi
+    in
     commit uvis;
     {wl with ctr=wl.ctr + 1}
 
@@ -793,22 +832,6 @@ let pat_vars env ctx args : option<binders> =
         | _ -> None
     in
     aux [] args
-
-type flex_t = (term * ctx_uvar * args)
-
-let flex_t_to_string (_, c, args) =
-    BU.format2 "%s [%s]" (print_ctx_uvar c) (Print.args_to_string args)
-
-let is_flex t = match (SS.compress t).n with
-    | Tm_uvar _
-    | Tm_app({n=Tm_uvar _}, _) -> true
-    | _ -> false
-
-let destruct_flex_t t : flex_t =
-    match t.n with
-    | Tm_uvar uv -> (t, uv, [])
-    | Tm_app({n=Tm_uvar uv}, args) -> (t, uv, args)
-    | _ -> failwith "Not a flex-uvar"
 
 (* ------------------------------------------------ *)
 (* </variable ops>                                  *)

@@ -78,8 +78,9 @@ let new_implicit_var reason r env k =
 let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
     let rec aux x i =
         let (reason, term, ctx_u, range, should_check) = i in
-        if not should_check then i
-        else match FStar.Syntax.Unionfind.find ctx_u.ctx_uvar_head with
+        if Env.debug env <| Options.Other "Rel"
+        then BU.print1 "Considering closing uvar %s\n" (Print.ctx_uvar_to_string ctx_u);
+        match FStar.Syntax.Unionfind.find ctx_u.ctx_uvar_head with
         | Some _ ->
           if Env.debug env <| Options.Other "Rel"
           then BU.print1 "%s already solved; nothing to do\n" (Print.ctx_uvar_to_string ctx_u);
@@ -89,7 +90,7 @@ let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
           match BU.prefix_until (function Binding_var _ -> true | _ -> false) ctx_u.ctx_uvar_gamma with
           | None -> i
           | Some (_, hd, gamma_tail) ->
-            check_uvar_ctx_invariant reason range should_check ctx_u.ctx_uvar_gamma ctx_u.ctx_uvar_binders;
+            check_uvar_ctx_invariant reason range true ctx_u.ctx_uvar_gamma ctx_u.ctx_uvar_binders;
             match hd with
             | Binding_var x' when S.bv_eq x x' ->
               let binders_pfx, _ = BU.prefix ctx_u.ctx_uvar_binders in
