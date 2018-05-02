@@ -18,7 +18,7 @@ if ! [[ -d ulib ]]; then
   echo "This script is intended to be run from the root of the F* repository"
   exit 1
 fi
-export FSTAR_HOME=$PWD
+FSTAR_HOME=$PWD
 
 # Expects to be called from $BN_BINARYSPATH_ROOT
 function cp_to_binaries () {
