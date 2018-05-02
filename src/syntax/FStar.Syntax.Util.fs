@@ -302,6 +302,8 @@ let is_div_effect l =
 
 let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
 
+let is_pure_or_ghost_effect l = is_pure_effect l || is_ghost_effect l
+
 let is_pure_lcomp lc =
     is_total_lcomp lc
     || is_pure_effect lc.eff_name

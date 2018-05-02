@@ -2671,14 +2671,15 @@ let normalize_universe env u = norm_universe (config [] env) [] u
 
 (* Promotes Ghost T, when T is not informative to Pure T
         Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
-   In case result type is a uvar in c, the decision is made on the (optional) type inside topt
+   In case result type is a uvar in c, the decision is made on the type inside copt when it is PURE or GHOST
 *)
-let ghost_to_pure env c topt =
+let ghost_to_pure env c copt =
     let cfg = config [UnfoldUntil delta_constant; AllowUnboundUniverses; EraseUniverses] env in
     let non_info t = non_informative (norm cfg [] [] t) in
     let should_downgrade t =
       non_info t ||
-      (is_uvar t && is_some topt && topt |> must |> non_info)
+      (is_uvar t && is_some copt && copt |> must |> (fun c2 -> c2 |> comp_effect_name |> Env.norm_eff_name env |> U.is_pure_or_ghost_effect &&
+                                                               c2 |> comp_result |> non_info))
     in
     match c.n with
     | Total _ -> c
