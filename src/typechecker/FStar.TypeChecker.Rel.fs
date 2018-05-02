@@ -1293,22 +1293,22 @@ let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
         |  _, [] ->
           Some (List.rev pat_binders, U.arrow formals (S.mk_Total t_res))
 
-        | (formal, _)::formals, (a, _)::args ->
+        | (formal, formal_imp)::formals, (a, a_imp)::args ->
             begin
             match (SS.compress a).n with
             | Tm_name x ->
                 if name_exists_in x ctx
                 ||  name_exists_in x pat_binders
                 then //we already have x
-                        //so don't include it in the quasi-pattern
-                        aux (S.mk_binder formal :: pat_binders) formals t_res args
+                     //so don't include it in the quasi-pattern
+                     aux ((formal, formal_imp) :: pat_binders) formals t_res args
                 else let x = {x with sort=formal.sort} in
                         let subst = [NT(formal, S.bv_to_name x)] in
                         let formals = SS.subst_binders subst formals in
                         let t_res = SS.subst subst t_res in
-                        aux (S.mk_binder ({x with sort=formal.sort}) :: pat_binders) formals t_res args
+                        aux (({x with sort=formal.sort}, a_imp) :: pat_binders) formals t_res args
             | _ -> //it's not a name, so it can't be included in the patterns
-            aux (S.mk_binder formal :: pat_binders) formals t_res args
+            aux ((formal, formal_imp) :: pat_binders) formals t_res args
             end
 
         | [], args ->
