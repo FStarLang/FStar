@@ -192,12 +192,8 @@ install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar
 install: all
         # Install the binary
 	$(INSTALL_EXEC) -m 755 -D _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
-	# Then the standard library, but not the ml or fs files
-	cp -p -r ../../ulib ../../ulib-install
-	rm -rf ../../ulib-install/ml
-	rm -rf ../../ulib-install/fs
-	$(call install_dir,ulib-install,lib/fstar)
-	rm -rf ../../ulib-install
+	# Then the standard library
+	$(call install_dir,ulib,lib/fstar)
 	# Then the binary library
 	cd ../../bin/fstarlib && ocamlfind install fstarlib *
 	cd ../../bin/fstar-compiler-lib && ocamlfind install fstar-compiler-lib *
