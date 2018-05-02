@@ -172,6 +172,9 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
     | Some expected_c -> //expected effects should already be normalized
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (U.lcomp_of_comp c) in
        let c = lcomp_comp c in
+       if debug env <| Options.Extreme then
+       BU.print3 "In check_expected_effect, asking rel to solve the problem on e %s and c %s and expected_c %s\n"
+                 (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
        let e, _, g = TcUtil.check_comp env e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
        if debug env Options.Low then BU.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
@@ -397,9 +400,21 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_ascribed (e, (Inr expected_c, topt), _) ->
     let env0, _ = Env.clear_expected_typ env in
     let expected_c, _, g = tc_comp env0 expected_c in
-    let t_res = U.comp_result expected_c in
-    let e, c', g' = tc_term (Env.set_expected_typ env0 t_res) e in
+    let expected_c_has_wp = U.comp_effect_args expected_c <> [] in
+    
+    let e, c', g' = tc_term (if expected_c_has_wp then env0 else U.comp_result expected_c |> Env.set_expected_typ env0) e in
+    //let c' = if expected_c_has_wp then TcUtil.maybe_assume_result_eq_pure_term env0 e c' else c' in
+
+    if debug env <| Options.Extreme then
+    BU.print3 "Checking expected effect for %s with lcomp %s and expected effect %s\n"
+              (Print.term_to_string e) (Print.lcomp_to_string c') (Print.comp_to_string expected_c);
+
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, lcomp_comp c') in
+    
+    if debug env <| Options.Extreme then
+    BU.print4 "Checked expected effect for %s with lcomp %s and expected effect %s produced guard: %s\n"
+              (Print.term_to_string e) (Print.lcomp_to_string c') (Print.comp_to_string expected_c) (Rel.guard_to_string env g'');
+
     let topt = tc_tactic_opt env0 topt in
     let e = mk (Tm_ascribed(e, (Inr expected_c, topt), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
     let lc = U.lcomp_of_comp expected_c in

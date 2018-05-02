@@ -378,8 +378,17 @@ let set_result_typ c t = match c.n with
   | GTotal _ -> mk_GTotal t
   | Comp ct -> mk_Comp({ct with result_typ=t})
 
+let set_result_typ_lc (lc:lcomp) (t:typ) :lcomp =
+  Syntax.mk_lcomp lc.eff_name t lc.cflags (fun _ -> set_result_typ (lcomp_comp lc) t)
+
 let is_trivial_wp c =
   comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
+
+let comp_effect_args (c:comp) :args =
+  match c.n with
+  | Total _
+  | GTotal _ -> []
+  | Comp ct -> ct.effect_args
 
 (********************************************************************************)
 (*               Simple utils on the structure of a term                        *)
