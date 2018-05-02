@@ -55,8 +55,8 @@ let iv_of_entry_inj (e1 e2:log_entry)
   : Lemma (iv_of_entry e1 <> iv_of_entry e2 
            ==> Entry?.c e1 <> Entry?.c e2)
   = let iv1, r1 = iv_of_entry e1, raw_cipher e1 in
-    let iv2 = iv_of_entry e2 in
-    FStar.Classical.move_requires (Platform.Bytes.lemma_append_inj iv1 r1 iv2) (raw_cipher e2)
+    let iv2, r2 = iv_of_entry e2, raw_cipher e2 in
+    FStar.Classical.move_requires (Platform.Bytes.lemma_append_inj iv1 r1 iv2) r2
 
 /// A key includes the raw AES key but also an monotonic log of entries
 /// representing the ideal state
