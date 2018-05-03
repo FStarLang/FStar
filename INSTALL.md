@@ -65,7 +65,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
         $ fstar.exe --version
-        F* 0.9.5.0
+        F* 0.9.6.0
         platform=Linux_x86_64
         compiler=OCaml 4.02.3
         date=yyyy-mm-ddThh:nn:ss+02:00
