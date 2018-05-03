@@ -79,7 +79,7 @@ val normalize_comp:       steps -> Env.env -> comp -> comp
 val normalize_refinement: steps -> Env.env -> typ -> typ
 val unfold_whnf:          Env.env -> term -> term
 val reduce_uvar_solutions:Env.env -> term -> term
-val ghost_to_pure:        Env.env -> comp -> option<comp> -> comp
+val ghost_to_pure:        Env.env -> comp -> comp
 val ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
 val normalize_with_primitive_steps : list<primitive_step> -> list<step> -> Env.env -> term -> term
 val term_to_string:  Env.env -> term -> string

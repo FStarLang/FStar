@@ -399,22 +399,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_ascribed (e, (Inr expected_c, topt), _) ->
     let env0, _ = Env.clear_expected_typ env in
-    let expected_c, _, g = tc_comp env0 expected_c in
-    let expected_c_has_wp = U.comp_effect_args expected_c <> [] in
-    
-    let e, c', g' = tc_term (if expected_c_has_wp then env0 else U.comp_result expected_c |> Env.set_expected_typ env0) e in
-    //let c' = if expected_c_has_wp then TcUtil.maybe_assume_result_eq_pure_term env0 e c' else c' in
-
-    if debug env <| Options.Extreme then
-    BU.print3 "Checking expected effect for %s with lcomp %s and expected effect %s\n"
-              (Print.term_to_string e) (Print.lcomp_to_string c') (Print.comp_to_string expected_c);
-
+    let expected_c, _, g = tc_comp env0 expected_c in    
+    let e, c', g' = tc_term (U.comp_result expected_c |> Env.set_expected_typ env0) e in
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, lcomp_comp c') in
-    
-    if debug env <| Options.Extreme then
-    BU.print4 "Checked expected effect for %s with lcomp %s and expected effect %s produced guard: %s\n"
-              (Print.term_to_string e) (Print.lcomp_to_string c') (Print.comp_to_string expected_c) (Rel.guard_to_string env g'');
-
     let topt = tc_tactic_opt env0 topt in
     let e = mk (Tm_ascribed(e, (Inr expected_c, topt), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
     let lc = U.lcomp_of_comp expected_c in

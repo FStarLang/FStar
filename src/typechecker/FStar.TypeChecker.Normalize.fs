@@ -2671,23 +2671,17 @@ let normalize_universe env u = norm_universe (config [] env) [] u
 
 (* Promotes Ghost T, when T is not informative to Pure T
         Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
-   In case result type is a uvar in c, the decision is made on the type inside copt when it is PURE or GHOST
 *)
-let ghost_to_pure env c copt =
+let ghost_to_pure env c =
     let cfg = config [UnfoldUntil delta_constant; AllowUnboundUniverses; EraseUniverses] env in
     let non_info t = non_informative (norm cfg [] [] t) in
-    let should_downgrade t =
-      non_info t ||
-      (is_uvar t && is_some copt && copt |> must |> (fun c2 -> c2 |> comp_effect_name |> Env.norm_eff_name env |> U.is_pure_or_ghost_effect &&
-                                                               c2 |> comp_result |> non_info))
-    in
     match c.n with
     | Total _ -> c
-    | GTotal (t, uopt) when should_downgrade t -> {c with n = Total (t, uopt)}
+    | GTotal (t, uopt) when non_info t -> {c with n = Total (t, uopt)}
     | Comp ct ->
         let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
         if U.is_ghost_effect l
-        && should_downgrade ct.result_typ
+        && non_info ct.result_typ
         then let ct =
                  match downgrade_ghost_effect_name ct.effect_name with
                  | Some pure_eff ->
@@ -2708,7 +2702,7 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
     then match downgrade_ghost_effect_name lc.eff_name with
          | Some pure_eff ->
            S.mk_lcomp pure_eff lc.res_typ lc.cflags
-                      (fun () -> ghost_to_pure env (lcomp_comp lc) None)
+                      (fun () -> ghost_to_pure env (lcomp_comp lc))
          | None -> //can't downgrade, don't know the particular incarnation of PURE to use
            lc
     else lc
