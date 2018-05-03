@@ -7,26 +7,13 @@
       2,
       1,
       [
-        "@query",
-        "FStar.Integers_pretyping_524bfc1e1b9b646503733842578812c4",
-        "FStar.Integers_pretyping_d70a4712ef5ffa432abf45910e822a6a",
-        "assumption_Prims.HasEq_int",
-        "constructor_distinct_FStar.Integers.Signed",
-        "constructor_distinct_FStar.Integers.Winfinite",
-        "data_typing_intro_FStar.Integers.Unsigned@tok",
-        "data_typing_intro_FStar.Integers.W16@tok",
-        "equality_tok_FStar.Integers.Signed@tok",
-        "equality_tok_FStar.Integers.Winfinite@tok",
-        "equation_FStar.Integers.int_t", "int_typing",
-        "primitive_Prims.op_Addition",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+        "@query", "assumption_Prims.HasEq_int", "primitive_Prims.op_Addition"
       ],
       0,
-      "c2b680e10b6479d083e5d9aa71f84b33"
+      "02bc12dfdc9b820c7057836b5f6c0c03"
     ],
     [
-      "Pruning.uu___134",
+      "Pruning.uu___71",
       1,
       4,
       2,
@@ -41,10 +28,10 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "6c5d8436035dd950361c26615e5ec5df"
+      "c294b9071719a268e35a8c6fd1c11065"
     ],
     [
-      "Pruning.uu___135",
+      "Pruning.uu___72",
       1,
       4,
       2,
@@ -59,7 +46,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "a2e0752f3ca9e98b60b00ab078ac6b42"
+      "2189b1b0493e51e269f6cbae222f3d3f"
     ]
   ]
 ]

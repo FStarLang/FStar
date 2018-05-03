@@ -44,7 +44,7 @@ let (__proj__Mkgoal__item__is_guard : goal -> Prims.bool) =
 let (subst_goal : FStar_Syntax_Syntax.subst_t -> goal -> goal) =
   fun subst1  ->
     fun goal  ->
-      let uu___76_86 = goal  in
+      let uu___77_86 = goal  in
       let uu____87 = FStar_TypeChecker_Env.rename_env subst1 goal.context  in
       let uu____88 = FStar_Syntax_Subst.subst subst1 goal.witness  in
       let uu____89 = FStar_Syntax_Subst.subst subst1 goal.goal_ty  in
@@ -52,8 +52,8 @@ let (subst_goal : FStar_Syntax_Syntax.subst_t -> goal -> goal) =
         context = uu____87;
         witness = uu____88;
         goal_ty = uu____89;
-        opts = (uu___76_86.opts);
-        is_guard = (uu___76_86.is_guard)
+        opts = (uu___77_86.opts);
+        is_guard = (uu___77_86.is_guard)
       }
   
 type guard_policy =
@@ -218,55 +218,55 @@ let (subst_proof_state :
       if uu____501
       then ps
       else
-        (let uu___77_503 = ps  in
+        (let uu___78_503 = ps  in
          let uu____504 = subst_goal subst1 ps.main_goal  in
          let uu____505 = FStar_List.map (subst_goal subst1) ps.goals  in
          {
-           main_context = (uu___77_503.main_context);
+           main_context = (uu___78_503.main_context);
            main_goal = uu____504;
-           all_implicits = (uu___77_503.all_implicits);
+           all_implicits = (uu___78_503.all_implicits);
            goals = uu____505;
-           smt_goals = (uu___77_503.smt_goals);
-           depth = (uu___77_503.depth);
-           __dump = (uu___77_503.__dump);
-           psc = (uu___77_503.psc);
-           entry_range = (uu___77_503.entry_range);
-           guard_policy = (uu___77_503.guard_policy);
-           freshness = (uu___77_503.freshness)
+           smt_goals = (uu___78_503.smt_goals);
+           depth = (uu___78_503.depth);
+           __dump = (uu___78_503.__dump);
+           psc = (uu___78_503.psc);
+           entry_range = (uu___78_503.entry_range);
+           guard_policy = (uu___78_503.guard_policy);
+           freshness = (uu___78_503.freshness)
          })
   
 let (decr_depth : proofstate -> proofstate) =
   fun ps  ->
-    let uu___78_513 = ps  in
+    let uu___79_513 = ps  in
     {
-      main_context = (uu___78_513.main_context);
-      main_goal = (uu___78_513.main_goal);
-      all_implicits = (uu___78_513.all_implicits);
-      goals = (uu___78_513.goals);
-      smt_goals = (uu___78_513.smt_goals);
+      main_context = (uu___79_513.main_context);
+      main_goal = (uu___79_513.main_goal);
+      all_implicits = (uu___79_513.all_implicits);
+      goals = (uu___79_513.goals);
+      smt_goals = (uu___79_513.smt_goals);
       depth = (ps.depth - (Prims.parse_int "1"));
-      __dump = (uu___78_513.__dump);
-      psc = (uu___78_513.psc);
-      entry_range = (uu___78_513.entry_range);
-      guard_policy = (uu___78_513.guard_policy);
-      freshness = (uu___78_513.freshness)
+      __dump = (uu___79_513.__dump);
+      psc = (uu___79_513.psc);
+      entry_range = (uu___79_513.entry_range);
+      guard_policy = (uu___79_513.guard_policy);
+      freshness = (uu___79_513.freshness)
     }
   
 let (incr_depth : proofstate -> proofstate) =
   fun ps  ->
-    let uu___79_519 = ps  in
+    let uu___80_519 = ps  in
     {
-      main_context = (uu___79_519.main_context);
-      main_goal = (uu___79_519.main_goal);
-      all_implicits = (uu___79_519.all_implicits);
-      goals = (uu___79_519.goals);
-      smt_goals = (uu___79_519.smt_goals);
+      main_context = (uu___80_519.main_context);
+      main_goal = (uu___80_519.main_goal);
+      all_implicits = (uu___80_519.all_implicits);
+      goals = (uu___80_519.goals);
+      smt_goals = (uu___80_519.smt_goals);
       depth = (ps.depth + (Prims.parse_int "1"));
-      __dump = (uu___79_519.__dump);
-      psc = (uu___79_519.psc);
-      entry_range = (uu___79_519.entry_range);
-      guard_policy = (uu___79_519.guard_policy);
-      freshness = (uu___79_519.freshness)
+      __dump = (uu___80_519.__dump);
+      psc = (uu___80_519.psc);
+      entry_range = (uu___80_519.entry_range);
+      guard_policy = (uu___80_519.guard_policy);
+      freshness = (uu___80_519.freshness)
     }
   
 let (tracepoint : proofstate -> unit) =
@@ -288,37 +288,37 @@ let (set_ps_psc :
   FStar_TypeChecker_Normalize.psc -> proofstate -> proofstate) =
   fun psc  ->
     fun ps  ->
-      let uu___80_541 = ps  in
+      let uu___81_541 = ps  in
       {
-        main_context = (uu___80_541.main_context);
-        main_goal = (uu___80_541.main_goal);
-        all_implicits = (uu___80_541.all_implicits);
-        goals = (uu___80_541.goals);
-        smt_goals = (uu___80_541.smt_goals);
-        depth = (uu___80_541.depth);
-        __dump = (uu___80_541.__dump);
+        main_context = (uu___81_541.main_context);
+        main_goal = (uu___81_541.main_goal);
+        all_implicits = (uu___81_541.all_implicits);
+        goals = (uu___81_541.goals);
+        smt_goals = (uu___81_541.smt_goals);
+        depth = (uu___81_541.depth);
+        __dump = (uu___81_541.__dump);
         psc;
-        entry_range = (uu___80_541.entry_range);
-        guard_policy = (uu___80_541.guard_policy);
-        freshness = (uu___80_541.freshness)
+        entry_range = (uu___81_541.entry_range);
+        guard_policy = (uu___81_541.guard_policy);
+        freshness = (uu___81_541.freshness)
       }
   
 let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
   fun ps  ->
     fun r  ->
-      let uu___81_552 = ps  in
+      let uu___82_552 = ps  in
       {
-        main_context = (uu___81_552.main_context);
-        main_goal = (uu___81_552.main_goal);
-        all_implicits = (uu___81_552.all_implicits);
-        goals = (uu___81_552.goals);
-        smt_goals = (uu___81_552.smt_goals);
-        depth = (uu___81_552.depth);
-        __dump = (uu___81_552.__dump);
-        psc = (uu___81_552.psc);
+        main_context = (uu___82_552.main_context);
+        main_goal = (uu___82_552.main_goal);
+        all_implicits = (uu___82_552.all_implicits);
+        goals = (uu___82_552.goals);
+        smt_goals = (uu___82_552.smt_goals);
+        depth = (uu___82_552.depth);
+        __dump = (uu___82_552.__dump);
+        psc = (uu___82_552.psc);
         entry_range = r;
-        guard_policy = (uu___81_552.guard_policy);
-        freshness = (uu___81_552.freshness)
+        guard_policy = (uu___82_552.guard_policy);
+        freshness = (uu___82_552.freshness)
       }
   
 type direction =
