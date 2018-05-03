@@ -1,5 +1,5 @@
 [
-  "ΩP·™W[5ä”Å¥t¬ÖVƒ",
+  "\u0013óFŸ*HÛRV*\u0006ıÄ\u0017\u000fã",
   [
     [
       "TwoPhaseTC.conjunction_monoid",
@@ -82,6 +82,15 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
       "f34562742fb6755f7d2b0d226d926629"
+    ],
+    [
+      "TwoPhaseTC.f18",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "691288eee9fec5fb78204560b69b3572"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__p",

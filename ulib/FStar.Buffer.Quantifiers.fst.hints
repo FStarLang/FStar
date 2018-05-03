@@ -324,7 +324,7 @@
         "typing_FStar.Buffer.as_seq", "typing_FStar.UInt32.v"
       ],
       0,
-      "42e08dcd6031506548ea2958e7cf9a5a"
+      "6106ff722c4e1705324304548ca304d2"
     ],
     [
       "FStar.Buffer.Quantifiers.lemma_index_quantifiers",
@@ -660,7 +660,7 @@
         "typing_FStar.Buffer.as_seq", "typing_FStar.UInt32.v"
       ],
       0,
-      "4802e60acf5b7b9b1926a671dc9fd6d8"
+      "08fc15a788e6e21b5472835708b9c5c6"
     ],
     [
       "FStar.Buffer.Quantifiers.lemma_upd_quantifiers",

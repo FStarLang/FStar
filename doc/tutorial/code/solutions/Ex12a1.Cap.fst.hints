@@ -48,10 +48,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Ex12a1.Cap.capRead",
-        "projection_inverse_BoxBool_proj_0", "string_inversion"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ex12a1.Cap_Tm_refine_40b23c06210f10bc3c5257ef1ca5518a",
+        "string_inversion"
       ],
       0,
-      "480a02b92d96e0ad8edb0d5e47485c24"
+      "b1c40f077fd2840a61bebc159b2b83c6"
     ],
     [
       "Ex12a1.Cap.capRead",
