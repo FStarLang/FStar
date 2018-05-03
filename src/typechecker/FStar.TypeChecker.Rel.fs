@@ -636,7 +636,7 @@ let wl_to_string wl =
 (* </printing worklists>                             *)
 (* ------------------------------------------------ *)
 
-type flex_t = (term * ctx_uvar * list<subst_elt> * args)
+type flex_t = (term * ctx_uvar * args)
 
 let flex_t_to_string (_, c, args) =
     BU.format2 "%s [%s]" (print_ctx_uvar c) (Print.args_to_string args)
@@ -646,10 +646,10 @@ let is_flex t = match (SS.compress t).n with
     | Tm_app({n=Tm_uvar _}, _) -> true
     | _ -> false
 
-let destruct_flex_t t : flex_t =
-    match t.n with
-    | Tm_uvar (uv, s) -> (t, uv, s, [])
-    | Tm_app({n=Tm_uvar (uv, s)}, args) -> (t, uv, s, args)
+let destruct_flex_t t wl : flex_t * worklist =
+    let head, args = U.head_and_args t in
+    match (SS.compress head).n with
+    | Tm_uvar (uv, []) -> (t, uv, args), wl
     | _ -> failwith "Not a flex-uvar"
 
 (* ------------------------------------------------ *)
@@ -702,17 +702,15 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
               fail();
               [])
     in
-    let _ =
+    let wl =
         let g = whnf wl.tcenv (p_guard prob) in
         if not (is_flex g)
-        then if resolve_ok then ()
+        then if resolve_ok
+             then wl
              else fail()
-        else let _, uv, subst, args = destruct_flex_t g in
-             let _ = match subst with
-                     | [] -> ()
-                     | _ -> failwith "Impossible: delayed substitution on a problem's guard"
-             in
-             assign_solution (args_as_binders args) uv phi
+        else let (_, uv, args), wl  = destruct_flex_t g wl in
+             assign_solution (args_as_binders args) uv phi;
+             wl
     in
     commit uvis;
     {wl with ctr=wl.ctr + 1}
@@ -1108,9 +1106,12 @@ let next_prob wl : option<(prob * list<prob> * rank_t)> =
 
 let flex_prob_closing tcenv (bs:binders) (p:prob) =
     let flex_will_be_closed t =
-        let (_, u, _, _) = destruct_flex_t t in
-        u.ctx_uvar_binders |> BU.for_some (fun (y, _) ->
-        bs |> BU.for_some (fun (x, _) -> S.bv_eq x y))
+        let hd, _ = U.head_and_args t in
+        match (SS.compress hd).n with
+        | Tm_uvar(u, _) ->
+          u.ctx_uvar_binders |> BU.for_some (fun (y, _) ->
+          bs |> BU.for_some (fun (x, _) -> S.bv_eq x y))
+        | _ -> false
     in
     let r, p = rank tcenv p in
     match p with
@@ -1424,6 +1425,14 @@ and solve_rigid_flex_or_flex_rigid_subtyping
     (rank:rank_t)
     (env:Env.env) (tp:tprob) (wl:worklist) : solution =
     let flip = rank = Flex_rigid in
+    (*
+        meet_or_join op [t1;..;tn] env wl:
+            Informally, this computes `t1 op t2 ... op tn`
+            where op is either \/ or /\
+
+            t1 op t2 is only defined when t1 and t2
+            are refinements of the same base type
+    *)
     let meet_or_join op ts env wl =
         let eq_prob t1 t2 wl =
             let p, wl =
@@ -1536,34 +1545,42 @@ and solve_rigid_flex_or_flex_rigid_subtyping
         in
         aux (List.hd ts, [], wl) (List.tl ts)
     in
-  let this_flex, this_rigid = if flip then tp.lhs, tp.rhs else tp.rhs, tp.lhs in
-  begin
-  match (SS.compress this_rigid).n with
-  | Tm_arrow (_bs, comp) ->
-    //BEWARE: special treatment of Tot and GTot here
-    if U.is_tot_or_gtot_comp comp
-    then let flex = destruct_flex_t this_flex in
-         begin
-         match quasi_pattern env flex with
-         | None -> giveup env "flex-arrow subtyping, not a quasi pattern" (TProb tp)
-         | Some (flex_bs, flex_t) ->
-           if Env.debug env <| Options.Other "Rel"
-           then BU.print1 "Trying to solve by imitating arrow:%s\n" (string_of_int tp.pid);
-           imitate_arrow (TProb tp) env wl flex flex_bs flex_t tp.relation this_rigid
-         end
-    else //imitating subtyping with WPs is hopeless
-         solve env (attempt [TProb ({tp with relation=EQ})] wl)
+    (*end meet_or_join *)
+
+    let this_flex, this_rigid = if flip then tp.lhs, tp.rhs else tp.rhs, tp.lhs in
+    begin
+    match (SS.compress this_rigid).n with
+    | Tm_arrow (_bs, comp) ->
+        //Although it's possible to take the meet/join of arrow types
+        //we handle them separately either by imitation (for Tot/GTot arrows)
+        //which provides some structural subtyping for them
+        //or just by reducing it to equality in other cases
+
+        //BEWARE: special treatment of Tot and GTot here
+        if U.is_tot_or_gtot_comp comp
+        then let flex, wl = destruct_flex_t this_flex wl in
+             begin
+             match quasi_pattern env flex with
+             | None -> giveup env "flex-arrow subtyping, not a quasi pattern" (TProb tp)
+             | Some (flex_bs, flex_t) ->
+               if Env.debug env <| Options.Other "Rel"
+               then BU.print1 "Trying to solve by imitating arrow:%s\n" (string_of_int tp.pid);
+               imitate_arrow (TProb tp) env wl flex flex_bs flex_t tp.relation this_rigid
+             end
+        else //imitating subtyping with WPs is hopeless
+             solve env (attempt [TProb ({tp with relation=EQ})] wl)
+
   | _ ->
     if Env.debug env <| Options.Other "Rel"
     then BU.print1 "Trying to solve by meeting refinements:%s\n" (string_of_int tp.pid);
     let u, _args = U.head_and_args this_flex in
     begin
     match (SS.compress u).n with
-    | Tm_uvar ctx_uvar ->
+    | Tm_uvar(ctx_uvar, _subst) ->
       let equiv t =
          let u', _ = U.head_and_args t in
          match (whnf env u').n with
-         | Tm_uvar ctx_uvar' ->
+         | Tm_uvar(ctx_uvar', _subst') ->
            UF.equiv ctx_uvar.ctx_uvar_head ctx_uvar'.ctx_uvar_head
          | _ -> false
       in
