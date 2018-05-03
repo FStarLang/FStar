@@ -352,7 +352,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "cef061a8cdd1627260830b85b4444a65"
+      "76c8b603df94865fd6336547b5a47a33"
     ],
     [
       "Loops.equiv_sum_up_dn",
@@ -392,7 +392,7 @@
         "true_interp", "typing_Loops.sum_dn", "typing_Loops.v", "unit_typing"
       ],
       0,
-      "f428a8347e2de2ac4c21edfd08efcfd0"
+      "64709ebff3b1de77ec20156c35017c14"
     ],
     [
       "Loops.sum_up",
