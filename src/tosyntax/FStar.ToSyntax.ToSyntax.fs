@@ -1220,7 +1220,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let t1', aq1 = desugar_term_aq env t1 in
       let t2', aq2 = desugar_term_aq env t2 in
       let t3', aq3 = desugar_term_aq env t3 in
-      mk (Tm_match(ascribe t1' (Inl t_bool, None),
+      mk (Tm_match(t1',
                     [(withinfo (Pat_constant (Const_bool true)) t2.range, None, t2');
                      (withinfo (Pat_wild x) t3.range, None, t3')])), join_aqs [aq1;aq2;aq3]
 
