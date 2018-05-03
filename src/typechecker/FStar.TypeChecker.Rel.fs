@@ -479,6 +479,7 @@ let guard_on_element wl problem x phi =
         | Some e -> Subst.subst [NT(x,e)] phi
 let explain env d s =
     if Env.debug env <| Options.Other "ExplainRel"
+    ||  Env.debug env <| Options.Other "Rel"
     then BU.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n"
                        (Range.string_of_range <| p_loc d)
                        (prob_to_string env d)
@@ -718,7 +719,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     {wl with ctr=wl.ctr + 1}
 
 let extend_solution pid sol wl =
-    if Env.debug wl.tcenv <| Options.Other "RelCheck"
+    if Env.debug wl.tcenv <| Options.Other "Rel"
     then BU.print2 "Solving %s: with [%s]\n" (string_of_int pid) (List.map (uvi_to_string wl.tcenv) sol |> String.concat ", ");
     commit sol;
     {wl with ctr=wl.ctr+1}
@@ -730,7 +731,7 @@ let solve_prob (prob : prob) (logical_guard : option<term>) (uvis : list<uvi>) (
         | _, Trivial -> t
         | None, NonTrivial f -> Some f
         | Some t, NonTrivial f -> Some (U.mk_conj t f) in
-    if Env.debug wl.tcenv <| Options.Other "RelCheck"
+    if Env.debug wl.tcenv <| Options.Other "Rel"
     then BU.print2 "Solving %s: with %s\n" (string_of_int <| p_pid prob) (List.map (uvi_to_string wl.tcenv) uvis |> String.concat ", ");
     solve_prob' false prob logical_guard uvis wl
 
@@ -1330,7 +1331,7 @@ let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
 (******************************************************************************************************)
 let rec solve (env:Env.env) (probs:worklist) : solution =
 //    printfn "Solving TODO:\n%s;;" (List.map prob_to_string probs.attempting |> String.concat "\n\t");
-    if Env.debug env <| Options.Other "RelCheck"
+    if Env.debug env <| Options.Other "Rel"
     then BU.print1 "solve:\n\t%s\n" (wl_to_string probs);
     match next_prob probs with
     | Some (hd, tl, rank) ->
@@ -1433,7 +1434,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
             TProb p, wl
         in
         let pairwise t1 t2 wl =
-            if Env.debug env <| Options.Other "RelCheck"
+            if Env.debug env <| Options.Other "Rel"
             then BU.print2 "pairwise: %s and %s" (Print.term_to_string t1) (Print.term_to_string t2);
             let mr, ts = head_matches_delta env () t1 t2 in
             match mr with
@@ -1522,7 +1523,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                     (t, [p], wl)
               in
               let t1, ps, wl = combine t1 t2 wl in
-              if Env.debug env <| Options.Other "RelCheck"
+              if Env.debug env <| Options.Other "Rel"
               then BU.print1 "pairwise fallback2 succeeded: %s"
                             (Print.term_to_string t1);
               t1, ps, wl
@@ -1547,14 +1548,14 @@ and solve_rigid_flex_or_flex_rigid_subtyping
          match quasi_pattern env flex with
          | None -> giveup env "flex-arrow subtyping, not a quasi pattern" (TProb tp)
          | Some (flex_bs, flex_t) ->
-           if Env.debug env <| Options.Other "RelCheck"
+           if Env.debug env <| Options.Other "Rel"
            then BU.print1 "Trying to solve by imitating arrow:%s\n" (string_of_int tp.pid);
            imitate_arrow (TProb tp) env wl flex flex_bs flex_t tp.relation this_rigid
          end
     else //imitating subtyping with WPs is hopeless
          solve env (attempt [TProb ({tp with relation=EQ})] wl)
   | _ ->
-    if Env.debug env <| Options.Other "RelCheck"
+    if Env.debug env <| Options.Other "Rel"
     then BU.print1 "Trying to solve by meeting refinements:%s\n" (string_of_int tp.pid);
     let u, _args = U.head_and_args this_flex in
     begin
@@ -1613,7 +1614,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
           new_problem wl env bound EQ this_flex None tp.loc
                 (if flip then "joining refinements" else "meeting refinements")
       in
-      let _ = if Env.debug env <| Options.Other "RelCheck"
+      let _ = if Env.debug env <| Options.Other "Rel"
               then let wl' = {wl with attempting=TProb eq_prob::sub_probs} in
                    BU.print1 "After meet/join refinements: %s\n" (wl_to_string wl') in
 
@@ -1629,7 +1630,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
       | Failed (p, msg) ->
          UF.rollback tx;
-         if Env.debug env <| Options.Other "RelCheck"
+         if Env.debug env <| Options.Other "Rel"
          then BU.print1 "meet/join attempted and failed to solve problems:\n%s\n"
                         (List.map (prob_to_string env) (TProb eq_prob::sub_probs) |> String.concat "\n");
          (match rank, base_and_refinement env bound_typ with
@@ -1817,7 +1818,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                     (lhs:flex_t) (bs_lhs:binders) (t_res_lhs:term)
                     (rhs:term)
         : solution =
-        //if Env.debug env <| Options.Other "RelCheck"
+        //if Env.debug env <| Options.Other "Rel"
         //then printfn "imitate_app 1:\n\tlhs=%s\n\tbs_lhs=%s\n\tt_res_lhs=%s\n\trhs=%s\n"
         //    (flex_t_to_string lhs)
         //    (Print.binders_to_string ", " bs_lhs)
@@ -1827,7 +1828,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let rhs_hd, args = U.head_and_args rhs in
         let args_rhs, last_arg_rhs = BU.prefix args in
         let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
-        //if Env.debug env <| Options.Other "RelCheck"
+        //if Env.debug env <| Options.Other "Rel"
         //then printfn "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
         //            (Print.term_to_string rhs')
         //            (Print.args_to_string [last_arg_rhs]);
@@ -1841,7 +1842,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
               let lhs'_last_arg = S.mk_Tm_app u_lhs'_last_arg bs_lhs_args None t_lhs.pos in
               lhs', lhs'_last_arg, wl
         in
-        //if Env.debug env <| Options.Other "RelCheck"
+        //if Env.debug env <| Options.Other "Rel"
         //then printfn "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
         //            (Print.term_to_string lhs')
         //            (Print.term_to_string lhs'_last_arg);
@@ -1980,7 +1981,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                          (u_lhs.ctx_uvar_should_check || u_rhs.ctx_uvar_should_check) in
                  let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) None w.pos in
                  let _ =
-                    if Env.debug env <| Options.Other "RelCheck"
+                    if Env.debug env <| Options.Other "Rel"
                     then BU.print3 "flex-flex quasi:\n\tlhs=%s\n\trhs=%s\n\tsol=%s"
                             (flex_t_to_string lhs)
                             (flex_t_to_string rhs)
@@ -2115,7 +2116,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let t1 = problem.lhs in
     let t2 = problem.rhs in
     let _ =
-        if debug env (Options.Other "RelCheck")
+        if debug env (Options.Other "Rel")
         then BU.print3 "Attempting %s (%s vs %s)\n" (string_of_int problem.pid)
                             (Print.tag_of_term t1 ^ "::" ^ Print.term_to_string t1)
                             (Print.tag_of_term t2 ^ "::" ^ Print.term_to_string t2)
@@ -2404,7 +2405,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          let head1 = U.head_and_args t1 |> fst in
          let head2 = U.head_and_args t2 |> fst in
          let _ =
-             if debug env (Options.Other "RelCheck")
+             if debug env (Options.Other "Rel")
              then BU.print3 ">> (%s)\n>>> head1 = %s\n>>> head2 = %s\n" (string_of_int problem.pid)
                                  (Print.term_to_string head1)
                                  (Print.term_to_string head2)
@@ -2640,6 +2641,7 @@ let guard_to_string (env:env) g =
 
 let new_t_problem wl env lhs rel rhs elt loc =
  let reason = if debug env <| Options.Other "ExplainRel"
+              ||  Env.debug env <| Options.Other "Rel"
               then BU.format3 "Top-level:\n%s\n\t%s\n%s"
                         (N.term_to_string env lhs) (rel_to_string rel)
                         (N.term_to_string env rhs)
@@ -2662,6 +2664,7 @@ let solve_and_commit env probs err =
       Some (deferred, implicits)
     | Failed (d,s) ->
       if Env.debug env <| Options.Other "ExplainRel"
+      ||  Env.debug env <| Options.Other "Rel"
       then BU.print_string <| explain env d s;
       let result = err (d,s) in
       UF.rollback tx;
@@ -2806,7 +2809,7 @@ let try_solve_deferred_constraints defer_ok env (g:guard_t) =
       raise_error (Errors.Fatal_ErrorInSolveDeferredConstraints, msg) (p_loc d)
    in
    let wl = {wl_of_guard env g.deferred with defer_ok=defer_ok} in
-   if Env.debug env <| Options.Other "RelCheck"
+   if Env.debug env <| Options.Other "Rel"
    then begin
          BU.print3 "Trying to solve carried problems (defer_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
                   (BU.string_of_bool defer_ok)
@@ -2949,7 +2952,7 @@ let resolve_implicits' env must_total forcelax g =
           else let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
                let tm = N.normalize [N.Beta] env tm in
                let env = if forcelax then {env with lax=true} else env in
-               if Env.debug env <| Options.Other "RelCheck"
+               if Env.debug env <| Options.Other "Rel"
                then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
                                (Print.uvar_to_string ctx_u.ctx_uvar_head)
                                (Print.term_to_string tm)
