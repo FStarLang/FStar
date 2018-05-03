@@ -271,7 +271,7 @@ into your `~/.bashrc`.
 
 ### Prerequisite for steps 2 and 3: Working OCaml setup  ###
 
-Steps 2 and 3 below require a working OCaml setup. Any version of OCaml from 4.02.2 to 4.06.0 should do.
+Steps 2 and 3 below require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.0 should work.
 
 #### Instructions for Windows ####
 

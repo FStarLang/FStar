@@ -246,8 +246,8 @@ let (lookup_fv_by_lid : env -> FStar_Ident.lident -> ty_or_exp_b) =
     fun lid  ->
       let x =
         FStar_Util.find_map g.gamma
-          (fun uu___80_831  ->
-             match uu___80_831 with
+          (fun uu___81_831  ->
+             match uu___81_831 with
              | Fv (fv',x) when FStar_Syntax_Syntax.fv_eq_lid fv' lid ->
                  FStar_Pervasives_Native.Some x
              | uu____836 -> FStar_Pervasives_Native.None)
@@ -267,8 +267,8 @@ let (try_lookup_fv :
   fun g  ->
     fun fv  ->
       FStar_Util.find_map g.gamma
-        (fun uu___81_856  ->
-           match uu___81_856 with
+        (fun uu___82_856  ->
+           match uu___82_856 with
            | Fv (fv',t) when FStar_Syntax_Syntax.fv_eq fv fv' ->
                FStar_Pervasives_Native.Some t
            | uu____861 -> FStar_Pervasives_Native.None)
@@ -299,8 +299,8 @@ let (lookup_bv : env -> FStar_Syntax_Syntax.bv -> ty_or_exp_b) =
     fun bv  ->
       let x =
         FStar_Util.find_map g.gamma
-          (fun uu___82_895  ->
-             match uu___82_895 with
+          (fun uu___83_895  ->
+             match uu___83_895 with
              | Bv (bv',r) when FStar_Syntax_Syntax.bv_eq bv bv' ->
                  FStar_Pervasives_Native.Some r
              | uu____900 -> FStar_Pervasives_Native.None)
@@ -365,13 +365,13 @@ let (extend_ty :
         let gamma = (Bv (a, (FStar_Util.Inl (ml_a, mapped_to1)))) ::
           (g.gamma)  in
         let tcenv = FStar_TypeChecker_Env.push_bv g.tcenv a  in
-        let uu___84_1028 = g  in
+        let uu___85_1028 = g  in
         {
           tcenv;
           gamma;
-          tydefs = (uu___84_1028.tydefs);
-          type_names = (uu___84_1028.type_names);
-          currentModule = (uu___84_1028.currentModule)
+          tydefs = (uu___85_1028.tydefs);
+          type_names = (uu___85_1028.type_names);
+          currentModule = (uu___85_1028.currentModule)
         }
   
 let (sanitize : Prims.string -> Prims.string) =
@@ -405,8 +405,8 @@ let (find_uniq : binding Prims.list -> Prims.string -> Prims.string) =
         let target_mlident = Prims.strcat mlident1 suffix  in
         let has_collision =
           FStar_List.existsb
-            (fun uu___83_1120  ->
-               match uu___83_1120 with
+            (fun uu___84_1120  ->
+               match uu___84_1120 with
                | Bv (uu____1121,FStar_Util.Inl (mlident',uu____1123)) ->
                    target_mlident = mlident'
                | Fv (uu____1152,FStar_Util.Inl (mlident',uu____1154)) ->
@@ -476,13 +476,13 @@ let (extend_bv :
               let tcenv =
                 let uu____1336 = FStar_Syntax_Syntax.binders_of_list [x]  in
                 FStar_TypeChecker_Env.push_binders g.tcenv uu____1336  in
-              ((let uu___85_1338 = g  in
+              ((let uu___86_1338 = g  in
                 {
                   tcenv;
                   gamma;
-                  tydefs = (uu___85_1338.tydefs);
-                  type_names = (uu___85_1338.type_names);
-                  currentModule = (uu___85_1338.currentModule)
+                  tydefs = (uu___86_1338.tydefs);
+                  type_names = (uu___86_1338.type_names);
+                  currentModule = (uu___86_1338.currentModule)
                 }), mlident)
   
 let rec (mltyFvars :
@@ -572,13 +572,13 @@ let (extend_fv' :
                       (Fv
                          (x, (FStar_Util.Inr (mlsymbol, mly1, t_x1, is_rec))))
                       :: (g.gamma)  in
-                    ((let uu___86_1539 = g  in
+                    ((let uu___87_1539 = g  in
                       {
-                        tcenv = (uu___86_1539.tcenv);
+                        tcenv = (uu___87_1539.tcenv);
                         gamma;
-                        tydefs = (uu___86_1539.tydefs);
-                        type_names = (uu___86_1539.type_names);
-                        currentModule = (uu___86_1539.currentModule)
+                        tydefs = (uu___87_1539.tydefs);
+                        type_names = (uu___87_1539.type_names);
+                        currentModule = (uu___87_1539.currentModule)
                       }), mlsymbol)
               else failwith "freevars found"
   
@@ -635,25 +635,25 @@ let (extend_tydef :
     fun fv  ->
       fun td  ->
         let m = module_name_of_fv fv  in
-        let uu___87_1650 = g  in
+        let uu___88_1650 = g  in
         {
-          tcenv = (uu___87_1650.tcenv);
-          gamma = (uu___87_1650.gamma);
+          tcenv = (uu___88_1650.tcenv);
+          gamma = (uu___88_1650.gamma);
           tydefs = ((fv, m, td) :: (g.tydefs));
           type_names = (fv :: (g.type_names));
-          currentModule = (uu___87_1650.currentModule)
+          currentModule = (uu___88_1650.currentModule)
         }
   
 let (extend_type_name : env -> FStar_Syntax_Syntax.fv -> env) =
   fun g  ->
     fun fv  ->
-      let uu___88_1671 = g  in
+      let uu___89_1671 = g  in
       {
-        tcenv = (uu___88_1671.tcenv);
-        gamma = (uu___88_1671.gamma);
-        tydefs = (uu___88_1671.tydefs);
+        tcenv = (uu___89_1671.tcenv);
+        gamma = (uu___89_1671.gamma);
+        tydefs = (uu___89_1671.tydefs);
         type_names = (fv :: (g.type_names));
-        currentModule = (uu___88_1671.currentModule)
+        currentModule = (uu___89_1671.currentModule)
       }
   
 let (is_type_name : env -> FStar_Syntax_Syntax.fv -> Prims.bool) =

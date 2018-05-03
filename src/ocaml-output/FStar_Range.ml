@@ -71,8 +71,8 @@ let (set_use_range : range -> rng -> range) =
     fun use_rng  ->
       if use_rng <> dummy_rng
       then
-        let uu___51_139 = r2  in
-        { def_range = (uu___51_139.def_range); use_range = use_rng }
+        let uu___52_139 = r2  in
+        { def_range = (uu___52_139.def_range); use_range = use_rng }
       else r2
   
 let (set_def_range : range -> rng -> range) =
@@ -80,8 +80,8 @@ let (set_def_range : range -> rng -> range) =
     fun def_rng  ->
       if def_rng <> dummy_rng
       then
-        let uu___52_151 = r2  in
-        { def_range = def_rng; use_range = (uu___52_151.use_range) }
+        let uu___53_151 = r2  in
+        { def_range = def_rng; use_range = (uu___53_151.use_range) }
       else r2
   
 let (mk_pos : Prims.int -> Prims.int -> pos) =
@@ -179,8 +179,8 @@ let (range_before_pos : range -> pos -> Prims.bool) =
   
 let (end_of_line : pos -> pos) =
   fun p  ->
-    let uu___53_345 = p  in
-    { line = (uu___53_345.line); col = FStar_Util.max_int }
+    let uu___54_345 = p  in
+    { line = (uu___54_345.line); col = FStar_Util.max_int }
   
 let (extend_to_end_of_line : range -> range) =
   fun r  ->
