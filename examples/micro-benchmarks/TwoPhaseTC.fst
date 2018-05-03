@@ -80,7 +80,7 @@ let f17 (x:int) :Lemma (requires True) (ensures f15) [SMTPat (f16 x)] = admit ()
 
 (* We were dropping the comp from the ascription in the second phase, this testcase tests the fix *)
 let f18 (p:int -> Type0) (f:(x:int -> squash (p x))) :Lemma (forall (x:int). p x)
-  = FStar.Classical.forall_intro #int #p (fun x -> (f x <: Lemma (p x)))
+  = FStar.Classical.forall_intro #int #p (fun (x:int) -> (FStar.Classical.give_witness_from_squash (f x) <: Lemma (p x)))
 
 (*
  * This tests the type annotations on the dependent patterns.

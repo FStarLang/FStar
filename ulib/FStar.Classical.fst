@@ -4,6 +4,8 @@ open FStar.Squash
 
 let give_witness #a x = return_squash x
 
+let give_witness_from_squash #a x = x
+
 val get_squashed (#b a:Type) : Pure a (requires (a /\ a == squash b)) (ensures (fun _ -> True))
 let get_squashed #b a =
   let p = get_proof a in
@@ -26,9 +28,7 @@ let forall_intro_gtot #a #p $f =
   let h : (x:a -> GTot (id (p x))) = fun x -> f x in
   return_squash #(forall (x:a). id (p x)) ()
 
-let lemma_forall_intro_gtot #a #p $f = 
-  let aux () : u:unit{forall x. p x} = forall_intro_gtot #a #p f in
-  aux ()
+let lemma_forall_intro_gtot #a #p $f = give_witness (forall_intro_gtot #a #p f)
 
 let gtot_to_lemma #a #p $f x = give_proof #(p x) (return_squash (f x))
 
@@ -45,9 +45,7 @@ let forall_intro_squash_gtot_join #a #p $f =
 	      (squash_double_arrow #a #p (return_squash f))
 	      (fun f -> lemma_forall_intro_gtot #a #p f))
 
-let forall_intro #a #p $f = 
-    let aux () : (u:unit{forall x. p x}) = forall_intro_squash_gtot (lemma_to_squash_gtot #a #p f) in
-    aux ()
+let forall_intro #a #p $f = give_witness (forall_intro_squash_gtot (lemma_to_squash_gtot #a #p f))
 
 let forall_intro_with_pat #a #c #p $pat #f = forall_intro #a #p f
 

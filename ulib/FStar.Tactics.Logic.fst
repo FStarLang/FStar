@@ -23,7 +23,7 @@ let rec l_revert_all (bs:binders) : Tac unit =
 private val fa_intro_lem : (#a:Type) -> (#p : (a -> Type)) ->
                            (x:a -> squash (p x)) ->
                            Lemma (forall (x:a). p x)
-let fa_intro_lem #a #p f = FStar.Classical.forall_intro #a #p (fun x -> f x <: Lemma (p x))
+let fa_intro_lem #a #p f = FStar.Classical.lemma_forall_intro_gtot f
 
 let forall_intro () : Tac binder =
     let g = cur_goal () in
@@ -52,7 +52,8 @@ let split () : Tac unit =
 private val imp_intro_lem : (#a:Type) -> (#b : Type) ->
                             (a -> squash b) ->
                             Lemma (a ==> b)
-let imp_intro_lem #a #b f = FStar.Classical.impl_intro #a #b (fun x -> f x <: Lemma b)
+let imp_intro_lem #a #b f =
+  FStar.Classical.give_witness (FStar.Classical.arrow_to_impl (fun (x:squash a) -> FStar.Squash.bind_squash x f))
 
 let implies_intro () : Tac binder =
     let g = cur_goal () in
@@ -116,7 +117,7 @@ let rec unfold_definition_and_simplify_eq (tm:term) : Tac unit =
         end
 
 private val vbind : (#p:Type) -> (#q:Type) -> squash p -> (p -> squash q) -> Lemma q
-let vbind #p #q sq f = FStar.Squash.bind_squash sq f
+let vbind #p #q sq f = FStar.Classical.give_witness_from_squash (FStar.Squash.bind_squash sq f)
 
 let unsquash (t:term) : Tac term =
     let v = `vbind in
