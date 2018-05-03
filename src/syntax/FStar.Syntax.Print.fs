@@ -294,7 +294,8 @@ and term_to_string x =
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x
       | Tm_fvar f ->        fv_to_string f
-      | Tm_uvar u ->        uvar_to_string u.ctx_uvar_head
+      | Tm_uvar (u, []) ->   ctx_uvar_to_string u
+      | Tm_uvar (u, s) ->   U.format2 "(%s @ %s)" (ctx_uvar_to_string u) (subst_to_string s)
       | Tm_constant c ->    const_to_string c
       | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type u#(%s)" (univ_to_string u) else "Type"
       | Tm_arrow(bs, c) ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
@@ -335,6 +336,23 @@ and term_to_string x =
 
       | Tm_unknown -> "_"
   end
+
+and ctx_uvar_to_string ctx_uvar =
+    format4 "(* %s *)\n(%s |- %s : %s)"
+            (ctx_uvar.ctx_uvar_reason)
+            (binders_to_string ", " ctx_uvar.ctx_uvar_binders)
+            (uvar_to_string ctx_uvar.ctx_uvar_head)
+            (term_to_string ctx_uvar.ctx_uvar_typ)
+
+
+and subst_elt_to_string = function
+   | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
+   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
+   | NT(x, t) -> U.format2 "DB (%s, %s)" (bv_to_string x) (term_to_string t)
+   | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
+   | UD(u, i) -> U.format2 "UD (%s, %s)" u.idText (string_of_int i)
+
+and subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
 
 and pat_to_string x =
   if not (Options.ugly()) then
@@ -702,14 +720,6 @@ let rec modul_to_string (m:modul) =
   U.format3 "module %s\nDeclarations:\n%s\nExports:\n%s\n" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
                                                                         (List.map sigelt_to_string m.exports |> String.concat "\n")
 
-let subst_elt_to_string = function
-   | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
-   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
-   | NT(x, t) -> U.format2 "DB (%s, %s)" (bv_to_string x) (term_to_string t)
-   | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
-   | UD(u, i) -> U.format2 "UD (%s, %s)" u.idText (string_of_int i)
-
-let subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
 
 let abs_ascription_to_string ascription =
   let strb = U.new_string_builder () in
@@ -755,11 +765,3 @@ let set_to_string f s =
             U.string_of_string_builder strb
 
 let bvs_to_string sep bvs = binders_to_string sep (List.map mk_binder bvs)
-
-
-let ctx_uvar_to_string ctx_uvar =
-    format4 "(* %s *)\n(%s |- %s : %s)"
-            (ctx_uvar.ctx_uvar_reason)
-            (binders_to_string ", " ctx_uvar.ctx_uvar_binders)
-            (uvar_to_string ctx_uvar.ctx_uvar_head)
-            (term_to_string ctx_uvar.ctx_uvar_typ)

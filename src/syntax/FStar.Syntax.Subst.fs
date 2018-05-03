@@ -93,9 +93,9 @@ let delay t s =
 *)
 let rec force_uvar' t =
   match t.n with
-  | Tm_uvar {ctx_uvar_head=uv} ->
+  | Tm_uvar ({ctx_uvar_head=uv}, s) ->
       (match Unionfind.find uv with
-          | Some t' -> fst (force_uvar' t'), true
+          | Some t' -> fst (force_uvar' (delay t' ([s], None))), true
           | _ -> t, false)
   | _ -> t, false
 
@@ -301,6 +301,29 @@ let push_subst_lcomp s lopt = match lopt with
     | None -> None
     | Some rc -> Some ({rc with residual_typ = FStar.Util.map_opt rc.residual_typ (subst' s)})
 
+let compose_uvar_subst (u:ctx_uvar) (s0:list<subst_elt>) (s:subst_ts) : list<subst_elt> =
+    let should_retain x =
+        u.ctx_uvar_binders |> Util.for_some (fun (x', _) -> S.bv_eq x x')
+    in
+    let rec aux = function
+        | [] -> []
+        | hd_subst::rest ->
+          let hd =
+              hd_subst |> List.collect (function
+              | NT(x, t) ->
+                if should_retain x
+                then [NT(x, delay t (rest, None))]
+                else []
+              | NM(x, i) ->
+                if should_retain x
+                then [NT(x, delay (S.bv_to_tm {x with index=i}) (rest, None))]
+                else []
+              | _ -> [])
+          in
+          hd @ aux rest
+    in
+    aux (s0::fst s)
+
 let rec push_subst s t =
     //makes a syntax node, setting it's use range as appropriate from s
     let mk t' = Syntax.mk t' None (mk_range t.pos s) in
@@ -312,11 +335,11 @@ let rec push_subst s t =
     | Tm_fvar _
     | Tm_unknown -> tag_with_range t s //these are always closed
 
-    | Tm_uvar {ctx_uvar_head=uv} ->
+    | Tm_uvar (uv, s0) ->
       begin
-      match (Unionfind.find uv) with
-      | None -> tag_with_range t s
-      | Some t -> push_subst s t
+      match (Unionfind.find uv.ctx_uvar_head) with
+      | None -> tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s0 s)}) s
+      | Some t -> push_subst (compose_subst ([s0], None) s) t
       end
 
     | Tm_type _

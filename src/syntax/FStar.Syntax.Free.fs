@@ -87,7 +87,7 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
       | Tm_name x ->
         singleton_bv x
 
-      | Tm_uvar uv ->
+      | Tm_uvar (uv, _) ->
         singleton_uv uv
 
       | Tm_type u ->

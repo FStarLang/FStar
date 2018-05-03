@@ -186,7 +186,7 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
          ctx_uvar_range=r
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
-    let t = mk (Tm_uvar ctx_uvar) None r in
+    let t = mk (Tm_uvar (ctx_uvar, [])) None r in
     ctx_uvar, t, {wl with wl_implicits=(reason, t, ctx_uvar, r, should_check)::wl.wl_implicits}
 
 let copy_uvar u t wl =
@@ -223,12 +223,7 @@ let rel_to_string = function
   | SUB -> "<:"
   | SUBINV -> ":>"
 
-let term_to_string t =
-    match (SS.compress t).n with
-    | Tm_uvar u -> print_ctx_uvar u
-    | Tm_app({n=Tm_uvar u}, args) ->
-      BU.format2 "%s [%s]" (print_ctx_uvar u) (Print.args_to_string args)
-    | _ -> Print.term_to_string t
+let term_to_string t = Print.term_to_string t
 
 let prob_to_string env = function
   | TProb p ->
@@ -641,7 +636,7 @@ let wl_to_string wl =
 (* </printing worklists>                             *)
 (* ------------------------------------------------ *)
 
-type flex_t = (term * ctx_uvar * args)
+type flex_t = (term * ctx_uvar * list<subst_elt> * args)
 
 let flex_t_to_string (_, c, args) =
     BU.format2 "%s [%s]" (print_ctx_uvar c) (Print.args_to_string args)
@@ -653,8 +648,8 @@ let is_flex t = match (SS.compress t).n with
 
 let destruct_flex_t t : flex_t =
     match t.n with
-    | Tm_uvar uv -> (t, uv, [])
-    | Tm_app({n=Tm_uvar uv}, args) -> (t, uv, args)
+    | Tm_uvar (uv, s) -> (t, uv, s, [])
+    | Tm_app({n=Tm_uvar (uv, s)}, args) -> (t, uv, s, args)
     | _ -> failwith "Not a flex-uvar"
 
 (* ------------------------------------------------ *)
@@ -712,7 +707,11 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         if not (is_flex g)
         then if resolve_ok then ()
              else fail()
-        else let _, uv, args = destruct_flex_t g in
+        else let _, uv, subst, args = destruct_flex_t g in
+             let _ = match subst with
+                     | [] -> ()
+                     | _ -> failwith "Impossible: delayed substitution on a problem's guard"
+             in
              assign_solution (args_as_binders args) uv phi
     in
     commit uvis;
@@ -914,7 +913,7 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some (fv_delta_depth env f), Some (fv_delta_depth env g))
     | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches env f g |> head_match
     | Tm_constant c, Tm_constant d -> if FStar.Const.eq_const c d then FullMatch else MisMatch(None, None)
-    | Tm_uvar uv,  Tm_uvar uv' -> if UF.equiv uv.ctx_uvar_head uv'.ctx_uvar_head then FullMatch else MisMatch(None, None)
+    | Tm_uvar (uv, _), Tm_uvar (uv', _) -> if UF.equiv uv.ctx_uvar_head uv'.ctx_uvar_head then FullMatch else MisMatch(None, None)
 
     | Tm_refine(x, _), Tm_refine(y, _) -> head_matches env x.sort y.sort |> head_match
 
@@ -1109,7 +1108,7 @@ let next_prob wl : option<(prob * list<prob> * rank_t)> =
 
 let flex_prob_closing tcenv (bs:binders) (p:prob) =
     let flex_will_be_closed t =
-        let (_, u, _) = destruct_flex_t t in
+        let (_, u, _, _) = destruct_flex_t t in
         u.ctx_uvar_binders |> BU.for_some (fun (y, _) ->
         bs |> BU.for_some (fun (x, _) -> S.bv_eq x y))
     in

@@ -529,7 +529,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_constant c, Tm_constant d ->
       equal_iff (eq_const c d)
 
-    | Tm_uvar u1, Tm_uvar u2 ->
+    | Tm_uvar (u1, []), Tm_uvar (u2, []) ->
       equal_if (Unionfind.equiv u1.ctx_uvar_head u2.ctx_uvar_head)
 
     | Tm_app (h1, args1), Tm_app (h2, args2) ->
@@ -1499,7 +1499,8 @@ let uvar_from_id (id : int) (gamma, bs, t) =
         ctx_uvar_range = Range.dummyRange;
         ctx_uvar_should_check = true
     } in
-    mk (Tm_uvar ctx_u) None Range.dummyRange
+    failwith "uvar_from_id: not fully supported yet .. delayed substitutions";
+    mk (Tm_uvar (ctx_u, [])) None Range.dummyRange
 
 // Some generic equalities
 let rec eqlist (eq : 'a -> 'a -> bool) (xs : list<'a>) (ys : list<'a>) : bool =
@@ -1592,7 +1593,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
     (check "let lbs"   (eqlist (letbinding_eq_dbg dbg) lbs1 lbs2)) &&
     (check "let body"  (term_eq_dbg dbg t1 t2))
 
-  | Tm_uvar u1, Tm_uvar u2 ->
+  | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
     (* These must have alreade been resolved, so we check that
      * they are indeed the same uvar *)
     check "uvar" (u1.ctx_uvar_head = u2.ctx_uvar_head)
