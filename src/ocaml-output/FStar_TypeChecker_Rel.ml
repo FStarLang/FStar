@@ -9364,13 +9364,9 @@ and (solve_c :
             else ());
            (let uu____23729 =
               let uu____23734 =
-                FStar_TypeChecker_Normalize.ghost_to_pure env c1
-                  (FStar_Pervasives_Native.Some c2)
-                 in
+                FStar_TypeChecker_Normalize.ghost_to_pure env c1  in
               let uu____23735 =
-                FStar_TypeChecker_Normalize.ghost_to_pure env c2
-                  (FStar_Pervasives_Native.Some c1)
-                 in
+                FStar_TypeChecker_Normalize.ghost_to_pure env c2  in
               (uu____23734, uu____23735)  in
             match uu____23729 with
             | (c11,c21) ->
