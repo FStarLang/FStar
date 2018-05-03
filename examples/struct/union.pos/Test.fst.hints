@@ -47,7 +47,7 @@
         "typing_tok_FStar.Pointer.Base.TUnit@tok"
       ],
       0,
-      "033986847638915b1b7ef51b1b7d38ed"
+      "a1badf849d50c9d7b3eaee2e6ef604fa"
     ],
     [
       "Test.u",
@@ -100,7 +100,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "e9aabbc93255c4487936e788fed12e3b"
+      "0dc0c4d034a3e58620a8e53ba753cd53"
     ],
     [
       "Test.f",
@@ -118,7 +118,6 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.map.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
-        "@fuel_irrelevance_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_7fe3e7847982dd1674bac902db1b25d6",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
@@ -177,7 +176,6 @@
         "lemma_FStar.Pointer.Base.modifies_pointer_elim",
         "lemma_FStar.Pointer.Base.modifies_trans",
         "lemma_FStar.Pointer.Base.readable_gufield",
-        "lemma_FStar.Pointer.Base.type_of_typ_union",
         "lemma_FStar.Pointer.Derived1.includes_gfield_gen",
         "lemma_FStar.Pointer.Derived1.includes_gufield_gen",
         "lemma_FStar.UInt.pow2_values", "primitive_Prims.op_AmpAmp",
@@ -204,9 +202,9 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Test_Tm_refine_0b1ea826a473e1560951f6ecd6950263",
+        "refinement_interpretation_Test_Tm_refine_0c15be61ad33ff232f74e8bbd34ba548",
         "refinement_interpretation_Test_Tm_refine_35927a15e9516018e6643fa65a3f830c",
-        "refinement_interpretation_Test_Tm_refine_6e5a613641e573d4fa0960b46f7504c5",
-        "refinement_interpretation_Test_Tm_refine_b3ec26d014d0ef346857e15942925c0f",
+        "refinement_interpretation_Test_Tm_refine_6b6c69ab7a137c4051d4fc7731df124d",
         "string_inversion", "string_typing",
         "token_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
@@ -219,7 +217,7 @@
         "typing_FStar.UInt32.uint_to_t", "unit_typing"
       ],
       0,
-      "770cac1efa12a32f2400b494b270d1c3"
+      "5bc477527ee111ebb5f099a9c209cee7"
     ]
   ]
 ]

@@ -205,7 +205,7 @@ val mac:    k:key -> t:text{key_prop k t} -> ST tag
   (ensures (fun h x h' -> modifies (Set.singleton (addr_of log)) h h'))
 val verify: k:key -> t:text -> tag -> ST (b:bool{b ==> key_prop k t})
   (requires (fun h -> True))
-  (ensures (fun h x h' -> modifies Set.empty h h'))
+  (ensures (fun h x h' -> (x ==> key_prop k t) /\ modifies Set.empty h h'))
 // END: MacSpec
 
 (* ---- implementation *)
