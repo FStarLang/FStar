@@ -298,7 +298,7 @@
         "typing_Ex12b2.Format.response", "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "bb73c77ca618f62bbd06e897a8568d7f"
+      "967ffa858da2c12f471efc409b5d57dd"
     ],
     [
       "Ex12b.RPC.server",
@@ -374,7 +374,7 @@
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
       0,
-      "ac9b02c486af3261081a7ce32ef33d2b"
+      "b0298a76dc0c31f5bd7cb5636e862d8f"
     ],
     [
       "Ex12b.RPC.test",
