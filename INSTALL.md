@@ -67,7 +67,7 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ fstar.exe --version
         F* 0.9.6.0~alpha1
         platform=Linux_x86_64
-        compiler=OCaml 4.02.3
+        compiler=OCaml 4.05.0
         date=yyyy-mm-ddThh:nn:ss+02:00
         commit=xxxxxxxx
         $ z3 --version
@@ -82,6 +82,9 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ make -C examples/micro-benchmarks
 
 3. If you have OCaml installed the following command should print "Hello F\*!"
+   You need the same version of OCaml as was used to create the
+   `fstar.exe` binary (which you can see with `fstar.exe --version`,
+    as illustrated above).
 
         $ make -C examples/hello ocaml
 
@@ -98,6 +101,10 @@ following commands. (On Windows this requires Cygwin and `make`)
    take a long time.
 
         $ make -j6 -C examples
+
+   Note: On Linux if you get a file descriptor exhaustion error that looks
+         like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
+         you can increase the limits with `ulimit -n 4000`.
 
 ### Homebrew formula for Mac OS X ###
 
