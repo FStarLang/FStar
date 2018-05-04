@@ -112,7 +112,7 @@ type term' =
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Tm_uvar       of ctx_uvar * list<subst_elt>                  (* A unification variable ?u (aka meta-variable)
+  | Tm_uvar       of ctx_uvar * subst_ts                         (* A unification variable ?u (aka meta-variable)
                                                                    and a delayed substitution of only NM or NT elements *)
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)

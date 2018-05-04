@@ -186,7 +186,7 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
          ctx_uvar_range=r
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
-    let t = mk (Tm_uvar (ctx_uvar, [])) None r in
+    let t = mk (Tm_uvar (ctx_uvar, ([], None))) None r in
     ctx_uvar, t, {wl with wl_implicits=(reason, t, ctx_uvar, r, should_check)::wl.wl_implicits}
 
 let copy_uvar u t wl =
@@ -656,27 +656,33 @@ let flex_uvar_head t =
 let destruct_flex_t t wl : flex_t * worklist =
     let head, args = U.head_and_args t in
     match (SS.compress head).n with
-    | Tm_uvar (uv, []) -> (t, uv, args), wl
+    | Tm_uvar (uv, ([], _)) -> (t, uv, args), wl
     | Tm_uvar (uv, s) ->
-      let dom_s = s |> List.collect (function NT(x, _) | NM(x, _) -> [S.mk_binder x] | _ -> []) in
+      //let dom_s = s |> List.collect (function NT(x, _) | NM(x, _) -> [S.mk_binder x] | _ -> []) in
       let new_gamma, dom_binders_rev =
           uv.ctx_uvar_gamma |> List.partition (function
           | Binding_var x ->
-            not (BU.for_some (fun y -> S.bv_eq x (fst y)) dom_s)
+            let t_x = S.bv_to_name x in
+            let t_x' = SS.subst' s t_x in
+            (match (SS.compress t_x').n with
+             | Tm_name y ->
+               S.bv_eq x y //not in the substitution if true
+             | _ ->
+               false)
           | _ -> true)
       in
-      let dom_binders = List.map (function Binding_var x -> S.mk_binder x) dom_binders_rev |> List.rev in
+      let dom_binders = List.collect (function Binding_var x -> [S.mk_binder x] | _ -> []) dom_binders_rev |> List.rev in
       let v, t_v, wl = new_uvar (uv.ctx_uvar_reason ^ "; force delayed")
                        wl
                        t.pos
                        new_gamma
                        (new_gamma |> List.collect (function Binding_var x -> [S.mk_binder x] | _ -> []) |> List.rev)
-                       (U.arrow dom_binders (S.mk_Total (SS.subst s uv.ctx_uvar_typ)))
+                       (U.arrow dom_binders (S.mk_Total (SS.subst' s uv.ctx_uvar_typ)))
                        uv.ctx_uvar_should_check
       in
       let args_sol = List.map (fun (x, i) -> S.bv_to_name x, i) dom_binders in
       let sol = S.mk_Tm_app t_v args_sol None t.pos in
-      let args_sol_s = List.map (fun (a, i) -> SS.subst s a, i) args_sol in
+      let args_sol_s = List.map (fun (a, i) -> SS.subst' s a, i) args_sol in
       let all_args = args_sol_s @ args in
       let t = S.mk_Tm_app t_v all_args None t.pos in
       Unionfind.change uv.ctx_uvar_head sol;

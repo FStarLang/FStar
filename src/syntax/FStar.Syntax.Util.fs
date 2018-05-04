@@ -529,7 +529,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_constant c, Tm_constant d ->
       equal_iff (eq_const c d)
 
-    | Tm_uvar (u1, []), Tm_uvar (u2, []) ->
+    | Tm_uvar (u1, ([], _)), Tm_uvar (u2, ([], _)) ->
       equal_if (Unionfind.equiv u1.ctx_uvar_head u2.ctx_uvar_head)
 
     | Tm_app (h1, args1), Tm_app (h2, args2) ->
@@ -1500,7 +1500,7 @@ let uvar_from_id (id : int) (gamma, bs, t) =
         ctx_uvar_should_check = true
     } in
     failwith "uvar_from_id: not fully supported yet .. delayed substitutions";
-    mk (Tm_uvar (ctx_u, [])) None Range.dummyRange
+    mk (Tm_uvar (ctx_u, ([], None))) None Range.dummyRange
 
 // Some generic equalities
 let rec eqlist (eq : 'a -> 'a -> bool) (xs : list<'a>) (ys : list<'a>) : bool =

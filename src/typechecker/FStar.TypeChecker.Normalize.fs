@@ -420,16 +420,29 @@ let rec inline_closure_env cfg (env:env) stack t =
                         (Print.term_to_string t))
              | _ ->
               inline_closure_env cfg env stack t
-        else let s = s |> List.map (function
+        else
+            let s' = fst s |> List.map (fun s ->
+                    s |> List.map (function
                 | NT(x, t) ->
                   NT(x, inline_closure_env cfg env [] t)
                 | NM(x, i) ->
-                  let t = S.bv_to_tm ({x with index = i}) in
-                  NT(x, inline_closure_env cfg env [] t)
-                | _ -> failwith "Impossible: subst invariant of uvar nodes")
+                  let x_i = S.bv_to_tm ({x with index=i}) in
+                  let t = inline_closure_env cfg env [] x_i in
+                  (match t.n with
+                   | Tm_bvar x_j -> NM(x, x_j.index)
+                   | _ -> NT(x, t))
+                | _ -> failwith "Impossible: subst invariant of uvar nodes"))
              in
-             let t = {t with n=Tm_uvar(uv, s)} in
-             rebuild_closure cfg env stack t //should be closed anyway
+             let _ = match s with
+                     | [], _
+                     | [[]], _ -> ()
+                     | _::_, _ -> printfn "inline_closure_env: dodginess %d\n\tBefore %s\n\t After %s"
+                                            (List.length (fst s))
+                                            (List.map Print.subst_to_string (fst s) |> String.concat "@")
+                                            (List.map Print.subst_to_string s' |> String.concat "@")
+                     | _ -> () in
+             let t = {t with n=Tm_uvar(uv, (s', snd s))} in
+             rebuild_closure cfg env stack t
 
       | Tm_type u ->
         let t = mk (Tm_type (norm_universe cfg env u)) t.pos in
@@ -2778,7 +2791,7 @@ let eta_expand (env:Env.env) (t:term) : term =
       let head, args = U.head_and_args t in
       begin match (SS.compress head).n with
       | Tm_uvar (u,s) ->
-        let formals, _tres = U.arrow_formals (SS.subst s u.ctx_uvar_typ) in
+        let formals, _tres = U.arrow_formals (SS.subst' s u.ctx_uvar_typ) in
         if List.length formals = List.length args
         then t
         else let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in

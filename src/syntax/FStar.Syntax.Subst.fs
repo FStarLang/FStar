@@ -95,7 +95,7 @@ let rec force_uvar' t =
   match t.n with
   | Tm_uvar ({ctx_uvar_head=uv}, s) ->
       (match Unionfind.find uv with
-          | Some t' -> fst (force_uvar' (delay t' ([s], None))), true
+          | Some t' -> fst (force_uvar' (delay t' s)), true
           | _ -> t, false)
   | _ -> t, false
 
@@ -301,7 +301,7 @@ let push_subst_lcomp s lopt = match lopt with
     | None -> None
     | Some rc -> Some ({rc with residual_typ = FStar.Util.map_opt rc.residual_typ (subst' s)})
 
-let compose_uvar_subst (u:ctx_uvar) (s0:list<subst_elt>) (s:subst_ts) : list<subst_elt> =
+let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
     let should_retain x =
         u.ctx_uvar_binders |> U.for_some (fun (x', _) -> S.bv_eq x x')
     in
@@ -316,13 +316,19 @@ let compose_uvar_subst (u:ctx_uvar) (s0:list<subst_elt>) (s:subst_ts) : list<sub
                 else []
               | NM(x, i) ->
                 if should_retain x
-                then [NT(x, delay (S.bv_to_tm ({x with index=i})) (rest, None))]
+                then let x_i = S.bv_to_tm ({x with index=i}) in
+                     let t = subst' (rest, None) x_i in
+                     match t.n with
+                     | Tm_bvar x_j -> [NM(x, x_j.index)]
+                     | _ -> [NT(x, t)]
                 else []
               | _ -> [])
           in
           hd @ aux rest
     in
-    aux (s0::fst s)
+    match aux (fst s0 @ fst s) with
+    | [] -> [], snd s
+    |  s' -> [s'], snd s
 
 let rec push_subst s t =
     //makes a syntax node, setting it's use range as appropriate from s
@@ -339,7 +345,7 @@ let rec push_subst s t =
       begin
       match (Unionfind.find uv.ctx_uvar_head) with
       | None -> tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s0 s)}) s
-      | Some t -> push_subst (compose_subst ([s0], None) s) t
+      | Some t -> push_subst (compose_subst s0 s) t
       end
 
     | Tm_type _

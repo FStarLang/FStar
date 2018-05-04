@@ -294,8 +294,8 @@ and term_to_string x =
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x
       | Tm_fvar f ->        fv_to_string f
-      | Tm_uvar (u, []) ->   ctx_uvar_to_string u
-      | Tm_uvar (u, s) ->   U.format2 "(%s @ %s)" (ctx_uvar_to_string u) (subst_to_string s)
+      | Tm_uvar (u, ([], _)) ->   ctx_uvar_to_string u
+      | Tm_uvar (u, s) ->   U.format2 "(%s @ %s)" (ctx_uvar_to_string u) (List.map subst_to_string (fst s) |> String.concat "; ")
       | Tm_constant c ->    const_to_string c
       | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type u#(%s)" (univ_to_string u) else "Type"
       | Tm_arrow(bs, c) ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
@@ -348,7 +348,7 @@ and ctx_uvar_to_string ctx_uvar =
 and subst_elt_to_string = function
    | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
    | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
-   | NT(x, t) -> U.format2 "DB (%s, %s)" (bv_to_string x) (term_to_string t)
+   | NT(x, t) -> U.format2 "NT (%s, %s)" (bv_to_string x) (term_to_string t)
    | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
    | UD(u, i) -> U.format2 "UD (%s, %s)" u.idText (string_of_int i)
 

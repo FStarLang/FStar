@@ -61,7 +61,7 @@ let new_implicit_var_aux reason r gamma binders k =
           ctx_uvar_range=r
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
-      ctx_uvar, mk (Tm_uvar (ctx_uvar, [])) None r
+      ctx_uvar, mk (Tm_uvar (ctx_uvar, ([], None))) None r
 
 let new_implicit_var reason r env k =
     match U.destruct k C.range_of_lid with
