@@ -212,30 +212,31 @@ let rec (term_eq' :
                        (term_eq' lb1.FStar_Syntax_Syntax.lbdef
                           lb2.FStar_Syntax_Syntax.lbdef)) lbs lbs'))
             && (term_eq' t s)
-      | (FStar_Syntax_Syntax.Tm_uvar u,FStar_Syntax_Syntax.Tm_uvar u') ->
+      | (FStar_Syntax_Syntax.Tm_uvar
+         (u,uu____1325),FStar_Syntax_Syntax.Tm_uvar (u',uu____1327)) ->
           FStar_Syntax_Unionfind.equiv u.FStar_Syntax_Syntax.ctx_uvar_head
             u'.FStar_Syntax_Syntax.ctx_uvar_head
-      | (FStar_Syntax_Syntax.Tm_meta (t12,uu____1327),uu____1328) ->
+      | (FStar_Syntax_Syntax.Tm_meta (t12,uu____1337),uu____1338) ->
           term_eq' t12 t21
-      | (uu____1333,FStar_Syntax_Syntax.Tm_meta (t22,uu____1335)) ->
+      | (uu____1343,FStar_Syntax_Syntax.Tm_meta (t22,uu____1345)) ->
           term_eq' t11 t22
-      | (FStar_Syntax_Syntax.Tm_delayed uu____1340,uu____1341) ->
-          let uu____1366 =
-            let uu____1367 = FStar_Syntax_Print.tag_of_term t11  in
-            let uu____1368 = FStar_Syntax_Print.tag_of_term t21  in
-            FStar_Util.format2 "Impossible: %s and %s" uu____1367 uu____1368
+      | (FStar_Syntax_Syntax.Tm_delayed uu____1350,uu____1351) ->
+          let uu____1376 =
+            let uu____1377 = FStar_Syntax_Print.tag_of_term t11  in
+            let uu____1378 = FStar_Syntax_Print.tag_of_term t21  in
+            FStar_Util.format2 "Impossible: %s and %s" uu____1377 uu____1378
              in
-          failwith uu____1366
-      | (uu____1369,FStar_Syntax_Syntax.Tm_delayed uu____1370) ->
-          let uu____1395 =
-            let uu____1396 = FStar_Syntax_Print.tag_of_term t11  in
-            let uu____1397 = FStar_Syntax_Print.tag_of_term t21  in
-            FStar_Util.format2 "Impossible: %s and %s" uu____1396 uu____1397
+          failwith uu____1376
+      | (uu____1379,FStar_Syntax_Syntax.Tm_delayed uu____1380) ->
+          let uu____1405 =
+            let uu____1406 = FStar_Syntax_Print.tag_of_term t11  in
+            let uu____1407 = FStar_Syntax_Print.tag_of_term t21  in
+            FStar_Util.format2 "Impossible: %s and %s" uu____1406 uu____1407
              in
-          failwith uu____1395
+          failwith uu____1405
       | (FStar_Syntax_Syntax.Tm_unknown ,FStar_Syntax_Syntax.Tm_unknown ) ->
           true
-      | uu____1398 -> false
+      | uu____1408 -> false
   
 let (term_eq :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -246,10 +247,10 @@ let (term_eq :
       let b = term_eq' t1 t2  in
       if Prims.op_Negation b
       then
-        (let uu____1423 = FStar_Syntax_Print.term_to_string t1  in
-         let uu____1424 = FStar_Syntax_Print.term_to_string t2  in
+        (let uu____1433 = FStar_Syntax_Print.term_to_string t1  in
+         let uu____1434 = FStar_Syntax_Print.term_to_string t2  in
          FStar_Util.print2 ">>>>>>>>>>>Term %s is not equal to %s\n"
-           uu____1423 uu____1424)
+           uu____1433 uu____1434)
       else ();
       b
   
