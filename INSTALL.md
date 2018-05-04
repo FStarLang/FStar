@@ -103,7 +103,9 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ make -j6 -C examples
         $ echo $?    # non-zero means build failed! scroll up for error message!
 
-   Note: This step currently has a dependency on having [KreMLin](https://github.com/FStarLang/kremlin)
+   Note: This step currently requires having OCaml installed (as for step 3 above).
+
+   Note: This step currently requires having [KreMLin](https://github.com/FStarLang/kremlin)
          installed and the `KREMLIN_HOME` variable pointing to its location.
          
    Note: On Linux if you get a file descriptor exhaustion error that looks
