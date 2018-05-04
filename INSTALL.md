@@ -95,7 +95,7 @@ following commands. (On Windows this requires Cygwin and `make`)
    your OS; then use the following command to install the packages
    required to compile OCaml programs extracted from F\* code:
 
-        $ opam install ocamlfind batteries stdint zarith ppx_deriving
+        $ opam install ocamlfind batteries stdint zarith ppx_deriving ppx_deriving_yojson
 
 4. You can verify all the examples, keeping in mind that this might
    take a long time.
@@ -326,7 +326,7 @@ that's over there (it's optimized for F\*). This will install both OCaml and OPA
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson
   ```
   Some of the examples also require the `sqlite3` opam package, which depends
   on SQLite itself that you can install with `opam depext sqlite3` (at least on Linux)
