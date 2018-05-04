@@ -303,7 +303,7 @@ let push_subst_lcomp s lopt = match lopt with
 
 let compose_uvar_subst (u:ctx_uvar) (s0:list<subst_elt>) (s:subst_ts) : list<subst_elt> =
     let should_retain x =
-        u.ctx_uvar_binders |> Util.for_some (fun (x', _) -> S.bv_eq x x')
+        u.ctx_uvar_binders |> U.for_some (fun (x', _) -> S.bv_eq x x')
     in
     let rec aux = function
         | [] -> []
