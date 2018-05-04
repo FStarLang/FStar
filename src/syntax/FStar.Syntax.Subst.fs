@@ -316,7 +316,7 @@ let compose_uvar_subst (u:ctx_uvar) (s0:list<subst_elt>) (s:subst_ts) : list<sub
                 else []
               | NM(x, i) ->
                 if should_retain x
-                then [NT(x, delay (S.bv_to_tm {x with index=i}) (rest, None))]
+                then [NT(x, delay (S.bv_to_tm ({x with index=i})) (rest, None))]
                 else []
               | _ -> [])
           in
