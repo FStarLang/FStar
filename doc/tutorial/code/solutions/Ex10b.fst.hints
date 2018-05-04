@@ -282,7 +282,7 @@
         "typing_FStar.Monotonic.Heap.only"
       ],
       0,
-      "897e769fa5fa316f3ffb0be248875602"
+      "7e56f416ce7d739cdc609f523f647cd2"
     ],
     [
       "Ex10b.test1",
@@ -307,7 +307,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "d48278e1379c608181206ff53174107c"
+      "bdf9797ef6c5bce466853f740fbb68b9"
     ],
     [
       "Ex10b.test2",
@@ -474,7 +474,7 @@
         "typing_FStar.Monotonic.Heap.op_Hat_Plus_Hat", "typing_FStar.Set.mem"
       ],
       0,
-      "02880ec580c09e559aeacba7a216e59b"
+      "bea48cd4cb0108651cbdbfd110b5c3a7"
     ],
     [
       "Ex10b.test",
@@ -499,7 +499,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "82fc9aa9c0256b15e180a1721e7cb8b2"
+      "5766bdf08c68556f1e0134e9fa1b68ac"
     ],
     [
       "Ex10b.point",

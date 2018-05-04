@@ -357,12 +357,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_136fd5270a258ddaaad5b0c5f45f8938_1",
+        "binder_x_136fd5270a258ddaaad5b0c5f45f8938_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "89f8318459b95862ff9c30514e2ec2aa"
+      "41a88c723d9d97757d90a84c352d7436"
     ],
     [
       "X64.Vale.StrongPost_i.inss_to_codes",
@@ -429,8 +429,8 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_X64.Vale.StrongPost_i.regs_match.fuel_instrumented",
         "@fuel_irrelevance_X64.Vale.StrongPost_i.regs_match.fuel_instrumented",
-        "@query", "binder_x_136fd5270a258ddaaad5b0c5f45f8938_1",
-        "binder_x_de52c7fd4c52e1942aeef9a9143c43bf_2",
+        "@query", "binder_x_136fd5270a258ddaaad5b0c5f45f8938_0",
+        "binder_x_de52c7fd4c52e1942aeef9a9143c43bf_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil", "eq2-interp",
         "equation_X64.Machine_s.nat64",
@@ -443,7 +443,7 @@
         "subterm_ordering_Prims.Cons", "true_interp"
       ],
       0,
-      "0afa67205495912e78c9c1bd9f823509"
+      "d8f2f8afc0f927df626246ac4b952782"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_update_reg_equal",

@@ -905,7 +905,7 @@
         "typing_X64.Vale.State_i.eval_operand", "unit_typing"
       ],
       0,
-      "9799bdcddce94122fc5cd63635232466"
+      "1a2fa30fbf550f275b7ceb1a0498c269"
     ],
     [
       "X64.Vale.Decls.va_lemma_Store64",
@@ -923,7 +923,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "90bbdefab142894a4e090fc68dadf76c"
+      "4a328255e799600247d1ff29dd2e4c5d"
     ],
     [
       "X64.Vale.Decls.va_irreducible_lemma_Add64",

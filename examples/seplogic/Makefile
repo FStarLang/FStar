@@ -11,7 +11,7 @@ shallow: SepLogic.Heap.uver Shallow.uver SL.Heap.uver SL.Effect.uver SL.Shallow.
 examples:
 	$(FSTAR) --use_two_phase_tc false Examples.fst
 	#$(FSTAR) --record_hints --use_hints SL.Examples.fst ---loops
-	$(FSTAR) --record_hints --use_hints SL.ExamplesAuto.fst
+	#$(FSTAR) --record_hints --use_hints SL.ExamplesAuto.fst
 
 OTHERFLAGS+=--include ../tactics
 

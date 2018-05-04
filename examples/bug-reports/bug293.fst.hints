@@ -20,7 +20,7 @@
         "refinement_interpretation_Bug293_Tm_refine_24a102650c3561bc6be37068de08feda"
       ],
       0,
-      "65e4f458ec864bde8cb814abb6f259c6"
+      "abd77c171a317ad0ec480382fdd7a46b"
     ],
     [
       "Bug293.test",
@@ -29,7 +29,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1948a1c1a644e6a2388c476ee2bf32dc"
+      "4e12dde966f4b3f60322b20df409d99a"
     ],
     [
       "Bug293.test",
@@ -38,7 +38,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c5077e385b05d196da52f2be30f6aa71"
+      "cd68f6d7649819f126c2c033ea138922"
     ]
   ]
 ]
