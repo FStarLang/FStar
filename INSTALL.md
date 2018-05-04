@@ -101,6 +101,7 @@ following commands. (On Windows this requires Cygwin and `make`)
    take a long time.
 
         $ make -j6 -C examples
+        $ echo $?    # non-zero means build failed! scroll up for error message!
 
    Note: On Linux if you get a file descriptor exhaustion error that looks
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
