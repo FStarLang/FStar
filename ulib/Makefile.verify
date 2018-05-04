@@ -1,7 +1,8 @@
 .PHONY: verify-core verify-extra
 
 EXTRA=FStar.Pointer.Base.fst
-FSTAR_FILES := $(wildcard FStar.*.fst FStar.*.fsti)
+FLAKY=FStar.Relational.State.fst
+FSTAR_FILES := $(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
 
 OTHERFLAGS+=--use_two_phase_tc true --use_extracted_interfaces
 
