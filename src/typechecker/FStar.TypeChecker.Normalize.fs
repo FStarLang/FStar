@@ -410,7 +410,7 @@ let rec inline_closure_env cfg (env:env) stack t =
       | Tm_fvar _ ->
         rebuild_closure cfg env stack t
 
-      | Tm_uvar _ ->
+      | Tm_uvar (uv, s) ->
         if cfg.steps.check_no_uvars
         then let t = compress t in
              match t.n with
@@ -420,7 +420,16 @@ let rec inline_closure_env cfg (env:env) stack t =
                         (Print.term_to_string t))
              | _ ->
               inline_closure_env cfg env stack t
-        else rebuild_closure cfg env stack t //should be closed anyway
+        else let s = s |> List.map (function
+                | NT(x, t) ->
+                  NT(x, inline_closure_env cfg env [] t)
+                | NM(x, i) ->
+                  let t = S.bv_to_tm ({x with index = i}) in
+                  NT(x, inline_closure_env cfg env [] t)
+                | _ -> failwith "Impossible: subst invariant of uvar nodes")
+             in
+             let t = {t with n=Tm_uvar(uv, s)} in
+             rebuild_closure cfg env stack t //should be closed anyway
 
       | Tm_type u ->
         let t = mk (Tm_type (norm_universe cfg env u)) t.pos in
@@ -1653,7 +1662,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
                                     (Range.string_of_range t.pos)
                                     (Print.term_to_string t))
-            else rebuild cfg env stack t
+            else rebuild cfg env stack (inline_closure_env cfg env [] t)
 
           | _ ->
             norm cfg env stack t
