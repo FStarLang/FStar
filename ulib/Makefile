@@ -9,7 +9,7 @@ include gmake/fstar.mk
 # Makefile here is not.
 
 all:
-	+$(MAKE) -f Makefile.verify verify-all
+	+$(MAKE) -f Makefile.verify verify-core
 
 include ml/Makefile.include
 
