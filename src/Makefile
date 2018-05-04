@@ -167,7 +167,7 @@ fstarlib:
 	+$(MAKE) -C ../ulib
 
 ulib-extra:
-	+$(MAKE) -C ../ulib -f Makefile.verify verify-extra
+	+$(MAKE) -C ../ulib extra
 
 tutorial: fstarlib
 	+$(MAKE) -C ../doc/tutorial regressions
