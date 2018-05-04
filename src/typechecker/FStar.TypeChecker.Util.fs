@@ -76,38 +76,38 @@ let new_implicit_var reason r env k =
       t, [(ctx_uvar, r)], g
 
 let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
-    let rec aux x i =
-        let (reason, term, ctx_u, range, should_check) = i in
-        if Env.debug env <| Options.Other "Rel"
-        then BU.print1 "Considering closing uvar %s\n" (Print.ctx_uvar_to_string ctx_u);
-        match FStar.Syntax.Unionfind.find ctx_u.ctx_uvar_head with
-        | Some _ ->
-          if Env.debug env <| Options.Other "Rel"
-          then BU.print1 "%s already solved; nothing to do\n" (Print.ctx_uvar_to_string ctx_u);
-          i //already solved; nothing to do
-        | None ->
-          begin
-          match BU.prefix_until (function Binding_var _ -> true | _ -> false) ctx_u.ctx_uvar_gamma with
-          | None -> i
-          | Some (_, hd, gamma_tail) ->
-            check_uvar_ctx_invariant reason range true ctx_u.ctx_uvar_gamma ctx_u.ctx_uvar_binders;
-            match hd with
-            | Binding_var x' when S.bv_eq x x' ->
-              let binders_pfx, _ = BU.prefix ctx_u.ctx_uvar_binders in
-              let typ = U.arrow [S.mk_binder x] (S.mk_Total ctx_u.ctx_uvar_typ) in
-              let ctx_v, t_v = new_implicit_var_aux reason range gamma_tail binders_pfx typ in
-              let sol = S.mk_Tm_app t_v [S.as_arg (S.bv_to_name x)] None range in
-              if Env.debug env <| Options.Other "Rel"
-              then BU.print3 "Closing implicit %s with binder %s to %s\n"
-                            (Print.bv_to_string x)
-                            (Print.ctx_uvar_to_string ctx_u)
-                            (Print.term_to_string sol);
-              Unionfind.change ctx_u.ctx_uvar_head sol;
-              (reason, t_v, ctx_v, range, should_check)
+    //let rec aux x i =
+    //    let (reason, term, ctx_u, range, should_check) = i in
+    //    if Env.debug env <| Options.Other "Rel"
+    //    then BU.print1 "Considering closing uvar %s\n" (Print.ctx_uvar_to_string ctx_u);
+    //    match FStar.Syntax.Unionfind.find ctx_u.ctx_uvar_head with
+    //    | Some _ ->
+    //      if Env.debug env <| Options.Other "Rel"
+    //      then BU.print1 "%s already solved; nothing to do\n" (Print.ctx_uvar_to_string ctx_u);
+    //      i //already solved; nothing to do
+    //    | None ->
+    //      begin
+    //      match BU.prefix_until (function Binding_var _ -> true | _ -> false) ctx_u.ctx_uvar_gamma with
+    //      | None -> i
+    //      | Some (_, hd, gamma_tail) ->
+    //        check_uvar_ctx_invariant reason range true ctx_u.ctx_uvar_gamma ctx_u.ctx_uvar_binders;
+    //        match hd with
+    //        | Binding_var x' when S.bv_eq x x' ->
+    //          let binders_pfx, _ = BU.prefix ctx_u.ctx_uvar_binders in
+    //          let typ = U.arrow [S.mk_binder x] (S.mk_Total ctx_u.ctx_uvar_typ) in
+    //          let ctx_v, t_v = new_implicit_var_aux reason range gamma_tail binders_pfx typ in
+    //          let sol = S.mk_Tm_app t_v [S.as_arg (S.bv_to_name x)] None range in
+    //          if Env.debug env <| Options.Other "Rel"
+    //          then BU.print3 "Closing implicit %s with binder %s to %s\n"
+    //                        (Print.bv_to_string x)
+    //                        (Print.ctx_uvar_to_string ctx_u)
+    //                        (Print.term_to_string sol);
+    //          Unionfind.change ctx_u.ctx_uvar_head sol;
+    //          (reason, t_v, ctx_v, range, should_check)
 
-            | _ -> i
-          end
-    in
+    //        | _ -> i
+    //      end
+    //in
     let solve_now, defer =
         g.deferred |> List.partition (fun (_, p) -> Rel.flex_prob_closing env xs p)
     in
@@ -125,13 +125,13 @@ let close_guard_implicits env (xs:binders) (g:guard_t) : guard_t =
     then BU.print1 "Starting to close implicits with binders {%s}\n"
                         (Print.binders_to_string ", " xs);
 
-    let is =
-      List.fold_right (fun (x, _) is ->
-         if Env.debug env <| Options.Other "Rel"
-         then BU.print1 "Considering closing %s\n" (Print.bv_to_string x);
-         List.map (aux x) is) xs g.implicits
-    in
-    let g = {g with implicits=is} in
+    //let is =
+    //  List.fold_right (fun (x, _) is ->
+    //     if Env.debug env <| Options.Other "Rel"
+    //     then BU.print1 "Considering closing %s\n" (Print.bv_to_string x);
+    //     List.map (aux x) is) xs g.implicits
+    //in
+    //let g = {g with implicits=is} in
     if Env.debug env <| Options.Other "Rel"
     then BU.print2 "Closed implicits with binders {%s}; guard is\n\t%s\n"
                            (Print.binders_to_string ", " xs)

@@ -732,7 +732,7 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
             bind (__apply uopt tm' typ') (fun _ ->
             let u = bnorm goal.context u in
             match (SS.compress (fst (U.head_and_args u))).n with
-            | Tm_uvar {ctx_uvar_head=uvar} ->
+            | Tm_uvar ({ctx_uvar_head=uvar}, _) ->
                 bind get (fun ps ->
                 if uopt && uvar_free uvar ps
                 then ret ()
@@ -837,7 +837,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
         let checkone t goals =
             let hd, _ = U.head_and_args t in
             begin match hd.n with
-            | Tm_uvar uv -> appears uv.ctx_uvar_head goals
+            | Tm_uvar (uv, _) -> appears uv.ctx_uvar_head goals
             | _ -> false
             end
         in
@@ -1412,7 +1412,7 @@ let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
                | _ -> FStar.Options.peek ()
     in
     match U.head_and_args t with
-    | { n = Tm_uvar ctx_uvar }, _ ->
+    | { n = Tm_uvar (ctx_uvar, _) }, _ ->
         let env = {env with gamma=ctx_uvar.ctx_uvar_gamma} in
         add_goals [{ witness  = bnorm env t;
                      goal_ty  = bnorm env ctx_uvar.ctx_uvar_typ;
@@ -1541,8 +1541,10 @@ let rec inspect (t:term) : tac<term_view> =
     | Tm_constant c ->
         ret <| Tv_Const (inspect_const c)
 
-    | Tm_uvar ctx_u ->
+    | Tm_uvar (ctx_u, []) ->
         ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_id ctx_u.ctx_uvar_head), ctx_u.ctx_uvar_gamma, ctx_u.ctx_uvar_binders, ctx_u.ctx_uvar_typ)
+
+    | Tm_uvar _ -> failwith "NOT FULLY SUPPORTED"
 
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then ret <| Tv_Unknown else

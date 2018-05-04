@@ -641,15 +641,45 @@ type flex_t = (term * ctx_uvar * args)
 let flex_t_to_string (_, c, args) =
     BU.format2 "%s [%s]" (print_ctx_uvar c) (Print.args_to_string args)
 
-let is_flex t = match (SS.compress t).n with
-    | Tm_uvar _
-    | Tm_app({n=Tm_uvar _}, _) -> true
+let is_flex t =
+    let head, _args = U.head_and_args t in
+    match (SS.compress head).n with
+    | Tm_uvar _ -> true
     | _ -> false
+
+let flex_uvar_head t =
+    let head, _args = U.head_and_args t in
+    match (SS.compress head).n with
+    | Tm_uvar (u, _) -> u
+    | _ -> failwith "Not a flex-uvar"
 
 let destruct_flex_t t wl : flex_t * worklist =
     let head, args = U.head_and_args t in
     match (SS.compress head).n with
     | Tm_uvar (uv, []) -> (t, uv, args), wl
+    | Tm_uvar (uv, s) ->
+      let dom_s = s |> List.collect (function NT(x, _) | NM(x, _) -> [S.mk_binder x] | _ -> []) in
+      let new_gamma = uv.ctx_uvar_gamma |> List.filter (function
+          | Binding_var x ->
+            not (BU.for_some (fun y -> S.bv_eq x (fst y)) dom_s)
+          | _ -> true)
+      in
+      let v, t_v, wl = new_uvar (uv.ctx_uvar_reason ^ "; force delayed")
+                       wl
+                       t.pos
+                       new_gamma
+                       (new_gamma |> List.collect (function Binding_var x -> [S.mk_binder x] | _ -> []) |> List.rev)
+                       (U.arrow dom_s (S.mk_Total (SS.subst s uv.ctx_uvar_typ)))
+                       uv.ctx_uvar_should_check
+      in
+      let args_sol = List.map (fun (x, i) -> S.bv_to_name x, i) dom_s in
+      let sol = S.mk_Tm_app t_v args_sol None t.pos in
+      Unionfind.change uv.ctx_uvar_head sol;
+      let args_sol_s = List.map (fun (a, i) -> SS.subst s a, i) args_sol in
+      let all_args = args_sol_s @ args in
+      let t = S.mk_Tm_app t_v all_args None t.pos in
+      (t, v, all_args), wl
+
     | _ -> failwith "Not a flex-uvar"
 
 (* ------------------------------------------------ *)
@@ -1613,7 +1643,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
           meet_or_join (if flip then U.mk_conj else U.mk_disj) bounds_typs env wl
       in
       let bound_typ, (eq_prob, wl) =
-          let _, flex_u, _ = destruct_flex_t this_flex in
+          let flex_u = flex_uvar_head this_flex in
           let bound =
             //We get constraints of the form (x:?u{phi} <: ?u)
             //This cannot be solved with an equality constraints
@@ -2001,7 +2031,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                     then BU.print3 "flex-flex quasi:\n\tlhs=%s\n\trhs=%s\n\tsol=%s"
                             (flex_t_to_string lhs)
                             (flex_t_to_string rhs)
-                            (flex_t_to_string (destruct_flex_t w))
+                            (term_to_string w)
                  in
                  let sol =
                      let s1 = TERM(u_lhs, U.abs binders_lhs w_app (Some (U.residual_tot t_res_lhs))) in
@@ -2223,7 +2253,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               //so, this is going to fail, except if one last shot succeeds
               if is_flex not_abs //if it's a pattern and the free var check succeeds, then unify it with the abstraction in one step
               && p_rel orig = EQ
-              then solve_t_flex_rigid_eq env orig wl (destruct_flex_t not_abs) t_abs
+              then let flex, wl = destruct_flex_t not_abs wl in
+                    solve_t_flex_rigid_eq env orig wl flex t_abs
               else let t1 = force_eta t1 in
                    let t2 = force_eta t2 in
                    if is_abs t1 && is_abs t2
@@ -2291,12 +2322,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | Tm_app({n=Tm_uvar _}, _), Tm_uvar _
       | Tm_uvar _,                Tm_app({n=Tm_uvar _}, _)
       | Tm_app({n=Tm_uvar _}, _), Tm_app({n=Tm_uvar _}, _) ->
-        solve_t_flex_flex env orig wl (destruct_flex_t t1) (destruct_flex_t t2)
+        let f1, wl = destruct_flex_t t1 wl in
+        let f2, wl = destruct_flex_t t2 wl in
+        solve_t_flex_flex env orig wl f1 f2
 
       (* flex-rigid equalities *)
       | Tm_uvar _, _
       | Tm_app({n=Tm_uvar _}, _), _ when (problem.relation=EQ) -> (* just imitate/project ... no slack *)
-        solve_t_flex_rigid_eq env orig wl (destruct_flex_t t1) t2
+        let f1, wl = destruct_flex_t t1 wl in
+        solve_t_flex_rigid_eq env orig wl f1 t2
 
       (* rigid-flex: reorient if it is an equality constraint *)
       | _, Tm_uvar _

@@ -145,8 +145,10 @@ let rec inspect_ln (t:term) : term_view =
     | Tm_constant c ->
         Tv_Const (inspect_const c)
 
-    | Tm_uvar ctx_u ->
+    | Tm_uvar (ctx_u, []) ->
         Tv_Uvar (Z.of_int_fs (UF.uvar_id ctx_u.ctx_uvar_head), ctx_u.ctx_uvar_gamma, ctx_u.ctx_uvar_binders, ctx_u.ctx_uvar_typ)
+
+    | Tm_uvar _ -> failwith "NOT HANDLED YET"
 
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then Tv_Unknown else
