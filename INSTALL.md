@@ -288,9 +288,8 @@ Steps 2 and 3 below require a working OCaml setup. OCaml version 4.04.X, 4.05.X,
 
 #### Instructions for Windows ####
 
-Please use the  [OCaml Installer for Windows](http://protz.github.io/ocaml-installer/).
-Follow the [installation guide](https://github.com/protz/ocaml-installer/wiki)
-that's over there (it's optimized for F\*). This will install both OCaml and OPAM.
+Please use [Andreas Hauptmann's OCaml Installer for Windows](https://fdopen.github.io/opam-repository-mingw/installation/).
+This will install both OCaml and OPAM.
 
 #### Instructions for Linux and Mac OS X ####
 
