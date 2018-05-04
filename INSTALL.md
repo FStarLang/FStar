@@ -95,7 +95,7 @@ following commands. (On Windows this requires Cygwin and `make`)
    your OS; then use the following command to install the packages
    required to compile OCaml programs extracted from F\* code:
 
-        $ opam install ocamlfind batteries stdint zarith
+        $ opam install ocamlfind batteries stdint zarith ppx_deriving
 
 4. You can verify all the examples, keeping in mind that this might
    take a long time.
@@ -103,6 +103,9 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ make -j6 -C examples
         $ echo $?    # non-zero means build failed! scroll up for error message!
 
+   Note: This step currently has a dependency on having [KreMLin](https://github.com/FStarLang/kremlin)
+         installed and the `KREMLIN_HOME` variable pointing to its location.
+         
    Note: On Linux if you get a file descriptor exhaustion error that looks
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
          you can increase the limits with `ulimit -n 4000`.
@@ -321,7 +324,7 @@ that's over there (it's optimized for F\*). This will install both OCaml and OPA
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving
   ```
   Some of the examples also require the `sqlite3` opam package, which depends
   on SQLite itself that you can install with `opam depext sqlite3` (at least on Linux)
