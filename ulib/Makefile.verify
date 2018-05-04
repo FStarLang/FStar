@@ -1,13 +1,13 @@
 .PHONY: verify-core verify-extra
 
-include gmake/z3.mk
-include gmake/fstar.mk
-include gmake/Makefile.tmpl
-
 EXTRA=FStar.Pointer.Base.fst
 FSTAR_FILES := $(wildcard FStar.*.fst FStar.*.fsti)
 
 OTHERFLAGS+=--use_two_phase_tc true --use_extracted_interfaces
+
+include gmake/z3.mk
+include gmake/fstar.mk
+include gmake/Makefile.tmpl
 
 %.fst-in:
 	@echo --use_hints --hint_info

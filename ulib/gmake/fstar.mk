@@ -9,5 +9,5 @@ FSTAR_ALWAYS=$(shell cd $(FSTAR_HOME) && pwd)/bin/fstar.exe $(OTHERFLAGS) $(HINT
 FSTAR=$(FSTAR_ALWAYS)
 else
 # FSTAR_HOME not defined, assume fstar.exe reachable from PATH
-FSTAR=fstar.exe
+FSTAR=fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED)
 endif
