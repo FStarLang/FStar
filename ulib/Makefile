@@ -35,7 +35,7 @@ fstarlib.mgen: *.fst *.fsti
 	cp ../src/ocaml-output/FStar_Pervasives.ml ml/extracted
 	touch fstarlib.mgen
 
-FSTARLIB_LEFTOVERS=$(shell python fstarlib_leftovers.py +ml +ml/extracted -../bin/fstar-compiler-lib/)
+FSTARLIB_LEFTOVERS=$(shell ocaml fstarlib_leftovers.ml +ml +ml/extracted -../bin/fstar-compiler-lib/)
 fstartaclib.mgen: fstarlib.mgen
 	mkdir -p tactics_ml/extracted
 	rm -f .depend.extract
