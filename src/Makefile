@@ -153,7 +153,7 @@ ocaml-unit-tests:
 	$(BIN)/tests.exe
 
 # Getting parallelism from this target
-uregressions: fstarlib ulib tutorial uexamples interactive-test prettyprinting-tests
+uregressions: ulib tutorial uexamples interactive-test prettyprinting-tests
 
 # Getting parallelism from this target as well
 uregressions-ulong: uregressions ulib-extra

@@ -40,11 +40,6 @@ extra:
 	+make -C crypto all extra
 # removed tests poly-test and aead-test, relying on older code.
 
-ulib: $(FSTARLIB_DIR)/fstarlib.cmxa
-
-$(FSTARLIB_DIR)/fstarlib.cmxa:
-	make -j 1 -C $(FSTAR_HOME)/ulib/ml MEM=HST clean all
-
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
 	$(FSTAR) FStar.HyperStack.fst FStar.HST.fst FStar.Buffer.fst
@@ -339,6 +334,5 @@ OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
 
 # Cleaning
 clean:
-	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
 	@rm -f $(addprefix crypto/ml/, *.cmx *.o *.cmi *~)
 	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) $(AESGCM_ODIR) $(CHACHA_AEAD_ODIR) tmp kremlin *~ *.exe ./crypto/*~
