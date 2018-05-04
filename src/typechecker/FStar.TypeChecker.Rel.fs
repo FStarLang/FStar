@@ -737,7 +737,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         if not (is_flex g)
         then if resolve_ok
              then wl
-             else fail()
+             else (fail(); wl)
         else let (_, uv, args), wl  = destruct_flex_t g wl in
              assign_solution (args_as_binders args) uv phi;
              wl
