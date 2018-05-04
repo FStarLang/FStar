@@ -1,3 +1,14 @@
+(*
+List fstarlib files not included in the compiler.
+
+We need this to compile a clean version of fstar-tactics-lib, containing no
+duplicate copies of modules included in the compiler.
+
+Usage: ocaml fstarlib_leftovers.ml {+|-}dir1 {+|-}dir2 ...
+
+NOTE: each dir MUST NOT end with / or \
+*)
+
 let starts_with input prefix =
   let len_prefix = String.length prefix in
   String.length input >= len_prefix &&
