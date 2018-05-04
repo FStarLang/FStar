@@ -659,25 +659,27 @@ let destruct_flex_t t wl : flex_t * worklist =
     | Tm_uvar (uv, []) -> (t, uv, args), wl
     | Tm_uvar (uv, s) ->
       let dom_s = s |> List.collect (function NT(x, _) | NM(x, _) -> [S.mk_binder x] | _ -> []) in
-      let new_gamma = uv.ctx_uvar_gamma |> List.filter (function
+      let new_gamma, dom_binders_rev =
+          uv.ctx_uvar_gamma |> List.partition (function
           | Binding_var x ->
             not (BU.for_some (fun y -> S.bv_eq x (fst y)) dom_s)
           | _ -> true)
       in
+      let dom_binders = List.map (function Binding_var x -> S.mk_binder x) dom_binders_rev |> List.rev in
       let v, t_v, wl = new_uvar (uv.ctx_uvar_reason ^ "; force delayed")
                        wl
                        t.pos
                        new_gamma
                        (new_gamma |> List.collect (function Binding_var x -> [S.mk_binder x] | _ -> []) |> List.rev)
-                       (U.arrow dom_s (S.mk_Total (SS.subst s uv.ctx_uvar_typ)))
+                       (U.arrow dom_binders (S.mk_Total (SS.subst s uv.ctx_uvar_typ)))
                        uv.ctx_uvar_should_check
       in
-      let args_sol = List.map (fun (x, i) -> S.bv_to_name x, i) dom_s in
+      let args_sol = List.map (fun (x, i) -> S.bv_to_name x, i) dom_binders in
       let sol = S.mk_Tm_app t_v args_sol None t.pos in
-      Unionfind.change uv.ctx_uvar_head sol;
       let args_sol_s = List.map (fun (a, i) -> SS.subst s a, i) args_sol in
       let all_args = args_sol_s @ args in
       let t = S.mk_Tm_app t_v all_args None t.pos in
+      Unionfind.change uv.ctx_uvar_head sol;
       (t, v, all_args), wl
 
     | _ -> failwith "Not a flex-uvar"
