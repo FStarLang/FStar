@@ -1,7 +1,13 @@
 .PHONY: verify-core verify-extra
 
+# List the files that should be verified by verify-extra and verify-all
 EXTRA=FStar.Pointer.Base.fst
+
+# List the files that should NOT be verified at all
 FLAKY=FStar.Relational.State.fst
+
+# List the files that should be verified by verify-core and verify-all
+# Those files are the roots from where all dependencies are computed
 FSTAR_FILES := $(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
 
 OTHERFLAGS+=--use_two_phase_tc true --use_extracted_interfaces
@@ -9,6 +15,8 @@ OTHERFLAGS+=--use_two_phase_tc true --use_extracted_interfaces
 include gmake/z3.mk
 include gmake/fstar.mk
 include gmake/Makefile.tmpl
+
+# Default rule is verify-all, defined in gmake/Makefile.tmpl
 
 %.fst-in:
 	@echo --use_hints --hint_info
