@@ -677,7 +677,7 @@ let destruct_flex_t t wl : flex_t * worklist =
                        t.pos
                        new_gamma
                        (new_gamma |> List.collect (function Binding_var x -> [S.mk_binder x] | _ -> []) |> List.rev)
-                       (U.arrow dom_binders (S.mk_Total (SS.subst' s uv.ctx_uvar_typ)))
+                       (U.arrow dom_binders (S.mk_Total uv.ctx_uvar_typ))
                        uv.ctx_uvar_should_check
       in
       let args_sol = List.map (fun (x, i) -> S.bv_to_name x, i) dom_binders in
