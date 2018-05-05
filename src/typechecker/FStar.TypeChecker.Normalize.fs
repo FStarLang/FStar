@@ -433,14 +433,13 @@ let rec inline_closure_env cfg (env:env) stack t =
                    | _ -> NT(x, t))
                 | _ -> failwith "Impossible: subst invariant of uvar nodes"))
              in
-             let _ = match s with
-                     | [], _
-                     | [[]], _ -> ()
-                     | _::_, _ -> printfn "inline_closure_env: dodginess %d\n\tBefore %s\n\t After %s"
-                                            (List.length (fst s))
-                                            (List.map Print.subst_to_string (fst s) |> String.concat "@")
-                                            (List.map Print.subst_to_string s' |> String.concat "@")
-                     | _ -> () in
+             //let _ = match s with
+             //        | [], _
+             //        | [[]], _ -> ()
+             //        | _::_, _ -> BU.print2 "inline_closure_env\n\tBefore %s\n\t After %s"
+             //                               (List.map Print.subst_to_string (fst s) |> String.concat "@")
+             //                               (List.map Print.subst_to_string s' |> String.concat "@")
+             //        | _ -> () in
              let t = {t with n=Tm_uvar(uv, (s', snd s))} in
              rebuild_closure cfg env stack t
 
