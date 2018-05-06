@@ -37,7 +37,8 @@ let mk_tactic_interpretation_0 :
                              in
                           let uu____109 =
                             FStar_TypeChecker_Normalize.psc_range psc  in
-                          let uu____110 = FStar_Tactics_Basic.run t ps1  in
+                          let uu____110 = FStar_Tactics_Basic.run_safe t ps1
+                             in
                           FStar_Syntax_Embeddings.embed uu____104 uu____109
                             uu____110
                            in
@@ -88,7 +89,8 @@ let mk_tactic_interpretation_1 :
                             (fun a1  ->
                                let res =
                                  let uu____248 = t a1  in
-                                 FStar_Tactics_Basic.run uu____248 ps1  in
+                                 FStar_Tactics_Basic.run_safe uu____248 ps1
+                                  in
                                let uu____251 =
                                  let uu____252 =
                                    FStar_Tactics_Embedding.e_result er  in
@@ -154,7 +156,8 @@ let mk_tactic_interpretation_1_env :
                             (fun a1  ->
                                let res =
                                  let uu____401 = t psc a1  in
-                                 FStar_Tactics_Basic.run uu____401 ps1  in
+                                 FStar_Tactics_Basic.run_safe uu____401 ps1
+                                  in
                                let uu____404 =
                                  let uu____405 =
                                    FStar_Tactics_Embedding.e_result er  in
@@ -228,7 +231,8 @@ let mk_tactic_interpretation_2 :
                                    (fun b1  ->
                                       let res =
                                         let uu____586 = t a1 b1  in
-                                        FStar_Tactics_Basic.run uu____586 ps1
+                                        FStar_Tactics_Basic.run_safe
+                                          uu____586 ps1
                                          in
                                       let uu____589 =
                                         let uu____590 =
@@ -314,7 +318,7 @@ let mk_tactic_interpretation_3 :
                                           (fun c1  ->
                                              let res =
                                                let uu____808 = t a1 b1 c1  in
-                                               FStar_Tactics_Basic.run
+                                               FStar_Tactics_Basic.run_safe
                                                  uu____808 ps1
                                                 in
                                              let uu____811 =
@@ -414,7 +418,7 @@ let mk_tactic_interpretation_4 :
                                                     let res =
                                                       let uu____1067 =
                                                         t a1 b1 c1 d1  in
-                                                      FStar_Tactics_Basic.run
+                                                      FStar_Tactics_Basic.run_safe
                                                         uu____1067 ps1
                                                        in
                                                     let uu____1070 =
@@ -528,7 +532,7 @@ let mk_tactic_interpretation_5 :
                                                                t a1 b1 c1 d1
                                                                  e1
                                                                 in
-                                                             FStar_Tactics_Basic.run
+                                                             FStar_Tactics_Basic.run_safe
                                                                uu____1363 ps1
                                                               in
                                                            let uu____1366 =
@@ -656,7 +660,7 @@ let mk_tactic_interpretation_6 :
                                                                     t a1 b1
                                                                     c1 d1 e1
                                                                     f1  in
-                                                                    FStar_Tactics_Basic.run
+                                                                    FStar_Tactics_Basic.run_safe
                                                                     uu____1696
                                                                     ps1  in
                                                                   let uu____1699
