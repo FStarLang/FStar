@@ -147,6 +147,7 @@ val initial_env : FStar.Parser.Dep.deps ->
 val should_verify   : env -> bool
 val incr_query_index: env -> env
 val string_of_delta_level : delta_level -> string
+val rename_gamma : subst_t -> gamma -> gamma
 val rename_env : subst_t -> env -> env
 val set_dep_graph: env -> FStar.Parser.Dep.deps -> env
 val dep_graph: env -> FStar.Parser.Dep.deps

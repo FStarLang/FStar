@@ -20,19 +20,38 @@ module Range = FStar.Range
 //       witness = ?u, although, more generally, witness is a partial solution and can be any term
 //       goal_ty = t
 type goal = {
-    context : env;
-    witness : term;
-    goal_ty : typ;
+    goal_main_env : env;
+    goal_ctx_uvar : ctx_uvar;
     opts    : FStar.Options.optionstate; // option state for this particular goal
     is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
                      // We make the distinction to be more user-friendly at times
 }
+let goal_env g = { g.goal_main_env with gamma = g.goal_ctx_uvar.ctx_uvar_gamma }
+let goal_witness g =
+    FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], None))) None Range.dummyRange
+let goal_type g = g.goal_ctx_uvar.ctx_uvar_typ
+let goal_with_type g t =
+    let c = g.goal_ctx_uvar in
+    let c' = {c with ctx_uvar_typ = t} in
+    { g with goal_ctx_uvar = c' }
+let goal_with_env g env =
+    let c = g.goal_ctx_uvar in
+    let c' = {c with ctx_uvar_gamma = env.gamma} in
+    { g with goal_main_env=env; goal_ctx_uvar = c' }
 
-let subst_goal subst goal = {
-    goal with context = FStar.TypeChecker.Env.rename_env subst goal.context;
-              witness = SS.subst subst goal.witness;
-              goal_ty = SS.subst subst goal.goal_ty
+let mk_goal env u o b = {
+    goal_main_env=env;
+    goal_ctx_uvar=u;
+    opts=o;
+    is_guard=b
 }
+let subst_goal subst goal =
+    let g = goal.goal_ctx_uvar in
+    let ctx_uvar = {
+        g with ctx_uvar_gamma=FStar.TypeChecker.Env.rename_gamma subst g.ctx_uvar_gamma;
+               ctx_uvar_typ=SS.subst subst g.ctx_uvar_typ
+    } in
+    { goal with goal_ctx_uvar = ctx_uvar }
 
 type guard_policy =
     | Goal
