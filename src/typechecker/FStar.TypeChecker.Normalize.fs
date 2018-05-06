@@ -229,6 +229,21 @@ let prim_from_list (l : list<primitive_step>) : BU.psmap<primitive_step> =
 let find_prim_step cfg fv =
     BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v)
 
+let is_primop_app cfg tm =
+    (* Either a primop, or some of the constants which are primops in a way too *)
+    let head, _ = U.head_and_args tm in
+    match (U.un_uinst head).n with
+    | Tm_fvar fv -> begin
+      match find_prim_step cfg fv with
+      | Some _ -> true
+      | _ -> false
+      end
+    | Tm_constant FC.Const_reify
+    | Tm_constant (FC.Const_reflect _)
+    | Tm_constant FC.Const_range_of
+    | Tm_constant FC.Const_set_range_of -> true
+    | _ -> false
+
 type branches = list<(pat * option<term> * term)>
 
 type stack_elt =
@@ -976,7 +991,10 @@ let mk_psc_subst cfg env =
 
 let reduce_primops cfg env stack tm =
     if not cfg.steps.primops
-    then tm
+    then begin
+           log_primops cfg (fun () -> BU.print1 "primop: skipping for %s\n" (Print.term_to_string tm));
+           tm
+         end
     else begin
          let head, args = U.head_and_args tm in
          match (U.un_uinst head).n with
@@ -1105,12 +1123,6 @@ let get_norm_request (full_norm:term -> term) args =
       end
     | _ ->
       None
-
-let is_reify_head = function
-    | App(_, {n=Tm_constant FC.Const_reify}, _, _)::_ ->
-      true
-    | _ ->
-      false
 
 let firstn k l = if List.length l < k then l,[] else first_N k l
 let should_reify cfg stack = match stack with
@@ -2392,26 +2404,32 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
   | Arg (Clos(env_arg, tm, m, _), aq, r) :: stack ->
     log cfg (fun () -> BU.print1 "Rebuilding with arg %s\n" (Print.term_to_string tm));
+    let should_norm_arg =
+        // the usual case, we reduce fully
+        not cfg.steps.hnf
+        // consider: op_Plus (1 + 1) 2, it is not an HNF, but we can't proceed
+        // without normalizing the arguments (or unembedding fails)
+        || (cfg.steps.primops && is_primop_app cfg t)
+    in
     // this needs to be tail recursive for reducing large terms
-
     // GM: This is basically saying "if exclude iota, don't memoize".
     // what's up with that?
     // GM: I actually get a regression if I just keep the second branch.
     if not cfg.steps.iota
-    then if cfg.steps.hnf
-         then let arg = closure_as_term cfg env_arg tm in
+    then if should_norm_arg
+         then let stack = App(env, t, aq, r)::stack in
+              norm cfg env_arg stack tm
+         else let arg = closure_as_term cfg env_arg tm in
               let t = extend_app t (arg, aq) None r in
               rebuild cfg env_arg stack t
-         else let stack = App(env, t, aq, r)::stack in
-              norm cfg env_arg stack tm
     else begin match !m with
       | None ->
-        if cfg.steps.hnf
-        then let arg = closure_as_term cfg env_arg tm in
+        if should_norm_arg
+        then let stack = MemoLazy m::App(env, t, aq, r)::stack in
+             norm cfg env_arg stack tm
+        else let arg = closure_as_term cfg env_arg tm in
              let t = extend_app t (arg, aq) None r in
              rebuild cfg env_arg stack t
-        else let stack = MemoLazy m::App(env, t, aq, r)::stack in
-             norm cfg env_arg stack tm
 
       | Some (_, a) ->
         let t = S.extend_app t (a,aq) None r in
