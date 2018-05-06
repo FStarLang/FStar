@@ -1507,13 +1507,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_match(head, branches) ->
             let stack = Match(env, branches, cfg, t.pos)::stack in
-            let cfg =
-                if cfg.steps.iota
+            if cfg.steps.iota
                 && cfg.steps.weakly_reduce_scrutinee
                 && not cfg.steps.weak
-                then { cfg with steps={cfg.steps with weak=true} }
-                else cfg in
-            norm cfg env stack head
+            then let cfg' = { cfg with steps= { cfg.steps with weak = true } } in
+                 norm cfg' env (Cfg cfg :: stack) head
+            else norm cfg env stack head
 
           | Tm_let((b, lbs), lbody) when is_top_level lbs && cfg.steps.compress_uvars ->
             let lbs = lbs |> List.map (fun lb ->
