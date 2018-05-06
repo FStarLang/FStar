@@ -538,7 +538,7 @@ let base_and_refinement_maybe_delta should_delta env t1 =
    aux false (whnf env t1)
 
 let base_and_refinement env t = base_and_refinement_maybe_delta false env t
-let normalize_refinement steps env wl t0 = N.normalize_refinement steps env t0
+let normalize_refinement steps env t0 = N.normalize_refinement steps env t0
 
 let unrefine env t = base_and_refinement env t |> fst
 
@@ -908,9 +908,9 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
         let reduce_one_and_try_again (d1:delta_depth) (d2:delta_depth) =
           let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
           let t1, t2 = if d1_greater_than_d2
-                       then let t1' = normalize_refinement [N.UnfoldUntil d2; N.Weak; N.HNF] env wl t1 in
+                       then let t1' = normalize_refinement [N.UnfoldUntil d2; N.Weak; N.HNF] env t1 in
                             t1', t2
-                       else let t2' = normalize_refinement [N.UnfoldUntil d1; N.Weak; N.HNF] env wl t2 in
+                       else let t2' = normalize_refinement [N.UnfoldUntil d1; N.Weak; N.HNF] env t2 in
                             t1, t2' in
           aux retry (n_delta + 1) t1 t2
         in
@@ -919,8 +919,8 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
           match Common.decr_delta_depth d with
           | None -> fail n_delta r t1 t2
           | Some d ->
-            let t1 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t1 in
-            let t2 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t2 in
+            let t1 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env t1 in
+            let t2 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env t2 in
             aux retry (n_delta + 1) t1 t2
         in
 
