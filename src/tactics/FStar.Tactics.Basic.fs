@@ -56,7 +56,12 @@ type tac<'a> = {
 let mk_tac (f : proofstate -> __result<'a>) : tac<'a> =
     { tac_f = f }
 
-let run t p = t.tac_f p
+let run t p =
+    t.tac_f p
+
+let run_safe t p =
+    try t.tac_f p
+    with | e -> Failed (BU.message_of_exn e, p)
 
 (* monadic return *)
 let ret (x:'a) : tac<'a> =

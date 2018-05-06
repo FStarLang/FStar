@@ -41,7 +41,7 @@ let mk_tactic_interpretation_0 (reflect:bool)
  (*  We have: t () embedded_state
      The idea is to:
         1. unembed the state
-        2. run the `t` tactic
+        2. run the `t` tactic (catching exceptions)
         3. embed the result and final state and return it to the normalizer
   *)
   match args with
@@ -52,7 +52,7 @@ let mk_tactic_interpretation_0 (reflect:bool)
     BU.print2 "Reached %s, args are: %s\n"
             (Ident.string_of_lid nm)
             (Print.args_to_string args));
-    let res = embed (E.e_result er) (N.psc_range psc) (run t ps) in
+    let res = embed (E.e_result er) (N.psc_range psc) (run_safe t ps) in
     Some res)
   | _ ->
     failwith ("Unexpected application of tactic primitive")
@@ -70,7 +70,7 @@ let mk_tactic_interpretation_1 (reflect:bool)
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
     BU.bind_opt (unembed ea a) (fun a ->
-    let res = run (t a) ps in
+    let res = run_safe (t a) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res)))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -89,7 +89,7 @@ let mk_tactic_interpretation_1_env
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
     BU.bind_opt (unembed ea a) (fun a ->
-    let res = run (t psc a) ps in
+    let res = run_safe (t psc a) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res)))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -109,7 +109,7 @@ let mk_tactic_interpretation_2 (reflect:bool)
             (Print.term_to_string embedded_state));
     BU.bind_opt (unembed ea a) (fun a ->
     BU.bind_opt (unembed eb b) (fun b ->
-    let res = run (t a b) ps in
+    let res = run_safe (t a b) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -132,7 +132,7 @@ let mk_tactic_interpretation_3 (reflect:bool)
     BU.bind_opt (unembed ea a) (fun a ->
     BU.bind_opt (unembed eb b) (fun b ->
     BU.bind_opt (unembed ec c) (fun c ->
-    let res = run (t a b c) ps in
+    let res = run_safe (t a b c) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res)))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -157,7 +157,7 @@ let mk_tactic_interpretation_4 (reflect:bool)
     BU.bind_opt (unembed eb b) (fun b ->
     BU.bind_opt (unembed ec c) (fun c ->
     BU.bind_opt (unembed ed d) (fun d ->
-    let res = run (t a b c d) ps in
+    let res = run_safe (t a b c d) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res))))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -184,7 +184,7 @@ let mk_tactic_interpretation_5 (reflect:bool)
     BU.bind_opt (unembed ec c) (fun c ->
     BU.bind_opt (unembed ed d) (fun d ->
     BU.bind_opt (unembed ee e) (fun e ->
-    let res = run (t a b c d e) ps in
+    let res = run_safe (t a b c d e) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res)))))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -213,7 +213,7 @@ let mk_tactic_interpretation_6 (reflect:bool)
     BU.bind_opt (unembed ed d) (fun d ->
     BU.bind_opt (unembed ee e) (fun e ->
     BU.bind_opt (unembed ef f) (fun f ->
-    let res = run (t a b c d e f) ps in
+    let res = run_safe (t a b c d e f) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res))))))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))

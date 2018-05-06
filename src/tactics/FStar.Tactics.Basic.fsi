@@ -14,7 +14,8 @@ type goal = FStar.Tactics.Types.goal
 
 type tac<'a>
 
-val run : tac<'a> -> proofstate -> __result<'a>
+val run      : tac<'a> -> proofstate -> __result<'a>
+val run_safe : tac<'a> -> proofstate -> __result<'a> (* Won't raise any exception, just fail within the monad *)
 val ret : 'a -> tac<'a>
 val set : proofstate -> tac<unit>
 val get : tac<proofstate>
