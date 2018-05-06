@@ -223,7 +223,16 @@ let rel_to_string = function
   | SUB -> "<:"
   | SUBINV -> ":>"
 
-let term_to_string t = Print.term_to_string t
+let term_to_string t =
+    let head, args = U.head_and_args t in
+    match head.n with
+    | Tm_uvar (u, s) ->
+      BU.format3 "%s%s %s"
+            (Print.ctx_uvar_to_string u)
+            (match fst s with | [] -> "" | s -> BU.format1 "@<%s>" (Print.subst_to_string (List.hd s)))
+            (Print.args_to_string args)
+    | _ -> Print.term_to_string t
+
 
 let prob_to_string env = function
   | TProb p ->

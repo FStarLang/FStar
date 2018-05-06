@@ -18,9 +18,8 @@ module Range = FStar.Range
 //       witness = ?u, although, more generally, witness is a partial solution and can be any term
 //       goal_ty = t
 type goal = {
-    context : env;
-    witness : term;
-    goal_ty : typ;
+    goal_main_env: env;
+    goal_ctx_uvar : ctx_uvar;
     opts    : FStar.Options.optionstate; // option state for this particular goal
     is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
                      // We make the distinction to be more user-friendly at times
@@ -54,7 +53,13 @@ val set_proofstate_range : proofstate -> Range.range -> proofstate
 val subst_proof_state: subst_t -> proofstate -> proofstate
 
 val set_ps_psc : N.psc -> proofstate -> proofstate
+val goal_env: goal -> env
+val goal_witness: goal -> term
+val goal_type: goal -> term
+val goal_with_type: goal -> term -> goal
+val goal_with_env: goal -> env -> goal
 
+val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> goal
 type direction =
     | TopDown
     | BottomUp
