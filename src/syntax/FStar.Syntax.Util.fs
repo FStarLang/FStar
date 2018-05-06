@@ -497,7 +497,10 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         then (
             assert (List.length args1 = List.length args2);
             List.fold_left (fun acc ((a1, q1), (a2, q2)) ->
-                                assert (q1 = q2);
+                                if q1 <> q2
+                                then U.print1 "Arguments of %s mismatch on implicit qualifier\n"
+                                                (Ident.string_of_lid f1.fv_name.v);
+                                //assert (q1 = q2);
                                 eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
         ) else NotEqual
     in

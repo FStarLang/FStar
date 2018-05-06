@@ -75,11 +75,24 @@ let get : tac<proofstate> =
 
 let idtac : tac<unit> = ret ()
 
+let check_goal_solved goal =
+    match FStar.Syntax.Unionfind.find goal.goal_ctx_uvar.ctx_uvar_head with
+    | Some t ->
+      Some t
+    | None ->
+      None
+
 let goal_to_string (g:goal) =
-    let g_binders = Env.all_binders (goal_env g) |> Print.binders_to_string ", " in
-    let w = bnorm (goal_env g) (goal_witness g) in
-    let t = bnorm (goal_env g) (goal_type g) in
-    Util.format3 "%s |- %s : %s" g_binders (tts (goal_env g) w) (tts (goal_env g) t)
+    BU.format2 "%s%s"
+        (Print.ctx_uvar_to_string g.goal_ctx_uvar)
+        (match check_goal_solved g with
+         | None -> ""
+         | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (Print.term_to_string t))
+
+    //let g_binders = Env.all_binders (goal_env g) |> Print.binders_to_string ", " in
+    //let w = bnorm (goal_env g) (goal_witness g) in
+    //let t = bnorm (goal_env g) (goal_type g) in
+    //Util.format3 "%s |- %s : %s" g_binders (tts (goal_env g) w) (tts (goal_env g) t)
 
 let tacprint  (s:string)       = BU.print1 "TAC>> %s\n" s
 let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
@@ -277,6 +290,14 @@ let do_unify env t1 t2 : tac<bool> =
         Options.pop ();
     ret r))
 
+let set_solution goal solution : tac<unit> =
+    match FStar.Syntax.Unionfind.find goal.goal_ctx_uvar.ctx_uvar_head with
+    | Some _ ->
+      fail (BU.format1 "Goal %s is already solved" (goal_to_string goal))
+    | None ->
+      FStar.Syntax.Unionfind.change goal.goal_ctx_uvar.ctx_uvar_head solution;
+      ret ()
+
 let trysolve (goal : goal) (solution : term) : tac<bool> =
     do_unify (goal_env goal) solution (goal_witness goal)
 
@@ -390,7 +411,14 @@ let cur_goal () : tac<goal> =
     bind get (fun p ->
     match p.goals with
     | [] -> fail "No more goals (1)"
-    | hd::tl -> ret hd)
+    | hd::tl ->
+      match FStar.Syntax.Unionfind.find (hd.goal_ctx_uvar.ctx_uvar_head) with
+      | None -> ret hd
+      | Some t ->
+        BU.print2 "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
+                (goal_to_string hd)
+                (Print.term_to_string t);
+        ret hd)
 
 let tadmit () : tac<unit> = wrap_err "tadmit" <|
     bind (cur_goal ()) (fun g ->
@@ -567,13 +595,24 @@ let intro () : tac<binder> = wrap_err "intro" <|
         then fail "Codomain is effectful"
         else let env' = Env.push_binders (goal_env goal) [b] in
              let typ' = comp_to_typ c in
+             BU.print1 "[intro]: current goal is %s" (goal_to_string goal);
+             BU.print1 "[intro]: current goal witness is %s" (Print.term_to_string (goal_witness goal));
+             BU.print1 "[intro]: with goal type %s" (Print.term_to_string (goal_type goal));
+             BU.print2 "[intro]: with binder = %s, new goal = %s"
+                      (Print.binders_to_string ", " [b])
+                      (Print.term_to_string typ');
              bind (new_uvar "intro" env' typ') (fun (body, ctx_uvar) ->
-             bind (trysolve goal (U.abs [b] body None)) (fun bb ->
-             if bb
-             then bind (replace_cur ({ goal with goal_ctx_uvar=ctx_uvar })) (fun _ ->
-                  ret b)
-             else fail "unification failed"
-             ))
+             let sol = U.abs [b] body None in
+             BU.print1 "[intro]: solution is %s"
+                        (Print.term_to_string sol);
+             BU.print1 "[intro]: old goal is %s" (goal_to_string goal);
+             BU.print1 "[intro]: new goal is %s"
+                        (Print.ctx_uvar_to_string ctx_uvar);
+             ignore (FStar.Options.set_options Options.Set "--debug_level Rel");
+             bind (set_solution goal sol) (fun () ->
+             let g = mk_goal env' ctx_uvar goal.opts goal.is_guard in
+             bind (replace_cur g) (fun _ ->
+             ret b)))
     | None ->
         fail1 "goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
     )
@@ -595,12 +634,9 @@ let intro_rec () : tac<(binder * binder)> =
              let body = S.bv_to_name bv in
              let lbs, body = SS.close_let_rec [lb] body in
              let tm = mk (Tm_let ((true, lbs), body)) None (goal_witness goal).pos in
-             bind (trysolve goal tm) (fun bb ->
-             if bb
-             then bind (replace_cur ({ goal with goal_ctx_uvar=ctx_uvar_u})) (fun _ ->
-                  ret (S.mk_binder bv, b))
-             else fail "intro_rec: unification failed"
-             ))
+             bind (set_solution goal tm) (fun () ->
+             bind (replace_cur ({ goal with goal_ctx_uvar=ctx_uvar_u})) (fun _ ->
+             ret (S.mk_binder bv, b))))
     | None ->
         fail1 "intro_rec: goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
     )
@@ -1004,11 +1040,9 @@ let revert () : tac<unit> =
     | Some (x, env') ->
         let typ' = U.arrow [(x, None)] (mk_Total (goal_type goal)) in
         bind (new_uvar "revert" env' typ') (fun (r, u_r) ->
-        bind (trysolve goal (S.mk_Tm_app r [S.as_arg (S.bv_to_name x)] None (goal_type goal).pos)) (fun bb ->
-        if bb
-        then let g = mk_goal env' u_r goal.opts goal.is_guard in
-             replace_cur g
-        else fail "[revert]: unification failed")))
+        bind (set_solution goal (S.mk_Tm_app r [S.as_arg (S.bv_to_name x)] None (goal_type goal).pos)) (fun () ->
+        let g = mk_goal env' u_r goal.opts goal.is_guard in
+        replace_cur g)))
 
 let free_in bv t =
     Util.set_mem bv (SF.names t)
@@ -1036,10 +1070,8 @@ let rec clear (b : binder) : tac<unit> =
         else bind (check bvs) (fun () ->
         let env' = push_bvs e' bvs in
         bind (new_uvar "clear.witness" env' (goal_type goal)) (fun (ut, uvar_ut) ->
-        bind (trysolve goal ut) (fun b ->
-        if b
-        then replace_cur (mk_goal env' uvar_ut goal.opts goal.is_guard)
-        else fail "Cannot clear; binder appears in witness")))))
+        bind (set_solution goal ut) (fun () ->
+        replace_cur (mk_goal env' uvar_ut goal.opts goal.is_guard))))))
 
 let clear_top () : tac<unit> =
     bind (cur_goal ()) (fun goal ->
