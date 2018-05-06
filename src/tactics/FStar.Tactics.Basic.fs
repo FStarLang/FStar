@@ -595,20 +595,20 @@ let intro () : tac<binder> = wrap_err "intro" <|
         then fail "Codomain is effectful"
         else let env' = Env.push_binders (goal_env goal) [b] in
              let typ' = comp_to_typ c in
-             BU.print1 "[intro]: current goal is %s" (goal_to_string goal);
-             BU.print1 "[intro]: current goal witness is %s" (Print.term_to_string (goal_witness goal));
-             BU.print1 "[intro]: with goal type %s" (Print.term_to_string (goal_type goal));
-             BU.print2 "[intro]: with binder = %s, new goal = %s"
-                      (Print.binders_to_string ", " [b])
-                      (Print.term_to_string typ');
+             //BU.print1 "[intro]: current goal is %s" (goal_to_string goal);
+             //BU.print1 "[intro]: current goal witness is %s" (Print.term_to_string (goal_witness goal));
+             //BU.print1 "[intro]: with goal type %s" (Print.term_to_string (goal_type goal));
+             //BU.print2 "[intro]: with binder = %s, new goal = %s"
+             //         (Print.binders_to_string ", " [b])
+             //         (Print.term_to_string typ');
              bind (new_uvar "intro" env' typ') (fun (body, ctx_uvar) ->
              let sol = U.abs [b] body None in
-             BU.print1 "[intro]: solution is %s"
-                        (Print.term_to_string sol);
-             BU.print1 "[intro]: old goal is %s" (goal_to_string goal);
-             BU.print1 "[intro]: new goal is %s"
-                        (Print.ctx_uvar_to_string ctx_uvar);
-             ignore (FStar.Options.set_options Options.Set "--debug_level Rel");
+             //BU.print1 "[intro]: solution is %s"
+             //           (Print.term_to_string sol);
+             //BU.print1 "[intro]: old goal is %s" (goal_to_string goal);
+             //BU.print1 "[intro]: new goal is %s"
+             //           (Print.ctx_uvar_to_string ctx_uvar);
+             //ignore (FStar.Options.set_options Options.Set "--debug_level Rel");
              bind (set_solution goal sol) (fun () ->
              let g = mk_goal env' ctx_uvar goal.opts goal.is_guard in
              bind (replace_cur g) (fun _ ->
@@ -757,16 +757,16 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
             mlog (fun () ->
                 BU.print1 "__apply: pushing binder %s\n" (Print.binder_to_string (bv, aq))) (fun _ ->
             if not (U.is_total_comp c) then fail "apply: not total codomain" else
-            bind (new_uvar "apply" (goal_env goal) bv.sort) (fun (u, goal_u) ->
+            bind (new_uvar "apply" (goal_env goal) bv.sort) (fun (u, _goal_u) ->
             (* BU.print1 "__apply: witness is %s\n" (Print.term_to_string u); *)
             let tm' = mk_Tm_app tm [(u, aq)] None tm.pos in
             let typ' = SS.subst [S.NT (bv, u)] <| comp_to_typ c in
             bind (__apply uopt tm' typ') (fun _ ->
             let u = bnorm (goal_env goal) u in
             match (SS.compress (fst (U.head_and_args u))).n with
-            | Tm_uvar ({ctx_uvar_head=uvar}, _) ->
+            | Tm_uvar (goal_u, _) ->
                 bind get (fun ps ->
-                if uopt && uvar_free uvar ps
+                if uopt && uvar_free goal_u.ctx_uvar_head ps
                 then ret ()
                 else begin
                     (* BU.print2 "__apply: adding goal %s : %s\n" (Print.term_to_string u) *)
@@ -856,7 +856,6 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                             (tts (goal_env goal) (goal_type goal))
     else
        //NS: 01/24 ... looks redundant
-       //let solution = N.normalize [N.Beta] (goal_env goal) (S.mk_Tm_app tm uvs None (goal_env goal).range) in
         bind (add_implicits implicits.implicits) (fun _ ->
         // We solve with (), we don't care about the witness if applying a lemma
         bind (solve goal U.exp_unit) (fun _ ->
@@ -874,13 +873,14 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
         in
         bind (implicits.implicits |> mapM (fun (_msg, term, ctx_uvar, _range, _) -> //(_msg, env, _uvar, term, typ, _) ->
             let hd, _ = U.head_and_args term in
-            let env = {(goal_env goal) with gamma=ctx_uvar.ctx_uvar_gamma} in
             match (SS.compress hd).n with
-            | Tm_uvar _ ->
+            | Tm_uvar (ctx_uvar, _) ->
+                let env = {(goal_env goal) with gamma=ctx_uvar.ctx_uvar_gamma} in
                 let goal_ty = bnorm env ctx_uvar.ctx_uvar_typ in //NS: 01/24 ...expensive
                 let goal = goal_with_type ({ goal with goal_ctx_uvar = ctx_uvar }) goal_ty in
                 ret ([goal], [])
             | _ ->
+                let env = {(goal_env goal) with gamma=ctx_uvar.ctx_uvar_gamma} in
                 let g_typ =
                   if Options.__temp_fast_implicits()
                   then // NS:01/24: use the fast path instead, knowing that term is at least well-typed
