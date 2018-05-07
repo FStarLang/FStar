@@ -737,13 +737,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let t_has_kind = mk_HasType t mk_Term_type in
 
               //add hasEq axiom for this refinement type
-              let t_haseq_base = mk_haseq base_t in
-              let t_haseq_ref = mk_haseq t in
+              //AR: 07/05: add haseq only if we are past the point in prims where haseq is in scope
+              let add_haseq = Util.is_some (Env.try_lookup_lid env.tcenv Const.haseq_lid) in
 
               let t_haseq =
-                Util.mkAssume(mkForall t0.pos ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
-                              Some ("haseq for " ^ tsym),
-                              "haseq" ^ tsym) in
+                if add_haseq then
+                  let t_haseq_base = mk_haseq base_t in
+                  let t_haseq_ref = mk_haseq t in
+                  [ Util.mkAssume(mkForall t0.pos ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
+                                  Some ("haseq for " ^ tsym),
+                                  "haseq" ^ tsym) ]
+                else []
+              in
               // let t_valid =
               //   let xx = (x, Term_sort) in
               //   let valid_t = mkApp ("Valid", [t]) in
@@ -769,7 +774,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             @[tdecl;
                               t_kinding;
                               // t_valid;
-                              t_interp] @ (if is_type bt then [] else [t_haseq]) in
+                              t_interp] @ (if is_type bt then [] else t_haseq) in
 
               BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);
               t, t_decls
