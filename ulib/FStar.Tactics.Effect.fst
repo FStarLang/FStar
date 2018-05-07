@@ -84,7 +84,7 @@ assume val synth_by_tactic : (#t:Type) -> (unit -> Tac unit) -> Tot t
 
 let assert_by_tactic (p:Type) (t:unit -> Tac unit)
   : Pure unit
-         (requires (by_tactic t (squash p)))
+         (requires (set_range_of (by_tactic t (squash p)) (range_of t)))
          (ensures (fun _ -> p))
   = ()
 
