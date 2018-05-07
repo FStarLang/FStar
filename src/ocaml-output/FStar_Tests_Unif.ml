@@ -69,7 +69,7 @@ let (unify :
             (let uu____92 = FStar_Util.string_of_int i  in
              FStar_Util.print1 "%s ..." uu____92);
             (let uu____94 = FStar_Main.process_args ()  in
-             FStar_All.pipe_right uu____94 (fun a244  -> ()));
+             FStar_All.pipe_right uu____94 (fun a243  -> ()));
             (let uu____108 = FStar_Syntax_Print.term_to_string x1  in
              let uu____109 = FStar_Syntax_Print.term_to_string y1  in
              FStar_Util.print2 "Unify %s\nand %s\n" uu____108 uu____109);
@@ -232,7 +232,7 @@ let (run_all : unit -> unit) =
            FStar_TypeChecker_Common.NonTrivial uu____355  in
          unify1 (Prims.parse_int "8") uu____352 uu____353 uu____354);
         (let uu____357 = FStar_Main.process_args ()  in
-         FStar_All.pipe_right uu____357 (fun a245  -> ()));
+         FStar_All.pipe_right uu____357 (fun a244  -> ()));
         (let uu____370 =
            let uu____377 = FStar_Tests_Pars.tc "fun u x -> u x"  in
            inst (Prims.parse_int "1") uu____377  in
