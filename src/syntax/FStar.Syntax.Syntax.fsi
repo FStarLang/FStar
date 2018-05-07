@@ -97,6 +97,7 @@ type lazy_kind =
   | Lazy_env
   | Lazy_proofstate
   | Lazy_sigelt
+  | Lazy_uvar
 
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
@@ -112,7 +113,7 @@ type term' =
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Tm_uvar       of ctx_uvar * subst_ts                         (* A unification variable ?u (aka meta-variable)
+  | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
                                                                    and a delayed substitution of only NM or NT elements *)
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
@@ -129,6 +130,7 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_should_check:bool;
     ctx_uvar_range:Range.range
 }
+and ctx_uvar_and_subst = ctx_uvar * subst_ts
 and uvar = Unionfind.p_uvar<option<term>> * version
 and uvars = set<ctx_uvar>
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
