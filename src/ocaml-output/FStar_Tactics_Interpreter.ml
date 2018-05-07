@@ -1826,7 +1826,7 @@ let (report_implicits :
                      "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
                      uu____3217 uu____3218 r
                     in
-                 (FStar_Errors.Fatal_UninstantiatedUnificationVarInTactic,
+                 (FStar_Errors.Error_UninstantiatedUnificationVarInTactic,
                    uu____3216, rng)) is
          in
       match errs with
