@@ -308,7 +308,7 @@ let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
     fun r  ->
       let uu___82_552 = ps  in
       let uu____553 =
-        let uu____554 = FStar_Range.use_range r  in
+        let uu____554 = FStar_Range.def_range r  in
         FStar_Range.set_def_range ps.entry_range uu____554  in
       {
         main_context = (uu___82_552.main_context);
