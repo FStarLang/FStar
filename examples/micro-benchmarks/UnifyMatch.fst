@@ -59,21 +59,21 @@ let tests () : Tac (list (term * term * bool)) = [
    norm_term [delta] (`(ff (x.f 2))),
    false);
 
-  (`(nat2unary 10),
-   `(S (nat2unary 9)),
-   true);
+  (* (`(nat2unary 10), *)
+  (*  `(S (nat2unary 9)), *)
+  (*  true); *)
 
-  (`(nat2unary 9),
-   `(S (nat2unary 9)),
-   false);
+  (* (`(nat2unary 9), *)
+  (*  `(S (nat2unary 9)), *)
+  (*  false); *)
 
-  (`(nat2unary 10),
-   norm_term [delta;zeta;primops] (`(nat2unary 10)),
-   true);
+  (* (`(nat2unary 10), *)
+  (*  norm_term [delta;zeta;primops] (`(nat2unary 10)), *)
+  (*  true); *)
 
-  (`(nat2unary 11),
-   norm_term [delta;zeta;primops] (`(nat2unary 10)),
-   false);
+  (* (`(nat2unary 11), *)
+  (*  norm_term [delta;zeta;primops] (`(nat2unary 10)), *)
+  (*  false); *)
   ]
 
 let test1 tb  : Tac unit =
