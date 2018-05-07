@@ -98,6 +98,6 @@ let neg_indirect_2 ()
                    else fail "failed")
 
 // Bug reported by Jay
-[@Prims.fail]
+[@Pervasives.fail]
 let bug () : Lemma False =
    ((if true then () else ()); ())
