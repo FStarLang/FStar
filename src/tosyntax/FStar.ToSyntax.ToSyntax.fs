@@ -1346,18 +1346,6 @@ and not_ascribed t =
     | Ascribed _ -> false
     | _ ->  true
 
-and is_synth_by_tactic e t =
-    // In this case, we might have implicits in the way
-    match t.tm with
-    | App (l, r, Hash) -> is_synth_by_tactic e l
-    | Var lid ->
-        begin match Env.resolve_to_fully_qualified_name e lid with
-        | Some lid -> lid_equals lid C.synth_lid
-        | None -> false
-        end
-    | _ -> false
-
-
 and desugar_args env args =
     args |> List.map (fun (a, imp) -> arg_withimp_e imp (desugar_term env a))
 
