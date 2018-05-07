@@ -53,7 +53,11 @@ let guard_of_guard_formula g = {guard_f=g; deferred=[]; univ_ineqs=([], []); imp
 let guard_form g = g.guard_f
 
 let is_trivial g = match g with
-    | {guard_f=Trivial; deferred=[]} -> true
+    | {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=i} ->
+      i |> BU.for_all (fun (_, _, ctx_uvar, _, _) ->
+           match Unionfind.find ctx_uvar.ctx_uvar_head with
+           | Some _ -> true
+           | None -> false)
     | _ -> false
 
 let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=[]}
