@@ -1644,7 +1644,8 @@ let (strengthen_precondition :
       fun e_for_debug_only  ->
         fun lc  ->
           fun g0  ->
-            let uu____5153 = FStar_TypeChecker_Rel.is_trivial g0  in
+            let uu____5153 =
+              FStar_TypeChecker_Rel.is_trivial_guard_formula g0  in
             if uu____5153
             then (lc, g0)
             else

@@ -393,7 +393,9 @@ let (value_check_expected_typ :
                             else ());
                            (let msg =
                               let uu____501 =
-                                FStar_TypeChecker_Rel.is_trivial g  in
+                                FStar_TypeChecker_Rel.is_trivial_guard_formula
+                                  g
+                                 in
                               if uu____501
                               then FStar_Pervasives_Native.None
                               else
