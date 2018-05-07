@@ -300,7 +300,7 @@ let (ps_to_json :
             then
               let uu____643 =
                 let uu____648 =
-                  FStar_Range.json_of_def_range
+                  FStar_Range.json_of_use_range
                     ps.FStar_Tactics_Types.entry_range
                    in
                 ("location", uu____648)  in
