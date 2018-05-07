@@ -16,13 +16,13 @@
 module Prims
 
 (* Type of attributes *)
-assume new type attribute : Type0
+assume new type attribute :Type0
 (* An attribute indicating that some effect must be processed by dmff *)
-assume val cps : attribute
+assume val cps :attribute
 
 (* bool is a two element type with elements {'true', 'false'}
     we assume it is primitive, for convenient interop with other languages *)
-assume new type bool : Type0
+assume new type bool :Type0
 
 (* False is the empty inductive type *)
 type c_False =
@@ -33,10 +33,10 @@ type c_True =
 
 (* another singleton type, with its only inhabitant written '()'
    we assume it is primitive, for convenient interop with other languages *)
-assume new type unit : Type0
+assume new type unit :Type0
 
 (* The usual equality defined as an inductive type *)
-noeq type equals (#a:Type) (x:a) : a -> Type =
+noeq type equals (#a:Type) (x:a) :a -> Type =
   | Refl : equals x x
 
 // need to define these first to break circularities
@@ -53,21 +53,21 @@ let prop = a:Type0{is_prop a}
 
 (* A predicate to express when a type supports decidable equality
    The type-checker emits axioms for hasEq for each inductive type *)
-assume type hasEq: Type -> Tot prop
+assume type hasEq:Type -> Tot prop
 
 type eqtype = a:Type{hasEq a}
 
 (* A coercion down to prop *)
 
 [@ "tac_opaque"]
-let squash : Type -> GTot prop = fun p -> x:unit{p}
+let squash :Type -> GTot prop = fun p -> x:unit{p}
 
 // the primitive refinements can still be accessed outside prims
 // but we don't expect user code to really use this
-let p_refine : a:Type -> (a->Tot Type) -> Type = fun a p -> x:a{p x}
+let p_refine :a:Type -> (a -> Tot Type) -> Type = fun a p -> x:a{p x}
 
 // Refinement types outside prims desugar to this
-unfold let t_refine : a:Type -> (a->Tot prop) -> Tot Type = fun a p -> x:a{p x}
+unfold let t_refine :a:Type -> (a -> Tot prop) -> Tot Type = fun a p -> x:a{p x}
 
 (* F* will automatically insert `auto_squash` when simplifying terms,
    converting terms of the form `p /\ True` to `auto_squash p`.
@@ -80,16 +80,16 @@ unfold let t_refine : a:Type -> (a->Tot prop) -> Tot Type = fun a p -> x:a{p x}
 private
 let auto_squash (p:Type) = squash p
 
-assume HasEq_bool: hasEq bool
-assume HasEq_unit: hasEq unit
+assume HasEq_bool:hasEq bool
+assume HasEq_unit:hasEq unit
 
 (*
  * Squashed versions of truth and falsehood
  *)
 [@ "tac_opaque"]
-let l_True : prop = squash c_True
+let l_True :prop = squash c_True
 [@ "tac_opaque"]
-let l_False : prop = squash c_False
+let l_False :prop = squash c_False
 
 (* infix binary '==';
    proof irrelevant, heterogeneous equality in Type#0
@@ -97,7 +97,7 @@ let l_False : prop = squash c_False
 //TODO: instead of hard-wiring the == syntax,
 //       we should just rename eq2 to op_Equals_Equals
 [@ "tac_opaque"]
-type eq2 (#a:Type) (x y:a) : prop = squash (equals x y)
+type eq2 (#a:Type) (x y:a) :prop = squash (equals x y)
 
 (* Heterogeneous equality *)
 type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type =
@@ -111,7 +111,7 @@ unfold
 let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
 
 (* bool-to-prop coercion *)
-type b2p (b:bool) : prop = (b == true)
+type b2p (b:bool) :prop = (b == true)
 
 (* constructive conjunction *)
 type c_and  (p:Type) (q:Type) =
@@ -128,30 +128,30 @@ type c_or   (p:Type) (q:Type) =
 
 (* '\/'  : specialized to prop *)
 [@ "tac_opaque"]
-type l_or (p q:prop) : prop = squash (c_or p q)
+type l_or (p q:prop) :prop = squash (c_or p q)
 
 (* '==>' : specialized to prop *)
 [@ "tac_opaque"]
-type l_imp (p q:prop) : prop = squash (p -> GTot q)
+type l_imp (p q:prop) :prop = squash (p -> GTot q)
                                          (* ^^^ NB: The GTot effect is primitive;            *)
 				         (*         elaborated using GHOST a few lines below *)
 (* infix binary '<==>' *)
-type l_iff (p:prop) (q:prop) : prop = (p ==> q) /\ (q ==> p)
+type l_iff (p:prop) (q:prop) :prop = (p ==> q) /\ (q ==> p)
 
 (* prefix unary '~' *)
-type l_not (p:prop) : prop = l_imp p False
+type l_not (p:prop) :prop = l_imp p False
 
-unfold type l_ITE (p q r:prop) : prop = (p ==> q) /\ (~p ==> r)
+unfold type l_ITE (p q r:prop) :prop = (p ==> q) /\ (~p ==> r)
 
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
-assume type precedes : #a:Type -> #b:Type -> a -> b -> Tot prop
+assume type precedes :#a:Type -> #b:Type -> a -> b -> Tot prop
 
 (* internalizing the typing relation for the SMT encoding: (has_type x t) *)
-assume type has_type : #a:Type -> a -> Type -> Tot prop
+assume type has_type :#a:Type -> a -> Type -> Tot prop
 
 (* forall (x:a). p x : specialized to prop *)
 [@ "tac_opaque"]
-type l_Forall (#a:Type) (p:a -> GTot prop) : prop = squash (x:a -> GTot (p x))
+type l_Forall (#a:Type) (p:a -> GTot prop) :prop = squash (x:a -> GTot (p x))
 
 (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
 unopteq
@@ -172,12 +172,12 @@ type l_Exists (#a:Type) (p:a -> GTot prop) = squash (x:a & p x)
          that internally, set_range_of is not an identity function.
 *)
 assume new
-type range : Type0
+type range :Type0
 
 assume new
-type string : Type0
+type string :Type0
 
-assume HasEq_string: hasEq string
+assume HasEq_string:hasEq string
 
 (* PURE effect *)
 let pure_pre = prop
@@ -193,8 +193,8 @@ let pure_return (a:Type) (x:a) (p:pure_post a) =
 
 unfold
 let pure_bind_wp (r1:range) (a:Type) (b:Type)
-                   (wp1:pure_wp a) (wp2: (a -> GTot (pure_wp b)))
-                   (p : pure_post b) =
+                   (wp1:pure_wp a) (wp2:(a -> GTot (pure_wp b)))
+                   (p:pure_post b) =
 	wp1 (fun (bind_result_1:a) -> wp2 bind_result_1 p)
 
 unfold let pure_if_then_else (a:Type) (p:prop) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =

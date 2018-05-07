@@ -1,4 +1,6 @@
-* TODO P0 Give squash a definition (workaround no longer working)
+* DONE P0 Give squash a definition (workaround no longer working)
+
+- AR: 07/05: prims verifies.
 
 - couldn't add a `prop` type annotation on squash (see below), so
   originally assumed squash
