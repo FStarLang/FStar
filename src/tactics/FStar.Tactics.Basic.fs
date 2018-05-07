@@ -130,9 +130,9 @@ let dump_cur ps msg =
 let ps_to_string (msg, ps) =
     String.concat ""
                [format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
-                if ps.entry_range <> Range.dummyRange
-                then format1 "Location: %s\n" (Range.string_of_range ps.entry_range)
-                else "";
+                (if ps.entry_range <> Range.dummyRange
+                 then format1 "Location: %s\n" (Range.string_of_range ps.entry_range)
+                 else "");
                 format2 "ACTIVE goals (%s):\n%s\n"
                     (string_of_int (List.length ps.goals))
                     (String.concat "\n" (List.map goal_to_string ps.goals));

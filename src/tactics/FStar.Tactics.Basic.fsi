@@ -7,6 +7,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 
 open FStar.Reflection.Data
+module Range = FStar.Range
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 
