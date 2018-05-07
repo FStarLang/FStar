@@ -19,7 +19,7 @@ let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __ta
         let ps = incr_depth ps in
         let r = t1 ps in
         match r with
-        | Success a ps'  ->
+        | Success a ps' ->
             let ps' = set_proofstate_range ps' (FStar.Range.prims_to_fstar_range r2) in
             // Force evaluation of __tracepoint q
             begin match tracepoint ps' with

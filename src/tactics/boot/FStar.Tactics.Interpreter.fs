@@ -784,7 +784,8 @@ let reify_tactic (a : term) : term =
 
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     tacdbg := Env.debug env (Options.Other "Tac");
-    let gs, w = run_tactic_on_typ (reify_tactic tau) env typ in
+    let tau = reify_tactic tau in
+    let gs, w = run_tactic_on_typ tau env typ in
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
     if List.existsML (fun g -> not (Option.isSome (getprop g.context g.goal_ty))) gs
