@@ -1680,7 +1680,14 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          begin
          log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
                        (Print.term_to_string t0) (Print.term_to_string t));
-         let t = Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t in
+         let t =
+           if cfg.steps.unfold_until = Some delta_constant
+            && not cfg.steps.unfold_tac
+           //we're really trying to compute here; no point propagating range information
+           //which can be expensive (except for tactics: it matters for tracing!)
+           then t
+           else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
+         in
          let n = List.length us in
          if n > 0
          then match stack with //universe beta reduction
