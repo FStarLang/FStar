@@ -1052,7 +1052,7 @@ let reduce_primops cfg env stack tm =
            begin match args with
            | [(t, _); (r, _)] ->
                 begin match EMB.unembed EMB.e_range r with
-                | Some rng -> ({ t with pos = rng })
+                | Some rng -> Subst.set_use_range rng t
                 | None -> tm
                 end
            | _ -> tm
