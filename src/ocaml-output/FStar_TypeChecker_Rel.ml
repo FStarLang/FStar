@@ -4534,7 +4534,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                              in
                                           (bound1, uu____12004)  in
                                         (match uu____11966 with
-                                         | (bound_typ,(eq_prob,wl2)) ->
+                                         | (bound_typ,(eq_prob,wl')) ->
                                              ((let uu____12032 =
                                                  FStar_All.pipe_left
                                                    (FStar_TypeChecker_Env.debug
@@ -4543,8 +4543,8 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                   in
                                                if uu____12032
                                                then
-                                                 let wl' =
-                                                   let uu___180_12034 = wl2
+                                                 let wl'1 =
+                                                   let uu___180_12034 = wl1
                                                       in
                                                    {
                                                      attempting =
@@ -4565,7 +4565,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                        (uu___180_12034.wl_implicits)
                                                    }  in
                                                  let uu____12035 =
-                                                   wl_to_string wl'  in
+                                                   wl_to_string wl'1  in
                                                  FStar_Util.print1
                                                    "After meet/join refinements: %s\n"
                                                    uu____12035
@@ -4576,7 +4576,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                   in
                                                let uu____12038 =
                                                  solve_t env eq_prob
-                                                   (let uu___181_12040 = wl2
+                                                   (let uu___181_12040 = wl'
                                                        in
                                                     {
                                                       attempting = sub_probs;
@@ -4595,8 +4595,8 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                   in
                                                match uu____12038 with
                                                | Success uu____12041 ->
-                                                   let wl3 =
-                                                     let uu___182_12047 = wl2
+                                                   let wl2 =
+                                                     let uu___182_12047 = wl'
                                                         in
                                                      {
                                                        attempting = rest;
@@ -4613,26 +4613,26 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                        wl_implicits =
                                                          (uu___182_12047.wl_implicits)
                                                      }  in
-                                                   let wl4 =
+                                                   let wl3 =
                                                      solve_prob' false
                                                        (FStar_TypeChecker_Common.TProb
                                                           tp)
                                                        FStar_Pervasives_Native.None
-                                                       [] wl3
+                                                       [] wl2
                                                       in
                                                    let uu____12051 =
                                                      FStar_List.fold_left
-                                                       (fun wl5  ->
+                                                       (fun wl4  ->
                                                           fun p  ->
                                                             solve_prob' true
                                                               p
                                                               FStar_Pervasives_Native.None
-                                                              [] wl5) wl4
+                                                              [] wl4) wl3
                                                        bounds_probs
                                                       in
                                                    (FStar_Syntax_Unionfind.commit
                                                       tx;
-                                                    solve env wl4)
+                                                    solve env wl3)
                                                | Failed (p,msg) ->
                                                    (FStar_Syntax_Unionfind.rollback
                                                       tx;
@@ -4676,7 +4676,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                           uu____12108))
                                                          ->
                                                          let uu____12133 =
-                                                           new_problem wl2
+                                                           new_problem wl1
                                                              env t_base
                                                              FStar_TypeChecker_Common.EQ
                                                              this_flex
@@ -4686,8 +4686,8 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                             in
                                                          (match uu____12133
                                                           with
-                                                          | (eq_prob1,wl3) ->
-                                                              let wl4 =
+                                                          | (eq_prob1,wl2) ->
+                                                              let wl3 =
                                                                 solve_prob'
                                                                   false
                                                                   (FStar_TypeChecker_Common.TProb
@@ -4696,19 +4696,19 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                                     (p_guard
                                                                     (FStar_TypeChecker_Common.TProb
                                                                     eq_prob1)))
-                                                                  [] wl3
+                                                                  [] wl2
                                                                  in
                                                               solve env
                                                                 (attempt
                                                                    [FStar_TypeChecker_Common.TProb
                                                                     eq_prob1]
-                                                                   wl4))
+                                                                   wl3))
                                                      | (FStar_TypeChecker_Common.Flex_rigid
                                                         ,(t_base,FStar_Pervasives_Native.Some
                                                           (x,phi)))
                                                          ->
                                                          let uu____12172 =
-                                                           new_problem wl2
+                                                           new_problem wl1
                                                              env t_base
                                                              FStar_TypeChecker_Common.EQ
                                                              this_flex
@@ -4718,13 +4718,13 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                             in
                                                          (match uu____12172
                                                           with
-                                                          | (eq_prob1,wl3) ->
+                                                          | (eq_prob1,wl2) ->
                                                               let phi1 =
                                                                 guard_on_element
-                                                                  wl3 tp x
+                                                                  wl2 tp x
                                                                   phi
                                                                  in
-                                                              let wl4 =
+                                                              let wl3 =
                                                                 let uu____12189
                                                                   =
                                                                   let uu____12194
@@ -4743,13 +4743,13 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                                   (FStar_TypeChecker_Common.TProb
                                                                     tp)
                                                                   uu____12189
-                                                                  [] wl3
+                                                                  [] wl2
                                                                  in
                                                               solve env
                                                                 (attempt
                                                                    [FStar_TypeChecker_Common.TProb
                                                                     eq_prob1]
-                                                                   wl4))
+                                                                   wl3))
                                                      | uu____12199 ->
                                                          giveup env
                                                            (Prims.strcat
