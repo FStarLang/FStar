@@ -272,6 +272,18 @@ val modifies
   (h1 h2: HS.mem)
 : GTot Type0
 
+val modifies_live_region
+  (s: loc)
+  (h1 h2: HS.mem)
+  (r: HS.rid)
+: Lemma
+  (requires (modifies s h1 h2 /\ loc_disjoint s (loc_region_only r) /\ HS.live_region h1 r))
+  (ensures (HS.live_region h2 r))
+  [SMTPatOr [
+    [SMTPat (modifies s h1 h2); SMTPat (HS.live_region h1 r)];
+    [SMTPat (modifies s h1 h2); SMTPat (HS.live_region h2 r)];
+  ]]
+
 val modifies_mreference_elim
   (#t: Type)
   (#pre: Preorder.preorder t)

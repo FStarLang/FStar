@@ -55,6 +55,8 @@ let as_addr #a b = if g_is_null b then 0 else HS.as_addr (Buffer?.content b)
 let unused_in_equiv #a b h =
   if g_is_null b then Heap.not_addr_unused_in_nullptr (Map.sel h.HS.h HS.root) else ()
 
+let live_region_frameOf #a h b = ()
+
 (* Contents *)
 
 let len #a b =
@@ -325,11 +327,20 @@ let abuffer_disjoint_intro #t1 #t2 b1 b2 = ()
 
 (* Basic, non-compositional modifies clauses, used only to implement the generic modifies clause. DO NOT USE in client code *)
 
-let modifies_0' (h1 h2: HS.mem) : GTot Type0 =
+let modifies_0_preserves_mreferences (h1 h2: HS.mem) : GTot Type0 =
   forall (a: Type) (pre: Preorder.preorder a) (r: HS.mreference a pre) .
   h1 `HS.contains` r ==> (h2 `HS.contains` r /\ HS.sel h1 r == HS.sel h2 r)
 
+let modifies_0_preserves_regions (h1 h2: HS.mem) : GTot Type0 =
+  forall (r: HS.rid) . HS.live_region h1 r ==> HS.live_region h2 r
+
+let modifies_0' (h1 h2: HS.mem) : GTot Type0 =
+  modifies_0_preserves_mreferences h1 h2 /\
+  modifies_0_preserves_regions h1 h2
+
 let modifies_0 = modifies_0'
+
+let modifies_0_live_region h1 h2 r = ()
 
 let modifies_0_mreference #a #pre h1 h2 r = ()
 
@@ -352,10 +363,13 @@ let modifies_1'
   (#a: Type) (b: buffer a)
   (h1 h2: HS.mem)
 : GTot Type0
-= modifies_1_preserves_mreferences b h1 h2 /\
+= modifies_0_preserves_regions h1 h2 /\
+  modifies_1_preserves_mreferences b h1 h2 /\
   modifies_1_preserves_abuffers b h1 h2
 
 let modifies_1 = modifies_1'
+
+let modifies_1_live_region #a b h1 h2 r = ()
 
 let modifies_1_mreference #a b h1 h2 #a' #pre r' = ()
 

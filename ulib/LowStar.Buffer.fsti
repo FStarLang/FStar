@@ -53,6 +53,14 @@ val as_addr (#a: Type) (b: buffer a) : GTot nat
 val unused_in_equiv (#a: Type) (b: buffer a) (h: HS.mem) : Lemma
   (ensures (unused_in b h <==> (HS.live_region h (frameOf b) ==> as_addr b `Heap.addr_unused_in` (Map.sel h.HS.h (frameOf b)))))
 
+val live_region_frameOf (#a: Type) (h: HS.mem) (b: buffer a) : Lemma
+  (requires (live h b))
+  (ensures (HS.live_region h (frameOf b)))
+  [SMTPatOr [
+    [SMTPat (live h b)];
+    [SMTPat (HS.live_region h (frameOf b))];
+  ]]
+
 (* Contents *)
 
 val len (#a: Type) (b: buffer a) : GTot U32.t
@@ -317,6 +325,10 @@ val abuffer_disjoint_intro (#t1 #t2: Type) (b1: buffer t1) (b2: buffer t2) : Lem
 
 val modifies_0 (h1 h2: HS.mem) : GTot Type0
 
+val modifies_0_live_region (h1 h2: HS.mem) (r: HS.rid) : Lemma
+  (requires (modifies_0 h1 h2 /\ HS.live_region h1 r))
+  (ensures (HS.live_region h2 r))
+
 val modifies_0_mreference (#a: Type) (#pre: Preorder.preorder a) (h1 h2: HS.mem) (r: HS.mreference a pre) : Lemma
   (requires (modifies_0 h1 h2 /\ h1 `HS.contains` r))
   (ensures (h2 `HS.contains` r /\ h1 `HS.sel` r == h2 `HS.sel` r))
@@ -332,6 +344,10 @@ let modifies_0_abuffer
 = same_mreference_abuffer_preserved b h1 h2 (fun a' pre r' -> modifies_0_mreference h1 h2 r')
 
 val modifies_1 (#a: Type) (b: buffer a) (h1 h2: HS.mem) : GTot Type0
+
+val modifies_1_live_region (#a: Type) (b: buffer a) (h1 h2: HS.mem) (r: HS.rid) : Lemma
+  (requires (modifies_1 b h1 h2 /\ HS.live_region h1 r))
+  (ensures (HS.live_region h2 r))
 
 val modifies_1_mreference
   (#a: Type) (b: buffer a)
@@ -423,7 +439,8 @@ val rfree
     (not (g_is_null b)) /\
     Map.domain h1.HS.h `Set.equal` Map.domain h0.HS.h /\ 
     h1.HS.tip == h0.HS.tip /\
-    modifies_1 b h0 h1
+    modifies_1 b h0 h1 /\
+    HS.live_region h1 (frameOf b)
   ))
 
 
