@@ -491,7 +491,7 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) : tac<'b> = //
         bind (set ps) (fun _ -> fail msg)
 
     | None ->
-        Errors.raise_error (Errors.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
+        Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
     )
 //IN F*: and unembed_tactic_0' (#b:Type) (eb:embedding b) (embedded_tac_b:term) : option (tac b) =
 and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term) : option<(tac<'b>)> = //JUST FSHARP
@@ -499,7 +499,7 @@ and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term) : option<(tac
 
 let report_implicits ps (is : Env.implicits) : unit =
     let errs = List.map (fun (r, _, uv, _, ty, rng) ->
-                (Errors.Fatal_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
+                (Err.Fatal_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string uv) (Print.term_to_string ty) r,
                  rng)) is in
     match errs with
@@ -561,7 +561,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
 
     | Failed (s, ps) ->
         dump_proofstate (subst_proof_state (N.psc_subst ps.psc) ps) "at the time of failure";
-        Errors.raise_error (Errors.Fatal_ArgumentLengthMismatch, (BU.format1 "user tactic failed: %s" s)) typ.pos
+        Errors.raise_error (Errors.Fatal_UserTacticFailure, (BU.format1 "user tactic failed: %s" s)) typ.pos
 
 // Polarity
 type pol =
