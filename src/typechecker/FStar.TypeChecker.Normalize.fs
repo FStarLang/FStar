@@ -2677,7 +2677,7 @@ let ghost_to_pure env c =
     let non_info t = non_informative (norm cfg [] [] t) in
     match c.n with
     | Total _ -> c
-    | GTotal(t,uopt) when non_info t -> {c with n=Total(t, uopt)}
+    | GTotal (t, uopt) when non_info t -> {c with n = Total (t, uopt)}
     | Comp ct ->
         let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
         if U.is_ghost_effect l

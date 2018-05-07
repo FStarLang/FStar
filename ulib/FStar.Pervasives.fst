@@ -276,6 +276,8 @@ type __internal_ocaml_attributes =
     (* Generate [@@ deriving show ] on the resulting OCaml type *)
   | PpxDerivingShowConstant of string
     (* Similar, but for constant printers. *)
+  | PpxDerivingYoJson
+    (* Generate [@@ deriving yojson ] on the resulting OCaml type *)
   | CInline
     (* KreMLin-only: generates a C "inline" attribute on the resulting
      * function declaration. *)

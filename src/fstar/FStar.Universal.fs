@@ -45,7 +45,7 @@ module BU      = FStar.Util
 module Dep     = FStar.Parser.Dep
 
 (* we write this version number to the cache files, and detect when loading the cache that the version number is same *)
-let cache_version_number = 1
+let cache_version_number = 2
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -341,10 +341,6 @@ let needs_interleaving intf impl =
   m1 = m2 &&
   List.mem (FStar.Util.get_file_extension intf) ["fsti"; "fsi"] &&
   List.mem (FStar.Util.get_file_extension impl) ["fst"; "fs"]
-
-let pop_context env msg = Tc.pop_context env msg |> ignore
-
-let push_context env msg = Tc.push_context env msg
 
 let tc_one_file_from_remaining (remaining:list<string>) (env:TcEnv.env) (delta_env:delta_env) =
   let remaining, (nmods, env, delta_env) =

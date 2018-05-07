@@ -58,6 +58,12 @@ let as_pair = function
    | [a;b] -> (a,b)
    | _ -> failwith "Expected a list with 2 elements"
 
+let flag_of_qual = function
+  | Assumption -> Some Assumed
+  | S.Private -> Some Private
+  | S.NoExtract -> Some NoExtract
+  | _ -> None
+
 (*****************************************************************************)
 (* Extracting type definitions from the signature                            *)
 (*****************************************************************************)
@@ -70,6 +76,7 @@ let rec extract_meta x =
   | { n = Tm_fvar fv } ->
       begin match string_of_lid (lid_of_fv fv) with
       | "FStar.Pervasives.PpxDerivingShow" -> Some PpxDerivingShow
+      | "FStar.Pervasives.PpxDerivingYoJson" -> Some PpxDerivingYoJson
       | "FStar.Pervasives.CInline" -> Some CInline
       | "FStar.Pervasives.Substitute" -> Some Substitute
       | "FStar.Pervasives.Gc" -> Some GCType
@@ -122,7 +129,7 @@ let extract_typ_abbrev env fv quals attrs def =
          then let mname = mangle_projector_lid lid in
               Some mname.ident.idText
          else None in
-    let metadata = extract_metadata attrs in
+    let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
     let td = [assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, metadata, Some (MLTD_Abbrev body)] in
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty td] in
     let env = if quals |> BU.for_some (function Assumption | New -> true | _ -> false)
@@ -394,12 +401,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 *   bonus; in particular, the MustDisappear attribute (that
                 *   StackInline bestows upon an individual let-binding) is
                 *   specific to each let-binding! *)
-            let flags = List.choose (function
-                | Assumption -> Some Assumed
-                | S.Private -> Some Private
-                | S.NoExtract -> Some NoExtract
-                | _ -> None
-            ) quals in
+            let flags = List.choose flag_of_qual quals in
             let flags' = extract_metadata attrs in
 
             let g, ml_lbs' =

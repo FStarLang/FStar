@@ -172,6 +172,9 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
     | Some expected_c -> //expected effects should already be normalized
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (U.lcomp_of_comp c) in
        let c = lcomp_comp c in
+       if debug env <| Options.Extreme then
+       BU.print3 "In check_expected_effect, asking rel to solve the problem on e %s and c %s and expected_c %s\n"
+                 (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
        let e, _, g = TcUtil.check_comp env e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
        if debug env Options.Low then BU.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
@@ -191,28 +194,51 @@ let print_expected_ty env = match Env.expected_typ env with
 (* check the patterns in an SMT lemma to make sure all bound vars are mentiond *)
 (************************************************************************************************************)
 
-let rec get_pat_vars (pats:term) (acc:set<bv>) :set<bv> =
+(* andlist: whether we're inside an SMTPatOr and we should take the
+ * intersection of the sub-variables instead of the union. *)
+let rec get_pat_vars' all (andlist : bool) (pats:term) :set<bv> =
   let pats = unmeta pats in
   let head, args = head_and_args pats in
-  match (un_uinst head).n with
-  | Tm_fvar fv when fv_eq_lid fv Const.nil_lid      -> acc
-  | Tm_fvar fv when fv_eq_lid fv Const.smtpat_lid   -> get_pat_vars_args (List.tl args) acc  //we should ignore the first argument of smtpat
-  | Tm_fvar fv when fv_eq_lid fv Const.smtpatOr_lid -> get_pat_vars_args args acc
-  | Tm_fvar fv when fv_eq_lid fv Const.cons_lid     -> get_pat_vars_args args acc
-  | _                                               -> BU.set_union acc (Free.names pats)
+  match (un_uinst head).n, args with
+  | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid ->
+      if andlist
+      then BU.as_set all Syntax.order_bv
+      else BU.new_set Syntax.order_bv
 
-and get_pat_vars_args (args:args) (acc:set<bv>) :set<bv> =
-  List.fold_left (fun s arg -> get_pat_vars (fst arg) s) acc args
+  | Tm_fvar fv, [(_, Some (Implicit _)); (hd, None); (tl, None)] when fv_eq_lid fv Const.cons_lid ->
+      (* The head is not under the scope of the SMTPatOr, consider
+        * SMTPatOr [ [SMTPat p1; SMTPat p2] ; ... ]
+        * we should take the union of fv(p1) and fv(p2) *)
+      let hdvs = get_pat_vars' all false   hd in
+      let tlvs = get_pat_vars' all andlist tl in
+
+      if andlist
+      then BU.set_intersect hdvs tlvs
+      else BU.set_union     hdvs tlvs
+
+  | Tm_fvar fv, [(_, Some (Implicit _)); (pat, None)] when fv_eq_lid fv Const.smtpat_lid ->
+      Free.names pat
+
+  | Tm_fvar fv, [(subpats, None)] when fv_eq_lid fv Const.smtpatOr_lid ->
+      get_pat_vars' all true subpats
+
+  | _ ->
+      BU.new_set Syntax.order_bv
+
+and get_pat_vars all pats = get_pat_vars' all false pats
+
+let check_pat_fvs rng env pats bs =
+    let pat_vars = get_pat_vars (List.map fst bs) (N.normalize [N.Beta] env pats) in
+    begin match bs |> BU.find_opt (fun (b, _) -> not(BU.set_mem b pat_vars)) with
+        | None -> ()
+        | Some (x,_) -> Errors.log_issue rng (Errors.Warning_PatternMissingBoundVar, (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
+    end
 
 let check_smt_pat env t bs c =
     if U.is_smt_lemma t //check patterns cover the bound vars
     then match c.n with
         | Comp ({effect_args=[_pre; _post; (pats, _)]}) ->
-            let pat_vars = get_pat_vars (N.normalize [N.Beta] env pats) (BU.new_set Syntax.order_bv) in
-            begin match bs |> BU.find_opt (fun (b, _) -> not(BU.set_mem b pat_vars)) with
-                | None -> ()
-                | Some (x,_) -> Errors.log_issue t.pos (Errors.Warning_PatternMissingBoundVar, (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
-            end
+            check_pat_fvs t.pos env pats bs
         | _ -> failwith "Impossible"
 
 (************************************************************************************************************)
@@ -373,9 +399,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_ascribed (e, (Inr expected_c, topt), _) ->
     let env0, _ = Env.clear_expected_typ env in
-    let expected_c, _, g = tc_comp env0 expected_c in
-    let t_res = U.comp_result expected_c in
-    let e, c', g' = tc_term (Env.set_expected_typ env0 t_res) e in
+    let expected_c, _, g = tc_comp env0 expected_c in    
+    let e, c', g' = tc_term (U.comp_result expected_c |> Env.set_expected_typ env0) e in
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, lcomp_comp c') in
     let topt = tc_tactic_opt env0 topt in
     let e = mk (Tm_ascribed(e, (Inr expected_c, topt), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
@@ -1741,7 +1766,7 @@ and tc_eqn scrutinee env branch
                     match Env.try_lookup_lid env discriminator with
                         | None -> []  // We don't use the discriminator if we are typechecking it
                         | _ ->
-                            let disc = S.fvar discriminator delta_equational None in
+                            let disc = S.fvar discriminator (Delta_equational_at_level 1) None in
                             let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
                             [U.mk_eq2 U_zero U.t_bool disc U.exp_true_bool]
                 else []
@@ -1780,7 +1805,7 @@ and tc_eqn scrutinee env branch
                             match Env.try_lookup_lid env projector with
                              | None -> []
                              | _ ->
-                                let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) delta_equational None) [as_arg scrutinee_tm] None f.p in
+                                let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) (Delta_equational_at_level 1) None) [as_arg scrutinee_tm] None f.p in
                                 build_branch_guard sub_term ei) |> List.flatten in
                          discriminate scrutinee_tm f @ sub_term_guards
                 | _ -> [] //a non-pattern sub-term: must be from a dot pattern

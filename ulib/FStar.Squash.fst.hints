@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "d882c45dfb36ea8f04142e68eec37753"
+      "923c467cb78126408af68db598e050db"
     ],
     [
       "FStar.Squash.get_proof",
@@ -23,7 +23,7 @@
         "unit_typing"
       ],
       0,
-      "eb3e9a6930f53d0df9d6f77488808f65"
+      "80fdf367f50e7d08098a0c31ee38f2dd"
     ],
     [
       "FStar.Squash.give_proof",
@@ -36,7 +36,7 @@
         "unit_typing"
       ],
       0,
-      "8e9bbb7c0229d142de4492a25983a91d"
+      "a17ebc155578cb915f129e084c3447ac"
     ],
     [
       "FStar.Squash.proof_irrelevance",
@@ -49,47 +49,7 @@
         "unit_inversion"
       ],
       0,
-      "0bd8d64790e34cb8c8643ba9729f9a9c"
-    ],
-    [
-      "FStar.Squash.return_squash",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4e1cf315ef59102b6d6ec9fbb99a512e"
-    ],
-    [
-      "FStar.Squash.get_proof",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3c596e15d69c92759838c0ac57844ef9"
-    ],
-    [
-      "FStar.Squash.proof_irrelevance",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_inversion"
-      ],
-      0,
-      "4189af40ea8e64c0f41e5d17fed97575"
-    ],
-    [
-      "FStar.Squash.proof_irrelevance",
-      3,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c345600a2366277ba8db7f70d9fc15d4"
+      "44383d582818c98928164ccb2d9035be"
     ]
   ]
 ]

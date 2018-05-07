@@ -27,6 +27,8 @@ val load_checked_module: env -> modul -> env
 
 val pop_context: env -> string -> env
 val push_context: env -> string -> env
+val snapshot_context: env -> string -> ((int * int * solver_depth_t * int) * env)
+val rollback_context: solver_t -> string -> option<(int * int * solver_depth_t * int)> -> env
 
 val tc_decls: env -> list<sigelt> -> list<sigelt> * list<sigelt> * env
 val tc_partial_modul: env -> modul -> modul * list<sigelt> * env

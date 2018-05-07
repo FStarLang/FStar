@@ -30,7 +30,6 @@ let string_of_time = string_of_float
 exception Impos
 exception NYI of string
 exception HardError of string
-exception Interrupt
 
 let cur_sigint_handler : Sys.signal_behavior ref =
   ref Sys.Signal_default
@@ -41,12 +40,24 @@ type sigint_handler = Sys.signal_behavior
 let sigint_ignore: sigint_handler =
   Sys.Signal_ignore
 
-let sigint_raise: sigint_handler =
+let sigint_delay = ref 0
+let sigint_pending = ref false
+
+let raise_sigint _ =
+  sigint_pending := false;
+  raise SigInt
+
+let raise_sigint_maybe_delay _ =
   (* This function should not do anything complicated, lest it cause deadlocks.
    * Calling print_string, for example, can cause a deadlock (print_string →
    * caml_flush → process_pending_signals → caml_execute_signal → raise_sigint →
    * print_string → caml_io_mutex_lock ⇒ deadlock) *)
-  Sys.Signal_handle (fun _ -> raise SigInt)
+  if !sigint_delay = 0
+  then raise_sigint ()
+  else sigint_pending := true
+
+let sigint_raise: sigint_handler =
+  Sys.Signal_handle raise_sigint_maybe_delay
 
 let set_sigint_handler sigint_handler =
   cur_sigint_handler := sigint_handler;
@@ -81,14 +92,18 @@ let monitor_wait _ = ()
 let monitor_pulse _ = ()
 let current_tid _ = Z.zero
 
-let with_monitor _ f x =
-  monitor_enter ();
-  BatPervasives.finally monitor_exit f x
+let atomically f = (* This function only protects against signals *)
+  let finalizer () =
+    decr sigint_delay;
+    if !sigint_pending && !sigint_delay = 0 then
+      raise_sigint () in
+  let body f =
+    incr sigint_delay; f () in
+  BatPervasives.finally finalizer body f
 
-let atomically =
-  (* let mutex = Mutex.create () in *)
-  fun f -> f ()
-(*fun f -> Mutex.lock mutex; let r = f () in Mutex.unlock mutex; r*)
+let with_monitor _ f x = atomically (fun () ->
+  monitor_enter ();
+  BatPervasives.finally monitor_exit f x)
 
 let spawn f =
   let _ = Thread.create f () in ()
@@ -143,18 +158,65 @@ let process_read_all_output (p: proc) =
   (* Pass cleanup:false because kill_process closes both fds already. *)
   BatIO.read_all (BatIO.input_channel ~autoclose:true ~cleanup:false p.inc)
 
+(** Feed `stdin` to `p`, and call `reader_fn` in a separate thread to read the
+    response.
+
+    Signal handling makes this function fairly hairy.  The usual design is to
+    launch a reader thread, then write to the process on the main thread and use
+    `Thread.join` to wait for the reader to complete.
+
+    When we get a signal, Caml routes it to either of the threads.  If it
+    reaches the reader thread, we're good: the reader thread is most likely
+    waiting in input_line at that point, and input_line polls for signals fairly
+    frequently.  If the signal reaches the writer (main) thread, on the other
+    hand, we're toast: `Thread.join` isn't interruptible, so Caml will save the
+    signal until the child tread exits and `join` returns, and at that point the
+    Z3 query is complete and the signal is useless.
+
+    There are three possible solutions to this problem:
+    1. Use an interruptible version of Thread.join written in C
+    2. Ensure that signals are always delivered to the reader thread
+    3. Use a different synchronization mechanism between th reader and the writer.
+
+    Option 1 is bad because building F* doesn't currently require a C compiler.
+    Option 2 is easy to implement with `Unix.sigprocmask`, but that isn't
+    available on Windows.  Option 3 is what the code below does: it uses a pipe
+    and a 1-byte write as a way for the writer thread to wait on the reader
+    thread.  That's what `reader_fn` is passed a `signal_exit` function.
+
+    If a SIGINT reaches the reader, it should still call `signal_exit`.  If
+    a SIGINT reaches the writer, it should make sure that the reader exits.
+    These two things are the responsibility of the caller of this function. **)
+
 let process_read_async p stdin reader_fn =
-  let child_thread = Thread.create reader_fn () in
-  (match stdin with
-   | Some s -> output_string p.outc s; flush p.outc
-   | None -> ());
-  Thread.join child_thread
+  let fd_r, fd_w = Unix.pipe () in
+  BatPervasives.finally (fun () -> Unix.close fd_w; Unix.close fd_r)
+    (fun () ->
+      let wait_for_exit () =
+        ignore (Unix.read fd_r (Bytes.create 1) 0 1) in
+      let signal_exit () =
+        try ignore (Unix.write fd_w (Bytes.create 1) 0 1)
+        with (* ‘write’ will fail if called after the finalizer above *)
+        | Unix.Unix_error (Unix.EBADF, _, _) -> () in
+
+      let write_input = function
+        | Some str -> output_string p.outc str; flush p.outc
+        | None -> () in
+
+      (* In the following we can get a signal at any point; it's the caller's
+         responsibility to ensure that reader_fn will exit in that case *)
+      let t = Thread.create reader_fn signal_exit in
+      write_input stdin;
+      wait_for_exit ();
+      Thread.join t) ()
 
 let run_process (id: string) (prog: string) (args: string list) (stdin: string option): string =
   let p = start_process' id prog args None in
   let output = ref "" in
-  process_read_async p stdin (fun () -> output := process_read_all_output p);
-  kill_process p;
+  let reader_fn signal_fn =
+    output := process_read_all_output p; signal_fn () in
+  BatPervasives.finally (fun () -> kill_process p)
+    (fun () -> process_read_async p stdin reader_fn) ();
   !output
 
 type read_result = EOF | SIGINT
@@ -166,25 +228,25 @@ let ask_process
   let out = Buffer.create 16 in
   let stop_marker = BatOption.default (fun s -> false) p.stop_marker in
 
-  let reader_fn () =
+  let reader_fn signal_fn =
     let rec loop p out =
-      let s = BatString.trim (input_line p.inc) in (* raises EOF *)
-      if stop_marker s then ()
-      else (Buffer.add_string out (s ^ "\n"); loop p out) in
-
-    try loop p out;
-    with | SigInt -> result := Some SIGINT
-         | End_of_file -> result := Some EOF in
+      let line = BatString.trim (input_line p.inc) in (* raises EOF *)
+      if not (stop_marker line) then
+        (Buffer.add_string out (line ^ "\n"); loop p out) in
+    (try loop p out
+     with | SigInt -> result := Some SIGINT
+          | End_of_file -> result := Some EOF);
+    signal_fn () in
 
   try
     process_read_async p (Some stdin) reader_fn;
     (match !result with
      | Some EOF -> kill_process p; Buffer.add_string out (exn_handler ())
-     | Some SIGINT -> raise SigInt (* Though this thread should have received it as well *)
+     | Some SIGINT -> raise SigInt
      | None -> ());
     Buffer.contents out
-  with SigInt ->
-    kill_process p; raise SigInt
+  with e -> (* Ensure that reader_fn gets an EOF and exits *)
+    kill_process p; raise e
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
 let is_path_absolute path_str =
@@ -230,6 +292,8 @@ let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
 [@@deriving show]
+let set_to_yojson _ _ = `Null
+let set_of_yojson _ _ = failwith "cannot readback"
 
 let set_is_empty ((s, _):'a set) =
   match s with
@@ -487,7 +551,7 @@ let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
-[@@deriving show]
+[@@deriving yojson,show]
 
 let is_left = function
   | Inl _ -> true

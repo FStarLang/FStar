@@ -291,13 +291,15 @@ let dismiss () : tac<unit> =
     | _ -> __dismiss)
 
 let solve (goal : goal) (solution : term) : tac<unit> =
+    let e = goal.context in
+    mlog (fun () -> BU.print2 "solve %s := %s\n" (tts e goal.witness) (tts e solution)) (fun () ->
     bind (trysolve goal solution) (fun b ->
     if b
     then __dismiss
     else fail (BU.format3 "%s does not solve %s : %s"
               (tts goal.context solution)
               (tts goal.context goal.witness)
-              (tts goal.context goal.goal_ty)))
+              (tts goal.context goal.goal_ty))))
 
 let dismiss_all : tac<unit> =
     bind get (fun p ->
@@ -654,7 +656,7 @@ let __exact_now set_expected_typ (t:term) : tac<unit> =
               else goal.context
     in
     bind (__tc env t) (fun (t, typ, guard) ->
-    mlog (fun () -> BU.print2 "__exact_now: got type %s\n__exact_now and guard %s\n"
+    mlog (fun () -> BU.print2 "__exact_now: got type %s\n__exact_now: and guard %s\n"
                                                      (tts goal.context typ)
                                                      (Rel.guard_to_string goal.context guard)) (fun _ ->
     bind (proc_guard "__exact typing" goal.context guard goal.opts) (fun _ ->
@@ -673,11 +675,12 @@ let t_exact set_expected_typ tm : tac<unit> = wrap_err "exact" <|
     bind (trytac' (__exact_now set_expected_typ tm)) (function
     | Inr r -> ret r
     | Inl e ->
+    mlog (fun () -> BU.print_string "__exact_now failed, trying refine...\n") (fun _ ->
     bind (trytac' (bind (norm [EMB.Delta]) (fun _ ->
                    bind (refine_intro ()) (fun _ ->
                    __exact_now set_expected_typ tm)))) (function
     | Inr r -> ret r
-    | Inl _ -> fail e))) // keep original error
+    | Inl _ -> fail e)))) // keep original error
 
 let uvar_free_in_goal (u:uvar) (g:goal) =
     if g.is_guard then false else

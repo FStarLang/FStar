@@ -294,7 +294,11 @@ let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfo
          ty_nested_positive_in_inductive ty_lid fv.fv_name.v us args unfolded env
      | Tm_arrow (sbs, c) ->  //binder type is an arrow type
        debug_log env ("Checking strict positivity in Tm_arrow");
-       if not (is_pure_or_ghost_comp c) then
+       let check_comp =
+         let c = Env.unfold_effect_abbrev env c |> mk_Comp in
+         is_pure_or_ghost_comp c || (Env.lookup_effect_quals env (U.comp_effect_name c) |> List.existsb (fun q -> q = S.TotalEffect))
+       in
+       if not check_comp then
          let _ = debug_log env ("Checking strict positivity , the arrow is impure, so return true") in
          true
        else
@@ -1009,7 +1013,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
         else let disc_name = U.mk_discriminator lid in
              let x = S.new_bv (Some p) arg_typ in
              let sort =
-                 let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) delta_equational None in
+                 let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) (Delta_equational_at_level 1) None in
                  U.refine x (U.b2p (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] None p))
              in
              S.mk_binder ({projectee arg_typ with sort = sort})
@@ -1078,8 +1082,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 in
                 let dd =
                     if quals |> List.contains S.Abstract
-                    then Delta_abstract delta_equational
-                    else delta_equational
+                    then Delta_abstract (Delta_equational_at_level 1)
+                    else (Delta_equational_at_level 1)
                 in
                 let imp = U.abs binders body None in
                 let lbtyp = if no_decl then t else tun in
@@ -1111,7 +1115,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let subst = fields |> List.mapi (fun i (a, _) ->
             let field_name, _ = U.mk_field_projector_name lid a i in
-            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name delta_equational None)) inst_univs in
+            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name (Delta_equational_at_level 1) None)) inst_univs in
             let proj = mk_Tm_app field_proj_tm [arg] None p in
             NT(a, proj))
     in
@@ -1165,8 +1169,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               let imp = U.abs binders body None in
               let dd =
                   if quals |> List.contains S.Abstract
-                  then Delta_abstract delta_equational
-                  else delta_equational
+                  then Delta_abstract (Delta_equational_at_level 1)
+                  else (Delta_equational_at_level 1)
               in
               let lbtyp = if no_decl then t else tun in
               let lb = {

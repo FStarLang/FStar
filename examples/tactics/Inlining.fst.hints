@@ -62,7 +62,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.singleton"
       ],
       0,
-      "32d4021d59104bce7bc68c08916615fa"
+      "037809604bdf5e25cf22e41f3194b404"
     ],
     [
       "Inlining.create_add_1'",
@@ -125,7 +125,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.singleton"
       ],
       0,
-      "807367b424dc1160f141c5e8d107a221"
+      "8d27338cbd14208ab08dde3bb859f5db"
     ],
     [
       "Inlining.create_and_set",
@@ -172,7 +172,7 @@
         "typing_FStar.Monotonic.HyperStack.poppable"
       ],
       0,
-      "00eec7dbc0745c05211145cf48235ee0"
+      "a5e72e4a02a4246b3dda4d9fc588f54d"
     ],
     [
       "Inlining.create_and_set'",
@@ -219,7 +219,7 @@
         "typing_FStar.Monotonic.HyperStack.poppable"
       ],
       0,
-      "9edc9b2b2dd332ac0888ff25b09b4b21"
+      "279a1fff4114a7f1d2b55d034e8a7147"
     ],
     [
       "Inlining.set_to_1",
@@ -233,7 +233,7 @@
         "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
         "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
-        "fuel_guarded_inversion_FStar.Buffer._buffer",
+        "equation_Prims.nat", "fuel_guarded_inversion_FStar.Buffer._buffer",
         "function_token_typing_FStar.UInt32.n",
         "function_token_typing_FStar.UInt32.t", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_LessThanOrEqual",
@@ -244,11 +244,13 @@
         "refinement_interpretation_FStar.Buffer_Tm_refine_ac61996218e7c5b51c85527152e93166",
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_Inlining_Tm_refine_0d4da60cb6187749d65a25df63d2ab15",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Buffer.__proj__MkBuffer__item__length",
+        "typing_FStar.Buffer.as_seq", "typing_FStar.Seq.Base.length",
         "typing_FStar.UInt32.v"
       ],
       0,
-      "69b4d221a121341ad00d87ed0de6cb3b"
+      "309d8a03d3ef1ea6a04bc0bc2b603445"
     ]
   ]
 ]

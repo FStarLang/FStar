@@ -302,6 +302,8 @@ let is_div_effect l =
 
 let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
 
+let is_pure_or_ghost_effect l = is_pure_effect l || is_ghost_effect l
+
 let is_pure_lcomp lc =
     is_total_lcomp lc
     || is_pure_effect lc.eff_name
@@ -378,8 +380,17 @@ let set_result_typ c t = match c.n with
   | GTotal _ -> mk_GTotal t
   | Comp ct -> mk_Comp({ct with result_typ=t})
 
+let set_result_typ_lc (lc:lcomp) (t:typ) :lcomp =
+  Syntax.mk_lcomp lc.eff_name t lc.cflags (fun _ -> set_result_typ (lcomp_comp lc) t)
+
 let is_trivial_wp c =
   comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
+
+let comp_effect_args (c:comp) :args =
+  match c.n with
+  | Total _
+  | GTotal _ -> []
+  | Comp ct -> ct.effect_args
 
 (********************************************************************************)
 (*               Simple utils on the structure of a term                        *)
@@ -598,6 +609,14 @@ let rec unrefine t =
   | Tm_refine(x, _) -> unrefine x.sort
   | Tm_ascribed(t, _, _) -> unrefine t
   | _ -> t
+
+let rec is_uvar t =
+  match (compress t).n with
+  | Tm_uvar _ -> true
+  | Tm_uinst (t, _) -> is_uvar t
+  | Tm_app _ -> t |> head_and_args |> fst |> is_uvar
+  | Tm_ascribed (t, _, _) -> is_uvar t
+  | _ -> false
 
 let rec is_unit t =
     match (unrefine t).n with
@@ -1014,7 +1033,6 @@ let t_false = fvar_const PC.false_lid
 let t_true  = fvar_const PC.true_lid
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
-let fail_attr = fvar_const PC.fail_attr
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2

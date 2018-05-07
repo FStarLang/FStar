@@ -83,7 +83,7 @@ type delta_depth =
   | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
-///[@ PpxDerivingShow ]
+///[@ PpxDerivingYoJson PpxDerivingShow ]
 // Different kinds of lazy terms. These are used to decide the unfolding
 // function, instead of keeping the closure inside the lazy node, since
 // that means we cannot have equality on terms (not serious) nor call
@@ -225,12 +225,6 @@ and free_vars = {
     free_univs:list<universe_uvar>;
     free_univ_names:list<univ_name>; //fifo
 }
-and lcomp = { //a lazy computation
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflags>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
-}
 
 (* Residual of a computation type after typechecking *)
 and residual_comp = {
@@ -247,6 +241,13 @@ and lazyinfo = {
     typ   : typ;
     rng   : Range.range;
  }
+
+type lcomp = { //a lazy computation
+    eff_name: lident;
+    res_typ: typ;
+    cflags: list<cflags>;
+    comp_thunk: ref<(either<(unit -> comp), comp>)>
+}
 
 
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo

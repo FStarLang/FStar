@@ -1237,7 +1237,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let t1', aq1 = desugar_term_aq env t1 in
       let t2', aq2 = desugar_term_aq env t2 in
       let t3', aq3 = desugar_term_aq env t3 in
-      mk (Tm_match(ascribe t1' (Inl t_bool, None),
+      mk (Tm_match(t1',
                     [(withinfo (Pat_constant (Const_bool true)) t2.range, None, t2');
                      (withinfo (Pat_wild x) t3.range, None, t3')])), join_aqs [aq1;aq2;aq3]
 
@@ -1318,7 +1318,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let e, s = desugar_term_aq env e in
       let projname = mk_field_projector_name_from_ident constrname f.ident in
       let qual = if is_rec then Some (Record_projector (constrname, f.ident)) else None in
-      mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) delta_equational qual, [as_arg e]), s
+      mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) (Delta_equational_at_level 1) qual, [as_arg e]), s
 
     | NamedTyp(_, e) ->
         desugar_term_aq env e
@@ -1746,8 +1746,8 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
         else
             let dd =
                 if quals |> List.contains S.Abstract
-                then Delta_abstract delta_equational
-                else delta_equational
+                then Delta_abstract (Delta_equational_at_level 1)
+                else (Delta_equational_at_level 1)
             in
             let lb = {
                 lbname=Inr (S.lid_as_fv field_name dd None);
@@ -2061,19 +2061,36 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
-let get_fail_attr warn (at : S.term) : option<list<int>> =
+// For a fail-family attribute is found, return the listed errors and
+// whether it's a fail_lax or not
+let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
     let hd, args = U.head_and_args at in
     match (SS.compress hd).n, args with
     | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_errs_attr ->
-        BU.map_opt (EMB.unembed (EMB.e_list EMB.e_int) a1) (List.map FStar.BigInt.to_int_fs)
+        begin match EMB.unembed (EMB.e_list EMB.e_int) a1 with
+        | Some [] ->
+            raise_error (Errors.Error_EmptyFailErrs, "Found ill-applied fail_errs, argument should be a non-empty list of integers") at.pos
+
+        | Some es -> Some (List.map FStar.BigInt.to_int_fs es, false)
+        | None ->
+            if warn then
+                Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail_errs, argument should be non-empty a list of integers");
+            None
+        end
+
     | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_errs_attr ->
         if warn then
-            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail_errs, did you forget to use parentheses?");
+            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found unapplied fail_errs, did you forget to use parentheses?");
         None
+
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_attr ->
+        Some ([], false)
+
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_lax_attr ->
+        Some ([], true)
+
     | _ ->
-        if U.attr_eq at U.fail_attr
-        then Some []
-        else None
+        None
 
 let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls attrs =
     let env0 = env in
@@ -2750,10 +2767,9 @@ let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modu
     then as_interface m
     else m
   in
-  let x, y, pop_when_done = desugar_modul_common curmod env m in
-  if pop_when_done then
-    ignore (pop ());
-  x,y
+  let env, modul, pop_when_done = desugar_modul_common curmod env m in
+  if pop_when_done then Env.pop (), modul
+  else env, modul
 
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
   let env, modul, pop_when_done = desugar_modul_common None env m in
