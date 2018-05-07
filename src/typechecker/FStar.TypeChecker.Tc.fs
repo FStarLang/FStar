@@ -1078,6 +1078,8 @@ let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
             if n1 <> n2
             then Some (hd1, n1, n2)
             else aux tl1 tl2
+
+        | _ -> failwith "Impossible?"
     in
     aux l1 l2
 

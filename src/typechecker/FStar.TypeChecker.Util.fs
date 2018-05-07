@@ -621,7 +621,8 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
 
 
 let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) flags =
-    if env.lax
+    if env.lax ||  //we are lax checking
+       Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid)  //we are very early in prims
     then c
     else let c = Env.unfold_effect_abbrev env c in
          let u_res_t, res_t, wp = destruct_comp c in

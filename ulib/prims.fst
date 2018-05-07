@@ -66,7 +66,7 @@ type eqtype = a:Type{hasEq a}
 #set-options "--lax"
 
 [@ "tac_opaque"]
-let squash : Type -> Tot prop = fun p -> x:unit{p}
+let squash : Type -> GTot prop = fun p -> x:unit{p}
 
 #reset-options
 
