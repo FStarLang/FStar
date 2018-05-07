@@ -375,14 +375,17 @@ let def_check_prob msg prob =
     | _ -> (); //TODO
     ()
 
-let mk_eq2 wl prob t1 t2 =
+let mk_eq2 wl prob t1 t2 : term * worklist =
     (* NS: Rather than introducing a new variable, it would be much preferable
             to simply compute the type of t1 here.
             Sadly, it seems to be way too expensive to call env.type_of here.
     *)
     let t_type, u = U.type_u () in
     let binders = Env.all_binders wl.tcenv in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma binders t_type false in
+    let uv, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma binders t_type false in
+    BU.print3 "GG mk_eq2 (%s) for (%s) = (%s)\n" (Print.ctx_uvar_to_string uv)
+            (Print.term_to_string t1)
+            (Print.term_to_string t2);
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
