@@ -99,6 +99,11 @@ type lazy_kind =
   | Lazy_sigelt
   | Lazy_uvar
 
+type should_check_uvar =
+  | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
+  | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
+  | Strict                (* Everything else is strict *)
+
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
@@ -127,7 +132,7 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_binders:binders;                                    (* All the Tm_name bindings in G, a snoc list (most recent at the tail) *)
     ctx_uvar_typ:typ;                                            (* t *)
     ctx_uvar_reason:string;
-    ctx_uvar_should_check:bool;
+    ctx_uvar_should_check:should_check_uvar;
     ctx_uvar_range:Range.range
 }
 and ctx_uvar_and_subst = ctx_uvar * subst_ts

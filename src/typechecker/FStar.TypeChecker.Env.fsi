@@ -129,7 +129,7 @@ and guard_t = {
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
-and implicits = list<(string * term * ctx_uvar * Range.range * bool)> //the bool indicates whether or not its solution should be checked
+and implicits = list<(string * term * ctx_uvar * Range.range)>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
 val tc_hooks : env -> tcenv_hooks

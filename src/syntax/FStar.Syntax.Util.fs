@@ -1499,24 +1499,6 @@ let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
     let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.nil_lid)  [U_zero]) args None pos in
     List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
 
-(* This function should rarely be used.
-   It magically reconstructs a uvar from its integer index into the unionfind graph.
-   It's only used from the reflection API.
-   BE CAREFUL!
-*)
-let uvar_from_id (id : int) (gamma, bs, t) =
-    let ctx_u = {
-        ctx_uvar_head = Unionfind.from_id id;
-        ctx_uvar_gamma = gamma;
-        ctx_uvar_binders = bs;
-        ctx_uvar_typ = t;
-        ctx_uvar_reason = "";
-        ctx_uvar_range = Range.dummyRange;
-        ctx_uvar_should_check = true
-    } in
-    failwith "uvar_from_id: not fully supported yet .. delayed substitutions";
-    mk (Tm_uvar (ctx_u, ([], None))) None Range.dummyRange
-
 // Some generic equalities
 let rec eqlist (eq : 'a -> 'a -> bool) (xs : list<'a>) (ys : list<'a>) : bool =
     match xs, ys with

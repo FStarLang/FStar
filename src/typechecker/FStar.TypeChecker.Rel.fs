@@ -54,10 +54,11 @@ let guard_form g = g.guard_f
 
 let is_trivial g = match g with
     | {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=i} ->
-      i |> BU.for_all (fun (_, _, ctx_uvar, _, _) ->
-           match Unionfind.find ctx_uvar.ctx_uvar_head with
-           | Some _ -> true
-           | None -> false)
+      i |> BU.for_all (fun (_, _, ctx_uvar, _) ->
+           (ctx_uvar.ctx_uvar_should_check=Allow_unresolved)
+           || (match Unionfind.find ctx_uvar.ctx_uvar_head with
+               | Some _ -> true
+               | None -> false))
     | _ -> false
 
 let is_trivial_guard_formula g = match g with
@@ -195,7 +196,7 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
     let t = mk (Tm_uvar (ctx_uvar, ([], None))) None r in
-    ctx_uvar, t, {wl with wl_implicits=(reason, t, ctx_uvar, r, should_check)::wl.wl_implicits}
+    ctx_uvar, t, {wl with wl_implicits=(reason, t, ctx_uvar, r)::wl.wl_implicits}
 
 let copy_uvar u t wl =
     new_uvar u.ctx_uvar_reason wl u.ctx_uvar_range u.ctx_uvar_gamma
@@ -382,7 +383,7 @@ let mk_eq2 wl prob t1 t2 =
     *)
     let t_type, u = U.type_u () in
     let binders = Env.all_binders wl.tcenv in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma binders t_type false in
+    let _, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma binders t_type Allow_unresolved in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -402,7 +403,7 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
                  wl.tcenv.gamma
                  (Env.all_binders wl.tcenv)
                  guard_ty
-                 false
+                 Allow_untyped
     in
     let lg =
         match scope with
@@ -450,7 +451,7 @@ let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
                env.gamma
                (Env.all_binders env)
                lg_ty
-               false
+               Allow_untyped
   in
   let lg =
     match elt with
@@ -2062,7 +2063,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                           ^"\tlhs="  ^u_lhs.ctx_uvar_reason
                                           ^ "\trhs=" ^u_rhs.ctx_uvar_reason)
                                          wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs))
-                                         (u_lhs.ctx_uvar_should_check || u_rhs.ctx_uvar_should_check) in
+                                         Strict in
                  let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) None w.pos in
                  let _ =
                     if Env.debug env <| Options.Other "Rel"
@@ -2702,7 +2703,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
 (* -------------------------------------------------------- *)
 (* top-level interface                                      *)
 (* -------------------------------------------------------- *)
-let print_pending_implicits g = g.implicits |> List.map (fun (_, tm, _, _, _) -> Print.term_to_string tm) |> String.concat ", "
+let print_pending_implicits g = g.implicits |> List.map (fun (_, tm, _, _) -> Print.term_to_string tm) |> String.concat ", "
 
 let ineqs_to_string ineqs =
     let vars =
@@ -3030,22 +3031,23 @@ let discharge_guard env g =
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
 let resolve_implicits' env must_total forcelax g =
-  let unresolved u =
-    let hd, _ = U.head_and_args u in
-    match (SS.compress u).n with
-    | Tm_uvar _ -> true
-    | _ -> false
+  let unresolved ctx_u =
+    match (Unionfind.find ctx_u.ctx_uvar_head) with
+    | Some _ -> false
+    | None -> true
   in
   let rec until_fixpoint (acc: Env.implicits * bool) (implicits:Env.implicits) : Env.implicits =
     let out, changed = acc in
     match implicits with
     | [] -> if not changed then out else until_fixpoint ([], false) out
     | hd::tl ->
-          let (reason, tm, ctx_u, r, should_check) = hd in
-          if not should_check
+          let (reason, tm, ctx_u, r) = hd in
+          if ctx_u.ctx_uvar_should_check = Allow_unresolved
           then until_fixpoint(out, true) tl
-          else if unresolved tm
+          else if unresolved ctx_u
           then until_fixpoint (hd::out, changed) tl
+          else if ctx_u.ctx_uvar_should_check = Allow_untyped
+          then until_fixpoint(out, true) tl
           else let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
                let tm = N.normalize [N.Beta] env tm in
                let env = if forcelax then {env with lax=true} else env in
@@ -3070,7 +3072,12 @@ let resolve_implicits' env must_total forcelax g =
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
                        else g in
                let g' =
-                 match discharge_guard' (Some (fun () -> Print.term_to_string tm)) env g true with
+                 match discharge_guard' (Some (fun () ->
+                        BU.format4 "%s (Introduced at %s for %s resolved at %s)"
+                            (Print.term_to_string tm)
+                            (Range.string_of_range r)
+                            reason
+                            (Range.string_of_range tm.pos))) env g true with
                  | Some g -> g
                  | None   -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
                in
@@ -3084,13 +3091,12 @@ let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits env in
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
-        | (reason, e, ctx_u, r, should_check)::_ ->
+        | (reason, e, ctx_u, r)::_ ->
            raise_error (Errors.Fatal_FailToResolveImplicitArgument,
-                        BU.format4 "Failed to resolve implicit argument %s of type %s introduced for %s (should check=%s)"
+                        BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
                                     (Print.uvar_to_string ctx_u.ctx_uvar_head)
                                     (N.term_to_string env ctx_u.ctx_uvar_typ)
-                                    reason
-                                    (BU.string_of_bool should_check)) r
+                                    reason) r
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);

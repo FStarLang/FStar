@@ -915,7 +915,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             | _ -> false
             end
         in
-        bind (implicits.implicits |> mapM (fun (_msg, term, ctx_uvar, _range, _) -> //(_msg, env, _uvar, term, typ, _) ->
+        bind (implicits.implicits |> mapM (fun (_msg, term, ctx_uvar, _range) ->
             let hd, _ = U.head_and_args term in
             match (SS.compress hd).n with
             | Tm_uvar (ctx_uvar, _) ->
