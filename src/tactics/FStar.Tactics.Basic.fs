@@ -290,6 +290,12 @@ let do_unify env t1 t2 : tac<bool> =
         Options.pop ();
     ret r))
 
+let remove_solved_goals : tac<unit> =
+    bind get (fun ps ->
+    let ps' = { ps with goals = List.filter (fun g -> Option.isNone (check_goal_solved g)) ps.goals } in
+    set ps'
+    )
+
 (*
    set_solution:
 
@@ -330,11 +336,16 @@ let dismiss () : tac<unit> =
 let solve (goal : goal) (solution : term) : tac<unit> =
     bind (trysolve goal solution) (fun b ->
     if b
-    then __dismiss
+    then bind __dismiss (fun () -> remove_solved_goals)
     else fail (BU.format3 "%s does not solve %s : %s"
               (tts (goal_env goal) solution)
               (tts (goal_env goal) (goal_witness goal))
               (tts (goal_env goal) (goal_type goal))))
+
+let solve' (goal : goal) (solution : term) : tac<unit> =
+    bind (set_solution goal solution) (fun () ->
+    bind __dismiss (fun () ->
+    remove_solved_goals))
 
 let dismiss_all : tac<unit> =
     bind get (fun p ->
@@ -441,7 +452,7 @@ let tadmit () : tac<unit> = wrap_err "tadmit" <|
     Err.log_issue (goal_type g).pos
         (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
                     (goal_to_string g));
-    solve g U.exp_unit)
+    solve' g U.exp_unit)
 
 let fresh () : tac<Z.t> =
     bind get (fun ps ->
@@ -541,7 +552,7 @@ let add_irrelevant_goal reason env phi opts : tac<unit> =
 let trivial () : tac<unit> =
     bind (cur_goal ()) (fun goal ->
     if istrivial (goal_env goal) (goal_type goal)
-    then solve goal U.exp_unit
+    then solve' goal U.exp_unit
     else fail1 "Not a trivial goal: %s" (tts (goal_env goal) (goal_type goal))
     )
 
@@ -574,7 +585,8 @@ let divide (n:Z.t) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     bind get      (fun rp' ->
     let p' = {p with goals=lp'.goals@rp'.goals; smt_goals=lp'.smt_goals@rp'.smt_goals@p.smt_goals} in
     bind (set p') (fun _ ->
-    ret (a, b))))))))))
+    bind remove_solved_goals (fun () ->
+    ret (a, b)))))))))))
 
 (* focus: runs f on the current goal only, and then restores all the goals *)
 (* There is a user defined version as well, we just use this one internally, but can't mark it as private *)
@@ -902,7 +914,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
        //NS: 01/24 ... looks redundant
         bind (add_implicits implicits.implicits) (fun _ ->
         // We solve with (), we don't care about the witness if applying a lemma
-        bind (solve goal U.exp_unit) (fun _ ->
+        bind (solve' goal U.exp_unit) (fun _ ->
         let is_free_uvar uv t =
             let free_uvars = List.map (fun x -> x.ctx_uvar_head) (BU.set_elements (SF.uvars t)) in
             List.existsML (fun u -> UF.equiv u uv) free_uvars
@@ -1398,7 +1410,7 @@ let trefl () : tac<unit> =
             bind (do_unify (goal_env g) l r) (fun b ->
             if not b
             then fail2 "trefl: not a trivial equality (%s vs %s)" (tts (goal_env g) l) (tts (goal_env g) r)
-            else solve g U.exp_unit)
+            else solve' g U.exp_unit)
         | hd, _ ->
             fail1 "trefl: not an equality (%s)" (tts (goal_env g) t)
         end
