@@ -1102,7 +1102,7 @@ let rank tcenv pr : rank_t    //the rank
 
         | Tm_uvar _, _
         | _, Tm_uvar _ when (tp.relation=EQ || Options.eager_inference()) ->
-          Flex_rigid_eq, tp
+          Flex_rigid_eq, {tp with relation=EQ}
 
         | Tm_uvar _, Tm_arrow _
         | Tm_uvar _, Tm_type _
@@ -1726,8 +1726,14 @@ and solve_rigid_flex_or_flex_rigid_subtyping
             giveup env ("failed to solve sub-problems: " ^msg) p)
       end
 
-    | _ when flip -> failwith (BU.format1 "Impossible: Not a flex-rigid: %s" (prob_to_string env (TProb tp)))
-    | _ -> failwith (BU.format1 "Impossible: Not a rigid-flex: %s" (prob_to_string env (TProb tp)))
+    | _ when flip ->
+      failwith (BU.format2 "Impossible: (rank=%s) Not a flex-rigid: %s"
+                            (BU.string_of_int (rank_t_num rank))
+                            (prob_to_string env (TProb tp)))
+    | _ ->
+      failwith (BU.format2 "Impossible: (rank=%s) Not a rigid-flex: %s"
+                            (BU.string_of_int (rank_t_num rank))
+                            (prob_to_string env (TProb tp)))
     end
   end
 
