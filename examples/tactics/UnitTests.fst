@@ -119,7 +119,7 @@ let _ = assert_by_tactic (ne Lt) trivial
 let _ = assert_by_tactic (ne Gt) trivial
 
 let _ = assert_by_tactic (exists (n:int). n == 5)
-                         (fun () -> witness (quote 5); trefl (); qed ())
+                         (fun () -> witness (quote 5); norm []; trefl (); qed ())
 
 // This one doesn't work, currently, as 5 gets typed as int, and not as nat
 // Fixing this seemss non-trivial, after some attempts...

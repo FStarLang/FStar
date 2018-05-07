@@ -862,15 +862,6 @@ let example #a #b #c: unit =
                               rewrite h <: Tac unit) `or_else`
                  (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: goal (squash a)) ->
                               exact_hyp a h <: Tac unit) ())))));
-               smt (); //needed to send this to SMT; NS 04/29
-               //Otherwise I get:
-               // proof-state: State dump @ depth 0 (at the time of failure):
-               // Location: FStar.Tactics.PatternMatching.fst(866,15-866,21)
-               // ACTIVE goals (1):
-               // (a:Type0), (b:Type0), (c:Type0), (uu___133218:c == b), (uu___153285:a), (uu___161757:b) |- (*?u1381*) _ : Prims.squash b
-               // SMT goals (0):
-               // FStar.Tactics.PatternMatching.fst(853,22-854,2): (Error 23) user tactic failed: Not done! (see also FStar.Tactics.Effect.fst(86,32-86,42))
-               // 1 error was reported (see above)
                qed ())
 
 /// Possible extensions

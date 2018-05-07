@@ -290,6 +290,22 @@ let do_unify env t1 t2 : tac<bool> =
         Options.pop ();
     ret r))
 
+(*
+   set_solution:
+
+     Sometimes the witness of a goal is solved by
+     using a low-level assignment of the unification variable
+     provided by set_solution.
+
+     The general discipline is that when a trusted primitive tactic
+     constructs a term to solve the current goal, then it should be
+     able to just do a set_solution.
+
+     OTOH, if it's a user-provided term to solve the goal, then trysolve is safer
+
+     Note, set_solution is not just an optimization. In cases like `intro`
+     it is actually important to get the right shape of goal. See the comment there.
+*)
 let set_solution goal solution : tac<unit> =
     match FStar.Syntax.Unionfind.find goal.goal_ctx_uvar.ctx_uvar_head with
     | Some _ ->
@@ -587,6 +603,17 @@ let seq (t1:tac<unit>) (t2:tac<unit>) : tac<unit> =
         bind (map t2) (fun _ -> ret ()))
     )
 
+(*
+  [intro]:
+
+  Initial goal: G |- ?u : (t -> t')
+
+  Now we do an `intro`:
+
+  Next goal:  `G, x:t |- ?v : t'`
+
+  with `?u := (fun (x:t) -> ?v @ [NM(x, 0)])`
+*)
 let intro () : tac<binder> = wrap_err "intro" <|
     bind (cur_goal ()) (fun goal ->
     match U.arrow_one (goal_type goal) with
@@ -609,6 +636,23 @@ let intro () : tac<binder> = wrap_err "intro" <|
              //BU.print1 "[intro]: new goal is %s"
              //           (Print.ctx_uvar_to_string ctx_uvar);
              //ignore (FStar.Options.set_options Options.Set "--debug_level Rel");
+              (* Suppose if instead of simply assigning `?u` to the lambda term on
+                the RHS, we tried to unify `?u` with the `(fun (x:t) -> ?v @ [NM(x, 0)])`.
+
+                Then, this would defeat the purpose of the delayed substitution, since
+                the unification engine would solve it by doing something like
+
+                  `(fun (y:t) ->  ?u y)  ~ (fun (x:t) -> ?v @ [NM(x, 0)])`
+
+                And then solving
+
+                  `?u z ~ ?v @ [NT(x, z)]`
+
+                which would then proceed by solving `?v` to `?w z` and then unifying
+                `?u` and `?w`.
+
+                I.e., this immediately destroys the nice shape of the next goal.
+             *)
              bind (set_solution goal sol) (fun () ->
              let g = mk_goal env' ctx_uvar goal.opts goal.is_guard in
              bind (replace_cur g) (fun _ ->
