@@ -127,11 +127,13 @@ let dump_cur ps msg =
         dump_goal ps (List.hd ps.goals)
         end
 
+(* Note: we use def ranges. In tactics we keep the position in there, while the
+ * use range is the original position of the assertion / synth / splice. *)
 let ps_to_string (msg, ps) =
     String.concat ""
                [format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
                 (if ps.entry_range <> Range.dummyRange
-                 then format1 "Location: %s\n" (Range.string_of_range ps.entry_range)
+                 then format1 "Location: %s\n" (Range.string_of_def_range ps.entry_range)
                  else "");
                 format2 "ACTIVE goals (%s):\n%s\n"
                     (string_of_int (List.length ps.goals))
@@ -153,7 +155,7 @@ let ps_to_json (msg, ps) =
                 ("goals", JsonList (List.map goal_to_json ps.goals));
                 ("smt-goals", JsonList (List.map goal_to_json ps.smt_goals))] @
                 (if ps.entry_range <> Range.dummyRange
-                 then [("location", Range.json_of_use_range ps.entry_range)]
+                 then [("location", Range.json_of_def_range ps.entry_range)]
                  else []))
 
 let dump_proofstate ps msg =
