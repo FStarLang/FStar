@@ -1,0 +1,2 @@
+arraystruct:
+        +$(MAKE) -f Makefile.verify $(addsuffix .checked,$(wildcard FStar.Pointer*.fst FStar.Pointer*.fsti) FStar.BufferNG.fst FStar.TaggedUnion.fst FStar.TaggedUnion.fsti)

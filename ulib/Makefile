@@ -1,15 +1,18 @@
 .PHONY: all
 
 FSTAR_HOME=..
-include $(FSTAR_HOME)/src/gmake/z3.mk
-include $(FSTAR_HOME)/src/gmake/fstar.mk
+include gmake/z3.mk
+include gmake/fstar.mk
 
 # Makefile.verify has been split off because it is the actual
 # Makefile that is distributed in the binary package. This
 # Makefile here is not.
 
 all:
-	+$(MAKE) -f Makefile.verify verify-all
+	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-core
+
+extra:
+	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-extra
 
 include ml/Makefile.include
 
@@ -35,7 +38,8 @@ fstarlib.mgen: *.fst *.fsti
 	cp ../src/ocaml-output/FStar_Pervasives.ml ml/extracted
 	touch fstarlib.mgen
 
-FSTARLIB_LEFTOVERS=$(shell python fstarlib_leftovers.py +ml +ml/extracted -../bin/fstar-compiler-lib/)
+# NOTE: fstarlib_leftovers.ml takes directories that MUST NOT end with /
+FSTARLIB_LEFTOVERS=$(shell ocaml fstarlib_leftovers.ml +ml +ml/extracted -../bin/fstar-compiler-lib)
 fstartaclib.mgen: fstarlib.mgen
 	mkdir -p tactics_ml/extracted
 	rm -f .depend.extract

@@ -1,5 +1,5 @@
 [
-  "ΩP·™W[5ä”Å¥t¬ÖVƒ",
+  "\u0013óFŸ*HÛRV*\u0006ıÄ\u0017\u000fã",
   [
     [
       "TwoPhaseTC.conjunction_monoid",
@@ -19,7 +19,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "873a39e4044a3fc768bfb36b75643e48"
+      "5effed5c06a0c2e1e0b0c3c784fe306c"
     ],
     [
       "TwoPhaseTC.false_elim",
@@ -32,7 +32,7 @@
         "refinement_interpretation_TwoPhaseTC_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
       ],
       0,
-      "7a329ed44a5da788950e8b99f82ac7d8"
+      "2a0471e81c104460c950d083c49b9bc9"
     ],
     [
       "TwoPhaseTC.f8",
@@ -46,7 +46,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f183aaee50f422e3a4fe04e490dad887"
+      "63a965b6288cca7ff24909873314189e"
     ],
     [
       "TwoPhaseTC.f12",
@@ -55,7 +55,7 @@
       0,
       [ "@query" ],
       0,
-      "725b9e315bdcf73b4038e96686576d8d"
+      "2972c8513415bec86be71ab832c3e1f9"
     ],
     [
       "TwoPhaseTC.f13",
@@ -72,7 +72,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6c878d2bed704e5a1b73a71e64f90f30"
+      "e7c06e3b8f3ef089e37bf59ac4222ab8"
     ],
     [
       "TwoPhaseTC.f14",
@@ -81,22 +81,16 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d8974171027b9038dbd133e4d5bd4794"
+      "f34562742fb6755f7d2b0d226d926629"
     ],
     [
       "TwoPhaseTC.f18",
       1,
       0,
       0,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
-      ],
+      [ "@query" ],
       0,
-      "4d0e85a0de1ec7cc844d0c8baf4865db"
+      "02dd86b7091556e37f42f8925063a520"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__p",
@@ -108,7 +102,7 @@
         "projection_inverse_TwoPhaseTC.ExIntro_a"
       ],
       0,
-      "7e7a60358e350a06c10ba7535ad7fb9a"
+      "80e41c765bc33f544ba1384bd60e756f"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__x",
@@ -120,7 +114,7 @@
         "projection_inverse_TwoPhaseTC.ExIntro_a"
       ],
       0,
-      "2f9d38ba315154f1c359829c92758c03"
+      "9a6a42fcdf2f3825d561f510a440f7e4"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item___3",
@@ -135,7 +129,7 @@
         "token_correspondence_TwoPhaseTC.__proj__ExIntro__item__p"
       ],
       0,
-      "6d818c44b4f83e9d27147407c060de3b"
+      "f81581eade9883eed4fd5ddc70cdf26b"
     ],
     [
       "TwoPhaseTC.f21",
@@ -149,7 +143,7 @@
         "typing_tok_TwoPhaseTC.IP@tok"
       ],
       0,
-      "1eeacc68fd99d739d57eb5e55581d8b5"
+      "09bdbee6748ab15e68ff2f41ccc706ca"
     ],
     [
       "TwoPhaseTC.false_elim",
@@ -162,7 +156,7 @@
         "refinement_interpretation_TwoPhaseTC_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
       ],
       0,
-      "8e60e39339b1c18e1998c0bfc901e440"
+      "dbbed299c0dd923fa8796fa07a27bb3a"
     ],
     [
       "TwoPhaseTC.f12",
@@ -171,7 +165,7 @@
       0,
       [ "@query" ],
       0,
-      "9415afd9d8985ddf5339d784dd64d9ae"
+      "596dc6e5dd93b1b6ffb9d68f6e4860ad"
     ],
     [
       "TwoPhaseTC.f13",
@@ -188,7 +182,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ff8605f9d1b98bf09eb85a9b141bb1cc"
+      "a890e097181b4e444bedc7b383bee0ba"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__p",
@@ -200,7 +194,7 @@
         "projection_inverse_TwoPhaseTC.ExIntro_a"
       ],
       0,
-      "617385b781e0817145ddd2ad8b329705"
+      "571ab472cd725b11573eb901c6491437"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__x",
@@ -212,7 +206,7 @@
         "projection_inverse_TwoPhaseTC.ExIntro_a"
       ],
       0,
-      "c9f2e9867e4ecf4dfa101498a3e2615a"
+      "d70af95dcf196aa92c3daf1a6ff6a305"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item___3",
@@ -227,7 +221,7 @@
         "token_correspondence_TwoPhaseTC.__proj__ExIntro__item__p"
       ],
       0,
-      "d8c77b8df10e512e0ad22f53cd2f3398"
+      "7d82b73bcf3a888ecf4447f0beb0f3e4"
     ]
   ]
 ]

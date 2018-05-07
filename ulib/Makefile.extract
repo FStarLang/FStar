@@ -1,8 +1,8 @@
 .PHONY: indent extra
 
 FSTAR_HOME=..
-include $(FSTAR_HOME)/src/gmake/z3.mk
-include $(FSTAR_HOME)/src/gmake/fstar.mk
+include gmake/z3.mk
+include gmake/fstar.mk
 
 CODEGEN ?= OCaml
 MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY)
