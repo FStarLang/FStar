@@ -1370,9 +1370,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | UnivArgs _::_ ->
                   failwith "Ill-typed term: universes cannot be applied to term abstraction"
 
-                | Match _::_ ->
-                  failwith "Ill-typed term: cannot pattern match an abstraction"
-
                 | Arg(c, _, _)::stack_rest ->
                   begin match c with
                     | Univ _ -> //universe variables do not have explicit binders
@@ -1403,6 +1400,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
+                | Match _::_
                 | Debug _::_
                 | Meta _::_
                 | Let _ :: _
