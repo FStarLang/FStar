@@ -706,8 +706,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       || debug env <| Options.Other "bind"
       then f ()
   in
+  debug (fun () -> BU.print2 "bind: input lc1: %s, lc2: %s\n" (Print.lcomp_to_string lc1) (Print.lcomp_to_string lc2));
   let lc1 = N.ghost_to_pure_lcomp env lc1 in //downgrade from ghost to pure, if possible
   let lc2 = N.ghost_to_pure_lcomp env lc2 in
+  debug (fun () -> BU.print2 "bind: post ghost to pure downgrade lc1: %s, lc2: %s\n" (Print.lcomp_to_string lc1) (Print.lcomp_to_string lc2));
+
   let joined_eff = join_lcomp env lc1 lc2 in
   let bind_flags =
       if should_not_inline_lc lc1

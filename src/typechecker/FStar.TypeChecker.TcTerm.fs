@@ -358,8 +358,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     mk (Tm_meta (e, Meta_desugared Meta_smt_pat)) None top.pos, c, g  //AR: keeping the pats as meta for the second phase. smtencoding does an unmeta.
 
   | Tm_meta(e, Meta_pattern pats) ->
-    let t, u = U.type_u () in
-    let e, c, g = tc_check_tot_or_gtot_term env e t in
+    let e, c, g = tc_check_tot_or_gtot_term env e U.kprop in
     let pats, g' =
         let env, _ = Env.clear_expected_typ env in
         tc_pats env pats in
@@ -561,6 +560,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
     if Env.debug env Options.Extreme
     then BU.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
+    if Env.debug env Options.Extreme
+    then BU.print3 "In application checking, comp_check_expected_typ for e: %s, c: %s, and expected_typ: %s\n"
+                   (Print.term_to_string e) (Print.lcomp_to_string c)
+                   (let topt = Env.expected_typ env0 in if is_some topt then topt |> must |> Print.term_to_string else "None");
     let e, c, g' = comp_check_expected_typ env0 e c in
     let gimp =
         match (SS.compress head).n with
@@ -570,9 +573,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         | _ -> Rel.trivial_guard in
     let gres = Rel.conj_guard g (Rel.conj_guard g' gimp) in
     if Env.debug env Options.Extreme
-    then BU.print2 "Guard from application node %s is %s\n"
+    then BU.print3 "Guard from application node %s is %s and lcomp is %s\n"
                 (Print.term_to_string e)
-                (Rel.guard_to_string env gres);
+                (Rel.guard_to_string env gres) (Print.lcomp_to_string c);
     e, c, gres
 
   | Tm_match(e1, eqns) ->
@@ -1146,6 +1149,12 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
           (if env.top_level then "true" else "false");
 
     let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g = expected_function_typ env topt body in
+
+    if debug env <| Options.Extreme then
+    BU.print3 "expected_function_typ inside tc_abs, tfun_opt: %s and c_opt: %s and expected_typ in envbody: %s\n"
+              (if is_some tfun_opt then tfun_opt |> must |> Print.term_to_string else "None")
+              (if is_some c_opt then c_opt |> must |> Print.comp_to_string else "None")
+              (let topt = Env.expected_typ envbody in if is_some topt then topt |> must |> Print.term_to_string else "None");
     let body, cbody, guard =
         let should_check_expected_effect =
             match c_opt, (SS.compress body).n with
@@ -1507,6 +1516,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 and check_short_circuit_args env head chead g_head args expected_topt : term * lcomp * guard_t =
     let r = Env.get_range env in
     let tf = SS.compress chead.res_typ in
+    if debug env <| Options.Extreme then
+    BU.print2 "Checking short circuit application with head: %s and chead: %s\n" (Print.term_to_string head) (Print.lcomp_to_string chead);
     match tf.n with
         | Tm_arrow(bs, c) when (U.is_total_comp c && List.length bs=List.length args) ->
           let res_t = U.comp_result c in
@@ -1521,7 +1532,14 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
                 seen@[as_arg e], Rel.conj_guard guard g, ghost) ([], g_head, false) args bs in
           let e = mk_Tm_app head args None r  in
           let c = if ghost then S.mk_GTotal res_t |> U.lcomp_of_comp else U.lcomp_of_comp c in
+          if debug env <| Options.Extreme then
+          BU.print3 "check_short_circuit_args: strengthening the precondition of lcomp: %s with guard: %s for head: %s\n"
+                    (Print.lcomp_to_string c) (Rel.guard_to_string env guard) (Print.term_to_string head);
           let c, g = TcUtil.strengthen_precondition None env e c guard in
+          if debug env <| Options.Extreme then
+          BU.print3 "check_short_circuit_args: strengthened precondition to lcomp: %s with guard: %s for head: %s\n"
+                    (Print.lcomp_to_string c) (Rel.guard_to_string env g) (Print.term_to_string head);
+
           e, c, g
 
         | _ -> //fallback

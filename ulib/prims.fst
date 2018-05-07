@@ -59,16 +59,8 @@ type eqtype = a:Type{hasEq a}
 
 (* A coercion down to prop *)
 
-(* CH: squash only lax checks, and not sure we can do better
-       since it has a non-trivial guard that seems hard to discharge
-       so early in this file;
-  squash also needs --use_two_phase_tc true *)
-#set-options "--lax"
-
 [@ "tac_opaque"]
 let squash : Type -> GTot prop = fun p -> x:unit{p}
-
-#reset-options
 
 // the primitive refinements can still be accessed outside prims
 // but we don't expect user code to really use this

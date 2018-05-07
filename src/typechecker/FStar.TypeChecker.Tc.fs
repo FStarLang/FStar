@@ -951,8 +951,7 @@ let tc_lex_t env ses quals lids =
 
 let tc_assume (env:env) (phi:formula) (r:Range.range) :term =
     let env = Env.set_range env r in
-    let k, _ = U.type_u() in
-    let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
+    let phi = tc_check_trivial_guard env phi U.kprop |> N.normalize [N.Beta; N.Eager_unfolding] env in
     TcUtil.check_uvars r phi;
     phi
 
