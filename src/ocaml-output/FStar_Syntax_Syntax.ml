@@ -204,6 +204,22 @@ let (uu___is_Lazy_uvar : lazy_kind -> Prims.bool) =
   fun projectee  ->
     match projectee with | Lazy_uvar  -> true | uu____453 -> false
   
+type should_check_uvar =
+  | Allow_unresolved 
+  | Allow_untyped 
+  | Strict [@@deriving show]
+let (uu___is_Allow_unresolved : should_check_uvar -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Allow_unresolved  -> true | uu____459 -> false
+  
+let (uu___is_Allow_untyped : should_check_uvar -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Allow_untyped  -> true | uu____465 -> false
+  
+let (uu___is_Strict : should_check_uvar -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Strict  -> true | uu____471 -> false
+  
 type term' =
   | Tm_bvar of bv 
   | Tm_name of bv 
@@ -261,7 +277,7 @@ and ctx_uvar =
   ctx_uvar_binders: (bv,aqual) FStar_Pervasives_Native.tuple2 Prims.list ;
   ctx_uvar_typ: term' syntax ;
   ctx_uvar_reason: Prims.string ;
-  ctx_uvar_should_check: Prims.bool ;
+  ctx_uvar_should_check: should_check_uvar ;
   ctx_uvar_range: FStar_Range.range }[@@deriving show]
 and pat' =
   | Pat_constant of sconst 
@@ -389,44 +405,44 @@ and binding =
   | Binding_univ of univ_name [@@deriving show]
 let (uu___is_Tm_bvar : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_bvar _0 -> true | uu____1334 -> false
+    match projectee with | Tm_bvar _0 -> true | uu____1352 -> false
   
 let (__proj__Tm_bvar__item___0 : term' -> bv) =
   fun projectee  -> match projectee with | Tm_bvar _0 -> _0 
 let (uu___is_Tm_name : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_name _0 -> true | uu____1348 -> false
+    match projectee with | Tm_name _0 -> true | uu____1366 -> false
   
 let (__proj__Tm_name__item___0 : term' -> bv) =
   fun projectee  -> match projectee with | Tm_name _0 -> _0 
 let (uu___is_Tm_fvar : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_fvar _0 -> true | uu____1362 -> false
+    match projectee with | Tm_fvar _0 -> true | uu____1380 -> false
   
 let (__proj__Tm_fvar__item___0 : term' -> fv) =
   fun projectee  -> match projectee with | Tm_fvar _0 -> _0 
 let (uu___is_Tm_uinst : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_uinst _0 -> true | uu____1382 -> false
+    match projectee with | Tm_uinst _0 -> true | uu____1400 -> false
   
 let (__proj__Tm_uinst__item___0 :
   term' -> (term' syntax,universes) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | Tm_uinst _0 -> _0 
 let (uu___is_Tm_constant : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_constant _0 -> true | uu____1414 -> false
+    match projectee with | Tm_constant _0 -> true | uu____1432 -> false
   
 let (__proj__Tm_constant__item___0 : term' -> sconst) =
   fun projectee  -> match projectee with | Tm_constant _0 -> _0 
 let (uu___is_Tm_type : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_type _0 -> true | uu____1428 -> false
+    match projectee with | Tm_type _0 -> true | uu____1446 -> false
   
 let (__proj__Tm_type__item___0 : term' -> universe) =
   fun projectee  -> match projectee with | Tm_type _0 -> _0 
 let (uu___is_Tm_abs : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_abs _0 -> true | uu____1458 -> false
+    match projectee with | Tm_abs _0 -> true | uu____1476 -> false
   
 let (__proj__Tm_abs__item___0 :
   term' ->
@@ -436,7 +452,7 @@ let (__proj__Tm_abs__item___0 :
   = fun projectee  -> match projectee with | Tm_abs _0 -> _0 
 let (uu___is_Tm_arrow : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_arrow _0 -> true | uu____1532 -> false
+    match projectee with | Tm_arrow _0 -> true | uu____1550 -> false
   
 let (__proj__Tm_arrow__item___0 :
   term' ->
@@ -445,14 +461,14 @@ let (__proj__Tm_arrow__item___0 :
   = fun projectee  -> match projectee with | Tm_arrow _0 -> _0 
 let (uu___is_Tm_refine : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_refine _0 -> true | uu____1588 -> false
+    match projectee with | Tm_refine _0 -> true | uu____1606 -> false
   
 let (__proj__Tm_refine__item___0 :
   term' -> (bv,term' syntax) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | Tm_refine _0 -> _0 
 let (uu___is_Tm_app : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_app _0 -> true | uu____1634 -> false
+    match projectee with | Tm_app _0 -> true | uu____1652 -> false
   
 let (__proj__Tm_app__item___0 :
   term' ->
@@ -462,7 +478,7 @@ let (__proj__Tm_app__item___0 :
   = fun projectee  -> match projectee with | Tm_app _0 -> _0 
 let (uu___is_Tm_match : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_match _0 -> true | uu____1712 -> false
+    match projectee with | Tm_match _0 -> true | uu____1730 -> false
   
 let (__proj__Tm_match__item___0 :
   term' ->
@@ -474,7 +490,7 @@ let (__proj__Tm_match__item___0 :
   = fun projectee  -> match projectee with | Tm_match _0 -> _0 
 let (uu___is_Tm_ascribed : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_ascribed _0 -> true | uu____1818 -> false
+    match projectee with | Tm_ascribed _0 -> true | uu____1836 -> false
   
 let (__proj__Tm_ascribed__item___0 :
   term' ->
@@ -486,7 +502,7 @@ let (__proj__Tm_ascribed__item___0 :
   = fun projectee  -> match projectee with | Tm_ascribed _0 -> _0 
 let (uu___is_Tm_let : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_let _0 -> true | uu____1922 -> false
+    match projectee with | Tm_let _0 -> true | uu____1940 -> false
   
 let (__proj__Tm_let__item___0 :
   term' ->
@@ -495,7 +511,7 @@ let (__proj__Tm_let__item___0 :
   = fun projectee  -> match projectee with | Tm_let _0 -> _0 
 let (uu___is_Tm_uvar : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_uvar _0 -> true | uu____1986 -> false
+    match projectee with | Tm_uvar _0 -> true | uu____2004 -> false
   
 let (__proj__Tm_uvar__item___0 :
   term' ->
@@ -506,7 +522,7 @@ let (__proj__Tm_uvar__item___0 :
   = fun projectee  -> match projectee with | Tm_uvar _0 -> _0 
 let (uu___is_Tm_delayed : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_delayed _0 -> true | uu____2066 -> false
+    match projectee with | Tm_delayed _0 -> true | uu____2084 -> false
   
 let (__proj__Tm_delayed__item___0 :
   term' ->
@@ -518,27 +534,27 @@ let (__proj__Tm_delayed__item___0 :
   = fun projectee  -> match projectee with | Tm_delayed _0 -> _0 
 let (uu___is_Tm_meta : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_meta _0 -> true | uu____2158 -> false
+    match projectee with | Tm_meta _0 -> true | uu____2176 -> false
   
 let (__proj__Tm_meta__item___0 :
   term' -> (term' syntax,metadata) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | Tm_meta _0 -> _0 
 let (uu___is_Tm_lazy : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_lazy _0 -> true | uu____2190 -> false
+    match projectee with | Tm_lazy _0 -> true | uu____2208 -> false
   
 let (__proj__Tm_lazy__item___0 : term' -> lazyinfo) =
   fun projectee  -> match projectee with | Tm_lazy _0 -> _0 
 let (uu___is_Tm_quoted : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_quoted _0 -> true | uu____2210 -> false
+    match projectee with | Tm_quoted _0 -> true | uu____2228 -> false
   
 let (__proj__Tm_quoted__item___0 :
   term' -> (term' syntax,quoteinfo) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | Tm_quoted _0 -> _0 
 let (uu___is_Tm_unknown : term' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Tm_unknown  -> true | uu____2241 -> false
+    match projectee with | Tm_unknown  -> true | uu____2259 -> false
   
 let (__proj__Mkctx_uvar__item__ctx_uvar_head :
   ctx_uvar ->
@@ -605,7 +621,7 @@ let (__proj__Mkctx_uvar__item__ctx_uvar_reason : ctx_uvar -> Prims.string) =
         __fname__ctx_uvar_reason
   
 let (__proj__Mkctx_uvar__item__ctx_uvar_should_check :
-  ctx_uvar -> Prims.bool) =
+  ctx_uvar -> should_check_uvar) =
   fun projectee  ->
     match projectee with
     | { ctx_uvar_head = __fname__ctx_uvar_head;
@@ -632,13 +648,13 @@ let (__proj__Mkctx_uvar__item__ctx_uvar_range :
   
 let (uu___is_Pat_constant : pat' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Pat_constant _0 -> true | uu____2512 -> false
+    match projectee with | Pat_constant _0 -> true | uu____2530 -> false
   
 let (__proj__Pat_constant__item___0 : pat' -> sconst) =
   fun projectee  -> match projectee with | Pat_constant _0 -> _0 
 let (uu___is_Pat_cons : pat' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Pat_cons _0 -> true | uu____2538 -> false
+    match projectee with | Pat_cons _0 -> true | uu____2556 -> false
   
 let (__proj__Pat_cons__item___0 :
   pat' ->
@@ -648,19 +664,19 @@ let (__proj__Pat_cons__item___0 :
   = fun projectee  -> match projectee with | Pat_cons _0 -> _0 
 let (uu___is_Pat_var : pat' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Pat_var _0 -> true | uu____2588 -> false
+    match projectee with | Pat_var _0 -> true | uu____2606 -> false
   
 let (__proj__Pat_var__item___0 : pat' -> bv) =
   fun projectee  -> match projectee with | Pat_var _0 -> _0 
 let (uu___is_Pat_wild : pat' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Pat_wild _0 -> true | uu____2602 -> false
+    match projectee with | Pat_wild _0 -> true | uu____2620 -> false
   
 let (__proj__Pat_wild__item___0 : pat' -> bv) =
   fun projectee  -> match projectee with | Pat_wild _0 -> _0 
 let (uu___is_Pat_dot_term : pat' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Pat_dot_term _0 -> true | uu____2622 -> false
+    match projectee with | Pat_dot_term _0 -> true | uu____2640 -> false
   
 let (__proj__Pat_dot_term__item___0 :
   pat' -> (bv,term' syntax) FStar_Pervasives_Native.tuple2) =
@@ -779,7 +795,7 @@ let (__proj__Mkcomp_typ__item__flags : comp_typ -> cflags Prims.list) =
   
 let (uu___is_Total : comp' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Total _0 -> true | uu____3060 -> false
+    match projectee with | Total _0 -> true | uu____3078 -> false
   
 let (__proj__Total__item___0 :
   comp' ->
@@ -788,7 +804,7 @@ let (__proj__Total__item___0 :
   = fun projectee  -> match projectee with | Total _0 -> _0 
 let (uu___is_GTotal : comp' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | GTotal _0 -> true | uu____3106 -> false
+    match projectee with | GTotal _0 -> true | uu____3124 -> false
   
 let (__proj__GTotal__item___0 :
   comp' ->
@@ -797,55 +813,55 @@ let (__proj__GTotal__item___0 :
   = fun projectee  -> match projectee with | GTotal _0 -> _0 
 let (uu___is_Comp : comp' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Comp _0 -> true | uu____3144 -> false
+    match projectee with | Comp _0 -> true | uu____3162 -> false
   
 let (__proj__Comp__item___0 : comp' -> comp_typ) =
   fun projectee  -> match projectee with | Comp _0 -> _0 
 let (uu___is_TOTAL : cflags -> Prims.bool) =
   fun projectee  ->
-    match projectee with | TOTAL  -> true | uu____3157 -> false
+    match projectee with | TOTAL  -> true | uu____3175 -> false
   
 let (uu___is_MLEFFECT : cflags -> Prims.bool) =
   fun projectee  ->
-    match projectee with | MLEFFECT  -> true | uu____3163 -> false
+    match projectee with | MLEFFECT  -> true | uu____3181 -> false
   
 let (uu___is_RETURN : cflags -> Prims.bool) =
   fun projectee  ->
-    match projectee with | RETURN  -> true | uu____3169 -> false
+    match projectee with | RETURN  -> true | uu____3187 -> false
   
 let (uu___is_PARTIAL_RETURN : cflags -> Prims.bool) =
   fun projectee  ->
-    match projectee with | PARTIAL_RETURN  -> true | uu____3175 -> false
+    match projectee with | PARTIAL_RETURN  -> true | uu____3193 -> false
   
 let (uu___is_SOMETRIVIAL : cflags -> Prims.bool) =
   fun projectee  ->
-    match projectee with | SOMETRIVIAL  -> true | uu____3181 -> false
+    match projectee with | SOMETRIVIAL  -> true | uu____3199 -> false
   
 let (uu___is_TRIVIAL_POSTCONDITION : cflags -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | TRIVIAL_POSTCONDITION  -> true
-    | uu____3187 -> false
+    | uu____3205 -> false
   
 let (uu___is_SHOULD_NOT_INLINE : cflags -> Prims.bool) =
   fun projectee  ->
-    match projectee with | SHOULD_NOT_INLINE  -> true | uu____3193 -> false
+    match projectee with | SHOULD_NOT_INLINE  -> true | uu____3211 -> false
   
 let (uu___is_LEMMA : cflags -> Prims.bool) =
   fun projectee  ->
-    match projectee with | LEMMA  -> true | uu____3199 -> false
+    match projectee with | LEMMA  -> true | uu____3217 -> false
   
 let (uu___is_CPS : cflags -> Prims.bool) =
-  fun projectee  -> match projectee with | CPS  -> true | uu____3205 -> false 
+  fun projectee  -> match projectee with | CPS  -> true | uu____3223 -> false 
 let (uu___is_DECREASES : cflags -> Prims.bool) =
   fun projectee  ->
-    match projectee with | DECREASES _0 -> true | uu____3214 -> false
+    match projectee with | DECREASES _0 -> true | uu____3232 -> false
   
 let (__proj__DECREASES__item___0 : cflags -> term' syntax) =
   fun projectee  -> match projectee with | DECREASES _0 -> _0 
 let (uu___is_Meta_pattern : metadata -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Meta_pattern _0 -> true | uu____3244 -> false
+    match projectee with | Meta_pattern _0 -> true | uu____3262 -> false
   
 let (__proj__Meta_pattern__item___0 :
   metadata ->
@@ -853,13 +869,13 @@ let (__proj__Meta_pattern__item___0 :
   = fun projectee  -> match projectee with | Meta_pattern _0 -> _0 
 let (uu___is_Meta_named : metadata -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Meta_named _0 -> true | uu____3288 -> false
+    match projectee with | Meta_named _0 -> true | uu____3306 -> false
   
 let (__proj__Meta_named__item___0 : metadata -> FStar_Ident.lident) =
   fun projectee  -> match projectee with | Meta_named _0 -> _0 
 let (uu___is_Meta_labeled : metadata -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Meta_labeled _0 -> true | uu____3308 -> false
+    match projectee with | Meta_labeled _0 -> true | uu____3326 -> false
   
 let (__proj__Meta_labeled__item___0 :
   metadata ->
@@ -868,20 +884,20 @@ let (__proj__Meta_labeled__item___0 :
   = fun projectee  -> match projectee with | Meta_labeled _0 -> _0 
 let (uu___is_Meta_desugared : metadata -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Meta_desugared _0 -> true | uu____3340 -> false
+    match projectee with | Meta_desugared _0 -> true | uu____3358 -> false
   
 let (__proj__Meta_desugared__item___0 : metadata -> meta_source_info) =
   fun projectee  -> match projectee with | Meta_desugared _0 -> _0 
 let (uu___is_Meta_monadic : metadata -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Meta_monadic _0 -> true | uu____3360 -> false
+    match projectee with | Meta_monadic _0 -> true | uu____3378 -> false
   
 let (__proj__Meta_monadic__item___0 :
   metadata -> (monad_name,term' syntax) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | Meta_monadic _0 -> _0 
 let (uu___is_Meta_monadic_lift : metadata -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Meta_monadic_lift _0 -> true | uu____3400 -> false
+    match projectee with | Meta_monadic_lift _0 -> true | uu____3418 -> false
   
 let (__proj__Meta_monadic_lift__item___0 :
   metadata ->
@@ -889,35 +905,35 @@ let (__proj__Meta_monadic_lift__item___0 :
   = fun projectee  -> match projectee with | Meta_monadic_lift _0 -> _0 
 let (uu___is_Sequence : meta_source_info -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sequence  -> true | uu____3437 -> false
+    match projectee with | Sequence  -> true | uu____3455 -> false
   
 let (uu___is_Primop : meta_source_info -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Primop  -> true | uu____3443 -> false
+    match projectee with | Primop  -> true | uu____3461 -> false
   
 let (uu___is_Masked_effect : meta_source_info -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Masked_effect  -> true | uu____3449 -> false
+    match projectee with | Masked_effect  -> true | uu____3467 -> false
   
 let (uu___is_Meta_smt_pat : meta_source_info -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Meta_smt_pat  -> true | uu____3455 -> false
+    match projectee with | Meta_smt_pat  -> true | uu____3473 -> false
   
 let (uu___is_Mutable_alloc : meta_source_info -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Mutable_alloc  -> true | uu____3461 -> false
+    match projectee with | Mutable_alloc  -> true | uu____3479 -> false
   
 let (uu___is_Mutable_rval : meta_source_info -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Mutable_rval  -> true | uu____3467 -> false
+    match projectee with | Mutable_rval  -> true | uu____3485 -> false
   
 let (uu___is_Data_ctor : fv_qual -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Data_ctor  -> true | uu____3473 -> false
+    match projectee with | Data_ctor  -> true | uu____3491 -> false
   
 let (uu___is_Record_projector : fv_qual -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Record_projector _0 -> true | uu____3484 -> false
+    match projectee with | Record_projector _0 -> true | uu____3502 -> false
   
 let (__proj__Record_projector__item___0 :
   fv_qual ->
@@ -925,7 +941,7 @@ let (__proj__Record_projector__item___0 :
   = fun projectee  -> match projectee with | Record_projector _0 -> _0 
 let (uu___is_Record_ctor : fv_qual -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Record_ctor _0 -> true | uu____3516 -> false
+    match projectee with | Record_ctor _0 -> true | uu____3534 -> false
   
 let (__proj__Record_ctor__item___0 :
   fv_qual ->
@@ -934,35 +950,35 @@ let (__proj__Record_ctor__item___0 :
   = fun projectee  -> match projectee with | Record_ctor _0 -> _0 
 let (uu___is_DB : subst_elt -> Prims.bool) =
   fun projectee  ->
-    match projectee with | DB _0 -> true | uu____3552 -> false
+    match projectee with | DB _0 -> true | uu____3570 -> false
   
 let (__proj__DB__item___0 :
   subst_elt -> (Prims.int,bv) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | DB _0 -> _0 
 let (uu___is_NM : subst_elt -> Prims.bool) =
   fun projectee  ->
-    match projectee with | NM _0 -> true | uu____3582 -> false
+    match projectee with | NM _0 -> true | uu____3600 -> false
   
 let (__proj__NM__item___0 :
   subst_elt -> (bv,Prims.int) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | NM _0 -> _0 
 let (uu___is_NT : subst_elt -> Prims.bool) =
   fun projectee  ->
-    match projectee with | NT _0 -> true | uu____3614 -> false
+    match projectee with | NT _0 -> true | uu____3632 -> false
   
 let (__proj__NT__item___0 :
   subst_elt -> (bv,term' syntax) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | NT _0 -> _0 
 let (uu___is_UN : subst_elt -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UN _0 -> true | uu____3650 -> false
+    match projectee with | UN _0 -> true | uu____3668 -> false
   
 let (__proj__UN__item___0 :
   subst_elt -> (Prims.int,universe) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | UN _0 -> _0 
 let (uu___is_UD : subst_elt -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UD _0 -> true | uu____3680 -> false
+    match projectee with | UD _0 -> true | uu____3698 -> false
   
 let (__proj__UD__item___0 :
   subst_elt -> (univ_name,Prims.int) FStar_Pervasives_Native.tuple2) =
@@ -1136,13 +1152,13 @@ let (__proj__Mklazyinfo__item__rng : lazyinfo -> FStar_Range.range) =
   
 let (uu___is_Binding_var : binding -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Binding_var _0 -> true | uu____4223 -> false
+    match projectee with | Binding_var _0 -> true | uu____4241 -> false
   
 let (__proj__Binding_var__item___0 : binding -> bv) =
   fun projectee  -> match projectee with | Binding_var _0 -> _0 
 let (uu___is_Binding_lid : binding -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Binding_lid _0 -> true | uu____4249 -> false
+    match projectee with | Binding_lid _0 -> true | uu____4267 -> false
   
 let (__proj__Binding_lid__item___0 :
   binding ->
@@ -1152,7 +1168,7 @@ let (__proj__Binding_lid__item___0 :
   = fun projectee  -> match projectee with | Binding_lid _0 -> _0 
 let (uu___is_Binding_univ : binding -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Binding_univ _0 -> true | uu____4299 -> false
+    match projectee with | Binding_univ _0 -> true | uu____4317 -> false
   
 let (__proj__Binding_univ__item___0 : binding -> univ_name) =
   fun projectee  -> match projectee with | Binding_univ _0 -> _0 
@@ -1210,13 +1226,13 @@ let (mk_lcomp :
     fun res_typ  ->
       fun cflags  ->
         fun comp_thunk  ->
-          let uu____4524 = FStar_Util.mk_ref (FStar_Util.Inl comp_thunk)  in
-          { eff_name; res_typ; cflags; comp_thunk = uu____4524 }
+          let uu____4542 = FStar_Util.mk_ref (FStar_Util.Inl comp_thunk)  in
+          { eff_name; res_typ; cflags; comp_thunk = uu____4542 }
   
 let (lcomp_comp : lcomp -> comp) =
   fun lc  ->
-    let uu____4583 = FStar_ST.op_Bang lc.comp_thunk  in
-    match uu____4583 with
+    let uu____4601 = FStar_ST.op_Bang lc.comp_thunk  in
+    match uu____4601 with
     | FStar_Util.Inl thunk ->
         let c = thunk ()  in
         (FStar_ST.op_Colon_Equals lc.comp_thunk (FStar_Util.Inr c); c)
@@ -1256,77 +1272,77 @@ type qualifier =
   | OnlyName [@@deriving show]
 let (uu___is_Assumption : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Assumption  -> true | uu____4778 -> false
+    match projectee with | Assumption  -> true | uu____4796 -> false
   
 let (uu___is_New : qualifier -> Prims.bool) =
-  fun projectee  -> match projectee with | New  -> true | uu____4784 -> false 
+  fun projectee  -> match projectee with | New  -> true | uu____4802 -> false 
 let (uu___is_Private : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Private  -> true | uu____4790 -> false
+    match projectee with | Private  -> true | uu____4808 -> false
   
 let (uu___is_Unfold_for_unification_and_vcgen : qualifier -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Unfold_for_unification_and_vcgen  -> true
-    | uu____4796 -> false
+    | uu____4814 -> false
   
 let (uu___is_Visible_default : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Visible_default  -> true | uu____4802 -> false
+    match projectee with | Visible_default  -> true | uu____4820 -> false
   
 let (uu___is_Irreducible : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Irreducible  -> true | uu____4808 -> false
+    match projectee with | Irreducible  -> true | uu____4826 -> false
   
 let (uu___is_Abstract : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Abstract  -> true | uu____4814 -> false
+    match projectee with | Abstract  -> true | uu____4832 -> false
   
 let (uu___is_Inline_for_extraction : qualifier -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Inline_for_extraction  -> true
-    | uu____4820 -> false
+    | uu____4838 -> false
   
 let (uu___is_NoExtract : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | NoExtract  -> true | uu____4826 -> false
+    match projectee with | NoExtract  -> true | uu____4844 -> false
   
 let (uu___is_Noeq : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Noeq  -> true | uu____4832 -> false
+    match projectee with | Noeq  -> true | uu____4850 -> false
   
 let (uu___is_Unopteq : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Unopteq  -> true | uu____4838 -> false
+    match projectee with | Unopteq  -> true | uu____4856 -> false
   
 let (uu___is_TotalEffect : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | TotalEffect  -> true | uu____4844 -> false
+    match projectee with | TotalEffect  -> true | uu____4862 -> false
   
 let (uu___is_Logic : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Logic  -> true | uu____4850 -> false
+    match projectee with | Logic  -> true | uu____4868 -> false
   
 let (uu___is_Reifiable : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Reifiable  -> true | uu____4856 -> false
+    match projectee with | Reifiable  -> true | uu____4874 -> false
   
 let (uu___is_Reflectable : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Reflectable _0 -> true | uu____4863 -> false
+    match projectee with | Reflectable _0 -> true | uu____4881 -> false
   
 let (__proj__Reflectable__item___0 : qualifier -> FStar_Ident.lident) =
   fun projectee  -> match projectee with | Reflectable _0 -> _0 
 let (uu___is_Discriminator : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Discriminator _0 -> true | uu____4877 -> false
+    match projectee with | Discriminator _0 -> true | uu____4895 -> false
   
 let (__proj__Discriminator__item___0 : qualifier -> FStar_Ident.lident) =
   fun projectee  -> match projectee with | Discriminator _0 -> _0 
 let (uu___is_Projector : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Projector _0 -> true | uu____4895 -> false
+    match projectee with | Projector _0 -> true | uu____4913 -> false
   
 let (__proj__Projector__item___0 :
   qualifier ->
@@ -1334,7 +1350,7 @@ let (__proj__Projector__item___0 :
   = fun projectee  -> match projectee with | Projector _0 -> _0 
 let (uu___is_RecordType : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | RecordType _0 -> true | uu____4929 -> false
+    match projectee with | RecordType _0 -> true | uu____4947 -> false
   
 let (__proj__RecordType__item___0 :
   qualifier ->
@@ -1343,7 +1359,7 @@ let (__proj__RecordType__item___0 :
   = fun projectee  -> match projectee with | RecordType _0 -> _0 
 let (uu___is_RecordConstructor : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | RecordConstructor _0 -> true | uu____4975 -> false
+    match projectee with | RecordConstructor _0 -> true | uu____4993 -> false
   
 let (__proj__RecordConstructor__item___0 :
   qualifier ->
@@ -1352,7 +1368,7 @@ let (__proj__RecordConstructor__item___0 :
   = fun projectee  -> match projectee with | RecordConstructor _0 -> _0 
 let (uu___is_Action : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Action _0 -> true | uu____5013 -> false
+    match projectee with | Action _0 -> true | uu____5031 -> false
   
 let (__proj__Action__item___0 : qualifier -> FStar_Ident.lident) =
   fun projectee  -> match projectee with | Action _0 -> _0 
@@ -1360,19 +1376,19 @@ let (uu___is_ExceptionConstructor : qualifier -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | ExceptionConstructor  -> true
-    | uu____5026 -> false
+    | uu____5044 -> false
   
 let (uu___is_HasMaskedEffect : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | HasMaskedEffect  -> true | uu____5032 -> false
+    match projectee with | HasMaskedEffect  -> true | uu____5050 -> false
   
 let (uu___is_Effect : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Effect  -> true | uu____5038 -> false
+    match projectee with | Effect  -> true | uu____5056 -> false
   
 let (uu___is_OnlyName : qualifier -> Prims.bool) =
   fun projectee  ->
-    match projectee with | OnlyName  -> true | uu____5044 -> false
+    match projectee with | OnlyName  -> true | uu____5062 -> false
   
 type tycon = (FStar_Ident.lident,binders,typ) FStar_Pervasives_Native.tuple3
 [@@deriving show]
@@ -1882,7 +1898,7 @@ and sigelt =
   sigattrs: attribute Prims.list }[@@deriving show]
 let (uu___is_Sig_inductive_typ : sigelt' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sig_inductive_typ _0 -> true | uu____6232 -> false
+    match projectee with | Sig_inductive_typ _0 -> true | uu____6250 -> false
   
 let (__proj__Sig_inductive_typ__item___0 :
   sigelt' ->
@@ -1891,7 +1907,7 @@ let (__proj__Sig_inductive_typ__item___0 :
   = fun projectee  -> match projectee with | Sig_inductive_typ _0 -> _0 
 let (uu___is_Sig_bundle : sigelt' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sig_bundle _0 -> true | uu____6302 -> false
+    match projectee with | Sig_bundle _0 -> true | uu____6320 -> false
   
 let (__proj__Sig_bundle__item___0 :
   sigelt' ->
@@ -1900,7 +1916,7 @@ let (__proj__Sig_bundle__item___0 :
   = fun projectee  -> match projectee with | Sig_bundle _0 -> _0 
 let (uu___is_Sig_datacon : sigelt' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sig_datacon _0 -> true | uu____6354 -> false
+    match projectee with | Sig_datacon _0 -> true | uu____6372 -> false
   
 let (__proj__Sig_datacon__item___0 :
   sigelt' ->
@@ -1910,7 +1926,7 @@ let (__proj__Sig_datacon__item___0 :
   = fun projectee  -> match projectee with | Sig_datacon _0 -> _0 
 let (uu___is_Sig_declare_typ : sigelt' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sig_declare_typ _0 -> true | uu____6416 -> false
+    match projectee with | Sig_declare_typ _0 -> true | uu____6434 -> false
   
 let (__proj__Sig_declare_typ__item___0 :
   sigelt' ->
@@ -1918,7 +1934,7 @@ let (__proj__Sig_declare_typ__item___0 :
   = fun projectee  -> match projectee with | Sig_declare_typ _0 -> _0 
 let (uu___is_Sig_let : sigelt' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sig_let _0 -> true | uu____6454 -> false
+    match projectee with | Sig_let _0 -> true | uu____6472 -> false
   
 let (__proj__Sig_let__item___0 :
   sigelt' ->
@@ -1927,13 +1943,13 @@ let (__proj__Sig_let__item___0 :
   = fun projectee  -> match projectee with | Sig_let _0 -> _0 
 let (uu___is_Sig_main : sigelt' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sig_main _0 -> true | uu____6486 -> false
+    match projectee with | Sig_main _0 -> true | uu____6504 -> false
   
 let (__proj__Sig_main__item___0 : sigelt' -> term) =
   fun projectee  -> match projectee with | Sig_main _0 -> _0 
 let (uu___is_Sig_assume : sigelt' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sig_assume _0 -> true | uu____6506 -> false
+    match projectee with | Sig_assume _0 -> true | uu____6524 -> false
   
 let (__proj__Sig_assume__item___0 :
   sigelt' ->
@@ -1941,7 +1957,7 @@ let (__proj__Sig_assume__item___0 :
   = fun projectee  -> match projectee with | Sig_assume _0 -> _0 
 let (uu___is_Sig_new_effect : sigelt' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sig_new_effect _0 -> true | uu____6538 -> false
+    match projectee with | Sig_new_effect _0 -> true | uu____6556 -> false
   
 let (__proj__Sig_new_effect__item___0 : sigelt' -> eff_decl) =
   fun projectee  -> match projectee with | Sig_new_effect _0 -> _0 
@@ -1949,19 +1965,19 @@ let (uu___is_Sig_new_effect_for_free : sigelt' -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | Sig_new_effect_for_free _0 -> true
-    | uu____6552 -> false
+    | uu____6570 -> false
   
 let (__proj__Sig_new_effect_for_free__item___0 : sigelt' -> eff_decl) =
   fun projectee  -> match projectee with | Sig_new_effect_for_free _0 -> _0 
 let (uu___is_Sig_sub_effect : sigelt' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sig_sub_effect _0 -> true | uu____6566 -> false
+    match projectee with | Sig_sub_effect _0 -> true | uu____6584 -> false
   
 let (__proj__Sig_sub_effect__item___0 : sigelt' -> sub_eff) =
   fun projectee  -> match projectee with | Sig_sub_effect _0 -> _0 
 let (uu___is_Sig_effect_abbrev : sigelt' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sig_effect_abbrev _0 -> true | uu____6592 -> false
+    match projectee with | Sig_effect_abbrev _0 -> true | uu____6610 -> false
   
 let (__proj__Sig_effect_abbrev__item___0 :
   sigelt' ->
@@ -1970,13 +1986,13 @@ let (__proj__Sig_effect_abbrev__item___0 :
   = fun projectee  -> match projectee with | Sig_effect_abbrev _0 -> _0 
 let (uu___is_Sig_pragma : sigelt' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sig_pragma _0 -> true | uu____6642 -> false
+    match projectee with | Sig_pragma _0 -> true | uu____6660 -> false
   
 let (__proj__Sig_pragma__item___0 : sigelt' -> pragma) =
   fun projectee  -> match projectee with | Sig_pragma _0 -> _0 
 let (uu___is_Sig_splice : sigelt' -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Sig_splice _0 -> true | uu____6662 -> false
+    match projectee with | Sig_splice _0 -> true | uu____6680 -> false
   
 let (__proj__Sig_splice__item___0 :
   sigelt' ->
@@ -2062,10 +2078,10 @@ type mk_t = term' mk_t_a[@@deriving show]
 let (contains_reflectable : qualifier Prims.list -> Prims.bool) =
   fun l  ->
     FStar_Util.for_some
-      (fun uu___58_6862  ->
-         match uu___58_6862 with
-         | Reflectable uu____6863 -> true
-         | uu____6864 -> false) l
+      (fun uu___58_6880  ->
+         match uu___58_6880 with
+         | Reflectable uu____6881 -> true
+         | uu____6882 -> false) l
   
 let withinfo : 'a . 'a -> FStar_Range.range -> 'a withinfo_t =
   fun v1  -> fun r  -> { v = v1; p = r } 
@@ -2101,13 +2117,13 @@ let (range_of_bv : bv -> FStar_Range.range) =
 let (set_range_of_bv : bv -> FStar_Range.range -> bv) =
   fun x  ->
     fun r  ->
-      let uu___65_6950 = x  in
-      let uu____6951 =
+      let uu___65_6968 = x  in
+      let uu____6969 =
         FStar_Ident.mk_ident (((x.ppname).FStar_Ident.idText), r)  in
       {
-        ppname = uu____6951;
-        index = (uu___65_6950.index);
-        sort = (uu___65_6950.sort)
+        ppname = uu____6969;
+        index = (uu___65_6968.index);
+        sort = (uu___65_6968.sort)
       }
   
 let (on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo) =
@@ -2115,13 +2131,13 @@ let (on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo) =
     fun qi  ->
       let aq =
         FStar_List.map
-          (fun uu____6993  ->
-             match uu____6993 with
-             | (bv,b,t) -> let uu____7009 = f t  in (bv, b, uu____7009))
+          (fun uu____7011  ->
+             match uu____7011 with
+             | (bv,b,t) -> let uu____7027 = f t  in (bv, b, uu____7027))
           qi.antiquotes
          in
-      let uu___66_7010 = qi  in
-      { qkind = (uu___66_7010.qkind); antiquotes = aq }
+      let uu___66_7028 = qi  in
+      { qkind = (uu___66_7028.qkind); antiquotes = aq }
   
 let (lookup_aq :
   bv ->
@@ -2131,44 +2147,44 @@ let (lookup_aq :
   =
   fun bv  ->
     fun aq  ->
-      let uu____7033 =
+      let uu____7051 =
         FStar_List.tryFind
-          (fun uu____7056  ->
-             match uu____7056 with
-             | (bv',uu____7066,uu____7067) -> bv_eq bv bv') aq
+          (fun uu____7074  ->
+             match uu____7074 with
+             | (bv',uu____7084,uu____7085) -> bv_eq bv bv') aq
          in
-      match uu____7033 with
-      | FStar_Pervasives_Native.Some (uu____7078,b,e) ->
+      match uu____7051 with
+      | FStar_Pervasives_Native.Some (uu____7096,b,e) ->
           FStar_Pervasives_Native.Some (b, e)
       | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
   
 let syn :
-  'Auu____7121 'Auu____7122 'Auu____7123 .
-    'Auu____7121 ->
-      'Auu____7122 ->
-        ('Auu____7122 -> 'Auu____7121 -> 'Auu____7123) -> 'Auu____7123
+  'Auu____7139 'Auu____7140 'Auu____7141 .
+    'Auu____7139 ->
+      'Auu____7140 ->
+        ('Auu____7140 -> 'Auu____7139 -> 'Auu____7141) -> 'Auu____7141
   = fun p  -> fun k  -> fun f  -> f k p 
 let mk_fvs :
-  'Auu____7164 .
-    unit -> 'Auu____7164 FStar_Pervasives_Native.option FStar_ST.ref
-  = fun uu____7173  -> FStar_Util.mk_ref FStar_Pervasives_Native.None 
+  'Auu____7182 .
+    unit -> 'Auu____7182 FStar_Pervasives_Native.option FStar_ST.ref
+  = fun uu____7191  -> FStar_Util.mk_ref FStar_Pervasives_Native.None 
 let mk_uvs :
-  'Auu____7191 .
-    unit -> 'Auu____7191 FStar_Pervasives_Native.option FStar_ST.ref
-  = fun uu____7200  -> FStar_Util.mk_ref FStar_Pervasives_Native.None 
+  'Auu____7209 .
+    unit -> 'Auu____7209 FStar_Pervasives_Native.option FStar_ST.ref
+  = fun uu____7218  -> FStar_Util.mk_ref FStar_Pervasives_Native.None 
 let (new_bv_set : unit -> bv FStar_Util.set) =
-  fun uu____7209  -> FStar_Util.new_set order_bv 
+  fun uu____7227  -> FStar_Util.new_set order_bv 
 let (new_fv_set : unit -> FStar_Ident.lident FStar_Util.set) =
-  fun uu____7218  -> FStar_Util.new_set order_fv 
+  fun uu____7236  -> FStar_Util.new_set order_fv 
 let (order_univ_name : univ_name -> univ_name -> Prims.int) =
   fun x  ->
     fun y  ->
-      let uu____7231 = FStar_Ident.text_of_id x  in
-      let uu____7232 = FStar_Ident.text_of_id y  in
-      FStar_String.compare uu____7231 uu____7232
+      let uu____7249 = FStar_Ident.text_of_id x  in
+      let uu____7250 = FStar_Ident.text_of_id y  in
+      FStar_String.compare uu____7249 uu____7250
   
 let (new_universe_names_set : unit -> univ_name FStar_Util.set) =
-  fun uu____7239  -> FStar_Util.new_set order_univ_name 
+  fun uu____7257  -> FStar_Util.new_set order_univ_name 
 let (no_names : bv FStar_Util.set) = new_bv_set () 
 let (no_fvars : FStar_Ident.lident FStar_Util.set) = new_fv_set () 
 let (no_universe_names : univ_name FStar_Util.set) =
@@ -2179,20 +2195,20 @@ let (list_of_freenames : freenames -> bv Prims.list) =
   fun fvs  -> FStar_Util.set_elements fvs 
 let mk : 'a . 'a -> 'a mk_t_a =
   fun t  ->
-    fun uu____7292  ->
+    fun uu____7310  ->
       fun r  ->
-        let uu____7296 = FStar_Util.mk_ref FStar_Pervasives_Native.None  in
-        { n = t; pos = r; vars = uu____7296 }
+        let uu____7314 = FStar_Util.mk_ref FStar_Pervasives_Native.None  in
+        { n = t; pos = r; vars = uu____7314 }
   
 let (bv_to_tm : bv -> term) =
   fun bv  ->
-    let uu____7328 = range_of_bv bv  in
-    mk (Tm_bvar bv) FStar_Pervasives_Native.None uu____7328
+    let uu____7346 = range_of_bv bv  in
+    mk (Tm_bvar bv) FStar_Pervasives_Native.None uu____7346
   
 let (bv_to_name : bv -> term) =
   fun bv  ->
-    let uu____7334 = range_of_bv bv  in
-    mk (Tm_name bv) FStar_Pervasives_Native.None uu____7334
+    let uu____7352 = range_of_bv bv  in
+    mk (Tm_name bv) FStar_Pervasives_Native.None uu____7352
   
 let (mk_Tm_app : term -> args -> mk_t) =
   fun t1  ->
@@ -2201,19 +2217,19 @@ let (mk_Tm_app : term -> args -> mk_t) =
         fun p  ->
           match args with
           | [] -> t1
-          | uu____7363 ->
+          | uu____7381 ->
               mk (Tm_app (t1, args)) FStar_Pervasives_Native.None p
   
 let (mk_Tm_uinst : term -> universes -> term) =
   fun t  ->
-    fun uu___59_7385  ->
-      match uu___59_7385 with
+    fun uu___59_7403  ->
+      match uu___59_7403 with
       | [] -> t
       | us ->
           (match t.n with
-           | Tm_fvar uu____7387 ->
+           | Tm_fvar uu____7405 ->
                mk (Tm_uinst (t, us)) FStar_Pervasives_Native.None t.pos
-           | uu____7390 -> failwith "Unexpected universe instantiation")
+           | uu____7408 -> failwith "Unexpected universe instantiation")
   
 let (extend_app_n : term -> args -> mk_t) =
   fun t  ->
@@ -2223,7 +2239,7 @@ let (extend_app_n : term -> args -> mk_t) =
           match t.n with
           | Tm_app (head1,args) ->
               mk_Tm_app head1 (FStar_List.append args args') kopt r
-          | uu____7445 -> mk_Tm_app t args' kopt r
+          | uu____7463 -> mk_Tm_app t args' kopt r
   
 let (extend_app : term -> arg -> mk_t) =
   fun t  -> fun arg  -> fun kopt  -> fun r  -> extend_app_n t [arg] kopt r 
@@ -2232,15 +2248,15 @@ let (mk_Tm_delayed :
   =
   fun lr  ->
     fun pos  ->
-      let uu____7500 =
-        let uu____7507 =
-          let uu____7508 =
-            let uu____7533 = FStar_Util.mk_ref FStar_Pervasives_Native.None
+      let uu____7518 =
+        let uu____7525 =
+          let uu____7526 =
+            let uu____7551 = FStar_Util.mk_ref FStar_Pervasives_Native.None
                in
-            (lr, uu____7533)  in
-          Tm_delayed uu____7508  in
-        mk uu____7507  in
-      uu____7500 FStar_Pervasives_Native.None pos
+            (lr, uu____7551)  in
+          Tm_delayed uu____7526  in
+        mk uu____7525  in
+      uu____7518 FStar_Pervasives_Native.None pos
   
 let (mk_Total' : typ -> universe FStar_Pervasives_Native.option -> comp) =
   fun t  -> fun u  -> mk (Total (t, u)) FStar_Pervasives_Native.None t.pos 
@@ -2256,8 +2272,8 @@ let (mk_lb :
   (lbname,univ_name Prims.list,FStar_Ident.lident,typ,term,FStar_Range.range)
     FStar_Pervasives_Native.tuple6 -> letbinding)
   =
-  fun uu____7658  ->
-    match uu____7658 with
+  fun uu____7676  ->
+    match uu____7676 with
     | (x,univs,eff,t,e,pos) ->
         {
           lbname = x;
@@ -2296,10 +2312,10 @@ let (is_teff : term -> Prims.bool) =
   fun t  ->
     match t.n with
     | Tm_constant (FStar_Const.Const_effect ) -> true
-    | uu____7725 -> false
+    | uu____7743 -> false
   
 let (is_type : term -> Prims.bool) =
-  fun t  -> match t.n with | Tm_type uu____7731 -> true | uu____7732 -> false 
+  fun t  -> match t.n with | Tm_type uu____7749 -> true | uu____7750 -> false 
 let (null_id : FStar_Ident.ident) =
   FStar_Ident.mk_ident ("_", FStar_Range.dummyRange) 
 let (null_bv : term -> bv) =
@@ -2307,7 +2323,7 @@ let (null_bv : term -> bv) =
 let (mk_binder : bv -> binder) = fun a  -> (a, FStar_Pervasives_Native.None) 
 let (null_binder : term -> binder) =
   fun t  ->
-    let uu____7748 = null_bv t  in (uu____7748, FStar_Pervasives_Native.None)
+    let uu____7766 = null_bv t  in (uu____7766, FStar_Pervasives_Native.None)
   
 let (imp_tag : arg_qualifier) = Implicit false 
 let (iarg : term -> arg) =
@@ -2318,19 +2334,19 @@ let (is_null_bv : bv -> Prims.bool) =
 let (is_null_binder : binder -> Prims.bool) =
   fun b  -> is_null_bv (FStar_Pervasives_Native.fst b) 
 let (is_top_level : letbinding Prims.list -> Prims.bool) =
-  fun uu___60_7779  ->
-    match uu___60_7779 with
-    | { lbname = FStar_Util.Inr uu____7782; lbunivs = uu____7783;
-        lbtyp = uu____7784; lbeff = uu____7785; lbdef = uu____7786;
-        lbattrs = uu____7787; lbpos = uu____7788;_}::uu____7789 -> true
-    | uu____7802 -> false
+  fun uu___60_7797  ->
+    match uu___60_7797 with
+    | { lbname = FStar_Util.Inr uu____7800; lbunivs = uu____7801;
+        lbtyp = uu____7802; lbeff = uu____7803; lbdef = uu____7804;
+        lbattrs = uu____7805; lbpos = uu____7806;_}::uu____7807 -> true
+    | uu____7820 -> false
   
 let (freenames_of_binders : binders -> freenames) =
   fun bs  ->
     FStar_List.fold_right
-      (fun uu____7820  ->
+      (fun uu____7838  ->
          fun out  ->
-           match uu____7820 with | (x,uu____7831) -> FStar_Util.set_add x out)
+           match uu____7838 with | (x,uu____7849) -> FStar_Util.set_add x out)
       bs no_names
   
 let (binders_of_list : bv Prims.list -> binders) =
@@ -2340,18 +2356,18 @@ let (binders_of_list : bv Prims.list -> binders) =
   
 let (binders_of_freenames : freenames -> binders) =
   fun fvs  ->
-    let uu____7858 = FStar_Util.set_elements fvs  in
-    FStar_All.pipe_right uu____7858 binders_of_list
+    let uu____7876 = FStar_Util.set_elements fvs  in
+    FStar_All.pipe_right uu____7876 binders_of_list
   
 let (is_implicit : aqual -> Prims.bool) =
-  fun uu___61_7867  ->
-    match uu___61_7867 with
-    | FStar_Pervasives_Native.Some (Implicit uu____7868) -> true
-    | uu____7869 -> false
+  fun uu___61_7885  ->
+    match uu___61_7885 with
+    | FStar_Pervasives_Native.Some (Implicit uu____7886) -> true
+    | uu____7887 -> false
   
 let (as_implicit : Prims.bool -> aqual) =
-  fun uu___62_7874  ->
-    if uu___62_7874
+  fun uu___62_7892  ->
+    if uu___62_7892
     then FStar_Pervasives_Native.Some imp_tag
     else FStar_Pervasives_Native.None
   
@@ -2359,31 +2375,31 @@ let (pat_bvs : pat -> bv Prims.list) =
   fun p  ->
     let rec aux b p1 =
       match p1.v with
-      | Pat_dot_term uu____7908 -> b
-      | Pat_constant uu____7915 -> b
+      | Pat_dot_term uu____7926 -> b
+      | Pat_constant uu____7933 -> b
       | Pat_wild x -> x :: b
       | Pat_var x -> x :: b
-      | Pat_cons (uu____7918,pats) ->
+      | Pat_cons (uu____7936,pats) ->
           FStar_List.fold_left
             (fun b1  ->
-               fun uu____7949  ->
-                 match uu____7949 with | (p2,uu____7961) -> aux b1 p2) b pats
+               fun uu____7967  ->
+                 match uu____7967 with | (p2,uu____7979) -> aux b1 p2) b pats
        in
-    let uu____7966 = aux [] p  in
-    FStar_All.pipe_left FStar_List.rev uu____7966
+    let uu____7984 = aux [] p  in
+    FStar_All.pipe_left FStar_List.rev uu____7984
   
 let (gen_reset :
   (unit -> Prims.int,unit -> unit) FStar_Pervasives_Native.tuple2) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0")  in
-  let gen1 uu____7991 = FStar_Util.incr x; FStar_ST.op_Bang x  in
-  let reset uu____8076 = FStar_ST.op_Colon_Equals x (Prims.parse_int "0")  in
+  let gen1 uu____8009 = FStar_Util.incr x; FStar_ST.op_Bang x  in
+  let reset uu____8094 = FStar_ST.op_Colon_Equals x (Prims.parse_int "0")  in
   (gen1, reset) 
 let (next_id : unit -> Prims.int) = FStar_Pervasives_Native.fst gen_reset 
 let (reset_gensym : unit -> unit) = FStar_Pervasives_Native.snd gen_reset 
 let (range_of_ropt :
   FStar_Range.range FStar_Pervasives_Native.option -> FStar_Range.range) =
-  fun uu___63_8154  ->
-    match uu___63_8154 with
+  fun uu___63_8172  ->
+    match uu___63_8172 with
     | FStar_Pervasives_Native.None  -> FStar_Range.dummyRange
     | FStar_Pervasives_Native.Some r -> r
   
@@ -2395,39 +2411,39 @@ let (gen_bv :
     fun r  ->
       fun t  ->
         let id1 = FStar_Ident.mk_ident (s, (range_of_ropt r))  in
-        let uu____8189 = next_id ()  in
-        { ppname = id1; index = uu____8189; sort = t }
+        let uu____8207 = next_id ()  in
+        { ppname = id1; index = uu____8207; sort = t }
   
 let (new_bv : FStar_Range.range FStar_Pervasives_Native.option -> typ -> bv)
   = fun ropt  -> fun t  -> gen_bv FStar_Ident.reserved_prefix ropt t 
 let (freshen_bv : bv -> bv) =
   fun bv  ->
-    let uu____8209 = is_null_bv bv  in
-    if uu____8209
+    let uu____8227 = is_null_bv bv  in
+    if uu____8227
     then
-      let uu____8210 =
-        let uu____8213 = range_of_bv bv  in
-        FStar_Pervasives_Native.Some uu____8213  in
-      new_bv uu____8210 bv.sort
+      let uu____8228 =
+        let uu____8231 = range_of_bv bv  in
+        FStar_Pervasives_Native.Some uu____8231  in
+      new_bv uu____8228 bv.sort
     else
-      (let uu___67_8215 = bv  in
-       let uu____8216 = next_id ()  in
+      (let uu___67_8233 = bv  in
+       let uu____8234 = next_id ()  in
        {
-         ppname = (uu___67_8215.ppname);
-         index = uu____8216;
-         sort = (uu___67_8215.sort)
+         ppname = (uu___67_8233.ppname);
+         index = uu____8234;
+         sort = (uu___67_8233.sort)
        })
   
 let (new_univ_name :
   FStar_Range.range FStar_Pervasives_Native.option -> univ_name) =
   fun ropt  ->
     let id1 = next_id ()  in
-    let uu____8227 =
-      let uu____8232 =
-        let uu____8233 = FStar_Util.string_of_int id1  in
-        Prims.strcat FStar_Ident.reserved_prefix uu____8233  in
-      (uu____8232, (range_of_ropt ropt))  in
-    FStar_Ident.mk_ident uu____8227
+    let uu____8245 =
+      let uu____8250 =
+        let uu____8251 = FStar_Util.string_of_int id1  in
+        Prims.strcat FStar_Ident.reserved_prefix uu____8251  in
+      (uu____8250, (range_of_ropt ropt))  in
+    FStar_Ident.mk_ident uu____8245
   
 let (mkbv : FStar_Ident.ident -> Prims.int -> term' syntax -> bv) =
   fun x  -> fun y  -> fun t  -> { ppname = x; index = y; sort = t } 
@@ -2440,7 +2456,7 @@ let (lbname_eq :
       match (l1, l2) with
       | (FStar_Util.Inl x,FStar_Util.Inl y) -> bv_eq x y
       | (FStar_Util.Inr l,FStar_Util.Inr m) -> FStar_Ident.lid_equals l m
-      | uu____8307 -> false
+      | uu____8325 -> false
   
 let (fv_eq : fv -> fv -> Prims.bool) =
   fun fv1  ->
@@ -2451,13 +2467,13 @@ let (fv_eq_lid : fv -> FStar_Ident.lident -> Prims.bool) =
 let (set_bv_range : bv -> FStar_Range.range -> bv) =
   fun bv  ->
     fun r  ->
-      let uu___68_8350 = bv  in
-      let uu____8351 =
+      let uu___68_8368 = bv  in
+      let uu____8369 =
         FStar_Ident.mk_ident (((bv.ppname).FStar_Ident.idText), r)  in
       {
-        ppname = uu____8351;
-        index = (uu___68_8350.index);
-        sort = (uu___68_8350.sort)
+        ppname = uu____8369;
+        index = (uu___68_8368.index);
+        sort = (uu___68_8368.sort)
       }
   
 let (lid_as_fv :
@@ -2467,15 +2483,15 @@ let (lid_as_fv :
   fun l  ->
     fun dd  ->
       fun dq  ->
-        let uu____8371 =
-          let uu____8372 = FStar_Ident.range_of_lid l  in
-          withinfo l uu____8372  in
-        { fv_name = uu____8371; fv_delta = dd; fv_qual = dq }
+        let uu____8389 =
+          let uu____8390 = FStar_Ident.range_of_lid l  in
+          withinfo l uu____8390  in
+        { fv_name = uu____8389; fv_delta = dd; fv_qual = dq }
   
 let (fv_to_tm : fv -> term) =
   fun fv  ->
-    let uu____8378 = FStar_Ident.range_of_lid (fv.fv_name).v  in
-    mk (Tm_fvar fv) FStar_Pervasives_Native.None uu____8378
+    let uu____8396 = FStar_Ident.range_of_lid (fv.fv_name).v  in
+    mk (Tm_fvar fv) FStar_Pervasives_Native.None uu____8396
   
 let (fvar :
   FStar_Ident.lident ->
@@ -2483,38 +2499,38 @@ let (fvar :
   =
   fun l  ->
     fun dd  ->
-      fun dq  -> let uu____8398 = lid_as_fv l dd dq  in fv_to_tm uu____8398
+      fun dq  -> let uu____8416 = lid_as_fv l dd dq  in fv_to_tm uu____8416
   
 let (lid_of_fv : fv -> FStar_Ident.lid) = fun fv  -> (fv.fv_name).v 
 let (range_of_fv : fv -> FStar_Range.range) =
   fun fv  ->
-    let uu____8409 = lid_of_fv fv  in FStar_Ident.range_of_lid uu____8409
+    let uu____8427 = lid_of_fv fv  in FStar_Ident.range_of_lid uu____8427
   
 let (set_range_of_fv : fv -> FStar_Range.range -> fv) =
   fun fv  ->
     fun r  ->
-      let uu___69_8420 = fv  in
-      let uu____8421 =
-        let uu___70_8422 = fv.fv_name  in
-        let uu____8423 =
-          let uu____8424 = lid_of_fv fv  in
-          FStar_Ident.set_lid_range uu____8424 r  in
-        { v = uu____8423; p = (uu___70_8422.p) }  in
+      let uu___69_8438 = fv  in
+      let uu____8439 =
+        let uu___70_8440 = fv.fv_name  in
+        let uu____8441 =
+          let uu____8442 = lid_of_fv fv  in
+          FStar_Ident.set_lid_range uu____8442 r  in
+        { v = uu____8441; p = (uu___70_8440.p) }  in
       {
-        fv_name = uu____8421;
-        fv_delta = (uu___69_8420.fv_delta);
-        fv_qual = (uu___69_8420.fv_qual)
+        fv_name = uu____8439;
+        fv_delta = (uu___69_8438.fv_delta);
+        fv_qual = (uu___69_8438.fv_qual)
       }
   
 let (has_simple_attribute : term Prims.list -> Prims.string -> Prims.bool) =
   fun l  ->
     fun s  ->
       FStar_List.existsb
-        (fun uu___64_8446  ->
-           match uu___64_8446 with
-           | { n = Tm_constant (FStar_Const.Const_string (data,uu____8450));
-               pos = uu____8451; vars = uu____8452;_} when data = s -> true
-           | uu____8455 -> false) l
+        (fun uu___64_8464  ->
+           match uu___64_8464 with
+           | { n = Tm_constant (FStar_Const.Const_string (data,uu____8468));
+               pos = uu____8469; vars = uu____8470;_} when data = s -> true
+           | uu____8473 -> false) l
   
 let rec (eq_pat : pat -> pat -> Prims.bool) =
   fun p1  ->
@@ -2522,20 +2538,20 @@ let rec (eq_pat : pat -> pat -> Prims.bool) =
       match ((p1.v), (p2.v)) with
       | (Pat_constant c1,Pat_constant c2) -> FStar_Const.eq_const c1 c2
       | (Pat_cons (fv1,as1),Pat_cons (fv2,as2)) ->
-          let uu____8506 = fv_eq fv1 fv2  in
-          if uu____8506
+          let uu____8524 = fv_eq fv1 fv2  in
+          if uu____8524
           then
-            let uu____8508 = FStar_List.zip as1 as2  in
-            FStar_All.pipe_right uu____8508
+            let uu____8526 = FStar_List.zip as1 as2  in
+            FStar_All.pipe_right uu____8526
               (FStar_List.for_all
-                 (fun uu____8566  ->
-                    match uu____8566 with
+                 (fun uu____8584  ->
+                    match uu____8584 with
                     | ((p11,b1),(p21,b2)) -> (b1 = b2) && (eq_pat p11 p21)))
           else false
-      | (Pat_var uu____8592,Pat_var uu____8593) -> true
-      | (Pat_wild uu____8594,Pat_wild uu____8595) -> true
+      | (Pat_var uu____8610,Pat_var uu____8611) -> true
+      | (Pat_wild uu____8612,Pat_wild uu____8613) -> true
       | (Pat_dot_term (bv1,t1),Pat_dot_term (bv2,t2)) -> true
-      | (uu____8608,uu____8609) -> false
+      | (uu____8626,uu____8627) -> false
   
 let (delta_constant : delta_depth) =
   Delta_constant_at_level (Prims.parse_int "0") 
@@ -2543,31 +2559,31 @@ let (delta_equational : delta_depth) =
   Delta_equational_at_level (Prims.parse_int "0") 
 let (tconst : FStar_Ident.lident -> term) =
   fun l  ->
-    let uu____8615 =
-      let uu____8622 =
-        let uu____8623 =
+    let uu____8633 =
+      let uu____8640 =
+        let uu____8641 =
           lid_as_fv l delta_constant FStar_Pervasives_Native.None  in
-        Tm_fvar uu____8623  in
-      mk uu____8622  in
-    uu____8615 FStar_Pervasives_Native.None FStar_Range.dummyRange
+        Tm_fvar uu____8641  in
+      mk uu____8640  in
+    uu____8633 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let (tabbrev : FStar_Ident.lident -> term) =
   fun l  ->
-    let uu____8632 =
-      let uu____8639 =
-        let uu____8640 =
+    let uu____8650 =
+      let uu____8657 =
+        let uu____8658 =
           lid_as_fv l (Delta_constant_at_level (Prims.parse_int "1"))
             FStar_Pervasives_Native.None
            in
-        Tm_fvar uu____8640  in
-      mk uu____8639  in
-    uu____8632 FStar_Pervasives_Native.None FStar_Range.dummyRange
+        Tm_fvar uu____8658  in
+      mk uu____8657  in
+    uu____8650 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let (tdataconstr : FStar_Ident.lident -> term) =
   fun l  ->
-    let uu____8649 =
+    let uu____8667 =
       lid_as_fv l delta_constant (FStar_Pervasives_Native.Some Data_ctor)  in
-    fv_to_tm uu____8649
+    fv_to_tm uu____8667
   
 let (t_unit : term) = tconst FStar_Parser_Const.unit_lid 
 let (t_bool : term) = tconst FStar_Parser_Const.bool_lid 
@@ -2585,54 +2601,54 @@ let (t_bv : term) = tconst FStar_Parser_Const.bv_lid
 let (t_fv : term) = tconst FStar_Parser_Const.fv_lid 
 let (t_norm_step : term) = tconst FStar_Parser_Const.norm_step_lid 
 let (t_tactic_unit : term' syntax) =
-  let uu____8652 =
-    let uu____8657 =
-      let uu____8658 = tabbrev FStar_Parser_Const.tactic_lid  in
-      mk_Tm_uinst uu____8658 [U_zero]  in
-    let uu____8659 = let uu____8660 = as_arg t_unit  in [uu____8660]  in
-    mk_Tm_app uu____8657 uu____8659  in
-  uu____8652 FStar_Pervasives_Native.None FStar_Range.dummyRange 
+  let uu____8670 =
+    let uu____8675 =
+      let uu____8676 = tabbrev FStar_Parser_Const.tactic_lid  in
+      mk_Tm_uinst uu____8676 [U_zero]  in
+    let uu____8677 = let uu____8678 = as_arg t_unit  in [uu____8678]  in
+    mk_Tm_app uu____8675 uu____8677  in
+  uu____8670 FStar_Pervasives_Native.None FStar_Range.dummyRange 
 let (t_tac_unit : term' syntax) =
-  let uu____8683 =
-    let uu____8688 =
-      let uu____8689 = tabbrev FStar_Parser_Const.u_tac_lid  in
-      mk_Tm_uinst uu____8689 [U_zero]  in
-    let uu____8690 = let uu____8691 = as_arg t_unit  in [uu____8691]  in
-    mk_Tm_app uu____8688 uu____8690  in
-  uu____8683 FStar_Pervasives_Native.None FStar_Range.dummyRange 
+  let uu____8701 =
+    let uu____8706 =
+      let uu____8707 = tabbrev FStar_Parser_Const.u_tac_lid  in
+      mk_Tm_uinst uu____8707 [U_zero]  in
+    let uu____8708 = let uu____8709 = as_arg t_unit  in [uu____8709]  in
+    mk_Tm_app uu____8706 uu____8708  in
+  uu____8701 FStar_Pervasives_Native.None FStar_Range.dummyRange 
 let (t_list_of : term -> term) =
   fun t  ->
-    let uu____8717 =
-      let uu____8722 =
-        let uu____8723 = tabbrev FStar_Parser_Const.list_lid  in
-        mk_Tm_uinst uu____8723 [U_zero]  in
-      let uu____8724 = let uu____8725 = as_arg t  in [uu____8725]  in
-      mk_Tm_app uu____8722 uu____8724  in
-    uu____8717 FStar_Pervasives_Native.None FStar_Range.dummyRange
+    let uu____8735 =
+      let uu____8740 =
+        let uu____8741 = tabbrev FStar_Parser_Const.list_lid  in
+        mk_Tm_uinst uu____8741 [U_zero]  in
+      let uu____8742 = let uu____8743 = as_arg t  in [uu____8743]  in
+      mk_Tm_app uu____8740 uu____8742  in
+    uu____8735 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let (t_option_of : term -> term) =
   fun t  ->
-    let uu____8751 =
-      let uu____8756 =
-        let uu____8757 = tabbrev FStar_Parser_Const.option_lid  in
-        mk_Tm_uinst uu____8757 [U_zero]  in
-      let uu____8758 = let uu____8759 = as_arg t  in [uu____8759]  in
-      mk_Tm_app uu____8756 uu____8758  in
-    uu____8751 FStar_Pervasives_Native.None FStar_Range.dummyRange
+    let uu____8769 =
+      let uu____8774 =
+        let uu____8775 = tabbrev FStar_Parser_Const.option_lid  in
+        mk_Tm_uinst uu____8775 [U_zero]  in
+      let uu____8776 = let uu____8777 = as_arg t  in [uu____8777]  in
+      mk_Tm_app uu____8774 uu____8776  in
+    uu____8769 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let (t_tuple2_of : term -> term -> term) =
   fun t1  ->
     fun t2  ->
-      let uu____8790 =
-        let uu____8795 =
-          let uu____8796 = tabbrev FStar_Parser_Const.lid_tuple2  in
-          mk_Tm_uinst uu____8796 [U_zero]  in
-        let uu____8797 =
-          let uu____8798 = as_arg t1  in
-          let uu____8805 = let uu____8814 = as_arg t2  in [uu____8814]  in
-          uu____8798 :: uu____8805  in
-        mk_Tm_app uu____8795 uu____8797  in
-      uu____8790 FStar_Pervasives_Native.None FStar_Range.dummyRange
+      let uu____8808 =
+        let uu____8813 =
+          let uu____8814 = tabbrev FStar_Parser_Const.lid_tuple2  in
+          mk_Tm_uinst uu____8814 [U_zero]  in
+        let uu____8815 =
+          let uu____8816 = as_arg t1  in
+          let uu____8823 = let uu____8832 = as_arg t2  in [uu____8832]  in
+          uu____8816 :: uu____8823  in
+        mk_Tm_app uu____8813 uu____8815  in
+      uu____8808 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let (unit_const : term' syntax) =
   mk (Tm_constant FStar_Const.Const_unit) FStar_Pervasives_Native.None

@@ -124,7 +124,9 @@ let (label_goals :
             let fresh_label1 msg ropt rng t =
               let msg1 =
                 if flag
-                then Prims.strcat "Failed to verify implicit argument: " msg
+                then
+                  Prims.strcat "Failed to verify implicit argument: "
+                    (Prims.strcat msg_prefix (Prims.strcat " :: " msg))
                 else msg  in
               let rng1 =
                 match ropt with
