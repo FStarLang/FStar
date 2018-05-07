@@ -2359,9 +2359,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     if BU.physical_equality t1 t2 then solve env (solve_prob orig None [] wl) else
     let _ =
         if debug env (Options.Other "RelCheck")
-        then BU.print3 "Attempting %s (%s - %s)\n" (string_of_int problem.pid)
+        then BU.print5 "Attempting %s (%s - %s)\nwith tags (%s - %s)\n" (string_of_int problem.pid)
                             (Print.term_to_string t1)
                             (Print.term_to_string t2)
+                            (Print.tag_of_term t1)
+                            (Print.tag_of_term t2)
                             in
     let r = Env.get_range env in
     match t1.n, t2.n with
@@ -2562,26 +2564,32 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                  end
 
       (* rigid-flex: subtyping *)
+      | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, _), _
+      | Tm_app({n=Tm_fvar fv}, _), _
+        when S.fv_eq_lid fv FStar.Parser.Const.t_refine_lid
+         ||  S.fv_eq_lid fv FStar.Parser.Const.p_refine_lid ->
+        let t1norm = N.normalize [N.Eager_unfolding] env t1 in
+        if debug env <| Options.Other "Rel" then
+        BU.print2 "Found a t_refine or a p_refine node, normalized %s to %s\n"
+                  (Print.term_to_string t1) (Print.term_to_string t1norm);
+        solve_t env ({problem with lhs=t1norm}) wl
+
+      | _, Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, _)
+      | _, Tm_app({n=Tm_fvar fv}, _)
+        when S.fv_eq_lid fv FStar.Parser.Const.t_refine_lid
+         ||  S.fv_eq_lid fv FStar.Parser.Const.p_refine_lid ->
+        let t2norm = N.normalize [N.Eager_unfolding] env t2 in
+        if debug env <| Options.Other "Rel" then
+        BU.print2 "Found a t_refine or a p_refine node, normalized %s to %s\n"
+                  (Print.term_to_string t2) (Print.term_to_string t2norm);
+        solve_t env ({problem with rhs=t2norm}) wl
+
       | _, Tm_uvar _
       | _, Tm_app({n=Tm_uvar _}, _) -> (* widen immediately, by forgetting the top-level refinement and equating *)
         if wl.defer_ok
         then solve env (defer "rigid-flex subtyping deferred" orig wl)
         else let t_base, _ = base_and_refinement env t1 in
              solve_t env ({problem with lhs=t_base; relation=EQ}) wl
-
-      | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, _), _
-      | Tm_app({n=Tm_fvar fv}, _), _
-        when S.fv_eq_lid fv FStar.Parser.Const.t_refine_lid
-         ||  S.fv_eq_lid fv FStar.Parser.Const.p_refine_lid ->
-        let t1 = N.normalize [N.Eager_unfolding] env t1 in
-        solve_t env ({problem with lhs=t1}) wl
-
-      | _, Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, _)
-      | _, Tm_app({n=Tm_fvar fv}, _)
-        when S.fv_eq_lid fv FStar.Parser.Const.t_refine_lid
-         ||  S.fv_eq_lid fv FStar.Parser.Const.p_refine_lid ->
-        let t2 = N.normalize [N.Eager_unfolding] env t2 in
-        solve_t env ({problem with rhs=t2}) wl
 
       | Tm_refine _, _ ->
         let t2 = force_refinement <| base_and_refinement env t2 in
