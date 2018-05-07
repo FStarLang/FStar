@@ -34,6 +34,7 @@ val apply_guard               : guard_t -> term -> guard_t
 val map_guard                 : guard_t -> (term -> term) -> guard_t
 val trivial_guard             : guard_t
 val is_trivial                : guard_t -> bool
+val is_trivial_guard_formula  : guard_t -> bool
 val conj_guard                : guard_t -> guard_t -> guard_t
 val abstract_guard            : binder -> guard_t -> guard_t
 val abstract_guard_n          : list<binder> -> guard_t -> guard_t

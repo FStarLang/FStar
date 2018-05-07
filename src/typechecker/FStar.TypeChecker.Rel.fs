@@ -60,6 +60,10 @@ let is_trivial g = match g with
            | None -> false)
     | _ -> false
 
+let is_trivial_guard_formula g = match g with
+    | {guard_f=Trivial} -> true
+    | _ -> false
+
 let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=[]}
 
 let abstract_guard_n bs g =
