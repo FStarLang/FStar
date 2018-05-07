@@ -2037,30 +2037,29 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
-// For a fail-family attribute is found, return the listed errors and
-// whether it's a fail_lax or not
+// If this is a fail attribute, return the listed errors and whether it's a fail_lax or not
 let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
     let hd, args = U.head_and_args at in
     match (SS.compress hd).n, args with
-    | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_errs_attr ->
+    | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_attr ->
         begin match EMB.unembed (EMB.e_list EMB.e_int) a1 with
         | Some [] ->
-            raise_error (Errors.Error_EmptyFailErrs, "Found ill-applied fail_errs, argument should be a non-empty list of integers") at.pos
+            raise_error (Errors.Error_EmptyFailErrs, "Found ill-applied fail, argument should be a non-empty list of integers") at.pos
 
         | Some es -> Some (List.map FStar.BigInt.to_int_fs es, false)
         | None ->
             if warn then
-                Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail_errs, argument should be non-empty a list of integers");
+                Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail, argument should be a non-empty list of integer literals");
             None
         end
 
-    | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_errs_attr ->
-        if warn then
-            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found unapplied fail_errs, did you forget to use parentheses?");
-        None
-
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_attr ->
         Some ([], false)
+
+    | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_attr ->
+        if warn then
+            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail, argument should be a non-empty list of integer literals");
+        None
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_lax_attr ->
         Some ([], true)

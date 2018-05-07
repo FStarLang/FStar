@@ -338,16 +338,13 @@ let must_erase_for_extraction :unit = ()
 
 let dm4f_bind_range : unit = ()
 
-(** When attached a top-level definition, the typechecker will succeed if and
- * only if checking the definition results in an error. *)
+(** When attached a top-level definition, the typechecker will succeed
+ * if and only if checking the definition results in an error. The
+ * error number list is actually OPTIONAL. If present, it will be
+ * checked that the definition raises exactly those errors in the
+ * specified multiplicity, but order does not matter. *)
 irreducible
-let fail : unit = ()
-
-(** Like fail, but allows to present a list of error numbers that need to be exactly
- * those raised. All errors should be listed in the exact multiplicity, but order
- * does not matter. *)
-irreducible
-let fail_errs (errs : list int) : unit = ()
+let fail (errs : list int) : unit = ()
 
 (** When --lax is present, we ignore both previous attributes since some definitions
  * only fail when verification is turned on. With this attribute, one can ensure

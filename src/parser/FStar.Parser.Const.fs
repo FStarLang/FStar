@@ -250,7 +250,6 @@ let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
 let fail_attr      = psconst "fail"
 let fail_lax_attr  = psconst "fail_lax"
-let fail_errs_attr = psconst "fail_errs"
 
 let gen_reset =
     let x = U.mk_ref 0 in
