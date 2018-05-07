@@ -514,6 +514,7 @@ let report_implicits ps (is : Env.implicits) : unit =
 let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remaining goals
                                                         * term // witness
                                                         =
+    let rng = tactic.pos in
     // This bit is really important: a typechecked tactic can contain many uvar redexes
     // that make normalization SUPER slow (probably exponential). Doing this first pass
     // gets rid of those redexes and leaves a much smaller term, which performs a lot better.
@@ -533,7 +534,6 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
     let env = { env with Env.instantiate_imp = false } in
     (* TODO: We do not faithfully expose universes to metaprograms *)
     let env = { env with Env.lax_universes = true } in
-    let rng = tactic.pos in
     let ps, w = proofstate_of_goal_ty rng env typ in
     if !tacdbg then
         BU.print1 "Running tactic with goal = %s\n" (Print.term_to_string typ);
@@ -788,8 +788,8 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
     if List.existsML (fun g -> not (Option.isSome (getprop g.context g.goal_ty))) gs
-    then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, ("synthesis left open goals")) typ.pos
-    else w
+        then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos;
+    w
 
 let splice (env:Env.env) (tau:term) : list<sigelt> =
     tacdbg := Env.debug env (Options.Other "Tac");
@@ -798,11 +798,13 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
     if List.existsML (fun g -> not (Option.isSome (getprop g.context g.goal_ty))) gs
-        then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, ("splice left open goals")) typ.pos;
+        then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") typ.pos;
 
     // Fully normalize the witness
     let w = N.normalize [N.Weak; N.HNF; N.UnfoldUntil delta_constant;
                          N.Primops; N.Unascribe; N.Unmeta] env w in
 
     // Unembed it, this must work if things are well-typed
-    BU.must <| unembed (e_list RE.e_sigelt) w
+    match unembed (e_list RE.e_sigelt) w with
+    | Some sigelts -> sigelts
+    | None -> Err.raise_error (Err.Fatal_SpliceUnembedFail, "splice: failed to unembed sigelts") typ.pos
