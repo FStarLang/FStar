@@ -4,7 +4,7 @@ val foo : f:(unit -> Tot bool){f () = true}
           -> Tot (r:bool {r = f () /\ r = true})
 let foo f = f ()
 val bar : unit -> Pure bool (requires True) (ensures (fun _ -> False))
-[@(fail_errs [19])]
+[@(fail [19])]
 let bar () = foo (fun x -> false)
 
 (*#380*)

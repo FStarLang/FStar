@@ -3,13 +3,13 @@ module Fail
 [@ fail]
 let _ = 1 + 'a'
 
-[@ (fail_errs [189])]
+[@ (fail [189])]
 let _ = 1 + 'a'
 
 [@ fail]
 let _ = assert False
 
-[@ (fail_errs [19])]
+[@ (fail [19])]
 let _ = assert False
 
 (* Now for interaction with --lax *)
@@ -33,5 +33,5 @@ let _ = 1 + 'a'
 //let _ = assert True
 
 (* We can also specify the expected errors *)
-[@ fail_lax (fail_errs [189])]
+[@ fail_lax (fail [189])]
 let _ = 1 + 'a'

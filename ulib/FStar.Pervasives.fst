@@ -348,7 +348,7 @@ let fail (errs : list int) : unit = ()
 
 (** When --lax is present, we ignore both previous attributes since some definitions
  * only fail when verification is turned on. With this attribute, one can ensure
- * that a definition fails lax-checking too. This can be combined with `fail_errs`.
+ * that a definition fails lax-checking too.
  *
  * (Note: this will NOT turn on --lax for you.) *)
 irreducible
