@@ -533,7 +533,8 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
     let env = { env with Env.instantiate_imp = false } in
     (* TODO: We do not faithfully expose universes to metaprograms *)
     let env = { env with Env.lax_universes = true } in
-    let ps, w = proofstate_of_goal_ty env typ in
+    let rng = tactic.pos in
+    let ps, w = proofstate_of_goal_ty rng env typ in
     if !tacdbg then
         BU.print1 "Running tactic with goal = %s\n" (Print.term_to_string typ);
     let res, ms = BU.record_time (fun () -> run tau ps) in
@@ -561,7 +562,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
 
     | Failed (s, ps) ->
         dump_proofstate (subst_proof_state (N.psc_subst ps.psc) ps) "at the time of failure";
-        Errors.raise_error (Errors.Fatal_UserTacticFailure, (BU.format1 "user tactic failed: %s" s)) typ.pos
+        Errors.raise_error (Errors.Fatal_UserTacticFailure, (BU.format1 "user tactic failed: %s" s)) ps.entry_range
 
 // Polarity
 type pol =

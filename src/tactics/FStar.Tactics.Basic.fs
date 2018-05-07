@@ -130,7 +130,9 @@ let dump_cur ps msg =
 let ps_to_string (msg, ps) =
     String.concat ""
                [format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
-                format1 "Location: %s\n" (Range.string_of_range ps.entry_range);
+                if ps.entry_range <> Range.dummyRange
+                then format1 "Location: %s\n" (Range.string_of_range ps.entry_range)
+                else "";
                 format2 "ACTIVE goals (%s):\n%s\n"
                     (string_of_int (List.length ps.goals))
                     (String.concat "\n" (List.map goal_to_string ps.goals));
@@ -1666,7 +1668,7 @@ let pack (tv:term_view) : tac<term> =
         ret <| S.mk Tm_unknown None Range.dummyRange
 
 let goal_of_goal_ty env typ : goal * guard_t =
-    let u, _, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
+    let u, _, g_u = TcUtil.new_implicit_var "goal_of_goal_ty" typ.pos env typ in
     let g = {
         context = env;
         witness = u;
@@ -1677,7 +1679,7 @@ let goal_of_goal_ty env typ : goal * guard_t =
     in
     g, g_u
 
-let proofstate_of_goal_ty env typ =
+let proofstate_of_goal_ty rng env typ =
     let g, g_u = goal_of_goal_ty env typ in
     let ps = {
         main_context = env;
@@ -1688,7 +1690,7 @@ let proofstate_of_goal_ty env typ =
         depth = 0;
         __dump = (fun ps msg -> dump_proofstate ps msg);
         psc = N.null_psc;
-        entry_range = Range.dummyRange;
+        entry_range = rng;
         guard_policy = SMT;
         freshness = 0;
     }

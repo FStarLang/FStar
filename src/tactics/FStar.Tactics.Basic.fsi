@@ -105,4 +105,5 @@ val unify : term -> term -> tac<bool>
 val change : typ -> tac<unit>
 
 val goal_of_goal_ty : env -> typ -> goal * guard_t
-val proofstate_of_goal_ty : env -> typ -> proofstate * term (* Returns proofstate and uvar for main witness *)
+(* Returns proofstate and uvar for main witness *)
+val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate * term
