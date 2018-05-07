@@ -198,6 +198,16 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let eq2_x_y = mkApp(eq2, [a;x;y]) in
         let valid = mkApp("Valid", [eq2_x_y]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[eq2_x_y]], [aa;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", "eq2-interp")] in
+    let mk_teq2_interp : env -> string -> term -> decls_t = fun env eq2 tt ->
+        let aa = ("a", Term_sort) in
+        let xx = ("x", Term_sort) in
+        let yy = ("y", Term_sort) in
+        let a = mkFreeV aa in
+        let x = mkFreeV xx in
+        let y = mkFreeV yy in
+        let eq2_x_y = mkApp(eq2, [a;x;y]) in
+        let valid = mkApp("Valid", [eq2_x_y]) in
+        [Util.mkAssume(mkForall (Env.get_range env) ([[eq2_x_y]], [aa;xx;yy], mkIff(mkEq(x, y), valid)), Some "t-Eq2 interpretation", "t-eq2-interp")] in
     let mk_eq3_interp : env -> string -> term -> decls_t = fun env eq3 tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
@@ -312,12 +322,12 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
                  (Const.string_lid, mk_str);
-                 (Const.true_lid,   mk_true_interp);
-                 (Const.false_lid,  mk_false_interp);
+                 //(Const.true_lid,   mk_true_interp);
+                 //(Const.false_lid,  mk_false_interp);
                  (Const.and_lid,    mk_and_interp);
                  (Const.or_lid,     mk_or_interp);
                  (Const.eq2_lid,    mk_eq2_interp);
-                 (Const.t_eq2_lid,  mk_eq2_interp);
+                 (Const.t_eq2_lid,  mk_teq2_interp);
                  (Const.eq3_lid,    mk_eq3_interp);
                  (Const.imp_lid,    mk_imp_interp);
                  (Const.iff_lid,    mk_iff_interp);
