@@ -1645,10 +1645,8 @@ let rec inspect (t:term) : tac<term_view> =
     | Tm_constant c ->
         ret <| Tv_Const (inspect_const c)
 
-    | Tm_uvar (ctx_u, ([], _)) ->
-        ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_id ctx_u.ctx_uvar_head), ctx_u.ctx_uvar_gamma, ctx_u.ctx_uvar_binders, ctx_u.ctx_uvar_typ)
-
-    | Tm_uvar _ -> failwith "NOT FULLY SUPPORTED"
+    | Tm_uvar (ctx_u, s) ->
+        ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_id ctx_u.ctx_uvar_head), (ctx_u, s))
 
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then ret <| Tv_Unknown else
@@ -1730,8 +1728,8 @@ let pack (tv:term_view) : tac<term> =
     | Tv_Const c ->
         ret <| S.mk (Tm_constant (pack_const c)) None Range.dummyRange
 
-    | Tv_Uvar (u, g, bs, t) ->
-        ret <| U.uvar_from_id (Z.to_int_fs u) (g, bs, t)
+    | Tv_Uvar (_u, ctx_u_s) ->
+        ret <| S.mk (Tm_uvar ctx_u_s) None Range.dummyRange
 
     | Tv_Let (false, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in

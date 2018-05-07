@@ -362,6 +362,8 @@ let (lazy_chooser :
           FStar_Reflection_Embeddings.unfold_lazy_sigelt i
       | FStar_Syntax_Syntax.Lazy_proofstate  ->
           FStar_Tactics_Embedding.unfold_lazy_proofstate i
+      | FStar_Syntax_Syntax.Lazy_uvar  ->
+          FStar_Syntax_Util.exp_string "((uvar))"
   
 let (setup_hooks : unit -> unit) =
   fun uu____628  ->

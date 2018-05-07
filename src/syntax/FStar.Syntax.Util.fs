@@ -423,6 +423,14 @@ let rec unlazy t =
     | Tm_lazy i -> unlazy <| unfold_lazy i
     | _ -> t
 
+let rec unlazy_as_t k t =
+    match (compress t).n with
+    | Tm_lazy ({lkind=k'; blob=v})
+        when k=k' ->
+      FStar.Dyn.undyn v
+    | _ ->
+      failwith "Not a Tm_lazy of the expected kind"
+
 let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option<range>) : term =
     let rng = (match r with | Some r -> r | None -> dummyRange) in
     let i = {
@@ -1016,6 +1024,8 @@ let t_false = fvar_const PC.false_lid
 let t_true  = fvar_const PC.true_lid
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
+
+let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
