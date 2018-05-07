@@ -236,13 +236,13 @@ let term_to_string t =
 
 let prob_to_string env = function
   | TProb p ->
-    BU.format "\n%s:\t%s \n\t\t%s\n\t%s\n\twith guard %s\n\telement= %s\n" //  (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
+    BU.format "\n%s:\t%s \n\t\t%s\n\t%s\n" //\twith guard %s\n\telement= %s\n" //  (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
         [(BU.string_of_int p.pid);
          (term_to_string p.lhs);
          (rel_to_string p.relation);
          (term_to_string p.rhs);
-         (term_to_string p.logical_guard);
-         (match p.element with None -> "none" | Some t -> term_to_string t)
+         //(term_to_string p.logical_guard);
+         //(match p.element with None -> "none" | Some t -> term_to_string t)
          (* (N.term_to_string env (fst p.logical_guard)); *)
          (* (p.reason |> String.concat "\n\t\t\t") *)]
   | CProb p ->
@@ -838,10 +838,15 @@ let restrict_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
 let restrict_all_uvars (tgt:ctx_uvar) (sources:list<ctx_uvar>) wl  =
     List.fold_right (restrict_ctx tgt) sources wl
 
-let intersect_binders (v1:binders) (v2:binders) : binders =
+let intersect_binders (g:gamma) (v1:binders) (v2:binders) : binders =
     let as_set v =
         v |> List.fold_left (fun out x -> BU.set_add (fst x) out) S.no_names in
     let v1_set = as_set v1 in
+    let ctx_binders =
+        List.fold_left (fun out b -> match b with Binding_var x -> BU.set_add x out | _ -> out)
+                        S.no_names
+                        g
+    in
     let isect, _ =
         v2 |> List.fold_left (fun (isect, isect_set) (x, imp) ->
             if not <| BU.set_mem x v1_set
@@ -852,7 +857,7 @@ let intersect_binders (v1:binders) (v2:binders) : binders =
                  if BU.set_is_subset_of fvs isect_set
                  then (x, imp)::isect, BU.set_add x isect_set
                  else isect, isect_set)
-        ([], S.no_names) in
+        ([], ctx_binders) in
     List.rev isect
 
 let binders_eq v1 v2 =
@@ -2038,17 +2043,28 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                    u_rhs.ctx_uvar_binders
                  in
                  let gamma_w = gamma_until u_lhs.ctx_uvar_gamma ctx_w in
-                 let zs = intersect_binders (ctx_l @ binders_lhs) (ctx_r @ binders_rhs) in
-                 let _, w, wl = new_uvar ("flex-flex quasi: lhs=" ^u_lhs.ctx_uvar_reason^ ", rhs=" ^u_rhs.ctx_uvar_reason)
+                 let zs = intersect_binders gamma_w (ctx_l @ binders_lhs) (ctx_r @ binders_rhs) in
+                 let _, w, wl = new_uvar ("flex-flex quasi:"
+                                          ^"\tlhs="  ^u_lhs.ctx_uvar_reason
+                                          ^ "\trhs=" ^u_rhs.ctx_uvar_reason)
                                          wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs))
                                          (u_lhs.ctx_uvar_should_check || u_rhs.ctx_uvar_should_check) in
                  let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) None w.pos in
                  let _ =
                     if Env.debug env <| Options.Other "Rel"
-                    then BU.print3 "flex-flex quasi:\n\tlhs=%s\n\trhs=%s\n\tsol=%s"
-                            (flex_t_to_string lhs)
-                            (flex_t_to_string rhs)
-                            (term_to_string w)
+                    then BU.print "flex-flex quasi:\n\t\
+                                        lhs=%s\n\t\
+                                        rhs=%s\n\t\
+                                        sol=%s\n\t\
+                                        ctx_l@binders_lhs=%s\n\t\
+                                        ctx_r@binders_rhs=%s\n\t\
+                                        zs=%s\n"
+                            [flex_t_to_string lhs;
+                             flex_t_to_string rhs;
+                             term_to_string w;
+                             Print.binders_to_string ", " (ctx_l@binders_lhs);
+                             Print.binders_to_string ", " (ctx_r@binders_rhs);
+                             Print.binders_to_string ", " zs]
                  in
                  let sol =
                      let s1 = TERM(u_lhs, U.abs binders_lhs w_app (Some (U.residual_tot t_res_lhs))) in
