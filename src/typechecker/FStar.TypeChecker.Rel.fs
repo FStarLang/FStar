@@ -1673,7 +1673,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
       let (bound, sub_probs, wl) =
           meet_or_join (if flip then U.mk_conj else U.mk_disj) bounds_typs env wl
       in
-      let bound_typ, (eq_prob, wl) =
+      let bound_typ, (eq_prob, wl') =
           let flex_u = flex_uvar_head this_flex in
           let bound =
             //We get constraints of the form (x:?u{phi} <: ?u)
@@ -1697,9 +1697,9 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
       let tx = UF.new_transaction () in
       begin
-      match solve_t env eq_prob ({wl with defer_ok=false; attempting=sub_probs}) with
+      match solve_t env eq_prob ({wl' with defer_ok=false; attempting=sub_probs}) with
       | Success _ ->
-         let wl = {wl with attempting=rest} in
+         let wl = {wl' with attempting=rest} in
          let wl = solve_prob' false (TProb tp) None [] wl in
          let _ = List.fold_left (fun wl p -> solve_prob' true p None [] wl) wl bounds_probs in
          UF.commit tx;
