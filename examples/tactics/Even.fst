@@ -8,4 +8,4 @@ type even : unat → Type = | Even_Z : even Z | Even_SS : #n: unat → even n �
 
 let prove_even () = compute (); ignore (repeat (fun () -> apply (`Even_SS))); apply (`Even_Z)
 
-let even10 : even (nat2unary 10) = synth prove_even
+let even10 : even (normalize_term (nat2unary 10)) = synth prove_even
