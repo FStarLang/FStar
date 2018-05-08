@@ -880,14 +880,14 @@ let pat_vars env ctx args : option<binders> =
     let rec aux seen args =
       match args with
       | [] -> Some (List.rev seen)
-      | arg::args ->
-        let hd = norm_arg env arg in
-        match (fst hd).n with
+      | (arg, i)::args ->
+        let hd = sn env arg in
+        match hd.n with
         | Tm_name a ->
           if name_exists_in_binders a seen
           ||  name_exists_in_binders a ctx
           then None
-          else aux (S.mk_binder a::seen) args
+          else aux ((a, i)::seen) args
         | _ -> None
     in
     aux [] args
@@ -3041,9 +3041,10 @@ let resolve_implicits' env must_total forcelax g =
                    env.check_type_of must_total env tm ctx_u.ctx_uvar_typ
                  with e when Errors.handleable e ->
                     Errors.add_errors [Error_BadImplicit,
-                                       BU.format2 "Failed while checking implicit %s set to %s"
+                                       BU.format3 "Failed while checking implicit %s set to %s of expected type %s"
                                                (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                                               (N.term_to_string env tm), r];
+                                               (N.term_to_string env tm)
+                                               (N.term_to_string env ctx_u.ctx_uvar_typ), r];
                     raise e
                in
                let g = if env.is_pattern
