@@ -44,6 +44,7 @@ let tts = N.term_to_string
 
 open FStar.Tactics.Types
 open FStar.Tactics.Result
+let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
 
 (* The main monad for tactics.
  * A record, so we can keep it somewhat encapsulated and
@@ -656,7 +657,7 @@ let intro () : tac<binder> = wrap_err "intro" <|
              *)
              bind (set_solution goal sol) (fun () ->
              let g = mk_goal env' ctx_uvar goal.opts goal.is_guard in
-             bind (replace_cur g) (fun _ ->
+             bind (replace_cur (bnorm_goal g)) (fun _ ->
              ret b)))
     | None ->
         fail1 "goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
@@ -680,7 +681,7 @@ let intro_rec () : tac<(binder * binder)> =
              let lbs, body = SS.close_let_rec [lb] body in
              let tm = mk (Tm_let ((true, lbs), body)) None (goal_witness goal).pos in
              bind (set_solution goal tm) (fun () ->
-             bind (replace_cur ({ goal with goal_ctx_uvar=ctx_uvar_u})) (fun _ ->
+             bind (replace_cur (bnorm_goal ({ goal with goal_ctx_uvar=ctx_uvar_u}))) (fun _ ->
              ret (S.mk_binder bv, b))))
     | None ->
         fail1 "intro_rec: goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
@@ -816,9 +817,9 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
                 else begin
                     (* BU.print2 "__apply: adding goal %s : %s\n" (Print.term_to_string u) *)
                     (*                                            (Print.term_to_string bv.sort); *)
-                    add_goals [{ goal with
-                                  goal_ctx_uvar = goal_u;
-                                  is_guard = false; }]
+                    add_goals [bnorm_goal ({ goal with
+                                             goal_ctx_uvar = goal_u;
+                                             is_guard = false; })]
                 end)
             | t -> begin
                 (* BU.print1 "__apply: uvar was instantiated to %s\n" (Print.term_to_string u); *)
@@ -920,9 +921,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             let hd, _ = U.head_and_args term in
             match (SS.compress hd).n with
             | Tm_uvar (ctx_uvar, _) ->
-                let env = {(goal_env goal) with gamma=ctx_uvar.ctx_uvar_gamma} in
-                let goal_ty = bnorm env ctx_uvar.ctx_uvar_typ in //NS: 01/24 ...expensive
-                let goal = goal_with_type ({ goal with goal_ctx_uvar = ctx_uvar }) goal_ty in
+                let goal = bnorm_goal ({ goal with goal_ctx_uvar = ctx_uvar }) in
                 ret ([goal], [])
             | _ ->
                 let env = {(goal_env goal) with gamma=ctx_uvar.ctx_uvar_gamma} in
@@ -1510,8 +1509,7 @@ let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
     | { n = Tm_uvar (ctx_uvar, _) }, _ ->
         let env = {env with gamma=ctx_uvar.ctx_uvar_gamma} in
         let g = mk_goal env ctx_uvar opts false in
-        let g = goal_with_type g (bnorm env ctx_uvar.ctx_uvar_typ) in
-        add_goals [g]
+        add_goals [bnorm_goal g]
     | _ -> fail "not a uvar")
 
 let unify (t1 : term) (t2 : term) : tac<bool> =

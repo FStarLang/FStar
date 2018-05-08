@@ -2351,8 +2351,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 solve env (attempt [base_prob] wl)
              in
         let has_uvars =
-                not (BU.set_is_empty (FStar.Syntax.Free.uvars phi1))
-             || not (BU.set_is_empty (FStar.Syntax.Free.uvars phi2))
+            not (BU.set_is_empty (FStar.Syntax.Free.uvars phi1))
+            || not (BU.set_is_empty (FStar.Syntax.Free.uvars phi2))
         in
         if problem.relation = EQ
         || (not env.uvar_subtyping && has_uvars)
