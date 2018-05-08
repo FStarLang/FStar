@@ -2350,17 +2350,20 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 let wl = solve_prob orig (Some guard) [] wl in
                 solve env (attempt [base_prob] wl)
              in
+        let has_uvars =
+                not (BU.set_is_empty (FStar.Syntax.Free.uvars phi1))
+             || not (BU.set_is_empty (FStar.Syntax.Free.uvars phi2))
+        in
         if problem.relation = EQ
+        || (not env.uvar_subtyping && has_uvars)
         then let ref_prob, wl =
                   mk_t_problem wl [mk_binder x1] orig phi1 EQ phi2 None "refinement formula"
              in
              match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
              | Failed (prob, msg) ->
-               if BU.set_is_empty (FStar.Syntax.Free.uvars phi1)
-               && BU.set_is_empty (FStar.Syntax.Free.uvars phi2)
-               && wl.smt_ok
-               then fallback()
-               else giveup env msg prob
+               if not env.uvar_subtyping && has_uvars
+               then giveup env msg prob
+               else fallback()
 
              | Success _ ->
                let guard =

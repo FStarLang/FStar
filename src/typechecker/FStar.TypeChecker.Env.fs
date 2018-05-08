@@ -97,6 +97,7 @@ type env = {
   lax_universes  :bool;                         (* don't check universe constraints *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
+  uvar_subtyping :bool;
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
@@ -202,6 +203,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     lax_universes=false;
     failhard=false;
     nosynth=false;
+    uvar_subtyping=true;
     tc_term=tc_term;
     type_of=type_of;
     check_type_of=check_type_of;

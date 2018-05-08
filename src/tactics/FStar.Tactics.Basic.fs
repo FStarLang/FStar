@@ -473,6 +473,7 @@ let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
 let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (tts e t)) (fun () ->
+    let e = {e with uvar_subtyping=false} in
     try ret (ps.main_context.type_of e t)
     with | Errors.Err (_, msg)
          | Errors.Error (_, msg, _) -> begin
