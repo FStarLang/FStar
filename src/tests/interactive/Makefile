@@ -33,7 +33,7 @@ touch:
 %.in: .FORCE
 
 FSTAR_HOME = ../../..
-include $(FSTAR_HOME)/src/gmake/z3.mk
+include $(FSTAR_HOME)/ulib/gmake/z3.mk
 
 ifdef Z3
 SMT=--smt $(Z3)

@@ -106,13 +106,13 @@ let e_result (ea : embedding<'a>)  =
 
         match hd'_and_args t with
         | Tm_fvar fv, [_t; (a, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Success_lid ->
-            BU.bind_opt (unembed ea a) (fun a ->
-            BU.bind_opt (unembed e_proofstate ps) (fun ps ->
+            BU.bind_opt (unembed' w ea a) (fun a ->
+            BU.bind_opt (unembed' w e_proofstate ps) (fun ps ->
             Some (Success (a, ps))))
 
         | Tm_fvar fv, [_t; (msg, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
-            BU.bind_opt (unembed e_string msg) (fun msg ->
-            BU.bind_opt (unembed e_proofstate ps) (fun ps ->
+            BU.bind_opt (unembed' w e_string msg) (fun msg ->
+            BU.bind_opt (unembed' w e_proofstate ps) (fun ps ->
             Some (Failed (msg, ps))))
 
         | _ ->

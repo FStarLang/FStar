@@ -31,6 +31,7 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
+open FStar.Syntax
 
 type lcomp_with_binder = option<bv> * lcomp
 
@@ -1161,9 +1162,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
         )
     | Some g, apply_guard ->
       match guard_form g with
-        | Trivial ->
-          let lc = {lc with res_typ = t} in
-          (e, lc, g)
+        | Trivial -> e, Util.set_result_typ_lc lc t, g
 
         | NonTrivial f ->
           let g = {g with guard_f=Trivial} in

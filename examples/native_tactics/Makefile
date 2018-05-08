@@ -42,11 +42,8 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 # include .depend
 
-.PHONY: %.test $(FSTARTACLIB)
+.PHONY: %.test
 .PRECIOUS: %.ml
-
-$(FSTARTACLIB):
-	$(MAKE) -C $(FSTAR_HOME)/ulib install-fstar-tactics
 
 %.test: %.fst %.ml
 	$(FSTAR) $*.fst --load $*
@@ -56,7 +53,7 @@ $(FSTARTACLIB):
 	$(FSTAR) $*.Test.fst --load $*
 	touch $@
 
-%.ml: %.fst $(FSTARTACLIB)
+%.ml: %.fst
 	$(FSTAR) $*.fst --cache_checked_modules --codegen Plugin --extract $*
 	touch $@
 

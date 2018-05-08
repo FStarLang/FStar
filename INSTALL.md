@@ -65,9 +65,9 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
         $ fstar.exe --version
-        F* 0.9.5.0
+        F* 0.9.6.0~alpha1
         platform=Linux_x86_64
-        compiler=OCaml 4.02.3
+        compiler=OCaml 4.05.0
         date=yyyy-mm-ddThh:nn:ss+02:00
         commit=xxxxxxxx
         $ z3 --version
@@ -82,6 +82,9 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ make -C examples/micro-benchmarks
 
 3. If you have OCaml installed the following command should print "Hello F\*!"
+   You need the same version of OCaml as was used to create the
+   `fstar.exe` binary (which you can see with `fstar.exe --version`,
+    as illustrated above).
 
         $ make -C examples/hello ocaml
 
@@ -92,12 +95,22 @@ following commands. (On Windows this requires Cygwin and `make`)
    your OS; then use the following command to install the packages
    required to compile OCaml programs extracted from F\* code:
 
-        $ opam install ocamlfind batteries stdint zarith
+        $ opam install ocamlfind batteries stdint zarith ppx_deriving ppx_deriving_yojson
 
 4. You can verify all the examples, keeping in mind that this might
    take a long time.
 
         $ make -j6 -C examples
+        $ echo $?    # non-zero means build failed! scroll up for error message!
+
+   Note: This step currently requires having OCaml installed (as for step 3 above).
+
+   Note: This step currently requires having [KreMLin](https://github.com/FStarLang/kremlin)
+         installed and the `KREMLIN_HOME` variable pointing to its location.
+         
+   Note: On Linux if you get a file descriptor exhaustion error that looks
+         like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
+         you can increase the limits with `ulimit -n 4000`.
 
 ### Homebrew formula for Mac OS X ###
 
@@ -271,13 +284,12 @@ into your `~/.bashrc`.
 
 ### Prerequisite for steps 2 and 3: Working OCaml setup  ###
 
-Steps 2 and 3 below require a working OCaml setup. Any version of OCaml from 4.02.2 to 4.06.0 should do.
+Steps 2 and 3 below require a working OCaml setup. OCaml version 4.04.X, 4.05.X, 4.06.X, or 4.07.0 should work.
 
 #### Instructions for Windows ####
 
-Please use the  [OCaml Installer for Windows](http://protz.github.io/ocaml-installer/).
-Follow the [installation guide](https://github.com/protz/ocaml-installer/wiki)
-that's over there (it's optimized for F\*). This will install both OCaml and OPAM.
+Please use [Andreas Hauptmann's OCaml Installer for Windows](https://fdopen.github.io/opam-repository-mingw/installation/).
+This will install both OCaml and OPAM.
 
 #### Instructions for Linux and Mac OS X ####
 
@@ -313,7 +325,7 @@ that's over there (it's optimized for F\*). This will install both OCaml and OPA
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson
   ```
   Some of the examples also require the `sqlite3` opam package, which depends
   on SQLite itself that you can install with `opam depext sqlite3` (at least on Linux)

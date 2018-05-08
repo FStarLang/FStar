@@ -1220,7 +1220,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let t1', aq1 = desugar_term_aq env t1 in
       let t2', aq2 = desugar_term_aq env t2 in
       let t3', aq3 = desugar_term_aq env t3 in
-      mk (Tm_match(ascribe t1' (Inl t_bool, None),
+      mk (Tm_match(t1',
                     [(withinfo (Pat_constant (Const_bool true)) t2.range, None, t2');
                      (withinfo (Pat_wild x) t3.range, None, t3')])), join_aqs [aq1;aq2;aq3]
 
@@ -1301,7 +1301,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let e, s = desugar_term_aq env e in
       let projname = mk_field_projector_name_from_ident constrname f.ident in
       let qual = if is_rec then Some (Record_projector (constrname, f.ident)) else None in
-      mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) delta_equational qual, [as_arg e]), s
+      mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) (Delta_equational_at_level 1) qual, [as_arg e]), s
 
     | NamedTyp(_, e) ->
         desugar_term_aq env e
@@ -1345,18 +1345,6 @@ and not_ascribed t =
     match t.tm with
     | Ascribed _ -> false
     | _ ->  true
-
-and is_synth_by_tactic e t =
-    // In this case, we might have implicits in the way
-    match t.tm with
-    | App (l, r, Hash) -> is_synth_by_tactic e l
-    | Var lid ->
-        begin match Env.resolve_to_fully_qualified_name e lid with
-        | Some lid -> lid_equals lid C.synth_lid
-        | None -> false
-        end
-    | _ -> false
-
 
 and desugar_args env args =
     args |> List.map (fun (a, imp) -> arg_withimp_e imp (desugar_term env a))
@@ -1729,8 +1717,8 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
         else
             let dd =
                 if quals |> List.contains S.Abstract
-                then Delta_abstract delta_equational
-                else delta_equational
+                then Delta_abstract (Delta_equational_at_level 1)
+                else (Delta_equational_at_level 1)
             in
             let lb = {
                 lbname=Inr (S.lid_as_fv field_name dd None);
@@ -2049,30 +2037,29 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
-// For a fail-family attribute is found, return the listed errors and
-// whether it's a fail_lax or not
+// If this is a fail attribute, return the listed errors and whether it's a fail_lax or not
 let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
     let hd, args = U.head_and_args at in
     match (SS.compress hd).n, args with
-    | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_errs_attr ->
+    | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_attr ->
         begin match EMB.unembed (EMB.e_list EMB.e_int) a1 with
         | Some [] ->
-            raise_error (Errors.Error_EmptyFailErrs, "Found ill-applied fail_errs, argument should be a non-empty list of integers") at.pos
+            raise_error (Errors.Error_EmptyFailErrs, "Found ill-applied fail, argument should be a non-empty list of integers") at.pos
 
         | Some es -> Some (List.map FStar.BigInt.to_int_fs es, false)
         | None ->
             if warn then
-                Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail_errs, argument should be non-empty a list of integers");
+                Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail, argument should be a non-empty list of integer literals");
             None
         end
 
-    | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_errs_attr ->
-        if warn then
-            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found unapplied fail_errs, did you forget to use parentheses?");
-        None
-
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_attr ->
         Some ([], false)
+
+    | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_attr ->
+        if warn then
+            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail, argument should be a non-empty list of integer literals");
+        None
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_lax_attr ->
         Some ([], true)

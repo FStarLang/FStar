@@ -1,12 +1,11 @@
-ifndef FSTAR_HOME
-   $(error "Please define the `FSTAR_HOME` variable before including this makefile.")
-endif
-
 USE_Z3_NIGHTLY?=no
 USE_UNTESTED_Z3_NIGHTLY?=no
 
 ifeq ($(USE_Z3_NIGHTLY),yes)
 ifndef HAVE_Z3_NIGHTLY_BIN
+  ifndef FSTAR_HOME
+   $(error "Please define the `FSTAR_HOME` variable before including this makefile.")
+  endif
   ifeq ($(USE_UNTESTED_Z3_NIGHTLY),yes)
     C=get-latest
   else

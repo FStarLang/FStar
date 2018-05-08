@@ -1014,7 +1014,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
         else let disc_name = U.mk_discriminator lid in
              let x = S.new_bv (Some p) arg_typ in
              let sort =
-                 let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) delta_equational None in
+                 let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) (Delta_equational_at_level 1) None in
                  U.refine x (U.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] None p))
              in
              S.mk_binder ({projectee arg_typ with sort = sort})
@@ -1084,8 +1084,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 in
                 let dd =
                     if quals |> List.contains S.Abstract
-                    then Delta_abstract delta_equational
-                    else delta_equational
+                    then Delta_abstract (Delta_equational_at_level 1)
+                    else (Delta_equational_at_level 1)
                 in
                 let imp = U.abs binders body None in
                 let lbtyp = if no_decl then t else tun in
@@ -1117,7 +1117,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let subst = fields |> List.mapi (fun i (a, _) ->
             let field_name, _ = U.mk_field_projector_name lid a i in
-            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name delta_equational None)) inst_univs in
+            let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name (Delta_equational_at_level 1) None)) inst_univs in
             let proj = mk_Tm_app field_proj_tm [arg] None p in
             NT(a, proj))
     in
@@ -1171,8 +1171,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               let imp = U.abs binders body None in
               let dd =
                   if quals |> List.contains S.Abstract
-                  then Delta_abstract delta_equational
-                  else delta_equational
+                  then Delta_abstract (Delta_equational_at_level 1)
+                  else (Delta_equational_at_level 1)
               in
               let lbtyp = if no_decl then t else tun in
               let lb = {

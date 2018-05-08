@@ -1526,7 +1526,7 @@ let path_disjoint_step
   (requires True)
   (ensures (path_disjoint (PathStep through to1 p s1) (PathStep through to2 p s2)))
   [SMTPat (path_disjoint (PathStep through to1 p s1) (PathStep through to2 p s2))]
-= FStar.Squash.return_squash (PathDisjointStep p s1 s2)
+= FStar.Classical.give_witness (FStar.Squash.return_squash (PathDisjointStep p s1 s2))
 
 let path_disjoint_includes
   (#from: typ)
@@ -4513,11 +4513,12 @@ let ecreate
   (r:HS.rid)
   (s: option (type_of_typ t))
 = let h0 = HST.get () in
+  let s0 = s in
   let s = match s with
   | Some s -> ovalue_of_value t s
   | _ -> none_ovalue t
   in
-  let content: HS.reference pointer_ref_contents =
+  let content: HS.ref pointer_ref_contents =
      HST.ralloc r (| t, s |)
   in
   domain_upd h0 content (| t, s |) ;

@@ -18,13 +18,17 @@ if ! [[ -d ulib ]]; then
   echo "This script is intended to be run from the root of the F* repository"
   exit 1
 fi
-FSTAR_HOME=$PWD
+
+# We need two FSTAR_HOMEs in this script: one for the host (from where
+# we build F*) and one for the package (from where we test the
+# obtained binary). FSTAR_HOST_HOME is the former.
+FSTAR_HOST_HOME=$PWD
 
 # Expects to be called from $BN_BINARYSPATH_ROOT
 function cp_to_binaries () {
   local file=$1
-  echo "--" $FSTAR_HOME/src/ocaml-output/$file $BN_BINARYSPATH
-  cp $FSTAR_HOME/src/ocaml-output/$file $BN_BINARYSPATH
+  echo "--" $FSTAR_HOST_HOME/src/ocaml-output/$file $BN_BINARYSPATH
+  cp $FSTAR_HOST_HOME/src/ocaml-output/$file $BN_BINARYSPATH
   git add $BN_BINARYSPATH/$file
 }
 
@@ -66,18 +70,19 @@ make package
 # 'make package' makes the package using the major version from version.txt. This script is a weekly process to make minor versions so use timestamp in file name instead of major version
 diag "*** Unzip and verify the Package  ***"
 TIME_STAMP=$(date +%Y%m%d%H%M)
+COMMIT=_$(git log --pretty=format:%h -n 1)
 
 TYPE="_Windows_x64.zip"
 MAJOR_ZIP_FILE=fstar_$CURRENT_VERSION$TYPE
 if [[ -f $MAJOR_ZIP_FILE ]]; then
-  MINOR_ZIP_FILE=fstar_$TIME_STAMP$TYPE
+  MINOR_ZIP_FILE=fstar_$TIME_STAMP$COMMIT$TYPE
   cp $MAJOR_ZIP_FILE $MINOR_ZIP_FILE
   unzip -o $MAJOR_ZIP_FILE
 else
   TYPE="_Linux_x86_64.tar.gz"
   MAJOR_TAR_FILE=fstar_$CURRENT_VERSION$TYPE
   if [[ -f $MAJOR_TAR_FILE ]]; then
-    MINOR_TAR_FILE=fstar_$TIME_STAMP$TYPE
+    MINOR_TAR_FILE=fstar_$TIME_STAMP$COMMIT$TYPE
     cp $MAJOR_TAR_FILE $MINOR_TAR_FILE
     tar -x -f $MAJOR_TAR_FILE
   else
@@ -88,6 +93,15 @@ fi
 
 diag "*** Make the examples ***"
 cd fstar
+
+# We need two FSTAR_HOMEs in this script: one for the host (from where
+# we build F*) and one for the package (from where we test the
+# obtained binary). FSTAR_HOME is the latter. Most examples will
+# anyway redefine and overwrite FSTAR_HOME according to their location
+# within the package, *except* one: stringprinter in examples/tactics,
+# which needs KreMLin, which needs some FSTAR_HOME defined. So we have
+# to export it from here.
+export FSTAR_HOME="$PWD"
 
 diag "-- Verify hello ocaml -- should output Hello F*! --"
 make -C examples/hello ocaml | tee HelloOcamlOutput.log
@@ -110,6 +124,9 @@ else
   echo -e "* ${GREEN}PASSED!${NC} for all examples"
 fi
 
+# From this point on, we should no longer need FSTAR_HOME.
+export FSTAR_HOME=
+
 # Got to this point, so know it passed - copy minor version out
 diag "*** Upload the minor version of the package. Will only keep the most recent 4 packages ***"
 BN_BINARYSPATH_ROOT=~/binaries
@@ -126,10 +143,10 @@ git checkout master
 git reset --hard origin/master
 
 diag "-- copy files and add to Github --"
-if [[ -f $FSTAR_HOME/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
+if [[ -f $FSTAR_HOST_HOME/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
   cp_to_binaries $MINOR_ZIP_FILE
 fi
-if [[ -f $FSTAR_HOME/src/ocaml-output/$MINOR_TAR_FILE ]]; then
+if [[ -f $FSTAR_HOST_HOME/src/ocaml-output/$MINOR_TAR_FILE ]]; then
   cp_to_binaries $MINOR_TAR_FILE
 fi
 

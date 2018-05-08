@@ -161,20 +161,21 @@ ocaml-unit-tests:
 	$(BIN)/tests.exe
 
 # Getting parallelism from this target
-uregressions: fstarlib ulib tutorial uexamples interactive-test prettyprinting-tests
+uregressions: ulib-extra tutorial uexamples interactive-test prettyprinting-tests
 
 # Getting parallelism from this target as well
-uregressions-ulong: uregressions ulib-extra
-
-ulib-extra:
-	+$(MAKE) -C ../ulib -f Makefile.verify extra
+# This is a hook for nightly builds (on Linux)
+# But, at the moment, it tests the same files as get tested on every push
+# We may add more nightly tests here in the future
+uregressions-ulong: uregressions
 
 fstarlib:
 	+$(MAKE) -C ../ulib/ml
 	+$(MAKE) -C ../ulib install-fstar-tactics
-
-ulib:
 	+$(MAKE) -C ../ulib
+
+ulib-extra:
+	+$(MAKE) -C ../ulib extra
 
 tutorial: fstarlib
 	+$(MAKE) -C ../doc/tutorial regressions

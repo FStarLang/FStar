@@ -76,6 +76,7 @@ let rec extract_meta x =
   | { n = Tm_fvar fv } ->
       begin match string_of_lid (lid_of_fv fv) with
       | "FStar.Pervasives.PpxDerivingShow" -> Some PpxDerivingShow
+      | "FStar.Pervasives.PpxDerivingYoJson" -> Some PpxDerivingYoJson
       | "FStar.Pervasives.CInline" -> Some CInline
       | "FStar.Pervasives.Substitute" -> Some Substitute
       | "FStar.Pervasives.Gc" -> Some GCType
