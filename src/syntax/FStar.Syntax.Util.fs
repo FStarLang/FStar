@@ -326,6 +326,15 @@ let is_lemma t =
     | Tm_arrow(_, c) -> is_lemma_comp c
     | _ -> false
 
+let rec head_of (t : term) : term =
+    match (compress t).n with
+    | Tm_app (t, _)
+    | Tm_match (t, _)
+    | Tm_abs (_, t, _)
+    | Tm_ascribed (t, _, _)
+    | Tm_meta (t, _) -> head_of t
+    | _ -> t
+
 let head_and_args t =
     let t = compress t in
     match t.n with
