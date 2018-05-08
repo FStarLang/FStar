@@ -377,8 +377,9 @@ let def_check_prob msg prob =
     ()
 
 let mk_eq2 wl _prob t1 t2 =
-    let _, tt, g = wl.tcenv.type_of wl.tcenv t1 in
-    let u = wl.tcenv.universe_of wl.tcenv tt in
+    let env = {wl.tcenv with use_bv_sorts=true} in
+    let _, tt, g = env.type_of env t1 in
+    let u = wl.tcenv.universe_of env tt in
     U.mk_eq2 u tt t1 t2, {wl with wl_implicits=g.implicits@wl.wl_implicits}
 
 let p_invert = function
