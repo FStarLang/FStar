@@ -325,6 +325,8 @@ let abuffer_disjoint_includes #r #a larger1 larger2 smaller1 smaller2 = ()
 
 let abuffer_disjoint_intro #t1 #t2 b1 b2 = ()
 
+let abuffer_disjoint_self_preserved #r #a b h1 h2 = ()
+
 (* Basic, non-compositional modifies clauses, used only to implement the generic modifies clause. DO NOT USE in client code *)
 
 let modifies_0_preserves_mreferences (h1 h2: HS.mem) : GTot Type0 =

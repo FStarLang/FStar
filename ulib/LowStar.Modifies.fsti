@@ -22,6 +22,27 @@ val loc_union_idem
   (loc_union s s == s)
   [SMTPat (loc_union s s)]
 
+val loc_union_comm
+  (s1 s2: loc)
+: Lemma
+  (loc_union s1 s2 == loc_union s2 s1)
+
+val loc_union_assoc
+  (s1 s2 s3: loc)
+: Lemma
+  (loc_union s1 (loc_union s2 s3) == loc_union (loc_union s1 s2) s3)
+
+val loc_union_loc_none_l
+  (s: loc)
+: Lemma
+  (loc_union loc_none s == s)
+
+val loc_union_loc_none_r
+  (s: loc)
+: Lemma
+  (loc_union s loc_none == s)
+
+
 val loc_buffer
   (#t: Type)
   (b: B.buffer t)

@@ -320,6 +320,14 @@ val abuffer_disjoint_intro (#t1 #t2: Type) (b1: buffer t1) (b2: buffer t2) : Lem
     abuffer_disjoint #r #a (abuffer_of_buffer b1) (abuffer_of_buffer b2)
   ))
 
+(* It is too much to ask that a buffer not be disjoint from itself,
+   but if so, then it should be always preserved. (Actually, it should
+   be zero-length; not sure if we need such a strong result.) *)
+
+val abuffer_disjoint_self_preserved (#r: HS.rid) (#a: nat) (b: abuffer r a) (h1 h2: HS.mem) : Lemma
+  (requires (abuffer_disjoint b b))
+  (ensures (abuffer_preserved b h1 h2))
+
 
 (* Basic, non-compositional modifies clauses, used only to implement the generic modifies clause. DO NOT USE in client code *)
 

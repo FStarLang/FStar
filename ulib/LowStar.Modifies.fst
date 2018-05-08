@@ -6,14 +6,14 @@ module B = LowStar.Buffer
 module U32 = FStar.UInt32
 
 noeq
-type loc_aux (r: HS.rid) (a: nat) : Type =
-  | LocBuffer:
-    (b: B.abuffer r a) ->
-    loc_aux r a
-  | LocUnion:
-    (l1: loc_aux r a) ->
-    (l2: loc_aux r a) ->
-    loc_aux r a
+type abuffer = | ABuffer:
+  (region: HS.rid) ->
+  (addr: nat) ->
+  (buffer: B.abuffer region addr) ->
+  abuffer
+
+let abuffer_domain (regions: Ghost.erased (Set.set HS.rid)) (addrs: ((r: HS.rid { Set.mem r (Ghost.reveal regions) } ) -> GTot (Set.set nat))) : GTot (GSet.set abuffer) =
+  GSet.comprehend (fun a -> Set.mem a.region (Ghost.reveal regions) && Set.mem a.addr (addrs a.region))
 
 noeq
 type loc' : Type =
@@ -21,27 +21,18 @@ type loc' : Type =
       (regions: Ghost.erased (Set.set HS.rid)) ->
       (region_liveness_tags: Ghost.erased (Set.set HS.rid) { Ghost.reveal region_liveness_tags `Set.subset` Ghost.reveal regions } ) ->
       (addrs: (
-	(r: HS.rid) ->
-	Ghost (Set.set nat)
-	(requires (Set.mem r (Ghost.reveal regions)))
-	(ensures (fun _ -> True))
+	(r: HS.rid { Set.mem r (Ghost.reveal regions) } ) ->
+	GTot (Set.set nat)
       )) ->
       (aux_addrs: (
-	(r: HS.rid) ->
-	Ghost (Set.set nat)
-	(requires (Set.mem r (Ghost.reveal regions)))
-	(ensures (fun y -> Set.subset (Set.intersect y (addrs r)) Set.empty))
+	(r: HS.rid { Set.mem r (Ghost.reveal regions) } ) ->
+	GTot (Set.set nat)
       )) ->
-      (aux: (
-	(r: HS.rid) ->
-	(n: nat) ->
-	Ghost (loc_aux r n)
-	(requires (
-	  Set.mem r (Ghost.reveal regions) /\
-	  Set.mem n (aux_addrs r)
-	))
-	(ensures (fun y -> True))
-      )) ->
+      (aux_addrs_disjoint: ((r: HS.rid { Set.mem r (Ghost.reveal regions) } ) -> Lemma (Set.subset (Set.intersect (aux_addrs r) (addrs r)) Set.empty ))) ->
+      (aux: Ghost.erased (GSet.set abuffer) {
+        abuffer_domain regions addrs `GSet.subset` Ghost.reveal aux /\
+        Ghost.reveal aux `GSet.subset` (abuffer_domain regions addrs `GSet.union` abuffer_domain regions aux_addrs)
+      } ) ->
       loc'
 
 let loc = loc'
@@ -51,7 +42,8 @@ let loc_none = Loc
   (Ghost.hide (Set.empty))
   (fun _ -> Set.empty)
   (fun _ -> Set.empty)
-  (fun _ _ -> false_elim ())
+  (fun _ -> ())
+  (Ghost.hide GSet.empty)
 
 let regions_of_loc
   (s: loc)
@@ -69,9 +61,9 @@ let addrs_of_loc_weak
 let addrs_of_loc_aux
   (l: loc)
   (r: HS.rid)
-: GTot (Set.set nat)
+: GTot (y: Set.set nat { Set.subset (Set.intersect y (addrs_of_loc_weak l r)) Set.empty } )
 = if Set.mem r (regions_of_loc l)
-  then Loc?.aux_addrs l r
+  then (Loc?.aux_addrs_disjoint l r; Loc?.aux_addrs l r)
   else Set.empty
 
 let addrs_of_loc
@@ -95,59 +87,75 @@ let addrs_of_loc_aux_prop
 = ()
 
 let loc_union s1 s2 =
-  if StrongExcludedMiddle.strong_excluded_middle (s1 == s2)
-  then s1
-  else
   let regions1 = Ghost.reveal (Loc?.regions s1) in
   let regions2 = Ghost.reveal (Loc?.regions s2) in
   let regions = Set.union regions1 regions2 in
   let addrs
-    (r: HS.rid)
-  : Ghost (Set.set nat)
-    (requires (Set.mem r regions))
-    (ensures (fun _ -> True))
+    (r: HS.rid { Set.mem r regions } )
+  : GTot (Set.set nat)
   = Set.union
-      (if Set.mem r regions1 then Loc?.addrs s1 r else Set.empty)
-      (if Set.mem r regions2 then Loc?.addrs s2 r else Set.empty)
+      (if Set.mem r regions1 then addrs_of_loc_weak s1 r else Set.empty)
+      (if Set.mem r regions2 then addrs_of_loc_weak s2 r else Set.empty)
   in
   let aux_addrs
-    (r: HS.rid)
+    (r: HS.rid { Set.mem r regions } )
   : Ghost (Set.set nat)
-    (requires (Set.mem r regions))
+    (requires True)
     (ensures (fun y -> Set.subset (Set.intersect y (addrs r)) Set.empty))
   = Set.intersect
       (Set.union (addrs_of_loc_aux s1 r) (addrs_of_loc_aux s2 r))
       (Set.complement (addrs r))
   in
-  let aux
-    (r: HS.rid)
-    (n: nat)
-  : Ghost (loc_aux r n)
-    (requires (Set.mem r regions /\ Set.mem n (aux_addrs r)))
-    (ensures (fun y -> True))
-  = let l1 =
-      if Set.mem r regions1 && Set.mem n (Loc?.aux_addrs s1 r)
-      then Some (Loc?.aux s1 r n)
-      else None
-    in
-    let l2 =
-      if Set.mem r regions2 && Set.mem n (Loc?.aux_addrs s2 r)
-      then Some (Loc?.aux s2 r n)
-      else None
-    in
-    match l1, l2 with
-    | Some l1, Some l2 -> LocUnion l1 l2
-    | Some l1, _ -> l1
-    | _, Some l2 -> l2
+  let aux = Ghost.hide
+      (Ghost.reveal (Loc?.aux s1) `GSet.union` Ghost.reveal (Loc?.aux s2))
   in
   Loc
     (Ghost.hide regions)
     (Ghost.hide (Set.union (Ghost.reveal (Loc?.region_liveness_tags s1)) (Ghost.reveal (Loc?.region_liveness_tags s2))))
     addrs
     aux_addrs
+    (fun _ -> ())
     aux
 
-let loc_union_idem s = ()
+let fun_set_equal (#t: Type) (#t': eqtype) (f1 f2: (t -> GTot (Set.set t'))) : GTot Type0 =
+  forall (x: t) . {:pattern (f1 x) \/ (f2 x) } f1 x `Set.equal` f2 x
+
+let fun_set_equal_elim (#t: Type) (#t' : eqtype) (f1 f2: (t -> GTot (Set.set t'))) : Lemma
+  (requires (fun_set_equal f1 f2))
+  (ensures (f1 == f2))
+  [SMTPat (fun_set_equal f1 f2)]
+= assert (f1 `FunctionalExtensionality.gfeq` f2)
+
+let loc_equal (s1 s2: loc) : GTot Type0 =
+  let Loc regions1 region_liveness_tags1 addrs1 aux_addrs1 _ aux1 = s1 in
+  let Loc regions2 region_liveness_tags2 addrs2 aux_addrs2 _ aux2 = s2 in
+  Ghost.reveal regions1 `Set.equal` Ghost.reveal regions2 /\
+  Ghost.reveal region_liveness_tags1 `Set.equal` Ghost.reveal region_liveness_tags2 /\
+  fun_set_equal (Loc?.addrs s1) (Loc?.addrs s2) /\
+  fun_set_equal (Loc?.aux_addrs s1) (Loc?.aux_addrs s2) /\
+  Ghost.reveal (Loc?.aux s1) `GSet.equal` Ghost.reveal (Loc?.aux s2)
+
+let loc_equal_elim (s1 s2: loc) : Lemma
+  (requires (loc_equal s1 s2))
+  (ensures (s1 == s2))
+  [SMTPat (s1 `loc_equal` s2)]
+= assert (Loc?.aux_addrs_disjoint s1 `FunctionalExtensionality.gfeq` Loc?.aux_addrs_disjoint s2)
+
+let loc_union_idem s =
+  assert (loc_union s s `loc_equal` s)
+
+let loc_union_comm s1 s2 =
+  assert (loc_union s1 s2 `loc_equal` loc_union s2 s1)
+
+let loc_union_assoc s1 s2 s3 =
+  assert (loc_union s1 (loc_union s2 s3) `loc_equal` loc_union (loc_union s1 s2) s3)
+
+let loc_union_loc_none_l s =
+  assert (loc_union loc_none s `loc_equal` s)
+
+let loc_union_loc_none_r s =
+  assert (loc_union s loc_none `loc_equal` s)
+
 
 let loc_buffer #t b =
   if B.g_is_null b
@@ -158,153 +166,115 @@ let loc_buffer #t b =
       (Ghost.hide Set.empty)
       (fun _ -> Set.empty)
       (fun _ -> Set.singleton (B.as_addr b))
-      (fun r n ->
-        let x : B.abuffer r n = B.abuffer_of_buffer b in
-        LocBuffer x)
+      (fun _ -> ())
+      (Ghost.hide (GSet.singleton (ABuffer (B.frameOf b) (B.as_addr b) (B.abuffer_of_buffer b))))
 
 let loc_addresses r n =
+  let regions = (Ghost.hide (Set.singleton r)) in
   Loc
-    (Ghost.hide (Set.singleton r))
+    regions
     (Ghost.hide Set.empty)
     (fun _ -> n)
     (fun _ -> Set.empty)
-    (fun _ _ -> false_elim ())
+    (fun _ -> ())
+    (Ghost.hide (abuffer_domain regions (fun _ -> n)))
 
 let loc_regions r =
+  let addrs (r' : HS.rid { Set.mem r' r } ) : GTot (Set.set nat) =
+    Set.complement Set.empty
+  in
   Loc
     (Ghost.hide r)
     (Ghost.hide r)
-    (fun r' -> if Set.mem r' r then Set.complement Set.empty else Set.empty)
+    addrs
     (fun _ -> Set.empty)
-    (fun _ _ -> false_elim ())
+    (fun _ -> ())
+    (Ghost.hide (abuffer_domain (Ghost.hide r) addrs))
 
-let rec loc_aux_includes_buffer
-  (#r: HS.rid)
-  (#a: nat)
-  (s: loc_aux r a)
-  (b: B.abuffer r a)
+let abuffer_includes (b0 b: abuffer) : GTot Type0 =
+  b0.region == b.region /\ b0.addr = b.addr /\ b0.buffer `B.abuffer_includes` b.buffer
+
+let loc_aux_includes_buffer
+  (s: GSet.set abuffer)
+  (b: abuffer)
 : GTot Type0
   (decreases s)
-= match s with
-  | LocUnion s1 s2 -> loc_aux_includes_buffer s1 b \/ loc_aux_includes_buffer s2 b
-  | LocBuffer b0 -> b0 `B.abuffer_includes` b
+= exists (b0 : abuffer) . b0 `GSet.mem` s /\ b0 `abuffer_includes` b
 
-let rec loc_aux_includes
-  (#r: HS.rid)
-  (#a: nat)
-  (s1 s2: loc_aux r a)
+let loc_aux_includes
+  (s1 s2: GSet.set abuffer)
 : GTot Type0
   (decreases s2)
-= match s2 with
-  | LocUnion s2l s2r -> loc_aux_includes s1 s2l /\ loc_aux_includes s1 s2r
-  | LocBuffer b -> loc_aux_includes_buffer s1 b
+= forall (b2: abuffer) . GSet.mem b2 s2 ==> loc_aux_includes_buffer s1 b2
 
-let rec loc_aux_includes_union_l
-  (#r: HS.rid)
-  (#a: nat)
-  (s1 s2 s: loc_aux r a)
+let loc_aux_includes_union_l
+  (s1 s2 s: GSet.set abuffer)
 : Lemma
   (requires (loc_aux_includes s1 s \/ loc_aux_includes s2 s))
-  (ensures (loc_aux_includes (LocUnion s1 s2) s))
+  (ensures (loc_aux_includes (GSet.union s1 s2) s))
   (decreases s)
-= match s with 
-  | LocUnion sl sr -> loc_aux_includes_union_l s1 s2 sl; loc_aux_includes_union_l s1 s2 sr
-  | _ -> ()
+= ()
 
-let rec loc_aux_includes_refl
-  (#r: HS.rid)
-  (#a: nat)
-  (s: loc_aux r a)
+let loc_aux_includes_refl
+  (s: GSet.set abuffer)
 : Lemma
   (loc_aux_includes s s)
-= match s with
-  | LocUnion sl sr ->
-    loc_aux_includes_refl sl;
-    loc_aux_includes_refl sr;
-    loc_aux_includes_union_l sl sr sl;
-    loc_aux_includes_union_l sl sr sr
-  | LocBuffer b -> B.abuffer_includes_refl b
+= Classical.forall_intro_3 (fun r a b -> B.abuffer_includes_refl #r #a b)
+
+let loc_aux_includes_subset
+  (s1 s2: GSet.set abuffer)
+: Lemma
+  (requires (s1 `GSet.subset` s2))
+  (ensures (loc_aux_includes s2 s1))
+= Classical.forall_intro_3 (fun r a b -> B.abuffer_includes_refl #r #a b)
+
+let loc_aux_includes_subset'
+  (s1 s2: GSet.set abuffer)
+: Lemma
+  (requires (s1 `GSet.subset` s2))
+  (ensures (loc_aux_includes s2 s1))
+  [SMTPatOr [
+    [SMTPat (s1 `GSet.subset` s2)];
+    [SMTPat (loc_aux_includes s2 s1)];
+  ]]
+= loc_aux_includes_subset s1 s2
 
 let loc_aux_includes_union_l_r
-  (#r: HS.rid)
-  (#a: nat)
-  (s s': loc_aux r a)
+  (s s': GSet.set abuffer)
 : Lemma
-  (loc_aux_includes (LocUnion s s') s)
+  (loc_aux_includes (GSet.union s s') s)
 = loc_aux_includes_refl s;
   loc_aux_includes_union_l s s' s
 
 let loc_aux_includes_union_l_l
-  (#r: HS.rid)
-  (#a: nat)
-  (s s': loc_aux r a)
+  (s s': GSet.set abuffer)
 : Lemma
-  (loc_aux_includes (LocUnion s' s) s)
+  (loc_aux_includes (GSet.union s' s) s)
 = loc_aux_includes_refl s;
   loc_aux_includes_union_l s' s s
 
-let rec loc_aux_includes_buffer_includes
-  (#r: HS.rid)
-  (#a: nat)
-  (s: loc_aux r a)
-  (b1 b2: B.abuffer r a)
+let loc_aux_includes_buffer_includes
+  (s: GSet.set abuffer)
+  (b1 b2: abuffer)
 : Lemma
-  (requires (loc_aux_includes_buffer s b1 /\ b1 `B.abuffer_includes` b2))
+  (requires (loc_aux_includes_buffer s b1 /\ b1 `abuffer_includes` b2))
   (ensures (loc_aux_includes_buffer s b2))
-  (decreases s)
-= match s with
-  | LocUnion sl sr ->
-    Classical.or_elim
-      #(loc_aux_includes_buffer sl b1)
-      #(loc_aux_includes_buffer sr b1)
-      #(fun _ -> loc_aux_includes_buffer s b2)
-      (fun _ -> loc_aux_includes_buffer_includes sl b1 b2)
-      (fun _ -> loc_aux_includes_buffer_includes sr b1 b2)
-  | LocBuffer b -> B.abuffer_includes_trans b b1 b2
+= Classical.forall_intro_3 (fun r a b1 -> Classical.forall_intro_2 (fun b2 b3 -> Classical.move_requires (B.abuffer_includes_trans #r #a b1 b2) b3))
 
-let rec loc_aux_includes_loc_aux_includes_buffer
-  (#r: HS.rid)
-  (#a: nat)
-  (s1 s2: loc_aux r a)
-  (b: B.abuffer r a)
+let loc_aux_includes_loc_aux_includes_buffer
+  (s1 s2: GSet.set abuffer)
+  (b: abuffer)
 : Lemma
   (requires (loc_aux_includes s1 s2 /\ loc_aux_includes_buffer s2 b))
   (ensures (loc_aux_includes_buffer s1 b))
-  (decreases s2)
-= match s2 with
-  | LocUnion s2l s2r ->
-    Classical.or_elim
-      #(loc_aux_includes_buffer s2l b)
-      #(loc_aux_includes_buffer s2r b)
-      #(fun _ -> loc_aux_includes_buffer s1 b)
-      (fun _ -> loc_aux_includes_loc_aux_includes_buffer s1 s2l b)
-      (fun _ -> loc_aux_includes_loc_aux_includes_buffer s1 s2r b)
-  | LocBuffer b2 -> loc_aux_includes_buffer_includes s1 b2 b
+= Classical.forall_intro_3 (fun s b1 b2 -> Classical.move_requires (loc_aux_includes_buffer_includes s b1) b2)
 
-let rec loc_aux_includes_trans
-  (#r: HS.rid)
-  (#a: nat)
-  (s1 s2 s3: loc_aux r a)
+let loc_aux_includes_trans
+  (s1 s2 s3: GSet.set abuffer)
 : Lemma
   (requires (loc_aux_includes s1 s2 /\ loc_aux_includes s2 s3))
   (ensures (loc_aux_includes s1 s3))
-  (decreases s3)
-= match s3 with
-  | LocUnion s3l s3r ->
-    loc_aux_includes_trans s1 s2 s3l;
-    loc_aux_includes_trans s1 s2 s3r
-  | LocBuffer b -> loc_aux_includes_loc_aux_includes_buffer s1 s2 b
-
-(* the following is necessary because `decreases` messes up 2nd-order unification with `Classical.forall_intro_3` *)
-
-let loc_aux_includes_trans'
-  (#r: HS.rid)
-  (#a: nat)
-  (s1 s2: loc_aux r a)
-  (s3: loc_aux r a)
-: Lemma
-  ((loc_aux_includes s1 s2 /\ loc_aux_includes s2 s3) ==> loc_aux_includes s1 s3)
-= Classical.move_requires (loc_aux_includes_trans s1 s2) s3
+= Classical.forall_intro_3 (fun r a b1 -> Classical.forall_intro_2 (fun b2 b3 -> Classical.move_requires (B.abuffer_includes_trans #r #a b1 b2) b3))
 
 let addrs_of_loc_weak_loc_union
   (l1 l2: loc)
@@ -334,56 +304,32 @@ let loc_includes s1 s2 =
       forall (r: HS.rid) .
       Set.subset (addrs_of_loc s2 r) (addrs_of_loc s1 r)
     ) /\ (
-      forall (r: HS.rid) (n: nat) .
-      (Set.mem r regions2 /\ Set.mem n (addrs_of_loc_aux s2 r) /\ Set.mem n (addrs_of_loc_aux s1 r)) ==>
-      loc_aux_includes (Loc?.aux s1 r n) (Loc?.aux s2 r n)
-  ))
+      (Ghost.reveal (Loc?.aux s1)) `loc_aux_includes` (Ghost.reveal (Loc?.aux s2))
+    )
+  )
 
 let loc_includes_refl s =
-  let pre
-    (r: HS.rid)
-    (n: nat)
-  : GTot Type0
-  = Set.mem r (regions_of_loc s) /\
-    Set.mem n (Loc?.aux_addrs s r)
-  in
-  let post
-    (r: HS.rid)
-    (n: nat)
-  : GTot Type0
-  = pre r n /\
-    loc_aux_includes (Loc?.aux s r n) (Loc?.aux s r n)
-  in
-  let f
-    (r: HS.rid)
-    (n: nat)
-  : Lemma
-    (requires (pre r n))
-    (ensures (post r n))
-  = loc_aux_includes_refl (Loc?.aux s r n)
-  in
-  Classical.forall_intro_2 (fun r -> Classical.move_requires (f r))
+  loc_aux_includes_refl (Ghost.reveal (Loc?.aux s))
 
 let loc_includes_trans s1 s2 s3 =
-  Classical.forall_intro_2 (fun r a -> Classical.forall_intro_3 (loc_aux_includes_trans' #r #a))
+  loc_aux_includes_trans (Ghost.reveal (Loc?.aux s1)) (Ghost.reveal (Loc?.aux s2)) (Ghost.reveal (Loc?.aux s3))
 
 let loc_includes_union_r s s1 s2 = ()
 
 let loc_includes_union_l s1 s2 s =
   let u12 = loc_union s1 s2 in
-  if StrongExcludedMiddle.strong_excluded_middle (s1 == s2)
-  then ()
-  else begin
-    Classical.forall_intro_2 (fun r a -> Classical.forall_intro (loc_aux_includes_refl #r #a));
-    Classical.forall_intro_2 (fun r a -> Classical.forall_intro_2 (loc_aux_includes_union_l_l #r #a));
-    Classical.forall_intro_2 (fun r a -> Classical.forall_intro_2 (loc_aux_includes_union_l_r #r #a));
     Classical.or_elim
       #(loc_includes s1 s)
       #(loc_includes s2 s)
       #(fun _ -> loc_includes (loc_union s1 s2) s)
-      (fun _ -> loc_includes_trans u12 s1 s)
-      (fun _ -> loc_includes_trans u12 s2 s)
-  end
+      (fun _ ->
+        loc_aux_includes_union_l_r (Ghost.reveal (Loc?.aux s1)) (Ghost.reveal (Loc?.aux s2));
+        assert (loc_includes (loc_union s1 s2) s1);
+        loc_includes_trans u12 s1 s)
+      (fun _ ->
+        loc_aux_includes_union_l_l (Ghost.reveal (Loc?.aux s2)) (Ghost.reveal (Loc?.aux s1));
+        assert (loc_includes (loc_union s1 s2) s2);
+        loc_includes_trans u12 s2 s)
 
 let loc_includes_none s = ()
 
@@ -391,7 +337,11 @@ let loc_includes_buffer #t b1 b2 =
   B.includes_frameOf_as_addr b1 b2;
   if B.g_is_null b1
   then ()
-  else B.abuffer_includes_intro b1 b2
+  else begin
+    B.abuffer_includes_intro b1 b2;
+    // FIXME: WHY WHY WHY do I need this assert?
+    assert (Ghost.reveal (Loc?.aux (loc_buffer b1)) `loc_aux_includes` Ghost.reveal (Loc?.aux (loc_buffer b2)))
+  end
 
 let loc_includes_gsub_buffer_r l #t b i len =
   loc_includes_trans l (loc_buffer b) (loc_buffer (B.gsub b i len))
@@ -405,6 +355,7 @@ let loc_includes_region_buffer #t s b = ()
 
 let loc_includes_region_addresses s r a = ()
 
+
 let loc_includes_region_region s1 s2 = ()
 
 #set-options "--z3rlimit 16"
@@ -416,95 +367,37 @@ let loc_includes_region_union_l l s1 s2 = ()
 
 (* Disjointness of two memory locations *)
 
-let rec loc_aux_disjoint_buffer
-  (#r: HS.rid)
-  (#a: nat)
-  (l: loc_aux r a)
-  (p: B.abuffer r a)
-: GTot Type0
-  (decreases l)
-= match l with
-  | LocUnion ll lr ->
-    loc_aux_disjoint_buffer ll p /\ loc_aux_disjoint_buffer lr p
-  | LocBuffer b -> B.abuffer_disjoint b p
+let abuffer_disjoint (b1 b2: abuffer) : GTot Type0 =
+  if b1.region = b2.region && b1.addr = b2.addr
+  then B.abuffer_disjoint b1.buffer b2.buffer
+  else True
 
-let rec loc_aux_disjoint
-  (#r: HS.rid)
-  (#a: nat)
-  (l1 l2: loc_aux r a)
+let abuffer_disjoint_sym (b1 b2: abuffer) : Lemma
+  (abuffer_disjoint b1 b2 <==> abuffer_disjoint b2 b1)
+= Classical.forall_intro_2 (fun r a -> Classical.forall_intro_2 (fun b1 b2 -> B.abuffer_disjoint_sym #r #a b1 b2))
+
+let loc_aux_disjoint
+  (l1 l2: GSet.set abuffer)
 : GTot Type0
-  (decreases l2)
-= match l2 with
-  | LocUnion ll lr ->
-    loc_aux_disjoint l1 ll /\ loc_aux_disjoint l1 lr
-  | LocBuffer b ->
-    loc_aux_disjoint_buffer l1 b
+= forall (b1 b2: abuffer) . (GSet.mem b1 l1 /\ GSet.mem b2 l2) ==> abuffer_disjoint b1 b2
 
 let rec loc_aux_disjoint_union_l
-  (#r: HS.rid)
-  (#a: nat)
-  (ll1 lr1 l2: loc_aux r a)
+  (ll1 lr1 l2: GSet.set abuffer)
 : Lemma
-  (ensures (loc_aux_disjoint (LocUnion ll1 lr1) l2 <==> (loc_aux_disjoint ll1 l2 /\ loc_aux_disjoint lr1 l2)))
-  (decreases l2)
-= match l2 with
-  | LocUnion ll2 lr2 ->
-    loc_aux_disjoint_union_l ll1 lr1 ll2;
-    loc_aux_disjoint_union_l ll1 lr1 lr2
-  | _ -> ()
-
-let loc_aux_disjoint_union_r
-  (#r: HS.rid)
-  (#a: nat)
-  (l1 ll2 lr2: loc_aux r a)
-: Lemma
-  (loc_aux_disjoint l1 (LocUnion ll2 lr2) <==> (loc_aux_disjoint l1 ll2 /\ loc_aux_disjoint l1 lr2))
+  (ensures (loc_aux_disjoint (GSet.union ll1 lr1) l2 <==> (loc_aux_disjoint ll1 l2 /\ loc_aux_disjoint lr1 l2)))
 = ()
 
-let rec loc_aux_size
-  (#r: HS.rid)
-  (#a: nat)
-  (l: loc_aux r a)
-: GTot nat
-= match l with
-  | LocUnion l1 l2 ->
-    let n1 = loc_aux_size l1 in
-    let n2 = loc_aux_size l2 in
-    1 + (if n1 > n2 then n1 else n2)
-  | _ -> 0
+let loc_aux_disjoint_union_r
+  (l1 ll2 lr2: GSet.set abuffer)
+: Lemma
+  (loc_aux_disjoint l1 (GSet.union ll2 lr2) <==> (loc_aux_disjoint l1 ll2 /\ loc_aux_disjoint l1 lr2))
+= ()
 
-let rec loc_aux_disjoint_sym
-  (#r: HS.rid)
-  (#a: nat)
-  (l1 l2: loc_aux r a)
+let loc_aux_disjoint_sym
+  (l1 l2: GSet.set abuffer)
 : Lemma
   (ensures (loc_aux_disjoint l1 l2 <==> loc_aux_disjoint l2 l1))
-  (decreases (loc_aux_size l1 + loc_aux_size l2))
-= match l2 with
-  | LocUnion ll lr ->
-    loc_aux_disjoint_union_r l1 ll lr;
-    loc_aux_disjoint_sym l1 ll;
-    loc_aux_disjoint_sym l1 lr;
-    loc_aux_disjoint_union_l ll lr l1
-  | LocBuffer b1 ->
-    begin match l1 with
-    | LocUnion ll lr ->
-      loc_aux_disjoint_union_l ll lr l2;
-      loc_aux_disjoint_sym ll l2;
-      loc_aux_disjoint_sym lr l2;
-      loc_aux_disjoint_union_r l2 ll lr
-    | LocBuffer b2 -> B.abuffer_disjoint_sym b1 b2
-    end
-
-(* Same problem with decreases here *)
-
-let loc_aux_disjoint_sym'
-  (#r: HS.rid)
-  (#a: nat)
-  (l1 l2: loc_aux r a)
-: Lemma
-  (loc_aux_disjoint l1 l2 <==> loc_aux_disjoint l2 l1)
-= loc_aux_disjoint_sym l1 l2
+= Classical.forall_intro_2 abuffer_disjoint_sym
 
 let regions_of_loc_loc_union
   (s1 s2: loc)
@@ -530,11 +423,7 @@ let loc_disjoint_addrs (l1 l2: loc) : GTot Type0 =
   )
 
 let loc_disjoint_aux (l1 l2: loc) : GTot Type0 =
-  (forall (r: HS.rid) (n: nat) .
-    (Set.mem r (regions_of_loc l1) /\ Set.mem n (addrs_of_loc_aux l1 r) /\
-     Set.mem r (regions_of_loc l2) /\ Set.mem n (addrs_of_loc_aux l2 r)) ==>
-    loc_aux_disjoint (Loc?.aux l1 r n) (Loc?.aux l2 r n)
-  )
+  loc_aux_disjoint (Ghost.reveal (Loc?.aux l1)) (Ghost.reveal (Loc?.aux l2))
 
 let loc_disjoint'
   (l1 l2: loc)
@@ -546,12 +435,13 @@ let loc_disjoint'
 let loc_disjoint = loc_disjoint'
 
 let loc_disjoint_sym l1 l2 =
-  Classical.forall_intro_2 (fun r a -> Classical.forall_intro_2 (loc_aux_disjoint_sym' #r #a))
+  Classical.forall_intro_2 loc_aux_disjoint_sym
 
 let loc_disjoint_none_r s = ()
 
 let loc_disjoint_union_r s s1 s2 = ()
 
+(*
 let rec loc_aux_disjoint_buffer_includes
   (#r: HS.rid)
   (#a: nat)
@@ -588,53 +478,38 @@ let rec loc_aux_disjoint_loc_aux_includes_buffer
       (fun _ -> loc_aux_disjoint_loc_aux_includes_buffer l1 l2l b3)
       (fun _ -> loc_aux_disjoint_loc_aux_includes_buffer l1 l2r b3)
   | LocBuffer b2 -> loc_aux_disjoint_buffer_includes l1 b2 b3
+*)
 
-let rec loc_aux_disjoint_loc_aux_includes
-  (#r: HS.rid)
-  (#a: nat)
-  (l1 l2 l3: loc_aux r a)
+let abuffer_disjoint_includes (b1 b2 b3 : abuffer) : Lemma
+  (requires (abuffer_disjoint b1 b2 /\ abuffer_includes b2 b3))
+  (ensures (abuffer_disjoint b1 b3))
+= if b1.region = b2.region && b1.addr = b2.addr
+  then begin
+    B.abuffer_includes_refl b1.buffer;
+    B.abuffer_disjoint_includes b1.buffer b2.buffer b1.buffer b3.buffer
+  end
+  else ()
+
+let loc_aux_disjoint_loc_aux_includes
+  (l1 l2 l3: GSet.set abuffer)
 : Lemma
   (requires (loc_aux_disjoint l1 l2 /\ loc_aux_includes l2 l3))
   (ensures (loc_aux_disjoint l1 l3))
-  (decreases l3)
-= match l3 with
-  | LocUnion ll3 lr3 ->
-    loc_aux_disjoint_loc_aux_includes l1 l2 ll3;
-    loc_aux_disjoint_loc_aux_includes l1 l2 lr3
-  | LocBuffer b3 ->
-    loc_aux_disjoint_loc_aux_includes_buffer l1 l2 b3
+= // FIXME: WHY WHY WHY do I need this assert?
+  assert (forall (b1 b3: abuffer) . (GSet.mem b1 l1 /\ GSet.mem b3 l3) ==> (exists (b2: abuffer) . GSet.mem b2 l2 /\ abuffer_disjoint b1 b2 /\ abuffer_includes b2 b3));
+  Classical.forall_intro_3 (fun b1 b2 b3 -> Classical.move_requires (abuffer_disjoint_includes b1 b2) b3)
 
 let loc_disjoint_includes p1 p2 p1' p2' =
   regions_of_loc_monotonic p1 p1';
   regions_of_loc_monotonic p2 p2';
-  let pre = //A rather brutal way to force inlining of pre and post in VC of the continuation
-    (fun r n ->
-      Set.mem r (regions_of_loc p1') /\ Set.mem n (addrs_of_loc_aux p1' r) /\
-      Set.mem r (regions_of_loc p2') /\ Set.mem n (addrs_of_loc_aux p2' r))
-    <: Tot ((r:HS.rid) -> (n:nat) -> GTot Type0)
-  in
-  let post =
-    (fun r n ->
-       pre r n /\
-       loc_aux_disjoint (Loc?.aux p1' r n) (Loc?.aux p2' r n))
-    <: Tot ((r:HS.rid) -> (n:nat) -> GTot Type0)
-  in
-  let f
-    (r: HS.rid)
-    (n: nat)
-  : Lemma
-    (requires (pre r n))
-    (ensures (post r n))
-  = let l1 = Loc?.aux p1 r n in
-    let l2 = Loc?.aux p2 r n in
-    let l1' = Loc?.aux p1' r n in
-    let l2' = Loc?.aux p2' r n in
-    loc_aux_disjoint_loc_aux_includes l1 l2 l2';
-    loc_aux_disjoint_sym l1 l2';
-    loc_aux_disjoint_loc_aux_includes l2' l1 l1';
-    loc_aux_disjoint_sym l2' l1'
-  in
-  Classical.forall_intro_2 (fun r -> Classical.move_requires (f r))
+  let l1 = Ghost.reveal (Loc?.aux p1) in
+  let l2 = Ghost.reveal (Loc?.aux p2) in
+  let l1' = Ghost.reveal (Loc?.aux p1') in
+  let l2' = Ghost.reveal (Loc?.aux p2') in
+  loc_aux_disjoint_loc_aux_includes l1 l2 l2';
+  loc_aux_disjoint_sym l1 l2';
+  loc_aux_disjoint_loc_aux_includes l2' l1 l1';
+  loc_aux_disjoint_sym l2' l1'
 
 let loc_disjoint_buffer #t1 #t2 b1 b2 =
   if B.g_is_null b1 || B.g_is_null b2
@@ -700,24 +575,25 @@ let modifies_preserves_buffers
   (s: loc)
   (h1 h2: HS.mem)
 : GTot Type0
-= (forall (r: HS.rid) (a: nat) (b: B.abuffer r a) . (
-      (Set.mem r (regions_of_loc s) ==> ~ (Set.mem a (addrs_of_loc_weak s r))) /\
-      ((Set.mem r (regions_of_loc s) /\ Set.mem a (addrs_of_loc_aux s r)) ==> loc_aux_disjoint_buffer (Loc?.aux s r a) b)
-    ) ==>
+= (forall (r: HS.rid) (a: nat) (b: B.abuffer r a) .
+    loc_aux_disjoint (Ghost.reveal (Loc?.aux s)) (GSet.singleton (ABuffer r a b))
+    ==>
     B.abuffer_preserved b h1 h2
   )
 
 let modifies_preserves_buffers_intro
   (s: loc)
   (h1 h2: HS.mem)
+  (u: unit { modifies_preserves_mreferences s h1 h2 } )
   (f: (
     (r: HS.rid) ->
     (a: nat) ->
     (b: B.abuffer r a) ->
     Lemma
     (requires (
-      (Set.mem r (regions_of_loc s) ==> ~ (Set.mem a (addrs_of_loc_weak s r))) /\
-      ((Set.mem r (regions_of_loc s) /\ Set.mem a (addrs_of_loc_aux s r)) ==> loc_aux_disjoint_buffer (Loc?.aux s r a) b)
+      Set.mem r (regions_of_loc s) /\ 
+      (~ (Set.mem a (addrs_of_loc_weak s r))) /\
+      (Set.mem a (addrs_of_loc_aux s r) ==> loc_aux_disjoint (Ghost.reveal (Loc?.aux s)) (GSet.singleton (ABuffer r a b)))
     ))
     (ensures (B.abuffer_preserved b h1 h2))
   ))
@@ -728,13 +604,22 @@ let modifies_preserves_buffers_intro
     (a: nat)
     (b: B.abuffer r a)
   : Lemma
-    ( (
-      (Set.mem r (regions_of_loc s) ==> ~ (Set.mem a (addrs_of_loc_weak s r))) /\
-      ((Set.mem r (regions_of_loc s) /\ Set.mem a (addrs_of_loc_aux s r)) ==> loc_aux_disjoint_buffer (Loc?.aux s r a) b)
-    ) ==> (B.abuffer_preserved b h1 h2))
-  = Classical.move_requires (f r a) b
+    (requires (loc_aux_disjoint (Ghost.reveal (Loc?.aux s)) (GSet.singleton (ABuffer r a b))))
+    (ensures (B.abuffer_preserved b h1 h2))
+  = if Set.mem r (regions_of_loc s) && (not (Set.mem a (addrs_of_loc_weak s r)))
+    then
+      Classical.move_requires (f r a) b
+    else if Set.mem r (regions_of_loc s)
+    then begin
+      assert (Set.mem a (addrs_of_loc_weak s r));
+      assert (GSet.mem (ABuffer r a b) (Ghost.reveal (Loc?.aux s)));
+      assert (abuffer_disjoint (ABuffer r a b) (ABuffer r a b));
+      B.abuffer_disjoint_self_preserved b h1 h2
+    end
+    else
+      B.same_mreference_abuffer_preserved b h1 h2 (fun a' pre' r' -> ())
   in
-  Classical.forall_intro_3 f'
+  Classical.forall_intro_3 (fun r a b -> Classical.move_requires (f' r a) b)
 
 let modifies_preserves_regions
   (s: loc)
@@ -771,29 +656,10 @@ let modifies_buffer_elim #t1 b p h h' =
 let modifies_refl s h =
   Classical.forall_intro_3 (fun r a b -> B.abuffer_preserved_refl #r #a b h)
 
-let loc_aux_disjoint_buffer_loc_aux_includes
-  (#r: HS.rid)
-  (#a: nat)
-  (l1: loc_aux r a)
-: Lemma
-  (forall (l2: loc_aux r a)
-    (b3: B.abuffer r a) .
-  (loc_aux_disjoint_buffer l1 b3 /\ loc_aux_includes l1 l2) ==> loc_aux_disjoint_buffer l2 b3)
-= let f
-  (l2: loc_aux r a)
-  (b3: B.abuffer r a)
-  : Lemma
-    (requires (loc_aux_disjoint_buffer l1 b3 /\ loc_aux_includes l1 l2))
-    (ensures (loc_aux_disjoint_buffer l2 b3))
-  = loc_aux_disjoint_sym (LocBuffer b3) l1;
-    loc_aux_disjoint_loc_aux_includes (LocBuffer b3) l1 l2;
-    loc_aux_disjoint_sym (LocBuffer b3) l2
-  in
-  Classical.forall_intro_2 (fun (l2: loc_aux r a) (b3: B.abuffer r a) -> Classical.move_requires (f l2) b3)
-
 let modifies_loc_includes s1 h h' s2 =
   assert (modifies_preserves_mreferences s1 h h');
-  Classical.forall_intro_3 (fun r a l1 -> loc_aux_disjoint_buffer_loc_aux_includes #r #a l1);
+  Classical.forall_intro_2 loc_aux_disjoint_sym;
+  Classical.forall_intro_3 (fun l1 l2 l3 -> Classical.move_requires (loc_aux_disjoint_loc_aux_includes l1 l2) l3);
   assert (modifies_preserves_buffers s1 h h')
 
 let modifies_trans'
@@ -830,13 +696,14 @@ let restrict_to_regions
   (l: loc)
   (rs: Set.set HS.rid)
 : GTot loc
-= let (Loc regions region_liveness_tags addrs aux_addrs aux) = l in
+= let (Loc regions region_liveness_tags addrs aux_addrs aux_addrs_disjoint aux) = l in
   Loc
     (Ghost.hide (Set.intersect (Ghost.reveal regions) rs))
     (Ghost.hide (Set.intersect (Ghost.reveal region_liveness_tags) rs))
     (fun r -> addrs r)
     (fun r -> aux_addrs r)
-    (fun r n -> aux r n)
+    (fun r -> aux_addrs_disjoint r)
+    (Ghost.hide (GSet.intersect (Ghost.reveal aux) (abuffer_domain (Ghost.hide rs) (fun r -> Set.complement Set.empty))))
 
 let regions_of_loc_restrict_to_regions
   (l: loc)
@@ -869,21 +736,21 @@ let loc_includes_restrict_to_regions
   (rs: Set.set HS.rid)
 : Lemma
   (loc_includes l (restrict_to_regions l rs))
-= Classical.forall_intro_2 (fun r a -> Classical.forall_intro (loc_aux_includes_refl #r #a))
+= Classical.forall_intro (loc_aux_includes_refl)
 
 let loc_includes_loc_union_restrict_to_regions
   (l: loc)
   (rs: Set.set HS.rid)
 : Lemma
-  (loc_includes (loc_union (restrict_to_regions l rs) (restrict_to_regions l (Set.complement rs))) l)
-= Classical.forall_intro_2 (fun r a -> Classical.forall_intro (loc_aux_includes_refl #r #a))
+  (loc_equal (loc_union (restrict_to_regions l rs) (restrict_to_regions l (Set.complement rs))) l)
+= ()
 
 let loc_includes_loc_regions_restrict_to_regions
   (l: loc)
   (rs: Set.set HS.rid)
 : Lemma
   (loc_includes (loc_regions rs) (restrict_to_regions l rs))
-= Classical.forall_intro_2 (fun r a -> Classical.forall_intro (loc_aux_includes_refl #r #a))
+= Classical.forall_intro (loc_aux_includes_refl)
 
 let modifies_only_live_regions rs l h h' =
   let s = l in
@@ -923,8 +790,12 @@ let modifies_fresh_frame_popped h0 h1 s h2 h3 =
     (ensures (B.abuffer_preserved b h2 h3))
   = B.same_mreference_abuffer_preserved #r #a b h2 h3 (fun a' pre r' -> ())
   in
-  Classical.forall_intro_3 (fun r a b -> Classical.move_requires (f23 r a) b);
-  modifies_loc_includes s' h2 h3 (loc_region_only h2.HS.tip);
+  let s23 = loc_region_only h2.HS.tip in
+  assert (modifies_preserves_mreferences s23 h2 h3);
+  modifies_preserves_buffers_intro s23 h2 h3 () (fun r a b ->
+    f23 r a b
+  );
+  modifies_loc_includes s' h2 h3 s23;
   modifies_trans' s' h1 h2 h3;
   modifies_only_live_regions (HS.mod_set (Set.singleton h1.HS.tip)) s h0 h3
 
@@ -934,7 +805,10 @@ let modifies_loc_regions_intro rs h1 h2 =
     (ensures (B.abuffer_preserved b h1 h2))
   = B.same_mreference_abuffer_preserved #r #a b h1 h2 (fun a' pre r' -> ())
   in
-  Classical.forall_intro_3 (fun r a b -> Classical.move_requires (f r a) b)
+  assert (modifies_preserves_mreferences (loc_regions rs) h1 h2);
+  modifies_preserves_buffers_intro (loc_regions rs) h1 h2 () (fun r a b ->
+    f r a b
+  )
 
 let modifies_loc_addresses_intro_weak
   (r: HS.rid)
@@ -956,7 +830,7 @@ let modifies_loc_addresses_intro_weak
     (ensures (B.abuffer_preserved b h1 h2))
   = B.same_mreference_abuffer_preserved #r #a b h1 h2 (fun a' pre r_ -> ())
   in
-  modifies_preserves_buffers_intro (loc_union (loc_addresses r s) l) h1 h2 (fun r' a b -> if r = r' then f a b else ()
+  modifies_preserves_buffers_intro (loc_union (loc_addresses r s) l) h1 h2 () (fun r' a b -> if r = r' then f a b else ()
   )
 
 let modifies_loc_addresses_intro r s l h1 h2 =
@@ -986,7 +860,7 @@ let modifies_free #a #rel r m =
     (ensures (B.abuffer_preserved b m (HS.free r m)))
   = B.same_mreference_abuffer_preserved #r' #a b m (HS.free r m) (fun a' pre r' -> ())
   in
-  modifies_preserves_buffers_intro (loc_mreference r) m (HS.free r m) (fun r a b -> g r a b)
+  modifies_preserves_buffers_intro (loc_mreference r) m (HS.free r m) () (fun r a b -> g r a b)
 
 let modifies_none_modifies h1 h2
 = let g (r: HS.rid) (a: nat) (b: B.abuffer r a) : Lemma
@@ -1032,7 +906,12 @@ let modifies_1_modifies #t b h1 h2 =
     then B.modifies_1_abuffer #t b h1 h2 b'
     else B.same_mreference_abuffer_preserved #r' #a' b' h1 h2 (fun a_ pre_ r_ -> ())
   in
-  modifies_preserves_buffers_intro s h1 h2 (fun r a b -> g r a b)
+  modifies_preserves_buffers_intro s h1 h2 () (fun r' a' b' -> 
+    Classical.forall_intro_2 loc_aux_disjoint_sym;
+    assert (abuffer_disjoint (ABuffer r' a' b') (ABuffer r a (B.abuffer_of_buffer b)));
+    Classical.forall_intro_2 (B.abuffer_disjoint_sym #r #a);
+    g r' a' b'
+  )
  end
  
 let mreference_live_buffer_unused_in_disjoint #t1 #pre #t2 h b1 b2 =
@@ -1077,7 +956,7 @@ let modifies_only_live_addresses_weak
   ))
   (ensures (modifies l h h'))
 = assert (modifies_preserves_mreferences l h h');
-  modifies_preserves_buffers_intro l h h' (fun r' a' b' ->
+  modifies_preserves_buffers_intro l h h' () (fun r' a' b' ->
     if r = r' && Set.mem a' a
     then B.same_mreference_abuffer_preserved #r' #a' b' h h' (fun a_ pre_ r_ -> ())
     else ()
@@ -1093,14 +972,25 @@ let restrict_to_addresses
 : Ghost loc
   (requires (loc_region_only r `loc_includes` l))
   (ensures (fun _ -> True))
-= let (Loc regions region_liveness_tags addrs aux_addrs aux) = l in
-  let aux_addrs' = if Set.mem r (Ghost.reveal regions) then Set.intersect (aux_addrs r) as else Set.empty in
+= let (Loc regions region_liveness_tags addrs aux_addrs aux_addrs_disjoint aux) = l in
+  let regions' = ((Set.intersect (Ghost.reveal regions) (Set.singleton r))) in
+  let addrs' (r' : HS.rid { Set.mem r' regions' } ) : GTot (Set.set nat) =
+    if (* r' = r && *) Set.mem r (Ghost.reveal regions)
+    then Set.intersect (addrs r) as
+    else Set.empty
+  in
+  let aux_addrs' (r' : HS.rid { Set.mem r' regions' } ) : GTot (Set.set nat) =
+    if (* r = r' && *) Set.mem r (Ghost.reveal regions)
+    then Set.intersect (aux_addrs r') as
+    else Set.empty
+  in
     Loc
-      (Ghost.hide (Set.intersect (Ghost.reveal regions) (Set.singleton r)))
+      (Ghost.hide regions')
       (Ghost.hide (if include_liveness_tag then Set.intersect (Ghost.reveal region_liveness_tags) (Set.singleton r) else Set.empty))
-      (fun _ -> if Set.mem r (Ghost.reveal regions) then Set.intersect (addrs r) as else Set.empty)
-      (fun _ -> aux_addrs')
-      (fun r n -> aux r n)
+      addrs'
+      aux_addrs'
+      (fun r -> aux_addrs_disjoint r)
+      (Ghost.hide (GSet.intersect (Ghost.reveal aux) (abuffer_domain (Ghost.hide regions') (aux_addrs')) `GSet.union` (abuffer_domain (Ghost.hide regions') addrs')))
 
 let regions_of_loc_restrict_to_addresses
   (l: loc)
@@ -1146,7 +1036,7 @@ let loc_includes_restrict_to_addresses
 : Lemma
   (requires (loc_region_only r `loc_includes` l))
   (ensures (loc_includes l (restrict_to_addresses l r include_liveness_tag as)))
-= Classical.forall_intro_2 (fun r a -> Classical.forall_intro (loc_aux_includes_refl #r #a))
+= Classical.forall_intro_2 (fun s1 s2 -> Classical.move_requires (loc_aux_includes_subset s1) s2)
 
 let loc_includes_loc_union_restrict_to_addresses
   (l: loc)
@@ -1154,8 +1044,8 @@ let loc_includes_loc_union_restrict_to_addresses
   (as: Set.set nat)
 : Lemma
   (requires (loc_region_only r `loc_includes` l))
-  (ensures (loc_includes (loc_union (restrict_to_addresses l r false as) (restrict_to_addresses l r true (Set.complement as))) l))
-= Classical.forall_intro_2 (fun r a -> Classical.forall_intro (loc_aux_includes_refl #r #a))
+  (ensures (loc_equal (loc_union (restrict_to_addresses l r false as) (restrict_to_addresses l r true (Set.complement as))) l))
+= ()
 
 let loc_includes_loc_addresses_restrict_to_addresses
   (l: loc)
@@ -1164,7 +1054,7 @@ let loc_includes_loc_addresses_restrict_to_addresses
 : Lemma
   (requires (loc_region_only r `loc_includes` l))
   (ensures (loc_includes (loc_addresses r as) (restrict_to_addresses l r false as)))
-= Classical.forall_intro_2 (fun r a -> Classical.forall_intro (loc_aux_includes_refl #r #a))
+= Classical.forall_intro_2 (fun s1 s2 -> Classical.move_requires (loc_aux_includes_subset s1) s2)
 
 #set-options "--z3rlimit 64"
 
@@ -1182,6 +1072,8 @@ let modifies_only_live_addresses r a l h h' =
   loc_includes_trans (loc_union l_a l_not_a) (loc_union (loc_union l_a l_r_not_a) l_not_r) l;
   loc_includes_trans l' (loc_union l_a l_not_a) l;
   modifies_loc_includes (loc_union (loc_addresses r a) l_not_a) h h' (loc_union (loc_addresses r a) l);
+  assert (loc_disjoint (loc_addresses r a) l_r_not_a);
+  assert (loc_disjoint (loc_addresses r a) l_not_r);
   modifies_only_live_addresses_weak r a l_not_a h h';
   loc_includes_restrict_to_regions l (Set.complement (Set.singleton r));
   loc_includes_restrict_to_addresses l_r r true (Set.complement a);
