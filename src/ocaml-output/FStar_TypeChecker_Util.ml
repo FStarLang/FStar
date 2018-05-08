@@ -4217,6 +4217,8 @@ let (check_and_ascribe :
                 (uu___143_11228.FStar_TypeChecker_Env.failhard);
               FStar_TypeChecker_Env.nosynth =
                 (uu___143_11228.FStar_TypeChecker_Env.nosynth);
+              FStar_TypeChecker_Env.uvar_subtyping =
+                (uu___143_11228.FStar_TypeChecker_Env.uvar_subtyping);
               FStar_TypeChecker_Env.tc_term =
                 (uu___143_11228.FStar_TypeChecker_Env.tc_term);
               FStar_TypeChecker_Env.type_of =
