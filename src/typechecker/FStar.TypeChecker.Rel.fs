@@ -376,10 +376,15 @@ let def_check_prob msg prob =
     | _ -> (); //TODO
     ()
 
-let mk_eq2 wl _prob t1 t2 =
-    let _, tt, g = wl.tcenv.type_of wl.tcenv t1 in
-    let u = wl.tcenv.universe_of wl.tcenv tt in
-    U.mk_eq2 u tt t1 t2, {wl with wl_implicits=g.implicits@wl.wl_implicits}
+let mk_eq2 wl prob t1 t2 =
+    (* NS: Rather than introducing a new variable, it would be much preferable
+            to simply compute the type of t1 here.
+            Sadly, it seems to be way too expensive to call env.type_of here.
+    *)
+    let t_type, u = U.type_u () in
+    let binders = Env.all_binders wl.tcenv in
+    let _, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma binders t_type Allow_unresolved in
+    U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
    | TProb p -> TProb <| invert p
