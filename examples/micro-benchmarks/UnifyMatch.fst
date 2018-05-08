@@ -74,6 +74,18 @@ let tests () : Tac (list (term * term * bool)) = [
   (* (`(nat2unary 11), *)
   (*  norm_term [delta;zeta;primops] (`(nat2unary 10)), *)
   (*  false); *)
+
+  (`((match D (fun x -> x) with D f -> f) 5),
+   `5,
+   true);
+
+  (`((match (fun x -> x) with f -> f) 5),
+   `5,
+   true);
+
+  (`((match D (match D (fun x -> x) with D f -> f) with | D g -> g) 5),
+   `5,
+   true);
   ]
 
 let test1 tb  : Tac unit =
