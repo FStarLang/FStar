@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "a403013882adc33d051ba0959c2f84bb"
+      "7f63ecde4f6d9543fc3da594bdabd475"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -30,7 +30,7 @@
         "token_correspondence_Ex12f.TMAC.bspec"
       ],
       0,
-      "978eb71458c87a0dd72f6979071c1b0b"
+      "9c6c239159169d11ddac58ad32940c33"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -51,7 +51,7 @@
         "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
       ],
       0,
-      "35f26069be4bfd0badd654f8e995b1cf"
+      "dc4b6556685a3fcf0dd17d186bcfd07f"
     ],
     [
       "Ex12f.TMAC.keygen",
@@ -60,7 +60,7 @@
       1,
       [ "@query" ],
       0,
-      "25dcbeff6695e8c92a0d459cd8fb33cb"
+      "f41784384c7967f605df4285fd43cede"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -82,7 +82,7 @@
         "token_correspondence_Ex12f.TMAC.bspec"
       ],
       0,
-      "07bcb4de58f49b3b5005d658c0994c26"
+      "cc1d911997198eee1c8d2d7c6cebf601"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -103,7 +103,7 @@
         "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
       ],
       0,
-      "dd74b71f56408e906b307a9d9e975614"
+      "f9c9a2f46e7a59a4870fb00719ad204c"
     ]
   ]
 ]
