@@ -120,7 +120,7 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
      then BU.print4 "check_and_ascribe: type is %s<:%s \tguard is %s, %s\n"
                 (Print.term_to_string t) (Print.term_to_string t')
                 (Rel.guard_to_string env g) (Rel.guard_to_string env guard);
-     let msg = if Rel.is_trivial g then None else Some <| Err.subtyping_failed env t t' in
+     let msg = if Rel.is_trivial_guard_formula g then None else Some <| Err.subtyping_failed env t t' in
      let g = Rel.conj_guard g guard in
      (* adding a guard for confirming that the computed type t is a subtype of the expected type t' *)
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in

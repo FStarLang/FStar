@@ -671,7 +671,7 @@ let strengthen_precondition
             (lc:lcomp)
             (g0:guard_t)
     : lcomp * guard_t =
-    if Rel.is_trivial g0
+    if Rel.is_trivial_guard_formula g0
     then lc, g0
     else let flags =
             let maybe_trivial_post, flags =
