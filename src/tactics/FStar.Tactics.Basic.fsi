@@ -7,6 +7,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 
 open FStar.Reflection.Data
+module Range = FStar.Range
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 
@@ -14,7 +15,8 @@ type goal = FStar.Tactics.Types.goal
 
 type tac<'a>
 
-val run : tac<'a> -> proofstate -> __result<'a>
+val run      : tac<'a> -> proofstate -> __result<'a>
+val run_safe : tac<'a> -> proofstate -> __result<'a> (* Won't raise any exception, just fail within the monad *)
 val ret : 'a -> tac<'a>
 val set : proofstate -> tac<unit>
 val get : tac<proofstate>
@@ -104,4 +106,5 @@ val unify : term -> term -> tac<bool>
 val change : typ -> tac<unit>
 
 val goal_of_goal_ty : env -> typ -> goal * guard_t
-val proofstate_of_goal_ty : env -> typ -> proofstate * term (* Returns proofstate and uvar for main witness *)
+(* Returns proofstate and uvar for main witness *)
+val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate * term

@@ -11,16 +11,25 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3c682c9b3b1f82616089391cbd0e781f"
+      "7e5551dca3c84f9c143668193dcaf22d"
+    ],
+    [
+      "Canon.lem8",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "8d3f75b255e5cb08949cfeee07fe6c40"
     ],
     [
       "Canon.lem9",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
       0,
-      "efb71d63f3b5994cbda30119ab48aaa5"
+      "7248e92f7ff85003862aa75120a2d71c"
     ],
     [
       "Canon.check_canon",
@@ -37,7 +46,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "bb44192be2c5a4e9220df2b4a2be3c44"
+      "cdee2e11a717618249fcda9ad2eb64b0"
     ]
   ]
 ]

@@ -311,7 +311,7 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
     (let report uu____399 =
        let uu____400 = FStar_Errors.report_all ()  in
-       FStar_All.pipe_right uu____400 (fun a238  -> ())  in
+       FStar_All.pipe_right uu____400 (fun a237  -> ())  in
      try
        let tcenv = init ()  in
        let frag = frag_of_text s  in
