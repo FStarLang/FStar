@@ -2341,29 +2341,37 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let phi2 = Subst.subst subst phi2 in
         let env = Env.push_bv env x1 in
         let mk_imp imp phi1 phi2 = imp phi1 phi2 |> guard_on_element wl problem x1 in
-        let fallback () =
-            let impl =
-                if problem.relation = EQ
-                then mk_imp U.mk_iff phi1 phi2
-                else mk_imp U.mk_imp phi1 phi2 in
-            let guard = U.mk_conj (p_guard base_prob) impl in
-            let wl = solve_prob orig (Some guard) [] wl in
-            solve env (attempt [base_prob] wl) in
+             let fallback () =
+                let impl =
+                    if problem.relation = EQ
+                    then mk_imp U.mk_iff phi1 phi2
+                    else mk_imp U.mk_imp phi1 phi2 in
+                let guard = U.mk_conj (p_guard base_prob) impl in
+                let wl = solve_prob orig (Some guard) [] wl in
+                solve env (attempt [base_prob] wl)
+             in
         if problem.relation = EQ
         then let ref_prob, wl =
-                 mk_t_problem wl [mk_binder x1] orig phi1 EQ phi2 None "refinement formula" in
-             begin
+                  mk_t_problem wl [mk_binder x1] orig phi1 EQ phi2 None "refinement formula"
+             in
              match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
-             | Failed _ -> fallback()
+             | Failed (prob, msg) ->
+               if BU.set_is_empty (FStar.Syntax.Free.uvars phi1)
+               && BU.set_is_empty (FStar.Syntax.Free.uvars phi2)
+               && wl.smt_ok
+               then fallback()
+               else giveup env msg prob
+
              | Success _ ->
                let guard =
-                    U.mk_conj (p_guard base_prob)
-                              (p_guard ref_prob |> guard_on_element wl problem x1) in
-                let wl = solve_prob orig (Some guard) [] wl in
-                let wl = {wl with ctr=wl.ctr+1} in
-                solve env (attempt [base_prob] wl)
-             end
+                   U.mk_conj (p_guard base_prob)
+                             (p_guard ref_prob |> guard_on_element wl problem x1) in
+               let wl = solve_prob orig (Some guard) [] wl in
+               let wl = {wl with ctr=wl.ctr+1} in
+               solve env (attempt [base_prob] wl)
         else fallback()
+        //else let ref_prob, wl = ref_eq_prob wl in
+        //     solve env (attempt [ref_prob; base_prob] wl)
 
       (* flex-flex *)
       | Tm_uvar _,                Tm_uvar _
@@ -2400,39 +2408,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | Tm_app({n=Tm_uvar _}, _), _ ->
         //flex-rigid subtyping is handled in the top-loop
         solve env (attempt [TProb problem] wl)
-
-      // (* flex-rigid: subtyping *)
-      // | Tm_uvar _, _
-      // | Tm_app({n=Tm_uvar _}, _), _ -> (* equate with the base type of the refinement on the RHS, and add a logical guard for the refinement formula *)
-      //   if wl.defer_ok
-      //   then solve env (defer "flex-rigid subtyping deferred" orig wl)
-      //   else
-      //       let new_rel = problem.relation in
-      //       if not <| is_top_level_prob orig //If it's not top-level and t2 is refined, then we should not try to prove that t2's refinement is saturated
-      //       then solve_t_flex_rigid_eq env (TProb <| {problem with relation=new_rel}) wl (destruct_flex_t t1) t2
-      //       else let t_base, ref_opt = base_and_refinement env t2 in
-      //            begin
-      //            match ref_opt with
-      //            | None -> //no useful refinement on the RHS, so just equate and solve
-      //               solve_t_flex_rigid_eq env (TProb <| {problem with relation=new_rel}) wl (destruct_flex_t t1) t_base
-
-      //            | Some (y, phi) ->
-      //               let y' = {y with sort = t1} in
-      //               let impl = guard_on_element wl problem y' phi in
-      //               let base_prob, wl =
-      //                   mk_t_problem wl [] orig t1 new_rel y.sort problem.element "flex-rigid: base type" in
-      //               let guard = U.mk_conj (p_guard base_prob) impl in //FIXME! does y' escape?
-      //               let wl = solve_prob orig (Some guard) [] wl in
-      //               solve env (attempt [base_prob] wl)
-      //            end
-
-      // (* rigid-flex: subtyping *)
-      // | _, Tm_uvar _
-      // | _, Tm_app({n=Tm_uvar _}, _) -> (* widen immediately, by forgetting the top-level refinement and equating *)
-      //   if wl.defer_ok
-      //   then solve env (defer "rigid-flex subtyping deferred" orig wl)
-      //   else let t_base, _ = base_and_refinement env t1 in
-      //        solve_t env ({problem with lhs=t_base; relation=EQ}) wl
 
       | Tm_refine _, _ ->
         let t2 = force_refinement <| base_and_refinement env t2 in
