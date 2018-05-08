@@ -1818,7 +1818,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard = guard_of_prob env problem t1 t2 in
                      solve env (solve_prob orig guard [] wl)
-                else giveup env (BU.format2 "head mismatch (%s vs %s)" (Print.term_to_string head1) (Print.term_to_string head2)) orig
+                else giveup env (BU.format4 "head mismatch (%s-%s vs %s-%s)"
+                                    (Print.tag_of_term head1) (Print.term_to_string head1)
+                                    (Print.tag_of_term head2) (Print.term_to_string head2)) orig
 
             // heads match, but we unfolded, so we should unify again
             | (HeadMatch _, Some (t1, t2))
