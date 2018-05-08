@@ -1,5 +1,5 @@
 open Prims
-let (uu___105 : unit) = FStar_Version.dummy () 
+let (uu___101 : unit) = FStar_Version.dummy () 
 let (process_args :
   unit ->
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
@@ -75,7 +75,7 @@ let (report_errors :
   =
   fun fmods  ->
     (let uu____147 = FStar_Errors.report_all ()  in
-     FStar_All.pipe_right uu____147 (fun a242  -> ()));
+     FStar_All.pipe_right uu____147 (fun a241  -> ()));
     (let nerrs = FStar_Errors.get_err_count ()  in
      if nerrs > (Prims.parse_int "0")
      then

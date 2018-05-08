@@ -3,8 +3,7 @@ let (string_compare : Prims.string -> Prims.string -> Prims.int) =
   fun s1  -> fun s2  -> FStar_String.compare s1 s2 
 type 'a heap =
   | EmptyHeap 
-  | Heap of ('a,'a heap Prims.list) FStar_Pervasives_Native.tuple2 [@@deriving
-                                                                    show]
+  | Heap of ('a,'a heap Prims.list) FStar_Pervasives_Native.tuple2 
 let uu___is_EmptyHeap : 'a . 'a heap -> Prims.bool =
   fun projectee  ->
     match projectee with | EmptyHeap  -> true | uu____45 -> false
@@ -46,8 +45,8 @@ let rec heap_merge_pairs :
       'Auu____262 heap Prims.list -> 'Auu____262 heap
   =
   fun cmp  ->
-    fun uu___57_284  ->
-      match uu___57_284 with
+    fun uu___58_284  ->
+      match uu___58_284 with
       | [] -> EmptyHeap
       | h::[] -> h
       | h1::h2::hh ->
@@ -59,8 +58,8 @@ let heap_peek :
   'Auu____327 .
     'Auu____327 heap -> 'Auu____327 FStar_Pervasives_Native.option
   =
-  fun uu___58_336  ->
-    match uu___58_336 with
+  fun uu___59_336  ->
+    match uu___59_336 with
     | EmptyHeap  -> FStar_Pervasives_Native.None
     | Heap (v1,uu____340) -> FStar_Pervasives_Native.Some v1
   
@@ -72,8 +71,8 @@ let heap_pop :
           FStar_Pervasives_Native.option
   =
   fun cmp  ->
-    fun uu___59_381  ->
-      match uu___59_381 with
+    fun uu___60_381  ->
+      match uu___60_381 with
       | EmptyHeap  -> FStar_Pervasives_Native.None
       | Heap (v1,hh) ->
           let uu____404 =
@@ -95,8 +94,8 @@ let push_nodup :
   =
   fun key_fn  ->
     fun x  ->
-      fun uu___60_487  ->
-        match uu___60_487 with
+      fun uu___61_487  ->
+        match uu___61_487 with
         | [] -> [x]
         | h::t ->
             let uu____496 =
@@ -116,8 +115,8 @@ let rec add_priorities :
   =
   fun n1  ->
     fun acc  ->
-      fun uu___61_541  ->
-        match uu___61_541 with
+      fun uu___62_541  ->
+        match uu___62_541 with
         | [] -> acc
         | h::t ->
             add_priorities (n1 + (Prims.parse_int "1")) ((n1, h) :: acc) t
@@ -161,7 +160,7 @@ let merge_increasing_lists_rev :
 type 'a btree =
   | StrEmpty 
   | StrBranch of (Prims.string,'a,'a btree,'a btree)
-  FStar_Pervasives_Native.tuple4 [@@deriving show]
+  FStar_Pervasives_Native.tuple4 
 let uu___is_StrEmpty : 'a . 'a btree -> Prims.bool =
   fun projectee  ->
     match projectee with | StrEmpty  -> true | uu____1052 -> false
@@ -305,7 +304,7 @@ let rec btree_remove : 'a . 'a btree -> Prims.string -> 'a btree =
 type prefix_match =
   {
   prefix: Prims.string FStar_Pervasives_Native.option ;
-  completion: Prims.string }[@@deriving show]
+  completion: Prims.string }
 let (__proj__Mkprefix_match__item__prefix :
   prefix_match -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee  ->
@@ -322,7 +321,7 @@ let (__proj__Mkprefix_match__item__completion : prefix_match -> Prims.string)
   
 type path_elem = {
   imports: Prims.string Prims.list ;
-  segment: prefix_match }[@@deriving show]
+  segment: prefix_match }
 let (__proj__Mkpath_elem__item__imports :
   path_elem -> Prims.string Prims.list) =
   fun projectee  ->
@@ -387,14 +386,14 @@ let rec btree_fold :
               let uu____2008 = btree_fold rbt f acc  in f k v1 uu____2008  in
             btree_fold lbt f uu____2007
   
-type path = path_elem Prims.list[@@deriving show]
-type query = Prims.string Prims.list[@@deriving show]
+type path = path_elem Prims.list
+type query = Prims.string Prims.list
 let (query_to_string : Prims.string Prims.list -> Prims.string) =
   fun q  -> FStar_String.concat "." q 
 type 'a name_collection =
   | Names of 'a btree 
   | ImportedNames of (Prims.string,'a name_collection Prims.list)
-  FStar_Pervasives_Native.tuple2 [@@deriving show]
+  FStar_Pervasives_Native.tuple2 
 let uu___is_Names : 'a . 'a name_collection -> Prims.bool =
   fun projectee  ->
     match projectee with | Names _0 -> true | uu____2066 -> false
@@ -411,10 +410,10 @@ let __proj__ImportedNames__item___0 :
       (Prims.string,'a name_collection Prims.list)
         FStar_Pervasives_Native.tuple2
   = fun projectee  -> match projectee with | ImportedNames _0 -> _0 
-type 'a names = 'a name_collection Prims.list[@@deriving show]
+type 'a names = 'a name_collection Prims.list
 type 'a trie = {
   bindings: 'a names ;
-  namespaces: 'a trie names }[@@deriving show]
+  namespaces: 'a trie names }
 let __proj__Mktrie__item__bindings : 'a . 'a trie -> 'a names =
   fun projectee  ->
     match projectee with
@@ -544,8 +543,8 @@ let trie_mutate_leaf :
              fun uu____2923  ->
                fun uu____2924  ->
                  fun namespaces  ->
-                   let uu___63_2933 = tr1  in
-                   { bindings = (uu___63_2933.bindings); namespaces })
+                   let uu___64_2933 = tr1  in
+                   { bindings = (uu___64_2933.bindings); namespaces })
   
 let trie_insert : 'a . 'a trie -> query -> Prims.string -> 'a -> 'a trie =
   fun tr  ->
@@ -555,11 +554,11 @@ let trie_insert : 'a . 'a trie -> query -> Prims.string -> 'a -> 'a trie =
           trie_mutate_leaf tr ns_query
             (fun tr1  ->
                fun uu____2980  ->
-                 let uu___64_2983 = tr1  in
+                 let uu___65_2983 = tr1  in
                  let uu____2986 = names_insert tr1.bindings id1 v1  in
                  {
                    bindings = uu____2986;
-                   namespaces = (uu___64_2983.namespaces)
+                   namespaces = (uu___65_2983.namespaces)
                  })
   
 let trie_import :
@@ -587,11 +586,11 @@ let trie_include : 'a . 'a trie -> query -> query -> 'a trie =
           (fun tr1  ->
              fun inc  ->
                fun label  ->
-                 let uu___65_3113 = tr1  in
+                 let uu___66_3113 = tr1  in
                  {
                    bindings = ((ImportedNames (label, (inc.bindings))) ::
                      (tr1.bindings));
-                   namespaces = (uu___65_3113.namespaces)
+                   namespaces = (uu___66_3113.namespaces)
                  })
   
 let trie_open_namespace : 'a . 'a trie -> query -> query -> 'a trie =
@@ -602,9 +601,9 @@ let trie_open_namespace : 'a . 'a trie -> query -> query -> 'a trie =
           (fun tr1  ->
              fun inc  ->
                fun label  ->
-                 let uu___66_3163 = tr1  in
+                 let uu___67_3163 = tr1  in
                  {
-                   bindings = (uu___66_3163.bindings);
+                   bindings = (uu___67_3163.bindings);
                    namespaces = ((ImportedNames (label, (inc.namespaces))) ::
                      (tr1.namespaces))
                  })
@@ -640,8 +639,8 @@ let names_revmap :
       let rec aux acc imports name_collections1 =
         FStar_List.fold_left
           (fun acc1  ->
-             fun uu___62_3359  ->
-               match uu___62_3359 with
+             fun uu___63_3359  ->
+               match uu___63_3359 with
                | Names bt ->
                    let uu____3381 =
                      let uu____3388 = fn bt  in (imports, uu____3388)  in
@@ -668,7 +667,7 @@ let btree_find_all :
 type name_search_term =
   | NSTAll 
   | NSTNone 
-  | NSTPrefix of Prims.string [@@deriving show]
+  | NSTPrefix of Prims.string 
 let (uu___is_NSTAll : name_search_term -> Prims.bool) =
   fun projectee  ->
     match projectee with | NSTAll  -> true | uu____3484 -> false
@@ -764,7 +763,7 @@ let trie_find_prefix :
   = fun tr  -> fun query  -> trie_find_prefix' tr [] query [] 
 type ns_info = {
   ns_name: Prims.string ;
-  ns_loaded: Prims.bool }[@@deriving show]
+  ns_loaded: Prims.bool }
 let (__proj__Mkns_info__item__ns_name : ns_info -> Prims.string) =
   fun projectee  ->
     match projectee with
@@ -781,7 +780,7 @@ type mod_info =
   {
   mod_name: Prims.string ;
   mod_path: Prims.string ;
-  mod_loaded: Prims.bool }[@@deriving show]
+  mod_loaded: Prims.bool }
 let (__proj__Mkmod_info__item__mod_name : mod_info -> Prims.string) =
   fun projectee  ->
     match projectee with
@@ -803,7 +802,7 @@ let (__proj__Mkmod_info__item__mod_loaded : mod_info -> Prims.bool) =
 let (mod_name : mod_info -> Prims.string) = fun md  -> md.mod_name 
 type mod_symbol =
   | Module of mod_info 
-  | Namespace of ns_info [@@deriving show]
+  | Namespace of ns_info 
 let (uu___is_Module : mod_symbol -> Prims.bool) =
   fun projectee  ->
     match projectee with | Module _0 -> true | uu____4003 -> false
@@ -816,10 +815,10 @@ let (uu___is_Namespace : mod_symbol -> Prims.bool) =
   
 let (__proj__Namespace__item___0 : mod_symbol -> ns_info) =
   fun projectee  -> match projectee with | Namespace _0 -> _0 
-type lid_symbol = FStar_Ident.lid[@@deriving show]
+type lid_symbol = FStar_Ident.lid
 type symbol =
   | ModOrNs of mod_symbol 
-  | Lid of lid_symbol [@@deriving show]
+  | Lid of lid_symbol 
 let (uu___is_ModOrNs : symbol -> Prims.bool) =
   fun projectee  ->
     match projectee with | ModOrNs _0 -> true | uu____4041 -> false
@@ -834,7 +833,7 @@ let (__proj__Lid__item___0 : symbol -> lid_symbol) =
   fun projectee  -> match projectee with | Lid _0 -> _0 
 type table = {
   tbl_lids: lid_symbol trie ;
-  tbl_mods: mod_symbol trie }[@@deriving show]
+  tbl_mods: mod_symbol trie }
 let (__proj__Mktable__item__tbl_lids : table -> lid_symbol trie) =
   fun projectee  ->
     match projectee with
@@ -854,28 +853,28 @@ let (insert : table -> query -> Prims.string -> lid_symbol -> table) =
     fun host_query  ->
       fun id1  ->
         fun c  ->
-          let uu___67_4127 = tbl  in
+          let uu___68_4127 = tbl  in
           let uu____4128 = trie_insert tbl.tbl_lids host_query id1 c  in
-          { tbl_lids = uu____4128; tbl_mods = (uu___67_4127.tbl_mods) }
+          { tbl_lids = uu____4128; tbl_mods = (uu___68_4127.tbl_mods) }
   
 let (register_alias : table -> Prims.string -> query -> query -> table) =
   fun tbl  ->
     fun key  ->
       fun host_query  ->
         fun included_query  ->
-          let uu___68_4151 = tbl  in
+          let uu___69_4151 = tbl  in
           let uu____4152 =
             trie_add_alias tbl.tbl_lids key host_query included_query  in
-          { tbl_lids = uu____4152; tbl_mods = (uu___68_4151.tbl_mods) }
+          { tbl_lids = uu____4152; tbl_mods = (uu___69_4151.tbl_mods) }
   
 let (register_include : table -> query -> query -> table) =
   fun tbl  ->
     fun host_query  ->
       fun included_query  ->
-        let uu___69_4170 = tbl  in
+        let uu___70_4170 = tbl  in
         let uu____4171 = trie_include tbl.tbl_lids host_query included_query
            in
-        { tbl_lids = uu____4171; tbl_mods = (uu___69_4170.tbl_mods) }
+        { tbl_lids = uu____4171; tbl_mods = (uu___70_4170.tbl_mods) }
   
 let (register_open : table -> Prims.bool -> query -> query -> table) =
   fun tbl  ->
@@ -885,10 +884,10 @@ let (register_open : table -> Prims.bool -> query -> query -> table) =
           if is_module
           then register_include tbl host_query included_query
           else
-            (let uu___70_4195 = tbl  in
+            (let uu___71_4195 = tbl  in
              let uu____4196 =
                trie_open_namespace tbl.tbl_lids host_query included_query  in
-             { tbl_lids = uu____4196; tbl_mods = (uu___70_4195.tbl_mods) })
+             { tbl_lids = uu____4196; tbl_mods = (uu___71_4195.tbl_mods) })
   
 let (register_module_path :
   table -> Prims.bool -> Prims.string -> query -> table) =
@@ -927,7 +926,7 @@ let (register_module_path :
             match q with
             | [] -> ins_mod id1 bindings name loaded1
             | uu____4368 -> ins_ns id1 bindings name loaded1  in
-          let uu___71_4374 = tbl  in
+          let uu___72_4374 = tbl  in
           let uu____4375 =
             trie_mutate tbl.tbl_mods mod_query []
               (fun tr  ->
@@ -935,13 +934,13 @@ let (register_module_path :
                    fun q  ->
                      fun revq  ->
                        fun namespaces  ->
-                         let uu___72_4397 = tr  in
+                         let uu___73_4397 = tr  in
                          let uu____4400 = ins id1 q revq tr.bindings loaded
                             in
                          { bindings = uu____4400; namespaces })
               (fun tr  -> fun uu____4411  -> tr)
              in
-          { tbl_lids = (uu___71_4374.tbl_lids); tbl_mods = uu____4375 }
+          { tbl_lids = (uu___72_4374.tbl_lids); tbl_mods = uu____4375 }
   
 let (string_of_path : path -> Prims.string) =
   fun path  ->
@@ -1001,7 +1000,7 @@ type completion_result =
   {
   completion_match_length: Prims.int ;
   completion_candidate: Prims.string ;
-  completion_annotation: Prims.string }[@@deriving show]
+  completion_annotation: Prims.string }
 let (__proj__Mkcompletion_result__item__completion_match_length :
   completion_result -> Prims.int) =
   fun projectee  ->

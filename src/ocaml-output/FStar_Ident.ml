@@ -1,7 +1,7 @@
 open Prims
 type ident = {
   idText: Prims.string ;
-  idRange: FStar_Range.range }[@@deriving show]
+  idRange: FStar_Range.range }[@@deriving yojson,show]
 let (__proj__Mkident__item__idText : ident -> Prims.string) =
   fun projectee  ->
     match projectee with
@@ -14,13 +14,13 @@ let (__proj__Mkident__item__idRange : ident -> FStar_Range.range) =
     | { idText = __fname__idText; idRange = __fname__idRange;_} ->
         __fname__idRange
   
-type path = Prims.string Prims.list[@@deriving show]
+type path = Prims.string Prims.list
 type lident =
   {
   ns: ident Prims.list ;
   ident: ident ;
   nsstr: Prims.string ;
-  str: Prims.string }[@@deriving show]
+  str: Prims.string }[@@deriving yojson,show]
 let (__proj__Mklident__item__ns : lident -> ident Prims.list) =
   fun projectee  ->
     match projectee with
@@ -45,7 +45,7 @@ let (__proj__Mklident__item__str : lident -> Prims.string) =
     | { ns = __fname__ns; ident = __fname__ident; nsstr = __fname__nsstr;
         str = __fname__str;_} -> __fname__str
   
-type lid = lident[@@deriving show]
+type lid = lident[@@deriving yojson,show]
 let (mk_ident :
   (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2 -> ident) =
   fun uu____105  ->
@@ -126,14 +126,14 @@ let (range_of_lid : lident -> FStar_Range.range) =
 let (set_lid_range : lident -> FStar_Range.range -> lident) =
   fun l  ->
     fun r  ->
-      let uu___51_417 = l  in
+      let uu___52_417 = l  in
       {
-        ns = (uu___51_417.ns);
+        ns = (uu___52_417.ns);
         ident =
-          (let uu___52_419 = l.ident  in
-           { idText = (uu___52_419.idText); idRange = r });
-        nsstr = (uu___51_417.nsstr);
-        str = (uu___51_417.str)
+          (let uu___53_419 = l.ident  in
+           { idText = (uu___53_419.idText); idRange = r });
+        nsstr = (uu___52_417.nsstr);
+        str = (uu___52_417.str)
       }
   
 let (lid_add_suffix : lident -> Prims.string -> lident) =

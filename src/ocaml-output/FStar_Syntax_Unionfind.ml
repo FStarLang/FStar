@@ -2,7 +2,7 @@ open Prims
 type vops_t =
   {
   next_major: unit -> FStar_Syntax_Syntax.version ;
-  next_minor: unit -> FStar_Syntax_Syntax.version }[@@deriving show]
+  next_minor: unit -> FStar_Syntax_Syntax.version }
 let (__proj__Mkvops_t__item__next_major :
   vops_t -> unit -> FStar_Syntax_Syntax.version) =
   fun projectee  ->
@@ -38,15 +38,14 @@ let (vops : vops_t) =
   { next_major; next_minor } 
 type tgraph =
   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option FStar_Unionfind.puf
-[@@deriving show]
 type ugraph =
   FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
-    FStar_Unionfind.puf[@@deriving show]
+    FStar_Unionfind.puf
 type uf =
   {
   term_graph: tgraph ;
   univ_graph: ugraph ;
-  version: FStar_Syntax_Syntax.version }[@@deriving show]
+  version: FStar_Syntax_Syntax.version }
 let (__proj__Mkuf__item__term_graph : uf -> tgraph) =
   fun projectee  ->
     match projectee with
@@ -81,7 +80,7 @@ let (state : uf FStar_ST.ref) =
   let uu____409 = let uu____410 = vops.next_major ()  in empty uu____410  in
   FStar_Util.mk_ref uu____409 
 type tx =
-  | TX of uf [@@deriving show]
+  | TX of uf 
 let (uu___is_TX : tx -> Prims.bool) = fun projectee  -> true 
 let (__proj__TX__item___0 : tx -> uf) =
   fun projectee  -> match projectee with | TX _0 -> _0 
@@ -96,11 +95,11 @@ let (new_transaction : unit -> tx) =
   fun uu____494  ->
     let tx = let uu____496 = get ()  in TX uu____496  in
     (let uu____498 =
-       let uu___51_499 = get ()  in
+       let uu___52_499 = get ()  in
        let uu____500 = vops.next_minor ()  in
        {
-         term_graph = (uu___51_499.term_graph);
-         univ_graph = (uu___51_499.univ_graph);
+         term_graph = (uu___52_499.term_graph);
+         univ_graph = (uu___52_499.univ_graph);
          version = uu____500
        }  in
      set uu____498);
@@ -118,11 +117,11 @@ let (get_version : unit -> FStar_Syntax_Syntax.version) =
 let (set_term_graph : tgraph -> unit) =
   fun tg  ->
     let uu____583 =
-      let uu___52_584 = get ()  in
+      let uu___53_584 = get ()  in
       {
         term_graph = tg;
-        univ_graph = (uu___52_584.univ_graph);
-        version = (uu___52_584.version)
+        univ_graph = (uu___53_584.univ_graph);
+        version = (uu___53_584.version)
       }  in
     set uu____583
   
@@ -213,11 +212,11 @@ let (get_univ_graph : unit -> ugraph) =
 let (set_univ_graph : ugraph -> unit) =
   fun ug  ->
     let uu____829 =
-      let uu___53_830 = get ()  in
+      let uu___54_830 = get ()  in
       {
-        term_graph = (uu___53_830.term_graph);
+        term_graph = (uu___54_830.term_graph);
         univ_graph = ug;
-        version = (uu___53_830.version)
+        version = (uu___54_830.version)
       }  in
     set uu____829
   
