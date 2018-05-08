@@ -657,7 +657,9 @@ let rec sigelt_to_string (x: sigelt) =
              then U.format1 "<%s>" (univ_names_to_string univs)
              else "")
             (term_to_string t)
-      | Sig_assume(lid, _, f) -> U.format2 "val %s : %s" lid.str (term_to_string f)
+      | Sig_assume(lid, us, f) ->
+        if Options.print_universes () then U.format3 "val %s<%s> : %s" lid.str (univ_names_to_string us) (term_to_string f)
+        else U.format2 "val %s : %s" lid.str (term_to_string f)
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
       | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
