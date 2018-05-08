@@ -816,6 +816,7 @@ let (mk_op : Prims.string -> op FStar_Pervasives_Native.option) =
     | "op_Plus_Percent_Hat" -> FStar_Pervasives_Native.Some AddW
     | "sub" -> FStar_Pervasives_Native.Some Sub
     | "op_Subtraction_Hat" -> FStar_Pervasives_Native.Some Sub
+    | "sub_underspec" -> FStar_Pervasives_Native.Some Sub
     | "sub_mod" -> FStar_Pervasives_Native.Some SubW
     | "op_Subtraction_Percent_Hat" -> FStar_Pervasives_Native.Some SubW
     | "mul" -> FStar_Pervasives_Native.Some Mult

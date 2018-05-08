@@ -225,7 +225,7 @@ let mk_op = function
       Some Add
   | "add_mod" | "op_Plus_Percent_Hat" ->
       Some AddW
-  | "sub" | "op_Subtraction_Hat" ->
+  | "sub" | "op_Subtraction_Hat" | "sub_underspec" ->
       Some Sub
   | "sub_mod" | "op_Subtraction_Percent_Hat" ->
       Some SubW
