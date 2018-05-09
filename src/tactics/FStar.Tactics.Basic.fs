@@ -571,19 +571,6 @@ let trivial () : tac<unit> =
     )
 
 let goal_from_guard (reason:string) (e:env) (g : guard_t) opts : tac<option<goal>> =
-    List.iter (fun (imp : (string * term * ctx_uvar * Range.range)) ->
-        match imp with
-        | (s, tm, uv, rng) ->
-            begin match get_uvar_solved uv with
-            | None ->
-                BU.print3 "GG, implicit from guard\n>>%s\n\n(%s, %s)\n"
-                                (Rel.guard_to_string e g)
-                                s
-                                (Print.ctx_uvar_to_string uv);
-                                failwith ""
-            | Some _ -> ()
-            end
-    ) g.implicits;
     match (Rel.simplify_guard e g).guard_f with
     | TcComm.Trivial -> ret None
     | TcComm.NonTrivial f ->
