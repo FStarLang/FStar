@@ -965,7 +965,7 @@ let tc_declare_typ (env:env) (ts:tscheme) (r:Range.range) :tscheme =
 
 let tc_assume (env:env) (ts:tscheme) (r:Range.range) :tscheme =
   //AR: this might seem same as tc_declare_typ but come prop, this will change
-  tc_type_common env ts (U.type_u () |> fst) r //N.normalize [N.Beta; N.Eager_unfolding] env
+  tc_type_common env ts (U.type_u () |> fst) r
 
 let tc_inductive env ses quals lids =
     let env = Env.push env "tc_inductive" in
@@ -1359,7 +1359,7 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
 
     let uvs, t =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
-        let uvs, t = tc_assume ({ env with lax = true }) (uvs, t) se.sigrng in //|> N.normalize [N.NoFullNorm; N.Beta; N.DoNotUnfoldPureLets] env in
+        let uvs, t = tc_assume ({ env with lax = true }) (uvs, t) se.sigrng in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Assume after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
         uvs, t
       end
