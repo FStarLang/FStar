@@ -423,10 +423,11 @@ let sep_logic
   (fun _ -> apply_lemma (`exists_intro);
             flip();
             canon_monoid m;
-            trefl();
+            trefl()
             // this one blows up big time (takes up all RAM)
             // exact (cur_witness())
-            dismiss()
+            // GM, May 8th: This goal is now skipped since its witness was solved already
+            (* dismiss() *)
   )
 
 (* TODO: Need better control of reduction:
