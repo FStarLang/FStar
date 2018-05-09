@@ -2463,7 +2463,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         solve_t env ({problem with lhs=t1}) wl
 
       | Tm_match (s1, brs1), Tm_match (s2, brs2) ->
-        let sc_prob, wl = mk_t_problem wl [] orig s1 EQ s2 None "match scrutinee" in
         let rec solve_branches wl brs1 brs2 : option<(list<prob> * worklist)> =
             match brs1, brs2 with
             | br1::rs1, br2::rs2 ->
@@ -2510,6 +2509,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             then by_smt wl
             else giveup env "Tm_match branches don't match" orig
         | Some (sub_probs, wl) ->
+            let sc_prob, wl = mk_t_problem wl [] orig s1 EQ s2 None "match scrutinee" in
             let sub_probs = sc_prob::sub_probs in
             let formula = U.mk_conj_l (List.map (fun p -> p_guard p) sub_probs) in
             let tx = UF.new_transaction () in
