@@ -32,6 +32,8 @@ open FStar.Syntax.Util
 open FStar.Const
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
+open FStar.Syntax
+
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
@@ -576,6 +578,26 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     then BU.print3 "Guard from application node %s is %s and lcomp is %s\n"
                 (Print.term_to_string e)
                 (Rel.guard_to_string env gres) (Print.lcomp_to_string c);
+
+    //AR: turn t_refine application into Tm_refine
+    let e =
+      let head, args = U.head_and_args e in
+      match head.n with
+      | Tm_fvar fv
+      | Tm_uinst ({ n = Tm_fvar fv }, _) when S.fv_eq_lid fv Const.t_refine_lid ->
+        if List.length args <> 2 then failwith "Impossible! Did not expect a partial application of t_refine"
+        else  //try to restrict normalization as much as possible
+          let e' = N.normalize [ N.Exclude N.Zeta;
+                                 N.Exclude N.Iota;
+                                 N.Weak;
+                                 N.UnfoldUntil S.delta_constant;
+                                 N.UnfoldOnly [ Const.t_refine_lid ];
+                                 N.DoNotUnfoldPureLets ] env0 e in
+          if Env.debug env Options.Extreme then
+            BU.print2 "Normalized t_refine application: %s to %s\n" (Print.term_to_string e) (Print.term_to_string e');
+          e'
+      | _ -> e
+    in
     e, c, gres
 
   | Tm_match(e1, eqns) ->
