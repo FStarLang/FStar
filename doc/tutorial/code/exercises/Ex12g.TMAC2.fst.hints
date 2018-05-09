@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "9ca5e8bff9280a2ba28700bc213f6ec5"
+      "b8a4d49c7c6e8140214af23942376c16"
     ],
     [
       "Ex12g.TMAC2.bspec1",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "c6fbf76f7243d92e651425c997e130b2"
+      "f66b1a93824892144ebb649c891654d8"
     ],
     [
       "Ex12g.TMAC2.keygen",
@@ -39,7 +39,7 @@
         "typing_Ex12.BMAC.keygen"
       ],
       0,
-      "6f1ed7d5cc50aeacb2c85e88c547f9b9"
+      "2452eee780cfbf4a32489bf1f984bdde"
     ],
     [
       "Ex12g.TMAC2.bspec0",
@@ -48,7 +48,7 @@
       1,
       [ "@query" ],
       0,
-      "601ddc540d2cbeaa16a9f863300eba1c"
+      "43fd19f52db1b1b6555544eb06560f61"
     ],
     [
       "Ex12g.TMAC2.bspec1",
@@ -57,7 +57,7 @@
       1,
       [ "@query" ],
       0,
-      "7f642223e1985585d3514035dbffc14e"
+      "b2bffae0cc4862c09eecddde748d9060"
     ],
     [
       "Ex12g.TMAC2.keygen",
@@ -79,7 +79,7 @@
         "typing_Ex12.BMAC.keygen"
       ],
       0,
-      "8e68b4b1fe89dc351143756cfb4061a4"
+      "206e82cde9dee3dcc181f0698fab6ccd"
     ]
   ]
 ]

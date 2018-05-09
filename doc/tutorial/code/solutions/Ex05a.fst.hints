@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "59e37b6cb9fb4530e77aaf784a12e16a"
+      "56eb6d9b5c94fb14b6ce2a6f9ec7ab48"
     ],
     [
       "Ex05a.reverse",
@@ -27,7 +27,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2164a0f4bb9713fda588e7dc80c3a663"
+      "5df4ba2553f9c79f7230f5cad8555c60"
     ],
     [
       "Ex05a.rev",
@@ -42,7 +42,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8f786af3c38151ad362920830f5182aa"
+      "5a84636420ed1e9680b2c7e0f17f4152"
     ],
     [
       "Ex05a.append_assoc",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4af1fd7d4e2cc6f9ce45d33f5cb00c69"
+      "18143c0cf0ea3493827026a959e9f9af"
     ],
     [
       "Ex05a.rev_is_ok_aux",
@@ -93,7 +93,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ab6a8d41b6cd42c505e393620c7a06c4"
+      "c28789f6aaec11d5057581e33be9da24"
     ],
     [
       "Ex05a.append_nil",
@@ -113,7 +113,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2bccb21670e574dac5ad9950f0b83220"
+      "269deb41388ec800b8b14b792c956530"
     ],
     [
       "Ex05a.rev_is_ok",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "d6ed0e906a6eeedfaf40db2868de90e2"
+      "1f8f37be0452bd0e6f5487a3b74b982f"
     ],
     [
       "Ex05a.append",
@@ -136,7 +136,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "99ea8c774a00a60888dd77871f7f2779"
+      "28f3ccc22f33cfcf670b9fa89404a372"
     ],
     [
       "Ex05a.reverse",
@@ -150,7 +150,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e0a0faa3e4c021d7ccbd73c46a695640"
+      "ca62441ea4b428b359914e42c11acc91"
     ],
     [
       "Ex05a.rev",
@@ -165,7 +165,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "af38b38ab9ca1b0b74c62475bd8ca354"
+      "c5db42a9f6776df368fcc810241b3fd4"
     ]
   ]
 ]
