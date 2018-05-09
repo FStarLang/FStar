@@ -168,8 +168,13 @@ let print_env e =
         BU.pimap_fold pi (fun _i (x, _term) acc ->
             Print.bv_to_string x :: acc) acc) [] in
     let allvars = BU.psmap_fold e.fvar_bindings (fun _k fvb acc ->
-        Print.lid_to_string fvb.fvar_lid :: acc) bvars in
-    String.concat ", " allvars
+        fvb.fvar_lid :: acc) [] in
+    let last_fvar =
+      match List.rev allvars with
+      | [] -> ""
+      | l::_ -> "...," ^ Print.lid_to_string l
+    in
+    String.concat ", " (last_fvar :: bvars)
 
 let lookup_bvar_binding env bv =
     match BU.psmap_try_find env.bvar_bindings bv.ppname.idText with
@@ -211,7 +216,9 @@ let lookup_term_var env a =
         //AR: this is a temporary fix, use reserved u__ for mangling names
         let a2 = unmangle a in
         (match lookup_bvar_binding env a2 with
-            | None -> failwith (BU.format2 "Bound term variable not found (after unmangling): %s in environment: %s" (Print.bv_to_string a2) (print_env env))
+            | None -> failwith (BU.format2 "Bound term variable not found (after unmangling): %s in environment: %s"
+                                          (Print.bv_to_string a2)
+                                          (print_env env))
             | Some (b,t) -> t)
     | Some (b,t) -> t
 

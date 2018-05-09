@@ -164,6 +164,8 @@ let (term_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "term"] 
 let (decls_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Data"; "decls"] 
+let (ctx_uvar_and_subst_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"] 
 let (range_lid : FStar_Ident.lident) = pconst "range" 
 let (range_of_lid : FStar_Ident.lident) = pconst "range_of" 
 let (labeled_lid : FStar_Ident.lident) = pconst "labeled" 

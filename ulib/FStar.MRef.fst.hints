@@ -19,11 +19,23 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "72db3f005321e7a23103d2bc96c418fa"
+      "86acfc6cb8dd672aa32fa011ddb5f16e"
     ],
     [
       "FStar.MRef.witness_token",
       1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
+      ],
+      0,
+      "c31ba32117f2980a022e8befecc35302"
+    ],
+    [
+      "FStar.MRef.witness_token",
+      2,
       2,
       1,
       [
@@ -42,11 +54,23 @@
         "typing_FStar.Monotonic.Heap.sel", "unit_typing"
       ],
       0,
-      "623bce07458c5b8f40f868c17722637f"
+      "2bab5e4502781b6a7f39d585821c99e6"
     ],
     [
       "FStar.MRef.recall_token",
       1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
+      ],
+      0,
+      "0f5a980c4cbc9340875b1f048c96077f"
+    ],
+    [
+      "FStar.MRef.recall_token",
+      2,
       2,
       1,
       [
@@ -63,7 +87,7 @@
         "typing_FStar.Monotonic.Heap.sel", "unit_typing"
       ],
       0,
-      "75e88b40b1f05bb127f6480312e9227a"
+      "7f8415f788044692f2e5a49f4ebc6b29"
     ],
     [
       "FStar.MRef.lemma_functoriality",
@@ -84,7 +108,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "67fa22a7c87bc2dff480c95c5dbcd198"
+      "863c24d77ab0373dd1935ac6f86e3ca3"
     ],
     [
       "FStar.MRef.recall",
@@ -98,7 +122,7 @@
         "unit_typing"
       ],
       0,
-      "feb7dff574b3a690e99945e4f9d06cf1"
+      "8ae9bb29b1fe71abf8ee47a135810981"
     ],
     [
       "FStar.MRef.witness",
@@ -112,7 +136,7 @@
         "unit_typing"
       ],
       0,
-      "30441db6e8921969623372da35e734ed"
+      "ae14d91790517f2860f09ce20893efc1"
     ],
     [
       "FStar.MRef.lemma_functoriality",
@@ -127,7 +151,7 @@
         "token_correspondence_FStar.Preorder.stable"
       ],
       0,
-      "2ff11bae7f83a21240aaf15d21a0e075"
+      "e98383defa864797759fe56634ec790b"
     ]
   ]
 ]

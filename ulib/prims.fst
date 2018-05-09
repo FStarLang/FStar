@@ -49,12 +49,12 @@ type squash (p:Type) : Type0 = x:unit{p}
 
 (* F* will automatically insert `auto_squash` when simplifying terms,
    converting terms of the form `p /\ True` to `auto_squash p`.
-   
-   We distinguish these automatically inserted squashes from explicit, 
+
+   We distinguish these automatically inserted squashes from explicit,
    user-written squashes.
 
    It's marked `private` so that users cannot write it themselves.
-*)   
+*)
 private
 let auto_squash (p:Type) = squash p
 
@@ -113,7 +113,7 @@ type l_or (p:Type0) (q:Type0) = squash (c_or p q)
 [@ "tac_opaque"]
 type l_imp (p:Type0) (q:Type0) = squash (p -> GTot q)
                                          (* ^^^ NB: The GTot effect is primitive;            *)
-				         (*         elaborated using GHOST a few lines below *)
+                                         (*         elaborated using GHOST a few lines below *)
 (* infix binary '<==>' *)
 type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
 
@@ -130,7 +130,7 @@ type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 (* internalizing the typing relation for the SMT encoding: (has_type x t) *)
 assume
 type has_type : #a:Type -> a -> Type -> Type0
-  
+
 (* forall (x:a). p x : specialized to Type#0 *)
 [@ "tac_opaque"]
 type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
@@ -190,8 +190,8 @@ let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) 
 unfold
 let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
      forall (k:pure_post a).
-	 (forall (x:a).{:pattern (guard_free (k x))} post x ==> k x)
-	 ==> wp k
+         (forall (x:a).{:pattern (guard_free (k x))} post x ==> k x)
+         ==> wp k
 
 unfold
 let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =
@@ -248,7 +248,6 @@ sub_effect
 
 (* The primitive effect GTot is definitionally equal to an instance of GHOST *)
 effect GTot (a:Type) = GHOST a (pure_null_wp a)
-(* #set-options "--print_universes --print_implicits --print_bound_var_types --debug Prims --debug_level Extreme" *)
 effect Ghost (a:Type) (pre:Type) (post:pure_post' a pre) =
        GHOST a (fun (p:pure_post a) -> pre /\ (forall (ghost_result:a). post ghost_result ==> p ghost_result))
 
@@ -381,9 +380,7 @@ assume
 val magic   : #a:Type -> unit -> Tot a
 
 irreducible
-val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
-
-let unsafe_coerce #a #b x = admit(); x
+let unsafe_coerce (#a:Type) (#b: Type) (x:a) : b = admit (); x
 
 assume
 val admitP  : p:Type -> Pure unit True (fun x -> p)

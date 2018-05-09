@@ -139,7 +139,7 @@ let enum_key_of_repr
   (requires True)
   (ensures (fun y -> L.assoc y e == Some r))
 = map_fst_flip e;
-  let e' = list_map flip e in
+  let e' = list_map #(key * repr) #(repr * key) flip e in
   L.assoc_mem r e';
   let k = Some?.v (L.assoc r e') in
   assoc_flip_elim e r k;

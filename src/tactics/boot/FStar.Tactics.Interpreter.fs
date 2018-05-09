@@ -498,9 +498,9 @@ and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term) : option<(tac
     Some <| unembed_tactic_0 eb embedded_tac_b
 
 let report_implicits ps (is : Env.implicits) : unit =
-    let errs = List.map (fun (r, _, uv, _, ty, rng) ->
-                (Err.Fatal_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
-                             (Print.uvar_to_string uv) (Print.term_to_string ty) r,
+    let errs = List.map (fun (r, ty, uv, rng) ->
+                (Err.Error_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
+                             (Print.uvar_to_string uv.ctx_uvar_head) (Print.term_to_string ty) r,
                  rng)) is in
     match errs with
     | [] -> ()
@@ -545,9 +545,10 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
         if !tacdbg then
             BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w); //FIXME: Is this right?
         List.iter (fun g -> if is_irrelevant g
-                            then if TcRel.teq_nosmt g.context g.witness U.exp_unit
+                            then if TcRel.teq_nosmt (goal_env g) (goal_witness g) U.exp_unit
                                  then ()
-                                 else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s" (Print.term_to_string g.witness))
+                                 else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s"
+                                                    (Print.term_to_string (goal_witness g)))
                             else ())
                   (ps.goals @ ps.smt_goals);
 
@@ -556,13 +557,13 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
         // do not want to repeat all of the reasoning that took place in tactics.
         // It would also most likely fail.
         let g = {TcRel.trivial_guard with Env.implicits=ps.all_implicits} in
-        let g = TcRel.solve_deferred_constraints env g |> TcRel.resolve_implicits_tac in
+        let g = TcRel.solve_deferred_constraints env g |> TcRel.resolve_implicits_tac env in
         report_implicits ps g.implicits;
         (ps.goals@ps.smt_goals, w)
 
     | Failed (s, ps) ->
         dump_proofstate (subst_proof_state (N.psc_subst ps.psc) ps) "at the time of failure";
-        Errors.raise_error (Errors.Fatal_UserTacticFailure, (BU.format1 "user tactic failed: %s" s)) ps.entry_range
+        Err.raise_error (Err.Fatal_UserTacticFailure, (BU.format1 "user tactic failed: %s" s)) ps.entry_range
 
 // Polarity
 type pol =
@@ -764,16 +765,16 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
                 (Print.term_to_string t');
     let s = initial in
     let s = List.fold_left (fun (n,gs) g ->
-                 let phi = match getprop g.context g.goal_ty with
+                 let phi = match getprop (goal_env g) (goal_type g) with
                            | None ->
                                 Err.raise_error (Err.Fatal_TacticProofRelevantGoal,
-                                    (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string g.goal_ty))) env.range
+                                    (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string (goal_type g)))) env.range
                            | Some phi -> phi
                  in
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
                  let gt' = TcUtil.label ("Could not prove goal #" ^ string_of_int n) goal.pos phi in
-                 (n+1, (g.context, gt', g.opts)::gs)) s gs in
+                 (n+1, (goal_env g, gt', g.opts)::gs)) s gs in
     let (_, gs) = s in
     // Use default opts for main goal
     (env, t', FStar.Options.peek ()) :: gs
@@ -788,7 +789,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     let gs, w = run_tactic_on_typ tau env typ in
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
-    if List.existsML (fun g -> not (Option.isSome (getprop g.context g.goal_ty))) gs
+    if List.existsML (fun g -> not (Option.isSome (getprop (goal_env g) (goal_type g)))) gs
         then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos;
     w
 
@@ -798,7 +799,7 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     let gs, w = run_tactic_on_typ (reify_tactic tau) env typ in
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
-    if List.existsML (fun g -> not (Option.isSome (getprop g.context g.goal_ty))) gs
+    if List.existsML (fun g -> not (Option.isSome (getprop (goal_env g) (goal_type g)))) gs
         then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") typ.pos;
 
     // Fully normalize the witness

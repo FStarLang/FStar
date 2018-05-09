@@ -19,7 +19,7 @@ type text = b:bytes {(length b < blocksize)}
 
 // BEGIN: PadEx
 (* fill in type here and remove the assumption*)
-let pad n = 
+let pad (n:int) =
   assume (1 <= n /\ n < 256);
   Seq.create n (n2b (n-1))  
 

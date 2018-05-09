@@ -217,7 +217,7 @@ type raw_error =
   | Fatal_UnfoldableDeprecated 
   | Fatal_UnificationNotWellFormed 
   | Fatal_Uninstantiated 
-  | Fatal_UninstantiatedUnificationVarInTactic 
+  | Error_UninstantiatedUnificationVarInTactic 
   | Fatal_UninstantiatedVarInTactic 
   | Fatal_UniverseMightContainSumOfTwoUnivVars 
   | Fatal_UniversePolymorphicInnerLetBound 
@@ -1591,11 +1591,11 @@ let (uu___is_Fatal_Uninstantiated : raw_error -> Prims.bool) =
     | Fatal_Uninstantiated  -> true
     | uu____1302 -> false
   
-let (uu___is_Fatal_UninstantiatedUnificationVarInTactic :
+let (uu___is_Error_UninstantiatedUnificationVarInTactic :
   raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | Fatal_UninstantiatedUnificationVarInTactic  -> true
+    | Error_UninstantiatedUnificationVarInTactic  -> true
     | uu____1308 -> false
   
 let (uu___is_Fatal_UninstantiatedVarInTactic : raw_error -> Prims.bool) =
@@ -2362,7 +2362,7 @@ let (default_flags :
   (Fatal_UnfoldableDeprecated, CFatal);
   (Fatal_UnificationNotWellFormed, CFatal);
   (Fatal_Uninstantiated, CFatal);
-  (Fatal_UninstantiatedUnificationVarInTactic, CFatal);
+  (Error_UninstantiatedUnificationVarInTactic, CError);
   (Fatal_UninstantiatedVarInTactic, CFatal);
   (Fatal_UniverseMightContainSumOfTwoUnivVars, CFatal);
   (Fatal_UniversePolymorphicInnerLetBound, CFatal);

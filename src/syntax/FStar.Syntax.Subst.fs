@@ -93,9 +93,9 @@ let delay t s =
 *)
 let rec force_uvar' t =
   match t.n with
-  | Tm_uvar (uv,_) ->
+  | Tm_uvar ({ctx_uvar_head=uv}, s) ->
       (match Unionfind.find uv with
-          | Some t' -> fst (force_uvar' t'), true
+          | Some t' -> fst (force_uvar' (delay t' s)), true
           | _ -> t, false)
   | _ -> t, false
 
@@ -202,11 +202,7 @@ let rec subst' (s:subst_ts) t =
     match t0.n with
     | Tm_unknown
     | Tm_constant _                      //a constant cannot be substituted
-    | Tm_fvar _                          //fvars are never subject to substitution
-    | Tm_uvar _ -> tag_with_range t0 s   //uvars are always resolved to closed terms, AR: doesn't seem so
-                                         //there could be free universe names, and so universe substs need to be taken care of
-                                         //right now the problem is masked by using a normalization/compress pass
-                                         //AR: update, it happens that univ subst is applied to a uvar, see the example from commit: 3ac46a2a40dd97025522afb19b1437d0e4bbbe4a
+    | Tm_fvar _ -> tag_with_range t0 s   //fvars are never subject to substitution
 
     | Tm_delayed((t', s'), m) ->
         //s' is the subsitution already associated with this node;
@@ -224,7 +220,11 @@ let rec subst' (s:subst_ts) t =
     | Tm_type u ->
         mk (Tm_type (subst_univ (fst s) u)) None (mk_range t0.pos s)
 
-    | _ -> mk_Tm_delayed ((t0, s)) (mk_range t.pos s)
+    | _ ->
+      //NS: 04/12/2018
+      //    Substitutions on Tm_uvar just gets delayed
+      //    since its solution may eventually end up being an open term
+      mk_Tm_delayed ((t0, s)) (mk_range t.pos s)
 
 and subst_flags' s flags =
     flags |> List.map (function
@@ -301,7 +301,36 @@ let push_subst_lcomp s lopt = match lopt with
     | None -> None
     | Some rc -> Some ({rc with residual_typ = FStar.Util.map_opt rc.residual_typ (subst' s)})
 
-let push_subst s t =
+let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
+    let should_retain x =
+        u.ctx_uvar_binders |> U.for_some (fun (x', _) -> S.bv_eq x x')
+    in
+    let rec aux = function
+        | [] -> []
+        | hd_subst::rest ->
+          let hd =
+              hd_subst |> List.collect (function
+              | NT(x, t) ->
+                if should_retain x
+                then [NT(x, delay t (rest, None))]
+                else []
+              | NM(x, i) ->
+                if should_retain x
+                then let x_i = S.bv_to_tm ({x with index=i}) in
+                     let t = subst' (rest, None) x_i in
+                     match t.n with
+                     | Tm_bvar x_j -> [NM(x, x_j.index)]
+                     | _ -> [NT(x, t)]
+                else []
+              | _ -> [])
+          in
+          hd @ aux rest
+    in
+    match aux (fst s0 @ fst s) with
+    | [] -> [], snd s
+    |  s' -> [s'], snd s
+
+let rec push_subst s t =
     //makes a syntax node, setting it's use range as appropriate from s
     let mk t' = Syntax.mk t' None (mk_range t.pos s) in
     match t.n with
@@ -310,8 +339,14 @@ let push_subst s t =
 
     | Tm_constant _
     | Tm_fvar _
-    | Tm_uvar _
-    | Tm_unknown -> tag_with_range t s
+    | Tm_unknown -> tag_with_range t s //these are always closed
+
+    | Tm_uvar (uv, s0) ->
+      begin
+      match (Unionfind.find uv.ctx_uvar_head) with
+      | None -> tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s0 s)}) s
+      | Some t -> push_subst (compose_subst s0 s) t
+      end
 
     | Tm_type _
     | Tm_bvar _
@@ -409,16 +444,13 @@ let push_subst s t =
 *)
 let rec compress (t:term) =
     let t = try_read_memo t in
+    let t, _ = force_uvar t in
     match t.n with
     | Tm_delayed((t', s), memo) ->
         memo := Some (push_subst s t');
         compress t
     | _ ->
-        let t', forced = force_uvar t in
-        match t'.n with
-        | Tm_delayed _ -> compress t'
-        | _ -> t'
-
+        t
 
 let subst s t = subst' ([s], None) t
 let set_use_range r t = subst' ([], Some (Range.set_def_range r (Range.use_range r))) t

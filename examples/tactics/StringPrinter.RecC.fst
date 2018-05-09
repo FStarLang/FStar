@@ -182,7 +182,7 @@ let do_while_st_body
   let (Left x) = interm.do_while_st_interm_res in
   let (res', bout') = body_st x bout in
   let h2 = HST.get () in
-  let res = match res' with | Left x' -> Left x' | Right y -> Right y in
+  let res = match res' with | Left x' -> Left (x' <: tin) | Right y -> Right y in
   B.upd binterm 0ul ({
     do_while_st_interm_res = res;
     do_while_st_interm_log = bout';

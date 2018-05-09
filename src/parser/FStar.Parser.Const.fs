@@ -217,6 +217,9 @@ let decreases_lid  = pconst "decreases"
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
 let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 
+let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
+
+
 let range_lid      = pconst "range"
 let range_of_lid   = pconst "range_of"
 let labeled_lid    = pconst "labeled"

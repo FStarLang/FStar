@@ -224,7 +224,7 @@ type raw_error =
   | Fatal_UnfoldableDeprecated
   | Fatal_UnificationNotWellFormed
   | Fatal_Uninstantiated
-  | Fatal_UninstantiatedUnificationVarInTactic
+  | Error_UninstantiatedUnificationVarInTactic
   | Fatal_UninstantiatedVarInTactic
   | Fatal_UniverseMightContainSumOfTwoUnivVars
   | Fatal_UniversePolymorphicInnerLetBound
@@ -546,7 +546,7 @@ let default_flags =
   (Fatal_UnfoldableDeprecated                        , CFatal);
   (Fatal_UnificationNotWellFormed                    , CFatal);
   (Fatal_Uninstantiated                              , CFatal);
-  (Fatal_UninstantiatedUnificationVarInTactic        , CFatal);
+  (Error_UninstantiatedUnificationVarInTactic        , CError);
   (Fatal_UninstantiatedVarInTactic                   , CFatal);
   (Fatal_UniverseMightContainSumOfTwoUnivVars        , CFatal);
   (Fatal_UniversePolymorphicInnerLetBound            , CFatal);

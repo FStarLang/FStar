@@ -663,7 +663,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
 
     | Tm_uvar (u, _) ->
-      let s = "?u" ^ (UF.uvar_id u |> string_of_int) in
+      let s = "?u" ^ (UF.uvar_id u.ctx_uvar_head |> string_of_int) in
       (* TODO : should we put a pretty_non_parseable option for these cases ? *)
       label s (mk A.Wild)
 

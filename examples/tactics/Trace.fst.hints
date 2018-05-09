@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "89b8bb323ee237c1aeefbc3931d03d4c"
+      "23f41a7052f24b0d6c6e1394565e1f15"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Trace_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "bdc81c95c30a1fc5b2d00fec16d4c163"
+      "410418f597b37a83e8cb0b128dd4b8ca"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f9c9dcd49ab589e7432df1a3d7e2c482"
+      "81ee69f933ba926a433730a5296495cf"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ab69779970e8e22154f58cee140a7747"
+      "67c1dae424fc746b84508d3df31c5b89"
     ],
     [
       "Trace.fall",
@@ -63,10 +63,10 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "45682bc7ddb3900680580692c607e179"
+      "f3208126ec419cce283ca32313b88b02"
     ],
     [
-      "Trace.uu___116",
+      "Trace.uu___61",
       1,
       4,
       2,
@@ -81,7 +81,7 @@
         "projection_inverse_Trace.S__0", "token_correspondence_Trace.fall_"
       ],
       0,
-      "dfd244a7a0d07b61e73f9bed9bc9ff91"
+      "3aa0549b4e2c6d6d1394cf979ba3636d"
     ],
     [
       "Trace.fact_aux",
@@ -99,10 +99,10 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c24ac7b71f2a18fcb7d02d33807bd987"
+      "20dd32cd92a99bdaeb3c3094eaec6d00"
     ],
     [
-      "Trace.uu___117",
+      "Trace.uu___62",
       1,
       8,
       2,
@@ -119,10 +119,10 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1426c0f07c7e9907b88ddd5abe4a80d1"
+      "d4b3f858b5a63015aee7e4670d879164"
     ],
     [
-      "Trace.uu___118",
+      "Trace.uu___63",
       1,
       8,
       2,
@@ -141,12 +141,13 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_Trace.fact_.fuel_instrumented"
       ],
       0,
-      "9d09c894466284610161a41c102eeb97"
+      "db5b03265b9cdfd13f7f241f840526b6"
     ],
     [
       "Trace.mynat",
@@ -155,7 +156,7 @@
       1,
       [ "@query" ],
       0,
-      "2dc6e5d33202327f0c49e63ab8133ad1"
+      "4501f904600d0efe607f787cb70ce490"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -168,7 +169,7 @@
         "refinement_interpretation_Trace_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "bb9cc39707d0fc1fca40e3e87b80d21d"
+      "71cbc9c123c8b08f4ca1025e2dd30ec7"
     ],
     [
       "Trace.tick_last",
@@ -182,7 +183,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "07cee980c85739c4a8af662de755f7f8"
+      "f03e92d2283bbd00fbb246b922fb5101"
     ],
     [
       "Trace.term_is_fv",
@@ -199,7 +200,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "0fcfecb0a3a5e91a0888951c56d3cbe3"
+      "0da2a5ee56da0501c0e53fdaba1cfb62"
     ],
     [
       "Trace.cutlast",
@@ -213,7 +214,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3f7d3e0bf79e5be3755b763c98eec63d"
+      "22586ad2f42e9e6bee7e0914101bb890"
     ],
     [
       "Trace.fall",
@@ -227,7 +228,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "fc14a93fec3d77b7f3e15fa174f6d925"
+      "ccc4a3e65c47f597271018f2af15cfa0"
     ],
     [
       "Trace.fact_aux",
@@ -245,7 +246,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8d111fd3f09d84c6223f68e8ba867c9c"
+      "e04f9ab3c2a236e84afbb8fcbd72d6fc"
     ]
   ]
 ]

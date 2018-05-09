@@ -774,10 +774,17 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               t, t_decls
         end
 
-      | Tm_uvar (uv, k) ->
-        let ttm = mk_Term_uvar (Unionfind.uvar_id uv) in
-        let t_has_k, decls = encode_term_pred None k env ttm in //TODO: skip encoding this if it has already been encoded before
-        let d = Util.mkAssume(t_has_k, Some "Uvar typing", varops.mk_unique (BU.format1 "uvar_typing_%s" (BU.string_of_int <| Unionfind.uvar_id uv))) in
+      | Tm_uvar (uv, _) ->
+        let ttm = mk_Term_uvar (Unionfind.uvar_id uv.ctx_uvar_head) in
+        let t_has_k, decls = encode_term_pred None uv.ctx_uvar_typ env ttm in //TODO: skip encoding this if it has already been encoded before
+        let d =
+            Util.mkAssume(t_has_k,
+                          Some "Uvar typing",
+                          varops.mk_unique
+                            (BU.format1 "uvar_typing_%s"
+                                        (BU.string_of_int
+                                            (Unionfind.uvar_id uv.ctx_uvar_head))))
+        in
         ttm, decls@[d]
 
       | Tm_app _ ->
@@ -911,9 +918,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 //          in
 
           let codomain_eff rc =
-              let res_typ = match rc.residual_typ with
-                | None -> FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst
-                | Some t -> t in
+              let res_typ =
+                match rc.residual_typ with
+                | None ->
+                  let t, _, _ =
+                      FStar.TypeChecker.Util.new_implicit_var
+                                              "SMTEncoding codomain"
+                                              (Env.get_range env.tcenv)
+                                              env.tcenv
+                                              U.ktype0 in
+                  t
+                | Some t -> t
+              in
               if Ident.lid_equals rc.residual_effect Const.effect_Tot_lid
               then Some (S.mk_Total res_typ)
               else if Ident.lid_equals rc.residual_effect Const.effect_GTot_lid
