@@ -544,8 +544,8 @@ let find_univ_uvar u s = BU.find_map s (function
 (* ------------------------------------------------*)
 (* <normalization>                                *)
 (* ------------------------------------------------*)
-let whnf env t     = SS.compress (N.normalize [N.Primops; N.Beta; N.Weak; N.HNF] env (U.unmeta t))
-let sn env t       = SS.compress (N.normalize [N.Primops; N.Beta] env t)
+let whnf env t     = SS.compress (N.normalize [N.Beta; N.Weak; N.HNF] env (U.unmeta t))
+let sn env t       = SS.compress (N.normalize [N.Beta] env t)
 let norm_arg env t = sn env (fst t), snd t
 let sn_binders env (binders:binders) =
     binders |> List.map (fun (x, imp) -> {x with sort=sn env x.sort}, imp)

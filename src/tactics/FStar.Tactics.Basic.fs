@@ -81,7 +81,7 @@ let get : tac<proofstate> =
 
 let idtac : tac<unit> = ret ()
 
-let get_uvar_solved uv = 
+let get_uvar_solved uv =
     match FStar.Syntax.Unionfind.find uv.ctx_uvar_head with
     | Some t -> Some t
     | None   -> None
@@ -571,9 +571,9 @@ let trivial () : tac<unit> =
     )
 
 let goal_from_guard (reason:string) (e:env) (g : guard_t) opts : tac<option<goal>> =
-    List.iter (fun (imp : (string * term * ctx_uvar * Range.range * bool)) ->
+    List.iter (fun (imp : (string * term * ctx_uvar * Range.range)) ->
         match imp with
-        | (s, tm, uv, rng, b) ->
+        | (s, tm, uv, rng) ->
             begin match get_uvar_solved uv with
             | None ->
                 BU.print3 "GG, implicit from guard\n>>%s\n\n(%s, %s)\n"

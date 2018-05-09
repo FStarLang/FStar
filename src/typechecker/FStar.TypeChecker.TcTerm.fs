@@ -401,7 +401,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_ascribed (e, (Inr expected_c, topt), _) ->
     let env0, _ = Env.clear_expected_typ env in
-    let expected_c, _, g = tc_comp env0 expected_c in    
+    let expected_c, _, g = tc_comp env0 expected_c in
     let e, c', g' = tc_term (U.comp_result expected_c |> Env.set_expected_typ env0) e in
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, lcomp_comp c') in
     let topt = tc_tactic_opt env0 topt in
