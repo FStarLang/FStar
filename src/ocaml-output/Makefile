@@ -103,13 +103,13 @@ endif
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
 fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
 fstar.exe: $(GENERATED_FILES)
-	$(OCAMLBUILD) main.native
+	$(OCAMLBUILD) main.native src/ocaml-output/FStar_Syntax_Syntax.inferred.mli
 	cp -f _build/src/fstar/ml/main.native ../../bin/$@
 	cp -f _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
 
 install-compiler-lib: fstar.exe
 	mkdir -p ../../bin/fstar-compiler-lib/
-	$(FIND) -\( -name '*.cmi' -or -name '*.cmx' -\) -exec cp {} ../../bin/fstar-compiler-lib/ \;
+	$(FIND) . \( -name '*.cmi' -or -name '*.cmx' \) -exec cp {} ../../bin/fstar-compiler-lib/ \;
 
 FStar_Parser_Parse.ml: parse.mly
 	# We are opening the same module twice but we need these modules
@@ -185,23 +185,24 @@ install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {}
 # install the standard library binary files
 install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar/$(2)
 
-# Install FStar into $(PREFIX) using the standard Unix directory structure.
+# Install FStar into $(PREFIX) using the standard Unix directory
+# structure.  NOTE: this rule needs ocamlfind to install the fstarlib,
+# fstar-tactics-lib and fstar-compiler-lib packages. It works with the
+# opam package, but it has not been tested in any other settings.
 install: all
         # Install the binary
 	$(INSTALL_EXEC) -m 755 -D _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
-	# Then the standard library, but not the ml or fs files
-	cp -p -r ../../ulib ../../ulib-install
-	rm -rf ../../ulib-install/ml
-	rm -rf ../../ulib-install/fs
-	$(call install_dir,ulib-install,lib/fstar)
-	rm -rf ../../ulib-install
+	# Then the standard library
+	$(call install_dir,ulib,lib/fstar)
 	# Then the binary library
-	$(call install_fstarlib,bin/fstarlib,fstarlib.cma)
-	$(call install_fstarlib,bin/fstarlib,fstarlib.cmxa)
-	$(call install_fstarlib,ulib/ml,fstarlib.mllib)
+	cd ../../bin/fstarlib && ocamlfind install fstarlib *
+	cd ../../bin/fstar-compiler-lib && ocamlfind install fstar-compiler-lib *
+	cd ../../bin/fstar-tactics-lib && ocamlfind install fstar-tactics-lib *
         # Then the rest of the static files.
+	# (those are not used in the opam package, not sure if their Makefiles work)
 	$(call install_dir,examples,share/fstar/examples)
 	$(call install_dir,ucontrib,share/fstar/contrib)
+	# Then the tutorial
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial first
 	$(MAKE) -C ../../doc/tutorial
@@ -228,7 +229,8 @@ Z3_LICENSE=$(shell dirname $(Z3_DIR))/LICENSE.txt
 
 .PHONY: ulib
 ulib:
-	make -C ../../ulib/ml
+	make -C ../../ulib install-fstarlib
+	make -C ../../ulib install-fstar-tactics
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
@@ -242,20 +244,13 @@ package: all
 	$(INSTALL_EXEC) -m 755 _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
 	# Then the standard library.
 	$(call fexport,ulib)
-	# Do not provide ml/fs sources, however. From ulib/ml, only
-	# preserve Makefile.include
-	mv $(PREFIX)/ulib/ml/Makefile.include $(PREFIX)/ulib/ml_Makefile.include
-	rm -rf $(PREFIX)/ulib/ml $(PREFIX)/ulib/fs
-	mkdir -p $(PREFIX)/ulib/ml
-	mv $(PREFIX)/ulib/ml_Makefile.include $(PREFIX)/ulib/ml/Makefile.include
-	# Only provide the Makefile suited for verification
-	rm -f $(PREFIX)/ulib/Makefile
-	mv $(PREFIX)/ulib/Makefile.verify $(PREFIX)/ulib/Makefile
 	# Then the rest of the static files.
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
 	$(call fexport-all,bin/fstarlib)
+	$(call fexport-all,bin/fstar-compiler-lib)
+	$(call fexport-all,bin/fstar-tactics-lib)
 
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
@@ -267,10 +262,6 @@ endif
         # Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
 	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
-
-        # Some new things used by examples/Makefile
-	mkdir -p $(PREFIX)/src/gmake/
-	cp ../../src/gmake/*.mk ../../src/gmake/*.tmpl $(PREFIX)/src/gmake/
 
 	# Z3
 ifeq ($(OS),Windows_NT)

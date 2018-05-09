@@ -62,7 +62,6 @@ out:
 	mkdir -p out
 
 Ex01a-ocaml: out Ex01a.fst
-	$(MAKE) -C $(ULIB_ML)
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Ex01a.fst
 	$(OCAMLOPT) out/Ex01a.ml -o Ex01a.exe 2>&1
 	-./Ex01a.exe 2>&1

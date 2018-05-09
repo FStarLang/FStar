@@ -1054,8 +1054,8 @@ let reduce_primops cfg env stack tm =
                                         (Print.term_to_string tm));
            begin match args with
            | [(t, _); (r, _)] ->
-                begin match EMB.unembed EMB.e_range r with
-                | Some rng -> ({ t with pos = rng })
+                begin match EMB.try_unembed EMB.e_range r with
+                | Some rng -> Subst.set_use_range rng t
                 | None -> tm
                 end
            | _ -> tm
@@ -1315,15 +1315,15 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           (not cfg.steps.unfold_tac ||
                            not (cases (BU.for_some (U.attr_eq U.tac_opaque_attr)) false attrs)) &&
                           //otherwise, unfold fv if it appears in "Delta_only" or if one of the Delta_attr matches
-                          ( //delta_only l
-                            (match cfg.steps.unfold_only with
-                             | None -> true
-                             | Some lids -> BU.for_some (fv_eq_lid fv) lids) ||
-                           ( //delta_attrs a
-                             match attrs, cfg.steps.unfold_attr with
-                             | None, Some _ -> false
-                             | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats') ats
-                             | _, _ -> false)))
+                          //delta_only l
+                          (match cfg.steps.unfold_only with
+                           | None -> true
+                           | Some lids -> BU.for_some (fv_eq_lid fv) lids) &&
+                          //delta_attrs a
+                          (match attrs, cfg.steps.unfold_attr with
+                            | None, Some _ -> false
+                            | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats') ats
+                            | _, None -> true))
                  in
                  let should_delta, fully =
                      match cfg.steps.unfold_fully with
@@ -1379,9 +1379,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | UnivArgs _::_ ->
                   failwith "Ill-typed term: universes cannot be applied to term abstraction"
 
-                | Match _::_ ->
-                  failwith "Ill-typed term: cannot pattern match an abstraction"
-
                 | Arg(c, _, _)::stack_rest ->
                   begin match c with
                     | Univ _ -> //universe variables do not have explicit binders
@@ -1412,6 +1409,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
+                | Match _::_
                 | Debug _::_
                 | Meta _::_
                 | Let _ :: _
@@ -1516,13 +1514,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_match(head, branches) ->
             let stack = Match(env, branches, cfg, t.pos)::stack in
-            let cfg =
-                if cfg.steps.iota
+            if cfg.steps.iota
                 && cfg.steps.weakly_reduce_scrutinee
                 && not cfg.steps.weak
-                then { cfg with steps={cfg.steps with weak=true} }
-                else cfg in
-            norm cfg env stack head
+            then let cfg' = { cfg with steps= { cfg.steps with weak = true } } in
+                 norm cfg' env (Cfg cfg :: stack) head
+            else norm cfg env stack head
 
           | Tm_let((b, lbs), lbody) when is_top_level lbs && cfg.steps.compress_uvars ->
             let lbs = lbs |> List.map (fun lb ->
@@ -2698,7 +2695,7 @@ let ghost_to_pure env c =
     let non_info t = non_informative (norm cfg [] [] t) in
     match c.n with
     | Total _ -> c
-    | GTotal(t,uopt) when non_info t -> {c with n=Total(t, uopt)}
+    | GTotal (t, uopt) when non_info t -> {c with n = Total (t, uopt)}
     | Comp ct ->
         let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
         if U.is_ghost_effect l

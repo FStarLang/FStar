@@ -1,6 +1,6 @@
-type int16 = int
-type t = int16
-type t' = t
+type int16 = int[@@deriving yojson,show]
+type t = int16[@@deriving yojson,show]
+type t' = t[@@deriving yojson,show]
 
 let v (x:int16) : Prims.int = Prims.parse_int (string_of_int x)
 

@@ -7,7 +7,7 @@ type validity : n:pnat -> Type =
   | VSucc : n:pnat -> Tot (validity (S n))
 val bad : t:pnat -> Tot (validity (S (S t)))
 
-[@(fail_errs [19])]
+[@(fail [19])]
 let bad t = VSucc t
 
 

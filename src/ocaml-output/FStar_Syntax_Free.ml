@@ -1,7 +1,7 @@
 open Prims
 type free_vars_and_fvars =
   (FStar_Syntax_Syntax.free_vars,FStar_Ident.lident FStar_Util.set)
-    FStar_Pervasives_Native.tuple2[@@deriving show]
+    FStar_Pervasives_Native.tuple2
 let (no_free_vars :
   (FStar_Syntax_Syntax.free_vars,FStar_Ident.lident FStar_Util.set)
     FStar_Pervasives_Native.tuple2)
@@ -33,15 +33,15 @@ let (singleton_bv :
       FStar_Pervasives_Native.tuple2)
   =
   fun x  ->
-    ((let uu___51_53 = FStar_Pervasives_Native.fst no_free_vars  in
+    ((let uu___52_53 = FStar_Pervasives_Native.fst no_free_vars  in
       {
         FStar_Syntax_Syntax.free_names = [x];
         FStar_Syntax_Syntax.free_uvars =
-          (uu___51_53.FStar_Syntax_Syntax.free_uvars);
+          (uu___52_53.FStar_Syntax_Syntax.free_uvars);
         FStar_Syntax_Syntax.free_univs =
-          (uu___51_53.FStar_Syntax_Syntax.free_univs);
+          (uu___52_53.FStar_Syntax_Syntax.free_univs);
         FStar_Syntax_Syntax.free_univ_names =
-          (uu___51_53.FStar_Syntax_Syntax.free_univ_names)
+          (uu___52_53.FStar_Syntax_Syntax.free_univ_names)
       }), (FStar_Pervasives_Native.snd no_free_vars))
   
 let (singleton_uv :
@@ -50,15 +50,15 @@ let (singleton_uv :
       FStar_Pervasives_Native.tuple2)
   =
   fun x  ->
-    ((let uu___52_72 = FStar_Pervasives_Native.fst no_free_vars  in
+    ((let uu___53_72 = FStar_Pervasives_Native.fst no_free_vars  in
       {
         FStar_Syntax_Syntax.free_names =
-          (uu___52_72.FStar_Syntax_Syntax.free_names);
+          (uu___53_72.FStar_Syntax_Syntax.free_names);
         FStar_Syntax_Syntax.free_uvars = [x];
         FStar_Syntax_Syntax.free_univs =
-          (uu___52_72.FStar_Syntax_Syntax.free_univs);
+          (uu___53_72.FStar_Syntax_Syntax.free_univs);
         FStar_Syntax_Syntax.free_univ_names =
-          (uu___52_72.FStar_Syntax_Syntax.free_univ_names)
+          (uu___53_72.FStar_Syntax_Syntax.free_univ_names)
       }), (FStar_Pervasives_Native.snd no_free_vars))
   
 let (singleton_univ :
@@ -67,15 +67,15 @@ let (singleton_univ :
       FStar_Pervasives_Native.tuple2)
   =
   fun x  ->
-    ((let uu___53_91 = FStar_Pervasives_Native.fst no_free_vars  in
+    ((let uu___54_91 = FStar_Pervasives_Native.fst no_free_vars  in
       {
         FStar_Syntax_Syntax.free_names =
-          (uu___53_91.FStar_Syntax_Syntax.free_names);
+          (uu___54_91.FStar_Syntax_Syntax.free_names);
         FStar_Syntax_Syntax.free_uvars =
-          (uu___53_91.FStar_Syntax_Syntax.free_uvars);
+          (uu___54_91.FStar_Syntax_Syntax.free_uvars);
         FStar_Syntax_Syntax.free_univs = [x];
         FStar_Syntax_Syntax.free_univ_names =
-          (uu___53_91.FStar_Syntax_Syntax.free_univ_names)
+          (uu___54_91.FStar_Syntax_Syntax.free_univ_names)
       }), (FStar_Pervasives_Native.snd no_free_vars))
   
 let (singleton_univ_name :
@@ -84,14 +84,14 @@ let (singleton_univ_name :
       FStar_Pervasives_Native.tuple2)
   =
   fun x  ->
-    ((let uu___54_110 = FStar_Pervasives_Native.fst no_free_vars  in
+    ((let uu___55_110 = FStar_Pervasives_Native.fst no_free_vars  in
       {
         FStar_Syntax_Syntax.free_names =
-          (uu___54_110.FStar_Syntax_Syntax.free_names);
+          (uu___55_110.FStar_Syntax_Syntax.free_names);
         FStar_Syntax_Syntax.free_uvars =
-          (uu___54_110.FStar_Syntax_Syntax.free_uvars);
+          (uu___55_110.FStar_Syntax_Syntax.free_uvars);
         FStar_Syntax_Syntax.free_univs =
-          (uu___54_110.FStar_Syntax_Syntax.free_univs);
+          (uu___55_110.FStar_Syntax_Syntax.free_univs);
         FStar_Syntax_Syntax.free_univ_names = [x]
       }), (FStar_Pervasives_Native.snd no_free_vars))
   

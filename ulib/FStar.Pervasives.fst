@@ -276,6 +276,8 @@ type __internal_ocaml_attributes =
     (* Generate [@@ deriving show ] on the resulting OCaml type *)
   | PpxDerivingShowConstant of string
     (* Similar, but for constant printers. *)
+  | PpxDerivingYoJson
+    (* Generate [@@ deriving yojson ] on the resulting OCaml type *)
   | CInline
     (* KreMLin-only: generates a C "inline" attribute on the resulting
      * function declaration. *)
@@ -336,3 +338,18 @@ let must_erase_for_extraction :unit = ()
 
 let dm4f_bind_range : unit = ()
 
+(** When attached a top-level definition, the typechecker will succeed
+ * if and only if checking the definition results in an error. The
+ * error number list is actually OPTIONAL. If present, it will be
+ * checked that the definition raises exactly those errors in the
+ * specified multiplicity, but order does not matter. *)
+irreducible
+let fail (errs : list int) : unit = ()
+
+(** When --lax is present, we ignore both previous attributes since some definitions
+ * only fail when verification is turned on. With this attribute, one can ensure
+ * that a definition fails lax-checking too.
+ *
+ * (Note: this will NOT turn on --lax for you.) *)
+irreducible
+let fail_lax : unit = ()

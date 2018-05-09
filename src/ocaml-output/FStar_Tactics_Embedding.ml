@@ -1,5 +1,5 @@
 open Prims
-type name = FStar_Syntax_Syntax.bv[@@deriving show]
+type name = FStar_Syntax_Syntax.bv
 let (fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
   fun s  -> FStar_Parser_Const.fstar_tactics_lid' s 
 let (lid_as_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
@@ -96,7 +96,7 @@ let (e_proofstate :
         i.FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_proofstate ->
         let uu____108 = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob  in
         FStar_All.pipe_left
-          (fun _0_17  -> FStar_Pervasives_Native.Some _0_17) uu____108
+          (fun _0_16  -> FStar_Pervasives_Native.Some _0_16) uu____108
     | uu____111 ->
         (if w
          then
@@ -192,11 +192,11 @@ let e_result :
       | (FStar_Syntax_Syntax.Tm_fvar
          fv,_t::(a,uu____432)::(ps,uu____434)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Success_lid ->
-          let uu____481 = FStar_Syntax_Embeddings.unembed ea a  in
+          let uu____481 = FStar_Syntax_Embeddings.unembed' w ea a  in
           FStar_Util.bind_opt uu____481
             (fun a1  ->
                let uu____489 =
-                 FStar_Syntax_Embeddings.unembed e_proofstate ps  in
+                 FStar_Syntax_Embeddings.unembed' w e_proofstate ps  in
                FStar_Util.bind_opt uu____489
                  (fun ps1  ->
                     FStar_Pervasives_Native.Some
@@ -205,13 +205,13 @@ let e_result :
          fv,_t::(msg,uu____501)::(ps,uu____503)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Failed_lid ->
           let uu____550 =
-            FStar_Syntax_Embeddings.unembed FStar_Syntax_Embeddings.e_string
-              msg
+            FStar_Syntax_Embeddings.unembed' w
+              FStar_Syntax_Embeddings.e_string msg
              in
           FStar_Util.bind_opt uu____550
             (fun msg1  ->
                let uu____558 =
-                 FStar_Syntax_Embeddings.unembed e_proofstate ps  in
+                 FStar_Syntax_Embeddings.unembed' w e_proofstate ps  in
                FStar_Util.bind_opt uu____558
                  (fun ps1  ->
                     FStar_Pervasives_Native.Some

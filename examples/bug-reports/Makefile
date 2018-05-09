@@ -4,11 +4,6 @@ include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
 all: verify iverify not-verify extract
 
-ulib: ../../bin/fstarlib/fstarlib.cmxa
-
-../../bin/fstarlib/fstarlib.cmxa:
-	$(MAKE) -C $(ULIB_ML)
-
 
 ##################
 # Positive tests #
@@ -133,7 +128,7 @@ not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
 	$(OCAMLOPT) out_$*/$(CAPPED).ml -o $(CAPPED).exe
 	./$(CAPPED).exe
 
-extract: ulib $(subst .fst,.extract,$(SHOULD_EXTRACT_CLOSED))
+extract: $(subst .fst,.extract,$(SHOULD_EXTRACT_CLOSED))
 
 clean:
 	rm -rf out*

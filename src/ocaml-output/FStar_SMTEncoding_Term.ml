@@ -8,7 +8,7 @@ type sort =
   | BitVec_sort of Prims.int 
   | Array of (sort,sort) FStar_Pervasives_Native.tuple2 
   | Arrow of (sort,sort) FStar_Pervasives_Native.tuple2 
-  | Sort of Prims.string [@@deriving show]
+  | Sort of Prims.string 
 let (uu___is_Bool_sort : sort -> Prims.bool) =
   fun projectee  ->
     match projectee with | Bool_sort  -> true | uu____34 -> false
@@ -110,7 +110,7 @@ type op =
   | NatToBv of Prims.int 
   | BvToNat 
   | ITE 
-  | Var of Prims.string [@@deriving show]
+  | Var of Prims.string 
 let (uu___is_TrueOp : op -> Prims.bool) =
   fun projectee  ->
     match projectee with | TrueOp  -> true | uu____183 -> false
@@ -221,7 +221,7 @@ let (__proj__Var__item___0 : op -> Prims.string) =
   fun projectee  -> match projectee with | Var _0 -> _0 
 type qop =
   | Forall 
-  | Exists [@@deriving show]
+  | Exists 
 let (uu___is_Forall : qop -> Prims.bool) =
   fun projectee  ->
     match projectee with | Forall  -> true | uu____411 -> false
@@ -241,8 +241,7 @@ type term' =
   | Let of (term Prims.list,term) FStar_Pervasives_Native.tuple2 
   | Labeled of (term,Prims.string,FStar_Range.range)
   FStar_Pervasives_Native.tuple3 
-  | LblPos of (term,Prims.string) FStar_Pervasives_Native.tuple2 [@@deriving
-                                                                   show]
+  | LblPos of (term,Prims.string) FStar_Pervasives_Native.tuple2 
 and term =
   {
   tm: term' ;
@@ -250,7 +249,7 @@ and term =
     (Prims.string,sort) FStar_Pervasives_Native.tuple2 Prims.list
       FStar_Syntax_Syntax.memo
     ;
-  rng: FStar_Range.range }[@@deriving show]
+  rng: FStar_Range.range }
 let (uu___is_Integer : term' -> Prims.bool) =
   fun projectee  ->
     match projectee with | Integer _0 -> true | uu____552 -> false
@@ -330,24 +329,21 @@ let (__proj__Mkterm__item__rng : term -> FStar_Range.range) =
     | { tm = __fname__tm; freevars = __fname__freevars; rng = __fname__rng;_}
         -> __fname__rng
   
-type pat = term[@@deriving show]
-type fv = (Prims.string,sort) FStar_Pervasives_Native.tuple2[@@deriving show]
+type pat = term
+type fv = (Prims.string,sort) FStar_Pervasives_Native.tuple2
 type fvs = (Prims.string,sort) FStar_Pervasives_Native.tuple2 Prims.list
-[@@deriving show]
-type caption = Prims.string FStar_Pervasives_Native.option[@@deriving show]
+type caption = Prims.string FStar_Pervasives_Native.option
 type binders = (Prims.string,sort) FStar_Pervasives_Native.tuple2 Prims.list
-[@@deriving show]
 type constructor_field =
-  (Prims.string,sort,Prims.bool) FStar_Pervasives_Native.tuple3[@@deriving
-                                                                 show]
+  (Prims.string,sort,Prims.bool) FStar_Pervasives_Native.tuple3
 type constructor_t =
   (Prims.string,constructor_field Prims.list,sort,Prims.int,Prims.bool)
-    FStar_Pervasives_Native.tuple5[@@deriving show]
-type constructors = constructor_t Prims.list[@@deriving show]
+    FStar_Pervasives_Native.tuple5
+type constructors = constructor_t Prims.list
 type fact_db_id =
   | Name of FStar_Ident.lid 
   | Namespace of FStar_Ident.lid 
-  | Tag of Prims.string [@@deriving show]
+  | Tag of Prims.string 
 let (uu___is_Name : fact_db_id -> Prims.bool) =
   fun projectee  ->
     match projectee with | Name _0 -> true | uu____990 -> false
@@ -371,7 +367,7 @@ type assumption =
   assumption_term: term ;
   assumption_caption: caption ;
   assumption_name: Prims.string ;
-  assumption_fact_ids: fact_db_id Prims.list }[@@deriving show]
+  assumption_fact_ids: fact_db_id Prims.list }
 let (__proj__Mkassumption__item__assumption_term : assumption -> term) =
   fun projectee  ->
     match projectee with
@@ -428,7 +424,7 @@ type decl =
   | GetUnsatCore 
   | SetOption of (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2 
   | GetStatistics 
-  | GetReasonUnknown [@@deriving show]
+  | GetReasonUnknown 
 let (uu___is_DefPrelude : decl -> Prims.bool) =
   fun projectee  ->
     match projectee with | DefPrelude  -> true | uu____1169 -> false
@@ -510,11 +506,10 @@ let (uu___is_GetReasonUnknown : decl -> Prims.bool) =
   fun projectee  ->
     match projectee with | GetReasonUnknown  -> true | uu____1429 -> false
   
-type decls_t = decl Prims.list[@@deriving show]
+type decls_t = decl Prims.list
 type error_label =
-  (fv,Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple3[@@deriving
-                                                                    show]
-type error_labels = error_label Prims.list[@@deriving show]
+  (fv,Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple3
+type error_labels = error_label Prims.list
 let (fv_eq : fv -> fv -> Prims.bool) =
   fun x  ->
     fun y  ->
@@ -533,14 +528,14 @@ let (freevar_eq : term -> term -> Prims.bool) =
       | uu____1491 -> false
   
 let (freevar_sort : term -> sort) =
-  fun uu___74_1500  ->
-    match uu___74_1500 with
+  fun uu___75_1500  ->
+    match uu___75_1500 with
     | { tm = FreeV x; freevars = uu____1502; rng = uu____1503;_} -> fv_sort x
     | uu____1516 -> failwith "impossible"
   
 let (fv_of_term : term -> fv) =
-  fun uu___75_1521  ->
-    match uu___75_1521 with
+  fun uu___76_1521  ->
+    match uu___76_1521 with
     | { tm = FreeV fv; freevars = uu____1523; rng = uu____1524;_} -> fv
     | uu____1537 -> failwith "impossible"
   
@@ -571,12 +566,12 @@ let (free_variables : term -> fvs) =
          fvs)
   
 let (qop_to_string : qop -> Prims.string) =
-  fun uu___76_1764  ->
-    match uu___76_1764 with | Forall  -> "forall" | Exists  -> "exists"
+  fun uu___77_1764  ->
+    match uu___77_1764 with | Forall  -> "forall" | Exists  -> "exists"
   
 let (op_to_string : op -> Prims.string) =
-  fun uu___77_1769  ->
-    match uu___77_1769 with
+  fun uu___78_1769  ->
+    match uu___78_1769 with
     | TrueOp  -> "true"
     | FalseOp  -> "false"
     | Not  -> "not"
@@ -618,8 +613,8 @@ let (op_to_string : op -> Prims.string) =
   
 let (weightToSmt : Prims.int FStar_Pervasives_Native.option -> Prims.string)
   =
-  fun uu___78_1781  ->
-    match uu___78_1781 with
+  fun uu___79_1781  ->
+    match uu___79_1781 with
     | FStar_Pervasives_Native.None  -> ""
     | FStar_Pervasives_Native.Some i ->
         let uu____1785 = FStar_Util.string_of_int i  in
@@ -1894,8 +1889,8 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
   
 let (caption_to_string :
   Prims.string FStar_Pervasives_Native.option -> Prims.string) =
-  fun uu___79_5997  ->
-    match uu___79_5997 with
+  fun uu___80_5997  ->
+    match uu___80_5997 with
     | FStar_Pervasives_Native.None  -> ""
     | FStar_Pervasives_Native.Some c ->
         Prims.strcat ";;;;;;;;;;;;;;;;" (Prims.strcat c "\n")
@@ -1913,8 +1908,8 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
             then
               let uu____6046 =
                 FStar_All.pipe_right (FStar_Util.splitlines c)
-                  (fun uu___80_6050  ->
-                     match uu___80_6050 with | [] -> "" | h::t -> h)
+                  (fun uu___81_6050  ->
+                     match uu___81_6050 with | [] -> "" | h::t -> h)
                  in
               FStar_Util.format1 "\n; %s" uu____6046
             else ""
@@ -1940,8 +1935,8 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
             let fact_ids_to_string ids =
               FStar_All.pipe_right ids
                 (FStar_List.map
-                   (fun uu___81_6146  ->
-                      match uu___81_6146 with
+                   (fun uu___82_6146  ->
+                      match uu___82_6146 with
                       | Name n1 ->
                           let uu____6148 = FStar_Ident.text_of_lid n1  in
                           Prims.strcat "Name " uu____6148
@@ -2290,10 +2285,10 @@ let (mk_Valid : term -> term) =
           let uu____6814 = unboxBitVec sz t2  in (uu____6813, uu____6814)  in
         mkBvUlt uu____6808 t.rng
     | App (Var "Prims.b2t",t1::[]) ->
-        let uu___82_6818 = unboxBool t1  in
+        let uu___83_6818 = unboxBool t1  in
         {
-          tm = (uu___82_6818.tm);
-          freevars = (uu___82_6818.freevars);
+          tm = (uu___83_6818.tm);
+          freevars = (uu___83_6818.freevars);
           rng = (t.rng)
         }
     | uu____6819 -> mkApp ("Valid", [t]) t.rng

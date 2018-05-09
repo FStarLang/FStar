@@ -30,44 +30,45 @@ open FStar.Dyn
 module PC = FStar.Parser.Const
 
 (* Objects with metadata *)
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type withinfo_t<'a> = {
   v:  'a;
   p: Range.range;
 }
 
 (* Free term and type variables *)
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type var = withinfo_t<lident>
 
 (* Term language *)
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type sconst = FStar.Const.sconst
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
   | LightOff
 
-///[@ (PpxDerivingShowConstant "None") ]
+// IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]
 type memo<'a> = ref<option<'a>>
 
 //versioning for unification variables
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type version = {
     major:int;
     minor:int
 }
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
   | Equality
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type aqual = option<arg_qualifier>
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type universe =
   | U_zero
   | U_succ  of universe
@@ -80,27 +81,27 @@ and univ_name = ident
 and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type univ_names    = list<univ_name>
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type universes     = list<universe>
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type monad_name    = lident
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type quote_kind =
   | Quote_static
   | Quote_dynamic
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type delta_depth =
   | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
   | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 // Different kinds of lazy terms. These are used to decide the unfolding
 // function, instead of keeping the closure inside the lazy node, since
 // that means we cannot have equality on terms (not serious) nor call
@@ -116,13 +117,13 @@ type lazy_kind =
   | Lazy_sigelt
   | Lazy_uvar
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type should_check_uvar =
   | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
   | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
   | Strict                (* Everything else is strict *)
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
@@ -261,12 +262,6 @@ and free_vars = {
     free_univs:list<universe_uvar>;
     free_univ_names:list<univ_name>; //fifo
 }
-and lcomp = { //a lazy computation
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflags>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
-}
 
 (* Residual of a computation type after typechecking *)
 and residual_comp = {
@@ -289,6 +284,13 @@ and binding =
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
+
+type lcomp = { //a lazy computation
+    eff_name: lident;
+    res_typ: typ;
+    cflags: list<cflags>;
+    comp_thunk: ref<(either<(unit -> comp), comp>)>
+}
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref<option<(lazy_kind -> lazyinfo -> term)>> = mk_ref None

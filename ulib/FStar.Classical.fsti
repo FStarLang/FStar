@@ -2,6 +2,8 @@ module FStar.Classical
 
 val give_witness (#a:Type) (_:a) :Lemma (ensures a)
 
+val give_witness_from_squash (#a:Type) (_:squash a) :Lemma (ensures a)
+
 val get_equality (#t:Type) (a b:t) :Pure (a == b) (requires (a == b)) (ensures (fun _ -> True))
 
 val get_forall (#a:Type) (p:a -> GTot Type0) :Pure (forall (x:a). p x) (requires (forall (x:a). p x)) (ensures (fun _ -> True))

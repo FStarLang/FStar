@@ -43,7 +43,7 @@ _tags:
 $(OUTPUT_DIRECTORY)/%.ml:
 	$(FSTAR) $(subst .checked,,$<) --codegen OCaml --extract_module $(subst .fst.checked,,$<)
 
-$(OCAML_EXE): _tags $(ML_FILES) $(TOP_LEVEL_FILE) $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa
+$(OCAML_EXE): _tags $(ML_FILES) $(TOP_LEVEL_FILE)
 	OCAMLPATH="$(FSTAR_HOME)/bin" ocamlbuild -I $(OUTPUT_DIRECTORY) -use-ocamlfind -pkg fstarlib $(subst .ml,.native,$(TOP_LEVEL_FILE))
 	mv _build/$(subst .ml,.native,$(TOP_LEVEL_FILE)) $@
 
@@ -60,9 +60,6 @@ test.kremlin: $(KREMLIN_EXE)
 	./$< hello
 
 test: test.kremlin test.ocaml
-
-$(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa:
-	make -C $(FSTAR_HOME)/ulib/ml
 
 clean:
 	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE) .depend

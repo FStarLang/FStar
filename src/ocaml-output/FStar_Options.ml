@@ -4,7 +4,7 @@ type debug_level_t =
   | Medium 
   | High 
   | Extreme 
-  | Other of Prims.string [@@deriving show]
+  | Other of Prims.string 
 let (uu___is_Low : debug_level_t -> Prims.bool) =
   fun projectee  -> match projectee with | Low  -> true | uu____11 -> false 
 let (uu___is_Medium : debug_level_t -> Prims.bool) =
@@ -29,7 +29,7 @@ type option_val =
   | Path of Prims.string 
   | Int of Prims.int 
   | List of option_val Prims.list 
-  | Unset [@@deriving show]
+  | Unset 
 let (uu___is_Bool : option_val -> Prims.bool) =
   fun projectee  ->
     match projectee with | Bool _0 -> true | uu____77 -> false
@@ -72,7 +72,7 @@ let (mk_list : option_val Prims.list -> option_val) = fun _0_8  -> List _0_8
 type options =
   | Set 
   | Reset 
-  | Restore [@@deriving show]
+  | Restore 
 let (uu___is_Set : options -> Prims.bool) =
   fun projectee  -> match projectee with | Set  -> true | uu____182 -> false 
 let (uu___is_Reset : options -> Prims.bool) =
@@ -91,27 +91,27 @@ let (__set_unit_tests : unit -> unit) =
 let (__clear_unit_tests : unit -> unit) =
   fun uu____268  -> FStar_ST.op_Colon_Equals __unit_tests__ false 
 let (as_bool : option_val -> Prims.bool) =
-  fun uu___64_296  ->
-    match uu___64_296 with
+  fun uu___65_296  ->
+    match uu___65_296 with
     | Bool b -> b
     | uu____298 -> failwith "Impos: expected Bool"
   
 let (as_int : option_val -> Prims.int) =
-  fun uu___65_303  ->
-    match uu___65_303 with
+  fun uu___66_303  ->
+    match uu___66_303 with
     | Int b -> b
     | uu____305 -> failwith "Impos: expected Int"
   
 let (as_string : option_val -> Prims.string) =
-  fun uu___66_310  ->
-    match uu___66_310 with
+  fun uu___67_310  ->
+    match uu___67_310 with
     | String b -> b
     | Path b -> FStar_Common.try_convert_file_name_to_mixed b
     | uu____313 -> failwith "Impos: expected String"
   
 let (as_list' : option_val -> option_val Prims.list) =
-  fun uu___67_320  ->
-    match uu___67_320 with
+  fun uu___68_320  ->
+    match uu___68_320 with
     | List ts -> ts
     | uu____326 -> failwith "Impos: expected List"
   
@@ -130,13 +130,13 @@ let as_option :
       option_val -> 'Auu____366 FStar_Pervasives_Native.option
   =
   fun as_t  ->
-    fun uu___68_381  ->
-      match uu___68_381 with
+    fun uu___69_381  ->
+      match uu___69_381 with
       | Unset  -> FStar_Pervasives_Native.None
       | v1 ->
           let uu____385 = as_t v1  in FStar_Pervasives_Native.Some uu____385
   
-type optionstate = option_val FStar_Util.smap[@@deriving show]
+type optionstate = option_val FStar_Util.smap
 let (fstar_options : optionstate Prims.list FStar_ST.ref) =
   FStar_Util.mk_ref [] 
 let (peek : unit -> optionstate) =
@@ -508,8 +508,8 @@ let (get_warn_error : unit -> Prims.string) =
 let (get_use_extracted_interfaces : unit -> Prims.bool) =
   fun uu____1856  -> lookup_opt "use_extracted_interfaces" as_bool 
 let (dlevel : Prims.string -> debug_level_t) =
-  fun uu___69_1861  ->
-    match uu___69_1861 with
+  fun uu___70_1861  ->
+    match uu___70_1861 with
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
@@ -667,7 +667,6 @@ type opt_type =
   | Accumulated of opt_type 
   | ReverseAccumulated of opt_type 
   | WithSideEffect of (unit -> unit,opt_type) FStar_Pervasives_Native.tuple2 
-[@@deriving show]
 let (uu___is_Const : opt_type -> Prims.bool) =
   fun projectee  ->
     match projectee with | Const _0 -> true | uu____2483 -> false
@@ -2191,8 +2190,8 @@ and (specs : unit -> FStar_Getopt.opt Prims.list) =
              mk_spec uu____5263) uu____5225
 
 let (settable : Prims.string -> Prims.bool) =
-  fun uu___70_5283  ->
-    match uu___70_5283 with
+  fun uu___71_5283  ->
+    match uu___71_5283 with
     | "admit_smt_queries" -> true
     | "admit_except" -> true
     | "debug" -> true
@@ -2567,7 +2566,7 @@ type codegen_t =
   | OCaml 
   | FSharp 
   | Kremlin 
-  | Plugin [@@deriving show]
+  | Plugin 
 let (uu___is_OCaml : codegen_t -> Prims.bool) =
   fun projectee  ->
     match projectee with | OCaml  -> true | uu____6030 -> false
@@ -2588,8 +2587,8 @@ let (codegen : unit -> codegen_t FStar_Pervasives_Native.option) =
   fun uu____6055  ->
     let uu____6056 = get_codegen ()  in
     FStar_Util.map_opt uu____6056
-      (fun uu___71_6060  ->
-         match uu___71_6060 with
+      (fun uu___72_6060  ->
+         match uu___72_6060 with
          | "OCaml" -> OCaml
          | "FSharp" -> FSharp
          | "Kremlin" -> Kremlin

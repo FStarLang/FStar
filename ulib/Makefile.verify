@@ -1,44 +1,26 @@
-.PHONY: indent extra arraystruct
+.PHONY: verify-core verify-extra
 
-FSTAR_HOME=..
-include $(FSTAR_HOME)/src/gmake/z3.mk
-include $(FSTAR_HOME)/src/gmake/fstar.mk
-include $(FSTAR_HOME)/src/gmake/Makefile.tmpl
+# List the files that should be verified by verify-extra and verify-all
+EXTRA=FStar.Pointer.Base.fst
 
-EXTRA=
-FLAKY=$(EXTRA) FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
-# This was unused, and out previous idea of putting them first in
-# FSTAR_FILES doesn't really work, since we will first generate .depend
-# and then follow its order, which is not related to this one.
-#EXPENSIVE=FStar.Pointer.Base.fst
+# List the files that should NOT be verified at all
+FLAKY=FStar.Relational.State.fst
 
+# List the files that should be verified by verify-core and verify-all
+# Those files are the roots from where all dependencies are computed
 FSTAR_FILES := $(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
-
-extra: $(addsuffix -ver, $(EXTRA))
 
 OTHERFLAGS+=--use_two_phase_tc true --use_extracted_interfaces
 
-indent: $(addsuffix -indent, $(ALL))
+include gmake/z3.mk
+include gmake/fstar.mk
+include gmake/Makefile.tmpl
 
-%-ver: %
-	$(FSTAR) $^
-	touch $@
+# Default rule is verify-all, defined in gmake/Makefile.tmpl
 
 %.fst-in:
 	@echo --use_hints --hint_info
 
-%.fst-indent: %.fst
-	$(FSTAR) --indent $^ > $^.indent.fst
+verify-core: $(addsuffix .checked, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))
 
-%.fsti-indent: %.fsti
-	$(FSTAR) --indent $^ > $^.indent.fsti
-
-verify-indent: $(addsuffix -verindent, $(wildcard *.indent.fst))
-
-%-verindent: %
-	$(FSTAR) $^
-
-wc:
-	wc -l prims.fst $(ALL)
-
-arraystruct: $(addsuffix .checked,$(wildcard FStar.Pointer*.fst FStar.Pointer*.fsti) FStar.BufferNG.fst FStar.TaggedUnion.fst FStar.TaggedUnion.fsti)
+verify-extra: $(addsuffix .checked, $(EXTRA))

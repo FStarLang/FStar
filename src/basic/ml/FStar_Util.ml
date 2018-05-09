@@ -292,6 +292,8 @@ let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
 [@@deriving show]
+let set_to_yojson _ _ = `Null
+let set_of_yojson _ _ = failwith "cannot readback"
 
 let set_is_empty ((s, _):'a set) =
   match s with
@@ -549,7 +551,7 @@ let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
-[@@deriving show]
+[@@deriving yojson,show]
 
 let is_left = function
   | Inl _ -> true
@@ -998,7 +1000,11 @@ let write_hints (filename: string) (hints: hints_db): unit =
           ]
     ) hints.hints)
   ] in
-  Yojson.Safe.pretty_to_channel (open_out_bin filename) json
+  let channel = open_out_bin filename in
+  BatPervasives.finally
+    (fun () -> close_out channel)
+    (fun channel -> Yojson.Safe.pretty_to_channel channel json)
+    channel
 
 let read_hints (filename: string): hints_db option =
   let mk_hint nm ix fuel ifuel unsat_core time hash_opt = {
