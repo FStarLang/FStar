@@ -54,7 +54,7 @@
         "typing_FStar.Monotonic.HyperStack.is_stack_region"
       ],
       0,
-      "9b9a00c52344f91cd400c0380f55fe89"
+      "8b4147e61a9834dd30451bbe52c62d5a"
     ],
     [
       "Test.HyperStack.test2",
@@ -76,7 +76,7 @@
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__tip"
       ],
       0,
-      "6f26d4a33698720ff8a63ddc0b3b9264"
+      "c5029b4a9acf7e1e895792fdd9a4dab0"
     ],
     [
       "Test.HyperStack.dc_elim",
@@ -295,7 +295,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "49a2611d0f50b98d0b50e83da52fe940"
+      "c9ff09cefef36ca3426575a9540324b0"
     ],
     [
       "Test.HyperStack.test_do_something",
@@ -380,7 +380,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5db4f440a6627d08f048c7351e61bf96"
+      "7368c3dee93668c44098b9a19708955a"
     ],
     [
       "Test.HyperStack.test_do_something_else",
@@ -721,7 +721,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a2e375ab04f6c50a46728bbeb55f0d59"
+      "713e72242afe8fe936863af43206d381"
     ],
     [
       "Test.HyperStack.test_stack_with_long_lived",
@@ -1200,7 +1200,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "87570ff626ecfdf92687e1dcd4aa73b5"
+      "3e32c55361bb4259d600a0519b071df8"
     ],
     [
       "Test.HyperStack.test_to_be_stack_inlined",
@@ -1806,7 +1806,7 @@
         "haseqTest.HyperStack_Tm_refine_9afd37d05f1e12249156988988865f79"
       ],
       0,
-      "c2dd5e14fca9fe6d6251dbbb1c192a02"
+      "1324dd30a06e250abc5a5248aff335f2"
     ],
     [
       "Test.HyperStack.dc_elim",

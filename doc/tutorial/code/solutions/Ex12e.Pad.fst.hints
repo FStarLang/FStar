@@ -77,7 +77,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ccdafff22655cbd07ebb12324199a572"
+      "0180d82dd9a47751dd844645c7c909dc"
     ],
     [
       "Ex12e.Pad.lemma_append_inj",
@@ -89,22 +89,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c517bda3f2ae15ece7af4eb167ddc8f0"
-    ],
-    [
-      "Ex12e.Pad.lemma_append_inj",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
-        "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "1aec83b9d157907ead71f3c989784617"
+      "7b7bbafebb2fd8bc8f3bc3dbbc6403e8"
     ],
     [
       "Ex12e.Pad.inj",
@@ -219,7 +204,7 @@
         "haseqFStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
       0,
-      "a8fe141d44c2545b2682a69d8ddee478"
+      "9b308d3fe1c0234660d6e892f24dcfa3"
     ],
     [
       "Ex12e.Pad.block",
@@ -289,7 +274,7 @@
     ],
     [
       "Ex12e.Pad.lemma_append_inj",
-      4,
+      3,
       2,
       1,
       [
