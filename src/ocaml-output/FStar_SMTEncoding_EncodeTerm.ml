@@ -369,8 +369,8 @@ let check_pattern_vars :
   
 type label =
   (FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
-    FStar_Pervasives_Native.tuple3
-type labels = label Prims.list
+    FStar_Pervasives_Native.tuple3[@@deriving show]
+type labels = label Prims.list[@@deriving show]
 type pattern =
   {
   pat_vars:
@@ -387,7 +387,7 @@ type pattern =
     FStar_SMTEncoding_Term.term ->
       (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.term)
         FStar_Pervasives_Native.tuple2 Prims.list
-    }
+    }[@@deriving show]
 let (__proj__Mkpattern__item__pat_vars :
   pattern ->
     (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.fv)
@@ -1399,6 +1399,8 @@ and (encode_term :
                                 (uu___96_4102.FStar_TypeChecker_Env.failhard);
                               FStar_TypeChecker_Env.nosynth =
                                 (uu___96_4102.FStar_TypeChecker_Env.nosynth);
+                              FStar_TypeChecker_Env.uvar_subtyping =
+                                (uu___96_4102.FStar_TypeChecker_Env.uvar_subtyping);
                               FStar_TypeChecker_Env.tc_term =
                                 (uu___96_4102.FStar_TypeChecker_Env.tc_term);
                               FStar_TypeChecker_Env.type_of =

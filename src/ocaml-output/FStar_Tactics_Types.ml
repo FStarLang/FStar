@@ -4,7 +4,7 @@ type goal =
   goal_main_env: FStar_TypeChecker_Env.env ;
   goal_ctx_uvar: FStar_Syntax_Syntax.ctx_uvar ;
   opts: FStar_Options.optionstate ;
-  is_guard: Prims.bool }
+  is_guard: Prims.bool }[@@deriving show]
 let (__proj__Mkgoal__item__goal_main_env : goal -> FStar_TypeChecker_Env.env)
   =
   fun projectee  ->
@@ -82,6 +82,8 @@ let (goal_env : goal -> FStar_TypeChecker_Env.env) =
         (uu___77_62.FStar_TypeChecker_Env.failhard);
       FStar_TypeChecker_Env.nosynth =
         (uu___77_62.FStar_TypeChecker_Env.nosynth);
+      FStar_TypeChecker_Env.uvar_subtyping =
+        (uu___77_62.FStar_TypeChecker_Env.uvar_subtyping);
       FStar_TypeChecker_Env.tc_term =
         (uu___77_62.FStar_TypeChecker_Env.tc_term);
       FStar_TypeChecker_Env.type_of =
@@ -231,7 +233,7 @@ type guard_policy =
   | Goal 
   | SMT 
   | Force 
-  | Drop 
+  | Drop [@@deriving show]
 let (uu___is_Goal : guard_policy -> Prims.bool) =
   fun projectee  -> match projectee with | Goal  -> true | uu____168 -> false 
 let (uu___is_SMT : guard_policy -> Prims.bool) =
@@ -254,7 +256,7 @@ type proofstate =
   psc: FStar_TypeChecker_Normalize.psc ;
   entry_range: FStar_Range.range ;
   guard_policy: guard_policy ;
-  freshness: Prims.int }
+  freshness: Prims.int }[@@deriving show]
 let (__proj__Mkproofstate__item__main_context :
   proofstate -> FStar_TypeChecker_Env.env) =
   fun projectee  ->
@@ -497,7 +499,7 @@ let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
   
 type direction =
   | TopDown 
-  | BottomUp 
+  | BottomUp [@@deriving show]
 let (uu___is_TopDown : direction -> Prims.bool) =
   fun projectee  ->
     match projectee with | TopDown  -> true | uu____633 -> false

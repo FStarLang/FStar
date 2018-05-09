@@ -1,7 +1,7 @@
 open Prims
 type z3_replay_result =
   (FStar_SMTEncoding_Z3.unsat_core,FStar_SMTEncoding_Term.error_labels)
-    FStar_Util.either
+    FStar_Util.either[@@deriving show]
 let z3_result_as_replay_result :
   'Auu____13 'Auu____14 'Auu____15 .
     ('Auu____13,('Auu____14,'Auu____15) FStar_Pervasives_Native.tuple2)
@@ -231,7 +231,7 @@ type errors =
   error_messages:
     (FStar_Errors.raw_error,Prims.string,FStar_Range.range)
       FStar_Pervasives_Native.tuple3 Prims.list
-    }
+    }[@@deriving show]
 let (__proj__Mkerrors__item__error_reason : errors -> Prims.string) =
   fun projectee  ->
     match projectee with
@@ -300,7 +300,7 @@ type query_settings =
   query_errors: errors Prims.list ;
   query_all_labels: FStar_SMTEncoding_Term.error_labels ;
   query_suffix: FStar_SMTEncoding_Term.decl Prims.list ;
-  query_hash: Prims.string FStar_Pervasives_Native.option }
+  query_hash: Prims.string FStar_Pervasives_Native.option }[@@deriving show]
 let (__proj__Mkquery_settings__item__query_env :
   query_settings -> FStar_TypeChecker_Env.env) =
   fun projectee  ->

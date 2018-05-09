@@ -24,7 +24,7 @@ type step =
   | NoFullNorm 
   | CheckNoUvars 
   | Unmeta 
-  | Unascribe 
+  | Unascribe [@@deriving show]
 let (uu___is_Beta : step -> Prims.bool) =
   fun projectee  -> match projectee with | Beta  -> true | uu____35 -> false 
 let (uu___is_Iota : step -> Prims.bool) =
@@ -129,7 +129,7 @@ let (uu___is_Unascribe : step -> Prims.bool) =
   fun projectee  ->
     match projectee with | Unascribe  -> true | uu____235 -> false
   
-type steps = step Prims.list
+type steps = step Prims.list[@@deriving show]
 let cases :
   'Auu____248 'Auu____249 .
     ('Auu____248 -> 'Auu____249) ->
@@ -170,7 +170,7 @@ type fsteps =
   unmeta: Prims.bool ;
   unascribe: Prims.bool ;
   in_full_norm_request: Prims.bool ;
-  weakly_reduce_scrutinee: Prims.bool }
+  weakly_reduce_scrutinee: Prims.bool }[@@deriving show]
 let (__proj__Mkfsteps__item__beta : fsteps -> Prims.bool) =
   fun projectee  ->
     match projectee with
@@ -1503,7 +1503,7 @@ let rec (to_fsteps : step Prims.list -> fsteps) =
 type psc =
   {
   psc_range: FStar_Range.range ;
-  psc_subst: unit -> FStar_Syntax_Syntax.subst_t }
+  psc_subst: unit -> FStar_Syntax_Syntax.subst_t }[@@deriving show]
 let (__proj__Mkpsc__item__psc_range : psc -> FStar_Range.range) =
   fun projectee  ->
     match projectee with
@@ -1533,7 +1533,7 @@ type primitive_step =
     psc ->
       FStar_Syntax_Syntax.args ->
         FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
-    }
+    }[@@deriving show]
 let (__proj__Mkprimitive_step__item__name :
   primitive_step -> FStar_Ident.lid) =
   fun projectee  ->
@@ -1609,7 +1609,7 @@ type closure =
     FStar_Pervasives_Native.tuple2 FStar_Syntax_Syntax.memo,Prims.bool)
   FStar_Pervasives_Native.tuple4 
   | Univ of FStar_Syntax_Syntax.universe 
-  | Dummy 
+  | Dummy [@@deriving show]
 let (uu___is_Clos : closure -> Prims.bool) =
   fun projectee  ->
     match projectee with | Clos _0 -> true | uu____1902 -> false
@@ -1635,7 +1635,7 @@ let (uu___is_Dummy : closure -> Prims.bool) =
   
 type env =
   (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
-    FStar_Pervasives_Native.tuple2 Prims.list
+    FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
 let (dummy :
   (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
     FStar_Pervasives_Native.tuple2)
@@ -1647,7 +1647,7 @@ type debug_switches =
   b380: Prims.bool ;
   wpe: Prims.bool ;
   norm_delayed: Prims.bool ;
-  print_normalized: Prims.bool }
+  print_normalized: Prims.bool }[@@deriving show]
 let (__proj__Mkdebug_switches__item__gen : debug_switches -> Prims.bool) =
   fun projectee  ->
     match projectee with
@@ -1703,7 +1703,7 @@ type cfg =
   primitive_steps: primitive_step FStar_Util.psmap ;
   strong: Prims.bool ;
   memoize_lazy: Prims.bool ;
-  normalize_pure_lets: Prims.bool }
+  normalize_pure_lets: Prims.bool }[@@deriving show]
 let (__proj__Mkcfg__item__steps : cfg -> fsteps) =
   fun projectee  ->
     match projectee with
@@ -1818,7 +1818,7 @@ let (find_prim_step :
 type branches =
   (FStar_Syntax_Syntax.pat,FStar_Syntax_Syntax.term
                              FStar_Pervasives_Native.option,FStar_Syntax_Syntax.term)
-    FStar_Pervasives_Native.tuple3 Prims.list
+    FStar_Pervasives_Native.tuple3 Prims.list[@@deriving show]
 type stack_elt =
   | Arg of (closure,FStar_Syntax_Syntax.aqual,FStar_Range.range)
   FStar_Pervasives_Native.tuple3 
@@ -1842,7 +1842,7 @@ type stack_elt =
   FStar_Pervasives_Native.tuple4 
   | Cfg of cfg 
   | Debug of (FStar_Syntax_Syntax.term,FStar_Util.time)
-  FStar_Pervasives_Native.tuple2 
+  FStar_Pervasives_Native.tuple2 [@@deriving show]
 let (uu___is_Arg : stack_elt -> Prims.bool) =
   fun projectee  ->
     match projectee with | Arg _0 -> true | uu____2538 -> false
@@ -1929,7 +1929,7 @@ let (__proj__Debug__item___0 :
   stack_elt ->
     (FStar_Syntax_Syntax.term,FStar_Util.time) FStar_Pervasives_Native.tuple2)
   = fun projectee  -> match projectee with | Debug _0 -> _0 
-type stack = stack_elt Prims.list
+type stack = stack_elt Prims.list[@@deriving show]
 let (head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t  ->
     let uu____2962 = FStar_Syntax_Util.head_and_args' t  in
@@ -9451,6 +9451,8 @@ let (eta_expand :
                                      (uu___229_26357.FStar_TypeChecker_Env.failhard);
                                    FStar_TypeChecker_Env.nosynth =
                                      (uu___229_26357.FStar_TypeChecker_Env.nosynth);
+                                   FStar_TypeChecker_Env.uvar_subtyping =
+                                     (uu___229_26357.FStar_TypeChecker_Env.uvar_subtyping);
                                    FStar_TypeChecker_Env.tc_term =
                                      (uu___229_26357.FStar_TypeChecker_Env.tc_term);
                                    FStar_TypeChecker_Env.type_of =
@@ -9537,6 +9539,8 @@ let (eta_expand :
                              (uu___230_26370.FStar_TypeChecker_Env.failhard);
                            FStar_TypeChecker_Env.nosynth =
                              (uu___230_26370.FStar_TypeChecker_Env.nosynth);
+                           FStar_TypeChecker_Env.uvar_subtyping =
+                             (uu___230_26370.FStar_TypeChecker_Env.uvar_subtyping);
                            FStar_TypeChecker_Env.tc_term =
                              (uu___230_26370.FStar_TypeChecker_Env.tc_term);
                            FStar_TypeChecker_Env.type_of =

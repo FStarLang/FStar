@@ -1,23 +1,25 @@
 open Prims
 let id : 'Aa . 'Aa -> 'Aa = fun x  -> x 
-type 'Aheap st_pre_h = unit
-type ('Aheap,'Aa,'Apre) st_post_h' = unit
-type ('Aheap,'Aa) st_post_h = unit
-type ('Aheap,'Aa) st_wp_h = unit
-type ('Aheap,'Aa,'Ax,'Ap,'Auu___6_77) st_return = 'Ap
-type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) st_bind_wp = 'Awp1
+type 'Aheap st_pre_h = unit[@@deriving show]
+type ('Aheap,'Aa,'Apre) st_post_h' = unit[@@deriving show]
+type ('Aheap,'Aa) st_post_h = unit[@@deriving show]
+type ('Aheap,'Aa) st_wp_h = unit[@@deriving show]
+type ('Aheap,'Aa,'Ax,'Ap,'Auu___6_77) st_return = 'Ap[@@deriving show]
+type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) st_bind_wp = 'Awp1[@@deriving
+                                                                    show]
 type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) st_if_then_else = unit
-type ('Aheap,'Aa,'Awp,'Apost,'Ah0) st_ite_wp = unit
-type ('Aheap,'Aa,'Awp1,'Awp2) st_stronger = unit
-type ('Aheap,'Aa,'Ab,'Awp,'Ap,'Ah) st_close_wp = unit
-type ('Aheap,'Aa,'Ap,'Awp,'Aq,'Ah) st_assert_p = unit
-type ('Aheap,'Aa,'Ap,'Awp,'Aq,'Ah) st_assume_p = unit
-type ('Aheap,'Aa,'Ap,'Ah) st_null_wp = unit
-type ('Aheap,'Aa,'Awp) st_trivial = unit
+[@@deriving show]
+type ('Aheap,'Aa,'Awp,'Apost,'Ah0) st_ite_wp = unit[@@deriving show]
+type ('Aheap,'Aa,'Awp1,'Awp2) st_stronger = unit[@@deriving show]
+type ('Aheap,'Aa,'Ab,'Awp,'Ap,'Ah) st_close_wp = unit[@@deriving show]
+type ('Aheap,'Aa,'Ap,'Awp,'Aq,'Ah) st_assert_p = unit[@@deriving show]
+type ('Aheap,'Aa,'Ap,'Awp,'Aq,'Ah) st_assume_p = unit[@@deriving show]
+type ('Aheap,'Aa,'Ap,'Ah) st_null_wp = unit[@@deriving show]
+type ('Aheap,'Aa,'Awp) st_trivial = unit[@@deriving show]
 type 'Aa result =
   | V of 'Aa 
   | E of Prims.exn 
-  | Err of Prims.string 
+  | Err of Prims.string [@@deriving show]
 let uu___is_V : 'Aa . 'Aa result -> Prims.bool =
   fun projectee  -> match projectee with | V v -> true | uu____407 -> false 
 let __proj__V__item__v : 'Aa . 'Aa result -> 'Aa =
@@ -32,41 +34,44 @@ let uu___is_Err : 'Aa . 'Aa result -> Prims.bool =
   
 let __proj__Err__item__msg : 'Aa . 'Aa result -> Prims.string =
   fun projectee  -> match projectee with | Err msg -> msg 
-type ex_pre = unit
-type ('Aa,'Apre) ex_post' = unit
-type 'Aa ex_post = unit
-type 'Aa ex_wp = unit
-type ('Aa,'Ax,'Ap) ex_return = 'Ap
-type ('Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap) ex_bind_wp = unit
-type ('Aa,'Awp,'Apost) ex_ite_wp = unit
-type ('Aa,'Ap,'Awp_then,'Awp_else,'Apost) ex_if_then_else = unit
-type ('Aa,'Awp1,'Awp2) ex_stronger = unit
-type ('Aa,'Ab,'Awp,'Ap) ex_close_wp = unit
-type ('Aa,'Aq,'Awp,'Ap) ex_assert_p = unit
-type ('Aa,'Aq,'Awp,'Ap) ex_assume_p = unit
-type ('Aa,'Ap) ex_null_wp = unit
-type ('Aa,'Awp) ex_trivial = 'Awp
-type ('Aa,'Awp,'Ap) lift_div_exn = 'Awp
-type 'Ah all_pre_h = unit
-type ('Ah,'Aa,'Apre) all_post_h' = unit
-type ('Ah,'Aa) all_post_h = unit
-type ('Ah,'Aa) all_wp_h = unit
-type ('Aheap,'Aa,'Awp,'Apost,'Ah0) all_ite_wp = unit
-type ('Aheap,'Aa,'Ax,'Ap,'Auu___9_841) all_return = 'Ap
-type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) all_bind_wp = 'Awp1
+type ex_pre = unit[@@deriving show]
+type ('Aa,'Apre) ex_post' = unit[@@deriving show]
+type 'Aa ex_post = unit[@@deriving show]
+type 'Aa ex_wp = unit[@@deriving show]
+type ('Aa,'Ax,'Ap) ex_return = 'Ap[@@deriving show]
+type ('Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap) ex_bind_wp = unit[@@deriving show]
+type ('Aa,'Awp,'Apost) ex_ite_wp = unit[@@deriving show]
+type ('Aa,'Ap,'Awp_then,'Awp_else,'Apost) ex_if_then_else = unit[@@deriving
+                                                                  show]
+type ('Aa,'Awp1,'Awp2) ex_stronger = unit[@@deriving show]
+type ('Aa,'Ab,'Awp,'Ap) ex_close_wp = unit[@@deriving show]
+type ('Aa,'Aq,'Awp,'Ap) ex_assert_p = unit[@@deriving show]
+type ('Aa,'Aq,'Awp,'Ap) ex_assume_p = unit[@@deriving show]
+type ('Aa,'Ap) ex_null_wp = unit[@@deriving show]
+type ('Aa,'Awp) ex_trivial = 'Awp[@@deriving show]
+type ('Aa,'Awp,'Ap) lift_div_exn = 'Awp[@@deriving show]
+type 'Ah all_pre_h = unit[@@deriving show]
+type ('Ah,'Aa,'Apre) all_post_h' = unit[@@deriving show]
+type ('Ah,'Aa) all_post_h = unit[@@deriving show]
+type ('Ah,'Aa) all_wp_h = unit[@@deriving show]
+type ('Aheap,'Aa,'Awp,'Apost,'Ah0) all_ite_wp = unit[@@deriving show]
+type ('Aheap,'Aa,'Ax,'Ap,'Auu___9_841) all_return = 'Ap[@@deriving show]
+type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) all_bind_wp = 'Awp1[@@deriving
+                                                                    show]
 type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) all_if_then_else = unit
-type ('Aheap,'Aa,'Awp1,'Awp2) all_stronger = unit
-type ('Aheap,'Aa,'Ab,'Awp,'Ap,'Ah) all_close_wp = unit
-type ('Aheap,'Aa,'Ap,'Awp,'Aq,'Ah) all_assert_p = unit
-type ('Aheap,'Aa,'Ap,'Awp,'Aq,'Ah) all_assume_p = unit
-type ('Aheap,'Aa,'Ap,'Ah0) all_null_wp = unit
-type ('Aheap,'Aa,'Awp) all_trivial = unit
-type 'Aa inversion = unit
+[@@deriving show]
+type ('Aheap,'Aa,'Awp1,'Awp2) all_stronger = unit[@@deriving show]
+type ('Aheap,'Aa,'Ab,'Awp,'Ap,'Ah) all_close_wp = unit[@@deriving show]
+type ('Aheap,'Aa,'Ap,'Awp,'Aq,'Ah) all_assert_p = unit[@@deriving show]
+type ('Aheap,'Aa,'Ap,'Awp,'Aq,'Ah) all_assume_p = unit[@@deriving show]
+type ('Aheap,'Aa,'Ap,'Ah0) all_null_wp = unit[@@deriving show]
+type ('Aheap,'Aa,'Awp) all_trivial = unit[@@deriving show]
+type 'Aa inversion = unit[@@deriving show]
 
 
 type ('a,'b) either =
   | Inl of 'a 
-  | Inr of 'b 
+  | Inr of 'b [@@deriving show]
 let uu___is_Inl : 'a 'b . ('a,'b) either -> Prims.bool =
   fun projectee  ->
     match projectee with | Inl v -> true | uu____1155 -> false
@@ -84,7 +89,7 @@ let dfst : 'Aa 'Ab . ('Aa,'Ab) Prims.dtuple2 -> 'Aa =
 let dsnd : 'Aa 'Ab . ('Aa,'Ab) Prims.dtuple2 -> 'Ab =
   fun t  -> Prims.__proj__Mkdtuple2__item___2 t 
 type ('Aa,'Ab,'Ac) dtuple3 =
-  | Mkdtuple3 of 'Aa * 'Ab * 'Ac 
+  | Mkdtuple3 of 'Aa * 'Ab * 'Ac [@@deriving show]
 let uu___is_Mkdtuple3 : 'Aa 'Ab 'Ac . ('Aa,'Ab,'Ac) dtuple3 -> Prims.bool =
   fun projectee  -> true 
 let __proj__Mkdtuple3__item___1 : 'Aa 'Ab 'Ac . ('Aa,'Ab,'Ac) dtuple3 -> 'Aa
@@ -94,7 +99,7 @@ let __proj__Mkdtuple3__item___2 : 'Aa 'Ab 'Ac . ('Aa,'Ab,'Ac) dtuple3 -> 'Ab
 let __proj__Mkdtuple3__item___3 : 'Aa 'Ab 'Ac . ('Aa,'Ab,'Ac) dtuple3 -> 'Ac
   = fun projectee  -> match projectee with | Mkdtuple3 (_1,_2,_3) -> _3 
 type ('Aa,'Ab,'Ac,'Ad) dtuple4 =
-  | Mkdtuple4 of 'Aa * 'Ab * 'Ac * 'Ad 
+  | Mkdtuple4 of 'Aa * 'Ab * 'Ac * 'Ad [@@deriving show]
 let uu___is_Mkdtuple4 :
   'Aa 'Ab 'Ac 'Ad . ('Aa,'Ab,'Ac,'Ad) dtuple4 -> Prims.bool =
   fun projectee  -> true 
@@ -122,7 +127,7 @@ type __internal_ocaml_attributes =
   | Comment of Prims.string 
   | CPrologue of Prims.string 
   | CEpilogue of Prims.string 
-  | CConst of Prims.string 
+  | CConst of Prims.string [@@deriving show]
 let (uu___is_PpxDerivingShow : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
     match projectee with | PpxDerivingShow  -> true | uu____1791 -> false

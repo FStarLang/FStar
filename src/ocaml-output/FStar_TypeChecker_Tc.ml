@@ -73,6 +73,8 @@ let (set_hint_correlator :
               (uu___89_54.FStar_TypeChecker_Env.failhard);
             FStar_TypeChecker_Env.nosynth =
               (uu___89_54.FStar_TypeChecker_Env.nosynth);
+            FStar_TypeChecker_Env.uvar_subtyping =
+              (uu___89_54.FStar_TypeChecker_Env.uvar_subtyping);
             FStar_TypeChecker_Env.tc_term =
               (uu___89_54.FStar_TypeChecker_Env.tc_term);
             FStar_TypeChecker_Env.type_of =
@@ -168,6 +170,8 @@ let (set_hint_correlator :
               (uu___90_104.FStar_TypeChecker_Env.failhard);
             FStar_TypeChecker_Env.nosynth =
               (uu___90_104.FStar_TypeChecker_Env.nosynth);
+            FStar_TypeChecker_Env.uvar_subtyping =
+              (uu___90_104.FStar_TypeChecker_Env.uvar_subtyping);
             FStar_TypeChecker_Env.tc_term =
               (uu___90_104.FStar_TypeChecker_Env.tc_term);
             FStar_TypeChecker_Env.type_of =
@@ -1419,6 +1423,9 @@ let (tc_eff_decl :
                                                      FStar_TypeChecker_Env.nosynth
                                                        =
                                                        (uu___94_2395.FStar_TypeChecker_Env.nosynth);
+                                                     FStar_TypeChecker_Env.uvar_subtyping
+                                                       =
+                                                       (uu___94_2395.FStar_TypeChecker_Env.uvar_subtyping);
                                                      FStar_TypeChecker_Env.tc_term
                                                        =
                                                        (uu___94_2395.FStar_TypeChecker_Env.tc_term);
@@ -1747,6 +1754,9 @@ let (tc_eff_decl :
                                                        FStar_TypeChecker_Env.nosynth
                                                          =
                                                          (uu___96_2680.FStar_TypeChecker_Env.nosynth);
+                                                       FStar_TypeChecker_Env.uvar_subtyping
+                                                         =
+                                                         (uu___96_2680.FStar_TypeChecker_Env.uvar_subtyping);
                                                        FStar_TypeChecker_Env.tc_term
                                                          =
                                                          (uu___96_2680.FStar_TypeChecker_Env.tc_term);
@@ -4444,6 +4454,8 @@ and (tc_decl' :
                              (uu___104_7304.FStar_TypeChecker_Env.failhard);
                            FStar_TypeChecker_Env.nosynth =
                              (uu___104_7304.FStar_TypeChecker_Env.nosynth);
+                           FStar_TypeChecker_Env.uvar_subtyping =
+                             (uu___104_7304.FStar_TypeChecker_Env.uvar_subtyping);
                            FStar_TypeChecker_Env.tc_term =
                              (uu___104_7304.FStar_TypeChecker_Env.tc_term);
                            FStar_TypeChecker_Env.type_of =
@@ -4615,6 +4627,8 @@ and (tc_decl' :
                              (uu___108_7412.FStar_TypeChecker_Env.failhard);
                            FStar_TypeChecker_Env.nosynth =
                              (uu___108_7412.FStar_TypeChecker_Env.nosynth);
+                           FStar_TypeChecker_Env.uvar_subtyping =
+                             (uu___108_7412.FStar_TypeChecker_Env.uvar_subtyping);
                            FStar_TypeChecker_Env.tc_term =
                              (uu___108_7412.FStar_TypeChecker_Env.tc_term);
                            FStar_TypeChecker_Env.type_of =
@@ -5002,6 +5016,8 @@ and (tc_decl' :
                                (uu___112_8264.FStar_TypeChecker_Env.failhard);
                              FStar_TypeChecker_Env.nosynth =
                                (uu___112_8264.FStar_TypeChecker_Env.nosynth);
+                             FStar_TypeChecker_Env.uvar_subtyping =
+                               (uu___112_8264.FStar_TypeChecker_Env.uvar_subtyping);
                              FStar_TypeChecker_Env.tc_term =
                                (uu___112_8264.FStar_TypeChecker_Env.tc_term);
                              FStar_TypeChecker_Env.type_of =
@@ -5572,6 +5588,8 @@ and (tc_decl' :
                               (uu___117_9203.FStar_TypeChecker_Env.failhard);
                             FStar_TypeChecker_Env.nosynth =
                               (uu___117_9203.FStar_TypeChecker_Env.nosynth);
+                            FStar_TypeChecker_Env.uvar_subtyping =
+                              (uu___117_9203.FStar_TypeChecker_Env.uvar_subtyping);
                             FStar_TypeChecker_Env.tc_term =
                               (uu___117_9203.FStar_TypeChecker_Env.tc_term);
                             FStar_TypeChecker_Env.type_of =
@@ -5993,6 +6011,8 @@ and (tc_decl' :
                      (uu___122_10093.FStar_TypeChecker_Env.failhard);
                    FStar_TypeChecker_Env.nosynth =
                      (uu___122_10093.FStar_TypeChecker_Env.nosynth);
+                   FStar_TypeChecker_Env.uvar_subtyping =
+                     (uu___122_10093.FStar_TypeChecker_Env.uvar_subtyping);
                    FStar_TypeChecker_Env.tc_term =
                      (uu___122_10093.FStar_TypeChecker_Env.tc_term);
                    FStar_TypeChecker_Env.type_of =
@@ -6140,6 +6160,8 @@ and (tc_decl' :
                                   (uu___125_10172.FStar_TypeChecker_Env.failhard);
                                 FStar_TypeChecker_Env.nosynth =
                                   (uu___125_10172.FStar_TypeChecker_Env.nosynth);
+                                FStar_TypeChecker_Env.uvar_subtyping =
+                                  (uu___125_10172.FStar_TypeChecker_Env.uvar_subtyping);
                                 FStar_TypeChecker_Env.tc_term =
                                   (uu___125_10172.FStar_TypeChecker_Env.tc_term);
                                 FStar_TypeChecker_Env.type_of =
@@ -6759,6 +6781,8 @@ let (check_exports :
               (uu___132_11648.FStar_TypeChecker_Env.failhard);
             FStar_TypeChecker_Env.nosynth =
               (uu___132_11648.FStar_TypeChecker_Env.nosynth);
+            FStar_TypeChecker_Env.uvar_subtyping =
+              (uu___132_11648.FStar_TypeChecker_Env.uvar_subtyping);
             FStar_TypeChecker_Env.tc_term =
               (uu___132_11648.FStar_TypeChecker_Env.tc_term);
             FStar_TypeChecker_Env.type_of =
@@ -7418,6 +7442,8 @@ let (tc_partial_modul :
              (uu___139_12986.FStar_TypeChecker_Env.failhard);
            FStar_TypeChecker_Env.nosynth =
              (uu___139_12986.FStar_TypeChecker_Env.nosynth);
+           FStar_TypeChecker_Env.uvar_subtyping =
+             (uu___139_12986.FStar_TypeChecker_Env.uvar_subtyping);
            FStar_TypeChecker_Env.tc_term =
              (uu___139_12986.FStar_TypeChecker_Env.tc_term);
            FStar_TypeChecker_Env.type_of =
@@ -7647,6 +7673,8 @@ and (finish_partial_modul :
                         (uu___142_13214.FStar_TypeChecker_Env.failhard);
                       FStar_TypeChecker_Env.nosynth =
                         (uu___142_13214.FStar_TypeChecker_Env.nosynth);
+                      FStar_TypeChecker_Env.uvar_subtyping =
+                        (uu___142_13214.FStar_TypeChecker_Env.uvar_subtyping);
                       FStar_TypeChecker_Env.tc_term =
                         (uu___142_13214.FStar_TypeChecker_Env.tc_term);
                       FStar_TypeChecker_Env.type_of =
@@ -7883,6 +7911,8 @@ let (check_module :
                (uu___146_13459.FStar_TypeChecker_Env.failhard);
              FStar_TypeChecker_Env.nosynth =
                (uu___146_13459.FStar_TypeChecker_Env.nosynth);
+             FStar_TypeChecker_Env.uvar_subtyping =
+               (uu___146_13459.FStar_TypeChecker_Env.uvar_subtyping);
              FStar_TypeChecker_Env.tc_term =
                (uu___146_13459.FStar_TypeChecker_Env.tc_term);
              FStar_TypeChecker_Env.type_of =

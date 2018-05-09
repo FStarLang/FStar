@@ -1721,6 +1721,7 @@ type generalized_lb =
                                                                    FStar_Pervasives_Native.tuple2)
                                                                  FStar_Pervasives_Native.tuple2,
     Prims.bool,FStar_Syntax_Syntax.term) FStar_Pervasives_Native.tuple5
+[@@deriving show]
 let rec (check_term_as_mlexpr :
   FStar_Extraction_ML_UEnv.env ->
     FStar_Syntax_Syntax.term ->

@@ -8,7 +8,7 @@ type prims_t =
                                                  Prims.list)
           FStar_Pervasives_Native.tuple3
     ;
-  is: FStar_Ident.lident -> Prims.bool }
+  is: FStar_Ident.lident -> Prims.bool }[@@deriving show]
 let (__proj__Mkprims_t__item__mk :
   prims_t ->
     FStar_Ident.lident ->
@@ -1287,6 +1287,8 @@ let (encode_free_var :
                                        (uu___104_4681.FStar_TypeChecker_Env.failhard);
                                      FStar_TypeChecker_Env.nosynth =
                                        (uu___104_4681.FStar_TypeChecker_Env.nosynth);
+                                     FStar_TypeChecker_Env.uvar_subtyping =
+                                       (uu___104_4681.FStar_TypeChecker_Env.uvar_subtyping);
                                      FStar_TypeChecker_Env.tc_term =
                                        (uu___104_4681.FStar_TypeChecker_Env.tc_term);
                                      FStar_TypeChecker_Env.type_of =
@@ -2104,6 +2106,8 @@ let (encode_top_level_let :
                          (uu___107_6171.FStar_TypeChecker_Env.failhard);
                        FStar_TypeChecker_Env.nosynth =
                          (uu___107_6171.FStar_TypeChecker_Env.nosynth);
+                       FStar_TypeChecker_Env.uvar_subtyping =
+                         (uu___107_6171.FStar_TypeChecker_Env.uvar_subtyping);
                        FStar_TypeChecker_Env.tc_term =
                          (uu___107_6171.FStar_TypeChecker_Env.tc_term);
                        FStar_TypeChecker_Env.type_of =
