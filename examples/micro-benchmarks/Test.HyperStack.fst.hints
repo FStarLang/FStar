@@ -293,7 +293,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6fb858112991e0fd48de7c6893fe76f9"
+      "e5e889f1186f1fd938a45bfd69ecff5b"
     ],
     [
       "Test.HyperStack.test_do_something",
@@ -378,7 +378,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fa3716ba3f4735cd09840e85bf77f7c9"
+      "c0b581c5bda39f3bf1eb53e47981b328"
     ],
     [
       "Test.HyperStack.test_do_something_else",
@@ -719,7 +719,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e094b985b941e46de7d04c4e0af5b19c"
+      "44f7731d4d72795aed32f7a33af20bc3"
     ],
     [
       "Test.HyperStack.test_stack_with_long_lived",
@@ -1198,7 +1198,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5f38d3e5963cc49ecd882d93416f1cb6"
+      "66538ac4c08849c8f618db3838d2b18e"
     ],
     [
       "Test.HyperStack.test_to_be_stack_inlined",

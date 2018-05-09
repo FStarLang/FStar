@@ -11,15 +11,6 @@
       "dba5b025564faee75f38a83ab31caf95"
     ],
     [
-      "NegativeTests.Neg.test",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "bdfbc7327d4d144152e6197721d7579d"
-    ],
-    [
       "NegativeTests.Neg.test_label",
       2,
       2,

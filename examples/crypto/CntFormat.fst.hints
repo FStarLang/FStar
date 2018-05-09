@@ -8,29 +8,11 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "a85dd24b1d7c4ee0f9e1215ce2c1dc79"
+      "da1d306ee35bcc307b8ef6d943851b72"
     ],
     [
       "CntFormat.append_inj_lemma",
       2,
-      2,
-      1,
-      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
-      0,
-      "231f906fb6309a12b74f059e611f061f"
-    ],
-    [
-      "CntFormat.append_inj_lemma",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
-      0,
-      "959e64d245c6564d39b597b4871eb08f"
-    ],
-    [
-      "CntFormat.append_inj_lemma",
-      4,
       2,
       1,
       [
@@ -38,8 +20,7 @@
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "assumption_FStar.UInt8.t__uu___haseq", "equation_CntFormat.length",
         "equation_CntFormat.message", "equation_CntFormat.op_At_Bar",
-        "equation_Platform.Bytes.byte", "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.length",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.length",
         "equation_Platform.Bytes.op_At_Bar", "equation_Prims.eqtype",
         "equation_Prims.nat", "function_token_typing_FStar.UInt8.t",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
@@ -50,7 +31,7 @@
         "typing_CntFormat.op_At_Bar", "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "744b33c8284dc8775a697299b99bd13b"
+      "a66cc6dd25de95d1214a7e83bdba1607"
     ],
     [
       "CntFormat.UTF8_inj",
@@ -59,7 +40,7 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "24e4ce66f7476cfd7dba799a865b4e32"
+      "5e7d0b6ea28ea65929b710abef415415"
     ],
     [
       "CntFormat.response",
@@ -71,7 +52,7 @@
         "refinement_interpretation_CntFormat_Tm_refine_f5cfff85cb7c9a21e92347e29fc626c9"
       ],
       0,
-      "88d0cbd66b35cdd03ccea94c2af6592b"
+      "5e3de093ce7a9125546d455cffad4661"
     ],
     [
       "CntFormat.signal",
@@ -83,7 +64,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "eedd08ae384eb9264ac69aafb5f29ab0"
+      "4756a534e19e2f6a3bb58d60cb25e3ea"
     ],
     [
       "CntFormat.signal",
@@ -106,7 +87,7 @@
         "typing_CntFormat.uint32_to_bytes"
       ],
       0,
-      "242c2c0dcf47c08bb5660e8cc7f352c6"
+      "84ff8dd6690832287463595f5b5834cf"
     ],
     [
       "CntFormat.signal_split",
@@ -125,40 +106,26 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "2cc8b2a4004d2baf22dc2a6b122dc051"
+      "c77de7933121553a7ddbb74af793373d"
     ],
     [
       "CntFormat.signal_split",
       2,
-      2,
-      1,
-      [
-        "@query", "equation_CntFormat.signal_size",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "7dc77bdee93b15e18c76861d9976d2b8"
-    ],
-    [
-      "CntFormat.signal_split",
-      3,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Platform.Bytes.HasEq_bytes",
-        "assumption_Prims.HasEq_int", "equation_CntFormat.bytes_to_uint16",
-        "equation_CntFormat.bytes_to_uint32", "equation_CntFormat.msg",
+        "assumption_Prims.HasEq_int", "equation_CntFormat.msg",
         "equation_CntFormat.op_At_Bar", "equation_CntFormat.signal",
         "equation_CntFormat.signal_size", "equation_CntFormat.uint16",
         "equation_CntFormat.uint16_to_bytes", "equation_CntFormat.uint32",
         "equation_CntFormat.uint32_to_bytes",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_FStar.UInt32.n",
-        "equation_Platform.Bytes.byte", "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.lbytes", "equation_Platform.Bytes.length",
-        "equation_Platform.Bytes.split_eq", "equation_Prims.nat",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_Platform.Bytes.length", "equation_Prims.nat",
         "function_token_typing_FStar.UInt32.n",
         "haseqCntFormat_Tm_refine_3980f0779462eb2167aa5484cf2bf257",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -174,68 +141,26 @@
         "refinement_interpretation_Platform.Bytes_Tm_refine_71050496a0b6bdbab08b701114cb2b13"
       ],
       0,
-      "474e0d3d8649df2eb8ed1ed86cfb0727"
+      "8d4233ef3d2d9d146c97635967606f8d"
     ],
     [
       "CntFormat.signal_components_corr",
       1,
-      2,
-      1,
-      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
-      0,
-      "7a47783fa3715acc7a3b7a7314cde8a3"
-    ],
-    [
-      "CntFormat.signal_components_corr",
-      2,
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_CntFormat.uint32",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_FStar.UInt8.t__uu___haseq", "assumption_Prims.HasEq_int",
+        "equation_CntFormat.uint16", "equation_CntFormat.uint32",
+        "equation_FStar.UInt32.n", "equation_Prims.nat",
+        "function_token_typing_FStar.UInt32.n",
         "haseqCntFormat_Tm_refine_3373e5c475ec56f6202f0dd413c64935",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "782394fe04d0bcb30e1d183355af9839"
-    ],
-    [
-      "CntFormat.signal_components_corr",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_CntFormat.uint16",
-        "equation_Prims.nat",
         "haseqCntFormat_Tm_refine_9adbdccb31bd5d6d35b7a0e150a5d273",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "efda97b5d4c093a882a44f295a97367c"
-    ],
-    [
-      "CntFormat.signal_components_corr",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_CntFormat.signal_size",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "d962bc61d6dc09271ced606a8e4a8811"
-    ],
-    [
-      "CntFormat.signal_components_corr",
-      5,
-      2,
-      1,
-      [
-        "@query", "equation_CntFormat.signal_size",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "b956e2453172ed1db4f7b14c11dff56c"
+      "73f6b4963fccd2bc7d1d986f9dd2c424"
     ]
   ]
 ]

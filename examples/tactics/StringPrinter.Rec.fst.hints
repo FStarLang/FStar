@@ -17,7 +17,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "bce56e5597fce6ea89302d116ce4890c"
+      "78fce480a8a8a11d1d221a5fb6c8d701"
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "925ee7f8673a7e477f7fe3681e5ed38e"
+      "ff81a21995fab4dcb080ef572e7a29a5"
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -43,7 +43,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "46f5498b21e83ddcc2e3d3c8d28f1df0"
+      "46b10ead3c73318cb8bf927086da7ddd"
     ],
     [
       "StringPrinter.Rec.do_while_correct",
@@ -89,7 +89,7 @@
         "unit_typing"
       ],
       0,
-      "c5e7bbabbbd3418a40b2235921409fe3"
+      "ea3d71b74b9c32e7dd56b760171d1ef7"
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -118,7 +118,7 @@
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "88a23f93e23080515834a71940782e77"
+      "108a132a4cd895d9baec1dbc59012976"
     ],
     [
       "StringPrinter.Rec.do_while_body_post",
@@ -136,7 +136,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "26eacf4c1676d5970c6261acf581c4bb"
+      "3d64d9ae00fb46287c8ba8d0ff0510a0"
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
@@ -145,7 +145,7 @@
       1,
       [ "@query" ],
       0,
-      "79d9850d1a203929bfddf39b4761c2c5"
+      "863453b7f49de8231a26a6a4b7fe5359"
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -162,7 +162,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "d0af4e05ae859a3c9518bea76cbb670e"
+      "4a53ca0d2707b67e6ab35acd0ab1c80b"
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -191,7 +191,7 @@
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "5951bab0d5862cc06359af7818436408"
+      "daa0294ff94aa5f0f451cb2dddf16f40"
     ]
   ]
 ]

@@ -409,39 +409,23 @@
       1,
       2,
       1,
-      [ "@query", "assumption_MerkleTree.proof__uu___haseq" ],
-      0,
-      "38bccc9cd4d3df96467c50e0c226b44a"
-    ],
-    [
-      "MerkleTree.correctness",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_MerkleTree.mstring__uu___haseq",
-        "equation_MerkleTree.hash",
-        "function_token_typing_MerkleTree.hash_size"
-      ],
-      0,
-      "93cc61abd4c9fed843b8f2631080fea6"
-    ],
-    [
-      "MerkleTree.correctness",
-      3,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query",
+        "assumption_MerkleTree.mstring__uu___haseq",
+        "assumption_MerkleTree.proof__uu___haseq",
+        "equation_MerkleTree.hash", "equation_Prims.nat",
+        "function_token_typing_MerkleTree.hash_size", "int_inversion",
         "refinement_interpretation_MerkleTree_Tm_refine_3cfdb31a94a2090d67164c1485a1fd2b",
+        "refinement_interpretation_MerkleTree_Tm_refine_77bdb9485207f0507746518db92722d3",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_MerkleTree.prover"
       ],
       0,
-      "dd60e5f86ba949bb040a9f8372ac2695"
+      "1b465851a1181bf4fb92f756a4048d08"
     ],
     [
       "MerkleTree.correctness",
-      4,
+      2,
       2,
       1,
       [
@@ -488,7 +472,6 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_MerkleTree.Mk_proof_data",
         "projection_inverse_MerkleTree.Mk_proof_pstream",
-        "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_MerkleTree_Tm_refine_3cfdb31a94a2090d67164c1485a1fd2b",
@@ -503,7 +486,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "ea077ba5bd37836c65b3180e742c6336"
+      "1094af0e759eed00ad0c16aaea21d0e0"
     ],
     [
       "MerkleTree.hash_collision",
@@ -525,41 +508,23 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_MerkleTree.mstring__uu___haseq",
+        "assumption_Prims.HasEq_int", "equation_MerkleTree.data",
+        "equation_MerkleTree.hash", "equation_Prims.nat",
+        "function_token_typing_MerkleTree.data_size",
+        "function_token_typing_MerkleTree.hash_size",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c4b340e58c2f4945935243ad4944349b"
+      "753b64d3142b7f5ab19b4092a96479b9"
     ],
     [
       "MerkleTree.security",
       2,
-      2,
-      1,
-      [
-        "@query", "assumption_MerkleTree.mstring__uu___haseq",
-        "equation_MerkleTree.hash",
-        "function_token_typing_MerkleTree.hash_size"
-      ],
-      0,
-      "0fc9e0a1dae045750546e8f562c52fe9"
-    ],
-    [
-      "MerkleTree.security",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_MerkleTree.mstring__uu___haseq",
-        "equation_MerkleTree.data",
-        "function_token_typing_MerkleTree.data_size"
-      ],
-      0,
-      "cacfc5cad3d4f965fab2fcd70b801241"
-    ],
-    [
-      "MerkleTree.security",
-      4,
       2,
       1,
       [
@@ -582,15 +547,13 @@
         "disc_equation_MerkleTree.L", "disc_equation_MerkleTree.N",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equality_tok_Prims.LexTop@tok", "equation_MerkleTree.data",
-        "equation_MerkleTree.hash", "equation_MerkleTree.hash_collision",
-        "equation_MerkleTree.len", "equation_MerkleTree.lenp",
-        "equation_MerkleTree.p_data", "equation_MerkleTree.p_stream",
-        "equation_MerkleTree.p_tail", "equation_MerkleTree.path",
-        "equation_Prims.nat",
+        "equation_MerkleTree.hash", "equation_MerkleTree.len",
+        "equation_MerkleTree.lenp", "equation_MerkleTree.p_data",
+        "equation_MerkleTree.p_stream", "equation_MerkleTree.p_tail",
+        "equation_MerkleTree.path", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_MerkleTree.get_elt.fuel_instrumented",
         "equation_with_fuel_MerkleTree.verifier.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Constructive.cexists",
         "fuel_guarded_inversion_MerkleTree.mtree",
         "fuel_guarded_inversion_MerkleTree.proof",
         "fuel_guarded_inversion_Prims.list",
@@ -628,7 +591,7 @@
         "typing_MerkleTree.lenp"
       ],
       0,
-      "f768c411215e4c37e01203eeef507a48"
+      "b7b0ffd03355ada36e3842ccb265f707"
     ],
     [
       "MerkleTree.mstring",
@@ -641,7 +604,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c1d6cec3a6ca5922a62d136132ff39e1"
+      "ee8c41fd19ef7406bec4c655e8ab3d59"
     ],
     [
       "MerkleTree.mstring",
@@ -657,7 +620,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "757689c3c7e894a1334a31369fcd1aab"
+      "0108967ed4129f4ce0b40c7d099be73d"
     ],
     [
       "MerkleTree.__proj__Base__item__n",
@@ -670,7 +633,7 @@
         "refinement_interpretation_MerkleTree_Tm_refine_3ab915087995f936a969050df0880d3c"
       ],
       0,
-      "6e2ad65e1c2f79933d37ad66fcfea999"
+      "7266f00f2b494bfc02e6b4420ec4ebbc"
     ],
     [
       "MerkleTree.__proj__Concat__item__n",
@@ -683,7 +646,7 @@
         "refinement_interpretation_MerkleTree_Tm_refine_2dd3f6eb0f0d89e4537f22ac1be23031"
       ],
       0,
-      "b5256312b47bac74293d0c3edd787d69"
+      "21d6a122f55efa2f03349387446bfd6e"
     ],
     [
       "MerkleTree.__proj__Concat__item__s1",
@@ -700,7 +663,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "899f06712c9bb3ebc47358a740276566"
+      "8d285f63f930e38d4aa715c62d87a474"
     ],
     [
       "MerkleTree.__proj__Concat__item__s2",
@@ -717,7 +680,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "aebe7f4f3a5010e9574c4846df2d31e3"
+      "009817474612da3139b1b20413d83361"
     ],
     [
       "MerkleTree.mtree",
@@ -731,7 +694,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "9ed7f37114912066f37870ddb26813d9"
+      "9bec71fbd518531b0bc499d2a27d1d89"
     ],
     [
       "MerkleTree.mtree",
@@ -751,7 +714,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "aeac055a7102edba057a65ff1ee6addb"
+      "c57a478593e20faba8df15e6ebbb0d85"
     ],
     [
       "MerkleTree.__proj__L__item__data",
@@ -764,7 +727,7 @@
         "refinement_interpretation_MerkleTree_Tm_refine_c60e89554f8e64395245e385f320b1e4"
       ],
       0,
-      "bdb9bf05fdc54ca23f966fbf9c098fc2"
+      "e40dca279ed6ce54c03de5dd3ec4ac24"
     ],
     [
       "MerkleTree.__proj__N__item__n",
@@ -777,7 +740,7 @@
         "refinement_interpretation_MerkleTree_Tm_refine_0147c691bf5d65a9d6eb7f17865eb252"
       ],
       0,
-      "f992bac598ec68109fca62cbef0f840a"
+      "104c3362c79b6360f50636f6ffcad2e9"
     ],
     [
       "MerkleTree.__proj__N__item__h1",
@@ -790,7 +753,7 @@
         "refinement_interpretation_MerkleTree_Tm_refine_0147c691bf5d65a9d6eb7f17865eb252"
       ],
       0,
-      "bcc1424b192f270b070ca5926043b110"
+      "06cb21f9a9780dbf562a936824aea88a"
     ],
     [
       "MerkleTree.__proj__N__item__h2",
@@ -803,7 +766,7 @@
         "refinement_interpretation_MerkleTree_Tm_refine_0147c691bf5d65a9d6eb7f17865eb252"
       ],
       0,
-      "c85ccd5cfecb67c3b28b8a77e2b6aafa"
+      "4d44cfc4453aefc701c216f573677df1"
     ],
     [
       "MerkleTree.__proj__N__item__left",
@@ -821,7 +784,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "94958fa00faa9b841f4f9eb23237b3e2"
+      "fab58a022b4f6d5cb8e0e0a1d6b4011a"
     ],
     [
       "MerkleTree.__proj__N__item__right",
@@ -839,7 +802,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "928e33c9e7b6b9261ddf38c38d576c74"
+      "00f6668fa7142dfce1467b8a06f3b155"
     ],
     [
       "MerkleTree.get_elt",
@@ -876,7 +839,7 @@
         "token_correspondence_MerkleTree.len"
       ],
       0,
-      "f08197dcfb194c365fb1616966b6a035"
+      "daba37fbf3b51b54b6e5dd7bbc964f28"
     ],
     [
       "MerkleTree.proof",
@@ -894,7 +857,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f3e00ac5c4fee8099214d6e139ee4387"
+      "f8ae8c97cd4ca0606cdf303f52fd2b10"
     ],
     [
       "MerkleTree.p_tail",
@@ -916,7 +879,7 @@
         "typing_MerkleTree.__proj__Mk_proof__item__pstream"
       ],
       0,
-      "4f5904033cdf1f65f15edf39c85f5688"
+      "1fae765ce10646354fd8fb4c816add7a"
     ],
     [
       "MerkleTree.verifier",
@@ -962,7 +925,7 @@
         "typing_MerkleTree.lenp"
       ],
       0,
-      "f47e156ac2641defbb24508958394c4b"
+      "c9e4ad1d4bd138325d98324838403f79"
     ],
     [
       "MerkleTree.prover",
@@ -1007,11 +970,11 @@
         "token_correspondence_MerkleTree.len"
       ],
       0,
-      "1200e7a96c510ae016f9ff5c11804cc4"
+      "babe4f072a3f52e3dea2201fa92d7f38"
     ],
     [
       "MerkleTree.correctness",
-      5,
+      3,
       2,
       1,
       [
@@ -1026,7 +989,7 @@
         "typing_MerkleTree.prover"
       ],
       0,
-      "5134fccd4dd111b0566a2326b0c8cefa"
+      "b1c0d8f840718f08e8d126cb78a24a02"
     ],
     [
       "MerkleTree.hash_collision",
@@ -1040,11 +1003,11 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a81dc988e4a1b6b0b8c3cdea4ccae512"
+      "5b0ee047e3ebec1aa257fd222d25ef78"
     ],
     [
       "MerkleTree.security",
-      5,
+      3,
       2,
       1,
       [
@@ -1063,26 +1026,26 @@
         "binder_x_92481019dbd3c25c4fc34cb54c911f82_3",
         "binder_x_953da1aba088dbf0ae1dc331922b77cf_1", "bool_typing",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_elim_MerkleTree.N", "disc_equation_MerkleTree.L",
-        "disc_equation_MerkleTree.N", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
-        "equation_MerkleTree.data", "equation_MerkleTree.hash",
-        "equation_MerkleTree.hash_collision", "equation_MerkleTree.len",
+        "data_elim_MerkleTree.N", "data_elim_Prims.Cons",
+        "disc_equation_MerkleTree.L", "disc_equation_MerkleTree.N",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "equation_MerkleTree.data",
+        "equation_MerkleTree.hash", "equation_MerkleTree.len",
         "equation_MerkleTree.lenp", "equation_MerkleTree.p_data",
         "equation_MerkleTree.p_stream", "equation_MerkleTree.p_tail",
         "equation_MerkleTree.path", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_MerkleTree.get_elt.fuel_instrumented",
         "equation_with_fuel_MerkleTree.verifier.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Constructive.cexists",
         "fuel_guarded_inversion_MerkleTree.mtree",
         "fuel_guarded_inversion_MerkleTree.proof",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_MerkleTree.data_size",
+        "function_token_typing_MerkleTree.hash",
         "function_token_typing_MerkleTree.hash_size",
         "function_token_typing_Prims.bool",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "int_inversion", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "proj_equation_MerkleTree.L_data",
         "proj_equation_MerkleTree.Mk_proof_data",
         "proj_equation_MerkleTree.Mk_proof_pstream",
@@ -1111,7 +1074,7 @@
         "typing_MerkleTree.lenp"
       ],
       0,
-      "882f34a40ea4a39fc38f93549efba4c7"
+      "17d88d7e2af2aff1c9cee1d3e812efa8"
     ]
   ]
 ]

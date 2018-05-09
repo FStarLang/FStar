@@ -271,26 +271,17 @@
       1,
       1,
       0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "6a2133de6865724fbfe66ac53f0b519a"
-    ],
-    [
-      "Loops.sum_up_dn_aux",
-      2,
-      1,
-      0,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f",
         "refinement_interpretation_Loops_Tm_refine_5d68b4aedab07e9543c96792e76744c9"
       ],
       0,
-      "2279dbf419a8981f4b1686b697a8382f"
+      "8b837bae5ceda010ac9c40d61d4f1798"
     ],
     [
       "Loops.sum_up_dn_aux",
-      3,
+      2,
       1,
       0,
       [
@@ -392,7 +383,7 @@
         "true_interp", "typing_Loops.sum_dn", "typing_Loops.v", "unit_typing"
       ],
       0,
-      "69a399c3e9f7c78a75b1511bd48abfbd"
+      "605d6c361ef6f1607a1e630419e1c346"
     ],
     [
       "Loops.sum_up",
@@ -412,7 +403,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "42ef71960195f8b73c11687436766166"
+      "c248173ac4451fd003d0823cb45414ba"
     ],
     [
       "Loops.sum_up_eq",
@@ -424,7 +415,7 @@
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
       0,
-      "aca5c5d0c411ef67d88cd37859b6b07d"
+      "fe63c09190f87bae2ddd53bbb04e4721"
     ],
     [
       "Loops.sum_up_commute",
@@ -439,7 +430,7 @@
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
       0,
-      "df91636e61ba429f065d218125f5c507"
+      "1aa6d99fcd790ab5fe39bcbb95c3eec0"
     ],
     [
       "Loops.sum_dn",
@@ -458,7 +449,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3562bafc27aad8ca67982ff2e47b7855"
+      "2b07c61e1d63bea19dcdea2b301e9e84"
     ],
     [
       "Loops.sum_dn_eq",
@@ -470,7 +461,7 @@
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
       0,
-      "15d7e3364e41ace22d6332410730f56b"
+      "701281ae99bac11187db294b4ed94522"
     ],
     [
       "Loops.sum_dn_commute",
@@ -485,11 +476,11 @@
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
       0,
-      "dbf5b03b2c8980dad4799c71c3c53aaf"
+      "687eb455674d1b6c3fdbade55bb220c4"
     ],
     [
       "Loops.sum_up_dn_aux",
-      4,
+      3,
       1,
       0,
       [
@@ -498,7 +489,7 @@
         "refinement_interpretation_Loops_Tm_refine_5d68b4aedab07e9543c96792e76744c9"
       ],
       0,
-      "3cf6705d931bdba89c0217c1caa912aa"
+      "2d7e3a25f583eb9ce9e10313906ea6b4"
     ],
     [
       "Loops.equiv_sum_up_dn",
@@ -510,7 +501,7 @@
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
       0,
-      "d05932568bc6390b8f16b760db115548"
+      "891dd7470824314ea77d752a3cf0c552"
     ]
   ]
 ]

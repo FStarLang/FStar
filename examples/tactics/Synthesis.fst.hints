@@ -2,16 +2,16 @@
   "\u0005\u0015Æ–\u001cÏ•u6\u0016‹µ\u001b„èê",
   [
     [
-      "Synthesis.uu___61",
+      "Synthesis.uu___116",
       1,
       2,
       1,
       [ "@query", "equation_Synthesis.a" ],
       0,
-      "e3db790d26445c16cab8ee28bee06f72"
+      "841e931e82ae1cd6df51c09e8049d668"
     ],
     [
-      "Synthesis.uu___62",
+      "Synthesis.uu___117",
       1,
       2,
       1,
@@ -20,37 +20,37 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "54b2636e738e29f193d7eeb28c9fcd20"
+      "0e5d61f65a47d62050d9d69199fc7050"
     ],
     [
-      "Synthesis.uu___63",
+      "Synthesis.uu___118",
       1,
       2,
       1,
       [ "@query", "equation_Synthesis.fn8" ],
       0,
-      "a7d0bd0e95234b47a0e493a6789d38bf"
+      "437ef46161753161f6e22d8783eba3ed"
     ],
     [
-      "Synthesis.uu___64",
+      "Synthesis.uu___119",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int", "equation_Synthesis.iszero" ],
       0,
-      "2fc92647ee901cd954a9e9adbb2b8206"
+      "c1b7e62fbf30426c3230bedb73168a1a"
     ],
     [
-      "Synthesis.uu___65",
+      "Synthesis.uu___120",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int", "equation_Synthesis.iszero" ],
       0,
-      "712d994e08915fceae939aed529f2116"
+      "6a04f0aed9aee35a9f50c1fd15d5736d"
     ],
     [
-      "Synthesis.uu___66",
+      "Synthesis.uu___121",
       1,
       2,
       1,
@@ -59,32 +59,25 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "607dc552093fc3eea4620f31f08d3804"
+      "523077428774dd510425b4551074f556"
     ],
     [
-      "Synthesis.uu___67",
+      "Synthesis.uu___122",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Synthesis.f2",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0"
-      ],
+      [ "@query", "equation_Synthesis.f2" ],
       0,
-      "5e014f0e59ac8d5e06fed0634bfc9d04"
+      "b1a9295d735ef1336661801948bcdd9d"
     ],
     [
-      "Synthesis.uu___68",
+      "Synthesis.uu___123",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "2936ae69d41d38260493caaf45deeb54"
+      "69f302a7581146fdf2abaea867f1d2e4"
     ]
   ]
 ]

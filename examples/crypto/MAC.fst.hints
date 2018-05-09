@@ -30,6 +30,32 @@
       "63f231bfe787549bbe887b2fd9e3cd03"
     ],
     [
+      "MAC.verify",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "assumption_Platform.Bytes.HasEq_bytes",
+        "assumption_Prims.HasEq_bool",
+        "data_elim_FStar.Pervasives.Native.Some", "data_elim_MAC.Entry",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.text",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "fuel_guarded_inversion_MAC.entry", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f",
+        "refinement_interpretation_MAC_Tm_refine_61aeee88c37953ca4933a44381e61e4a",
+        "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
+        "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
+        "typing_Platform.Bytes.equalBytes"
+      ],
+      0,
+      "1165137a4b379c1c6a948ae18659daf9"
+    ],
+    [
       "MAC.keygen",
       1,
       2,
@@ -38,7 +64,7 @@
         "@query", "equation_SHA1.keysize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1a54e0a33ab4e1e62dfcdf25e23874dd"
+      "474366bdd209f221b5bbfc152c00fcdf"
     ],
     [
       "MAC.mac",
@@ -77,11 +103,11 @@
         "typing_Platform.Bytes.equalBytes", "typing_SHA1.hmac_sha1"
       ],
       0,
-      "c4d61d50d2984cd1687589134c8ddc98"
+      "e549b1f3584eb0b4ed7664e8e919b27e"
     ],
     [
       "MAC.verify",
-      1,
+      2,
       2,
       2,
       [
@@ -103,7 +129,7 @@
         "typing_Platform.Bytes.equalBytes"
       ],
       0,
-      "d5afcd728579acd1e329680131e6cb59"
+      "0b3099ddf526a38eaee30ed50f4a8c5a"
     ]
   ]
 ]

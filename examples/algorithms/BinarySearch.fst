@@ -106,12 +106,12 @@ let hint1 y a = ()
 val hint2 : t:(seq int) -> a:int -> mid:int
   -> Lemma
        (requires
-          (forall i1 i2. (0 <= i1) ==> (i1 <= i2) ==> (i2 < length t) ==> (index t i1 <= index t i2)) /\
+          (forall (i1 i2:int). (0 <= i1) ==> (i1 <= i2) ==> (i2 < length t) ==> (index t i1 <= index t i2)) /\
           (0 <= mid) /\
           (mid < length t) /\
           (index t mid < a))
        (ensures
-          (forall p. (((0 <= p) /\ (p < length t) /\ (index t p = a) /\ (p <= mid)) ==> False)))
+          (forall (p:int). (((0 <= p) /\ (p < length t) /\ (index t p = a) /\ (p <= mid)) ==> False)))
 let hint2 t a mid = hint1 (index t mid) a
 
 val hint3 : y:int -> a:int -> Lemma
@@ -122,12 +122,12 @@ let hint3 y a = ()
 val hint4 : t:(seq int) -> a:int -> mid:int
   -> Lemma
        (requires
-          (forall i1 i2. (0 <= i1) ==> (i1 <= i2) ==> (i2 < length t) ==> (index t i1 <= index t i2)) /\
+          (forall (i1 i2:int). (0 <= i1) ==> (i1 <= i2) ==> (i2 < length t) ==> (index t i1 <= index t i2)) /\
           (0 <= mid) /\
           (mid < length t) /\
           (a < index t mid))
        (ensures
-          (forall p. (((0 <= p) /\ (p < length t) /\ (index t p = a) /\ (mid <= p)) ==> False)))
+          (forall (p:int). (((0 <= p) /\ (p < length t) /\ (index t p = a) /\ (mid <= p)) ==> False)))
 let hint4 t a mid = hint3 (index t mid) a
 
 val bsearch_rec_complete : t:(seq int)

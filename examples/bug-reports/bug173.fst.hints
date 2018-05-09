@@ -570,28 +570,19 @@
       2,
       1,
       [
-        "@query", "assumption_Bug173.typ__uu___haseq",
-        "assumption_FStar.Pervasives.Native.option__uu___haseq",
-        "kinding_Bug173.typ@tok"
-      ],
-      0,
-      "e47caeab69129e86b4169074e7573242"
-    ],
-    [
-      "Bug173.preservation_exp",
-      2,
-      2,
-      1,
-      [
         "@MaxIFuel_assumption", "@query",
+        "Bug173_pretyping_2e6088c3e78554cca9be304cc06504d2",
+        "assumption_Bug173.typ__uu___haseq",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "data_typing_intro_Bug173.TBool@tok", "kinding_Bug173.typ@tok",
         "refinement_interpretation_Bug173_Tm_refine_6d220662d73c37f5901d157fdf6e4586"
       ],
       0,
-      "29f87209137a642a4ab31414699797e9"
+      "17c7e9cb43cd7f839a5519c7bdc95793"
     ],
     [
       "Bug173.preservation_exp",
-      3,
+      2,
       2,
       1,
       [
@@ -603,7 +594,6 @@
         "Bug173_pretyping_2e6088c3e78554cca9be304cc06504d2",
         "Bug173_pretyping_b5e1a0c80664b21af6ee72e3758c81e1",
         "Bug173_pretyping_d83e1dc370c53e96a182896c4591ec0d",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "binder_x_1ee8a8a473a8094052133d9cad5ddfe2_2",
         "binder_x_825a28ea7d7dbe9d8075abbf9b429212_1",
         "binder_x_9e53eb5d806d96bed9bf05f4a8103650_0", "bool_inversion",
@@ -614,12 +604,10 @@
         "constructor_distinct_Bug173.VBool",
         "constructor_distinct_Bug173.VInt",
         "constructor_distinct_Bug173.Val", "constructor_distinct_Bug173.Var",
-        "constructor_distinct_Bug173.typ",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
-        "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
-        "data_elim_Bug173.VBool", "data_elim_Bug173.Val",
-        "data_elim_FStar.Pervasives.Native.Some",
+        "constructor_distinct_Tm_unit", "data_elim_Bug173.VBool",
+        "data_elim_Bug173.Val", "data_elim_FStar.Pervasives.Native.Some",
         "data_typing_intro_Bug173.TBool@tok", "disc_equation_Bug173.If",
         "disc_equation_Bug173.Op", "disc_equation_Bug173.Val",
         "disc_equation_Bug173.Var",
@@ -660,12 +648,13 @@
         "refinement_interpretation_Bug173_Tm_refine_138dd579a0ad0bd1094baef62d8372d3",
         "refinement_interpretation_Bug173_Tm_refine_e994ec08b8956d0a371e580bd68b176c",
         "subterm_ordering_Bug173.If", "subterm_ordering_Bug173.Op",
+        "token_correspondence_Bug173.step_exp.fuel_instrumented",
         "token_correspondence_Bug173.typing_exp.fuel_instrumented",
         "typing_Bug173.op_type", "typing_Bug173.step_exp",
         "typing_Bug173.typing_exp", "unit_inversion", "unit_typing"
       ],
       0,
-      "60993906a97f431a2b16f30da2ff9bd7"
+      "46cf7a587b628d988cda4cbab6daf07b"
     ],
     [
       "Bug173.preservation",
