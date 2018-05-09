@@ -219,7 +219,7 @@ private let lemma_mod_plus_0 (a:nat) (b:nat) (p:pos) : Lemma
   lemma_div_mod a p;
   lemma_div_mod z p
 
-#reset-options "--z3rlimit 10 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
 
 private let lemma_mod_plus_1 (a:nat) (b:nat) (p:pos) : Lemma
   ((a + b * p) % p = a + b * p - p * ((a + b * p) / p))
