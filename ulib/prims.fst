@@ -67,7 +67,7 @@ let squash :Type -> GTot prop = fun p -> x:unit{p}
 let p_refine :a:Type -> (a -> Tot Type) -> Type = fun a p -> x:a{p x}
 
 // Refinement types outside prims desugar to this
-unfold let t_refine :a:Type -> (a -> Tot prop) -> Tot Type = fun a p -> x:a{p x}
+unfold private let t_refine :a:Type -> (a -> Tot prop) -> Tot Type = fun a p -> x:a{p x}
 
 (* F* will automatically insert `auto_squash` when simplifying terms,
    converting terms of the form `p /\ True` to `auto_squash p`.
