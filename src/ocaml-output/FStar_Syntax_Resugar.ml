@@ -298,7 +298,8 @@ let (string_to_op :
                  (op, FStar_Pervasives_Native.None))
         else FStar_Pervasives_Native.None
   
-type expected_arity = Prims.int FStar_Pervasives_Native.option
+type expected_arity = Prims.int FStar_Pervasives_Native.option[@@deriving
+                                                                show]
 let rec (resugar_term_as_op :
   FStar_Syntax_Syntax.term ->
     (Prims.string,expected_arity) FStar_Pervasives_Native.tuple2

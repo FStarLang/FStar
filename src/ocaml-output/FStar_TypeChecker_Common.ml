@@ -2,7 +2,7 @@ open Prims
 type rel =
   | EQ 
   | SUB 
-  | SUBINV 
+  | SUBINV [@@deriving show]
 let (uu___is_EQ : rel -> Prims.bool) =
   fun projectee  -> match projectee with | EQ  -> true | uu____6 -> false 
 let (uu___is_SUB : rel -> Prims.bool) =
@@ -17,7 +17,7 @@ type rank_t =
   | Flex_flex_pattern_eq 
   | Flex_rigid 
   | Rigid_flex 
-  | Flex_flex 
+  | Flex_flex [@@deriving show]
 let (uu___is_Rigid_rigid : rank_t -> Prims.bool) =
   fun projectee  ->
     match projectee with | Rigid_rigid  -> true | uu____24 -> false
@@ -56,7 +56,7 @@ type 'a problem =
     ;
   reason: Prims.string Prims.list ;
   loc: FStar_Range.range ;
-  rank: rank_t FStar_Pervasives_Native.option }
+  rank: rank_t FStar_Pervasives_Native.option }[@@deriving show]
 let __proj__Mkproblem__item__pid : 'a . 'a problem -> Prims.int =
   fun projectee  ->
     match projectee with
@@ -169,7 +169,7 @@ let __proj__Mkproblem__item__rank :
   
 type prob =
   | TProb of FStar_Syntax_Syntax.typ problem 
-  | CProb of FStar_Syntax_Syntax.comp problem 
+  | CProb of FStar_Syntax_Syntax.comp problem [@@deriving show]
 let (uu___is_TProb : prob -> Prims.bool) =
   fun projectee  ->
     match projectee with | TProb _0 -> true | uu____491 -> false
@@ -188,10 +188,10 @@ let (as_tprob : prob -> FStar_Syntax_Syntax.typ problem) =
     | TProb p -> p
     | uu____539 -> failwith "Expected a TProb"
   
-type probs = prob Prims.list
+type probs = prob Prims.list[@@deriving show]
 type guard_formula =
   | Trivial 
-  | NonTrivial of FStar_Syntax_Syntax.formula 
+  | NonTrivial of FStar_Syntax_Syntax.formula [@@deriving show]
 let (uu___is_Trivial : guard_formula -> Prims.bool) =
   fun projectee  ->
     match projectee with | Trivial  -> true | uu____554 -> false
@@ -204,9 +204,10 @@ let (__proj__NonTrivial__item___0 :
   guard_formula -> FStar_Syntax_Syntax.formula) =
   fun projectee  -> match projectee with | NonTrivial _0 -> _0 
 type deferred = (Prims.string,prob) FStar_Pervasives_Native.tuple2 Prims.list
+[@@deriving show]
 type univ_ineq =
   (FStar_Syntax_Syntax.universe,FStar_Syntax_Syntax.universe)
-    FStar_Pervasives_Native.tuple2
+    FStar_Pervasives_Native.tuple2[@@deriving show]
 let (mk_by_tactic :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -295,7 +296,7 @@ type identifier_info =
   identifier:
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either ;
   identifier_ty: FStar_Syntax_Syntax.typ ;
-  identifier_range: FStar_Range.range }
+  identifier_range: FStar_Range.range }[@@deriving show]
 let (__proj__Mkidentifier_info__item__identifier :
   identifier_info ->
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either)
@@ -366,13 +367,14 @@ let (find_nearest_preceding_col_info :
   
 type id_info_by_col =
   (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
-type col_info_by_row = id_info_by_col FStar_Util.pimap
-type row_info_by_file = col_info_by_row FStar_Util.psmap
+[@@deriving show]
+type col_info_by_row = id_info_by_col FStar_Util.pimap[@@deriving show]
+type row_info_by_file = col_info_by_row FStar_Util.psmap[@@deriving show]
 type id_info_table =
   {
   id_info_enabled: Prims.bool ;
   id_info_db: row_info_by_file ;
-  id_info_buffer: identifier_info Prims.list }
+  id_info_buffer: identifier_info Prims.list }[@@deriving show]
 let (__proj__Mkid_info_table__item__id_info_enabled :
   id_info_table -> Prims.bool) =
   fun projectee  ->

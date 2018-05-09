@@ -2,7 +2,7 @@ open Prims
 type verify_mode =
   | VerifyAll 
   | VerifyUserList 
-  | VerifyFigureItOut 
+  | VerifyFigureItOut [@@deriving show]
 let (uu___is_VerifyAll : verify_mode -> Prims.bool) =
   fun projectee  ->
     match projectee with | VerifyAll  -> true | uu____6 -> false
@@ -18,11 +18,11 @@ let (uu___is_VerifyFigureItOut : verify_mode -> Prims.bool) =
 type files_for_module_name =
   (Prims.string FStar_Pervasives_Native.option,Prims.string
                                                  FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2 FStar_Util.smap
+    FStar_Pervasives_Native.tuple2 FStar_Util.smap[@@deriving show]
 type color =
   | White 
   | Gray 
-  | Black 
+  | Black [@@deriving show]
 let (uu___is_White : color -> Prims.bool) =
   fun projectee  -> match projectee with | White  -> true | uu____34 -> false 
 let (uu___is_Gray : color -> Prims.bool) =
@@ -31,7 +31,7 @@ let (uu___is_Black : color -> Prims.bool) =
   fun projectee  -> match projectee with | Black  -> true | uu____46 -> false 
 type open_kind =
   | Open_module 
-  | Open_namespace 
+  | Open_namespace [@@deriving show]
 let (uu___is_Open_module : open_kind -> Prims.bool) =
   fun projectee  ->
     match projectee with | Open_module  -> true | uu____52 -> false
@@ -127,12 +127,12 @@ let (namespace_of_module :
         let uu____255 = FStar_Ident.lid_of_ids lid.FStar_Ident.ns  in
         FStar_Pervasives_Native.Some uu____255
   
-type file_name = Prims.string
-type module_name = Prims.string
+type file_name = Prims.string[@@deriving show]
+type module_name = Prims.string[@@deriving show]
 type dependence =
   | UseInterface of module_name 
   | PreferInterface of module_name 
-  | UseImplementation of module_name 
+  | UseImplementation of module_name [@@deriving show]
 let (uu___is_UseInterface : dependence -> Prims.bool) =
   fun projectee  ->
     match projectee with | UseInterface _0 -> true | uu____277 -> false
@@ -151,12 +151,12 @@ let (uu___is_UseImplementation : dependence -> Prims.bool) =
   
 let (__proj__UseImplementation__item___0 : dependence -> module_name) =
   fun projectee  -> match projectee with | UseImplementation _0 -> _0 
-type dependences = dependence Prims.list
+type dependences = dependence Prims.list[@@deriving show]
 let empty_dependences : 'Auu____317 . unit -> 'Auu____317 Prims.list =
   fun uu____320  -> [] 
 type dependence_graph =
   | Deps of (dependences,color) FStar_Pervasives_Native.tuple2
-  FStar_Util.smap 
+  FStar_Util.smap [@@deriving show]
 let (uu___is_Deps : dependence_graph -> Prims.bool) = fun projectee  -> true 
 let (__proj__Deps__item___0 :
   dependence_graph ->
@@ -164,7 +164,7 @@ let (__proj__Deps__item___0 :
   = fun projectee  -> match projectee with | Deps _0 -> _0 
 type deps =
   | Mk of (dependence_graph,files_for_module_name,file_name Prims.list)
-  FStar_Pervasives_Native.tuple3 
+  FStar_Pervasives_Native.tuple3 [@@deriving show]
 let (uu___is_Mk : deps -> Prims.bool) = fun projectee  -> true 
 let (__proj__Mk__item___0 :
   deps ->

@@ -31,11 +31,11 @@ type decl =
                                             FStar_Pervasives_Native.tuple2
                                             Prims.list)
                               FStar_Pervasives_Native.tuple2 Prims.list)
-  FStar_Pervasives_Native.tuple4 
+  FStar_Pervasives_Native.tuple4 [@@deriving show]
 and cc =
   | StdCall 
   | CDecl 
-  | FastCall 
+  | FastCall [@@deriving show]
 and flag =
   | Private 
   | WipeBody 
@@ -46,11 +46,11 @@ and flag =
   | MustDisappear 
   | Const of Prims.string 
   | Prologue of Prims.string 
-  | Epilogue of Prims.string 
+  | Epilogue of Prims.string [@@deriving show]
 and lifetime =
   | Eternal 
   | Stack 
-  | ManuallyManaged 
+  | ManuallyManaged [@@deriving show]
 and expr =
   | EBound of Prims.int 
   | EQualified of (Prims.string Prims.list,Prims.string)
@@ -92,7 +92,7 @@ and expr =
   | EString of Prims.string 
   | EFun of (binder Prims.list,expr,typ) FStar_Pervasives_Native.tuple3 
   | EAbortS of Prims.string 
-  | EBufFree of expr 
+  | EBufFree of expr [@@deriving show]
 and op =
   | Add 
   | AddW 
@@ -118,7 +118,7 @@ and op =
   | And 
   | Or 
   | Xor 
-  | Not 
+  | Not [@@deriving show]
 and pattern =
   | PUnit 
   | PBool of Prims.bool 
@@ -129,6 +129,7 @@ and pattern =
   | PRecord of (Prims.string,pattern) FStar_Pervasives_Native.tuple2
   Prims.list 
   | PConstant of (width,Prims.string) FStar_Pervasives_Native.tuple2 
+[@@deriving show]
 and width =
   | UInt8 
   | UInt16 
@@ -139,10 +140,10 @@ and width =
   | Int32 
   | Int64 
   | Bool 
-  | CInt 
+  | CInt [@@deriving show]
 and binder = {
   name: Prims.string ;
-  typ: typ }
+  typ: typ }[@@deriving show]
 and typ =
   | TInt of width 
   | TBuf of typ 
@@ -156,7 +157,7 @@ and typ =
   | TApp of
   ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
   typ Prims.list) FStar_Pervasives_Native.tuple2 
-  | TTuple of typ Prims.list 
+  | TTuple of typ Prims.list [@@deriving show]
 let (uu___is_DGlobal : decl -> Prims.bool) =
   fun projectee  ->
     match projectee with | DGlobal _0 -> true | uu____616 -> false
@@ -746,26 +747,31 @@ let (uu___is_TTuple : typ -> Prims.bool) =
   
 let (__proj__TTuple__item___0 : typ -> typ Prims.list) =
   fun projectee  -> match projectee with | TTuple _0 -> _0 
-type program = decl Prims.list
-type ident = Prims.string
+type program = decl Prims.list[@@deriving show]
+type ident = Prims.string[@@deriving show]
 type fields_t =
   (Prims.string,(typ,Prims.bool) FStar_Pervasives_Native.tuple2)
-    FStar_Pervasives_Native.tuple2 Prims.list
+    FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
 type branches_t =
   (Prims.string,(Prims.string,(typ,Prims.bool) FStar_Pervasives_Native.tuple2)
                   FStar_Pervasives_Native.tuple2 Prims.list)
-    FStar_Pervasives_Native.tuple2 Prims.list
-type fsdoc = Prims.string
-type branch = (pattern,expr) FStar_Pervasives_Native.tuple2
+    FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
+type fsdoc = Prims.string[@@deriving show]
+type branch = (pattern,expr) FStar_Pervasives_Native.tuple2[@@deriving show]
 type branches = (pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list
-type constant = (width,Prims.string) FStar_Pervasives_Native.tuple2
-type var = Prims.int
+[@@deriving show]
+type constant = (width,Prims.string) FStar_Pervasives_Native.tuple2[@@deriving
+                                                                    show]
+type var = Prims.int[@@deriving show]
 type lident =
   (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2
-type version = Prims.int
+[@@deriving show]
+type version = Prims.int[@@deriving show]
 let (current_version : version) = (Prims.parse_int "27") 
-type file = (Prims.string,program) FStar_Pervasives_Native.tuple2
+type file = (Prims.string,program) FStar_Pervasives_Native.tuple2[@@deriving
+                                                                   show]
 type binary_format = (version,file Prims.list) FStar_Pervasives_Native.tuple2
+[@@deriving show]
 let fst3 :
   'Auu____3014 'Auu____3015 'Auu____3016 .
     ('Auu____3014,'Auu____3015,'Auu____3016) FStar_Pervasives_Native.tuple3
@@ -860,9 +866,9 @@ type env =
   {
   names: name Prims.list ;
   names_t: Prims.string Prims.list ;
-  module_name: Prims.string Prims.list }
+  module_name: Prims.string Prims.list }[@@deriving show]
 and name = {
-  pretty: Prims.string }
+  pretty: Prims.string }[@@deriving show]
 let (__proj__Mkenv__item__names : env -> name Prims.list) =
   fun projectee  ->
     match projectee with

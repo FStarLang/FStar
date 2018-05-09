@@ -10,8 +10,8 @@ let (__proj__Not_a_wp_implication__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee  ->
     match projectee with | Not_a_wp_implication uu____18 -> uu____18
   
-type label = FStar_SMTEncoding_Term.error_label
-type labels = FStar_SMTEncoding_Term.error_labels
+type label = FStar_SMTEncoding_Term.error_label[@@deriving show]
+type labels = FStar_SMTEncoding_Term.error_labels[@@deriving show]
 let (sort_labels :
   (FStar_SMTEncoding_Term.error_label,Prims.bool)
     FStar_Pervasives_Native.tuple2 Prims.list ->
@@ -41,9 +41,10 @@ let (remove_dups :
       l
   
 type msg = (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
+[@@deriving show]
 type ranges =
   (Prims.string FStar_Pervasives_Native.option,FStar_Range.range)
-    FStar_Pervasives_Native.tuple2 Prims.list
+    FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
 let (fresh_label :
   Prims.string ->
     FStar_Range.range ->

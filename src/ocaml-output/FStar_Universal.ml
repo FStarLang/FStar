@@ -67,6 +67,8 @@ let with_tcenv :
                  (uu___77_55.FStar_TypeChecker_Env.failhard);
                FStar_TypeChecker_Env.nosynth =
                  (uu___77_55.FStar_TypeChecker_Env.nosynth);
+               FStar_TypeChecker_Env.uvar_subtyping =
+                 (uu___77_55.FStar_TypeChecker_Env.uvar_subtyping);
                FStar_TypeChecker_Env.tc_term =
                  (uu___77_55.FStar_TypeChecker_Env.tc_term);
                FStar_TypeChecker_Env.type_of =
@@ -237,6 +239,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___79_253.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.nosynth =
           (uu___79_253.FStar_TypeChecker_Env.nosynth);
+        FStar_TypeChecker_Env.uvar_subtyping =
+          (uu___79_253.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term =
           (uu___79_253.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of =
@@ -316,6 +320,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___80_255.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.nosynth =
           (uu___80_255.FStar_TypeChecker_Env.nosynth);
+        FStar_TypeChecker_Env.uvar_subtyping =
+          (uu___80_255.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term =
           (uu___80_255.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of =
@@ -394,6 +400,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___81_257.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.nosynth =
           (uu___81_257.FStar_TypeChecker_Env.nosynth);
+        FStar_TypeChecker_Env.uvar_subtyping =
+          (uu___81_257.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term =
           (uu___81_257.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of =
@@ -771,7 +779,7 @@ let (store_module_to_cache :
   
 type delta_env =
   (FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env)
-    FStar_Pervasives_Native.option
+    FStar_Pervasives_Native.option[@@deriving show]
 let (apply_delta_env :
   FStar_TypeChecker_Env.env -> delta_env -> FStar_TypeChecker_Env.env) =
   fun env  ->
