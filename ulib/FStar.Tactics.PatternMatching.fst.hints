@@ -137,7 +137,7 @@
         "subterm_ordering_FStar.Tactics.PatternMatching.PApp"
       ],
       0,
-      "5ebcda36013338799ba527c73ef34e3e"
+      "7c6cdcd65c94439455dd3f2ab5993711"
     ],
     [
       "FStar.Tactics.PatternMatching.__proj__NameMismatch__item___0",
@@ -820,7 +820,7 @@
         "subterm_ordering_FStar.Tactics.PatternMatching.PApp"
       ],
       0,
-      "e7054ec725d3fea43922ae89b18a9e95"
+      "aa5896c28a8971275dc5e77c53c2338d"
     ],
     [
       "FStar.Tactics.PatternMatching.__proj__NameMismatch__item___0",
