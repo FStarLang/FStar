@@ -24,6 +24,8 @@ type zero = x:int{x=0}
 val z: unit -> Tot zero
 let z x = 0
 
+let one = match (fun x -> x) with | f -> f 1
+
 val list_zero_to_int_assert : list zero -> Tot int
 let list_zero_to_int_assert l = match l with
   | [] -> 0

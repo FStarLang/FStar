@@ -1000,7 +1000,11 @@ let write_hints (filename: string) (hints: hints_db): unit =
           ]
     ) hints.hints)
   ] in
-  Yojson.Safe.pretty_to_channel (open_out_bin filename) json
+  let channel = open_out_bin filename in
+  BatPervasives.finally
+    (fun () -> close_out channel)
+    (fun channel -> Yojson.Safe.pretty_to_channel channel json)
+    channel
 
 let read_hints (filename: string): hints_db option =
   let mk_hint nm ix fuel ifuel unsat_core time hash_opt = {

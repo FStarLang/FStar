@@ -26,7 +26,7 @@ type embedding<'a> = {
 
 (* Eta-expand to make F# happy *)
 let embed       (e:embedding<'a>) r x = e.em r x
-let unembed'    (e:embedding<'a>) b t = e.un b t
+let unembed'  b (e:embedding<'a>) t = e.un b t
 let unembed     (e:embedding<'a>) t   = e.un true  t
 let try_unembed (e:embedding<'a>) t   = e.un false t
 let type_of     (e:embedding<'a>)     = e.typ
@@ -142,7 +142,7 @@ let e_option (ea : embedding<'a>) =
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
         | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
-             BU.bind_opt (unembed ea a) (fun a -> Some (Some a))
+             BU.bind_opt (unembed' w ea a) (fun a -> Some (Some a))
         | _ ->
              if w then
              Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded option: %s" (Print.term_to_string t0)));
@@ -165,8 +165,8 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv PC.lid_Mktuple2 ->
-            BU.bind_opt (unembed ea a) (fun a ->
-            BU.bind_opt (unembed eb b) (fun b ->
+            BU.bind_opt (unembed' w ea a) (fun a ->
+            BU.bind_opt (unembed' w eb b) (fun b ->
             Some (a, b)))
         | _ ->
             if w then
@@ -206,7 +206,7 @@ let e_list (ea:embedding<'a>) =
         | Tm_fvar fv, [(_, Some (Implicit _)); (hd, None); (tl, None)]
         | Tm_fvar fv, [(hd, None); (tl, None)]
             when S.fv_eq_lid fv PC.cons_lid ->
-            BU.bind_opt (unembed ea hd) (fun hd ->
+            BU.bind_opt (unembed' w ea hd) (fun hd ->
             BU.bind_opt (un w tl) (fun tl ->
             Some (hd :: tl)))
         | _ ->
@@ -287,10 +287,10 @@ let e_norm_step =
         | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_iota ->
             Some Iota
         | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
-            BU.bind_opt (unembed (e_list e_string) l) (fun ss ->
+            BU.bind_opt (unembed' w (e_list e_string) l) (fun ss ->
             Some <| UnfoldOnly ss)
         | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldfully ->
-            BU.bind_opt (unembed (e_list e_string) l) (fun ss ->
+            BU.bind_opt (unembed' w (e_list e_string) l) (fun ss ->
             Some <| UnfoldFully ss)
         | Tm_fvar fv, [_;(a, _)] when S.fv_eq_lid fv PC.steps_unfoldattr ->
             Some (UnfoldAttr a)

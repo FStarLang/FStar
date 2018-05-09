@@ -41,7 +41,7 @@ let mk_tactic_interpretation_0 (reflect:bool)
  (*  We have: t () embedded_state
      The idea is to:
         1. unembed the state
-        2. run the `t` tactic
+        2. run the `t` tactic (catching exceptions)
         3. embed the result and final state and return it to the normalizer
   *)
   match args with
@@ -52,7 +52,7 @@ let mk_tactic_interpretation_0 (reflect:bool)
     BU.print2 "Reached %s, args are: %s\n"
             (Ident.string_of_lid nm)
             (Print.args_to_string args));
-    let res = embed (E.e_result er) (N.psc_range psc) (run t ps) in
+    let res = embed (E.e_result er) (N.psc_range psc) (run_safe t ps) in
     Some res)
   | _ ->
     failwith ("Unexpected application of tactic primitive")
@@ -70,7 +70,7 @@ let mk_tactic_interpretation_1 (reflect:bool)
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
     BU.bind_opt (unembed ea a) (fun a ->
-    let res = run (t a) ps in
+    let res = run_safe (t a) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res)))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -89,7 +89,7 @@ let mk_tactic_interpretation_1_env
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
     BU.bind_opt (unembed ea a) (fun a ->
-    let res = run (t psc a) ps in
+    let res = run_safe (t psc a) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res)))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -109,7 +109,7 @@ let mk_tactic_interpretation_2 (reflect:bool)
             (Print.term_to_string embedded_state));
     BU.bind_opt (unembed ea a) (fun a ->
     BU.bind_opt (unembed eb b) (fun b ->
-    let res = run (t a b) ps in
+    let res = run_safe (t a b) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -132,7 +132,7 @@ let mk_tactic_interpretation_3 (reflect:bool)
     BU.bind_opt (unembed ea a) (fun a ->
     BU.bind_opt (unembed eb b) (fun b ->
     BU.bind_opt (unembed ec c) (fun c ->
-    let res = run (t a b c) ps in
+    let res = run_safe (t a b c) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res)))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -157,7 +157,7 @@ let mk_tactic_interpretation_4 (reflect:bool)
     BU.bind_opt (unembed eb b) (fun b ->
     BU.bind_opt (unembed ec c) (fun c ->
     BU.bind_opt (unembed ed d) (fun d ->
-    let res = run (t a b c d) ps in
+    let res = run_safe (t a b c d) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res))))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -184,7 +184,7 @@ let mk_tactic_interpretation_5 (reflect:bool)
     BU.bind_opt (unembed ec c) (fun c ->
     BU.bind_opt (unembed ed d) (fun d ->
     BU.bind_opt (unembed ee e) (fun e ->
-    let res = run (t a b c d e) ps in
+    let res = run_safe (t a b c d e) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res)))))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -213,7 +213,7 @@ let mk_tactic_interpretation_6 (reflect:bool)
     BU.bind_opt (unembed ed d) (fun d ->
     BU.bind_opt (unembed ee e) (fun e ->
     BU.bind_opt (unembed ef f) (fun f ->
-    let res = run (t a b c d e f) ps in
+    let res = run_safe (t a b c d e f) ps in
     Some (embed (E.e_result er) (N.psc_range psc) res))))))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -491,7 +491,7 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) : tac<'b> = //
         bind (set ps) (fun _ -> fail msg)
 
     | None ->
-        Errors.raise_error (Errors.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
+        Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
     )
 //IN F*: and unembed_tactic_0' (#b:Type) (eb:embedding b) (embedded_tac_b:term) : option (tac b) =
 and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term) : option<(tac<'b>)> = //JUST FSHARP
@@ -499,7 +499,7 @@ and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term) : option<(tac
 
 let report_implicits ps (is : Env.implicits) : unit =
     let errs = List.map (fun (r, _, uv, _, ty, rng) ->
-                (Errors.Fatal_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
+                (Err.Fatal_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string uv) (Print.term_to_string ty) r,
                  rng)) is in
     match errs with
@@ -514,6 +514,7 @@ let report_implicits ps (is : Env.implicits) : unit =
 let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remaining goals
                                                         * term // witness
                                                         =
+    let rng = tactic.pos in
     // This bit is really important: a typechecked tactic can contain many uvar redexes
     // that make normalization SUPER slow (probably exponential). Doing this first pass
     // gets rid of those redexes and leaves a much smaller term, which performs a lot better.
@@ -533,7 +534,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
     let env = { env with Env.instantiate_imp = false } in
     (* TODO: We do not faithfully expose universes to metaprograms *)
     let env = { env with Env.lax_universes = true } in
-    let ps, w = proofstate_of_goal_ty env typ in
+    let ps, w = proofstate_of_goal_ty rng env typ in
     if !tacdbg then
         BU.print1 "Running tactic with goal = %s\n" (Print.term_to_string typ);
     let res, ms = BU.record_time (fun () -> run tau ps) in
@@ -561,7 +562,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
 
     | Failed (s, ps) ->
         dump_proofstate (subst_proof_state (N.psc_subst ps.psc) ps) "at the time of failure";
-        Errors.raise_error (Errors.Fatal_ArgumentLengthMismatch, (BU.format1 "user tactic failed: %s" s)) typ.pos
+        Errors.raise_error (Errors.Fatal_UserTacticFailure, (BU.format1 "user tactic failed: %s" s)) ps.entry_range
 
 // Polarity
 type pol =
@@ -783,12 +784,13 @@ let reify_tactic (a : term) : term =
 
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     tacdbg := Env.debug env (Options.Other "Tac");
-    let gs, w = run_tactic_on_typ (reify_tactic tau) env typ in
+    let tau = reify_tactic tau in
+    let gs, w = run_tactic_on_typ tau env typ in
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
     if List.existsML (fun g -> not (Option.isSome (getprop g.context g.goal_ty))) gs
-    then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, ("synthesis left open goals")) typ.pos
-    else w
+        then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos;
+    w
 
 let splice (env:Env.env) (tau:term) : list<sigelt> =
     tacdbg := Env.debug env (Options.Other "Tac");
@@ -797,11 +799,13 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
     if List.existsML (fun g -> not (Option.isSome (getprop g.context g.goal_ty))) gs
-        then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, ("splice left open goals")) typ.pos;
+        then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") typ.pos;
 
     // Fully normalize the witness
     let w = N.normalize [N.Weak; N.HNF; N.UnfoldUntil delta_constant;
                          N.Primops; N.Unascribe; N.Unmeta] env w in
 
     // Unembed it, this must work if things are well-typed
-    BU.must <| unembed (e_list RE.e_sigelt) w
+    match unembed (e_list RE.e_sigelt) w with
+    | Some sigelts -> sigelts
+    | None -> Err.raise_error (Err.Fatal_SpliceUnembedFail, "splice: failed to unembed sigelts") typ.pos

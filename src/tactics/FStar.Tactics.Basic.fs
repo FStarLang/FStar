@@ -56,7 +56,12 @@ type tac<'a> = {
 let mk_tac (f : proofstate -> __result<'a>) : tac<'a> =
     { tac_f = f }
 
-let run t p = t.tac_f p
+let run t p =
+    t.tac_f p
+
+let run_safe t p =
+    try t.tac_f p
+    with | e -> Failed (BU.message_of_exn e, p)
 
 (* monadic return *)
 let ret (x:'a) : tac<'a> =
@@ -122,10 +127,14 @@ let dump_cur ps msg =
         dump_goal ps (List.hd ps.goals)
         end
 
+(* Note: we use def ranges. In tactics we keep the position in there, while the
+ * use range is the original position of the assertion / synth / splice. *)
 let ps_to_string (msg, ps) =
     String.concat ""
                [format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
-                format1 "Location: %s\n" (Range.string_of_range ps.entry_range);
+                (if ps.entry_range <> Range.dummyRange
+                 then format1 "Location: %s\n" (Range.string_of_def_range ps.entry_range)
+                 else "");
                 format2 "ACTIVE goals (%s):\n%s\n"
                     (string_of_int (List.length ps.goals))
                     (String.concat "\n" (List.map goal_to_string ps.goals));
@@ -726,7 +735,7 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
         | Some ((bv, aq), c) ->
             mlog (fun () ->
                 BU.print1 "__apply: pushing binder %s\n" (Print.binder_to_string (bv, aq))) (fun _ ->
-            if not (U.is_total_comp c) then fail "apply: not total codomain" else
+            if not (U.is_total_comp c) then fail "not total codomain" else
             bind (new_uvar "apply" goal.context bv.sort) (fun u ->
             (* BU.print1 "__apply: witness is %s\n" (Print.term_to_string u); *)
             let tm' = mk_Tm_app tm [(u, aq)] None tm.pos in
@@ -926,12 +935,12 @@ let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : option<goal> =
         { g with context = c; witness = w; goal_ty = t }
     )
 
-let rewrite (h:binder) : tac<unit> =
+let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
     bind (cur_goal ()) (fun goal ->
     let bv, _ = h in
     mlog (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (tts goal.context bv.sort)) (fun _ ->
     match split_env bv goal.context with
-    | None -> fail "rewrite: binder not found in environment"
+    | None -> fail "binder not found in environment"
     | Some (e0, bvs) -> begin
         match destruct_eq bv.sort with
         | Some (x, e) ->
@@ -944,24 +953,24 @@ let rewrite (h:binder) : tac<unit> =
                                      goal_ty = SS.subst s goal.goal_ty;
                                      witness = SS.subst s goal.witness;})
            | _ ->
-             fail "rewrite: Not an equality hypothesis with a variable on the LHS")
-        | _ -> fail "rewrite: Not an equality hypothesis"
+             fail "Not an equality hypothesis with a variable on the LHS")
+        | _ -> fail "Not an equality hypothesis"
         end))
 
-let rename_to (b : binder) (s : string) : tac<unit> =
+let rename_to (b : binder) (s : string) : tac<unit> = wrap_err "rename_to" <|
     bind (cur_goal ()) (fun goal ->
     let bv, _ = b in
     let bv' = freshen_bv ({ bv with ppname = mk_ident (s, bv.ppname.idRange) }) in
     let s = [NT (bv, S.bv_to_name bv')] in
     match subst_goal bv bv' s goal with
-    | None -> fail "rename_to: binder not found in environment"
+    | None -> fail "binder not found in environment"
     | Some goal -> replace_cur goal)
 
-let binder_retype (b : binder) : tac<unit> =
+let binder_retype (b : binder) : tac<unit> = wrap_err "binder_retype" <|
     bind (cur_goal ()) (fun goal ->
     let bv, _ = b in
     match split_env bv goal.context with
-    | None -> fail "binder_retype: binder is not present in environment"
+    | None -> fail "binder is not present in environment"
     | Some (e0, bvs) -> begin
         let (ty, u) = U.type_u () in
         bind (new_uvar "binder_retype" e0 ty) (fun t' ->
@@ -978,11 +987,11 @@ let binder_retype (b : binder) : tac<unit> =
          end)
 
 (* TODO: move to bv *)
-let norm_binder_type (s : list<EMB.norm_step>) (b : binder) : tac<unit> =
+let norm_binder_type (s : list<EMB.norm_step>) (b : binder) : tac<unit> = wrap_err "norm_binder_type" <|
     bind (cur_goal ()) (fun goal ->
     let bv, _ = b in
     match split_env bv goal.context with
-    | None -> fail "binder_retype: binder is not present in environment"
+    | None -> fail "binder is not present in environment"
     | Some (e0, bvs) -> begin
         let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
         let sort' = normalize steps e0 bv.sort in
@@ -1268,11 +1277,11 @@ let rewrite_rec (ps : proofstate)
              ret (ut, ctrl))))))
 
 let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
-                    (rewriter:tac<unit>) : tac<unit> =
+                    (rewriter:tac<unit>) : tac<unit> = wrap_err "topdown_rewrite" <|
     bind get (fun ps ->
     let g, gs = match ps.goals with
                 | g::gs -> g, gs
-                | [] -> failwith "Pointwise: no goals"
+                | [] -> failwith "no goals"
     in
     let gt = g.goal_ty in
     log ps (fun () ->
@@ -1285,11 +1294,11 @@ let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
     add_goals [{g with goal_ty = gt'}]))))
 
 
-let pointwise (d : direction) (tau:tac<unit>) : tac<unit> =
+let pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "pointwise" <|
     bind get (fun ps ->
     let g, gs = match ps.goals with
                 | g::gs -> g, gs
-                | [] -> failwith "Pointwise: no goals"
+                | [] -> failwith "no goals"
     in
     let gt = g.goal_ty in
     log ps (fun () ->
@@ -1301,7 +1310,7 @@ let pointwise (d : direction) (tau:tac<unit>) : tac<unit> =
     bind (push_goals gs) (fun _ ->
     add_goals [{g with goal_ty = gt'}]))))
 
-let trefl () : tac<unit> =
+let trefl () : tac<unit> = wrap_err "trefl" <|
     bind (cur_goal ()) (fun g ->
     match U.un_squash g.goal_ty with
     | Some t ->
@@ -1311,10 +1320,10 @@ let trefl () : tac<unit> =
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv PC.eq2_lid ->
             bind (do_unify g.context l r) (fun b ->
             if not b
-            then fail2 "trefl: not a trivial equality (%s vs %s)" (tts g.context l) (tts g.context r)
+            then fail2 "not a trivial equality (%s vs %s)" (tts g.context l) (tts g.context r)
             else solve g U.exp_unit)
         | hd, _ ->
-            fail1 "trefl: not an equality (%s)" (tts g.context t)
+            fail1 "not an equality (%s)" (tts g.context t)
         end
      | None ->
         fail "not an irrelevant goal")
@@ -1366,7 +1375,7 @@ let cases (t : term) : tac<(term * term)> = wrap_err "cases" <|
     | _ ->
         fail1 "Not a disjunction: %s" (tts g.context typ)))
 
-let set_options (s : string) : tac<unit> =
+let set_options (s : string) : tac<unit> = wrap_err "set_options" <|
     bind (cur_goal ()) (fun g ->
     FStar.Options.push ();
     FStar.Options.set (Util.smap_copy g.opts); // copy the map, they are not purely functional
@@ -1479,7 +1488,7 @@ let rec init (l:list<'a>) : list<'a> =
     | x::xs -> x :: init xs
 
 (* TODO: these are mostly duplicated from FStar.Reflection.Basic, unify *)
-let rec inspect (t:term) : tac<term_view> =
+let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
     let t = U.unascribe t in
     let t = U.un_uinst t in
     match t.n with
@@ -1496,7 +1505,7 @@ let rec inspect (t:term) : tac<term_view> =
         ret <| Tv_FVar fv
 
     | Tm_app (hd, []) ->
-        failwith "inspect: empty arguments on Tm_app"
+        failwith "empty arguments on Tm_app"
 
     | Tm_app (hd, args) ->
         // We split at the last argument, since the term_view does not
@@ -1506,7 +1515,7 @@ let rec inspect (t:term) : tac<term_view> =
         ret <| Tv_App (S.mk_Tm_app hd (init args) None t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
 
     | Tm_abs ([], _, _) ->
-        failwith "inspect: empty arguments on Tm_abs"
+        failwith "empty arguments on Tm_abs"
 
     | Tm_abs (bs, t, k) ->
         let bs, t = SS.open_term bs t in
@@ -1520,7 +1529,7 @@ let rec inspect (t:term) : tac<term_view> =
         ret <| Tv_Type () 
 
     | Tm_arrow ([], k) ->
-        failwith "inspect: empty binders on arrow"
+        failwith "empty binders on arrow"
 
     | Tm_arrow _ ->
         begin match U.arrow_one t with
@@ -1591,6 +1600,8 @@ let rec inspect (t:term) : tac<term_view> =
     | _ ->
         Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
         ret <| Tv_Unknown
+    )
+
 (* This function could actually be pure, it doesn't need freshness
  * like `inspect` does, but we mark it as Tac for uniformity. *)
 let pack (tv:term_view) : tac<term> =
@@ -1659,7 +1670,7 @@ let pack (tv:term_view) : tac<term> =
         ret <| S.mk Tm_unknown None Range.dummyRange
 
 let goal_of_goal_ty env typ : goal * guard_t =
-    let u, _, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
+    let u, _, g_u = TcUtil.new_implicit_var "goal_of_goal_ty" typ.pos env typ in
     let g = {
         context = env;
         witness = u;
@@ -1670,7 +1681,7 @@ let goal_of_goal_ty env typ : goal * guard_t =
     in
     g, g_u
 
-let proofstate_of_goal_ty env typ =
+let proofstate_of_goal_ty rng env typ =
     let g, g_u = goal_of_goal_ty env typ in
     let ps = {
         main_context = env;
@@ -1681,7 +1692,7 @@ let proofstate_of_goal_ty env typ =
         depth = 0;
         __dump = (fun ps msg -> dump_proofstate ps msg);
         psc = N.null_psc;
-        entry_range = Range.dummyRange;
+        entry_range = rng;
         guard_policy = SMT;
         freshness = 0;
     }

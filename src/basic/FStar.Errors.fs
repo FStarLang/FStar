@@ -308,6 +308,7 @@ type raw_error =
   | Error_NoSMTButNeeded
   | Fatal_UnexpectedAntiquotation
   | Fatal_SplicedUndef
+  | Fatal_SpliceUnembedFail
   | Warning_ExtractionUnexpectedEffect
   | Error_DidNotFail
   | Warning_UnappliedFail
@@ -629,6 +630,7 @@ let default_flags =
   (Error_NoSMTButNeeded                              , CAlwaysError);
   (Fatal_UnexpectedAntiquotation                     , CFatal);
   (Fatal_SplicedUndef                                , CFatal);
+  (Fatal_SpliceUnembedFail                           , CFatal);
   (Warning_ExtractionUnexpectedEffect                , CWarning);
   (Error_DidNotFail                                  , CAlwaysError);
   (Warning_UnappliedFail                             , CWarning);

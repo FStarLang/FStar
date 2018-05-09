@@ -76,7 +76,7 @@ let tracepoint ps : unit =
 let set_ps_psc psc ps = { ps with psc = psc }
 
 let set_proofstate_range ps r =
-    { ps with entry_range = r }
+    { ps with entry_range = Range.set_def_range ps.entry_range (Range.def_range r) }
 
 type direction =
     | TopDown

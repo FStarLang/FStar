@@ -192,11 +192,11 @@ let e_result :
       | (FStar_Syntax_Syntax.Tm_fvar
          fv,_t::(a,uu____306)::(ps,uu____308)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Success_lid ->
-          let uu____355 = FStar_Syntax_Embeddings.unembed ea a  in
+          let uu____355 = FStar_Syntax_Embeddings.unembed' w ea a  in
           FStar_Util.bind_opt uu____355
             (fun a1  ->
                let uu____363 =
-                 FStar_Syntax_Embeddings.unembed e_proofstate ps  in
+                 FStar_Syntax_Embeddings.unembed' w e_proofstate ps  in
                FStar_Util.bind_opt uu____363
                  (fun ps1  ->
                     FStar_Pervasives_Native.Some
@@ -205,13 +205,13 @@ let e_result :
          fv,_t::(msg,uu____375)::(ps,uu____377)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Failed_lid ->
           let uu____424 =
-            FStar_Syntax_Embeddings.unembed FStar_Syntax_Embeddings.e_string
-              msg
+            FStar_Syntax_Embeddings.unembed' w
+              FStar_Syntax_Embeddings.e_string msg
              in
           FStar_Util.bind_opt uu____424
             (fun msg1  ->
                let uu____432 =
-                 FStar_Syntax_Embeddings.unembed e_proofstate ps  in
+                 FStar_Syntax_Embeddings.unembed' w e_proofstate ps  in
                FStar_Util.bind_opt uu____432
                  (fun ps1  ->
                     FStar_Pervasives_Native.Some

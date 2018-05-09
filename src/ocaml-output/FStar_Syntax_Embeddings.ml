@@ -37,10 +37,10 @@ let embed :
   fun e  -> fun r  -> fun x  -> e.em r x 
 let unembed' :
   'a .
-    'a embedding ->
-      Prims.bool ->
+    Prims.bool ->
+      'a embedding ->
         FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option
-  = fun e  -> fun b  -> fun t  -> e.un b t 
+  = fun b  -> fun e  -> fun t  -> e.un b t 
 let unembed :
   'a .
     'a embedding ->
@@ -268,7 +268,7 @@ let e_option :
                when
                FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.some_lid
                ->
-               let uu____859 = unembed ea a  in
+               let uu____859 = unembed' w ea a  in
                FStar_Util.bind_opt uu____859
                  (fun a1  ->
                     FStar_Pervasives_Native.Some
@@ -351,10 +351,10 @@ let e_tuple2 :
                  FStar_Syntax_Syntax.fv_eq_lid fv
                    FStar_Parser_Const.lid_Mktuple2
                  ->
-                 let uu____1139 = unembed ea a  in
+                 let uu____1139 = unembed' w ea a  in
                  FStar_Util.bind_opt uu____1139
                    (fun a1  ->
-                      let uu____1149 = unembed eb b  in
+                      let uu____1149 = unembed' w eb b  in
                       FStar_Util.bind_opt uu____1149
                         (fun b1  -> FStar_Pervasives_Native.Some (a1, b1)))
              | uu____1162 ->
@@ -440,7 +440,7 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                when
                FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.cons_lid
                ->
-               let uu____1443 = unembed ea hd2  in
+               let uu____1443 = unembed' w ea hd2  in
                FStar_Util.bind_opt uu____1443
                  (fun hd3  ->
                     let uu____1451 = un w tl1  in
@@ -452,7 +452,7 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                when
                FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.cons_lid
                ->
-               let uu____1515 = unembed ea hd2  in
+               let uu____1515 = unembed' w ea hd2  in
                FStar_Util.bind_opt uu____1515
                  (fun hd3  ->
                     let uu____1523 = un w tl1  in
@@ -634,7 +634,8 @@ let (e_norm_step : norm_step embedding) =
                FStar_Parser_Const.steps_unfoldonly
              ->
              let uu____1966 =
-               let uu____1971 = e_list e_string  in unembed uu____1971 l  in
+               let uu____1971 = e_list e_string  in unembed' w uu____1971 l
+                in
              FStar_Util.bind_opt uu____1966
                (fun ss  ->
                   FStar_All.pipe_left
@@ -645,7 +646,8 @@ let (e_norm_step : norm_step embedding) =
                FStar_Parser_Const.steps_unfoldfully
              ->
              let uu____2013 =
-               let uu____2018 = e_list e_string  in unembed uu____2018 l  in
+               let uu____2018 = e_list e_string  in unembed' w uu____2018 l
+                in
              FStar_Util.bind_opt uu____2013
                (fun ss  ->
                   FStar_All.pipe_left

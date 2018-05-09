@@ -7,5 +7,5 @@ module StableErr
  * fixed. *)
 
 #set-options "--no_smt"
-[@(fail_errs [298])]
+[@(fail [298])]
 let _ = assert False

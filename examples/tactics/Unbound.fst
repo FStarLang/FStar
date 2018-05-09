@@ -10,5 +10,5 @@ let tau () : Tac unit =
     // (if it succeeds: is the use_bv_sorts flag on? it should be off)
     squash_intro (); exact (pack (Tv_Var x))
 
-[@(fail_errs [23])]
+[@(Pervasives.fail [228])]
 let _ = assert_by_tactic ((False ==> False) /\ False) tau

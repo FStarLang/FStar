@@ -51,7 +51,7 @@ val mk_emb : raw_embedder<'a> -> raw_unembedder'<'a> -> typ -> embedding<'a>
 // embed: turning a value into a term (compiler internals -> userland)
 // unembed: interpreting a term as a value, which can fail (userland -> compiler internals)
 val embed       : embedding<'a> -> Range.range -> 'a -> term
-val unembed'    : embedding<'a> -> bool -> term -> option<'a>
+val unembed'    : bool -> embedding<'a> -> term -> option<'a>
 val unembed     : embedding<'a> -> term -> option<'a>
 val try_unembed : embedding<'a> -> term -> option<'a>
 val type_of     : embedding<'a> -> typ

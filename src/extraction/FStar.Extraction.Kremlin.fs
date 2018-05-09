@@ -221,11 +221,11 @@ let is_bool_op op =
   mk_bool_op op <> None
 
 let mk_op = function
-  | "add" | "op_Plus_Hat" ->
+  | "add" | "op_Plus_Hat" | "add_underspec" ->
       Some Add
   | "add_mod" | "op_Plus_Percent_Hat" ->
       Some AddW
-  | "sub" | "op_Subtraction_Hat" ->
+  | "sub" | "op_Subtraction_Hat" | "sub_underspec" ->
       Some Sub
   | "sub_mod" | "op_Subtraction_Percent_Hat" ->
       Some SubW

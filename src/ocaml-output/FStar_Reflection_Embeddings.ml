@@ -352,8 +352,8 @@ let (e_const :
                FStar_Reflection_Data.ref_C_Int.FStar_Reflection_Data.lid
              ->
              let uu____776 =
-               FStar_Syntax_Embeddings.unembed FStar_Syntax_Embeddings.e_int
-                 i
+               FStar_Syntax_Embeddings.unembed' w
+                 FStar_Syntax_Embeddings.e_int i
                 in
              FStar_Util.bind_opt uu____776
                (fun i1  ->
@@ -365,7 +365,7 @@ let (e_const :
                FStar_Reflection_Data.ref_C_String.FStar_Reflection_Data.lid
              ->
              let uu____810 =
-               FStar_Syntax_Embeddings.unembed
+               FStar_Syntax_Embeddings.unembed' w
                  FStar_Syntax_Embeddings.e_string s
                 in
              FStar_Util.bind_opt uu____810
@@ -487,7 +487,8 @@ let rec (e_pattern' :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Pat_Constant.FStar_Reflection_Data.lid
                ->
-               let uu____1047 = FStar_Syntax_Embeddings.unembed e_const c  in
+               let uu____1047 = FStar_Syntax_Embeddings.unembed' w e_const c
+                  in
                FStar_Util.bind_opt uu____1047
                  (fun c1  ->
                     FStar_All.pipe_left
@@ -498,14 +499,14 @@ let rec (e_pattern' :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Pat_Cons.FStar_Reflection_Data.lid
                ->
-               let uu____1093 = FStar_Syntax_Embeddings.unembed e_fv f  in
+               let uu____1093 = FStar_Syntax_Embeddings.unembed' w e_fv f  in
                FStar_Util.bind_opt uu____1093
                  (fun f1  ->
                     let uu____1099 =
                       let uu____1104 =
                         let uu____1109 = e_pattern' ()  in
                         FStar_Syntax_Embeddings.e_list uu____1109  in
-                      FStar_Syntax_Embeddings.unembed uu____1104 ps  in
+                      FStar_Syntax_Embeddings.unembed' w uu____1104 ps  in
                     FStar_Util.bind_opt uu____1099
                       (fun ps1  ->
                          FStar_All.pipe_left
@@ -515,7 +516,8 @@ let rec (e_pattern' :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Pat_Var.FStar_Reflection_Data.lid
                ->
-               let uu____1151 = FStar_Syntax_Embeddings.unembed e_bv bv  in
+               let uu____1151 = FStar_Syntax_Embeddings.unembed' w e_bv bv
+                  in
                FStar_Util.bind_opt uu____1151
                  (fun bv1  ->
                     FStar_All.pipe_left
@@ -525,7 +527,8 @@ let rec (e_pattern' :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Pat_Wild.FStar_Reflection_Data.lid
                ->
-               let uu____1185 = FStar_Syntax_Embeddings.unembed e_bv bv  in
+               let uu____1185 = FStar_Syntax_Embeddings.unembed' w e_bv bv
+                  in
                FStar_Util.bind_opt uu____1185
                  (fun bv1  ->
                     FStar_All.pipe_left
@@ -536,11 +539,12 @@ let rec (e_pattern' :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Pat_Dot_Term.FStar_Reflection_Data.lid
                ->
-               let uu____1231 = FStar_Syntax_Embeddings.unembed e_bv bv  in
+               let uu____1231 = FStar_Syntax_Embeddings.unembed' w e_bv bv
+                  in
                FStar_Util.bind_opt uu____1231
                  (fun bv1  ->
                     let uu____1237 =
-                      FStar_Syntax_Embeddings.unembed e_term t2  in
+                      FStar_Syntax_Embeddings.unembed' w e_term t2  in
                     FStar_Util.bind_opt uu____1237
                       (fun t3  ->
                          FStar_All.pipe_left
@@ -908,7 +912,7 @@ let (e_term_view_aq :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_Var.FStar_Reflection_Data.lid
                ->
-               let uu____1758 = FStar_Syntax_Embeddings.unembed e_bv b  in
+               let uu____1758 = FStar_Syntax_Embeddings.unembed' w e_bv b  in
                FStar_Util.bind_opt uu____1758
                  (fun b1  ->
                     FStar_All.pipe_left
@@ -918,7 +922,7 @@ let (e_term_view_aq :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_BVar.FStar_Reflection_Data.lid
                ->
-               let uu____1792 = FStar_Syntax_Embeddings.unembed e_bv b  in
+               let uu____1792 = FStar_Syntax_Embeddings.unembed' w e_bv b  in
                FStar_Util.bind_opt uu____1792
                  (fun b1  ->
                     FStar_All.pipe_left
@@ -928,7 +932,7 @@ let (e_term_view_aq :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_FVar.FStar_Reflection_Data.lid
                ->
-               let uu____1826 = FStar_Syntax_Embeddings.unembed e_fv f  in
+               let uu____1826 = FStar_Syntax_Embeddings.unembed' w e_fv f  in
                FStar_Util.bind_opt uu____1826
                  (fun f1  ->
                     FStar_All.pipe_left
@@ -939,11 +943,12 @@ let (e_term_view_aq :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_App.FStar_Reflection_Data.lid
                ->
-               let uu____1872 = FStar_Syntax_Embeddings.unembed e_term l  in
+               let uu____1872 = FStar_Syntax_Embeddings.unembed' w e_term l
+                  in
                FStar_Util.bind_opt uu____1872
                  (fun l1  ->
-                    let uu____1878 = FStar_Syntax_Embeddings.unembed e_argv r
-                       in
+                    let uu____1878 =
+                      FStar_Syntax_Embeddings.unembed' w e_argv r  in
                     FStar_Util.bind_opt uu____1878
                       (fun r1  ->
                          FStar_All.pipe_left
@@ -954,12 +959,12 @@ let (e_term_view_aq :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_Abs.FStar_Reflection_Data.lid
                ->
-               let uu____1924 = FStar_Syntax_Embeddings.unembed e_binder b
+               let uu____1924 = FStar_Syntax_Embeddings.unembed' w e_binder b
                   in
                FStar_Util.bind_opt uu____1924
                  (fun b1  ->
                     let uu____1930 =
-                      FStar_Syntax_Embeddings.unembed e_term t1  in
+                      FStar_Syntax_Embeddings.unembed' w e_term t1  in
                     FStar_Util.bind_opt uu____1930
                       (fun t2  ->
                          FStar_All.pipe_left
@@ -970,12 +975,12 @@ let (e_term_view_aq :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_Arrow.FStar_Reflection_Data.lid
                ->
-               let uu____1976 = FStar_Syntax_Embeddings.unembed e_binder b
+               let uu____1976 = FStar_Syntax_Embeddings.unembed' w e_binder b
                   in
                FStar_Util.bind_opt uu____1976
                  (fun b1  ->
                     let uu____1982 =
-                      FStar_Syntax_Embeddings.unembed e_comp t1  in
+                      FStar_Syntax_Embeddings.unembed' w e_comp t1  in
                     FStar_Util.bind_opt uu____1982
                       (fun c  ->
                          FStar_All.pipe_left
@@ -986,7 +991,7 @@ let (e_term_view_aq :
                  FStar_Reflection_Data.ref_Tv_Type.FStar_Reflection_Data.lid
                ->
                let uu____2016 =
-                 FStar_Syntax_Embeddings.unembed
+                 FStar_Syntax_Embeddings.unembed' w
                    FStar_Syntax_Embeddings.e_unit u
                   in
                FStar_Util.bind_opt uu____2016
@@ -999,11 +1004,11 @@ let (e_term_view_aq :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_Refine.FStar_Reflection_Data.lid
                ->
-               let uu____2062 = FStar_Syntax_Embeddings.unembed e_bv b  in
+               let uu____2062 = FStar_Syntax_Embeddings.unembed' w e_bv b  in
                FStar_Util.bind_opt uu____2062
                  (fun b1  ->
                     let uu____2068 =
-                      FStar_Syntax_Embeddings.unembed e_term t1  in
+                      FStar_Syntax_Embeddings.unembed' w e_term t1  in
                     FStar_Util.bind_opt uu____2068
                       (fun t2  ->
                          FStar_All.pipe_left
@@ -1013,7 +1018,8 @@ let (e_term_view_aq :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_Const.FStar_Reflection_Data.lid
                ->
-               let uu____2102 = FStar_Syntax_Embeddings.unembed e_const c  in
+               let uu____2102 = FStar_Syntax_Embeddings.unembed' w e_const c
+                  in
                FStar_Util.bind_opt uu____2102
                  (fun c1  ->
                     FStar_All.pipe_left
@@ -1025,13 +1031,13 @@ let (e_term_view_aq :
                  FStar_Reflection_Data.ref_Tv_Uvar.FStar_Reflection_Data.lid
                ->
                let uu____2148 =
-                 FStar_Syntax_Embeddings.unembed
+                 FStar_Syntax_Embeddings.unembed' w
                    FStar_Syntax_Embeddings.e_int u
                   in
                FStar_Util.bind_opt uu____2148
                  (fun u1  ->
                     let uu____2154 =
-                      FStar_Syntax_Embeddings.unembed e_term t1  in
+                      FStar_Syntax_Embeddings.unembed' w e_term t1  in
                     FStar_Util.bind_opt uu____2154
                       (fun t2  ->
                          FStar_All.pipe_left
@@ -1044,21 +1050,22 @@ let (e_term_view_aq :
                  FStar_Reflection_Data.ref_Tv_Let.FStar_Reflection_Data.lid
                ->
                let uu____2224 =
-                 FStar_Syntax_Embeddings.unembed
+                 FStar_Syntax_Embeddings.unembed' w
                    FStar_Syntax_Embeddings.e_bool r
                   in
                FStar_Util.bind_opt uu____2224
                  (fun r1  ->
-                    let uu____2230 = FStar_Syntax_Embeddings.unembed e_bv b
-                       in
+                    let uu____2230 =
+                      FStar_Syntax_Embeddings.unembed' w e_bv b  in
                     FStar_Util.bind_opt uu____2230
                       (fun b1  ->
                          let uu____2236 =
-                           FStar_Syntax_Embeddings.unembed e_term t1  in
+                           FStar_Syntax_Embeddings.unembed' w e_term t1  in
                          FStar_Util.bind_opt uu____2236
                            (fun t11  ->
                               let uu____2242 =
-                                FStar_Syntax_Embeddings.unembed e_term t2  in
+                                FStar_Syntax_Embeddings.unembed' w e_term t2
+                                 in
                               FStar_Util.bind_opt uu____2242
                                 (fun t21  ->
                                    FStar_All.pipe_left
@@ -1071,13 +1078,14 @@ let (e_term_view_aq :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_Match.FStar_Reflection_Data.lid
                ->
-               let uu____2288 = FStar_Syntax_Embeddings.unembed e_term t1  in
+               let uu____2288 = FStar_Syntax_Embeddings.unembed' w e_term t1
+                  in
                FStar_Util.bind_opt uu____2288
                  (fun t2  ->
                     let uu____2294 =
                       let uu____2299 =
                         FStar_Syntax_Embeddings.e_list e_branch  in
-                      FStar_Syntax_Embeddings.unembed uu____2299 brs  in
+                      FStar_Syntax_Embeddings.unembed' w uu____2299 brs  in
                     FStar_Util.bind_opt uu____2294
                       (fun brs1  ->
                          FStar_All.pipe_left
@@ -1089,17 +1097,19 @@ let (e_term_view_aq :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_AscT.FStar_Reflection_Data.lid
                ->
-               let uu____2367 = FStar_Syntax_Embeddings.unembed e_term e  in
+               let uu____2367 = FStar_Syntax_Embeddings.unembed' w e_term e
+                  in
                FStar_Util.bind_opt uu____2367
                  (fun e1  ->
                     let uu____2373 =
-                      FStar_Syntax_Embeddings.unembed e_term t1  in
+                      FStar_Syntax_Embeddings.unembed' w e_term t1  in
                     FStar_Util.bind_opt uu____2373
                       (fun t2  ->
                          let uu____2379 =
                            let uu____2384 =
                              FStar_Syntax_Embeddings.e_option e_term  in
-                           FStar_Syntax_Embeddings.unembed uu____2384 tacopt
+                           FStar_Syntax_Embeddings.unembed' w uu____2384
+                             tacopt
                             in
                          FStar_Util.bind_opt uu____2379
                            (fun tacopt1  ->
@@ -1114,17 +1124,19 @@ let (e_term_view_aq :
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Data.ref_Tv_AscC.FStar_Reflection_Data.lid
                ->
-               let uu____2452 = FStar_Syntax_Embeddings.unembed e_term e  in
+               let uu____2452 = FStar_Syntax_Embeddings.unembed' w e_term e
+                  in
                FStar_Util.bind_opt uu____2452
                  (fun e1  ->
-                    let uu____2458 = FStar_Syntax_Embeddings.unembed e_comp c
-                       in
+                    let uu____2458 =
+                      FStar_Syntax_Embeddings.unembed' w e_comp c  in
                     FStar_Util.bind_opt uu____2458
                       (fun c1  ->
                          let uu____2464 =
                            let uu____2469 =
                              FStar_Syntax_Embeddings.e_option e_term  in
-                           FStar_Syntax_Embeddings.unembed uu____2469 tacopt
+                           FStar_Syntax_Embeddings.unembed' w uu____2469
+                             tacopt
                             in
                          FStar_Util.bind_opt uu____2464
                            (fun tacopt1  ->
@@ -1211,19 +1223,19 @@ let (e_bv_view :
                FStar_Reflection_Data.ref_Mk_bv.FStar_Reflection_Data.lid
              ->
              let uu____2701 =
-               FStar_Syntax_Embeddings.unembed
+               FStar_Syntax_Embeddings.unembed' w
                  FStar_Syntax_Embeddings.e_string nm
                 in
              FStar_Util.bind_opt uu____2701
                (fun nm1  ->
                   let uu____2707 =
-                    FStar_Syntax_Embeddings.unembed
+                    FStar_Syntax_Embeddings.unembed' w
                       FStar_Syntax_Embeddings.e_int idx
                      in
                   FStar_Util.bind_opt uu____2707
                     (fun idx1  ->
                        let uu____2713 =
-                         FStar_Syntax_Embeddings.unembed e_term s  in
+                         FStar_Syntax_Embeddings.unembed' w e_term s  in
                        FStar_Util.bind_opt uu____2713
                          (fun s1  ->
                             FStar_All.pipe_left
@@ -1321,13 +1333,14 @@ let (e_comp_view :
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_C_Total.FStar_Reflection_Data.lid
              ->
-             let uu____2925 = FStar_Syntax_Embeddings.unembed e_term t2  in
+             let uu____2925 = FStar_Syntax_Embeddings.unembed' w e_term t2
+                in
              FStar_Util.bind_opt uu____2925
                (fun t3  ->
                   let uu____2931 =
                     let uu____2936 = FStar_Syntax_Embeddings.e_option e_term
                        in
-                    FStar_Syntax_Embeddings.unembed uu____2936 md  in
+                    FStar_Syntax_Embeddings.unembed' w uu____2936 md  in
                   FStar_Util.bind_opt uu____2931
                     (fun md1  ->
                        FStar_All.pipe_left
@@ -1338,11 +1351,12 @@ let (e_comp_view :
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_C_Lemma.FStar_Reflection_Data.lid
              ->
-             let uu____2992 = FStar_Syntax_Embeddings.unembed e_term pre  in
+             let uu____2992 = FStar_Syntax_Embeddings.unembed' w e_term pre
+                in
              FStar_Util.bind_opt uu____2992
                (fun pre1  ->
                   let uu____2998 =
-                    FStar_Syntax_Embeddings.unembed e_term post  in
+                    FStar_Syntax_Embeddings.unembed' w e_term post  in
                   FStar_Util.bind_opt uu____2998
                     (fun post1  ->
                        FStar_All.pipe_left
@@ -1580,17 +1594,17 @@ let (e_sigelt_view :
                FStar_Reflection_Data.ref_Sg_Inductive.FStar_Reflection_Data.lid
              ->
              let uu____3513 =
-               FStar_Syntax_Embeddings.unembed
+               FStar_Syntax_Embeddings.unembed' w
                  FStar_Syntax_Embeddings.e_string_list nm
                 in
              FStar_Util.bind_opt uu____3513
                (fun nm1  ->
                   let uu____3527 =
-                    FStar_Syntax_Embeddings.unembed e_binders bs  in
+                    FStar_Syntax_Embeddings.unembed' w e_binders bs  in
                   FStar_Util.bind_opt uu____3527
                     (fun bs1  ->
                        let uu____3533 =
-                         FStar_Syntax_Embeddings.unembed e_term t2  in
+                         FStar_Syntax_Embeddings.unembed' w e_term t2  in
                        FStar_Util.bind_opt uu____3533
                          (fun t3  ->
                             let uu____3539 =
@@ -1598,7 +1612,8 @@ let (e_sigelt_view :
                                 FStar_Syntax_Embeddings.e_list
                                   FStar_Syntax_Embeddings.e_string_list
                                  in
-                              FStar_Syntax_Embeddings.unembed uu____3546 dcs
+                              FStar_Syntax_Embeddings.unembed' w uu____3546
+                                dcs
                                in
                             FStar_Util.bind_opt uu____3539
                               (fun dcs1  ->
@@ -1614,21 +1629,22 @@ let (e_sigelt_view :
                FStar_Reflection_Data.ref_Sg_Let.FStar_Reflection_Data.lid
              ->
              let uu____3640 =
-               FStar_Syntax_Embeddings.unembed FStar_Syntax_Embeddings.e_bool
-                 r
+               FStar_Syntax_Embeddings.unembed' w
+                 FStar_Syntax_Embeddings.e_bool r
                 in
              FStar_Util.bind_opt uu____3640
                (fun r1  ->
-                  let uu____3646 = FStar_Syntax_Embeddings.unembed e_fv fvar1
-                     in
+                  let uu____3646 =
+                    FStar_Syntax_Embeddings.unembed' w e_fv fvar1  in
                   FStar_Util.bind_opt uu____3646
                     (fun fvar2  ->
                        let uu____3652 =
-                         FStar_Syntax_Embeddings.unembed e_term ty  in
+                         FStar_Syntax_Embeddings.unembed' w e_term ty  in
                        FStar_Util.bind_opt uu____3652
                          (fun ty1  ->
                             let uu____3658 =
-                              FStar_Syntax_Embeddings.unembed e_term t2  in
+                              FStar_Syntax_Embeddings.unembed' w e_term t2
+                               in
                             FStar_Util.bind_opt uu____3658
                               (fun t3  ->
                                  FStar_All.pipe_left
@@ -1722,8 +1738,8 @@ let (e_exp : FStar_Reflection_Data.exp FStar_Syntax_Embeddings.embedding) =
                FStar_Reflection_Data.ref_E_Var.FStar_Reflection_Data.lid
              ->
              let uu____3870 =
-               FStar_Syntax_Embeddings.unembed FStar_Syntax_Embeddings.e_int
-                 i
+               FStar_Syntax_Embeddings.unembed' w
+                 FStar_Syntax_Embeddings.e_int i
                 in
              FStar_Util.bind_opt uu____3870
                (fun i1  ->

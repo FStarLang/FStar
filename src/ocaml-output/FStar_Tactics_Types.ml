@@ -307,6 +307,9 @@ let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
   fun ps  ->
     fun r  ->
       let uu___82_552 = ps  in
+      let uu____553 =
+        let uu____554 = FStar_Range.def_range r  in
+        FStar_Range.set_def_range ps.entry_range uu____554  in
       {
         main_context = (uu___82_552.main_context);
         main_goal = (uu___82_552.main_goal);
@@ -316,7 +319,7 @@ let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
         depth = (uu___82_552.depth);
         __dump = (uu___82_552.__dump);
         psc = (uu___82_552.psc);
-        entry_range = r;
+        entry_range = uu____553;
         guard_policy = (uu___82_552.guard_policy);
         freshness = (uu___82_552.freshness)
       }
@@ -326,9 +329,9 @@ type direction =
   | BottomUp 
 let (uu___is_TopDown : direction -> Prims.bool) =
   fun projectee  ->
-    match projectee with | TopDown  -> true | uu____558 -> false
+    match projectee with | TopDown  -> true | uu____560 -> false
   
 let (uu___is_BottomUp : direction -> Prims.bool) =
   fun projectee  ->
-    match projectee with | BottomUp  -> true | uu____564 -> false
+    match projectee with | BottomUp  -> true | uu____566 -> false
   
