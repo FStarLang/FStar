@@ -29,7 +29,7 @@ val forall_intro_squash_gtot_join (#a:Type) (#p:(a -> GTot prop)) ($_:(x:a -> GT
 
 val forall_intro (#a:Type) (#p:(a -> GTot prop)) ($_:(x:a -> Lemma (p x))) :Lemma (forall (x:a). p x)
 
-val forall_intro_with_pat (#a:Type) (#c: (x:a -> prop)) (#p:(x:a -> GTot Type0))
+val forall_intro_with_pat (#a:Type) (#c: (x:a -> prop)) (#p:(x:a -> GTot prop))
   ($pat: (x:a -> Tot (c x)))
   ($_: (x:a -> Lemma (p x)))
   :Lemma (forall (x:a).{:pattern (pat x)} p x)
