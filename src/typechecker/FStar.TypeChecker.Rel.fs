@@ -2234,6 +2234,18 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                      solve env (solve_prob orig (Some guard) [] wl)
                 else giveup env (BU.format2 "head mismatch (%s vs %s)" (Print.term_to_string head1) (Print.term_to_string head2)) orig
 
+            | (HeadMatch true, _) when problem.relation <> EQ ->
+              //heads may only match after unification;
+              //but we're not trying to unify them here
+              //so, treat as a mismatch
+                if wl.smt_ok
+                then let guard, wl = guard_of_prob env wl problem t1 t2 in
+                     solve env (solve_prob orig (Some guard) [] wl)
+                else giveup env (BU.format2 "head mismatch for subtyping (%s vs %s)"
+                                            (Print.term_to_string t1)
+                                            (Print.term_to_string t2))
+                                 orig
+
             | (_, Some (t1, t2)) -> //heads match after some delta steps
                 solve_t env ({problem with lhs=t1; rhs=t2}) wl
 
