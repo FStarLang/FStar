@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "be32473527d146d7af2fb1ddf1a97806"
+      "c355c580929349e4d3c658561ca76f62"
     ],
     [
       "FStar.Tactics.BV.cong_bvand",
@@ -22,7 +22,384 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "5833bb93c6b11060b2de732984ba15bd"
+      "3672ae7100b949f7913c30fa92d3a803"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvxor",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "fd7bb5e6afbb60158304626704ca010e"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvxor",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.pos", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "95a789beed8e0ed0dbf96f91243665ef"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvor",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "f7c52954d8638e524049a770126f51ee"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvor",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.pos", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "e65038b612b616c52ae41bdb0d3a4b08"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvshl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt32.n", "equation_Prims.pos",
+        "function_token_typing_FStar.UInt32.n", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "d014c877e344c5a037c9044e9531b5b8"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvshl",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.pos", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "b3c7dbf284908bffae4d7c8206fa4291"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvshr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt32.n", "equation_Prims.pos",
+        "function_token_typing_FStar.UInt32.n", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "6ae4d843e9f7fc4fd415e7fd6319be81"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvshr",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.pos", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "23c93365d61695e22c3b0f6c2bd4e2c1"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvdiv",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "9c22e623a72503228c1a64304c06e8dc"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvdiv",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "eq2-interp", "equation_Prims.eq2", "equation_Prims.pos",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "2882dda36ebb0c683ae7b0eb877bd272"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvmod",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "bfbc9210b174c7f030248447cfc7cdc0"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvmod",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "eq2-interp", "equation_Prims.eq2", "equation_Prims.pos",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "321ad76f67ea4ed21dfb277e537ddde9"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvmul",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "182e0267c27c7c83121a627a41a0fba7"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvmul",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.pos", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "31eee49db0a776706fb23a22c71b4626"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvadd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "9668e871e92ba82e44b002547ee54c1c"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvadd",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.pos", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "b68632b0252d9e2231ed3971b15d7622"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvsub",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "7421e6f26317dfc8625bb08860afd302"
+    ],
+    [
+      "FStar.Tactics.BV.cong_bvsub",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.pos", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "0217ea3d789bfc552ec8c6ebd31cd13a"
+    ],
+    [
+      "FStar.Tactics.BV.eq_to_bv",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6fb9b02522eb6d709064bb93bb1bce8d"
+    ],
+    [
+      "FStar.Tactics.BV.eq_to_bv",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.pos", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "bfe1fc3044d53105cbb70a70fe69d555"
+    ],
+    [
+      "FStar.Tactics.BV.lt_to_bv",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "c7b3482ff5dd0474f2d93ce259cf78af"
+    ],
+    [
+      "FStar.Tactics.BV.lt_to_bv",
+      2,
+      2,
+      1,
+      [ "@query", "b2t_def" ],
+      0,
+      "2fd07a073f45444857829701ca2393b3"
+    ],
+    [
+      "FStar.Tactics.BV.trans",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d030a5d9cb139bcdfef5bb9c2ee5fa8f"
+    ],
+    [
+      "FStar.Tactics.BV.trans",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.pos", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "a123e1aa0d4a0c4df8eec737f97621c2"
+    ],
+    [
+      "FStar.Tactics.BV.trans_lt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "8c0b7371c205ca1f29c29f130763be11"
+    ],
+    [
+      "FStar.Tactics.BV.trans_lt",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_FStar.Tactics.BV_Tm_refine_8002c79ae42ff92c4edc4d769192262d",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_typing"
+      ],
+      0,
+      "cdd54c61fdce8ac26d457933ae395055"
+    ],
+    [
+      "FStar.Tactics.BV.trans_lt2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1c20b157aca6ce9b66062f5192cb8972"
+    ],
+    [
+      "FStar.Tactics.BV.trans_lt2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "eq2-interp",
+        "equation_Prims.eq2", "equation_Prims.pos", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "b6cb11898823eb642b6e6f94eaadd6fa"
+    ],
+    [
+      "FStar.Tactics.BV.arith_to_bv_tac",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Formula_pretyping_b073e375dc2ba165c16a483cd56ed8f1",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_FStar.Reflection.Formula.False_@tok",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "4b14afd10f0eaa940d2cda37a2356170"
     ],
     [
       "FStar.Tactics.BV.cong_bvand",
@@ -36,33 +413,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "2b4d60beb4ab920803c2d5408977a44e"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvxor",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "f8eae62668b5d4b22af0303ab9945dca"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvxor",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "7207c13fca006e288f2b9af17ecc48e4"
+      "9532eaa0faf62b81fcf6b18be3c94e0c"
     ],
     [
       "FStar.Tactics.BV.cong_bvxor",
@@ -71,47 +422,7 @@
       1,
       [ "@query" ],
       0,
-      "33e2947ef34484eddd2364876a7cf245"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvxor",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "b484741597762abeb9ee1b687c11ae23"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvor",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "965c959c4121b4b661a7b649873c1076"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvor",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "f64ab39c3b8030ca82540abdfb39ac23"
+      "31e0fd4844254c6200b8de96d6dd8c83"
     ],
     [
       "FStar.Tactics.BV.cong_bvor",
@@ -120,47 +431,7 @@
       1,
       [ "@query" ],
       0,
-      "9fc0f7482a6d18207dcbeae6768af307"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvor",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "d763fbebd51b2218c30806ddadc478e6"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvshl",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "200d54917929bbdf4c63bd8e631c168c"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvshl",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "7c4ac8b7aa2da228314cc7b0a6741c9f"
+      "0fcbf01f2b9d700f723177d467a524c2"
     ],
     [
       "FStar.Tactics.BV.cong_bvshl",
@@ -178,34 +449,11 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "6ba93c2e43b1b931b88dc56ce7637409"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvshl",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "2955545e8845ceb5b63a9dccdc72f9b5"
+      "2d40259a3ac03cffa9665f35dd091904"
     ],
     [
       "FStar.Tactics.BV.cong_bvshr",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "fd9beffbadd8b4a5f25a1ff07aa60213"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvshr",
-      2,
+      3,
       2,
       1,
       [
@@ -221,45 +469,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "e0f559672e965b9ad902525628a91698"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvshr",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "3323bb958cf9e8544595a724caf581cf"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvdiv",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "ad08038a91c107f4bc9b452c23187c23"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvdiv",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "eq2-interp", "equation_Prims.eq2", "equation_Prims.pos",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "5865d9cb123ad75b42c6480f38c47194"
+      "bbb3269f7d5a0a6917ba9e3de02f024a"
     ],
     [
       "FStar.Tactics.BV.cong_bvdiv",
@@ -274,46 +484,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "577ba7bf14204ac5b8b9d0cd420269a6"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvdiv",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "eq2-interp", "equation_Prims.eq2", "equation_Prims.pos",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "a651c5802b22964f7322275dd02a0bba"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvmod",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "5a7efaa45b2661b2d27b0e3292905ebd"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvmod",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "eq2-interp", "equation_Prims.eq2", "equation_Prims.pos",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "30d95dbede6c6e8b66e5250c088fab18"
+      "11d0f1582431c0e8187f1e1f8dc49ce6"
     ],
     [
       "FStar.Tactics.BV.cong_bvmod",
@@ -328,45 +499,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "b105db854a9959e4fb95f499cfa9e8f0"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvmod",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "eq2-interp", "equation_Prims.eq2", "equation_Prims.pos",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "5b9cefb88bee949988a30ac8bb3ec74d"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvmul",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "aadc5f0e80f459396d34469340e883d5"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvmul",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "ad5095bd0f6265a7f8507a7f41766291"
+      "251d61ffae025d614da600c2f9e5035c"
     ],
     [
       "FStar.Tactics.BV.cong_bvmul",
@@ -380,33 +513,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "da802eb1bbee7b9e1f2cddbc09945555"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvadd",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "cb19a54868472b61bc48886711d2c9b2"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvadd",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "ff51b54a98aa6e9004d6764c23f96535"
+      "bca4bfda766e75afbeb82ca3ebf30b60"
     ],
     [
       "FStar.Tactics.BV.cong_bvadd",
@@ -415,47 +522,7 @@
       1,
       [ "@query" ],
       0,
-      "7f55e7266cf77a082a8615e515445f5b"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvadd",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "58e6029bf4e503ec8ec65fa81ab80c6b"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvsub",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "22708cae2e0079bc76e7d05a32e2699b"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvsub",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "dbcfa9fbf21763a281fb670abf8123c0"
+      "505b9d832b296d8dd0c6592e80ab439b"
     ],
     [
       "FStar.Tactics.BV.cong_bvsub",
@@ -464,44 +531,7 @@
       1,
       [ "@query" ],
       0,
-      "3a024fbd42602540cc2ec7d896678e40"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvsub",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "1a142c3863800c0d5b5788d1427c89fe"
-    ],
-    [
-      "FStar.Tactics.BV.eq_to_bv",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "08e913a52db0d788d015778dd00db540"
-    ],
-    [
-      "FStar.Tactics.BV.eq_to_bv",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "63a46ca9401aec0f7567a32930bf0a14"
+      "ff80aebce88228de5818696a7964a779"
     ],
     [
       "FStar.Tactics.BV.eq_to_bv",
@@ -515,310 +545,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "490289c293144d48021d185df5431861"
-    ],
-    [
-      "FStar.Tactics.BV.lt_to_bv",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "e3f8f4d3d93fddb0e206b94946a81e75"
-    ],
-    [
-      "FStar.Tactics.BV.lt_to_bv",
-      2,
-      2,
-      1,
-      [ "@query", "b2t_def" ],
-      0,
-      "a160b326ca36bea45b79d6e574edbf1c"
-    ],
-    [
-      "FStar.Tactics.BV.trans",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "0e157f93898ebd7e9280eafd82678d3e"
-    ],
-    [
-      "FStar.Tactics.BV.trans",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "52dd38e0aee890b572a663f4266d253f"
-    ],
-    [
-      "FStar.Tactics.BV.trans_lt",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "50f5bcd46544bcaf9012f194b024f662"
-    ],
-    [
-      "FStar.Tactics.BV.trans_lt",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
-        "refinement_interpretation_FStar.Tactics.BV_Tm_refine_8002c79ae42ff92c4edc4d769192262d",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
-      ],
-      0,
-      "8a0fce246b9dd44e9d43f759a76a1e64"
-    ],
-    [
-      "FStar.Tactics.BV.trans_lt2",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "42b8ae072baf7d0516d2544dff608946"
-    ],
-    [
-      "FStar.Tactics.BV.trans_lt2",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "eq2-interp",
-        "equation_Prims.eq2", "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "b9d3d1677369eadcfdd74ea3624a75de"
-    ],
-    [
-      "FStar.Tactics.BV.trans_lt2",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "52e207c8eb2da7f1c0308d87d0027770"
-    ],
-    [
-      "FStar.Tactics.BV.trans_lt2",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "eq2-interp",
-        "equation_Prims.eq2", "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "b5e108c77b196e1752688eb700e8e2dd"
-    ],
-    [
-      "FStar.Tactics.BV.arith_to_bv_tac",
-      1,
-      2,
-      2,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Formula_pretyping_b073e375dc2ba165c16a483cd56ed8f1",
-        "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_FStar.Reflection.Formula.False_@tok",
-        "disc_equation_FStar.Pervasives.Inl",
-        "disc_equation_FStar.Pervasives.Inr",
-        "fuel_guarded_inversion_FStar.Pervasives.either",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "a36cf787a4eb3e839da8dd6ed30046a7"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvand",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "72be1b558a09b72a6051007331741d60"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvxor",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "1b317190ca69315656156042719f4177"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvor",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "58233cd88b11c04ab087764dba7ddaf8"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvshl",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.n", "equation_Prims.pos",
-        "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "48f6bb3d76ce91813dfe4180989b181d"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvshr",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.n", "equation_Prims.pos",
-        "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "3691bd11f74af77c85762c56969509f5"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvdiv",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "eq2-interp", "equation_Prims.eq2", "equation_Prims.pos",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "cacd9bc98964f12e9a7c01024b5282b4"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvmod",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "eq2-interp", "equation_Prims.eq2", "equation_Prims.pos",
-        "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "df13be2a7a0bfa442f1fef90ed1fbb96"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvmul",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "a64c9c8d0fd4867846e912e3452f99cd"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvadd",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "e48261819aec23f615c5966cba0129fc"
-    ],
-    [
-      "FStar.Tactics.BV.cong_bvsub",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "fd0273858ab4a9c6fc1957c1cbcd9172"
-    ],
-    [
-      "FStar.Tactics.BV.eq_to_bv",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.pos", "equation_Prims.squash",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "9ff05cea7c127955e9c451338ac677e3"
+      "d92c29457f3fea17fd1c6ad458e3a05e"
     ],
     [
       "FStar.Tactics.BV.lt_to_bv",
@@ -830,7 +557,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "688817ac23e94324105446bc7c7334cf"
+      "f453e352b70846a0da7a1577cb876e1c"
     ],
     [
       "FStar.Tactics.BV.trans",
@@ -839,7 +566,7 @@
       1,
       [ "@query" ],
       0,
-      "3ce9fc3dea682fb62dcdb9fa5c306759"
+      "811839cb612b738589fe84fc7290d86d"
     ],
     [
       "FStar.Tactics.BV.trans_lt",
@@ -851,11 +578,11 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "39712e96336939fb91f87c27d924741a"
+      "34bb55df0f868b867c06c3ef42ea4976"
     ],
     [
       "FStar.Tactics.BV.trans_lt2",
-      5,
+      3,
       2,
       1,
       [
@@ -863,7 +590,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "f58b16b0544d5a59662e8c2c5acdacbb"
+      "3d725e1497b8a98d05a5f7b03b23eb88"
     ],
     [
       "FStar.Tactics.BV.arith_to_bv_tac",
@@ -881,7 +608,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "70cba876c8ca60419eb5193ae7888a69"
+      "9c2dd3a34492ba05fc5137ba3d6979c1"
     ]
   ]
 ]
