@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f84a8778f82b437c4b52cd25e1a2123b"
+      "7d78a3c622145025f5780fe6dbb21018"
     ],
     [
       "Bug026b.bar",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "53ea96f22ce4666d4888c5ec3ea07704"
+      "ec9e9b70a4cae8c49950841d83a834a5"
     ]
   ]
 ]
