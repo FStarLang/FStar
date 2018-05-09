@@ -328,8 +328,7 @@ let (mk_ty_fun :
   
 type unfold_t =
   FStar_Extraction_ML_Syntax.mlty ->
-    FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option[@@deriving
-                                                                    show]
+    FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option
 let rec (type_leq_c :
   unfold_t ->
     FStar_Extraction_ML_Syntax.mlexpr FStar_Pervasives_Native.option ->
@@ -790,7 +789,7 @@ let (not_implemented_warning :
   
 type emb_loc =
   | S 
-  | R [@@deriving show]
+  | R 
 let (uu___is_S : emb_loc -> Prims.bool) =
   fun projectee  -> match projectee with | S  -> true | uu____1632 -> false 
 let (uu___is_R : emb_loc -> Prims.bool) =

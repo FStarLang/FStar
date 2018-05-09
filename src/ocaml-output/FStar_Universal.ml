@@ -779,7 +779,7 @@ let (store_module_to_cache :
   
 type delta_env =
   (FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env)
-    FStar_Pervasives_Native.option[@@deriving show]
+    FStar_Pervasives_Native.option
 let (apply_delta_env :
   FStar_TypeChecker_Env.env -> delta_env -> FStar_TypeChecker_Env.env) =
   fun env  ->

@@ -3,7 +3,7 @@ type env =
   {
   env: FStar_TypeChecker_Env.env ;
   subst: FStar_Syntax_Syntax.subst_elt Prims.list ;
-  tc_const: FStar_Const.sconst -> FStar_Syntax_Syntax.typ }[@@deriving show]
+  tc_const: FStar_Const.sconst -> FStar_Syntax_Syntax.typ }
 let (__proj__Mkenv__item__env : env -> FStar_TypeChecker_Env.env) =
   fun projectee  ->
     match projectee with
@@ -1502,7 +1502,7 @@ let (gen_wps_for_free :
                       }  in
                     (uu____3490, uu____3543)))))
   
-type env_ = env[@@deriving show]
+type env_ = env
 let (get_env : env -> FStar_TypeChecker_Env.env) = fun env  -> env.env 
 let (set_env : env -> FStar_TypeChecker_Env.env -> env) =
   fun dmff_env  ->
@@ -1516,7 +1516,7 @@ let (set_env : env -> FStar_TypeChecker_Env.env -> env) =
   
 type nm =
   | N of FStar_Syntax_Syntax.typ 
-  | M of FStar_Syntax_Syntax.typ [@@deriving show]
+  | M of FStar_Syntax_Syntax.typ 
 let (uu___is_N : nm -> Prims.bool) =
   fun projectee  -> match projectee with | N _0 -> true | uu____3641 -> false 
 let (__proj__N__item___0 : nm -> FStar_Syntax_Syntax.typ) =
@@ -1525,7 +1525,7 @@ let (uu___is_M : nm -> Prims.bool) =
   fun projectee  -> match projectee with | M _0 -> true | uu____3655 -> false 
 let (__proj__M__item___0 : nm -> FStar_Syntax_Syntax.typ) =
   fun projectee  -> match projectee with | M _0 -> _0 
-type nm_ = nm[@@deriving show]
+type nm_ = nm
 let (nm_of_comp : FStar_Syntax_Syntax.comp' -> nm) =
   fun uu___90_3667  ->
     match uu___90_3667 with

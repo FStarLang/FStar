@@ -146,7 +146,7 @@ type varops_t =
   fresh: Prims.string -> Prims.string ;
   string_const: Prims.string -> FStar_SMTEncoding_Term.term ;
   next_id: unit -> Prims.int ;
-  mk_unique: Prims.string -> Prims.string }[@@deriving show]
+  mk_unique: Prims.string -> Prims.string }
 let (__proj__Mkvarops_t__item__push : varops_t -> unit -> unit) =
   fun projectee  ->
     match projectee with
@@ -368,8 +368,7 @@ type fvar_binding =
   smt_id: Prims.string ;
   smt_token: FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option ;
   smt_fuel_partial_app:
-    FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option }[@@deriving
-                                                                  show]
+    FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option }
 let (__proj__Mkfvar_binding__item__fvar_lid :
   fvar_binding -> FStar_Ident.lident) =
   fun projectee  ->
@@ -426,7 +425,7 @@ type cache_entry =
   cache_symbol_name: Prims.string ;
   cache_symbol_arg_sorts: FStar_SMTEncoding_Term.sort Prims.list ;
   cache_symbol_decls: FStar_SMTEncoding_Term.decl Prims.list ;
-  cache_symbol_assumption_names: Prims.string Prims.list }[@@deriving show]
+  cache_symbol_assumption_names: Prims.string Prims.list }
 let (__proj__Mkcache_entry__item__cache_symbol_name :
   cache_entry -> Prims.string) =
   fun projectee  ->
@@ -486,7 +485,7 @@ type env_t =
   use_zfuel_name: Prims.bool ;
   encode_non_total_function_typ: Prims.bool ;
   current_module_name: Prims.string ;
-  encoding_quantifier: Prims.bool }[@@deriving show]
+  encoding_quantifier: Prims.bool }
 let (__proj__Mkenv_t__item__bvar_bindings :
   env_t ->
     (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.term)

@@ -1,16 +1,15 @@
 open Prims
 type local_binding =
   (FStar_Ident.ident,FStar_Syntax_Syntax.bv,Prims.bool)
-    FStar_Pervasives_Native.tuple3[@@deriving show]
+    FStar_Pervasives_Native.tuple3
 type rec_binding =
   (FStar_Ident.ident,FStar_Ident.lid,FStar_Syntax_Syntax.delta_depth)
-    FStar_Pervasives_Native.tuple3[@@deriving show]
+    FStar_Pervasives_Native.tuple3
 type module_abbrev =
   (FStar_Ident.ident,FStar_Ident.lident) FStar_Pervasives_Native.tuple2
-[@@deriving show]
 type open_kind =
   | Open_module 
-  | Open_namespace [@@deriving show]
+  | Open_namespace 
 let (uu___is_Open_module : open_kind -> Prims.bool) =
   fun projectee  ->
     match projectee with | Open_module  -> true | uu____22 -> false
@@ -20,8 +19,7 @@ let (uu___is_Open_namespace : open_kind -> Prims.bool) =
     match projectee with | Open_namespace  -> true | uu____28 -> false
   
 type open_module_or_namespace =
-  (FStar_Ident.lident,open_kind) FStar_Pervasives_Native.tuple2[@@deriving
-                                                                 show]
+  (FStar_Ident.lident,open_kind) FStar_Pervasives_Native.tuple2
 type record_or_dc =
   {
   typename: FStar_Ident.lident ;
@@ -32,7 +30,7 @@ type record_or_dc =
       FStar_Pervasives_Native.tuple2 Prims.list
     ;
   is_private_or_abstract: Prims.bool ;
-  is_record: Prims.bool }[@@deriving show]
+  is_record: Prims.bool }
 let (__proj__Mkrecord_or_dc__item__typename :
   record_or_dc -> FStar_Ident.lident) =
   fun projectee  ->
@@ -95,7 +93,7 @@ type scope_mod =
   | Module_abbrev of module_abbrev 
   | Open_module_or_namespace of open_module_or_namespace 
   | Top_level_def of FStar_Ident.ident 
-  | Record_or_dc of record_or_dc [@@deriving show]
+  | Record_or_dc of record_or_dc 
 let (uu___is_Local_binding : scope_mod -> Prims.bool) =
   fun projectee  ->
     match projectee with | Local_binding _0 -> true | uu____219 -> false
@@ -135,10 +133,10 @@ let (uu___is_Record_or_dc : scope_mod -> Prims.bool) =
   
 let (__proj__Record_or_dc__item___0 : scope_mod -> record_or_dc) =
   fun projectee  -> match projectee with | Record_or_dc _0 -> _0 
-type string_set = Prims.string FStar_Util.set[@@deriving show]
+type string_set = Prims.string FStar_Util.set
 type exported_id_kind =
   | Exported_id_term_type 
-  | Exported_id_field [@@deriving show]
+  | Exported_id_field 
 let (uu___is_Exported_id_term_type : exported_id_kind -> Prims.bool) =
   fun projectee  ->
     match projectee with
@@ -149,8 +147,7 @@ let (uu___is_Exported_id_field : exported_id_kind -> Prims.bool) =
   fun projectee  ->
     match projectee with | Exported_id_field  -> true | uu____310 -> false
   
-type exported_id_set = exported_id_kind -> string_set FStar_ST.ref[@@deriving
-                                                                    show]
+type exported_id_set = exported_id_kind -> string_set FStar_ST.ref
 type env =
   {
   curmodule: FStar_Ident.lident FStar_Pervasives_Native.option ;
@@ -177,13 +174,13 @@ type env =
       FStar_Pervasives_Native.tuple2 Prims.list
     ;
   syntax_only: Prims.bool ;
-  ds_hooks: dsenv_hooks }[@@deriving show]
+  ds_hooks: dsenv_hooks }
 and dsenv_hooks =
   {
   ds_push_open_hook: env -> open_module_or_namespace -> unit ;
   ds_push_include_hook: env -> FStar_Ident.lident -> unit ;
   ds_push_module_abbrev_hook:
-    env -> FStar_Ident.ident -> FStar_Ident.lident -> unit }[@@deriving show]
+    env -> FStar_Ident.ident -> FStar_Ident.lident -> unit }
 let (__proj__Mkenv__item__curmodule :
   env -> FStar_Ident.lident FStar_Pervasives_Native.option) =
   fun projectee  ->
@@ -469,8 +466,7 @@ let (__proj__Mkdsenv_hooks__item__ds_push_module_abbrev_hook :
         ds_push_module_abbrev_hook = __fname__ds_push_module_abbrev_hook;_}
         -> __fname__ds_push_module_abbrev_hook
   
-type 'a withenv = env -> ('a,env) FStar_Pervasives_Native.tuple2[@@deriving
-                                                                  show]
+type 'a withenv = env -> ('a,env) FStar_Pervasives_Native.tuple2
 let (default_ds_hooks : dsenv_hooks) =
   {
     ds_push_open_hook = (fun uu____1725  -> fun uu____1726  -> ());
@@ -484,7 +480,7 @@ type foundname =
                                         Prims.list)
   FStar_Pervasives_Native.tuple3 
   | Eff_name of (FStar_Syntax_Syntax.sigelt,FStar_Ident.lident)
-  FStar_Pervasives_Native.tuple2 [@@deriving show]
+  FStar_Pervasives_Native.tuple2 
 let (uu___is_Term_name : foundname -> Prims.bool) =
   fun projectee  ->
     match projectee with | Term_name _0 -> true | uu____1773 -> false
@@ -851,7 +847,7 @@ let (unmangleOpName :
 type 'a cont_t =
   | Cont_ok of 'a 
   | Cont_fail 
-  | Cont_ignore [@@deriving show]
+  | Cont_ignore 
 let uu___is_Cont_ok : 'a . 'a cont_t -> Prims.bool =
   fun projectee  ->
     match projectee with | Cont_ok _0 -> true | uu____2593 -> false
@@ -3450,7 +3446,7 @@ let (finish_module_or_interface :
 type exported_ids =
   {
   exported_id_terms: Prims.string Prims.list ;
-  exported_id_fields: Prims.string Prims.list }[@@deriving show]
+  exported_id_fields: Prims.string Prims.list }
 let (__proj__Mkexported_ids__item__exported_id_terms :
   exported_ids -> Prims.string Prims.list) =
   fun projectee  ->
@@ -3507,7 +3503,6 @@ type module_inclusion_info =
   mii_exported_ids: exported_ids FStar_Pervasives_Native.option ;
   mii_trans_exported_ids: exported_ids FStar_Pervasives_Native.option ;
   mii_includes: FStar_Ident.lident Prims.list FStar_Pervasives_Native.option }
-[@@deriving show]
 let (__proj__Mkmodule_inclusion_info__item__mii_exported_ids :
   module_inclusion_info -> exported_ids FStar_Pervasives_Native.option) =
   fun projectee  ->
