@@ -104,7 +104,8 @@ type term_view =
   | Tv_Refine of (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term)
   FStar_Pervasives_Native.tuple2 
   | Tv_Const of vconst 
-  | Tv_Uvar of (FStar_BigInt.t,typ) FStar_Pervasives_Native.tuple2 
+  | Tv_Uvar of (FStar_BigInt.t,FStar_Syntax_Syntax.ctx_uvar_and_subst)
+  FStar_Pervasives_Native.tuple2 
   | Tv_Let of
   (Prims.bool,FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
   FStar_Pervasives_Native.tuple4 
@@ -187,8 +188,10 @@ let (uu___is_Tv_Uvar : term_view -> Prims.bool) =
     match projectee with | Tv_Uvar _0 -> true | uu____540 -> false
   
 let (__proj__Tv_Uvar__item___0 :
-  term_view -> (FStar_BigInt.t,typ) FStar_Pervasives_Native.tuple2) =
-  fun projectee  -> match projectee with | Tv_Uvar _0 -> _0 
+  term_view ->
+    (FStar_BigInt.t,FStar_Syntax_Syntax.ctx_uvar_and_subst)
+      FStar_Pervasives_Native.tuple2)
+  = fun projectee  -> match projectee with | Tv_Uvar _0 -> _0 
 let (uu___is_Tv_Let : term_view -> Prims.bool) =
   fun projectee  ->
     match projectee with | Tv_Let _0 -> true | uu____574 -> false

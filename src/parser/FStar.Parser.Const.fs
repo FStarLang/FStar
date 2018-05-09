@@ -222,6 +222,9 @@ let decreases_lid  = pconst "decreases"
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
 let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 
+let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
+
+
 let range_lid      = pconst "range"
 let range_of_lid   = pconst "range_of"
 let labeled_lid    = pconst "labeled"
@@ -253,9 +256,8 @@ let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
 let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
 let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
-let fail_attr = pconst "fail"
-let fail_lax_attr = pconst "fail_lax"
-let fail_errs_attr = pconst "fail_errs"
+let fail_attr      = psconst "fail"
+let fail_lax_attr  = psconst "fail_lax"
 
 let gen_reset =
     let x = U.mk_ref 0 in

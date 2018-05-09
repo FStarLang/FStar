@@ -8,24 +8,31 @@ include FStar.ST
 open FStar.Heap
 open FStar.ST
 
-abstract let sel (#a:Type0) (h:heap) (r:ref a) :GTot (x:a{x == Heap.sel h r})
+unfold
+let sel (#a:Type0) (h:heap) (r:ref a) : GTot a
   = Heap.sel h r
 
-abstract let upd (#a:Type0) (h:heap) (r:ref a) (v:a) :GTot (h1:heap{h1 == Heap.upd h r v})
+unfold
+let upd (#a:Type0) (h:heap) (r:ref a) (v:a) :GTot heap
   = Heap.upd h r v
 
-abstract let addr_of (#a:Type0) (r:ref a) :GTot (n:nat{n == Heap.addr_of r}) = addr_of r
+unfold
+let addr_of (#a:Type0) (r:ref a) : GTot nat = addr_of r
 
-abstract let contains (#a:Type0) (h:heap) (r:ref a) :GTot (p:prop{p <==> Heap.contains h r})
+unfold
+let contains (#a:Type0) (h:heap) (r:ref a) :GTot prop
   = Heap.contains h r
 
-abstract let unused_in (#a:Type0) (r:ref a) (h:heap) :GTot (p:prop{p <==> Heap.unused_in r h})
+unfold
+let unused_in (#a:Type0) (r:ref a) (h:heap) :GTot prop
   = Heap.unused_in r h
 
-abstract let fresh (#a:Type0) (r:ref a) (h0:heap) (h1:heap) :GTot (p:prop{p <==> Heap.fresh r h0 h1})
+unfold
+let fresh (#a:Type0) (r:ref a) (h0:heap) (h1:heap) : prop
   = Heap.fresh r h0 h1
 
-abstract let only (#a:Type0) (r:ref a) :GTot (s:Set.set nat{s == Heap.only r})
+unfold
+let only (#a:Type0) (r:ref a) :GTot (Set.set nat)
   = Heap.only r
 
 abstract let recall (#a:Type0) (r:ref a)

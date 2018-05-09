@@ -34,30 +34,40 @@ type rel =
   | SUB
   | SUBINV  (* sub-typing/sub-kinding, inverted *)
 
-type problem<'a,'b> = {               //Try to prove: lhs rel rhs ~> guard
+type rank_t =
+    | Rigid_rigid
+    | Flex_rigid_eq
+    | Flex_flex_pattern_eq
+    | Flex_rigid
+    | Rigid_flex
+    | Flex_flex
+
+type problem<'a> = {                  //Try to prove: lhs rel rhs ~> guard
     pid:int;
     lhs:'a;
     relation:rel;
     rhs:'a;
-    element:option<'b>;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
-    logical_guard:(term * term);      //the condition under which this problem is solveable; (uv x1 ... xn, uv)
-    scope:binders;                    //the set of names permissible in the guard of this formula
+    element:option<term>;             //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
+    logical_guard:term;               //the condition under which this problem is solveable; (?u v1..vn)
+    logical_guard_uvar:binders * ctx_uvar;
     reason: list<string>;             //why we generated this problem, for error reporting
     loc: Range.range;                 //and the source location where this arose
-    rank: option<int>;
+    rank: option<rank_t>;
 }
 
 type prob =
-  | TProb of problem<typ,term>
-  | CProb of problem<comp,unit>
+  | TProb of problem<typ>
+  | CProb of problem<comp>
 
-val as_tprob : prob -> problem<typ,term>
+val as_tprob : prob -> problem<typ>
 
 type probs = list<prob>
 
 type guard_formula =
   | Trivial
   | NonTrivial of formula
+
+val check_uvar_ctx_invariant : string -> Range.range -> bool -> gamma -> binders -> unit
 
 type deferred = list<(string * prob)>
 type univ_ineq = universe * universe

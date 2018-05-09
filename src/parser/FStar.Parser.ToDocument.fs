@@ -292,24 +292,24 @@ let matches_level s (assoc_levels, tokens) =
     List.tryFind (matches_token s) tokens <> None
 
 (* Precedence and associativity levels, taken from ../src/parse.mly *)
-let opinfix4 = Right, [Inr "**"]
+let opinfix4 : associativity_level = Right, [Inr "**"]
 // level backtick won't be used here
-let opinfix3 = Left,  [Inl '*' ; Inl '/' ; Inl '%']
-let opinfix2 = Left,  [Inl '+' ; Inl '-' ]
-let minus_lvl = Left, [Inr "-"] // Sublevel of opinfix2, not a level on its own !!!
-let opinfix1 = Right, [Inl '@' ; Inl '^']
-let pipe_right = Left,  [Inr "|>"]
-let opinfix0d = Left,  [Inl '$']
-let opinfix0c = Left,  [Inl '=' ; Inl '<' ; Inl '>']
-let equal = Left, [Inr "="] // Sublevel of opinfix0c, not a level on its own !!!
-let opinfix0b = Left,  [Inl '&']
-let opinfix0a = Left,  [Inl '|']
-let colon_equals = NonAssoc, [Inr ":="]
-let amp = Right, [Inr "&"]
-let colon_colon = Right, [Inr "::"]
+let opinfix3 : associativity_level = Left,  [Inl '*' ; Inl '/' ; Inl '%']
+let opinfix2 : associativity_level = Left,  [Inl '+' ; Inl '-' ]
+let minus_lvl : associativity_level = Left, [Inr "-"] // Sublevel of opinfix2, not a level on its own !!!
+let opinfix1 : associativity_level = Right, [Inl '@' ; Inl '^']
+let pipe_right : associativity_level = Left,  [Inr "|>"]
+let opinfix0d : associativity_level = Left,  [Inl '$']
+let opinfix0c : associativity_level = Left,  [Inl '=' ; Inl '<' ; Inl '>']
+let equal : associativity_level = Left, [Inr "="] // Sublevel of opinfix0c, not a level on its own !!!
+let opinfix0b : associativity_level = Left,  [Inl '&']
+let opinfix0a : associativity_level = Left,  [Inl '|']
+let colon_equals : associativity_level = NonAssoc, [Inr ":="]
+let amp : associativity_level = Right, [Inr "&"]
+let colon_colon : associativity_level = Right, [Inr "::"]
 
 (* The latter the element, the tighter it binds *)
-let level_associativity_spec =
+let level_associativity_spec : list<associativity_level> =
   [
     opinfix4 ;
     opinfix3 ;
@@ -1003,7 +1003,8 @@ and paren_if b =
   if b then
     soft_parens_with_nesting
   else
-    fun x -> x
+    let id : document -> document = fun x -> x in
+    id
 
 and p_term (ps:bool) (pb:bool) (e:term) = match e.tm with
   | Seq (e1, e2) ->
@@ -1463,7 +1464,9 @@ and p_projectionLHS e = match e.tm with
   | Op (op, args) when not (handleable_op op args) ->
     failwith ("Operation " ^ Ident.text_of_id op ^ " with " ^ string_of_int (List.length args) ^
               " arguments couldn't be handled by the pretty printer")
-  | Uvar _ -> failwith "Unexpected universe variable out of universe context"
+  | Uvar id ->
+    str "u#" ^^ str id.idText
+//    failwith "Unexpected universe variable out of universe context"
 
   (* All the cases are explicitly listed below so that a modification of the ast doesn't lead to a loop *)
   (* We must also make sure that all the constructors listed below are handled somewhere *)

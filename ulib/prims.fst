@@ -71,12 +71,12 @@ unfold let t_refine :a:Type -> (a -> Tot prop) -> Tot Type = fun a p -> x:a{p x}
 
 (* F* will automatically insert `auto_squash` when simplifying terms,
    converting terms of the form `p /\ True` to `auto_squash p`.
-   
-   We distinguish these automatically inserted squashes from explicit, 
+
+   We distinguish these automatically inserted squashes from explicit,
    user-written squashes.
 
    It's marked `private` so that users cannot write it themselves.
-*)   
+*)
 private
 let auto_squash (p:Type) = squash p
 
@@ -134,7 +134,7 @@ type l_or (p q:prop) :prop = squash (c_or p q)
 [@ "tac_opaque"]
 type l_imp (p q:prop) :prop = squash (p -> GTot q)
                                          (* ^^^ NB: The GTot effect is primitive;            *)
-				         (*         elaborated using GHOST a few lines below *)
+                                         (*         elaborated using GHOST a few lines below *)
 (* infix binary '<==>' *)
 type l_iff (p:prop) (q:prop) :prop = (p ==> q) /\ (q ==> p)
 
@@ -147,7 +147,8 @@ unfold type l_ITE (p q r:prop) :prop = (p ==> q) /\ (~p ==> r)
 assume type precedes :#a:Type -> #b:Type -> a -> b -> Tot prop
 
 (* internalizing the typing relation for the SMT encoding: (has_type x t) *)
-assume type has_type :#a:Type -> a -> Type -> Tot prop
+assume
+type has_type : #a:Type -> a -> Type -> Tot prop
 
 (* forall (x:a). p x : specialized to prop *)
 [@ "tac_opaque"]
@@ -204,8 +205,8 @@ unfold let pure_if_then_else (a:Type) (p:prop) (wp_then:pure_wp a) (wp_else:pure
 unfold
 let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
      forall (k:pure_post a).
-	 (forall (x:a).{:pattern (guard_free (k x))} post x ==> k x)
-	 ==> wp k
+         (forall (x:a).{:pattern (guard_free (k x))} post x ==> k x)
+         ==> wp k
 
 unfold
 let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =
@@ -261,7 +262,6 @@ sub_effect
 
 (* The primitive effect GTot is definitionally equal to an instance of GHOST *)
 effect GTot (a:Type) = GHOST a (pure_null_wp a)
-(* #set-options "--print_universes --print_implicits --print_bound_var_types --debug Prims --debug_level Extreme" *)
 effect Ghost (a:Type) (pre:prop) (post:pure_post' a pre) =
        GHOST a (fun (p:pure_post a) -> pre /\ (forall (ghost_result:a). post ghost_result ==> p ghost_result))
 
@@ -386,12 +386,21 @@ type lex_t =
 let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
 let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
 
-assume val _assume : p:prop -> Pure unit (requires (True)) (ensures (fun x -> p))
-assume val admit   : #a:Type -> unit -> Admit a
-assume val magic   : #a:Type -> unit -> Tot a
-irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
-let unsafe_coerce #a #b x = admit(); x
-assume val admitP  : p:prop -> Pure unit True (fun x -> p)
+assume
+val _assume : p:prop -> Pure unit (requires (True)) (ensures (fun x -> p))
+
+assume
+val admit   : #a:Type -> unit -> Admit a
+
+assume
+val magic   : #a:Type -> unit -> Tot a
+
+irreducible
+let unsafe_coerce (#a:Type) (#b: Type) (x:a) : b = admit (); x
+
+assume
+val admitP  : p:prop -> Pure unit True (fun x -> p)
+
 val _assert : p:prop -> Pure unit (requires p) (ensures (fun x -> p))
 let _assert p = ()
 
@@ -450,22 +459,3 @@ val string_of_int: int -> Tot string
 
 irreducible
 let labeled (r:range) (msg:string) (b:Type) :Type = b
-
-(** When attached a top-level definition, the typechecker will succeed if and
- * only if checking the definition results in an error. *)
-assume
-val fail : attribute
-
-(** Like fail, but allows to present a list of error numbers that need to be exactly
- * those raised. All errors should be listed in the exact multiplicity, but order
- * does not matter. *)
-assume
-val fail_errs : list int -> Tot attribute
-
-(** When --lax is present, we ignore both previous attributes since some definitions
- * only fail when verification is turned on. With this attribute, one can ensure
- * that a definition fails lax-checking too. This can be combined with `fail_errs`.
- *
- * (Note: this will NOT turn on --lax for you.) *)
-assume
-val fail_lax : attribute

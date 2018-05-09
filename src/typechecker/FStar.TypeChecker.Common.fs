@@ -34,22 +34,30 @@ type rel =
   | SUB
   | SUBINV  (* sub-typing/sub-kinding, inverted *)
 
-type problem<'a,'b> = {               //Try to prove: lhs rel rhs ~> guard
+type rank_t =
+    | Rigid_rigid
+    | Flex_rigid_eq
+    | Flex_flex_pattern_eq
+    | Flex_rigid
+    | Rigid_flex
+    | Flex_flex
+
+type problem<'a> = {                  //Try to prove: lhs rel rhs ~> guard
     pid:int;
     lhs:'a;
     relation:rel;
     rhs:'a;
-    element:option<'b>;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
-    logical_guard:(term * term);      //the condition under which this problem is solveable; (uv x1 ... xn, uv)
-    scope:binders;                    //the set of names permissible in the guard of this formula
+    element:option<term>;             //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
+    logical_guard:term;               //the condition under which this problem is solveable; (?u v1..vn)
+    logical_guard_uvar:binders * ctx_uvar;
     reason: list<string>;             //why we generated this problem, for error reporting
     loc: Range.range;                 //and the source location where this arose
-    rank: option<int>;
+    rank: option<rank_t>;
 }
 
 type prob =
-  | TProb of problem<typ,term>
-  | CProb of problem<comp,unit>
+  | TProb of problem<typ>
+  | CProb of problem<comp>
 
 let as_tprob = function
    | TProb p -> p
@@ -196,3 +204,39 @@ let id_info_at_pos (table: id_info_table) (fn:string) (row:int) (col:int) : opti
     | Some info ->
       let last_col = col_of_pos (end_of_range info.identifier_range) in
       if col <= last_col then Some info else None
+
+let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:gamma) (bs:binders) =
+    let print_gamma gamma =
+        (gamma |> List.map (function
+          | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
+          | Binding_univ u -> "Binding_univ " ^ u.idText
+          | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
+    // (env.gamma_sig |> List.map (fun (ls, _) ->
+    //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
+    // ))
+      |> String.concat "::\n"
+     in
+     let fail () =
+         failwith (BU.format5
+                   "Invariant violation: gamma and binders are out of sync\n\t\
+                               reason=%s, range=%s, should_check=%s\n\t
+                               gamma=%s\n\t\
+                               binders=%s\n"
+                               reason
+                               (Range.string_of_range r)
+                               (if should_check then "true" else "false")
+                               (print_gamma g)
+                               (FStar.Syntax.Print.binders_to_string ", " bs))
+     in
+     if not should_check then ()
+     else match BU.prefix_until (function Binding_var _ -> true | _ -> false) g, bs with
+     | None, [] -> ()
+     | Some (_, hd, gamma_tail), _::_ ->
+       let _, (x, _) = BU.prefix bs in
+       begin
+       match hd with
+       | Binding_var x' when S.bv_eq x x' ->
+         ()
+       | _ -> fail()
+        end
+     | _ -> fail()

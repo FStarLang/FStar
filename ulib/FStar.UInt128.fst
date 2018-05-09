@@ -18,6 +18,7 @@ type uint128: Type0 = { low: U64.t; high: U64.t }
 
 let t = uint128
 
+noextract
 let v x = U64.v x.low + (U64.v x.high) * (pow2 64)
 
 let div_mod (x:nat) (k:nat{k > 0}) : Lemma (x / k * k + x % k == x) = ()

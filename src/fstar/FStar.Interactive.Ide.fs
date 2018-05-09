@@ -202,7 +202,7 @@ type name_tracking_event =
 | NTAlias of lid (* host *) * ident (* alias *) * lid (* aliased *)
 | NTOpen of lid (* host *) * DsEnv.open_module_or_namespace (* opened *)
 | NTInclude of lid (* host *) * lid (* included *)
-| NTBinding of binding
+| NTBinding of either<FStar.Syntax.Syntax.binding, TcEnv.sig_binding>
 
 let query_of_ids (ids: list<ident>) : CTable.query =
   List.map text_of_id ids
@@ -231,9 +231,8 @@ let update_names_from_event cur_mod_str table evt =
   | NTBinding binding ->
     let lids =
       match binding with
-      | Binding_lid (lid, _) -> [lid]
-      | Binding_sig (lids, _) -> lids
-      | Binding_sig_inst (lids, _, _) -> lids
+      | Inl (SS.Binding_lid (lid, _)) -> [lid]
+      | Inr (lids, _) -> lids
       | _ -> [] in
     List.fold_left
       (fun tbl lid ->

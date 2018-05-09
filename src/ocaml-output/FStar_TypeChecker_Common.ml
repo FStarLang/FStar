@@ -11,144 +11,182 @@ let (uu___is_SUBINV : rel -> Prims.bool) =
   fun projectee  ->
     match projectee with | SUBINV  -> true | uu____18 -> false
   
-type ('a,'b) problem =
+type rank_t =
+  | Rigid_rigid 
+  | Flex_rigid_eq 
+  | Flex_flex_pattern_eq 
+  | Flex_rigid 
+  | Rigid_flex 
+  | Flex_flex 
+let (uu___is_Rigid_rigid : rank_t -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Rigid_rigid  -> true | uu____24 -> false
+  
+let (uu___is_Flex_rigid_eq : rank_t -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Flex_rigid_eq  -> true | uu____30 -> false
+  
+let (uu___is_Flex_flex_pattern_eq : rank_t -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Flex_flex_pattern_eq  -> true | uu____36 -> false
+  
+let (uu___is_Flex_rigid : rank_t -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Flex_rigid  -> true | uu____42 -> false
+  
+let (uu___is_Rigid_flex : rank_t -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Rigid_flex  -> true | uu____48 -> false
+  
+let (uu___is_Flex_flex : rank_t -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Flex_flex  -> true | uu____54 -> false
+  
+type 'a problem =
   {
   pid: Prims.int ;
   lhs: 'a ;
   relation: rel ;
   rhs: 'a ;
-  element: 'b FStar_Pervasives_Native.option ;
-  logical_guard:
-    (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+  element: FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ;
+  logical_guard: FStar_Syntax_Syntax.term ;
+  logical_guard_uvar:
+    (FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.ctx_uvar)
       FStar_Pervasives_Native.tuple2
     ;
-  scope: FStar_Syntax_Syntax.binders ;
   reason: Prims.string Prims.list ;
   loc: FStar_Range.range ;
-  rank: Prims.int FStar_Pervasives_Native.option }
-let __proj__Mkproblem__item__pid : 'a 'b . ('a,'b) problem -> Prims.int =
+  rank: rank_t FStar_Pervasives_Native.option }
+let __proj__Mkproblem__item__pid : 'a . 'a problem -> Prims.int =
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
         rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        logical_guard = __fname__logical_guard;
+        logical_guard_uvar = __fname__logical_guard_uvar;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__pid
   
-let __proj__Mkproblem__item__lhs : 'a 'b . ('a,'b) problem -> 'a =
+let __proj__Mkproblem__item__lhs : 'a . 'a problem -> 'a =
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
         rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        logical_guard = __fname__logical_guard;
+        logical_guard_uvar = __fname__logical_guard_uvar;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__lhs
   
-let __proj__Mkproblem__item__relation : 'a 'b . ('a,'b) problem -> rel =
+let __proj__Mkproblem__item__relation : 'a . 'a problem -> rel =
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
         rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        logical_guard = __fname__logical_guard;
+        logical_guard_uvar = __fname__logical_guard_uvar;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__relation
   
-let __proj__Mkproblem__item__rhs : 'a 'b . ('a,'b) problem -> 'a =
+let __proj__Mkproblem__item__rhs : 'a . 'a problem -> 'a =
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
         rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        logical_guard = __fname__logical_guard;
+        logical_guard_uvar = __fname__logical_guard_uvar;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__rhs
   
 let __proj__Mkproblem__item__element :
-  'a 'b . ('a,'b) problem -> 'b FStar_Pervasives_Native.option =
+  'a . 'a problem -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+  =
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
         rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        logical_guard = __fname__logical_guard;
+        logical_guard_uvar = __fname__logical_guard_uvar;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__element
   
 let __proj__Mkproblem__item__logical_guard :
-  'a 'b .
-    ('a,'b) problem ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+  'a . 'a problem -> FStar_Syntax_Syntax.term =
+  fun projectee  ->
+    match projectee with
+    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
+        rhs = __fname__rhs; element = __fname__element;
+        logical_guard = __fname__logical_guard;
+        logical_guard_uvar = __fname__logical_guard_uvar;
+        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
+        -> __fname__logical_guard
+  
+let __proj__Mkproblem__item__logical_guard_uvar :
+  'a .
+    'a problem ->
+      (FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.ctx_uvar)
         FStar_Pervasives_Native.tuple2
   =
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
         rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        logical_guard = __fname__logical_guard;
+        logical_guard_uvar = __fname__logical_guard_uvar;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-        -> __fname__logical_guard
-  
-let __proj__Mkproblem__item__scope :
-  'a 'b . ('a,'b) problem -> FStar_Syntax_Syntax.binders =
-  fun projectee  ->
-    match projectee with
-    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-        rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard; scope = __fname__scope;
-        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-        -> __fname__scope
+        -> __fname__logical_guard_uvar
   
 let __proj__Mkproblem__item__reason :
-  'a 'b . ('a,'b) problem -> Prims.string Prims.list =
+  'a . 'a problem -> Prims.string Prims.list =
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
         rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        logical_guard = __fname__logical_guard;
+        logical_guard_uvar = __fname__logical_guard_uvar;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__reason
   
-let __proj__Mkproblem__item__loc :
-  'a 'b . ('a,'b) problem -> FStar_Range.range =
+let __proj__Mkproblem__item__loc : 'a . 'a problem -> FStar_Range.range =
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
         rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        logical_guard = __fname__logical_guard;
+        logical_guard_uvar = __fname__logical_guard_uvar;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__loc
   
 let __proj__Mkproblem__item__rank :
-  'a 'b . ('a,'b) problem -> Prims.int FStar_Pervasives_Native.option =
+  'a . 'a problem -> rank_t FStar_Pervasives_Native.option =
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
         rhs = __fname__rhs; element = __fname__element;
-        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        logical_guard = __fname__logical_guard;
+        logical_guard_uvar = __fname__logical_guard_uvar;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__rank
   
 type prob =
-  | TProb of (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem 
-  | CProb of (FStar_Syntax_Syntax.comp,unit) problem 
+  | TProb of FStar_Syntax_Syntax.typ problem 
+  | CProb of FStar_Syntax_Syntax.comp problem 
 let (uu___is_TProb : prob -> Prims.bool) =
   fun projectee  ->
-    match projectee with | TProb _0 -> true | uu____535 -> false
+    match projectee with | TProb _0 -> true | uu____491 -> false
   
-let (__proj__TProb__item___0 :
-  prob -> (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem) =
+let (__proj__TProb__item___0 : prob -> FStar_Syntax_Syntax.typ problem) =
   fun projectee  -> match projectee with | TProb _0 -> _0 
 let (uu___is_CProb : prob -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CProb _0 -> true | uu____565 -> false
+    match projectee with | CProb _0 -> true | uu____513 -> false
   
-let (__proj__CProb__item___0 :
-  prob -> (FStar_Syntax_Syntax.comp,unit) problem) =
+let (__proj__CProb__item___0 : prob -> FStar_Syntax_Syntax.comp problem) =
   fun projectee  -> match projectee with | CProb _0 -> _0 
-let (as_tprob :
-  prob -> (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem) =
-  fun uu___55_593  ->
-    match uu___55_593 with
+let (as_tprob : prob -> FStar_Syntax_Syntax.typ problem) =
+  fun uu___82_533  ->
+    match uu___82_533 with
     | TProb p -> p
-    | uu____603 -> failwith "Expected a TProb"
+    | uu____539 -> failwith "Expected a TProb"
   
 type probs = prob Prims.list
 type guard_formula =
@@ -156,11 +194,11 @@ type guard_formula =
   | NonTrivial of FStar_Syntax_Syntax.formula 
 let (uu___is_Trivial : guard_formula -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Trivial  -> true | uu____620 -> false
+    match projectee with | Trivial  -> true | uu____554 -> false
   
 let (uu___is_NonTrivial : guard_formula -> Prims.bool) =
   fun projectee  ->
-    match projectee with | NonTrivial _0 -> true | uu____627 -> false
+    match projectee with | NonTrivial _0 -> true | uu____561 -> false
   
 let (__proj__NonTrivial__item___0 :
   guard_formula -> FStar_Syntax_Syntax.formula) =
@@ -176,41 +214,41 @@ let (mk_by_tactic :
   fun tac  ->
     fun f  ->
       let t_by_tactic =
-        let uu____656 =
+        let uu____590 =
           FStar_Syntax_Syntax.tabbrev FStar_Parser_Const.by_tactic_lid  in
-        FStar_Syntax_Syntax.mk_Tm_uinst uu____656
+        FStar_Syntax_Syntax.mk_Tm_uinst uu____590
           [FStar_Syntax_Syntax.U_zero]
          in
       let t_reify_tactic =
-        let uu____658 =
+        let uu____592 =
           FStar_Syntax_Syntax.tabbrev FStar_Parser_Const.reify_tactic_lid  in
-        FStar_Syntax_Syntax.mk_Tm_uinst uu____658
+        FStar_Syntax_Syntax.mk_Tm_uinst uu____592
           [FStar_Syntax_Syntax.U_zero]
          in
       let tac1 =
-        let uu____662 =
-          let uu____667 =
-            let uu____668 =
+        let uu____596 =
+          let uu____601 =
+            let uu____602 =
               FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit  in
-            let uu____669 =
-              let uu____672 = FStar_Syntax_Syntax.as_arg tac  in [uu____672]
+            let uu____609 =
+              let uu____618 = FStar_Syntax_Syntax.as_arg tac  in [uu____618]
                in
-            uu____668 :: uu____669  in
-          FStar_Syntax_Syntax.mk_Tm_app t_reify_tactic uu____667  in
-        uu____662 FStar_Pervasives_Native.None FStar_Range.dummyRange  in
-      let uu____675 =
-        let uu____680 =
-          let uu____681 = FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit
+            uu____602 :: uu____609  in
+          FStar_Syntax_Syntax.mk_Tm_app t_reify_tactic uu____601  in
+        uu____596 FStar_Pervasives_Native.None FStar_Range.dummyRange  in
+      let uu____645 =
+        let uu____650 =
+          let uu____651 = FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit
              in
-          let uu____682 =
-            let uu____685 = FStar_Syntax_Syntax.as_arg tac1  in
-            let uu____686 =
-              let uu____689 = FStar_Syntax_Syntax.as_arg f  in [uu____689]
+          let uu____658 =
+            let uu____667 = FStar_Syntax_Syntax.as_arg tac1  in
+            let uu____674 =
+              let uu____683 = FStar_Syntax_Syntax.as_arg f  in [uu____683]
                in
-            uu____685 :: uu____686  in
-          uu____681 :: uu____682  in
-        FStar_Syntax_Syntax.mk_Tm_app t_by_tactic uu____680  in
-      uu____675 FStar_Pervasives_Native.None FStar_Range.dummyRange
+            uu____667 :: uu____674  in
+          uu____651 :: uu____658  in
+        FStar_Syntax_Syntax.mk_Tm_app t_by_tactic uu____650  in
+      uu____645 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let rec (delta_depth_greater_than :
   FStar_Syntax_Syntax.delta_depth ->
@@ -223,25 +261,25 @@ let rec (delta_depth_greater_than :
          i,FStar_Syntax_Syntax.Delta_equational_at_level j) -> i > j
       | (FStar_Syntax_Syntax.Delta_constant_at_level
          i,FStar_Syntax_Syntax.Delta_constant_at_level j) -> i > j
-      | (FStar_Syntax_Syntax.Delta_equational_at_level uu____706,uu____707)
+      | (FStar_Syntax_Syntax.Delta_equational_at_level uu____730,uu____731)
           -> true
-      | (uu____708,FStar_Syntax_Syntax.Delta_equational_at_level uu____709)
+      | (uu____732,FStar_Syntax_Syntax.Delta_equational_at_level uu____733)
           -> false
-      | (FStar_Syntax_Syntax.Delta_abstract d,uu____711) ->
+      | (FStar_Syntax_Syntax.Delta_abstract d,uu____735) ->
           delta_depth_greater_than d m
-      | (uu____712,FStar_Syntax_Syntax.Delta_abstract d) ->
+      | (uu____736,FStar_Syntax_Syntax.Delta_abstract d) ->
           delta_depth_greater_than l d
   
 let rec (decr_delta_depth :
   FStar_Syntax_Syntax.delta_depth ->
     FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option)
   =
-  fun uu___56_720  ->
-    match uu___56_720 with
-    | FStar_Syntax_Syntax.Delta_constant_at_level _0_4 when
-        _0_4 = (Prims.parse_int "0") -> FStar_Pervasives_Native.None
-    | FStar_Syntax_Syntax.Delta_equational_at_level _0_5 when
-        _0_5 = (Prims.parse_int "0") -> FStar_Pervasives_Native.None
+  fun uu___83_744  ->
+    match uu___83_744 with
+    | FStar_Syntax_Syntax.Delta_constant_at_level _0_16 when
+        _0_16 = (Prims.parse_int "0") -> FStar_Pervasives_Native.None
+    | FStar_Syntax_Syntax.Delta_equational_at_level _0_17 when
+        _0_17 = (Prims.parse_int "0") -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Delta_constant_at_level i ->
         FStar_Pervasives_Native.Some
           (FStar_Syntax_Syntax.Delta_constant_at_level
@@ -305,8 +343,8 @@ let (insert_col_info :
               then (aux, ((col, info) :: rest))
               else __insert ((c, i) :: aux) rest'
            in
-        let uu____963 = __insert [] col_infos  in
-        match uu____963 with
+        let uu____987 = __insert [] col_infos  in
+        match uu____987 with
         | (l,r) -> FStar_List.append (FStar_List.rev l) r
   
 let (find_nearest_preceding_col_info :
@@ -316,8 +354,8 @@ let (find_nearest_preceding_col_info :
   =
   fun col  ->
     fun col_infos  ->
-      let rec aux out uu___57_1068 =
-        match uu___57_1068 with
+      let rec aux out uu___84_1092 =
+        match uu___84_1092 with
         | [] -> out
         | (c,i)::rest ->
             if c > col
@@ -362,8 +400,8 @@ let (__proj__Mkid_info_table__item__id_info_buffer :
         __fname__id_info_buffer
   
 let (id_info_table_empty : id_info_table) =
-  let uu____1160 = FStar_Util.psmap_empty ()  in
-  { id_info_enabled = false; id_info_db = uu____1160; id_info_buffer = [] } 
+  let uu____1184 = FStar_Util.psmap_empty ()  in
+  { id_info_enabled = false; id_info_db = uu____1184; id_info_buffer = [] } 
 let (id_info__insert :
   (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) ->
     (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
@@ -377,33 +415,33 @@ let (id_info__insert :
       fun info  ->
         let range = info.identifier_range  in
         let use_range1 =
-          let uu____1213 = FStar_Range.use_range range  in
-          FStar_Range.set_def_range range uu____1213  in
+          let uu____1237 = FStar_Range.use_range range  in
+          FStar_Range.set_def_range range uu____1237  in
         let info1 =
-          let uu___58_1215 = info  in
-          let uu____1216 = ty_map info.identifier_ty  in
+          let uu___87_1239 = info  in
+          let uu____1240 = ty_map info.identifier_ty  in
           {
-            identifier = (uu___58_1215.identifier);
-            identifier_ty = uu____1216;
+            identifier = (uu___87_1239.identifier);
+            identifier_ty = uu____1240;
             identifier_range = use_range1
           }  in
         let fn = FStar_Range.file_of_range use_range1  in
         let start = FStar_Range.start_of_range use_range1  in
-        let uu____1219 =
-          let uu____1224 = FStar_Range.line_of_pos start  in
-          let uu____1225 = FStar_Range.col_of_pos start  in
-          (uu____1224, uu____1225)  in
-        match uu____1219 with
+        let uu____1243 =
+          let uu____1248 = FStar_Range.line_of_pos start  in
+          let uu____1249 = FStar_Range.col_of_pos start  in
+          (uu____1248, uu____1249)  in
+        match uu____1243 with
         | (row,col) ->
             let rows =
-              let uu____1247 = FStar_Util.pimap_empty ()  in
-              FStar_Util.psmap_find_default db fn uu____1247  in
+              let uu____1271 = FStar_Util.pimap_empty ()  in
+              FStar_Util.psmap_find_default db fn uu____1271  in
             let cols = FStar_Util.pimap_find_default rows row []  in
-            let uu____1287 =
-              let uu____1296 = insert_col_info col info1 cols  in
-              FStar_All.pipe_right uu____1296 (FStar_Util.pimap_add rows row)
+            let uu____1311 =
+              let uu____1320 = insert_col_info col info1 cols  in
+              FStar_All.pipe_right uu____1320 (FStar_Util.pimap_add rows row)
                in
-            FStar_All.pipe_right uu____1287 (FStar_Util.psmap_add db fn)
+            FStar_All.pipe_right uu____1311 (FStar_Util.psmap_add db fn)
   
 let (id_info_insert :
   id_info_table ->
@@ -417,10 +455,10 @@ let (id_info_insert :
           let info =
             { identifier = id1; identifier_ty = ty; identifier_range = range
             }  in
-          let uu___59_1378 = table  in
+          let uu___88_1402 = table  in
           {
-            id_info_enabled = (uu___59_1378.id_info_enabled);
-            id_info_db = (uu___59_1378.id_info_db);
+            id_info_enabled = (uu___88_1402.id_info_enabled);
+            id_info_db = (uu___88_1402.id_info_db);
             id_info_buffer = (info :: (table.id_info_buffer))
           }
   
@@ -433,8 +471,8 @@ let (id_info_insert_bv :
       fun ty  ->
         if table.id_info_enabled
         then
-          let uu____1394 = FStar_Syntax_Syntax.range_of_bv bv  in
-          id_info_insert table (FStar_Util.Inl bv) ty uu____1394
+          let uu____1418 = FStar_Syntax_Syntax.range_of_bv bv  in
+          id_info_insert table (FStar_Util.Inl bv) ty uu____1418
         else table
   
 let (id_info_insert_fv :
@@ -446,19 +484,19 @@ let (id_info_insert_fv :
       fun ty  ->
         if table.id_info_enabled
         then
-          let uu____1411 = FStar_Syntax_Syntax.range_of_fv fv  in
-          id_info_insert table (FStar_Util.Inr fv) ty uu____1411
+          let uu____1435 = FStar_Syntax_Syntax.range_of_fv fv  in
+          id_info_insert table (FStar_Util.Inr fv) ty uu____1435
         else table
   
 let (id_info_toggle : id_info_table -> Prims.bool -> id_info_table) =
   fun table  ->
     fun enabled  ->
-      let uu___60_1423 = table  in
-      let uu____1424 = enabled && (FStar_Options.ide ())  in
+      let uu___89_1447 = table  in
+      let uu____1448 = enabled && (FStar_Options.ide ())  in
       {
-        id_info_enabled = uu____1424;
-        id_info_db = (uu___60_1423.id_info_db);
-        id_info_buffer = (uu___60_1423.id_info_buffer)
+        id_info_enabled = uu____1448;
+        id_info_db = (uu___89_1447.id_info_db);
+        id_info_buffer = (uu___89_1447.id_info_buffer)
       }
   
 let (id_info_promote :
@@ -467,14 +505,14 @@ let (id_info_promote :
   =
   fun table  ->
     fun ty_map  ->
-      let uu___61_1440 = table  in
-      let uu____1441 =
+      let uu___90_1464 = table  in
+      let uu____1465 =
         FStar_List.fold_left (id_info__insert ty_map) table.id_info_db
           table.id_info_buffer
          in
       {
-        id_info_enabled = (uu___61_1440.id_info_enabled);
-        id_info_db = uu____1441;
+        id_info_enabled = (uu___90_1464.id_info_enabled);
+        id_info_db = uu____1465;
         id_info_buffer = []
       }
   
@@ -489,18 +527,85 @@ let (id_info_at_pos :
       fun row  ->
         fun col  ->
           let rows =
-            let uu____1477 = FStar_Util.pimap_empty ()  in
-            FStar_Util.psmap_find_default table.id_info_db fn uu____1477  in
+            let uu____1501 = FStar_Util.pimap_empty ()  in
+            FStar_Util.psmap_find_default table.id_info_db fn uu____1501  in
           let cols = FStar_Util.pimap_find_default rows row []  in
-          let uu____1483 = find_nearest_preceding_col_info col cols  in
-          match uu____1483 with
+          let uu____1507 = find_nearest_preceding_col_info col cols  in
+          match uu____1507 with
           | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
           | FStar_Pervasives_Native.Some info ->
               let last_col =
-                let uu____1490 =
+                let uu____1514 =
                   FStar_Range.end_of_range info.identifier_range  in
-                FStar_Range.col_of_pos uu____1490  in
+                FStar_Range.col_of_pos uu____1514  in
               if col <= last_col
               then FStar_Pervasives_Native.Some info
               else FStar_Pervasives_Native.None
+  
+let (check_uvar_ctx_invariant :
+  Prims.string ->
+    FStar_Range.range ->
+      Prims.bool ->
+        FStar_Syntax_Syntax.gamma -> FStar_Syntax_Syntax.binders -> unit)
+  =
+  fun reason  ->
+    fun r  ->
+      fun should_check  ->
+        fun g  ->
+          fun bs  ->
+            let print_gamma gamma =
+              let uu____1553 =
+                FStar_All.pipe_right gamma
+                  (FStar_List.map
+                     (fun uu___85_1563  ->
+                        match uu___85_1563 with
+                        | FStar_Syntax_Syntax.Binding_var x ->
+                            let uu____1565 =
+                              FStar_Syntax_Print.bv_to_string x  in
+                            Prims.strcat "Binding_var " uu____1565
+                        | FStar_Syntax_Syntax.Binding_univ u ->
+                            Prims.strcat "Binding_univ " u.FStar_Ident.idText
+                        | FStar_Syntax_Syntax.Binding_lid (l,uu____1568) ->
+                            let uu____1585 = FStar_Ident.string_of_lid l  in
+                            Prims.strcat "Binding_lid " uu____1585))
+                 in
+              FStar_All.pipe_right uu____1553 (FStar_String.concat "::\n")
+               in
+            let fail1 uu____1593 =
+              let uu____1594 =
+                let uu____1595 = FStar_Range.string_of_range r  in
+                let uu____1596 = print_gamma g  in
+                let uu____1597 = FStar_Syntax_Print.binders_to_string ", " bs
+                   in
+                FStar_Util.format5
+                  "Invariant violation: gamma and binders are out of sync\n\treason=%s, range=%s, should_check=%s\n\t\n                               gamma=%s\n\tbinders=%s\n"
+                  reason uu____1595
+                  (if should_check then "true" else "false") uu____1596
+                  uu____1597
+                 in
+              failwith uu____1594  in
+            if Prims.op_Negation should_check
+            then ()
+            else
+              (let uu____1600 =
+                 let uu____1623 =
+                   FStar_Util.prefix_until
+                     (fun uu___86_1638  ->
+                        match uu___86_1638 with
+                        | FStar_Syntax_Syntax.Binding_var uu____1639 -> true
+                        | uu____1640 -> false) g
+                    in
+                 (uu____1623, bs)  in
+               match uu____1600 with
+               | (FStar_Pervasives_Native.None ,[]) -> ()
+               | (FStar_Pervasives_Native.Some
+                  (uu____1691,hd1,gamma_tail),uu____1694::uu____1695) ->
+                   let uu____1746 = FStar_Util.prefix bs  in
+                   (match uu____1746 with
+                    | (uu____1765,(x,uu____1767)) ->
+                        (match hd1 with
+                         | FStar_Syntax_Syntax.Binding_var x' when
+                             FStar_Syntax_Syntax.bv_eq x x' -> ()
+                         | uu____1785 -> fail1 ()))
+               | uu____1786 -> fail1 ())
   

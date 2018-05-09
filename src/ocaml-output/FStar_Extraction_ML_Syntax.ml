@@ -900,11 +900,11 @@ let (apply_obj_repr : mlexpr -> mlty -> mlexpr) =
   fun x  ->
     fun t  ->
       let obj_ns =
-        let uu____2783 =
-          let uu____2784 = FStar_Options.codegen ()  in
-          uu____2784 = (FStar_Pervasives_Native.Some FStar_Options.FSharp)
+        let uu____2765 =
+          let uu____2766 = FStar_Options.codegen ()  in
+          uu____2766 = (FStar_Pervasives_Native.Some FStar_Options.FSharp)
            in
-        if uu____2783 then "FSharp.Compatibility.OCaml.Obj" else "Obj"  in
+        if uu____2765 then "FSharp.Compatibility.OCaml.Obj" else "Obj"  in
       let obj_repr =
         with_ty (MLTY_Fun (t, E_PURE, MLTY_Top))
           (MLE_Name ([obj_ns], "repr"))
@@ -913,48 +913,48 @@ let (apply_obj_repr : mlexpr -> mlty -> mlexpr) =
   
 let (avoid_keyword : Prims.string -> Prims.string) =
   fun s  ->
-    let uu____2800 = is_reserved s  in
-    if uu____2800 then Prims.strcat s "_" else s
+    let uu____2782 = is_reserved s  in
+    if uu____2782 then Prims.strcat s "_" else s
   
 let (bv_as_mlident : FStar_Syntax_Syntax.bv -> mlident) =
   fun x  ->
-    let uu____2807 =
+    let uu____2789 =
       ((FStar_Util.starts_with
           (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
           FStar_Ident.reserved_prefix)
          || (FStar_Syntax_Syntax.is_null_bv x))
         || (is_reserved (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText)
        in
-    if uu____2807
+    if uu____2789
     then
-      let uu____2808 =
-        let uu____2809 =
-          let uu____2810 =
+      let uu____2790 =
+        let uu____2791 =
+          let uu____2792 =
             FStar_Util.string_of_int x.FStar_Syntax_Syntax.index  in
-          Prims.strcat "_" uu____2810  in
+          Prims.strcat "_" uu____2792  in
         Prims.strcat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
-          uu____2809
+          uu____2791
          in
-      FStar_All.pipe_left avoid_keyword uu____2808
+      FStar_All.pipe_left avoid_keyword uu____2790
     else
       FStar_All.pipe_left avoid_keyword
         (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
   
 let (push_unit : mltyscheme -> mltyscheme) =
   fun ts  ->
-    let uu____2817 = ts  in
-    match uu____2817 with
+    let uu____2799 = ts  in
+    match uu____2799 with
     | (vs,ty) -> (vs, (MLTY_Fun (ml_unit_ty, E_PURE, ty)))
   
 let (pop_unit : mltyscheme -> mltyscheme) =
   fun ts  ->
-    let uu____2825 = ts  in
-    match uu____2825 with
+    let uu____2807 = ts  in
+    match uu____2807 with
     | (vs,ty) ->
         (match ty with
          | MLTY_Fun (l,E_PURE ,t) ->
              if l = ml_unit_ty
              then (vs, t)
              else failwith "unexpected: pop_unit: domain was not unit"
-         | uu____2831 -> failwith "unexpected: pop_unit: not a function type")
+         | uu____2813 -> failwith "unexpected: pop_unit: not a function type")
   

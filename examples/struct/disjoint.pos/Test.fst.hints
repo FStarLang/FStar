@@ -47,7 +47,7 @@
         "typing_tok_FStar.Pointer.Base.TBool@tok"
       ],
       0,
-      "87cd5a28a98d66de9f189ead78dd95c3"
+      "3444daa8925cfb7e50b47c07dade9337"
     ],
     [
       "Test.callee",
@@ -84,15 +84,14 @@
         "equation_with_fuel_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
         "function_token_typing_Test.struct",
-        "function_token_typing_Test.struct_t", "int_inversion", "int_typing",
+        "function_token_typing_Test.struct_t",
         "lemma_FStar.Pointer.Base.gread_gfield",
         "lemma_FStar.Pointer.Base.live_gfield",
         "lemma_FStar.Pointer.Base.modifies_pointer_elim",
         "lemma_FStar.Pointer.Base.readable_gfield",
         "lemma_FStar.Pointer.Base.readable_live",
         "lemma_FStar.Pointer.Derived1.loc_disjoint_gfield_r",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_Equality",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_FStar.Pointer.Base.Mkstruct_typ_fields",
@@ -108,14 +107,13 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_9560ef23f44dd048af58f1767cc19bc8",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
+        "refinement_interpretation_Test_Tm_refine_271ecf2d38164a98038cc8c42fa72ff8",
         "refinement_interpretation_Test_Tm_refine_abc25e0ebc5f7440fde89b32fc79589b",
-        "refinement_interpretation_Test_Tm_refine_fcdab1caf6de7b0f8873ed6c1f2407c2",
         "string_typing", "token_correspondence_FStar.Pervasives.Native.fst",
-        "typing_FStar.Pointer.Base.loc_pointer",
-        "typing_FStar.Pointer.Base.typ_of_struct_field"
+        "typing_FStar.Pointer.Base.loc_pointer"
       ],
       0,
-      "49960d497e2f2d52a850eba899fb9fee"
+      "1ff3655dd9c7805e046dd5898e1f579b"
     ],
     [
       "Test.more_struct",
@@ -172,7 +170,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "5615ba0eb4c08aab6c741d167948f303"
+      "598f59b45e196e269c0961b8338271c4"
     ],
     [
       "Test.caller",
@@ -347,7 +345,7 @@
         "typing_FStar.Set.union", "unit_typing"
       ],
       0,
-      "e3a6c0a110cfa0603a012a624075e77d"
+      "b9a4873ed577d7241a0c7f74a82b42b7"
     ]
   ]
 ]

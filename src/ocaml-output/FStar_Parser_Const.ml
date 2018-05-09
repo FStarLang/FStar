@@ -164,6 +164,8 @@ let (term_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "term"] 
 let (decls_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Data"; "decls"] 
+let (ctx_uvar_and_subst_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"] 
 let (range_lid : FStar_Ident.lident) = pconst "range" 
 let (range_of_lid : FStar_Ident.lident) = pconst "range_of" 
 let (labeled_lid : FStar_Ident.lident) = pconst "labeled" 
@@ -195,9 +197,8 @@ let (dm4f_bind_range_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "dm4f_bind_range"] 
 let (must_erase_for_extraction_attr : FStar_Ident.lident) =
   psconst "must_erase_for_extraction" 
-let (fail_attr : FStar_Ident.lident) = pconst "fail" 
-let (fail_lax_attr : FStar_Ident.lident) = pconst "fail_lax" 
-let (fail_errs_attr : FStar_Ident.lident) = pconst "fail_errs" 
+let (fail_attr : FStar_Ident.lident) = psconst "fail" 
+let (fail_lax_attr : FStar_Ident.lident) = psconst "fail_lax" 
 let (gen_reset :
   (unit -> Prims.int,unit -> unit) FStar_Pervasives_Native.tuple2) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0")  in

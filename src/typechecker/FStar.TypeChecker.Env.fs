@@ -37,12 +37,7 @@ module U  = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 
-type binding =
-  | Binding_var      of bv
-  | Binding_lid      of lident * tscheme
-  | Binding_sig      of list<lident> * sigelt
-  | Binding_univ     of univ_name
-  | Binding_sig_inst of list<lident> * sigelt * universes //the first component should always be a Sig_inductive
+type sig_binding = list<lident> * sigelt
 
 type delta_level =
   | NoDelta
@@ -82,7 +77,8 @@ type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
-  gamma          :list<binding>;                (* Local typing environment and signature elements *)
+  gamma          :list<binding>;                (* Local typing environment *)
+  gamma_sig      :list<sig_binding>;            (* and signature elements *)
   gamma_cache    :BU.smap<cached_elt>;          (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
@@ -101,6 +97,7 @@ type env = {
   lax_universes  :bool;                         (* don't check universe constraints *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
+  uvar_subtyping :bool;
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
@@ -137,9 +134,9 @@ and guard_t = {
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
-and implicits = list<(string * env * uvar * term * typ * Range.range)>
+and implicits = list<(string * term * ctx_uvar * Range.range)>
 and tcenv_hooks =
-  { tc_push_in_gamma_hook : (env -> binding -> unit) }
+  { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
 
 let rename_gamma subst gamma =
     gamma |> List.map (function
@@ -187,6 +184,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     range=dummyRange;
     curmodule=module_lid;
     gamma= [];
+    gamma_sig = [];
     gamma_cache=new_gamma_cache();
     modules= [];
     expected_typ=None;
@@ -205,6 +203,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     lax_universes=false;
     failhard=false;
     nosynth=false;
+    uvar_subtyping=true;
     tc_term=tc_term;
     type_of=type_of;
     check_type_of=check_type_of;
@@ -408,29 +407,26 @@ let lookup_qname env (lid:lident) : qninfo =
     if cur_mod<>No
     then match BU.smap_try_find (gamma_cache env) lid.str with
       | None ->
-        BU.find_map env.gamma (function
-          | Binding_lid(l,t) ->
-            if lid_equals lid l then Some (Inl (inst_tscheme t), Ident.range_of_lid l) else None
-          | Binding_sig (_, { sigel = Sig_bundle(ses, _) }) ->
-              BU.find_map ses (fun se ->
-                if lids_of_sigelt se |> BU.for_some (lid_equals lid)
-                then cache (Inr (se, None), U.range_of_sigelt se)
-                else None)
-          | Binding_sig (lids, s) ->
-            let maybe_cache t = match s.sigel with
-              | Sig_declare_typ _ -> Some t
-              | _ -> cache t
-            in
-            begin match List.tryFind (lid_equals lid) lids with
-                  | None -> None
-                  | Some l -> maybe_cache (Inr (s, None), Ident.range_of_lid l)
-            end
-          | Binding_sig_inst (lids, s, us) ->
-            begin match List.tryFind (lid_equals lid) lids with
-                  | None -> None
-                  | Some l -> Some (Inr (s, Some us), Ident.range_of_lid l)
-            end
-          | _ -> None)
+        BU.catch_opt
+            (BU.find_map env.gamma (function
+              | Binding_lid(l,t) ->
+                if lid_equals lid l then Some (Inl (inst_tscheme t), Ident.range_of_lid l) else None
+              | _ -> None))
+            (fun () -> BU.find_map env.gamma_sig (function
+              | (_, { sigel = Sig_bundle(ses, _) }) ->
+                  BU.find_map ses (fun se ->
+                    if lids_of_sigelt se |> BU.for_some (lid_equals lid)
+                    then cache (Inr (se, None), U.range_of_sigelt se)
+                    else None)
+              | (lids, s) ->
+                let maybe_cache t = match s.sigel with
+                  | Sig_declare_typ _ -> Some t
+                  | _ -> cache t
+                in
+                begin match List.tryFind (lid_equals lid) lids with
+                      | None -> None
+                      | Some l -> maybe_cache (Inr (s, None), Ident.range_of_lid l)
+                end))
       | se -> se
     else None
   in
@@ -613,7 +609,6 @@ let lookup_lid env l =
 let lookup_univ env x =
     List.find (function
         | Binding_univ y -> x.idText=y.idText
-//      | Binding_var({sort=t}) -> BU.set_mem x (Free.univnames t)
         | _ -> false) env.gamma
     |> Option.isSome
 
@@ -1120,32 +1115,30 @@ let is_reifiable_function (env:env) (t:S.term) : bool =
 //   l_1 ... l_n val_1 ... val_n
 // where l_i is a local binding and val_i is a top-level binding.
 //
+//let push_in_gamma env s =
+//  let rec push x rest =
+//    match rest with
+//    | Binding_sig _ :: _ ->
+//        x :: rest
+//    | [] ->
+//        [ x ]
+//    | local :: rest ->
+//        local :: push x rest
+//  in
+//  env.tc_hooks.tc_push_in_gamma_hook env s;
+//  { env with gamma = push s env.gamma }
+
 // This function assumes that, in the case that the environment contains local
 // bindings _and_ we push a top-level binding, then the top-level binding does
 // not capture any of the local bindings (duh).
-let push_in_gamma env s =
-  let rec push x rest =
-    match rest with
-    | Binding_sig _ :: _
-    | Binding_sig_inst _ :: _ ->
-        x :: rest
-    | [] ->
-        [ x ]
-    | local :: rest ->
-        local :: push x rest
-  in
-  env.tc_hooks.tc_push_in_gamma_hook env s;
-  { env with gamma = push s env.gamma }
-
 let push_sigelt env s =
-  let env = push_in_gamma env (Binding_sig(lids_of_sigelt s, s)) in
+  let sb = (lids_of_sigelt s, s) in
+  let env = {env with gamma_sig = sb::env.gamma_sig} in
+  env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
   build_lattice env s
 
-let push_sigelt_inst env s us =
-  let env = push_in_gamma env (Binding_sig_inst(lids_of_sigelt s,s,us)) in
-  build_lattice env s
-
-let push_local_binding env b = {env with gamma=b::env.gamma}
+let push_local_binding env b =
+  {env with gamma=b::env.gamma}
 
 let push_bv env x = push_local_binding env (Binding_var x)
 
@@ -1175,6 +1168,7 @@ let push_module env (m:modul) =
     {env with
       modules=m::env.modules;
       gamma=[];
+      gamma_sig=[];
       expected_typ=None}
 
 let push_univ_vars (env:env_t) (xs:univ_names) : env_t =
@@ -1200,14 +1194,13 @@ let finish_module =
     fun env m ->
       let sigs =
         if lid_equals m.name Const.prims_lid
-        then env.gamma |> List.collect (function
-                | Binding_sig (_, se) -> [se]
-                | _ -> []) |> List.rev
+        then env.gamma_sig |> List.map snd |> List.rev
         else m.exports  in
       add_sigelts env sigs;
       {env with
         curmodule=empty_lid;
         gamma=[];
+        gamma_sig=[];
         modules=m::env.modules}
 
 ////////////////////////////////////////////////////////////
@@ -1221,8 +1214,7 @@ let uvars_in_env env =
     | Binding_univ _ :: tl -> aux out tl
     | Binding_lid(_, (_, t))::tl
     | Binding_var({sort=t})::tl -> aux (ext out (Free.uvars t)) tl
-    | Binding_sig _::_
-    | Binding_sig_inst _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
+  in
   aux no_uvs env.gamma
 
 let univ_vars env =
@@ -1230,11 +1222,10 @@ let univ_vars env =
     let ext out uvs = BU.set_union out uvs in
     let rec aux out g = match g with
       | [] -> out
-      | Binding_sig_inst _::tl
       | Binding_univ _ :: tl -> aux out tl
       | Binding_lid(_, (_, t))::tl
       | Binding_var({sort=t})::tl -> aux (ext out (Free.univs t)) tl
-      | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more uvars beyond this *)
+    in
     aux no_univs env.gamma
 
 let univnames env =
@@ -1242,20 +1233,17 @@ let univnames env =
     let ext out uvs = BU.set_union out uvs in
     let rec aux out g = match g with
         | [] -> out
-        | Binding_sig_inst _::tl -> aux out tl
         | Binding_univ uname :: tl -> aux (BU.set_add uname out) tl
         | Binding_lid(_, (_, t))::tl
         | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
-        | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more universe names beyond this *)
+    in
     aux no_univ_names env.gamma
 
 let bound_vars_of_bindings bs =
   bs |> List.collect (function
         | Binding_var x -> [x]
         | Binding_lid _
-        | Binding_sig _
-        | Binding_univ _
-        | Binding_sig_inst _ -> [])
+        | Binding_univ _ -> [])
 
 let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
 
@@ -1263,25 +1251,15 @@ let bound_vars env = bound_vars_of_bindings env.gamma
 
 let all_binders env = binders_of_bindings env.gamma
 
-let print_gamma env =
-    env.gamma |> List.map (function
+let print_gamma gamma =
+    (gamma |> List.map (function
         | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
         | Binding_univ u -> "Binding_univ " ^ u.idText
-        | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)
-        | Binding_sig (ls, _) -> "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
-        | Binding_sig_inst (ls, _, _) -> "Binding_sig_inst " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", "))
+        | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
+    // (env.gamma_sig |> List.map (fun (ls, _) ->
+    //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
+    // ))
     |> String.concat "::\n"
-    |> BU.print1 "%s\n"
-
-let eq_gamma env env' =
-    if BU.physical_equality env.gamma env'.gamma
-    then true
-    else let g = all_binders env in
-         let g' = all_binders env' in
-         List.length g = List.length g'
-         && List.forall2 (fun (b1, _) (b2, _) -> S.bv_eq b1 b2) g g'
-
-let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
 let string_of_delta_level = function
   | NoDelta -> "NoDelta"
@@ -1291,9 +1269,7 @@ let string_of_delta_level = function
   | UnfoldTac -> "UnfoldTac"
 
 let lidents env : list<lident> =
-  let keys = List.fold_left (fun keys -> function
-    | Binding_sig(lids, _) -> lids@keys
-    | _ -> keys) [] env.gamma in
+  let keys = List.collect fst env.gamma_sig in
   BU.smap_fold (sigtab env) (fun _ v keys -> U.lids_of_sigelt v@keys) keys
 
 let should_enc_path env path =

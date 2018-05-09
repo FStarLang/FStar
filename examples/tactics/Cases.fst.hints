@@ -2,35 +2,49 @@
   "…ÕYîø°¸ö\u001a\u000e›R‰ìJâ",
   [
     [
+      "Cases.test_cases",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "6d9ecc019749ce842afe497768b750f5"
+    ],
+    [
+      "Cases.test_cases_unsquash",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "909f22978b9604a6aa1b82e94f1dc259"
+    ],
+    [
+      "Cases.test_cases_bool",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "df82c9171827cc76b151a399713012a8"
+    ],
+    [
       "Cases.test_cases_bool_2",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_int",
-        "data_elim_FStar.Tactics.Result.Failed",
-        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "function_token_typing_Prims.unit", "unit_typing"
-      ],
+      [ "@query", "true_interp" ],
       0,
-      "de43684301eff0644597760cc820a382"
+      "d0708432c26c552eb7c555456e7e7082"
     ],
     [
       "Cases.test_cases_bool_2",
       2,
       2,
       1,
-      [
-        "@query", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c6c2d50785d82c752878de9d4bca2630"
+      "854a4518d8ecbf5643e5a68ffb7db191"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -44,7 +58,21 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "bc390603e082166c47f66636d370eb09"
+      "7bc99bc00a5a0b51e36317fe0c7bfeb5"
+    ],
+    [
+      "Cases.test_cases_bool_2",
+      4,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "f54c4c93f136bb16b399e260e6dd7990"
     ]
   ]
 ]

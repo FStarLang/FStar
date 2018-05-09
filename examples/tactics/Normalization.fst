@@ -48,12 +48,13 @@ let _ = assert_by_tactic True
  * end up with (2 + 1) + 1 *)
 let four' : int = synth_by_tactic (fun () -> normalize [delta] (add_2 2))
 
-let _ = assert_by_tactic True
-                         (fun () ->
-                            let t = def_of four' in
-                            if compare_term t (`((2 + 1) + 1)) = FStar.Order.Eq
-                            then ()
-                            else fail "Test 2")
+(* But... the unifier does some primop-computation now, and we actually get 4 *)
+(* let _ = assert_by_tactic True *)
+(*                          (fun () -> *)
+(*                             let t = def_of four' in *)
+(*                             if compare_term t (`((2 + 1) + 1)) = FStar.Order.Eq *)
+(*                             then () *)
+(*                             else fail "Test 2") *)
 
 (* Here, we allow for primitive computation but don't allow for `add_2` to be expanded to
  * its definition, so the final result is `add_2 1` *)

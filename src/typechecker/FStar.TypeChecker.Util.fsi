@@ -31,13 +31,12 @@ open FStar.TypeChecker.Common
 val report: env -> list<string> -> unit
 
 //unification variables
-val new_uvar : env -> typ -> typ
-val as_uvar  : typ -> uvar
-val new_implicit_var : string -> Range.range -> env -> typ -> (term * list<(uvar * Range.range)> * guard_t)
+val new_implicit_var : string -> Range.range -> env -> typ -> (term * list<(ctx_uvar * Range.range)> * guard_t)
 val check_uvars: Range.range -> typ -> unit
+val close_guard_implicits: env -> binders -> guard_t -> guard_t
 
 //extracting annotations from a term
-val extract_let_rec_annotation: env -> letbinding -> (univ_names * typ * bool)
+val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * bool
 
 //pattern utilities
 val pat_as_exp: bool -> env -> pat -> (env -> term -> term * guard_t) -> (list<bv> * term * guard_t * pat)

@@ -216,7 +216,9 @@ let rec is_type_aux env t =
     | Tm_fvar fv ->
       UEnv.is_type_name env fv
 
-    | Tm_uvar (_, t)
+    | Tm_uvar ({ctx_uvar_typ=t}, s) ->
+      is_arity env (SS.subst' s t)
+
     | Tm_bvar ({sort=t})
     | Tm_name ({sort=t}) ->
       is_arity env t
@@ -850,6 +852,15 @@ let maybe_promote_effect ml_e tag t =
     | E_PURE, MLTY_Erased -> ml_unit, E_PURE
     | _ -> ml_e, tag
 
+type generalized_lb =
+          lbname //just lbname returned back
+        * e_tag  //the ML version of the effect label lbeff
+        * (typ   //just the source type lbtyp=t, after compression
+            * (S.binders //the erased type binders
+                * mltyscheme)) //translation of the source type t as a ML type scheme
+        * bool   //whether or not to add a unit argument
+        * term   //the term e, maybe after some type binders have been erased
+
 //The main extraction function
 let rec check_term_as_mlexpr (g:env) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
     debug g (fun () -> BU.print2 "Checking %s at type %s\n" (Print.term_to_string e) (Code.string_of_mlty g.currentModule ty));
@@ -1210,13 +1221,14 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             else lbs in
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
           let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=t; lbdef=e}
-            : lbname //just lbname returned back
-            * e_tag  //the ML version of the effect label lbeff
-            * (typ   //just the source type lbtyp=t, after compression
-               * (S.binders //the erased type binders
-                  * mltyscheme)) //translation of the source type t as a ML type scheme
-            * bool   //whether or not to add a unit argument
-            * term   //the term e, maybe after some type binders have been erased
+            : generalized_lb
+            //: lbname //just lbname returned back
+            //* e_tag  //the ML version of the effect label lbeff
+            //* (typ   //just the source type lbtyp=t, after compression
+            //   * (S.binders //the erased type binders
+            //      * mltyscheme)) //translation of the source type t as a ML type scheme
+            //* bool   //whether or not to add a unit argument
+            //* term   //the term e, maybe after some type binders have been erased
             =
               let f_e = effect_as_etag g lbeff in
               let t = SS.compress t in
@@ -1304,7 +1316,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
                 | _ ->  no_gen()
           in
-          let check_lb env (nm, (lbname, f, (t, (targs, polytype)), add_unit, e)) =
+          let check_lb : env -> (mlident * generalized_lb) -> e_tag * mllb =
+              fun env (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, e)) ->
               let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) env targs in
               let expected_t = snd polytype in
               let e, ty = check_term_as_mlexpr env e f expected_t in

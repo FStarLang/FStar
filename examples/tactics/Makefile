@@ -5,7 +5,7 @@ EXCLUDED_FSTAR_FILES=Launch.fst CanonCommSemiring.fst WeakVsHNF.fst \
 		     Test.Math.Lemmas.fst CanonDeep.fst
 FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
-all: verify-all stringprintertest
+all: verify-all #stringprintertest
 
 $(CACHE_DIR):
 	mkdir -p $@

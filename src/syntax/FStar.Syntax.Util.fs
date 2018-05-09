@@ -326,6 +326,15 @@ let is_lemma t =
     | Tm_arrow(_, c) -> is_lemma_comp c
     | _ -> false
 
+let rec head_of (t : term) : term =
+    match (compress t).n with
+    | Tm_app (t, _)
+    | Tm_match (t, _)
+    | Tm_abs (_, t, _)
+    | Tm_ascribed (t, _, _)
+    | Tm_meta (t, _) -> head_of t
+    | _ -> t
+
 let head_and_args t =
     let t = compress t in
     match t.n with
@@ -434,6 +443,14 @@ let rec unlazy t =
     | Tm_lazy i -> unlazy <| unfold_lazy i
     | _ -> t
 
+let rec unlazy_as_t k t =
+    match (compress t).n with
+    | Tm_lazy ({lkind=k'; blob=v})
+        when k=k' ->
+      FStar.Dyn.undyn v
+    | _ ->
+      failwith "Not a Tm_lazy of the expected kind"
+
 let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option<range>) : term =
     let rng = (match r with | Some r -> r | None -> dummyRange) in
     let i = {
@@ -508,6 +525,11 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         then (
             assert (List.length args1 = List.length args2);
             List.fold_left (fun acc ((a1, q1), (a2, q2)) ->
+                                //if q1 <> q2
+                                //then failwith (U.format1 "Arguments of %s mismatch on implicit qualifier\n"
+                                //                (Ident.string_of_lid f1.fv_name.v));
+                                //NS: 05/06/2018 ...this does not always hold
+                                //    it's been succeeding because the assert is disabled in the non-debug builds
                                 assert (q1 = q2);
                                 eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
         ) else NotEqual
@@ -540,8 +562,8 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_constant c, Tm_constant d ->
       equal_iff (eq_const c d)
 
-    | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
-      equal_if (Unionfind.equiv u1 u2)
+    | Tm_uvar (u1, ([], _)), Tm_uvar (u2, ([], _)) ->
+      equal_if (Unionfind.equiv u1.ctx_uvar_head u2.ctx_uvar_head)
 
     | Tm_app (h1, args1), Tm_app (h2, args2) ->
       begin match (un_uinst h1).n, (un_uinst h2).n with
@@ -1034,6 +1056,8 @@ let t_true  = fvar_const PC.true_lid
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 
+let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
+
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
   | Some phi1 -> Some (mk (Tm_app(tand, [as_arg phi1; as_arg phi2])) None (Range.union_ranges phi1.pos phi2.pos))
@@ -1506,9 +1530,6 @@ let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
     let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.nil_lid)  [U_zero]) args None pos in
     List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
 
-let uvar_from_id (id : int) (t : typ)=
-    mk (Tm_uvar (Unionfind.from_id id, t)) None Range.dummyRange
-
 // Some generic equalities
 let rec eqlist (eq : 'a -> 'a -> bool) (xs : list<'a>) (ys : list<'a>) : bool =
     match xs, ys with
@@ -1603,7 +1624,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
   | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
     (* These must have alreade been resolved, so we check that
      * they are indeed the same uvar *)
-    check "uvar" (u1 = u2)
+    check "uvar" (u1.ctx_uvar_head = u2.ctx_uvar_head)
 
   | Tm_quoted (qt1, qi1), Tm_quoted (qt2, qi2) ->
     (check "tm_quoted qi"      (qi1 = qi2)) &&
@@ -1757,7 +1778,7 @@ let rec unbound_variables tm :  list<bv> =
       | Tm_name x ->
         []
 
-      | Tm_uvar (x, t) ->
+      | Tm_uvar _ ->
         []
 
       | Tm_type u ->

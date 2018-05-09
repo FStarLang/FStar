@@ -15,7 +15,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "f6e48ea5fb6f5670676ddf4088fc3277"
+      "7e14d64d18ab1f384f31045996ea2880"
     ],
     [
       "MAC.__proj__Entry__item__t",
@@ -27,7 +27,33 @@
         "projection_inverse_MAC.Entry_k"
       ],
       0,
-      "defa942a0d82cb1f1b214fc574ed383d"
+      "9271aacf408393afb50d52e3c50dbda3"
+    ],
+    [
+      "MAC.verify",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "assumption_Platform.Bytes.HasEq_bytes",
+        "assumption_Prims.HasEq_bool",
+        "data_elim_FStar.Pervasives.Native.Some", "data_elim_MAC.Entry",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.text",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "fuel_guarded_inversion_MAC.entry", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f",
+        "refinement_interpretation_MAC_Tm_refine_61aeee88c37953ca4933a44381e61e4a",
+        "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
+        "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
+        "typing_Platform.Bytes.equalBytes"
+      ],
+      0,
+      "22afd5a5aa6190ac144de8c31a173108"
     ],
     [
       "MAC.keygen",
@@ -38,7 +64,7 @@
         "@query", "equation_SHA1.keysize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "693c78a1a4b65443bbdc5c03e2b2eb3e"
+      "49785a2bd232dcda1deb0673940181c8"
     ],
     [
       "MAC.mac",
@@ -77,11 +103,11 @@
         "typing_Platform.Bytes.equalBytes", "typing_SHA1.hmac_sha1"
       ],
       0,
-      "6e9da527f2bf1744c5b30bc8a25ec351"
+      "a32ad6ea4f33e088958d7d8427272056"
     ],
     [
       "MAC.verify",
-      1,
+      2,
       2,
       2,
       [
@@ -103,7 +129,7 @@
         "typing_Platform.Bytes.equalBytes"
       ],
       0,
-      "17d9fdd6202ae64df1f53e43e0759dd3"
+      "0b3099ddf526a38eaee30ed50f4a8c5a"
     ]
   ]
 ]

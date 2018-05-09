@@ -8,29 +8,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "adabbfae944db19f14a08c51943f4754"
+      "9a1599b12c3d7e6c6cfb9897152a8437"
     ],
     [
       "Bug284.foo",
       2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "97f240fe03da42da8538df1b7ec06137"
-    ],
-    [
-      "Bug284.foo",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "125adddaff92e8cd57aaefc1174a3aee"
-    ],
-    [
-      "Bug284.foo",
-      4,
       2,
       1,
       [
@@ -38,7 +20,7 @@
         "refinement_interpretation_Bug284_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "0fb7544268a756e3bd4d6d9508938a98"
+      "1dc031930b314fc084cb00654055c9c1"
     ]
   ]
 ]

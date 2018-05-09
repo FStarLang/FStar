@@ -87,8 +87,8 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
       | Tm_name x ->
         singleton_bv x
 
-      | Tm_uvar (x, t) ->
-        singleton_uv (x,t)
+      | Tm_uvar (uv, _) ->
+        singleton_uv uv
 
       | Tm_type u ->
         free_univs u
@@ -208,17 +208,19 @@ and free_names_and_uvars_comp c use_cache =
 
 and should_invalidate_cache n use_cache =
     not use_cache ||
-      (n.free_uvars |> Util.for_some (fun (u, _) -> match UF.find u with
+      (n.free_uvars |> Util.for_some (fun u ->
+         match UF.find u.ctx_uvar_head with
          | Some _ -> true
          | _ -> false)
-       || n.free_univs |> Util.for_some (fun u -> match UF.univ_find u with
+   || n.free_univs |> Util.for_some (fun u ->
+           match UF.univ_find u with
            | Some _ -> true
            | None -> false)
       )
 
 //note use_cache is set false ONLY for fvars, which is not maintained at each AST node
 //see the comment above
-let compare_uv uv1 uv2 = UF.uvar_id (fst uv1) - UF.uvar_id (fst uv2)
+let compare_uv uv1 uv2 = UF.uvar_id uv1.ctx_uvar_head - UF.uvar_id uv2.ctx_uvar_head
 let new_uv_set () : uvars = Util.new_set compare_uv
 
 let compare_universe_uvar x y = UF.univ_uvar_id x - UF.univ_uvar_id y

@@ -6,12 +6,15 @@ open FStar.Mul
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 
+noextract
 let n = 128
 
 val t: (x:Type0{hasEq x})
 
+noextract
 val v (x:t) : Tot (uint_t n)
 
+noextract
 val uint_to_t: x:uint_t n -> Pure t
   (requires True)
   (ensures (fun y -> v y = x))
