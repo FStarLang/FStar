@@ -26,29 +26,11 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9b92ce5676acc786f8f7dedfa8cb2c58"
+      "89a17ff1bd30ded931c2d55942858553"
     ],
     [
       "IfcExampleReify3.p1_x",
       2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "e92fb8dbc1e7b9a4f5ba1666e85cc3f4"
-    ],
-    [
-      "IfcExampleReify3.p1_x",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "958899abf269abda737f0e2a62f08cdc"
-    ],
-    [
-      "IfcExampleReify3.p1_x",
-      4,
       2,
       1,
       [
@@ -150,7 +132,7 @@
         "unit_typing"
       ],
       0,
-      "f8fd999c9ca95b34fdd51da8ecabef21"
+      "abc0c5ce923560843e67fe71478e0e62"
     ],
     [
       "IfcExampleReify3.low_equiv",
@@ -190,7 +172,7 @@
     ],
     [
       "IfcExampleReify3.p1_x",
-      5,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],

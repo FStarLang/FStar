@@ -11,82 +11,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0d1c6fe1c9b9d0a1b12615c93483012f"
+      "ae93a1ef20bef20d3a931378ae774b21"
     ],
     [
       "Bug422.fails",
       2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "25fdb7d00abfdaa241eca4cd84336a9b"
-    ],
-    [
-      "Bug422.fails",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "cf6ab2ea33fbb2a55a91436142f4972e"
-    ],
-    [
-      "Bug422.fails",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Bug422.lint",
-        "equation_Bug422.sixty_four", "equation_FStar.Heap.ref",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Monotonic.Heap.modifies",
-        "equation_FStar.Monotonic.Heap.modifies_t", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Bug422.sixty_four",
-        "function_token_typing_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "int_inversion",
-        "lemma_FStar.Monotonic.Heap.lemma_contains_upd_modifies",
-        "lemma_FStar.Monotonic.Heap.lemma_sel_upd2",
-        "lemma_FStar.Set.mem_union",
-        "lemma_FStar.TSet.lemma_mem_tset_of_set",
-        "primitive_Prims.op_BarBar", "proj_equation_Bug422.Box_v",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug422_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_kinding_Bug422_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "typing_Bug422.__proj__Box__item__v",
-        "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.empty",
-        "typing_FStar.Set.singleton", "typing_FStar.Set.union"
-      ],
-      0,
-      "a9cb0bcd54daa6e9c35a53dde391871d"
-    ],
-    [
-      "Bug422.fails",
-      5,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "3f6a907a35bec77e58033701fbffa26b"
-    ],
-    [
-      "Bug422.fails",
-      6,
       2,
       1,
       [
@@ -117,7 +46,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "8b5d58b462a6f169827b48df265f6474"
+      "65fb6ca270db1a01feb63a095ea65293"
     ],
     [
       "Bug422.box'",
@@ -129,7 +58,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1a4fe7139aa7220e369010ec0290a4a7"
+      "037ea6f4a61135ffe9dbe91cadddaa77"
     ],
     [
       "Bug422.__proj__Box'__item__v",
@@ -141,7 +70,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1a5d6fce89127e36c4e74e0ccff74a45"
+      "00677f1dc839599931814281d0a654ed"
     ],
     [
       "Bug422.__proj__Box'__item__v",
@@ -153,166 +82,27 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f01981ecd12515dae4d2a1530f43c19d"
+      "2c1d8ad817107adf821dfb885b93b1f6"
     ],
     [
       "Bug422.works",
       1,
-      2,
-      1,
-      [
-        "@query", "equation_Bug422.sixty_four",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "3538cabaf9439bd269e388ff4133ebde"
-    ],
-    [
-      "Bug422.works",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Bug422.sixty_four",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "dcdaf7669863404ca3a3821dcc7f5934"
-    ],
-    [
-      "Bug422.works",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_Bug422.sixty_four",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "1bdb17f34ab1e949490c6169affbcbfd"
-    ],
-    [
-      "Bug422.works",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_Bug422.sixty_four",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "7fc22538bc101c8eeb9d7bbecb60e4fd"
-    ],
-    [
-      "Bug422.works",
-      5,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "147d5a4db70fe9e514b7766b6cab50e9"
-    ],
-    [
-      "Bug422.works",
-      6,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "265558caf042bb66ff5bbcb3f06550f4"
-    ],
-    [
-      "Bug422.works",
-      7,
-      2,
-      1,
-      [
-        "@query", "equation_Bug422.sixty_four",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "c1914a55180db11bc86532181c08ee17"
-    ],
-    [
-      "Bug422.works",
-      8,
-      2,
-      1,
-      [
-        "@query", "equation_Bug422.sixty_four",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "9bb27ee684d545f61d85b8f9312ef015"
-    ],
-    [
-      "Bug422.works",
-      9,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "df5b78173ad2c01bdcb6bcc9a336c3ee"
-    ],
-    [
-      "Bug422.works",
-      10,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Bug422.lint",
-        "equation_Bug422.sixty_four", "equation_FStar.Heap.ref",
-        "equation_FStar.Monotonic.Heap.modifies",
-        "equation_FStar.Monotonic.Heap.modifies_t", "equation_Prims.eqtype",
+        "assumption_Prims.HasEq_int", "equation_Bug422.sixty_four",
         "equation_Prims.nat", "function_token_typing_Bug422.sixty_four",
-        "function_token_typing_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "int_inversion",
-        "lemma_FStar.Monotonic.Heap.lemma_contains_upd_modifies",
-        "lemma_FStar.Monotonic.Heap.lemma_sel_upd2",
-        "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
-        "lemma_FStar.TSet.lemma_mem_tset_of_set",
-        "primitive_Prims.op_BarBar", "proj_equation_Bug422.Box__v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Bug422_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_Bug422_Tm_refine_afcab39568e77763e21befc04763fdf5",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_Bug422.__proj__Box___item__v", "typing_Bug422.lint",
-        "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.empty",
-        "typing_FStar.Set.singleton", "typing_FStar.Set.union"
+        "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ee8a7e06035caaf1abd523ebf531e236"
+      "ab332a2b136a8007d64d1ce500574764"
     ],
     [
       "Bug422.works",
-      11,
       2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "ecff54d60868897142c9bf03729011d9"
-    ],
-    [
-      "Bug422.works",
-      12,
       2,
       1,
       [
@@ -342,7 +132,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "a3f1828dd732908f309fb7cc9a26cf4d"
+      "0dba8e0b99cc4b8c24c83693211c5a02"
     ]
   ]
 ]

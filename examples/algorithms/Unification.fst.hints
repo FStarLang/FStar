@@ -457,35 +457,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b5884ece90b0bd602e5c8f6b54bfbc24"
+      "e3d6a6de55c20b53b422cbda7ab1cd9f"
     ],
     [
       "Unification.lemma_vars_decrease",
       2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "64871a3f2059723862d9281c9aaa1ae9"
-    ],
-    [
-      "Unification.lemma_vars_decrease",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "84ae16fe5e94f4186134d9e5d4b7a747"
-    ],
-    [
-      "Unification.lemma_vars_decrease",
-      4,
       2,
       1,
       [
@@ -495,13 +471,14 @@
         "@fuel_irrelevance_Unification.subst_term.fuel_instrumented",
         "@fuel_irrelevance_Unification.vars.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Unification_pretyping_6ea39f1b1b9923e1f4f54d31e2c44859",
         "assumption_Prims.HasEq_int",
         "binder_x_6ea39f1b1b9923e1f4f54d31e2c44859_1",
         "binder_x_f53c282fc2f6e16d629e4d2fa33f9f40_0", "bool_inversion",
         "bool_typing", "constructor_distinct_Unification.F",
         "constructor_distinct_Unification.V", "disc_equation_Unification.F",
         "disc_equation_Unification.V", "equality_tok_Prims.LexTop@tok",
-        "equation_FStar.OrdSet.cmp", "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_Unification.occurs",
         "equation_Unification.ok", "equation_Unification.subst",
@@ -532,7 +509,7 @@
         "typing_Unification.subst_term", "typing_Unification.vars"
       ],
       0,
-      "a1c0cb3c11961428e2873d5735008459"
+      "8f29669fc3fa532527296e588fb7697d"
     ],
     [
       "Unification.vars_decrease_eqns",
@@ -544,23 +521,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5ae299a27d2a19f028be47cb9724c698"
+      "936b69b538c3964f360c918e3d09499c"
     ],
     [
       "Unification.vars_decrease_eqns",
       2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "3e6829261067dfcc75e8dd2c2c5561fd"
-    ],
-    [
-      "Unification.vars_decrease_eqns",
-      3,
       2,
       1,
       [
@@ -584,7 +549,7 @@
         "data_typing_intro_Prims.Nil@tok",
         "data_typing_intro_Unification.V@tok", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
-        "equation_FStar.OrdSet.cmp", "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_Unification.empty_vars",
         "equation_Unification.eqns", "equation_Unification.lsubst_term",
@@ -628,7 +593,7 @@
         "typing_Unification.vars"
       ],
       0,
-      "49b590d09718569105339ce0011fc2e5"
+      "46d046cc4990385d075c860f4c9f57c3"
     ],
     [
       "Unification.unify",
@@ -1064,33 +1029,16 @@
         "equation_Unification.subst", "function_token_typing_Prims.nat",
         "function_token_typing_Unification.subst",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_Unification.term@tok",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1b1e1f2a8e133172c405b129fd8a3fc2"
+      "bd15e86932f194717771bcbc08838d7c"
     ],
     [
       "Unification.key_lemma",
       2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Unification_pretyping_6ea39f1b1b9923e1f4f54d31e2c44859",
-        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Prims.list__uu___haseq",
-        "assumption_Unification.term__uu___haseq",
-        "equation_Unification.eqns",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "kinding_Unification.term@tok"
-      ],
-      0,
-      "c0ef61e8d8a7184f68034f3d8e324ce1"
-    ],
-    [
-      "Unification.key_lemma",
-      3,
       2,
       1,
       [
@@ -1146,13 +1094,13 @@
         "token_correspondence_Unification.extend_lsubst",
         "token_correspondence_Unification.op_At",
         "token_correspondence_Unification.op_Plus_Plus",
+        "token_correspondence_Unification.solved.fuel_instrumented",
         "token_correspondence_Unification.subst_term",
-        "typing_Unification.lsubst_eqns", "typing_Unification.lsubst_term",
-        "typing_Unification.occurs", "typing_Unification.solved",
-        "typing_Unification.sub"
+        "typing_Unification.lsubst_eqns", "typing_Unification.neutral_l",
+        "typing_Unification.occurs", "typing_Unification.sub"
       ],
       0,
-      "3506174c10c1f518bbbc56e141fd0ac2"
+      "85d390793ee31e324302d27a387c7c5e"
     ],
     [
       "Unification.lemma_subst_term_idem",
@@ -1161,7 +1109,7 @@
       1,
       [ "@query", "assumption_Unification.term__uu___haseq" ],
       0,
-      "579c5a1c8713d6d39f1aa8adb049b757"
+      "ab60db2d88ecf181ebd0cde3673034f0"
     ],
     [
       "Unification.lemma_subst_term_idem",
@@ -1194,7 +1142,7 @@
         "subterm_ordering_Unification.F"
       ],
       0,
-      "6fbdab376a95429dbfe718ef380f71f8"
+      "ad9a7b2fd8a4466fdeb32cc01e827e57"
     ],
     [
       "Unification.lemma_subst_eqns_idem",
@@ -1212,7 +1160,7 @@
         "kinding_Unification.term@tok"
       ],
       0,
-      "527ae7181fe54c92112f37aa29e67c73"
+      "8b31d531eefd4d48e930e94f365d3aeb"
     ],
     [
       "Unification.lemma_subst_eqns_idem",
@@ -1244,7 +1192,7 @@
         "token_correspondence_Unification.subst_term"
       ],
       0,
-      "4991000786f44e2a00ed223f4e3dfef0"
+      "a71e90f593ca2e4e5e29fc7f23253210"
     ],
     [
       "Unification.subst_funs_monotone",
@@ -1280,7 +1228,7 @@
         "typing_Unification.subst_term"
       ],
       0,
-      "854fd631ad39e828f2c6d45574964439"
+      "34cb71d60f23531c6b5f1dc5d4fbb7df"
     ],
     [
       "Unification.lsubst_funs_monotone",
@@ -1306,7 +1254,7 @@
         "token_correspondence_Unification.subst_term"
       ],
       0,
-      "7963e87d651141d7bcab7c3d5f39415a"
+      "e19854c37362ca35cc047b19e07ee628"
     ],
     [
       "Unification.lemma_occurs_not_solveable_aux",
@@ -1355,7 +1303,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "115864e255790a7f812a20bd6ffa0c51"
+      "2974b09ccbafbd53a89b8289b5c767e8"
     ],
     [
       "Unification.not_solveable",
@@ -1364,7 +1312,7 @@
       1,
       [ "@query", "assumption_Unification.term__uu___haseq" ],
       0,
-      "fb0c07c2ba97503a978c56a20587e16e"
+      "96549c1fc404bc49a98364dc9dbf636d"
     ],
     [
       "Unification.lemma_occurs_not_solveable",
@@ -1393,7 +1341,7 @@
         "token_correspondence_Unification.funs.fuel_instrumented"
       ],
       0,
-      "ddbd50e7391e4094c0da285f896cfa67"
+      "8bed6f6eb46867b81dc1d4a2f201c3bc"
     ],
     [
       "Unification.lemma_subst_idem",
@@ -1402,20 +1350,11 @@
       1,
       [ "@query", "assumption_Unification.term__uu___haseq" ],
       0,
-      "45bd6dcb16dd2294153d25d861aa724e"
+      "9ed2a3ccc4e6d6da706fd7714249e899"
     ],
     [
       "Unification.lemma_subst_idem",
       2,
-      2,
-      1,
-      [ "@query", "assumption_Unification.term__uu___haseq" ],
-      0,
-      "4e058dc6c46b72fea56b38c08db6c012"
-    ],
-    [
-      "Unification.lemma_subst_idem",
-      3,
       2,
       1,
       [
@@ -1451,38 +1390,26 @@
         "subterm_ordering_Unification.F", "typing_Unification.subst_term"
       ],
       0,
-      "4306377fb693d59ee3368dc92c6fff99"
+      "18b6c608408de9c4165256dfe9c27e06"
     ],
     [
       "Unification.lemma_subst_eqns",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Unification.term__uu___haseq" ],
-      0,
-      "c6f92682aea4e6eeb22b3902aa61afeb"
-    ],
-    [
-      "Unification.lemma_subst_eqns",
-      2,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Unification_pretyping_6ea39f1b1b9923e1f4f54d31e2c44859",
-        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Prims.list__uu___haseq",
         "assumption_Unification.term__uu___haseq",
         "equation_Unification.eqns",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "kinding_Unification.term@tok"
+        "kinding_FStar.Pervasives.Native.tuple2@tok"
       ],
       0,
-      "012e4ac3cff2b3946de69d96638cdcfa"
+      "8f3e68ba11595b8e04c8a5b2e14ddf44"
     ],
     [
       "Unification.lemma_subst_eqns",
-      3,
+      2,
       2,
       1,
       [
@@ -1495,8 +1422,9 @@
         "binder_x_6ea39f1b1b9923e1f4f54d31e2c44859_2",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_Unification.eqns",
-        "equation_Unification.lsubst_term", "equation_Unification.subst",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "equation_Unification.eqns", "equation_Unification.lsubst_term",
+        "equation_Unification.subst",
         "equation_with_fuel_FStar.List.Tot.Base.fold_right.fuel_instrumented",
         "equation_with_fuel_Unification.lsubst_eqns.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
@@ -1509,7 +1437,7 @@
         "token_correspondence_Unification.subst_term"
       ],
       0,
-      "deab1d7030b253618b2a675631e9598e"
+      "4a3ff60029eaf6942698b47592a9258b"
     ],
     [
       "Unification.lemma_not_solveable_cons_aux",
@@ -1538,7 +1466,7 @@
         "token_correspondence_Unification.solved.fuel_instrumented"
       ],
       0,
-      "e5d51f19111dd7d28b969c9588d62fe8"
+      "5089f0af9c09a588908dd3934214eba8"
     ],
     [
       "Unification.lemma_not_solveable_cons",
@@ -1555,7 +1483,7 @@
         "lemma_Unification.lemma_not_solveable_cons_aux"
       ],
       0,
-      "0496563fc940663a372f434df84b67cb"
+      "aadb7d69305b7b3000d4f3386cb282c3"
     ],
     [
       "Unification.unify_correct_aux",
@@ -1563,56 +1491,32 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Prims.list__uu___haseq",
-        "assumption_Unification.term__uu___haseq",
-        "equation_Unification.eqns",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "kinding_Unification.term@tok"
-      ],
-      0,
-      "16feced18ad48df40ab78f7ce0914edb"
-    ],
-    [
-      "Unification.unify_correct_aux",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Unification.unify.fuel_instrumented",
+        "@fuel_irrelevance_Unification.unify.fuel_instrumented", "@query",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Prims.HasEq_int", "assumption_Prims.list__uu___haseq",
-        "assumption_Unification.term__uu___haseq", "equation_Prims.nat",
+        "assumption_Unification.term__uu___haseq", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some", "equation_Prims.nat",
+        "equation_Unification.eqns", "equation_Unification.lsubst",
         "equation_Unification.subst", "function_token_typing_Prims.nat",
+        "function_token_typing_Unification.lsubst",
         "function_token_typing_Unification.subst",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "kinding_Unification.term@tok"
-      ],
-      0,
-      "961c80257fc21abaf6da2836214ce3fe"
-    ],
-    [
-      "Unification.unify_correct_aux",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption",
-        "@fuel_correspondence_Unification.unify.fuel_instrumented", "@query",
-        "bool_inversion", "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Unification.lsubst",
-        "function_token_typing_Unification.lsubst",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_Unification.term@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_Unification.unify"
       ],
       0,
-      "a277794a9bbf47ef52cfd75efddcfc3b"
+      "62dc620f3aecb6dc1f54974a64dfc06e"
     ],
     [
       "Unification.unify_correct_aux",
-      4,
+      2,
       2,
       1,
       [
@@ -1657,12 +1561,12 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "disc_equation_Unification.F", "disc_equation_Unification.V",
-        "equality_tok_Prims.LexTop@tok", "equation_FStar.OrdSet.cmp",
+        "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_Unification.eqns",
         "equation_Unification.extend_lsubst",
-        "equation_Unification.extend_subst",
+        "equation_Unification.extend_subst", "equation_Unification.lsubst",
         "equation_Unification.lsubst_term", "equation_Unification.n_evars",
         "equation_Unification.neutral_l",
         "equation_Unification.not_solveable",
@@ -1687,6 +1591,7 @@
         "function_token_typing_FStar.List.Tot.Base.append",
         "function_token_typing_Prims.nat",
         "function_token_typing_Unification.extend_lsubst",
+        "function_token_typing_Unification.lsubst",
         "function_token_typing_Unification.nat_order",
         "function_token_typing_Unification.op_At",
         "function_token_typing_Unification.subst",
@@ -1700,6 +1605,7 @@
         "lemma_FStar.OrdSet.mem_union", "lemma_FStar.OrdSet.size_remove",
         "lemma_FStar.OrdSet.size_singleton", "lemma_FStar.OrdSet.size_union",
         "lemma_FStar.OrdSet.subset_size",
+        "lemma_FStar.Pervasives.invertOption",
         "lemma_Unification.lemma_extend_lsubst_distributes_eqns",
         "lemma_Unification.lemma_lsubst_eqns_nil",
         "lemma_Unification.lsubst_distributes_over_F",
@@ -1724,7 +1630,7 @@
         "projection_inverse_Unification.V_i",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Unification_Tm_refine_b5c8c2685f70f6e1729ca74d14c45639",
+        "refinement_interpretation_Unification_Tm_refine_b2cf05c80b1bc8f1a452898d967a3414",
         "refinement_interpretation_Unification_Tm_refine_e56eb86621f475ab19c1e6dee8ef4fe6",
         "token_correspondence_FStar.List.Tot.Base.append",
         "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
@@ -1732,7 +1638,6 @@
         "token_correspondence_Unification.evars.fuel_instrumented",
         "token_correspondence_Unification.extend_lsubst",
         "token_correspondence_Unification.extend_subst",
-        "token_correspondence_Unification.funs.fuel_instrumented",
         "token_correspondence_Unification.lsubst_eqns.fuel_instrumented",
         "token_correspondence_Unification.n_flex_rhs.fuel_instrumented",
         "token_correspondence_Unification.op_At",
@@ -1742,6 +1647,7 @@
         "typing_FStar.OrdSet.union",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
+        "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_Unification.efuns", "typing_Unification.evars",
         "typing_Unification.funs", "typing_Unification.lsubst_eqns",
         "typing_Unification.lsubst_term", "typing_Unification.n_evars",
@@ -1752,7 +1658,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "43efcd546946d3ed4ed092b3cb38fecc"
+      "0488c63ea543c7db444eacd604e77964"
     ],
     [
       "Unification.unify_eqns_correct",
@@ -1768,7 +1674,7 @@
         "typing_Unification.unify_eqns"
       ],
       0,
-      "02d3a1a79028f74fd14235ebeb19ca95"
+      "826d46f1667b8f44f6b7e9c419f07d6c"
     ],
     [
       "Unification.unify_eqns_correct",
@@ -1786,7 +1692,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "262e157a852f8095de7d727360a33213"
+      "e041d543c0f5bf4e35af5aa381773ff6"
     ],
     [
       "Unification.lemma_shift_append",
@@ -1799,7 +1705,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3081c1b2dea9c18194d22ff75d22c55e"
+      "9027d32eaef49931b7dd001880dbdeaf"
     ],
     [
       "Unification.term",
@@ -1811,7 +1717,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "59575208b9e906897b7fb2704775b763"
+      "f4c91c434854e22b8e114d379078511e"
     ],
     [
       "Unification.__proj__V__item__i",
@@ -1824,7 +1730,7 @@
         "refinement_interpretation_Unification_Tm_refine_a6f3162317a37ec3b40e2ddee0a47784"
       ],
       0,
-      "f251e87a5117a61a16d3a57e4e49bcb5"
+      "83900b232106499e6db39cf9186f66fd"
     ],
     [
       "Unification.__proj__F__item__t1",
@@ -1837,7 +1743,7 @@
         "refinement_interpretation_Unification_Tm_refine_f9393b35e18e69a35f7906fba2f36513"
       ],
       0,
-      "13d7df9bea5e90a03798be7ebd863075"
+      "24e27d5e51e67da237e40dc1035163f0"
     ],
     [
       "Unification.__proj__F__item__t2",
@@ -1850,7 +1756,7 @@
         "refinement_interpretation_Unification_Tm_refine_f9393b35e18e69a35f7906fba2f36513"
       ],
       0,
-      "4acb350838b2e0662be3accedaa7cdd7"
+      "5ee957247b17aa548e06c2a9d2c24eee"
     ],
     [
       "Unification.nat_order",
@@ -1867,7 +1773,7 @@
         "token_correspondence_Prims.op_LessThanOrEqual"
       ],
       0,
-      "5296e3a7b1571af36a0ac36a40917734"
+      "fa426552362dd2a0f88c0d53f96bb8f6"
     ],
     [
       "Unification.varset",
@@ -1879,7 +1785,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "10bae954276fdbb83efbebf5ad510bba"
+      "9842e19e4f7f23b913be86b63205989b"
     ],
     [
       "Unification.empty_vars",
@@ -1891,7 +1797,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "51e1198ca32c0bc35b17ba7d5ed18122"
+      "4f94feb2a53b065859a3764db54c717c"
     ],
     [
       "Unification.vars",
@@ -1907,7 +1813,7 @@
         "subterm_ordering_Unification.F"
       ],
       0,
-      "a0900bf9ebcda6ca4494dd8b6a83fce0"
+      "7fb7879f4208c3419a55bc1c741abd80"
     ],
     [
       "Unification.evars",
@@ -1924,7 +1830,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6fbfd1d5849b577733f8fd5a78816e34"
+      "0dfd9a93afb79ecbbd392f4d5c43b7a9"
     ],
     [
       "Unification.n_evars",
@@ -1936,7 +1842,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0bdc2987e828756572e5633d1fec74c4"
+      "f251b0a343043542cbcad7b586745f1d"
     ],
     [
       "Unification.funs",
@@ -1953,7 +1859,7 @@
         "subterm_ordering_Unification.F"
       ],
       0,
-      "acbcd51f925572b3e8b619e6b79f9e1f"
+      "76d23d5625aed6bcfa6d16da3a5fa582"
     ],
     [
       "Unification.efuns",
@@ -1972,7 +1878,7 @@
         "subterm_ordering_Prims.Cons", "typing_Unification.funs"
       ],
       0,
-      "2ed1432ba6d0c3420b9b5447ff9a7f07"
+      "fcaf6c34369af28fe87dad89d1c69fc0"
     ],
     [
       "Unification.n_flex_rhs",
@@ -1991,7 +1897,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5f7b8438567556cc4647769147965e1d"
+      "62193f04952a28f159aea649a772bc4a"
     ],
     [
       "Unification.subst_term",
@@ -2016,7 +1922,7 @@
         "subterm_ordering_Unification.F"
       ],
       0,
-      "38d069cac2a90a2b1b5f14c0f3ccd2ae"
+      "1945d94fa466d567579203db59874011"
     ],
     [
       "Unification.occurs",
@@ -2028,7 +1934,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "acc27367bcb2afca65803365a0d2a4c5"
+      "b906e1dcbe2dc721976541219308ffb9"
     ],
     [
       "Unification.lsubst_eqns",
@@ -2043,7 +1949,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "aa8441a111e6b828d42e9feac6dd2430"
+      "82e72b2c7211d31855ff093053cc3050"
     ],
     [
       "Unification.lemma_lsubst_eqns_nil",
@@ -2059,7 +1965,7 @@
         "kinding_Unification.term@tok"
       ],
       0,
-      "c2ae9921528a5cacda11c6f9269da819"
+      "c967899d545b77324508752b91947bd7"
     ],
     [
       "Unification.evars_permute_hd",
@@ -2077,7 +1983,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "97f255f4c9ac6079b4dafb40bfb12a28"
+      "2c5fe386d2a7938946c484583b080405"
     ],
     [
       "Unification.evars_unfun",
@@ -2095,41 +2001,91 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5ad731779e8eff5395fb478eb832a669"
+      "fd7e374c8b88e02d422384f94c8b57ef"
     ],
     [
       "Unification.lemma_vars_decrease",
-      5,
+      3,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_FStar.Pervasives.Native.fst",
-        "equation_Prims.nat", "equation_Unification.subst",
-        "function_token_typing_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "kinding_Unification.term@tok",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Pervasives.Native.fst"
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "37d1628696a48bbb2fb37942c0e088f8"
+      "b417674c06dd4e174dffdb900cefc779"
     ],
     [
       "Unification.vars_decrease_eqns",
-      4,
+      3,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "@fuel_correspondence_Unification.evars.fuel_instrumented",
+        "@fuel_correspondence_Unification.lsubst_eqns.fuel_instrumented",
+        "@fuel_correspondence_Unification.vars.fuel_instrumented",
+        "@fuel_irrelevance_Unification.evars.fuel_instrumented",
+        "@fuel_irrelevance_Unification.lsubst_eqns.fuel_instrumented",
+        "@fuel_irrelevance_Unification.vars.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "assumption_Prims.HasEq_int",
+        "binder_x_5e4219615a8bb2c95ad963d52672b408_2",
+        "binder_x_6ea39f1b1b9923e1f4f54d31e2c44859_1",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "bool_inversion",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "constructor_distinct_Unification.V",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok",
+        "data_typing_intro_Unification.V@tok", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.OrdSet.cmp", "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Unification.empty_vars",
+        "equation_Unification.eqns", "equation_Unification.lsubst_term",
+        "equation_Unification.occurs", "equation_Unification.ok",
+        "equation_Unification.subst", "equation_Unification.varset",
+        "equation_with_fuel_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "equation_with_fuel_Unification.evars.fuel_instrumented",
+        "equation_with_fuel_Unification.lsubst_eqns.fuel_instrumented",
+        "equation_with_fuel_Unification.vars.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.nat",
+        "function_token_typing_Unification.nat_order",
+        "function_token_typing_Unification.subst",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "int_inversion", "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_Unification.term@tok", "lemma_FStar.OrdSet.mem_empty",
+        "lemma_FStar.OrdSet.mem_remove", "lemma_FStar.OrdSet.mem_singleton",
+        "lemma_FStar.OrdSet.mem_subset", "lemma_FStar.OrdSet.mem_union",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "projection_inverse_Unification.V_i",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "subterm_ordering_Prims.Cons",
+        "token_correspondence_Unification.evars.fuel_instrumented",
+        "token_correspondence_Unification.subst_term",
+        "typing_FStar.OrdSet.mem", "typing_FStar.OrdSet.remove",
+        "typing_FStar.OrdSet.union", "typing_FStar.Pervasives.Native.fst",
+        "typing_FStar.Pervasives.Native.snd", "typing_Unification.evars",
+        "typing_Unification.lsubst_eqns", "typing_Unification.lsubst_term",
+        "typing_Unification.occurs", "typing_Unification.subst_term",
+        "typing_Unification.vars"
       ],
       0,
-      "661c3449a82cf1bdf98b08a7316d3416"
+      "d0153865940799a877e6cffb077c1a22"
     ],
     [
       "Unification.unify",
@@ -2215,7 +2171,7 @@
         "typing_Unification.vars", "well-founded-ordering-on-nat"
       ],
       0,
-      "83468de639222f7f53d1755f1f1ccacc"
+      "af7f7bb7c808fe4e06a17ca30552e349"
     ],
     [
       "Unification.solved",
@@ -2231,7 +2187,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "237a354b1c5aa3c5ab9465ce082833c7"
+      "53fcc323563830d82a3973f82a8580d1"
     ],
     [
       "Unification.lsubst_distributes_over_F",
@@ -2240,7 +2196,7 @@
       1,
       [ "@query", "assumption_Unification.term__uu___haseq" ],
       0,
-      "f16fa385f814a804247b85638a11683a"
+      "63ce212f0f5dfbcf40aee8b5fc9b870b"
     ],
     [
       "Unification.lemma_extend_lsubst_distributes_term",
@@ -2249,7 +2205,7 @@
       1,
       [ "@query", "assumption_Unification.term__uu___haseq" ],
       0,
-      "383589c46bd0db53f5e9ebd438df1c80"
+      "7f0d25e3cc0dde3a41918eeb4b38b35c"
     ],
     [
       "Unification.lemma_extend_lsubst_distributes_eqns",
@@ -2265,7 +2221,7 @@
         "kinding_Unification.term@tok"
       ],
       0,
-      "bd678e2703f89b0e5a0b28db8963ed32"
+      "5d7339da6fa24fc5f79bc94454fafbd5"
     ],
     [
       "Unification.lemma_subst_id",
@@ -2274,7 +2230,7 @@
       1,
       [ "@query", "assumption_Unification.term__uu___haseq" ],
       0,
-      "6cf0069e073ed7083f1350008a0b81dd"
+      "0415d0ff82443eeffe91b17bba1d69ab"
     ],
     [
       "Unification.neutral",
@@ -2283,7 +2239,7 @@
       1,
       [ "@query", "assumption_Unification.term__uu___haseq" ],
       0,
-      "6357d535ce6a8d7235cd49ccbd1f71af"
+      "dee2886787f2f130cfab39be286fb119"
     ],
     [
       "Unification.neutral_l",
@@ -2292,7 +2248,7 @@
       1,
       [ "@query", "assumption_Unification.term__uu___haseq" ],
       0,
-      "b1bfd169db400bdd101191eed2e1e8d5"
+      "b1490edda11020c78c7fd168b91a16e3"
     ],
     [
       "Unification.lemma_lsubst_term_commutes",
@@ -2301,7 +2257,7 @@
       1,
       [ "@query", "assumption_Unification.term__uu___haseq" ],
       0,
-      "71fb35fa36d202fd12ea7b8a6d41d210"
+      "4fd2bb251f67fd5677c3885393a4f120"
     ],
     [
       "Unification.lemma_lsubst_eqns_commutes",
@@ -2317,11 +2273,11 @@
         "kinding_Unification.term@tok"
       ],
       0,
-      "3dbb61e43f0fdf0b735fbdb97d8bfd4d"
+      "c430ff5cfd3cb9c55747be66f3703f88"
     ],
     [
       "Unification.key_lemma",
-      4,
+      3,
       2,
       1,
       [
@@ -2331,8 +2287,7 @@
         "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Prims.HasEq_int", "assumption_Prims.list__uu___haseq",
         "assumption_Unification.term__uu___haseq", "equation_Prims.nat",
-        "equation_Unification.eqns", "equation_Unification.subst",
-        "function_token_typing_Prims.nat",
+        "equation_Unification.subst", "function_token_typing_Prims.nat",
         "function_token_typing_Unification.subst",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
@@ -2340,7 +2295,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a1686477b13afbf491473d82e4f9f7b0"
+      "fd94d62f59e722bf62d61181b2d298b2"
     ],
     [
       "Unification.lemma_subst_term_idem",
@@ -2349,7 +2304,7 @@
       1,
       [ "@query", "assumption_Unification.term__uu___haseq" ],
       0,
-      "38a88b35a9c3930709f4bce9bb3a57c9"
+      "3c4105d0e9c0ece9b5c1274024410e62"
     ],
     [
       "Unification.lemma_subst_eqns_idem",
@@ -2367,7 +2322,7 @@
         "kinding_Unification.term@tok"
       ],
       0,
-      "6a5a395763495297ffbf792e0477d7f4"
+      "8f4a34244b3c9fbfa18df68de144d431"
     ],
     [
       "Unification.not_solveable",
@@ -2376,20 +2331,20 @@
       1,
       [ "@query", "assumption_Unification.term__uu___haseq" ],
       0,
-      "ec6861f694687e52e5b8761ad6a455db"
+      "d85fbb204983701abad1e9320ee2253b"
     ],
     [
       "Unification.lemma_subst_idem",
-      4,
+      3,
       2,
       1,
       [ "@query", "assumption_Unification.term__uu___haseq" ],
       0,
-      "b51ca0d00bb3f699897bf1c93b09bea3"
+      "7c55937713601462f8348158440b3e04"
     ],
     [
       "Unification.lemma_subst_eqns",
-      4,
+      3,
       2,
       1,
       [
@@ -2400,11 +2355,11 @@
         "kinding_FStar.Pervasives.Native.tuple2@tok"
       ],
       0,
-      "81c825bab697574af3bbc2eaf244b396"
+      "11ccd5da80e3814cc9c3cfd449ae64d6"
     ],
     [
       "Unification.unify_correct_aux",
-      5,
+      3,
       2,
       1,
       [
@@ -2449,12 +2404,12 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "disc_equation_Unification.F", "disc_equation_Unification.V",
-        "equality_tok_Prims.LexTop@tok", "equation_FStar.OrdSet.cmp",
+        "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_Unification.eqns",
         "equation_Unification.extend_lsubst",
-        "equation_Unification.extend_subst",
+        "equation_Unification.extend_subst", "equation_Unification.lsubst",
         "equation_Unification.lsubst_term", "equation_Unification.n_evars",
         "equation_Unification.neutral_l",
         "equation_Unification.not_solveable",
@@ -2479,6 +2434,7 @@
         "function_token_typing_FStar.List.Tot.Base.append",
         "function_token_typing_Prims.nat",
         "function_token_typing_Unification.extend_lsubst",
+        "function_token_typing_Unification.lsubst",
         "function_token_typing_Unification.nat_order",
         "function_token_typing_Unification.op_At",
         "function_token_typing_Unification.subst",
@@ -2488,10 +2444,12 @@
         "interpretation_Unification_Tm_abs_9355c9a18609b2fd6c6705ee5e434477",
         "interpretation_Unification_Tm_abs_e9634bdfca374fb6f39cecfa426634eb",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "kinding_Unification.term@tok", "lemma_FStar.OrdSet.mem_singleton",
+        "kinding_Unification.term@tok", "lemma_FStar.OrdSet.eq_remove",
+        "lemma_FStar.OrdSet.mem_remove", "lemma_FStar.OrdSet.mem_singleton",
         "lemma_FStar.OrdSet.mem_union", "lemma_FStar.OrdSet.size_remove",
         "lemma_FStar.OrdSet.size_singleton", "lemma_FStar.OrdSet.size_union",
         "lemma_FStar.OrdSet.subset_size",
+        "lemma_FStar.Pervasives.invertOption",
         "lemma_Unification.lemma_extend_lsubst_distributes_eqns",
         "lemma_Unification.lemma_lsubst_eqns_nil",
         "lemma_Unification.lsubst_distributes_over_F",
@@ -2516,7 +2474,7 @@
         "projection_inverse_Unification.V_i",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Unification_Tm_refine_b5c8c2685f70f6e1729ca74d14c45639",
+        "refinement_interpretation_Unification_Tm_refine_b2cf05c80b1bc8f1a452898d967a3414",
         "refinement_interpretation_Unification_Tm_refine_e56eb86621f475ab19c1e6dee8ef4fe6",
         "token_correspondence_FStar.List.Tot.Base.append",
         "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
@@ -2524,7 +2482,6 @@
         "token_correspondence_Unification.evars.fuel_instrumented",
         "token_correspondence_Unification.extend_lsubst",
         "token_correspondence_Unification.extend_subst",
-        "token_correspondence_Unification.funs.fuel_instrumented",
         "token_correspondence_Unification.lsubst_eqns.fuel_instrumented",
         "token_correspondence_Unification.n_flex_rhs.fuel_instrumented",
         "token_correspondence_Unification.op_At",
@@ -2534,6 +2491,7 @@
         "typing_FStar.OrdSet.union",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
+        "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_Unification.efuns", "typing_Unification.evars",
         "typing_Unification.funs", "typing_Unification.lsubst_eqns",
         "typing_Unification.lsubst_term", "typing_Unification.n_evars",
@@ -2544,7 +2502,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "75da4fb3f76342b5524f1b2e9243e106"
+      "1ebb2747f1f19b200a54bce40499886d"
     ],
     [
       "Unification.unify_eqns_correct",
@@ -2560,7 +2518,7 @@
         "typing_Unification.unify_eqns"
       ],
       0,
-      "08e70cec575a2883da4131276f1cb673"
+      "2cb915afb27acd376b05cdd607c26361"
     ]
   ]
 ]
