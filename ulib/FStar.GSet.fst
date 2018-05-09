@@ -131,9 +131,6 @@ let rec as_set' #a l = match l with
   | [] -> empty
   | hd::tl -> union (singleton hd) (as_set' tl)
 
-unfold val as_set:  #a:Type -> l:list a -> Tot (set a)
-let as_set (#a:Type) (l:list a) = normalize_term (as_set' l)
-
 let lemma_disjoint_subset (#a:Type) (s1:set a) (s2:set a) (s3:set a)
   :Lemma (requires (disjoint s1 s2 /\ subset s3 s1))
          (ensures  (disjoint s3 s2))
