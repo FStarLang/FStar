@@ -2463,6 +2463,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         solve_t env ({problem with lhs=t1}) wl
 
       | Tm_match (s1, brs1), Tm_match (s2, brs2) ->
+        let by_smt () =
+            // using original WL
+            let guard, wl = guard_of_prob env wl problem t1 t2 in
+            solve env (solve_prob orig (Some guard) [] wl)
+        in
         let rec solve_branches wl brs1 brs2 : option<(list<prob> * worklist)> =
             match brs1, brs2 with
             | br1::rs1, br2::rs2 ->
@@ -2477,7 +2482,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 let w2 = BU.map_opt w2 (SS.subst s) in
                 let e2 = SS.subst s e2 in
 
-                let scope = p_scope orig @ (List.map S.mk_binder <| S.pat_bvs p1) in
+                let scope = List.map S.mk_binder <| S.pat_bvs p1 in
 
                 (* Subproblem for then `when` clause *)
                 BU.bind_opt (
@@ -2499,14 +2504,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | [], [] -> Some ([], wl)
             | _ -> None
         in
-        let by_smt wl =
-            let guard, wl = guard_of_prob env wl problem t1 t2 in
-            solve env (solve_prob orig (Some guard) [] wl)
-        in
         begin match solve_branches wl brs1 brs2 with
         | None ->
             if wl.smt_ok
-            then by_smt wl
+            then by_smt ()
             else giveup env "Tm_match branches don't match" orig
         | Some (sub_probs, wl) ->
             let sc_prob, wl = mk_t_problem wl [] orig s1 EQ s2 None "match scrutinee" in
@@ -2520,7 +2521,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 Success (ds, imp)
             | Failed _ ->
                 UF.rollback tx;
-                by_smt wl
+                by_smt ()
             end
         end
 
