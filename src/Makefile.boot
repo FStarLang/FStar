@@ -23,9 +23,10 @@ INCLUDE_PATHS = \
 
 CACHE_DIR?=./.cache.boot
 
-FSTAR_C=$(FSTAR) $(OTHERFLAGS) --cache_checked_modules	        	\
-        --lax --MLish --no_location_info              \
-	--odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))   \
+FSTAR_BOOT ?= $(FSTAR)
+FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) --cache_checked_modules		\
+        --lax --MLish --no_location_info				\
+        --odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))	\
         --warn_error -272-241 --cache_dir $(CACHE_DIR)
 
 # Each "project" for the compiler is in its own namespace.  We want to
