@@ -639,7 +639,7 @@ let termToSmt
   fun print_ranges enclosing_name t ->
       let next_qid =
           let ctr = BU.mk_ref 0 in
-          fun () ->
+          fun depth ->
             let n = !ctr in
             BU.incr ctr;
             if n = 0 then enclosing_name
