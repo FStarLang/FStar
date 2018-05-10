@@ -203,6 +203,7 @@ let dummy : option<binder> * closure = None,Dummy
 type debug_switches = {
     gen              : bool;
     primop           : bool;
+    unfolding        : bool;
     b380             : bool;
     wpe              : bool;
     norm_delayed     : bool;
@@ -286,6 +287,9 @@ let log cfg f =
 
 let log_primops cfg f =
     if cfg.debug.primop then f () else ()
+
+let log_unfolding cfg f =
+    if cfg.debug.unfolding then f () else ()
 
 let is_empty = function
     | [] -> true
@@ -1222,9 +1226,9 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     // We unfold dm4f actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
         let b = should_reify cfg stack in
-        log cfg (fun () -> BU.print2 ">>> For DM4F action %s, should_reify = %s\n"
-                                 (Print.fv_to_string fv)
-                                 (string_of_bool b));
+        log_unfolding cfg (fun () -> BU.print2 ">>> For DM4F action %s, should_reify = %s\n"
+                                               (Print.fv_to_string fv)
+                                               (string_of_bool b));
         if b then reif else no
 
     // If it is handled primitively, then don't unfold
@@ -1246,6 +1250,8 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     | _, Some _, _, _
     | _, _, Some _, _
     | _, _, _, Some _ ->
+        log_unfolding cfg (fun () -> BU.print1 ">>> Reached a %s with selective unfolding\n"
+                                               (Print.fv_to_string fv));
         comb_or [
          (match cfg.steps.unfold_only with
           | None -> yes
@@ -1259,14 +1265,18 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
         ]
     // Nothing special, just check the depth
     | _ ->
-        yesno <| cfg.delta_level |> BU.for_some (function
+        log_unfolding cfg (fun () -> BU.print3 ">>> Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
+                                               (Print.fv_to_string fv)
+                                               (Print.delta_depth_to_string fv.fv_delta)
+                                               (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
+        yesno <| (cfg.delta_level |> BU.for_some (function
              | Env.UnfoldTac
              | NoDelta -> false
              | Env.Inlining
              | Eager_unfolding_only -> true
-             | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l)
+             | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l))
     in
-    log cfg (fun () -> BU.print3 ">>> For %s (%s), unfolding res = %s\n"
+    log_unfolding cfg (fun () -> BU.print3 ">>> For %s (%s), unfolding res = %s\n"
                     (Print.fv_to_string fv)
                     (Range.string_of_range rng)
                     (string_of_res res));
@@ -1298,7 +1308,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
         Some (cfg, List.tl stack)
 
     | _ ->
-        failwith <| BU.format1 "Unexpected unfolding result, (%s, %s, %s)" (string_of_res res)
+        failwith <| BU.format1 "Unexpected unfolding result: %s" (string_of_res res)
 
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
@@ -2696,6 +2706,7 @@ let config' psteps s e =
     {tcenv=e;
      debug = { gen = Env.debug e (Options.Other "Norm")
              ; primop = Env.debug e (Options.Other "Primops")
+             ; unfolding = Env.debug e (Options.Other "Unfolding")
              ; b380 = Env.debug e (Options.Other "380")
              ; wpe  = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
