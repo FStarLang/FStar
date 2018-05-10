@@ -1129,7 +1129,7 @@ let residual_comp_of_lcomp (lc:lcomp) = {
 
 let mk_forall_aux fa x body =
   mk (Tm_app(fa, [ iarg (x.sort);
-                   as_arg (abs [mk_binder x] body (Some (residual_tot ktype0)))])) None dummyRange
+                   as_arg (abs [mk_binder x] body (Some (residual_tot kprop)))])) None dummyRange
 
 let mk_forall_no_univ (x:bv) (body:typ) : typ =
   mk_forall_aux tforall x body

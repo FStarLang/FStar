@@ -71,7 +71,7 @@ let abstract_guard_n bs g =
     match g.guard_f with
     | Trivial -> g
     | NonTrivial f ->
-        let f' = U.abs bs f (Some (U.residual_tot U.ktype0)) in
+        let f' = U.abs bs f (Some (U.residual_tot U.kprop)) in
         ({ g with guard_f = NonTrivial f' })
 
 let abstract_guard b g =
@@ -395,7 +395,7 @@ let next_pid =
     fun () -> incr ctr; !ctr
 
 let mk_problem wl scope orig lhs rel rhs elt reason =
-    let guard_ty = U.arrow scope (S.mk_Total U.ktype0) in
+    let guard_ty = U.arrow scope (S.mk_Total U.kprop) in
     let ctx_uvar, lg, wl =
         new_uvar ("mk_problem: logical guard for " ^ reason)
                  wl
@@ -437,11 +437,11 @@ let mk_c_problem wl scope orig lhs rel rhs elt reason =
 let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
   let bs, lg_ty, elt =
     match subject with
-    | None -> [], U.ktype0, None
+    | None -> [], U.kprop, None
     | Some x ->
       let bs = [S.mk_binder x] in
       bs,
-      U.arrow bs (S.mk_Total U.ktype0),
+      U.arrow bs (S.mk_Total U.kprop),
       Some (S.bv_to_name x)
   in
   let ctx_uvar, lg, wl =
@@ -739,7 +739,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
                             (string_of_int (p_pid prob))
                             (print_ctx_uvar uv)
                             (Print.term_to_string phi);
-        let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
+        let phi = U.abs xs phi (Some (U.residual_tot U.kprop)) in
         def_check_closed (p_loc prob) "solve_prob'" phi;
         U.set_uvar uv.ctx_uvar_head phi
     in
