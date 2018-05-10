@@ -1757,7 +1757,7 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
       fun t  ->
         let next_qid =
           let ctr = FStar_Util.mk_ref (Prims.parse_int "0")  in
-          fun uu____5482  ->
+          fun depth  ->
             let n1 = FStar_ST.op_Bang ctr  in
             FStar_Util.incr ctr;
             if n1 = (Prims.parse_int "0")
