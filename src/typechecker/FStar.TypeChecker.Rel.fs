@@ -89,10 +89,6 @@ let def_check_vars_in_set rng msg vset t =
                                       (BU.set_elements s |> Print.bvs_to_string ",\n\t"))
     end
 
-let def_check_closed rng msg t =
-    if not (Options.defensive ()) then () else
-    def_check_vars_in_set rng msg Free.empty t
-
 let def_check_closed_in rng msg l t =
     if not (Options.defensive ()) then () else
     def_check_vars_in_set rng msg (BU.as_set l Syntax.order_bv) t
@@ -524,7 +520,7 @@ let commit uvis = uvis |> List.iter (function
         | _ -> UF.univ_change u t
       end
     | TERM(u, t) ->
-      def_check_closed t.pos "commit" t;
+      def_check_closed_in t.pos "commit" (List.map fst u.ctx_uvar_binders) t;
       U.set_uvar u.ctx_uvar_head t
     )
 
@@ -740,7 +736,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
                             (print_ctx_uvar uv)
                             (Print.term_to_string phi);
         let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
-        def_check_closed (p_loc prob) "solve_prob'" phi;
+        def_check_closed_in (p_loc prob) ("solve_prob'" ^ string_of_int (p_pid prob)) (List.map fst uv.ctx_uvar_binders) phi;
         U.set_uvar uv.ctx_uvar_head phi
     in
     let xs, uv = p_guard_uvar prob in
