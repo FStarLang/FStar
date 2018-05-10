@@ -45,6 +45,11 @@ module Const = FStar.Parser.Const
 
 let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
+let is_t_true t =
+     match (U.unmeta t).n with
+     | Tm_fvar fv -> S.fv_eq_lid fv Const.true_lid
+     | _ -> false
+
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
 (* ------------------------------------------------*)
@@ -1596,20 +1601,24 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                   let t1_base, p1_opt = base_and_refinement_maybe_delta false env t1 in
                   let t2_base, p2_opt = base_and_refinement_maybe_delta false env t2 in
                   let combine_refinements t_base p1_opt p2_opt =
+                      let refine x t =
+                          if is_t_true t then x.sort
+                          else U.refine x t
+                      in
                       match p1_opt, p2_opt with
                       | Some (x, phi1), Some(y, phi2) ->
                         let x = freshen_bv x in
                         let subst = [DB(0, x)] in
                         let phi1 = SS.subst subst phi1 in
                         let phi2 = SS.subst subst phi2 in
-                        U.refine x (op phi1 phi2)
+                        refine x (op phi1 phi2)
 
                       | None, Some (x, phi)
                       | Some(x, phi), None ->
                         let x = freshen_bv x in
                         let subst = [DB(0, x)] in
                         let phi = SS.subst subst phi in
-                        U.refine x (op U.t_true phi)
+                        refine x (op U.t_true phi)
 
                       | _ ->
                         t_base
@@ -1707,7 +1716,17 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                           bounds_probs
       in
       let (bound, sub_probs, wl) =
-          meet_or_join (if flip then U.mk_conj else U.mk_disj) bounds_typs env wl
+          let mk_conj t1 t2 =
+              if is_t_true t1 then t2
+              else if is_t_true t2 then t1
+              else U.mk_conj t1 t2
+          in
+          let mk_disj t1 t2 =
+              if is_t_true t1 then U.t_true
+              else if is_t_true t2 then U.t_true
+              else U.mk_disj t1 t2
+          in
+          meet_or_join (if flip then mk_conj else mk_disj) bounds_typs env wl
       in
       let bound_typ, (eq_prob, wl') =
           let flex_u = flex_uvar_head this_flex in
