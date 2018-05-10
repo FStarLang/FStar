@@ -1691,9 +1691,8 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
                        (Print.term_to_string t0) (Print.term_to_string t));
          let t =
            if cfg.steps.unfold_until = Some delta_constant
-            && not cfg.steps.unfold_tac
            //we're really trying to compute here; no point propagating range information
-           //which can be expensive (except for tactics: it matters for tracing!)
+           //which can be expensive
            then t
            else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
          in
@@ -1708,6 +1707,7 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
                 | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
          else norm cfg env stack t
          end
+
 and reduce_impure_comp cfg env stack (head : term) // monadic term
                                      (m : either<monad_name,(monad_name * monad_name)>)
                                         // relevant monads.
