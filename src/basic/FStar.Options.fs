@@ -569,7 +569,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "eager_inference",
         Const (mk_bool true),
-        "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+        "Deprecated: Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
 
        ( noshort,
          "extract",
@@ -1232,7 +1232,6 @@ let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
-let eager_inference              () = get_eager_inference             ()
 let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let full_context_dependency      () = true

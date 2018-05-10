@@ -290,7 +290,7 @@ let empty_worklist env = {
     wl_deferred=[];
     ctr=0;
     tcenv=env;
-    defer_ok=not (Options.eager_inference());
+    defer_ok=true;
     smt_ok=true;
     wl_implicits=[]
 }
@@ -1135,8 +1135,8 @@ let rank tcenv pr : rank_t    //the rank
           end
 
         | Tm_uvar _, _
-        | _, Tm_uvar _ when (tp.relation=EQ || Options.eager_inference()) ->
-          Flex_rigid_eq, {tp with relation=EQ}
+        | _, Tm_uvar _ when tp.relation=EQ ->
+          Flex_rigid_eq, tp
 
         | Tm_uvar _, Tm_arrow _
         | Tm_uvar _, Tm_type _
@@ -2821,7 +2821,6 @@ let new_t_prob wl env t1 rel t2 =
  p, x, wl
 
 let solve_and_commit env probs err =
-  let probs = if (Options.eager_inference()) then {probs with defer_ok=false} else probs in
   let tx = UF.new_transaction () in
   let sol = solve env probs in
   match sol with
