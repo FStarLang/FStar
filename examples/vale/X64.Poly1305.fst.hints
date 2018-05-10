@@ -808,7 +808,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "26c30369e19229105b27886e1255798a"
+      "614b9fd2ca65243fc92617f05a3cbc7a"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_blocks",
@@ -959,7 +959,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "abbe8e88c65ea5a73accd60f0f138291"
+      "9989034a426af8b77ee576042dab514b"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -979,7 +979,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "e1ebe8862c07335cdc2005952b548987"
+      "52da62252bfd53d9f5b5d3774a310ae5"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_last_block",
@@ -1731,7 +1731,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "476a7fed92516918edad386764bb6986"
+      "6e059b7c5bbcbc8ad3719504f3b42431"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_impl",
@@ -1958,7 +1958,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "21224872461d21a655bf5f98c2fa20b0"
+      "39bdc1dc3588f6d675f1f669852b3a94"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305",

@@ -12,7 +12,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "65e5fa348e243af1164eeb54c1d12fe1"
+      "03fa76e63c846ed225dfa59bdfe47ee2"
     ],
     [
       "FStar.DM4F.Heap.compare_addrs",
@@ -29,7 +29,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "988ead95efaaa56755778d22a21a551c"
+      "c7c28c9681fa42316a1fe24a0332da9f"
     ],
     [
       "FStar.DM4F.Heap.sel_tot",
@@ -731,7 +731,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "365e075ba5119a49617fd998f95408a5"
+      "00a2497b0fdc202fb657348903c5ec6d"
     ],
     [
       "FStar.DM4F.Heap.lemma_sel_tot_is_sel_if_contains_a_well_typed",
@@ -854,7 +854,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0f484a8919137a75362bdf1b5e99f069"
+      "1ac21e32994182d36713b1427f9f1b72"
     ],
     [
       "FStar.DM4F.Heap.contains_addr_of",

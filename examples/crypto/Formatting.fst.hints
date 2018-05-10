@@ -31,7 +31,7 @@
         "typing_FStar.Seq.Base.eq", "typing_Formatting.op_At_Bar"
       ],
       0,
-      "42ab1d0048702931b8d32f7e3a3b4b10"
+      "2f087208f5a0dfdc896224e6d6e5b6a4"
     ],
     [
       "Formatting.lemma_eq_intro",
@@ -52,7 +52,7 @@
       1,
       [ "@query", "lemma_FStar.Seq.Base.lemma_eq_intro" ],
       0,
-      "976fb8292159e09dde5b5a60b1f2782f"
+      "8b3aee0f09bc5590908e631bed0d03f5"
     ],
     [
       "Formatting.UTF8_inj",

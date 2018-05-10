@@ -73,7 +73,7 @@
         "subterm_ordering_Prims.Cons", "typing_QuickSort.List.count"
       ],
       0,
-      "7473d88435da659cb5caa9c0dd98e673"
+      "4f5a8cae434206e1b944b4bef068cdaf"
     ],
     [
       "QuickSort.List.partition",
@@ -153,7 +153,7 @@
         "typing_QuickSort.List.partition"
       ],
       0,
-      "a69ca53e5d15d2abd32b21864c73dd58"
+      "c9efa1890edbf0635a36a6e5036f3f09"
     ],
     [
       "QuickSort.List.sorted_app_lemma",
@@ -389,7 +389,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "ed86fbd31a7e697633cff4c11d19c5be"
+      "e21fb48a7e00bd143cf46c11b4f62d25"
     ],
     [
       "QuickSort.List.partition",
@@ -412,7 +412,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7b9ebaa0a962e08406ab87dc6965efdf"
+      "9710213a6243af29b8ac8b4e2f6ec82a"
     ],
     [
       "QuickSort.List.is_permutation",
@@ -433,7 +433,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7f3ef69b144a4b6a381e9ee28b321f3a"
+      "3f11b633a641a56514186f8dded6d0f8"
     ],
     [
       "QuickSort.List.quicksort",

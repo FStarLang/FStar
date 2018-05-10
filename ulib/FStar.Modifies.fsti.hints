@@ -98,7 +98,7 @@
       1,
       [ "@query" ],
       0,
-      "3e91c926499a87ee9d859fc58534f593"
+      "850ea8592cb4255a2ef75202e36271fc"
     ],
     [
       "FStar.Modifies.modifies_fresh_frame_popped",
@@ -107,7 +107,7 @@
       1,
       [ "@query" ],
       0,
-      "87efeeca039ce116c8c09a9ea5e5dd04"
+      "766d7b8b7cd61735e289f4581a7926cf"
     ],
     [
       "FStar.Modifies.modifies_loc_addresses_intro",
