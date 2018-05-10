@@ -1042,8 +1042,8 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflags> * (
                           None
                           (Range.union_ranges wp_t.pos wp_e.pos) in
             let default_case =
-                let post_k = U.arrow [null_binder res_t] (S.mk_Total U.kprop) in
-                let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.kprop) in
+                let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
+                let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
                 let post   = S.new_bv None post_k in
                 let wp     = U.abs [mk_binder post]
                                    (label Err.exhaustiveness_check (Env.get_range env) <| fvar_const env C.false_lid)
