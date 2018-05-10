@@ -1488,9 +1488,13 @@ let rec delta_qualifier t =
         | Tm_refine({sort=t}, _)
         | Tm_meta(t, _)
         | Tm_ascribed(t, _, _)
-        | Tm_app(t, _)
         | Tm_abs(_, t, _)
         | Tm_let(_, t) -> delta_qualifier t
+        | Tm_app ({ n = Tm_fvar fv }, args)
+        | Tm_app ({ n = Tm_uinst ( { n = Tm_fvar fv}, _) }, args) when fv_eq_lid fv FStar.Parser.Const.t_refine_lid ->
+          if List.length args <> 2 then failwith "Impossible! Did not expect a partially applied t_refine"
+          else delta_qualifier (List.hd args |> fst)  //treat it just like Tm_refine
+        | Tm_app(t, _) -> delta_qualifier t
 
 let rec incr_delta_depth d =
     match d with
