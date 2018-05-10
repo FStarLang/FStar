@@ -64,6 +64,14 @@ let run_safe t p =
     try t.tac_f p
     with | e -> Failed (BU.message_of_exn e, p)
 
+let tac_verb_dbg : ref<option<bool>> = BU.mk_ref None
+let rec log ps f : unit =
+    match !tac_verb_dbg with
+    | None -> (tac_verb_dbg := Some (Env.debug ps.main_context (Options.Other "TacVerbose"));
+               log ps f)
+    | Some true -> f ()
+    | Some false -> ()
+
 (* monadic return *)
 let ret (x:'a) : tac<'a> =
     mk_tac (fun p -> Success (x, p))
@@ -88,17 +96,27 @@ let get_uvar_solved uv =
 
 let check_goal_solved goal = get_uvar_solved goal.goal_ctx_uvar
 
-let goal_to_string (g:goal) =
+let goal_to_string_verbose (g:goal) : string =
     BU.format2 "%s%s"
         (Print.ctx_uvar_to_string g.goal_ctx_uvar)
         (match check_goal_solved g with
          | None -> ""
          | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (Print.term_to_string t))
 
-    //let g_binders = Env.all_binders (goal_env g) |> Print.binders_to_string ", " in
-    //let w = bnorm (goal_env g) (goal_witness g) in
-    //let t = bnorm (goal_env g) (goal_type g) in
-    //Util.format3 "%s |- %s : %s" g_binders (tts (goal_env g) w) (tts (goal_env g) t)
+let goal_to_string (g:goal) =
+    if Options.print_implicits ()
+       || !tac_verb_dbg = Some true
+    then goal_to_string_verbose g
+    else
+        let w =
+            match get_uvar_solved g.goal_ctx_uvar with
+            | None -> "_"
+            | Some t -> Print.term_to_string t
+        in
+        BU.format3 "%s |- %s : %s"
+             (Print.binders_to_string ", " g.goal_ctx_uvar.ctx_uvar_binders)
+             w
+             (Print.term_to_string g.goal_ctx_uvar.ctx_uvar_typ)
 
 let tacprint  (s:string)       = BU.print1 "TAC>> %s\n" s
 let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
@@ -190,14 +208,6 @@ let print_proof_state (msg:string) : tac<unit> =
                    let subst = N.psc_subst psc in
                    dump_proofstate (subst_proof_state subst ps) msg;
                    Success ((), ps))
-
-let tac_verb_dbg : ref<option<bool>> = BU.mk_ref None
-let rec log ps f : unit =
-    match !tac_verb_dbg with
-    | None -> (tac_verb_dbg := Some (Env.debug ps.main_context (Options.Other "TacVerbose"));
-               log ps f)
-    | Some true -> f ()
-    | Some false -> ()
 
 let mlog f (cont : unit -> tac<'a>) : tac<'a> =
     bind get (fun ps -> log ps f; cont ())
@@ -325,7 +335,7 @@ let remove_solved_goals : tac<unit> =
 let set_solution goal solution : tac<unit> =
     match FStar.Syntax.Unionfind.find goal.goal_ctx_uvar.ctx_uvar_head with
     | Some _ ->
-      fail (BU.format1 "Goal %s is already solved" (goal_to_string goal))
+      fail (BU.format1 "Goal %s is already solved" (goal_to_string_verbose goal))
     | None ->
       FStar.Syntax.Unionfind.change goal.goal_ctx_uvar.ctx_uvar_head solution;
       ret ()
@@ -383,7 +393,7 @@ let check_valid_goal g =
         if not (aux b env) && !nwarn < 5
         then (Err.log_issue (goal_type g).pos
                   (Errors.Warning_IllFormedGoal, BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
-                              (goal_to_string g));
+                              (goal_to_string_verbose g));
               nwarn := !nwarn + 1)
     end
 
@@ -456,7 +466,7 @@ let cur_goal () : tac<goal> =
       | None -> ret hd
       | Some t ->
         BU.print2 "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
-                (goal_to_string hd)
+                (goal_to_string_verbose hd)
                 (Print.term_to_string t);
         ret hd)
 
