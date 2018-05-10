@@ -70,3 +70,6 @@ let raise_failed_assertion msg =
 
 let runtime_assert b msg =
   if not b then raise_failed_assertion msg
+
+let string_of_list (f : 'a -> string) (l : list<'a>) : string =
+  "[" ^ String.concat ", " (List.map f l) ^ "]"
