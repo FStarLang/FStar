@@ -1320,14 +1320,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
                            not (cases (BU.for_some (U.attr_eq U.tac_opaque_attr)) false attrs)) &&
                           //otherwise, unfold fv if it appears in "Delta_only" or if one of the Delta_attr matches
                           //delta_only l
-                          (match cfg.steps.unfold_only with
-                           | None -> true
-                           | Some lids -> BU.for_some (fv_eq_lid fv) lids) &&
-                          //delta_attrs a
-                          (match attrs, cfg.steps.unfold_attr with
-                            | None, Some _ -> false
-                            | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats') ats
-                            | _, None -> true))
+                          (match cfg.steps.unfold_only, cfg.steps.unfold_attr with
+                           | Some lids, Some ats' -> BU.for_some (fv_eq_lid fv) lids ||
+                                                     begin match attrs with
+                                                     | Some ats -> BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats') ats
+                                                     | None -> true
+                                                     end
+                           | Some lids, None -> BU.for_some (fv_eq_lid fv) lids
+                           | None, Some ats' -> begin match attrs with
+                                                | Some ats -> BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats') ats
+                                                | None -> true
+                                                end
+                           | None, None -> true))
                  in
                  let should_delta, fully =
                      match cfg.steps.unfold_fully with
