@@ -329,6 +329,9 @@ let p_reason = function
 let p_loc = function
    | TProb p -> p.loc
    | CProb p -> p.loc
+let p_element = function
+   | TProb p -> p.element
+   | CProb p -> p.element
 let p_guard = function
    | TProb p -> p.logical_guard
    | CProb p -> p.logical_guard
@@ -361,13 +364,18 @@ let def_check_scoped msg prob phi =
 
 let def_check_prob msg prob =
     if not (Options.defensive ()) then () else
-    def_scope_wf (msg ^ ".scope") (p_loc prob) (p_scope prob);
-    def_check_scoped (msg ^ ".guard")      prob (p_guard prob);
+    let msgf m = msg ^ "." ^ string_of_int (p_pid prob) ^ "." ^ m in
+    def_scope_wf (msgf "scope") (p_loc prob) (p_scope prob);
+    def_check_scoped (msgf "guard")      prob (p_guard prob);
+    begin match (p_element prob) with
+    | Some t -> def_check_scoped ("element." ^ msg) prob t
+    | None -> ()
+    end;
     match prob with
     | TProb p ->
         begin
-        def_check_scoped (msg ^ ".lhs")        prob p.lhs;
-        def_check_scoped (msg ^ ".rhs")        prob p.rhs
+        def_check_scoped (msgf "lhs")        prob p.lhs;
+        def_check_scoped (msgf "rhs")        prob p.rhs
         end
     | _ -> (); //TODO
     ()
@@ -406,28 +414,34 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
         | [] -> lg
         | _ -> S.mk_Tm_app lg (List.map (fun (x, i) -> S.bv_to_name x, i) scope) None lg.pos
     in
-    //logical guards are always squashed;
-    //their range is intentionally dummy
-    {
-         pid=next_pid();
-         lhs=lhs;
-         relation=rel;
-         rhs=rhs;
-         element=elt;
-         logical_guard=lg;
-         logical_guard_uvar=(scope, ctx_uvar);
-         reason=reason::p_reason orig;
-         loc=p_loc orig;
-         rank=None;
-    },
-    wl
+    let prob =
+        //logical guards are always squashed;
+        //their range is intentionally dummy
+        {
+             pid=next_pid();
+             lhs=lhs;
+             relation=rel;
+             rhs=rhs;
+             element=elt;
+             logical_guard=lg;
+             logical_guard_uvar=(scope, ctx_uvar);
+             reason=reason::p_reason orig;
+             loc=p_loc orig;
+             rank=None;
+        }
+    in
+    (prob, wl)
 
 let mk_t_problem wl scope orig lhs rel rhs elt reason =
+  def_check_prob (reason ^ ".arg_t") orig;
   let p, wl = mk_problem wl scope orig lhs rel rhs elt reason in
+  def_check_prob (reason ^ ".mk_t") (TProb p);
   TProb p, wl
 
 let mk_c_problem wl scope orig lhs rel rhs elt reason =
+  def_check_prob (reason ^ ".arg_c") orig;
   let p, wl = mk_problem wl scope orig lhs rel rhs elt reason in
+  def_check_prob (reason ^ ".mk_c") (CProb p);
   CProb p, wl
 
 let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
@@ -2184,6 +2198,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 if debug env <| Options.Other "Rel"
                 then BU.print1 "Adding subproblems for arguments: %s\n"
                                    (Print.list_to_string (prob_to_string env) subprobs);
+
+                List.iter (def_check_prob "solve_t' subprobs") subprobs;
                 let formula = U.mk_conj_l (List.map p_guard subprobs) in
                 let wl = solve_prob orig (Some formula) [] wl in
                 solve env (attempt subprobs wl)
@@ -2259,6 +2275,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     if BU.physical_equality problem.lhs problem.rhs then solve env (solve_prob orig None [] wl) else
     let t1 = problem.lhs in
     let t2 = problem.rhs in
+    def_check_closed_in (p_loc orig) "ref.t1" (List.map fst (p_scope orig)) t1;
+    def_check_closed_in (p_loc orig) "ref.t2" (List.map fst (p_scope orig)) t2;
     let _ =
         if debug env (Options.Other "Rel")
         then BU.print3 "Attempting %s (%s vs %s)\n" (string_of_int problem.pid)
@@ -2397,6 +2415,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     then mk_imp U.mk_iff phi1 phi2
                     else mk_imp U.mk_imp phi1 phi2 in
                 let guard = U.mk_conj (p_guard base_prob) impl in
+                def_check_closed_in (p_loc orig) "ref.1" (List.map fst (p_scope orig)) (p_guard base_prob);
+                def_check_closed_in (p_loc orig) "ref.2" (List.map fst (p_scope orig)) impl;
                 let wl = solve_prob orig (Some guard) [] wl in
                 solve env (attempt [base_prob] wl)
              in
