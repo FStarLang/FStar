@@ -2434,7 +2434,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
              in
              match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
              | Failed (prob, msg) ->
-               if not env.uvar_subtyping && has_uvars
+               if (not env.uvar_subtyping && has_uvars)
+               || not wl.smt_ok
                then giveup env msg prob
                else fallback()
 
