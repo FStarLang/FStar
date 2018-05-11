@@ -4286,7 +4286,7 @@ let decide_unfolding :
                      (let uu____12729 =
                         let uu____12738 =
                           match (cfg.steps).unfold_only with
-                          | FStar_Pervasives_Native.None  -> yes
+                          | FStar_Pervasives_Native.None  -> no
                           | FStar_Pervasives_Native.Some lids ->
                               let uu____12758 =
                                 FStar_Util.for_some
@@ -4297,7 +4297,7 @@ let decide_unfolding :
                         let uu____12765 =
                           let uu____12774 =
                             match (cfg.steps).unfold_attr with
-                            | FStar_Pervasives_Native.None  -> yes
+                            | FStar_Pervasives_Native.None  -> no
                             | FStar_Pervasives_Native.Some ats ->
                                 let uu____12794 =
                                   FStar_Util.for_some
@@ -4311,7 +4311,7 @@ let decide_unfolding :
                           let uu____12803 =
                             let uu____12812 =
                               match (cfg.steps).unfold_fully with
-                              | FStar_Pervasives_Native.None  -> yes
+                              | FStar_Pervasives_Native.None  -> no
                               | FStar_Pervasives_Native.Some lids ->
                                   let uu____12832 =
                                     FStar_Util.for_some
@@ -4335,7 +4335,7 @@ let decide_unfolding :
                      (let uu____12936 =
                         let uu____12945 =
                           match (cfg.steps).unfold_only with
-                          | FStar_Pervasives_Native.None  -> yes
+                          | FStar_Pervasives_Native.None  -> no
                           | FStar_Pervasives_Native.Some lids ->
                               let uu____12965 =
                                 FStar_Util.for_some
@@ -4346,7 +4346,7 @@ let decide_unfolding :
                         let uu____12972 =
                           let uu____12981 =
                             match (cfg.steps).unfold_attr with
-                            | FStar_Pervasives_Native.None  -> yes
+                            | FStar_Pervasives_Native.None  -> no
                             | FStar_Pervasives_Native.Some ats ->
                                 let uu____13001 =
                                   FStar_Util.for_some
@@ -4360,7 +4360,7 @@ let decide_unfolding :
                           let uu____13010 =
                             let uu____13019 =
                               match (cfg.steps).unfold_fully with
-                              | FStar_Pervasives_Native.None  -> yes
+                              | FStar_Pervasives_Native.None  -> no
                               | FStar_Pervasives_Native.Some lids ->
                                   let uu____13039 =
                                     FStar_Util.for_some
@@ -4384,7 +4384,7 @@ let decide_unfolding :
                      (let uu____13143 =
                         let uu____13152 =
                           match (cfg.steps).unfold_only with
-                          | FStar_Pervasives_Native.None  -> yes
+                          | FStar_Pervasives_Native.None  -> no
                           | FStar_Pervasives_Native.Some lids ->
                               let uu____13172 =
                                 FStar_Util.for_some
@@ -4395,7 +4395,7 @@ let decide_unfolding :
                         let uu____13179 =
                           let uu____13188 =
                             match (cfg.steps).unfold_attr with
-                            | FStar_Pervasives_Native.None  -> yes
+                            | FStar_Pervasives_Native.None  -> no
                             | FStar_Pervasives_Native.Some ats ->
                                 let uu____13208 =
                                   FStar_Util.for_some
@@ -4409,7 +4409,7 @@ let decide_unfolding :
                           let uu____13217 =
                             let uu____13226 =
                               match (cfg.steps).unfold_fully with
-                              | FStar_Pervasives_Native.None  -> yes
+                              | FStar_Pervasives_Native.None  -> no
                               | FStar_Pervasives_Native.Some lids ->
                                   let uu____13246 =
                                     FStar_Util.for_some
