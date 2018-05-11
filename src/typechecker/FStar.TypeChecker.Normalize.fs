@@ -1254,13 +1254,13 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
                                                (Print.fv_to_string fv));
         comb_or [
          (match cfg.steps.unfold_only with
-          | None -> yes
+          | None -> no
           | Some lids -> yesno <| BU.for_some (fv_eq_lid fv) lids)
         ;(match cfg.steps.unfold_attr with
-          | None -> yes
+          | None -> no
           | Some ats -> yesno <| BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats) attrs)
         ;(match cfg.steps.unfold_fully with
-          | None -> yes
+          | None -> no
           | Some lids -> fullyno <| BU.for_some (fv_eq_lid fv) lids)
         ]
     // Nothing special, just check the depth
