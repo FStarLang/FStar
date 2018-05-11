@@ -1256,6 +1256,14 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     | _, _, _, Some _ ->
         log_unfolding cfg (fun () -> BU.print1 ">>> Reached a %s with selective unfolding\n"
                                                (Print.fv_to_string fv));
+        // How does the following code work?
+        // We are doing selective unfolding so, by default, we assume everything
+        // should *not* be normalized unless it meets *at least one* of the criteria.
+        // So we check exactly that, that this `fv` meets some criteria that is presently
+        // being used. Note that in `None`, we default to `no`, otherwise everything would
+        // unfold (unless we had all criteria present at once, which is unlikely)
+
+        // TODO: thunk these
         comb_or [
          (match cfg.steps.unfold_only with
           | None -> no
