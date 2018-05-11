@@ -17,7 +17,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "24d9bc24556b81a94e31283af424f77a"
+      "cc0d30cb37dd1585a153eba717887da8"
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
@@ -26,10 +26,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_632c45b0a0bb44e12be5f467a06c3783"
+        "equation_StringPrinter.Rec.do_while_body_res_t",
+        "refinement_interpretation_StringPrinter.Rec_Tm_refine_632c45b0a0bb44e12be5f467a06c3783",
+        "refinement_interpretation_StringPrinter.Rec_Tm_refine_fccbd444730e179142d53d00da45706a"
       ],
       0,
-      "0445b2bb2593126860c49e743a8cd342"
+      "bf5d26d56132a612acbc6ebf9991d94e"
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -46,7 +48,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "b2536c10641f9d84c5bbb9f99e640c4d"
+      "0063a51d9fa7a258bb2553c59512a143"
     ],
     [
       "StringPrinter.Rec.do_while_correct",
@@ -92,7 +94,7 @@
         "unit_typing"
       ],
       0,
-      "815fa40fed2178505b224f183f395a7f"
+      "f99c8800d896c57f3259287d72d0246e"
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -121,7 +123,7 @@
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "90ff3e7e8d6f3157abd24890beb494e1"
+      "518a6320c6ecd38b4b39f22fd1680ac4"
     ],
     [
       "StringPrinter.Rec.do_while_body_post",
@@ -139,7 +141,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "a4bd6bc94642ff6c10390d8dbffed604"
+      "e6a5149e3863dd3800f158c33b72762b"
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
@@ -148,10 +150,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_632c45b0a0bb44e12be5f467a06c3783"
+        "equation_StringPrinter.Rec.do_while_body_res_t",
+        "refinement_interpretation_StringPrinter.Rec_Tm_refine_632c45b0a0bb44e12be5f467a06c3783",
+        "refinement_interpretation_StringPrinter.Rec_Tm_refine_fccbd444730e179142d53d00da45706a"
       ],
       0,
-      "1e262736c4fa232b1e83171c3de65c13"
+      "11a29ce816633d5b4c8de3183a4890b0"
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -168,7 +172,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "b19932aad27c287aea7dc55b29911f89"
+      "da3ff23b26127e4756aaa69e8e6a0dd5"
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -197,7 +201,7 @@
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "9dc84984c749ad872e80b3d3d3c78c37"
+      "7af3385b4afbb058b19ea3792b3bdebf"
     ]
   ]
 ]

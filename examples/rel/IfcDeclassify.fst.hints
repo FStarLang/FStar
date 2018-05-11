@@ -10,7 +10,7 @@
         "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
       ],
       0,
-      "5756f12f14c4cb326371aa53a767c730"
+      "e9fca7c8c2664715621dd7a9b9683589"
     ],
     [
       "IfcDeclassify.state",
@@ -21,7 +21,7 @@
         "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
       ],
       0,
-      "722675e707465ca56b9f8b20e0592dac"
+      "6e1a85bf2d83f678197a7d5356e24b03"
     ]
   ]
 ]

@@ -10,7 +10,7 @@
         "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
       ],
       0,
-      "a911616ca2d4061a0d1f21014a79deb7"
+      "e8f323e5ffeeab822ad1089b4e980ed0"
     ],
     [
       "VQuote.myrec",
@@ -21,7 +21,7 @@
         "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
       ],
       0,
-      "8e9ba843e9bf95a36aea047656b8e7cf"
+      "bd8ea2de04681f7c5876db2998a380ff"
     ]
   ]
 ]
