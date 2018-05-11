@@ -2756,7 +2756,10 @@ let normalize_refinement steps env t0 =
          let t0 = aux x.sort in
          begin match t0.n with
             | Tm_refine(y, phi1) ->
-              mk (Tm_refine(y, U.mk_conj phi1 phi)) t0.pos
+              //NB: this is working on de Bruijn
+              //    representations; so no need
+              //    to substitute y/x in phi
+              mk (Tm_refine(y, U.mk_conj_simp phi1 phi)) t0.pos
             | _ -> t
          end
        | _ -> t in
