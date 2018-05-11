@@ -1544,7 +1544,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
         in
         let pairwise t1 t2 wl =
             if Env.debug env <| Options.Other "Rel"
-            then BU.print2 "pairwise: %s and %s" (Print.term_to_string t1) (Print.term_to_string t2);
+            then BU.print2 "[meet/join]: pairwise: %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
             let mr, ts = head_matches_delta env () t1 t2 in
             match mr with
             | HeadMatch true
@@ -2446,8 +2446,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                let wl = {wl with ctr=wl.ctr+1} in
                solve env (attempt [base_prob] wl)
         else fallback()
-        //else let ref_prob, wl = ref_eq_prob wl in
-        //     solve env (attempt [ref_prob; base_prob] wl)
 
       (* flex-flex *)
       | Tm_uvar _,                Tm_uvar _
