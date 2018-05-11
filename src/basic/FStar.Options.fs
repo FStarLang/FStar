@@ -124,13 +124,13 @@ let defaults =
       ("debug"                        , List []);
       ("debug_level"                  , List []);
       ("defensive"                    , String "no");
-      ("delay_subtyping"              , Bool true);
       ("dep"                          , Unset);
       ("detail_errors"                , Bool false);
       ("detail_hint_replay"           , Bool false);
       ("doc"                          , Bool false);
       ("dump_module"                  , List []);
       ("eager_inference"              , Bool false);
+      ("eager_subtyping"              , Bool false);
       ("expose_interfaces"            , Bool false);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
@@ -240,12 +240,12 @@ let get_codegen_lib             ()      = lookup_opt "codegen-lib"              
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
 let get_debug_level             ()      = lookup_opt "debug_level"              (as_list as_string)
 let get_defensive               ()      = lookup_opt "defensive"                as_string
-let get_delay_subtyping         ()      = lookup_opt "delay_subtyping"          as_bool
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
+let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
@@ -537,11 +537,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          if 'fail', like 'warn', but the compiler aborts instead of issuing a warning\n\t\t\
          (default 'no')");
 
-       (noshort,
-        "delay_subtyping",
-        Const (mk_bool true),
-        "Delay solving subtyping constraints until the top-level (not meant for typical use)");
-
        ( noshort,
         "dep",
         EnumStr ["make"; "graph"; "full"],
@@ -576,6 +571,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "eager_inference",
         Const (mk_bool true),
         "Deprecated: Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+
+       (noshort,
+        "eager_subtyping",
+        Const (mk_bool true),
+        "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
 
        ( noshort,
          "extract",
@@ -1001,10 +1001,10 @@ let settable = function
     | "debug"
     | "debug_level"
     | "defensive"
-    | "delay_subtyping"
     | "detail_errors"
     | "detail_hint_replay"
     | "eager_inference"
+    | "eager_subtyping"
     | "hide_uvar_nums"
     | "hint_info"
     | "hint_file"
@@ -1234,12 +1234,12 @@ let debug_module        modul       = (get_debug () |> List.contains modul)
 let debug_at_level      modul level = (get_debug () |> List.contains modul) && debug_level_geq level
 let defensive                    () = get_defensive () <> "no"
 let defensive_fail               () = get_defensive () = "fail"
-let delay_subtyping              () = get_delay_subtyping()
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
+let eager_subtyping              () = get_eager_subtyping()
 let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let full_context_dependency      () = true

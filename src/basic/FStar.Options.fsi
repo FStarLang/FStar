@@ -109,7 +109,6 @@ val debug_module                : string  -> bool
 val debug_at_level              : string  -> debug_level_t -> bool
 val defensive                   : unit    -> bool // true if "warn" or "fail"
 val defensive_fail              : unit    -> bool // true if "fail"
-val delay_subtyping             : unit    -> bool
 val dep                         : unit    -> option<string>
 val detail_errors               : unit    -> bool
 val detail_hint_replay          : unit    -> bool
@@ -117,6 +116,7 @@ val display_usage               : unit    -> unit
 val doc                         : unit    -> bool
 val dont_gen_projectors         : string  -> bool
 val dump_module                 : string  -> bool
+val eager_subtyping             : unit    -> bool
 val expose_interfaces           : unit    -> bool
 val file_list                   : unit    -> list<string>
 val find_file                   : string  -> option<string>
