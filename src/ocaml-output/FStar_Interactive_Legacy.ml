@@ -960,14 +960,14 @@ let rec (go :
                     | ((env1,curmod1),stack1) ->
                         go line_col filename stack1 curmod1 env1 ts))
               | Push (lax1,l,c) ->
-                  let uu____4003 =
+                  let uu____3967 =
                     if (FStar_List.length stack) = (FStar_List.length ts)
                     then
-                      let uu____4040 =
+                      let uu____4004 =
                         update_deps filename curmod stack env ts  in
-                      (true, uu____4040)
+                      (true, uu____4004)
                     else (false, (stack, env, ts))  in
-                  (match uu____4003 with
+                  (match uu____3967 with
                    | (restore_cmd_line_options1,(stack1,env1,ts1)) ->
                        let stack2 = (env1, curmod) :: stack1  in
                        let env2 =
@@ -996,37 +996,37 @@ let rec (go :
                          (FStar_Util.print1 "\n%s\n" ok;
                           go line_col filename stack curmod1 env1 ts)
                        else fail2 curmod1 env1
-                   | uu____4131 -> fail2 curmod env)
+                   | uu____4095 -> fail2 curmod env)
   
 let (interactive_mode : Prims.string -> unit) =
   fun filename  ->
-    (let uu____4148 =
-       let uu____4149 = FStar_Options.codegen ()  in
-       FStar_Option.isSome uu____4149  in
-     if uu____4148
+    (let uu____4112 =
+       let uu____4113 = FStar_Options.codegen ()  in
+       FStar_Option.isSome uu____4113  in
+     if uu____4112
      then
        FStar_Errors.log_issue FStar_Range.dummyRange
          (FStar_Errors.Warning_IDEIgnoreCodeGen,
            "code-generation is not supported in interactive mode, ignoring the codegen flag")
      else ());
-    (let uu____4153 = deps_of_our_file filename  in
-     match uu____4153 with
+    (let uu____4117 = deps_of_our_file filename  in
+     match uu____4117 with
      | (filenames,maybe_intf,dep_graph1) ->
          let env = FStar_Universal.init_env dep_graph1  in
-         let uu____4176 =
+         let uu____4140 =
            tc_deps FStar_Pervasives_Native.None [] env filenames []  in
-         (match uu____4176 with
+         (match uu____4140 with
           | (stack,env1,ts) ->
               let initial_range =
-                let uu____4203 =
+                let uu____4167 =
                   FStar_Range.mk_pos (Prims.parse_int "1")
                     (Prims.parse_int "0")
                    in
-                let uu____4204 =
+                let uu____4168 =
                   FStar_Range.mk_pos (Prims.parse_int "1")
                     (Prims.parse_int "0")
                    in
-                FStar_Range.mk_range "<input>" uu____4203 uu____4204  in
+                FStar_Range.mk_range "<input>" uu____4167 uu____4168  in
               let env2 = FStar_TypeChecker_Env.set_range env1 initial_range
                  in
               let env3 =
@@ -1034,17 +1034,17 @@ let (interactive_mode : Prims.string -> unit) =
                 | FStar_Pervasives_Native.Some intf ->
                     FStar_Universal.load_interface_decls env2 intf
                 | FStar_Pervasives_Native.None  -> env2  in
-              let uu____4208 =
+              let uu____4172 =
                 (FStar_Options.record_hints ()) ||
                   (FStar_Options.use_hints ())
                  in
-              if uu____4208
+              if uu____4172
               then
-                let uu____4209 =
-                  let uu____4210 = FStar_Options.file_list ()  in
-                  FStar_List.hd uu____4210  in
-                FStar_SMTEncoding_Solver.with_hints_db uu____4209
-                  (fun uu____4214  ->
+                let uu____4173 =
+                  let uu____4174 = FStar_Options.file_list ()  in
+                  FStar_List.hd uu____4174  in
+                FStar_SMTEncoding_Solver.with_hints_db uu____4173
+                  (fun uu____4178  ->
                      go ((Prims.parse_int "1"), (Prims.parse_int "0"))
                        filename stack FStar_Pervasives_Native.None env3 ts)
               else

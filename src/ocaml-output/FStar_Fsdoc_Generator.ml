@@ -284,7 +284,7 @@ let document_toplevel :
           FStar_Errors.raise_err
             (FStar_Errors.Fatal_NotTopLevelModule, "Not Top-level Module")
   
-let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lid) =
+let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lident) =
   fun m  ->
     let uu____1224 =
       match m with
