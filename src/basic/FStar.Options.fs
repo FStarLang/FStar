@@ -124,7 +124,7 @@ let defaults =
       ("debug"                        , List []);
       ("debug_level"                  , List []);
       ("defensive"                    , String "no");
-      ("delay_subtyping"              , Bool false);
+      ("delay_subtyping"              , Bool true);
       ("dep"                          , Unset);
       ("detail_errors"                , Bool false);
       ("detail_hint_replay"           , Bool false);
