@@ -37,7 +37,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "847ff0b86e730a1a314f77c5f60edde8"
+      "e0de1ee9939fc444d5a73afbe48ba1df"
     ],
     [
       "CanonCommSwaps.apply_swaps",
@@ -61,7 +61,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "de970d396c4294e7b23d1fadb165637e"
+      "453b9f47fcbacf913c7f2263db714f64"
     ],
     [
       "CanonCommSwaps.extend_equal_counts",
@@ -81,7 +81,7 @@
         "projection_inverse_Prims.Cons_tl"
       ],
       0,
-      "11348f26e21881c9d6e41bdfc4a85c51"
+      "3badbc218a949dac0de5b7245d8b18f2"
     ],
     [
       "CanonCommSwaps.retract_equal_counts",
@@ -106,7 +106,7 @@
         "typing_FStar.List.Tot.Base.count"
       ],
       0,
-      "88e1e84f3a93bcdc0d8a90fa1936e83b"
+      "39f0b32d07d49358ee6d882c11c10bc8"
     ],
     [
       "CanonCommSwaps.append_swaps",
@@ -149,7 +149,7 @@
         "typing_CanonCommSwaps.swap", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "5a5fb124e39bc7010982ba9556c88d18"
+      "3e950a3f60f219668e323c32daf49e28"
     ],
     [
       "CanonCommSwaps.lift_swap_cons",
@@ -188,7 +188,7 @@
         "subterm_ordering_Prims.Cons", "unit_inversion", "unit_typing"
       ],
       0,
-      "b477f5e4e27b5464295ec75e2fef3d95"
+      "833b973b3c60d0533cf0185841b56143"
     ],
     [
       "CanonCommSwaps.lift_swaps_cons",
@@ -231,7 +231,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "89ec049d5ff69aa9741164f2aa337713"
+      "2b2d2a371fb7192999d45a06dbba3f05"
     ],
     [
       "CanonCommSwaps.swap_to_front",
@@ -278,7 +278,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "a8d58bb5bcfb7ec97eb5384056fe723f"
+      "f73ab665d7ca07f33ba0f88e21d58f5b"
     ],
     [
       "CanonCommSwaps.equal_counts_implies_swaps",
@@ -316,7 +316,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "5d1cc0c46c4022e3e74120236a4fc31c"
+      "411f60f0850b1b060fafe1bbae6deee1"
     ],
     [
       "CanonCommSwaps.apply_swap_aux",
@@ -353,7 +353,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "bc835be17b4ddd5eb5dee8f85fa79b8c"
+      "abd5e91f2845fdcaca0b19f27f559a23"
     ],
     [
       "CanonCommSwaps.apply_swaps",
@@ -377,7 +377,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "68625772911a9b14c6a11b5540c667f2"
+      "0de255460ea55cbc2183ded029851b7b"
     ],
     [
       "CanonCommSwaps.append_swaps",
@@ -386,7 +386,7 @@
       1,
       [ "@query" ],
       0,
-      "fa3ae121fb9f187b298ad8f5fe00e710"
+      "b40dee8b803f1964326c0850745e4182"
     ],
     [
       "CanonCommSwaps.lift_swap_cons",
@@ -418,7 +418,7 @@
         "typing_FStar.List.Tot.Base.length", "unit_typing"
       ],
       0,
-      "5d793dda4dc8b48516440aba2bc07db7"
+      "af0dd959637cecc99f9b4a438b009139"
     ],
     [
       "CanonCommSwaps.lift_swaps_cons",
@@ -458,7 +458,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "f68f3aec1131a4015b37f28d4c3d70a8"
+      "be90a2897d50b873e77bb44207b5504a"
     ],
     [
       "CanonCommSwaps.swap_to_front",
@@ -505,7 +505,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "991da37a41288f4caa90819627705c07"
+      "8384828703abb219e234cebf9d0b0fae"
     ],
     [
       "CanonCommSwaps.equal_counts_implies_swaps",
@@ -543,7 +543,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "7f6210552217d45041580af3ba086e9e"
+      "50461f101958cb61d75f84bf41482d49"
     ]
   ]
 ]

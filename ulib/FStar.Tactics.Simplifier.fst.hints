@@ -13,7 +13,7 @@
         "unit_typing"
       ],
       0,
-      "1fe44c97e2a86ce79afaeb4c64ec64ae"
+      "de5277386d01d877328c29c129f65691"
     ],
     [
       "FStar.Tactics.Simplifier.lem_fa_false",
@@ -22,7 +22,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "30e5b2304752058f804c83d148fd57c4"
+      "ca05a83b04dd940052f96299914cf438"
     ],
     [
       "FStar.Tactics.Simplifier.lem_ex_true",
@@ -31,7 +31,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "5a2476ec91b0770f9a48f207ac7dafe4"
+      "4df42700f707129f0a06e77372ced4ef"
     ],
     [
       "FStar.Tactics.Simplifier.and_cong",
@@ -45,7 +45,7 @@
         "unit_typing"
       ],
       0,
-      "450156732d4b96431c3b12d721403b52"
+      "7168e853eca9a57bd9df1f31543340fd"
     ],
     [
       "FStar.Tactics.Simplifier.or_cong",
@@ -59,7 +59,7 @@
         "unit_typing"
       ],
       0,
-      "6302a54d60d059a855fa451bdc7dfbc1"
+      "c4c65b62e41b53f5bad5f83a216ccd98"
     ],
     [
       "FStar.Tactics.Simplifier.imp_cong",
@@ -73,7 +73,7 @@
         "unit_typing"
       ],
       0,
-      "b7d38a657771c05bcdc8b8313a7587aa"
+      "bc1fd4cc5dab28141484758b70c83a6f"
     ],
     [
       "FStar.Tactics.Simplifier.neg_cong",
@@ -87,7 +87,7 @@
         "unit_typing"
       ],
       0,
-      "04ffaf1b3f45ae80c1c0882ec0d5dd0d"
+      "7453b9f59dd1efb78b72cfd679988e0c"
     ],
     [
       "FStar.Tactics.Simplifier.iff_cong",
@@ -101,7 +101,7 @@
         "unit_typing"
       ],
       0,
-      "676be649993b60d0f779afca9c0260b8"
+      "778e9083785ddb0014abdc6ccc6d25c7"
     ],
     [
       "FStar.Tactics.Simplifier.inhabit",
@@ -116,7 +116,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b09bc80958107f1e9ac34b9e00f8cac0"
+      "f205f79c339f5447f246fb55d1209926"
     ],
     [
       "FStar.Tactics.Simplifier.equiv",
@@ -130,7 +130,7 @@
         "unit_typing"
       ],
       0,
-      "876472297d12029b07dc070b6c627f87"
+      "8d4e68544c88cefb8fb48c7c64e4ece5"
     ],
     [
       "FStar.Tactics.Simplifier.inhabit",
@@ -145,7 +145,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b375d9784389b711c3e23a083dcd5319"
+      "68ce98bd5192d120fe8e065fa393334e"
     ]
   ]
 ]

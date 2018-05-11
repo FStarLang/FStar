@@ -1106,17 +1106,21 @@ let tr_norm_step = function
 let tr_norm_steps s =
     List.concatMap tr_norm_step s
 
-let get_norm_request (full_norm:term -> term) args =
+let get_norm_request cfg (full_norm:term -> term) args =
     let parse_steps s =
       match EMB.try_unembed (EMB.e_list EMB.e_norm_step) s with
       | Some steps -> Some (tr_norm_steps steps)
       | None -> None
     in
+    let inherited_steps =
+        (if cfg.steps.erase_universes then [EraseUniverses] else [])
+      @ (if cfg.steps.allow_unbound_universes then [AllowUnboundUniverses] else [])
+    in
     match args with
     | [_; (tm, _)]
     | [(tm, _)] ->
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
-      Some (s, tm)
+      Some (inherited_steps @ s, tm)
     | [(steps, _); _; (tm, _)] ->
       let add_exclude s z = if List.contains z s then s else Exclude z :: s in
       begin
@@ -1126,7 +1130,7 @@ let get_norm_request (full_norm:term -> term) args =
         let s = Beta::s in
         let s = add_exclude s Zeta in
         let s = add_exclude s Iota in
-        Some (s, tm)
+        Some (inherited_steps @ s, tm)
       end
     | _ ->
       None
@@ -1352,7 +1356,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                   delta_level=[Unfold delta_constant];
                                   normalize_pure_lets=true} in
             begin
-            match get_norm_request (norm cfg' env []) args with
+            match get_norm_request cfg (norm cfg' env []) args with
             | None -> //just normalize it as a normal application
               let stack =
                 stack |>
@@ -1396,6 +1400,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             | Some (cfg, stack) -> do_unfold_fv cfg env stack t qninfo fv
             | None -> rebuild cfg env stack t
             end
+
           | Tm_bvar x ->
             begin match lookup_bvar env x with
                 | Univ _ -> failwith "Impossible: term variable is bound to a universe"
@@ -2790,7 +2795,10 @@ let normalize_refinement steps env t0 =
          let t0 = aux x.sort in
          begin match t0.n with
             | Tm_refine(y, phi1) ->
-              mk (Tm_refine(y, U.mk_conj phi1 phi)) t0.pos
+              //NB: this is working on de Bruijn
+              //    representations; so no need
+              //    to substitute y/x in phi
+              mk (Tm_refine(y, U.mk_conj_simp phi1 phi)) t0.pos
             | _ -> t
          end
        | _ -> t in

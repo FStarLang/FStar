@@ -1072,6 +1072,19 @@ let mk_imp phi1 phi2 : term = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2 : term = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
 
+let is_t_true t =
+     match (unmeta t).n with
+     | Tm_fvar fv -> fv_eq_lid fv PC.true_lid
+     | _ -> false
+let mk_conj_simp t1 t2 =
+    if is_t_true t1 then t2
+    else if is_t_true t2 then t1
+    else mk_conj t1 t2
+let mk_disj_simp t1 t2 =
+    if is_t_true t1 then t_true
+    else if is_t_true t2 then t_true
+    else mk_disj t1 t2
+
 let teq = fvar_const PC.eq2_lid
 let mk_untyped_eq2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
 let mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : term =

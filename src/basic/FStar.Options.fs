@@ -130,6 +130,7 @@ let defaults =
       ("doc"                          , Bool false);
       ("dump_module"                  , List []);
       ("eager_inference"              , Bool false);
+      ("eager_subtyping"              , Bool false);
       ("expose_interfaces"            , Bool false);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
@@ -244,7 +245,7 @@ let get_detail_errors           ()      = lookup_opt "detail_errors"            
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
-let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
+let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
@@ -569,7 +570,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "eager_inference",
         Const (mk_bool true),
-        "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+        "Deprecated: Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+
+       (noshort,
+        "eager_subtyping",
+        Const (mk_bool true),
+        "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
 
        ( noshort,
          "extract",
@@ -998,6 +1004,7 @@ let settable = function
     | "detail_errors"
     | "detail_hint_replay"
     | "eager_inference"
+    | "eager_subtyping"
     | "hide_uvar_nums"
     | "hint_info"
     | "hint_file"
@@ -1232,7 +1239,7 @@ let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
-let eager_inference              () = get_eager_inference             ()
+let eager_subtyping              () = get_eager_subtyping()
 let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let full_context_dependency      () = true

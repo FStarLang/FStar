@@ -281,7 +281,7 @@ let empty_worklist env = {
     wl_deferred=[];
     ctr=0;
     tcenv=env;
-    defer_ok=not (Options.eager_inference());
+    defer_ok=true;
     smt_ok=true;
     wl_implicits=[]
 }
@@ -1140,8 +1140,8 @@ let rank tcenv pr : rank_t    //the rank
           end
 
         | Tm_uvar _, _
-        | _, Tm_uvar _ when (tp.relation=EQ || Options.eager_inference()) ->
-          Flex_rigid_eq, {tp with relation=EQ}
+        | _, Tm_uvar _ when tp.relation=EQ ->
+          Flex_rigid_eq, tp
 
         | Tm_uvar _, Tm_arrow _
         | Tm_uvar _, Tm_type _
@@ -1549,7 +1549,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
         in
         let pairwise t1 t2 wl =
             if Env.debug env <| Options.Other "Rel"
-            then BU.print2 "pairwise: %s and %s" (Print.term_to_string t1) (Print.term_to_string t2);
+            then BU.print2 "[meet/join]: pairwise: %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
             let mr, ts = head_matches_delta env () t1 t2 in
             match mr with
             | HeadMatch true
@@ -1606,20 +1606,24 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                   let t1_base, p1_opt = base_and_refinement_maybe_delta false env t1 in
                   let t2_base, p2_opt = base_and_refinement_maybe_delta false env t2 in
                   let combine_refinements t_base p1_opt p2_opt =
+                      let refine x t =
+                          if U.is_t_true t then x.sort
+                          else U.refine x t
+                      in
                       match p1_opt, p2_opt with
                       | Some (x, phi1), Some(y, phi2) ->
                         let x = freshen_bv x in
                         let subst = [DB(0, x)] in
                         let phi1 = SS.subst subst phi1 in
                         let phi2 = SS.subst subst phi2 in
-                        U.refine x (op phi1 phi2)
+                        refine x (op phi1 phi2)
 
                       | None, Some (x, phi)
                       | Some(x, phi), None ->
                         let x = freshen_bv x in
                         let subst = [DB(0, x)] in
                         let phi = SS.subst subst phi in
-                        U.refine x (op U.t_true phi)
+                        refine x (op U.t_true phi)
 
                       | _ ->
                         t_base
@@ -1717,7 +1721,10 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                           bounds_probs
       in
       let (bound, sub_probs, wl) =
-          meet_or_join (if flip then U.mk_conj else U.mk_disj) bounds_typs env wl
+         meet_or_join (if flip then U.mk_conj_simp else U.mk_disj_simp)
+                      bounds_typs
+                      env
+                      wl
       in
       let bound_typ, (eq_prob, wl') =
           let flex_u = flex_uvar_head this_flex in
@@ -1746,7 +1753,10 @@ and solve_rigid_flex_or_flex_rigid_subtyping
       match solve_t env eq_prob ({wl' with defer_ok=false; attempting=sub_probs}) with
       | Success _ ->
          let wl = {wl' with attempting=rest} in
-         let wl = solve_prob' false (TProb tp) None [] wl in
+         let g =  List.fold_left (fun g p -> U.mk_conj g (p_guard p))
+                                 eq_prob.logical_guard
+                                 sub_probs in
+         let wl = solve_prob' false (TProb tp) (Some g) [] wl in
          let _ = List.fold_left (fun wl p -> solve_prob' true p None [] wl) wl bounds_probs in
          UF.commit tx;
          solve env wl
@@ -2431,7 +2441,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
              in
              match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
              | Failed (prob, msg) ->
-               if not env.uvar_subtyping && has_uvars
+               if (not env.uvar_subtyping && has_uvars)
+               || not wl.smt_ok
                then giveup env msg prob
                else fallback()
 
@@ -2443,8 +2454,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                let wl = {wl with ctr=wl.ctr+1} in
                solve env (attempt [base_prob] wl)
         else fallback()
-        //else let ref_prob, wl = ref_eq_prob wl in
-        //     solve env (attempt [ref_prob; base_prob] wl)
 
       (* flex-flex *)
       | Tm_uvar _,                Tm_uvar _
@@ -2818,7 +2827,6 @@ let new_t_prob wl env t1 rel t2 =
  p, x, wl
 
 let solve_and_commit env probs err =
-  let probs = if (Options.eager_inference()) then {probs with defer_ok=false} else probs in
   let tx = UF.new_transaction () in
   let sol = solve env probs in
   match sol with
