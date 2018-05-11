@@ -1265,7 +1265,7 @@ let string_of_delta_level = function
   | NoDelta -> "NoDelta"
   | Inlining -> "Inlining"
   | Eager_unfolding_only -> "Eager_unfolding_only"
-  | Unfold _ -> "Unfold _"
+  | Unfold d -> "Unfold " ^ Print.delta_depth_to_string d
   | UnfoldTac -> "UnfoldTac"
 
 let lidents env : list<lident> =
