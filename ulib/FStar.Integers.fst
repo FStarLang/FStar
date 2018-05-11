@@ -2,35 +2,6 @@ module FStar.Integers
 
 #set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 0 --max_fuel 0"
 
-type signedness =
-  | Signed
-  | Unsigned
-
-type width =
-  | W8
-  | W16
-  | W31
-  | W32
-  | W63
-  | W64
-  | W128
-  | Winfinite
-
-let fixed_width = w:width{w <> Winfinite}
-
-let nat_of_width = function
-  | W8   -> Some 8
-  | W16  -> Some 16
-  | W31  -> Some 31
-  | W32  -> Some 32
-  | W63  -> Some 63
-  | W64  -> Some 64
-  | W128 -> Some 128
-  | Winfinite -> None
-
-let nat_of_fixed_width (w:fixed_width) =
-  match nat_of_width w with
-  | Some v -> v
 
 let int_t (s:signedness) (w:width) : Tot Type0 =
   match s, w with
@@ -51,36 +22,7 @@ let int_t (s:signedness) (w:width) : Tot Type0 =
   | Signed, W64 -> FStar.Int64.t
   | Signed, W128 -> FStar.Int128.t
 
-abstract
-let nat_size (x:int) : Type =
-  x >= 0
-let reveal_nat_size x
-  : Lemma (nat_size x <==> x >= 0)
-          [SMTPat (nat_size x)]
-  = ()
-
-abstract
-let uint_size (x:int) (n:nat) : Type =
-    FStar.UInt.size x n
-let reveal_uint_size x n
-  : Lemma (uint_size x n <==> FStar.UInt.size x n)
-          [SMTPat (uint_size x n)]
-  = ()
-
-abstract
-let int_size (x:int) (n:pos) : Type =
-    FStar.Int.size x n
-let reveal_int_size x n
-  : Lemma (int_size x n <==> FStar.Int.size x n)
-          [SMTPat (int_size x n)]
-  = ()
-
-let within_bounds (s:signedness) (w:width) (x:int) =
-  match s, nat_of_width w with
-  | Signed,   None   -> True
-  | Unsigned, None   -> nat_size x
-  | Signed  , Some n -> int_size x n
-  | Unsigned, Some n -> uint_size x n
+let t = int_t
 
 let v (#s:signedness) (#w:width) (x:int_t s w)
   : Tot (y:int_t Signed Winfinite{normalize (within_bounds s w y)})
@@ -105,6 +47,8 @@ let v (#s:signedness) (#w:width) (x:int_t s w)
        | W63 -> FStar.Int63.v x
        | W64 -> FStar.Int64.v x
        | W128 -> FStar.Int128.v x)
+
+let int_of_t #s #w = v #s #w
 
 let u   (#s:signedness) (#w:width)
         (x:int_t Signed Winfinite{normalize (within_bounds s w x)})
@@ -131,14 +75,15 @@ let u   (#s:signedness) (#w:width)
        | W64 -> FStar.Int64.int_to_t x
        | W128 -> FStar.Int128.int_to_t x)
 
-abstract let cast (#s:signedness) (#s':signedness)
+let t_of_int #s #w = u #s #w
+
+let cast (#s:signedness) (#s':signedness)
          (#w:width)      (#w':width)
          (from:int_t s w{normalize (within_bounds s' w' (v from))})
    : Tot (to:int_t s' w'{normalize (v from == v to)})
    = u (v from)
 
-unfold
-let ( + ) (#s:signedness) (#w:width)
+let ( +! ) (#s:signedness) (#w:width)
           (x:int_t s w)
           (y:int_t s w{normalize (within_bounds s w (v x + v y))})
   : Tot   (z:int_t s w{normalize (v z = v x + v y)})
@@ -179,7 +124,6 @@ let modulo (s:signedness) (x:int) (y:pos{s=Signed ==> y%2=0}) =
   | Unsigned ->  x % y
   | _ -> FStar.Int.(x @% y)
 
-unfold
 let ( +% ) (#w:fixed_width)
            (x:int_t Unsigned w)
            (y:int_t Unsigned w)
