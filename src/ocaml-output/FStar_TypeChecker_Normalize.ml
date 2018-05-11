@@ -9315,8 +9315,8 @@ let (normalize_refinement :
                | FStar_Syntax_Syntax.Tm_refine (y,phi1) ->
                    let uu____26175 =
                      let uu____26176 =
-                       let uu____26183 = FStar_Syntax_Util.mk_conj phi1 phi
-                          in
+                       let uu____26183 =
+                         FStar_Syntax_Util.mk_conj_simp phi1 phi  in
                        (y, uu____26183)  in
                      FStar_Syntax_Syntax.Tm_refine uu____26176  in
                    mk uu____26175 t01.FStar_Syntax_Syntax.pos
