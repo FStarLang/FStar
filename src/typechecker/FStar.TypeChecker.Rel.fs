@@ -1755,7 +1755,10 @@ and solve_rigid_flex_or_flex_rigid_subtyping
       match solve_t env eq_prob ({wl' with defer_ok=false; attempting=sub_probs}) with
       | Success _ ->
          let wl = {wl' with attempting=rest} in
-         let wl = solve_prob' false (TProb tp) None [] wl in
+         let g =  List.fold_left (fun g p -> U.mk_conj g (p_guard p))
+                                 eq_prob.logical_guard
+                                 sub_probs in
+         let wl = solve_prob' false (TProb tp) (Some g) [] wl in
          let _ = List.fold_left (fun wl p -> solve_prob' true p None [] wl) wl bounds_probs in
          UF.commit tx;
          solve env wl
