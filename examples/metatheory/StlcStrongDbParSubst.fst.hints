@@ -901,7 +901,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "722fccc23c7bb77d0e074163694e4571"
+      "e4c2af4ea1dabb7716069878b6458edd"
     ],
     [
       "StlcStrongDbParSubst.substitution_beta",
@@ -1831,7 +1831,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "23964eba263e52d49a2eb539483a8371"
+      "675ac2a7266441b681a4a9772c732f03"
     ],
     [
       "StlcStrongDbParSubst.substitution_beta",
