@@ -995,6 +995,9 @@ let modifies_only_live_addresses r a l h h' =
   loc_includes_trans (loc_union l_a l_not_a) (loc_union (loc_union l_a l_r_not_a) l_not_r) l;
   loc_includes_trans l' (loc_union l_a l_not_a) l;
   modifies_loc_includes (loc_union (loc_addresses r a) l_not_a) h h' (loc_union (loc_addresses r a) l);
+
+  assume (loc_disjoint (loc_addresses r a) l_not_a);
+  
   modifies_only_live_addresses_weak r a l_not_a h h';
   loc_includes_restrict_to_regions l (Set.complement (Set.singleton r));
   loc_includes_restrict_to_addresses l_r r (Set.complement a);
