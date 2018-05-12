@@ -43,6 +43,8 @@ module EMB = FStar.Syntax.Embeddings
 module RE = FStar.Reflection.Embeddings
 open FStar.SMTEncoding.Env
 open FStar.SMTEncoding.EncodeTerm
+open FStar.Parser
+
 module Env = FStar.TypeChecker.Env
 
 type prims_t = {
@@ -671,9 +673,22 @@ let encode_top_level_let :
                 in
                 let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
                 let app, (body, decls2) =
-                    if quals |> List.contains Logic
-                    then mk_Valid app, encode_formula body env'
-                    else app, encode_term body env'
+                  let is_logical =
+                    match (SS.compress t_body).n with
+                    | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
+                    | _ -> false
+                  in
+                  if quals |> List.contains Logic && not is_logical && debug env.tcenv <| Options.Other "Logical" then begin
+                    let module_name = lbn |> FStar.Util.right |> lid_of_fv |> (fun l -> l.nsstr) in
+                    if module_name = FStar.Parser.Const.prims_lid.str ||
+                       module_name = FStar.Parser.Const.pervasives_native_lid.str ||
+                       module_name = FStar.Parser.Const.pervasives_lid.str then ()
+                    else BU.print1 "%s does not have the logical type but has the logic qualifier, consider removing its result type annotation"
+                                   (Print.lbname_to_string lbn)
+                  end;
+                  if quals |> List.contains Logic || is_logical
+                  then mk_Valid app, encode_formula body env'
+                  else app, encode_term body env'
                 in
 
                 //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
