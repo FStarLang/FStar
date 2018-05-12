@@ -789,16 +789,16 @@ let (detail_errors :
             (match active with
              | [] ->
                  let results =
-                   let uu____2282 =
+                   let uu____2252 =
                      FStar_List.map (fun x  -> (x, true)) eliminated  in
-                   let uu____2295 =
+                   let uu____2265 =
                      FStar_List.map (fun x  -> (x, false)) errors  in
-                   FStar_List.append uu____2282 uu____2295  in
+                   FStar_List.append uu____2252 uu____2265  in
                  sort_labels results
              | hd1::tl1 ->
-                 ((let uu____2347 =
+                 ((let uu____2287 =
                      FStar_Util.string_of_int (FStar_List.length active)  in
-                   FStar_Util.print1 "%s, " uu____2347);
+                   FStar_Util.print1 "%s, " uu____2287);
                   (let decls =
                      FStar_All.pipe_left elim
                        (FStar_List.append eliminated
@@ -806,9 +806,9 @@ let (detail_errors :
                       in
                    let result = askZ3 decls  in
                    match result.FStar_SMTEncoding_Z3.z3result_status with
-                   | FStar_SMTEncoding_Z3.UNSAT uu____2404 ->
+                   | FStar_SMTEncoding_Z3.UNSAT uu____2314 ->
                        linear_check (hd1 :: eliminated) errors tl1
-                   | uu____2405 ->
+                   | uu____2315 ->
                        linear_check eliminated (hd1 :: errors) tl1)))
              in
           print_banner ();
@@ -817,9 +817,9 @@ let (detail_errors :
           (let res = linear_check [] [] all_labels  in
            FStar_Util.print_string "\n";
            FStar_All.pipe_right res (FStar_List.iter print_result);
-           (let uu____2445 =
+           (let uu____2355 =
               FStar_Util.for_all FStar_Pervasives_Native.snd res  in
-            if uu____2445
+            if uu____2355
             then
               FStar_Util.print_string
                 "Failed: the heuristic of trying each proof in isolation failed to identify a precise error\n"

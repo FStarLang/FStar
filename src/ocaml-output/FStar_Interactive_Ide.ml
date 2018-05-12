@@ -3401,7 +3401,7 @@ let (sc_typ :
   
 let (sc_fvars :
   FStar_TypeChecker_Env.env ->
-    search_candidate -> FStar_Ident.lid FStar_Util.set)
+    search_candidate -> FStar_Ident.lident FStar_Util.set)
   =
   fun tcenv  ->
     fun sc  ->

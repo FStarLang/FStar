@@ -24,7 +24,8 @@ let (is_type : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
                       (FStar_Parser_AST.id_of_tycon t) = x.FStar_Ident.idText))
       | uu____82 -> false
   
-let (definition_lids : FStar_Parser_AST.decl -> FStar_Ident.lid Prims.list) =
+let (definition_lids :
+  FStar_Parser_AST.decl -> FStar_Ident.lident Prims.list) =
   fun d  ->
     match d.FStar_Parser_AST.d with
     | FStar_Parser_AST.TopLevelLet (uu____92,defs) ->
