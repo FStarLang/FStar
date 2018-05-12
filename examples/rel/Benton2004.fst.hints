@@ -246,7 +246,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "18f21e79cabc28925501c8dd69563122"
+      "4f6640f99c577f64cd7fa6d30abc17c5"
     ],
     [
       "Benton2004.while",
@@ -945,7 +945,7 @@
         "typing_Benton2004.while"
       ],
       0,
-      "eb40f439c50aec45b546b16176306e88"
+      "c7f712f642f7972425f2f4cefa342e6d"
     ],
     [
       "Benton2004.d_lu2",
@@ -1015,7 +1015,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "380118334cbaad9912d44f934eee1b45"
+      "4a3f517f34927e02acd1f96ddedb9729"
     ],
     [
       "Benton2004.d_bre",
