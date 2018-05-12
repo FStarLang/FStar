@@ -97,6 +97,11 @@ let def_check_closed_in_env rng msg e t =
     if not (Options.defensive ()) then () else
     def_check_closed_in rng msg (Env.bound_vars e) t
 
+let def_check_guard_wf rng msg env g =
+    match g.guard_f with
+    | Trivial -> ()
+    | NonTrivial f -> def_check_closed_in_env rng msg env f
+
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
   | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) None f.pos}
@@ -362,6 +367,11 @@ let def_check_scoped msg prob phi =
     if not (Options.defensive ()) then () else
     def_check_closed_in (p_loc prob) msg (List.map fst <| p_scope prob) phi
 
+let def_check_scoped_comp msg prob comp =
+    if not (Options.defensive ()) then () else
+    (* Cheat *)
+    def_check_scoped msg prob (U.arrow [] comp)
+
 let def_check_prob msg prob =
     if not (Options.defensive ()) then () else
     let msgf m = msg ^ "." ^ string_of_int (p_pid prob) ^ "." ^ m in
@@ -377,8 +387,11 @@ let def_check_prob msg prob =
         def_check_scoped (msgf "lhs")        prob p.lhs;
         def_check_scoped (msgf "rhs")        prob p.rhs
         end
-    | _ -> (); //TODO
-    ()
+    | CProb p ->
+        begin
+        def_check_scoped_comp (msgf "lhs")        prob p.lhs;
+        def_check_scoped_comp (msgf "rhs")        prob p.rhs
+        end
 
 let mk_eq2 wl prob t1 t2 : term * worklist =
     (* NS: Rather than introducing a new variable, it would be much preferable

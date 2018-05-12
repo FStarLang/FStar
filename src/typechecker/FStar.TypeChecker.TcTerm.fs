@@ -105,6 +105,7 @@ let memo_tk (e:term) (t:typ) = e
 (************************************************************************************************************)
 let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_t)
     : term * lcomp * guard_t =
+  Rel.def_check_guard_wf e.pos "value_check_expected_typ" env guard;
   let lc = match tlc with
     | Inl t -> U.lcomp_of_comp <| mk_Total t
     | Inr lc -> lc in
@@ -1698,6 +1699,7 @@ and tc_eqn scrutinee env branch
   let branch_exp, c, g_branch = tc_term pat_env branch_exp in
 
   let g_branch = Rel.conj_guard guard_pat_annots g_branch in  //AR: add the guard from the type annotations on pattern bvars
+  Rel.def_check_guard_wf cbr.pos "tc_eqn.1" pat_env g_branch;
 
   (* 4. Lift the when clause to a logical condition. *)
   (*    It is used in step 5 (a) below, and in step 6 (d) to build the branch guard *)
