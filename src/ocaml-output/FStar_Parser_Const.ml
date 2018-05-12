@@ -8,6 +8,8 @@ let (psconst : Prims.string -> FStar_Ident.lident) =
 let (psnconst : Prims.string -> FStar_Ident.lident) =
   fun s  -> p2l ["FStar"; "Pervasives"; "Native"; s] 
 let (prims_lid : FStar_Ident.lident) = p2l ["Prims"] 
+let (pervasives_native_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "Native"] 
 let (pervasives_lid : FStar_Ident.lident) = p2l ["FStar"; "Pervasives"] 
 let (fstar_ns_lid : FStar_Ident.lident) = p2l ["FStar"] 
 let (bool_lid : FStar_Ident.lident) = pconst "bool" 
@@ -46,6 +48,7 @@ let (max_lid : FStar_Ident.lident) = p2l ["max"]
 let (float_lid : FStar_Ident.lident) = p2l ["FStar"; "Float"; "float"] 
 let (char_lid : FStar_Ident.lident) = p2l ["FStar"; "Char"; "char"] 
 let (heap_lid : FStar_Ident.lident) = p2l ["FStar"; "Heap"; "heap"] 
+let (logical_lid : FStar_Ident.lident) = pconst "logical" 
 let (true_lid : FStar_Ident.lident) = pconst "l_True" 
 let (false_lid : FStar_Ident.lident) = pconst "l_False" 
 let (and_lid : FStar_Ident.lident) = pconst "l_and" 
