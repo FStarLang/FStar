@@ -1,5 +1,5 @@
 [
-  "|á×Äœ\u001b¥ñÚµŠIc–2\u001f",
+  "Þî\u0001v¡3ñ'¿\t“ðYFƒÎ",
   [
     [
       "FStar.PropositionalExtensionality.apply",
@@ -8,7 +8,97 @@
       1,
       [ "@query" ],
       0,
-      "9bdf5338a3e577681f72c8333968cf97"
+      "a4d14db00a4346adbdef8ab6e190d701"
+    ],
+    [
+      "FStar.PropositionalExtensionality.lemma_l_True_equation",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "97394a206efd48497acf3df586264e32"
+    ],
+    [
+      "FStar.PropositionalExtensionality.lemma_l_False_equation",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0627f1f73395f8e251a59a05d8d97828"
+    ],
+    [
+      "FStar.PropositionalExtensionality.lemma_eq2_equation",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d10026033bc51cc92e643c9e23baa20e"
+    ],
+    [
+      "FStar.PropositionalExtensionality.lemma_eq3_equation",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "dfbe3b847b55b833eac96c6cdcfb9b61"
+    ],
+    [
+      "FStar.PropositionalExtensionality.lemma_l_and_equation",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "21f873b54cc72330d5590215a7170026"
+    ],
+    [
+      "FStar.PropositionalExtensionality.lemma_l_or_equation",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8d17d577a5837db7ea0278d19fd86deb"
+    ],
+    [
+      "FStar.PropositionalExtensionality.lemma_l_imp_equation",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "564b6426821be94e0f35d4c426fc3d9d"
+    ],
+    [
+      "FStar.PropositionalExtensionality.lemma_l_not_equation",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5e52d4d9215c73162f852f5a2ac1bfe2"
+    ],
+    [
+      "FStar.PropositionalExtensionality.lemma_l_Forall_equation",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ddc009bb60ff8aacdaf0904600174d44"
+    ],
+    [
+      "FStar.PropositionalExtensionality.lemma_l_Exists_equation",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a15643e8331cc8f40dd2ff183a6160c6"
     ]
   ]
 ]
