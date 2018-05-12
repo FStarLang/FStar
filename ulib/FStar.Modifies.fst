@@ -996,8 +996,13 @@ let modifies_only_live_addresses r a l h h' =
   loc_includes_trans l' (loc_union l_a l_not_a) l;
   modifies_loc_includes (loc_union (loc_addresses r a) l_not_a) h h' (loc_union (loc_addresses r a) l);
 
-  assume (loc_disjoint (loc_addresses r a) l_not_a);
-  
+  assume (
+    let l1 = loc_addresses r a in
+    let l2 = l_not_a in
+    (forall (r: HS.rid) .
+       Set.subset (Set.intersect (addrs_of_loc_weak l1 r) (addrs_of_loc l2 r)) Set.empty /\
+       Set.subset (Set.intersect (addrs_of_loc l1 r) (addrs_of_loc_weak l2 r)) Set.empty));
+
   modifies_only_live_addresses_weak r a l_not_a h h';
   loc_includes_restrict_to_regions l (Set.complement (Set.singleton r));
   loc_includes_restrict_to_addresses l_r r (Set.complement a);
