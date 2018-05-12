@@ -47,6 +47,7 @@ let excluded_middle (p:Type) = map_squash (join_squash (get_proof (p \/ (~p)))) 
 
 val excluded_middle_squash : p:Type0 -> GTot (p \/ ~p)
 let excluded_middle_squash p =
+  FStar.Classical.forall_intro_2 FStar.PropositionalExtensionality.lemma_l_or_equation;
   bind_squash (excluded_middle p) (fun x ->
   if x then
     map_squash (get_proof p) Left
