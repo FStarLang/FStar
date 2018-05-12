@@ -290,11 +290,6 @@ let empty_worklist env = {
     smt_ok=true;
     wl_implicits=[]
 }
-let singleton wl prob smt_ok     = {wl with attempting=[prob]; smt_ok = smt_ok}
-let wl_of_guard env g            = {empty_worklist env with attempting=List.map snd g}
-let defer reason prob wl         = {wl with wl_deferred=(wl.ctr, reason, prob)::wl.wl_deferred}
-let attempt probs wl             = {wl with attempting=probs@wl.attempting}
-
 let giveup env reason prob =
     if debug env <| Options.Other "Rel"
     then BU.print2 "Failed %s:\n%s\n" reason (prob_to_string env prob);
@@ -392,6 +387,13 @@ let def_check_prob msg prob =
         def_check_scoped_comp (msgf "lhs")        prob p.lhs;
         def_check_scoped_comp (msgf "rhs")        prob p.rhs
         end
+
+let singleton wl prob smt_ok     = {wl with attempting=[prob]; smt_ok = smt_ok}
+let wl_of_guard env g            = {empty_worklist env with attempting=List.map snd g}
+let defer reason prob wl         = {wl with wl_deferred=(wl.ctr, reason, prob)::wl.wl_deferred}
+let attempt probs wl             =
+    List.iter (def_check_prob "attempt") probs;
+    {wl with attempting=probs@wl.attempting}
 
 let mk_eq2 wl prob t1 t2 : term * worklist =
     (* NS: Rather than introducing a new variable, it would be much preferable
@@ -1461,6 +1463,7 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
     match next_prob probs with
     | Some (hd, tl, rank) ->
       let probs = {probs with attempting=tl} in
+      def_check_prob "solve,hd" hd;
       begin match hd with
       | CProb cp ->
             solve_c env (maybe_invert cp) probs
@@ -1549,6 +1552,7 @@ and giveup_or_defer (env:Env.env) (orig:prob) (wl:worklist) (msg:string) : solut
 and solve_rigid_flex_or_flex_rigid_subtyping
     (rank:rank_t)
     (env:Env.env) (tp:tprob) (wl:worklist) : solution =
+    def_check_prob "solve_rigid_flex_or_flex_rigid_subtyping" (TProb tp);
     let flip = rank = Flex_rigid in
     (*
         meet_or_join op [t1;..;tn] env wl:
