@@ -165,11 +165,9 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         [Util.mkAssume(mkForall (Env.get_range env) ([[Term.boxString b]], [bb], mk_HasType (Term.boxString b) tt), Some "string typing", "string_typing");
          Util.mkAssume(mkForall_fuel (Env.get_range env) ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxStringFun) x)),  Some "string inversion", "string_inversion")] in
     let mk_true_interp : env -> string -> term -> decls_t = fun env nm true_tm ->
-        let valid = mkApp("Valid", [true_tm]) in
-        [Util.mkAssume(valid, Some "True interpretation", "true_interp")] in
+        [Util.mkAssume(true_tm, Some "True interpretation", "true_interp")] in
     let mk_false_interp : env -> string -> term -> decls_t = fun env nm false_tm ->
-        let valid = mkApp("Valid", [false_tm]) in
-        [Util.mkAssume(mkIff(mkFalse, valid), Some "False interpretation", "false_interp")] in
+        [Util.mkAssume(mkIff(mkFalse, false_tm), Some "False interpretation", "false_interp")] in
     let mk_and_interp : env -> string -> term -> decls_t = fun env conj _ ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
