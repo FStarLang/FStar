@@ -446,13 +446,13 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
     (prob, wl)
 
 let mk_t_problem wl scope orig lhs rel rhs elt reason =
-  def_check_prob (reason ^ ".arg_t") orig;
+  def_check_prob (reason ^ ".mk_t.arg") orig;
   let p, wl = mk_problem wl scope orig lhs rel rhs elt reason in
   def_check_prob (reason ^ ".mk_t") (TProb p);
   TProb p, wl
 
 let mk_c_problem wl scope orig lhs rel rhs elt reason =
-  def_check_prob (reason ^ ".arg_c") orig;
+  def_check_prob (reason ^ ".mk_c.arg") orig;
   let p, wl = mk_problem wl scope orig lhs rel rhs elt reason in
   def_check_prob (reason ^ ".mk_c") (CProb p);
   CProb p, wl
@@ -481,6 +481,7 @@ let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
     | None -> lg
     | Some x -> S.mk_Tm_app lg [S.as_arg x] None loc
   in
+  let prob =
    {
     pid=next_pid();
     lhs=lhs;
@@ -492,10 +493,11 @@ let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
     reason=[reason];
     loc=loc;
     rank=None;
-   },
-   wl
+   } in
+   prob, wl
 
-let problem_using_guard orig lhs rel rhs elt reason = {
+let problem_using_guard orig lhs rel rhs elt reason =
+    let p = {
      pid=next_pid();
      lhs=lhs;
      relation=rel;
@@ -506,7 +508,10 @@ let problem_using_guard orig lhs rel rhs elt reason = {
      reason=reason::p_reason orig;
      loc=p_loc orig;
      rank=None;
-}
+    } in
+    def_check_prob reason (TProb p);
+    p
+
 let guard_on_element wl problem x phi =
     match problem.element with
         | None ->
@@ -763,7 +768,8 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
                             (print_ctx_uvar uv)
                             (Print.term_to_string phi);
         let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
-        def_check_closed_in (p_loc prob) ("solve_prob'" ^ string_of_int (p_pid prob)) (List.map fst uv.ctx_uvar_binders) phi;
+        def_check_closed_in (p_loc prob) ("solve_prob'.sol." ^ string_of_int (p_pid prob))
+                            (List.map fst <| p_scope prob) phi;
         U.set_uvar uv.ctx_uvar_head phi
     in
     let xs, uv = p_guard_uvar prob in
@@ -1558,6 +1564,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
             new_problem wl env t1 EQ t2 None t1.pos
                         "join/meet refinements"
             in
+            def_check_prob "meet_or_join" (TProb p);
             TProb p, wl
         in
         let pairwise t1 t2 wl =
@@ -1757,6 +1764,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
           new_problem wl env bound EQ this_flex None tp.loc
                 (if flip then "joining refinements" else "meeting refinements")
       in
+      def_check_prob "meet_or_join2" (TProb eq_prob);
       let _ = if Env.debug env <| Options.Other "Rel"
               then let wl' = {wl with attempting=TProb eq_prob::sub_probs} in
                    BU.print1 "After meet/join refinements: %s\n" (wl_to_string wl') in
@@ -1786,6 +1794,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
               //i.e., try to solve ?u = t and proceed
             let eq_prob, wl =
                 new_problem wl env t_base EQ this_flex None tp.loc "widened subtyping" in
+            def_check_prob "meet_or_join3" (TProb eq_prob);
             let wl = solve_prob' false (TProb tp) (Some (p_guard (TProb eq_prob))) [] wl in
             solve env (attempt [TProb eq_prob] wl)
 
@@ -1796,6 +1805,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
               //i.e., solve ?u = t_base, with the guard formula phi
             let eq_prob, wl =
                 new_problem wl env t_base EQ this_flex None tp.loc "widened subtyping" in
+            def_check_prob "meet_or_join4" (TProb eq_prob);
             let phi = guard_on_element wl tp x phi in
             let wl = solve_prob' false (TProb tp) (Some (U.mk_conj phi (p_guard (TProb eq_prob)))) [] wl in
             solve env (attempt [TProb eq_prob] wl)
@@ -2832,6 +2842,7 @@ let new_t_problem wl env lhs rel rhs elt loc =
                         (N.term_to_string env rhs)
               else "TOP" in
  let p, wl = new_problem wl env lhs rel rhs elt loc reason in
+ def_check_prob ("new_t_problem." ^ reason) (TProb p);
  TProb p, wl
 
 let new_t_prob wl env t1 rel t2 =
@@ -2907,6 +2918,7 @@ let sub_comp env c1 c2 =
   then BU.print3 "sub_comp of %s --and-- %s --with-- %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB");
   let prob, wl = new_problem (empty_worklist env) env c1 rel c2 None (Env.get_range env) "sub_comp" in
   let prob = CProb prob in
+  def_check_prob "sub_comp" prob;
   with_guard env prob <| solve_and_commit env (singleton wl prob true)  (fun _ -> None)
 
 let solve_universe_inequalities' tx env (variables, ineqs) =
