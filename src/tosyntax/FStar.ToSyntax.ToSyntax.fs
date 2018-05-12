@@ -1828,7 +1828,7 @@ let mk_data_projector_names iquals env se =
 
   | _ -> []
 
-let mk_typ_abbrev lid uvs typars k t lids quals rng =
+let mk_typ_abbrev lid uvs typars kopt t lids quals rng =
     let dd = if quals |> List.contains S.Abstract
              then Delta_abstract (incr_delta_qualifier t)
              else incr_delta_qualifier t in
@@ -1836,7 +1836,7 @@ let mk_typ_abbrev lid uvs typars k t lids quals rng =
         lbname=Inr (S.lid_as_fv lid dd None);
         lbunivs=uvs;
         lbdef=no_annot_abs typars t;
-        lbtyp=U.arrow typars (S.mk_Total k);
+        lbtyp=if is_some kopt then U.arrow typars (S.mk_Total (kopt |> must)) else tun;
         lbeff=C.effect_Tot_lid;
         lbattrs=[];
         lbpos=rng;
@@ -1933,12 +1933,12 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
 
     | [TyconAbbrev(id, binders, kopt, t)] ->
         let env', typars = typars_of_binders env binders in
-        let k = match kopt with
+        let kopt = match kopt with
             | None ->
               if BU.for_some (function S.Effect -> true | _ -> false) quals
-              then teff
-              else ktype
-            | Some k -> desugar_term env' k in
+              then Some teff
+              else None
+            | Some k -> Some (desugar_term env' k) in
         let t0 = t in
         let quals = if quals |> BU.for_some (function S.Logic -> true | _ -> false)
                     then quals
@@ -1976,7 +1976,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                    sigmeta = default_sigmeta  ;
                    sigattrs = [] }
             else let t = desugar_typ env' t in
-                 mk_typ_abbrev qlid [] typars k t [qlid] quals rng in
+                 mk_typ_abbrev qlid [] typars kopt t [qlid] quals rng in
 
         let env = push_sigelt env se in
         let env = push_doc env qlid d.doc in
@@ -2015,7 +2015,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
 	          let tpars = Subst.close_binders tpars in
 	          Subst.close tpars t
           in
-          [((id, d.doc), [], mk_typ_abbrev id uvs tpars k t [id] quals rng)]
+          [((id, d.doc), [], mk_typ_abbrev id uvs tpars (Some k) t [id] quals rng)]
 
         | Inl ({ sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, _); sigquals = tname_quals }, constrs, tconstr, quals) ->
           let mk_tot t =
