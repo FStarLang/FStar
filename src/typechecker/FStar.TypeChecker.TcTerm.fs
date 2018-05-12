@@ -1598,8 +1598,10 @@ and tc_eqn scrutinee env branch
     in
     //an expression for each clause in a disjunctive pattern
     let pat_bvs, exp, guard_pat_annots, p = TcUtil.pat_as_exp allow_implicits env p0 tc_annot in
-    if Env.debug env Options.High
-    then BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
+    if Env.debug env Options.High then begin
+        BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
+        BU.print1 "pat_bvs = [%s]\n" (Print.bvs_to_string ", " pat_bvs)
+    end;
     let pat_env = List.fold_left Env.push_bv env pat_bvs in
     let env1, _ = Env.clear_expected_typ pat_env in
     //This is_pattern flag is crucial to check that every variable in the pattern
@@ -2271,7 +2273,7 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
 and tc_binder env (x, imp) =
     let tu, u = U.type_u () in
     if Env.debug env Options.Extreme
-    then BU.print3 "Checking binders %s:%s at type %s\n"
+    then BU.print3 "Checking binder %s:%s at type %s\n"
                    (Print.bv_to_string x)
                    (Print.term_to_string x.sort)
                    (Print.term_to_string tu);
@@ -2282,6 +2284,8 @@ and tc_binder env (x, imp) =
     x, push_binding env x, g, u
 
 and tc_binders env bs =
+    if Env.debug env Options.Extreme then
+        BU.print1 "Checking binders %s\n" (Print.binders_to_string ", " bs);
     let rec aux env bs = match bs with
         | [] -> [], env, Rel.trivial_guard, []
         | b::bs ->
