@@ -1242,7 +1242,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
             List.contains HasMaskedEffect qs -> no
 
-    // UnfoldTac means never unfolded FVs marked [@"tac_opaque"]
+    // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
     | _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
         no
 
@@ -1258,12 +1258,11 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
                                                (Print.fv_to_string fv));
         // How does the following code work?
         // We are doing selective unfolding so, by default, we assume everything
-        // should *not* be normalized unless it meets *at least one* of the criteria.
+        // should *not* be unfolded unless it meets *at least one* of the criteria.
         // So we check exactly that, that this `fv` meets some criteria that is presently
         // being used. Note that in `None`, we default to `no`, otherwise everything would
         // unfold (unless we had all criteria present at once, which is unlikely)
 
-        // TODO: thunk these
         comb_or [
          (match cfg.steps.unfold_only with
           | None -> no
@@ -1275,6 +1274,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
           | None -> no
           | Some lids -> fullyno <| BU.for_some (fv_eq_lid fv) lids)
         ]
+
     // Nothing special, just check the depth
     | _ ->
         log_unfolding cfg (fun () -> BU.print3 ">>> Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
