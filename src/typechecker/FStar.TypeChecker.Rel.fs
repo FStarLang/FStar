@@ -414,20 +414,15 @@ let next_pid =
     fun () -> incr ctr; !ctr
 
 let mk_problem wl scope orig lhs rel rhs elt reason =
-    let guard_ty = U.arrow scope (S.mk_Total U.ktype0) in
+    let env = FStar.TypeChecker.Env.push_binders wl.tcenv scope in
     let ctx_uvar, lg, wl =
         new_uvar ("mk_problem: logical guard for " ^ reason)
                  wl
                  Range.dummyRange
-                 wl.tcenv.gamma
-                 (Env.all_binders wl.tcenv)
-                 guard_ty
+                 env.gamma
+                 (Env.all_binders env)
+                 U.ktype0
                  Allow_untyped
-    in
-    let lg =
-        match scope with
-        | [] -> lg
-        | _ -> S.mk_Tm_app lg (List.map (fun (x, i) -> S.bv_to_name x, i) scope) None lg.pos
     in
     let prob =
         //logical guards are always squashed;
@@ -439,7 +434,7 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
              rhs=rhs;
              element=elt;
              logical_guard=lg;
-             logical_guard_uvar=(scope, ctx_uvar);
+             logical_guard_uvar=([], ctx_uvar);
              reason=reason::p_reason orig;
              loc=p_loc orig;
              rank=None;
