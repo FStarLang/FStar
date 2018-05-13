@@ -979,7 +979,7 @@ let loc_includes_loc_addresses_restrict_to_addresses
   (ensures (loc_includes (loc_addresses r as) (restrict_to_addresses l r as)))
 = Classical.forall_intro loc_aux_includes_refl
 
-#set-options "--z3rlimit 64"
+#set-options "--z3rlimit 64 --max_fuel 1 --max_ifuel 1"
 
 let modifies_only_live_addresses r a l h h' =
   let l_r = restrict_to_regions l (Set.singleton r) in
@@ -987,6 +987,7 @@ let modifies_only_live_addresses r a l h h' =
   let l_a = restrict_to_addresses l_r r a in
   let l_r_not_a = restrict_to_addresses l_r r (Set.complement a) in
   let l_not_a = loc_union l_r_not_a l_not_r in
+  assert_spinoff (loc_disjoint (loc_addresses r a) (l_not_a));
   let l' = loc_union (loc_addresses r a) l_not_a in
   loc_includes_loc_addresses_restrict_to_addresses l_r r a;
   loc_includes_loc_union_restrict_to_regions l (Set.singleton r);
@@ -995,14 +996,6 @@ let modifies_only_live_addresses r a l h h' =
   loc_includes_trans (loc_union l_a l_not_a) (loc_union (loc_union l_a l_r_not_a) l_not_r) l;
   loc_includes_trans l' (loc_union l_a l_not_a) l;
   modifies_loc_includes (loc_union (loc_addresses r a) l_not_a) h h' (loc_union (loc_addresses r a) l);
-
-  assume (
-    let l1 = loc_addresses r a in
-    let l2 = l_not_a in
-    (forall (r: HS.rid) .
-       Set.subset (Set.intersect (addrs_of_loc_weak l1 r) (addrs_of_loc l2 r)) Set.empty /\
-       Set.subset (Set.intersect (addrs_of_loc l1 r) (addrs_of_loc_weak l2 r)) Set.empty));
-
   modifies_only_live_addresses_weak r a l_not_a h h';
   loc_includes_restrict_to_regions l (Set.complement (Set.singleton r));
   loc_includes_restrict_to_addresses l_r r (Set.complement a);
