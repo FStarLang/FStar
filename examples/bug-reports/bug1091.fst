@@ -82,3 +82,17 @@ let apr19_2017_mem_sanity_fail #a x xs =
 
 let apr19_2017_mem_sanity (#a:eqtype) (x:a) xs =
         assert_by_tactic (apr19_2017_mem x xs <==> apr19_2017_mem x xs) idtac
+
+////////////////////////////////////////////////////////////////////////////////
+//April 21, 2017
+////////////////////////////////////////////////////////////////////////////////
+[@ (FStar.Pervasives.fail [19])]
+let rec apr21_2017_ackermann_fail m n =
+  if m=0 then n + 1
+  else if n = 0 then apr21_2017_ackermann_fail (m - 1) 1
+  else apr21_2017_ackermann_fail (m - 1) (apr21_2017_ackermann_fail m (n - 1))
+
+let rec apr21_2017_ackermann (m n : nat) =
+  if m=0 then n + 1
+  else if n = 0 then apr21_2017_ackermann (m - 1) 1
+  else apr21_2017_ackermann (m - 1) (apr21_2017_ackermann m (n - 1))
