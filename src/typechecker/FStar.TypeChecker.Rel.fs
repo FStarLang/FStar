@@ -199,9 +199,11 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
     let t = mk (Tm_uvar (ctx_uvar, ([], None))) None r in
     ctx_uvar, t, {wl with wl_implicits=(reason, t, ctx_uvar, r)::wl.wl_implicits}
 
-let copy_uvar u t wl =
-    new_uvar u.ctx_uvar_reason wl u.ctx_uvar_range u.ctx_uvar_gamma
-             u.ctx_uvar_binders t u.ctx_uvar_should_check
+let copy_uvar u (bs:binders) t wl =
+    let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
+    let env = Env.push_binders env bs in
+    new_uvar u.ctx_uvar_reason wl u.ctx_uvar_range env.gamma
+            (Env.all_binders env) t u.ctx_uvar_should_check
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -1840,8 +1842,8 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
                   | Some univ ->
                     S.mk (Tm_type univ) None t.pos, univ
               in
-              let _, u, wl = copy_uvar u_lhs (U.arrow (bs_lhs@bs) (S.mk_Total k)) wl in
-              f (S.mk_Tm_app u (bs_lhs_args@bs_terms) None c.pos) (Some univ), wl
+              let _, u, wl = copy_uvar u_lhs (bs_lhs@bs) k wl in
+              f u (Some univ), wl
            in
            match c.n with
            | Total (t, uopt) ->
@@ -1852,9 +1854,8 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
              let out_args, wl =
                List.fold_right
                  (fun (a, i) (out_args, wl) ->
-                   let _, t_a, wl = copy_uvar u_lhs (fst <| U.type_u()) wl in
-                   let _, a', wl = copy_uvar u_lhs (U.arrow bs (S.mk_Total t_a)) wl in
-                   let a' = S.mk_Tm_app a' bs_terms None a.pos in
+                   let _, t_a, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
+                   let _, a', wl = copy_uvar u_lhs bs t_a wl in
                    (a',i)::out_args, wl)
                  ((S.as_arg ct.result_typ)::ct.effect_args)
                  ([], wl)
@@ -1877,10 +1878,9 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
               solve env (attempt [sub_prob] (solve_prob orig None [sol] wl))
 
             | (x, imp)::formals ->
-              let _ctx_u_x, u_x, wl = copy_uvar u_lhs (U.arrow (bs_lhs@bs) (S.mk_Total (U.type_u() |> fst))) wl in
-              let t_y = S.mk_Tm_app u_x (bs_lhs_args@bs_terms) None x.sort.pos in
+              let _ctx_u_x, u_x, wl = copy_uvar u_lhs (bs_lhs@bs) (U.type_u() |> fst) wl in
               //printfn "Generated formal %s where %s" (Print.term_to_string t_y) (Print.ctx_uvar_to_string ctx_u_x);
-              let y = S.new_bv (Some (S.range_of_bv x)) t_y in
+              let y = S.new_bv (Some (S.range_of_bv x)) u_x in
               aux (bs@[y, imp]) (bs_terms@[S.bv_to_name y, imp]) formals wl
          in
          aux [] [] formals wl
@@ -1995,12 +1995,10 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //            (Print.args_to_string [last_arg_rhs]);
         let t_lhs, u_lhs, _lhs_args = lhs in
         let lhs', lhs'_last_arg, wl =
-              let _, t_last_arg, wl = copy_uvar u_lhs (fst <| U.type_u()) wl in
+              let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
               //FIXME: this may be an implicit arg ... fix qualifier
-              let _, u_lhs', wl = copy_uvar u_lhs (U.arrow (bs_lhs@[S.null_binder t_last_arg]) (S.mk_Total t_res_lhs)) wl in
-              let lhs' = S.mk_Tm_app u_lhs' bs_lhs_args None t_lhs.pos in
-              let _, u_lhs'_last_arg, wl = copy_uvar u_lhs (U.arrow bs_lhs (S.mk_Total t_last_arg)) wl in
-              let lhs'_last_arg = S.mk_Tm_app u_lhs'_last_arg bs_lhs_args None t_lhs.pos in
+              let _, lhs', wl = copy_uvar u_lhs (bs_lhs@[S.null_binder t_last_arg]) t_res_lhs wl in
+              let _, lhs'_last_arg, wl = copy_uvar u_lhs bs_lhs t_last_arg wl in
               lhs', lhs'_last_arg, wl
         in
         //if Env.debug env <| Options.Other "Rel"
