@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "3d6d6179f507037816b47d8a9ebf7ef8"
+      "8438d6b1f6a3a66b69a9c1598bfdecb8"
     ],
     [
       "FStar.TaggedUnion.field_of_tag'",
@@ -78,7 +78,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "6f6965bcf1ea5f0eaa71c2dad27b5811"
+      "b5fd6e8b3cae3b7228767a58ebea2fd6"
     ],
     [
       "FStar.TaggedUnion.field_of_tag",
@@ -90,7 +90,7 @@
         "equation_FStar.Pointer.Base.struct_field"
       ],
       0,
-      "ff203583c074d0cf03102a0669b4fcbf"
+      "f92cf7100c2469e270e1a389f00b4c04"
     ],
     [
       "FStar.TaggedUnion.tag_of_field'",
@@ -159,7 +159,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "1b0e3d8552f6dc150893b98b718458ea"
+      "962e6b298ae2f34a7009bbe12a1f2e2d"
     ],
     [
       "FStar.TaggedUnion.tag_of_field",
@@ -168,7 +168,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "b3080416730fe276e5fed26a7383df6b"
+      "5f3c91e18ca069758d3b7e6155cee077"
     ],
     [
       "FStar.TaggedUnion.field_of_tag_of_field",
@@ -177,7 +177,7 @@
       1,
       [ "@query" ],
       0,
-      "05200adee86c0e1e885b4d114fdf6ca6"
+      "fd65c0b999be931e44033f3cd5f55c7b"
     ],
     [
       "FStar.TaggedUnion.tag_of_field_of_tag",
@@ -186,7 +186,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "08f5d9a58ba3422e2689a590ed6048f3"
+      "cb247096e690cb467b5863037d8ac850"
     ],
     [
       "FStar.TaggedUnion.read_tag",
@@ -195,7 +195,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "cb895757c1b4487562370f5662639637"
+      "5d021a9d37ff23a0bee94b80734894b4"
     ],
     [
       "FStar.TaggedUnion.includes_gfield_gen",
@@ -204,7 +204,7 @@
       1,
       [ "@query" ],
       0,
-      "115853c1e9712abaac86807545e85b52"
+      "4d5b4b40cdcddfe74713411a256c9f8e"
     ],
     [
       "FStar.TaggedUnion.matching_tags",
@@ -213,7 +213,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "78adee58736ec8aaac6cdba6cb835b2c"
+      "cdc5a9aaa027eecd38d4d001c98600bc"
     ],
     [
       "FStar.TaggedUnion.get_tag",
@@ -224,17 +224,21 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "@query", "assumption_FStar.UInt32.t__uu___haseq", "b2t_def",
-        "eq2-interp", "equation_FStar.Pointer.Base.union_typ",
+        "@query", "FStar.UInt32_pretyping_041e3a67a2d2b51fd702f1f88cfc3b44",
+        "assumption_FStar.UInt32.t__uu___haseq", "b2t_def",
+        "equation_FStar.Pointer.Base.struct_field",
+        "equation_FStar.Pointer.Base.union_typ",
+        "equation_FStar.TaggedUnion.field_of_tag",
         "equation_FStar.TaggedUnion.get_field",
         "equation_FStar.TaggedUnion.matching_tags",
-        "equation_FStar.TaggedUnion.t",
+        "equation_FStar.TaggedUnion.t", "equation_Prims.eq2",
+        "equation_Prims.l_and",
         "fuel_guarded_inversion_FStar.Pointer.Base.struct_typ",
-        "l_and-interp", "lemma_FStar.TaggedUnion.tag_of_field_of_tag",
+        "lemma_FStar.TaggedUnion.tag_of_field_of_tag",
         "refinement_interpretation_FStar.TaggedUnion_Tm_refine_b1bf8f1568fdea244a500a7e69890ee4"
       ],
       0,
-      "81f3c815eca425d19eade3bcc444af6e"
+      "cc074fd08b21666153e51cc7cbfe4e32"
     ],
     [
       "FStar.TaggedUnion.get_value",
@@ -250,7 +254,7 @@
         "refinement_interpretation_FStar.TaggedUnion_Tm_refine_b1bf8f1568fdea244a500a7e69890ee4"
       ],
       0,
-      "e80c3044fbd371a230c4fe3e7f724d7b"
+      "03271a17016f77b27b591be5215e8538"
     ]
   ]
 ]

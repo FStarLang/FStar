@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "8e20bc1a04d4bd7e3c2c2944c95052d3"
+      "db65c0b61dc04b7be29a9f4a09645e40"
     ],
     [
       "FStar.Squash.get_proof",
@@ -23,7 +23,7 @@
         "unit_typing"
       ],
       0,
-      "b34f1a6550f1938c28f243b0bb87e0b8"
+      "9c778113554c9cbd4f9877342f5e46ad"
     ],
     [
       "FStar.Squash.give_proof",
@@ -36,7 +36,7 @@
         "unit_typing"
       ],
       0,
-      "7bc2971b433aceb78feda6604d19ca4d"
+      "77b866d3ec09bccb964e9eea521c48d7"
     ],
     [
       "FStar.Squash.proof_irrelevance",
@@ -49,7 +49,7 @@
         "unit_inversion"
       ],
       0,
-      "7c7163b9e0d3575c09bfffc7d4c36a79"
+      "d3d6f6769e490ab15a70a6bf873bc5c4"
     ]
   ]
 ]
