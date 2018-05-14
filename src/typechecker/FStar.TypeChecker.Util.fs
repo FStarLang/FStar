@@ -1034,10 +1034,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflags> * (
              lax_mk_tot_or_comp_l eff u_res_t res_t []
         else begin
             let ifthenelse md res_t g wp_t wp_e =
-                mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.if_then_else)
-                          [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e]
-                          None
-                          (Range.union_ranges wp_t.pos wp_e.pos) in
+                mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
             let default_case =
                 let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
                 let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
@@ -1047,7 +1044,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflags> * (
                                    (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
                 let md     = Env.get_effect_decl env C.effect_PURE_lid in
                 mk_comp md u_res_t res_t wp [] in
-            let maybe_return eff_label_then (cthen:bool->lcomp) =
+            let maybe_return eff_label_then cthen =
                if should_not_inline_whole_match
                || not (is_pure_or_ghost_effect env eff)
                then cthen true //inline each the branch, if eligible

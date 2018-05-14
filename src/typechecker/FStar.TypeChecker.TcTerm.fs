@@ -105,6 +105,7 @@ let memo_tk (e:term) (t:typ) = e
 (************************************************************************************************************)
 let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_t)
     : term * lcomp * guard_t =
+  Rel.def_check_guard_wf e.pos "value_check_expected_typ" env guard;
   let lc = match tlc with
     | Inl t -> U.lcomp_of_comp <| mk_Total t
     | Inr lc -> lc in
@@ -1597,8 +1598,10 @@ and tc_eqn scrutinee env branch
     in
     //an expression for each clause in a disjunctive pattern
     let pat_bvs, exp, guard_pat_annots, p = TcUtil.pat_as_exp allow_implicits env p0 tc_annot in
-    if Env.debug env Options.High
-    then BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
+    if Env.debug env Options.High then begin
+        BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
+        BU.print1 "pat_bvs = [%s]\n" (Print.bvs_to_string ", " pat_bvs)
+    end;
     let pat_env = List.fold_left Env.push_bv env pat_bvs in
     let env1, _ = Env.clear_expected_typ pat_env in
     //This is_pattern flag is crucial to check that every variable in the pattern
@@ -1698,6 +1701,7 @@ and tc_eqn scrutinee env branch
   let branch_exp, c, g_branch = tc_term pat_env branch_exp in
 
   let g_branch = Rel.conj_guard guard_pat_annots g_branch in  //AR: add the guard from the type annotations on pattern bvars
+  Rel.def_check_guard_wf cbr.pos "tc_eqn.1" pat_env g_branch;
 
   (* 4. Lift the when clause to a logical condition. *)
   (*    It is used in step 5 (a) below, and in step 6 (d) to build the branch guard *)
@@ -2269,7 +2273,7 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
 and tc_binder env (x, imp) =
     let tu, u = U.type_u () in
     if Env.debug env Options.Extreme
-    then BU.print3 "Checking binders %s:%s at type %s\n"
+    then BU.print3 "Checking binder %s:%s at type %s\n"
                    (Print.bv_to_string x)
                    (Print.term_to_string x.sort)
                    (Print.term_to_string tu);
@@ -2280,6 +2284,8 @@ and tc_binder env (x, imp) =
     x, push_binding env x, g, u
 
 and tc_binders env bs =
+    if Env.debug env Options.Extreme then
+        BU.print1 "Checking binders %s\n" (Print.binders_to_string ", " bs);
     let rec aux env bs = match bs with
         | [] -> [], env, Rel.trivial_guard, []
         | b::bs ->

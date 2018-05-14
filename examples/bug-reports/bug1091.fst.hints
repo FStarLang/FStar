@@ -1,0 +1,152 @@
+[
+  "…ìM\u000eã2a¯ž‰-û5§~Ä",
+  [
+    [
+      "Bug1091.jun21_2017_t",
+      1,
+      1,
+      1,
+      [ "@query", "assumption_FStar.UInt64.t__uu___haseq" ],
+      0,
+      "b1110f81f8fe4ecfcb50c584701ab1e2"
+    ],
+    [
+      "Bug1091.jun21_2017_logand_fail",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
+        "equation_Prims.pos", "function_token_typing_FStar.UInt32.n",
+        "haseqBug1091_Tm_refine_ac1d897047c85f3af9a501a1c5dd4218",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "uvar_typing_21"
+      ],
+      0,
+      "927af5c803f4e6c139e3b7b60a238e3e"
+    ],
+    [
+      "Bug1091.jun21_2017_logand",
+      2,
+      1,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.UInt.uint_t",
+        "haseqFStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
+      ],
+      0,
+      "09cd75fd3bfcd175eb2bf235f7bc5c08"
+    ],
+    [
+      "Bug1091.apr19_2017_mem",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "72b95611a80727c8c5127a576c52dc19"
+    ],
+    [
+      "Bug1091.apr19_2017_mem_sanity",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "2f365c36eaddac908ccce61fe798b846"
+    ],
+    [
+      "Bug1091.apr19_2017_mem_sanity",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "7ea4f6b34bb0984ef41b128ace149a2f"
+    ],
+    [
+      "Bug1091.apr19_2017_mem_sanity",
+      3,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "0e8bce4539866d36d63d2574ced8cc77"
+    ],
+    [
+      "Bug1091.apr21_2017_ackermann_fail",
+      2,
+      1,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "85f4566057ddfc333c6d54636810e438"
+    ],
+    [
+      "Bug1091.apr21_2017_ackermann_fail",
+      3,
+      1,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "6dc2f10b0d5789c5e3e8c62b760a2e62"
+    ],
+    [
+      "Bug1091.apr21_2017_ackermann",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_1",
+        "equality_tok_Prims.LexTop@tok", "equation_FStar.UInt32.n",
+        "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "3cf00159964fbf365ce9513039fd846e"
+    ],
+    [
+      "Bug1091.apr21_2017_ackermann",
+      2,
+      1,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "c60be484288f5de4154e8a59e8eb920e"
+    ],
+    [
+      "Bug1091.apr21_2017_ackermann",
+      3,
+      1,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "a1411f97389e1813c147e367f9050d59"
+    ]
+  ]
+]

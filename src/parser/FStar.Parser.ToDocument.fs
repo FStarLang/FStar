@@ -291,6 +291,8 @@ let matches_token (s:string) = function
 let matches_level s (assoc_levels, tokens) =
     List.tryFind (matches_token s) tokens <> None
 
+// GM 05/10/18, TODO: This still needs to be heavily annotated with the new unifier:
+
 (* Precedence and associativity levels, taken from ../src/parse.mly *)
 let opinfix4 : associativity_level = Right, [Inr "**"]
 // level backtick won't be used here
@@ -1003,8 +1005,7 @@ and paren_if b =
   if b then
     soft_parens_with_nesting
   else
-    let id : document -> document = fun x -> x in
-    id
+    fun x -> x
 
 and p_term (ps:bool) (pb:bool) (e:term) = match e.tm with
   | Seq (e1, e2) ->

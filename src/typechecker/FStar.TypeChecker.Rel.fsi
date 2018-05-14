@@ -25,6 +25,7 @@ open FStar.Syntax
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
+open FStar.Range
 
 val prob_to_string: env -> prob -> string
 val flex_prob_closing         : env -> binders -> prob -> bool
@@ -65,3 +66,6 @@ val universe_inequality : universe -> universe -> guard_t
 
 val subtype_fail: env -> term -> typ -> typ -> unit
 val print_pending_implicits: guard_t -> string
+
+// Debugging
+val def_check_guard_wf : Range.range -> string -> env -> guard_t -> unit

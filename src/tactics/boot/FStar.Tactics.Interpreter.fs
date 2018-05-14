@@ -511,13 +511,16 @@ let report_implicits ps (is : Env.implicits) : unit =
         Err.raise_error (e, msg) r
     end
 
-let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remaining goals
-                                                        * term // witness
-                                                        =
-    let rng = tactic.pos in
+let run_tactic_on_typ
+        (rng_tac : Range.range) (rng_goal : Range.range)
+        (tactic:term) (env:env) (typ:typ)
+                    : list<goal> // remaining goals
+                    * term // witness
+                    =
     // This bit is really important: a typechecked tactic can contain many uvar redexes
     // that make normalization SUPER slow (probably exponential). Doing this first pass
     // gets rid of those redexes and leaves a much smaller term, which performs a lot better.
+    // TODO: This may be useless with the new representation
     if !tacdbg then
         BU.print1 "About to reduce uvars on: %s\n" (Print.term_to_string tactic);
     let tactic = N.reduce_uvar_solutions env tactic in
@@ -534,6 +537,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
     let env = { env with Env.instantiate_imp = false } in
     (* TODO: We do not faithfully expose universes to metaprograms *)
     let env = { env with Env.lax_universes = true } in
+    let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
     let ps, w = proofstate_of_goal_ty rng env typ in
     if !tacdbg then
         BU.print1 "Running tactic with goal = %s\n" (Print.term_to_string typ);
@@ -595,11 +599,11 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
             when S.fv_eq_lid fv PC.by_tactic_lid ->
         begin match pol with
         | Pos ->
-            let gs, _ = run_tactic_on_typ tactic e assertion in
+            let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e assertion in
             Simplified (FStar.Syntax.Util.t_true, gs)
 
         | Both ->
-            let gs, _ = run_tactic_on_typ tactic e assertion in
+            let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e assertion in
             Dual (assertion, FStar.Syntax.Util.t_true, gs)
 
         | Neg ->
@@ -785,8 +789,7 @@ let reify_tactic (a : term) : term =
 
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     tacdbg := Env.debug env (Options.Other "Tac");
-    let tau = reify_tactic tau in
-    let gs, w = run_tactic_on_typ tau env typ in
+    let gs, w = run_tactic_on_typ tau.pos typ.pos (reify_tactic tau) env typ in
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
     if List.existsML (fun g -> not (Option.isSome (getprop (goal_env g) (goal_type g)))) gs
@@ -796,7 +799,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
 let splice (env:Env.env) (tau:term) : list<sigelt> =
     tacdbg := Env.debug env (Options.Other "Tac");
     let typ = S.t_decls in // running with goal type FStar.Reflection.Data.decls
-    let gs, w = run_tactic_on_typ (reify_tactic tau) env typ in
+    let gs, w = run_tactic_on_typ tau.pos tau.pos (reify_tactic tau) env typ in
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
     if List.existsML (fun g -> not (Option.isSome (getprop (goal_env g) (goal_type g)))) gs
