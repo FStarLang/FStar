@@ -8,7 +8,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "72915e0c37abaaa24a27cff77b42e969"
+      "84d62a462e9e2c25db99c908bc11fc39"
     ],
     [
       "TestBV.test2",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "d5b2aa31862a8d9f715695393f484b24"
+      "ba2ebda7648cf00514d87a691f9f9355"
     ],
     [
       "TestBV.test3",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "2c11d3b32b8cebc8095bbf17b8eacedf"
+      "5f504c025b0c670ff10419a9464a52fb"
     ],
     [
       "TestBV.test4",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "fd48e31d5841738c739c76255285e618"
+      "7affa549127f23058c6dbc4ece657ecc"
     ],
     [
       "TestBV.test5",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "10820400aeddd2cc7e4fd15cc8dfcee3"
+      "10c7de5dbce57892957c2b991135a4e3"
     ],
     [
       "TestBV.v64_eq",
@@ -53,7 +53,7 @@
       1,
       [ "@query", "lemma_FStar.UInt64.uv_inv" ],
       0,
-      "b738b7ce6cec3076d67031aebdd85c92"
+      "cb446d33199438e678e3a342ae115895"
     ],
     [
       "TestBV.unfold_logand64",
@@ -67,7 +67,7 @@
         "typing_FStar.UInt64.logand"
       ],
       0,
-      "5be2772e966460086c75e5de5a5520dc"
+      "0b8b956c5b92de089d24cbf6c8810daa"
     ],
     [
       "TestBV.unfold_logor64",
@@ -81,7 +81,7 @@
         "typing_FStar.UInt64.logor"
       ],
       0,
-      "535f001d1f3de793fafe933849f5609b"
+      "2ad475ba45c3cc972d687deaa3523e0a"
     ],
     [
       "TestBV.unfold_logxor64",
@@ -95,16 +95,16 @@
         "typing_FStar.UInt64.logxor"
       ],
       0,
-      "4e2efd738f78452c9b0b3c64e489850c"
+      "e5b1ab0eb7e1cdbdc45173a5fbfd3e29"
     ],
     [
       "TestBV.test6",
       1,
       2,
       1,
-      [ "@query", "equation_Prims.l_True" ],
+      [ "@query", "true_interp" ],
       0,
-      "c650cf304e24c5d6447d6f7ece74c250"
+      "74cd68baf99c20b949c8fe0f60c877ad"
     ],
     [
       "TestBV.test6",
@@ -113,16 +113,16 @@
       1,
       [ "@query" ],
       0,
-      "56d1c3bdab935f2deadd6b1be2eb7f5b"
+      "3b432ca7cc1d5e48f783cc8155f7e2e7"
     ],
     [
       "TestBV.test7",
       1,
       2,
       1,
-      [ "@query", "equation_Prims.l_True" ],
+      [ "@query", "true_interp" ],
       0,
-      "5dec9d7da84e28a10dcae23d499d960a"
+      "13638f6073673eee1f8877321d4d1861"
     ],
     [
       "TestBV.test7",
@@ -131,7 +131,7 @@
       1,
       [ "@query" ],
       0,
-      "e3e4456fc0545c105b64aafb722149fc"
+      "672a65d54c94c981d265656b3b859590"
     ]
   ]
 ]

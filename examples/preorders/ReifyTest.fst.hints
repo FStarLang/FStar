@@ -15,14 +15,14 @@
         "equation_FStar.Preorder.stable", "equation_MRefHeap.preorder_t",
         "equation_MRefST.contains", "equation_MRefST.heap_rel",
         "equation_MRefST.mref", "equation_MRefST.stable_on_heap",
-        "equation_MRefST.stable_on_heap_aux", "equation_Prims.l_and",
-        "equation_Prims.logical", "equation_Prims.nat",
+        "equation_MRefST.stable_on_heap_aux", "equation_Prims.logical",
+        "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Prims.nat", "int_typing",
         "interpretation_ReifyTest_Tm_abs_1c4bca45afaddd1ca3d451b0c2f0d343",
         "interpretation_ReifyTest_Tm_abs_82fd8f7d068132bb7a72ce0e8641b3ab",
-        "lemma_MRefST.stable_on_heap_stable", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_GreaterThan",
+        "l_and-interp", "lemma_MRefST.stable_on_heap_stable",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -36,7 +36,7 @@
         "typing_MRefHeap.upd"
       ],
       0,
-      "ecf4b729ed80f0d95e8863ed9f85cc68"
+      "873cdda9dc2927a6c667c2a1b21872e9"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -52,14 +52,14 @@
         "equation_FStar.Preorder.stable", "equation_MRefHeap.preorder_t",
         "equation_MRefST.contains", "equation_MRefST.heap_rel",
         "equation_MRefST.mref", "equation_MRefST.stable_on_heap",
-        "equation_MRefST.stable_on_heap_aux", "equation_Prims.l_and",
-        "equation_Prims.logical", "equation_Prims.nat",
+        "equation_MRefST.stable_on_heap_aux", "equation_Prims.logical",
+        "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Prims.nat", "int_typing",
         "interpretation_ReifyTest_Tm_abs_1c4bca45afaddd1ca3d451b0c2f0d343",
         "interpretation_ReifyTest_Tm_abs_82fd8f7d068132bb7a72ce0e8641b3ab",
-        "lemma_MRefST.stable_on_heap_stable", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_GreaterThan",
+        "l_and-interp", "lemma_MRefST.stable_on_heap_stable",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -73,7 +73,7 @@
         "typing_MRefHeap.upd"
       ],
       0,
-      "e61ff748238c812584e1a65309ccff31"
+      "e5557d4be916082163beac2fcfb888df"
     ]
   ]
 ]

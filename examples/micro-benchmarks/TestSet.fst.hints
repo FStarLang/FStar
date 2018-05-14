@@ -7,16 +7,15 @@
       2,
       1,
       [
-        "@query", "equation_Prims.l_or", "function_token_typing_TestSet.a",
-        "function_token_typing_TestSet.b",
-        "function_token_typing_TestSet.elt",
+        "@query", "equation_FStar.TSet.subset",
+        "function_token_typing_TestSet.a", "function_token_typing_TestSet.b",
+        "function_token_typing_TestSet.elt", "l_or-interp",
         "lemma_FStar.TSet.lemma_equal_intro",
-        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_subset",
-        "lemma_FStar.TSet.mem_union", "lemma_FStar.TSet.subset_mem",
+        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_union",
         "typing_FStar.TSet.singleton", "typing_FStar.TSet.union"
       ],
       0,
-      "f3ba8edeaef7c56c0e4906b987854c5f"
+      "b9fe85a95641e7f16699b066923954c4"
     ]
   ]
 ]

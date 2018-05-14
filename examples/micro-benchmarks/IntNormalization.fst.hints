@@ -6,24 +6,18 @@
       1,
       2,
       1,
-      [
-        "@query", "assumption_FStar.UInt32.t__uu___haseq",
-        "equation_Prims.l_True"
-      ],
+      [ "@query", "assumption_FStar.UInt32.t__uu___haseq", "true_interp" ],
       0,
-      "fcc72d66f3c3ed083155c6f1dba91141"
+      "cb4288d6f43fda5fdcd04ce8c337d081"
     ],
     [
       "IntNormalization.uu___124",
       1,
       2,
       1,
-      [
-        "@query", "assumption_FStar.UInt32.t__uu___haseq",
-        "equation_Prims.l_True"
-      ],
+      [ "@query", "assumption_FStar.UInt32.t__uu___haseq", "true_interp" ],
       0,
-      "251762464129132d8b57481a69e2915a"
+      "4ec1159b2597c77ca81ba509c9e00482"
     ]
   ]
 ]

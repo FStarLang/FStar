@@ -7,13 +7,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Pervasives.Lemma_l_False_equation",
-        "equation_Prims.l_False", "equation_Prims.squash",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_False",
+        "equation_Prims.squash", "false_interp",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "bc2194d35f7028a78fa6c89b693399f6"
+      "6bf23ddbb0f9598b35c61a153fee557d"
     ]
   ]
 ]

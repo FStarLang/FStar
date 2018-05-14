@@ -23,7 +23,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "840623bda697782b70e83ac3165cf8ef"
+      "cfb990a01867778e4412c5caf187ed42"
     ],
     [
       "StRel.f2",
@@ -41,7 +41,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "10d5bfa58c48d740eba0f568e890d3f8"
+      "1b69dfc91ba789ff8c38bb8ccc82c306"
     ],
     [
       "StRel.f1_ni",
@@ -49,8 +49,8 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.ST.ref",
-        "equation_Prims.eq2", "equation_Rel.eq", "equation_Rel.lift",
+        "@MaxIFuel_assumption", "@query", "eq2-interp",
+        "equation_FStar.ST.ref", "equation_Rel.eq", "equation_Rel.lift",
         "equation_Rel.r_eq", "equation_StRel.glift2",
         "proj_equation_Rel.R_l", "proj_equation_Rel.R_r",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -60,7 +60,7 @@
         "token_correspondence_StRel.f1_hp"
       ],
       0,
-      "c2c171f05f4b93df3fcfc471fdad4d17"
+      "7a29b6b344e28d150197a024e18f19ae"
     ],
     [
       "StRel.f2_ni",
@@ -68,11 +68,10 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "eq2-interp",
         "equation_FStar.Pervasives.Native.snd", "equation_FStar.ST.ref",
-        "equation_Prims.eq2", "equation_Rel.lift", "equation_Rel.lift2",
-        "equation_Rel.r_eq", "equation_StRel.f2_hp",
-        "fuel_guarded_inversion_Rel.rel",
+        "equation_Rel.lift", "equation_Rel.lift2", "equation_Rel.r_eq",
+        "equation_StRel.f2_hp", "fuel_guarded_inversion_Rel.rel",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -81,7 +80,7 @@
         "token_correspondence_StRel.f2_hp"
       ],
       0,
-      "ea0463a1472b58d9b94afc72de1af38f"
+      "3fa8391da1bc2179992df72db598e0e4"
     ]
   ]
 ]
