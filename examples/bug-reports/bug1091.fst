@@ -1,5 +1,5 @@
 module Bug1091
-#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1 --use_two_phase_tc false"
 
 ////////////////////////////////////////////////////////////////////////////////
 // June 21, 2017
