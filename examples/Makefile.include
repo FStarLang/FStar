@@ -6,8 +6,6 @@ endif
 include $(FSTAR_HOME)/ulib/gmake/z3.mk
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk
 
-OTHERFLAGS+=--use_two_phase_tc true
-
 ifeq ($(OS),Windows_NT)
   MSBUILD = $(FSTAR_HOME)/src/msbuild.bat
 else
@@ -16,7 +14,7 @@ else
 endif
 
 %.uver: %.fst
-	$(FSTAR) --use_extracted_interfaces $^
+	$(FSTAR) $^
 
 %.fail-uver: %.fst
 	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)
