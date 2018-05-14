@@ -208,7 +208,7 @@ let defaults =
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("warn_error"                   , String "");
-      ("use_extracted_interfaces"     , Bool false)]
+      ("use_extracted_interfaces"     , Bool true)]
 
 let init () =
    let o = peek () in
