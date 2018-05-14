@@ -21,33 +21,41 @@ let lemma_l_False_equation (_:unit)
   = assert_norm (l_False == squash c_False)
 
 let lemma_eq2_equation (#a:Type) (x y:a)
-  :Lemma ((x == y) == squash (equals x y))
+  :Lemma (requires True) (ensures ((x == y) == squash (equals x y)))
+         [SMTPat (eq2 x y)]
   = assert_norm ((x == y) == squash (equals x y))
 
 let lemma_eq3_equation (#a:Type) (#b:Type) (x:a) (y:a)
-  :Lemma ((x === y) == squash (h_equals x y))
+  :Lemma (requires True) (ensures ((x === y) == squash (h_equals x y)))
+         [SMTPat (eq3 #a #b x y)]
   = assert_norm ((x === y) == squash (h_equals x y))
 
 let lemma_l_and_equation (p q:Type0)
-  :Lemma ((p /\ q) == squash (c_and p q))
+  :Lemma (requires True) (ensures ((p /\ q) == squash (c_and p q)))
+         [SMTPat (p /\ q)]
   = assert_norm ((p /\ q) == squash (c_and p q))
 
 let lemma_l_or_equation (p q:Type0)
-  :Lemma ((p \/ q) == squash (c_or p q))
+  :Lemma (requires True) (ensures ((p \/ q) == squash (c_or p q)))
+         [SMTPat (p \/ q)]
   = assert_norm ((p \/ q) == squash (c_or p q))
 
 let lemma_l_imp_equation (p q:Type0)
-  :Lemma ((p ==> q) == squash (p -> GTot q))
+  :Lemma (requires True) (ensures ((p ==> q) == squash (p -> GTot q)))
+         [SMTPat (p ==> q)]
   = assert_norm ((p ==> q) == squash (p -> GTot q))
 
 let lemma_l_not_equation (p:Type0)
-  :Lemma ((~ p) == squash (p -> GTot False))
+  :Lemma (requires True) (ensures ((~ p) == squash (p -> GTot False)))
+         [SMTPat (~ p)]
   = assert_norm ((~ p) == squash (p -> GTot False))
 
 let lemma_l_Forall_equation (a:Type) (p:a -> GTot Type0)
-  :Lemma ((l_Forall #a p) == squash (x:a -> GTot (p x)))
+  :Lemma (requires True) (ensures ((l_Forall #a p) == squash (x:a -> GTot (p x))))
+         [SMTPat (l_Forall p)]
   = assert_norm ((l_Forall #a p) == squash (x:a -> GTot (p x)))
 
 let lemma_l_Exists_equation (a:Type) (p:a -> GTot Type0)
-  :Lemma ((l_Exists #a p) == squash (x:a & p x))
+  :Lemma (requires True) (ensures ((l_Exists #a p) == squash (x:a & p x)))
+         [SMTPat (l_Exists p)]
   = assert_norm ((l_Exists #a p) == squash (x:a & p x))
