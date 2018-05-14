@@ -158,9 +158,6 @@ let loc_union_loc_none_r s =
 
 
 let loc_buffer #t b =
-  if B.g_is_null b
-  then loc_none
-  else
     Loc
       (Ghost.hide (Set.singleton (B.frameOf b)))
       (Ghost.hide Set.empty)
@@ -335,9 +332,7 @@ let loc_includes_none s = ()
 
 let loc_includes_buffer #t b1 b2 =
   B.includes_frameOf_as_addr b1 b2;
-  if B.g_is_null b1
-  then ()
-  else begin
+  begin
     B.abuffer_includes_intro b1 b2;
     // FIXME: WHY WHY WHY do I need this assert?
     assert (Ghost.reveal (Loc?.aux (loc_buffer b1)) `loc_aux_includes` Ghost.reveal (Loc?.aux (loc_buffer b2)))
@@ -512,9 +507,7 @@ let loc_disjoint_includes p1 p2 p1' p2' =
   loc_aux_disjoint_sym l2' l1'
 
 let loc_disjoint_buffer #t1 #t2 b1 b2 =
-  if B.g_is_null b1 || B.g_is_null b2
-  then ()
-  else if B.frameOf b1 = B.frameOf b2 && B.as_addr b1 = B.as_addr b2
+  if B.frameOf b1 = B.frameOf b2 && B.as_addr b1 = B.as_addr b2
   then
     B.abuffer_disjoint_intro b1 b2
   else ()
@@ -642,12 +635,7 @@ let modifies_live_region s h1 h2 r = ()
 let modifies_mreference_elim #t #pre b p h h' = ()
 
 let modifies_buffer_elim #t1 b p h h' =
-  if B.g_is_null b
-  then begin
-    B.null_unique b;
-    B.live_null t1 h;
-    assert (B.as_seq h b `Seq.equal` B.as_seq h' b)
-  end else if B.length b = 0
+  if B.length b = 0
   then
     assert (B.as_seq h b `Seq.equal` B.as_seq h' b)
   else
@@ -881,11 +869,6 @@ let modifies_0_modifies h1 h2
   Classical.forall_intro_3 g
 
 let modifies_1_modifies #t b h1 h2 =
- if B.g_is_null b
- then begin
-  B.modifies_1_null b h1 h2;
-  modifies_0_modifies h1 h2
- end else begin
   Classical.forall_intro (Classical.move_requires (B.modifies_1_live_region b h1 h2));
   let r = B.frameOf b in
   let a = B.as_addr b in
@@ -912,20 +895,13 @@ let modifies_1_modifies #t b h1 h2 =
     Classical.forall_intro_2 (B.abuffer_disjoint_sym #r #a);
     g r' a' b'
   )
- end
  
 let mreference_live_buffer_unused_in_disjoint #t1 #pre #t2 h b1 b2 =
-  if B.g_is_null b2
-  then ()
-  else B.unused_in_equiv b2 h
+  B.unused_in_equiv b2 h
 
 let buffer_live_mreference_unused_in_disjoint #t1 #t2 #pre h b1 b2 =
-  if B.g_is_null b1
-  then ()
-  else begin
     B.unused_in_equiv b1 h;
     Classical.move_requires (B.live_not_unused_in #t1 h) b1
-  end
 
 
 let does_not_contain_addr' (h: HS.mem) (ra: HS.rid * nat) : GTot Type0 =
