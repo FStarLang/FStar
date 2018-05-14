@@ -8,7 +8,16 @@
       1,
       [ "@query", "equation_Bug067.good", "true_interp" ],
       0,
-      "b26db58b175e4a5f780b9dd0769bf359"
+      "1e656d455ee07c5aaa7c9650bb6b06f4"
+    ],
+    [
+      "Bug067.test",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Bug067.good" ],
+      0,
+      "f6330c2a05da8644e58fd51d61d2bbb2"
     ]
   ]
 ]

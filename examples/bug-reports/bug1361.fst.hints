@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "75a1ceca20ec736466c09de5b507687a"
+      "7574d2657d0ca128a32f50c1eeda2207"
     ],
     [
       "Bug1361.f2",
@@ -25,7 +25,33 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "6c4a397d3aaaf343f0b8ed971cf617b2"
+      "bf952bcc355919e6c83a410e9349c9d1"
+    ],
+    [
+      "Bug1361.f",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "c2bdb468c0327af18637843af9254b9f"
+    ],
+    [
+      "Bug1361.f2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "33fee4d0b63f480915b225e93a648f66"
     ]
   ]
 ]

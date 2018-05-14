@@ -16,7 +16,24 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "45433da8598a49ad0b344c461f46e37c"
+      "374d5f3f014321c48e45c863715fcb00"
+    ],
+    [
+      "Bug025.length",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.nat", "fuel_guarded_inversion_Prims.list",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "be3f17210dea939ca21146ca49fe7d0b"
     ]
   ]
 ]

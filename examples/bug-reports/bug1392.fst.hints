@@ -8,7 +8,16 @@
       1,
       [ "@query" ],
       0,
-      "8c8479b58f64071eb504b5cec9c06ccc"
+      "ad4e8c3a6c406e152abd242729ec4f2d"
+    ],
+    [
+      "Bug1392.unsquash",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fc0631230e10e51d2e9b764fabbc94e3"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "a276c3a8bda6ae1e5f74962d1ea5bdad"
+      "a0a4be373247b4bd6c6a5ebcd0f19062"
     ],
     [
       "Bug398.bar",
@@ -17,7 +17,16 @@
       1,
       [ "@query" ],
       0,
-      "f14164c8f25858d6a67c34209a2814d0"
+      "3a4bb2e88249ee798ce5f4a7e1dad929"
+    ],
+    [
+      "Bug398.bar",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "03d9e9a1cf7ffbb7fd5416943a1772dc"
     ]
   ]
 ]

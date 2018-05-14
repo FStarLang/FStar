@@ -12,7 +12,20 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c3ea157d259e4076c8bc1ec6272d02ed"
+      "3a6773f606e005825b4bf839280ec3d0"
+    ],
+    [
+      "Bug1341.incr",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "6b88bd9a11b82caad3bbd2360cae7c31"
     ]
   ]
 ]

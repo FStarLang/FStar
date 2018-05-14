@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "77b3248fbf84123ed23fcb009c7b57ba"
+      "e43ab572cfda09b1e10bc7434849a719"
     ],
     [
       "Cert.ACLs.test",
@@ -22,7 +22,7 @@
         "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "213652aa76b8437ac44957aedc9ebf10"
+      "bda4bc93c9e65873b95fc436052133da"
     ],
     [
       "Cert.ACLs.rc",
@@ -31,7 +31,16 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "d20ce4a6d1c0b07ce4617024d40e7197"
+      "cd88f7d6cbc34974737c6841c53bd589"
+    ],
+    [
+      "Cert.ACLs.canRead",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "27437874b9e1519d44d04f6d246b0b08"
     ]
   ]
 ]

@@ -8,7 +8,16 @@
       1,
       [ "@query", "equation_HyE.AE.keysize", "equation_HyE.RSA.plainsize" ],
       0,
-      "69606a3fb949226ed374ed672901875d"
+      "37fc816804b1414e9a4bdf9c90512924"
+    ],
+    [
+      "HyE.PlainPKE.repr",
+      2,
+      2,
+      1,
+      [ "@query", "equation_HyE.AE.keysize", "equation_HyE.RSA.plainsize" ],
+      0,
+      "4a87088674096b2e4b6e33a43d7751e4"
     ]
   ]
 ]

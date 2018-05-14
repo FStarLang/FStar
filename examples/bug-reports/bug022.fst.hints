@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c953427e9f515259a9a422b8ed5edb76"
+      "176479105dde8686eddcc71d76e947c3"
     ],
     [
       "Bug022.__proj__EAbs__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Bug022_Tm_refine_1fab4118271d47fc28cd28aead33e87f"
       ],
       0,
-      "498e9463f0bfed6dc1c6d82aa3cc4bb8"
+      "a5723a530fc53a1f765497bec9f7d6d4"
     ],
     [
       "Bug022.subst",
@@ -30,7 +30,38 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0bc995e85ed1f8805f15d5462e4db44a"
+      "00ad932d8f5d46f4fc1646b25e6f4c32"
+    ],
+    [
+      "Bug022.exp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "512d6f6644f892144ce77f31d182c3be"
+    ],
+    [
+      "Bug022.__proj__EAbs__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug022.EAbs",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug022_Tm_refine_1fab4118271d47fc28cd28aead33e87f"
+      ],
+      0,
+      "dafba2b2ef3d07f914b94cf2f1204873"
+    ],
+    [
+      "Bug022.subst",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "7c85aab67fe1a0119f70c0eb5920f2f6"
     ]
   ]
 ]

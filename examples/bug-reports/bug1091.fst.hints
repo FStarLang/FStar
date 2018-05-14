@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt64.t__uu___haseq" ],
       0,
-      "9eb4087c5606e5e392ca054bdbb9095d"
+      "245a95f3cb7b91ee657f6b447810f009"
     ],
     [
       "Bug1091.jun21_2017_logand_fail",
@@ -25,7 +25,7 @@
         "uvar_typing_21"
       ],
       0,
-      "f2dad3fcbda7ad3aa71203f17c1d46a3"
+      "d635c93d5177d0ad686bcce721f83bec"
     ],
     [
       "Bug1091.jun21_2017_logand",
@@ -37,7 +37,7 @@
         "haseqFStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
       0,
-      "cec5d2a3348205b403c2f990746b0f3c"
+      "b21ae05e1464469615359909c823d63a"
     ],
     [
       "Bug1091.apr19_2017_mem",
@@ -52,7 +52,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6caa7d80c662dda3b7c9cc37489e1284"
+      "0fe4f9986f66cf80f8dcb1e8e2bad958"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -64,7 +64,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "530037906d73844fdb967b720ac4df3a"
+      "b5076b9e664328d64a91b054fae6d8f7"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -76,7 +76,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b1911ecb80e38a49f692e73aa31acd12"
+      "6e66410b5d6fef0e6d75f54db9399b38"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -88,7 +88,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f845b88654e55e69293ab342f3a01197"
+      "2d8f7c2e47270f81ee2ed3552706bb17"
     ],
     [
       "Bug1091.apr21_2017_ackermann_fail",
@@ -97,7 +97,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "90749ccaf2407370c2b298719479e544"
+      "5d18ecb3e107bd159c1fc37fd1025f1c"
     ],
     [
       "Bug1091.apr21_2017_ackermann_fail",
@@ -106,7 +106,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a41fbdcb6d2f7bb0a41ea5a11edc5666"
+      "ee87dd8dd3bcbfb6e176b99062ee1808"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -128,7 +128,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f00be4f03c71319f66562fc865666f9f"
+      "1b97fbc3d919b7a51324308b946cc1e9"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -137,7 +137,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2be25919f4b77a7de48382969340f9a0"
+      "8b8de939703315d2178cc9227cd27c9c"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -146,7 +146,63 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0a0ffcb45246dbb38f811b2fe2b5b103"
+      "b6fa9f0ee0050edfaca008d59acd0d6e"
+    ],
+    [
+      "Bug1091.jun21_2017_t",
+      1,
+      1,
+      1,
+      [ "@query", "assumption_FStar.UInt64.t__uu___haseq" ],
+      0,
+      "f83b8f5c20471da32627c2d3d8cde489"
+    ],
+    [
+      "Bug1091.jul25_2017_refUL",
+      1,
+      1,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "9d64a3eb315ca0f64ed27447f2b5b570"
+    ],
+    [
+      "Bug1091.apr19_2017_mem",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "4dabd22c0cdf649c4ac87c65289c0cbf"
+    ],
+    [
+      "Bug1091.apr21_2017_ackermann",
+      4,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_1",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "9994a11683a6622d844da6636c1d8151"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8bd4c99963065517983b4d50f5025a94"
+      "9a23d20d42396511e0a5ca83c6ec2f62"
     ],
     [
       "Bug292.triple_a",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e42e4f855c856ea645969619949c9330"
+      "954e3347033b595db5746c51b1c8485b"
     ],
     [
       "Bug292.triple_a",
@@ -43,7 +43,51 @@
         "refinement_interpretation_Bug292_Tm_refine_bd6d982985e2df5ac87b5db124accca1"
       ],
       0,
-      "6f736a9316eaaf6468185143f14b9912"
+      "2098c1ccf267b8c9e2b2993546d05060"
+    ],
+    [
+      "Bug292.shared",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "405770ecb001476ead24d4a65907c169"
+    ],
+    [
+      "Bug292.triple_a",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Pervasives.Native_pretyping_4894c30cf477acf9a27e7a844279eb08",
+        "assumption_Prims.HasEq_int", "equation_Bug292.shared",
+        "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd",
+        "equation_FStar.Pervasives.dsnd", "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "proj_equation_Prims.Mkdtuple2__2",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__2",
+        "refinement_interpretation_Bug292_Tm_refine_bd6d982985e2df5ac87b5db124accca1"
+      ],
+      0,
+      "c53079f3710bfa54b68a13b27243301f"
+    ],
+    [
+      "Bug292.triple_a",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "63c96f228588038b53431f7d5aa28bb8"
     ]
   ]
 ]

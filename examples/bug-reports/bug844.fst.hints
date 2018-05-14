@@ -13,7 +13,7 @@
         "token_correspondence_Bug844.__proj__MkR__item__j"
       ],
       0,
-      "08f12207673f11462beae9a2bf5e40cd"
+      "667d61acc881b81972824adf43f2e303"
     ],
     [
       "Bug844.__proj__MkC__item__inv2",
@@ -28,7 +28,7 @@
         "token_correspondence_Bug844.__proj__MkC__item__j2"
       ],
       0,
-      "71f522c8642809b5d88fc5330af3d21c"
+      "9280a35de1e283fc048446f2103ba643"
     ],
     [
       "Bug844.l1",
@@ -41,7 +41,48 @@
         "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "ecb9c63e20284e4a29d47af2f9112f79"
+      "e1171b716978e79df635ade75b806eae"
+    ],
+    [
+      "Bug844.__proj__MkR__item__inv",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug844.MkR_i", "proj_equation_Bug844.MkR_j",
+        "projection_inverse_Bug844.MkR_i", "projection_inverse_Bug844.MkR_j",
+        "token_correspondence_Bug844.__proj__MkR__item__i",
+        "token_correspondence_Bug844.__proj__MkR__item__j"
+      ],
+      0,
+      "ef36c37414819ee3e1cac39d0df7fa47"
+    ],
+    [
+      "Bug844.__proj__MkC__item__inv2",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug844.MkC_i2",
+        "proj_equation_Bug844.MkC_j2", "projection_inverse_Bug844.MkC_i2",
+        "projection_inverse_Bug844.MkC_j2",
+        "token_correspondence_Bug844.__proj__MkC__item__i2",
+        "token_correspondence_Bug844.__proj__MkC__item__j2"
+      ],
+      0,
+      "a454f83fe4e308d522368476ddcc7ee5"
+    ],
+    [
+      "Bug844.l1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or"
+      ],
+      0,
+      "3bf7e49b49b2a360a2001b692f569565"
     ]
   ]
 ]

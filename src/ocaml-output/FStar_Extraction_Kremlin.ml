@@ -2593,12 +2593,12 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
         let char_of_int1 = EQualified (["FStar"; "Char"], "char_of_int")  in
         EApp (char_of_int1, [c2])
     | FStar_Extraction_ML_Syntax.MLC_Int
-        (s,FStar_Pervasives_Native.Some uu____6594) ->
+        (s,FStar_Pervasives_Native.Some uu____6595) ->
         failwith
           "impossible: machine integer not desugared to a function call"
-    | FStar_Extraction_ML_Syntax.MLC_Float uu____6609 ->
+    | FStar_Extraction_ML_Syntax.MLC_Float uu____6610 ->
         failwith "todo: translate_expr [MLC_Float]"
-    | FStar_Extraction_ML_Syntax.MLC_Bytes uu____6610 ->
+    | FStar_Extraction_ML_Syntax.MLC_Bytes uu____6611 ->
         failwith "todo: translate_expr [MLC_Bytes]"
     | FStar_Extraction_ML_Syntax.MLC_Int (s,FStar_Pervasives_Native.None ) ->
         EConstant (CInt, s)
@@ -2610,7 +2610,7 @@ and (mk_op_app :
     fun w  ->
       fun op  ->
         fun args  ->
-          let uu____6630 =
-            let uu____6637 = FStar_List.map (translate_expr env) args  in
-            ((EOp (op, w)), uu____6637)  in
-          EApp uu____6630
+          let uu____6631 =
+            let uu____6638 = FStar_List.map (translate_expr env) args  in
+            ((EOp (op, w)), uu____6638)  in
+          EApp uu____6631

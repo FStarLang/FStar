@@ -11,7 +11,7 @@
         "refinement_interpretation_Bug590_Tm_refine_de9aeb070296eed20d879692d0254af0"
       ],
       0,
-      "cb950046b33ba039ee94a4cc3576113b"
+      "5275e7e65eb81b519aff4d456c27dc46"
     ],
     [
       "Bug590.coerce",
@@ -30,7 +30,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e60f586503c83fd0d6120935d93dbb28"
+      "0432ad09a9472206d04229c01001f67b"
     ],
     [
       "Bug590.blah2",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "38cab3ab86cbf42b05d32166450d1f49"
+      "dd5d8eab28fcf6191fc2e1d36ab9088a"
     ],
     [
       "Bug590.flatten_lemma",
@@ -65,7 +65,49 @@
         "typing_Bug590.coerce", "typing_FStar.List.Tot.Base.flatten"
       ],
       0,
-      "e305a782b9ffff0acd6cf5f7c2d6e7ed"
+      "ea9e5cf94e7aa85ff7178dce445b73b7"
+    ],
+    [
+      "Bug590.transport",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "749cd6a69d503fb4e104b78e5e9dd48a"
+    ],
+    [
+      "Bug590.coerce",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
+        "binder_x_43977d3a299ccb3d0fc3efcaad937593_2",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug590_Tm_refine_89abfbf1dd7254ec2f6bfc654aa43591",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "f4eab0267dc617b929e553404e49d180"
+    ],
+    [
+      "Bug590.blah2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_a",
+        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
+      ],
+      0,
+      "19e093c50f815e2ec152ceb46ed3f86e"
     ]
   ]
 ]

@@ -11,7 +11,19 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c62d6831af9ecc9c5fe676dd1bdf46a7"
+      "60e8b19f8fc65074ad77b3d819134aae"
+    ],
+    [
+      "Bug264.ref_identity",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "e41e83d4d41a50405682d2f532bc6007"
     ]
   ]
 ]
