@@ -119,6 +119,8 @@ verify-maybe-close: $(subst .fst,.verify,$(SHOULD_VERIFY_MAYBE_CLOSE))
 %.not-verify: %.fst
 	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "Negative test failed ($@)!" ; false)
 
+bug319.not-verify: OTHERFLAGS=--use_extracted_interfaces false
+
 not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
 
 
