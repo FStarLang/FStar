@@ -9,12 +9,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.eq2", "equation_Prims.squash",
+        "equation_Prims.squash", "lemma_FStar.Pervasives.lemma_eq2_equation",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_inversion", "unit_typing"
       ],
       0,
-      "c16f78c06fe89438f5ce13a09426aaec"
+      "e42ae44a0838205646c0c65adfa22ad3"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.inj_injective",
@@ -22,14 +22,14 @@
       2,
       1,
       [
-        "@query", "eq2-interp",
+        "@query", "equation_Prims.eq2",
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.inj",
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.prop",
         "interpretation_PropImpredicativeAndNonStrictlyPositiveInductives_Tm_abs_50bcf4b52db65e2607f02a7b091b68ab",
         "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.inj"
       ],
       0,
-      "ee7dbf9e109f7b8ec933b22d9853fb82"
+      "6184222800822a33e636fdf21f5b963b"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.f_injective",
@@ -42,7 +42,7 @@
         "projection_inverse_PropImpredicativeAndNonStrictlyPositiveInductives.IntroA__0"
       ],
       0,
-      "36f9b5420dfb01ef2286804f9cac1a4a"
+      "f734dd706494e22a7399772049ca7bd9"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.p0",
@@ -51,13 +51,19 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.l_Exists", "equation_Prims.squash",
+        "PropImpredicativeAndNonStrictlyPositiveInductives_interpretation_Tm_arrow_d11b20ab1fac330d5126e2e108e7cc9f",
+        "equation_Prims.squash",
+        "equation_PropImpredicativeAndNonStrictlyPositiveInductives.prop",
+        "kinding_Tm_arrow_8959d674ad4495a2273c0fd2945c0457",
+        "lemma_FStar.Pervasives.lemma_l_Exists_equation",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_PropImpredicativeAndNonStrictlyPositiveInductives_Tm_abs_5767ad136232c7fff0b973c505131401",
         "unit_inversion", "unit_typing"
       ],
       0,
-      "1e128bc581c288446299ea905c81cdcb"
+      "6a4bd92a05355f7ad1c77c0fc94a6fc6"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad1",
@@ -72,7 +78,7 @@
         "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.p0"
       ],
       0,
-      "02355e3597609d9c3447d90bc637dde6"
+      "80a48dc928b903cf588bd26fd3398f2d"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad2",
@@ -84,10 +90,10 @@
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.p0",
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.prop",
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.x0",
-        "l_quant_interp__2422"
+        "l_quant_interp__2430"
       ],
       0,
-      "f0c7d66256699c648e4cfc39cd490a6f"
+      "a9b5519bf57a59b482ddf85023575508"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad",
@@ -96,7 +102,7 @@
       1,
       [ "@query" ],
       0,
-      "ec84d4cfd043e5ed3b15522490e54a1b"
+      "8ec7999c560286df73ac86f597bf8814"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.worse",
@@ -105,7 +111,7 @@
       1,
       [ "@query" ],
       0,
-      "a7f774426961353011ad95c12b7c39ff"
+      "bafb9cc8cdf70ffac1801f4c706a42e8"
     ]
   ]
 ]

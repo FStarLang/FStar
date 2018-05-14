@@ -2,7 +2,7 @@
   "5\f&\u000fÃ÷0áO°[Ì©Z‰\u0018",
   [
     [
-      "Fresh.uu___61",
+      "Fresh.uu___116",
       1,
       2,
       1,
@@ -14,10 +14,10 @@
         "function_token_typing_FStar.UInt32.n"
       ],
       0,
-      "60bca08e6706963000be9ab8e84cc8bd"
+      "678345ea927dfb018f99f0f669109706"
     ],
     [
-      "Fresh.uu___61",
+      "Fresh.uu___116",
       2,
       2,
       1,
@@ -25,11 +25,12 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
+        "equation_Prims.l_True",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "function_token_typing_FStar.UInt32.n", "true_interp"
+        "function_token_typing_FStar.UInt32.n"
       ],
       0,
-      "ef981f422eae3ca60a432282258528ec"
+      "4f53347b9bc59309537cc0af68e52b0e"
     ]
   ]
 ]
