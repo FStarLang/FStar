@@ -288,3 +288,37 @@ let test_odd2 = assert (odd 5 = true)
 assume val f_eq: #a:Type -> #p:(a -> Type) -> $arg:(u:unit -> Pure a (requires True) (ensures p)) -> Tot (x:a{p x})
 assume val g_eq_c: u:unit -> Pure int (requires True) (ensures (fun x -> x >= 0))
 let h_test_eq : nat = f_eq #int g_eq_c //NS: 05.28: Needed to add the #int
+
+
+(** AR: 05/14: adding testcases for now deprecated logic qualifier **)
+val logic_test0: int -> GTot Type0
+let logic_test0 n = True \/ True
+
+val logic_test1 : Type0
+let logic_test1 = forall (_:unit). True
+
+val logic_test2:
+	#a : Type ->
+	#b : Type ->
+	#c : Type ->
+	g : (b -> c -> Tot Type0) ->
+	f : (a -> b -> Tot Type0) ->
+	Tot (a -> c -> Tot Type0)
+let logic_test2 #a #b #c g f = fun x z -> exists (y : b). True
+
+val logic_test3:
+	#a : Type ->
+	#b : Type ->
+	#c : Type ->
+	g : (b -> c -> Tot Type0) ->
+	f : (a -> b -> Tot Type0) ->
+	Lemma (ensures ( forall (x : a) (z : c).
+		((logic_test2 #a #b #c g f) x z) <==> (exists (y : b). True)
+	))
+let logic_test3 #a #b #c g f = ()
+
+val logic_test4: a:Type -> Tot Type0
+let logic_test4 a = exists (x : a). True
+
+val logic_test5: a:Type -> Lemma (ensures ((logic_test4 a) <==> (exists (x : a). True)))
+let logic_test5 a = ()
