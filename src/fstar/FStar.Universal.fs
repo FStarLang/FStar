@@ -219,11 +219,13 @@ let load_module_from_cache
     in
     fun env fn ->
         let cache_file = Dep.cache_file_name fn in
-        let fail tag =
+        let fail tag should_warn =
              invalidate_cache();
-             FStar.Errors.log_issue
-                (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
-                (Errors.Warning_CachedFile, BU.format3 "%s cache file %s; will recheck %s and all subsequent files" tag cache_file fn);
+             if should_warn then
+                 FStar.Errors.log_issue
+                    (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
+                    (Errors.Warning_CachedFile,
+                     BU.format3 "%s cache file %s; will recheck %s and all subsequent files" tag cache_file fn);
              None
         in
         match !some_cache_invalid with
@@ -231,14 +233,14 @@ let load_module_from_cache
         | _ ->
           if BU.file_exists cache_file then
             match load env fn cache_file with
-            | Inl msg -> fail msg
+            | Inl msg -> fail msg true
             | Inr res -> Some res
           else
             match FStar.Options.find_file (FStar.Util.basename cache_file) with
-            | None -> fail "Absent"
+            | None -> fail "Absent" false //do not warn if the file was not found
             | Some alt_cache_file ->
               match load env fn alt_cache_file with
-              | Inl msg -> fail msg
+              | Inl msg -> fail msg true
               | Inr res ->
                 //found a valid .checked file somewhere else in the include path
                 //copy it to the destination, if we are supposed to be verifying this file
@@ -248,18 +250,19 @@ let load_module_from_cache
 
 
 let store_module_to_cache env fn (m:modul) (modul_iface_opt:option<modul>) (mii:DsEnv.module_inclusion_info) =
-    let cache_file = FStar.Parser.Dep.cache_file_name fn in
-    let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
-    match digest with
-    | Some hashes ->
-      //cache_version_number should always be the first field here
-      BU.save_value_to_file cache_file (cache_version_number, hashes, m, modul_iface_opt, mii)
-    | _ ->
-      FStar.Errors.log_issue
-        (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
-                                 (FStar.Range.mk_pos 0 0))
-        (Errors.Warning_FileNotWritten, BU.format1 "%s was not written, since some of its dependences were not also checked"
-                    cache_file)
+    if Options.cache_checked_modules() then
+        let cache_file = FStar.Parser.Dep.cache_file_name fn in
+        let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
+        match digest with
+        | Some hashes ->
+          //cache_version_number should always be the first field here
+          BU.save_value_to_file cache_file (cache_version_number, hashes, m, modul_iface_opt, mii)
+        | _ ->
+          FStar.Errors.log_issue
+            (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
+                                     (FStar.Range.mk_pos 0 0))
+            (Errors.Warning_FileNotWritten, BU.format1 "%s was not written, since some of its dependences were not also checked"
+                        cache_file)
 
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
@@ -295,42 +298,45 @@ let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and 
       let mii = FStar.Syntax.DsEnv.inclusion_info env.dsenv (fst tcmod).name in
       tcmod, tcmod_iface_opt, mii, env
   in
-  if Options.cache_checked_modules ()
-  then match load_module_from_cache env fn with
-       | None ->
-         let tcmod, tcmod_iface_opt, mii, env = tc_source_file () in
-         if FStar.Errors.get_err_count() = 0
-         && (Options.lax()  //we'll write out a .checked.lax file
-             || Options.should_verify (fst tcmod).name.str) //we'll write out a .checked file
-         //but we will not write out a .checked file for an unverified dependence
-         //of some file that should be checked
-         then store_module_to_cache env fn (fst tcmod) tcmod_iface_opt mii;
-         tcmod, env, None
-       | Some (tcmod, tcmod_iface_opt, mii) ->
-         let tcmod =
-           if tcmod.is_interface then tcmod
-           else
-             let use_interface_from_the_cache = Options.use_extracted_interfaces () && pre_fn = None &&
-                                                (not (Options.expose_interfaces ()  && Options.should_verify tcmod.name.str)) in
-             if use_interface_from_the_cache then
-               if tcmod_iface_opt = None then
-                 Errors.raise_error (Errors.Fatal_ModuleNotFound, "use_extracted_interfaces option is set but could not find it in the cache for: " ^ tcmod.name.str)
-                                    Range.dummyRange
-               else tcmod_iface_opt |> must
-             else tcmod
-         in
-         let delta_env env =
-             let _, env =
-                with_tcenv env <|
-                FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii (FStar.TypeChecker.Normalize.erase_universes env)
-             in
-             FStar.TypeChecker.Tc.load_checked_module env tcmod
-         in
-         (tcmod,0), env, extend_delta_env delta delta_env
-  else let env = apply_delta_env env delta in
-       let tcmod, tcmod_iface_opt, _, env = tc_source_file () in
-       let tcmod = if is_some tcmod_iface_opt then (tcmod_iface_opt |> must, snd tcmod) else tcmod in  //AR: TODO: does it matter what we return here?
-       tcmod, env, None
+  match load_module_from_cache env fn with
+  | None ->
+        let tcmod, tcmod_iface_opt, mii, env = tc_source_file () in
+        if FStar.Errors.get_err_count() = 0
+        && (Options.lax()  //we'll write out a .checked.lax file
+            || Options.should_verify (fst tcmod).name.str) //we'll write out a .checked file
+        //but we will not write out a .checked file for an unverified dependence
+        //of some file that should be checked
+        then store_module_to_cache env fn (fst tcmod) tcmod_iface_opt mii;
+        tcmod, env, None
+  | Some (tcmod, tcmod_iface_opt, mii) ->
+        let tcmod =
+        if tcmod.is_interface then tcmod
+        else
+            let use_interface_from_the_cache = Options.use_extracted_interfaces () && pre_fn = None &&
+                                            (not (Options.expose_interfaces ()  && Options.should_verify tcmod.name.str)) in
+            if use_interface_from_the_cache then
+            if tcmod_iface_opt = None then
+            begin
+                FStar.Errors.log_issue (Range.mk_range tcmod.name.str
+                                                    (Range.mk_pos 0 0)
+                                                    (Range.mk_pos 0 0))
+                                    (Errors.Warning_MissingInterfaceOrImplementation,
+                                        "use_extracted_interfaces option is set \
+                                        but could not find an interface in the cache for: "
+                                        ^ tcmod.name.str);
+                tcmod
+            end
+            else tcmod_iface_opt |> must
+            else tcmod
+        in
+        let delta_env env =
+            let _, env =
+            with_tcenv env <|
+            FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii (FStar.TypeChecker.Normalize.erase_universes env)
+            in
+            FStar.TypeChecker.Tc.load_checked_module env tcmod
+        in
+        (tcmod,0), env, extend_delta_env delta delta_env
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)
