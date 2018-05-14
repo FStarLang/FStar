@@ -204,7 +204,7 @@ let defaults =
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
-      ("use_two_phase_tc"             , Bool false);
+      ("use_two_phase_tc"             , Bool true);
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("warn_error"                   , String "");
@@ -957,7 +957,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "use_two_phase_tc",
         BoolStr,
-        "Use the two phase typechecker (default 'false')");
+        "Use the two phase typechecker (default 'true')");
 
        ( noshort,
         "__no_positivity",
