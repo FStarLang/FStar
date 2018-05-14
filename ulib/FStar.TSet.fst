@@ -17,8 +17,6 @@
 (** Propositional sets (on any types): membership is a predicate *)
 module FStar.TSet
 
-module P = FStar.PropositionalExtensionality
-
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 abstract type set (a:Type) = a -> Tot prop
@@ -43,10 +41,10 @@ abstract val complement : set 'a -> Tot (set 'a)
  *)
 
 let empty           = fun #a x -> False
-let singleton x     = fun y -> P.lemma_eq2_equation y x; y == x
-let union s1 s2     = fun x -> P.lemma_l_or_equation (s1 x) (s2 x); s1 x \/ s2 x
-let intersect s1 s2 = fun x -> P.lemma_l_and_equation (s1 x) (s2 x); s1 x /\ s2 x
-let complement s    = fun x -> P.lemma_l_not_equation (s x); P.lemma_l_imp_equation (s x) False; ~ (s x)
+let singleton x     = fun y -> y == x
+let union s1 s2     = fun x -> s1 x \/ s2 x
+let intersect s1 s2 = fun x -> s1 x /\ s2 x
+let complement s    = fun x -> ~ (s x)
 
 (* ops *)
 type subset (#a:Type) (s1:set a) (s2:set a) :Type0 = forall x. mem x s1 ==> mem x s2
@@ -148,7 +146,7 @@ let lemma_mem_tset_of_set (#a:eqtype) (s:Set.set a) (x:a)
 
 abstract
 let filter (#a:Type) (f:a -> Type0) (s:set a) : set a =
-  (fun (x:a) -> P.lemma_l_and_equation (f x) (s x); f x /\ s x)
+  fun (x:a) -> f x /\ s x
 
 let lemma_mem_filter (#a:Type) (f:(a -> Type0)) (s:set a) (x:a)
   :Lemma (requires True)
@@ -157,7 +155,6 @@ let lemma_mem_filter (#a:Type) (f:(a -> Type0)) (s:set a) (x:a)
   = ()
 
 let exists_y_in_s (#a:Type) (#b:Type) (s:set a) (f:a -> Tot b) (x:b) : Tot prop =
- FStar.Classical.forall_intro_2 P.lemma_l_Exists_equation;
  exists (y:a). mem y s /\ x == f y
 
 abstract

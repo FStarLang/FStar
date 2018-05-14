@@ -592,6 +592,6 @@ val modifies_only_live_addresses
 : Lemma
   (requires (
     modifies (loc_union (loc_addresses r a) l) h h' /\
-    (forall x .{:pattern Set.mem x a} Set.mem x a ==> h `does_not_contain_addr` (r, x))
+    (forall x . Set.mem x a ==> h `does_not_contain_addr` (r, x))
   ))
   (ensures (modifies l h h'))

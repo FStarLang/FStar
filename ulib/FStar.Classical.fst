@@ -11,13 +11,9 @@ let get_squashed #b a =
   let p = get_proof a in
   join_squash #b p
 
-let get_equality #t a b =
-  FStar.PropositionalExtensionality.lemma_eq2_equation a b;
-  get_squashed #(equals a b) (a == b)
+let get_equality #t a b = get_squashed #(equals a b) (a == b)
 
-let get_forall #a p =
-  FStar.PropositionalExtensionality.lemma_l_Forall_equation a p;
-  get_squashed #(x:a -> GTot (p x)) (forall (x:a). p x)
+let get_forall #a p = get_squashed #(x:a -> GTot (p x)) (forall (x:a). p x)
 
 let impl_to_arrow #a #b impl sx =
   bind_squash #(a -> GTot b) impl (fun f ->

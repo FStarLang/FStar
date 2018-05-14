@@ -52,8 +52,8 @@ let int_plus_monoid : monoid int =
 (*   intro_monoid int 1 op_Multiply *)
 
 let conjunction_monoid : monoid prop =
-  let u : prop = PropExt.lemma_l_True_equation (); singleton True in
-  let mult (p q : prop) : prop = PropExt.lemma_l_and_equation p q;  p /\ q in
+  let u : prop = singleton True in
+  let mult (p q : prop) : prop = p /\ q in
 
   let left_unitality_helper (p:prop) : Lemma ((u `mult` p) == p) =
     assert ((u `mult` p) <==> p) ;
@@ -80,8 +80,8 @@ let conjunction_monoid : monoid prop =
 
 
 let disjunction_monoid : monoid prop =
-  let u : prop = PropExt.lemma_l_True_equation (); singleton False in
-  let mult (p q : prop) : prop = PropExt.lemma_l_or_equation p q;  p \/ q in
+  let u : prop = singleton False in
+  let mult (p q : prop) : prop = p \/ q in
 
   let left_unitality_helper (p:prop) : Lemma ((u `mult` p) == p) =
     assert ((u `mult` p) <==> p) ;
@@ -150,13 +150,10 @@ let intro_monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b)
 let embed_nat_int (n:nat) : int = n
 let _ = intro_monoid_morphism embed_nat_int nat_plus_monoid int_plus_monoid
 
-let neg (p:prop) : prop = PropExt.lemma_l_not_equation p; ~p
+let neg (p:prop) : prop = ~p
 let _ =
-  PropExt.lemma_l_True_equation ();
   assert (neg True <==> False) ;
   PropExt.apply (neg True) False ;
-  FStar.Classical.forall_intro_2 PropExt.lemma_l_and_equation;
-  FStar.Classical.forall_intro_2 PropExt.lemma_l_or_equation;
   let mult_lemma_helper (p q:prop) : Lemma (neg (p /\ q) == (neg p \/ neg q)) =
     assert (neg (p /\ q) <==> (neg p \/ neg q)) ;
     PropExt.apply (neg (p /\ q)) (neg p \/ neg q)
@@ -165,11 +162,8 @@ let _ =
   intro_monoid_morphism neg conjunction_monoid disjunction_monoid
 
 let _ =
-  PropExt.lemma_l_True_equation ();
   assert (neg False <==> True) ;
   PropExt.apply (neg False) True ;
-  FStar.Classical.forall_intro_2 PropExt.lemma_l_and_equation;
-  FStar.Classical.forall_intro_2 PropExt.lemma_l_or_equation;
   let mult_lemma_helper (p q:prop) : Lemma (neg (p \/ q) == (neg p /\ neg q)) =
     assert (neg (p \/ q) <==> (neg p /\ neg q)) ;
     PropExt.apply (neg (p \/ q)) (neg p /\ neg q)

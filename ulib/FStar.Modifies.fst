@@ -884,7 +884,7 @@ let free_does_not_contain_addr #a #rel r m x = ()
 
 let does_not_contain_addr_elim #a #rel r m x = ()
 
-#set-options "--z3rlimit 16"
+#set-options "--z3rlimit 32"
 
 let modifies_only_live_addresses_weak
   (r: HS.rid)
@@ -961,6 +961,7 @@ let loc_includes_restrict_to_addresses
   (ensures (loc_includes l (restrict_to_addresses l r as)))
 = Classical.forall_intro loc_aux_includes_refl
 
+#set-options "--z3rlimit 10"
 let loc_includes_loc_union_restrict_to_addresses
   (l: loc)
   (r: HS.rid)
@@ -979,7 +980,7 @@ let loc_includes_loc_addresses_restrict_to_addresses
   (ensures (loc_includes (loc_addresses r as) (restrict_to_addresses l r as)))
 = Classical.forall_intro loc_aux_includes_refl
 
-#set-options "--z3rlimit 64 --max_fuel 1 --max_ifuel 1"
+#set-options "--z3rlimit 64"
 
 let modifies_only_live_addresses r a l h h' =
   let l_r = restrict_to_regions l (Set.singleton r) in
@@ -987,7 +988,7 @@ let modifies_only_live_addresses r a l h h' =
   let l_a = restrict_to_addresses l_r r a in
   let l_r_not_a = restrict_to_addresses l_r r (Set.complement a) in
   let l_not_a = loc_union l_r_not_a l_not_r in
-  assert_spinoff (loc_disjoint (loc_addresses r a) (l_not_a));
+  //assert_spinoff (loc_disjoint (loc_addresses r a) (l_not_a));
   let l' = loc_union (loc_addresses r a) l_not_a in
   loc_includes_loc_addresses_restrict_to_addresses l_r r a;
   loc_includes_loc_union_restrict_to_regions l (Set.singleton r);
