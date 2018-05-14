@@ -5,7 +5,7 @@ include gmake/z3.mk
 include gmake/fstar.mk
 
 CODEGEN ?= OCaml
-MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY)
+MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --use_extracted_interface false --odir $(OUTPUT_DIRECTORY)
 
 %.checked.lax: %
 	$(MY_FSTAR) $*
