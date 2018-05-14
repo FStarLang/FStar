@@ -314,6 +314,7 @@ type raw_error =
   | Warning_UnappliedFail
   | Warning_QuantifierWithoutPattern
   | Error_EmptyFailErrs
+  | Warning_logicqualifier
 
 type flag =
   | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
@@ -636,6 +637,7 @@ let default_flags =
   (Warning_UnappliedFail                             , CWarning);
   (Warning_QuantifierWithoutPattern                  , CSilent);
   (Error_EmptyFailErrs                               , CAlwaysError);
+  (Warning_logicqualifier                            , CWarning);
   ]
 
 exception Err of raw_error* string

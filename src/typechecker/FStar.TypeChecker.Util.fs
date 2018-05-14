@@ -1814,7 +1814,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | _ -> //inferred
           true
     in
-    let quals = U.quals_of_sigelt se in
+    let quals = U.quals_of_sigelt se |> List.filter (fun x -> not (x = Logic)) in  //drop logic since it is deprecated
     if quals |> BU.for_some (function OnlyName -> true | _ -> false) |> not
     then
       let r = U.range_of_sigelt se in

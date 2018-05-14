@@ -3,6 +3,12 @@ module FStar.Algebra.Monoid
 open FStar.Classical
 module PropExt = FStar.PropositionalExtensionality
 
+(*
+ * AR: 05/12: adding calls to equational lemmas from PropositionalExtensionality
+ *            these should go away with proper prop support
+ *            also see the comment in PropositionalExtensionality.fst
+ *)
+
 (** Definition of a monoid *)
 
 let right_unitality_lemma (m:Type) (u:m) (mult:m -> m -> m) =

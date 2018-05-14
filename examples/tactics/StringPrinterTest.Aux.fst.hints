@@ -21,7 +21,7 @@
         "typing_FStar.UInt32.v", "well-founded-ordering-on-nat"
       ],
       0,
-      "cefd3d0b762a514b3c514fa0af57e33e"
+      "31929aea97b176db55e6873ca6c1e1d9"
     ],
     [
       "StringPrinterTest.Aux.example_do_while",
@@ -87,7 +87,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "e6e607e2e95f0996c05788d0f0c9f0c2"
+      "460d20e17670b5c26c7582103ac037e0"
     ],
     [
       "StringPrinterTest.Aux.example_sz",
@@ -153,7 +153,6 @@
         "interpretation_StringPrinterTest.Aux_Tm_abs_06e721a5552d5af54d2c886fdd020ff7",
         "interpretation_StringPrinterTest.Aux_Tm_abs_21e5eb7e74f008214a35d4c67672368c",
         "interpretation_StringPrinterTest.Aux_Tm_abs_369e5ff81aaaeeb258fe825c6dff7112",
-        "interpretation_StringPrinterTest.Aux_Tm_abs_715edab3f961ce036ca77fcfd81264da",
         "interpretation_StringPrinterTest.Aux_Tm_abs_86f3eb1af404f5b32f2eeedc5631efa0",
         "interpretation_StringPrinterTest.Aux_Tm_abs_de5959f259a26ec1e278e0c9900efbed",
         "lemma_FStar.Buffer.lemma_size", "lemma_FStar.UInt.pow2_values",
@@ -179,7 +178,6 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_StringPrinter.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91",
         "refinement_interpretation_StringPrinterTest.Aux_Tm_refine_0859f644f4a18e08c0e487cfead5edba",
         "token_correspondence_StringPrinter.Base.bind",
         "token_correspondence_StringPrinter.Rec.do_while_body_res_intro",
@@ -198,7 +196,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "5ace7aa87a5bd97efd6759eaaf1bae4a"
+      "6aa6cd50a8b08643a6aa636485f6093e"
     ],
     [
       "StringPrinterTest.Aux.example_st",
@@ -264,7 +262,6 @@
         "interpretation_StringPrinterTest.Aux_Tm_abs_06e721a5552d5af54d2c886fdd020ff7",
         "interpretation_StringPrinterTest.Aux_Tm_abs_21e5eb7e74f008214a35d4c67672368c",
         "interpretation_StringPrinterTest.Aux_Tm_abs_369e5ff81aaaeeb258fe825c6dff7112",
-        "interpretation_StringPrinterTest.Aux_Tm_abs_715edab3f961ce036ca77fcfd81264da",
         "interpretation_StringPrinterTest.Aux_Tm_abs_86f3eb1af404f5b32f2eeedc5631efa0",
         "interpretation_StringPrinterTest.Aux_Tm_abs_de5959f259a26ec1e278e0c9900efbed",
         "lemma_FStar.Buffer.lemma_size", "lemma_FStar.UInt.pow2_values",
@@ -290,7 +287,6 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_StringPrinter.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91",
         "refinement_interpretation_StringPrinterTest.Aux_Tm_refine_0859f644f4a18e08c0e487cfead5edba",
         "token_correspondence_StringPrinter.Base.bind",
         "token_correspondence_StringPrinter.Rec.do_while_body_res_intro",
@@ -309,7 +305,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "ed63427279b646f78271944b8f08723a"
+      "d659e5cf64c0d3827de7c595bcab695e"
     ],
     [
       "StringPrinterTest.Aux.example_test",
@@ -317,9 +313,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption",
-        "@fuel_correspondence_StringPrinterTest.Aux.example.fuel_instrumented",
-        "@query",
+        "@MaxIFuel_assumption", "@query",
         "FStar.Monotonic.HyperStack_pretyping_ed25b04ac1a3660bf4cdc8ae577888d8",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
@@ -353,7 +347,7 @@
         "typing_FStar.UInt8.v", "unit_typing"
       ],
       0,
-      "5040b518d4e3f4cf4bc3d50b497e96c7"
+      "8c19e163f8343dad5de7b82f53f39b1d"
     ],
     [
       "StringPrinterTest.Aux.print_cipher_suite_spec",
@@ -364,7 +358,7 @@
         "@query", "assumption_StringPrinterTest.Aux.cipher_suite__uu___haseq"
       ],
       0,
-      "92aeb5967706a71464dc81abbb3cf861"
+      "f1565725cda5f3beb75cb3fa8366d69a"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite_spec",
@@ -383,7 +377,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c53233903772cc69ac5ba2581608fad9"
+      "257cf203993a7097318dab6aad81c068"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite_spec_do_while",
@@ -424,7 +418,6 @@
         "interpretation_StringPrinter.Rec_Tm_abs_26ede87d4cc4c291e9b47af5700d7702",
         "interpretation_StringPrinter.Rec_Tm_abs_ef1d448ec7eefb3d146e05cb7330bea4",
         "interpretation_StringPrinterTest.Aux_Tm_abs_178285cf3b8c17bc7198752a6a593418",
-        "interpretation_StringPrinterTest.Aux_Tm_abs_8be13c509d3b26240397395521c9b814",
         "interpretation_StringPrinterTest.Aux_Tm_abs_e621e4d3a362d3c1cb62503a87f5336c",
         "lemma_StringPrinter.Rec.seq_append_empty_l",
         "lemma_StringPrinter.Rec.seq_append_empty_r",
@@ -438,7 +431,6 @@
         "projection_inverse_StringPrinter.Base.Right_p",
         "projection_inverse_StringPrinter.Base.Right_q",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b913a3f691ca99086652e0a655e72f17",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_StringPrinter.Base.bind",
         "token_correspondence_StringPrinterTest.Aux.print_list_cipher_suite_spec",
@@ -447,7 +439,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "ec2c4129fe64c4cdd2e2dc68e0e27fe1"
+      "7a22a5ad0c33331f74614aa50339cc63"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite_sz",
@@ -510,7 +502,6 @@
         "interpretation_StringPrinter.Rec_Tm_abs_ef1d448ec7eefb3d146e05cb7330bea4",
         "interpretation_StringPrinterTest.Aux_Tm_abs_0e286f7013a11256b7add787823ca754",
         "interpretation_StringPrinterTest.Aux_Tm_abs_178285cf3b8c17bc7198752a6a593418",
-        "interpretation_StringPrinterTest.Aux_Tm_abs_8be13c509d3b26240397395521c9b814",
         "interpretation_StringPrinterTest.Aux_Tm_abs_9a99b51d57525bdcce2f7285f27379bb",
         "interpretation_StringPrinterTest.Aux_Tm_abs_bc4bf46f6c025f6f13065824cf42acde",
         "interpretation_StringPrinterTest.Aux_Tm_abs_d1712812f0efad0f9b2c9a490c19e163",
@@ -532,7 +523,6 @@
         "projection_inverse_StringPrinter.Base.Right_q",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b913a3f691ca99086652e0a655e72f17",
         "refinement_interpretation_StringPrinter.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91",
         "refinement_interpretation_StringPrinterTest.Aux_Tm_refine_6585ed1103701811cc3009cea861101f",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_StringPrinter.Base.bind",
@@ -546,7 +536,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "8333ece27f66a523768291f06615145c"
+      "d2bb4b107140e33829221cfeb41122f2"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite_st",
@@ -609,7 +599,6 @@
         "interpretation_StringPrinter.Rec_Tm_abs_ef1d448ec7eefb3d146e05cb7330bea4",
         "interpretation_StringPrinterTest.Aux_Tm_abs_0e286f7013a11256b7add787823ca754",
         "interpretation_StringPrinterTest.Aux_Tm_abs_178285cf3b8c17bc7198752a6a593418",
-        "interpretation_StringPrinterTest.Aux_Tm_abs_8be13c509d3b26240397395521c9b814",
         "interpretation_StringPrinterTest.Aux_Tm_abs_9a99b51d57525bdcce2f7285f27379bb",
         "interpretation_StringPrinterTest.Aux_Tm_abs_bc4bf46f6c025f6f13065824cf42acde",
         "interpretation_StringPrinterTest.Aux_Tm_abs_d1712812f0efad0f9b2c9a490c19e163",
@@ -631,7 +620,6 @@
         "projection_inverse_StringPrinter.Base.Right_q",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b913a3f691ca99086652e0a655e72f17",
         "refinement_interpretation_StringPrinter.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91",
         "refinement_interpretation_StringPrinterTest.Aux_Tm_refine_6585ed1103701811cc3009cea861101f",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_StringPrinter.Base.bind",
@@ -645,7 +633,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "27f742a418cfca1ad9b1f2e7001910fa"
+      "4ac3d20389f2826102144d965d87e001"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite",
@@ -653,9 +641,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption",
-        "@fuel_correspondence_StringPrinterTest.Aux.print_list_cipher_suite_spec.fuel_instrumented",
-        "@query",
+        "@MaxIFuel_assumption", "@query",
         "FStar.Monotonic.HyperStack_pretyping_ed25b04ac1a3660bf4cdc8ae577888d8",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
         "bool_inversion",
@@ -681,7 +667,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some", "unit_typing"
       ],
       0,
-      "8c7159a69fa69f156ec1085789585c67"
+      "9ac1d4c3fad3509a7e222a7e5869e1b6"
     ],
     [
       "StringPrinterTest.Aux.example",
@@ -703,7 +689,7 @@
         "typing_FStar.UInt32.v", "well-founded-ordering-on-nat"
       ],
       0,
-      "bcdfc35ece73742c6fe11614afa9e70e"
+      "d743789a57abc385228439e0f331b950"
     ],
     [
       "StringPrinterTest.Aux.example_do_while",
@@ -769,7 +755,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "430c5cde875ad9a1d69664a4b2d1fe6b"
+      "6b2dcce985a9863cb69d7ea83152ebd9"
     ],
     [
       "StringPrinterTest.Aux.example_sz",
@@ -835,7 +821,6 @@
         "interpretation_StringPrinterTest.Aux_Tm_abs_06e721a5552d5af54d2c886fdd020ff7",
         "interpretation_StringPrinterTest.Aux_Tm_abs_21e5eb7e74f008214a35d4c67672368c",
         "interpretation_StringPrinterTest.Aux_Tm_abs_369e5ff81aaaeeb258fe825c6dff7112",
-        "interpretation_StringPrinterTest.Aux_Tm_abs_715edab3f961ce036ca77fcfd81264da",
         "interpretation_StringPrinterTest.Aux_Tm_abs_86f3eb1af404f5b32f2eeedc5631efa0",
         "interpretation_StringPrinterTest.Aux_Tm_abs_de5959f259a26ec1e278e0c9900efbed",
         "lemma_FStar.Buffer.lemma_size", "lemma_FStar.UInt.pow2_values",
@@ -861,7 +846,6 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_StringPrinter.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91",
         "refinement_interpretation_StringPrinterTest.Aux_Tm_refine_0859f644f4a18e08c0e487cfead5edba",
         "token_correspondence_StringPrinter.Base.bind",
         "token_correspondence_StringPrinter.Rec.do_while_body_res_intro",
@@ -880,7 +864,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "39a55fc916527f1386837dbc37aecb81"
+      "54444e3c98dd8b21235eace6ac0a9316"
     ],
     [
       "StringPrinterTest.Aux.example_st",
@@ -946,7 +930,6 @@
         "interpretation_StringPrinterTest.Aux_Tm_abs_06e721a5552d5af54d2c886fdd020ff7",
         "interpretation_StringPrinterTest.Aux_Tm_abs_21e5eb7e74f008214a35d4c67672368c",
         "interpretation_StringPrinterTest.Aux_Tm_abs_369e5ff81aaaeeb258fe825c6dff7112",
-        "interpretation_StringPrinterTest.Aux_Tm_abs_715edab3f961ce036ca77fcfd81264da",
         "interpretation_StringPrinterTest.Aux_Tm_abs_86f3eb1af404f5b32f2eeedc5631efa0",
         "interpretation_StringPrinterTest.Aux_Tm_abs_de5959f259a26ec1e278e0c9900efbed",
         "lemma_FStar.Buffer.lemma_size", "lemma_FStar.UInt.pow2_values",
@@ -972,7 +955,6 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_StringPrinter.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91",
         "refinement_interpretation_StringPrinterTest.Aux_Tm_refine_0859f644f4a18e08c0e487cfead5edba",
         "token_correspondence_StringPrinter.Base.bind",
         "token_correspondence_StringPrinter.Rec.do_while_body_res_intro",
@@ -991,7 +973,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "0dfdf98d21dde9425635d11393497c4d"
+      "ba3f31c2799450c59c6425dcc8d268cb"
     ],
     [
       "StringPrinterTest.Aux.example_test",
@@ -1008,7 +990,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "f0e300cb5876a334851faca582559aca"
+      "2eb4a2a6cd0a60a216cf0610c86926e3"
     ],
     [
       "StringPrinterTest.Aux.print_cipher_suite_spec",
@@ -1019,7 +1001,7 @@
         "@query", "assumption_StringPrinterTest.Aux.cipher_suite__uu___haseq"
       ],
       0,
-      "e9c45edc67e5b74a2d044e66f715423b"
+      "e7578a1eb2773425b4e5cafa5418f6fa"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite_spec",
@@ -1038,7 +1020,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4cdf023ee4bcfc48afe9c381f2651d43"
+      "19f2775ce6a13a9927ef0e2ffca5c25d"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite_spec_do_while",
@@ -1079,7 +1061,6 @@
         "interpretation_StringPrinter.Rec_Tm_abs_26ede87d4cc4c291e9b47af5700d7702",
         "interpretation_StringPrinter.Rec_Tm_abs_ef1d448ec7eefb3d146e05cb7330bea4",
         "interpretation_StringPrinterTest.Aux_Tm_abs_178285cf3b8c17bc7198752a6a593418",
-        "interpretation_StringPrinterTest.Aux_Tm_abs_8be13c509d3b26240397395521c9b814",
         "interpretation_StringPrinterTest.Aux_Tm_abs_e621e4d3a362d3c1cb62503a87f5336c",
         "lemma_StringPrinter.Rec.seq_append_empty_l",
         "lemma_StringPrinter.Rec.seq_append_empty_r",
@@ -1093,7 +1074,6 @@
         "projection_inverse_StringPrinter.Base.Right_p",
         "projection_inverse_StringPrinter.Base.Right_q",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b913a3f691ca99086652e0a655e72f17",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_StringPrinter.Base.bind",
         "token_correspondence_StringPrinterTest.Aux.print_list_cipher_suite_spec",
@@ -1102,7 +1082,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "a3808dbe69b6ebd0400894a254736fac"
+      "bdee15f0ffc9032e9b69f58571b4d0e2"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite_sz",
@@ -1165,7 +1145,6 @@
         "interpretation_StringPrinter.Rec_Tm_abs_ef1d448ec7eefb3d146e05cb7330bea4",
         "interpretation_StringPrinterTest.Aux_Tm_abs_0e286f7013a11256b7add787823ca754",
         "interpretation_StringPrinterTest.Aux_Tm_abs_178285cf3b8c17bc7198752a6a593418",
-        "interpretation_StringPrinterTest.Aux_Tm_abs_8be13c509d3b26240397395521c9b814",
         "interpretation_StringPrinterTest.Aux_Tm_abs_9a99b51d57525bdcce2f7285f27379bb",
         "interpretation_StringPrinterTest.Aux_Tm_abs_bc4bf46f6c025f6f13065824cf42acde",
         "interpretation_StringPrinterTest.Aux_Tm_abs_d1712812f0efad0f9b2c9a490c19e163",
@@ -1187,7 +1166,6 @@
         "projection_inverse_StringPrinter.Base.Right_q",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b913a3f691ca99086652e0a655e72f17",
         "refinement_interpretation_StringPrinter.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91",
         "refinement_interpretation_StringPrinterTest.Aux_Tm_refine_6585ed1103701811cc3009cea861101f",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_StringPrinter.Base.bind",
@@ -1201,7 +1179,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "100d71169993b82e7d940ddb5fa754c4"
+      "1829cd8ba1cb648a98cc1a965ccd93d5"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite_st",
@@ -1264,7 +1242,6 @@
         "interpretation_StringPrinter.Rec_Tm_abs_ef1d448ec7eefb3d146e05cb7330bea4",
         "interpretation_StringPrinterTest.Aux_Tm_abs_0e286f7013a11256b7add787823ca754",
         "interpretation_StringPrinterTest.Aux_Tm_abs_178285cf3b8c17bc7198752a6a593418",
-        "interpretation_StringPrinterTest.Aux_Tm_abs_8be13c509d3b26240397395521c9b814",
         "interpretation_StringPrinterTest.Aux_Tm_abs_9a99b51d57525bdcce2f7285f27379bb",
         "interpretation_StringPrinterTest.Aux_Tm_abs_bc4bf46f6c025f6f13065824cf42acde",
         "interpretation_StringPrinterTest.Aux_Tm_abs_d1712812f0efad0f9b2c9a490c19e163",
@@ -1286,7 +1263,6 @@
         "projection_inverse_StringPrinter.Base.Right_q",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b913a3f691ca99086652e0a655e72f17",
         "refinement_interpretation_StringPrinter.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d",
-        "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91",
         "refinement_interpretation_StringPrinterTest.Aux_Tm_refine_6585ed1103701811cc3009cea861101f",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_StringPrinter.Base.bind",
@@ -1300,7 +1276,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "cc95619f33f3460e49b0971937700867"
+      "2d20a31e7ed339846f3076652c9d0f90"
     ],
     [
       "StringPrinterTest.Aux.print_list_cipher_suite",
@@ -1317,7 +1293,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "9b53535082b89411abc4bc5de29db1cd"
+      "90c2998a04ee430a7f2b6e10e744335b"
     ]
   ]
 ]

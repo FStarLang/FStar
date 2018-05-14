@@ -849,7 +849,7 @@ let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
 /// tried in succession, until one succeeds.  The whole process is repeated as
 /// long as at least one tactic succeeds.
 
-let example #a #b #c: unit =
+let example (#a:Type0) (#b:Type0) (#c:Type0) :unit =
   assert_by_tactic (a /\ b ==> c == b ==> c)
     (fun () -> repeat' (fun () ->
                  gpm #unit (fun (a: Type) (h: hyp (squash a)) ->

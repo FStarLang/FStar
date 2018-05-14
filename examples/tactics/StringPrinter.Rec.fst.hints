@@ -17,7 +17,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "cc0d30cb37dd1585a153eba717887da8"
+      "085bac7fb7c9864921d5635a1034d8d2"
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
@@ -31,7 +31,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_fccbd444730e179142d53d00da45706a"
       ],
       0,
-      "5cfd1da2c0bc69e43d2f15cb8322c7fb"
+      "c7248cf22dd707ec107ed1394f6532dd"
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -48,7 +48,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "0063a51d9fa7a258bb2553c59512a143"
+      "be72bc2cc0b516acd47dd890c35fdeaf"
     ],
     [
       "StringPrinter.Rec.do_while_correct",
@@ -59,7 +59,8 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_StringPrinter.Rec.do_while.fuel_instrumented",
         "@fuel_irrelevance_StringPrinter.Rec.do_while.fuel_instrumented",
-        "@query", "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "@query", "Prims_pretyping_e4836109f73687024ac3edd113084865",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "StringPrinter.Rec_interpretation_Tm_arrow_ac7b50106d4d0ee7dd2755b6a1fd0e8f",
         "binder_x_0efe4bfc81302ae193e1fdcda56aacfd_5",
         "binder_x_e09860b75d8922ab497a3e5bc9347578_6",
@@ -91,10 +92,10 @@
         "token_correspondence_StringPrinter.Base.bind",
         "token_correspondence_StringPrinter.Rec.do_while",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
-        "unit_typing"
+        "typing_tok_Prims.LexTop@tok", "unit_typing"
       ],
       0,
-      "f99c8800d896c57f3259287d72d0246e"
+      "815d9f02b0cfe3d1bb8ae1b1bfd2ba25"
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -123,7 +124,7 @@
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "518a6320c6ecd38b4b39f22fd1680ac4"
+      "825e818912b3612bb5ce757e4633e230"
     ],
     [
       "StringPrinter.Rec.do_while_body_post",
@@ -141,7 +142,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "e6a5149e3863dd3800f158c33b72762b"
+      "967b3a2bf77478d31fef345995379321"
     ],
     [
       "StringPrinter.Rec.do_while_body_res_intro",
@@ -155,7 +156,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_fccbd444730e179142d53d00da45706a"
       ],
       0,
-      "38f14a5838b8ebcf8560ccd67b5b3b7f"
+      "330a2386a8545cf85028ec7c591bdb87"
     ],
     [
       "StringPrinter.Rec.do_while",
@@ -172,7 +173,7 @@
         "refinement_interpretation_StringPrinter.Rec_Tm_refine_bcc6987f9a4ea41c8ab43f649231ab91"
       ],
       0,
-      "da3ff23b26127e4756aaa69e8e6a0dd5"
+      "9bd546b577f97050209a78431b0e3c9d"
     ],
     [
       "StringPrinter.Rec.rewrite_do_while",
@@ -201,7 +202,7 @@
         "token_correspondence_StringPrinter.Rec.do_while", "unit_typing"
       ],
       0,
-      "7af3385b4afbb058b19ea3792b3bdebf"
+      "eaad0c1903da5fefab0193d366e71b32"
     ]
   ]
 ]

@@ -16,6 +16,7 @@
 *)
 (** Propositional sets (on any types): membership is a predicate *)
 module FStar.TSet
+
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 abstract type set (a:Type) = a -> Tot prop
@@ -32,6 +33,12 @@ abstract val singleton  : 'a -> Tot (set 'a)
 abstract val union      : set 'a -> set 'a -> Tot (set 'a)
 abstract val intersect  : set 'a -> set 'a -> Tot (set 'a)
 abstract val complement : set 'a -> Tot (set 'a)
+
+(*
+ * AR: 05/12: adding calls to equational lemmas from PropositionalExtensionality
+ *            these should go away with proper prop support
+ *            also see the comment in PropositionalExtensionality.fst
+ *)
 
 let empty           = fun #a x -> False
 let singleton x     = fun y -> y == x
@@ -139,7 +146,7 @@ let lemma_mem_tset_of_set (#a:eqtype) (s:Set.set a) (x:a)
 
 abstract
 let filter (#a:Type) (f:a -> Type0) (s:set a) : set a =
-  (fun (x:a) -> f x /\ s x)
+  fun (x:a) -> f x /\ s x
 
 let lemma_mem_filter (#a:Type) (f:(a -> Type0)) (s:set a) (x:a)
   :Lemma (requires True)

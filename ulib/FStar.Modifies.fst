@@ -884,7 +884,7 @@ let free_does_not_contain_addr #a #rel r m x = ()
 
 let does_not_contain_addr_elim #a #rel r m x = ()
 
-#set-options "--z3rlimit 16"
+#set-options "--z3rlimit 32"
 
 let modifies_only_live_addresses_weak
   (r: HS.rid)
@@ -961,6 +961,7 @@ let loc_includes_restrict_to_addresses
   (ensures (loc_includes l (restrict_to_addresses l r as)))
 = Classical.forall_intro loc_aux_includes_refl
 
+#set-options "--z3rlimit 10"
 let loc_includes_loc_union_restrict_to_addresses
   (l: loc)
   (r: HS.rid)

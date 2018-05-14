@@ -43,6 +43,8 @@ module EMB = FStar.Syntax.Embeddings
 module RE = FStar.Reflection.Embeddings
 open FStar.SMTEncoding.Env
 open FStar.SMTEncoding.EncodeTerm
+open FStar.Parser
+
 module Env = FStar.TypeChecker.Env
 
 type prims_t = {
@@ -321,8 +323,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.imp_lid,    mk_imp_interp);
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.not_lid,    mk_not_interp);
-                 // (Const.forall_lid, mk_forall_interp);
-                 // (Const.exists_lid, mk_exists_interp);
+                 //(Const.forall_lid, mk_forall_interp);
+                 //(Const.exists_lid, mk_exists_interp);
                  (Const.range_lid,  mk_range_interp);
                  (Const.inversion_lid,mk_inversion_axiom);
                  (Const.with_type_lid, mk_with_type_axiom)
@@ -671,9 +673,15 @@ let encode_top_level_let :
                 in
                 let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
                 let app, (body, decls2) =
-                    if quals |> List.contains Logic
-                    then mk_Valid app, encode_formula body env'
-                    else app, encode_term body env'
+                  let is_logical =
+                    match (SS.compress t_body).n with
+                    | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
+                    | _ -> false
+                  in
+                  let is_prims = lbn |> FStar.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids lid.ns) Const.prims_lid) in
+                  if not is_prims && (quals |> List.contains Logic || is_logical)
+                  then mk_Valid app, encode_formula body env'
+                  else app, encode_term body env'
                 in
 
                 //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),

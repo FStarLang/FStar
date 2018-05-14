@@ -12,7 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "430b391d70fe8490ae4706dda5a1c2ad"
+      "a751b6dc18e0f89a9393c864169b0834"
     ],
     [
       "FStar.Monotonic.Map.grows",
@@ -21,11 +21,12 @@
       1,
       [
         "@query", "equation_FStar.Preorder.preorder_rel",
-        "interpretation_FStar.Monotonic.Map_Tm_abs_f2e6fcef38c9ee61d79523643508417e",
-        "l_quant_interp__2025"
+        "equation_Prims.logical",
+        "interpretation_FStar.Monotonic.Map_Tm_abs_63928b969f7b54f6141fc25b7299600e",
+        "l_quant_interp__2032"
       ],
       0,
-      "3d51a14d856e37d26dd024bb9070abcc"
+      "fe7eba5214d3b810170108aecd22ade7"
     ],
     [
       "FStar.Monotonic.Map.alloc",
@@ -47,7 +48,7 @@
         "refinement_interpretation_FStar.Monotonic.Map_Tm_refine_ff29b7a45b8f3430bb5eb44dab5f02d4"
       ],
       0,
-      "9af2b584bd30d574e7304c97c77f33bf"
+      "12f204fe3b07679d3388825f845bfcb0"
     ],
     [
       "FStar.Monotonic.Map.contains",
@@ -73,7 +74,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "fbe9c848ce6fb12cfa41ea93904c7141"
+      "be7c3b3270f9ea1e374bcb7381b81561"
     ],
     [
       "FStar.Monotonic.Map.value",
@@ -110,7 +111,7 @@
         "typing_FStar.Monotonic.HyperStack.is_eternal_region"
       ],
       0,
-      "2abafd73acd6b70aee6b2cf76e3d96ee"
+      "fd267b32f07406bff7b815ad99b50857"
     ],
     [
       "FStar.Monotonic.Map.contains_stable",
@@ -122,13 +123,13 @@
         "equation_FStar.Monotonic.HyperStack.sel",
         "equation_FStar.Monotonic.Map.contains",
         "equation_FStar.Monotonic.Map.grows",
-        "equation_FStar.Monotonic.Map.sel",
-        "interpretation_FStar.Monotonic.Map_Tm_abs_f2e6fcef38c9ee61d79523643508417e",
-        "l_quant_interp__2037", "projection_inverse_BoxBool_proj_0",
+        "equation_FStar.Monotonic.Map.sel", "equation_Prims.logical",
+        "interpretation_FStar.Monotonic.Map_Tm_abs_63928b969f7b54f6141fc25b7299600e",
+        "l_quant_interp__2044", "projection_inverse_BoxBool_proj_0",
         "token_correspondence_FStar.Monotonic.Map.grows"
       ],
       0,
-      "e373c11c5571a4a236ffb1a1a095c987"
+      "b9e7e2eba2c090b8eb04fddf69e4c278"
     ],
     [
       "FStar.Monotonic.Map.extend",
@@ -172,15 +173,15 @@
         "equation_FStar.Monotonic.Map.sel", "equation_FStar.Monotonic.Map.t",
         "equation_FStar.Monotonic.Map.upd", "equation_FStar.Set.eqtype",
         "equation_FStar.Set.subset", "equation_Prims.eqtype",
-        "equation_Prims.nat",
+        "equation_Prims.logical", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_FStar.Monotonic.Map.grows",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "interpretation_FStar.Monotonic.Map_Tm_abs_63928b969f7b54f6141fc25b7299600e",
         "interpretation_FStar.Monotonic.Map_Tm_abs_e1edf3f4f81d344a88d1fcf24c263396",
-        "interpretation_FStar.Monotonic.Map_Tm_abs_f2e6fcef38c9ee61d79523643508417e",
-        "l_quant_interp__2037",
+        "l_quant_interp__2044",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_elim",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
         "lemma_FStar.Map.lemma_ContainsDom",
@@ -230,7 +231,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "64ddea7eb09ae77e87f0fadd73a728c8"
+      "16017189831523ae9fdb1fca030e0160"
     ],
     [
       "FStar.Monotonic.Map.lookup",
@@ -259,10 +260,11 @@
         "equation_FStar.Monotonic.Map.grows",
         "equation_FStar.Monotonic.Map.map",
         "equation_FStar.Monotonic.Map.sel", "equation_FStar.Monotonic.Map.t",
+        "equation_Prims.logical",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
         "function_token_typing_FStar.Monotonic.Map.grows",
-        "interpretation_FStar.Monotonic.Map_Tm_abs_f2e6fcef38c9ee61d79523643508417e",
-        "l_quant_interp__2037",
+        "interpretation_FStar.Monotonic.Map_Tm_abs_63928b969f7b54f6141fc25b7299600e",
+        "l_quant_interp__2044",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Negation",
         "proj_equation_FStar.Pervasives.Native.Some_v",
@@ -280,7 +282,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "cfe5f0351f0b4fc183ccb5613c84ddb2"
+      "5aaab5cea4f86772bf4edf0a944e1ed6"
     ],
     [
       "FStar.Monotonic.Map.upd",
@@ -292,7 +294,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e1da92c759f1f8c63535e756f53365b2"
+      "4fc403d8a42d70cda5a35d0f948a75b9"
     ],
     [
       "FStar.Monotonic.Map.alloc",
@@ -312,7 +314,7 @@
         "refinement_interpretation_FStar.Monotonic.Map_Tm_refine_ff29b7a45b8f3430bb5eb44dab5f02d4"
       ],
       0,
-      "87c2516e92da496dc51e8642d147fc84"
+      "90a5c76e47a8c2a228a7668bf189045a"
     ],
     [
       "FStar.Monotonic.Map.contains",
@@ -321,7 +323,7 @@
       1,
       [ "@query" ],
       0,
-      "cb70a94649b456d211a19ebc01a22455"
+      "dfecab1e32cfc5189a515e04a23fdd1e"
     ],
     [
       "FStar.Monotonic.Map.value",
@@ -341,7 +343,7 @@
         "refinement_interpretation_FStar.Monotonic.Map_Tm_refine_9b52d8df2db9a70aa4173c55ec4812eb"
       ],
       0,
-      "7fa48d7113351fc9dc9e73ad3fff2892"
+      "8f3ebeb32ecce0fc753c5e3707d813f5"
     ],
     [
       "FStar.Monotonic.Map.extend",
@@ -353,7 +355,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "cfb41bb92dc621c7b08e5cc537823327"
+      "eb6e3981710c1fbc55ee291b89cee3c3"
     ],
     [
       "FStar.Monotonic.Map.lookup",
@@ -362,7 +364,7 @@
       1,
       [ "@query" ],
       0,
-      "b80454a1ffe3365e21320bd8c02ea2e2"
+      "8982226528c38643393a30b45cba28b6"
     ]
   ]
 ]

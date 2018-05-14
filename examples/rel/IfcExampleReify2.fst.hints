@@ -11,7 +11,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "598c1cf27860a6f3b21c20d8f7c46021"
+      "398e81261369fd70563b496050a58739"
     ],
     [
       "IfcExampleReify2.lo",
@@ -23,7 +23,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "8042298ff5277331e6b83a278c804403"
+      "863636db250e8a9f9dd43b4abc9a4754"
     ],
     [
       "IfcExampleReify2.c",
@@ -35,7 +35,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ad9b6e63971818968574e4163d0895cd"
+      "e64cfdcf4ce6600c724e7c87920c9097"
     ],
     [
       "IfcExampleReify2.c_2_3_ni",
@@ -59,7 +59,10 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "WhileReify_interpretation_Tm_arrow_d02cfcaeaa7110215a021afccca3cf3d",
+        "bool_inversion",
+        "constructor_distinct_FStar.Pervasives.Native.Mktuple2",
         "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_IfcRulesReify.High",
         "constructor_distinct_IfcRulesReify.Low",
         "constructor_distinct_Tm_unit",
@@ -71,7 +74,8 @@
         "constructor_distinct_WhileReify.Seq",
         "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Rel.R",
         "data_typing_intro_IfcRulesReify.High@tok",
-        "data_typing_intro_WhileReify.Seq@tok", "eq2-interp",
+        "data_typing_intro_WhileReify.Seq@tok",
+        "disc_equation_FStar.Pervasives.Native.None", "eq2-interp",
         "equality_tok_IfcRulesReify.High@tok",
         "equality_tok_IfcRulesReify.Low@tok",
         "equality_tok_WhileReify.Plus@tok",
@@ -84,7 +88,9 @@
         "equation_IfcRulesReify.inv_com_",
         "equation_IfcRulesReify.low_equiv", "equation_IfcRulesReify.ni_com",
         "equation_IfcRulesReify.ni_com_", "equation_IfcRulesReify.op_Less",
-        "equation_Prims.as_requires", "equation_Prims.l_True",
+        "equation_Prims.as_ensures", "equation_Prims.as_requires",
+        "equation_Prims.eq2", "equation_Prims.l_Forall",
+        "equation_Prims.l_True", "equation_Prims.squash",
         "equation_WhileReify.interpret_binop",
         "equation_WhileReify.interpret_com",
         "equation_with_fuel_WhileReify.interpret_com_st.fuel_instrumented",
@@ -109,13 +115,14 @@
         "interpretation_FStar.DM4F.IntStoreFixedReader_Tm_abs_4e96ca165a406577a5ca096c6a621ad3",
         "interpretation_FStar.DM4F.IntStoreFixedReader_Tm_abs_b34c206b4f74d444d8a3891713f9c0ba",
         "interpretation_Prims_Tm_abs_65a2e960d61ec783b59c1bd1dd30ed10",
+        "interpretation_Prims_Tm_abs_cc0ce251c10a6cba9664080c8e806896",
         "interpretation_WhileReify_Tm_abs_2ca2ac6fc76f9adb0c42fe5c105caf1d",
         "interpretation_WhileReify_Tm_abs_4075f20d306c7f7c61b1a46cfb41311a",
         "interpretation_WhileReify_Tm_abs_a913baa8bcff288e2b78b333e567f8a9",
         "interpretation_WhileReify_Tm_abs_b38fe3182e21fefd54ea2f8ffd759df0",
         "interpretation_WhileReify_Tm_abs_e2de9af40e7addcec157eaf54701dd16",
-        "l_and-interp", "l_imp-interp", "l_quant_interp__13435",
-        "l_quant_interp__13800",
+        "l_and-interp", "l_imp-interp", "l_not-interp",
+        "l_quant_interp__13264", "l_quant_interp__13629",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd1",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd2",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
@@ -142,13 +149,14 @@
         "token_correspondence_WhileReify.interpret_com_st.fuel_instrumented",
         "true_interp", "typing_FStar.DM4F.Heap.IntStoreFixed.index",
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd",
-        "typing_WhileReify.interpret_binop",
+        "typing_IfcRulesReify.op_Less", "typing_WhileReify.interpret_binop",
         "typing_WhileReify.interpret_com",
         "typing_WhileReify.interpret_com_st",
-        "typing_tok_WhileReify.Plus@tok", "unit_typing"
+        "typing_tok_IfcRulesReify.Low@tok", "typing_tok_WhileReify.Plus@tok",
+        "unit_typing"
       ],
       0,
-      "63d3fccdd05b76aad5034942e0e982c1"
+      "40a5ff2c43e8a0b4ae15f280296ed084"
     ],
     [
       "IfcExampleReify2.cmd_ni",
@@ -235,8 +243,8 @@
         "interpretation_WhileReify_Tm_abs_a913baa8bcff288e2b78b333e567f8a9",
         "interpretation_WhileReify_Tm_abs_b38fe3182e21fefd54ea2f8ffd759df0",
         "interpretation_WhileReify_Tm_abs_e2de9af40e7addcec157eaf54701dd16",
-        "l_and-interp", "l_imp-interp", "l_quant_interp__13435",
-        "l_quant_interp__13800",
+        "l_and-interp", "l_imp-interp", "l_quant_interp__13264",
+        "l_quant_interp__13629",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd1",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd2",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
@@ -271,7 +279,7 @@
         "typing_tok_WhileReify.Skip@tok", "unit_typing"
       ],
       0,
-      "2e4762d9ad546bca74d44c1988b5bd18"
+      "a52912802279b5005db8eeba75c05177"
     ],
     [
       "IfcExampleReify2.hi",
@@ -283,7 +291,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d8f7cc2d7c1e67821aad2b6644391119"
+      "c013c14a48254183b35489da0884a6f3"
     ],
     [
       "IfcExampleReify2.lo",
@@ -295,7 +303,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "6aa25db571b620f19503dbf6112fdb78"
+      "404c85f783690456e079c845968a27db"
     ],
     [
       "IfcExampleReify2.c",
@@ -307,7 +315,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d80c60bda91688fd3f5bb99f4e049455"
+      "be13872199a223b6ee36b6257dfbe72c"
     ],
     [
       "IfcExampleReify2.cmd_ni",
@@ -394,8 +402,8 @@
         "interpretation_WhileReify_Tm_abs_a913baa8bcff288e2b78b333e567f8a9",
         "interpretation_WhileReify_Tm_abs_b38fe3182e21fefd54ea2f8ffd759df0",
         "interpretation_WhileReify_Tm_abs_e2de9af40e7addcec157eaf54701dd16",
-        "l_and-interp", "l_imp-interp", "l_quant_interp__13435",
-        "l_quant_interp__13800",
+        "l_and-interp", "l_imp-interp", "l_quant_interp__13264",
+        "l_quant_interp__13629",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd1",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd2",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
@@ -430,7 +438,7 @@
         "typing_tok_WhileReify.Skip@tok", "unit_typing"
       ],
       0,
-      "2a77fef49c08415c4f6289c5ea7db5e1"
+      "5ff8a4db4b2fd60e0176a1c95e5cfb24"
     ]
   ]
 ]
