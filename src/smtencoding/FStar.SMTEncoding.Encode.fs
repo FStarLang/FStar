@@ -321,8 +321,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  //(Const.imp_lid,    mk_imp_interp);
                  //(Const.iff_lid,    mk_iff_interp);
                  //(Const.not_lid,    mk_not_interp);
-                 // (Const.forall_lid, mk_forall_interp);
-                 // (Const.exists_lid, mk_exists_interp);
+                 //(Const.forall_lid, mk_forall_interp);
+                 //(Const.exists_lid, mk_exists_interp);
                  (Const.range_lid,  mk_range_interp);
                  (Const.inversion_lid,mk_inversion_axiom);
                  (Const.with_type_lid, mk_with_type_axiom)
@@ -670,7 +670,7 @@ let encode_top_level_let :
                   else U.ascribe body (BU.Inl t_body, None)
                 in
                 let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
-                let app, (body, decls2) =
+                let pat, app, (body, decls2) =
                   let is_logical =
                     match (SS.compress t_body).n with
                     | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
@@ -685,14 +685,14 @@ let encode_top_level_let :
                                    (Print.lbname_to_string lbn)
                   end;
                   if quals |> List.contains Logic || is_logical
-                  then mk_Valid app, encode_formula body env'
-                  else app, encode_term body env'
+                  then app, mk_Valid app, encode_formula body env'
+                  else app, app, encode_term body env'
                 in
 
                 //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
                 //But the guard is unnecessary given the pattern
                 let eqn = Util.mkAssume(mkForall (U.range_of_lbname lbn)
-                                                 ([[app]], vars, mkEq(app,body)),
+                                                 ([[pat]], vars, mkEq(app,body)),
                                     Some (BU.format1 "Equation for %s" flid.str),
                                     ("equation_"^fvb.smt_id)) in
                 decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid fvb.smt_id app,
