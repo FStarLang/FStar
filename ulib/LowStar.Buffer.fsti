@@ -263,10 +263,10 @@ val addr_unused_in_abuffer_preserved
   (requires (HS.live_region h1 r ==> a `Heap.addr_unused_in` (Map.sel h1.HS.h r)))
   (ensures (abuffer_preserved b h1 h2))
 
-val abuffer_of_buffer (#t: Type) (b: buffer t { not (g_is_null b) } ) : Tot (abuffer (frameOf b) (as_addr b))
+val abuffer_of_buffer (#t: Type) (b: buffer t) : Tot (abuffer (frameOf b) (as_addr b))
 
 val abuffer_preserved_elim (#t: Type) (b: buffer t) (h h' : HS.mem) : Lemma
-  (requires ((not (g_is_null b)) /\ abuffer_preserved #(frameOf b) #(as_addr b) (abuffer_of_buffer b) h h' /\ live h b /\ length b > 0))
+  (requires (abuffer_preserved #(frameOf b) #(as_addr b) (abuffer_of_buffer b) h h' /\ live h b /\ length b > 0))
   (ensures (live h' b /\ as_seq h b == as_seq h' b))
 
 let unused_in_abuffer_preserved
@@ -275,7 +275,7 @@ let unused_in_abuffer_preserved
   (h h' : HS.mem)
 : Lemma
   (requires (b `unused_in` h))
-  (ensures ((not (g_is_null b)) /\ abuffer_preserved #(frameOf b) #(as_addr b) (abuffer_of_buffer b) h h'))
+  (ensures (abuffer_preserved #(frameOf b) #(as_addr b) (abuffer_of_buffer b) h h'))
 = Classical.move_requires (fun b -> live_not_unused_in #t h b) b;
   live_null t h;
   null_unique b;
@@ -296,7 +296,7 @@ val abuffer_includes_abuffer_preserved (#r: HS.rid) (#a: nat) (larger smaller: a
   (ensures (abuffer_preserved smaller h1 h2))
 
 val abuffer_includes_intro (#t: Type) (larger smaller: buffer t) : Lemma
-  (requires (larger `includes` smaller /\ (not (g_is_null larger)) /\ (not (g_is_null smaller))))
+  (requires (larger `includes` smaller))
   (ensures (
     let r = frameOf larger in
     let a = as_addr larger in
@@ -313,7 +313,7 @@ val abuffer_disjoint_includes (#r: HS.rid) (#a: nat) (larger1 larger2: abuffer r
   (ensures (abuffer_disjoint smaller1 smaller2))
 
 val abuffer_disjoint_intro (#t1 #t2: Type) (b1: buffer t1) (b2: buffer t2) : Lemma
-  (requires (disjoint b1 b2 /\ (not (g_is_null b1)) /\ (not (g_is_null b2)) /\ frameOf b1 == frameOf b2 /\ as_addr b1 == as_addr b2))
+  (requires (disjoint b1 b2 /\ frameOf b1 == frameOf b2 /\ as_addr b1 == as_addr b2))
   (ensures (
     let r = frameOf b1 in
     let a = as_addr b1 in
@@ -370,7 +370,7 @@ val modifies_1_abuffer
   (h1 h2: HS.mem)
   (b' : abuffer (frameOf b) (as_addr b))
 : Lemma
-  (requires (modifies_1 b h1 h2 /\ (not (g_is_null b)) /\ abuffer_disjoint #(frameOf b) #(as_addr b) (abuffer_of_buffer b) b'))
+  (requires (modifies_1 b h1 h2 /\ abuffer_disjoint #(frameOf b) #(as_addr b) (abuffer_of_buffer b) b'))
   (ensures (abuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2))
 
 val modifies_1_null

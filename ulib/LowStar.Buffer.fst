@@ -221,12 +221,20 @@ type abuffer_
 
 let abuffer' region addr = (x: abuffer_ { x.b_offset + x.b_length <= x.b_max_length } )
 
-let abuffer_of_buffer' (#a: Type) (b: buffer a { not (g_is_null b) } ) : Tot (abuffer (frameOf b) (as_addr b)) =
-  Ghost.hide ({
-    b_max_length = U32.v (Buffer?.max_length b);
-    b_offset = U32.v (Buffer?.idx b);
-    b_length = U32.v (Buffer?.length b);
-  })
+let abuffer_of_buffer' (#a: Type) (b: buffer a) : Tot (abuffer (frameOf b) (as_addr b)) =
+  if Null? b
+  then
+    Ghost.hide ({
+      b_max_length = 0;
+      b_offset = 0;
+      b_length = 0;
+    })
+  else
+    Ghost.hide ({
+      b_max_length = U32.v (Buffer?.max_length b);
+      b_offset = U32.v (Buffer?.idx b);
+      b_length = U32.v (Buffer?.length b);
+    })
 
 let abuffer_preserved' 
   (#r: HS.rid)
@@ -235,7 +243,7 @@ let abuffer_preserved'
   (h h' : HS.mem)
 : GTot Type0
 = forall (t' : Type0) (b' : buffer t' ) .
-  ((not (g_is_null b')) /\ frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b' /\ length b' > 0) ==>
+  (frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b' /\ length b' > 0) ==>
   (live h' b' /\ as_seq h' b' == as_seq h b')
 
 let abuffer_preserved = abuffer_preserved'
@@ -249,7 +257,7 @@ let abuffer_preserved_intro
     (t' : Type0) ->
     (b' : buffer t') ->
     Lemma
-    (requires ((not (g_is_null b')) /\ frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b' /\ length b' > 0))
+    (requires (frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b' /\ length b' > 0))
     (ensures (live h' b' /\ as_seq h' b' == as_seq h b'))
   ))
 : Lemma
@@ -259,7 +267,7 @@ let abuffer_preserved_intro
     (b' : buffer t')
   : Lemma
     ((
-      (not (g_is_null b')) /\ frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b' /\ length b' > 0
+      frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b' /\ length b' > 0
     ) ==> (
       live h' b' /\ as_seq h' b' == as_seq h b'
     ))
@@ -278,12 +286,7 @@ let same_mreference_abuffer_preserved #r #a b h1 h2 f =
 
 let addr_unused_in_abuffer_preserved #r #a b h1 h2 = ()
 
-let abuffer_of_buffer #t b =
-  match b with
-  | Null ->
-    Ghost.hide ({ b_max_length = 0; b_offset = 0; b_length = 0; })
-  | _ ->
-    abuffer_of_buffer' b
+let abuffer_of_buffer #t b = abuffer_of_buffer' b
 
 let abuffer_preserved_elim #t b h h' = ()
 
@@ -359,7 +362,7 @@ let modifies_1_preserves_abuffers
   (h1 h2: HS.mem)
 : GTot Type0
 = forall (b' : abuffer (frameOf b) (as_addr b)) .
-  ((not (g_is_null b)) ==> abuffer_disjoint #(frameOf b) #(as_addr b) (abuffer_of_buffer b) b') ==> abuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2
+  (abuffer_disjoint #(frameOf b) #(as_addr b) (abuffer_of_buffer b) b') ==> abuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2
 
 let modifies_1' 
   (#a: Type) (b: buffer a)
