@@ -2812,53 +2812,56 @@ let (z3_rlimit_factor : unit -> Prims.int) =
   fun uu____6630  -> get_z3rlimit_factor () 
 let (z3_seed : unit -> Prims.int) = fun uu____6635  -> get_z3seed () 
 let (use_two_phase_tc : unit -> Prims.bool) =
-  fun uu____6640  -> get_use_two_phase_tc () 
+  fun uu____6640  ->
+    (get_use_two_phase_tc ()) &&
+      (let uu____6642 = lax ()  in Prims.op_Negation uu____6642)
+  
 let (no_positivity : unit -> Prims.bool) =
-  fun uu____6645  -> get_no_positivity () 
+  fun uu____6647  -> get_no_positivity () 
 let (ml_no_eta_expand_coertions : unit -> Prims.bool) =
-  fun uu____6650  -> get_ml_no_eta_expand_coertions () 
+  fun uu____6652  -> get_ml_no_eta_expand_coertions () 
 let (warn_error : unit -> Prims.string) =
-  fun uu____6655  -> get_warn_error () 
+  fun uu____6657  -> get_warn_error () 
 let (use_extracted_interfaces : unit -> Prims.bool) =
-  fun uu____6660  -> get_use_extracted_interfaces () 
+  fun uu____6662  -> get_use_extracted_interfaces () 
 let (should_extract : Prims.string -> Prims.bool) =
   fun m  ->
     let m1 = FStar_String.lowercase m  in
-    let uu____6667 = get_extract ()  in
-    match uu____6667 with
+    let uu____6669 = get_extract ()  in
+    match uu____6669 with
     | FStar_Pervasives_Native.Some extract_setting ->
-        ((let uu____6678 =
-            let uu____6691 = get_no_extract ()  in
-            let uu____6694 = get_extract_namespace ()  in
-            let uu____6697 = get_extract_module ()  in
-            (uu____6691, uu____6694, uu____6697)  in
-          match uu____6678 with
+        ((let uu____6680 =
+            let uu____6693 = get_no_extract ()  in
+            let uu____6696 = get_extract_namespace ()  in
+            let uu____6699 = get_extract_module ()  in
+            (uu____6693, uu____6696, uu____6699)  in
+          match uu____6680 with
           | ([],[],[]) -> ()
-          | uu____6712 ->
+          | uu____6714 ->
               failwith
                 "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module");
          (let setting = parse_settings extract_setting  in
           let m_components = FStar_Ident.path_of_text m1  in
           let rec matches_path m_components1 path =
             match (m_components1, path) with
-            | (uu____6758,[]) -> true
+            | (uu____6760,[]) -> true
             | (m2::ms,p::ps) ->
                 (m2 = (FStar_String.lowercase p)) && (matches_path ms ps)
-            | uu____6777 -> false  in
-          let uu____6786 =
+            | uu____6779 -> false  in
+          let uu____6788 =
             FStar_All.pipe_right setting
               (FStar_Util.try_find
-                 (fun uu____6820  ->
-                    match uu____6820 with
-                    | (path,uu____6828) -> matches_path m_components path))
+                 (fun uu____6822  ->
+                    match uu____6822 with
+                    | (path,uu____6830) -> matches_path m_components path))
              in
-          match uu____6786 with
+          match uu____6788 with
           | FStar_Pervasives_Native.None  -> false
-          | FStar_Pervasives_Native.Some (uu____6839,flag) -> flag))
+          | FStar_Pervasives_Native.Some (uu____6841,flag) -> flag))
     | FStar_Pervasives_Native.None  ->
         let should_extract_namespace m2 =
-          let uu____6859 = get_extract_namespace ()  in
-          match uu____6859 with
+          let uu____6861 = get_extract_namespace ()  in
+          match uu____6861 with
           | [] -> false
           | ns ->
               FStar_All.pipe_right ns
@@ -2867,21 +2870,21 @@ let (should_extract : Prims.string -> Prims.bool) =
                       FStar_Util.starts_with m2 (FStar_String.lowercase n1)))
            in
         let should_extract_module m2 =
-          let uu____6875 = get_extract_module ()  in
-          match uu____6875 with
+          let uu____6877 = get_extract_module ()  in
+          match uu____6877 with
           | [] -> false
           | l ->
               FStar_All.pipe_right l
                 (FStar_Util.for_some
                    (fun n1  -> (FStar_String.lowercase n1) = m2))
            in
-        (let uu____6887 = no_extract m1  in Prims.op_Negation uu____6887) &&
-          (let uu____6889 =
-             let uu____6898 = get_extract_namespace ()  in
-             let uu____6901 = get_extract_module ()  in
-             (uu____6898, uu____6901)  in
-           (match uu____6889 with
+        (let uu____6889 = no_extract m1  in Prims.op_Negation uu____6889) &&
+          (let uu____6891 =
+             let uu____6900 = get_extract_namespace ()  in
+             let uu____6903 = get_extract_module ()  in
+             (uu____6900, uu____6903)  in
+           (match uu____6891 with
             | ([],[]) -> true
-            | uu____6912 ->
+            | uu____6914 ->
                 (should_extract_namespace m1) || (should_extract_module m1)))
   
