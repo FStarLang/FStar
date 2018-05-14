@@ -979,9 +979,9 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          - [@r] makes range [r] fatal.");
 
         ( noshort,
-        "use_extracted_interfaces",
-        Const (mk_bool true),
-        "Extract interfaces from the dependencies and use them for verification");
+         "use_extracted_interfaces",
+          BoolStr,
+         "Extract interfaces from the dependencies and use them for verification (default 'true')");
 
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
