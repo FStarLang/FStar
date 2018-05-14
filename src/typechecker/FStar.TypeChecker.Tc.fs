@@ -1856,6 +1856,8 @@ let extract_interface (en:env) (m:modul) :modul =
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
+    if Env.debug en Options.Extreme
+    then BU.print1 "Extracting interface for %s\n" (Print.sigelt_to_string s);
     match s.sigel with
     | Sig_inductive_typ _
     | Sig_datacon _ -> failwith "Impossible! extract_interface: bare data constructor"
@@ -1957,7 +1959,8 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     (not loading_from_cache)            &&
     (not iface_exists)                  &&
     Options.use_extracted_interfaces () &&
-    (not m.is_interface)
+    (not m.is_interface)                &&
+    FStar.Errors.get_err_count() = 0
   in
   if should_extract_interface then begin //if we are using extracted interfaces and this is not already an interface
     //extract the interface in the new environment, this helps us figure out things like if an effect is reifiable
