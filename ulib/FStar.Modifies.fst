@@ -988,7 +988,6 @@ let modifies_only_live_addresses r a l h h' =
   let l_a = restrict_to_addresses l_r r a in
   let l_r_not_a = restrict_to_addresses l_r r (Set.complement a) in
   let l_not_a = loc_union l_r_not_a l_not_r in
-  assert_spinoff (loc_includes (loc_union l_a l_not_a) (loc_union (loc_union l_a l_r_not_a) l_not_r));
   let l' = loc_union (loc_addresses r a) l_not_a in
   loc_includes_loc_addresses_restrict_to_addresses l_r r a;
   loc_includes_loc_union_restrict_to_regions l (Set.singleton r);
