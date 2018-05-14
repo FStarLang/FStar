@@ -1396,6 +1396,9 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
     let check_quals_eq l qopt q = match qopt with
       | None -> Some q
       | Some q' ->
+        //logic is now a deprecated qualifier, so discard it from the checking
+        let drop_logic = List.filter (fun x -> not (x = Logic)) in
+        let q, q' = drop_logic q, drop_logic q' in
         if List.length q = List.length q'
         && List.forall2 U.qualifier_equal q q'
         then Some q
