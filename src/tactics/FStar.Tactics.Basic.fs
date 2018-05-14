@@ -64,13 +64,10 @@ let run_safe t p =
     try t.tac_f p
     with | e -> Failed (BU.message_of_exn e, p)
 
-let tac_verb_dbg : ref<option<bool>> = BU.mk_ref None
-let rec log ps f : unit =
-    match !tac_verb_dbg with
-    | None -> (tac_verb_dbg := Some (Env.debug ps.main_context (Options.Other "TacVerbose"));
-               log ps f)
-    | Some true -> f ()
-    | Some false -> ()
+let rec log ps (f : unit -> unit) : unit =
+    if ps.tac_verb_dbg
+    then f ()
+    else ()
 
 (* monadic return *)
 let ret (x:'a) : tac<'a> =
@@ -103,9 +100,9 @@ let goal_to_string_verbose (g:goal) : string =
          | None -> ""
          | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (Print.term_to_string t))
 
-let goal_to_string (g:goal) =
+let goal_to_string ps (g:goal) =
     if Options.print_implicits ()
-       || !tac_verb_dbg = Some true
+       || ps.tac_verb_dbg
     then goal_to_string_verbose g
     else
         let w =
@@ -146,7 +143,7 @@ let debug (msg:string) : tac<unit> =
     ret ())
 
 let dump_goal ps goal =
-    tacprint (goal_to_string goal);
+    tacprint (goal_to_string ps goal);
     ()
 
 let dump_cur ps msg =
@@ -169,10 +166,10 @@ let ps_to_string (msg, ps) =
                  else "");
                 format2 "ACTIVE goals (%s):\n%s\n"
                     (string_of_int (List.length ps.goals))
-                    (String.concat "\n" (List.map goal_to_string ps.goals));
+                    (String.concat "\n" (List.map (goal_to_string ps) ps.goals));
                 format2 "SMT goals (%s):\n%s\n"
                     (string_of_int (List.length ps.smt_goals))
-                    (String.concat "\n" (List.map goal_to_string ps.smt_goals));
+                    (String.concat "\n" (List.map (goal_to_string ps) ps.smt_goals));
                ]
 
 let goal_to_json g =
@@ -471,11 +468,12 @@ let cur_goal () : tac<goal> =
         ret hd)
 
 let tadmit () : tac<unit> = wrap_err "tadmit" <|
+    bind get (fun ps ->
     bind (cur_goal ()) (fun g ->
     Err.log_issue (goal_type g).pos
         (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
-                    (goal_to_string g));
-    solve' g U.exp_unit)
+                    (goal_to_string ps g));
+    solve' g U.exp_unit))
 
 let fresh () : tac<Z.t> =
     bind get (fun ps ->
@@ -1807,6 +1805,7 @@ let proofstate_of_goal_ty rng env typ =
         entry_range = rng;
         guard_policy = SMT;
         freshness = 0;
+        tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
     }
     in
     (ps, (goal_witness g))
