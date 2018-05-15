@@ -4,12 +4,12 @@ include ../Makefile.include
 OTHERFLAGS+=--include ../tactics
 
 all: SepLogic.Heap.uver Shallow.uver SL.Heap.uver SL.Effect.uver	\
-	SL.Shallow.uver Examples.uver SL.Examples.uver			\
-	SL.ExamplesAuto.uver
+	SL.Shallow.uver Examples.uver SL.Examples.custom		\
+	SL.ExamplesAuto.custom
 
 #Excludes extracted interfaces for these examples
-SL.Examples.uver: OTHERFLAGS += --use_extracted_interfaces false
-SL.ExamplesAuto.uver: OTHERFLAGS += --use_extracted_interfaces false --cache_off
+%.custom: %.fst
+	$(FSTAR) --use_extracted_interfaces false $^
 
 %.fst-in:
 	@echo $(OTHERFLAGS)
