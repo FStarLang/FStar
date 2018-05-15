@@ -355,8 +355,8 @@ let def_scope_wf msg rng r =
 // Only used for defensive tests now.
 let p_scope prob =
    let r = match prob with
-   | TProb p -> p.logical_guard_uvar.ctx_uvar_binders
-   | CProb p -> p.logical_guard_uvar.ctx_uvar_binders
+   | TProb p -> p.logical_guard_uvar.ctx_uvar_binders @ (match p_element prob with | None -> [] | Some x -> [S.mk_binder x])
+   | CProb p -> p.logical_guard_uvar.ctx_uvar_binders @ (match p_element prob with | None -> [] | Some x -> [S.mk_binder x])
    in
    def_scope_wf "p_scope" (p_loc prob) r;
    r
