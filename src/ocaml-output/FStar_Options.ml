@@ -288,7 +288,7 @@ let (defaults :
   ("__no_positivity", (Bool false));
   ("__ml_no_eta_expand_coertions", (Bool false));
   ("warn_error", (String ""));
-  ("use_extracted_interfaces", (Bool true))] 
+  ("use_extracted_interfaces", (Bool false))] 
 let (init : unit -> unit) =
   fun uu____1182  ->
     let o = peek ()  in
@@ -1719,7 +1719,7 @@ let rec (specs_with_types :
                                                                     (FStar_Getopt.noshort,
                                                                     "use_extracted_interfaces",
                                                                     BoolStr,
-                                                                    "Extract interfaces from the dependencies and use them for verification (default 'true')")
+                                                                    "Extract interfaces from the dependencies and use them for verification (default 'false')")
                                                                     ::
                                                                     uu____4634
                                                                      in
