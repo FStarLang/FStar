@@ -438,7 +438,7 @@ val recall
 
 val freeable (#a: Type) (b: buffer a) : GTot Type0
 
-val rfree
+val free
   (#a: Type)
   (b: buffer a)
 : HST.ST unit
@@ -454,7 +454,7 @@ val rfree
 
 (* Allocation *)
 
-let rcreate_post_common
+let alloc_post_common
   (#a: Type)
   (r: HS.rid)
   (len: nat)
@@ -470,7 +470,7 @@ let rcreate_post_common
   length b == len /\
   modifies_0 h0 h1
 
-val rcreate
+val gcmalloc
   (#a: Type)
   (r: HS.rid)
   (init: a)
@@ -478,12 +478,12 @@ val rcreate
 : HST.ST (buffer a)
   (requires (fun h -> HST.is_eternal_region r /\ U32.v len > 0))
   (ensures (fun h b h' ->
-    rcreate_post_common r (U32.v len) b h h' /\
+    alloc_post_common r (U32.v len) b h h' /\
     as_seq h' b == Seq.create (U32.v len) init /\     
     recallable b
   ))
 
-val rcreate_mm
+val malloc
   (#a: Type)
   (r: HS.rid)
   (init: a)
@@ -491,36 +491,36 @@ val rcreate_mm
 : HST.ST (buffer a)
   (requires (fun h -> HST.is_eternal_region r /\ U32.v len > 0))
   (ensures (fun h b h' ->
-    rcreate_post_common r (U32.v len) b h h' /\
+    alloc_post_common r (U32.v len) b h h' /\
     as_seq h' b == Seq.create (U32.v len) init /\     
     freeable b
   ))
 
-val create
+val alloca
   (#a: Type)
   (init: a)
   (len: U32.t)
 : HST.StackInline (buffer a)
   (requires (fun h -> U32.v len > 0))
   (ensures (fun h b h' ->
-    rcreate_post_common h.HS.tip (U32.v len) b h h' /\
+    alloc_post_common h.HS.tip (U32.v len) b h h' /\
     as_seq h' b == Seq.create (U32.v len) init
   ))
 
-unfold let createL_pre (#a: Type0) (init: list a) : GTot Type0 =
+unfold let alloca_of_list_pre (#a: Type0) (init: list a) : GTot Type0 =
   normalize (0 < FStar.List.Tot.length init) /\
   normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
-unfold let createL_post (#a: Type) (len: nat) (buf: buffer a) : GTot Type0 =
+unfold let alloca_of_list_post (#a: Type) (len: nat) (buf: buffer a) : GTot Type0 =
   normalize (length buf == len)
 
-val createL
+val alloca_of_list
   (#a: Type0)
   (init: list a)
 : HST.StackInline (buffer a)
-  (requires (fun h -> createL_pre #a init))
+  (requires (fun h -> alloca_of_list_pre #a init))
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
-    rcreate_post_common h.HS.tip len b h h' /\
-    createL_post #a len b
+    alloc_post_common h.HS.tip len b h h' /\
+    alloca_of_list_post #a len b
   ))

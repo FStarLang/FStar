@@ -443,12 +443,12 @@ let freeable' (#a: Type) (b: buffer a) : GTot Type0 =
 
 let freeable = freeable'
 
-let rfree #a b =
+let free #a b =
   HST.rfree (Buffer?.content b)
 
 (* Allocation *)
 
-let rcreate_common
+let alloc_common
   (#a: Type)
   (r: HS.rid)
   (init: a)
@@ -457,7 +457,7 @@ let rcreate_common
 : HST.ST (buffer a)
   (requires (fun h0 -> HST.is_eternal_region r /\ U32.v len > 0))
   (ensures (fun h0 b h1 ->
-    rcreate_post_common r (U32.v len) b h0 h1 /\
+    alloc_post_common r (U32.v len) b h0 h1 /\
     as_seq h1 b == Seq.create (U32.v len) init /\
     HS.is_mm (Buffer?.content b) == mm /\
     Buffer?.idx b == 0ul /\
@@ -470,20 +470,20 @@ let rcreate_common
   let b = Buffer len content 0ul len in
   b
 
-let rcreate #a r init len =
-  rcreate_common r init len false
+let gcmalloc #a r init len =
+  alloc_common r init len false
 
-let rcreate_mm #a r init len =
-  rcreate_common r init len true
+let malloc #a r init len =
+  alloc_common r init len true
 
-let create #a init len =
+let alloca #a init len =
   let content: HST.reference (vec a (U32.v len)) =
     HST.salloc (vec_of_lseq (Seq.create (U32.v len) init))
   in
   let b = Buffer len content 0ul len in
   b
 
-let createL #a init =
+let alloca_of_list #a init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.of_list init in
   Seq.lemma_of_list_length s init;
