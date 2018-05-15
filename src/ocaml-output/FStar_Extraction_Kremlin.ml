@@ -1829,7 +1829,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            uu____5175 = "FStar.Buffer.create") ||
             (let uu____5177 = FStar_Extraction_ML_Syntax.string_of_mlpath p
                 in
-             uu____5177 = "LowStar.Buffer.create")
+             uu____5177 = "LowStar.Buffer.alloca")
           ->
           let uu____5178 =
             let uu____5185 = translate_expr env e1  in
@@ -1870,7 +1870,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            uu____5224 = "FStar.Buffer.createL") ||
             (let uu____5226 = FStar_Extraction_ML_Syntax.string_of_mlpath p
                 in
-             uu____5226 = "LowStar.Buffer.createL")
+             uu____5226 = "LowStar.Buffer.alloca_of_list")
           ->
           let rec list_elements acc e21 =
             match e21.FStar_Extraction_ML_Syntax.expr with
@@ -1924,7 +1924,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            uu____5321 = "FStar.Buffer.rcreate") ||
             (let uu____5323 = FStar_Extraction_ML_Syntax.string_of_mlpath p
                 in
-             uu____5323 = "LowStar.Buffer.rcreate")
+             uu____5323 = "LowStar.Buffer.gcmalloc")
           ->
           let uu____5324 =
             let uu____5331 = translate_expr env e1  in
@@ -1965,7 +1965,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            uu____5373 = "FStar.Buffer.rcreate_mm") ||
             (let uu____5375 = FStar_Extraction_ML_Syntax.string_of_mlpath p
                 in
-             uu____5375 = "LowStar.Buffer.rcreate_mm")
+             uu____5375 = "LowStar.Buffer.malloc")
           ->
           let uu____5376 =
             let uu____5383 = translate_expr env e1  in
@@ -2003,7 +2003,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            uu____5415 = "FStar.Buffer.rfree") ||
             (let uu____5417 = FStar_Extraction_ML_Syntax.string_of_mlpath p
                 in
-             uu____5417 = "LowStar.Buffer.rfree")
+             uu____5417 = "LowStar.Buffer.free")
           -> let uu____5418 = translate_expr env e2  in EBufFree uu____5418
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
