@@ -301,8 +301,7 @@ let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and 
       let mii = FStar.Syntax.DsEnv.inclusion_info env.dsenv (fst tcmod).name in
       tcmod, tcmod_iface_opt, mii, env
   in
-  if Options.cache_checked_modules()
-  && not (Options.cache_off()) then
+  if not (Options.cache_off()) then
       match load_module_from_cache env fn with
       | None ->
             let tcmod, tcmod_iface_opt, mii, env = tc_source_file () in
