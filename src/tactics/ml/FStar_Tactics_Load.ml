@@ -26,7 +26,7 @@ let find_taclib () =
   | { Process.Output.exit_status = Process.Exit.Exit 0; stdout; _ } ->
       String.trim (List.hd stdout)
   | _ ->
-      FStar_Options.fstar_home () ^ "/bin/fstar-tactics-lib"
+      FStar_Options.fstar_bin_directory ^ "/fstar-tactics-lib"
 
 
 let load_tactic tac =
@@ -56,7 +56,6 @@ let load_tactics_dir dir =
     |> List.iter load_tactic
 
 let compile_modules dir ms =
-   let fs_home = FStar_Options.fstar_home () in
    let compile m =
      let packages = ["fstar-tactics-lib"] in
      let pkg pname = "-package " ^ pname in
@@ -65,7 +64,7 @@ let compile_modules dir ms =
                 @ (List.map pkg packages)
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
      (* Note: not useful when in an OPAM setting *)
-     let env_setter = U.format1 "env OCAMLPATH=\"%s/bin/\"" fs_home in
+     let env_setter = U.format1 "env OCAMLPATH=\"%s/\"" FStar_Options.fstar_bin_directory in
      let cmd = String.concat " " (env_setter :: "ocamlfind" :: args) in
      let rc = Sys.command cmd in
      if rc <> 0
