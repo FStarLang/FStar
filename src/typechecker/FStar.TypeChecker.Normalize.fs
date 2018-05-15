@@ -1211,6 +1211,11 @@ let rec maybe_weakly_reduced tm :  bool =
            | Meta_named _ -> false)
 
 let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
+    log_unfolding cfg (fun () ->
+          BU.print3 ">>> Deciding unfolding of %s with %s env elements top of the stack %s \n"
+                                        (Print.fv_to_string fv)
+                                        (BU.string_of_int (List.length env))
+                                        (stack_to_string (fst <| firstn 4 stack)));
     let attrs = match Env.attrs_of_qninfo qninfo with
                 | None -> []
                 | Some ats -> ats
@@ -1230,7 +1235,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     // We unfold dm4f actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
         let b = should_reify cfg stack in
-        log_unfolding cfg (fun () -> BU.print2 ">>> For DM4F action %s, should_reify = %s\n"
+        log_unfolding cfg (fun () -> BU.print2 " >> For DM4F action %s, should_reify = %s\n"
                                                (Print.fv_to_string fv)
                                                (string_of_bool b));
         if b then reif else no
@@ -1254,7 +1259,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     | _, Some _, _, _
     | _, _, Some _, _
     | _, _, _, Some _ ->
-        log_unfolding cfg (fun () -> BU.print1 ">>> Reached a %s with selective unfolding\n"
+        log_unfolding cfg (fun () -> BU.print1 " >> Reached a %s with selective unfolding\n"
                                                (Print.fv_to_string fv));
         // How does the following code work?
         // We are doing selective unfolding so, by default, we assume everything
@@ -1277,7 +1282,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
 
     // Nothing special, just check the depth
     | _ ->
-        log_unfolding cfg (fun () -> BU.print3 ">>> Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
+        log_unfolding cfg (fun () -> BU.print3 " >> Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
                                                (Print.fv_to_string fv)
                                                (Print.delta_depth_to_string fv.fv_delta)
                                                (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
@@ -1288,7 +1293,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
              | Eager_unfolding_only -> true
              | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l))
     in
-    log_unfolding cfg (fun () -> BU.print3 ">>> For %s (%s), unfolding res = %s\n"
+    log_unfolding cfg (fun () -> BU.print3 " >> For %s (%s), unfolding res = %s\n"
                     (Print.fv_to_string fv)
                     (Range.string_of_range rng)
                     (string_of_res res));
@@ -1303,14 +1308,9 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
         // Unfolding fully, use new cfg with more steps and keep old one in stack
         let cfg' =
             { cfg with steps = { cfg.steps with
-                       iota         = false
-                     ; zeta         = false
-                     ; weak         = false
-                     ; hnf          = false
-                     ; primops      = false
-                     ; simplify     = false
-                     ; unfold_only  = None
+                       unfold_only  = None
                      ; unfold_fully = None
+                     ; unfold_attr  = None
                      ; unfold_until = Some delta_constant } } in
         let stack' = (Cfg cfg) :: stack in
         Some (cfg', stack')
@@ -1345,11 +1345,19 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_lazy _
 
-          | Tm_fvar( {fv_delta=Delta_constant_at_level 0} )
-          | Tm_fvar( {fv_qual=Some Data_ctor } )
-          | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
-            //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
+          //these three are just constructors; no delta steps can apply
+          | Tm_fvar({ fv_delta = Delta_constant_at_level 0 })
+          | Tm_fvar({ fv_qual = Some Data_ctor })
+          | Tm_fvar({ fv_qual = Some (Record_ctor _) }) ->
+            log_unfolding cfg (fun () -> BU.print1 ">>> Tm_fvar case 0 for %s\n" (Print.term_to_string t));
             rebuild cfg env stack t
+
+          | Tm_fvar fv ->
+            let qninfo = Env.lookup_qname cfg.tcenv (S.lid_of_fv fv) in
+            begin match decide_unfolding cfg env stack t.pos fv qninfo with
+            | Some (cfg, stack) -> do_unfold_fv cfg env stack t qninfo fv
+            | None -> rebuild cfg env stack t
+            end
 
           | Tm_quoted _ ->
             rebuild cfg env stack (closure_as_term cfg env t)
@@ -1401,13 +1409,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             else let us = UnivArgs(List.map (norm_universe cfg env) us, t.pos) in
                  let stack = us::stack in
                  norm cfg env stack t'
-
-          | Tm_fvar fv ->
-            let qninfo = Env.lookup_qname cfg.tcenv (S.lid_of_fv fv) in
-            begin match decide_unfolding cfg env stack t.pos fv qninfo with
-            | Some (cfg, stack) -> do_unfold_fv cfg env stack t qninfo fv
-            | None -> rebuild cfg env stack t
-            end
 
           | Tm_bvar x ->
             begin match lookup_bvar env x with
@@ -1736,13 +1737,13 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
        | None ->
-         log cfg (fun () -> // printfn "delta_level = %A, qninfo=%A" cfg.delta_level qninfo;
-                         BU.print "Tm_fvar case 2\n" []) ;
+         log_unfolding cfg (fun () -> // printfn "delta_level = %A, qninfo=%A" cfg.delta_level qninfo;
+                                      BU.print1 " >> Tm_fvar case 2 for %s\n" (Print.fv_to_string f));
          rebuild cfg env stack t0
 
        | Some (us, t) ->
          begin
-         log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
+         log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n"
                        (Print.term_to_string t0) (Print.term_to_string t));
          let t =
            if cfg.steps.unfold_until = Some delta_constant
