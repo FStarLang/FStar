@@ -1455,6 +1455,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       end
                   end
 
+                // TODO: GM: This bit is shady, and it breaks unfold_fully across lambdas
                 | Cfg cfg :: stack ->
                   norm cfg env stack t
 
