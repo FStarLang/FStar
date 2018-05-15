@@ -2008,10 +2008,10 @@ and check_top_level_let_rec env top =
             * the expected type is defined within lbs
             * *)
            let env0, topt = Env.clear_expected_typ env in
-           let lbs, rec_env = build_let_rec_env true env0 lbs in
+           let lbs, rec_env, g_t = build_let_rec_env true env0 lbs in
            (* now we type check each let rec *)
            let lbs, g_lbs = check_let_recs rec_env lbs in
-           let g_lbs = Rel.solve_deferred_constraints env g_lbs |> Rel.resolve_implicits env in
+           let g_lbs = Rel.conj_guard g_t g_lbs |> Rel.solve_deferred_constraints env |> Rel.resolve_implicits env in
 
            let all_lb_names = lbs |> List.map (fun lb -> right lb.lbname) |> Some in
 
@@ -2061,8 +2061,8 @@ and check_inner_let_rec env top =
 (*open*)  let lbs, e2 = SS.open_let_rec lbs e2 in
 
           let env0, topt = Env.clear_expected_typ env in
-          let lbs, rec_env = build_let_rec_env false env0 lbs in
-          let lbs, g_lbs = check_let_recs rec_env lbs in
+          let lbs, rec_env, g_t = build_let_rec_env false env0 lbs in
+          let lbs, g_lbs = check_let_recs rec_env lbs |> (fun (lbs, g) -> lbs, Rel.conj_guard g_t g) in
 
           let env, lbs = lbs |> BU.fold_map (fun env lb ->
             let x = {left lb.lbname with sort=lb.lbtyp} in
@@ -2102,7 +2102,7 @@ and check_inner_let_rec env top =
 (* build an environment with recursively bound names.                         *)
 (* refining the types of those names with decreases clauses is done in tc_abs *)
 (******************************************************************************)
-and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
+and build_let_rec_env top_level env lbs : list<letbinding> * env_t * guard_t =
    let env0 = env in
    let termination_check_enabled lbname lbdef lbtyp =
      if Options.ml_ish () then false else
@@ -2148,18 +2148,16 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
        quals |> List.contains TotalEffect
      )
    in
-   let lbs, env = List.fold_left (fun (lbs, env) lb ->
+   let lbs, env, g = List.fold_left (fun (lbs, env, g_acc) lb ->
         let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
         let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes
         let e = U.unascribe lb.lbdef in
-        let t =
+        let g, t =
             if not check_t
-            then t
+            then g_acc, t
             else (let env0 = Env.push_univ_vars env0 univ_vars in
                   let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) in
-                  let g = Rel.resolve_implicits env g in
-                  ignore <| Rel.discharge_guard env g;
-                  norm env0 t) in
+                  Rel.conj_guard g_acc (g |> Rel.resolve_implicits env |> Rel.discharge_guard env), norm env0 t) in
         let env = if termination_check_enabled lb.lbname e t  //AR: This code also used to have && Env.should_verify env
                                                               //i.e. when lax checking it was adding lbname in the second branch
                                                               //this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
@@ -2169,10 +2167,10 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
                                                                                 //adding universes here so that when we add the let binding, we can add a typescheme with these universes
                   else Env.push_let_binding env lb.lbname (univ_vars, t) in
         let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
-        lb::lbs,  env)
-    ([],env)
+        lb::lbs,  env, g)
+    ([], env, Rel.trivial_guard)
     lbs  in
-  List.rev lbs, env
+  List.rev lbs, env, g
 
 and check_let_recs env lbs =
     let lbs, gs = lbs |> List.map (fun lb ->
