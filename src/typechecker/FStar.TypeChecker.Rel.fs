@@ -413,13 +413,19 @@ let next_pid =
     fun () -> incr ctr; !ctr
 
 let mk_problem wl scope orig lhs rel rhs elt reason =
-    let env = FStar.TypeChecker.Env.push_binders wl.tcenv scope in
+    let scope =
+        match elt with
+        | None -> scope
+        | Some x -> scope @ [S.mk_binder x]
+    in
+    let bs = (p_guard_uvar orig).ctx_uvar_binders @ scope in
+    let gamma = List.rev (List.map (fun b -> Binding_var (fst b)) scope) @ (p_guard_uvar orig).ctx_uvar_gamma in
     let ctx_uvar, lg, wl =
         new_uvar ("mk_problem: logical guard for " ^ reason)
                  wl
                  Range.dummyRange
-                 env.gamma
-                 (Env.all_binders env)
+                 gamma
+                 bs
                  U.ktype0
                  Allow_untyped
     in
