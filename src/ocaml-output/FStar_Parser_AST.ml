@@ -2071,7 +2071,7 @@ and (attrs_opt_to_string :
           FStar_All.pipe_right uu____6903 (FStar_String.concat "; ")  in
         FStar_Util.format1 "[@ %s]" uu____6902
 
-let rec (head_id_of_pat : pattern -> FStar_Ident.lid Prims.list) =
+let rec (head_id_of_pat : pattern -> FStar_Ident.lident Prims.list) =
   fun p  ->
     match p.pat with
     | PatName l -> [l]
@@ -2084,7 +2084,7 @@ let rec (head_id_of_pat : pattern -> FStar_Ident.lid Prims.list) =
 let lids_of_let :
   'Auu____6950 .
     (pattern,'Auu____6950) FStar_Pervasives_Native.tuple2 Prims.list ->
-      FStar_Ident.lid Prims.list
+      FStar_Ident.lident Prims.list
   =
   fun defs  ->
     FStar_All.pipe_right defs

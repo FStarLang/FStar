@@ -203,6 +203,7 @@ let dummy : option<binder> * closure = None,Dummy
 type debug_switches = {
     gen              : bool;
     primop           : bool;
+    unfolding        : bool;
     b380             : bool;
     wpe              : bool;
     norm_delayed     : bool;
@@ -286,6 +287,9 @@ let log cfg f =
 
 let log_primops cfg f =
     if cfg.debug.primop then f () else ()
+
+let log_unfolding cfg f =
+    if cfg.debug.unfolding then f () else ()
 
 let is_empty = function
     | [] -> true
@@ -410,7 +414,7 @@ let rec inline_closure_env cfg (env:env) stack t =
       | Tm_fvar _ ->
         rebuild_closure cfg env stack t
 
-      | Tm_uvar _ ->
+      | Tm_uvar (uv, s) ->
         if cfg.steps.check_no_uvars
         then let t = compress t in
              match t.n with
@@ -420,7 +424,28 @@ let rec inline_closure_env cfg (env:env) stack t =
                         (Print.term_to_string t))
              | _ ->
               inline_closure_env cfg env stack t
-        else rebuild_closure cfg env stack t //should be closed anyway
+        else
+            let s' = fst s |> List.map (fun s ->
+                    s |> List.map (function
+                | NT(x, t) ->
+                  NT(x, inline_closure_env cfg env [] t)
+                | NM(x, i) ->
+                  let x_i = S.bv_to_tm ({x with index=i}) in
+                  let t = inline_closure_env cfg env [] x_i in
+                  (match t.n with
+                   | Tm_bvar x_j -> NM(x, x_j.index)
+                   | _ -> NT(x, t))
+                | _ -> failwith "Impossible: subst invariant of uvar nodes"))
+             in
+             //let _ = match s with
+             //        | [], _
+             //        | [[]], _ -> ()
+             //        | _::_, _ -> BU.print2 "inline_closure_env\n\tBefore %s\n\t After %s"
+             //                               (List.map Print.subst_to_string (fst s) |> String.concat "@")
+             //                               (List.map Print.subst_to_string s' |> String.concat "@")
+             //        | _ -> () in
+             let t = {t with n=Tm_uvar(uv, (s', snd s))} in
+             rebuild_closure cfg env stack t
 
       | Tm_type u ->
         let t = mk (Tm_type (norm_universe cfg env u)) t.pos in
@@ -1081,17 +1106,21 @@ let tr_norm_step = function
 let tr_norm_steps s =
     List.concatMap tr_norm_step s
 
-let get_norm_request (full_norm:term -> term) args =
+let get_norm_request cfg (full_norm:term -> term) args =
     let parse_steps s =
       match EMB.try_unembed (EMB.e_list EMB.e_norm_step) s with
       | Some steps -> Some (tr_norm_steps steps)
       | None -> None
     in
+    let inherited_steps =
+        (if cfg.steps.erase_universes then [EraseUniverses] else [])
+      @ (if cfg.steps.allow_unbound_universes then [AllowUnboundUniverses] else [])
+    in
     match args with
     | [_; (tm, _)]
     | [(tm, _)] ->
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
-      Some (s, tm)
+      Some (inherited_steps @ s, tm)
     | [(steps, _); _; (tm, _)] ->
       let add_exclude s z = if List.contains z s then s else Exclude z :: s in
       begin
@@ -1101,7 +1130,7 @@ let get_norm_request (full_norm:term -> term) args =
         let s = Beta::s in
         let s = add_exclude s Zeta in
         let s = add_exclude s Iota in
-        Some (s, tm)
+        Some (inherited_steps @ s, tm)
       end
     | _ ->
       None
@@ -1181,6 +1210,117 @@ let rec maybe_weakly_reduced tm :  bool =
            | Meta_desugared _
            | Meta_named _ -> false)
 
+let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
+    let attrs = match Env.attrs_of_qninfo qninfo with
+                | None -> []
+                | Some ats -> ats
+    in
+    (* unfold or not, fully or not, reified or not *)
+    let yes   = true  , false , false in
+    let no    = false , false , false in
+    let fully = true  , true  , false in
+    let reif  = true  , false , true in
+
+    let yesno b = if b then yes else no in
+    let fullyno b = if b then fully else no in
+    let comb_or l = List.fold_right (fun (a,b,c) (x,y,z) -> (a||x, b||y, c||z)) l (false, false, false) in
+    let string_of_res (x,y,z) = BU.format3 "(%s,%s,%s)" (string_of_bool x) (string_of_bool y) (string_of_bool z) in
+
+    let res = match qninfo, cfg.steps.unfold_only, cfg.steps.unfold_fully, cfg.steps.unfold_attr with
+    // We unfold dm4f actions if and only if we are reifying
+    | _ when Env.qninfo_is_action qninfo ->
+        let b = should_reify cfg stack in
+        log_unfolding cfg (fun () -> BU.print2 ">>> For DM4F action %s, should_reify = %s\n"
+                                               (Print.fv_to_string fv)
+                                               (string_of_bool b));
+        if b then reif else no
+
+    // If it is handled primitively, then don't unfold
+    | _ when Option.isSome (find_prim_step cfg fv) -> no
+
+    // Don't unfold HasMaskedEffect
+    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
+            List.contains HasMaskedEffect qs -> no
+
+    // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
+    | _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
+        no
+
+    // Recursive lets may only be unfolded when Zeta is on
+    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
+            is_rec && not cfg.steps.zeta -> no
+
+    // We're doing selectively unfolding, assume it to not unfold unless it meets the criteria
+    | _, Some _, _, _
+    | _, _, Some _, _
+    | _, _, _, Some _ ->
+        log_unfolding cfg (fun () -> BU.print1 ">>> Reached a %s with selective unfolding\n"
+                                               (Print.fv_to_string fv));
+        // How does the following code work?
+        // We are doing selective unfolding so, by default, we assume everything
+        // should *not* be unfolded unless it meets *at least one* of the criteria.
+        // So we check exactly that, that this `fv` meets some criteria that is presently
+        // being used. Note that in `None`, we default to `no`, otherwise everything would
+        // unfold (unless we had all criteria present at once, which is unlikely)
+
+        comb_or [
+         (match cfg.steps.unfold_only with
+          | None -> no
+          | Some lids -> yesno <| BU.for_some (fv_eq_lid fv) lids)
+        ;(match cfg.steps.unfold_attr with
+          | None -> no
+          | Some ats -> yesno <| BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats) attrs)
+        ;(match cfg.steps.unfold_fully with
+          | None -> no
+          | Some lids -> fullyno <| BU.for_some (fv_eq_lid fv) lids)
+        ]
+
+    // Nothing special, just check the depth
+    | _ ->
+        log_unfolding cfg (fun () -> BU.print3 ">>> Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
+                                               (Print.fv_to_string fv)
+                                               (Print.delta_depth_to_string fv.fv_delta)
+                                               (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
+        yesno <| (cfg.delta_level |> BU.for_some (function
+             | Env.UnfoldTac
+             | NoDelta -> false
+             | Env.Inlining
+             | Eager_unfolding_only -> true
+             | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l))
+    in
+    log_unfolding cfg (fun () -> BU.print3 ">>> For %s (%s), unfolding res = %s\n"
+                    (Print.fv_to_string fv)
+                    (Range.string_of_range rng)
+                    (string_of_res res));
+    match res with
+    | false, _, _ ->
+        // No unfolding
+        None
+    | true, false, false ->
+        // Usual unfolding, no change to cfg or stack
+        Some (cfg, stack)
+    | true, true, false ->
+        // Unfolding fully, use new cfg with more steps and keep old one in stack
+        let cfg' =
+            { cfg with steps = { cfg.steps with
+                       iota         = false
+                     ; zeta         = false
+                     ; weak         = false
+                     ; hnf          = false
+                     ; primops      = false
+                     ; simplify     = false
+                     ; unfold_only  = None
+                     ; unfold_fully = None
+                     ; unfold_until = Some delta_constant } } in
+        let stack' = (Cfg cfg) :: stack in
+        Some (cfg', stack')
+
+    | true, false, true ->
+        // Reifying, remove the reify from the stack
+        Some (cfg, List.tl stack)
+
+    | _ ->
+        failwith <| BU.format1 "Unexpected unfolding result: %s" (string_of_res res)
 
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
@@ -1224,7 +1364,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                   delta_level=[Unfold delta_constant];
                                   normalize_pure_lets=true} in
             begin
-            match get_norm_request (norm cfg' env []) args with
+            match get_norm_request cfg (norm cfg' env []) args with
             | None -> //just normalize it as a normal application
               let stack =
                 stack |>
@@ -1264,75 +1404,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_fvar fv ->
             let qninfo = Env.lookup_qname cfg.tcenv (S.lid_of_fv fv) in
-            if Env.qninfo_is_action qninfo
-            // we don't unfold dm4f actions unless reifying
-            then let b = should_reify cfg stack in
-                 log cfg (fun () -> BU.print2 ">>> For DM4F action %s, should_reify = %s\n"
-                                          (Print.term_to_string t)
-                                          (string_of_bool b));
-                 if b
-                 then do_unfold_fv cfg env (List.tl stack) t qninfo fv
-                 else rebuild cfg env stack t
-            else // not an action, common case
-                 let should_delta =
-                     Option.isNone (find_prim_step cfg fv) //if it is handled primitively, then don't unfold
-                     && (match qninfo with
-                         | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _) ->
-                           not (List.contains HasMaskedEffect qs)
-                           &&  (not is_rec || cfg.steps.zeta)
-                         | _ -> true)
-                     && cfg.delta_level |> BU.for_some (function
-                         | Env.UnfoldTac
-                         | NoDelta -> false
-                         | Env.Inlining
-                         | Eager_unfolding_only -> true
-                         | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l)
-                 in
-                 let should_delta = should_delta && (
-                          let attrs = Env.attrs_of_qninfo qninfo in
-                           // never unfold something marked tac_opaque when reducing tactics
-                          (not cfg.steps.unfold_tac ||
-                           not (cases (BU.for_some (U.attr_eq U.tac_opaque_attr)) false attrs)) &&
-                          //otherwise, unfold fv if it appears in "Delta_only" or if one of the Delta_attr matches
-                          ( //delta_only l
-                            (match cfg.steps.unfold_only with
-                             | None -> true
-                             | Some lids -> BU.for_some (fv_eq_lid fv) lids) ||
-                           ( //delta_attrs a
-                             match attrs, cfg.steps.unfold_attr with
-                             | None, Some _ -> false
-                             | Some ats, Some ats' -> BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats') ats
-                             | _, _ -> false)))
-                 in
-                 let should_delta, fully =
-                     match cfg.steps.unfold_fully with
-                     | None -> should_delta, false
-                     | Some lids -> if BU.for_some (fv_eq_lid fv) lids
-                                    then true, true
-                                    else false, false
-                 in
-                 log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
-                                 (Print.term_to_string t)
-                                 (Range.string_of_range t.pos)
-                                 (string_of_bool should_delta));
-                 if should_delta then
-                     let stack, cfg =
-                        if fully
-                        then (Cfg cfg) :: stack,
-                             { cfg with steps = { cfg.steps with
-                                        iota         = false
-                                      ; zeta         = false
-                                      ; weak         = false
-                                      ; hnf          = false
-                                      ; primops      = false
-                                      ; simplify     = false
-                                      ; unfold_only  = None
-                                      ; unfold_fully = None
-                                      ; unfold_until = Some delta_constant } }
-                        else stack, cfg
-                     in
-                     do_unfold_fv cfg env stack t qninfo fv
-                 else rebuild cfg env stack t
+            begin match decide_unfolding cfg env stack t.pos fv qninfo with
+            | Some (cfg, stack) -> do_unfold_fv cfg env stack t qninfo fv
+            | None -> rebuild cfg env stack t
+            end
 
           | Tm_bvar x ->
             begin match lookup_bvar env x with
@@ -1650,7 +1725,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
                                     (Range.string_of_range t.pos)
                                     (Print.term_to_string t))
-            else rebuild cfg env stack t
+            else rebuild cfg env stack (inline_closure_env cfg env [] t)
 
           | _ ->
             norm cfg env stack t
@@ -1670,9 +1745,8 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
                        (Print.term_to_string t0) (Print.term_to_string t));
          let t =
            if cfg.steps.unfold_until = Some delta_constant
-            && not cfg.steps.unfold_tac
            //we're really trying to compute here; no point propagating range information
-           //which can be expensive (except for tactics: it matters for tracing!)
+           //which can be expensive
            then t
            else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
          in
@@ -1687,6 +1761,7 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
                 | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
          else norm cfg env stack t
          end
+
 and reduce_impure_comp cfg env stack (head : term) // monadic term
                                      (m : either<monad_name,(monad_name * monad_name)>)
                                         // relevant monads.
@@ -2644,6 +2719,7 @@ let config' psteps s e =
     {tcenv=e;
      debug = { gen = Env.debug e (Options.Other "Norm")
              ; primop = Env.debug e (Options.Other "Primops")
+             ; unfolding = Env.debug e (Options.Other "Unfolding")
              ; b380 = Env.debug e (Options.Other "380")
              ; wpe  = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
@@ -2727,7 +2803,10 @@ let normalize_refinement steps env t0 =
          let t0 = aux x.sort in
          begin match t0.n with
             | Tm_refine(y, phi1) ->
-              mk (Tm_refine(y, U.mk_conj phi1 phi)) t0.pos
+              //NB: this is working on de Bruijn
+              //    representations; so no need
+              //    to substitute y/x in phi
+              mk (Tm_refine(y, U.mk_conj_simp phi1 phi)) t0.pos
             | _ -> t
          end
        | _ -> t in
@@ -2765,8 +2844,8 @@ let eta_expand (env:Env.env) (t:term) : term =
   | _ ->
       let head, args = U.head_and_args t in
       begin match (SS.compress head).n with
-      | Tm_uvar(_, thead) ->
-        let formals, tres = U.arrow_formals thead in
+      | Tm_uvar (u,s) ->
+        let formals, _tres = U.arrow_formals (SS.subst' s u.ctx_uvar_typ) in
         if List.length formals = List.length args
         then t
         else let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
@@ -2852,8 +2931,8 @@ let rec elim_delayed_subst_term (t:term) : term =
       mk (Tm_let((fst lbs, List.map elim_lb (snd lbs)),
                   elim_delayed_subst_term t))
 
-    | Tm_uvar(uv, t) ->
-      mk (Tm_uvar(uv, elim_delayed_subst_term t))
+    | Tm_uvar(u,s) ->
+      mk (Tm_uvar(u,s)) //explicitly don't descend into (bs,t) to not break sharing there
 
     | Tm_quoted (tm, qi) ->
       let qi = S.on_antiquoted elim_delayed_subst_term qi in

@@ -7,6 +7,7 @@ assume new type env
 assume new type fv
 assume new type comp
 assume new type sigelt
+assume new type ctx_uvar_and_subst
 
 type name : eqtype = list string
 type typ     = term

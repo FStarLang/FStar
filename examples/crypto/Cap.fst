@@ -14,7 +14,7 @@ assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
     (utf8 s0) == (utf8 s1) ==> s0==s1
 
-logic type capRead (msg:seq byte) =
+type capRead (msg:seq byte) =
     (forall f. msg = utf8 f ==> canRead f)
 
 let gen () = keygen capRead

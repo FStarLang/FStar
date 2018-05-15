@@ -6,5 +6,3 @@ endif
 
 include $(FSTAR_HOME)/ulib/gmake/z3.mk
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk
-
-OTHERFLAGS+=--use_two_phase_tc true

@@ -1,5 +1,5 @@
 [
-  "‹\u00060.å»g=x(‰t´wö¹",
+  "\u000f\u000e¦îÍôv\r\u001cn\u0016‹µº\u007f˜",
   [
     [
       "Bug293.test",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "824e5153f713c9a3bf9e6c4a7723d4a6"
+      "b5701558032140bc1c1e2b728fb9bbbf"
     ],
     [
       "Bug293.test",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Bug293_Tm_refine_24a102650c3561bc6be37068de08feda"
       ],
       0,
-      "3e7fff9330ca2fce36f4e2983f14ee80"
+      "200b0294ec3e8949614aa6c1c153f4fd"
     ]
   ]
 ]

@@ -383,6 +383,69 @@ let mk_ref_assign t1 t2 pos =
     [ t1, S.as_implicit false; t2, S.as_implicit false ]) in
   S.mk tm None pos
 
+(*
+ * Collect the explicitly annotated universes in the sigelt, close the sigelt with them, and stash them appropriately in the sigelt
+ *)
+let generalize_annotated_univs (s:sigelt) :sigelt =
+  let bs_univnames (bs:binders) :BU.set<univ_name> =
+    bs |> List.fold_left (fun uvs ( { sort = t }, _) -> BU.set_union uvs (Free.univnames t)) (BU.new_set Syntax.order_univ_name)
+  in
+  let empty_set = BU.new_set Syntax.order_univ_name in
+
+  match s.sigel with
+  | Sig_inductive_typ _
+  | Sig_datacon _ -> failwith "Impossible: collect_annotated_universes: bare data/type constructor"
+  | Sig_bundle (sigs, lids) ->
+    let uvs = sigs |> List.fold_left (fun uvs se ->
+      let se_univs =
+        match se.sigel with
+        | Sig_inductive_typ (_, _, bs, t, _, _) -> BU.set_union (bs_univnames bs) (Free.univnames t)
+        | Sig_datacon (_, _, t, _, _, _) -> Free.univnames t
+        | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
+      in
+      BU.set_union uvs se_univs) empty_set |> BU.set_elements
+    in
+    let usubst = Subst.univ_var_closing uvs in
+    { s with sigel = Sig_bundle (sigs |> List.map (fun se ->
+      match se.sigel with
+      | Sig_inductive_typ (lid, _, bs, t, lids1, lids2) ->
+        { se with sigel = Sig_inductive_typ (lid, uvs, Subst.subst_binders usubst bs, Subst.subst (Subst.shift_subst (List.length bs) usubst) t, lids1, lids2) }
+      | Sig_datacon (lid, _, t, tlid, n, lids) ->
+        { se with sigel = Sig_datacon (lid, uvs, Subst.subst usubst t, tlid, n, lids) }
+      | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
+      ), lids) }
+  | Sig_declare_typ (lid, _, t) ->
+    let uvs = Free.univnames t |> BU.set_elements in
+    { s with sigel = Sig_declare_typ (lid, uvs, Subst.close_univ_vars uvs t) }
+  | Sig_let ((b, lbs), lids) ->
+    let lb_univnames (lb:letbinding) :BU.set<univ_name> =
+      BU.set_union (Free.univnames lb.lbtyp)
+      (match lb.lbdef.n with
+       | Tm_abs (bs, e, _) ->
+         let uvs1 = bs_univnames bs in
+         let uvs2 =
+           match e.n with
+           | Tm_ascribed (_, (Inl t, _), _) -> Free.univnames t
+           | Tm_ascribed (_, (Inr c, _), _) -> Free.univnames_comp c
+           | _ -> empty_set
+         in
+         BU.set_union uvs1 uvs2
+       | Tm_ascribed (_, (Inl t, _), _) -> Free.univnames t
+       | Tm_ascribed (_, (Inr c, _), _) -> Free.univnames_comp c
+       | _ -> empty_set)
+    in
+    let all_lb_univs = lbs |> List.fold_left (fun uvs lb -> BU.set_union uvs (lb_univnames lb)) empty_set |> BU.set_elements in
+    let usubst = Subst.univ_var_closing all_lb_univs in
+    { s with sigel = Sig_let ((b, lbs |> List.map (fun lb -> { lb with lbunivs = all_lb_univs; lbdef = Subst.subst usubst lb.lbdef; lbtyp = Subst.subst usubst lb.lbtyp })), lids) }
+  | Sig_assume (lid, _, fml) ->
+    let uvs = Free.univnames fml |> BU.set_elements in
+    { s with sigel = Sig_assume (lid, uvs, Subst.close_univ_vars uvs fml) }
+  | Sig_effect_abbrev (lid, _, bs, c, flags) ->
+    let uvs = BU.set_union (bs_univnames bs) (Free.univnames_comp c) |> BU.set_elements in
+    let usubst = Subst.univ_var_closing uvs in
+    { s with sigel = Sig_effect_abbrev (lid, uvs, Subst.subst_binders usubst bs, Subst.subst_comp usubst c, flags) }
+  | _ -> s
+
 let is_special_effect_combinator = function
   | "repr" | "post" | "pre" | "wp" -> true
   | _ -> false
@@ -1765,7 +1828,7 @@ let mk_data_projector_names iquals env se =
 
   | _ -> []
 
-let mk_typ_abbrev lid uvs typars k t lids quals rng =
+let mk_typ_abbrev lid uvs typars kopt t lids quals rng =
     let dd = if quals |> List.contains S.Abstract
              then Delta_abstract (incr_delta_qualifier t)
              else incr_delta_qualifier t in
@@ -1773,7 +1836,7 @@ let mk_typ_abbrev lid uvs typars k t lids quals rng =
         lbname=Inr (S.lid_as_fv lid dd None);
         lbunivs=uvs;
         lbdef=no_annot_abs typars t;
-        lbtyp=U.arrow typars (S.mk_Total k);
+        lbtyp=if is_some kopt then U.arrow typars (S.mk_Total (kopt |> must)) else tun;
         lbeff=C.effect_Tot_lid;
         lbattrs=[];
         lbpos=rng;
@@ -1870,12 +1933,12 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
 
     | [TyconAbbrev(id, binders, kopt, t)] ->
         let env', typars = typars_of_binders env binders in
-        let k = match kopt with
+        let kopt = match kopt with
             | None ->
               if BU.for_some (function S.Effect -> true | _ -> false) quals
-              then teff
-              else ktype
-            | Some k -> desugar_term env' k in
+              then Some teff
+              else None
+            | Some k -> Some (desugar_term env' k) in
         let t0 = t in
         let quals = if quals |> BU.for_some (function S.Logic -> true | _ -> false)
                     then quals
@@ -1913,7 +1976,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                    sigmeta = default_sigmeta  ;
                    sigattrs = [] }
             else let t = desugar_typ env' t in
-                 mk_typ_abbrev qlid [] typars k t [qlid] quals rng in
+                 mk_typ_abbrev qlid [] typars kopt t [qlid] quals rng in
 
         let env = push_sigelt env se in
         let env = push_doc env qlid d.doc in
@@ -1952,7 +2015,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
 	          let tpars = Subst.close_binders tpars in
 	          Subst.close tpars t
           in
-          [((id, d.doc), [], mk_typ_abbrev id uvs tpars k t [id] quals rng)]
+          [((id, d.doc), [], mk_typ_abbrev id uvs tpars (Some k) t [id] quals rng)]
 
         | Inl ({ sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, _); sigquals = tname_quals }, constrs, tconstr, quals) ->
           let mk_tot t =
@@ -2348,7 +2411,7 @@ and mk_comment_attr (d: decl) =
   let arg = U.exp_string str in
   U.mk_app fv [ S.as_arg arg ]
 
-and desugar_decl env (d: decl): (env_t * sigelts) =
+and desugar_decl_aux env (d: decl): (env_t * sigelts) =
   // Rather than carrying the attributes down the maze of recursive calls, we
   // let each desugar_foo function provide an empty list, then override it here.
   // Not for the `fail` attribute though! We only keep that one on the first
@@ -2361,6 +2424,10 @@ and desugar_decl env (d: decl): (env_t * sigelts) =
                                   then { sigelt with sigattrs = attrs }
                                   else { sigelt with sigattrs = List.filter (fun at -> Option.isNone (get_fail_attr false at)) attrs })
                  sigelts
+
+and desugar_decl env (d:decl) :(env_t * sigelts) =
+  let env, ses = desugar_decl_aux env d in
+  env, ses |> List.map generalize_annotated_univs
 
 and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   let trans_qual = trans_qual d.drange in
@@ -2640,70 +2707,6 @@ let open_prims_all =
     [AST.mk_decl (AST.Open C.prims_lid) Range.dummyRange;
      AST.mk_decl (AST.Open C.all_lid) Range.dummyRange]
 
-(*
- * Collect the explicitly annotated universes in the sigelt, close the sigelt with them, and stash them appropriately in the sigelt
- *)
-let generalize_annotated_univs (s:sigelt) :sigelt =
-  let bs_univnames (bs:binders) :BU.set<univ_name> =
-    bs |> List.fold_left (fun uvs ( { sort = t }, _) -> BU.set_union uvs (Free.univnames t)) (BU.new_set Syntax.order_univ_name)
-  in
-  let empty_set = BU.new_set Syntax.order_univ_name in
-
-  match s.sigel with
-  | Sig_inductive_typ _
-  | Sig_datacon _ -> failwith "Impossible: collect_annotated_universes: bare data/type constructor"
-  | Sig_bundle (sigs, lids) ->
-    let uvs = sigs |> List.fold_left (fun uvs se ->
-      let se_univs =
-        match se.sigel with
-        | Sig_inductive_typ (_, _, bs, t, _, _) -> BU.set_union (bs_univnames bs) (Free.univnames t)
-        | Sig_datacon (_, _, t, _, _, _) -> Free.univnames t
-        | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
-      in
-      BU.set_union uvs se_univs) empty_set |> BU.set_elements
-    in
-    let usubst = Subst.univ_var_closing uvs in
-    { s with sigel = Sig_bundle (sigs |> List.map (fun se ->
-      match se.sigel with
-      | Sig_inductive_typ (lid, _, bs, t, lids1, lids2) ->
-        { se with sigel = Sig_inductive_typ (lid, uvs, Subst.subst_binders usubst bs, Subst.subst (Subst.shift_subst (List.length bs) usubst) t, lids1, lids2) }
-      | Sig_datacon (lid, _, t, tlid, n, lids) ->
-        { se with sigel = Sig_datacon (lid, uvs, Subst.subst usubst t, tlid, n, lids) }
-      | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
-      ), lids) }
-  | Sig_declare_typ (lid, _, t) ->
-    let uvs = Free.univnames t |> BU.set_elements in
-    { s with sigel = Sig_declare_typ (lid, uvs, Subst.close_univ_vars uvs t) }
-  | Sig_let ((b, lbs), lids) ->
-    let lb_univnames (lb:letbinding) :BU.set<univ_name> =
-      BU.set_union (Free.univnames lb.lbtyp)
-      (match lb.lbdef.n with
-       | Tm_abs (bs, e, _) ->
-         let uvs1 = bs_univnames bs in
-         let uvs2 =
-           match e.n with
-           | Tm_ascribed (_, (Inl t, _), _) -> Free.univnames t
-           | Tm_ascribed (_, (Inr c, _), _) -> Free.univnames_comp c
-           | _ -> empty_set
-         in
-         BU.set_union uvs1 uvs2
-       | Tm_ascribed (_, (Inl t, _), _) -> Free.univnames t
-       | Tm_ascribed (_, (Inr c, _), _) -> Free.univnames_comp c
-       | _ -> empty_set)
-    in
-    let all_lb_univs = lbs |> List.fold_left (fun uvs lb -> BU.set_union uvs (lb_univnames lb)) empty_set |> BU.set_elements in
-    let usubst = Subst.univ_var_closing all_lb_univs in
-    { s with sigel = Sig_let ((b, lbs |> List.map (fun lb -> { lb with lbunivs = all_lb_univs; lbdef = Subst.subst usubst lb.lbdef; lbtyp = Subst.subst usubst lb.lbtyp })), lids) }
-  | Sig_assume (lid, _, fml) ->
-    let uvs = Free.univnames fml |> BU.set_elements in
-    { s with sigel = Sig_assume (lid, uvs, Subst.close_univ_vars uvs fml) }
-  | Sig_effect_abbrev (lid, _, bs, c, flags) ->
-    let uvs = BU.set_union (bs_univnames bs) (Free.univnames_comp c) |> BU.set_elements in
-    let usubst = Subst.univ_var_closing uvs in
-    { s with sigel = Sig_effect_abbrev (lid, uvs, Subst.subst_binders usubst bs, Subst.subst_comp usubst c, flags) }
-  | _ -> s
-    
-
 (* Top-level functionality: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
@@ -2724,8 +2727,6 @@ let desugar_modul_common (curmod: option<S.modul>) env (m:AST.modul) : env_t * S
     | Module(mname, decls) ->
       Env.prepare_module_or_interface false false env mname Env.default_mii, mname, decls, false in
   let env, sigelts = desugar_decls env decls in
-  //generalize sigelts using annotated universes
-  let sigelts = sigelts |> List.map generalize_annotated_univs in
   let modul = {
     name = mname;
     declarations = sigelts;

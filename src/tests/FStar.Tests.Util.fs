@@ -83,7 +83,7 @@ let rec term_eq' t1 t2 =
         List.length lbs = List.length lbs'
         && List.forall2 (fun lb1 lb2 -> term_eq' lb1.lbtyp lb2.lbtyp && term_eq' lb1.lbdef lb2.lbdef) lbs lbs'
         && term_eq' t s
-      | Tm_uvar(u, _), Tm_uvar(u', _) -> UF.equiv u u'
+      | Tm_uvar (u,_), Tm_uvar (u',_) -> UF.equiv u.ctx_uvar_head u'.ctx_uvar_head
       | Tm_meta(t1, _), _ -> term_eq' t1 t2
       | _, Tm_meta(t2, _) -> term_eq' t1 t2
 

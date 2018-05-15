@@ -92,7 +92,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | Some f -> true, f() in
     let fresh_label msg ropt rng t =
         let msg = if flag
-                  then "Failed to verify implicit argument: " ^ msg
+                  then "Failed to verify implicit argument: " ^ msg_prefix ^ " :: " ^ msg
                   else msg in
         let rng = match ropt with
                   | None -> rng

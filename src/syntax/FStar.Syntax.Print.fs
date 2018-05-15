@@ -23,7 +23,6 @@ open FStar
 open FStar.Syntax
 open FStar.Util
 open FStar.Syntax.Syntax
-open FStar.Syntax.Util
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
@@ -35,6 +34,7 @@ module ToDocument = FStar.Parser.ToDocument
 module Pp = FStar.Pprint
 module Unionfind = FStar.Syntax.Unionfind
 module C = FStar.Parser.Const
+module SU = FStar.Syntax.Util
 
 let rec delta_depth_to_string = function
     | Delta_constant_at_level i   -> "Delta_constant_at_level " ^ string_of_int i
@@ -260,7 +260,7 @@ and term_to_string x =
     Pp.pretty_string (float_of_string "1.0") 100 d
   else begin
       let x = Subst.compress x in
-      let x = if Options.print_implicits() then x else unmeta x in
+      let x = if Options.print_implicits() then x else SU.unmeta x in
       match x.n with
       | Tm_delayed _ ->   failwith "impossible"
       | Tm_app(_, []) ->  failwith "Empty args!"
@@ -294,7 +294,16 @@ and term_to_string x =
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x
       | Tm_fvar f ->        fv_to_string f
-      | Tm_uvar (u, _) ->   uvar_to_string u
+      | Tm_uvar (u, ([], _)) ->
+        if Options.print_bound_var_types()
+        && Options.print_effect_args()
+        then ctx_uvar_to_string u
+        else "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head)
+      | Tm_uvar (u, s) ->
+        if Options.print_bound_var_types()
+        && Options.print_effect_args()
+        then U.format2 "(%s @ %s)" (ctx_uvar_to_string u) (List.map subst_to_string (fst s) |> String.concat "; ")
+        else "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_constant c ->    const_to_string c
       | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type u#(%s)" (univ_to_string u) else "Type"
       | Tm_arrow(bs, c) ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
@@ -335,6 +344,23 @@ and term_to_string x =
 
       | Tm_unknown -> "_"
   end
+
+and ctx_uvar_to_string ctx_uvar =
+    format4 "(* %s *)\n(%s |- %s : %s)"
+            (ctx_uvar.ctx_uvar_reason)
+            (binders_to_string ", " ctx_uvar.ctx_uvar_binders)
+            (uvar_to_string ctx_uvar.ctx_uvar_head)
+            (term_to_string ctx_uvar.ctx_uvar_typ)
+
+
+and subst_elt_to_string = function
+   | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
+   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
+   | NT(x, t) -> U.format2 "NT (%s, %s)" (bv_to_string x) (term_to_string t)
+   | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
+   | UD(u, i) -> U.format2 "UD (%s, %s)" u.idText (string_of_int i)
+
+and subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
 
 and pat_to_string x =
   if not (Options.ugly()) then
@@ -657,7 +683,9 @@ let rec sigelt_to_string (x: sigelt) =
              then U.format1 "<%s>" (univ_names_to_string univs)
              else "")
             (term_to_string t)
-      | Sig_assume(lid, _, f) -> U.format2 "val %s : %s" lid.str (term_to_string f)
+      | Sig_assume(lid, us, f) ->
+        if Options.print_universes () then U.format3 "val %s<%s> : %s" lid.str (univ_names_to_string us) (term_to_string f)
+        else U.format2 "val %s : %s" lid.str (term_to_string f)
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
       | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
@@ -696,20 +724,13 @@ let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
 let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_let((_, [{lbname=lb; lbtyp=t}]), _) -> U.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
-  | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
+  | _ ->
+    SU.lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =
   U.format3 "module %s\nDeclarations:\n%s\nExports:\n%s\n" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
                                                                         (List.map sigelt_to_string m.exports |> String.concat "\n")
 
-let subst_elt_to_string = function
-   | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
-   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
-   | NT(x, t) -> U.format2 "DB (%s, %s)" (bv_to_string x) (term_to_string t)
-   | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
-   | UD(u, i) -> U.format2 "UD (%s, %s)" u.idText (string_of_int i)
-
-let subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
 
 let abs_ascription_to_string ascription =
   let strb = U.new_string_builder () in

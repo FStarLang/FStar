@@ -43,6 +43,8 @@ module EMB = FStar.Syntax.Embeddings
 module RE = FStar.Reflection.Embeddings
 open FStar.SMTEncoding.Env
 open FStar.SMTEncoding.EncodeTerm
+open FStar.Parser
+
 module Env = FStar.TypeChecker.Env
 
 type prims_t = {
@@ -321,8 +323,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.imp_lid,    mk_imp_interp);
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.not_lid,    mk_not_interp);
-                 // (Const.forall_lid, mk_forall_interp);
-                 // (Const.exists_lid, mk_exists_interp);
+                 //(Const.forall_lid, mk_forall_interp);
+                 //(Const.exists_lid, mk_exists_interp);
                  (Const.range_lid,  mk_range_interp);
                  (Const.inversion_lid,mk_inversion_axiom);
                  (Const.with_type_lid, mk_with_type_axiom)
@@ -671,9 +673,15 @@ let encode_top_level_let :
                 in
                 let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
                 let app, (body, decls2) =
-                    if quals |> List.contains Logic
-                    then mk_Valid app, encode_formula body env'
-                    else app, encode_term body env'
+                  let is_logical =
+                    match (SS.compress t_body).n with
+                    | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
+                    | _ -> false
+                  in
+                  let is_prims = lbn |> FStar.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids lid.ns) Const.prims_lid) in
+                  if not is_prims && (quals |> List.contains Logic || is_logical)
+                  then mk_Valid app, encode_formula body env'
+                  else app, encode_term body env'
                 in
 
                 //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
@@ -928,7 +936,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              env
 
      | Sig_assume(l, us, f) ->
-        let _, f = SS.open_univ_vars us f in
+        let uvs, f = SS.open_univ_vars us f in
+        let env = { env with tcenv = Env.push_univ_vars env.tcenv uvs } in
+        let f = N.normalize [N.Beta; N.Eager_unfolding] env.tcenv f in
         let f, decls = encode_formula f env in
         let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^l.str)))] in
         decls@g, env
@@ -1251,7 +1261,7 @@ and encode_sigelts env ses =
       g@g', env) ([], env)
 
 
-let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * env_t) =
+let encode_env_bindings (env:env_t) (bindings:list<S.binding>) : (decls_t * env_t) =
      (* Encoding Binding_var and Binding_typ as local constants leads to breakages in hash consing.
 
                Consider:
@@ -1277,10 +1287,10 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
 
     *)
     let encode_binding b (i, decls, env) = match b with
-        | Binding_univ _ ->
+        | S.Binding_univ _ ->
           i+1, decls, env
 
-        | Env.Binding_var x ->
+        | S.Binding_var x ->
             let t1 = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops; N.EraseUniverses] env.tcenv x.sort in
             if Env.debug env.tcenv <| Options.Other "SMTEncoding"
             then (BU.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
@@ -1302,18 +1312,13 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
                     @[ax] in
             i+1, decls@g, env'
 
-        | Env.Binding_lid(x, (_, t)) ->
+        | S.Binding_lid(x, (_, t)) ->
             let t_norm = whnf env t in
             let fv = S.lid_as_fv x delta_constant None in
 //            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
             let g, env' = encode_free_var false env fv t t_norm [] in
             i+1, decls@g, env'
-
-        | Env.Binding_sig_inst(_, se, _)
-        | Env.Binding_sig (_, se) ->
-            let g, env' = encode_sigelt env se in
-            i+1, decls@g, env' in
-
+    in
     let _, decls, env = List.fold_right encode_binding bindings (0, [], env) in
     decls, env
 
@@ -1435,10 +1440,9 @@ let encode_query use_env_msg tcenv q
   * list<decl>  //suffix, evaluating labels in the model, etc.
   = Z3.query_logging.set_module_name (TypeChecker.Env.current_module tcenv).str;
     let env = get_env (Env.current_module tcenv) tcenv in
-    let bindings = Env.fold_env tcenv (fun bs b -> b::bs) [] in
     let q, bindings =
         let rec aux bindings = match bindings with
-            | Env.Binding_var x::rest ->
+            | S.Binding_var x::rest ->
                 let out, rest = aux rest in
                 let t =
                     match (FStar.Syntax.Util.destruct_typ_as_formula x.sort) with
@@ -1451,10 +1455,10 @@ let encode_query use_env_msg tcenv q
                 let t = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify; N.Primops; N.EraseUniverses] env.tcenv t in
                 Syntax.mk_binder ({x with sort=t})::out, rest
             | _ -> [], bindings in
-        let closing, bindings = aux bindings in
+        let closing, bindings = aux tcenv.gamma in
         U.close_forall_no_univs (List.rev closing) q, bindings
     in
-    let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
+    let env_decls, env = encode_env_bindings env bindings in
     if debug tcenv Options.Low
     || debug tcenv <| Options.Other "SMTEncoding"
     || debug tcenv <| Options.Other "SMTQuery"

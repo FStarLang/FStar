@@ -1,6 +1,8 @@
 open List
 open Lexing
-open Parsetree
+open Migrate_parsetree
+open Migrate_parsetree.Ast_405
+open Migrate_parsetree.Ast_405.Parsetree
 open Location
 open Pprintast
 open Ast_helper
@@ -17,6 +19,7 @@ let current_module = ref ""
 
 let flatmap f l = map f l |> List.flatten
 let opt_to_list = function Some x -> [x] | None -> []
+
 
 let no_position : Lexing.position =
   {pos_fname = ""; pos_lnum = 0; pos_bol = 0; pos_cnum = 0}
@@ -102,7 +105,7 @@ let build_constant (c: mlconstant): Parsetree.constant =
   | MLC_Float v -> Const.float (string_of_float v)
   | MLC_Char v -> Const.int v
   | MLC_String v -> Const.string v
-  | MLC_Bytes _ -> failwith "not defined10" (* do we need this? *)
+  | MLC_Bytes _ -> failwith "Case not handled" (* do we need this? *)
   | _ -> failwith "Case not handled"
 
 let build_constant_expr (c: mlconstant): expression =
@@ -177,8 +180,11 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
   then t
   else Typ.mk (Ptyp_poly (annots, t))
 
-let build_binding_pattern (sym: mlident) : pattern =
-  Pat.mk (Ppat_var (mk_sym sym))
+let build_binding_pattern ?ty (sym : mlident) : pattern =
+    let p = Pat.mk (Ppat_var (mk_sym sym)) in
+    match ty with
+    | None -> p
+    | Some ty -> Pat.mk (Ppat_constraint (p, ty))
 
 let resugar_prims_ops path: expression =
   (match path with
@@ -211,8 +217,8 @@ let resugar_if_stmts ep cases =
   else
     Exp.match_ ep cases
 
-let rec build_expr ?annot (e: mlexpr): expression =
-  let e' = (match e.expr with
+let rec build_expr (e: mlexpr): expression =
+  match e.expr with
   | MLE_Const c -> build_constant_expr c
   | MLE_Var sym -> Exp.ident (mk_lident sym)
   | MLE_Name path ->
@@ -230,7 +236,7 @@ let rec build_expr ?annot (e: mlexpr): expression =
       let f = build_expr e in
       resugar_app f args es
    | MLE_TApp (e, ts) ->
-     build_expr e
+      build_expr e
    | MLE_Fun (l, e) -> build_fun l e
    | MLE_Match (e, branches) ->
       let ep = build_expr e in
@@ -255,14 +261,7 @@ let rec build_expr ?annot (e: mlexpr): expression =
       let args = map (fun x -> (Nolabel, build_expr x)) es in
       Exp.apply r args
    | MLE_Try (e, cs) ->
-      Exp.try_ (build_expr e) (map build_case cs)) in
-  match annot with
-  | None -> e'
-  | Some ts ->
-          (* Remove the leading tick *)
-          let vars = List.map (fun s -> String.sub s 1 (String.length s - 1)) (fst ts) in
-          let ty = snd ts in
-          Exp.constraint_ e' (build_core_type ~annots:vars ty)
+      Exp.try_ (build_expr e) (map build_case cs)
 
 and resugar_app f args es: expression =
   match f.pexp_desc with
@@ -325,14 +324,20 @@ and build_case ((lhs, guard, rhs): mlbranch): case =
    pc_rhs = (build_expr rhs)}
 
 and build_binding (toplevel: bool) (lb: mllb): value_binding =
-  (* replicating the rules for whether to print type ascriptions
-     from the old printer *)
-  let annot = if (lb.print_typ && toplevel)
-                 then lb.mllb_tysc
-                 else None
+  (* Add a constraint on the binding (ie. an annotation) for top-level lets *)
+  let mk1 s = mkloc (String.sub s 1 (String.length s - 1)) none in
+  let ty =
+      match lb.mllb_tysc with
+      | None -> None
+      | Some ts ->
+           if lb.print_typ && toplevel
+           then let vars = List.map mk1 (fst ts) in
+                let ty = snd ts in
+                Some (build_core_type ~annots:vars ty)
+           else None
   in
-  let e = build_expr ?annot:annot lb.mllb_def in
-  let p = build_binding_pattern lb.mllb_name in
+  let e = build_expr lb.mllb_def in
+  let p = build_binding_pattern ?ty:ty lb.mllb_name in
   (Vb.mk p e)
 
 let build_label_decl (sym, ty): label_declaration =
@@ -380,15 +385,15 @@ let add_deriving_const (md: metadata) (ptype_manifest: core_type option): core_t
       BatOption.map (fun x -> {x with ptyp_attributes=[deriving_const]}) ptype_manifest
   | _ -> ptype_manifest
 
-let build_one_tydecl ((_, x, mangle_opt, tparams, metadata, body): one_mltydecl): type_declaration =
+let build_one_tydecl ((_, x, mangle_opt, tparams, attrs, body): one_mltydecl): type_declaration =
   let ptype_name = match mangle_opt with
     | Some y -> mk_sym y
     | None -> mk_sym x in
   let ptype_params = Some (map (fun sym -> Typ.mk (Ptyp_var (mk_typ_name sym)), Invariant) tparams) in
   let (ptype_manifest: core_type option) =
-    BatOption.map_default build_ty_manifest None body |> add_deriving_const metadata in
+    BatOption.map_default build_ty_manifest None body |> add_deriving_const attrs in
   let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
-  let ptype_attrs = type_metadata metadata in
+  let ptype_attrs = type_metadata attrs in
   Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ?attrs:ptype_attrs ptype_name
 
 let build_tydecl (td: mltydecl): structure_item_desc option =
@@ -442,8 +447,10 @@ let build_ast (out_dir: string option) (ext: string) (ml: mllib) =
 
 (* printing the AST to the correct path *)
 let print_module ((path, m): string * structure) =
+  let migration =
+    Versions.migrate Versions.ocaml_405 Versions.ocaml_current in
   Format.set_formatter_out_channel (open_out_bin path);
-  structure Format.std_formatter m;
+  structure Format.std_formatter (migration.copy_structure m);
   Format.pp_print_flush Format.std_formatter ()
 
 let print (out_dir: string option) (ext: string) (ml: mllib) =

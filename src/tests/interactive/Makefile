@@ -1,7 +1,11 @@
 .PHONY: .FORCE rebuild-all check-all accept-all
 .SUFFIXES:
 
-IN := $(wildcard *.in)
+ALL := $(wildcard *.in)
+
+DISABLED=FailRange.in
+
+IN=$(filter-out $(DISABLED), $(ALL))
 
 default: check
 

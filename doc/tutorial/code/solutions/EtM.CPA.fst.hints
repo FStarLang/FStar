@@ -11,7 +11,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "9d6918c14de4026f97756c69bde9bd9d"
+      "f0720823ca32a24ab5db0d1b46a7e919"
     ],
     [
       "EtM.CPA.__proj__Key__item__log",
@@ -23,7 +23,7 @@
         "projection_inverse_EtM.CPA.Key_region"
       ],
       0,
-      "4c80f57c629a2fc54c79fe885c798f74"
+      "06aa01d58cb2b108f3b8dba7452e68e7"
     ],
     [
       "EtM.CPA.keygen",
@@ -115,7 +115,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "cdbfbdb1bcf14679aaf83437b8f8ad71"
+      "89a3eec7fa8ddd9fafed276fdf9d154d"
     ],
     [
       "EtM.CPA.encrypt",
@@ -162,33 +162,17 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "56ed6d389a5081fc2b786bd9ac7fd01a"
+      "f29e54d2acd942dea8ebb86d7b5352e8"
     ],
     [
       "EtM.CPA.decrypt",
       1,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_EtM.CPA.cipher", "equation_EtM.CPA.ivsize",
-        "equation_Platform.Bytes.bytes",
-        "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
-      ],
-      0,
-      "9d71fd2d58f2bc4ba7a6b16ab33f2d43"
-    ],
-    [
-      "EtM.CPA.decrypt",
-      2,
       2,
       1,
       [
         "@query", "assumption_EtM.Plain.Plain_hasEq",
         "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Platform.Bytes.HasEq_bytes",
-        "equality_tok_CoreCrypto.AES_128_CBC@tok",
-        "equation_CoreCrypto.blockSize", "equation_EtM.CPA.cipher",
+        "assumption_Platform.Bytes.HasEq_bytes", "equation_EtM.CPA.cipher",
         "equation_EtM.CPA.ivsize", "equation_EtM.CPA.msg",
         "equation_Platform.Bytes.bytes",
         "function_token_typing_EtM.CPA.cipher",
@@ -196,15 +180,18 @@
         "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
       ],
       0,
-      "cf2fd5349c375dc01a6d438fefa90cb8"
+      "f1fe8a5a2e6027a55b19a313ba6d43b1"
     ],
     [
       "EtM.CPA.decrypt",
-      3,
+      2,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.Seq.Properties.seq_find_aux.fuel_instrumented",
+        "@fuel_irrelevance_FStar.Seq.Properties.seq_find_aux.fuel_instrumented",
+        "@query",
         "EtM.CPA_interpretation_Tm_arrow_ff8a7ab4c864efca23ca36852cb6adbc",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
@@ -220,7 +207,7 @@
         "equation_EtM.CPA.ivsize", "equation_EtM.CPA.log_t",
         "equation_EtM.CPA.mem", "equation_EtM.CPA.msg",
         "equation_EtM.CPA.rid", "equation_EtM.Ideal.auth",
-        "equation_EtM.Ideal.ind_cpa_rest_adv", "equation_EtM.Plain.coerce",
+        "equation_EtM.Ideal.ind_cpa_rest_adv",
         "equation_FStar.HyperStack.ST.equal_stack_domains",
         "equation_FStar.HyperStack.ST.erid",
         "equation_FStar.HyperStack.ST.is_live_for_rw_in",
@@ -239,10 +226,9 @@
         "equation_FStar.Pervasives.Native.snd",
         "equation_FStar.Seq.Properties.seq_find",
         "equation_FStar.Set.eqtype", "equation_FStar.Set.subset",
-        "equation_FStar.UInt32.n", "equation_Platform.Bytes.byte",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.length",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "fuel_guarded_inversion_EtM.CPA.key",
+        "equation_FStar.UInt32.n", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.length", "equation_Prims.eqtype",
+        "equation_Prims.nat", "fuel_guarded_inversion_EtM.CPA.key",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_EtM.CPA.cipher",
@@ -253,7 +239,6 @@
         "function_token_typing_FStar.UInt32.n",
         "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "int_inversion",
         "interpretation_EtM.CPA_Tm_abs_ad024afc35c1984a5529edd0237bce5a",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_stack_regions_intro",
@@ -281,9 +266,7 @@
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_1a1278f1aecd37594ba20d888b7fd230",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_ecfe710eaddaa768c46a7d024350dcbc",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_846db27a9d72443c3ad3d0b0bd9f60bb",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_EtM.CPA.__proj__Key__item__region",
         "typing_EtM.CPA_Tm_abs_ac63d9684fd9d9c67e1dc5f93535ebf4",
         "typing_EtM.CPA_Tm_abs_ad024afc35c1984a5529edd0237bce5a",
@@ -298,7 +281,7 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "267746bceb221f1ca61cbe22546fea48"
+      "9bac06d1953c446491780fe60daa08da"
     ],
     [
       "EtM.CPA.aes_key",
@@ -310,7 +293,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c86515e70f1a60e1fa6ba39c32288fd6"
+      "319d0ac6e8abfc857aaa7ead76e3259f"
     ],
     [
       "EtM.CPA.__proj__Key__item__log",
@@ -322,19 +305,17 @@
         "projection_inverse_EtM.CPA.Key_region"
       ],
       0,
-      "957c4ef9d9516580f7006d75a5f574e8"
+      "3a3cd4b01ad25467d5b9b01e7445e793"
     ],
     [
       "EtM.CPA.decrypt",
-      4,
+      3,
       2,
       1,
       [
         "@query", "assumption_EtM.Plain.Plain_hasEq",
         "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Platform.Bytes.HasEq_bytes",
-        "equality_tok_CoreCrypto.AES_128_CBC@tok",
-        "equation_CoreCrypto.blockSize", "equation_EtM.CPA.cipher",
+        "assumption_Platform.Bytes.HasEq_bytes", "equation_EtM.CPA.cipher",
         "equation_EtM.CPA.ivsize", "equation_EtM.CPA.msg",
         "equation_Platform.Bytes.bytes",
         "function_token_typing_EtM.CPA.cipher",
@@ -342,7 +323,7 @@
         "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
       ],
       0,
-      "bc39e6cd35d282dd9ae500128ebe649d"
+      "9de6eab6f9f51978013c9345c8f1c561"
     ]
   ]
 ]

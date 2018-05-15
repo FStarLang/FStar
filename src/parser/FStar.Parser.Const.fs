@@ -26,12 +26,13 @@ module U = FStar.Util
 
 let p2l l = lid_of_path l dummyRange
 
-let pconst s       = p2l ["Prims";s]
-let psconst s      = p2l ["FStar"; "Pervasives"; s]
-let psnconst s     = p2l ["FStar"; "Pervasives" ; "Native" ; s]
-let prims_lid      = p2l ["Prims"]
-let pervasives_lid = p2l ["FStar"; "Pervasives"]
-let fstar_ns_lid   = p2l ["FStar"]
+let pconst s              = p2l ["Prims";s]
+let psconst s             = p2l ["FStar"; "Pervasives"; s]
+let psnconst s            = p2l ["FStar"; "Pervasives" ; "Native" ; s]
+let prims_lid             = p2l ["Prims"]
+let pervasives_native_lid = p2l ["FStar"; "Pervasives"; "Native"]
+let pervasives_lid        = p2l ["FStar"; "Pervasives"]
+let fstar_ns_lid          = p2l ["FStar"]
 
 (* Primitive types *)
 let bool_lid        = pconst "bool"
@@ -75,6 +76,8 @@ let float_lid  = p2l ["FStar"; "Float"; "float"]
 let char_lid  = p2l ["FStar"; "Char"; "char"]
 
 let heap_lid   = p2l ["FStar"; "Heap"; "heap"]
+
+let logical_lid = pconst "logical"
 
 let true_lid   = pconst "l_True"
 let false_lid  = pconst "l_False"
@@ -216,6 +219,9 @@ let decreases_lid  = pconst "decreases"
 
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
 let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
+
+let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
+
 
 let range_lid      = pconst "range"
 let range_of_lid   = pconst "range_of"

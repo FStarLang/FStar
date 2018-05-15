@@ -49,22 +49,27 @@ type squash (p:Type) : Type0 = x:unit{p}
 
 (* F* will automatically insert `auto_squash` when simplifying terms,
    converting terms of the form `p /\ True` to `auto_squash p`.
-   
-   We distinguish these automatically inserted squashes from explicit, 
+
+   We distinguish these automatically inserted squashes from explicit,
    user-written squashes.
 
    It's marked `private` so that users cannot write it themselves.
-*)   
+*)
 private
 let auto_squash (p:Type) = squash p
+
+(*
+ * transition to prop and its enforcement
+ *)
+private type logical = Type0
 
 (*
  * Squashed versions of truth and falsehood
  *)
 [@ "tac_opaque"]
-let l_True = squash c_True
+let l_True :logical = squash c_True
 [@ "tac_opaque"]
-let l_False = squash c_False
+let l_False :logical = squash c_False
 
 (* The usual equality defined as an inductive type *)
 type equals (#a:Type) (x:a) : a -> Type =
@@ -76,7 +81,7 @@ type equals (#a:Type) (x:a) : a -> Type =
 //TODO: instead of hard-wiring the == syntax,
 //       we should just rename eq2 to op_Equals_Equals
 [@ "tac_opaque"]
-type eq2 (#a:Type) (x:a) (y:a) = squash (equals x y)
+type eq2 (#a:Type) (x:a) (y:a) :logical = squash (equals x y)
 
 (* Heterogeneous equality *)
 type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type =
@@ -84,13 +89,13 @@ type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type =
 
 (* A proof-irrelevant version of h_equals *)
 [@ "tac_opaque"]
-type eq3 (#a:Type) (#b:Type) (x:a) (y:b) = squash (h_equals x y)
+type eq3 (#a:Type) (#b:Type) (x:a) (y:b) :logical = squash (h_equals x y)
 
 unfold
 let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
 
 (* bool-to-type coercion *)
-type b2t (b:bool) = (b == true)
+type b2t (b:bool) :logical = (b == true)
 
 (* constructive conjunction *)
 type c_and  (p:Type) (q:Type) =
@@ -98,7 +103,7 @@ type c_and  (p:Type) (q:Type) =
 
 (* '/\'  : specialized to Type#0 *)
 [@ "tac_opaque"]
-type l_and (p:Type0) (q:Type0) = squash (c_and p q)
+type l_and (p q:logical) :logical = squash (c_and p q)
 
 (* constructive disjunction *)
 type c_or   (p:Type) (q:Type) =
@@ -107,21 +112,21 @@ type c_or   (p:Type) (q:Type) =
 
 (* '\/'  : specialized to Type#0 *)
 [@ "tac_opaque"]
-type l_or (p:Type0) (q:Type0) = squash (c_or p q)
+type l_or (p q:logical) :logical = squash (c_or p q)
 
 (* '==>' : specialized to Type#0 *)
 [@ "tac_opaque"]
-type l_imp (p:Type0) (q:Type0) = squash (p -> GTot q)
+type l_imp (p q:logical) :logical = squash (p -> GTot q)
                                          (* ^^^ NB: The GTot effect is primitive;            *)
-				         (*         elaborated using GHOST a few lines below *)
+                                         (*         elaborated using GHOST a few lines below *)
 (* infix binary '<==>' *)
-type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
+type l_iff (p q:logical) :logical = (p ==> q) /\ (q ==> p)
 
 (* prefix unary '~' *)
-type l_not (p:Type) = l_imp p False
+type l_not (p:logical) :logical = l_imp p False
 
 unfold
-type l_ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
+type l_ITE (p q r:logical) :logical = (p ==> q) /\ (~p ==> r)
 
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
 assume
@@ -130,10 +135,10 @@ type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 (* internalizing the typing relation for the SMT encoding: (has_type x t) *)
 assume
 type has_type : #a:Type -> a -> Type -> Type0
-  
+
 (* forall (x:a). p x : specialized to Type#0 *)
 [@ "tac_opaque"]
-type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
+type l_Forall (#a:Type) (p:a -> GTot Type0) :logical = squash (x:a -> GTot (p x))
 
 (* The type of squashed types *)
 type prop = a:Type0{ forall (x:a). x === () }
@@ -148,7 +153,7 @@ type dtuple2 (a:Type)
 
 (* exists (x:a). p x : specialized to Type#0 *)
 [@ "tac_opaque"]
-type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
+type l_Exists (#a:Type) (p:a -> GTot Type0) :logical = squash (x:a & p x)
 
 (* range is a type for the internal representations of source ranges
          The functions that follow below allow manipulating ranges
@@ -190,8 +195,8 @@ let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) 
 unfold
 let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
      forall (k:pure_post a).
-	 (forall (x:a).{:pattern (guard_free (k x))} post x ==> k x)
-	 ==> wp k
+         (forall (x:a).{:pattern (guard_free (k x))} post x ==> k x)
+         ==> wp k
 
 unfold
 let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =
@@ -248,7 +253,6 @@ sub_effect
 
 (* The primitive effect GTot is definitionally equal to an instance of GHOST *)
 effect GTot (a:Type) = GHOST a (pure_null_wp a)
-(* #set-options "--print_universes --print_implicits --print_bound_var_types --debug Prims --debug_level Extreme" *)
 effect Ghost (a:Type) (pre:Type) (post:pure_post' a pre) =
        GHOST a (fun (p:pure_post a) -> pre /\ (forall (ghost_result:a). post ghost_result ==> p ghost_result))
 
@@ -381,9 +385,7 @@ assume
 val magic   : #a:Type -> unit -> Tot a
 
 irreducible
-val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
-
-let unsafe_coerce #a #b x = admit(); x
+let unsafe_coerce (#a:Type) (#b: Type) (x:a) : b = admit (); x
 
 assume
 val admitP  : p:Type -> Pure unit True (fun x -> p)

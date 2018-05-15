@@ -145,8 +145,9 @@ let rec inspect_ln (t:term) : term_view =
     | Tm_constant c ->
         Tv_Const (inspect_const c)
 
-    | Tm_uvar (u, t) ->
-        Tv_Uvar (Z.of_int_fs (UF.uvar_id u), t)
+    | Tm_uvar (ctx_u, s) ->
+        Tv_Uvar (Z.of_int_fs (UF.uvar_id ctx_u.ctx_uvar_head),
+                (ctx_u, s))
 
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then Tv_Unknown else
@@ -250,8 +251,8 @@ let pack_ln (tv:term_view) : term =
     | Tv_Const c ->
         S.mk (Tm_constant (pack_const c)) None Range.dummyRange
 
-    | Tv_Uvar (u, t) ->
-        U.uvar_from_id (Z.to_int_fs u) t
+    | Tv_Uvar (u, ctx_u_s) ->
+      S.mk (Tm_uvar ctx_u_s) None Range.dummyRange
 
     | Tv_Let (false, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 [] Range.dummyRange in

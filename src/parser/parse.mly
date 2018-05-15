@@ -20,6 +20,10 @@ open FStar_Parser_Util
 open FStar_Const
 open FStar_Ident
 open FStar_String
+
+let logic_qualifier_deprecation_warning =
+  "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
+
 %}
 
 %token <bytes> BYTEARRAY
@@ -318,7 +322,9 @@ qualifier:
   | NOEQUALITY    { Noeq }
   | UNOPTEQUALITY { Unopteq }
   | NEW           { New }
-  | LOGIC         { Logic }
+  | LOGIC         { log_issue (lhs parseState) (Warning_logicqualifier,
+                                                logic_qualifier_deprecation_warning);
+                    Logic }
   | OPAQUE        { Opaque }
   | REIFIABLE     { Reifiable }
   | REFLECTABLE   { Reflectable }

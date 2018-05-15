@@ -80,3 +80,14 @@ let (runtime_assert : Prims.bool -> Prims.string -> unit) =
     fun msg  ->
       if Prims.op_Negation b then raise_failed_assertion msg else ()
   
+let string_of_list :
+  'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
+  fun f  ->
+    fun l  ->
+      let uu____348 =
+        let uu____349 =
+          let uu____350 = FStar_List.map f l  in
+          FStar_String.concat ", " uu____350  in
+        Prims.strcat uu____349 "]"  in
+      Prims.strcat "[" uu____348
+  

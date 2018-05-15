@@ -225,7 +225,7 @@ let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
 
 (* seq of ciphers sent so far on this connection *)
 let ciphers (c:connection) (h:heap) :GTot (seq network_message) =
-  ArrayUtils.seq_map (fun (E _ _ cipher _) -> cipher) (sel h (entries_of c))
+  ArrayUtils.seq_map E?.cipher (sel h (entries_of c))
 
 assume val network_receive (c:connection)
   :ST (option (network_message * seq byte)) (requires (fun h0 -> h0 `live_connection` c))
@@ -609,7 +609,7 @@ let receive_file #n file c =
 
 (* seq of tags sent so far on this connection *)
 let tags (c:connection) (h:heap) :GTot (seq (seq byte)) =
-  ArrayUtils.seq_map (fun (E _ _ _ tag) -> tag) (sel h (entries_of c))
+  ArrayUtils.seq_map E?.tag (sel h (entries_of c))
 
 #reset-options "--z3rlimit 100"
 let lemma_partial_length_hiding

@@ -119,6 +119,7 @@ let defaults =
       ("admit_except"                 , Unset);
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
+      ("cache_off"                    , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -130,6 +131,7 @@ let defaults =
       ("doc"                          , Bool false);
       ("dump_module"                  , List []);
       ("eager_inference"              , Bool false);
+      ("eager_subtyping"              , Bool false);
       ("expose_interfaces"            , Bool false);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
@@ -203,7 +205,7 @@ let defaults =
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
-      ("use_two_phase_tc"             , Bool false);
+      ("use_two_phase_tc"             , Bool true);
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("warn_error"                   , String "");
@@ -234,6 +236,7 @@ let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
+let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -244,7 +247,7 @@ let get_detail_errors           ()      = lookup_opt "detail_errors"            
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
-let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
+let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
@@ -508,6 +511,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Read and write .checked and .checked.lax in directory <dir>");
 
       ( noshort,
+        "cache_off",
+        Const (mk_bool true),
+        "Do not read or write any .checked files");
+
+      ( noshort,
         "codegen",
         EnumStr ["OCaml"; "FSharp"; "Kremlin"; "Plugin"],
         "Generate code for further compilation to executable code, or build a compiler plugin");
@@ -569,7 +577,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "eager_inference",
         Const (mk_bool true),
-        "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+        "Deprecated: Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+
+       (noshort,
+        "eager_subtyping",
+        Const (mk_bool true),
+        "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
 
        ( noshort,
          "extract",
@@ -951,7 +964,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "use_two_phase_tc",
         BoolStr,
-        "Use the two phase typechecker (default 'false')");
+        "Use the two phase typechecker (default 'true')");
 
        ( noshort,
         "__no_positivity",
@@ -973,9 +986,9 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          - [@r] makes range [r] fatal.");
 
         ( noshort,
-        "use_extracted_interfaces",
-        Const (mk_bool true),
-        "Extract interfaces from the dependencies and use them for verification");
+         "use_extracted_interfaces",
+          BoolStr,
+         "Extract interfaces from the dependencies and use them for verification (default 'false')");
 
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
@@ -998,6 +1011,7 @@ let settable = function
     | "detail_errors"
     | "detail_hint_replay"
     | "eager_inference"
+    | "eager_subtyping"
     | "hide_uvar_nums"
     | "hint_info"
     | "hint_file"
@@ -1211,6 +1225,7 @@ let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
+let cache_off                    () = get_cache_off                   ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
 let codegen                      () =
     Util.map_opt
@@ -1232,7 +1247,7 @@ let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
-let eager_inference              () = get_eager_inference             ()
+let eager_subtyping              () = get_eager_subtyping()
 let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let full_context_dependency      () = true
@@ -1312,6 +1327,7 @@ let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
 let use_two_phase_tc             () = get_use_two_phase_tc            ()
+                                    && not (lax())
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()

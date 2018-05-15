@@ -45,9 +45,10 @@ val partition_lemma: #a:eqtype -> f:(a -> Tot bool) -> l:list a ->
   Lemma (requires True)
         (ensures (let (hi, lo) = partition f l in
                   length l = length hi + length lo
-                  /\ (forall x. (mem x hi ==>   f x)
-                        /\ (mem x lo ==> ~(f x))
-                        /\ (count x l = count x hi + count x lo))))
+                  /\ (forall x.{:pattern f x} (mem x hi ==>   f x)
+                                      /\ (mem x lo ==> ~(f x)))
+                  /\ (forall x.{:pattern (count x hi) \/ (count x lo)}
+                                   (count x l = count x hi + count x lo))))
   [SMTPat (partition f l)]
 let rec partition_lemma #a f l = match l with
   | [] -> ()

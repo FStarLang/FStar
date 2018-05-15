@@ -100,6 +100,7 @@ val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
 val cache_checked_modules       : unit    -> bool
+val cache_off                   : unit    -> bool
 type codegen_t =
     | OCaml | FSharp | Kremlin | Plugin
 val codegen                     : unit    -> option<codegen_t>
@@ -116,7 +117,7 @@ val display_usage               : unit    -> unit
 val doc                         : unit    -> bool
 val dont_gen_projectors         : string  -> bool
 val dump_module                 : string  -> bool
-val eager_inference             : unit    -> bool
+val eager_subtyping             : unit    -> bool
 val expose_interfaces           : unit    -> bool
 val file_list                   : unit    -> list<string>
 val find_file                   : string  -> option<string>

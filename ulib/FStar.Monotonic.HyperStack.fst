@@ -30,8 +30,7 @@ unfold private let map_invariant_predicate (m:hmap) :Type0 =
       (forall s. includes s r ==> Map.contains m s)
 
 //All regions above a contained region are contained
-//AR: logic qualifier here ensures that quantifiers are shallowly encoded
-abstract logic let map_invariant (m:hmap) :Type0 = map_invariant_predicate m
+abstract let map_invariant (m:hmap) :Type0 = map_invariant_predicate m
 
 [@"opaque_to_smt"]
 unfold private let downward_closed_predicate (h:hmap) :Type0 =
@@ -41,13 +40,13 @@ unfold private let downward_closed_predicate (h:hmap) :Type0 =
                           /\ s `is_in` h   //that is also in the memory
                      ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
 
-abstract logic let downward_closed (h:hmap) :Type0 = downward_closed_predicate h
+abstract let downward_closed (h:hmap) :Type0 = downward_closed_predicate h
 
 [@"opaque_to_smt"]
 unfold private let tip_top_predicate (tip:rid) (h:hmap) :Type0 =
   forall (r:sid). r `is_in` h <==> r `is_above` tip
 
-abstract logic let tip_top (tip:rid) (h:hmap) :Type0 = tip_top_predicate tip h
+abstract let tip_top (tip:rid) (h:hmap) :Type0 = tip_top_predicate tip h
 
 let is_tip (tip:rid) (h:hmap) =
   (is_stack_region tip \/ tip = root) /\  //the tip is a stack region, or the root
@@ -68,7 +67,7 @@ unfold private let rid_ctr_pred_predicate (h:hmap) (n:int) :Type0 =
  * AR: all live regions have last component less than the rid_ctr
  *     marking it abstract, else it has a high-chance of firing even with a pattern
  *)
-abstract logic let rid_ctr_pred (h:hmap) (n:int) :Type0 = rid_ctr_pred_predicate h n
+abstract let rid_ctr_pred (h:hmap) (n:int) :Type0 = rid_ctr_pred_predicate h n
 
 let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid) :Type0
   = root `is_in` h /\ tip `is_tip` h /\ map_invariant h /\ downward_closed h /\ rid_ctr_pred h ctr

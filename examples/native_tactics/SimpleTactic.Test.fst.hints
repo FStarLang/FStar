@@ -6,9 +6,9 @@
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ee154a9715551f80d649a3da5b9dc47f"
+      "d438d6a211ae17119cf05934d68c84c4"
     ]
   ]
 ]

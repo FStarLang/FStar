@@ -949,12 +949,23 @@ let tc_lex_t env ses quals lids =
         raise_error (Errors.Fatal_InvalidRedefinitionOfLexT, err_msg) err_range
     end
 
-let tc_assume (env:env) (phi:formula) (r:Range.range) :term =
-    let env = Env.set_range env r in
-    let k, _ = U.type_u() in
-    let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
-    TcUtil.check_uvars r phi;
-    phi
+let tc_type_common (env:env) ((uvs, t):tscheme) (expected_typ:typ) (r:Range.range) :tscheme =
+  let uvs, t = SS.open_univ_vars uvs t in
+  let env = Env.push_univ_vars env uvs in
+  let t = tc_check_trivial_guard env t expected_typ in
+  if uvs = [] then
+    let uvs, t = TcUtil.generalize_universes env t in
+    //AR: generalize_universes only calls N.reduce_uvar_solutions, so make sure there are no uvars left
+    TcUtil.check_uvars r t;
+    uvs, t
+  else uvs, t |> N.remove_uvar_solutions env |> SS.close_univ_vars uvs
+
+let tc_declare_typ (env:env) (ts:tscheme) (r:Range.range) :tscheme =
+  tc_type_common env ts (U.type_u () |> fst) r
+
+let tc_assume (env:env) (ts:tscheme) (r:Range.range) :tscheme =
+  //AR: this might seem same as tc_declare_typ but come prop, this will change
+  tc_type_common env ts (U.type_u () |> fst) r
 
 let tc_inductive env ses quals lids =
     let env = Env.push env "tc_inductive" in
@@ -1332,40 +1343,31 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
                                    (Ident.text_of_lid lid))) r;
 
     let uvs, t =
-        if uvs = []
-        then check_and_gen env t (fst (U.type_u()))
-        else
-            let uvs, t = SS.open_univ_vars uvs t in
-            let env = Env.push_univ_vars env uvs in
-            let t = tc_check_trivial_guard env t (fst (U.type_u())) in
-            let t = N.normalize [N.NoFullNorm; N.Beta; N.DoNotUnfoldPureLets] env t in
-            uvs, SS.close_univ_vars uvs t
-    in
-    let se = { se with sigel = Sig_declare_typ(lid, uvs, t) } in
-    [se], []
-
-  | Sig_assume(lid, us, phi) ->
-    let us, phi = SS.open_univ_vars us phi in
-    let env = Env.push_univ_vars env us in
-    let phi =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
-        let phi = tc_assume ({ env with lax = true }) phi r |> N.remove_uvar_solutions env in
-        if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Assume after phase 1: %s\n" (Print.term_to_string phi);
-        phi
+        let uvs, t = tc_declare_typ ({ env with lax = true }) (uvs, t) se.sigrng in //|> N.normalize [N.NoFullNorm; N.Beta; N.DoNotUnfoldPureLets] env in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Val declaration after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
+        uvs, t
       end
-      else phi
+      else uvs, t
     in
 
-    let phi = tc_assume env phi r in
-    let us, phi =
-      if us = [] then TcUtil.generalize_universes env phi
-      else us, SS.close_univ_vars us phi
+    let uvs, t = tc_declare_typ env (uvs, t) se.sigrng in
+    [ { se with sigel = Sig_declare_typ (lid, uvs, t) }], []
+
+  | Sig_assume(lid, uvs, t) ->
+    let env = Env.set_range env r in
+
+    let uvs, t =
+      if Options.use_two_phase_tc () && Env.should_verify env then begin
+        let uvs, t = tc_assume ({ env with lax = true }) (uvs, t) se.sigrng in
+        if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Assume after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
+        uvs, t
+      end
+      else uvs, t
     in
-    [ { sigel = Sig_assume(lid, us, phi);
-        sigquals = se.sigquals;
-        sigrng = r;
-        sigmeta = default_sigmeta;
-        sigattrs = []  } ], []
+
+    let uvs, t = tc_assume env (uvs, t) se.sigrng in
+    [ { se with sigel = Sig_assume (lid, uvs, t) }], []
 
   | Sig_main(e) ->
     let env = Env.set_range env r in
@@ -1394,6 +1396,9 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
     let check_quals_eq l qopt q = match qopt with
       | None -> Some q
       | Some q' ->
+        //logic is now a deprecated qualifier, so discard it from the checking
+        let drop_logic = List.filter (fun x -> not (x = Logic)) in
+        let q, q' = drop_logic q, drop_logic q' in
         if List.length q = List.length q'
         && List.forall2 U.qualifier_equal q q'
         then Some q
@@ -1851,6 +1856,8 @@ let extract_interface (en:env) (m:modul) :modul =
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =
+    if Env.debug en Options.Extreme
+    then BU.print1 "Extracting interface for %s\n" (Print.sigelt_to_string s);
     match s.sigel with
     | Sig_inductive_typ _
     | Sig_datacon _ -> failwith "Impossible! extract_interface: bare data constructor"
@@ -1952,7 +1959,8 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     (not loading_from_cache)            &&
     (not iface_exists)                  &&
     Options.use_extracted_interfaces () &&
-    (not m.is_interface)
+    (not m.is_interface)                &&
+    FStar.Errors.get_err_count() = 0
   in
   if should_extract_interface then begin //if we are using extracted interfaces and this is not already an interface
     //extract the interface in the new environment, this helps us figure out things like if an effect is reifiable

@@ -21,6 +21,10 @@ open FStar.String
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 (* TODO : these files should be deprecated and removed *)
+
+let logic_qualifier_deprecation_warning =
+  "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
+
 %}
 %start inputFragment
 %start term
@@ -1036,7 +1040,9 @@ qualifier:
                   ( New )}
 | LOGIC
     {let _1 = () in
-                  ( Logic )}
+                  ( log_issue (lhs parseState) (Warning_logicqualifier,
+                                                logic_qualifier_deprecation_warning);
+                    Logic )}
 | OPAQUE
     {let _1 = () in
                   ( Opaque )}
