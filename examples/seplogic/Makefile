@@ -13,7 +13,7 @@ all: SepLogic.Heap.uver Shallow.uver SL.Heap.uver SL.Effect.uver	\
 
 #Excludes extracted interfaces for these examples
 SL.Examples.uver: OTHERFLAGS+= --use_extracted_interfaces false
-SL.ExamplesAuto.uver: OTHERFLAGS+= --use_extracted_interfaces false
+SL.ExamplesAuto.uver: OTHERFLAGS+= --use_extracted_interfaces false --cache_off
 
 %.fst-in:
 	@echo $(OTHERFLAGS)
