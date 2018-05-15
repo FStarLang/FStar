@@ -204,17 +204,22 @@ val gsub_disjoint (#a: Type) (b: buffer a) (i1 len1 i2 len2: U32.t) : Lemma
   (ensures (disjoint (gsub b i1 len1) (gsub b i2 len2)))
   [SMTPat (disjoint (gsub b i1 len1) (gsub b i2 len2))]
 
+(* Useful shorthands for pointers, or maybe-null pointers. *)
+type pointer (t: Type0) =
+  b:buffer t { length b == 1 }
+
+type pointer_or_null (t: Type0) =
+  b:buffer t { if g_is_null b then True else length b == 1 }
+
 val pointer_distinct_sel_disjoint
   (#a: Type)
-  (b1: buffer a)
-  (b2: buffer a)
+  (b1: pointer a)
+  (b2: pointer a)
   (h: HS.mem)
 : Lemma
   (requires (
     live h b1 /\
     live h b2 /\
-    length b1 == 1 /\
-    length b2 == 1 /\
     Seq.index (as_seq h b1) 0 =!= Seq.index (as_seq h b2) 0
   ))
   (ensures (
