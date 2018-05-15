@@ -341,9 +341,24 @@ and ty_nested_positive_in_inductive (ty_lid:lident) (ilid:lident) (us:universes)
   debug_log env ("Checking nested positivity in the inductive " ^ ilid.str ^ " applied to arguments: " ^ (PP.args_to_string args));
   let b, idatas = datacons_of_typ env ilid in
   //if ilid is not an inductive, return false
-  if not b then
-    let _ = debug_log env ("Checking nested positivity, not an inductive, return false") in
-    false
+  if not b then begin
+    match Env.lookup_attrs_of_lid env ilid with
+    | None
+    | Some [] ->
+      debug_log env ("Checking nested positivity, not an inductive, return false");
+      false
+    | Some attrs ->
+      if attrs |> BU.for_some (fun tm ->
+         match (SS.compress tm).n with
+         | Tm_fvar fv ->
+           S.fv_eq_lid fv FStar.Parser.Const.assume_strictly_positive_attr_lid
+         | _ -> false)
+      then (debug_log env (BU.format1 "Checking nested positivity, special case decorated with `assume_strictly_positive` %s; return true"
+                                    (Ident.string_of_lid ilid));
+            true)
+      else (debug_log env ("Checking nested positivity, not an inductive, return false");
+           false)
+  end
   //if ilid has already been unfolded with same arguments, return true
   else
     if already_unfolded ilid args unfolded env then
@@ -493,7 +508,7 @@ let datacon_typ (data:sigelt) :term =
 (* private *)
 let haseq_suffix = "__uu___haseq"
 
-let is_haseq_lid lid = 
+let is_haseq_lid lid =
   let str = lid.str in let len = String.length str in
   let haseq_suffix_len = String.length haseq_suffix in
   len > haseq_suffix_len &&
@@ -550,7 +565,7 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list<subst_elt>) (us:
   //fold right with ibs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
   let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) ibs fml in
-  
+
   //fold right with bs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
   let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) bs fml in
@@ -602,7 +617,7 @@ let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list<subst_elt>
     | Sig_inductive_typ (lid, _, _, _, _, _) -> lid
     | _                                      -> failwith "Impossible!"
   in
-  
+
   let _, en, _, _ = acc in
   let axiom_lid, fml, bs, ibs, haseq_bs = get_optimized_haseq_axiom en ty usubst us in
   //fml is the hasEq axiom for the inductive, bs and ibs are opened binders and index binders,

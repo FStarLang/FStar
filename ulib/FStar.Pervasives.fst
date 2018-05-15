@@ -353,3 +353,16 @@ let fail (errs : list int) : unit = ()
  * (Note: this will NOT turn on --lax for you.) *)
 irreducible
 let fail_lax : unit = ()
+
+(**
+ * **THIS ATTRIBUTE IS AN ESCAPE HATCH AND CAN BREAK SOUNDNESS**
+ * **USE WITH CARE**
+ * The positivity check for inductive types stops at abstraction
+ * boundaries. This results in spurious errors about positivity,
+ * e.g., when defining types like `type t = ref (option t)`
+ * By adding this attribute to a declaration of a top-level name
+ * positivity checks on applications of that name are admitted.
+ * See, for instance, FStar.Monotonic.Heap.mref
+ *)
+irreducible
+let assume_strictly_positive : unit = ()
