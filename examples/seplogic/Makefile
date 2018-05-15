@@ -3,6 +3,10 @@ include ../Makefile.include
 
 OTHERFLAGS+=--include ../tactics
 
+all:uall
+
+uall: shallow examples
+
 all: SepLogic.Heap.uver Shallow.uver SL.Heap.uver SL.Effect.uver	\
 	SL.Shallow.uver Examples.uver SL.Examples.uver		\
 	SL.ExamplesAuto.uver
