@@ -363,6 +363,9 @@ let fail_lax : unit = ()
  * By adding this attribute to a declaration of a top-level name
  * positivity checks on applications of that name are admitted.
  * See, for instance, FStar.Monotonic.Heap.mref
+ * We plan to decorate binders of abstract types with polarities
+ * to allow us to check positivity across abstraction boundaries
+ * and will eventually remove this attribute.
  *)
 irreducible
 let assume_strictly_positive : unit = ()
