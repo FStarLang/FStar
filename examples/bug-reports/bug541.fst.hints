@@ -11,19 +11,7 @@
         "projection_inverse_Bug541.Bla_t"
       ],
       0,
-      "df16d916e75db978d3c622a7f1e0f9b3"
-    ],
-    [
-      "Bug541.__proj__Bla__item__b",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Bug541.Bla_t",
-        "projection_inverse_Bug541.Bla_t"
-      ],
-      0,
-      "db7b605292683191f4ec879779938d71"
+      "3c5deaa8a324682ceb36ecb28ec0a3df"
     ]
   ]
 ]

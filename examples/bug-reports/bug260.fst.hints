@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "3125f3dad5d942d8bbe9b72cb5808191"
+      "aee2fa70625d40a45771a94821113962"
     ],
     [
       "Bug260.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Bug260_Tm_refine_157a25d7c8423b184ee7d22a138c6995"
       ],
       0,
-      "9e62fb76a70e29650af6693bbdeed18b"
+      "b861331172bce67d551dce6ab3a9c2fa"
     ],
     [
       "Bug260.validity",
@@ -30,7 +30,7 @@
       1,
       [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
       0,
-      "c364827ff82e1bc0ec15c863a0bdfc68"
+      "927f503d6709ac5821d4b628042018a0"
     ],
     [
       "Bug260.validity'",
@@ -39,7 +39,7 @@
       1,
       [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
       0,
-      "80bcdb9b037e58fa09754d2c05e0e07a"
+      "f8f8c953c10dccabc26a70ed1e505106"
     ],
     [
       "Bug260.__proj__VSucc'__item___1",
@@ -51,7 +51,7 @@
         "projection_inverse_Bug260.VSucc__n"
       ],
       0,
-      "29c5cfffdfff396e780189d15f3710b8"
+      "e4dce8fada82c03fb8a81a1dd68b9385"
     ],
     [
       "Bug260.validity'_empty",
@@ -66,59 +66,7 @@
         "projection_inverse_Bug260.VSucc__n", "subterm_ordering_Bug260.S"
       ],
       0,
-      "20c5e1f9bc498c1809d8604d3300506b"
-    ],
-    [
-      "Bug260.pnat",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a86e593ac7ae850098c9445ad2be8b84"
-    ],
-    [
-      "Bug260.__proj__S__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug260.S",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug260_Tm_refine_157a25d7c8423b184ee7d22a138c6995"
-      ],
-      0,
-      "e36d7ffe90f73b7ab976d0c76cec7c84"
-    ],
-    [
-      "Bug260.validity",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
-      0,
-      "515b817c8d72c7a719d5bbc355ff5a62"
-    ],
-    [
-      "Bug260.validity'",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Bug260.pnat__uu___haseq" ],
-      0,
-      "8a6c9c1ec69a22c7ddfc8232be490946"
-    ],
-    [
-      "Bug260.__proj__VSucc'__item___1",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Bug260.VSucc__n",
-        "projection_inverse_Bug260.VSucc__n"
-      ],
-      0,
-      "bf41781e49c80826e89df668987bbece"
+      "615603fa44b43817a334073cdcf06d2a"
     ]
   ]
 ]

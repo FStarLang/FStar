@@ -11,19 +11,7 @@
         "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "05860c8fbc823eb00083781ffa118343"
-    ],
-    [
-      "Bug433.num",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.pos",
-        "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "6217645412f697c662d8931299981da0"
+      "209f28bc599472d2337ac6a08268c5be"
     ]
   ]
 ]

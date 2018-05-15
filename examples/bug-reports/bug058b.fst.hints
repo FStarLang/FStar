@@ -23,7 +23,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "300300d61d30e55baa034e73d78afb02"
+      "ecf3d334e9abdd88346da83acda3f69f"
     ],
     [
       "Bug058b.fibonacci",
@@ -37,43 +37,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "da9cef8e5c65b3abc6116f8266025212"
-    ],
-    [
-      "Bug058b.sub_fibo",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int",
-        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_2",
-        "binder_x_8f0dca50757ca4d3234278fe85ba50f4_1",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
-        "haseqBug058b_Tm_refine_168d47edc382eb44a1bb9f73ed9ce867",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Bug058b_Tm_refine_fc2f97f164eeb698aab88b6f2ac8f37a",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "d772c3780ec8f15c2cbfa18eaa81415f"
-    ],
-    [
-      "Bug058b.fibonacci",
-      2,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "899287b11eca47d0376a44b345cfb890"
+      "54a4aaf37dbd7b164c4cd09c5695950c"
     ]
   ]
 ]

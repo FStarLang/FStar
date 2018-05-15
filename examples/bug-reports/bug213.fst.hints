@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "507f706a3f7f3716d7e87339256fe0b3"
+      "9def00f89b71f1ab6e66a7e3c8cd9aa3"
     ],
     [
       "Bug213.__proj__ExIntro__item__p",
@@ -20,7 +20,7 @@
         "projection_inverse_Bug213.ExIntro_a"
       ],
       0,
-      "1ec35a220edc3f88ef978fded1a21677"
+      "ec32fecb9bce82c3cc6a1939beaba69d"
     ],
     [
       "Bug213.__proj__ExIntro__item__x",
@@ -32,7 +32,7 @@
         "projection_inverse_Bug213.ExIntro_a"
       ],
       0,
-      "af5da289870daa5866636f546c0dd3a7"
+      "2e91864736bb583e4cb38cc7fe77210d"
     ],
     [
       "Bug213.__proj__ExIntro__item___3",
@@ -47,7 +47,7 @@
         "token_correspondence_Bug213.__proj__ExIntro__item__p"
       ],
       0,
-      "b221f0932450b5de5ce337944552838c"
+      "606baf7df9d0e5c76b50e87603150ca8"
     ],
     [
       "Bug213.foo",
@@ -56,55 +56,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "data_elim_Bug213.ExIntro" ],
       0,
-      "21c119ba901337aa958dd0125673d8b8"
-    ],
-    [
-      "Bug213.intPair",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "46a04bfd1de6f300aa23e47c073ace11"
-    ],
-    [
-      "Bug213.__proj__ExIntro__item__p",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Bug213.ExIntro_a",
-        "projection_inverse_Bug213.ExIntro_a"
-      ],
-      0,
-      "65274637bf72e16efe41932c15052e81"
-    ],
-    [
-      "Bug213.__proj__ExIntro__item__x",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Bug213.ExIntro_a",
-        "projection_inverse_Bug213.ExIntro_a"
-      ],
-      0,
-      "b92f8e8dc6fc42822cad4885113f9c29"
-    ],
-    [
-      "Bug213.__proj__ExIntro__item___3",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Bug213.ExIntro_p",
-        "proj_equation_Bug213.ExIntro_x",
-        "projection_inverse_Bug213.ExIntro_p",
-        "projection_inverse_Bug213.ExIntro_x",
-        "token_correspondence_Bug213.__proj__ExIntro__item__p"
-      ],
-      0,
-      "04a835d5e31ffb7b163961244de110f4"
+      "d56e9d031c6fc5ac8806a3531bdefcd0"
     ]
   ]
 ]

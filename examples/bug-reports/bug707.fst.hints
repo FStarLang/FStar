@@ -19,27 +19,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "d33ff82844792241bd8295b6e54a6c7b"
-    ],
-    [
-      "Bug707.bind",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Bug707_interpretation_Tm_arrow_52994bb0275470a0caf2252ea6901b0a",
-        "bool_inversion", "bool_typing",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Bug707.stexn", "function_token_typing_Prims.int",
-        "int_inversion", "kinding_FStar.Pervasives.Native.option@tok",
-        "lemma_FStar.Pervasives.invertOption",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
-      ],
-      0,
-      "931d4c5ed6cdc7d7d12d19e960a82473"
+      "970cd3234000dbb5310c017548808a53"
     ]
   ]
 ]

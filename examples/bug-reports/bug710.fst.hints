@@ -20,7 +20,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "6f6fc04b06f45bafcf125628ecd49f8f"
+      "c0baba6d05a4464d0105cbfdd72372cd"
     ],
     [
       "Bug710.left_unit",
@@ -48,28 +48,7 @@
         "typing_Bug710.bind_ifc", "typing_Bug710.return_ifc"
       ],
       0,
-      "2bd82360d04b06257c937cdae7dcacf2"
-    ],
-    [
-      "Bug710.bind_ifc",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Bug710_interpretation_Tm_arrow_b2723f04049f55e23469d5c6dd46d21f",
-        "Bug710_interpretation_Tm_arrow_c56aebc985490abf5ef65536a48a4daa",
-        "Bug710_pretyping_e9504e14cc1510d6e0212487d8a1730a",
-        "bool_inversion", "bool_typing", "data_typing_intro_Bug710.High@tok",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some", "equation_Bug710.ifc",
-        "kinding_Bug710.label@tok",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
-      ],
-      0,
-      "cba30d2d6af4d4c420d456b8e934795f"
+      "91afd84758d9361c50daa7753a84541a"
     ]
   ]
 ]

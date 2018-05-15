@@ -11,7 +11,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f637c4510fbd0a6d8528272374a95447"
+      "50119b382c539dd19b41ab932414b188"
     ],
     [
       "Bug290.test2",
@@ -23,7 +23,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f35b693d89ba317b8a825a36a17c412c"
+      "9afa276822844f4a1130773a1b37ceab"
     ],
     [
       "Bug290.test3",
@@ -35,7 +35,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "03f8bb5f441092a2ccb065f43d23225f"
+      "0d6c36ed9c28712a86d4d334c7a9fbc9"
     ],
     [
       "Bug290.test4",
@@ -47,55 +47,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "836b5833f922a4ea5c66bdb806ba4e01"
-    ],
-    [
-      "Bug290.test",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "34e5008c0434409ee68eeab5e8ef7bff"
-    ],
-    [
-      "Bug290.test2",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "2905b633f0db756f98c6669da6dcc557"
-    ],
-    [
-      "Bug290.test3",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "bd3673c755fcd7c4db6bc0429ab47e01"
-    ],
-    [
-      "Bug290.test4",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "ac3166a05b9845e71bd79a0235d2b8b2"
+      "c6491547089c35921e2ec4186aa937cc"
     ]
   ]
 ]

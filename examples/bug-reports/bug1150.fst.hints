@@ -13,7 +13,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f6c6e424b429f6f735c1762c9f4f9e83"
+      "791296d8dd88e2295781c4365d07701a"
     ],
     [
       "Bug1150.foo",
@@ -27,21 +27,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "9ce02d3520f79490319a7c9648a3517c"
-    ],
-    [
-      "Bug1150.positive",
-      2,
-      2,
-      1,
-      [
-        "@query", "b2t_def", "equation_Bug1150.positive_",
-        "primitive_Prims.op_GreaterThan",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "d7954ea1ebc0ec87f02f31f4e22e4a99"
+      "e24b725d08241bb2612adac6db77e7c1"
     ]
   ]
 ]

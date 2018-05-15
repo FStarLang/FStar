@@ -12,20 +12,7 @@
         "refinement_interpretation_Bug1076_Tm_refine_5cdcca8bdc4b0558b575402415d68f74"
       ],
       0,
-      "7d6908a0f868048469991fa2eaff8fbd"
-    ],
-    [
-      "Bug1076.__proj__Const1__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug1076.Const1",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug1076_Tm_refine_5cdcca8bdc4b0558b575402415d68f74"
-      ],
-      0,
-      "06d52334b5a86f50a98c06469fffed8f"
+      "f38ca15cf044c86d9261036b44d3b2f8"
     ]
   ]
 ]

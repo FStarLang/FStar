@@ -11,19 +11,7 @@
         "projection_inverse_Bug190.DForallElim_f"
       ],
       0,
-      "e8d524e0c16a4ae05156bd96b50856c5"
-    ],
-    [
-      "Bug190.__proj__DForallElim__item___1",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Bug190.DForallElim_f",
-        "projection_inverse_Bug190.DForallElim_f"
-      ],
-      0,
-      "dfa7c6758a8a820fd16ee7b65a2ac10b"
+      "a701f2bd53151e3a209d0456481899cb"
     ]
   ]
 ]

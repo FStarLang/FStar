@@ -70,7 +70,7 @@
         "lemma_FStar.Map.lemma_ContainsDom", "typing_FStar.Map.contains"
       ],
       0,
-      "0641a2af060edf142337aa737fbdaa52"
+      "e08e2f3ad0a826573747b65cd2f1f5bd"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_is_wf_ctr_and_tip_elim",
@@ -92,7 +92,7 @@
         "proj_equation_FStar.Monotonic.HyperStack.HS_tip"
       ],
       0,
-      "633e74c843953f5459fb3203e5cc64df"
+      "8c7d48ac0ed7d92ff7df709961fb0d78"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_map_invariant",
@@ -118,7 +118,7 @@
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h"
       ],
       0,
-      "d81a031425fd09884a173c48a699db48"
+      "560f22db5a3a734e0db7c7cf89b3660d"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_downward_closed",
@@ -152,7 +152,7 @@
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h"
       ],
       0,
-      "6dd92266bf3631906f6b8f19f0bfcf89"
+      "4b265384daeb7a5d24584f5173db57a1"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_tip_top",
@@ -175,7 +175,7 @@
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__tip"
       ],
       0,
-      "9fe308538dcc1c7cc2de68c563858ee0"
+      "e6dc8bc8bab57daefbcac10086befca4"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_tip_top_smt",
@@ -198,7 +198,7 @@
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__tip"
       ],
       0,
-      "f20f987515142cc9294f575958e56580"
+      "58303bde7cd1d8877cc7489c45a24443"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_rid_ctr_pred",
@@ -222,7 +222,7 @@
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h"
       ],
       0,
-      "a875c41cab645a149ce05648378324f7"
+      "aae3854253ab61c11a5d6d40b3e22da3"
     ],
     [
       "FStar.Monotonic.HyperStack.empty_mem",
@@ -290,7 +290,7 @@
         "typing_FStar.Monotonic.HyperStack.is_eternal_color"
       ],
       0,
-      "20f64e0cc6fbbb629904cc67780e3449"
+      "bea8d338f113c5716707010760afaeb6"
     ],
     [
       "FStar.Monotonic.HyperStack.popped",
@@ -404,7 +404,7 @@
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h"
       ],
       0,
-      "a440f019c1f40566b83fdfc6596f9b66"
+      "5591c0398402446ba52ee722a7a21dd2"
     ],
     [
       "FStar.Monotonic.HyperStack.upd",
@@ -1405,7 +1405,7 @@
         "typing_FStar.Monotonic.HyperStack.is_eternal_color"
       ],
       0,
-      "78a650c24f3429a1d0e6b23baf09e078"
+      "08e3c980c83bf1610b9b7736c56f6ab9"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_heap_equality_cancel_same_mref_upd",

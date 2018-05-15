@@ -11,7 +11,7 @@
         "refinement_interpretation_Bug590_Tm_refine_de9aeb070296eed20d879692d0254af0"
       ],
       0,
-      "85eabc00b70d876e970b89e73cac843c"
+      "cb950046b33ba039ee94a4cc3576113b"
     ],
     [
       "Bug590.coerce",
@@ -30,7 +30,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "160c07c7174d1ee3a2624cf13c6584dc"
+      "e60f586503c83fd0d6120935d93dbb28"
     ],
     [
       "Bug590.blah2",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "e05598a5b8354bb3b69b8f054e00059e"
+      "38cab3ab86cbf42b05d32166450d1f49"
     ],
     [
       "Bug590.flatten_lemma",
@@ -65,49 +65,7 @@
         "typing_Bug590.coerce", "typing_FStar.List.Tot.Base.flatten"
       ],
       0,
-      "7ff7091e3506939168f3245add1a1a76"
-    ],
-    [
-      "Bug590.transport",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d8889b99f3c2a6d98eecf03fa553e578"
-    ],
-    [
-      "Bug590.coerce",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
-        "binder_x_43977d3a299ccb3d0fc3efcaad937593_2",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug590_Tm_refine_89abfbf1dd7254ec2f6bfc654aa43591",
-        "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "3be34d6ad18fcde20929bcae8a3c3b42"
-    ],
-    [
-      "Bug590.blah2",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_a",
-        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
-      ],
-      0,
-      "73b14b61360b230d8710e58d96b79d94"
+      "e305a782b9ffff0acd6cf5f7c2d6e7ed"
     ]
   ]
 ]

@@ -11,7 +11,7 @@
         "disc_equation_Eta_expand.B", "fuel_guarded_inversion_Eta_expand.t"
       ],
       0,
-      "4ab85d421899a6ed9fedff08198aab7f"
+      "e6405b8e96518993d756b2221a16fc69"
     ],
     [
       "Eta_expand.choose",
@@ -27,35 +27,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "29c14917b52c6fb1d721812746044c9f"
-    ],
-    [
-      "Eta_expand.dec",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Eta_expand.A",
-        "disc_equation_Eta_expand.B", "fuel_guarded_inversion_Eta_expand.t"
-      ],
-      0,
-      "a8f408d615aa8b95f5f953ae8d449087"
-    ],
-    [
-      "Eta_expand.choose",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_Eta_expand.A",
-        "constructor_distinct_Eta_expand.B", "disc_equation_Eta_expand.A",
-        "disc_equation_Eta_expand.B", "equation_Eta_expand.dec",
-        "fuel_guarded_inversion_Eta_expand.t",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "2c5f1509b95f3190a077cf168fa62738"
+      "936cc99b98163a09733cdcfed091f7dd"
     ]
   ]
 ]

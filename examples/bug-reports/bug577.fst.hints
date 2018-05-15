@@ -11,7 +11,7 @@
         "projection_inverse_Bug577.Multi_step_x"
       ],
       0,
-      "60e11323b35668aad472506e1ca073a5"
+      "19f9ebd21aa17205d893489e170697ef"
     ],
     [
       "Bug577.steps_preserves_red",
@@ -23,31 +23,7 @@
         "fuel_guarded_inversion_Bug577.step"
       ],
       0,
-      "fad9a9fe47a81b582f1beff43acc8bb5"
-    ],
-    [
-      "Bug577.__proj__Multi_step__item___1",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Bug577.Multi_step_x",
-        "projection_inverse_Bug577.Multi_step_x"
-      ],
-      0,
-      "fbf5272b56df954bb1cd49086f4b15c7"
-    ],
-    [
-      "Bug577.steps_preserves_red",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug577.step"
-      ],
-      0,
-      "b80b2862d4dd204d92e4018d9734350f"
+      "92ce378f6034bae7a81b17edfdf7148a"
     ]
   ]
 ]

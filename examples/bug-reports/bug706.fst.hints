@@ -18,25 +18,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "8e19d4870103f09f78ec004db25fe2e1"
-    ],
-    [
-      "Bug706.bind",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Bug706_interpretation_Tm_arrow_0be46514fe61755cfabf3fe87e746ccc",
-        "bool_inversion", "bool_typing",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Bug706.exnst",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.Pervasives.invertOption"
-      ],
-      0,
-      "0b9f590886611fb464ae9ce7ac6e4fd0"
+      "cc25b93f4f56075b1521254171b782a8"
     ]
   ]
 ]

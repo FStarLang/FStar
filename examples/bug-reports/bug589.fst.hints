@@ -12,20 +12,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d4af2473b6595d051150d1b902cad90c"
-    ],
-    [
-      "Bug589.h",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
-        "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "a631470e2f91c01024f81f6f11b15c32"
+      "208386676e63cc6031ecc94495d97aa1"
     ]
   ]
 ]

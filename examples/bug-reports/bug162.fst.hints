@@ -21,28 +21,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "93cc4030560c1109a5077e068246b68f"
-    ],
-    [
-      "Bug162.eval",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_41840e4f7223abadbf7c4cedfad987ae_0",
-        "equation_Bug162.good", "equation_Bug162.heap", "equation_Prims.nat",
-        "int_inversion", "int_typing",
-        "interpretation_Bug162_Tm_abs_923a4e8159a6afb9ad0e2934f79573b4",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Bug162_Tm_refine_6490d5503944c83ad35f19c7bf5424bf",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "b4e4ec8c95ac8096cbd4fbf8583609b4"
+      "7a0e46fda00cae1e27b13f0ce604aab3"
     ]
   ]
 ]

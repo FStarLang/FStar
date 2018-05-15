@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4addeb842d8f29b08d2cfb05b7eeb682"
+      "8bd4c99963065517983b4d50f5025a94"
     ],
     [
       "Bug292.triple_a",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c0a9302a053a6bc047175671561ef0be"
+      "e42e4f855c856ea645969619949c9330"
     ],
     [
       "Bug292.triple_a",
@@ -43,51 +43,7 @@
         "refinement_interpretation_Bug292_Tm_refine_bd6d982985e2df5ac87b5db124accca1"
       ],
       0,
-      "bab1a0b0d7141c6dbd5ae1cabf745def"
-    ],
-    [
-      "Bug292.shared",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "4c25e887068805e0a03884df5597906e"
-    ],
-    [
-      "Bug292.triple_a",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Pervasives.Native_pretyping_4894c30cf477acf9a27e7a844279eb08",
-        "assumption_Prims.HasEq_int", "equation_Bug292.shared",
-        "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pervasives.Native.snd",
-        "equation_FStar.Pervasives.dsnd", "primitive_Prims.op_Addition",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "proj_equation_Prims.Mkdtuple2__1",
-        "proj_equation_Prims.Mkdtuple2__2",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Prims.Mkdtuple2__1",
-        "projection_inverse_Prims.Mkdtuple2__2",
-        "refinement_interpretation_Bug292_Tm_refine_bd6d982985e2df5ac87b5db124accca1"
-      ],
-      0,
-      "358886671a6c0604364a184e9625942e"
-    ],
-    [
-      "Bug292.triple_a",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "6e632a096d831fd29f8ac5c4bff5baad"
+      "6f736a9316eaaf6468185143f14b9912"
     ]
   ]
 ]

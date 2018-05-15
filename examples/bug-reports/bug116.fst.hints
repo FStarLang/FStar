@@ -15,23 +15,7 @@
         "projection_inverse_Bug116.TyAbs_x"
       ],
       0,
-      "f4ad1fc35ef471526f26623ea38b6150"
-    ],
-    [
-      "Bug116.__proj__TyAbs__item___3",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Bug116.rtyping",
-        "proj_equation_Bug116.TyAbs_e1", "proj_equation_Bug116.TyAbs_g",
-        "proj_equation_Bug116.TyAbs_x", "projection_inverse_Bug116.TyAbs_e1",
-        "projection_inverse_Bug116.TyAbs_g",
-        "projection_inverse_Bug116.TyAbs_x"
-      ],
-      0,
-      "c81ea727b80db8d32ca6af6a2684f53d"
+      "dbcf858975590a86c51a960c863e625f"
     ]
   ]
 ]

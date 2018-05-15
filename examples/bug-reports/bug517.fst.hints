@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "91e0211cec3404755fe937ae0059cceb"
+      "48164fbaa525fccd0985bbd1e776e5f6"
     ],
     [
       "Bug517.add",
@@ -21,7 +21,7 @@
         "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
       ],
       0,
-      "39b37f1e05290a216c959a47c292997d"
+      "682ade390f4f3b7553892127aafb9331"
     ],
     [
       "Bug517.add'",
@@ -34,42 +34,7 @@
         "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
       ],
       0,
-      "9fbd1730172ed59990fb999a1aa9ec95"
-    ],
-    [
-      "Bug517.new_int",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "a254efff9e364eb60b62675cb983fcbf"
-    ],
-    [
-      "Bug517.add",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Bug517.new_int",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
-      ],
-      0,
-      "e3f5a288b8daba22eef5cb5ae888e78d"
-    ],
-    [
-      "Bug517.add'",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Bug517.new_int",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Pervasives.Native_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
-      ],
-      0,
-      "eb8064e0a53efbcb00127f97e64a791c"
+      "a424f4aa9e95ea8df41be25cf62113d4"
     ]
   ]
 ]
