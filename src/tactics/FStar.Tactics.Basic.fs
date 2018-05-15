@@ -1508,11 +1508,14 @@ let cur_goal'   () : tac<term> = bind (cur_goal ()) (fun g -> ret <| (goal_type 
 let cur_witness () : tac<term> = bind (cur_goal ()) (fun g -> ret <| (goal_witness g))
 
 let unquote (ty : term) (tm : term) : tac<term> = wrap_err "unquote" <|
+    mlog (fun () -> BU.print1 "unquote: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind (cur_goal ()) (fun goal ->
     let env = Env.set_expected_typ (goal_env goal) ty in
     bind (__tc env tm) (fun (tm, typ, guard) ->
+    mlog (fun () -> BU.print1 "unquote: tm' = %s\n" (Print.term_to_string tm)) (fun _ ->
+    mlog (fun () -> BU.print1 "unquote: typ = %s\n" (Print.term_to_string typ)) (fun _ ->
     bind (proc_guard "unquote" env guard goal.opts) (fun () ->
-    ret tm)))
+    ret tm))))))
 
 let uvar_env (env : env) (ty : option<typ>) : tac<term> =
     // If no type was given, add a uvar for it too!
