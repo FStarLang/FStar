@@ -28,7 +28,7 @@ let op_Array_Assignment #a b n z = B.upd #a b n z
 let ( !* ) (#a: Type) (p: B.pointer a):
   HST.Stack a
   (requires (fun h -> B.live h p))
-  (ensures (fun h0 x h1 -> B.live h1 p /\ x == Seq.index (B.as_seq h0 p) 0 /\ h1 == h0)) =
+  (ensures (fun h0 x h1 -> B.live h1 p /\ x == B.get h0 p 0 /\ h1 == h0)) =
   B.index p 0ul
 
 (* NOTE: DO NOT mark ( *= ) as inline_for_extraction,

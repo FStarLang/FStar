@@ -90,6 +90,11 @@ val length_as_seq (#a: Type) (h: HS.mem) (b: buffer a) : Lemma
   (Seq.length (as_seq h b) == length b)
   [SMTPat (Seq.length (as_seq h b))]
 
+let get (#a: Type) (h: HS.mem) (p: buffer a) (i: nat) : Ghost a
+  (requires (i < length p))
+  (ensures (fun _ -> True))
+= Seq.index (as_seq h p) i
+
 (* Inclusion *)
 
 val includes (#a: Type) (larger smaller: buffer a) : GTot Type0
@@ -205,9 +210,11 @@ val gsub_disjoint (#a: Type) (b: buffer a) (i1 len1 i2 len2: U32.t) : Lemma
   [SMTPat (disjoint (gsub b i1 len1) (gsub b i2 len2))]
 
 (* Useful shorthands for pointers, or maybe-null pointers. *)
+inline_for_extraction
 type pointer (t: Type0) =
   b:buffer t { length b == 1 }
 
+inline_for_extraction
 type pointer_or_null (t: Type0) =
   b:buffer t { if g_is_null b then True else length b == 1 }
 
@@ -220,7 +227,7 @@ val pointer_distinct_sel_disjoint
   (requires (
     live h b1 /\
     live h b2 /\
-    Seq.index (as_seq h b1) 0 =!= Seq.index (as_seq h b2) 0
+    get h b1 0 =!= get h b2 0
   ))
   (ensures (
     disjoint b1 b2
