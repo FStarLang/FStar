@@ -138,7 +138,6 @@ let defaults =
       ("extract_module"               , List []);
       ("extract_namespace"            , List []);
       ("fs_typ_app"                   , Bool false);
-      ("fstar_home"                   , Unset);
       ("full_context_dependency"      , Bool true);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
@@ -253,7 +252,6 @@ let get_extract                 ()      = lookup_opt "extract"                  
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
-let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
@@ -611,11 +609,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "expose_interfaces",
         Const (mk_bool true),
         "Explicitly break the abstraction imposed by the interface of any implementation file that appears on the command line (use with care!)");
-
-       ( noshort,
-        "fstar_home",
-        PathStr "dir",
-        "Set the FSTAR_HOME variable to <dir>");
 
        ( noshort,
         "hide_uvar_nums",
@@ -1075,16 +1068,7 @@ let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 let display_usage () = display_usage_aux (specs())
 
-let fstar_home () =
-    match get_fstar_home() with
-    | None ->
-      let x = Util.get_exec_dir () in
-      let x = x ^ "/.." in
-      // Memoizes to avoid repeatedly forking an external process
-      set_option' ("fstar_home", mk_string x);
-      x
-    | Some x ->
-      x
+let fstar_bin_directory = Util.get_exec_dir ()
 
 exception File_argument of string
 
@@ -1142,9 +1126,15 @@ let include_path () =
   if get_no_default_includes() then
     get_include()
   else
-    let h = fstar_home () in
-    let defs = universe_include_path_base_dirs in
-    (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
+    let lib_paths =
+        match FStar.Util.expand_environment_variable "FSTAR_LIB" with
+        | None ->
+          let fstar_home = fstar_bin_directory ^ "/.."  in
+          let defs = universe_include_path_base_dirs in
+          defs |> List.map (fun x -> fstar_home ^ x) |> List.filter file_exists
+        | Some s -> [s]
+    in
+    lib_paths @ get_include() @ [ "." ]
 
 let find_file filename =
   if Util.is_path_absolute filename then

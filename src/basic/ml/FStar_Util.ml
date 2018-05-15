@@ -815,7 +815,7 @@ let decr r = FStar_ST.(Z.(write r (read r - one)))
 let geq (i:int) (j:int) = i >= j
 
 let get_exec_dir () = Filename.dirname (Sys.executable_name)
-let expand_environment_variable x = try Sys.getenv x with Not_found -> ""
+let expand_environment_variable x = try Some (Sys.getenv x) with Not_found -> None
 
 let physical_equality (x:'a) (y:'a) = x == y
 let check_sharing a b msg = if physical_equality a b then print1 "Sharing OK: %s\n" msg else print1 "Sharing broken in %s\n" msg

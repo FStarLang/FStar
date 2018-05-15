@@ -122,7 +122,7 @@ val expose_interfaces           : unit    -> bool
 val file_list                   : unit    -> list<string>
 val find_file                   : string  -> option<string>
 val fs_typ_app                  : string  -> bool
-val fstar_home                  : unit    -> string
+val fstar_bin_directory         : string
 val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
