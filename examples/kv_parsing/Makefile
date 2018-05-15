@@ -30,7 +30,7 @@ OTHERFLAGS+=$(FSTAR_INCLUDE_PATHS) --z3rlimit_factor 4
 
 all: $(FST_FILES:.fst=.uver)
 
-Serializer.uver: OTHERFLAGS += --use_extracted_interfaces false
+Serializer.uver: OTHERFLAGS += --cache_off
 
 %.fst-in:
 	@echo $(OTHERFLAGS)
