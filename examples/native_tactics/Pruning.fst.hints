@@ -22,7 +22,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "a427204148dcb3838f177b5a5066b196"
+      "2dd6b66f3ad764948b3808c9fb02b816"
     ],
     [
       "Pruning.f",
@@ -31,10 +31,10 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7713e381e522860d1ba7f00385e82bae"
+      "3dc3a351d4ca701391d3bd61d2b9ff89"
     ],
     [
-      "Pruning.uu___136",
+      "Pruning.uu___67",
       1,
       4,
       2,
@@ -52,7 +52,7 @@
       "19c6ff4ac1593e577ac4c765d18826dc"
     ],
     [
-      "Pruning.uu___137",
+      "Pruning.uu___68",
       1,
       4,
       2,

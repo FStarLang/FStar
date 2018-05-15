@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "60e90d8d9844c450f06c66fe7ff7a39c"
+      "c4df1dfcb56b5269a57d8c3a4fca7e2c"
     ],
     [
       "Bug052.trivial_a",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "9afa5978e5cf8ef1b7a8d1239b4f5a6f"
+      "32d36ec2e7cdf35015482e6d99545bde"
     ],
     [
       "Bug052.trivial_b",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0e13fe217cf52c53f441e2952a582d22"
+      "aea4cef338f4882b981e8c2d0392afc7"
     ],
     [
       "Bug052.trivial_c",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7427af67b311098ec0c002983d73c0c2"
+      "47da38a94b72f75b351e082ec1f8728b"
     ],
     [
       "Bug052.use_fact_and_lemma",
@@ -49,7 +49,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0296c07f50cf43c16da3b5a45f814422"
+      "bec65b71b3173d39a843023697a7935a"
     ],
     [
       "Bug052.test",
@@ -62,7 +62,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "59f52b6a036f79c0a827b938f905ce55"
+      "f48d5721924370881a95014a5ffbf983"
     ]
   ]
 ]

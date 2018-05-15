@@ -1,5 +1,5 @@
 [
-  "NdFpxXÛ\u0002ôM\u0012ó„\u0004\u0015",
+  "IµäM©±Ë˛≠…6=èS⁄d",
   [
     [
       "FStar.Math.Lemmas.euclidean_div_axiom",
@@ -1760,24 +1760,25 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "d233607a9a1636ae2ee783988fe398b5"
+      "f13179e93c0bbf63135ae4102b73fa4b"
     ],
     [
       "FStar.Math.Lemmas.division_multiplication_lemma",
       2,
-      0,
-      0,
+      8,
+      2,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Division",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
+        "equation_Prims.pos", "int_inversion", "int_typing",
+        "primitive_Prims.op_Division", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "e0c9b5a222741e8afc0ba0d44b60dea1"
+      "1291516d37897622b0d90a4226b7bfb2"
     ],
     [
       "FStar.Math.Lemmas.lemma_mul_pos_pos_is_pos",
@@ -1790,7 +1791,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "123066d9639723b7234a4c2f19872e03"
+      "d59b6c43a668e9911f1b27b285a33226"
     ],
     [
       "FStar.Math.Lemmas.lemma_mul_nat_pos_is_nat",
@@ -1805,7 +1806,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "32e731b3b25bf4c7b516ea64e9f2980b"
+      "1ab718836a42c4331fe6d6eab27661ba"
     ],
     [
       "FStar.Math.Lemmas.modulo_division_lemma_0",
@@ -2994,7 +2995,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "a104898269a3bce18ceb2c7b6f460580"
+      "7b886b5dabf6f30570935652eae97c5c"
     ],
     [
       "FStar.Math.Lemmas.modulo_division_lemma_0",
