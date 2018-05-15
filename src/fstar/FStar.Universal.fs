@@ -250,7 +250,9 @@ let load_module_from_cache
 
 
 let store_module_to_cache env fn (m:modul) (modul_iface_opt:option<modul>) (mii:DsEnv.module_inclusion_info) =
-    if Options.cache_checked_modules() then
+    if Options.cache_checked_modules()
+    && not (Options.cache_off())
+    then begin
         let cache_file = FStar.Parser.Dep.cache_file_name fn in
         let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
         match digest with
@@ -263,6 +265,7 @@ let store_module_to_cache env fn (m:modul) (modul_iface_opt:option<modul>) (mii:
                                      (FStar.Range.mk_pos 0 0))
             (Errors.Warning_FileNotWritten, BU.format1 "%s was not written, since some of its dependences were not also checked"
                         cache_file)
+    end
 
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
@@ -298,7 +301,7 @@ let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and 
       let mii = FStar.Syntax.DsEnv.inclusion_info env.dsenv (fst tcmod).name in
       tcmod, tcmod_iface_opt, mii, env
   in
-  if Options.cache_checked_modules() then
+  if not (Options.cache_off()) then
       match load_module_from_cache env fn with
       | None ->
             let tcmod, tcmod_iface_opt, mii, env = tc_source_file () in

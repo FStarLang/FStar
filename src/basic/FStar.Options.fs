@@ -119,6 +119,7 @@ let defaults =
       ("admit_except"                 , Unset);
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
+      ("cache_off"                    , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -235,6 +236,7 @@ let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
+let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -507,6 +509,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "cache_dir",
         PostProcessed (pp_validate_dir, PathStr "dir"),
         "Read and write .checked and .checked.lax in directory <dir>");
+
+      ( noshort,
+        "cache_off",
+        Const (mk_bool true),
+        "Do not read or write any .checked files");
 
       ( noshort,
         "codegen",
@@ -1218,6 +1225,7 @@ let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
+let cache_off                    () = get_cache_off                   ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
 let codegen                      () =
     Util.map_opt
