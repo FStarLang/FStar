@@ -23,7 +23,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "59082cac4ade3222f7e1d546afc09827"
+      "300300d61d30e55baa034e73d78afb02"
     ],
     [
       "Bug058b.fibonacci",
@@ -37,7 +37,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0b0374a2f4ca6e789211309f7c5d5b05"
+      "da9cef8e5c65b3abc6116f8266025212"
     ],
     [
       "Bug058b.sub_fibo",
@@ -61,7 +61,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "893ca9725e71dde4a9d79b37fcc2f786"
+      "d772c3780ec8f15c2cbfa18eaa81415f"
     ],
     [
       "Bug058b.fibonacci",
@@ -73,7 +73,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "40ae5c34c67d692387c6f926ae2f2d68"
+      "899287b11eca47d0376a44b345cfb890"
     ]
   ]
 ]

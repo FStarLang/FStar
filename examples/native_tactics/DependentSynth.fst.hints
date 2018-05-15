@@ -11,19 +11,7 @@
         "equation_DependentSynth.myty", "int_typing", "unit_typing"
       ],
       0,
-      "b13c885251f1e822ccb52190f07506ed"
-    ],
-    [
-      "DependentSynth.f",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_DependentSynth.myty", "int_typing", "unit_typing"
-      ],
-      0,
-      "977131bdde8fab94f82b73507208b078"
+      "121991a9defaedb72d257c88cb838fd5"
     ]
   ]
 ]

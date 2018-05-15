@@ -15,10 +15,10 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1b2d0b17038922ac971adcfe2ebef00c"
+      "c639b75bc3baf16cb5d2ca263cd92b75"
     ],
     [
-      "DoNotation.uu___8",
+      "DoNotation.uu___13",
       1,
       2,
       1,
@@ -28,7 +28,7 @@
         "function_token_typing_Prims.int", "function_token_typing_Prims.unit"
       ],
       0,
-      "19e9cad8a70826622ea53751b266e87b"
+      "de9d32d141a35602ebf1e631a5588d8e"
     ],
     [
       "DoNotation.add",
@@ -44,7 +44,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1940c9325abd1e234d70edad6bea7ba4"
+      "8a946fcec6e2dd58e11f8dddb41a2287"
     ]
   ]
 ]

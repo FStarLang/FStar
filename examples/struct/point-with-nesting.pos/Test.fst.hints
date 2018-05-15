@@ -47,7 +47,7 @@
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "38553c1af4bd7bf765b3904029302ce8"
+      "5cccb1214ef1b46064c51ad62d49c376"
     ],
     [
       "Test.colored_object_struct",
@@ -104,7 +104,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "6e6785fe104edd63137fa185123bbc1c"
+      "aba8cea0c84f091ee443ee76219933b9"
     ],
     [
       "Test.write_struct_field",
@@ -136,7 +136,7 @@
         "token_correspondence_FStar.Pointer.Base.type_of_typ"
       ],
       0,
-      "973673cb1bfde79a37ac18db4ddf9569"
+      "ac51958fdfc8e1177d3926705d325e00"
     ],
     [
       "Test.flip",
@@ -238,7 +238,7 @@
         "typing_Test.colored_object_struct", "typing_Test.colored_object_t"
       ],
       0,
-      "56dce976c80918df1504f56af46c14cb"
+      "50f6740efaa665b15d56d37eed3178db"
     ],
     [
       "Test.flip'",
@@ -339,7 +339,7 @@
         "typing_Test.colored_object_struct", "typing_Test.colored_object_t"
       ],
       0,
-      "5dcea21d58ff4119b63199b794f866c9"
+      "4911a4f8e01bdf1f023c513c90f041b5"
     ],
     [
       "Test.point_struct",
@@ -388,7 +388,7 @@
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "282f1738b3b0c9500b4f16a7d8743b73"
+      "c0a35f06cd7008b3631316d071ac80cb"
     ],
     [
       "Test.colored_object_struct",
@@ -444,7 +444,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "e3a70044f9b47bbbbbb3986e47180f08"
+      "420938370bd06773aaf46104be021372"
     ],
     [
       "Test.write_struct_field",
@@ -459,7 +459,7 @@
         "lemma_FStar.Pointer.Base.type_of_typ_type_of_struct_field"
       ],
       0,
-      "4c99620c13eaa6a4833c31721f5f9988"
+      "e30f13437bd49dc718ac6c51da5a3df4"
     ],
     [
       "Test.flip",
@@ -522,7 +522,7 @@
         "typing_Test.colored_object_struct"
       ],
       0,
-      "d0da9710bd71516ae76782245105233f"
+      "7665aeac1341b3eb170112c6b0c214dc"
     ],
     [
       "Test.flip'",
@@ -585,7 +585,7 @@
         "typing_Test.colored_object_struct"
       ],
       0,
-      "d8220913fec747dba3f2e5a60c68b27b"
+      "8918579a07302f578c55f952f370da76"
     ]
   ]
 ]

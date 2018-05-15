@@ -1,5 +1,5 @@
 [
-  "\u0002‹rŒ\u001aÒ+\u0010Ê_Ô(\u0013Ïæû",
+  "­E\u0016âÊ“0<”÷.Ëô´j\u0018",
   [
     [
       "Cap.capRead",
@@ -11,7 +11,7 @@
         "equation_Cap.byte", "equation_Platform.Bytes.bytes"
       ],
       0,
-      "f4983d5072577f417eeac4441fd35a74"
+      "c17022ff158593bc649f9b8c06266b43"
     ],
     [
       "Cap.main",
@@ -41,28 +41,7 @@
         "typing_Platform.Bytes.equalBytes", "unit_typing"
       ],
       0,
-      "c887169c5372559240ad6cfcf58082d7"
-    ],
-    [
-      "Cap.capRead",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Cap.byte", "equation_Platform.Bytes.bytes"
-      ],
-      0,
-      "e1f33ddfb25e1f234dfde59190affc7e"
-    ],
-    [
-      "Cap.issue",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3f0f4bc0cd944d8802f38f7379108aff"
+      "9b86fac3b4622d8604a4858279ac4413"
     ]
   ]
 ]

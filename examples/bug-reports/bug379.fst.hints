@@ -15,7 +15,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "55fe28f7617f8f14a942c02695f89ddb"
+      "8726442eba0ad88790c0546bd4b5632c"
     ],
     [
       "Bug379.test3",
@@ -28,32 +28,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "959493fe4be0da4c7d2b4788435ac076"
-    ],
-    [
-      "Bug379.test1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
-        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "a31ec963b50e85e3cce15a004a812eec"
-    ],
-    [
-      "Bug379.test3",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "c5599796129df39875bd29dcb9df10b1"
+      "aabe0104dea0614e13c3a1aaafeadbb2"
     ]
   ]
 ]

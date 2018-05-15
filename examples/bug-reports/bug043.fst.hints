@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "627e2ef3c89c333c3e1edaba49d9ae09"
+      "2b2b9ad9f4218834e74a0900680f6c47"
     ],
     [
       "Bug043.__proj__S__item___0",
@@ -21,29 +21,7 @@
         "refinement_interpretation_Bug043_Tm_refine_e9b75321b1c0b82fe3be1f811b1a5f79"
       ],
       0,
-      "6d5f3544c8b8347670428c2cff3fe527"
-    ],
-    [
-      "Bug043.nat",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "706d471165676ea532d25599c8c2d74d"
-    ],
-    [
-      "Bug043.__proj__S__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Bug043.S",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Bug043_Tm_refine_e9b75321b1c0b82fe3be1f811b1a5f79"
-      ],
-      0,
-      "b2bc43bbd5d5f2a7d042831460724b6b"
+      "b03799f23ce4edc7fd980fc8888980ec"
     ]
   ]
 ]

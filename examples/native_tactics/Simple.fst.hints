@@ -7,7 +7,8 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_Prims.nat", "int_inversion", "int_typing",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
@@ -15,7 +16,16 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "eb421a221130654b7c1485549f59d1ba"
+      "b6ba3db546a09edd18c77362983a2f25"
+    ],
+    [
+      "Simple.id",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "36c1838d025cfc7145ef2d06f20dda8d"
     ],
     [
       "Simple.poly_id",
@@ -23,7 +33,8 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_Prims.nat", "int_inversion", "int_typing",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
@@ -31,7 +42,16 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "91f48ae3d3233d9ed5e22ad4a71f8583"
+      "2ba07376fde40193cdc6c64cd6b7fe36"
+    ],
+    [
+      "Simple.poly_id",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "f51220f84b4b84272b8ea84c11f0b470"
     ],
     [
       "Simple.mk_n_list",
@@ -39,14 +59,24 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "da9fa95ac0af51215b3ce44e4165bdc0"
+      "9e574d86fef5e42f7d3df5c3ca004b69"
+    ],
+    [
+      "Simple.mk_n_list",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "8632cedbb8a58c1fa501941a93b1b449"
     ],
     [
       "Simple.poly_list_id",
@@ -67,89 +97,23 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_1",
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6f147c10b696b54ce79336422b6abc5d"
-    ],
-    [
-      "Simple.id",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.nat", "int_inversion", "int_typing",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "8a786ac19872313c644545496d11a57d"
-    ],
-    [
-      "Simple.poly_id",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.nat", "int_inversion", "int_typing",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "6f853b34e560afa26a7e70e1dab33c3c"
-    ],
-    [
-      "Simple.mk_n_list",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "b0524a355db2087c76ed220e62a5e66c"
-    ],
-    [
-      "Simple.poly_list_id",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
-        "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "2f9362854b48a846cb58c8a9c3d2d39e"
+      "514a03f5b6b5b9cf4ed396e535a8adad"
     ],
     [
       "Simple.eq_int_list",
       2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_1",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "subterm_ordering_Prims.Cons"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2089a31473a13322e9c91f7ff6e80e61"
+      "332f4b765d6745797e48dc995f48061f"
     ]
   ]
 ]

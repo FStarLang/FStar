@@ -6,13 +6,18 @@
       1,
       2,
       1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.Pervasives.id", "equation_Plugins.int_plugin",
-        "primitive_Prims.op_Equality"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b2ddc2658cbef95492176f18dfa31201"
+      "cf16831d96a59b840993e7fe1a205da9"
+    ],
+    [
+      "Plugins.Test.uu___121",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5cd58ae0751981d8984dc01f3870bf58"
     ],
     [
       "Plugins.Test.uu___122",
@@ -20,17 +25,21 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
         "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int",
-        "equation_FStar.UInt32.n", "equation_Plugins.tuple_plugin",
-        "function_token_typing_FStar.UInt32.n",
-        "function_token_typing_Prims.bool",
-        "function_token_typing_Prims.int", "primitive_Prims.op_Equality"
+        "function_token_typing_Prims.bool", "function_token_typing_Prims.int"
       ],
       0,
-      "a1fc992292cf98d5718f27f705ba5374"
+      "6ea57c0f0b18d4b4ec70f7c5908f3bcd"
+    ],
+    [
+      "Plugins.Test.uu___122",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9f05fa968312bfde66b22e5142c79e07"
     ],
     [
       "Plugins.Test.uu___123",
@@ -38,15 +47,21 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "assumption_Prims.list__uu___haseq",
-        "equation_FStar.UInt32.n", "equation_Plugins.any_plugin",
-        "function_token_typing_FStar.UInt32.n",
-        "function_token_typing_Prims.int", "primitive_Prims.op_Equality"
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.list__uu___haseq",
+        "function_token_typing_Prims.int"
       ],
       0,
-      "7adc6c83a2c418042205f612477ed179"
+      "2a5f65b2a6e4083629a15321ccd10650"
+    ],
+    [
+      "Plugins.Test.uu___123",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "aa417d90121219738e7898b58eed5f56"
     ]
   ]
 ]
