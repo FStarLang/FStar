@@ -12,7 +12,7 @@ inline_for_extraction
 type aloc_t = HS.rid -> nat -> Tot Type0
 
 noeq
-type class (aloc: aloc_t) : Type u#1 = | Class:
+type cls (aloc: aloc_t) : Type u#1 = | Cls:
   (aloc_includes: (
     (#r: HS.rid) ->
     (#a: nat) ->
@@ -119,70 +119,70 @@ type class (aloc: aloc_t) : Type u#1 = | Class:
     (requires (aloc_disjoint b b))
     (ensures (aloc_preserved b h1 h2))
   )) ->
-  class aloc
+  cls aloc
 
-val loc (#aloc: aloc_t) (c: class aloc) : Tot (Type u#0)
+val loc (#aloc: aloc_t) (c: cls aloc) : Tot (Type u#0)
 
-val loc_none (#aloc: aloc_t) (#c: class aloc): Tot (loc c)
+val loc_none (#aloc: aloc_t) (#c: cls aloc): Tot (loc c)
 
 val loc_union
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s1 s2: loc c)
 : GTot (loc c)
 
 (** The following is useful to make Z3 cut matching loops with
 modifies_trans and modifies_refl *)
 val loc_union_idem
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s: loc c)
 : Lemma
   (loc_union s s == s)
 
 val loc_union_comm
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s1 s2: loc c)
 : Lemma
   (loc_union s1 s2 == loc_union s2 s1)
 
 val loc_union_assoc
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s1 s2 s3: loc c)
 : Lemma
   (loc_union s1 (loc_union s2 s3) == loc_union (loc_union s1 s2) s3)
 
 val loc_union_loc_none_l
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s: loc c)
 : Lemma
   (loc_union loc_none s == s)
 
 val loc_union_loc_none_r
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s: loc c)
 : Lemma
   (loc_union s loc_none == s)
 
 
 val loc_of_aloc
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (#r: HS.rid)
   (#n: nat)
   (b: aloc r n)
 : GTot (loc c)
 
 val loc_addresses
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (r: HS.rid)
   (n: Set.set nat)
 : GTot (loc c)
 
 val loc_regions
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (r: Set.set HS.rid)
 : GTot (loc c)
 
 let loc_mreference
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (#a: Type)
   (#p: Preorder.preorder a)
   (b: HS.mreference a p)
@@ -190,13 +190,13 @@ let loc_mreference
 = loc_addresses (HS.frameOf b) (Set.singleton (HS.as_addr b))
 
 let loc_region_only
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (r: HS.rid)
 : GTot (loc c)
 = loc_regions (Set.singleton r)
 
 let loc_all_regions_from
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (r: HS.rid)
 : GTot (loc c)
 = loc_regions (HS.mod_set (Set.singleton r))
@@ -205,45 +205,45 @@ let loc_all_regions_from
 (* Inclusion of memory locations *)
 
 val loc_includes
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s1 s2: loc c)
 : GTot Type0
 
 val loc_includes_refl
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s: loc c)
 : Lemma
   (loc_includes s s)
 
 val loc_includes_trans
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s1 s2 s3: loc c)
 : Lemma
   (requires (loc_includes s1 s2 /\ loc_includes s2 s3))
   (ensures (loc_includes s1 s3))
 
 val loc_includes_union_r
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s s1 s2: loc c)
 : Lemma
   (requires (loc_includes s s1 /\ loc_includes s s2))
   (ensures (loc_includes s (loc_union s1 s2)))
 
 val loc_includes_union_l
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s1 s2 s: loc c)
 : Lemma
   (requires (loc_includes s1 s \/ loc_includes s2 s))
   (ensures (loc_includes (loc_union s1 s2) s))
 
 val loc_includes_none
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s: loc c)
 : Lemma
   (loc_includes s loc_none)
 
 val loc_includes_aloc
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (#r: HS.rid)
   (#n: nat)
   (b1 b2: aloc r n)
@@ -252,7 +252,7 @@ val loc_includes_aloc
   (ensures (loc_includes (loc_of_aloc b1) (loc_of_aloc #_ #c b2)))
 
 val loc_includes_addresses_aloc
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (r: HS.rid)
   (s: Set.set nat)
   (#a: nat)
@@ -262,7 +262,7 @@ val loc_includes_addresses_aloc
   (ensures (loc_includes (loc_addresses r s) (loc_of_aloc #_ #c p)))
 
 val loc_includes_region_aloc
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s: Set.set HS.rid)
   (#r: HS.rid)
   (#a: nat)
@@ -272,7 +272,7 @@ val loc_includes_region_aloc
   (ensures (loc_includes (loc_regions s) (loc_of_aloc #_ #c b)))
 
 val loc_includes_region_addresses
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s: Set.set HS.rid)
   (r: HS.rid)
   (a: Set.set nat)
@@ -281,14 +281,14 @@ val loc_includes_region_addresses
   (ensures (loc_includes (loc_regions #_ #c s) (loc_addresses r a)))
 
 val loc_includes_region_region
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s1 s2: Set.set HS.rid)
 : Lemma
   (requires (Set.subset s2 s1))
   (ensures (loc_includes (loc_regions #_ #c s1) (loc_regions s2)))
 
 val loc_includes_region_union_l
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (l: loc c)
   (s1 s2: Set.set HS.rid)
 : Lemma
@@ -299,39 +299,39 @@ val loc_includes_region_union_l
 (* Disjointness of two memory locations *)
 
 val loc_disjoint
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s1 s2: loc c)
 : GTot Type0
 
 val loc_disjoint_sym
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s1 s2: loc c)
 : Lemma
   (requires (loc_disjoint s1 s2))
   (ensures (loc_disjoint s2 s1))
 
 val loc_disjoint_none_r
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s: loc c)
 : Lemma
   (ensures (loc_disjoint s loc_none))
 
 val loc_disjoint_union_r
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s s1 s2: loc c)
 : Lemma
   (requires (loc_disjoint s s1 /\ loc_disjoint s s2))
   (ensures (loc_disjoint s (loc_union s1 s2)))
 
 val loc_disjoint_includes
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (p1 p2 p1' p2' : loc c)
 : Lemma
   (requires (loc_includes p1 p1' /\ loc_includes p2 p2' /\ loc_disjoint p1 p2))
   (ensures (loc_disjoint p1' p2'))
 
 val loc_disjoint_aloc
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (#r1: HS.rid)
   (#a1: nat)
   (#r2: HS.rid)
@@ -343,7 +343,7 @@ val loc_disjoint_aloc
   (ensures (loc_disjoint (loc_of_aloc b1) (loc_of_aloc #_ #c b2)))
 
 val loc_disjoint_addresses
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (r1 r2: HS.rid)
   (n1 n2: Set.set nat)
 : Lemma
@@ -351,7 +351,7 @@ val loc_disjoint_addresses
   (ensures (loc_disjoint (loc_addresses #_ #c r1 n1) (loc_addresses r2 n2)))
 
 val loc_disjoint_aloc_addresses
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (#r' : HS.rid)
   (#a' : nat)
   (p: aloc r' a')
@@ -362,7 +362,7 @@ val loc_disjoint_aloc_addresses
   (ensures (loc_disjoint (loc_of_aloc p) (loc_addresses #_ #c r n)))
   
 val loc_disjoint_regions
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (rs1 rs2: Set.set HS.rid)
 : Lemma
   (requires (Set.subset (Set.intersect rs1 rs2) Set.empty))
@@ -372,13 +372,13 @@ val loc_disjoint_regions
 (** The modifies clause proper *)
 
 val modifies
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s: loc c)
   (h1 h2: HS.mem)
 : GTot Type0
 
 val modifies_live_region
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s: loc c)
   (h1 h2: HS.mem)
   (r: HS.rid)
@@ -387,7 +387,7 @@ val modifies_live_region
   (ensures (HS.live_region h2 r))
 
 val modifies_mreference_elim
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (#t: Type)
   (#pre: Preorder.preorder t)
   (b: HS.mreference t pre)
@@ -405,7 +405,7 @@ val modifies_mreference_elim
   ))
 
 val modifies_aloc_elim
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (#r: HS.rid)
   (#a: nat)
   (b: aloc r a)
@@ -421,14 +421,14 @@ val modifies_aloc_elim
   ))
 
 val modifies_refl
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s: loc c)
   (h: HS.mem)
 : Lemma
   (modifies s h h)
 
 val modifies_loc_includes
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s1: loc c)
   (h h': HS.mem)
   (s2: loc c)
@@ -437,7 +437,7 @@ val modifies_loc_includes
   (ensures (modifies s1 h h'))
 
 val modifies_trans
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (s12: loc c)
   (h1 h2: HS.mem)
   (s23: loc c)
@@ -447,7 +447,7 @@ val modifies_trans
   (ensures (modifies (loc_union s12 s23) h1 h3))
 
 val modifies_only_live_regions
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (rs: Set.set HS.rid)
   (l: loc c)
   (h h' : HS.mem)
@@ -459,7 +459,7 @@ val modifies_only_live_regions
   (ensures (modifies l h h'))
 
 val no_upd_fresh_region
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (r:HS.rid)
   (l:loc c)
   (h0:HS.mem)
@@ -469,7 +469,7 @@ val no_upd_fresh_region
   (ensures  (modifies l h0 h1))
 
 val modifies_fresh_frame_popped
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (h0 h1: HS.mem)
   (s: loc c)
   (h2 h3: HS.mem)
@@ -486,7 +486,7 @@ val modifies_fresh_frame_popped
   ))
 
 val modifies_loc_regions_intro
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (rs: Set.set HS.rid)
   (h1 h2: HS.mem)
 : Lemma
@@ -494,7 +494,7 @@ val modifies_loc_regions_intro
   (ensures (modifies (loc_regions #_ #c rs) h1 h2))
 
 val modifies_loc_addresses_intro
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (r: HS.rid)
   (a: Set.set nat)
   (l: loc c)
@@ -508,7 +508,7 @@ val modifies_loc_addresses_intro
   (ensures (modifies (loc_union (loc_addresses r a) l) h1 h2))
 
 val modifies_ralloc_post
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (#a: Type)
   (#rel: Preorder.preorder a)
   (i: HS.rid)
@@ -521,7 +521,7 @@ val modifies_ralloc_post
   (ensures (modifies (loc_none #_ #c) h h'))
 
 val modifies_salloc_post
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (#a: Type)
   (#rel: Preorder.preorder a)
   (init: a)
@@ -533,7 +533,7 @@ val modifies_salloc_post
   (ensures (modifies (loc_none #_ #c) h h'))
 
 val modifies_free
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (#a: Type)
   (#rel: Preorder.preorder a)
   (r: HS.mreference a rel { HS.is_mm r } )
@@ -542,7 +542,7 @@ val modifies_free
   (modifies (loc_mreference #_ #c r) m (HS.free r m))
 
 val modifies_none_modifies
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (h1 h2: HS.mem)
 : Lemma
   (requires (HST.modifies_none h1 h2))
@@ -612,7 +612,7 @@ val does_not_contain_addr_elim
 (** END TODO *)
 
 val modifies_only_live_addresses
-  (#aloc: aloc_t) (#c: class aloc)
+  (#aloc: aloc_t) (#c: cls aloc)
   (r: HS.rid)
   (a: Set.set nat)
   (l: loc c)
@@ -629,47 +629,47 @@ val modifies_only_live_addresses
 
 val aloc_union: (bool -> Tot aloc_t) -> Tot aloc_t
 
-val class_union (#a: (bool -> Tot aloc_t)) (c: ((b: bool) -> Tot (class (a b)))) : Tot (class (aloc_union a))
+val cls_union (#a: (bool -> Tot aloc_t)) (c: ((b: bool) -> Tot (cls (a b)))) : Tot (cls (aloc_union a))
 
-val union_loc_of_loc (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (class (al b))) (b: bool) (l: loc (c b)) : GTot (loc (class_union c))
+val union_loc_of_loc (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b))) (b: bool) (l: loc (c b)) : GTot (loc (cls_union c))
 
 val union_loc_of_loc_none
-  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (class (al b)))
+  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
   (b: bool)
 : Lemma
-  (union_loc_of_loc c b (loc_none #_ #(c b)) == loc_none #_ #(class_union c))
+  (union_loc_of_loc c b (loc_none #_ #(c b)) == loc_none #_ #(cls_union c))
 
 val union_loc_of_loc_union
-  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (class (al b)))
+  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
   (b: bool)
   (l1 l2: loc (c b))
 : Lemma
-  (union_loc_of_loc c b (loc_union #_ #(c b) l1 l2) == loc_union #_ #(class_union c) (union_loc_of_loc c b l1) (union_loc_of_loc c b l2))
+  (union_loc_of_loc c b (loc_union #_ #(c b) l1 l2) == loc_union #_ #(cls_union c) (union_loc_of_loc c b l1) (union_loc_of_loc c b l2))
 
 val union_loc_of_loc_addresses
-  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (class (al b)))
+  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
   (b: bool)
   (r: HS.rid)
   (n: Set.set nat)
 : Lemma
-  (union_loc_of_loc c b (loc_addresses #_ #(c b) r n) == loc_addresses #_ #(class_union c) r n)
+  (union_loc_of_loc c b (loc_addresses #_ #(c b) r n) == loc_addresses #_ #(cls_union c) r n)
 
 val union_loc_of_loc_regions
-  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (class (al b)))
+  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
   (b: bool)
   (r: Set.set HS.rid)
 : Lemma
-  (union_loc_of_loc c b (loc_regions #_ #(c b) r) == loc_regions #_ #(class_union c) r)
+  (union_loc_of_loc c b (loc_regions #_ #(c b) r) == loc_regions #_ #(cls_union c) r)
 
 val union_loc_of_loc_includes
-  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (class (al b)))
+  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
   (b: bool)
   (s1 s2: loc (c b))
 : Lemma
   (union_loc_of_loc c b s1 `loc_includes` union_loc_of_loc c b s2 <==> s1 `loc_includes` s2)
 
 val union_loc_of_loc_disjoint
-  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (class (al b)))
+  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
   (b: bool)
   (s1 s2: loc (c b))
 : Lemma
@@ -677,9 +677,9 @@ val union_loc_of_loc_disjoint
 
 (*
 val modifies_union_loc_of_loc
-  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (class (al b)))
+  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
   (b: bool)
   (l: loc (c b))
   (h1 h2: HS.mem)
 : Lemma
-  (modifies #(c b) l h1 h2 <==> modifies #(class_union c) (union_loc_of_loc c b l) h1 h2)
+  (modifies #(c b) l h1 h2 <==> modifies #(cls_union c) (union_loc_of_loc c b l) h1 h2)
