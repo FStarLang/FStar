@@ -14,7 +14,7 @@ let rec max_int i =
     256 * max_int (i-1)
   else 256
 
-logic type UInt (len:pint) (i:int) = (0 <= i /\ i < max_int len)
+type UInt (len:pint) (i:int) = (0 <= i /\ i < max_int len)
 type ulint (len:pint) = i:int{UInt len i}
 type uint16 = i:int{UInt 2 i}
 let uint16_max = (max_int 2) - 1
