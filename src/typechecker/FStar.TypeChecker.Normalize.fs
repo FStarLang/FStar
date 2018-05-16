@@ -1733,8 +1733,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             norm cfg env stack t
 
 and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
-    //preserve the range info on the returned def
-    let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
        | None ->
          log_unfolding cfg (fun () -> // printfn "delta_level = %A, qninfo=%A" cfg.delta_level qninfo;
@@ -1745,12 +1743,13 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          begin
          log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n"
                        (Print.term_to_string t0) (Print.term_to_string t));
+         // preserve the range info on the returned term
          let t =
            if cfg.steps.unfold_until = Some delta_constant
            //we're really trying to compute here; no point propagating range information
            //which can be expensive
            then t
-           else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
+           else Subst.set_use_range t0.pos t
          in
          let n = List.length us in
          if n > 0
