@@ -99,13 +99,25 @@ let union_ranges r1 r2 = {
 }
 let string_of_pos pos =
     format2 "%s,%s" (string_of_int pos.line) (string_of_int pos.col)
+let string_of_file_name f =
+    if Options.ide()
+    then begin
+        match FStar.Options.find_file (FStar.Util.basename f) with
+        | None -> f //couldn't find file; just return the relative path
+        | Some absolute_path ->
+            absolute_path
+    end
+    else f
+let file_of_range r       =
+    let f = r.def_range.file_name in
+    string_of_file_name f
+let set_file_of_range r (f:string) = {r with def_range = {r.def_range with file_name = f}}
 let string_of_rng r =
-    format3 "%s(%s-%s)" r.file_name (string_of_pos r.start_pos) (string_of_pos r.end_pos)
+    format3 "%s(%s-%s)" (string_of_file_name r.file_name) (string_of_pos r.start_pos) (string_of_pos r.end_pos)
 let string_of_def_range r = string_of_rng r.def_range
 let string_of_use_range r = string_of_rng r.use_range
 let string_of_range r     = string_of_def_range r
 
-let file_of_range r       = r.def_range.file_name
 let start_of_range r      = r.def_range.start_pos
 let end_of_range r        = r.def_range.end_pos
 

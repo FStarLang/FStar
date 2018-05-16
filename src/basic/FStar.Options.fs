@@ -1136,22 +1136,31 @@ let include_path () =
     in
     lib_paths @ get_include() @ [ "." ]
 
-let find_file filename =
-  if Util.is_path_absolute filename then
-    if Util.file_exists filename then
-      Some filename
-    else
-      None
-  else
-    (* In reverse, because the last directory has the highest precedence. *)
-    Util.find_map (List.rev (include_path ())) (fun p ->
-      let path =
-        if p = "." then filename
-        else Util.join_paths p filename in
-      if Util.file_exists path then
-        Some path
-      else
-        None)
+let find_file =
+  let file_map = FStar.Util.smap_create 100 in
+  fun filename ->
+     match Util.smap_try_find file_map filename with
+     | Some f -> f
+     | None ->
+       let result =
+          if Util.is_path_absolute filename then
+            if Util.file_exists filename then
+              Some filename
+            else
+              None
+          else
+            (* In reverse, because the last directory has the highest precedence. *)
+            Util.find_map (List.rev (include_path ())) (fun p ->
+              let path =
+                if p = "." then filename
+                else Util.join_paths p filename in
+              if Util.file_exists path then
+                Some path
+              else
+                None)
+       in
+       Util.smap_add file_map filename result;
+       result
 
 let prims () =
   match get_prims() with
@@ -1194,16 +1203,18 @@ let prepend_cache_dir fpath =
 //Used to parse the options of
 //   --using_facts_from
 //   --extract
+let path_of_text text = String.split ['.'] text
+
 let parse_settings ns : list<(list<string> * bool)> =
     let parse_one_setting s =
         if s = "*" then ([], true)
         else if FStar.Util.starts_with s "-"
-        then let path = FStar.Ident.path_of_text (FStar.Util.substring_from s 1) in
+        then let path = path_of_text (FStar.Util.substring_from s 1) in
              (path, false)
         else let s = if FStar.Util.starts_with s "+"
                      then FStar.Util.substring_from s 1
                      else s in
-             (FStar.Ident.path_of_text s, true)
+             (path_of_text s, true)
     in
     ns |> List.collect (fun s ->
           FStar.Util.split s " "
@@ -1332,7 +1343,7 @@ let should_extract m =
               | _ -> failwith "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module"
       in
       let setting = parse_settings extract_setting in
-      let m_components = Ident.path_of_text m in
+      let m_components = path_of_text m in
       let rec matches_path m_components path =
           match m_components, path with
           | _, [] -> true
