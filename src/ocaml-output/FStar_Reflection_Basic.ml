@@ -192,8 +192,8 @@ let rec (inspect_ln :
            in
         let brs1 =
           FStar_List.map
-            (fun uu___80_570  ->
-               match uu___80_570 with
+            (fun uu___221_570  ->
+               match uu___221_570 with
                | (pat,uu____592,t4) ->
                    let uu____610 = inspect_pat pat  in (uu____610, t4)) brs
            in
@@ -239,8 +239,8 @@ let (inspect_comp :
            then
              let maybe_dec =
                FStar_List.tryFind
-                 (fun uu___81_693  ->
-                    match uu___81_693 with
+                 (fun uu___222_693  ->
+                    match uu___222_693 with
                     | FStar_Syntax_Syntax.DECREASES uu____694 -> true
                     | uu____697 -> false) ct.FStar_Syntax_Syntax.flags
                 in
@@ -356,8 +356,8 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
            in
         let brs1 =
           FStar_List.map
-            (fun uu___82_964  ->
-               match uu___82_964 with
+            (fun uu___223_964  ->
+               match uu___223_964 with
                | (pat,t1) ->
                    let uu____981 = pack_pat pat  in
                    (uu____981, FStar_Pervasives_Native.None, t1)) brs
