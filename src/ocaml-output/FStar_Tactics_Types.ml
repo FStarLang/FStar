@@ -256,7 +256,8 @@ type proofstate =
   psc: FStar_TypeChecker_Normalize.psc ;
   entry_range: FStar_Range.range ;
   guard_policy: guard_policy ;
-  freshness: Prims.int }
+  freshness: Prims.int ;
+  tac_verb_dbg: Prims.bool }
 let (__proj__Mkproofstate__item__main_context :
   proofstate -> FStar_TypeChecker_Env.env) =
   fun projectee  ->
@@ -266,8 +267,8 @@ let (__proj__Mkproofstate__item__main_context :
         smt_goals = __fname__smt_goals; depth = __fname__depth;
         __dump = __fname____dump; psc = __fname__psc;
         entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy;
-        freshness = __fname__freshness;_} -> __fname__main_context
+        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
+        tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname__main_context
   
 let (__proj__Mkproofstate__item__main_goal : proofstate -> goal) =
   fun projectee  ->
@@ -277,8 +278,8 @@ let (__proj__Mkproofstate__item__main_goal : proofstate -> goal) =
         smt_goals = __fname__smt_goals; depth = __fname__depth;
         __dump = __fname____dump; psc = __fname__psc;
         entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy;
-        freshness = __fname__freshness;_} -> __fname__main_goal
+        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
+        tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname__main_goal
   
 let (__proj__Mkproofstate__item__all_implicits :
   proofstate -> FStar_TypeChecker_Env.implicits) =
@@ -289,8 +290,8 @@ let (__proj__Mkproofstate__item__all_implicits :
         smt_goals = __fname__smt_goals; depth = __fname__depth;
         __dump = __fname____dump; psc = __fname__psc;
         entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy;
-        freshness = __fname__freshness;_} -> __fname__all_implicits
+        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
+        tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname__all_implicits
   
 let (__proj__Mkproofstate__item__goals : proofstate -> goal Prims.list) =
   fun projectee  ->
@@ -300,8 +301,8 @@ let (__proj__Mkproofstate__item__goals : proofstate -> goal Prims.list) =
         smt_goals = __fname__smt_goals; depth = __fname__depth;
         __dump = __fname____dump; psc = __fname__psc;
         entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy;
-        freshness = __fname__freshness;_} -> __fname__goals
+        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
+        tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname__goals
   
 let (__proj__Mkproofstate__item__smt_goals : proofstate -> goal Prims.list) =
   fun projectee  ->
@@ -311,8 +312,8 @@ let (__proj__Mkproofstate__item__smt_goals : proofstate -> goal Prims.list) =
         smt_goals = __fname__smt_goals; depth = __fname__depth;
         __dump = __fname____dump; psc = __fname__psc;
         entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy;
-        freshness = __fname__freshness;_} -> __fname__smt_goals
+        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
+        tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname__smt_goals
   
 let (__proj__Mkproofstate__item__depth : proofstate -> Prims.int) =
   fun projectee  ->
@@ -322,8 +323,8 @@ let (__proj__Mkproofstate__item__depth : proofstate -> Prims.int) =
         smt_goals = __fname__smt_goals; depth = __fname__depth;
         __dump = __fname____dump; psc = __fname__psc;
         entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy;
-        freshness = __fname__freshness;_} -> __fname__depth
+        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
+        tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname__depth
   
 let (__proj__Mkproofstate__item____dump :
   proofstate -> proofstate -> Prims.string -> unit) =
@@ -334,8 +335,8 @@ let (__proj__Mkproofstate__item____dump :
         smt_goals = __fname__smt_goals; depth = __fname__depth;
         __dump = __fname____dump; psc = __fname__psc;
         entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy;
-        freshness = __fname__freshness;_} -> __fname____dump
+        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
+        tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname____dump
   
 let (__proj__Mkproofstate__item__psc :
   proofstate -> FStar_TypeChecker_Normalize.psc) =
@@ -346,8 +347,8 @@ let (__proj__Mkproofstate__item__psc :
         smt_goals = __fname__smt_goals; depth = __fname__depth;
         __dump = __fname____dump; psc = __fname__psc;
         entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy;
-        freshness = __fname__freshness;_} -> __fname__psc
+        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
+        tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname__psc
   
 let (__proj__Mkproofstate__item__entry_range :
   proofstate -> FStar_Range.range) =
@@ -358,8 +359,8 @@ let (__proj__Mkproofstate__item__entry_range :
         smt_goals = __fname__smt_goals; depth = __fname__depth;
         __dump = __fname____dump; psc = __fname__psc;
         entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy;
-        freshness = __fname__freshness;_} -> __fname__entry_range
+        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
+        tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname__entry_range
   
 let (__proj__Mkproofstate__item__guard_policy : proofstate -> guard_policy) =
   fun projectee  ->
@@ -369,8 +370,8 @@ let (__proj__Mkproofstate__item__guard_policy : proofstate -> guard_policy) =
         smt_goals = __fname__smt_goals; depth = __fname__depth;
         __dump = __fname____dump; psc = __fname__psc;
         entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy;
-        freshness = __fname__freshness;_} -> __fname__guard_policy
+        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
+        tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname__guard_policy
   
 let (__proj__Mkproofstate__item__freshness : proofstate -> Prims.int) =
   fun projectee  ->
@@ -380,121 +381,137 @@ let (__proj__Mkproofstate__item__freshness : proofstate -> Prims.int) =
         smt_goals = __fname__smt_goals; depth = __fname__depth;
         __dump = __fname____dump; psc = __fname__psc;
         entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy;
-        freshness = __fname__freshness;_} -> __fname__freshness
+        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
+        tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname__freshness
+  
+let (__proj__Mkproofstate__item__tac_verb_dbg : proofstate -> Prims.bool) =
+  fun projectee  ->
+    match projectee with
+    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
+        all_implicits = __fname__all_implicits; goals = __fname__goals;
+        smt_goals = __fname__smt_goals; depth = __fname__depth;
+        __dump = __fname____dump; psc = __fname__psc;
+        entry_range = __fname__entry_range;
+        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
+        tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname__tac_verb_dbg
   
 let (subst_proof_state :
   FStar_Syntax_Syntax.subst_t -> proofstate -> proofstate) =
   fun subst1  ->
     fun ps  ->
-      let uu____574 = FStar_Options.tactic_raw_binders ()  in
-      if uu____574
+      let uu____617 = FStar_Options.tactic_raw_binders ()  in
+      if uu____617
       then ps
       else
-        (let uu___84_576 = ps  in
-         let uu____577 = subst_goal subst1 ps.main_goal  in
-         let uu____578 = FStar_List.map (subst_goal subst1) ps.goals  in
+        (let uu___84_619 = ps  in
+         let uu____620 = subst_goal subst1 ps.main_goal  in
+         let uu____621 = FStar_List.map (subst_goal subst1) ps.goals  in
          {
-           main_context = (uu___84_576.main_context);
-           main_goal = uu____577;
-           all_implicits = (uu___84_576.all_implicits);
-           goals = uu____578;
-           smt_goals = (uu___84_576.smt_goals);
-           depth = (uu___84_576.depth);
-           __dump = (uu___84_576.__dump);
-           psc = (uu___84_576.psc);
-           entry_range = (uu___84_576.entry_range);
-           guard_policy = (uu___84_576.guard_policy);
-           freshness = (uu___84_576.freshness)
+           main_context = (uu___84_619.main_context);
+           main_goal = uu____620;
+           all_implicits = (uu___84_619.all_implicits);
+           goals = uu____621;
+           smt_goals = (uu___84_619.smt_goals);
+           depth = (uu___84_619.depth);
+           __dump = (uu___84_619.__dump);
+           psc = (uu___84_619.psc);
+           entry_range = (uu___84_619.entry_range);
+           guard_policy = (uu___84_619.guard_policy);
+           freshness = (uu___84_619.freshness);
+           tac_verb_dbg = (uu___84_619.tac_verb_dbg)
          })
   
 let (decr_depth : proofstate -> proofstate) =
   fun ps  ->
-    let uu___85_586 = ps  in
+    let uu___85_629 = ps  in
     {
-      main_context = (uu___85_586.main_context);
-      main_goal = (uu___85_586.main_goal);
-      all_implicits = (uu___85_586.all_implicits);
-      goals = (uu___85_586.goals);
-      smt_goals = (uu___85_586.smt_goals);
+      main_context = (uu___85_629.main_context);
+      main_goal = (uu___85_629.main_goal);
+      all_implicits = (uu___85_629.all_implicits);
+      goals = (uu___85_629.goals);
+      smt_goals = (uu___85_629.smt_goals);
       depth = (ps.depth - (Prims.parse_int "1"));
-      __dump = (uu___85_586.__dump);
-      psc = (uu___85_586.psc);
-      entry_range = (uu___85_586.entry_range);
-      guard_policy = (uu___85_586.guard_policy);
-      freshness = (uu___85_586.freshness)
+      __dump = (uu___85_629.__dump);
+      psc = (uu___85_629.psc);
+      entry_range = (uu___85_629.entry_range);
+      guard_policy = (uu___85_629.guard_policy);
+      freshness = (uu___85_629.freshness);
+      tac_verb_dbg = (uu___85_629.tac_verb_dbg)
     }
   
 let (incr_depth : proofstate -> proofstate) =
   fun ps  ->
-    let uu___86_592 = ps  in
+    let uu___86_635 = ps  in
     {
-      main_context = (uu___86_592.main_context);
-      main_goal = (uu___86_592.main_goal);
-      all_implicits = (uu___86_592.all_implicits);
-      goals = (uu___86_592.goals);
-      smt_goals = (uu___86_592.smt_goals);
+      main_context = (uu___86_635.main_context);
+      main_goal = (uu___86_635.main_goal);
+      all_implicits = (uu___86_635.all_implicits);
+      goals = (uu___86_635.goals);
+      smt_goals = (uu___86_635.smt_goals);
       depth = (ps.depth + (Prims.parse_int "1"));
-      __dump = (uu___86_592.__dump);
-      psc = (uu___86_592.psc);
-      entry_range = (uu___86_592.entry_range);
-      guard_policy = (uu___86_592.guard_policy);
-      freshness = (uu___86_592.freshness)
+      __dump = (uu___86_635.__dump);
+      psc = (uu___86_635.psc);
+      entry_range = (uu___86_635.entry_range);
+      guard_policy = (uu___86_635.guard_policy);
+      freshness = (uu___86_635.freshness);
+      tac_verb_dbg = (uu___86_635.tac_verb_dbg)
     }
   
 let (tracepoint : proofstate -> unit) =
   fun ps  ->
-    let uu____598 =
+    let uu____641 =
       (FStar_Options.tactic_trace ()) ||
-        (let uu____600 = FStar_Options.tactic_trace_d ()  in
-         ps.depth <= uu____600)
+        (let uu____643 = FStar_Options.tactic_trace_d ()  in
+         ps.depth <= uu____643)
        in
-    if uu____598
+    if uu____641
     then
-      let uu____601 =
-        let uu____602 = FStar_TypeChecker_Normalize.psc_subst ps.psc  in
-        subst_proof_state uu____602 ps  in
-      ps.__dump uu____601 "TRACE"
+      let uu____644 =
+        let uu____645 = FStar_TypeChecker_Normalize.psc_subst ps.psc  in
+        subst_proof_state uu____645 ps  in
+      ps.__dump uu____644 "TRACE"
     else ()
   
 let (set_ps_psc :
   FStar_TypeChecker_Normalize.psc -> proofstate -> proofstate) =
   fun psc  ->
     fun ps  ->
-      let uu___87_614 = ps  in
+      let uu___87_657 = ps  in
       {
-        main_context = (uu___87_614.main_context);
-        main_goal = (uu___87_614.main_goal);
-        all_implicits = (uu___87_614.all_implicits);
-        goals = (uu___87_614.goals);
-        smt_goals = (uu___87_614.smt_goals);
-        depth = (uu___87_614.depth);
-        __dump = (uu___87_614.__dump);
+        main_context = (uu___87_657.main_context);
+        main_goal = (uu___87_657.main_goal);
+        all_implicits = (uu___87_657.all_implicits);
+        goals = (uu___87_657.goals);
+        smt_goals = (uu___87_657.smt_goals);
+        depth = (uu___87_657.depth);
+        __dump = (uu___87_657.__dump);
         psc;
-        entry_range = (uu___87_614.entry_range);
-        guard_policy = (uu___87_614.guard_policy);
-        freshness = (uu___87_614.freshness)
+        entry_range = (uu___87_657.entry_range);
+        guard_policy = (uu___87_657.guard_policy);
+        freshness = (uu___87_657.freshness);
+        tac_verb_dbg = (uu___87_657.tac_verb_dbg)
       }
   
 let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
   fun ps  ->
     fun r  ->
-      let uu___88_625 = ps  in
-      let uu____626 =
-        let uu____627 = FStar_Range.def_range r  in
-        FStar_Range.set_def_range ps.entry_range uu____627  in
+      let uu___88_668 = ps  in
+      let uu____669 =
+        let uu____670 = FStar_Range.def_range r  in
+        FStar_Range.set_def_range ps.entry_range uu____670  in
       {
-        main_context = (uu___88_625.main_context);
-        main_goal = (uu___88_625.main_goal);
-        all_implicits = (uu___88_625.all_implicits);
-        goals = (uu___88_625.goals);
-        smt_goals = (uu___88_625.smt_goals);
-        depth = (uu___88_625.depth);
-        __dump = (uu___88_625.__dump);
-        psc = (uu___88_625.psc);
-        entry_range = uu____626;
-        guard_policy = (uu___88_625.guard_policy);
-        freshness = (uu___88_625.freshness)
+        main_context = (uu___88_668.main_context);
+        main_goal = (uu___88_668.main_goal);
+        all_implicits = (uu___88_668.all_implicits);
+        goals = (uu___88_668.goals);
+        smt_goals = (uu___88_668.smt_goals);
+        depth = (uu___88_668.depth);
+        __dump = (uu___88_668.__dump);
+        psc = (uu___88_668.psc);
+        entry_range = uu____669;
+        guard_policy = (uu___88_668.guard_policy);
+        freshness = (uu___88_668.freshness);
+        tac_verb_dbg = (uu___88_668.tac_verb_dbg)
       }
   
 type direction =
@@ -502,9 +519,9 @@ type direction =
   | BottomUp 
 let (uu___is_TopDown : direction -> Prims.bool) =
   fun projectee  ->
-    match projectee with | TopDown  -> true | uu____633 -> false
+    match projectee with | TopDown  -> true | uu____676 -> false
   
 let (uu___is_BottomUp : direction -> Prims.bool) =
   fun projectee  ->
-    match projectee with | BottomUp  -> true | uu____639 -> false
+    match projectee with | BottomUp  -> true | uu____682 -> false
   
