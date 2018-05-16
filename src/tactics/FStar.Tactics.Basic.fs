@@ -40,6 +40,9 @@ type implicits = Env.implicits
 // Beta reduce
 let normalize s e t = N.normalize_with_primitive_steps FStar.Reflection.Interpreter.reflection_primops s e t
 let bnorm e t = normalize [] e t
+
+(* Use this one for everything the user is supposed to see, as it does resugaring.
+ * For debug messages, just use plain term_to_string, we don't want to cause normalization with debug flags. *)
 let tts = N.term_to_string
 
 open FStar.Tactics.Types
@@ -108,12 +111,12 @@ let goal_to_string ps (g:goal) =
         let w =
             match get_uvar_solved g.goal_ctx_uvar with
             | None -> "_"
-            | Some t -> Print.term_to_string t
+            | Some t -> tts (goal_env g) t
         in
         BU.format3 "%s |- %s : %s"
              (Print.binders_to_string ", " g.goal_ctx_uvar.ctx_uvar_binders)
              w
-             (Print.term_to_string g.goal_ctx_uvar.ctx_uvar_typ)
+             (tts (goal_env g) g.goal_ctx_uvar.ctx_uvar_typ)
 
 let tacprint  (s:string)       = BU.print1 "TAC>> %s\n" s
 let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
@@ -352,7 +355,8 @@ let dismiss () : tac<unit> =
 
 let solve (goal : goal) (solution : term) : tac<unit> =
     let e = goal_env goal in
-    mlog (fun () -> BU.print2 "solve %s := %s\n" (tts e (goal_witness goal)) (tts e solution)) (fun () ->
+    mlog (fun () -> BU.print2 "solve %s := %s\n" (Print.term_to_string (goal_witness goal))
+                                                 (Print.term_to_string solution)) (fun () ->
     bind (trysolve goal solution) (fun b ->
     if b
     then bind __dismiss (fun () -> remove_solved_goals)
@@ -504,7 +508,7 @@ let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
 
 let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
-    mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (tts e t)) (fun () ->
+    mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
     try ret (ps.main_context.type_of e t)
     with | Errors.Err (_, msg)
@@ -737,7 +741,7 @@ let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = w
                | g::_ -> g.opts
                | _ -> FStar.Options.peek ()
     in
-    mlog (fun () -> BU.print1 "norm_term_env: t = %s\n" (tts ps.main_context t)) (fun () ->
+    mlog (fun () -> BU.print1 "norm_term_env: t = %s\n" (Print.term_to_string t)) (fun () ->
     bind (__tc e t) (fun (t, _, _) ->
     let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
@@ -766,11 +770,11 @@ let __exact_now set_expected_typ (t:term) : tac<unit> =
     in
     bind (__tc env t) (fun (t, typ, guard) ->
     mlog (fun () -> BU.print2 "__exact_now: got type %s\n__exact_now: and guard %s\n"
-                                                     (tts (goal_env goal) typ)
+                                                     (Print.term_to_string typ)
                                                      (Rel.guard_to_string (goal_env goal) guard)) (fun _ ->
     bind (proc_guard "__exact typing" (goal_env goal) guard goal.opts) (fun _ ->
-    mlog (fun () -> BU.print2 "__exact_now: unifying %s and %s\n" (tts (goal_env goal) typ)
-                                                                  (tts (goal_env goal) (goal_type goal))) (fun _ ->
+    mlog (fun () -> BU.print2 "__exact_now: unifying %s and %s\n" (Print.term_to_string typ)
+                                                                  (Print.term_to_string (goal_type goal))) (fun _ ->
     bind (do_unify (goal_env goal) typ (goal_type goal)) (fun b -> if b
     then solve goal t
     else fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
@@ -1039,7 +1043,7 @@ let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : option<goal> =
 let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
     bind (cur_goal ()) (fun goal ->
     let bv, _ = h in
-    mlog (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (tts (goal_env goal) bv.sort)) (fun _ ->
+    mlog (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (Print.term_to_string bv.sort)) (fun _ ->
     match split_env bv (goal_env goal) with
     | None -> fail "binder not found in environment"
     | Some (e0, bvs) -> begin
