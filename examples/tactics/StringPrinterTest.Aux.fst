@@ -7,7 +7,7 @@ module T = FStar.Tactics
 module HST = FStar.HyperStack.ST
 module B = FStar.Buffer
 
-#reset-options "--z3rlimit 32 --use_two_phase_tc true --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
+#reset-options "--z3rlimit 32 --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
 let rec example (x: U32.t) : Tot (m unit) (decreases (U32.v x)) =
   _ <-- print_char (Ca.uint32_to_uint8 x) ;

@@ -564,8 +564,6 @@ let bind_st
 
 #reset-options
 
-#set-options "--use_two_phase_tc true"
-
 inline_for_extraction
 let seq_st
   (t2: Type0)

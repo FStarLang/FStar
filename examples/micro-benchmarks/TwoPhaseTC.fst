@@ -1,6 +1,6 @@
 module TwoPhaseTC
 
-#set-options "--use_two_phase_tc true --ugly"
+#set-options "--ugly"
 
 open FStar.Classical
 module PropExt = FStar.PropositionalExtensionality
