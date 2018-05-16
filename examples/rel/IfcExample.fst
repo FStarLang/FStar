@@ -13,7 +13,7 @@ assume val y : ref int
 assume val z : ref int 
 assume val c : ref int 
 
-let env var = 
+let env (var: nat) = 
   if var = addr_of x then Low
   else if var = addr_of y then Low 
     else if var = addr_of c then Low

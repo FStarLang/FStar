@@ -4,8 +4,8 @@ open FStar.Preorder
 open FStar.Classical
 
 private noeq type heap_rec = {
-  next_addr: nat;
-  memory   : nat -> Tot (option (a:Type0 & rel:(option (preorder a)) & b:bool & a))  //type, preorder, mm flag, and value
+  next_addr: (x: nat { x > 0 } );
+  memory   : (x: nat { x > 0 } ) -> Tot (option (a:Type0 & rel:(option (preorder a)) & b:bool & a))  //type, preorder, mm flag, and value
 }
 
 let heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
@@ -18,12 +18,12 @@ let equal h1 h2 =
 let equal_extensional h1 h2 = ()
 
 let emp = {
-  next_addr = 0;
+  next_addr = 1;
   memory    = (fun (r:nat) -> None)
 }
 
 private noeq type mref' (a:Type0) (rel:preorder a) :Type0 = {
-  addr: nat;
+  addr: (x: nat { x > 0 } );
   init: a;
   mm:   bool;  //manually managed flag
 }
@@ -42,7 +42,9 @@ let contains #a #rel h r =
   (let Some (| a1, pre_opt, mm, _ |) = h.memory r.addr in
    a == a1 /\ Some? pre_opt /\ Some?.v pre_opt == rel /\ mm = r.mm)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
 
-let addr_unused_in n h = None? (h.memory n)
+let addr_unused_in n h = n <> 0 && None? (h.memory n)
+
+let not_addr_unused_in_nullptr h = ()
 
 let unused_in #a #rel r h = addr_unused_in (addr_of r) h
 
@@ -69,7 +71,7 @@ let upd #a #rel h r x =
     if r.addr >= h.next_addr
     then
       { next_addr = r.addr + 1;
-        memory    = (fun (r':nat) -> if r' = r.addr
+        memory    = (fun r' -> if r' = r.addr
 	   		         then Some (| a, Some rel, r.mm, x |)
                                  else h.memory r') }
     else
@@ -80,7 +82,7 @@ let upd #a #rel h r x =
 let alloc #a rel h x mm =
   let r = { addr = h.next_addr; init = x; mm = mm } in
   r, { next_addr = r.addr + 1;
-       memory    = (fun (r':nat) -> if r' = r.addr
+       memory    = (fun r' -> if r' = r.addr
 	   		        then Some (| a, Some rel, r.mm, x |)
                                 else h.memory r') }
 
@@ -209,12 +211,12 @@ let lemma_heap_equality_commute_distinct_upds #a #b #rel_a #rel_b h r1 r2 x y =
 
 (* Definition and ghost decidable equality *)
 noeq type aref' :Type0 = {
-  a_addr: nat;
+  a_addr: (x: nat { x > 0 } );
   a_mm:   bool;  //manually managed flag
 }
 let aref = aref'
 let dummy_aref = {
-  a_addr = 0;
+  a_addr = 1;
   a_mm   = false;
 }
 let aref_equal a1 a2 = a1.a_addr = a2.a_addr && a1.a_mm = a2.a_mm

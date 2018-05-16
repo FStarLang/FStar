@@ -557,6 +557,7 @@ and translate_type env t: typ =
     ->
       TBuf (translate_type env arg)
   | MLTY_Named ([arg], p) when
+    Syntax.string_of_mlpath p = "LowStar.Buffer.buffer" ||
     Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.reference" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.stackref" ||
@@ -656,7 +657,8 @@ and translate_expr env e: expr =
          ESequence [t; EAbort])
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
-    when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access" ->
+    when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
+      || string_of_mlpath p = "LowStar.Buffer.index" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
@@ -666,7 +668,7 @@ and translate_expr env e: expr =
   (* All the distinguished combinators that correspond to allocation, either on
    * the stack, on the heap (GC'd or manually-managed). *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ e1; e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.create") ->
+    when (string_of_mlpath p = "FStar.Buffer.create" || string_of_mlpath p = "LowStar.Buffer.alloca") ->
       EBufCreate (Stack, translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
@@ -674,7 +676,7 @@ and translate_expr env e: expr =
       EBufCreate (Stack, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.createL") ->
+    when (string_of_mlpath p = "FStar.Buffer.createL" || string_of_mlpath p = "LowStar.Buffer.alloca_of_list") ->
       let rec list_elements acc e2 =
         match e2.expr with
         | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
@@ -692,7 +694,7 @@ and translate_expr env e: expr =
       EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.rcreate") ->
+    when (string_of_mlpath p = "FStar.Buffer.rcreate" || string_of_mlpath p = "LowStar.Buffer.gcmalloc") ->
       EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
@@ -700,28 +702,29 @@ and translate_expr env e: expr =
       EBufCreate (ManuallyManaged, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.rcreate_mm") ->
+    when (string_of_mlpath p = "FStar.Buffer.rcreate_mm" || string_of_mlpath p = "LowStar.Buffer.malloc") ->
       EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
 
   (* Only manually-managed references and buffers can be freed. *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.HyperStack.ST.rfree") ->
       EBufFree (translate_expr env e2)
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.rfree") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.rfree" || string_of_mlpath p = "LowStar.Buffer.free") ->
       EBufFree (translate_expr env e2)
 
   (* Generic buffer operations. *)
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub" || string_of_mlpath p = "LowStar.Buffer.sub") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.join") ->
       (translate_expr env e1)
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset" || string_of_mlpath p = "LowStar.Buffer.offset") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
-    when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Array_Assignment" ->
+    when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Array_Assignment"
+    || string_of_mlpath p = "LowStar.Buffer.upd" ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals" ->

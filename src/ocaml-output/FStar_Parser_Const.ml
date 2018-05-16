@@ -202,6 +202,8 @@ let (must_erase_for_extraction_attr : FStar_Ident.lident) =
   psconst "must_erase_for_extraction" 
 let (fail_attr : FStar_Ident.lident) = psconst "fail" 
 let (fail_lax_attr : FStar_Ident.lident) = psconst "fail_lax" 
+let (assume_strictly_positive_attr_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "assume_strictly_positive"] 
 let (gen_reset :
   (unit -> Prims.int,unit -> unit) FStar_Pervasives_Native.tuple2) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0")  in
