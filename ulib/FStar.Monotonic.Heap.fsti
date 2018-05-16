@@ -21,7 +21,7 @@ val emp :heap
 [@ assume_strictly_positive]
 val mref (a:Type0) (rel:preorder a) :Type0
 
-val addr_of: #a:Type0 -> #rel:preorder a -> mref a rel -> GTot nat
+val addr_of: #a:Type0 -> #rel:preorder a -> mref a rel -> GTot (n: nat { n > 0 } )
 
 val is_mm: #a:Type0 -> #rel:preorder a -> mref a rel -> GTot bool
 
@@ -32,6 +32,8 @@ val compare_addrs:
 val contains: #a:Type0 -> #rel:preorder a -> heap -> mref a rel -> Type0
 
 val addr_unused_in: nat -> heap -> Type0
+
+val not_addr_unused_in_nullptr (h: heap) : Lemma (~ (addr_unused_in 0 h))
 
 val unused_in: #a:Type0 -> #rel:preorder a -> mref a rel -> heap -> Type0
 
@@ -262,7 +264,7 @@ val aref_equal (a1 a2: aref) : Ghost bool (requires True) (ensures (fun b -> b =
 val aref_of: #t: Type0 -> #rel: preorder t -> r: mref t rel -> Tot aref
 
 (* Operators lifted from ref *)
-val addr_of_aref: a: aref -> GTot nat
+val addr_of_aref: a: aref -> GTot (n: nat { n > 0 } )
 val addr_of_aref_of: #t: Type0 -> #rel: preorder t -> r: mref t rel -> Lemma (addr_of r == addr_of_aref (aref_of r))
 [SMTPat (addr_of_aref (aref_of r))]
 val aref_is_mm: aref -> GTot bool

@@ -368,7 +368,7 @@ val equal
   (requires True)
   (ensures (fun b -> b == true <==> t1 == t2 /\ p1 == p2 ))
 
-val as_addr (#t: typ) (p: pointer t): GTot nat
+val as_addr (#t: typ) (p: pointer t): GTot (x: nat { x > 0 } )
 
 val unused_in
   (#value: typ)
@@ -1077,7 +1077,7 @@ val live_region_frameOf_buffer
 val buffer_as_addr
   (#t: typ)
   (b: buffer t)
-: GTot nat
+: GTot (x: nat { x > 0 } )
 
 val buffer_as_addr_gsingleton_buffer_of_pointer
   (#t: typ)
