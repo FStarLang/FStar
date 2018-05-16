@@ -44,7 +44,6 @@ val debug           : string -> tac<unit>
 val dump_proofstate : proofstate -> string -> unit
 val print_proof_state1 : string -> tac<unit>
 val print_proof_state  : string -> tac<unit>
-val goal_to_string : goal -> string
 
 val fail : string -> tac<'a>
 val trivial : unit -> tac<unit>

@@ -47,9 +47,9 @@ type problem<'a> = {                  //Try to prove: lhs rel rhs ~> guard
     lhs:'a;
     relation:rel;
     rhs:'a;
-    element:option<term>;             //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
+    element:option<bv>;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
     logical_guard:term;               //the condition under which this problem is solveable; (?u v1..vn)
-    logical_guard_uvar:binders * ctx_uvar;
+    logical_guard_uvar:ctx_uvar;
     reason: list<string>;             //why we generated this problem, for error reporting
     loc: Range.range;                 //and the source location where this arose
     rank: option<rank_t>;

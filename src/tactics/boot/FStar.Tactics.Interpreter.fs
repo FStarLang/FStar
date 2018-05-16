@@ -473,10 +473,10 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) : tac<'b> = //
     // `steps 2` before caling norm, or it will fail to unembed the set of steps. Further,
     // at this moment at least, the normalizer will not call into any step of arity > 1.
     let steps = [N.Weak; N.Reify; N.UnfoldUntil delta_constant; N.UnfoldTac; N.Primops; N.Unascribe] in
-    if Env.debug proof_state.main_context (Options.Other "TacVerbose") then
+    if proof_state.tac_verb_dbg then
         BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
     let result = N.normalize_with_primitive_steps (primitive_steps ()) steps proof_state.main_context tm in
-    if Env.debug proof_state.main_context (Options.Other "TacVerbose") then
+    if proof_state.tac_verb_dbg then
         BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
 
     // F* requires more annotations.
@@ -776,7 +776,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
                            | Some phi -> phi
                  in
                  if !tacdbg then
-                     BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
+                     BU.print2 "Got goal #%s: %s\n" (string_of_int n) (Print.term_to_string (goal_type g));
                  let gt' = TcUtil.label ("Could not prove goal #" ^ string_of_int n) goal.pos phi in
                  (n+1, (goal_env g, gt', g.opts)::gs)) s gs in
     let (_, gs) = s in

@@ -1,9 +1,9 @@
 (* ******************************************************************************** *)
 module NegativeTests.Set
 assume type elt
-assume logic val a : elt
-assume logic val b : elt
-assume logic val c : elt
+assume val a : elt
+assume val b : elt
+assume val c : elt
 assume AB_distinct: a=!=b
 open FStar.TSet
 

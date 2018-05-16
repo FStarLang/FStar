@@ -94,12 +94,12 @@ let cond3 guard _then _else =
 
 
 (* A sample program written against this API *)
-logic type pre (r1:ref int) (r2:ref int) (h:heap) =
+type pre (r1:ref int) (r2:ref int) (h:heap) =
           (contains h r1
            /\ contains h r2
            /\ sel h r1 <= sel h r2)
 
-logic type post  (r1:ref int) (r2:ref int) (b:bool) (h:heap) =
+type post  (r1:ref int) (r2:ref int) (b:bool) (h:heap) =
           (b = (sel h r1 <> sel h r2))
 
 (* equalize r1 r2:
