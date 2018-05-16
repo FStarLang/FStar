@@ -1143,21 +1143,24 @@ let find_file =
      | Some f -> f
      | None ->
        let result =
-          if Util.is_path_absolute filename then
-            if Util.file_exists filename then
-              Some filename
-            else
-              None
-          else
-            (* In reverse, because the last directory has the highest precedence. *)
-            Util.find_map (List.rev (include_path ())) (fun p ->
-              let path =
-                if p = "." then filename
-                else Util.join_paths p filename in
-              if Util.file_exists path then
-                Some path
+          (try
+              if Util.is_path_absolute filename then
+                if Util.file_exists filename then
+                  Some filename
+                else
+                  None
               else
-                None)
+                (* In reverse, because the last directory has the highest precedence. *)
+                Util.find_map (List.rev (include_path ())) (fun p ->
+                  let path =
+                    if p = "." then filename
+                    else Util.join_paths p filename in
+                  if Util.file_exists path then
+                    Some path
+                  else
+                    None)
+           with | _ -> //to deal with issues like passing bogus strings as paths like "<input>"
+                  None)
        in
        Util.smap_add file_map filename result;
        result
