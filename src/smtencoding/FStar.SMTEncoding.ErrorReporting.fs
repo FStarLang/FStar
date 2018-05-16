@@ -37,12 +37,15 @@ let remove_dups (l:labels) = BU.remove_dups (fun (_, m1, r1) (_, m2, r2) -> r1=r
 type msg = string * Range.range
 type ranges = list<(option<string> * Range.range)>
 
+let string_of_both_ranges range = (Range.string_of_def_range range) ^ ", " ^ (Range.string_of_use_range range)
+
 //decorate a term with an error label
 let fresh_label : string -> Range.range -> term -> label * term =
     let ctr = BU.mk_ref 0 in
     fun message range t ->
         let l = incr ctr; format1 "label_%s" (string_of_int !ctr) in
         let lvar = l, Bool_sort in
+        printfn "Generated fresh label %s for %s at range %s" (fst lvar) message (string_of_both_ranges range);
         let label = (lvar, message, range) in
         let lterm = mkFreeV lvar in
         let lt = Term.mkOr(lterm, t) range in
@@ -91,12 +94,22 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | None -> false, ""
         | Some f -> true, f() in
     let fresh_label msg ropt rng t =
+        printfn "fresh_label with ropt = %s, rng=%s, msg=%s ...term is %s @ %s"
+            (match ropt with
+             | None -> "None"
+             | Some r -> string_of_both_ranges r)
+            (string_of_both_ranges rng)
+            msg
+            (Term.print_smt_term t)
+            (string_of_both_ranges t.rng);
         let msg = if flag
                   then "Failed to verify implicit argument: " ^ msg_prefix ^ " :: " ^ msg
                   else msg in
         let rng = match ropt with
                   | None -> rng
-                  | Some r -> Range.set_def_range r (Range.def_range rng)
+                  | Some r -> if Range.rng_included (Range.use_range rng) (Range.use_range r)
+                              then rng
+                              else Range.set_def_range r (Range.def_range rng)
         in
         fresh_label msg rng t
     in
@@ -113,9 +126,10 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | LblPos _ -> failwith "Impossible" //these get added after errorReporting instrumentation only
 
         | Labeled(arg, "could not prove post-condition", _) ->
-//          printfn "GOT A LABELED WP IMPLICATION";
+          printfn "GOT A LABELED WP IMPLICATION";
           let fallback msg =
-//            printfn "FALLING BACK: %s" msg;
+            printfn "FALLING BACK: %s with range %s" msg
+                        (match ropt with None -> "None" | Some r -> Range.string_of_range r);
             aux default_msg ropt post_name_opt labels arg in
           begin try
               begin match arg.tm with

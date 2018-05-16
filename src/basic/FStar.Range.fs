@@ -97,6 +97,10 @@ let union_ranges r1 r2 = {
   def_range=union_rng r1.def_range r2.def_range;
   use_range=union_rng r1.use_range r2.use_range
 }
+let rng_included r1 r2 =
+    if r1.file_name <> r2.file_name then false
+    else pos_geq r1.start_pos r2.start_pos &&
+         pos_geq r2.end_pos r1.end_pos
 let string_of_pos pos =
     format2 "%s,%s" (string_of_int pos.line) (string_of_int pos.col)
 let string_of_file_name f =

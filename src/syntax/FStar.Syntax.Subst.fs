@@ -168,6 +168,9 @@ let tag_with_range t s =
     match snd s with
     | None -> t
     | Some r ->
+      if Range.rng_included (Range.use_range t.pos) (Range.use_range r)
+      then t
+      else begin
       let r = Range.set_use_range t.pos (Range.use_range r) in
       let t' = match t.n with
         | Tm_bvar bv -> Tm_bvar (Syntax.set_range_of_bv bv r)
@@ -178,11 +181,15 @@ let tag_with_range t s =
                         Tm_fvar fv
         | t' -> t' in
       {t with n=t'; pos=r}
+      end
 
 let tag_lid_with_range l s =
     match (snd s) with
     | None -> l
-    | Some r -> Ident.set_lid_range l (Range.set_use_range (Ident.range_of_lid l) (Range.use_range r))
+    | Some r ->
+      if Range.rng_included (Range.use_range (Ident.range_of_lid l)) (Range.use_range r)
+      then l
+      else Ident.set_lid_range l (Range.set_use_range (Ident.range_of_lid l) (Range.use_range r))
 
 let mk_range r (s:subst_ts) =
     match snd s with

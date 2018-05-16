@@ -1291,6 +1291,11 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
     let rec fallback phi =  match phi.n with
         | Tm_meta(phi', Meta_labeled(msg, r, b)) ->
           let phi, decls = encode_formula phi' env in
+          printfn "Encoded term %s and range %s, %s\n\tas smt term %s"
+                    (Print.term_to_string phi')
+                    (Range.string_of_def_range phi'.pos)
+                    (Range.string_of_use_range phi'.pos)
+                    (Term.print_smt_term phi);
           mk (Term.Labeled(phi, msg, r)) r, decls
 
         | Tm_meta _ ->
@@ -1331,12 +1336,20 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
 
             | _ ->
               let tt, decls = encode_term phi env in
-              mk_Valid ({tt with rng=phi.pos}), decls
+              let tt =
+                  if Range.rng_included (Range.use_range tt.rng) (Range.use_range phi.pos)
+                  then tt
+                  else {tt with rng=phi.pos} in
+              mk_Valid tt, decls
           end
 
         | _ ->
             let tt, decls = encode_term phi env in
-            mk_Valid ({tt with rng=phi.pos}), decls in
+            let tt =
+                  if Range.rng_included (Range.use_range tt.rng) (Range.use_range phi.pos)
+                  then tt
+                  else {tt with rng=phi.pos} in
+            mk_Valid tt, decls in
 
     let encode_q_body env (bs:Syntax.binders) (ps:list<args>) body =
         let vars, guards, env, decls, _ = encode_binders None bs env in
