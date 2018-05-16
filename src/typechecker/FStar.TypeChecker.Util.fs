@@ -1077,6 +1077,7 @@ let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
     | Some g -> e, c', g
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
+    if env.is_pattern then e, lc else
     let is_type t =
         let t = N.unfold_whnf env t in
         match (SS.compress t).n with
