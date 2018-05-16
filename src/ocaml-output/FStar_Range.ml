@@ -18,7 +18,7 @@ let (max : Prims.int -> Prims.int -> Prims.int) =
 let (pos_geq : pos -> pos -> Prims.bool) =
   fun p1  ->
     fun p2  ->
-      (p1.line >= p2.line) || ((p1.line = p2.line) && (p1.col >= p2.col))
+      (p1.line > p2.line) || ((p1.line = p2.line) && (p1.col >= p2.col))
   
 type rng = {
   file_name: file_name ;
@@ -109,9 +109,8 @@ let (union_rng : rng -> rng -> rng) =
            then r2.start_pos
            else r1.start_pos  in
          let end_pos =
-           if pos_geq r1.start_pos r2.start_pos
-           then r1.start_pos
-           else r2.start_pos  in
+           if pos_geq r1.end_pos r2.end_pos then r1.end_pos else r2.end_pos
+            in
          mk_rng r1.file_name start_pos end_pos)
   
 let (union_ranges : range -> range -> range) =
