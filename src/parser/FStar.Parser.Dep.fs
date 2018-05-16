@@ -35,6 +35,7 @@ open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
+
 module Const = FStar.Parser.Const
 module BU = FStar.Util
 
@@ -188,9 +189,12 @@ let file_of_dep_aux
       && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
       then if Options.expose_interfaces()
            then maybe_add_suffix (Option.get (implementation_of file_system_map key))
-           else raise_err (Errors.Fatal_MissingExposeInterfacesOption, BU.format2 "Invoking fstar with %s on the command line breaks \
+           else raise_err (Errors.Fatal_MissingExposeInterfacesOption,
+                           BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
+                                       Alternatively, invoking fstar with %s on the command line breaks \
                                        the abstraction imposed by its interface %s; \
                                        if you really want this behavior add the option '--expose_interfaces'"
+                                       key
                                        (Option.get (implementation_of file_system_map key))
                                        (Option.get (interface_of file_system_map key)))
       else maybe_add_suffix (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
@@ -387,7 +391,7 @@ let collect_one
       add_dep deps (PreferInterface module_name);
       if has_interface original_or_working_map module_name
       && has_implementation original_or_working_map module_name
-      && FStar.Options.dep() = Some "full"
+      // && FStar.Options.dep() = Some "full"
       then add_dep mo_roots (UseImplementation module_name);
       true
     | _ ->
@@ -705,7 +709,7 @@ let collect_one
   let mname = lowercase_module_name filename in
   if is_interface filename
   && has_implementation original_map mname
-  && FStar.Options.dep() = Some "full"
+  // && FStar.Options.dep() = Some "full"
   then add_dep mo_roots (UseImplementation mname);
   collect_module ast;
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
@@ -772,7 +776,17 @@ let collect (all_cmd_line_files: list<file_name>)
   List.iter discover_one all_cmd_line_files;
 
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
-
+  let dep_graph_copy =
+      let (Deps g) = dep_graph in
+      Deps (BU.smap_copy g)
+  in
+  let cycle_detected dep_graph cycle filename =
+      Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
+      print_graph dep_graph;
+      print_string "\n";
+      Errors.raise_err (Errors.Fatal_CyclicDependence,
+                        BU.format1 "Recursive dependency on module %s\n" filename)
+  in
   let topological_dependences_of all_command_line_files =
       let topologically_sorted = BU.mk_ref [] in
       (* Compute the transitive closure, collecting visiting files in a post-order traversal *)
@@ -780,11 +794,7 @@ let collect (all_cmd_line_files: list<file_name>)
         let direct_deps, color = must (deps_try_find dep_graph filename) in
         match color with
         | Gray ->
-            Errors.log_issue Range.dummyRange (Errors.Warning_RecursiveDependency, (BU.format1 "Recursive dependency on module %s\n" filename));
-            Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
-            print_graph dep_graph;
-            print_string "\n";
-            exit 1
+            cycle_detected dep_graph cycle filename
         | Black ->
             (* If the element has been visited already, then the map contains all its
              * dependencies. Otherwise, the map only contains its direct dependencies. *)
@@ -797,7 +807,7 @@ let collect (all_cmd_line_files: list<file_name>)
                                       dep_graph
                                       all_command_line_files
                                       filename);
-            (* Mutate the graph (it now remembers transitive dependencies). *)
+            (* Mutate the graph to mark the node as visited *)
             deps_add_dep dep_graph filename (direct_deps, Black);
             (* Also build the topological sort (Tarjan's algorithm). *)
             topologically_sorted := filename :: !topologically_sorted
@@ -805,6 +815,60 @@ let collect (all_cmd_line_files: list<file_name>)
       List.iter (aux []) all_command_line_files;
       !topologically_sorted
   in
+  (* full_cycle_detection finds cycles across interface
+     boundaries that can otherwise be exploited to
+     build cross-module recursive loops, as in issue #1391
+  *)
+  let full_cycle_detection all_command_line_files =
+    let dep_graph = dep_graph_copy in
+    let rec aux (cycle:list<file_name>) filename =
+        let direct_deps, color =
+            match deps_try_find dep_graph filename with
+            | Some (d, c) -> d, c
+            | None ->
+              failwith (BU.format1 "Failed to find dependences of %s" filename)
+        in
+        let direct_deps = direct_deps |> List.collect (fun x ->
+            match x with
+            | UseInterface f
+            | PreferInterface f ->
+              begin
+              match implementation_of file_system_map f with
+              | None -> [x]
+              | Some fn when fn=filename ->
+                //don't add trivial self-loops
+                [x]
+              | _ ->
+                //if a module A uses B
+                //then detect cycles through both B.fsti
+                //and B.fst
+               [x; UseImplementation f]
+              end
+            | _ -> [x]) in
+        match color with
+        | Gray ->
+           cycle_detected dep_graph cycle filename
+        | Black ->
+            (* If the element has been visited already, then the map contains all its
+             * dependencies. Otherwise, the map only contains its direct dependencies. *)
+            ()
+        | White ->
+            (* Unvisited. Compute. *)
+            deps_add_dep dep_graph filename (direct_deps, Gray);
+            List.iter (fun k -> aux (k :: cycle) k)
+                      (dependences_of file_system_map
+                                      dep_graph
+                                      all_command_line_files
+                                      filename);
+            (* Mutate the graph (to mark the node as visited) *)
+            deps_add_dep dep_graph filename (direct_deps, Black)
+      in
+      List.iter (aux []) all_command_line_files
+  in
+  // if FStar.Options.dep() = Some "full"
+  // then
+  full_cycle_detection all_cmd_line_files;
+
   //only verify those files on the command line
   all_cmd_line_files |>
   List.iter (fun f ->
