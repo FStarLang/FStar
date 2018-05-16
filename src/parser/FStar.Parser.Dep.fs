@@ -391,7 +391,7 @@ let collect_one
       add_dep deps (PreferInterface module_name);
       if has_interface original_or_working_map module_name
       && has_implementation original_or_working_map module_name
-      && FStar.Options.dep() = Some "full"
+      // && FStar.Options.dep() = Some "full"
       then add_dep mo_roots (UseImplementation module_name);
       true
     | _ ->
@@ -709,7 +709,7 @@ let collect_one
   let mname = lowercase_module_name filename in
   if is_interface filename
   && has_implementation original_map mname
-  && FStar.Options.dep() = Some "full"
+  // && FStar.Options.dep() = Some "full"
   then add_dep mo_roots (UseImplementation mname);
   collect_module ast;
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
@@ -865,8 +865,9 @@ let collect (all_cmd_line_files: list<file_name>)
       in
       List.iter (aux []) all_command_line_files
   in
-  if FStar.Options.dep() = Some "full"
-  then full_cycle_detection all_cmd_line_files;
+  // if FStar.Options.dep() = Some "full"
+  // then
+  full_cycle_detection all_cmd_line_files;
 
   //only verify those files on the command line
   all_cmd_line_files |>
