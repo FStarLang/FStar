@@ -31,7 +31,7 @@ type pos = {
 }
 let max i j = if i < j then j else i
 let pos_geq p1 p2 =
-   (p1.line >= p2.line ||
+   (p1.line > p2.line ||
    (p1.line = p2.line && p1.col >= p2.col))
 
 // IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
@@ -89,9 +89,9 @@ let union_rng r1 r2 =
              r2.start_pos
            else r1.start_pos in
        let end_pos =
-           if pos_geq r1.start_pos r2.start_pos then
-             r1.start_pos
-           else r2.start_pos in
+           if pos_geq r1.end_pos r2.end_pos then
+             r1.end_pos
+           else r2.end_pos in
        mk_rng r1.file_name start_pos end_pos
 let union_ranges r1 r2 = {
   def_range=union_rng r1.def_range r2.def_range;
