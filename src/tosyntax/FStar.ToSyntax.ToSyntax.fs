@@ -1214,7 +1214,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                     then AST.ml_comp t
                     else AST.tot_comp t
                 in
-                mk_term (Ascribed(def, t, tacopt)) (Range.union_ranges t.range def.range) Expr
+                mk_term (Ascribed(def, t, tacopt)) def.range Expr
             in
             let def = match args with
                  | [] -> def
