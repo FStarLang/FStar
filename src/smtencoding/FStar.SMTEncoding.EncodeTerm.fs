@@ -1291,11 +1291,6 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
     let rec fallback phi =  match phi.n with
         | Tm_meta(phi', Meta_labeled(msg, r, b)) ->
           let phi, decls = encode_formula phi' env in
-          printfn "Encoded term %s and range %s, %s\n\tas smt term %s"
-                    (Print.term_to_string phi')
-                    (Range.string_of_def_range phi'.pos)
-                    (Range.string_of_use_range phi'.pos)
-                    (Term.print_smt_term phi);
           mk (Term.Labeled(phi, msg, r)) r, decls
 
         | Tm_meta _ ->

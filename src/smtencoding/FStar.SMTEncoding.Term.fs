@@ -412,10 +412,9 @@ let check_pattern_ok (t:term) : option<term> =
           | None -> aux_l ts
     in
     aux t
-let string_of_both_ranges range = (Range.string_of_def_range range) ^ ", " ^ (Range.string_of_use_range range)
 
  let rec print_smt_term (t:term) :string =
-  (match t.tm with
+  match t.tm with
   | Integer n               -> BU.format1 "(Integer %s)" n
   | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
   | FreeV  fv               -> BU.format1 "(FreeV %s)" (fst fv)
@@ -423,9 +422,7 @@ let string_of_both_ranges range = (Range.string_of_def_range range) ^ ", " ^ (Ra
   | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" r1 (print_smt_term t)
   | LblPos(t, s)            -> BU.format2 "(LblPos %s %s)" s (print_smt_term t)
   | Quant (qop, l, _, _, t) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
-  | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)) ^
-   "@" ^
-   (string_of_both_ranges t.rng)
+  | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
 
 and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> String.concat " "
 
