@@ -1140,7 +1140,7 @@ let find_file =
   let file_map = FStar.Util.smap_create 100 in
   fun filename ->
      match Util.smap_try_find file_map filename with
-     | Some f -> f
+     | Some f -> Some f
      | None ->
        let result =
           (try
@@ -1162,8 +1162,12 @@ let find_file =
            with | _ -> //to deal with issues like passing bogus strings as paths like "<input>"
                   None)
        in
-       Util.smap_add file_map filename result;
-       result
+       match result with
+       | None -> result
+       | Some f ->
+         //only cache positive results
+         Util.smap_add file_map filename f;
+         result
 
 let prims () =
   match get_prims() with
