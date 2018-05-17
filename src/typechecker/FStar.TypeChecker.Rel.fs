@@ -1884,7 +1884,10 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
               let y = S.new_bv (Some (S.range_of_bv x)) u_x in
               aux (bs@[y, imp]) (bs_terms@[S.bv_to_name y, imp]) formals wl
          in
-         aux [] [] formals wl
+         let _, occurs_ok, msg = occurs_check u_lhs arrow in
+         if not occurs_ok
+         then giveup_or_defer env orig wl ("occurs-check failed: " ^ (Option.get msg))
+         else aux [] [] formals wl
 
 and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
                   (rhs:worklist -> binders -> Env.env -> list<subst_elt> -> (prob * worklist)) : solution =
