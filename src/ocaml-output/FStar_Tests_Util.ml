@@ -216,27 +216,27 @@ let rec (term_eq' :
          (u,uu____1325),FStar_Syntax_Syntax.Tm_uvar (u',uu____1327)) ->
           FStar_Syntax_Unionfind.equiv u.FStar_Syntax_Syntax.ctx_uvar_head
             u'.FStar_Syntax_Syntax.ctx_uvar_head
-      | (FStar_Syntax_Syntax.Tm_meta (t12,uu____1369),uu____1370) ->
+      | (FStar_Syntax_Syntax.Tm_meta (t12,uu____1361),uu____1362) ->
           term_eq' t12 t21
-      | (uu____1375,FStar_Syntax_Syntax.Tm_meta (t22,uu____1377)) ->
+      | (uu____1367,FStar_Syntax_Syntax.Tm_meta (t22,uu____1369)) ->
           term_eq' t11 t22
-      | (FStar_Syntax_Syntax.Tm_delayed uu____1382,uu____1383) ->
-          let uu____1408 =
-            let uu____1409 = FStar_Syntax_Print.tag_of_term t11  in
-            let uu____1410 = FStar_Syntax_Print.tag_of_term t21  in
-            FStar_Util.format2 "Impossible: %s and %s" uu____1409 uu____1410
+      | (FStar_Syntax_Syntax.Tm_delayed uu____1374,uu____1375) ->
+          let uu____1398 =
+            let uu____1399 = FStar_Syntax_Print.tag_of_term t11  in
+            let uu____1400 = FStar_Syntax_Print.tag_of_term t21  in
+            FStar_Util.format2 "Impossible: %s and %s" uu____1399 uu____1400
              in
-          failwith uu____1408
-      | (uu____1411,FStar_Syntax_Syntax.Tm_delayed uu____1412) ->
-          let uu____1437 =
-            let uu____1438 = FStar_Syntax_Print.tag_of_term t11  in
-            let uu____1439 = FStar_Syntax_Print.tag_of_term t21  in
-            FStar_Util.format2 "Impossible: %s and %s" uu____1438 uu____1439
+          failwith uu____1398
+      | (uu____1401,FStar_Syntax_Syntax.Tm_delayed uu____1402) ->
+          let uu____1425 =
+            let uu____1426 = FStar_Syntax_Print.tag_of_term t11  in
+            let uu____1427 = FStar_Syntax_Print.tag_of_term t21  in
+            FStar_Util.format2 "Impossible: %s and %s" uu____1426 uu____1427
              in
-          failwith uu____1437
+          failwith uu____1425
       | (FStar_Syntax_Syntax.Tm_unknown ,FStar_Syntax_Syntax.Tm_unknown ) ->
           true
-      | uu____1440 -> false
+      | uu____1428 -> false
   
 let (term_eq :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -247,10 +247,10 @@ let (term_eq :
       let b = term_eq' t1 t2  in
       if Prims.op_Negation b
       then
-        (let uu____1465 = FStar_Syntax_Print.term_to_string t1  in
-         let uu____1466 = FStar_Syntax_Print.term_to_string t2  in
+        (let uu____1453 = FStar_Syntax_Print.term_to_string t1  in
+         let uu____1454 = FStar_Syntax_Print.term_to_string t2  in
          FStar_Util.print2 ">>>>>>>>>>>Term %s is not equal to %s\n"
-           uu____1465 uu____1466)
+           uu____1453 uu____1454)
       else ();
       b
   
