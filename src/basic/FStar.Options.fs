@@ -1165,7 +1165,6 @@ let find_file =
        match result with
        | None -> result
        | Some f ->
-         //only cache positive results
          Util.smap_add file_map filename f;
          result
 

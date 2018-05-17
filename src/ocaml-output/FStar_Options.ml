@@ -2436,23 +2436,23 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
   =
   let file_map = FStar_Util.smap_create (Prims.parse_int "100")  in
   fun filename  ->
-    let uu____6174 = FStar_Util.smap_try_find file_map filename  in
-    match uu____6174 with
-    | FStar_Pervasives_Native.Some f -> FStar_Pervasives_Native.Some f
+    let uu____6178 = FStar_Util.smap_try_find file_map filename  in
+    match uu____6178 with
+    | FStar_Pervasives_Native.Some f -> f
     | FStar_Pervasives_Native.None  ->
         let result =
           try
-            let uu____6190 = FStar_Util.is_path_absolute filename  in
-            if uu____6190
+            let uu____6204 = FStar_Util.is_path_absolute filename  in
+            if uu____6204
             then
               (if FStar_Util.file_exists filename
                then FStar_Pervasives_Native.Some filename
                else FStar_Pervasives_Native.None)
             else
-              (let uu____6197 =
-                 let uu____6200 = include_path ()  in
-                 FStar_List.rev uu____6200  in
-               FStar_Util.find_map uu____6197
+              (let uu____6211 =
+                 let uu____6214 = include_path ()  in
+                 FStar_List.rev uu____6214  in
+               FStar_Util.find_map uu____6211
                  (fun p  ->
                     let path =
                       if p = "."
@@ -2461,81 +2461,81 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
                     if FStar_Util.file_exists path
                     then FStar_Pervasives_Native.Some path
                     else FStar_Pervasives_Native.None))
-          with | uu____6216 -> FStar_Pervasives_Native.None  in
-        (match result with
-         | FStar_Pervasives_Native.None  -> result
-         | FStar_Pervasives_Native.Some f ->
-             (FStar_Util.smap_add file_map filename f; result))
+          with | uu____6230 -> FStar_Pervasives_Native.None  in
+        (if FStar_Option.isSome result
+         then FStar_Util.smap_add file_map filename result
+         else ();
+         result)
   
 let (prims : unit -> Prims.string) =
-  fun uu____6225  ->
-    let uu____6226 = get_prims ()  in
-    match uu____6226 with
+  fun uu____6239  ->
+    let uu____6240 = get_prims ()  in
+    match uu____6240 with
     | FStar_Pervasives_Native.None  ->
         let filename = "prims.fst"  in
-        let uu____6230 = find_file filename  in
-        (match uu____6230 with
+        let uu____6244 = find_file filename  in
+        (match uu____6244 with
          | FStar_Pervasives_Native.Some result -> result
          | FStar_Pervasives_Native.None  ->
-             let uu____6234 =
+             let uu____6248 =
                FStar_Util.format1
                  "unable to find required file \"%s\" in the module search path.\n"
                  filename
                 in
-             failwith uu____6234)
+             failwith uu____6248)
     | FStar_Pervasives_Native.Some x -> x
   
 let (prims_basename : unit -> Prims.string) =
-  fun uu____6240  ->
-    let uu____6241 = prims ()  in FStar_Util.basename uu____6241
+  fun uu____6254  ->
+    let uu____6255 = prims ()  in FStar_Util.basename uu____6255
   
 let (pervasives : unit -> Prims.string) =
-  fun uu____6246  ->
+  fun uu____6260  ->
     let filename = "FStar.Pervasives.fst"  in
-    let uu____6248 = find_file filename  in
-    match uu____6248 with
+    let uu____6262 = find_file filename  in
+    match uu____6262 with
     | FStar_Pervasives_Native.Some result -> result
     | FStar_Pervasives_Native.None  ->
-        let uu____6252 =
+        let uu____6266 =
           FStar_Util.format1
             "unable to find required file \"%s\" in the module search path.\n"
             filename
            in
-        failwith uu____6252
+        failwith uu____6266
   
 let (pervasives_basename : unit -> Prims.string) =
-  fun uu____6257  ->
-    let uu____6258 = pervasives ()  in FStar_Util.basename uu____6258
+  fun uu____6271  ->
+    let uu____6272 = pervasives ()  in FStar_Util.basename uu____6272
   
 let (pervasives_native_basename : unit -> Prims.string) =
-  fun uu____6263  ->
+  fun uu____6277  ->
     let filename = "FStar.Pervasives.Native.fst"  in
-    let uu____6265 = find_file filename  in
-    match uu____6265 with
+    let uu____6279 = find_file filename  in
+    match uu____6279 with
     | FStar_Pervasives_Native.Some result -> FStar_Util.basename result
     | FStar_Pervasives_Native.None  ->
-        let uu____6269 =
+        let uu____6283 =
           FStar_Util.format1
             "unable to find required file \"%s\" in the module search path.\n"
             filename
            in
-        failwith uu____6269
+        failwith uu____6283
   
 let (prepend_output_dir : Prims.string -> Prims.string) =
   fun fname  ->
-    let uu____6275 = get_odir ()  in
-    match uu____6275 with
+    let uu____6289 = get_odir ()  in
+    match uu____6289 with
     | FStar_Pervasives_Native.None  -> fname
     | FStar_Pervasives_Native.Some x -> FStar_Util.join_paths x fname
   
 let (prepend_cache_dir : Prims.string -> Prims.string) =
   fun fpath  ->
-    let uu____6284 = get_cache_dir ()  in
-    match uu____6284 with
+    let uu____6298 = get_cache_dir ()  in
+    match uu____6298 with
     | FStar_Pervasives_Native.None  -> fpath
     | FStar_Pervasives_Native.Some x ->
-        let uu____6288 = FStar_Util.basename fpath  in
-        FStar_Util.join_paths x uu____6288
+        let uu____6302 = FStar_Util.basename fpath  in
+        FStar_Util.join_paths x uu____6302
   
 let (path_of_text : Prims.string -> Prims.string Prims.list) =
   fun text  -> FStar_String.split [46] text 
@@ -2552,9 +2552,9 @@ let (parse_settings :
         if FStar_Util.starts_with s "-"
         then
           (let path =
-             let uu____6354 =
+             let uu____6368 =
                FStar_Util.substring_from s (Prims.parse_int "1")  in
-             path_of_text uu____6354  in
+             path_of_text uu____6368  in
            (path, false))
         else
           (let s1 =
@@ -2563,29 +2563,29 @@ let (parse_settings :
              else s  in
            ((path_of_text s1), true))
        in
-    let uu____6362 =
+    let uu____6376 =
       FStar_All.pipe_right ns
         (FStar_List.collect
            (fun s  ->
               FStar_All.pipe_right (FStar_Util.split s " ")
                 (FStar_List.map parse_one_setting)))
        in
-    FStar_All.pipe_right uu____6362 FStar_List.rev
+    FStar_All.pipe_right uu____6376 FStar_List.rev
   
 let (__temp_no_proj : Prims.string -> Prims.bool) =
   fun s  ->
-    let uu____6432 = get___temp_no_proj ()  in
-    FStar_All.pipe_right uu____6432 (FStar_List.contains s)
+    let uu____6446 = get___temp_no_proj ()  in
+    FStar_All.pipe_right uu____6446 (FStar_List.contains s)
   
 let (__temp_fast_implicits : unit -> Prims.bool) =
-  fun uu____6441  -> lookup_opt "__temp_fast_implicits" as_bool 
+  fun uu____6455  -> lookup_opt "__temp_fast_implicits" as_bool 
 let (admit_smt_queries : unit -> Prims.bool) =
-  fun uu____6446  -> get_admit_smt_queries () 
+  fun uu____6460  -> get_admit_smt_queries () 
 let (admit_except : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____6453  -> get_admit_except () 
+  fun uu____6467  -> get_admit_except () 
 let (cache_checked_modules : unit -> Prims.bool) =
-  fun uu____6458  -> get_cache_checked_modules () 
-let (cache_off : unit -> Prims.bool) = fun uu____6463  -> get_cache_off () 
+  fun uu____6472  -> get_cache_checked_modules () 
+let (cache_off : unit -> Prims.bool) = fun uu____6477  -> get_cache_off () 
 type codegen_t =
   | OCaml 
   | FSharp 
@@ -2593,289 +2593,289 @@ type codegen_t =
   | Plugin 
 let (uu___is_OCaml : codegen_t -> Prims.bool) =
   fun projectee  ->
-    match projectee with | OCaml  -> true | uu____6469 -> false
+    match projectee with | OCaml  -> true | uu____6483 -> false
   
 let (uu___is_FSharp : codegen_t -> Prims.bool) =
   fun projectee  ->
-    match projectee with | FSharp  -> true | uu____6475 -> false
+    match projectee with | FSharp  -> true | uu____6489 -> false
   
 let (uu___is_Kremlin : codegen_t -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Kremlin  -> true | uu____6481 -> false
+    match projectee with | Kremlin  -> true | uu____6495 -> false
   
 let (uu___is_Plugin : codegen_t -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Plugin  -> true | uu____6487 -> false
+    match projectee with | Plugin  -> true | uu____6501 -> false
   
 let (codegen : unit -> codegen_t FStar_Pervasives_Native.option) =
-  fun uu____6494  ->
-    let uu____6495 = get_codegen ()  in
-    FStar_Util.map_opt uu____6495
-      (fun uu___80_6499  ->
-         match uu___80_6499 with
+  fun uu____6508  ->
+    let uu____6509 = get_codegen ()  in
+    FStar_Util.map_opt uu____6509
+      (fun uu___80_6513  ->
+         match uu___80_6513 with
          | "OCaml" -> OCaml
          | "FSharp" -> FSharp
          | "Kremlin" -> Kremlin
          | "Plugin" -> Plugin
-         | uu____6500 -> failwith "Impossible")
+         | uu____6514 -> failwith "Impossible")
   
 let (codegen_libs : unit -> Prims.string Prims.list Prims.list) =
-  fun uu____6509  ->
-    let uu____6510 = get_codegen_lib ()  in
-    FStar_All.pipe_right uu____6510
+  fun uu____6523  ->
+    let uu____6524 = get_codegen_lib ()  in
+    FStar_All.pipe_right uu____6524
       (FStar_List.map (fun x  -> FStar_Util.split x "."))
   
 let (debug_any : unit -> Prims.bool) =
-  fun uu____6527  -> let uu____6528 = get_debug ()  in uu____6528 <> [] 
+  fun uu____6541  -> let uu____6542 = get_debug ()  in uu____6542 <> [] 
 let (debug_module : Prims.string -> Prims.bool) =
   fun modul  ->
-    let uu____6538 = get_debug ()  in
-    FStar_All.pipe_right uu____6538 (FStar_List.contains modul)
+    let uu____6552 = get_debug ()  in
+    FStar_All.pipe_right uu____6552 (FStar_List.contains modul)
   
 let (debug_at_level : Prims.string -> debug_level_t -> Prims.bool) =
   fun modul  ->
     fun level  ->
-      (let uu____6555 = get_debug ()  in
-       FStar_All.pipe_right uu____6555 (FStar_List.contains modul)) &&
+      (let uu____6569 = get_debug ()  in
+       FStar_All.pipe_right uu____6569 (FStar_List.contains modul)) &&
         (debug_level_geq level)
   
 let (defensive : unit -> Prims.bool) =
-  fun uu____6564  -> let uu____6565 = get_defensive ()  in uu____6565 <> "no" 
+  fun uu____6578  -> let uu____6579 = get_defensive ()  in uu____6579 <> "no" 
 let (defensive_fail : unit -> Prims.bool) =
-  fun uu____6570  ->
-    let uu____6571 = get_defensive ()  in uu____6571 = "fail"
+  fun uu____6584  ->
+    let uu____6585 = get_defensive ()  in uu____6585 = "fail"
   
 let (dep : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____6578  -> get_dep () 
+  fun uu____6592  -> get_dep () 
 let (detail_errors : unit -> Prims.bool) =
-  fun uu____6583  -> get_detail_errors () 
+  fun uu____6597  -> get_detail_errors () 
 let (detail_hint_replay : unit -> Prims.bool) =
-  fun uu____6588  -> get_detail_hint_replay () 
-let (doc : unit -> Prims.bool) = fun uu____6593  -> get_doc () 
+  fun uu____6602  -> get_detail_hint_replay () 
+let (doc : unit -> Prims.bool) = fun uu____6607  -> get_doc () 
 let (dump_module : Prims.string -> Prims.bool) =
   fun s  ->
-    let uu____6599 = get_dump_module ()  in
-    FStar_All.pipe_right uu____6599 (FStar_List.contains s)
+    let uu____6613 = get_dump_module ()  in
+    FStar_All.pipe_right uu____6613 (FStar_List.contains s)
   
 let (eager_subtyping : unit -> Prims.bool) =
-  fun uu____6608  -> get_eager_subtyping () 
+  fun uu____6622  -> get_eager_subtyping () 
 let (expose_interfaces : unit -> Prims.bool) =
-  fun uu____6613  -> get_expose_interfaces () 
+  fun uu____6627  -> get_expose_interfaces () 
 let (fs_typ_app : Prims.string -> Prims.bool) =
   fun filename  ->
-    let uu____6619 = FStar_ST.op_Bang light_off_files  in
-    FStar_List.contains filename uu____6619
+    let uu____6633 = FStar_ST.op_Bang light_off_files  in
+    FStar_List.contains filename uu____6633
   
-let (full_context_dependency : unit -> Prims.bool) = fun uu____6653  -> true 
+let (full_context_dependency : unit -> Prims.bool) = fun uu____6667  -> true 
 let (hide_uvar_nums : unit -> Prims.bool) =
-  fun uu____6658  -> get_hide_uvar_nums () 
+  fun uu____6672  -> get_hide_uvar_nums () 
 let (hint_info : unit -> Prims.bool) =
-  fun uu____6663  -> (get_hint_info ()) || (get_query_stats ()) 
+  fun uu____6677  -> (get_hint_info ()) || (get_query_stats ()) 
 let (hint_file : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____6670  -> get_hint_file () 
-let (ide : unit -> Prims.bool) = fun uu____6675  -> get_ide () 
-let (indent : unit -> Prims.bool) = fun uu____6680  -> get_indent () 
+  fun uu____6684  -> get_hint_file () 
+let (ide : unit -> Prims.bool) = fun uu____6689  -> get_ide () 
+let (indent : unit -> Prims.bool) = fun uu____6694  -> get_indent () 
 let (initial_fuel : unit -> Prims.int) =
-  fun uu____6685  ->
-    let uu____6686 = get_initial_fuel ()  in
-    let uu____6687 = get_max_fuel ()  in Prims.min uu____6686 uu____6687
+  fun uu____6699  ->
+    let uu____6700 = get_initial_fuel ()  in
+    let uu____6701 = get_max_fuel ()  in Prims.min uu____6700 uu____6701
   
 let (initial_ifuel : unit -> Prims.int) =
-  fun uu____6692  ->
-    let uu____6693 = get_initial_ifuel ()  in
-    let uu____6694 = get_max_ifuel ()  in Prims.min uu____6693 uu____6694
+  fun uu____6706  ->
+    let uu____6707 = get_initial_ifuel ()  in
+    let uu____6708 = get_max_ifuel ()  in Prims.min uu____6707 uu____6708
   
 let (interactive : unit -> Prims.bool) =
-  fun uu____6699  -> (get_in ()) || (get_ide ()) 
-let (lax : unit -> Prims.bool) = fun uu____6704  -> get_lax () 
-let (load : unit -> Prims.string Prims.list) = fun uu____6711  -> get_load () 
-let (legacy_interactive : unit -> Prims.bool) = fun uu____6716  -> get_in () 
+  fun uu____6713  -> (get_in ()) || (get_ide ()) 
+let (lax : unit -> Prims.bool) = fun uu____6718  -> get_lax () 
+let (load : unit -> Prims.string Prims.list) = fun uu____6725  -> get_load () 
+let (legacy_interactive : unit -> Prims.bool) = fun uu____6730  -> get_in () 
 let (log_queries : unit -> Prims.bool) =
-  fun uu____6721  -> get_log_queries () 
-let (log_types : unit -> Prims.bool) = fun uu____6726  -> get_log_types () 
-let (max_fuel : unit -> Prims.int) = fun uu____6731  -> get_max_fuel () 
-let (max_ifuel : unit -> Prims.int) = fun uu____6736  -> get_max_ifuel () 
-let (min_fuel : unit -> Prims.int) = fun uu____6741  -> get_min_fuel () 
-let (ml_ish : unit -> Prims.bool) = fun uu____6746  -> get_MLish () 
+  fun uu____6735  -> get_log_queries () 
+let (log_types : unit -> Prims.bool) = fun uu____6740  -> get_log_types () 
+let (max_fuel : unit -> Prims.int) = fun uu____6745  -> get_max_fuel () 
+let (max_ifuel : unit -> Prims.int) = fun uu____6750  -> get_max_ifuel () 
+let (min_fuel : unit -> Prims.int) = fun uu____6755  -> get_min_fuel () 
+let (ml_ish : unit -> Prims.bool) = fun uu____6760  -> get_MLish () 
 let (set_ml_ish : unit -> unit) =
-  fun uu____6751  -> set_option "MLish" (Bool true) 
-let (n_cores : unit -> Prims.int) = fun uu____6756  -> get_n_cores () 
+  fun uu____6765  -> set_option "MLish" (Bool true) 
+let (n_cores : unit -> Prims.int) = fun uu____6770  -> get_n_cores () 
 let (no_default_includes : unit -> Prims.bool) =
-  fun uu____6761  -> get_no_default_includes () 
+  fun uu____6775  -> get_no_default_includes () 
 let (no_extract : Prims.string -> Prims.bool) =
   fun s  ->
     let s1 = FStar_String.lowercase s  in
-    let uu____6768 = get_no_extract ()  in
-    FStar_All.pipe_right uu____6768
+    let uu____6782 = get_no_extract ()  in
+    FStar_All.pipe_right uu____6782
       (FStar_Util.for_some (fun f  -> (FStar_String.lowercase f) = s1))
   
 let (normalize_pure_terms_for_extraction : unit -> Prims.bool) =
-  fun uu____6779  -> get_normalize_pure_terms_for_extraction () 
+  fun uu____6793  -> get_normalize_pure_terms_for_extraction () 
 let (no_location_info : unit -> Prims.bool) =
-  fun uu____6784  -> get_no_location_info () 
-let (no_smt : unit -> Prims.bool) = fun uu____6789  -> get_no_smt () 
+  fun uu____6798  -> get_no_location_info () 
+let (no_smt : unit -> Prims.bool) = fun uu____6803  -> get_no_smt () 
 let (output_dir : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____6796  -> get_odir () 
-let (ugly : unit -> Prims.bool) = fun uu____6801  -> get_ugly () 
+  fun uu____6810  -> get_odir () 
+let (ugly : unit -> Prims.bool) = fun uu____6815  -> get_ugly () 
 let (print_bound_var_types : unit -> Prims.bool) =
-  fun uu____6806  -> get_print_bound_var_types () 
+  fun uu____6820  -> get_print_bound_var_types () 
 let (print_effect_args : unit -> Prims.bool) =
-  fun uu____6811  -> get_print_effect_args () 
+  fun uu____6825  -> get_print_effect_args () 
 let (print_implicits : unit -> Prims.bool) =
-  fun uu____6816  -> get_print_implicits () 
+  fun uu____6830  -> get_print_implicits () 
 let (print_real_names : unit -> Prims.bool) =
-  fun uu____6821  -> (get_prn ()) || (get_print_full_names ()) 
+  fun uu____6835  -> (get_prn ()) || (get_print_full_names ()) 
 let (print_universes : unit -> Prims.bool) =
-  fun uu____6826  -> get_print_universes () 
+  fun uu____6840  -> get_print_universes () 
 let (print_z3_statistics : unit -> Prims.bool) =
-  fun uu____6831  -> (get_print_z3_statistics ()) || (get_query_stats ()) 
+  fun uu____6845  -> (get_print_z3_statistics ()) || (get_query_stats ()) 
 let (query_stats : unit -> Prims.bool) =
-  fun uu____6836  -> get_query_stats () 
+  fun uu____6850  -> get_query_stats () 
 let (record_hints : unit -> Prims.bool) =
-  fun uu____6841  -> get_record_hints () 
+  fun uu____6855  -> get_record_hints () 
 let (reuse_hint_for : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____6848  -> get_reuse_hint_for () 
-let (silent : unit -> Prims.bool) = fun uu____6853  -> get_silent () 
+  fun uu____6862  -> get_reuse_hint_for () 
+let (silent : unit -> Prims.bool) = fun uu____6867  -> get_silent () 
 let (smtencoding_elim_box : unit -> Prims.bool) =
-  fun uu____6858  -> get_smtencoding_elim_box () 
+  fun uu____6872  -> get_smtencoding_elim_box () 
 let (smtencoding_nl_arith_native : unit -> Prims.bool) =
-  fun uu____6863  ->
-    let uu____6864 = get_smtencoding_nl_arith_repr ()  in
-    uu____6864 = "native"
+  fun uu____6877  ->
+    let uu____6878 = get_smtencoding_nl_arith_repr ()  in
+    uu____6878 = "native"
   
 let (smtencoding_nl_arith_wrapped : unit -> Prims.bool) =
-  fun uu____6869  ->
-    let uu____6870 = get_smtencoding_nl_arith_repr ()  in
-    uu____6870 = "wrapped"
+  fun uu____6883  ->
+    let uu____6884 = get_smtencoding_nl_arith_repr ()  in
+    uu____6884 = "wrapped"
   
 let (smtencoding_nl_arith_default : unit -> Prims.bool) =
-  fun uu____6875  ->
-    let uu____6876 = get_smtencoding_nl_arith_repr ()  in
-    uu____6876 = "boxwrap"
+  fun uu____6889  ->
+    let uu____6890 = get_smtencoding_nl_arith_repr ()  in
+    uu____6890 = "boxwrap"
   
 let (smtencoding_l_arith_native : unit -> Prims.bool) =
-  fun uu____6881  ->
-    let uu____6882 = get_smtencoding_l_arith_repr ()  in
-    uu____6882 = "native"
+  fun uu____6895  ->
+    let uu____6896 = get_smtencoding_l_arith_repr ()  in
+    uu____6896 = "native"
   
 let (smtencoding_l_arith_default : unit -> Prims.bool) =
-  fun uu____6887  ->
-    let uu____6888 = get_smtencoding_l_arith_repr ()  in
-    uu____6888 = "boxwrap"
+  fun uu____6901  ->
+    let uu____6902 = get_smtencoding_l_arith_repr ()  in
+    uu____6902 = "boxwrap"
   
 let (tactic_raw_binders : unit -> Prims.bool) =
-  fun uu____6893  -> get_tactic_raw_binders () 
+  fun uu____6907  -> get_tactic_raw_binders () 
 let (tactic_trace : unit -> Prims.bool) =
-  fun uu____6898  -> get_tactic_trace () 
+  fun uu____6912  -> get_tactic_trace () 
 let (tactic_trace_d : unit -> Prims.int) =
-  fun uu____6903  -> get_tactic_trace_d () 
-let (timing : unit -> Prims.bool) = fun uu____6908  -> get_timing () 
+  fun uu____6917  -> get_tactic_trace_d () 
+let (timing : unit -> Prims.bool) = fun uu____6922  -> get_timing () 
 let (trace_error : unit -> Prims.bool) =
-  fun uu____6913  -> get_trace_error () 
+  fun uu____6927  -> get_trace_error () 
 let (unthrottle_inductives : unit -> Prims.bool) =
-  fun uu____6918  -> get_unthrottle_inductives () 
+  fun uu____6932  -> get_unthrottle_inductives () 
 let (unsafe_tactic_exec : unit -> Prims.bool) =
-  fun uu____6923  -> get_unsafe_tactic_exec () 
+  fun uu____6937  -> get_unsafe_tactic_exec () 
 let (use_eq_at_higher_order : unit -> Prims.bool) =
-  fun uu____6928  -> get_use_eq_at_higher_order () 
-let (use_hints : unit -> Prims.bool) = fun uu____6933  -> get_use_hints () 
+  fun uu____6942  -> get_use_eq_at_higher_order () 
+let (use_hints : unit -> Prims.bool) = fun uu____6947  -> get_use_hints () 
 let (use_hint_hashes : unit -> Prims.bool) =
-  fun uu____6938  -> get_use_hint_hashes () 
+  fun uu____6952  -> get_use_hint_hashes () 
 let (use_native_tactics :
   unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____6945  -> get_use_native_tactics () 
+  fun uu____6959  -> get_use_native_tactics () 
 let (use_tactics : unit -> Prims.bool) =
-  fun uu____6950  -> get_use_tactics () 
+  fun uu____6964  -> get_use_tactics () 
 let (using_facts_from :
   unit ->
     (Prims.string Prims.list,Prims.bool) FStar_Pervasives_Native.tuple2
       Prims.list)
   =
-  fun uu____6963  ->
-    let uu____6964 = get_using_facts_from ()  in
-    match uu____6964 with
+  fun uu____6977  ->
+    let uu____6978 = get_using_facts_from ()  in
+    match uu____6978 with
     | FStar_Pervasives_Native.None  -> [([], true)]
     | FStar_Pervasives_Native.Some ns -> parse_settings ns
   
 let (vcgen_optimize_bind_as_seq : unit -> Prims.bool) =
-  fun uu____7002  ->
-    let uu____7003 = get_vcgen_optimize_bind_as_seq ()  in
-    FStar_Option.isSome uu____7003
+  fun uu____7016  ->
+    let uu____7017 = get_vcgen_optimize_bind_as_seq ()  in
+    FStar_Option.isSome uu____7017
   
 let (vcgen_decorate_with_type : unit -> Prims.bool) =
-  fun uu____7010  ->
-    let uu____7011 = get_vcgen_optimize_bind_as_seq ()  in
-    match uu____7011 with
+  fun uu____7024  ->
+    let uu____7025 = get_vcgen_optimize_bind_as_seq ()  in
+    match uu____7025 with
     | FStar_Pervasives_Native.Some "with_type" -> true
-    | uu____7014 -> false
+    | uu____7028 -> false
   
 let (warn_default_effects : unit -> Prims.bool) =
-  fun uu____7021  -> get_warn_default_effects () 
+  fun uu____7035  -> get_warn_default_effects () 
 let (z3_exe : unit -> Prims.string) =
-  fun uu____7026  ->
-    let uu____7027 = get_smt ()  in
-    match uu____7027 with
+  fun uu____7040  ->
+    let uu____7041 = get_smt ()  in
+    match uu____7041 with
     | FStar_Pervasives_Native.None  -> FStar_Platform.exe "z3"
     | FStar_Pervasives_Native.Some s -> s
   
 let (z3_cliopt : unit -> Prims.string Prims.list) =
-  fun uu____7037  -> get_z3cliopt () 
-let (z3_refresh : unit -> Prims.bool) = fun uu____7042  -> get_z3refresh () 
-let (z3_rlimit : unit -> Prims.int) = fun uu____7047  -> get_z3rlimit () 
+  fun uu____7051  -> get_z3cliopt () 
+let (z3_refresh : unit -> Prims.bool) = fun uu____7056  -> get_z3refresh () 
+let (z3_rlimit : unit -> Prims.int) = fun uu____7061  -> get_z3rlimit () 
 let (z3_rlimit_factor : unit -> Prims.int) =
-  fun uu____7052  -> get_z3rlimit_factor () 
-let (z3_seed : unit -> Prims.int) = fun uu____7057  -> get_z3seed () 
+  fun uu____7066  -> get_z3rlimit_factor () 
+let (z3_seed : unit -> Prims.int) = fun uu____7071  -> get_z3seed () 
 let (use_two_phase_tc : unit -> Prims.bool) =
-  fun uu____7062  ->
+  fun uu____7076  ->
     (get_use_two_phase_tc ()) &&
-      (let uu____7064 = lax ()  in Prims.op_Negation uu____7064)
+      (let uu____7078 = lax ()  in Prims.op_Negation uu____7078)
   
 let (no_positivity : unit -> Prims.bool) =
-  fun uu____7069  -> get_no_positivity () 
+  fun uu____7083  -> get_no_positivity () 
 let (ml_no_eta_expand_coertions : unit -> Prims.bool) =
-  fun uu____7074  -> get_ml_no_eta_expand_coertions () 
+  fun uu____7088  -> get_ml_no_eta_expand_coertions () 
 let (warn_error : unit -> Prims.string) =
-  fun uu____7079  -> get_warn_error () 
+  fun uu____7093  -> get_warn_error () 
 let (use_extracted_interfaces : unit -> Prims.bool) =
-  fun uu____7084  -> get_use_extracted_interfaces () 
+  fun uu____7098  -> get_use_extracted_interfaces () 
 let (should_extract : Prims.string -> Prims.bool) =
   fun m  ->
     let m1 = FStar_String.lowercase m  in
-    let uu____7091 = get_extract ()  in
-    match uu____7091 with
+    let uu____7105 = get_extract ()  in
+    match uu____7105 with
     | FStar_Pervasives_Native.Some extract_setting ->
-        ((let uu____7102 =
-            let uu____7115 = get_no_extract ()  in
-            let uu____7118 = get_extract_namespace ()  in
-            let uu____7121 = get_extract_module ()  in
-            (uu____7115, uu____7118, uu____7121)  in
-          match uu____7102 with
+        ((let uu____7116 =
+            let uu____7129 = get_no_extract ()  in
+            let uu____7132 = get_extract_namespace ()  in
+            let uu____7135 = get_extract_module ()  in
+            (uu____7129, uu____7132, uu____7135)  in
+          match uu____7116 with
           | ([],[],[]) -> ()
-          | uu____7136 ->
+          | uu____7150 ->
               failwith
                 "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module");
          (let setting = parse_settings extract_setting  in
           let m_components = path_of_text m1  in
           let rec matches_path m_components1 path =
             match (m_components1, path) with
-            | (uu____7184,[]) -> true
+            | (uu____7198,[]) -> true
             | (m2::ms,p::ps) ->
                 (m2 = (FStar_String.lowercase p)) && (matches_path ms ps)
-            | uu____7203 -> false  in
-          let uu____7212 =
+            | uu____7217 -> false  in
+          let uu____7226 =
             FStar_All.pipe_right setting
               (FStar_Util.try_find
-                 (fun uu____7246  ->
-                    match uu____7246 with
-                    | (path,uu____7254) -> matches_path m_components path))
+                 (fun uu____7260  ->
+                    match uu____7260 with
+                    | (path,uu____7268) -> matches_path m_components path))
              in
-          match uu____7212 with
+          match uu____7226 with
           | FStar_Pervasives_Native.None  -> false
-          | FStar_Pervasives_Native.Some (uu____7265,flag) -> flag))
+          | FStar_Pervasives_Native.Some (uu____7279,flag) -> flag))
     | FStar_Pervasives_Native.None  ->
         let should_extract_namespace m2 =
-          let uu____7285 = get_extract_namespace ()  in
-          match uu____7285 with
+          let uu____7299 = get_extract_namespace ()  in
+          match uu____7299 with
           | [] -> false
           | ns ->
               FStar_All.pipe_right ns
@@ -2884,21 +2884,21 @@ let (should_extract : Prims.string -> Prims.bool) =
                       FStar_Util.starts_with m2 (FStar_String.lowercase n1)))
            in
         let should_extract_module m2 =
-          let uu____7301 = get_extract_module ()  in
-          match uu____7301 with
+          let uu____7315 = get_extract_module ()  in
+          match uu____7315 with
           | [] -> false
           | l ->
               FStar_All.pipe_right l
                 (FStar_Util.for_some
                    (fun n1  -> (FStar_String.lowercase n1) = m2))
            in
-        (let uu____7313 = no_extract m1  in Prims.op_Negation uu____7313) &&
-          (let uu____7315 =
-             let uu____7324 = get_extract_namespace ()  in
-             let uu____7327 = get_extract_module ()  in
-             (uu____7324, uu____7327)  in
-           (match uu____7315 with
+        (let uu____7327 = no_extract m1  in Prims.op_Negation uu____7327) &&
+          (let uu____7329 =
+             let uu____7338 = get_extract_namespace ()  in
+             let uu____7341 = get_extract_module ()  in
+             (uu____7338, uu____7341)  in
+           (match uu____7329 with
             | ([],[]) -> true
-            | uu____7338 ->
+            | uu____7352 ->
                 (should_extract_namespace m1) || (should_extract_module m1)))
   
