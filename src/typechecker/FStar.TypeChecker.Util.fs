@@ -70,7 +70,7 @@ let new_implicit_var_aux reason r env k should_check =
           ctx_uvar_range=r
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
-      let t = mk (Tm_uvar (ctx_uvar, ([], None))) None r in
+      let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
       let g = {Rel.trivial_guard with implicits=[(reason, t, ctx_uvar, r)]} in
       t, [(ctx_uvar, r)], g
 

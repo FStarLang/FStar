@@ -28,7 +28,7 @@ type goal = {
 }
 let goal_env g = { g.goal_main_env with gamma = g.goal_ctx_uvar.ctx_uvar_gamma }
 let goal_witness g =
-    FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], None))) None Range.dummyRange
+    FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) None Range.dummyRange
 let goal_type g = g.goal_ctx_uvar.ctx_uvar_typ
 let goal_with_type g t =
     let c = g.goal_ctx_uvar in

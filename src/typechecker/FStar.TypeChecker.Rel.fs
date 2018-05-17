@@ -196,7 +196,7 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
          ctx_uvar_range=r
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
-    let t = mk (Tm_uvar (ctx_uvar, ([], None))) None r in
+    let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
     ctx_uvar, t, {wl with wl_implicits=(reason, t, ctx_uvar, r)::wl.wl_implicits}
 
 let copy_uvar u (bs:binders) t wl =
@@ -2878,7 +2878,11 @@ let with_guard env prob dopt =
     match dopt with
     | None -> None
     | Some (deferred, implicits) ->
-      Some <| simplify_guard env ({guard_f=(p_guard prob |> NonTrivial); deferred=deferred; univ_ineqs=([], []); implicits=implicits})
+      Some <| simplify_guard env
+                ({guard_f=(p_guard prob |> NonTrivial);
+                  deferred=deferred;
+                  univ_ineqs=([], []);
+                  implicits=implicits})
 
 let with_guard_no_simp env prob dopt = match dopt with
     | None -> None
