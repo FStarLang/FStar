@@ -45,7 +45,7 @@ module BU      = FStar.Util
 module Dep     = FStar.Parser.Dep
 
 (* we write this version number to the cache files, and detect when loading the cache that the version number is same *)
-let cache_version_number = 3
+let cache_version_number = 4
 
 let module_or_interface_name m = m.is_interface, m.name
 

@@ -95,6 +95,7 @@ type quote_kind =
   | Quote_static
   | Quote_dynamic
 
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type maybe_set_use_range =
   | NoUseRange
   | SomeUseRange of range
