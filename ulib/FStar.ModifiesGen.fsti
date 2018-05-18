@@ -675,11 +675,10 @@ val union_loc_of_loc_disjoint
 : Lemma
   (union_loc_of_loc c b s1 `loc_disjoint` union_loc_of_loc c b s2 <==> s1 `loc_disjoint` s2)
 
-(*
 val modifies_union_loc_of_loc
   (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
   (b: bool)
   (l: loc (c b))
   (h1 h2: HS.mem)
 : Lemma
-  (modifies #(c b) l h1 h2 <==> modifies #(cls_union c) (union_loc_of_loc c b l) h1 h2)
+  (modifies #_ #(cls_union c) (union_loc_of_loc c b l) h1 h2 <==> modifies #_ #(c b) l h1 h2)
