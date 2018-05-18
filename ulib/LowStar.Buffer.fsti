@@ -399,7 +399,7 @@ val is_null (#a: Type) (b: buffer a) : HST.Stack bool
   (ensures (fun h y h' -> h == h' /\ y == g_is_null b))
 
 val sub (#a: Type) (b: buffer a) (i: U32.t) (len: U32.t) : HST.Stack (buffer a)
-  (requires (fun h -> U32.v i + U32.v len < length b /\ live h b))
+  (requires (fun h -> U32.v i + U32.v len <= length b /\ live h b))
   (ensures (fun h y h' -> h == h' /\ y == gsub b i len))
 
 val offset (#a: Type) (b: buffer a) (i: U32.t) : HST.Stack (buffer a)
