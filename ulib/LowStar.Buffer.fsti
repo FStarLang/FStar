@@ -14,18 +14,18 @@ module Seq = FStar.Seq
 ///
 /// The workhorse of Low*, this module allows modeling C arrays on the
 /// stack and in the heap.  At compilation time, KreMLin implements
-/// buffers using C arrays, i.e. if Low* type `t` is translated into C
-/// type `u`, then Low* type `buffer t` is translated to C type `u*`.
+/// buffers using C arrays, i.e. if Low* type ``t`` is translated into C
+/// type ``u``, then Low* type ``buffer t`` is translated to C type ``u*``.
 
 val buffer (a: Type0) : Tot Type0
 
 
-/// The C `NULL` pointer is represented as the Low* `null` buffer. For
-/// any given type, there is exactly one `null` buffer of this type,
-/// just like there is exactly one C `NULL` pointer of any given type.
+/// The C ``NULL`` pointer is represented as the Low* ``null`` buffer. For
+/// any given type, there is exactly one ``null`` buffer of this type,
+/// just like there is exactly one C ``NULL`` pointer of any given type.
 ///
-/// The nullity test `g_is_null` is ghost, for proof purposes
-/// only. The corresponding stateful nullity test is `is_null`, see
+/// The nullity test ``g_is_null`` is ghost, for proof purposes
+/// only. The corresponding stateful nullity test is ``is_null``, see
 /// below.
 
 (* FIXME: The nullity test for proof purposes is currently expressed
@@ -40,14 +40,14 @@ val null_unique (#a: Type) (b: buffer a) : Lemma
   (g_is_null b <==> b == null)
 
 
-///  `unused_in b h` holds only if buffer `b` has not been allocated
+///  ``unused_in b h`` holds only if buffer ``b`` has not been allocated
 ///  yet.
 
 val unused_in (#a: Type) (b: buffer a) (h: HS.mem) : GTot Type0
 
 
-/// `live h b` holds if, and only if, buffer `b` is currently
-/// allocated in `h` and has not been deallocated yet.
+/// ``live h b`` holds if, and only if, buffer ``b`` is currently
+/// allocated in ``h`` and has not been deallocated yet.
 ///
 /// This predicate corresponds to the C notion of "lifetime", and as
 /// such, is a prerequisite for all stateful operations on buffers
@@ -108,13 +108,13 @@ let live_not_unused_in' (#a: Type) (h: HS.mem) (b: buffer a) : Lemma
 ///  - in the 2016 POPL paper: https://www.fstar-lang.org/papers/mumon/
 ///  - in the relevant section of the F* tutorial: http://www.fstar-lang.org/tutorial/
 ///
-/// `frameOf b` returns the identifier of the region in which the
-/// buffer `b` lives.
+/// ``frameOf b`` returns the identifier of the region in which the
+/// buffer ``b`` lives.
 
 val frameOf (#a: Type) (b: buffer a) : GTot HS.rid
 
 
-/// `as_addr b` returns the abstract address of the buffer in its
+/// ``as_addr b`` returns the abstract address of the buffer in its
 /// region, as an allocation unit: two buffers that are allocated
 /// separately in the same region will actually have different
 /// addresses, but a sub-buffer of a buffer will actually have the
@@ -140,8 +140,8 @@ val live_region_frameOf (#a: Type) (h: HS.mem) (b: buffer a) : Lemma
   ]]
 
 
-/// The length of a buffer `b` is available as a machine integer `len
-/// b` or as a mathematical integer `length b`, but both in ghost
+/// The length of a buffer ``b`` is available as a machine integer ``len
+/// b`` or as a mathematical integer ``length b``, but both in ghost
 /// (proof) code only: just like in C, one cannot compute the length
 /// of a buffer at run-time.
 
@@ -171,21 +171,21 @@ let length_null_2 (#a: Type) (b: buffer a) : Lemma
 
 
 /// For functional correctness, buffers are reflected at the proof
-/// level using sequences, via `as_seq b h`, which returns the
-/// contents of a given buffer `b` in a given heap `h`. If `b` is not
-/// live in `h`, then the result is unspecified.
+/// level using sequences, via ``as_seq b h``, which returns the
+/// contents of a given buffer ``b`` in a given heap ``h``. If ``b`` is not
+/// live in ``h``, then the result is unspecified.
 
 val as_seq (#a: Type) (h: HS.mem) (b: buffer a) : GTot (Seq.seq a)
 
 
-/// The contents of a buffer `b` has the same length as `b` itself.
+/// The contents of a buffer ``b`` has the same length as ``b`` itself.
 
 val length_as_seq (#a: Type) (h: HS.mem) (b: buffer a) : Lemma
   (Seq.length (as_seq h b) == length b)
   [SMTPat (Seq.length (as_seq h b))]
 
 
-/// `get` is an often-convenient shorthand to index the value of a
+/// ``get`` is an often-convenient shorthand to index the value of a
 /// given buffer in a given heap, for proof purposes.
 
 let get (#a: Type) (h: HS.mem) (p: buffer a) (i: nat) : Ghost a
@@ -194,9 +194,9 @@ let get (#a: Type) (h: HS.mem) (p: buffer a) (i: nat) : Ghost a
 = Seq.index (as_seq h p) i
 
 
-/// A buffer `smaller` is included in another buffer `larger`, denoted
-/// as `includes larger smaller`, if `smaller` is a sub-buffer of
-/// `larger`. (See `gsub` below for how to actually construct such a
+/// A buffer ``smaller`` is included in another buffer ``larger``, denoted
+/// as ``includes larger smaller``, if ``smaller`` is a sub-buffer of
+/// ``larger``. (See ``gsub`` below for how to actually construct such a
 /// sub-buffer of a buffer.)
 
 val includes (#a: Type) (larger smaller: buffer a) : GTot Type0
@@ -242,13 +242,13 @@ val includes_frameOf_as_addr (#a: Type) (larger smaller: buffer a) : Lemma
   [SMTPat (larger `includes` smaller)]
 
 
-/// `gsub` is the way to carve a sub-buffer out of a given
-/// buffer. `gsub b i len` return the sub-buffer of `b` starting from
-/// offset `i` within `b`, and with length `len`. Of course `i` and
-/// `len` must fit within the length of `b`.
+/// ``gsub`` is the way to carve a sub-buffer out of a given
+/// buffer. ``gsub b i len`` return the sub-buffer of ``b`` starting from
+/// offset ``i`` within ``b``, and with length ``len``. Of course ``i`` and
+/// ``len`` must fit within the length of ``b``.
 ///
-/// `gsub` is the ghost version, for proof purposes. Its stateful
-/// counterpart is `sub`, see below.
+/// ``gsub`` is the ghost version, for proof purposes. Its stateful
+/// counterpart is ``sub``, see below.
 
 val gsub (#a: Type) (b: buffer a) (i: U32.t) (len: U32.t) : Ghost (buffer a)
   (requires (U32.v i + U32.v len <= length b))
@@ -270,7 +270,7 @@ val includes_gsub (#a: Type) (b: buffer a) (i: U32.t) (len: U32.t) : Lemma
   [SMTPat (gsub b i len)]
 
 
-/// The length of a sub-buffer is exactly the one provided at `gsub`.
+/// The length of a sub-buffer is exactly the one provided at ``gsub``.
 
 val len_gsub (#a: Type) (b: buffer a) (i: U32.t) (len': U32.t) : Lemma
   (requires (U32.v i + U32.v len' <= length b))
@@ -281,7 +281,7 @@ val len_gsub (#a: Type) (b: buffer a) (i: U32.t) (len': U32.t) : Lemma
   ]]
 
 
-/// Nesting two `gsub` collapses into one `gsub`, transitively.
+/// Nesting two ``gsub`` collapses into one ``gsub``, transitively.
 
 val gsub_gsub (#a: Type) (b: buffer a) (i1: U32.t) (len1: U32.t) (i2: U32.t) (len2: U32.t) : Lemma
   (requires (U32.v i1 + U32.v len1 <= length b /\ U32.v i2 + U32.v len2 <= U32.v len1))
@@ -292,8 +292,8 @@ val gsub_gsub (#a: Type) (b: buffer a) (i1: U32.t) (len1: U32.t) (i2: U32.t) (le
   [SMTPat (gsub (gsub b i1 len1) i2 len2)]
 
 
-/// A buffer `b` is equal to its "largest" sub-buffer, at index 0 and
-/// length `len b`.
+/// A buffer ``b`` is equal to its "largest" sub-buffer, at index 0 and
+/// length ``len b``.
 
 val gsub_zero_length (#a: Type) (b: buffer a) : Lemma
   (b == gsub b 0ul (len b))
@@ -408,7 +408,7 @@ val pointer_distinct_sel_disjoint
 /// The following definitions are needed to implement the generic
 /// modifies clause. Those should not be used in client code. They
 /// appear in the interface only because the modifies clause is
-/// defined in another module, `LowStar.Modifies`.
+/// defined in another module, ``LowStar.Modifies``.
 
 val abuffer' (region: HS.rid) (addr: nat) : Tot Type0
 
@@ -571,28 +571,28 @@ val modifies_1_null
 /// memory, but, as required by the C standard, they all require the
 /// buffer in question to be live.
 
-/// The nullity test, `is_null b`, which KreMLin compiles to C as `b == NULL`.
+/// The nullity test, ``is_null b``, which KreMLin compiles to C as ``b == NULL``.
 
 val is_null (#a: Type) (b: buffer a) : HST.Stack bool
   (requires (fun h -> live h b))
   (ensures (fun h y h' -> h == h' /\ y == g_is_null b))
 
 
-/// `sub b i len` constructs the sub-buffer of `b` starting from
-/// offset `i` with length `len`. KreMLin extracts this operation as
-/// `b + i` (or, equivalently, `&b[i]`.)
+/// ``sub b i len`` constructs the sub-buffer of ``b`` starting from
+/// offset ``i`` with length ``len``. KreMLin extracts this operation as
+/// ``b + i`` (or, equivalently, ``&b[i]``.)
 
 val sub (#a: Type) (b: buffer a) (i: U32.t) (len: U32.t) : HST.Stack (buffer a)
   (requires (fun h -> U32.v i + U32.v len <= length b /\ live h b))
   (ensures (fun h y h' -> h == h' /\ y == gsub b i len))
 
 
-/// `offset b i` construct the tail of the buffer `b` starting from
-/// offset `i`, i.e. the sub-buffer of `b` starting from offset `i`
-/// with length `U32.sub (len b) i`. KreMLin compiles it as `b + i` or
-/// `&b[i]`.
+/// ``offset b i`` construct the tail of the buffer ``b`` starting from
+/// offset ``i``, i.e. the sub-buffer of ``b`` starting from offset ``i``
+/// with length ``U32.sub (len b) i``. KreMLin compiles it as ``b + i`` or
+/// ``&b[i]``.
 ///
-/// This stateful operation cannot be derived from `sub`, because the
+/// This stateful operation cannot be derived from ``sub``, because the
 /// length cannot be computed outside of proofs.
 
 val offset (#a: Type) (b: buffer a) (i: U32.t) : HST.Stack (buffer a)
@@ -600,7 +600,7 @@ val offset (#a: Type) (b: buffer a) (i: U32.t) : HST.Stack (buffer a)
   (ensures (fun h y h' -> h == h' /\ y == gsub b i (U32.sub (len b) i)))
 
 
-/// `index b i` reads the value of `b` at offset `i` from memory and
+/// ``index b i`` reads the value of ``b`` at offset ``i`` from memory and
 /// returns it. KreMLin compiles it as b[i].
 val index (#a: Type) (b: buffer a) (i: U32.t) : HST.Stack a
   (requires (fun h -> live h b /\ U32.v i < length b))
@@ -619,7 +619,8 @@ val index (#a: Type) (b: buffer a) (i: U32.t) : HST.Stack a
    compositional modifies clauses.
  *)
 
-/// `upd b i v` writes `v` to the memory, at offset `i` of buffer `b`.
+/// ``upd b i v`` writes ``v`` to the memory, at offset ``i`` of
+/// buffer ``b``. KreMLin compiles it as ``b[i] = v``.
 
 val upd
   (#a: Type)
@@ -655,8 +656,8 @@ val recall
   (ensures  (fun m0 _ m1 -> m0 == m1 /\ live m1 b))
 
 
-/// Deallocation. A buffer that was allocated by `malloc` (see below)
-/// can be `free`d.
+/// Deallocation. A buffer that was allocated by ``malloc`` (see below)
+/// can be ``free``d.
 
 val freeable (#a: Type) (b: buffer a) : GTot Type0
 
@@ -693,9 +694,9 @@ let alloc_post_common
   length b == len /\
   modifies_0 h0 h1
 
-/// `gcmalloc r init len` allocates a memory-managed buffer of some
-/// positive length `len` in an eternal region `r`. Every cell of this
-/// buffer will have initial contents `init`. Such a buffer cannot be
+/// ``gcmalloc r init len`` allocates a memory-managed buffer of some
+/// positive length ``len`` in an eternal region ``r``. Every cell of this
+/// buffer will have initial contents ``init``. Such a buffer cannot be
 /// freed. In fact, it is eternal: it cannot be deallocated at all.
 
 val gcmalloc
@@ -712,11 +713,11 @@ val gcmalloc
   ))
 
 
-/// `malloc r init len` allocates a hand-managed buffer of some
-/// positive length `len` in an eternal region `r`. Every cell of this
-/// buffer will have initial contents `init`. Such a buffer can be
-/// freed using `free` above. Note that the `freeable` permission is
-/// only on the whole buffer `b`, and is not inherited by any of its
+/// ``malloc r init len`` allocates a hand-managed buffer of some
+/// positive length ``len`` in an eternal region ``r``. Every cell of this
+/// buffer will have initial contents ``init``. Such a buffer can be
+/// freed using ``free`` above. Note that the ``freeable`` permission is
+/// only on the whole buffer ``b``, and is not inherited by any of its
 /// strict sub-buffers.
 
 val malloc
@@ -733,11 +734,11 @@ val malloc
   ))
 
 
-/// `alloca init len` allocates a buffer of some positive length `len`
+/// ``alloca init len`` allocates a buffer of some positive length ``len``
 /// in the current stack frame. Every cell of this buffer will have
-/// initial contents `init`. Such a buffer cannot be freed
+/// initial contents ``init``. Such a buffer cannot be freed
 /// individually, but is automatically freed as soon as its stack
-/// frame is deallocated by `HST.pop_frame`.
+/// frame is deallocated by ``HST.pop_frame``.
 
 val alloca
   (#a: Type)
@@ -751,9 +752,9 @@ val alloca
   ))
 
 
-/// `alloca_of_list init` allocates a buffer in the current stack
+/// ``alloca_of_list init`` allocates a buffer in the current stack
 /// frame. The initial values of the cells of this buffer are
-/// specified by the `init` list, which must be nonempty, and of
+/// specified by the ``init`` list, which must be nonempty, and of
 /// length representable as a machine integer.
 
 unfold let alloca_of_list_pre (#a: Type0) (init: list a) : GTot Type0 =

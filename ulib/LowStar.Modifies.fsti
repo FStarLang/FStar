@@ -13,14 +13,14 @@ module B = LowStar.Buffer
 /// by an operation is preserved by that operation.
 ///
 /// We start by specifying a monoid of sets of memory locations. From
-/// a rough high-level view, `loc` is the type of sets of memory
-/// locations, equipped with an identity element `loc_none`,
+/// a rough high-level view, ``loc`` is the type of sets of memory
+/// locations, equipped with an identity element ``loc_none``,
 /// representing the empty set, and an associative and commutative
-/// operator, `loc_union`, representing the union of two sets of
+/// operator, ``loc_union``, representing the union of two sets of
 /// memory locations.
 ///
-/// Moreover, `loc_union` is idempotent, which is useful to cut SMT
-/// matching loops with `modifies_trans` and `modifies_refl` below.
+/// Moreover, ``loc_union`` is idempotent, which is useful to cut SMT
+/// matching loops with ``modifies_trans`` and ``modifies_refl`` below.
 
 val loc : Type0
 
@@ -57,7 +57,7 @@ val loc_union_loc_none_r
   (loc_union s loc_none == s)
 
 
-/// `loc_buffer b` is the set of memory locations associated to a buffer `b`.
+/// ``loc_buffer b`` is the set of memory locations associated to a buffer ``b``.
 
 val loc_buffer
   (#t: Type)
@@ -65,8 +65,8 @@ val loc_buffer
 : GTot loc
 
 
-/// `loc_addresses r n` is the set of memory locations associated to a
-/// set of addresses `n` in a given region `r`.
+/// ``loc_addresses r n`` is the set of memory locations associated to a
+/// set of addresses ``n`` in a given region ``r``.
 
 val loc_addresses
   (r: HS.rid)
@@ -74,17 +74,17 @@ val loc_addresses
 : GTot loc
 
 
-/// `loc_regions r` is the set of memory locations associated to a set
-/// `r` of regions.
+/// ``loc_regions r`` is the set of memory locations associated to a set
+/// ``r`` of regions.
 
 val loc_regions
   (r: Set.set HS.rid)
 : GTot loc
 
 
-/// `loc_mreference b` is the set of memory locations associated to a
-/// reference `b`, which is actually the set of memory locations
-/// associated to the address of `b`.
+/// ``loc_mreference b`` is the set of memory locations associated to a
+/// reference ``b``, which is actually the set of memory locations
+/// associated to the address of ``b``.
 
 let loc_mreference
   (#a: Type)
@@ -94,9 +94,9 @@ let loc_mreference
 = loc_addresses (HS.frameOf b) (Set.singleton (HS.as_addr b))
 
 
-/// `loc_region_only r` is the set of memory locations associated to a
-/// region `r` but not any region `r'` that extends `r` (in the sense
-/// of `FStar.HyperStack.extends`.)
+/// ``loc_region_only r`` is the set of memory locations associated to a
+/// region ``r`` but not any region ``r'`` that extends ``r`` (in the sense
+/// of ``FStar.HyperStack.extends``.)
 
 let loc_region_only
   (r: HS.rid)
@@ -104,9 +104,9 @@ let loc_region_only
 = loc_regions (Set.singleton r)
 
 
-/// `loc_all_regions_from r` is the set of all memory locations
-/// associated to a region `r` and any region `r'` that transitively
-/// extends `r` (in the sense of `FStar.HyperStack.extends`,
+/// ``loc_all_regions_from r`` is the set of all memory locations
+/// associated to a region ``r`` and any region ``r'`` that transitively
+/// extends ``r`` (in the sense of ``FStar.HyperStack.extends``,
 /// e.g. nested stack frames.)
 
 let loc_all_regions_from
@@ -115,11 +115,11 @@ let loc_all_regions_from
 = loc_regions (HS.mod_set (Set.singleton r))
 
 
-/// We equip the `loc` monoid of sets of memory locations with an
-/// inclusion relation, `loc_includes`, which is a preorder compatible
-/// with `loc_union`. Although we consider sets of memory locations,
+/// We equip the ``loc`` monoid of sets of memory locations with an
+/// inclusion relation, ``loc_includes``, which is a preorder compatible
+/// with ``loc_union``. Although we consider sets of memory locations,
 /// we do not specify them using any F* set library such as
-/// `FStar.Set`, `FStar.TSet` or `FStar.GSet`, because `loc_includes`
+/// ``FStar.Set``, ``FStar.TSet`` or ``FStar.GSet``, because ``loc_includes``
 /// encompasses more than just set-theoretic inclusion.
 
 val loc_includes
@@ -159,8 +159,8 @@ val loc_includes_none
   [SMTPat (loc_includes s loc_none)]
 
 
-/// If a buffer `b1` includes a buffer `b2` in the sense of the buffer
-/// theory (see `LowStar.Buffer.includes`), then so are their
+/// If a buffer ``b1`` includes a buffer ``b2`` in the sense of the buffer
+/// theory (see ``LowStar.Buffer.includes``), then so are their
 /// corresponding sets of memory locations.
 
 val loc_includes_buffer
@@ -198,10 +198,10 @@ val loc_includes_gsub_buffer_l
   [SMTPat (loc_includes (loc_buffer (B.gsub b i1 len1)) (loc_buffer (B.gsub b i2 len2)))]
 
 
-/// Given a buffer `b`, if its address is in a set `s` of addresses in
-/// the region of `b`, then the set of memory locations corresponding
-/// to `b` is included in the set of memory locations corresponding to
-/// the addresses in `s` in region `r`.
+/// Given a buffer ``b``, if its address is in a set ``s`` of addresses in
+/// the region of ``b``, then the set of memory locations corresponding
+/// to ``b`` is included in the set of memory locations corresponding to
+/// the addresses in ``s`` in region ``r``.
 ///
 /// In particular, the set of memory locations corresponding to a
 /// buffer is included in the set of memory locations corresponding to
@@ -231,14 +231,14 @@ val loc_includes_region_buffer
   [SMTPat (loc_includes (loc_regions s) (loc_buffer b))]
 
 
-/// If a region `r` is in a set of region `s`, then the set of memory
-/// locations corresponding to a set of addresses `a` in `r` is
+/// If a region ``r`` is in a set of region ``s``, then the set of memory
+/// locations corresponding to a set of addresses ``a`` in ``r`` is
 /// included in the set of memory locations corresponding to the
-/// regions in `s`.
+/// regions in ``s``.
 ///
 /// In particular, the the set of memory locations corresponding to a
-/// set of addresses `a` in a given region `r` is included in the set
-/// of memory locations corresponding to region `r`.
+/// set of addresses ``a`` in a given region ``r`` is included in the set
+/// of memory locations corresponding to region ``r``.
 
 val loc_includes_region_addresses
   (s: Set.set HS.rid)
@@ -249,8 +249,8 @@ val loc_includes_region_addresses
   (ensures (loc_includes (loc_regions s) (loc_addresses r a)))
   [SMTPat (loc_includes (loc_regions s) (loc_addresses r a))]
 
-/// If a set of region identifiers `s1` includes a set of region
-/// identifiers `s2`, then so are their corresponding sets of memory
+/// If a set of region identifiers ``s1`` includes a set of region
+/// identifiers ``s2``, then so are their corresponding sets of memory
 /// locations.
 
 val loc_includes_region_region
@@ -314,7 +314,7 @@ val loc_disjoint_includes
   ]]
 
 /// If two buffers are disjoint in the sense of the theory of buffers
-/// (see `LowStar.Buffer.disjoint`), then so are their corresponding
+/// (see ``LowStar.Buffer.disjoint``), then so are their corresponding
 /// sets of memory locations.
 
 val loc_disjoint_buffer
@@ -363,8 +363,8 @@ val loc_disjoint_addresses
   (ensures (loc_disjoint (loc_addresses r1 n1) (loc_addresses r2 n2)))
   [SMTPat (loc_disjoint (loc_addresses r1 n1) (loc_addresses r2 n2))]
 
-/// If the region of a buffer `p` is not `r`, or its address is not in
-/// the set `n` of addresses, then their corresponding sets of memory
+/// If the region of a buffer ``p`` is not ``r``, or its address is not in
+/// the set ``n`` of addresses, then their corresponding sets of memory
 /// locations are disjoint.
 
 val loc_disjoint_buffer_addresses
@@ -390,17 +390,17 @@ val loc_disjoint_regions
 
 /// The modifies clauses proper.
 ///
-/// Let `s` be a set of memory locations, and `h1` and `h2` be two
-/// memory states. Then, `s` is modified from `h1` to `h2` only if,
-/// any memory location disjoint from `s` is preserved from `h1` into
-/// `h2`. Elimination lemmas illustrating this principle follow.
+/// Let ``s`` be a set of memory locations, and ``h1`` and ``h2`` be two
+/// memory states. Then, ``s`` is modified from ``h1`` to ``h2`` only if,
+/// any memory location disjoint from ``s`` is preserved from ``h1`` into
+/// ``h2``. Elimination lemmas illustrating this principle follow.
 
 val modifies
   (s: loc)
   (h1 h2: HS.mem)
 : GTot Type0
 
-/// If a region `r` is disjoint from a set `s` of memory locations
+/// If a region ``r`` is disjoint from a set ``s`` of memory locations
 /// which is modified, then its liveness is preserved.
 
 val modifies_live_region
@@ -415,7 +415,7 @@ val modifies_live_region
     [SMTPat (modifies s h1 h2); SMTPat (HS.live_region h2 r)];
   ]]
 
-/// If a reference `b` is disjoint from a set `p` of memory locations
+/// If a reference ``b`` is disjoint from a set ``p`` of memory locations
 /// which is modified, then its liveness and contents are preserved.
 
 val modifies_mreference_elim
@@ -441,20 +441,20 @@ val modifies_mreference_elim
     [ SMTPat (modifies p h h'); SMTPat (HS.contains h' b) ]
   ] ]
 
-/// If a buffer `b` *of positive length* is disjoint from a set `p` of
+/// If a buffer ``b`` *of positive length* is disjoint from a set ``p`` of
 /// memory locations which is modified, then its liveness and contents
 /// are preserved.
 ///
-/// Here it is important to require that the length of `b` must not be
-/// zero. Indeed, let `x` be a buffer of size 2, and pose `y = B.gsub
-/// x 2ul 0ul`. Then, `y` is disjoint from `x`, because it is a
-/// sub-buffer of `x` covering a range disjoint from that of `x`
-/// (since `x == B.gsub x 0ul 2ul`.) However, if `x` is deallocated,
-/// then `x` is no longer live, and so neither is `y`, as a sub-buffer
-/// of `x`. This means that the liveness of buffers of length 0 cannot
+/// Here it is important to require that the length of ``b`` must not be
+/// zero. Indeed, let ``x`` be a buffer of size 2, and pose ``y = B.gsub
+/// x 2ul 0ul``. Then, ``y`` is disjoint from ``x``, because it is a
+/// sub-buffer of ``x`` covering a range disjoint from that of ``x``
+/// (since ``x == B.gsub x 0ul 2ul``.) However, if ``x`` is deallocated,
+/// then ``x`` is no longer live, and so neither is ``y``, as a sub-buffer
+/// of ``x``. This means that the liveness of buffers of length 0 cannot
 /// be preserved by modifies clauses. Fortunately, in most cases, to
-/// talk about the liveness of `y`, it is always possible to reason
-/// about the liveness of a buffer which encloses `y`, such as `x`.
+/// talk about the liveness of ``y``, it is always possible to reason
+/// about the liveness of a buffer which encloses ``y``, such as ``x``.
 
 val modifies_buffer_elim
   (#t1: Type)
@@ -480,7 +480,7 @@ val modifies_buffer_elim
   ] ]
 
 /// If the memory state does not change, then any memory location is
-/// modified (and, in particular, the empty set, `loc_none`.)
+/// modified (and, in particular, the empty set, ``loc_none``.)
 
 val modifies_refl
   (s: loc)
@@ -489,8 +489,8 @@ val modifies_refl
   (modifies s h h)
   [SMTPat (modifies s h h)]
 
-/// If a set `s2` of memory locations is modified, then so is any set
-/// `s1` that includes `s2`. In other words, it is always possible to
+/// If a set ``s2`` of memory locations is modified, then so is any set
+/// ``s1`` that includes ``s2``. In other words, it is always possible to
 /// weaken a modifies clause by widening its set of memory locations.
 
 val modifies_loc_includes
@@ -631,9 +631,9 @@ val modifies_none_modifies
   (ensures (modifies loc_none h1 h2))
 
 /// Main lemmas to integrate non-compositional modifies clauses
-/// specified in `LowStar.Buffer` for elementary operations.
+/// specified in ``LowStar.Buffer`` for elementary operations.
 ///
-/// Case `modifies_0`: allocation.
+/// Case ``modifies_0``: allocation.
 
 val modifies_0_modifies
   (h1 h2: HS.mem)
@@ -645,7 +645,7 @@ val modifies_0_modifies
     [SMTPat (modifies loc_none h1 h2)];
   ]]
 
-/// Case `modifies_1`: update, free.
+/// Case ``modifies_1``: update, free.
 
 val modifies_1_modifies
   (#a: Type)
@@ -688,9 +688,9 @@ val buffer_live_mreference_unused_in_disjoint
   (ensures (loc_disjoint (loc_buffer b1) (loc_mreference b2)))
   [SMTPat (B.live h b1); SMTPat (HS.unused_in b2 h)]
 
-///  A memory `h` does not contain address `a` in region `r`, denoted
-///  `does_not_contain_addr h (r, a)`, only if, either region `r` is
-///  not live, or address `a` is unused in region `r`.
+///  A memory ``h`` does not contain address ``a`` in region ``r``, denoted
+///  ``does_not_contain_addr h (r, a)``, only if, either region ``r`` is
+///  not live, or address ``a`` is unused in region ``r``.
 
 (* BEGIN TODO: move to FStar.Monotonic.HyperStack *)
 
