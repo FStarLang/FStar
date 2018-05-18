@@ -10,7 +10,8 @@ module Seq = FStar.Seq
    https://fstarlang.github.io/lowstar/html/LowStar.html
  *)
 
-/// # Low* buffers
+/// Low* buffers
+/// ==============
 ///
 /// The workhorse of Low*, this module allows modeling C arrays on the
 /// stack and in the heap.  At compilation time, KreMLin implements
@@ -40,8 +41,8 @@ val null_unique (#a: Type) (b: buffer a) : Lemma
   (g_is_null b <==> b == null)
 
 
-///  ``unused_in b h`` holds only if buffer ``b`` has not been allocated
-///  yet.
+/// ``unused_in b h`` holds only if buffer ``b`` has not been allocated
+/// yet.
 
 val unused_in (#a: Type) (b: buffer a) (h: HS.mem) : GTot Type0
 
@@ -55,7 +56,8 @@ val unused_in (#a: Type) (b: buffer a) (h: HS.mem) : GTot Type0
 ///
 ///   If an object is referred to outside of its lifetime, the
 ///   behavior is undefined.
-///                  -- ISO/IEC 9899:2011, Section 6.2.4 paragraph 2
+/// 
+///   -- ISO/IEC 9899:2011, Section 6.2.4 paragraph 2
 /// 
 /// By contrast, it is not required for the ghost versions of those
 /// operators.
@@ -76,7 +78,7 @@ let live_is_null (#a: Type) (h: HS.mem) (b: buffer a) : Lemma
   live_null a h
 
 
-///  A live buffer has already been allocated.
+/// A live buffer has already been allocated.
 
 val live_not_unused_in (#a: Type) (h: HS.mem) (b: buffer a) : Lemma
   (requires (live h b /\ b `unused_in` h))
@@ -98,13 +100,13 @@ let live_not_unused_in' (#a: Type) (h: HS.mem) (b: buffer a) : Lemma
 = live_not_unused_in h b
 
 
-///  Buffers live in the HyperStack model, which is an extension of
-///  the HyperHeap model, a hierarchical memory model that divides the
-///  heap into a tree of regions. This coarse-grained separation
-///  allows the programmer to state modifies clauses at the level of
-///  regions, rather than on individual buffers.
+/// Buffers live in the HyperStack model, which is an extension of
+/// the HyperHeap model, a hierarchical memory model that divides the
+/// heap into a tree of regions. This coarse-grained separation
+/// allows the programmer to state modifies clauses at the level of
+/// regions, rather than on individual buffers.
 ///
-///  The HyperHeap memory model is described:
+/// The HyperHeap memory model is described:
 ///  - in the 2016 POPL paper: https://www.fstar-lang.org/papers/mumon/
 ///  - in the relevant section of the F* tutorial: http://www.fstar-lang.org/tutorial/
 ///
@@ -234,7 +236,7 @@ val includes_trans (#a: Type) (x y z: buffer a) : Lemma
 
 
 /// A buffer and any of its sub-buffers live in the same region, and
-/// at the same address, and are both null or not null.
+/// at the same address, and are either both null or both not null.
 
 val includes_frameOf_as_addr (#a: Type) (larger smaller: buffer a) : Lemma
   (requires (larger `includes` smaller))
@@ -657,7 +659,7 @@ val recall
 
 
 /// Deallocation. A buffer that was allocated by ``malloc`` (see below)
-/// can be ``free``d.
+/// can be ``free`` d.
 
 val freeable (#a: Type) (b: buffer a) : GTot Type0
 

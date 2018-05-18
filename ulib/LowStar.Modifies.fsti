@@ -4,7 +4,8 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module B = LowStar.Buffer
 
-/// # The modifies clause for regions, references and buffers.
+/// The modifies clause for regions, references and buffers.
+/// ==========================================================
 ///
 /// This module presents the modifies clause, a way to track the set
 /// of memory locations modified by a stateful Low* (or even F*)
@@ -231,7 +232,7 @@ val loc_includes_region_buffer
   [SMTPat (loc_includes (loc_regions s) (loc_buffer b))]
 
 
-/// If a region ``r`` is in a set of region ``s``, then the set of memory
+/// If a region ``r`` is in a set of regions ``s``, then the set of memory
 /// locations corresponding to a set of addresses ``a`` in ``r`` is
 /// included in the set of memory locations corresponding to the
 /// regions in ``s``.
