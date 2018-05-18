@@ -28,7 +28,7 @@ type goal = {
 }
 let goal_env g = { g.goal_main_env with gamma = g.goal_ctx_uvar.ctx_uvar_gamma }
 let goal_witness g =
-    FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], None))) None Range.dummyRange
+    FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) None Range.dummyRange
 let goal_type g = g.goal_ctx_uvar.ctx_uvar_typ
 let goal_with_type g t =
     let c = g.goal_ctx_uvar in
@@ -66,12 +66,13 @@ type proofstate = {
     goals        : list<goal>;   //all the goals remaining to be solved
     smt_goals    : list<goal>;   //goals that have been deferred to SMT
     depth        : int;          //depth for tracing and debugging
-    __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying ciruluarity
+    __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying circularity
 
     psc          : N.psc;        //primitive step context where we started execution
     entry_range  : Range.range;  //position of entry, set by the use
     guard_policy : guard_policy; //guard policy: what to do with guards arising during tactic exec
     freshness    : int;          //a simple freshness counter for the fresh tactic
+    tac_verb_dbg : bool;         //whether to print verbose debugging messages
 }
 
 let subst_proof_state subst ps =

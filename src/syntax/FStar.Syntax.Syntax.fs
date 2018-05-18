@@ -96,6 +96,11 @@ type quote_kind =
   | Quote_dynamic
 
 // IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+type maybe_set_use_range =
+  | NoUseRange
+  | SomeUseRange of range
+
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type delta_depth =
   | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
   | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
@@ -233,7 +238,7 @@ and fv_qual =
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
-             * option<range>                    (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
+             * maybe_set_use_range              (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
 and subst_elt =
    | DB of int * bv                            (* DB i t: replace a bound variable with index i with name bv                 *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)

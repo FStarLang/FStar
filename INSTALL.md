@@ -95,7 +95,7 @@ following commands. (On Windows this requires Cygwin and `make`)
    your OS; then use the following command to install the packages
    required to compile OCaml programs extracted from F\* code:
 
-        $ opam install ocamlfind batteries stdint zarith ppx_deriving ppx_deriving_yojson
+        $ opam install ocamlfind batteries stdint zarith ppx_deriving ppx_deriving_yojson ocaml-migrate-parsetree process
 
 4. You can verify all the examples, keeping in mind that this might
    take a long time.

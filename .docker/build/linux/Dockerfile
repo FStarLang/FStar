@@ -17,8 +17,14 @@ RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 # buffering, to preserve interleaving as much as possible. `3>&1 1>&2
 # 2>&3` actually swaps stdout and stderr, because `|` only works on
 # stdout.
-RUN { { { stdbuf -i0 -o0 -e0 make -C src -j ${MAXTHREADS} utest-prelude && echo "success" > "result.txt" || echo "failed" > "result.txt" ; } 3>&1 1>&2 2>&3 | stdbuf -i0 -o0 -e0 sed 's!^![STDERR] !' ; } 3>&1 1>&2 2>&3 | stdbuf -i0 -o0 -e0 sed 's!^![STDOUT] !' ; } 2>&1 | stdbuf -i0 -o0 -e0 tee --append ${BUILDLOGFILE}
+
+RUN { { { stdbuf -i0 -o0 -e0 make -C src -j ${MAXTHREADS} utest-prelude && echo "success" > "result.txt" || echo "failure" > "result.txt" ; } 3>&1 1>&2 2>&3 | stdbuf -i0 -o0 -e0 sed 's!^![STDERR] !' ; } 3>&1 1>&2 2>&3 | stdbuf -i0 -o0 -e0 sed 's!^![STDOUT] !' ; } 2>&1 | stdbuf -i0 -o0 -e0 tee --append ${BUILDLOGFILE}
 
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 
+# Generate query-stats.
+# List the hints that fail to replay.
+RUN bash -c ".scripts/query-stats.py -f ${BUILDLOGFILE} -F html -o log_no_replay.html -n all '--filter=fstar_usedhints=+' '--filter=fstar_tag=-' -g"
 
+# Worst offenders (longest times)
+RUN bash -c ".scripts/query-stats.py -f ${BUILDLOGFILE} -F html -o log_worst.html -c -g -n 10"

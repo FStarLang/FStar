@@ -138,7 +138,6 @@ let defaults =
       ("extract_module"               , List []);
       ("extract_namespace"            , List []);
       ("fs_typ_app"                   , Bool false);
-      ("fstar_home"                   , Unset);
       ("full_context_dependency"      , Bool true);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
@@ -253,7 +252,6 @@ let get_extract                 ()      = lookup_opt "extract"                  
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
-let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
@@ -611,11 +609,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "expose_interfaces",
         Const (mk_bool true),
         "Explicitly break the abstraction imposed by the interface of any implementation file that appears on the command line (use with care!)");
-
-       ( noshort,
-        "fstar_home",
-        PathStr "dir",
-        "Set the FSTAR_HOME variable to <dir>");
 
        ( noshort,
         "hide_uvar_nums",
@@ -1075,16 +1068,7 @@ let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 let display_usage () = display_usage_aux (specs())
 
-let fstar_home () =
-    match get_fstar_home() with
-    | None ->
-      let x = Util.get_exec_dir () in
-      let x = x ^ "/.." in
-      // Memoizes to avoid repeatedly forking an external process
-      set_option' ("fstar_home", mk_string x);
-      x
-    | Some x ->
-      x
+let fstar_bin_directory = Util.get_exec_dir ()
 
 exception File_argument of string
 
@@ -1142,26 +1126,47 @@ let include_path () =
   if get_no_default_includes() then
     get_include()
   else
-    let h = fstar_home () in
-    let defs = universe_include_path_base_dirs in
-    (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
+    let lib_paths =
+        match FStar.Util.expand_environment_variable "FSTAR_LIB" with
+        | None ->
+          let fstar_home = fstar_bin_directory ^ "/.."  in
+          let defs = universe_include_path_base_dirs in
+          defs |> List.map (fun x -> fstar_home ^ x) |> List.filter file_exists
+        | Some s -> [s]
+    in
+    lib_paths @ get_include() @ [ "." ]
 
-let find_file filename =
-  if Util.is_path_absolute filename then
-    if Util.file_exists filename then
-      Some filename
-    else
-      None
-  else
-    (* In reverse, because the last directory has the highest precedence. *)
-    Util.find_map (List.rev (include_path ())) (fun p ->
-      let path =
-        if p = "." then filename
-        else Util.join_paths p filename in
-      if Util.file_exists path then
-        Some path
-      else
-        None)
+let find_file =
+  let file_map = FStar.Util.smap_create 100 in
+  fun filename ->
+     match Util.smap_try_find file_map filename with
+     | Some f -> Some f
+     | None ->
+       let result =
+          (try
+              if Util.is_path_absolute filename then
+                if Util.file_exists filename then
+                  Some filename
+                else
+                  None
+              else
+                (* In reverse, because the last directory has the highest precedence. *)
+                Util.find_map (List.rev (include_path ())) (fun p ->
+                  let path =
+                    if p = "." then filename
+                    else Util.join_paths p filename in
+                  if Util.file_exists path then
+                    Some path
+                  else
+                    None)
+           with | _ -> //to deal with issues like passing bogus strings as paths like "<input>"
+                  None)
+       in
+       match result with
+       | None -> result
+       | Some f ->
+         Util.smap_add file_map filename f;
+         result
 
 let prims () =
   match get_prims() with
@@ -1204,16 +1209,18 @@ let prepend_cache_dir fpath =
 //Used to parse the options of
 //   --using_facts_from
 //   --extract
+let path_of_text text = String.split ['.'] text
+
 let parse_settings ns : list<(list<string> * bool)> =
     let parse_one_setting s =
         if s = "*" then ([], true)
         else if FStar.Util.starts_with s "-"
-        then let path = FStar.Ident.path_of_text (FStar.Util.substring_from s 1) in
+        then let path = path_of_text (FStar.Util.substring_from s 1) in
              (path, false)
         else let s = if FStar.Util.starts_with s "+"
                      then FStar.Util.substring_from s 1
                      else s in
-             (FStar.Ident.path_of_text s, true)
+             (path_of_text s, true)
     in
     ns |> List.collect (fun s ->
           FStar.Util.split s " "
@@ -1342,7 +1349,7 @@ let should_extract m =
               | _ -> failwith "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module"
       in
       let setting = parse_settings extract_setting in
-      let m_components = Ident.path_of_text m in
+      let m_components = path_of_text m in
       let rec matches_path m_components path =
           match m_components, path with
           | _, [] -> true

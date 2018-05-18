@@ -70,7 +70,7 @@ let new_implicit_var_aux reason r env k should_check =
           ctx_uvar_range=r
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
-      let t = mk (Tm_uvar (ctx_uvar, ([], None))) None r in
+      let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
       let g = {Rel.trivial_guard with implicits=[(reason, t, ctx_uvar, r)]} in
       t, [(ctx_uvar, r)], g
 
@@ -1077,6 +1077,7 @@ let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
     | Some g -> e, c', g
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
+    if env.is_pattern then e, lc else
     let is_type t =
         let t = N.unfold_whnf env t in
         match (SS.compress t).n with

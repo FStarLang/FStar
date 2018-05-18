@@ -40,6 +40,9 @@ type implicits = Env.implicits
 // Beta reduce
 let normalize s e t = N.normalize_with_primitive_steps FStar.Reflection.Interpreter.reflection_primops s e t
 let bnorm e t = normalize [] e t
+
+(* Use this one for everything the user is supposed to see, as it does resugaring.
+ * For debug messages, just use plain term_to_string, we don't want to cause normalization with debug flags. *)
 let tts = N.term_to_string
 
 open FStar.Tactics.Types
@@ -64,13 +67,10 @@ let run_safe t p =
     try t.tac_f p
     with | e -> Failed (BU.message_of_exn e, p)
 
-let tac_verb_dbg : ref<option<bool>> = BU.mk_ref None
-let rec log ps f : unit =
-    match !tac_verb_dbg with
-    | None -> (tac_verb_dbg := Some (Env.debug ps.main_context (Options.Other "TacVerbose"));
-               log ps f)
-    | Some true -> f ()
-    | Some false -> ()
+let rec log ps (f : unit -> unit) : unit =
+    if ps.tac_verb_dbg
+    then f ()
+    else ()
 
 (* monadic return *)
 let ret (x:'a) : tac<'a> =
@@ -103,20 +103,20 @@ let goal_to_string_verbose (g:goal) : string =
          | None -> ""
          | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (Print.term_to_string t))
 
-let goal_to_string (g:goal) =
+let goal_to_string ps (g:goal) =
     if Options.print_implicits ()
-       || !tac_verb_dbg = Some true
+       || ps.tac_verb_dbg
     then goal_to_string_verbose g
     else
         let w =
             match get_uvar_solved g.goal_ctx_uvar with
             | None -> "_"
-            | Some t -> Print.term_to_string t
+            | Some t -> tts (goal_env g) t
         in
         BU.format3 "%s |- %s : %s"
              (Print.binders_to_string ", " g.goal_ctx_uvar.ctx_uvar_binders)
              w
-             (Print.term_to_string g.goal_ctx_uvar.ctx_uvar_typ)
+             (tts (goal_env g) g.goal_ctx_uvar.ctx_uvar_typ)
 
 let tacprint  (s:string)       = BU.print1 "TAC>> %s\n" s
 let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
@@ -146,7 +146,7 @@ let debug (msg:string) : tac<unit> =
     ret ())
 
 let dump_goal ps goal =
-    tacprint (goal_to_string goal);
+    tacprint (goal_to_string ps goal);
     ()
 
 let dump_cur ps msg =
@@ -169,10 +169,10 @@ let ps_to_string (msg, ps) =
                  else "");
                 format2 "ACTIVE goals (%s):\n%s\n"
                     (string_of_int (List.length ps.goals))
-                    (String.concat "\n" (List.map goal_to_string ps.goals));
+                    (String.concat "\n" (List.map (goal_to_string ps) ps.goals));
                 format2 "SMT goals (%s):\n%s\n"
                     (string_of_int (List.length ps.smt_goals))
-                    (String.concat "\n" (List.map goal_to_string ps.smt_goals));
+                    (String.concat "\n" (List.map (goal_to_string ps) ps.smt_goals));
                ]
 
 let goal_to_json g =
@@ -355,7 +355,8 @@ let dismiss () : tac<unit> =
 
 let solve (goal : goal) (solution : term) : tac<unit> =
     let e = goal_env goal in
-    mlog (fun () -> BU.print2 "solve %s := %s\n" (tts e (goal_witness goal)) (tts e solution)) (fun () ->
+    mlog (fun () -> BU.print2 "solve %s := %s\n" (Print.term_to_string (goal_witness goal))
+                                                 (Print.term_to_string solution)) (fun () ->
     bind (trysolve goal solution) (fun b ->
     if b
     then bind __dismiss (fun () -> remove_solved_goals)
@@ -471,11 +472,12 @@ let cur_goal () : tac<goal> =
         ret hd)
 
 let tadmit () : tac<unit> = wrap_err "tadmit" <|
+    bind get (fun ps ->
     bind (cur_goal ()) (fun g ->
     Err.log_issue (goal_type g).pos
         (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
-                    (goal_to_string g));
-    solve' g U.exp_unit)
+                    (goal_to_string ps g));
+    solve' g U.exp_unit))
 
 let fresh () : tac<Z.t> =
     bind get (fun ps ->
@@ -506,7 +508,7 @@ let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
 
 let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
-    mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (tts e t)) (fun () ->
+    mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
     try ret (ps.main_context.type_of e t)
     with | Errors.Err (_, msg)
@@ -739,7 +741,7 @@ let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = w
                | g::_ -> g.opts
                | _ -> FStar.Options.peek ()
     in
-    mlog (fun () -> BU.print1 "norm_term_env: t = %s\n" (tts ps.main_context t)) (fun () ->
+    mlog (fun () -> BU.print1 "norm_term_env: t = %s\n" (Print.term_to_string t)) (fun () ->
     bind (__tc e t) (fun (t, _, _) ->
     let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
@@ -768,11 +770,11 @@ let __exact_now set_expected_typ (t:term) : tac<unit> =
     in
     bind (__tc env t) (fun (t, typ, guard) ->
     mlog (fun () -> BU.print2 "__exact_now: got type %s\n__exact_now: and guard %s\n"
-                                                     (tts (goal_env goal) typ)
+                                                     (Print.term_to_string typ)
                                                      (Rel.guard_to_string (goal_env goal) guard)) (fun _ ->
     bind (proc_guard "__exact typing" (goal_env goal) guard goal.opts) (fun _ ->
-    mlog (fun () -> BU.print2 "__exact_now: unifying %s and %s\n" (tts (goal_env goal) typ)
-                                                                  (tts (goal_env goal) (goal_type goal))) (fun _ ->
+    mlog (fun () -> BU.print2 "__exact_now: unifying %s and %s\n" (Print.term_to_string typ)
+                                                                  (Print.term_to_string (goal_type goal))) (fun _ ->
     bind (do_unify (goal_env goal) typ (goal_type goal)) (fun b -> if b
     then solve goal t
     else fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
@@ -1041,7 +1043,7 @@ let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : option<goal> =
 let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
     bind (cur_goal ()) (fun goal ->
     let bv, _ = h in
-    mlog (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (tts (goal_env goal) bv.sort)) (fun _ ->
+    mlog (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (Print.term_to_string bv.sort)) (fun _ ->
     match split_env bv (goal_env goal) with
     | None -> fail "binder not found in environment"
     | Some (e0, bvs) -> begin
@@ -1510,11 +1512,14 @@ let cur_goal'   () : tac<term> = bind (cur_goal ()) (fun g -> ret <| (goal_type 
 let cur_witness () : tac<term> = bind (cur_goal ()) (fun g -> ret <| (goal_witness g))
 
 let unquote (ty : term) (tm : term) : tac<term> = wrap_err "unquote" <|
+    mlog (fun () -> BU.print1 "unquote: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind (cur_goal ()) (fun goal ->
     let env = Env.set_expected_typ (goal_env goal) ty in
     bind (__tc env tm) (fun (tm, typ, guard) ->
+    mlog (fun () -> BU.print1 "unquote: tm' = %s\n" (Print.term_to_string tm)) (fun _ ->
+    mlog (fun () -> BU.print1 "unquote: typ = %s\n" (Print.term_to_string typ)) (fun _ ->
     bind (proc_guard "unquote" env guard goal.opts) (fun () ->
-    ret tm)))
+    ret tm))))))
 
 let uvar_env (env : env) (ty : option<typ>) : tac<term> =
     // If no type was given, add a uvar for it too!
@@ -1807,6 +1812,7 @@ let proofstate_of_goal_ty rng env typ =
         entry_range = rng;
         guard_policy = SMT;
         freshness = 0;
+        tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
     }
     in
     (ps, (goal_witness g))

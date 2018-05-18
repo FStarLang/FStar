@@ -180,7 +180,10 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
                  (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
        let e, _, g = TcUtil.check_comp env e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
-       if debug env Options.Low then BU.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
+       if debug env Options.Low
+       then BU.print2 "(%s) DONE check_expected_effect;\n\tguard is: %s\n"
+                         (Range.string_of_range e.pos)
+                         (guard_to_string env g);
        let e = TcUtil.maybe_lift env e (U.comp_effect_name c) (U.comp_effect_name expected_c) (U.comp_result c) in
        e, expected_c, g
 
@@ -1146,6 +1149,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
           (if env.top_level then "true" else "false");
 
     let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g = expected_function_typ env topt body in
+    let envbody = Env.set_range envbody body.pos in
     let body, cbody, guard =
         let should_check_expected_effect =
             match c_opt, (SS.compress body).n with

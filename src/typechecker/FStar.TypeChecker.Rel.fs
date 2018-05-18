@@ -196,7 +196,7 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
          ctx_uvar_range=r
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
-    let t = mk (Tm_uvar (ctx_uvar, ([], None))) None r in
+    let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
     ctx_uvar, t, {wl with wl_implicits=(reason, t, ctx_uvar, r)::wl.wl_implicits}
 
 let copy_uvar u (bs:binders) t wl =
@@ -352,10 +352,11 @@ let def_scope_wf msg rng r =
           end
     in aux [] r
 
+// Only used for defensive tests now.
 let p_scope prob =
    let r = match prob with
-   | TProb p -> (snd p.logical_guard_uvar).ctx_uvar_binders @ (fst p.logical_guard_uvar)
-   | CProb p -> (snd p.logical_guard_uvar).ctx_uvar_binders @ (fst p.logical_guard_uvar)
+   | TProb p -> p.logical_guard_uvar.ctx_uvar_binders @ (match p_element prob with | None -> [] | Some x -> [S.mk_binder x])
+   | CProb p -> p.logical_guard_uvar.ctx_uvar_binders @ (match p_element prob with | None -> [] | Some x -> [S.mk_binder x])
    in
    def_scope_wf "p_scope" (p_loc prob) r;
    r
@@ -374,10 +375,6 @@ let def_check_prob msg prob =
     let msgf m = msg ^ "." ^ string_of_int (p_pid prob) ^ "." ^ m in
     def_scope_wf (msgf "scope") (p_loc prob) (p_scope prob);
     def_check_scoped (msgf "guard")      prob (p_guard prob);
-    begin match (p_element prob) with
-    | Some t -> def_check_scoped ("element." ^ msg) prob t
-    | None -> ()
-    end;
     match prob with
     | TProb p ->
         begin
@@ -416,13 +413,19 @@ let next_pid =
     fun () -> incr ctr; !ctr
 
 let mk_problem wl scope orig lhs rel rhs elt reason =
-    let env = FStar.TypeChecker.Env.push_binders wl.tcenv scope in
+    let scope =
+        match elt with
+        | None -> scope
+        | Some x -> scope @ [S.mk_binder x]
+    in
+    let bs = (p_guard_uvar orig).ctx_uvar_binders @ scope in
+    let gamma = List.rev (List.map (fun b -> Binding_var (fst b)) scope) @ (p_guard_uvar orig).ctx_uvar_gamma in
     let ctx_uvar, lg, wl =
         new_uvar ("mk_problem: logical guard for " ^ reason)
                  wl
                  Range.dummyRange
-                 env.gamma
-                 (Env.all_binders env)
+                 gamma
+                 bs
                  U.ktype0
                  Allow_untyped
     in
@@ -436,7 +439,7 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
              rhs=rhs;
              element=elt;
              logical_guard=lg;
-             logical_guard_uvar=([], ctx_uvar);
+             logical_guard_uvar=ctx_uvar;
              reason=reason::p_reason orig;
              loc=p_loc orig;
              rank=None;
@@ -457,14 +460,12 @@ let mk_c_problem wl scope orig lhs rel rhs elt reason =
   CProb p, wl
 
 let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
-  let bs, lg_ty, elt =
+  let lg_ty =
     match subject with
-    | None -> [], U.ktype0, None
+    | None -> U.ktype0
     | Some x ->
       let bs = [S.mk_binder x] in
-      bs,
-      U.arrow bs (S.mk_Total U.ktype0),
-      Some (S.bv_to_name x)
+      U.arrow bs (S.mk_Total U.ktype0)
   in
   let ctx_uvar, lg, wl =
       new_uvar ("new_problem: logical guard for " ^ reason)
@@ -476,9 +477,9 @@ let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
                Allow_untyped
   in
   let lg =
-    match elt with
+    match subject with
     | None -> lg
-    | Some x -> S.mk_Tm_app lg [S.as_arg x] None loc
+    | Some x -> S.mk_Tm_app lg [S.as_arg <| S.bv_to_name x] None loc
   in
   let prob =
    {
@@ -486,9 +487,9 @@ let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
     lhs=lhs;
     relation=rel;
     rhs=rhs;
-    element=elt;
+    element=subject;
     logical_guard=lg;
-    logical_guard_uvar=(bs, ctx_uvar);
+    logical_guard_uvar=ctx_uvar;
     reason=[reason];
     loc=loc;
     rank=None;
@@ -516,7 +517,7 @@ let guard_on_element wl problem x phi =
         | None ->
           let u = wl.tcenv.universe_of wl.tcenv x.sort in
           U.mk_forall u x phi
-        | Some e -> Subst.subst [NT(x,e)] phi
+        | Some e -> Subst.subst [NT(x,S.bv_to_name e)] phi
 let explain env d s =
     if Env.debug env <| Options.Other "ExplainRel"
     ||  Env.debug env <| Options.Other "Rel"
@@ -771,7 +772,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
                             (List.map fst <| p_scope prob) phi;
         U.set_uvar uv.ctx_uvar_head phi
     in
-    let xs, uv = p_guard_uvar prob in
+    let uv = p_guard_uvar prob in
     let fail () =
         failwith (BU.format2 "Impossible: this instance %s has already been assigned a solution\n%s\n"
                               (Print.ctx_uvar_to_string uv)
@@ -1384,7 +1385,7 @@ let guard_of_prob (env:Env.env) (wl:worklist) (problem:tprob) (t1 : term) (t2 : 
     let has_type_guard t1 t2 =
         match problem.element with
         | Some t ->
-            U.mk_has_type t1 t t2
+            U.mk_has_type t1 (S.bv_to_name t) t2
         | None ->
             let x = S.new_bv None t1 in
             let u_x = env.universe_of env t1 in
@@ -1883,7 +1884,10 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
               let y = S.new_bv (Some (S.range_of_bv x)) u_x in
               aux (bs@[y, imp]) (bs_terms@[S.bv_to_name y, imp]) formals wl
          in
-         aux [] [] formals wl
+         let _, occurs_ok, msg = occurs_check u_lhs arrow in
+         if not occurs_ok
+         then giveup_or_defer env orig wl ("occurs-check failed: " ^ (Option.get msg))
+         else aux [] [] formals wl
 
 and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
                   (rhs:worklist -> binders -> Env.env -> list<subst_elt> -> (prob * worklist)) : solution =
@@ -2877,7 +2881,11 @@ let with_guard env prob dopt =
     match dopt with
     | None -> None
     | Some (deferred, implicits) ->
-      Some <| simplify_guard env ({guard_f=(p_guard prob |> NonTrivial); deferred=deferred; univ_ineqs=([], []); implicits=implicits})
+      Some <| simplify_guard env
+                ({guard_f=(p_guard prob |> NonTrivial);
+                  deferred=deferred;
+                  univ_ineqs=([], []);
+                  implicits=implicits})
 
 let with_guard_no_simp env prob dopt = match dopt with
     | None -> None

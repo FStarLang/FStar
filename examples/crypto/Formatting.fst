@@ -50,7 +50,7 @@ let lemma_eq_intro #a s1 s2 = ()
 
 (* ----- from strings to bytestring and back *)
 
-logic type uInt16 (i:int) = (0 <= i /\ i < 65536)
+type uInt16 (i:int) = (0 <= i /\ i < 65536)
 type uint16 = i:int{uInt16 i}
 
 (*val utf8:

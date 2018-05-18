@@ -53,7 +53,7 @@ let hd_int_pure l = match l with
 val square_is_nat: x:int -> Tot nat
 let square_is_nat x = op_Multiply x x
 
-(* logic val infer_nat: x:int -> Tot nat *)
+(* val infer_nat: x:int -> Tot nat *)
 let infer_nat x = if x < 0 then -x else x
 
 val check_nat: x:int -> Tot nat
