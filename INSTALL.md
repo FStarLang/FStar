@@ -325,7 +325,7 @@ This will install both OCaml and OPAM.
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process
   ```
   Some of the examples also require the `sqlite3` opam package, which depends
   on SQLite itself that you can install with `opam depext sqlite3` (at least on Linux)
