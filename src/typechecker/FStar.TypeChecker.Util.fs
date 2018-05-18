@@ -1073,7 +1073,10 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lident * list<cflags> * (
 let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
   //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_to_string c) (Print.comp_to_string c');
   match Rel.sub_comp env c c' with
-    | None -> raise_error (Err.computed_computation_type_does_not_match_annotation env e c c') (Env.get_range env)
+    | None ->
+        if env.use_eq
+        then raise_error (Err.computed_computation_type_does_not_match_annotation_eq env e c c') (Env.get_range env)
+        else raise_error (Err.computed_computation_type_does_not_match_annotation env e c c') (Env.get_range env)
     | Some g -> e, c', g
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =

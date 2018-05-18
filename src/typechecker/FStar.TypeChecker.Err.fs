@@ -64,6 +64,16 @@ let err_msg_type_strings env t1 t2 :(string * string) =
     )
   else s1, s2
 
+let err_msg_comp_strings env c1 c2 :(string * string) =
+  let s1 = N.comp_to_string env c1 in
+  let s2 = N.comp_to_string env c2 in
+  if s1 = s2 then
+    Options.with_saved_options (fun _ ->
+      ignore (Options.set_options Options.Set "--print_full_names --print_universes --print_effect_args");
+      N.comp_to_string env c1, N.comp_to_string env c2
+    )
+  else s1, s2
+
 (* Error messages for labels in VCs *)
 let exhaustiveness_check = "Patterns are incomplete"
 let subtyping_failed : env -> typ -> typ -> unit -> string =
@@ -155,6 +165,12 @@ let computed_computation_type_does_not_match_annotation env e c c' =
   (Errors.Fatal_ComputedTypeNotMatchAnnotation, (format4
     "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
       s1 f1 s2 f2))
+
+let computed_computation_type_does_not_match_annotation_eq env e c c' =
+  let s1, s2 = err_msg_comp_strings env c c' in
+  (Errors.Fatal_ComputedTypeNotMatchAnnotation, (format2
+    "Computed type \"%s\" does not match annotated type \"%s\", and no subtyping was allowed"
+      s1 s2))
 
 let unexpected_non_trivial_precondition_on_term env f =
  (Errors.Fatal_UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))
