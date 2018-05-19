@@ -498,7 +498,9 @@ let loc_disjoint_addresses #al #c r1 r2 n1 n2 =
   // FIXME: WHY WHY WHY this assert?
   assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_addresses #_ #c r1 n1))) (Ghost.reveal (Loc?.aux (loc_addresses #_ #c r2 n2))))
 
-let loc_disjoint_aloc_addresses #al #c #r' #a' p r n = ()
+let loc_disjoint_aloc_addresses_intro #al #c #r' #a' p r n = ()
+
+let loc_disjoint_aloc_addresses_elim #al #c #r' #a' p r n = ()
 
 let loc_disjoint_regions #al #c rs1 rs2 =
   // FIXME: WHY WHY WHY this assert?
