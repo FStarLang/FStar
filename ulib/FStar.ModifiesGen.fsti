@@ -330,7 +330,7 @@ val loc_disjoint_includes
   (requires (loc_includes p1 p1' /\ loc_includes p2 p2' /\ loc_disjoint p1 p2))
   (ensures (loc_disjoint p1' p2'))
 
-val loc_disjoint_aloc
+val loc_disjoint_aloc_intro
   (#aloc: aloc_t) (#c: cls aloc)
   (#r1: HS.rid)
   (#a1: nat)
@@ -341,6 +341,18 @@ val loc_disjoint_aloc
 : Lemma
   (requires ((r1 == r2 /\ a1 == a2) ==> c.aloc_disjoint b1 b2))
   (ensures (loc_disjoint (loc_of_aloc b1) (loc_of_aloc #_ #c b2)))
+
+val loc_disjoint_aloc_elim
+  (#aloc: aloc_t) (#c: cls aloc)
+  (#r1: HS.rid)
+  (#a1: nat)
+  (#r2: HS.rid)
+  (#a2: nat)
+  (b1: aloc r1 a1)
+  (b2: aloc r2 a2)
+: Lemma
+  (requires (loc_disjoint (loc_of_aloc b1) (loc_of_aloc #_ #c b2)))
+  (ensures ((r1 == r2 /\ a1 == a2) ==> c.aloc_disjoint b1 b2))
 
 val loc_disjoint_addresses
   (#aloc: aloc_t) (#c: cls aloc)
@@ -376,6 +388,33 @@ val modifies
   (s: loc c)
   (h1 h2: HS.mem)
 : GTot Type0
+
+val modifies_intro
+  (#al: aloc_t) (#c: cls al) (l: loc c) (h h' : HS.mem)
+  (regions: (
+    (r: HS.rid) ->
+    Lemma
+    (requires (HS.live_region h r))
+    (ensures (HS.live_region h' r))
+  ))
+  (mrefs: (
+    (t: Type0) ->
+    (pre: Preorder.preorder t) ->
+    (b: HS.mreference t pre) ->
+    Lemma
+    (requires (loc_disjoint (loc_mreference b) l /\ HS.contains h b))
+    (ensures (HS.contains h' b /\ HS.sel h' b == HS.sel h b))
+  ))
+  (alocs: (
+    (r: HS.rid) ->
+    (a: nat) ->
+    (x: al r a) ->
+    Lemma
+    (requires (loc_disjoint (loc_of_aloc x) l))
+    (ensures (c.aloc_preserved x h h'))
+  ))
+: Lemma
+  (modifies l h h')
 
 val modifies_live_region
   (#aloc: aloc_t) (#c: cls aloc)
