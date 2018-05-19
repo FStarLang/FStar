@@ -771,3 +771,32 @@ val modifies_only_live_addresses
     (forall x . Set.mem x a ==> h `does_not_contain_addr` (r, x))
   ))
   (ensures (modifies l h h'))
+
+
+/// Type class instantiation for compositionality with other kinds of memory locations than regions, references or buffers (just in case).
+/// No usage pattern has been found yet.
+
+module MG = FStar.ModifiesGen
+
+val cloc_cls: MG.cls B.abuffer
+
+val cloc_of_loc (l: loc) : Tot (MG.loc cloc_cls)
+
+val loc_of_cloc (l: MG.loc cloc_cls) : Tot loc
+
+val loc_of_cloc_of_loc (l: loc) : Lemma
+  (loc_of_cloc (cloc_of_loc l) == l)
+  [SMTPat (loc_of_cloc (cloc_of_loc l))]
+
+val cloc_of_loc_of_cloc (l: MG.loc cloc_cls) : Lemma
+  (cloc_of_loc (loc_of_cloc l) == l)
+  [SMTPat (cloc_of_loc (loc_of_cloc l))]
+
+val loc_includes_to_cloc (l1 l2: loc) : Lemma
+  (loc_includes l1 l2 <==> MG.loc_includes (cloc_of_loc l1) (cloc_of_loc l2))
+
+val loc_disjoint_to_cloc (l1 l2: loc) : Lemma
+  (loc_disjoint l1 l2 <==> MG.loc_disjoint (cloc_of_loc l1) (cloc_of_loc l2))
+
+val modifies_to_cloc (l: loc) (h1 h2: HS.mem) : Lemma
+  (modifies l h1 h2 <==> MG.modifies (cloc_of_loc l) h1 h2)
