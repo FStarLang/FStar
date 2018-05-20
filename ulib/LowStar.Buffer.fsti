@@ -598,7 +598,7 @@ val sub (#a: Type) (b: buffer a) (i: U32.t) (len: U32.t) : HST.Stack (buffer a)
 /// length cannot be computed outside of proofs.
 
 val offset (#a: Type) (b: buffer a) (i: U32.t) : HST.Stack (buffer a)
-  (requires (fun h -> U32.v i < length b /\ live h b))
+  (requires (fun h -> U32.v i <= length b /\ live h b))
   (ensures (fun h y h' -> h == h' /\ y == gsub b i (U32.sub (len b) i)))
 
 
