@@ -1530,3 +1530,99 @@ let modifies_union_loc_of_loc_intro
 let modifies_union_loc_of_loc #al c b l h1 h2 =
   Classical.move_requires (modifies_union_loc_of_loc_elim c b l h1) h2;
   Classical.move_requires (modifies_union_loc_of_loc_intro c b l h1) h2
+
+module U = FStar.Universe
+
+let raise_aloc al r n = U.raise_t (al r n)
+
+let raise_cls #al c = Cls #(raise_aloc u#x u#y al)
+  (fun #r #a x1 x2 -> c.aloc_includes (U.downgrade_val x1) (U.downgrade_val x2))
+  (fun #r #a x -> c.aloc_includes_refl (U.downgrade_val x))
+  (fun #r #a x1 x2 x3 -> c.aloc_includes_trans (U.downgrade_val x1) (U.downgrade_val x2) (U.downgrade_val x3))
+  (fun #r #a x1 x2 -> c.aloc_disjoint (U.downgrade_val x1) (U.downgrade_val x2))
+  (fun #r #a x1 x2 -> c.aloc_disjoint_sym (U.downgrade_val x1) (U.downgrade_val x2))
+  (fun #r #a larger1 larger2 smaller1 smaller2 -> c.aloc_disjoint_includes (U.downgrade_val larger1) (U.downgrade_val larger2) (U.downgrade_val smaller1) (U.downgrade_val smaller2))
+  (fun #r #a x h1 h2 -> c.aloc_preserved (U.downgrade_val x) h1 h2)
+  (fun #r #a x h -> c.aloc_preserved_refl (U.downgrade_val x) h)
+  (fun #r #a x h1 h2 h3 -> c.aloc_preserved_trans (U.downgrade_val x) h1 h2 h3)
+  (fun #r #a b h1 h2 f -> c.same_mreference_aloc_preserved (U.downgrade_val b) h1 h2 f)
+  (fun #r #a b h1 h2 -> c.aloc_disjoint_self_preserved (U.downgrade_val b) h1 h2)
+
+let downgrade_aloc (#al: aloc_t u#a) (#c: cls al) (a: aloc (raise_cls u#a u#b c)) : Tot (aloc c) =
+  let ALoc region addr x = a in
+  ALoc region addr (U.downgrade_val x)
+
+let upgrade_aloc (#al: aloc_t u#a) (#c: cls al) (a: aloc c) : Tot (aloc (raise_cls u#a u#b c)) =
+  let ALoc region addr x = a in
+  ALoc region addr (U.raise_val x)
+
+let downgrade_aloc_upgrade_aloc (#al: aloc_t u#a) (#c: cls al) (a: aloc c) : Lemma
+  (downgrade_aloc (upgrade_aloc u#a u#b a) == a)
+  [SMTPat (downgrade_aloc (upgrade_aloc u#a u#b a))]
+= ()
+
+let upgrade_aloc_downgrade_aloc (#al: aloc_t u#a) (#c: cls al) (a: aloc (raise_cls u#a u#b c)) : Lemma
+  (upgrade_aloc (downgrade_aloc a) == a)
+  [SMTPat (upgrade_aloc u#a u#b (downgrade_aloc a))]
+= ()
+
+let raise_loc_aux_pred
+  (#al: aloc_t u#a)
+  (c: cls al)
+  (aux: Ghost.erased (GSet.set (aloc c)))
+  (a: aloc (raise_cls u#a u#b c))
+: GTot bool
+= GSet.mem (downgrade_aloc a) (Ghost.reveal aux)
+
+let raise_loc #al #c l =
+  let (Loc regions region_liveness_tags addrs aux) = l in
+  Loc
+    regions
+    region_liveness_tags
+    addrs
+    (Ghost.hide (GSet.comprehend (raise_loc_aux_pred c aux)))
+
+let raise_loc_none #al #c =
+  assert (raise_loc u#x u#y (loc_none #_ #c) `loc_equal` loc_none)
+
+let raise_loc_union #al #c l1 l2 =
+  assert (raise_loc u#x u#y (loc_union l1 l2) `loc_equal` loc_union (raise_loc l1) (raise_loc l2))
+
+let raise_loc_addresses #al #c r a =
+  assert (raise_loc u#x u#y (loc_addresses #_ #c r a) `loc_equal` loc_addresses r a)
+
+let raise_loc_regions #al #c r =
+  assert (raise_loc u#x u#y (loc_regions #_ #c r) `loc_equal` loc_regions r)
+
+let raise_loc_includes #al #c l1 l2 =
+  let l1' = raise_loc l1 in
+  let l2' = raise_loc l2 in
+  assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l1')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l1)));
+  assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l2')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l2)));
+  assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l1)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l1')));
+  assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l2)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l2')));
+  assert (loc_aux_includes (Ghost.reveal (Loc?.aux l1')) (Ghost.reveal (Loc?.aux l2')) <==> loc_aux_includes (Ghost.reveal (Loc?.aux l1)) (Ghost.reveal (Loc?.aux l2)))
+
+let raise_loc_disjoint #al #c l1 l2 =
+  let l1' = raise_loc l1 in
+  let l2' = raise_loc l2 in
+  assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l1')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l1)));
+  assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l2')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l2)));
+  assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l1)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l1')));
+  assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l2)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l2')));
+  assert (forall r . addrs_of_loc l1' r `GSet.equal` addrs_of_loc l1 r);
+  assert (forall r . addrs_of_loc l2' r `GSet.equal` addrs_of_loc l2 r);
+  assert (forall (x1 x2: aloc (raise_cls u#x u#y c)) . aloc_disjoint x1 x2 <==> aloc_disjoint (downgrade_aloc x1) (downgrade_aloc x2));
+  assert (forall (x1 x2: aloc (c)) . aloc_disjoint x1 x2 <==> aloc_disjoint (upgrade_aloc u#x u#y x1) (upgrade_aloc x2))
+
+let modifies_raise_loc #al #c l h1 h2 =
+  let l' = raise_loc l in
+  assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l)));
+  assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l')));
+  assert (forall r . addrs_of_loc l' r `GSet.equal` addrs_of_loc l r);
+  assert (forall (x1 x2: aloc (raise_cls u#x u#y c)) . aloc_disjoint x1 x2 <==> aloc_disjoint (downgrade_aloc x1) (downgrade_aloc x2));
+  assert (modifies_preserves_alocs l h1 h2 ==> modifies_preserves_alocs l' h1 h2);
+  assert (forall (r: HS.rid) (a: nat) (b: al r a) .
+    loc_aux_disjoint (Ghost.reveal (Loc?.aux l)) (GSet.singleton (ALoc r a b)) ==>
+    loc_aux_disjoint (Ghost.reveal (Loc?.aux l')) (GSet.singleton (ALoc r a (U.raise_val b))));
+  assert (modifies_preserves_alocs l' h1 h2 ==> modifies_preserves_alocs l h1 h2)

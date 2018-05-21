@@ -732,3 +732,33 @@ val modifies_union_loc_of_loc
   (h1 h2: HS.mem)
 : Lemma
   (modifies #_ #(cls_union c) (union_loc_of_loc c b l) h1 h2 <==> modifies #_ #(c b) l h1 h2)
+
+
+/// Universes
+
+val raise_aloc (al: aloc_t u#x) : Tot (aloc_t u#(max x (y + 1)))
+
+val raise_cls (#al: aloc_t u#x) (c: cls al) : Tot (cls (raise_aloc u#x u#y al))
+
+val raise_loc (#al: aloc_t u#x) (#c: cls al) (l: loc c) : Tot (loc (raise_cls u#x u#y c))
+
+val raise_loc_none (#al: aloc_t u#x) (#c: cls al) : Lemma
+  (raise_loc u#x u#y (loc_none #_ #c) == loc_none)
+
+val raise_loc_union (#al: aloc_t u#x) (#c: cls al) (l1 l2: loc c) : Lemma
+  (raise_loc u#x u#y (loc_union l1 l2) == loc_union (raise_loc l1) (raise_loc l2))
+
+val raise_loc_addresses (#al: aloc_t u#x) (#c: cls al) (r: HS.rid) (a: Set.set nat) : Lemma
+  (raise_loc u#x u#y (loc_addresses #_ #c r a) == loc_addresses r a)
+
+val raise_loc_regions (#al: aloc_t u#x) (#c: cls al) (r: Set.set HS.rid) : Lemma
+  (raise_loc u#x u#y (loc_regions #_ #c r) == loc_regions r)
+
+val raise_loc_includes (#al: aloc_t u#x) (#c: cls al) (l1 l2: loc c) : Lemma
+  (loc_includes (raise_loc u#x u#y l1) (raise_loc l2) <==> loc_includes l1 l2)
+
+val raise_loc_disjoint (#al: aloc_t u#x) (#c: cls al) (l1 l2: loc c) : Lemma
+  (loc_disjoint (raise_loc u#x u#y l1) (raise_loc l2) <==> loc_disjoint l1 l2)
+
+val modifies_raise_loc (#al: aloc_t u#x) (#c: cls al) (l: loc c) (h1 h2: HS.mem) : Lemma
+  (modifies (raise_loc u#x u#y l) h1 h2 <==> modifies l h1 h2)
