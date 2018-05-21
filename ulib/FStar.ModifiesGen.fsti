@@ -9,10 +9,10 @@ module HST = FStar.HyperStack.ST
    extraction. So it must be a parameter of the class instead. *)
 
 inline_for_extraction
-type aloc_t = HS.rid -> nat -> Tot Type0
+type aloc_t = HS.rid -> nat -> Tot Type
 
 noeq
-type cls (aloc: aloc_t) : Type u#1 = | Cls:
+type cls (aloc: aloc_t) : Type = | Cls:
   (aloc_includes: (
     (#r: HS.rid) ->
     (#a: nat) ->
@@ -121,7 +121,7 @@ type cls (aloc: aloc_t) : Type u#1 = | Cls:
   )) ->
   cls aloc
 
-val loc (#aloc: aloc_t) (c: cls aloc) : Tot (Type u#0)
+val loc (#aloc: aloc_t u#x) (c: cls aloc) : Tot (Type u#x)
 
 val loc_none (#aloc: aloc_t) (#c: cls aloc): Tot (loc c)
 
@@ -677,7 +677,7 @@ val modifies_only_live_addresses
 
 (** * Compositionality *)
 
-val aloc_union: (bool -> Tot aloc_t) -> Tot aloc_t
+val aloc_union: (bool -> Tot (aloc_t u#x)) -> Tot (aloc_t u#x)
 
 val cls_union (#a: (bool -> Tot aloc_t)) (c: ((b: bool) -> Tot (cls (a b)))) : Tot (cls (aloc_union a))
 

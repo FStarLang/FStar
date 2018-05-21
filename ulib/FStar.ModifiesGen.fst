@@ -4,7 +4,7 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
 noeq
-type aloc (#al: aloc_t) (c: cls al) : Type0 = | ALoc:
+type aloc (#al: aloc_t) (c: cls al) = | ALoc:
   (region: HS.rid) ->
   (addr: nat) ->
   (loc: al region addr) ->
@@ -14,7 +14,7 @@ let aloc_domain (#al: aloc_t) (c: cls al) (regions: Ghost.erased (Set.set HS.rid
   GSet.comprehend (fun a -> Set.mem a.region (Ghost.reveal regions) && Set.mem a.addr (addrs a.region))
 
 noeq
-type loc' (#al: aloc_t) (c: cls al) : Type =
+type loc' (#al: aloc_t u#x) (c: cls al) : Type u#x =
   | Loc:
       (regions: Ghost.erased (Set.set HS.rid)) ->
       (region_liveness_tags: Ghost.erased (Set.set HS.rid) { Ghost.reveal region_liveness_tags `Set.subset` Ghost.reveal regions } ) ->
@@ -1113,13 +1113,13 @@ let modifies_only_live_addresses #al #c r a l h h' =
 
 noeq
 type cls_union_aloc
-  (al: (bool -> HS.rid -> nat -> Tot Type0))
-  (r: HS.rid) (n: nat) : Type0
+  (al: (bool -> HS.rid -> nat -> Tot (Type u#x)))
+  (r: HS.rid) (n: nat) : Type u#x
 = | ALOC_FALSE of (al false) r n
   | ALOC_TRUE  of (al true) r n
 
 let bool_of_cls_union_aloc
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (#r: HS.rid) (#n: nat)
   (l: cls_union_aloc al r n)
 : Tot bool =
@@ -1128,7 +1128,7 @@ let bool_of_cls_union_aloc
   | ALOC_TRUE _ -> true
 
 let aloc_of_cls_union_aloc
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (#r: HS.rid) (#n: nat)
   (l: cls_union_aloc al r n)
 : Tot ((al (bool_of_cls_union_aloc l)) r n)
@@ -1137,7 +1137,7 @@ let aloc_of_cls_union_aloc
   | ALOC_TRUE x -> x
 
 let make_cls_union_aloc
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (b: bool)
   (#r: HS.rid)
   (#n: nat)
@@ -1148,7 +1148,7 @@ let make_cls_union_aloc
   else ALOC_FALSE l
 
 let cls_union_aloc_includes
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (#r: HS.rid)
   (#a: nat)
@@ -1160,7 +1160,7 @@ let cls_union_aloc_includes
     (aloc_of_cls_union_aloc smaller)
 
 let cls_union_aloc_disjoint
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (#r: HS.rid)
   (#a: nat)
@@ -1172,7 +1172,7 @@ let cls_union_aloc_disjoint
     (aloc_of_cls_union_aloc smaller)
 
 let cls_union_aloc_preserved
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (#r: HS.rid)
   (#a: nat)
@@ -1249,7 +1249,7 @@ let cls_union #al c = Cls
   )
 
 let union_aux_of_aux_left_pred
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (b: bool)
   (s: GSet.set (aloc (c b)))
@@ -1260,7 +1260,7 @@ let union_aux_of_aux_left_pred
   GSet.mem (ALoc region addr (aloc_of_cls_union_aloc #al #region #addr loc)) s
 
 let union_aux_of_aux_left
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (b: bool)
   (s: GSet.set (aloc (c b)))
@@ -1283,7 +1283,7 @@ let union_loc_of_loc #al c b l =
     (Ghost.hide aux')
 
 let mem_union_aux_of_aux_left_intro
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (b: bool)
   (x: aloc (c b))
@@ -1294,7 +1294,7 @@ let mem_union_aux_of_aux_left_intro
 = ()
 
 let mem_union_aux_of_aux_left_elim
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (b: bool)
   (x: aloc (cls_union c))
@@ -1305,7 +1305,7 @@ let mem_union_aux_of_aux_left_elim
 = ()
 
 let addrs_of_loc_union_loc_of_loc
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (b: bool)
   (l: loc (c b))
@@ -1328,7 +1328,7 @@ let union_loc_of_loc_regions #al c b r =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_regions #_ #(c b) r)) (loc_regions #_ #(cls_union c) r))
 
 let union_loc_of_loc_includes_intro
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (b: bool)
   (larger smaller: loc (c b))
@@ -1345,7 +1345,7 @@ let union_loc_of_loc_includes_intro
 #set-options "--z3rlimit 16"
 
 let union_loc_of_loc_includes_elim
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (b: bool)
   (larger smaller: loc (c b))
@@ -1388,7 +1388,7 @@ let union_loc_of_loc_includes #al c b s1 s2 =
 #set-options "--z3rlimit 16"
 
 let union_loc_of_loc_disjoint_intro
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (b: bool)
   (larger smaller: loc (c b))
@@ -1425,7 +1425,7 @@ let union_loc_of_loc_disjoint_intro
 #reset-options
 
 let union_loc_of_loc_disjoint_elim
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (b: bool)
   (larger smaller: loc (c b))
@@ -1447,7 +1447,7 @@ let union_loc_of_loc_disjoint #al c b s1 s2 =
   Classical.move_requires (union_loc_of_loc_disjoint_intro c b s1) s2
 
 let modifies_union_loc_of_loc_elim
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (b: bool)
   (l: loc (c b))
@@ -1482,7 +1482,7 @@ let modifies_union_loc_of_loc_elim
 #set-options "--z3rlimit 16"
 
 let modifies_union_loc_of_loc_intro
-  (#al: (bool -> HS.rid -> nat -> Tot Type0))
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
   (b: bool)
   (l: loc (c b))
