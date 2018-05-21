@@ -1557,9 +1557,26 @@ let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
         add_goals [bnorm_goal g]
     | _ -> fail "not a uvar")
 
-let unify (t1 : term) (t2 : term) : tac<bool> =
+let tac_and (t1 : tac<bool>) (t2 : tac<bool>) : tac<bool> =
+    let comp = bind t1 (fun b ->
+               bind (if b then t2 else ret false) (fun b' ->
+               if b'
+               then ret b'
+               else fail ""))
+    in
+    bind (trytac comp) (function
+    | Some true -> ret true
+    | Some false -> failwith "impossible"
+    | None -> ret false)
+
+
+let unify_env (e:env) (t1 : term) (t2 : term) : tac<bool> = wrap_err "unify_env" <|
     bind get (fun ps ->
-    do_unify ps.main_context t1 t2)
+    bind (__tc e t1) (fun (t1, ty1, g1) ->
+    bind (__tc e t2) (fun (t2, ty2, g2) ->
+    bind (proc_guard "unify_env g1" e g1) (fun () ->
+    bind (proc_guard "unify_env g2" e g2) (fun () ->
+    tac_and (do_unify e ty1 ty2) (do_unify e t1 t2))))))
 
 let launch_process (prog : string) (args : list<string>) (input : string) : tac<string> =
     // The `bind idtac` thunks the tactic
