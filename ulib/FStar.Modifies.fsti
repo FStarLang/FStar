@@ -602,7 +602,7 @@ val modifies_only_live_addresses
 
 module MG = FStar.ModifiesGen
 
-val cloc_aloc : HS.rid -> nat -> Tot Type0
+val cloc_aloc : HS.rid -> nat -> Tot (Type u#1)
 
 val cloc_cls: MG.cls cloc_aloc
 
