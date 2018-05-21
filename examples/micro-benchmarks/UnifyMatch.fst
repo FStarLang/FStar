@@ -53,13 +53,13 @@ let tests () : Tac (list (term * term * bool)) = [
    norm_term [delta] (`(ff (x.f 2))),
    true);
 
-  // (`(y.f 2),
-  //  norm_term [delta] (`(x.f 2)),
-  //  false);
+  (`(y.f 2),
+   norm_term [delta] (`(x.f 2)),
+   false);
 
-  // (`(ff (y.f 2)),
-  //  norm_term [delta] (`(ff (x.f 2))),
-  //  false);
+  (`(ff (y.f 2)),
+   norm_term [delta] (`(ff (x.f 2))),
+   false);
 
   (* (`(nat2unary 10), *)
   (*  `(S (nat2unary 9)), *)
