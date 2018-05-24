@@ -33,7 +33,7 @@ type guard_policy =
 type proofstate = {
     main_context : env;          //the shared top-level context for all goals
     main_goal    : goal;         //this is read only; it helps keep track of the goal we started working on initially
-    all_implicits: implicits ;   //all the implicits currently open, partially resolved (unclear why we really need this)
+    all_implicits: implicits ;   //all the implicits currently open, partially resolved
     goals        : list<goal>;   //all the goals remaining to be solved
     smt_goals    : list<goal>;   //goals that have been deferred to SMT
     depth        : int;          //depth for tracing and debugging

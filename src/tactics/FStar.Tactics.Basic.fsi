@@ -101,7 +101,7 @@ val unquote : typ -> term -> tac<term>
 val uvar_env : env -> option<typ> -> tac<term>
 val unshelve : term -> tac<unit>
 
-val unify : term -> term -> tac<bool>
+val unify_env : env -> term -> term -> tac<bool>
 val change : typ -> tac<unit>
 
 val goal_of_goal_ty : env -> typ -> goal * guard_t

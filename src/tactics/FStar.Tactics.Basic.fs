@@ -536,7 +536,13 @@ let with_policy pol (t : tac<'a>) : tac<'a> =
     bind (set_guard_policy old_pol) (fun () ->
     ret r))))
 
-let proc_guard (reason:string) (e : env) (g : guard_t) opts : tac<unit> =
+let getopts : tac<FStar.Options.optionstate> =
+    bind (trytac (cur_goal ())) (function
+    | Some g -> ret g.opts
+    | None -> ret (FStar.Options.peek ()))
+
+let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
+    bind getopts (fun opts ->
     match (Rel.simplify_guard e g).guard_f with
     | TcComm.Trivial -> ret ()
     | TcComm.NonTrivial f ->
@@ -562,12 +568,12 @@ let proc_guard (reason:string) (e : env) (g : guard_t) opts : tac<unit> =
             else ret ()
         with
         | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
-               fail1 "Forcing the guard failed (%s)" reason))
+               fail1 "Forcing the guard failed (%s)" reason)))
 
 let tc (t : term) : tac<typ> = wrap_err "tc" <|
     bind (cur_goal ()) (fun goal ->
     bind (__tc (goal_env goal) t) (fun (t, typ, guard) ->
-    bind (proc_guard "tc" (goal_env goal) guard goal.opts) (fun _ ->
+    bind (proc_guard "tc" (goal_env goal) guard) (fun _ ->
     ret typ
     )))
 
@@ -772,7 +778,7 @@ let __exact_now set_expected_typ (t:term) : tac<unit> =
     mlog (fun () -> BU.print2 "__exact_now: got type %s\n__exact_now: and guard %s\n"
                                                      (Print.term_to_string typ)
                                                      (Rel.guard_to_string (goal_env goal) guard)) (fun _ ->
-    bind (proc_guard "__exact typing" (goal_env goal) guard goal.opts) (fun _ ->
+    bind (proc_guard "__exact typing" (goal_env goal) guard) (fun _ ->
     mlog (fun () -> BU.print2 "__exact_now: unifying %s and %s\n" (Print.term_to_string typ)
                                                                   (Print.term_to_string (goal_type goal))) (fun _ ->
     bind (do_unify (goal_env goal) typ (goal_type goal)) (fun b -> if b
@@ -877,7 +883,7 @@ let apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
     bind (__tc (goal_env goal) tm) (fun (tm, typ, guard) ->
     // Focus helps keep the goal order
     let typ = bnorm (goal_env goal) typ in
-    try_unif (focus (bind (__apply uopt tm typ) (fun _ -> proc_guard "apply guard" (goal_env goal) guard goal.opts)))
+    try_unif (focus (bind (__apply uopt tm typ) (fun _ -> proc_guard "apply guard" (goal_env goal) guard)))
              (fail3 "Cannot instantiate %s (of type %s) to match goal (%s)"
                             (tts (goal_env goal) tm)
                             (tts (goal_env goal) typ)
@@ -938,7 +944,6 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                             (tts (goal_env goal) (U.mk_squash U_zero post))
                             (tts (goal_env goal) (goal_type goal))
     else
-       //NS: 01/24 ... looks redundant
         bind (add_implicits implicits.implicits) (fun _ ->
         // We solve with (), we don't care about the witness if applying a lemma
         bind (solve' goal U.exp_unit) (fun _ ->
@@ -987,7 +992,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
              | x::xs -> if f x xs then x::(filter' f xs) else filter' f xs
         in
         let sub_goals = filter' (fun g goals -> not (checkone (goal_witness g) goals)) sub_goals in
-        bind (proc_guard "apply_lemma guard" (goal_env goal) guard goal.opts) (fun _ ->
+        bind (proc_guard "apply_lemma guard" (goal_env goal) guard) (fun _ ->
         bind (if not (istrivial (goal_env goal) (U.mk_squash U_zero pre)) //lemma preconditions are in U_zero
               then add_irrelevant_goal "apply_lemma precondition" (goal_env goal) pre goal.opts
               else ret ()) (fun _ ->
@@ -1518,7 +1523,7 @@ let unquote (ty : term) (tm : term) : tac<term> = wrap_err "unquote" <|
     bind (__tc env tm) (fun (tm, typ, guard) ->
     mlog (fun () -> BU.print1 "unquote: tm' = %s\n" (Print.term_to_string tm)) (fun _ ->
     mlog (fun () -> BU.print1 "unquote: typ = %s\n" (Print.term_to_string typ)) (fun _ ->
-    bind (proc_guard "unquote" env guard goal.opts) (fun () ->
+    bind (proc_guard "unquote" env guard) (fun () ->
     ret tm))))))
 
 let uvar_env (env : env) (ty : option<typ>) : tac<term> =
@@ -1552,15 +1557,32 @@ let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
         add_goals [bnorm_goal g]
     | _ -> fail "not a uvar")
 
-let unify (t1 : term) (t2 : term) : tac<bool> =
+let tac_and (t1 : tac<bool>) (t2 : tac<bool>) : tac<bool> =
+    let comp = bind t1 (fun b ->
+               bind (if b then t2 else ret false) (fun b' ->
+               if b'
+               then ret b'
+               else fail ""))
+    in
+    bind (trytac comp) (function
+    | Some true -> ret true
+    | Some false -> failwith "impossible"
+    | None -> ret false)
+
+
+let unify_env (e:env) (t1 : term) (t2 : term) : tac<bool> = wrap_err "unify_env" <|
     bind get (fun ps ->
-    do_unify ps.main_context t1 t2)
+    bind (__tc e t1) (fun (t1, ty1, g1) ->
+    bind (__tc e t2) (fun (t2, ty2, g2) ->
+    bind (proc_guard "unify_env g1" e g1) (fun () ->
+    bind (proc_guard "unify_env g2" e g2) (fun () ->
+    tac_and (do_unify e ty1 ty2) (do_unify e t1 t2))))))
 
 let launch_process (prog : string) (args : list<string>) (input : string) : tac<string> =
     // The `bind idtac` thunks the tactic
     bind idtac (fun () ->
     if Options.unsafe_tactic_exec () then
-        let s = BU.run_process "tactic_launch" prog args (Some input) in // FIXME
+        let s = BU.run_process "tactic_launch" prog args (Some input) in
         ret s
     else
         fail "launch_process: will not run anything unless --unsafe_tactic_exec is provided"
@@ -1576,7 +1598,7 @@ let change (ty : typ) : tac<unit> = wrap_err "change" <|
     mlog (fun () -> BU.print1 "change: ty = %s\n" (Print.term_to_string ty)) (fun _ ->
     bind (cur_goal ()) (fun g ->
     bind (__tc (goal_env g) ty) (fun (ty, _, guard) ->
-    bind (proc_guard "change" (goal_env g) guard g.opts) (fun () ->
+    bind (proc_guard "change" (goal_env g) guard) (fun () ->
     bind (do_unify (goal_env g) (goal_type g) ty) (fun bb ->
     if bb
     then replace_cur (goal_with_type g ty)
