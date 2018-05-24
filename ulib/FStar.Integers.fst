@@ -51,6 +51,18 @@ let int_t (s:signedness) (w:width) : Tot Type0 =
   | Signed, W64 -> FStar.Int64.t
   | Signed, W128 -> FStar.Int128.t
 
+(**
+ * We use abstract predicates for
+ *  nat_size, uint_size, int_size etc.
+ * Not to enforce any particular invariant
+ * but to ensure that we don't end up with needless
+ * discrepancies in sizedness predicates that may
+ * arise from the use of normalization.
+ * E.g., as we write (normalize (within_bounds ...)
+ * we prefer to always get things like (int_size x n)
+ * rather than getting in some places (FStar.Int.size x n)
+ * and in other places things like (min_int n < x && n < max_int n)
+ **)
 abstract
 let nat_size (x:int) : Type =
   x >= 0
