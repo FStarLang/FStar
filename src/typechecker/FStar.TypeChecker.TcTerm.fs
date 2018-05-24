@@ -862,9 +862,9 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
         if not (Options.integer_overloading())
         then t_int
         else begin
-            match Env.try_lookup_lid env FStar.Parser.Const.fstar_integers_int_lid with
-            | Some _ ->
-              S.tconst FStar.Parser.Const.fstar_integers_int_lid
+            match DsEnv.try_lookup_lid env.dsenv FStar.Parser.Const.fstar_integers_int_lid with
+            | Some (t, _) ->
+              t
             | None ->
               t_int
         end
