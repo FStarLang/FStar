@@ -18,6 +18,14 @@ type width =
 
 let fixed_width = w:width{w <> Winfinite}
 
+irreducible
+private
+let mark_for_norm = ()
+
+unfold
+let norm (#a:Type) (x:a) = norm [iota; delta_attr mark_for_norm] x
+
+[@mark_for_norm]
 let nat_of_width = function
   | W8   -> Some 8
   | W16  -> Some 16
@@ -28,10 +36,13 @@ let nat_of_width = function
   | W128 -> Some 128
   | Winfinite -> None
 
+[@mark_for_norm]
 let nat_of_fixed_width (w:fixed_width) =
   match nat_of_width w with
   | Some v -> v
 
+[@mark_for_norm]
+inline_for_extraction
 let int_t (s:signedness) (w:width) : Tot Type0 =
   match s, w with
   | Unsigned, Winfinite -> nat
@@ -51,51 +62,20 @@ let int_t (s:signedness) (w:width) : Tot Type0 =
   | Signed, W64 -> FStar.Int64.t
   | Signed, W128 -> FStar.Int128.t
 
-(**
- * We use abstract predicates for
- *  nat_size, uint_size, int_size etc.
- * Not to enforce any particular invariant
- * but to ensure that we don't end up with needless
- * discrepancies in sizedness predicates that may
- * arise from the use of normalization.
- * E.g., as we write (normalize (within_bounds ...)
- * we prefer to always get things like (int_size x n)
- * rather than getting in some places (FStar.Int.size x n)
- * and in other places things like (min_int n < x && n < max_int n)
- **)
-abstract
-let nat_size (x:int) : Type =
-  x >= 0
-let reveal_nat_size x
-  : Lemma (nat_size x <==> x >= 0)
-          [SMTPat (nat_size x)]
-  = ()
-
-abstract
-let uint_size (x:int) (n:nat) : Type =
-    FStar.UInt.size x n
-let reveal_uint_size x n
-  : Lemma (uint_size x n <==> FStar.UInt.size x n)
-          [SMTPat (uint_size x n)]
-  = ()
-
-abstract
-let int_size (x:int) (n:pos) : Type =
-    FStar.Int.size x n
-let reveal_int_size x n
-  : Lemma (int_size x n <==> FStar.Int.size x n)
-          [SMTPat (int_size x n)]
-  = ()
-
-let within_bounds (s:signedness) (w:width) (x:int) =
+[@mark_for_norm]
+let within_bounds' (s:signedness) (w:width) (x:int) =
   match s, nat_of_width w with
   | Signed,   None   -> True
-  | Unsigned, None   -> nat_size x
-  | Signed  , Some n -> int_size x n
-  | Unsigned, Some n -> uint_size x n
+  | Unsigned, None   -> b2t (x >= 0)
+  | Signed  , Some n -> FStar.Int.size x n
+  | Unsigned, Some n -> FStar.UInt.size x n
 
+unfold
+let within_bounds s w x = norm (within_bounds' s w x)
+
+[@mark_for_norm]
 let v (#s:signedness) (#w:width) (x:int_t s w)
-  : Tot (y:int_t Signed Winfinite{normalize (within_bounds s w y)})
+  : Tot (y:int_t Signed Winfinite{within_bounds s w y})
   = match s with
     | Unsigned ->
       (match w with
@@ -118,9 +98,10 @@ let v (#s:signedness) (#w:width) (x:int_t s w)
        | W64 -> FStar.Int64.v x
        | W128 -> FStar.Int128.v x)
 
+[@mark_for_norm]
 let u   (#s:signedness) (#w:width)
-        (x:int_t Signed Winfinite{normalize (within_bounds s w x)})
-  : Tot (y:int_t s w{normalize (v x == v y)})
+        (x:int_t Signed Winfinite{within_bounds s w x})
+  : Tot (y:int_t s w{norm (v x == v y)})
   = match s with
     | Unsigned ->
       (match w with
@@ -143,17 +124,19 @@ let u   (#s:signedness) (#w:width)
        | W64 -> FStar.Int64.int_to_t x
        | W128 -> FStar.Int128.int_to_t x)
 
-abstract let cast (#s:signedness) (#s':signedness)
+abstract
+let cast (#s:signedness) (#s':signedness)
          (#w:width)      (#w':width)
-         (from:int_t s w{normalize (within_bounds s' w' (v from))})
-   : Tot (to:int_t s' w'{normalize (v from == v to)})
+         (from:int_t s w{within_bounds s' w' (v from)})
+   : Tot (to:int_t s' w'{norm (v from == v to)})
    = u (v from)
 
+[@mark_for_norm]
 unfold
 let ( + ) (#s:signedness) (#w:width)
           (x:int_t s w)
-          (y:int_t s w{normalize (within_bounds s w (v x + v y))})
-  : Tot   (z:int_t s w{normalize (v z = v x + v y)})
+          (y:int_t s w{within_bounds s w (v x + v y)})
+  : Tot   (z:int_t s w{norm (v z == v x + v y)})
   = match s, w with
     | _, Winfinite -> x + y
     | Unsigned, W8   -> FStar.UInt8.(x +^ y)
@@ -171,11 +154,12 @@ let ( + ) (#s:signedness) (#w:width)
     | Signed, W64  -> FStar.Int64.(x +^ y)
     | Signed, W128 -> FStar.Int128.(x +^ y)
 
+[@mark_for_norm]
 unfold
 let ( +? ) (#w:width)
            (x:int_t Unsigned w)
            (y:int_t Unsigned w)
-  : Tot    (z:int_t Unsigned w{normalize (within_bounds Unsigned w (v x + v y) ==> v z = v x + v y)})
+  : Tot    (z:int_t Unsigned w{within_bounds Unsigned w (v x + v y) ==> norm (v z == v x + v y)})
   = match w with
     | Winfinite -> x + y
     | W8 -> FStar.UInt8.(x +?^ y)
@@ -186,16 +170,18 @@ let ( +? ) (#w:width)
     | W64 -> FStar.UInt64.(x +?^ y)
     | W128 -> FStar.UInt128.(x +?^ y)
 
+[@mark_for_norm]
 let modulo (s:signedness) (x:int) (y:pos{s=Signed ==> y%2=0}) =
   match s with
   | Unsigned ->  x % y
   | _ -> FStar.Int.(x @% y)
 
+[@mark_for_norm]
 unfold
 let ( +% ) (#w:fixed_width)
            (x:int_t Unsigned w)
            (y:int_t Unsigned w)
-  : Tot    (z:int_t Unsigned w{v z == modulo Unsigned (v x + v y) (pow2 (nat_of_fixed_width w))})
+  : Tot    (z:int_t Unsigned w{norm (v z == modulo Unsigned (v x + v y) (pow2 (nat_of_fixed_width w)))})
   = match w with
     | W8 -> FStar.UInt8.(x +%^ y)
     | W16 -> FStar.UInt16.(x +%^ y)
@@ -205,11 +191,12 @@ let ( +% ) (#w:fixed_width)
     | W64 -> FStar.UInt64.(x +%^ y)
     | W128 -> FStar.UInt128.(x +%^ y)
 
+[@mark_for_norm]
 unfold
 let op_Subtraction (#s:signedness) (#w:width)
                    (x:int_t s w)
                    (y:int_t s w{within_bounds s w (v x - v y)})
-    : Tot          (z:int_t s w{v z = v x - v y})
+    : Tot          (z:int_t s w{norm (v z == v x - v y)})
   = match s, w with
     | _, Winfinite -> x - y
     | Unsigned, W8 -> FStar.UInt8.(x -^ y)
@@ -227,12 +214,13 @@ let op_Subtraction (#s:signedness) (#w:width)
     | Signed, W64 -> FStar.Int64.(x -^ y)
     | Signed, W128 -> FStar.Int128.(x -^ y)
 
+[@mark_for_norm]
 unfold
 let op_Subtraction_Question
         (#w:width)
         (x:int_t Unsigned w)
         (y:int_t Unsigned w)
-  : Tot (z:int_t Unsigned w{within_bounds Unsigned w (v x - v y) ==> v z = v x - v y})
+  : Tot (z:int_t Unsigned w{within_bounds Unsigned w (v x - v y) ==> norm (v z == v x - v y)})
   = match w with
     | Winfinite -> if v x - v y >= 0 then x - y else 0
     | W8 -> FStar.UInt8.(x -?^ y)
@@ -243,12 +231,13 @@ let op_Subtraction_Question
     | W64 -> FStar.UInt64.(x -?^ y)
     | W128 -> FStar.UInt128.(x -?^ y)
 
+[@mark_for_norm]
 unfold
 let op_Subtraction_Percent
          (#w:fixed_width)
          (x:int_t Unsigned w)
          (y:int_t Unsigned w)
-  : Tot  (z:int_t Unsigned w{v z = modulo Unsigned (v x - v y) (pow2 (nat_of_fixed_width w))})
+  : Tot  (z:int_t Unsigned w{norm (v z == modulo Unsigned (v x - v y) (pow2 (nat_of_fixed_width w)))})
   = match w with
     | W8 -> FStar.UInt8.(x -%^ y)
     | W16 -> FStar.UInt16.(x -%^ y)
@@ -260,11 +249,12 @@ let op_Subtraction_Percent
 
 open FStar.Mul
 
+[@mark_for_norm]
 unfold
 let ( * ) (#s:signedness) (#w:width{w <> W128})
           (x:int_t s w)
           (y:int_t s w{within_bounds s w (v x * v y)})
-  : Tot   (z:int_t s w{v z = v x * v y})
+  : Tot   (z:int_t s w{norm (v z == v x * v y)})
   = match s, w with
     | _, Winfinite -> x * y
     | Unsigned, W8 -> FStar.UInt8.(x *^ y)
@@ -281,11 +271,12 @@ let ( * ) (#s:signedness) (#w:width{w <> W128})
     | Signed, W64 -> FStar.Int64.(x *^ y)
     | Signed, W128 -> FStar.Int128.(x *^ y)
 
+[@mark_for_norm]
 unfold
 let ( *? ) (#w:width{w <> W128})
            (x:int_t Unsigned w)
            (y:int_t Unsigned w)
-  : Tot    (z:int_t Unsigned w{within_bounds Unsigned w (v x * v y) ==> v z = v x * v y})
+  : Tot    (z:int_t Unsigned w{within_bounds Unsigned w (v x * v y) ==> norm (v z == v x * v y)})
   = match w with
     | Winfinite -> x * y
     | W8 -> FStar.UInt8.(x *?^ y)
@@ -295,11 +286,12 @@ let ( *? ) (#w:width{w <> W128})
     | W63 -> FStar.UInt63.(x *?^ y)
     | W64 -> FStar.UInt64.(x *?^ y)
 
+[@mark_for_norm]
 unfold
 let ( *% ) (#w:fixed_width{w <> W128})
            (x:int_t Unsigned w)
            (y:int_t Unsigned w)
-  : Tot    (z:int_t Unsigned w{v z = modulo Unsigned (v x * v y) (pow2 (nat_of_fixed_width w))})
+  : Tot    (z:int_t Unsigned w{norm (v z == modulo Unsigned (v x * v y) (pow2 (nat_of_fixed_width w)))})
   = match w with
     | W8 -> FStar.UInt8.(x *%^ y)
     | W16 -> FStar.UInt16.(x *%^ y)
@@ -308,23 +300,67 @@ let ( *% ) (#w:fixed_width{w <> W128})
     | W63 -> FStar.UInt63.(x *%^ y)
     | W64 -> FStar.UInt64.(x *%^ y)
 
-unfold let nat        = int_t Unsigned Winfinite
-unfold let uint_8   = int_t Unsigned W8
-unfold let uint_16  = int_t Unsigned W16
-unfold let uint_31  = int_t Unsigned W31
-unfold let uint_32  = int_t Unsigned W32
-unfold let uint_63  = int_t Unsigned W63
-unfold let uint_64  = int_t Unsigned W64
+[@mark_for_norm]
+inline_for_extraction
+let nat        = int_t Unsigned Winfinite
 
-unfold let int       = int_t Signed Winfinite
-unfold let int_8   = int_t Signed W8
-unfold let int_16  = int_t Signed W16
-unfold let int_31  = int_t Signed W31
-unfold let int_32  = int_t Signed W32
-unfold let int_63  = int_t Signed W63
-unfold let int_64  = int_t Signed W64
-unfold let int_128 = int_t Signed W128
+[@mark_for_norm]
+inline_for_extraction
+let uint_8   = int_t Unsigned W8
 
+[@mark_for_norm]
+inline_for_extraction
+let uint_16  = int_t Unsigned W16
+
+[@mark_for_norm]
+inline_for_extraction
+let uint_31  = int_t Unsigned W31
+
+[@mark_for_norm]
+inline_for_extraction
+let uint_32  = int_t Unsigned W32
+
+[@mark_for_norm]
+inline_for_extraction
+let uint_63  = int_t Unsigned W63
+
+[@mark_for_norm]
+inline_for_extraction
+let uint_64  = int_t Unsigned W64
+
+[@mark_for_norm]
+inline_for_extraction
+let int       = int_t Signed Winfinite
+
+[@mark_for_norm]
+inline_for_extraction
+let int_8   = int_t Signed W8
+
+[@mark_for_norm]
+inline_for_extraction
+let int_16  = int_t Signed W16
+
+[@mark_for_norm]
+inline_for_extraction
+let int_31  = int_t Signed W31
+
+[@mark_for_norm]
+inline_for_extraction
+let int_32  = int_t Signed W32
+
+[@mark_for_norm]
+inline_for_extraction
+let int_63  = int_t Signed W63
+
+[@mark_for_norm]
+inline_for_extraction
+let int_64  = int_t Signed W64
+
+[@mark_for_norm]
+inline_for_extraction
+let int_128 = int_t Signed W128
+
+[@mark_for_norm]
 unfold
 let ok (#s:signedness) (#w:width)
        (op:(int_t Signed Winfinite
@@ -332,7 +368,7 @@ let ok (#s:signedness) (#w:width)
           -> int_t Signed Winfinite))
        (x:int_t s w)
        (y:int_t s w)
-   = normalize (within_bounds s w (op (v x) (v y)))
+   = within_bounds s w (op (v x) (v y))
 ////////////////////////////////////////////////////////////////////////////////
 //Test
 ////////////////////////////////////////////////////////////////////////////////
