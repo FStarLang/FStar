@@ -148,7 +148,7 @@ let defaults =
       ("indent"                       , Bool false);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
-      ("integer_overloading"          , Bool true);
+      ("integer_overloading"          , Bool false);
       ("lax"                          , Bool false);
       ("load"                         , List []);
       ("log_queries"                  , Bool false);
