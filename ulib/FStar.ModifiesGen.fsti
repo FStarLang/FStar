@@ -108,17 +108,6 @@ type cls (aloc: aloc_t) : Type = | Cls:
     Lemma
     (aloc_preserved b h1 h2)
   )) ->
-  (* In general, a location should not be disjoint from itself, but if it really is (e.g. a zero-length buffer), then it shall be always preserved. *)
-  (aloc_disjoint_self_preserved: (
-    (#r: HS.rid) ->
-    (#a: nat) ->
-    (b: aloc r a) ->
-    (h1: HS.mem) ->
-    (h2: HS.mem) ->
-    Lemma
-    (requires (aloc_disjoint b b))
-    (ensures (aloc_preserved b h1 h2))
-  )) ->
   cls aloc
 
 val loc (#aloc: aloc_t u#x) (c: cls aloc) : Tot (Type u#x)

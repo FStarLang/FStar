@@ -1240,13 +1240,6 @@ let cls_union #al c = Cls
       h2
       f
   )
-  (* aloc_disjoint_self_preserved *)
-  (fun #r #a b h1 h2 ->
-    (c (bool_of_cls_union_aloc b)).aloc_disjoint_self_preserved
-      (aloc_of_cls_union_aloc b)
-      h1
-      h2
-  )
 
 let union_aux_of_aux_left_pred
   (#al: (bool -> HS.rid -> nat -> Tot Type))
@@ -1585,7 +1578,6 @@ let raise_cls #al c = Cls #(raise_aloc u#x u#y al)
   (fun #r #a x h -> c.aloc_preserved_refl (U.downgrade_val x) h)
   (fun #r #a x h1 h2 h3 -> c.aloc_preserved_trans (U.downgrade_val x) h1 h2 h3)
   (fun #r #a b h1 h2 f -> c.same_mreference_aloc_preserved (U.downgrade_val b) h1 h2 f)
-  (fun #r #a b h1 h2 -> c.aloc_disjoint_self_preserved (U.downgrade_val b) h1 h2)
 
 let downgrade_aloc (#al: aloc_t u#a) (#c: cls al) (a: aloc (raise_cls u#a u#b c)) : Tot (aloc c) =
   let ALoc region addr x = a in
@@ -1633,6 +1625,8 @@ let raise_loc_addresses #al #c r a =
 let raise_loc_regions #al #c r =
   assert (raise_loc u#x u#y (loc_regions #_ #c r) `loc_equal` loc_regions r)
 
+#set-options "--z3rlimit 16"
+
 let raise_loc_includes #al #c l1 l2 =
   let l1' = raise_loc l1 in
   let l2' = raise_loc l2 in
@@ -1641,6 +1635,8 @@ let raise_loc_includes #al #c l1 l2 =
   assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l1)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l1')));
   assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l2)) <==> GSet.mem (upgrade_aloc x) (Ghost.reveal (Loc?.aux l2')));
   assert (loc_aux_includes (Ghost.reveal (Loc?.aux l1')) (Ghost.reveal (Loc?.aux l2')) <==> loc_aux_includes (Ghost.reveal (Loc?.aux l1)) (Ghost.reveal (Loc?.aux l2)))
+
+#reset-options
 
 let raise_loc_disjoint #al #c l1 l2 =
   let l1' = raise_loc l1 in

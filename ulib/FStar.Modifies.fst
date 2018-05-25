@@ -165,7 +165,6 @@ let cls : MG.cls aloc = MG.Cls #aloc
       in
       Classical.move_requires g ()
   )
-  (fun #r #a b h1 h2 -> ())
 
 let loc = MG.loc cls
 

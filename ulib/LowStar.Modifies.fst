@@ -17,7 +17,6 @@ let cls : MG.cls B.abuffer = MG.Cls #B.abuffer
   (fun #r #a x h -> B.abuffer_preserved_refl x h)
   (fun #r #a x h1 h2 h3 -> B.abuffer_preserved_trans x h1 h2 h3)
   (fun #r #a b h1 h2 f -> B.same_mreference_abuffer_preserved b h1 h2 f)
-  (fun #r #a b h1 h2 -> B.abuffer_disjoint_self_preserved b h1 h2)
 
 let loc = MG.loc cls
 

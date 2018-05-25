@@ -3622,14 +3622,6 @@ let cls : MG.cls aloc = MG.Cls #aloc
     | LocPointer p -> pointer_preserved_intro p h1 h2 f
     | LocBuffer p -> buffer_preserved_intro p h1 h2 f
   )
-  (fun #r #a b h1 h2 ->
-    match b with
-    | LocPointer p -> disjoint_not_self p
-    | LocBuffer p ->
-      if buffer_length p = 0ul
-      then ()
-      else disjoint_not_self (gpointer_of_buffer_cell p 0ul)
-  )
 
 let loc = MG.loc cls
 
