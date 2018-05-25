@@ -243,7 +243,7 @@ let abuffer_preserved'
   (h h' : HS.mem)
 : GTot Type0
 = forall (t' : Type0) (b' : buffer t' ) .
-  (frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b' /\ length b' > 0) ==>
+  (frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b') ==>
   (live h' b' /\ as_seq h' b' == as_seq h b')
 
 let abuffer_preserved = abuffer_preserved'
@@ -257,7 +257,7 @@ let abuffer_preserved_intro
     (t' : Type0) ->
     (b' : buffer t') ->
     Lemma
-    (requires (frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b' /\ length b' > 0))
+    (requires (frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b'))
     (ensures (live h' b' /\ as_seq h' b' == as_seq h b'))
   ))
 : Lemma
@@ -267,7 +267,7 @@ let abuffer_preserved_intro
     (b' : buffer t')
   : Lemma
     ((
-      frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b' /\ length b' > 0
+      frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b'
     ) ==> (
       live h' b' /\ as_seq h' b' == as_seq h b'
     ))
@@ -281,7 +281,10 @@ let abuffer_preserved_trans #r #a b h1 h2 h3 = ()
 
 let same_mreference_abuffer_preserved #r #a b h1 h2 f =
   abuffer_preserved_intro b h1 h2 (fun t' b' ->
-    f _ _ (Buffer?.content b')
+    if Null? b'
+    then ()
+    else
+      f _ _ (Buffer?.content b')
   )
 
 let addr_unused_in_abuffer_preserved #r #a b h1 h2 = ()
@@ -304,12 +307,15 @@ let abuffer_includes_trans #r #a b1 b2 b3 = ()
 
 let abuffer_includes_abuffer_preserved #r #a larger smaller h1 h2 =
   abuffer_preserved_intro smaller h1 h2 (fun t' b' ->
-    let (Buffer max_len content idx' len') = b' in
-    let idx = U32.uint_to_t (G.reveal larger).b_offset in
-    let len = U32.uint_to_t (G.reveal larger).b_length in
-    let larger' = Buffer max_len content idx len in
-    assert (b' == gsub larger' (U32.sub idx' idx) len');
-    abuffer_preserved_elim larger' h1 h2
+    if Null? b'
+    then ()
+    else
+      let (Buffer max_len content idx' len') = b' in
+      let idx = U32.uint_to_t (G.reveal larger).b_offset in
+      let len = U32.uint_to_t (G.reveal larger).b_length in
+      let larger' = Buffer max_len content idx len in
+      assert (b' == gsub larger' (U32.sub idx' idx) len');
+      abuffer_preserved_elim larger' h1 h2
   )
 
 let abuffer_includes_intro #t larger smaller = ()
@@ -327,8 +333,6 @@ let abuffer_disjoint_sym #r #a b1 b2 = ()
 let abuffer_disjoint_includes #r #a larger1 larger2 smaller1 smaller2 = ()
 
 let abuffer_disjoint_intro #t1 #t2 b1 b2 = ()
-
-let abuffer_disjoint_self_preserved #r #a b h1 h2 = ()
 
 (* Basic, non-compositional modifies clauses, used only to implement the generic modifies clause. DO NOT USE in client code *)
 
@@ -381,6 +385,20 @@ let modifies_1_mreference #a b h1 h2 #a' #pre r' = ()
 let modifies_1_abuffer #a b h1 h2 b' = ()
 
 let modifies_1_null #a b h1 h2 = ()
+
+let modifies_addr_of'
+  (#a: Type) (b: buffer a)
+  (h1 h2: HS.mem)
+: GTot Type0
+= modifies_0_preserves_regions h1 h2 /\
+  modifies_1_preserves_mreferences b h1 h2
+
+let modifies_addr_of = modifies_addr_of'
+
+let modifies_addr_of_live_region #a b h1 h2 r = ()
+
+let modifies_addr_of_mreference #a b h1 h2 #a' #pre r' = ()
+
 
 (* Basic stateful operations *)
 

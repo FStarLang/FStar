@@ -343,13 +343,23 @@ val loc_disjoint_aloc_elim
   (requires (loc_disjoint (loc_of_aloc b1) (loc_of_aloc #_ #c b2)))
   (ensures ((r1 == r2 /\ a1 == a2) ==> c.aloc_disjoint b1 b2))
 
-val loc_disjoint_addresses
+val loc_disjoint_addresses_intro
   (#aloc: aloc_t) (#c: cls aloc)
   (r1 r2: HS.rid)
   (n1 n2: Set.set nat)
 : Lemma
   (requires (r1 <> r2 \/ Set.subset (Set.intersect n1 n2) Set.empty))
   (ensures (loc_disjoint (loc_addresses #_ #c r1 n1) (loc_addresses r2 n2)))
+
+let loc_disjoint_addresses #aloc #c = loc_disjoint_addresses_intro #aloc #c
+
+val loc_disjoint_addresses_elim
+  (#aloc: aloc_t) (#c: cls aloc)
+  (r1 r2: HS.rid)
+  (n1 n2: Set.set nat)
+: Lemma
+  (requires (loc_disjoint (loc_addresses #_ #c r1 n1) (loc_addresses r2 n2)))
+  (ensures (r1 <> r2 \/ Set.subset (Set.intersect n1 n2) Set.empty))
 
 val loc_disjoint_aloc_addresses_intro
   (#aloc: aloc_t) (#c: cls aloc)

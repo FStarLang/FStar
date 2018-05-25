@@ -102,7 +102,7 @@ let loc_disjoint_gsub_buffer #t b i1 len1 i2 len2 =
   B.gsub_disjoint b i1 len1 i2 len2;
   loc_disjoint_buffer (B.gsub b i1 len1) (B.gsub b i2 len2)
 
-let loc_disjoint_addresses = MG.loc_disjoint_addresses #_ #cls
+let loc_disjoint_addresses = MG.loc_disjoint_addresses_intro #_ #cls
 
 let loc_disjoint_buffer_addresses #t p r n =
   MG.loc_disjoint_aloc_addresses_intro #_ #cls #(B.frameOf p) #(B.as_addr p) (B.abuffer_of_buffer p) r n
@@ -116,12 +116,8 @@ let modifies_live_region = MG.modifies_live_region
 let modifies_mreference_elim = MG.modifies_mreference_elim
 
 let modifies_buffer_elim #t1 b p h h' =
-  if B.length b = 0
-  then assert (Seq.equal (B.as_seq h b) (B.as_seq h' b))
-  else begin
     MG.modifies_aloc_elim #_ #cls #(B.frameOf b) #(B.as_addr b) (B.abuffer_of_buffer b) p h h' ;
     B.abuffer_preserved_elim b h h'
-  end
 
 let modifies_refl = MG.modifies_refl
 
@@ -173,6 +169,21 @@ let modifies_1_modifies #t b h1 h2 =
         B.same_mreference_abuffer_preserved #r' #a' b' h1 h2
           (fun a_ pre_ r_ -> B.modifies_1_mreference b h1 h2 r_)
     )
+
+let modifies_addr_of_modifies #t b h1 h2 =
+  MG.modifies_intro (loc_addresses (B.frameOf b) (Set.singleton (B.as_addr b))) h1 h2
+    (fun r -> B.modifies_addr_of_live_region b h1 h2 r)
+    (fun t pre p ->
+      MG.loc_disjoint_addresses_elim #_ #cls (HS.frameOf p)  (B.frameOf b) (Set.singleton (HS.as_addr p)) (Set.singleton (B.as_addr b));
+      B.modifies_addr_of_mreference b h1 h2 p
+    )
+    (fun r' a' b' ->
+      MG.loc_disjoint_aloc_addresses_elim #_ #cls #r' #a' b' (B.frameOf b) (Set.singleton (B.as_addr b));
+      B.same_mreference_abuffer_preserved b' h1 h2 (fun _ _ p ->
+        B.modifies_addr_of_mreference b h1 h2 p
+      )
+    )
+
 
 let mreference_live_buffer_unused_in_disjoint #t1 #pre #t2 h b1 b2 =
   B.unused_in_equiv b2 h;

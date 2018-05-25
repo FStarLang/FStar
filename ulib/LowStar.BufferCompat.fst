@@ -26,7 +26,7 @@ let rfree
     (not (g_is_null b)) /\
     Map.domain h1.HS.h `Set.equal` Map.domain h0.HS.h /\ 
     h1.HS.tip == h0.HS.tip /\
-    modifies_1 b h0 h1 /\
+    modifies_addr_of b h0 h1 /\
     HS.live_region h1 (frameOf b)
   ))
 = free b

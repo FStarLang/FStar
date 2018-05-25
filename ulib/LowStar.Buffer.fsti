@@ -454,7 +454,7 @@ val addr_unused_in_abuffer_preserved
 val abuffer_of_buffer (#t: Type) (b: buffer t) : Tot (abuffer (frameOf b) (as_addr b))
 
 val abuffer_preserved_elim (#t: Type) (b: buffer t) (h h' : HS.mem) : Lemma
-  (requires (abuffer_preserved #(frameOf b) #(as_addr b) (abuffer_of_buffer b) h h' /\ live h b /\ length b > 0))
+  (requires (abuffer_preserved #(frameOf b) #(as_addr b) (abuffer_of_buffer b) h h' /\ live h b))
   (ensures (live h' b /\ as_seq h b == as_seq h' b))
 
 let unused_in_abuffer_preserved
@@ -508,14 +508,6 @@ val abuffer_disjoint_intro (#t1 #t2: Type) (b1: buffer t1) (b2: buffer t2) : Lem
     abuffer_disjoint #r #a (abuffer_of_buffer b1) (abuffer_of_buffer b2)
   ))
 
-(* It is too much to ask that a buffer not be disjoint from itself,
-   but if so, then it should be always preserved. (Actually, it should
-   be zero-length; not sure if we need such a strong result.) *)
-
-val abuffer_disjoint_self_preserved (#r: HS.rid) (#a: nat) (b: abuffer r a) (h1 h2: HS.mem) : Lemma
-  (requires (abuffer_disjoint b b))
-  (ensures (abuffer_preserved b h1 h2))
-
 
 (* Basic, non-compositional modifies clauses, used only to implement the generic modifies clause. DO NOT USE in client code *)
 
@@ -567,6 +559,24 @@ val modifies_1_null
 : Lemma
   (requires (modifies_1 b h1 h2 /\ g_is_null b))
   (ensures (modifies_0 h1 h2))
+
+val modifies_addr_of
+  (#a: Type)
+  (b: buffer a)
+  (h1 h2: HS.mem)
+: GTot Type0
+
+val modifies_addr_of_live_region (#a: Type) (b: buffer a) (h1 h2: HS.mem) (r: HS.rid) : Lemma
+  (requires (modifies_addr_of b h1 h2 /\ HS.live_region h1 r))
+  (ensures (HS.live_region h2 r))
+
+val modifies_addr_of_mreference
+  (#a: Type) (b: buffer a)
+  (h1 h2: HS.mem)
+  (#a': Type) (#pre: Preorder.preorder a') (r' : HS.mreference a' pre)
+: Lemma
+  (requires (modifies_addr_of b h1 h2 /\ (frameOf b <> HS.frameOf r' \/ as_addr b <> HS.as_addr r') /\ h1 `HS.contains` r'))
+  (ensures (h2 `HS.contains` r' /\ h1 `HS.sel` r' == h2 `HS.sel` r'))
 
 
 /// The following stateful operations on buffers do not change the
@@ -672,7 +682,7 @@ val free
     (not (g_is_null b)) /\
     Map.domain h1.HS.h `Set.equal` Map.domain h0.HS.h /\ 
     h1.HS.tip == h0.HS.tip /\
-    modifies_1 b h0 h1 /\
+    modifies_addr_of b h0 h1 /\
     HS.live_region h1 (frameOf b)
   ))
 
