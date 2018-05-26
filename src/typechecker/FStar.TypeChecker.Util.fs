@@ -1438,6 +1438,8 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
+  if debug env Options.Low then
+    BU.print1 "check_top_level, lc = %s\n" (Print.lcomp_to_string lc);
   let discharge g =
     force_trivial_guard env g;
     U.is_pure_lcomp lc in

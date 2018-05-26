@@ -175,7 +175,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
     | Some expected_c -> //expected effects should already be normalized
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (U.lcomp_of_comp c) in
        let c = lcomp_comp c in
-       if debug env <| Options.Extreme then
+       if debug env <| Options.Low then
        BU.print3 "In check_expected_effect, asking rel to solve the problem on e %s and c %s and expected_c %s\n"
                  (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
        let e, _, g = TcUtil.check_comp env e c expected_c in
