@@ -543,8 +543,31 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         e, c, Env.conj_guard g' g
     end
 
-  | Tm_app(head, args) when U.is_synth_by_tactic head ->
-      tc_synth env args head.pos
+  // If we're on the first phase, we don't synth, and just wait for the next phase
+  | Tm_app (head, [(tau, None)])
+  | Tm_app (head, [(_, Some (Implicit _)); (tau, None)])
+        when U.is_synth_by_tactic head && not env.phase1 ->
+    (* Got an application of synth_by_tactic, process it *)
+
+    // no "as" clause
+    let head, args = U.head_and_args top in
+    tc_synth head env args top.pos
+
+  | Tm_app (head, args)
+        when U.is_synth_by_tactic head && not env.phase1 ->
+    (* We have some extra args, move them out of the way *)
+    let args1, args2 =
+        match args with
+        | (tau, None)::rest ->
+            [(tau, None)], rest
+        | (a, Some (Implicit b)) :: (tau, None) :: rest ->
+            [(a, Some (Implicit b)); (tau, None)], rest
+        | _ ->
+            raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: bad application") top.pos
+    in
+    let t1 = mk_app head args1 in
+    let t2 = mk_app t1 args2 in
+    tc_term env t2
 
   | Tm_app(head, args) ->
     let env0 = env in
@@ -649,7 +672,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_let ((true, _), _) ->
     check_inner_let_rec env top
 
-and tc_synth env args rng =
+and tc_synth head env args rng =
     let tau, atyp, rest =
     match args with
     | (tau, None)::rest ->
@@ -679,10 +702,9 @@ and tc_synth env args rng =
     let tau, _, g2 = tc_tactic env' tau in
     Rel.force_trivial_guard env' g2;
 
-    // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
     let t =
-        if env.nosynth
-        then mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit] None rng
+        // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
+        if env.nosynth then mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit] None rng
         else begin
             let t = env.synth_hook env' typ ({ tau with pos = rng }) in
             if Env.debug env <| Options.Other "Tac" then
@@ -764,7 +786,7 @@ and tc_value env (e:term) : term
     value_check_expected_typ env e tc implicits
 
   | Tm_uinst({n=Tm_fvar fv}, _)
-  | Tm_fvar fv when S.fv_eq_lid fv Const.synth_lid ->
+  | Tm_fvar fv when S.fv_eq_lid fv Const.synth_lid && not env.phase1 ->
     raise_error (Errors.Fatal_BadlyInstantiatedSynthByTactic, "Badly instantiated synth_by_tactic") (Env.get_range env)
 
   | Tm_uinst({n=Tm_fvar fv}, us) ->
