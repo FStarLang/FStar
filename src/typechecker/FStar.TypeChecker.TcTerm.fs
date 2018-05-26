@@ -673,12 +673,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     check_inner_let_rec env top
 
 and tc_synth head env args rng =
-    let tau, atyp, rest =
+    let tau, atyp =
     match args with
-    | (tau, None)::rest ->
-        tau, None, rest
-    | (a, Some (Implicit _)) :: (tau, None) :: rest ->
-        tau, Some a, rest
+    | (tau, None)::[] ->
+        tau, None
+    | (a, Some (Implicit _)) :: (tau, None) :: [] ->
+        tau, Some a
     | _ ->
         raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: bad application") rng
     in
@@ -715,7 +715,8 @@ and tc_synth head env args rng =
 
     // TODO: fix, this gives a crappy error
     TcUtil.check_uvars tau.pos t;
-    tc_term env (mk_Tm_app t rest None rng)
+
+    t, U.lcomp_of_comp <| mk_Total typ, Env.trivial_guard
 
 and tc_tactic env tau =
     let env = { env with failhard = true } in
