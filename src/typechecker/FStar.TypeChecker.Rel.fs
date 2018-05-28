@@ -1242,9 +1242,9 @@ let solve_universe_eq orig wl u1 u2 =
  * take a maximal same-length prefix from each list, getting
  *   (xs1, xs2) and (ys1, ys2)  /  where length xs1 == length xs2 (and ys1 = [] \/ ys2 = [])
  * and then return
- *   (xs1, f xs2), (xy2, g ys2)
+ *   (xs1, f xs2), (ys1, g ys2)
  *
- * We could find their minimum length, split, and apply, but this is faster.
+ * We could find the minimum of their lengths, split, and apply, but this is faster.
  *)
 let match_num_binders (bc1: (list<'a> * (list<'a> -> 'b)))
                       (bc2: (list<'a> * (list<'a> -> 'b)))
@@ -2061,10 +2061,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         if debug env <| Options.Other "Rel"
         then BU.print5 "Heads %s: %s (%s) and %s (%s)\n"
             (if need_unif then "need unification" else "match")
-            (Print.term_to_string t1) (Print.tag_of_term t1)
-            (Print.term_to_string t2) (Print.tag_of_term t2);
-        if debug env <| Options.Other "Rel"
-        then BU.print4 "Head matches after call to head_matches_delta: %s (%s) and %s (%s)\n"
             (Print.term_to_string t1) (Print.tag_of_term t1)
             (Print.term_to_string t2) (Print.tag_of_term t2);
         let head1, args1 = U.head_and_args t1 in
