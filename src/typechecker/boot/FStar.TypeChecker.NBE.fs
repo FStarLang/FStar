@@ -70,7 +70,7 @@ type atom = //JUST FSHARP
   (* Zoe : a recursive function definition together with its block of mutually recursive function definitions and its environment *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
-  | Lam of (t -> t) * aqual //NS: * ((unit -> t) * aqual)
+  | Lam of (t -> t) * t * aqual //NS: * ((unit -> t) * (type : t) * aqual)
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<universe> * args (* Zoe: This is used for both type and data constructors*)
@@ -305,7 +305,7 @@ let find_let (lbs : list<letbinding>) (fvar : fv) =
 let rec app (f:t) (x:t) (q:aqual) =
   debug (fun () -> BU.print2 "When creating app: %s applied to %s\n" (t_to_string f) (t_to_string x));
   match f with
-  | Lam (f, _) -> f x
+  | Lam (f, _, _) -> f x
   | Accu (a, ts) -> Accu (a, (x,q)::ts)
   | Construct (i, us, ts) ->
     (match x with
@@ -366,7 +366,7 @@ and translate_letbinding (env:Env.env) (bs:list<t>) (lb:letbinding) : t =
   let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t =
     match us with
     | [] -> translate env bs def
-    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), None) // Zoe: Leaving universe binder qualifier none for now; NS: makes sense
+      | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), Constant Unit, None) // Zoe: Bogus type! The idea is that we will never readback these lambdas
   in
   make_univ_abst lb.lbunivs bs lb.lbdef
 
@@ -431,7 +431,8 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
     | Tm_abs ([x], body, _) ->
       debug (fun () -> BU.print2 "Tm_abs body : %s - %s\n" (P.tag_of_term body) (P.term_to_string body));
-      Lam ((fun (y:t) -> translate env (y::bs) body), snd x)
+      let x1 = fst x in
+      Lam ((fun (y:t) -> translate env (y::bs) body), translate env bs x1.sort, snd x)
 
     | Tm_abs (x::xs, body, _) ->
       let rest = S.mk (Tm_abs(xs, body, None)) None Range.dummyRange in
@@ -511,8 +512,8 @@ and readback (env:Env.env) (x:t) : term =
     | Type_t u ->
       S.mk (Tm_type u) None Range.dummyRange
 
-    | Lam (f, q) ->
-      let x = S.new_bv None S.tun in
+    | Lam (f, t, q) ->
+      let x = S.new_bv None (readback env t) in (* (readback env t) is the type of the binder *)
       let body = readback env (f (mkAccuVar x)) in
       U.abs [(x, q)] body None
 
