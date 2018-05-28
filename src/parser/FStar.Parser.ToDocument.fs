@@ -44,7 +44,8 @@ module BU = FStar.Util
 
 
 
-
+let min x y = if x > y then y else x
+let max x y = if x > y then x else y
 
 
 (* [should_print_fs_typ_app] is set when encountering a [LightOff] pragma and *)
@@ -340,8 +341,6 @@ let assign_levels (token_associativity_spec : list<associativity_level>) (s:stri
         | Some (assoc_levels, _) -> assoc_levels
         | _ -> failwith ("Unrecognized operator " ^ s)
 
-let max k1 k2 = if k1 > k2 then k1 else k2
-
 let max_level l =
   let find_level_and_max n level =
     match List.tryFind (fun (_, tokens) -> tokens = snd level) level_table with
@@ -457,21 +456,21 @@ let with_comment printer tm tmrange =
 (* [comment_stack] whose range is before pos and separate each comments by as many lines *)
 (* as indicated by the range information (at least [k]) using [lbegin] as the last line of *)
 (* [doc] in the original document. Between 2 comments [k] is set to [1] *)
-let rec place_comments_until_pos k lbegin pos_end doc =
+let rec place_comments_until_pos k lbegin pos_end end_correction doc =
   match !comment_stack with
   | (comment, crange) :: cs when range_before_pos crange pos_end ->
     comment_stack := cs ;
     let lnum = max k (line_of_pos (start_of_range crange) - lbegin) in
     let lnum = min 2 lnum in
     let doc = doc ^^ repeat lnum hardline ^^ str comment in
-    place_comments_until_pos 1 (line_of_pos (end_of_range crange)) pos_end doc
+    place_comments_until_pos 1 (line_of_pos (end_of_range crange)) pos_end end_correction doc
   | _ ->
     if doc = empty then
       empty
     else
-      let lnum = max 1 (line_of_pos pos_end - lbegin) in
-      let lnum = min 2 lnum in
-      doc ^^ repeat lnum hardline
+      let lnum' = line_of_pos pos_end (* - end_correction *) - lbegin in
+      let lnum = min 2 lnum' in //puts a limit of at most one empty line between decls
+      doc ^^ repeat lnum hardline ^^ (str <| string_of_int lbegin) ^^ (str "*") ^^ (str <| string_of_int (line_of_pos pos_end))
 
 (* [separate_map_with_comments prefix sep f xs extract_range] is the document *)
 (*                                                                            *)
@@ -488,13 +487,14 @@ let rec place_comments_until_pos k lbegin pos_end doc =
 (* inserted after [prefix] and [sep]. *)
 let separate_map_with_comments prefix sep f xs extract_range =
   let fold_fun (last_line, doc) x =
-    let r = extract_range x in
-    let doc = place_comments_until_pos 1 last_line (start_of_range r) doc in
+    let r, c = extract_range x in
+    let doc = place_comments_until_pos 1 last_line (start_of_range r) c doc in
     line_of_pos (end_of_range r), doc ^^ sep ^^ f x
   in
   let x, xs = List.hd xs, List.tl xs in
   let init =
-    line_of_pos (end_of_range (extract_range x)), prefix ^^ f x
+    let r, c = extract_range x in
+    line_of_pos (end_of_range r), prefix ^^ f x
   in
   snd (List.fold_left fold_fun init xs)
 
@@ -510,13 +510,14 @@ let separate_map_with_comments prefix sep f xs extract_range =
 (*   (f sep xs[n]) *)
 let separate_map_with_comments_kw prefix sep f xs extract_range =
   let fold_fun (last_line, doc) x =
-    let r = extract_range x in
-    let doc = place_comments_until_pos 1 last_line (start_of_range r) doc in
+    let r, c = extract_range x in
+    let doc = place_comments_until_pos 1 last_line (start_of_range r) c doc in
     line_of_pos (end_of_range r), doc ^^ f sep x
   in
   let x, xs = List.hd xs, List.tl xs in
   let init =
-    line_of_pos (end_of_range (extract_range x)), f prefix x
+    let r, c = extract_range x in
+    line_of_pos (end_of_range r), f prefix x
   in
   snd (List.fold_left fold_fun init xs)
 
@@ -560,7 +561,7 @@ and p_fsdoc (doc, kwd_args) =
         hardline ^^ separate_map hardline process_kwd_arg kwd_args ^^ hardline
   in
   (* TODO : these newlines should not always be there *)
-  hardline ^^ lparen ^^ star ^^ star ^^ str doc ^^ kwd_args_doc ^^ star ^^ rparen ^^ hardline
+  lparen ^^ star ^^ star ^^ str doc ^^ kwd_args_doc ^^ star ^^ rparen ^^ hardline
 
 
 and p_justSig d = match d.d with
@@ -599,7 +600,7 @@ and p_rawDecl d = match d.d with
   | TopLevelLet(q, lbs) ->
     let let_doc = str "let" ^^ p_letqualifier q in
     separate_map_with_comments_kw let_doc (str "and") p_letbinding lbs
-      (fun (p, t) -> Range.union_ranges p.prange t.range)
+      (fun (p, t) -> Range.union_ranges p.prange t.range, 0)
   | Val(lid, t) ->
     str "val" ^^ space ^^ p_lident lid ^^ group (colon ^^ space ^^ (p_typ false false t))
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
@@ -796,6 +797,7 @@ and p_qualifier = function
 and p_qualifiers qs =
   match qs with
   | [] -> empty
+  | [q] -> (p_qualifier q) ^^ hardline
   | _ -> flow break1 (List.map p_qualifier qs) ^^ hardline
 
 (* Skipping focus since it cannot be recoverred at printing *)
@@ -1582,6 +1584,18 @@ let modul_to_document (m:modul) =
 let comments_to_document (comments : list<(string * FStar.Range.range)>) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
+(* TODO : take into account the space of the fsdoc (and attributes ?) *)
+let extract_decl_range = fun d ->
+  (* take newline for qualifiers into account *)
+  let qual_lines =
+    match (d.quals, d.d) with
+    | ([Assumption], Assume(id, _)) -> 0
+    | ([], _) -> 0
+    | _ -> 1
+  in
+  (d.drange, qual_lines)
+
+
 (* [modul_with_comments_to_document m comments] prints the module [m] trying *)
 (* to insert the comments from [comments]. The list comments is composed of *)
 (* pairs of a raw string and a position which is used to place the comment *)
@@ -1605,10 +1619,8 @@ let modul_with_comments_to_document (m:modul) comments =
             d0 :: d :: List.tl ds, d0.drange
         | _ -> d :: ds, d.drange
       in
-      (* TODO : take into account the space of the fsdoc (and attributes ?) *)
-      let extract_decl_range d = d.drange in
       comment_stack := comments ;
-      let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) empty in
+      let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) 0 empty in
   let doc = separate_map_with_comments empty empty decl_to_document decls extract_decl_range in
   let comments = !comment_stack in
   comment_stack := [] ;
