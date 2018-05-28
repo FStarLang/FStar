@@ -77,6 +77,7 @@ and t = //JUST FSHARP
   | Constant of constant
   | Type_t of universe
   | Univ of universe
+  | Unknown (* For translating unknown types *)
   // NS:
   // | Refinement of binder * t
   // | Arrow of list binder * comp_t
@@ -112,6 +113,7 @@ let rec t_to_string (x:t) =
   | Constant c -> constant_to_string c
   | Univ u -> "Universe " ^ (P.univ_to_string u)
   | Type_t u -> "Type_t " ^ (P.univ_to_string u)
+  | Unknown -> "Unknown"
 
 and atom_to_string (a: atom) =
     match a with
@@ -311,7 +313,7 @@ let rec app (f:t) (x:t) (q:aqual) =
     (match x with
      | Univ u -> Construct (i, u::us, ts)
      | _ -> Construct (i, us, (x,q)::ts))
-  | Constant _ | Univ _ | Type_t _ -> failwith "Ill-typed application"
+  | Constant _ | Univ _ | Type_t _ | Unknown -> failwith "Ill-typed application"
 
 and iapp (f:t) (args:list<(t * aqual)>) =
   match args with
@@ -396,8 +398,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_delayed (_, _) ->
       failwith "Tm_delayed: Impossible"
 
-    | Tm_unknown ->
-      failwith "Tm_unknown: Impossible"
+    | Tm_unknown -> Unknown
 
     | Tm_constant c ->
       Constant (translate_constant c)
@@ -501,7 +502,9 @@ and readback (env:Env.env) (x:t) : term =
     debug (fun () -> BU.print1 "Readback: %s\n" (t_to_string x));
     match x with
     | Univ u -> failwith "Readback of universes should not occur"
-
+    
+    | Unknown -> S.mk Tm_unknown None Range.dummyRange
+    
     | Constant Unit -> S.unit_const
     | Constant (Bool true) -> U.exp_true_bool
     | Constant (Bool false) -> U.exp_false_bool
