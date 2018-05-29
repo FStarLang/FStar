@@ -83,7 +83,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
     in
     let is_guard_free tm =
       match tm.tm with
-      | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, _, {tm=App(Iff, [l;r])}) ->
+      | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, _, {tm=App(Imp, [l;r])}) ->
         true
       | _ -> false
     in
@@ -181,9 +181,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           let labels, lhs_conjs =
                 BU.fold_map (fun labels tm ->
                     match tm.tm with
-                    | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])}) ->
+                    | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Imp, [l;r])}) ->
                         let labels, r = aux default_msg None post_name_opt labels r in
-                        labels, mk (Quant(Forall, [[p]], Some 0, sorts, norng mk (App(Iff, [l;r])))) q.rng
+                        labels, mk (Quant(Forall, [[p]], Some 0, sorts, norng mk (App(Imp, [l;r])))) q.rng
                     | _ -> labels, tm)
                 labels (conjuncts lhs) in
 
