@@ -129,6 +129,8 @@ let modifies_only_live_regions = MG.modifies_only_live_regions
 
 let no_upd_fresh_region = MG.no_upd_fresh_region
 
+let fresh_frame_modifies = MG.fresh_frame_modifies #_ cls
+
 let modifies_fresh_frame_popped = MG.modifies_fresh_frame_popped
 
 let modifies_loc_regions_intro = MG.modifies_loc_regions_intro #_ #cls

@@ -210,6 +210,10 @@ val includes (#a: Type) (larger smaller: buffer a) : GTot Type0
 val includes_live (#a: Type) (h: HS.mem) (larger smaller: buffer a) : Lemma
   (requires (larger `includes` smaller))
   (ensures (live h larger <==> live h smaller))
+  [SMTPatOr [
+    [SMTPat (includes larger smaller); SMTPat (live h larger)];
+    [SMTPat (includes larger smaller); SMTPat (live h smaller)];
+  ]]
 
 
 /// If the contents of a buffer are equal in two given heaps, then so
@@ -224,6 +228,7 @@ val includes_as_seq (#a: Type) (h1 h2: HS.mem) (larger smaller: buffer a) : Lemm
 
 val includes_refl (#a: Type) (x: buffer a) : Lemma
   (includes x x)
+  [SMTPat (includes x x)]
 
 val includes_trans (#a: Type) (x y z: buffer a) : Lemma
   (requires (x `includes` y /\ y `includes` z))

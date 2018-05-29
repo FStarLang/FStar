@@ -796,6 +796,13 @@ let modifies_only_live_regions #al #c rs l h h' =
 let no_upd_fresh_region #al #c r l h0 h1 =
   modifies_only_live_regions (HS.mod_set (Set.singleton r)) l h0 h1
 
+let fresh_frame_modifies #al c h0 h1 =
+  modifies_intro #_ #c loc_none h0 h1
+    (fun _ -> ())
+    (fun _ _ _ -> ())
+    (fun r a x ->
+      c.same_mreference_aloc_preserved #r #a x h0 h1 (fun _ _ _ -> ()))
+
 let modifies_fresh_frame_popped #al #c h0 h1 s h2 h3 =
   let f01 (r: HS.rid) (a: nat) (b: al r a) : Lemma
     (c.aloc_preserved b h0 h1)

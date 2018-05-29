@@ -41,21 +41,28 @@ val loc_union_comm
   (s1 s2: loc)
 : Lemma
   (loc_union s1 s2 == loc_union s2 s1)
+  [SMTPat (loc_union s1 s2)]
 
 val loc_union_assoc
   (s1 s2 s3: loc)
 : Lemma
   (loc_union s1 (loc_union s2 s3) == loc_union (loc_union s1 s2) s3)
+  [SMTPatOr [
+    [SMTPat (loc_union s1 (loc_union s2 s3))];
+    [SMTPat (loc_union (loc_union s1 s2) s3)];
+  ]]
 
 val loc_union_loc_none_l
   (s: loc)
 : Lemma
   (loc_union loc_none s == s)
+  [SMTPat (loc_union loc_none s)]
 
 val loc_union_loc_none_r
   (s: loc)
 : Lemma
   (loc_union s loc_none == s)
+  [SMTPat (loc_union s loc_none)]
 
 
 /// ``loc_buffer b`` is the set of memory locations associated to a buffer ``b``.
@@ -286,7 +293,14 @@ val loc_disjoint_sym
 : Lemma
   (requires (loc_disjoint s1 s2))
   (ensures (loc_disjoint s2 s1))
+
+let loc_disjoint_sym'
+  (s1 s2: loc)
+: Lemma
+  (loc_disjoint s1 s2 <==> loc_disjoint s2 s1)
   [SMTPat (loc_disjoint s1 s2)]
+= Classical.move_requires (loc_disjoint_sym s1) s2;
+  Classical.move_requires (loc_disjoint_sym s2) s1
 
 val loc_disjoint_none_r
   (s: loc)
@@ -529,6 +543,11 @@ val no_upd_fresh_region: r:HS.rid -> l:loc -> h0:HS.mem -> h1:HS.mem -> Lemma
   (requires (HS.fresh_region r h0 h1 /\ modifies (loc_union (loc_all_regions_from r) l) h0 h1))
   (ensures  (modifies l h0 h1))
   [SMTPat (HS.fresh_region r h0 h1); SMTPat (modifies l h0 h1)]
+
+val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
+  (requires (HS.fresh_frame h0 h1))
+  (ensures (modifies loc_none h0 h1))
+  [SMTPat (HS.fresh_frame h0 h1)]
 
 /// Stack discipline: any stack frame (and all its transitively
 /// extending regions) that is pushed, modified and popped can be

@@ -517,6 +517,13 @@ val no_upd_fresh_region
   (requires (HS.fresh_region r h0 h1 /\ modifies (loc_union (loc_all_regions_from r) l) h0 h1))
   (ensures  (modifies l h0 h1))
 
+val fresh_frame_modifies
+  (#aloc: aloc_t) (c: cls aloc)
+  (h0 h1: HS.mem)
+: Lemma
+  (requires (HS.fresh_frame h0 h1))
+  (ensures (modifies #_ #c loc_none h0 h1))
+
 val modifies_fresh_frame_popped
   (#aloc: aloc_t) (#c: cls aloc)
   (h0 h1: HS.mem)
