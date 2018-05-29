@@ -293,7 +293,7 @@ assume val uvar_env : env -> option typ -> Tac term
 whether unification was possible. When the tactic returns true, the
 terms have been unified, instantiating uvars as needed. When false,
 unification was not possible and no change to uvars occurs. *)
-assume val unify : term -> term -> Tac bool
+assume val unify_env : env -> term -> term -> Tac bool
 
 (** Launches an external process [prog] with arguments [args] and input
 [input] and returns the output. For security reasons, this can only be
