@@ -1,6 +1,12 @@
 module FStar.Integers
 
 #set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 0 --max_fuel 0"
+irreducible
+private
+let mark_for_norm = ()
+
+unfold
+let norm (#a:Type) (x:a) = norm [iota; delta_attr mark_for_norm] x
 
 type signedness =
   | Signed
@@ -18,12 +24,21 @@ type width =
 
 let fixed_width = w:width{w <> Winfinite}
 
-irreducible
-private
-let mark_for_norm = ()
+[@mark_for_norm]
+let join (s1, w1) (s2, w2) =
+  match w1, w2 with
+  | Winfinite, Winfinite ->
+    //Any operation on infinite width types
+    //uses the full range of mathematical integers
+    //This is to support the existing behavior from Prims
+    //of the basic arithmetic operations being defined on Prims.int
+    Some (Signed, Winfinite)
 
-unfold
-let norm (#a:Type) (x:a) = norm [iota; delta_attr mark_for_norm] x
+  | _ ->
+    //No other heterogeneous combinations are supported
+    if (s1, w1) = (s2, w2)
+    then Some (s1, w1)
+    else None
 
 [@mark_for_norm]
 let nat_of_width = function
@@ -63,6 +78,13 @@ let int_t (s:signedness) (w:width) : Tot Type0 =
   | Signed, W128 -> FStar.Int128.t
 
 [@mark_for_norm]
+inline_for_extraction
+let join_types #s1 #w1 (x:int_t s1 w1)
+               #s2 #w2 (y:int_t s2 w2{Some? (join (s1, w1) (s2, w2))}) : Type0 =
+  let Some (s, w) = join (s1, w1) (s2, w2) in
+  int_t s w
+
+[@mark_for_norm]
 let within_bounds' (s:signedness) (w:width) (x:int) =
   match s, nat_of_width w with
   | Signed,   None   -> True
@@ -72,6 +94,14 @@ let within_bounds' (s:signedness) (w:width) (x:int) =
 
 unfold
 let within_bounds s w x = norm (within_bounds' s w x)
+
+unfold
+let join_within_bounds #s1 #w1 (_:int_t s1 w1)
+                       #s2 #w2 (_:int_t s2 w2)
+                       (x:Prims.int) =
+  norm (match join (s1, w1) (s2, w2) with
+        | None -> False
+        | Some (s, w) -> within_bounds' s w x)
 
 [@mark_for_norm]
 let v (#s:signedness) (#w:width) (x:int_t s w)
@@ -133,11 +163,12 @@ let cast (#s:signedness) (#s':signedness)
 
 [@mark_for_norm]
 unfold
-let ( + ) (#s:signedness) (#w:width)
-          (x:int_t s w)
-          (y:int_t s w{within_bounds s w (v x + v y)})
-  : Tot   (z:int_t s w{norm (v z == v x + v y)})
-  = match s, w with
+let ( + ) (#s1:signedness) (#w1:width)
+          (x:int_t s1 w1)
+          (#s2:signedness) (#w2:width)
+          (y:int_t s2 w2{join_within_bounds x y (v x + v y)})
+  : Tot   (z:join_types x y{norm (v z == v x + v y)})
+  = match join (s1, w1) (s2, w2) with
     | _, Winfinite -> x + y
     | Unsigned, W8   -> FStar.UInt8.(x +^ y)
     | Unsigned, W16  -> FStar.UInt16.(x +^ y)
