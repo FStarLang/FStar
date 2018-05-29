@@ -299,10 +299,10 @@ and build_seq args =
 
 and build_constructor_expr ((path, sym), exp): expression =
   let path', name =
-    (match sym with
-    | "Cons" -> ([], "::")
-    | "Nil" -> ([], "[]")
-    | x -> (path, x)) in
+    (match path, sym with
+    | ["Prims"], "Cons" -> ([], "::")
+    | ["Prims"], "Nil" -> ([], "[]")
+    | path, x -> (path, x)) in
   match exp with
   | [] -> Exp.construct (path_to_ident(path', name)) None
   | [e] ->
