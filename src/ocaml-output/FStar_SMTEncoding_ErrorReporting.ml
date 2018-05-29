@@ -103,7 +103,7 @@ let (label_goals :
                    FStar_SMTEncoding_Term.rng = uu____458;_}::[])::[],iopt,uu____460,
                {
                  FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App
-                   (FStar_SMTEncoding_Term.Iff ,l::r1::[]);
+                   (FStar_SMTEncoding_Term.Imp ,l::r1::[]);
                  FStar_SMTEncoding_Term.freevars = uu____463;
                  FStar_SMTEncoding_Term.rng = uu____464;_})
               -> true
@@ -409,7 +409,7 @@ let (label_goals :
                                      {
                                        FStar_SMTEncoding_Term.tm =
                                          FStar_SMTEncoding_Term.App
-                                         (FStar_SMTEncoding_Term.Iff
+                                         (FStar_SMTEncoding_Term.Imp
                                           ,l::r1::[]);
                                        FStar_SMTEncoding_Term.freevars =
                                          uu____1144;
@@ -430,7 +430,7 @@ let (label_goals :
                                                  FStar_SMTEncoding_Util.norng
                                                    FStar_SMTEncoding_Term.mk
                                                    (FStar_SMTEncoding_Term.App
-                                                      (FStar_SMTEncoding_Term.Iff,
+                                                      (FStar_SMTEncoding_Term.Imp,
                                                         [l; r2]))
                                                   in
                                                (FStar_SMTEncoding_Term.Forall,
