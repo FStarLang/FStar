@@ -8,12 +8,13 @@ ARG TARGET
 #BUILD FSTAR
 RUN mkdir ${MYHOME}/FStar
 COPY --chown=everest / ${MYHOME}/FStar/
-RUN rm -rf  ${MYHOME}/FStar/.git
 WORKDIR ${MYHOME}/FStar
 
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 COPY --chown=everest build_fstar_with_regressions.sh ${MYHOME}/FStar/build_fstar_with_regressions.sh
 RUN chmod +x build_fstar_with_regressions.sh
+COPY --chown=everest build_fstar_with_regressions_helper.sh ${MYHOME}/FStar/build_fstar_with_regressions_helper.sh
+RUN chmod +x build_fstar_with_regressions_helper.sh
 RUN ./build_fstar_with_regressions.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS}
 
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
