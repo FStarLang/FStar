@@ -1025,44 +1025,18 @@ let rec head_matches env t1 t2 : match_result =
 (* Does t1 head-match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let maybe_inline t =
-        let head, args = U.head_and_args t in
+        let head = U.head_of t in
         if Env.debug env <| Options.Other "RelDelta" then
             BU.print2 "Head of %s is %s\n" (Print.term_to_string t) (Print.term_to_string head);
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-          begin
-          match Env.lookup_definition [Env.Unfold delta_constant; Env.Eager_unfolding_only] env fv.fv_name.v with
+          begin match Env.lookup_definition [Env.Unfold delta_constant; Env.Eager_unfolding_only] env fv.fv_name.v with
           | None ->
             if Env.debug env <| Options.Other "RelDelta" then
                 BU.print1 "No definition found for %s\n" (Print.term_to_string head);
-            if N.is_norm_request head args
-            then Some (N.normalize_refinement [] env t)
-            else None
-          | Some def_scheme ->
-            //only unfold the head symbol
-            let head_def =
-                match fst def_scheme, (SS.compress head).n with
-                | u_formals, Tm_uinst(_, u_args)
-                    when List.length u_formals = List.length u_args ->
-                  Env.inst_tscheme_with def_scheme u_args
-                | [], _ ->
-                  snd def_scheme
-                | _ ->
-                  failwith (BU.format4 "Impossible: Unexpected number of universe instantiations\n\t\
-                                            %s unfolded to %s\n\t\
-                                            but instantiated as %s\n\t\
-                                            at %s"
-                                        (Print.fv_to_string fv)
-                                        (Print.tscheme_to_string def_scheme)
-                                        (Print.term_to_string head)
-                                        (Range.string_of_range t.pos))
-            in
-            //and do other computation steps, but don't unfold anything else
-            let t' = normalize_refinement
-                        [N.Weak; N.HNF; N.Primops; N.Beta; N.Iota]
-                        env
-                        (S.mk_Tm_app head_def args None t.pos)
-            in
+            None
+          | Some _ ->
+            let t' = N.normalize [N.UnfoldUntil delta_constant; N.Weak; N.HNF; N.Primops; N.Beta; N.Eager_unfolding; N.Iota] env t in
             if Env.debug env <| Options.Other "RelDelta" then
                 BU.print2 "Inlined %s to %s\n" (Print.term_to_string t) (Print.term_to_string t');
             Some t'
@@ -1073,83 +1047,55 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let fail d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
     let rec aux retry n_delta t1 t2 =
         let r = head_matches env t1 t2 in
-        if Env.debug env <| Options.Other "RelDelta"
-        then begin
+        if Env.debug env <| Options.Other "RelDelta" then
             BU.print3 "head_matches (%s, %s) = %s\n"
                 (Print.term_to_string t1)
                 (Print.term_to_string t2)
-                (string_of_match_result r)
-        end;
-
-        let reduce_greater_and_try_again (t1, d1) (t2, d2) (r:match_result) =
-          //requires: d1 <> d2
-          if Common.delta_depth_greater_than d1 d2
-          then match maybe_inline t1 with
-               | None -> fail n_delta r t1 t2
-               | Some t1' ->
-                 aux retry (n_delta + 1) t1' t2
-          else match maybe_inline t2 with
-               | None -> fail n_delta r t1 t2
-               | Some t2' ->
-                 aux retry (n_delta + 1) t1 t2'
+                (string_of_match_result r);
+        let reduce_one_and_try_again (d1:delta_depth) (d2:delta_depth) =
+          let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
+          let t1, t2 = if d1_greater_than_d2
+                       then let t1' = normalize_refinement [N.UnfoldUntil d2; N.Weak; N.HNF] env t1 in
+                            t1', t2
+                       else let t2' = normalize_refinement [N.UnfoldUntil d1; N.Weak; N.HNF] env t2 in
+                            t1, t2' in
+          aux retry (n_delta + 1) t1 t2
         in
 
-        let reduce_either_and_try_again t1 t2 (r:match_result) =
-            match maybe_inline t1, maybe_inline t2 with
-            | None, None       -> fail n_delta r t1 t2
-            | Some t1, None    -> aux false (n_delta + 1) t1 t2
-            | None, Some t2    -> aux false (n_delta + 1) t1 t2
-            | Some t1', Some t2' ->
-              match (U.unmeta t1').n, (U.unmeta t2').n with
-              | Tm_match _, Tm_match _ ->
-                //only worth comparing match with match
-                aux false (n_delta + 1) t1' t2'
-              | Tm_match _, _ ->
-                //if only one side is a match, don't unfold it
-                aux false (n_delta + 1) t1 t2'
-              | _, Tm_match _ ->
-                //if only one side is a match, don't unfold it
-                aux false (n_delta + 1) t1' t2
-              | _ ->
-                aux false (n_delta + 1) t1' t2'
-        in
-
-        let reduce_both_and_try_again (t1, d1) (t2, d2) (r:match_result) =
-          match Common.decr_delta_depth d1 with
-          | None ->
-            fail n_delta r t1 t2
-          | Some _ ->
-            match maybe_inline t1, maybe_inline t2 with
-            | Some t1', Some t2' ->
-              aux retry (n_delta + 1) t1 t2'
-            | _ ->
-              fail n_delta r t1 t2
+        let reduce_both_and_try_again (d:delta_depth) (r:match_result) =
+          match Common.decr_delta_depth d with
+          | None -> fail n_delta r t1 t2
+          | Some d ->
+            let t1 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env t1 in
+            let t2 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env t2 in
+            aux retry (n_delta + 1) t1 t2
         in
 
         match r with
-        | MisMatch (Some (Delta_equational_at_level i), Some (Delta_equational_at_level j))
-            when (i > 0 || j > 0) && i <> j ->
-           reduce_greater_and_try_again (t1, Delta_equational_at_level i) (t2, Delta_equational_at_level j) r
+            | MisMatch (Some (Delta_equational_at_level i), Some (Delta_equational_at_level j)) when (i > 0 || j > 0) && i <> j ->
+              reduce_one_and_try_again (Delta_equational_at_level i) (Delta_equational_at_level j)
 
-        | MisMatch(Some (Delta_equational_at_level _), _)
-        | MisMatch(_, Some (Delta_equational_at_level _)) ->
-          if not retry
-          then fail n_delta r t1 t2
-          else reduce_either_and_try_again t1 t2 r
+            | MisMatch(Some (Delta_equational_at_level _), _)
+            | MisMatch(_, Some (Delta_equational_at_level _)) ->
+              if not retry then fail n_delta r t1 t2
+              else begin match maybe_inline t1, maybe_inline t2 with
+                   | None, None       -> fail n_delta r t1 t2
+                   | Some t1, None    -> aux false (n_delta + 1) t1 t2
+                   | None, Some t2    -> aux false (n_delta + 1) t1 t2
+                   | Some t1, Some t2 -> aux false (n_delta + 1) t1 t2
+                   end
 
-        | MisMatch(Some d1, Some d2)
-            when d1=d2 -> //incompatible: d1 and d2 are Delta_constant i, or Delta_abstract i
-          reduce_both_and_try_again (t1, d1) (t2, d2) r
+            | MisMatch(Some d1, Some d2) when (d1=d2) -> //incompatible
+              reduce_both_and_try_again d1 r
 
-        | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
-          reduce_greater_and_try_again (t1, d1) (t2, d2) r
+            | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
+              reduce_one_and_try_again d1 d2
 
-        | MisMatch _ ->
-          fail n_delta r t1 t2
+            | MisMatch _ ->
+              fail n_delta r t1 t2
 
-        | _ ->
-          success n_delta r t1 t2
-    in
+            | _ ->
+              success n_delta r t1 t2 in
     let r = aux true 0 t1 t2 in
     if Env.debug env <| Options.Other "RelDelta" then
         BU.print4 "head_matches_delta (%s, %s) = %s (%s)\n"

@@ -1075,7 +1075,7 @@ let reduce_equality cfg tm =
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
 (********************************************************************************************************************)
-let is_norm_request hd (args:args) =
+let is_norm_request hd args =
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [_; _] ->
       S.fv_eq_lid fv PC.normalize_term
