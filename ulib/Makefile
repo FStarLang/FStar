@@ -119,7 +119,7 @@ install-fstar-tactics: $(TACLIB_OBJECTS)
 clean:
 	rm -f .depend .depend.extract
 	rm -f *.mgen
-	rm -f *.checked *.source *.checked.lax
+	rm -f *.checked *.checked.lax
 	rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
 	rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
 	rm -f $(FSTARLIB_DIR)/*.cm[aiox]
