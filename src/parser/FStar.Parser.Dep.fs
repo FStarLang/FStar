@@ -915,12 +915,21 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     let rec hash_deps out = function
         | [] -> Some (("source", source_hash)::interface_hash@out)
         | fn::deps ->
-          let cache_fn = cache_file_name fn in
-          if BU.file_exists cache_fn
-          then hash_deps ((lowercase_module_name fn, digest_of_file cache_fn) :: out) deps
-          else (if Options.debug_any()
-                then BU.print2 "%s: missed digest of file %s\n" cache_file cache_fn;
-                None)
+          let digest =
+            let fn = cache_file_name fn in
+            if BU.file_exists fn
+            then Some (digest_of_file fn)
+            else match FStar.Options.find_file (FStar.Util.basename fn) with
+                 | None -> None
+                 | Some fn -> Some (digest_of_file fn)
+          in
+          match digest with
+          | None ->
+            if Options.debug_any()
+            then BU.print2 "%s: missed digest of file %s\n" cache_file (cache_file_name fn);
+            None
+          | Some dig ->
+            hash_deps ((lowercase_module_name fn, dig) :: out) deps
     in
     hash_deps [] binary_deps
 

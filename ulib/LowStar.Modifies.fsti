@@ -41,21 +41,28 @@ val loc_union_comm
   (s1 s2: loc)
 : Lemma
   (loc_union s1 s2 == loc_union s2 s1)
+  [SMTPat (loc_union s1 s2)]
 
 val loc_union_assoc
   (s1 s2 s3: loc)
 : Lemma
   (loc_union s1 (loc_union s2 s3) == loc_union (loc_union s1 s2) s3)
+  [SMTPatOr [
+    [SMTPat (loc_union s1 (loc_union s2 s3))];
+    [SMTPat (loc_union (loc_union s1 s2) s3)];
+  ]]
 
 val loc_union_loc_none_l
   (s: loc)
 : Lemma
   (loc_union loc_none s == s)
+  [SMTPat (loc_union loc_none s)]
 
 val loc_union_loc_none_r
   (s: loc)
 : Lemma
   (loc_union s loc_none == s)
+  [SMTPat (loc_union s loc_none)]
 
 
 /// ``loc_buffer b`` is the set of memory locations associated to a buffer ``b``.
@@ -286,7 +293,14 @@ val loc_disjoint_sym
 : Lemma
   (requires (loc_disjoint s1 s2))
   (ensures (loc_disjoint s2 s1))
+
+let loc_disjoint_sym'
+  (s1 s2: loc)
+: Lemma
+  (loc_disjoint s1 s2 <==> loc_disjoint s2 s1)
   [SMTPat (loc_disjoint s1 s2)]
+= Classical.move_requires (loc_disjoint_sym s1) s2;
+  Classical.move_requires (loc_disjoint_sym s2) s1
 
 val loc_disjoint_none_r
   (s: loc)
@@ -442,20 +456,9 @@ val modifies_mreference_elim
     [ SMTPat (modifies p h h'); SMTPat (HS.contains h' b) ]
   ] ]
 
-/// If a buffer ``b`` *of positive length* is disjoint from a set ``p`` of
+/// If a buffer ``b`` is disjoint from a set ``p`` of
 /// memory locations which is modified, then its liveness and contents
 /// are preserved.
-///
-/// Here it is important to require that the length of ``b`` must not be
-/// zero. Indeed, let ``x`` be a buffer of size 2, and pose ``y = B.gsub
-/// x 2ul 0ul``. Then, ``y`` is disjoint from ``x``, because it is a
-/// sub-buffer of ``x`` covering a range disjoint from that of ``x``
-/// (since ``x == B.gsub x 0ul 2ul``.) However, if ``x`` is deallocated,
-/// then ``x`` is no longer live, and so neither is ``y``, as a sub-buffer
-/// of ``x``. This means that the liveness of buffers of length 0 cannot
-/// be preserved by modifies clauses. Fortunately, in most cases, to
-/// talk about the liveness of ``y``, it is always possible to reason
-/// about the liveness of a buffer which encloses ``y``, such as ``x``.
 
 val modifies_buffer_elim
   (#t1: Type)
@@ -466,7 +469,6 @@ val modifies_buffer_elim
   (requires (
     loc_disjoint (loc_buffer b) p /\
     B.live h b /\
-    ((B.length b) == 0 ==> B.live h' b) /\ // necessary for liveness, because all buffers of size 0 are disjoint for any memory location, so we cannot talk about their liveness individually without referring to a larger nonempty buffer
     modifies p h h'
   ))
   (ensures (
@@ -541,6 +543,11 @@ val no_upd_fresh_region: r:HS.rid -> l:loc -> h0:HS.mem -> h1:HS.mem -> Lemma
   (requires (HS.fresh_region r h0 h1 /\ modifies (loc_union (loc_all_regions_from r) l) h0 h1))
   (ensures  (modifies l h0 h1))
   [SMTPat (HS.fresh_region r h0 h1); SMTPat (modifies l h0 h1)]
+
+val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
+  (requires (HS.fresh_frame h0 h1))
+  (ensures (modifies loc_none h0 h1))
+  [SMTPat (HS.fresh_frame h0 h1)]
 
 /// Stack discipline: any stack frame (and all its transitively
 /// extending regions) that is pushed, modified and popped can be
@@ -646,7 +653,7 @@ val modifies_0_modifies
     [SMTPat (modifies loc_none h1 h2)];
   ]]
 
-/// Case ``modifies_1``: update, free.
+/// Case ``modifies_1``: update.
 
 val modifies_1_modifies
   (#a: Type)
@@ -659,6 +666,18 @@ val modifies_1_modifies
     [SMTPat (B.modifies_1 b h1 h2)];
     [SMTPat (modifies (loc_buffer b) h1 h2)];
   ]]
+
+/// Case ``modifies_addr_of``: free. 
+
+val modifies_addr_of_modifies
+  (#a: Type)
+  (b: B.buffer a)
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (B.modifies_addr_of b h1 h2))
+  (ensures (modifies (loc_addresses (B.frameOf b) (Set.singleton (B.as_addr b))) h1 h2))
+  [SMTPat (B.modifies_addr_of b h1 h2)]
+
 
 /// Any live reference is disjoint from a buffer which has not been allocated yet.
 
@@ -771,3 +790,32 @@ val modifies_only_live_addresses
     (forall x . Set.mem x a ==> h `does_not_contain_addr` (r, x))
   ))
   (ensures (modifies l h h'))
+
+
+/// Type class instantiation for compositionality with other kinds of memory locations than regions, references or buffers (just in case).
+/// No usage pattern has been found yet.
+
+module MG = FStar.ModifiesGen
+
+val cloc_cls: MG.cls B.abuffer
+
+val cloc_of_loc (l: loc) : Tot (MG.loc cloc_cls)
+
+val loc_of_cloc (l: MG.loc cloc_cls) : Tot loc
+
+val loc_of_cloc_of_loc (l: loc) : Lemma
+  (loc_of_cloc (cloc_of_loc l) == l)
+  [SMTPat (loc_of_cloc (cloc_of_loc l))]
+
+val cloc_of_loc_of_cloc (l: MG.loc cloc_cls) : Lemma
+  (cloc_of_loc (loc_of_cloc l) == l)
+  [SMTPat (cloc_of_loc (loc_of_cloc l))]
+
+val loc_includes_to_cloc (l1 l2: loc) : Lemma
+  (loc_includes l1 l2 <==> MG.loc_includes (cloc_of_loc l1) (cloc_of_loc l2))
+
+val loc_disjoint_to_cloc (l1 l2: loc) : Lemma
+  (loc_disjoint l1 l2 <==> MG.loc_disjoint (cloc_of_loc l1) (cloc_of_loc l2))
+
+val modifies_to_cloc (l: loc) (h1 h2: HS.mem) : Lemma
+  (modifies l h1 h2 <==> MG.modifies (cloc_of_loc l) h1 h2)
