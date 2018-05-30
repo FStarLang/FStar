@@ -14,12 +14,12 @@ let x_explicit = FStar.UInt32.(0ul +^ 1ul)
 
 #set-options "--integer_overloading true"
 /// With the option turned on, this is no longer necessary
-/// Note the inferred type: z: int_t (Unsigned W32){...}
+/// Note the inferred type: z: int_t (Unsigned W32)
 let ex1 = 0ul + 1ul
 
 /// Overloading covers both machine integers as well as
 /// mathematical integers
-/// Note the inferred type: z: int_t (Signed Winfinite){ ... }
+/// Note the inferred type: z: int_t (Signed Winfinite)
 let ex2 = 0 + 1
 
 /// `FStar.Integers.nat`, `FStar.Integers.pos` etc.
@@ -49,4 +49,21 @@ let ex8 (x:uint_32) (y:uint_32{ok ( + ) x y }) = FStar.UInt32.(x +^ y)
 let ex9 (x:int_32{ok op_Subtraction 0l x}) = 0l - x
 
 /// Though, it's arguably still a bit cleaner than before
-let ex10 (x:FStar.Int32.t{FStar.Int.size (- (FStar.Int32.v x)) 32}) = FStar.Int32.(0l -^ x)
+let ex10 (x:FStar.Int32.t{FStar.Int.size (Prims.op_Minus (FStar.Int32.v x)) 32}) = FStar.Int32.(0l -^ x)
+
+/// We also now have unary minus on machine integers
+let ex11 =
+  let abs (x:int) = if x > 0 then x else - x in
+  let min_int32 = -0x7fffffffl - 1l in
+  let abs_int32 (x:int_32{x <> min_int32}) : y:int_32{v y = abs (v x)} =
+      if x < 0l then -x else x
+  in
+  ()
+
+/// We also have a generic bounds-respecting cast operator among the integer types
+/// This one does an an addition in uint_32, with checks on both the cast and the addition
+let cast_ok #from to (x:int_t from) = within_bounds to (v x)
+let ex12 (x:int_32{cast_ok (Unsigned W32) x}) (y:uint_32{ok (+) (cast x) y}) = cast x + y
+
+/// But casts to wider types of the same signedness are always ok
+let ex13 (x:uint_16) (y:uint_32{ok (+) (cast x) y}) = cast x + y
