@@ -181,7 +181,7 @@ let file_of_dep_aux
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
          raise_err (Errors.Fatal_MissingInterface, BU.format1 "Expected an interface for module %s, but couldn't find one" key)
        | Some f ->
-         if use_checked_file then FStar.Options.prepend_cache_dir f else f)
+         f)
 
     | PreferInterface key //key for module 'a'
         when has_interface file_system_map key ->  //so long as 'a.fsti' exists
