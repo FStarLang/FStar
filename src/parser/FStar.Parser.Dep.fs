@@ -181,7 +181,7 @@ let file_of_dep_aux
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
          raise_err (Errors.Fatal_MissingInterface, BU.format1 "Expected an interface for module %s, but couldn't find one" key)
        | Some f ->
-         if use_checked_file then FStar.Options.prepend_cache_dir (f ^ ".source") else f)
+         if use_checked_file then FStar.Options.prepend_cache_dir f else f)
 
     | PreferInterface key //key for module 'a'
         when has_interface file_system_map key ->  //so long as 'a.fsti' exists
@@ -1036,17 +1036,19 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           in
           let norm_f = norm_path f in
           let files = List.map (file_of_dep_aux true file_system_map all_cmd_line_files) f_deps in
+          let files =
+              match iface_deps with
+              | None -> files
+              | Some iface_deps ->
+                let iface_files =
+                    List.map (file_of_dep_aux true file_system_map all_cmd_line_files) iface_deps
+                in
+                BU.remove_dups (fun x y -> x = y) (files @ iface_files)
+          in
           let files = List.map norm_path files in
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
           let files = String.concat "\\\n\t" files in
-          //interfaces get two lines of output
-          //this one prints:
-          //   a.fsti.source: a.fsti b.fst.checked c.fsti.checked
-          //                 touch $@
-          if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n"
-                                             (norm_path (FStar.Options.prepend_cache_dir norm_f))
-                                             norm_f
-                                             files;
+
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
           Util.print3 "%s: %s \\\n\t%s\n\n"
