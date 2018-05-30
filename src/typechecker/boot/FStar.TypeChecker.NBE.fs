@@ -430,8 +430,8 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
     | Tm_arrow (bs, c) -> debug_term e; failwith "Tm_arrow: Not yet implemented"
 
-    | Tm_refine (db, t) ->
-      Refinement ((db, None), Lam ((fun (y:t) -> translate env (y::bs) t), None))
+    | Tm_refine (db, tm) ->
+      Refinement ((db, None), Lam ((fun (y:t) -> translate env (y::bs) tm), None))
 
     | Tm_ascribed (t, _, _) -> translate env bs t
 
@@ -511,7 +511,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
       translate env (make_rec_env lbs bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
 
 
-and readback_primops (env:Env.env) (n:string) (args:list<term * aqual>): term =
+and readback_primops (env:Env.env) (n:string) (args:list<(term * aqual)>): term =
     debug (fun () -> BU.print1 "Readback primop %s\n" n);
     let args = List.map (fun (e, _) -> translate env [] e) args in
     match (n, args) with
