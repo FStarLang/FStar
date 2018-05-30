@@ -1579,11 +1579,31 @@ let (print_full : deps -> unit) =
         (FStar_All.pipe_right keys
            (FStar_List.iter
               (fun f  ->
-                 let uu____5249 =
-                   let uu____5256 = deps_try_find deps f  in
-                   FStar_All.pipe_right uu____5256 FStar_Option.get  in
-                 match uu____5249 with
-                 | (f_deps,uu____5280) ->
+                 let uu____5250 =
+                   let uu____5257 = deps_try_find deps f  in
+                   FStar_All.pipe_right uu____5257 FStar_Option.get  in
+                 match uu____5250 with
+                 | (f_deps,uu____5281) ->
+                     let iface_deps =
+                       let uu____5291 = is_interface f  in
+                       if uu____5291
+                       then FStar_Pervasives_Native.None
+                       else
+                         (let uu____5299 =
+                            let uu____5302 = lowercase_module_name f  in
+                            interface_of file_system_map uu____5302  in
+                          match uu____5299 with
+                          | FStar_Pervasives_Native.None  ->
+                              FStar_Pervasives_Native.None
+                          | FStar_Pervasives_Native.Some iface ->
+                              let uu____5310 =
+                                let uu____5313 =
+                                  let uu____5318 = deps_try_find deps iface
+                                     in
+                                  FStar_Option.get uu____5318  in
+                                FStar_Pervasives_Native.fst uu____5313  in
+                              FStar_Pervasives_Native.Some uu____5310)
+                        in
                      let norm_f = norm_path f  in
                      let files =
                        FStar_List.map
@@ -1597,44 +1617,44 @@ let (print_full : deps -> unit) =
                          files1
                         in
                      let files3 = FStar_String.concat "\\\n\t" files2  in
-                     ((let uu____5300 = is_interface f  in
-                       if uu____5300
+                     ((let uu____5346 = is_interface f  in
+                       if uu____5346
                        then
-                         let uu____5301 =
-                           let uu____5302 =
+                         let uu____5347 =
+                           let uu____5348 =
                              FStar_Options.prepend_cache_dir norm_f  in
-                           norm_path uu____5302  in
+                           norm_path uu____5348  in
                          FStar_Util.print3
                            "%s.source: %s \\\n\t%s\n\ttouch $@\n\n"
-                           uu____5301 norm_f files3
+                           uu____5347 norm_f files3
                        else ());
-                      (let uu____5305 = cache_file f  in
-                       FStar_Util.print3 "%s: %s \\\n\t%s\n\n" uu____5305
+                      (let uu____5351 = cache_file f  in
+                       FStar_Util.print3 "%s: %s \\\n\t%s\n\n" uu____5351
                          norm_f files3);
                       (let already_there =
-                         let uu____5309 =
-                           let uu____5320 =
-                             let uu____5321 = output_file ".krml" f  in
-                             norm_path uu____5321  in
+                         let uu____5355 =
+                           let uu____5366 =
+                             let uu____5367 = output_file ".krml" f  in
+                             norm_path uu____5367  in
                            FStar_Util.smap_try_find transitive_krml
-                             uu____5320
+                             uu____5366
                             in
-                         match uu____5309 with
+                         match uu____5355 with
                          | FStar_Pervasives_Native.Some
-                             (uu____5332,already_there,uu____5334) ->
+                             (uu____5378,already_there,uu____5380) ->
                              already_there
                          | FStar_Pervasives_Native.None  -> []  in
-                       (let uu____5356 =
-                          let uu____5357 = output_file ".krml" f  in
-                          norm_path uu____5357  in
-                        let uu____5358 =
-                          let uu____5367 =
-                            let uu____5368 = output_file ".exe" f  in
-                            norm_path uu____5368  in
-                          let uu____5369 =
-                            let uu____5372 =
-                              let uu____5375 =
-                                let uu____5378 =
+                       (let uu____5402 =
+                          let uu____5403 = output_file ".krml" f  in
+                          norm_path uu____5403  in
+                        let uu____5404 =
+                          let uu____5413 =
+                            let uu____5414 = output_file ".exe" f  in
+                            norm_path uu____5414  in
+                          let uu____5415 =
+                            let uu____5418 =
+                              let uu____5421 =
+                                let uu____5424 =
                                   deps_of
                                     (Mk
                                        (deps, file_system_map,
@@ -1642,22 +1662,22 @@ let (print_full : deps -> unit) =
                                    in
                                 FStar_List.map
                                   (fun x  ->
-                                     let uu____5386 = output_file ".krml" x
+                                     let uu____5432 = output_file ".krml" x
                                         in
-                                     norm_path uu____5386) uu____5378
+                                     norm_path uu____5432) uu____5424
                                  in
-                              FStar_List.append already_there uu____5375  in
-                            FStar_List.unique uu____5372  in
-                          (uu____5367, uu____5369, false)  in
-                        FStar_Util.smap_add transitive_krml uu____5356
-                          uu____5358);
-                       (let uu____5397 = is_implementation f  in
-                        if uu____5397
+                              FStar_List.append already_there uu____5421  in
+                            FStar_List.unique uu____5418  in
+                          (uu____5413, uu____5415, false)  in
+                        FStar_Util.smap_add transitive_krml uu____5402
+                          uu____5404);
+                       (let uu____5443 = is_implementation f  in
+                        if uu____5443
                         then
-                          ((let uu____5399 = output_ml_file f  in
-                            let uu____5400 = cache_file f  in
-                            FStar_Util.print2 "%s: %s\n\n" uu____5399
-                              uu____5400);
+                          ((let uu____5445 = output_ml_file f  in
+                            let uu____5446 = cache_file f  in
+                            FStar_Util.print2 "%s: %s\n\n" uu____5445
+                              uu____5446);
                            (let cmx_files =
                               let fst_files =
                                 FStar_All.pipe_right f_deps
@@ -1665,59 +1685,78 @@ let (print_full : deps -> unit) =
                                      (file_of_dep_aux false file_system_map
                                         all_cmd_line_files))
                                  in
+                              let fst_files_from_iface =
+                                match iface_deps with
+                                | FStar_Pervasives_Native.None  -> []
+                                | FStar_Pervasives_Native.Some iface_deps1 ->
+                                    let id1 =
+                                      FStar_All.pipe_right iface_deps1
+                                        (FStar_List.map
+                                           (file_of_dep_aux false
+                                              file_system_map
+                                              all_cmd_line_files))
+                                       in
+                                    id1
+                                 in
+                              let fst_files1 =
+                                FStar_Util.remove_dups
+                                  (fun x  -> fun y  -> x = y)
+                                  (FStar_List.append fst_files
+                                     fst_files_from_iface)
+                                 in
                               let extracted_fst_files =
-                                FStar_All.pipe_right fst_files
+                                FStar_All.pipe_right fst_files1
                                   (FStar_List.filter
                                      (fun df  ->
-                                        (let uu____5424 =
+                                        (let uu____5496 =
                                            lowercase_module_name df  in
-                                         let uu____5425 =
+                                         let uu____5497 =
                                            lowercase_module_name f  in
-                                         uu____5424 <> uu____5425) &&
-                                          (let uu____5427 =
+                                         uu____5496 <> uu____5497) &&
+                                          (let uu____5499 =
                                              lowercase_module_name df  in
                                            FStar_Options.should_extract
-                                             uu____5427)))
+                                             uu____5499)))
                                  in
                               FStar_All.pipe_right extracted_fst_files
                                 (FStar_List.map output_cmx_file)
                                in
-                            (let uu____5433 =
-                               let uu____5434 = lowercase_module_name f  in
-                               FStar_Options.should_extract uu____5434  in
-                             if uu____5433
+                            (let uu____5505 =
+                               let uu____5506 = lowercase_module_name f  in
+                               FStar_Options.should_extract uu____5506  in
+                             if uu____5505
                              then
-                               let uu____5435 = output_cmx_file f  in
-                               let uu____5436 = output_ml_file f  in
+                               let uu____5507 = output_cmx_file f  in
+                               let uu____5508 = output_ml_file f  in
                                FStar_Util.print3 "%s: %s \\\n\t%s\n\n"
-                                 uu____5435 uu____5436
+                                 uu____5507 uu____5508
                                  (FStar_String.concat "\\\n\t" cmx_files)
                              else ());
-                            (let uu____5438 = output_krml_file f  in
-                             let uu____5439 = cache_file f  in
-                             FStar_Util.print2 "%s: %s\n\n" uu____5438
-                               uu____5439)))
+                            (let uu____5510 = output_krml_file f  in
+                             let uu____5511 = cache_file f  in
+                             FStar_Util.print2 "%s: %s\n\n" uu____5510
+                               uu____5511)))
                         else
-                          (let uu____5441 =
-                             (let uu____5444 =
-                                let uu____5445 = lowercase_module_name f  in
-                                has_implementation file_system_map uu____5445
+                          (let uu____5513 =
+                             (let uu____5516 =
+                                let uu____5517 = lowercase_module_name f  in
+                                has_implementation file_system_map uu____5517
                                  in
-                              Prims.op_Negation uu____5444) &&
+                              Prims.op_Negation uu____5516) &&
                                (is_interface f)
                               in
-                           if uu____5441
+                           if uu____5513
                            then
-                             let uu____5446 = output_krml_file f  in
-                             let uu____5447 = cache_file f  in
-                             FStar_Util.print2 "%s: %s\n\n" uu____5446
-                               uu____5447
+                             let uu____5518 = output_krml_file f  in
+                             let uu____5519 = cache_file f  in
+                             FStar_Util.print2 "%s: %s\n\n" uu____5518
+                               uu____5519
                            else ()))))));
          (let all_fst_files =
-            let uu____5452 =
+            let uu____5524 =
               FStar_All.pipe_right keys (FStar_List.filter is_implementation)
                in
-            FStar_All.pipe_right uu____5452
+            FStar_All.pipe_right uu____5524
               (FStar_Util.sort_with FStar_String.compare)
              in
           let all_ml_files =
@@ -1727,11 +1766,11 @@ let (print_full : deps -> unit) =
               (FStar_List.iter
                  (fun fst_file  ->
                     let mname = lowercase_module_name fst_file  in
-                    let uu____5478 = FStar_Options.should_extract mname  in
-                    if uu____5478
+                    let uu____5550 = FStar_Options.should_extract mname  in
+                    if uu____5550
                     then
-                      let uu____5479 = output_ml_file fst_file  in
-                      FStar_Util.smap_add ml_file_map mname uu____5479
+                      let uu____5551 = output_ml_file fst_file  in
+                      FStar_Util.smap_add ml_file_map mname uu____5551
                     else ()));
             sort_output_files ml_file_map  in
           let all_krml_files =
@@ -1741,83 +1780,83 @@ let (print_full : deps -> unit) =
               (FStar_List.iter
                  (fun fst_file  ->
                     let mname = lowercase_module_name fst_file  in
-                    let uu____5495 = output_krml_file fst_file  in
-                    FStar_Util.smap_add krml_file_map mname uu____5495));
+                    let uu____5567 = output_krml_file fst_file  in
+                    FStar_Util.smap_add krml_file_map mname uu____5567));
             sort_output_files krml_file_map  in
           let rec make_transitive f =
-            let uu____5508 =
-              let uu____5517 = FStar_Util.smap_try_find transitive_krml f  in
-              FStar_Util.must uu____5517  in
-            match uu____5508 with
+            let uu____5580 =
+              let uu____5589 = FStar_Util.smap_try_find transitive_krml f  in
+              FStar_Util.must uu____5589  in
+            match uu____5580 with
             | (exe,deps1,seen) ->
                 if seen
                 then (exe, deps1)
                 else
                   (FStar_Util.smap_add transitive_krml f (exe, deps1, true);
                    (let deps2 =
-                      let uu____5580 =
-                        let uu____5583 =
+                      let uu____5652 =
+                        let uu____5655 =
                           FStar_List.map
                             (fun dep1  ->
-                               let uu____5595 = make_transitive dep1  in
-                               match uu____5595 with
-                               | (uu____5604,deps2) -> dep1 :: deps2) deps1
+                               let uu____5667 = make_transitive dep1  in
+                               match uu____5667 with
+                               | (uu____5676,deps2) -> dep1 :: deps2) deps1
                            in
-                        FStar_List.flatten uu____5583  in
-                      FStar_List.unique uu____5580  in
+                        FStar_List.flatten uu____5655  in
+                      FStar_List.unique uu____5652  in
                     FStar_Util.smap_add transitive_krml f (exe, deps2, true);
                     (exe, deps2)))
              in
-          (let uu____5624 = FStar_Util.smap_keys transitive_krml  in
+          (let uu____5696 = FStar_Util.smap_keys transitive_krml  in
            FStar_List.iter
              (fun f  ->
-                let uu____5643 = make_transitive f  in
-                match uu____5643 with
+                let uu____5715 = make_transitive f  in
+                match uu____5715 with
                 | (exe,deps1) ->
                     let deps2 =
-                      let uu____5657 = FStar_List.unique (f :: deps1)  in
-                      FStar_String.concat " " uu____5657  in
+                      let uu____5729 = FStar_List.unique (f :: deps1)  in
+                      FStar_String.concat " " uu____5729  in
                     let wasm =
-                      let uu____5661 =
+                      let uu____5733 =
                         FStar_Util.substring exe (Prims.parse_int "0")
                           ((FStar_String.length exe) - (Prims.parse_int "4"))
                          in
-                      Prims.strcat uu____5661 ".wasm"  in
+                      Prims.strcat uu____5733 ".wasm"  in
                     (FStar_Util.print2 "%s: %s\n\n" exe deps2;
-                     FStar_Util.print2 "%s: %s\n\n" wasm deps2)) uu____5624);
-          (let uu____5664 =
-             let uu____5665 =
+                     FStar_Util.print2 "%s: %s\n\n" wasm deps2)) uu____5696);
+          (let uu____5736 =
+             let uu____5737 =
                FStar_All.pipe_right all_fst_files (FStar_List.map norm_path)
                 in
-             FStar_All.pipe_right uu____5665 (FStar_String.concat " \\\n\t")
+             FStar_All.pipe_right uu____5737 (FStar_String.concat " \\\n\t")
               in
-           FStar_Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n" uu____5664);
-          (let uu____5675 =
-             let uu____5676 =
+           FStar_Util.print1 "ALL_FST_FILES=\\\n\t%s\n\n" uu____5736);
+          (let uu____5747 =
+             let uu____5748 =
                FStar_All.pipe_right all_ml_files (FStar_List.map norm_path)
                 in
-             FStar_All.pipe_right uu____5676 (FStar_String.concat " \\\n\t")
+             FStar_All.pipe_right uu____5748 (FStar_String.concat " \\\n\t")
               in
-           FStar_Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n" uu____5675);
-          (let uu____5685 =
-             let uu____5686 =
+           FStar_Util.print1 "ALL_ML_FILES=\\\n\t%s\n\n" uu____5747);
+          (let uu____5757 =
+             let uu____5758 =
                FStar_All.pipe_right all_krml_files (FStar_List.map norm_path)
                 in
-             FStar_All.pipe_right uu____5686 (FStar_String.concat " \\\n\t")
+             FStar_All.pipe_right uu____5758 (FStar_String.concat " \\\n\t")
               in
-           FStar_Util.print1 "ALL_KRML_FILES=\\\n\t%s\n" uu____5685)))
+           FStar_Util.print1 "ALL_KRML_FILES=\\\n\t%s\n" uu____5757)))
   
 let (print : deps -> unit) =
   fun deps  ->
-    let uu____5700 = FStar_Options.dep ()  in
-    match uu____5700 with
+    let uu____5772 = FStar_Options.dep ()  in
+    match uu____5772 with
     | FStar_Pervasives_Native.Some "make" -> print_make deps
     | FStar_Pervasives_Native.Some "full" -> print_full deps
     | FStar_Pervasives_Native.Some "graph" ->
-        let uu____5703 = deps  in
-        (match uu____5703 with
-         | Mk (deps1,uu____5705,uu____5706) -> print_graph deps1)
-    | FStar_Pervasives_Native.Some uu____5711 ->
+        let uu____5775 = deps  in
+        (match uu____5775 with
+         | Mk (deps1,uu____5777,uu____5778) -> print_graph deps1)
+    | FStar_Pervasives_Native.Some uu____5783 ->
         FStar_Errors.raise_err
           (FStar_Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
     | FStar_Pervasives_Native.None  -> ()
