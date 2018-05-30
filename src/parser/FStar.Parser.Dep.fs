@@ -1025,6 +1025,15 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
+          let iface_deps =
+              if is_interface f
+              then None
+              else match interface_of file_system_map (lowercase_module_name f) with
+                   | None ->
+                     None
+                   | Some iface ->
+                     Some (fst (Option.get (deps_try_find deps iface)))
+          in
           let norm_f = norm_path f in
           let files = List.map (file_of_dep_aux true file_system_map all_cmd_line_files) f_deps in
           let files = List.map norm_path files in
@@ -1068,6 +1077,14 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                 let fst_files =
                     f_deps |> List.map (file_of_dep_aux false file_system_map all_cmd_line_files)
                 in
+                let fst_files_from_iface =
+                    match iface_deps with
+                    | None -> []
+                    | Some iface_deps ->
+                      let id = iface_deps |> List.map (file_of_dep_aux false file_system_map all_cmd_line_files) in
+                      id
+                in
+                let fst_files = BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface) in
                 let extracted_fst_files =
                     fst_files |> List.filter (fun df ->
                         lowercase_module_name df <> lowercase_module_name f //avoid circular deps on f's own cmx
