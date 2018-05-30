@@ -70,6 +70,7 @@ type primitive_step = {
 }
 
 val register_plugin: primitive_step -> unit
+val is_norm_request: term -> args -> bool
 val closure_as_term : cfg -> env -> term -> term
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term

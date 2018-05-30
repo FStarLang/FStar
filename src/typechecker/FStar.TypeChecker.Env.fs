@@ -348,21 +348,21 @@ let variable_not_found v =
 let new_u_univ () = U_unif (Unionfind.univ_fresh ())
 
 //Instantiate the universe variables in a type scheme with provided universes
-let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
+let inst_tscheme_with : tscheme -> universes -> term = fun ts us ->
     match ts, us with
-    | ([], t), [] -> [], t
+    | ([], t), [] -> t
     | (formals, t), _ ->
       assert (List.length us = List.length formals);
       let n = List.length formals - 1 in
       let vs = us |> List.mapi (fun i u -> UN (n - i, u)) in
-      us, Subst.subst vs t
+      Subst.subst vs t
 
 //Instantiate the universe variables in a type scheme with new unification variables
 let inst_tscheme : tscheme -> universes * term = function
     | [], t -> [], t
     | us, t ->
       let us' = us |> List.map (fun _ -> new_u_univ()) in
-      inst_tscheme_with (us, t) us'
+      us', inst_tscheme_with (us, t) us'
 
 let inst_tscheme_with_range (r:range) (t:tscheme) =
     let us, t = inst_tscheme t in
@@ -376,7 +376,7 @@ let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
           then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
                             (string_of_int <| List.length univs) (string_of_int <| List.length insts)
                             (Print.lid_to_string ed.mname) (Print.term_to_string t));
-          snd (inst_tscheme_with (ed.univs@us, t) insts)
+          inst_tscheme_with (ed.univs@us, t) insts
         | _  -> failwith (BU.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
 
 type tri =
@@ -464,7 +464,7 @@ let lookup_type_of_let us_opt se lid =
     let inst_tscheme ts =
       match us_opt with
       | None -> inst_tscheme ts
-      | Some us -> inst_tscheme_with ts us
+      | Some us -> us, inst_tscheme_with ts us
     in
     match se.sigel with
     | Sig_let((_, [lb]), _) ->
@@ -484,7 +484,7 @@ let effect_signature us_opt se =
     let inst_tscheme ts =
        match us_opt with
        | None -> inst_tscheme ts
-       | Some us -> inst_tscheme_with ts us
+       | Some us -> us, inst_tscheme_with ts us
     in
     match se.sigel with
     | Sig_new_effect(ne) ->
@@ -499,7 +499,7 @@ let try_lookup_lid_aux us_opt env lid =
   let inst_tscheme ts =
       match us_opt with
       | None -> inst_tscheme ts
-      | Some us -> inst_tscheme_with ts us
+      | Some us -> us, inst_tscheme_with ts us
   in
   let mapper (lr, rng) =
     match lr with
@@ -524,8 +524,8 @@ let try_lookup_lid_aux us_opt env lid =
 
     | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _) }, Some us) ->
       begin match tps with
-        | [] -> Some (inst_tscheme_with (uvs, k) us, rng)
-        | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, rng)
+        | [] -> Some ((us, inst_tscheme_with (uvs, k) us), rng)
+        | _ ->  Some ((us, inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us), rng)
       end
 
     | Inr se ->
@@ -700,7 +700,7 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
              | _, _::_::_ ->
                 failwith (BU.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
                            (Print.lid_to_string lid) (string_of_int <| List.length univs))
-             | _ -> let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in
+             | _ -> let t = inst_tscheme_with (univs, U.arrow binders c) insts in
                     let t = Subst.set_use_range (range_of_lid lid) t in
                     begin match (Subst.compress t).n with
                         | Tm_arrow(binders, c) ->
@@ -907,7 +907,7 @@ let build_lattice env se = match se.sigel with
     in
 
     let mk_mlift_wp lift_t u r wp1 =
-      let _, lift_t = inst_tscheme_with lift_t [u] in
+      let lift_t = inst_tscheme_with lift_t [u] in
       mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos
     in
 
@@ -919,7 +919,7 @@ let build_lattice env se = match se.sigel with
     in
 
     let mk_mlift_term lift_t u r wp1 e =
-      let _, lift_t = inst_tscheme_with lift_t [u] in
+      let lift_t = inst_tscheme_with lift_t [u] in
       mk (Tm_app(lift_t, [as_arg r; as_arg wp1; as_arg e])) None e.pos
     in
 
