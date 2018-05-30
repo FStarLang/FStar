@@ -10,7 +10,7 @@ open FStar.Integers
 
 /// `FStar.Integers.nat`, `FStar.Integers.pos` etc.
 ///  are just refinements of `FStar.Integers.int`
-///  So, operations that mix these with are supported
+///  So, operations that mix these are supported
 let ex1_const_nat (x:nat) : nat = 0 + x
 let ex2_nat_int_pos (x:nat) (y:int) (z:pos) = x + y + z
 
@@ -144,3 +144,7 @@ let ex22 (a:Type0) (s:Seq.seq a) (t:Seq.seq a) = (Seq.length s <: nat) < Seq.len
 ///    converted to their counterparts in `FStar.Integers.int_t _`
 ///
 /// this overloading support will continue to have such kinks.
+
+/// One possibility is to extend the compiler support provided by
+/// `--integer_overloading true` to explicitly add ascriptions to
+/// any (machine)-int typed terms, not just to the constants.
