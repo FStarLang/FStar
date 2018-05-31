@@ -188,18 +188,21 @@ let loc_addresses #al #c preserve_liveness r n =
     (fun _ -> n)
     (Ghost.hide (aloc_domain c regions (fun _ -> n)))
 
-let loc_regions #al #c r =
+let loc_regions #al #c preserve_liveness r =
   let region_liveness_tags : Ghost.erased (Set.set HS.rid) =
-    (Ghost.hide r)  
+    if preserve_liveness then Ghost.hide Set.empty else Ghost.hide r
   in
   let addrs (r' : HS.rid { Set.mem r' r } ) : GTot (y: Set.set nat { r' `Set.mem` (Ghost.reveal region_liveness_tags) ==> Set.subset (Set.complement Set.empty) y } ) =
     Set.complement Set.empty
+  in
+  let live_addrs (r' : HS.rid { Set.mem r' r } ) : GTot (y: Set.set nat { addrs r' `Set.subset` y } ) =
+    addrs r'
   in
   Loc
     (Ghost.hide r)
     region_liveness_tags
     addrs
-    addrs
+    live_addrs
     (Ghost.hide (aloc_domain c (Ghost.hide r) addrs))
 
 let aloc_includes (#al: aloc_t) (#c: cls al) (b0 b: aloc c) : GTot Type0 =
@@ -385,13 +388,18 @@ let addrs_of_loc_loc_of_aloc
 
 let loc_includes_addresses_aloc #al #c preserve_liveness r s #a p = ()
 
-let loc_includes_region_aloc #al #c s #r #a b = ()
+let loc_includes_region_aloc #al #c preserve_liveness s #r #a b = ()
 
-let loc_includes_region_addresses #al #c s preserve_liveness r a = ()
+let loc_includes_region_addresses #al #c s preserve_liveness1 preserve_liveness2 r a = ()
 
-let loc_includes_region_region #al #c s1 s2 = ()
+let loc_includes_region_region #al #c preserve_liveness1 preserve_liveness2 s1 s2 = ()
 
-let loc_includes_region_union_l #al #c l s1 s2 = ()
+let loc_includes_region_union_l #al #c preserve_liveness l s1 s2 =
+  assert ((loc_regions #_ #c preserve_liveness (Set.intersect s2 (Set.complement s1)) `loc_union` loc_regions #_ #c preserve_liveness (Set.intersect s2 s1)) `loc_equal` loc_regions preserve_liveness s2);
+  loc_includes_region_region #_ #c preserve_liveness preserve_liveness s1 (Set.intersect s2 s1);
+  loc_includes_union_l (loc_regions preserve_liveness s1) l (loc_regions preserve_liveness (Set.intersect s2 (Set.complement s1)));
+  loc_includes_union_l (loc_regions preserve_liveness s1) l (loc_regions preserve_liveness (Set.intersect s2 s1));
+  loc_includes_union_r (loc_union (loc_regions preserve_liveness s1) l) (loc_regions preserve_liveness (Set.intersect s2 (Set.complement s1))) (loc_regions preserve_liveness (Set.intersect s2 s1))
 
 let loc_includes_addresses_addresses #al c preserve_liveness1 preserve_liveness2 r s1 s2 = ()
 
@@ -535,9 +543,9 @@ let loc_disjoint_aloc_addresses_intro #al #c #r' #a' p preserve_liveness r n = (
 
 let loc_disjoint_aloc_addresses_elim #al #c #r' #a' p preserve_liveness r n = ()
 
-let loc_disjoint_regions #al #c rs1 rs2 =
+let loc_disjoint_regions #al #c preserve_liveness1 preserve_liveness2 rs1 rs2 =
   // FIXME: WHY WHY WHY this assert?
-  assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_regions #_ #c rs1))) (Ghost.reveal (Loc?.aux (loc_regions #_ #c rs2))))
+  assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_regions #_ #c preserve_liveness1 rs1))) (Ghost.reveal (Loc?.aux (loc_regions #_ #c preserve_liveness2 rs2))))
 
 
 (** Liveness-insensitive memory locations *)
@@ -842,8 +850,8 @@ let modifies_only_live_regions_weak
   (h h' : HS.mem)
 : Lemma
   (requires (
-    modifies (loc_union (loc_regions rs) l) h h' /\
-    loc_disjoint (loc_regions rs) l /\
+    modifies (loc_union (loc_regions false rs) l) h h' /\
+    loc_disjoint (loc_regions false rs) l /\
     (forall r . Set.mem r rs ==> (~ (HS.live_region h r)))
   ))
   (ensures (modifies l h h'))
@@ -914,7 +922,7 @@ let loc_includes_loc_regions_restrict_to_regions
   (l: loc c)
   (rs: Set.set HS.rid)
 : Lemma
-  (loc_includes (loc_regions rs) (restrict_to_regions l rs))
+  (loc_includes (loc_regions false rs) (restrict_to_regions l rs))
 = Classical.forall_intro (loc_aux_includes_refl #al #c)
 
 let modifies_only_live_regions #al #c rs l h h' =
@@ -922,7 +930,7 @@ let modifies_only_live_regions #al #c rs l h h' =
   let c_rs = Set.complement rs in
   let s_rs = restrict_to_regions s rs in
   let s_c_rs = restrict_to_regions s c_rs in
-  let lrs = loc_regions rs in
+  let lrs = loc_regions false rs in
   loc_includes_loc_regions_restrict_to_regions s rs;
   loc_includes_union_l lrs s_c_rs s_rs;
   loc_includes_refl s_c_rs;
@@ -932,9 +940,9 @@ let modifies_only_live_regions #al #c rs l h h' =
   loc_includes_trans (loc_union lrs s_c_rs) (loc_union s_rs s_c_rs) s;
   modifies_loc_includes (loc_union lrs s_c_rs) h h' (loc_union lrs s);
   loc_includes_loc_regions_restrict_to_regions s c_rs;
-  loc_disjoint_regions #al #c rs c_rs;
+  loc_disjoint_regions #al #c false false rs c_rs;
   loc_includes_refl lrs;
-  loc_disjoint_includes lrs (loc_regions c_rs) lrs s_c_rs;
+  loc_disjoint_includes lrs (loc_regions false c_rs) lrs s_c_rs;
   modifies_only_live_regions_weak rs s_c_rs h h';
   loc_includes_restrict_to_regions s c_rs;
   modifies_loc_includes s h h' s_c_rs
@@ -952,9 +960,9 @@ let fresh_frame_modifies #al c h0 h1 =
 
 let modifies_fresh_frame_popped #al #c h0 h1 s h2 h3 =
   fresh_frame_modifies c h0 h1;
-  let r = loc_region_only #al #c h2.HS.tip in
+  let r = loc_region_only #al #c false h2.HS.tip in
   let rs = HS.mod_set (Set.singleton h1.HS.tip) in
-  let s' = loc_union (loc_regions rs) s in
+  let s' = loc_union (loc_regions false rs) s in
   modifies_trans' s' h0 h1 h2;
   assert (modifies_preserves_mreferences r h2 h3);
   let f23 (r: HS.rid) (a: nat) (b: al r a) : Lemma
@@ -974,8 +982,8 @@ let modifies_loc_regions_intro #al #c rs h1 h2 =
     (ensures (c.aloc_preserved b h1 h2))
   = c.same_mreference_aloc_preserved #r #a b h1 h2 (fun a' pre r' -> ())
   in
-  assert (modifies_preserves_mreferences (loc_regions #al #c rs) h1 h2);
-  modifies_preserves_alocs_intro (loc_regions #_ #c rs) h1 h2 () (fun r a b ->
+  assert (modifies_preserves_mreferences (loc_regions #al #c true rs) h1 h2);
+  modifies_preserves_alocs_intro (loc_regions #_ #c true rs) h1 h2 () (fun r a b ->
     f r a b
   )
 
@@ -988,9 +996,9 @@ let modifies_loc_addresses_intro_weak
 : Lemma
   (requires (
     HS.live_region h2 r /\
-    modifies (loc_union (loc_region_only r) l) h1 h2 /\
+    modifies (loc_union (loc_region_only false r) l) h1 h2 /\
     HS.modifies_ref r s h1 h2 /\
-    loc_disjoint l (loc_region_only r)
+    loc_disjoint l (loc_region_only false r)
   ))
   (ensures (modifies (loc_union (loc_addresses true r s) l) h1 h2))
 = modifies_preserves_mreferences_intro (loc_union (loc_addresses true r s) l) h1 h2 (fun r' a' b' ->
@@ -1012,12 +1020,12 @@ let modifies_loc_addresses_intro_weak
 let modifies_loc_addresses_intro #al #c r s l h1 h2 =
   loc_includes_loc_regions_restrict_to_regions l (Set.singleton r);
   loc_includes_loc_union_restrict_to_regions l (Set.singleton r);
-  assert (modifies (loc_union (loc_region_only r) (loc_union (restrict_to_regions l (Set.singleton r)) (restrict_to_regions l (Set.complement (Set.singleton r))))) h1 h2);
+  assert (modifies (loc_union (loc_region_only false r) (loc_union (restrict_to_regions l (Set.singleton r)) (restrict_to_regions l (Set.complement (Set.singleton r))))) h1 h2);
   let l' = restrict_to_regions l (Set.complement (Set.singleton r)) in
-  loc_includes_refl (loc_region_only #_ #c r) ;
+  loc_includes_refl (loc_region_only #_ #c false r) ;
   loc_includes_loc_regions_restrict_to_regions l (Set.complement (Set.singleton r));
-  loc_disjoint_regions #_ #c (Set.complement (Set.singleton r)) (Set.singleton r);
-  loc_disjoint_includes (loc_regions #_ #c (Set.complement (Set.singleton r))) (loc_region_only r) l' (loc_region_only r);
+  loc_disjoint_regions #_ #c false false (Set.complement (Set.singleton r)) (Set.singleton r);
+  loc_disjoint_includes (loc_regions #_ #c false (Set.complement (Set.singleton r))) (loc_region_only false r) l' (loc_region_only false r);
   modifies_loc_addresses_intro_weak r s l' h1 h2;
   loc_includes_restrict_to_regions l (Set.complement (Set.singleton r))
 
@@ -1117,7 +1125,7 @@ let restrict_to_addresses
   (r: HS.rid)
   (as: Set.set nat)
 : Ghost (loc c)
-  (requires (loc_region_only r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
+  (requires (loc_region_only false r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
   (ensures (fun _ -> True))
 = let (Loc regions _ non_live_addrs live_addrs aux) = l in
   let regions' = ((Set.intersect (Ghost.reveal regions) (Set.singleton r))) in
@@ -1144,7 +1152,7 @@ let regions_of_loc_restrict_to_addresses
   (r: HS.rid)
   (as: Set.set nat)
 : Lemma
-  (requires (loc_region_only r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
+  (requires (loc_region_only false r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
   (ensures (regions_of_loc (restrict_to_addresses l r as) == Set.intersect (regions_of_loc l) (Set.singleton r)))
   [SMTPat (regions_of_loc (restrict_to_addresses l r as))]
 = assert (regions_of_loc (restrict_to_addresses l r as) `Set.equal` Set.intersect (regions_of_loc l) (Set.singleton r))
@@ -1156,7 +1164,7 @@ let addrs_of_loc_weak_restrict_to_addresses
   (as: Set.set nat)
   (r' : HS.rid)
 : Lemma
-  (requires (loc_region_only r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
+  (requires (loc_region_only false r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
   (ensures (addrs_of_loc_weak (restrict_to_addresses l r as) r' == (if r = r' then Set.intersect (addrs_of_loc_weak l r) as else Set.empty)))
   [SMTPat (addrs_of_loc_weak (restrict_to_addresses l r as) r')]
 = assert (addrs_of_loc_weak (restrict_to_addresses l r as) r `Set.equal` Set.intersect (addrs_of_loc_weak l r) as)
@@ -1168,7 +1176,7 @@ let addrs_of_loc_restrict_to_addresses
   (as: Set.set nat)
   (r' : HS.rid)
 : Lemma
-  (requires (loc_region_only r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
+  (requires (loc_region_only false r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
   (ensures (addrs_of_loc (restrict_to_addresses l r as) r' == (if r = r' then GSet.intersect (addrs_of_loc l r) (GSet.of_set as) else GSet.empty)))
   [SMTPat (addrs_of_loc (restrict_to_addresses l r as) r')]
 = assert (addrs_of_loc (restrict_to_addresses l r as) r `GSet.equal` GSet.intersect (addrs_of_loc l r) (GSet.of_set as));
@@ -1180,7 +1188,7 @@ let loc_includes_restrict_to_addresses
   (r: HS.rid)
   (as: Set.set nat)
 : Lemma
-  (requires (loc_region_only r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
+  (requires (loc_region_only false r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
   (ensures (loc_includes l (restrict_to_addresses l r as)))
 = Classical.forall_intro_2 (fun s1 s2 -> Classical.move_requires (loc_aux_includes_subset #al #c s1) s2)
 
@@ -1192,7 +1200,7 @@ let loc_includes_loc_union_restrict_to_addresses
   (r: HS.rid)
   (as: Set.set nat)
 : Lemma
-  (requires (loc_region_only r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
+  (requires (loc_region_only false r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
   (ensures (loc_equal (loc_union (restrict_to_addresses l r as) (restrict_to_addresses l r (Set.complement as))) l))
 = ()
 
@@ -1204,7 +1212,7 @@ let loc_includes_loc_addresses_restrict_to_addresses
   (r: HS.rid)
   (as: Set.set nat)
 : Lemma
-  (requires (loc_region_only r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
+  (requires (loc_region_only false r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
   (ensures (loc_includes (loc_addresses false r as) (restrict_to_addresses l r as)))
 = Classical.forall_intro_2 (fun s1 s2 -> Classical.move_requires (loc_aux_includes_subset #al #c s1) s2)
 
@@ -1214,7 +1222,7 @@ let loc_disjoint_restrict_to_addresses
   (r: HS.rid)
   (as: Set.set nat)
 : Lemma
-  (requires (loc_region_only r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
+  (requires (loc_region_only false r `loc_includes` l /\ Loc?.region_liveness_tags l == Ghost.hide Set.empty))
   (ensures (loc_addresses false r as `loc_disjoint` restrict_to_addresses l r (Set.complement as)))
 = disjoint_addrs_of_loc_loc_disjoint (loc_addresses false r as) (restrict_to_addresses l r (Set.complement as))
 
@@ -1251,9 +1259,9 @@ let modifies_only_live_addresses_no_liveness_tag #al #c r a l h h' =
   modifies_loc_includes (loc_union (loc_addresses false r a) l_not_a) h h' (loc_union (loc_addresses false r a) l);
   loc_disjoint_restrict_to_addresses l_r r a;
   loc_includes_loc_regions_restrict_to_regions l (Set.complement (Set.singleton r));
-  loc_includes_region_addresses #al #c false (Set.singleton r) r a;
-  loc_disjoint_regions #al #c (Set.singleton r) (Set.complement (Set.singleton r));
-  loc_disjoint_includes (loc_region_only r) (loc_regions (Set.complement (Set.singleton r))) (loc_addresses false r a) l_not_r;
+  loc_includes_region_addresses #al #c false false (Set.singleton r) r a;
+  loc_disjoint_regions #al #c false false (Set.singleton r) (Set.complement (Set.singleton r));
+  loc_disjoint_includes (loc_region_only false r) (loc_regions false (Set.complement (Set.singleton r))) (loc_addresses false r a) l_not_r;
   loc_disjoint_union_r (loc_addresses false r a) l_r_not_a l_not_r;
   modifies_only_live_addresses_weak r a l_not_a h h';
   loc_includes_restrict_to_regions l (Set.complement (Set.singleton r));
@@ -1265,9 +1273,9 @@ let modifies_only_live_addresses_no_liveness_tag #al #c r a l h h' =
 let modifies_only_live_addresses #al #c r a l h h' =
   if Set.mem r (Ghost.reveal (Loc?.region_liveness_tags l))
   then begin
-    assert (loc_includes l (loc_region_only r));
-    loc_includes_region_addresses #_ #c false (Set.singleton r) r a;
-    loc_includes_trans l (loc_region_only r) (loc_addresses false r a);
+    assert (loc_includes l (loc_region_only false r));
+    loc_includes_region_addresses #_ #c false false (Set.singleton r) r a;
+    loc_includes_trans l (loc_region_only false r) (loc_addresses false r a);
     loc_includes_refl l;
     loc_includes_union_r l (loc_addresses false r a) l;
     modifies_loc_includes l h h' (loc_union (loc_addresses false r a) l)
@@ -1490,8 +1498,8 @@ let union_loc_of_loc_union #al c b l1 l2 =
 let union_loc_of_loc_addresses #al c b preserve_liveness r n =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_addresses #_ #(c b) preserve_liveness r n)) (loc_addresses #_ #(cls_union c) preserve_liveness r n))
 
-let union_loc_of_loc_regions #al c b r =
-  assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_regions #_ #(c b) r)) (loc_regions #_ #(cls_union c) r))
+let union_loc_of_loc_regions #al c preserve_liveness b r =
+  assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_regions #_ #(c b) preserve_liveness r)) (loc_regions #_ #(cls_union c) preserve_liveness r))
 
 #set-options "--z3rlimit 32"
 
@@ -1793,8 +1801,8 @@ let raise_loc_union #al #c l1 l2 =
 let raise_loc_addresses #al #c preserve_liveness r a =
   assert (raise_loc u#x u#y (loc_addresses #_ #c preserve_liveness r a) `loc_equal` loc_addresses preserve_liveness r a)
 
-let raise_loc_regions #al #c r =
-  assert (raise_loc u#x u#y (loc_regions #_ #c r) `loc_equal` loc_regions r)
+let raise_loc_regions #al #c preserve_liveness r =
+  assert (raise_loc u#x u#y (loc_regions #_ #c preserve_liveness r) `loc_equal` loc_regions preserve_liveness r)
 
 #set-options "--z3rlimit 16"
 

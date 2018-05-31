@@ -168,6 +168,7 @@ val loc_addresses
 
 val loc_regions
   (#aloc: aloc_t) (#c: cls aloc)
+  (preserve_liveness: bool)
   (r: Set.set HS.rid)
 : GTot (loc c)
 
@@ -189,15 +190,17 @@ let loc_freed_mreference
 
 let loc_region_only
   (#aloc: aloc_t) (#c: cls aloc)
+  (preserve_liveness: bool)
   (r: HS.rid)
 : GTot (loc c)
-= loc_regions (Set.singleton r)
+= loc_regions preserve_liveness (Set.singleton r)
 
 let loc_all_regions_from
   (#aloc: aloc_t) (#c: cls aloc)
+  (preserve_liveness: bool)
   (r: HS.rid)
 : GTot (loc c)
-= loc_regions (HS.mod_set (Set.singleton r))
+= loc_regions preserve_liveness (HS.mod_set (Set.singleton r))
 
 
 (* Inclusion of memory locations *)
@@ -262,38 +265,41 @@ val loc_includes_addresses_aloc
 
 val loc_includes_region_aloc
   (#aloc: aloc_t) (#c: cls aloc)
+  (preserve_liveness: bool)
   (s: Set.set HS.rid)
   (#r: HS.rid)
   (#a: nat)
   (b: aloc r a)
 : Lemma
   (requires (Set.mem r s))
-  (ensures (loc_includes (loc_regions s) (loc_of_aloc #_ #c b)))
+  (ensures (loc_includes (loc_regions preserve_liveness s) (loc_of_aloc #_ #c b)))
 
 val loc_includes_region_addresses
   (#aloc: aloc_t) (#c: cls aloc)
-  (preserve_liveness: bool)
+  (preserve_liveness1 preserve_liveness2: bool)
   (s: Set.set HS.rid)
   (r: HS.rid)
   (a: Set.set nat)
 : Lemma
   (requires (Set.mem r s))
-  (ensures (loc_includes (loc_regions #_ #c s) (loc_addresses preserve_liveness r a)))
+  (ensures (loc_includes (loc_regions #_ #c preserve_liveness1 s) (loc_addresses preserve_liveness2 r a)))
 
 val loc_includes_region_region
   (#aloc: aloc_t) (#c: cls aloc)
+  (preserve_liveness1 preserve_liveness2: bool)
   (s1 s2: Set.set HS.rid)
 : Lemma
-  (requires (Set.subset s2 s1))
-  (ensures (loc_includes (loc_regions #_ #c s1) (loc_regions s2)))
+  (requires ((preserve_liveness1 ==> preserve_liveness2) /\ Set.subset s2 s1))
+  (ensures (loc_includes (loc_regions #_ #c preserve_liveness1 s1) (loc_regions preserve_liveness2 s2)))
 
 val loc_includes_region_union_l
   (#aloc: aloc_t) (#c: cls aloc)
+  (preserve_liveness: bool)
   (l: loc c)
   (s1 s2: Set.set HS.rid)
 : Lemma
-  (requires (loc_includes l (loc_regions (Set.intersect s2 (Set.complement s1)))))
-  (ensures (loc_includes (loc_union (loc_regions s1) l) (loc_regions s2)))
+  (requires (loc_includes l (loc_regions preserve_liveness (Set.intersect s2 (Set.complement s1)))))
+  (ensures (loc_includes (loc_union (loc_regions preserve_liveness s1) l) (loc_regions preserve_liveness s2)))
 
 val loc_includes_addresses_addresses
   (#aloc: aloc_t) (c: cls aloc)
@@ -409,10 +415,11 @@ val loc_disjoint_aloc_addresses_elim
 
 val loc_disjoint_regions
   (#aloc: aloc_t) (#c: cls aloc)
+  (preserve_liveness1 preserve_liveness2: bool)
   (rs1 rs2: Set.set HS.rid)
 : Lemma
   (requires (Set.subset (Set.intersect rs1 rs2) Set.empty))
-  (ensures (loc_disjoint (loc_regions #_ #c rs1) (loc_regions rs2)))
+  (ensures (loc_disjoint (loc_regions #_ #c preserve_liveness1 rs1) (loc_regions preserve_liveness2 rs2)))
 
 
 (** Liveness-insensitive memory locations *)
@@ -555,7 +562,7 @@ val modifies_live_region
   (h1 h2: HS.mem)
   (r: HS.rid)
 : Lemma
-  (requires (modifies s h1 h2 /\ loc_disjoint s (loc_region_only r) /\ HS.live_region h1 r))
+  (requires (modifies s h1 h2 /\ loc_disjoint s (loc_region_only false r) /\ HS.live_region h1 r))
   (ensures (HS.live_region h2 r))
 
 val modifies_mreference_elim
@@ -648,7 +655,7 @@ val modifies_only_live_regions
   (h h' : HS.mem)
 : Lemma
   (requires (
-    modifies (loc_union (loc_regions rs) l) h h' /\
+    modifies (loc_union (loc_regions false rs) l) h h' /\
     (forall r . Set.mem r rs ==> (~ (HS.live_region h r)))
   ))
   (ensures (modifies l h h'))
@@ -660,7 +667,7 @@ val no_upd_fresh_region
   (h0:HS.mem)
   (h1:HS.mem)
 : Lemma
-  (requires (HS.fresh_region r h0 h1 /\ modifies (loc_union (loc_all_regions_from r) l) h0 h1))
+  (requires (HS.fresh_region r h0 h1 /\ modifies (loc_union (loc_all_regions_from false r) l) h0 h1))
   (ensures  (modifies l h0 h1))
 
 val fresh_frame_modifies
@@ -678,7 +685,7 @@ val modifies_fresh_frame_popped
 : Lemma
   (requires (
     HS.fresh_frame h0 h1 /\
-    modifies (loc_union (loc_all_regions_from h1.HS.tip) s) h1 h2 /\
+    modifies (loc_union (loc_all_regions_from false h1.HS.tip) s) h1 h2 /\
     h2.HS.tip == h1.HS.tip /\
     HS.popped h2 h3
   ))
@@ -693,7 +700,7 @@ val modifies_loc_regions_intro
   (h1 h2: HS.mem)
 : Lemma
   (requires (HS.modifies rs h1 h2))
-  (ensures (modifies (loc_regions #_ #c rs) h1 h2))
+  (ensures (modifies (loc_regions #_ #c true rs) h1 h2))
 
 val modifies_loc_addresses_intro
   (#aloc: aloc_t) (#c: cls aloc)
@@ -704,7 +711,7 @@ val modifies_loc_addresses_intro
 : Lemma
   (requires (
     HS.live_region h2 r /\
-    modifies (loc_union (loc_region_only r) l) h1 h2 /\
+    modifies (loc_union (loc_region_only false r) l) h1 h2 /\
     HS.modifies_ref r a h1 h2
   ))
   (ensures (modifies (loc_union (loc_addresses true r a) l) h1 h2))
@@ -859,10 +866,11 @@ val union_loc_of_loc_addresses
 
 val union_loc_of_loc_regions
   (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
+  (preserve_liveness: bool)
   (b: bool)
   (r: Set.set HS.rid)
 : Lemma
-  (union_loc_of_loc c b (loc_regions #_ #(c b) r) == loc_regions #_ #(cls_union c) r)
+  (union_loc_of_loc c b (loc_regions #_ #(c b) preserve_liveness r) == loc_regions #_ #(cls_union c) preserve_liveness r)
 
 val union_loc_of_loc_includes
   (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
@@ -904,8 +912,8 @@ val raise_loc_union (#al: aloc_t u#x) (#c: cls al) (l1 l2: loc c) : Lemma
 val raise_loc_addresses (#al: aloc_t u#x) (#c: cls al) (preserve_liveness: bool) (r: HS.rid) (a: Set.set nat) : Lemma
   (raise_loc u#x u#y (loc_addresses #_ #c preserve_liveness r a) == loc_addresses preserve_liveness r a)
 
-val raise_loc_regions (#al: aloc_t u#x) (#c: cls al) (r: Set.set HS.rid) : Lemma
-  (raise_loc u#x u#y (loc_regions #_ #c r) == loc_regions r)
+val raise_loc_regions (#al: aloc_t u#x) (#c: cls al) (preserve_liveness: bool) (r: Set.set HS.rid) : Lemma
+  (raise_loc u#x u#y (loc_regions #_ #c preserve_liveness r) == loc_regions preserve_liveness r)
 
 val raise_loc_includes (#al: aloc_t u#x) (#c: cls al) (l1 l2: loc c) : Lemma
   (loc_includes (raise_loc u#x u#y l1) (raise_loc l2) <==> loc_includes l1 l2)
