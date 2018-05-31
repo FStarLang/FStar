@@ -554,6 +554,8 @@ let liveness_insensitive' (#aloc: aloc_t) (#c: cls aloc) (l: loc c) : GTot Type0
 
 let liveness_insensitive = liveness_insensitive'
 
+let liveness_insensitive_none #_ _ = ()
+
 let liveness_insensitive_aloc #al #c #r #n a = ()
 
 let liveness_insensitive_addresses #al c r a = ()
@@ -561,6 +563,8 @@ let liveness_insensitive_addresses #al c r a = ()
 let liveness_insensitive_union #al #c l1 l2 =
   assert (forall (r: HS.rid { Set.mem r (regions_of_loc l1) } ) . Set.subset (Loc?.non_live_addrs l1 r) (Loc?.non_live_addrs (loc_union l1 l2) r));
   assert (forall (r: HS.rid { Set.mem r (regions_of_loc l2) } ) . Set.subset (Loc?.non_live_addrs l2 r) (Loc?.non_live_addrs (loc_union l1 l2) r))
+
+let liveness_insensitive_includes #_ #_ _ _ = ()
 
 (** The modifies clause proper *)
 

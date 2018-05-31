@@ -419,6 +419,9 @@ val loc_disjoint_regions
 
 val liveness_insensitive (#aloc: aloc_t) (#c: cls aloc) (l: loc c) : GTot Type0
 
+val liveness_insensitive_none (#aloc: aloc_t) (c: cls aloc) : Lemma
+  (liveness_insensitive #_ #c loc_none)
+
 val liveness_insensitive_aloc (#aloc: aloc_t) (#c: cls aloc) (#r: HS.rid) (#n: nat) (a: aloc r n) : Lemma
   (liveness_insensitive #_ #c (loc_of_aloc a))
 
@@ -428,6 +431,9 @@ val liveness_insensitive_addresses (#aloc: aloc_t) (c: cls aloc) (r: HS.rid) (a:
 val liveness_insensitive_union (#aloc: aloc_t) (#c: cls aloc) (l1 l2: loc c) : Lemma
   (liveness_insensitive (loc_union l1 l2) <==> (liveness_insensitive l1 /\ liveness_insensitive l2))
 
+val liveness_insensitive_includes (#aloc: aloc_t) (#c: cls aloc) (l1 l2: loc c) : Lemma
+  (requires (liveness_insensitive l1 /\ loc_includes l1 l2))
+  (ensures (liveness_insensitive l2))
 
 (** The modifies clause proper *)
 
