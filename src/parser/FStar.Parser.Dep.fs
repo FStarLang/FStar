@@ -249,7 +249,7 @@ let print_graph (graph:dependence_graph) =
           let r s = replace_char s '.' '_' in
           let print dep =
             Util.format2 "  \"%s\" -> \"%s\""
-                (r k)
+                (r (lowercase_module_name k))
                 (r (module_name_of_dep dep))
           in
           List.map print deps)
@@ -1161,8 +1161,6 @@ let print deps =
       print_full deps
   | Some "graph" ->
       let (Mk(deps, _, _)) = deps in
-      (* JP: this was broken by the change of the main map to contain filenames
-       * instead of module names. *)
       print_graph deps
   | Some _ ->
       raise_err (Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
