@@ -1036,7 +1036,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                 BU.print1 "No definition found for %s\n" (Print.term_to_string head);
             None
           | Some _ ->
-            let t' = N.normalize [N.UnfoldUntil delta_constant; N.Weak; N.HNF; N.Primops; N.Beta; N.Eager_unfolding] env t in
+            let t' = N.normalize [N.UnfoldUntil delta_constant; N.Weak; N.HNF; N.Primops; N.Beta; N.Eager_unfolding; N.Iota] env t in
             if Env.debug env <| Options.Other "RelDelta" then
                 BU.print2 "Inlined %s to %s\n" (Print.term_to_string t) (Print.term_to_string t');
             Some t'
