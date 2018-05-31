@@ -30,18 +30,11 @@ DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
 
 # Detect the GNU utilities
 INSTALL_EXEC := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
-DATE_EXEC := $(shell gdate --version 2>/dev/null | cut -c -4 | head -n 1)
 FIND=$(shell which gfind >/dev/null 2>&1 && echo gfind || echo find)
 ifdef INSTALL_EXEC
    INSTALL_EXEC := ginstall
 else
    INSTALL_EXEC := install
-endif
-
-ifdef DATE_EXEC
-   DATE_EXEC := gdate
-else
-   DATE_EXEC := date
 endif
 
 # Final sanity check for the OCaml version
@@ -153,7 +146,7 @@ else
      PLATFORM=$(shell echo `uname`_`uname -m`)
 endif
 COMPILER = OCaml $(shell ocamlc -version)
-DATE = $(shell $(DATE_EXEC) -Iseconds)
+DATE = $(shell date '+%Y-%m-%dT%H:%M:%S%z')
 COMMIT = $(shell ../tools/get_commit)
 
 .PHONY: FStar_Version.ml
