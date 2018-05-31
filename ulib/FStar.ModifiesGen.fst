@@ -800,6 +800,9 @@ let modifies_loc_includes #al #c s1 h h' s2 =
 
 let modifies_preserves_liveness #al #c s1 s2 h h' #t #pre r = ()
 
+let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
+  assert (Set.mem (HS.frameOf r) (regions_of_loc s1) ==> (~ (Set.mem (HS.as_addr r) (Loc?.non_live_addrs s1 (HS.frameOf r)))))
+
 let modifies_trans'
   (#al: aloc_t) (#c: cls al)
   (s: loc c)

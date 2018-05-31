@@ -613,6 +613,18 @@ val modifies_preserves_liveness
   (requires (modifies (loc_union s1 s2) h h' /\ loc_disjoint s1 (loc_mreference r) /\ liveness_insensitive s2 /\ h `HS.contains` r))
   (ensures (h' `HS.contains` r))
 
+val modifies_preserves_liveness_strong
+  (#aloc: aloc_t) (#c: cls aloc)
+  (s1 s2: loc c)
+  (h h' : HS.mem)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (r: HS.mreference t pre)
+  (x: aloc (HS.frameOf r) (HS.as_addr r))
+: Lemma
+  (requires (modifies (loc_union s1 s2) h h' /\ loc_disjoint s1 (loc_of_aloc #_ #c #(HS.frameOf r) #(HS.as_addr r) x) /\ liveness_insensitive s2 /\ h `HS.contains` r))
+  (ensures (h' `HS.contains` r))
+
 val modifies_trans
   (#aloc: aloc_t) (#c: cls aloc)
   (s12: loc c)
