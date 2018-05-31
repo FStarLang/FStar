@@ -174,6 +174,14 @@ let loc_union = MG.loc_union
 
 let loc_union_idem = MG.loc_union_idem
 
+let loc_union_comm = MG.loc_union_comm
+
+let loc_union_assoc = MG.loc_union_assoc
+
+let loc_union_loc_none_l = MG.loc_union_loc_none_l
+
+let loc_union_loc_none_r = MG.loc_union_loc_none_r
+
 let loc_buffer #t b =
   MG.loc_of_aloc #_ #cls #(B.frameOf b) #(B.as_addr b) (LocBuffer b)
 
@@ -247,6 +255,23 @@ let modifies_buffer_elim #t1 b p h h' =
 let modifies_refl = MG.modifies_refl
 
 let modifies_loc_includes = MG.modifies_loc_includes
+
+let liveness_insensitive = MG.liveness_insensitive #_ #cls
+
+let liveness_insensitive_none = MG.liveness_insensitive_none cls
+
+let liveness_insensitive_buffer #t b = MG.liveness_insensitive_aloc #_ #cls #(B.frameOf b) #(B.as_addr b) (LocBuffer b)
+
+let liveness_insensitive_addresses = MG.liveness_insensitive_addresses #_ cls
+
+let liveness_insensitive_union = MG.liveness_insensitive_union
+
+let liveness_insensitive_includes = MG.liveness_insensitive_includes
+
+let modifies_liveness_insensitive_mreference = MG.modifies_preserves_liveness
+
+let modifies_liveness_insensitive_buffer l1 l2 h h' #t x =
+  MG.modifies_preserves_liveness_strong l1 l2 h h' (B.content x) (LocBuffer x)
 
 let modifies_trans = MG.modifies_trans
 
