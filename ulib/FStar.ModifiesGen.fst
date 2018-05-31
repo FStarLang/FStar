@@ -574,6 +574,20 @@ let liveness_insensitive_union #al #c l1 l2 =
 
 let liveness_insensitive_includes #_ #_ _ _ = ()
 
+let region_liveness_insensitive_locs #al c =
+  Loc
+    (Ghost.hide (Set.complement Set.empty))
+    (Ghost.hide Set.empty)
+    (fun _ -> Set.complement Set.empty)
+    (fun _ -> Set.complement Set.empty)
+    (Ghost.hide (aloc_domain c (Ghost.hide (Set.complement Set.empty)) (fun _ -> Set.complement Set.empty)))
+
+let loc_includes_region_liveness_insensitive_locs_loc_regions #al c r = ()
+
+let loc_includes_region_liveness_insensitive_locs_loc_addresses #al c preserve_liveness r a = ()
+
+let loc_includes_region_liveness_insensitive_locs_loc_of_aloc #al c #r #a x = ()
+
 (** The modifies clause proper *)
 
 let modifies_preserves_livenesses
@@ -814,6 +828,12 @@ let modifies_preserves_liveness #al #c s1 s2 h h' #t #pre r = ()
 
 let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
   assert (Set.mem (HS.frameOf r) (regions_of_loc s1) ==> (~ (Set.mem (HS.as_addr r) (Loc?.non_live_addrs s1 (HS.frameOf r)))))
+
+let modifies_preserves_region_liveness #al #c l1 l2 h h' r = ()
+
+let modifies_preserves_region_liveness_reference #al #c l1 l2 h h' #t #pre r = ()
+
+let modifies_preserves_region_liveness_aloc #al #c l1 l2 h h' #r #n x = ()
 
 let modifies_trans'
   (#al: aloc_t) (#c: cls al)

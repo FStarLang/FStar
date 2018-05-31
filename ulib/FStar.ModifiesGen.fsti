@@ -442,6 +442,24 @@ val liveness_insensitive_includes (#aloc: aloc_t) (#c: cls aloc) (l1 l2: loc c) 
   (requires (liveness_insensitive l1 /\ loc_includes l1 l2))
   (ensures (liveness_insensitive l2))
 
+val region_liveness_insensitive_locs (#al: aloc_t) (c: cls al) : Tot (loc c)
+
+val loc_includes_region_liveness_insensitive_locs_loc_regions
+  (#al: aloc_t) (c: cls al) (r: Set.set HS.rid)
+: Lemma
+  (region_liveness_insensitive_locs c `loc_includes` loc_regions #_ #c true r)
+
+val loc_includes_region_liveness_insensitive_locs_loc_addresses
+  (#al: aloc_t) (c: cls al) (preserve_liveness: bool) (r: HS.rid) (a: Set.set nat)
+: Lemma
+  (region_liveness_insensitive_locs c `loc_includes` loc_addresses #_ #c preserve_liveness r a)
+
+val loc_includes_region_liveness_insensitive_locs_loc_of_aloc
+  (#al: aloc_t) (c: cls al) (#r: HS.rid) (#a: nat) (x: al r a)
+: Lemma
+  (region_liveness_insensitive_locs c `loc_includes` loc_of_aloc #_ #c x)
+
+
 (** The modifies clause proper *)
 
 val modifies
@@ -637,6 +655,37 @@ val modifies_preserves_liveness_strong
 : Lemma
   (requires (modifies (loc_union s1 s2) h h' /\ loc_disjoint s1 (loc_of_aloc #_ #c #(HS.frameOf r) #(HS.as_addr r) x) /\ liveness_insensitive s2 /\ h `HS.contains` r))
   (ensures (h' `HS.contains` r))
+
+val modifies_preserves_region_liveness
+  (#al: aloc_t) (#c: cls al)
+  (l1 l2: loc c)
+  (h h' : HS.mem)
+  (r: HS.rid)
+: Lemma
+  (requires (modifies (loc_union l1 l2) h h' /\ region_liveness_insensitive_locs c `loc_includes` l2 /\ loc_disjoint (loc_region_only false r) l1 /\ HS.live_region h r))
+  (ensures (HS.live_region h' r))
+
+val modifies_preserves_region_liveness_reference
+  (#al: aloc_t) (#c: cls al)
+  (l1 l2: loc c)
+  (h h' : HS.mem)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (modifies (loc_union l1 l2) h h' /\ region_liveness_insensitive_locs c `loc_includes` l2 /\ loc_disjoint (loc_mreference r) l1 /\ HS.live_region h (HS.frameOf r)))
+  (ensures (HS.live_region h' (HS.frameOf r)))
+
+val modifies_preserves_region_liveness_aloc
+  (#al: aloc_t) (#c: cls al)
+  (l1 l2: loc c)
+  (h h' : HS.mem)
+  (#r: HS.rid)
+  (#n: nat)
+  (x: al r n)
+: Lemma
+  (requires (modifies (loc_union l1 l2) h h' /\ region_liveness_insensitive_locs c `loc_includes` l2 /\ loc_disjoint (loc_of_aloc x) l1 /\ HS.live_region h r))
+  (ensures (HS.live_region h' r))
 
 val modifies_trans
   (#aloc: aloc_t) (#c: cls aloc)
