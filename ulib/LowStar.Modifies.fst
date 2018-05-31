@@ -121,7 +121,13 @@ let modifies_buffer_elim #t1 b p h h' =
     MG.modifies_aloc_elim #_ #cls #(B.frameOf b) #(B.as_addr b) (B.abuffer_of_buffer b) p h h' ;
     B.abuffer_preserved_elim b h h'
 
+let modifies_refl = MG.modifies_refl
+
+let modifies_loc_includes = MG.modifies_loc_includes
+
 let liveness_insensitive = MG.liveness_insensitive #_ #cls
+
+let liveness_insensitive_none = MG.liveness_insensitive_none cls
 
 let liveness_insensitive_buffer #t b = MG.liveness_insensitive_aloc #_ #cls #(B.frameOf b) #(B.as_addr b) (B.abuffer_of_buffer b)
 
@@ -129,16 +135,14 @@ let liveness_insensitive_addresses = MG.liveness_insensitive_addresses #_ cls
 
 let liveness_insensitive_union = MG.liveness_insensitive_union
 
+let liveness_insensitive_includes = MG.liveness_insensitive_includes
+
 let modifies_liveness_insensitive_mreference = MG.modifies_preserves_liveness
 
 let modifies_liveness_insensitive_buffer l1 l2 h h' #t x =
   B.liveness_preservation_intro h h' x (fun t' pre r ->
     MG.modifies_preserves_liveness_strong l1 l2 h h' r (B.abuffer_of_buffer x)
   )
-
-let modifies_refl = MG.modifies_refl
-
-let modifies_loc_includes = MG.modifies_loc_includes
 
 let modifies_trans = MG.modifies_trans
 

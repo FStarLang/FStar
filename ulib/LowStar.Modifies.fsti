@@ -505,48 +505,6 @@ val modifies_buffer_elim
     [ SMTPat (modifies p h h'); SMTPat (B.live h' b) ]
   ] ]
 
-
-/// Some memory locations are tagged as liveness-insensitive: the
-/// liveness preservation of a memory location only depends on its
-/// disjointness from the liveness-sensitive memory locations of a
-/// modifies clause.
-
-val liveness_insensitive (l: loc) : GTot Type0
-
-val liveness_insensitive_buffer (#t: Type) (b: B.buffer t) : Lemma
-  (liveness_insensitive (loc_buffer b))
-  [SMTPat (liveness_insensitive (loc_buffer b))]
-
-val liveness_insensitive_addresses (r: HS.rid) (a: Set.set nat) : Lemma
-  (liveness_insensitive (loc_addresses true r a))
-  [SMTPat (liveness_insensitive (loc_addresses true r a))]
-
-val liveness_insensitive_union (l1 l2: loc) : Lemma
-  (liveness_insensitive (loc_union l1 l2) <==> (liveness_insensitive l1 /\ liveness_insensitive l2))
-  [SMTPat (liveness_insensitive (loc_union l1 l2))]
-
-val modifies_liveness_insensitive_mreference
-  (l1 l2 : loc)
-  (h h' : HS.mem)
-  (#t: Type)
-  (#pre: Preorder.preorder t)
-  (x: HS.mreference t pre)
-: Lemma
-  (requires (modifies (loc_union l1 l2) h h' /\ loc_disjoint l1 (loc_mreference x) /\ liveness_insensitive l2 /\ h `HS.contains` x))
-  (ensures (h' `HS.contains` x))
-  (* TODO: pattern *)
-
-val modifies_liveness_insensitive_buffer
-  (l1 l2 : loc)
-  (h h' : HS.mem)
-  (#t: Type)
-  (x: B.buffer t)
-: Lemma
-  (requires (modifies (loc_union l1 l2) h h' /\ loc_disjoint l1 (loc_buffer x) /\ liveness_insensitive l2 /\ B.live h x))
-  (ensures (B.live h' x))
-  (* TODO: pattern *)
-
-
 /// If the memory state does not change, then any memory location is
 /// modified (and, in particular, the empty set, ``loc_none``.)
 
@@ -573,6 +531,88 @@ val modifies_loc_includes
     [SMTPat (modifies s1 h h'); SMTPat (loc_includes s1 s2)];
     [SMTPat (modifies s2 h h'); SMTPat (loc_includes s1 s2)];
   ]]
+
+/// Some memory locations are tagged as liveness-insensitive: the
+/// liveness preservation of a memory location only depends on its
+/// disjointness from the liveness-sensitive memory locations of a
+/// modifies clause.
+
+val liveness_insensitive (l: loc) : GTot Type0
+
+val liveness_insensitive_none :
+  squash (liveness_insensitive loc_none)
+
+val liveness_insensitive_buffer (#t: Type) (b: B.buffer t) : Lemma
+  (liveness_insensitive (loc_buffer b))
+  [SMTPat (liveness_insensitive (loc_buffer b))]
+
+val liveness_insensitive_addresses (r: HS.rid) (a: Set.set nat) : Lemma
+  (liveness_insensitive (loc_addresses true r a))
+  [SMTPat (liveness_insensitive (loc_addresses true r a))]
+
+val liveness_insensitive_union (l1 l2: loc) : Lemma
+  (liveness_insensitive (loc_union l1 l2) <==> (liveness_insensitive l1 /\ liveness_insensitive l2))
+  [SMTPat (liveness_insensitive (loc_union l1 l2))]
+
+val liveness_insensitive_includes (l1 l2: loc) : Lemma
+  (requires (liveness_insensitive l1 /\ loc_includes l1 l2))
+  (ensures (liveness_insensitive l2))
+  [SMTPatOr [
+    [SMTPat (liveness_insensitive l1); SMTPat (loc_includes l1 l2);];
+    [SMTPat (liveness_insensitive l2); SMTPat (loc_includes l1 l2);];
+    [SMTPat (liveness_insensitive l1); SMTPat (liveness_insensitive l2);];
+  ]]
+
+val modifies_liveness_insensitive_mreference
+  (l1 l2 : loc)
+  (h h' : HS.mem)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (x: HS.mreference t pre)
+: Lemma
+  (requires (modifies (loc_union l1 l2) h h' /\ loc_disjoint l1 (loc_mreference x) /\ liveness_insensitive l2 /\ h `HS.contains` x))
+  (ensures (h' `HS.contains` x))
+  (* TODO: pattern *)
+
+val modifies_liveness_insensitive_buffer
+  (l1 l2 : loc)
+  (h h' : HS.mem)
+  (#t: Type)
+  (x: B.buffer t)
+: Lemma
+  (requires (modifies (loc_union l1 l2) h h' /\ loc_disjoint l1 (loc_buffer x) /\ liveness_insensitive l2 /\ B.live h x))
+  (ensures (B.live h' x))
+  (* TODO: pattern *)
+
+let modifies_liveness_insensitive_mreference_weak
+  (l : loc)
+  (h h' : HS.mem)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (x: HS.mreference t pre)
+: Lemma
+  (requires (modifies l h h' /\ liveness_insensitive l /\ h `HS.contains` x))
+  (ensures (h' `HS.contains` x))
+  [SMTPatOr [
+    [SMTPat (h `HS.contains` x); SMTPat (modifies l h h');];
+    [SMTPat (h' `HS.contains` x); SMTPat (modifies l h h');];
+  ]]
+= modifies_liveness_insensitive_mreference loc_none l h h' x
+
+let modifies_liveness_insensitive_buffer_weak
+  (l : loc)
+  (h h' : HS.mem)
+  (#t: Type)
+  (x: B.buffer t)
+: Lemma
+  (requires (modifies l h h' /\ liveness_insensitive l /\ B.live h x))
+  (ensures (B.live h' x))
+  [SMTPatOr [
+    [SMTPat (B.live h x); SMTPat (modifies l h h');];
+    [SMTPat (B.live h' x); SMTPat (modifies l h h');];
+  ]]
+= modifies_liveness_insensitive_buffer loc_none l h h' x
+
 
 /// Modifies clauses are transitive. This lemma is the most general
 /// one.
