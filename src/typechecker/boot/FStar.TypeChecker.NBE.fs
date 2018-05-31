@@ -64,33 +64,37 @@ type constant =
 type atom = //JUST FSHARP
   | Var of var
   | Match of t * (* the scutinee *)
-             (t -> t) (* the closure that pattern matches the scrutiny *)
-             //NS: add a thunked pattern translations here
+             (t -> t) * (* the closure that pattern matches the scrutiny *)
+             list<branch>
+             // ZP: Keep the original branches to reconstruct just the patterns
+             // NS: add a thunked pattern translations here ZP: Not entirely sure that this is needed, trying something simpler first.
+
   | Rec of letbinding * list<letbinding> * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
   (* Zoe : a recursive function definition together with its block of mutually recursive function definitions and its environment *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
-  | Lam of (t -> t) * aqual //NS: * ((unit -> t) * aqual)
+  | Lam of (t -> t) * t * aqual //NS: * ((unit -> t) * (type : t) * aqual)
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<universe> * args (* Zoe: This is used for both type and data constructors*)
   | Constant of constant
   | Type_t of universe
   | Univ of universe
+  | Unknown (* For translating unknown types *)
   // NS:
   | Refinement of binder * t // VD: do we need to keep the aqual?
   // | Arrow of list binder * comp_t
 and args = list<(t * aqual)>
-//NS:  
+//NS:
 // and comp_t =
 //   | Comp of lident * universes * args * flags
-// and binder = ident * t //ident is just for pretty name on readback  
+// and binder = ident * t //ident is just for pretty name on readback
 
 (*
    (xi:ti) -> C uts (attributes ...)
 
    x:t{t}
-   
+
 *)
 
 type head = t
@@ -113,11 +117,12 @@ let rec t_to_string (x:t) =
   | Univ u -> "Universe " ^ (P.univ_to_string u)
   | Type_t u -> "Type_t " ^ (P.univ_to_string u)
   | Refinement ((b,_), t) -> "Refinement (" ^ (P.bv_to_string b) ^ ", " ^ (t_to_string t) ^ ")"
+  | Unknown -> "Unknown"
 
 and atom_to_string (a: atom) =
     match a with
     | Var v -> "Var " ^ (P.bv_to_string v)
-    | Match (t, _) -> "Match " ^ (t_to_string t)
+    | Match (t, _, _) -> "Match " ^ (t_to_string t)
     | Rec (_,_, l) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
 let is_not_accu (x:t) =
@@ -128,7 +133,7 @@ let is_not_accu (x:t) =
 let mkConstruct i us ts = Construct(i, us, ts)
 
 let mkAccuVar (v:var) = Accu(Var v, [])
-let mkAccuMatch (s : t) (c : t -> t) = Accu(Match (s, c), [])
+let mkAccuMatch (s : t) (c : t -> t) (bs:list<branch>) = Accu(Match (s, c, bs), [])
 let mkAccuRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = Accu(Rec(b, bs, env), [])
 
 let isAccu (trm:t) =
@@ -136,7 +141,8 @@ let isAccu (trm:t) =
   | Accu _ -> true
   | _ -> false
 
-let rec pickBranch (scrut : t) (branches : list<branch>) : option<(term * list<t>)>  =
+let pickBranch (scrut : t) (branches : list<branch>) : option<(term * list<t>)> =
+  let rec pickBranch_aux (scrut : t) (branches : list<branch>) (branches0 : list<branch>) : option<(term * list<t>)> =
     //NS: adapted from FStar.TypeChecker.Normalize: rebuild_match
     let rec matches_pat (scrutinee:t) (p:pat)
         : BU.either<list<t>, bool> =
@@ -190,9 +196,10 @@ let rec pickBranch (scrut : t) (branches : list<branch>) : option<(term * list<t
       match matches_pat scrut p with
       | BU.Inl matches -> Some (e, matches)
       | BU.Inr false -> //definitely did not match
-        pickBranch scrut branches
+        pickBranch_aux scrut branches branches0
       | BU.Inr true -> //maybe matches; stop
         None
+  in pickBranch_aux scrut branches branches
 
 (* Tests is the application is full and if none of the arguments is symbolic *)
 let rec test_args ts cnt =
@@ -284,15 +291,15 @@ let un_univ (tm:t) : universe =
 
 
 (* Creates the environment of mutually recursive function definitions *)
-let make_rec_env (lbs:list<letbinding>) (bs:list<t>) : list<t> = 
-  let rec aux (lbs:list<letbinding>) (lbs0:list<letbinding>) (bs:list<t>) (bs0:list<t>) : list<t> = 
-  match lbs with 
+let make_rec_env (lbs:list<letbinding>) (bs:list<t>) : list<t> =
+  let rec aux (lbs:list<letbinding>) (lbs0:list<letbinding>) (bs:list<t>) (bs0:list<t>) : list<t> =
+  match lbs with
   | [] -> bs
   | lb::lbs' -> aux lbs' lbs0 ((mkAccuRec lb lbs0 bs0) :: bs) bs0
-  in 
+  in
   aux lbs lbs bs bs
 
-let find_let (lbs : list<letbinding>) (fvar : fv) = 
+let find_let (lbs : list<letbinding>) (fvar : fv) =
   BU.find_map lbs (fun lb -> match lb.lbname with
                    | BU.Inl _ -> failwith "impossible"
                    | BU.Inr name ->
@@ -304,14 +311,14 @@ let find_let (lbs : list<letbinding>) (fvar : fv) =
 let rec app (f:t) (x:t) (q:aqual) =
   debug (fun () -> BU.print2 "When creating app: %s applied to %s\n" (t_to_string f) (t_to_string x));
   match f with
-  | Lam (f, _) -> f x
+  | Lam (f, _, _) -> f x
   | Accu (a, ts) -> Accu (a, (x,q)::ts)
   | Construct (i, us, ts) ->
     (match x with
      | Univ u -> Construct (i, u::us, ts)
      | _ -> Construct (i, us, (x,q)::ts))
   | Refinement (b, r) -> Refinement (b, app r x q)
-  | Constant _ | Univ _ | Type_t _ -> failwith "Ill-typed application"
+  | Constant _ | Univ _ | Type_t _ | Unknown -> failwith "Ill-typed application"
 
 and iapp (f:t) (args:list<(t * aqual)>) =
   match args with
@@ -325,11 +332,11 @@ and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
    | Some elt ->
      (match elt with
       | Some { sigel = Sig_let ((is_rec, lbs), names) } ->
-        let lbm = find_let lbs fvar in 
-        (match lbm with 
-         | Some lb -> 
+        let lbm = find_let lbs fvar in
+        (match lbm with
+         | Some lb ->
            if is_rec then
-             mkAccuRec lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty 
+             mkAccuRec lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty
                                    since they are already present in the global environment *)
            else
              begin
@@ -364,27 +371,44 @@ and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
 
 (* translate a let-binding - local or global *)
 and translate_letbinding (env:Env.env) (bs:list<t>) (lb:letbinding) : t =
-  let translated_def = translate env bs lb.lbdef in
-  let rec make_univ_abst (us:list<univ_name>) (bs:list<t>): t =
+  let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term): t =
+    let translated_def = translate env bs def in
+    let translated_type =
+      match (SS.compress lb.lbtyp).n with
+      | Tm_refine _ -> app (translate env bs lb.lbtyp) translated_def None
+      | _ -> Constant Unit
+    in
+    // VD: For debugging purposes, I'm forcing a readback here, but I don't think this is  necessary
+    // debug (fun () ->
+    //   match (SS.compress lb.lbtyp).n with
+    //   | Tm_refine _ ->
+    //       let readback_type = readback env translated_type in
+    //       BU.print2 "<<< Type of %s is %s\n" (t_to_string translated_def) (P.term_to_string readback_type)
+    //   | _ -> ());
+
     match us with
-    | [] -> translated_def
-    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs)), None) // Zoe: Leaving universe binder qualifier none for now; NS: makes sense
+    | [] -> translate env bs def
+    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), Constant Unit, None) // Zoe: Bogus type! The idea is that we will never readback these lambdas
   in
-  let translated_type =
-    match (SS.compress lb.lbtyp).n with
-    | Tm_refine _ -> app (translate env bs lb.lbtyp) translated_def None
-    | _ -> Constant Unit
-  in
+  make_univ_abst lb.lbunivs bs lb.lbdef
 
-  // VD: For debugging purposes, I'm forcing a readback here, but I don't think this is  necessary
-  debug (fun () ->
-          match (SS.compress lb.lbtyp).n with
-          | Tm_refine _ ->
-              let readback_type = readback env translated_type in
-              BU.print2 "<<< Type of %s is %s\n" (t_to_string translated_def) (P.term_to_string readback_type)
-          | _ -> ());
 
-  make_univ_abst lb.lbunivs bs
+and translate_constant (c : sconst) : constant =
+    match c with
+    | C.Const_unit -> Unit
+    | C.Const_bool b -> Bool b
+    | C.Const_int (s, None) -> (Int (Z.big_int_of_string s))
+    | C.Const_string (s, r) -> String (s,r)
+    | C.Const_char c -> (Char c)
+    | _ -> failwith ("Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented")
+
+and translate_pat (p : pat) : t =
+    match p.v with
+    | Pat_constant c -> Constant (translate_constant c)
+    | Pat_cons (cfv, pats) -> iapp (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat p, None)) pats)
+    | Pat_var bvar -> mkAccuVar bvar
+    | Pat_wild bvar -> mkAccuVar bvar
+    | Pat_dot_term (bvar, t) -> failwith "Pat_dot_term not implemented"
 
 and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
@@ -394,27 +418,10 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_delayed (_, _) ->
       failwith "Tm_delayed: Impossible"
 
-    | Tm_unknown ->
-      failwith "Tm_unknown: Impossible"
-
-    | Tm_constant (C.Const_unit) ->
-      Constant Unit
-
-    | Tm_constant (C.Const_bool b) ->
-      Constant (Bool b)
-
-    | Tm_constant (C.Const_int (s, None)) ->
-      Constant (Int (Z.big_int_of_string s))
-
-    | Tm_constant (C.Const_string (s, r)) ->
-      Constant (String (s,r))
-
-    | Tm_constant (C.Const_char c) ->
-      Constant (Char c)
+    | Tm_unknown -> Unknown
 
     | Tm_constant c ->
-      let err = "Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented" in
-      debug_term e; failwith err
+      Constant (translate_constant c)
 
     | Tm_bvar db -> //de Bruijn
       List.nth bs db.index
@@ -431,7 +438,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_arrow (bs, c) -> debug_term e; failwith "Tm_arrow: Not yet implemented"
 
     | Tm_refine (db, tm) ->
-      Refinement ((db, None), Lam ((fun (y:t) -> translate env (y::bs) tm), None))
+      Refinement ((db, None), Lam ((fun (y:t) -> translate env (y::bs) tm), Constant Unit, None))
 
     | Tm_ascribed (t, _, _) -> translate env bs t
 
@@ -446,7 +453,8 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
     | Tm_abs ([x], body, _) ->
       debug (fun () -> BU.print2 "Tm_abs body : %s - %s\n" (P.tag_of_term body) (P.term_to_string body));
-      Lam ((fun (y:t) -> translate env (y::bs) body), snd x)
+      let x1 = fst x in
+      Lam ((fun (y:t) -> translate env (y::bs) body), translate env bs x1.sort, snd x)
 
     | Tm_abs (x::xs, body, _) ->
       let rest = S.mk (Tm_abs(xs, body, None)) None Range.dummyRange in
@@ -484,7 +492,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
           | Some (branch, args) ->
             translate env (List.fold_left (fun bs x -> x::bs) bs args) branch
           | None -> //no branch is determined
-            mkAccuMatch scrut case
+            mkAccuMatch scrut case branches
           end
         | Constant c ->
           (* same as for construted values, but args are either empty or is a singleton list (for wildcard patterns) *)
@@ -494,20 +502,20 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
            | Some (branch, [arg]) ->
              translate env (arg::bs) branch
            | None -> //no branch is determined
-             mkAccuMatch scrut case
+             mkAccuMatch scrut case branches
            | Some (_, hd::tl) -> failwith "Impossible: Matching on constants cannot bind more than one variable")
 
         | _ ->
-          mkAccuMatch scrut case
+          mkAccuMatch scrut case branches
       in
       case (translate env bs scrut)
 
     | Tm_let((false, lbs), body) -> // non-recursive let
-      let bs' = 
+      let bs' =
         List.fold_left (fun bs' lb -> let b = translate_letbinding env bs lb in b :: bs') bs lbs  in
       translate env bs' body
 
-    | Tm_let((true, lbs), body) -> 
+    | Tm_let((true, lbs), body) ->
       translate env (make_rec_env lbs bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
 
 
@@ -532,6 +540,8 @@ and readback (env:Env.env) (x:t) : term =
     match x with
     | Univ u -> failwith "Readback of universes should not occur"
 
+    | Unknown -> S.mk Tm_unknown None Range.dummyRange
+
     | Constant Unit -> S.unit_const
     | Constant (Bool true) -> U.exp_true_bool
     | Constant (Bool false) -> U.exp_false_bool
@@ -542,8 +552,8 @@ and readback (env:Env.env) (x:t) : term =
     | Type_t u ->
       S.mk (Tm_type u) None Range.dummyRange
 
-    | Lam (f, q) ->
-      let x = S.new_bv None S.tun in
+    | Lam (f, t, q) ->
+      let x = S.new_bv None (readback env t) in (* (readback env t) is the type of the binder *)
       let body = readback env (f (mkAccuVar x)) in
       U.abs [(x, q)] body None
 
@@ -568,8 +578,16 @@ and readback (env:Env.env) (x:t) : term =
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
       U.mk_app (S.bv_to_name bv) args
 
-    | Accu (Match (scrut, cases), ts) ->
+    | Accu (Match (scrut, cases, branches), ts) ->
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
+      let head =
+        let scrut_new = readback env scrut in
+        let branches_new =
+          List.map (fun (pat, when_clause, _) -> pat, when_clause, readback env (cases (translate_pat pat)))
+                   branches
+        in
+        S.mk (Tm_match (scrut_new, branches_new)) None Range.dummyRange
+      in
       (*  When `cases scrut` returns a Accu(Match ..))
           we need to reconstruct a source match node.
 
@@ -593,7 +611,7 @@ and readback (env:Env.env) (x:t) : term =
           match (readback [[x]])
                 branches
        *)
-      let head = readback env (cases scrut) in
+
       (match ts with
        | [] -> head
        | _ -> U.mk_app head args)
