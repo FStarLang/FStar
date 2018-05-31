@@ -410,19 +410,23 @@ let (label_goals :
                                        FStar_SMTEncoding_Term.tm =
                                          FStar_SMTEncoding_Term.App
                                          (FStar_SMTEncoding_Term.Imp
-                                          ,l::r1::[]);
+                                          ,l0::r1::[]);
                                        FStar_SMTEncoding_Term.freevars =
                                          uu____1144;
                                        FStar_SMTEncoding_Term.rng =
                                          uu____1145;_})
+                                    when
+                                    is_a_post_condition
+                                      (FStar_Pervasives_Native.Some post_name)
+                                      r1
                                     ->
                                     let uu____1182 =
                                       aux default_msg
                                         FStar_Pervasives_Native.None
-                                        post_name_opt labels1 r1
+                                        post_name_opt labels1 l0
                                        in
                                     (match uu____1182 with
-                                     | (labels2,r2) ->
+                                     | (labels2,l) ->
                                          let uu____1201 =
                                            let uu____1202 =
                                              let uu____1203 =
@@ -431,7 +435,7 @@ let (label_goals :
                                                    FStar_SMTEncoding_Term.mk
                                                    (FStar_SMTEncoding_Term.App
                                                       (FStar_SMTEncoding_Term.Imp,
-                                                        [l; r2]))
+                                                        [l; r1]))
                                                   in
                                                (FStar_SMTEncoding_Term.Forall,
                                                  [[p]],
