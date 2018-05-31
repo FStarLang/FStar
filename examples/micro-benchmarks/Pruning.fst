@@ -84,7 +84,7 @@ open Prims
 (* Clear most of it before SMT encoding *)
 #reset-options "--using_facts_from FStar.Seq --using_facts_from Prims"
 
-let lemma (#a:Type) (s_0:Seq.seq a) (s_1:Seq.seq a{Seq.length s_0 <= Seq.length s_1})
+let lemma (#a:Type) (s_0:Seq.seq a) (s_1:Seq.seq a{Seq.length s_0 `Prims.op_LessThanOrEqual` Seq.length s_1})
     : Lemma (requires (Seq.equal s_0 (Seq.slice s_1 0 (Seq.length s_0))))
             (ensures  (Seq.equal s_1 (Seq.append s_0 (Seq.slice s_1 (Seq.length s_0) (Seq.length s_1)))))
     = ()

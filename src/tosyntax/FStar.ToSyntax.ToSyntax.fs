@@ -806,7 +806,21 @@ and desugar_machine_integer env repr (signedness, width) range =
     | None ->
       raise_error (Errors.Fatal_UnexpectedNumericLiteral, (BU.format1 "Unexpected numeric literal.  Restart F* to load %s." tnm)) range in
   let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
-  S.mk (Tm_app (lid, [repr, as_implicit false])) None range
+  let t = S.mk (Tm_app (lid, [repr, as_implicit false])) None range in
+  let maybe_ascribe_as_overloaded_int t =
+      if not (Options.integer_overloading()) then t
+      else begin
+          let tnm = "FStar.Integers." ^
+              (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_" ^
+              (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64")
+          in
+          let nm = Ident.lid_of_str tnm in
+          match Env.try_lookup_lid env nm with
+          | None -> t //it's not in scope
+          | Some (ty, _mut) -> U.ascribe t (Inl ty, None)
+      end
+  in
+  maybe_ascribe_as_overloaded_int t
 
 and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
     let tm, mut, attrs = fail_or env ((if resolve then Env.try_lookup_lid_with_attributes else Env.try_lookup_lid_with_attributes_no_resolve) env) l in
@@ -2433,13 +2447,13 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   let trans_qual = trans_qual d.drange in
   match d.d with
   | Pragma p ->
-    let se = { sigel = Sig_pragma(trans_pragma p);
+    let p = trans_pragma p in
+    U.process_pragma p d.drange;
+    let se = { sigel = Sig_pragma p;
                sigquals = [];
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
                sigattrs = [] } in
-    if p = LightOff
-    then Options.set_ml_ish();
     env, [se]
 
   | Fsdoc _ -> env, []
@@ -2762,22 +2776,35 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
 /////////////////////////////////////////////////////////////////////////////////////////
 //External API for modules
 /////////////////////////////////////////////////////////////////////////////////////////
+let with_options (f:unit -> 'a) : 'a =
+    FStar.Options.push();
+    let res = f () in
+    let light = FStar.Options.ml_ish() in
+    FStar.Options.pop();
+    if light then FStar.Options.set_ml_ish();
+    res
+
 let ast_modul_to_modul modul : withenv<S.modul> =
     fun env ->
-        let env, modul = desugar_modul env modul in
-         modul,env
+        with_options (fun () ->
+        let e, m = desugar_modul env modul in
+        m, e)
 
 let decls_to_sigelts decls : withenv<S.sigelts> =
     fun env ->
+        with_options (fun () ->
         let env, sigelts = desugar_decls env decls in
-        sigelts, env
+        sigelts, env)
 
 let partial_ast_modul_to_modul modul a_modul : withenv<S.modul> =
     fun env ->
+        with_options (fun () ->
         let env, modul = desugar_partial_modul modul env a_modul in
-        modul, env
+        modul, env)
 
-let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) (erase_univs:S.term -> S.term) : withenv<unit> =
+let add_modul_to_env (m:Syntax.modul)
+                     (mii:module_inclusion_info)
+                     (erase_univs:S.term -> S.term) : withenv<unit> =
   fun en ->
       let erase_univs_ed ed =
           let erase_binders bs =

@@ -148,6 +148,7 @@ let defaults =
       ("indent"                       , Bool false);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
+      ("integer_overloading"          , Bool false);
       ("lax"                          , Bool false);
       ("load"                         , List []);
       ("log_queries"                  , Bool false);
@@ -261,6 +262,7 @@ let get_include                 ()      = lookup_opt "include"                  
 let get_indent                  ()      = lookup_opt "indent"                   as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
+let get_integer_overloading     ()      = lookup_opt "integer_overloading"      as_bool
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
 let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
@@ -656,6 +658,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Number of unrolling of inductive datatypes to try at first (default 1)");
 
        ( noshort,
+        "integer_overloading",
+         BoolStr,
+        "Type integer and machine integer constants using FStar.Integers, in support of overloading integer operations");
+
+       ( noshort,
         "lax",
         Const (mk_bool true),
         "Run the lax-type checker only (admit all verification conditions)");
@@ -1010,6 +1017,7 @@ let settable = function
     | "hint_file"
     | "initial_fuel"
     | "initial_ifuel"
+    | "integer_overloading"
     | "lax"
     | "load"
     | "log_types"
@@ -1267,6 +1275,7 @@ let indent                       () = get_indent                      ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
+let integer_overloading          () = get_integer_overloading()
 let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
 let legacy_interactive           () = get_in                          ()

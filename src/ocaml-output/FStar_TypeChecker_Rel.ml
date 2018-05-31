@@ -2932,7 +2932,8 @@ let head_matches_delta :
                           FStar_TypeChecker_Normalize.HNF;
                           FStar_TypeChecker_Normalize.Primops;
                           FStar_TypeChecker_Normalize.Beta;
-                          FStar_TypeChecker_Normalize.Eager_unfolding] env t
+                          FStar_TypeChecker_Normalize.Eager_unfolding;
+                          FStar_TypeChecker_Normalize.Iota] env t
                          in
                       ((let uu____7220 =
                           FStar_All.pipe_left
