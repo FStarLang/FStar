@@ -550,29 +550,17 @@ let loc_disjoint_regions #al #c preserve_liveness1 preserve_liveness2 rs1 rs2 =
 
 (** Liveness-insensitive memory locations *)
 
-let liveness_insensitive_region_liveness_tags (#aloc: aloc_t) (#c: cls aloc) (l: loc c) : GTot Type0 =
-  Set.subset (Ghost.reveal (Loc?.region_liveness_tags l)) Set.empty
+let address_liveness_insensitive_locs #al c =
+  Loc
+    (Ghost.hide (Set.complement Set.empty))
+    (Ghost.hide Set.empty)
+    (fun _ -> Set.empty)
+    (fun _ -> Set.complement Set.empty)
+    (Ghost.hide (aloc_domain c (Ghost.hide (Set.complement Set.empty)) (fun _ -> Set.complement Set.empty)))
 
-let liveness_insensitive_region_addresses (#aloc: aloc_t) (#c: cls aloc) (l: loc c) : GTot Type0 =
-  (forall (r: HS.rid { Set.mem r (regions_of_loc l) }) . Set.subset (Loc?.non_live_addrs l r) Set.empty)
+let loc_includes_address_liveness_insensitive_locs_aloc #al #c #r #n a = ()
 
-let liveness_insensitive' (#aloc: aloc_t) (#c: cls aloc) (l: loc c) : GTot Type0 =
-  liveness_insensitive_region_addresses l /\
-  liveness_insensitive_region_liveness_tags l
-
-let liveness_insensitive = liveness_insensitive'
-
-let liveness_insensitive_none #_ _ = ()
-
-let liveness_insensitive_aloc #al #c #r #n a = ()
-
-let liveness_insensitive_addresses #al c r a = ()
-
-let liveness_insensitive_union #al #c l1 l2 =
-  assert (forall (r: HS.rid { Set.mem r (regions_of_loc l1) } ) . Set.subset (Loc?.non_live_addrs l1 r) (Loc?.non_live_addrs (loc_union l1 l2) r));
-  assert (forall (r: HS.rid { Set.mem r (regions_of_loc l2) } ) . Set.subset (Loc?.non_live_addrs l2 r) (Loc?.non_live_addrs (loc_union l1 l2) r))
-
-let liveness_insensitive_includes #_ #_ _ _ = ()
+let loc_includes_address_liveness_insensitive_locs_addresses #al c r a = ()
 
 let region_liveness_insensitive_locs #al c =
   Loc
@@ -581,6 +569,8 @@ let region_liveness_insensitive_locs #al c =
     (fun _ -> Set.complement Set.empty)
     (fun _ -> Set.complement Set.empty)
     (Ghost.hide (aloc_domain c (Ghost.hide (Set.complement Set.empty)) (fun _ -> Set.complement Set.empty)))
+
+let loc_includes_region_liveness_insensitive_locs_address_liveness_insensitive_locs #al c = ()
 
 let loc_includes_region_liveness_insensitive_locs_loc_regions #al c r = ()
 
@@ -826,8 +816,12 @@ let modifies_loc_includes #al #c s1 h h' s2 =
 
 let modifies_preserves_liveness #al #c s1 s2 h h' #t #pre r = ()
 
+#set-options "--z3rlimit 16"
+
 let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
-  assert (Set.mem (HS.frameOf r) (regions_of_loc s1) ==> (~ (Set.mem (HS.as_addr r) (Loc?.non_live_addrs s1 (HS.frameOf r)))))
+  assert (Set.mem (HS.frameOf r) (regions_of_loc s1) ==> (~ (Set.mem (HS.as_addr r) (Loc?.non_live_addrs (loc_union s1 s2) (HS.frameOf r)))))
+
+#reset-options
 
 let modifies_preserves_region_liveness #al #c l1 l2 h h' r = ()
 
