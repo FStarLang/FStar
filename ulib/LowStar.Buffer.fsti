@@ -513,6 +513,19 @@ val abuffer_disjoint_intro (#t1 #t2: Type) (b1: buffer t1) (b2: buffer t2) : Lem
     abuffer_disjoint #r #a (abuffer_of_buffer b1) (abuffer_of_buffer b2)
   ))
 
+val liveness_preservation_intro
+  (#t: Type) (h h' : HS.mem) (b: buffer t)
+  (f: (
+    (t' : Type) ->
+    (pre: Preorder.preorder t') ->
+    (r: HS.mreference t' pre) ->
+    Lemma
+    (requires (HS.frameOf r == frameOf b /\ HS.as_addr r == as_addr b /\ h `HS.contains` r))
+    (ensures (h' `HS.contains` r))
+  ))
+: Lemma
+  (requires (live h b))
+  (ensures (live h' b))
 
 (* Basic, non-compositional modifies clauses, used only to implement the generic modifies clause. DO NOT USE in client code *)
 
@@ -541,6 +554,13 @@ val modifies_1 (#a: Type) (b: buffer a) (h1 h2: HS.mem) : GTot Type0
 val modifies_1_live_region (#a: Type) (b: buffer a) (h1 h2: HS.mem) (r: HS.rid) : Lemma
   (requires (modifies_1 b h1 h2 /\ HS.live_region h1 r))
   (ensures (HS.live_region h2 r))
+
+val modifies_1_liveness
+  (#a: Type) (b: buffer a) (h1 h2: HS.mem)
+  (#a': Type) (#pre: Preorder.preorder a') (r' : HS.mreference a' pre)
+: Lemma
+  (requires (modifies_1 b h1 h2 /\ h1 `HS.contains` r'))
+  (ensures (h2 `HS.contains` r'))
 
 val modifies_1_mreference
   (#a: Type) (b: buffer a)

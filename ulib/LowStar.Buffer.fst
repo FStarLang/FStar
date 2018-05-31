@@ -334,6 +334,11 @@ let abuffer_disjoint_includes #r #a larger1 larger2 smaller1 smaller2 = ()
 
 let abuffer_disjoint_intro #t1 #t2 b1 b2 = ()
 
+let liveness_preservation_intro #t h h' b f =
+  if Null? b
+  then ()
+  else f _ _ (Buffer?.content b)
+
 (* Basic, non-compositional modifies clauses, used only to implement the generic modifies clause. DO NOT USE in client code *)
 
 let modifies_0_preserves_mreferences (h1 h2: HS.mem) : GTot Type0 =
@@ -368,17 +373,28 @@ let modifies_1_preserves_abuffers
 = forall (b' : abuffer (frameOf b) (as_addr b)) .
   (abuffer_disjoint #(frameOf b) #(as_addr b) (abuffer_of_buffer b) b') ==> abuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2
 
+let modifies_1_preserves_livenesses
+  (#a: Type) (b: buffer a)
+  (h1 h2: HS.mem)
+: GTot Type0
+= forall (a' : Type) (pre: Preorder.preorder a') (r' : HS.mreference  a' pre) .
+  h1 `HS.contains` r' ==>
+  h2 `HS.contains` r'
+
 let modifies_1' 
   (#a: Type) (b: buffer a)
   (h1 h2: HS.mem)
 : GTot Type0
 = modifies_0_preserves_regions h1 h2 /\
   modifies_1_preserves_mreferences b h1 h2 /\
+  modifies_1_preserves_livenesses b h1 h2 /\
   modifies_1_preserves_abuffers b h1 h2
 
 let modifies_1 = modifies_1'
 
 let modifies_1_live_region #a b h1 h2 r = ()
+
+let modifies_1_liveness #a b h1 h2 #a' #pre r' = ()
 
 let modifies_1_mreference #a b h1 h2 #a' #pre r' = ()
 

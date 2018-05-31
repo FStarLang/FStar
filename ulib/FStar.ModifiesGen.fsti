@@ -161,6 +161,7 @@ val loc_of_aloc
 
 val loc_addresses
   (#aloc: aloc_t) (#c: cls aloc)
+  (preserve_liveness: bool)
   (r: HS.rid)
   (n: Set.set nat)
 : GTot (loc c)
@@ -176,7 +177,15 @@ let loc_mreference
   (#p: Preorder.preorder a)
   (b: HS.mreference a p)
 : GTot (loc c)
-= loc_addresses (HS.frameOf b) (Set.singleton (HS.as_addr b))
+= loc_addresses true (HS.frameOf b) (Set.singleton (HS.as_addr b))
+
+let loc_freed_mreference
+  (#aloc: aloc_t) (#c: cls aloc)
+  (#a: Type)
+  (#p: Preorder.preorder a)
+  (b: HS.mreference a p)
+: GTot (loc c)
+= loc_addresses false (HS.frameOf b) (Set.singleton (HS.as_addr b))
 
 let loc_region_only
   (#aloc: aloc_t) (#c: cls aloc)
@@ -242,13 +251,14 @@ val loc_includes_aloc
 
 val loc_includes_addresses_aloc
   (#aloc: aloc_t) (#c: cls aloc)
+  (preserve_liveness: bool)
   (r: HS.rid)
   (s: Set.set nat)
   (#a: nat)
   (p: aloc r a)
 : Lemma
   (requires (Set.mem a s))
-  (ensures (loc_includes (loc_addresses r s) (loc_of_aloc #_ #c p)))
+  (ensures (loc_includes (loc_addresses preserve_liveness r s) (loc_of_aloc #_ #c p)))
 
 val loc_includes_region_aloc
   (#aloc: aloc_t) (#c: cls aloc)
@@ -262,12 +272,13 @@ val loc_includes_region_aloc
 
 val loc_includes_region_addresses
   (#aloc: aloc_t) (#c: cls aloc)
+  (preserve_liveness: bool)
   (s: Set.set HS.rid)
   (r: HS.rid)
   (a: Set.set nat)
 : Lemma
   (requires (Set.mem r s))
-  (ensures (loc_includes (loc_regions #_ #c s) (loc_addresses r a)))
+  (ensures (loc_includes (loc_regions #_ #c s) (loc_addresses preserve_liveness r a)))
 
 val loc_includes_region_region
   (#aloc: aloc_t) (#c: cls aloc)
@@ -283,6 +294,15 @@ val loc_includes_region_union_l
 : Lemma
   (requires (loc_includes l (loc_regions (Set.intersect s2 (Set.complement s1)))))
   (ensures (loc_includes (loc_union (loc_regions s1) l) (loc_regions s2)))
+
+val loc_includes_addresses_addresses
+  (#aloc: aloc_t) (c: cls aloc)
+  (preserve_liveness1 preserve_liveness2: bool)
+  (r: HS.rid)
+  (a1 a2: Set.set nat)
+: Lemma
+  (requires ((preserve_liveness1 ==> preserve_liveness2) /\ Set.subset a2 a1))
+  (ensures (loc_includes #_ #c (loc_addresses preserve_liveness1 r a1) (loc_addresses preserve_liveness2 r a2)))
 
 
 (* Disjointness of two memory locations *)
@@ -345,20 +365,22 @@ val loc_disjoint_aloc_elim
 
 val loc_disjoint_addresses_intro
   (#aloc: aloc_t) (#c: cls aloc)
+  (preserve_liveness1 preserve_liveness2: bool)
   (r1 r2: HS.rid)
   (n1 n2: Set.set nat)
 : Lemma
   (requires (r1 <> r2 \/ Set.subset (Set.intersect n1 n2) Set.empty))
-  (ensures (loc_disjoint (loc_addresses #_ #c r1 n1) (loc_addresses r2 n2)))
+  (ensures (loc_disjoint (loc_addresses #_ #c preserve_liveness1 r1 n1) (loc_addresses preserve_liveness2 r2 n2)))
 
 let loc_disjoint_addresses #aloc #c = loc_disjoint_addresses_intro #aloc #c
 
 val loc_disjoint_addresses_elim
   (#aloc: aloc_t) (#c: cls aloc)
+  (preserve_liveness1 preserve_liveness2: bool)
   (r1 r2: HS.rid)
   (n1 n2: Set.set nat)
 : Lemma
-  (requires (loc_disjoint (loc_addresses #_ #c r1 n1) (loc_addresses r2 n2)))
+  (requires (loc_disjoint (loc_addresses #_ #c preserve_liveness1 r1 n1) (loc_addresses preserve_liveness2 r2 n2)))
   (ensures (r1 <> r2 \/ Set.subset (Set.intersect n1 n2) Set.empty))
 
 val loc_disjoint_aloc_addresses_intro
@@ -366,21 +388,23 @@ val loc_disjoint_aloc_addresses_intro
   (#r' : HS.rid)
   (#a' : nat)
   (p: aloc r' a')
+  (preserve_liveness: bool)
   (r: HS.rid)
   (n: Set.set nat)
 : Lemma
   (requires (r == r' ==> (~ (Set.mem a' n))))
-  (ensures (loc_disjoint (loc_of_aloc p) (loc_addresses #_ #c r n)))
+  (ensures (loc_disjoint (loc_of_aloc p) (loc_addresses #_ #c preserve_liveness r n)))
 
 val loc_disjoint_aloc_addresses_elim
   (#aloc: aloc_t) (#c: cls aloc)
   (#r' : HS.rid)
   (#a' : nat)
   (p: aloc r' a')
+  (preserve_liveness: bool)
   (r: HS.rid)
   (n: Set.set nat)
 : Lemma
-  (requires (loc_disjoint (loc_of_aloc p) (loc_addresses #_ #c r n)))
+  (requires (loc_disjoint (loc_of_aloc p) (loc_addresses #_ #c preserve_liveness r n)))
   (ensures (r == r' ==> (~ (Set.mem a' n))))
 
 val loc_disjoint_regions
@@ -390,6 +414,26 @@ val loc_disjoint_regions
   (requires (Set.subset (Set.intersect rs1 rs2) Set.empty))
   (ensures (loc_disjoint (loc_regions #_ #c rs1) (loc_regions rs2)))
 
+
+(** Liveness-insensitive memory locations *)
+
+val liveness_insensitive (#aloc: aloc_t) (#c: cls aloc) (l: loc c) : GTot Type0
+
+val liveness_insensitive_none (#aloc: aloc_t) (c: cls aloc) : Lemma
+  (liveness_insensitive #_ #c loc_none)
+
+val liveness_insensitive_aloc (#aloc: aloc_t) (#c: cls aloc) (#r: HS.rid) (#n: nat) (a: aloc r n) : Lemma
+  (liveness_insensitive #_ #c (loc_of_aloc a))
+
+val liveness_insensitive_addresses (#aloc: aloc_t) (c: cls aloc) (r: HS.rid) (a: Set.set nat) : Lemma
+  (liveness_insensitive #_ #c (loc_addresses true r a))
+
+val liveness_insensitive_union (#aloc: aloc_t) (#c: cls aloc) (l1 l2: loc c) : Lemma
+  (liveness_insensitive (loc_union l1 l2) <==> (liveness_insensitive l1 /\ liveness_insensitive l2))
+
+val liveness_insensitive_includes (#aloc: aloc_t) (#c: cls aloc) (l1 l2: loc c) : Lemma
+  (requires (liveness_insensitive l1 /\ loc_includes l1 l2))
+  (ensures (liveness_insensitive l2))
 
 (** The modifies clause proper *)
 
@@ -412,8 +456,16 @@ val modifies_intro
     (pre: Preorder.preorder t) ->
     (b: HS.mreference t pre) ->
     Lemma
-    (requires (loc_disjoint (loc_mreference b) l /\ HS.contains h b))
+    (requires ((loc_disjoint (loc_mreference b) l) /\ HS.contains h b))
     (ensures (HS.contains h' b /\ HS.sel h' b == HS.sel h b))
+  ))
+  (livenesses: (
+    (t: Type0) ->
+    (pre: Preorder.preorder t) ->
+    (b: HS.mreference t pre) ->
+    Lemma
+    (requires (HS.contains h b))
+    (ensures (HS.contains h' b))
   ))
   (alocs: (
     (r: HS.rid) ->
@@ -425,6 +477,77 @@ val modifies_intro
   ))
 : Lemma
   (modifies l h h')
+
+val modifies_none_intro
+  (#al: aloc_t) (#c: cls al) (h h' : HS.mem)
+  (regions: (
+    (r: HS.rid) ->
+    Lemma
+    (requires (HS.live_region h r))
+    (ensures (HS.live_region h' r))
+  ))
+  (mrefs: (
+    (t: Type0) ->
+    (pre: Preorder.preorder t) ->
+    (b: HS.mreference t pre) ->
+    Lemma
+    (requires (HS.contains h b))
+    (ensures (HS.contains h' b /\ HS.sel h' b == HS.sel h b))
+  ))
+: Lemma
+  (modifies (loc_none #_ #c) h h')
+
+val modifies_address_intro
+  (#al: aloc_t) (#c: cls al) (r: HS.rid) (n: nat) (h h' : HS.mem)
+  (regions: (
+    (r: HS.rid) ->
+    Lemma
+    (requires (HS.live_region h r))
+    (ensures (HS.live_region h' r))
+  ))
+  (mrefs: (
+    (t: Type0) ->
+    (pre: Preorder.preorder t) ->
+    (b: HS.mreference t pre) ->
+    Lemma
+    (requires ((r <> HS.frameOf b \/ n <> HS.as_addr b) /\ HS.contains h b))
+    (ensures (HS.contains h' b /\ HS.sel h' b == HS.sel h b))
+  ))
+: Lemma
+  (modifies (loc_addresses #_ #c false r (Set.singleton n)) h h')
+
+val modifies_aloc_intro
+  (#al: aloc_t) (#c: cls al) (#r: HS.rid) (#n: nat) (z: al r n) (h h' : HS.mem)
+  (regions: (
+    (r: HS.rid) ->
+    Lemma
+    (requires (HS.live_region h r))
+    (ensures (HS.live_region h' r))
+  ))
+  (mrefs: (
+    (t: Type0) ->
+    (pre: Preorder.preorder t) ->
+    (b: HS.mreference t pre) ->
+    Lemma
+    (requires ((r <> HS.frameOf b \/ n <> HS.as_addr b) /\ HS.contains h b))
+    (ensures (HS.contains h' b /\ HS.sel h' b == HS.sel h b))
+  ))
+  (livenesses: (
+    (t: Type0) ->
+    (pre: Preorder.preorder t) ->
+    (b: HS.mreference t pre) ->
+    Lemma
+    (requires (HS.contains h b))
+    (ensures (HS.contains h' b))
+  ))
+  (alocs: (
+    (x: al r n) ->
+    Lemma
+    (requires (c.aloc_disjoint x z))
+    (ensures (c.aloc_preserved x h h'))
+  ))
+: Lemma
+  (modifies (loc_of_aloc #_ #c z) h h')
 
 val modifies_live_region
   (#aloc: aloc_t) (#c: cls aloc)
@@ -484,6 +607,29 @@ val modifies_loc_includes
 : Lemma
   (requires (modifies s2 h h' /\ loc_includes s1 s2))
   (ensures (modifies s1 h h'))
+
+val modifies_preserves_liveness
+  (#aloc: aloc_t) (#c: cls aloc)
+  (s1 s2: loc c)
+  (h h' : HS.mem)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (modifies (loc_union s1 s2) h h' /\ loc_disjoint s1 (loc_mreference r) /\ liveness_insensitive s2 /\ h `HS.contains` r))
+  (ensures (h' `HS.contains` r))
+
+val modifies_preserves_liveness_strong
+  (#aloc: aloc_t) (#c: cls aloc)
+  (s1 s2: loc c)
+  (h h' : HS.mem)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (r: HS.mreference t pre)
+  (x: aloc (HS.frameOf r) (HS.as_addr r))
+: Lemma
+  (requires (modifies (loc_union s1 s2) h h' /\ loc_disjoint s1 (loc_of_aloc #_ #c #(HS.frameOf r) #(HS.as_addr r) x) /\ liveness_insensitive s2 /\ h `HS.contains` r))
+  (ensures (h' `HS.contains` r))
 
 val modifies_trans
   (#aloc: aloc_t) (#c: cls aloc)
@@ -561,7 +707,7 @@ val modifies_loc_addresses_intro
     modifies (loc_union (loc_region_only r) l) h1 h2 /\
     HS.modifies_ref r a h1 h2
   ))
-  (ensures (modifies (loc_union (loc_addresses r a) l) h1 h2))
+  (ensures (modifies (loc_union (loc_addresses true r a) l) h1 h2))
 
 val modifies_ralloc_post
   (#aloc: aloc_t) (#c: cls aloc)
@@ -595,7 +741,7 @@ val modifies_free
   (r: HS.mreference a rel { HS.is_mm r } )
   (m: HS.mem { m `HS.contains` r } )
 : Lemma
-  (modifies (loc_mreference #_ #c r) m (HS.free r m))
+  (modifies (loc_freed_mreference #_ #c r) m (HS.free r m))
 
 val modifies_none_modifies
   (#aloc: aloc_t) (#c: cls aloc)
@@ -675,7 +821,7 @@ val modifies_only_live_addresses
   (h h' : HS.mem)
 : Lemma
   (requires (
-    modifies (loc_union (loc_addresses r a) l) h h' /\
+    modifies (loc_union (loc_addresses false r a) l) h h' /\
     (forall x . Set.mem x a ==> h `does_not_contain_addr` (r, x))
   ))
   (ensures (modifies l h h'))
@@ -705,10 +851,11 @@ val union_loc_of_loc_union
 val union_loc_of_loc_addresses
   (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
   (b: bool)
+  (preserve_liveness: bool)
   (r: HS.rid)
   (n: Set.set nat)
 : Lemma
-  (union_loc_of_loc c b (loc_addresses #_ #(c b) r n) == loc_addresses #_ #(cls_union c) r n)
+  (union_loc_of_loc c b (loc_addresses #_ #(c b) preserve_liveness r n) == loc_addresses #_ #(cls_union c) preserve_liveness r n)
 
 val union_loc_of_loc_regions
   (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
@@ -754,8 +901,8 @@ val raise_loc_none (#al: aloc_t u#x) (#c: cls al) : Lemma
 val raise_loc_union (#al: aloc_t u#x) (#c: cls al) (l1 l2: loc c) : Lemma
   (raise_loc u#x u#y (loc_union l1 l2) == loc_union (raise_loc l1) (raise_loc l2))
 
-val raise_loc_addresses (#al: aloc_t u#x) (#c: cls al) (r: HS.rid) (a: Set.set nat) : Lemma
-  (raise_loc u#x u#y (loc_addresses #_ #c r a) == loc_addresses r a)
+val raise_loc_addresses (#al: aloc_t u#x) (#c: cls al) (preserve_liveness: bool) (r: HS.rid) (a: Set.set nat) : Lemma
+  (raise_loc u#x u#y (loc_addresses #_ #c preserve_liveness r a) == loc_addresses preserve_liveness r a)
 
 val raise_loc_regions (#al: aloc_t u#x) (#c: cls al) (r: Set.set HS.rid) : Lemma
   (raise_loc u#x u#y (loc_regions #_ #c r) == loc_regions r)
