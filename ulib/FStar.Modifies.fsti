@@ -358,7 +358,6 @@ val modifies_buffer_elim
   (requires (
     loc_disjoint (loc_buffer b) p /\
     B.live h b /\
-    ((B.length b) == 0 ==> B.live h' b) /\ // necessary for liveness, because all buffers of size 0 are disjoint for any memory location, so we cannot talk about their liveness individually without referring to a larger nonempty buffer
     modifies p h h'
   ))
   (ensures (

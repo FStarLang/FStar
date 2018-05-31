@@ -136,8 +136,7 @@ let loc_aux_preserved (l: loc_aux) (h1 h2: HS.mem) : GTot Type0
 = match l with
   | LocBuffer b ->
     (
-      B.live h1 b /\
-      B.length b <> 0
+      B.live h1 b
     ) ==> (
       B.live h2 b /\
       B.as_seq h2 b == B.as_seq h1 b
