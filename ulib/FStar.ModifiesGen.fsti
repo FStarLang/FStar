@@ -298,11 +298,11 @@ val loc_includes_region_union_l
 val loc_includes_addresses_addresses
   (#aloc: aloc_t) (c: cls aloc)
   (preserve_liveness1 preserve_liveness2: bool)
-  (r1 r2: HS.rid)
+  (r: HS.rid)
   (a1 a2: Set.set nat)
 : Lemma
-  (requires ((preserve_liveness1 ==> preserve_liveness2) /\ r1 == r2 /\ Set.subset a2 a1))
-  (ensures (loc_includes #_ #c (loc_addresses preserve_liveness1 r1 a1) (loc_addresses preserve_liveness2 r2 a2)))
+  (requires ((preserve_liveness1 ==> preserve_liveness2) /\ Set.subset a2 a1))
+  (ensures (loc_includes #_ #c (loc_addresses preserve_liveness1 r a1) (loc_addresses preserve_liveness2 r a2)))
 
 
 (* Disjointness of two memory locations *)
@@ -450,7 +450,7 @@ val modifies_intro
     (pre: Preorder.preorder t) ->
     (b: HS.mreference t pre) ->
     Lemma
-    (requires (loc_disjoint (loc_mreference b) l /\ HS.contains h b))
+    (requires ((loc_disjoint (loc_mreference b) l) /\ HS.contains h b))
     (ensures (HS.contains h' b /\ HS.sel h' b == HS.sel h b))
   ))
   (livenesses: (
@@ -471,6 +471,77 @@ val modifies_intro
   ))
 : Lemma
   (modifies l h h')
+
+val modifies_none_intro
+  (#al: aloc_t) (#c: cls al) (h h' : HS.mem)
+  (regions: (
+    (r: HS.rid) ->
+    Lemma
+    (requires (HS.live_region h r))
+    (ensures (HS.live_region h' r))
+  ))
+  (mrefs: (
+    (t: Type0) ->
+    (pre: Preorder.preorder t) ->
+    (b: HS.mreference t pre) ->
+    Lemma
+    (requires (HS.contains h b))
+    (ensures (HS.contains h' b /\ HS.sel h' b == HS.sel h b))
+  ))
+: Lemma
+  (modifies (loc_none #_ #c) h h')
+
+val modifies_address_intro
+  (#al: aloc_t) (#c: cls al) (r: HS.rid) (n: nat) (h h' : HS.mem)
+  (regions: (
+    (r: HS.rid) ->
+    Lemma
+    (requires (HS.live_region h r))
+    (ensures (HS.live_region h' r))
+  ))
+  (mrefs: (
+    (t: Type0) ->
+    (pre: Preorder.preorder t) ->
+    (b: HS.mreference t pre) ->
+    Lemma
+    (requires ((r <> HS.frameOf b \/ n <> HS.as_addr b) /\ HS.contains h b))
+    (ensures (HS.contains h' b /\ HS.sel h' b == HS.sel h b))
+  ))
+: Lemma
+  (modifies (loc_addresses #_ #c false r (Set.singleton n)) h h')
+
+val modifies_aloc_intro
+  (#al: aloc_t) (#c: cls al) (#r: HS.rid) (#n: nat) (z: al r n) (h h' : HS.mem)
+  (regions: (
+    (r: HS.rid) ->
+    Lemma
+    (requires (HS.live_region h r))
+    (ensures (HS.live_region h' r))
+  ))
+  (mrefs: (
+    (t: Type0) ->
+    (pre: Preorder.preorder t) ->
+    (b: HS.mreference t pre) ->
+    Lemma
+    (requires ((r <> HS.frameOf b \/ n <> HS.as_addr b) /\ HS.contains h b))
+    (ensures (HS.contains h' b /\ HS.sel h' b == HS.sel h b))
+  ))
+  (livenesses: (
+    (t: Type0) ->
+    (pre: Preorder.preorder t) ->
+    (b: HS.mreference t pre) ->
+    Lemma
+    (requires (HS.contains h b))
+    (ensures (HS.contains h' b))
+  ))
+  (alocs: (
+    (x: al r n) ->
+    Lemma
+    (requires (c.aloc_disjoint x z))
+    (ensures (c.aloc_preserved x h h'))
+  ))
+: Lemma
+  (modifies (loc_of_aloc #_ #c z) h h')
 
 val modifies_live_region
   (#aloc: aloc_t) (#c: cls aloc)

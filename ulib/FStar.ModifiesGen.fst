@@ -393,7 +393,7 @@ let loc_includes_region_region #al #c s1 s2 = ()
 
 let loc_includes_region_union_l #al #c l s1 s2 = ()
 
-let loc_includes_addresses_addresses #al c preserve_liveness1 preserve_liveness2 r1 r2 s1 s2 = ()
+let loc_includes_addresses_addresses #al c preserve_liveness1 preserve_liveness2 r s1 s2 = ()
 
 (* Disjointness of two memory locations *)
 
@@ -743,6 +743,45 @@ let modifies_intro #al #c l h h' regions mrefs lives alocs =
   )
 
 #reset-options
+
+let modifies_none_intro #al #c h h' regions mrefs =
+  modifies_intro #_ #c loc_none h h'
+    (fun r -> regions r)
+    (fun t pre b -> mrefs t pre b)
+    (fun t pre b -> mrefs t pre b)
+    (fun r a x ->
+      c.same_mreference_aloc_preserved x h h' (fun t pre b -> mrefs t pre b)
+    )
+
+let modifies_address_intro #al #c r n h h' regions mrefs =
+  Classical.forall_intro (Classical.move_requires regions);
+  let l : loc c = loc_addresses #_ #c false r (Set.singleton n) in
+  modifies_preserves_mreferences_intro l h h'
+    (fun t pre p -> mrefs t pre p)
+  ;
+  modifies_preserves_livenesses_intro l h h'
+    (fun t pre p -> mrefs t pre p)
+  ;
+  modifies_preserves_alocs_intro l h h' ()
+    (fun r a b -> 
+      c.same_mreference_aloc_preserved b h h' (fun t pre p -> mrefs t pre p)
+    )
+
+let modifies_aloc_intro #al #c #r #n x h h' regions mrefs livenesses alocs =
+  modifies_intro #_ #c (loc_of_aloc x) h h'
+    (fun r -> regions r)
+    (fun t pre b -> mrefs t pre b)
+    (fun t pre b -> livenesses t pre b)
+    (fun r' n' z ->
+      if r' = r && n' = n
+      then begin
+        loc_disjoint_aloc_elim #_ #c z x;
+        alocs z
+      end else
+        c.same_mreference_aloc_preserved z h h' (fun t pre p ->
+          mrefs t pre p
+        )
+    )
 
 let modifies_live_region #al #c s h1 h2 r = ()
 

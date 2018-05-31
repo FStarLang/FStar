@@ -542,6 +542,13 @@ val modifies_1_live_region (#a: Type) (b: buffer a) (h1 h2: HS.mem) (r: HS.rid) 
   (requires (modifies_1 b h1 h2 /\ HS.live_region h1 r))
   (ensures (HS.live_region h2 r))
 
+val modifies_1_liveness
+  (#a: Type) (b: buffer a) (h1 h2: HS.mem)
+  (#a': Type) (#pre: Preorder.preorder a') (r' : HS.mreference a' pre)
+: Lemma
+  (requires (modifies_1 b h1 h2 /\ h1 `HS.contains` r'))
+  (ensures (h2 `HS.contains` r'))
+
 val modifies_1_mreference
   (#a: Type) (b: buffer a)
   (h1 h2: HS.mem)
