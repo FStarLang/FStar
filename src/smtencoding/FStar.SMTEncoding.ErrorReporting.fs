@@ -127,7 +127,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                 | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}) ->
                   let post_name = "^^post_condition_"^ (BU.string_of_int <| Syntax.Syntax.next_id ()) in
                   let names = (post_name, post)
-                              ::List.mapi (fun i s -> ("^^" ^ string_of_int i, s)) sorts in
+                              ::List.map (fun s -> ("^^" ^ (string_of_int <| Syntax.Syntax.next_id()), s)) sorts in
                   let instantiation = List.map mkFreeV names in
                   let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
 
@@ -182,7 +182,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           let sorts', post = BU.prefix sorts in
           let new_post_name = "^^post_condition_"^ (BU.string_of_int <| Syntax.Syntax.next_id ()) in
           //printfn "Got a named continuation with post-condition %s" new_post_name;
-          let names = List.mapi (fun i s -> ("^^" ^ string_of_int i, s)) sorts' @ [(new_post_name, post)] in
+          let names = List.map (fun s -> ("^^" ^ (string_of_int <| Syntax.Syntax.next_id()), s)) sorts'
+                             @ [(new_post_name, post)] in
           let instantiation = List.map mkFreeV names in
           let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
 
