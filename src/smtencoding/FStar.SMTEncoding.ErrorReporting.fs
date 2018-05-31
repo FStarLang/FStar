@@ -181,8 +181,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           let labels, lhs_conjs =
                 BU.fold_map (fun labels tm ->
                     match tm.tm with
-                    | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Imp, [l;r])}) ->
-                        let labels, r = aux default_msg None post_name_opt labels r in
+                    | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Imp, [l0;r])})
+                      when is_a_post_condition (Some post_name) r ->
+                        let labels, l = aux default_msg None post_name_opt labels l0 in
                         labels, mk (Quant(Forall, [[p]], Some 0, sorts, norng mk (App(Imp, [l;r])))) q.rng
                     | _ -> labels, tm)
                 labels (conjuncts lhs) in
