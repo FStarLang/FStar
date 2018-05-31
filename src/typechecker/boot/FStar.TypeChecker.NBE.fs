@@ -371,23 +371,25 @@ and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
 
 (* translate a let-binding - local or global *)
 and translate_letbinding (env:Env.env) (bs:list<t>) (lb:letbinding) : t =
-  let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term): t =
-    let translated_def = translate env bs def in
-    let translated_type =
-      match (SS.compress lb.lbtyp).n with
-      | Tm_refine _ -> app (translate env bs lb.lbtyp) translated_def None
-      | _ -> Constant Unit
-    in
-    // VD: For debugging purposes, I'm forcing a readback here, but I don't think this is  necessary
-    // debug (fun () ->
-    //   match (SS.compress lb.lbtyp).n with
-    //   | Tm_refine _ ->
-    //       let readback_type = readback env translated_type in
-    //       BU.print2 "<<< Type of %s is %s\n" (t_to_string translated_def) (P.term_to_string readback_type)
-    //   | _ -> ());
-
+  let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t =
     match us with
-    | [] -> translate env bs def
+    | [] ->
+      (let translated_def = translate env bs def in
+
+      let translated_type =
+        match (SS.compress lb.lbtyp).n with
+        | Tm_refine _ -> app (translate env bs lb.lbtyp) translated_def None
+        | _ -> Constant Unit
+      in
+      //VD: For debugging purposes, I'm forcing a readback here, but I don't think this is  necessary
+      debug (fun () ->
+        match (SS.compress lb.lbtyp).n with
+        | Tm_refine _ ->
+            let readback_type = readback env translated_type in
+            BU.print2 "<<< Type of %s is %s\n" (t_to_string translated_def) (P.term_to_string readback_type)
+        | _ -> ());
+
+        translated_def)
     | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), Constant Unit, None) // Zoe: Bogus type! The idea is that we will never readback these lambdas
   in
   make_univ_abst lb.lbunivs bs lb.lbdef

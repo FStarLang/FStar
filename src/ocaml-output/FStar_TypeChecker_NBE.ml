@@ -723,20 +723,40 @@ and (translate_letbinding :
     fun bs  ->
       fun lb  ->
         let rec make_univ_abst us bs1 def =
-          let translated_def = translate env bs1 def  in
-          let translated_type =
-            let uu____2536 =
-              let uu____2537 =
-                FStar_Syntax_Subst.compress lb.FStar_Syntax_Syntax.lbtyp  in
-              uu____2537.FStar_Syntax_Syntax.n  in
-            match uu____2536 with
-            | FStar_Syntax_Syntax.Tm_refine uu____2540 ->
-                let uu____2547 =
-                  translate env bs1 lb.FStar_Syntax_Syntax.lbtyp  in
-                app uu____2547 translated_def FStar_Pervasives_Native.None
-            | uu____2548 -> Constant Unit  in
           match us with
-          | [] -> translate env bs1 def
+          | [] ->
+              let translated_def = translate env bs1 def  in
+              let translated_type =
+                let uu____2536 =
+                  let uu____2537 =
+                    FStar_Syntax_Subst.compress lb.FStar_Syntax_Syntax.lbtyp
+                     in
+                  uu____2537.FStar_Syntax_Syntax.n  in
+                match uu____2536 with
+                | FStar_Syntax_Syntax.Tm_refine uu____2540 ->
+                    let uu____2547 =
+                      translate env bs1 lb.FStar_Syntax_Syntax.lbtyp  in
+                    app uu____2547 translated_def
+                      FStar_Pervasives_Native.None
+                | uu____2548 -> Constant Unit  in
+              (debug
+                 (fun uu____2562  ->
+                    let uu____2563 =
+                      let uu____2564 =
+                        FStar_Syntax_Subst.compress
+                          lb.FStar_Syntax_Syntax.lbtyp
+                         in
+                      uu____2564.FStar_Syntax_Syntax.n  in
+                    match uu____2563 with
+                    | FStar_Syntax_Syntax.Tm_refine uu____2567 ->
+                        let readback_type = readback env translated_type  in
+                        let uu____2575 = t_to_string translated_def  in
+                        let uu____2576 =
+                          FStar_Syntax_Print.term_to_string readback_type  in
+                        FStar_Util.print2 "<<< Type of %s is %s\n" uu____2575
+                          uu____2576
+                    | uu____2577 -> ());
+               translated_def)
           | u::us' ->
               Lam
                 (((fun u1  -> make_univ_abst us' (u1 :: bs1) def)),
@@ -751,32 +771,32 @@ and (translate_constant : FStar_Syntax_Syntax.sconst -> constant) =
     | FStar_Const.Const_unit  -> Unit
     | FStar_Const.Const_bool b -> Bool b
     | FStar_Const.Const_int (s,FStar_Pervasives_Native.None ) ->
-        let uu____2572 = FStar_BigInt.big_int_of_string s  in Int uu____2572
+        let uu____2601 = FStar_BigInt.big_int_of_string s  in Int uu____2601
     | FStar_Const.Const_string (s,r) -> String (s, r)
     | FStar_Const.Const_char c1 -> Char c1
-    | uu____2576 ->
-        let uu____2577 =
-          let uu____2578 =
-            let uu____2579 = FStar_Syntax_Print.const_to_string c  in
-            Prims.strcat uu____2579 ": Not yet implemented"  in
-          Prims.strcat "Tm_constant " uu____2578  in
-        failwith uu____2577
+    | uu____2605 ->
+        let uu____2606 =
+          let uu____2607 =
+            let uu____2608 = FStar_Syntax_Print.const_to_string c  in
+            Prims.strcat uu____2608 ": Not yet implemented"  in
+          Prims.strcat "Tm_constant " uu____2607  in
+        failwith uu____2606
 
 and (translate_pat : FStar_Syntax_Syntax.pat -> t) =
   fun p  ->
     match p.FStar_Syntax_Syntax.v with
     | FStar_Syntax_Syntax.Pat_constant c ->
-        let uu____2582 = translate_constant c  in Constant uu____2582
+        let uu____2611 = translate_constant c  in Constant uu____2611
     | FStar_Syntax_Syntax.Pat_cons (cfv,pats) ->
-        let uu____2601 =
+        let uu____2630 =
           FStar_List.map
-            (fun uu____2622  ->
-               match uu____2622 with
-               | (p1,uu____2634) ->
-                   let uu____2635 = translate_pat p1  in
-                   (uu____2635, FStar_Pervasives_Native.None)) pats
+            (fun uu____2651  ->
+               match uu____2651 with
+               | (p1,uu____2663) ->
+                   let uu____2664 = translate_pat p1  in
+                   (uu____2664, FStar_Pervasives_Native.None)) pats
            in
-        iapp (mkConstruct cfv [] []) uu____2601
+        iapp (mkConstruct cfv [] []) uu____2630
     | FStar_Syntax_Syntax.Pat_var bvar -> mkAccuVar bvar
     | FStar_Syntax_Syntax.Pat_wild bvar -> mkAccuVar bvar
     | FStar_Syntax_Syntax.Pat_dot_term (bvar,t) ->
@@ -789,57 +809,57 @@ and (translate :
     fun bs  ->
       fun e  ->
         debug
-          (fun uu____2662  ->
-             let uu____2663 =
-               let uu____2664 = FStar_Syntax_Subst.compress e  in
-               FStar_Syntax_Print.tag_of_term uu____2664  in
-             let uu____2665 =
-               let uu____2666 = FStar_Syntax_Subst.compress e  in
-               FStar_Syntax_Print.term_to_string uu____2666  in
-             FStar_Util.print2 "Term: %s - %s\n" uu____2663 uu____2665);
+          (fun uu____2691  ->
+             let uu____2692 =
+               let uu____2693 = FStar_Syntax_Subst.compress e  in
+               FStar_Syntax_Print.tag_of_term uu____2693  in
+             let uu____2694 =
+               let uu____2695 = FStar_Syntax_Subst.compress e  in
+               FStar_Syntax_Print.term_to_string uu____2695  in
+             FStar_Util.print2 "Term: %s - %s\n" uu____2692 uu____2694);
         debug
-          (fun uu____2672  ->
-             let uu____2673 =
-               let uu____2674 = FStar_List.map (fun x  -> t_to_string x) bs
+          (fun uu____2701  ->
+             let uu____2702 =
+               let uu____2703 = FStar_List.map (fun x  -> t_to_string x) bs
                   in
-               FStar_String.concat ";; " uu____2674  in
-             FStar_Util.print1 "BS list: %s\n" uu____2673);
-        (let uu____2679 =
-           let uu____2680 = FStar_Syntax_Subst.compress e  in
-           uu____2680.FStar_Syntax_Syntax.n  in
-         match uu____2679 with
-         | FStar_Syntax_Syntax.Tm_delayed (uu____2683,uu____2684) ->
+               FStar_String.concat ";; " uu____2703  in
+             FStar_Util.print1 "BS list: %s\n" uu____2702);
+        (let uu____2708 =
+           let uu____2709 = FStar_Syntax_Subst.compress e  in
+           uu____2709.FStar_Syntax_Syntax.n  in
+         match uu____2708 with
+         | FStar_Syntax_Syntax.Tm_delayed (uu____2712,uu____2713) ->
              failwith "Tm_delayed: Impossible"
          | FStar_Syntax_Syntax.Tm_unknown  -> Unknown
          | FStar_Syntax_Syntax.Tm_constant c ->
-             let uu____2726 = translate_constant c  in Constant uu____2726
+             let uu____2755 = translate_constant c  in Constant uu____2755
          | FStar_Syntax_Syntax.Tm_bvar db ->
              FStar_List.nth bs db.FStar_Syntax_Syntax.index
          | FStar_Syntax_Syntax.Tm_uinst (t,us) ->
              (debug
-                (fun uu____2743  ->
-                   let uu____2744 = FStar_Syntax_Print.tag_of_term t  in
-                   let uu____2745 = FStar_Syntax_Print.term_to_string t  in
-                   let uu____2746 =
-                     let uu____2747 =
+                (fun uu____2772  ->
+                   let uu____2773 = FStar_Syntax_Print.tag_of_term t  in
+                   let uu____2774 = FStar_Syntax_Print.term_to_string t  in
+                   let uu____2775 =
+                     let uu____2776 =
                        FStar_List.map FStar_Syntax_Print.univ_to_string us
                         in
-                     FStar_All.pipe_right uu____2747
+                     FStar_All.pipe_right uu____2776
                        (FStar_String.concat ", ")
                       in
                    FStar_Util.print3 "Term with univs: %s - %s\nUniv %s\n"
-                     uu____2744 uu____2745 uu____2746);
-              (let uu____2752 = translate env bs t  in
-               let uu____2753 = FStar_List.map (translate_univ bs) us  in
+                     uu____2773 uu____2774 uu____2775);
+              (let uu____2781 = translate env bs t  in
+               let uu____2782 = FStar_List.map (translate_univ bs) us  in
                FStar_List.fold_left
                  (fun head1  ->
                     fun u  -> app head1 u FStar_Pervasives_Native.None)
-                 uu____2752 uu____2753))
+                 uu____2781 uu____2782))
          | FStar_Syntax_Syntax.Tm_type u ->
-             let uu____2761 =
-               let uu____2762 = translate_univ bs u  in un_univ uu____2762
+             let uu____2790 =
+               let uu____2791 = translate_univ bs u  in un_univ uu____2791
                 in
-             Type_t uu____2761
+             Type_t uu____2790
          | FStar_Syntax_Syntax.Tm_arrow (bs1,c) ->
              (debug_term e; failwith "Tm_arrow: Not yet implemented")
          | FStar_Syntax_Syntax.Tm_refine (db,tm) ->
@@ -848,31 +868,31 @@ and (translate :
                  (Lam
                     (((fun y  -> translate env (y :: bs) tm)),
                       (Constant Unit), FStar_Pervasives_Native.None)))
-         | FStar_Syntax_Syntax.Tm_ascribed (t,uu____2803,uu____2804) ->
+         | FStar_Syntax_Syntax.Tm_ascribed (t,uu____2832,uu____2833) ->
              translate env bs t
          | FStar_Syntax_Syntax.Tm_uvar (uvar,t) ->
              (debug_term e; failwith "Tm_uvar: Not yet implemented")
-         | FStar_Syntax_Syntax.Tm_meta (e1,uu____2873) -> translate env bs e1
+         | FStar_Syntax_Syntax.Tm_meta (e1,uu____2902) -> translate env bs e1
          | FStar_Syntax_Syntax.Tm_name x -> mkAccuVar x
-         | FStar_Syntax_Syntax.Tm_abs ([],uu____2879,uu____2880) ->
+         | FStar_Syntax_Syntax.Tm_abs ([],uu____2908,uu____2909) ->
              failwith "Impossible: abstraction with no binders"
-         | FStar_Syntax_Syntax.Tm_abs (x::[],body,uu____2901) ->
+         | FStar_Syntax_Syntax.Tm_abs (x::[],body,uu____2930) ->
              (debug
-                (fun uu____2935  ->
-                   let uu____2936 = FStar_Syntax_Print.tag_of_term body  in
-                   let uu____2937 = FStar_Syntax_Print.term_to_string body
+                (fun uu____2964  ->
+                   let uu____2965 = FStar_Syntax_Print.tag_of_term body  in
+                   let uu____2966 = FStar_Syntax_Print.term_to_string body
                       in
-                   FStar_Util.print2 "Tm_abs body : %s - %s\n" uu____2936
-                     uu____2937);
+                   FStar_Util.print2 "Tm_abs body : %s - %s\n" uu____2965
+                     uu____2966);
               (let x1 = FStar_Pervasives_Native.fst x  in
-               let uu____2939 =
-                 let uu____2948 =
+               let uu____2968 =
+                 let uu____2977 =
                    translate env bs x1.FStar_Syntax_Syntax.sort  in
-                 ((fun y  -> translate env (y :: bs) body), uu____2948,
+                 ((fun y  -> translate env (y :: bs) body), uu____2977,
                    (FStar_Pervasives_Native.snd x))
                   in
-               Lam uu____2939))
-         | FStar_Syntax_Syntax.Tm_abs (x::xs,body,uu____2956) ->
+               Lam uu____2968))
+         | FStar_Syntax_Syntax.Tm_abs (x::xs,body,uu____2985) ->
              let rest =
                FStar_Syntax_Syntax.mk
                  (FStar_Syntax_Syntax.Tm_abs
@@ -891,29 +911,29 @@ and (translate :
              failwith "Impossible: application with no arguments"
          | FStar_Syntax_Syntax.Tm_app (e1,arg::[]) ->
              (debug
-                (fun uu____3078  ->
-                   let uu____3079 = FStar_Syntax_Print.term_to_string e1  in
-                   let uu____3080 =
+                (fun uu____3107  ->
+                   let uu____3108 = FStar_Syntax_Print.term_to_string e1  in
+                   let uu____3109 =
                      FStar_Syntax_Print.term_to_string
                        (FStar_Pervasives_Native.fst arg)
                       in
-                   FStar_Util.print2 "Application %s / %s\n" uu____3079
-                     uu____3080);
-              (let uu____3083 = translate env bs e1  in
-               let uu____3084 =
+                   FStar_Util.print2 "Application %s / %s\n" uu____3108
+                     uu____3109);
+              (let uu____3112 = translate env bs e1  in
+               let uu____3113 =
                  translate env bs (FStar_Pervasives_Native.fst arg)  in
-               app uu____3083 uu____3084 (FStar_Pervasives_Native.snd arg)))
+               app uu____3112 uu____3113 (FStar_Pervasives_Native.snd arg)))
          | FStar_Syntax_Syntax.Tm_app (head1,arg::args) ->
              (debug
-                (fun uu____3131  ->
-                   let uu____3132 = FStar_Syntax_Print.term_to_string head1
+                (fun uu____3160  ->
+                   let uu____3161 = FStar_Syntax_Print.term_to_string head1
                       in
-                   let uu____3133 =
+                   let uu____3162 =
                      FStar_Syntax_Print.term_to_string
                        (FStar_Pervasives_Native.fst arg)
                       in
                    FStar_Util.print2 "Application %s / %s (...more agrs)\n"
-                     uu____3132 uu____3133);
+                     uu____3161 uu____3162);
               (let first =
                  FStar_Syntax_Syntax.mk
                    (FStar_Syntax_Syntax.Tm_app (head1, [arg]))
@@ -930,48 +950,48 @@ and (translate :
                match scrut1 with
                | Construct (c,us,args) ->
                    (debug
-                      (fun uu____3240  ->
-                         let uu____3241 =
-                           let uu____3242 =
+                      (fun uu____3269  ->
+                         let uu____3270 =
+                           let uu____3271 =
                              FStar_All.pipe_right args
                                (FStar_List.map
-                                  (fun uu____3263  ->
-                                     match uu____3263 with
+                                  (fun uu____3292  ->
+                                     match uu____3292 with
                                      | (x,q) ->
-                                         let uu____3276 = t_to_string x  in
+                                         let uu____3305 = t_to_string x  in
                                          Prims.strcat
                                            (if FStar_Util.is_some q
                                             then "#"
-                                            else "") uu____3276))
+                                            else "") uu____3305))
                               in
-                           FStar_All.pipe_right uu____3242
+                           FStar_All.pipe_right uu____3271
                              (FStar_String.concat "; ")
                             in
-                         FStar_Util.print1 "Match args: %s\n" uu____3241);
-                    (let uu____3280 = pickBranch scrut1 branches  in
-                     match uu____3280 with
+                         FStar_Util.print1 "Match args: %s\n" uu____3270);
+                    (let uu____3309 = pickBranch scrut1 branches  in
+                     match uu____3309 with
                      | FStar_Pervasives_Native.Some (branch1,args1) ->
-                         let uu____3301 =
+                         let uu____3330 =
                            FStar_List.fold_left
                              (fun bs1  -> fun x  -> x :: bs1) bs args1
                             in
-                         translate env uu____3301 branch1
+                         translate env uu____3330 branch1
                      | FStar_Pervasives_Native.None  ->
                          mkAccuMatch scrut1 case branches))
                | Constant c ->
-                   let uu____3319 = pickBranch scrut1 branches  in
-                   (match uu____3319 with
+                   let uu____3348 = pickBranch scrut1 branches  in
+                   (match uu____3348 with
                     | FStar_Pervasives_Native.Some (branch1,[]) ->
                         translate env bs branch1
                     | FStar_Pervasives_Native.Some (branch1,arg::[]) ->
                         translate env (arg :: bs) branch1
                     | FStar_Pervasives_Native.None  ->
                         mkAccuMatch scrut1 case branches
-                    | FStar_Pervasives_Native.Some (uu____3353,hd1::tl1) ->
+                    | FStar_Pervasives_Native.Some (uu____3382,hd1::tl1) ->
                         failwith
                           "Impossible: Matching on constants cannot bind more than one variable")
-               | uu____3366 -> mkAccuMatch scrut1 case branches  in
-             let uu____3367 = translate env bs scrut  in case uu____3367
+               | uu____3395 -> mkAccuMatch scrut1 case branches  in
+             let uu____3396 = translate env bs scrut  in case uu____3396
          | FStar_Syntax_Syntax.Tm_let ((false ,lbs),body) ->
              let bs' =
                FStar_List.fold_left
@@ -982,8 +1002,8 @@ and (translate :
                 in
              translate env bs' body
          | FStar_Syntax_Syntax.Tm_let ((true ,lbs),body) ->
-             let uu____3413 = make_rec_env lbs bs  in
-             translate env uu____3413 body)
+             let uu____3442 = make_rec_env lbs bs  in
+             translate env uu____3442 body)
 
 and (readback_primops :
   FStar_TypeChecker_Env.env ->
@@ -995,52 +1015,52 @@ and (readback_primops :
     fun n1  ->
       fun args  ->
         debug
-          (fun uu____3428  -> FStar_Util.print1 "Readback primop %s\n" n1);
+          (fun uu____3457  -> FStar_Util.print1 "Readback primop %s\n" n1);
         (let args1 =
            FStar_List.map
-             (fun uu____3439  ->
-                match uu____3439 with | (e,uu____3445) -> translate env [] e)
+             (fun uu____3468  ->
+                match uu____3468 with | (e,uu____3474) -> translate env [] e)
              args
             in
          match (n1, args1) with
          | ("op_Minus",(Constant (Int i))::[]) ->
-             let uu____3451 =
-               let uu____3452 =
-                 let uu____3453 = FStar_BigInt.minus_big_int i  in
-                 Int uu____3453  in
-               Constant uu____3452  in
-             readback env uu____3451
-         | ("op_Addition",(Constant (Int i1))::(Constant (Int i2))::[]) ->
-             let uu____3458 =
-               let uu____3459 =
-                 let uu____3460 = FStar_BigInt.add_big_int i1 i2  in
-                 Int uu____3460  in
-               Constant uu____3459  in
-             readback env uu____3458
-         | ("op_Subtraction",(Constant (Int i1))::(Constant (Int i2))::[]) ->
-             let uu____3465 =
-               let uu____3466 =
-                 let uu____3467 = FStar_BigInt.sub_big_int i1 i2  in
-                 Int uu____3467  in
-               Constant uu____3466  in
-             readback env uu____3465
-         | ("op_GreaterThan",(Constant (Int i1))::(Constant (Int i2))::[]) ->
-             let uu____3472 =
-               let uu____3473 =
-                 let uu____3474 = FStar_BigInt.gt_big_int i1 i2  in
-                 Bool uu____3474  in
-               Constant uu____3473  in
-             readback env uu____3472
-         | ("equals",typ::t1::t2::[]) ->
              let uu____3480 =
                let uu____3481 =
-                 let uu____3482 =
-                   let uu____3483 = readback env t1  in
-                   let uu____3484 = readback env t2  in
-                   uu____3483 = uu____3484  in
-                 Bool uu____3482  in
+                 let uu____3482 = FStar_BigInt.minus_big_int i  in
+                 Int uu____3482  in
                Constant uu____3481  in
              readback env uu____3480
+         | ("op_Addition",(Constant (Int i1))::(Constant (Int i2))::[]) ->
+             let uu____3487 =
+               let uu____3488 =
+                 let uu____3489 = FStar_BigInt.add_big_int i1 i2  in
+                 Int uu____3489  in
+               Constant uu____3488  in
+             readback env uu____3487
+         | ("op_Subtraction",(Constant (Int i1))::(Constant (Int i2))::[]) ->
+             let uu____3494 =
+               let uu____3495 =
+                 let uu____3496 = FStar_BigInt.sub_big_int i1 i2  in
+                 Int uu____3496  in
+               Constant uu____3495  in
+             readback env uu____3494
+         | ("op_GreaterThan",(Constant (Int i1))::(Constant (Int i2))::[]) ->
+             let uu____3501 =
+               let uu____3502 =
+                 let uu____3503 = FStar_BigInt.gt_big_int i1 i2  in
+                 Bool uu____3503  in
+               Constant uu____3502  in
+             readback env uu____3501
+         | ("equals",typ::t1::t2::[]) ->
+             let uu____3509 =
+               let uu____3510 =
+                 let uu____3511 =
+                   let uu____3512 = readback env t1  in
+                   let uu____3513 = readback env t2  in
+                   uu____3512 = uu____3513  in
+                 Bool uu____3511  in
+               Constant uu____3510  in
+             readback env uu____3509
          | ("op_Negation",(Constant (Bool b))::[]) ->
              readback env (Constant (Bool (Prims.op_Negation b)))
          | ("l_and",(Constant (Bool b1))::(Constant (Bool b2))::[]) ->
@@ -1049,15 +1069,15 @@ and (readback_primops :
              readback env (Constant (Bool (b1 || b2)))
          | ("b2t",(Constant (Bool b))::[]) ->
              readback env (Constant (Bool b))
-         | uu____3499 -> failwith "Bad primitive op application")
+         | uu____3528 -> failwith "Bad primitive op application")
 
 and (readback : FStar_TypeChecker_Env.env -> t -> FStar_Syntax_Syntax.term) =
   fun env  ->
     fun x  ->
       debug
-        (fun uu____3513  ->
-           let uu____3514 = t_to_string x  in
-           FStar_Util.print1 "Readback: %s\n" uu____3514);
+        (fun uu____3542  ->
+           let uu____3543 = t_to_string x  in
+           FStar_Util.print1 "Readback: %s\n" uu____3543);
       (match x with
        | Univ u -> failwith "Readback of universes should not occur"
        | Unknown  ->
@@ -1067,8 +1087,8 @@ and (readback : FStar_TypeChecker_Env.env -> t -> FStar_Syntax_Syntax.term) =
        | Constant (Bool (true )) -> FStar_Syntax_Util.exp_true_bool
        | Constant (Bool (false )) -> FStar_Syntax_Util.exp_false_bool
        | Constant (Int i) ->
-           let uu____3517 = FStar_BigInt.string_of_big_int i  in
-           FStar_All.pipe_right uu____3517 FStar_Syntax_Util.exp_int
+           let uu____3546 = FStar_BigInt.string_of_big_int i  in
+           FStar_All.pipe_right uu____3546 FStar_Syntax_Util.exp_int
        | Constant (String (s,r)) ->
            FStar_Syntax_Syntax.mk
              (FStar_Syntax_Syntax.Tm_constant
@@ -1080,27 +1100,27 @@ and (readback : FStar_TypeChecker_Env.env -> t -> FStar_Syntax_Syntax.term) =
              FStar_Pervasives_Native.None FStar_Range.dummyRange
        | Lam (f,t,q) ->
            let x1 =
-             let uu____3531 = readback env t  in
+             let uu____3560 = readback env t  in
              FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
-               uu____3531
+               uu____3560
               in
            let body =
-             let uu____3533 = f (mkAccuVar x1)  in readback env uu____3533
+             let uu____3562 = f (mkAccuVar x1)  in readback env uu____3562
               in
            FStar_Syntax_Util.abs [(x1, q)] body FStar_Pervasives_Native.None
        | Construct (fv,us,args_t) ->
            let args =
              map_rev
-               (fun uu____3580  ->
-                  match uu____3580 with
+               (fun uu____3609  ->
+                  match uu____3609 with
                   | (x1,q) ->
-                      let uu____3591 = readback env x1  in (uu____3591, q))
+                      let uu____3620 = readback env x1  in (uu____3620, q))
                args_t
               in
            let apply1 tm =
              match args with
              | [] -> tm
-             | uu____3608 -> FStar_Syntax_Util.mk_app tm args  in
+             | uu____3637 -> FStar_Syntax_Util.mk_app tm args  in
            let fv_lid =
              FStar_Syntax_Print.lid_to_string
                (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
@@ -1109,56 +1129,56 @@ and (readback : FStar_TypeChecker_Env.env -> t -> FStar_Syntax_Syntax.term) =
            then readback_primops env fv_lid args
            else
              (match us with
-              | uu____3617::uu____3618 ->
-                  let uu____3621 =
-                    let uu____3624 =
+              | uu____3646::uu____3647 ->
+                  let uu____3650 =
+                    let uu____3653 =
                       FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar fv)
                         FStar_Pervasives_Native.None FStar_Range.dummyRange
                        in
-                    FStar_Syntax_Syntax.mk_Tm_uinst uu____3624
+                    FStar_Syntax_Syntax.mk_Tm_uinst uu____3653
                       (FStar_List.rev us)
                      in
-                  apply1 uu____3621
+                  apply1 uu____3650
               | [] ->
-                  let uu____3625 =
+                  let uu____3654 =
                     FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar fv)
                       FStar_Pervasives_Native.None FStar_Range.dummyRange
                      in
-                  apply1 uu____3625)
+                  apply1 uu____3654)
        | Accu (Var bv,[]) -> FStar_Syntax_Syntax.bv_to_name bv
        | Accu (Var bv,ts) ->
            let args =
              map_rev
-               (fun uu____3672  ->
-                  match uu____3672 with
+               (fun uu____3701  ->
+                  match uu____3701 with
                   | (x1,q) ->
-                      let uu____3683 = readback env x1  in (uu____3683, q))
+                      let uu____3712 = readback env x1  in (uu____3712, q))
                ts
               in
-           let uu____3684 = FStar_Syntax_Syntax.bv_to_name bv  in
-           FStar_Syntax_Util.mk_app uu____3684 args
+           let uu____3713 = FStar_Syntax_Syntax.bv_to_name bv  in
+           FStar_Syntax_Util.mk_app uu____3713 args
        | Accu (Match (scrut,cases,branches),ts) ->
            let args =
              map_rev
-               (fun uu____3730  ->
-                  match uu____3730 with
+               (fun uu____3759  ->
+                  match uu____3759 with
                   | (x1,q) ->
-                      let uu____3741 = readback env x1  in (uu____3741, q))
+                      let uu____3770 = readback env x1  in (uu____3770, q))
                ts
               in
            let head1 =
              let scrut_new = readback env scrut  in
              let branches_new =
                FStar_List.map
-                 (fun uu____3786  ->
-                    match uu____3786 with
-                    | (pat,when_clause,uu____3811) ->
-                        let uu____3824 =
-                          let uu____3825 =
-                            let uu____3826 = translate_pat pat  in
-                            cases uu____3826  in
-                          readback env uu____3825  in
-                        (pat, when_clause, uu____3824)) branches
+                 (fun uu____3815  ->
+                    match uu____3815 with
+                    | (pat,when_clause,uu____3840) ->
+                        let uu____3853 =
+                          let uu____3854 =
+                            let uu____3855 = translate_pat pat  in
+                            cases uu____3855  in
+                          readback env uu____3854  in
+                        (pat, when_clause, uu____3853)) branches
                 in
              FStar_Syntax_Syntax.mk
                (FStar_Syntax_Syntax.Tm_match (scrut_new, branches_new))
@@ -1166,7 +1186,7 @@ and (readback : FStar_TypeChecker_Env.env -> t -> FStar_Syntax_Syntax.term) =
               in
            (match ts with
             | [] -> head1
-            | uu____3847 -> FStar_Syntax_Util.mk_app head1 args)
+            | uu____3876 -> FStar_Syntax_Util.mk_app head1 args)
        | Accu (Rec (lb,lbs,bs),ts) ->
            let rec curry hd1 args =
              match args with
@@ -1175,20 +1195,20 @@ and (readback : FStar_TypeChecker_Env.env -> t -> FStar_Syntax_Syntax.term) =
                  app hd1 (FStar_Pervasives_Native.fst arg)
                    (FStar_Pervasives_Native.snd arg)
              | arg::args1 ->
-                 let uu____3930 = curry hd1 args1  in
-                 app uu____3930 (FStar_Pervasives_Native.fst arg)
+                 let uu____3959 = curry hd1 args1  in
+                 app uu____3959 (FStar_Pervasives_Native.fst arg)
                    (FStar_Pervasives_Native.snd arg)
               in
            let args_no = count_abstractions lb.FStar_Syntax_Syntax.lbdef  in
-           let uu____3932 = test_args ts args_no  in
-           if uu____3932
+           let uu____3961 = test_args ts args_no  in
+           if uu____3961
            then
-             let uu____3933 =
-               let uu____3934 =
-                 let uu____3935 = make_rec_env lbs bs  in
-                 translate_letbinding env uu____3935 lb  in
-               curry uu____3934 ts  in
-             readback env uu____3933
+             let uu____3962 =
+               let uu____3963 =
+                 let uu____3964 = make_rec_env lbs bs  in
+                 translate_letbinding env uu____3964 lb  in
+               curry uu____3963 ts  in
+             readback env uu____3962
            else
              (let head1 =
                 let f =
@@ -1201,37 +1221,37 @@ and (readback : FStar_TypeChecker_Env.env -> t -> FStar_Syntax_Syntax.term) =
                  in
               let args =
                 map_rev
-                  (fun uu____3972  ->
-                     match uu____3972 with
+                  (fun uu____4001  ->
+                     match uu____4001 with
                      | (x1,q) ->
-                         let uu____3983 = readback env x1  in (uu____3983, q))
+                         let uu____4012 = readback env x1  in (uu____4012, q))
                   ts
                  in
               match ts with
               | [] -> head1
-              | uu____3988 -> FStar_Syntax_Util.mk_app head1 args)
+              | uu____4017 -> FStar_Syntax_Util.mk_app head1 args)
        | Refinement (b,r) ->
            let body =
-             let uu____3998 = readback env r  in translate env [] uu____3998
+             let uu____4027 = readback env r  in translate env [] uu____4027
               in
            (debug
-              (fun uu____4004  ->
-                 let uu____4005 = t_to_string body  in
+              (fun uu____4033  ->
+                 let uu____4034 = t_to_string body  in
                  FStar_Util.print1 "Translated refinement body: %s\n"
-                   uu____4005);
-            (let uu____4006 =
-               let uu____4009 =
-                 let uu____4010 =
-                   let uu____4017 = readback env body  in
-                   ((FStar_Pervasives_Native.fst b), uu____4017)  in
-                 FStar_Syntax_Syntax.Tm_refine uu____4010  in
-               FStar_Syntax_Syntax.mk uu____4009  in
-             uu____4006 FStar_Pervasives_Native.None FStar_Range.dummyRange)))
+                   uu____4034);
+            (let uu____4035 =
+               let uu____4038 =
+                 let uu____4039 =
+                   let uu____4046 = readback env body  in
+                   ((FStar_Pervasives_Native.fst b), uu____4046)  in
+                 FStar_Syntax_Syntax.Tm_refine uu____4039  in
+               FStar_Syntax_Syntax.mk uu____4038  in
+             uu____4035 FStar_Pervasives_Native.None FStar_Range.dummyRange)))
 
 let (normalize :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
   fun env  ->
-    fun e  -> let uu____4027 = translate env [] e  in readback env uu____4027
+    fun e  -> let uu____4056 = translate env [] e  in readback env uu____4056
   
