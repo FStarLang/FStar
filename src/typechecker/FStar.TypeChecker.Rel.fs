@@ -34,7 +34,6 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.TypeChecker.Common
-open System.Runtime.Remoting.Metadata.W3cXsd2001
 
 module BU = FStar.Util //basic util
 module U = FStar.Syntax.Util
