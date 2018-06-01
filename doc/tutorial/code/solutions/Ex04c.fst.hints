@@ -60,7 +60,7 @@
         "typing_Ex04c.mem"
       ],
       0,
-      "c60ed5627f0b5532e49c18419b5bf510"
+      "2fedd127f31fa67d95e490264bbdcc7c"
     ],
     [
       "Ex04c.append",
@@ -74,7 +74,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "57371950ceae2041b94156840bbe46ca"
+      "a6deb2fba986c4ff4ec11519db116589"
     ],
     [
       "Ex04c.mem",
@@ -89,7 +89,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4bc55b4f6aae29ab30a1b92ce2774934"
+      "72e6035dd05170d5241fd819eb1f028d"
     ]
   ]
 ]

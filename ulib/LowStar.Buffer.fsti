@@ -794,20 +794,34 @@ val alloca
 /// specified by the ``init`` list, which must be nonempty, and of
 /// length representable as a machine integer.
 
-unfold let alloca_of_list_pre (#a: Type0) (init: list a) : GTot Type0 =
+unfold let alloc_of_list_pre (#a: Type0) (init: list a) : GTot Type0 =
   normalize (0 < FStar.List.Tot.length init) /\
   normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
-unfold let alloca_of_list_post (#a: Type) (len: nat) (buf: buffer a) : GTot Type0 =
+unfold let alloc_of_list_post (#a: Type) (len: nat) (buf: buffer a) : GTot Type0 =
   normalize (length buf == len)
 
 val alloca_of_list
   (#a: Type0)
   (init: list a)
 : HST.StackInline (buffer a)
-  (requires (fun h -> alloca_of_list_pre #a init))
+  (requires (fun h -> alloc_of_list_pre #a init))
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
     alloc_post_common h.HS.tip len b h h' /\
-    alloca_of_list_post #a len b
+    as_seq h' b == Seq.of_list init /\
+    alloc_of_list_post #a len b
+  ))
+
+val gcmalloc_of_list
+  (#a: Type0)
+  (r: HS.rid)
+  (init: list a)
+: HST.ST (buffer a)
+  (requires (fun h -> HST.is_eternal_region r /\ alloc_of_list_pre #a init))
+  (ensures (fun h b h' ->
+    let len = FStar.List.Tot.length init in
+    alloc_post_common r len b h h' /\
+    as_seq h' b == Seq.of_list init /\
+    alloc_of_list_post #a len b
   ))

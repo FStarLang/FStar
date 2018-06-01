@@ -75,10 +75,10 @@ let create
 = alloca init len
 
 unfold let createL_pre (#a: Type0) (init: list a) : GTot Type0 =
-  alloca_of_list_pre init
+  alloc_of_list_pre init
 
 unfold let createL_post (#a: Type) (len: nat) (buf: buffer a) : GTot Type0 =
-  alloca_of_list_post len buf
+  alloc_of_list_post len buf
 
 let createL
   (#a: Type0)
@@ -88,6 +88,7 @@ let createL
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
     rcreate_post_common h.HS.tip len b h h' /\
+    as_seq h' b == Seq.of_list init /\
     createL_post #a len b
   ))
 = alloca_of_list init
