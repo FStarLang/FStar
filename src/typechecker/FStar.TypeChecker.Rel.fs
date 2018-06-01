@@ -2145,7 +2145,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
           solve ?u to Pi
           and then try to prove `t ~ ti`
      *)
-    let try_match_heuristic env orig wl t1t2_opt =
+    let try_match_heuristic env orig wl s1 s2 t1t2_opt =
         match t1t2_opt with
         | None -> Inr None
         | Some (t1, t2) ->
@@ -2153,9 +2153,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             then BU.print2 "Trying match heuristic for %s vs. %s\n"
                             (Print.term_to_string t1)
                             (Print.term_to_string t2);
-            match U.unmeta t1, U.unmeta t2 with
-            | {n=Tm_match (scrutinee, branches)}, t
-            | t, {n=Tm_match(scrutinee, branches)} ->
+            match (s1, U.unmeta t1), (s2, U.unmeta t2) with
+            | (_, {n=Tm_match (scrutinee, branches)}), (s, t)
+            | (s, t), (_, {n=Tm_match(scrutinee, branches)}) ->
               if not (is_flex scrutinee)
               then begin
                 if Env.debug env <| Options.Other "Rel"
@@ -2170,11 +2170,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                   let matching_branch =
                       branches |>
                       BU.try_find
-                          (function
-                            | (_, None, t') ->
-
+                          (fun b ->
+                            match b with
+                            | ({v=Pat_constant _}, None, _)
+                            | ({v=Pat_cons _}, None, _) -> //other patterns do not discriminate
+                              let (_, _, t') = SS.open_branch b in
                               begin
-                              match head_matches_delta env wl t t' with
+                              match head_matches_delta env wl s t' with
                               | FullMatch, _
                               | HeadMatch _, _ ->
                                 true
@@ -2281,7 +2283,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 | _ -> false
             in
             begin
-            match try_match_heuristic env orig wl o with
+            match try_match_heuristic env orig wl t1 t2 o with
             | Inl _defer_ok ->
               giveup_or_defer orig "delaying match heuristic"
 

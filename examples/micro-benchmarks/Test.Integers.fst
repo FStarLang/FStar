@@ -100,3 +100,39 @@ let ex_21 (x:Prims.int) (y:Prims.int) = x + y
 /// This is especially important for reuse of exsiting libraries
 let ex_22 (a:Type0) (s:Seq.seq a) (t:Seq.seq a) = Seq.length s < Seq.length t
 let ex_23 (a:Type0) (s:Seq.seq a) (t:Seq.seq a) = Seq.length s + Seq.length t + 1
+
+////////////////////////////////////////////////////////////////////////////////
+// Limitations
+//   A heuristic for unifying matches is key to making this work
+// In particular, we can unify
+//  `match ?u with | P1 -> t1 ... | Pn -> tn` with `s`
+// by setting `?u := Pi`,
+// whenever the head symbol of `ti` matches the head of `s`
+// This works well for some simple cases, but is not fully compositional
+// As illustrated below.
+////////////////////////////////////////////////////////////////////////////////
+
+/// This is a small example mimicing the essence of how FStar.Integers works
+let t0 (b:bool) =
+  match b with
+  | true -> int
+  | false -> string
+let f0 #b (x:t0 b) = ()
+let g0 = f0 0
+let h0 = f0 "hello"
+
+/// And you can layer these indexed types, as usual
+let t1 (x:option bool) =
+  match x with
+  | Some b -> t0 b
+  | None -> unit
+let f1 #i (x:t1 i) = ()
+/// And the inference heuristic succeeds here
+let g1 (a: t0 true) = f1 a
+let g2 (a: t0 false) = f1 a
+
+/// But it fails here because although the `int` is unifiable
+/// with `t1 (Some true)` the head symbol of the first branch
+/// doesn't match `int`. So the heuristic fails.
+[@fail]
+let g3 (a: int) = f1 a
