@@ -57,51 +57,33 @@ let ex12 (x:int_32{cast_ok (Unsigned W32) x}) (y:uint_32{ok (+) (cast x) y}) = c
 let ex13 (x:uint_16) (y:uint_32{ok (+) (cast x) y}) = cast x + y
 
 ////////////////////////////////////////////////////////////////////////////////
-// Constants:
-//  By default constants like 0ul are types as FStar.UInt32.t
-//  rather than FStar.Integers.uint_32
+// Mixing code that has been annotated or inferred with types like Prims.int
+// with code that uses FStar.Integers.int, etc. just works
+// This required an extension of the unification algorithm
 ////////////////////////////////////////////////////////////////////////////////
 
-/// Without the --integer_overloading option
-/// working with integer constants requires an explicit
-/// type annotation to infer implicit arguments
-///
-/// This next one is expected to fail since `0ul` and `1ul` are typed
-/// as FStar.UInt32.t, whereas the `+` is from FStar.Integers
-/// and its implicit arguments cannot be inferred
-[@fail]
-let ex_fail1 = 0ul + 1ul
+/// Constants like `0ul` are still typed as `FStar.UInt32.t`
+/// But, they can still be used with the overloaded operators
+/// Since `FStar.UInt32.t` can be unified with `FStar.Integers.int_t (Unsigned W32)
+/// Note the inferred type is still `FStar.Integers.int_t (Unsigned W32)
+let ex14 = 0ul + 1ul
 
-/// But, with a type annotation it succeeds
-let ex14 : uint_32 = 0ul + 1ul
+/// Of course, you can also annotate it
+let ex15 : uint_32 = 0ul + 1ul
 
-/// Or, one can explicitly use the non-overloaded operators
-let ex15 = FStar.UInt32.(0ul +^ 1ul)
+/// Or, one can still explicitly use the non-overloaded operators
+let ex16 = FStar.UInt32.(0ul +^ 1ul)
 
-/// But, recall that this is just a problem where there are no
-/// FStar.Integer.int_t types around to help guide inference
-///
-/// As above, this still works: an annotation on one of the operands
-/// will do
-let ex16 (bound:uint_32) (x:uint_32{x < bound}) = x + 1ul
+/// Types from FStar.Integers can also be mixed with
+/// the machine integer types
+let ex17 (bound:uint_32) (x:uint_32{x < bound}) = x + 1ul
 
-/// One can also annotate the constants with their types
-let ex17 = (0ul <: uint_32) + (1ul <: uint_32)
-
-/// The following compiler option automates this type ascription
-/// adding the appropriate ascription to all integer constants
-#set-options "--integer_overloading true"
-
-/// With the option turned on, this is no longer necessary
-let ex18 = 0ul + 1ul
-
-/// Overloading covers both machine integers as well as
-/// mathematical integers
-/// Note the inferred type: z: int_t (Signed Winfinite)
+/// Of course, this works for mathematical integers too
 let ex19 = 0 + 1
 
-/// With constants typed this way, and with unary minus on machine integers
-/// some code is easier to write than before
+/// We now also have a unary minus on all integers making some code
+/// easier to write than before, esp. when mixed with machine integer
+/// constants
 let ex20 =
   let abs (x:int) = if x > 0 then x else - x in
   let min_int32 = -0x7fffffffl - 1l in
@@ -110,41 +92,11 @@ let ex20 =
   in
   ()
 
-////////////////////////////////////////////////////////////////////////////////
-//But, some problems remain. Notably, compatibility with modules that
-//have not been written with FStar.Integers in mind
-////////////////////////////////////////////////////////////////////////////////
+/// If you have code annotated with types like Prims.int or
+/// FStar.UInt32.t etc.  then these can be freely mixed with
+/// FStar.Integers
+let ex_21 (x:Prims.int) (y:Prims.int) = x + y
 
-/// If you have code annotated with types like Prims.int or FStar.UInt32.t etc.
-/// then using these with FStar.Integers requires explicit casts
-
-[@fail] //this will fail to infer implicits
-let ex_fail2 (x:Prims.int) (y:Prims.int) = x + y
-
-/// But not if you annotate with FStar.Integers.int
-let ex21 (x:int) (y:int) = x + y
-
-/// This may not seem like much of a problem, except that many
-/// libraries do not use yet use these FStar.Integer types
-[@fail] //fails for the same reason as ex_fail2; Seq.length returns a Prims.nat
-let ex_fail3 (a:Type0) (s:Seq.seq a) (t:Seq.seq a) = Seq.length s < Seq.length t
-
-/// It requires an explicit ascription to FStar.Integers.nat to succeed
-let ex22 (a:Type0) (s:Seq.seq a) (t:Seq.seq a) = (Seq.length s <: nat) < Seq.length t
-
-/// So, unless we
-///
-/// 1. rewrite our libraries to use FStar.Integers.* more
-///    systematically
-///
-/// Or,
-///
-/// 2. add compiler support to special case types like Prims.int,
-///    Prims.nat, FStar.UInt[N].t, etc, allowing them to be implicitly
-///    converted to their counterparts in `FStar.Integers.int_t _`
-///
-/// this overloading support will continue to have such kinks.
-
-/// One possibility is to extend the compiler support provided by
-/// `--integer_overloading true` to explicitly add ascriptions to
-/// any (machine)-int typed terms, not just to the constants.
+/// This is especially important for reuse of exsiting libraries
+let ex_22 (a:Type0) (s:Seq.seq a) (t:Seq.seq a) = Seq.length s < Seq.length t
+let ex_23 (a:Type0) (s:Seq.seq a) (t:Seq.seq a) = Seq.length s + Seq.length t + 1
