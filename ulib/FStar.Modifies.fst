@@ -211,8 +211,8 @@ let loc_includes_gsub_buffer_l #t b i1 len1 i2 len2 = ()
 let loc_includes_addresses_buffer #t preserve_liveness r s p =
   MG.loc_includes_addresses_aloc #_ #cls preserve_liveness r s #(B.as_addr p) (LocBuffer p)
 
-let loc_includes_region_buffer #t s b =
-  MG.loc_includes_region_aloc #_ #cls s #(B.frameOf b) #(B.as_addr b) (LocBuffer b)
+let loc_includes_region_buffer #t preserve_liveness s b =
+  MG.loc_includes_region_aloc #_ #cls preserve_liveness s #(B.frameOf b) #(B.as_addr b) (LocBuffer b)
 
 let loc_includes_region_addresses = MG.loc_includes_region_addresses #_ #cls
 
@@ -255,22 +255,40 @@ let modifies_refl = MG.modifies_refl
 
 let modifies_loc_includes = MG.modifies_loc_includes
 
-let liveness_insensitive = MG.liveness_insensitive #_ #cls
+let address_liveness_insensitive_locs = MG.address_liveness_insensitive_locs _
 
-let liveness_insensitive_none = MG.liveness_insensitive_none cls
+let region_liveness_insensitive_locs = MG.region_liveness_insensitive_locs _
 
-let liveness_insensitive_buffer #t b = MG.liveness_insensitive_aloc #_ #cls #(B.frameOf b) #(B.as_addr b) (LocBuffer b)
+let address_liveness_insensitive_buffer #t b =
+  MG.loc_includes_address_liveness_insensitive_locs_aloc #_ #cls #(B.frameOf b) #(B.as_addr b) (LocBuffer b)
 
-let liveness_insensitive_addresses = MG.liveness_insensitive_addresses #_ cls
+let address_liveness_insensitive_addresses =
+  MG.loc_includes_address_liveness_insensitive_locs_addresses cls
 
-let liveness_insensitive_union = MG.liveness_insensitive_union
+let region_liveness_insensitive_buffer #t b =
+  MG.loc_includes_region_liveness_insensitive_locs_loc_of_aloc #_ cls #(B.frameOf b) #(B.as_addr b) (LocBuffer b)
 
-let liveness_insensitive_includes = MG.liveness_insensitive_includes
+let region_liveness_insensitive_addresses =
+  MG.loc_includes_region_liveness_insensitive_locs_loc_addresses cls
+
+let region_liveness_insensitive_regions =
+  MG.loc_includes_region_liveness_insensitive_locs_loc_regions cls
+
+let region_liveness_insensitive_address_liveness_insensitive =
+  MG.loc_includes_region_liveness_insensitive_locs_address_liveness_insensitive_locs cls
 
 let modifies_liveness_insensitive_mreference = MG.modifies_preserves_liveness
 
 let modifies_liveness_insensitive_buffer l1 l2 h h' #t x =
   MG.modifies_preserves_liveness_strong l1 l2 h h' (B.content x) (LocBuffer x)
+
+let modifies_liveness_insensitive_region = MG.modifies_preserves_region_liveness
+
+let modifies_liveness_insensitive_region_mreference = MG.modifies_preserves_region_liveness_reference
+
+let modifies_liveness_insensitive_region_buffer l1 l2 h h' #t x =
+  MG.modifies_preserves_region_liveness_aloc l1 l2 h h' #(B.frameOf x) #(B.as_addr x) (LocBuffer x)
+
 
 let modifies_trans = MG.modifies_trans
 
