@@ -820,7 +820,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
-      if not (is_unknown t2.n) && not (Rel.is_trivial (Rel.teq env.env t1 t2)) then
+      if not (is_unknown t2.n) && not (Env.is_trivial (Rel.teq env.env t1 t2)) then
         raise_err (Errors.Fatal_TypeMismatch, (BU.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
           (Print.term_to_string e) (Print.term_to_string t1) (Print.term_to_string t2)))
     in

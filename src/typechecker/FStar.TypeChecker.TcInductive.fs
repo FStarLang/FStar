@@ -64,7 +64,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let indices, env', guard_indices, us' = tc_binders env_tps indices in
          let t, guard =
              let t, _, g = tc_tot_or_gtot_term env' t in
-             t, Rel.discharge_guard env' (Rel.conj_guard guard_params (Rel.conj_guard guard_indices g)) in
+             t, Rel.discharge_guard env' (Env.conj_guard guard_params (Env.conj_guard guard_indices g)) in
          let k = U.arrow indices (S.mk_Total t) in
          let t_type, u = U.type_u() in
          Rel.force_trivial_guard env' (Rel.teq env' t t_type);
@@ -149,15 +149,15 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
               if List.length _uvs = List.length tuvs then
                 List.fold_left2 (fun g u1 u2 ->
                   //unify the two
-                  Rel.conj_guard g (Rel.teq env' (mk (Tm_type u1) None Range.dummyRange) (mk (Tm_type (U_name u2)) None Range.dummyRange))
-                ) Rel.trivial_guard tuvs _uvs
+                  Env.conj_guard g (Rel.teq env' (mk (Tm_type u1) None Range.dummyRange) (mk (Tm_type (U_name u2)) None Range.dummyRange))
+                ) Env.trivial_guard tuvs _uvs
               else failwith "Impossible: tc_datacon: length of annotated universes not same as instantiated ones"
-            | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> Rel.trivial_guard
+            | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> Env.trivial_guard
             | _ -> raise_error (Errors.Fatal_UnexpectedConstructorType, (BU.format2 "Expected a constructor of type %s; got %s"
                                         (Print.lid_to_string tc_lid)
                                         (Print.term_to_string head))) se.sigrng in
          let g =List.fold_left2 (fun g (x, _) u_x ->
-                Rel.conj_guard g (Rel.universe_inequality u_x u_tc))
+                Env.conj_guard g (Rel.universe_inequality u_x u_tc))
             g_uvs
             arguments
             us in
@@ -673,7 +673,7 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sig
   let _ =
     //is this inline with verify_module ?
     if Env.should_verify env then
-      Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi))
+      Rel.force_trivial_guard env (Env.guard_of_guard_formula (NonTrivial phi))
     else ()
   in
 
@@ -939,14 +939,14 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
     let env, tc, tc_u, guard = tc_tycon env tc in
     let g' = Rel.universe_inequality S.U_zero tc_u in
     if Env.debug env Options.Low then BU.print1 "Checked inductive: %s\n" (Print.sigelt_to_string tc);
-    env, (tc, tc_u)::all_tcs, Rel.conj_guard g (Rel.conj_guard guard g')
-  ) tys (env1, [], Rel.trivial_guard)
+    env, (tc, tc_u)::all_tcs, Env.conj_guard g (Env.conj_guard guard g')
+  ) tys (env1, [], Env.trivial_guard)
   in
 
   (* Check each datacon *)
   let datas, g = List.fold_right (fun se (datas, g) ->
     let data, g' = tc_data env tcs se in
-    data::datas, Rel.conj_guard g g'
+    data::datas, Env.conj_guard g g'
   ) datas ([], g)
   in
 

@@ -561,7 +561,7 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
         let goal = { goal with is_guard = true } in
         push_smt_goals [goal])
     | Force ->
-        try if not (Rel.is_trivial <| Rel.discharge_guard_no_smt e g)
+        try if not (Env.is_trivial <| Rel.discharge_guard_no_smt e g)
             then
                 mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
                 fail1 "Forcing the guard failed %s)" reason)
@@ -928,7 +928,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                else
                    let u, _, g_u = TcUtil.new_implicit_var "apply_lemma" (goal_type goal).pos (goal_env goal) b_t in
                    (u, aq)::uvs,
-                   Rel.conj_guard guard g_u,
+                   Env.conj_guard guard g_u,
                    S.NT(b, u)::subst
                )
        ([], guard, [])
@@ -1265,7 +1265,7 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : term) : tac<term> =
     let t, lcomp, g = TcTerm.tc_term env t in
-    if not (U.is_pure_or_ghost_lcomp lcomp) || not (Rel.is_trivial g) then
+    if not (U.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
     else
         let rewrite_eq =
@@ -1372,7 +1372,7 @@ let rewrite_rec (ps : proofstate)
     if not should_rewrite
     then ret (t, ctrl)
     else let t, lcomp, g = TcTerm.tc_term env t in //re-typechecking the goal is expensive
-         if not (U.is_pure_or_ghost_lcomp lcomp) || not (Rel.is_trivial g) then
+         if not (U.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
            ret (t, globalStop) // Don't do anything for possibly impure terms
          else
            let typ = lcomp.res_typ in

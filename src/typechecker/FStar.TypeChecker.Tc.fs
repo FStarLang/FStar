@@ -432,7 +432,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                 (Print.term_to_string act_typ) (Print.tag_of_term act_typ))) act_defn.pos
           in
           let g = Rel.teq env act_typ expected_k in
-          Rel.force_trivial_guard env (Rel.conj_guard g_a (Rel.conj_guard g_k (Rel.conj_guard g_t g)));
+          Rel.force_trivial_guard env (Env.conj_guard g_a (Env.conj_guard g_k (Env.conj_guard g_t g)));
 
           // 4) Do a bunch of plumbing to assign a type in the new monad to
           //    the action
@@ -1374,7 +1374,7 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
     let env = Env.set_expected_typ env t_unit in
     let e, c, g1 = tc_term env e in
     let e, _, g = check_expected_effect env (Some (U.ml_comp t_unit r)) (e, lcomp_comp c) in
-    Rel.force_trivial_guard env (Rel.conj_guard g1 g);
+    Rel.force_trivial_guard env (Env.conj_guard g1 g);
     let se = { se with sigel = Sig_main(e) } in
     [se], []
 
@@ -1504,7 +1504,7 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
     in
 
     let se, lbs = match tc_maybe_toplevel_term env0 e with
-      | {n=Tm_let(lbs, e)}, _, g when Rel.is_trivial g ->
+      | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
 
