@@ -526,3 +526,13 @@ let alloca_of_list #a init =
   in
   let b = Buffer len content 0ul len in
   b
+
+let gcmalloc_of_list #a r init =
+  let len = U32.uint_to_t (FStar.List.Tot.length init) in
+  let s = Seq.of_list init in
+  Seq.lemma_of_list_length s init;
+  let content: HST.reference (vec a (U32.v len)) =
+    HST.ralloc r (vec_of_lseq s)
+  in
+  let b = Buffer len content 0ul len in
+  b
