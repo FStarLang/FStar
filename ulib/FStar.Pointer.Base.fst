@@ -3639,7 +3639,7 @@ let loc_buffer #t p =
 
 let loc_addresses = MG.loc_addresses #_ #cls false
 
-let loc_regions = MG.loc_regions
+let loc_regions = MG.loc_regions false
 
 let loc_includes = MG.loc_includes
 
@@ -3684,16 +3684,16 @@ let loc_includes_addresses_buffer #t r s p =
   MG.loc_includes_addresses_aloc #_ #cls false r s #(buffer_as_addr p) (LocBuffer p)  
 
 let loc_includes_region_pointer #t s p =
-  MG.loc_includes_region_aloc #_ #cls s #(frameOf p) #(as_addr p) (LocPointer p)
+  MG.loc_includes_region_aloc #_ #cls false s #(frameOf p) #(as_addr p) (LocPointer p)
 
 let loc_includes_region_buffer #t s b =
-  MG.loc_includes_region_aloc #_ #cls s #(frameOf_buffer b) #(buffer_as_addr b) (LocBuffer b)
+  MG.loc_includes_region_aloc #_ #cls false s #(frameOf_buffer b) #(buffer_as_addr b) (LocBuffer b)
 
-let loc_includes_region_addresses = MG.loc_includes_region_addresses #_ #cls false
+let loc_includes_region_addresses = MG.loc_includes_region_addresses #_ #cls false false
 
-let loc_includes_region_region = MG.loc_includes_region_region #_ #cls
+let loc_includes_region_region = MG.loc_includes_region_region #_ #cls false false
 
-let loc_includes_region_union_l = MG.loc_includes_region_union_l
+let loc_includes_region_union_l = MG.loc_includes_region_union_l false
 
 let loc_disjoint = MG.loc_disjoint
 
@@ -3750,11 +3750,14 @@ let loc_disjoint_pointer_addresses #t p r n =
 let loc_disjoint_buffer_addresses #t p r n =
   loc_disjoint_includes (loc_addresses (frameOf_buffer p) (Set.singleton (buffer_as_addr p))) (loc_addresses r n) (loc_buffer p) (loc_addresses r n)
 
-let loc_disjoint_regions = MG.loc_disjoint_regions #_ #cls
+let loc_disjoint_regions = MG.loc_disjoint_regions #_ #cls false false
 
 let modifies = MG.modifies
 
-let modifies_loc_regions_intro = MG.modifies_loc_regions_intro #_ #cls
+let modifies_loc_regions_intro rs h1 h2 =
+  MG.modifies_loc_regions_intro #_ #cls rs h1 h2;
+  MG.loc_includes_region_region #_ #cls false true rs rs;
+  MG.modifies_loc_includes (loc_regions rs) h1 h2 (MG.loc_regions true rs)
 
 let modifies_pointer_elim s h1 h2 #a' p' =
   MG.modifies_aloc_elim #_ #_ #(frameOf p') #(as_addr p') (LocPointer p') s h1 h2
