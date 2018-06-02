@@ -102,14 +102,16 @@ let ex_22 (a:Type0) (s:Seq.seq a) (t:Seq.seq a) = Seq.length s < Seq.length t
 let ex_23 (a:Type0) (s:Seq.seq a) (t:Seq.seq a) = Seq.length s + Seq.length t + 1
 
 ////////////////////////////////////////////////////////////////////////////////
-// Limitations
-//   A heuristic for unifying matches is key to making this work
+// A heuristic for unifying matches is key to making this work
 // In particular, we can unify
 //  `match ?u with | P1 -> t1 ... | Pn -> tn` with `s`
 // by setting `?u := Pi`,
 // whenever the head symbol of `ti` matches the head of `s`
-// This works well for some simple cases, but is not fully compositional
-// As illustrated below.
+// If no such branch exists, we try the branches in sequence
+// trying to solve `ti ~ s` backtracking when it fails to try the next branch.
+//
+// This works well for in many simple cases, and also allows for
+// several layers of overloading to be defined compositionally
 ////////////////////////////////////////////////////////////////////////////////
 
 /// This is a small example mimicing the essence of how FStar.Integers works
@@ -127,12 +129,32 @@ let t1 (x:option bool) =
   | Some b -> t0 b
   | None -> unit
 let f1 #i (x:t1 i) = ()
-/// And the inference heuristic succeeds here
+/// And the inference heuristic succeeds here, finding a branch that
+/// matches the head symbol easily
 let g1 (a: t0 true) = f1 a
 let g2 (a: t0 false) = f1 a
 
-/// But it fails here because although the `int` is unifiable
-/// with `t1 (Some true)` the head symbol of the first branch
-/// doesn't match `int`. So the heuristic fails.
-[@fail]
-let g3 (a: int) = f1 a
+/// But even when that's not the case, the backtracking search
+/// succeeds in finding the needed instantiation
+
+/// Unification picks the first branch of t1 and the head-matching
+/// heuristic picks the first branch of t0
+let g3 = f1 0
+
+/// Unification picks the first branch of t1 and the head-matching
+/// heuristic picks the second branch of t0
+let g4 = f1 "hello"
+
+/// The head-matching heuristic picks the 2nd branch of t1
+let g5 = f1 ()
+
+/// Without the head-matching heuristic, unification would pick the
+/// first branch of t1, then the first branch of t0 & fail;
+/// backtracks to the 2nd branch of t0 & fail; backtracks to the
+/// the second branch of t1 and succeed.
+///
+/// Note, as with other uses of backtracking in the unification
+/// algorithm, the search is local; if we find a solution a particular
+/// problem instance, we commit to it immediately even if the chosen
+/// solution is incompatible with other problems that may be in scope;
+/// global backtracking is too expensive and unpredictable.

@@ -2146,6 +2146,49 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
           and then try to prove `t ~ ti`
      *)
     let try_match_heuristic env orig wl s1 s2 t1t2_opt =
+        let try_solve_branch scrutinee p =
+            let (_t, uv, _args), wl = destruct_flex_t scrutinee wl  in
+            let tc_annot env t =
+                let t, _, g = env.type_of env t in
+                t, g
+            in
+            let xs, pat_term, _, _ = PatternUtils.pat_as_exp true env p tc_annot in
+            let subst, wl =
+                List.fold_left (fun (subst, wl) x ->
+                    let t_x = SS.subst subst x.sort in
+                    let _, u, wl = copy_uvar uv [] t_x wl in
+                    let subst = NT(x, u)::subst in
+                    subst, wl)
+                    ([], wl)
+                    xs
+            in
+            let pat_term = SS.subst subst pat_term in
+            let prob, wl =
+                new_problem wl env scrutinee
+                            EQ pat_term None scrutinee.pos
+                            "match heuristic"
+            in
+            let wl' = {wl with defer_ok=false;
+                                smt_ok=false;
+                                attempting=[TProb prob];
+                                wl_deferred=[];
+                                wl_implicits=[]} in
+            let tx = UF.new_transaction () in
+            match solve env wl' with
+            | Success (_, imps) ->
+                let wl' = {wl' with attempting=[orig]} in
+                (match solve env wl' with
+                | Success (_, imps') ->
+                  UF.commit tx;
+                  Some ({wl with wl_implicits=wl.wl_implicits@imps@imps'})
+
+                | Failed _ ->
+                  UF.rollback tx;
+                  None)
+            | _ ->
+              UF.rollback tx;
+              None
+        in
         match t1t2_opt with
         | None -> Inr None
         | Some (t1, t2) ->
@@ -2162,88 +2205,53 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 then BU.print1 "match head %s is not a flex term\n" (Print.term_to_string scrutinee);
                 Inr None
               end
+              else if wl.defer_ok
+              then (if Env.debug env <| Options.Other "Rel"
+                    then BU.print_string "Deferring ... \n";
+                    Inl "defer")
               else begin
                   if Env.debug env <| Options.Other "Rel"
                   then BU.print2 "Heuristic applicable with scrutinee %s and other side = %s\n"
                                 (Print.term_to_string scrutinee)
                                 (Print.term_to_string t);
-                  let matching_branch =
+                  let pat_discriminates = function
+                      | ({v=Pat_constant _}, None, _)
+                      | ({v=Pat_cons _}, None, _) -> true
+                      | _ -> false //other patterns do not discriminate
+                  in
+                  let head_matching_branch =
                       branches |>
                       BU.try_find
                           (fun b ->
-                            match b with
-                            | ({v=Pat_constant _}, None, _)
-                            | ({v=Pat_cons _}, None, _) -> //other patterns do not discriminate
+                            if pat_discriminates b
+                            then
                               let (_, _, t') = SS.open_branch b in
-                              begin
                               match head_matches_delta env wl s t' with
                               | FullMatch, _
                               | HeadMatch _, _ ->
                                 true
                               | _ -> false
-                              end
-                            | _ -> false)
+                            else false)
                   in
                   begin
-                  match matching_branch with
+                  match head_matching_branch with
                   | None ->
                     if Env.debug env <| Options.Other "Rel"
-                    then BU.print_string "No matching branch\n";
-                    Inr None
+                    then BU.print_string "No head_matching branch\n";
+                    let try_branches =
+                        match BU.prefix_until (fun b -> not (pat_discriminates b)) branches with
+                        | Some (branches, _, _) -> branches
+                        | _ -> branches
+                    in
+                    Inr <| BU.find_map try_branches (fun (p, _, _) -> try_solve_branch scrutinee p)
 
-                  | Some (p, _wopt, _branch) ->
-                    if wl.defer_ok
-                    then (if Env.debug env <| Options.Other "Rel"
-                          then BU.print_string "Deferring ... \n";
-                          Inl "defer")
-                    else begin
-                        if Env.debug env <| Options.Other "Rel"
-                        then BU.print2 "Found matching branch %s -> %s\n"
-                                    (Print.pat_to_string p)
-                                    (Print.term_to_string _branch);
+                  | Some (p, _, e) ->
+                    if Env.debug env <| Options.Other "Rel"
+                    then BU.print2 "Found head matching branch %s -> e\n"
+                                (Print.pat_to_string p)
+                                (Print.term_to_string e);
+                    Inr <| try_solve_branch scrutinee p
 
-                        let (_t, uv, _args), wl = destruct_flex_t scrutinee wl  in
-                        let tc_annot env t =
-                            let t, _, g = env.type_of env t in
-                            t, g
-                        in
-                        let xs, pat_term, _, _ = PatternUtils.pat_as_exp true env p tc_annot in
-                        let subst, wl =
-                            List.fold_left (fun (subst, wl) x ->
-                                let t_x = SS.subst subst x.sort in
-                                let _, u, wl = copy_uvar uv [] t_x wl in
-                                let subst = NT(x, u)::subst in
-                                subst, wl)
-                                ([], wl)
-                                xs
-                        in
-                        let pat_term = SS.subst subst pat_term in
-                        let prob, wl =
-                            new_problem wl env scrutinee
-                                        EQ pat_term None scrutinee.pos
-                                        "match heuristic"
-                        in
-                        let wl' = {wl with defer_ok=false;
-                                           smt_ok=false;
-                                           attempting=[TProb prob];
-                                           wl_deferred=[];
-                                           wl_implicits=[]} in
-                        let tx = UF.new_transaction () in
-                        match solve env wl' with
-                        | Success (_, imps) ->
-                          let wl' = {wl' with attempting=[orig]} in
-                          (match solve env wl' with
-                          | Success (_, imps') ->
-                            UF.commit tx;
-                            Inr (Some ({wl with wl_implicits=wl.wl_implicits@imps@imps'}))
-
-                          | Failed _ ->
-                            UF.rollback tx;
-                            Inr None)
-                        | _ ->
-                          UF.rollback tx;
-                          Inr None
-                    end
                   end
               end
             | _ ->

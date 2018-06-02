@@ -65,8 +65,6 @@ let uint32_lid  = p2l ["FStar"; "UInt32"; "t"]
 let int64_lid   = p2l ["FStar"; "Int64"; "t"]
 let uint64_lid  = p2l ["FStar"; "UInt64"; "t"]
 
-let fstar_integers_int_lid = p2l ["FStar"; "Integers"; "int"]
-
 let salloc_lid = p2l ["FStar"; "ST"; "salloc"]
 let swrite_lid = p2l ["FStar"; "ST"; "op_Colon_Equals"]
 let sread_lid = p2l ["FStar"; "ST"; "op_Bang"]
