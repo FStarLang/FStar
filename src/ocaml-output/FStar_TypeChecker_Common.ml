@@ -253,14 +253,14 @@ let rec (delta_depth_greater_than :
          i,FStar_Syntax_Syntax.Delta_equational_at_level j) -> i > j
       | (FStar_Syntax_Syntax.Delta_constant_at_level
          i,FStar_Syntax_Syntax.Delta_constant_at_level j) -> i > j
-      | (FStar_Syntax_Syntax.Delta_equational_at_level uu____682,uu____683)
-          -> true
-      | (uu____684,FStar_Syntax_Syntax.Delta_equational_at_level uu____685)
-          -> false
-      | (FStar_Syntax_Syntax.Delta_abstract d,uu____687) ->
+      | (FStar_Syntax_Syntax.Delta_abstract d,uu____683) ->
           delta_depth_greater_than d m
-      | (uu____688,FStar_Syntax_Syntax.Delta_abstract d) ->
+      | (uu____684,FStar_Syntax_Syntax.Delta_abstract d) ->
           delta_depth_greater_than l d
+      | (FStar_Syntax_Syntax.Delta_equational_at_level uu____686,uu____687)
+          -> true
+      | (uu____688,FStar_Syntax_Syntax.Delta_equational_at_level uu____689)
+          -> false
   
 let rec (decr_delta_depth :
   FStar_Syntax_Syntax.delta_depth ->
