@@ -7,6 +7,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 
 open FStar.Reflection.Data
+module Range = FStar.Range
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 
@@ -14,7 +15,8 @@ type goal = FStar.Tactics.Types.goal
 
 type tac<'a>
 
-val run : tac<'a> -> proofstate -> __result<'a>
+val run      : tac<'a> -> proofstate -> __result<'a>
+val run_safe : tac<'a> -> proofstate -> __result<'a> (* Won't raise any exception, just fail within the monad *)
 val ret : 'a -> tac<'a>
 val set : proofstate -> tac<unit>
 val get : tac<proofstate>
@@ -42,7 +44,6 @@ val debug           : string -> tac<unit>
 val dump_proofstate : proofstate -> string -> unit
 val print_proof_state1 : string -> tac<unit>
 val print_proof_state  : string -> tac<unit>
-val goal_to_string : goal -> string
 
 val fail : string -> tac<'a>
 val trivial : unit -> tac<unit>
@@ -74,7 +75,7 @@ val is_irrelevant : goal -> bool
 val prune : string -> tac<unit>
 val addns : string -> tac<unit>
 val set_options : string -> tac<unit>
-val launch_process : string -> string -> string -> tac<string>
+val launch_process : string -> list<string> -> string -> tac<string>
 
 val fresh_bv_named : string -> typ -> tac<bv>
 
@@ -100,8 +101,9 @@ val unquote : typ -> term -> tac<term>
 val uvar_env : env -> option<typ> -> tac<term>
 val unshelve : term -> tac<unit>
 
-val unify : term -> term -> tac<bool>
+val unify_env : env -> term -> term -> tac<bool>
 val change : typ -> tac<unit>
 
 val goal_of_goal_ty : env -> typ -> goal * guard_t
-val proofstate_of_goal_ty : env -> typ -> proofstate * term (* Returns proofstate and uvar for main witness *)
+(* Returns proofstate and uvar for main witness *)
+val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate * term

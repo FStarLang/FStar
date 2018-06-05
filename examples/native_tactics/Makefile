@@ -14,7 +14,7 @@ TAC_MODULES=Print\
     SimpleTactic\
     Evens\
     Embeddings\
-	Plugins
+    Plugins
 
 # Tests for which the native tatics are declared and used in the same module
 ALL=Apply\
@@ -35,6 +35,8 @@ ALL=Apply\
     Tutorial\
     Unify
 
+OTHERFLAGS += --use_extracted_interfaces false --use_two_phase_tc false
+
 all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 # .depend:
@@ -42,11 +44,8 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 # include .depend
 
-.PHONY: %.test $(FSTARTACLIB)
+.PHONY: %.test
 .PRECIOUS: %.ml
-
-$(FSTARTACLIB):
-	$(MAKE) -C $(FSTAR_HOME)/ulib install-fstar-tactics
 
 %.test: %.fst %.ml
 	$(FSTAR) $*.fst --load $*
@@ -56,7 +55,7 @@ $(FSTARTACLIB):
 	$(FSTAR) $*.Test.fst --load $*
 	touch $@
 
-%.ml: %.fst $(FSTARTACLIB)
+%.ml: %.fst
 	$(FSTAR) $*.fst --cache_checked_modules --codegen Plugin --extract $*
 	touch $@
 

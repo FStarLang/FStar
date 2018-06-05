@@ -20,19 +20,38 @@ module Range = FStar.Range
 //       witness = ?u, although, more generally, witness is a partial solution and can be any term
 //       goal_ty = t
 type goal = {
-    context : env;
-    witness : term;
-    goal_ty : typ;
+    goal_main_env : env;
+    goal_ctx_uvar : ctx_uvar;
     opts    : FStar.Options.optionstate; // option state for this particular goal
     is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
                      // We make the distinction to be more user-friendly at times
 }
+let goal_env g = { g.goal_main_env with gamma = g.goal_ctx_uvar.ctx_uvar_gamma }
+let goal_witness g =
+    FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) None Range.dummyRange
+let goal_type g = g.goal_ctx_uvar.ctx_uvar_typ
+let goal_with_type g t =
+    let c = g.goal_ctx_uvar in
+    let c' = {c with ctx_uvar_typ = t} in
+    { g with goal_ctx_uvar = c' }
+let goal_with_env g env =
+    let c = g.goal_ctx_uvar in
+    let c' = {c with ctx_uvar_gamma = env.gamma} in
+    { g with goal_main_env=env; goal_ctx_uvar = c' }
 
-let subst_goal subst goal = {
-    goal with context = FStar.TypeChecker.Env.rename_env subst goal.context;
-              witness = SS.subst subst goal.witness;
-              goal_ty = SS.subst subst goal.goal_ty
+let mk_goal env u o b = {
+    goal_main_env=env;
+    goal_ctx_uvar=u;
+    opts=o;
+    is_guard=b
 }
+let subst_goal subst goal =
+    let g = goal.goal_ctx_uvar in
+    let ctx_uvar = {
+        g with ctx_uvar_gamma=FStar.TypeChecker.Env.rename_gamma subst g.ctx_uvar_gamma;
+               ctx_uvar_typ=SS.subst subst g.ctx_uvar_typ
+    } in
+    { goal with goal_ctx_uvar = ctx_uvar }
 
 type guard_policy =
     | Goal
@@ -43,16 +62,17 @@ type guard_policy =
 type proofstate = {
     main_context : env;          //the shared top-level context for all goals
     main_goal    : goal;         //this is read only; it helps keep track of the goal we started working on initially
-    all_implicits: implicits ;   //all the implicits currently open, partially resolved (unclear why we really need this)
+    all_implicits: implicits ;   //all the implicits currently open, partially resolved
     goals        : list<goal>;   //all the goals remaining to be solved
     smt_goals    : list<goal>;   //goals that have been deferred to SMT
     depth        : int;          //depth for tracing and debugging
-    __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying ciruluarity
+    __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying circularity
 
     psc          : N.psc;        //primitive step context where we started execution
     entry_range  : Range.range;  //position of entry, set by the use
     guard_policy : guard_policy; //guard policy: what to do with guards arising during tactic exec
     freshness    : int;          //a simple freshness counter for the fresh tactic
+    tac_verb_dbg : bool;         //whether to print verbose debugging messages
 }
 
 let subst_proof_state subst ps =
@@ -76,7 +96,7 @@ let tracepoint ps : unit =
 let set_ps_psc psc ps = { ps with psc = psc }
 
 let set_proofstate_range ps r =
-    { ps with entry_range = r }
+    { ps with entry_range = Range.set_def_range ps.entry_range (Range.def_range r) }
 
 type direction =
     | TopDown

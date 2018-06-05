@@ -1,5 +1,5 @@
 [
-  "ØµŒ8\"\u0011ó„Àå”iêë_»",
+  "Ûß≠V◊Ò0u%d5(Q‘º/",
   [
     [
       "Bug613.l",
@@ -7,11 +7,11 @@
       2,
       1,
       [
-        "@query", "token_correspondence_Bug613.f",
-        "token_correspondence_Bug613.g"
+        "@query", "function_token_typing_Bug613.f",
+        "function_token_typing_Bug613.g"
       ],
       0,
-      "aea981bb4b9bf0ec06b4607d87c82d55"
+      "d76f38ac12f0e93274d2e402908336ce"
     ],
     [
       "Bug613.l'",
@@ -19,11 +19,11 @@
       2,
       1,
       [
-        "@query", "token_correspondence_Bug613.f",
-        "token_correspondence_Bug613.g"
+        "@query", "function_token_typing_Bug613.f",
+        "function_token_typing_Bug613.g"
       ],
       0,
-      "517524db47e41ee9cdf9d596b1d9ff10"
+      "9c83aa8d039853ba5ef8c0bf8d2eec22"
     ],
     [
       "Bug613.l''",
@@ -31,11 +31,23 @@
       2,
       1,
       [
-        "@query", "token_correspondence_Bug613.f",
-        "token_correspondence_Bug613.h"
+        "@query", "function_token_typing_Bug613.f",
+        "function_token_typing_Bug613.h"
       ],
       0,
-      "88b6e85ac140697f08a5b4cd6e2b8a71"
+      "04e99f5e92a3f8045a4648831f4d0365"
+    ],
+    [
+      "Bug613.test_i",
+      1,
+      2,
+      1,
+      [
+        "@query", "function_token_typing_Bug613.i0",
+        "function_token_typing_Bug613.i1"
+      ],
+      0,
+      "32cd03a90c8a4cb98470d665618e32ea"
     ]
   ]
 ]

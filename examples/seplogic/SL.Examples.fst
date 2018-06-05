@@ -364,7 +364,8 @@ let rec valid (p:listptr) (repr:list int) (m:memory) :Tot Type0 (decreases repr)
   (match repr with
    | []    -> None? p /\ m == emp
    | hd::tl -> Some? p /\
-             (exists (tail:listptr) (m1:memory). m == (((Some?.v p) |> Cell hd tail) <*> m1) /\ valid tail tl m1))
+             (exists (tail:listptr) (m1:memory).{:pattern (has_type tail listptr); (has_type m1 memory)}
+                 m == (((Some?.v p) |> Cell hd tail) <*> m1) /\ valid tail tl m1))
                                                       
 private let __exists_elim_as_forall2
   (#a:Type) (#b:Type) (#p: a -> b -> Type) (#phi:Type)

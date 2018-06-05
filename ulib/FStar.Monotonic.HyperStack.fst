@@ -30,8 +30,7 @@ unfold private let map_invariant_predicate (m:hmap) :Type0 =
       (forall s. includes s r ==> Map.contains m s)
 
 //All regions above a contained region are contained
-//AR: logic qualifier here ensures that quantifiers are shallowly encoded
-abstract logic let map_invariant (m:hmap) :Type0 = map_invariant_predicate m
+abstract let map_invariant (m:hmap) :Type0 = map_invariant_predicate m
 
 [@"opaque_to_smt"]
 unfold private let downward_closed_predicate (h:hmap) :Type0 =
@@ -41,13 +40,13 @@ unfold private let downward_closed_predicate (h:hmap) :Type0 =
                           /\ s `is_in` h   //that is also in the memory
                      ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
 
-abstract logic let downward_closed (h:hmap) :Type0 = downward_closed_predicate h
+abstract let downward_closed (h:hmap) :Type0 = downward_closed_predicate h
 
 [@"opaque_to_smt"]
 unfold private let tip_top_predicate (tip:rid) (h:hmap) :Type0 =
   forall (r:sid). r `is_in` h <==> r `is_above` tip
 
-abstract logic let tip_top (tip:rid) (h:hmap) :Type0 = tip_top_predicate tip h
+abstract let tip_top (tip:rid) (h:hmap) :Type0 = tip_top_predicate tip h
 
 let is_tip (tip:rid) (h:hmap) =
   (is_stack_region tip \/ tip = root) /\  //the tip is a stack region, or the root
@@ -68,7 +67,7 @@ unfold private let rid_ctr_pred_predicate (h:hmap) (n:int) :Type0 =
  * AR: all live regions have last component less than the rid_ctr
  *     marking it abstract, else it has a high-chance of firing even with a pattern
  *)
-abstract logic let rid_ctr_pred (h:hmap) (n:int) :Type0 = rid_ctr_pred_predicate h n
+abstract let rid_ctr_pred (h:hmap) (n:int) :Type0 = rid_ctr_pred_predicate h n
 
 let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid) :Type0
   = root `is_in` h /\ tip `is_tip` h /\ map_invariant h /\ downward_closed h /\ rid_ctr_pred h ctr
@@ -213,7 +212,7 @@ abstract let as_ref #a #rel (x:mreference a rel)
 
 //And make this one abstract
 let as_addr #a #rel (x:mreference a rel)
-  : GTot nat
+  : GTot (x: nat { x > 0 } )
   = Heap.addr_of (as_ref x)
 
 let lemma_as_ref_inj (#a:Type) (#rel:preorder a) (r:mreference a rel)
@@ -373,6 +372,24 @@ let lemma_upd_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1 r2:mreference a
       lemma_sel_same_addr h r1 r2
     else lemma_sel_same_addr h r2 r1
 
+(* Two references with different reads are disjoint. *)
+
+let mreference_distinct_sel_disjoint
+  (#a:Type0) (#rel1: preorder a) (#rel2: preorder a) (h: mem) (r1: mreference a rel1) (r2:mreference a rel2)
+: Lemma
+  (requires (
+    h `contains` r1 /\
+    h `contains` r2 /\
+    frameOf r1 == frameOf r2 /\
+    as_addr r1 == as_addr r2
+  ))
+  (ensures (
+    sel h r1 == sel h r2
+  ))
+= Heap.lemma_distinct_addrs_distinct_preorders ();
+  Heap.lemma_distinct_addrs_distinct_mm ();
+  Heap.lemma_sel_same_addr #a #rel1 (Map.sel h.h (frameOf r1)) (as_ref r1) (as_ref r2)
+
 (*
 // //  * AR: 12/26: modifies clauses
 // //  *            NOTE: the modifies clauses used to have a m0.tip == m1.tip conjunct too
@@ -461,7 +478,7 @@ private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem
 [@"opaque_to_smt"]
 unfold private let norm_steps :list norm_step =
   //iota for reducing match
-  [iota; delta; delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
+  [iota; zeta; delta; delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
                             "FStar.Monotonic.HyperStack.refs_in_region";
                             "FStar.Monotonic.HyperStack.modifies_some_refs"];
    primops]
@@ -554,7 +571,7 @@ abstract let frameOf_aref_of
 
 abstract let aref_as_addr
   (a: aref)
-: GTot nat
+: GTot (x: nat { x > 0 } )
 = Heap.addr_of_aref a.aref_aref
 
 abstract let aref_as_addr_aref_of

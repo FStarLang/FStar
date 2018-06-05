@@ -95,6 +95,9 @@ val psmap_empty: unit -> psmap<'value> // GH-1161
 val psmap_add: psmap<'value> -> string -> 'value -> psmap<'value>
 val psmap_find_default: psmap<'value> -> string -> 'value -> 'value
 val psmap_try_find: psmap<'value> -> string -> option<'value>
+val psmap_fold: psmap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
+val psmap_find_map: psmap<'value> -> (string -> 'value -> option<'a>) -> option<'a>
+val psmap_modify: psmap<'value> -> string -> (option<'value> -> 'value) -> psmap<'value>
 
 (* not relying on representation *)
 type imap<'value>
@@ -117,6 +120,7 @@ val pimap_empty: unit -> pimap<'value> // GH-1161
 val pimap_add: pimap<'value> -> int -> 'value -> pimap<'value>
 val pimap_find_default: pimap<'value> -> int -> 'value -> 'value
 val pimap_try_find: pimap<'value> -> int -> option<'value>
+val pimap_fold: pimap<'value> -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
 
 val format: string -> list<string> -> string
 val format1: string -> string -> string
@@ -192,6 +196,7 @@ val open_file_for_writing: string -> file_handle
 val append_to_file: file_handle -> string -> unit
 val close_file: file_handle -> unit
 val write_file: string -> string -> unit
+val copy_file: string -> string -> unit
 val flush_file: file_handle -> unit
 val file_get_contents: string -> string
 val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
@@ -214,15 +219,20 @@ val string_builder_append: string_builder -> string -> unit
 val message_of_exn: exn -> string
 val trace_of_exn: exn -> string
 
+exception SigInt
+type sigint_handler
+val sigint_ignore: sigint_handler
+val sigint_raise: sigint_handler
+val set_sigint_handler: sigint_handler -> unit
+val with_sigint_handler: sigint_handler -> (unit -> 'a) -> 'a
+
 (* not relying on representation *)
 type proc
-val launch_process: bool -> string -> string -> string -> string -> (string -> string -> bool) -> string
-val start_process: bool -> string -> string -> string -> (string -> string -> bool) -> proc
-val ask_process: proc -> string -> string
+val run_process : string -> string -> list<string> -> option<string> -> string
+val start_process: string -> string -> list<string> -> (string -> bool) -> proc
+val ask_process: proc -> string -> (unit -> string) -> string
 val kill_process: proc -> unit
 val kill_all: unit -> unit
-
-val run_proc : string -> string -> string -> (bool * string * string)
 
 val get_file_extension: string -> string
 val is_path_absolute: string -> bool
@@ -342,7 +352,7 @@ val run_st: 's -> state<'s,'a> -> ('a * 's)
 val mk_ref: 'a -> ref<'a>
 
 val get_exec_dir: unit -> string
-val expand_environment_variable: string -> string
+val expand_environment_variable: string -> option<string>
 
 val physical_equality: 'a -> 'a -> bool
 val check_sharing: 'a -> 'a -> string -> unit
@@ -389,6 +399,7 @@ val monitor_enter: 'a -> unit
 val monitor_exit:  'a -> unit
 val monitor_wait: 'a -> unit
 val monitor_pulse:  'a -> unit
+val with_monitor: 'a -> ('b -> 'c) -> 'b -> 'c
 val current_tid: unit -> int
 val sleep: int -> unit
 val atomically: (unit -> 'a) -> 'a

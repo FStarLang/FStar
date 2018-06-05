@@ -1,5 +1,5 @@
 [
-  "Ë!\u001eV\u0018IÂí–Q€¹y$%ê",
+  "žœ=\u0015\u007f\u000fe°ºí¢\u0005nµÎw",
   [
     [
       "NegativeTests.Neg.test_label",
@@ -8,7 +8,16 @@
       1,
       [ "@query" ],
       0,
-      "559a611417ad16799fbe5305a70c36ca"
+      "fa09204553b4561d04ef4e4980644b95"
+    ],
+    [
+      "NegativeTests.Neg.test_label",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "bacc88778f3181bdbdbf034b25cb4722"
     ]
   ]
 ]

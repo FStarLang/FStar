@@ -70,7 +70,7 @@ let gst_post' (a:Type) (pre:Type) = st_post_h' mem a pre
 let gst_post (a:Type) = st_post_h mem a
 let gst_wp (a:Type)   = st_wp_h mem a
 
-unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
+unfold let lift_div_gst (a:Type) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
 sub_effect DIV ~> GST = lift_div_gst
 
 (*
@@ -108,7 +108,7 @@ let st_wp    = gst_wp
 
 new_effect STATE = GST
 
-unfold let lift_gst_state (a:Type0) (wp:gst_wp a) = wp
+unfold let lift_gst_state (a:Type) (wp:gst_wp a) = wp
 sub_effect GST ~> STATE = lift_gst_state
 
 (* effect State (a:Type) (wp:st_wp a) = *)

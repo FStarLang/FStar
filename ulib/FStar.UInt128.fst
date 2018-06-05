@@ -18,6 +18,7 @@ type uint128: Type0 = { low: U64.t; high: U64.t }
 
 let t = uint128
 
+noextract
 let v x = U64.v x.low + (U64.v x.high) * (pow2 64)
 
 let div_mod (x:nat) (k:nat{k > 0}) : Lemma (x / k * k + x % k == x) = ()
@@ -556,6 +557,7 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   Math.paren_mul_right a_h (pow2 64) (pow2 s);
   ()
 
+#reset-options "--normalize_pure_terms_for_extraction"
 #set-options "--z3rlimit 300"
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))

@@ -1,1 +1,18 @@
-[ "\u0001'C¤ÍÝ\u001a‘Û€\u0011o\u00041^ã", [] ]
+[
+  "\u0001'C¤ÍÝ\u001a‘Û€\u0011o\u00041^ã",
+  [
+    [
+      "Bug623.null",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "function_token_typing_Prims.unit"
+      ],
+      0,
+      "a04208a6026a611522b23d5f9a2e0e53"
+    ]
+  ]
+]

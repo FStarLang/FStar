@@ -286,10 +286,10 @@ let terminate_comment buffer startpos lexbuf =
   Buffer.clear buffer;
   comments := (comment, FStar_Parser_Util.mksyn_range startpos endpos) :: ! comments
 
-let push_one_line_comment lexbuf =
+let push_one_line_comment pre lexbuf =
   let startpos, endpos = L.range lexbuf in
   assert (startpos.Lexing.pos_lnum = endpos.Lexing.pos_lnum);
-  comments := (L.lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos) :: !comments
+  comments := (pre ^ L.lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos) :: !comments
 
 (** Unicode class definitions
   Auto-generated from http:/ /www.unicode.org/Public/8.0.0/ucd/UnicodeData.txt **)
@@ -484,7 +484,11 @@ let rec token = lexer
    let inner, buffer, startpos = start_comment lexbuf in
    comment inner buffer startpos lexbuf
 
- | "//" [^ 10 13 0x2028 0x2029]* -> push_one_line_comment lexbuf; token lexbuf
+ | "// IN F*:" -> token lexbuf
+ | "//" ->
+     (* Only match on "//" to allow the longest-match rule to catch IN F*. This
+      * creates a lexing conflict with op_infix3 which is caught below. *)
+     one_line_comment (L.lexeme lexbuf) lexbuf
 
  | '"' -> string (Buffer.create 0) lexbuf
 
@@ -503,7 +507,12 @@ let rec token = lexer
  | op_infix0d symbolchar* -> OPINFIX0d (L.lexeme lexbuf)
  | op_infix1  symbolchar* -> OPINFIX1 (L.lexeme lexbuf)
  | op_infix2  symbolchar* -> OPINFIX2 (L.lexeme lexbuf)
- | op_infix3  symbolchar* -> OPINFIX3 (L.lexeme lexbuf)
+ | op_infix3  symbolchar* -> 
+     let l = L.lexeme lexbuf in
+     if String.length l >= 2 && String.sub l 0 2 = "//" then
+       one_line_comment l lexbuf
+     else
+        OPINFIX3 l
  | "**"       symbolchar* -> OPINFIX4 (L.lexeme lexbuf)
  | ".[]<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
  | ".()<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
@@ -520,6 +529,9 @@ let rec token = lexer
 
  | eof -> EOF
  | _ -> failwith "unexpected char"
+
+and one_line_comment pre = lexer
+ | [^ 10 13 0x2028 0x2029]* -> push_one_line_comment pre lexbuf; token lexbuf
 
 and symbolchar_parser = lexer
  | symbolchar* -> OPINFIX0c (">" ^  L.lexeme lexbuf)

@@ -6,16 +6,11 @@ all: ocaml testseq
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
-ulib: ../../bin/fstarlib/fstarlib.cmxa
-
-../../bin/fstarlib/fstarlib.cmxa:
-	$(MAKE) -C $(ULIB_ML)
-
 
 
 # This target is very concise and re-uses the variables defined in
 # Makefile.include. You shouldn't need to call `cp` ever.
-ocaml: out hello.fst ulib
+ocaml: out hello.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml hello.fst
 	$(OCAMLOPT) out/Hello.ml -o hello.exe
 	./hello.exe
@@ -27,7 +22,7 @@ ocaml: out hello.fst ulib
 # invocation of $(MAKE) changes, and so do the include paths for `ocamlopt`.
 # In this particular case, we need to compile against the extracted version of
 # `FStar.Seq` (it is not realized in ML), so we pass it to `ocamlopt`.
-testseq: out testseq.fst ulib
+testseq: out testseq.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml testseq.fst
 	$(OCAMLOPT) out/TestSeq.ml -o testseq.exe
 	./testseq.exe

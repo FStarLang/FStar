@@ -1,1 +1,23 @@
-[ "\u0014ÔE¨cb)\u0010ñåB?9.%‡", [] ]
+[
+  "\u0005¨È:Fï\u0000¡÷ç`‘òDÍe",
+  [
+    [
+      "FStar.HyperStack.reference_distinct_sel_disjoint",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1dfe1fae599c2edc3780818dcc5dd542"
+    ],
+    [
+      "FStar.HyperStack.reference_distinct_sel_disjoint",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f72ac3141f219dce13c0f6426adf1ec9"
+    ]
+  ]
+]

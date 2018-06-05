@@ -39,10 +39,11 @@ module N  = FStar.TypeChecker.Normalize
 module PC = FStar.Parser.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
+module TcUtil = FStar.TypeChecker.Util
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
-    mk (Tm_app(S.fvar PC.failwith_lid Delta_constant None,
+    mk (Tm_app(S.fvar PC.failwith_lid delta_constant None,
                [ S.iarg t
                ; S.as_arg <| mk (Tm_constant (Const_string ("Not yet implemented:"^(Print.lid_to_string lid), Range.dummyRange))) None Range.dummyRange]))
         None
@@ -57,6 +58,12 @@ let as_pair = function
    | [a;b] -> (a,b)
    | _ -> failwith "Expected a list with 2 elements"
 
+let flag_of_qual = function
+  | Assumption -> Some Assumed
+  | S.Private -> Some Private
+  | S.NoExtract -> Some NoExtract
+  | _ -> None
+
 (*****************************************************************************)
 (* Extracting type definitions from the signature                            *)
 (*****************************************************************************)
@@ -69,6 +76,7 @@ let rec extract_meta x =
   | { n = Tm_fvar fv } ->
       begin match string_of_lid (lid_of_fv fv) with
       | "FStar.Pervasives.PpxDerivingShow" -> Some PpxDerivingShow
+      | "FStar.Pervasives.PpxDerivingYoJson" -> Some PpxDerivingYoJson
       | "FStar.Pervasives.CInline" -> Some CInline
       | "FStar.Pervasives.Substitute" -> Some Substitute
       | "FStar.Pervasives.Gc" -> Some GCType
@@ -121,7 +129,7 @@ let extract_typ_abbrev env fv quals attrs def =
          then let mname = mangle_projector_lid lid in
               Some mname.ident.idText
          else None in
-    let metadata = extract_metadata attrs in
+    let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
     let td = [assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, metadata, Some (MLTD_Abbrev body)] in
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty td] in
     let env = if quals |> BU.for_some (function Assumption | New -> true | _ -> false)
@@ -169,7 +177,7 @@ let bundle_as_inductive_families env ses quals attrs : UEnv.env * list<inductive
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
                 let metadata = extract_metadata (se.sigattrs @ attrs) in
-                let env = UEnv.extend_type_name env (S.lid_as_fv l Delta_constant None) in
+                let env = UEnv.extend_type_name env (S.lid_as_fv l delta_constant None) in
                 env, [{   iname=l
                         ; iparams=bs
                         ; ityp=t
@@ -187,7 +195,7 @@ let extract_bundle env se =
         env_t * (mlsymbol * list<(mlsymbol * mlty)>)
         =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
-        let steps = [ N.Inlining; N.UnfoldUntil S.Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses ] in
+        let steps = [ N.Inlining; N.UnfoldUntil S.delta_constant; N.EraseUniverses; N.AllowUnboundUniverses ] in
         let names = match (SS.compress (N.normalize steps env.tcenv ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
               List.map (fun ({ ppname = ppname }, _) -> ppname.idText) bs
@@ -274,7 +282,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
         | Sig_new_effect ed when se.sigquals |> List.contains Reifiable ->
           let extend_env g lid ml_name tm tysc =
-            let g, mangled_name = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
+            let g, mangled_name = extend_fv' g (S.lid_as_fv lid delta_equational None) ml_name tysc false false in
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
             BU.print1 "Mangled name: %s\n" mangled_name;
             let lb = {
@@ -352,7 +360,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           if not (quals |> BU.for_some (function Assumption -> true | _ -> false))
           then g, []
           else let bs, _ = U.arrow_formals t in
-               let fv = S.lid_as_fv lid Delta_constant None in
+               let fv = S.lid_as_fv lid delta_constant None in
                extract_typ_abbrev g fv quals attrs (U.abs bs t_unit None)
 
         | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
@@ -363,7 +371,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             let tcenv, _, def_typ =
                 FStar.TypeChecker.Env.open_universes_in g.tcenv lb.lbunivs [lb.lbdef; lb.lbtyp] in
             tcenv, as_pair def_typ in
-          let lbtyp = FStar.TypeChecker.Normalize.normalize [FStar.TypeChecker.Normalize.Beta;FStar.TypeChecker.Normalize.UnfoldUntil Delta_constant] tcenv lbtyp in
+          let lbtyp = FStar.TypeChecker.Normalize.normalize [FStar.TypeChecker.Normalize.Beta;FStar.TypeChecker.Normalize.UnfoldUntil delta_constant] tcenv lbtyp in
           let lbdef = FStar.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
           //eta expansion is important; see issue #490
           extract_typ_abbrev g (right lb.lbname) quals se.sigattrs lbdef
@@ -393,35 +401,41 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 *   bonus; in particular, the MustDisappear attribute (that
                 *   StackInline bestows upon an individual let-binding) is
                 *   specific to each let-binding! *)
-            let flags = List.choose (function
-                | Assumption -> Some Assumed
-                | S.Private -> Some Private
-                | S.NoExtract -> Some NoExtract
-                | _ -> None
-            ) quals in
+            let flags = List.choose flag_of_qual quals in
             let flags' = extract_metadata attrs in
 
             let g, ml_lbs' =
                 List.fold_left2
                     (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t } ->
-                        // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
-                        let lb_lid = (right lbname).fv_name.v in
-                        let flags'' =
-                            match (SS.compress t).n with
-                            | Tm_arrow (_, { n = Comp { effect_name = e }})
-                                when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
-                                [ StackInline ]
-                            | _ ->
-                                []
-                        in
-                        let meta = flags @ flags' @ flags'' in
-                        let ml_lb = { ml_lb with mllb_meta = meta } in
-                        let g, ml_lb =
-                            if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
-                            then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
-                                let env, _ = UEnv.extend_fv' env (right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
-                                env, {ml_lb with mllb_name=snd mname }
-                            else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
+                        if ml_lb.mllb_meta |> List.contains Erased
+                        then env, ml_lbs
+                        else
+                            // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
+                            let lb_lid = (right lbname).fv_name.v in
+                            let flags'' =
+                                match (SS.compress t).n with
+                                | Tm_arrow (_, { n = Comp { effect_name = e }})
+                                    when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
+                                    [ StackInline ]
+                                | _ ->
+                                    []
+                            in
+                            let meta = flags @ flags' @ flags'' in
+                            let ml_lb = { ml_lb with mllb_meta = meta } in
+                            let g, ml_lb =
+                                if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
+                                then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
+                                     let env, _ =
+                                         UEnv.extend_fv'
+                                                env
+                                                (right lbname)
+                                                mname
+                                                (must ml_lb.mllb_tysc)
+                                                ml_lb.mllb_add_unit
+                                                false
+                                     in
+                                     env, {ml_lb with mllb_name=snd mname }
+                                else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                         g, ml_lb::ml_lbs)
                 (g, [])
                 bindings
@@ -438,6 +452,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_declare_typ(lid, _, t) ->
          let quals = se.sigquals in
          if quals |> List.contains Assumption
+         && not (TcUtil.must_erase_for_extraction g.tcenv t)
          then let always_fail =
                   let imp = match U.arrow_formals t with
                     | [], t ->
@@ -446,7 +461,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                       U.abs [b] (fail_exp lid t) None
                     | bs, t ->
                       U.abs bs (fail_exp lid t) None in
-                  { se with sigel = Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None);
+                  { se with sigel = Sig_let((false, [{lbname=Inr (S.lid_as_fv lid delta_constant None);
                                                       lbunivs=[];
                                                       lbtyp=t;
                                                       lbeff=PC.effect_ML_lid;
@@ -468,6 +483,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                           g, mlm //in all other cases, generate mlm, a stub that always fails
                     end
          else g, [] //it's not assumed, so wait for the corresponding Sig_let to generate code
+                    //or, it must be erased
 
        | Sig_main(e) ->
          let ml_main, _, _ = Term.term_as_mlexpr g e in

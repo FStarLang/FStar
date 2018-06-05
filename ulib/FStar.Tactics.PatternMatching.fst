@@ -849,7 +849,7 @@ let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
 /// tried in succession, until one succeeds.  The whole process is repeated as
 /// long as at least one tactic succeeds.
 
-let example #a #b #c: unit =
+let example (#a:Type0) (#b:Type0) (#c:Type0) :unit =
   assert_by_tactic (a /\ b ==> c == b ==> c)
     (fun () -> repeat' (fun () ->
                  gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
@@ -877,26 +877,3 @@ let example #a #b #c: unit =
 ///   abspat notations
 /// - Using the normalizer to partially-evaluated pattern-matching tactics
 /// - Migrating to a compile-time version of ``quote``
-///
-/// Notes
-/// =====
-///
-/// The following should work, but it crashes F\*:
-/// GM: Not anymore! :) But I sent a goal to smt.
-
-let example2 #a #b #c: unit =
-  assert_by_tactic (a /\ b ==> c == b ==> c)
-    (fun () -> first #unit
-                  [gpm (fun (a: Type) (h: hyp (squash a)) ->
-                          clear h <: Tac unit);
-                   gpm (fun (a b: Type0) (_: goal (squash (a ==> b))) ->
-                          implies_intro' () <: Tac unit);
-                   gpm (fun (a b: Type0) (h: hyp (a /\ b)) ->
-                          and_elim' h <: Tac unit);
-                   gpm (fun (a b: Type0) (h: hyp (a == b)) (_: goal (squash a)) ->
-                          rewrite h <: Tac unit);
-                   gpm (fun (a: Type0) (h: hyp a) (_: goal (squash a)) ->
-                          exact_hyp a h <: Tac unit);
-                   idtac];
-              smt ();
-              qed ())

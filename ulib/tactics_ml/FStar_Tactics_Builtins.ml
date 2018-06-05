@@ -1,4 +1,5 @@
 open Prims
+open FStar_Pervasives_Native
 open FStar_Tactics_Result
 open FStar_Tactics_Types
 open FStar_Tactics_Effect
@@ -101,7 +102,7 @@ let addns                   = from_tac_1 B.addns
 let cases                   = from_tac_1 B.cases
 let set_options             = from_tac_1 B.set_options
 let uvar_env                = from_tac_2 B.uvar_env
-let unify                   = from_tac_2 B.unify
+let unify_env               = from_tac_3 B.unify_env
 let launch_process          = from_tac_3 B.launch_process
 let fresh_bv_named          = from_tac_2 B.fresh_bv_named
 let change                  = from_tac_1 B.change

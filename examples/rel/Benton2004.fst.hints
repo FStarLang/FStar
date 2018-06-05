@@ -1,5 +1,5 @@
 [
-  "×\u000e…|]\u0001)à!™“\u001c>â",
+  "i_\u0011&rs˜!yd#Òˆ²Å¹",
   [
     [
       "Benton2004.reify_computation",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Benton2004_Tm_refine_72f59247ec9aa4a8317b20902c00c895"
       ],
       0,
-      "05e5248d54c7d70f555d0c553bd4c0c2"
+      "fb4069f7894c20feb608a3b22512dc4f"
     ],
     [
       "Benton2004.skip",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2ef5ce02bd618faa13d0cfad56bec506"
+      "a07b8bc1f37a1bdc3f740896f6683d9f"
     ],
     [
       "Benton2004.reify_exp",
@@ -49,7 +49,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5ef568690fad46fdfb6e6c848e486491"
+      "7ce4390c5abd2dde59b7076bdd7c02ac"
     ],
     [
       "Benton2004.const",
@@ -58,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "dc14b0a62034050eab933ac86ea32f33"
+      "643e51548d31025964519a01fa689e69"
     ],
     [
       "Benton2004.evar",
@@ -70,7 +70,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.index"
       ],
       0,
-      "f548c0210ae80efbe25b1f6e145c4c9b"
+      "2eee41d3a70403f371a14ad54bf73ad2"
     ],
     [
       "Benton2004.assign",
@@ -92,7 +92,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd"
       ],
       0,
-      "443026f3f4f948c2a9a82a3b680a6073"
+      "c22bde434dd14512a79482438f67327e"
     ],
     [
       "Benton2004.ifthenelse",
@@ -133,7 +133,7 @@
         "typing_Benton2004.reify_raw_computation"
       ],
       0,
-      "e3d610e10d1a16f1c1e565e6403822a1"
+      "211f95cbdbf0fb4058bacd3dcf1ee3a0"
     ],
     [
       "Benton2004.seq",
@@ -176,7 +176,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2"
       ],
       0,
-      "582d3a872be17c7c36ea3a79d9678acf"
+      "35a6906dafb190ab9525a5fc95661b84"
     ],
     [
       "Benton2004.while_raw",
@@ -205,7 +205,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "455ed10c4e50493fcc13777f0eceb047"
+      "1ad7628f82383586b2433bf6bfbb9d50"
     ],
     [
       "Benton2004.fuel_monotonic_while",
@@ -246,7 +246,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "110102566263c590a39f06da351039ec"
+      "d372a4de39bda9405f279ac541d848c8"
     ],
     [
       "Benton2004.while",
@@ -259,7 +259,7 @@
         "token_correspondence_Benton2004.while_raw"
       ],
       0,
-      "20c2ac5eb2d64873e093c865919ca9c1"
+      "5054c13e2d10deeca9609128c066ec6f"
     ],
     [
       "Benton2004.is_per_holds_sym",
@@ -268,7 +268,7 @@
       1,
       [ "@query", "equation_Benton2004.is_per" ],
       0,
-      "83cf77cc11fb52d72ab3708472680d2b"
+      "090aa08e3754af0f32167f22c1d541a2"
     ],
     [
       "Benton2004.per_holds_trans",
@@ -277,7 +277,7 @@
       1,
       [ "@query", "equation_Benton2004.is_per" ],
       0,
-      "9b3a194beb43ec8750b80e165271faf6"
+      "ae062781bffd3c5e73c5d69723b2ddd4"
     ],
     [
       "Benton2004.holds_intersect",
@@ -285,12 +285,12 @@
       2,
       1,
       [
-        "@query", "equation_Benton2004.intersect",
-        "interpretation_Benton2004_Tm_abs_c8088a491fa943ca16f60bc68d9fa8b4",
+        "@query", "equation_Benton2004.intersect", "equation_Prims.logical",
+        "interpretation_Benton2004_Tm_abs_2a8b14f474d0a1a41cceb38c579e9b27",
         "l_and-interp", "token_correspondence_Benton2004.intersect"
       ],
       0,
-      "9814d123f7288d8410363d0aae106d0e"
+      "157c7ce618d2491e2189aed11b7b1a69"
     ],
     [
       "Benton2004.interpolable_elim",
@@ -299,7 +299,7 @@
       1,
       [ "@query", "equation_Benton2004.interpolable" ],
       0,
-      "a4bba103ee8710b21de30ddc4294b884"
+      "3752946a67a8911078ea5ea2be560d17"
     ],
     [
       "Benton2004.terminates_equiv_reified_sym",
@@ -315,7 +315,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "975e0d45f41c8d2ffec4df752d2ffa50"
+      "84d44a264837a1d681bcfb7493e04658"
     ],
     [
       "Benton2004.holds_flip",
@@ -328,7 +328,7 @@
         "token_correspondence_Benton2004.flip"
       ],
       0,
-      "f867a3bafb19727ba1aeba3ba1159ae6"
+      "1f635d6ce0e0933fd35c412bd87da801"
     ],
     [
       "Benton2004.holds_flip'",
@@ -337,7 +337,7 @@
       1,
       [ "@query" ],
       0,
-      "67a28fb76854a12071f140d5133457c5"
+      "d85d61837aa923617e51dee88258d390"
     ],
     [
       "Benton2004.eval_equiv_flip",
@@ -357,7 +357,7 @@
         "typing_Benton2004.reify_exp", "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "4a2056dea79df995c1eb783f7403b455"
+      "4314714472c9fa5b22e17ad3613db93d"
     ],
     [
       "Benton2004.exec_equiv_flip",
@@ -383,7 +383,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "34982c5d398d2cd9b9b5f1c64b69b0a8"
+      "f10b39f75cc1732df09a24244d170f91"
     ],
     [
       "Benton2004.eval_equiv_sym",
@@ -405,7 +405,7 @@
         "typing_Benton2004.reify_exp", "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "1caf6e0a11ff2360b0a64c6189cfeaed"
+      "2e21c5173f8a98d45acede01cea93245"
     ],
     [
       "Benton2004.exec_equiv_sym",
@@ -433,7 +433,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "f65fc54084b26c4331d828f1b5fc602a"
+      "fee02c956fff49c14112bc3211539d45"
     ],
     [
       "Benton2004.eval_equiv_trans",
@@ -457,7 +457,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "520919177e9372ee6036e785eec24ee0"
+      "276fe7a857e0a4e33500ae102ce72af9"
     ],
     [
       "Benton2004.exec_equiv_reified_trans",
@@ -491,7 +491,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2"
       ],
       0,
-      "7daf21aacf8fb2869b977b56cbff56f0"
+      "b23b28ce34a134ae3c4de0e822516c40"
     ],
     [
       "Benton2004.exec_equiv_trans",
@@ -503,7 +503,7 @@
         "equation_Benton2004.reify_computation"
       ],
       0,
-      "7c933ee5dd97555613e833f636fbf9c5"
+      "fa9d87a8be7af246f21e5b0c7de7119f"
     ],
     [
       "Benton2004.d_esub",
@@ -523,7 +523,7 @@
         "typing_Benton2004.reify_exp", "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "e103efd32d6d5b73e934cbd1c8fe93da"
+      "fb6b84bacca379498fa1dea5fad836a4"
     ],
     [
       "Benton2004.d_csub",
@@ -550,7 +550,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "9bf1e43e0425625ea266998388f3ccb0"
+      "7c27b59f450472a7f6e08a868527e8eb"
     ],
     [
       "Benton2004.eop",
@@ -559,7 +559,7 @@
       1,
       [ "@query" ],
       0,
-      "e35d48490a1c7326eb396326f017effe"
+      "5624c3f629d63856a0d4d5a523ff5c3e"
     ],
     [
       "Benton2004.d_op",
@@ -589,7 +589,7 @@
         "unit_typing"
       ],
       0,
-      "090cfde055bcddb7b9891e9e3d2146b0"
+      "3835288c5d66bd674ff1a4a2d2e49df3"
     ],
     [
       "Benton2004.d_skip",
@@ -612,7 +612,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "45741ee82a666171a5accc87c86dc4eb"
+      "312d88917658342790aaca69386c768b"
     ],
     [
       "Benton2004.d_seq_terminates",
@@ -660,7 +660,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "90dba989d389ad1b9bd5873d92944035"
+      "4a0be77c1edf08f0d53c9170e2994eee"
     ],
     [
       "Benton2004.d_seq_terminates_recip",
@@ -669,7 +669,7 @@
       1,
       [ "@query", "lemma_Benton2004.exec_equiv_flip" ],
       0,
-      "43167c197cbf10c749cf2fdd74eefc34"
+      "6e6a8ab3fa7831e36df980b5d4818859"
     ],
     [
       "Benton2004.d_seq",
@@ -688,6 +688,7 @@
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
         "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_Benton2004.reify_computation",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "function_token_typing_Prims.bool", "int_inversion",
@@ -700,11 +701,10 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_Benton2004.reify_computation",
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "996926ca0110a13329c4cd261a3ce023"
+      "30c96948babb39cb7a6ce28a868b8be1"
     ],
     [
       "Benton2004.d_su1",
@@ -744,7 +744,7 @@
         "typing_Benton2004.reify_raw_computation", "typing_Benton2004.seq"
       ],
       0,
-      "c96589789aa0ed7f3d48a0a264a8302e"
+      "dfa4d2ac619e0600f2b19f5c00241869"
     ],
     [
       "Benton2004.d_su1'",
@@ -763,6 +763,7 @@
         "equation_Benton2004.terminates_equiv_reified",
         "equation_Benton2004.terminates_on", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_Benton2004.reify_computation",
         "function_token_typing_Benton2004.skip",
         "interpretation_Benton2004_Tm_abs_0905fb4e4b00d500335fabf272817e37",
         "interpretation_Benton2004_Tm_abs_4ebdbaef20556b124b09ee4259fe07a2",
@@ -772,11 +773,10 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Benton2004_Tm_refine_19740681924b8e3f1389bc7c09e2f42c",
-        "token_correspondence_Benton2004.reify_computation",
         "typing_Benton2004.reify_computation"
       ],
       0,
-      "ae6e237a9b17c7e598c0122f7d36e3a2"
+      "4f550187e21f476afb8e315af0ac870a"
     ],
     [
       "Benton2004.d_su2",
@@ -815,7 +815,7 @@
         "typing_Benton2004.reify_computation", "typing_Benton2004.seq"
       ],
       0,
-      "a3c539809b814f7ce15bb12194254af9"
+      "11169cb985bf1adc37c75ffb58397267"
     ],
     [
       "Benton2004.d_assoc",
@@ -836,6 +836,7 @@
         "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_Benton2004.reify_computation",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "int_inversion",
         "interpretation_Benton2004_Tm_abs_0905fb4e4b00d500335fabf272817e37",
@@ -845,11 +846,10 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Benton2004_Tm_refine_19740681924b8e3f1389bc7c09e2f42c",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_Benton2004.reify_computation"
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c31e68da13f05fa03afc6f412de4fa40"
+      "815e4b962258931822fe4d470de5b7eb"
     ],
     [
       "Benton2004.d_cc",
@@ -871,6 +871,7 @@
         "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_Benton2004.reify_computation",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "int_inversion",
         "interpretation_Benton2004_Tm_abs_05bdc28d64a525403666deee2b115250",
@@ -880,11 +881,10 @@
         "lemma_Benton2004.d_seq",
         "refinement_interpretation_Benton2004_Tm_refine_19740681924b8e3f1389bc7c09e2f42c",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_Benton2004.reify_computation",
         "typing_Benton2004.ifthenelse"
       ],
       0,
-      "d504156884614c044e03355ee50db385"
+      "134ff2062348a8345f1b60e94319a376"
     ],
     [
       "Benton2004.d_lu1",
@@ -918,6 +918,8 @@
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.nat",
         "equation_with_fuel_Benton2004.while_raw.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_Benton2004.reify_computation",
+        "function_token_typing_Benton2004.reify_exp",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "int_inversion", "int_typing",
         "interpretation_Benton2004_Tm_abs_05bdc28d64a525403666deee2b115250",
@@ -939,13 +941,11 @@
         "refinement_interpretation_Benton2004_Tm_refine_72f59247ec9aa4a8317b20902c00c895",
         "refinement_interpretation_Benton2004_Tm_refine_f7398afa07276a41388ff40a65b1c542",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_Benton2004.reify_computation",
-        "token_correspondence_Benton2004.reify_exp",
         "token_correspondence_Benton2004.while_raw",
         "typing_Benton2004.while"
       ],
       0,
-      "d3f1acb3ecce6987d0ac84ed80b40af6"
+      "ff7888e417db9e3f823437c63cd0acaa"
     ],
     [
       "Benton2004.d_lu2",
@@ -967,7 +967,6 @@
         "equation_Benton2004.fuel_monotonic",
         "equation_Benton2004.ifthenelse",
         "equation_Benton2004.raw_computation",
-        "equation_Benton2004.reified_computation",
         "equation_Benton2004.reified_exp",
         "equation_Benton2004.reified_raw_computation",
         "equation_Benton2004.reify_computation",
@@ -982,6 +981,7 @@
         "equation_Prims.nat",
         "equation_with_fuel_Benton2004.while_raw.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_Benton2004.reify_computation",
         "function_token_typing_Benton2004.skip",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
@@ -1002,14 +1002,12 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "refinement_interpretation_Benton2004_Tm_refine_19740681924b8e3f1389bc7c09e2f42c",
         "refinement_interpretation_Benton2004_Tm_refine_72f59247ec9aa4a8317b20902c00c895",
         "refinement_interpretation_Benton2004_Tm_refine_f7398afa07276a41388ff40a65b1c542",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_Benton2004.reify_computation",
         "token_correspondence_Benton2004.while_raw",
-        "typing_Benton2004.ifthenelse",
+        "typing_Benton2004.ifthenelse", "typing_Benton2004.reify_exp",
         "typing_Benton2004.reify_raw_computation", "typing_Benton2004.seq",
         "typing_Benton2004.while",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
@@ -1017,7 +1015,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "5c655acb1bf5da7b84354c17039f7f83"
+      "50868ef29d40dbb8a4580c67176fbd9d"
     ],
     [
       "Benton2004.d_bre",
@@ -1052,7 +1050,7 @@
         "typing_Benton2004.reify_exp"
       ],
       0,
-      "d15f7c2936097f494f8fb261e6f5f49b"
+      "146b5494fd92c0934d617527dedafcb1"
     ],
     [
       "Benton2004.reify_computation",
@@ -1066,7 +1064,7 @@
         "refinement_interpretation_Benton2004_Tm_refine_72f59247ec9aa4a8317b20902c00c895"
       ],
       0,
-      "e0d51d20e9741535d7ec8953824d28e8"
+      "4b48acabd3bd1557e8dc051fb16892a5"
     ],
     [
       "Benton2004.skip",
@@ -1085,7 +1083,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3ee776d4bd70235a469efb392868d3be"
+      "1b0fa9ac15b5e82e1965ce1cc05930ac"
     ],
     [
       "Benton2004.reify_exp",
@@ -1102,7 +1100,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "05163d2c6755ab4dd18ac8b4add8fbfb"
+      "5db23787a44bd5f33b13e0554c944634"
     ],
     [
       "Benton2004.const",
@@ -1111,7 +1109,7 @@
       1,
       [ "@query" ],
       0,
-      "424127a8e1b28c2e5d6a90e39de73f06"
+      "8308e63fe5b060f99c806876a4948d45"
     ],
     [
       "Benton2004.evar",
@@ -1123,7 +1121,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.index"
       ],
       0,
-      "7c2a388df1ef7e0f05d4b5f6dd730cf0"
+      "572dcb036ac8b15606fda0f92257d3d3"
     ],
     [
       "Benton2004.assign",
@@ -1144,7 +1142,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd"
       ],
       0,
-      "11ef9c1503ee120fa3d5d730317a089f"
+      "f517bcf555be08e319d8893ddb86a387"
     ],
     [
       "Benton2004.ifthenelse",
@@ -1185,7 +1183,7 @@
         "typing_Benton2004.reify_raw_computation"
       ],
       0,
-      "9402aa40079fec0866a1ccc8914f1264"
+      "75df061d8baf4efe8b63464847d246f4"
     ],
     [
       "Benton2004.seq",
@@ -1228,7 +1226,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2"
       ],
       0,
-      "7c2afd8907e88739f94b0e60aad4cd26"
+      "f36610b694dbf92c09fd0fed2e5eeac7"
     ],
     [
       "Benton2004.while_raw",
@@ -1257,7 +1255,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1b4a0a7c15599f53450e76548f36f722"
+      "cc0c76641035c218141ace5f69b521d4"
     ],
     [
       "Benton2004.while",
@@ -1270,7 +1268,7 @@
         "token_correspondence_Benton2004.while_raw"
       ],
       0,
-      "0450dd379d18ac76303000b02a01ff9d"
+      "cf6ae3b509985376ce92e9d270a780f3"
     ],
     [
       "Benton2004.eop",
@@ -1279,7 +1277,7 @@
       1,
       [ "@query" ],
       0,
-      "83960ed80bb3376eb8970e2c43cbfab5"
+      "fce01a9a1f48a0550df0582a780a60cd"
     ]
   ]
 ]

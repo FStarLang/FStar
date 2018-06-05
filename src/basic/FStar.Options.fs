@@ -88,16 +88,19 @@ type optionstate = Util.smap<option_val>
 
 let fstar_options : ref<list<optionstate> > = Util.mk_ref []
 let peek () = List.hd !fstar_options
-let pop  () =
+let pop  () = // already signal-atomic
     match !fstar_options with
     | []
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
-let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
+let push () = // already signal-atomic
+    fstar_options := Util.smap_copy (peek()) :: !fstar_options
 let set o =
     match !fstar_options with
     | [] -> failwith "set on empty option stack"
     | _::os -> fstar_options := (o::os)
+let snapshot () = Common.snapshot push fstar_options ()
+let rollback depth = Common.rollback pop fstar_options depth
 
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
@@ -116,6 +119,7 @@ let defaults =
       ("admit_except"                 , Unset);
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
+      ("cache_off"                    , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -127,13 +131,13 @@ let defaults =
       ("doc"                          , Bool false);
       ("dump_module"                  , List []);
       ("eager_inference"              , Bool false);
+      ("eager_subtyping"              , Bool false);
       ("expose_interfaces"            , Bool false);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
       ("extract_namespace"            , List []);
       ("fs_typ_app"                   , Bool false);
-      ("fstar_home"                   , Unset);
       ("full_context_dependency"      , Bool true);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
@@ -200,11 +204,11 @@ let defaults =
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
-      ("use_two_phase_tc"             , Bool false);
+      ("use_two_phase_tc"             , Bool true);
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("warn_error"                   , String "");
-      ("use_extracted_interfaces"     , Bool false);]
+      ("use_extracted_interfaces"     , Bool false)]
 
 let init () =
    let o = peek () in
@@ -231,6 +235,7 @@ let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
+let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -241,13 +246,12 @@ let get_detail_errors           ()      = lookup_opt "detail_errors"            
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
-let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
+let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
-let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
@@ -505,6 +509,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Read and write .checked and .checked.lax in directory <dir>");
 
       ( noshort,
+        "cache_off",
+        Const (mk_bool true),
+        "Do not read or write any .checked files");
+
+      ( noshort,
         "codegen",
         EnumStr ["OCaml"; "FSharp"; "Kremlin"; "Plugin"],
         "Generate code for further compilation to executable code, or build a compiler plugin");
@@ -566,7 +575,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "eager_inference",
         Const (mk_bool true),
-        "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+        "Deprecated: Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+
+       (noshort,
+        "eager_subtyping",
+        Const (mk_bool true),
+        "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
 
        ( noshort,
          "extract",
@@ -595,11 +609,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "expose_interfaces",
         Const (mk_bool true),
         "Explicitly break the abstraction imposed by the interface of any implementation file that appears on the command line (use with care!)");
-
-       ( noshort,
-        "fstar_home",
-        PathStr "dir",
-        "Set the FSTAR_HOME variable to <dir>");
 
        ( noshort,
         "hide_uvar_nums",
@@ -948,7 +957,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "use_two_phase_tc",
         BoolStr,
-        "Use the two phase typechecker (default 'false')");
+        "Use the two phase typechecker (default 'true')");
 
        ( noshort,
         "__no_positivity",
@@ -970,9 +979,9 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          - [@r] makes range [r] fatal.");
 
         ( noshort,
-        "use_extracted_interfaces",
-        Const (mk_bool true),
-        "Extract interfaces from the dependencies and use them for verification");
+         "use_extracted_interfaces",
+          BoolStr,
+         "Extract interfaces from the dependencies and use them for verification (default 'false')");
 
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
@@ -995,6 +1004,7 @@ let settable = function
     | "detail_errors"
     | "detail_hint_replay"
     | "eager_inference"
+    | "eager_subtyping"
     | "hide_uvar_nums"
     | "hint_info"
     | "hint_file"
@@ -1058,16 +1068,7 @@ let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 let display_usage () = display_usage_aux (specs())
 
-let fstar_home () =
-    match get_fstar_home() with
-    | None ->
-      let x = Util.get_exec_dir () in
-      let x = x ^ "/.." in
-      // Memoizes to avoid repeatedly forking an external process
-      set_option' ("fstar_home", mk_string x);
-      x
-    | Some x ->
-      x
+let fstar_bin_directory = Util.get_exec_dir ()
 
 exception File_argument of string
 
@@ -1125,26 +1126,47 @@ let include_path () =
   if get_no_default_includes() then
     get_include()
   else
-    let h = fstar_home () in
-    let defs = universe_include_path_base_dirs in
-    (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
+    let lib_paths =
+        match FStar.Util.expand_environment_variable "FSTAR_LIB" with
+        | None ->
+          let fstar_home = fstar_bin_directory ^ "/.."  in
+          let defs = universe_include_path_base_dirs in
+          defs |> List.map (fun x -> fstar_home ^ x) |> List.filter file_exists
+        | Some s -> [s]
+    in
+    lib_paths @ get_include() @ [ "." ]
 
-let find_file filename =
-  if Util.is_path_absolute filename then
-    if Util.file_exists filename then
-      Some filename
-    else
-      None
-  else
-    (* In reverse, because the last directory has the highest precedence. *)
-    Util.find_map (List.rev (include_path ())) (fun p ->
-      let path =
-        if p = "." then filename
-        else Util.join_paths p filename in
-      if Util.file_exists path then
-        Some path
-      else
-        None)
+let find_file =
+  let file_map = FStar.Util.smap_create 100 in
+  fun filename ->
+     match Util.smap_try_find file_map filename with
+     | Some f -> Some f
+     | None ->
+       let result =
+          (try
+              if Util.is_path_absolute filename then
+                if Util.file_exists filename then
+                  Some filename
+                else
+                  None
+              else
+                (* In reverse, because the last directory has the highest precedence. *)
+                Util.find_map (List.rev (include_path ())) (fun p ->
+                  let path =
+                    if p = "." then filename
+                    else Util.join_paths p filename in
+                  if Util.file_exists path then
+                    Some path
+                  else
+                    None)
+           with | _ -> //to deal with issues like passing bogus strings as paths like "<input>"
+                  None)
+       in
+       match result with
+       | None -> result
+       | Some f ->
+         Util.smap_add file_map filename f;
+         result
 
 let prims () =
   match get_prims() with
@@ -1187,16 +1209,18 @@ let prepend_cache_dir fpath =
 //Used to parse the options of
 //   --using_facts_from
 //   --extract
+let path_of_text text = String.split ['.'] text
+
 let parse_settings ns : list<(list<string> * bool)> =
     let parse_one_setting s =
         if s = "*" then ([], true)
         else if FStar.Util.starts_with s "-"
-        then let path = FStar.Ident.path_of_text (FStar.Util.substring_from s 1) in
+        then let path = path_of_text (FStar.Util.substring_from s 1) in
              (path, false)
         else let s = if FStar.Util.starts_with s "+"
                      then FStar.Util.substring_from s 1
                      else s in
-             (FStar.Ident.path_of_text s, true)
+             (path_of_text s, true)
     in
     ns |> List.collect (fun s ->
           FStar.Util.split s " "
@@ -1208,6 +1232,7 @@ let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
+let cache_off                    () = get_cache_off                   ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
 let codegen                      () =
     Util.map_opt
@@ -1229,7 +1254,7 @@ let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
-let eager_inference              () = get_eager_inference             ()
+let eager_subtyping              () = get_eager_subtyping()
 let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let full_context_dependency      () = true
@@ -1309,6 +1334,7 @@ let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
 let use_two_phase_tc             () = get_use_two_phase_tc            ()
+                                    && not (lax())
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
@@ -1323,7 +1349,7 @@ let should_extract m =
               | _ -> failwith "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module"
       in
       let setting = parse_settings extract_setting in
-      let m_components = Ident.path_of_text m in
+      let m_components = path_of_text m in
       let rec matches_path m_components path =
           match m_components, path with
           | _, [] -> true

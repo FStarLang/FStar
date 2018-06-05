@@ -53,34 +53,42 @@ boot/%.fsti: basic/boot/%.fsi | boot_dir
 	cp $^ $@
 	$(SED) -i 's/<.* when .* : equality>//g' $@
 	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
+	touch -r $^ $@
 
 boot/%.fsti: prettyprint/boot/%.fsi | boot_dir
 	cp $^ $@
 	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
+	touch -r $^ $@
 
 #fix up a use of polymorphic recursion in F#, which has a different syntax than F*
 boot/FStar.Tactics.Interpreter.fst: tactics/boot/FStar.Tactics.Interpreter.fs | boot_dir
 	cp $^ $@
 	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
 	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
+	touch -r $^ $@
 
 boot/FStar.Tests.Test.fst: tests/boot/FStar.Tests.Test.fs | boot_dir
 	cp $^ $@
 	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
+	touch -r $^ $@
 
 boot/FStar.Parser.Parse.fsti: parser/parse.fsi | boot_dir
 	echo "#light \"off\"" > $@
 	$(HEAD) -n -12 $^ >> $@
 	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse\nopen FStar.All\nopen FStar.BaseTypes\ntype bytes = array<byte>\nopen FStar.Syntax.Syntax/' $@
+	touch -r parser/parse.mly $@
 
 boot/%.fst: basic/boot/%.fs | boot_dir
 	cp $^ $@
+	touch -r $^ $@
 
 boot/FStar.Parser.Parse.fst: parser/parse.fs | boot_dir
 	cp $^ $@
+	touch -r $^ $@
 
 boot/FStar.Tactics.Interpreter.fsti: tactics/boot/FStar.Tactics.Interpreter.fsi | boot_dir
 	cp $^ $@
+	touch -r $^ $@
 
 boot_dir:
 	mkdir -p boot
@@ -153,20 +161,21 @@ ocaml-unit-tests:
 	$(BIN)/tests.exe
 
 # Getting parallelism from this target
-uregressions: fstarlib ulib tutorial uexamples interactive-test
+uregressions: ulib-extra tutorial uexamples interactive-test prettyprinting-tests
 
 # Getting parallelism from this target as well
-uregressions-ulong: uregressions ulib-extra
-
-ulib-extra:
-	+$(MAKE) -C ../ulib -f Makefile.verify extra
+# This is a hook for nightly builds (on Linux)
+# But, at the moment, it tests the same files as get tested on every push
+# We may add more nightly tests here in the future
+uregressions-ulong: uregressions
 
 fstarlib:
 	+$(MAKE) -C ../ulib/ml
 	+$(MAKE) -C ../ulib install-fstar-tactics
-
-ulib:
 	+$(MAKE) -C ../ulib
+
+ulib-extra:
+	+$(MAKE) -C ../ulib extra
 
 tutorial: fstarlib
 	+$(MAKE) -C ../doc/tutorial regressions
@@ -177,6 +186,9 @@ uexamples: fstarlib
 # Interactive mode regressions
 interactive-test:
 	$(MAKE) -C tests/interactive
+
+prettyprinting-tests:
+	$(MAKE) -C tests/prettyprinting
 
 ulong:
 	+$(MAKE) utest-prelude

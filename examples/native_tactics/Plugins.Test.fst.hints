@@ -2,51 +2,66 @@
   "ÛNu''q\n¶sí=5º`\u0006²",
   [
     [
-      "Plugins.Test.uu___65",
+      "Plugins.Test.uu___61",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "f39cf8ab2ed8b363d96323e7da65830c"
+    ],
+    [
+      "Plugins.Test.uu___61",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1d5ce1f6e9697aa183b29ab5fd116ba8"
+    ],
+    [
+      "Plugins.Test.uu___62",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int",
+        "function_token_typing_Prims.bool", "function_token_typing_Prims.int"
+      ],
+      0,
+      "9578e58bd9e5f23566836fe2a9d1014d"
+    ],
+    [
+      "Plugins.Test.uu___62",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d62a36af5b112b1a015ec4c97ae4bac0"
+    ],
+    [
+      "Plugins.Test.uu___63",
       1,
       2,
       1,
       [
         "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.Pervasives.id", "equation_Plugins.int_plugin",
-        "primitive_Prims.op_Equality"
+        "assumption_Prims.list__uu___haseq",
+        "function_token_typing_Prims.int"
       ],
       0,
-      "56617d590ec5e31fc832d1c9300d7226"
+      "3e9c612243e168f121d1b8b8ae8fb82a"
     ],
     [
-      "Plugins.Test.uu___66",
-      1,
+      "Plugins.Test.uu___63",
+      2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int",
-        "equation_FStar.UInt32.n", "equation_Plugins.tuple_plugin",
-        "function_token_typing_FStar.UInt32.n",
-        "function_token_typing_Prims.bool",
-        "function_token_typing_Prims.int", "primitive_Prims.op_Equality"
-      ],
+      [ "@query" ],
       0,
-      "50ddc7765f22de53f17d30e7f279714b"
-    ],
-    [
-      "Plugins.Test.uu___67",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "assumption_Prims.list__uu___haseq",
-        "equation_FStar.UInt32.n", "equation_Plugins.any_plugin",
-        "function_token_typing_FStar.UInt32.n",
-        "function_token_typing_Prims.int", "primitive_Prims.op_Equality"
-      ],
-      0,
-      "8b613d0a3c49d1bef7c9a00ee9f58a87"
+      "5a0fa55c28c875c5b76437faebfd0e44"
     ]
   ]
 ]

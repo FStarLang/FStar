@@ -11,7 +11,7 @@
         "disc_equation_Eta_expand.B", "fuel_guarded_inversion_Eta_expand.t"
       ],
       0,
-      "ec0870c0f713cfa8d561e571993025ee"
+      "e554632cf142035d32ea30b216bd5435"
     ],
     [
       "Eta_expand.choose",
@@ -27,21 +27,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c4dd5571711ea9a0d91a607cf99dd39b"
-    ],
-    [
-      "Eta_expand.uu___15",
-      1,
-      2,
-      1,
-      [
-        "@query", "constructor_distinct_Eta_expand.A",
-        "equality_tok_Eta_expand.A@tok", "equation_Eta_expand.choose",
-        "equation_Eta_expand.dec", "equation_Eta_expand.fun_a", "int_typing",
-        "token_correspondence_Eta_expand.fun_a"
-      ],
-      0,
-      "a2c4b6dc8aba3760378c84fa8d656a83"
+      "61bc03df1b07aa7ecb59028a741f18ff"
     ]
   ]
 ]

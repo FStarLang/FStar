@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "345bc7d4d8397596a6bccd081cc20002"
+      "38fd600eeb10a3bab09ae9b508454c93"
     ],
     [
       "Ex04e.__proj__Some__item__v",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Ex04e_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
       ],
       0,
-      "049a4611b32fc77516751b8e989fea79"
+      "feeeae4d2cbd7231b1f8bcf030f17e77"
     ],
     [
       "Ex04e.find",
@@ -32,11 +32,10 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "13d270c90a31321a36b5b4cb8d9e5520"
+      "cc8a4cf1b368a64341bad65f48a4ed9c"
     ],
     [
       "Ex04e.option",
@@ -45,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "7a5cbd670af07326a2d7159aac466bcf"
+      "0eaf19370894ff4246e3dcdb2cc892d8"
     ],
     [
       "Ex04e.__proj__Some__item__v",
@@ -58,7 +57,7 @@
         "refinement_interpretation_Ex04e_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
       ],
       0,
-      "106371efd8e3c9d0566c59bdacbdcf12"
+      "941319f061d439c98f7afd2e74bc1421"
     ],
     [
       "Ex04e.find",
@@ -72,7 +71,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "86e21d111b0757d4301c3644b2cb99a3"
+      "0f99c696b2c3c4e30383341be3557444"
     ]
   ]
 ]

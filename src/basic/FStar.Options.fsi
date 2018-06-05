@@ -54,6 +54,8 @@ type optionstate = Util.smap<option_val>
 (* Control the option stack *)
 val push                        : unit -> unit
 val pop                         : unit -> unit
+val snapshot                    : unit -> (int * unit)
+val rollback                    : option<int> -> unit
 val peek                        : unit -> optionstate
 val set                         : optionstate -> unit
 
@@ -98,6 +100,7 @@ val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
 val cache_checked_modules       : unit    -> bool
+val cache_off                   : unit    -> bool
 type codegen_t =
     | OCaml | FSharp | Kremlin | Plugin
 val codegen                     : unit    -> option<codegen_t>
@@ -114,12 +117,12 @@ val display_usage               : unit    -> unit
 val doc                         : unit    -> bool
 val dont_gen_projectors         : string  -> bool
 val dump_module                 : string  -> bool
-val eager_inference             : unit    -> bool
+val eager_subtyping             : unit    -> bool
 val expose_interfaces           : unit    -> bool
 val file_list                   : unit    -> list<string>
-val find_file                   : string  -> option<string>
+val find_file                   : (string  -> option<string>)
 val fs_typ_app                  : string  -> bool
-val fstar_home                  : unit    -> string
+val fstar_bin_directory         : string
 val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
@@ -191,7 +194,7 @@ val use_hints                   : unit    -> bool
 val use_hint_hashes             : unit    -> bool
 val use_native_tactics          : unit    -> option<string>
 val use_tactics                 : unit    -> bool
-val using_facts_from            : unit    -> list<(Ident.path * bool)>
+val using_facts_from            : unit    -> list<(list<string> * bool)>
 val vcgen_optimize_bind_as_seq  : unit    -> bool
 val vcgen_decorate_with_type    : unit    -> bool
 val warn_default_effects        : unit    -> bool

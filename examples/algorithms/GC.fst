@@ -74,12 +74,12 @@ unfold type inv gc_state (color_invariant:mem_addr -> Type) =
           color_invariant i /\
           (not (valid (gc_state.to_abs i)) <==> gc_state.color i = Unalloc))
 
-logic type gc_inv gc_state =
+type gc_inv gc_state =
   inv gc_state (fun i ->
       (gc_state.color i = Black
         ==> (forall f. gc_state.color (gc_state.fields (i, f)) <> White)))
 
-logic type mutator_inv gc_state =
+type mutator_inv gc_state =
   inv gc_state (fun i -> gc_state.color i = Unalloc \/ gc_state.color i = White)
 
 new_effect GC_STATE = STATE_h gc_state

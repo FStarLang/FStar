@@ -302,6 +302,8 @@ let is_div_effect l =
 
 let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
 
+let is_pure_or_ghost_effect l = is_pure_effect l || is_ghost_effect l
+
 let is_pure_lcomp lc =
     is_total_lcomp lc
     || is_pure_effect lc.eff_name
@@ -323,6 +325,15 @@ let is_lemma t =
     match (compress t).n with
     | Tm_arrow(_, c) -> is_lemma_comp c
     | _ -> false
+
+let rec head_of (t : term) : term =
+    match (compress t).n with
+    | Tm_app (t, _)
+    | Tm_match (t, _)
+    | Tm_abs (_, t, _)
+    | Tm_ascribed (t, _, _)
+    | Tm_meta (t, _) -> head_of t
+    | _ -> t
 
 let head_and_args t =
     let t = compress t in
@@ -378,8 +389,17 @@ let set_result_typ c t = match c.n with
   | GTotal _ -> mk_GTotal t
   | Comp ct -> mk_Comp({ct with result_typ=t})
 
+let set_result_typ_lc (lc:lcomp) (t:typ) :lcomp =
+  Syntax.mk_lcomp lc.eff_name t lc.cflags (fun _ -> set_result_typ (lcomp_comp lc) t)
+
 let is_trivial_wp c =
   comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
+
+let comp_effect_args (c:comp) :args =
+  match c.n with
+  | Total _
+  | GTotal _ -> []
+  | Comp ct -> ct.effect_args
 
 (********************************************************************************)
 (*               Simple utils on the structure of a term                        *)
@@ -422,6 +442,14 @@ let rec unlazy t =
     match (compress t).n with
     | Tm_lazy i -> unlazy <| unfold_lazy i
     | _ -> t
+
+let rec unlazy_as_t k t =
+    match (compress t).n with
+    | Tm_lazy ({lkind=k'; blob=v})
+        when k=k' ->
+      FStar.Dyn.undyn v
+    | _ ->
+      failwith "Not a Tm_lazy of the expected kind"
 
 let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option<range>) : term =
     let rng = (match r with | Some r -> r | None -> dummyRange) in
@@ -497,6 +525,11 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         then (
             assert (List.length args1 = List.length args2);
             List.fold_left (fun acc ((a1, q1), (a2, q2)) ->
+                                //if q1 <> q2
+                                //then failwith (U.format1 "Arguments of %s mismatch on implicit qualifier\n"
+                                //                (Ident.string_of_lid f1.fv_name.v));
+                                //NS: 05/06/2018 ...this does not always hold
+                                //    it's been succeeding because the assert is disabled in the non-debug builds
                                 assert (q1 = q2);
                                 eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
         ) else NotEqual
@@ -529,8 +562,8 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_constant c, Tm_constant d ->
       equal_iff (eq_const c d)
 
-    | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
-      equal_if (Unionfind.equiv u1 u2)
+    | Tm_uvar (u1, ([], _)), Tm_uvar (u2, ([], _)) ->
+      equal_if (Unionfind.equiv u1.ctx_uvar_head u2.ctx_uvar_head)
 
     | Tm_app (h1, args1), Tm_app (h2, args2) ->
       begin match (un_uinst h1).n, (un_uinst h2).n with
@@ -598,6 +631,14 @@ let rec unrefine t =
   | Tm_refine(x, _) -> unrefine x.sort
   | Tm_ascribed(t, _, _) -> unrefine t
   | _ -> t
+
+let rec is_uvar t =
+  match (compress t).n with
+  | Tm_uvar _ -> true
+  | Tm_uinst (t, _) -> is_uvar t
+  | Tm_app _ -> t |> head_and_args |> fst |> is_uvar
+  | Tm_ascribed (t, _, _) -> is_uvar t
+  | _ -> false
 
 let rec is_unit t =
     match (unrefine t).n with
@@ -691,9 +732,9 @@ let mk_app f args =
 let mk_data l args =
   match args with
     | [] ->
-      mk (fvar l Delta_constant (Some Data_ctor)) None (range_of_lid l)
+      mk (fvar l delta_constant (Some Data_ctor)) None (range_of_lid l)
     | _ ->
-      let e = mk_app (fvar l Delta_constant (Some Data_ctor)) args in
+      let e = mk_app (fvar l delta_constant (Some Data_ctor)) args in
       mk e None e.pos
 
 let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
@@ -826,9 +867,9 @@ let rec arrow_formals_comp k =
     match k.n with
         | Tm_arrow(bs, c) ->
             let bs, c = Subst.open_comp bs c in
-            if is_tot_or_gtot_comp c
+            if is_total_comp c
             then let bs', k = arrow_formals_comp (comp_result c) in
-                bs@bs', k
+                 bs@bs', k
             else bs, c
         | Tm_refine ({ sort = k }, _) -> arrow_formals_comp k
         | _ -> [], Syntax.mk_Total k
@@ -988,7 +1029,7 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) Delta_constant None)) None Range.dummyRange
+mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) delta_constant None)) None Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
@@ -998,11 +1039,11 @@ let exp_int s : term = mk (Tm_constant (Const_int (s,None))) None dummyRange
 let exp_char c : term = mk (Tm_constant (Const_char c)) None dummyRange
 let exp_string s : term = mk (Tm_constant (Const_string (s, dummyRange))) None dummyRange
 
-let fvar_const l = fvar l Delta_constant None
+let fvar_const l = fvar l delta_constant None
 let tand    = fvar_const PC.and_lid
 let tor     = fvar_const PC.or_lid
-let timp    = fvar PC.imp_lid (Delta_defined_at_level 1) None
-let tiff    = fvar PC.iff_lid (Delta_defined_at_level 2) None
+let timp    = fvar PC.imp_lid (Delta_constant_at_level 1) None
+let tiff    = fvar PC.iff_lid (Delta_constant_at_level 2) None
 let t_bool  = fvar_const PC.bool_lid
 let b2t_v   = fvar_const PC.b2t_lid
 let t_not   = fvar_const PC.not_lid
@@ -1012,6 +1053,8 @@ let t_true  = fvar_const PC.true_lid
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 
+let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
+
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
   | Some phi1 -> Some (mk (Tm_app(tand, [as_arg phi1; as_arg phi2])) None (Range.union_ranges phi1.pos phi2.pos))
@@ -1019,7 +1062,7 @@ let mk_binop op_t phi1 phi2 = mk (Tm_app(op_t, [as_arg phi1; as_arg phi2])) None
 let mk_neg phi = mk (Tm_app(t_not, [as_arg phi])) None phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l phi = match phi with
-    | [] -> fvar PC.true_lid Delta_constant None
+    | [] -> fvar PC.true_lid delta_constant None
     | hd::tl -> List.fold_right mk_conj tl hd
 let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_disj_l phi = match phi with
@@ -1028,6 +1071,19 @@ let mk_disj_l phi = match phi with
 let mk_imp phi1 phi2 : term = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2 : term = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
+
+let is_t_true t =
+     match (unmeta t).n with
+     | Tm_fvar fv -> fv_eq_lid fv PC.true_lid
+     | _ -> false
+let mk_conj_simp t1 t2 =
+    if is_t_true t1 then t2
+    else if is_t_true t2 then t1
+    else mk_conj t1 t2
+let mk_disj_simp t1 t2 =
+    if is_t_true t1 then t_true
+    else if is_t_true t2 then t_true
+    else mk_disj t1 t2
 
 let teq = fvar_const PC.eq2_lid
 let mk_untyped_eq2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
@@ -1041,15 +1097,15 @@ let mk_has_type t x t' =
     mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) None dummyRange
 
 let mk_with_type u t e =
-    let t_with_type = fvar PC.with_type_lid Delta_equational None in
+    let t_with_type = fvar PC.with_type_lid delta_equational None in
     let t_with_type = mk (Tm_uinst(t_with_type, [u])) None dummyRange in
     mk (Tm_app(t_with_type, [iarg t; as_arg e])) None dummyRange
 
 let lex_t    = fvar_const PC.lex_t_lid
-let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid Delta_constant (Some Data_ctor), [U_zero])) None dummyRange
-let lex_pair = fvar PC.lexcons_lid Delta_constant (Some Data_ctor)
-let tforall  = fvar PC.forall_lid (Delta_defined_at_level 1) None
-let t_haseq   = fvar PC.haseq_lid Delta_constant None
+let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid delta_constant (Some Data_ctor), [U_zero])) None dummyRange
+let lex_pair = fvar PC.lexcons_lid delta_constant (Some Data_ctor)
+let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None
+let t_haseq   = fvar PC.haseq_lid delta_constant None
 
 let lcomp_of_comp c0 =
     let eff_name, flags =
@@ -1109,11 +1165,11 @@ let if_then_else b t1 t2 =
 // Operations on squashed and other irrelevant/sub-singleton types
 //////////////////////////////////////////////////////////////////////////////////////
 let mk_squash u p =
-    let sq = fvar PC.squash_lid (Delta_defined_at_level 1) None in
+    let sq = fvar PC.squash_lid (Delta_constant_at_level 1) None in
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let mk_auto_squash u p =
-    let sq = fvar PC.auto_squash_lid (Delta_defined_at_level 2) None in
+    let sq = fvar PC.auto_squash_lid (Delta_constant_at_level 2) None in
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let un_squash t =
@@ -1401,7 +1457,7 @@ let action_as_lb eff_lid a pos =
   let lb =
     close_univs_and_mk_letbinding None
       (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
-      (Inr (lid_as_fv a.action_name Delta_equational None))
+      (Inr (lid_as_fv a.action_name delta_equational None))
       a.action_univs
       (arrow a.action_params (mk_Total a.action_typ))
       PC.effect_Tot_lid
@@ -1433,11 +1489,11 @@ let rec delta_qualifier t =
         | Tm_name _
         | Tm_match _
         | Tm_uvar _
-        | Tm_unknown -> Delta_equational
+        | Tm_unknown -> delta_equational
         | Tm_type _
         | Tm_quoted _
         | Tm_constant _
-        | Tm_arrow _ -> Delta_constant
+        | Tm_arrow _ -> delta_constant
         | Tm_uinst(t, _)
         | Tm_refine({sort=t}, _)
         | Tm_meta(t, _)
@@ -1448,10 +1504,9 @@ let rec delta_qualifier t =
 
 let rec incr_delta_depth d =
     match d with
-    | Delta_equational -> d
-    | Delta_constant -> Delta_defined_at_level 1
-    | Delta_defined_at_level i -> Delta_defined_at_level (i + 1)
-    | Delta_abstract d -> incr_delta_depth d
+    | Delta_constant_at_level i   -> Delta_constant_at_level (i + 1)
+    | Delta_equational_at_level i -> Delta_equational_at_level (i + 1)
+    | Delta_abstract d            -> incr_delta_depth d
 
 let incr_delta_qualifier t =
     incr_delta_depth (delta_qualifier t)
@@ -1480,13 +1535,10 @@ let dm4f_lid ed name : lident =
     lid_of_path p' Range.dummyRange
 
 let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
-    let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) None rng in
+    let ctor l = mk (Tm_fvar (lid_as_fv l delta_constant (Some Data_ctor))) None rng in
     let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.cons_lid) [U_zero]) args None pos in
     let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.nil_lid)  [U_zero]) args None pos in
     List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
-
-let uvar_from_id (id : int) (t : typ)=
-    mk (Tm_uvar (Unionfind.from_id id, t)) None Range.dummyRange
 
 // Some generic equalities
 let rec eqlist (eq : 'a -> 'a -> bool) (xs : list<'a>) (ys : list<'a>) : bool =
@@ -1582,7 +1634,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
   | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
     (* These must have alreade been resolved, so we check that
      * they are indeed the same uvar *)
-    check "uvar" (u1 = u2)
+    check "uvar" (u1.ctx_uvar_head = u2.ctx_uvar_head)
 
   | Tm_quoted (qt1, qi1), Tm_quoted (qt2, qi2) ->
     (check "tm_quoted qi"      (qi1 = qi2)) &&
@@ -1726,3 +1778,109 @@ let process_pragma p r =
       match sopt with
       | None -> ()
       | Some s -> set_options Options.Reset s
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+let rec unbound_variables tm :  list<bv> =
+    let t = Subst.compress tm in
+    match t.n with
+      | Tm_delayed _ -> failwith "Impossible"
+
+      | Tm_name x ->
+        []
+
+      | Tm_uvar _ ->
+        []
+
+      | Tm_type u ->
+        []
+
+      | Tm_bvar x ->
+        [x]
+
+      | Tm_fvar _
+      | Tm_constant _
+      | Tm_lazy _
+      | Tm_unknown ->
+        []
+
+      | Tm_uinst(t, us) ->
+        unbound_variables t
+
+      | Tm_abs(bs, t, _) ->
+        let bs, t = Subst.open_term bs t in
+        List.collect (fun (b, _) -> unbound_variables b.sort) bs
+        @ unbound_variables t
+
+      | Tm_arrow (bs, c) ->
+        let bs, c = Subst.open_comp bs c in
+        List.collect (fun (b, _) -> unbound_variables b.sort) bs
+        @ unbound_variables_comp c
+
+      | Tm_refine(b, t) ->
+        let bs, t = Subst.open_term [b, None] t in
+        List.collect (fun (b, _) -> unbound_variables b.sort) bs
+        @ unbound_variables t
+
+      | Tm_app(t, args) ->
+        List.collect (fun (x, _) -> unbound_variables x) args
+        @ unbound_variables t
+
+      | Tm_match(t, pats) ->
+        unbound_variables t
+        @ (pats |> List.collect (fun br ->
+                 let p, wopt, t = Subst.open_branch br in
+                 unbound_variables t
+                 @ (match wopt with None -> [] | Some t -> unbound_variables t)))
+
+      | Tm_ascribed(t1, asc, _) ->
+        unbound_variables t1
+        @ (match fst asc with
+           | Inl t2 -> unbound_variables t2
+           | Inr c2 -> unbound_variables_comp c2)
+        @ (match snd asc with
+           | None -> []
+           | Some tac -> unbound_variables tac)
+
+      | Tm_let ((false, [lb]), t) ->
+        unbound_variables lb.lbtyp
+        @ unbound_variables lb.lbdef
+        @ (match lb.lbname with
+           | Inr _ -> unbound_variables t
+           | Inl bv -> let _, t= Subst.open_term [bv, None] t in
+                       unbound_variables t)
+
+      | Tm_let ((_, lbs), t) ->
+        let lbs, t = Subst.open_let_rec lbs t in
+        unbound_variables t
+        @ List.collect (fun lb -> unbound_variables lb.lbtyp @ unbound_variables lb.lbdef) lbs
+
+      | Tm_quoted (tm, qi) ->
+        begin match qi.qkind with
+        | Quote_static  -> []
+        | Quote_dynamic -> unbound_variables tm
+        end
+
+      | Tm_meta(t, m) ->
+        unbound_variables t
+        @ (match m with
+           | Meta_pattern args ->
+             List.collect (List.collect (fun (a, _) -> unbound_variables a)) args
+
+           | Meta_monadic_lift(_, _, t')
+           | Meta_monadic(_, t') ->
+             unbound_variables t'
+
+           | Meta_labeled _
+           | Meta_desugared _
+           | Meta_named _ -> [])
+
+
+and unbound_variables_comp c =
+    match c.n with
+    | GTotal (t, _)
+    | Total (t, _) ->
+      unbound_variables t
+
+    | Comp ct ->
+      unbound_variables ct.result_typ
+      @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args

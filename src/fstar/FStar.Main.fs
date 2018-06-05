@@ -60,9 +60,10 @@ let report_errors fmods =
   end
 
 (* Extraction to OCaml, F# or Kremlin *)
-let codegen (umods, env) =
+let codegen (umods, env, delta) =
   let opt = Options.codegen () in
   if opt <> None then
+    let env = Universal.apply_delta_env env delta in
     let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
     let ext = match opt with
@@ -164,8 +165,10 @@ let go _ =
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then let _, deps = Parser.Dep.collect filenames in
              Parser.Dep.print deps
-        else if Options.use_extracted_interfaces () && List.length filenames > 1 then
-          Errors.raise_error (Errors.Error_TooManyFiles, "Only one command line file is allowed if --use_extracted_interfaces is set") Range.dummyRange
+        else if Options.use_extracted_interfaces () && (not (Options.expose_interfaces ())) && List.length filenames > 1 then
+          Errors.raise_error (Errors.Error_TooManyFiles,
+                              "Only one command line file is allowed if --use_extracted_interfaces is set, found %s" ^ (string_of_int (List.length filenames)))
+                             Range.dummyRange
         else if Options.interactive () then begin
           match filenames with
           | [] ->
@@ -187,10 +190,10 @@ let go _ =
                          reindenting is not known to work yet with this version"
         else if List.length filenames >= 1 then begin //normal batch mode
           let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames in
-          let fmods, env = Universal.batch_mode_tc filenames dep_graph in
+          let fmods, env, delta_env = Universal.batch_mode_tc filenames dep_graph in
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
-          codegen (fmods |> List.map fst, env);
+          codegen (fmods |> List.map fst, env, delta_env);
           report_errors module_names_and_times; //codegen errors
           finished_message module_names_and_times 0
         end //end normal batch mode
@@ -206,12 +209,27 @@ let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.Lazy_env        -> FStar.Reflection.Embeddings.unfold_lazy_env         i
     | FStar.Syntax.Syntax.Lazy_sigelt     -> FStar.Reflection.Embeddings.unfold_lazy_sigelt      i
     | FStar.Syntax.Syntax.Lazy_proofstate -> FStar.Tactics.Embedding.unfold_lazy_proofstate i
+    | FStar.Syntax.Syntax.Lazy_uvar       -> FStar.Syntax.Util.exp_string "((uvar))"
+
+// This is called directly by the Javascript port (it doesn't call Main)
+let setup_hooks () =
+    FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
+    FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
+    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder
+
+let handle_error e =
+    if FStar.Errors.handleable e then
+      FStar.Errors.err_exn e;
+    if Options.trace_error() then
+      Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+    else if not (FStar.Errors.handleable e) then
+      Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
+    cleanup();
+    report_errors []
 
 let main () =
   try
-    FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
-    FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
-    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;
+    setup_hooks ();
     let _, time = FStar.Util.record_time go in
     if FStar.Options.query_stats()
     then FStar.Util.print2 "TOTAL TIME %s ms: %s\n"
@@ -219,15 +237,6 @@ let main () =
               (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();
     exit 0
-  with | e ->
-    let trace = Util.trace_of_exn e in
-    begin
-      if FStar.Errors.handleable e then FStar.Errors.err_exn e;
-      if (Options.trace_error()) then
-        Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) trace
-      else if not (FStar.Errors.handleable e) then
-        Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
-    end;
-    cleanup();
-    report_errors [];
-    exit 1
+  with
+  | e -> handle_error e;
+        exit 1

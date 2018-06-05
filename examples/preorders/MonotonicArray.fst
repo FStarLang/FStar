@@ -395,6 +395,7 @@ abstract let recall_all_init (#a:Type0) (#n:nat) (arr:t a n{all_init arr})
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ init_arr_in_heap arr h0))
   = recall_all_init_i_j arr 0 n
 
+#set-options "--z3rlimit 20"
 abstract let witness_all_init_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{j >= i /\ j <= n})
   :ST unit (requires (fun h0      -> init_arr_in_heap_i_j arr h0 i j))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ all_init_i_j arr i j))
@@ -495,7 +496,7 @@ let lemma_disjoint_sibling_remain_same_transitive
          (ensures  (disjoint_siblings_remain_same arr h0 h2))
   = ()
 
-#reset-options "--z3rlimit 150"
+#reset-options "--z3rlimit 250"
 private let fill_common (#a:Type0) (#n:nat) (arr:t a n) (buf:seq a{Seq.length buf <= n})
   :ST unit (requires (fun h0      -> is_mutable arr h0))
            (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\

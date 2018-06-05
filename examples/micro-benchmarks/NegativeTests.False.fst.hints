@@ -1,5 +1,5 @@
 [
-  "ÐãÒO±Rv\u001d\u0014î\u0011€£\u0004êd",
+  "_\f\u001b\u0005 GNFÿÌ‹p¼Ôæ†",
   [
     [
       "NegativeTests.False.foo",
@@ -8,25 +8,53 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "735576d408e9278a1d4028b573b6c38e"
+      "043848f2d75e698b08b48537cd1ca182"
     ],
     [
       "NegativeTests.False.foo",
       2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
+        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+      ],
       0,
-      "0d33e83a92dd061c06ba1d656c3582b9"
+      "f6d462bef9b0f8285cd32a70c1e2dd08"
+    ],
+    [
+      "NegativeTests.False.f",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_unit", "equation_Prims.l_True",
+        "equation_Prims.squash",
+        "haseqPrims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "a033845ed2d053a105c638ce6188ad16"
+    ],
+    [
+      "NegativeTests.False.f",
+      2,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
+      0,
+      "aea511e376f9c918e73403dd817f13b9"
     ],
     [
       "NegativeTests.False.foo",
       3,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
+        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+      ],
       0,
-      "a60f1b7ba2115154c3d49ad6aae4446c"
+      "3fc81c4987c4c5f45b9be3dafd82cfb8"
     ],
     [
       "NegativeTests.False.foo",
@@ -38,28 +66,20 @@
         "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "1742f7672dc1931639668cb09df73611"
+      "969cc186079fdad454e987cf6ffecf7e"
     ],
     [
       "NegativeTests.False.f",
-      1,
+      3,
       2,
       1,
       [
         "@query", "assumption_Prims.HasEq_unit", "equation_Prims.l_True",
-        "haseqNegativeTests.False_Tm_refine_bcb7d7b02fc420eb5dd6ef8d59203102"
+        "equation_Prims.squash",
+        "haseqPrims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "6ae980bd95d316c96cd6578c6b6a85c7"
-    ],
-    [
-      "NegativeTests.False.f",
-      2,
-      2,
-      1,
-      [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
-      0,
-      "fd873f9243f12a11717b35dc515ee3b4"
+      "6d5ef802450c741b1d37f7264d24bc04"
     ]
   ]
 ]

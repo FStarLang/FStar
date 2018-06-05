@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6a9bdfdbcea4ea0041d521549eddcac8"
+      "b7d14d48e6d71d72b517a13935644e78"
     ],
     [
       "Bug292.triple_a",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3e5b7b14ec5e0816272fea777d1f25f5"
+      "46e5848868aca627ac6aa85317ca9829"
     ],
     [
       "Bug292.triple_a",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Bug292_Tm_refine_bd6d982985e2df5ac87b5db124accca1"
       ],
       0,
-      "a13cc1c772bb4903110695107e4a088a"
+      "a2f9ebe8ed3c039e066b844628a4910f"
     ]
   ]
 ]

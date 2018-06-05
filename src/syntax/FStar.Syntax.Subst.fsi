@@ -26,6 +26,7 @@ open FStar.Util
 
 val shift_subst:        int -> subst_t -> subst_t
 val subst:              list<subst_elt> -> term -> term
+val subst':           subst_ts -> term -> term
 val subst_comp:         list<subst_elt> -> comp -> comp
 val subst_binders:      list<subst_elt> -> binders -> binders
 val compress:           term -> term
@@ -46,6 +47,7 @@ val open_term:          binders -> term -> binders * term
 val open_term':         binders -> term -> binders * term * subst_t
 val open_comp:          binders -> comp -> binders * comp
 val open_branch:        branch -> branch
+val open_branch':       branch -> branch * subst_t
 val open_let_rec:       list<letbinding> -> term -> list<letbinding> * term
 val open_univ_vars:     univ_names -> term -> univ_names * term
 val open_univ_vars_comp:univ_names -> comp -> univ_names * comp

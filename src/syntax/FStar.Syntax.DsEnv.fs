@@ -184,8 +184,8 @@ let set_bv_range bv r =
 
 let bv_to_name bv r = bv_to_name (set_bv_range bv r)
 
-let unmangleMap = [("op_ColonColon", "Cons", Delta_constant, Some Data_ctor);
-                   ("not", "op_Negation", Delta_equational, None)]
+let unmangleMap = [("op_ColonColon", "Cons", delta_constant, Some Data_ctor);
+                   ("not", "op_Negation", delta_equational, None)]
 
 let unmangleOpName (id:ident) : option<(term * bool)> =
   let t =
@@ -539,8 +539,8 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       | (_, true) when exclude_interf -> None
       | (se, _) ->
         begin match se.sigel with
-          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid Delta_constant None, false, se.sigattrs))
-          | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid Delta_constant (fv_qual_of_se se), false, se.sigattrs))
+          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid delta_constant None, false, se.sigattrs))
+          | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid delta_constant (fv_qual_of_se se), false, se.sigattrs))
           | Sig_let((_, lbs), _) ->
             let fv = lb_fv lbs source_lid in
             Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false, se.sigattrs))
@@ -551,9 +551,13 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
                  let dd = if U.is_primop_lid lid
                           || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
-                          then Delta_equational
-                          else Delta_constant in
-                 let dd = if quals |> BU.for_some (function Abstract -> true | _ -> false) then Delta_abstract dd else dd in
+                          then delta_equational
+                          else delta_constant in
+                 let dd = if quals |> BU.for_some (function Abstract -> true | _ -> false)
+                          || (quals |> BU.for_some (function Assumption -> true | _ -> false)
+                            && not (quals |> BU.for_some (function New -> true | _ -> false)))
+                          then Delta_abstract dd
+                          else dd in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
@@ -565,7 +569,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
             | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
             | Sig_splice (lids, t) ->
                 // TODO: This depth is probably wrong
-                Some (Term_name (S.fvar source_lid (Delta_defined_at_level 1) None, false, []))
+                Some (Term_name (S.fvar source_lid (Delta_constant_at_level 1) None, false, []))
             | _ -> None
         end in
 
@@ -717,12 +721,15 @@ let try_lookup_doc (env: env) (l:lid) =
   BU.smap_try_find env.docs l.str
 
 let try_lookup_datacon env (lid:lident) =
-  let k_global_def lid = function
+  let k_global_def lid se =
+      match se with
       | ({ sigel = Sig_declare_typ(_, _, _); sigquals = quals }, _) ->
         if quals |> BU.for_some (function Assumption -> true | _ -> false)
-        then Some (lid_as_fv lid Delta_constant None)
+        then Some (lid_as_fv lid delta_constant None)
         else None
-      | ({ sigel = Sig_datacon _ }, _) -> Some (lid_as_fv lid Delta_constant (Some Data_ctor))
+      | ({ sigel = Sig_datacon _ }, _) ->
+         let qual = fv_qual_of_se (fst se) in
+         Some (lid_as_fv lid delta_constant qual)
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
@@ -734,11 +741,14 @@ let find_all_datacons env (lid:lident) =
 
 //no top-level pattern in F*, so need to do this ugliness
 let record_cache_aux_with_filter =
+    // push, pop, etc. already signal-atomic: no need for BU.atomically
     let record_cache : ref<list<list<record_or_dc>>> = BU.mk_ref [[]] in
     let push () =
         record_cache := List.hd !record_cache::!record_cache in
     let pop () =
         record_cache := List.tl !record_cache in
+    let snapshot () = Common.snapshot push record_cache () in
+    let rollback depth = Common.rollback pop record_cache depth in
     let peek () = List.hd !record_cache in
     let insert r = record_cache := (r::peek())::List.tl (!record_cache) in
     (* remove private/abstract records *)
@@ -748,30 +758,17 @@ let record_cache_aux_with_filter =
         record_cache := filtered :: List.tl !record_cache
     in
     let aux =
-    (push, pop, peek, insert)
+    ((push, pop), ((snapshot, rollback), (peek, insert)))
     in (aux, filter)
 
-let record_cache_aux =
-    let (aux, _) = record_cache_aux_with_filter in aux
-
-let filter_record_cache =
-    let (_, filter) = record_cache_aux_with_filter in filter
-
-let push_record_cache =
-    let push, _, _, _ = record_cache_aux in
-    push
-
-let pop_record_cache =
-    let _, pop, _, _ = record_cache_aux in
-    pop
-
-let peek_record_cache =
-    let _, _, peek, _ = record_cache_aux in
-    peek
-
-let insert_record_cache =
-    let _, _, _, insert = record_cache_aux in
-    insert
+let record_cache_aux = fst record_cache_aux_with_filter
+let filter_record_cache = snd record_cache_aux_with_filter
+let push_record_cache = fst (fst record_cache_aux)
+let pop_record_cache = snd (fst record_cache_aux)
+let snapshot_record_cache = fst (fst (snd record_cache_aux))
+let rollback_record_cache = snd (fst (snd record_cache_aux))
+let peek_record_cache = fst (snd (snd record_cache_aux))
+let insert_record_cache = snd (snd (snd record_cache_aux))
 
 let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match se.sigel with
   | Sig_bundle(sigs, _) ->
@@ -1125,18 +1122,25 @@ let finish env modul =
   }
 
 let stack: ref<(list<env>)> = BU.mk_ref []
-let push env =
+let push env = BU.atomically (fun () ->
   push_record_cache();
   stack := env::!stack;
-  {env with sigmap=BU.smap_copy (sigmap env); docs=BU.smap_copy env.docs}
+  {env with exported_ids = BU.smap_copy env.exported_ids;
+            trans_exported_ids = BU.smap_copy env.trans_exported_ids;
+            includes = BU.smap_copy env.includes;
+            sigmap = BU.smap_copy env.sigmap;
+            docs = BU.smap_copy env.docs})
 
-let pop () =
+let pop () = BU.atomically (fun () ->
   match !stack with
   | env::tl ->
     pop_record_cache();
     stack := tl;
     env
-  | _ -> failwith "Impossible: Too many pops"
+  | _ -> failwith "Impossible: Too many pops")
+
+let snapshot env = Common.snapshot push stack env
+let rollback depth = Common.rollback pop stack depth
 
 let export_interface (m:lident) env =
 //    printfn "Exporting interface %s" m.str;
@@ -1145,7 +1149,7 @@ let export_interface (m:lident) env =
             | l::_ -> l.nsstr=m.str
             | _ -> false in
     let sm = sigmap env in
-    let env = pop () in
+    let env = pop () in // FIXME PUSH POP
     let keys = BU.smap_keys sm in
     let sm' = sigmap env in
     keys |> List.iter (fun k ->
@@ -1253,7 +1257,7 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
         if not (Options.interactive ()) && (not m.is_interface || intf)
         then raise_error (Errors.Fatal_DuplicateModuleOrInterface, (BU.format1 "Duplicate module or interface name: %s" mname.str)) (range_of_lid mname);
         //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
-        prep (push env), true //push a context so that we can pop it when we're done
+        prep (push env), true //push a context so that we can pop it when we're done // FIXME PUSH POP
 
 let enter_monad_scope env mname =
   match env.curmonad with
@@ -1300,9 +1304,3 @@ let fail_or env lookup lid = match lookup lid with
 let fail_or2 lookup id = match lookup id with
   | None -> raise_error (Errors.Fatal_IdentifierNotFound, ("Identifier not found [" ^id.idText^"]")) id.idRange
   | Some r -> r
-
-let mk_copy en =
-  { en with exported_ids = BU.smap_copy en.exported_ids;
-            trans_exported_ids = BU.smap_copy en.trans_exported_ids;
-            sigmap = BU.smap_copy en.sigmap;
-            docs = BU.smap_copy en.docs }

@@ -45,6 +45,10 @@ let fresh_uvar (o : option typ) : Tac term =
     let e = cur_env () in
     uvar_env e o
 
+let unify t1 t2 =
+    let e = cur_env () in
+    unify_env e t1 t2
+
 let exact_args (qs : list aqualv) (t : term) : Tac unit =
     focus (fun () ->
         let n = List.length qs in
@@ -260,7 +264,10 @@ let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
     | []    -> ()
 
 private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
-private let __witness #a x #p _ = ()
+private let __witness #a x #p _ =
+  let id (a:Type) = a in
+  let x : squash (exists x. id (p x)) = () in //an indirection to tickle the SMT encoding
+  x
 
 let witness (t : term) : Tac unit =
     apply_raw (`__witness);

@@ -46,7 +46,7 @@ type term_view =
   | Tv_Type   : unit -> term_view
   | Tv_Refine : bv:bv -> ref:term -> term_view
   | Tv_Const  : vconst -> term_view
-  | Tv_Uvar   : int -> typ -> term_view
+  | Tv_Uvar   : int -> ctx_uvar_and_subst -> term_view
   | Tv_Let    : recf:bool -> bv:bv -> def:term -> body:term -> term_view
   | Tv_Match  : scrutinee:term -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> term_view

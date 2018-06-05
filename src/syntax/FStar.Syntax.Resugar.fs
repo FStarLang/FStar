@@ -663,7 +663,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
 
     | Tm_uvar (u, _) ->
-      let s = "?u" ^ (UF.uvar_id u |> string_of_int) in
+      let s = "?u" ^ (UF.uvar_id u.ctx_uvar_head |> string_of_int) in
       (* TODO : should we put a pretty_non_parseable option for these cases ? *)
       label s (mk A.Wild)
 
@@ -702,7 +702,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                 | _ -> failwith "mutable_alloc should have let term with no qualifier"
               end
           | Mutable_rval ->
-              let fv = S.lid_as_fv C.sread_lid Delta_constant None in
+              let fv = S.lid_as_fv C.sread_lid delta_constant None in
               begin match (SS.compress e).n with
                 | Tm_app({n=Tm_fvar fv}, [(term, _)])-> resugar_term' env term
                 | _ -> failwith "mutable_rval should have app term"

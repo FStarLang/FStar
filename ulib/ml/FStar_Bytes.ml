@@ -22,6 +22,7 @@ let hide_reveal (x:bytes) = ()
 let reveal_hide s = ()
 
 type 'a lbytes = bytes
+type 'a lbytes32 = bytes
 type kbytes = bytes
 
 let empty_bytes = ""

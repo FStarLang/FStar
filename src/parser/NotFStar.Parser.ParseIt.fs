@@ -175,9 +175,9 @@ let parse_warn_error s =
   let lexer lexbuf = LexFStar.token (Lexhelp.mkLexargs ((fun () -> "."), "","")) lexbuf in
   let user_flags =
     try
-      Parse.warn_error_list lexer lexbuf 
+      Parse.warn_error_list lexer lexbuf
     with e ->
       FStar.Errors.log_issue Range.dummyRange (Warning_MalformedWarnErrorList, "Malformed warn-error list, ignored");
       []
   in
-  FStar.Errors.update_flags user_flags 
+  FStar.Errors.update_flags user_flags

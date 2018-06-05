@@ -20,6 +20,10 @@ open FStar_Parser_Util
 open FStar_Const
 open FStar_Ident
 open FStar_String
+
+let logic_qualifier_deprecation_warning =
+  "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
+
 %}
 
 %token <bytes> BYTEARRAY
@@ -318,7 +322,9 @@ qualifier:
   | NOEQUALITY    { Noeq }
   | UNOPTEQUALITY { Unopteq }
   | NEW           { New }
-  | LOGIC         { Logic }
+  | LOGIC         { log_issue (lhs parseState) (Warning_logicqualifier,
+                                                logic_qualifier_deprecation_warning);
+                    Logic }
   | OPAQUE        { Opaque }
   | REIFIABLE     { Reifiable }
   | REFLECTABLE   { Reflectable }
@@ -542,7 +548,7 @@ noSeqTerm:
       {
         let lbs = (attrs, lb)::lbs in
         let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
-        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
+        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 6) Expr
       }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
@@ -990,7 +996,7 @@ warn_error:
 
 flag:
   | op=OPINFIX1
-    { if op = "@" then CError else failwith (format1 "unexpected token %s in warn-error list" op)}
+    { if op = "@" then CAlwaysError else failwith (format1 "unexpected token %s in warn-error list" op)}
   | op=OPINFIX2
     { if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op)}
   | MINUS

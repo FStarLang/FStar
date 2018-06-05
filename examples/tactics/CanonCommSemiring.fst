@@ -283,7 +283,7 @@ let canon_norm () : Tac unit =
 
 let canon_semiring_with
     (b:Type) (f:term -> Tac b) (def:b) (p:permute b) (pc:permute_correct p)
-    (#a:Type) (r:cr a) : Tac unit =
+    (#a:Type) (r:cr a) : Tac unit = focus (fun () ->
   norm [];
   let g = cur_goal () in
   match term_as_formula g with
@@ -315,23 +315,22 @@ let canon_semiring_with
             unfold_def (quote p);
             //dump ("after unfold");
             canon_norm ();
-            //dump ("after norm");
-            smt ();
-            //dump ("after smt");
+            dump ("after norm");
+            later ();
+            dump ("after smt");
             canon_norm ();
             //dump ("after norm-left");
             trefl ();
             canon_norm ();
             //dump ("after norm-right");
             trefl ();
-            dump "done";
-            qed ()
+            dump "done"
           )
         | _ -> fail "Unexpected"
       )
       else fail "Found equality, but terms do not have the expected type"
     )
-  | _ -> fail "Goal should be an equality"
+  | _ -> fail "Goal should be an equality")
 
 let is_not_const (t:term) : Tac bool =
   let (hd, tl) = collect_app_ref t in

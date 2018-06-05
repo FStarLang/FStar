@@ -15,7 +15,7 @@ let int_plugin: int -> int = id
 let bool_plugin: bool -> bool = id
 
 [@plugin]
-let unit_plugin: unit -> unit = id
+let unit_plugin: unit -> bool = fun _ -> true
 
 [@plugin]
 let string_plugin: string -> string = id

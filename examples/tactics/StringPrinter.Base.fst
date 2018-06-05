@@ -389,7 +389,7 @@ let compile_fvar
     // unfolding might have introduced a redex,
     // so we find an opportunity to reduce it here
     T.debug ("before norm_term: " ^ T.term_to_string t');
-    let t' = T.norm_term_env env [Prims.iota] t' in // beta implicit
+    let t' = T.norm_term_env env [iota] t' in // beta implicit
     T.debug "after norm_term";
     let res' = compile ty t' in
     let u = quote () in

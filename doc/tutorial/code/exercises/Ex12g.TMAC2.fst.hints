@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e7cd2820841322bf1cfb19f77c0edb08"
+      "9d862a68c3c072c6a4877f32cc4981f8"
     ],
     [
       "Ex12g.TMAC2.bspec1",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "3671f75e1e758ae11e566aa9dfb38c42"
+      "7de9cf9d7705fd0567ca5eb69f616b9d"
     ],
     [
       "Ex12g.TMAC2.keygen",
@@ -25,11 +25,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Ex12.BMAC.key",
-        "equation_Ex12.BMAC.keysize", "equation_Ex12.BMAC.pkey",
-        "equation_Ex12.Pad.block", "equation_Ex12.Pad.blocksize",
-        "equation_Ex12.Pad.nbytes",
-        "partial_app_typing_58076f92f313e17c7d4a464aa7e8cfac",
+        "@MaxIFuel_assumption", "@query",
+        "Ex12g.TMAC2_interpretation_Tm_arrow_e87641a489e6795a817e1cb2e2255d32",
+        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "equation_Ex12.BMAC.key", "equation_Ex12.BMAC.pkey",
+        "equation_Ex12.Pad.block", "equation_Ex12g.TMAC2.text2",
+        "equation_Prims.logical", "function_token_typing_Ex12g.TMAC2.bspec0",
         "partial_app_typing_cef420ad8f8ddf26e23998561b58810d",
         "proj_equation_Ex12g.TMAC2.Keys_k0",
         "proj_equation_Ex12g.TMAC2.Keys_k1",
@@ -39,7 +40,7 @@
         "typing_Ex12.BMAC.keygen"
       ],
       0,
-      "3f96155a4d86ec76b3c66f4c433463eb"
+      "e53104cd90e8533335fec026e970c09e"
     ],
     [
       "Ex12g.TMAC2.bspec0",
@@ -48,7 +49,7 @@
       1,
       [ "@query" ],
       0,
-      "a7d3d70768f5c645bb45edc703794c5c"
+      "ffdcd4ec0465efb1afd3d36a3d191d17"
     ],
     [
       "Ex12g.TMAC2.bspec1",
@@ -57,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "6fa06d92daa052e045d44d71672b1fd1"
+      "effd7085a3b4e77f35516a279c95d6d5"
     ],
     [
       "Ex12g.TMAC2.keygen",
@@ -65,11 +66,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Ex12.BMAC.key",
-        "equation_Ex12.BMAC.keysize", "equation_Ex12.BMAC.pkey",
-        "equation_Ex12.Pad.block", "equation_Ex12.Pad.blocksize",
-        "equation_Ex12.Pad.nbytes",
-        "partial_app_typing_58076f92f313e17c7d4a464aa7e8cfac",
+        "@MaxIFuel_assumption", "@query",
+        "Ex12g.TMAC2_interpretation_Tm_arrow_e87641a489e6795a817e1cb2e2255d32",
+        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "equation_Ex12.BMAC.key", "equation_Ex12.BMAC.pkey",
+        "equation_Ex12.Pad.block", "equation_Ex12g.TMAC2.text2",
+        "equation_Prims.logical", "function_token_typing_Ex12g.TMAC2.bspec0",
         "partial_app_typing_cef420ad8f8ddf26e23998561b58810d",
         "proj_equation_Ex12g.TMAC2.Keys_k0",
         "proj_equation_Ex12g.TMAC2.Keys_k1",
@@ -79,7 +81,7 @@
         "typing_Ex12.BMAC.keygen"
       ],
       0,
-      "f65daa14723081ba22cef3a67d8136fe"
+      "c49a9801c67392c1f9ea52d06dead82b"
     ]
   ]
 ]
