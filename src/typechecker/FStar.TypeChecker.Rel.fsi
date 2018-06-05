@@ -29,19 +29,19 @@ open FStar.Range
 
 val prob_to_string: env -> prob -> string
 val flex_prob_closing         : env -> binders -> prob -> bool
-val close_guard_univs         : universes -> binders -> guard_t -> guard_t
-val close_guard               : env -> binders -> guard_t -> guard_t
-val apply_guard               : guard_t -> term -> guard_t
-val map_guard                 : guard_t -> (term -> term) -> guard_t
-val trivial_guard             : guard_t
-val is_trivial                : guard_t -> bool
-val is_trivial_guard_formula  : guard_t -> bool
-val conj_guard                : guard_t -> guard_t -> guard_t
-val abstract_guard            : binder -> guard_t -> guard_t
-val abstract_guard_n          : list<binder> -> guard_t -> guard_t
-val imp_guard                 : guard_t -> guard_t -> guard_t
-val guard_of_guard_formula    : guard_formula -> guard_t
-val guard_form                : guard_t -> guard_formula
+//val close_guard_univs         : universes -> binders -> guard_t -> guard_t
+//val close_guard               : env -> binders -> guard_t -> guard_t
+//val apply_guard               : guard_t -> term -> guard_t
+//val map_guard                 : guard_t -> (term -> term) -> guard_t
+//val trivial_guard             : guard_t
+//val is_trivial                : guard_t -> bool
+//val is_trivial_guard_formula  : guard_t -> bool
+//val conj_guard                : guard_t -> guard_t -> guard_t
+//val abstract_guard            : binder -> guard_t -> guard_t
+//val abstract_guard_n          : list<binder> -> guard_t -> guard_t
+//val imp_guard                 : guard_t -> guard_t -> guard_t
+//val guard_of_guard_formula    : guard_formula -> guard_t
+//val guard_form                : guard_t -> guard_formula
 val guard_to_string           : env -> guard_t -> string
 val simplify_guard            : env -> guard_t -> guard_t
 val solve_deferred_constraints: env -> guard_t -> guard_t
@@ -68,4 +68,4 @@ val subtype_fail: env -> term -> typ -> typ -> unit
 val print_pending_implicits: guard_t -> string
 
 // Debugging
-val def_check_guard_wf : Range.range -> string -> env -> guard_t -> unit
+//val def_check_guard_wf : Range.range -> string -> env -> guard_t -> unit

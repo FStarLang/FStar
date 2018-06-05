@@ -142,10 +142,6 @@ let expected_poly_typ env f t targ =
   (Errors.Fatal_PolyTypeExpected, (format3 "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""
     (Print.term_to_string f) (N.term_to_string env t) (N.term_to_string env targ)))
 
-let nonlinear_pattern_variable x =
-  let m = Print.bv_to_string x in
-  (Errors.Fatal_NonLinearPatternVars, (format1 "The pattern variable \"%s\" was used more than once" m))
-
 let disjunctive_pattern_vars v1 v2 =
   let vars v =
     v |> List.map Print.bv_to_string |> String.concat ", " in

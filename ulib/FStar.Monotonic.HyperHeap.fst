@@ -29,6 +29,11 @@ open FStar.Ghost
  *     - Clients don't need to open/know about HyperHeap, they should work only with HyperStack
  *)
 
+(*
+ * This is a temporary assumption, we should fix the model to get rid of it
+ *)
+assume HasEq_rid: hasEq (erased (list (int * int)))
+
 abstract type rid :(a:Type0{hasEq a}) = erased (list (int * int))
 
 abstract let reveal (r:rid) : GTot (list (int * int)) = reveal r
@@ -39,13 +44,6 @@ abstract let color (x:rid): GTot int =
   | (c, _)::_ -> c
 
 type hmap = Map.t rid heap
-
-let has_eq_rid (u:unit) :
-  Lemma (requires True)
-        (ensures hasEq rid)
-  = ()
-
-assume HasEq_rid: hasEq rid //TODO: we just proved this above, but we need to expose it as an argument-free SMT lemma, which isn't supported yet
 
 (* AR: see issue#1262 *)
 abstract let root :rid = let x:rid = hide [] in x

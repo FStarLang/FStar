@@ -38,7 +38,7 @@
         "subterm_ordering_Prims.Cons", "typing_IntSort.sorted"
       ],
       0,
-      "c35b9cd9a5736103502782a8b27bc569"
+      "69e2c36b25cf0866df8ba1d64e143215"
     ],
     [
       "InsertionSort.insert_implicit",
@@ -149,7 +149,7 @@
         "typing_IntSort.sorted"
       ],
       0,
-      "84c38a1dc83965512096b603a2c0b306"
+      "61438357c132e9774cc41bfbf8fac2b9"
     ],
     [
       "InsertionSort.insert_implicit",

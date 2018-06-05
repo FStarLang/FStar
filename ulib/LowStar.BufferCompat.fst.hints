@@ -1,14 +1,14 @@
 [
-  "sÞ£¼\u0000§m‡×\u0013^Ì\u001f©ìó",
+  "Ç\u0017©\u007f¼LÖó¥\u0011\u001e>ç\u0004Â ",
   [
     [
       "LowStar.BufferCompat.rfree",
       1,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "7064c2ef444ab8b7a76cf643c61d5027"
+      "105d13b8f6443249358dbb4bf9adc9c7"
     ],
     [
       "LowStar.BufferCompat.rcreate",
@@ -20,7 +20,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
       ],
       0,
-      "f224a319866795af3c91e1b4917cffa0"
+      "dda0b6966cc631448ff4a885959e4403"
     ],
     [
       "LowStar.BufferCompat.rcreate_mm",
@@ -32,7 +32,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
       ],
       0,
-      "74e6e03ed87f4a757f092e551734154c"
+      "0adb7d79d26e58e24faa3a73266bc635"
     ],
     [
       "LowStar.BufferCompat.create",
@@ -44,16 +44,16 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_f91c442f4e872efb5dc260d2bd566195"
       ],
       0,
-      "340f78e1edd9c6f3a18ec1fe53ef17b0"
+      "995ac9a09587c7fd864d64b769a88cc5"
     ],
     [
       "LowStar.BufferCompat.rfree",
       2,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "330485b72ee4965d66f8c81901341d20"
+      "56beab0c29acd99752891d1ee9aee251"
     ],
     [
       "LowStar.BufferCompat.rcreate",
@@ -65,7 +65,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
       ],
       0,
-      "6e78efe448f082e3acf3cb4b12195bcc"
+      "20e0afb419fc0b0b853d8728db288ef0"
     ],
     [
       "LowStar.BufferCompat.rcreate_mm",
@@ -77,7 +77,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
       ],
       0,
-      "43696c8e604d1a21eb03e1c73b3d6c5b"
+      "389f74fdb13cf9f25f5ac043277bd25a"
     ],
     [
       "LowStar.BufferCompat.create",
@@ -89,7 +89,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_f91c442f4e872efb5dc260d2bd566195"
       ],
       0,
-      "0fdc3687edf7da73b4f928e3ceeb7d15"
+      "eba4db595561d0e20ae9c5be481b77d5"
     ]
   ]
 ]

@@ -280,4 +280,28 @@ val unbound_vars    : env -> term -> BU.set<bv>
 val closed          : env -> term -> bool
 val closed'         : term -> bool
 
+(* Operations on guard_t *)
+val close_guard_univs         : universes -> binders -> guard_t -> guard_t
+val close_guard               : env -> binders -> guard_t -> guard_t
+val apply_guard               : guard_t -> term -> guard_t
+val map_guard                 : guard_t -> (term -> term) -> guard_t
+val trivial_guard             : guard_t
+val is_trivial                : guard_t -> bool
+val is_trivial_guard_formula  : guard_t -> bool
+val conj_guard                : guard_t -> guard_t -> guard_t
+val abstract_guard            : binder -> guard_t -> guard_t
+val abstract_guard_n          : list<binder> -> guard_t -> guard_t
+val imp_guard                 : guard_t -> guard_t -> guard_t
+val guard_of_guard_formula    : guard_formula -> guard_t
+val guard_form                : guard_t -> guard_formula
+val check_trivial             : term -> guard_formula
+
+(* Other utils *)
+val def_check_closed_in       : Range.range -> msg:string -> scope:list<bv> -> term -> unit
+val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
+val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
+val close_forall              : env -> binders -> term -> term
+
+val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> (term * list<(ctx_uvar * Range.range)> * guard_t)
+
 val print_gamma : gamma -> string

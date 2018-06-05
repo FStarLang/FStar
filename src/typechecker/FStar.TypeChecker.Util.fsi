@@ -39,7 +39,6 @@ val close_guard_implicits: env -> binders -> guard_t -> guard_t
 val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * bool
 
 //pattern utilities
-val pat_as_exp: bool -> env -> pat -> (env -> term -> term * guard_t) -> (list<bv> * term * guard_t * pat)
 val decorate_pattern: env -> pat -> term -> pat
 val decorated_pattern_as_term: pat -> list<bv> * term
 
