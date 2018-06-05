@@ -65,12 +65,12 @@ type atom = //JUST FSHARP
              list<branch> 
              // ZP: Keep the original branches to reconstruct just the patterns
              // NS: add a thunked pattern translations here ZP: Not entirely sure that this is needed, trying something simpler first.
-             
+             // ZP TODO: Figure out why we need a thunk!
   | Rec of letbinding * list<letbinding> * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
   (* Zoe : a recursive function definition together with its block of mutually recursive function definitions and its environment *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
-  | Lam of (t -> t) * t * aqual //NS: * ((unit -> t) * (type : t) * aqual)
+  | Lam of (t -> t) * (unit -> t) * aqual //NS: * (t * (type : unit -> t) * aqual)
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<universe> * args (* Zoe: This is used for both type and data constructors*)
@@ -368,7 +368,7 @@ and translate_letbinding (env:Env.env) (bs:list<t>) (lb:letbinding) : t =
   let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t =
     match us with
     | [] -> translate env bs def
-      | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), Constant Unit, None) // Zoe: Bogus type! The idea is that we will never readback these lambdas
+      | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), (fun () -> Constant Unit), None) // Zoe: Bogus type! The idea is that we will never readback these lambdas
   in
   make_univ_abst lb.lbunivs bs lb.lbdef
 
@@ -433,7 +433,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_abs ([x], body, _) ->
       debug (fun () -> BU.print2 "Tm_abs body : %s - %s\n" (P.tag_of_term body) (P.term_to_string body));
       let x1 = fst x in
-      Lam ((fun (y:t) -> translate env (y::bs) body), translate env bs x1.sort, snd x)
+      Lam ((fun (y:t) -> translate env (y::bs) body), (fun () -> translate env bs x1.sort), snd x)
 
     | Tm_abs (x::xs, body, _) ->
       let rest = S.mk (Tm_abs(xs, body, None)) None Range.dummyRange in
@@ -516,7 +516,7 @@ and readback (env:Env.env) (x:t) : term =
       S.mk (Tm_type u) None Range.dummyRange
 
     | Lam (f, t, q) ->
-      let x = S.new_bv None (readback env t) in (* (readback env t) is the type of the binder *)
+      let x = S.new_bv None (readback env (t ())) in (* (readback env t) is the type of the binder *)
       let body = readback env (f (mkAccuVar x)) in
       U.abs [(x, q)] body None
 
@@ -599,28 +599,6 @@ and readback (env:Env.env) (x:t) : term =
          (match ts with
           | [] -> head
           | _ -> U.mk_app head args)
-
-// Zoe: Commenting out conflict with Danel
-// =======
-//     | Accu (Rec (lb, bs), ts) ->
-//        (match (SS.compress lb.lbdef).n with
-//         | Tm_abs (args, _, _) ->
-//             if (List.length ts = List.length args &&
-//                 List.fold_right (fun x y -> x && y) (List.map is_not_accu ts) true)
-//             then readback (iapp (translate ((Accu (Rec (lb, bs), []))::bs) lb.lbdef) ts)
-//             else (let args = List.map (fun x -> as_arg (readback x)) ts in
-//                   let body = (match args with
-//                               | [] -> (match lb.lbname with
-//                                        | BU.Inl bv -> S.bv_to_name bv
-//                                        | BU.Inr fv -> failwith "Not yet implemented")
-//                               | _  -> (match lb.lbname with
-//                                        | BU.Inl bv -> U.mk_app (S.bv_to_name bv) args
-//                                        | BU.Inr fv -> failwith "Not yet implemented")) in
-//                   S.mk (Tm_let((true, [lb]), body)) None Range.dummyRange)
-//                   (* Currently not normalizing the let-bound definition on its own,
-//                      only normalizing it when it is unfolded *)
-//         | _ -> failwith "Recursive definition not a function")
-// >>>>>>> 86f93ae6edc257258f376954fed7fba11f53ff83
 
 let normalize (env : Env.env) (e:term) : term =
   //debug_sigmap env.sigtab;
