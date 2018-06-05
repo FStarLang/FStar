@@ -61,7 +61,6 @@ type constant =
 type atom = //JUST FSHARP
   | Var of var
   | Match of t * (* the scutinee *)
-             (t -> t) * (* the computation that pattern matches the scrutiny *)
              ((t -> term) -> list<branch>) (* the computation that reconstructs the pattern matching, parameterized by the readback function *)
              // ZP: Keep the original branches to reconstruct just the patterns
              // NS: add a thunked pattern translations here
@@ -117,7 +116,7 @@ let rec t_to_string (x:t) =
 and atom_to_string (a: atom) =
     match a with
     | Var v -> "Var " ^ (P.bv_to_string v)
-    | Match (t, _, _) -> "Match " ^ (t_to_string t)
+    | Match (t, _) -> "Match " ^ (t_to_string t)
     | Rec (_,_, l) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
 let is_not_accu (x:t) =
@@ -128,7 +127,7 @@ let is_not_accu (x:t) =
 let mkConstruct i us ts = Construct(i, us, ts)
 
 let mkAccuVar (v:var) = Accu(Var v, [])
-let mkAccuMatch (s:t) (c:t -> t) (bs:((t -> term) -> list<branch>)) = Accu(Match (s, c, bs), [])
+let mkAccuMatch (s:t) (bs:((t -> term) -> list<branch>)) = Accu(Match (s, bs), [])
 let mkAccuRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = Accu(Rec(b, bs, env), [])
 
 let isAccu (trm:t) =
@@ -470,7 +469,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
           | Some (branch, args) ->
             translate env (List.fold_left (fun bs x -> x::bs) bs args) branch
           | None -> //no branch is determined
-            mkAccuMatch scrut case patterns
+            mkAccuMatch scrut patterns
           end
         | Constant c ->
           (* same as for construted values, but args are either empty or is a singleton list (for wildcard patterns) *)
@@ -480,11 +479,11 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
            | Some (branch, [arg]) ->
              translate env (arg::bs) branch
            | None -> //no branch is determined
-             mkAccuMatch scrut case patterns
+             mkAccuMatch scrut patterns
            | Some (_, hd::tl) -> failwith "Impossible: Matching on constants cannot bind more than one variable")
 
         | _ ->
-          mkAccuMatch scrut case patterns
+          mkAccuMatch scrut patterns
       (* Thunked computation that reconstructs the patterns *)
       and patterns (readback:t -> term) : list<branch> = 
         let rec process_pattern (p:pat) : pat = 
@@ -552,7 +551,7 @@ and readback (env:Env.env) (x:t) : term =
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
       U.mk_app (S.bv_to_name bv) args
 
-    | Accu (Match (scrut, cases, patterns), ts) ->
+    | Accu (Match (scrut, patterns), ts) ->
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
       let head = 
         let scrut_new = readback env scrut in
