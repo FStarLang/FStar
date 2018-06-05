@@ -61,8 +61,8 @@ type constant =
 type atom = //JUST FSHARP
   | Var of var
   | Match of t * (* the scutinee *)
-             (t -> t) * (* the closure that pattern matches the scrutiny *)
-             list<branch> 
+             (t -> t) * (* the computation that pattern matches the scrutiny *)
+             ((t -> term) -> list<branch>) (* the computation that reconstructs the pattern matching, parameterized by the readback function *)
              // ZP: Keep the original branches to reconstruct just the patterns
              // NS: add a thunked pattern translations here
   | Rec of letbinding * list<letbinding> * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
@@ -128,7 +128,7 @@ let is_not_accu (x:t) =
 let mkConstruct i us ts = Construct(i, us, ts)
 
 let mkAccuVar (v:var) = Accu(Var v, [])
-let mkAccuMatch (s : t) (c : t -> t) (bs:list<branch>) = Accu(Match (s, c, bs), [])
+let mkAccuMatch (s:t) (c:t -> t) (bs:((t -> term) -> list<branch>)) = Accu(Match (s, c, bs), [])
 let mkAccuRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = Accu(Rec(b, bs, env), [])
 
 let isAccu (trm:t) =
@@ -470,7 +470,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
           | Some (branch, args) ->
             translate env (List.fold_left (fun bs x -> x::bs) bs args) branch
           | None -> //no branch is determined
-            mkAccuMatch scrut case branches
+            mkAccuMatch scrut case patterns
           end
         | Constant c ->
           (* same as for construted values, but args are either empty or is a singleton list (for wildcard patterns) *)
@@ -480,11 +480,27 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
            | Some (branch, [arg]) ->
              translate env (arg::bs) branch
            | None -> //no branch is determined
-             mkAccuMatch scrut case branches
+             mkAccuMatch scrut case patterns
            | Some (_, hd::tl) -> failwith "Impossible: Matching on constants cannot bind more than one variable")
 
         | _ ->
-          mkAccuMatch scrut case branches
+          mkAccuMatch scrut case patterns
+      (* Thunked computation that reconstructs the patterns *)
+      and patterns (readback:t -> term) : list<branch> = 
+        let rec process_pattern (p:pat) : pat = 
+          let p_new = 
+            match p.v with
+            | Pat_constant c -> Pat_constant c
+            | Pat_cons (fvar, args) -> Pat_cons (fvar, List.map (fun (p, b) -> (process_pattern p, b)) args)
+            | Pat_var bvar -> Pat_var {bvar with sort = readback (translate env bs bvar.sort)}
+            | Pat_wild bvar -> Pat_wild {bvar with sort = readback (translate env bs bvar.sort)}
+            (* Zoe: I'm not sure what this is, just speculating the translation *)
+            | Pat_dot_term (bvar, tm) -> Pat_dot_term ({bvar with sort = readback (translate env bs bvar.sort)}, readback (translate env bs tm))
+          in
+          {p with v = p_new} (* keep the info and change the pattern *) 
+        in
+        List.map (fun (pat, when_clause, _) -> process_pattern pat, when_clause, readback (case (translate_pat pat))) 
+                 branches 
       in
       case (translate env bs scrut)
 
@@ -536,14 +552,11 @@ and readback (env:Env.env) (x:t) : term =
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
       U.mk_app (S.bv_to_name bv) args
 
-    | Accu (Match (scrut, cases, branches), ts) ->
+    | Accu (Match (scrut, cases, patterns), ts) ->
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
       let head = 
         let scrut_new = readback env scrut in
-        let branches_new = 
-          List.map (fun (pat, when_clause, _) -> pat, when_clause, readback env (cases (translate_pat pat))) 
-                   branches 
-        in
+        let branches_new = patterns (readback env) in
         S.mk (Tm_match (scrut_new, branches_new)) None Range.dummyRange
       in
       (*  When `cases scrut` returns a Accu(Match ..))
