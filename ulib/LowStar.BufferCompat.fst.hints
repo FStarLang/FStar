@@ -6,9 +6,9 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "731e83d52299789bfec95da039fc1d2b"
+      "105d13b8f6443249358dbb4bf9adc9c7"
     ],
     [
       "LowStar.BufferCompat.rcreate",
@@ -20,7 +20,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
       ],
       0,
-      "5eccaa4c59f392e6aa0b10440cdb02d4"
+      "dda0b6966cc631448ff4a885959e4403"
     ],
     [
       "LowStar.BufferCompat.rcreate_mm",
@@ -32,7 +32,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
       ],
       0,
-      "6e9a4a95cffb46dbc31085df08332926"
+      "0adb7d79d26e58e24faa3a73266bc635"
     ],
     [
       "LowStar.BufferCompat.create",
@@ -44,16 +44,16 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_f91c442f4e872efb5dc260d2bd566195"
       ],
       0,
-      "cf458a0fa9a328b12cf646d519e6eeb8"
+      "995ac9a09587c7fd864d64b769a88cc5"
     ],
     [
       "LowStar.BufferCompat.rfree",
       2,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "7e1306dcaef871e1279446ad551e7982"
+      "56beab0c29acd99752891d1ee9aee251"
     ],
     [
       "LowStar.BufferCompat.rcreate",
@@ -65,7 +65,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
       ],
       0,
-      "c8c87528d0ffc29bb00b6afc82295c5d"
+      "20e0afb419fc0b0b853d8728db288ef0"
     ],
     [
       "LowStar.BufferCompat.rcreate_mm",
@@ -77,7 +77,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
       ],
       0,
-      "4eb40236c938d75374eab0a9f0cd40c0"
+      "389f74fdb13cf9f25f5ac043277bd25a"
     ],
     [
       "LowStar.BufferCompat.create",
@@ -89,7 +89,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_f91c442f4e872efb5dc260d2bd566195"
       ],
       0,
-      "f54242ff29079df441309bd04d2bbaef"
+      "eba4db595561d0e20ae9c5be481b77d5"
     ]
   ]
 ]

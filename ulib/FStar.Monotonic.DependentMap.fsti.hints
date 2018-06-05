@@ -13,7 +13,7 @@
         "refinement_interpretation_FStar.Monotonic.DependentMap_Tm_refine_29666485b5a0a190c9167fabb9b987b8"
       ],
       0,
-      "9eafebd550e3b3167569c59896a76da3"
+      "da236ce0929120bfe27eac320013bc71"
     ],
     [
       "FStar.Monotonic.DependentMap.contains",
@@ -25,7 +25,7 @@
         "equation_FStar.Monotonic.DependentMap.defined"
       ],
       0,
-      "12482f002079ea34c2845ae28c73fd08"
+      "d82f73787161c18fac520846a9b1a30f"
     ],
     [
       "FStar.Monotonic.DependentMap.alloc",
@@ -46,7 +46,7 @@
         "refinement_interpretation_FStar.Monotonic.DependentMap_Tm_refine_b2967d9ab9ba1cfd9fec4aa29b50fa40"
       ],
       0,
-      "4b405a0fb10131dff4e72b3b3a361491"
+      "12ad88d3db0a97ce95a5cf604d3bd509"
     ],
     [
       "FStar.Monotonic.DependentMap.extend",
@@ -54,11 +54,12 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid",
+        "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "68fb08479651d44a20354f5d863ee17b"
+      "e5c95d72e115aa2e77e1d10287f7d789"
     ],
     [
       "FStar.Monotonic.DependentMap.lookup",
@@ -75,7 +76,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d7acf7aa594b19b812fee8eadd87a426"
+      "a9d4d1552516d022a10ce8287f6757a8"
     ],
     [
       "FStar.Monotonic.DependentMap.forall_t",
@@ -87,7 +88,7 @@
         "equation_FStar.Monotonic.DependentMap.defined"
       ],
       0,
-      "09eb64fb049d93d8112759f925a3d8de"
+      "cdea1b6a415f4f0a22fcedd69bbe68d9"
     ],
     [
       "FStar.Monotonic.DependentMap.f_opt",
@@ -104,7 +105,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "81c5676a40c10ba188fe4a5aefc17aca"
+      "4721c400d9d7c3205cc1e5dc3f3cd48d"
     ],
     [
       "FStar.Monotonic.DependentMap.map_f",
@@ -125,7 +126,7 @@
         "refinement_interpretation_FStar.Monotonic.DependentMap_Tm_refine_ecc923c61561a744b55919cb2bbb6591"
       ],
       0,
-      "7c560955be071437d73a7bf17f33e377"
+      "5e0114708ef9ac10cdbd068d180c6490"
     ]
   ]
 ]
