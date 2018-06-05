@@ -318,6 +318,18 @@ let add_binders env binders =
 
 (* Actual translation ********************************************************)
 
+let list_elements e2 =
+  let rec list_elements acc e2 =
+    match e2.expr with
+    | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
+        list_elements (hd :: acc) tl
+    | MLE_CTor (([ "Prims" ], "Nil" ), []) ->
+        List.rev acc
+    | _ ->
+        failwith "Argument of FStar.Buffer.createL is not a list literal!"
+  in
+  list_elements [] e2
+
 let rec translate (MLLib modules): list<file> =
   List.filter_map (fun m ->
     let m_name =
@@ -677,17 +689,11 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ])
     when (string_of_mlpath p = "FStar.Buffer.createL" || string_of_mlpath p = "LowStar.Buffer.alloca_of_list") ->
-      let rec list_elements acc e2 =
-        match e2.expr with
-        | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
-            list_elements (hd :: acc) tl
-        | MLE_CTor (([ "Prims" ], "Nil" ), []) ->
-            List.rev acc
-        | _ ->
-            failwith "Argument of FStar.Buffer.createL is not a list literal!"
-      in
-      let list_elements = list_elements [] in
       EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; e2 ])
+    when string_of_mlpath p = "LowStar.Buffer.gcmalloc_of_list" ->
+      EBufCreateL (Eternal, List.map (translate_expr env) (list_elements e2))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
     when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc") ->
