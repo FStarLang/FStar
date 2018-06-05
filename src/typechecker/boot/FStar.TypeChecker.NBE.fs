@@ -64,8 +64,7 @@ type atom = //JUST FSHARP
              (t -> t) * (* the closure that pattern matches the scrutiny *)
              list<branch> 
              // ZP: Keep the original branches to reconstruct just the patterns
-             // NS: add a thunked pattern translations here ZP: Not entirely sure that this is needed, trying something simpler first.
-             // ZP TODO: Figure out why we need a thunk!
+             // NS: add a thunked pattern translations here
   | Rec of letbinding * list<letbinding> * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
   (* Zoe : a recursive function definition together with its block of mutually recursive function definitions and its environment *)
 //IN F*: and t : Type0 =
