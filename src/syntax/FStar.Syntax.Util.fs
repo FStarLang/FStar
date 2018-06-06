@@ -981,25 +981,6 @@ let rec get_tycon t =
   | Tm_app(t, _) -> get_tycon t
   | _ -> None
 
-let is_interpreted l =
-  let theory_syms =
-    [PC.op_Eq          ;
-     PC.op_notEq       ;
-     PC.op_LT          ;
-     PC.op_LTE         ;
-     PC.op_GT          ;
-     PC.op_GTE         ;
-     PC.op_Subtraction ;
-     PC.op_Minus       ;
-     PC.op_Addition    ;
-     PC.op_Multiply    ;
-     PC.op_Division    ;
-     PC.op_Modulus     ;
-     PC.op_And         ;
-     PC.op_Or          ;
-     PC.op_Negation] in
-  U.for_some (lid_equals l) theory_syms
-
 let is_fstar_tactics_by_tactic t =
     match (un_uinst t).n with
     | Tm_fvar fv -> fv_eq_lid fv PC.by_tactic_lid
