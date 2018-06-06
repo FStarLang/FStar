@@ -206,8 +206,9 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
     # 2017-05-10T12:50:45.6397264Z (.\FStar.Int.fst(8,11-8,14))       Query-stats (FStar.Int.pow2_values, 1)  succeeded (with hint) in 34 milliseconds with fuel 2 and ifuel 1 and rlimit 2723280
     # F* also reports:
     # 2017-06-29T14:00:36.8084892Z STDERR: Verified module: Hacl.Spec.Bignum.Fsquare (576007 milliseconds)
+    # [STDOUT](aead/Crypto.AEAD.Encrypt.fst(196,2-205,53))    Query-stats ...
 
-    rx=re.compile("^([ 0-9-TZ:.]+)?\((?P<fstar_range>.*)\)[ \t]+Query-stats \((?P<fstar_name>.*),[ ]*(?P<fstar_index>.*)\)[ \t]+(?P<fstar_tag>[a-zA-Z]+)[ \t]*(\{reason-unknown=[^ \t]+[ \t]+[^ \t]+[ \t]+\(*(?P<fstar_reason_unknown>[^\)]*)\)*\})?[ \t]*(?P<fstar_usedhints>.*) in (?P<fstar_time>[0-9+\.+-]+) milliseconds with fuel (?P<fstar_fuel>\d+) and ifuel (?P<fstar_ifuel>\d+) and rlimit (?P<fstar_rlimit>\d+)[ \t\r]*(statistics=\{(?P<fstar_z3stats>.*)\})?[ \t\r]*$")
+    rx=re.compile("^([ 0-9-TZ:.]+|\[STDOUT\])?\((?P<fstar_range>.*)\)[ \t]+Query-stats \((?P<fstar_name>.*),[ ]*(?P<fstar_index>.*)\)[ \t]+(?P<fstar_tag>[a-zA-Z]+)[ \t]*(\{reason-unknown=[^ \t]+[ \t]+[^ \t]+[ \t]+\(*(?P<fstar_reason_unknown>[^\)]*)\)*\})?[ \t]*(?P<fstar_usedhints>.*) in (?P<fstar_time>[0-9+\.+-]+) milliseconds with fuel (?P<fstar_fuel>\d+) and ifuel (?P<fstar_ifuel>\d+) and rlimit (?P<fstar_rlimit>\d+)[ \t\r]*(statistics=\{(?P<fstar_z3stats>.*)\})?[ \t\r]*$")
     z3rx=re.compile("([^ =]+)=([^ =\"]+|\".*\")")
     modrx=re.compile("^([ 0-9-TZ:.]+( STDERR:)? )?Verified module: (?P<module>[^ ]+) \((?P<module_time>[0-9]*) milliseconds\)[ \t\r]*$")
 
