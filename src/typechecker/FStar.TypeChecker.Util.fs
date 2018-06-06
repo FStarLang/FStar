@@ -1231,7 +1231,6 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let env_uvars = Env.uvars_in_env env in
      let gen_uvars uvs = BU.set_difference uvs env_uvars |> BU.set_elements in
      let univs_and_uvars_of_lec (lbname, e, c) =
-          let t = U.comp_result c |> SS.compress in
           let c = norm c in
           let t = U.comp_result c in
           let univs = Free.univs t in
