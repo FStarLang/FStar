@@ -138,6 +138,9 @@ let rec (extract_meta :
          | "FStar.Pervasives.CConst" ->
              FStar_Pervasives_Native.Some
                (FStar_Extraction_ML_Syntax.CConst s)
+         | "FStar.Pervasives.CCConv" ->
+             FStar_Pervasives_Native.Some
+               (FStar_Extraction_ML_Syntax.CCConv s)
          | uu____239 -> FStar_Pervasives_Native.None)
     | {
         FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant

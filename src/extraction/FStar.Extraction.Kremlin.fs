@@ -359,6 +359,13 @@ and translate_flags flags =
     | _ -> None // is this all of them?
   ) flags
 
+and translate_cc flags =
+  match List.choose (function | Syntax.CCConv s -> Some s | _ -> None) flags with
+  | [ "stdcall" ] -> Some StdCall
+  | [ "fastcall" ] -> Some FastCall
+  | [ "cdecl" ] -> Some CDecl
+  | _ -> None
+
 and translate_decl env d: list<decl> =
   match d with
   | MLM_Let (flavor, lbs) ->
@@ -414,6 +421,7 @@ and translate_let env flavor lb: option<decl> =
         let binders = translate_binders env args in
         let env = add_binders env args in
         let name = env.module_name, name in
+        let cc = translate_cc meta in
         let meta = match eff, t with
           | E_GHOST, _
           | E_PURE, TUnit -> MustDisappear :: translate_flags meta
@@ -421,7 +429,7 @@ and translate_let env flavor lb: option<decl> =
         in
         if assumed then
           if List.length tvars = 0 then
-            Some (DExternal (None, meta, name, translate_type env t0))
+            Some (DExternal (cc, meta, name, translate_type env t0))
           else begin
             BU.print1_warning "Not extracting %s to KreMLin (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
             None
@@ -429,14 +437,14 @@ and translate_let env flavor lb: option<decl> =
         else begin
           try
             let body = translate_expr env body in
-            Some (DFunction (None, meta, List.length tvars, t, name, binders, body))
+            Some (DFunction (cc, meta, List.length tvars, t, name, binders, body))
           with e ->
             // JP: TODO: figure out what are the remaining things we don't extract
             let msg = BU.print_exn e in
             Errors. log_issue Range.dummyRange
             (Errors.Warning_FunctionNotExtacted, (BU.format2 "Error while extracting %s to KreMLin (%s)\n" (Syntax.string_of_mlpath name) msg));
             let msg = "This function was not extracted:\n" ^ msg in
-            Some (DFunction (None, meta, List.length tvars, t, name, binders, EAbortS msg))
+            Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
 
   | {
