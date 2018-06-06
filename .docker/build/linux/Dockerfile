@@ -15,7 +15,7 @@ COPY --chown=everest build_fstar.sh ${MYHOME}/FStar/build_fstar.sh
 RUN chmod +x build_fstar.sh
 COPY --chown=everest build.sh ${MYHOME}/FStar/build.sh
 RUN chmod +x build.sh
-RUN ./build.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS}
+RUN ./build.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} || true
 
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 
