@@ -45,6 +45,8 @@ module PP = FStar.Syntax.Print
 module UF = FStar.Syntax.Unionfind
 module C  = FStar.Parser.Const
 
+let unfold_whnf = N.unfold_whnf' [N.AllowUnboundUniverses]
+
 let tc_tycon (env:env_t)     (* environment that contains all mutually defined type constructors *)
              (s:sigelt)      (* a Sig_inductive_type (aka tc) that needs to be type-checked *)
        : env_t          (* environment extended with a refined type for the type-constructor *)
@@ -59,7 +61,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let env, tps, k = Env.push_univ_vars env uvs, SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
          let tps, k = SS.open_term tps k in
          let tps, env_tps, guard_params, us = tc_binders env tps in
-         let k = N.unfold_whnf env k in
+         let k = unfold_whnf env k in
          let indices, t = U.arrow_formals k in
          let indices, env', guard_indices, us' = tc_binders env_tps indices in
          let t, guard =
