@@ -61,7 +61,6 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let env, tps, k = Env.push_univ_vars env uvs, SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
          let tps, k = SS.open_term tps k in
          let tps, env_tps, guard_params, us = tc_binders env tps in
-         let k = unfold_whnf env k in
          let indices, t = U.arrow_formals k in
          let indices, env', guard_indices, us' = tc_binders env_tps indices in
          let t, guard =
@@ -134,11 +133,12 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
 
          let arguments, env', us = tc_tparams env arguments in
          let result, res_lcomp = tc_trivial_guard env' result in
-         begin match (SS.compress res_lcomp.res_typ).n with
+         let ty = unfold_whnf env res_lcomp.res_typ |> U.unrefine in
+         begin match (SS.compress ty).n with
                | Tm_type _ -> ()
-               | ty -> raise_error (Errors.Fatal_WrongResultTypeAfterConstrutor, (BU.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
+               | _ -> raise_error (Errors.Fatal_WrongResultTypeAfterConstrutor, (BU.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
                                                 (Print.term_to_string result)
-                                                (Print.term_to_string (res_lcomp.res_typ)))) se.sigrng
+                                                (Print.term_to_string ty))) se.sigrng
          end;
          let head, _ = U.head_and_args result in
          (*
