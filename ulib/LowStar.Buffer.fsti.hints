@@ -1,5 +1,5 @@
 [
-  "∏¥¢\b-p2∫Ÿ9ê˜‰.Õ\u0019",
+  "‹Ó!L√0¸“éœ4â√ñÙÎ",
   [
     [
       "LowStar.Buffer.live_is_null",
@@ -396,7 +396,7 @@
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "9e6cb15ec257a6d8838c2cefdc43961b"
+      "40ef242b5f43ff9f83113dffba6f2b13"
     ],
     [
       "LowStar.Buffer.gcmalloc",
@@ -404,11 +404,15 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
       ],
       0,
-      "603cf34cc5042bea738c399076ad1f41"
+      "525c3091a711705cc914f6cf00cbba24"
     ],
     [
       "LowStar.Buffer.malloc",
@@ -420,7 +424,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
       ],
       0,
-      "7fb01cdc61c91e11b1430f109aa510c5"
+      "c949b5b5aac6cc094ab1555f92791321"
     ],
     [
       "LowStar.Buffer.alloca",
@@ -432,7 +436,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_f91c442f4e872efb5dc260d2bd566195"
       ],
       0,
-      "f71fa5a81a7f5dd786cff03e41dcdeb2"
+      "be3779ef21c72322309381d9be557331"
     ]
   ]
 ]
