@@ -221,6 +221,8 @@ type cfg = {
     normalize_pure_lets: bool;
 }
 
+let cfg_env cfg = cfg.tcenv
+
 let add_steps (m : BU.psmap<primitive_step>) (l : list<primitive_step>) : BU.psmap<primitive_step> =
     List.fold_right (fun p m -> BU.psmap_add m (I.text_of_lid p.name) p) l m
 
@@ -1213,15 +1215,16 @@ let rec maybe_weakly_reduced tm :  bool =
            | Meta_desugared _
            | Meta_named _ -> false)
 
-let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
-    log_unfolding cfg (fun () ->
-          BU.print3 ">>> Deciding unfolding of %s with %s env elements top of the stack %s \n"
-                                        (Print.fv_to_string fv)
-                                        (BU.string_of_int (List.length env))
-                                        (stack_to_string (fst <| firstn 4 stack)));
+type should_unfold_res =
+    | Should_unfold_no
+    | Should_unfold_yes
+    | Should_unfold_fully
+    | Should_unfold_reify
+
+let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let attrs = match Env.attrs_of_qninfo qninfo with
-                | None -> []
-                | Some ats -> ats
+            | None -> []
+            | Some ats -> ats
     in
     (* unfold or not, fully or not, reified or not *)
     let yes   = true  , false , false in
@@ -1237,7 +1240,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     let res = match qninfo, cfg.steps.unfold_only, cfg.steps.unfold_fully, cfg.steps.unfold_attr with
     // We unfold dm4f actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
-        let b = should_reify cfg stack in
+        let b = should_reify cfg in
         log_unfolding cfg (fun () -> BU.print2 " >> For DM4F action %s, should_reify = %s\n"
                                                (Print.fv_to_string fv)
                                                (string_of_bool b));
@@ -1298,16 +1301,28 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     in
     log_unfolding cfg (fun () -> BU.print3 " >> For %s (%s), unfolding res = %s\n"
                     (Print.fv_to_string fv)
-                    (Range.string_of_range rng)
+                    (Range.string_of_range (S.range_of_fv fv))
                     (string_of_res res));
     match res with
-    | false, _, _ ->
+    | false, _, _ -> Should_unfold_no
+    | true, false, false -> Should_unfold_yes
+    | true, true, false -> Should_unfold_fully
+    | true, false, true -> Should_unfold_reify
+    | _ ->
+      failwith <| BU.format1 "Unexpected unfolding result: %s" (string_of_res res)
+
+let decide_unfolding cfg env stack rng fv qninfo : option<(cfg * stack)> =
+    let res =
+        should_unfold cfg (fun cfg -> should_reify cfg stack) fv qninfo
+    in
+    match res with
+    | Should_unfold_no ->
         // No unfolding
         None
-    | true, false, false ->
+    | Should_unfold_yes ->
         // Usual unfolding, no change to cfg or stack
         Some (cfg, stack)
-    | true, true, false ->
+    | Should_unfold_fully ->
         // Unfolding fully, use new cfg with more steps and keep old one in stack
         let cfg' =
             { cfg with steps = { cfg.steps with
@@ -1318,12 +1333,9 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
         let stack' = (Cfg cfg) :: stack in
         Some (cfg', stack')
 
-    | true, false, true ->
+    | Should_unfold_reify ->
         // Reifying, remove the reify from the stack
         Some (cfg, List.tl stack)
-
-    | _ ->
-        failwith <| BU.format1 "Unexpected unfolding result: %s" (string_of_res res)
 
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->

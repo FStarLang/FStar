@@ -18,7 +18,7 @@ module BU = FStar.Util
 module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const
-
+module N = FStar.TypeChecker.Normalize
 
 (* Utils *)
 
@@ -80,16 +80,16 @@ and t = //JUST FSHARP
   // | Refinement of binder * t
   // | Arrow of list binder * comp_t
 and args = list<(t * aqual)>
-//NS:  
+//NS:
 // and comp_t =
 //   | Comp of lident * universes * args * flags
-// and binder = ident * t //ident is just for pretty name on readback  
+// and binder = ident * t //ident is just for pretty name on readback
 
 (*
    (xi:ti) -> C uts (attributes ...)
 
    x:t{t}
-   
+
 *)
 
 type head = t
@@ -194,7 +194,7 @@ let pickBranch (scrut : t) (branches : list<branch>) : option<(term * list<t>)> 
       | BU.Inr true -> //maybe matches; stop
         None
   in pickBranch_aux scrut branches branches
-  
+
 (* Tests is the application is full and if none of the arguments is symbolic *)
 let rec test_args ts cnt =
   match ts with
@@ -285,15 +285,15 @@ let un_univ (tm:t) : universe =
 
 
 (* Creates the environment of mutually recursive function definitions *)
-let make_rec_env (lbs:list<letbinding>) (bs:list<t>) : list<t> = 
-  let rec aux (lbs:list<letbinding>) (lbs0:list<letbinding>) (bs:list<t>) (bs0:list<t>) : list<t> = 
-  match lbs with 
+let make_rec_env (lbs:list<letbinding>) (bs:list<t>) : list<t> =
+  let rec aux (lbs:list<letbinding>) (lbs0:list<letbinding>) (bs:list<t>) (bs0:list<t>) : list<t> =
+  match lbs with
   | [] -> bs
   | lb::lbs' -> aux lbs' lbs0 ((mkAccuRec lb lbs0 bs0) :: bs) bs0
-  in 
+  in
   aux lbs lbs bs bs
 
-let find_let (lbs : list<letbinding>) (fvar : fv) = 
+let find_let (lbs : list<letbinding>) (fvar : fv) =
   BU.find_map lbs (fun lb -> match lb.lbname with
                    | BU.Inl _ -> failwith "impossible"
                    | BU.Inr name ->
@@ -318,18 +318,24 @@ and iapp (f:t) (args:list<(t * aqual)>) =
   | [] -> f
   | _ -> iapp (app f (fst (List.hd args)) (snd (List.hd args))) (List.tl args)
 
-and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
-  let find_in_sigtab (env : Env.env) (lid : lident) : option<sigelt> = BU.smap_try_find env.sigtab (text_of_lid lid) in
-  //VD: for now, also search in local environment (local definitions are not part of env.sigtab)
-  match List.find BU.is_some [find_sigelt_in_gamma env fvar.fv_name.v; find_in_sigtab env fvar.fv_name.v] with
-   | Some elt ->
-     (match elt with
-      | Some { sigel = Sig_let ((is_rec, lbs), names) } ->
-        let lbm = find_let lbs fvar in 
-        (match lbm with 
-         | Some lb -> 
+and translate_fv (cfg: N.cfg) (bs:list<t>) (fvar:fv): t =
+   let qninfo = Env.lookup_qname (N.cfg_env cfg) (S.lid_of_fv fvar) in
+   match N.should_unfold cfg (fun _ -> false) fvar qninfo with
+   | N.Should_unfold_fully
+   | N.Should_unfold_reify ->
+     failwith "Not yet handled"
+
+   | N.Should_unfold_no ->
+     mkConstruct fvar [] []
+
+   | N.Should_unfold_yes -> begin
+     match qninfo with
+     | Some (BU.Inr ({ sigel = Sig_let ((is_rec, lbs), names) }, _us_opt), _rng) ->
+        let lbm = find_let lbs fvar in
+        (match lbm with
+         | Some lb ->
            if is_rec then
-             mkAccuRec lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty 
+             mkAccuRec lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty
                                    since they are already present in the global environment *)
            else
              begin
@@ -340,40 +346,26 @@ and translate_fv (env: Env.env) (bs:list<t>) (fvar:fv): t =
                 // let x = (S.new_bv None S.tun, None) in
                 // let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
                 // iapp (translate env bs t') (List.map (fun u -> (translate_univ env bs u, None)) us)
-                translate_letbinding env [] lb
+                translate_letbinding cfg [] lb
              end
-          | None -> failwith "Could not find mutually recursive definition")
-      | Some { sigel = Sig_datacon(_, _, _, lid, _, []) } ->
-          debug (fun() -> BU.print1 "Translate fv %s: it's a Sig_datacon\n" (P.lid_to_string lid));
-          mkConstruct fvar [] []
-      | Some { sigel = Sig_inductive_typ(lid, univs, bs, ty, _, _) } ->
-          debug (fun() -> BU.print1 "Translate fv %s: it's a Sig_inductive_type\n" (P.lid_to_string lid));
-          mkConstruct fvar [] []
-      | Some { sigel = Sig_declare_typ(lid, _, _) } ->
-          debug (fun() -> BU.print1 "Translate fv %s: it's a Sig_declare_typ\n" (P.lid_to_string lid));
-          mkConstruct fvar [] []
-      | None ->
-          debug (fun() -> BU.print "Translate fv: it's not in the environment\n" []);
-          mkConstruct fvar [] [] (* Zoe : Treat all other cases as type/data constructors for now. *)
-      | Some s ->
-          BU.format1 "Sig %s\n" (P.sigelt_to_string s) |> failwith
-     )
-   | None ->
+        | None -> failwith "Could not find mutually recursive definition")
+     | _ ->
        mkConstruct fvar [] [] (* Zoe : Z and S data constructors from the examples are not in the environment *)
+    end
 
 (* translate a let-binding - local or global *)
-and translate_letbinding (env:Env.env) (bs:list<t>) (lb:letbinding) : t =
+and translate_letbinding (cfg:N.cfg) (bs:list<t>) (lb:letbinding) : t =
   let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t =
     match us with
-    | [] -> translate env bs def
+    | [] -> translate cfg bs def
       | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), (fun () -> Constant Unit), None) // Zoe: Bogus type! The idea is that we will never readback these lambdas
   in
   make_univ_abst lb.lbunivs bs lb.lbdef
 
 
-and translate_constant (c : sconst) : constant = 
+and translate_constant (c : sconst) : constant =
     match c with
-    | C.Const_unit -> Unit 
+    | C.Const_unit -> Unit
     | C.Const_bool b -> Bool b
     | C.Const_int (s, None) -> (Int (Z.big_int_of_string s))
     | C.Const_string (s, r) -> String (s,r)
@@ -381,14 +373,14 @@ and translate_constant (c : sconst) : constant =
     | _ -> failwith ("Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented")
 
 and translate_pat (p : pat) : t =
-    match p.v with 
+    match p.v with
     | Pat_constant c -> Constant (translate_constant c)
     | Pat_cons (cfv, pats) -> iapp (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat p, None)) pats)
     | Pat_var bvar -> mkAccuVar bvar
     | Pat_wild bvar -> mkAccuVar bvar
-    | Pat_dot_term (bvar, t) -> failwith "Pat_dot_term not implemented" 
+    | Pat_dot_term (bvar, t) -> failwith "Pat_dot_term not implemented"
 
-and translate (env:Env.env) (bs:list<t>) (e:term) : t =
+and translate (cfg:N.cfg) (bs:list<t>) (e:term) : t =
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
     debug (fun () -> BU.print1 "BS list: %s\n" (String.concat ";; " (List.map (fun x -> t_to_string x) bs)));
 
@@ -407,7 +399,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_uinst(t, us) ->
       debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t) (P.term_to_string t) (List.map P.univ_to_string us |> String.concat ", "));
       List.fold_left (fun head u -> app head u None)
-                     (translate env bs t)
+                     (translate cfg bs t)
                      (List.map (translate_univ bs) us)
 
     | Tm_type u ->
@@ -417,11 +409,11 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
     | Tm_refine _ -> debug_term e; failwith "Tm_refine: Not yet implemented"
 
-    | Tm_ascribed (t, _, _) -> translate env bs t
+    | Tm_ascribed (t, _, _) -> translate cfg bs t
 
     | Tm_uvar (uvar, t) -> debug_term e; failwith "Tm_uvar: Not yet implemented"
 
-    | Tm_meta (e, _) -> translate env bs e
+    | Tm_meta (e, _) -> translate cfg bs e
 
     | Tm_name x ->
       mkAccuVar x
@@ -431,27 +423,27 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_abs ([x], body, _) ->
       debug (fun () -> BU.print2 "Tm_abs body : %s - %s\n" (P.tag_of_term body) (P.term_to_string body));
       let x1 = fst x in
-      Lam ((fun (y:t) -> translate env (y::bs) body), (fun () -> translate env bs x1.sort), snd x)
+      Lam ((fun (y:t) -> translate cfg (y::bs) body), (fun () -> translate cfg bs x1.sort), snd x)
 
     | Tm_abs (x::xs, body, _) ->
       let rest = S.mk (Tm_abs(xs, body, None)) None Range.dummyRange in
       let tm = S.mk (Tm_abs([x], rest, None)) None e.pos in
-      translate env bs tm
+      translate cfg bs tm
 
     | Tm_fvar fvar ->
-      translate_fv env bs fvar
+      translate_fv cfg bs fvar
 
     | Tm_app(e, []) -> failwith "Impossible: application with no arguments"
 
     | Tm_app (e, [arg]) ->
       debug (fun () -> BU.print2 "Application %s / %s\n" (P.term_to_string e) (P.term_to_string (fst arg)));
-      app (translate env bs e) (translate env bs (fst arg)) (snd arg)
+      app (translate cfg bs e) (translate cfg bs (fst arg)) (snd arg)
 
     | Tm_app(head, arg::args) ->
       debug (fun () -> BU.print2 "Application %s / %s (...more agrs)\n" (P.term_to_string head) (P.term_to_string (fst arg)));
       let first = S.mk (Tm_app(head, [arg])) None Range.dummyRange in
       let tm = S.mk (Tm_app(first, args)) None e.pos in
-      translate env bs tm
+      translate cfg bs tm
 
     | Tm_match(scrut, branches) ->
       let rec case (scrut : t) : t =
@@ -467,7 +459,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
           begin
           match pickBranch scrut branches with
           | Some (branch, args) ->
-            translate env (List.fold_left (fun bs x -> x::bs) bs args) branch
+            translate cfg (List.fold_left (fun bs x -> x::bs) bs args) branch
           | None -> //no branch is determined
             mkAccuMatch scrut patterns
           end
@@ -475,9 +467,9 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
           (* same as for construted values, but args are either empty or is a singleton list (for wildcard patterns) *)
           (match pickBranch scrut branches with
            | Some (branch, []) ->
-             translate env bs branch
+             translate cfg bs branch
            | Some (branch, [arg]) ->
-             translate env (arg::bs) branch
+             translate cfg (arg::bs) branch
            | None -> //no branch is determined
              mkAccuMatch scrut patterns
            | Some (_, hd::tl) -> failwith "Impossible: Matching on constants cannot bind more than one variable")
@@ -485,40 +477,40 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
         | _ ->
           mkAccuMatch scrut patterns
       (* Thunked computation that reconstructs the patterns *)
-      and patterns (readback:t -> term) : list<branch> = 
-        let rec process_pattern (p:pat) : pat = 
-          let p_new = 
+      and patterns (readback:t -> term) : list<branch> =
+        let rec process_pattern (p:pat) : pat =
+          let p_new =
             match p.v with
             | Pat_constant c -> Pat_constant c
             | Pat_cons (fvar, args) -> Pat_cons (fvar, List.map (fun (p, b) -> (process_pattern p, b)) args)
-            | Pat_var bvar -> Pat_var ({bvar with sort = readback (translate env bs bvar.sort)})
-            | Pat_wild bvar -> Pat_wild ({bvar with sort = readback (translate env bs bvar.sort)})
+            | Pat_var bvar -> Pat_var ({bvar with sort = readback (translate cfg bs bvar.sort)})
+            | Pat_wild bvar -> Pat_wild ({bvar with sort = readback (translate cfg bs bvar.sort)})
             (* Zoe: I'm not sure what this is, just speculating the translation *)
-            | Pat_dot_term (bvar, tm) -> Pat_dot_term ({bvar with sort = readback (translate env bs bvar.sort)}, readback (translate env bs tm))
+            | Pat_dot_term (bvar, tm) -> Pat_dot_term ({bvar with sort = readback (translate cfg bs bvar.sort)}, readback (translate cfg bs tm))
           in
-          {p with v = p_new} (* keep the info and change the pattern *) 
+          {p with v = p_new} (* keep the info and change the pattern *)
         in
-        List.map (fun (pat, when_clause, _) -> process_pattern pat, when_clause, readback (case (translate_pat pat))) 
-                 branches 
+        List.map (fun (pat, when_clause, _) -> process_pattern pat, when_clause, readback (case (translate_pat pat)))
+                 branches
       in
-      case (translate env bs scrut)
+      case (translate cfg bs scrut)
 
     | Tm_let((false, lbs), body) -> // non-recursive let
-      let bs' = 
-        List.fold_left (fun bs' lb -> let b = translate_letbinding env bs lb in b :: bs') bs lbs  in
-      translate env bs' body
+      let bs' =
+        List.fold_left (fun bs' lb -> let b = translate_letbinding cfg bs lb in b :: bs') bs lbs  in
+      translate cfg bs' body
 
-    | Tm_let((true, lbs), body) -> 
-      translate env (make_rec_env lbs bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
+    | Tm_let((true, lbs), body) ->
+      translate cfg (make_rec_env lbs bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
 
 (* [readback] creates named binders and not De Bruijn *)
-and readback (env:Env.env) (x:t) : term =
+and readback (cfg:N.cfg) (x:t) : term =
     debug (fun () -> BU.print1 "Readback: %s\n" (t_to_string x));
     match x with
     | Univ u -> failwith "Readback of universes should not occur"
-    
+
     | Unknown -> S.mk Tm_unknown None Range.dummyRange
-    
+
     | Constant Unit -> S.unit_const
     | Constant (Bool true) -> U.exp_true_bool
     | Constant (Bool false) -> U.exp_false_bool
@@ -530,12 +522,12 @@ and readback (env:Env.env) (x:t) : term =
       S.mk (Tm_type u) None Range.dummyRange
 
     | Lam (f, t, q) ->
-      let x = S.new_bv None (readback env (t ())) in (* (readback env t) is the type of the binder *)
-      let body = readback env (f (mkAccuVar x)) in
+      let x = S.new_bv None (readback cfg (t ())) in (* (readback env t) is the type of the binder *)
+      let body = readback cfg (f (mkAccuVar x)) in
       U.abs [(x, q)] body None
 
     | Construct (fv, us, args) ->
-      let args = map_rev (fun (x, q) -> (readback env x, q)) args in
+      let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
       let apply tm =
         match args with
          | [] -> tm
@@ -548,14 +540,14 @@ and readback (env:Env.env) (x:t) : term =
     | Accu (Var bv, []) ->
       S.bv_to_name bv
     | Accu (Var bv, ts) ->
-      let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
+      let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
       U.mk_app (S.bv_to_name bv) args
 
     | Accu (Match (scrut, patterns), ts) ->
-      let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
-      let head = 
-        let scrut_new = readback env scrut in
-        let branches_new = patterns (readback env) in
+      let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
+      let head =
+        let scrut_new = readback cfg scrut in
+        let branches_new = patterns (readback cfg) in
         S.mk (Tm_match (scrut_new, branches_new)) None Range.dummyRange
       in
       (*  When `cases scrut` returns a Accu(Match ..))
@@ -581,9 +573,9 @@ and readback (env:Env.env) (x:t) : term =
           match (readback [[x]])
                 branches
        *)
-     
+
       (match ts with
-       | [] -> head 
+       | [] -> head
        | _ -> U.mk_app head args)
 
     | Accu (Rec(lb, lbs, bs), ts) ->
@@ -596,7 +588,7 @@ and readback (env:Env.env) (x:t) : term =
        let args_no = count_abstractions lb.lbdef in
        // Printf.printf "Args no. %d\n" args_no;
        if test_args ts args_no then (* if the arguments are not symbolic and the application is not partial compute *)
-         readback env (curry (translate_letbinding env (make_rec_env lbs bs) lb) ts)
+         readback cfg (curry (translate_letbinding cfg (make_rec_env lbs bs) lb) ts)
        else (* otherwise do not unfold *)
          let head =
            (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
@@ -606,11 +598,28 @@ and readback (env:Env.env) (x:t) : term =
            in
            S.mk (Tm_let((true, lbs), f)) None Range.dummyRange
          in
-         let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
+         let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
          (match ts with
           | [] -> head
           | _ -> U.mk_app head args)
 
-let normalize (env : Env.env) (e:term) : term =
+type step =
+  | Primops
+  | UnfoldUntil of delta_depth
+  | UnfoldOnly  of list<FStar.Ident.lid>
+  | UnfoldAttr of attribute
+  | UnfoldTac
+  | Reify
+
+let step_as_normalizer_step = function
+  | Primops -> N.Primops
+  | UnfoldUntil d -> N.UnfoldUntil d
+  | UnfoldOnly lids -> N.UnfoldOnly lids
+  | UnfoldAttr attr -> N.UnfoldAttr attr
+  | UnfoldTac -> N.UnfoldTac
+  | Reify -> N.Reify
+
+let normalize (steps:list<step>) (env : Env.env) (e:term) : term =
+  let cfg = N.config (List.map step_as_normalizer_step steps) env in
   //debug_sigmap env.sigtab;
-  readback env (translate env [] e)
+  readback cfg (translate cfg [] e)

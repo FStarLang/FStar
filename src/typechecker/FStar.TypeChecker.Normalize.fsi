@@ -56,6 +56,9 @@ type closure =
   | Dummy                                           //Dummy is a placeholder for a binder when doing strong reduction
 and env = list<(option<binder> * closure)>
 type cfg
+val cfg_env: cfg -> Env.env
+val config: list<step> -> Env.env -> cfg
+
 type psc // primitive step context
 val null_psc : psc
 val psc_range : psc -> FStar.Range.range
@@ -68,6 +71,18 @@ type primitive_step = {
     requires_binder_substitution:bool;
     interpretation:(psc -> args -> option<term>)
 }
+
+type should_unfold_res =
+    | Should_unfold_no
+    | Should_unfold_yes
+    | Should_unfold_fully
+    | Should_unfold_reify
+
+val should_unfold : cfg
+                 -> should_reify:(cfg -> bool)
+                 -> fv
+                 -> Env.qninfo
+                 -> should_unfold_res
 
 val register_plugin: primitive_step -> unit
 val closure_as_term : cfg -> env -> term -> term
