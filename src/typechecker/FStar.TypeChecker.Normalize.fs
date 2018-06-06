@@ -1311,7 +1311,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     | _ ->
       failwith <| BU.format1 "Unexpected unfolding result: %s" (string_of_res res)
 
-let decide_unfolding cfg env stack rng fv qninfo : option<(cfg * stack)> =
+let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     let res =
         should_unfold cfg (fun cfg -> should_reify cfg stack) fv qninfo
     in

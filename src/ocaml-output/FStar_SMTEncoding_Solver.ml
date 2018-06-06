@@ -1157,20 +1157,21 @@ let (ask_and_report_errors :
                            (FStar_List.append half_max_fuel_max_ifuel
                               max_fuel_max_ifuel)))
                     in
-                 let check_one_config config k =
+                 let check_one_config config1 k =
                    (let uu____2344 =
-                      (used_hint config) || (FStar_Options.z3_refresh ())  in
+                      (used_hint config1) || (FStar_Options.z3_refresh ())
+                       in
                     if uu____2344
                     then FStar_SMTEncoding_Z3.refresh ()
                     else ());
-                   (let uu____2346 = with_fuel_and_diagnostics config []  in
+                   (let uu____2346 = with_fuel_and_diagnostics config1 []  in
                     let uu____2349 =
                       let uu____2352 = FStar_SMTEncoding_Z3.mk_fresh_scope ()
                          in
                       FStar_Pervasives_Native.Some uu____2352  in
-                    FStar_SMTEncoding_Z3.ask config.query_range
-                      (filter_assertions config.query_env config.query_hint)
-                      config.query_hash config.query_all_labels uu____2346
+                    FStar_SMTEncoding_Z3.ask config1.query_range
+                      (filter_assertions config1.query_env config1.query_hint)
+                      config1.query_hash config1.query_all_labels uu____2346
                       uu____2349 k)
                     in
                  let check_all_configs configs =
