@@ -715,6 +715,16 @@ val free
 /// operators, which tells that the resulting buffer is fresh, and
 /// specifies its initial contents.
 
+let alloc_post_static
+  (#a: Type)
+  (r: HS.rid)
+  (len: nat)
+  (b: buffer a)
+: GTot Type0
+= (not (g_is_null b)) /\
+  frameOf b == r /\
+  length b == len
+
 let alloc_post_common
   (#a: Type)
   (r: HS.rid)
@@ -722,13 +732,11 @@ let alloc_post_common
   (b: buffer a)
   (h0 h1: HS.mem)
 : GTot Type0
-= b `unused_in` h0 /\
+= alloc_post_static r len b /\
+  b `unused_in` h0 /\
   live h1 b /\
-  (not (g_is_null b)) /\
-  frameOf b == r /\
   Map.domain h1.HS.h `Set.equal` Map.domain h0.HS.h /\ 
   h1.HS.tip == h0.HS.tip /\
-  length b == len /\
   modifies_0 h0 h1
 
 /// ``gcmalloc r init len`` allocates a memory-managed buffer of some
@@ -741,12 +749,14 @@ val gcmalloc
   (r: HS.rid)
   (init: a)
   (len: U32.t)
-: HST.ST (buffer a)
+: HST.ST (b: buffer a {
+    recallable b /\
+    alloc_post_static r (U32.v len) b
+  } )
   (requires (fun h -> HST.is_eternal_region r /\ U32.v len > 0))
   (ensures (fun h b h' ->
     alloc_post_common r (U32.v len) b h h' /\
-    as_seq h' b == Seq.create (U32.v len) init /\     
-    recallable b
+    as_seq h' b == Seq.create (U32.v len) init
   ))
 
 
@@ -817,11 +827,15 @@ val gcmalloc_of_list
   (#a: Type0)
   (r: HS.rid)
   (init: list a)
-: HST.ST (buffer a)
+: HST.ST (b: buffer a {
+    let len = FStar.List.Tot.length init in
+    recallable b /\
+    alloc_post_static r len b /\
+    alloc_of_list_post len b
+  } )
   (requires (fun h -> HST.is_eternal_region r /\ alloc_of_list_pre #a init))
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
     alloc_post_common r len b h h' /\
-    as_seq h' b == Seq.of_list init /\
-    alloc_of_list_post #a len b
+    as_seq h' b == Seq.of_list init
   ))

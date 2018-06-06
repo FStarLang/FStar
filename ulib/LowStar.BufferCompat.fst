@@ -44,7 +44,8 @@ let rcreate
     as_seq h' b == Seq.create (U32.v len) init /\     
     recallable b
   ))
-= gcmalloc r init len
+= let b = gcmalloc r init len in
+  b
 
 inline_for_extraction
 let rcreate_mm
