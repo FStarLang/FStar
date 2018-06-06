@@ -313,13 +313,21 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
-let rec tc_term env e = tc_maybe_toplevel_term ({env with top_level=false}) e
+let rec tc_term env e =
+    let r, ms = BU.record_time (fun () ->
+                    tc_maybe_toplevel_term ({env with top_level=false}) e) in
+    if Env.debug env Options.Medium then
+        BU.print4 "(%s) tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
+                                                        (Print.term_to_string e)
+                                                        (Print.tag_of_term e)
+                                                        (string_of_int ms);
+    r
 
 and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked and elaborated version of e            *)
                                         * lcomp                 (* computation type where the WPs are lazily evaluated *)
                                         * guard_t =             (* well-formedness condition                           *)
   let env = if e.pos=Range.dummyRange then env else Env.set_range env e.pos in
-  if debug env Options.Low then BU.print2 "%s (%s)\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term e);
+  if debug env Options.Low then BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term e) (Print.term_to_string e);
   let top = SS.compress e in
   match top.n with
   | Tm_delayed _ -> failwith "Impossible"
