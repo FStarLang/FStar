@@ -469,7 +469,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
           | Some (branch, args) ->
             translate env (List.fold_left (fun bs x -> x::bs) bs args) branch
           | None -> //no branch is determined
-            mkAccuMatch scrut patterns
+            mkAccuMatch scrut make_branches
           end
         | Constant c ->
           (* same as for construted values, but args are either empty or is a singleton list (for wildcard patterns) *)
@@ -479,27 +479,43 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
            | Some (branch, [arg]) ->
              translate env (arg::bs) branch
            | None -> //no branch is determined
-             mkAccuMatch scrut patterns
+             mkAccuMatch scrut make_branches
            | Some (_, hd::tl) -> failwith "Impossible: Matching on constants cannot bind more than one variable")
 
         | _ ->
-          mkAccuMatch scrut patterns
+          mkAccuMatch scrut make_branches
       (* Thunked computation that reconstructs the patterns *)
-      and patterns (readback:t -> term) : list<branch> = 
-        let rec process_pattern (p:pat) : pat = 
-          let p_new = 
+      (* Zoe TODO : maybe rewrite in CPS? *)
+      and make_branches (readback:t -> term) : list<branch> = 
+        let rec process_pattern bs (p:pat) : list<t> * pat = (* returns new environment and pattern *) 
+          let (bs, p_new) = 
             match p.v with
-            | Pat_constant c -> Pat_constant c
-            | Pat_cons (fvar, args) -> Pat_cons (fvar, List.map (fun (p, b) -> (process_pattern p, b)) args)
-            | Pat_var bvar -> Pat_var {bvar with sort = readback (translate env bs bvar.sort)}
-            | Pat_wild bvar -> Pat_wild {bvar with sort = readback (translate env bs bvar.sort)}
-            (* Zoe: I'm not sure what this is, just speculating the translation *)
-            | Pat_dot_term (bvar, tm) -> Pat_dot_term ({bvar with sort = readback (translate env bs bvar.sort)}, readback (translate env bs tm))
+            | Pat_constant c -> (bs, Pat_constant c)
+            | Pat_cons (fvar, args) -> 
+              let (bs', args') = 
+                  List.fold_left (fun (bs, args) (arg, b) -> 
+                                    let (bs', arg') = process_pattern bs arg in
+                                    (bs, (arg', b) :: args)) (bs, []) args
+              in
+              (bs', Pat_cons (fvar, List.rev args'))
+            | Pat_var bvar -> 
+              let x = S.new_bv None (readback (translate env bs bvar.sort)) in 
+              (mkAccuVar x :: bs, Pat_var x)
+            | Pat_wild bvar -> 
+              let x = S.new_bv None (readback (translate env bs bvar.sort)) in 
+              (mkAccuVar x :: bs, Pat_wild x)
+              (* Zoe: I'm not sure what this pattern binds, just speculating the translation *)
+            | Pat_dot_term (bvar, tm) -> 
+              let x = S.new_bv None (readback (translate env bs bvar.sort)) in 
+              (mkAccuVar x :: bs, 
+               Pat_dot_term (x, readback (translate env bs tm)))
           in
-          {p with v = p_new} (* keep the info and change the pattern *) 
+          (bs, {p with v = p_new}) (* keep the info and change the pattern *) 
         in
-        List.map (fun (pat, when_clause, _) -> process_pattern pat, when_clause, readback (case (translate_pat pat))) 
-                 branches 
+        List.map (fun (pat, when_clause, e) -> 
+                  let (bs', pat') = process_pattern bs pat in 
+                  (* TODO : handle when clause *)
+                  U.branch (pat', when_clause, readback (translate env bs' e))) branches 
       in
       case (translate env bs scrut)
 
@@ -551,11 +567,11 @@ and readback (env:Env.env) (x:t) : term =
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
       U.mk_app (S.bv_to_name bv) args
 
-    | Accu (Match (scrut, patterns), ts) ->
+    | Accu (Match (scrut, make_branches), ts) ->
       let args = map_rev (fun (x, q) -> (readback env x, q)) ts in
       let head = 
         let scrut_new = readback env scrut in
-        let branches_new = patterns (readback env) in
+        let branches_new = make_branches (readback env) in
         S.mk (Tm_match (scrut_new, branches_new)) None Range.dummyRange
       in
       (*  When `cases scrut` returns a Accu(Match ..))
