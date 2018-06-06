@@ -316,6 +316,7 @@ type raw_error =
   | Error_EmptyFailErrs
   | Warning_logicqualifier
   | Fatal_CyclicDependence
+  | Error_InductiveAnnotNotAType
 
 type flag =
   | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
@@ -639,7 +640,10 @@ let default_flags =
   (Warning_QuantifierWithoutPattern                  , CSilent);
   (Error_EmptyFailErrs                               , CAlwaysError);
   (Warning_logicqualifier                            , CWarning);
-  (Fatal_CyclicDependence                            , CFatal)
+  (Fatal_CyclicDependence                            , CFatal);
+  (Error_InductiveAnnotNotAType                      , CError);
+  (* Protip: if we keep the semicolon at the end, we modify exactly one
+   * line for each error we add. This means we get a cleaner git history/blame *)
   ]
 
 exception Err of raw_error* string

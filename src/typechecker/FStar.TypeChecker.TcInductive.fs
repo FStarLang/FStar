@@ -68,8 +68,11 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
              t, Rel.discharge_guard env' (Env.conj_guard guard_params (Env.conj_guard guard_indices g)) in
          let k = U.arrow indices (S.mk_Total t) in
          let t_type, u = U.type_u() in
-         Rel.force_trivial_guard env' (Rel.teq env' t t_type);
-
+         if not (subtype_nosmt env t t_type) then
+             raise_error (Errors.Error_InductiveAnnotNotAType,
+                          (BU.format2 "Type annotation %s for inductive %s is not a subtype of Type"
+                                                (Print.term_to_string t)
+                                                (Ident.string_of_lid tc))) s.sigrng;
 (*close*)let usubst = SS.univ_var_closing uvs in
          let guard = TcUtil.close_guard_implicits env (tps@indices) guard in
          let t_tc = U.arrow ((tps |> SS.subst_binders usubst) @
