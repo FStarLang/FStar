@@ -1,14 +1,41 @@
 [
-  "∞êÃ€\\ˇ˜i⁄ô∂ÃÀÑâﬁ",
+  "Ö’YÓ¯∞∏ˆ\u001a\u000eõRâÏJ‚",
   [
+    [
+      "Cases.test_cases",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "d83dbabb636e88a3e53cbb94c3addd95"
+    ],
+    [
+      "Cases.test_cases_unsquash",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "e8c764c8493b315bc8b7d91dff33126c"
+    ],
+    [
+      "Cases.test_cases_bool",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "236b35e4100126e76779c9ca6fd68088"
+    ],
     [
       "Cases.test_cases_bool_2",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [ "@query", "true_interp" ],
       0,
-      "046ce43d97248addd0a22e0bc24def63"
+      "65bf5cfd2795c71e15c0d0a46193e63b"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -17,7 +44,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "91b3714228dfdbe4b4b1ab30c1326a50"
+      "5b6fd8684d75f4934eeb1b35962cd9c4"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -26,10 +53,12 @@
       1,
       [
         "@query", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3c41975f18606fca6a3987ca9f0ed62b"
+      "214aa11f312ce3734bde9bf7d26d080b"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -43,7 +72,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c24f5ad818c4f94f874c1a16c78a331a"
+      "755d8c951dc33c7244d21eb52d4e679d"
     ]
   ]
 ]

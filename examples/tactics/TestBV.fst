@@ -8,31 +8,31 @@ module U64 = FStar.UInt64
 /// These examples only rely on facts about bounded ints, U64, and Prims
 /// In particular, pruning away sequences, reflection, tactics etc.
 /// from the SMT solver makes a big difference
-#reset-options "--using_facts_from '+FStar.UInt +FStar.UInt64 +Prims'"
+#reset-options "--using_facts_from '+FStar.UInt +FStar.UInt64 +Prims' --__temp_fast_implicits"
 
 ////////////////////////////////////////////////////////////////////////////////
 //Some examples working on FStar.UInt.uint_t, i.e., bounded natural numbers
 ////////////////////////////////////////////////////////////////////////////////
 let test1 (x y: uint_t 64) =
     assert_by_tactic (logand x y == logand y x)
-                     (bv_tac ())
+                      bv_tac
 
 let test2 (x y : uint_t 64) =
     assert_by_tactic (logand (logand x y) y == logand y (logand y x))
-                     (bv_tac ())
+                      bv_tac
 
 let test3 (x y : uint_t 64) =
     assert_by_tactic (logand (logand (logand x y) x) y == logand y (logand x (logand y x)))
-                     (bv_tac ())
+                      bv_tac
 
 let test4 (x y : uint_t 64) =
     assert_by_tactic (logand (logand x (logxor x y)) y == logand y (logand x (logxor y x)))
-                     (bv_tac ())
+                      bv_tac
 
 /// This also works when you expliclity coerce from a machine integer to a uint_t
 let test5 (x y: U64.t) =
     assert_by_tactic (logand (U64.v x) (U64.v y) == logand (U64.v y) (U64.v x))
-                     (bv_tac ())
+                      bv_tac
 
 ////////////////////////////////////////////////////////////////////////////////
 //Now for some examples working directly on machine integers
@@ -78,20 +78,22 @@ let unfold_logxor64 (x y: U64.t) : Lemma
 
 /// Now, here's a tactic that will try to rewrite the goal
 /// using one of the above three lemmas or fail
-let unfold64 () =
-  or_else (mapply (quote unfold_logand64))
-          (or_else (mapply (quote unfold_logor64))
-                   (mapply (quote unfold_logxor64)))
+let unfold64 () : Tac unit =
+  or_else (fun () -> mapply (quote unfold_logand64))
+          (fun () -> or_else (fun () -> mapply (quote unfold_logor64))
+                             (fun () -> mapply (quote unfold_logxor64)))
+
+let aux () : Tac unit = or_else unfold64 (fun () -> fail "SKIP")
 
 /// Finally, a tactic for bitwise operations on U64.t
-let bv64_tac : tactic unit =
+let bv64_tac () : Tac unit =
     //introduce a single `v e = v e'` at the top, if the goal is a U64.t equality
-    mapply (quote v64_eq) ;;
-    norm [];;
+    mapply (`v64_eq);
+    norm [];
     //proceed top-down through the goal recursively rewriting to `uint_t 64` further
     // if unfold64 fails, then just skip rewriting this node.
-    pointwise' (or_else (unfold64 ()) (fail "SKIP")) ;;
-    norm [];;
+    pointwise' aux;
+    norm [];
     //call bv_tac to encode the whole thing to bit vectors
     bv_tac ()
 

@@ -2,21 +2,14 @@ module Caller
 
 open FStar.Tactics
 
-(*
- * Testing tactics for requires clauses
- *
- * Seems to work, but might too brittle... what if the axiom spawns off a VC?
- *)
+(* Testing tactics for requires clauses *)
 
-let tau : tactic unit =
-    let proof : b2t (3 > 0) = magic () in
-    exact (quote proof)
-
-assume val ax : i:int -> Pure int (requires (by_tactic tau (i > 0)))
+assume val ax : tau:(unit -> Tac unit) ->
+                i:int -> Pure int (requires (by_tactic tau (squash (i > 0))))
                                   (ensures (fun i' -> i' == i + 1))
 
 (* No tactic should run before this line *)
 
-(* Will call tau to discharge the `b2t (3 > 0)` goal. We might want a way to specify the tactic on each call site *)
+(* Will call tau to discharge the `b2t (3 > 0)` goal. *)
 let f () : int =
-    ax 3
+    ax (fun () -> debug "Hello!"; trivial ()) 3

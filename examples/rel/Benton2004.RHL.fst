@@ -562,9 +562,9 @@ let r_trans
   ))
   (ensures (exec_equiv p p' c1 c3))
   [SMTPatOr [
-    [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c2 c3); SMTPat (is_per p'); SMTPat (interpolable p) ];
+    [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c2 c3); SMTPat (is_per p'); SMTPat (interpolable p)];
     [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c1 c3); SMTPat (is_per p'); SMTPat (interpolable p)];
-    [SMTPat (exec_equiv p p' c2 c3); SMTPat (exec_equiv p p' c2 c3); SMTPat (is_per p'); SMTPat (interpolable p)];
+    [SMTPat (exec_equiv p p' c1 c3); SMTPat (exec_equiv p p' c2 c3); SMTPat (is_per p'); SMTPat (interpolable p)];
   ]]
 = exec_equiv_trans (interp p) (interp p') c1 c2 c3
 

@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a4d33b7e0d1826f60f2c4e7fa807cb24"
+      "24cec66e0bbaa93012f5e0c1380589dd"
     ],
     [
       "RandomTapes.id",
@@ -21,7 +21,7 @@
         "interpretation_RandomTapes_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da"
       ],
       0,
-      "a3edc53943da09c711337b167670b27f"
+      "f307f2855e367203cf95caf5a4c95de9"
     ],
     [
       "RandomTapes.add",
@@ -31,6 +31,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_44faff5d8543c30ad9bf2eeaf1b3abcf",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_Bijection.bijection", "equation_Bijection.injection",
         "equation_Bijection.inverses", "equation_Bijection.surjection",
@@ -42,20 +43,16 @@
         "token_correspondence_RandomTapes.minus"
       ],
       0,
-      "3ffa40569a32f5ea336072701c2057fe"
+      "c63040ff3c2eab2a78bb1215942dec7c"
     ],
     [
       "RandomTapes.otp_rand",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "function_token_typing_RandomTapes.id",
-        "refinement_interpretation_RandomTapes_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e2179d17b780ea27520624bc7a4bb728"
+      "441d5eec014af5ae0f5f4d014aeef6b1"
     ],
     [
       "RandomTapes.otp_eq",
@@ -67,11 +64,10 @@
         "equation_RandomTapes.add", "equation_RandomTapes.otp",
         "equation_RandomTapes.otp_rand", "equation_RandomTapes.random_tape",
         "equation_RandomTapes.rel_random_tape", "equation_Rel.lift3",
-        "equation_Rel.r_eq", "fuel_guarded_inversion_Rel.rel",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
-        "proj_equation_Rel.R_l", "proj_equation_Rel.R_r",
-        "projection_inverse_BoxInt_proj_0",
+        "equation_Rel.r_eq", "fuel_guarded_inversion_Rel.rel", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "proj_equation_Rel.R_l",
+        "proj_equation_Rel.R_r", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
@@ -84,21 +80,7 @@
         "token_correspondence_Rel.__proj__R__item__r"
       ],
       0,
-      "f6507836208996816bc8d73c7db6b1e1"
-    ],
-    [
-      "RandomTapes.otp2_rand",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "function_token_typing_RandomTapes.id",
-        "refinement_interpretation_RandomTapes_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
-      ],
-      0,
-      "a3dd4f115e5191e7518629b4210e6a26"
+      "19d03063e78607839d590c3718e906b0"
     ],
     [
       "RandomTapes.otp2_eq",
@@ -128,7 +110,60 @@
         "token_correspondence_Rel.__proj__R__item__r"
       ],
       0,
-      "04f988026d71314338551af1caed97c0"
+      "8c10540a3b6d8ddf54e98313d649ae42"
+    ],
+    [
+      "RandomTapes.rel_random_tape",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "efc317842aad047c497a21f047bbbe7f"
+    ],
+    [
+      "RandomTapes.id",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Bijection.bijection",
+        "equation_Bijection.injection", "equation_Bijection.surjection",
+        "interpretation_RandomTapes_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da"
+      ],
+      0,
+      "a5132ce03b95b798147e0dfd5b7d8b8d"
+    ],
+    [
+      "RandomTapes.add",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_44faff5d8543c30ad9bf2eeaf1b3abcf",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Bijection.bijection", "equation_Bijection.injection",
+        "equation_Bijection.inverses", "equation_Bijection.surjection",
+        "equation_RandomTapes.minus",
+        "function_token_typing_RandomTapes.minus", "int_inversion",
+        "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "token_correspondence_Prims.op_Addition",
+        "token_correspondence_RandomTapes.minus"
+      ],
+      0,
+      "3c0c38dfae8e010f2726f209b0e6d247"
+    ],
+    [
+      "RandomTapes.otp_rand",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "dceba3c82c588e14c58bce0a869510a0"
     ]
   ]
 ]

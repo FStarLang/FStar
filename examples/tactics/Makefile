@@ -1,55 +1,25 @@
 FSTAR_HOME=../..
-include ../Makefile.include
+KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
+INCLUDE_PATHS=$(KREMLIN_HOME)/kremlib
+EXCLUDED_FSTAR_FILES=Launch.fst CanonCommSemiring.fst WeakVsHNF.fst \
+		     Test.Math.Lemmas.fst CanonDeep.fst
+FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
-.PHONY: neg
+all: verify-all #stringprintertest
 
-all:	Apply.uver		\
-	Canon.uver		\
-	Arith.uver		\
-	Pruning.uver		\
-	Cut.uver		\
-	Fail.uver		\
-	MApply.uver		\
-	Clear.uver		\
-	Cases.uver		\
-	Tutorial.uver		\
-	Syntax.uver		\
-	NormBinderType.uver	\
-	Normalization.uver	\
-	GRewrite.uver		\
-	Rename.uver		\
-	Imp.uver		\
-	UserTactics.uver	\
-	Logic.uver		\
-	DependentSynth.uver	\
-	NatPos.uver		\
-	Trace.uver		\
-	Bug1252.uver		\
-	Bug1270.uver		\
-	Bug1272.uver		\
-	Bug1299.uver		\
-	Admit.uver		\
-	Nest.uver		\
-	TestBV.uver		\
-	Map.uver		\
-	Map.OpaqueToSMT.uver	\
-	Map.OpaqueToSMT.Test.uver	\
-	Synthesis.uver		\
-	Printers.uver		\
-	Setopts.uver		\
-	Simplifier.uver		\
-	Neg.uver		\
-	Sequences.uver		\
-	Caller.uver		\
-	Retype.uver		\
-	Unify.uver		\
-	UnitTests.uver		\
-	MetaCoq.uver		\
-	neg
-	# launch			\
+$(CACHE_DIR):
+	mkdir -p $@
+
+include ../Makefile.common
+
+verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
 
 launch: Launch.fst
 	$(FSTAR) --unsafe_tactic_exec $^
 
-neg:
-	$(MAKE) -C neg
+ifdef KREMLIN_HOME
+stringprintertest: $(CACHE_DIR)
+	 [ ! -f $(KREMLIN_HOME)/krml ] || [ ! -x $(KREMLIN_HOME)/krml ] || $(KREMLIN_HOME)/krml -tmpdir stringprintertest -bundle 'StringPrinter.\*' -bundle StringPrinterTest.Aux -drop 'FStar.Tactics.\*' -drop 'FStar.Reflection.\*' StringPrinterTest.fst -skip-linking
+else
+stringprintertest:
+endif

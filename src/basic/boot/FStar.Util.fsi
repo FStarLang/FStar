@@ -53,23 +53,25 @@ val set_intersect: set<'a> -> set<'a> -> set<'a>
 val set_is_subset_of: set<'a> -> set<'a> -> bool
 val set_count: set<'a> -> int
 val set_difference: set<'a> -> set<'a> -> set<'a>
+val set_symmetric_difference: set<'a> -> set<'a> -> set<'a>
+val set_eq: set<'a> -> set<'a> -> bool
 
 (* A fifo_set is a set preserving the insertion order *)
-type fifo_set<'a>
-  = set<'a> // JUST FSHARP
-val new_fifo_set: ('a -> 'a -> int) -> fifo_set<'a>
-val as_fifo_set: list<'a> -> ('a -> 'a -> int) -> fifo_set<'a>
-val fifo_set_is_empty: fifo_set<'a> -> bool
-(* [fifo_set_add x s] pushes an element [x] at the end of the set [s] *)
-val fifo_set_add: 'a -> fifo_set<'a> -> fifo_set<'a>
-(* [fifo_set_remove x s] removes [x]from [s] *)
-val fifo_set_remove: 'a -> fifo_set<'a> -> fifo_set<'a>
-val fifo_set_mem: 'a -> fifo_set<'a> -> bool
-(* [fifo_set s1 s2] is the set with all elements in [s1] inserted before those of [s2] *)
-val fifo_set_union: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
-val fifo_set_count: fifo_set<'a> -> int
-val fifo_set_difference: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
-val fifo_set_elements: fifo_set<'a> -> list<'a>
+//type fifo_set<'a>
+//  = set<'a> // JUST FSHARP
+//val new_fifo_set: ('a -> 'a -> int) -> fifo_set<'a>
+//val as_fifo_set: list<'a> -> ('a -> 'a -> int) -> fifo_set<'a>
+//val fifo_set_is_empty: fifo_set<'a> -> bool
+//(* [fifo_set_add x s] pushes an element [x] at the end of the set [s] *)
+//val fifo_set_add: 'a -> fifo_set<'a> -> fifo_set<'a>
+//(* [fifo_set_remove x s] removes [x]from [s] *)
+//val fifo_set_remove: 'a -> fifo_set<'a> -> fifo_set<'a>
+//val fifo_set_mem: 'a -> fifo_set<'a> -> bool
+//(* [fifo_set s1 s2] is the set with all elements in [s1] inserted before those of [s2] *)
+//val fifo_set_union: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
+//val fifo_set_count: fifo_set<'a> -> int
+//val fifo_set_difference: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
+//val fifo_set_elements: fifo_set<'a> -> list<'a>
 
 (* not relying on representation *)
 type smap<'value>
@@ -93,6 +95,9 @@ val psmap_empty: unit -> psmap<'value> // GH-1161
 val psmap_add: psmap<'value> -> string -> 'value -> psmap<'value>
 val psmap_find_default: psmap<'value> -> string -> 'value -> 'value
 val psmap_try_find: psmap<'value> -> string -> option<'value>
+val psmap_fold: psmap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
+val psmap_find_map: psmap<'value> -> (string -> 'value -> option<'a>) -> option<'a>
+val psmap_modify: psmap<'value> -> string -> (option<'value> -> 'value) -> psmap<'value>
 
 (* not relying on representation *)
 type imap<'value>
@@ -115,6 +120,7 @@ val pimap_empty: unit -> pimap<'value> // GH-1161
 val pimap_add: pimap<'value> -> int -> 'value -> pimap<'value>
 val pimap_find_default: pimap<'value> -> int -> 'value -> 'value
 val pimap_try_find: pimap<'value> -> int -> option<'value>
+val pimap_fold: pimap<'value> -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
 
 val format: string -> list<string> -> string
 val format1: string -> string -> string
@@ -190,6 +196,7 @@ val open_file_for_writing: string -> file_handle
 val append_to_file: file_handle -> string -> unit
 val close_file: file_handle -> unit
 val write_file: string -> string -> unit
+val copy_file: string -> string -> unit
 val flush_file: file_handle -> unit
 val file_get_contents: string -> string
 val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
@@ -212,21 +219,27 @@ val string_builder_append: string_builder -> string -> unit
 val message_of_exn: exn -> string
 val trace_of_exn: exn -> string
 
+exception SigInt
+type sigint_handler
+val sigint_ignore: sigint_handler
+val sigint_raise: sigint_handler
+val set_sigint_handler: sigint_handler -> unit
+val with_sigint_handler: sigint_handler -> (unit -> 'a) -> 'a
+
 (* not relying on representation *)
 type proc
-val launch_process: bool -> string -> string -> string -> string -> (string -> string -> bool) -> string
-val start_process: bool -> string -> string -> string -> (string -> string -> bool) -> proc
-val ask_process: proc -> string -> string
+val run_process : string -> string -> list<string> -> option<string> -> string
+val start_process: string -> string -> list<string> -> (string -> bool) -> proc
+val ask_process: proc -> string -> (unit -> string) -> string
 val kill_process: proc -> unit
 val kill_all: unit -> unit
-
-val run_proc : string -> string -> string -> (bool * string * string)
 
 val get_file_extension: string -> string
 val is_path_absolute: string -> bool
 val join_paths: string -> string -> string
 val normalize_file_path: string -> string
 val basename: string -> string
+val dirname : string -> string
 val getcwd: unit -> string
 val readdir: string -> list<string>
 
@@ -284,7 +297,6 @@ val right: either<'a,'b> -> 'b
 val find_dup: ('a -> 'a -> bool) -> list<'a> -> option<'a>
 val nodups: ('a -> 'a -> bool) -> list<'a> -> bool
 val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
-val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool
 val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
 val add_unique: ('a -> 'a -> bool) -> 'a -> list<'a> -> list<'a>
 val try_find: ('a -> bool) -> list<'a> -> option<'a>
@@ -340,7 +352,7 @@ val run_st: 's -> state<'s,'a> -> ('a * 's)
 val mk_ref: 'a -> ref<'a>
 
 val get_exec_dir: unit -> string
-val expand_environment_variable: string -> string
+val expand_environment_variable: string -> option<string>
 
 val physical_equality: 'a -> 'a -> bool
 val check_sharing: 'a -> 'a -> string -> unit
@@ -387,6 +399,7 @@ val monitor_enter: 'a -> unit
 val monitor_exit:  'a -> unit
 val monitor_wait: 'a -> unit
 val monitor_pulse:  'a -> unit
+val with_monitor: 'a -> ('b -> 'c) -> 'b -> 'c
 val current_tid: unit -> int
 val sleep: int -> unit
 val atomically: (unit -> 'a) -> 'a

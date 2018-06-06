@@ -2,40 +2,40 @@
   "Œt\u007f'Ÿ\u0014\u0014‡„˜ÎqoçÙ\u0013",
   [
     [
-      "Unit1.TopLevelPats.uu___12",
+      "Unit1.TopLevelPats.uu___7",
       1,
       2,
       1,
       [
-        "@query", "equation_Unit1.TopLevelPats.uu___11",
+        "@query", "equation_Unit1.TopLevelPats.uu___6",
         "equation_Unit1.TopLevelPats.x",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "fba62078f1f8312a09b4c18fbe9b59d6"
+      "3fa620fbd5704d44ca4aeb0c85ab189c"
     ],
     [
-      "Unit1.TopLevelPats.uu___13",
+      "Unit1.TopLevelPats.uu___8",
       1,
       2,
       1,
       [
-        "@query", "equation_Unit1.TopLevelPats.uu___11",
+        "@query", "equation_Unit1.TopLevelPats.uu___6",
         "equation_Unit1.TopLevelPats.y",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "9edf837398ae3238ac2ad94db7bbb5ec"
+      "4f5ebccc6658c7eefb7524bfdb8e15b7"
     ],
     [
-      "Unit1.TopLevelPats.uu___15",
+      "Unit1.TopLevelPats.uu___10",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Unit1.TopLevelPats.make",
-        "equation_Unit1.TopLevelPats.uu___11",
-        "equation_Unit1.TopLevelPats.uu___14",
+        "equation_Unit1.TopLevelPats.uu___6",
+        "equation_Unit1.TopLevelPats.uu___9",
         "equation_Unit1.TopLevelPats.z",
         "function_token_typing_Unit1.TopLevelPats.z", "int_inversion",
         "primitive_Prims.op_Division", "projection_inverse_BoxInt_proj_0",
@@ -43,17 +43,17 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "d673360fd5dbc9e9435188af86ed0cab"
+      "4b5f6d9929f9c4c0da8c592a57aef41d"
     ],
     [
-      "Unit1.TopLevelPats.uu___16",
+      "Unit1.TopLevelPats.uu___11",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Unit1.TopLevelPats.make",
-        "equation_Unit1.TopLevelPats.uu___11",
-        "equation_Unit1.TopLevelPats.uu___14",
+        "equation_Unit1.TopLevelPats.uu___6",
+        "equation_Unit1.TopLevelPats.uu___9",
         "equation_Unit1.TopLevelPats.w",
         "function_token_typing_Unit1.TopLevelPats.w", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
@@ -62,7 +62,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "46837b787862d7d4d7bf0659966d24a3"
+      "ededdbf113bac31472656f632817ca7e"
     ]
   ]
 ]

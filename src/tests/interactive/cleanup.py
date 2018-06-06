@@ -17,6 +17,8 @@ def cleanup_json(js):
     if isinstance(js, dict):
         if "fname" in js:
             js["fname"] = os.path.basename(js["fname"].replace('\\', '/'))
+        if "location" in js:
+            js["location"] = "<location removed>"
         for v in js.itervalues():
             cleanup_json(v)
     elif isinstance(js, list):
@@ -28,7 +30,9 @@ def cleanup_one(line):
     try:
         js = json.loads(line)
         if js.get("kind") == "protocol-info":
-            js = {"kind": "[...]"} # Drop entire message
+            js = {"kind": js.get("kind"), "rest": "[...]"} # Drop message body
+        if js.get("kind") == "message" and js.get("level") == "progress":
+            return "" # Drop full message
         cleanup_json(js)
         return json.dumps(js, ensure_ascii=False, sort_keys=True) + "\n"
     except Exception as ex:

@@ -1,7 +1,7 @@
 module TestMRef
 open FStar.Heap
 open FStar.ST
-(*opaque logic type increasing (x:int) (y:int) = b2t (y >= x)*)
+(*opaque type increasing (x:int) (y:int) = b2t (y >= x)*)
 (*assume val x : MRef.mref int increasing *)
 
 val x : mref int (fun (x:int) (y:int) -> b2t (y >= x))

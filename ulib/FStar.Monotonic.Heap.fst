@@ -4,8 +4,8 @@ open FStar.Preorder
 open FStar.Classical
 
 private noeq type heap_rec = {
-  next_addr: nat;
-  memory   : nat -> Tot (option (a:Type0 & rel:(option (preorder a)) & b:bool & a))  //type, preorder, mm flag, and value
+  next_addr: (x: nat { x > 0 } );
+  memory   : (x: nat { x > 0 } ) -> Tot (option (a:Type0 & rel:(option (preorder a)) & b:bool & a))  //type, preorder, mm flag, and value
 }
 
 let heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
@@ -18,12 +18,12 @@ let equal h1 h2 =
 let equal_extensional h1 h2 = ()
 
 let emp = {
-  next_addr = 0;
+  next_addr = 1;
   memory    = (fun (r:nat) -> None)
 }
 
 private noeq type mref' (a:Type0) (rel:preorder a) :Type0 = {
-  addr: nat;
+  addr: (x: nat { x > 0 } );
   init: a;
   mm:   bool;  //manually managed flag
 }
@@ -40,9 +40,11 @@ let contains #a #rel h r =
   let _ = () in
   Some? (h.memory r.addr) /\
   (let Some (| a1, pre_opt, mm, _ |) = h.memory r.addr in
-   a == a1 /\ Some? pre_opt /\ Some?.v pre_opt === rel /\ mm = r.mm)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
+   a == a1 /\ Some? pre_opt /\ Some?.v pre_opt == rel /\ mm = r.mm)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
 
-let addr_unused_in n h = None? (h.memory n)
+let addr_unused_in n h = n <> 0 && None? (h.memory n)
+
+let not_addr_unused_in_nullptr h = ()
 
 let unused_in #a #rel r h = addr_unused_in (addr_of r) h
 
@@ -69,7 +71,7 @@ let upd #a #rel h r x =
     if r.addr >= h.next_addr
     then
       { next_addr = r.addr + 1;
-        memory    = (fun (r':nat) -> if r' = r.addr
+        memory    = (fun r' -> if r' = r.addr
 	   		         then Some (| a, Some rel, r.mm, x |)
                                  else h.memory r') }
     else
@@ -80,7 +82,7 @@ let upd #a #rel h r x =
 let alloc #a rel h x mm =
   let r = { addr = h.next_addr; init = x; mm = mm } in
   r, { next_addr = r.addr + 1;
-       memory    = (fun (r':nat) -> if r' = r.addr
+       memory    = (fun r' -> if r' = r.addr
 	   		        then Some (| a, Some rel, r.mm, x |)
                                 else h.memory r') }
 
@@ -171,8 +173,6 @@ let lemma_free_mm_sel #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_free_mm_contains #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_free_mm_unused #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_sel_same_addr #a #rel h r1 r2 = ()
-let lemma_upd_same_addr #a #rel h r1 r2 x =
-  assert (equal (upd h r1 x) (upd h r2 x))
 let lemma_sel_upd1 #a #rel h r1 x r2 = ()
 let lemma_sel_upd2 #a #b #rel1 #rel2 h r1 r2 x = ()
 let lemma_mref_injectivity = ()
@@ -185,22 +185,38 @@ let lemma_upd_unused #a #b #rel1 #rel2 h r1 x r2 = ()
 let lemma_contains_upd_modifies #a #rel h r x = ()
 let lemma_unused_upd_modifies #a #rel h r x = ()
 
-let upd_upd_same_mref #a #rel h r x y = assert (equal (upd (upd h r x) r y) (upd h r y))
 let lemma_sel_equals_sel_tot_for_contained_refs #a #rel h r = ()
 let lemma_upd_equals_upd_tot_for_contained_refs #a #rel h r x = ()
 let lemma_modifies_and_equal_dom_sel_diff_addr #a #rel s h0 h1 r = ()
 
+let lemma_heap_equality_upd_same_addr #a #rel h r1 r2 x =
+  assert (equal (upd h r1 x) (upd h r2 x))
+
+let lemma_heap_equality_cancel_same_mref_upd #a #rel h r x y =
+  let h0 = upd (upd h r x) r y in
+  let h1 = upd h r y in
+  assert (equal h0 h1)
+
+let lemma_heap_equality_upd_with_sel #a #rel h r =
+  let h' = upd h r (sel h r) in
+  let Some (| _, _, _, _ |) = h.memory r.addr in
+  assert (equal h h')
+
+let lemma_heap_equality_commute_distinct_upds #a #b #rel_a #rel_b h r1 r2 x y =
+  let h0 = upd (upd h r1 x) r2 y in
+  let h1 = upd (upd h r2 y) r1 x in
+  assert (equal h0 h1)
 
 (*** Untyped views of references *)
 
 (* Definition and ghost decidable equality *)
 noeq type aref' :Type0 = {
-  a_addr: nat;
+  a_addr: (x: nat { x > 0 } );
   a_mm:   bool;  //manually managed flag
 }
 let aref = aref'
 let dummy_aref = {
-  a_addr = 0;
+  a_addr = 1;
   a_mm   = false;
 }
 let aref_equal a1 a2 = a1.a_addr = a2.a_addr && a1.a_mm = a2.a_mm

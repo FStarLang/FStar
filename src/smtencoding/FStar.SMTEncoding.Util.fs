@@ -65,18 +65,16 @@ let mkBvUext sz = norng (mkBvUext sz)
 let mkBvToNat = norng mkBvToNat
 let mkITE = norng mkITE
 let mkCases = norng mkCases
-let mkForall = norng mkForall
-let mkForall' = norng mkForall'
-let mkForall'' = norng mkForall''
-let mkExists = norng mkExists
 
 let norng2 f = fun x y -> f x y Range.dummyRange
+let norng3 f = fun x y z -> f x y z Range.dummyRange
+let norng4 f = fun x y z w -> f x y z w Range.dummyRange
 let mk_Term_app  = norng2 mk_Term_app
 let mk_Term_uvar = norng mk_Term_uvar
 let mk_and_l = norng mk_and_l
 let mk_or_l = norng mk_or_l
 let mk_ApplyTT = norng2 mk_ApplyTT
 let mk_String_const = norng mk_String_const
-let mk_Precedes = norng2 mk_Precedes
-let mk_LexCons = norng2 mk_LexCons
+let mk_Precedes = norng4 mk_Precedes
+let mk_LexCons = norng3 mk_LexCons
 

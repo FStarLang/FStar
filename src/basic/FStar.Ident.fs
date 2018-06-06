@@ -5,26 +5,28 @@ open FStar.ST
 open FStar.All
 open FStar.Range
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type ident = {idText:string;
               idRange:Range.range}
 
 type path = list<string>
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type lident = {ns:list<ident>; //["FStar"; "Basic"]
                ident:ident;    //"lident"
                nsstr:string; // Cached version of the namespace
                str:string} // Cached version of string_of_lid
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type lid = lident
 
 let mk_ident (text,range) = {idText=text; idRange=range}
 let reserved_prefix = "uu___"
-let gen =
+let _gen =
     let x = Util.mk_ref 0 in
     fun r -> x := !x + 1; mk_ident (reserved_prefix ^ string_of_int !x, r)
+let gen r = _gen r // need this indirection for F#, ugh
+
 let id_of_text str = mk_ident(str, dummyRange)
 let text_of_id (id:ident) = id.idText
 let text_of_path path = Util.concat_l "." path
@@ -55,6 +57,8 @@ let lid_add_suffix l s =
     let path = path_of_lid l in
     lid_of_path (path@[s]) (range_of_lid l)
 let ml_path_of_lid lid = String.concat "_" <| (path_of_ns lid.ns)@[text_of_id lid.ident]
+
+let string_of_ident id = id.idText
 
 (* JP: I don't understand why a lid has both a str and a semantic list of
  * namespaces followed by a lowercase identifiers... *)

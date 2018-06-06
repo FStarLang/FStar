@@ -230,24 +230,23 @@ let rec sorted_concat_lemma #a f lo pivot hi =
         lemma_append_cons lo (cons pivot hi);
         lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
 
-#set-options "--max_fuel 1 --initial_fuel 1 --z3rlimit 30"
-val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
+abstract val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
   (requires True)
   (ensures (fun x ->
-            ((length x = 5)
-             /\ (s == append (index x 0) (append (index x 1) (append (index x 2) (append (index x 3) (index x 4)))))
+            (length x = 5
+             /\ equal s (append (index x 0) (append (index x 1) (append (index x 2) (append (index x 3) (index x 4)))))
              /\ equal (index x 0) (slice s 0 i)
              /\ equal (index x 1) (slice s i (i+1))
              /\ equal (index x 2) (slice s (i+1) j)
              /\ equal (index x 3) (slice s j (j + 1))
              /\ equal (index x 4) (slice s (j + 1) (length s)))))
 let split_5 #a s i j =
-  let frag_lo, rest  = split_eq s i in
-  let frag_i,  rest  = split_eq rest 1 in
-  let frag_mid,rest  = split_eq rest (j - (i + 1)) in
-  let frag_j,frag_hi = split_eq rest 1 in
+  let frag_lo = slice s 0 i in
+  let frag_i = slice s i (i + 1) in
+  let frag_mid = slice s (i + 1) j in
+  let frag_j = slice s j (j + 1) in
+  let frag_hi = slice s (j + 1) (length s) in
   upd (upd (upd (upd (create 5 frag_lo) 1 frag_i) 2 frag_mid) 3 frag_j) 4 frag_hi
-#reset-options
 
 val lemma_swap_permutes_aux_frag_eq: #a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s}
                           -> i':nat -> j':nat{i' <= j' /\ j'<=length s /\

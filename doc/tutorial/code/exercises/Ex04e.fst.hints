@@ -8,25 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e90ad5805d486fe9ab5423513d24a2b2"
-    ],
-    [
-      "Ex04e.uu___is_None",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c3c78046438a4a6c54628dd18d888df9"
-    ],
-    [
-      "Ex04e.uu___is_Some",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c2c1e14d7597c6b88d7be3263d387aeb"
+      "38fd600eeb10a3bab09ae9b508454c93"
     ],
     [
       "Ex04e.__proj__Some__item__v",
@@ -39,7 +21,7 @@
         "refinement_interpretation_Ex04e_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
       ],
       0,
-      "124f08ccd62b29340352a3851365ef96"
+      "feeeae4d2cbd7231b1f8bcf030f17e77"
     ],
     [
       "Ex04e.find",
@@ -50,11 +32,46 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "52b5ef1a32afce6a2c9cab99ec0688ac"
+      "cc8a4cf1b368a64341bad65f48a4ed9c"
+    ],
+    [
+      "Ex04e.option",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0eaf19370894ff4246e3dcdb2cc892d8"
+    ],
+    [
+      "Ex04e.__proj__Some__item__v",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ex04e.Some",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ex04e_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
+      ],
+      0,
+      "941319f061d439c98f7afd2e74bc1421"
+    ],
+    [
+      "Ex04e.find",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "0f99c696b2c3c4e30383341be3557444"
     ]
   ]
 ]

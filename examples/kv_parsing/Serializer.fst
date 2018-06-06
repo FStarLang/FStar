@@ -129,7 +129,7 @@ let writer_reinit b num_entries s scratch =
     let (length_field, entries_written_buf) = bslice_split_at b 4ul in
     let w = { length_field = length_field.p;
               entries_written_buf = entries_written_buf;
-              entries_written_list = elift1 (fun s -> s.entries) s;
+              entries_written_list = elift1 Store?.entries s;
               num_entries_written = num_entries;
               entries_scratch = scratch; } in
     begin

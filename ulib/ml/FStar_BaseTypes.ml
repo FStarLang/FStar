@@ -1,7 +1,7 @@
-type char   = FStar_Char.char
-type float  = FStar_Float.float
-type double = FStar_Float.double
-type byte   = FStar_UInt8.byte
+type char   = FStar_Char.char[@@deriving yojson,show]
+type float  = FStar_Float.float[@@deriving yojson,show]
+type double = FStar_Float.double[@@deriving yojson,show]
+type byte   = FStar_UInt8.byte[@@deriving yojson,show]
 type int8   = FStar_Int8.int8
 type uint8  = FStar_UInt8.uint8
 type int16   = FStar_Int16.int16

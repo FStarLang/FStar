@@ -16,7 +16,7 @@ let give_proof (#p:Type) _ = ()
 
 let proof_irrelevance (p:Type) x y = ()
 
-let squash_double_arrow (#a:Type) (#p:(a -> Type)) f =
+let squash_double_arrow #a #p f =
     bind_squash f push_squash
 
 let push_sum (#a:Type) (#b:(a -> Type)) ($p : dtuple2 a (fun (x:a) -> squash (b x))) =

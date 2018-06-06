@@ -26,7 +26,7 @@ open FStar.Ident
 open FStar.Universal
 open FStar.TypeChecker.Env
 
-module DsEnv   = FStar.ToSyntax.Env
+module DsEnv   = FStar.Syntax.DsEnv
 module TcEnv   = FStar.TypeChecker.Env
 
 // A custom version of the function that's in FStar.Universal.fs just for the
@@ -35,11 +35,11 @@ let tc_one_file (remaining:list<string>) (env:TcEnv.env) = //:((string option * 
   let (intf, impl), env, remaining =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let _, env = tc_one_file env (Some intf) impl in
-          (Some intf, impl), env, remaining
+          let _, env, delta = tc_one_file env None (Some intf) impl in
+          (Some intf, impl), Universal.apply_delta_env env delta, remaining
         | intf_or_impl :: remaining ->
-          let _, env = tc_one_file env None intf_or_impl in
-          (None, intf_or_impl), env, remaining
+          let _, env, delta = tc_one_file env None None intf_or_impl in
+          (None, intf_or_impl), Universal.apply_delta_env env delta, remaining
         | [] -> failwith "Impossible"
   in
   (intf, impl), env, remaining
@@ -58,12 +58,12 @@ type stack_t = list<(env_t * modul_t)>
 // pop).
 
 let pop env msg =
-    pop_context env msg;
+    ignore (TypeChecker.Tc.pop_context env msg);
     Options.pop()
 
 let push_with_kind env lax restore_cmd_line_options msg =
     let env = { env with lax = lax } in
-    let res = push_context env msg in
+    let res = TypeChecker.Tc.push_context env msg in
     Options.push();
     if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
     res
@@ -436,7 +436,7 @@ let rec go (line_col:(int*int))
     in
     let shorten_namespace (prefix, matched, match_len) =
       let naked_match = match matched with [_] -> true | _ -> false in
-      let stripped_ns, shortened = ToSyntax.Env.shorten_module_path env.dsenv prefix naked_match in
+      let stripped_ns, shortened = Syntax.DsEnv.shorten_module_path env.dsenv prefix naked_match in
       (str_of_ids shortened, str_of_ids matched, str_of_ids stripped_ns, match_len) in
     let prepare_candidate (prefix, matched, stripped_ns, match_len) =
       if prefix = "" then
@@ -487,7 +487,7 @@ let rec go (line_col:(int*int))
             | [] -> case_b_find_matches_in_env ()
             | _ ->
               let l = Ident.lid_of_path ns Range.dummyRange in
-              match FStar.ToSyntax.Env.resolve_module_name env.dsenv l true with
+              match FStar.Syntax.DsEnv.resolve_module_name env.dsenv l true with
               | None ->
                 case_b_find_matches_in_env ()
               | Some m ->

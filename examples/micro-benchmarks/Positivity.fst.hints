@@ -1,5 +1,5 @@
 [
-  "СЁИ▐&└э▄╬А╟¤┌╨7▄",
+  "\f\u0012<Б\nГ·v░°╞9з\u000bюд",
   [
     [
       "Positivity.mlist",
@@ -8,25 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b69211d45569705e63d52f792d7d908e"
-    ],
-    [
-      "Positivity.uu___is_MNil",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c3bd0f2d14ff99750b77904773de08a5"
-    ],
-    [
-      "Positivity.uu___is_MCons",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "9330c336594d1586180c84b8be11cd48"
+      "4e1edd3d4d9c7cfbf4dcd8739b60f01f"
     ],
     [
       "Positivity.__proj__MCons__item___0",
@@ -39,7 +21,7 @@
         "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0,
-      "5e3d0b860b2dd3715742d91a252d94c5"
+      "939c2ba96a29be91ba7105daa3736c50"
     ],
     [
       "Positivity.__proj__MCons__item___1",
@@ -52,25 +34,7 @@
         "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0,
-      "d92cfdcc7d7229f0c90fe50874194343"
-    ],
-    [
-      "Positivity.uu___is_NNil",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c281aac0a93b52f6325146426b766bd5"
-    ],
-    [
-      "Positivity.uu___is_NCons",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a8a808095a09502c21e71b15e3d10097"
+      "d1bf642de0a5db0d880b51db38ff459f"
     ],
     [
       "Positivity.__proj__NCons__item___0",
@@ -83,7 +47,7 @@
         "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0,
-      "cdd0dac63bbfb3c53f9d1cba78e8e5c7"
+      "47e83483dd6f7cd2fb9c601163439238"
     ],
     [
       "Positivity.__proj__NCons__item___1",
@@ -96,7 +60,68 @@
         "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0,
-      "1110952817c7151a78085782c680141a"
+      "d88f3ac4b17c316b7a9583d7ebda3f91"
+    ],
+    [
+      "Positivity.mlist",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "912b4091f206e4bde5ace171e5348f82"
+    ],
+    [
+      "Positivity.__proj__MCons__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.MCons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
+      ],
+      0,
+      "6ba7092f3c6270995b3bd19635a935a2"
+    ],
+    [
+      "Positivity.__proj__MCons__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.MCons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
+      ],
+      0,
+      "1cb190b4f585e0932cd5a8410af43eb9"
+    ],
+    [
+      "Positivity.__proj__NCons__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.NCons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
+      ],
+      0,
+      "01112bcd1af8f28a4b2c6206b798ddfe"
+    ],
+    [
+      "Positivity.__proj__NCons__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.NCons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
+      ],
+      0,
+      "e1141d40531537191761ebd4a5ac835e"
     ]
   ]
 ]

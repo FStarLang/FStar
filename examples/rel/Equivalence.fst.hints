@@ -6,15 +6,6 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0,
-      "c1875a899a50d3357c115c9c5f87e940"
-    ],
-    [
-      "Equivalence.if_left",
-      2,
-      2,
-      1,
       [
         "@query",
         "interpretation_Equivalence_Tm_abs_5646eff0017a4d35a78f1f3103e85ba6",
@@ -22,7 +13,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "fb10779250c350123b2d16e343965891"
+      "da4ed04685ed9d574420424cfe35edc1"
     ],
     [
       "Equivalence.if_left_wp",
@@ -39,7 +30,7 @@
         "unit_typing"
       ],
       0,
-      "27ed58c2bc95786899bda7912e0e665b"
+      "6778a4e8a2ab705c057d5f71cd217175"
     ],
     [
       "Equivalence.if_left_wp'",
@@ -56,7 +47,33 @@
         "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
       ],
       0,
-      "27f4baf246233759d6c55e868368e978"
+      "53c9bc31872adedeaab710bdd0dfa023"
+    ],
+    [
+      "Equivalence.if_left_wp",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Equivalence_Tm_refine_3bb8de9165e5ea42e5e07a8efedd0281"
+      ],
+      0,
+      "771f41eb869147bad44352e965b92382"
+    ],
+    [
+      "Equivalence.if_left_wp'",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
+      ],
+      0,
+      "3e5c04a04f844932208a221847a0069b"
     ]
   ]
 ]

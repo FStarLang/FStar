@@ -31,16 +31,14 @@ open FStar.TypeChecker.Common
 val report: env -> list<string> -> unit
 
 //unification variables
-val new_uvar : env -> typ -> typ
-val as_uvar  : typ -> uvar
-val new_implicit_var : string -> Range.range -> env -> typ -> (term * list<(uvar * Range.range)> * guard_t)
+val new_implicit_var : string -> Range.range -> env -> typ -> (term * list<(ctx_uvar * Range.range)> * guard_t)
 val check_uvars: Range.range -> typ -> unit
+val close_guard_implicits: env -> binders -> guard_t -> guard_t
 
 //extracting annotations from a term
-val extract_let_rec_annotation: env -> letbinding -> (univ_names * typ * bool)
+val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * bool
 
 //pattern utilities
-val pat_as_exp: bool -> env -> pat -> (env -> term -> term * guard_t) -> (list<bv> * term * guard_t * pat)
 val decorate_pattern: env -> pat -> term -> pat
 val decorated_pattern_as_term: pat -> list<bv> * term
 
@@ -93,5 +91,4 @@ val maybe_monadic: env -> term -> lident -> typ -> term
 //qualifiers
 val check_sigelt_quals: env -> sigelt -> unit
 
-//elaborate discriminator and projectors
-val mk_data_operations : list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>
+val must_erase_for_extraction: env -> term -> bool

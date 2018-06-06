@@ -19,10 +19,13 @@ let lemma_size (x:int) : Lemma (requires (UInt.size x n))
 				     [SMTPat (UInt.size x n)]
   = ()
 
+let lseq (a: Type) (l: nat) : Type =
+  (s: seq a { Seq.length s == l } )
+
 (* Buffer general type, fully implemented on FStar's arrays *)
 noeq private type _buffer (a:Type) =
   | MkBuffer: max_length:UInt32.t
-    -> content:reference (s:seq a{Seq.length s == v max_length})
+    -> content:reference (s: lseq a (v max_length))
     -> idx:UInt32.t
     -> length:UInt32.t{v idx + v length <= v max_length}
     -> _buffer a
@@ -44,7 +47,7 @@ let idx #a (b:buffer a) : GTot nat = v b.idx
 
 //17-01-04 rename to container or ref? 
 let content #a (b:buffer a) :
-  GTot (reference (s:seq a{Seq.length s == v b.max_length})) = b.content
+  GTot (reference (lseq a (max_length b))) = b.content
 
 (* Lifting from buffer to reference *)
 let as_ref #a (b:buffer a) = as_ref (content b)
@@ -184,7 +187,8 @@ let disjoint_3 a b b' b'' = disjoint a b /\ disjoint a b' /\ disjoint a b''
 let disjoint_4 a b b' b'' b''' = disjoint a b /\ disjoint a b' /\ disjoint a b'' /\ disjoint a b'''
 let disjoint_5 a b b' b'' b''' b'''' = disjoint a b /\ disjoint a b' /\ disjoint a b'' /\ disjoint a b''' /\ disjoint a b''''
 
-let disjoint_ref_1 (#t:Type) a (r:reference t) = frameOf a =!= HS.frameOf r \/ as_addr a =!= HS.as_addr r
+let disjoint_ref_1 (#t:Type) (#u:Type) (a:buffer t) (r:reference u) = 
+  frameOf a =!= HS.frameOf r \/ as_addr a =!= HS.as_addr r
 let disjoint_ref_2 a r r' = disjoint_ref_1 a r /\ disjoint_ref_1 a r'
 let disjoint_ref_3 a r r' r'' = disjoint_ref_1 a r /\ disjoint_ref_2 a r' r''
 let disjoint_ref_4 a r r' r'' r''' = disjoint_ref_1 a r /\ disjoint_ref_3 a r' r'' r'''
@@ -276,79 +280,79 @@ val lemma_modifies_bufs_superset: #a:Type -> #a':Type -> h0:mem -> h1:mem -> buf
 let lemma_modifies_bufs_superset #a #a' h0 h1 bufs b b' = ()
 
 (* Specialized lemmas *)
-let modifies_trans_0_0 rid h0 h1 h2 :
+let modifies_trans_0_0 (rid:rid) (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_0 rid h0 h1 /\ modifies_buf_0 rid h1 h2))
 	(ensures (modifies_buf_0 rid h0 h2))
 	[SMTPat (modifies_buf_0 rid h0 h1); SMTPat (modifies_buf_0 rid h1 h2)]
  = ()
 
-let modifies_trans_1_0 rid b h0 h1 h2 :
+let modifies_trans_1_0 (#t:Type) (rid:rid) (b:buffer t) (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_1 rid b h0 h1 /\ modifies_buf_0 rid h1 h2))
 	(ensures (modifies_buf_1 rid b h0 h2))
 	[SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_0 rid h1 h2)]
  = ()
 
-let modifies_trans_0_1 rid b h0 h1 h2 :
+let modifies_trans_0_1 (#t:Type) (rid:rid) (b:buffer t) (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_0 rid h0 h1 /\ modifies_buf_1 rid b h1 h2))
 	(ensures (modifies_buf_1 rid b h0 h2))
 	[SMTPat (modifies_buf_0 rid h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
  = ()
 
-let modifies_trans_1_1 rid b h0 h1 h2 :
+let modifies_trans_1_1 (#t:Type) (rid:rid) (b:buffer t) (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid b h1 h2))
 	(ensures (modifies_buf_1 rid b h0 h2))
 	[SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
  = ()
 
-let modifies_trans_1_1' rid b b' h0 h1 h2 :
+let modifies_trans_1_1' (#t:Type) (#t':Type) (rid:rid) (b:buffer t) (b':buffer t') (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid b' h1 h2))
 	(ensures (modifies_buf_2 rid b b' h0 h2))
 	[SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_1 rid b' h1 h2)]
  = ()
 
-let modifies_trans_2_0 rid b b' h0 h1 h2 :
+let modifies_trans_2_0 (#t:Type) (#t':Type) (rid:rid) (b:buffer t) (b':buffer t') (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_2 rid b b' h0 h1 /\ modifies_buf_0 rid h1 h2))
 	(ensures (modifies_buf_2 rid b b' h0 h2))
 	[SMTPat (modifies_buf_2 rid b b' h0 h1); SMTPat (modifies_buf_0 rid h1 h2)]
  = ()
 
-let modifies_trans_2_1 rid b b' h0 h1 h2 :
+let modifies_trans_2_1 (#t:Type) (#t':Type) (rid:rid) (b:buffer t) (b':buffer t') (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_2 rid b b' h0 h1 /\ modifies_buf_1 rid b h1 h2))
 	(ensures (modifies_buf_2 rid b b' h0 h2))
 	[SMTPat (modifies_buf_2 rid b b' h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
  = ()
 
-let modifies_trans_2_1' rid b b' h0 h1 h2 :
+let modifies_trans_2_1' (#t:Type) (#t':Type) (rid:rid) (b:buffer t) (b':buffer t') (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_2 rid b' b h0 h1 /\ modifies_buf_1 rid b h1 h2))
 	(ensures (modifies_buf_2 rid b b' h0 h2))
 	[SMTPat (modifies_buf_2 rid b' b h0 h1); SMTPat (modifies_buf_1 rid b h1 h2)]
  = ()
 
-let modifies_trans_0_2 rid b b' h0 h1 h2 :
+let modifies_trans_0_2 (#t:Type) (#t':Type) (rid:rid) (b:buffer t) (b':buffer t') (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_0 rid h0 h1 /\ modifies_buf_2 rid b b' h1 h2))
 	(ensures (modifies_buf_2 rid b b' h0 h2))
 	[SMTPat (modifies_buf_0 rid h0 h1); SMTPat (modifies_buf_2 rid b b' h1 h2)]
  = ()
 
-let modifies_trans_1_2 rid b b' h0 h1 h2 :
+let modifies_trans_1_2 (#t:Type) (#t':Type) (rid:rid) (b:buffer t) (b':buffer t') (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_1 rid b h0 h1 /\ modifies_buf_2 rid b b' h1 h2))
 	(ensures (modifies_buf_2 rid b b' h0 h2))
 	[SMTPat (modifies_buf_1 rid b h0 h1); SMTPat (modifies_buf_2 rid b b' h1 h2)]
  = ()
 
-let modifies_trans_2_2 rid b b' h0 h1 h2 :
+let modifies_trans_2_2 (#t:Type) (#t':Type) (rid:rid) (b:buffer t) (b':buffer t') (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_2 rid b b' h0 h1 /\ modifies_buf_2 rid b b' h1 h2))
 	(ensures (modifies_buf_2 rid b b' h0 h2))
 	[SMTPat (modifies_buf_2 rid b b' h0 h1); SMTPat (modifies_buf_2 rid b b' h1 h2)]
  = ()
 
-let modifies_trans_3_3 rid b b' b'' h0 h1 h2 :
+let modifies_trans_3_3 (#t #t' #t'':Type) (rid:rid) (b:buffer t) (b':buffer t') (b'':buffer t'') (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_3 rid b b' b'' h0 h1 /\ modifies_buf_3 rid b b' b'' h1 h2))
 	(ensures (modifies_buf_3 rid b b' b'' h0 h2))
 	[SMTPat (modifies_buf_3 rid b b' b'' h0 h1); SMTPat (modifies_buf_3 rid b b' b'' h1 h2)]
  = ()
 
-let modifies_trans_4_4 rid b b' b'' b''' h0 h1 h2 :
+let modifies_trans_4_4 (#t #t' #t'' #t''':Type) (rid:rid) (b:buffer t) (b':buffer t') (b'':buffer t'') (b''':buffer t''') (h0 h1 h2:mem) :
   Lemma (requires (modifies_buf_4 rid b b' b'' b''' h0 h1 /\ modifies_buf_4 rid b b' b'' b''' h1 h2))
 	(ensures (modifies_buf_4 rid b b' b'' b''' h0 h2))
 	[SMTPat (modifies_buf_4 rid b b' b'' b''' h0 h1); SMTPat (modifies_buf_4 rid b b' b'' b''' h1 h2)]
@@ -358,35 +362,35 @@ let modifies_trans_4_4 rid b b' b'' b''' h0 h1 h2 :
 
 (* Modifies clauses that do not change the shape of the HyperStack (h1.tip = h0.tip) *)
 (* NB: those clauses are made abstract in order to make verification faster
-   Lemmas follow to allow the programmer to make use of the real definition
-   of those predicates in a general setting *)
-abstract let modifies_0 h0 h1 =
+//    Lemmas follow to allow the programmer to make use of the real definition
+//    of those predicates in a general setting *)
+abstract let modifies_0 (h0 h1:mem) :Type0 =
   modifies_one h0.tip h0 h1
   /\ modifies_buf_0 h0.tip h0 h1
   /\ h0.tip == h1.tip
 
 (* This one is very generic: it says
- * - some references have changed in the frame of b, but
- * - among all buffers in this frame, b is the only one that changed. *)
-abstract let modifies_1 (#a:Type) (b:buffer a) h0 h1 =
+//  * - some references have changed in the frame of b, but
+//  * - among all buffers in this frame, b is the only one that changed. *)
+abstract let modifies_1 (#a:Type) (b:buffer a) (h0 h1:mem) :Type0 =
   let rid = frameOf b in
   modifies_one rid h0 h1 /\ modifies_buf_1 rid b h0 h1 /\ h0.tip == h1.tip
 
-abstract let modifies_2_1 (#a:Type) (b:buffer a) h0 h1 =
+abstract let modifies_2_1 (#a:Type) (b:buffer a) (h0 h1:mem) :Type0 =
   h0.tip == h1.tip /\
   (let rid = frameOf b in
    ((rid == h0.tip /\ modifies_buf_1 rid b h0 h1 /\ modifies_one rid h0 h1)
    \/ (rid =!= h0.tip /\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton h0.tip)) h0 h1
        /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_0 h0.tip h0 h1 )))
 
-abstract let modifies_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 =
+abstract let modifies_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') (h0 h1:mem) :Type0 =
   h0.tip == h1.tip /\
   (let rid = frameOf b in let rid' = frameOf b' in
    ((rid == rid' /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_one rid h0 h1)
    \/ (rid =!= rid' /\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton rid')) h0 h1
        /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 )))
 
-abstract let modifies_3 (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer a')  (b'':buffer a'') h0 h1 =
+abstract let modifies_3 (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer a')  (b'':buffer a'') (h0 h1:mem) :Type0 =
   h0.tip == h1.tip /\
   (let rid = frameOf b in let rid' = frameOf b' in let rid'' = frameOf b'' in
    ((rid == rid' /\ rid' == rid'' /\ modifies_buf_3 rid b b' b'' h0 h1 /\ modifies_one rid h0 h1)
@@ -400,7 +404,7 @@ abstract let modifies_3 (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer
        /\ HS.modifies (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton rid'')) h0 h1
        /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_1 rid'' b'' h0 h1)))
 
-abstract let modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 =
+abstract let modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') (h0 h1:mem) :Type0 =
   h0.tip == h1.tip /\
   (let rid = frameOf b in let rid' = frameOf b' in
    ((rid == rid' /\ rid' == h0.tip /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_one rid h0 h1)
@@ -414,7 +418,7 @@ abstract let modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1
        /\ HS.modifies (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton h0.tip)) h0 h1
        /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_0 h0.tip h0 h1)))
 
-abstract let modifies_region (rid:rid) bufs h0 h1 =
+abstract let modifies_region (rid:rid) (bufs:TSet.set abuffer) (h0 h1:mem) :Type0 =
   modifies_one rid h0 h1 /\ modifies_bufs rid bufs h0 h1 /\ h0.tip == h1.tip
 
 (* Lemmas introducing the 'modifies' predicates *)
@@ -492,7 +496,7 @@ let lemma_intro_modifies_region (rid:rid) bufs h0 h1 : Lemma
 
 
 (* Lemmas revealing the content of the specialized modifies clauses in order to
-   be able to generalize them if needs be. *)
+//    be able to generalize them if needs be. *)
 let lemma_reveal_modifies_0 h0 h1 : Lemma
   (requires (modifies_0 h0 h1))
   (ensures  (modifies_one h0.tip h0 h1 /\ modifies_buf_0 h0.tip h0 h1 /\ h0.tip == h1.tip))
@@ -578,8 +582,8 @@ let lemma_stack_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 h3 :
   = ()
 
 (* Specialized modifies clauses lemmas + associated SMTPatterns. Those are critical for
-   verification as the specialized modifies clauses are abstract from outside the
-   module *)
+//    verification as the specialized modifies clauses are abstract from outside the
+//    module *)
 
 (** Commutativity lemmas *)
 let lemma_modifies_2_comm (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 : Lemma
@@ -795,7 +799,7 @@ val create: #a:Type -> init:a -> len:UInt32.t -> StackInline (buffer a)
      /\ modifies_0 h0 h1
      /\ as_seq h1 b == Seq.create (v len) init))
 let create #a init len =
-  let content: reference (s:seq a{Seq.length s == v len}) =
+  let content: reference (lseq a (v len)) =
      salloc (Seq.create (v len) init) in
   let b = MkBuffer len content 0ul len in
   let h = HST.get() in
@@ -830,7 +834,7 @@ let createL #a init =
   let len = UInt32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.of_list init in
   lemma_of_list_length s init;
-  let content: reference (s:seq a{Seq.length s == v len}) =
+  let content: reference (lseq a (v len)) =
     salloc (Seq.of_list init) in
   let b = MkBuffer len content 0ul len in
   let h = HST.get() in
@@ -860,7 +864,7 @@ private let rcreate_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (mm:bool)
 		                        is_mm b.content == mm))
   = let h0 = HST.get() in
     let s = Seq.create (v len) init in
-    let content: reference (s:seq a{Seq.length s == v len}) =
+    let content: reference (lseq a (v len)) =
       if mm then ralloc_mm r s else ralloc r s
     in
     let b = MkBuffer len content 0ul len in
@@ -870,25 +874,36 @@ private let rcreate_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (mm:bool)
     b
 
 (** This function allocates a buffer in an "eternal" region, i.e. a region where memory is
- * automatically-managed. One does not need to call rfree on such a buffer. It
- * translates to C as a call to malloc and assumes a conservative garbage
- * collector is runnning. *)
+//  * automatically-managed. One does not need to call rfree on such a buffer. It
+//  * translates to C as a call to malloc and assumes a conservative garbage
+//  * collector is runnning. *)
 val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
   (requires (fun h            -> is_eternal_region r))
   (ensures (fun (h0:mem) b h1 -> rcreate_post_common r init len b h0 h1 /\ ~(is_mm b.content)))
 let rcreate #a r init len = rcreate_common r init len false
 
-(** This function allocates a buffer into a manually-managed region, meaning that the client must
- * call rfree in order to avoid memory leaks. It translates to C as a straight malloc. *)
+(** This predicate tells whether a buffer can be `rfree`d. The only
+    way to produce it should be `rcreate_mm`, and the only way to
+    consume it should be `rfree.` Rationale: a buffer can be `rfree`d
+    only if it is the result of `rcreate_mm`. Subbuffers should not. *)
+abstract
+let freeable (#a: Type) (b: buffer a) : GTot Type0 =
+  is_mm b.content /\ is_eternal_region (frameOf b) /\ idx b == 0
+
+(** This function allocates a buffer into a manually-managed buffer in a heap
+ * region, meaning that the client must call rfree in order to avoid memory
+ * leaks. It translates to C as a straight malloc. *)
 let rcreate_mm (#a:Type) (r:rid) (init:a) (len:UInt32.t)
   :ST (buffer a) (requires (fun h0      -> is_eternal_region r))
-                 (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm b.content))
+                 (ensures  (fun h0 b h1 -> rcreate_post_common r init len b h0 h1 /\ is_mm (content b) /\ freeable b))
   = rcreate_common r init len true
+
+#reset-options
 
 (** This function frees a buffer allocated with `rcreate_mm`. It translates to C as a regular free. *)
 let rfree (#a:Type) (b:buffer a)
-  :ST unit (requires (fun h0      -> live h0 b /\ is_mm b.content /\ is_eternal_region (frameOf b)))
-           (ensures  (fun h0 _ h1 -> h1 == HS.free b.content h0))
+  :ST unit (requires (fun h0      -> live h0 b /\ freeable b))
+           (ensures  (fun h0 _ h1 -> is_mm (content b) /\ is_eternal_region (frameOf b) /\ h1 == HS.free (content b) h0))
   = rfree b.content
 
 (* #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0" *)
@@ -935,7 +950,7 @@ let index #a b n =
   Seq.index s (v b.idx + v n)
 
 (** REMARK: the proof of this lemma relies crucially on the `a == a'` condition
-    in `disjoint`, and on the pattern in `Seq.slice_upd` *)
+//     in `disjoint`, and on the pattern in `Seq.slice_upd` *)
 private let lemma_aux_0
   (#a:Type) (b:buffer a) (n:UInt32.t{v n < length b}) (z:a) (h0:mem) (tt:Type) (bb:buffer tt)
   :Lemma (requires (live h0 b /\ live h0 bb /\ disjoint b bb))
@@ -1099,11 +1114,11 @@ let rec eqb #a b1 b2 len =
       false
 
 (**
-    Defining operators for buffer accesses as specified at
-    https://github.com/FStarLang/FStar/wiki/Parsing-and-operator-precedence
-   *)
+//     Defining operators for buffer accesses as specified at
+//     https://github.com/FStarLang/FStar/wiki/Parsing-and-operator-precedence
+//    *)
 (* JP: if the [val] is not specified, there's an issue with these functions
- * taking an extra unification parameter at extraction-time... *)
+//  * taking an extra unification parameter at extraction-time... *)
 val op_Array_Access: #a:Type -> b:buffer a -> n:UInt32.t{v n<length b} -> Stack a
      (requires (fun h -> live h b))
      (ensures (fun h0 z h1 -> h1 == h0

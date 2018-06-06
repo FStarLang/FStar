@@ -22,6 +22,7 @@ let hide_reveal (x:bytes) = ()
 let reveal_hide s = ()
 
 type 'a lbytes = bytes
+type 'a lbytes32 = bytes
 type kbytes = bytes
 
 let empty_bytes = ""
@@ -30,9 +31,6 @@ let empty_unique (b:bytes) = ()
 let get (b:bytes) (pos:u32) = int_of_char (String.get b pos)
 let op_String_Access = get
 
-let set_byte (bs:bytes) (pos:u32) (b:byte) =
-    let x = (Bytes.copy bs) in Bytes.set x pos (char_of_int b); x
-let op_String_Assignment = set_byte
 let index (b:bytes) (i:Z.t) = get b (Z.to_int i)
 
 type ('b1, 'b2) equal = unit
@@ -177,7 +175,7 @@ let string_of_hex s =
     in
     aux 0;
     res
-let bytes_of_hex s = string_of_hex s
+let bytes_of_hex s = Bytes.to_string (string_of_hex s)
 
 let hex_of_string s =
   let n = String.length s in
@@ -192,7 +190,7 @@ let hex_of_bytes b = hex_of_string b
 
 let print_bytes (s:bytes) : string =
   let b = Buffer.create 1024 in
-  for i = 0 to Bytes.length s - 1 do
+  for i = 0 to String.length s - 1 do
     Buffer.add_string b (Printf.sprintf "%02X" (int_of_char s.[i]));
   done;
   Buffer.contents b

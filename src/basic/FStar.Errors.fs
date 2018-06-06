@@ -71,6 +71,7 @@ type raw_error =
   | Fatal_ExpectTermGotFunction
   | Fatal_ExpectTrivialPreCondition
   | Fatal_FailToCompileNativeTactic
+  | Fatal_FailToExtractNativeTactic
   | Fatal_FailToProcessPragma
   | Fatal_FailToResolveImplicitArgument
   | Fatal_FailToSolveUniverseInEquality
@@ -217,12 +218,13 @@ type raw_error =
   | Fatal_UnexpectedTerm
   | Fatal_UnexpectedTermInUniverse
   | Fatal_UnexpectedTermType
+  | Fatal_UnexpectedTermVQuote
   | Fatal_UnexpectedUniversePolymorphicReturn
   | Fatal_UnexpectedUniverseVariable
   | Fatal_UnfoldableDeprecated
   | Fatal_UnificationNotWellFormed
   | Fatal_Uninstantiated
-  | Fatal_UninstantiatedUnificationVarInTactic
+  | Error_UninstantiatedUnificationVarInTactic
   | Fatal_UninstantiatedVarInTactic
   | Fatal_UniverseMightContainSumOfTwoUnivVars
   | Fatal_UniversePolymorphicInnerLetBound
@@ -242,7 +244,7 @@ type raw_error =
   | Fatal_WrongResultTypeAfterConstrutor
   | Fatal_WrongTerm
   | Fatal_WhenClauseNotSupported
-  | Fatal_CallNotImplemented
+  | Unused01
   | Warning_AddImplicitAssumeNewQualifier
   | Warning_AdmitWithoutDefinition
   | Warning_CachedFile
@@ -294,35 +296,61 @@ type raw_error =
   | Error_NoLetMutable
   | Error_BadImplicit
   | Warning_DeprecatedDefinition
+  | Fatal_SMTEncodingArityMismatch
+  | Warning_Defensive
+  | Warning_CantInspect
+  | Warning_NilGivenExplicitArgs
+  | Warning_ConsAppliedExplicitArgs
+  | Warning_UnembedBinderKnot
+  | Fatal_TacticProofRelevantGoal
+  | Warning_TacAdmit
+  | Fatal_IncoherentPatterns
+  | Error_NoSMTButNeeded
+  | Fatal_UnexpectedAntiquotation
+  | Fatal_SplicedUndef
+  | Fatal_SpliceUnembedFail
+  | Warning_ExtractionUnexpectedEffect
+  | Error_DidNotFail
+  | Warning_UnappliedFail
+  | Warning_QuantifierWithoutPattern
+  | Error_EmptyFailErrs
+  | Warning_logicqualifier
+  | Fatal_CyclicDependence
 
-// Needs review: Do we need CFatal, or can we just use CError?
 type flag =
-  | CError | CFatal | CWarning | CSilent
+  | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
+  | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
+                    //the compiler can progress after reporting them
+  | CError          //CError: these are reported as errors using log_issue
+                    //        but they can be turned into warnings or silenced
+  | CWarning        //CWarning: reported using log_issue as warnings by default;
+                    //          then can be silenced or escalated to errors
+  | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
 
 // This list should be considered STABLE
 // Which means, if you need to add an error, APPEND it, to keep old error numbers the same
 // If an error is deprecated, do not remove it! Change its name (if needed)
 let default_flags =
- [(Error_DependencyAnalysisFailed                    , CError);
-  (Error_IDETooManyPops                              , CError);
-  (Error_IDEUnrecognized                             , CError);
-  (Error_InductiveTypeNotSatisfyPositivityCondition  , CError);
-  (Error_InvalidUniverseVar                          , CError);
-  (Error_MissingFileName                             , CError);
-  (Error_ModuleFileNameMismatch                      , CError);
-  (Error_OpPlusInUniverse                            , CError);
-  (Error_OutOfRange                                  , CError);
-  (Error_ProofObligationFailed                       , CError);
-  (Error_TooManyFiles                                , CError);
-  (Error_TypeCheckerFailToProve                      , CError);
-  (Error_TypeError                                   , CError);
-  (Error_UncontrainedUnificationVar                  , CError);
-  (Error_UnexpectedGTotComputation                   , CError);
-  (Error_UnexpectedInstance                          , CError);
-  (Error_UnknownFatal_AssertionFailure               , CError);
-  (Error_Z3InvocationError                           , CError);
-  (Error_IDEAssertionFailure                         , CError);
-  (Error_Z3SolverError                               , CError);
+ [(Error_DependencyAnalysisFailed                    , CAlwaysError);
+  (Error_IDETooManyPops                              , CAlwaysError);
+  (Error_IDEUnrecognized                             , CAlwaysError);
+  (Error_InductiveTypeNotSatisfyPositivityCondition  , CAlwaysError);
+  (Error_InvalidUniverseVar                          , CAlwaysError);
+  (Error_MissingFileName                             , CAlwaysError);
+  (Error_ModuleFileNameMismatch                      , CAlwaysError);
+  (Error_OpPlusInUniverse                            , CAlwaysError);
+  (Error_OutOfRange                                  , CAlwaysError);
+  (Error_ProofObligationFailed                       , CAlwaysError);
+  (Error_TooManyFiles                                , CAlwaysError);
+  (Error_TypeCheckerFailToProve                      , CAlwaysError);
+  (Error_TypeError                                   , CAlwaysError);
+  (Error_UncontrainedUnificationVar                  , CAlwaysError);
+  (Error_UnexpectedGTotComputation                   , CAlwaysError);
+  (Error_UnexpectedInstance                          , CAlwaysError);
+  (Error_UnknownFatal_AssertionFailure               , CAlwaysError);
+  (Error_Z3InvocationError                           , CAlwaysError);
+  (Error_IDEAssertionFailure                         , CAlwaysError);
+  (Error_Z3SolverError                               , CAlwaysError);
   (Fatal_AbstractTypeDeclarationInInterface          , CFatal);
   (Fatal_ActionMustHaveFunctionType                  , CFatal);
   (Fatal_AlreadyDefinedTopLevelDeclaration           , CFatal);
@@ -366,6 +394,7 @@ let default_flags =
   (Fatal_ExpectNormalizedEffect                      , CFatal);
   (Fatal_ExpectTermGotFunction                       , CFatal);
   (Fatal_ExpectTrivialPreCondition                   , CFatal);
+  (Fatal_FailToExtractNativeTactic                   , CFatal);
   (Fatal_FailToCompileNativeTactic                   , CFatal);
   (Fatal_FailToProcessPragma                         , CFatal);
   (Fatal_FailToResolveImplicitArgument               , CFatal);
@@ -513,12 +542,13 @@ let default_flags =
   (Fatal_UnexpectedTerm                              , CFatal);
   (Fatal_UnexpectedTermInUniverse                    , CFatal);
   (Fatal_UnexpectedTermType                          , CFatal);
+  (Fatal_UnexpectedTermVQuote                        , CFatal);
   (Fatal_UnexpectedUniversePolymorphicReturn         , CFatal);
   (Fatal_UnexpectedUniverseVariable                  , CFatal);
   (Fatal_UnfoldableDeprecated                        , CFatal);
   (Fatal_UnificationNotWellFormed                    , CFatal);
   (Fatal_Uninstantiated                              , CFatal);
-  (Fatal_UninstantiatedUnificationVarInTactic        , CFatal);
+  (Error_UninstantiatedUnificationVarInTactic        , CError);
   (Fatal_UninstantiatedVarInTactic                   , CFatal);
   (Fatal_UniverseMightContainSumOfTwoUnivVars        , CFatal);
   (Fatal_UniversePolymorphicInnerLetBound            , CFatal);
@@ -538,7 +568,7 @@ let default_flags =
   (Fatal_WrongResultTypeAfterConstrutor              , CFatal);
   (Fatal_WrongTerm                                   , CFatal);
   (Fatal_WhenClauseNotSupported                      , CFatal);
-  (Fatal_CallNotImplemented                          , CFatal);
+  (Unused01                                          , CFatal);
   (Warning_CallNotImplementedAsWarning               , CWarning);
   (Warning_AddImplicitAssumeNewQualifier             , CWarning);
   (Warning_AdmitWithoutDefinition                    , CWarning);
@@ -577,7 +607,7 @@ let default_flags =
   (Warning_UnboundModuleReference                    , CWarning);
   (Warning_UnexpectedFile                            , CWarning);
   (Warning_UnexpectedFsTypApp                        , CWarning);
-  (Warning_UnexpectedZ3Output                        , CWarning);
+  (Warning_UnexpectedZ3Output                        , CError);
   (Warning_UnprotectedTerm                           , CWarning);
   (Warning_UnrecognizedAttribute                     , CWarning);
   (Warning_UpperBoundCandidateAlreadyVisited         , CWarning);
@@ -587,8 +617,30 @@ let default_flags =
   (Warning_MissingInterfaceOrImplementation          , CWarning);
   (Warning_ConstructorBuildsUnexpectedType           , CWarning);
   (Warning_ModuleOrFileNotFoundWarning               , CWarning);
-  (Error_BadImplicit                                 , CError);
-  (Warning_DeprecatedDefinition                      , CWarning)]
+  (Error_NoLetMutable                                , CAlwaysError);
+  (Error_BadImplicit                                 , CAlwaysError);
+  (Warning_DeprecatedDefinition                      , CWarning);
+  (Fatal_SMTEncodingArityMismatch                    , CFatal);
+  (Warning_Defensive                                 , CWarning);
+  (Warning_CantInspect                               , CWarning);
+  (Warning_NilGivenExplicitArgs                      , CWarning);
+  (Warning_ConsAppliedExplicitArgs                   , CWarning);
+  (Warning_UnembedBinderKnot                         , CWarning);
+  (Fatal_TacticProofRelevantGoal                     , CFatal);
+  (Warning_TacAdmit                                  , CWarning);
+  (Fatal_IncoherentPatterns                          , CFatal);
+  (Error_NoSMTButNeeded                              , CAlwaysError);
+  (Fatal_UnexpectedAntiquotation                     , CFatal);
+  (Fatal_SplicedUndef                                , CFatal);
+  (Fatal_SpliceUnembedFail                           , CFatal);
+  (Warning_ExtractionUnexpectedEffect                , CWarning);
+  (Error_DidNotFail                                  , CAlwaysError);
+  (Warning_UnappliedFail                             , CWarning);
+  (Warning_QuantifierWithoutPattern                  , CSilent);
+  (Error_EmptyFailErrs                               , CAlwaysError);
+  (Warning_logicqualifier                            , CWarning);
+  (Fatal_CyclicDependence                            , CFatal)
+  ]
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range
@@ -656,7 +708,7 @@ let compare_issues i1 i2 =
     | Some _, None -> 1
     | Some r1, Some r2 -> Range.compare_use_range r1 r2
 
-let default_handler =
+let mk_default_handler print =
     let errs : ref<list<issue>> = BU.mk_ref [] in
     let add_one (e: issue) =
         match e.issue_level with
@@ -666,7 +718,8 @@ let default_handler =
         List.length !errs in
     let report () =
         let sorted = List.sortWith compare_issues !errs in
-        List.iter print_issue sorted;
+        if print then
+            List.iter print_issue sorted;
         sorted in
     let clear () =
         errs := [] in
@@ -674,6 +727,8 @@ let default_handler =
       eh_count_errors = count_errors;
       eh_report = report;
       eh_clear = clear }
+
+let default_handler = mk_default_handler true
 
 let current_handler =
     BU.mk_ref default_handler
@@ -732,9 +787,16 @@ let init_warn_error_flags =
 let diag r msg =
   if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg None)
 
+let defensive_errno = errno_of_error Warning_Defensive
+let lookup flags errno =
+    if errno = defensive_errno && Options.defensive_fail ()
+    then CAlwaysError
+    else List.nth flags errno
+
 let log_issue r (e, msg) =
   let errno = errno_of_error (e) in
-  match List.nth !flags errno with
+  match lookup !flags errno with
+  | CAlwaysError
   | CError ->
      add_one (mk_issue EError (Some r) msg (Some errno))
   | CWarning ->
@@ -793,8 +855,9 @@ let update_flags l =
   in
   let set_one_flag f d =
     match (f, d) with
-    | (CWarning, CError) -> raise_err (Fatal_InvalidWarnErrorSetting, "cannot turn an error into warning")
-    | (CSilent, CError) -> raise_err (Fatal_InvalidWarnErrorSetting, "cannot silence an error")
+    | (CWarning, CAlwaysError) -> raise_err (Fatal_InvalidWarnErrorSetting, "cannot turn an error into warning")
+    | (CError, CAlwaysError) -> raise_err (Fatal_InvalidWarnErrorSetting, "cannot turn an error into warning")
+    | (CSilent, CAlwaysError) -> raise_err (Fatal_InvalidWarnErrorSetting, "cannot silence an error")
     | (_, CFatal) -> raise_err (Fatal_InvalidWarnErrorSetting, "cannot reset the error level of a fatal error")
     | _ -> f
   in
@@ -828,3 +891,14 @@ let update_flags l =
   let range = compute_range [] l in
   let sorted = List.sortWith compare range in
   flags := aux [] 0 !flags sorted
+
+let catch_errors (f : unit -> 'a) : list<issue> =
+    let newh = mk_default_handler false in
+    let old = !current_handler in
+    current_handler := newh;
+    let _ = try let _ = f () in ()
+            with | ex -> err_exn ex
+    in
+    let errs = newh.eh_report() in
+    current_handler := old;
+    errs

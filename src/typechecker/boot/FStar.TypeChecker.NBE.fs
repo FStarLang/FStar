@@ -491,8 +491,8 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
             match p.v with
             | Pat_constant c -> Pat_constant c
             | Pat_cons (fvar, args) -> Pat_cons (fvar, List.map (fun (p, b) -> (process_pattern p, b)) args)
-            | Pat_var bvar -> Pat_var {bvar with sort = readback (translate env bs bvar.sort)}
-            | Pat_wild bvar -> Pat_wild {bvar with sort = readback (translate env bs bvar.sort)}
+            | Pat_var bvar -> Pat_var ({bvar with sort = readback (translate env bs bvar.sort)})
+            | Pat_wild bvar -> Pat_wild ({bvar with sort = readback (translate env bs bvar.sort)})
             (* Zoe: I'm not sure what this is, just speculating the translation *)
             | Pat_dot_term (bvar, tm) -> Pat_dot_term ({bvar with sort = readback (translate env bs bvar.sort)}, readback (translate env bs tm))
           in

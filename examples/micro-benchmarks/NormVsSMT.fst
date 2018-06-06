@@ -23,5 +23,7 @@ let _ = assert_norm True
 let _ = assert_norm (False ==> True)
 let _ = assert_norm (False ==> False)
 let _ = assert_norm (forall (x:nat). x >= 0)
-let _ = assert_norm (exists (x:int). x >= 0)
+let trigger (x:int) = True
+let _ = assert (trigger 0); assert (exists (x:int).{:pattern (trigger x)} x >= 0)
+// NS: 02/11 Apparently z3 can't show `exists (x:int). x >= 0`, after a change to encode unit-typed terms as unit
 // Apparently z3 can't show `exists (x:nat). x >= 0`, probably the refinement getting in the way

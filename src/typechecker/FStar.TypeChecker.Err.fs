@@ -64,6 +64,16 @@ let err_msg_type_strings env t1 t2 :(string * string) =
     )
   else s1, s2
 
+let err_msg_comp_strings env c1 c2 :(string * string) =
+  let s1 = N.comp_to_string env c1 in
+  let s2 = N.comp_to_string env c2 in
+  if s1 = s2 then
+    Options.with_saved_options (fun _ ->
+      ignore (Options.set_options Options.Set "--print_full_names --print_universes --print_effect_args");
+      N.comp_to_string env c1, N.comp_to_string env c2
+    )
+  else s1, s2
+
 (* Error messages for labels in VCs *)
 let exhaustiveness_check = "Patterns are incomplete"
 let subtyping_failed : env -> typ -> typ -> unit -> string =
@@ -89,10 +99,6 @@ let expected_expression_of_type env t1 e t2 =
   (Errors.Fatal_UnexpectedExpressionType, (format3 "Expected expression of type \"%s\"; got expression \"%s\" of type \"%s\""
     s1 (Print.term_to_string e) s2))
 
-let expected_function_with_parameter_of_type env t1 t2 =
-  let s1, s2 = err_msg_type_strings env t1 t2 in
-  (format3 "Expected a function with a parameter of type \"%s\"; this function has a parameter of type \"%s\"" s1 s2)
-
 let expected_pattern_of_type env t1 e t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   (Errors.Fatal_UnexpectedPattern, (format3 "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\""
@@ -107,9 +113,6 @@ let basic_type_error env eopt t1 t2 =
 
 let occurs_check =
   (Errors.Fatal_PossibleInfiniteTyp, "Possibly infinite typ (occurs check failed)")
-
-let unification_well_formedness =
-  (Errors.Fatal_UnificationNotWellFormed, "Term or type of an unexpected sort")
 
 let incompatible_kinds env k1 k2 =
   (Errors.Fatal_IncompatibleKinds, (format2 "Kinds \"%s\" and \"%s\" are incompatible"
@@ -139,10 +142,6 @@ let expected_poly_typ env f t targ =
   (Errors.Fatal_PolyTypeExpected, (format3 "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""
     (Print.term_to_string f) (N.term_to_string env t) (N.term_to_string env targ)))
 
-let nonlinear_pattern_variable x =
-  let m = Print.bv_to_string x in
-  (Errors.Fatal_NonLinearPatternVars, (format1 "The pattern variable \"%s\" was used more than once" m))
-
 let disjunctive_pattern_vars v1 v2 =
   let vars v =
     v |> List.map Print.bv_to_string |> String.concat ", " in
@@ -162,6 +161,12 @@ let computed_computation_type_does_not_match_annotation env e c c' =
   (Errors.Fatal_ComputedTypeNotMatchAnnotation, (format4
     "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
       s1 f1 s2 f2))
+
+let computed_computation_type_does_not_match_annotation_eq env e c c' =
+  let s1, s2 = err_msg_comp_strings env c c' in
+  (Errors.Fatal_ComputedTypeNotMatchAnnotation, (format2
+    "Computed type \"%s\" does not match annotated type \"%s\", and no subtyping was allowed"
+      s1 s2))
 
 let unexpected_non_trivial_precondition_on_term env f =
  (Errors.Fatal_UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))

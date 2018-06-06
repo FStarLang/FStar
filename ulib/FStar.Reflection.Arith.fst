@@ -56,12 +56,16 @@ let ge e1 e2 = CompProp (Plus (Lit 1) e1) C_Gt e2
 
 (* Define a traversal monad! Makes exception handling and counter-keeping easy *)
 private let st = p:(nat * list term){fst p == List.length (snd p)}
-private let tm a = st -> either string (a * st)
+private let tm a = st -> Tac (either string (a * st))
 private let return (x:'a) : tm 'a = fun i -> Inr (x, i)
 private let bind (m : tm 'a) (f : 'a -> tm 'b) : tm 'b =
     fun i -> match m i with
-             | Inl s -> Inl s
              | Inr (x, j) -> f x j
+             | s -> Inl (Inl?.v s) // why? To have a catch-all pattern and thus an easy WP
+
+val lift : ('a -> Tac 'b) -> ('a -> tm 'b)
+let lift f x st =
+    Inr (f x, st)
 
 val liftM : ('a -> 'b) -> (tm 'a -> tm 'b)
 let liftM f x =
@@ -101,17 +105,11 @@ private let atom (t:term) : tm expr = fun (n, atoms) ->
 private val fail : (#a:Type) -> string -> tm a
 private let fail #a s = fun i -> Inl s
 
-let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
-    match l with
-    | [] -> True
-    | x::xs -> p x /\ forall_list p xs
-
 val as_arith_expr : term -> tm expr
 let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
-    // Admitting this subtyping on lists for now, it's provable, but tedious right now
-    let tl : list ((a:term{a << t}) * aqualv) = admit(); tl in
-    match inspect hd, tl with
+    let tl = List.list_unref tl in
+    match inspect_ln hd, tl with
     | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
       let qn = inspect_fv fv in
       let e2' = as_arith_expr e2 in
@@ -160,30 +158,34 @@ let is_arith_expr t =
   match a with
   | Atom _ t -> begin
     let hd, tl = collect_app_ref t in
-    match inspect hd, tl with
+    match inspect_ln hd, tl with
     | Tv_FVar _, []
+    | Tv_BVar _, []
     | Tv_Var _, [] -> return a
     | _ -> fail ("not an arithmetic expression: (" ^ term_to_string t ^ ")")
   end
   | _ -> return a
 
-val is_arith_prop : term -> tm prop
-let rec is_arith_prop (t:term) =
-    match term_as_formula t with
+// Cannot use this...
+// val is_arith_prop : term -> tm prop
+val is_arith_prop : term -> st -> Tac (either string (prop * st))
+let rec is_arith_prop (t:term) = fun i ->
+    (f <-- lift term_as_formula t;
+    match f with
     | Comp (Eq _) l r     -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
     | Comp (BoolEq _) l r -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
     | Comp Lt l r     -> liftM2 lt (is_arith_expr l) (is_arith_expr r)
     | Comp Le l r     -> liftM2 le (is_arith_expr l) (is_arith_expr r)
     | And l r         -> liftM2 AndProp (is_arith_prop l) (is_arith_prop r)
     | Or l r          -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
-    | _               -> fail ("connector (" ^ term_to_string t ^ ")")
+    | _               -> fail ("connector (" ^ term_to_string t ^ ")")) i
 
 
 // Run the monadic computations, disregard the counter
-let run_tm (m : tm 'a) : either string 'a =
+let run_tm (m : tm 'a) : Tac (either string 'a) =
     match m (0, []) with
-    | Inl s -> Inl s
     | Inr (x, _) -> Inr x
+    | s -> Inl (Inl?.v s) // why? To have a catch-all pattern and thus an easy WP
 
 let rec expr_to_string (e:expr) : string =
     match e with
@@ -201,7 +203,6 @@ let rec expr_to_string (e:expr) : string =
     | Shl l r -> "(" ^ (expr_to_string l) ^ " << " ^ (expr_to_string r) ^ ")"
     | Shr l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
     | NatToBv l -> "(" ^ "to_vec " ^ (expr_to_string l) ^ ")"
-    | Neg l -> "~ " ^ (expr_to_string l)
     | Udiv l r -> "(" ^ (expr_to_string l) ^ " / " ^ (expr_to_string r) ^ ")"
     | Umod l r -> "(" ^ (expr_to_string l) ^ " % " ^ (expr_to_string r) ^ ")"
     | MulMod l r -> "(" ^ (expr_to_string l) ^ " ** " ^ (expr_to_string r) ^ ")"

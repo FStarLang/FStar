@@ -1,15 +1,6 @@
 [
-  "7»ã≥È\u0006'\\–ç`ê,JD_",
+  "¨Ÿ\u0014¬y*x\u0007\bt)0ı˘ƒ",
   [
-    [
-      "NegativeTests.Positivity.uu___is_C41",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "003fb04cf60e2e9b9c329af671b2928b"
-    ],
     [
       "NegativeTests.Positivity.__proj__C41__item___0",
       1,
@@ -22,16 +13,7 @@
         "refinement_interpretation_NegativeTests.Positivity_Tm_refine_b87d6bbfde336dc7bda327a6b8b57fe0"
       ],
       0,
-      "ffdc4e8487e330fa6bdab9fd5096610a"
-    ],
-    [
-      "NegativeTests.Positivity.uu___is_C42",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "014def261f2b16e33cc9c5d96c4b6ddc"
+      "7ebc677f67ca64e99af6e7659089a3e6"
     ],
     [
       "NegativeTests.Positivity.__proj__C42__item___0",
@@ -45,7 +27,7 @@
         "refinement_interpretation_NegativeTests.Positivity_Tm_refine_57bfa41d0d733420720971d3c9002d84"
       ],
       0,
-      "b109e145f6fad52a10c2626f44db3f0e"
+      "f82a6f01911c92d1fab417a91e6caa0e"
     ],
     [
       "NegativeTests.Positivity.__proj__C42__item___1",
@@ -59,16 +41,7 @@
         "refinement_interpretation_NegativeTests.Positivity_Tm_refine_57bfa41d0d733420720971d3c9002d84"
       ],
       0,
-      "8389587783ab87e1e6554aa6d7b11554"
-    ],
-    [
-      "NegativeTests.Positivity.uu___is_C61",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "5c295ce1ee4355c5f76045a420089b1c"
+      "9a8933a04700335ae695e107d77ae999"
     ],
     [
       "NegativeTests.Positivity.__proj__C61__item___0",
@@ -82,7 +55,7 @@
         "refinement_interpretation_NegativeTests.Positivity_Tm_refine_d189dce05c186475c90958872418b4e6"
       ],
       0,
-      "56bbc05ccad4adf319fac9426f5eb0ee"
+      "8367dc4b8f0c7fbc46e5e644147a42e2"
     ],
     [
       "NegativeTests.Positivity.__proj__C61__item___1",
@@ -96,16 +69,77 @@
         "refinement_interpretation_NegativeTests.Positivity_Tm_refine_d189dce05c186475c90958872418b4e6"
       ],
       0,
-      "e502135bac5cdfa91bc07a4c5c23dad7"
+      "3aa1b8184ee7dace21b662bf537364ee"
     ],
     [
-      "NegativeTests.Positivity.uu___is_C62",
-      1,
+      "NegativeTests.Positivity.__proj__C41__item___0",
+      2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Positivity.C41",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_NegativeTests.Positivity_Tm_refine_b87d6bbfde336dc7bda327a6b8b57fe0"
+      ],
       0,
-      "6ede85dc7e69852d609ce5be94b4eb8b"
+      "a6be16c97f9ecb01988f32a898ea8667"
+    ],
+    [
+      "NegativeTests.Positivity.__proj__C42__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Positivity.C42",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_NegativeTests.Positivity_Tm_refine_57bfa41d0d733420720971d3c9002d84"
+      ],
+      0,
+      "c10c407e4b3f41a2d0db35ff3c92857c"
+    ],
+    [
+      "NegativeTests.Positivity.__proj__C42__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Positivity.C42",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_NegativeTests.Positivity_Tm_refine_57bfa41d0d733420720971d3c9002d84"
+      ],
+      0,
+      "49ffee3e62debff9a18f6c9fdfe47770"
+    ],
+    [
+      "NegativeTests.Positivity.__proj__C61__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Positivity.C61",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_NegativeTests.Positivity_Tm_refine_d189dce05c186475c90958872418b4e6"
+      ],
+      0,
+      "f13ece502b9206d451a52aecb5d0d798"
+    ],
+    [
+      "NegativeTests.Positivity.__proj__C61__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Positivity.C61",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_NegativeTests.Positivity_Tm_refine_d189dce05c186475c90958872418b4e6"
+      ],
+      0,
+      "731724b69f5f507a6e176e2a78d568e0"
     ]
   ]
 ]

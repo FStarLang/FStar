@@ -21,8 +21,14 @@ INCLUDE_PATHS = \
 	typechecker \
 	tests
 
-FSTAR_C=$(FSTAR) $(OTHERFLAGS) --cache_checked_modules --eager_inference --lax --MLish --no_location_info \
-		   --odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))
+CACHE_DIR?=./.cache.boot
+
+FSTAR_BOOT ?= $(FSTAR)
+FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) --cache_checked_modules		\
+	--use_extracted_interfaces false                                \
+	--lax --MLish --no_location_info				\
+	--odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))	\
+	--warn_error -272-241 --cache_dir $(CACHE_DIR)
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
@@ -55,14 +61,16 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # file was already up to date, it doesn't touch it. Touching it here
 # ensures that if this rule is successful then %.checked.lax is more
 # recent than its dependences.
-%.checked.lax: %
-	$(FSTAR_C) $*
+%.checked.lax:
+	$(FSTAR_C) $<
 	touch $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
 ocaml-output/%.ml:
-	$(FSTAR_C) $(subst .checked.lax,,$<) --codegen OCaml --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
+	$(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
+                   --codegen OCaml \
+                   --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
 # --------------------------------------------------------------------
 # Dependency analysis for bootstrapping
@@ -72,13 +80,18 @@ ocaml-output/%.ml:
 # file as the roots, mentioning the the modules that are to be
 # extracted. This emits dependences for each of the ML files we want
 # to produce.
+#
+# We do an indirection via ._depend so we don't write an empty file if
+# the dependency analysis failed.
 
 .depend:
 	$(FSTAR_C) --dep full                 \
 		   fstar/FStar.Main.fs	      \
 		   boot/FStar.Tests.Test.fst  \
 		   $(EXTRACT)		      \
-		   --codegen OCaml > .depend
+		   --codegen OCaml > ._depend
+	mv ._depend .depend
+	mkdir -p $(CACHE_DIR)
 
 depend: .depend
 
