@@ -232,4 +232,9 @@ function build_fstar () {
     fi
 }
 
+# Some environment variables we want
+export OCAMLRUNPARAM=b
+export OTHERFLAGS="--print_z3_statistics --use_hints --query_stats"
+export MAKEFLAGS="$MAKEFLAGS -Otarget"
+
 build_fstar
