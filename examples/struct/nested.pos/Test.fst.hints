@@ -53,7 +53,7 @@
         "typing_FStar.List.Tot.Base.noRepeats", "typing_FStar.UInt32.v"
       ],
       0,
-      "8748f0d5850d682ee88edb377a4dd6e4"
+      "e4b1f883d356d5360ff53bd669b16e87"
     ],
     [
       "Test.ty",
@@ -102,7 +102,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "3416b6dc25b1b6971e7f715a62dd203d"
+      "0214938048cfdfca454efc9dd6090875"
     ],
     [
       "Test.f",
@@ -206,13 +206,12 @@
         "lemma_FStar.Set.lemma_equal_elim",
         "lemma_FStar.Set.lemma_equal_intro",
         "lemma_FStar.Set.mem_complement", "lemma_FStar.Set.mem_intersect",
-        "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
-        "lemma_FStar.UInt.pow2_values", "lemma_FStar.UInt32.uv_inv",
-        "lemma_FStar.UInt32.vu_inv", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
-        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
-        "primitive_Prims.op_disEquality",
+        "lemma_FStar.Set.mem_singleton", "lemma_FStar.UInt.pow2_values",
+        "lemma_FStar.UInt32.uv_inv", "lemma_FStar.UInt32.vu_inv",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Negation",
+        "primitive_Prims.op_Subtraction", "primitive_Prims.op_disEquality",
         "proj_equation_FStar.Monotonic.HyperStack.HS_h",
         "proj_equation_FStar.Monotonic.HyperStack.HS_rid_ctr",
         "proj_equation_FStar.Monotonic.HyperStack.HS_tip",
@@ -264,7 +263,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt32@tok"
       ],
       0,
-      "b174911edcb236c41d81944daba4fd5c"
+      "9d892303df866ea49980a76fcda38848"
     ]
   ]
 ]

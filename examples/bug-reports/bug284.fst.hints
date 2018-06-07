@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "38c85facd80b3afc58be9670dd6d930f"
+      "1a5f0ae2f16f687065f7094f4aa3679d"
     ],
     [
       "Bug284.foo",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Bug284_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "73420a676e408211e3d1b03f95ff80c5"
+      "1618b8968c9aa8e5172e0edde59ba249"
     ]
   ]
 ]
