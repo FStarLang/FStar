@@ -318,6 +318,18 @@ let add_binders env binders =
 
 (* Actual translation ********************************************************)
 
+let list_elements e2 =
+  let rec list_elements acc e2 =
+    match e2.expr with
+    | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
+        list_elements (hd :: acc) tl
+    | MLE_CTor (([ "Prims" ], "Nil" ), []) ->
+        List.rev acc
+    | _ ->
+        failwith "Argument of FStar.Buffer.createL is not a list literal!"
+  in
+  list_elements [] e2
+
 let rec translate (MLLib modules): list<file> =
   List.filter_map (fun m ->
     let m_name =
@@ -358,6 +370,13 @@ and translate_flags flags =
     | Syntax.CEpilogue s -> Some (Epilogue s)
     | _ -> None // is this all of them?
   ) flags
+
+and translate_cc flags =
+  match List.choose (function | Syntax.CCConv s -> Some s | _ -> None) flags with
+  | [ "stdcall" ] -> Some StdCall
+  | [ "fastcall" ] -> Some FastCall
+  | [ "cdecl" ] -> Some CDecl
+  | _ -> None
 
 and translate_decl env d: list<decl> =
   match d with
@@ -414,6 +433,7 @@ and translate_let env flavor lb: option<decl> =
         let binders = translate_binders env args in
         let env = add_binders env args in
         let name = env.module_name, name in
+        let cc = translate_cc meta in
         let meta = match eff, t with
           | E_GHOST, _
           | E_PURE, TUnit -> MustDisappear :: translate_flags meta
@@ -421,7 +441,7 @@ and translate_let env flavor lb: option<decl> =
         in
         if assumed then
           if List.length tvars = 0 then
-            Some (DExternal (None, meta, name, translate_type env t0))
+            Some (DExternal (cc, meta, name, translate_type env t0))
           else begin
             BU.print1_warning "Not extracting %s to KreMLin (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
             None
@@ -429,14 +449,14 @@ and translate_let env flavor lb: option<decl> =
         else begin
           try
             let body = translate_expr env body in
-            Some (DFunction (None, meta, List.length tvars, t, name, binders, body))
+            Some (DFunction (cc, meta, List.length tvars, t, name, binders, body))
           with e ->
             // JP: TODO: figure out what are the remaining things we don't extract
             let msg = BU.print_exn e in
             Errors. log_issue Range.dummyRange
             (Errors.Warning_FunctionNotExtacted, (BU.format2 "Error while extracting %s to KreMLin (%s)\n" (Syntax.string_of_mlpath name) msg));
             let msg = "This function was not extracted:\n" ^ msg in
-            Some (DFunction (None, meta, List.length tvars, t, name, binders, EAbortS msg))
+            Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
 
   | {
@@ -677,17 +697,11 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ])
     when (string_of_mlpath p = "FStar.Buffer.createL" || string_of_mlpath p = "LowStar.Buffer.alloca_of_list") ->
-      let rec list_elements acc e2 =
-        match e2.expr with
-        | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
-            list_elements (hd :: acc) tl
-        | MLE_CTor (([ "Prims" ], "Nil" ), []) ->
-            List.rev acc
-        | _ ->
-            failwith "Argument of FStar.Buffer.createL is not a list literal!"
-      in
-      let list_elements = list_elements [] in
       EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; e2 ])
+    when string_of_mlpath p = "LowStar.Buffer.gcmalloc_of_list" ->
+      EBufCreateL (Eternal, List.map (translate_expr env) (list_elements e2))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
     when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc") ->
