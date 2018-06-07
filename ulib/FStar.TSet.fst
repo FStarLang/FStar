@@ -19,90 +19,100 @@ module FStar.TSet
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-type cmp_t (a:Type) = a -> a -> prop
-unfold let default_cmp (a:Type) :cmp_t a = fun (x y:a) -> x == y
-
-abstract type set_cmp (a:Type) (cmp:cmp_t a) = a -> Tot prop
-type set (a:Type) = set_cmp a (default_cmp a)
-
-abstract type equal_cmp (#a:Type) (#cmp:cmp_t a) (s1 s2:set_cmp a cmp) = forall (x:a). s1 x <==> s2 x
-type equal (#a:Type) (s1 s2:set a) = equal_cmp s1 s2
+abstract type set (a:Type) = a -> Tot prop
+abstract type equal (#a:Type) (s1:set a) (s2:set a) = forall x. s1 x <==> s2 x
 
 (* destructors *)
 
-abstract let mem_cmp (#a:Type) (#cmp:cmp_t a) (x:a) (s:set_cmp a cmp) :Type0 = s x
-let mem (#a:Type) (x:a) (s:set a) = mem_cmp x s
+abstract val mem : 'a -> set 'a -> Tot Type0
+let mem x s = s x
 
-abstract let empty_cmp (#a:Type) (#cmp:cmp_t a) :set_cmp a cmp = fun (x:a) -> False
-let empty (#a:Type) :set a = empty_cmp
+(* constructors *)
+abstract val empty      : #a:Type -> Tot (set a)
+abstract val singleton  : 'a -> Tot (set 'a)
+abstract val union      : set 'a -> set 'a -> Tot (set 'a)
+abstract val intersect  : set 'a -> set 'a -> Tot (set 'a)
+abstract val complement : set 'a -> Tot (set 'a)
 
-abstract let singleton_cmp (#a:Type) (#cmp:cmp_t a) (x:a) :set_cmp a cmp = fun (y:a) -> cmp x y
-let singleton (#a:Type) (x:a) :set a = singleton_cmp x
+(*
+ * AR: 05/12: adding calls to equational lemmas from PropositionalExtensionality
+ *            these should go away with proper prop support
+ *            also see the comment in PropositionalExtensionality.fst
+ *)
 
-abstract let union_cmp (#a:Type) (#cmp:cmp_t a) (s1 s2:set_cmp a cmp) :set_cmp a cmp = fun (x:a) -> s1 x \/ s2 x
-let union (#a:Type) (s1 s2:set a) :set a = union_cmp s1 s2
-
-abstract let intersect_cmp (#a:Type) (#cmp:cmp_t a) (s1 s2:set_cmp a cmp) :set_cmp a cmp = fun (x:a) -> s1 x /\ s2 x
-let intersect (#a:Type) (s1 s2:set a) :set a = intersect_cmp s1 s2
-
-abstract let complement_cmp (#a:Type) (#cmp:cmp_t a) (s:set_cmp a cmp) :set_cmp a cmp = fun (x:a) -> ~ (s x)
-let complement (#a:Type) (s:set a) :set a = complement_cmp s
+let empty           = fun #a x -> False
+let singleton x     = fun y -> y == x
+let union s1 s2     = fun x -> s1 x \/ s2 x
+let intersect s1 s2 = fun x -> s1 x /\ s2 x
+let complement s    = fun x -> ~ (s x)
 
 (* ops *)
-type subset_cmp (#a:Type) (#cmp:cmp_t a) (s1 s2:set_cmp a cmp) :Type0 = forall (x:a). mem_cmp x s1 ==> mem_cmp x s2
-type subset (#a:Type) (s1 s2:set a) :Type0 = subset_cmp s1 s2
+type subset (#a:Type) (s1:set a) (s2:set a) :Type0 = forall x. mem x s1 ==> mem x s2
 
-let lemma_mem_empty (#a:Type) (#cmp:cmp_t a) (x:a)
-  :Lemma (requires True) (ensures (~ (mem_cmp x (empty_cmp #a #cmp))))
-         [SMTPat (mem_cmp x (empty_cmp #a #cmp))]
-  = ()
+(* Properties *)
+abstract val mem_empty: #a:Type -> x:a -> Lemma
+   (requires True)
+   (ensures (~ (mem x empty)))
+   [SMTPat (mem x empty)]
 
-let lemma_mem_singleton (#a:Type) (#cmp:cmp_t a) (x y:a)
-  :Lemma (requires True) (ensures (mem_cmp y (singleton_cmp #a #cmp x) <==> cmp x y))
-         [SMTPat (mem_cmp y (singleton_cmp #a #cmp x))]
-  = ()
+abstract val mem_singleton: #a:Type -> x:a -> y:a -> Lemma
+   (requires True)
+   (ensures (mem y (singleton x) <==> (x==y)))
+   [SMTPat (mem y (singleton x))]
 
-let lemma_mem_union (#a:Type) (#cmp:cmp_t a) (x:a) (s1 s2:set_cmp a cmp)
-  :Lemma (requires True) (ensures (mem_cmp x (union_cmp s1 s2) == (mem_cmp x s1 \/ mem_cmp x s2)))
-   [SMTPat (mem_cmp x (union_cmp s1 s2))]
-  = ()
+abstract val mem_union: #a:Type -> x:a -> s1:set a -> s2:set a -> Lemma
+   (requires True)
+   (ensures (mem x (union s1 s2) == (mem x s1 \/ mem x s2)))
+   [SMTPat (mem x (union s1 s2))]
 
-let lemma_mem_intersect (#a:Type) (#cmp:cmp_t a) (x:a) (s1 s2:set_cmp a cmp)
-  :Lemma (requires True) (ensures (mem_cmp x (intersect_cmp s1 s2) == (mem_cmp x s1 /\ mem_cmp x s2)))
-   [SMTPat (mem_cmp x (intersect_cmp s1 s2))]
-  = ()
-  
-let lemma_mem_complement (#a:Type) (#cmp:cmp_t a) (x:a) (s:set_cmp a cmp)
-  :Lemma (requires True) (ensures (mem_cmp x (complement_cmp s) == ~ (mem_cmp x s)))
-   [SMTPat (mem_cmp x (complement_cmp s))]
-  = ()
+abstract val mem_intersect: #a:Type -> x:a -> s1:set a -> s2:set a -> Lemma
+   (requires True)
+   (ensures (mem x (intersect s1 s2) == (mem x s1 /\ mem x s2)))
+   [SMTPat (mem x (intersect s1 s2))]
 
-let lemma_mem_subset (#a:Type) (#cmp:cmp_t a) (s1 s2:set_cmp a cmp)
-  :Lemma (requires (forall x. mem_cmp x s1 ==> mem_cmp x s2)) (ensures (subset_cmp s1 s2))
-   [SMTPat (subset_cmp s1 s2)]
-  = ()
+abstract val mem_complement: #a:Type -> x:a -> s:set a -> Lemma
+   (requires True)
+   (ensures (mem x (complement s) == ~(mem x s)))
+   [SMTPat (mem x (complement s))]
 
-let lemma_subset_mem (#a:Type) (#cmp:cmp_t a) (s1 s2:set_cmp a cmp)
-  :Lemma (requires (subset_cmp s1 s2)) (ensures (forall x. mem_cmp x s1 ==> mem_cmp x s2))
-   [SMTPat (subset_cmp s1 s2)]
-  = ()
+abstract val mem_subset: #a:Type -> s1:set a -> s2:set a -> Lemma
+   (requires (forall x. mem x s1 ==> mem x s2))
+   (ensures (subset s1 s2))
+   [SMTPat (subset s1 s2)]
+
+abstract val subset_mem: #a:Type -> s1:set a -> s2:set a -> Lemma
+   (requires (subset s1 s2))
+   (ensures (forall x. mem x s1 ==> mem x s2))
+   [SMTPat (subset s1 s2)]
+
+let mem_empty      #a x       = ()
+let mem_singleton  #a x y     = ()
+let mem_union      #a x s1 s2 = ()
+let mem_intersect  #a x s1 s2 = ()
+let mem_complement #a x s     = ()
+let subset_mem     #a s1 s2   = ()
+let mem_subset     #a s1 s2   = ()
 
 (* extensionality *)
 
-let lemma_equal_intro (#a:Type) (#cmp:cmp_t a) (s1 s2:set_cmp a cmp)
-  :Lemma (requires  (forall x. mem_cmp x s1 <==> mem_cmp x s2)) (ensures (equal_cmp s1 s2))
-   [SMTPat (equal_cmp s1 s2)]
-  = ()
+abstract val lemma_equal_intro: #a:Type -> s1:set a -> s2:set a -> Lemma
+    (requires  (forall x. mem x s1 <==> mem x s2))
+    (ensures (equal s1 s2))
+    [SMTPat (equal s1 s2)]
 
-let lemma_equal_elim (#a:Type) (#cmp:cmp_t a) (s1 s2:set_cmp a cmp)
-  :Lemma (requires (equal_cmp s1 s2)) (ensures  (s1 == s2))
-   [SMTPat (equal_cmp s1 s2)]
-  = PredicateExtensionality.predicateExtensionality a s1 s2
+abstract val lemma_equal_elim: #a:Type -> s1:set a -> s2:set a -> Lemma
+    (requires (equal s1 s2))
+    (ensures  (s1 == s2))
+    [SMTPat (equal s1 s2)]
 
-let lemma_equal_refl (#a:Type) (#cmp:cmp_t a) (s1 s2:set_cmp a cmp)
-  :Lemma (requires (s1 == s2)) (ensures  (equal_cmp s1 s2))
-   [SMTPat (equal_cmp s1 s2)]
-  = ()
+abstract val lemma_equal_refl: #a:Type -> s1:set a -> s2:set a -> Lemma
+    (requires (s1 == s2))
+    (ensures  (equal s1 s2))
+    [SMTPat (equal s1 s2)]
+
+let lemma_equal_intro #a s1 s2 = ()
+let lemma_equal_elim  #a s1 s2 = PredicateExtensionality.predicateExtensionality a s1 s2
+let lemma_equal_refl  #a s1 s2 = ()
 
 abstract let tset_of_set (#a:eqtype) (s:Set.set a) :set a =
   fun (x:a) -> squash (b2t (Set.mem x s))
@@ -135,26 +145,24 @@ let lemma_mem_tset_of_set (#a:eqtype) (s:Set.set a) (x:a)
   = lemma_mem_tset_of_set_l #a s x; lemma_mem_tset_of_set_r #a s x
 
 abstract
-let filter_cmp (#a:Type) (#cmp:cmp_t a) (f:a -> Type0) (s:set_cmp a cmp) :set_cmp a cmp =
+let filter (#a:Type) (f:a -> Type0) (s:set a) : set a =
   fun (x:a) -> f x /\ s x
-let filter (#a:Type) (f:a -> Type0) (s:set a) :set a = filter_cmp f s
 
-let lemma_mem_filter (#a:Type) (#cmp:cmp_t a) (f:(a -> Type0)) (s:set_cmp a cmp) (x:a)
+let lemma_mem_filter (#a:Type) (f:(a -> Type0)) (s:set a) (x:a)
   :Lemma (requires True)
-         (ensures  (mem_cmp x (filter_cmp f s) <==> mem_cmp x s /\ f x))
-         [SMTPat (mem_cmp x (filter_cmp f s))]
+         (ensures  (mem x (filter f s) <==> mem x s /\ f x))
+         [SMTPat (mem x (filter f s))]
   = ()
 
-let exists_y_in_s (#a:Type) (#b:Type) (#cmp:cmp_t a) (s:set_cmp a cmp) (f:a -> Tot b) (x:b) :Tot prop =
- exists (y:a). mem_cmp y s /\ x == f y
+let exists_y_in_s (#a:Type) (#b:Type) (s:set a) (f:a -> Tot b) (x:b) : Tot prop =
+ exists (y:a). mem y s /\ x == f y
 
 abstract
-let map_cmp (#a:Type) (#b:Type) (#cmp:cmp_t a) (f:a -> Tot b) (s:set_cmp a cmp) :Tot (set b) = exists_y_in_s s f
-let map (#a:Type) (#b:Type) (f:a -> Tot b) (s:set a) :Tot (set b) = map_cmp f s
+let map (#a:Type) (#b:Type) (f:a -> Tot b) (s:set a) : Tot (set b) = exists_y_in_s s f
 
-let lemma_mem_map (#a:Type) (#b:Type) (#cmp:cmp_t a) (f:(a -> Tot b)) (s:set_cmp a cmp) (x:b)
-  :Lemma ((exists (y:a). {:pattern (mem_cmp y s)} mem_cmp y s /\ x == f y) <==> mem_cmp x (map_cmp f s))
-         [SMTPat (mem_cmp x (map_cmp f s))]
+let lemma_mem_map (#a:Type) (#b:Type) (f:(a -> Tot b)) (s:set a) (x:b)
+  :Lemma ((exists (y:a). {:pattern (mem y s)} mem y s /\ x == f y) <==> mem x (map f s))
+         [SMTPat (mem x (map f s))]
   = ()
 
 #reset-options
