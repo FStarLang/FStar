@@ -7,7 +7,7 @@ type tb : Type u#42 = | B
 (* We get two errors with this, probably should only report one *)
 (* AnotType.fst(8,0-8,19): (Error 234) The type of AnotType.tc is Prims.int, but since this is the result type of a constructor its type should be Type *)
 (* AnotType.fst(8,0-8,19): (Error 12) Expected type "Type u#_"; got type "Prims.int" *)
-[@(fail [234])]
+[@(fail [309])]
 type tc : int = | C
 
 type td : eqtype = | D
