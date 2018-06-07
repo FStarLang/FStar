@@ -1,14 +1,18 @@
 module AnotType
 
+(* If this is not first, we explode weirdly *)
+(* AnotType.fst(3,19-3,20): (Error 22) Top-level declaration AnotType.uu___is_A for a name that is already used in this module; top-level declarations must be unique in their module *)
+(* Huh???????? *)
+[@(fail [309])]
+type tc : int = | C
+
 type ta : Type = | A
 
 type tb : Type u#42 = | B
 
-(* We get two errors with this, probably should only report one *)
-(* AnotType.fst(8,0-8,19): (Error 234) The type of AnotType.tc is Prims.int, but since this is the result type of a constructor its type should be Type *)
-(* AnotType.fst(8,0-8,19): (Error 12) Expected type "Type u#_"; got type "Prims.int" *)
-[@(fail [309])]
-type tc : int = | C
+(* Fails, Type0 != Type42 *)
+[@(fail [189])]
+let _ = ta == tb
 
 type td : eqtype = | D
 
