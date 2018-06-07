@@ -90,7 +90,17 @@ private let lemma_mem_projectors_are_in_relation (m:mem)
   :Lemma (is_wf_with_ctr_and_tip (get_hmap m) (get_rid_ctr m) (get_tip m))
   = ()
 
-let lemma_mk_mem_and_projectors_are_inverses (rid_ctr:int) (h:hmap) (tip:
+private let lemma_mem_projectors (rid_ctr:int) (h:hmap) (tip:rid)
+  :Lemma (requires (is_wf_with_ctr_and_tip h rid_ctr tip))
+         (ensures  (let m = mk_mem rid_ctr h tip in
+	            (get_hmap m == h /\
+	             get_rid_ctr m == rid_ctr /\
+		     get_tip m == tip)))
+         [SMTPatOr [[SMTPat (get_hmap (mk_mem rid_ctr h tip))];
+	            [SMTPat (get_rid_ctr (mk_mem rid_ctr h tip))];
+		    [SMTPat (get_tip (mk_mem rid_ctr h tip))];
+		    ]]
+  = ()
 
 private let lemma_is_wf_ctr_and_tip_intro (h:hmap) (ctr:int) (tip:rid)
   :Lemma (requires (root `is_in` h /\ (is_stack_region tip \/ tip = root) /\  tip `is_in` h /\
@@ -331,34 +341,34 @@ let free (#a:Type0) (#rel:preorder a) (r:mreference a rel{is_mm r}) (m:mem{m `co
     lemma_is_wf_ctr_and_tip_intro new_h (get_rid_ctr m) (get_tip m);
     mk_mem (get_rid_ctr m) new_h (get_tip m)
 
-// let upd_tot (#a:Type) (#rel:preorder a) (m:mem) (r:mreference a rel{m `contains` r}) (v:a)
-//   :Tot mem
-//   = lemma_is_wf_ctr_and_tip_elim m;
-//     let i = frameOf r in
-//     let h = Map.sel m.h i in
-//     let new_h = Heap.upd_tot h (as_ref r) v in
-//     let new_h = Map.upd m.h i new_h in
-//     lemma_is_wf_ctr_and_tip_intro new_h m.rid_ctr m.tip;
-//     HS m.rid_ctr new_h m.tip
+let upd_tot (#a:Type) (#rel:preorder a) (m:mem) (r:mreference a rel{m `contains` r}) (v:a)
+  :Tot mem
+  = lemma_is_wf_ctr_and_tip_elim m;
+    let i = frameOf r in
+    let h = Map.sel (get_hmap m) i in
+    let new_h = Heap.upd_tot h (as_ref r) v in
+    let new_h = Map.upd (get_hmap m) i new_h in
+    lemma_is_wf_ctr_and_tip_intro new_h (get_rid_ctr m) (get_tip m);
+    mk_mem (get_rid_ctr m) new_h (get_tip m)
 
-// let sel_tot (#a:Type) (#rel:preorder a) (m:mem) (r:mreference a rel{m `contains` r})
-//   :Tot a
-//   = Heap.sel_tot (Map.sel m.h (frameOf r)) (as_ref r)
+let sel_tot (#a:Type) (#rel:preorder a) (m:mem) (r:mreference a rel{m `contains` r})
+  :Tot a
+  = Heap.sel_tot (Map.sel (get_hmap m) (frameOf r)) (as_ref r)
 
-// let fresh_frame (m0:mem) (m1:mem) =
-//   not (Map.contains m0.h m1.tip) /\
-//   parent m1.tip = m0.tip         /\
-//   m1.h == Map.upd m0.h m1.tip Heap.emp
+let fresh_frame (m0:mem) (m1:mem) =
+  not (Map.contains (get_hmap m0) (get_tip m1)) /\
+  parent (get_tip m1) == get_tip m0             /\
+  get_hmap m1 == Map.upd (get_hmap m0) (get_tip m1) Heap.emp
 
 // let hs_push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
 //   = lemma_is_wf_ctr_and_tip_elim m;
-//     let new_tip_rid = extend m.tip m.rid_ctr 1 in
-//     let h = Map.upd m.h new_tip_rid Heap.emp in
+//     let new_tip_rid = extend (get_tip m) (get_rid_ctr m) 1 in
+//     let h = Map.upd (get_hmap m) new_tip_rid Heap.emp in
 //     assert (forall (s:rid). (new_tip_rid `is_above` s /\ s `is_in` h) ==> s = new_tip_rid);
-//     lemma_is_wf_ctr_and_tip_intro h (m.rid_ctr + 1) new_tip_rid;
-//     HS (m.rid_ctr + 1) h new_tip_rid
+//     lemma_is_wf_ctr_and_tip_intro h ((get_rid_ctr m) + 1) new_tip_rid;
+//     mk_mem ((get_rid_ctr m) + 1) h new_tip_rid
 
-// let new_eternal_region (m:mem) (parent:rid{is_eternal_color (color parent) /\ m.h `Map.contains` parent})
+// // let new_eternal_region (m:mem) (parent:rid{is_eternal_color (color parent) /\ m.h `Map.contains` parent})
 //                        (c:option int{None? c \/ is_eternal_color (Some?.v c)})
 //   :Tot (t:(rid * mem){fresh_region (fst t) m (snd t)})
 //   = lemma_is_wf_ctr_and_tip_elim m;
