@@ -88,7 +88,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "c9040dcdb4023db90e37c099d13a7ff3"
+      "f6967406a09ae2cc6d905e7a71ed19b6"
     ],
     [
       "FStar.OrdSet.hd_unique",
@@ -253,7 +253,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "81cd51377fc2562e8cc45eb16fe99ca0"
+      "36aedfca2cb5703f5613c7fdd79e005e"
     ],
     [
       "FStar.OrdSet.remove'",
@@ -291,7 +291,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "8f0e3736e7693020eb5bd0f070a33395"
+      "796aa553ac6adb87e4d15286bf725e0a"
     ],
     [
       "FStar.OrdSet.subset",
@@ -396,7 +396,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "4e7bfce8fe2152a59e43779101f70999"
+      "fdb369604ffe0bc96978ea3a994e4085"
     ],
     [
       "FStar.OrdSet.mem_remove",
@@ -1471,7 +1471,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.OrdSet.sorted"
       ],
       0,
-      "d8be92f9e55ea001007225f355def38c"
+      "7fc6c59cdc3c5a31b531ac67b835f734"
     ],
     [
       "FStar.OrdSet.equal",
@@ -1543,7 +1543,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "b26187f85292094572b39745f47900d9"
+      "9b9ffdb30483c2a4fe61b78316f71492"
     ],
     [
       "FStar.OrdSet.mem_remove",
