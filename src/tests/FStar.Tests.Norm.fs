@@ -215,10 +215,15 @@ let tests =
   ; (304, (tc_nbe "rev [T; F; F]"), (tc_nbe "[F; F; T]"))
   ; (305, (tc_nbe "rev [[T]; [F; T]]"), (tc_nbe "[[F; T]; [T]]"))
 
-   ; (309, (tc_nbe "x1"), (tc_nbe "6"))
-   ; (310, (tc_nbe "x2"), (tc_nbe "2"))
-
-   // ; (311, (tc_nbe "x3"), (tc_nbe "7"))
+  ; (309, (tc_nbe "x1"), (tc_nbe "6"))
+  ; (310, (tc_nbe "x2"), (tc_nbe "2"))
+  // ; (311, (tc_nbe "x3"), (tc_nbe "7"))
+  
+  // Tests for primops 
+  ; (401, (tc_nbe "7 + 3"), (tc_nbe "10"))
+  ; (402, (tc_nbe "true && false"), (tc_nbe "false"))
+  ; (403, (tc_nbe "3 = 5"), (tc_nbe "false"))
+  ; (404, (tc_nbe "\"abc\" ^ \"def\""), (tc_nbe "\"abcdef\"")) //ZP : Fails the normalizer: Term "abcdef" is not equal to "abcdef"
   ]
 
 
