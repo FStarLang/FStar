@@ -69,8 +69,8 @@ unfold private let rid_ctr_pred_predicate (h:hmap) (n:int) :Type0 =
  *)
 abstract let rid_ctr_pred (h:hmap) (n:int) :Type0 = rid_ctr_pred_predicate h n
 
-abstract let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid) :Type0
-  = tip `is_tip` h /\ map_invariant h /\ downward_closed h /\ rid_ctr_pred h ctr
+let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid) :Type0
+  = root `is_in` h /\ tip `is_tip` h /\ map_invariant h /\ downward_closed h /\ rid_ctr_pred h ctr
 
 (*
  * AR: would like to mark it as private, see #1469
@@ -95,7 +95,7 @@ private let lemma_mk_mem'_projectors (rid_ctr:int) (h:hmap) (tip:rid)
 		    ]]
   = ()
 
-type mem :Type = m:mem'{root `is_in` get_hmap m /\ is_wf_with_ctr_and_tip (get_hmap m) (get_rid_ctr m) (get_tip m) }
+type mem :Type = m:mem'{is_wf_with_ctr_and_tip (get_hmap m) (get_rid_ctr m) (get_tip m) }
 
 private let lemma_mem_projectors_are_in_wf_relation (m:mem)
   :Lemma (is_wf_with_ctr_and_tip (get_hmap m) (get_rid_ctr m) (get_tip m))
