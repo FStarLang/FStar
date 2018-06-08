@@ -79,22 +79,22 @@ let promote #a #sl
 /// implement functions that break basic IFC guarantees, e.g., we
 /// cannot implement a boolean comparison function on secret_ints
 abstract
-let addition #a #l (#t:lattice_element #a l) #s
-             (x : secret_int t s)
-             (y : secret_int t s {ok ( + ) (FStar.IFC.reveal x) (FStar.IFC.reveal y)})
-    : Tot (z:secret_int t s{m z == m x + m y})
+let addition #a #sl (#l:lattice_element #a sl) #s
+             (x : secret_int l s)
+             (y : secret_int l s {ok ( + ) (m x) (m y)})
+    : Tot (z:secret_int l s{m z == m x + m y})
     = a <-- x ;
       b <-- y ;
-      return t (a + b)
+      return l (a + b)
 
 abstract
-let addition_mod #a #l (#t:lattice_element #a l) (#w: fixed_width{w <> W128})
-                 (x : secret_int t (Unsigned w))
-                 (y : secret_int t (Unsigned w))
-    : Tot (z:secret_int t (Unsigned w) { m z == m x +% m y } )
+let addition_mod #a #sl (#l:lattice_element #a sl) (#w: fixed_width{w <> W128})
+                 (x : secret_int l (Unsigned w))
+                 (y : secret_int l (Unsigned w))
+    : Tot (z:secret_int l (Unsigned w) { m z == m x +% m y } )
     = a <-- x;
       b <-- y;
-      return t (a +% b)
+      return l (a +% b)
 
 /// If we like this style, I will proceed to implement a lifting of
 /// the rest of the constant-time integers over secret integers
