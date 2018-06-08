@@ -439,11 +439,23 @@ let index #a b i =
 
 (* Update *)
 
+let g_upd (#a:Type) (b:buffer a) (i:nat{i < length b}) (v:a) (h:HS.mem{live h b})
+  : GTot HS.mem
+  = let s0 = lseq_of_vec (HS.sel h (Buffer?.content b)) in
+    let s1 = Seq.upd s0 (U32.v (Buffer?.idx b) + i) v in
+    let v = vec_of_lseq s1 in
+    HS.upd h (Buffer?.content b) v
+
+let g_upd_equiv #a b i v h = ()
+
 let upd #a b i v =
   let open HST in
+  let h0 = get () in
   let s0 = lseq_of_vec ! (Buffer?.content b) in
   let s = Seq.upd s0 (U32.v (Buffer?.idx b) + U32.v i) v in
   Buffer?.content b := vec_of_lseq s;
+  let h1 = get() in
+  assert (h1 == g_upd b (U32.v i) v h0);
   // prove modifies_1_preserves_abuffers
   Heap.lemma_distinct_addrs_distinct_preorders ();
   Heap.lemma_distinct_addrs_distinct_mm ()

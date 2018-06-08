@@ -656,6 +656,24 @@ val index (#a: Type) (b: buffer a) (i: U32.t) : HST.Stack a
    compositional modifies clauses.
  *)
 
+/// ``g_upd b i v h`` updates the buffer `b` in heap `h` at location
+/// `i` writing ``v`` there. This is the spec analog of the stateful
+/// update `upd` below.
+val g_upd (#a:Type)
+          (b:buffer a)
+          (i:nat{i < length b})
+          (v:a)
+          (h:HS.mem{live h b})
+  : GTot HS.mem
+
+val g_upd_equiv (#a:Type)
+                (b:buffer a)
+                (i:nat{i < length b})
+                (v:a)
+                (h:HS.mem{live h b})
+   : Lemma (let h' = g_upd b i v h in
+            as_seq h' b == Seq.upd (as_seq h b) i v)
+            
 /// ``upd b i v`` writes ``v`` to the memory, at offset ``i`` of
 /// buffer ``b``. KreMLin compiles it as ``b[i] = v``.
 
