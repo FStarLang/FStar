@@ -360,7 +360,7 @@ let modifies_trans_4_4 (#t #t' #t'' #t''':Type) (rid:rid) (b:buffer t) (b':buffe
 
 (* TODO: complete with specialized versions of every general lemma *)
 
-(* Modifies clauses that do not change the shape of the HyperStack (h1.tip = h0.tip) *)
+(* Modifies clauses that do not change the shape of the HyperStack ((HS.get_tip h1) = (HS.get_tip h0)) *)
 (* NB: those clauses are made abstract in order to make verification faster
 //    Lemmas follow to allow the programmer to make use of the real definition
 //    of those predicates in a general setting *)

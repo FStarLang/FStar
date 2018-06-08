@@ -131,7 +131,7 @@ effect Unsafe (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))
 //  * AR: (may be this is an overkill)
 //  *     various effects below talk about refs being equal in some regions (all regions, stack regions, etc.)
 //  *     this was done by defining, for example, an equal_dom predicate with a (forall (r:rid)) quantifier
-//  *     this quantifier was only guarded with Map.contains m.h r
+//  *     this quantifier was only guarded with Map.contains (HS.get_hmap m) r
 //  *     which meant it could fire for all the contained regions
 //  *
 //  *     instead now we define abstract predicates, e.g. same_refs_in_all_regions, and provide intro and elim forms
