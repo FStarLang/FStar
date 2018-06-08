@@ -72,10 +72,7 @@ abstract let rid_ctr_pred (h:hmap) (n:int) :Type0 = rid_ctr_pred_predicate h n
 let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid) :Type0
   = root `is_in` h /\ tip `is_tip` h /\ map_invariant h /\ downward_closed h /\ rid_ctr_pred h ctr
 
-(*
- * AR: would like to mark it as private, see #1469
- *)
-noeq abstract type mem' =
+noeq abstract private type mem' =
   | HS :rid_ctr:int -> h:hmap -> tip:rid -> mem'
 
 abstract private let mk_mem (rid_ctr:int) (h:hmap) (tip:rid) :mem'
@@ -114,16 +111,6 @@ private let lemma_is_wf_ctr_and_tip_elim (m:mem)
 	   tip_top_predicate tip h /\ map_invariant_predicate h /\
            downward_closed_predicate h /\ rid_ctr_pred_predicate h rid_ctr))
   = ()
-
-(******* tip is tip of h *******)
-
-let lemma_tip_is_tip_h (m:mem)
-  :Lemma (requires True)
-         (ensures  (get_tip m `is_tip` get_hmap m))
-	 [SMTPat (get_tip m); SMTPat (get_hmap m)]
-  = ()
-
-(******)
 
 (******* map_invariant related lemmas ******)
 
