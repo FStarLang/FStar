@@ -1,4 +1,5 @@
 module FStar.IFC
+
 (**
  * FStar.IFC provides a simple, generic abstraction
  * for monadic information-flow control
@@ -16,37 +17,38 @@ let idempotent #a (f: (a -> a -> a)) =
   forall x. f x x == x
 
 noeq
-type semi_lattice (a:Type) = {
-  top: a;
-  lub: (f: (a -> a -> a) {
-    associative f /\
-    commutative f /\
-    idempotent f
- })
-}
+type semi_lattice =
+  | SemiLattice: #carrier:Type
+               -> top:carrier
+               -> lub:(f: (carrier -> carrier -> carrier) {
+                          associative f /\
+                          commutative f /\
+                          idempotent f
+                      })
+               -> semi_lattice
+
 
 (* A lattice element is just an element of the carrier type *)
-let lattice_element (#a:Type) (s:semi_lattice a) = a
+let lattice_element (sl:semi_lattice) = SemiLattice?.carrier sl
 
 (* A convenience for joining elements in the lattice *)
 unfold
-let lub #a #l (x:lattice_element #a l) (y:lattice_element #a l)
-  : lattice_element l
-  = l.lub x y
+let lub #sl (x:lattice_element sl) (y:lattice_element sl)
+  : lattice_element sl
+  = SemiLattice?.lub sl x y
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// The main type provided by this module is `protected l b`
 /// i.e., a `b`-typed value protected at IFC level `l`
 abstract
-let protected (#a:Type)
-              (#sl:semi_lattice a)
+let protected (#sl:semi_lattice)
               (l:lattice_element sl)
               (b:Type) = b
 
 /// At the specification level a `protected l b` is just a `b`
 abstract
-let reveal #a #sl (#l:lattice_element #a sl)
+let reveal #sl (#l:lattice_element sl)
            #b (x:protected l b)
    : GTot b
    = x
@@ -54,17 +56,17 @@ let reveal #a #sl (#l:lattice_element #a sl)
 /// And any `b` can be promoted to a `protected l b`
 /// i.e., `protected l b` is only meant to enforce confidentiality
 abstract
-let hide #a (#l:semi_lattice a) (#tag:lattice_element l) #b (x:b)
-  : Tot (protected tag b)
+let hide #sl (#l:lattice_element sl) #b (x:b)
+  : Tot (protected l b)
   = x
 
 /// The next pair of lemmas show that reveal/hide are inverses
-let reveal_hide #a #l #t #b (x:b)
-  : Lemma (reveal (hide #a #l #t x) == x)
-          [SMTPat (hide #a #l #t x)]
+let reveal_hide #l #t #b (x:b)
+  : Lemma (reveal (hide #l #t x) == x)
+          [SMTPat (hide #l #t x)]
   = ()
 
-let hide_reveal #a (#sl:semi_lattice a) (#l:lattice_element sl) #b
+let hide_reveal #sl (#l:lattice_element sl) #b
                 (x:protected l b)
   : Lemma (hide (reveal x) == x)
           [SMTPat (reveal x)]
@@ -77,7 +79,7 @@ let hide_reveal #a (#sl:semi_lattice a) (#l:lattice_element sl) #b
 ///    -- `join`   (so it's also a monad)
 ///  Which we package up as a `bind`
 unfold
-let return #c (#sl:semi_lattice c) #a
+let return #sl #a
            (l:lattice_element sl) (x:a)
     : protected l a
     = hide x
@@ -87,8 +89,8 @@ let return #c (#sl:semi_lattice c) #a
 /// We write `map x f` instead of `map f x` so that
 /// `f`'s type can depend on `x`
 abstract
-let map #a #b #c
-        (#sl:semi_lattice c)
+let map #a #b
+        #sl
         (#l:lattice_element sl)
         (x:protected l a)
         (f: (y:a{y == reveal x} -> b))
@@ -99,8 +101,7 @@ let map #a #b #c
 /// Except notice that the label of the result is the lub
 /// of the both the labels in the argument
 abstract
-let join #c
-         (#sl:semi_lattice c)
+let join  #sl
          (#l1:lattice_element sl)
          (#l2:lattice_element sl)
          #a
@@ -118,8 +119,7 @@ let join #c
 /// As such, any computation that observes the protected value held in
 /// `x` has a secrecy level at least as secret as `x` itself
 unfold
-let bind #c
-         (#sl:semi_lattice c)
+let bind #sl
          (#l1:lattice_element sl)
          #a
          (x:protected l1 a)

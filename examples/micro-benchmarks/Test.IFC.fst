@@ -4,17 +4,16 @@ module Test.IFC
 ////////////////////////////////////////////////////////////////////////////////
 open FStar.IFC
 
-let two_point_lattice = {
-  top = true;
-  lub = (fun x y -> x || y)
-}
+let two_point_lattice =
+  SemiLattice true (fun x y -> x || y)
+
 let high : lattice_element two_point_lattice = true
 let low  : lattice_element two_point_lattice = false
 
 let ret #a (x:a) = return low x
 
 let test1 (#l1:lattice_element two_point_lattice)
-         (px:protected l1 int)
+          (px:protected l1 int)
    : z:protected l1 int{reveal z = reveal px + 1}
    = map px (fun x -> x + 1)
 
