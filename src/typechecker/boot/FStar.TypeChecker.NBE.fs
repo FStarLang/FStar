@@ -47,6 +47,9 @@ let debug_term (t : term) =
 let debug_sigmap (m : BU.smap<sigelt>) =
   BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
 
+let primops = ["op_Minus"; "op_Addition"; "op_Subtraction"; "op_GreaterThan"; "equals";
+               "op_Negation"; "l_and"; "l_or"; "b2t"]
+
 type var = bv
 type sort = int
 
@@ -77,7 +80,7 @@ and t = //JUST FSHARP
   | Univ of universe
   | Unknown (* For translating unknown types *)
   // NS:
-  // | Refinement of binder * t
+  | Refinement of binder * t // VD: do we need to keep the aqual?
   // | Arrow of list binder * comp_t
 and args = list<(t * aqual)>
 //NS:
@@ -111,6 +114,7 @@ let rec t_to_string (x:t) =
   | Constant c -> constant_to_string c
   | Univ u -> "Universe " ^ (P.univ_to_string u)
   | Type_t u -> "Type_t " ^ (P.univ_to_string u)
+  | Refinement ((b,_), t) -> "Refinement (" ^ (P.bv_to_string b) ^ ", " ^ (t_to_string t) ^ ")"
   | Unknown -> "Unknown"
 
 and atom_to_string (a: atom) =
@@ -312,12 +316,14 @@ let rec app (f:t) (x:t) (q:aqual) =
     (match x with
      | Univ u -> Construct (i, u::us, ts)
      | _ -> Construct (i, us, (x,q)::ts))
+  | Refinement (b, r) -> Refinement (b, app r x q)
   | Constant _ | Univ _ | Type_t _ | Unknown -> failwith "Ill-typed application"
 
 and iapp (f:t) (args:list<(t * aqual)>) =
   match args with
   | [] -> f
   | _ -> iapp (app f (fst (List.hd args)) (snd (List.hd args))) (List.tl args)
+
 
 and translate_fv (cfg: N.cfg) (bs:list<t>) (fvar:fv): t =
    let qninfo = Env.lookup_qname (N.cfg_env cfg) (S.lid_of_fv fvar) in
@@ -343,11 +349,11 @@ and translate_fv (cfg: N.cfg) (bs:list<t>) (fvar:fv): t =
                 debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
                 debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
                 debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
-                // let t = SS.compress lb.lbdef in
-                // let x = (S.new_bv None S.tun, None) in
-                // let t' = S.mk (Tm_abs([x], t, None)) None t.pos in
-                // iapp (translate env bs t') (List.map (fun u -> (translate_univ env bs u, None)) us)
-                translate_letbinding cfg [] lb
+                // VD: Don't unfold primops
+                if (List.mem (P.lid_to_string (fvar.fv_name.v)) primops) then
+                  mkConstruct fvar [] []
+                else
+                  translate_letbinding cfg [] lb
              end
        | None -> failwith "Could not find mutually recursive definition" (* TODO: is this correct? *))
      | _ ->
@@ -358,8 +364,25 @@ and translate_fv (cfg: N.cfg) (bs:list<t>) (fvar:fv): t =
 and translate_letbinding (cfg:N.cfg) (bs:list<t>) (lb:letbinding) : t =
   let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t =
     match us with
-    | [] -> translate cfg bs def
-      | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), (fun () -> Constant Unit), None) // Zoe: Bogus type! The idea is that we will never readback these lambdas
+    | [] -> 
+      let translated_def = translate cfg bs def in
+      let translated_type = 
+        match (SS.compress lb.lbtyp).n with
+        | Tm_refine _ -> app (translate cfg bs lb.lbtyp) translated_def None
+        | _ -> Constant Unit
+      in
+      // VD: For debugging purposes, I'm forcing a readback here, but I don't think this is  necessary
+      debug (fun () ->
+             match (SS.compress lb.lbtyp).n with
+             | Tm_refine _ ->
+               let readback_type = readback cfg translated_type in
+               BU.print2 "<<< Type of %s is %s\n" (t_to_string translated_def) (P.term_to_string readback_type)
+             | _ -> ());
+             
+      translated_def
+
+    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), (fun () -> Constant Unit), None) 
+     // Zoe: Bogus type! The idea is that we will never readback these lambdas
   in
   make_univ_abst lb.lbunivs bs lb.lbdef
 
@@ -408,7 +431,8 @@ and translate (cfg:N.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_arrow (bs, c) -> debug_term e; failwith "Tm_arrow: Not yet implemented"
 
-    | Tm_refine _ -> debug_term e; failwith "Tm_refine: Not yet implemented"
+    | Tm_refine (db, tm) ->
+      Refinement ((db, None), Lam ((fun (y:t) -> translate cfg (y::bs) tm), (fun () -> Constant Unit), None)) // XXX: Bogus type?
 
     | Tm_ascribed (t, _, _) -> translate cfg bs t
 
@@ -641,6 +665,10 @@ and readback (cfg:N.cfg) (x:t) : term =
          (match ts with
           | [] -> head
           | _ -> U.mk_app head args)
+    | Refinement (b, r) ->
+       let body = translate cfg [] (readback cfg r) in
+       debug (fun () -> BU.print1 "Translated refinement body: %s\n" (t_to_string body));
+       S.mk (Tm_refine(fst b, readback cfg body)) None Range.dummyRange
 
 type step =
   | Primops
