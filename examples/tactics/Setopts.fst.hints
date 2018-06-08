@@ -1,26 +1,26 @@
 [
-  "0m‡§žGÆ§eT¯QmÙ\u000fv",
+  "”4úê7L6•ý¦\u0003_ÝÞè2",
   [
     [
       "Setopts.mult_ass",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
       0,
-      "5c8bc2dcb1602e5fce57d36a1868be99"
+      "f8e1836602f26c70c505cc1d4893fa75"
     ],
     [
       "Setopts.mult_ass",
       2,
       2,
-      1,
+      2,
       [
         "@query", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "59345acdf83b6846c7eaceb0f0a4f258"
+      "9223544d64e6a6060bc83a908afbe5d4"
     ]
   ]
 ]

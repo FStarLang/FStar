@@ -1,5 +1,0 @@
-In principle, the process works the same as for UserPrintTactic.fst. However, we cannot currently
-use this tactic natively.
-
-The limitation is that we cannot currently run the pre-defined tactics in FStar.Tactics.fst natively,
-since they don't have an OCaml interpretation.

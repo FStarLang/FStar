@@ -7,14 +7,15 @@
       2,
       1,
       [
-        "@query", "proj_equation_Bug116.TyAbs_e1",
-        "proj_equation_Bug116.TyAbs_g", "proj_equation_Bug116.TyAbs_x",
-        "projection_inverse_Bug116.TyAbs_e1",
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Bug116.rtyping",
+        "proj_equation_Bug116.TyAbs_e1", "proj_equation_Bug116.TyAbs_g",
+        "proj_equation_Bug116.TyAbs_x", "projection_inverse_Bug116.TyAbs_e1",
         "projection_inverse_Bug116.TyAbs_g",
         "projection_inverse_Bug116.TyAbs_x"
       ],
       0,
-      "79efbec25b0e00b3b963d5afdec18bcd"
+      "117e0d2186d39f0e6d61a4dafac89784"
     ]
   ]
 ]

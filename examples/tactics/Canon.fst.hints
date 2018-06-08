@@ -1,5 +1,5 @@
 [
-  "i«K!o\u0004¬ šºO\\[XÁœ",
+  "J(\t„­\u0011\rðd)J—-Låø",
   [
     [
       "Canon.lem1",
@@ -7,12 +7,46 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxInt_proj_0"
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "990968530724391f9840f629a1121b3c"
+      "ac0aeeb695ee93b6e53cae98ee6adedd"
+    ],
+    [
+      "Canon.lem8",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "c997a2e35c3529f8be2ffa025ded0d32"
+    ],
+    [
+      "Canon.lem9",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
+      0,
+      "a52afbc6980f2facc69830af9ada3f70"
+    ],
+    [
+      "Canon.check_canon",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "function_token_typing_Prims.unit",
+        "lemma_FStar.Tactics.Result.result_split",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Tactics.Result.uu___is_Failed"
+      ],
+      0,
+      "8a060691edc389479f5819c4368101a9"
     ]
   ]
 ]

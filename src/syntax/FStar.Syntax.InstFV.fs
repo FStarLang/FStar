@@ -42,8 +42,11 @@ let rec inst (s:term -> fv -> term) t =
       | Tm_type _
       | Tm_bvar _
       | Tm_constant _
+      | Tm_quoted _
       | Tm_unknown
       | Tm_uinst _ -> t
+
+      | Tm_lazy _ -> t
 
       | Tm_fvar fv ->
         s t fv

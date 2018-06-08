@@ -9,16 +9,16 @@ let int32_max_value = 2147483647
 assume val uint32_max_value : int
 (*let uint32_max_value = 4294967295*)
 
-opaque logic type Within_Int32 (i:int) =
+opaque type Within_Int32 (i:int) =
     int32_min_value <= i /\ i <= int32_max_value
 
-private opaque logic type Int32 (i:int) =
+private opaque type Int32 (i:int) =
   Within_Int32 i
 
-opaque logic type Within_UInt32 (i:int) =
+opaque type Within_UInt32 (i:int) =
     0 <= i /\ i <= uint32_max_value
 
-private opaque logic type UInt32 (i:int) =
+private opaque type UInt32 (i:int) =
    Within_UInt32 i
 
 type int32 = i:int{Int32 i}

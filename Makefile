@@ -10,3 +10,21 @@ package:
 clean:
 	$(MAKE) -C ulib clean
 	$(MAKE) -C src/ocaml-output clean
+
+# Shortcuts
+
+# Build the F# version
+0:
+	$(MAKE) -C src/
+
+# Build the OCaml snapshot
+1:
+	$(MAKE) -C src/ocaml-output
+
+# Generate a new OCaml snapshot
+2:
+	$(MAKE) -C src fstar-ocaml
+
+# Build the snapshot and then regen, i.e. 1 + 2
+3:
+	$(MAKE) -C src ocaml-fstar-ocaml

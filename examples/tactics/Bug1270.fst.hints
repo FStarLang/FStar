@@ -1,5 +1,5 @@
 [
-  "2ñ€µ[}†4·ã?Ï ¥\u0001\u0017",
+  "ú\u0019¸ú{Ìü‘Ó{Ò§É\u001fÃS",
   [
     [
       "Bug1270.test",
@@ -28,7 +28,24 @@
         "unit_typing"
       ],
       0,
-      "e76c810859ea9ea7f7fed183bfe0a4eb"
+      "d5433f589a83e5ba519542f7b4b81e65"
+    ],
+    [
+      "Bug1270.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
+        "data_elim_FStar.Tactics.Result.Success", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list", "true_interp",
+        "typing_FStar.Reflection.Basic.binders_of_env"
+      ],
+      0,
+      "1bcd33cad2680709b7ce8978d08a744c"
     ]
   ]
 ]

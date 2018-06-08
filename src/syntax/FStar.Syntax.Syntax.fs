@@ -30,44 +30,45 @@ open FStar.Dyn
 module PC = FStar.Parser.Const
 
 (* Objects with metadata *)
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type withinfo_t<'a> = {
   v:  'a;
   p: Range.range;
 }
 
 (* Free term and type variables *)
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type var = withinfo_t<lident>
 
 (* Term language *)
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type sconst = FStar.Const.sconst
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
   | LightOff
 
-///[@ (PpxDerivingShowConstant "None") ]
+// IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]
 type memo<'a> = ref<option<'a>>
 
 //versioning for unification variables
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type version = {
     major:int;
     minor:int
 }
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
   | Equality
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type aqual = option<arg_qualifier>
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type universe =
   | U_zero
   | U_succ  of universe
@@ -80,23 +81,54 @@ and univ_name = ident
 and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type univ_names    = list<univ_name>
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type universes     = list<universe>
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type monad_name    = lident
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+type quote_kind =
+  | Quote_static
+  | Quote_dynamic
+
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+type maybe_set_use_range =
+  | NoUseRange
+  | SomeUseRange of range
+
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type delta_depth =
-  | Delta_constant                  //A defined constant, e.g., int, list, etc.
-  | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
-  | Delta_equational                //A symbol that may be equated to another by extensional reasoning
+  | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
+  | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
-///[@ PpxDerivingShow ]
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// Different kinds of lazy terms. These are used to decide the unfolding
+// function, instead of keeping the closure inside the lazy node, since
+// that means we cannot have equality on terms (not serious) nor call
+// output_value on them (serious).
+type lazy_kind =
+  | BadLazy
+  | Lazy_bv
+  | Lazy_binder
+  | Lazy_fvar
+  | Lazy_comp
+  | Lazy_env
+  | Lazy_proofstate
+  | Lazy_sigelt
+  | Lazy_uvar
+
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+type should_check_uvar =
+  | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
+  | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
+  | Strict                (* Everything else is strict *)
+
+// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
@@ -111,11 +143,26 @@ type term' =
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
+  | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
+                                                                    and a delayed substitution of only NM or NT elements *)
   | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+  | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
+  | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
+and ctx_uvar = {                                                 (* (G |- ?u : t), a uvar introduced in context G at type t *)
+    ctx_uvar_head:uvar;                                          (* ?u *)
+    ctx_uvar_gamma:gamma;                                        (* G: a cons list of bindings (most recent at the head) *)
+    ctx_uvar_binders:binders;                                    (* All the Tm_name bindings in G, a snoc list (most recent at the tail) *)
+    ctx_uvar_typ:typ;                                            (* t *)
+    ctx_uvar_reason:string;
+    ctx_uvar_should_check:should_check_uvar;
+    ctx_uvar_range:Range.range
+}
+and ctx_uvar_and_subst = ctx_uvar * subst_ts
+and uvar = Unionfind.p_uvar<option<term>> * version
+and uvars = set<ctx_uvar>
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
 and pat' =
@@ -130,7 +177,13 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbtyp  :typ;             //t
     lbeff  :lident;          //M
     lbdef  :term;            //e
-    lbattrs:list<attribute>
+    lbattrs:list<attribute>; //attrs
+    lbpos  :range;           //original position of 'e'
+}
+and antiquotations = list<(bv * bool * term)>
+and quoteinfo = {
+    qkind      : quote_kind;
+    antiquotes : antiquotations;
 }
 and comp_typ = {
   comp_univs:universes;
@@ -162,7 +215,6 @@ and cflags =
   | LEMMA
   | CPS
   | DECREASES of term
-and uvar = Unionfind.p_uvar<option<term>> * version
 and metadata =
   | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
@@ -172,9 +224,7 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-  | Meta_alien         of dyn * string * typ                     (* A blob embedded into syntax, with an annotation to print it and its type *)
 and meta_source_info =
-  | Data_app
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
@@ -188,7 +238,7 @@ and fv_qual =
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
-             * option<range>                    (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
+             * maybe_set_use_range              (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
 and subst_elt =
    | DB of int * bv                            (* DB i t: replace a bound variable with index i with name bv                 *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
@@ -196,7 +246,6 @@ and subst_elt =
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
 and freenames = set<bv>
-and uvars     = set<(uvar*typ)>
 and syntax<'a> = {
     n:'a;
     pos:Range.range;
@@ -214,15 +263,9 @@ and fv = {
 }
 and free_vars = {
     free_names:list<bv>;
-    free_uvars:list<(uvar*typ)>;
+    free_uvars:list<ctx_uvar>;
     free_univs:list<universe_uvar>;
     free_univ_names:list<univ_name>; //fifo
-}
-and lcomp = {
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflags>;
-    comp_thunk: ref<(either<(unit -> comp), comp>)>
 }
 
 (* Residual of a computation type after typechecking *)
@@ -233,6 +276,29 @@ and residual_comp = {
 }
 
 and attribute = term
+
+and lazyinfo = {
+    blob  : dyn;
+    lkind : lazy_kind;
+    typ   : typ;
+    rng   : Range.range;
+}
+and binding =
+  | Binding_var      of bv
+  | Binding_lid      of lident * tscheme
+  | Binding_univ     of univ_name
+and tscheme = list<univ_name> * typ
+and gamma = list<binding>
+
+type lcomp = { //a lazy computation
+    eff_name: lident;
+    res_typ: typ;
+    cflags: list<cflags>;
+    comp_thunk: ref<(either<(unit -> comp), comp>)>
+}
+
+// This is set in FStar.Main.main, where all modules are in-scope.
+let lazy_chooser : ref<option<(lazy_kind -> lazyinfo -> term)>> = mk_ref None
 
 let mk_lcomp eff_name res_typ cflags comp_thunk =
     { eff_name = eff_name;
@@ -246,7 +312,6 @@ let lcomp_comp lc =
       lc.comp_thunk := Inr c;
       c
     | Inr c -> c
-type tscheme = list<univ_name> * typ
 
 type freenames_l = list<bv>
 type formula = typ
@@ -323,7 +388,8 @@ type eff_decl = {
     return_repr :tscheme;
     bind_repr   :tscheme;
     //actions for the effect
-    actions     :list<action>
+    actions     :list<action>;
+    eff_attrs   :list<attribute>;
 }
 
 type sig_metadata = {
@@ -369,6 +435,7 @@ type sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
+  | Sig_splice         of list<lident> * term
 and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
@@ -417,6 +484,17 @@ let range_of_lbname (l:lbname) = match l with
 let range_of_bv x = x.ppname.idRange
 let set_range_of_bv x r = {x with ppname=Ident.mk_ident(x.ppname.idText, r)}
 
+
+(* Helpers *)
+let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
+    let aq = List.map (fun (bv, b, t) -> (bv, b, f t)) qi.antiquotes in
+    { qi with antiquotes = aq }
+
+let lookup_aq (bv : bv) (aq : antiquotations) : option<(bool * term)> =
+    match List.tryFind (fun (bv', _, _) -> bv_eq bv bv') aq with
+    | Some (_, b, e) -> Some (b, e)
+    | None -> None
+
 (*********************************************************************************)
 (* Syntax builders *)
 (*********************************************************************************)
@@ -428,11 +506,11 @@ let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv
 let new_fv_set () :set<lident> = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
-let new_universe_names_fifo_set () : fifo_set<univ_name> = Util.new_fifo_set order_univ_name
+let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name
 
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
-let no_universe_names = new_universe_names_fifo_set ()
+let no_universe_names = new_universe_names_set ()
 //let memo_no_uvs = Util.mk_ref (Some no_uvs)
 //let memo_no_names = Util.mk_ref (Some no_names)
 let freenames_of_list l = List.fold_right Util.set_add l no_names
@@ -467,7 +545,16 @@ let mk_GTotal' t u: comp = mk (GTotal(t, u)) None t.pos
 let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
-let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e; lbattrs=[]}
+let mk_lb (x, univs, eff, t, e, pos) = {
+    lbname=x;
+    lbunivs=univs;
+    lbtyp=t;
+    lbeff=eff;
+    lbdef=e;
+    lbattrs=[];
+    lbpos=pos;
+  }
+
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
 let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] }
 let mk_subst (s:subst_t)   = s
@@ -582,19 +669,29 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
 ///////////////////////////////////////////////////////////////////////
 //Some common constants
 ///////////////////////////////////////////////////////////////////////
-let tconst l = mk (Tm_fvar(lid_as_fv l Delta_constant None)) None Range.dummyRange
-let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_defined_at_level 1) None)) None Range.dummyRange
-let tdataconstr l = fv_to_tm (lid_as_fv l Delta_constant (Some Data_ctor))
-let t_unit   = tconst PC.unit_lid
-let t_bool   = tconst PC.bool_lid
-let t_int    = tconst PC.int_lid
-let t_string = tconst PC.string_lid
-let t_float  = tconst PC.float_lid
-let t_char   = tabbrev PC.char_lid
-let t_range  = tconst PC.range_lid
-let t_term   = tconst PC.term_lid
+let delta_constant = Delta_constant_at_level 0
+let delta_equational = Delta_equational_at_level 0
+let tconst l = mk (Tm_fvar(lid_as_fv l delta_constant None)) None Range.dummyRange
+let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_constant_at_level 1) None)) None Range.dummyRange
+let tdataconstr l = fv_to_tm (lid_as_fv l delta_constant (Some Data_ctor))
+let t_unit      = tconst PC.unit_lid
+let t_bool      = tconst PC.bool_lid
+let t_int       = tconst PC.int_lid
+let t_string    = tconst PC.string_lid
+let t_float     = tconst PC.float_lid
+let t_char      = tabbrev PC.char_lid
+let t_range     = tconst PC.range_lid
+let t_term      = tconst PC.term_lid
+let t_order     = tconst PC.order_lid
+let t_decls     = tabbrev PC.decls_lid
+let t_binder    = tconst PC.binder_lid
+let t_binders   = tconst PC.binders_lid
+let t_bv        = tconst PC.bv_lid
+let t_fv        = tconst PC.fv_lid
+let t_norm_step = tconst PC.norm_step_lid
 let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev PC.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
+let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange
 let unit_const = mk (Tm_constant FStar.Const.Const_unit) None Range.dummyRange

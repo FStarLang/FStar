@@ -2,15 +2,6 @@
   "˛¥\u001f}Éˆ—Î¨;æa‹˙\"ê",
   [
     [
-      "Eval.DB.uu___is_O",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6ae39dd3a39d7c77ea725b9b243d4156"
-    ],
-    [
       "Eval.DB.__proj__O__item__g",
       1,
       2,
@@ -21,7 +12,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_484127013bba2593946d02c4a721e275"
       ],
       0,
-      "a80e65d147b7908ef923a8a908b4f85a"
+      "a8457d6b5b68ea81e9061ee58165e577"
     ],
     [
       "Eval.DB.__proj__O__item__a",
@@ -34,16 +25,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_484127013bba2593946d02c4a721e275"
       ],
       0,
-      "d581e60accd7b69b00db31c4ff2bc2f2"
-    ],
-    [
-      "Eval.DB.uu___is_S",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "922e1f3f5b7f97675001738d09bd34d8"
+      "c303eb9f73dda91f64bc2985853c4f10"
     ],
     [
       "Eval.DB.__proj__S__item__g",
@@ -56,7 +38,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_7953764d4affd5fc53963a3447f7bdde"
       ],
       0,
-      "4cd407f140f4750dca3519d26a890383"
+      "db990fca4ee88be7a24d6141477768c5"
     ],
     [
       "Eval.DB.__proj__S__item__a",
@@ -69,7 +51,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_7953764d4affd5fc53963a3447f7bdde"
       ],
       0,
-      "1762f51ee637252919ed1a80d0bdc0ce"
+      "52810a1aa04dd59485d00e1aafd8bc9d"
     ],
     [
       "Eval.DB.__proj__S__item__b",
@@ -82,7 +64,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_7953764d4affd5fc53963a3447f7bdde"
       ],
       0,
-      "485e455ff8b99fbab0d17cf36fbaf294"
+      "dc2b79729f149ae9e37bbfa6ab928360"
     ],
     [
       "Eval.DB.__proj__S__item___3",
@@ -97,16 +79,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_7953764d4affd5fc53963a3447f7bdde"
       ],
       0,
-      "0b44a8a51781730e17d57ef6bd37ee07"
-    ],
-    [
-      "Eval.DB.uu___is_Var",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "cf5027f1733a499d2cafc677d0369c87"
+      "9a555bc618ae58685dbba767f2462982"
     ],
     [
       "Eval.DB.__proj__Var__item__g",
@@ -119,7 +92,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_510090c4b8d9bd9a52cee793ac3e6455"
       ],
       0,
-      "d7052b6d830a8f1f6c565873552b2c47"
+      "e9f9f053aff818f85d2e6d4d10073fbe"
     ],
     [
       "Eval.DB.__proj__Var__item__a",
@@ -132,7 +105,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_510090c4b8d9bd9a52cee793ac3e6455"
       ],
       0,
-      "dcd04d680bf7098b6d65ad80184aa22a"
+      "b9ad46378194c090aa14e62eff0f0560"
     ],
     [
       "Eval.DB.__proj__Var__item___2",
@@ -148,16 +121,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_510090c4b8d9bd9a52cee793ac3e6455"
       ],
       0,
-      "c63c86694ff7f0062686ad5bc26e659f"
-    ],
-    [
-      "Eval.DB.uu___is_Lam",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "945d8fd804837c6f0e33ab49c30577bb"
+      "aba7992b0f895b8e50b5a709148aca06"
     ],
     [
       "Eval.DB.__proj__Lam__item__g",
@@ -170,7 +134,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_8ba4e4e3f13cea313e3b1698266f8372"
       ],
       0,
-      "5af437e0bb1851b839d3e4524459367e"
+      "8e8cc3fb35f9a533a7ef184a131fa8ba"
     ],
     [
       "Eval.DB.__proj__Lam__item__a",
@@ -183,7 +147,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_8ba4e4e3f13cea313e3b1698266f8372"
       ],
       0,
-      "755f46e62dc975201fd739e876d09b6c"
+      "264234e26198fdf8e21d16e8def57017"
     ],
     [
       "Eval.DB.__proj__Lam__item__b",
@@ -196,7 +160,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_8ba4e4e3f13cea313e3b1698266f8372"
       ],
       0,
-      "1aa875c52570e0ca8552f68632b8c1c4"
+      "70d8734d1ec7fc56ae6d174e7d4776a3"
     ],
     [
       "Eval.DB.__proj__Lam__item__body",
@@ -213,16 +177,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_8ba4e4e3f13cea313e3b1698266f8372"
       ],
       0,
-      "90af18279ace654da01dc6628c9d9ab8"
-    ],
-    [
-      "Eval.DB.uu___is_App",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3b129f9f3692e6ee28cc0e634f683486"
+      "39299b37ff77e135de76a3c35f555908"
     ],
     [
       "Eval.DB.__proj__App__item__g",
@@ -235,7 +190,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
       ],
       0,
-      "c924a2a5d048908360b6cb8dcec083fa"
+      "c0cff862d8ebe26383fbf288eaa2ff24"
     ],
     [
       "Eval.DB.__proj__App__item__a",
@@ -248,7 +203,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
       ],
       0,
-      "199298d2ca9758452d342b12511ee72c"
+      "105afc2979bec287ec9cb7b921829ca6"
     ],
     [
       "Eval.DB.__proj__App__item__b",
@@ -261,7 +216,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
       ],
       0,
-      "71682e94fcb3bf1e13589c738da46775"
+      "0b0193c7d6f72cf66ac4ba3b012d0ace"
     ],
     [
       "Eval.DB.__proj__App__item__e1",
@@ -269,17 +224,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "data_elim_Eval.DB.App",
-        "disc_equation_Eval.DB.App", "proj_equation_Eval.DB.App_a",
-        "proj_equation_Eval.DB.App_b", "proj_equation_Eval.DB.App_g",
-        "projection_inverse_BoxBool_proj_0",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.App",
+        "proj_equation_Eval.DB.App_a", "proj_equation_Eval.DB.App_b",
+        "proj_equation_Eval.DB.App_g", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Eval.DB.App_a",
         "projection_inverse_Eval.DB.App_b",
         "projection_inverse_Eval.DB.App_g",
         "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
       ],
       0,
-      "0945ab7526a60afec49d3c2f5acf67f1"
+      "d558b682eb4862ff8af29f9474fc5ae7"
     ],
     [
       "Eval.DB.__proj__App__item__e2",
@@ -295,7 +249,7 @@
         "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
       ],
       0,
-      "868252f6ca6ebc0cb38612750356ff17"
+      "8be9cd011ed7c0b00b7925b27598101f"
     ],
     [
       "Eval.DB.eval_var",
@@ -306,14 +260,12 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_04eaea7bd4f83bcbe98e3ee87b22ddff_4",
         "binder_x_64a6f2da4341770a4dee8aa1d0d4ae69_5", "data_elim_Eval.DB.O",
-        "disc_equation_Eval.DB.O", "disc_equation_Eval.DB.S",
-        "fuel_guarded_inversion_Eval.DB.var",
-        "projection_inverse_Eval.DB.S__3", "projection_inverse_Eval.DB.S_a",
-        "projection_inverse_Eval.DB.S_b", "projection_inverse_Eval.DB.S_g",
+        "data_elim_Eval.DB.S", "disc_equation_Eval.DB.O",
+        "disc_equation_Eval.DB.S", "fuel_guarded_inversion_Eval.DB.var",
         "subterm_ordering_Eval.DB.S"
       ],
       0,
-      "7b65a3f6bd870ce4f3e41f637ad99162"
+      "b17dd2da03bb34ab98093ed75e679c0c"
     ],
     [
       "Eval.DB.eval",
@@ -323,24 +275,299 @@
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_469181b3de8c335ece34fd70f472f78d_3",
-        "constructor_distinct_Eval.DB.App",
-        "constructor_distinct_Eval.DB.Lam",
-        "constructor_distinct_Eval.DB.Var", "data_elim_Eval.DB.App",
-        "data_elim_Eval.DB.Lam", "data_elim_Eval.DB.Var",
-        "disc_equation_Eval.DB.App", "disc_equation_Eval.DB.Lam",
-        "disc_equation_Eval.DB.Var", "fuel_guarded_inversion_Eval.DB.tm",
-        "projection_inverse_Eval.DB.App_b",
-        "projection_inverse_Eval.DB.App_e1",
-        "projection_inverse_Eval.DB.App_e2",
-        "projection_inverse_Eval.DB.App_g",
-        "projection_inverse_Eval.DB.Lam_a",
-        "projection_inverse_Eval.DB.Lam_b",
-        "projection_inverse_Eval.DB.Lam_g", "subterm_ordering_Eval.DB.App",
+        "data_elim_Eval.DB.App", "data_elim_Eval.DB.Lam",
+        "data_elim_Eval.DB.Var", "disc_equation_Eval.DB.App",
+        "disc_equation_Eval.DB.Lam", "disc_equation_Eval.DB.Var",
+        "fuel_guarded_inversion_Eval.DB.tm", "subterm_ordering_Eval.DB.App",
         "subterm_ordering_Eval.DB.Lam",
         "typing_Eval.DB_Tm_abs_f194870b934b0e45086850ee97d529d3"
       ],
       0,
-      "6f962b22ee831d131a8e5a1f9dfb3cdc"
+      "a979825ff184c83aeca151f0391499cf"
+    ],
+    [
+      "Eval.DB.__proj__O__item__g",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.O",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_484127013bba2593946d02c4a721e275"
+      ],
+      0,
+      "50d484647b2b9e3c3c85d9e988f8b959"
+    ],
+    [
+      "Eval.DB.__proj__O__item__a",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.O",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_484127013bba2593946d02c4a721e275"
+      ],
+      0,
+      "bd6e841dd97b46a91a72ef77ca82bf51"
+    ],
+    [
+      "Eval.DB.__proj__S__item__g",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_7953764d4affd5fc53963a3447f7bdde"
+      ],
+      0,
+      "0cb1113ad700e0db6f407b122e114ef2"
+    ],
+    [
+      "Eval.DB.__proj__S__item__a",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_7953764d4affd5fc53963a3447f7bdde"
+      ],
+      0,
+      "b25f805f78d65092429af0b8202b5580"
+    ],
+    [
+      "Eval.DB.__proj__S__item__b",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_7953764d4affd5fc53963a3447f7bdde"
+      ],
+      0,
+      "d46785e07cc44b1552f08d238988c792"
+    ],
+    [
+      "Eval.DB.__proj__S__item___3",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.S",
+        "proj_equation_Eval.DB.S_a", "proj_equation_Eval.DB.S_g",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Eval.DB.S_a", "projection_inverse_Eval.DB.S_g",
+        "refinement_interpretation_Eval.DB_Tm_refine_7953764d4affd5fc53963a3447f7bdde"
+      ],
+      0,
+      "18bfa2c1ab407b763496974737d896c8"
+    ],
+    [
+      "Eval.DB.__proj__Var__item__g",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.Var",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_510090c4b8d9bd9a52cee793ac3e6455"
+      ],
+      0,
+      "2806efbd4cfc5eef94c27e3af397ca7c"
+    ],
+    [
+      "Eval.DB.__proj__Var__item__a",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.Var",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_510090c4b8d9bd9a52cee793ac3e6455"
+      ],
+      0,
+      "5db09fa5f68018cf039e349b9d594c84"
+    ],
+    [
+      "Eval.DB.__proj__Var__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.Var",
+        "proj_equation_Eval.DB.Var_a", "proj_equation_Eval.DB.Var_g",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Eval.DB.Var_a",
+        "projection_inverse_Eval.DB.Var_g",
+        "refinement_interpretation_Eval.DB_Tm_refine_510090c4b8d9bd9a52cee793ac3e6455"
+      ],
+      0,
+      "9df449688c7c27aaebe07ddacb7a23f7"
+    ],
+    [
+      "Eval.DB.__proj__Lam__item__g",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.Lam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_8ba4e4e3f13cea313e3b1698266f8372"
+      ],
+      0,
+      "bbe6d3ab4cb28b4d51473aa2ee23aedb"
+    ],
+    [
+      "Eval.DB.__proj__Lam__item__a",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.Lam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_8ba4e4e3f13cea313e3b1698266f8372"
+      ],
+      0,
+      "34705cc13d87f4fe05745a5bf69df335"
+    ],
+    [
+      "Eval.DB.__proj__Lam__item__b",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.Lam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_8ba4e4e3f13cea313e3b1698266f8372"
+      ],
+      0,
+      "caf9c14668915c0ca2195a05d79e7bc9"
+    ],
+    [
+      "Eval.DB.__proj__Lam__item__body",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.Lam",
+        "proj_equation_Eval.DB.Lam_a", "proj_equation_Eval.DB.Lam_b",
+        "proj_equation_Eval.DB.Lam_g", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Eval.DB.Lam_a",
+        "projection_inverse_Eval.DB.Lam_b",
+        "projection_inverse_Eval.DB.Lam_g",
+        "refinement_interpretation_Eval.DB_Tm_refine_8ba4e4e3f13cea313e3b1698266f8372"
+      ],
+      0,
+      "dd786adafa0c0d4543b9946c4fc6c0a7"
+    ],
+    [
+      "Eval.DB.__proj__App__item__g",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.App",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
+      ],
+      0,
+      "5dcf4085b685327609e0f8860ce2a39e"
+    ],
+    [
+      "Eval.DB.__proj__App__item__a",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.App",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
+      ],
+      0,
+      "60afbce5f4befcbf0aeec25b87ccdbc8"
+    ],
+    [
+      "Eval.DB.__proj__App__item__b",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.App",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
+      ],
+      0,
+      "79185d1534136b1649689f9b43c80059"
+    ],
+    [
+      "Eval.DB.__proj__App__item__e1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.App",
+        "proj_equation_Eval.DB.App_a", "proj_equation_Eval.DB.App_b",
+        "proj_equation_Eval.DB.App_g", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Eval.DB.App_a",
+        "projection_inverse_Eval.DB.App_b",
+        "projection_inverse_Eval.DB.App_g",
+        "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
+      ],
+      0,
+      "c096a2d7a9aa929588ec9b600e781a93"
+    ],
+    [
+      "Eval.DB.__proj__App__item__e2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Eval.DB.App",
+        "proj_equation_Eval.DB.App_a", "proj_equation_Eval.DB.App_g",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Eval.DB.App_a",
+        "projection_inverse_Eval.DB.App_g",
+        "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
+      ],
+      0,
+      "7541aa322b3876c8ac3034fe4eb2b1cc"
+    ],
+    [
+      "Eval.DB.eval_var",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_04eaea7bd4f83bcbe98e3ee87b22ddff_4",
+        "binder_x_64a6f2da4341770a4dee8aa1d0d4ae69_5", "data_elim_Eval.DB.O",
+        "data_elim_Eval.DB.S", "disc_equation_Eval.DB.O",
+        "disc_equation_Eval.DB.S", "fuel_guarded_inversion_Eval.DB.var",
+        "subterm_ordering_Eval.DB.S"
+      ],
+      0,
+      "f7559d5ee159988acd38e9bc9e602a9a"
+    ],
+    [
+      "Eval.DB.eval",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_469181b3de8c335ece34fd70f472f78d_3",
+        "data_elim_Eval.DB.App", "data_elim_Eval.DB.Lam",
+        "data_elim_Eval.DB.Var", "disc_equation_Eval.DB.App",
+        "disc_equation_Eval.DB.Lam", "disc_equation_Eval.DB.Var",
+        "fuel_guarded_inversion_Eval.DB.tm", "subterm_ordering_Eval.DB.App",
+        "subterm_ordering_Eval.DB.Lam",
+        "typing_Eval.DB_Tm_abs_f194870b934b0e45086850ee97d529d3"
+      ],
+      0,
+      "e3c7d8dc5212793b1bb059ea31b9d8cf"
     ]
   ]
 ]

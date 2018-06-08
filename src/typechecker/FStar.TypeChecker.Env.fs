@@ -37,12 +37,7 @@ module U  = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 
-type binding =
-  | Binding_var      of bv
-  | Binding_lid      of lident * tscheme
-  | Binding_sig      of list<lident> * sigelt
-  | Binding_univ     of univ_name
-  | Binding_sig_inst of list<lident> * sigelt * universes //the first component should always be a Sig_inductive
+type sig_binding = list<lident> * sigelt
 
 type delta_level =
   | NoDelta
@@ -82,7 +77,8 @@ type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
-  gamma          :list<binding>;                (* Local typing environment and signature elements *)
+  gamma          :list<binding>;                (* Local typing environment *)
+  gamma_sig      :list<sig_binding>;            (* and signature elements *)
   gamma_cache    :BU.smap<cached_elt>;          (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
@@ -101,24 +97,30 @@ type env = {
   lax_universes  :bool;                         (* don't check universe constraints *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
+  uvar_subtyping :bool;
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   check_type_of  :bool -> env -> term -> typ -> guard_t;
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
-  qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
+  qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
+  normalized_eff_names:BU.smap<lident>;              (* cache for normalized effect names, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
-  synth          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  synth_hook          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  splice         :env -> term -> list<sigelt>;       (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
   is_native_tactic: lid -> bool;                     (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                      (* hooks that the interactive more relies onto for symbol tracking *)
-  dsenv          : FStar.ToSyntax.Env.env;           (* The desugaring environment from the front-end *)
+  dsenv          : FStar.Syntax.DsEnv.env;           (* The desugaring environment from the front-end *)
   dep_graph      : FStar.Parser.Dep.deps             (* The result of the dependency analysis *)
 }
+and solver_depth_t = int * int * int
 and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
+    snapshot     :string -> (solver_depth_t * unit);
+    rollback     :string -> option<solver_depth_t> -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
@@ -132,9 +134,9 @@ and guard_t = {
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
-and implicits = list<(string * env * uvar * term * typ * Range.range)>
+and implicits = list<(string * term * ctx_uvar * Range.range)>
 and tcenv_hooks =
-  { tc_push_in_gamma_hook : (env -> binding -> unit) }
+  { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
 
 let rename_gamma subst gamma =
     gamma |> List.map (function
@@ -182,6 +184,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     range=dummyRange;
     curmodule=module_lid;
     gamma= [];
+    gamma_sig = [];
     gamma_cache=new_gamma_cache();
     modules= [];
     expected_typ=None;
@@ -200,37 +203,45 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     lax_universes=false;
     failhard=false;
     nosynth=false;
+    uvar_subtyping=true;
     tc_term=tc_term;
     type_of=type_of;
     check_type_of=check_type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
-    qname_and_index=None;
+    qtbl_name_and_index=BU.smap_create 10, None;  //10?
+    normalized_eff_names=BU.smap_create 20;  //20?
     proof_ns = Options.using_facts_from ();
-    synth = (fun e g tau -> failwith "no synthesizer available");
+    synth_hook = (fun e g tau -> failwith "no synthesizer available");
+    splice = (fun e tau -> failwith "no splicer available");
     is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
-    dsenv = FStar.ToSyntax.Env.empty_env();
+    dsenv = FStar.Syntax.DsEnv.empty_env();
     dep_graph = deps
   }
 
-(* Marking and resetting the environment, for the interactive mode *)
+let dsenv env = env.dsenv
 let sigtab env = env.sigtab
 let gamma_cache env = env.gamma_cache
 
-let query_indices: ref<(list<(list<(lident * int)>)>)> = BU.mk_ref [[]]
-let push_query_indices () = match !query_indices with
-    | [] -> failwith "Empty query indices!"
-    | _ -> query_indices := (List.hd !query_indices)::!query_indices
+(* Marking and resetting the environment, for the interactive mode *)
 
-let pop_query_indices () = match !query_indices with
-    | [] -> failwith "Empty query indices!"
-    | hd::tl -> query_indices := tl
+let query_indices: ref<(list<(list<(lident * int)>)>)> = BU.mk_ref [[]]
+let push_query_indices () = match !query_indices with // already signal-atmoic
+  | [] -> failwith "Empty query indices!"
+  | _ -> query_indices := (List.hd !query_indices)::!query_indices
+
+let pop_query_indices () = match !query_indices with // already signal-atmoic
+  | [] -> failwith "Empty query indices!"
+  | hd::tl -> query_indices := tl
+
+let snapshot_query_indices () = Common.snapshot push_query_indices query_indices ()
+let rollback_query_indices depth = Common.rollback pop_query_indices query_indices depth
 
 let add_query_index (l, n) = match !query_indices with
-    | hd::tl -> query_indices := ((l,n)::hd)::tl
-    | _ -> failwith "Empty query indices"
+  | hd::tl -> query_indices := ((l,n)::hd)::tl
+  | _ -> failwith "Empty query indices"
 
 let peek_query_indices () = List.hd !query_indices
 
@@ -239,7 +250,9 @@ let push_stack env =
     stack := env::!stack;
     {env with sigtab=BU.smap_copy (sigtab env);
               gamma_cache=BU.smap_copy (gamma_cache env);
-              identifier_info=BU.mk_ref !env.identifier_info}
+              identifier_info=BU.mk_ref !env.identifier_info;
+              qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd;
+              normalized_eff_names=BU.smap_copy env.normalized_eff_names}
 
 let pop_stack () =
     match !stack with
@@ -248,30 +261,52 @@ let pop_stack () =
       env
     | _ -> failwith "Impossible: Too many pops"
 
-let push env msg =
-    push_query_indices();
-    env.solver.push msg;
-    push_stack env
+let snapshot_stack env = Common.snapshot push_stack stack env
+let rollback_stack depth = Common.rollback pop_stack stack depth
 
-let pop env msg =
-    env.solver.pop msg;
-    pop_query_indices();
-    pop_stack ()
+type tcenv_depth_t = int * int * solver_depth_t * int
+
+let snapshot env msg = BU.atomically (fun () ->
+    let stack_depth, env = snapshot_stack env in
+    let query_indices_depth, () = snapshot_query_indices () in
+    let solver_depth, () = env.solver.snapshot msg in
+    let dsenv_depth, dsenv = DsEnv.snapshot env.dsenv in
+    (stack_depth, query_indices_depth, solver_depth, dsenv_depth), { env with dsenv=dsenv })
+
+let rollback solver msg depth = BU.atomically (fun () ->
+    let stack_depth, query_indices_depth, solver_depth, dsenv_depth = match depth with
+        | Some (s1, s2, s3, s4) -> Some s1, Some s2, Some s3, Some s4
+        | None -> None, None, None, None in
+    let () = solver.rollback msg solver_depth in
+    let () = rollback_query_indices query_indices_depth in
+    let tcenv = rollback_stack stack_depth in
+    let dsenv = DsEnv.rollback dsenv_depth in
+    // Because of the way ``snapshot`` is implemented, the `tcenv` and `dsenv`
+    // that we rollback to should be consistent:
+    FStar.Common.runtime_assert
+      (BU.physical_equality tcenv.dsenv dsenv)
+      "Inconsistent stack state";
+    tcenv)
+
+let push env msg = snd (snapshot env msg)
+let pop env msg = rollback env.solver msg None
 
 let incr_query_index env =
-    let qix = peek_query_indices () in
-    match env.qname_and_index with
-    | None -> env
-    | Some (l, n) ->
+  let qix = peek_query_indices () in
+  match env.qtbl_name_and_index with
+  | _, None -> env
+  | tbl, Some (l, n) ->
     match qix |> List.tryFind (fun (m, _) -> Ident.lid_equals l m) with
     | None ->
-        let next = n + 1 in
-        add_query_index (l, next);
-        {env with qname_and_index=Some (l, next)}
+      let next = n + 1 in
+      add_query_index (l, next);
+      BU.smap_add tbl l.str next;
+      {env with qtbl_name_and_index=tbl, Some (l, next)}
     | Some (_, m) ->
-        let next = m + 1 in
-        add_query_index (l, next);
-        {env with qname_and_index=Some (l, next)}
+      let next = m + 1 in
+      add_query_index (l, next);
+      BU.smap_add tbl l.str next;
+      {env with qtbl_name_and_index=tbl, Some (l, next)}
 
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
@@ -363,36 +398,35 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
          aux cur lns
     else No
 
-let lookup_qname env (lid:lident) : option<(either<(universes * typ), (sigelt * option<universes>)> * Range.range)>  =
+type qninfo = option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+
+let lookup_qname env (lid:lident) : qninfo =
   let cur_mod = in_cur_mod env lid in
   let cache t = BU.smap_add (gamma_cache env) lid.str t; Some t in
   let found =
     if cur_mod<>No
     then match BU.smap_try_find (gamma_cache env) lid.str with
       | None ->
-        BU.find_map env.gamma (function
-          | Binding_lid(l,t) ->
-            if lid_equals lid l then Some (Inl (inst_tscheme t), Ident.range_of_lid l) else None
-          | Binding_sig (_, { sigel = Sig_bundle(ses, _) }) ->
-              BU.find_map ses (fun se ->
-                if lids_of_sigelt se |> BU.for_some (lid_equals lid)
-                then cache (Inr (se, None), U.range_of_sigelt se)
-                else None)
-          | Binding_sig (lids, s) ->
-            let maybe_cache t = match s.sigel with
-              | Sig_declare_typ _ -> Some t
-              | _ -> cache t
-            in
-            begin match List.tryFind (lid_equals lid) lids with
-                  | None -> None
-                  | Some l -> maybe_cache (Inr (s, None), Ident.range_of_lid l)
-            end
-          | Binding_sig_inst (lids, s, us) ->
-            begin match List.tryFind (lid_equals lid) lids with
-                  | None -> None
-                  | Some l -> Some (Inr (s, Some us), Ident.range_of_lid l)
-            end
-          | _ -> None)
+        BU.catch_opt
+            (BU.find_map env.gamma (function
+              | Binding_lid(l,t) ->
+                if lid_equals lid l then Some (Inl (inst_tscheme t), Ident.range_of_lid l) else None
+              | _ -> None))
+            (fun () -> BU.find_map env.gamma_sig (function
+              | (_, { sigel = Sig_bundle(ses, _) }) ->
+                  BU.find_map ses (fun se ->
+                    if lids_of_sigelt se |> BU.for_some (lid_equals lid)
+                    then cache (Inr (se, None), U.range_of_sigelt se)
+                    else None)
+              | (lids, s) ->
+                let maybe_cache t = match s.sigel with
+                  | Sig_declare_typ _ -> Some t
+                  | _ -> cache t
+                in
+                begin match List.tryFind (lid_equals lid) lids with
+                      | None -> None
+                      | Some l -> maybe_cache (Inr (s, None), Ident.range_of_lid l)
+                end))
       | se -> se
     else None
   in
@@ -410,7 +444,7 @@ let rec add_sigelt env se = match se.sigel with
     match se.sigel with
     | Sig_new_effect(ne) ->
       ne.actions |> List.iter (fun a ->
-          let se_let = U.action_as_lb ne.mname a in
+          let se_let = U.action_as_lb ne.mname a a.action_defn.pos in
           BU.smap_add (sigtab env) a.action_name.str se_let)
     | _ -> ()
 
@@ -575,7 +609,6 @@ let lookup_lid env l =
 let lookup_univ env x =
     List.find (function
         | Binding_univ y -> x.idText=y.idText
-//      | Binding_var({sort=t}) -> BU.set_mem x (Free.univnames t)
         | _ -> false) env.gamma
     |> Option.isSome
 
@@ -608,11 +641,11 @@ let typ_of_datacon env lid =
     | Some (Inr ({ sigel = Sig_datacon (_, _, _, l, _, _) }, _), _) -> l
     | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
-let lookup_definition delta_levels env lid =
+let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
   let visible quals =
       delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
   in
-  match lookup_qname env lid with
+  match qninfo with
   | Some (Inr (se, None), _) ->
     begin match se.sigel with
       | Sig_let((_, lbs), _) when visible se.sigquals ->
@@ -625,10 +658,16 @@ let lookup_definition delta_levels env lid =
     end
   | _ -> None
 
-let lookup_attrs_of_lid env lid : option<list<attribute>> =
-  match lookup_qname env lid with
+let lookup_definition delta_levels env lid =
+    lookup_definition_qninfo delta_levels lid <| lookup_qname env lid
+
+let attrs_of_qninfo (qninfo : qninfo) : option<list<attribute>> =
+  match qninfo with
   | Some (Inr (se, _), _) -> Some se.sigattrs
   | _ -> None
+
+let lookup_attrs_of_lid env lid : option<list<attribute>> =
+  attrs_of_qninfo <| lookup_qname env lid
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
@@ -672,7 +711,6 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
     | _ -> None
 
 let norm_eff_name =
-   let cache = BU.smap_create 20 in
    fun env (l:lident) ->
        let rec find l =
            match lookup_effect_abbrev env [U_unknown] l with //universe doesn't matter here; we're just normalizing the name
@@ -682,12 +720,12 @@ let norm_eff_name =
                 match find l with
                     | None -> Some l
                     | Some l' -> Some l' in
-       let res = match BU.smap_try_find cache l.str with
+       let res = match BU.smap_try_find env.normalized_eff_names l.str with
             | Some l -> l
             | None ->
               begin match find l with
                         | None -> l
-                        | Some m -> BU.smap_add cache l.str m;
+                        | Some m -> BU.smap_add env.normalized_eff_names l.str m;
                                     m
               end in
        Ident.set_lid_range res (range_of_lid l)
@@ -727,11 +765,14 @@ let is_record env lid =
         BU.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) quals
     | _ -> false
 
-let is_action env lid =
-    match lookup_qname env lid with
+let qninfo_is_action (qninfo : qninfo) =
+    match qninfo with
         | Some (Inr ({ sigel = Sig_let(_, _); sigquals = quals }, _), _) ->
             BU.for_some (function Action _ -> true | _ -> false) quals
         | _ -> false
+
+let is_action env lid =
+    qninfo_is_action <| lookup_qname env lid
 
 let is_interpreted =
     let interpreted_symbols =
@@ -753,7 +794,9 @@ let is_interpreted =
     fun (env:env) head ->
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-            fv.fv_delta=Delta_equational
+            (match fv.fv_delta with
+             | Delta_equational_at_level _ -> true
+             | _ -> false)
             //U.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
         | _ -> false
 
@@ -897,7 +940,7 @@ let build_lattice env se = match se.sigel with
     (* For debug purpose... *)
     let print_mlift l =
       (* A couple of bogus constants, just for printing *)
-      let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) Delta_constant None) in
+      let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) delta_constant None) in
       let arg = bogus_term "ARG" in
       let wp = bogus_term "WP" in
       let e = bogus_term "COMP" in
@@ -1072,34 +1115,35 @@ let is_reifiable_function (env:env) (t:S.term) : bool =
 //   l_1 ... l_n val_1 ... val_n
 // where l_i is a local binding and val_i is a top-level binding.
 //
+//let push_in_gamma env s =
+//  let rec push x rest =
+//    match rest with
+//    | Binding_sig _ :: _ ->
+//        x :: rest
+//    | [] ->
+//        [ x ]
+//    | local :: rest ->
+//        local :: push x rest
+//  in
+//  env.tc_hooks.tc_push_in_gamma_hook env s;
+//  { env with gamma = push s env.gamma }
+
 // This function assumes that, in the case that the environment contains local
 // bindings _and_ we push a top-level binding, then the top-level binding does
 // not capture any of the local bindings (duh).
-let push_in_gamma env s =
-  let rec push x rest =
-    match rest with
-    | Binding_sig _ :: _
-    | Binding_sig_inst _ :: _ ->
-        x :: rest
-    | [] ->
-        [ x ]
-    | local :: rest ->
-        local :: push x rest
-  in
-  env.tc_hooks.tc_push_in_gamma_hook env s;
-  { env with gamma = push s env.gamma }
-
 let push_sigelt env s =
-  let env = push_in_gamma env (Binding_sig(lids_of_sigelt s, s)) in
+  let sb = (lids_of_sigelt s, s) in
+  let env = {env with gamma_sig = sb::env.gamma_sig} in
+  env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
   build_lattice env s
 
-let push_sigelt_inst env s us =
-  let env = push_in_gamma env (Binding_sig_inst(lids_of_sigelt s,s,us)) in
-  build_lattice env s
-
-let push_local_binding env b = {env with gamma=b::env.gamma}
+let push_local_binding env b =
+  {env with gamma=b::env.gamma}
 
 let push_bv env x = push_local_binding env (Binding_var x)
+
+let push_bvs env bvs =
+    List.fold_left (fun env bv -> push_bv env bv) env bvs
 
 let pop_bv env =
     match env.gamma with
@@ -1124,6 +1168,7 @@ let push_module env (m:modul) =
     {env with
       modules=m::env.modules;
       gamma=[];
+      gamma_sig=[];
       expected_typ=None}
 
 let push_univ_vars (env:env_t) (xs:univ_names) : env_t =
@@ -1149,14 +1194,13 @@ let finish_module =
     fun env m ->
       let sigs =
         if lid_equals m.name Const.prims_lid
-        then env.gamma |> List.collect (function
-                | Binding_sig (_, se) -> [se]
-                | _ -> []) |> List.rev
+        then env.gamma_sig |> List.map snd |> List.rev
         else m.exports  in
       add_sigelts env sigs;
       {env with
         curmodule=empty_lid;
         gamma=[];
+        gamma_sig=[];
         modules=m::env.modules}
 
 ////////////////////////////////////////////////////////////
@@ -1170,8 +1214,7 @@ let uvars_in_env env =
     | Binding_univ _ :: tl -> aux out tl
     | Binding_lid(_, (_, t))::tl
     | Binding_var({sort=t})::tl -> aux (ext out (Free.uvars t)) tl
-    | Binding_sig _::_
-    | Binding_sig_inst _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
+  in
   aux no_uvs env.gamma
 
 let univ_vars env =
@@ -1179,32 +1222,28 @@ let univ_vars env =
     let ext out uvs = BU.set_union out uvs in
     let rec aux out g = match g with
       | [] -> out
-      | Binding_sig_inst _::tl
       | Binding_univ _ :: tl -> aux out tl
       | Binding_lid(_, (_, t))::tl
       | Binding_var({sort=t})::tl -> aux (ext out (Free.univs t)) tl
-      | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more uvars beyond this *)
+    in
     aux no_univs env.gamma
 
 let univnames env =
     let no_univ_names = Syntax.no_universe_names in
-    let ext out uvs = BU.fifo_set_union out uvs in
+    let ext out uvs = BU.set_union out uvs in
     let rec aux out g = match g with
         | [] -> out
-        | Binding_sig_inst _::tl -> aux out tl
-        | Binding_univ uname :: tl -> aux (BU.fifo_set_add uname out) tl
+        | Binding_univ uname :: tl -> aux (BU.set_add uname out) tl
         | Binding_lid(_, (_, t))::tl
         | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
-        | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more universe names beyond this *)
+    in
     aux no_univ_names env.gamma
 
 let bound_vars_of_bindings bs =
   bs |> List.collect (function
         | Binding_var x -> [x]
         | Binding_lid _
-        | Binding_sig _
-        | Binding_univ _
-        | Binding_sig_inst _ -> [])
+        | Binding_univ _ -> [])
 
 let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
 
@@ -1212,37 +1251,25 @@ let bound_vars env = bound_vars_of_bindings env.gamma
 
 let all_binders env = binders_of_bindings env.gamma
 
-let print_gamma env =
-    env.gamma |> List.map (function
+let print_gamma gamma =
+    (gamma |> List.map (function
         | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
         | Binding_univ u -> "Binding_univ " ^ u.idText
-        | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)
-        | Binding_sig (ls, _) -> "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
-        | Binding_sig_inst (ls, _, _) -> "Binding_sig_inst " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", "))
+        | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
+    // (env.gamma_sig |> List.map (fun (ls, _) ->
+    //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
+    // ))
     |> String.concat "::\n"
-    |> BU.print1 "%s\n"
-
-let eq_gamma env env' =
-    if BU.physical_equality env.gamma env'.gamma
-    then true
-    else let g = all_binders env in
-         let g' = all_binders env' in
-         List.length g = List.length g'
-         && List.forall2 (fun (b1, _) (b2, _) -> S.bv_eq b1 b2) g g'
-
-let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
 let string_of_delta_level = function
   | NoDelta -> "NoDelta"
   | Inlining -> "Inlining"
   | Eager_unfolding_only -> "Eager_unfolding_only"
-  | Unfold _ -> "Unfold _"
+  | Unfold d -> "Unfold " ^ Print.delta_depth_to_string d
   | UnfoldTac -> "UnfoldTac"
 
 let lidents env : list<lident> =
-  let keys = List.fold_left (fun keys -> function
-    | Binding_sig(lids, _) -> lids@keys
-    | _ -> keys) [] env.gamma in
+  let keys = List.collect fst env.gamma_sig in
   BU.smap_fold (sigtab env) (fun _ v keys -> U.lids_of_sigelt v@keys) keys
 
 let should_enc_path env path =
@@ -1270,6 +1297,7 @@ let get_proof_ns e = e.proof_ns
 let set_proof_ns ns e = {e with proof_ns = ns}
 
 let unbound_vars (e : env) (t : term) : BU.set<bv> =
+    // FV(t) \ Vars(Γ)
     List.fold_left (fun s bv -> BU.set_remove bv s) (Free.names t) (bound_vars e)
 
 let closed (e : env) (t : term) =
@@ -1287,11 +1315,160 @@ let string_of_proof_ns env =
     |> List.rev
     |> String.concat " "
 
+
+(* ------------------------------------------------*)
+(* <guard_formula ops> Operations on guard_formula *)
+(* ------------------------------------------------*)
+let guard_of_guard_formula g = {guard_f=g; deferred=[]; univ_ineqs=([], []); implicits=[]}
+
+let guard_form g = g.guard_f
+
+let is_trivial g = match g with
+    | {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=i} ->
+      i |> BU.for_all (fun (_, _, ctx_uvar, _) ->
+           (ctx_uvar.ctx_uvar_should_check=Allow_unresolved)
+           || (match Unionfind.find ctx_uvar.ctx_uvar_head with
+               | Some _ -> true
+               | None -> false))
+    | _ -> false
+
+let is_trivial_guard_formula g = match g with
+    | {guard_f=Trivial} -> true
+    | _ -> false
+
+let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=[]}
+
+let abstract_guard_n bs g =
+    match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f ->
+        let f' = U.abs bs f (Some (U.residual_tot U.ktype0)) in
+        ({ g with guard_f = NonTrivial f' })
+
+let abstract_guard b g =
+    abstract_guard_n [b] g
+
+let def_check_vars_in_set rng msg vset t =
+    if Options.defensive () then begin
+        let s = Free.names t in
+        if not (BU.set_is_empty <| BU.set_difference s vset)
+        then Errors.log_issue rng
+                    (Errors.Warning_Defensive,
+                     BU.format3 "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\n"
+                                      msg
+                                      (Print.term_to_string t)
+                                      (BU.set_elements s |> Print.bvs_to_string ",\n\t"))
+    end
+
+let def_check_closed_in rng msg l t =
+    if not (Options.defensive ()) then () else
+    def_check_vars_in_set rng msg (BU.as_set l Syntax.order_bv) t
+
+let def_check_closed_in_env rng msg e t =
+    if not (Options.defensive ()) then () else
+    def_check_closed_in rng msg (bound_vars e) t
+
+let def_check_guard_wf rng msg env g =
+    match g.guard_f with
+    | Trivial -> ()
+    | NonTrivial f -> def_check_closed_in_env rng msg env f
+
+let apply_guard g e = match g.guard_f with
+  | Trivial -> g
+  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) None f.pos}
+
+let map_guard g map = match g.guard_f with
+  | Trivial -> g
+  | NonTrivial f -> {g with guard_f=NonTrivial (map f)}
+
+let trivial t = match t with
+  | Trivial -> ()
+  | NonTrivial _ -> failwith "impossible"
+
+let conj_guard_f g1 g2 = match g1, g2 with
+  | Trivial, g
+  | g, Trivial -> g
+  | NonTrivial f1, NonTrivial f2 -> NonTrivial (U.mk_conj f1 f2)
+
+let check_trivial t = match (U.unmeta t).n with
+    | Tm_fvar tc when S.fv_eq_lid tc Const.true_lid -> Trivial
+    | _ -> NonTrivial t
+
+let imp_guard_f g1 g2 = match g1, g2 with
+  | Trivial, g -> g
+  | g, Trivial -> Trivial
+  | NonTrivial f1, NonTrivial f2 ->
+    let imp = U.mk_imp f1 f2 in check_trivial imp
+
+let binop_guard f g1 g2 = {guard_f=f g1.guard_f g2.guard_f;
+                           deferred=g1.deferred@g2.deferred;
+                           univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
+                                       snd g1.univ_ineqs@snd g2.univ_ineqs);
+                           implicits=g1.implicits@g2.implicits}
+let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
+let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
+
+let close_guard_univs us bs g =
+    match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f ->
+      let f =
+          List.fold_right2 (fun u b f ->
+              if Syntax.is_null_binder b then f
+              else U.mk_forall u (fst b) f)
+        us bs f in
+    {g with guard_f=NonTrivial f}
+
+let close_forall env bs f =
+    List.fold_right (fun b f ->
+            if Syntax.is_null_binder b then f
+            else let u = env.universe_of env (fst b).sort in
+                 U.mk_forall u (fst b) f)
+    bs f
+
+let close_guard env binders g =
+    match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f ->
+      {g with guard_f=NonTrivial (close_forall env binders f)}
+
+(* ------------------------------------------------*)
+(* </guard_formula ops>                            *)
+(* ------------------------------------------------*)
+
+(* Generating new implicit variables *)
+let new_implicit_var_aux reason r env k should_check =
+    match U.destruct k FStar.Parser.Const.range_of_lid with
+     | Some [_; (tm, _)] ->
+       let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) None tm.pos in
+       t, [], trivial_guard
+
+     | _ ->
+      let binders = all_binders env in
+      let gamma = env.gamma in
+      let ctx_uvar = {
+          ctx_uvar_head=FStar.Syntax.Unionfind.fresh();
+          ctx_uvar_gamma=gamma;
+          ctx_uvar_binders=binders;
+          ctx_uvar_typ=k;
+          ctx_uvar_reason=reason;
+          ctx_uvar_should_check=should_check;
+          ctx_uvar_range=r
+      } in
+      check_uvar_ctx_invariant reason r true gamma binders;
+      let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
+      let g = {trivial_guard with implicits=[(reason, t, ctx_uvar, r)]} in
+      t, [(ctx_uvar, r)], g
+
+(***************************************************)
+
 (* <Move> this out of here *)
 let dummy_solver = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
+    snapshot=(fun _ -> (0, 0, 0), ());
+    rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);

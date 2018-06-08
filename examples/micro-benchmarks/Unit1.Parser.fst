@@ -24,14 +24,14 @@ type ta = (x:int) -> (y:int -> tint y) -> tint x
 type tb = x:int -> (y:int -> tint y) -> tint x
 type tc = x:int -> f:(y:int -> Tot int) -> tint (f 0)
 
-let f1 (x: y:int &  z:tint y{z==z /\ y=0}) = x
-let f2 (x: y:int *  z:tint 0{z==z}) = x
-let f3 (x: y:int -> z:tint y{z==z /\ y=0})= x
+let f1 (x: (y:int &  z:tint y{z==z /\ y=0})) = x
+let f2 (x: (y:int *  z:tint 0{z==z})) = x
+let f3 (x: (y:int -> z:tint y{z==z /\ y=0})) = x
 let f4 (#a:Type) (l:list a) (#x:int) (v:tint x) = l
 let f5 (l:list int) (v:tint 0) = f4 l v
 
 type s0 (x:int) (y:int -> Tot int) = tint (y 0)
-type s1 (x: y:int &  z:tint y{z==z /\ y=0}) = tint (dfst x)
-type s2 (x: y:int *  z:tint 0{z==z}) = tint (fst x)
-type s3 (x: y:int -> z:tint y{z==z /\ y=0}) = tint ((fun x -> 0) x)
+type s1 (x: (y:int &  z:tint y{z==z /\ y=0})) = tint (dfst x)
+type s2 (x: (y:int *  z:tint 0{z==z})) = tint (fst x)
+type s3 (x: (y:int -> z:tint y{z==z /\ y=0})) = tint ((fun x -> 0) x)
 

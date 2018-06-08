@@ -38,12 +38,12 @@ let minus m n = app n [pred; m]
 let let_ x e e' : term = app (U.abs [b x] e' None) [e]
 let mk_let x e e' : term =
     let e' = FStar.Syntax.Subst.subst [NM(x, 0)] e' in
-    mk (Tm_let((false, [{lbname=BU.Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=Const.effect_Tot_lid; lbattrs=[]}]), e'))
+    mk (Tm_let((false, [{lbname=BU.Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=Const.effect_Tot_lid; lbattrs=[];lbpos=dummyRange}]), e'))
                            None dummyRange
 
 let lid x = lid_of_path [x] dummyRange
-let znat_l = S.lid_as_fv (lid "Z") Delta_constant (Some Data_ctor)
-let snat_l = S.lid_as_fv (lid "S") Delta_constant (Some Data_ctor)
+let znat_l = S.lid_as_fv (lid "Z") delta_constant (Some Data_ctor)
+let snat_l = S.lid_as_fv (lid "S") delta_constant (Some Data_ctor)
 let tm_fv fv = mk (Tm_fvar fv) None dummyRange
 let znat : term = tm_fv znat_l
 let snat s      = mk (Tm_app(tm_fv snat_l, [as_arg s])) None dummyRange
@@ -71,7 +71,7 @@ let minus_nat t1 t2 =
                   app (nm minus) [pred_nat (nm x); nm n] in
     let lb = {lbname=BU.Inl minus; lbeff=lid_of_path ["Pure"] dummyRange; lbunivs=[]; lbtyp=tun;
               lbdef=subst [NM(minus, 0)] (U.abs [b x; b y] (mk_match (nm y) [zbranch; sbranch]) None);
-              lbattrs=[]} in
+              lbattrs=[]; lbpos=dummyRange} in
     mk (Tm_let((true, [lb]), subst [NM(minus, 0)] (app (nm minus) [t1; t2]))) None dummyRange
 let encode_nat n =
     let rec aux out n =
@@ -225,9 +225,9 @@ let run_either i r expected normalizer =
     // ignore (Options.set_options Options.Set "--debug Test --debug_level univ_norm --debug_level NBE");
     always i (term_eq (U.unascribe x) expected)
 
-let run_interpreter i r expected = run_either i r expected (N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops])
-let run_nbe i r expected = run_either i r expected FStar.TypeChecker.NBE.normalize
-
+let run_interpreter i r expected = run_either i r expected (N.normalize [N.Beta; N.UnfoldUntil delta_constant; N.Primops])
+let run_nbe i r expected =
+    run_either i r expected (FStar.TypeChecker.NBE.normalize [FStar.TypeChecker.NBE.UnfoldUntil delta_constant])
 let run_interpreter_with_time i r expected =
   let interp () = run_interpreter i r expected in
   (i, snd (FStar.Util.return_execution_time interp))

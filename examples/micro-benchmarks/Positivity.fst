@@ -22,3 +22,8 @@ type t3 (a:Type) = nat -> t2 a
 
 noeq type t4 =
   | C4: t3 t4 -> t4
+
+open FStar.ST
+noeq
+type t =
+  | MkT : ref t -> t //relies in assume_strictly_positive

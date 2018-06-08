@@ -8,19 +8,16 @@
       1,
       [ "@query", "assumption_Prims.HasEq_unit" ],
       0,
-      "8c272c9449958bdb0abc647211d02391"
+      "5df7a04c0abdcb5cd1dfe7c25147e8ad"
     ],
     [
       "Bug424.get",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
-      ],
+      [ "@query" ],
       0,
-      "e2175f0efe6008111840ad6553565df8"
+      "6985ced1f755a2f13639ffc9a535049e"
     ]
   ]
 ]

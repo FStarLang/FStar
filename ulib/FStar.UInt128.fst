@@ -18,6 +18,7 @@ type uint128: Type0 = { low: U64.t; high: U64.t }
 
 let t = uint128
 
+noextract
 let v x = U64.v x.low + (U64.v x.high) * (pow2 64)
 
 let div_mod (x:nat) (k:nat{k > 0}) : Lemma (x / k * k + x % k == x) = ()
@@ -274,7 +275,7 @@ let to_vec_v (a: t) :
   Lemma (vec128 a == Seq.append (vec64 a.high) (vec64 a.low)) =
   to_vec_append (U64.v a.low) (U64.v a.high)
 
-val logand_vec_append (#n1 #n2: n:nat{n > 0}) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
+val logand_vec_append (#n1 #n2: pos) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
   Lemma (Seq.append (BV.logand_vec a1 b1) (BV.logand_vec a2 b2) ==
          BV.logand_vec #(n1 + n2) (Seq.append a1 a2) (Seq.append b1 b2))
 let logand_vec_append #n1 #n2 a1 b1 a2 b2 =
@@ -295,7 +296,7 @@ let logand (a b: t) : Pure t
   assert (vec128 r == BV.logand_vec (vec128 a) (vec128 b));
   r
 
-val logxor_vec_append (#n1 #n2: n:nat{n > 0}) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
+val logxor_vec_append (#n1 #n2: pos) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
   Lemma (Seq.append (BV.logxor_vec a1 b1) (BV.logxor_vec a2 b2) ==
          BV.logxor_vec #(n1 + n2) (Seq.append a1 a2) (Seq.append b1 b2))
 let logxor_vec_append #n1 #n2 a1 b1 a2 b2 =
@@ -316,7 +317,7 @@ let logxor (a b: t) : Pure t
   assert (vec128 r == BV.logxor_vec (vec128 a) (vec128 b));
   r
 
-val logor_vec_append (#n1 #n2: n:nat{n > 0}) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
+val logor_vec_append (#n1 #n2: pos) (a1 b1: BV.bv_t n1) (a2 b2: BV.bv_t n2) :
   Lemma (Seq.append (BV.logor_vec a1 b1) (BV.logor_vec a2 b2) ==
         BV.logor_vec #(n1 + n2) (Seq.append a1 a2) (Seq.append b1 b2))
 let logor_vec_append #n1 #n2 a1 b1 a2 b2 =
@@ -337,7 +338,7 @@ let logor (a b: t) : Pure t
   assert (vec128 r == BV.logor_vec (vec128 a) (vec128 b));
   r
 
-val lognot_vec_append (#n1 #n2: n:nat{n > 0}) (a1: BV.bv_t n1) (a2: BV.bv_t n2) :
+val lognot_vec_append (#n1 #n2: pos) (a1: BV.bv_t n1) (a2: BV.bv_t n2) :
   Lemma (Seq.append (BV.lognot_vec a1) (BV.lognot_vec a2) ==
         BV.lognot_vec #(n1 + n2) (Seq.append a1 a2))
 let lognot_vec_append #n1 #n2 a1 a2 =
@@ -556,7 +557,8 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   Math.paren_mul_right a_h (pow2 64) (pow2 s);
   ()
 
-#set-options "--z3rlimit 80"
+#reset-options "--normalize_pure_terms_for_extraction"
+#set-options "--z3rlimit 300"
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
@@ -573,7 +575,8 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
 
 val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
   r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
-
+#reset-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--normalize_pure_terms_for_extraction --z3rlimit 150"
 let shift_left_large a s =
   let h_shift = U32.sub s u32_64 in
   assert (U32.v h_shift < 64);
@@ -585,7 +588,7 @@ let shift_left_large a s =
   assert (U64.v r.high * pow2 64 == (U64.v a.low * pow2 (U32.v s)) % pow2 128);
   shift_left_large_lemma_t a (U32.v s);
   r
-#set-options "--z3rlimit 64"
+#set-options "--z3rlimit 128 --max_fuel 0 --max_ifuel 0"
 
 let shift_left a s =
   if (U32.lt s u32_64) then shift_left_small a s
@@ -1081,6 +1084,7 @@ let product_div_bound (#n:pos) (x y: UInt.uint_t n) :
   product_bound x y (pow2 n);
   pow2_div_bound #(n+n) (x * y) n
 
+#set-options "--z3rlimit 100"
 let mul_wide (x y:U64.t) : Pure t
   (requires True)
   (ensures (fun r -> v r == U64.v x * U64.v y)) =

@@ -47,6 +47,10 @@ type let_qualifier =
   | Rec
   | Mutable
 
+type quote_kind =
+  | Static
+  | Dynamic
+
 type term' =
   | Wild
   | Const     of sconst
@@ -62,7 +66,7 @@ type term' =
   | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
-  | Let       of option<attributes_> * let_qualifier * list<(pattern * term)> * term
+  | Let       of let_qualifier * list<(option<attributes_> * (pattern * term))> * term
   | LetOpen   of lid * term
   | Seq       of term * term
   | Bind      of ident * term * term
@@ -82,9 +86,11 @@ type term' =
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
   | Labeled   of term * string * bool
-  | Assign    of ident * term
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
+  | Antiquote of bool * term   (* Antiquotation within a quoted term. Boolean is true when value. *)
+  | Quote     of term * quote_kind
+  | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
 
 and term = {tm:term'; range:range; level:level}
 
@@ -109,7 +115,7 @@ and pattern' =
   | PatList     of list<pattern>
   | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
   | PatRecord   of list<(lid * pattern)>
-  | PatAscribed of pattern * term
+  | PatAscribed of pattern * (term * option<term>)
   | PatOr       of list<pattern>
   | PatOp       of ident
 and pattern = {pat:pattern'; prange:range}
@@ -195,6 +201,7 @@ type decl' =
   | Pragma of pragma
   | Fsdoc of fsdoc
   | Assume of ident * term
+  | Splice of list<ident> * term
 
 and decl = {
   d:decl';
@@ -342,6 +349,15 @@ let focusLetBindings lbs r =
               else (fst lb, mkAdmitMagic r)) lbs
         else lbs |> List.map snd
 
+let focusAttrLetBindings lbs r =
+    let should_filter = Util.for_some (fun (attr, (focus, _)) -> focus) lbs in
+    if should_filter
+    then let _ = Errors.log_issue r (Errors.Warning_Filtered, "Focusing on only some cases in this (mutually) recursive definition") in
+        List.map (fun (attr, (f, lb)) ->
+            if f then attr, lb
+            else (attr, (fst lb, mkAdmitMagic r))) lbs
+    else lbs |> List.map (fun (attr, (_, lb)) -> (attr, lb))
+
 let mkFsTypApp t args r =
   mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
 
@@ -393,7 +409,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                 let x = gen t.range in
                 mk_term (Refine(mk_binder (Annotated (x, t)) t_range Type_level None, phi)) range Type_level
      in
-     mk_pattern (PatAscribed(pat, t)) range
+     mk_pattern (PatAscribed(pat, (t, None))) range
 
 let rec extract_named_refinement t1  =
     match t1.tm with
@@ -520,12 +536,19 @@ let rec term_to_string (x:term) = match x.tm with
   | Abs(pats, t) ->
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
-  | Let (attrs, Rec, lbs, body) ->
-    Util.format3 "%slet rec %s in %s"
-        (attrs_opt_to_string attrs)
-        (to_string_l " and " (fun (p,b) -> Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string)) lbs)
+  | Let (Rec, (a,(p,b))::lbs, body) ->
+    Util.format4 "%slet rec %s%s in %s"
+        (attrs_opt_to_string a)
+        (Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string))
+        (to_string_l " "
+            (fun (a,(p,b)) ->
+                Util.format3 "%sand %s=%s"
+                              (attrs_opt_to_string a)
+                              (p|> pat_to_string)
+                              (b|> term_to_string))
+            lbs)
         (body|> term_to_string)
-  | Let (attrs, q, [(pat,tm)], body) ->
+  | Let (q, [(attrs,(pat,tm))], body) ->
     Util.format5 "%slet %s %s = %s in %s"
         (attrs_opt_to_string attrs)
         (string_of_let_qualifier q)
@@ -610,7 +633,8 @@ and pat_to_string x = match x.pat with
   | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (f.str) (e |> pat_to_string)) l)
   | PatOr l ->  to_string_l "|\n " pat_to_string l
   | PatOp op ->  Util.format1 "(%s)" (Ident.text_of_id op)
-  | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
+  | PatAscribed(p,(t, None)) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
+  | PatAscribed(p,(t, Some tac)) -> Util.format3 "(%s:%s by %s)" (p |> pat_to_string) (t |> term_to_string) (tac |> term_to_string)
 
 and attrs_opt_to_string = function
   | None -> ""
@@ -644,6 +668,7 @@ let decl_to_string (d:decl) = match d.d with
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(DefineEffect(i, _, _, _))
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
+  | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> i.idText) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc _ -> "fsdoc"

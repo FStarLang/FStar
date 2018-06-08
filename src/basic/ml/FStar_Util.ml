@@ -31,10 +31,51 @@ exception Impos
 exception NYI of string
 exception HardError of string
 
+let cur_sigint_handler : Sys.signal_behavior ref =
+  ref Sys.Signal_default
+
+exception SigInt
+type sigint_handler = Sys.signal_behavior
+
+let sigint_ignore: sigint_handler =
+  Sys.Signal_ignore
+
+let sigint_delay = ref 0
+let sigint_pending = ref false
+
+let raise_sigint _ =
+  sigint_pending := false;
+  raise SigInt
+
+let raise_sigint_maybe_delay _ =
+  (* This function should not do anything complicated, lest it cause deadlocks.
+   * Calling print_string, for example, can cause a deadlock (print_string →
+   * caml_flush → process_pending_signals → caml_execute_signal → raise_sigint →
+   * print_string → caml_io_mutex_lock ⇒ deadlock) *)
+  if !sigint_delay = 0
+  then raise_sigint ()
+  else sigint_pending := true
+
+let sigint_raise: sigint_handler =
+  Sys.Signal_handle raise_sigint_maybe_delay
+
+let set_sigint_handler sigint_handler =
+  cur_sigint_handler := sigint_handler;
+  Sys.set_signal Sys.sigint !cur_sigint_handler
+
+let with_sigint_handler handler f =
+  let original_handler = !cur_sigint_handler in
+  BatPervasives.finally
+    (fun () -> Sys.set_signal Sys.sigint original_handler)
+    (fun () -> set_sigint_handler handler; f ())
+    ()
+
 type proc =
-    {inc : in_channel;
+    {pid: int;
+     inc : in_channel;
      outc : out_channel;
      mutable killed : bool;
+     stop_marker: (string -> bool) option;
      id : string}
 
 let all_procs : (proc list) ref = ref []
@@ -51,110 +92,161 @@ let monitor_wait _ = ()
 let monitor_pulse _ = ()
 let current_tid _ = Z.zero
 
-let atomically =
-  (* let mutex = Mutex.create () in *)
-  fun f -> f ()
-(*fun f -> Mutex.lock mutex; let r = f () in Mutex.unlock mutex; r*)
+let atomically f = (* This function only protects against signals *)
+  let finalizer () =
+    decr sigint_delay;
+    if !sigint_pending && !sigint_delay = 0 then
+      raise_sigint () in
+  let body f =
+    incr sigint_delay; f () in
+  BatPervasives.finally finalizer body f
+
+let with_monitor _ f x = atomically (fun () ->
+  monitor_enter ();
+  BatPervasives.finally monitor_exit f x)
 
 let spawn f =
   let _ = Thread.create f () in ()
 
-let write_input in_write input =
-  output_string in_write input;
-  flush in_write
-
-(*let cnt = ref 0*)
-
-let launch_process (raw:bool) (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
-  (*let fc = open_out ("tmp/q"^(string_of_int !cnt)) in
-  output_string fc input;
-  close_out fc;*)
-  let cmd = prog^" "^args in
-  let (to_chd_r, to_chd_w) = Unix.pipe () in
-  let (from_chd_r, from_chd_w) = Unix.pipe () in
-  Unix.set_close_on_exec to_chd_w;
-  Unix.set_close_on_exec from_chd_r;
-  let _pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
-  (*let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; ("run.sh "^(string_of_int (!cnt)))^" | " ^ cmd |]*)
-                               to_chd_r from_chd_w Unix.stderr
-  in
-  (*cnt := !cnt +1;*)
-  Unix.close from_chd_w;
-  Unix.close to_chd_r;
-  let cin = Unix.in_channel_of_descr from_chd_r in
-  let cout = Unix.out_channel_of_descr to_chd_w in
-
-  (* parallel reading thread *)
-  let out = Buffer.create 16 in
-  let rec read_out _ =
-    let s, eof = (try
-                    BatString.trim (input_line cin), false
-                  with End_of_file ->
-                    if not raw then
-                        Buffer.add_string out ("\nkilled\n")
-                    else (); "", true) in
-    if not raw then (
-        if not eof then
-          if s = "Done!" then ()
-          else (Buffer.add_string out (s ^ "\n"); read_out ())
-    ) else (
-        if not eof then
-          (Buffer.add_string out s; read_out ())
-    )
-  in
-  let child_thread = Thread.create (fun _ -> read_out ()) () in
-
-  (* writing to z3 *)
-  write_input cout input;
-  close_out cout;
-
-  (* waiting for z3 to finish *)
-  Thread.join child_thread;
-  close_in cin;
-  Buffer.contents out
-
-let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
-  let command = prog^" "^args in
-  let (inc,outc) = Unix.open_process command in
-  let proc = {inc = inc; outc = outc; killed = false; id = prog^":"^id} in
-  all_procs := proc::!all_procs;
+(* On the OCaml side it would make more sense to take stop_marker in
+   ask_process, but the F# side isn't built that way *)
+let start_process'
+      (id: string) (prog: string) (args: string list)
+      (stop_marker: (string -> bool) option) : proc =
+  let (stdout_r, stdout_w) = Unix.pipe () in
+  let (stdin_r, stdin_w) = Unix.pipe () in
+  Unix.set_close_on_exec stdin_w;
+  Unix.set_close_on_exec stdout_r;
+  let pid = Unix.create_process prog (Array.of_list (prog :: args)) stdin_r stdout_w stdout_w in
+  Unix.close stdin_r;
+  Unix.close stdout_w;
+  let proc = { pid = pid; id = prog ^ ":" ^ id;
+               inc = Unix.in_channel_of_descr stdout_r;
+               outc = Unix.out_channel_of_descr stdin_w;
+               stop_marker = stop_marker;
+               killed = false } in
+  all_procs := proc :: !all_procs;
   proc
 
-let ask_process (p:proc) (stdin:string) : string =
-  let out = Buffer.create 16 in
+let start_process
+      (id: string) (prog: string) (args: string list)
+      (stop_marker: string -> bool) : proc =
+  start_process' id prog args (Some stop_marker)
 
-  let rec read_out _ =
-    let s, eof = (try
-                    BatString.trim (input_line p.inc), false
-                  with End_of_file ->
-                    Buffer.add_string out ("\nkilled\n") ; "", true) in
-    if not eof then
-      if s = "Done!" then ()
-      else (Buffer.add_string out (s ^ "\n"); read_out ())
-  in
+let rec waitpid_ignore_signals pid =
+  try ignore (Unix.waitpid [] pid)
+  with Unix.Unix_error (Unix.EINTR, _, _) ->
+    waitpid_ignore_signals pid
 
-  let child_thread = Thread.create (fun _ -> read_out ()) () in
-  output_string p.outc stdin;
-  flush p.outc;
-  Thread.join child_thread;
-  Buffer.contents out
-
-let kill_process (p:proc) =
-  let _ = Unix.close_process (p.inc, p.outc) in
-  p.killed <- true
+let kill_process (p: proc) =
+  if not p.killed then begin
+      (* Close the fds directly: close_in and close_out both call `flush`,
+         potentially forcing us to wait until p starts reading again *)
+      Unix.close (Unix.descr_of_in_channel p.inc);
+      Unix.close (Unix.descr_of_out_channel p.outc);
+      (try Unix.kill p.pid Sys.sigkill
+       with Unix.Unix_error (Unix.ESRCH, _, _) -> ());
+      (* Avoid zombie processes (Unix.close_process does the same thing. *)
+      waitpid_ignore_signals p.pid;
+      p.killed <- true
+    end
 
 let kill_all () =
-  FStar_List.iter (fun p -> if not p.killed then kill_process p) !all_procs
+  BatList.iter kill_process !all_procs
 
-let run_proc (name:string) (args:string) (stdin:string) : bool * string * string =
-  let command = name^" "^args in
-  let (inc,outc,errc) = Unix.open_process_full command (Unix.environment ()) in
-  output_string outc stdin;
-  flush outc;
-  let res = BatPervasives.input_all inc in
-  let err = BatPervasives.input_all errc in
-  let _ = Unix.close_process_full (inc, outc, errc) in
-  (true, res, err)
+let process_read_all_output (p: proc) =
+  (* Pass cleanup:false because kill_process closes both fds already. *)
+  BatIO.read_all (BatIO.input_channel ~autoclose:true ~cleanup:false p.inc)
+
+(** Feed `stdin` to `p`, and call `reader_fn` in a separate thread to read the
+    response.
+
+    Signal handling makes this function fairly hairy.  The usual design is to
+    launch a reader thread, then write to the process on the main thread and use
+    `Thread.join` to wait for the reader to complete.
+
+    When we get a signal, Caml routes it to either of the threads.  If it
+    reaches the reader thread, we're good: the reader thread is most likely
+    waiting in input_line at that point, and input_line polls for signals fairly
+    frequently.  If the signal reaches the writer (main) thread, on the other
+    hand, we're toast: `Thread.join` isn't interruptible, so Caml will save the
+    signal until the child tread exits and `join` returns, and at that point the
+    Z3 query is complete and the signal is useless.
+
+    There are three possible solutions to this problem:
+    1. Use an interruptible version of Thread.join written in C
+    2. Ensure that signals are always delivered to the reader thread
+    3. Use a different synchronization mechanism between th reader and the writer.
+
+    Option 1 is bad because building F* doesn't currently require a C compiler.
+    Option 2 is easy to implement with `Unix.sigprocmask`, but that isn't
+    available on Windows.  Option 3 is what the code below does: it uses a pipe
+    and a 1-byte write as a way for the writer thread to wait on the reader
+    thread.  That's what `reader_fn` is passed a `signal_exit` function.
+
+    If a SIGINT reaches the reader, it should still call `signal_exit`.  If
+    a SIGINT reaches the writer, it should make sure that the reader exits.
+    These two things are the responsibility of the caller of this function. **)
+
+let process_read_async p stdin reader_fn =
+  let fd_r, fd_w = Unix.pipe () in
+  BatPervasives.finally (fun () -> Unix.close fd_w; Unix.close fd_r)
+    (fun () ->
+      let wait_for_exit () =
+        ignore (Unix.read fd_r (Bytes.create 1) 0 1) in
+      let signal_exit () =
+        try ignore (Unix.write fd_w (Bytes.create 1) 0 1)
+        with (* ‘write’ will fail if called after the finalizer above *)
+        | Unix.Unix_error (Unix.EBADF, _, _) -> () in
+
+      let write_input = function
+        | Some str -> output_string p.outc str; flush p.outc
+        | None -> () in
+
+      (* In the following we can get a signal at any point; it's the caller's
+         responsibility to ensure that reader_fn will exit in that case *)
+      let t = Thread.create reader_fn signal_exit in
+      write_input stdin;
+      wait_for_exit ();
+      Thread.join t) ()
+
+let run_process (id: string) (prog: string) (args: string list) (stdin: string option): string =
+  let p = start_process' id prog args None in
+  let output = ref "" in
+  let reader_fn signal_fn =
+    output := process_read_all_output p; signal_fn () in
+  BatPervasives.finally (fun () -> kill_process p)
+    (fun () -> process_read_async p stdin reader_fn) ();
+  !output
+
+type read_result = EOF | SIGINT
+
+let ask_process
+      (p: proc) (stdin: string)
+      (exn_handler: unit -> string): string =
+  let result = ref None in
+  let out = Buffer.create 16 in
+  let stop_marker = BatOption.default (fun s -> false) p.stop_marker in
+
+  let reader_fn signal_fn =
+    let rec loop p out =
+      let line = BatString.trim (input_line p.inc) in (* raises EOF *)
+      if not (stop_marker line) then
+        (Buffer.add_string out (line ^ "\n"); loop p out) in
+    (try loop p out
+     with | SigInt -> result := Some SIGINT
+          | End_of_file -> result := Some EOF);
+    signal_fn () in
+
+  try
+    process_read_async p (Some stdin) reader_fn;
+    (match !result with
+     | Some EOF -> kill_process p; Buffer.add_string out (exn_handler ())
+     | Some SIGINT -> raise SigInt
+     | None -> ());
+    Buffer.contents out
+  with e -> (* Ensure that reader_fn gets an EOF and exits *)
+    kill_process p; raise e
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
 let is_path_absolute path_str =
@@ -200,6 +292,8 @@ let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
 [@@deriving show]
+let set_to_yojson _ _ = `Null
+let set_of_yojson _ _ = failwith "cannot readback"
 
 let set_is_empty ((s, _):'a set) =
   match s with
@@ -211,7 +305,7 @@ let new_set (cmp:'a -> 'a -> Z.t) : 'a set = as_set [] cmp
 
 let set_elements ((s1, eq):'a set) : 'a list =
   let rec aux out = function
-    | [] -> out
+    | [] -> BatList.rev_append out []
     | hd::tl ->
        if BatList.exists (eq hd) out then
          aux out tl
@@ -219,7 +313,7 @@ let set_elements ((s1, eq):'a set) : 'a list =
          aux (hd::out) tl in
   aux [] s1
 
-let set_add a ((s, b):'a set) = (a::s, b)
+let set_add a ((s, b):'a set) = (s@[a], b)
 let set_remove x ((s1, eq):'a set) =
   (BatList.filter (fun y -> not (eq x y)) s1, eq)
 let set_mem a ((s, b):'a set) = BatList.exists (b a) s
@@ -231,40 +325,12 @@ let set_is_subset_of ((s1, eq):'a set) ((s2, _):'a set) =
 let set_count ((s1, _):'a set) = Z.of_int (BatList.length s1)
 let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
   (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
+let set_symmetric_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
+  set_union (set_difference (s1, eq) (s2, eq))
+            (set_difference (s2, eq) (s1, eq))
+let set_eq ((s1, eq):'a set) ((s2, _):'a set) : bool =
+  set_is_empty (set_symmetric_difference (s1, eq) (s2, eq))
 
-
-(* See ../Util.fsi for documentation and ../Util.fs for implementation details *)
-type 'a fifo_set = ('a list) * ('a -> 'a -> bool)
-[@@deriving show]
-
-let fifo_set_is_empty ((s, _):'a fifo_set) =
-  match s with
-  | [] -> true
-  | _ -> false
-
-let as_fifo_set (l:'a list) (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
-  (l, fun x y -> cmp x y = Z.zero)
-
-let new_fifo_set (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
-    as_fifo_set [] cmp
-
-let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
-  let rec aux out = function
-    | [] -> out
-    | hd::tl ->
-       if BatList.exists (eq hd) tl then
-         aux out tl
-       else
-         aux (hd::out) tl in
-  aux [] s1
-let fifo_set_add a ((s, b):'a fifo_set) = (a::s, b)
-let fifo_set_remove x ((s1, eq):'a fifo_set) =
-  (BatList.filter (fun y -> not (eq x y)) s1, eq)
-let fifo_set_mem a ((s, b):'a fifo_set) = BatList.exists (b a) s
-let fifo_set_union ((s1, b):'a fifo_set) ((s2, _):'a fifo_set) = (s2@s1, b)
-let fifo_set_count ((s1, _):'a fifo_set) = Z.of_int (BatList.length s1)
-let fifo_set_difference ((s1, eq):'a fifo_set) ((s2, _):'a fifo_set) : 'a fifo_set =
-  (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
 
 type 'value smap = (string, 'value) BatHashtbl.t
 let smap_create (i:Z.t) : 'value smap = BatHashtbl.create (Z.to_int i)
@@ -282,13 +348,25 @@ let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = BatHashtbl.copy m
 let smap_size (m:'value smap) = BatHashtbl.length m
 
+exception PSMap_Found
 type 'value psmap = (string, 'value) BatMap.t
 let psmap_empty (_: unit) : 'value psmap = BatMap.empty
 let psmap_add (map: 'value psmap) (key: string) (value: 'value) = BatMap.add key value map
 let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
-  try BatMap.find key map with Not_found -> dflt
+  BatMap.find_default dflt key map
 let psmap_try_find (map: 'value psmap) (key: string) =
-  try Some (BatMap.find key map) with Not_found -> None
+  BatMap.Exceptionless.find key map
+let psmap_fold (m:'value psmap) f a = BatMap.foldi f m a
+let psmap_find_map (m:'value psmap) f =
+  let res = ref None in
+  let upd k v =
+    let r = f k v in
+    if r <> None then (res := r; raise PSMap_Found) in
+  (try BatMap.iter upd m with PSMap_Found -> ());
+  !res
+let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
+  BatMap.modify_opt k (fun vopt -> Some (upd vopt)) m
+
 
 type 'value imap = (Z.t, 'value) BatHashtbl.t
 let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)
@@ -308,9 +386,10 @@ type 'value pimap = (Z.t, 'value) BatMap.t
 let pimap_empty (_: unit) : 'value pimap = BatMap.empty
 let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = BatMap.add key value map
 let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
-  try BatMap.find key map with Not_found -> dflt
+  BatMap.find_default dflt key map
 let pimap_try_find (map: 'value pimap) (key: Z.t) =
-  try Some (BatMap.find key map) with Not_found -> None
+  BatMap.Exceptionless.find key map
+let pimap_fold (m:'value pimap) f a = BatMap.foldi f m a
 
 let format (fmt:string) (args:string list) =
   let frags = BatString.nsplit fmt "%s" in
@@ -434,8 +513,8 @@ let contains (s1:string) (s2:string) = BatString.exists s1 s2
 let substring_from s index = BatString.tail s (Z.to_int index)
 let substring s i j = BatString.sub s (Z.to_int i) (Z.to_int j)
 let replace_char (s:string) c1 c2 =
-  let b = bytes_of_string s in
-  string_of_bytes (BatArray.map (fun x -> if x = c1 then c2 else x) b)
+  let c1, c2 = BatUChar.chr c1, BatUChar.chr c2 in
+  BatUTF8.map (fun x -> if x = c1 then c2 else x) s
 let replace_chars (s:string) c (by:string) =
   BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
@@ -472,7 +551,7 @@ let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
-[@@deriving show]
+[@@deriving yojson,show]
 
 let is_left = function
   | Inl _ -> true
@@ -530,11 +609,6 @@ let find_opt f l =
 (* JP: why so many duplicates? :'( *)
 let sort_with = FStar_List.sortWith
 
-let set_eq (f: 'a -> 'a -> Z.t) (l1: 'a list) (l2: 'a list) =
-  let l1 = sort_with f l1 in
-  let l2 = sort_with f l2 in
-  BatList.for_all2 (fun l1 l2 -> f l1 l2 = Z.zero) l1 l2
-
 let bind_opt opt f =
   match opt with
   | None -> None
@@ -561,7 +635,7 @@ let rec find_map l f =
      | None -> find_map tl f
      | y -> y
 
-let try_find f l = try Some (List.find f l) with Not_found -> None
+let try_find f l = BatList.find_opt f l
 
 let try_find_index f l =
   let rec aux i = function
@@ -695,6 +769,21 @@ let write_file (fn:string) s =
   let fh = open_file_for_writing fn in
   append_to_file fh s;
   close_file fh
+let copy_file input_name output_name =
+  (* see https://ocaml.github.io/ocamlunix/ocamlunix.html#sec33 *)
+  let open Unix in
+  let buffer_size = 8192 in
+  let buffer = String.create buffer_size in
+  let fd_in = openfile input_name [O_RDONLY] 0 in
+  let fd_out = openfile output_name [O_WRONLY; O_CREAT; O_TRUNC] 0o666 in
+  let rec copy_loop () =
+    match read fd_in buffer 0 buffer_size with
+    |  0 -> ()
+    | r -> ignore (write fd_out buffer 0 r); copy_loop ()
+  in
+  copy_loop ();
+  close fd_in;
+  close fd_out
 let flush_file (fh:file_handle) = flush fh
 let file_get_contents f =
   let ic = open_in_bin f in
@@ -726,7 +815,7 @@ let decr r = FStar_ST.(Z.(write r (read r - one)))
 let geq (i:int) (j:int) = i >= j
 
 let get_exec_dir () = Filename.dirname (Sys.executable_name)
-let expand_environment_variable x = try Sys.getenv x with Not_found -> ""
+let expand_environment_variable x = try Some (Sys.getenv x) with Not_found -> None
 
 let physical_equality (x:'a) (y:'a) = x == y
 let check_sharing a b msg = if physical_equality a b then print1 "Sharing OK: %s\n" msg else print1 "Sharing broken in %s\n" msg
@@ -818,40 +907,36 @@ let get_oreader (filename:string) : oReader = {
   close = (fun _ -> ());
 }
 
-let getcwd = Unix.getcwd
+let getcwd = Sys.getcwd
 
-let readdir dir =
-  let handle = Unix.opendir dir in
-  let files = ref [] in
-  try
-    while true do
-      files := Unix.readdir handle :: !files
-    done;
-    assert false
-  with End_of_file ->
-    !files
+let readdir dir = "." :: ".." :: Array.to_list (Sys.readdir dir)
 
 let file_exists = Sys.file_exists
 let basename = Filename.basename
+let dirname = Filename.dirname
 let print_endline = print_endline
 
 let map_option f opt = BatOption.map f opt
 
 let save_value_to_file (fname:string) value =
-  BatFile.with_file_out
-    fname
-    (fun f ->
-      BatPervasives.output_value f value)
+  (* BatFile.with_file_out uses Unix.openfile (which isn't available in
+     js_of_ocaml) instead of Pervasives.open_out, so we don't use it here. *)
+  let channel = open_out_bin fname in
+  BatPervasives.finally
+    (fun () -> close_out channel)
+    (fun channel -> output_value channel value)
+    channel
 
 let load_value_from_file (fname:string) =
+  (* BatFile.with_file_in uses Unix.openfile (which isn't available in
+     js_of_ocaml) instead of Pervasives.open_in, so we don't use it here. *)
   try
-    BatFile.with_file_in
-      fname
-      (fun f ->
-        Some (BatPervasives.input_value f))
-  with
-  | _ ->
-    None
+    let channel = open_in_bin fname in
+    BatPervasives.finally
+      (fun () -> close_in channel)
+      (fun channel -> Some (input_value channel))
+      channel
+  with | _ -> None
 
 let print_exn e =
   Printexc.to_string e
@@ -921,7 +1006,11 @@ let write_hints (filename: string) (hints: hints_db): unit =
           ]
     ) hints.hints)
   ] in
-  Yojson.Safe.pretty_to_channel (open_out_bin filename) json
+  let channel = open_out_bin filename in
+  BatPervasives.finally
+    (fun () -> close_out channel)
+    (fun channel -> Yojson.Safe.pretty_to_channel channel json)
+    channel
 
 let read_hints (filename: string): hints_db option =
   let mk_hint nm ix fuel ifuel unsat_core time hash_opt = {

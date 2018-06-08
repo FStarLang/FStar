@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "1a749fd966e0776d4519d8ee1c2e9f50"
+      "27f2ec9ae579b86da3f87dd64f92e4c6"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -20,17 +20,17 @@
         "equation_Ex12.Pad.blocksize", "equation_Ex12.Pad.bytes",
         "equation_Ex12.Pad.encode", "equation_Ex12.Pad.text",
         "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.key",
-        "equation_Ex12f.TMAC.pkey", "equation_FStar.UInt8.byte",
+        "equation_Ex12f.TMAC.pkey",
+        "function_token_typing_Ex12.BMAC.key_prop",
         "function_token_typing_FStar.UInt8.t", "lemma_Ex12.Pad.inj",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
         "refinement_interpretation_Ex12.Pad_Tm_refine_0b4eea63038be23ac97553bb7c8a71cc",
         "refinement_interpretation_Ex12f.TMAC_Tm_refine_3c40c68998e031e6744deee90305e0e2",
-        "refinement_interpretation_Ex12f.TMAC_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
-        "token_correspondence_Ex12.BMAC.key_prop",
+        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
         "token_correspondence_Ex12f.TMAC.bspec"
       ],
       0,
-      "ba3e98f69c723ce59007c53477ef8a78"
+      "44040ca01b0520fa0eab8ccba01a19e8"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -43,15 +43,67 @@
         "equation_Ex12.Pad.bytes", "equation_Ex12.Pad.encode",
         "equation_Ex12.Pad.nbytes", "equation_Ex12f.TMAC.bspec",
         "equation_Ex12f.TMAC.key", "equation_Ex12f.TMAC.pkey",
-        "equation_FStar.UInt8.byte", "function_token_typing_FStar.UInt8.t",
+        "function_token_typing_Ex12.BMAC.key_prop",
+        "function_token_typing_FStar.UInt8.t",
         "lemma_FStar.Seq.Base.lemma_eq_refl",
         "refinement_interpretation_Ex12.Pad_Tm_refine_b769c0bf16cb286238e7b11ff583e99b",
         "refinement_interpretation_Ex12f.TMAC_Tm_refine_3c40c68998e031e6744deee90305e0e2",
-        "token_correspondence_Ex12.BMAC.key_prop",
         "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
       ],
       0,
-      "ae01f905a81d7d935bf0009c2bca2746"
+      "4333f67a245a49c18e6f38223e33ec97"
+    ],
+    [
+      "Ex12f.TMAC.keygen",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7ac08eb21b218efba4ea7e904e529df2"
+    ],
+    [
+      "Ex12f.TMAC.mac",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Ex12.BMAC.key",
+        "equation_Ex12.Pad.blocksize", "equation_Ex12.Pad.bytes",
+        "equation_Ex12.Pad.encode", "equation_Ex12.Pad.text",
+        "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.key",
+        "equation_Ex12f.TMAC.pkey",
+        "function_token_typing_Ex12.BMAC.key_prop",
+        "function_token_typing_FStar.UInt8.t", "lemma_Ex12.Pad.inj",
+        "lemma_FStar.Seq.Base.lemma_eq_elim",
+        "refinement_interpretation_Ex12.Pad_Tm_refine_0b4eea63038be23ac97553bb7c8a71cc",
+        "refinement_interpretation_Ex12f.TMAC_Tm_refine_3c40c68998e031e6744deee90305e0e2",
+        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
+        "token_correspondence_Ex12f.TMAC.bspec"
+      ],
+      0,
+      "b04fe894a36b904b35c9940ff9ee7ac6"
+    ],
+    [
+      "Ex12f.TMAC.verify",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Ex12.BMAC.key",
+        "equation_Ex12.Pad.block", "equation_Ex12.Pad.blocksize",
+        "equation_Ex12.Pad.bytes", "equation_Ex12.Pad.encode",
+        "equation_Ex12.Pad.nbytes", "equation_Ex12f.TMAC.bspec",
+        "equation_Ex12f.TMAC.key", "equation_Ex12f.TMAC.pkey",
+        "function_token_typing_Ex12.BMAC.key_prop",
+        "function_token_typing_FStar.UInt8.t",
+        "lemma_FStar.Seq.Base.lemma_eq_refl",
+        "refinement_interpretation_Ex12.Pad_Tm_refine_b769c0bf16cb286238e7b11ff583e99b",
+        "refinement_interpretation_Ex12f.TMAC_Tm_refine_3c40c68998e031e6744deee90305e0e2",
+        "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
+      ],
+      0,
+      "874af3d7273d2b1f7d779a5f705a1816"
     ]
   ]
 ]

@@ -23,12 +23,7 @@ open FStar.Ident
 open FStar.TypeChecker.Common
 module BU = FStar.Util
 
-type binding =
-  | Binding_var      of bv
-  | Binding_lid      of lident * tscheme
-  | Binding_sig      of list<lident> * sigelt
-  | Binding_univ     of univ_name
-  | Binding_sig_inst of list<lident> * sigelt * universes //the first component should always be a Sig_inductive
+type sig_binding = list<lident> * sigelt
 
 type delta_level =
   | NoDelta
@@ -78,7 +73,8 @@ type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
-  gamma          :list<binding>;                (* Local typing environment and signature elements *)
+  gamma          :list<binding>;                (* Local typing environment *)
+  gamma_sig      :list<sig_binding>;            (* and signature elements *)
   gamma_cache    :FStar.Util.smap<cached_elt>;  (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
@@ -97,24 +93,30 @@ type env = {
   lax_universes  :bool;                         (* don't check universe constraints *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
+  uvar_subtyping :bool;
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
   check_type_of  :bool -> env -> term -> typ -> guard_t;
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
-  qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
+  qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
+  normalized_eff_names:BU.smap<lident>;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
-  synth          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  splice         :env -> term -> list<sigelt>;    (* hook for synthesizing terms via tactics, third arg is tactic term *)
   is_native_tactic: lid -> bool;                  (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
-  dsenv          : FStar.ToSyntax.Env.env;        (* The desugaring environment from the front-end *)
+  dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
   dep_graph      : FStar.Parser.Dep.deps          (* The result of the dependency analysis *)
 }
+and solver_depth_t = int * int * int
 and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
+    snapshot     :string -> (solver_depth_t * unit);
+    rollback     :string -> option<solver_depth_t> -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
@@ -128,10 +130,9 @@ and guard_t = {
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
-and implicits = list<(string * env * uvar * term * typ * Range.range)>
+and implicits = list<(string * term * ctx_uvar * Range.range)>
 and tcenv_hooks =
-  { tc_push_in_gamma_hook : (env -> binding -> unit) }
-
+  { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
 val tc_hooks : env -> tcenv_hooks
 val set_tc_hooks: env -> tcenv_hooks -> env
 
@@ -147,13 +148,20 @@ val initial_env : FStar.Parser.Dep.deps ->
 val should_verify   : env -> bool
 val incr_query_index: env -> env
 val string_of_delta_level : delta_level -> string
+val rename_gamma : subst_t -> gamma -> gamma
 val rename_env : subst_t -> env -> env
 val set_dep_graph: env -> FStar.Parser.Dep.deps -> env
 val dep_graph: env -> FStar.Parser.Dep.deps
 
-(* Marking and resetting the environment, for the interactive mode *)
-val push               : env -> string -> env
-val pop                : env -> string -> env
+val dsenv : env -> FStar.Syntax.DsEnv.env
+
+(* Marking and resetting the environment *)
+val push : env -> string -> env
+val pop : env -> string -> env
+
+type tcenv_depth_t = int * int * solver_depth_t * int
+val snapshot : env -> string -> (tcenv_depth_t * env)
+val rollback : solver_t -> string -> option<tcenv_depth_t> -> env
 
 (* Checking the per-module debug level and position info *)
 val debug          : env -> Options.debug_level_t -> bool
@@ -165,11 +173,13 @@ val insert_fv_info : env -> fv -> typ -> unit
 val toggle_id_info : env -> bool -> unit
 val promote_id_info : env -> (typ -> typ) -> unit
 
+type qninfo = option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
 val try_lookup_bv          : env -> bv -> option<(typ * Range.range)>
 val lookup_bv              : env -> bv -> typ * Range.range
-val lookup_qname           : env -> lident -> option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+val lookup_qname           : env -> lident -> qninfo
 val try_lookup_lid         : env -> lident -> option<((universes * typ) * Range.range)>
 val try_lookup_and_inst_lid: env -> universes -> lident -> option<(typ * Range.range)>
 val lookup_lid             : env -> lident -> (universes * typ) * Range.range
@@ -180,7 +190,9 @@ val lookup_datacon         : env -> lident -> universes * typ
 (* the boolean tells if the lident was actually a inductive *)
 val datacons_of_typ        : env -> lident -> (bool * list<lident>)
 val typ_of_datacon         : env -> lident -> lident
+val lookup_definition_qninfo : list<delta_level> -> lident -> qninfo -> option<(univ_names * term)>
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
+val attrs_of_qninfo        : qninfo -> option<list<attribute>>
 val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
@@ -191,6 +203,7 @@ val lookup_projector       : env -> lident -> int -> lident
 val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
+val qninfo_is_action       : qninfo -> bool
 val is_action              : env -> lident -> bool
 val is_interpreted         : (env -> term -> bool)
 val is_irreducible         : env -> lident -> bool
@@ -207,8 +220,8 @@ val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env
-val push_sigelt_inst   : env -> sigelt -> universes -> env
 val push_bv            : env -> bv -> env
+val push_bvs           : env -> list<bv> -> env
 val pop_bv             : env -> option<(bv * env)>
 val push_let_binding   : env -> lbname -> tscheme -> env
 val push_binders       : env -> binders -> env
@@ -220,7 +233,6 @@ val expected_typ       : env -> option<typ>
 val clear_expected_typ : env -> env*option<typ>
 val set_current_module : env -> lident -> env
 val finish_module      : (env -> modul -> env)
-val eq_gamma           : env -> env -> bool
 
 (* Collective state of the environment *)
 val bound_vars   : env -> list<bv>
@@ -228,9 +240,8 @@ val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
 val univ_vars    : env -> FStar.Util.set<universe_uvar>
-val univnames   : env -> FStar.Util.fifo_set<univ_name>
+val univnames    : env -> FStar.Util.set<univ_name>
 val lidents      : env -> list<lident>
-val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 
 (* operations on monads *)
 val identity_mlift      : mlift
@@ -269,5 +280,28 @@ val unbound_vars    : env -> term -> BU.set<bv>
 val closed          : env -> term -> bool
 val closed'         : term -> bool
 
-// VD: just for testing
-val print_gamma : env -> unit
+(* Operations on guard_t *)
+val close_guard_univs         : universes -> binders -> guard_t -> guard_t
+val close_guard               : env -> binders -> guard_t -> guard_t
+val apply_guard               : guard_t -> term -> guard_t
+val map_guard                 : guard_t -> (term -> term) -> guard_t
+val trivial_guard             : guard_t
+val is_trivial                : guard_t -> bool
+val is_trivial_guard_formula  : guard_t -> bool
+val conj_guard                : guard_t -> guard_t -> guard_t
+val abstract_guard            : binder -> guard_t -> guard_t
+val abstract_guard_n          : list<binder> -> guard_t -> guard_t
+val imp_guard                 : guard_t -> guard_t -> guard_t
+val guard_of_guard_formula    : guard_formula -> guard_t
+val guard_form                : guard_t -> guard_formula
+val check_trivial             : term -> guard_formula
+
+(* Other utils *)
+val def_check_closed_in       : Range.range -> msg:string -> scope:list<bv> -> term -> unit
+val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
+val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
+val close_forall              : env -> binders -> term -> term
+
+val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> (term * list<(ctx_uvar * Range.range)> * guard_t)
+
+val print_gamma : gamma -> string

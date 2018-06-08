@@ -8,16 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ec1a7200e736ae8ba8942ba182be40d3"
-    ],
-    [
-      "Bug022.uu___is_EAbs",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "41dd2289e925eac44164ab4087045a73"
+      "91a792ecf12e1889c62c508c78c4a31d"
     ],
     [
       "Bug022.__proj__EAbs__item___0",
@@ -30,31 +21,16 @@
         "refinement_interpretation_Bug022_Tm_refine_1fab4118271d47fc28cd28aead33e87f"
       ],
       0,
-      "0f4a02a751ba46475617955f25bcb4a9"
-    ],
-    [
-      "Bug022.uu___is_EFalse",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6ac288508c68e1071e86f2583e13580b"
+      "c5b9996e0b8618ce21b7856e89a319f8"
     ],
     [
       "Bug022.subst",
       1,
       2,
       1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
-        "constructor_distinct_Bug022.EAbs", "disc_equation_Bug022.EAbs",
-        "equality_tok_Bug022.EFalse@tok",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Bug022.EAbs__0"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3ead4b1f38ec59d837dffdc8620b2fca"
+      "ca2df674d183da8b90e0fe1bac670420"
     ]
   ]
 ]

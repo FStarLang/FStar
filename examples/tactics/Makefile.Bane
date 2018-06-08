@@ -17,9 +17,6 @@ include .depend
 FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 CACHE = _cache
 
-$(FSTARTACLIB):
-	$(MAKE) -C $(FSTAR_HOME)/ulib install-fstar-tactics
-
 %.cmxs: %.Lib.fst.checked
 	mkdir -p $(CACHE)_$*
 	$(FSTAR) --gen_native_tactics $(CACHE)_$* $*.Lib.fst

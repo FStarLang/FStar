@@ -18,7 +18,7 @@ unfold let subtree (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot subtree_t =
  * well-formed conditions on the forest, essentially the invariants needed for proving the termination of operations
  * my suspicion is that these patterns are not too helpful
  *)
-abstract let well_formed (#n:nat) (uf:uf_forest n) (h:heap) =
+let well_formed (#n:nat) (uf:uf_forest n) (h:heap) =
   forall (i:id n). {:pattern (sel h (index uf i))}
              (let p = parent uf i h in
 	      let s = subtree uf i h in

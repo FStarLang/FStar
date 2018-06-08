@@ -11,6 +11,119 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+# Version 0.9.6.0
+
+## Command line options
+
+   F* reads .checked files by default unless the `--cache_off` option is provided.
+   To write .checked files, provide `--cache_checked_modules`
+
+   `--use_two_phase_tc true` is now the default. This improves type
+   inference for implicit arguments and reduces our trust in type
+   inference, since the result of type inference is type-checked
+   again.
+
+   `--use_extracted_interfaces` now takes a boolean string as an
+   option, i.e., `--use_extracted_interfaces true` or
+   `--use_extracted_interfaces false`. The latter is the default. The
+   next release of F* aims to turn this on always with no option to
+   turn it off. This feature is more demanding in enforcing
+   abstraction at module boundaries; without out it, some abstractions
+   leak. See
+   https://github.com/FStarLang/FStar/wiki/Revised-checking-of-a-module's-interface
+   for more information.
+
+## Type inference
+
+   We had a significant overhaul of the type inference algorithm and
+   representation of unification variables. The new algorithm performs
+   significantly better, particularly on memory consumption.
+
+   But, some of the heuristics changed slightly so you may have to add
+   annotations to programs that previously required none.
+
+   For the changes we had to make to existing code, see the commits
+   below:
+
+```
+commit d4c0161c22ab9ac6d72900acd7ed905d43cb92b7
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Tue May 8 15:27:19 2018 -0700
+
+    ***SOURCE CODE CHANGE*** in support of new inference; need an annotation in Synthesis.fst
+
+
+commit 362fa403c45def14fb2e2809e04405c39e88dfcb
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Tue May 1 15:55:08 2018 -0700
+
+    ***SOURCE CODE CHANGE*** for inference; the inferred type is more precise than previously, which leads to failure later; annotated with a weaker type
+
+commit ec17efe04709e4a6434c05e5b6f1bf11b033353e
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Mon Apr 30 22:11:54 2018 -0700
+
+    ***SOURCE CODE CHANGE** for new inference; a repacking coercion needs an annotation
+
+commit f60cbf38fa73d5603606cff42a88c53ca17fbd37
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Mon Apr 30 22:11:17 2018 -0700
+
+    ***SOURCE CODE CHANGE*** for new inference; arguably an improvement
+
+commit c97d42cae876772a18d20f54bba2a7d5fceecd69
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Mon Apr 30 20:59:50 2018 -0700
+
+    **SOURCE CODE CHANGE** for new type inference; arguably an improvement
+
+commit 936a5ff7a8404c5ddbdc87d0dbb3a86af234e71b
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Mon Apr 30 16:57:21 2018 -0700
+
+    ***SOURCE CODE CHANGE*** for type inference; could be reverted once prop lands
+```
+
+
+# Version 0.9.6.0~alpha1
+
+## Syntax
+
+* The syntax of type annotations on binders has changed to eliminate a
+  parsing ambiguity. The annotation on a binder cannot itself contain
+  top-level binders. For example, all of the following previously
+  accepted forms are now forbidden:
+
+  ```
+    let g0 (f:x:a -> b) = ()
+    let g1 (f:x:int{x > 0}) = ()
+    let g2 (a b : x:int{x> 0}) = ()
+    let g3 (f:a -> x:b -> c) = ()
+   ```
+
+  Instead, you must write:
+
+
+  ```
+    let g0 (f: (x:a -> b)) = ()
+    let g1 (f: (x:int{x > 0})) = ()
+    let g2 (a b : (x:int{x> 0})) = ()
+    let g3 (f : (a -> x:b -> c)) = ()
+   ```
+
+  In the second case, this version is also supported and is preferred:
+
+  ```
+    let g1 (f:int{f > 0}) = ()
+  ```
+
+  See the following diffs for some of the changes that were made to
+  existing code:
+
+  https://github.com/FStarLang/FStar/commit/6bcaedef6d91726540e8969c5f7a6a08ee21b73c
+  https://github.com/FStarLang/FStar/commit/03a7a1be23a904807fa4c92ee006ab9c738375dc
+  https://github.com/FStarLang/FStar/commit/442cf7e4a99acb53fc653ebeaa91306c12c69969
+
 ## Basic type-checking and inference
 
 * A revision to implicit generalization of types
@@ -110,25 +223,24 @@ Guidelines for the changelog:
 
   Only `ulib/FStar.Algebra.Monoid.fst` needed to be tweaked like this.
 
+## IDE
+
+* F* now prints `progress` messages while loading dependencies in `--ide` mode
+  (https://github.com/FStarLang/FStar/commit/084638c12ae83ecfa975abd6bbc990f6a784a873)
+
+* Sending an interrupt (C-c / SIGINT) to F* in `--ide` mode does not kill the
+  process any more.  Instead, it interrupts the currently running query or
+  computation.  Not all queries support this (at the moment only `compute` and
+  `push` do); others simply ignore interrupts
+  (https://github.com/FStarLang/FStar/commit/417750b70ae0d0796a480627149dc0a09f9437d2).
+  This feature is experimental.
+
+* The `segment` query can now be used to split a document into a list of
+  top-level forms.
+
+* Some `proof-state` messages now contain location information.
+
 ## Standard library
-
-* [commit FStar@f73f295e](https://github.com/FStarLang/FStar/commit/f73f295ed0661faec205fdf7b76bdd85a2a94a32)
-
-  The specifications for the machine integer libraries (`Int64.fst`,
-  `UInt64.fst`, etc) now forbid several forms of undefined behavior in
-  C.
-
-  The signed arithmetic `add_underspec`, `sub_underspec`, and `mul_underspec`
-  functions have been removed.
-
-  Shifts have a precondition that the shift is less than the bitwidth.
-
-  Existing code may need additional preconditions to verify (for example, see
-  a
-  [fix to HACL*](https://github.com/mitls/hacl-star/commit/c8a61ab189ce163705f8f9ff51e41cab2869f6d6)).
-  Code that relied on undefined behavior is unsafe, but it can be extracted
-  using `assume` or
-  `admit`.
 
 * Related to the change in implicit generalization of types, is the
   change to the standard libraries for state.
@@ -199,7 +311,7 @@ Guidelines for the changelog:
      18. `MR.ex_rid_of_rid` --> `HST.witness_region`
 
      See the following commits for examples:
-     
+
      https://github.com/mitls/mitls-fstar/commit/be1b8899a344e885bd3a83a26b099ffb4184fd06
      https://github.com/mitls/mitls-fstar/commit/73299b71075aca921aad6fbf78faeafe893731db
      https://github.com/mitls/hacl-star/commit/1fb9727e8193e798fe7a6091ad8b16887a72b98d
@@ -252,7 +364,7 @@ Guidelines for the changelog:
   5. `HH.modifies_just` --> `HS.modifies`
   6. `HH.modifies_one` --> `HS.modifies_one`
   7. ...
-  
+
   For a complete list of the mapping implemented as a crude script to
   rewrite source files, see:
   https://github.com/mitls/mitls-fstar/blob/quic2c/src/tls/renamings.sh
@@ -285,30 +397,30 @@ Guidelines for the changelog:
 
 ## Extraction
 
-* [PR #1176](https://github.com/FStarLang/FStar/pull/1176)
-  `inline_for_extraction` on a type annotation now unfolds it at extraction
-  time. This can help to reveal first-order code for C extraction;
-  see [FStarLang/kremlin #51](https://github.com/FStarLang/kremlin/issues/51).
-
 * Pure terms are extracted while preserving their local `let`-structure.
 This avoids code blow-up problems observed in both HACL and miTLS.
-To recover the old behavior, at the cost of larger code size, 
+To recover the old behavior, at the cost of larger code size,
 use the option `--normalize_pure_terms_for_extraction`.
 Changed since 45a120988381de410d2c1c5c99bcac17f00bd36e
 
+* Since 393835080377fff79baeb0db5405157e8b7d4da2, erasure for
+  extraction is substantially revised. We now make use of a notion of
+  "must_erase" types, defined as follows:
+
+   ```
+   must_erase ::= unit
+               | Type
+               | FStar.Ghost.erased t
+               | x:must_erase{t'}            //any refinement of a must_erase type
+               | t1..tn -> PURE must_erase _ //any pure function returning a must_erase type
+               | t1..tn -> GHOST t' _        //any ghost function
+   ```
+
+  Any must_erase type is extracted to `unit`.
+  Any must_erase computation is extracted as `()`.
+  A top-level must_erase computation is not extracted at all.
+
 ## Command line options
-
-* --hint_stats and --check_hints are gone
-    b50c88930e3f2655704696902693941525f6cf9f. The former was rarely
-    used. The latter may be restored, but the code was too messy to
-    retain, given that the feature is also not much used.
-
-* --hint_info and --print_z3_statistics are deprecated. They are
-    subsumed by --query_stats.
-
-* --cache_checked_modules: writes out a .checked file from which the
-  typechecker can reconstruct its state, instead of re-verifying a
-  module every time
 
 * --verify_all, --verify_module, --extract_all, --explicit_deps are
     gone. The behavior of `--dep make` has changed. See the section on
@@ -355,7 +467,7 @@ Changed since 45a120988381de410d2c1c5c99bcac17f00bd36e
   imposed by an interface of `A`.
 
   In such a situation, you can run:
-  
+
      `fstar --expose_interfaces A.fsti A.fst B.fst`
 
   Note, this explicitly breaks the abstraction of the interface
@@ -381,20 +493,6 @@ Expected changes in the near future:
 
 ## Error reporting
 
-* The error reports from SMT query failures have been substantially
-  reworked. At least a diagnostic (i.e., an "Info" message) is issued
-  for each SMT query failure together with a reason provided by the
-  SMT solver. To see that diagnostic message, you at least need to
-  have '--debug yes'. Additionally, localized assertion failures will
-  be printed as errors. If no localized errors could be recovered
-  (e.g., because of a solver timeout) then the dreaded "Unknown
-  assertion failed" error is reported.
-
-* --query_stats now reports a reason for a hint failure as well as
-  localized errors for sub-proofs that failed to replay. This is
-  should provide a faster workflow than using --detail_hint_replay
-  (which still exists)
-
 * Every error or warning is now assigned a unique number. Error
   reports now look like this:
 
@@ -403,13 +501,9 @@ Expected changes in the near future:
 ```
 
   Notice the `19`: that's the unique error number.
-  
+
   Warnings can be silenced or turned into errors using the new
   `--warn_error` option.
-   
-## Miscellaneous
-
-* A file can now contain at most one module or interface
 
 ## Tactics
 
@@ -436,3 +530,63 @@ Expected changes in the near future:
 * `clear`, which removed the innermost binder from the context, now takes a binder as
    an argument an will attempt to remove it from any position (given that dependency allows it).
    The old behaviour can be recovered with `clear_top` instead.
+
+# Version 0.9.5.0
+
+## Standard library
+
+* [commit FStar@f73f295e](https://github.com/FStarLang/FStar/commit/f73f295ed0661faec205fdf7b76bdd85a2a94a32) The specifications for the machine integer libraries (`Int64.fst`,
+  `UInt64.fst`, etc) now forbid several forms of undefined behavior in C.
+
+  The signed arithmetic `add_underspec`, `sub_underspec`, and `mul_underspec`
+  functions have been removed.
+
+  Shifts have a precondition that the shift is less than the bitwidth.
+
+  Existing code may need additional preconditions to verify (for example, see
+  a
+  [fix to HACL*](https://github.com/mitls/hacl-star/commit/c8a61ab189ce163705f8f9ff51e41cab2869f6d6)).
+  Code that relied on undefined behavior is unsafe, but it can be extracted
+  using `assume` or
+  `admit`.
+
+## C Extraction
+
+* [PR #1176](https://github.com/FStarLang/FStar/pull/1176)
+  `inline_for_extraction` on a type annotation now unfolds it at extraction
+  time. This can help to reveal first-order code for C extraction;
+  see [FStarLang/kremlin #51](https://github.com/FStarLang/kremlin/issues/51).
+
+## Command line options
+
+* --hint_stats and --check_hints are gone
+    b50c88930e3f2655704696902693941525f6cf9f. The former was rarely
+    used. The latter may be restored, but the code was too messy to
+    retain, given that the feature is also not much used.
+
+* --hint_info and --print_z3_statistics are deprecated. They are
+    subsumed by --query_stats.
+
+* --cache_checked_modules: writes out a .checked file from which the
+  typechecker can reconstruct its state, instead of re-verifying a
+  module every time
+
+## Error reporting
+
+* The error reports from SMT query failures have been substantially
+  reworked. At least a diagnostic (i.e., an "Info" message) is issued
+  for each SMT query failure together with a reason provided by the
+  SMT solver. To see that diagnostic message, you at least need to
+  have '--debug yes'. Additionally, localized assertion failures will
+  be printed as errors. If no localized errors could be recovered
+  (e.g., because of a solver timeout) then the dreaded "Unknown
+  assertion failed" error is reported.
+
+* --query_stats now reports a reason for a hint failure as well as
+  localized errors for sub-proofs that failed to replay. This is
+  should provide a faster workflow than using --detail_hint_replay
+  (which still exists)
+
+## Miscellaneous
+
+* A file can now contain at most one module or interface

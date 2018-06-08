@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -10,7 +10,7 @@
     <RootNamespace>FStar</RootNamespace>
     <AssemblyName>fstar</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
+    <TargetFSharpCoreVersion>4.4.3.0</TargetFSharpCoreVersion>
     <Name>FStar</Name>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\VS\</SolutionDir>
     <RestorePackages>true</RestorePackages>
@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--admit_smt_queries true --cache_checked_modules Bane.Test.fst</StartArguments>
+    <StartArguments>--codegen OCaml A.fst --debug yes --trace_error --debug A --debug_level Extraction</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\Users\nswamy\workspace\test\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\test2\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
     <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
   </PropertyGroup>
@@ -117,8 +117,22 @@
       <Project>{21685793-ac84-4ec1-9eab-39f9c0252f3f}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\reflection\reflection.fsproj">
+      <Name>reflection</Name>
+      <Project>{8869FA4E-96AF-4E01-99BC-B52C88610E3D}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\tactics\tactics.fsproj">
+      <Name>tactics</Name>
+      <Project>{8869FA4E-96AF-4E01-99BC-B52C88610E3D}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <Reference Include="FSharp.Compatibility.OCaml">
       <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.Core" >
+      <HintPath>..\VS\packages\FSharp.Core.4.2.3/lib/net45/FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">
@@ -133,10 +147,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <HintPath>$(MSBuildProgramFiles32)\Reference Assemblies\Microsoft\FSharp\.NETFramework\v4.0\$(TargetFSharpCoreVersion)\FSharp.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <ProjectReference Include="..\basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>

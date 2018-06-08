@@ -65,17 +65,17 @@ assume val l : unit -> unit -> Lemma (requires p1) (ensures p2)
 
 let _ =
     assert_by_tactic p2
-                     (apply_lemma (quote l);; exact (quote proof_1))
+                     (fun () -> apply_lemma (quote l); exact (quote proof_1))
 
 let _ =
     assert_by_tactic p2
-                     (apply_lemma (quote (l ()));; exact (quote proof_1))
+                     (fun () -> apply_lemma (quote (l ())); exact (quote proof_1))
 
 (* This fails, since when we fully apply `l` we get a Pure *)
 (* let _ = *)
 (*     assert_by_tactic p2 *)
-(*                      (apply_lemma (quote (l () ()));; *)
-(*                       exact (quote proof_1)) *)
+(*                      (fun () -> apply_lemma (quote (l () ())); *)
+(*                                 exact (quote proof_1)) *)
 
 assume val pp1 : Type0
 
@@ -91,8 +91,17 @@ let _ = assert_by_tactic (xx.x == 4) trivial
 
 assume val dlem : squash True -> squash True -> squash True
 
-let _ = assert_by_tactic True (apply (quote dlem);; divide 1 (trivial;; qed) (trivial;; qed);; qed)
-let _ = assert_by_tactic True (apply (quote dlem);; focus (trivial;; qed);; focus (trivial;; qed);; qed)
+let _ = assert_by_tactic True (fun () ->
+            apply (quote dlem);
+            let _ = divide 1 (fun () -> trivial (); qed ())
+                             (fun () -> trivial (); qed ()) in
+            qed ())
+
+let _ = assert_by_tactic True (fun () ->
+            apply (quote dlem);
+            let _ = divide 1 (fun () -> trivial (); qed ())
+                             (fun () -> trivial (); qed ()) in
+            qed ())
 
 open FStar.Order
 
@@ -110,14 +119,25 @@ let _ = assert_by_tactic (ne Lt) trivial
 let _ = assert_by_tactic (ne Gt) trivial
 
 let _ = assert_by_tactic (exists (n:int). n == 5)
-                         (witness (quote 5);; trefl;; qed)
+                         (fun () -> witness (quote 5); norm []; trefl (); qed ())
 
 // This one doesn't work, currently, as 5 gets typed as int, and not as nat
 // Fixing this seemss non-trivial, after some attempts...
 (* let _ = assert_by_tactic (exists (n:nat). n == 5) *)
-(*                          (witness (quote 5);; trefl;; qed) *)
+(*                          (fun () -> witness (quote 5); trefl (); qed ()) *)
 
 assume val l' : nat -> unit -> Lemma p1
 let _ =
     assert_by_tactic p1
-                     (apply_lemma (quote (l' 5)))
+                     (fun () -> apply_lemma (quote (l' 5)))
+
+(* Testing pointwise over matches *)
+noeq
+type tt =
+    | CC : int -> bool -> tt
+    | BB : tt
+
+let pwtest x =
+    assert_by_tactic
+        (match x with | CC a b -> a == a /\ (b == true \/ b == false) | BB -> true)
+        (fun () -> pointwise trefl)

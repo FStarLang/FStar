@@ -9,7 +9,8 @@
 true: \
   annot, bin_annot, thread, -traverse, \
   package(batteries), \
-  package(zarith)
+  package(zarith), \
+  package(ppx_deriving.std), package(ppx_deriving_yojson)
 
 # ADL: the new unicode lexer
 "src/parser/ml/FStar_Parser_LexFStar.ml": syntax(camlp4o)
@@ -23,7 +24,9 @@ true: \
   package(pprint), \
   package(ulex), \
   package(stdint), \
-  package(yojson)
+  package(yojson), \
+  package(ocaml-migrate-parsetree), \
+  package(process)
 
 # This ensures that main.native bundles its dependencies, which dynlinked tactics might need.
 "src/fstar/ml/main.native": \

@@ -1,0 +1,6 @@
+{"kind": "protocol-info", "rest": "[...]"}
+{"kind": "response", "query-id": "1", "response": null, "status": "success"}
+{"kind": "response", "query-id": "2", "response": [], "status": "success"}
+{"kind": "response", "query-id": "3", "response": "2", "status": "success"}
+{"kind": "response", "query-id": "4", "response": "4", "status": "success"}
+{"kind": "response", "query-id": "5", "response": "6", "status": "success"}

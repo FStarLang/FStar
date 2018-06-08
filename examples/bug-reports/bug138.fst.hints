@@ -14,7 +14,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "947b30c0e705ff989d6ab810b02e032d"
+      "b5e7c78ce942b0dae29d76ecaa35b302"
     ],
     [
       "Bug138.foo",
@@ -27,25 +27,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6c2f584f13f60f7830f6fd4665bea8f0"
-    ],
-    [
-      "Bug138.uu___is_Foo",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "302b6badf0c72f62053852d75a938c0f"
-    ],
-    [
-      "Bug138.uu___is_Bar",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "034e6486bd9a18467a598a98004decaf"
+      "cb3347cfabafd2b295de7bcefb9031b7"
     ],
     [
       "Bug138.arg_precede",
@@ -53,12 +35,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_Bug138.Bar",
-        "constructor_distinct_Bug138.Foo", "disc_equation_Bug138.Bar",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug138.Bar",
         "disc_equation_Bug138.Foo", "fuel_guarded_inversion_Bug138.arg"
       ],
       0,
-      "8f278a4690de9863b83ee36c3b88792d"
+      "c3ae8f6533a8d9120b5cba82b907e270"
     ],
     [
       "Bug138.foo_bar",
@@ -80,7 +61,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e38078cf8cc7790f300fed013cb7808b"
+      "8e65c3be6f1c44d816015cdd1d7ced3b"
     ]
   ]
 ]

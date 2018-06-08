@@ -13,7 +13,21 @@
         "true_interp"
       ],
       0,
-      "3694253e56306c89c85eb3f3ac35396a"
+      "e27135897f656a084e148f8e00eb34b8"
+    ],
+    [
+      "FStar.Heap.trivial_preorder",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_rel",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "true_interp"
+      ],
+      0,
+      "00e15093f188404e599376058703f086"
     ]
   ]
 ]

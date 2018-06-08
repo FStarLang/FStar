@@ -8,16 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "2f6d65c1248244a2332caa09d8e3a4d9"
-    ],
-    [
-      "Ex10a.uu___is_Readable",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f51b82372b3323afb77e12f4772544ab"
+      "2065fc90f4706947ed9cc585a9e508dd"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -30,16 +21,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "2265b28489d51546c145848c43c7c2e3"
-    ],
-    [
-      "Ex10a.uu___is_Writable",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "bca7cbd6329c0376e35ed62f4acb6f18"
+      "23335b104a554fff07b04b1422e6adb8"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -52,7 +34,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "0222c79fb776a0e5909b46cd0d4e3d4c"
+      "ef684fb0434909b7cf9d144e9e0b8e0d"
     ],
     [
       "Ex10a.canWrite",
@@ -61,7 +43,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "a3ff474c44dd8ac75bb04a8bf29b6600"
+      "607cc4b77a02a87f57f8f1ece67152d4"
     ],
     [
       "Ex10a.canRead",
@@ -74,7 +56,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "e57b903ecd29d61ab9d43ea8b3ea910c"
+      "7de1b1e822293ad5a08a679eef6a4996"
     ],
     [
       "Ex10a.safe_delete",
@@ -96,7 +78,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "fb2e4027fe1f3652188aaadfd27d4e40"
+      "e5fc22e6962c30d647f7ce5399dbe984"
     ],
     [
       "Ex10a.test_acls",
@@ -108,7 +90,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Ex10a.entry_haseq", "bool_typing",
+        "assumption_Ex10a.entry__uu___haseq", "bool_typing",
         "constructor_distinct_Ex10a.Readable",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
@@ -126,7 +108,77 @@
         "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0,
-      "d23e9f941f3478d7a1607d9f9d8b1f62"
+      "12f4f6137fb271c7db009b90f4654079"
+    ],
+    [
+      "Ex10a.entry",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "3cc176fc14ef538580837e9cdd6b5760"
+    ],
+    [
+      "Ex10a.__proj__Readable__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ex10a.Readable",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
+      ],
+      0,
+      "5adaa7e8155a6ad7118fb39881186fc6"
+    ],
+    [
+      "Ex10a.__proj__Writable__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ex10a.Writable",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
+      ],
+      0,
+      "dd470f5673062e6e5b39fcb2967d53dc"
+    ],
+    [
+      "Ex10a.canWrite",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "695591b1c88b2998b9d4813d617c7b85"
+    ],
+    [
+      "Ex10a.canRead",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_string",
+        "disc_equation_Ex10a.Readable", "disc_equation_Ex10a.Writable",
+        "fuel_guarded_inversion_Ex10a.entry"
+      ],
+      0,
+      "642704b8538b3c61ede86221dd5ee258"
+    ],
+    [
+      "Ex10a.revoke",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Ex10a.entry__uu___haseq",
+        "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
+      ],
+      0,
+      "a5655be2225e94339a938c005a54fc0c"
     ]
   ]
 ]

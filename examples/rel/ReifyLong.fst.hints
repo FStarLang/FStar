@@ -1,6 +1,15 @@
 [
-  "/H_J‰ù°\u0013Ì'\u007f¯Ø\u0018\u0000M",
+  "¨ˇø±D∑VÇ\u0018\u0001mºø÷\u0018‡",
   [
+    [
+      "ReifyLong.is_x",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "10ac139ca380af3f1050fddeb1eb1f7c"
+    ],
     [
       "ReifyLong.bidule",
       1,
@@ -8,33 +17,60 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__get_equality",
-        "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__get_token_correspondence",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__put_equality",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__put_token_correspondence",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_int", "assumption_Prims.HasEq_unit",
-        "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
-        "equation_FStar.DM4F.Heap.IntStoreFixed.upd",
-        "equation_FStar.DM4F.IntStoreFixed.read",
+        "assumption_Prims.HasEq_unit",
         "equation_FStar.DM4F.IntStoreFixed.write",
         "equation_FStar.Pervasives.Native.fst", "equation_ReifyLong.p1",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_493a6a2efdc1ba856d2ec47940085959",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_7c14753a5b99774e3e0081a9f2de5e5d",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_7eec5bd5292b39f63c270c670e278b1a",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_b86d1955c0c72a74391d47e1fb4ee8dc",
-        "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_be1f098a73b727536eabaf253dd83852",
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_d118813f5b63d6276a92d2454f10fa10",
-        "interpretation_ReifyLong_Tm_abs_a8db41215e7945158a96e8ee2c6776b7",
+        "interpretation_ReifyLong_Tm_abs_6e9afa0c594f10d8fda5cf8af28d1383",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "unit_typing"
       ],
       0,
-      "3ba92ee57ef171216e24dc10bc0e3bbe"
+      "4bc2338376b97c50ec77208ee322d7f1"
+    ],
+    [
+      "ReifyLong.is_x",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "2426f315b9a7188f625df24b450daf37"
+    ],
+    [
+      "ReifyLong.is_x",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "137bbd6b84436b737dc0e7769595d5e6"
+    ],
+    [
+      "ReifyLong.p1",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "f2346bb256dbab9b1e57c559e461b16a"
+    ],
+    [
+      "ReifyLong.bidule",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "assumption_Prims.HasEq_unit"
+      ],
+      0,
+      "6c6e61d2f0a57f103010df4dd8574fe3"
     ]
   ]
 ]

@@ -1,5 +1,5 @@
 [
-  "‚\u000fÌðý¿C4ÿ6®$Å1|Þ",
+  " ÍØ)lå+‘\u001a\u0001½ëf‰R\u0014",
   [
     [
       "Sequences.unrefine_eq_lem",
@@ -12,34 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "18ea5283500c001946ab020120424bf1"
-    ],
-    [
-      "Sequences.prune_for_seq",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "acbbf8bb346b62e3eb2bbbb6f385d100"
-    ],
-    [
-      "Sequences.try_unref_eq",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "edf2758bc7f69e15ebe751f31e4f5f29"
-    ],
-    [
-      "Sequences.sequence_pruning",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "db38699b57c3b47e3bec7c0ef458d005"
+      "ea283968b34c18d2aebdacefc8359288"
     ],
     [
       "Sequences.test",
@@ -58,10 +31,11 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.create"
+        "true_interp", "typing_FStar.Seq.Base.create",
+        "typing_FStar.Seq.Base.length"
       ],
       0,
-      "2e503ccaf2464ac9f922c3d4675112a3"
+      "a5398c6488d20bdcf61504c186fe9417"
     ],
     [
       "Sequences.test",
@@ -81,7 +55,7 @@
         "unit_typing"
       ],
       0,
-      "25d2b0c267fff754c7541f49a40810d5"
+      "138fc32ce9a10851d52c3f5729875088"
     ],
     [
       "Sequences.test",
@@ -89,19 +63,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_elim_Prims.Refl", "eq2-interp",
-        "equation_FStar.Seq.Properties.snoc", "equation_Prims.eq2",
-        "equation_Prims.nat", "equation_Prims.squash",
-        "fuel_guarded_inversion_Prims.equals", "int_inversion",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.nat", "equation_Prims.squash", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "unit_typing"
+        "typing_FStar.Seq.Base.length"
       ],
       0,
-      "b463008adf9f38ec7ece53c335da2e80"
+      "d14b57f63465207011db12784d34a9fb"
     ],
     [
       "Sequences.test",
@@ -134,7 +106,7 @@
         "unit_typing"
       ],
       0,
-      "2f7569363c67eee9f2347a137e7d1e68"
+      "b5fa75dc63bcc7b03443d5da2c6b8476"
     ]
   ]
 ]

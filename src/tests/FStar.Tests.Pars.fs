@@ -11,7 +11,7 @@ open FStar.Syntax.Syntax
 open FStar.Errors
 open FStar.TypeChecker.Env
 open FStar.Parser.ParseIt
-module DsEnv = FStar.ToSyntax.Env
+module DsEnv = FStar.Syntax.DsEnv
 module TcEnv = FStar.TypeChecker.Env
 module SMT = FStar.SMTEncoding.Solver
 module Tc = FStar.TypeChecker.Tc
@@ -24,9 +24,9 @@ module Rel = FStar.TypeChecker.Rel
 let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange
 let tcenv_ref: ref<option<TcEnv.env>> = mk_ref None
 let test_mod_ref = mk_ref (Some ({name=test_lid;
-                                declarations=[];
-                                exports=[];
-                                is_interface=false}))
+                                  declarations=[];
+                                  exports=[];
+                                  is_interface=false}))
 
 let parse_mod mod_name dsenv =
     match parse (Filename mod_name) with
@@ -45,7 +45,7 @@ let parse_mod mod_name dsenv =
 let add_mods mod_names dsenv env =
   List.fold_left (fun (dsenv,env) mod_name ->
       let dsenv, string_mod = parse_mod mod_name dsenv in
-      let _mod, env = Tc.check_module env string_mod in
+      let _mod, _, env = Tc.check_module env string_mod false in
       (dsenv, env)
   ) (dsenv,env) mod_names
 
@@ -62,7 +62,7 @@ let init_once () : unit =
   env.solver.init env;
   let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env()) in
   let env = {env with dsenv=dsenv} in
-  let _prims_mod, env = Tc.check_module env prims_mod in
+  let _prims_mod, _, env = Tc.check_module env prims_mod false in
   // needed to run tests with chars
   // let dsenv, env = add_mods ["FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Mul.fst"; "FStar.Squash.fsti";
   //                            "FStar.Classical.fst"; "FStar.List.Tot.Base.fst"; "FStar.List.Tot.Properties.fst"; "FStar.List.Tot.fst";

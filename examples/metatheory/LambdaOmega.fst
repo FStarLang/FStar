@@ -25,7 +25,7 @@ open FStar.Classical
 open FStar.FunctionalExtensionality
 open FStar.StrongExcludedMiddle
 
-#set-options "--max_fuel 1 --max_ifuel 1"
+#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1"
 
 
 (* Chapter 29 of TAPL: "Type Operators and Kinding",
@@ -469,7 +469,7 @@ let rec tappears_free_in x t =
   | TApp t1 t2 -> tappears_free_in x t1 || tappears_free_in x t2
   | TLam _ t1 -> tappears_free_in (x+1) t1
 
-logic type envEqualT (t:typ) (g1:env) (g2:env) =
+type envEqualT (t:typ) (g1:env) (g2:env) =
                  (forall (x:var). tappears_free_in x t ==>
                     lookup_tvar g1 x = lookup_tvar g2 x)
 

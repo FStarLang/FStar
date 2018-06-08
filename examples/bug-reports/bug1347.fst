@@ -2,10 +2,10 @@ module Bug1347
 
 open FStar.Tactics
 
-let t1 : tactic unit =
-  dump "Before";;
-  u <-- forall_intro;
-  smt
+let t1 (): Tac unit =
+  dump "Before";
+  let u = forall_intro () in
+  smt ()
 
 let fyz (yz:(int * int)) : Type = let (y, z) = yz in True
 

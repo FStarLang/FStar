@@ -20,6 +20,11 @@ let u8 = FStar.UInt8.t
 let uint32s = buffer u32
 let bytes = buffer u8
 
+// JP: 20180402 this file dropped off CI a long while ago. Retained here,
+// currently used as a testcase for KreMLin extraction, but I would love to see
+// this re-enabled as a sanity check for F*'s long CI.
+#set-options "--lax"
+
 (** Rotate operators on UInt32.t *)
 let op_Greater_Greater_Greater (a:u32) (s:u32{v s <= 32}) =
   let (m:u32{v m = 32}) = 32ul in

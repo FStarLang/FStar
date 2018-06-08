@@ -13,11 +13,10 @@
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Recursive_Tm_refine_6bde3baeeb36041bb17851e173846917",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9433224c531b90a9b717e9780c11d8c7"
+      "d1e7dece6a1d867ee5896c0214f34362"
     ],
     [
       "Recursive.fac_mon",
@@ -30,10 +29,9 @@
         "@fuel_irrelevance_Recursive.fac.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_1", "bool_inversion",
-        "bool_typing", "equation_Prims.nat",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_1", "equation_Prims.nat",
         "equation_with_fuel_Recursive.fac.fuel_instrumented",
-        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "int_inversion", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
@@ -42,11 +40,10 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Recursive_Tm_refine_ce89e1cceaa21081ee686664ef613433",
         "typing_Recursive.fac", "well-founded-ordering-on-nat"
       ],
       0,
-      "64378e4fec1ed3f8bdb5c02e627627d9"
+      "31beccb8744818f4da1788ac62810b23"
     ],
     [
       "Recursive.fac_sum",
@@ -62,7 +59,7 @@
         "typing_Recursive.fac"
       ],
       0,
-      "9e32a223cff90cf3b1147fd41bc1492b"
+      "9c46dceef65419d48eb56c2d2a2038e7"
     ],
     [
       "Recursive.fac_sum_mon",
@@ -75,7 +72,40 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f46a616ac88ff688c620b7a2b1bd9c63"
+      "6b7f92345040422e99b4682c9982170f"
+    ],
+    [
+      "Recursive.fac",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "ef203a625ab93461605d7a94ce66c95b"
+    ],
+    [
+      "Recursive.fac_sum",
+      2,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_Recursive.fac.fuel_instrumented", "@query",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_Recursive.fac"
+      ],
+      0,
+      "a1a986dfca04a0f7ab1a008557222fee"
     ]
   ]
 ]

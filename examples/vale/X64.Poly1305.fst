@@ -937,11 +937,11 @@ irreducible let va_irreducible_lemma_poly1305_add_key_s va_b0 va_s0 va_sN h0 h1 
   let va_sM = (va_lemma_empty va_s3 va_sM) in
   (va_bM, va_sM)
 let va_lemma_poly1305_add_key_s = va_irreducible_lemma_poly1305_add_key_s
-let retain_only (nss:list string) : tactic unit =
-  prune "";; //removes every top-level assertion which has "" as a prefix; so prune everything
-  addns "Prims" ;; //keep prims always
-  _ig <-- mapM addns nss ;  //add back only things in nss
-  return ()
+let retain_only (nss:list string) : Tac unit =
+  prune ""; //removes every top-level assertion which has "" as a prefix; so prune everything
+  addns "Prims" ; //keep prims always
+  let _ = FStar.Tactics.map addns nss in  //add back only things in nss
+  ()
 
 let retain_only_modp () = 
     retain_only ["Opaque_i"; "X64.Poly1305.Spec_s"; "X64.Poly1305"; "X64.Poly1305.Math_i"] //; "FStar.Seq"]`
