@@ -112,7 +112,7 @@ function build_fstar () {
 
     if [ ! -d ulib ]; then
       echo "I don't seem to be in the right directory, bailing"
-      exit 1
+      return
     fi
 
     if [[ $target == "uregressions-ulong" ]]; then
@@ -125,7 +125,7 @@ function build_fstar () {
     then
         echo Warm-up failed
         echo Failure > $result_file
-        return 1
+        return
     else
         fetch_vale &
         fetch_hacl &
