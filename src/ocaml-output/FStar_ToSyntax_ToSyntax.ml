@@ -5052,8 +5052,12 @@ let (mk_data_projector_names :
                         | FStar_Pervasives_Native.Some q -> q  in
                       let iquals1 =
                         if
-                          FStar_List.contains FStar_Syntax_Syntax.Abstract
-                            iquals
+                          (FStar_List.contains FStar_Syntax_Syntax.Abstract
+                             iquals)
+                            &&
+                            (Prims.op_Negation
+                               (FStar_List.contains
+                                  FStar_Syntax_Syntax.Private iquals))
                         then FStar_Syntax_Syntax.Private :: iquals
                         else iquals  in
                       let uu____16066 = FStar_Util.first_N n1 formals  in
@@ -5880,9 +5884,14 @@ let rec (desugar_tycon :
                                         se.FStar_Syntax_Syntax.sigquals  in
                                       let quals2 =
                                         if
-                                          FStar_List.contains
-                                            FStar_Syntax_Syntax.Abstract
-                                            quals1
+                                          (FStar_List.contains
+                                             FStar_Syntax_Syntax.Abstract
+                                             quals1)
+                                            &&
+                                            (Prims.op_Negation
+                                               (FStar_List.contains
+                                                  FStar_Syntax_Syntax.Private
+                                                  quals1))
                                         then FStar_Syntax_Syntax.Private ::
                                           quals1
                                         else quals1  in
