@@ -71,7 +71,7 @@ and t = //JUST FSHARP
   | Lam of (t -> t) * (unit -> t) * aqual //NS: * (t * (type : unit -> t) * aqual)
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
-  | Construct of fv * list<universe> * args (* Zoe: This is used for both type and data constructors*)
+  | Construct of fv * list<universe> * args (* Zoe: This is used for type, data constructors, and primops *)
   | Constant of constant
   | Type_t of universe
   | Univ of universe
@@ -349,7 +349,7 @@ and translate_fv (cfg: N.cfg) (bs:list<t>) (fvar:fv): t =
                 // iapp (translate env bs t') (List.map (fun u -> (translate_univ env bs u, None)) us)
                 translate_letbinding cfg [] lb
              end
-        | None -> failwith "Could not find mutually recursive definition")
+       | None -> failwith "Could not find mutually recursive definition" (* TODO: is this correct? *))
      | _ ->
        mkConstruct fvar [] [] (* Zoe : Z and S data constructors from the examples are not in the environment *)
     end
@@ -550,9 +550,31 @@ and readback (cfg:N.cfg) (x:t) : term =
          | [] -> tm
          | _ ->  U.mk_app tm args
       in
-      (match us with
-       | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
-       | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange))
+      let tm () = 
+        match us with
+        | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
+        | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange)
+      in
+      (match N.find_prim_step cfg fv with
+       | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) -> 
+         (* TODO : can primops be universe polymorphic? *)
+         begin
+           let l = List.length args in 
+           let args_1, args_2 = if l = prim_step.arity
+                                then args, []
+                                else List.splitAt prim_step.arity args
+           in  
+           let psc = {
+             N.psc_range = Range.dummyRange;
+             N.psc_subst = (fun () -> if prim_step.requires_binder_substitution
+                                 then failwith "Cannot handle primops that require substitution"
+                                 else [])
+           } in
+           match prim_step.interpretation psc args_1 with 
+           | Some tm -> U.mk_app tm args_2
+           | None -> tm ()
+         end
+       | _ -> tm ())
 
     | Accu (Var bv, []) ->
       S.bv_to_name bv

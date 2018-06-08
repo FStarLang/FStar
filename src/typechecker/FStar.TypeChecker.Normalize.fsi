@@ -59,7 +59,11 @@ type cfg
 val cfg_env: cfg -> Env.env
 val config: list<step> -> Env.env -> cfg
 
-type psc // primitive step context
+type psc = { // primitive step context
+    psc_range:FStar.Range.range;
+    psc_subst: unit -> subst_t // potentially expensive, so thunked
+}
+
 val null_psc : psc
 val psc_range : psc -> FStar.Range.range
 val psc_subst : psc -> subst_t
@@ -85,6 +89,7 @@ val should_unfold : cfg
                  -> should_unfold_res
 
 val register_plugin: primitive_step -> unit
+val find_prim_step: cfg -> fv -> primitive_step option
 val closure_as_term : cfg -> env -> term -> term
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term
