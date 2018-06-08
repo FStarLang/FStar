@@ -81,9 +81,9 @@ noeq abstract type mem' =
 abstract private let mk_mem (rid_ctr:int) (h:hmap) (tip:rid) :mem'
   = HS rid_ctr h tip
 
-abstract private let get_hmap (m:mem') :hmap = m.h
-abstract private let get_rid_ctr (m:mem') :int = m.rid_ctr
-abstract private let get_tip (m:mem') :rid = m.tip
+abstract let get_hmap (m:mem') :hmap = m.h
+abstract let get_rid_ctr (m:mem') :int = m.rid_ctr
+abstract let get_tip (m:mem') :rid = m.tip
 
 private let lemma_mk_mem'_projectors (rid_ctr:int) (h:hmap) (tip:rid)
   :Lemma (requires True)
