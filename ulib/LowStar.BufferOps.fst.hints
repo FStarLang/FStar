@@ -14,7 +14,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cf50f66b070215a0562aa769ba26bcd0"
       ],
       0,
-      "4c9f9a5a618952dd35d634b4848f747d"
+      "fce7141ab997cbf6aea3248f4f7ff814"
     ],
     [
       "LowStar.BufferOps.op_Star_Equals",
@@ -44,54 +44,7 @@
         "typing_LowStar.Buffer.as_seq", "typing_LowStar.Buffer.length"
       ],
       0,
-      "3fc92a4cfb1b97e48190fa083ac6450d"
-    ],
-    [
-      "LowStar.BufferOps.op_Array_Access",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "lemma_LowStar.Buffer.length_as_seq",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_LowStar.BufferOps_Tm_refine_26ed3976e34c40b3d35cfc40f2ad3724"
-      ],
-      0,
-      "9bc455eccec6d239e7a34a0cd3112f2e"
-    ],
-    [
-      "LowStar.BufferOps.op_Array_Assignment",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size",
-        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
-        "lemma_LowStar.Buffer.length_as_seq", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_LowStar.BufferOps_Tm_refine_26ed3976e34c40b3d35cfc40f2ad3724"
-      ],
-      0,
-      "ca4b62158b2465a2d983211c0a9398c6"
-    ],
-    [
-      "LowStar.BufferOps.op_Bang_Star",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_LowStar.Buffer.pointer",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_LowStar.Buffer_Tm_refine_cf50f66b070215a0562aa769ba26bcd0"
-      ],
-      0,
-      "6e3235607345a0ca65ed037a5d209ff1"
+      "c067c6dbe75dca1b3b4d55ef13f30663"
     ]
   ]
 ]
