@@ -97,7 +97,7 @@ let mem (#a:eqtype) x xs = Some? (Seq.seq_find (fun y -> y = x) xs)
 // BEGIN: EtMCPADecryptRequires
 val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
-    Map.contains h0.h k.region /\
+    Map.contains (get_hmap h0) k.region /\
     (let log0 = sel h0 k.log in
       (b2t ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) log0 )
     )
