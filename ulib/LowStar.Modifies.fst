@@ -251,6 +251,10 @@ let loc_of_cloc_of_loc l = ()
 
 let cloc_of_loc_of_cloc l = ()
 
+let cloc_of_loc_none _ = ()
+
+let cloc_of_loc_union _ _ = ()
+
 let loc_includes_to_cloc l1 l2 = ()
 
 let loc_disjoint_to_cloc l1 l2 = ()
