@@ -183,11 +183,9 @@ let rec sort_correct_aux (#a:Type) (m:cm a) (vm:vmap a unit) (xs:list var) :
     Lemma (xsdenote m vm xs == xsdenote m vm (sort a vm xs)) =
   permute_via_swaps_correct #unit (fun a -> sort a) (fun #a -> sort_via_swaps) m vm xs
 
-let rec sortWith_correct_aux (#a #b:Type) (f:nat -> nat -> int) (m:cm a)
-    (vm:vmap a b) (xs:list var) :
+let rec sortWith_correct_aux (#a #b:Type) (f:nat -> nat -> int) (m:cm a) (vm:vmap a b) (xs:list var) :
     Lemma (xsdenote m vm xs == xsdenote m vm (sortWith #b f a vm xs)) =
-  permute_via_swaps_correct #b (fun a -> sortWith #b f a)
-    (fun #a -> sortWith_via_swaps f) m vm xs
+  permute_via_swaps_correct #b (fun a -> sortWith #b f a) (fun #a -> sortWith_via_swaps f) m vm xs
 
 let sort_correct : permute_correct #unit sort = (fun #a -> sort_correct_aux #a)
 
@@ -248,8 +246,8 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type)
     (unquotea:term->Tac a) (quotea:a -> Tac term) (tmult tunit:term) (munit:a)
     (ts:list term) :
     Tac (list exp * vmap a b) =
-  let tmult:term = norm_term [delta] tmult in
-  let tunit:term = norm_term [delta] tunit in
+  let tmult: term = norm_term [delta] tmult in
+  let tunit: term = norm_term [delta] tunit in
   let ts   = Tactics.Util.map (norm_term [delta]) ts in
   // dump ("mult = " ^ term_to_string mult ^
   //     "; unit = " ^ term_to_string unit ^
@@ -267,15 +265,12 @@ let rec term_mem x = function
   | [] -> false
   | hd::tl -> if term_eq hd x then true else term_mem x tl
 
-let unfold_topdown (ts:list term) =
+let unfold_topdown (ts: list term) =
   let should_rewrite (s:term) : Tac (bool * int) =
-      (term_mem s ts, 0)
+    (term_mem s ts, 0)
   in
   let rewrite () : Tac unit =
-    dump "before delta";
-    compute();
-    // norm [delta];
-    dump "after delta";
+    norm [delta];
     trefl()
   in
   topdown_rewrite should_rewrite rewrite
@@ -314,16 +309,11 @@ let rec quote_exp (e:exp) : Tac term =
   | Var x -> mk_e_app (`Var) [pack (Tv_Const (C_Int x))]
   | Mult e1 e2 -> mk_e_app (`Mult) [quote_exp e1; quote_exp e2]
 
-(*
-CanonCommMonoid.fst(323,8-323,12): (Warning 238) Plugin CanonCommMonoid.canon_monoid_aux will not run natively because Embedding not defined for type uu___11395:b -> FStar.Tactics.Effect.Tac FStar.Reflection.Types.term.
-*)
-
 [@plugin]
 let canon_monoid_aux
-    (a b:Type) (ta:term) (unquotea:term->Tac a) (quotea:a->Tac term)
-    (tm:term) (tmult tunit:term) (munit:a)
-    (tb:term) (quoteb:b->Tac term) (f:term->Tac b) (def:b) (tp:term) (tpc:term) :
-    Tac unit =
+    (a b: Type) (ta: term) (unquotea: term -> Tac a) (quotea: a -> Tac term)
+    (tm tmult tunit: term) (munit: a) (tb: term) (quoteb:b->Tac term)
+    (f:term->Tac b) (def:b) (tp:term) (tpc:term): Tac unit =
   norm [];
   match term_as_formula (cur_goal ()) with
   | Comp (Eq (Some t)) t1 t2 ->
@@ -335,6 +325,7 @@ let canon_monoid_aux
           // dump ("r1=" ^ exp_to_string r1 ^
           //     "; r2=" ^ exp_to_string r2);
           // dump ("vm =" ^ term_to_string (quote vm));
+
           // change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
           // TODO: quasi-quotes would help at least for splicing in the vm r1 r2
           let tvm = quote_vm ta tb quotea quoteb vm in
@@ -347,6 +338,7 @@ let canon_monoid_aux
              (mk_app (`mdenote) [(ta,Q_Implicit); (tb,Q_Implicit);
                  (tm,Q_Explicit); (tvm,Q_Explicit); (tr2,Q_Explicit)], Q_Explicit)] in
           change_sq teq;
+
           // dump ("before =" ^ term_to_string (norm_term [delta;primops]
           //   (quote (mdenote m vm r1 == mdenote m vm r2))));
           // dump ("expected after =" ^ term_to_string (norm_term [delta;primops]
@@ -406,137 +398,116 @@ let canon_monoid (#a:Type) (cm:cm a) : Tac unit =
 
 (***** Examples *)
 
-let lem0 (a b c d : int) =
+ let lem0 (a b c d : int) =
   assert (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   by (fun _ -> canon_monoid int_plus_cm; trefl())
 
-// even for ints, quoting and unquoting is only easy for values; not enough!
-let quote_int (i:int) : Tac term = pack (Tv_Const (C_Int i))
-let unquote_int (t:term) : Tac int =
-  match inspect t with
-  | Tv_Const (C_Int i) -> i
-  | _ -> fail "not an int value"
 
-// this doesn't really work
-let canon_monoid_int_native_broken () : Tac unit =
-  canon_monoid_aux int unit
-    (`int) unquote_int quote_int
-    (`int_plus_cm) (`(+)) (`0) 0
-    (`unit) (fun () -> (`())) (fun _ -> ()) ()
-    (`sort) (`(fun #int -> sort_correct #int))
+// (* Trying to enable computation with constants beyond unit.
+//    It might be enough to move all them to the end of the list by
+//    a careful ordering and let the normalizer do its thing: *)
 
-let canon_monoid_int_native () : Tac unit =
-  canon_monoid_aux int unit
-    (`int) (unquote #int)  (fun (x:int) -> quote x)
-    (`int_plus_cm) (`(+)) (`0) 0
-    (`unit) (fun () -> (`())) (fun _ -> ()) ()
-    (`sort) (`(fun #int -> sort_correct #int))
+// // remember if something is a constant or not
+// let is_const (t:term) : Tac bool = Tv_Const? (inspect t)
 
-let lem0_native (a b c d : int) : unit =
-  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid_int_native(); trefl())
+// // sort things and put the constants last
+// let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
+//   match select_extra x vm, select_extra y vm with
+//   | false, false | true, true -> compare_of_bool (<) x y
+//   | false, true -> 1
+//   | true, false -> -1
 
-(* Trying to enable computation with constants beyond unit.
-   It might be enough to move all them to the end of the list by
-   a careful ordering and let the normalizer do its thing: *)
+// let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
+//   List.Tot.sortWith #nat (const_compare vm) xs
 
-// remember if something is a constant or not
-let is_const (t:term) : Tac bool = Tv_Const? (inspect t)
+// let canon_monoid_const #a cm = canon_monoid_with bool is_const false
+//   (fun a -> const_last a)
+// //  (fun #a m vm xs -> admit ()) #a cm
+//   (fun #a m vm xs -> sortWith_correct #bool (const_compare vm) #a m vm xs) #a cm
 
-// sort things and put the constants last
-let const_compare (#a:Type) (vm:vmap a bool) (x y:var) : int =
-  match select_extra x vm, select_extra y vm with
-  | false, false | true, true -> compare_of_bool (<) x y
-  | false, true -> 1
-  | true, false -> -1
+// let lem1 (a b c d : int) =
+//   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+//   (fun _ -> canon_monoid_const int_plus_cm; trefl())
 
-let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
-  List.Tot.sortWith #nat (const_compare vm) xs
+// (* Trying to only bring some constants to the front,
+//    as Nik said would be useful for separation logic *)
 
-let canon_monoid_const (#a:Type) (m:cm a) : Tac unit =
-  canon_monoid_with bool is_const false
-    (fun a -> const_last a)
-    (fun #a m vm -> sortWith_correct #bool (const_compare vm) #a m vm) #a m
+// val term_mem: term -> list term -> Tot bool
+// let rec term_mem x = function
+//   | [] -> false
+//   | hd::tl -> if term_eq hd x then true else term_mem x tl
 
-let lem1 (a b c d : int) =
-  assert (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  by (fun _ -> canon_monoid_const int_plus_cm; trefl())
+// // remember if something is a constant or not
+// let is_special (ts:list term) (t:term) : Tac bool = t `term_mem` ts
 
-(* Trying to only bring some constants to the front,
-   as Nik said would be useful for separation logic *)
+// // put the special things sorted before the non-special ones,
+// // but don't change anything else
+// let special_compare (#a:Type) (vm:vmap a bool) (x y:var) =
+//   match select_extra x vm, select_extra y vm with
+//   | false, false -> 0
+//   | true, true -> compare_of_bool (<) x y
+//   | false, true -> -1
+//   | true, false -> 1
 
-// remember if something is a constant or not
-let is_special (ts:list term) (t:term) : Tac bool = t `term_mem` ts
+// let special_first (a:Type) (vm:vmap a bool) (xs:list var) : list var =
+//   List.Tot.sortWith #nat (special_compare vm) xs
 
-// put the special things sorted before the non-special ones,
-// but don't change anything else
-let special_compare (#a:Type) (vm:vmap a bool) (x y:var) =
-  match select_extra x vm, select_extra y vm with
-  | false, false -> 0
-  | true, true -> compare_of_bool (<) x y
-  | false, true -> -1
-  | true, false -> 1
+// let canon_monoid_special (ts:list term) =
+//   canon_monoid_with bool (is_special ts) false
+//     (fun a -> special_first a)
+// //    (fun #a m vm xs -> admit ())
+//     (fun #a m vm xs -> sortWith_correct #bool (special_compare vm) #a m vm xs)
 
-let special_first (a:Type) (vm:vmap a bool) (xs:list var) : list var =
-  List.Tot.sortWith #nat (special_compare vm) xs
+// let lem2 (a b c d : int) =
+//   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+//   (fun _ -> canon_monoid_special [quote a; quote b] int_plus_cm;
+//             dump "this won't work, admitting"; admit1())
 
-let canon_monoid_special (ts:list term) : cm int -> Tac unit =
-  canon_monoid_with bool (is_special ts) false (fun a -> special_first a)
-    (fun #a m vm -> sortWith_correct #bool (special_compare vm) #a m vm) #int
+// (* Trying to do something separation logic like. Want to
+//    prove a goal of the form: given some concrete h0 and h1
+//    exists h1', h1 * h1' == h0. -- can use apply exists_intro to get an uvar
+//    Do this for an arbitrary commutative monoid. *)
 
-let lem2 (a b c d : int) =
-  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid_special [quote a; quote b] int_plus_cm;
-            dump "this won't work, admitting"; admit1())
+// let sep_logic
+// // TODO: this generality makes unfold_def fail with:
+// //       (Error) Variable "mult#1139342" not found
+// //       - Guido thinks this is related to
+// //         https://github.com/FStarLang/FStar/issues/1392
+// // (a:Type) (m:cm a) (x y z1 z2 z3 : a) = let op_Star = CM?.mult m in
+// // so working around it for now
+// (x y z1 z2 z3 : int) = let m = int_multiply_cm in let op_Star = op_Multiply in
+//   let h0 = z1 * CM?.unit m * (x * z2 * y * CM?.unit m) * z3 in
+//   let h1 = x * y in
+//   assert_by_tactic (exists h1'. h1 * h1' == h0)
+//   (fun _ -> apply_lemma (`exists_intro);
+//             flip();
+//             canon_monoid m;
+//             trefl()
+//             // this one blows up big time (takes up all RAM)
+//             // exact (cur_witness())
+//             // GM, May 8th: This goal is now skipped since its witness was solved already
+//             (* dismiss() *)
+//   )
 
-(* Trying to do something separation logic like. Want to
-   prove a goal of the form: given some concrete h0 and h1
-   exists h1', h1 * h1' == h0. -- can use apply exists_intro to get an uvar
-   Do this for an arbitrary commutative monoid. *)
+// (* TODO: Need better control of reduction:
+//          - unfold_def still not good enough, see stopgap above *)
 
-let sep_logic
-// TODO: this generality makes unfold_def fail with:
-//       (Error) Variable "mult#1139342" not found
-//       - Guido thinks this is related to
-//         https://github.com/FStarLang/FStar/issues/1392
-// (a:Type) (m:cm a) (x y z1 z2 z3 : a) = let op_Star = CM?.mult m in
-// so working around it for now
-(x y z1 z2 z3 : int) = let m = int_multiply_cm in let op_Star = op_Multiply in
-  let h0 = z1 * CM?.unit m * (x * z2 * y * CM?.unit m) * z3 in
-  let h1 = x * y in
-  assert_by_tactic (exists h1'. h1 * h1' == h0)
-  (fun _ -> apply_lemma (`exists_intro);
-            flip();
-            canon_monoid m;
-            trefl()
-            // this one blows up big time (takes up all RAM)
-            // exact (cur_witness())
-            // GM, May 8th: This goal is now skipped since its witness was solved already
-            (* dismiss() *)
-  )
+// (* TODO: need a version of canon that works on assumption(s)
+//          (canon_in / canon_all) *)
 
-(* TODO: Need better control of reduction:
-         - unfold_def still not good enough, see stopgap above *)
+// (* TODO: Wondering whether we should support arbitrary re-association?
+//          Could be useful for separation logic, but we might also just
+//          work around it. *)
 
-(* TODO: need a version of canon that works on assumption(s)
-         (canon_in / canon_all) *)
+// (* TODO: would be nice to just find all terms of monoid type in the
+//          goal and replace them with their canonicalization;
+//          basically use flatten_correct instead of monoid_reflect
+//          - for this to be efficient need Nik's pointwise' that can
+//            stop traversing when finding something interesting
+//          - even better, the user would have control over the place(s)
+//            where the canonicalization is done *)
 
-(* TODO: would be nice to just find all terms of monoid type in the
-         goal and replace them with their canonicalization;
-         basically use flatten_correct instead of monoid_reflect
-         - for this to be efficient need Nik's pointwise' that can
-           stop traversing when finding something interesting
-         - even better, the user would have control over the place(s)
-           where the canonicalization is done *)
-
-(* TODO: Can we write a tactic that automatically inverts any
-         well-behaved denote function? Coq has this in the quote
-         tactic, and it also seems to be what the Why3 people do
-         (Section 3.2 here: https://hal.inria.fr/hal-01699754/) *)
-
-(* TODO (open ended) Do the things used for reflective tactics really
-        need to be this pure? Can we prove correctness of denotations
-        intrinsically / by monadic reification for an effectful denotation?
-        This seems to be what the Why3 people are now doing?
-        (Section 4 here: https://hal.inria.fr/hal-01699754/)
-*)
+// (* TODO (open ended) Do the things used for reflective tactics really
+//                      need to be this pure? Can we prove correctness of
+//                      denotations intrinsically / by monadic
+//                      reification for an effectful denotation? *)
