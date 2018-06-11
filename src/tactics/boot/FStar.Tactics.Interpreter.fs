@@ -21,6 +21,7 @@ module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module TcTerm = FStar.TypeChecker.TcTerm
 module N = FStar.TypeChecker.Normalize
+module Env = FStar.TypeChecker.Env
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.Tactics.Basic
@@ -472,7 +473,7 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) : tac<'b> = //
     // normal form due to primitive steps. Consider `norm (steps 2)`: we need to normalize
     // `steps 2` before caling norm, or it will fail to unembed the set of steps. Further,
     // at this moment at least, the normalizer will not call into any step of arity > 1.
-    let steps = [N.Weak; N.Reify; N.UnfoldUntil delta_constant; N.UnfoldTac; N.Primops; N.Unascribe] in
+    let steps = [Env.Weak; Env.Reify; Env.UnfoldUntil delta_constant; Env.UnfoldTac; Env.Primops; Env.Unascribe] in
     if proof_state.tac_verb_dbg then
         BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
     let result = N.normalize_with_primitive_steps (primitive_steps ()) steps proof_state.main_context tm in
@@ -746,7 +747,7 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         Dual ({t with n = tn}, p', gs@gs')
 
 let getprop (e:env) (t:term) : option<term> =
-    let tn = N.normalize [N.Weak; N.HNF; N.UnfoldUntil delta_constant] e t in
+    let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
     U.un_squash tn
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.optionstate)> =
@@ -806,8 +807,8 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
         then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") typ.pos;
 
     // Fully normalize the witness
-    let w = N.normalize [N.Weak; N.HNF; N.UnfoldUntil delta_constant;
-                         N.Primops; N.Unascribe; N.Unmeta] env w in
+    let w = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant;
+                         Env.Primops; Env.Unascribe; Env.Unmeta] env w in
 
     // Unembed it, this must work if things are well-typed
     match unembed (e_list RE.e_sigelt) w with

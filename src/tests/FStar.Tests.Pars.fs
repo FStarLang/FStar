@@ -20,6 +20,7 @@ module ToSyntax = FStar.ToSyntax.ToSyntax
 module BU = FStar.Util
 module D = FStar.Parser.Driver
 module Rel = FStar.TypeChecker.Rel
+module NBE = FStar.TypeChecker.NBE
 
 let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange
 let tcenv_ref: ref<option<TcEnv.env>> = mk_ref None
@@ -58,7 +59,8 @@ let init_once () : unit =
                 TcTerm.universe_of
                 TcTerm.check_type_of_well_typed_term
                 solver
-                Const.prims_lid in
+                Const.prims_lid 
+                NBE.normalize' in
   env.solver.init env;
   let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env()) in
   let env = {env with dsenv=dsenv} in

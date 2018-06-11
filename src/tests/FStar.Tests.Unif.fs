@@ -40,8 +40,8 @@ let guard_eq i g g' =
     let b, g, g' = match g, g' with
         | Trivial, Trivial -> true, g, g'
         | NonTrivial f, NonTrivial f' ->
-          let f = N.normalize  [N.EraseUniverses] (tcenv()) f in
-          let f' = N.normalize [N.EraseUniverses] (tcenv()) f' in
+          let f = N.normalize  [Env.EraseUniverses] (tcenv()) f in
+          let f' = N.normalize [Env.EraseUniverses] (tcenv()) f' in
           term_eq f f', NonTrivial f, NonTrivial f'
         | _ -> false, g, g' in
     if not b

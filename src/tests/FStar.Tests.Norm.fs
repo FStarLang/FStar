@@ -12,6 +12,8 @@ module I = FStar.Ident
 module P  = FStar.Syntax.Print
 module Const = FStar.Parser.Const
 module BU = FStar.Util
+module N = FStar.TypeChecker.Normalize
+module Env = FStar.TypeChecker.Env
 open FStar.Ident
 open FStar.Range
 open FStar.Tests.Util
@@ -78,8 +80,6 @@ let encode_nat n =
         if n=0 then out
         else aux (snat out) (n - 1) in
     aux znat n
-
-module N = FStar.TypeChecker.Normalize
 
 let tests =
   let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
@@ -239,7 +239,7 @@ let run_either i r expected normalizer =
     // ignore (Options.set_options Options.Set "--debug Test --debug_level univ_norm --debug_level NBE");
     always i (term_eq (U.unascribe x) expected)
 
-let run_interpreter i r expected = run_either i r expected (N.normalize [N.Beta; N.UnfoldUntil delta_constant; N.Primops])
+let run_interpreter i r expected = run_either i r expected (N.normalize [Env.Beta; Env.UnfoldUntil delta_constant; Env.Primops])
 let run_nbe i r expected =
     run_either i r expected (FStar.TypeChecker.NBE.normalize [FStar.TypeChecker.NBE.UnfoldUntil delta_constant])
 let run_interpreter_with_time i r expected =
