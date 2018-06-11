@@ -27,22 +27,23 @@ type semi_lattice =
                       })
                -> semi_lattice
 
+let sl = FStar.Ghost.erased semi_lattice
 
 (* A lattice element is just an element of the carrier type *)
-let lattice_element (sl:semi_lattice) = SemiLattice?.carrier sl
+let lattice_element (sl:sl) = Ghost.erased (SemiLattice?.carrier (Ghost.reveal sl))
 
 (* A convenience for joining elements in the lattice *)
 unfold
 let lub #sl (x:lattice_element sl) (y:lattice_element sl)
-  : lattice_element sl
-  = SemiLattice?.lub sl x y
+  : Tot (lattice_element sl)
+  = Ghost.hide (SemiLattice?.lub (Ghost.reveal sl) (Ghost.reveal x) (Ghost.reveal y))
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// The main type provided by this module is `protected l b`
 /// i.e., a `b`-typed value protected at IFC level `l`
 abstract
-let protected (#sl:semi_lattice)
+let protected #sl
               (l:lattice_element sl)
               (b:Type) = b
 

@@ -7,18 +7,19 @@ open FStar.IFC
 let two_point_lattice =
   SemiLattice true (fun x y -> x || y)
 
-let high : lattice_element two_point_lattice = true
-let low  : lattice_element two_point_lattice = false
+let sl2 = FStar.Ghost.hide two_point_lattice
+let high : lattice_element sl2 = Ghost.hide true
+let low  : lattice_element sl2 = Ghost.hide false
 
 let ret #a (x:a) = return low x
 
-let test1 (#l1:lattice_element two_point_lattice)
+let test1 (#l1:lattice_element sl2)
           (px:protected l1 int)
    : z:protected l1 int{reveal z = reveal px + 1}
    = map px (fun x -> x + 1)
 
-let test2 (#l1:lattice_element two_point_lattice)
-          (#l2:lattice_element two_point_lattice)
+let test2 (#l1:lattice_element sl2)
+          (#l2:lattice_element sl2)
           (px:protected l1 int)
           (py:protected l2 int)
    : z:protected (l1 `lub` l2) int{reveal z = reveal px + reveal py}
@@ -30,8 +31,8 @@ let test2 (#l1:lattice_element two_point_lattice)
      in
      join g
 
-let test3 (#l1:lattice_element two_point_lattice)
-          (#l2:lattice_element two_point_lattice)
+let test3 (#l1:lattice_element sl2)
+          (#l2:lattice_element sl2)
           (px:protected l1 int)
           (py:protected l2 int)
    : z:protected (l1 `lub` l2) int{reveal z = reveal px + reveal py}
