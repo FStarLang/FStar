@@ -157,6 +157,7 @@ and var = int
 and binder = {
   name: ident;
   typ: typ;
+  mut: bool
 }
 
 (* for pretty-printing *)
@@ -616,7 +617,7 @@ and translate_binders env args =
   List.map (translate_binder env) args
 
 and translate_binder env (name, typ) =
-  { name = name; typ = translate_type env typ }
+  { name = name; typ = translate_type env typ; mut = false }
 
 and translate_expr env e: expr =
   match e.expr with
@@ -647,7 +648,7 @@ and translate_expr env e: expr =
       mllb_meta = flags;
       print_typ = print // ?
     }]), continuation) ->
-      let binder = { name = name; typ = translate_type env typ } in
+      let binder = { name = name; typ = translate_type env typ; mut = false } in
       let body = translate_expr env body in
       let env = extend env name in
       let continuation = translate_expr env continuation in
@@ -895,10 +896,10 @@ and translate_pat env p =
       env, PConstant (translate_width sw, s)
   | MLP_Var name ->
       let env = extend env name in
-      env, PVar ({ name = name; typ = TAny })
+      env, PVar ({ name = name; typ = TAny; mut = false })
   | MLP_Wild ->
       let env = extend env "_" in
-      env, PVar ({ name = "_"; typ = TAny })
+      env, PVar ({ name = "_"; typ = TAny; mut = false })
   | MLP_CTor ((_, cons), ps) ->
       let env, ps = List.fold_left (fun (env, acc) p ->
         let env, p = translate_pat env p in
