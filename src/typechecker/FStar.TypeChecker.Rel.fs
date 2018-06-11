@@ -452,8 +452,8 @@ let find_univ_uvar u s = BU.find_map s (function
 (* ------------------------------------------------*)
 (* <normalization>                                *)
 (* ------------------------------------------------*)
-let whnf env t     = SS.compress (N.normalize [N.Beta; N.Weak; N.HNF] env (U.unmeta t))
-let sn env t       = SS.compress (N.normalize [N.Beta] env t)
+let whnf env t     = SS.compress (N.normalize [Env.Beta; Env.Weak; Env.HNF] env (U.unmeta t))
+let sn env t       = SS.compress (N.normalize [Env.Beta] env t)
 let norm_arg env t = sn env (fst t), snd t
 let sn_binders env (binders:binders) =
     binders |> List.map (fun (x, imp) -> {x with sort=sn env x.sort}, imp)
@@ -479,8 +479,8 @@ let base_and_refinement_maybe_delta should_delta env t1 =
    let norm_refinement env t =
        let steps =
          if should_delta
-         then [N.Weak; N.HNF; N.UnfoldUntil delta_constant]
-         else [N.Weak; N.HNF] in
+         then [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
+         else [Env.Weak; Env.HNF] in
        N.normalize_refinement steps env t
    in
    let rec aux norm t1 =
@@ -916,7 +916,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                 BU.print1 "No definition found for %s\n" (Print.term_to_string head);
             None
           | Some _ ->
-            let t' = N.normalize [N.UnfoldUntil delta_constant; N.Weak; N.HNF; N.Primops; N.Beta; N.Eager_unfolding; N.Iota] env t in
+            let t' = N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t in
             if Env.debug env <| Options.Other "RelDelta" then
                 BU.print2 "Inlined %s to %s\n" (Print.term_to_string t) (Print.term_to_string t');
             Some t'
@@ -935,9 +935,9 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
         let reduce_one_and_try_again (d1:delta_depth) (d2:delta_depth) =
           let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
           let t1, t2 = if d1_greater_than_d2
-                       then let t1' = normalize_refinement [N.UnfoldUntil d2; N.Weak; N.HNF] env t1 in
+                       then let t1' = normalize_refinement [Env.UnfoldUntil d2; Env.Weak; Env.HNF] env t1 in
                             t1', t2
-                       else let t2' = normalize_refinement [N.UnfoldUntil d1; N.Weak; N.HNF] env t2 in
+                       else let t2' = normalize_refinement [Env.UnfoldUntil d1; Env.Weak; Env.HNF] env t2 in
                             t1, t2' in
           aux retry (n_delta + 1) t1 t2
         in
@@ -946,8 +946,8 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
           match Common.decr_delta_depth d with
           | None -> fail n_delta r t1 t2
           | Some d ->
-            let t1 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env t1 in
-            let t2 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env t2 in
+            let t1 = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t1 in
+            let t2 = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t2 in
             aux retry (n_delta + 1) t1 t2
         in
 
@@ -2732,11 +2732,11 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
              else let c2_decl, qualifiers = must (Env.effect_decl_opt env c2.effect_name) in
                   if qualifiers |> List.contains Reifiable
                   then let c1_repr =
-                           N.normalize [N.UnfoldUntil delta_constant; N.Weak; N.HNF] env
+                           N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF] env
                                        (Env.reify_comp env (S.mk_Comp (lift_c1 ())) (env.universe_of env c1.result_typ))
                        in
                        let c2_repr =
-                           N.normalize [N.UnfoldUntil delta_constant; N.Weak; N.HNF] env
+                           N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF] env
                                        (Env.reify_comp env (S.mk_Comp c2) (env.universe_of env c2.result_typ))
                        in
                        let prob, wl =
@@ -2899,7 +2899,7 @@ let simplify_guard env g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f ->
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops; N.NoFullNorm] env f in
+      let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (U.unmeta f).n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
@@ -3096,7 +3096,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
-      let vc = N.normalize [N.Eager_unfolding; N.Simplify; N.Primops] env vc in
+      let vc = N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env vc in
       if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "After normalization VC=\n%s\n" (Print.term_to_string vc));
@@ -3121,7 +3121,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                         ignore <| Options.set_options Options.Set "--no_tactics";
                         let vcs = env.solver.preprocess env vc in
                         vcs |> List.map (fun (env, goal, opts) ->
-                        env, N.normalize [N.Simplify; N.Primops] env goal, opts)
+                        env, N.normalize [Env.Simplify; Env.Primops] env goal, opts)
                     )
                 end
                 else [env,vc,FStar.Options.peek ()]
@@ -3181,7 +3181,7 @@ let resolve_implicits' env must_total forcelax g =
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl
           else let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
-               let tm = N.normalize [N.Beta] env tm in
+               let tm = N.normalize [Env.Beta] env tm in
                let env = if forcelax then {env with lax=true} else env in
                if Env.debug env <| Options.Other "Rel"
                then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"

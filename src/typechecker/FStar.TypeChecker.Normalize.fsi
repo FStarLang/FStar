@@ -22,34 +22,8 @@ open FStar.All
 
 open FStar.TypeChecker
 open FStar.Syntax.Syntax
+open FStar.TypeChecker.Env
 
-type step =
-  | Beta
-  | Iota            //pattern matching
-  | Zeta            //fixed points
-  | Exclude of step //the first three kinds are included by default, unless Excluded explicity
-  | Weak            //Do not descend into binders
-  | HNF             //Only produce a head normal form
-  | Primops         //reduce primitive operators like +, -, *, /, etc.
-  | Eager_unfolding
-  | Inlining
-  | DoNotUnfoldPureLets
-  | UnfoldUntil of delta_depth
-  | UnfoldOnly  of list<FStar.Ident.lid>
-  | UnfoldFully of list<FStar.Ident.lid>
-  | UnfoldAttr of attribute
-  | UnfoldTac
-  | PureSubtermsWithinComputations
-  | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
-  | EraseUniverses
-  | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
-  | Reify
-  | CompressUvars
-  | NoFullNorm
-  | CheckNoUvars
-  | Unmeta
-  | Unascribe
-and steps = list<step>
 type closure =
   | Clos of env * term * memo<(env * term)> * bool  //memo for lazy evaluation; bool marks whether or not this is a fixpoint
   | Univ of universe                                //universe terms do not have free variables
@@ -90,6 +64,7 @@ val should_unfold : cfg
 
 val register_plugin: primitive_step -> unit
 val find_prim_step: cfg -> fv -> primitive_step option
+val is_prim_step: cfg -> fv -> bool
 val closure_as_term : cfg -> env -> term -> term
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term
@@ -101,7 +76,7 @@ val unfold_whnf:          Env.env -> term -> term
 val reduce_uvar_solutions:Env.env -> term -> term
 val ghost_to_pure:        Env.env -> comp -> comp
 val ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
-val normalize_with_primitive_steps : list<primitive_step> -> list<step> -> Env.env -> term -> term
+val normalize_with_primitive_steps : list<primitive_step> -> steps -> Env.env -> term -> term
 val term_to_string:  Env.env -> term -> string
 val comp_to_string:  Env.env -> comp -> string
 val elim_uvars: Env.env -> sigelt -> sigelt

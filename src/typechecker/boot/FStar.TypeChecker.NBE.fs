@@ -47,9 +47,6 @@ let debug_term (t : term) =
 let debug_sigmap (m : BU.smap<sigelt>) =
   BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
 
-let primops = ["op_Minus"; "op_Addition"; "op_Subtraction"; "op_GreaterThan"; "equals";
-               "op_Negation"; "l_and"; "l_or"; "b2t"]
-
 type var = bv
 type sort = int
 
@@ -350,7 +347,7 @@ and translate_fv (cfg: N.cfg) (bs:list<t>) (fvar:fv): t =
                 debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
                 debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
                 // VD: Don't unfold primops
-                if (List.mem (P.lid_to_string (fvar.fv_name.v)) primops) then
+                if N.is_prim_step cfg fvar then
                   mkConstruct fvar [] []
                 else
                   translate_letbinding cfg [] lb
@@ -679,14 +676,20 @@ type step =
   | Reify
 
 let step_as_normalizer_step = function
-  | Primops -> N.Primops
-  | UnfoldUntil d -> N.UnfoldUntil d
-  | UnfoldOnly lids -> N.UnfoldOnly lids
-  | UnfoldAttr attr -> N.UnfoldAttr attr
-  | UnfoldTac -> N.UnfoldTac
-  | Reify -> N.Reify
+  | Primops -> Env.Primops
+  | UnfoldUntil d -> Env.UnfoldUntil d
+  | UnfoldOnly lids -> Env.UnfoldOnly lids
+  | UnfoldAttr attr -> Env.UnfoldAttr attr
+  | UnfoldTac -> Env.UnfoldTac
+  | Reify -> Env.Reify
 
 let normalize (steps:list<step>) (env : Env.env) (e:term) : term =
   let cfg = N.config (List.map step_as_normalizer_step steps) env in
+  //debug_sigmap env.sigtab;
+  readback cfg (translate cfg [] e)
+
+
+let normalize' (steps:list<Env.step>) (env : Env.env) (e:term) : term =
+  let cfg = N.config steps env in
   //debug_sigmap env.sigtab;
   readback cfg (translate cfg [] e)

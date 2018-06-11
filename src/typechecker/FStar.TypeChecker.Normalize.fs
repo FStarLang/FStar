@@ -51,34 +51,6 @@ module Z = FStar.BigInt
  * Higher-Order Symb Comput (2007) 20: 209–230
  **********************************************************************************************)
 
-type step =
-  | Beta
-  | Iota            //pattern matching
-  | Zeta            //fixed points
-  | Exclude of step //the first three kinds are included by default, unless Excluded explicity
-  | Weak            //Do not descend into binders
-  | HNF             //Only produce a head normal form
-  | Primops         //reduce primitive operators like +, -, *, /, etc.
-  | Eager_unfolding
-  | Inlining
-  | DoNotUnfoldPureLets
-  | UnfoldUntil of S.delta_depth
-  | UnfoldOnly  of list<I.lid>
-  | UnfoldFully of list<I.lid>
-  | UnfoldAttr of attribute
-  | UnfoldTac
-  | PureSubtermsWithinComputations
-  | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
-  | EraseUniverses
-  | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
-  | Reify
-  | CompressUvars
-  | NoFullNorm
-  | CheckNoUvars
-  | Unmeta          //remove all non-monadic metas.
-  | Unascribe
-and steps = list<step>
-
 let cases f d = function
   | Some x -> f x
   | None -> d
@@ -108,6 +80,7 @@ type fsteps = {
     unascribe : bool;
     in_full_norm_request: bool;
     weakly_reduce_scrutinee:bool;
+    nbe:bool;
 }
 
 let default_steps : fsteps = {
@@ -134,7 +107,8 @@ let default_steps : fsteps = {
     unmeta = false;
     unascribe = false;
     in_full_norm_request = false;
-    weakly_reduce_scrutinee = true
+    weakly_reduce_scrutinee = true;
+    nbe = false
 }
 
 let fstep_add_one s fs =
@@ -154,7 +128,7 @@ let fstep_add_one s fs =
     | HNF -> { fs with hnf = true }
     | Primops -> { fs with primops = true }
     | Eager_unfolding -> fs // eager_unfolding is not a step
-    | Inlining -> fs // not a step
+    | Inlining -> fs // not a step // ZP : Adding qualification because of name clash
     | DoNotUnfoldPureLets ->  { fs with do_not_unfold_pure_lets = true }
     | UnfoldUntil d -> { fs with unfold_until = Some d }
     | UnfoldOnly  lids -> { fs with unfold_only  = Some lids }
@@ -171,7 +145,7 @@ let fstep_add_one s fs =
     | CheckNoUvars ->  { fs with check_no_uvars = true }
     | Unmeta ->  { fs with unmeta = true }
     | Unascribe ->  { fs with unascribe = true }
-
+    | NBE -> {fs with nbe = true }
 let rec to_fsteps (s : list<step>) : fsteps =
     List.fold_right fstep_add_one s default_steps
 
@@ -231,6 +205,9 @@ let prim_from_list (l : list<primitive_step>) : BU.psmap<primitive_step> =
 
 let find_prim_step cfg fv =
     BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v)
+
+let is_prim_step cfg fv =
+    BU.is_some (BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v))
 
 type branches = list<(pat * option<term> * term)>
 
@@ -1093,6 +1070,8 @@ let is_norm_request hd args =
 
     | _ -> false
 
+let is_nbe_request s = List.mem NBE s
+  
 let tr_norm_step = function
     | EMB.Zeta ->    [Zeta]
     | EMB.Iota ->    [Iota]
@@ -1293,9 +1272,9 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                                                (Print.delta_depth_to_string fv.fv_delta)
                                                (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
         yesno <| (cfg.delta_level |> BU.for_some (function
-             | Env.UnfoldTac
+             | UnfoldTacDelta
              | NoDelta -> false
-             | Env.Inlining
+             | InliningDelta
              | Eager_unfolding_only -> true
              | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l))
     in
@@ -1398,6 +1377,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
               log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
               norm cfg env stack hd
 
+            | Some (s, tm) when is_nbe_request s ->
+              let delta_level =
+                if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
+                then [Unfold delta_constant]
+                else [NoDelta] in
+              let tm' = closure_as_term cfg env t in 
+              let env = cfg_env cfg in
+              let nbe = env.nbe in 
+              let tm_norm = nbe s cfg.tcenv tm' in
+              tm_norm (* Zoe TODO : Not quite sure about that, maybe call the normalizer again? *)
+            
             | Some (s, tm) ->
               let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
@@ -1815,7 +1805,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                          Inlining]
         in { cfg with
                steps = List.fold_right fstep_add_one new_steps cfg.steps;
-               delta_level = [Env.Inlining; Env.Eager_unfolding_only]
+               delta_level = [Env.InliningDelta; Env.Eager_unfolding_only]
            }
       else
         { cfg with steps = { cfg.steps with zeta = false } }
@@ -2568,7 +2558,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       let cfg_exclude_zeta =
          let new_delta =
            cfg.delta_level |> List.filter (function
-             | Env.Inlining
+             | Env.InliningDelta
              | Env.Eager_unfolding_only -> true
              | _ -> false)
          in
@@ -2729,8 +2719,8 @@ let config' psteps s e =
     let d = s |> List.collect (function
         | UnfoldUntil k -> [Env.Unfold k]
         | Eager_unfolding -> [Env.Eager_unfolding_only]
-        | Inlining -> [Env.Inlining]
-        | UnfoldTac -> [Env.UnfoldTac]
+        | Inlining -> [Env.InliningDelta]
+        | UnfoldTac -> [Env.UnfoldTacDelta]
         | _ -> []) in
     let d = match d with
         | [] -> [Env.NoDelta]
@@ -2753,6 +2743,7 @@ let config' psteps s e =
         || not (s |> List.contains PureSubtermsWithinComputations))}
 
 let config s e = config' [] s e
+
 
 let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
@@ -3142,7 +3133,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                repr         = elim_term    ed.repr;
                return_repr  = elim_tscheme ed.return_repr;
                bind_repr    = elim_tscheme ed.bind_repr;
-               actions       = List.map elim_action ed.actions } in
+               actions      = List.map elim_action ed.actions } in
       {s with sigel=Sig_new_effect ed}
 
     | Sig_sub_effect sub_eff ->
