@@ -198,7 +198,7 @@ let go _ =
           finished_message module_names_and_times 0
         end //end normal batch mode
         else
-          Errors.log_issue Range.dummyRange (Errors.Error_MissingFileName,  "no file provided\n")
+          Errors.raise_error (Errors.Error_MissingFileName, "No file provided") Range.dummyRange
 
 let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"

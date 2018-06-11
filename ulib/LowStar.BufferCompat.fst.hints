@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "6d99d7fa92d3747ec9304810fd8865d8"
+      "ec27a5f3dbedbce9782049b49854c432"
     ],
     [
       "LowStar.BufferCompat.rcreate",
@@ -21,7 +21,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_b12477b5a5f082fcc0cbbab95c8e8744"
       ],
       0,
-      "5c390f5461bd6d42180f47b4394f13f1"
+      "16571f3a5dd2766d11e42e6f4b1e3642"
     ],
     [
       "LowStar.BufferCompat.rcreate_mm",
@@ -33,7 +33,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
       ],
       0,
-      "b34b61f8253934e7986d998db18434fc"
+      "8089f994f25fa7c5c99b22681fc0d8bf"
     ],
     [
       "LowStar.BufferCompat.create",
@@ -45,52 +45,7 @@
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_f91c442f4e872efb5dc260d2bd566195"
       ],
       0,
-      "58daa1b6f7a9d589c08d47dca39138aa"
-    ],
-    [
-      "LowStar.BufferCompat.rfree",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0,
-      "465b029209cdb601bf1fff1afe3c818a"
-    ],
-    [
-      "LowStar.BufferCompat.rcreate",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
-      ],
-      0,
-      "796ee85bd53fbbdab92b68ae630995ad"
-    ],
-    [
-      "LowStar.BufferCompat.rcreate_mm",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
-      ],
-      0,
-      "4559ffb160044857a2a37c3cfeccb872"
-    ],
-    [
-      "LowStar.BufferCompat.create",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_f91c442f4e872efb5dc260d2bd566195"
-      ],
-      0,
-      "77e0214e531759093ad2b70b381ab599"
+      "e2722ceedde292e62f6013b406e7e147"
     ]
   ]
 ]
