@@ -85,6 +85,27 @@ assume val gsub_old_to_new (#t: Type0) (b: Old.buffer t) (i: U32.t) (len: U32.t)
     [SMTPat (old_to_new_ghost (Old.sub b i len))];
   ]]
 
+assume val new_to_old_includes_left (#t: Type0) (b1: New.buffer t) (b2: Old.buffer t) : Lemma
+  ((new_to_old_ghost b1 `Old.includes` b2) <==> (b1 `New.includes` (old_to_new_ghost b2)))
+  [SMTPatOr [
+    [SMTPat (new_to_old_ghost b1 `Old.includes` b2)];
+    [SMTPat (b1 `New.includes` old_to_new_ghost b2)];
+  ]]
+
+assume val new_to_old_includes_right (#t: Type0) (b1: Old.buffer t) (b2: New.buffer t) : Lemma
+  ((b1 `Old.includes` (new_to_old_ghost b2)) <==> (old_to_new_ghost b1 `New.includes` b2))
+  [SMTPatOr [
+    [SMTPat (b1 `Old.includes` new_to_old_ghost b2)];
+    [SMTPat (old_to_new_ghost b1 `New.includes` b2)];
+  ]]
+
+assume val new_to_old_disjoint (#t: Type0) (b1: New.buffer t) (b2: Old.buffer t) : Lemma
+  ((new_to_old_ghost b1 `Old.disjoint` b2) <==> (b1 `New.disjoint` (old_to_new_ghost b2)))
+  [SMTPatOr [
+    [SMTPat (new_to_old_ghost b1 `Old.disjoint` b2)];
+    [SMTPat (b1 `New.disjoint` old_to_new_ghost b2)];
+  ]]
+
 (* The modifies clause *)
 
 module M = FStar.ModifiesGen
