@@ -91,6 +91,7 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
   lax_universes  :bool;                         (* don't check universe constraints *)
+  phase1         :bool;                         (* running in phase 1, phase 2 to come after *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
@@ -130,6 +131,8 @@ and guard_t = {
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
+// Reason, term and uvar, and (rough) position where it is introduced
+// The term is just a Tm_uvar of the ctx_uvar
 and implicits = list<(string * term * ctx_uvar * Range.range)>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
