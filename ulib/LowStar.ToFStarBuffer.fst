@@ -183,3 +183,61 @@ let modifies_2_modifies
   M.modifies_raise_loc #_ #NewM.cloc_cls (M.loc_union (NewM.cloc_of_loc (NewM.loc_buffer b1)) (NewM.cloc_of_loc (NewM.loc_buffer b2))) h h';
   NewM.cloc_of_loc_union (NewM.loc_buffer b1) (NewM.loc_buffer b2);
   NewM.modifies_to_cloc (NewM.loc_union (NewM.loc_buffer b1) (NewM.loc_buffer b2)) h h'
+
+(* Examples *)
+
+let new_eqb
+  (#a: eqtype)
+  (b1 b2: New.buffer a)
+  (len: U32.t)
+: HST.Stack bool
+  (requires (fun h -> New.live h b1 /\ New.live h b2 /\ U32.v len <= New.length b1 /\ U32.v len <= New.length b2))
+  (ensures (fun h res h' ->
+    h' == h /\
+    (res <==> Seq.equal (New.as_seq h (New.gsub b1 0ul len)) (New.as_seq h (New.gsub b2 0ul len)))
+  ))
+= let b1' = new_to_old_st b1 in
+  let b2' = new_to_old_st b2 in
+  Old.eqb b1' b2' len
+
+let new_blit
+  (#t: Type)
+  (src: New.buffer t)
+  (idx_src: U32.t)
+  (dst: New.buffer t)
+  (idx_dst: U32.t)
+  (len: U32.t)
+: HST.Stack unit
+  (requires (fun h ->
+    New.live h src /\ New.live h dst /\ New.disjoint src dst /\
+    U32.v idx_src + U32.v len <= New.length src /\
+    U32.v idx_dst + U32.v len <= New.length dst
+  ))
+  (ensures (fun h _ h' ->
+    NewM.modifies (NewM.loc_buffer dst) h h' /\
+    New.live h' dst /\
+    Seq.slice (New.as_seq h' dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len) ==
+    Seq.slice (New.as_seq h src) (U32.v idx_src) (U32.v idx_src + U32.v len) /\
+    Seq.slice (New.as_seq h' dst) 0 (U32.v idx_dst) ==
+    Seq.slice (New.as_seq h dst) 0 (U32.v idx_dst) /\
+    Seq.slice (New.as_seq h' dst) (U32.v idx_dst + U32.v len) (New.length dst) ==
+    Seq.slice (New.as_seq h dst) (U32.v idx_dst + U32.v len) (New.length dst)
+  ))
+= let src' = new_to_old_st src in
+  let dst' = new_to_old_st dst in
+  Old.blit src' idx_src dst' idx_dst len
+
+let new_fill
+  (#t: Type)
+  (b: New.buffer t)
+  (z: t)
+  (len: U32.t)
+: HST.Stack unit
+  (requires (fun h -> New.live h b /\ U32.v len <= New.length b))
+  (ensures (fun h _ h' ->
+    NewM.modifies (NewM.loc_buffer b) h h' /\
+    Seq.slice (New.as_seq h' b) 0 (U32.v len) == Seq.create (U32.v len) z /\
+    Seq.slice (New.as_seq h' b) (U32.v len) (New.length b) == Seq.slice (New.as_seq h b) (U32.v len) (New.length b)
+  ))
+= let b' = new_to_old_st b in
+  Old.fill b' z len
