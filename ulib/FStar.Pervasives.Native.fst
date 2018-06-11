@@ -89,7 +89,7 @@ noeq type norm_step =
   | UnfoldOnly:list string -> norm_step // each string is a fully qualified name like `A.M.f`
   | UnfoldFully:list string -> norm_step // idem
   | UnfoldAttr:#t:Type0 -> a:t -> norm_step
-  | NBE // use NBE instead of the notmalizer
+  | NBE // use NBE instead of the normalizer
   
 // Helpers, so we don't expose the actual inductive
 abstract let simplify : norm_step = Simpl

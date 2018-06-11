@@ -1086,7 +1086,8 @@ let tr_norm_step = function
         [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
     | EMB.UnfoldAttr t ->
         [UnfoldUntil delta_constant; UnfoldAttr t]
-
+    | EMB.NBE -> [NBE]
+    
 let tr_norm_steps s =
     List.concatMap tr_norm_step s
 
