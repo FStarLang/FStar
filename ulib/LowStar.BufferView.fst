@@ -6,20 +6,34 @@ type buffer_view (a:Type0) (b:Type u#b) : Type0 =
               -> v:view a b{length buf % View?.n v == 0}
               -> buffer_view a b
 
-let mk_buffer_view #src #dest b v = BufferView b v
+let mk_buffer_view #src #dest b v  = (| src, BufferView b v |)
 
-let as_buffer (#a #b : Type0) (v:buffer_view a b) : buffer a =
-    BufferView?.buf v
+let as_buffer (#b : Type) (v:buffer b) =
+    BufferView?.buf (dsnd v)
 
-let get_view  (#a #b : Type0) (v:buffer_view a b) : view a b =
-    BufferView?.v v
+let as_buffer_mk_buffer_view (#src #dest:Type)
+                             (b:B.buffer src)
+                             (v:view src dest{
+                               length b % View?.n v == 0
+                              }) = ()
 
+let get_view  (#b : Type) (v:buffer b) =
+    BufferView?.v (dsnd v)
 
-// module HS=FStar.HyperStack
-// module B=LowStar.Buffer
+let get_view_mk_buffer_view (#src #dest:Type)
+                            (b:B.buffer src)
+                            (v:view src dest{
+                               length b % View?.n v == 0
+                             }) = ()
+
+let length (#b: _) (vb:buffer b)
+  : GTot nat
+  = B.length (as_buffer vb) / View?.n (get_view vb)
+
+let length_eq (#b: _) (vb:buffer b) = ()
 
 #reset-options "--max_fuel 0 --max_ifuel 1"
-let view_indexing (#a #b: _) (vb:buffer_view a b) (i:nat{i < length vb})
+let view_indexing (#b: _) (vb:buffer b) (i:nat{i < length vb})
   = let n = View?.n (get_view vb) in
     FStar.Math.Lemmas.distributivity_add_left (length vb) (-i) n
 
@@ -29,11 +43,11 @@ let lt_leq_mul (min:nat) (max:nat{min < max}) (n:nat)
      assert ((min * n) + n = (min + 1) * n);
      assert ((min * n) + n <= max * n)
 
-let split_at_i (#a #b: _) (vb:buffer_view a b) (i:nat{i < length vb}) (h:HS.mem)
+let split_at_i (#b: _) (vb:buffer b) (i:nat{i < length vb}) (h:HS.mem)
     : GTot (frags:
-               (Seq.seq a *
-                Seq.lseq a (View?.n (get_view vb)) *
-                Seq.seq a){
+               (Seq.seq (dfst vb) *
+                Seq.lseq (dfst vb) (View?.n (get_view vb)) *
+                Seq.seq (dfst vb)){
                let prefix, as, suffix = frags in
                B.as_seq h (as_buffer vb) ==
                (prefix `Seq.append` (as `Seq.append` suffix))
@@ -50,13 +64,13 @@ let split_at_i (#a #b: _) (vb:buffer_view a b) (i:nat{i < length vb}) (h:HS.mem)
       Seq.lemma_split suffix n;
       prefix, as, tail
 
-let sel (#a #b: _) (vb:buffer_view a b) (i:nat{i < length vb}) (h:HS.mem)
+let sel (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i < length vb})
    : GTot b
    = let v = get_view vb in
      let _, as, _ = split_at_i vb i h in
      View?.get v as
 
-let upd (#a #b: _) (vb:buffer_view a b) (i:nat{i < length vb}) (x:b) (h:HS.mem{live h vb})
+let upd (#b: _) (h:HS.mem) (vb:buffer b{live h vb}) (i:nat{i < length vb}) (x:b)
   : GTot HS.mem
   = let open FStar.Mul in
     let v = get_view vb in
@@ -64,11 +78,12 @@ let upd (#a #b: _) (vb:buffer_view a b) (i:nat{i < length vb}) (x:b) (h:HS.mem{l
     let s1 = prefix `Seq.append` (View?.put v x `Seq.append` suffix) in
     B.g_upd_seq (as_buffer vb) s1 h
 
-let sel_upd1 (#a #b:_) (vb:buffer_view a b) (i:nat{i < length vb}) (x:b) (h:HS.mem{live h vb})
-  : Lemma (sel vb i (upd vb i x h) == x)
-  = let v = get_view vb in
+let sel_upd1 (#b:_) (vb:buffer b) (i:nat{i < length vb}) (x:b) (h:HS.mem{live h vb})
+   : Lemma (sel (upd h vb i x) vb i == x)
+   =
+    let v = get_view vb in
     view_indexing vb i;
-    let h' = upd vb i x h in
+    let h' = upd h vb i x in
     let prefix, as, suffix = split_at_i vb i h in
     let as' = View?.put v x in
     let s' = B.as_seq h' (as_buffer vb) in
@@ -82,13 +97,17 @@ let sel_upd1 (#a #b:_) (vb:buffer_view a b) (i:nat{i < length vb}) (x:b) (h:HS.m
                          as'' suffix';
     assert (as' == as'')
 
-let sel_upd2 (#a #b:_) (vb:buffer_view a b) (i:nat{i < length vb}) (j:nat{j < length vb /\ i<>j}) (x:b) (h:HS.mem{live h vb})
-  : Lemma (sel vb j (upd vb i x h) == sel vb j h)
+let sel_upd2 (#b:_) (vb:buffer b)
+             (i:nat{i < length vb})
+             (j:nat{j < length vb /\ i<>j})
+             (x:b)
+             (h:HS.mem{live h vb})
+  : Lemma (sel (upd h vb i x) vb j == sel h vb j)
   = let open FStar.Mul in
     let v = get_view vb in
     view_indexing vb i;
     view_indexing vb j;
-    let h' = upd vb i x h in
+    let h' = upd h vb i x in
     let s0 = B.as_seq h  (as_buffer vb) in
     let s1 = B.as_seq h' (as_buffer vb) in
     let min = if i < j then i else j in
@@ -119,8 +138,8 @@ let sel_upd2 (#a #b:_) (vb:buffer_view a b) (i:nat{i < length vb}) (j:nat{j < le
       assert (Seq.equal s_j s_j')
     end
 
-let sel_upd (#a #b:_)
-            (vb:buffer_view a b)
+let sel_upd (#b:_)
+            (vb:buffer b)
             (i:nat{i < length vb})
             (j:nat{j < length vb /\ i<>j})
             (x:b)
@@ -128,7 +147,7 @@ let sel_upd (#a #b:_)
     if i=j then sel_upd1 vb i x h
     else sel_upd2 vb i j x h
 
-let rec as_seq' (#a #b: _) (h:HS.mem) (vb:buffer_view a b) (i:nat{i <= length vb})
+let rec as_seq' (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i <= length vb})
   : GTot (Seq.lseq b (length vb - i))
          (decreases (length vb - i))
   = let v = get_view vb in
@@ -138,23 +157,20 @@ let rec as_seq' (#a #b: _) (h:HS.mem) (vb:buffer_view a b) (i:nat{i <= length vb
          let _, s_i, suffix = split_at_i vb i h in
          View?.get v s_i `Seq.cons` as_seq' h vb (i + 1)
 
-let as_seq (#a #b: _) (h:HS.mem) (vb:buffer_view a b) = as_seq' h vb 0
+let as_seq (#b: _) (h:HS.mem) (vb:buffer b) = as_seq' h vb 0
 
 #set-options "--max_fuel 1 --max_ifuel 1"
-let as_seq_sel (#a #b: _) (h:HS.mem) (vb:buffer_view a b) (i:nat{i < length vb})
-    : Lemma (ensures (sel vb i h == Seq.index (as_seq h vb) i))
+let as_seq_sel (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i < length vb})
+    : Lemma (ensures (sel h vb i == Seq.index (as_seq h vb) i))
     =
-      let rec as_seq'_as_seq' (#a #b: _)
-                              (h:HS.mem)
-                              (vb:buffer_view a b)
-                              (j:nat)
+      let rec as_seq'_as_seq' (j:nat)
                               (i:nat{j + i < length vb})
         : Lemma (ensures (Seq.index (as_seq' h vb j) i == Seq.index (as_seq' h vb (j + i)) 0))
                 (decreases i)
-        = if i = 0 then () else as_seq'_as_seq' h vb (j + 1) (i - 1)
+        = if i = 0 then () else as_seq'_as_seq' (j + 1) (i - 1)
       in
-      as_seq'_as_seq' h vb 0 i
+      as_seq'_as_seq' 0 i
 
 #set-options "--max_fuel 0 --max_ifuel 1"
-let get_sel (#a #b: _) (h:HS.mem) (vb:buffer_view a b) (i:nat{i < length vb}) = ()
-let put_sel (#a #b: _) (h:HS.mem) (vb:buffer_view a b) (i:nat{i < length vb}) = ()
+let get_sel (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i < length vb}) = ()
+let put_sel (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i < length vb}) = ()
