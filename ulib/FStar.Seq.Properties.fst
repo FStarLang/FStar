@@ -20,6 +20,9 @@ module FStar.Seq.Properties
 open FStar.Seq.Base
 module Seq = FStar.Seq.Base
 
+let lseq (a: Type) (l: nat) : Type =
+    s: Seq.seq a { Seq.length s == l }
+
 let indexable (#a:Type) (s:Seq.seq a) (j:int) = 0 <= j /\ j < Seq.length s
 
 val lemma_append_inj_l: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a{length s1 = length t1 /\ equal (append s1 s2) (append t1 t2)} -> i:nat{i < length s1}
