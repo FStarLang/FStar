@@ -667,10 +667,7 @@ val modifies_0_modifies
 : Lemma
   (requires (B.modifies_0 h1 h2))
   (ensures (modifies loc_none h1 h2))
-  [SMTPatOr [
-    [SMTPat (B.modifies_0 h1 h2)];
-    [SMTPat (modifies loc_none h1 h2)];
-  ]]
+  [SMTPat (B.modifies_0 h1 h2)]
 
 val modifies_1_modifies
   (#a: Type)
@@ -679,10 +676,7 @@ val modifies_1_modifies
 : Lemma
   (requires (B.modifies_1 b h1 h2))
   (ensures (modifies (loc_buffer b) h1 h2))
-  [SMTPatOr [
-    [SMTPat (B.modifies_1 b h1 h2)];
-    [SMTPat (modifies (loc_buffer b) h1 h2)];
-  ]]
+  [SMTPat (B.modifies_1 b h1 h2)]
 
 val modifies_2_modifies
   (#a1 #a2: Type)
@@ -692,6 +686,7 @@ val modifies_2_modifies
 : Lemma
   (requires (B.modifies_2 b1 b2 h1 h2))
   (ensures (modifies (loc_union (loc_buffer b1) (loc_buffer b2)) h1 h2))
+  [SMTPat (B.modifies_2 b1 b2 h1 h2)]
 
 val modifies_3_modifies
   (#a1 #a2 #a3: Type)
@@ -835,6 +830,24 @@ val loc_of_cloc_of_loc (l: loc) : Lemma
 val cloc_of_loc_of_cloc (l: MG.loc cloc_cls) : Lemma
   (cloc_of_loc (loc_of_cloc l) == l)
   [SMTPat (cloc_of_loc (loc_of_cloc l))]
+
+val cloc_of_loc_none : unit -> Lemma (cloc_of_loc loc_none == MG.loc_none)
+
+val cloc_of_loc_union (l1 l2: loc) : Lemma
+  (cloc_of_loc (loc_union l1 l2) == MG.loc_union (cloc_of_loc l1) (cloc_of_loc l2))
+
+val cloc_of_loc_addresses
+  (preserve_liveness: bool)
+  (r: HS.rid)
+  (n: Set.set nat)
+: Lemma
+  (cloc_of_loc (loc_addresses preserve_liveness r n) == MG.loc_addresses preserve_liveness r n)
+
+val cloc_of_loc_regions
+  (preserve_liveness: bool)
+  (r: Set.set HS.rid)
+: Lemma
+  (cloc_of_loc (loc_regions preserve_liveness r) == MG.loc_regions preserve_liveness r)
 
 val loc_includes_to_cloc (l1 l2: loc) : Lemma
   (loc_includes l1 l2 <==> MG.loc_includes (cloc_of_loc l1) (cloc_of_loc l2))
