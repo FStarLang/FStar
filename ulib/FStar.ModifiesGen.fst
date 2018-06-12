@@ -1537,7 +1537,7 @@ let union_loc_of_loc_includes_intro
   let doms = aloc_domain (cls_union c) (Loc?.regions smaller) (Loc?.live_addrs smaller) in
   assert (doml `loc_aux_includes` doms)
 
-#set-options "--z3rlimit 16"
+#set-options "--z3rlimit 32"
 
 let union_loc_of_loc_includes_elim
   (#al: (bool -> HS.rid -> nat -> Tot Type))
