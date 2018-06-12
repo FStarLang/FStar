@@ -158,6 +158,32 @@ let new_to_union_loc_union (new1 new2: NewM.loc) : Lemma
   M.raise_loc_union (NewM.cloc_of_loc new1) (NewM.cloc_of_loc new2);
   M.union_loc_of_loc_union old_and_new_cl true (M.raise_loc (NewM.cloc_of_loc new1)) (M.raise_loc (NewM.cloc_of_loc new2))
 
+let old_to_union_loc_addresses (preserve_liveness: bool) (r: HS.rid) (n: Set.set nat) : Lemma
+  (old_to_union_loc (OldM.loc_addresses preserve_liveness r n) == M.loc_addresses preserve_liveness r n)
+  [SMTPat (old_to_union_loc (OldM.loc_addresses preserve_liveness r n))]
+= OldM.cloc_of_loc_addresses preserve_liveness r n;
+  M.union_loc_of_loc_addresses old_and_new_cl false preserve_liveness r n
+
+let new_to_union_loc_addresses (preserve_liveness: bool) (r: HS.rid) (n: Set.set nat) : Lemma
+  (new_to_union_loc (NewM.loc_addresses preserve_liveness r n) == M.loc_addresses preserve_liveness r n)
+  [SMTPat (new_to_union_loc (NewM.loc_addresses preserve_liveness r n))]
+= NewM.cloc_of_loc_addresses preserve_liveness r n;
+  M.raise_loc_addresses u#0 u#0 #_ #NewM.cloc_cls preserve_liveness r n;
+  M.union_loc_of_loc_addresses old_and_new_cl true preserve_liveness r n
+
+let old_to_union_loc_regions (preserve_liveness: bool) (r: Set.set HS.rid) : Lemma
+  (old_to_union_loc (OldM.loc_regions preserve_liveness r) == M.loc_regions preserve_liveness r)
+  [SMTPat (old_to_union_loc (OldM.loc_regions preserve_liveness r))]
+= OldM.cloc_of_loc_regions preserve_liveness r;
+  M.union_loc_of_loc_regions old_and_new_cl false preserve_liveness r
+
+let new_to_union_loc_regions (preserve_liveness: bool) (r: Set.set HS.rid) : Lemma
+  (new_to_union_loc (NewM.loc_regions preserve_liveness r) == M.loc_regions preserve_liveness r)
+  [SMTPat (new_to_union_loc (NewM.loc_regions preserve_liveness r))]
+= NewM.cloc_of_loc_regions preserve_liveness r;
+  M.raise_loc_regions u#0 u#0 #_ #NewM.cloc_cls preserve_liveness r;
+  M.union_loc_of_loc_regions old_and_new_cl true preserve_liveness r
+
 let union_loc_to_new (l: M.loc old_and_new_cl_union) : GTot NewM.loc =
   NewM.loc_of_cloc (M.lower_loc (M.loc_of_union_loc true l))
 
@@ -165,12 +191,12 @@ let union_loc_to_new_new_to_union_loc (l: NewM.loc) : Lemma
   (union_loc_to_new (new_to_union_loc l) == l)
   [SMTPat (union_loc_to_new (new_to_union_loc l))]
 = M.loc_of_union_loc_union_loc_of_loc old_and_new_cl true (M.raise_loc (NewM.cloc_of_loc l));
-  M.lower_loc_raise_loc u#0 u#1 (NewM.cloc_of_loc l);
+  M.lower_loc_raise_loc u#0 u#0 (NewM.cloc_of_loc l);
   NewM.loc_of_cloc_of_loc l
 
 let union_loc_to_new_none : squash (union_loc_to_new M.loc_none == NewM.loc_none) =
   M.loc_of_union_loc_none old_and_new_cl true;
-  M.lower_loc_none u#0 u#1 #_ #NewM.cloc_cls;
+  M.lower_loc_none u#0 u#0 #_ #NewM.cloc_cls;
   NewM.cloc_of_loc_none ();
   NewM.loc_of_cloc_of_loc NewM.loc_none
 
@@ -188,6 +214,22 @@ let union_loc_to_new_union (l1 l2: M.loc old_and_new_cl_union) : Lemma
   M.lower_loc_union u#0 u#0 j1 j2;
   NewM.cloc_of_loc_union (NewM.loc_of_cloc (M.lower_loc j1)) (NewM.loc_of_cloc (M.lower_loc j2));
   NewM.loc_of_cloc_of_loc (NewM.loc_of_cloc (M.lower_loc j1) `NewM.loc_union` NewM.loc_of_cloc (M.lower_loc j2))
+
+let union_loc_to_new_addresses (preserve_liveness: bool) (r: HS.rid) (n: Set.set nat) : Lemma
+  (union_loc_to_new (M.loc_addresses preserve_liveness r n) == NewM.loc_addresses preserve_liveness r n)
+  [SMTPat (union_loc_to_new (M.loc_addresses preserve_liveness r n))]
+= M.loc_of_union_loc_addresses old_and_new_cl true preserve_liveness r n;
+  M.lower_loc_addresses u#0 u#0 #_ #NewM.cloc_cls preserve_liveness r n;
+  NewM.cloc_of_loc_addresses preserve_liveness r n;
+  NewM.cloc_of_loc_of_cloc (M.loc_addresses preserve_liveness r n)
+
+let union_loc_to_new_regions (preserve_liveness: bool) (r: Set.set HS.rid) : Lemma
+  (union_loc_to_new (M.loc_regions preserve_liveness r) == NewM.loc_regions preserve_liveness r)
+  [SMTPat (union_loc_to_new (M.loc_regions preserve_liveness r))]
+= M.loc_of_union_loc_regions old_and_new_cl true preserve_liveness r;
+  M.lower_loc_regions u#0 u#0 #_ #NewM.cloc_cls preserve_liveness r;
+  NewM.cloc_of_loc_regions preserve_liveness r;
+  NewM.cloc_of_loc_of_cloc (M.loc_regions preserve_liveness r)
 
 let old_to_new_modifies' (old_l: OldM.loc) (h h' : HS.mem) : Lemma
   (requires (OldM.modifies old_l h h' /\ new_to_union_loc (union_loc_to_new (old_to_union_loc old_l)) == old_to_union_loc old_l))
