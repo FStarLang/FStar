@@ -148,6 +148,13 @@ let sel_upd (#b:_)
     if i=j then sel_upd1 vb i x h
     else sel_upd2 vb i j x h
 
+let upd_modifies #b h vb i x
+  = let open FStar.Mul in
+    let v = get_view vb in
+    let prefix, _, suffix = split_at_i vb i h in
+    let s1 = prefix `Seq.append` (View?.put v x `Seq.append` suffix) in
+    B.g_upd_seq_as_seq (as_buffer vb) s1 h
+
 let rec as_seq' (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i <= length vb})
   : GTot (Seq.lseq b (length vb - i))
          (decreases (length vb - i))

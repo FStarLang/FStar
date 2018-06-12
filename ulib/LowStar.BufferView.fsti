@@ -164,6 +164,14 @@ val sel_upd (#b:_)
            else sel (upd h vb i x) vb j == sel h vb j)
           [SMTPat (sel (upd h vb i x) vb j)]
 
+/// `upd_modifies`: Footprint of `upd`
+val upd_modifies (#b: _)
+                 (h:HS.mem)
+                 (vb:buffer b{live h vb})
+                 (i:nat{i < length vb})
+                 (x:b)
+    : Lemma (B.modifies_1 (as_buffer vb) h (upd h vb i x))
+
 /// `as_seq h vb`: Viewing the entire buffer as a sequence of `b`
 val as_seq (#b: _) (h:HS.mem) (vb:buffer b)
    : GTot (Seq.lseq b (length vb))

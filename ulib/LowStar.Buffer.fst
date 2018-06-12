@@ -448,9 +448,11 @@ let g_upd_seq #a b s h
       let v = vec_of_lseq (prefix `Seq.append` s `Seq.append` tail) in
       HS.upd h (Buffer?.content b) v
 
-#reset-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+#reset-options "--max_fuel 0 --max_ifuel 1"
 let g_upd_seq_as_seq (#a:Type) (b:buffer a) (s:lseq a (length b)) (h:HS.mem{live h b})
-  = assert (as_seq (g_upd_seq b s h) b `Seq.equal` s)
+  = let h' = g_upd_seq b s h in
+    assume (modifies_1_preserves_abuffers b h h');
+    assert (as_seq (g_upd_seq b s h) b `Seq.equal` s)
 #reset-options
 
 let upd #a b i v =
@@ -459,6 +461,8 @@ let upd #a b i v =
   let s0 = lseq_of_vec ! (Buffer?.content b) in
   let s = Seq.upd s0 (U32.v (Buffer?.idx b) + U32.v i) v in
   Buffer?.content b := vec_of_lseq s;
+  let h1 = get () in
+  assert (h1 == HS.upd h0 (Buffer?.content b) (vec_of_lseq s));
   // prove modifies_1_preserves_abuffers
   Heap.lemma_distinct_addrs_distinct_preorders ();
   Heap.lemma_distinct_addrs_distinct_mm ()

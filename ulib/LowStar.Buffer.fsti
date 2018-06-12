@@ -670,7 +670,9 @@ val g_upd_seq_as_seq (#a:Type)
                      (b:buffer a)
                      (s:Seq.lseq a (length b))
                      (h:HS.mem{live h b})
-  : Lemma (as_seq (g_upd_seq b s h) b == s)
+  : Lemma (let h' = g_upd_seq b s h in
+           modifies_1 b h h' /\
+           as_seq h' b == s)
 
 /// ``g_upd b i v h`` updates the buffer `b` in heap `h` at location
 /// `i` writing ``v`` there. This is the spec analog of the stateful
