@@ -493,7 +493,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "0827168a383ecb05d1e30b7671b93376"
+      "e8b007a6c7ad6016cf52dcd444f53833"
     ],
     [
       "Ex11a.walk_robot_to",
@@ -812,7 +812,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "e9b47b5812705a1f6b0151bb3ef84fae"
+      "d6e8f3ab168b34dc6e26c398db6b4b8e"
     ],
     [
       "Ex11a.fly_one",
@@ -873,7 +873,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.mem"
       ],
       0,
-      "dfd1955b33d70dd1a44d4a1571e924d0"
+      "5b9327abf95ba809c67c630f2f41e1ad"
     ],
     [
       "Ex11a.__proj__Cons__item__rs",
@@ -1097,7 +1097,7 @@
         "typing_FStar.Set.mem", "typing_FStar.Set.singleton"
       ],
       0,
-      "6a7b5af21a4b59571a2e5874726255ef"
+      "d514f977cbca5f0cf7a7f431c5caa972"
     ],
     [
       "Ex11a.point",
