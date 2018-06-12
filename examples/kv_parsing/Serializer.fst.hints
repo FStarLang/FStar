@@ -172,7 +172,7 @@
         "typing_Slice.truncated_slice"
       ],
       0,
-      "849a1648108970e03270560f30a7bd82"
+      "ac3c2b0c66ab90fcc17fba9e1387c4a5"
     ],
     [
       "Serializer.adjacent_truncate",
@@ -224,7 +224,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "64551f8a1d365dc57260e4a3d3dc748e"
+      "71b54a862d25d98f04e11998c8677831"
     ],
     [
       "Serializer.adjacent_0len",
@@ -298,7 +298,7 @@
         "typing_Slice.truncated_slice"
       ],
       0,
-      "f564b6a4be14583a0e4ea1f860675959"
+      "6afd1c22b2de972ce1674ac26ce6116e"
     ],
     [
       "Serializer.writer_init",
@@ -401,7 +401,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "952eba440992c89eb1a0e536220b6e6f"
+      "102d6ce19f775b2d48ebffbaff8f170b"
     ],
     [
       "Serializer.writer_reinit",
@@ -503,7 +503,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "e0a6a565830e397b6bcad0f97c97f2a8"
+      "884f48b2ceb01f8ff4237a230d4bbdf8"
     ],
     [
       "Serializer.join_slices",
@@ -569,7 +569,7 @@
         "typing_Slice.u32_add_overflows"
       ],
       0,
-      "5ad6d464aedaf66f7f67f84357c87f9c"
+      "817c39a86e69eb28eda0c98418a50cd5"
     ],
     [
       "Serializer.enc_one_more",
@@ -888,7 +888,7 @@
         "typing_Slice.buffer_split_at", "typing_Slice.u32_add_overflows"
       ],
       0,
-      "40f94796a96bc14d368570e120a29ba8"
+      "d527972fb4cdcef474a6695e63bd705a"
     ],
     [
       "Serializer.join_is_concat",
@@ -1006,7 +1006,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "a60d3cccadaf0ce79c6fb4d62ce98c04"
+      "2058088209dac9bd3e3a2747a61d2369"
     ],
     [
       "Serializer.writer_finish",
@@ -1230,7 +1230,7 @@
         "typing_Slice.bslice_split_at"
       ],
       0,
-      "2d7c119736a5bc5b8116808fb33dbb1a"
+      "e57072ef8e06cdcd32d70f7e2082faea"
     ],
     [
       "Serializer.enc_entry_st",
@@ -1597,7 +1597,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "417a489e68aa9a9ea342f6bee2c40c3b"
+      "a6bc4f8df3403dccc4ca49b8369f1d26"
     ],
     [
       "Serializer.writer_finish",
