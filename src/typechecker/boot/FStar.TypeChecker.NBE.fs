@@ -37,8 +37,8 @@ let rec drop (p: 'a -> bool) (l: list<'a>): list<'a> =
   | [] -> []
   | x::xs -> if p x then x::xs else drop p xs
 
-let debug f =
-    if Options.debug_at_level "Test" (Options.Other "NBE")
+let debug cfg f =
+    if Env.debug (N.cfg_env cfg) (Options.Other "NBE")
     then f ()
 
 let debug_term (t : term) =
@@ -241,12 +241,12 @@ let rec count_abstractions (t : term) : int =
     | Tm_ascribed (t, _, _) -> count_abstractions t
     | _ -> 0
 
-let find_sigelt_in_gamma (env: Env.env) (lid:lident): option<sigelt> =
+let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option<sigelt> =
   let mapper (lr, rng) =
     match lr with
     | BU.Inr (elt, None) -> Some elt
     | BU.Inr (elt, Some us) ->
-        debug (fun () -> BU.print1 "Universes in local declaration: %s\n" (P.univs_to_string us));
+        debug cfg (fun () -> BU.print1 "Universes in local declaration: %s\n" (P.univs_to_string us));
         Some elt
     | _ -> None in
   BU.bind_opt (Env.lookup_qname env lid) mapper
@@ -304,8 +304,8 @@ let find_let (lbs : list<letbinding>) (fvar : fv) =
                      else None)
 
 (* We are not targeting tagless normalization at this point *)
-let rec app (f:t) (x:t) (q:aqual) =
-  debug (fun () -> BU.print2 "When creating app: %s applied to %s\n" (t_to_string f) (t_to_string x));
+let rec app cfg (f:t) (x:t) (q:aqual) =
+  debug cfg (fun () -> BU.print2 "When creating app: %s applied to %s\n" (t_to_string f) (t_to_string x));
   match f with
   | Lam (f, _, _) -> f x
   | Accu (a, ts) -> Accu (a, (x,q)::ts)
@@ -313,16 +313,17 @@ let rec app (f:t) (x:t) (q:aqual) =
     (match x with
      | Univ u -> Construct (i, u::us, ts)
      | _ -> Construct (i, us, (x,q)::ts))
-  | Refinement (b, r) -> Refinement (b, app r x q)
+  | Refinement (b, r) -> Refinement (b, app cfg  r x q)
   | Constant _ | Univ _ | Type_t _ | Unknown -> failwith "Ill-typed application"
 
-and iapp (f:t) (args:list<(t * aqual)>) =
+and iapp cfg (f:t) (args:list<(t * aqual)>) =
   match args with
   | [] -> f
-  | _ -> iapp (app f (fst (List.hd args)) (snd (List.hd args))) (List.tl args)
+  | _ -> iapp cfg (app cfg f (fst (List.hd args)) (snd (List.hd args))) (List.tl args)
 
 
 and translate_fv (cfg: N.cfg) (bs:list<t>) (fvar:fv): t =
+   let debug = debug cfg in
    let qninfo = Env.lookup_qname (N.cfg_env cfg) (S.lid_of_fv fvar) in
    match N.should_unfold cfg (fun _ -> false) fvar qninfo with
    | N.Should_unfold_fully
@@ -330,6 +331,7 @@ and translate_fv (cfg: N.cfg) (bs:list<t>) (fvar:fv): t =
      failwith "Not yet handled"
 
    | N.Should_unfold_no ->
+     debug (fun () -> BU.print1 "(1) Decided to not unfold %s\n" (P.fv_to_string fvar));
      mkConstruct fvar [] []
 
    | N.Should_unfold_yes -> begin
@@ -354,18 +356,20 @@ and translate_fv (cfg: N.cfg) (bs:list<t>) (fvar:fv): t =
              end
        | None -> failwith "Could not find mutually recursive definition" (* TODO: is this correct? *))
      | _ ->
-       mkConstruct fvar [] [] (* Zoe : Z and S data constructors from the examples are not in the environment *)
+      debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar));
+      mkConstruct fvar [] [] (* Zoe : Z and S data constructors from the examples are not in the environment *)
     end
 
 (* translate a let-binding - local or global *)
 and translate_letbinding (cfg:N.cfg) (bs:list<t>) (lb:letbinding) : t =
+  let debug = debug cfg in
   let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t =
     match us with
-    | [] -> 
+    | [] ->
       let translated_def = translate cfg bs def in
-      let translated_type = 
+      let translated_type =
         match (SS.compress lb.lbtyp).n with
-        | Tm_refine _ -> app (translate cfg bs lb.lbtyp) translated_def None
+        | Tm_refine _ -> app cfg (translate cfg bs lb.lbtyp) translated_def None
         | _ -> Constant Unit
       in
       // VD: For debugging purposes, I'm forcing a readback here, but I don't think this is  necessary
@@ -375,10 +379,10 @@ and translate_letbinding (cfg:N.cfg) (bs:list<t>) (lb:letbinding) : t =
                let readback_type = readback cfg translated_type in
                BU.print2 "<<< Type of %s is %s\n" (t_to_string translated_def) (P.term_to_string readback_type)
              | _ -> ());
-             
+
       translated_def
 
-    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), (fun () -> Constant Unit), None) 
+    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), (fun () -> Constant Unit), None)
      // Zoe: Bogus type! The idea is that we will never readback these lambdas
   in
   make_univ_abst lb.lbunivs bs lb.lbdef
@@ -393,15 +397,16 @@ and translate_constant (c : sconst) : constant =
     | C.Const_char c -> (Char c)
     | _ -> failwith ("Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented")
 
-and translate_pat (p : pat) : t =
+and translate_pat cfg (p : pat) : t =
     match p.v with
     | Pat_constant c -> Constant (translate_constant c)
-    | Pat_cons (cfv, pats) -> iapp (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat p, None)) pats)
+    | Pat_cons (cfv, pats) -> iapp cfg (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat cfg p, None)) pats)
     | Pat_var bvar -> mkAccuVar bvar
     | Pat_wild bvar -> mkAccuVar bvar
     | Pat_dot_term (bvar, t) -> failwith "Pat_dot_term not implemented"
 
 and translate (cfg:N.cfg) (bs:list<t>) (e:term) : t =
+    let debug = debug cfg in
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
     debug (fun () -> BU.print1 "BS list: %s\n" (String.concat ";; " (List.map (fun x -> t_to_string x) bs)));
 
@@ -419,7 +424,7 @@ and translate (cfg:N.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_uinst(t, us) ->
       debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t) (P.term_to_string t) (List.map P.univ_to_string us |> String.concat ", "));
-      List.fold_left (fun head u -> app head u None)
+      List.fold_left (fun head u -> app cfg head u None)
                      (translate cfg bs t)
                      (List.map (translate_univ bs) us)
 
@@ -459,7 +464,7 @@ and translate (cfg:N.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_app (e, [arg]) ->
       debug (fun () -> BU.print2 "Application %s / %s\n" (P.term_to_string e) (P.term_to_string (fst arg)));
-      app (translate cfg bs e) (translate cfg bs (fst arg)) (snd arg)
+      app cfg (translate cfg bs e) (translate cfg bs (fst arg)) (snd arg)
 
     | Tm_app(head, arg::args) ->
       debug (fun () -> BU.print2 "Application %s / %s (...more agrs)\n" (P.term_to_string head) (P.term_to_string (fst arg)));
@@ -500,36 +505,36 @@ and translate (cfg:N.cfg) (bs:list<t>) (e:term) : t =
           mkAccuMatch scrut make_branches
       (* Thunked computation that reconstructs the patterns *)
       (* Zoe TODO : maybe rewrite in CPS? *)
-      and make_branches (readback:t -> term) : list<branch> = 
-        let rec process_pattern bs (p:pat) : list<t> * pat = (* returns new environment and pattern *) 
-          let (bs, p_new) = 
+      and make_branches (readback:t -> term) : list<branch> =
+        let rec process_pattern bs (p:pat) : list<t> * pat = (* returns new environment and pattern *)
+          let (bs, p_new) =
             match p.v with
             | Pat_constant c -> (bs, Pat_constant c)
-            | Pat_cons (fvar, args) -> 
-              let (bs', args') = 
-                  List.fold_left (fun (bs, args) (arg, b) -> 
+            | Pat_cons (fvar, args) ->
+              let (bs', args') =
+                  List.fold_left (fun (bs, args) (arg, b) ->
                                     let (bs', arg') = process_pattern bs arg in
                                     (bs, (arg', b) :: args)) (bs, []) args
               in
               (bs', Pat_cons (fvar, List.rev args'))
-            | Pat_var bvar -> 
-              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in 
+            | Pat_var bvar ->
+              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
               (mkAccuVar x :: bs, Pat_var x)
-            | Pat_wild bvar -> 
-              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in 
+            | Pat_wild bvar ->
+              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
               (mkAccuVar x :: bs, Pat_wild x)
               (* Zoe: I'm not sure what this pattern binds, just speculating the translation *)
-            | Pat_dot_term (bvar, tm) -> 
-              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in 
-              (mkAccuVar x :: bs, 
+            | Pat_dot_term (bvar, tm) ->
+              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
+              (mkAccuVar x :: bs,
                Pat_dot_term (x, readback (translate cfg bs tm)))
           in
-          (bs, {p with v = p_new}) (* keep the info and change the pattern *) 
+          (bs, {p with v = p_new}) (* keep the info and change the pattern *)
         in
-        List.map (fun (pat, when_clause, e) -> 
-                  let (bs', pat') = process_pattern bs pat in 
+        List.map (fun (pat, when_clause, e) ->
+                  let (bs', pat') = process_pattern bs pat in
                   (* TODO : handle when clause *)
-                  U.branch (pat', when_clause, readback (translate cfg bs' e))) branches 
+                  U.branch (pat', when_clause, readback (translate cfg bs' e))) branches
       in
       case (translate cfg bs scrut)
 
@@ -543,6 +548,7 @@ and translate (cfg:N.cfg) (bs:list<t>) (e:term) : t =
 
 (* [readback] creates named binders and not De Bruijn *)
 and readback (cfg:N.cfg) (x:t) : term =
+    let debug = debug cfg in
     debug (fun () -> BU.print1 "Readback: %s\n" (t_to_string x));
     match x with
     | Univ u -> failwith "Readback of universes should not occur"
@@ -571,27 +577,27 @@ and readback (cfg:N.cfg) (x:t) : term =
          | [] -> tm
          | _ ->  U.mk_app tm args
       in
-      let tm () = 
+      let tm () =
         match us with
         | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
         | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange)
       in
       (match N.find_prim_step cfg fv with
-       | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) -> 
+       | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
          (* TODO : can primops be universe polymorphic? *)
          begin
-           let l = List.length args in 
+           let l = List.length args in
            let args_1, args_2 = if l = prim_step.arity
                                 then args, []
                                 else List.splitAt prim_step.arity args
-           in  
+           in
            let psc = {
              N.psc_range = Range.dummyRange;
              N.psc_subst = (fun () -> if prim_step.requires_binder_substitution
                                  then failwith "Cannot handle primops that require substitution"
                                  else [])
            } in
-           match prim_step.interpretation psc args_1 with 
+           match prim_step.interpretation psc args_1 with
            | Some tm -> U.mk_app tm args_2
            | None -> tm ()
          end
@@ -605,7 +611,7 @@ and readback (cfg:N.cfg) (x:t) : term =
 
     | Accu (Match (scrut, make_branches), ts) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
-      let head = 
+      let head =
         let scrut_new = readback cfg scrut in
         let branches_new = make_branches (readback cfg) in
         S.mk (Tm_match (scrut_new, branches_new)) None Range.dummyRange
@@ -642,8 +648,8 @@ and readback (cfg:N.cfg) (x:t) : term =
        let rec curry hd args =
        match args with
        | [] -> hd
-       | [arg] -> app hd (fst arg) (snd arg)
-       | arg :: args -> app (curry hd args) (fst arg) (snd arg)
+       | [arg] -> app cfg hd (fst arg) (snd arg)
+       | arg :: args -> app cfg (curry hd args) (fst arg) (snd arg)
        in
        let args_no = count_abstractions lb.lbdef in
        // Printf.printf "Args no. %d\n" args_no;

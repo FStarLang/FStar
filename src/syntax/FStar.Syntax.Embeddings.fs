@@ -269,8 +269,8 @@ let e_norm_step =
                         None rng
         | UnfoldAttr a ->
             S.mk_Tm_app steps_UnfoldAttr [S.as_arg a] None rng
-        | NBE -> 
-            steps_NBE 
+        | NBE ->
+            steps_NBE
     in
     let un (w:bool) (t0:term) : option<norm_step> =
         let t = U.unmeta_safe t0 in
@@ -290,6 +290,8 @@ let e_norm_step =
             Some Zeta
         | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_iota ->
             Some Iota
+        | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_nbe ->
+            Some NBE
         | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
             BU.bind_opt (unembed' w (e_list e_string) l) (fun ss ->
             Some <| UnfoldOnly ss)

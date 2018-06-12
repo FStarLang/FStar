@@ -270,6 +270,10 @@ let log_primops cfg f =
 let log_unfolding cfg f =
     if cfg.debug.unfolding then f () else ()
 
+let log_nbe cfg f =
+    if Env.debug cfg.tcenv <| Options.Other "NBE"
+    then f()
+
 let is_empty = function
     | [] -> true
     | _ -> false
@@ -1071,7 +1075,7 @@ let is_norm_request hd args =
     | _ -> false
 
 let is_nbe_request s = List.mem NBE s
-  
+
 let tr_norm_step = function
     | EMB.Zeta ->    [Zeta]
     | EMB.Iota ->    [Iota]
@@ -1087,7 +1091,7 @@ let tr_norm_step = function
     | EMB.UnfoldAttr t ->
         [UnfoldUntil delta_constant; UnfoldAttr t]
     | EMB.NBE -> [NBE]
-    
+
 let tr_norm_steps s =
     List.concatMap tr_norm_step s
 
@@ -1221,31 +1225,38 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     // We unfold dm4f actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
         let b = should_reify cfg in
-        log_unfolding cfg (fun () -> BU.print2 " >> For DM4F action %s, should_reify = %s\n"
+        log_unfolding cfg (fun () -> BU.print2 "should_unfold: For DM4F action %s, should_reify = %s\n"
                                                (Print.fv_to_string fv)
                                                (string_of_bool b));
         if b then reif else no
 
     // If it is handled primitively, then don't unfold
-    | _ when Option.isSome (find_prim_step cfg fv) -> no
+    | _ when Option.isSome (find_prim_step cfg fv) ->
+        log_unfolding cfg (fun () -> BU.print_string "should_unfold: primitive step, no\n");
+        no
 
     // Don't unfold HasMaskedEffect
     | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
-            List.contains HasMaskedEffect qs -> no
+            List.contains HasMaskedEffect qs ->
+        log_unfolding cfg (fun () -> BU.print_string "should_unfold: masked effect, no\n");
+        no
 
     // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
     | _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
+        log_unfolding cfg (fun () -> BU.print_string "should_unfold: masked effect, no\n");
         no
 
     // Recursive lets may only be unfolded when Zeta is on
     | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
-            is_rec && not cfg.steps.zeta -> no
+            is_rec && not cfg.steps.zeta ->
+        log_unfolding cfg (fun () -> BU.print_string "should_unfold: recursive function without zeta, no\n");
+        no
 
     // We're doing selectively unfolding, assume it to not unfold unless it meets the criteria
     | _, Some _, _, _
     | _, _, Some _, _
     | _, _, _, Some _ ->
-        log_unfolding cfg (fun () -> BU.print1 " >> Reached a %s with selective unfolding\n"
+        log_unfolding cfg (fun () -> BU.print1 "should_unfold: Reached a %s with selective unfolding\n"
                                                (Print.fv_to_string fv));
         // How does the following code work?
         // We are doing selective unfolding so, by default, we assume everything
@@ -1268,7 +1279,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
 
     // Nothing special, just check the depth
     | _ ->
-        log_unfolding cfg (fun () -> BU.print3 " >> Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
+        log_unfolding cfg (fun () -> BU.print3 "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
                                                (Print.fv_to_string fv)
                                                (Print.delta_depth_to_string fv.fv_delta)
                                                (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
@@ -1279,10 +1290,13 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
              | Eager_unfolding_only -> true
              | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l))
     in
-    log_unfolding cfg (fun () -> BU.print3 " >> For %s (%s), unfolding res = %s\n"
+    log_unfolding cfg (fun () -> printfn "should_unfold: For %s (%s), unfolding res = %s, cfg={steps=%A; delta_level=%A}\n"
                     (Print.fv_to_string fv)
                     (Range.string_of_range (S.range_of_fv fv))
-                    (string_of_res res));
+                    (string_of_res res)
+                    cfg.steps
+                    cfg.delta_level
+                    );
     match res with
     | false, _, _ -> Should_unfold_no
     | true, false, false -> Should_unfold_yes
@@ -1361,6 +1375,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             when not (cfg.steps.no_full_norm)
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
+            log_nbe cfg (fun () -> BU.print1 "Reached norm_request for %s\n" (Print.term_to_string t));
             let cfg' = { cfg with steps = { cfg.steps with unfold_only = None
                                                          ; unfold_fully = None
                                                          ; do_not_unfold_pure_lets = false };
@@ -1383,13 +1398,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
                 then [Unfold delta_constant]
                 else [NoDelta] in
-              let tm' = closure_as_term cfg env t in 
-              let env = cfg_env cfg in
-              let nbe = env.nbe in 
-              let tm_norm = nbe s cfg.tcenv tm' in
-              log cfg (fun () -> BU.print1 "Invoking NBE with  %s\n" (Print.term_to_string tm'));
-              tm_norm (* Zoe TODO : Not quite sure about that, maybe call the normalizer again? *)
-            
+              let tm' = closure_as_term cfg env tm in
+              log_nbe cfg (fun () -> BU.print1 "Invoking NBE with  %s\n" (Print.term_to_string tm'));
+              let tm_norm = (cfg_env cfg).nbe s cfg.tcenv tm' in
+              log_nbe cfg (fun () -> BU.print1 "Result of NBE is  %s\n" (Print.term_to_string tm_norm));
+              norm cfg env stack tm_norm
+              (* Zoe, NS:
+                 This call to norm is needed to evaluate the continuation with the fully evaluated tm_norm
+                 But, it's potentially wasteful, since norm will attempt to normalize tm_norm again.
+                 In cases where tm_norm is small (e.g., 2), this is not a big deal;
+                 but in general, this may incur a large unnecessary traversal
+               *)
             | Some (s, tm) ->
               let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
