@@ -176,7 +176,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (U.lcomp_of_comp c) in
        let c = lcomp_comp c in
        if debug env <| Options.Low then
-       BU.print3 "In check_expected_effect, asking rel to solve the problem on e %s and c %s and expected_c %s\n"
+       BU.print3 "In check_expected_effect, asking rel to solve the problem on e=(%s) and c=(%s) and expected_c=(%s)\n"
                  (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
        let e, _, g = TcUtil.check_comp env e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
@@ -319,7 +319,7 @@ let rec tc_term env e =
     if Env.debug env Options.Medium then
         BU.print4 "(%s) tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
                                                         (Print.term_to_string e)
-                                                        (Print.tag_of_term e)
+                                                        (Print.tag_of_term (SS.compress e))
                                                         (string_of_int ms);
     r
 
@@ -327,8 +327,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                                         * lcomp                 (* computation type where the WPs are lazily evaluated *)
                                         * guard_t =             (* well-formedness condition                           *)
   let env = if e.pos=Range.dummyRange then env else Env.set_range env e.pos in
-  if debug env Options.Low then BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term e) (Print.term_to_string e);
   let top = SS.compress e in
+  if debug env Options.Low then
+    BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term top) (Print.term_to_string top);
   match top.n with
   | Tm_delayed _ -> failwith "Impossible"
 

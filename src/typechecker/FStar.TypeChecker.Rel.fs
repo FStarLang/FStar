@@ -2759,6 +2759,8 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                            as_arg wpc2;
                                            as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
                                    None r in
+                      if debug env <| Options.Other "Rel" then
+                          BU.print1 "WP guard (simplifed) is (%s)\n" (Print.term_to_string (N.normalize [N.Iota; N.Eager_unfolding; N.Primops; N.Simplify] env g));
                       let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
                       let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob) g) [] wl in
                       solve env (attempt [base_prob] wl)
