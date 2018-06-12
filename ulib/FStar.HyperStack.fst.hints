@@ -8,16 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "5a57578b88f63232ec31e488e4fb2bcb"
-    ],
-    [
-      "FStar.HyperStack.reference_distinct_sel_disjoint",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "0e4fe65ff72a06c6634ba60f775d9238"
+      "79d7741c380e379bd2c593c9ced8a73d"
     ]
   ]
 ]
