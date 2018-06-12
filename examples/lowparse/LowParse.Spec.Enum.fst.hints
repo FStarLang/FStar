@@ -599,7 +599,6 @@
         "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "proj_equation_FStar.Pervasives.Native.Some_v",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -633,7 +632,7 @@
         "unit_typing"
       ],
       0,
-      "c8587ba171d89e0c965d6800820c4867"
+      "57805c34fc7f897c10e9a6f1f845f549"
     ],
     [
       "LowParse.Spec.Enum.serialize_enum_key",

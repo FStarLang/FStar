@@ -133,7 +133,7 @@ val create
     b `unused_in` h0 /\
     live h1 b /\
     length b == UInt32.v len /\
-    frameOf b == h0.HS.tip /\
+    frameOf b == (HS.get_tip h0) /\
     P.modifies_0 h0 h1 /\
     as_seq h1 b == Seq.create (UInt32.v len) init
   ))
@@ -160,7 +160,7 @@ val createL
      b `unused_in` h0 /\
      live h1 b /\
      length b == len /\
-     frameOf b == h0.HS.tip /\
+     frameOf b == (HS.get_tip h0) /\
      P.modifies_0 h0 h1 /\
      as_seq h1 b == Seq.of_list init /\
      q #a len b
@@ -193,7 +193,7 @@ val rcreate
     b `unused_in` h0 /\
     live h1 b /\
     length b == UInt32.v len /\
-    h1.HS.tip == h0.HS.tip /\
+    (HS.get_tip h1) == (HS.get_tip h0) /\
     P.modifies (P.loc_addresses r Set.empty) h0 h1 /\
     as_seq h1 b == Seq.create (UInt32.v len) init
   ))

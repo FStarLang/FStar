@@ -3765,8 +3765,13 @@ let (mk_data_operations :
                                     | FStar_Pervasives_Native.Some q -> q  in
                                   let iquals1 =
                                     if
-                                      FStar_List.contains
-                                        FStar_Syntax_Syntax.Abstract iquals
+                                      (FStar_List.contains
+                                         FStar_Syntax_Syntax.Abstract iquals)
+                                        &&
+                                        (Prims.op_Negation
+                                           (FStar_List.contains
+                                              FStar_Syntax_Syntax.Private
+                                              iquals))
                                     then FStar_Syntax_Syntax.Private ::
                                       iquals
                                     else iquals  in

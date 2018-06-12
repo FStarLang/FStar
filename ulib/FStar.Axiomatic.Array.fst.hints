@@ -8,7 +8,16 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4db3ee96b9f93f13f873d7279e39f4ac"
+      "2a18dd753d080e7ab110009c96e8cbb2"
+    ],
+    [
+      "FStar.Axiomatic.Array.IndexUpdate",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "ed0c060f8a420f1b0f914add4635eaeb"
     ]
   ]
 ]

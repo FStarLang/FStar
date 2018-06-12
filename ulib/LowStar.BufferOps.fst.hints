@@ -7,14 +7,15 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_LowStar.Buffer.get",
-        "equation_LowStar.Buffer.pointer",
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_LowStar.Buffer.get", "equation_LowStar.Buffer.pointer",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_LowStar.BufferOps_Tm_refine_6814030e892fd90d0d66191b8ef75dd7",
+        "refinement_interpretation_LowStar.BufferOps_Tm_refine_4d5b9a422b8cf8b54fdf7546e796590b",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cf50f66b070215a0562aa769ba26bcd0"
       ],
       0,
-      "fce7141ab997cbf6aea3248f4f7ff814"
+      "87d7eca01fffc468e83ec4f787a8ce57"
     ],
     [
       "LowStar.BufferOps.op_Star_Equals",
@@ -24,9 +25,8 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.UInt32.n", "equation_LowStar.Buffer.pointer",
-        "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
+        "equation_FStar.Monotonic.HyperStack.mem", "equation_FStar.UInt32.n",
+        "equation_LowStar.Buffer.pointer", "equation_Prims.nat",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
         "int_typing", "lemma_FStar.Seq.Base.lemma_create_len",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
@@ -36,15 +36,62 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_LowStar.BufferOps_Tm_refine_6814030e892fd90d0d66191b8ef75dd7",
-        "refinement_interpretation_LowStar.BufferOps_Tm_refine_b56d31247801a49f0ae4041bf6724163",
+        "refinement_interpretation_LowStar.BufferOps_Tm_refine_4d5b9a422b8cf8b54fdf7546e796590b",
+        "refinement_interpretation_LowStar.BufferOps_Tm_refine_ad32e8bc0499870d7bb209cc7a93cdac",
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cf50f66b070215a0562aa769ba26bcd0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.index",
         "typing_LowStar.Buffer.as_seq", "typing_LowStar.Buffer.length"
       ],
       0,
-      "c067c6dbe75dca1b3b4d55ef13f30663"
+      "d31f0e45600aeaf77276d3d6588fdc4a"
+    ],
+    [
+      "LowStar.BufferOps.op_Array_Access",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "lemma_LowStar.Buffer.length_as_seq",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LowStar.BufferOps_Tm_refine_7903deff749982108f154cf55557a1a6"
+      ],
+      0,
+      "da20707d7df661a6e26770ca915c72ef"
+    ],
+    [
+      "LowStar.BufferOps.op_Array_Assignment",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "lemma_LowStar.Buffer.length_as_seq",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_LowStar.BufferOps_Tm_refine_7903deff749982108f154cf55557a1a6"
+      ],
+      0,
+      "8848a09316606a596596c46e0de0c339"
+    ],
+    [
+      "LowStar.BufferOps.op_Bang_Star",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LowStar.Buffer.pointer",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_LowStar.Buffer_Tm_refine_cf50f66b070215a0562aa769ba26bcd0"
+      ],
+      0,
+      "7d7b0b8a869d253af381eb15011f5967"
     ]
   ]
 ]

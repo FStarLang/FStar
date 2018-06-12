@@ -527,7 +527,7 @@
         "typing_LowParse.Spec.Base.serialize"
       ],
       0,
-      "c71bfce36623d401f6068889652196eb"
+      "893a0fd71fc6eafe98ed386cbfcada3d"
     ],
     [
       "LowParse.SLow.Base.parser32_correct",
@@ -808,7 +808,7 @@
         "typing_LowParse.Spec.Base.serialize"
       ],
       0,
-      "6bacf9f715d41d4821cc8857891d4059"
+      "49aa823a3c1992ef13fcc06cd7ca9d9e"
     ]
   ]
 ]

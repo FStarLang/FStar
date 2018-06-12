@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "d5bcf1196ae0202e59416324048434f8"
+      "4f14688e5c4441a52003688a96bb2044"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "9b29a63d703c1afe483a857c68f6ce59"
+      "e09cab90525d5c5c67d36201700ef39a"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -34,7 +34,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "36f1380f0708bcf33059808adf7b8358"
+      "ee975f292b371c7e74b81258682dde53"
     ],
     [
       "Ex10a.canWrite",
@@ -43,7 +43,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "aea582e23ac620a9416a73518cd70923"
+      "0bbeb4f7dd1ed746b601f6297f0f1031"
     ],
     [
       "Ex10a.canRead",
@@ -56,7 +56,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "bb53938ea5f4287ccf2124402b531599"
+      "9ad5fe4974d9581fd0808c786a0036e4"
     ],
     [
       "Ex10a.revoke",
@@ -65,7 +65,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "c5dae1d075296560683ab9549b1d261e"
+      "7e89f5c130883d597cc2306660bf5b06"
     ],
     [
       "Ex10a.grant",
@@ -74,7 +74,7 @@
       1,
       [ "@query" ],
       0,
-      "151a978be98ebe494698fd0755a80bd5"
+      "7ea0b39e9012888573ac64977858a963"
     ],
     [
       "Ex10a.revoke",
@@ -108,7 +108,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "2031d40800bf4810890526ae0671e0a6"
+      "c752a40ea749174a43ee9bf021ba0ce2"
     ],
     [
       "Ex10a.safe_delete",
@@ -130,7 +130,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "9e2ebdc8e3022bca0f3c6b7c276ecf58"
+      "6dedfdd4eb92ca7b2f646c3a004730aa"
     ],
     [
       "Ex10a.test_acls",
@@ -159,7 +159,7 @@
         "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0,
-      "215a487dd14efdc19d23f40cabf32773"
+      "e084ae41b745face002c73ca9c3795e5"
     ],
     [
       "Ex10a.entry",
@@ -168,7 +168,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "103c868670d2543e563ce43f51458d01"
+      "dbbbf2be27617f0a4930808cbdf3c8b7"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -181,7 +181,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "fd878431b9d3ad401cada52564e08d28"
+      "8f2640eabaeeb2ca0abd129f5052f19e"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -194,7 +194,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "a006d98cf8fcd596f614093731ca1d18"
+      "deff1dfe211d8b35a277d3ab34036d23"
     ],
     [
       "Ex10a.canWrite",
@@ -203,7 +203,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "067e827f1c5d8cbae60e05256562b290"
+      "94277df76eec97631750617d4dba2865"
     ],
     [
       "Ex10a.canRead",
@@ -216,7 +216,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "01f4d16d40814c7995e6d35a8e3215e6"
+      "acceacf6f08eeb10a7067928019ce907"
     ],
     [
       "Ex10a.revoke",
@@ -225,7 +225,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "cd94ef50d6f2f5cb4b581dfefbf17f53"
+      "190eb32e4997737cee3b9871b0f0103e"
     ]
   ]
 ]
