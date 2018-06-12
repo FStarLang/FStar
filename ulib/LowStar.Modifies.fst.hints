@@ -1961,7 +1961,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "a346f651b4e3f189b42e8fd82086a432"
+      "d84f9672a30889bbb3ff2e7d6cbcf38b"
     ],
     [
       "LowStar.Modifies.modifies_loc_regions_intro",
@@ -2396,7 +2396,7 @@
         "typing_LowStar.Buffer.as_addr"
       ],
       0,
-      "60a246e7bf3b8fcf6e46430d6d1c1ab5"
+      "8779527fb9cc25341463a2dbcb8e8cd8"
     ],
     [
       "LowStar.Modifies.buffer_live_mreference_unused_in_disjoint",
