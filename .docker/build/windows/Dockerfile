@@ -13,8 +13,8 @@ COPY / ${MYHOME}/FStar/
 WORKDIR ${MYHOME}/FStar
 
 RUN echo %DATE% %TIME% >> %BUILDLOGFILE%
-COPY build_fstar_with_regressions.sh ${MYHOME}/FStar/build_fstar_with_regressions.sh
-RUN powershell.exe c:\ewerest\bash.ps1 ./build_fstar_with_regressions.sh %TARGET% %BUILDLOGFILE% %MAXTHREADS%
+COPY build.sh ${MYHOME}/FStar/build.sh
+RUN powershell.exe c:\ewerest\bash.ps1 ./build.sh %TARGET% %BUILDLOGFILE% %MAXTHREADS%
 
 RUN echo %DATE% %TIME% >> %BUILDLOGFILE%
 
