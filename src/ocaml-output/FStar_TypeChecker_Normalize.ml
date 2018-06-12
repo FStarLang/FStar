@@ -4476,7 +4476,6 @@ let decide_unfolding :
                            (FStar_Util.for_some
                               (fun uu___251_13379  ->
                                  match uu___251_13379 with
-                                 | FStar_TypeChecker_Env.UnfoldTac  -> false
                                  | FStar_TypeChecker_Env.NoDelta  -> false
                                  | FStar_TypeChecker_Env.Inlining  -> true
                                  | FStar_TypeChecker_Env.Eager_unfolding_only
@@ -9293,7 +9292,6 @@ let (config' :
                   | Eager_unfolding  ->
                       [FStar_TypeChecker_Env.Eager_unfolding_only]
                   | Inlining  -> [FStar_TypeChecker_Env.Inlining]
-                  | UnfoldTac  -> [FStar_TypeChecker_Env.UnfoldTac]
                   | uu____27208 -> []))
            in
         let d1 =

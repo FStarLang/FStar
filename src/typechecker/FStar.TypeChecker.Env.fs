@@ -44,7 +44,6 @@ type delta_level =
   | Inlining
   | Eager_unfolding_only
   | Unfold of delta_depth
-  | UnfoldTac
 
 type mlift = {
   mlift_wp:universe -> typ -> typ -> typ ;
@@ -1268,7 +1267,6 @@ let string_of_delta_level = function
   | Inlining -> "Inlining"
   | Eager_unfolding_only -> "Eager_unfolding_only"
   | Unfold d -> "Unfold " ^ Print.delta_depth_to_string d
-  | UnfoldTac -> "UnfoldTac"
 
 let lidents env : list<lident> =
   let keys = List.collect fst env.gamma_sig in

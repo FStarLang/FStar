@@ -527,20 +527,25 @@ let base_and_refinement_maybe_delta should_delta env t1 =
 
    aux false (whnf env t1)
 
-let base_and_refinement env t = base_and_refinement_maybe_delta false env t
-let normalize_refinement steps env t0 = N.normalize_refinement steps env t0
+let base_and_refinement env t : term * option<(bv * term)> =
+    base_and_refinement_maybe_delta false env t
 
-let unrefine env t = base_and_refinement env t |> fst
+let normalize_refinement steps env t0 : term =
+    N.normalize_refinement steps env t0
 
-let trivial_refinement t = S.null_bv t, U.t_true
+let unrefine env t : term =
+    base_and_refinement env t |> fst
 
-let as_refinement delta env wl t =
+let trivial_refinement t : bv * term =
+    S.null_bv t, U.t_true
+
+let as_refinement delta env t : bv * term =
     let t_base, refinement = base_and_refinement_maybe_delta delta env t in
     match refinement with
         | None -> trivial_refinement t_base
         | Some (x, phi) -> x, phi
 
-let force_refinement (t_base, refopt) =
+let force_refinement (t_base, refopt) : term =
     let y, phi = match refopt with
         | Some (y, phi) -> y, phi
         | None -> trivial_refinement t_base in
@@ -903,7 +908,7 @@ let rec head_matches env t1 t2 : match_result =
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
 (* Does t1 head-match t2, after some delta steps? *)
-let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
+let head_matches_delta env t1 t2 : (match_result * option<(typ*typ)>) =
     let maybe_inline t =
         let head = U.head_of t in
         if Env.debug env <| Options.Other "RelDelta" then
@@ -1452,7 +1457,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
         let pairwise t1 t2 wl =
             if Env.debug env <| Options.Other "Rel"
             then BU.print2 "[meet/join]: pairwise: %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
-            let mr, ts = head_matches_delta env () t1 t2 in
+            let mr, ts = head_matches_delta env t1 t2 in
             match mr with
             | HeadMatch true
             | MisMatch _ ->
@@ -2222,7 +2227,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             if pat_discriminates b
                             then
                               let (_, _, t') = SS.open_branch b in
-                              match head_matches_delta env wl s t' with
+                              match head_matches_delta env s t' with
                               | FullMatch, _
                               | HeadMatch _, _ ->
                                 true
@@ -2267,7 +2272,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                         (Print.tag_of_term t2)
                         (Print.term_to_string t1)
                         (Print.term_to_string t2);
-        let m, o = head_matches_delta env wl t1 t2 in
+        let m, o = head_matches_delta env t1 t2 in
         match m, o  with
         | (MisMatch _, _) -> //heads definitely do not match
             let rec may_relate head =
@@ -2438,30 +2443,39 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | _ -> failwith "Impossible: at least one side is an abstraction"
         end
 
-      | Tm_refine(x1, ph1), Tm_refine(x2, phi2) ->
-        let should_delta =
-          BU.set_is_empty (FStar.Syntax.Free.uvars t1)
-          && BU.set_is_empty (FStar.Syntax.Free.uvars t2) //no remaining uvars on eithe side
-          && (match head_matches env x1.sort x2.sort with
-              | MisMatch(Some d1, Some d2) ->
-                let is_unfoldable = function
-                    | Delta_constant_at_level _ -> true
-                    | _ -> false
-                in
-                is_unfoldable d1 && is_unfoldable d2
-              | _ -> false
-                //head symbols of x1 and x2 already match, don't unfold further
-                //Or, they cannot match after unfolding, so no point trying
-              ) //and heads don't match
+      | Tm_refine(x1, phi1), Tm_refine(x2, phi2) ->
+        (* If the heads of their bases can match, make it so, and continue *)
+        (* The unfolding is very much needed since we might have
+         *   n:nat{phi n} =?= i:int{psi i}
+         * and if we try to unify the bases, nat and int, we're toast.
+         * However too much unfolding is also harmful for inference! See
+         * the discussion on #1345. Hence we reuse head_matches_delta to
+         * do the unfolding for us, which is good *heuristic* but not
+         * necessarily always correct.
+         *)
+        let x1, x2 =
+            match head_matches_delta env x1.sort x2.sort with
+            (* We allow (HeadMatch true) since we're gonna unify them again anyway via base_prob *)
+            | FullMatch, Some (t1, t2)
+            | HeadMatch _, Some (t1, t2) ->
+                ({ x1 with sort = t1 }), ({ x2 with sort = t2 })
+            | _ -> x1, x2
         in
-        //If there are no remaining uvars then unfold t1 and t2 all the way down to
-        //a type constant and its refinement;
-        //Otherwise peel it back one refinement at a time
-        //See issue #1345
-        let x1, phi1 = as_refinement should_delta env wl t1 in
-        let x2, phi2 = as_refinement should_delta env wl t2 in
-        let base_prob, wl =
-          mk_t_problem wl [] orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
+        (* A bit hackish *)
+        let t1 = U.refine x1 phi1 in
+        let t2 = U.refine x2 phi2 in
+        (* / hack *)
+        let x1, phi1 = as_refinement false env t1 in
+        let x2, phi2 = as_refinement false env t2 in
+        if Env.debug env (Options.Other "Rel") then begin
+            BU.print3 "ref1 = (%s):(%s){%s}\n" (Print.bv_to_string x1)
+                                               (Print.term_to_string x1.sort)
+                                               (Print.term_to_string phi1);
+            BU.print3 "ref2 = (%s):(%s){%s}\n" (Print.bv_to_string x2)
+                                               (Print.term_to_string x2.sort)
+                                               (Print.term_to_string phi2)
+        end;
+        let base_prob, wl = mk_t_problem wl [] orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
         let x1 = freshen_bv x1 in
         let subst = [DB(0, x1)] in
         let phi1 = Subst.subst subst phi1 in
@@ -2631,22 +2645,24 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                  (Print.term_to_string head1)
                                  (Print.term_to_string head2)
          in
+         let no_free_uvars t = BU.set_is_empty (Free.uvars t) && BU.set_is_empty (Free.univs t) in
+         let equal t1 t2 =
+            let t1 = N.normalize [N.UnfoldUntil delta_constant; N.Primops; N.Beta; N.Eager_unfolding; N.Iota] env t1 in
+            let t2 = N.normalize [N.UnfoldUntil delta_constant; N.Primops; N.Beta; N.Eager_unfolding; N.Iota] env t2 in
+            U.eq_tm t1 t2 = U.Equal
+         in
          if (Env.is_interpreted env head1 || Env.is_interpreted env head2) //we have something like (+ x1 x2) =?= (- y1 y2)
-         && wl.smt_ok
-         && problem.relation = EQ
-         then let uv1 = Free.uvars t1 in
-              let uv2 = Free.uvars t2 in
-              let uuv1 = Free.univs t1 in
-              let uuv2 = Free.univs t2 in
-              if BU.set_is_empty uv1 && BU.set_is_empty uv2 //and we don't have any unification variables left to solve within the terms
-              && BU.set_is_empty uuv1 && BU.set_is_empty uuv2 //nor universe unification variables
-              then let guard,wl = if U.eq_tm t1 t2 = U.Equal
-                               then None, wl
-                               else let g, wl = mk_eq2 wl orig t1 t2 in
-                                    Some g, wl
-                   in
-                   solve env (solve_prob orig guard [] wl)
-              else rigid_rigid_delta env orig wl head1 head2 t1 t2
+           && problem.relation = EQ
+           && wl.smt_ok // with SMT allowed
+           && no_free_uvars t1 // and neither term has any free variables
+           && no_free_uvars t2
+         then let guard, wl =
+                  if equal t1 t2
+                  then None, wl
+                  else let g, wl = mk_eq2 wl orig t1 t2 in
+                       Some g, wl
+              in
+              solve env (solve_prob orig guard [] wl)
          else rigid_rigid_delta env orig wl head1 head2 t1 t2
 
       | Tm_let _, Tm_let _ ->
@@ -2763,6 +2779,8 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                            as_arg wpc2;
                                            as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
                                    None r in
+                      if debug env <| Options.Other "Rel" then
+                          BU.print1 "WP guard (simplifed) is (%s)\n" (Print.term_to_string (N.normalize [N.Iota; N.Eager_unfolding; N.Primops; N.Simplify] env g));
                       let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
                       let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob) g) [] wl in
                       solve env (attempt [base_prob] wl)
@@ -2851,8 +2869,8 @@ let guard_to_string (env:env) g =
           | Trivial -> "trivial"
           | NonTrivial f ->
               if debug env <| Options.Other "Rel"
-              || debug env <| Options.Other "Implicits"
               || debug env <| Options.Extreme
+              || Options.print_implicits ()
               then N.term_to_string env f
               else "non-trivial" in
       let carry = List.map (fun (_, x) -> prob_to_string env x) g.deferred |> String.concat ",\n" in
