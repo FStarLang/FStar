@@ -28,3 +28,7 @@ clean:
 # Build the snapshot and then regen, i.e. 1 + 2
 3:
 	$(MAKE) -C src ocaml-fstar-ocaml
+
+# Regenerate all hints for the regression test suite
+hints:
+	$(MAKE) OTHERFLAGS=--record_hints -C src/ uregressions

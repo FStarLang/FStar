@@ -15,7 +15,7 @@ open FStar.Mul
  * - some functions (e.g., add_underspec, etc.) are only defined here, not on signed integers
  *)
 
-abstract type t =
+abstract type t : eqtype =
   | Mk: v:uint_t n -> t
 
 abstract
