@@ -128,7 +128,7 @@ val as_addr (#a: Type) (b: buffer a) : GTot nat
 /// A buffer is unused if, and only if, its address is unused.
 
 val unused_in_equiv (#a: Type) (b: buffer a) (h: HS.mem) : Lemma
-  (ensures (unused_in b h <==> (HS.live_region h (frameOf b) ==> as_addr b `Heap.addr_unused_in` (Map.sel h.HS.h (frameOf b)))))
+  (ensures (unused_in b h <==> (HS.live_region h (frameOf b) ==> as_addr b `Heap.addr_unused_in` (Map.sel (HS.get_hmap h) (frameOf b)))))
 
 
 /// If a buffer is live, then so is its region.
@@ -453,7 +453,7 @@ val addr_unused_in_abuffer_preserved
   (b: abuffer r a)
   (h1 h2: HS.mem)
 : Lemma
-  (requires (HS.live_region h1 r ==> a `Heap.addr_unused_in` (Map.sel h1.HS.h r)))
+  (requires (HS.live_region h1 r ==> a `Heap.addr_unused_in` (Map.sel (HS.get_hmap h1) r)))
   (ensures (abuffer_preserved b h1 h2))
 
 val abuffer_of_buffer (#t: Type) (b: buffer t) : Tot (abuffer (frameOf b) (as_addr b))
@@ -705,8 +705,8 @@ val free
   (requires (fun h0 -> live h0 b /\ freeable b))
   (ensures (fun h0 _ h1 ->
     (not (g_is_null b)) /\
-    Map.domain h1.HS.h `Set.equal` Map.domain h0.HS.h /\ 
-    h1.HS.tip == h0.HS.tip /\
+    Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\ 
+    (HS.get_tip h1) == (HS.get_tip h0) /\
     modifies_addr_of b h0 h1 /\
     HS.live_region h1 (frameOf b)
   ))
@@ -735,8 +735,8 @@ let alloc_post_common
 = alloc_post_static r len b /\
   b `unused_in` h0 /\
   live h1 b /\
-  Map.domain h1.HS.h `Set.equal` Map.domain h0.HS.h /\ 
-  h1.HS.tip == h0.HS.tip /\
+  Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\ 
+  (HS.get_tip h1) == (HS.get_tip h0) /\
   modifies_0 h0 h1
 
 /// ``gcmalloc r init len`` allocates a memory-managed buffer of some
@@ -794,7 +794,7 @@ val alloca
 : HST.StackInline (buffer a)
   (requires (fun h -> U32.v len > 0))
   (ensures (fun h b h' ->
-    alloc_post_common h.HS.tip (U32.v len) b h h' /\
+    alloc_post_common (HS.get_tip h) (U32.v len) b h h' /\
     as_seq h' b == Seq.create (U32.v len) init
   ))
 
@@ -818,7 +818,7 @@ val alloca_of_list
   (requires (fun h -> alloc_of_list_pre #a init))
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
-    alloc_post_common h.HS.tip len b h h' /\
+    alloc_post_common (HS.get_tip h) len b h h' /\
     as_seq h' b == Seq.of_list init /\
     alloc_of_list_post #a len b
   ))

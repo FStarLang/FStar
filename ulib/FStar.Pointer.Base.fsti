@@ -2062,7 +2062,7 @@ val screate
   (ensures (fun (h0:HS.mem) b h1 ->
        unused_in b h0
      /\ live h1 b
-     /\ frameOf b = h0.HS.tip
+     /\ frameOf b = HS.get_tip h0
      /\ modifies_0 h0 h1
      /\ begin match s with
        | Some s' ->
@@ -2157,13 +2157,13 @@ val modifies_fresh_frame_popped
 : Lemma
   (requires (
     HS.fresh_frame h0 h1 /\
-    modifies (loc_union (loc_regions (HS.mod_set (Set.singleton h1.HS.tip))) s) h1 h2 /\
-    h2.HS.tip == h1.HS.tip /\
+    modifies (loc_union (loc_regions (HS.mod_set (Set.singleton (HS.get_tip h1)))) s) h1 h2 /\
+    (HS.get_tip h2) == (HS.get_tip h1) /\
     HS.popped h2 h3
   ))
   (ensures (
     modifies s h0 h3 /\
-    h3.HS.tip == h0.HS.tip
+    (HS.get_tip h3) == HS.get_tip h0
   ))
   [SMTPat (HS.fresh_frame h0 h1); SMTPat (HS.popped h2 h3); SMTPat (modifies s h0 h3)]
 
