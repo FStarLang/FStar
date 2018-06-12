@@ -242,7 +242,7 @@ let abuffer_preserved'
 : GTot Type0
 = forall (t' : Type0) (b' : buffer t' ) .
   (frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b') ==>
-  (live h' b' /\ as_seq h' b' == as_seq h b')
+  (live h' b' /\ Seq.equal (as_seq h' b') (as_seq h b'))
 
 let abuffer_preserved = abuffer_preserved'
 
@@ -454,24 +454,7 @@ let g_upd_seq_as_seq (#a:Type) (b:buffer a) (s:lseq a (length b)) (h:HS.mem{live
     assert (as_seq (g_upd_seq b s h) b `Seq.equal` s);
     // prove modifies_1_preserves_abuffers
     Heap.lemma_distinct_addrs_distinct_preorders ();
-    Heap.lemma_distinct_addrs_distinct_mm ();
-    // The proof below is basically unfolding definitions
-    // and triggering a use of extensional equality of sequences 
-    let aux (ab' : abuffer (frameOf b) (as_addr b))
-        : Lemma (requires (abuffer_disjoint #(frameOf b) #(as_addr b) (abuffer_of_buffer b) ab'))
-                (ensures (abuffer_preserved #(frameOf b) #(as_addr b) ab' h h'))
-        = let r = frameOf b in
-          let ad = as_addr b in
-          let aux' (t':Type) (b':buffer t')
-              : Lemma (frameOf b' == r /\ as_addr b' == ad /\ abuffer_of_buffer' b' == ab' /\ live h b'
-                       ==> live h' b' 
-                           /\ Seq.equal (as_seq h' b') (as_seq h b') //use extensional equality here
-                       )
-              = ()
-          in
-          FStar.Classical.forall_intro_2 aux'
-    in
-    FStar.Classical.forall_intro (FStar.Classical.move_requires aux)
+    Heap.lemma_distinct_addrs_distinct_mm ()
 #reset-options
 
 let upd #a b i v =
@@ -480,8 +463,6 @@ let upd #a b i v =
   let s0 = lseq_of_vec ! (Buffer?.content b) in
   let s = Seq.upd s0 (U32.v (Buffer?.idx b) + U32.v i) v in
   Buffer?.content b := vec_of_lseq s;
-  let h1 = get () in
-  assert (h1 == HS.upd h0 (Buffer?.content b) (vec_of_lseq s));
   // prove modifies_1_preserves_abuffers
   Heap.lemma_distinct_addrs_distinct_preorders ();
   Heap.lemma_distinct_addrs_distinct_mm ()
