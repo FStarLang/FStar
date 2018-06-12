@@ -908,8 +908,8 @@ val union_loc_of_loc_addresses
 
 val union_loc_of_loc_regions
   (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
-  (preserve_liveness: bool)
   (b: bool)
+  (preserve_liveness: bool)
   (r: Set.set HS.rid)
 : Lemma
   (union_loc_of_loc c b (loc_regions #_ #(c b) preserve_liveness r) == loc_regions #_ #(cls_union c) preserve_liveness r)
@@ -935,6 +935,53 @@ val modifies_union_loc_of_loc
   (h1 h2: HS.mem)
 : Lemma
   (modifies #_ #(cls_union c) (union_loc_of_loc c b l) h1 h2 <==> modifies #_ #(c b) l h1 h2)
+
+val loc_of_union_loc
+  (#al: (bool -> Tot aloc_t))
+  (#c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (l: loc (cls_union c))
+: GTot (loc (c b))
+
+val loc_of_union_loc_union_loc_of_loc
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
+  (c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (s: loc (c b))
+: Lemma
+  (loc_of_union_loc b (union_loc_of_loc c b s) == s)
+
+val loc_of_union_loc_none
+  (#al: (bool -> Tot aloc_t))
+  (c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+: Lemma
+  (loc_of_union_loc #_ #c b loc_none == loc_none)
+
+val loc_of_union_loc_union
+  (#al: (bool -> Tot aloc_t))
+  (c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (l1 l2: loc (cls_union c))
+: Lemma
+  (loc_of_union_loc b (l1 `loc_union` l2) == loc_of_union_loc b l1 `loc_union` loc_of_union_loc b l2)
+
+val loc_of_union_loc_addresses
+  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
+  (b: bool)
+  (preserve_liveness: bool)
+  (r: HS.rid)
+  (n: Set.set nat)
+: Lemma
+  (loc_of_union_loc #_ #c b (loc_addresses preserve_liveness r n) == loc_addresses preserve_liveness r n)
+
+val loc_of_union_loc_regions
+  (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
+  (b: bool)
+  (preserve_liveness: bool)
+  (r: Set.set HS.rid)
+: Lemma
+  (loc_of_union_loc #_ #c b (loc_regions preserve_liveness r) == loc_regions preserve_liveness r)
 
 
 /// Universes
@@ -965,3 +1012,23 @@ val raise_loc_disjoint (#al: aloc_t u#x) (#c: cls al) (l1 l2: loc c) : Lemma
 
 val modifies_raise_loc (#al: aloc_t u#x) (#c: cls al) (l: loc c) (h1 h2: HS.mem) : Lemma
   (modifies (raise_loc u#x u#y l) h1 h2 <==> modifies l h1 h2)
+
+val lower_loc (#al: aloc_t u#x) (#c: cls al) (l: loc (raise_cls u#x u#y c)) : Tot (loc c)
+
+val lower_loc_raise_loc (#al: aloc_t u#x) (#c: cls al) (l: loc c) : Lemma
+  (lower_loc (raise_loc u#x u#y l) == l)
+
+val raise_loc_lower_loc (#al: aloc_t u#x) (#c: cls al) (l: loc (raise_cls u#x u#y c)) : Lemma
+  (raise_loc (lower_loc l) == l)
+
+val lower_loc_none (#al: aloc_t u#x) (#c: cls al) : Lemma
+  (lower_loc u#x u#y #_ #c loc_none == loc_none)
+
+val lower_loc_union (#al: aloc_t u#x) (#c: cls al) (l1 l2: loc (raise_cls u#x u#y c)) : Lemma
+  (lower_loc u#x u#y (loc_union l1 l2) == loc_union (lower_loc l1) (lower_loc l2))
+
+val lower_loc_addresses (#al: aloc_t u#x) (#c: cls al) (preserve_liveness: bool) (r: HS.rid) (a: Set.set nat) : Lemma
+  (lower_loc u#x u#y #_ #c (loc_addresses preserve_liveness r a) == loc_addresses preserve_liveness r a)
+
+val lower_loc_regions (#al: aloc_t u#x) (#c: cls al) (preserve_liveness: bool) (r: Set.set HS.rid) : Lemma
+  (lower_loc u#x u#y #_ #c (loc_regions preserve_liveness r) == loc_regions preserve_liveness r)

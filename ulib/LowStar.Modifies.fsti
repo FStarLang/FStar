@@ -999,6 +999,24 @@ val cloc_of_loc_of_cloc (l: MG.loc cloc_cls) : Lemma
   (cloc_of_loc (loc_of_cloc l) == l)
   [SMTPat (cloc_of_loc (loc_of_cloc l))]
 
+val cloc_of_loc_none: unit -> Lemma (cloc_of_loc loc_none == MG.loc_none)
+
+val cloc_of_loc_union (l1 l2: loc) : Lemma
+  (cloc_of_loc (loc_union l1 l2) == MG.loc_union (cloc_of_loc l1) (cloc_of_loc l2))
+
+val cloc_of_loc_addresses
+  (preserve_liveness: bool)
+  (r: HS.rid)
+  (n: Set.set nat)
+: Lemma
+  (cloc_of_loc (loc_addresses preserve_liveness r n) == MG.loc_addresses preserve_liveness r n)
+
+val cloc_of_loc_regions
+  (preserve_liveness: bool)
+  (r: Set.set HS.rid)
+: Lemma
+  (cloc_of_loc (loc_regions preserve_liveness r) == MG.loc_regions preserve_liveness r)
+
 val loc_includes_to_cloc (l1 l2: loc) : Lemma
   (loc_includes l1 l2 <==> MG.loc_includes (cloc_of_loc l1) (cloc_of_loc l2))
 
