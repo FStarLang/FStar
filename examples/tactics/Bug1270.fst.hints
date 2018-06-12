@@ -28,7 +28,7 @@
         "unit_typing"
       ],
       0,
-      "83586238ba9de1c0096dd7714fdc736f"
+      "8884b37aa9f93cf6b5e24ff23409375b"
     ],
     [
       "Bug1270.test",
@@ -45,7 +45,7 @@
         "typing_FStar.Reflection.Basic.binders_of_env"
       ],
       0,
-      "21ea985c5ed851a57541f9df1108f5c7"
+      "e9c4cd6c9b5e060eb2e1f80625da664d"
     ]
   ]
 ]

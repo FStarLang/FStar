@@ -89,6 +89,7 @@ let rec extract_meta x =
       | "FStar.Pervasives.CPrologue" -> Some (CPrologue s)
       | "FStar.Pervasives.CEpilogue" -> Some (CEpilogue s)
       | "FStar.Pervasives.CConst" -> Some (CConst s)
+      | "FStar.Pervasives.CCConv" -> Some (CCConv s)
       | _ -> None
       end
   | { n = Tm_constant (Const_string ("KremlinPrivate", _)) } -> Some Private // This one generated internally

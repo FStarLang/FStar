@@ -11,11 +11,11 @@ COPY --chown=everest / ${MYHOME}/FStar/
 WORKDIR ${MYHOME}/FStar
 
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
-COPY --chown=everest build_fstar_with_regressions.sh ${MYHOME}/FStar/build_fstar_with_regressions.sh
-RUN chmod +x build_fstar_with_regressions.sh
-COPY --chown=everest build_fstar_with_regressions_helper.sh ${MYHOME}/FStar/build_fstar_with_regressions_helper.sh
-RUN chmod +x build_fstar_with_regressions_helper.sh
-RUN ./build_fstar_with_regressions.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS}
+COPY --chown=everest build_fstar.sh ${MYHOME}/FStar/build_fstar.sh
+RUN chmod +x build_fstar.sh
+COPY --chown=everest build.sh ${MYHOME}/FStar/build.sh
+RUN chmod +x build.sh
+RUN ./build.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} || true
 
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 

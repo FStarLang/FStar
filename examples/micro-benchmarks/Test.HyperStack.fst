@@ -6,29 +6,29 @@ open FStar.HyperStack.ST
 
 module HS = FStar.HyperStack
 
-let test0 (m:mem) (r:rid{r `is_above` m.tip}) = assert (r `is_in` m.h)
+let test0 (m:mem) (r:rid{r `is_above` HS.get_tip m}) = assert (r `is_in` HS.get_hmap m)
 
-let test1 (m:mem) (r:rid{r `is_above` m.tip}) = assert (r = root \/ is_stack_region r)
+let test1 (m:mem) (r:rid{r `is_above` HS.get_tip m}) = assert (r = root \/ is_stack_region r)
 
-let test2 (m:mem) (r:sid{m.tip `is_above` r /\ m.tip <> r}) = assert (~ (r `is_in` m.h))
+let test2 (m:mem) (r:sid{HS.get_tip m `is_above` r /\ HS.get_tip m <> r}) = assert (~ (r `is_in` HS.get_hmap m))
 
-let dc_elim (m:mem) (s:rid{s `is_in` m.h /\ s <> root}) (r:rid)
-  : Lemma ((s `is_above` r /\ r `is_in` m.h) ==> is_stack_region s = is_stack_region r)
+let dc_elim (m:mem) (s:rid{s `is_in` HS.get_hmap m /\ s <> root}) (r:rid)
+  : Lemma ((s `is_above` r /\ r `is_in` HS.get_hmap m) ==> is_stack_region s = is_stack_region r)
   = ()
 
-let test3 (m:mem) (r:rid{r <> root /\ is_eternal_region r /\ m.tip `is_above` r /\ is_stack_region m.tip})
-  : Lemma (~ (r `is_in` m.h))
+let test3 (m:mem) (r:rid{r <> root /\ is_eternal_region r /\ HS.get_tip m `is_above` r /\ is_stack_region (HS.get_tip m)})
+  : Lemma (~ (r `is_in` HS.get_hmap m))
   = root_has_color_zero ()
 
-let test4 (m:mem) (r:rid{r <> root /\ is_eternal_region r /\ r `is_above` m.tip /\ is_stack_region m.tip})
-  : Lemma (~ (r `is_in` m.h))
+let test4 (m:mem) (r:rid{r <> root /\ is_eternal_region r /\ r `is_above` HS.get_tip m /\ is_stack_region (HS.get_tip m)})
+  : Lemma (~ (r `is_in` HS.get_hmap m))
   = ()
 
 let stronger_fresh_region_was_redundant (i:rid) (m0 m1:mem)  //AR: because of map_invariant
   :Tot unit
   = let stronger_fresh_region (i:rid) (m0 m1:mem) =
-      (forall j. includes i j ==> not (j `is_in` m0.h)) /\
-      i `is_in` m1.h
+      (forall j. includes i j ==> not (j `is_in` HS.get_hmap m0)) /\
+      i `is_in` HS.get_hmap m1
     in
     assert (fresh_region i m0 m1 ==> stronger_fresh_region i m0 m1)
 
@@ -117,24 +117,24 @@ let test_stack_with_long_lived #rel s =
 
 val test_heap_code_with_stack_calls: unit -> Heap unit
   (requires (fun h -> heap_only h))
-  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton h0.tip) h0 h1 ))
+  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton (HS.get_tip h0)) h0 h1 ))
 let test_heap_code_with_stack_calls () =
   let h = get () in
   // How is the following not known ?
   HS.root_has_color_zero ();
-  let s :ref int = ralloc h.tip 0 in
+  let s :ref int = ralloc (HS.get_tip h) 0 in
   test_stack_with_long_lived s;
   s := 1;
   ()
 
 val test_heap_code_with_stack_calls_and_regions: unit -> Heap unit
   (requires (fun h -> heap_only h))
-  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton h0.tip) h0 h1 ))
+  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton (HS.get_tip h0)) h0 h1 ))
 let test_heap_code_with_stack_calls_and_regions () =
   let h = get() in
   let color = 0 in
   HS.root_has_color_zero ();
-  let new_region = new_colored_region h.tip color in
+  let new_region = new_colored_region (HS.get_tip h) color in
   let s :ref int = ralloc new_region 1 in
   test_stack_with_long_lived s; // STStack call
   test_heap_code_with_stack_calls (); // STHeap call
@@ -168,7 +168,7 @@ let test_lax_code_with_stack_calls_and_regions_2 () =
 #reset-options
 
 val test_to_be_stack_inlined: unit -> StackInline (reference int)
-  (requires (fun h -> is_stack_region h.tip))
+  (requires (fun h -> is_stack_region (HS.get_tip h)))
   (ensures  (fun h0 r h1 -> ~(contains h0 r) /\ contains h1 r /\ sel h1 r = 2))
 let test_to_be_stack_inlined () =
   let r :stackref int = salloc 0 in
@@ -196,7 +196,7 @@ let test_st_function_with_inline () =
   ()
 
 val test_to_be_inlined: unit -> Inline (reference int * reference int)
-  (requires (fun h -> is_stack_region h.tip))
+  (requires (fun h -> is_stack_region (HS.get_tip h)))
   (ensures  (fun h0 r h1 -> True))
 let test_to_be_inlined () =
   let r :stackref int = salloc 0 in
@@ -254,7 +254,7 @@ let mm_tests _ =
 
   //check that the heap contains the reference
   let m = get () in
-  let h = Map.sel m.h m.tip in
+  let h = HS.get_hmap m `Map.sel` (HS.get_tip m) in
   let _ = assert (Heap.contains h (as_ref r1)) in
 
   let _ = !r1 in
@@ -266,7 +266,7 @@ let mm_tests _ =
 
   //check that the heap does not contain the reference
   let m = get () in
-  let h = Map.sel m.h m.tip in
+  let h = HS.get_hmap m `Map.sel` (HS.get_tip m) in
   let _ = assert (~ (Heap.contains h (as_ref r1))) in
 
   let r2 :mmstackref int = salloc_mm 2 in
@@ -283,7 +283,7 @@ let mm_tests _ =
 
   //check that the heap does not contain the reference
   let m = get () in
-  let h = Map.sel m.h id in
+  let h = HS.get_hmap m `Map.sel` id in
   let _ = assert (~ (Heap.contains h (as_ref r3))) in
 
   //this fails because the reference is no longer live
