@@ -18,19 +18,18 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_FStar.UInt8.t__uu___haseq",
         "equation_Ex12b1.Format.message",
         "equation_FStar.Seq.Base.op_At_Bar", "equation_Platform.Bytes.byte",
-        "equation_Platform.Bytes.bytes", "equation_Prims.eqtype",
+        "equation_Platform.Bytes.bytes",
         "function_token_typing_FStar.UInt8.t",
+        "function_token_typing_Platform.Bytes.byte",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_f904f6c16e829f6df71f9c4ec26e4ace",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "7ea36d3ba6db6aad6d9cc4e83763901e"
+      "e9cb857e85dff1c0460753534dfd7af5"
     ],
     [
       "Ex12b1.Format.lemma_eq_intro",
@@ -103,12 +102,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Ex12b1.Format.string16",
-        "equation_Ex12b1.Format.uInt16", "equation_FStar.Char.char",
-        "equation_Platform.Bytes.byte", "projection_inverse_BoxInt_proj_0",
+        "equation_Ex12b1.Format.uInt16", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Ex12b1.Format_Tm_refine_0b0c7870479b009ecde2e1ac3a590e38"
       ],
       0,
-      "2a7711c67bc5a8f9d48377a92395ffac"
+      "fbda4b98e7702882fd0b026bf5c0ac63"
     ],
     [
       "Ex12b1.Format.req_resp_distinct",
@@ -221,12 +219,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Ex12b1.Format.string16",
-        "equation_Ex12b1.Format.uInt16", "equation_Platform.Bytes.byte",
-        "projection_inverse_BoxInt_proj_0",
+        "equation_Ex12b1.Format.uInt16", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Ex12b1.Format_Tm_refine_0b0c7870479b009ecde2e1ac3a590e38"
       ],
       0,
-      "5c62a1c21177ec0dc7cebfdbf6a617fa"
+      "134591d168669884c36d8b3f9e1fce60"
     ],
     [
       "Ex12b1.Format.req_resp_distinct",

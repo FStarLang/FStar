@@ -6,17 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Integers.Signed",
-        "constructor_distinct_FStar.Integers.Winfinite",
-        "equality_tok_FStar.Integers.Winfinite@tok",
-        "equation_FStar.Integers.int_t", "int_inversion",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Integers.Signed__0"
-      ],
+      [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "223407d28965710ce667f08501ae0a0a"
+      "e3474c7ff6d7a864114f157b407fc1ad"
     ],
     [
       "Pruning.uu___68",

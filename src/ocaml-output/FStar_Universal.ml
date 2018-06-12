@@ -63,6 +63,8 @@ let with_tcenv :
                  (uu___401_55.FStar_TypeChecker_Env.lax);
                FStar_TypeChecker_Env.lax_universes =
                  (uu___401_55.FStar_TypeChecker_Env.lax_universes);
+               FStar_TypeChecker_Env.phase1 =
+                 (uu___401_55.FStar_TypeChecker_Env.phase1);
                FStar_TypeChecker_Env.failhard =
                  (uu___401_55.FStar_TypeChecker_Env.failhard);
                FStar_TypeChecker_Env.nosynth =
@@ -235,6 +237,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.lax = (uu___403_253.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (uu___403_253.FStar_TypeChecker_Env.lax_universes);
+        FStar_TypeChecker_Env.phase1 =
+          (uu___403_253.FStar_TypeChecker_Env.phase1);
         FStar_TypeChecker_Env.failhard =
           (uu___403_253.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.nosynth =
@@ -316,6 +320,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.lax = (uu___404_255.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (uu___404_255.FStar_TypeChecker_Env.lax_universes);
+        FStar_TypeChecker_Env.phase1 =
+          (uu___404_255.FStar_TypeChecker_Env.phase1);
         FStar_TypeChecker_Env.failhard =
           (uu___404_255.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.nosynth =
@@ -396,6 +402,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.lax = (uu___405_257.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (uu___405_257.FStar_TypeChecker_Env.lax_universes);
+        FStar_TypeChecker_Env.phase1 =
+          (uu___405_257.FStar_TypeChecker_Env.phase1);
         FStar_TypeChecker_Env.failhard =
           (uu___405_257.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.nosynth =

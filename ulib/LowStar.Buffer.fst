@@ -53,7 +53,7 @@ let frameOf #a b = if g_is_null b then HS.root else HS.frameOf (Buffer?.content 
 let as_addr #a b = if g_is_null b then 0 else HS.as_addr (Buffer?.content b)
 
 let unused_in_equiv #a b h =
-  if g_is_null b then Heap.not_addr_unused_in_nullptr (Map.sel h.HS.h HS.root) else ()
+  if g_is_null b then Heap.not_addr_unused_in_nullptr (Map.sel (HS.get_hmap h) HS.root) else ()
 
 let live_region_frameOf #a h b = ()
 

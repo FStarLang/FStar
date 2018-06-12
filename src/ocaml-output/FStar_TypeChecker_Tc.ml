@@ -69,6 +69,8 @@ let (set_hint_correlator :
               (uu___359_54.FStar_TypeChecker_Env.lax);
             FStar_TypeChecker_Env.lax_universes =
               (uu___359_54.FStar_TypeChecker_Env.lax_universes);
+            FStar_TypeChecker_Env.phase1 =
+              (uu___359_54.FStar_TypeChecker_Env.phase1);
             FStar_TypeChecker_Env.failhard =
               (uu___359_54.FStar_TypeChecker_Env.failhard);
             FStar_TypeChecker_Env.nosynth =
@@ -166,6 +168,8 @@ let (set_hint_correlator :
               (uu___360_104.FStar_TypeChecker_Env.lax);
             FStar_TypeChecker_Env.lax_universes =
               (uu___360_104.FStar_TypeChecker_Env.lax_universes);
+            FStar_TypeChecker_Env.phase1 =
+              (uu___360_104.FStar_TypeChecker_Env.phase1);
             FStar_TypeChecker_Env.failhard =
               (uu___360_104.FStar_TypeChecker_Env.failhard);
             FStar_TypeChecker_Env.nosynth =
@@ -1417,6 +1421,9 @@ let (tc_eff_decl :
                                                      FStar_TypeChecker_Env.lax_universes
                                                        =
                                                        (uu___364_2287.FStar_TypeChecker_Env.lax_universes);
+                                                     FStar_TypeChecker_Env.phase1
+                                                       =
+                                                       (uu___364_2287.FStar_TypeChecker_Env.phase1);
                                                      FStar_TypeChecker_Env.failhard
                                                        =
                                                        (uu___364_2287.FStar_TypeChecker_Env.failhard);
@@ -1748,6 +1755,9 @@ let (tc_eff_decl :
                                                        FStar_TypeChecker_Env.lax_universes
                                                          =
                                                          (uu___366_2532.FStar_TypeChecker_Env.lax_universes);
+                                                       FStar_TypeChecker_Env.phase1
+                                                         =
+                                                         (uu___366_2532.FStar_TypeChecker_Env.phase1);
                                                        FStar_TypeChecker_Env.failhard
                                                          =
                                                          (uu___366_2532.FStar_TypeChecker_Env.failhard);
@@ -4494,6 +4504,7 @@ and (tc_decl' :
                            FStar_TypeChecker_Env.lax = true;
                            FStar_TypeChecker_Env.lax_universes =
                              (uu___374_7184.FStar_TypeChecker_Env.lax_universes);
+                           FStar_TypeChecker_Env.phase1 = true;
                            FStar_TypeChecker_Env.failhard =
                              (uu___374_7184.FStar_TypeChecker_Env.failhard);
                            FStar_TypeChecker_Env.nosynth =
@@ -4667,6 +4678,7 @@ and (tc_decl' :
                            FStar_TypeChecker_Env.lax = true;
                            FStar_TypeChecker_Env.lax_universes =
                              (uu___378_7292.FStar_TypeChecker_Env.lax_universes);
+                           FStar_TypeChecker_Env.phase1 = true;
                            FStar_TypeChecker_Env.failhard =
                              (uu___378_7292.FStar_TypeChecker_Env.failhard);
                            FStar_TypeChecker_Env.nosynth =
@@ -5056,6 +5068,8 @@ and (tc_decl' :
                              FStar_TypeChecker_Env.lax = true;
                              FStar_TypeChecker_Env.lax_universes =
                                (uu___382_8240.FStar_TypeChecker_Env.lax_universes);
+                             FStar_TypeChecker_Env.phase1 =
+                               (uu___382_8240.FStar_TypeChecker_Env.phase1);
                              FStar_TypeChecker_Env.failhard =
                                (uu___382_8240.FStar_TypeChecker_Env.failhard);
                              FStar_TypeChecker_Env.nosynth =
@@ -5576,6 +5590,8 @@ and (tc_decl' :
                        FStar_TypeChecker_Env.lax = true;
                        FStar_TypeChecker_Env.lax_universes =
                          (uu___386_9037.FStar_TypeChecker_Env.lax_universes);
+                       FStar_TypeChecker_Env.phase1 =
+                         (uu___386_9037.FStar_TypeChecker_Env.phase1);
                        FStar_TypeChecker_Env.failhard =
                          (uu___386_9037.FStar_TypeChecker_Env.failhard);
                        FStar_TypeChecker_Env.nosynth =
@@ -5709,6 +5725,7 @@ and (tc_decl' :
                      FStar_TypeChecker_Env.lax = true;
                      FStar_TypeChecker_Env.lax_universes =
                        (uu___388_9146.FStar_TypeChecker_Env.lax_universes);
+                     FStar_TypeChecker_Env.phase1 = true;
                      FStar_TypeChecker_Env.failhard =
                        (uu___388_9146.FStar_TypeChecker_Env.failhard);
                      FStar_TypeChecker_Env.nosynth =
@@ -6142,6 +6159,8 @@ and (tc_decl' :
                      (uu___394_10114.FStar_TypeChecker_Env.lax);
                    FStar_TypeChecker_Env.lax_universes =
                      (uu___394_10114.FStar_TypeChecker_Env.lax_universes);
+                   FStar_TypeChecker_Env.phase1 =
+                     (uu___394_10114.FStar_TypeChecker_Env.phase1);
                    FStar_TypeChecker_Env.failhard =
                      (uu___394_10114.FStar_TypeChecker_Env.failhard);
                    FStar_TypeChecker_Env.nosynth =
@@ -6291,6 +6310,7 @@ and (tc_decl' :
                                 FStar_TypeChecker_Env.lax = true;
                                 FStar_TypeChecker_Env.lax_universes =
                                   (uu___397_10193.FStar_TypeChecker_Env.lax_universes);
+                                FStar_TypeChecker_Env.phase1 = true;
                                 FStar_TypeChecker_Env.failhard =
                                   (uu___397_10193.FStar_TypeChecker_Env.failhard);
                                 FStar_TypeChecker_Env.nosynth =
@@ -6912,6 +6932,8 @@ let (check_exports :
               (uu___404_11669.FStar_TypeChecker_Env.admit);
             FStar_TypeChecker_Env.lax = true;
             FStar_TypeChecker_Env.lax_universes = true;
+            FStar_TypeChecker_Env.phase1 =
+              (uu___404_11669.FStar_TypeChecker_Env.phase1);
             FStar_TypeChecker_Env.failhard =
               (uu___404_11669.FStar_TypeChecker_Env.failhard);
             FStar_TypeChecker_Env.nosynth =
@@ -7582,6 +7604,8 @@ let (tc_partial_modul :
              (uu___411_13011.FStar_TypeChecker_Env.lax);
            FStar_TypeChecker_Env.lax_universes =
              (uu___411_13011.FStar_TypeChecker_Env.lax_universes);
+           FStar_TypeChecker_Env.phase1 =
+             (uu___411_13011.FStar_TypeChecker_Env.phase1);
            FStar_TypeChecker_Env.failhard =
              (uu___411_13011.FStar_TypeChecker_Env.failhard);
            FStar_TypeChecker_Env.nosynth =
@@ -7816,6 +7840,8 @@ and (finish_partial_modul :
                         (uu___414_13241.FStar_TypeChecker_Env.lax);
                       FStar_TypeChecker_Env.lax_universes =
                         (uu___414_13241.FStar_TypeChecker_Env.lax_universes);
+                      FStar_TypeChecker_Env.phase1 =
+                        (uu___414_13241.FStar_TypeChecker_Env.phase1);
                       FStar_TypeChecker_Env.failhard =
                         (uu___414_13241.FStar_TypeChecker_Env.failhard);
                       FStar_TypeChecker_Env.nosynth =
@@ -8054,6 +8080,8 @@ let (check_module :
              FStar_TypeChecker_Env.lax = uu____13487;
              FStar_TypeChecker_Env.lax_universes =
                (uu___418_13486.FStar_TypeChecker_Env.lax_universes);
+             FStar_TypeChecker_Env.phase1 =
+               (uu___418_13486.FStar_TypeChecker_Env.phase1);
              FStar_TypeChecker_Env.failhard =
                (uu___418_13486.FStar_TypeChecker_Env.failhard);
              FStar_TypeChecker_Env.nosynth =

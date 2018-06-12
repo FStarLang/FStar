@@ -44,7 +44,6 @@ type delta_level =
   | Inlining
   | Eager_unfolding_only
   | Unfold of delta_depth
-  | UnfoldTac
 
 type mlift = {
   mlift_wp:universe -> typ -> typ -> typ ;
@@ -95,6 +94,7 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
   lax_universes  :bool;                         (* don't check universe constraints *)
+  phase1         :bool;                         (* running in phase 1, phase 2 to come after *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
@@ -201,6 +201,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     admit=false;
     lax=false;
     lax_universes=false;
+    phase1=false;
     failhard=false;
     nosynth=false;
     uvar_subtyping=true;
@@ -1266,7 +1267,6 @@ let string_of_delta_level = function
   | Inlining -> "Inlining"
   | Eager_unfolding_only -> "Eager_unfolding_only"
   | Unfold d -> "Unfold " ^ Print.delta_depth_to_string d
-  | UnfoldTac -> "UnfoldTac"
 
 let lidents env : list<lident> =
   let keys = List.collect fst env.gamma_sig in

@@ -937,12 +937,18 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
       e, lc
 
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
+  if Env.debug env Options.High then
+    BU.print3 "weaken_result_typ e=(%s) lc=(%s) t=(%s)\n"
+            (Print.term_to_string e)
+            (Print.lcomp_to_string lc)
+            (Print.term_to_string t);
   let use_eq =
     env.use_eq ||
     (match Env.effect_decl_opt env lc.eff_name with
+     // See issue #881 for why weakening result type of a reifiable computation is problematic
      | Some (ed, qualifiers) -> qualifiers |> List.contains Reifiable
      | _ -> false) in
-  let gopt = if use_eq //see issue #881 for why weakening result type of a reifiable computation is problematic
+  let gopt = if use_eq
              then Rel.try_teq true env lc.res_typ t, false
              else Rel.get_subtyping_predicate env lc.res_typ t, true in
   match gopt with
@@ -1231,7 +1237,6 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let env_uvars = Env.uvars_in_env env in
      let gen_uvars uvs = BU.set_difference uvs env_uvars |> BU.set_elements in
      let univs_and_uvars_of_lec (lbname, e, c) =
-          let t = U.comp_result c |> SS.compress in
           let c = norm c in
           let t = U.comp_result c in
           let univs = Free.univs t in
@@ -1438,6 +1443,8 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
+  if debug env Options.Low then
+    BU.print1 "check_top_level, lc = %s\n" (Print.lcomp_to_string lc);
   let discharge g =
     force_trivial_guard env g;
     U.is_pure_lcomp lc in

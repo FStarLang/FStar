@@ -53,10 +53,10 @@ let arms_up (b:bot) (h:mem) =
   /\ sel h (Arm?.polar (Bot?.left b))  = 0
 
 type robot_inv (b:bot) (h:mem) =
-    Map.contains h.h (Bot?.r b)
-  /\ Map.contains h.h (Point?.r (Bot?.pos b))
-  /\ Map.contains h.h (Arm?.r (Bot?.left b))
-  /\ Map.contains h.h (Arm?.r (Bot?.right b))
+    Map.contains (get_hmap h) (Bot?.r b)
+  /\ Map.contains (get_hmap h) (Point?.r (Bot?.pos b))
+  /\ Map.contains (get_hmap h) (Arm?.r (Bot?.left b))
+  /\ Map.contains (get_hmap h) (Arm?.r (Bot?.right b))
   /\ (flying b h ==> arms_up b h)
 // END: Invariant
 

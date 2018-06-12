@@ -161,9 +161,9 @@ let invariant (h:mem) (k:key) =
   let log = get_log h k in
   let mac_log = get_mac_log h k in
   let cpa_log = get_cpa_log h k in
-  Map.contains h.h k.region /\
-  Map.contains h.h (MAC.Key?.region k.km) /\
-  Map.contains h.h (CPA.Key?.region k.ke) /\
+  Map.contains (get_hmap h) k.region /\
+  Map.contains (get_hmap h) (MAC.Key?.region k.km) /\
+  Map.contains (get_hmap h) (CPA.Key?.region k.ke) /\
   EtM.CPA.invariant (Key?.ke k) h /\
   mac_only_cpa_ciphers (get_mac_log h k) (get_cpa_log h k) /\
   mac_and_cpa_refine_ae (get_log h k) (get_mac_log h k) (get_cpa_log h k)
@@ -243,7 +243,7 @@ let keygen (parent:rid)
     modifies Set.empty h0 h1    /\
     extends k.region parent     /\
     fresh_region k.region h0 h1 /\
-    Map.contains h1.h k.region /\
+    Map.contains (get_hmap h1) k.region /\
     contains h1 k.log /\
     sel h1 k.log == createEmpty /\
     invariant h1 k)) =

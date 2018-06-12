@@ -24,7 +24,7 @@ SHOULD_VERIFY_CLOSED=bug022.fst bug024.fst bug025.fst bug026.fst bug026b.fst bug
   bug710.fst bug712.fst bug713.fst bug736.fst bug765.fst bug769c.fst bug786.fst bug836.fst bug844.fst bug985.fst \
 	bug989.fst\
   BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst bug1150.fst bug1076.fst\
-  bug1121.fst bug1341.fst bug1345.fst bug1346.fst bug1348.fst bug1362.fst \
+  bug1121.fst bug1341.fst bug1345.fst bug1345b.fst bug1346.fst bug1348.fst bug1362.fst \
   bug1347.fst bug1347b.fst bug1206.fst bug1271.fst bug1305.fst bug1361.fst bug1383.fst bug1392.fst bug1414.fst \
   unfold.fst bug1091.fst BugUnfoldAbstractEquational.fst
 SHOULD_VERIFY_INTERFACE_CLOSED=bug771.fsti bug771b.fsti

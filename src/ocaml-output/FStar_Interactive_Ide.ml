@@ -103,6 +103,8 @@ let (set_check_kind :
         FStar_TypeChecker_Env.lax = (check_kind = LaxCheck);
         FStar_TypeChecker_Env.lax_universes =
           (uu___437_163.FStar_TypeChecker_Env.lax_universes);
+        FStar_TypeChecker_Env.phase1 =
+          (uu___437_163.FStar_TypeChecker_Env.phase1);
         FStar_TypeChecker_Env.failhard =
           (uu___437_163.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.nosynth =
@@ -2487,6 +2489,8 @@ let run_push_without_deps :
                  (uu___452_5720.FStar_TypeChecker_Env.lax);
                FStar_TypeChecker_Env.lax_universes =
                  (uu___452_5720.FStar_TypeChecker_Env.lax_universes);
+               FStar_TypeChecker_Env.phase1 =
+                 (uu___452_5720.FStar_TypeChecker_Env.phase1);
                FStar_TypeChecker_Env.failhard =
                  (uu___452_5720.FStar_TypeChecker_Env.failhard);
                FStar_TypeChecker_Env.nosynth = flag;

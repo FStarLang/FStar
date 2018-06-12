@@ -46,18 +46,17 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Tactics.Effect_interpretation_Tm_arrow_64e9fbfe7638fce4dffc18967df04099",
-        "bool_inversion", "disc_equation_FStar.Tactics.Result.Failed",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Tactics.Result.Failed",
         "disc_equation_FStar.Tactics.Result.Success",
         "equation_FStar.Tactics.Effect.__tac",
         "lemma_FStar.Tactics.Result.result_split",
         "typing_FStar.Range.prims_to_fstar_range",
-        "typing_FStar.Tactics.Result.uu___is_Failed",
-        "typing_FStar.Tactics.Result.uu___is_Success",
         "typing_FStar.Tactics.Types.incr_depth",
         "typing_FStar.Tactics.Types.set_proofstate_range"
       ],
       0,
-      "06c55e787a5f4b3f0be4bef88e9e9666"
+      "897472a7037d3269df26cbd185fbde2f"
     ],
     [
       "FStar.Tactics.Effect.g_bind",

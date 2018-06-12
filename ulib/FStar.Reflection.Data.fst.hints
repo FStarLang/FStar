@@ -1653,11 +1653,11 @@
         "fuel_guarded_inversion_FStar.Reflection.Data.comp_view",
         "function_token_typing_FStar.Reflection.Types.term",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "ae6af3220014b1c670247d9c789881fe"
+      "eae025b84a8c350137d4c5d369cda9dd"
     ]
   ]
 ]

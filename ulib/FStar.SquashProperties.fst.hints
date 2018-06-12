@@ -184,11 +184,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
-        "disc_equation_Prims.Right", "equation_Prims.l_not",
-        "fuel_guarded_inversion_Prims.c_or"
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "2cda3688340f40ba1359dbc0ac6897ba"
+      "9ee139e0205155d2a457fcfe33b4d26f"
     ],
     [
       "FStar.SquashProperties.__proj__MkR__item__inv",
@@ -257,11 +256,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
-        "disc_equation_Prims.Right", "equation_Prims.l_not",
-        "fuel_guarded_inversion_Prims.c_or"
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "73a72414e51cdb6e4b5b7396fd5cf4bf"
+      "1c741547742a1f409ed9219fb32be479"
     ]
   ]
 ]

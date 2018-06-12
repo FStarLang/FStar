@@ -157,6 +157,7 @@ and var = int
 and binder = {
   name: ident;
   typ: typ;
+  mut: bool
 }
 
 (* for pretty-printing *)
@@ -616,7 +617,7 @@ and translate_binders env args =
   List.map (translate_binder env) args
 
 and translate_binder env (name, typ) =
-  { name = name; typ = translate_type env typ }
+  { name = name; typ = translate_type env typ; mut = false }
 
 and translate_expr env e: expr =
   match e.expr with
@@ -647,7 +648,7 @@ and translate_expr env e: expr =
       mllb_meta = flags;
       print_typ = print // ?
     }]), continuation) ->
-      let binder = { name = name; typ = translate_type env typ } in
+      let binder = { name = name; typ = translate_type env typ; mut = false } in
       let body = translate_expr env body in
       let env = extend env name in
       let continuation = translate_expr env continuation in
@@ -675,6 +676,12 @@ and translate_expr env e: expr =
          let print = with_ty MLTY_Top (MLE_App (print, [arg])) in
          let t = translate_expr env print in
          ESequence [t; EAbort])
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ] )
+    when string_of_mlpath p = "LowStar.ToFStarBuffer.new_to_old_st" ||
+         string_of_mlpath p = "LowStar.ToFStarBuffer.old_to_new_st"
+    ->
+    translate_expr env e
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
@@ -895,10 +902,10 @@ and translate_pat env p =
       env, PConstant (translate_width sw, s)
   | MLP_Var name ->
       let env = extend env name in
-      env, PVar ({ name = name; typ = TAny })
+      env, PVar ({ name = name; typ = TAny; mut = false })
   | MLP_Wild ->
       let env = extend env "_" in
-      env, PVar ({ name = "_"; typ = TAny })
+      env, PVar ({ name = "_"; typ = TAny; mut = false })
   | MLP_CTor ((_, cons), ps) ->
       let env, ps = List.fold_left (fun (env, acc) p ->
         let env, p = translate_pat env p in

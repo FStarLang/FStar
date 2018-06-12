@@ -175,8 +175,8 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
     | Some expected_c -> //expected effects should already be normalized
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (U.lcomp_of_comp c) in
        let c = lcomp_comp c in
-       if debug env <| Options.Extreme then
-       BU.print3 "In check_expected_effect, asking rel to solve the problem on e %s and c %s and expected_c %s\n"
+       if debug env <| Options.Low then
+       BU.print3 "In check_expected_effect, asking rel to solve the problem on e=(%s) and c=(%s) and expected_c=(%s)\n"
                  (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
        let e, _, g = TcUtil.check_comp env e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
@@ -313,14 +313,23 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
-let rec tc_term env e = tc_maybe_toplevel_term ({env with top_level=false}) e
+let rec tc_term env e =
+    let r, ms = BU.record_time (fun () ->
+                    tc_maybe_toplevel_term ({env with top_level=false}) e) in
+    if Env.debug env Options.Medium then
+        BU.print4 "(%s) tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
+                                                        (Print.term_to_string e)
+                                                        (Print.tag_of_term (SS.compress e))
+                                                        (string_of_int ms);
+    r
 
 and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked and elaborated version of e            *)
                                         * lcomp                 (* computation type where the WPs are lazily evaluated *)
                                         * guard_t =             (* well-formedness condition                           *)
   let env = if e.pos=Range.dummyRange then env else Env.set_range env e.pos in
-  if debug env Options.Low then BU.print2 "%s (%s)\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term e);
   let top = SS.compress e in
+  if debug env Options.Low then
+    BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term top) (Print.term_to_string top);
   match top.n with
   | Tm_delayed _ -> failwith "Impossible"
 
@@ -543,8 +552,31 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         e, c, Env.conj_guard g' g
     end
 
-  | Tm_app(head, args) when U.is_synth_by_tactic head ->
-      tc_synth env args head.pos
+  // If we're on the first phase, we don't synth, and just wait for the next phase
+  | Tm_app (head, [(tau, None)])
+  | Tm_app (head, [(_, Some (Implicit _)); (tau, None)])
+        when U.is_synth_by_tactic head && not env.phase1 ->
+    (* Got an application of synth_by_tactic, process it *)
+
+    // no "as" clause
+    let head, args = U.head_and_args top in
+    tc_synth head env args top.pos
+
+  | Tm_app (head, args)
+        when U.is_synth_by_tactic head && not env.phase1 ->
+    (* We have some extra args, move them out of the way *)
+    let args1, args2 =
+        match args with
+        | (tau, None)::rest ->
+            [(tau, None)], rest
+        | (a, Some (Implicit b)) :: (tau, None) :: rest ->
+            [(a, Some (Implicit b)); (tau, None)], rest
+        | _ ->
+            raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: bad application") top.pos
+    in
+    let t1 = mk_app head args1 in
+    let t2 = mk_app t1 args2 in
+    tc_term env t2
 
   | Tm_app(head, args) ->
     let env0 = env in
@@ -649,13 +681,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_let ((true, _), _) ->
     check_inner_let_rec env top
 
-and tc_synth env args rng =
-    let tau, atyp, rest =
+and tc_synth head env args rng =
+    let tau, atyp =
     match args with
-    | (tau, None)::rest ->
-        tau, None, rest
-    | (a, Some (Implicit _)) :: (tau, None) :: rest ->
-        tau, Some a, rest
+    | (tau, None)::[] ->
+        tau, None
+    | (a, Some (Implicit _)) :: (tau, None) :: [] ->
+        tau, Some a
     | _ ->
         raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: bad application") rng
     in
@@ -679,10 +711,9 @@ and tc_synth env args rng =
     let tau, _, g2 = tc_tactic env' tau in
     Rel.force_trivial_guard env' g2;
 
-    // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
     let t =
-        if env.nosynth
-        then mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit] None rng
+        // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
+        if env.nosynth then mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit] None rng
         else begin
             let t = env.synth_hook env' typ ({ tau with pos = rng }) in
             if Env.debug env <| Options.Other "Tac" then
@@ -693,7 +724,8 @@ and tc_synth env args rng =
 
     // TODO: fix, this gives a crappy error
     TcUtil.check_uvars tau.pos t;
-    tc_term env (mk_Tm_app t rest None rng)
+
+    t, U.lcomp_of_comp <| mk_Total typ, Env.trivial_guard
 
 and tc_tactic env tau =
     let env = { env with failhard = true } in
@@ -764,7 +796,7 @@ and tc_value env (e:term) : term
     value_check_expected_typ env e tc implicits
 
   | Tm_uinst({n=Tm_fvar fv}, _)
-  | Tm_fvar fv when S.fv_eq_lid fv Const.synth_lid ->
+  | Tm_fvar fv when S.fv_eq_lid fv Const.synth_lid && not env.phase1 ->
     raise_error (Errors.Fatal_BadlyInstantiatedSynthByTactic, "Badly instantiated synth_by_tactic") (Env.get_range env)
 
   | Tm_uinst({n=Tm_fvar fv}, us) ->

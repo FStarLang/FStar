@@ -49,12 +49,9 @@
       3,
       2,
       1,
-      [
-        "@query", "equation_FStar.UInt128.n",
-        "projection_inverse_BoxInt_proj_0"
-      ],
+      [ "@query" ],
       0,
-      "f43c8df2b1c6b758597a801b46b9c96f"
+      "b6e9531f1746cf27d999a427e3f878da"
     ],
     [
       "FStar.Int.Cast.Full.uint64_to_uint128",

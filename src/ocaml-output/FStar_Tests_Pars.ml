@@ -142,6 +142,8 @@ let (init_once : unit -> unit) =
                (uu___401_234.FStar_TypeChecker_Env.lax);
              FStar_TypeChecker_Env.lax_universes =
                (uu___401_234.FStar_TypeChecker_Env.lax_universes);
+             FStar_TypeChecker_Env.phase1 =
+               (uu___401_234.FStar_TypeChecker_Env.phase1);
              FStar_TypeChecker_Env.failhard =
                (uu___401_234.FStar_TypeChecker_Env.failhard);
              FStar_TypeChecker_Env.nosynth =
@@ -273,6 +275,8 @@ let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
         FStar_TypeChecker_Env.lax = (uu___404_365.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (uu___404_365.FStar_TypeChecker_Env.lax_universes);
+        FStar_TypeChecker_Env.phase1 =
+          (uu___404_365.FStar_TypeChecker_Env.phase1);
         FStar_TypeChecker_Env.failhard =
           (uu___404_365.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.nosynth =

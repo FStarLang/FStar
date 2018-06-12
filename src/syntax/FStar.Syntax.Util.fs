@@ -494,6 +494,7 @@ let injectives =
      "FStar.UInt32.__uint_to_t";
      "FStar.UInt64.__uint_to_t"]
 
+(* Precondition: terms are well-typed in a common environment, or this can return false positives *)
 let rec eq_tm (t1:term) (t2:term) : eq_result =
     let t1 = canon_app t1 in
     let t2 = canon_app t2 in
@@ -591,6 +592,9 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       if q1 = q2
       then eq_tm t1 t2
       else Unknown
+
+    | Tm_refine (t1, phi1), Tm_refine (t2, phi2) ->
+      eq_and (eq_tm t1.sort t2.sort) (fun () -> eq_tm phi1 phi2)
 
     | _ -> Unknown
 
@@ -976,25 +980,6 @@ let rec get_tycon t =
   | Tm_fvar _  -> Some t
   | Tm_app(t, _) -> get_tycon t
   | _ -> None
-
-let is_interpreted l =
-  let theory_syms =
-    [PC.op_Eq          ;
-     PC.op_notEq       ;
-     PC.op_LT          ;
-     PC.op_LTE         ;
-     PC.op_GT          ;
-     PC.op_GTE         ;
-     PC.op_Subtraction ;
-     PC.op_Minus       ;
-     PC.op_Addition    ;
-     PC.op_Multiply    ;
-     PC.op_Division    ;
-     PC.op_Modulus     ;
-     PC.op_And         ;
-     PC.op_Or          ;
-     PC.op_Negation] in
-  U.for_some (lid_equals l) theory_syms
 
 let is_fstar_tactics_by_tactic t =
     match (un_uinst t).n with

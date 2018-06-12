@@ -99,6 +99,8 @@ let (push_with_kind :
               FStar_TypeChecker_Env.lax = lax1;
               FStar_TypeChecker_Env.lax_universes =
                 (uu___401_268.FStar_TypeChecker_Env.lax_universes);
+              FStar_TypeChecker_Env.phase1 =
+                (uu___401_268.FStar_TypeChecker_Env.phase1);
               FStar_TypeChecker_Env.failhard =
                 (uu___401_268.FStar_TypeChecker_Env.failhard);
               FStar_TypeChecker_Env.nosynth =
