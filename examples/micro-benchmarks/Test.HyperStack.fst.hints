@@ -17,7 +17,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "7910ae299d57902c28c98485ab073077"
+      "56f61e3f081ec0d78fd554427f4133ff"
     ],
     [
       "Test.HyperStack.test1",
@@ -40,7 +40,7 @@
         "typing_FStar.Monotonic.HyperStack.is_stack_region"
       ],
       0,
-      "57465900f775915494d64dbd2f2ee90d"
+      "458381d817a36445d9a024848cbf0680"
     ],
     [
       "Test.HyperStack.test2",
@@ -59,7 +59,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "4fcaa1e4806c7455d35f815e250cfbc2"
+      "a72f629ea015667dd6e820c6cb665c01"
     ],
     [
       "Test.HyperStack.dc_elim",
@@ -73,7 +73,7 @@
         "refinement_interpretation_Test.HyperStack_Tm_refine_1f280a87e1b98f79d3dac344a394dd1e"
       ],
       0,
-      "cafef3d049636aaa0f5d70992cbbb16d"
+      "f513b9c21ebaac2bf070c8ff4a14ddac"
     ],
     [
       "Test.HyperStack.test3",
@@ -100,7 +100,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "31398e72d5195ec036adbb4f103cf127"
+      "418ef25acb2dfb5d1d4024a187a172e0"
     ],
     [
       "Test.HyperStack.test4",
@@ -128,7 +128,7 @@
         "typing_FStar.Monotonic.HyperStack.is_stack_region"
       ],
       0,
-      "1318d663de213b291e37ca1f43e53831"
+      "b47c9dbe6ba981b63967f4ed42c17608"
     ],
     [
       "Test.HyperStack.stronger_fresh_region_was_redundant",
@@ -196,7 +196,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "53e5deddfdfe834aa2784eac72f814b3"
+      "7737d000dbe2b1abaf9a8426af22a3c2"
     ],
     [
       "Test.HyperStack.test_do_nothing",
@@ -1588,7 +1588,7 @@
         "refinement_interpretation_Test.HyperStack_Tm_refine_6a06166666e1554fc56a4b17e6d25d25"
       ],
       0,
-      "2a3cbe3d5187310b2aadac9661f1c7b0"
+      "10a10f7f334f6224ec533d3949012db1"
     ],
     [
       "Test.HyperStack.with_frame",
@@ -1828,7 +1828,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "195d2088a469c3e8783bb3f262de4068"
+      "c15c0d483227dd039d4d0ad61737ead0"
     ],
     [
       "Test.HyperStack.dc_elim",
@@ -1888,7 +1888,7 @@
         "refinement_interpretation_Test.HyperStack_Tm_refine_6a06166666e1554fc56a4b17e6d25d25"
       ],
       0,
-      "a88f64badcb39ed07085cc793b2d0b0a"
+      "abcfb1a34c29bd0a61e1345f1fb6a636"
     ],
     [
       "Test.HyperStack.test_with_frame",
