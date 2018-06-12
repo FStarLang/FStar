@@ -451,8 +451,27 @@ let g_upd_seq #a b s h
 #reset-options "--max_fuel 0 --max_ifuel 1"
 let g_upd_seq_as_seq (#a:Type) (b:buffer a) (s:lseq a (length b)) (h:HS.mem{live h b})
   = let h' = g_upd_seq b s h in
-    assume (modifies_1_preserves_abuffers b h h');
-    assert (as_seq (g_upd_seq b s h) b `Seq.equal` s)
+    assert (as_seq (g_upd_seq b s h) b `Seq.equal` s);
+    // prove modifies_1_preserves_abuffers
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();
+    // The proof below is basically unfolding definitions
+    // and triggering a use of extensional equality of sequences 
+    let aux (ab' : abuffer (frameOf b) (as_addr b))
+        : Lemma (requires (abuffer_disjoint #(frameOf b) #(as_addr b) (abuffer_of_buffer b) ab'))
+                (ensures (abuffer_preserved #(frameOf b) #(as_addr b) ab' h h'))
+        = let r = frameOf b in
+          let ad = as_addr b in
+          let aux' (t':Type) (b':buffer t')
+              : Lemma (frameOf b' == r /\ as_addr b' == ad /\ abuffer_of_buffer' b' == ab' /\ live h b'
+                       ==> live h' b' 
+                           /\ Seq.equal (as_seq h' b') (as_seq h b') //use extensional equality here
+                       )
+              = ()
+          in
+          FStar.Classical.forall_intro_2 aux'
+    in
+    FStar.Classical.forall_intro (FStar.Classical.move_requires aux)
 #reset-options
 
 let upd #a b i v =

@@ -658,7 +658,7 @@ val index (#a: Type) (b: buffer a) (i: U32.t) : HST.Stack a
 
 /// ``g_upd_seq b s h`` updates the entire buffer `b`'s contents in
 /// heap `h` to correspond to the sequence `s`
-val g_upd_seq (#a:Type) 
+val g_upd_seq (#a:Type)
               (b:buffer a)
               (s:Seq.lseq a (length b))
               (h:HS.mem{live h b})
