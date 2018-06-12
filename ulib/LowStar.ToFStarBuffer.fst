@@ -127,33 +127,73 @@ let old_to_union_loc (l: OldM.loc) : GTot (M.loc old_and_new_cl_union) =
 let new_to_union_loc (l: NewM.loc) : GTot (M.loc old_and_new_cl_union) =
   M.union_loc_of_loc old_and_new_cl true (M.raise_loc (NewM.cloc_of_loc l))
 
-(* TODO: improve the pattern. There is no way to automatically compute new_l from old_l in general. *)
-
 let old_to_new_modifies (old_l: OldM.loc) (new_l: NewM.loc) (h h' : HS.mem) : Lemma
   (requires (OldM.modifies old_l h h' /\ old_to_union_loc old_l == new_to_union_loc new_l))
   (ensures (NewM.modifies new_l h h'))
-  [SMTPat (OldM.modifies old_l h h'); SMTPat (NewM.modifies new_l h h')]
 = OldM.modifies_to_cloc old_l h h';
   M.modifies_union_loc_of_loc old_and_new_cl false (OldM.cloc_of_loc old_l) h h';
   M.modifies_union_loc_of_loc old_and_new_cl true (M.raise_loc (NewM.cloc_of_loc new_l)) h h';
   M.modifies_raise_loc (NewM.cloc_of_loc new_l) h h';
   NewM.modifies_to_cloc new_l h h'
 
-let old_to_union_loc_none : squash (old_to_union_loc OldM.loc_none == new_to_union_loc NewM.loc_none) = OldM.cloc_of_loc_none ();
-  M.union_loc_of_loc_none old_and_new_cl false;
-  M.union_loc_of_loc_none old_and_new_cl true;
-  M.raise_loc_none #_ #NewM.cloc_cls;
-  NewM.cloc_of_loc_none ()
+let old_to_union_loc_none : squash (old_to_union_loc OldM.loc_none == M.loc_none) =
+  OldM.cloc_of_loc_none ();
+  M.union_loc_of_loc_none old_and_new_cl false
 
-let old_to_union_loc_union (old1 old2: OldM.loc) (new1 new2: NewM.loc) : Lemma
-  (requires (old_to_union_loc old1 == new_to_union_loc new1 /\ old_to_union_loc old2 == new_to_union_loc new2))
-  (ensures (old_to_union_loc (old1 `OldM.loc_union` old2) == new_to_union_loc (new1 `NewM.loc_union` new2)))
-  [SMTPat (old_to_union_loc (old1 `OldM.loc_union` old2)); SMTPat (new_to_union_loc (new1 `NewM.loc_union` new2))]
+let new_to_union_loc_none : squash (new_to_union_loc NewM.loc_none == M.loc_none) =
+  NewM.cloc_of_loc_none ();
+  M.raise_loc_none #_ #NewM.cloc_cls;
+  M.union_loc_of_loc_none old_and_new_cl true
+
+let old_to_union_loc_union (old1 old2: OldM.loc) : Lemma
+ (old_to_union_loc (old1 `OldM.loc_union` old2) == old_to_union_loc old1 `M.loc_union` old_to_union_loc old2)
+  [SMTPat (old_to_union_loc (old1 `OldM.loc_union` old2))]
 = OldM.cloc_of_loc_union old1 old2;
-  M.union_loc_of_loc_union old_and_new_cl false (OldM.cloc_of_loc old1) (OldM.cloc_of_loc old2);
-  M.union_loc_of_loc_union old_and_new_cl true (M.raise_loc (NewM.cloc_of_loc new1)) (M.raise_loc (NewM.cloc_of_loc new2));
+  M.union_loc_of_loc_union old_and_new_cl false (OldM.cloc_of_loc old1) (OldM.cloc_of_loc old2)
+
+let new_to_union_loc_union (new1 new2: NewM.loc) : Lemma
+ (new_to_union_loc (new1 `NewM.loc_union` new2) == new_to_union_loc new1 `M.loc_union` new_to_union_loc new2)
+  [SMTPat (new_to_union_loc (new1 `NewM.loc_union` new2))]
+= NewM.cloc_of_loc_union new1 new2;
   M.raise_loc_union (NewM.cloc_of_loc new1) (NewM.cloc_of_loc new2);
-  NewM.cloc_of_loc_union new1 new2
+  M.union_loc_of_loc_union old_and_new_cl true (M.raise_loc (NewM.cloc_of_loc new1)) (M.raise_loc (NewM.cloc_of_loc new2))
+
+let union_loc_to_new (l: M.loc old_and_new_cl_union) : GTot NewM.loc =
+  NewM.loc_of_cloc (M.lower_loc (M.loc_of_union_loc true l))
+
+let union_loc_to_new_new_to_union_loc (l: NewM.loc) : Lemma
+  (union_loc_to_new (new_to_union_loc l) == l)
+  [SMTPat (union_loc_to_new (new_to_union_loc l))]
+= M.loc_of_union_loc_union_loc_of_loc old_and_new_cl true (M.raise_loc (NewM.cloc_of_loc l));
+  M.lower_loc_raise_loc u#0 u#1 (NewM.cloc_of_loc l);
+  NewM.loc_of_cloc_of_loc l
+
+let union_loc_to_new_none : squash (union_loc_to_new M.loc_none == NewM.loc_none) =
+  M.loc_of_union_loc_none old_and_new_cl true;
+  M.lower_loc_none u#0 u#1 #_ #NewM.cloc_cls;
+  NewM.cloc_of_loc_none ();
+  NewM.loc_of_cloc_of_loc NewM.loc_none
+
+let coerce (t2: Type) (#t1: Type) (x: t1) : Pure t2 (requires (t1 == t2)) (ensures (fun y -> x == y)) = x
+
+let union_loc_to_new_union (l1 l2: M.loc old_and_new_cl_union) : Lemma
+  (union_loc_to_new (l1 `M.loc_union` l2) == union_loc_to_new l1 `NewM.loc_union` union_loc_to_new l2)
+  [SMTPat (union_loc_to_new (l1 `M.loc_union` l2))]
+= M.loc_of_union_loc_union old_and_new_cl true l1 l2;
+  let t : Type u#1 = M.loc (old_and_new_cl true) in
+  let i1 : t = M.loc_of_union_loc true l1 in
+  let i2 : t = M.loc_of_union_loc true l2 in
+  let j1 : M.loc (M.raise_cls NewM.cloc_cls) = coerce (M.loc (M.raise_cls NewM.cloc_cls)) i1 in
+  let j2 : M.loc (M.raise_cls u#0 u#0 NewM.cloc_cls) = coerce (M.loc (M.raise_cls NewM.cloc_cls)) i2 in
+  M.lower_loc_union u#0 u#0 j1 j2;
+  NewM.cloc_of_loc_union (NewM.loc_of_cloc (M.lower_loc j1)) (NewM.loc_of_cloc (M.lower_loc j2));
+  NewM.loc_of_cloc_of_loc (NewM.loc_of_cloc (M.lower_loc j1) `NewM.loc_union` NewM.loc_of_cloc (M.lower_loc j2))
+
+let old_to_new_modifies' (old_l: OldM.loc) (h h' : HS.mem) : Lemma
+  (requires (OldM.modifies old_l h h' /\ new_to_union_loc (union_loc_to_new (old_to_union_loc old_l)) == old_to_union_loc old_l))
+  (ensures (NewM.modifies (union_loc_to_new (old_to_union_loc old_l)) h h'))
+  [SMTPat (OldM.modifies old_l h h')]
+= old_to_new_modifies old_l (union_loc_to_new (old_to_union_loc old_l)) h h'
 
 assume val loc_buffer_new_to_old (#t: Type0) (b: New.buffer t) : Lemma
   (old_to_union_loc (OldM.loc_buffer (new_to_old_ghost b)) == new_to_union_loc (NewM.loc_buffer b))
@@ -162,7 +202,6 @@ assume val loc_buffer_new_to_old (#t: Type0) (b: New.buffer t) : Lemma
 let modifies_0_modifies (h h' : HS.mem) : Lemma
   (requires (Old.modifies_0 h h'))
   (ensures (NewM.modifies NewM.loc_none h h'))
-  [SMTPat (Old.modifies_0 h h')]
 = ()
 
 let modifies_1_modifies
@@ -172,7 +211,6 @@ let modifies_1_modifies
 : Lemma
   (requires (Old.modifies_1 (new_to_old_ghost b) h h'))
   (ensures (NewM.modifies (NewM.loc_buffer b) h h'))
-  [SMTPat (Old.modifies_1 (new_to_old_ghost b) h h')]
 = ()
 
 let modifies_2_modifies
@@ -183,7 +221,6 @@ let modifies_2_modifies
 : Lemma
   (requires (Old.modifies_2 (new_to_old_ghost b1) (new_to_old_ghost b2) h h'))
   (ensures (NewM.modifies (NewM.loc_union (NewM.loc_buffer b1) (NewM.loc_buffer b2)) h h'))
-  [SMTPat (Old.modifies_2 (new_to_old_ghost b1) (new_to_old_ghost b2) h h')]
 = ()
 
 (* Examples *)
