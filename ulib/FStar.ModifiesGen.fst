@@ -1466,6 +1466,68 @@ let union_loc_of_loc #al c b l =
     live_addrs
     (Ghost.hide aux')
 
+let union_aux_of_aux_left_inv_pred
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
+  (#c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (s: GSet.set (aloc (cls_union c)))
+  (x: aloc (c b))
+: GTot bool
+= let ALoc region addr loc = x in
+  match loc with
+  | None -> GSet.mem (ALoc region addr None) s
+  | Some loc ->
+    GSet.mem (ALoc region addr (Some (make_cls_union_aloc b loc))) s
+
+let union_aux_of_aux_left_inv
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
+  (#c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (s: GSet.set (aloc (cls_union c)))
+: Tot (GSet.set (aloc (c b)))
+= GSet.comprehend (union_aux_of_aux_left_inv_pred b s)
+
+let loc_of_union_loc
+  (#al: (bool -> Tot aloc_t))
+  (#c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (l: loc (cls_union c))
+: GTot (loc (c b))
+= let (Loc regions region_liveness_tags non_live_addrs live_addrs aux) = l in
+  let aux' = union_aux_of_aux_left_inv b (Ghost.reveal aux) in
+  Loc
+    regions
+    region_liveness_tags
+    non_live_addrs
+    live_addrs
+    (Ghost.hide aux')
+
+let loc_of_union_loc_union_loc_of_loc
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
+  (c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (s: loc (c b))
+: Lemma
+  (loc_of_union_loc b (union_loc_of_loc c b s) == s)
+= assert (loc_of_union_loc b (union_loc_of_loc c b s) `loc_equal` s)
+
+let loc_of_union_loc_none
+  (#al: (bool -> Tot aloc_t))
+  (c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+: Lemma
+  (loc_of_union_loc #_ #c b loc_none == loc_none)
+= assert (loc_of_union_loc #_ #c b loc_none `loc_equal` loc_none)
+
+let loc_of_union_loc_union
+  (#al: (bool -> Tot aloc_t))
+  (c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (l1 l2: loc (cls_union c))
+: Lemma
+  (loc_of_union_loc b (l1 `loc_union` l2) == loc_of_union_loc b l1 `loc_union` loc_of_union_loc b l2)
+= assert (loc_of_union_loc b (l1 `loc_union` l2) `loc_equal` (loc_of_union_loc b l1 `loc_union` loc_of_union_loc b l2))
+
 let mem_union_aux_of_aux_left_intro
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
