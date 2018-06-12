@@ -1387,6 +1387,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let env = cfg_env cfg in
               let nbe = env.nbe in 
               let tm_norm = nbe s cfg.tcenv tm' in
+              log cfg (fun () -> BU.print1 "Invoking NBE with  %s\n" (Print.term_to_string tm'));
               tm_norm (* Zoe TODO : Not quite sure about that, maybe call the normalizer again? *)
             
             | Some (s, tm) ->
