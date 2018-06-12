@@ -121,31 +121,49 @@ let old_and_new_cl (is_new: bool) : Tot (M.cls (old_and_new_aloc is_new)) =
 noextract
 let old_and_new_cl_union : M.cls (M.aloc_union old_and_new_aloc) = M.cls_union old_and_new_cl
 
+let old_to_union_loc (l: OldM.loc) : GTot (M.loc old_and_new_cl_union) =
+  M.union_loc_of_loc old_and_new_cl false (OldM.cloc_of_loc l)
+
+let new_to_union_loc (l: NewM.loc) : GTot (M.loc old_and_new_cl_union) =
+  M.union_loc_of_loc old_and_new_cl true (M.raise_loc (NewM.cloc_of_loc l))
+
+(* TODO: improve the pattern. There is no way to automatically compute new_l from old_l in general. *)
+
+let old_to_new_modifies (old_l: OldM.loc) (new_l: NewM.loc) (h h' : HS.mem) : Lemma
+  (requires (OldM.modifies old_l h h' /\ old_to_union_loc old_l == new_to_union_loc new_l))
+  (ensures (NewM.modifies new_l h h'))
+  [SMTPat (OldM.modifies old_l h h'); SMTPat (NewM.modifies new_l h h')]
+= OldM.modifies_to_cloc old_l h h';
+  M.modifies_union_loc_of_loc old_and_new_cl false (OldM.cloc_of_loc old_l) h h';
+  M.modifies_union_loc_of_loc old_and_new_cl true (M.raise_loc (NewM.cloc_of_loc new_l)) h h';
+  M.modifies_raise_loc (NewM.cloc_of_loc new_l) h h';
+  NewM.modifies_to_cloc new_l h h'
+
+let old_to_union_loc_none : squash (old_to_union_loc OldM.loc_none == new_to_union_loc NewM.loc_none) = OldM.cloc_of_loc_none ();
+  M.union_loc_of_loc_none old_and_new_cl false;
+  M.union_loc_of_loc_none old_and_new_cl true;
+  M.raise_loc_none #_ #NewM.cloc_cls;
+  NewM.cloc_of_loc_none ()
+
+let old_to_union_loc_union (old1 old2: OldM.loc) (new1 new2: NewM.loc) : Lemma
+  (requires (old_to_union_loc old1 == new_to_union_loc new1 /\ old_to_union_loc old2 == new_to_union_loc new2))
+  (ensures (old_to_union_loc (old1 `OldM.loc_union` old2) == new_to_union_loc (new1 `NewM.loc_union` new2)))
+  [SMTPat (old_to_union_loc (old1 `OldM.loc_union` old2)); SMTPat (new_to_union_loc (new1 `NewM.loc_union` new2))]
+= OldM.cloc_of_loc_union old1 old2;
+  M.union_loc_of_loc_union old_and_new_cl false (OldM.cloc_of_loc old1) (OldM.cloc_of_loc old2);
+  M.union_loc_of_loc_union old_and_new_cl true (M.raise_loc (NewM.cloc_of_loc new1)) (M.raise_loc (NewM.cloc_of_loc new2));
+  M.raise_loc_union (NewM.cloc_of_loc new1) (NewM.cloc_of_loc new2);
+  NewM.cloc_of_loc_union new1 new2
+
 assume val loc_buffer_new_to_old (#t: Type0) (b: New.buffer t) : Lemma
-  (M.union_loc_of_loc
-     old_and_new_cl
-     false
-     (OldM.cloc_of_loc (OldM.loc_buffer (new_to_old_ghost b)))
-   ==
-   M.union_loc_of_loc
-     old_and_new_cl
-     true
-     (M.raise_loc (NewM.cloc_of_loc (NewM.loc_buffer b))))
+  (old_to_union_loc (OldM.loc_buffer (new_to_old_ghost b)) == new_to_union_loc (NewM.loc_buffer b))
+  [SMTPat (old_to_union_loc (OldM.loc_buffer (new_to_old_ghost b)))]
 
 let modifies_0_modifies (h h' : HS.mem) : Lemma
   (requires (Old.modifies_0 h h'))
   (ensures (NewM.modifies NewM.loc_none h h'))
   [SMTPat (Old.modifies_0 h h')]
-= OldM.modifies_to_cloc OldM.loc_none h h';
-  OldM.cloc_of_loc_none ();
-  M.modifies_union_loc_of_loc old_and_new_cl false M.loc_none h h';
-  M.union_loc_of_loc_none old_and_new_cl false;
-  M.union_loc_of_loc_none old_and_new_cl true;
-  M.modifies_union_loc_of_loc old_and_new_cl true M.loc_none h h';
-  M.raise_loc_none #_ #NewM.cloc_cls;
-  M.modifies_raise_loc #_ #NewM.cloc_cls M.loc_none h h';
-  NewM.cloc_of_loc_none ();
-  NewM.modifies_to_cloc NewM.loc_none h h'
+= ()
 
 let modifies_1_modifies
   (#t: Type)
@@ -155,12 +173,7 @@ let modifies_1_modifies
   (requires (Old.modifies_1 (new_to_old_ghost b) h h'))
   (ensures (NewM.modifies (NewM.loc_buffer b) h h'))
   [SMTPat (Old.modifies_1 (new_to_old_ghost b) h h')]
-= OldM.modifies_to_cloc (OldM.loc_buffer (new_to_old_ghost b)) h h';
-  M.modifies_union_loc_of_loc old_and_new_cl false (OldM.cloc_of_loc (OldM.loc_buffer (new_to_old_ghost b))) h h';
-  loc_buffer_new_to_old b;
-  M.modifies_union_loc_of_loc old_and_new_cl true (M.raise_loc (NewM.cloc_of_loc (NewM.loc_buffer b))) h h';
-  M.modifies_raise_loc #_ #NewM.cloc_cls (NewM.cloc_of_loc (NewM.loc_buffer b)) h h';
-  NewM.modifies_to_cloc (NewM.loc_buffer b) h h'
+= ()
 
 let modifies_2_modifies
   (#t1 #t2: Type)
@@ -171,18 +184,7 @@ let modifies_2_modifies
   (requires (Old.modifies_2 (new_to_old_ghost b1) (new_to_old_ghost b2) h h'))
   (ensures (NewM.modifies (NewM.loc_union (NewM.loc_buffer b1) (NewM.loc_buffer b2)) h h'))
   [SMTPat (Old.modifies_2 (new_to_old_ghost b1) (new_to_old_ghost b2) h h')]
-= OldM.modifies_to_cloc (OldM.loc_union (OldM.loc_buffer (new_to_old_ghost b1)) (OldM.loc_buffer (new_to_old_ghost b2))) h h';
-  OldM.cloc_of_loc_union (OldM.loc_buffer (new_to_old_ghost b1)) (OldM.loc_buffer (new_to_old_ghost b2));
-  M.modifies_union_loc_of_loc old_and_new_cl false (M.loc_union (OldM.cloc_of_loc (OldM.loc_buffer (new_to_old_ghost b1))) (OldM.cloc_of_loc (OldM.loc_buffer (new_to_old_ghost b2)))) h h';
-  M.union_loc_of_loc_union old_and_new_cl false (OldM.cloc_of_loc (OldM.loc_buffer (new_to_old_ghost b1))) (OldM.cloc_of_loc (OldM.loc_buffer (new_to_old_ghost b2)));
-  loc_buffer_new_to_old b1;
-  loc_buffer_new_to_old b2;
-  M.union_loc_of_loc_union old_and_new_cl true (M.raise_loc (NewM.cloc_of_loc (NewM.loc_buffer b1))) (M.raise_loc (NewM.cloc_of_loc (NewM.loc_buffer b2)));
-  M.modifies_union_loc_of_loc old_and_new_cl true (M.loc_union (M.raise_loc (NewM.cloc_of_loc (NewM.loc_buffer b1))) (M.raise_loc (NewM.cloc_of_loc (NewM.loc_buffer b2)))) h h';
-  M.raise_loc_union (NewM.cloc_of_loc (NewM.loc_buffer b1)) (NewM.cloc_of_loc (NewM.loc_buffer b2));
-  M.modifies_raise_loc #_ #NewM.cloc_cls (M.loc_union (NewM.cloc_of_loc (NewM.loc_buffer b1)) (NewM.cloc_of_loc (NewM.loc_buffer b2))) h h';
-  NewM.cloc_of_loc_union (NewM.loc_buffer b1) (NewM.loc_buffer b2);
-  NewM.modifies_to_cloc (NewM.loc_union (NewM.loc_buffer b1) (NewM.loc_buffer b2)) h h'
+= ()
 
 (* Examples *)
 
