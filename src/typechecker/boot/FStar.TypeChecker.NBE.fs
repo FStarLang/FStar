@@ -251,13 +251,24 @@ let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option<sigelt> =
     | _ -> None in
   BU.bind_opt (Env.lookup_qname env lid) mapper
 
+let is_univ (tm : t)=
+match tm with
+| Univ _ -> true
+| _ -> false
+
+let un_univ (tm:t) : universe =
+match tm with
+| Univ u -> u
+| _ -> failwith "Not a universe"
+
+
 let translate_univ (bs:list<t>) (u:universe) : t =
     let rec aux u =
         let u = SS.compress_univ u in
         match u with
         | U_bvar i ->
-          let Univ u = List.nth bs i in //it has to be a Univ term at position i
-          u
+          let u' = List.nth bs i in //it has to be a Univ term at position i
+          (un_univ u')
 
         | U_succ u ->
           U_succ (aux u)
@@ -274,16 +285,6 @@ let translate_univ (bs:list<t>) (u:universe) : t =
           failwith "Unknown or unconstrained universe"
     in
     Univ (aux u)
-
-let is_univ (tm : t)=
-  match tm with
-  | Univ _ -> true
-  | _ -> false
-
-let un_univ (tm:t) : universe =
-    match tm with
-    | Univ u -> u
-    | _ -> failwith "Not a universe"
 
 
 (* Creates the environment of mutually recursive function definitions *)
@@ -382,7 +383,7 @@ and translate_letbinding (cfg:N.cfg) (bs:list<t>) (lb:letbinding) : t =
 
       translated_def
 
-    | u :: us' -> Lam ((fun u -> make_univ_abst us' (u :: bs) def), (fun () -> Constant Unit), None)
+    | u :: us' -> Lam ((fun univ -> make_univ_abst us' (univ :: bs) def), (fun () -> Constant Unit), None)
      // Zoe: Bogus type! The idea is that we will never readback these lambdas
   in
   make_univ_abst lb.lbunivs bs lb.lbdef
@@ -423,10 +424,12 @@ and translate (cfg:N.cfg) (bs:list<t>) (e:term) : t =
       List.nth bs db.index
 
     | Tm_uinst(t, us) ->
-      debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t) (P.term_to_string t) (List.map P.univ_to_string us |> String.concat ", "));
-      List.fold_left (fun head u -> app cfg head u None)
+      debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t) 
+                                                                    (P.term_to_string t) 
+                                                                    (List.map P.univ_to_string us |> String.concat ", "));
+      List.fold_left (fun head u -> app cfg head (translate_univ bs u) None)
                      (translate cfg bs t)
-                     (List.map (translate_univ bs) us)
+                     us
 
     | Tm_type u ->
       Type_t (un_univ (translate_univ bs u))
