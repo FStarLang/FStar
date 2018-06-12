@@ -267,6 +267,23 @@ let modifies_2_modifies
 
 (* Examples *)
 
+/// Basic example of mutating a new buffer by converting it first to
+/// an old buffer.
+///
+/// The spec shows that all three flavors of modifies clauses can be
+/// proven and the precise contents are reflected into the new buffer
+let ex1 (b:New.buffer nat{New.length b > 0})
+  : HST.ST unit
+           (requires (fun h -> New.live h b))
+           (ensures (fun h0 _ h1 ->
+             New.get h1 b 0 == 0 /\
+             Old.get h1 (new_to_old_ghost b) 0 == 0 /\
+             NewM.modifies (NewM.loc_buffer b) h0 h1 /\
+             OldM.modifies (OldM.loc_buffer (new_to_old_ghost b)) h0 h1 /\
+             Old.modifies_1 (new_to_old_ghost b) h0 h1)) =
+  let old = new_to_old_st b in
+  Old.upd old 0ul 0
+
 let new_eqb
   (#a: eqtype)
   (b1 b2: New.buffer a)
