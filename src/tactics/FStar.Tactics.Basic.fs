@@ -297,15 +297,7 @@ let do_unify env t1 t2 : tac<bool> =
         let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
         ()
     );
-
-    bind (
-        bind (__do_unify env t1 t2) (fun b ->
-        if not b
-        then let t1 = N.normalize [] env t1 in
-             let t2 = N.normalize [] env t2 in
-             __do_unify env t1 t2
-        else ret b)) (fun r ->
-
+    bind (__do_unify env t1 t2) (fun r ->
     if Env.debug env (Options.Other "1346") then
         Options.pop ();
     ret r))
