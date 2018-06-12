@@ -7,6 +7,12 @@ open FStar.ConstantTime.Integers
 /// Overloading `+` for math integers
 let ex0 (x:int) (y:int) = x + y
 
+/// Overloading `+` for math integers
+let ex0_1 (x:Prims.int) (y:Prims.int) = x + y
+
+/// Overloading `+` for machine integers
+let ex0_2 (x:uint_32) (y:uint_32) = x +% y
+
 /// And also for monomorpic secret integers
 ///    s_uint32 = t (Secret hacl_label (Unsigned W32))
 let ex1 (x:s_uint32) (y:s_uint32) = x +% y
