@@ -884,6 +884,36 @@ val cls_union (#a: (bool -> Tot aloc_t)) (c: ((b: bool) -> Tot (cls (a b)))) : T
 
 val union_loc_of_loc (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b))) (b: bool) (l: loc (c b)) : GTot (loc (cls_union c))
 
+val loc_of_union_loc
+  (#al: (bool -> Tot aloc_t))
+  (#c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (l: loc (cls_union c))
+: GTot (loc (c b))
+
+val loc_of_union_loc_union_loc_of_loc
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
+  (c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (s: loc (c b))
+: Lemma
+  (loc_of_union_loc b (union_loc_of_loc c b s) == s)
+
+val loc_of_union_loc_none
+  (#al: (bool -> Tot aloc_t))
+  (c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+: Lemma
+  (loc_of_union_loc #_ #c b loc_none == loc_none)
+
+val loc_of_union_loc_union
+  (#al: (bool -> Tot aloc_t))
+  (c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (l1 l2: loc (cls_union c))
+: Lemma
+  (loc_of_union_loc b (l1 `loc_union` l2) == loc_of_union_loc b l1 `loc_union` loc_of_union_loc b l2)
+
 val union_loc_of_loc_none
   (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
   (b: bool)

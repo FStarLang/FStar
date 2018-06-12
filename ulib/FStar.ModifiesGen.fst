@@ -1487,12 +1487,7 @@ let union_aux_of_aux_left_inv
 : Tot (GSet.set (aloc (c b)))
 = GSet.comprehend (union_aux_of_aux_left_inv_pred b s)
 
-let loc_of_union_loc
-  (#al: (bool -> Tot aloc_t))
-  (#c: ((b: bool) -> Tot (cls (al b))))
-  (b: bool)
-  (l: loc (cls_union c))
-: GTot (loc (c b))
+let loc_of_union_loc #al #c b l
 = let (Loc regions region_liveness_tags non_live_addrs live_addrs aux) = l in
   let aux' = union_aux_of_aux_left_inv b (Ghost.reveal aux) in
   Loc
@@ -1502,30 +1497,13 @@ let loc_of_union_loc
     live_addrs
     (Ghost.hide aux')
 
-let loc_of_union_loc_union_loc_of_loc
-  (#al: (bool -> HS.rid -> nat -> Tot Type))
-  (c: ((b: bool) -> Tot (cls (al b))))
-  (b: bool)
-  (s: loc (c b))
-: Lemma
-  (loc_of_union_loc b (union_loc_of_loc c b s) == s)
+let loc_of_union_loc_union_loc_of_loc #al c b s
 = assert (loc_of_union_loc b (union_loc_of_loc c b s) `loc_equal` s)
 
-let loc_of_union_loc_none
-  (#al: (bool -> Tot aloc_t))
-  (c: ((b: bool) -> Tot (cls (al b))))
-  (b: bool)
-: Lemma
-  (loc_of_union_loc #_ #c b loc_none == loc_none)
+let loc_of_union_loc_none #al c b
 = assert (loc_of_union_loc #_ #c b loc_none `loc_equal` loc_none)
 
-let loc_of_union_loc_union
-  (#al: (bool -> Tot aloc_t))
-  (c: ((b: bool) -> Tot (cls (al b))))
-  (b: bool)
-  (l1 l2: loc (cls_union c))
-: Lemma
-  (loc_of_union_loc b (l1 `loc_union` l2) == loc_of_union_loc b l1 `loc_union` loc_of_union_loc b l2)
+let loc_of_union_loc_union #al c b l1 l2
 = assert (loc_of_union_loc b (l1 `loc_union` l2) `loc_equal` (loc_of_union_loc b l1 `loc_union` loc_of_union_loc b l2))
 
 let mem_union_aux_of_aux_left_intro
