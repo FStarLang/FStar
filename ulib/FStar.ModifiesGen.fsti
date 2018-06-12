@@ -908,8 +908,8 @@ val union_loc_of_loc_addresses
 
 val union_loc_of_loc_regions
   (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
-  (preserve_liveness: bool)
   (b: bool)
+  (preserve_liveness: bool)
   (r: Set.set HS.rid)
 : Lemma
   (union_loc_of_loc c b (loc_regions #_ #(c b) preserve_liveness r) == loc_regions #_ #(cls_union c) preserve_liveness r)
@@ -977,8 +977,8 @@ val loc_of_union_loc_addresses
 
 val loc_of_union_loc_regions
   (#al: (bool -> Tot aloc_t)) (c: (b: bool) -> Tot (cls (al b)))
-  (preserve_liveness: bool)
   (b: bool)
+  (preserve_liveness: bool)
   (r: Set.set HS.rid)
 : Lemma
   (loc_of_union_loc #_ #c b (loc_regions preserve_liveness r) == loc_regions preserve_liveness r)

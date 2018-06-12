@@ -1533,7 +1533,7 @@ let union_loc_of_loc_union #al c b l1 l2 =
 let union_loc_of_loc_addresses #al c b preserve_liveness r n =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_addresses #_ #(c b) preserve_liveness r n)) (loc_addresses #_ #(cls_union c) preserve_liveness r n))
 
-let union_loc_of_loc_regions #al c preserve_liveness b r =
+let union_loc_of_loc_regions #al c b preserve_liveness r =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_regions #_ #(c b) preserve_liveness r)) (loc_regions #_ #(cls_union c) preserve_liveness r))
 
 #set-options "--z3rlimit 32"
@@ -1798,7 +1798,7 @@ let loc_of_union_loc_union #al c b l1 l2
 let loc_of_union_loc_addresses #al c b preserve_liveness r n =
   assert (loc_of_union_loc #_ #c b (loc_addresses preserve_liveness r n) `loc_equal` loc_addresses preserve_liveness r n)
 
-let loc_of_union_loc_regions #al c preserve_liveness b r =
+let loc_of_union_loc_regions #al c b preserve_liveness r =
   assert (loc_of_union_loc #_ #c b (loc_regions preserve_liveness r) `loc_equal` loc_regions preserve_liveness r)
 
 module U = FStar.Universe
