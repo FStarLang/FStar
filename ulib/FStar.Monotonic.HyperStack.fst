@@ -441,33 +441,6 @@ let modifies_one id h0 h1 = modifies_one id (get_hmap h0) (get_hmap h1)
 let modifies_ref (id:rid) (s:Set.set nat) (h0:mem) (h1:mem) =
   Heap.modifies s (get_hmap h0 `Map.sel` id) (get_hmap h1 `Map.sel` id)
 
-private let lemma_upd_1 #a #rel (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
-  (requires (contains h x))
-  (ensures (contains h x
-            /\ modifies_one (frameOf x) h (upd h x v)
-            /\ modifies_ref (frameOf x) (Set.singleton (as_addr x)) h (upd h x v)
-            /\ sel (upd h x v) x == v ))
-  = ()
-
-private let lemma_upd_2 (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
-  (requires (frameOf x = get_tip h /\ x `unused_in` h))
-  (ensures (frameOf x = get_tip h
-            /\ modifies_one (get_tip h) h (upd h x v)
-            /\ modifies_ref (get_tip h) Set.empty h (upd h x v)
-            /\ sel (upd h x v) x == v ))
-  = ()
-
-private val lemma_live_1: #a:Type ->  #a':Type -> #rel:preorder a -> #rel':preorder a'
-                  -> h:mem -> x:mreference a rel -> x':mreference a' rel' -> Lemma
-  (requires (contains h x /\ x' `unused_in` h))
-  (ensures  (frameOf x <> frameOf x' \/ ~ (as_ref x === as_ref x')))
-let lemma_live_1 #a #a' #rel #rel' h x x' = ()
-
-let above_tip_is_live (#a:Type) (#rel:preorder a) (m:mem) (x:mreference a rel) : Lemma
-  (requires (frameOf x `is_above` get_tip m))
-  (ensures (frameOf x `is_in` get_hmap m))
-  = ()
-
 noeq type some_ref =
   | Ref : #a:Type0 -> #rel:preorder a -> mreference a rel -> some_ref
 
