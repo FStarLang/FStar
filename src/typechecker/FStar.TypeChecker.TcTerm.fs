@@ -1343,9 +1343,11 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       let comp =
         List.fold_left
           (fun out_c ((e, q), x, c) ->
-              if Env.debug env Options.Extreme then BU.print2 "(b) Monadic app: Binding argument %s : %s\n"
+              if Env.debug env Options.Extreme then
+                  BU.print3 "(b) Monadic app: Binding argument %s : %s of type (%s)\n"
                         (match x with None -> "_" | Some x -> Print.bv_to_string x)
-                        (Print.term_to_string e);
+                        (Print.term_to_string e)
+                        (Print.lcomp_to_string c);
               if Util.is_pure_or_ghost_lcomp c
               then TcUtil.bind e.pos env (Some e) c (x, out_c)
               else TcUtil.bind e.pos env None c (x, out_c))
@@ -1353,22 +1355,22 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
           arg_comps_rev
       in
       let comp =
-          if Env.debug env Options.Extreme then BU.print1 "(c) Monadic app: Binding head %s " (Print.term_to_string head);
+          if Env.debug env Options.Extreme then BU.print1 "(c) Monadic app: Binding head %s\n" (Print.term_to_string head);
           if Util.is_pure_or_ghost_lcomp chead
           then TcUtil.bind head.pos env (Some head) chead (None, comp)
           else TcUtil.bind head.pos env None chead (None, comp) in
 
       let comp = TcUtil.subst_lcomp subst comp in
 
-     (* TODO : This is a really syntactic criterion to check if we can evaluate *)
-     (* applications left-to-right, can we do better ? *)
-     let shortcuts_evaluation_order =
-       match (SS.compress head).n with
-       | Tm_fvar fv ->
-         S.fv_eq_lid fv Parser.Const.op_And ||
-         S.fv_eq_lid fv Parser.Const.op_Or
-       | _ -> false
-     in
+      (* TODO : This is a really syntactic criterion to check if we can evaluate *)
+      (* applications left-to-right, can we do better ? *)
+      let shortcuts_evaluation_order =
+        match (SS.compress head).n with
+        | Tm_fvar fv ->
+          S.fv_eq_lid fv Parser.Const.op_And ||
+          S.fv_eq_lid fv Parser.Const.op_Or
+        | _ -> false
+      in
 
       let app =
        if shortcuts_evaluation_order then
@@ -1388,11 +1390,20 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
           (*    a fresh variable and lift the actual argument to comp.       *)
           let lifted_args, head, args =
             let map_fun ((e, q), _ , c) =
+               if Env.debug env Options.Extreme then
+                 BU.print2 "For arg e=(%s) c=(%s)... " (Print.term_to_string e) (Print.lcomp_to_string c);
                if U.is_pure_or_ghost_lcomp c
-               then None, (e, q)
-               else let x = S.new_bv None c.res_typ in
-                    let e = TcUtil.maybe_lift env e c.eff_name comp.eff_name c.res_typ in
-                    Some (x, c.eff_name, c.res_typ, e), (S.bv_to_name x, q)
+               then begin
+                   if Env.debug env Options.Extreme then
+                      BU.print_string "... not lifting\n";
+                   None, (e, q)
+               end else begin
+                   if Env.debug env Options.Extreme then
+                       BU.print_string "... lifting!\n";
+                   let x = S.new_bv None c.res_typ in
+                   let e = TcUtil.maybe_lift env e c.eff_name comp.eff_name c.res_typ in
+                   Some (x, c.eff_name, c.res_typ, e), (S.bv_to_name x, q)
+               end
             in
             let lifted_args, reverse_args =
                 List.split <| List.map map_fun ((as_arg head, None, chead)::arg_comps_rev)
