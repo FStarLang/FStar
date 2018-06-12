@@ -677,6 +677,12 @@ and translate_expr env e: expr =
          let t = translate_expr env print in
          ESequence [t; EAbort])
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ] )
+    when string_of_mlpath p = "LowStar.ToFStarBuffer.new_to_old_st" ||
+         string_of_mlpath p = "LowStar.ToFStarBuffer.old_to_new_st"
+    ->
+    translate_expr env e
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
       || string_of_mlpath p = "LowStar.Buffer.index" ->
