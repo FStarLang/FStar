@@ -527,20 +527,25 @@ let base_and_refinement_maybe_delta should_delta env t1 =
 
    aux false (whnf env t1)
 
-let base_and_refinement env t = base_and_refinement_maybe_delta false env t
-let normalize_refinement steps env t0 = N.normalize_refinement steps env t0
+let base_and_refinement env t : term * option<(bv * term)> =
+    base_and_refinement_maybe_delta false env t
 
-let unrefine env t = base_and_refinement env t |> fst
+let normalize_refinement steps env t0 : term =
+    N.normalize_refinement steps env t0
 
-let trivial_refinement t = S.null_bv t, U.t_true
+let unrefine env t : term =
+    base_and_refinement env t |> fst
 
-let as_refinement delta env wl t =
+let trivial_refinement t : bv * term =
+    S.null_bv t, U.t_true
+
+let as_refinement delta env t : bv * term =
     let t_base, refinement = base_and_refinement_maybe_delta delta env t in
     match refinement with
         | None -> trivial_refinement t_base
         | Some (x, phi) -> x, phi
 
-let force_refinement (t_base, refopt) =
+let force_refinement (t_base, refopt) : term =
     let y, phi = match refopt with
         | Some (y, phi) -> y, phi
         | None -> trivial_refinement t_base in
@@ -2438,30 +2443,39 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | _ -> failwith "Impossible: at least one side is an abstraction"
         end
 
-      | Tm_refine(x1, ph1), Tm_refine(x2, phi2) ->
-        let should_delta =
-          BU.set_is_empty (FStar.Syntax.Free.uvars t1)
-          && BU.set_is_empty (FStar.Syntax.Free.uvars t2) //no remaining uvars on eithe side
-          && (match head_matches env x1.sort x2.sort with
-              | MisMatch(Some d1, Some d2) ->
-                let is_unfoldable = function
-                    | Delta_constant_at_level _ -> true
-                    | _ -> false
-                in
-                is_unfoldable d1 && is_unfoldable d2
-              | _ -> false
-                //head symbols of x1 and x2 already match, don't unfold further
-                //Or, they cannot match after unfolding, so no point trying
-              ) //and heads don't match
+      | Tm_refine(x1, phi1), Tm_refine(x2, phi2) ->
+        (* If the heads of their bases can match, make it so, and continue *)
+        (* The unfolding is very much needed since we might have
+         *   n:nat{phi n} =?= i:int{psi i}
+         * and if we try to unify the bases, nat and int, we're toast.
+         * However too much unfolding is also harmful for inference! See
+         * the discussion on #1345. Hence we reuse head_matches_delta to
+         * do the unfolding for us, which is good *heuristic* but not
+         * necessarily always correct.
+         *)
+        let x1, x2 =
+            match head_matches_delta env x1.sort x2.sort with
+            (* We allow (HeadMatch true) since we're gonna unify them again anyway via base_prob *)
+            | FullMatch, Some (t1, t2)
+            | HeadMatch _, Some (t1, t2) ->
+                ({ x1 with sort = t1 }), ({ x2 with sort = t2 })
+            | _ -> x1, x2
         in
-        //If there are no remaining uvars then unfold t1 and t2 all the way down to
-        //a type constant and its refinement;
-        //Otherwise peel it back one refinement at a time
-        //See issue #1345
-        let x1, phi1 = as_refinement should_delta env wl t1 in
-        let x2, phi2 = as_refinement should_delta env wl t2 in
-        let base_prob, wl =
-          mk_t_problem wl [] orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
+        (* A bit hackish *)
+        let t1 = U.refine x1 phi1 in
+        let t2 = U.refine x2 phi2 in
+        (* / hack *)
+        let x1, phi1 = as_refinement false env t1 in
+        let x2, phi2 = as_refinement false env t2 in
+        if Env.debug env (Options.Other "Rel") then begin
+            BU.print3 "ref1 = (%s):(%s){%s}\n" (Print.bv_to_string x1)
+                                               (Print.term_to_string x1.sort)
+                                               (Print.term_to_string phi1);
+            BU.print3 "ref2 = (%s):(%s){%s}\n" (Print.bv_to_string x2)
+                                               (Print.term_to_string x2.sort)
+                                               (Print.term_to_string phi2)
+        end;
+        let base_prob, wl = mk_t_problem wl [] orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
         let x1 = freshen_bv x1 in
         let subst = [DB(0, x1)] in
         let phi1 = Subst.subst subst phi1 in
