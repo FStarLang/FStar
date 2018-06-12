@@ -2150,7 +2150,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let try_solve_branch scrutinee p =
             let (_t, uv, _args), wl = destruct_flex_t scrutinee wl  in
             let tc_annot env t =
-                let t, _, g = env.type_of env t in
+                let t, _, g = env.type_of ({env with lax=true; use_bv_sorts=true}) t in
                 t, g
             in
             let xs, pat_term, _, _ = PatternUtils.pat_as_exp true env p tc_annot in
@@ -2244,11 +2244,14 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                         | Some (branches, _, _) -> branches
                         | _ -> branches
                     in
-                    Inr <| BU.find_map try_branches (fun (p, _, _) -> try_solve_branch scrutinee p)
+                    Inr <| BU.find_map try_branches (fun b ->
+                        let (p, _, _) = SS.open_branch b in
+                        try_solve_branch scrutinee p)
 
-                  | Some (p, _, e) ->
+                  | Some b ->
+                    let (p, _, e) = SS.open_branch b in
                     if Env.debug env <| Options.Other "Rel"
-                    then BU.print2 "Found head matching branch %s -> e\n"
+                    then BU.print2 "Found head matching branch %s -> %s\n"
                                 (Print.pat_to_string p)
                                 (Print.term_to_string e);
                     Inr <| try_solve_branch scrutinee p
