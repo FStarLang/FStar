@@ -2632,15 +2632,21 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                  (Print.term_to_string head2)
          in
          let no_free_uvars t = BU.set_is_empty (Free.uvars t) && BU.set_is_empty (Free.univs t) in
+         let equal t1 t2 =
+            let t1 = N.normalize [N.UnfoldUntil delta_constant; N.Primops; N.Beta; N.Eager_unfolding; N.Iota] env t1 in
+            let t2 = N.normalize [N.UnfoldUntil delta_constant; N.Primops; N.Beta; N.Eager_unfolding; N.Iota] env t2 in
+            U.eq_tm t1 t2 = U.Equal
+         in
          if (Env.is_interpreted env head1 || Env.is_interpreted env head2) //we have something like (+ x1 x2) =?= (- y1 y2)
            && problem.relation = EQ
            && wl.smt_ok // with SMT allowed
            && no_free_uvars t1 // and neither term has any free variables
            && no_free_uvars t2
-         then let guard,wl = if U.eq_tm t1 t2 = U.Equal
-                          then None, wl
-                          else let g, wl = mk_eq2 wl orig t1 t2 in
-                               Some g, wl
+         then let guard, wl =
+                  if equal t1 t2
+                  then None, wl
+                  else let g, wl = mk_eq2 wl orig t1 t2 in
+                       Some g, wl
               in
               solve env (solve_prob orig guard [] wl)
          else rigid_rigid_delta env orig wl head1 head2 t1 t2
