@@ -816,7 +816,7 @@ let modifies_loc_includes #al #c s1 h h' s2 =
 
 let modifies_preserves_liveness #al #c s1 s2 h h' #t #pre r = ()
 
-#set-options "--z3rlimit 16"
+#set-options "--z3rlimit 20"
 
 let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
   assert (Set.mem (HS.frameOf r) (regions_of_loc s1) ==> (~ (Set.mem (HS.as_addr r) (Loc?.non_live_addrs (loc_union s1 s2) (HS.frameOf r)))))
@@ -853,7 +853,7 @@ let addr_unused_in_aloc_preserved
     (h1: HS.mem)
     (h2: HS.mem)
   : Lemma
-    (requires (HS.live_region h1 r ==> a `Heap.addr_unused_in` (Map.sel h1.HS.h r)))
+    (requires (HS.live_region h1 r ==> a `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)))
     (ensures (c.aloc_preserved b h1 h2))
 = c.same_mreference_aloc_preserved b h1 h2 (fun a' pre r' -> assert False)
 
@@ -974,13 +974,13 @@ let fresh_frame_modifies #al c h0 h1 =
 
 let modifies_fresh_frame_popped #al #c h0 h1 s h2 h3 =
   fresh_frame_modifies c h0 h1;
-  let r = loc_region_only #al #c false h2.HS.tip in
-  let rs = HS.mod_set (Set.singleton h1.HS.tip) in
+  let r = loc_region_only #al #c false (HS.get_tip h2) in
+  let rs = HS.mod_set (Set.singleton (HS.get_tip h1)) in
   let s' = loc_union (loc_regions false rs) s in
   modifies_trans' s' h0 h1 h2;
   assert (modifies_preserves_mreferences r h2 h3);
   let f23 (r: HS.rid) (a: nat) (b: al r a) : Lemma
-    (requires (r <> h2.HS.tip))
+    (requires (r <> HS.get_tip h2))
     (ensures (c.aloc_preserved b h2 h3))
   = c.same_mreference_aloc_preserved #r #a b h2 h3 (fun a' pre r' -> ())
   in

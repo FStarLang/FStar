@@ -1261,7 +1261,7 @@ let mk_data_operations iquals env tcs se =
     in
 
     let iquals =
-        if List.contains S.Abstract iquals
+        if List.contains S.Abstract iquals && not (List.contains S.Private iquals)
         then S.Private::iquals
         else iquals
     in

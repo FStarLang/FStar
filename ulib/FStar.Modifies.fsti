@@ -589,13 +589,13 @@ val modifies_fresh_frame_popped
 : Lemma
   (requires (
     HS.fresh_frame h0 h1 /\
-    modifies (loc_union (loc_all_regions_from false h1.HS.tip) s) h1 h2 /\
-    h2.HS.tip == h1.HS.tip /\
+    modifies (loc_union (loc_all_regions_from false (HS.get_tip h1)) s) h1 h2 /\
+    (HS.get_tip h2) == (HS.get_tip h1) /\
     HS.popped h2 h3
   ))
   (ensures (
     modifies s h0 h3 /\
-    h3.HS.tip == h0.HS.tip
+    (HS.get_tip h3) == HS.get_tip h0
   ))
   [SMTPat (HS.fresh_frame h0 h1); SMTPat (HS.popped h2 h3); SMTPat (modifies s h0 h3)]
 
@@ -760,7 +760,7 @@ val addr_unused_in_does_not_contain_addr
   (h: HS.mem)
   (ra: HS.rid * nat)
 : Lemma
-  (requires (HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (Map.sel h.HS.h (fst ra))))
+  (requires (HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (Map.sel (HS.get_hmap h) (fst ra))))
   (ensures (h `does_not_contain_addr` ra))
 
 val free_does_not_contain_addr

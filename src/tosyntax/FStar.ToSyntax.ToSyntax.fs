@@ -1818,7 +1818,7 @@ let mk_data_projector_names iquals env se =
                 | Some q -> q
             in
             let iquals =
-                if List.contains S.Abstract iquals
+                if List.contains S.Abstract iquals && not (List.contains S.Private iquals)
                 then S.Private::iquals
                 else iquals
             in
@@ -2065,7 +2065,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
         | Sig_inductive_typ(tname, _, tps, k, _, constrs) when (List.length constrs > 1)->
           let quals = se.sigquals in
-          let quals = if List.contains S.Abstract quals
+          let quals = if List.contains S.Abstract quals && not (List.contains S.Private quals)
                       then S.Private::quals
                       else quals in
           mk_data_discriminators quals env constrs
