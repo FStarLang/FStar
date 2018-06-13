@@ -45,6 +45,8 @@ module PP = FStar.Syntax.Print
 module UF = FStar.Syntax.Unionfind
 module C  = FStar.Parser.Const
 
+let unfold_whnf = N.unfold_whnf' [N.AllowUnboundUniverses]
+
 let tc_tycon (env:env_t)     (* environment that contains all mutually defined type constructors *)
              (s:sigelt)      (* a Sig_inductive_type (aka tc) that needs to be type-checked *)
        : env_t          (* environment extended with a refined type for the type-constructor *)
@@ -59,16 +61,18 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let env, tps, k = Env.push_univ_vars env uvs, SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
          let tps, k = SS.open_term tps k in
          let tps, env_tps, guard_params, us = tc_binders env tps in
-         let k = N.unfold_whnf env k in
          let indices, t = U.arrow_formals k in
          let indices, env', guard_indices, us' = tc_binders env_tps indices in
          let t, guard =
              let t, _, g = tc_tot_or_gtot_term env' t in
-             t, Rel.discharge_guard env' (Rel.conj_guard guard_params (Rel.conj_guard guard_indices g)) in
+             t, Rel.discharge_guard env' (Env.conj_guard guard_params (Env.conj_guard guard_indices g)) in
          let k = U.arrow indices (S.mk_Total t) in
          let t_type, u = U.type_u() in
-         Rel.force_trivial_guard env' (Rel.teq env' t t_type);
-
+         if not (subtype_nosmt env t t_type) then
+             raise_error (Errors.Error_InductiveAnnotNotAType,
+                          (BU.format2 "Type annotation %s for inductive %s is not a subtype of Type"
+                                                (Print.term_to_string t)
+                                                (Ident.string_of_lid tc))) s.sigrng;
 (*close*)let usubst = SS.univ_var_closing uvs in
          let guard = TcUtil.close_guard_implicits env (tps@indices) guard in
          let t_tc = U.arrow ((tps |> SS.subst_binders usubst) @
@@ -132,11 +136,12 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
 
          let arguments, env', us = tc_tparams env arguments in
          let result, res_lcomp = tc_trivial_guard env' result in
-         begin match (SS.compress res_lcomp.res_typ).n with
+         let ty = unfold_whnf env res_lcomp.res_typ |> U.unrefine in
+         begin match (SS.compress ty).n with
                | Tm_type _ -> ()
-               | ty -> raise_error (Errors.Fatal_WrongResultTypeAfterConstrutor, (BU.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
+               | _ -> raise_error (Errors.Fatal_WrongResultTypeAfterConstrutor, (BU.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
                                                 (Print.term_to_string result)
-                                                (Print.term_to_string (res_lcomp.res_typ)))) se.sigrng
+                                                (Print.term_to_string ty))) se.sigrng
          end;
          let head, _ = U.head_and_args result in
          (*
@@ -149,15 +154,15 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
               if List.length _uvs = List.length tuvs then
                 List.fold_left2 (fun g u1 u2 ->
                   //unify the two
-                  Rel.conj_guard g (Rel.teq env' (mk (Tm_type u1) None Range.dummyRange) (mk (Tm_type (U_name u2)) None Range.dummyRange))
-                ) Rel.trivial_guard tuvs _uvs
+                  Env.conj_guard g (Rel.teq env' (mk (Tm_type u1) None Range.dummyRange) (mk (Tm_type (U_name u2)) None Range.dummyRange))
+                ) Env.trivial_guard tuvs _uvs
               else failwith "Impossible: tc_datacon: length of annotated universes not same as instantiated ones"
-            | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> Rel.trivial_guard
+            | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> Env.trivial_guard
             | _ -> raise_error (Errors.Fatal_UnexpectedConstructorType, (BU.format2 "Expected a constructor of type %s; got %s"
                                         (Print.lid_to_string tc_lid)
                                         (Print.term_to_string head))) se.sigrng in
          let g =List.fold_left2 (fun g (x, _) u_x ->
-                Rel.conj_guard g (Rel.universe_inequality u_x u_tc))
+                Env.conj_guard g (Rel.universe_inequality u_x u_tc))
             g_uvs
             arguments
             us in
@@ -673,7 +678,7 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sig
   let _ =
     //is this inline with verify_module ?
     if Env.should_verify env then
-      Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi))
+      Rel.force_trivial_guard env (Env.guard_of_guard_formula (NonTrivial phi))
     else ()
   in
 
@@ -939,14 +944,14 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
     let env, tc, tc_u, guard = tc_tycon env tc in
     let g' = Rel.universe_inequality S.U_zero tc_u in
     if Env.debug env Options.Low then BU.print1 "Checked inductive: %s\n" (Print.sigelt_to_string tc);
-    env, (tc, tc_u)::all_tcs, Rel.conj_guard g (Rel.conj_guard guard g')
-  ) tys (env1, [], Rel.trivial_guard)
+    env, (tc, tc_u)::all_tcs, Env.conj_guard g (Env.conj_guard guard g')
+  ) tys (env1, [], Env.trivial_guard)
   in
 
   (* Check each datacon *)
   let datas, g = List.fold_right (fun se (datas, g) ->
     let data, g' = tc_data env tcs se in
-    data::datas, Rel.conj_guard g g'
+    data::datas, Env.conj_guard g g'
   ) datas ([], g)
   in
 
@@ -1256,7 +1261,7 @@ let mk_data_operations iquals env tcs se =
     in
 
     let iquals =
-        if List.contains S.Abstract iquals
+        if List.contains S.Abstract iquals && not (List.contains S.Private iquals)
         then S.Private::iquals
         else iquals
     in

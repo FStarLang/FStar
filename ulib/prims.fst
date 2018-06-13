@@ -307,10 +307,10 @@ assume
 val op_LessThan           : int -> int -> Tot bool
 
 assume
-val op_Equality :    #a:Type{hasEq a} -> a -> a -> Tot bool
+val op_Equality :    #a:eqtype -> a -> a -> Tot bool
 
 assume
-val op_disEquality : #a:Type{hasEq a} -> a -> a -> Tot bool
+val op_disEquality : #a:eqtype -> a -> a -> Tot bool
 
 assume new
 type exn : Type0

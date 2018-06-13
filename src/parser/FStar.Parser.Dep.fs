@@ -181,7 +181,7 @@ let file_of_dep_aux
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
          raise_err (Errors.Fatal_MissingInterface, BU.format1 "Expected an interface for module %s, but couldn't find one" key)
        | Some f ->
-         if use_checked_file then FStar.Options.prepend_cache_dir (f ^ ".source") else f)
+         f)
 
     | PreferInterface key //key for module 'a'
         when has_interface file_system_map key ->  //so long as 'a.fsti' exists
@@ -915,12 +915,21 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     let rec hash_deps out = function
         | [] -> Some (("source", source_hash)::interface_hash@out)
         | fn::deps ->
-          let cache_fn = cache_file_name fn in
-          if BU.file_exists cache_fn
-          then hash_deps ((lowercase_module_name fn, digest_of_file cache_fn) :: out) deps
-          else (if Options.debug_any()
-                then BU.print2 "%s: missed digest of file %s\n" cache_file cache_fn;
-                None)
+          let digest =
+            let fn = cache_file_name fn in
+            if BU.file_exists fn
+            then Some (digest_of_file fn)
+            else match FStar.Options.find_file (FStar.Util.basename fn) with
+                 | None -> None
+                 | Some fn -> Some (digest_of_file fn)
+          in
+          match digest with
+          | None ->
+            if Options.debug_any()
+            then BU.print2 "%s: missed digest of file %s\n" cache_file (cache_file_name fn);
+            None
+          | Some dig ->
+            hash_deps ((lowercase_module_name fn, dig) :: out) deps
     in
     hash_deps [] binary_deps
 
@@ -1016,19 +1025,30 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
+          let iface_deps =
+              if is_interface f
+              then None
+              else match interface_of file_system_map (lowercase_module_name f) with
+                   | None ->
+                     None
+                   | Some iface ->
+                     Some (fst (Option.get (deps_try_find deps iface)))
+          in
           let norm_f = norm_path f in
           let files = List.map (file_of_dep_aux true file_system_map all_cmd_line_files) f_deps in
+          let files =
+              match iface_deps with
+              | None -> files
+              | Some iface_deps ->
+                let iface_files =
+                    List.map (file_of_dep_aux true file_system_map all_cmd_line_files) iface_deps
+                in
+                BU.remove_dups (fun x y -> x = y) (files @ iface_files)
+          in
           let files = List.map norm_path files in
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
           let files = String.concat "\\\n\t" files in
-          //interfaces get two lines of output
-          //this one prints:
-          //   a.fsti.source: a.fsti b.fst.checked c.fsti.checked
-          //                 touch $@
-          if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n"
-                                             (norm_path (FStar.Options.prepend_cache_dir norm_f))
-                                             norm_f
-                                             files;
+
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
           Util.print3 "%s: %s \\\n\t%s\n\n"
@@ -1059,6 +1079,14 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
                 let fst_files =
                     f_deps |> List.map (file_of_dep_aux false file_system_map all_cmd_line_files)
                 in
+                let fst_files_from_iface =
+                    match iface_deps with
+                    | None -> []
+                    | Some iface_deps ->
+                      let id = iface_deps |> List.map (file_of_dep_aux false file_system_map all_cmd_line_files) in
+                      id
+                in
+                let fst_files = BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface) in
                 let extracted_fst_files =
                     fst_files |> List.filter (fun df ->
                         lowercase_module_name df <> lowercase_module_name f //avoid circular deps on f's own cmx

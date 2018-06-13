@@ -476,7 +476,11 @@ let mod_pow2_div2 a m =
   assert (a / 2 == pow2 (m - 1) * (a / pow2 m));
   multiple_modulo_lemma (a / pow2 m) (pow2 (m - 1))
 
-#reset-options "--z3rlimit 128 --initial_fuel 8 --max_fuel 8 --smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr boxwrap"
+// JP: there seems to be a discrepancy in z3 behavior across platforms. This
+// goes fine on Windows / CI with rlimit=40, but on Linux systems rlimit=400 is
+// needed. Leaving the high rlimit because it doesn't seem to deteriorate the
+// total verification time too much (I see ~40 seconds on my machine).
+#reset-options "--z3rlimit 400 --max_fuel 1 --max_ifuel 1 --smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr boxwrap"
 
 (* Lemma: Divided by a product is equivalent to being divided one by one *)
 val division_multiplication_lemma: a:nat -> b:pos -> c:pos ->

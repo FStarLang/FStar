@@ -45,6 +45,10 @@ let fresh_uvar (o : option typ) : Tac term =
     let e = cur_env () in
     uvar_env e o
 
+let unify t1 t2 =
+    let e = cur_env () in
+    unify_env e t1 t2
+
 let exact_args (qs : list aqualv) (t : term) : Tac unit =
     focus (fun () ->
         let n = List.length qs in
