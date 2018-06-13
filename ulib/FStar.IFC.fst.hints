@@ -1,0 +1,96 @@
+[
+  "ÑóT\u001bYu¥‰ÌÅËöˆêë„",
+  [
+    [
+      "FStar.IFC.__proj__SemiLattice__item__top",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_FStar.IFC.SemiLattice_carrier",
+        "projection_inverse_FStar.IFC.SemiLattice_carrier"
+      ],
+      0,
+      "bdac3cd124a78cd7aaa6d870f938ac47"
+    ],
+    [
+      "FStar.IFC.__proj__SemiLattice__item__lub",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "proj_equation_FStar.IFC.SemiLattice_carrier",
+        "projection_inverse_FStar.IFC.SemiLattice_carrier",
+        "refinement_interpretation_FStar.IFC_Tm_refine_edb2c6521da1348bce354e228735aede"
+      ],
+      0,
+      "d84b68daef2bb79700beaf3f098dfe04"
+    ],
+    [
+      "FStar.IFC.reveal_hide",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.IFC.hide", "equation_FStar.IFC.reveal" ],
+      0,
+      "0fbfa365bdd006944c7ad4e866f748f1"
+    ],
+    [
+      "FStar.IFC.hide_reveal",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.IFC.hide", "equation_FStar.IFC.reveal" ],
+      0,
+      "109a78ac783f13d5ffaebfef291240e6"
+    ],
+    [
+      "FStar.IFC.map",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.IFC.reveal",
+        "fuel_guarded_inversion_FStar.IFC.semi_lattice"
+      ],
+      0,
+      "a12fd8583b57b212aa279abd2bf3710f"
+    ],
+    [
+      "FStar.IFC.join",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.IFC.reveal" ],
+      0,
+      "d0f3d36aad5c074d494edaf98f6248a8"
+    ],
+    [
+      "FStar.IFC.__proj__SemiLattice__item__top",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_FStar.IFC.SemiLattice_carrier",
+        "projection_inverse_FStar.IFC.SemiLattice_carrier"
+      ],
+      0,
+      "f28ddd05624f73ac116d26aedc907582"
+    ],
+    [
+      "FStar.IFC.__proj__SemiLattice__item__lub",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "proj_equation_FStar.IFC.SemiLattice_carrier",
+        "projection_inverse_FStar.IFC.SemiLattice_carrier",
+        "refinement_interpretation_FStar.IFC_Tm_refine_edb2c6521da1348bce354e228735aede"
+      ],
+      0,
+      "a95e86da84e4b74cca2039ca49edb677"
+    ]
+  ]
+]

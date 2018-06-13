@@ -15,7 +15,7 @@
         "unit_typing"
       ],
       0,
-      "d2ae1613f0178ca066aa8655d131798f"
+      "14d7b553017ef5b3c53bab6916e8fed4"
     ],
     [
       "FStar.DependentMap.upd",
@@ -29,7 +29,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f3785fff6303bc17a4300e068e818bf2"
+      "bada280a6a6ea3115f57526fa1a62ad2"
     ],
     [
       "FStar.DependentMap.sel_upd_same",
@@ -48,7 +48,7 @@
         "unit_typing"
       ],
       0,
-      "c3de101d1e762edebf7347e77398d4e5"
+      "21c673f72177a688a155de66d0da5242"
     ],
     [
       "FStar.DependentMap.sel_upd_other",
@@ -68,7 +68,7 @@
         "token_correspondence_FStar.DependentMap.__proj__Mkt__item__mappings"
       ],
       0,
-      "ee3ebb2280ba6ba75608a5bda0585a5e"
+      "59cdc67ebabaf67b9b7d7d0609a6597a"
     ],
     [
       "FStar.DependentMap.equal_intro",
@@ -81,7 +81,7 @@
         "fuel_guarded_inversion_FStar.DependentMap.t", "unit_typing"
       ],
       0,
-      "109d62f3e3aaa3da79954ce173113d46"
+      "887100e828ba0b2c6bffb694be4b2520"
     ],
     [
       "FStar.DependentMap.equal_refl",
@@ -94,7 +94,7 @@
         "fuel_guarded_inversion_FStar.DependentMap.t", "unit_typing"
       ],
       0,
-      "8ab36d8f7728f8785e5942a32a2af940"
+      "decb2b242a0e7f6eb267ce9bd1f48b84"
     ],
     [
       "FStar.DependentMap.restrict",
@@ -108,7 +108,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "165e1e7b450bb61dfe9c76a7ef53bf5d"
+      "c68faf4f9d271d4012714755613bd27b"
     ],
     [
       "FStar.DependentMap.sel_restrict",
@@ -127,7 +127,7 @@
         "token_correspondence_FStar.DependentMap.__proj__Mkt__item__mappings"
       ],
       0,
-      "6beb080338db907a471b1bf241aeb06f"
+      "bc89137743b50065b9c99f28232a4faa"
     ],
     [
       "FStar.DependentMap.concat_value",
@@ -141,7 +141,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either"
       ],
       0,
-      "d5f4318390fa69a1c1a24e48adb63fa0"
+      "c70f958b821160bae4ff5217812d7525"
     ],
     [
       "FStar.DependentMap.concat_mappings",
@@ -165,7 +165,7 @@
         "projection_inverse_FStar.Pervasives.Inr_v"
       ],
       0,
-      "c1614724a3a0a24731cf1de4489fe3bd"
+      "94aab3a3fafa3fbc5afe88ce9a7f3d13"
     ],
     [
       "FStar.DependentMap.concat",
@@ -180,7 +180,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6679328d9481d405e06117a30e2af553"
+      "24360bd1197ba9a2209f1cb5e5bbe46f"
     ],
     [
       "FStar.DependentMap.sel_concat_l",
@@ -207,7 +207,7 @@
         "typing_FStar.DependentMap.sel"
       ],
       0,
-      "5cdcbe637b020d40d18e372636a9ccad"
+      "7f7bdfc8e8899dd87ad70f85c5797d90"
     ],
     [
       "FStar.DependentMap.sel_concat_r",
@@ -232,7 +232,7 @@
         "token_correspondence_FStar.DependentMap.concat_mappings"
       ],
       0,
-      "0e6e33e4275fa97b24c47c6bc3fe97ff"
+      "3bc6500048f4545c9ee22052a24b99ad"
     ],
     [
       "FStar.DependentMap.sel_rename",
@@ -253,7 +253,7 @@
         "typing_FStar.DependentMap.sel", "unit_typing"
       ],
       0,
-      "f6c04df07aa807ac9e59dbf2c6c64f3d"
+      "422560ed4ce7e11fa955e8fd0d8e9573"
     ],
     [
       "FStar.DependentMap.sel_map",
@@ -271,7 +271,7 @@
         "unit_typing"
       ],
       0,
-      "e5f9e3efed2621ad7549a2d279ddd202"
+      "442afa2e9035c0dd4717e0f983ca76ad"
     ],
     [
       "FStar.DependentMap.map_upd",
@@ -294,7 +294,113 @@
         "typing_FStar.DependentMap.upd"
       ],
       0,
-      "632772b45eb6175df1ea7d0315c4a88a"
+      "efe52d7c6de51881796b649d2bcb407c"
+    ],
+    [
+      "FStar.DependentMap.restrict",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "haseqFStar.DependentMap_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "099b3d6ed96b48aa620a28162ff12e72"
+    ],
+    [
+      "FStar.DependentMap.sel_restrict",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "haseqFStar.DependentMap_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "2cbfed4d9b1dfdae6da2165786aa2c46"
+    ],
+    [
+      "FStar.DependentMap.concat_value",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "62769a5209c0339ed277976a0505fc1b"
+    ],
+    [
+      "FStar.DependentMap.concat_mappings",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
+        "constructor_distinct_FStar.Pervasives.Inl",
+        "constructor_distinct_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_FStar.DependentMap.concat_value",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "projection_inverse_FStar.Pervasives.Inl__a",
+        "projection_inverse_FStar.Pervasives.Inl__b",
+        "projection_inverse_FStar.Pervasives.Inl_v",
+        "projection_inverse_FStar.Pervasives.Inr__a",
+        "projection_inverse_FStar.Pervasives.Inr__b",
+        "projection_inverse_FStar.Pervasives.Inr_v"
+      ],
+      0,
+      "36dfa97241d30ee941ad26486068dece"
+    ],
+    [
+      "FStar.DependentMap.concat",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either__uu___haseq",
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "5177f62ae37a84f1673f7f3cb3f4418b"
+    ],
+    [
+      "FStar.DependentMap.sel_concat_l",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either__uu___haseq",
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "5126246d1e0aa7c00d6bbf893a6eba21"
+    ],
+    [
+      "FStar.DependentMap.sel_concat_r",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either__uu___haseq",
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "29754986ca68350273d738b449874fc3"
     ]
   ]
 ]
