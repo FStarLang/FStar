@@ -1,7 +1,32 @@
 module Test.QuickCode
-#reset-options "--z3rlimit 10 --lax"
 
-irreducible let qattr = ()
+////////////////////////////////////////////////////////////////////////////////
+// A simpler first example
+////////////////////////////////////////////////////////////////////////////////
+
+irreducible
+let qattr = ()
+
+unfold let norm_simple #a (x:a) : a =
+  norm [iota; zeta; simplify; primops; delta_attr qattr; nbe] x
+
+type reg_file = int -> int
+
+[@qattr]
+let sel (r:reg_file) (x:int) = r x
+
+[@qattr]
+let upd (r:reg_file) (x:int) (v:int) = fun y -> if x=y then v else sel r y
+
+#set-options "--debug_level print_normalized_terms --debug_level NBE"
+let test (r:reg_file) =
+  assert (norm_simple (sel (upd (upd (upd r 0 0) 1 1) 2 2) 0) == 0)
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Something a bit more involved, but more representative of Vale's quick code
+////////////////////////////////////////////////////////////////////////////////
+#reset-options "--z3rlimit 10 --lax"
 
 noeq type state = {
   ok: bool;
@@ -21,6 +46,8 @@ let up_xmm (x:int) (v:int) (s:state) : state =
 
 [@qattr] let update_reg (r:int) (sM:state) (sK:state) : state = up_reg r (sM.regs r) sK [@qattr] let update_xmm (x:int) (sM:state) (sK:state) : state = up_xmm x (sM.xmms x) sK [@qattr] let upd_flags (flags:int) (s:state) : state = { s with flags = flags } [@qattr] let upd_mem (mem:int) (s:state) : state = { s with mem = mem }
 
+
+
 unfold let normal_steps : list string =
   [
     %`Mkstate?.ok;
@@ -30,7 +57,9 @@ unfold let normal_steps : list string =
     %`Mkstate?.mem
   ]
 
-unfold let normal (x:Type0) : Type0 = norm [iota; zeta; simplify; primops; delta_attr qattr; delta_only normal_steps] x
+unfold let normal (x:Type0) : Type0 =
+  norm [iota; zeta; simplify; primops; delta_attr qattr; delta_only normal_steps] x
+
 
 [@ "opaque_to_smt" qattr]
 let wp_compute_ghash_incremental (x:int) (s0:state) (k:(state -> Type0)) : Type0 =
