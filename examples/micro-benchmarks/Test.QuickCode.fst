@@ -41,7 +41,7 @@ let wp_compute_ghash_incremental (x:int) (s0:state) (k:(state -> Type0)) : Type0
   let sM = up_xmm 6 x (up_xmm 5 x (up_xmm 4 x sM)) in
   (k sM)
 
-#reset-options "--z3rlimit 10"
+#reset-options "--z3rlimit 10 --admit_smt_queries true"
 
 let lemma_gcm_core (s0:state) (x:int) : Lemma False =
   let k s =
