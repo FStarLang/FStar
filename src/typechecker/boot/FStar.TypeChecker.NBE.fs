@@ -8,6 +8,7 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Errors
+open FStar.TypeChecker.Normalize
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -424,8 +425,8 @@ and translate (cfg:N.cfg) (bs:list<t>) (e:term) : t =
       List.nth bs db.index
 
     | Tm_uinst(t, us) ->
-      debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t) 
-                                                                    (P.term_to_string t) 
+      debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t)
+                                                                    (P.term_to_string t)
                                                                     (List.map P.univ_to_string us |> String.concat ", "));
       List.fold_left (fun head u -> app cfg head (translate_univ bs u) None)
                      (translate cfg bs t)

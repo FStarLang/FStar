@@ -63,7 +63,8 @@ val should_unfold : cfg
                  -> should_unfold_res
 
 val register_plugin: primitive_step -> unit
-val find_prim_step: cfg -> fv -> primitive_step option
+
+val find_prim_step: cfg -> fv -> option<primitive_step>
 val is_prim_step: cfg -> fv -> bool
 val closure_as_term : cfg -> env -> term -> term
 val eta_expand_with_type :Env.env -> term -> typ -> term

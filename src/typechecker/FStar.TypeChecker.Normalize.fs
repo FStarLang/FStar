@@ -80,7 +80,7 @@ type fsteps = {
     unascribe : bool;
     in_full_norm_request: bool;
     weakly_reduce_scrutinee:bool;
-    nbe:bool;
+    nbe_step:bool;
 }
 
 let default_steps : fsteps = {
@@ -108,7 +108,7 @@ let default_steps : fsteps = {
     unascribe = false;
     in_full_norm_request = false;
     weakly_reduce_scrutinee = true;
-    nbe = false
+    nbe_step = false
 }
 
 let fstep_add_one s fs =
@@ -145,7 +145,7 @@ let fstep_add_one s fs =
     | CheckNoUvars ->  { fs with check_no_uvars = true }
     | Unmeta ->  { fs with unmeta = true }
     | Unascribe ->  { fs with unascribe = true }
-    | NBE -> {fs with nbe = true }
+    | NBE -> {fs with nbe_step = true }
 let rec to_fsteps (s : list<step>) : fsteps =
     List.fold_right fstep_add_one s default_steps
 
@@ -1290,12 +1290,10 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
              | Eager_unfolding_only -> true
              | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l))
     in
-    log_unfolding cfg (fun () -> printfn "should_unfold: For %s (%s), unfolding res = %s, cfg={steps=%A; delta_level=%A}\n"
+    log_unfolding cfg (fun () -> BU.print3 "should_unfold: For %s (%s), unfolding res = %s\n"
                     (Print.fv_to_string fv)
                     (Range.string_of_range (S.range_of_fv fv))
                     (string_of_res res)
-                    cfg.steps
-                    cfg.delta_level
                     );
     match res with
     | false, _, _ -> Should_unfold_no
