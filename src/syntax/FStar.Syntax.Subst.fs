@@ -66,7 +66,7 @@ let apply_until_some_then_map f s g t =
 let compose_subst s1 s2 =
     let s = fst s1 @ fst s2 in
     let ropt = match snd s2 with
-               | Some _ -> snd s2
+               | SomeUseRange _ -> snd s2
                | _ -> snd s1 in
     (s, ropt)
 
@@ -105,7 +105,7 @@ let force_uvar t =
   let t', forced = force_uvar' t in
   if not forced
   then t, forced
-  else delay t' ([], Some t.pos), forced
+  else delay t' ([], SomeUseRange t.pos), forced
 
 //If a delayed node has already been memoized, then return the memo
 //THIS DOES NOT PUSH A SUBSTITUTION UNDER A DELAYED NODE---see push_subst for that
@@ -166,8 +166,11 @@ let rec subst_univ s u =
 
 let tag_with_range t s =
     match snd s with
-    | None -> t
-    | Some r ->
+    | NoUseRange -> t
+    | SomeUseRange r ->
+      if Range.rng_included (Range.use_range t.pos) (Range.use_range r)
+      then t
+      else begin
       let r = Range.set_use_range t.pos (Range.use_range r) in
       let t' = match t.n with
         | Tm_bvar bv -> Tm_bvar (Syntax.set_range_of_bv bv r)
@@ -178,16 +181,23 @@ let tag_with_range t s =
                         Tm_fvar fv
         | t' -> t' in
       {t with n=t'; pos=r}
+      end
 
 let tag_lid_with_range l s =
     match (snd s) with
-    | None -> l
-    | Some r -> Ident.set_lid_range l (Range.set_use_range (Ident.range_of_lid l) (Range.use_range r))
+    | NoUseRange -> l
+    | SomeUseRange r ->
+      if Range.rng_included (Range.use_range (Ident.range_of_lid l)) (Range.use_range r)
+      then l
+      else Ident.set_lid_range l (Range.set_use_range (Ident.range_of_lid l) (Range.use_range r))
 
 let mk_range r (s:subst_ts) =
     match snd s with
-    | None -> r
-    | Some r' -> Range.set_use_range r (Range.use_range r')
+    | NoUseRange -> r
+    | SomeUseRange r' ->
+      if Range.rng_included (Range.use_range r) (Range.use_range r')
+      then r
+      else Range.set_use_range r (Range.use_range r')
 
 (* Applies a substitution to a node,
      immediately if it is a variable
@@ -195,8 +205,8 @@ let mk_range r (s:subst_ts) =
 let rec subst' (s:subst_ts) t =
   let subst_tail (tl:list<list<subst_elt>>) = subst' (tl, snd s) in
   match s with
-  | [], None
-  | [[]], None -> t
+  | [], NoUseRange
+  | [[]], NoUseRange -> t
   | _ ->
     let t0 = try_read_memo t in
     match t0.n with
@@ -233,8 +243,8 @@ and subst_flags' s flags =
 
 and subst_comp_typ' s t =
   match s with
-  | [], None
-  | [[]], None -> t
+  | [], NoUseRange
+  | [[]], NoUseRange -> t
   | _ ->
     {t with effect_name=tag_lid_with_range t.effect_name s;
             comp_univs=List.map (subst_univ (fst s)) t.comp_univs;
@@ -244,8 +254,8 @@ and subst_comp_typ' s t =
 
 and subst_comp' s t =
   match s with
-  | [], None
-  | [[]], None -> t
+  | [], NoUseRange
+  | [[]], NoUseRange -> t
   | _ ->
     match t.n with
       | Total (t, uopt) -> mk_Total' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
@@ -267,7 +277,7 @@ let subst_binders' s bs =
     bs |> List.mapi (fun i b ->
         if i=0 then subst_binder' s b
         else subst_binder' (shift_subst' i s) b)
-let subst_binders s (bs:binders) = subst_binders' ([s], None) bs
+let subst_binders s (bs:binders) = subst_binders' ([s], NoUseRange) bs
 let subst_arg' s (t, imp) = (subst' s t, imp)
 let subst_args' s = List.map (subst_arg' s)
 let subst_pat' s p : (pat * int) =
@@ -312,12 +322,12 @@ let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
               hd_subst |> List.collect (function
               | NT(x, t) ->
                 if should_retain x
-                then [NT(x, delay t (rest, None))]
+                then [NT(x, delay t (rest, NoUseRange))]
                 else []
               | NM(x, i) ->
                 if should_retain x
                 then let x_i = S.bv_to_tm ({x with index=i}) in
-                     let t = subst' (rest, None) x_i in
+                     let t = subst' (rest, NoUseRange) x_i in
                      match t.n with
                      | Tm_bvar x_j -> [NM(x, x_j.index)]
                      | _ -> [NT(x, t)]
@@ -452,9 +462,9 @@ let rec compress (t:term) =
     | _ ->
         t
 
-let subst s t = subst' ([s], None) t
-let set_use_range r t = subst' ([], Some (Range.set_def_range r (Range.use_range r))) t
-let subst_comp s t = subst_comp' ([s], None) t
+let subst s t = subst' ([s], NoUseRange) t
+let set_use_range r t = subst' ([], SomeUseRange (Range.set_def_range r (Range.use_range r))) t
+let subst_comp s t = subst_comp' ([s], NoUseRange) t
 let closing_subst (bs:binders) =
     List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst
 let open_binders' bs =

@@ -412,7 +412,9 @@ let check_pattern_ok (t:term) : option<term> =
           | None -> aux_l ts
     in
     aux t
- let rec print_smt_term (t:term) :string = match t.tm with
+
+ let rec print_smt_term (t:term) :string =
+  match t.tm with
   | Integer n               -> BU.format1 "(Integer %s)" n
   | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
   | FreeV  fv               -> BU.format1 "(FreeV %s)" (fst fv)

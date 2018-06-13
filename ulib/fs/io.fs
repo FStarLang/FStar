@@ -7,6 +7,7 @@ type fd_write = TextWriter
 
 let print_newline _ = Printf.printf "\n"
 let print_string x   = Printf.printf "%s" x
+let print_uint8 x    = Printf.printf "%.02x" x
 let print_any x      = Printf.printf "%A" x
 let input_line ()    = System.Console.ReadLine()
 let input_int  ()    = Int32.Parse(System.Console.ReadLine())

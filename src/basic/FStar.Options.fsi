@@ -120,7 +120,7 @@ val dump_module                 : string  -> bool
 val eager_subtyping             : unit    -> bool
 val expose_interfaces           : unit    -> bool
 val file_list                   : unit    -> list<string>
-val find_file                   : string  -> option<string>
+val find_file                   : (string  -> option<string>)
 val fs_typ_app                  : string  -> bool
 val fstar_bin_directory         : string
 val get_option                  : string  -> option_val
@@ -194,7 +194,7 @@ val use_hints                   : unit    -> bool
 val use_hint_hashes             : unit    -> bool
 val use_native_tactics          : unit    -> option<string>
 val use_tactics                 : unit    -> bool
-val using_facts_from            : unit    -> list<(Ident.path * bool)>
+val using_facts_from            : unit    -> list<(list<string> * bool)>
 val vcgen_optimize_bind_as_seq  : unit    -> bool
 val vcgen_decorate_with_type    : unit    -> bool
 val warn_default_effects        : unit    -> bool

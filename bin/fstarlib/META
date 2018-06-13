@@ -1,5 +1,5 @@
 name="fstarlib"
-version="0.9.6.0~alpha1"
+version="0.9.7.0~dev"
 description="FStar standard library"
 requires="batteries,stdint,zarith,ppx_deriving.std,ppx_deriving_yojson"
 archive(toploop)="fstarlib.cma"

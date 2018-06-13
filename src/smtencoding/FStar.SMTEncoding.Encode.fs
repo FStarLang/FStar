@@ -1005,7 +1005,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | Term.DeclFun _ -> true
         | _ -> false) in
        decls@rest@inversions, env
-    
+
      | Sig_inductive_typ(t, _, tps, k, _, datas) ->
         let quals = se.sigquals in
         let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in

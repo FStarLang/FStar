@@ -163,6 +163,7 @@ type meta =
   | CPrologue of string
   | CEpilogue of string
   | CConst of string
+  | CCConv of string
   | Erased
 
 // rename

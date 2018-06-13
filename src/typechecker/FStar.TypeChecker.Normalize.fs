@@ -1287,7 +1287,6 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
                                                (Print.delta_depth_to_string fv.fv_delta)
                                                (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
         yesno <| (cfg.delta_level |> BU.for_some (function
-             | Env.UnfoldTac
              | NoDelta -> false
              | Env.Inlining
              | Eager_unfolding_only -> true
@@ -1733,8 +1732,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             norm cfg env stack t
 
 and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
-    //preserve the range info on the returned def
-    let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
        | None ->
          log_unfolding cfg (fun () -> // printfn "delta_level = %A, qninfo=%A" cfg.delta_level qninfo;
@@ -1745,12 +1742,13 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          begin
          log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n"
                        (Print.term_to_string t0) (Print.term_to_string t));
+         // preserve the range info on the returned term
          let t =
            if cfg.steps.unfold_until = Some delta_constant
            //we're really trying to compute here; no point propagating range information
            //which can be expensive
            then t
-           else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
+           else Subst.set_use_range t0.pos t
          in
          let n = List.length us in
          if n > 0
@@ -2713,7 +2711,6 @@ let config' psteps s e =
         | UnfoldUntil k -> [Env.Unfold k]
         | Eager_unfolding -> [Env.Eager_unfolding_only]
         | Inlining -> [Env.Inlining]
-        | UnfoldTac -> [Env.UnfoldTac]
         | _ -> []) in
     let d = match d with
         | [] -> [Env.NoDelta]
@@ -2739,6 +2736,7 @@ let config s e = config' [] s e
 
 let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
+    log c (fun () -> BU.print1 "Starting normalizer for (%s)\n" (Print.term_to_string t));
     norm c [] [] t
 let normalize s e t = normalize_with_primitive_steps [] s e t
 let normalize_comp s e t = norm_comp (config s e) [] t
@@ -2814,7 +2812,8 @@ let normalize_refinement steps env t0 =
        | _ -> t in
    aux t
 
-let unfold_whnf env t = normalize [Primops; Weak; HNF; UnfoldUntil delta_constant; Beta] env t
+let unfold_whnf' steps env t = normalize (steps@[Primops; Weak; HNF; UnfoldUntil delta_constant; Beta]) env t
+let unfold_whnf  env t = unfold_whnf' [] env t
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
               @[Beta; DoNotUnfoldPureLets; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])

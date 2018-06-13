@@ -21,7 +21,7 @@ ENV OPAMYES true
 RUN opam init
 RUN echo ". /home/FStar/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" >> .bashrc
 RUN opam switch ${opamv}
-RUN opam install ocamlfind batteries sqlite3 fileutils stdint zarith yojson pprint menhir ulex ppx_deriving ppx_deriving_yojson
+RUN opam install ocamlfind batteries sqlite3 fileutils stdint zarith yojson pprint menhir ulex ppx_deriving ppx_deriving_yojson process
 
 # Prepare and build Z3
 RUN wget https://github.com/FStarLang/binaries/raw/master/z3-tested/z3-${z3v}.zip

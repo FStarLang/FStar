@@ -1,4 +1,4 @@
 name="fstar-tactics-lib"
-version="0.9.6.0~alpha1"
+version="0.9.7.0~dev"
 description="FStar native tactic support"
 requires="fstar-compiler-lib"

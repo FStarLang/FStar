@@ -28,7 +28,8 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 NegativeTests.BST.uver     NegativeTests.Heap.uver  NegativeTests.ShortCircuiting.uver \
 	 NegativeTests.Bug260.uver  NegativeTests.Neg.uver   NegativeTests.Termination.uver \
 	 NegativeTests.False.uver   NegativeTests.Set.uver   NegativeTests.Positivity.uver \
-	 NegativeTests.ZZImplicitFalse.uver StableErr.uver
+	 NegativeTests.ZZImplicitFalse.uver StableErr.uver   ChrisCheck.uver PatCoerce.uver \
+	 OccursCheckOnArrows.uver   Test.Integers.uver AnotType.uver
 	#TestHasEq.uver #temporarily removed from mac_universes branch
 
 basictests: $(VERFILES)

@@ -11,6 +11,80 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+# Version 0.9.6.0
+
+## Command line options
+
+   F* reads .checked files by default unless the `--cache_off` option is provided.
+   To write .checked files, provide `--cache_checked_modules`
+
+   `--use_two_phase_tc true` is now the default. This improves type
+   inference for implicit arguments and reduces our trust in type
+   inference, since the result of type inference is type-checked
+   again.
+
+   `--use_extracted_interfaces` now takes a boolean string as an
+   option, i.e., `--use_extracted_interfaces true` or
+   `--use_extracted_interfaces false`. The latter is the default. The
+   next release of F* aims to turn this on always with no option to
+   turn it off. This feature is more demanding in enforcing
+   abstraction at module boundaries; without out it, some abstractions
+   leak. See
+   https://github.com/FStarLang/FStar/wiki/Revised-checking-of-a-module's-interface
+   for more information.
+
+## Type inference
+
+   We had a significant overhaul of the type inference algorithm and
+   representation of unification variables. The new algorithm performs
+   significantly better, particularly on memory consumption.
+
+   But, some of the heuristics changed slightly so you may have to add
+   annotations to programs that previously required none.
+
+   For the changes we had to make to existing code, see the commits
+   below:
+
+```
+commit d4c0161c22ab9ac6d72900acd7ed905d43cb92b7
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Tue May 8 15:27:19 2018 -0700
+
+    ***SOURCE CODE CHANGE*** in support of new inference; need an annotation in Synthesis.fst
+
+
+commit 362fa403c45def14fb2e2809e04405c39e88dfcb
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Tue May 1 15:55:08 2018 -0700
+
+    ***SOURCE CODE CHANGE*** for inference; the inferred type is more precise than previously, which leads to failure later; annotated with a weaker type
+
+commit ec17efe04709e4a6434c05e5b6f1bf11b033353e
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Mon Apr 30 22:11:54 2018 -0700
+
+    ***SOURCE CODE CHANGE** for new inference; a repacking coercion needs an annotation
+
+commit f60cbf38fa73d5603606cff42a88c53ca17fbd37
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Mon Apr 30 22:11:17 2018 -0700
+
+    ***SOURCE CODE CHANGE*** for new inference; arguably an improvement
+
+commit c97d42cae876772a18d20f54bba2a7d5fceecd69
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Mon Apr 30 20:59:50 2018 -0700
+
+    **SOURCE CODE CHANGE** for new type inference; arguably an improvement
+
+commit 936a5ff7a8404c5ddbdc87d0dbb3a86af234e71b
+Author: Nikhil Swamy <nikswamy@users.noreply.github.com>
+Date:   Mon Apr 30 16:57:21 2018 -0700
+
+    ***SOURCE CODE CHANGE*** for type inference; could be reverted once prop lands
+```
+
+
 # Version 0.9.6.0~alpha1
 
 ## Syntax
@@ -276,6 +350,21 @@ Guidelines for the changelog:
      above, in that there is no extra proof obligation when creating
      regions now.
 
+  5. `FStar.HyperStack.mem` is now `abstract`. The client changes include
+     the following mappings (where `h` has type `mem`):
+
+     1. `h.tip` --> `HS.get_tip h`
+     2. `h.h` --> `HS.get_hmap h`
+
+     The script `FStar/.scripts/renamings.sh` has a new option
+     `rename_hs_mem_projectors` that tries to do this renaming
+     in all the `fst` and `fsti` files. If you use this script,
+     make sure the gloss over the renamings (using `git diff`) to
+     see that the changes are fine.
+
+     The change is only syntactic in the clients, there shouldn't
+     be any other proof changes.
+
 * Consolidation of HyperHeap and HyperStack memory models, and
   corresponding APIs for `contains`, `modifies`, etc.
 
@@ -507,7 +596,7 @@ Expected changes in the near future:
   be printed as errors. If no localized errors could be recovered
   (e.g., because of a solver timeout) then the dreaded "Unknown
   assertion failed" error is reported.
-   
+
 * --query_stats now reports a reason for a hint failure as well as
   localized errors for sub-proofs that failed to replay. This is
   should provide a faster workflow than using --detail_hint_replay
@@ -516,4 +605,3 @@ Expected changes in the near future:
 ## Miscellaneous
 
 * A file can now contain at most one module or interface
-

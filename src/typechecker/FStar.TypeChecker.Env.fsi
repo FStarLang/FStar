@@ -30,7 +30,6 @@ type delta_level =
   | Inlining
   | Eager_unfolding_only
   | Unfold of delta_depth
-  | UnfoldTac
 
 (* Type of wp liftings [l] between 2 effects Msource and Mtarget : *)
 (* given a computational type [Msource t wp], [wp' = mlift_wp t wp] should *)
@@ -91,6 +90,7 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
   lax_universes  :bool;                         (* don't check universe constraints *)
+  phase1         :bool;                         (* running in phase 1, phase 2 to come after *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
@@ -130,6 +130,8 @@ and guard_t = {
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
+// Reason, term and uvar, and (rough) position where it is introduced
+// The term is just a Tm_uvar of the ctx_uvar
 and implicits = list<(string * term * ctx_uvar * Range.range)>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
@@ -279,5 +281,29 @@ val string_of_proof_ns : env -> string
 val unbound_vars    : env -> term -> BU.set<bv>
 val closed          : env -> term -> bool
 val closed'         : term -> bool
+
+(* Operations on guard_t *)
+val close_guard_univs         : universes -> binders -> guard_t -> guard_t
+val close_guard               : env -> binders -> guard_t -> guard_t
+val apply_guard               : guard_t -> term -> guard_t
+val map_guard                 : guard_t -> (term -> term) -> guard_t
+val trivial_guard             : guard_t
+val is_trivial                : guard_t -> bool
+val is_trivial_guard_formula  : guard_t -> bool
+val conj_guard                : guard_t -> guard_t -> guard_t
+val abstract_guard            : binder -> guard_t -> guard_t
+val abstract_guard_n          : list<binder> -> guard_t -> guard_t
+val imp_guard                 : guard_t -> guard_t -> guard_t
+val guard_of_guard_formula    : guard_formula -> guard_t
+val guard_form                : guard_t -> guard_formula
+val check_trivial             : term -> guard_formula
+
+(* Other utils *)
+val def_check_closed_in       : Range.range -> msg:string -> scope:list<bv> -> term -> unit
+val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
+val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
+val close_forall              : env -> binders -> term -> term
+
+val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> (term * list<(ctx_uvar * Range.range)> * guard_t)
 
 val print_gamma : gamma -> string

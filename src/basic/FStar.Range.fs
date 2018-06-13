@@ -31,7 +31,7 @@ type pos = {
 }
 let max i j = if i < j then j else i
 let pos_geq p1 p2 =
-   (p1.line >= p2.line ||
+   (p1.line > p2.line ||
    (p1.line = p2.line && p1.col >= p2.col))
 
 // IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
@@ -89,23 +89,39 @@ let union_rng r1 r2 =
              r2.start_pos
            else r1.start_pos in
        let end_pos =
-           if pos_geq r1.start_pos r2.start_pos then
-             r1.start_pos
-           else r2.start_pos in
+           if pos_geq r1.end_pos r2.end_pos then
+             r1.end_pos
+           else r2.end_pos in
        mk_rng r1.file_name start_pos end_pos
 let union_ranges r1 r2 = {
   def_range=union_rng r1.def_range r2.def_range;
   use_range=union_rng r1.use_range r2.use_range
 }
+let rng_included r1 r2 =
+    if r1.file_name <> r2.file_name then false
+    else pos_geq r1.start_pos r2.start_pos &&
+         pos_geq r2.end_pos r1.end_pos
 let string_of_pos pos =
     format2 "%s,%s" (string_of_int pos.line) (string_of_int pos.col)
+let string_of_file_name f =
+    if Options.ide()
+    then begin
+        match FStar.Options.find_file (FStar.Util.basename f) with
+        | None -> f //couldn't find file; just return the relative path
+        | Some absolute_path ->
+            absolute_path
+    end
+    else f
+let file_of_range r       =
+    let f = r.def_range.file_name in
+    string_of_file_name f
+let set_file_of_range r (f:string) = {r with def_range = {r.def_range with file_name = f}}
 let string_of_rng r =
-    format3 "%s(%s-%s)" r.file_name (string_of_pos r.start_pos) (string_of_pos r.end_pos)
+    format3 "%s(%s-%s)" (string_of_file_name r.file_name) (string_of_pos r.start_pos) (string_of_pos r.end_pos)
 let string_of_def_range r = string_of_rng r.def_range
 let string_of_use_range r = string_of_rng r.use_range
 let string_of_range r     = string_of_def_range r
 
-let file_of_range r       = r.def_range.file_name
 let start_of_range r      = r.def_range.start_pos
 let end_of_range r        = r.def_range.end_pos
 

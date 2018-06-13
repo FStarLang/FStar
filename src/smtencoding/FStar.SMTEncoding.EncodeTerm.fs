@@ -1331,12 +1331,20 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
 
             | _ ->
               let tt, decls = encode_term phi env in
-              mk_Valid ({tt with rng=phi.pos}), decls
+              let tt =
+                  if Range.rng_included (Range.use_range tt.rng) (Range.use_range phi.pos)
+                  then tt
+                  else {tt with rng=phi.pos} in
+              mk_Valid tt, decls
           end
 
         | _ ->
             let tt, decls = encode_term phi env in
-            mk_Valid ({tt with rng=phi.pos}), decls in
+            let tt =
+                  if Range.rng_included (Range.use_range tt.rng) (Range.use_range phi.pos)
+                  then tt
+                  else {tt with rng=phi.pos} in
+            mk_Valid tt, decls in
 
     let encode_q_body env (bs:Syntax.binders) (ps:list<args>) body =
         let vars, guards, env, decls, _ = encode_binders None bs env in
