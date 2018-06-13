@@ -468,9 +468,10 @@ let rec place_comments_until_pos k lbegin pos_end end_correction doc =
     if doc = empty then
       empty
     else
-      let lnum' = line_of_pos pos_end (* - end_correction *) - lbegin in
-      let lnum = min 2 lnum' in //puts a limit of at most one empty line between decls
-      doc ^^ repeat lnum hardline ^^ (str <| string_of_int lbegin) ^^ (str "*") ^^ (str <| string_of_int (line_of_pos pos_end))
+      let lnum = line_of_pos pos_end - lbegin in
+      let lnum = if lnum >= 2 then lnum - end_correction else lnum in //make up for incorrect range information in declarations with qualifiers
+      let lnum = min 2 lnum in //puts a limit of at most one empty line between decls
+      doc ^^ repeat lnum hardline ^^ (str <| string_of_int lbegin) // ^^ (str "*") ^^ (str <| string_of_int (line_of_pos pos_end)) ^^ (str "+") ^^ (str <| string_of_int (end_correction))
 
 (* [separate_map_with_comments prefix sep f xs extract_range] is the document *)
 (*                                                                            *)
