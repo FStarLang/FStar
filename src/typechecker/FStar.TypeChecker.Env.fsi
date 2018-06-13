@@ -30,7 +30,6 @@ type delta_level =
   | Inlining
   | Eager_unfolding_only
   | Unfold of delta_depth
-  | UnfoldTac
 
 (* Type of wp liftings [l] between 2 effects Msource and Mtarget : *)
 (* given a computational type [Msource t wp], [wp' = mlift_wp t wp] should *)

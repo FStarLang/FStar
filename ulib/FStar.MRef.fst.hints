@@ -122,12 +122,12 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.MRef.spred",
         "equation_FStar.MRef.stable",
+        "function_token_typing_FStar.Preorder.stable",
         "refinement_interpretation_FStar.MRef_Tm_refine_622e5d71d43c090771b195939447feeb",
-        "token_correspondence_FStar.MRef.stable",
-        "token_correspondence_FStar.Preorder.stable"
+        "token_correspondence_FStar.MRef.stable"
       ],
       0,
-      "e27606c9ab02c90a9acbb632ec3d5452"
+      "c85dde2c3f6209206bb4736bb06dbc71"
     ]
   ]
 ]

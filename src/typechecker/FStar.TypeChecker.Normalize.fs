@@ -1287,7 +1287,6 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
                                                (Print.delta_depth_to_string fv.fv_delta)
                                                (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
         yesno <| (cfg.delta_level |> BU.for_some (function
-             | Env.UnfoldTac
              | NoDelta -> false
              | Env.Inlining
              | Eager_unfolding_only -> true
@@ -2712,7 +2711,6 @@ let config' psteps s e =
         | UnfoldUntil k -> [Env.Unfold k]
         | Eager_unfolding -> [Env.Eager_unfolding_only]
         | Inlining -> [Env.Inlining]
-        | UnfoldTac -> [Env.UnfoldTac]
         | _ -> []) in
     let d = match d with
         | [] -> [Env.NoDelta]

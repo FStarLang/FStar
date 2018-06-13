@@ -140,7 +140,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8d40f15a3560b5c6e29f9fa21cdbc467"
+      "9d81082554ca0b6c65767a40e3de9587"
     ],
     [
       "FStar.OrdSetProps.union_lemma",
@@ -149,7 +149,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "6dcbc95ddcd25253f7d24c56c93db6a0"
+      "3c6a4b218e20fe1d910c0885978edb16"
     ],
     [
       "FStar.OrdSetProps.union_lemma'",
@@ -158,7 +158,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "6951f9c2c63145d2cfb75d2074602658"
+      "53eeb6980e33c0c7d0304d7089bf4700"
     ]
   ]
 ]

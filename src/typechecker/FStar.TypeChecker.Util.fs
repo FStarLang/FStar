@@ -937,12 +937,18 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
       e, lc
 
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
+  if Env.debug env Options.High then
+    BU.print3 "weaken_result_typ e=(%s) lc=(%s) t=(%s)\n"
+            (Print.term_to_string e)
+            (Print.lcomp_to_string lc)
+            (Print.term_to_string t);
   let use_eq =
     env.use_eq ||
     (match Env.effect_decl_opt env lc.eff_name with
+     // See issue #881 for why weakening result type of a reifiable computation is problematic
      | Some (ed, qualifiers) -> qualifiers |> List.contains Reifiable
      | _ -> false) in
-  let gopt = if use_eq //see issue #881 for why weakening result type of a reifiable computation is problematic
+  let gopt = if use_eq
              then Rel.try_teq true env lc.res_typ t, false
              else Rel.get_subtyping_predicate env lc.res_typ t, true in
   match gopt with
