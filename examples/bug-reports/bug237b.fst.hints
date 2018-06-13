@@ -63,18 +63,6 @@
       ],
       0,
       "ba96852d9d0ef9ef79c7f306f9ce78f2"
-    ],
-    [
-      "Bug237b.k_foralle",
-      1,
-      2,
-      1,
-      [
-        "@query", "equality_tok_Bug237b.KType@tok",
-        "equation_Bug237b.ktsubst_beta"
-      ],
-      0,
-      "1bef23f73943a190d1613af48dc47b3c"
     ]
   ]
 ]
