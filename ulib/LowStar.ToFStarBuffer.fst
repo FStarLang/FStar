@@ -99,7 +99,7 @@ assume val new_to_old_includes_right (#t: Type0) (b1: Old.buffer t) (b2: New.buf
     [SMTPat (old_to_new_ghost b1 `New.includes` b2)];
   ]]
 
-assume val new_to_old_disjoint (#t: Type0) (b1: New.buffer t) (b2: Old.buffer t) : Lemma
+assume val new_to_old_disjoint (#t1 #t2: Type0) (b1: New.buffer t1) (b2: Old.buffer t2) : Lemma
   ((new_to_old_ghost b1 `Old.disjoint` b2) <==> (b1 `New.disjoint` (old_to_new_ghost b2)))
   [SMTPatOr [
     [SMTPat (new_to_old_ghost b1 `Old.disjoint` b2)];
