@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e63dcbadad1d66b58220eac19661fef6"
+      "bd27fde1228926226143612f26daea78"
     ],
     [
       "Ex05a.reverse",
@@ -27,7 +27,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c05bf86507afe58bc64ace15537385fa"
+      "c4e2bd2200162ab90339bbdb14428164"
     ],
     [
       "Ex05a.rev",
@@ -42,7 +42,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ec0c97f4c4ecccc6c10c50ea9ffad637"
+      "03f26c30faa841fea16d8e6da64da4e7"
     ],
     [
       "Ex05a.append_assoc",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "219602375009e44b54894f781d11c8d8"
+      "32885b95415ad7f78bc690918288c5f0"
     ],
     [
       "Ex05a.rev_is_ok_aux",
@@ -93,7 +93,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1d990729d8e2158350f0481d1e547ccc"
+      "c74ca7ffff3eac17a48d98c70881189c"
     ],
     [
       "Ex05a.append_nil",
@@ -113,7 +113,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b4862f4ec84fe9e3e510a8a54ad29d7c"
+      "575c2ba822b1bb343fe53d1757db1993"
     ],
     [
       "Ex05a.rev_is_ok",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "a9923bc4b5ae740ebae849bcd487ce80"
+      "623e2ed9027f51ee94407214888fce7f"
     ],
     [
       "Ex05a.append",
@@ -136,7 +136,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e80468fa7c2e8cb5b155e52a4844b1a5"
+      "c3ac1f39c18ec4d92055a3c78b76bba9"
     ],
     [
       "Ex05a.reverse",
@@ -150,7 +150,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d10ac44d05c3ac43ad3ce380d9c612f5"
+      "7bf2c10050c5bd18518a2387383a16fc"
     ],
     [
       "Ex05a.rev",
@@ -165,7 +165,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c5647076d1294aca2ebb23b32e5b1766"
+      "25c12ef30afa6ba764bdcc258e4ac503"
     ]
   ]
 ]

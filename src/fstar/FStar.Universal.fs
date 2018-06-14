@@ -313,6 +313,8 @@ let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and 
             then store_module_to_cache env fn (fst tcmod) tcmod_iface_opt mii;
             tcmod, env, None
       | Some (tcmod, tcmod_iface_opt, mii) ->
+            if Options.dump_module tcmod.name.str
+            then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
             let tcmod =
             if tcmod.is_interface then tcmod
             else

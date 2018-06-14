@@ -816,7 +816,7 @@ let modifies_loc_includes #al #c s1 h h' s2 =
 
 let modifies_preserves_liveness #al #c s1 s2 h h' #t #pre r = ()
 
-#set-options "--z3rlimit 16"
+#set-options "--z3rlimit 20"
 
 let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
   assert (Set.mem (HS.frameOf r) (regions_of_loc s1) ==> (~ (Set.mem (HS.as_addr r) (Loc?.non_live_addrs (loc_union s1 s2) (HS.frameOf r)))))
@@ -853,7 +853,7 @@ let addr_unused_in_aloc_preserved
     (h1: HS.mem)
     (h2: HS.mem)
   : Lemma
-    (requires (HS.live_region h1 r ==> a `Heap.addr_unused_in` (Map.sel h1.HS.h r)))
+    (requires (HS.live_region h1 r ==> a `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)))
     (ensures (c.aloc_preserved b h1 h2))
 = c.same_mreference_aloc_preserved b h1 h2 (fun a' pre r' -> assert False)
 
@@ -974,13 +974,13 @@ let fresh_frame_modifies #al c h0 h1 =
 
 let modifies_fresh_frame_popped #al #c h0 h1 s h2 h3 =
   fresh_frame_modifies c h0 h1;
-  let r = loc_region_only #al #c false h2.HS.tip in
-  let rs = HS.mod_set (Set.singleton h1.HS.tip) in
+  let r = loc_region_only #al #c false (HS.get_tip h2) in
+  let rs = HS.mod_set (Set.singleton (HS.get_tip h1)) in
   let s' = loc_union (loc_regions false rs) s in
   modifies_trans' s' h0 h1 h2;
   assert (modifies_preserves_mreferences r h2 h3);
   let f23 (r: HS.rid) (a: nat) (b: al r a) : Lemma
-    (requires (r <> h2.HS.tip))
+    (requires (r <> HS.get_tip h2))
     (ensures (c.aloc_preserved b h2 h3))
   = c.same_mreference_aloc_preserved #r #a b h2 h3 (fun a' pre r' -> ())
   in
@@ -1466,6 +1466,27 @@ let union_loc_of_loc #al c b l =
     live_addrs
     (Ghost.hide aux')
 
+let union_aux_of_aux_left_inv_pred
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
+  (#c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (s: GSet.set (aloc (cls_union c)))
+  (x: aloc (c b))
+: GTot bool
+= let ALoc region addr loc = x in
+  match loc with
+  | None -> GSet.mem (ALoc region addr None) s
+  | Some loc ->
+    GSet.mem (ALoc region addr (Some (make_cls_union_aloc b loc))) s
+
+let union_aux_of_aux_left_inv
+  (#al: (bool -> HS.rid -> nat -> Tot Type))
+  (#c: ((b: bool) -> Tot (cls (al b))))
+  (b: bool)
+  (s: GSet.set (aloc (cls_union c)))
+: Tot (GSet.set (aloc (c b)))
+= GSet.comprehend (union_aux_of_aux_left_inv_pred b s)
+
 let mem_union_aux_of_aux_left_intro
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
@@ -1512,7 +1533,7 @@ let union_loc_of_loc_union #al c b l1 l2 =
 let union_loc_of_loc_addresses #al c b preserve_liveness r n =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_addresses #_ #(c b) preserve_liveness r n)) (loc_addresses #_ #(cls_union c) preserve_liveness r n))
 
-let union_loc_of_loc_regions #al c preserve_liveness b r =
+let union_loc_of_loc_regions #al c b preserve_liveness r =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_regions #_ #(c b) preserve_liveness r)) (loc_regions #_ #(cls_union c) preserve_liveness r))
 
 #set-options "--z3rlimit 32"
@@ -1537,7 +1558,7 @@ let union_loc_of_loc_includes_intro
   let doms = aloc_domain (cls_union c) (Loc?.regions smaller) (Loc?.live_addrs smaller) in
   assert (doml `loc_aux_includes` doms)
 
-#set-options "--z3rlimit 16"
+#set-options "--z3rlimit 32"
 
 let union_loc_of_loc_includes_elim
   (#al: (bool -> HS.rid -> nat -> Tot Type))
@@ -1755,6 +1776,31 @@ let modifies_union_loc_of_loc #al c b l h1 h2 =
   Classical.move_requires (modifies_union_loc_of_loc_elim c b l h1) h2;
   Classical.move_requires (modifies_union_loc_of_loc_intro c b l h1) h2
 
+let loc_of_union_loc #al #c b l
+= let (Loc regions region_liveness_tags non_live_addrs live_addrs aux) = l in
+  let aux' = union_aux_of_aux_left_inv b (Ghost.reveal aux) in
+  Loc
+    regions
+    region_liveness_tags
+    non_live_addrs
+    live_addrs
+    (Ghost.hide aux')
+
+let loc_of_union_loc_union_loc_of_loc #al c b s
+= assert (loc_of_union_loc b (union_loc_of_loc c b s) `loc_equal` s)
+
+let loc_of_union_loc_none #al c b
+= assert (loc_of_union_loc #_ #c b loc_none `loc_equal` loc_none)
+
+let loc_of_union_loc_union #al c b l1 l2
+= assert (loc_of_union_loc b (l1 `loc_union` l2) `loc_equal` (loc_of_union_loc b l1 `loc_union` loc_of_union_loc b l2))
+
+let loc_of_union_loc_addresses #al c b preserve_liveness r n =
+  assert (loc_of_union_loc #_ #c b (loc_addresses preserve_liveness r n) `loc_equal` loc_addresses preserve_liveness r n)
+
+let loc_of_union_loc_regions #al c b preserve_liveness r =
+  assert (loc_of_union_loc #_ #c b (loc_regions preserve_liveness r) `loc_equal` loc_regions preserve_liveness r)
+
 module U = FStar.Universe
 
 let raise_aloc al r n = U.raise_t (al r n)
@@ -1857,3 +1903,38 @@ let modifies_raise_loc #al #c l h1 h2 =
     loc_aux_disjoint (Ghost.reveal (Loc?.aux l)) (GSet.singleton (ALoc r a (Some b))) ==>
     loc_aux_disjoint (Ghost.reveal (Loc?.aux l')) (GSet.singleton (ALoc r a (Some (U.raise_val b)))));
   assert (modifies_preserves_alocs l' h1 h2 ==> modifies_preserves_alocs l h1 h2)
+
+let lower_loc_aux_pred
+  (#al: aloc_t u#a)
+  (c: cls al)
+  (aux: Ghost.erased (GSet.set (aloc (raise_cls u#a u#b c))))
+  (a: aloc c)
+: GTot bool
+= GSet.mem (upgrade_aloc a) (Ghost.reveal aux)
+
+let lower_loc #al #c l =
+  let (Loc regions region_liveness_tags non_live_addrs live_addrs aux) = l in
+  Loc
+    regions
+    region_liveness_tags
+    non_live_addrs
+    live_addrs
+    (Ghost.hide (GSet.comprehend (lower_loc_aux_pred c aux)))
+
+let lower_loc_raise_loc #al #c l =
+  assert (lower_loc (raise_loc u#x u#y l) `loc_equal` l)
+
+let raise_loc_lower_loc #al #c l =
+  assert (raise_loc (lower_loc l) `loc_equal` l)
+
+let lower_loc_none #al #c =
+  assert (lower_loc u#x u#y #_ #c loc_none `loc_equal` loc_none)
+
+let lower_loc_union #al #c l1 l2 =
+  assert (lower_loc u#x u#y (loc_union l1 l2) `loc_equal` loc_union (lower_loc l1) (lower_loc l2))
+
+let lower_loc_addresses #al #c preserve_liveness r a =
+  assert (lower_loc u#x u#y #_ #c (loc_addresses preserve_liveness r a) `loc_equal` loc_addresses preserve_liveness r a)
+
+let lower_loc_regions #al #c preserve_liveness r =
+  assert (lower_loc u#x u#y #_ #c (loc_regions preserve_liveness r) `loc_equal` loc_regions preserve_liveness r)

@@ -92,7 +92,3 @@ val elift2_p : #a:Type
              -> ra:erased a
              -> rc:erased c{p (reveal ra) (reveal rc)}
              -> Tot (x:erased b{reveal x == f (reveal ra) (reveal rc)})
-
-val lemma_haseq_erased: a:Type -> Lemma (requires (hasEq a))
-                                       (ensures (hasEq (erased a)))
-				 [SMTPat (hasEq (erased a))]

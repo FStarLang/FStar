@@ -24,8 +24,8 @@ let rfree
   (requires (fun h0 -> live h0 b /\ freeable b))
   (ensures (fun h0 _ h1 ->
     (not (g_is_null b)) /\
-    Map.domain h1.HS.h `Set.equal` Map.domain h0.HS.h /\ 
-    h1.HS.tip == h0.HS.tip /\
+    Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\ 
+    (HS.get_tip h1) == (HS.get_tip h0) /\
     modifies_addr_of b h0 h1 /\
     HS.live_region h1 (frameOf b)
   ))
@@ -44,7 +44,8 @@ let rcreate
     as_seq h' b == Seq.create (U32.v len) init /\     
     recallable b
   ))
-= gcmalloc r init len
+= let b = gcmalloc r init len in
+  b
 
 inline_for_extraction
 let rcreate_mm
@@ -69,7 +70,7 @@ let create
 : HST.StackInline (buffer a)
   (requires (fun h -> U32.v len > 0))
   (ensures (fun h b h' ->
-    rcreate_post_common h.HS.tip (U32.v len) b h h' /\
+    rcreate_post_common (HS.get_tip h) (U32.v len) b h h' /\
     as_seq h' b == Seq.create (U32.v len) init
   ))
 = alloca init len
@@ -87,7 +88,7 @@ let createL
   (requires (fun h -> createL_pre #a init))
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
-    rcreate_post_common h.HS.tip len b h h' /\
+    rcreate_post_common (HS.get_tip h) len b h h' /\
     as_seq h' b == Seq.of_list init /\
     createL_post #a len b
   ))

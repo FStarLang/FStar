@@ -133,7 +133,6 @@ val include_path                : unit    -> list<string>
 val indent                      : unit    -> bool
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
-val integer_overloading         : unit    -> bool
 val interactive                 : unit    -> bool
 val lax                         : unit    -> bool
 val load                        : unit    -> list<string>
