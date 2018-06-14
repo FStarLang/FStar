@@ -109,6 +109,10 @@ let loc_disjoint_addresses = MG.loc_disjoint_addresses_intro #_ #cls
 let loc_disjoint_buffer_addresses #t p preserve_liveness r n =
   MG.loc_disjoint_aloc_addresses_intro #_ #cls #(B.frameOf p) #(B.as_addr p) (B.abuffer_of_buffer p) preserve_liveness r n
 
+let loc_disjoint_buffer_regions #t p preserve_liveness r =
+  MG.loc_disjoint_regions #_ #cls false preserve_liveness (Set.singleton (B.frameOf p)) r;
+  assert (loc_disjoint (loc_regions false (Set.singleton (B.frameOf p))) (loc_regions preserve_liveness r))
+
 let loc_disjoint_regions = MG.loc_disjoint_regions #_ #cls
 
 let modifies = MG.modifies
@@ -168,6 +172,8 @@ let modifies_only_live_regions = MG.modifies_only_live_regions
 let no_upd_fresh_region = MG.no_upd_fresh_region
 
 let fresh_frame_modifies = MG.fresh_frame_modifies #_ cls
+
+let popped_modifies = MG.popped_modifies #_ cls
 
 let modifies_fresh_frame_popped = MG.modifies_fresh_frame_popped
 

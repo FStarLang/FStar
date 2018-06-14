@@ -715,6 +715,7 @@ val free
 /// operators, which tells that the resulting buffer is fresh, and
 /// specifies its initial contents.
 
+unfold
 let alloc_post_static
   (#a: Type)
   (r: HS.rid)
@@ -725,6 +726,7 @@ let alloc_post_static
   frameOf b == r /\
   length b == len
 
+unfold
 let alloc_post_common
   (#a: Type)
   (r: HS.rid)

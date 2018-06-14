@@ -419,6 +419,16 @@ val loc_disjoint_buffer_addresses
   (ensures (loc_disjoint (loc_buffer p) (loc_addresses preserve_liveness r n)))
   [SMTPat (loc_disjoint (loc_buffer p) (loc_addresses preserve_liveness r n))]
 
+val loc_disjoint_buffer_regions
+  (#t: Type)
+  (p: B.buffer t)
+  (preserve_liveness: bool)
+  (r: Set.set HS.rid)
+: Lemma
+  (requires (~ (B.frameOf p `Set.mem` r)))
+  (ensures (loc_disjoint (loc_buffer p) (loc_regions preserve_liveness r)))
+  [SMTPat (loc_disjoint (loc_buffer p) (loc_regions preserve_liveness r))]
+
 /// If two sets of region identifiers are disjoint, then so are their
 /// corresponding sets of memory locations.
 
@@ -732,6 +742,11 @@ val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
   (requires (HS.fresh_frame h0 h1))
   (ensures (modifies loc_none h0 h1))
   [SMTPat (HS.fresh_frame h0 h1)]
+
+val popped_modifies (h0 h1: HS.mem) : Lemma
+  (requires (HS.popped h0 h1))
+  (ensures (modifies (loc_region_only false (HS.get_tip h0)) h0 h1))
+//  [SMTPat (HS.popped h0 h1)]
 
 /// Stack discipline: any stack frame (and all its transitively
 /// extending regions) that is pushed, modified and popped can be
