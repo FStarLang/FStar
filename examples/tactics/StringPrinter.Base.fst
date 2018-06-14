@@ -564,8 +564,6 @@ let bind_st
 
 #reset-options
 
-#set-options "--use_two_phase_tc true"
-
 inline_for_extraction
 let seq_st
   (t2: Type0)
@@ -644,8 +642,8 @@ let buffer_create_mm_post
 =   b `B.unused_in` h /\
     B.live h' b /\
     B.idx b == 0 /\
-    Map.domain h'.HS.h == Map.domain h.HS.h /\
-    h'.HS.tip == h.HS.tip /\
+    Map.domain (HS.get_hmap h') == Map.domain (HS.get_hmap h) /\
+    (HS.get_tip h') == (HS.get_tip h) /\
     HS.modifies (Set.singleton r) h h' /\
     HS.modifies_ref r Set.empty h h' /\
     buffer_is_mm b

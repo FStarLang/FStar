@@ -1,4 +1,5 @@
 module Bug1091
+//disabling of two phase tc here is intentional, as the bug happens only then
 #set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1 --use_two_phase_tc false"
 
 ////////////////////////////////////////////////////////////////////////////////

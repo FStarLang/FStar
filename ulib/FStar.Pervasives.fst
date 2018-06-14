@@ -306,6 +306,8 @@ type __internal_ocaml_attributes =
      * does NOT mark the parameter itself as const; the C syntax would be
      * "int **const p". This does not allow expressing things such as "int
      * *const *p" either. *)
+  | CCConv of string
+    (* A calling convention for C, one of stdcall, cdecl, fastcall *)
 
 (* Some supported attributes encoded using functions. *)
 

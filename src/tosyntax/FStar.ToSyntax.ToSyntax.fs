@@ -806,21 +806,7 @@ and desugar_machine_integer env repr (signedness, width) range =
     | None ->
       raise_error (Errors.Fatal_UnexpectedNumericLiteral, (BU.format1 "Unexpected numeric literal.  Restart F* to load %s." tnm)) range in
   let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
-  let t = S.mk (Tm_app (lid, [repr, as_implicit false])) None range in
-  let maybe_ascribe_as_overloaded_int t =
-      if not (Options.integer_overloading()) then t
-      else begin
-          let tnm = "FStar.Integers." ^
-              (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_" ^
-              (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64")
-          in
-          let nm = Ident.lid_of_str tnm in
-          match Env.try_lookup_lid env nm with
-          | None -> t //it's not in scope
-          | Some (ty, _mut) -> U.ascribe t (Inl ty, None)
-      end
-  in
-  maybe_ascribe_as_overloaded_int t
+  S.mk (Tm_app (lid, [repr, as_implicit false])) None range
 
 and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
     let tm, mut, attrs = fail_or env ((if resolve then Env.try_lookup_lid_with_attributes else Env.try_lookup_lid_with_attributes_no_resolve) env) l in
@@ -1832,7 +1818,7 @@ let mk_data_projector_names iquals env se =
                 | Some q -> q
             in
             let iquals =
-                if List.contains S.Abstract iquals
+                if List.contains S.Abstract iquals && not (List.contains S.Private iquals)
                 then S.Private::iquals
                 else iquals
             in
@@ -2079,7 +2065,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
         | Sig_inductive_typ(tname, _, tps, k, _, constrs) when (List.length constrs > 1)->
           let quals = se.sigquals in
-          let quals = if List.contains S.Abstract quals
+          let quals = if List.contains S.Abstract quals && not (List.contains S.Private quals)
                       then S.Private::quals
                       else quals in
           mk_data_discriminators quals env constrs
