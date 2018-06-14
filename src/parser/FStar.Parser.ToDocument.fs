@@ -456,14 +456,14 @@ let with_comment printer tm tmrange =
 (* [comment_stack] whose range is before pos and separate each comments by as many lines *)
 (* as indicated by the range information (at least [k]) using [lbegin] as the last line of *)
 (* [doc] in the original document. Between 2 comments [k] is set to [1] *)
-let rec place_comments_until_pos k lbegin pos_end end_correction doc =
+let rec place_comments_until_pos k lbegin pos_end end_correction fsdoc_correction doc =
   match !comment_stack with
   | (comment, crange) :: cs when range_before_pos crange pos_end ->
     comment_stack := cs ;
     let lnum = max k (line_of_pos (start_of_range crange) - lbegin) in
     let lnum = min 2 lnum in
-    let doc = doc ^^ repeat lnum hardline ^^ str comment in
-    place_comments_until_pos 1 (line_of_pos (end_of_range crange)) pos_end end_correction doc
+    let doc = doc ^^ repeat lnum hardline ^^ str comment in //^^ (str <| string_of_int lbegin) ^^ (str "*") ^^ (str <| string_of_int (line_of_pos pos_end)) ^^ (str "+") ^^ (str <| string_of_int (end_correction)) ^^ (str "+") ^^ (str <| string_of_int (fsdoc_correction)) in
+    place_comments_until_pos 1 (line_of_pos (end_of_range crange)) pos_end end_correction fsdoc_correction doc
   | _ ->
     if doc = empty then
       empty
@@ -471,7 +471,8 @@ let rec place_comments_until_pos k lbegin pos_end end_correction doc =
       let lnum = line_of_pos pos_end - lbegin in
       let lnum = if lnum >= 2 then lnum - end_correction else lnum in //make up for incorrect range information in declarations with qualifiers
       let lnum = min 2 lnum in //puts a limit of at most one empty line between decls
-      doc ^^ repeat lnum hardline ^^ (str <| string_of_int lbegin) // ^^ (str "*") ^^ (str <| string_of_int (line_of_pos pos_end)) ^^ (str "+") ^^ (str <| string_of_int (end_correction))
+      let lnum = if lnum >= 2 then lnum - fsdoc_correction else lnum in
+      doc ^^ repeat lnum hardline //^^ (str <| string_of_int lbegin) ^^ (str "*") ^^ (str <| string_of_int (line_of_pos pos_end)) ^^ (str "+") ^^ (str <| string_of_int (end_correction)) ^^ (str "+") ^^ (str <| string_of_int (fsdoc_correction))
 
 (* [separate_map_with_comments prefix sep f xs extract_range] is the document *)
 (*                                                                            *)
@@ -488,13 +489,13 @@ let rec place_comments_until_pos k lbegin pos_end end_correction doc =
 (* inserted after [prefix] and [sep]. *)
 let separate_map_with_comments prefix sep f xs extract_range =
   let fold_fun (last_line, doc) x =
-    let r, c = extract_range x in
-    let doc = place_comments_until_pos 1 last_line (start_of_range r) c doc in
+    let r, end_c, fsdoc_c = extract_range x in
+    let doc = place_comments_until_pos 1 last_line (start_of_range r) end_c fsdoc_c doc in
     line_of_pos (end_of_range r), doc ^^ sep ^^ f x
   in
   let x, xs = List.hd xs, List.tl xs in
   let init =
-    let r, c = extract_range x in
+    let r, _, _ = extract_range x in
     line_of_pos (end_of_range r), prefix ^^ f x
   in
   snd (List.fold_left fold_fun init xs)
@@ -511,13 +512,13 @@ let separate_map_with_comments prefix sep f xs extract_range =
 (*   (f sep xs[n]) *)
 let separate_map_with_comments_kw prefix sep f xs extract_range =
   let fold_fun (last_line, doc) x =
-    let r, c = extract_range x in
-    let doc = place_comments_until_pos 1 last_line (start_of_range r) c doc in
+    let r, end_c, fsdoc_c = extract_range x in
+    let doc = place_comments_until_pos 1 last_line (start_of_range r) end_c fsdoc_c doc in
     line_of_pos (end_of_range r), doc ^^ f sep x
   in
   let x, xs = List.hd xs, List.tl xs in
   let init =
-    let r, c = extract_range x in
+    let r, _, _ = extract_range x in
     line_of_pos (end_of_range r), f prefix x
   in
   snd (List.fold_left fold_fun init xs)
@@ -601,7 +602,7 @@ and p_rawDecl d = match d.d with
   | TopLevelLet(q, lbs) ->
     let let_doc = str "let" ^^ p_letqualifier q in
     separate_map_with_comments_kw let_doc (str "and") p_letbinding lbs
-      (fun (p, t) -> Range.union_ranges p.prange t.range, 0)
+      (fun (p, t) -> Range.union_ranges p.prange t.range, 0, (if BU.is_some d.doc then 1 else 0))
   | Val(lid, t) ->
     str "val" ^^ space ^^ p_lident lid ^^ group (colon ^^ space ^^ (p_typ false false t))
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
@@ -1594,7 +1595,8 @@ let extract_decl_range = fun d ->
     | ([], _) -> 0
     | _ -> 1
   in
-  (d.drange, qual_lines)
+  let fsdoc = if BU.is_some d.doc then 1 else 0 in
+  (d.drange, qual_lines, fsdoc)
 
 
 (* [modul_with_comments_to_document m comments] prints the module [m] trying *)
@@ -1621,7 +1623,7 @@ let modul_with_comments_to_document (m:modul) comments =
         | _ -> d :: ds, d.drange
       in
       comment_stack := comments ;
-      let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) 0 empty in
+      let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) 0 0 empty in
   let doc = separate_map_with_comments empty empty decl_to_document decls extract_decl_range in
   let comments = !comment_stack in
   comment_stack := [] ;
