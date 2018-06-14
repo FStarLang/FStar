@@ -142,7 +142,7 @@ let sel_upd2 (#b:_) (vb:buffer b)
 let sel_upd (#b:_)
             (vb:buffer b)
             (i:nat{i < length vb})
-            (j:nat{j < length vb /\ i<>j})
+            (j:nat{j < length vb})
             (x:b)
             (h:HS.mem{live h vb}) =
     if i=j then sel_upd1 vb i x h

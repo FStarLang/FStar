@@ -672,6 +672,7 @@ val g_upd_seq_as_seq (#a:Type)
                      (h:HS.mem{live h b})
   : Lemma (let h' = g_upd_seq b s h in
            modifies_1 b h h' /\
+           live h' b /\
            as_seq h' b == s)
 
 /// ``g_upd b i v h`` updates the buffer `b` in heap `h` at location
