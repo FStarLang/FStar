@@ -48,6 +48,20 @@ val loc_union_assoc
 : Lemma
   (loc_union s1 (loc_union s2 s3) == loc_union (loc_union s1 s2) s3)
 
+let loc_union_idem_1
+  (s1 s2: loc)
+: Lemma
+  (loc_union s1 (loc_union s1 s2) == loc_union s1 s2)
+  [SMTPat (loc_union s1 (loc_union s1 s2) == loc_union s1 s2)]
+= loc_union_assoc s1 s1 s2
+
+let loc_union_idem_2
+  (s1 s2: loc)
+: Lemma
+  (loc_union (loc_union s1 s2) s2 == loc_union s1 s2)
+  [SMTPat (loc_union (loc_union s1 s2) s2)]
+= loc_union_assoc s1 s2 s2
+
 val loc_union_loc_none_l
   (s: loc)
 : Lemma
@@ -544,8 +558,8 @@ val modifies_loc_includes
   (ensures (modifies s1 h h'))
   [SMTPatOr [
     [SMTPat (modifies s1 h h'); SMTPat (modifies s2 h h')];
-    [SMTPat (modifies s1 h h'); SMTPat (loc_includes s1 s2)];
-    [SMTPat (modifies s2 h h'); SMTPat (loc_includes s1 s2)];
+//    [SMTPat (modifies s1 h h'); SMTPat (loc_includes s1 s2)];
+//    [SMTPat (modifies s2 h h'); SMTPat (loc_includes s1 s2)];
   ]]
 
 /// Some memory locations are tagged as liveness-insensitive: the
@@ -849,7 +863,7 @@ val modifies_0_modifies
   (ensures (modifies loc_none h1 h2))
   [SMTPatOr [
     [SMTPat (B.modifies_0 h1 h2)];
-    [SMTPat (modifies loc_none h1 h2)];
+//    [SMTPat (modifies loc_none h1 h2)];
   ]]
 
 /// Case ``modifies_1``: update.
@@ -863,7 +877,7 @@ val modifies_1_modifies
   (ensures (modifies (loc_buffer b) h1 h2))
   [SMTPatOr [
     [SMTPat (B.modifies_1 b h1 h2)];
-    [SMTPat (modifies (loc_buffer b) h1 h2)];
+//    [SMTPat (modifies (loc_buffer b) h1 h2)];
   ]]
 
 /// Case ``modifies_addr_of``: free. 
