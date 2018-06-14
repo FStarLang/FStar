@@ -106,6 +106,7 @@ val loc_regions
 /// reference ``b``, which is actually the set of memory locations
 /// associated to the address of ``b``.
 
+unfold
 let loc_mreference
   (#a: Type)
   (#p: Preorder.preorder a)
@@ -113,6 +114,7 @@ let loc_mreference
 : GTot loc
 = loc_addresses true (HS.frameOf b) (Set.singleton (HS.as_addr b))
 
+unfold
 let loc_freed_mreference
   (#a: Type)
   (#p: Preorder.preorder a)
@@ -125,6 +127,7 @@ let loc_freed_mreference
 /// region ``r`` but not any region ``r'`` that extends ``r`` (in the sense
 /// of ``FStar.HyperStack.extends``.)
 
+unfold
 let loc_region_only
   (preserve_liveness: bool)
   (r: HS.rid)
@@ -137,6 +140,7 @@ let loc_region_only
 /// extends ``r`` (in the sense of ``FStar.HyperStack.extends``,
 /// e.g. nested stack frames.)
 
+unfold
 let loc_all_regions_from
   (preserve_liveness: bool)
   (r: HS.rid)
@@ -179,7 +183,6 @@ val loc_includes_union_l
 : Lemma
   (requires (loc_includes s1 s \/ loc_includes s2 s))
   (ensures (loc_includes (loc_union s1 s2) s))
-  [SMTPat (loc_includes (loc_union s1 s2) s)]
 
 val loc_includes_none
   (s: loc)
@@ -362,10 +365,6 @@ val loc_disjoint_includes
 : Lemma
   (requires (loc_includes p1 p1' /\ loc_includes p2 p2' /\ loc_disjoint p1 p2))
   (ensures (loc_disjoint p1' p2'))
-  [SMTPatOr [
-    [SMTPat (loc_disjoint p1 p2); SMTPat (loc_disjoint p1' p2')];
-    [SMTPat (loc_includes p1 p1'); SMTPat (loc_includes p2 p2')];
-  ]]
 
 /// If two buffers are disjoint in the sense of the theory of buffers
 /// (see ``LowStar.Buffer.disjoint``), then so are their corresponding
@@ -755,12 +754,10 @@ val no_upd_fresh_region: r:HS.rid -> l:loc -> h0:HS.mem -> h1:HS.mem -> Lemma
 val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
   (requires (HS.fresh_frame h0 h1))
   (ensures (modifies loc_none h0 h1))
-  [SMTPat (HS.fresh_frame h0 h1)]
 
 val popped_modifies (h0 h1: HS.mem) : Lemma
   (requires (HS.popped h0 h1))
   (ensures (modifies (loc_region_only false (HS.get_tip h0)) h0 h1))
-//  [SMTPat (HS.popped h0 h1)]
 
 /// Stack discipline: any stack frame (and all its transitively
 /// extending regions) that is pushed, modified and popped can be
