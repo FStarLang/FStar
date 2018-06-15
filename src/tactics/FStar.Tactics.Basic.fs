@@ -162,10 +162,16 @@ let dump_cur ps msg =
 (* Note: we use def ranges. In tactics we keep the position in there, while the
  * use range is the original position of the assertion / synth / splice. *)
 let ps_to_string (msg, ps) =
+    let p_imp (_, _, uv, _) =
+        Print.uvar_to_string uv.ctx_uvar_head
+    in
     String.concat ""
                [format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
                 (if ps.entry_range <> Range.dummyRange
                  then format1 "Location: %s\n" (Range.string_of_def_range ps.entry_range)
+                 else "");
+                (if Env.debug ps.main_context (Options.Other "Imp")
+                 then format1 "Imps: %s\n" (FStar.Common.string_of_list p_imp ps.all_implicits)
                  else "");
                 format2 "ACTIVE goals (%s):\n%s\n"
                     (string_of_int (List.length ps.goals))

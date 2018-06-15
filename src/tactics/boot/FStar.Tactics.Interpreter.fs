@@ -561,8 +561,18 @@ let run_tactic_on_typ
         // the implicits, so make it do a lax check because we certainly
         // do not want to repeat all of the reasoning that took place in tactics.
         // It would also most likely fail.
+        if !tacdbg then
+            BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list Print.ctx_uvar_to_string
+                                                                (List.map (fun (_, _, uv, _) -> uv) ps.all_implicits));
         let g = {Env.trivial_guard with Env.implicits=ps.all_implicits} in
-        let g = TcRel.solve_deferred_constraints env g |> TcRel.resolve_implicits_tac env in
+        let g = TcRel.solve_deferred_constraints env g in
+        if !tacdbg then
+            BU.print1 "Checked (1) implicits: %s\n" (FStar.Common.string_of_list Print.ctx_uvar_to_string
+                                                     (List.map (fun (_, _, uv, _) -> uv) g.implicits));
+        let g = TcRel.resolve_implicits_tac env g in
+        if !tacdbg then
+            BU.print1 "Checked (2) implicits: %s\n" (FStar.Common.string_of_list Print.ctx_uvar_to_string
+                                                     (List.map (fun (_, _, uv, _) -> uv) g.implicits));
         report_implicits ps g.implicits;
         (ps.goals@ps.smt_goals, w)
 
