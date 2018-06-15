@@ -502,14 +502,7 @@ let report_implicits ps (is : Env.implicits) : unit =
                 (Err.Error_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string uv.ctx_uvar_head) (Print.term_to_string ty) r,
                  rng)) is in
-    match errs with
-    | [] -> ()
-    | (e, msg, r)::tl -> begin
-        dump_proofstate ps "failing due to uninstantiated implicits";
-        // A trick to print each error exactly once.
-        Err.add_errors tl;
-        Err.raise_error (e, msg) r
-    end
+    Err.add_errors errs
 
 let run_tactic_on_typ
         (rng_tac : Range.range) (rng_goal : Range.range)
