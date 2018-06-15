@@ -5,40 +5,6 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module B = LowStar.Buffer
 
-abstract
-let loc_includes_union_l_buffer
-  (s1 s2: loc)
-  (#t: Type)
-  (b: B.buffer t)
-: Lemma
-  (requires (loc_includes s1 (loc_buffer b) \/ loc_includes s2 (loc_buffer b)))
-  (ensures (loc_includes (loc_union s1 s2) (loc_buffer b)))
-  [SMTPat (loc_includes (loc_union s1 s2) (loc_buffer b))]
-= loc_includes_union_l s1 s2 (loc_buffer b)
-
-abstract
-let loc_includes_union_l_addresses
-  (s1 s2: loc)
-  (prf: bool)
-  (r: HS.rid)
-  (a: Set.set nat)
-: Lemma
-  (requires (loc_includes s1 (loc_addresses prf r a) \/ loc_includes s2 (loc_addresses prf r a)))
-  (ensures (loc_includes (loc_union s1 s2) (loc_addresses prf r a)))
-  [SMTPat (loc_includes (loc_union s1 s2) (loc_addresses prf r a))]
-= loc_includes_union_l s1 s2 (loc_addresses prf r a)
-
-abstract
-let loc_includes_union_l_regions
-  (s1 s2: loc)
-  (prf: bool)
-  (r: Set.set HS.rid)
-: Lemma
-  (requires (loc_includes s1 (loc_regions prf r) \/ loc_includes s2 (loc_regions prf r)))
-  (ensures (loc_includes (loc_union s1 s2) (loc_regions prf r)))
-  [SMTPat (loc_includes (loc_union s1 s2) (loc_regions prf r))]
-= loc_includes_union_l s1 s2 (loc_regions prf r)
-
 (* Duplicate the modifies clause to cope with cases that must not be used with transitivity *)
 
 abstract

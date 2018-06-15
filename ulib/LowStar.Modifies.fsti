@@ -327,6 +327,38 @@ val loc_includes_addresses_addresses
   (requires ((preserve_liveness1 ==> preserve_liveness2) /\ Set.subset s2 s1))
   (ensures (loc_includes (loc_addresses preserve_liveness1 r s1) (loc_addresses preserve_liveness2 r s2)))
 
+/// Patterns with loc_includes, union on the left
+
+let loc_includes_union_l_buffer
+  (s1 s2: loc)
+  (#t: Type)
+  (b: B.buffer t)
+: Lemma
+  (requires (loc_includes s1 (loc_buffer b) \/ loc_includes s2 (loc_buffer b)))
+  (ensures (loc_includes (loc_union s1 s2) (loc_buffer b)))
+  [SMTPat (loc_includes (loc_union s1 s2) (loc_buffer b))]
+= loc_includes_union_l s1 s2 (loc_buffer b)
+
+let loc_includes_union_l_addresses
+  (s1 s2: loc)
+  (prf: bool)
+  (r: HS.rid)
+  (a: Set.set nat)
+: Lemma
+  (requires (loc_includes s1 (loc_addresses prf r a) \/ loc_includes s2 (loc_addresses prf r a)))
+  (ensures (loc_includes (loc_union s1 s2) (loc_addresses prf r a)))
+  [SMTPat (loc_includes (loc_union s1 s2) (loc_addresses prf r a))]
+= loc_includes_union_l s1 s2 (loc_addresses prf r a)
+
+let loc_includes_union_l_regions
+  (s1 s2: loc)
+  (prf: bool)
+  (r: Set.set HS.rid)
+: Lemma
+  (requires (loc_includes s1 (loc_regions prf r) \/ loc_includes s2 (loc_regions prf r)))
+  (ensures (loc_includes (loc_union s1 s2) (loc_regions prf r)))
+  [SMTPat (loc_includes (loc_union s1 s2) (loc_regions prf r))]
+= loc_includes_union_l s1 s2 (loc_regions prf r)
 
 /// Since inclusion encompasses more than just set-theoretic
 /// inclusion, we also need to specify disjointness accordingly, as a
