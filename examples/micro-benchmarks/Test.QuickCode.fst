@@ -12,15 +12,23 @@ unfold let norm_simple #a (x:a) : a =
 
 type reg_file = int -> int
 
+
 [@qattr]
 let sel (r:reg_file) (x:int) = r x
 
 [@qattr]
 let upd (r:reg_file) (x:int) (v:int) = fun y -> if x=y then v else sel r y
 
-#set-options "--debug_level print_normalized_terms --debug_level NBE"
-let test (r:reg_file) =
-  assert (norm_simple (sel (upd (upd (upd r 0 0) 1 1) 2 2) 0) == 0)
+#set-options "--debug_level NBE"
+
+//#set-options "--debug_level print_normalized_terms --debug_level NBE"
+
+let test = 
+  assert (norm_simple (if 0 = 0 then true else false) == true)
+  
+//let test (r:reg_file) =
+//  assert (norm_simple (sel (upd r 0 0) 0) == 0)
+//  assert (norm_simple (sel (upd (upd (upd r 0 0) 1 1) 2 2) 0) == 0)
 
 
 ////////////////////////////////////////////////////////////////////////////////
