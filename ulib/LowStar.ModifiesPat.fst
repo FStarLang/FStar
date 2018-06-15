@@ -5,6 +5,66 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module B = LowStar.Buffer
 
+(* Patterns on modifies clauses *)
+
+let modifies_refl'
+  (s: loc)
+  (h: HS.mem)
+: Lemma
+  (modifies s h h)
+  [SMTPat (modifies s h h)]
+= modifies_refl s h
+
+let modifies_loc_includes'
+  (s1: loc)
+  (h h': HS.mem)
+  (s2: loc)
+: Lemma
+  (requires (modifies s2 h h' /\ loc_includes s1 s2))
+  (ensures (modifies s1 h h'))
+  [SMTPat (modifies s1 h h'); SMTPat (modifies s2 h h')]
+= modifies_loc_includes s1 h h' s2
+
+let modifies_trans'
+  (s12: loc)
+  (h1 h2: HS.mem)
+  (s23: loc)
+  (h3: HS.mem)
+: Lemma
+  (requires (modifies s12 h1 h2 /\ modifies s23 h2 h3))
+  (ensures (modifies (loc_union s12 s23) h1 h3))
+  [SMTPat (modifies s12 h1 h2); SMTPat (modifies s23 h2 h3)]
+= modifies_trans s12 h1 h2 s23 h3
+
+let no_upd_fresh_region'
+  (r:HS.rid)
+  (l:loc)
+  (h0:HS.mem)
+  (h1:HS.mem)
+: Lemma
+  (requires (HS.fresh_region r h0 h1 /\ modifies (loc_union (loc_all_regions_from false r) l) h0 h1))
+  (ensures  (modifies l h0 h1))
+  [SMTPat (HS.fresh_region r h0 h1); SMTPat (modifies l h0 h1)]
+= no_upd_fresh_region r l h0 h1
+
+let modifies_fresh_frame_popped'
+  (h0 h1: HS.mem)
+  (s: loc)
+  (h2 h3: HS.mem)
+: Lemma
+  (requires (
+    HS.fresh_frame h0 h1 /\
+    modifies (loc_union (loc_all_regions_from false (HS.get_tip h1)) s) h1 h2 /\
+    (HS.get_tip h2) == (HS.get_tip h1) /\
+    HS.popped h2 h3
+  ))
+  (ensures (
+    modifies s h0 h3 /\
+    (HS.get_tip h3) == HS.get_tip h0
+  ))
+  [SMTPat (HS.fresh_frame h0 h1); SMTPat (HS.popped h2 h3); SMTPat (modifies s h0 h3)]
+= modifies_fresh_frame_popped h0 h1 s h2 h3
+
 (* Duplicate the modifies clause to cope with cases that must not be used with transitivity *)
 
 abstract
@@ -13,6 +73,16 @@ let modifies_inert
   (h1 h2: HS.mem)
 : GTot Type0
 = modifies s h1 h2
+
+abstract
+let modifies_inert_intro
+  (s: loc)
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (modifies s h1 h2))
+  (ensures (modifies_inert s h1 h2))
+  [SMTPat (modifies s h1 h2)]
+= ()
 
 let modifies_inert_live_region
   (s: loc)
@@ -25,7 +95,7 @@ let modifies_inert_live_region
     [SMTPat (modifies_inert s h1 h2); SMTPat (HS.live_region h1 r)];
     [SMTPat (modifies_inert s h1 h2); SMTPat (HS.live_region h2 r)];
   ]]
-= ()
+= modifies_live_region s h1 h2 r
 
 let modifies_inert_mreference_elim
   (#t: Type)
@@ -49,7 +119,7 @@ let modifies_inert_mreference_elim
     [ SMTPat (modifies_inert p h h'); SMTPat (HS.sel h' b) ] ;
     [ SMTPat (modifies_inert p h h'); SMTPat (HS.contains h' b) ]
   ] ]
-= ()
+= modifies_mreference_elim b p h h'
 
 let modifies_inert_buffer_elim
   (#t1: Type)
@@ -72,7 +142,7 @@ let modifies_inert_buffer_elim
     [ SMTPat (modifies_inert p h h'); SMTPat (B.as_seq h' b) ] ;
     [ SMTPat (modifies_inert p h h'); SMTPat (B.live h' b) ]
   ] ]
-= ()
+= modifies_buffer_elim b p h h'
 
 let modifies_inert_liveness_insensitive_mreference_weak
   (l : loc)
@@ -87,7 +157,7 @@ let modifies_inert_liveness_insensitive_mreference_weak
     [SMTPat (h `HS.contains` x); SMTPat (modifies_inert l h h');];
     [SMTPat (h' `HS.contains` x); SMTPat (modifies_inert l h h');];
   ]]
-= ()
+= modifies_liveness_insensitive_mreference_weak l h h' x
 
 let modifies_inert_liveness_insensitive_buffer_weak
   (l : loc)
@@ -101,7 +171,7 @@ let modifies_inert_liveness_insensitive_buffer_weak
     [SMTPat (B.live h x); SMTPat (modifies_inert l h h');];
     [SMTPat (B.live h' x); SMTPat (modifies_inert l h h');];
   ]]
-= ()
+= modifies_liveness_insensitive_buffer_weak l h h' x
 
 let modifies_inert_liveness_insensitive_region_weak
   (l2 : loc)
@@ -114,7 +184,7 @@ let modifies_inert_liveness_insensitive_region_weak
     [SMTPat (modifies_inert l2 h h'); SMTPat (HS.live_region h x)];
     [SMTPat (modifies_inert l2 h h'); SMTPat (HS.live_region h' x)];
   ]]
-= ()
+= modifies_liveness_insensitive_region_weak l2 h h' x
 
 let modifies_inert_liveness_insensitive_region_mreference_weak
   (l2 : loc)
@@ -129,7 +199,7 @@ let modifies_inert_liveness_insensitive_region_mreference_weak
     [SMTPat (modifies_inert l2 h h'); SMTPat (HS.live_region h (HS.frameOf x))];
     [SMTPat (modifies_inert l2 h h'); SMTPat (HS.live_region h' (HS.frameOf x))];
   ]]
-= ()
+= modifies_liveness_insensitive_region_mreference_weak l2 h h' x
 
 let modifies_inert_liveness_insensitive_region_buffer_weak
   (l2 : loc)
@@ -143,7 +213,7 @@ let modifies_inert_liveness_insensitive_region_buffer_weak
     [SMTPat (modifies_inert l2 h h'); SMTPat (HS.live_region h (B.frameOf x))];
     [SMTPat (modifies_inert l2 h h'); SMTPat (HS.live_region h' (B.frameOf x))];
   ]]
-= ()
+= modifies_liveness_insensitive_region_buffer_weak l2 h h' x
 
 let fresh_frame_modifies_inert
   (h0 h1: HS.mem)
