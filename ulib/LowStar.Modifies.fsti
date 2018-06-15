@@ -82,6 +82,12 @@ val loc_buffer
   (b: B.buffer t)
 : GTot loc
 
+val loc_buffer_null
+  (t: Type)
+: Lemma
+  (loc_buffer (B.null #t) == loc_none)
+  [SMTPat (loc_buffer (B.null #t))]
+
 
 /// ``loc_addresses r n`` is the set of memory locations associated to a
 /// set of addresses ``n`` in a given region ``r``.
