@@ -369,6 +369,11 @@ val as_addr_disjoint (#a1 #a2: Type) (b1: buffer a1) (b2: buffer a2) : Lemma
   ]]
 
 
+/// The null pointer is disjoint from any buffer.
+
+val disjoint_null (a1: Type) (#a2: Type) (b2: buffer a2) : Lemma
+  (disjoint (null #a1) b2)
+
 /// If two buffers span disjoint ranges from a common enclosing
 /// buffer, then they are disjoint.
 
