@@ -24,7 +24,7 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver Positivity.uver DoNotation.uver \
 	 Pruning.uver NormVsSMT.uver Unit1.TopLevelPats.uver AssumeRequires.uver TwoPhaseTC.uver \
 	 IntNormalization.uver Subtyping.uver Test.HyperStack.uver Raising.uver RangeStep.uver \
-	 WPExtensionality.uver UnifyMatch.uver \
+	 WPExtensionality.uver UnifyMatch.uver UnifyRefs.uver \
 	 NegativeTests.BST.uver     NegativeTests.Heap.uver  NegativeTests.ShortCircuiting.uver \
 	 NegativeTests.Bug260.uver  NegativeTests.Neg.uver   NegativeTests.Termination.uver \
 	 NegativeTests.False.uver   NegativeTests.Set.uver   NegativeTests.Positivity.uver \

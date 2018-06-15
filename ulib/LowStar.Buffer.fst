@@ -66,9 +66,7 @@ let len #a b =
 
 let len_null a = ()
 
-
-let lseq (a: Type) (l: nat) : Type =
-  (s: Seq.seq a { Seq.length s == l } )
+let lseq = Seq.lseq
 
 let rec lseq_of_vec (#a: Type0) (#n: nat) (l: vec a n) : Tot (lseq a n) =
   if n = 0
@@ -246,7 +244,7 @@ let abuffer_preserved'
 : GTot Type0
 = forall (t' : Type0) (b' : buffer t' ) .
   (frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b') ==>
-  (live h' b' /\ as_seq h' b' == as_seq h b')
+  (live h' b' /\ Seq.equal (as_seq h' b') (as_seq h b'))
 
 let abuffer_preserved = abuffer_preserved'
 
@@ -441,8 +439,29 @@ let index #a b i =
 
 (* Update *)
 
+let g_upd_seq #a b s h
+  : GTot HS.mem
+  = let n = length b in
+    if n = 0 then h
+    else
+      let s0 = lseq_of_vec (HS.sel h (Buffer?.content b)) in
+      let prefix, suffix = Seq.split s0 (U32.v (Buffer?.idx b)) in
+      let _, tail = Seq.split suffix (length b) in
+      let v = vec_of_lseq (prefix `Seq.append` s `Seq.append` tail) in
+      HS.upd h (Buffer?.content b) v
+
+#reset-options "--max_fuel 0 --max_ifuel 1"
+let g_upd_seq_as_seq (#a:Type) (b:buffer a) (s:lseq a (length b)) (h:HS.mem{live h b})
+  = let h' = g_upd_seq b s h in
+    assert (as_seq (g_upd_seq b s h) b `Seq.equal` s);
+    // prove modifies_1_preserves_abuffers
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ()
+#reset-options
+
 let upd #a b i v =
   let open HST in
+  let h0 = get () in
   let s0 = lseq_of_vec ! (Buffer?.content b) in
   let s = Seq.upd s0 (U32.v (Buffer?.idx b) + U32.v i) v in
   Buffer?.content b := vec_of_lseq s;

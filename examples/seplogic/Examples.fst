@@ -38,7 +38,6 @@ let increment_ok (h:heap) (r:addr) (n:t) =
   let post = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (h `contains` r /\ sel h r == n ==> post) solve
 
-#set-options "--use_two_phase_tc false"
 (*
  * Swapping two refs
  * TODO: fails with two phases

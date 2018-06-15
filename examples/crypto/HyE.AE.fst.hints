@@ -13,7 +13,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "74e0b60eafb17b7fea89dce9eeb23fa8"
+      "c0953a038bde829ea5259d3547d5541b"
     ],
     [
       "HyE.AE.__proj__Key__item__log",
@@ -25,16 +25,7 @@
         "projection_inverse_HyE.AE.Key_region"
       ],
       0,
-      "4593341822f7e63eda53ace4feaafe2d"
-    ],
-    [
-      "HyE.AE.key_log",
-      1,
-      2,
-      1,
-      [ "@query", "equation_HyE.AE.key_region" ],
-      0,
-      "c21d8d9f040c07716ec0523f7b4c925a"
+      "3eadc5c48c8356ff9b37353c4de726ba"
     ],
     [
       "HyE.AE.keygen",
@@ -133,7 +124,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "33e010a5b3f2596acae762be3b7dd244"
+      "7534af244ceef56e544141e1a95edcb1"
     ],
     [
       "HyE.AE.encrypt",
@@ -159,13 +150,13 @@
         "equation_FStar.Monotonic.HyperStack.sel",
         "equation_FStar.Monotonic.Seq.snoc",
         "equation_FStar.Seq.Properties.snoc", "equation_FStar.Set.eqtype",
-        "equation_FStar.UInt32.n", "equation_HyE.AE.cipher",
-        "equation_HyE.AE.ivsize", "equation_HyE.AE.key_log",
-        "equation_HyE.AE.key_region", "equation_HyE.AE.keysize",
-        "equation_HyE.AE.log_t", "equation_HyE.AE.msg",
-        "equation_HyE.AE.rid", "equation_HyE.Ideal.conf",
-        "equation_HyE.Plain.r", "equation_Platform.Bytes.byte",
-        "equation_Platform.Bytes.bytes",
+        "equation_FStar.UInt32.n", "equation_HyE.AE.aes_key",
+        "equation_HyE.AE.cipher", "equation_HyE.AE.ivsize",
+        "equation_HyE.AE.key_log", "equation_HyE.AE.key_region",
+        "equation_HyE.AE.keysize", "equation_HyE.AE.log_t",
+        "equation_HyE.AE.msg", "equation_HyE.AE.rid",
+        "equation_HyE.Ideal.conf", "equation_HyE.Plain.r",
+        "equation_Platform.Bytes.byte", "equation_Platform.Bytes.bytes",
         "equation_Platform.Bytes.empty_bytes",
         "equation_Platform.Bytes.lbytes", "equation_Platform.Bytes.length",
         "equation_Platform.Bytes.op_At_Bar", "equation_Prims.nat",
@@ -205,12 +196,13 @@
         "typing_FStar.Monotonic.Seq.grows", "typing_FStar.Seq.Base.seq",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_HyE.AE.__proj__Key__item__log",
+        "typing_HyE.AE.__proj__Key__item__raw",
         "typing_HyE.AE.__proj__Key__item__region",
         "typing_HyE.Ideal.int_ctxt", "typing_Platform.Bytes.length",
         "typing_tok_CoreCrypto.AES_128_GCM@tok"
       ],
       0,
-      "4f15e4adb37d3dde1641ca392a49c9de"
+      "91aa7616f91f50267a1c315e4f90c0d7"
     ],
     [
       "HyE.AE.decrypt",
@@ -230,7 +222,7 @@
         "haseqHyE.AE_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b"
       ],
       0,
-      "56249bd4f0f15992c56bffcd54d4ad0c"
+      "81742c298aab0fd1df05ea70f18ecc5e"
     ],
     [
       "HyE.AE.decrypt",
@@ -340,7 +332,7 @@
         "typing_HyE.Ideal.int_ctxt", "typing_Platform.Bytes.length"
       ],
       0,
-      "30bc697aa41233f232b58bda3c11ba16"
+      "ec6b99b226559fcd533b24e692c3965a"
     ]
   ]
 ]
