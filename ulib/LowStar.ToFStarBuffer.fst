@@ -13,13 +13,13 @@ module U32 = FStar.UInt32
 assume val new_to_old_ghost (#t: Type0) (b: New.buffer t) : GTot (Old.buffer t)
 assume val old_to_new_ghost (#t: Type0) (b: Old.buffer t) : GTot (New.buffer t)
 
-assume val new_to_old_st (#t: Type0) (b: New.buffer t) : HST.Stack (Old.buffer t)
+assume val new_to_old_st (#t: Type0) (b: New.buffer t) : HST.Stack (b' : Old.buffer t { b' == new_to_old_ghost b } )
   (requires (fun h -> New.live h b))
-  (ensures (fun h b' h' -> h' == h /\ b' == new_to_old_ghost b))
+  (ensures (fun h b' h' -> h' == h))
 
-assume val old_to_new_st (#t: Type0) (b: Old.buffer t) : HST.Stack (New.buffer t)
+assume val old_to_new_st (#t: Type0) (b: Old.buffer t) : HST.Stack (b' : New.buffer t { b' == old_to_new_ghost b })
   (requires (fun h -> Old.live h b))
-  (ensures (fun h b' h' -> h' == h /\ b' == old_to_new_ghost b))
+  (ensures (fun h b' h' -> h' == h))
 
 assume val new_to_old_to_new (#t: Type0) (b: New.buffer t) : Lemma
   (old_to_new_ghost (new_to_old_ghost b) == b)
