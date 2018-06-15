@@ -605,15 +605,15 @@ let smt () : tac<unit> =
 let divide (n:Z.t) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     bind get (fun p ->
     bind (try ret (List.splitAt (Z.to_int_fs n) p.goals) with | _ -> fail "divide: not enough goals") (fun (lgs, rgs) ->
-    let lp = {p with goals=lgs; smt_goals=[]} in
-    let rp = {p with goals=rgs; smt_goals=[]} in
+    let lp = { p with goals = lgs; smt_goals = [] } in
     bind (set lp) (fun _ ->
     bind l        (fun a ->
     bind get      (fun lp' ->
+    let rp = { lp' with goals = rgs; smt_goals = [] } in
     bind (set rp) (fun _ ->
     bind r        (fun b ->
     bind get      (fun rp' ->
-    let p' = {p with goals=lp'.goals@rp'.goals; smt_goals=lp'.smt_goals@rp'.smt_goals@p.smt_goals} in
+    let p' = { rp' with goals=lp'.goals @ rp'.goals; smt_goals = lp'.smt_goals @ rp'.smt_goals @ p.smt_goals } in
     bind (set p') (fun _ ->
     bind remove_solved_goals (fun () ->
     ret (a, b)))))))))))
