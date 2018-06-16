@@ -8,7 +8,6 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Errors
-open FStar.TypeChecker.Normalize
 
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
@@ -17,7 +16,6 @@ module BU = FStar.Util
 module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const
-module N = FStar.TypeChecker.Normalize
 
 type var = bv
 type sort = int
@@ -58,12 +56,6 @@ type annot = option<t>
 val constant_to_string : constant -> string
 val t_to_string : t -> string
 val atom_to_string : atom -> string
-
-// NBE debuging 
-
-val debug : N.cfg -> (unit -> unit) -> unit
-val debug_term : term -> unit
-val debug_sigmap : BU.smap<sigelt> -> unit
 
 // NBE term manipulation 
 

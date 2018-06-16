@@ -20,6 +20,7 @@ module BU = FStar.Util
 module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const
+module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 
 (* Utils *)
@@ -38,6 +39,18 @@ let rec drop (p: 'a -> bool) (l: list<'a>): list<'a> =
   match l with
   | [] -> []
   | x::xs -> if p x then x::xs else drop p xs
+
+// NBE debuging 
+
+let debug cfg f =
+  if Env.debug (Cfg.cfg_env cfg) (Options.Other "NBE")
+  then f ()
+
+let debug_term (t : term) =
+  BU.print1 "%s\n" (P.term_to_string t)
+
+let debug_sigmap (m : BU.smap<sigelt>) =
+  BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
 
 
 
@@ -240,9 +253,9 @@ and iapp cfg (f:t) (args:list<(t * aqual)>) =
   | _ -> iapp cfg (app cfg f (fst (List.hd args)) (snd (List.hd args))) (List.tl args)
 
 
-and translate_fv (cfg: N.cfg) (bs:list<t>) (fvar:fv): t =
+and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
    let debug = debug cfg in
-   let qninfo = Env.lookup_qname (N.cfg_env cfg) (S.lid_of_fv fvar) in
+   let qninfo = Env.lookup_qname (Cfg.cfg_env cfg) (S.lid_of_fv fvar) in
    if is_constr qninfo then mkConstruct fvar [] [] 
    else 
      match N.should_unfold cfg (fun _ -> false) fvar qninfo with
@@ -269,7 +282,7 @@ and translate_fv (cfg: N.cfg) (bs:list<t>) (fvar:fv): t =
                   debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
                   debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
                   // VD: Don't unfold primops
-                  if N.is_prim_step cfg fvar then
+                  if Cfg.is_prim_step cfg fvar then
                     mkFV fvar [] []
                   else
                     translate_letbinding cfg [] lb
@@ -281,7 +294,7 @@ and translate_fv (cfg: N.cfg) (bs:list<t>) (fvar:fv): t =
       end
 
 (* translate a let-binding - local or global *)
-and translate_letbinding (cfg:N.cfg) (bs:list<t>) (lb:letbinding) : t =
+and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   let debug = debug cfg in
   let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t =
     match us with
@@ -325,7 +338,7 @@ and translate_pat cfg (p : pat) : t =
     | Pat_wild bvar -> mkAccuVar bvar
     | Pat_dot_term (bvar, t) -> failwith "Pat_dot_term not implemented"
 
-and translate (cfg:N.cfg) (bs:list<t>) (e:term) : t =
+and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     let debug = debug cfg in
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
     debug (fun () -> BU.print1 "BS list: %s\n" (String.concat ";; " (List.map (fun x -> t_to_string x) bs)));
@@ -472,7 +485,7 @@ and translate (cfg:N.cfg) (bs:list<t>) (e:term) : t =
       
 
 (* [readback] creates named binders and not De Bruijn *)
-and readback (cfg:N.cfg) (x:t) : term =
+and readback (cfg:Cfg.cfg) (x:t) : term =
     let debug = debug cfg in
     debug (fun () -> BU.print1 "Readback: %s\n" (t_to_string x));
     match x with
@@ -518,7 +531,7 @@ and readback (cfg:N.cfg) (x:t) : term =
         | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
         | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange)
       in
-      (match N.find_prim_step cfg fv with
+      (match Cfg.find_prim_step cfg fv with
        | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
          (* TODO : can primops be universe polymorphic? *)
          begin
@@ -528,8 +541,8 @@ and readback (cfg:N.cfg) (x:t) : term =
                                 else List.splitAt prim_step.arity args
            in
            let psc = {
-             N.psc_range = Range.dummyRange;
-             N.psc_subst = (fun () -> if prim_step.requires_binder_substitution
+             Cfg.psc_range = Range.dummyRange;
+             Cfg.psc_subst = (fun () -> if prim_step.requires_binder_substitution
                                  then failwith "Cannot handle primops that require substitution"
                                  else [])
            } in
@@ -630,12 +643,12 @@ let step_as_normalizer_step = function
   | Reify -> Env.Reify
 
 let normalize (steps:list<step>) (env : Env.env) (e:term) : term =
-  let cfg = N.config (List.map step_as_normalizer_step steps) env in
+  let cfg = Cfg.config (List.map step_as_normalizer_step steps) env in
   //debug_sigmap env.sigtab;
   readback cfg (translate cfg [] e)
 
 
 let normalize' (steps:list<Env.step>) (env : Env.env) (e:term) : term =
-  let cfg = N.config steps env in
+  let cfg = Cfg.config steps env in
   //debug_sigmap env.sigtab;
   readback cfg (translate cfg [] e)

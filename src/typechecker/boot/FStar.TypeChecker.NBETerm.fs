@@ -1,3 +1,4 @@
+#light "off"
 module FStar.TypeChecker.NBETerm
 open FStar.All
 open FStar.Exn
@@ -7,7 +8,6 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Errors
-open FStar.TypeChecker.Normalize
 
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
@@ -16,7 +16,6 @@ module BU = FStar.Util
 module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const
-module N = FStar.TypeChecker.Normalize
 
 
 type var = bv
@@ -106,19 +105,6 @@ and atom_to_string (a: atom) =
     | Var v -> "Var " ^ (P.bv_to_string v)
     | Match (t, _, _) -> "Match " ^ (t_to_string t)
     | Rec (_,_, l) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
-
-// NBE debuging 
-
-let debug cfg f =
-  if Env.debug (N.cfg_env cfg) (Options.Other "NBE")
-  then f ()
-
-let debug_term (t : term) =
-  BU.print1 "%s\n" (P.term_to_string t)
-
-let debug_sigmap (m : BU.smap<sigelt>) =
-  BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
-
 
 // NBE term manipulation 
 

@@ -56,12 +56,14 @@
     <Compile Include="FStar.TypeChecker.Common.fs" />
     <Compile Include="FStar.TypeChecker.Env.fsi" />
     <Compile Include="FStar.TypeChecker.Env.fs" />
+    <Compile Include="boot/FStar.TypeChecker.NBETerm.fsi" />
+    <Compile Include="boot/FStar.TypeChecker.NBETerm.fs" />
+    <Compile Include="FStar.TypeChecker.Cfg.fsi" />
+    <Compile Include="FStar.TypeChecker.Cfg.fs" />
     <Compile Include="FStar.TypeChecker.PatternUtils.fsi" />
     <Compile Include="FStar.TypeChecker.PatternUtils.fs" />
     <Compile Include="FStar.TypeChecker.Normalize.fsi" />
     <Compile Include="FStar.TypeChecker.Normalize.fs" />
-    <Compile Include="boot/FStar.TypeChecker.NBETerm.fsi" />
-    <Compile Include="boot/FStar.TypeChecker.NBETerm.fs" />
     <Compile Include="boot/FStar.TypeChecker.NBE.fs" />
     <Compile Include="FStar.TypeChecker.Err.fs" />
     <Compile Include="FStar.TypeChecker.Rel.fsi" />

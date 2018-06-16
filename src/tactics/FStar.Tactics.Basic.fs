@@ -22,6 +22,7 @@ module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module TcTerm = FStar.TypeChecker.TcTerm
 module TcComm = FStar.TypeChecker.Common
+module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module UF = FStar.Syntax.Unionfind
 module EMB = FStar.Syntax.Embeddings
@@ -199,14 +200,14 @@ let dump_proofstate ps msg =
 let print_proof_state1  (msg:string) : tac<unit> =
     mk_tac (fun ps ->
                    let psc = ps.psc in
-                   let subst = N.psc_subst psc in
+                   let subst = Cfg.psc_subst psc in
                    dump_cur (subst_proof_state subst ps) msg;
                    Success ((), ps))
 
 let print_proof_state (msg:string) : tac<unit> =
     mk_tac (fun ps ->
                    let psc = ps.psc in
-                   let subst = N.psc_subst psc in
+                   let subst = Cfg.psc_subst psc in
                    dump_proofstate (subst_proof_state subst ps) msg;
                    Success ((), ps))
 
@@ -1831,7 +1832,7 @@ let proofstate_of_goal_ty rng env typ =
         smt_goals = [];
         depth = 0;
         __dump = (fun ps msg -> dump_proofstate ps msg);
-        psc = N.null_psc;
+        psc = Cfg.null_psc;
         entry_range = rng;
         guard_policy = SMT;
         freshness = 0;

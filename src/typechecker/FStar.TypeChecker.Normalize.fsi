@@ -23,32 +23,13 @@ open FStar.All
 open FStar.TypeChecker
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
+open FStar.TypeChecker.Cfg
 
 type closure =
   | Clos of env * term * memo<(env * term)> * bool  //memo for lazy evaluation; bool marks whether or not this is a fixpoint
   | Univ of universe                                //universe terms do not have free variables
   | Dummy                                           //Dummy is a placeholder for a binder when doing strong reduction
 and env = list<(option<binder> * closure)>
-type cfg
-val cfg_env: cfg -> Env.env
-val config: list<step> -> Env.env -> cfg
-
-type psc = { // primitive step context
-    psc_range:FStar.Range.range;
-    psc_subst: unit -> subst_t // potentially expensive, so thunked
-}
-
-val null_psc : psc
-val psc_range : psc -> FStar.Range.range
-val psc_subst : psc -> subst_t
-type primitive_step = {
-    name:FStar.Ident.lid;
-    arity:int;
-    auto_reflect:option<int>;
-    strong_reduction_ok:bool;
-    requires_binder_substitution:bool;
-    interpretation:(psc -> args -> option<term>)
-}
 
 type should_unfold_res =
     | Should_unfold_no
@@ -62,10 +43,7 @@ val should_unfold : cfg
                  -> Env.qninfo
                  -> should_unfold_res
 
-val register_plugin: primitive_step -> unit
 
-val find_prim_step: cfg -> fv -> option<primitive_step>
-val is_prim_step: cfg -> fv -> bool
 val closure_as_term : cfg -> env -> term -> term
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term

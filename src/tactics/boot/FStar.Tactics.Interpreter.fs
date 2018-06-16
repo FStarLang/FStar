@@ -20,6 +20,7 @@ module TcRel = FStar.TypeChecker.Rel
 module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module TcTerm = FStar.TypeChecker.TcTerm
+module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module Env = FStar.TypeChecker.Env
 open FStar.Tactics.Types
@@ -38,7 +39,7 @@ let tacdbg = BU.mk_ref false
 
 let mk_tactic_interpretation_0 (reflect:bool)
                                (t:tac<'r>) (er:embedding<'r>)
-                               (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
+                               (nm:Ident.lid) (psc:Cfg.psc) (args:args) : option<term> =
  (*  We have: t () embedded_state
      The idea is to:
         1. unembed the state
@@ -53,7 +54,7 @@ let mk_tactic_interpretation_0 (reflect:bool)
     BU.print2 "Reached %s, args are: %s\n"
             (Ident.string_of_lid nm)
             (Print.args_to_string args));
-    let res = embed (E.e_result er) (N.psc_range psc) (run_safe t ps) in
+    let res = embed (E.e_result er) (Cfg.psc_range psc) (run_safe t ps) in
     Some res)
   | _ ->
     failwith ("Unexpected application of tactic primitive")
@@ -61,7 +62,7 @@ let mk_tactic_interpretation_0 (reflect:bool)
 let mk_tactic_interpretation_1 (reflect:bool)
                                (t:'a -> tac<'r>) (ea:embedding<'a>)
                                (er:embedding<'r>)
-                               (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
+                               (nm:Ident.lid) (psc:Cfg.psc) (args:args) : option<term> =
   match args with
   | [(a, _); (embedded_state, _)] ->
     BU.bind_opt (unembed E.e_proofstate embedded_state) (fun ps ->
@@ -72,15 +73,15 @@ let mk_tactic_interpretation_1 (reflect:bool)
             (Print.term_to_string embedded_state));
     BU.bind_opt (unembed ea a) (fun a ->
     let res = run_safe (t a) ps in
-    Some (embed (E.e_result er) (N.psc_range psc) res)))
+    Some (embed (E.e_result er) (Cfg.psc_range psc) res)))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
 let mk_tactic_interpretation_1_env
                                (reflect:bool)
-                               (t:N.psc -> 'a -> tac<'r>) (ea:embedding<'a>)
+                               (t:Cfg.psc -> 'a -> tac<'r>) (ea:embedding<'a>)
                                (er:embedding<'r>)
-                               (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
+                               (nm:Ident.lid) (psc:Cfg.psc) (args:args) : option<term> =
   match args with
   | [(a, _); (embedded_state, _)] ->
     BU.bind_opt (unembed E.e_proofstate embedded_state) (fun ps ->
@@ -91,7 +92,7 @@ let mk_tactic_interpretation_1_env
             (Print.term_to_string embedded_state));
     BU.bind_opt (unembed ea a) (fun a ->
     let res = run_safe (t psc a) ps in
-    Some (embed (E.e_result er) (N.psc_range psc) res)))
+    Some (embed (E.e_result er) (Cfg.psc_range psc) res)))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
@@ -99,7 +100,7 @@ let mk_tactic_interpretation_2 (reflect:bool)
                                (t:'a -> 'b -> tac<'r>)
                                (ea:embedding<'a>) (eb:embedding<'b>)
                                (er:embedding<'r>)
-                               (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
+                               (nm:Ident.lid) (psc:Cfg.psc) (args:args) : option<term> =
   match args with
   | [(a, _); (b, _); (embedded_state, _)] ->
     BU.bind_opt (unembed E.e_proofstate embedded_state) (fun ps ->
@@ -111,7 +112,7 @@ let mk_tactic_interpretation_2 (reflect:bool)
     BU.bind_opt (unembed ea a) (fun a ->
     BU.bind_opt (unembed eb b) (fun b ->
     let res = run_safe (t a b) ps in
-    Some (embed (E.e_result er) (N.psc_range psc) res))))
+    Some (embed (E.e_result er) (Cfg.psc_range psc) res))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
@@ -121,7 +122,7 @@ let mk_tactic_interpretation_3 (reflect:bool)
                                (eb:embedding<'b>)
                                (ec:embedding<'c>)
                                (er:embedding<'r>)
-                               (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
+                               (nm:Ident.lid) (psc:Cfg.psc) (args:args) : option<term> =
   match args with
   | [(a, _); (b, _); (c, _); (embedded_state, _)] ->
     BU.bind_opt (unembed E.e_proofstate embedded_state) (fun ps ->
@@ -134,7 +135,7 @@ let mk_tactic_interpretation_3 (reflect:bool)
     BU.bind_opt (unembed eb b) (fun b ->
     BU.bind_opt (unembed ec c) (fun c ->
     let res = run_safe (t a b c) ps in
-    Some (embed (E.e_result er) (N.psc_range psc) res)))))
+    Some (embed (E.e_result er) (Cfg.psc_range psc) res)))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
@@ -145,7 +146,7 @@ let mk_tactic_interpretation_4 (reflect:bool)
                                (ec:embedding<'c>)
                                (ed:embedding<'d>)
                                (er:embedding<'r>)
-                               (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
+                               (nm:Ident.lid) (psc:Cfg.psc) (args:args) : option<term> =
   match args with
   | [(a, _); (b, _); (c, _); (d, _); (embedded_state, _)] ->
     BU.bind_opt (unembed E.e_proofstate embedded_state) (fun ps ->
@@ -159,7 +160,7 @@ let mk_tactic_interpretation_4 (reflect:bool)
     BU.bind_opt (unembed ec c) (fun c ->
     BU.bind_opt (unembed ed d) (fun d ->
     let res = run_safe (t a b c d) ps in
-    Some (embed (E.e_result er) (N.psc_range psc) res))))))
+    Some (embed (E.e_result er) (Cfg.psc_range psc) res))))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
@@ -171,7 +172,7 @@ let mk_tactic_interpretation_5 (reflect:bool)
                                (ed:embedding<'d>)
                                (ee:embedding<'e>)
                                (er:embedding<'r>)
-                               (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
+                               (nm:Ident.lid) (psc:Cfg.psc) (args:args) : option<term> =
   match args with
   | [(a, _); (b, _); (c, _); (d, _); (e, _); (embedded_state, _)] ->
     BU.bind_opt (unembed E.e_proofstate embedded_state) (fun ps ->
@@ -186,7 +187,7 @@ let mk_tactic_interpretation_5 (reflect:bool)
     BU.bind_opt (unembed ed d) (fun d ->
     BU.bind_opt (unembed ee e) (fun e ->
     let res = run_safe (t a b c d e) ps in
-    Some (embed (E.e_result er) (N.psc_range psc) res)))))))
+    Some (embed (E.e_result er) (Cfg.psc_range psc) res)))))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
@@ -199,7 +200,7 @@ let mk_tactic_interpretation_6 (reflect:bool)
                                (ee:embedding<'e>)
                                (ef:embedding<'f>)
                                (er:embedding<'r>)
-                               (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
+                               (nm:Ident.lid) (psc:Cfg.psc) (args:args) : option<term> =
   match args with
   | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _); (embedded_state, _)] ->
     BU.bind_opt (unembed E.e_proofstate embedded_state) (fun ps ->
@@ -215,17 +216,17 @@ let mk_tactic_interpretation_6 (reflect:bool)
     BU.bind_opt (unembed ee e) (fun e ->
     BU.bind_opt (unembed ef f) (fun f ->
     let res = run_safe (t a b c d e f) ps in
-    Some (embed (E.e_result er) (N.psc_range psc) res))))))))
+    Some (embed (E.e_result er) (Cfg.psc_range psc) res))))))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let step_from_native_step (s: native_primitive_step): N.primitive_step =
-    { N.name=s.name;
-      N.arity=s.arity;
-      N.auto_reflect=Some (s.arity - 1);
-      N.strong_reduction_ok=s.strong_reduction_ok;
-      N.requires_binder_substitution = false; // GM: really?
-      N.interpretation=(fun psc args -> s.tactic psc args) }
+let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
+    { Cfg.name=s.name;
+      Cfg.arity=s.arity;
+      Cfg.auto_reflect=Some (s.arity - 1);
+      Cfg.strong_reduction_ok=s.strong_reduction_ok;
+      Cfg.requires_binder_substitution = false; // GM: really?
+      Cfg.interpretation=(fun psc args -> s.tactic psc args) }
 
 
 let rec e_tactic_0' (er : embedding<'r>) : embedding<tac<'r>> =
@@ -237,38 +238,38 @@ and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<
     mk_emb (fun _ _ -> failwith "Impossible: embedding tactic (1)?")
            (fun w t -> unembed_tactic_1 ea er t)
            S.t_unit // never used
-and primitive_steps () : list<N.primitive_step> =
+and primitive_steps () : list<Cfg.primitive_step> =
     let mk nm arity interpretation =
       let nm = E.fstar_tactics_lid' ["Builtins";nm] in {
-      N.name=nm;
-      N.arity=arity;
-      N.auto_reflect=Some (arity - 1);
-      N.strong_reduction_ok=false;
-      N.requires_binder_substitution = true;
-      N.interpretation=(fun psc args -> interpretation nm psc args);
+      Cfg.name=nm;
+      Cfg.arity=arity;
+      Cfg.auto_reflect=Some (arity - 1);
+      Cfg.strong_reduction_ok=false;
+      Cfg.requires_binder_substitution = true;
+      Cfg.interpretation=(fun psc args -> interpretation nm psc args);
     } in
     let native_tactics = list_all () in
     let native_tactics_steps = List.map step_from_native_step native_tactics in
     // mktac0 cannot exist due to having a top-level effect
     let mktac1 (name : string) (f : 'a -> tac<'r>)
                (ea : embedding<'a>)
-               (er : embedding<'r>) : N.primitive_step =
+               (er : embedding<'r>) : Cfg.primitive_step =
         mk name 2 (mk_tactic_interpretation_1 false f ea er)
     in
     let mktac2 (name : string) (f : 'a -> 'b -> tac<'r>)
                (ea : embedding<'a>) (eb : embedding<'b>)
-               (er : embedding<'r>) : N.primitive_step =
+               (er : embedding<'r>) : Cfg.primitive_step =
         mk name 3 (mk_tactic_interpretation_2 false f ea eb er)
     in
     let mktac3 (name : string) (f : 'a -> 'b -> 'c -> tac<'r>)
                (ea : embedding<'a>) (eb : embedding<'b>) (ec : embedding<'c>)
-               (er : embedding<'r>) : N.primitive_step =
+               (er : embedding<'r>) : Cfg.primitive_step =
         mk name 4 (mk_tactic_interpretation_3 false f ea eb ec er)
     in
     let mktac5 (name : string) (f : 'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
                (ea : embedding<'a>) (eb : embedding<'b>) (ec : embedding<'c>)
                (ed : embedding<'d>) (ee : embedding<'e>)
-               (er : embedding<'r>) : N.primitive_step =
+               (er : embedding<'r>) : Cfg.primitive_step =
         mk name 6 (mk_tactic_interpretation_5 false f ea eb ec ed ee er)
     in
     let decr_depth_interp psc (args : args) =
@@ -276,17 +277,17 @@ and primitive_steps () : list<N.primitive_step> =
         | [(ps, _)] ->
             bind_opt (unembed E.e_proofstate ps) (fun ps ->
             let ps = set_ps_psc psc ps in
-            Some (embed E.e_proofstate (N.psc_range psc) (decr_depth ps)))
+            Some (embed E.e_proofstate (Cfg.psc_range psc) (decr_depth ps)))
 
         | _ -> failwith "Unexpected application of decr_depth"
     in
-    let decr_depth_step : N.primitive_step =
-        {N.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth";
-         N.arity = 1;
-         N.auto_reflect=None;
-         N.strong_reduction_ok = false;
-         N.requires_binder_substitution = false;
-         N.interpretation = decr_depth_interp
+    let decr_depth_step : Cfg.primitive_step =
+        {Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth";
+         Cfg.arity = 1;
+         Cfg.auto_reflect=None;
+         Cfg.strong_reduction_ok = false;
+         Cfg.requires_binder_substitution = false;
+         Cfg.interpretation = decr_depth_interp
          }
     in
     let incr_depth_interp psc (args : args) =
@@ -294,16 +295,16 @@ and primitive_steps () : list<N.primitive_step> =
         | [(ps, _)] ->
             bind_opt (unembed E.e_proofstate ps) (fun ps ->
             let ps = set_ps_psc psc ps in
-            Some (embed E.e_proofstate (N.psc_range psc) (incr_depth ps)))
+            Some (embed E.e_proofstate (Cfg.psc_range psc) (incr_depth ps)))
         | _ -> failwith "Unexpected application of incr_depth"
     in
-    let incr_depth_step : N.primitive_step =
-        {N.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth";
-         N.arity = 1;
-         N.auto_reflect=None;
-         N.strong_reduction_ok = false;
-         N.requires_binder_substitution = false;
-         N.interpretation = incr_depth_interp
+    let incr_depth_step : Cfg.primitive_step =
+        {Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth";
+         Cfg.arity = 1;
+         Cfg.auto_reflect=None;
+         Cfg.strong_reduction_ok = false;
+         Cfg.requires_binder_substitution = false;
+         Cfg.interpretation = incr_depth_interp
          }
     in
     let tracepoint_interp psc (args : args) =
@@ -321,7 +322,7 @@ and primitive_steps () : list<N.primitive_step> =
             bind_opt (unembed E.e_proofstate ps) (fun ps ->
             bind_opt (unembed e_range r) (fun r ->
             let ps' = set_proofstate_range ps r in
-            Some (embed E.e_proofstate (N.psc_range psc) ps')))
+            Some (embed E.e_proofstate (Cfg.psc_range psc) ps')))
         | _ -> failwith "Unexpected application of set_proofstate_range"
     in
     let push_binder_interp psc (args:args) =
@@ -333,34 +334,34 @@ and primitive_steps () : list<N.primitive_step> =
             Some (embed RE.e_env env_t.pos env)))
         | _ -> failwith "Unexpected application of push_binder"
     in
-    let set_proofstate_range_step : N.primitive_step =
+    let set_proofstate_range_step : Cfg.primitive_step =
         let nm = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" in
-        {N.name = nm;
-         N.arity = 2;
-         N.auto_reflect=None;
-         N.strong_reduction_ok = false;
-         N.requires_binder_substitution = false;
-         N.interpretation = set_proofstate_range_interp
+        {Cfg.name = nm;
+         Cfg.arity = 2;
+         Cfg.auto_reflect=None;
+         Cfg.strong_reduction_ok = false;
+         Cfg.requires_binder_substitution = false;
+         Cfg.interpretation = set_proofstate_range_interp
         }
     in
-    let tracepoint_step : N.primitive_step =
+    let tracepoint_step : Cfg.primitive_step =
         let nm = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" in
-        {N.name = nm;
-         N.arity = 1;
-         N.auto_reflect=None;
-         N.strong_reduction_ok = false;
-         N.requires_binder_substitution = true;
-         N.interpretation = tracepoint_interp
+        {Cfg.name = nm;
+         Cfg.arity = 1;
+         Cfg.auto_reflect=None;
+         Cfg.strong_reduction_ok = false;
+         Cfg.requires_binder_substitution = true;
+         Cfg.interpretation = tracepoint_interp
         }
     in
-    let push_binder_step : N.primitive_step =
+    let push_binder_step : Cfg.primitive_step =
        let nm = E.fstar_tactics_lid' ["Builtins";"push_binder"] in
-        {N.name = nm;
-         N.arity = 2;
-         N.auto_reflect=None;
-         N.strong_reduction_ok = false;
-         N.requires_binder_substitution = true;
-         N.interpretation = push_binder_interp
+        {Cfg.name = nm;
+         Cfg.arity = 2;
+         Cfg.auto_reflect=None;
+         Cfg.strong_reduction_ok = false;
+         Cfg.requires_binder_substitution = true;
+         Cfg.interpretation = push_binder_interp
         }
     in
     [
@@ -567,7 +568,7 @@ let run_tactic_on_typ
         (ps.goals@ps.smt_goals, w)
 
     | Failed (s, ps) ->
-        dump_proofstate (subst_proof_state (N.psc_subst ps.psc) ps) "at the time of failure";
+        dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the time of failure";
         Err.raise_error (Err.Fatal_UserTacticFailure, (BU.format1 "user tactic failed: %s" s)) ps.entry_range
 
 // Polarity
