@@ -1,0 +1,123 @@
+[
+  "fâ‚€âΩIj ˙N*_Aá_",
+  [
+    [
+      "LowStar.ModifiesPat.modifies_inert_intro",
+      1,
+      2,
+      1,
+      [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
+      0,
+      "04425e232b87de85ed80018a3a4fc3c2"
+    ],
+    [
+      "LowStar.ModifiesPat.modifies_inert_live_region",
+      1,
+      2,
+      1,
+      [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
+      0,
+      "0f838ad9de680d9692ef5872d80a8c08"
+    ],
+    [
+      "LowStar.ModifiesPat.modifies_inert_mreference_elim",
+      1,
+      2,
+      1,
+      [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
+      0,
+      "f3d7366154084670cc467fab0a5e2285"
+    ],
+    [
+      "LowStar.ModifiesPat.modifies_inert_buffer_elim",
+      1,
+      2,
+      1,
+      [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
+      0,
+      "3beca56490446ac05249c90075351483"
+    ],
+    [
+      "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_mreference_weak",
+      1,
+      2,
+      1,
+      [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
+      0,
+      "99450f7178c087b76cdce669368adf13"
+    ],
+    [
+      "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_buffer_weak",
+      1,
+      2,
+      1,
+      [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
+      0,
+      "0c96e188228d3bec909f01ea3e1ca498"
+    ],
+    [
+      "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_region_weak",
+      1,
+      2,
+      1,
+      [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
+      0,
+      "7e0ae0524148cc8005db95396d11bae3"
+    ],
+    [
+      "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_region_mreference_weak",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_LowStar.ModifiesPat.modifies_inert",
+        "lemma_LowStar.ModifiesPat.modifies_inert_liveness_insensitive_region_weak",
+        "typing_FStar.Monotonic.HyperStack.frameOf"
+      ],
+      0,
+      "a5e3be5e450f2a29fa9d9d32dcea38b2"
+    ],
+    [
+      "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_region_buffer_weak",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_LowStar.ModifiesPat.modifies_inert",
+        "lemma_LowStar.ModifiesPat.modifies_inert_liveness_insensitive_region_weak",
+        "typing_LowStar.Buffer.frameOf"
+      ],
+      0,
+      "322d3d906fd053c15a653ee328cf7504"
+    ],
+    [
+      "LowStar.ModifiesPat.fresh_frame_modifies_inert",
+      1,
+      2,
+      1,
+      [
+        "@query", "function_token_typing_LowStar.Modifies.loc_none",
+        "lemma_LowStar.ModifiesPat.modifies_inert_intro"
+      ],
+      0,
+      "d5ced9473f2e1b1f804aec555d889d5f"
+    ],
+    [
+      "LowStar.ModifiesPat.popped_modifies_inert",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_typing",
+        "equation_FStar.Monotonic.HyperStack.mem", "equation_Prims.eqtype",
+        "function_token_typing_FStar.Monotonic.HyperHeap.rid",
+        "lemma_LowStar.ModifiesPat.modifies_inert_intro",
+        "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
+        "typing_FStar.Monotonic.HyperStack.get_tip",
+        "typing_FStar.Set.singleton", "typing_LowStar.Modifies.loc_regions"
+      ],
+      0,
+      "f020b889a69b97f7522619eac5a4661e"
+    ]
+  ]
+]
