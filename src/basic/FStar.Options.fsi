@@ -95,6 +95,8 @@ val all_specs_with_types        : list<(char * string * opt_type * string)>
 val settable                    : string -> bool
 val resettable                  : string -> bool
 
+val abort_counter : ref<int>
+
 val __temp_no_proj              : string  -> bool
 val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool

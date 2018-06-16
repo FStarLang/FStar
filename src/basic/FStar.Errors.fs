@@ -743,11 +743,17 @@ let mk_issue level range msg n =
 
 let get_err_count () = (!current_handler).eh_count_errors ()
 
+let wrapped_eh_add_one (h : error_handler) (issue : issue) : unit =
+    Options.abort_counter := !Options.abort_counter - 1;
+    h.eh_add_one issue;
+    if !Options.abort_counter = 0
+    then failwith "Aborting due to --abort_on"
+
 let add_one issue =
-    atomically (fun () -> (!current_handler).eh_add_one issue)
+    atomically (fun () -> wrapped_eh_add_one (!current_handler) issue)
 
 let add_many issues =
-    atomically (fun () -> List.iter (!current_handler).eh_add_one issues)
+    atomically (fun () -> List.iter (wrapped_eh_add_one (!current_handler)) issues)
 
 let report_all () =
     (!current_handler).eh_report ()
