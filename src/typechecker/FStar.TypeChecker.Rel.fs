@@ -1670,12 +1670,12 @@ and solve_rigid_flex_or_flex_rigid_subtyping
          solve env wl
 
       | Failed (p, msg) ->
-         UF.rollback tx;
          if Env.debug env <| Options.Other "Rel"
          then BU.print1 "meet/join attempted and failed to solve problems:\n%s\n"
                         (List.map (prob_to_string env) (TProb eq_prob::sub_probs) |> String.concat "\n");
          (match rank, base_and_refinement env bound_typ with
           | Rigid_flex, (t_base, Some _) ->
+            UF.rollback tx;
               //We failed to solve (x:t_base{p} <: ?u) while computing a precise join of all the lower bounds
               //Rather than giving up, try again with a widening heuristic
               //i.e., try to solve ?u = t and proceed
@@ -1686,6 +1686,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
             solve env (attempt [TProb eq_prob] wl)
 
           | Flex_rigid, (t_base, Some (x, phi)) ->
+            UF.rollback tx;
               //We failed to solve (?u = x:t_base{phi}) while computing
               //a precise meet of all the upper bounds
               //Rather than giving up, try again with a narrowing heuristic
