@@ -500,7 +500,7 @@
         "typing_LowStar.Buffer.len", "typing_LowStar.Buffer.length"
       ],
       0,
-      "e88fc742b2256842d2bdb2e296d97c57"
+      "525cbc8b58b204766627a8dac29eb89e"
     ],
     [
       "LowStar.ToFStarBuffer.new_blit",
