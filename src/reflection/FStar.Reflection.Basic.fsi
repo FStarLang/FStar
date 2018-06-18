@@ -12,6 +12,7 @@ open FStar.Reflection.Data
 val compare_bv     : bv -> bv -> order
 val lookup_typ     : Env.env -> list<string> -> option<sigelt>
 val is_free        : bv -> term -> bool
+val lookup_attr    : term -> Env.env -> list<fv>
 val binders_of_env : Env.env -> binders
 val moduleof       : Env.env -> list<string>
 val term_eq        : term -> term -> bool

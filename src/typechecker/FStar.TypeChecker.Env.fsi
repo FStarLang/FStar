@@ -209,6 +209,7 @@ val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * com
 val norm_eff_name          : (env -> lident -> lident)
 val lookup_effect_quals    : env -> lident -> list<qualifier>
 val lookup_projector       : env -> lident -> int -> lident
+val lookup_attr            : env -> string -> list<sigelt>
 val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool

@@ -293,6 +293,15 @@ let compare_bv (x:bv) (y:bv) : order =
 let is_free (x:bv) (t:term) : bool =
     U.is_free_in x t
 
+let lookup_attr (attr:term) (env:Env.env) : list<fv> =
+    match (SS.compress attr).n with
+    | Tm_fvar fv ->
+        let ses = Env.lookup_attr env (Ident.text_of_lid (lid_of_fv fv)) in
+        List.concatMap (fun se -> match U.lid_of_sigelt se with
+                                  | None -> []
+                                  | Some l -> [S.lid_as_fv l S.delta_constant None]) ses
+    | _ -> []
+
 let lookup_typ (env:Env.env) (ns:list<string>) : option<sigelt> =
     let lid = PC.p2l ns in
     match Env.lookup_qname env lid with
