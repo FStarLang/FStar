@@ -80,7 +80,9 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
     let imp = { imp_reason = reason
               ; imp_tm     = t
               ; imp_uvar   = ctx_uvar
-              ; imp_range  = r } in
+              ; imp_range  = r
+              ; imp_meta   = None
+              } in
     ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
 
 let copy_uvar u (bs:binders) t wl =

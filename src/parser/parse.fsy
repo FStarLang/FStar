@@ -1078,7 +1078,10 @@ aqual:
                      ( q )}
 
 aqualUniverses:
-  HASH
+  HASH LBRACK tmNoEq RBRACK
+    {let (_1, _2, t, _4) = ((), (), $3, ()) in
+                                ( Meta t )}
+| HASH
     {let _1 = () in
               ( Implicit )}
 | DOLLAR

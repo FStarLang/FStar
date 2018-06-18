@@ -344,6 +344,7 @@ aqual:
   | q=aqualUniverses { q }
 
 aqualUniverses:
+  | HASH LBRACK t=tmNoEq RBRACK { Meta t }
   | HASH      { Implicit }
   | DOLLAR    { Equality }
 

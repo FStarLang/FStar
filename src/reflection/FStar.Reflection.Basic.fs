@@ -44,6 +44,7 @@ open FStar.Dyn
 (* private *)
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with
+    | Some (Meta _) -> failwith "Sorry! cannot inspect TC arguments for now"
     | Some (Implicit _) -> Data.Q_Implicit
     | Some Equality
     | None -> Data.Q_Explicit

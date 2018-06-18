@@ -138,6 +138,7 @@ and implicit = {
     imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
     imp_tm     : term;                    // The term, made up of the ctx_uvar
     imp_range  : Range.range;             // Position where it was introduced
+    imp_meta   : option<(env * term)>;    // An optional metaprogram to try to fill it
 }
 and implicits = list<implicit>
 and tcenv_hooks =

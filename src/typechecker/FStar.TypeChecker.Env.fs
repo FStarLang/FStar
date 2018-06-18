@@ -140,6 +140,7 @@ and implicit = {
     imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
     imp_tm     : term;                    // The term, made up of the ctx_uvar
     imp_range  : Range.range;             // Position where it was introduced
+    imp_meta   : option<(env * term)>;    // An optional metaprogram to try to fill it
 }
 and implicits = list<implicit>
 and tcenv_hooks =
@@ -1484,7 +1485,8 @@ let new_implicit_var_aux reason r env k should_check =
       let imp = { imp_reason = reason
                 ; imp_tm     = t
                 ; imp_uvar   = ctx_uvar
-                ; imp_range  = r } in
+                ; imp_range  = r
+                ; imp_meta   = None } in
       let g = {trivial_guard with implicits=[imp]} in
       t, [(ctx_uvar, r)], g
 
