@@ -1165,6 +1165,7 @@ let is_reifiable_function (env:env) (t:S.term) : bool =
 let push_sigelt env s =
   let sb = (lids_of_sigelt s, s) in
   let env = {env with gamma_sig = sb::env.gamma_sig} in
+  add_sigelt env s;
   env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
   build_lattice env s
 
