@@ -5,6 +5,19 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module B = LowStar.Buffer
 
+
+let loc_disjoint_union_r'
+  (s s1 s2: loc)
+: Lemma
+  (ensures (loc_disjoint s (loc_union s1 s2) <==> (loc_disjoint s s1 /\ loc_disjoint s s2)))
+  [SMTPat (loc_disjoint s (loc_union s1 s2))]
+= Classical.move_requires (loc_disjoint_union_r s s1) s2;
+  loc_includes_union_l s1 s2 s1;
+  loc_includes_union_l s1 s2 s2;
+  Classical.move_requires (loc_disjoint_includes s (loc_union s1 s2) s) s1;
+  Classical.move_requires (loc_disjoint_includes s (loc_union s1 s2) s) s2
+
+
 (* Patterns on modifies clauses *)
 
 let modifies_refl'

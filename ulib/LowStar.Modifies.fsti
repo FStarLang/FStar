@@ -393,7 +393,6 @@ val loc_disjoint_union_r
 : Lemma
   (requires (loc_disjoint s s1 /\ loc_disjoint s s2))
   (ensures (loc_disjoint s (loc_union s1 s2)))
-  [SMTPat (loc_disjoint s (loc_union s1 s2))]
 
 /// If two sets of memory locations are disjoint, then so are any two
 /// included sets of memory locations.
