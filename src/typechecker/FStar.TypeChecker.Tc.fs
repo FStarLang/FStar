@@ -1085,7 +1085,7 @@ let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
         | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 <> hd2 ->
             Some (hd1, n1, 0)
 
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 = hd2 ->
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 (* when hd1 = hd2 *) ->
             if n1 <> n2
             then Some (hd1, n1, n2)
             else aux tl1 tl2
