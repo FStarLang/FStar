@@ -51,8 +51,8 @@ and t = //JUST FSHARP
   | Type_t of universe
   | Univ of universe
   | Unknown (* For translating unknown types *)
-  // NS:
-  | Refinement of binder * t // VD: do we need to keep the aqual?
+  | Arrow of (list<t> -> t) * list<(unit -> arg)> 
+  // Refinement of binder * t // VD: do we need to keep the aqual?
   // | Arrow of list binder * comp_t
 and arg = t * aqual
 and args = list<arg>
@@ -99,7 +99,8 @@ let rec t_to_string (x:t) =
   | Constant c -> constant_to_string c
   | Univ u -> "Universe " ^ (P.univ_to_string u)
   | Type_t u -> "Type_t " ^ (P.univ_to_string u)
-  | Refinement ((b,_), t) -> "Refinement (" ^ (P.bv_to_string b) ^ ", " ^ (t_to_string t) ^ ")"
+  | Arrow _ -> "Arrow" // TODO : revisit
+//  | Refinement ((b,_), t) -> "Refinement (" ^ (P.bv_to_string b) ^ ", " ^ (t_to_string t) ^ ")"
   | Unknown -> "Unknown"
 
 and atom_to_string (a: atom) =
@@ -151,7 +152,9 @@ let lid_as_typ (l:lident) (us:list<universe>) (args:args) : t =
 
 let as_iarg (a:t) : arg = (a, Some S.imp_tag)
 let as_arg (a:t) : arg = (a, None)
-    
+
+//  Non-dependent arrow
+let make_arrow1 t1 (a:arg) : t = Arrow ((fun _ -> t1), [(fun _ -> a)])
 
 // Emdebbing at abstract types
 let e_any : embedding<t> = 
@@ -259,3 +262,18 @@ let e_list (ea:embedding<'a>) =
     in
     mk_emb em un (lid_as_typ PC.list_lid [U_zero] [as_arg (type_of ea)])
     
+
+let e_arrow1 (ea:embedding<'a>) (eb:embedding<'b>) = 
+    let em (f : 'a -> 'b) : t = Lam((fun (ta:t) -> match unembed ea ta with 
+                                             | Some a -> embed eb (f a)
+                                             | None -> failwith "Cannot unembed argument"), 
+                                 (fun _ -> type_of ea), None) 
+    in
+    let un (lam : t) : option<('a -> 'b)> =  
+        match lam with 
+        | Lam (ft, _, _) -> Some (fun (x:'a) -> match unembed eb (ft (embed ea x)) with 
+                                           | Some b -> b 
+                                           | None -> failwith "Cannot unembed function result")
+        | _ -> None
+    in
+    mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb)))

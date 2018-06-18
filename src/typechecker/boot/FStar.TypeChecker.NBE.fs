@@ -9,7 +9,7 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Errors
 open FStar.TypeChecker.Normalize
-  open FStar.TypeChecker.NBETerm
+open FStar.TypeChecker.NBETerm
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -244,8 +244,8 @@ let rec app cfg (f:t) (x:t) (q:aqual) =
      (match x with
      | Univ u -> FV (i, u::us, ts)
      | _ -> FV (i, us, (x,q)::ts))
-  | Refinement (b, r) -> Refinement (b, app cfg  r x q)
-  | Constant _ | Univ _ | Type_t _ | Unknown -> failwith "Ill-typed application"
+ // | Refinement (b, r) -> Refinement (b, app cfg  r x q)
+  | Constant _ | Univ _ | Type_t _ | Unknown | Arrow _ -> failwith "Ill-typed application"
 
 and iapp cfg (f:t) (args:list<(t * aqual)>) =
   match args with
@@ -368,8 +368,8 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_arrow (bs, c) -> debug_term e; failwith "Tm_arrow: Not yet implemented"
 
-    | Tm_refine (db, tm) ->
-      Refinement ((db, None), Lam ((fun (y:t) -> translate cfg (y::bs) tm), (fun () -> Constant Unit), None)) // XXX: Bogus type?
+    | Tm_refine (db, tm) -> failwith "Tm_refine: Not yet implemented"
+    //  Refinement ((db, None), Lam ((fun (y:t) -> translate cfg (y::bs) tm), (fun () -> Constant Unit), None)) // XXX: Bogus type?
 
     | Tm_ascribed (t, _, _) -> translate cfg bs t
 
@@ -621,10 +621,12 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
          (match ts with
           | [] -> head
           | _ -> U.mk_app head args)
-    | Refinement (b, r) ->
-       let body = translate cfg [] (readback cfg r) in
-       debug (fun () -> BU.print1 "Translated refinement body: %s\n" (t_to_string body));
-       S.mk (Tm_refine(fst b, readback cfg body)) None Range.dummyRange
+    | Arrow _ -> failwith "Arrows not yet handled"
+    
+    // | Refinement (b, r) ->
+    //    let body = translate cfg [] (readback cfg r) in
+    //    debug (fun () -> BU.print1 "Translated refinement body: %s\n" (t_to_string body));
+    //    S.mk (Tm_refine(fst b, readback cfg body)) None Range.dummyRange
 
 type step =
   | Primops

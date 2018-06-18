@@ -44,8 +44,9 @@ and t = //JUST FSHARP
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Refinement of binder * t
-and args = list<(t * aqual)>
+  | Arrow of (list<t> -> t) * list<(unit -> arg)> 
+and arg = t * aqual
+and args = list<(arg)>
 
 type head = t
 type annot = option<t>
