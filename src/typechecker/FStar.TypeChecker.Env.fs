@@ -82,6 +82,7 @@ type env = {
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
   sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
+  attrtab        :BU.smap<list<sigelt>>;        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
@@ -195,6 +196,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     modules= [];
     expected_typ=None;
     sigtab=new_sigtab();
+    attrtab=new_sigtab();
     is_pattern=false;
     instantiate_imp=true;
     effects={decls=[]; order=[]; joins=[]};
@@ -230,6 +232,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
 
 let dsenv env = env.dsenv
 let sigtab env = env.sigtab
+let attrtab env = env.attrtab
 let gamma_cache env = env.gamma_cache
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -256,6 +259,7 @@ let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
     stack := env::!stack;
     {env with sigtab=BU.smap_copy (sigtab env);
+              attrtab=BU.smap_copy (attrtab env);
               gamma_cache=BU.smap_copy (gamma_cache env);
               identifier_info=BU.mk_ref !env.identifier_info;
               qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd;
@@ -443,15 +447,29 @@ let lookup_qname env (lid:lident) : qninfo =
         | Some se -> Some (Inr (se, None), U.range_of_sigelt se)
         | None -> None
 
+let lookup_attr (env:env) (attr:string) : list<sigelt> =
+    match BU.smap_try_find (attrtab env) attr with
+    | Some ses -> ses
+    | None -> []
+
+let add_se_to_attrtab env se =
+    let add_one env se attr = BU.smap_add (attrtab env) attr (se :: lookup_attr env attr) in
+    List.iter (fun attr ->
+                match (Subst.compress attr).n with
+                | Tm_fvar fv -> add_one env se (lid_of_fv fv).str
+                | _ -> ()) se.sigattrs
+
 let rec add_sigelt env se = match se.sigel with
     | Sig_bundle(ses, _) -> add_sigelts env ses
     | _ ->
     let lids = lids_of_sigelt se in
     List.iter (fun l -> BU.smap_add (sigtab env) l.str se) lids;
+    add_se_to_attrtab env se;
     match se.sigel with
     | Sig_new_effect(ne) ->
       ne.actions |> List.iter (fun a ->
           let se_let = U.action_as_lb ne.mname a a.action_defn.pos in
+          (* TODO: attrtab? *)
           BU.smap_add (sigtab env) a.action_name.str se_let)
     | _ -> ()
 
