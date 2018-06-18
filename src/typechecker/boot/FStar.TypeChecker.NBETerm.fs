@@ -126,3 +126,47 @@ let mkAccuVar (v:var) = Accu(Var v, [])
 let mkAccuMatch (s:t) (cases: t -> t) (bs:((t -> term) -> list<branch>)) = Accu(Match (s, cases, bs), [])
 let mkAccuRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = Accu(Rec(b, bs, env), [])
 
+// Embedding and De-embedding 
+
+
+type embedding<'a> = {
+  em : 'a -> t;
+  un : t -> option<'a>;
+}
+
+let embed (e:embedding<'a>) (x:'a) : t = e.em x
+let unembed (e:embedding<'a>) (trm:t) : option<'a> = e.un trm
+
+let mk_emb em un = {em = em; un = un}
+
+// Emdebbing at abstract types
+let e_any : embedding<t> = 
+    let em = (fun a -> a) in 
+    let un =  (fun t -> Some t) in 
+    mk_emb em un
+
+// Emdebbing at type unit
+let e_unit : embedding<unit> = 
+    let em a = Constant Unit in 
+    let un t = Some () in // No runtime typecheck here 
+    mk_emb em un
+
+// Embeddind at type bool
+let e_bool : embedding<bool> = 
+    let em a = Constant (Bool a) in
+    let un t = 
+      match t with 
+      | Constant (Bool a) -> Some a
+      | _ -> None
+    in
+    mk_emb em un
+    
+// Embeddind at type char
+let e_char : embedding<char> = 
+    let em c = Constant (Char c) in
+    let un c = 
+      match c with 
+      | Constant (Char a) -> Some a
+      | _ -> None
+    in
+    mk_emb em un
