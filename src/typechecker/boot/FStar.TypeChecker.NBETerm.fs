@@ -236,3 +236,26 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     in
     mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero] [as_arg (type_of ea);
                                                      as_arg (type_of eb)])
+
+// Emdedding lists
+let e_list (ea:embedding<'a>) = 
+    let em (l:list<'a>) : t = 
+        let typ = as_iarg (type_of ea) in 
+        let nil = lid_as_constr PC.nil_lid [U_zero] [typ] in 
+        let cons hd tl = lid_as_constr PC.cons_lid [U_zero] [typ; as_arg (embed ea hd); as_arg tl] in
+        List.fold_right cons l nil
+    in
+    let rec un (trm:t) : option<list<'a>> = 
+        match trm with 
+        | Construct (fv, _, _) when S.fv_eq_lid fv PC.nil_lid -> Some []
+        | Construct (fv, _, [(_, Some (Implicit _)); (hd, None); (tl, None)]) 
+          // Zoe: Not sure why this case is need; following Emdeddings.fs
+        | Construct (fv, _, [(hd, None); (tl, None)]) 
+            when S.fv_eq_lid fv PC.cons_lid -> 
+          BU.bind_opt (unembed ea hd) (fun hd ->
+          BU.bind_opt (un tl) (fun tl ->
+          Some (hd :: tl)))
+        | _ -> None 
+    in
+    mk_emb em un (lid_as_typ PC.list_lid [U_zero] [as_arg (type_of ea)])
+    
