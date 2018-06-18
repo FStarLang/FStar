@@ -162,8 +162,8 @@ let dump_cur ps msg =
 (* Note: we use def ranges. In tactics we keep the position in there, while the
  * use range is the original position of the assertion / synth / splice. *)
 let ps_to_string (msg, ps) =
-    let p_imp (_, _, uv, _) =
-        Print.uvar_to_string uv.ctx_uvar_head
+    let p_imp imp =
+        Print.uvar_to_string imp.imp_uvar.ctx_uvar_head
     in
     String.concat ""
                [format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
@@ -946,7 +946,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             | _ -> false
             end
         in
-        bind (implicits.implicits |> mapM (fun (_msg, term, ctx_uvar, _range) ->
+        bind (implicits.implicits |> mapM (fun imp ->
+            let term = imp.imp_tm in
+            let ctx_uvar = imp.imp_uvar in
             let hd, _ = U.head_and_args term in
             match (SS.compress hd).n with
             | Tm_uvar (ctx_uvar, _) ->

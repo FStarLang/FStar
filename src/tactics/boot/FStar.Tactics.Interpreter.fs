@@ -498,10 +498,12 @@ and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term) : option<(tac
     Some <| unembed_tactic_0 eb embedded_tac_b
 
 let report_implicits ps (is : Env.implicits) : unit =
-    let errs = List.map (fun (r, ty, uv, rng) ->
+    let errs = List.map (fun imp ->
                 (Err.Error_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
-                             (Print.uvar_to_string uv.ctx_uvar_head) (Print.term_to_string ty) r,
-                 rng)) is in
+                             (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
+                             (Print.term_to_string imp.imp_uvar.ctx_uvar_typ)
+                             imp.imp_reason,
+                 imp.imp_range)) is in
     Err.add_errors errs
 
 let run_tactic_on_typ
@@ -555,17 +557,20 @@ let run_tactic_on_typ
         // do not want to repeat all of the reasoning that took place in tactics.
         // It would also most likely fail.
         if !tacdbg then
-            BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list Print.ctx_uvar_to_string
-                                                                (List.map (fun (_, _, uv, _) -> uv) ps.all_implicits));
+            BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
+                                                                    (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
+                                                                    ps.all_implicits);
         let g = {Env.trivial_guard with Env.implicits=ps.all_implicits} in
         let g = TcRel.solve_deferred_constraints env g in
         if !tacdbg then
-            BU.print1 "Checked (1) implicits: %s\n" (FStar.Common.string_of_list Print.ctx_uvar_to_string
-                                                     (List.map (fun (_, _, uv, _) -> uv) g.implicits));
+            BU.print1 "Checked (1) implicits: %s\n" (FStar.Common.string_of_list
+                                                                    (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
+                                                                    ps.all_implicits);
         let g = TcRel.resolve_implicits_tac env g in
         if !tacdbg then
-            BU.print1 "Checked (2) implicits: %s\n" (FStar.Common.string_of_list Print.ctx_uvar_to_string
-                                                     (List.map (fun (_, _, uv, _) -> uv) g.implicits));
+            BU.print1 "Checked (2) implicits: %s\n" (FStar.Common.string_of_list
+                                                                    (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
+                                                                    ps.all_implicits);
         report_implicits ps g.implicits;
         (ps.goals@ps.smt_goals, w)
 

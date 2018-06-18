@@ -77,7 +77,11 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
     let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
-    ctx_uvar, t, {wl with wl_implicits=(reason, t, ctx_uvar, r)::wl.wl_implicits}
+    let imp = { imp_reason = reason
+              ; imp_tm     = t
+              ; imp_uvar   = ctx_uvar
+              ; imp_range  = r } in
+    ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
 
 let copy_uvar u (bs:binders) t wl =
     let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
@@ -2848,7 +2852,8 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
 (* -------------------------------------------------------- *)
 (* top-level interface                                      *)
 (* -------------------------------------------------------- *)
-let print_pending_implicits g = g.implicits |> List.map (fun (_, tm, _, _) -> Print.term_to_string tm) |> String.concat ", "
+let print_pending_implicits g =
+    g.implicits |> List.map (fun i -> Print.term_to_string i.imp_tm) |> String.concat ", "
 
 let ineqs_to_string ineqs =
     let vars =
@@ -3191,7 +3196,7 @@ let resolve_implicits' env must_total forcelax g =
     match implicits with
     | [] -> if not changed then out else until_fixpoint ([], false) out
     | hd::tl ->
-          let (reason, tm, ctx_u, r) = hd in
+          let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = hd in
           if ctx_u.ctx_uvar_should_check = Allow_unresolved
           then until_fixpoint(out, true) tl
           else if unresolved ctx_u
@@ -3242,12 +3247,12 @@ let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits env in
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
-        | (reason, e, ctx_u, r)::_ ->
+        | imp::_ ->
            raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                         BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
-                                    (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                                    (N.term_to_string env ctx_u.ctx_uvar_typ)
-                                    reason) r
+                                    (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
+                                    (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
+                                    imp.imp_reason) imp.imp_range
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);

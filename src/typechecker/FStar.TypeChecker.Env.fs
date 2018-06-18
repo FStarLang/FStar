@@ -134,7 +134,13 @@ and guard_t = {
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
-and implicits = list<(string * term * ctx_uvar * Range.range)>
+and implicit = {
+    imp_reason : string;                  // Reason (in text) why the implicit was introduced
+    imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
+    imp_tm     : term;                    // The term, made up of the ctx_uvar
+    imp_range  : Range.range;             // Position where it was introduced
+}
+and implicits = list<implicit>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
 
@@ -1325,9 +1331,9 @@ let guard_form g = g.guard_f
 
 let is_trivial g = match g with
     | {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=i} ->
-      i |> BU.for_all (fun (_, _, ctx_uvar, _) ->
-           (ctx_uvar.ctx_uvar_should_check=Allow_unresolved)
-           || (match Unionfind.find ctx_uvar.ctx_uvar_head with
+      i |> BU.for_all (fun imp ->
+           (imp.imp_uvar.ctx_uvar_should_check=Allow_unresolved)
+           || (match Unionfind.find imp.imp_uvar.ctx_uvar_head with
                | Some _ -> true
                | None -> false))
     | _ -> false
@@ -1457,7 +1463,11 @@ let new_implicit_var_aux reason r env k should_check =
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
       let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
-      let g = {trivial_guard with implicits=[(reason, t, ctx_uvar, r)]} in
+      let imp = { imp_reason = reason
+                ; imp_tm     = t
+                ; imp_uvar   = ctx_uvar
+                ; imp_range  = r } in
+      let g = {trivial_guard with implicits=[imp]} in
       t, [(ctx_uvar, r)], g
 
 (***************************************************)

@@ -132,7 +132,13 @@ and guard_t = {
 }
 // Reason, term and uvar, and (rough) position where it is introduced
 // The term is just a Tm_uvar of the ctx_uvar
-and implicits = list<(string * term * ctx_uvar * Range.range)>
+and implicit = {
+    imp_reason : string;                  // Reason (in text) why the implicit was introduced
+    imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
+    imp_tm     : term;                    // The term, made up of the ctx_uvar
+    imp_range  : Range.range;             // Position where it was introduced
+}
+and implicits = list<implicit>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
 val tc_hooks : env -> tcenv_hooks
