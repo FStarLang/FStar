@@ -9,6 +9,7 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Errors
 
+module PC = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
@@ -53,7 +54,8 @@ and t = //JUST FSHARP
   // NS:
   | Refinement of binder * t // VD: do we need to keep the aqual?
   // | Arrow of list binder * comp_t
-and args = list<(t * aqual)>
+and arg = t * aqual
+and args = list<arg>
 //NS:
 // and comp_t =
 //   | Comp of lident * universes * args * flags
@@ -126,30 +128,42 @@ let mkAccuVar (v:var) = Accu(Var v, [])
 let mkAccuMatch (s:t) (cases: t -> t) (bs:((t -> term) -> list<branch>)) = Accu(Match (s, cases, bs), [])
 let mkAccuRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = Accu(Rec(b, bs, env), [])
 
-// Embedding and De-embedding 
+// Embedding and de-embedding 
 
 
 type embedding<'a> = {
-  em : 'a -> t;
-  un : t -> option<'a>;
+  em  : 'a -> t;
+  un  : t -> option<'a>;
+  typ : t; 
 }
 
 let embed (e:embedding<'a>) (x:'a) : t = e.em x
 let unembed (e:embedding<'a>) (trm:t) : option<'a> = e.un trm
+let type_of (e:embedding<'a>) : t = e.typ
 
-let mk_emb em un = {em = em; un = un}
+let mk_emb em un typ = {em = em; un = un; typ = typ}
+
+let lid_as_constr (l:lident) (us:list<universe>) (args:args) : t =
+    mkConstruct (lid_as_fv l S.delta_constant (Some Data_ctor)) us args
+
+let lid_as_typ (l:lident) (us:list<universe>) (args:args) : t = 
+    mkConstruct (lid_as_fv l S.delta_constant None) us args
+
+let as_iarg (a:t) : arg = (a, Some S.imp_tag)
+let as_arg (a:t) : arg = (a, None)
+    
 
 // Emdebbing at abstract types
 let e_any : embedding<t> = 
     let em = (fun a -> a) in 
     let un =  (fun t -> Some t) in 
-    mk_emb em un
+    mk_emb em un (lid_as_typ PC.term_lid [] [])
 
 // Emdebbing at type unit
 let e_unit : embedding<unit> = 
     let em a = Constant Unit in 
     let un t = Some () in // No runtime typecheck here 
-    mk_emb em un
+    mk_emb em un (lid_as_typ PC.unit_lid [] [])
 
 // Embeddind at type bool
 let e_bool : embedding<bool> = 
@@ -159,7 +173,7 @@ let e_bool : embedding<bool> =
       | Constant (Bool a) -> Some a
       | _ -> None
     in
-    mk_emb em un
+    mk_emb em un (lid_as_typ PC.bool_lid [] [])
     
 // Embeddind at type char
 let e_char : embedding<char> = 
@@ -169,4 +183,56 @@ let e_char : embedding<char> =
       | Constant (Char a) -> Some a
       | _ -> None
     in
-    mk_emb em un
+    mk_emb em un (lid_as_typ PC.char_lid [] [])
+
+// Embeddind at type int
+let e_int : embedding<Z.t> = 
+    let em c = Constant (Int c) in
+    let un c = 
+        match c with 
+        | Constant (Int a) -> Some a
+        | _ -> None
+    in
+    mk_emb em un (lid_as_typ PC.int_lid [] [])
+
+// Embedding at option type
+let e_option (ea : embedding<'a>) =
+    let em (o:option<'a>) : t =
+        match o with 
+        | None ->
+          lid_as_constr PC.none_lid [U_zero] [as_iarg (type_of ea)]
+        | Some x -> 
+          lid_as_constr PC.some_lid [U_zero] [as_iarg (type_of ea); 
+                                              as_arg (embed ea x)]
+    in 
+    let un (trm:t) : option<option<'a>> =
+        match trm with 
+        | Construct (fvar, us, args) when S.fv_eq_lid fvar PC.none_lid -> 
+          Some None
+        | Construct (fvar, us, [_; (a, _)]) when S.fv_eq_lid fvar PC.some_lid -> 
+          BU.bind_opt (unembed ea a) (fun a -> Some (Some a))
+        | _ -> None
+    in
+    mk_emb em un (lid_as_typ PC.option_lid [U_zero] [as_arg (type_of ea)])
+
+
+// Emdedding tuples
+let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
+    let em (x:'a * 'b) : t = 
+        lid_as_constr (PC.lid_Mktuple2) 
+                      [U_zero;U_zero]
+                      [as_iarg (type_of ea);
+                       as_iarg (type_of eb);
+                       as_arg (embed ea (fst x));
+                       as_arg (embed eb (snd x))]
+    in
+    let un (trm:t) : option<'a * 'b> = 
+        match trm with 
+        | Construct (fvar, us, [_; _; (a, _); (b, _)]) when S.fv_eq_lid fvar PC.lid_Mktuple2 -> 
+          BU.bind_opt (unembed ea a) (fun a ->
+          BU.bind_opt (unembed eb b) (fun b ->
+          Some (a, b)))
+        | _ -> None
+    in
+    mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero] [as_arg (type_of ea);
+                                                     as_arg (type_of eb)])
