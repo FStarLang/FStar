@@ -236,7 +236,7 @@ let make_rec_env (lbs:list<letbinding>) (bs:list<t>) : list<t> =
 
 let find_let (lbs : list<letbinding>) (fvar : fv) =
   BU.find_map lbs (fun lb -> match lb.lbname with
-                   | BU.Inl _ -> failwith "impossible"
+                   | BU.Inl _ -> failwith "find_let : impossible"
                    | BU.Inr name ->
                      if fv_eq name fvar
                      then Some lb
@@ -426,7 +426,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_app(head, args) ->
       debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string head) (P.args_to_string args));
-      iapp cfg (translate cfg bs e) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args      
+      iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args      
 
     | Tm_match(scrut, branches) ->
       let rec case (scrut : t) : t =
@@ -470,7 +470,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
               let (bs', args') =
                   List.fold_left (fun (bs, args) (arg, b) ->
                                     let (bs', arg') = process_pattern bs arg in
-                                    (bs, (arg', b) :: args)) (bs, []) args
+                                    (bs', (arg', b) :: args)) (bs, []) args
               in
               (bs', Pat_cons (fvar, List.rev args'))
             | Pat_var bvar ->
