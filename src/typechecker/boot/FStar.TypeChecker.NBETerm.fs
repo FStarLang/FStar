@@ -17,6 +17,7 @@ module BU = FStar.Util
 module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const
+module Range = FStar.Range
 
 
 type var = bv
@@ -42,7 +43,7 @@ type atom = //JUST FSHARP
   (* Zoe : a recursive function definition together with its block of mutually recursive function definitions and its environment *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
-  | Lam of (t -> t) * (unit -> t) * aqual //NS: * (t * (type : unit -> t) * aqual)
+  | Lam of (list<t> -> t) * list<(unit -> arg)> * int  // Zoe : body * args * arrity
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<universe> * args (* Zoe: Data constructors *)
@@ -188,6 +189,16 @@ let e_char : embedding<char> =
     in
     mk_emb em un (lid_as_typ PC.char_lid [] [])
 
+// Embeddind at type string
+let e_string : embedding<string> = 
+  let em s = Constant (String (s, Range.dummyRange)) in
+  let un s = 
+    match s with 
+    | Constant (String (s, _)) -> Some s
+    | _ -> None
+  in
+  mk_emb em un (lid_as_typ PC.string_lid [] [])
+
 // Embeddind at type int
 let e_int : embedding<Z.t> = 
     let em c = Constant (Int c) in
@@ -264,16 +275,31 @@ let e_list (ea:embedding<'a>) =
     
 
 let e_arrow1 (ea:embedding<'a>) (eb:embedding<'b>) = 
-    let em (f : 'a -> 'b) : t = Lam((fun (ta:t) -> match unembed ea ta with 
-                                             | Some a -> embed eb (f a)
-                                             | None -> failwith "Cannot unembed argument"), 
-                                 (fun _ -> type_of ea), None) 
+    let em (f : 'a -> 'b) : t = Lam((fun tas -> match unembed ea (List.hd tas) with 
+                                          | Some a -> embed eb (f a)
+                                          | None -> failwith "Cannot unembed argument"), 
+                                 [fun _ -> as_arg (type_of eb)], 1) 
     in
     let un (lam : t) : option<('a -> 'b)> =  
         match lam with 
-        | Lam (ft, _, _) -> Some (fun (x:'a) -> match unembed eb (ft (embed ea x)) with 
+        | Lam (ft, _, _) -> Some (fun (x:'a) -> match unembed eb (ft [embed ea x]) with 
                                            | Some b -> b 
                                            | None -> failwith "Cannot unembed function result")
         | _ -> None
     in
     mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb)))
+
+// let e_arrow2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) = 
+//   let em (f : 'a -> 'b -> 'c) : t = Lam((fun (ta:t) -> match unembed ea ta with 
+//                                            | Some a -> embed eb (f a)
+//                                            | None -> failwith "Cannot unembed argument"), 
+//                                     (fun _ -> type_of ea), None) 
+//   in
+//   let un (lam : t) : option<('a -> 'b)> =  
+//       match lam with 
+//       | Lam (ft, _, _) -> Some (fun (x:'a) -> match unembed eb (ft (embed ea x)) with 
+//                                          | Some b -> b 
+//                                          | None -> failwith "Cannot unembed function result")
+//       | _ -> None
+//   in
+//   mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb)))

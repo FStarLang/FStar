@@ -35,6 +35,18 @@ let map_rev (f : 'a -> 'b) (l : list<'a>) : list<'b> =
     | x :: xs -> aux xs (f x :: acc)
   in  aux l []
 
+let map_rev_append (f : 'a -> 'b) (l1 : list<'a>) (l2 : list<'b>) : list<'b> = 
+  let rec aux (l:list<'a>) (acc:list<'b>) = 
+    match l with
+    | [] -> l2
+    | x :: xs -> aux xs (f x :: acc)
+  in  aux l1 l2
+
+let rec map_append (f : 'a -> 'b)  (l1 : list<'a>) (l2 : list<'b>) : list<'b> = 
+  match l1 with
+  | [] -> l2
+  | x :: xs -> (f x) :: map_append f xs l2
+
 let rec drop (p: 'a -> bool) (l: list<'a>): list<'a> =
   match l with
   | [] -> []
@@ -231,10 +243,10 @@ let find_let (lbs : list<letbinding>) (fvar : fv) =
                      else None)
 
 (* We are not targeting tagless normalization at this point *)
-let rec app cfg (f:t) (x:t) (q:aqual) =
+let app cfg (f:t) (x:t) (q:aqual) =
   debug cfg (fun () -> BU.print2 "When creating app: %s applied to %s\n" (t_to_string f) (t_to_string x));
   match f with
-  | Lam (f, _, _) -> f x
+  | Lam (f, _, _) -> f [x]
   | Accu (a, ts) -> Accu (a, (x,q)::ts)
   | Construct (i, us, ts) ->
     (match x with
@@ -247,10 +259,41 @@ let rec app cfg (f:t) (x:t) (q:aqual) =
  // | Refinement (b, r) -> Refinement (b, app cfg  r x q)
   | Constant _ | Univ _ | Type_t _ | Unknown | Arrow _ -> failwith "Ill-typed application"
 
-and iapp cfg (f:t) (args:list<(t * aqual)>) =
-  match args with
-  | [] -> f
-  | _ -> iapp cfg (app cfg f (fst (List.hd args)) (snd (List.hd args))) (List.tl args)
+let rec iapp cfg (f:t) (args:args) = 
+  match f with 
+  | Lam (f, targs, n) -> 
+    let m = List.length args in
+    if m < n then 
+      // partial application 
+      let (_, targs') = List.splitAt m targs in
+      Lam ((fun l -> f (map_append fst args l)), targs', n - m)
+    else if m = n then
+      // full application 
+      f (List.map fst args)
+    else 
+      // extra arguments
+      let (args, args') = List.splitAt n args in
+      iapp cfg (f (List.map fst args)) args'
+  | Accu (a, ts) -> Accu (a, List.rev_append args ts)
+  | Construct (i, us, ts) ->
+    let rec aux args us ts = 
+      match args with 
+      | (Univ u, _) :: args -> aux args (u :: us) ts
+      | a :: args -> aux args us (a :: ts)
+      | [] -> (us, ts)
+    in
+    let (us', ts') = aux args us ts in 
+    Construct (i, us', ts')
+  | FV (i, us, ts) ->
+    let rec aux args us ts = 
+      match args with 
+      | (Univ u, _) :: args -> aux args (u :: us) ts
+      | a :: args -> aux args us (a :: ts)
+      | [] -> (us, ts)
+    in
+    let (us', ts') = aux args us ts in 
+    FV (i, us', ts')
+  | Constant _ | Univ _ | Type_t _ | Unknown | Arrow _ -> failwith "Ill-typed application"
 
 
 and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
@@ -296,29 +339,11 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
 (* translate a let-binding - local or global *)
 and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   let debug = debug cfg in
-  let rec make_univ_abst (us:list<univ_name>) (bs:list<t>) (def:term) : t =
-    match us with
-    | [] ->
-      let translated_def = translate cfg bs def in
-      let translated_type =
-        match (SS.compress lb.lbtyp).n with
-        | Tm_refine _ -> app cfg (translate cfg bs lb.lbtyp) translated_def None
-        | _ -> Constant Unit
-      in
-      // VD: For debugging purposes, I'm forcing a readback here, but I don't think this is  necessary
-      debug (fun () ->
-             match (SS.compress lb.lbtyp).n with
-             | Tm_refine _ ->
-               let readback_type = readback cfg translated_type in
-               BU.print2 "<<< Type of %s is %s\n" (t_to_string translated_def) (P.term_to_string readback_type)
-             | _ -> ());
 
-      translated_def
+  let us = lb.lbunivs in 
+  Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef), List.map (fun _ -> (fun () -> (Constant Unit, None))) us, List.length us)
+  // Zoe: Bogus type! The idea is that we will never readback these lambdas
 
-    | u :: us' -> Lam ((fun univ -> make_univ_abst us' (univ :: bs) def), (fun () -> Constant Unit), None)
-     // Zoe: Bogus type! The idea is that we will never readback these lambdas
-  in
-  make_univ_abst lb.lbunivs bs lb.lbdef
 
 
 and translate_constant (c : sconst) : constant =
@@ -333,7 +358,7 @@ and translate_constant (c : sconst) : constant =
 and translate_pat cfg (p : pat) : t =
     match p.v with
     | Pat_constant c -> Constant (translate_constant c)
-    | Pat_cons (cfv, pats) -> iapp cfg (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat cfg p, None)) pats)
+    | Pat_cons (cfv, pats) -> iapp cfg (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat cfg p, None)) pats) // Zoe : TODO universe args?
     | Pat_var bvar -> mkAccuVar bvar
     | Pat_wild bvar -> mkAccuVar bvar
     | Pat_dot_term (bvar, t) -> failwith "Pat_dot_term not implemented"
@@ -382,30 +407,26 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_abs ([], _, _) -> failwith "Impossible: abstraction with no binders"
 
-    | Tm_abs ([x], body, _) ->
-      debug (fun () -> BU.print2 "Tm_abs body : %s - %s\n" (P.tag_of_term body) (P.term_to_string body));
-      let x1 = fst x in
-      Lam ((fun (y:t) -> translate cfg (y::bs) body), (fun () -> translate cfg bs x1.sort), snd x)
+    // | Tm_abs ([x], body, _) ->
+    //   debug (fun () -> BU.print2 "Tm_abs body : %s - %s\n" (P.tag_of_term body) (P.term_to_string body));
+    //   let x1 = fst x in
+    //   Lam ((fun (y:t) -> translate cfg (y::bs) body), (fun () -> translate cfg bs x1.sort), snd x)
 
-    | Tm_abs (x::xs, body, _) ->
-      let rest = S.mk (Tm_abs(xs, body, None)) None Range.dummyRange in
-      let tm = S.mk (Tm_abs([x], rest, None)) None e.pos in
-      translate cfg bs tm
-
+    | Tm_abs (xs, body, _) ->
+      Lam ((fun ys -> translate cfg (List.rev_append ys bs) body), 
+           List.map (fun x () -> (translate cfg bs (fst x).sort, snd x)) xs, 
+           List.length xs)
+           
     | Tm_fvar fvar ->
       translate_fv cfg bs fvar
 
-    | Tm_app(e, []) -> failwith "Impossible: application with no arguments"
+    // | Tm_app (e, [arg]) ->
+    //   debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string e) (P.term_to_string (fst arg)));
+    //   app cfg (translate cfg bs e) (translate cfg bs (fst arg)) (snd arg)
 
-    | Tm_app (e, [arg]) ->
-      debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string e) (P.term_to_string (fst arg)));
-      app cfg (translate cfg bs e) (translate cfg bs (fst arg)) (snd arg)
-
-    | Tm_app(head, arg::args) ->
-      debug (fun () -> BU.print2 "Application: %s @ %s (...more agrs)\n" (P.term_to_string head) (P.term_to_string (fst arg)));
-      let first = S.mk (Tm_app(head, [arg])) None Range.dummyRange in
-      let tm = S.mk (Tm_app(first, args)) None e.pos in
-      translate cfg bs tm
+    | Tm_app(head, args) ->
+      debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string head) (P.args_to_string args));
+      iapp cfg (translate cfg bs e) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args      
 
     | Tm_match(scrut, branches) ->
       let rec case (scrut : t) : t =
@@ -503,10 +524,14 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
     | Type_t u ->
       S.mk (Tm_type u) None Range.dummyRange
 
-    | Lam (f, t, q) ->
-      let x = S.new_bv None (readback cfg (t ())) in (* (readback env t) is the type of the binder *)
-      let body = readback cfg (f (mkAccuVar x)) in
-      U.abs [(x, q)] body None
+    | Lam (f, targs, arity) ->
+      let (args, accus) = List.fold_left (fun (args, accus) tf -> 
+                                            let (xt, q) = tf () in 
+                                            let x = S.new_bv None (readback cfg xt) in 
+                                            ((x, q) :: args, (mkAccuVar x) :: accus)) ([], []) targs 
+      in
+      let body = readback cfg (f accus) in
+      U.abs args body None
 
     | Construct (fv, us, args) ->     
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in

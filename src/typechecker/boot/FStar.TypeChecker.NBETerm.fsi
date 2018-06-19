@@ -36,7 +36,7 @@ type atom = //JUST FSHARP
   | Rec of letbinding * list<letbinding> * list<t>
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
-  | Lam of (t -> t) * (unit -> t) * aqual
+  | Lam of (list<t> -> t) * list<(unit -> arg)> * int
   | Accu of atom * args
   | Construct of fv * list<universe> * args
   | FV of fv * list<universe> * args
