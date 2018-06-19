@@ -38,8 +38,10 @@ Ex12g.TMAC2.fst \
 EtM.Plain.fst \
 EtM.CPA.fst \
 EtM.MAC.fst \
-EtM.AE.fst
-
+EtM.AE.fst \
+LowStar.Ex1.fst \
+LowStar.Ex2.fst \
+LowStar.Ex3.fst
 
 FSTAR_HOME=../../../../
 include ../Makefile.include
