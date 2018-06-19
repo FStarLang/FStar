@@ -56,6 +56,8 @@ let (goal_env : goal -> FStar_TypeChecker_Env.env) =
         (uu___239_62.FStar_TypeChecker_Env.expected_typ);
       FStar_TypeChecker_Env.sigtab =
         (uu___239_62.FStar_TypeChecker_Env.sigtab);
+      FStar_TypeChecker_Env.attrtab =
+        (uu___239_62.FStar_TypeChecker_Env.attrtab);
       FStar_TypeChecker_Env.is_pattern =
         (uu___239_62.FStar_TypeChecker_Env.is_pattern);
       FStar_TypeChecker_Env.instantiate_imp =

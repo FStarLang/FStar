@@ -118,6 +118,8 @@ let (init_once : unit -> unit) =
                (uu___401_234.FStar_TypeChecker_Env.expected_typ);
              FStar_TypeChecker_Env.sigtab =
                (uu___401_234.FStar_TypeChecker_Env.sigtab);
+             FStar_TypeChecker_Env.attrtab =
+               (uu___401_234.FStar_TypeChecker_Env.attrtab);
              FStar_TypeChecker_Env.is_pattern =
                (uu___401_234.FStar_TypeChecker_Env.is_pattern);
              FStar_TypeChecker_Env.instantiate_imp =
@@ -253,6 +255,8 @@ let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
           (uu___404_365.FStar_TypeChecker_Env.expected_typ);
         FStar_TypeChecker_Env.sigtab =
           (uu___404_365.FStar_TypeChecker_Env.sigtab);
+        FStar_TypeChecker_Env.attrtab =
+          (uu___404_365.FStar_TypeChecker_Env.attrtab);
         FStar_TypeChecker_Env.is_pattern =
           (uu___404_365.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =

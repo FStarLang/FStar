@@ -9723,6 +9723,8 @@ let (eta_expand :
                                      FStar_Pervasives_Native.None;
                                    FStar_TypeChecker_Env.sigtab =
                                      (uu___366_27845.FStar_TypeChecker_Env.sigtab);
+                                   FStar_TypeChecker_Env.attrtab =
+                                     (uu___366_27845.FStar_TypeChecker_Env.attrtab);
                                    FStar_TypeChecker_Env.is_pattern =
                                      (uu___366_27845.FStar_TypeChecker_Env.is_pattern);
                                    FStar_TypeChecker_Env.instantiate_imp =
@@ -9813,6 +9815,8 @@ let (eta_expand :
                              FStar_Pervasives_Native.None;
                            FStar_TypeChecker_Env.sigtab =
                              (uu___367_27858.FStar_TypeChecker_Env.sigtab);
+                           FStar_TypeChecker_Env.attrtab =
+                             (uu___367_27858.FStar_TypeChecker_Env.attrtab);
                            FStar_TypeChecker_Env.is_pattern =
                              (uu___367_27858.FStar_TypeChecker_Env.is_pattern);
                            FStar_TypeChecker_Env.instantiate_imp =

@@ -173,53 +173,66 @@ let (reflection_primops :
                                in
                             let uu____441 =
                               let uu____444 =
-                                mk2 "term_eq" FStar_Reflection_Basic.term_eq
+                                let uu____445 =
+                                  FStar_Syntax_Embeddings.e_list
+                                    FStar_Reflection_Embeddings.e_fv
+                                   in
+                                mk2 "lookup_attr"
+                                  FStar_Reflection_Basic.lookup_attr
                                   FStar_Reflection_Embeddings.e_term
-                                  FStar_Reflection_Embeddings.e_term
-                                  FStar_Syntax_Embeddings.e_bool
+                                  FStar_Reflection_Embeddings.e_env uu____445
                                  in
-                              let uu____445 =
-                                let uu____448 =
-                                  let uu____449 =
-                                    FStar_Syntax_Embeddings.e_list
-                                      FStar_Syntax_Embeddings.e_string
-                                     in
-                                  mk11 "moduleof"
-                                    FStar_Reflection_Basic.moduleof
-                                    FStar_Reflection_Embeddings.e_env
-                                    uu____449
+                              let uu____452 =
+                                let uu____455 =
+                                  mk2 "term_eq"
+                                    FStar_Reflection_Basic.term_eq
+                                    FStar_Reflection_Embeddings.e_term
+                                    FStar_Reflection_Embeddings.e_term
+                                    FStar_Syntax_Embeddings.e_bool
                                    in
                                 let uu____456 =
                                   let uu____459 =
-                                    mk11 "term_to_string"
-                                      FStar_Reflection_Basic.term_to_string
-                                      FStar_Reflection_Embeddings.e_term
-                                      FStar_Syntax_Embeddings.e_string
-                                     in
-                                  let uu____460 =
-                                    let uu____463 =
-                                      mk11 "binders_of_env"
-                                        FStar_Reflection_Basic.binders_of_env
-                                        FStar_Reflection_Embeddings.e_env
-                                        FStar_Reflection_Embeddings.e_binders
+                                    let uu____460 =
+                                      FStar_Syntax_Embeddings.e_list
+                                        FStar_Syntax_Embeddings.e_string
                                        in
-                                    let uu____464 =
-                                      let uu____467 =
-                                        let uu____468 =
-                                          FStar_Syntax_Embeddings.e_option
-                                            FStar_Reflection_Embeddings.e_sigelt
-                                           in
-                                        mk2 "lookup_typ"
-                                          FStar_Reflection_Basic.lookup_typ
+                                    mk11 "moduleof"
+                                      FStar_Reflection_Basic.moduleof
+                                      FStar_Reflection_Embeddings.e_env
+                                      uu____460
+                                     in
+                                  let uu____467 =
+                                    let uu____470 =
+                                      mk11 "term_to_string"
+                                        FStar_Reflection_Basic.term_to_string
+                                        FStar_Reflection_Embeddings.e_term
+                                        FStar_Syntax_Embeddings.e_string
+                                       in
+                                    let uu____471 =
+                                      let uu____474 =
+                                        mk11 "binders_of_env"
+                                          FStar_Reflection_Basic.binders_of_env
                                           FStar_Reflection_Embeddings.e_env
-                                          FStar_Syntax_Embeddings.e_string_list
-                                          uu____468
+                                          FStar_Reflection_Embeddings.e_binders
                                          in
-                                      [uu____467]  in
-                                    uu____463 :: uu____464  in
-                                  uu____459 :: uu____460  in
-                                uu____448 :: uu____456  in
-                              uu____444 :: uu____445  in
+                                      let uu____475 =
+                                        let uu____478 =
+                                          let uu____479 =
+                                            FStar_Syntax_Embeddings.e_option
+                                              FStar_Reflection_Embeddings.e_sigelt
+                                             in
+                                          mk2 "lookup_typ"
+                                            FStar_Reflection_Basic.lookup_typ
+                                            FStar_Reflection_Embeddings.e_env
+                                            FStar_Syntax_Embeddings.e_string_list
+                                            uu____479
+                                           in
+                                        [uu____478]  in
+                                      uu____474 :: uu____475  in
+                                    uu____470 :: uu____471  in
+                                  uu____459 :: uu____467  in
+                                uu____455 :: uu____456  in
+                              uu____444 :: uu____452  in
                             uu____440 :: uu____441  in
                           uu____436 :: uu____437  in
                         uu____432 :: uu____433  in

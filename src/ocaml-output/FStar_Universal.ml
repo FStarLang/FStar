@@ -39,6 +39,8 @@ let with_tcenv :
                  (uu___401_55.FStar_TypeChecker_Env.expected_typ);
                FStar_TypeChecker_Env.sigtab =
                  (uu___401_55.FStar_TypeChecker_Env.sigtab);
+               FStar_TypeChecker_Env.attrtab =
+                 (uu___401_55.FStar_TypeChecker_Env.attrtab);
                FStar_TypeChecker_Env.is_pattern =
                  (uu___401_55.FStar_TypeChecker_Env.is_pattern);
                FStar_TypeChecker_Env.instantiate_imp =
@@ -214,6 +216,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___403_253.FStar_TypeChecker_Env.expected_typ);
         FStar_TypeChecker_Env.sigtab =
           (uu___403_253.FStar_TypeChecker_Env.sigtab);
+        FStar_TypeChecker_Env.attrtab =
+          (uu___403_253.FStar_TypeChecker_Env.attrtab);
         FStar_TypeChecker_Env.is_pattern =
           (uu___403_253.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =
@@ -297,6 +301,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___404_255.FStar_TypeChecker_Env.expected_typ);
         FStar_TypeChecker_Env.sigtab =
           (uu___404_255.FStar_TypeChecker_Env.sigtab);
+        FStar_TypeChecker_Env.attrtab =
+          (uu___404_255.FStar_TypeChecker_Env.attrtab);
         FStar_TypeChecker_Env.is_pattern =
           (uu___404_255.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =
@@ -379,6 +385,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___405_257.FStar_TypeChecker_Env.expected_typ);
         FStar_TypeChecker_Env.sigtab =
           (uu___405_257.FStar_TypeChecker_Env.sigtab);
+        FStar_TypeChecker_Env.attrtab =
+          (uu___405_257.FStar_TypeChecker_Env.attrtab);
         FStar_TypeChecker_Env.is_pattern =
           (uu___405_257.FStar_TypeChecker_Env.is_pattern);
         FStar_TypeChecker_Env.instantiate_imp =
