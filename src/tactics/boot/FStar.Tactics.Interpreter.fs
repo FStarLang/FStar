@@ -502,14 +502,7 @@ let report_implicits ps (is : Env.implicits) : unit =
                 (Err.Error_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string uv.ctx_uvar_head) (Print.term_to_string ty) r,
                  rng)) is in
-    match errs with
-    | [] -> ()
-    | (e, msg, r)::tl -> begin
-        dump_proofstate ps "failing due to uninstantiated implicits";
-        // A trick to print each error exactly once.
-        Err.add_errors tl;
-        Err.raise_error (e, msg) r
-    end
+    Err.add_errors errs
 
 let run_tactic_on_typ
         (rng_tac : Range.range) (rng_goal : Range.range)
@@ -520,7 +513,7 @@ let run_tactic_on_typ
     // This bit is really important: a typechecked tactic can contain many uvar redexes
     // that make normalization SUPER slow (probably exponential). Doing this first pass
     // gets rid of those redexes and leaves a much smaller term, which performs a lot better.
-    // TODO: This may be useless with the new representation
+    // TODO: This may be useless with the new representation?
     if !tacdbg then
         BU.print1 "About to reduce uvars on: %s\n" (Print.term_to_string tactic);
     let tactic = N.reduce_uvar_solutions env tactic in
@@ -528,7 +521,8 @@ let run_tactic_on_typ
         BU.print1 "About to check tactic term: %s\n" (Print.term_to_string tactic);
 
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
-     * will mess up the monadic lifts . c.f #1307 *)
+     * will mess up the monadic lifts. We're just making sure it's well-typed
+     * so it won't get stuck. c.f #1307 *)
     let _, _, g = TcTerm.tc_reified_tactic env tactic in
     TcRel.force_trivial_guard env g;
     Err.stop_if_err ();
@@ -547,7 +541,7 @@ let run_tactic_on_typ
     match res with
     | Success (_, ps) ->
         if !tacdbg then
-            BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w); //FIXME: Is this right?
+            BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w);
         List.iter (fun g -> if is_irrelevant g
                             then if TcRel.teq_nosmt (goal_env g) (goal_witness g) U.exp_unit
                                  then ()
@@ -560,8 +554,18 @@ let run_tactic_on_typ
         // the implicits, so make it do a lax check because we certainly
         // do not want to repeat all of the reasoning that took place in tactics.
         // It would also most likely fail.
-        let g = {TcRel.trivial_guard with Env.implicits=ps.all_implicits} in
-        let g = TcRel.solve_deferred_constraints env g |> TcRel.resolve_implicits_tac env in
+        if !tacdbg then
+            BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list Print.ctx_uvar_to_string
+                                                                (List.map (fun (_, _, uv, _) -> uv) ps.all_implicits));
+        let g = {Env.trivial_guard with Env.implicits=ps.all_implicits} in
+        let g = TcRel.solve_deferred_constraints env g in
+        if !tacdbg then
+            BU.print1 "Checked (1) implicits: %s\n" (FStar.Common.string_of_list Print.ctx_uvar_to_string
+                                                     (List.map (fun (_, _, uv, _) -> uv) g.implicits));
+        let g = TcRel.resolve_implicits_tac env g in
+        if !tacdbg then
+            BU.print1 "Checked (2) implicits: %s\n" (FStar.Common.string_of_list Print.ctx_uvar_to_string
+                                                     (List.map (fun (_, _, uv, _) -> uv) g.implicits));
         report_implicits ps g.implicits;
         (ps.goals@ps.smt_goals, w)
 
@@ -790,10 +794,19 @@ let reify_tactic (a : term) : term =
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     tacdbg := Env.debug env (Options.Other "Tac");
     let gs, w = run_tactic_on_typ tau.pos typ.pos (reify_tactic tau) env typ in
-    // Check that all goals left are irrelevant. We don't need to check their
-    // validity, as we will typecheck the witness independently.
-    if List.existsML (fun g -> not (Option.isSome (getprop (goal_env g) (goal_type g)))) gs
-        then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos;
+    // Check that all goals left are irrelevant and provable
+    // TODO: It would be nicer to combine all of these into a guard and return
+    // that to TcTerm, but the varying environments make it awkward.
+    List.iter (fun g ->
+        match getprop (goal_env g) (goal_type g) with
+        | Some vc ->
+            let guard = { guard_f = FStar.TypeChecker.Common.NonTrivial vc
+                        ; deferred = []
+                        ; univ_ineqs = [], []
+                        ; implicits = [] } in
+            TcRel.force_trivial_guard (goal_env g) guard
+        | None ->
+            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos) gs;
     w
 
 let splice (env:Env.env) (tau:term) : list<sigelt> =
@@ -802,6 +815,7 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     let gs, w = run_tactic_on_typ tau.pos tau.pos (reify_tactic tau) env typ in
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
+    // TODO: Do not retypecheck and do just like `synth`
     if List.existsML (fun g -> not (Option.isSome (getprop (goal_env g) (goal_type g)))) gs
         then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") typ.pos;
 
@@ -809,7 +823,7 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     let w = N.normalize [N.Weak; N.HNF; N.UnfoldUntil delta_constant;
                          N.Primops; N.Unascribe; N.Unmeta] env w in
 
-    // Unembed it, this must work if things are well-typed
+    // Unembed the result, this must work if things are well-typed
     match unembed (e_list RE.e_sigelt) w with
     | Some sigelts -> sigelts
     | None -> Err.raise_error (Err.Fatal_SpliceUnembedFail, "splice: failed to unembed sigelts") typ.pos

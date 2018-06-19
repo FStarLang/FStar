@@ -20,7 +20,7 @@
         "typing_FStar.Tactics.Types.set_proofstate_range"
       ],
       0,
-      "ac27010dec1ed102d7f8cd531193e511"
+      "3fb5108083f69dbaaba305df8e8d993d"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -36,7 +36,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "1a9c3099eb9ed9f9212c85d947fbe907"
+      "1e9ec7a221e8f347daf25e661927cece"
     ],
     [
       "FStar.Tactics.Effect.__bind",
@@ -46,18 +46,17 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Tactics.Effect_interpretation_Tm_arrow_64e9fbfe7638fce4dffc18967df04099",
-        "bool_inversion", "disc_equation_FStar.Tactics.Result.Failed",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Tactics.Result.Failed",
         "disc_equation_FStar.Tactics.Result.Success",
         "equation_FStar.Tactics.Effect.__tac",
         "lemma_FStar.Tactics.Result.result_split",
         "typing_FStar.Range.prims_to_fstar_range",
-        "typing_FStar.Tactics.Result.uu___is_Failed",
-        "typing_FStar.Tactics.Result.uu___is_Success",
         "typing_FStar.Tactics.Types.incr_depth",
         "typing_FStar.Tactics.Types.set_proofstate_range"
       ],
       0,
-      "e853cfc21a1ef1b129f573a8e8c1f73d"
+      "897472a7037d3269df26cbd185fbde2f"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -73,7 +72,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "fed6ae900525f1c9dc8f5998c5f35f5e"
+      "2bdb58d6f18db0691dd85db5fd4f5c58"
     ]
   ]
 ]

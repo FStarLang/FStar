@@ -1,0 +1,62 @@
+[
+  "Fï,iËçÏÅ!_»£$Ê\rî",
+  [
+    [
+      "ExtractionBug2.list",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "kinding_ExtractionBug2.list@tok"
+      ],
+      0,
+      "2a76d04288bb065e8bd111780d5772b1"
+    ],
+    [
+      "ExtractionBug2.__proj__Cons__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ExtractionBug2.Cons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ExtractionBug2_Tm_refine_88eeb34ca0a5b886dd99b47abdefbb52"
+      ],
+      0,
+      "7158ddf7723516964433a83e2fff8598"
+    ],
+    [
+      "ExtractionBug2.app_my_lists",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_b2db2a5adb1b34a8798ce04be4e2d428_2",
+        "data_elim_ExtractionBug2.Cons", "disc_equation_ExtractionBug2.Cons",
+        "disc_equation_ExtractionBug2.Nil",
+        "fuel_guarded_inversion_ExtractionBug2.list",
+        "subterm_ordering_ExtractionBug2.Cons",
+        "subterm_ordering_FStar.Pervasives.Native.Mktuple2"
+      ],
+      0,
+      "c0950f94384b2cf184baadca739cb3d9"
+    ],
+    [
+      "ExtractionBug2.app",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "d38dc6a8e99c308961b26d617865378f"
+    ]
+  ]
+]

@@ -83,6 +83,9 @@ let as_list as_t x =
 let as_option as_t = function
   | Unset -> None
   | v -> Some (as_t v)
+let as_comma_string_list = function
+  | List ls -> List.flatten <| List.map (fun l -> split (as_string l) ",") ls
+  | _ -> failwith "Impos: expected String (comma list)"
 
 type optionstate = Util.smap<option_val>
 
@@ -239,7 +242,7 @@ let get_cache_off               ()      = lookup_opt "cache_off"                
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
-let get_debug_level             ()      = lookup_opt "debug_level"              (as_list as_string)
+let get_debug_level             ()      = lookup_opt "debug_level"              as_comma_string_list
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool

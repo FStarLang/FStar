@@ -53,7 +53,7 @@ let frameOf #a b = if g_is_null b then HS.root else HS.frameOf (Buffer?.content 
 let as_addr #a b = if g_is_null b then 0 else HS.as_addr (Buffer?.content b)
 
 let unused_in_equiv #a b h =
-  if g_is_null b then Heap.not_addr_unused_in_nullptr (Map.sel h.HS.h HS.root) else ()
+  if g_is_null b then Heap.not_addr_unused_in_nullptr (Map.sel (HS.get_hmap h) HS.root) else ()
 
 let live_region_frameOf #a h b = ()
 
@@ -66,9 +66,7 @@ let len #a b =
 
 let len_null a = ()
 
-
-let lseq (a: Type) (l: nat) : Type =
-  (s: Seq.seq a { Seq.length s == l } )
+let lseq = Seq.lseq
 
 let rec lseq_of_vec (#a: Type0) (#n: nat) (l: vec a n) : Tot (lseq a n) =
   if n = 0
@@ -191,6 +189,8 @@ let live_unused_in_disjoint #a1 #a2 h b1 b2 = ()
 
 let as_addr_disjoint #a1 #a2 b1 b2 = ()
 
+let disjoint_null a1 #a2 b2 = ()
+
 let gsub_disjoint #a b i1 len1 i2 len2 = ()
 
 let pointer_distinct_sel_disjoint #a b1 b2 h =
@@ -243,8 +243,8 @@ let abuffer_preserved'
   (h h' : HS.mem)
 : GTot Type0
 = forall (t' : Type0) (b' : buffer t' ) .
-  (frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b' /\ length b' > 0) ==>
-  (live h' b' /\ as_seq h' b' == as_seq h b')
+  (frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b') ==>
+  (live h' b' /\ Seq.equal (as_seq h' b') (as_seq h b'))
 
 let abuffer_preserved = abuffer_preserved'
 
@@ -257,7 +257,7 @@ let abuffer_preserved_intro
     (t' : Type0) ->
     (b' : buffer t') ->
     Lemma
-    (requires (frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b' /\ length b' > 0))
+    (requires (frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b'))
     (ensures (live h' b' /\ as_seq h' b' == as_seq h b'))
   ))
 : Lemma
@@ -267,7 +267,7 @@ let abuffer_preserved_intro
     (b' : buffer t')
   : Lemma
     ((
-      frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b' /\ length b' > 0
+      frameOf b' == r /\ as_addr b' == a /\ abuffer_of_buffer' b' == b /\ live h b'
     ) ==> (
       live h' b' /\ as_seq h' b' == as_seq h b'
     ))
@@ -281,7 +281,10 @@ let abuffer_preserved_trans #r #a b h1 h2 h3 = ()
 
 let same_mreference_abuffer_preserved #r #a b h1 h2 f =
   abuffer_preserved_intro b h1 h2 (fun t' b' ->
-    f _ _ (Buffer?.content b')
+    if Null? b'
+    then ()
+    else
+      f _ _ (Buffer?.content b')
   )
 
 let addr_unused_in_abuffer_preserved #r #a b h1 h2 = ()
@@ -304,12 +307,15 @@ let abuffer_includes_trans #r #a b1 b2 b3 = ()
 
 let abuffer_includes_abuffer_preserved #r #a larger smaller h1 h2 =
   abuffer_preserved_intro smaller h1 h2 (fun t' b' ->
-    let (Buffer max_len content idx' len') = b' in
-    let idx = U32.uint_to_t (G.reveal larger).b_offset in
-    let len = U32.uint_to_t (G.reveal larger).b_length in
-    let larger' = Buffer max_len content idx len in
-    assert (b' == gsub larger' (U32.sub idx' idx) len');
-    abuffer_preserved_elim larger' h1 h2
+    if Null? b'
+    then ()
+    else
+      let (Buffer max_len content idx' len') = b' in
+      let idx = U32.uint_to_t (G.reveal larger).b_offset in
+      let len = U32.uint_to_t (G.reveal larger).b_length in
+      let larger' = Buffer max_len content idx len in
+      assert (b' == gsub larger' (U32.sub idx' idx) len');
+      abuffer_preserved_elim larger' h1 h2
   )
 
 let abuffer_includes_intro #t larger smaller = ()
@@ -328,7 +334,10 @@ let abuffer_disjoint_includes #r #a larger1 larger2 smaller1 smaller2 = ()
 
 let abuffer_disjoint_intro #t1 #t2 b1 b2 = ()
 
-let abuffer_disjoint_self_preserved #r #a b h1 h2 = ()
+let liveness_preservation_intro #t h h' b f =
+  if Null? b
+  then ()
+  else f _ _ (Buffer?.content b)
 
 (* Basic, non-compositional modifies clauses, used only to implement the generic modifies clause. DO NOT USE in client code *)
 
@@ -364,23 +373,48 @@ let modifies_1_preserves_abuffers
 = forall (b' : abuffer (frameOf b) (as_addr b)) .
   (abuffer_disjoint #(frameOf b) #(as_addr b) (abuffer_of_buffer b) b') ==> abuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2
 
+let modifies_1_preserves_livenesses
+  (#a: Type) (b: buffer a)
+  (h1 h2: HS.mem)
+: GTot Type0
+= forall (a' : Type) (pre: Preorder.preorder a') (r' : HS.mreference  a' pre) .
+  h1 `HS.contains` r' ==>
+  h2 `HS.contains` r'
+
 let modifies_1' 
   (#a: Type) (b: buffer a)
   (h1 h2: HS.mem)
 : GTot Type0
 = modifies_0_preserves_regions h1 h2 /\
   modifies_1_preserves_mreferences b h1 h2 /\
+  modifies_1_preserves_livenesses b h1 h2 /\
   modifies_1_preserves_abuffers b h1 h2
 
 let modifies_1 = modifies_1'
 
 let modifies_1_live_region #a b h1 h2 r = ()
 
+let modifies_1_liveness #a b h1 h2 #a' #pre r' = ()
+
 let modifies_1_mreference #a b h1 h2 #a' #pre r' = ()
 
 let modifies_1_abuffer #a b h1 h2 b' = ()
 
 let modifies_1_null #a b h1 h2 = ()
+
+let modifies_addr_of'
+  (#a: Type) (b: buffer a)
+  (h1 h2: HS.mem)
+: GTot Type0
+= modifies_0_preserves_regions h1 h2 /\
+  modifies_1_preserves_mreferences b h1 h2
+
+let modifies_addr_of = modifies_addr_of'
+
+let modifies_addr_of_live_region #a b h1 h2 r = ()
+
+let modifies_addr_of_mreference #a b h1 h2 #a' #pre r' = ()
+
 
 (* Basic stateful operations *)
 
@@ -405,8 +439,29 @@ let index #a b i =
 
 (* Update *)
 
+let g_upd_seq #a b s h
+  : GTot HS.mem
+  = let n = length b in
+    if n = 0 then h
+    else
+      let s0 = lseq_of_vec (HS.sel h (Buffer?.content b)) in
+      let prefix, suffix = Seq.split s0 (U32.v (Buffer?.idx b)) in
+      let _, tail = Seq.split suffix (length b) in
+      let v = vec_of_lseq (prefix `Seq.append` s `Seq.append` tail) in
+      HS.upd h (Buffer?.content b) v
+
+#reset-options "--max_fuel 0 --max_ifuel 1"
+let g_upd_seq_as_seq (#a:Type) (b:buffer a) (s:lseq a (length b)) (h:HS.mem{live h b})
+  = let h' = g_upd_seq b s h in
+    assert (as_seq (g_upd_seq b s h) b `Seq.equal` s);
+    // prove modifies_1_preserves_abuffers
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ()
+#reset-options
+
 let upd #a b i v =
   let open HST in
+  let h0 = get () in
   let s0 = lseq_of_vec ! (Buffer?.content b) in
   let s = Seq.upd s0 (U32.v (Buffer?.idx b) + U32.v i) v in
   Buffer?.content b := vec_of_lseq s;
@@ -489,6 +544,16 @@ let alloca_of_list #a init =
   Seq.lemma_of_list_length s init;
   let content: HST.reference (vec a (U32.v len)) =
     HST.salloc (vec_of_lseq s)
+  in
+  let b = Buffer len content 0ul len in
+  b
+
+let gcmalloc_of_list #a r init =
+  let len = U32.uint_to_t (FStar.List.Tot.length init) in
+  let s = Seq.of_list init in
+  Seq.lemma_of_list_length s init;
+  let content: HST.reference (vec a (U32.v len)) =
+    HST.ralloc r (vec_of_lseq s)
   in
   let b = Buffer len content 0ul len in
   b

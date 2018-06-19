@@ -1,0 +1,77 @@
+[
+  "8çºãL¢ô\b¯zø‰*√q",
+  [
+    [
+      "UnifyRefs.nat32_to_nat64'4",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "b113bfc0d31f52e9ec9574c82b473128"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'5",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "3629def26221c83e70b8b3f3e376e845"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'4",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b81e664b76fa62e6d91426c62b7af750"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1ee7bbd7783fe50ccc57da49466e7615"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'4",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "6169f892493605066f03a3af1345e08e"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'5",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "ed7a6ee07b169f5c4cb7d83626911411"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'4",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f67c8ab35985c0f0e09ea659fb933daf"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'5",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f6d11d1d9a5b34ed8e03d100158d988d"
+    ]
+  ]
+]

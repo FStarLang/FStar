@@ -504,6 +504,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         | Some ("try_with", _) ->
           resugar_as_app e args
 
+        | Some (op, _) when (op = "=" || op = "==" || op = "===") && Options.print_implicits () ->
+          resugar_as_app e args
+
         | Some (op, _) when op = "forall" || op = "exists" ->
           (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list<args>)*)
           let rec uncurry xs pat (t:A.term) = match t.tm with

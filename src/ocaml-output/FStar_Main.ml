@@ -1,5 +1,5 @@
 open Prims
-let (uu___450 : unit) = FStar_Version.dummy () 
+let (uu___452 : unit) = FStar_Version.dummy () 
 let (process_args :
   unit ->
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
@@ -335,9 +335,9 @@ let go : 'Auu____395 . 'Auu____395 -> unit =
                                             module_names_and_times
                                             (Prims.parse_int "0"))))
                              else
-                               FStar_Errors.log_issue FStar_Range.dummyRange
+                               FStar_Errors.raise_error
                                  (FStar_Errors.Error_MissingFileName,
-                                   "no file provided\n"))))))))
+                                   "No file provided") FStar_Range.dummyRange)))))))
   
 let (lazy_chooser :
   FStar_Syntax_Syntax.lazy_kind ->
