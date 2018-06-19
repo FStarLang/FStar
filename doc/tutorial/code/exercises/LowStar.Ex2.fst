@@ -19,12 +19,13 @@ open LowStar.Modifies
 /// Two useful operations: b *= (e), for writing into a pointer, and !*(e), for
 /// dereferencing a pointer. Moreover, in order to state a meaningful
 /// post-condition, you will need:
-/// - loc_buffer, which injects a buffer into the type of abstract memory
+/// - loc_buffer b, which injects a buffer b into the type of abstract memory
 ///   locations
-/// - loc_union, which computes the union of two memory locations
+/// - loc_union l1 l2, which computes the union of two memory locations l1 and
+///   l2
 /// - modifies l h0 h1, a predicate stating that going from memory h0 to memory
 ///   h1, only location l was modified.
-/// - B.get h p i, which fetches the contents of pointer p in heap h at index i
+/// - deref h x, which reads the content of pointer x in heap h
 let swap (x: B.pointer uint_32) (y: B.pointer uint_32): Stack unit
   (requires fun h0 -> B.live h0 x /\ B.live h0 y /\ B.disjoint x y)
   (ensures fun _ _ _ -> True)

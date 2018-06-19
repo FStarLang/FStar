@@ -18,8 +18,8 @@ let swap (x: B.pointer uint_32) (y: B.pointer uint_32): Stack unit
   (requires fun h0 -> B.live h0 x /\ B.live h0 y /\ B.disjoint x y)
   (ensures fun h0 _ h1 ->
            modifies (loc_union (loc_buffer x) (loc_buffer y)) h0 h1 /\
-           B.get h1 x 0 = B.get h0 y 0 /\
-           B.get h1 y 0 = B.get h0 x 0)
+           deref h1 x = deref h0 y /\
+           deref h1 y = deref h0 x)
 = let tmp = !* x in
   x *= !* y;
   y *= tmp
@@ -52,13 +52,13 @@ let prefix_equal (#l:uint_32) (#a:Type) (h:HS.mem) (b1 b2: lbuffer l a) (i:uint_
 /// prefix_equal predicate.
 let rec copy_correct (#len:uint_32) (dst src:lbuffer len uint_32) (cur: uint_32): Stack unit
   (requires (fun h0 ->
-                B.live h0 src 
+                 B.live h0 src
               /\ B.live h0 dst
               /\ B.disjoint src dst
               /\ cur <= len
               /\ prefix_equal h0 src dst cur))
   (ensures fun h0 _ h1 ->
-           B.live h1 src
+              B.live h1 src
            /\ B.live h1 dst
            /\ modifies (loc_buffer dst) h0 h1
            /\ prefix_equal h1 src dst len)

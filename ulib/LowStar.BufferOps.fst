@@ -41,6 +41,10 @@ let ( *= ) (#a: Type) (p: B.pointer a) (v: a) : HST.Stack unit
   ))
 = B.upd p 0ul v
 
+unfold
+let deref #a (h: HS.mem) (x: B.pointer a) =
+  B.get h x 0
+
 module M = LowStar.ModifiesPat // many people will forget about it, so add it here so that it appears in the dependencies, and so its patterns will be in the SMT verification context without polluting the F* scope
 
 val blit
