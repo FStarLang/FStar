@@ -31,11 +31,6 @@ type t_struct a = {
 }
 type t a = B.pointer (t_struct a)
 
-/// To facilitate writing predicates, we define a handy shortcut that is the
-/// reflection of the ``!*`` operator at the proof level.
-unfold
-let deref #a (h: HS.mem) (x: B.pointer a) = B.get h x 0
-
 /// Here's a well-formedness predicate on a finite list `xs: t a`
 /// in a given heap `h`
 let ok #a (h: HS.mem) (xs: t a) =
