@@ -569,6 +569,7 @@ and star_type' env t =
   let mk_star_to_type = mk_star_to_type mk in
   //BU.print1 "[debug]: star_type' %s\n" (Print.term_to_string t);
   let t = SS.compress t in
+  let raise_err msg = FStar.Errors.raise_error msg t.pos in
   match t.n with
   | Tm_arrow (binders, _) ->
       // TODO: check that this is not a dependent arrow.
@@ -821,8 +822,8 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
       if not (is_unknown t2.n) && not (Env.is_trivial (Rel.teq env.env t1 t2)) then
-        raise_err (Errors.Fatal_TypeMismatch, (BU.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
-          (Print.term_to_string e) (Print.term_to_string t1) (Print.term_to_string t2)))
+        raise_error (Errors.Fatal_TypeMismatch, (BU.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
+          (Print.term_to_string e) (Print.term_to_string t1) (Print.term_to_string t2))) e.pos
     in
     match rec_nm, context_nm with
     | N t1, N t2
@@ -834,11 +835,11 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
         // no need to wrap [u_e] in an explicit [return]; F* will infer it later on
         M t1, mk_return env t1 s_e, u_e
     | M t1,  N t2 ->
-        raise_err (Errors.Fatal_EffectfulAndPureComputationMismatch, (BU.format3
+        raise_error (Errors.Fatal_EffectfulAndPureComputationMismatch, (BU.format3
           "[check %s]: got an effectful computation [%s] in lieu of a pure computation [%s]"
           (Print.term_to_string e)
           (Print.term_to_string t1)
-          (Print.term_to_string t2)))
+          (Print.term_to_string t2))) e.pos
 
   in
 
@@ -905,6 +906,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 and infer (env: env) (e: term): nm * term * term =
   // BU.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
+  let raise_err msg = FStar.Errors.raise_error msg e.pos in
   let normalize = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.delta_constant; N.EraseUniverses ] env.env in
   match (SS.compress e).n with
   | Tm_bvar bv ->
@@ -1072,10 +1074,10 @@ and infer (env: env) (e: term): nm * term * term =
       let n = List.length binders in
       let n' = List.length args in
       if List.length binders < List.length args then
-        raise_err (Errors.Fatal_BinderAndArgsLengthMismatch, (BU.format3 "The head of this application, after being applied to %s \
+        raise_error (Errors.Fatal_BinderAndArgsLengthMismatch, (BU.format3 "The head of this application, after being applied to %s \
           arguments, is an effectful computation (leaving %s arguments to be \
           applied). Please let-bind the head applied to the %s first \
-          arguments." (string_of_int n) (string_of_int (n' - n)) (string_of_int n)));
+          arguments." (string_of_int n) (string_of_int (n' - n)) (string_of_int n))) e.pos;
       // BU.print2 "[debug] length binders=%s, length args=%s\n"
       //  (string_of_int n) (string_of_int n');
 
@@ -1153,7 +1155,7 @@ and infer (env: env) (e: term): nm * term * term =
 
 and mk_match env e0 branches f =
   let mk x = mk x None e0.pos in
-
+  let raise_err msg = FStar.Errors.raise_error msg e0.pos in
   // TODO: automatically [bind] when the scrutinee is monadic?
   let _, s_e0, u_e0 = check_n env e0 in
   let nms, branches = List.split (List.map (fun b ->
