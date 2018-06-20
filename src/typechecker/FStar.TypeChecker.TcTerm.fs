@@ -711,16 +711,9 @@ and tc_synth head env args rng =
     let tau, _, g2 = tc_tactic env' tau in
     Rel.force_trivial_guard env' g2;
 
-    let t =
-        // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
-        if env.nosynth then mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit] None rng
-        else begin
-            let t = env.synth_hook env' typ ({ tau with pos = rng }) in
-            if Env.debug env <| Options.Other "Tac" then
-                BU.print1 "Got %s\n" (Print.term_to_string t);
-            t
-        end
-    in
+    let t = env.synth_hook env' typ ({ tau with pos = rng }) in
+    if Env.debug env <| Options.Other "Tac" then
+        BU.print1 "Got %s\n" (Print.term_to_string t);
 
     // TODO: fix, this gives a crappy error
     TcUtil.check_uvars tau.pos t;
