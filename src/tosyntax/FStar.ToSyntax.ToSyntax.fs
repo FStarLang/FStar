@@ -1259,12 +1259,18 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
             | LocalBinder (x,_) ->
               let body, aq = desugar_term_aq env t2 in
-              let body = match pat with
-                | []
-                | [{v=Pat_wild _}] -> body
-                | _ ->
-                  S.mk (Tm_match(S.bv_to_name x, desugar_disjunctive_pattern pat None body)) None top.range in
-              mk <| Tm_let((false, [mk_lb (attrs, Inl x, x.sort, t1, t1.pos)]), Subst.close [S.mk_binder x] body), aq
+              match pat with
+              | []
+              | [{v=Pat_wild _}] ->
+                 mk <| Tm_let((false,
+                             [mk_lb (attrs, Inl x, x.sort, t1, t1.pos)]),
+                             Subst.close [S.mk_binder x] body),
+                 aq
+              | _ ->
+                S.mk (Tm_match(t1, desugar_disjunctive_pattern pat None body))
+                     None
+                     top.range,
+                aq
         in
         if is_mutable
         then mk <| Tm_meta (tm, Meta_desugared Mutable_alloc), aq
