@@ -271,6 +271,36 @@ let does_not_contain_addr_elim = MG.does_not_contain_addr_elim
 
 let modifies_only_live_addresses = MG.modifies_only_live_addresses
 
+val loc_not_unused_in (h: HS.mem) : GTot loc
+let loc_not_unused_in = MG.loc_not_unused_in _
+
+val loc_unused_in (h: HS.mem) : GTot loc
+let loc_unused_in = MG.loc_unused_in _
+
+val live_loc_not_unused_in (#t: Type) (b: B.buffer t) (h: HS.mem) : Lemma
+  (requires (B.live h b))
+  (ensures (loc_not_unused_in h `loc_includes` loc_buffer b))
+
+let live_loc_not_unused_in #t b h =
+  B.unused_in_equiv b h;
+  Classical.move_requires (MG.does_not_contain_addr_addr_unused_in h) (B.frameOf b, B.as_addr b);
+  MG.loc_addresses_not_unused_in cls (B.frameOf b) (Set.singleton (B.as_addr b)) h;
+  loc_includes_addresses_buffer false (B.frameOf b) (Set.singleton (B.as_addr b)) b;
+  MG.loc_includes_trans (loc_not_unused_in h) (loc_addresses false (B.frameOf b) (Set.singleton (B.as_addr b))) (loc_buffer b);
+  ()
+
+val unused_in_loc_unused_in (#t: Type) (b: B.buffer t) (h: HS.mem) : Lemma
+  (requires (B.unused_in b h))
+  (ensures (loc_unused_in h `loc_includes` loc_buffer b))
+
+let unused_in_loc_unused_in #t b h =
+  B.unused_in_equiv b h;
+  Classical.move_requires (MG.addr_unused_in_does_not_contain_addr h) (B.frameOf b, B.as_addr b);
+  MG.loc_addresses_unused_in cls (B.frameOf b) (Set.singleton (B.as_addr b)) h;
+  loc_includes_addresses_buffer false (B.frameOf b) (Set.singleton (B.as_addr b)) b;
+  MG.loc_includes_trans (loc_unused_in h) (loc_addresses false (B.frameOf b) (Set.singleton (B.as_addr b))) (loc_buffer b);
+  ()
+
 
 let cloc_cls = cls
 

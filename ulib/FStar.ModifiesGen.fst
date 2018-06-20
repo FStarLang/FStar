@@ -1091,7 +1091,7 @@ let modifies_none_modifies #al #c h1 h2
 
 
 let does_not_contain_addr' (h: HS.mem) (ra: HS.rid * nat) : GTot Type0 =
-  forall (a: Type) (rel: Preorder.preorder a) (r: HS.mreference a rel) . {:pattern (h `HS.contains` r) } (HS.frameOf r == fst ra /\ HS.as_addr r == snd ra /\ h `HS.contains` r) ==> False
+  HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` (fst ra))
 
 let does_not_contain_addr = does_not_contain_addr'
 
@@ -1100,6 +1100,8 @@ let not_live_region_does_not_contain_addr h ra = ()
 let unused_in_does_not_contain_addr h #a #rel r = ()
 
 let addr_unused_in_does_not_contain_addr h ra = ()
+
+let does_not_contain_addr_addr_unused_in h ra = ()
 
 let free_does_not_contain_addr #a #rel r m x = ()
 
@@ -1309,6 +1311,38 @@ let modifies_only_live_addresses #al #c r a l h h' =
     loc_includes_union_r l (loc_addresses false r a) l;
     modifies_loc_includes l h h' (loc_union (loc_addresses false r a) l)
   end else modifies_only_live_addresses_no_liveness_tag r a l h h'
+
+
+assume val set_comprehend (#t: eqtype) (f: t -> GTot bool) : GTot (g: Set.set t { forall x . Set.mem x g <==> f x == true } )
+
+let loc_not_unused_in #al c h =
+  let f (r: HS.rid) : GTot (Set.set nat) =
+    set_comprehend (fun a -> not (StrongExcludedMiddle.strong_excluded_middle (h `does_not_contain_addr` (r, a))))
+  in
+  Loc
+    (Ghost.hide (Set.complement Set.empty))
+    (Ghost.hide Set.empty)
+    f
+    (fun x -> f x)
+    (Ghost.hide (aloc_domain c (Ghost.hide (Set.complement Set.empty)) f))
+
+let loc_unused_in #al c h =
+  let f (r: HS.rid) : GTot (Set.set nat) =
+    set_comprehend (fun a -> StrongExcludedMiddle.strong_excluded_middle (h `does_not_contain_addr` (r, a)))
+  in
+  Loc
+    (Ghost.hide (Set.complement Set.empty))
+    (Ghost.hide Set.empty)
+    f
+    (fun x -> f x)
+    (Ghost.hide (aloc_domain c (Ghost.hide (Set.complement Set.empty)) f))
+
+let loc_addresses_unused_in #al c r a h = ()
+
+let loc_addresses_not_unused_in #al c r a h = ()
+
+let loc_unused_in_not_unused_in_disjoint #al c h =
+  assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)))
 
 
 (* * Compositionality *)
