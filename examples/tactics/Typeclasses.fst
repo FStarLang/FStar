@@ -8,7 +8,7 @@ type eq a = {
     eq : a -> a -> bool;
 }
 
-[@tcnorm] let deq (#a:Type) [|eq a|] = Mkeq?.eq solve
+[@tcnorm] let deq (#a:Type) [|d : eq a|] = d.eq
 
 noeq
 type additive a = {
@@ -16,8 +16,8 @@ type additive a = {
     plus : a -> a -> a;
 }
 
-[@tcnorm] let zero (#a:Type) [|additive a|] = Mkadditive?.zero solve
-[@tcnorm] let plus (#a:Type) [|additive a|] = Mkadditive?.plus solve
+[@tcnorm] let zero (#a:Type) [|d : additive a|] = d.zero
+[@tcnorm] let plus (#a:Type) [|d : additive a|] = d.plus
 
 noeq
 type num a = {
@@ -25,7 +25,7 @@ type num a = {
     add_super : additive a;
     minus : a -> a -> a;
 }
-[@tcnorm] let minus (#a:Type) [|num a|] = Mknum?.minus solve
+[@tcnorm] let minus (#a:Type) [|d : num a|] = d.minus
 
 // Needed!
 [@instance] let num_eq  (d : num 'a) : eq 'a = d.eq_super
