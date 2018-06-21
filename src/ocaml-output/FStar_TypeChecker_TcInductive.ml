@@ -220,7 +220,7 @@ let (tc_tycon :
                                                             (uvs1, t_tc)
                                                            in
                                                         (uu____421,
-                                                          (let uu___344_427 =
+                                                          (let uu___345_427 =
                                                              s  in
                                                            {
                                                              FStar_Syntax_Syntax.sigel
@@ -232,16 +232,16 @@ let (tc_tycon :
                                                                     data));
                                                              FStar_Syntax_Syntax.sigrng
                                                                =
-                                                               (uu___344_427.FStar_Syntax_Syntax.sigrng);
+                                                               (uu___345_427.FStar_Syntax_Syntax.sigrng);
                                                              FStar_Syntax_Syntax.sigquals
                                                                =
-                                                               (uu___344_427.FStar_Syntax_Syntax.sigquals);
+                                                               (uu___345_427.FStar_Syntax_Syntax.sigquals);
                                                              FStar_Syntax_Syntax.sigmeta
                                                                =
-                                                               (uu___344_427.FStar_Syntax_Syntax.sigmeta);
+                                                               (uu___345_427.FStar_Syntax_Syntax.sigmeta);
                                                              FStar_Syntax_Syntax.sigattrs
                                                                =
-                                                               (uu___344_427.FStar_Syntax_Syntax.sigattrs)
+                                                               (uu___345_427.FStar_Syntax_Syntax.sigattrs)
                                                            }), u, guard1)))))))))))
       | uu____432 -> failwith "impossible"
   
@@ -598,7 +598,7 @@ let (tc_data :
                                                    FStar_Syntax_Subst.close_univ_vars
                                                      _uvs1 t2
                                                     in
-                                                 ((let uu___345_1229 = se  in
+                                                 ((let uu___346_1229 = se  in
                                                    {
                                                      FStar_Syntax_Syntax.sigel
                                                        =
@@ -607,16 +607,16 @@ let (tc_data :
                                                             tc_lid, ntps, []));
                                                      FStar_Syntax_Syntax.sigrng
                                                        =
-                                                       (uu___345_1229.FStar_Syntax_Syntax.sigrng);
+                                                       (uu___346_1229.FStar_Syntax_Syntax.sigrng);
                                                      FStar_Syntax_Syntax.sigquals
                                                        =
-                                                       (uu___345_1229.FStar_Syntax_Syntax.sigquals);
+                                                       (uu___346_1229.FStar_Syntax_Syntax.sigquals);
                                                      FStar_Syntax_Syntax.sigmeta
                                                        =
-                                                       (uu___345_1229.FStar_Syntax_Syntax.sigmeta);
+                                                       (uu___346_1229.FStar_Syntax_Syntax.sigmeta);
                                                      FStar_Syntax_Syntax.sigattrs
                                                        =
-                                                       (uu___345_1229.FStar_Syntax_Syntax.sigattrs)
+                                                       (uu___346_1229.FStar_Syntax_Syntax.sigattrs)
                                                    }), g))))))))))
         | uu____1232 -> failwith "impossible"
   
@@ -637,18 +637,18 @@ let (generalize_and_inst_within :
           let tc_universe_vars =
             FStar_List.map FStar_Pervasives_Native.snd tcs  in
           let g1 =
-            let uu___346_1297 = g  in
+            let uu___347_1297 = g  in
             {
               FStar_TypeChecker_Env.guard_f =
-                (uu___346_1297.FStar_TypeChecker_Env.guard_f);
+                (uu___347_1297.FStar_TypeChecker_Env.guard_f);
               FStar_TypeChecker_Env.deferred =
-                (uu___346_1297.FStar_TypeChecker_Env.deferred);
+                (uu___347_1297.FStar_TypeChecker_Env.deferred);
               FStar_TypeChecker_Env.univ_ineqs =
                 (tc_universe_vars,
                   (FStar_Pervasives_Native.snd
                      g.FStar_TypeChecker_Env.univ_ineqs));
               FStar_TypeChecker_Env.implicits =
-                (uu___346_1297.FStar_TypeChecker_Env.implicits)
+                (uu___347_1297.FStar_TypeChecker_Env.implicits)
             }  in
           (let uu____1307 =
              FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -798,7 +798,7 @@ let (generalize_and_inst_within :
                                                      in
                                                   (match uu____1685 with
                                                    | (tps1,t3) ->
-                                                       let uu___347_1826 = se
+                                                       let uu___348_1826 = se
                                                           in
                                                        {
                                                          FStar_Syntax_Syntax.sigel
@@ -810,16 +810,16 @@ let (generalize_and_inst_within :
                                                                 datas1));
                                                          FStar_Syntax_Syntax.sigrng
                                                            =
-                                                           (uu___347_1826.FStar_Syntax_Syntax.sigrng);
+                                                           (uu___348_1826.FStar_Syntax_Syntax.sigrng);
                                                          FStar_Syntax_Syntax.sigquals
                                                            =
-                                                           (uu___347_1826.FStar_Syntax_Syntax.sigquals);
+                                                           (uu___348_1826.FStar_Syntax_Syntax.sigquals);
                                                          FStar_Syntax_Syntax.sigmeta
                                                            =
-                                                           (uu___347_1826.FStar_Syntax_Syntax.sigmeta);
+                                                           (uu___348_1826.FStar_Syntax_Syntax.sigmeta);
                                                          FStar_Syntax_Syntax.sigattrs
                                                            =
-                                                           (uu___347_1826.FStar_Syntax_Syntax.sigattrs)
+                                                           (uu___348_1826.FStar_Syntax_Syntax.sigattrs)
                                                        })
                                               | uu____1831 ->
                                                   failwith "Impossible"))
@@ -839,8 +839,8 @@ let (generalize_and_inst_within :
                                       let tc_insts =
                                         FStar_All.pipe_right tcs1
                                           (FStar_List.map
-                                             (fun uu___335_1859  ->
-                                                match uu___335_1859 with
+                                             (fun uu___336_1859  ->
+                                                match uu___336_1859 with
                                                 | {
                                                     FStar_Syntax_Syntax.sigel
                                                       =
@@ -879,7 +879,7 @@ let (generalize_and_inst_within :
                                                           (FStar_Syntax_Subst.close_univ_vars
                                                              uvs1)
                                                          in
-                                                      let uu___348_1935 = d
+                                                      let uu___349_1935 = d
                                                          in
                                                       {
                                                         FStar_Syntax_Syntax.sigel
@@ -890,16 +890,16 @@ let (generalize_and_inst_within :
                                                                mutuals));
                                                         FStar_Syntax_Syntax.sigrng
                                                           =
-                                                          (uu___348_1935.FStar_Syntax_Syntax.sigrng);
+                                                          (uu___349_1935.FStar_Syntax_Syntax.sigrng);
                                                         FStar_Syntax_Syntax.sigquals
                                                           =
-                                                          (uu___348_1935.FStar_Syntax_Syntax.sigquals);
+                                                          (uu___349_1935.FStar_Syntax_Syntax.sigquals);
                                                         FStar_Syntax_Syntax.sigmeta
                                                           =
-                                                          (uu___348_1935.FStar_Syntax_Syntax.sigmeta);
+                                                          (uu___349_1935.FStar_Syntax_Syntax.sigmeta);
                                                         FStar_Syntax_Syntax.sigattrs
                                                           =
-                                                          (uu___348_1935.FStar_Syntax_Syntax.sigattrs)
+                                                          (uu___349_1935.FStar_Syntax_Syntax.sigattrs)
                                                       }
                                                   | uu____1938 ->
                                                       failwith "Impossible"))
@@ -1777,7 +1777,7 @@ let (get_optimized_haseq_axiom :
                       in
                    let fml = FStar_Syntax_Util.mk_imp haseq_bs haseq_ind  in
                    let fml1 =
-                     let uu___349_4532 = fml  in
+                     let uu___350_4532 = fml  in
                      let uu____4533 =
                        let uu____4534 =
                          let uu____4541 =
@@ -1793,9 +1793,9 @@ let (get_optimized_haseq_axiom :
                      {
                        FStar_Syntax_Syntax.n = uu____4533;
                        FStar_Syntax_Syntax.pos =
-                         (uu___349_4532.FStar_Syntax_Syntax.pos);
+                         (uu___350_4532.FStar_Syntax_Syntax.pos);
                        FStar_Syntax_Syntax.vars =
-                         (uu___349_4532.FStar_Syntax_Syntax.vars)
+                         (uu___350_4532.FStar_Syntax_Syntax.vars)
                      }  in
                    let fml2 =
                      FStar_List.fold_right
@@ -2116,8 +2116,8 @@ let (unoptimized_haseq_data :
                 | FStar_Syntax_Syntax.Tm_meta (t',uu____5643) -> is_mutual t'
                 | uu____5648 -> false
               
-              and exists_mutual uu___336_5649 =
-                match uu___336_5649 with
+              and exists_mutual uu___337_5649 =
+                match uu___337_5649 with
                 | [] -> false
                 | hd1::tl1 -> (is_mutual hd1) || (exists_mutual tl1)
                in
@@ -2309,7 +2309,7 @@ let (unoptimized_haseq_ty :
                        let fml = FStar_Syntax_Util.mk_imp data_cond haseq_ind
                           in
                        let fml1 =
-                         let uu___350_6222 = fml  in
+                         let uu___351_6222 = fml  in
                          let uu____6223 =
                            let uu____6224 =
                              let uu____6231 =
@@ -2326,9 +2326,9 @@ let (unoptimized_haseq_ty :
                          {
                            FStar_Syntax_Syntax.n = uu____6223;
                            FStar_Syntax_Syntax.pos =
-                             (uu___350_6222.FStar_Syntax_Syntax.pos);
+                             (uu___351_6222.FStar_Syntax_Syntax.pos);
                            FStar_Syntax_Syntax.vars =
-                             (uu___350_6222.FStar_Syntax_Syntax.vars)
+                             (uu___351_6222.FStar_Syntax_Syntax.vars)
                          }  in
                        let fml2 =
                          FStar_List.fold_right
@@ -2450,8 +2450,8 @@ let (check_inductive_well_typedness :
           let uu____6628 =
             FStar_All.pipe_right ses
               (FStar_List.partition
-                 (fun uu___337_6653  ->
-                    match uu___337_6653 with
+                 (fun uu___338_6653  ->
+                    match uu___338_6653 with
                     | {
                         FStar_Syntax_Syntax.sigel =
                           FStar_Syntax_Syntax.Sig_inductive_typ uu____6654;
@@ -2466,8 +2466,8 @@ let (check_inductive_well_typedness :
               ((let uu____6701 =
                   FStar_All.pipe_right datas
                     (FStar_Util.for_some
-                       (fun uu___338_6710  ->
-                          match uu___338_6710 with
+                       (fun uu___339_6710  ->
+                          match uu___339_6710 with
                           | {
                               FStar_Syntax_Syntax.sigel =
                                 FStar_Syntax_Syntax.Sig_datacon uu____6711;
@@ -2536,17 +2536,17 @@ let (check_inductive_well_typedness :
                                   | uu____6874 ->
                                       failwith "Impossible, can't happen"
                                    in
-                                let uu___351_6875 = se  in
+                                let uu___352_6875 = se  in
                                 {
                                   FStar_Syntax_Syntax.sigel = sigel;
                                   FStar_Syntax_Syntax.sigrng =
-                                    (uu___351_6875.FStar_Syntax_Syntax.sigrng);
+                                    (uu___352_6875.FStar_Syntax_Syntax.sigrng);
                                   FStar_Syntax_Syntax.sigquals =
-                                    (uu___351_6875.FStar_Syntax_Syntax.sigquals);
+                                    (uu___352_6875.FStar_Syntax_Syntax.sigquals);
                                   FStar_Syntax_Syntax.sigmeta =
-                                    (uu___351_6875.FStar_Syntax_Syntax.sigmeta);
+                                    (uu___352_6875.FStar_Syntax_Syntax.sigmeta);
                                   FStar_Syntax_Syntax.sigattrs =
-                                    (uu___351_6875.FStar_Syntax_Syntax.sigattrs)
+                                    (uu___352_6875.FStar_Syntax_Syntax.sigattrs)
                                 }) tys
                             in
                          let datas1 =
@@ -2568,17 +2568,17 @@ let (check_inductive_well_typedness :
                                   | uu____6912 ->
                                       failwith "Impossible, can't happen"
                                    in
-                                let uu___352_6913 = se  in
+                                let uu___353_6913 = se  in
                                 {
                                   FStar_Syntax_Syntax.sigel = sigel;
                                   FStar_Syntax_Syntax.sigrng =
-                                    (uu___352_6913.FStar_Syntax_Syntax.sigrng);
+                                    (uu___353_6913.FStar_Syntax_Syntax.sigrng);
                                   FStar_Syntax_Syntax.sigquals =
-                                    (uu___352_6913.FStar_Syntax_Syntax.sigquals);
+                                    (uu___353_6913.FStar_Syntax_Syntax.sigquals);
                                   FStar_Syntax_Syntax.sigmeta =
-                                    (uu___352_6913.FStar_Syntax_Syntax.sigmeta);
+                                    (uu___353_6913.FStar_Syntax_Syntax.sigmeta);
                                   FStar_Syntax_Syntax.sigattrs =
-                                    (uu___352_6913.FStar_Syntax_Syntax.sigattrs)
+                                    (uu___353_6913.FStar_Syntax_Syntax.sigattrs)
                                 }) datas
                             in
                          let uu____6914 =
@@ -2911,12 +2911,12 @@ let (mk_discriminator_and_indexed_projectors :
                                FStar_Syntax_Util.b2t uu____7593  in
                              FStar_Syntax_Util.refine x uu____7590  in
                            let uu____7639 =
-                             let uu___353_7640 = projectee arg_typ  in
+                             let uu___354_7640 = projectee arg_typ  in
                              {
                                FStar_Syntax_Syntax.ppname =
-                                 (uu___353_7640.FStar_Syntax_Syntax.ppname);
+                                 (uu___354_7640.FStar_Syntax_Syntax.ppname);
                                FStar_Syntax_Syntax.index =
-                                 (uu___353_7640.FStar_Syntax_Syntax.index);
+                                 (uu___354_7640.FStar_Syntax_Syntax.index);
                                FStar_Syntax_Syntax.sort = sort
                              }  in
                            FStar_Syntax_Syntax.mk_binder uu____7639)
@@ -2977,8 +2977,8 @@ let (mk_discriminator_and_indexed_projectors :
                            let quals =
                              let uu____7796 =
                                FStar_List.filter
-                                 (fun uu___339_7800  ->
-                                    match uu___339_7800 with
+                                 (fun uu___340_7800  ->
+                                    match uu___340_7800 with
                                     | FStar_Syntax_Syntax.Abstract  ->
                                         Prims.op_Negation only_decl
                                     | FStar_Syntax_Syntax.Private  -> true
@@ -3329,8 +3329,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                then
                                                  let uu____8451 =
                                                    FStar_List.filter
-                                                     (fun uu___340_8455  ->
-                                                        match uu___340_8455
+                                                     (fun uu___341_8455  ->
+                                                        match uu___341_8455
                                                         with
                                                         | FStar_Syntax_Syntax.Abstract
                                                              -> false
@@ -3344,8 +3344,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                let iquals1 =
                                                  FStar_All.pipe_right iquals
                                                    (FStar_List.filter
-                                                      (fun uu___341_8469  ->
-                                                         match uu___341_8469
+                                                      (fun uu___342_8469  ->
+                                                         match uu___342_8469
                                                          with
                                                          | FStar_Syntax_Syntax.Abstract
                                                               -> true
@@ -3734,8 +3734,8 @@ let (mk_data_operations :
                                       FStar_All.pipe_right
                                         se.FStar_Syntax_Syntax.sigquals
                                         (FStar_Util.for_some
-                                           (fun uu___342_9114  ->
-                                              match uu___342_9114 with
+                                           (fun uu___343_9114  ->
+                                              match uu___343_9114 with
                                               | FStar_Syntax_Syntax.RecordConstructor
                                                   uu____9115 -> true
                                               | uu____9124 -> false))
@@ -3744,8 +3744,8 @@ let (mk_data_operations :
                                     then false
                                     else should_refine  in
                                   let fv_qual =
-                                    let filter_records uu___343_9134 =
-                                      match uu___343_9134 with
+                                    let filter_records uu___344_9134 =
+                                      match uu___344_9134 with
                                       | FStar_Syntax_Syntax.RecordConstructor
                                           (uu____9137,fns) ->
                                           FStar_Pervasives_Native.Some
