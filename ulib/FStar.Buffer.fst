@@ -840,6 +840,7 @@ let createL #a init =
   assert (Seq.equal (as_seq h b) (sel h b));
   b
 
+
 #reset-options "--initial_fuel 0 --max_fuel 0"
 let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h (HS.frameOf x)}) (v:a) : Lemma
   (requires True)
@@ -1423,3 +1424,36 @@ let lemma_equal_domains_2 (h0 h1 h2 h3 h4:mem) : Lemma
   (ensures  (equal_domains h0 h4))
   [SMTPat (fresh_frame h0 h1); SMTPat (modifies_0 h1 h2); SMTPat (popped h3 h4)]
   = ()
+
+#reset-options "--z3rlimit 50"
+
+// TODO: make this meta-evaluate properly + fix two assumes
+inline_for_extraction
+let rec assignL #a (l: list a) (b: buffer a): Stack unit
+  (requires (fun h0 ->
+    live h0 b /\
+    length b = List.Tot.length l))
+  (ensures (fun h0 _ h1 ->
+    live h1 b /\
+    modifies_1 b h0 h1 /\
+    as_seq h1 b == Seq.of_list l))
+=
+  match l with
+  | [] ->
+      let h = HST.get () in
+      assert (length b = List.Tot.length l);
+      assert_norm (List.Tot.length l = 0);
+      assert (Seq.length (as_seq h b) = 0);
+      assert (Seq.equal (as_seq h b) (Seq.empty #a));
+      assume (Seq.of_list [] == Seq.empty #a)
+  | hd :: tl ->
+      let b_hd = sub b 0ul 1ul in
+      let b_tl = offset b 1ul in
+      b_hd.(0ul) <- hd;
+      assignL tl b_tl;
+      let h = HST.get () in
+      assert (get h b_hd 0 == hd);
+      assert (as_seq h b_tl == Seq.of_list tl);
+      assert (Seq.equal (as_seq h b) (Seq.append (as_seq h b_hd) (as_seq h b_tl)));
+      assume (Seq.equal (Seq.of_list l) (Seq.cons hd (Seq.of_list tl)));
+      assert (as_seq h b == Seq.of_list l)
