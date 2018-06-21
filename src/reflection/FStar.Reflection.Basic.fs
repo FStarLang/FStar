@@ -31,9 +31,6 @@ open FStar.Dyn
  * a metaprogramming effect (such as TAC). These effects are irrelevant
  * for runtime and cannot, of course, be used for proof (where syntax
  * inspection would be completely inconsistent
- *
- * embed   : from compiler to user
- * unembed : from user to compiler
  *)
 
  (*
