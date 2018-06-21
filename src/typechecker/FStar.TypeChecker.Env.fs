@@ -687,6 +687,11 @@ let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
 let lookup_definition delta_levels env lid =
     lookup_definition_qninfo delta_levels lid <| lookup_qname env lid
 
+let quals_of_qninfo (qninfo : qninfo) : option<list<qualifier>> =
+  match qninfo with
+  | Some (Inr (se, _), _) -> Some se.sigquals
+  | _ -> None
+
 let attrs_of_qninfo (qninfo : qninfo) : option<list<attribute>> =
   match qninfo with
   | Some (Inr (se, _), _) -> Some se.sigattrs
