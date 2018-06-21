@@ -455,7 +455,6 @@ let g_upd_seq_as_seq (#a:Type) (b:buffer a) (s:lseq a (length b)) (h:HS.mem{live
     // prove modifies_1_preserves_abuffers
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ()
-#reset-options
 
 let upd #a b i v =
   let open HST in
@@ -466,6 +465,7 @@ let upd #a b i v =
   // prove modifies_1_preserves_abuffers
   Heap.lemma_distinct_addrs_distinct_preorders ();
   Heap.lemma_distinct_addrs_distinct_mm ()
+#reset-options
 
 (* Recall *)
 
