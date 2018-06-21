@@ -578,6 +578,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let t2 = mk_app t1 args2 in
     tc_term env t2
 
+  (* An ordinary application *)
   | Tm_app(head, args) ->
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
@@ -601,10 +602,17 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                        //         else c in
                        e, c, g
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
+    let e, c, implicits =
+        if U.is_tot_or_gtot_lcomp c
+        then let e, res_typ, implicits = TcUtil.maybe_instantiate env0 e c.res_typ in
+             e, U.set_result_typ_lc c res_typ, implicits
+        else e, c, Env.trivial_guard
+    in
     if Env.debug env Options.Extreme
     then BU.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
     let e, c, g' = comp_check_expected_typ env0 e c in
     let gres = Env.conj_guard g g' in
+    let gres = Env.conj_guard gres implicits in
     if Env.debug env Options.Extreme
     then BU.print2 "Guard from application node %s is %s\n"
                 (Print.term_to_string e)
