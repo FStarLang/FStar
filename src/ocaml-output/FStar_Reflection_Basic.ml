@@ -417,7 +417,8 @@ let (lookup_attr :
                | FStar_Pervasives_Native.Some l ->
                    let uu____1219 =
                      FStar_Syntax_Syntax.lid_as_fv l
-                       FStar_Syntax_Syntax.delta_constant
+                       (FStar_Syntax_Syntax.Delta_constant_at_level
+                          (Prims.parse_int "999"))
                        FStar_Pervasives_Native.None
                       in
                    [uu____1219]) ses
