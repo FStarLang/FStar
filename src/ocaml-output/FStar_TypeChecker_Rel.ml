@@ -10590,7 +10590,7 @@ let (discharge_guard' :
                                         FStar_Options.set_options
                                           FStar_Options.Set "--no_tactics"
                                          in
-                                      FStar_All.pipe_left (fun a237  -> ())
+                                      FStar_All.pipe_left (fun a236  -> ())
                                         uu____24680);
                                      (let vcs =
                                         (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.preprocess
@@ -11082,7 +11082,7 @@ let (force_trivial_guard :
       match g1.FStar_TypeChecker_Env.implicits with
       | [] ->
           let uu____25113 = discharge_guard env g1  in
-          FStar_All.pipe_left (fun a238  -> ()) uu____25113
+          FStar_All.pipe_left (fun a237  -> ()) uu____25113
       | (reason,e,ctx_u,r)::uu____25118 ->
           let uu____25137 =
             let uu____25142 =
