@@ -1009,6 +1009,24 @@ val modifies_address_liveness_insensitive_unused_in
   (requires (modifies (address_liveness_insensitive_locs) h h'))
   (ensures (loc_not_unused_in h' `loc_includes` loc_not_unused_in h /\ loc_unused_in h `loc_includes` loc_unused_in h'))
 
+val mreference_live_loc_not_unused_in
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (h: HS.mem)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (h `HS.contains` r))
+  (ensures (loc_not_unused_in h `loc_includes` loc_freed_mreference r /\ loc_not_unused_in h `loc_includes` loc_mreference r))
+
+val mreference_unused_in_loc_unused_in
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (h: HS.mem)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (r `HS.unused_in` h))
+  (ensures (loc_unused_in h `loc_includes` loc_freed_mreference r /\ loc_unused_in h `loc_includes` loc_mreference r))
+
 
 /// Type class instantiation for compositionality with other kinds of memory locations than regions, references or buffers (just in case).
 /// No usage pattern has been found yet.

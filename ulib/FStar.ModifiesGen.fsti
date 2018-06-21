@@ -943,6 +943,30 @@ val modifies_address_liveness_insensitive_unused_in
   (requires (modifies (address_liveness_insensitive_locs c) h h'))
   (ensures (loc_not_unused_in c h' `loc_includes` loc_not_unused_in c h /\ loc_unused_in c h `loc_includes` loc_unused_in c h'))
 
+val mreference_live_loc_not_unused_in
+  (#al: aloc_t)
+  (c: cls al)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (h: HS.mem)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (h `HS.contains` r))
+  (ensures (loc_not_unused_in c h `loc_includes` loc_freed_mreference r /\ loc_not_unused_in c h `loc_includes` loc_mreference r))
+
+
+val mreference_unused_in_loc_unused_in
+  (#al: aloc_t)
+  (c: cls al)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (h: HS.mem)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (r `HS.unused_in` h))
+  (ensures (loc_unused_in c h `loc_includes` loc_freed_mreference r /\ loc_unused_in c h `loc_includes` loc_mreference r))
+
+
 (** * Compositionality *)
 
 val aloc_union: (bool -> Tot (aloc_t u#x)) -> Tot (aloc_t u#x)
