@@ -797,7 +797,12 @@ let reify_tactic (a : term) : term =
     mk_Tm_app r [S.iarg t_unit; S.as_arg a] None a.pos
 
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
+    // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
+    if env.nosynth
+    then mk_Tm_app (TcUtil.fvar_const env PC.magic_lid) [S.as_arg U.exp_unit] None typ.pos
+    else begin
     tacdbg := Env.debug env (Options.Other "Tac");
+
     let gs, w = run_tactic_on_typ tau.pos typ.pos (reify_tactic tau) env typ in
     // Check that all goals left are irrelevant and provable
     // TODO: It would be nicer to combine all of these into a guard and return
@@ -813,6 +818,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
         | None ->
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos) gs;
     w
+    end
 
 let splice (env:Env.env) (tau:term) : list<sigelt> =
     tacdbg := Env.debug env (Options.Other "Tac");

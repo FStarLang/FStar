@@ -80,7 +80,9 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
     let imp = { imp_reason = reason
               ; imp_tm     = t
               ; imp_uvar   = ctx_uvar
-              ; imp_range  = r } in
+              ; imp_range  = r
+              ; imp_meta   = None
+              } in
     ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
 
 let copy_uvar u (bs:binders) t wl =
@@ -3185,6 +3187,16 @@ let discharge_guard env g =
   | Some g -> g
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
+let discharge_guard_nosmt env g =
+    match discharge_guard' None env g false with
+    | Some _ -> true
+    | None   -> false
+
+let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
+  match try_teq false env t1 t2 with
+  | None -> false
+  | Some g -> discharge_guard_nosmt env g
+
 let resolve_implicits' env must_total forcelax g =
   let unresolved ctx_u =
     match (Unionfind.find ctx_u.ctx_uvar_head) with
@@ -3200,7 +3212,17 @@ let resolve_implicits' env must_total forcelax g =
           if ctx_u.ctx_uvar_should_check = Allow_unresolved
           then until_fixpoint(out, true) tl
           else if unresolved ctx_u
-          then until_fixpoint (hd::out, changed) tl
+          then begin match hd.imp_meta with
+               | None ->
+                    until_fixpoint (hd::out, changed) tl
+               | Some (env, tau) ->
+                    let t = env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau in
+                    let r = teq_nosmt env t tm in // let the unifier handle setting the variable
+                    if not r then
+                        failwith "resolve_implicits: unifying with an unresolved uvar failed?";
+                    let hd = { hd with imp_meta = None } in
+                    until_fixpoint (out, changed) (hd::tl)
+               end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl
           else let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
@@ -3257,16 +3279,6 @@ let force_trivial_guard env g =
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
     {trivial_guard with univ_ineqs=([], [u1,u2])}
-
-let discharge_guard_nosmt env g =
-    match discharge_guard' None env g false with
-    | Some _ -> true
-    | None   -> false
-
-let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
-  match try_teq false env t1 t2 with
-  | None -> false
-  | Some g -> discharge_guard_nosmt env g
 
 ///////////////////////////////////////////////////////////////////
 let check_subtyping env t1 t2 =

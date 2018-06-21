@@ -711,16 +711,9 @@ and tc_synth head env args rng =
     let tau, _, g2 = tc_tactic env' tau in
     Rel.force_trivial_guard env' g2;
 
-    let t =
-        // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
-        if env.nosynth then mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit] None rng
-        else begin
-            let t = env.synth_hook env' typ ({ tau with pos = rng }) in
-            if Env.debug env <| Options.Other "Tac" then
-                BU.print1 "Got %s\n" (Print.term_to_string t);
-            t
-        end
-    in
+    let t = env.synth_hook env' typ ({ tau with pos = rng }) in
+    if Env.debug env <| Options.Other "Tac" then
+        BU.print1 "Got %s\n" (Print.term_to_string t);
 
     // TODO: fix, this gives a crappy error
     TcUtil.check_uvars tau.pos t;
@@ -1450,11 +1443,42 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" head.pos env t in //new_uvar env t in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
-            tc_args head_info (subst, (arg, None, S.mk_Total t |> U.lcomp_of_comp)::outargs, arg::arg_rets, Env.conj_guard implicits (Env.conj_guard g_ex g), fvs) rest args
+            let guard = List.fold_right Env.conj_guard [g_ex; g] implicits in
+            tc_args head_info (subst, (arg, None, S.mk_Total t |> U.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest args
+
+        | (x, Some (Meta tau))::rest, (_, None)::_ -> (* instantiate a meta arg *)
+            (* We follow the exact same procedure as for instantiating an implicit,
+             * except that we keep track of the (uvar, env, metaprogram) pair in the environment
+             * so we can later come back to the implicit and, if it wasn't solved by unification,
+             * run the metaprogram on it.
+             *
+             * Why don't we run the metaprogram here? At this stage, it's very likely that `t`
+             * is full of unresolved uvars, and it wouldn't be a whole lot useful to try
+             * to find an instance for it. We might not even be able to, since instances
+             * are for concrete types.
+             *)
+            let tau, _, g_tau = tc_tactic env tau in
+            let t = SS.subst subst x.sort in
+            let t, g_ex = check_no_escape (Some head) env fvs t in
+            let varg, _, implicits = TcUtil.new_implicit_var "Instantiating meta argument in application" head.pos env t in //new_uvar env t in
+            // There's only one implicit, but oh well
+            let mark_meta_implicits tau g =
+                { g with implicits =
+                    List.map (fun imp -> { imp with imp_meta = Some (env, tau) }) g.implicits } in
+            let implicits = mark_meta_implicits tau implicits in
+            let subst = NT(x, varg)::subst in
+            let arg = varg, as_implicit true in
+            let guard = List.fold_right Env.conj_guard [g_ex; g; g_tau] implicits in
+            tc_args head_info (subst, (arg, None, S.mk_Total t |> U.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest args
 
         | (x, aqual)::rest, (e, aq)::rest' -> (* a concrete argument *)
             let _ =
                 match aqual, aq with
+                | _, Some (Meta _) ->
+                    raise_error (Errors.Fatal_InconsistentImplicitQualifier,
+                                  "Inconsistent implicit qualifier; cannot apply meta arguments, just use #") e.pos
+
+                | Some (Meta _), Some (Implicit _)
                 | Some (Implicit _), Some (Implicit _)
                 | None, None
                 | Some Equality, None -> ()

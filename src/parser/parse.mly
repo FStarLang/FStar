@@ -344,6 +344,7 @@ aqual:
   | q=aqualUniverses { q }
 
 aqualUniverses:
+  | HASH LBRACK t=tmNoEq RBRACK { Meta t }
   | HASH      { Implicit }
   | DOLLAR    { Equality }
 
@@ -379,6 +380,13 @@ atomicPattern:
       }
   | LBRACK pats=separated_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rhs2 parseState 1 3) }
+  | LBRACK_BAR t=tmNoEq BAR_RBRACK
+      { let mt = mk_term (Var (FStar_Parser_Const.tcresolve_lid)) (rhs parseState 3) Type_level in
+        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 4), Some (Meta mt)))
+                                 (rhs2 parseState 1 4) in
+        let asc = (t, None) in
+        mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 3)
+      }
   | LBRACE record_pat=separated_nonempty_list(SEMICOLON, fieldPattern) RBRACE
       { mk_pattern (PatRecord record_pat) (rhs2 parseState 1 3) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT

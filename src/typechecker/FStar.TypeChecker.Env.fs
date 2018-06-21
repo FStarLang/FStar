@@ -140,6 +140,7 @@ and implicit = {
     imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
     imp_tm     : term;                    // The term, made up of the ctx_uvar
     imp_range  : Range.range;             // Position where it was introduced
+    imp_meta   : option<(env * term)>;    // An optional metaprogram to try to fill it
 }
 and implicits = list<implicit>
 and tcenv_hooks =
@@ -686,6 +687,11 @@ let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
 let lookup_definition delta_levels env lid =
     lookup_definition_qninfo delta_levels lid <| lookup_qname env lid
 
+let quals_of_qninfo (qninfo : qninfo) : option<list<qualifier>> =
+  match qninfo with
+  | Some (Inr (se, _), _) -> Some se.sigquals
+  | _ -> None
+
 let attrs_of_qninfo (qninfo : qninfo) : option<list<attribute>> =
   match qninfo with
   | Some (Inr (se, _), _) -> Some se.sigattrs
@@ -1159,6 +1165,7 @@ let is_reifiable_function (env:env) (t:S.term) : bool =
 let push_sigelt env s =
   let sb = (lids_of_sigelt s, s) in
   let env = {env with gamma_sig = sb::env.gamma_sig} in
+  add_sigelt env s;
   env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
   build_lattice env s
 
@@ -1484,7 +1491,8 @@ let new_implicit_var_aux reason r env k should_check =
       let imp = { imp_reason = reason
                 ; imp_tm     = t
                 ; imp_uvar   = ctx_uvar
-                ; imp_range  = r } in
+                ; imp_range  = r
+                ; imp_meta   = None } in
       let g = {trivial_guard with implicits=[imp]} in
       t, [(ctx_uvar, r)], g
 
