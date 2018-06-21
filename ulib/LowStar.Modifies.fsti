@@ -988,6 +988,28 @@ val modifies_only_live_addresses
   (ensures (modifies l h h'))
 
 
+(* Generic way to ensure that a buffer just allocated is disjoint from
+   any other object, however the latter's liveness is defined. *)
+
+val loc_not_unused_in (h: HS.mem) : GTot loc
+
+val loc_unused_in (h: HS.mem) : GTot loc
+
+val live_loc_not_unused_in (#t: Type) (b: B.buffer t) (h: HS.mem) : Lemma
+  (requires (B.live h b))
+  (ensures (loc_not_unused_in h `loc_includes` loc_buffer b))
+
+val unused_in_loc_unused_in (#t: Type) (b: B.buffer t) (h: HS.mem) : Lemma
+  (requires (B.unused_in b h))
+  (ensures (loc_unused_in h `loc_includes` loc_buffer b))
+
+val modifies_address_liveness_insensitive_unused_in
+  (h h' : HS.mem)
+: Lemma
+  (requires (modifies (address_liveness_insensitive_locs) h h'))
+  (ensures (loc_not_unused_in h' `loc_includes` loc_not_unused_in h /\ loc_unused_in h `loc_includes` loc_unused_in h'))
+
+
 /// Type class instantiation for compositionality with other kinds of memory locations than regions, references or buffers (just in case).
 /// No usage pattern has been found yet.
 
