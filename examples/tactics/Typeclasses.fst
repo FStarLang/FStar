@@ -8,7 +8,7 @@ type eq a = {
     eq : a -> a -> bool;
 }
 
-let deq (#a:Type) [|eq a|] = Mkeq?.eq (solve ())
+[@tcnorm] let deq (#a:Type) [|eq a|] = Mkeq?.eq (solve ())
 
 noeq
 type additive a = {
@@ -16,8 +16,8 @@ type additive a = {
     plus : a -> a -> a;
 }
 
-let zero (#a:Type) [|additive a|] = Mkadditive?.zero (solve ())
-let plus (#a:Type) [|additive a|] = Mkadditive?.plus (solve ())
+[@tcnorm] let zero (#a:Type) [|additive a|] = Mkadditive?.zero (solve ())
+[@tcnorm] let plus (#a:Type) [|additive a|] = Mkadditive?.plus (solve ())
 
 noeq
 type num a = {
@@ -25,7 +25,7 @@ type num a = {
     add_super : additive a;
     minus : a -> a -> a;
 }
-let minus (#a:Type) [|num a|] = Mknum?.minus (solve ())
+[@tcnorm] let minus (#a:Type) [|num a|] = Mknum?.minus (solve ())
 
 // Needed!
 [@instance] let num_eq  (d : num 'a) : eq 'a = d.eq_super
@@ -53,7 +53,9 @@ let add_int : additive int = { zero = 0; plus = (+) }
 
 [@instance]
 let num_int : num int =
-  { eq_super = solve  (); add_super = solve (); minus = (fun x y -> x - y); }
+  { eq_super = solve  ();
+    add_super = solve ();
+    minus = (fun x y -> x - y); }
 
 [@instance]
 let add_bool : additive bool =
@@ -82,7 +84,13 @@ let rec sum (#a:Type) [|additive a|] (l : list a) : a =
 let sum2 (#a:Type) [|additive a|] (l : list a) : a =
     List.Tot.fold_right plus l zero
 
-let sandwich (#a:Type) [|num a|] (x y z : a) =
+let _ = assert_norm (sum2 [1;2;3;4] == 10)
+let _ = assert_norm (sum2 [false; true] == true)
+
+let sandwich (#a:Type) [|num a|] (x y z : a) : a =
     if deq x y
     then plus x z
     else minus y z
+
+let test1 = sum [1;2;3;4;5;6]
+let test2 = plus 40 (minus 10 8)

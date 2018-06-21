@@ -9,6 +9,10 @@ open FStar.Tactics
 irreducible
 let instance : unit = ()
 
+(* Things that should be normalized after phase1 *)
+irreducible
+let tcnorm : unit = ()
+
 let rec first (f : 'a -> Tac 'b) (l : list 'a) : Tac 'b =
     match l with
     | [] -> fail "no cands"
@@ -27,4 +31,4 @@ and trywith t : Tac unit =
     (fun () -> apply t) `seq` tcresolve
 
 (* Solve an explicit argument by typeclass resolution *)
-let solve (#a:Type) (#[tcresolve] ev : a) () : Tot a = ev
+unfold let solve (#a:Type) (#[tcresolve] ev : a) () : Tot a = ev
