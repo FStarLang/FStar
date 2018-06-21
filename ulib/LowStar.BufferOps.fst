@@ -11,6 +11,7 @@ module U32 = FStar.UInt32
 module G = FStar.Ghost
 module Seq = FStar.Seq
 module B = LowStar.Buffer
+module L = FStar.List.Tot
 
 inline_for_extraction
 unfold
@@ -42,3 +43,33 @@ let ( *= ) (#a: Type) (p: B.pointer a) (v: a) : HST.Stack unit
 = B.upd p 0ul v
 
 module M = LowStar.Modifies // many people will forget about it, so add it here so that it appears in the dependencies, and so its patterns will be in the SMT verification context without polluting the F* scope
+
+/// TODO: remove two assumptions + make this meta-evaluate properly
+inline_for_extraction
+let rec assign_list #a (l: list a) (b: B.buffer a): HST.Stack unit
+  (requires (fun h0 ->
+    B.live h0 b /\
+    B.length b = L.length l))
+  (ensures (fun h0 _ h1 ->
+    B.live h1 b /\
+    M.(modifies (loc_buffer b) h0 h1) /\
+    B.as_seq h1 b == Seq.of_list l))
+=
+  match l with
+  | [] ->
+      let h = HST.get () in
+      assert (B.length b = 0);
+      assert (Seq.length (B.as_seq h b) = 0);
+      assert (Seq.equal (B.as_seq h b) (Seq.empty #a));
+      assume (Seq.of_list [] == Seq.empty #a)
+  | hd :: tl ->
+      let b_hd = B.sub b 0ul 1ul in
+      let b_tl = B.offset b 1ul in
+      b_hd.(0ul) <- hd;
+      assign_list tl b_tl;
+      let h = HST.get () in
+      assert (B.get h b_hd 0 == hd);
+      assert (B.as_seq h b_tl == Seq.of_list tl);
+      assert (Seq.equal (B.as_seq h b) (Seq.append (B.as_seq h b_hd) (B.as_seq h b_tl)));
+      assume (Seq.equal (Seq.of_list l) (Seq.cons hd (Seq.of_list tl)));
+      assert (B.as_seq h b == Seq.of_list l)
