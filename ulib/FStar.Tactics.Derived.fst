@@ -360,21 +360,3 @@ let solve_then #a #b (t1 : unit -> Tac a) (t2 : a -> Tac b) : Tac b =
 (* Some syntax utility functions *)
 let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
 let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_to_term bv
-
-(*
- * Specialize a function by partially evaluating it
- * For example:
- *   let rec foo (l:list int) (x:int) :St int =
-       match l with
-       | [] -> x
-       | hd::tl -> x + foo tl x
-
-     let f :int -> St int = synth_by_tactic (specialize (foo [1; 2]) [%`foo])
-
- * would make the definition of f as x + x + x
- *
- * f is the term that needs to be specialized
- * l is the list of names to be delta-ed
- *)
-let specialize (#a:Type) (f:a) (l:list string) :unit -> Tac unit
-  = fun () -> solve_then (fun () -> exact (quote f)) (fun () -> norm [delta_only l; iota; zeta])
