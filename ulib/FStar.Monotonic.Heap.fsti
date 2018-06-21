@@ -69,7 +69,11 @@ let modifies_t (s:tset nat) (h0:heap) (h1:heap) =
   (forall (a:Type) (rel:preorder a) (r:mref a rel).{:pattern (contains h1 r)}
                                h0 `contains` r ==> h1 `contains` r) /\
   (forall (a:Type) (rel:preorder a) (r:mref a rel).{:pattern (r `unused_in` h0)}
-                               r `unused_in` h1 ==> r `unused_in` h0)
+                               r `unused_in` h1 ==> r `unused_in` h0) /\
+  (forall (n: nat) . {:pattern (n `addr_unused_in` h0) }
+    n `addr_unused_in` h1 ==> n `addr_unused_in` h0
+  )
+
 
 let modifies (s:set nat) (h0:heap) (h1:heap) = modifies_t (TS.tset_of_set s) h0 h1
 
@@ -144,6 +148,14 @@ val lemma_free_mm_unused
 		     (r2 `unused_in` h0       ==> r2 `unused_in` h1)      /\
 		     (r2 `unused_in` h1       ==> (r2 `unused_in` h0 \/ addr_of r2 = addr_of r1)))))
 	 [SMTPat (r2 `unused_in` (free_mm h0 r1))]
+
+val lemma_free_addr_unused_in
+  (#a: Type) (#rel: preorder a) (h: heap) (r: mref a rel { h `contains` r /\ is_mm r } )
+  (n: nat)
+: Lemma
+  (requires (n `addr_unused_in` (free_mm h r) /\ n <> addr_of r))
+  (ensures (n `addr_unused_in` h))
+  [SMTPat (n `addr_unused_in` (free_mm h r))]
 
 (*
  * AR: we can prove this lemma only if both the mreferences have same preorder
