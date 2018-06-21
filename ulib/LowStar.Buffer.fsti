@@ -554,6 +554,18 @@ let modifies_0_abuffer
   (ensures (abuffer_preserved b h1 h2))
 = same_mreference_abuffer_preserved b h1 h2 (fun a' pre r' -> modifies_0_mreference h1 h2 r')
 
+val modifies_0_unused_in
+  (h1 h2: HS.mem)
+  (r: HS.rid)
+  (n: nat)
+: Lemma
+  (requires (
+    modifies_0 h1 h2 /\
+    HS.live_region h1 r /\ HS.live_region h2 r /\
+    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)
+  ))
+  (ensures (n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)))
+
 val modifies_1 (#a: Type) (b: buffer a) (h1 h2: HS.mem) : GTot Type0
 
 val modifies_1_live_region (#a: Type) (b: buffer a) (h1 h2: HS.mem) (r: HS.rid) : Lemma
@@ -566,6 +578,20 @@ val modifies_1_liveness
 : Lemma
   (requires (modifies_1 b h1 h2 /\ h1 `HS.contains` r'))
   (ensures (h2 `HS.contains` r'))
+
+val modifies_1_unused_in
+  (#t: Type)
+  (b: buffer t)
+  (h1 h2: HS.mem)
+  (r: HS.rid)
+  (n: nat)
+: Lemma
+  (requires (
+    modifies_1 b h1 h2 /\
+    HS.live_region h1 r /\ HS.live_region h2 r /\
+    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)
+  ))
+  (ensures (n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)))
 
 val modifies_1_mreference
   (#a: Type) (b: buffer a)
@@ -607,6 +633,21 @@ val modifies_addr_of_mreference
 : Lemma
   (requires (modifies_addr_of b h1 h2 /\ (frameOf b <> HS.frameOf r' \/ as_addr b <> HS.as_addr r') /\ h1 `HS.contains` r'))
   (ensures (h2 `HS.contains` r' /\ h1 `HS.sel` r' == h2 `HS.sel` r'))
+
+val modifies_addr_of_unused_in
+  (#t: Type)
+  (b: buffer t)
+  (h1 h2: HS.mem)
+  (r: HS.rid)
+  (n: nat)
+: Lemma
+  (requires (
+    modifies_addr_of b h1 h2 /\
+    (r <> frameOf b \/ n <> as_addr b) /\
+    HS.live_region h1 r /\ HS.live_region h2 r /\
+    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)
+  ))
+  (ensures (n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)))
 
 
 /// The following stateful operations on buffers do not change the

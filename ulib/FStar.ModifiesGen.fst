@@ -728,21 +728,116 @@ let modifies_preserves_regions
 : GTot Type0
 = forall (r: HS.rid) . (HS.live_region h1 r /\ ~ (Set.mem r (Ghost.reveal (Loc?.region_liveness_tags s)))) ==> HS.live_region h2 r
 
+
+let modifies_preserves_not_unused_in
+  (#al: aloc_t) (#c: cls al)
+  (s: loc c)
+  (h1 h2: HS.mem)
+: GTot Type0
+= (forall (r: HS.rid) (n: nat) . (
+      HS.live_region h1 r /\ HS.live_region h2 r /\
+      n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r) /\
+      (Set.mem r (regions_of_loc s) ==> ~ (GSet.mem n (Loc?.non_live_addrs s r)))
+    ) ==> (
+      n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)
+  ))
+
+let modifies_preserves_not_unused_in_intro
+  (#al: aloc_t) (#c: cls al)
+  (s: loc c)
+  (h1 h2: HS.mem)
+  (f: (
+    (r: HS.rid) ->
+    (n: nat) ->
+    Lemma
+    (requires (
+      HS.live_region h1 r /\ HS.live_region h2 r /\
+      n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r) /\
+      (Set.mem r (regions_of_loc s) ==> ~ (GSet.mem n (Loc?.non_live_addrs s r)))
+    ))
+    (ensures (
+      n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)
+    ))
+  ))
+: Lemma
+  (modifies_preserves_not_unused_in s h1 h2)
+= let f'
+    (r: HS.rid)
+    (n: nat)
+  : Lemma
+    ((
+      HS.live_region h1 r /\ HS.live_region h2 r /\
+      n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r) /\
+      (Set.mem r (regions_of_loc s) ==> ~ (GSet.mem n (Loc?.non_live_addrs s r)))
+    ) ==> (
+      n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)
+    ))
+  = Classical.move_requires (f r) n
+  in
+  Classical.forall_intro_2 f'
+
 let modifies'
   (#al: aloc_t) (#c: cls al)
   (s: loc c)
   (h1 h2: HS.mem)
 : GTot Type0
 = modifies_preserves_regions s h1 h2 /\
+  modifies_preserves_not_unused_in s h1 h2 /\
   modifies_preserves_mreferences s h1 h2 /\
   modifies_preserves_livenesses s h1 h2 /\
   modifies_preserves_alocs s h1 h2
 
 let modifies = modifies'
 
+val modifies_intro_strong
+  (#al: aloc_t) (#c: cls al) (l: loc c) (h h' : HS.mem)
+  (regions: (
+    (r: HS.rid) ->
+    Lemma
+    (requires (HS.live_region h r))
+    (ensures (HS.live_region h' r))
+  ))
+  (mrefs: (
+    (t: Type0) ->
+    (pre: Preorder.preorder t) ->
+    (b: HS.mreference t pre) ->
+    Lemma
+    (requires ((loc_disjoint (loc_mreference b) l) /\ HS.contains h b))
+    (ensures (HS.contains h' b /\ HS.sel h' b == HS.sel h b))
+  ))
+  (livenesses: (
+    (t: Type0) ->
+    (pre: Preorder.preorder t) ->
+    (b: HS.mreference t pre) ->
+    Lemma
+    (requires (HS.contains h b))
+    (ensures (HS.contains h' b))
+  ))
+  (addr_unused_in: (
+    (r: HS.rid) ->
+    (n: nat) ->
+    Lemma
+    (requires (
+      (Set.mem r (regions_of_loc l) ==> ~ (GSet.mem n (Loc?.non_live_addrs l r))) /\
+      HS.live_region h r /\
+      HS.live_region h' r /\ n `Heap.addr_unused_in` (HS.get_hmap h' `Map.sel` r)
+    ))
+    (ensures (n `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` r)))
+  ))
+  (alocs: (
+    (r: HS.rid) ->
+    (a: nat) ->
+    (x: al r a) ->
+    Lemma
+    (requires (loc_disjoint (loc_of_aloc x) l))
+    (ensures (c.aloc_preserved x h h'))
+  ))
+: Lemma
+  (modifies l h h')
+
 #reset-options "--z3rlimit 32"
 
-let modifies_intro #al #c l h h' regions mrefs lives alocs =
+let modifies_intro_strong #al #c l h h' regions mrefs lives unused_ins alocs =
   Classical.forall_intro (Classical.move_requires regions);
   assert (modifies_preserves_regions l h h');
   modifies_preserves_mreferences_intro l h h' (fun t pre p ->
@@ -753,6 +848,9 @@ let modifies_intro #al #c l h h' regions mrefs lives alocs =
     mrefs t pre p
   );
   Classical.forall_intro_3 (fun t pre p -> Classical.move_requires (lives t pre) p);
+  modifies_preserves_not_unused_in_intro l h h' (fun r n ->
+    unused_ins r n
+  );
   modifies_preserves_alocs_intro l h h' () (fun r a b ->
     loc_aux_disjoint_sym (Ghost.reveal (Loc?.aux l)) (Ghost.reveal (Loc?.aux (loc_of_aloc b)));
     alocs r a b
@@ -760,16 +858,25 @@ let modifies_intro #al #c l h h' regions mrefs lives alocs =
 
 #reset-options
 
-let modifies_none_intro #al #c h h' regions mrefs =
-  modifies_intro #_ #c loc_none h h'
+let modifies_intro #al #c l h h'  regions mrefs lives unused_ins alocs =
+  modifies_intro_strong l h h'
+    regions
+    mrefs
+    lives
+    (fun r n -> unused_ins r n)
+    alocs
+
+let modifies_none_intro #al #c h h' regions mrefs unused_ins =
+  modifies_intro_strong #_ #c loc_none h h'
     (fun r -> regions r)
     (fun t pre b -> mrefs t pre b)
     (fun t pre b -> mrefs t pre b)
+    (fun r n -> unused_ins r n)
     (fun r a x ->
       c.same_mreference_aloc_preserved x h h' (fun t pre b -> mrefs t pre b)
     )
 
-let modifies_address_intro #al #c r n h h' regions mrefs =
+let modifies_address_intro #al #c r n h h' regions mrefs unused_ins =
   Classical.forall_intro (Classical.move_requires regions);
   let l : loc c = loc_addresses #_ #c false r (Set.singleton n) in
   modifies_preserves_mreferences_intro l h h'
@@ -778,16 +885,20 @@ let modifies_address_intro #al #c r n h h' regions mrefs =
   modifies_preserves_livenesses_intro l h h'
     (fun t pre p -> mrefs t pre p)
   ;
+  modifies_preserves_not_unused_in_intro l h h'
+    (fun r n -> unused_ins r n)
+  ;
   modifies_preserves_alocs_intro l h h' ()
     (fun r a b -> 
       c.same_mreference_aloc_preserved b h h' (fun t pre p -> mrefs t pre p)
     )
 
-let modifies_aloc_intro #al #c #r #n x h h' regions mrefs livenesses alocs =
-  modifies_intro #_ #c (loc_of_aloc x) h h'
+let modifies_aloc_intro #al #c #r #n x h h' regions mrefs livenesses unused_ins alocs =
+  modifies_intro_strong #_ #c (loc_of_aloc x) h h'
     (fun r -> regions r)
     (fun t pre b -> mrefs t pre b)
     (fun t pre b -> livenesses t pre b)
+    (fun r n -> unused_ins r n)
     (fun r' n' z ->
       if r' = r && n' = n
       then begin
@@ -966,10 +1077,11 @@ let no_upd_fresh_region #al #c r l h0 h1 =
   modifies_only_live_regions (HS.mod_set (Set.singleton r)) l h0 h1
 
 let fresh_frame_modifies #al c h0 h1 =
-  modifies_intro #_ #c loc_none h0 h1
+  modifies_intro_strong #_ #c loc_none h0 h1
     (fun _ -> ())
     (fun _ _ _ -> ())
     (fun _ _ _ -> ())
+    (fun _ _ -> ())
     (fun r a x ->
       c.same_mreference_aloc_preserved #r #a x h0 h1 (fun _ _ _ -> ()))
 
@@ -1037,6 +1149,9 @@ let modifies_loc_addresses_intro_weak
   modifies_preserves_livenesses_intro (loc_union (loc_addresses true r s) l) h1 h2 (fun r' a' b' ->
     ()
   );
+  modifies_preserves_not_unused_in_intro (loc_union (loc_addresses true r s) l) h1 h2 (fun r' n' ->
+    ()
+  );
   let f (a: nat) (b: al r a) : Lemma
     (requires (not (Set.mem a s)))
     (ensures (c.aloc_preserved b h1 h2))
@@ -1081,7 +1196,7 @@ let modifies_free #al #c #a #rel r m =
     (ensures (c.aloc_preserved b m (HS.free r m)))
   = c.same_mreference_aloc_preserved #r' #a b m (HS.free r m) (fun a' pre r' -> ())
   in
-  modifies_preserves_alocs_intro (loc_mreference #_ #c r) m (HS.free r m) () (fun r a b -> g r a b)
+  modifies_preserves_alocs_intro (loc_freed_mreference #_ #c r) m (HS.free r m) () (fun r a b -> g r a b)
 
 let modifies_none_modifies #al #c h1 h2
 = let g (r: HS.rid) (a: nat) (b: al r a) : Lemma
@@ -1319,7 +1434,7 @@ let modifies_only_live_addresses #al #c r a l h h' =
 
 let loc_not_unused_in #al c h =
   let f (r: HS.rid) : GTot (GSet.set nat) =
-    GSet.comprehend (fun a -> not (StrongExcludedMiddle.strong_excluded_middle (h `does_not_contain_addr` (r, a))))
+    GSet.comprehend (fun a -> StrongExcludedMiddle.strong_excluded_middle (HS.live_region h r /\ ~ (h `does_not_contain_addr` (r, a))))
   in
   Loc
     (Ghost.hide (Set.complement Set.empty))
@@ -1345,6 +1460,13 @@ let loc_addresses_not_unused_in #al c r a h = ()
 
 let loc_unused_in_not_unused_in_disjoint #al c h =
   assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)))
+
+#set-options "--z3rlimit 16"
+
+let modifies_address_liveness_insensitive_unused_in #al c h h' =
+  assert (forall r . HS.live_region h r ==> HS.live_region h' r) 
+
+#reset-options
 
 
 (* * Compositionality *)
@@ -1789,6 +1911,8 @@ let modifies_union_loc_of_loc_intro
 = let l' = union_loc_of_loc c b l in
   assert (modifies_preserves_regions l' h1 h2);
   assert (modifies_preserves_mreferences l' h1 h2);
+  assert (modifies_preserves_livenesses l' h1 h2);
+  assert (modifies_preserves_not_unused_in l' h1 h2);
   modifies_preserves_alocs_intro #_ #(cls_union c) l' h1 h2 () (fun r' a' b' ->
     let b_ = bool_of_cls_union_aloc b' in
     let a_ = aloc_of_cls_union_aloc b' in

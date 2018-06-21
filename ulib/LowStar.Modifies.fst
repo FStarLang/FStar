@@ -213,6 +213,7 @@ let modifies_0_modifies h1 h2 =
   MG.modifies_none_intro #_ #cls h1 h2
     (fun r -> B.modifies_0_live_region h1 h2 r)
     (fun t pre b -> B.modifies_0_mreference #t #pre h1 h2 b)
+    (fun r n -> B.modifies_0_unused_in h1 h2 r n)
 
 let modifies_1_modifies #t b h1 h2 =
   if B.g_is_null b
@@ -230,6 +231,9 @@ let modifies_1_modifies #t b h1 h2 =
     (fun t pre p ->
       B.modifies_1_liveness b h1 h2 p
     )
+    (fun r n ->
+      B.modifies_1_unused_in b h1 h2 r n
+    )
     (fun r' a' b' ->
       loc_disjoint_sym (MG.loc_of_aloc b') (loc_buffer b);
       MG.loc_disjoint_aloc_elim #_ #cls #(B.frameOf b) #(B.as_addr b)  #r' #a' (B.abuffer_of_buffer b)  b';
@@ -246,6 +250,9 @@ let modifies_addr_of_modifies #t b h1 h2 =
     (fun r -> B.modifies_addr_of_live_region b h1 h2 r)
     (fun t pre p ->
       B.modifies_addr_of_mreference b h1 h2 p
+    )
+    (fun r n ->
+      B.modifies_addr_of_unused_in b h1 h2 r n
     )
 
 

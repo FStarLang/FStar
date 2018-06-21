@@ -3869,6 +3869,7 @@ let screate
     (fun _ -> ())
     (fun _ _ _ -> ())
     (fun _ _ _ -> ())
+    (fun _ _ -> ())
     (fun r a b ->
       cls.MG.same_mreference_aloc_preserved b h0 h1 (fun _ _ _ -> ())
     )
@@ -3915,6 +3916,7 @@ let ecreate
     (fun _ -> ())
     (fun _ _ _ -> ())
     (fun _ _ _ -> ())
+    (fun _ _ -> ())
     (fun r a b ->
       cls.MG.same_mreference_aloc_preserved b h0 h1 (fun _ _ _ -> ())
     )
@@ -4073,6 +4075,7 @@ let owrite
       MG.loc_disjoint_aloc_addresses_elim #_ #cls #(frameOf b) #(as_addr b) (LocPointer b) true (HS.frameOf p') (Set.singleton (HS.as_addr p'))
     )
     (fun _ _ _ -> ())
+    (fun _ _ -> ())
     (fun r' a' b' ->
       MG.loc_disjoint_aloc_elim #_ #cls #r' #a' #(frameOf b) #(as_addr b) b' (LocPointer b)
     )
