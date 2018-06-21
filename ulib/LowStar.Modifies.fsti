@@ -1001,10 +1001,12 @@ val loc_unused_in_not_unused_in_disjoint (h: HS.mem) : Lemma
 val live_loc_not_unused_in (#t: Type) (b: B.buffer t) (h: HS.mem) : Lemma
   (requires (B.live h b))
   (ensures (loc_not_unused_in h `loc_includes` loc_buffer b))
+  [SMTPat (B.live h b)]
 
 val unused_in_loc_unused_in (#t: Type) (b: B.buffer t) (h: HS.mem) : Lemma
   (requires (B.unused_in b h))
   (ensures (loc_unused_in h `loc_includes` loc_buffer b))
+  [SMTPat (B.unused_in b h)]
 
 val modifies_address_liveness_insensitive_unused_in
   (h h' : HS.mem)
@@ -1020,6 +1022,7 @@ val mreference_live_loc_not_unused_in
 : Lemma
   (requires (h `HS.contains` r))
   (ensures (loc_not_unused_in h `loc_includes` loc_freed_mreference r /\ loc_not_unused_in h `loc_includes` loc_mreference r))
+  [SMTPat (HS.contains h r)]
 
 val mreference_unused_in_loc_unused_in
   (#t: Type)
@@ -1029,6 +1032,7 @@ val mreference_unused_in_loc_unused_in
 : Lemma
   (requires (r `HS.unused_in` h))
   (ensures (loc_unused_in h `loc_includes` loc_freed_mreference r /\ loc_unused_in h `loc_includes` loc_mreference r))
+  [SMTPat (HS.unused_in r h)]
 
 
 /// Type class instantiation for compositionality with other kinds of memory locations than regions, references or buffers (just in case).

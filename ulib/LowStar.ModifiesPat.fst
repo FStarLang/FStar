@@ -5,7 +5,6 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module B = LowStar.Buffer
 
-
 let loc_disjoint_union_r'
   (s s1 s2: loc)
 : Lemma
@@ -243,3 +242,53 @@ let popped_modifies_inert
   (ensures (modifies_inert (loc_region_only false (HS.get_tip h0)) h0 h1))
   [SMTPat (HS.popped h0 h1)]
 = popped_modifies h0 h1
+
+let modifies_inert_loc_unused_in
+  (l: loc)
+  (h1 h2: HS.mem)
+  (l' : loc)
+: Lemma
+  (requires (
+    modifies_inert l h1 h2 /\
+    address_liveness_insensitive_locs `loc_includes` l /\
+    loc_unused_in h2 `loc_includes` l'
+  ))
+  (ensures (loc_unused_in h1 `loc_includes` l'))
+  [SMTPat (modifies_inert l h1 h2); SMTPat (loc_unused_in h2 `loc_includes` l')]
+= modifies_loc_includes address_liveness_insensitive_locs h1 h2 l;
+  modifies_address_liveness_insensitive_unused_in h1 h2;
+  loc_includes_trans (loc_unused_in h1) (loc_unused_in h2) l'
+
+let unused_in_not_unused_in_disjoint_2
+  (l1 l2 l1' l2': loc)
+  (h: HS.mem)
+: Lemma
+  (requires (loc_unused_in h `loc_includes` l1 /\ loc_not_unused_in h `loc_includes` l2 /\ l1 `loc_includes` l1' /\ l2 `loc_includes` l2' ))
+  (ensures (loc_disjoint l1'  l2' ))
+  [SMTPat (loc_disjoint l1' l2'); SMTPat (loc_unused_in h `loc_includes` l1); SMTPat (loc_not_unused_in h `loc_includes` l2); SMTPat (l1 `loc_includes` l1') ; SMTPat (l2 `loc_includes` l2' )]
+= loc_includes_trans (loc_unused_in h) l1 l1' ;
+  loc_includes_trans (loc_not_unused_in h) l2 l2'  ;
+  loc_unused_in_not_unused_in_disjoint h ;
+  loc_disjoint_includes (loc_unused_in h) (loc_not_unused_in h) l1' l2' 
+
+let unused_in_not_unused_in_disjoint_1
+  (l1 l2 l1'  : loc)
+  (h: HS.mem)
+: Lemma
+  (requires (
+    loc_unused_in h `loc_includes` l1 /\
+    loc_not_unused_in h `loc_includes` l2 /\
+    l1 `loc_includes` l1' 
+  ))
+  (ensures (l1' `loc_disjoint` l2))
+= assert (loc_includes l2 l2)
+
+let unused_in_not_unused_in_disjoint_0
+  (l1 l2: loc)
+  (h: HS.mem)
+: Lemma
+  (requires (loc_unused_in h `loc_includes` l1 /\ loc_not_unused_in h `loc_includes` l2))
+  (ensures (loc_disjoint l1 l2))
+  [SMTPat (loc_disjoint l1 l2); SMTPat (loc_unused_in h `loc_includes` l1); SMTPat (loc_not_unused_in h `loc_includes` l2)]
+= assert (loc_includes l1 l1);
+  assert (loc_includes l2 l2)
