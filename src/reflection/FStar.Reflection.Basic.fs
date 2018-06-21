@@ -67,6 +67,7 @@ let pack_fv (ns:list<string>) : fv =
         if Ident.lid_equals lid PC.none_lid then Some Data_ctor else
         None
     in
+    // FIXME: Get a proper delta depth
     lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) attr
 
 // TODO: move to library?
@@ -300,7 +301,8 @@ let lookup_attr (attr:term) (env:Env.env) : list<fv> =
         let ses = Env.lookup_attr env (Ident.text_of_lid (lid_of_fv fv)) in
         List.concatMap (fun se -> match U.lid_of_sigelt se with
                                   | None -> []
-                                  | Some l -> [S.lid_as_fv l S.delta_constant None]) ses
+                                  // FIXME: Get a proper delta depth
+                                  | Some l -> [S.lid_as_fv l (S.Delta_constant_at_level 999) None]) ses
     | _ -> []
 
 let lookup_typ (env:Env.env) (ns:list<string>) : option<sigelt> =
