@@ -995,6 +995,9 @@ val loc_not_unused_in (h: HS.mem) : GTot loc
 
 val loc_unused_in (h: HS.mem) : GTot loc
 
+val loc_unused_in_not_unused_in_disjoint (h: HS.mem) : Lemma
+  (loc_disjoint (loc_unused_in h) (loc_not_unused_in h))
+
 val live_loc_not_unused_in (#t: Type) (b: B.buffer t) (h: HS.mem) : Lemma
   (requires (B.live h b))
   (ensures (loc_not_unused_in h `loc_includes` loc_buffer b))
