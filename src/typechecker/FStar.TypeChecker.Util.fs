@@ -1136,7 +1136,8 @@ let maybe_instantiate (env:Env.env) e t =
                       let subst = NT(x, v)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
                       (v, Some (Implicit dot))::args, bs, subst, Env.conj_guard g g'
-                  | _, (x, Some (Meta tau ))::rest ->
+
+                  | _, (x, Some (Meta tau))::rest ->
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of meta argument" e.pos env t in
                       let mark_meta_implicits tau g =
@@ -1145,7 +1146,8 @@ let maybe_instantiate (env:Env.env) e t =
                       let g = mark_meta_implicits tau g in
                       let subst = NT(x, v)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some (Implicit false))::args, bs, subst, Env.conj_guard g g'
+                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
+
                  | _, bs -> [], bs, subst, Env.trivial_guard
               in
               let args, bs, subst, guard = aux [] (inst_n_binders t) bs in
