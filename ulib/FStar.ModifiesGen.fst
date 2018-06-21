@@ -740,7 +740,7 @@ let modifies'
 
 let modifies = modifies'
 
-#reset-options "--z3rlimit 50"
+#reset-options "--z3rlimit 100"
 
 let modifies_intro #al #c l h h' regions mrefs lives alocs =
   Classical.forall_intro (Classical.move_requires regions);
