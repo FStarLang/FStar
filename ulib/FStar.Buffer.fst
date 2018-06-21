@@ -833,7 +833,6 @@ val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
 let createL #a init =
   let len = UInt32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.of_list init in
-  lemma_of_list_length s init;
   let content: reference (lseq a (v len)) =
     salloc (Seq.of_list init) in
   let b = MkBuffer len content 0ul len in
