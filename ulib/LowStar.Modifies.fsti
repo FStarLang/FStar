@@ -887,7 +887,7 @@ val mreference_live_buffer_unused_in_disjoint
 : Lemma
   (requires (HS.contains h b1 /\ B.unused_in b2 h))
   (ensures (loc_disjoint (loc_freed_mreference b1) (loc_buffer b2)))
-  [SMTPat (HS.contains h b1); SMTPat (B.unused_in b2 h)]
+//  [SMTPat (HS.contains h b1); SMTPat (B.unused_in b2 h)]
 
 /// Any live buffer is disjoint from a reference which has not been
 /// allocated yet.
@@ -902,7 +902,7 @@ val buffer_live_mreference_unused_in_disjoint
 : Lemma
   (requires (B.live h b1 /\ HS.unused_in b2 h))
   (ensures (loc_disjoint (loc_buffer b1) (loc_freed_mreference b2)))
-  [SMTPat (B.live h b1); SMTPat (HS.unused_in b2 h)]
+//  [SMTPat (B.live h b1); SMTPat (HS.unused_in b2 h)]
 
 ///  A memory ``h`` does not contain address ``a`` in region ``r``, denoted
 ///  ``does_not_contain_addr h (r, a)``, only if, either region ``r`` is

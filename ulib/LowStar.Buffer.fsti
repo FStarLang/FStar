@@ -349,12 +349,13 @@ val disjoint_includes_r (#a1 #a2: Type) (b1 : buffer a1) (b2 b2': buffer a2) : L
 val live_unused_in_disjoint (#a1 #a2: Type) (h: HS.mem) (b1: buffer a1) (b2: buffer a2) : Lemma
   (requires (live h b1 /\ (unused_in b2 h)))
   (ensures (disjoint b1 b2))
+(*
   [SMTPatOr [
     [SMTPat (live h b1); SMTPat (disjoint b1 b2)];
     [SMTPat (live h b1); SMTPat (unused_in b2 h)];
     [SMTPat (unused_in b2 h); SMTPat (disjoint b1 b2)];
   ]]
-
+*)
 
 /// If two buffers live in different regions or at different
 /// addresses, then they are disjoint.
