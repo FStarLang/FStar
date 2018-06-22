@@ -1220,7 +1220,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     in
 
     let guard = if env.top_level || not(Env.should_verify env)
-                then Rel.discharge_guard env (Env.conj_guard g_env (Env.close_guard envbody bs guard_body))
+                then Env.conj_guard (Rel.discharge_guard env g_env)
+                                    (Rel.discharge_guard envbody guard_body)
                 else let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
                      guard in
 
