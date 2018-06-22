@@ -1358,7 +1358,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         | None ->
             raise_error (Errors.Fatal_SplicedUndef, BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" (string_of_lid lid) (String.concat ", " <| List.map string_of_lid lids')) r
     ) lids;
-    [], ses, env0
+    let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
+    let env = { env with dsenv = dsenv } in
+    [], ses, env
 
   | Sig_let(lbs, lids) ->
     let env = Env.set_range env r in
