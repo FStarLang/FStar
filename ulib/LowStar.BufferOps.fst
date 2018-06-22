@@ -43,6 +43,7 @@ let ( *= ) (#a: Type) (p: B.pointer a) (v: a) : HST.Stack unit
 = B.upd p 0ul v
 
 module M = LowStar.Modifies // many people will forget about it, so add it here so that it appears in the dependencies, and so its patterns will be in the SMT verification context without polluting the F* scope
+module MP = LowStar.ModifiesPat
 
 /// TODO: remove two assumptions + make this meta-evaluate properly
 inline_for_extraction
@@ -65,11 +66,13 @@ let rec assign_list #a (l: list a) (b: B.buffer a): HST.Stack unit
   | hd :: tl ->
       let b_hd = B.sub b 0ul 1ul in
       let b_tl = B.offset b 1ul in
-      b_hd.(0ul) <- hd;
-      assign_list tl b_tl;
       let h = HST.get () in
-      assert (B.get h b_hd 0 == hd);
-      assert (B.as_seq h b_tl == Seq.of_list tl);
-      assert (Seq.equal (B.as_seq h b) (Seq.append (B.as_seq h b_hd) (B.as_seq h b_tl)));
-      assume (Seq.equal (Seq.of_list l) (Seq.cons hd (Seq.of_list tl)));
-      assert (B.as_seq h b == Seq.of_list l)
+      b_hd.(0ul) <- hd;
+      let h0 = HST.get () in
+      assign_list tl b_tl;
+      let h1 = HST.get () in
+      assert B.(as_seq h1 b_hd == as_seq h0 b_hd);
+      assert (B.get h1 b_hd 0 == hd);
+      assert (B.as_seq h1 b_tl == Seq.of_list tl);
+      assert (Seq.equal (B.as_seq h1 b) (Seq.append (B.as_seq h1 b_hd) (B.as_seq h1 b_tl)));
+      assume (Seq.equal (Seq.of_list l) (Seq.cons hd (Seq.of_list tl)))
