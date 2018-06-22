@@ -924,3 +924,21 @@ let rec mem_seq_of_list
      lemma_mem_inversion (seq_of_list l)
     in
     mem_seq_of_list x q
+
+let lemma_of_list_induction (#a:Type) (l:list a)
+  :Lemma (match l with
+          | [] -> Seq.equal (Seq.of_list #a []) (Seq.empty #a)
+	  | hd::tl -> Seq.equal (Seq.of_list l) (cons hd (Seq.of_list tl)))
+  = match l with
+    | [] -> lemma_of_list_length l; lemma_empty (Seq.of_list #a [])
+    | _ ->
+      lemma_of_list_length l;
+      let aux (i:nat)
+        :Lemma (ensures  (i < List.Tot.length l ==>
+	                  Seq.index (Seq.of_list l) i == List.Tot.index l i))
+        = ()
+      in
+      FStar.Classical.forall_intro aux
+
+
+

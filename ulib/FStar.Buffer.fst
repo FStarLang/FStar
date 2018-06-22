@@ -1435,15 +1435,14 @@ let rec assignL #a (l: list a) (b: buffer a): Stack unit
     live h1 b /\
     modifies_1 b h0 h1 /\
     as_seq h1 b == Seq.of_list l))
-=
+= lemma_of_list_induction l;
   match l with
   | [] ->
       let h = HST.get () in
       assert (length b = List.Tot.length l);
       assert_norm (List.Tot.length l = 0);
       assert (Seq.length (as_seq h b) = 0);
-      assert (Seq.equal (as_seq h b) (Seq.empty #a));
-      lemma_empty (Seq.of_list #a [])
+      assert (Seq.equal (as_seq h b) (Seq.empty #a))
   | hd :: tl ->
       let b_hd = sub b 0ul 1ul in
       let b_tl = offset b 1ul in
@@ -1453,11 +1452,4 @@ let rec assignL #a (l: list a) (b: buffer a): Stack unit
       assert (get h b_hd 0 == hd);
       assert (as_seq h b_tl == Seq.of_list tl);
       assert (Seq.equal (as_seq h b) (Seq.append (as_seq h b_hd) (as_seq h b_tl)));
-      let aux (i:nat)
-        :Lemma (ensures  ((i < List.Tot.length l /\ i < Seq.length (Seq.of_list l)) ==>
-	                  Seq.index (Seq.of_list l) i == List.Tot.index l i))
-        = ()
-      in
-      FStar.Classical.forall_intro aux;
-      assert (Seq.equal (Seq.of_list l) (Seq.cons hd (Seq.of_list tl)));
       assert (as_seq h b == Seq.of_list l)
