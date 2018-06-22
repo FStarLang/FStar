@@ -4264,15 +4264,15 @@ and (tc_abs :
                             if uu____11667
                             then
                               let uu____11670 =
-                                let uu____11671 =
-                                  FStar_TypeChecker_Env.close_guard envbody1
-                                    bs1 guard_body
-                                   in
-                                FStar_TypeChecker_Env.conj_guard g_env
-                                  uu____11671
+                                FStar_TypeChecker_Rel.discharge_guard env1
+                                  g_env
                                  in
-                              FStar_TypeChecker_Rel.discharge_guard env1
-                                uu____11670
+                              let uu____11671 =
+                                FStar_TypeChecker_Rel.discharge_guard
+                                  envbody1 guard_body
+                                 in
+                              FStar_TypeChecker_Env.conj_guard uu____11670
+                                uu____11671
                             else
                               (let guard =
                                  let uu____11674 =
