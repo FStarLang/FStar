@@ -359,4 +359,3 @@ let embed_arrow_3 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:e
       Some (ed FStar.Range.dummyRange (f a b c)))))
     | _ ->
       None
-

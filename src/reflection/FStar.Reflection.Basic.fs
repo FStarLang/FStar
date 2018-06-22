@@ -309,6 +309,12 @@ let lookup_typ (env:Env.env) (ns:list<string>) : option<sigelt> =
     | Some (BU.Inl _, rng) -> None
     | Some (BU.Inr (se, us), rng) -> Some se
 
+let sigelt_attrs (se : sigelt) : list<attribute> =
+    se.sigattrs
+
+let set_sigelt_attrs (attrs : list<attribute>) (se : sigelt) : sigelt =
+    { se with sigattrs = attrs }
+
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with
     | Sig_let ((r, [lb]), _) ->

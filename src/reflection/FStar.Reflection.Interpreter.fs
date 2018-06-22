@@ -63,6 +63,9 @@ let reflection_primops : list<N.primitive_step> =
         mk1 "inspect_bv" inspect_bv E.e_bv   E.e_bv_view;
         mk1 "pack_bv"    pack_bv E.e_bv_view E.e_bv;
 
+        mk1 "sigelt_attrs" sigelt_attrs E.e_sigelt E.e_attributes;
+        mk2 "set_sigelt_attrs" set_sigelt_attrs E.e_attributes E.e_sigelt E.e_sigelt;
+
         mk1 "inspect_binder" inspect_binder E.e_binder E.e_binder_view;
 
         mk2 "pack_binder"    pack_binder E.e_bv E.e_aqualv E.e_binder;
