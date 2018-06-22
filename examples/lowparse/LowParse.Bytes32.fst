@@ -57,5 +57,5 @@ let b32_reveal_create
   Seq.lemma_eq_elim lhs rhs
 
 let reveal_empty () : Lemma
-  (reveal empty_bytes == Seq.createEmpty)
-= assert (Seq.equal (reveal empty_bytes) Seq.createEmpty)
+  (reveal empty_bytes == Seq.empty)
+= assert (Seq.equal (reveal empty_bytes) Seq.empty)

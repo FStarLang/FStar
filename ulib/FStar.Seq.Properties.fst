@@ -625,7 +625,7 @@ let rec seq_to_list #a s =
 val seq_of_list: #a:Type -> l:list a -> Tot (s:seq a{L.length l = length s})
 let rec seq_of_list #a l =
   match l with
-  | [] -> createEmpty #a
+  | [] -> Seq.empty #a
   | hd::tl -> create 1 hd @| seq_of_list tl
 
 val lemma_seq_list_bij: #a:Type -> s:seq a -> Lemma
@@ -696,7 +696,7 @@ let contains_elim (#a:Type) (s:seq a) (x:a)
 	  (exists (k:nat). k < Seq.length s /\ Seq.index s k == x))
   = ()
 
-let lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.createEmpty x)) = ()
+let lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.empty x)) = ()
 
 let lemma_contains_singleton (#a:Type) (x:a) : Lemma (forall (y:a). contains (create 1 x) y ==> y == x) = ()
 
@@ -872,9 +872,9 @@ let slice_is_empty
   (i: nat {i <= length s})
 : Lemma
   (requires True)
-  (ensures (slice s i i == createEmpty))
+  (ensures (slice s i i == Seq.empty))
   [SMTPat (slice s i i)]
-= lemma_eq_elim (slice s i i) createEmpty
+= lemma_eq_elim (slice s i i) Seq.empty
 
 let slice_length
   (#a: Type)

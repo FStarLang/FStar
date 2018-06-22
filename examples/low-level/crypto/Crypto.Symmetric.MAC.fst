@@ -34,7 +34,7 @@ val text_to_PS_text: t:text -> Tot (t':PS.text{
     i < Seq.length t ==> Seq.index t i == Seq.index t' i)})
   (decreases (Seq.length t))
 let rec text_to_PS_text t =
-  if Seq.length t = 0 then Seq.createEmpty
+  if Seq.length t = 0 then Seq.empty
   else
     Seq.cons (Seq.head t)
                        (text_to_PS_text (Seq.tail t))

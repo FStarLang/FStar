@@ -213,7 +213,7 @@ open FStar.Seq
 (* Casts *)
 val to_vec: #n:nat -> num:uint_t n -> Tot (bv_t n)
 let rec to_vec #n num =
-  if n = 0 then Seq.createEmpty #bool
+  if n = 0 then Seq.empty #bool
   else Seq.append (to_vec #(n - 1) (num / 2)) (Seq.create 1 (num % 2 = 1))
 
 val from_vec: #n:nat -> vec:bv_t n -> Tot (uint_t n)

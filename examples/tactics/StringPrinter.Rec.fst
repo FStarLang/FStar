@@ -151,8 +151,8 @@ let rec do_while_correct
 private let seq_append_empty_l
   (s: Seq.seq FStar.UInt8.t)
 : Lemma
-  (ensures (Seq.append Seq.createEmpty s == s))
-  [SMTPat (Seq.append Seq.createEmpty s)]
+  (ensures (Seq.append Seq.empty s == s))
+  [SMTPat (Seq.append Seq.empty s)]
 = Seq.append_empty_l s
 
 let rewrite_do_while
@@ -250,6 +250,6 @@ let mk_do_while (#t: Type) (x: t) : T.Tac unit =
 let seq_append_empty_r
   (s: Seq.seq FStar.UInt8.t)
 : Lemma
-  (ensures (Seq.append s Seq.createEmpty == s))
-  [SMTPat (Seq.append s Seq.createEmpty)]
+  (ensures (Seq.append s Seq.empty == s))
+  [SMTPat (Seq.append s Seq.empty)]
 = Seq.append_empty_r s

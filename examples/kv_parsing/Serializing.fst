@@ -35,7 +35,7 @@ module Cast = FStar.Int.Cast
 val encode_many : #t:Type -> l:list t -> enc:(t -> bytes) -> n:nat{n <= List.length l} -> bytes
 let rec encode_many #t l enc n =
   match n with
-  | 0 -> Seq.createEmpty
+  | 0 -> Seq.empty
   | _ -> enc (List.hd l) `append`
         encode_many (List.tail l) enc (n-1)
 

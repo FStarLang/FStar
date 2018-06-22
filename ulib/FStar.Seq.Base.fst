@@ -247,14 +247,14 @@ abstract let append_empty_l
   (#a: Type)
   (s: seq a)
 : Lemma
-  (ensures (append createEmpty s == s))
+  (ensures (append empty s == s))
 = List.append_nil_l (MkSeq?.l s)
 
 abstract let append_empty_r
   (#a: Type)
   (s: seq a)
 : Lemma
-  (ensures (append s createEmpty == s))
+  (ensures (append s empty == s))
 = List.append_l_nil (MkSeq?.l s)
 
 

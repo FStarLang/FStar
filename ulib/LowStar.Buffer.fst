@@ -70,7 +70,7 @@ let lseq = Seq.lseq
 
 let rec lseq_of_vec (#a: Type0) (#n: nat) (l: vec a n) : Tot (lseq a n) =
   if n = 0
-  then Seq.createEmpty
+  then Seq.empty
   else Seq.cons (VCons?.vec_hd l) (lseq_of_vec (VCons?.vec_tl l))
 
 let rec vec_of_lseq (#a: Type0) (#n: nat) (l: lseq a n) : Tot (vec a n) =
@@ -108,7 +108,7 @@ let rec vec_of_lseq_of_vec #a #n l =
 
 let as_seq #a h b =
   match b with
-  | Null -> Seq.createEmpty
+  | Null -> Seq.empty
   | Buffer max_len content idx len ->
     Seq.slice (lseq_of_vec (HS.sel h content)) (U32.v idx) (U32.v idx + U32.v len)
 

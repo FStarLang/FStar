@@ -245,12 +245,12 @@ let keygen (parent:rid)
     fresh_region k.region h0 h1 /\
     Map.contains (get_hmap h1) k.region /\
     contains h1 k.log /\
-    sel h1 k.log == createEmpty /\
+    sel h1 k.log == Seq.empty /\
     invariant h1 k)) =
   let region = new_region parent in
   let ke = CPA.keygen region in
   let ka = MAC.keygen region in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region Seq.empty in
   Key #region ke ka log
 
 /// encrypt:
