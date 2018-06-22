@@ -284,10 +284,10 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
         //           xsdenote m vm (canon r2)))));
         apply (`monoid_reflect);
         // dump ("after apply");
-        norm [delta_only [%`canon; %`xsdenote; %`flatten; %`sort;
-                %`select; %`assoc; %`fst; %`__proj__Mktuple2__item___1;
-                %`(@); %`append; %`List.Tot.Base.sortWith;
-                %`List.Tot.Base.partition; %`bool_of_compare; %`compare_of_bool;
+        norm [delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
+                `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
+                `%(@); `%append; `%List.Tot.Base.sortWith;
+                `%List.Tot.Base.partition; `%bool_of_compare; `%compare_of_bool;
            ]; primops]
         // ;dump "done"
       else fail "Goal should be an equality at the right monoid type"

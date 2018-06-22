@@ -232,8 +232,8 @@ let tvar_alt = constructor_start_char+
 rule token args = parse
  | "%splice"
      { SPLICE }
- | "%`"
-     { PERC_BACKTICK }
+ | "`%"
+     { BACKTICK_PERC }
  | "quote"
      { QUOTE }
  | ident

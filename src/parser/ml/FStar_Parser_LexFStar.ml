@@ -429,7 +429,7 @@ let regexp tvar        = '\'' (ident_start_char | constructor_start_char) tvar_c
 
 let rec token = lexer
  | "%splice" -> SPLICE
- | "%`" -> PERC_BACKTICK
+ | "`%" -> BACKTICK_PERC
  | "`#" -> BACKTICK_HASH
  | "`@" -> BACKTICK_AT
  | "quote" -> QUOTE

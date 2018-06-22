@@ -33,7 +33,7 @@ let normalize (#t:Type) (x:t) : Tac unit =
   dup ();
   debug (term_to_string (quote x));
   exact (quote x);
-  norm [delta; delta_only [%`(add_1)]; delta_only [%`(set_to_1)]];
+  norm [delta; delta_only [`%(add_1)]; delta_only [`%(set_to_1)]];
   trefl ()
 
 // add_2' is like add_2 but has add_1 inlined (printing verifies this)

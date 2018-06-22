@@ -498,7 +498,7 @@ let solve_mp #a (problem: matching_problem)
 
 // This is a hack to allow users to capture anything.
 assume val __ : #t:Type -> t
-let any_qn = %`__
+let any_qn = `%__
 
 (** Compile a term `tm` into a pattern. **)
 let rec pattern_of_term_ex tm : Tac (match_res pattern) =
@@ -561,8 +561,8 @@ let pattern_of_term tm : Tac pattern =
 let hyp (a: Type) = binder
 let goal (a: Type) = unit
 
-let hyp_qn  = %`hyp
-let goal_qn = %`goal
+let hyp_qn  = `%hyp
+let goal_qn = `%goal
 
 noeq type abspat_binder_kind =
 | ABKVar of typ

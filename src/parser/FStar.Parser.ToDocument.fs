@@ -1117,7 +1117,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
   | Quote (e, Static) ->
     group (str "`" ^^ p_noSeqTerm ps pb e)
   | VQuote e ->
-    group (str "%`" ^^ p_noSeqTerm ps pb e)
+    group (str "`%" ^^ p_noSeqTerm ps pb e)
   | Antiquote (false, e) ->
     group (str "`#" ^^ p_noSeqTerm ps pb e)
   | Antiquote (true, e) ->
