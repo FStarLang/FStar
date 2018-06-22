@@ -43,7 +43,7 @@ let mk_let x e e' : term =
     mk (Tm_let((false, [{lbname=BU.Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=Const.effect_Tot_lid; lbattrs=[];lbpos=dummyRange}]), e'))
                            None dummyRange
 
-let lid x = lid_of_path [x] dummyRange
+let lid x = lid_of_path ["Norm"; x] dummyRange
 let znat_l = S.lid_as_fv (lid "Z") delta_constant (Some Data_ctor)
 let snat_l = S.lid_as_fv (lid "S") delta_constant (Some Data_ctor)
 let tm_fv fv = mk (Tm_fvar fv) None dummyRange
@@ -312,6 +312,7 @@ let compare_times l_int l_nbe =
               ) l_int l_nbe
 
 let run_all () =
+    BU.print1 "%s" (P.term_to_string znat);
     let l_int = run_all_interpreter_with_time () in
     let l_nbe = run_all_nbe_with_time () in
     compare_times l_int l_nbe

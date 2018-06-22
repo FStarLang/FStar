@@ -195,6 +195,9 @@ match tm with
 | Univ u -> u
 | _ -> failwith "Not a universe"
 
+let is_constr_fv (fvar : fv) : bool = 
+  fvar.fv_qual = Some Data_ctor
+
 let is_constr (q : qninfo) : bool = 
   match q with 
   | Some (BU.Inr ({ sigel = Sig_datacon (_, _, _, _, _, _) }, _), _) -> true
@@ -299,7 +302,7 @@ let rec iapp cfg (f:t) (args:args) =
 and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
    let debug = debug cfg in
    let qninfo = Env.lookup_qname (Cfg.cfg_env cfg) (S.lid_of_fv fvar) in
-   if is_constr qninfo then mkConstruct fvar [] [] 
+   if is_constr qninfo || is_constr_fv fvar then mkConstruct fvar [] [] 
    else 
      match N.should_unfold cfg (fun _ -> false) fvar qninfo with
      | N.Should_unfold_fully
@@ -586,14 +589,11 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
 
     | Accu (Match (scrut, cases, make_branches), ts) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
-      (match scrut with 
-       | Construct(_, _, _) | Constant _ -> readback cfg (cases scrut) // the scrutinee got evaluated
-       | _ ->
-         let head =
-           let scrut_new = readback cfg scrut in
-           let branches_new = make_branches (readback cfg) in
-           S.mk (Tm_match (scrut_new, branches_new)) None Range.dummyRange
-         in
+      let head = 
+        let scrut_new = readback cfg scrut in
+        let branches_new = make_branches (readback cfg) in
+        S.mk (Tm_match (scrut_new, branches_new)) None Range.dummyRange
+      in
       (*  When `cases scrut` returns a Accu(Match ..))
           we need to reconstruct a source match node.
 
@@ -618,9 +618,9 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
                 branches
        *)
 
-         (match ts with
-          | [] -> head
-          | _ -> U.mk_app head args))
+      (match ts with
+       | [] -> head
+       | _ -> U.mk_app head args)
 
     | Accu (Rec(lb, lbs, bs), ts) ->
        let rec curry hd args =
