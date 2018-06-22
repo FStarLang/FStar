@@ -833,6 +833,23 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             end
         | _ -> None
     in
+    let string_substring' psc args : option<term> =
+        match args with
+        | [a1; a2; a3] ->
+            begin match arg_as_string a1, arg_as_int a2, arg_as_int a3 with
+            | Some s1, Some n1, Some n2 ->
+                let n1 = Z.to_int_fs n1 in
+                let n2 = Z.to_int_fs n2 in
+                (* Might raise an OOB exception *)
+                begin
+                try let r = String.substring s1 n1 n2 in
+                    Some (EMB.embed EMB.e_string psc.psc_range r)
+                with | _ -> None
+                end
+            | _ -> None
+            end
+        | _ -> None
+    in
     let string_of_int rng (i:Z.t) : term =
         EMB.embed EMB.e_string rng (Z.string_of_big_int i)
     in
@@ -909,6 +926,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                                     1, unary_op (arg_as_list EMB.e_char) string_of_list');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
              (PC.p2l ["FStar"; "String"; "split"], 2, string_split');
+             (PC.p2l ["FStar"; "String"; "substring"], 3, string_substring');
              (PC.p2l ["Prims"; "mk_range"], 5, mk_range);
              ]
     in
