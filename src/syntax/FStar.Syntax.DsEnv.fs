@@ -954,8 +954,8 @@ let push_sigelt' fail_on_dup env s =
   let env = {env with scope_mods = !globals } in
   env
 
-let push_sigelt       = push_sigelt' true
-let push_sigelt_force = push_sigelt' false
+let push_sigelt       env se = push_sigelt' true  env se
+let push_sigelt_force env se = push_sigelt' false env se
 
 let push_namespace env ns =
   (* namespace resolution disabled, but module abbrevs enabled *)
