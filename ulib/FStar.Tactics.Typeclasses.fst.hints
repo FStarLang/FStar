@@ -1,0 +1,29 @@
+[
+  "Y/ùÕi’î\u000fiÕøEô£ØV",
+  [
+    [
+      "FStar.Tactics.Typeclasses.first",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "04d80493dbc001155f2736375901c2e9"
+    ],
+    [
+      "FStar.Tactics.Typeclasses.first",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "b918e3ba630647c52840932674dca974"
+    ]
+  ]
+]
