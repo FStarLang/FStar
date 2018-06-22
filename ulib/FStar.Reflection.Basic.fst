@@ -29,5 +29,6 @@ assume val compare_bv     : bv -> bv -> order
 assume val binders_of_env : env -> binders
 assume val moduleof       : env -> list string
 assume val is_free        : bv -> term -> bool
+assume val lookup_attr    : term -> env -> list fv
 assume val term_eq        : term -> term -> bool
 assume val term_to_string : term -> string

@@ -369,6 +369,11 @@ val as_addr_disjoint (#a1 #a2: Type) (b1: buffer a1) (b2: buffer a2) : Lemma
   ]]
 
 
+/// The null pointer is disjoint from any buffer.
+
+val disjoint_null (a1: Type) (#a2: Type) (b2: buffer a2) : Lemma
+  (disjoint (null #a1) b2)
+
 /// If two buffers span disjoint ranges from a common enclosing
 /// buffer, then they are disjoint.
 
@@ -672,6 +677,7 @@ val g_upd_seq_as_seq (#a:Type)
                      (h:HS.mem{live h b})
   : Lemma (let h' = g_upd_seq b s h in
            modifies_1 b h h' /\
+           live h' b /\
            as_seq h' b == s)
 
 /// ``g_upd b i v h`` updates the buffer `b` in heap `h` at location
@@ -743,6 +749,7 @@ val free
 /// operators, which tells that the resulting buffer is fresh, and
 /// specifies its initial contents.
 
+unfold
 let alloc_post_static
   (#a: Type)
   (r: HS.rid)
@@ -753,6 +760,7 @@ let alloc_post_static
   frameOf b == r /\
   length b == len
 
+unfold
 let alloc_post_common
   (#a: Type)
   (r: HS.rid)

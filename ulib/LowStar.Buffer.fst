@@ -189,6 +189,8 @@ let live_unused_in_disjoint #a1 #a2 h b1 b2 = ()
 
 let as_addr_disjoint #a1 #a2 b1 b2 = ()
 
+let disjoint_null a1 #a2 b2 = ()
+
 let gsub_disjoint #a b i1 len1 i2 len2 = ()
 
 let pointer_distinct_sel_disjoint #a b1 b2 h =

@@ -31,9 +31,6 @@ open FStar.Dyn
  * a metaprogramming effect (such as TAC). These effects are irrelevant
  * for runtime and cannot, of course, be used for proof (where syntax
  * inspection would be completely inconsistent
- *
- * embed   : from compiler to user
- * unembed : from user to compiler
  *)
 
  (*
@@ -44,6 +41,7 @@ open FStar.Dyn
 (* private *)
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with
+    | Some (Meta _) -> failwith "Sorry! cannot inspect TC arguments for now"
     | Some (Implicit _) -> Data.Q_Implicit
     | Some Equality
     | None -> Data.Q_Explicit
@@ -66,6 +64,7 @@ let pack_fv (ns:list<string>) : fv =
         if Ident.lid_equals lid PC.none_lid then Some Data_ctor else
         None
     in
+    // FIXME: Get a proper delta depth
     lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) attr
 
 // TODO: move to library?
@@ -292,6 +291,16 @@ let compare_bv (x:bv) (y:bv) : order =
 
 let is_free (x:bv) (t:term) : bool =
     U.is_free_in x t
+
+let lookup_attr (attr:term) (env:Env.env) : list<fv> =
+    match (SS.compress attr).n with
+    | Tm_fvar fv ->
+        let ses = Env.lookup_attr env (Ident.text_of_lid (lid_of_fv fv)) in
+        List.concatMap (fun se -> match U.lid_of_sigelt se with
+                                  | None -> []
+                                  // FIXME: Get a proper delta depth
+                                  | Some l -> [S.lid_as_fv l (S.Delta_constant_at_level 999) None]) ses
+    | _ -> []
 
 let lookup_typ (env:Env.env) (ns:list<string>) : option<sigelt> =
     let lid = PC.p2l ns in

@@ -214,8 +214,8 @@ let (udelta_unfold :
       FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option)
   =
   fun g  ->
-    fun uu___250_366  ->
-      match uu___250_366 with
+    fun uu___251_366  ->
+      match uu___251_366 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
           let uu____375 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1  in
           (match uu____375 with
@@ -257,8 +257,8 @@ let (eff_leq :
       | uu____408 -> false
   
 let (eff_to_string : FStar_Extraction_ML_Syntax.e_tag -> Prims.string) =
-  fun uu___251_417  ->
-    match uu___251_417 with
+  fun uu___252_417  ->
+    match uu___252_417 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -508,8 +508,8 @@ let is_type_abstraction :
     (('a,'b) FStar_Util.either,'c) FStar_Pervasives_Native.tuple2 Prims.list
       -> Prims.bool
   =
-  fun uu___252_1004  ->
-    match uu___252_1004 with
+  fun uu___253_1004  ->
+    match uu___253_1004 with
     | (FStar_Util.Inl uu____1015,uu____1016)::uu____1017 -> true
     | uu____1040 -> false
   
@@ -549,8 +549,8 @@ let (resugar_exp :
   
 let (record_field_path :
   FStar_Ident.lident Prims.list -> Prims.string Prims.list) =
-  fun uu___253_1113  ->
-    match uu___253_1113 with
+  fun uu___254_1113  ->
+    match uu___254_1113 with
     | f::uu____1119 ->
         let uu____1122 = FStar_Util.prefix f.FStar_Ident.ns  in
         (match uu____1122 with
@@ -987,37 +987,37 @@ let (interpret_plugin_as_term_fun :
                 (match uu____2270 with
                  | (head1,args) ->
                      let n_args = FStar_List.length args  in
-                     let uu____2314 =
-                       let uu____2315 = FStar_Syntax_Util.un_uinst head1  in
-                       uu____2315.FStar_Syntax_Syntax.n  in
-                     (match uu____2314 with
-                      | FStar_Syntax_Syntax.Tm_refine (b,uu____2319) ->
+                     let uu____2322 =
+                       let uu____2323 = FStar_Syntax_Util.un_uinst head1  in
+                       uu____2323.FStar_Syntax_Syntax.n  in
+                     (match uu____2322 with
+                      | FStar_Syntax_Syntax.Tm_refine (b,uu____2327) ->
                           mk_embedding env b.FStar_Syntax_Syntax.sort
                       | FStar_Syntax_Syntax.Tm_fvar fv1 when
                           is_known_type_constructor fv1 n_args ->
                           let arg_embeddings =
                             FStar_List.map
-                              (fun uu____2339  ->
-                                 match uu____2339 with
-                                 | (t4,uu____2345) -> mk_embedding env t4)
+                              (fun uu____2349  ->
+                                 match uu____2349 with
+                                 | (t4,uu____2357) -> mk_embedding env t4)
                               args
                              in
                           let nm =
                             (((fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.ident).FStar_Ident.idText
                              in
-                          let uu____2347 =
-                            let uu____2356 =
+                          let uu____2363 =
+                            let uu____2372 =
                               FStar_Util.find_opt
-                                (fun uu____2380  ->
-                                   match uu____2380 with
-                                   | (x,uu____2390,uu____2391,uu____2392) ->
+                                (fun uu____2396  ->
+                                   match uu____2396 with
+                                   | (x,uu____2406,uu____2407,uu____2408) ->
                                        FStar_Syntax_Syntax.fv_eq_lid fv1 x)
                                 known_type_constructors
                                in
-                            FStar_All.pipe_right uu____2356 FStar_Util.must
+                            FStar_All.pipe_right uu____2372 FStar_Util.must
                              in
-                          (match uu____2347 with
-                           | (uu____2419,t_arity,trepr_head,loc_embedding) ->
+                          (match uu____2363 with
+                           | (uu____2435,t_arity,trepr_head,loc_embedding) ->
                                let head2 =
                                  mk_basic_embedding loc_embedding nm  in
                                (match t_arity with
@@ -1027,21 +1027,21 @@ let (interpret_plugin_as_term_fun :
                                     FStar_All.pipe_left w
                                       (FStar_Extraction_ML_Syntax.MLE_App
                                          (head2, arg_embeddings))))
-                      | uu____2427 ->
-                          let uu____2428 =
-                            let uu____2429 =
-                              let uu____2430 =
+                      | uu____2443 ->
+                          let uu____2444 =
+                            let uu____2445 =
+                              let uu____2446 =
                                 FStar_Syntax_Print.term_to_string t3  in
                               Prims.strcat "Embedding not defined for type "
-                                uu____2430
+                                uu____2446
                                in
-                            NoTacticEmbedding uu____2429  in
-                          FStar_Exn.raise uu____2428))
+                            NoTacticEmbedding uu____2445  in
+                          FStar_Exn.raise uu____2444))
              in
           let abstract_tvars tvar_names body =
             match tvar_names with
             | [] -> body
-            | uu____2446 ->
+            | uu____2462 ->
                 let args_tail =
                   FStar_Extraction_ML_Syntax.MLP_Var "args_tail"  in
                 let mk_cons hd_pat tail_pat =
@@ -1059,80 +1059,80 @@ let (interpret_plugin_as_term_fun :
                     args_tail
                    in
                 let branch1 =
-                  let uu____2483 =
-                    let uu____2484 =
-                      let uu____2485 =
-                        let uu____2492 =
-                          let uu____2495 = str_to_name "args_tail"  in
-                          [uu____2495]  in
-                        (body, uu____2492)  in
-                      FStar_Extraction_ML_Syntax.MLE_App uu____2485  in
-                    FStar_All.pipe_left w uu____2484  in
-                  (pattern, FStar_Pervasives_Native.None, uu____2483)  in
+                  let uu____2499 =
+                    let uu____2500 =
+                      let uu____2501 =
+                        let uu____2508 =
+                          let uu____2511 = str_to_name "args_tail"  in
+                          [uu____2511]  in
+                        (body, uu____2508)  in
+                      FStar_Extraction_ML_Syntax.MLE_App uu____2501  in
+                    FStar_All.pipe_left w uu____2500  in
+                  (pattern, FStar_Pervasives_Native.None, uu____2499)  in
                 let default_branch =
-                  let uu____2509 =
-                    let uu____2510 =
-                      let uu____2511 =
-                        let uu____2518 = str_to_name "failwith"  in
-                        let uu____2519 =
-                          let uu____2522 =
-                            let uu____2523 =
+                  let uu____2525 =
+                    let uu____2526 =
+                      let uu____2527 =
+                        let uu____2534 = str_to_name "failwith"  in
+                        let uu____2535 =
+                          let uu____2538 =
+                            let uu____2539 =
                               mlexpr_of_const FStar_Range.dummyRange
                                 (FStar_Const.Const_string
                                    ("arity mismatch", FStar_Range.dummyRange))
                                in
-                            FStar_All.pipe_left w uu____2523  in
-                          [uu____2522]  in
-                        (uu____2518, uu____2519)  in
-                      FStar_Extraction_ML_Syntax.MLE_App uu____2511  in
-                    FStar_All.pipe_left w uu____2510  in
+                            FStar_All.pipe_left w uu____2539  in
+                          [uu____2538]  in
+                        (uu____2534, uu____2535)  in
+                      FStar_Extraction_ML_Syntax.MLE_App uu____2527  in
+                    FStar_All.pipe_left w uu____2526  in
                   (FStar_Extraction_ML_Syntax.MLP_Wild,
-                    FStar_Pervasives_Native.None, uu____2509)
+                    FStar_Pervasives_Native.None, uu____2525)
                    in
                 let body1 =
-                  let uu____2529 =
-                    let uu____2530 =
-                      let uu____2545 = str_to_name "args"  in
-                      (uu____2545, [branch1; default_branch])  in
-                    FStar_Extraction_ML_Syntax.MLE_Match uu____2530  in
-                  FStar_All.pipe_left w uu____2529  in
+                  let uu____2545 =
+                    let uu____2546 =
+                      let uu____2561 = str_to_name "args"  in
+                      (uu____2561, [branch1; default_branch])  in
+                    FStar_Extraction_ML_Syntax.MLE_Match uu____2546  in
+                  FStar_All.pipe_left w uu____2545  in
                 mk_lam "args" body1
              in
-          let uu____2580 = FStar_Syntax_Util.arrow_formals_comp t1  in
-          match uu____2580 with
+          let uu____2596 = FStar_Syntax_Util.arrow_formals_comp t1  in
+          match uu____2596 with
           | (bs,c) ->
               let result_typ = FStar_Syntax_Util.comp_result c  in
               let arity = FStar_List.length bs  in
-              let uu____2621 =
-                let uu____2638 =
+              let uu____2645 =
+                let uu____2666 =
                   FStar_Util.prefix_until
-                    (fun uu____2672  ->
-                       match uu____2672 with
-                       | (b,uu____2678) ->
-                           let uu____2679 =
-                             let uu____2680 =
+                    (fun uu____2708  ->
+                       match uu____2708 with
+                       | (b,uu____2716) ->
+                           let uu____2721 =
+                             let uu____2722 =
                                FStar_Syntax_Subst.compress
                                  b.FStar_Syntax_Syntax.sort
                                 in
-                             uu____2680.FStar_Syntax_Syntax.n  in
-                           (match uu____2679 with
-                            | FStar_Syntax_Syntax.Tm_type uu____2683 -> false
-                            | uu____2684 -> true)) bs
+                             uu____2722.FStar_Syntax_Syntax.n  in
+                           (match uu____2721 with
+                            | FStar_Syntax_Syntax.Tm_type uu____2725 -> false
+                            | uu____2726 -> true)) bs
                    in
-                match uu____2638 with
+                match uu____2666 with
                 | FStar_Pervasives_Native.None  -> (bs, [])
                 | FStar_Pervasives_Native.Some (tvars,x,rest) ->
                     (tvars, (x :: rest))
                  in
-              (match uu____2621 with
+              (match uu____2645 with
                | (type_vars,bs1) ->
                    let non_tvar_arity = FStar_List.length bs1  in
                    let tvar_names =
                      FStar_List.mapi
                        (fun i  ->
                           fun tv  ->
-                            let uu____2867 = FStar_Util.string_of_int i  in
-                            Prims.strcat "tv_" uu____2867) type_vars
+                            let uu____2963 = FStar_Util.string_of_int i  in
+                            Prims.strcat "tv_" uu____2963) type_vars
                       in
                    let tvar_context =
                      FStar_List.map2
@@ -1146,19 +1146,19 @@ let (interpret_plugin_as_term_fun :
                          let arg_unembeddings =
                            FStar_List.rev accum_embeddings  in
                          let res_embedding = mk_embedding env result_typ  in
-                         let uu____2959 = FStar_Syntax_Util.is_pure_comp c
+                         let uu____3067 = FStar_Syntax_Util.is_pure_comp c
                             in
-                         if uu____2959
+                         if uu____3067
                          then
                            let embed_fun_N =
                              mk_arrow_embedding non_tvar_arity  in
                            let args =
-                             let uu____2978 =
-                               let uu____2981 =
-                                 let uu____2984 = lid_to_top_name fv  in
-                                 [uu____2984]  in
-                               res_embedding :: uu____2981  in
-                             FStar_List.append arg_unembeddings uu____2978
+                             let uu____3086 =
+                               let uu____3089 =
+                                 let uu____3092 = lid_to_top_name fv  in
+                                 [uu____3092]  in
+                               res_embedding :: uu____3089  in
+                             FStar_List.append arg_unembeddings uu____3086
                               in
                            let fun_embedding =
                              FStar_All.pipe_left w
@@ -1167,128 +1167,128 @@ let (interpret_plugin_as_term_fun :
                               in
                            let tabs = abstract_tvars tvar_names fun_embedding
                               in
-                           let uu____2989 =
-                             let uu____2996 = mk_lam "_psc" tabs  in
-                             (uu____2996, arity, true)  in
-                           FStar_Pervasives_Native.Some uu____2989
+                           let uu____3097 =
+                             let uu____3104 = mk_lam "_psc" tabs  in
+                             (uu____3104, arity, true)  in
+                           FStar_Pervasives_Native.Some uu____3097
                          else
-                           (let uu____3008 =
-                              let uu____3009 =
+                           (let uu____3116 =
+                              let uu____3117 =
                                 FStar_TypeChecker_Env.norm_eff_name tcenv
                                   (FStar_Syntax_Util.comp_effect_name c)
                                  in
-                              FStar_Ident.lid_equals uu____3009
+                              FStar_Ident.lid_equals uu____3117
                                 FStar_Parser_Const.effect_TAC_lid
                                in
-                            if uu____3008
+                            if uu____3116
                             then
                               let h =
-                                let uu____3019 =
-                                  let uu____3020 =
+                                let uu____3127 =
+                                  let uu____3128 =
                                     FStar_Util.string_of_int non_tvar_arity
                                      in
                                   Prims.strcat
                                     "FStar_Tactics_Interpreter.mk_tactic_interpretation_"
-                                    uu____3020
+                                    uu____3128
                                    in
-                                str_to_top_name uu____3019  in
+                                str_to_top_name uu____3127  in
                               let tac_fun =
-                                let uu____3028 =
-                                  let uu____3029 =
-                                    let uu____3036 =
-                                      let uu____3037 =
-                                        let uu____3038 =
+                                let uu____3136 =
+                                  let uu____3137 =
+                                    let uu____3144 =
+                                      let uu____3145 =
+                                        let uu____3146 =
                                           FStar_Util.string_of_int
                                             non_tvar_arity
                                            in
                                         Prims.strcat
                                           "FStar_Tactics_Native.from_tactic_"
-                                          uu____3038
+                                          uu____3146
                                          in
-                                      str_to_top_name uu____3037  in
-                                    let uu____3045 =
-                                      let uu____3048 = lid_to_top_name fv  in
-                                      [uu____3048]  in
-                                    (uu____3036, uu____3045)  in
+                                      str_to_top_name uu____3145  in
+                                    let uu____3153 =
+                                      let uu____3156 = lid_to_top_name fv  in
+                                      [uu____3156]  in
+                                    (uu____3144, uu____3153)  in
                                   FStar_Extraction_ML_Syntax.MLE_App
-                                    uu____3029
+                                    uu____3137
                                    in
-                                FStar_All.pipe_left w uu____3028  in
+                                FStar_All.pipe_left w uu____3136  in
                               let tac_lid_app =
-                                let uu____3052 =
-                                  let uu____3053 =
-                                    let uu____3060 =
+                                let uu____3160 =
+                                  let uu____3161 =
+                                    let uu____3168 =
                                       str_to_top_name
                                         "FStar_Ident.lid_of_str"
                                        in
-                                    (uu____3060, [w ml_fv])  in
+                                    (uu____3168, [w ml_fv])  in
                                   FStar_Extraction_ML_Syntax.MLE_App
-                                    uu____3053
+                                    uu____3161
                                    in
-                                FStar_All.pipe_left w uu____3052  in
+                                FStar_All.pipe_left w uu____3160  in
                               let psc = str_to_name "psc"  in
                               let all_args = str_to_name "args"  in
                               let args =
-                                let uu____3068 =
-                                  let uu____3071 =
+                                let uu____3176 =
+                                  let uu____3179 =
                                     FStar_All.pipe_left w
                                       (FStar_Extraction_ML_Syntax.MLE_Const
                                          (FStar_Extraction_ML_Syntax.MLC_Bool
                                             true))
                                      in
-                                  [uu____3071; tac_fun]  in
-                                FStar_List.append uu____3068
+                                  [uu____3179; tac_fun]  in
+                                FStar_List.append uu____3176
                                   (FStar_List.append arg_unembeddings
                                      [res_embedding; tac_lid_app; psc])
                                  in
                               let tabs =
                                 match tvar_names with
                                 | [] ->
-                                    let uu____3073 =
+                                    let uu____3181 =
                                       FStar_All.pipe_left w
                                         (FStar_Extraction_ML_Syntax.MLE_App
                                            (h,
                                              (FStar_List.append args
                                                 [all_args])))
                                        in
-                                    mk_lam "args" uu____3073
-                                | uu____3076 ->
-                                    let uu____3079 =
+                                    mk_lam "args" uu____3181
+                                | uu____3184 ->
+                                    let uu____3187 =
                                       FStar_All.pipe_left w
                                         (FStar_Extraction_ML_Syntax.MLE_App
                                            (h, args))
                                        in
-                                    abstract_tvars tvar_names uu____3079
+                                    abstract_tvars tvar_names uu____3187
                                  in
-                              let uu____3082 =
-                                let uu____3089 = mk_lam "psc" tabs  in
-                                (uu____3089, (arity + (Prims.parse_int "1")),
+                              let uu____3190 =
+                                let uu____3197 = mk_lam "psc" tabs  in
+                                (uu____3197, (arity + (Prims.parse_int "1")),
                                   false)
                                  in
-                              FStar_Pervasives_Native.Some uu____3082
+                              FStar_Pervasives_Native.Some uu____3190
                             else
-                              (let uu____3103 =
-                                 let uu____3104 =
-                                   let uu____3105 =
+                              (let uu____3211 =
+                                 let uu____3212 =
+                                   let uu____3213 =
                                      FStar_Syntax_Print.term_to_string t1  in
                                    Prims.strcat
                                      "Plugins not defined for type "
-                                     uu____3105
+                                     uu____3213
                                     in
-                                 NoTacticEmbedding uu____3104  in
-                               FStar_Exn.raise uu____3103))
-                     | (b,uu____3115)::bs3 ->
-                         let uu____3127 =
-                           let uu____3130 =
+                                 NoTacticEmbedding uu____3212  in
+                               FStar_Exn.raise uu____3211))
+                     | (b,uu____3223)::bs3 ->
+                         let uu____3243 =
+                           let uu____3246 =
                              mk_embedding env b.FStar_Syntax_Syntax.sort  in
-                           uu____3130 :: accum_embeddings  in
-                         aux uu____3127 env bs3
+                           uu____3246 :: accum_embeddings  in
+                         aux uu____3243 env bs3
                       in
                    (try aux [] tvar_context bs1
                     with
                     | NoTacticEmbedding msg ->
-                        ((let uu____3163 = FStar_Ident.string_of_lid fv  in
+                        ((let uu____3279 = FStar_Ident.string_of_lid fv  in
                           not_implemented_warning t1.FStar_Syntax_Syntax.pos
-                            uu____3163 msg);
+                            uu____3279 msg);
                          FStar_Pervasives_Native.None)))
   

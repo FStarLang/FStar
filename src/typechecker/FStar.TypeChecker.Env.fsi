@@ -77,7 +77,8 @@ type env = {
   gamma_cache    :FStar.Util.smap<cached_elt>;  (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
-  sigtab         :FStar.Util.smap<sigelt>;      (* a dictionary of long-names to sigelts *)
+  sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
+  attrtab        :BU.smap<list<sigelt>>;        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
@@ -132,7 +133,14 @@ and guard_t = {
 }
 // Reason, term and uvar, and (rough) position where it is introduced
 // The term is just a Tm_uvar of the ctx_uvar
-and implicits = list<(string * term * ctx_uvar * Range.range)>
+and implicit = {
+    imp_reason : string;                  // Reason (in text) why the implicit was introduced
+    imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
+    imp_tm     : term;                    // The term, made up of the ctx_uvar
+    imp_range  : Range.range;             // Position where it was introduced
+    imp_meta   : option<(env * term)>;    // An optional metaprogram to try to fill it
+}
+and implicits = list<implicit>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
 val tc_hooks : env -> tcenv_hooks
@@ -194,6 +202,7 @@ val datacons_of_typ        : env -> lident -> (bool * list<lident>)
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition_qninfo : list<delta_level> -> lident -> qninfo -> option<(univ_names * term)>
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
+val quals_of_qninfo        : qninfo -> option<list<qualifier>>
 val attrs_of_qninfo        : qninfo -> option<list<attribute>>
 val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 val try_lookup_effect_lid  : env -> lident -> option<term>
@@ -202,6 +211,7 @@ val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * com
 val norm_eff_name          : (env -> lident -> lident)
 val lookup_effect_quals    : env -> lident -> list<qualifier>
 val lookup_projector       : env -> lident -> int -> lident
+val lookup_attr            : env -> string -> list<sigelt>
 val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool

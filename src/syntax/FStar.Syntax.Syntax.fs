@@ -61,14 +61,6 @@ type version = {
 }
 
 // IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
-type arg_qualifier =
-  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Equality
-
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
-type aqual = option<arg_qualifier>
-
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type universe =
   | U_zero
   | U_succ  of universe
@@ -289,6 +281,11 @@ and binding =
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
+and arg_qualifier =
+  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
+  | Meta of term
+  | Equality
+and aqual = option<arg_qualifier>
 
 type lcomp = { //a lazy computation
     eff_name: lident;

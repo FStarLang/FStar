@@ -77,7 +77,13 @@ let new_uvar reason wl r gamma binders k should_check : ctx_uvar * term * workli
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
     let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
-    ctx_uvar, t, {wl with wl_implicits=(reason, t, ctx_uvar, r)::wl.wl_implicits}
+    let imp = { imp_reason = reason
+              ; imp_tm     = t
+              ; imp_uvar   = ctx_uvar
+              ; imp_range  = r
+              ; imp_meta   = None
+              } in
+    ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
 
 let copy_uvar u (bs:binders) t wl =
     let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
@@ -1670,12 +1676,12 @@ and solve_rigid_flex_or_flex_rigid_subtyping
          solve env wl
 
       | Failed (p, msg) ->
-         UF.rollback tx;
          if Env.debug env <| Options.Other "Rel"
          then BU.print1 "meet/join attempted and failed to solve problems:\n%s\n"
                         (List.map (prob_to_string env) (TProb eq_prob::sub_probs) |> String.concat "\n");
          (match rank, base_and_refinement env bound_typ with
           | Rigid_flex, (t_base, Some _) ->
+            UF.rollback tx;
               //We failed to solve (x:t_base{p} <: ?u) while computing a precise join of all the lower bounds
               //Rather than giving up, try again with a widening heuristic
               //i.e., try to solve ?u = t and proceed
@@ -1686,6 +1692,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
             solve env (attempt [TProb eq_prob] wl)
 
           | Flex_rigid, (t_base, Some (x, phi)) ->
+            UF.rollback tx;
               //We failed to solve (?u = x:t_base{phi}) while computing
               //a precise meet of all the upper bounds
               //Rather than giving up, try again with a narrowing heuristic
@@ -2847,7 +2854,8 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
 (* -------------------------------------------------------- *)
 (* top-level interface                                      *)
 (* -------------------------------------------------------- *)
-let print_pending_implicits g = g.implicits |> List.map (fun (_, tm, _, _) -> Print.term_to_string tm) |> String.concat ", "
+let print_pending_implicits g =
+    g.implicits |> List.map (fun i -> Print.term_to_string i.imp_tm) |> String.concat ", "
 
 let ineqs_to_string ineqs =
     let vars =
@@ -3179,6 +3187,16 @@ let discharge_guard env g =
   | Some g -> g
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
+let discharge_guard_nosmt env g =
+    match discharge_guard' None env g false with
+    | Some _ -> true
+    | None   -> false
+
+let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
+  match try_teq false env t1 t2 with
+  | None -> false
+  | Some g -> discharge_guard_nosmt env g
+
 let resolve_implicits' env must_total forcelax g =
   let unresolved ctx_u =
     match (Unionfind.find ctx_u.ctx_uvar_head) with
@@ -3190,11 +3208,21 @@ let resolve_implicits' env must_total forcelax g =
     match implicits with
     | [] -> if not changed then out else until_fixpoint ([], false) out
     | hd::tl ->
-          let (reason, tm, ctx_u, r) = hd in
+          let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = hd in
           if ctx_u.ctx_uvar_should_check = Allow_unresolved
           then until_fixpoint(out, true) tl
           else if unresolved ctx_u
-          then until_fixpoint (hd::out, changed) tl
+          then begin match hd.imp_meta with
+               | None ->
+                    until_fixpoint (hd::out, changed) tl
+               | Some (env, tau) ->
+                    let t = env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau in
+                    let r = teq_nosmt env t tm in // let the unifier handle setting the variable
+                    if not r then
+                        failwith "resolve_implicits: unifying with an unresolved uvar failed?";
+                    let hd = { hd with imp_meta = None } in
+                    until_fixpoint (out, changed) (hd::tl)
+               end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl
           else let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
@@ -3241,26 +3269,16 @@ let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits env in
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
-        | (reason, e, ctx_u, r)::_ ->
+        | imp::_ ->
            raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                         BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
-                                    (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                                    (N.term_to_string env ctx_u.ctx_uvar_typ)
-                                    reason) r
+                                    (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
+                                    (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
+                                    imp.imp_reason) imp.imp_range
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
     {trivial_guard with univ_ineqs=([], [u1,u2])}
-
-let discharge_guard_nosmt env g =
-    match discharge_guard' None env g false with
-    | Some _ -> true
-    | None   -> false
-
-let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
-  match try_teq false env t1 t2 with
-  | None -> false
-  | Some g -> discharge_guard_nosmt env g
 
 ///////////////////////////////////////////////////////////////////
 let check_subtyping env t1 t2 =

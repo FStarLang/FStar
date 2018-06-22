@@ -970,6 +970,9 @@ let tc_assume (env:env) (ts:tscheme) (r:Range.range) :tscheme =
 let tc_inductive env ses quals lids =
     let env = Env.push env "tc_inductive" in
 
+    if Env.debug env Options.Low then
+        BU.print1 ">>>>>>>>>>>>>>tc_inductive %s\n" (FStar.Common.string_of_list Print.sigelt_to_string ses);
+
     let sig_bndle, tcs, datas = TcInductive.check_inductive_well_typedness env ses quals lids in
     (* we have a well-typed inductive;
             we still need to check whether or not it supports equality
@@ -1085,49 +1088,15 @@ let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
         | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 <> hd2 ->
             Some (hd1, n1, 0)
 
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 = hd2 ->
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 (* when hd1 = hd2 *) ->
             if n1 <> n2
             then Some (hd1, n1, n2)
             else aux tl1 tl2
     in
     aux l1 l2
 
-(* [tc_decl env se] typechecks [se] in environment [env] and returns *)
-(* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
-let rec tc_decl env se: list<sigelt> * list<sigelt> =
-  let env = set_hint_correlator env se in
-  if Env.debug env Options.Low
-  then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
+let tc_decl' env se: list<sigelt> * list<sigelt> =
   TcUtil.check_sigelt_quals env se;
-  match get_fail_se se with
-  | Some (_, false) when not (Env.should_verify env) ->
-    (* If we're --laxing, and we didn't find fail_lax, then just ignore the definition *)
-    [], []
-
-  | Some (errnos, _) ->
-    if Env.debug env Options.Low then
-        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
-    let errs = Errors.catch_errors (fun () -> tc_decl' env se) in
-    if Env.debug env Options.Low then begin
-        BU.print_string ">> Got issues:\n";
-        List.iter Errors.print_issue errs;
-        BU.print_string ">> //Got issues:\n"
-    end;
-    begin match errs, check_multi_contained errnos (List.concatMap (fun i -> list_of_option i.issue_number) errs) with
-    | [], _ ->
-        List.iter Errors.print_issue errs;
-        raise_error (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded") se.sigrng
-    | _, Some (e, n1, n2) ->
-        List.iter Errors.print_issue errs;
-        raise_error (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
-                                                (string_of_int e) (string_of_int n1) (string_of_int n2)) se.sigrng
-    | _, None -> [], []
-    end
-
-  | None ->
-    tc_decl' env se
-
-and tc_decl' env se: list<sigelt> * list<sigelt> =
   let r = se.sigrng in
   match se.sigel with
   | Sig_inductive_typ _
@@ -1535,6 +1504,40 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
 
     [se], []
 
+(* [tc_decl env se] typechecks [se] in environment [env] and returns *)
+(* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
+let tc_decl env se: list<sigelt> * list<sigelt> =
+  let env = set_hint_correlator env se in
+  if Env.debug env Options.Low
+  then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
+  match get_fail_se se with
+  | Some (_, false) when not (Env.should_verify env) ->
+    (* If we're --laxing, and we didn't find fail_lax, then just ignore the definition *)
+    [], []
+
+  | Some (errnos, _) ->
+    if Env.debug env Options.Low then
+        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
+    let errs = Errors.catch_errors (fun () -> tc_decl' env se) in
+    if Env.debug env Options.Low then begin
+        BU.print_string ">> Got issues: [\n";
+        List.iter Errors.print_issue errs;
+        BU.print_string ">>]\n"
+    end;
+    begin match errs, check_multi_contained errnos (List.concatMap (fun i -> list_of_option i.issue_number) errs) with
+    | [], _ ->
+        List.iter Errors.print_issue errs;
+        raise_error (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded") se.sigrng
+    | _, Some (e, n1, n2) ->
+        List.iter Errors.print_issue errs;
+        raise_error (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
+                                                (string_of_int e) (string_of_int n1) (string_of_int n2)) se.sigrng
+    | _, None -> [], []
+    end
+
+  | None ->
+    tc_decl' env se
+
 let for_export hidden se : list<sigelt> * list<lident> =
    (* Exporting symbols based on whether they have been marked 'abstract'
 
@@ -1643,6 +1646,8 @@ let for_export hidden se : list<sigelt> * list<lident> =
 (* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
 (* this was earlier part of tc_decl, but separating it might help if and when we cache type checked modules *)
 let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
+  if Env.debug env Options.Low
+  then BU.print1 ">>>>>>>>>>>>>>Adding top-level decl to environment: %s\n" (Print.sigelt_to_string se);
   match se.sigel with
   | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
@@ -2037,6 +2042,8 @@ let load_checked_module (en:env) (m:modul) :env =
 let check_module env m b =
   if Options.debug_any()
   then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
+  if Options.dump_module m.name.str
+  then BU.print1 "Module before type checking:\n%s\n" (Print.modul_to_string m);
 
   let env = {env with lax=not (Options.should_verify m.name.str)} in
   let m, m_iface_opt, env = tc_modul env m b in

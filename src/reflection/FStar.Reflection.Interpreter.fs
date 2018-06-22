@@ -4,6 +4,7 @@ module FStar.Reflection.Interpreter
 module N = FStar.TypeChecker.Normalize
 open FStar.Reflection.Data
 open FStar.Reflection.Basic
+module RB = FStar.Reflection.Basic
 open FStar.Ident
 open FStar.TypeChecker.Env
 module Range = FStar.Range
@@ -69,6 +70,8 @@ let reflection_primops : list<N.primitive_step> =
         mk2 "compare_bv" compare_bv E.e_bv E.e_bv E.e_order;
 
         mk2 "is_free" is_free E.e_bv E.e_term e_bool;
+
+        mk2 "lookup_attr" RB.lookup_attr E.e_term E.e_env (e_list E.e_fv);
 
         mk2 "term_eq" term_eq E.e_term E.e_term e_bool;
 

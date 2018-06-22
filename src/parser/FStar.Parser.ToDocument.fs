@@ -808,6 +808,7 @@ and p_letqualifier = function
 and p_aqual = function
   | Implicit -> str "#"
   | Equality -> str "$"
+  | Meta t -> str "#[" ^^ p_term false false t ^^ str "]"
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1377,6 +1378,7 @@ and p_argTerm arg_imp = match arg_imp with
       Errors.log_issue e.range (Errors.Warning_UnexpectedFsTypApp, "Unexpected FsTypApp, output might not be formatted correctly.") ;
       surround 2 1 langle (p_indexingTerm e) rangle
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
+  | (e, HashBrace t) -> str "#[" ^^ p_indexingTerm t ^^ str "]" ^^ p_indexingTerm e
   | (e, Nothing) -> p_indexingTerm e
 
 and p_fsTypArg (e, _) = p_indexingTerm e

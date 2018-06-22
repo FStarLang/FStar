@@ -23,8 +23,8 @@ open FStar.Reflection.Basic //needed for inspect_fv, but that feels wrong
 open FStar.Dyn
 
 (*
- * Most of this file is tedious and repetitive.
- * We should really allow for some metaprogramming in F*. Oh wait....
+ * embed   : from compiler to user
+ * unembed : from user to compiler
  *)
 
 (* -------------------------------------------------------------------------------------- *)

@@ -972,6 +972,21 @@ let fresh_frame_modifies #al c h0 h1 =
     (fun r a x ->
       c.same_mreference_aloc_preserved #r #a x h0 h1 (fun _ _ _ -> ()))
 
+let popped_modifies #al c h0 h1 =
+  let l = loc_region_only #_ #c false (HS.get_tip h0) in
+  modifies_preserves_mreferences_intro l h0 h1 (fun t pre p ->
+    assert_norm (Loc?.region_liveness_tags (loc_mreference #_ #c p) == Ghost.hide Set.empty);
+    assert (loc_disjoint_region_liveness_tags (loc_mreference p) l );
+    // FIXME: WHY WHY WHY is this assert necessary?
+    assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_mreference p))) (Ghost.reveal (Loc?.aux l)));
+    ()
+  );
+  modifies_preserves_alocs_intro l h0 h1 () (fun r a b ->
+    loc_aux_disjoint_sym (Ghost.reveal (Loc?.aux l)) (Ghost.reveal (Loc?.aux (loc_of_aloc b)));
+    ()
+  )
+
+
 let modifies_fresh_frame_popped #al #c h0 h1 s h2 h3 =
   fresh_frame_modifies c h0 h1;
   let r = loc_region_only #al #c false (HS.get_tip h2) in

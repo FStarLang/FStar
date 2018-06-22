@@ -162,10 +162,16 @@ let dump_cur ps msg =
 (* Note: we use def ranges. In tactics we keep the position in there, while the
  * use range is the original position of the assertion / synth / splice. *)
 let ps_to_string (msg, ps) =
+    let p_imp imp =
+        Print.uvar_to_string imp.imp_uvar.ctx_uvar_head
+    in
     String.concat ""
                [format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
                 (if ps.entry_range <> Range.dummyRange
                  then format1 "Location: %s\n" (Range.string_of_def_range ps.entry_range)
+                 else "");
+                (if Env.debug ps.main_context (Options.Other "Imp")
+                 then format1 "Imps: %s\n" (FStar.Common.string_of_list p_imp ps.all_implicits)
                  else "");
                 format2 "ACTIVE goals (%s):\n%s\n"
                     (string_of_int (List.length ps.goals))
@@ -599,15 +605,15 @@ let smt () : tac<unit> =
 let divide (n:Z.t) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     bind get (fun p ->
     bind (try ret (List.splitAt (Z.to_int_fs n) p.goals) with | _ -> fail "divide: not enough goals") (fun (lgs, rgs) ->
-    let lp = {p with goals=lgs; smt_goals=[]} in
-    let rp = {p with goals=rgs; smt_goals=[]} in
+    let lp = { p with goals = lgs; smt_goals = [] } in
     bind (set lp) (fun _ ->
     bind l        (fun a ->
     bind get      (fun lp' ->
+    let rp = { lp' with goals = rgs; smt_goals = [] } in
     bind (set rp) (fun _ ->
     bind r        (fun b ->
     bind get      (fun rp' ->
-    let p' = {p with goals=lp'.goals@rp'.goals; smt_goals=lp'.smt_goals@rp'.smt_goals@p.smt_goals} in
+    let p' = { rp' with goals=lp'.goals @ rp'.goals; smt_goals = lp'.smt_goals @ rp'.smt_goals @ p.smt_goals } in
     bind (set p') (fun _ ->
     bind remove_solved_goals (fun () ->
     ret (a, b)))))))))))
@@ -940,7 +946,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             | _ -> false
             end
         in
-        bind (implicits.implicits |> mapM (fun (_msg, term, ctx_uvar, _range) ->
+        bind (implicits.implicits |> mapM (fun imp ->
+            let term = imp.imp_tm in
+            let ctx_uvar = imp.imp_uvar in
             let hd, _ = U.head_and_args term in
             match (SS.compress hd).n with
             | Tm_uvar (ctx_uvar, _) ->
