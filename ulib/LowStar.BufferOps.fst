@@ -45,6 +45,49 @@ let ( *= ) (#a: Type) (p: B.pointer a) (v: a) : HST.Stack unit
 module M = LowStar.Modifies // many people will forget about it, so add it here so that it appears in the dependencies, and so its patterns will be in the SMT verification context without polluting the F* scope
 module MP = LowStar.ModifiesPat
 
+unfold
+let deref #a (h: HS.mem) (x: B.pointer a) =
+  B.get h x 0
+
+module M = LowStar.ModifiesPat // many people will forget about it, so add it here so that it appears in the dependencies, and so its patterns will be in the SMT verification context without polluting the F* scope
+
+val blit
+  (#t: Type)
+  (src: B.buffer t)
+  (idx_src: U32.t)
+  (dst: B.buffer t)
+  (idx_dst: U32.t)
+  (len: U32.t)
+: HST.Stack unit
+  (requires (fun h ->
+    B.live h src /\ B.live h dst /\ B.disjoint src dst /\
+    U32.v idx_src + U32.v len <= B.length src /\
+    U32.v idx_dst + U32.v len <= B.length dst
+  ))
+  (ensures (fun h _ h' ->
+    M.modifies (M.loc_buffer dst) h h' /\
+    B.live h' dst /\
+    Seq.slice (B.as_seq h' dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len) ==
+    Seq.slice (B.as_seq h src) (U32.v idx_src) (U32.v idx_src + U32.v len) /\
+    Seq.slice (B.as_seq h' dst) 0 (U32.v idx_dst) ==
+    Seq.slice (B.as_seq h dst) 0 (U32.v idx_dst) /\
+    Seq.slice (B.as_seq h' dst) (U32.v idx_dst + U32.v len) (B.length dst) ==
+    Seq.slice (B.as_seq h dst) (U32.v idx_dst + U32.v len) (B.length dst)
+  ))
+let rec blit #t a idx_a b idx_b len =
+  let h0 = HST.get () in
+  if len = 0ul then ()
+  else begin
+    let len' = U32.(len -^ 1ul) in
+    blit #t a idx_a b idx_b len';
+    let z = U32.(a.(idx_a +^ len')) in
+    b.(U32.(idx_b +^ len')) <- z;
+    let h1 = HST.get() in
+    Seq.snoc_slice_index (B.as_seq h1 b) (U32.v idx_b) (U32.v idx_b + U32.v len');
+    Seq.cons_head_tail (Seq.slice (B.as_seq h0 b) (U32.v idx_b + U32.v len') (B.length b));
+    Seq.cons_head_tail (Seq.slice (B.as_seq h1 b) (U32.v idx_b + U32.v len') (B.length b))
+  end
+
 /// TODO: remove two assumptions + make this meta-evaluate properly
 inline_for_extraction
 let rec assign_list #a (l: list a) (b: B.buffer a): HST.Stack unit
