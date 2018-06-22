@@ -907,7 +907,7 @@ let push_top_level_rec_binding env (x:ident) dd =
   then push_scope_mod env (Rec_binding (x,l,dd))
   else raise_error (Errors.Fatal_DuplicateTopLevelNames, ("Duplicate top-level names " ^ l.str)) (range_of_lid l)
 
-let push_sigelt env s =
+let push_sigelt' fail_on_dup env s =
   let err l =
     let sopt = BU.smap_try_find (sigmap env) l.str in
     let r = match sopt with
@@ -926,7 +926,7 @@ let push_sigelt env s =
         | _ -> false, false in
       let lids = lids_of_sigelt s in
       begin match BU.find_map lids (fun l -> if not (unique any_val exclude_interface env l) then Some l else None) with
-        | Some l -> err l
+        | Some l when fail_on_dup -> err l
         | _ -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
       end in
   let env = {env with scope_mods = !globals} in
@@ -953,6 +953,9 @@ let push_sigelt env s =
       BU.smap_add (sigmap env) lid.str (se, env.iface && not env.admitted_iface)));
   let env = {env with scope_mods = !globals } in
   env
+
+let push_sigelt       = push_sigelt' true
+let push_sigelt_force = push_sigelt' false
 
 let push_namespace env ns =
   (* namespace resolution disabled, but module abbrevs enabled *)
