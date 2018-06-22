@@ -818,6 +818,21 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             end
         | _ -> None
     in
+    let string_split' psc args : option<term> =
+        match args with
+        | [a1; a2] ->
+            begin match arg_as_list EMB.e_char a1 with
+            | Some s1 ->
+                begin match arg_as_string a2 with
+                | Some s2 ->
+                    let r = String.split s1 s2 in
+                    Some (EMB.embed (EMB.e_list EMB.e_string) psc.psc_range r)
+                | _ -> None
+                end
+            | _ -> None
+            end
+        | _ -> None
+    in
     let string_of_int rng (i:Z.t) : term =
         EMB.embed EMB.e_string rng (Z.string_of_big_int i)
     in
@@ -893,6 +908,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              (PC.p2l ["FStar"; "String"; "string_of_list"],
                                     1, unary_op (arg_as_list EMB.e_char) string_of_list');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
+             (PC.p2l ["FStar"; "String"; "split"], 2, string_split');
              (PC.p2l ["Prims"; "mk_range"], 5, mk_range);
              ]
     in
