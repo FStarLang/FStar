@@ -320,7 +320,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
     | Sig_let ((r, [lb]), _) ->
         let fv = match lb.lbname with
                  | BU.Inr fv -> fv
-                 | BU.Inl _  -> failwith "global Sig_let has bv"
+                 | BU.Inl _  -> failwith "impossible: global Sig_let has bv"
         in
         Sg_Let (r, fv, lb.lbtyp, lb.lbdef)
 
