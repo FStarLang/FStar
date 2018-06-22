@@ -459,7 +459,7 @@ let shorten_module_path env ids is_full_path =
       | None -> ([], ids)
       | Some (stripped_ids, rev_kept_ids) -> (stripped_ids, List.rev rev_kept_ids) in
 
-  if is_full_path then
+  if is_full_path && List.length ids > 0 then
     // Try to strip the entire prefix.  This is the cheap common case.
     match resolve_module_name env (FStar.Ident.lid_of_ids ids) true with
     | Some m when module_is_open env m -> (ids, [])
