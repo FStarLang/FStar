@@ -9,7 +9,7 @@ let lemma_from_squash #a #b f x = FStar.Squash.give_proof (f x) // Is it expecte
 let easy_fill () =
     let _ = repeat intro in
     (* If the goal is `a -> Lemma b`, intro will fail, try to use this switch *)
-    let _ = trytac (fun () -> dump "HEY"; apply (`lemma_from_squash); intro ()) in
+    let _ = trytac (fun () -> apply (`lemma_from_squash); intro ()) in
     smt ()
 
 val easy : (#[easy_fill] _ : 'a) -> 'a

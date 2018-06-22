@@ -275,7 +275,7 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
       if term_eq t (quote a) then
         let (r1, ts, vm) = reification m [] (const (CM?.unit m)) t1 in
         let (r2, _, vm) = reification m ts vm t2 in
-         dump ("vm =" ^ term_to_string (quote vm));
+        // dump ("vm =" ^ term_to_string (quote vm));
         change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
         // dump ("before =" ^ term_to_string (norm_term [delta;primops]
         //   (quote (mdenote m vm r1 == mdenote m vm r2))));
