@@ -1427,8 +1427,6 @@ let lemma_equal_domains_2 (h0 h1 h2 h3 h4:mem) : Lemma
 
 #reset-options "--z3rlimit 50"
 
-// TODO: make this meta-evaluate properly + fix two assumes
-inline_for_extraction
 let rec assignL #a (l: list a) (b: buffer a): Stack unit
   (requires (fun h0 ->
     live h0 b /\
