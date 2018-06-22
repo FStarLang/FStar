@@ -18,6 +18,7 @@ let rec first (f : 'a -> Tac 'b) (l : list 'a) : Tac 'b =
     | [] -> fail "no cands"
     | x::xs -> (fun () -> f x) `or_else` (fun () -> first f xs)
 
+(* TODO: loop detection (and memoization?) *)
 let rec tcresolve () : Tac unit =
     local `or_else` (fun () -> global `or_else` (fun () -> fail "Typeclass resolution failed"))
 and local () : Tac unit =
@@ -29,6 +30,13 @@ and global () : Tac unit =
 and trywith t : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);
     (fun () -> apply t) `seq` tcresolve
+
+assume val wat : sigelt
+
+let mk_class (t:term) () : Tac unit =
+    add_elem (fun () -> exact (`wat));
+    apply (`Nil)
+
 
 (* Solve an explicit argument by typeclass resolution *)
 unfold let solve (#a:Type) (#[tcresolve] ev : a) : Tot a = ev
