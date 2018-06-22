@@ -162,7 +162,7 @@ let rec permute_via_swaps_correct_aux (p:permute) (pvs:permute_via_swaps p)
 
 let permute_via_swaps_correct
   (p:permute) (pvs:permute_via_swaps p) : permute_correct p =
-     permute_via_swaps_correct_aux p pvs
+     fun #a -> permute_via_swaps_correct_aux p pvs #a
 
 // TODO In the general case, an arbitrary permutation can be done via
 // swaps. To show this we could for instance, write the permutation as
