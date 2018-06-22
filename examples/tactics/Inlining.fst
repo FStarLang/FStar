@@ -37,7 +37,7 @@ let normalize (#t:Type) (x:t) : Tac unit =
   trefl ()
 
 // add_2' is like add_2 but has add_1 inlined (printing verifies this)
-let add_2' : int -> int = synth_by_tactic (fun () -> dump "wat"; normalize ((fun (x:int) -> add_1 (add_1 x))))
+let add_2' : int -> int = synth_by_tactic (fun () -> normalize ((fun (x:int) -> add_1 (add_1 x))))
 
 let create_add_1' : unit -> St unit = synth_by_tactic (fun () -> normalize ((fun (u:unit) ->
              push_frame();
