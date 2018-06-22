@@ -348,15 +348,26 @@ let modifies_0_preserves_mreferences (h1 h2: HS.mem) : GTot Type0 =
 let modifies_0_preserves_regions (h1 h2: HS.mem) : GTot Type0 =
   forall (r: HS.rid) . HS.live_region h1 r ==> HS.live_region h2 r
 
+let modifies_0_preserves_not_unused_in (h1 h2: HS.mem) : GTot Type0 =
+  forall (r: HS.rid) (n: nat) . (
+    HS.live_region h1 r /\ HS.live_region h2 r /\
+    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)  
+  ) ==> (
+    n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)
+  )
+
 let modifies_0' (h1 h2: HS.mem) : GTot Type0 =
   modifies_0_preserves_mreferences h1 h2 /\
-  modifies_0_preserves_regions h1 h2
+  modifies_0_preserves_regions h1 h2 /\
+  modifies_0_preserves_not_unused_in h1 h2
 
 let modifies_0 = modifies_0'
 
 let modifies_0_live_region h1 h2 r = ()
 
 let modifies_0_mreference #a #pre h1 h2 r = ()
+
+let modifies_0_unused_in h1 h2 r n = ()
 
 let modifies_1_preserves_mreferences
   (#a: Type) (b: buffer a)
@@ -388,6 +399,7 @@ let modifies_1'
 = modifies_0_preserves_regions h1 h2 /\
   modifies_1_preserves_mreferences b h1 h2 /\
   modifies_1_preserves_livenesses b h1 h2 /\
+  modifies_0_preserves_not_unused_in h1 h2 /\
   modifies_1_preserves_abuffers b h1 h2
 
 let modifies_1 = modifies_1'
@@ -396,24 +408,39 @@ let modifies_1_live_region #a b h1 h2 r = ()
 
 let modifies_1_liveness #a b h1 h2 #a' #pre r' = ()
 
+let modifies_1_unused_in #t b h1 h2 r n = ()
+
 let modifies_1_mreference #a b h1 h2 #a' #pre r' = ()
 
 let modifies_1_abuffer #a b h1 h2 b' = ()
 
 let modifies_1_null #a b h1 h2 = ()
 
+let modifies_addr_of_preserves_not_unused_in (#t:Type) (b: buffer t) (h1 h2: HS.mem) : GTot Type0 =
+  forall (r: HS.rid) (n: nat) . (
+    (r <> frameOf b \/ n <> as_addr b) /\
+    HS.live_region h1 r /\ HS.live_region h2 r /\
+    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)  
+  ) ==> (
+    n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)
+  )
+
 let modifies_addr_of'
   (#a: Type) (b: buffer a)
   (h1 h2: HS.mem)
 : GTot Type0
 = modifies_0_preserves_regions h1 h2 /\
-  modifies_1_preserves_mreferences b h1 h2
+  modifies_1_preserves_mreferences b h1 h2 /\
+  modifies_addr_of_preserves_not_unused_in b h1 h2
 
 let modifies_addr_of = modifies_addr_of'
 
 let modifies_addr_of_live_region #a b h1 h2 r = ()
 
 let modifies_addr_of_mreference #a b h1 h2 #a' #pre r' = ()
+
+let modifies_addr_of_unused_in #t b h1 h2 r n = ()
+
 
 
 (* Basic stateful operations *)

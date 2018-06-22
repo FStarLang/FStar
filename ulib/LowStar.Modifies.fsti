@@ -887,7 +887,7 @@ val mreference_live_buffer_unused_in_disjoint
 : Lemma
   (requires (HS.contains h b1 /\ B.unused_in b2 h))
   (ensures (loc_disjoint (loc_freed_mreference b1) (loc_buffer b2)))
-  [SMTPat (HS.contains h b1); SMTPat (B.unused_in b2 h)]
+//  [SMTPat (HS.contains h b1); SMTPat (B.unused_in b2 h)]
 
 /// Any live buffer is disjoint from a reference which has not been
 /// allocated yet.
@@ -902,7 +902,7 @@ val buffer_live_mreference_unused_in_disjoint
 : Lemma
   (requires (B.live h b1 /\ HS.unused_in b2 h))
   (ensures (loc_disjoint (loc_buffer b1) (loc_freed_mreference b2)))
-  [SMTPat (B.live h b1); SMTPat (HS.unused_in b2 h)]
+//  [SMTPat (B.live h b1); SMTPat (HS.unused_in b2 h)]
 
 ///  A memory ``h`` does not contain address ``a`` in region ``r``, denoted
 ///  ``does_not_contain_addr h (r, a)``, only if, either region ``r`` is
@@ -986,6 +986,53 @@ val modifies_only_live_addresses
     (forall x . Set.mem x a ==> h `does_not_contain_addr` (r, x))
   ))
   (ensures (modifies l h h'))
+
+
+(* Generic way to ensure that a buffer just allocated is disjoint from
+   any other object, however the latter's liveness is defined. *)
+
+val loc_not_unused_in (h: HS.mem) : GTot loc
+
+val loc_unused_in (h: HS.mem) : GTot loc
+
+val loc_unused_in_not_unused_in_disjoint (h: HS.mem) : Lemma
+  (loc_disjoint (loc_unused_in h) (loc_not_unused_in h))
+
+val live_loc_not_unused_in (#t: Type) (b: B.buffer t) (h: HS.mem) : Lemma
+  (requires (B.live h b))
+  (ensures (loc_not_unused_in h `loc_includes` loc_buffer b))
+  [SMTPat (B.live h b)]
+
+val unused_in_loc_unused_in (#t: Type) (b: B.buffer t) (h: HS.mem) : Lemma
+  (requires (B.unused_in b h))
+  (ensures (loc_unused_in h `loc_includes` loc_buffer b))
+  [SMTPat (B.unused_in b h)]
+
+val modifies_address_liveness_insensitive_unused_in
+  (h h' : HS.mem)
+: Lemma
+  (requires (modifies (address_liveness_insensitive_locs) h h'))
+  (ensures (loc_not_unused_in h' `loc_includes` loc_not_unused_in h /\ loc_unused_in h `loc_includes` loc_unused_in h'))
+
+val mreference_live_loc_not_unused_in
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (h: HS.mem)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (h `HS.contains` r))
+  (ensures (loc_not_unused_in h `loc_includes` loc_freed_mreference r /\ loc_not_unused_in h `loc_includes` loc_mreference r))
+  [SMTPat (HS.contains h r)]
+
+val mreference_unused_in_loc_unused_in
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (h: HS.mem)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (r `HS.unused_in` h))
+  (ensures (loc_unused_in h `loc_includes` loc_freed_mreference r /\ loc_unused_in h `loc_includes` loc_mreference r))
+  [SMTPat (HS.unused_in r h)]
 
 
 /// Type class instantiation for compositionality with other kinds of memory locations than regions, references or buffers (just in case).
