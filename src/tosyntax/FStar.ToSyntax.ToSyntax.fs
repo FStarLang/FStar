@@ -144,8 +144,8 @@ let op_as_term env arity rng op : option<S.term> =
       r C.read_lid delta_equational
     | "@" ->
       if Options.ml_ish ()
-      then r C.list_append_lid delta_equational
-      else r C.list_tot_append_lid delta_equational
+      then r C.list_append_lid     (Delta_equational_at_level 2)
+      else r C.list_tot_append_lid (Delta_equational_at_level 2)
     | "^" ->
       r C.strcat_lid delta_equational
     | "|>" ->
