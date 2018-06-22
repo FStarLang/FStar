@@ -1512,30 +1512,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | App _ :: _
                 | Abs _ :: _
                 | [] ->
-                  if cfg.steps.weak //don't descend beneath a lambda if we're just doing weak reduction
-                  then let t =
-                           //if we're in the middle of processing a `normalize` request
-                           //then don't touch the body of the lambda, just close it
-                           //Otherwise, we may have a large lambda term because of uvar solutions ... at least reduce those away
-                           //This is trying to reach a middle ground between two bad performance problems
-                           //Which we should ultimately resolve by revising the unification algorithm to not produce such large terms
-                           if cfg.steps.in_full_norm_request
-                           then closure_as_term cfg env t //But, if the environment is non-empty, we need to substitute within the term
-                           else let steps' = {cfg.steps with
-                                        weak=false;
-                                        iota=false;
-                                        zeta=false;
-                                        primops=false;
-                                        do_not_unfold_pure_lets=true;
-                                        pure_subterms_within_computations=false;
-                                        simplify=false;
-                                        reify_=false;
-                                        no_full_norm=true;
-                                        unmeta=false;
-                                        unascribe=false } in
-                                let cfg' = {cfg with delta_level=[NoDelta]; steps=steps'} in
-                                norm cfg' env [] t
-                       in
+                  if cfg.steps.weak
+                  then let t = closure_as_term cfg env t in
                        rebuild cfg env stack t
                   else let bs, body, opening = open_term' bs body in
                        let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
