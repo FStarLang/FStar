@@ -517,15 +517,18 @@ let run_tactic_on_typ
     // gets rid of those redexes and leaves a much smaller term, which performs a lot better.
     // TODO: This may be useless with the new representation?
     if !tacdbg then
-        BU.print1 "About to reduce uvars on: %s\n" (Print.term_to_string tactic);
+        BU.print1 "About to reduce uvars on: (%s) {\n" (Print.term_to_string tactic);
     let tactic = N.reduce_uvar_solutions env tactic in
     if !tacdbg then
-        BU.print1 "About to check tactic term: %s\n" (Print.term_to_string tactic);
+        BU.print1 "}\nTypechecking tactic: (%s) {\n" (Print.term_to_string tactic);
 
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed
      * so it won't get stuck. c.f #1307 *)
     let _, _, g = TcTerm.tc_reified_tactic env tactic in
+    if !tacdbg then
+        BU.print_string "}\n";
+
     TcRel.force_trivial_guard env g;
     Err.stop_if_err ();
     let tau = unembed_tactic_0 e_unit tactic in
@@ -535,11 +538,12 @@ let run_tactic_on_typ
     let env = { env with Env.lax_universes = true } in
     let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
     let ps, w = proofstate_of_goal_ty rng env typ in
+
     if !tacdbg then
-        BU.print1 "Running tactic with goal = %s\n" (Print.term_to_string typ);
+        BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ);
     let res, ms = BU.record_time (fun () -> run tau ps) in
     if !tacdbg then
-        BU.print3 "Tactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
+        BU.print3 "}\nTactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
     match res with
     | Success (_, ps) ->
         if !tacdbg then
@@ -833,6 +837,9 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     // Fully normalize the witness
     let w = N.normalize [N.Weak; N.HNF; N.UnfoldUntil delta_constant;
                          N.Primops; N.Unascribe; N.Unmeta] env w in
+
+    if !tacdbg then
+      BU.print1 "splice: got witness = %s\n" (Print.term_to_string w);
 
     // Unembed the result, this must work if things are well-typed
     match unembed (e_list RE.e_sigelt) w with

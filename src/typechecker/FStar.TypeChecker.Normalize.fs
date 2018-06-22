@@ -1275,19 +1275,26 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
         if b then reif else no
 
     // If it is handled primitively, then don't unfold
-    | _ when Option.isSome (find_prim_step cfg fv) -> no
+    | _ when Option.isSome (find_prim_step cfg fv) ->
+        log_unfolding cfg (fun () -> BU.print_string " >> It's a primop, not unfolding\n");
+        no
 
     // Don't unfold HasMaskedEffect
     | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
-            List.contains HasMaskedEffect qs -> no
+            List.contains HasMaskedEffect qs ->
+        log_unfolding cfg (fun () -> BU.print_string " >> HasMaskedEffect, not unfolding\n");
+        no
 
     // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
     | _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
+        log_unfolding cfg (fun () -> BU.print_string " >> tac_opaque, not unfolding\n");
         no
 
     // Recursive lets may only be unfolded when Zeta is on
     | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
-            is_rec && not cfg.steps.zeta -> no
+            is_rec && not cfg.steps.zeta ->
+        log_unfolding cfg (fun () -> BU.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
+        no
 
     // We're doing selectively unfolding, assume it to not unfold unless it meets the criteria
     | _, Some _, _, _
