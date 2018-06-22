@@ -247,10 +247,12 @@ let op_as_term :
                 if uu____330
                 then
                   r FStar_Parser_Const.list_append_lid
-                    FStar_Syntax_Syntax.delta_equational
+                    (FStar_Syntax_Syntax.Delta_equational_at_level
+                       (Prims.parse_int "2"))
                 else
                   r FStar_Parser_Const.list_tot_append_lid
-                    FStar_Syntax_Syntax.delta_equational
+                    (FStar_Syntax_Syntax.Delta_equational_at_level
+                       (Prims.parse_int "2"))
             | "^" ->
                 r FStar_Parser_Const.strcat_lid
                   FStar_Syntax_Syntax.delta_equational
