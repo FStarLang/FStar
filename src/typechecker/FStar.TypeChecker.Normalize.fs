@@ -344,10 +344,11 @@ let norm_universe cfg (env:env) u =
                 try match snd (List.nth env x) with
                       | Univ u -> aux u
                       | Dummy -> [u]
-                      | _ -> failwith "Impossible: universe variable bound to a term"
+                      | _ -> failwith (BU.format1 "Impossible: universe variable u@%s bound to a term"
+                                                   (string_of_int x))
                 with _ -> if cfg.steps.allow_unbound_universes
                           then [U_unknown]
-                          else failwith "Universe variable not found"
+                          else failwith ("Universe variable not found: u@" ^ string_of_int x)
             end
           | U_unif _ when cfg.steps.check_no_uvars ->
             [U_zero]
