@@ -76,6 +76,7 @@ type sigelt_view =
   // (no mutually defined types for now)
   | Sg_Inductive :
       (nm:name) ->              // name of the inductive type being defined
+      (univs:list univ_name) -> // universe variables
       (params:binders) ->       // parameters
       (typ:typ) ->              // the type annotation for the inductive, i.e., indices -> Type #u
       (cts:list name) ->        // constructor names

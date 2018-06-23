@@ -326,7 +326,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 
     | Sig_inductive_typ (lid, us, bs, t, _, c_lids) ->
         let nm = Ident.path_of_lid lid in
-        Sg_Inductive (nm, bs, t, List.map Ident.path_of_lid c_lids)
+        Sg_Inductive (nm, us, bs, t, List.map Ident.path_of_lid c_lids)
 
     | Sig_datacon (lid, us, t, _, n, _) ->
         Sg_Constructor (Ident.path_of_lid lid, t)
