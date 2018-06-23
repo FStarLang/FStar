@@ -27,6 +27,7 @@ let _gen =
     fun r -> x := !x + 1; mk_ident (reserved_prefix ^ string_of_int !x, r)
 let gen r = _gen r // need this indirection for F#, ugh
 
+let range_of_id (id:ident) = id.idRange
 let id_of_text str = mk_ident(str, dummyRange)
 let text_of_id (id:ident) = id.idText
 let text_of_path path = Util.concat_l "." path
@@ -51,7 +52,7 @@ let lid_of_path path pos =
 let text_of_lid lid = lid.str
 let lid_equals l1 l2 = l1.str = l2.str
 let ident_equals id1 id2 = id1.idText = id2.idText
-let range_of_lid (lid:lid) = lid.ident.idRange
+let range_of_lid (lid:lid) = range_of_id lid.ident
 let set_lid_range l r = {l with ident={l.ident with idRange=r}}
 let lid_add_suffix l s =
     let path = path_of_lid l in
