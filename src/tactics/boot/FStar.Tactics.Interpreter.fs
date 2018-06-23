@@ -825,6 +825,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     end
 
 let splice (env:Env.env) (tau:term) : list<sigelt> =
+    if env.nosynth then [] else begin
     tacdbg := Env.debug env (Options.Other "Tac");
     let typ = S.t_decls in // running with goal type FStar.Reflection.Data.decls
     let gs, w = run_tactic_on_typ tau.pos tau.pos (reify_tactic tau) env typ in
@@ -845,3 +846,4 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     match unembed (e_list RE.e_sigelt) w with
     | Some sigelts -> sigelts
     | None -> Err.raise_error (Err.Fatal_SpliceUnembedFail, "splice: failed to unembed sigelts") typ.pos
+    end
