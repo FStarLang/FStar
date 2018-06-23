@@ -55,6 +55,7 @@ val unembed'    : bool -> embedding<'a> -> term -> option<'a>
 val unembed     : embedding<'a> -> term -> option<'a>
 val try_unembed : embedding<'a> -> term -> option<'a>
 val type_of     : embedding<'a> -> typ
+val set_type    : typ -> embedding<'a> -> embedding<'a>
 
 (* Embeddings, both ways and containing type information *)
 val e_any         : embedding<term> // an identity

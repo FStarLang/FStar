@@ -30,6 +30,7 @@ let unembed'  b (e:embedding<'a>) t = e.un b t
 let unembed     (e:embedding<'a>) t   = e.un true  t
 let try_unembed (e:embedding<'a>) t   = e.un false t
 let type_of     (e:embedding<'a>)     = e.typ
+let set_type ty (e:embedding<'a>)     = { e with typ = ty }
 
 type raw_embedder<'a>    = range -> 'a -> term
 type raw_unembedder'<'a> = bool -> term -> option<'a>
