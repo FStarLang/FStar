@@ -546,10 +546,11 @@ let e_univ_names = e_list e_univ_name
 let e_sigelt_view =
     let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
         match sev with
-        | Sg_Let (r, fv, ty, t) ->
+        | Sg_Let (r, fv, univs, ty, t) ->
             S.mk_Tm_app ref_Sg_Let.t
                         [S.as_arg (embed e_bool rng r);
                             S.as_arg (embed e_fv rng fv);
+                            S.as_arg (embed e_univ_names rng univs);
                             S.as_arg (embed e_term rng ty);
                             S.as_arg (embed e_term rng t)]
                         None rng
@@ -582,12 +583,13 @@ let e_sigelt_view =
             BU.bind_opt (unembed' w (e_list e_string_list) dcs) (fun dcs ->
             Some <| Sg_Inductive (nm, bs, t, dcs)))))
 
-        | Tm_fvar fv, [(r, _); (fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
+        | Tm_fvar fv, [(r, _); (fvar, _); (univs, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
             BU.bind_opt (unembed' w e_bool r) (fun r ->
             BU.bind_opt (unembed' w e_fv fvar) (fun fvar ->
+            BU.bind_opt (unembed' w e_univ_names univs) (fun univs ->
             BU.bind_opt (unembed' w e_term ty) (fun ty ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            Some <| Sg_Let (r, fvar, ty, t)))))
+            Some <| Sg_Let (r, fvar, univs, ty, t))))))
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Unk.lid ->
             Some Unk

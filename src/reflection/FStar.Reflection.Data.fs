@@ -63,7 +63,7 @@ type comp_view =
     | C_Unknown
 
 type sigelt_view =
-    | Sg_Let of bool * fv * typ * term
+    | Sg_Let of bool * fv * list<univ_name> * typ * term
     | Sg_Inductive of name * list<binder> * typ * list<name> // name, params, type, constructors
     | Sg_Constructor of name * typ
     | Unk

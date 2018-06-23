@@ -56,7 +56,7 @@ let mk_printer_fun (dom : term) : Tac term =
     in
 
     match inspect_sigelt se with
-    | Sg_Let _ _ _ _ -> fail "cannot create printer for let"
+    | Sg_Let _ _ _ _ _ -> fail "cannot create printer for let"
     | Sg_Inductive _ bs t ctors ->
         let br1 ctor : Tac branch =
             let se = match lookup_typ e ctor with
@@ -113,7 +113,7 @@ let mk_printer dom : Tac unit =
              | _ -> fail "not an fv?"
     in
     let nm = maplast (fun s -> s ^ "_print") nm in
-    let sv : sigelt_view = Sg_Let false (pack_fv nm) (mk_printer_type dom) (mk_printer_fun dom) in
+    let sv : sigelt_view = Sg_Let false (pack_fv nm) [] (mk_printer_type dom) (mk_printer_fun dom) in
     let ses : list sigelt = [pack_sigelt sv] in
     exact (quote ses)
 

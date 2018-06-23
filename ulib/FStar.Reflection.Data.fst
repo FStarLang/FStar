@@ -65,6 +65,7 @@ type sigelt_view =
   | Sg_Let :
       (r:bool) ->
       (fv:fv) ->
+      (us:list univ_name) ->
       (typ:typ) ->
       (def:term) ->
       sigelt_view

@@ -250,7 +250,7 @@ let unfold_fv (t: T.fv) : T.Tac T.term =
   match T.lookup_typ env n with
   | Some s ->
     begin match T.inspect_sigelt s with
-    | T.Sg_Let false _ _ def -> def
+    | T.Sg_Let false _ _ _ def -> def
     | _ -> tfail "Not a non-recursive let definition"
     end
   | _ -> tfail "Definition not found"

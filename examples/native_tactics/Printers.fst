@@ -38,7 +38,7 @@ let printer_fun () : Tac unit =
              | Some se -> se
     in
     match inspect_sigelt se with
-    | Sg_Let _ _ _ _ -> fail "cannot create printer for let"
+    | Sg_Let _ _ _ _ _ -> fail "cannot create printer for let"
     | Sg_Inductive _ bs t ctors ->
         let br1 ctor : Tac branch =
             let se = match lookup_typ e ctor with

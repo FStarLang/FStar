@@ -322,7 +322,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
                  | BU.Inr fv -> fv
                  | BU.Inl _  -> failwith "impossible: global Sig_let has bv"
         in
-        Sg_Let (r, fv, lb.lbtyp, lb.lbdef)
+        Sg_Let (r, fv, lb.lbunivs, lb.lbtyp, lb.lbdef)
 
     | Sig_inductive_typ (lid, us, bs, t, _, c_lids) ->
         let nm = Ident.path_of_lid lid in
@@ -336,8 +336,8 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 
 let pack_sigelt (sv:sigelt_view) : sigelt =
     match sv with
-    | Sg_Let (r, fv, ty, def) ->
-        let lb = U.mk_letbinding (BU.Inr fv) [] ty PC.effect_Tot_lid def [] def.pos in
+    | Sg_Let (r, fv, univs, ty, def) ->
+        let lb = U.mk_letbinding (BU.Inr fv) univs ty PC.effect_Tot_lid def [] def.pos in
         mk_sigelt <| Sig_let ((r, [lb]), [lid_of_fv fv])
 
     | Sg_Constructor _ ->
