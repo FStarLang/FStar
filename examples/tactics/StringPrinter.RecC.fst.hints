@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "c5a33b766ea0cda8caca1240c0cabb5d"
+      "5364de0a2c044cb737b4632ce44cb5a4"
     ],
     [
       "StringPrinter.RecC.__proj__ILeft__item___0",
@@ -22,7 +22,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_6474df3426774fe0915d93800bd403be"
       ],
       0,
-      "c1138ccfb31939549fb5ffd350415127"
+      "8914bddabf9186f51ad3d81d7df5e5a6"
     ],
     [
       "StringPrinter.RecC.__proj__ILeft__item___1",
@@ -36,7 +36,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_6474df3426774fe0915d93800bd403be"
       ],
       0,
-      "a4cbead3df15f7c9ab1e23bb8ea90683"
+      "cf9d59b40c5c5de57961eeaf0e6abdc1"
     ],
     [
       "StringPrinter.RecC.__proj__IRight__item___0",
@@ -50,7 +50,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_5cc97964710279918046f6207e01f533"
       ],
       0,
-      "429ed377a1805dd118340243e0f9e2a0"
+      "a493e89ad639fc5625fc6de10248b8e3"
     ],
     [
       "StringPrinter.RecC.__proj__IRight__item___1",
@@ -64,7 +64,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_5cc97964710279918046f6207e01f533"
       ],
       0,
-      "d5979efaa5ba79dc9e79e19bd070ce17"
+      "a2c8f6d4659854b6a169d22d063e6df7"
     ],
     [
       "StringPrinter.RecC.do_while_sz_inv",
@@ -73,7 +73,7 @@
       1,
       [ "@query" ],
       0,
-      "9c2ece0825f2ebf9e4ea2051cbde06dc"
+      "0aa7172cecc55554db74f4c4b8195824"
     ],
     [
       "StringPrinter.RecC.do_while_sz_body",
@@ -251,7 +251,7 @@
         "typing_FStar.UInt32.v", "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "bc37d23ac3b88a700775cd6fd2a6e625"
+      "f6f69e629523be08896e8680ba51a651"
     ],
     [
       "StringPrinter.RecC.do_while_st_inv",
@@ -302,7 +302,7 @@
         "typing_StringPrinter.RecC.__proj__Mkdo_while_st_interm__item__do_while_st_interm_res"
       ],
       0,
-      "94517ca6ac05bd9e3e44ce012bfad8e6"
+      "a17241f7f4da3153f885a88d402cfffa"
     ],
     [
       "StringPrinter.RecC.do_while_st_body",
@@ -471,7 +471,7 @@
         "unit_typing"
       ],
       0,
-      "5dd1ef31664f1468b6736f38974ddc7b"
+      "ee0188ef74274835a5fbcc09b43b6039"
     ],
     [
       "StringPrinter.RecC.do_while_st",
@@ -550,12 +550,14 @@
         "lemma_FStar.Buffer.lemma_modifies_sub_2",
         "lemma_FStar.Buffer.lemma_sub_spec", "lemma_FStar.Buffer.live_fresh",
         "lemma_FStar.Buffer.modifies_popped_1",
+        "lemma_FStar.Buffer.no_upd_fresh",
         "lemma_FStar.Buffer.no_upd_lemma_0", "lemma_FStar.Ghost.reveal_hide",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_SelRestrict", "lemma_FStar.Map.lemma_SelUpd2",
         "lemma_FStar.Monotonic.HyperStack.lemma_mk_mem__projectors",
         "lemma_FStar.Seq.Base.lemma_index_create",
         "lemma_FStar.Seq.Base.lemma_len_append",
+        "lemma_FStar.Seq.Base.lemma_len_slice",
         "lemma_FStar.Seq.Properties.slice_is_empty",
         "lemma_FStar.Seq.Properties.slice_slice",
         "lemma_FStar.Set.lemma_equal_elim", "lemma_FStar.UInt32.uv_inv",
@@ -604,6 +606,8 @@
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_b913a3f691ca99086652e0a655e72f17",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_cd046bc4a887ee7e1b05946e0bf5772b",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_528d1ac7a4a801fe55aa0f436f85ad2a",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
@@ -631,15 +635,16 @@
         "typing_FStar.Monotonic.HyperStack.poppable",
         "typing_FStar.Monotonic.HyperStack.remove_elt",
         "typing_FStar.Monotonic.HyperStack.sel",
-        "typing_FStar.Seq.Base.length", "typing_FStar.UInt32.add",
-        "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v",
-        "typing_StringPrinter.Base.log", "typing_StringPrinter.Rec.do_while",
+        "typing_FStar.Seq.Base.createEmpty", "typing_FStar.Seq.Base.length",
+        "typing_FStar.UInt32.add", "typing_FStar.UInt32.uint_to_t",
+        "typing_FStar.UInt32.v", "typing_StringPrinter.Base.log",
+        "typing_StringPrinter.Rec.do_while",
         "typing_StringPrinter.RecC.__proj__Mkdo_while_st_interm__item__do_while_st_interm_log",
         "typing_StringPrinter.RecC.__proj__Mkdo_while_st_interm__item__do_while_st_interm_res",
         "unit_typing"
       ],
       0,
-      "6e51564ec38669df1ff4d5d0cbf0a9d0"
+      "63868cf20114d59b19b0b68059b0ec69"
     ],
     [
       "StringPrinter.RecC.compile_do_while",
@@ -663,7 +668,7 @@
         "unit_typing"
       ],
       0,
-      "cf2a3f619c842534a926f9c8ba848d00"
+      "325534ef19001099788b84a3d3f21a93"
     ],
     [
       "StringPrinter.RecC.do_while_sz_interm",
@@ -672,7 +677,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "e2194436f80b959ba83fc3f9d3d55ee7"
+      "848da44ea4b97ed2ff61c031e620eeca"
     ],
     [
       "StringPrinter.RecC.__proj__ILeft__item___0",
@@ -686,7 +691,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_6474df3426774fe0915d93800bd403be"
       ],
       0,
-      "6edc3b41bcd23c638220d83d949c4244"
+      "5da86399ebe4ba91fbda583a510c0817"
     ],
     [
       "StringPrinter.RecC.__proj__ILeft__item___1",
@@ -700,7 +705,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_6474df3426774fe0915d93800bd403be"
       ],
       0,
-      "9101642f9bf24fd007963a0c7609b20c"
+      "ff00876de2ffb56ddf506ec04b16a3de"
     ],
     [
       "StringPrinter.RecC.__proj__IRight__item___0",
@@ -714,7 +719,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_5cc97964710279918046f6207e01f533"
       ],
       0,
-      "52b81c5bde40228bec4cbfa1e8c79556"
+      "36259ed3c93241ec9eb073ee6411196d"
     ],
     [
       "StringPrinter.RecC.__proj__IRight__item___1",
@@ -728,7 +733,7 @@
         "refinement_interpretation_StringPrinter.RecC_Tm_refine_5cc97964710279918046f6207e01f533"
       ],
       0,
-      "b4543b063521ac6841ef1edd6080ed2c"
+      "cf05418a08eb2840074b16ed6c45e421"
     ],
     [
       "StringPrinter.RecC.do_while_sz_inv",
@@ -737,7 +742,7 @@
       1,
       [ "@query" ],
       0,
-      "aca7f631b971d608dd2359a294d2d2d3"
+      "3632af0cfe007ad129822fa96cf5118b"
     ],
     [
       "StringPrinter.RecC.do_while_sz_body",
@@ -848,7 +853,7 @@
         "unit_typing"
       ],
       0,
-      "be1412a02b03a1f60d78554378910123"
+      "e578e92a96e9a662a4d717f064d1cf21"
     ],
     [
       "StringPrinter.RecC.do_while_sz",
@@ -917,7 +922,7 @@
         "typing_FStar.UInt32.v", "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "84a40b10e66cee2af0fb58982697b278"
+      "6e501163133c68fc1bd603d5ac56954c"
     ],
     [
       "StringPrinter.RecC.do_while_st_inv",
@@ -968,7 +973,7 @@
         "typing_StringPrinter.RecC.__proj__Mkdo_while_st_interm__item__do_while_st_interm_res"
       ],
       0,
-      "f8da6389c522989f5335108c813464f4"
+      "28d7c5119352bb3635ad3a6a4bfd8d0f"
     ],
     [
       "StringPrinter.RecC.do_while_st",
@@ -1104,6 +1109,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_b913a3f691ca99086652e0a655e72f17",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_cd046bc4a887ee7e1b05946e0bf5772b",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_528d1ac7a4a801fe55aa0f436f85ad2a",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
@@ -1131,15 +1137,16 @@
         "typing_FStar.Monotonic.HyperStack.poppable",
         "typing_FStar.Monotonic.HyperStack.remove_elt",
         "typing_FStar.Monotonic.HyperStack.sel",
-        "typing_FStar.Seq.Base.length", "typing_FStar.UInt32.add",
-        "typing_FStar.UInt32.uint_to_t", "typing_FStar.UInt32.v",
-        "typing_StringPrinter.Base.log", "typing_StringPrinter.Rec.do_while",
+        "typing_FStar.Seq.Base.createEmpty", "typing_FStar.Seq.Base.length",
+        "typing_FStar.UInt32.add", "typing_FStar.UInt32.uint_to_t",
+        "typing_FStar.UInt32.v", "typing_StringPrinter.Base.log",
+        "typing_StringPrinter.Rec.do_while",
         "typing_StringPrinter.RecC.__proj__Mkdo_while_st_interm__item__do_while_st_interm_log",
         "typing_StringPrinter.RecC.__proj__Mkdo_while_st_interm__item__do_while_st_interm_res",
         "unit_typing"
       ],
       0,
-      "179a39ecc57d5fcf94853b54659131b4"
+      "29e880282c9dcdbd9445ca8a3227027c"
     ],
     [
       "StringPrinter.RecC.compile_do_while",
@@ -1163,7 +1170,7 @@
         "unit_typing"
       ],
       0,
-      "d17ce4b97d8229540cdda2d3da0b648e"
+      "f2359fe0dd2137250db36711ef5468f4"
     ]
   ]
 ]
