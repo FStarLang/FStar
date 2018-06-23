@@ -10,6 +10,7 @@ open FStar.Errors
 
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
+module I = FStar.Ident
 module SS = FStar.Syntax.Subst
 module BU = FStar.Util
 module Range = FStar.Range
@@ -526,6 +527,21 @@ let e_sigelt =
             None
     in
     mk_emb embed_sigelt unembed_sigelt fstar_refl_sigelt
+
+let e_ident : embedding<I.ident> =
+    let repr = e_tuple2 e_range e_string in
+    let embed_ident (rng:Range.range) (i:I.ident) : term =
+        embed repr rng (I.range_of_id i, I.text_of_id i)
+    in
+    let unembed_ident w (t:term) : option<I.ident> =
+        match unembed' w repr t with
+        | Some (rng, s) -> Some (I.mk_ident (s, rng))
+        | None -> None
+    in
+    mk_emb embed_ident unembed_ident fstar_refl_ident
+
+let e_univ_name = set_type fstar_refl_univ_name e_ident
+let e_univ_names = e_list e_univ_name
 
 let e_sigelt_view =
     let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
