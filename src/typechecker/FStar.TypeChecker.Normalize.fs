@@ -202,6 +202,7 @@ let dummy : option<binder> * closure = None,Dummy
 
 type debug_switches = {
     gen              : bool;
+    top              : bool;
     primop           : bool;
     unfolding        : bool;
     b380             : bool;
@@ -284,6 +285,9 @@ let stack_to_string s =
 
 let log cfg f =
     if cfg.debug.gen then f () else ()
+
+let log_top cfg f =
+    if cfg.debug.top then f () else ()
 
 let log_primops cfg f =
     if cfg.debug.primop then f () else ()
@@ -2737,6 +2741,7 @@ let config' psteps s e =
         | _ -> d in
     {tcenv=e;
      debug = { gen = Env.debug e (Options.Other "Norm")
+             ; top = Env.debug e (Options.Other "NormTop")
              ; primop = Env.debug e (Options.Other "Primops")
              ; unfolding = Env.debug e (Options.Other "Unfolding")
              ; b380 = Env.debug e (Options.Other "380")
@@ -2756,8 +2761,11 @@ let config s e = config' [] s e
 
 let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
-    log c (fun () -> BU.print1 "Starting normalizer for (%s)\n" (Print.term_to_string t));
-    norm c [] [] t
+    log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
+    let r = norm c [] [] t in
+    log_top c (fun () -> BU.print1 "}\nNormalization result = (%s)\n" (Print.term_to_string r));
+    r
+
 let normalize s e t = normalize_with_primitive_steps [] s e t
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
