@@ -487,7 +487,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         | Some ("try_with", _) ->
           resugar_as_app e args
 
-        | Some (op, _) when (op = "=" || op = "==" || op = "===") && Options.print_implicits () ->
+        (* These have implicits, don't do the fancy printing when we're printing them *)
+        | Some (op, _) when (op = "=" || op = "==" || op = "===" || op = "@" || op = ":=")
+            && Options.print_implicits () ->
           resugar_as_app e args
 
         | Some (op, _) when op = "forall" || op = "exists" ->
