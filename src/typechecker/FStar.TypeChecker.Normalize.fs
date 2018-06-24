@@ -110,6 +110,32 @@ type fsteps = {
     weakly_reduce_scrutinee:bool;
 }
 
+let steps_to_string steps =
+    (* Note: some are missing *)
+    String.concat "\n"
+        ["{";
+         BU.format1 "    beta = %s;"                              (string_of_bool steps.beta);
+         BU.format1 "    iota = %s;"                              (string_of_bool steps.iota);
+         BU.format1 "    zeta = %s;"                              (string_of_bool steps.zeta);
+         BU.format1 "    weak = %s;"                              (string_of_bool steps.weak);
+         BU.format1 "    hnf = %s;"                               (string_of_bool steps.hnf);
+         BU.format1 "    primops = %s;"                           (string_of_bool steps.primops);
+         BU.format1 "    do_not_unfold_pure_lets = %s;"           (string_of_bool steps.do_not_unfold_pure_lets);
+         BU.format1 "    unfold_tac = %s;"                        (string_of_bool steps.unfold_tac);
+         BU.format1 "    pure_subterms_within_computations = %s;" (string_of_bool steps.pure_subterms_within_computations);
+         BU.format1 "    simplify = %s;"                          (string_of_bool steps.simplify);
+         BU.format1 "    erase_universes = %s;"                   (string_of_bool steps.erase_universes);
+         BU.format1 "    allow_unbound_universes = %s;"           (string_of_bool steps.allow_unbound_universes);
+         BU.format1 "    reify_ = %s;"                            (string_of_bool steps.reify_);
+         BU.format1 "    compress_uvars = %s;"                    (string_of_bool steps.compress_uvars);
+         BU.format1 "    no_full_norm = %s;"                      (string_of_bool steps.no_full_norm);
+         BU.format1 "    check_no_uvars = %s;"                    (string_of_bool steps.check_no_uvars);
+         BU.format1 "    unmeta = %s;"                            (string_of_bool steps.unmeta);
+         BU.format1 "    unascribe = %s;"                         (string_of_bool steps.unascribe);
+         BU.format1 "    in_full_norm_request = %s;"              (string_of_bool steps.in_full_norm_request);
+         BU.format1 "    weakly_reduce_scrutinee = %s;"           (string_of_bool steps.weakly_reduce_scrutinee);
+         "  }"]
+
 let default_steps : fsteps = {
     beta = true;
     iota = true;
@@ -203,6 +229,7 @@ let dummy : option<binder> * closure = None,Dummy
 type debug_switches = {
     gen              : bool;
     top              : bool;
+    cfg              : bool;
     primop           : bool;
     unfolding        : bool;
     b380             : bool;
@@ -221,6 +248,12 @@ type cfg = {
     memoize_lazy : bool;
     normalize_pure_lets: bool;
 }
+
+let cfg_to_string cfg =
+    String.concat "\n"
+        ["{";
+         BU.format1 "  steps = %s" (steps_to_string cfg.steps);
+         "}" ]
 
 let add_steps (m : BU.psmap<primitive_step>) (l : list<primitive_step>) : BU.psmap<primitive_step> =
     List.fold_right (fun p m -> BU.psmap_add m (I.text_of_lid p.name) p) l m
@@ -288,6 +321,9 @@ let log cfg f =
 
 let log_top cfg f =
     if cfg.debug.top then f () else ()
+
+let log_cfg cfg f =
+    if cfg.debug.cfg then f () else ()
 
 let log_primops cfg f =
     if cfg.debug.primop then f () else ()
@@ -1383,6 +1419,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                         (Print.term_to_string t)
                                         (BU.string_of_int (List.length env))
                                         (stack_to_string (fst <| firstn 4 stack)));
+        log_cfg cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
         match t.n with
           | Tm_unknown
           | Tm_constant _
@@ -2742,6 +2779,7 @@ let config' psteps s e =
     {tcenv=e;
      debug = { gen = Env.debug e (Options.Other "Norm")
              ; top = Env.debug e (Options.Other "NormTop")
+             ; cfg = Env.debug e (Options.Other "NormCfg")
              ; primop = Env.debug e (Options.Other "Primops")
              ; unfolding = Env.debug e (Options.Other "Unfolding")
              ; b380 = Env.debug e (Options.Other "380")
