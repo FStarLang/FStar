@@ -201,6 +201,7 @@ and compare_argv (a1 a2 : argv) : order =
     let a1, q1 = a1 in
     let a2, q2 = a2 in
     match q1, q2 with
+    (* We should never see Q_Meta here *)
     | Q_Implicit, Q_Explicit -> Lt
     | Q_Explicit, Q_Implicit -> Gt
     | _, _ -> compare_term a1 a2

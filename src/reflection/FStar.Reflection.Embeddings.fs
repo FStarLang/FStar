@@ -102,6 +102,9 @@ let e_aqualv =
         match q with
         | Data.Q_Explicit -> ref_Q_Explicit.t
         | Data.Q_Implicit -> ref_Q_Implicit.t
+        | Data.Q_Meta t   ->
+            S.mk_Tm_app ref_Q_Meta.t [S.as_arg (embed e_term rng t)]
+                        None Range.dummyRange
         in { r with pos = rng }
     in
     let unembed_aqualv w (t : term) : option<aqualv> =

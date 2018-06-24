@@ -29,6 +29,7 @@ type branch = pattern * term
 type aqualv =
     | Q_Implicit
     | Q_Explicit
+    | Q_Meta of term
 
 type argv = term * aqualv
 
@@ -148,6 +149,7 @@ let ref_Mk_bv =
 (* quals *)
 let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"
 let ref_Q_Implicit = fstar_refl_data_const "Q_Implicit"
+let ref_Q_Meta     = fstar_refl_data_const "Q_Meta"
 
 (* const *)
 let ref_C_Unit   = fstar_refl_data_const "C_Unit"

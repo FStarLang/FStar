@@ -41,8 +41,8 @@ open FStar.Dyn
 (* private *)
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with
-    | Some (Meta _) -> failwith "Sorry! cannot inspect TC arguments for now"
     | Some (Implicit _) -> Data.Q_Implicit
+    | Some (Meta t) -> Data.Q_Meta t
     | Some Equality
     | None -> Data.Q_Explicit
 
@@ -51,6 +51,7 @@ let pack_aqual (aqv : aqualv) : aqual =
     match aqv with
     | Data.Q_Explicit -> None
     | Data.Q_Implicit -> Some (Implicit false)
+    | Data.Q_Meta t   -> Some (Meta t)
 
 let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
