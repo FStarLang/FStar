@@ -1428,7 +1428,7 @@ let trefl () : tac<unit> = wrap_err "trefl" <|
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv PC.eq2_lid ->
             bind (do_unify (goal_env g) l r) (fun b ->
             if not b
-            then fail2 "not a trivial equality (%s vs %s)" (tts (goal_env g) l) (tts (goal_env g) r)
+            then fail2 "not a trivial equality ((%s) vs (%s))" (tts (goal_env g) l) (tts (goal_env g) r)
             else solve' g U.exp_unit)
         | hd, _ ->
             fail1 "trefl: not an equality (%s)" (tts (goal_env g) t)
