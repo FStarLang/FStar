@@ -322,22 +322,34 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
                  | BU.Inr fv -> fv
                  | BU.Inl _  -> failwith "impossible: global Sig_let has bv"
         in
+        let s, us = SS.univ_var_opening lb.lbunivs in
+        let typ = SS.subst s lb.lbtyp in
+        let def = SS.subst s lb.lbdef in
         Sg_Let (r, fv, lb.lbunivs, lb.lbtyp, lb.lbdef)
 
-    | Sig_inductive_typ (lid, us, bs, t, _, c_lids) ->
+    | Sig_inductive_typ (lid, us, bs, ty, _, c_lids) ->
         let nm = Ident.path_of_lid lid in
-        Sg_Inductive (nm, us, bs, t, List.map Ident.path_of_lid c_lids)
+        let s, us = SS.univ_var_opening us in
+        let bs = SS.subst_binders s bs in
+        let ty = SS.subst s ty in
+        Sg_Inductive (nm, us, bs, ty, List.map Ident.path_of_lid c_lids)
 
-    | Sig_datacon (lid, us, t, _, n, _) ->
-        Sg_Constructor (Ident.path_of_lid lid, t)
+    | Sig_datacon (lid, us, ty, _, n, _) ->
+        let s, us = SS.univ_var_opening us in
+        let ty = SS.subst s ty in
+        (* TODO: return universes *)
+        Sg_Constructor (Ident.path_of_lid lid, ty)
 
     | _ ->
         Unk
 
 let pack_sigelt (sv:sigelt_view) : sigelt =
     match sv with
-    | Sg_Let (r, fv, univs, ty, def) ->
-        let lb = U.mk_letbinding (BU.Inr fv) univs ty PC.effect_Tot_lid def [] def.pos in
+    | Sg_Let (r, fv, univs, typ, def) ->
+        let s = SS.univ_var_closing univs in
+        let typ = SS.subst s typ in
+        let def = SS.subst s def in
+        let lb = U.mk_letbinding (BU.Inr fv) univs typ PC.effect_Tot_lid def [] def.pos in
         mk_sigelt <| Sig_let ((r, [lb]), [lid_of_fv fv])
 
     | Sg_Constructor _ ->
