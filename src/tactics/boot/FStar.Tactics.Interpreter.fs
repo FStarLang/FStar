@@ -541,7 +541,7 @@ let run_tactic_on_typ
 
     if !tacdbg then
         BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ);
-    let res, ms = BU.record_time (fun () -> run tau ps) in
+    let res, ms = BU.record_time (fun () -> run_safe tau ps) in
     if !tacdbg then
         BU.print3 "}\nTactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
     match res with
