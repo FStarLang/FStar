@@ -531,6 +531,9 @@ let e_sigelt =
     in
     mk_emb embed_sigelt unembed_sigelt fstar_refl_sigelt
 
+// TODO: It would be nice to have a
+// embed_as : ('a -> 'b) -> ('b -> 'a) -> embedding<'a> -> embedding<'b>
+// so we don't write these things
 let e_ident : embedding<I.ident> =
     let repr = e_tuple2 e_range e_string in
     let embed_ident (rng:Range.range) (i:I.ident) : term =
@@ -541,9 +544,15 @@ let e_ident : embedding<I.ident> =
         | Some (rng, s) -> Some (I.mk_ident (s, rng))
         | None -> None
     in
-    mk_emb embed_ident unembed_ident fstar_refl_ident
+    mk_emb embed_ident unembed_ident (S.t_tuple2_of S.t_range S.t_string)
+    // TODO: again a delta depth issue, should be this
+    (* fstar_refl_ident *)
 
-let e_univ_name = set_type fstar_refl_univ_name e_ident
+let e_univ_name =
+    (* TODO: Should be this, but there's a delta depth issue *)
+    (* set_type fstar_refl_univ_name e_ident *)
+    e_ident
+
 let e_univ_names = e_list e_univ_name
 
 let e_sigelt_view =
