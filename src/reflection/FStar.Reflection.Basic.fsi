@@ -18,6 +18,9 @@ val moduleof       : Env.env -> list<string>
 val term_eq        : term -> term -> bool
 val term_to_string : term -> string
 
+val sigelt_attrs     : sigelt -> list<attribute>
+val set_sigelt_attrs : list<attribute> -> sigelt -> sigelt
+
 (* Views *)
 val inspect_fv    : fv -> list<string>
 val pack_fv       : list<string> -> fv

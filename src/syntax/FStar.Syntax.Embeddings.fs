@@ -138,7 +138,7 @@ let e_option (ea : embedding<'a>) =
     in
     let un (w:bool) (t0:term) : option<option<'a>> =
         let t = U.unmeta_safe t0 in
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args' t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
         | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
@@ -162,7 +162,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     in
     let un (w:bool) (t0:term) : option<('a * 'b)> =
         let t = U.unmeta_safe t0 in
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args' t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv PC.lid_Mktuple2 ->
             BU.bind_opt (unembed' w ea a) (fun a ->
@@ -198,7 +198,7 @@ let e_list (ea:embedding<'a>) =
     in
     let rec un (w:bool) (t0:term) : option<list<'a>> =
         let t = U.unmeta_safe t0 in
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args' t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, _
             when S.fv_eq_lid fv PC.nil_lid -> Some []
@@ -270,7 +270,7 @@ let e_norm_step =
     in
     let un (w:bool) (t0:term) : option<norm_step> =
         let t = U.unmeta_safe t0 in
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args' t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_simpl ->
             Some Simpl
@@ -359,4 +359,3 @@ let embed_arrow_3 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:e
       Some (ed FStar.Range.dummyRange (f a b c)))))
     | _ ->
       None
-

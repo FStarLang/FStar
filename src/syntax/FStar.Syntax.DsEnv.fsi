@@ -161,6 +161,9 @@ val push_include: env -> lident -> env
 val push_module_abbrev : env -> ident -> lident -> env
 val push_doc: env -> lident -> option<Parser.AST.fsdoc> -> env
 
+(* Won't fail on duplicates, use with caution *)
+val push_sigelt_force : env -> sigelt -> env
+
 val pop: unit -> env
 val push: env -> env
 val rollback: option<int> -> env

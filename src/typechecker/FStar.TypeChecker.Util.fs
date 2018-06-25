@@ -1096,7 +1096,11 @@ let maybe_instantiate (env:Env.env) e t =
   let torig = SS.compress t in
   if not env.instantiate_imp
   then e, torig, Env.trivial_guard
-  else let number_of_implicits t =
+  else begin
+       if Env.debug env Options.High then
+         BU.print2 "maybe_instantiate: starting check for (%s) of type (%s)\n"
+                 (Print.term_to_string e) (Print.term_to_string t);
+       let number_of_implicits t =
             let formals, _ = U.arrow_formals t in
             let n_implicits =
             match formals |> BU.prefix_until (fun (_, imp) -> imp=None || imp=Some Equality) with
@@ -1133,19 +1137,27 @@ let maybe_instantiate (env:Env.env) e t =
                   | _, (x, Some (Implicit dot))::rest ->
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
+                      if Env.debug env Options.High then
+                        BU.print1 "maybe_instantiate: Instantiating implicit with %s\n"
+                                (Print.term_to_string v);
                       let subst = NT(x, v)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
                       (v, Some (Implicit dot))::args, bs, subst, Env.conj_guard g g'
-                  | _, (x, Some (Meta tau ))::rest ->
+
+                  | _, (x, Some (Meta tau))::rest ->
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of meta argument" e.pos env t in
+                      if Env.debug env Options.High then
+                        BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
+                                (Print.term_to_string v);
                       let mark_meta_implicits tau g =
                           { g with implicits =
                               List.map (fun imp -> { imp with imp_meta = Some (env, tau) }) g.implicits } in
                       let g = mark_meta_implicits tau g in
                       let subst = NT(x, v)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some (Implicit false))::args, bs, subst, Env.conj_guard g g'
+                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
+
                  | _, bs -> [], bs, subst, Env.trivial_guard
               in
               let args, bs, subst, guard = aux [] (inst_n_binders t) bs in
@@ -1169,6 +1181,7 @@ let maybe_instantiate (env:Env.env) e t =
 
             | _ -> e, t, Env.trivial_guard
        end
+  end
 
 (**************************************************************************************)
 (* Generalizing types *)

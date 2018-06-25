@@ -818,6 +818,38 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             end
         | _ -> None
     in
+    let string_split' psc args : option<term> =
+        match args with
+        | [a1; a2] ->
+            begin match arg_as_list EMB.e_char a1 with
+            | Some s1 ->
+                begin match arg_as_string a2 with
+                | Some s2 ->
+                    let r = String.split s1 s2 in
+                    Some (EMB.embed (EMB.e_list EMB.e_string) psc.psc_range r)
+                | _ -> None
+                end
+            | _ -> None
+            end
+        | _ -> None
+    in
+    let string_substring' psc args : option<term> =
+        match args with
+        | [a1; a2; a3] ->
+            begin match arg_as_string a1, arg_as_int a2, arg_as_int a3 with
+            | Some s1, Some n1, Some n2 ->
+                let n1 = Z.to_int_fs n1 in
+                let n2 = Z.to_int_fs n2 in
+                (* Might raise an OOB exception *)
+                begin
+                try let r = String.substring s1 n1 n2 in
+                    Some (EMB.embed EMB.e_string psc.psc_range r)
+                with | _ -> None
+                end
+            | _ -> None
+            end
+        | _ -> None
+    in
     let string_of_int rng (i:Z.t) : term =
         EMB.embed EMB.e_string rng (Z.string_of_big_int i)
     in
@@ -893,6 +925,8 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              (PC.p2l ["FStar"; "String"; "string_of_list"],
                                     1, unary_op (arg_as_list EMB.e_char) string_of_list');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
+             (PC.p2l ["FStar"; "String"; "split"], 2, string_split');
+             (PC.p2l ["FStar"; "String"; "substring"], 3, string_substring');
              (PC.p2l ["Prims"; "mk_range"], 5, mk_range);
              ]
     in
@@ -1241,19 +1275,26 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
         if b then reif else no
 
     // If it is handled primitively, then don't unfold
-    | _ when Option.isSome (find_prim_step cfg fv) -> no
+    | _ when Option.isSome (find_prim_step cfg fv) ->
+        log_unfolding cfg (fun () -> BU.print_string " >> It's a primop, not unfolding\n");
+        no
 
     // Don't unfold HasMaskedEffect
     | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
-            List.contains HasMaskedEffect qs -> no
+            List.contains HasMaskedEffect qs ->
+        log_unfolding cfg (fun () -> BU.print_string " >> HasMaskedEffect, not unfolding\n");
+        no
 
     // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
     | _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
+        log_unfolding cfg (fun () -> BU.print_string " >> tac_opaque, not unfolding\n");
         no
 
     // Recursive lets may only be unfolded when Zeta is on
     | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
-            is_rec && not cfg.steps.zeta -> no
+            is_rec && not cfg.steps.zeta ->
+        log_unfolding cfg (fun () -> BU.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
+        no
 
     // We're doing selectively unfolding, assume it to not unfold unless it meets the criteria
     | _, Some _, _, _
