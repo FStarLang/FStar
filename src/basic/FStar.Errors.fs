@@ -903,13 +903,13 @@ let update_flags l =
   let sorted = List.sortWith compare range in
   flags := aux [] 0 !flags sorted
 
-let catch_errors (f : unit -> 'a) : list<issue> =
+let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
     let newh = mk_default_handler false in
     let old = !current_handler in
     current_handler := newh;
-    let _ = try let _ = f () in ()
-            with | ex -> err_exn ex
+    let r = try let r = f () in Some r
+            with | ex -> err_exn ex; None
     in
     let errs = newh.eh_report() in
     current_handler := old;
-    errs
+    errs, r
