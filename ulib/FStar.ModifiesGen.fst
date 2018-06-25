@@ -1089,6 +1089,14 @@ let modifies_none_modifies #al #c h1 h2
   in
   Classical.forall_intro_3 g
 
+let modifies_upd #al #c #t #pre r v h =
+  let h' = HS.upd h r v in
+  modifies_intro #_ #c (loc_mreference r) h h'
+    (fun r -> ())
+    (fun t pre b -> ())
+    (fun t pre b -> ())
+    (fun r a b -> c.same_mreference_aloc_preserved #r #a b h h' (fun a' pre' r' -> ()))
+
 
 let does_not_contain_addr' (h: HS.mem) (ra: HS.rid * nat) : GTot Type0 =
   forall (a: Type) (rel: Preorder.preorder a) (r: HS.mreference a rel) . {:pattern (h `HS.contains` r) } (HS.frameOf r == fst ra /\ HS.as_addr r == snd ra /\ h `HS.contains` r) ==> False

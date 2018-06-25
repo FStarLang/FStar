@@ -805,6 +805,16 @@ val modifies_none_modifies
   (requires (HST.modifies_none h1 h2))
   (ensures (modifies (loc_none #_ #c) h1 h2))
 
+val modifies_upd
+  (#aloc: aloc_t) (#c: cls aloc)
+  (#t: Type) (#pre: Preorder.preorder t)
+  (r: HS.mreference t pre)
+  (v: t)
+  (h: HS.mem)
+: Lemma
+  (requires (HS.contains h r))
+  (ensures (modifies #_ #c (loc_mreference r) h (HS.upd h r v)))
+
 (** BEGIN TODO: move to FStar.Monotonic.HyperStack *)
 
 val does_not_contain_addr
