@@ -840,6 +840,18 @@ val modifies_none_modifies
   (requires (HST.modifies_none h1 h2))
   (ensures (modifies loc_none h1 h2))
 
+/// Compatibility with HS.upd
+
+val modifies_upd
+  (#t: Type) (#pre: Preorder.preorder t)
+  (r: HS.mreference t pre)
+  (v: t)
+  (h: HS.mem)
+: Lemma
+  (requires (HS.contains h r))
+  (ensures (modifies (loc_mreference r) h (HS.upd h r v)))
+
+
 /// Main lemmas to integrate non-compositional modifies clauses
 /// specified in ``LowStar.Buffer`` for elementary operations.
 ///

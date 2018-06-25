@@ -292,3 +292,14 @@ let unused_in_not_unused_in_disjoint_0
   [SMTPat (loc_disjoint l1 l2); SMTPat (loc_unused_in h `loc_includes` l1); SMTPat (loc_not_unused_in h `loc_includes` l2)]
 = assert (loc_includes l1 l1);
   assert (loc_includes l2 l2)
+
+let modifies_upd'
+  (#t: Type) (#pre: Preorder.preorder t)
+  (r: HS.mreference t pre)
+  (v: t)
+  (h: HS.mem)
+: Lemma
+  (requires (HS.contains h r))
+  (ensures (modifies (loc_mreference r) h (HS.upd h r v)))
+  [SMTPat (HS.upd h r v)]
+= modifies_upd r v h
