@@ -264,8 +264,10 @@ and term_to_string x =
       | Tm_delayed _ ->   failwith "impossible"
       | Tm_app(_, []) ->  failwith "Empty args!"
 
-      // TODO: add an option to mark where this happens
-      | Tm_lazy i -> term_to_string (must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
+      | Tm_lazy i ->
+        "[lazy:" ^
+        term_to_string (must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
+        ^"]"
 
       | Tm_quoted (tm, { qkind = Quote_static  }) ->
         U.format1 "`(%s)" (term_to_string tm)
