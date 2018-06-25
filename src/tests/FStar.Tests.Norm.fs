@@ -218,8 +218,8 @@ let tests =
   ; (309, (tc_nbe "x1"), (tc_nbe "6"))
   ; (310, (tc_nbe "x2"), (tc_nbe "2"))
   // ; (311, (tc_nbe "x3"), (tc_nbe "7"))
-  
-  // Tests for primops 
+
+  // Tests for primops
   ; (401, (tc_nbe "7 + 3"), (tc_nbe "10"))
   ; (402, (tc_nbe "true && false"), (tc_nbe "false"))
   ; (403, (tc_nbe "3 = 5"), (tc_nbe "false"))
@@ -241,7 +241,7 @@ let run_either i r expected normalizer =
 
 let run_interpreter i r expected = run_either i r expected (N.normalize [Env.Beta; Env.UnfoldUntil delta_constant; Env.Primops])
 let run_nbe i r expected =
-    run_either i r expected (FStar.TypeChecker.NBE.normalize [FStar.TypeChecker.NBE.UnfoldUntil delta_constant])
+    run_either i r expected (FStar.TypeChecker.NBE.test_normalize [FStar.TypeChecker.NBE.UnfoldUntil delta_constant])
 let run_interpreter_with_time i r expected =
   let interp () = run_interpreter i r expected in
   (i, snd (FStar.Util.return_execution_time interp))
