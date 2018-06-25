@@ -243,3 +243,14 @@ let popped_modifies_inert
   (ensures (modifies_inert (loc_region_only false (HS.get_tip h0)) h0 h1))
   [SMTPat (HS.popped h0 h1)]
 = popped_modifies h0 h1
+
+let modifies_upd'
+  (#t: Type) (#pre: Preorder.preorder t)
+  (r: HS.mreference t pre)
+  (v: t)
+  (h: HS.mem)
+: Lemma
+  (requires (HS.contains h r))
+  (ensures (modifies (loc_mreference r) h (HS.upd h r v)))
+  [SMTPat (HS.upd h r v)]
+= modifies_upd r v h
