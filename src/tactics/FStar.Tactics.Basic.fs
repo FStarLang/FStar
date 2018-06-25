@@ -1427,9 +1427,16 @@ let trefl () : tac<unit> = wrap_err "trefl" <|
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv PC.eq2_lid ->
             bind (do_unify (goal_env g) l r) (fun b ->
-            if not b
-            then fail2 "not a trivial equality ((%s) vs (%s))" (tts (goal_env g) l) (tts (goal_env g) r)
-            else solve' g U.exp_unit)
+            if b
+            then solve' g U.exp_unit
+            else
+            let l = N.normalize [N.UnfoldUntil delta_constant; N.Primops; N.UnfoldTac] (goal_env g) l in
+            let r = N.normalize [N.UnfoldUntil delta_constant; N.Primops; N.UnfoldTac] (goal_env g) r in
+            bind (do_unify (goal_env g) l r) (fun b ->
+            if b
+            then solve' g U.exp_unit
+            else
+            fail2 "not a trivial equality ((%s) vs (%s))" (tts (goal_env g) l) (tts (goal_env g) r)))
         | hd, _ ->
             fail1 "trefl: not an equality (%s)" (tts (goal_env g) t)
         end
