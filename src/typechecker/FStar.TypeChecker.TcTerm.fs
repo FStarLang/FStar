@@ -540,6 +540,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         in
         let e = mk (Tm_app(reflect_op, [(e, aqual)])) None top.pos in
         let e, c, g' = comp_check_expected_typ env e c in
+        let e = S.mk (Tm_meta(e, Meta_monadic(c.eff_name, c.res_typ))) None e.pos in
         e, c, Env.conj_guard g' g
     end
 
