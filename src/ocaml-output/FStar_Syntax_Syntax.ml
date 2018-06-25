@@ -2680,7 +2680,7 @@ let (t_tuple2_of : term -> term -> term) =
       let uu____8856 =
         let uu____8861 =
           let uu____8862 = tabbrev FStar_Parser_Const.lid_tuple2  in
-          mk_Tm_uinst uu____8862 [U_zero]  in
+          mk_Tm_uinst uu____8862 [U_zero; U_zero]  in
         let uu____8863 =
           let uu____8864 = as_arg t1  in
           let uu____8873 = let uu____8884 = as_arg t2  in [uu____8884]  in
