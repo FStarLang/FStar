@@ -84,9 +84,7 @@ let norm_term (s : list norm_step) (t : term) : Tac term =
 
 let idtac () : Tac unit = ()
 
-let guard (b : bool) : TAC unit (fun ps post -> if b
-					     then post (FStar.Tactics.Result.Success () ps)
-					     else forall j. post (FStar.Tactics.Result.Failed j ps)) =
+let guard (b : bool) : Tac unit =
     if b
     then ()
     else fail "guard failed"

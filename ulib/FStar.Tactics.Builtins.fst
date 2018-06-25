@@ -8,10 +8,9 @@ open FStar.Tactics.Effect
 open FStar.Reflection.Types
 open FStar.Reflection.Data
 open FStar.Tactics.Types
-open FStar.Tactics.Result
 
 (** Simply fail *)
-assume val fail : #a:Type -> m:string -> TAC a (fun ps post -> post (Failed m ps))
+assume val fail : #a:Type -> string -> Tac a
 
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
