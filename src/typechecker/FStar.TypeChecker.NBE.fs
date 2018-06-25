@@ -22,6 +22,8 @@ module Z = FStar.BigInt
 module C = FStar.Const
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
+module FC = FStar.Const
+module EMB = FStar.Syntax.Embeddings
 
 (* Utils *)
 
@@ -35,14 +37,14 @@ let map_rev (f : 'a -> 'b) (l : list<'a>) : list<'b> =
     | x :: xs -> aux xs (f x :: acc)
   in  aux l []
 
-let map_rev_append (f : 'a -> 'b) (l1 : list<'a>) (l2 : list<'b>) : list<'b> = 
-  let rec aux (l:list<'a>) (acc:list<'b>) = 
+let map_rev_append (f : 'a -> 'b) (l1 : list<'a>) (l2 : list<'b>) : list<'b> =
+  let rec aux (l:list<'a>) (acc:list<'b>) =
     match l with
     | [] -> l2
     | x :: xs -> aux xs (f x :: acc)
   in  aux l1 l2
 
-let rec map_append (f : 'a -> 'b)  (l1 : list<'a>) (l2 : list<'b>) : list<'b> = 
+let rec map_append (f : 'a -> 'b)  (l1 : list<'a>) (l2 : list<'b>) : list<'b> =
   match l1 with
   | [] -> l2
   | x :: xs -> (f x) :: map_append f xs l2
@@ -52,7 +54,7 @@ let rec drop (p: 'a -> bool) (l: list<'a>): list<'a> =
   | [] -> []
   | x::xs -> if p x then x::xs else drop p xs
 
-// NBE debuging 
+// NBE debuging
 
 let debug cfg f =
   if Env.debug (Cfg.cfg_env cfg) (Options.Other "NBE")
@@ -84,7 +86,7 @@ let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t
 
         | Pat_constant s ->
             let matches_const (c: t) (s: S.sconst) =
-                debug cfg (fun () -> BU.print2 "Testing term %s against pattern %s\n"  
+                debug cfg (fun () -> BU.print2 "Testing term %s against pattern %s\n"
                                     (t_to_string c) (P.const_to_string s));
                 match c with
                 | Constant (Unit) -> s = C.Const_unit
@@ -121,7 +123,7 @@ let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t
     | [] -> failwith "Branch not found"
     | (p, _wopt, e)::branches ->
       match matches_pat scrut p with
-      | BU.Inl matches -> 
+      | BU.Inl matches ->
         debug cfg (fun () -> BU.print1 "Pattern %s matches\n" (P.pat_to_string p));
         Some (e, matches)
       | BU.Inr false -> //definitely did not match
@@ -195,11 +197,11 @@ match tm with
 | Univ u -> u
 | _ -> failwith "Not a universe"
 
-let is_constr_fv (fvar : fv) : bool = 
+let is_constr_fv (fvar : fv) : bool =
   fvar.fv_qual = Some Data_ctor
 
-let is_constr (q : qninfo) : bool = 
-  match q with 
+let is_constr (q : qninfo) : bool =
+  match q with
   | Some (BU.Inr ({ sigel = Sig_datacon (_, _, _, _, _, _) }, _), _) -> true
   | _ -> false
 
@@ -217,12 +219,12 @@ let translate_univ (bs:list<t>) (u:universe) : t =
         | U_max us ->
           U_max (List.map aux us)
 
+        | U_unknown
         | U_name _
         | U_zero ->
           u
 
-        | U_unif _
-        | U_unknown ->
+        | U_unif _ ->
           failwith "Unknown or unconstrained universe"
     in
     Univ (aux u)
@@ -262,39 +264,39 @@ let app cfg (f:t) (x:t) (q:aqual) =
  // | Refinement (b, r) -> Refinement (b, app cfg  r x q)
   | Constant _ | Univ _ | Type_t _ | Unknown | Arrow _ -> failwith "Ill-typed application"
 
-let rec iapp cfg (f:t) (args:args) = 
-  match f with 
-  | Lam (f, targs, n) -> 
+let rec iapp (f:t) (args:args) =
+  match f with
+  | Lam (f, targs, n) ->
     let m = List.length args in
-    if m < n then 
-      // partial application 
+    if m < n then
+      // partial application
       let (_, targs') = List.splitAt m targs in
       Lam ((fun l -> f (map_append fst args l)), targs', n - m)
     else if m = n then
-      // full application 
+      // full application
       f (List.map fst args)
-    else 
+    else
       // extra arguments
       let (args, args') = List.splitAt n args in
-      iapp cfg (f (List.map fst args)) args'
+      iapp (f (List.map fst args)) args'
   | Accu (a, ts) -> Accu (a, List.rev_append args ts)
   | Construct (i, us, ts) ->
-    let rec aux args us ts = 
-      match args with 
+    let rec aux args us ts =
+      match args with
       | (Univ u, _) :: args -> aux args (u :: us) ts
       | a :: args -> aux args us (a :: ts)
       | [] -> (us, ts)
     in
-    let (us', ts') = aux args us ts in 
+    let (us', ts') = aux args us ts in
     Construct (i, us', ts')
   | FV (i, us, ts) ->
-    let rec aux args us ts = 
-      match args with 
+    let rec aux args us ts =
+      match args with
       | (Univ u, _) :: args -> aux args (u :: us) ts
       | a :: args -> aux args us (a :: ts)
       | [] -> (us, ts)
     in
-    let (us', ts') = aux args us ts in 
+    let (us', ts') = aux args us ts in
     FV (i, us', ts')
   | Constant _ | Univ _ | Type_t _ | Unknown | Arrow _ -> failwith "Ill-typed application"
 
@@ -302,17 +304,17 @@ let rec iapp cfg (f:t) (args:args) =
 and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
    let debug = debug cfg in
    let qninfo = Env.lookup_qname (Cfg.cfg_env cfg) (S.lid_of_fv fvar) in
-   if is_constr qninfo || is_constr_fv fvar then mkConstruct fvar [] [] 
-   else 
-     match N.should_unfold cfg (fun _ -> false) fvar qninfo with
-     | N.Should_unfold_fully
-     | N.Should_unfold_reify ->
+   if is_constr qninfo || is_constr_fv fvar then mkConstruct fvar [] []
+   else
+     match N.should_unfold cfg (fun _ -> cfg.reifying) fvar qninfo with
+     | N.Should_unfold_fully  ->
        failwith "Not yet handled"
 
      | N.Should_unfold_no ->
        debug (fun () -> BU.print1 "(1) Decided to not unfold %s\n" (P.fv_to_string fvar));
        mkFV fvar [] []
 
+     | N.Should_unfold_reify
      | N.Should_unfold_yes -> begin
        match qninfo with
        | Some (BU.Inr ({ sigel = Sig_let ((is_rec, lbs), names) }, _us_opt), _rng) ->
@@ -343,25 +345,34 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
 and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   let debug = debug cfg in
 
-  let us = lb.lbunivs in 
-  Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef), List.map (fun _ -> (fun () -> (Constant Unit, None))) us, List.length us)
-  // Zoe: Bogus type! The idea is that we will never readback these lambdas
+  let us = lb.lbunivs in
+  Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
+       List.map (fun _ -> (fun () -> (Constant Unit, None))) us,
+       // Zoe: Bogus type! The idea is that we will never readback these lambdas
+       List.length us)
 
+  // NS, GM: always translating to universe-polymorphic binding is not great
+  //      1. it breaks CBV evaluation order of let bindings
+  //      2. it adds a spurious universe abstraction that iapp must handle (which is okay, but maybe a bit inelegant?)
+  // Note, we only have universe polymorphic top-level pure terms (i.e., fvars bound to pure terms)
+  // Thunking them is probably okay, since the common case is really top-level function
+  // rather than top-level pure computation
 
 
 and translate_constant (c : sconst) : constant =
     match c with
     | C.Const_unit -> Unit
     | C.Const_bool b -> Bool b
-    | C.Const_int (s, None) -> (Int (Z.big_int_of_string s))
+    | C.Const_int (s, None) -> Int (Z.big_int_of_string s)
     | C.Const_string (s, r) -> String (s,r)
-    | C.Const_char c -> (Char c)
+    | C.Const_char c -> Char c
+    | C.Const_range r -> Range r
     | _ -> failwith ("Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented")
 
 and translate_pat cfg (p : pat) : t =
     match p.v with
     | Pat_constant c -> Constant (translate_constant c)
-    | Pat_cons (cfv, pats) -> iapp cfg (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat cfg p, None)) pats) // Zoe : TODO universe args?
+    | Pat_cons (cfv, pats) -> iapp (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat cfg p, None)) pats) // Zoe : TODO universe args?
     | Pat_var bvar -> mkAccuVar bvar
     | Pat_wild bvar -> mkAccuVar bvar
     | Pat_dot_term (bvar, t) -> failwith "Pat_dot_term not implemented"
@@ -403,8 +414,6 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_uvar (uvar, t) -> debug_term e; failwith "Tm_uvar: Not yet implemented"
 
-    | Tm_meta (e, _) -> translate cfg bs e
-
     | Tm_name x ->
       mkAccuVar x
 
@@ -416,10 +425,10 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     //   Lam ((fun (y:t) -> translate cfg (y::bs) body), (fun () -> translate cfg bs x1.sort), snd x)
 
     | Tm_abs (xs, body, _) ->
-      Lam ((fun ys -> translate cfg (List.rev_append ys bs) body), 
-           List.map (fun x () -> (translate cfg bs (fst x).sort, snd x)) xs, 
+      Lam ((fun ys -> translate cfg (List.rev_append ys bs) body),
+           List.map (fun x () -> (translate cfg bs (fst x).sort, snd x)) xs,
            List.length xs)
-           
+
     | Tm_fvar fvar ->
       translate_fv cfg bs fvar
 
@@ -427,9 +436,21 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     //   debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string e) (P.term_to_string (fst arg)));
     //   app cfg (translate cfg bs e) (translate cfg bs (fst arg)) (snd arg)
 
+    | Tm_app({n=Tm_constant FC.Const_reify}, arg::more::args)
+        when cfg.steps.reify_ ->
+      let reify, _ = U.head_and_args e in
+      let head = S.mk_Tm_app reify [arg] None e.pos in
+      translate cfg bs (S.mk_Tm_app head (more::args) None e.pos)
+
+    | Tm_app({n=Tm_constant FC.Const_reify}, [arg])
+        when cfg.steps.reify_ ->
+      assert (not cfg.reifying);
+      let cfg = {cfg with reifying=true} in
+      translate cfg bs (fst arg)
+
     | Tm_app(head, args) ->
       debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string head) (P.args_to_string args));
-      iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args      
+      iapp (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
 
     | Tm_match(scrut, branches) ->
       let rec case (scrut : t) : t =
@@ -497,6 +518,14 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       in
       case (translate cfg bs scrut)
 
+    | Tm_meta (e, Meta_monadic(m, t))
+        when cfg.reifying ->
+      translate_monadic (m, t) cfg bs e
+
+    | Tm_meta (e, Meta_monadic_lift(m, m', t))
+        when cfg.reifying ->
+      translate_monadic_lift (m, m', t) cfg bs e
+
     | Tm_let((false, lbs), body) -> // non-recursive let
       let bs' =
         List.fold_left (fun bs' lb -> let b = translate_letbinding cfg bs lb in b :: bs') bs lbs  in
@@ -505,8 +534,89 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_let((true, lbs), body) ->
       translate cfg (make_rec_env lbs bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
 
-    | Tm_lazy _ | Tm_quoted(_,_) -> failwith "Not yet handled"     
-      
+    | Tm_meta (e, _) -> translate cfg bs e
+
+    | Tm_lazy _ | Tm_quoted(_,_) -> failwith "Not yet handled"
+
+and translate_monadic (m, t) cfg bs e =
+   let e = U.unascribe e in
+   match e.n with
+   | Tm_let((false, [lb]), body) -> //elaborate this to M.bind
+     begin
+     match Env.effect_decl_opt cfg.tcenv (Env.norm_eff_name cfg.tcenv m) with
+     | None ->
+       failwith (BU.format1 "Effect declaration not found: %s" (Ident.string_of_lid m))
+
+     | Some (ed, q) ->
+       let cfg' = {cfg with reifying=false} in
+       let body_lam =
+           let body_rc = {
+                residual_effect=m;
+                residual_flags=[];
+                residual_typ=Some t
+            } in
+           S.mk (Tm_abs([(BU.left lb.lbname, None)], body, Some body_rc)) None body.pos
+       in
+       let maybe_range_arg =
+           if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+           then [translate cfg [] (EMB.embed EMB.e_range lb.lbpos lb.lbpos), None;
+                 translate cfg [] (EMB.embed EMB.e_range body.pos body.pos), None]
+           else []
+       in
+       iapp (iapp (translate cfg' [] (U.un_uinst (snd ed.bind_repr)))
+                  [Univ U_unknown, None;
+                   Univ U_unknown, None])
+           (
+           [(translate cfg' bs lb.lbtyp, None); //translating the type of the bound term
+            (translate cfg' bs t, None)]        //and the body is sub-optimal; it is often unused
+           @maybe_range_arg
+           @[(Unknown, None) ; //unknown WP of lb.lbdef
+            (translate cfg bs lb.lbdef, None);
+            (Unknown, None) ; //unknown WP of body
+            (translate cfg bs body_lam, None)]
+           )
+
+      end
+
+   | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [(e, _)]) ->
+     translate ({cfg with reifying=false}) bs e
+
+
+   | _ -> failwith (BU.format1 "Unexpected case in translate_monadic: %s" (P.tag_of_term e))
+
+and translate_monadic_lift (msrc, mtgt, t) cfg bs e =
+   let e = U.unascribe e in
+   if U.is_pure_effect msrc || U.is_div_effect msrc
+   then let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv mtgt) in
+        let cfg' = {cfg with reifying=false} in
+        iapp (iapp (translate cfg' [] (U.un_uinst (snd ed.return_repr)))
+                   [Univ U_unknown, None])
+              [(translate cfg' bs t, None); //translating the type of the returned term
+               (translate cfg' bs e, None)] //translating the returned term itself
+   else
+    match Env.monad_leq cfg.tcenv msrc mtgt with
+    | None ->
+      failwith (BU.format2 "Impossible : trying to reify a lift between unrelated effects (%s and %s)"
+                            (Ident.text_of_lid msrc)
+                            (Ident.text_of_lid mtgt))
+    | Some {mlift={mlift_term=None}} ->
+      failwith (BU.format2 "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
+                            (Ident.text_of_lid msrc)
+                            (Ident.text_of_lid mtgt))
+
+    | Some {mlift={mlift_term=Some lift}} ->
+      (* We don't have any reasonable wp to provide so we just pass unknow *)
+      (* Usually the wp is only necessary to typecheck, so this should not *)
+      (* create a big issue. *)
+      let lift_lam =
+        let x = S.new_bv None S.tun in
+        U.abs [(x, None)]
+              (lift U_unknown t S.tun (S.bv_to_name x))
+              None
+      in
+      let cfg' = {cfg with reifying=false} in
+      iapp (translate cfg' [] lift_lam)
+           [(translate cfg bs e, None)]
 
 (* [readback] creates named binders and not De Bruijn *)
 and readback (cfg:Cfg.cfg) (x:t) : term =
@@ -523,20 +633,21 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
     | Constant (Int i) -> Z.string_of_big_int i |> U.exp_int
     | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r))) None Range.dummyRange
     | Constant (Char c) -> U.exp_char c
+    | Constant (Range r) -> EMB.embed EMB.e_range r Range.dummyRange
 
     | Type_t u ->
       S.mk (Tm_type u) None Range.dummyRange
 
     | Lam (f, targs, arity) ->
-      let (args, accus) = List.fold_left (fun (args, accus) tf -> 
-                                            let (xt, q) = tf () in 
-                                            let x = S.new_bv None (readback cfg xt) in 
-                                            ((x, q) :: args, (mkAccuVar x) :: accus)) ([], []) targs 
+      let (args, accus) = List.fold_left (fun (args, accus) tf ->
+                                            let (xt, q) = tf () in
+                                            let x = S.new_bv None (readback cfg xt) in
+                                            ((x, q) :: args, (mkAccuVar x) :: accus)) ([], []) targs
       in
       let body = readback cfg (f accus) in
       U.abs args body None
 
-    | Construct (fv, us, args) ->     
+    | Construct (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
       let apply tm =
       match args with
@@ -546,7 +657,7 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       (match us with
        | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
        | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange))
-      
+
     | FV (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
       let apply tm =
@@ -582,14 +693,14 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
 
     | Accu (Var bv, []) ->
       S.bv_to_name bv
-      
+
     | Accu (Var bv, ts) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
       U.mk_app (S.bv_to_name bv) args
 
     | Accu (Match (scrut, cases, make_branches), ts) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
-      let head = 
+      let head =
         let scrut_new = readback cfg scrut in
         let branches_new = make_branches (readback cfg) in
         S.mk (Tm_match (scrut_new, branches_new)) None Range.dummyRange
@@ -647,7 +758,7 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
           | [] -> head
           | _ -> U.mk_app head args)
     | Arrow _ -> failwith "Arrows not yet handled"
-    
+
     // | Refinement (b, r) ->
     //    let body = translate cfg [] (readback cfg r) in
     //    debug (fun () -> BU.print1 "Translated refinement body: %s\n" (t_to_string body));
@@ -669,13 +780,18 @@ let step_as_normalizer_step = function
   | UnfoldTac -> Env.UnfoldTac
   | Reify -> Env.Reify
 
-let normalize (steps:list<step>) (env : Env.env) (e:term) : term =
-  let cfg = Cfg.config (List.map step_as_normalizer_step steps) env in
-  //debug_sigmap env.sigtab;
-  readback cfg (translate cfg [] e)
-
-
 let normalize' (steps:list<Env.step>) (env : Env.env) (e:term) : term =
   let cfg = Cfg.config steps env in
   //debug_sigmap env.sigtab;
+  let cfg = {cfg with steps={cfg.steps with reify_=true}} in
   readback cfg (translate cfg [] e)
+
+
+  (* ONLY FOR UNIT TESTS! *)
+let test_normalize (steps:list<step>) (env : Env.env) (e:term) : term =
+  let cfg = Cfg.config (List.map step_as_normalizer_step steps) env in
+  //debug_sigmap env.sigtab;
+  let cfg = {cfg with steps={cfg.steps with reify_=true}} in
+  readback cfg (translate cfg [] e)
+
+

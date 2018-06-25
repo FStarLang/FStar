@@ -87,7 +87,7 @@ type debug_switches = {
 }
 
 
-type cfg = { 
+type cfg = {
      steps: fsteps;
      tcenv: Env.env;
      debug: debug_switches;
@@ -96,6 +96,7 @@ type cfg = {
      strong : bool;                       // under a binder
      memoize_lazy : bool;
      normalize_pure_lets: bool;
+     reifying : bool
 }
 
 val cfg_env: cfg -> Env.env

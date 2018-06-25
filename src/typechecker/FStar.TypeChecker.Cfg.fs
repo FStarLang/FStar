@@ -152,7 +152,7 @@ type primitive_step = {
      //interpretation_nbe:(NBE.args -> option<NBE.t>)
 }
 
-type cfg = { 
+type cfg = {
      steps: fsteps;
      tcenv: Env.env;
      debug: debug_switches;
@@ -161,6 +161,7 @@ type cfg = {
      strong : bool;                       // under a binder
      memoize_lazy : bool;
      normalize_pure_lets: bool;
+     reifying : bool
 }
 
 
@@ -470,7 +471,7 @@ let plugins =
   let retrieve () = !plugins
   in
   register, retrieve
-  
+
 let register_plugin p = fst plugins p
 let retrieve_plugins () = snd plugins ()
 
@@ -500,6 +501,7 @@ let config' psteps s e =
      memoize_lazy=true;
      normalize_pure_lets=
        (Options.normalize_pure_terms_for_extraction()
-        || not (s |> List.contains PureSubtermsWithinComputations))}
+        || not (s |> List.contains PureSubtermsWithinComputations));
+     reifying=false}
 
 let config s e = config' [] s e
