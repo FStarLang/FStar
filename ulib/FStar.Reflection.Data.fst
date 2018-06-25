@@ -22,6 +22,7 @@ type pattern =
 
 type branch = pattern * term  // | pattern -> term
 
+noeq
 type aqualv =
     | Q_Implicit
     | Q_Explicit
