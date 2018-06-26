@@ -24,6 +24,7 @@ module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module FC = FStar.Const
 module EMB = FStar.Syntax.Embeddings
+open FStar.TypeChecker.Cfg
 
 (* Utils *)
 
@@ -344,10 +345,11 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
 (* translate a let-binding - local or global *)
 and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   let debug = debug cfg in
-
   let us = lb.lbunivs in
+  // GM: Ugh! need this to use <| and get the inner lambda into ALL, but why !?
+  let id x = x in
   Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
-       List.map (fun _ -> (fun () -> (Constant Unit, None))) us,
+       List.Tot.map (fun _ -> (fun () -> id <| (Constant Unit, None))) us,
        // Zoe: Bogus type! The idea is that we will never readback these lambdas
        List.length us)
 
@@ -438,8 +440,8 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_app({n=Tm_constant FC.Const_reify}, arg::more::args)
         when cfg.steps.reify_ ->
-      let reify, _ = U.head_and_args e in
-      let head = S.mk_Tm_app reify [arg] None e.pos in
+      let reifyh, _ = U.head_and_args e in
+      let head = S.mk_Tm_app reifyh [arg] None e.pos in
       translate cfg bs (S.mk_Tm_app head (more::args) None e.pos)
 
     | Tm_app({n=Tm_constant FC.Const_reify}, [arg])

@@ -161,7 +161,7 @@ type cfg = {
      strong : bool;                       // under a binder
      memoize_lazy : bool;
      normalize_pure_lets: bool;
-     reifying : bool
+     reifying : bool;
 }
 
 
