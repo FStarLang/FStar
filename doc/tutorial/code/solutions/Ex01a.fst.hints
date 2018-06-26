@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "263099651874c469e3a5a126ca3ddd15"
+      "b588a04ea6a00e4bc1ce6be839f928aa"
     ],
     [
       "Ex01a.staticChecking",
@@ -27,7 +27,7 @@
         "projection_inverse_FStar.Pervasives.V_v"
       ],
       0,
-      "64a7a9d891a91004c65f05dc6b013a1d"
+      "740d51615eb202547d3095d76f161828"
     ],
     [
       "Ex01a.checkedRead",
@@ -36,7 +36,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "0e8557ce4d83c328758df8c27312c2f8"
+      "7f618b41db1b824f4868257914e12ca9"
     ],
     [
       "Ex01a.checkedWrite",
@@ -45,7 +45,16 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "1199ac44def402e09863b62036548795"
+      "29e729051bff39eb8646bdd5069ad78a"
+    ],
+    [
+      "Ex01a.canRead",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "d25c1d25f2dd0302129028748cc79686"
     ]
   ]
 ]

@@ -12,7 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "61bdc06d568899bd8a3a4d845861e3d0"
+      "469f5ac53eab8dc50bfa1024094471d8"
     ],
     [
       "Vector.vector",
@@ -28,7 +28,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b8d74a8287849bc089fa2e01de07b9f3"
+      "777a926143ddd5777de209e6470468cc"
     ],
     [
       "Vector.__proj__VCons__item__hd",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Vector_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
-      "f4b683dd1c6b1dfa5b4e0cdc5051e310"
+      "8aa5b589f3c52c3144f861a08dbde158"
     ],
     [
       "Vector.__proj__VCons__item__n",
@@ -54,7 +54,7 @@
         "refinement_interpretation_Vector_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
-      "f3ae503a3896a9cca75e1b594fb9884f"
+      "c82bc6698b87947fa2917ee8167b1de1"
     ],
     [
       "Vector.__proj__VCons__item__tl",
@@ -70,7 +70,7 @@
         "refinement_interpretation_Vector_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
-      "70ab99d5ed220bbe0970f07c4d92d132"
+      "fedd3bab4e4014490f17d367b50d62b1"
     ],
     [
       "Vector.head",
@@ -79,7 +79,7 @@
       1,
       [ "@query" ],
       0,
-      "10e050736d3f590b213c91bd36235278"
+      "fc6488f0bccc907dc874c19e98287ae8"
     ],
     [
       "Vector.head",
@@ -92,7 +92,20 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "71f004858f4d14c81fabe8a9096e9d32"
+      "3d28aa177331ed5159d0d182c8d32ff7"
+    ],
+    [
+      "Vector.head",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Vector.VCons",
+        "equation_Prims.pos", "fuel_guarded_inversion_Vector.vector",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "273be61d042f240d0597a5a6b010d879"
     ],
     [
       "Vector.nth",
@@ -116,7 +129,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5e90020b8d72146292a524a9e3fb764c"
+      "b23da8c4386bbf1b1b99fceef76379cb"
     ],
     [
       "Vector.append",
@@ -129,7 +142,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "af9c944e12772d63c67c652e7926a079"
+      "59920c0babf994601447464912ffcc3d"
     ],
     [
       "Vector.append",
@@ -152,7 +165,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "13f2035908ded3d2470908c7809fdba8"
+      "2c91b87d7bdb9c02406d3a180ad6595b"
     ],
     [
       "Vector.reverse",
@@ -173,7 +186,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7d6275cf5aaa46068ff1b294d8beff0c"
+      "fd9c1d1b918c25179a7dfe4b7ebefb3f"
     ],
     [
       "Vector.mapT",
@@ -194,7 +207,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9d82a8d40804fcfcadf96c42b22ba2db"
+      "f4948539200de1e9b3797b05b8042fcf"
     ],
     [
       "Vector.fold_left",
@@ -215,7 +228,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9b8fbcf16e9144d6d06bdc6a7dbb90c1"
+      "31e85583d212a2bdfdcc2f67c26c5763"
     ],
     [
       "Vector.fold_right",
@@ -235,7 +248,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8c7931620b0a57da93ebbc1cfca9f9bd"
+      "8e121f999cb3cf0c4ae439aa004ac498"
     ],
     [
       "Vector.find",
@@ -256,7 +269,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1c685302cdefa4d85d8caefce5f76531"
+      "6e8c8f8170e937e8b1515f6fde5d54b2"
     ],
     [
       "Vector.zip'",
@@ -278,7 +291,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4174270a49dda8a5e6b121d97416375f"
+      "a6a5ca1a82814a1187d46b0f85a4955c"
     ],
     [
       "Vector.vector",
@@ -291,7 +304,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5bc4e2f1411730de153693ff8df36702"
+      "b7754d9282f3c6345da30cf129b157bc"
     ],
     [
       "Vector.vector",
@@ -307,7 +320,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e4c6646c1fc49df803bc4002c19eedfc"
+      "5e52b97f8905e7c4976cc50297b678d7"
     ],
     [
       "Vector.__proj__VCons__item__hd",
@@ -320,7 +333,7 @@
         "refinement_interpretation_Vector_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
-      "a7981e32d9b3207bd4215e417edac552"
+      "84cba9c22997c028c08580f3aa8e4043"
     ],
     [
       "Vector.__proj__VCons__item__n",
@@ -333,7 +346,7 @@
         "refinement_interpretation_Vector_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
-      "8f45e9d5a08d4307d5b67fd9b613dce0"
+      "2c45458f534e2554939508b8706af868"
     ],
     [
       "Vector.__proj__VCons__item__tl",
@@ -349,11 +362,20 @@
         "refinement_interpretation_Vector_Tm_refine_a4e93483662b42a2216eccfd8e27a9c0"
       ],
       0,
-      "02e1a2292762fa749c2832406459f539"
+      "029c93a1bb80c66a31e1c5a45ff04829"
     ],
     [
       "Vector.head",
-      3,
+      4,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fb93a0ff5f7d997b10c36e86b430f98f"
+    ],
+    [
+      "Vector.head",
+      5,
       2,
       1,
       [
@@ -362,7 +384,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "ed251b5f5e9396e3c231fdb5c81e6201"
+      "73185c153b5da15c4b81424087ed10a4"
     ],
     [
       "Vector.nth",
@@ -386,7 +408,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "563be22f70d46e3aca5f698b39c0a4f0"
+      "ad9bdabec6976e4335ab7079fdf105ac"
     ],
     [
       "Vector.append",
@@ -409,7 +431,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6c8b4f3d8753053d6640134c98a5e400"
+      "1a13f678ba58ae7ef079aaeadfaa27a0"
     ],
     [
       "Vector.reverse",
@@ -430,7 +452,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b975bdaf407833cb7f0585a79399bc91"
+      "f50def2da3ede20fac6d06d013a96f14"
     ],
     [
       "Vector.mapT",
@@ -451,7 +473,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "cbad28faffa2d6acfb26f790c48e0f92"
+      "55ba751efebc8f1e10678f80bb5afd0d"
     ],
     [
       "Vector.fold_left",
@@ -472,7 +494,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2611d7dda62a203e39e2cbefc8cad5c2"
+      "94fc6d71f466567469e880f6d914e1b2"
     ],
     [
       "Vector.fold_right",
@@ -492,7 +514,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "50a5c2db341196c43f93ef0d2f373fb9"
+      "85bfd2eb556226fd19a1603568fcc740"
     ],
     [
       "Vector.find",
@@ -513,7 +535,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4f831defed5bb14bde619a0a636f04ee"
+      "e6929dbfd7d665f39d97907fd5f7e5e8"
     ],
     [
       "Vector.zip'",
@@ -535,7 +557,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3ae0aa9556319405e4bba9e547ca8e8e"
+      "ec0a39aab60d0c9f8a52bd6a4c61c017"
     ]
   ]
 ]

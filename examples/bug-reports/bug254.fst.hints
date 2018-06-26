@@ -13,7 +13,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "3476129d46b0c310f8fd473a95c182d5"
+      "ee72437a406a0d37d8904827ee7bc62c"
     ],
     [
       "Bug254.bar",
@@ -28,7 +28,22 @@
         "refinement_interpretation_Bug254_Tm_refine_7e815a1593c688052ab1b25a0d825aa9"
       ],
       0,
-      "acde495f63fa1da483f54a00c2884c66"
+      "0e33ee3dccafbe9af6d873fbbf2a9a2c"
+    ],
+    [
+      "Bug254.bar",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.nat",
+        "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Bug254_Tm_refine_7e815a1593c688052ab1b25a0d825aa9"
+      ],
+      0,
+      "9cc4ec740533148d33f09a962c9f6bad"
     ]
   ]
 ]

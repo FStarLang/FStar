@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "a256895dcbd9dc2d0f082fcac1c54d5c"
+      "ed5c9946798d7efed41a23ee0f7944f3"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -17,15 +17,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Ex12c.Format.message",
-        "equation_FStar.Seq.Base.op_At_Bar", "equation_Platform.Bytes.byte",
-        "equation_Platform.Bytes.bytes",
-        "function_token_typing_FStar.UInt8.t",
+        "equation_FStar.Seq.Base.eq", "equation_FStar.Seq.Base.op_At_Bar",
+        "equation_Platform.Bytes.byte", "equation_Platform.Bytes.bytes",
         "function_token_typing_Platform.Bytes.byte",
+        "kinding_FStar.UInt8.t@tok",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_f904f6c16e829f6df71f9c4ec26e4ace",
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "a22cd4c7b95ee18e020c8d50639d838a"
+      "0f58f5fbca556c01c3f22b90b9449955"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -34,7 +34,7 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "4900aaea093320ad7ca4b4ad19bca735"
+      "dbb62c4d245f8f8e88bea58e14a6407b"
     ]
   ]
 ]
