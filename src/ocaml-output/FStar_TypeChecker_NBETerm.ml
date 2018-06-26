@@ -635,3 +635,231 @@ let e_arrow1 : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
         make_arrow1 uu____2594 uu____2595  in
       mk_emb em un uu____2593
   
+let (arg_as_int : arg -> FStar_BigInt.t FStar_Pervasives_Native.option) =
+  fun a  ->
+    FStar_All.pipe_right (FStar_Pervasives_Native.fst a) (unembed e_int)
+  
+let (arg_as_bool : arg -> Prims.bool FStar_Pervasives_Native.option) =
+  fun a  ->
+    FStar_All.pipe_right (FStar_Pervasives_Native.fst a) (unembed e_bool)
+  
+let (arg_as_char : arg -> FStar_Char.char FStar_Pervasives_Native.option) =
+  fun a  ->
+    FStar_All.pipe_right (FStar_Pervasives_Native.fst a) (unembed e_char)
+  
+let (arg_as_string : arg -> Prims.string FStar_Pervasives_Native.option) =
+  fun a  ->
+    FStar_All.pipe_right (FStar_Pervasives_Native.fst a) (unembed e_string)
+  
+let arg_as_list :
+  'Auu____2647 'a .
+    'a embedding ->
+      (t,'Auu____2647) FStar_Pervasives_Native.tuple2 ->
+        'a Prims.list FStar_Pervasives_Native.option
+  =
+  fun e  ->
+    fun a  ->
+      let uu____2675 = let uu____2684 = e_list e  in unembed uu____2684  in
+      FStar_All.pipe_right (FStar_Pervasives_Native.fst a) uu____2675
+  
+let arg_as_bounded_int :
+  'Auu____2699 .
+    (t,'Auu____2699) FStar_Pervasives_Native.tuple2 ->
+      (FStar_Syntax_Syntax.fv,FStar_BigInt.t) FStar_Pervasives_Native.tuple2
+        FStar_Pervasives_Native.option
+  =
+  fun uu____2714  ->
+    match uu____2714 with
+    | (a,uu____2720) ->
+        (match a with
+         | FV (fv1,[],(Constant (Int i),uu____2735)::[]) when
+             let uu____2752 =
+               FStar_Ident.text_of_lid
+                 (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                in
+             FStar_Util.ends_with uu____2752 "int_to_t" ->
+             FStar_Pervasives_Native.Some (fv1, i)
+         | uu____2757 -> FStar_Pervasives_Native.None)
+  
+let lift_unary :
+  'a 'b .
+    ('a -> 'b) ->
+      'a FStar_Pervasives_Native.option Prims.list ->
+        'b FStar_Pervasives_Native.option
+  =
+  fun f  ->
+    fun aopts  ->
+      match aopts with
+      | (FStar_Pervasives_Native.Some a)::[] ->
+          let uu____2802 = f a  in FStar_Pervasives_Native.Some uu____2802
+      | uu____2803 -> FStar_Pervasives_Native.None
+  
+let lift_binary :
+  'a 'b .
+    ('a -> 'a -> 'b) ->
+      'a FStar_Pervasives_Native.option Prims.list ->
+        'b FStar_Pervasives_Native.option
+  =
+  fun f  ->
+    fun aopts  ->
+      match aopts with
+      | (FStar_Pervasives_Native.Some a0)::(FStar_Pervasives_Native.Some
+          a1)::[] ->
+          let uu____2856 = f a0 a1  in
+          FStar_Pervasives_Native.Some uu____2856
+      | uu____2857 -> FStar_Pervasives_Native.None
+  
+let unary_op :
+  'a .
+    (arg -> 'a FStar_Pervasives_Native.option) ->
+      ('a -> t) -> args -> t FStar_Pervasives_Native.option
+  =
+  fun as_a  ->
+    fun f  ->
+      fun args  ->
+        let uu____2902 = FStar_List.map as_a args  in lift_unary f uu____2902
+  
+let binary_op :
+  'a .
+    (arg -> 'a FStar_Pervasives_Native.option) ->
+      ('a -> 'a -> t) -> args -> t FStar_Pervasives_Native.option
+  =
+  fun as_a  ->
+    fun f  ->
+      fun args  ->
+        let uu____2958 = FStar_List.map as_a args  in
+        lift_binary f uu____2958
+  
+let (unary_int_op :
+  (FStar_BigInt.t -> FStar_BigInt.t) ->
+    args -> t FStar_Pervasives_Native.option)
+  =
+  fun f  ->
+    unary_op arg_as_int
+      (fun x  -> let uu____2989 = f x  in embed e_int uu____2989)
+  
+let (binary_int_op :
+  (FStar_BigInt.t -> FStar_BigInt.t -> FStar_BigInt.t) ->
+    args -> t FStar_Pervasives_Native.option)
+  =
+  fun f  ->
+    binary_op arg_as_int
+      (fun x  -> fun y  -> let uu____3017 = f x y  in embed e_int uu____3017)
+  
+let (unary_bool_op :
+  (Prims.bool -> Prims.bool) -> args -> t FStar_Pervasives_Native.option) =
+  fun f  ->
+    unary_op arg_as_bool
+      (fun x  -> let uu____3038 = f x  in embed e_bool uu____3038)
+  
+let (binary_bool_op :
+  (Prims.bool -> Prims.bool -> Prims.bool) ->
+    args -> t FStar_Pervasives_Native.option)
+  =
+  fun f  ->
+    binary_op arg_as_bool
+      (fun x  -> fun y  -> let uu____3066 = f x y  in embed e_bool uu____3066)
+  
+let (binary_string_op :
+  (Prims.string -> Prims.string -> Prims.string) ->
+    args -> t FStar_Pervasives_Native.option)
+  =
+  fun f  ->
+    binary_op arg_as_string
+      (fun x  ->
+         fun y  -> let uu____3094 = f x y  in embed e_string uu____3094)
+  
+let mixed_binary_op :
+  'a 'b 'c .
+    (arg -> 'a FStar_Pervasives_Native.option) ->
+      (arg -> 'b FStar_Pervasives_Native.option) ->
+        ('c -> t) ->
+          ('a -> 'b -> 'c) -> args -> t FStar_Pervasives_Native.option
+  =
+  fun as_a  ->
+    fun as_b  ->
+      fun embed_c  ->
+        fun f  ->
+          fun args  ->
+            match args with
+            | a::b::[] ->
+                let uu____3196 =
+                  let uu____3205 = as_a a  in
+                  let uu____3208 = as_b b  in (uu____3205, uu____3208)  in
+                (match uu____3196 with
+                 | (FStar_Pervasives_Native.Some
+                    a1,FStar_Pervasives_Native.Some b1) ->
+                     let uu____3223 =
+                       let uu____3224 = f a1 b1  in embed_c uu____3224  in
+                     FStar_Pervasives_Native.Some uu____3223
+                 | uu____3225 -> FStar_Pervasives_Native.None)
+            | uu____3234 -> FStar_Pervasives_Native.None
+  
+let list_of_string' : 'Auu____3241 . 'Auu____3241 -> Prims.string -> t =
+  fun rng  ->
+    fun s  ->
+      let uu____3252 = e_list e_char  in
+      let uu____3259 = FStar_String.list_of_string s  in
+      embed uu____3252 uu____3259
+  
+let (string_of_list' : FStar_Range.range -> FStar_Char.char Prims.list -> t)
+  =
+  fun rng  ->
+    fun l  ->
+      let s = FStar_String.string_of_list l  in Constant (String (s, rng))
+  
+let string_compare' :
+  'Auu____3291 . 'Auu____3291 -> Prims.string -> Prims.string -> t =
+  fun rng  ->
+    fun s1  ->
+      fun s2  ->
+        let r = FStar_String.compare s1 s2  in
+        let uu____3308 =
+          let uu____3309 = FStar_Util.string_of_int r  in
+          FStar_BigInt.big_int_of_string uu____3309  in
+        embed e_int uu____3308
+  
+let (string_concat' :
+  (t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2 Prims.list ->
+    t FStar_Pervasives_Native.option)
+  =
+  fun args  ->
+    match args with
+    | a1::a2::[] ->
+        let uu____3353 = arg_as_string a1  in
+        (match uu____3353 with
+         | FStar_Pervasives_Native.Some s1 ->
+             let uu____3359 = arg_as_list e_string a2  in
+             (match uu____3359 with
+              | FStar_Pervasives_Native.Some s2 ->
+                  let r = FStar_String.concat s1 s2  in
+                  let uu____3372 = embed e_string r  in
+                  FStar_Pervasives_Native.Some uu____3372
+              | uu____3373 -> FStar_Pervasives_Native.None)
+         | uu____3378 -> FStar_Pervasives_Native.None)
+    | uu____3381 -> FStar_Pervasives_Native.None
+  
+let (string_of_int : FStar_BigInt.t -> t) =
+  fun i  ->
+    let uu____3393 = FStar_BigInt.string_of_big_int i  in
+    embed e_string uu____3393
+  
+let string_of_bool : 'Auu____3400 . 'Auu____3400 -> Prims.bool -> t =
+  fun rng  -> fun b  -> embed e_string (if b then "true" else "false") 
+let (decidable_eq : Prims.bool -> args -> t FStar_Pervasives_Native.option) =
+  fun neg  ->
+    fun args  ->
+      match args with
+      | (_typ,uu____3427)::(a1,uu____3429)::(a2,uu____3431)::[] ->
+          failwith "decidable_eq not yet implemented"
+      | uu____3450 -> failwith "Unexpected number of arguments"
+  
+let (dummy_interp :
+  FStar_Ident.lid -> args -> t FStar_Pervasives_Native.option) =
+  fun lid  ->
+    fun args  ->
+      let uu____3467 =
+        let uu____3468 = FStar_Ident.string_of_lid lid  in
+        Prims.strcat "No interpretation for " uu____3468  in
+      failwith uu____3467
+  
