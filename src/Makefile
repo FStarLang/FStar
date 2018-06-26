@@ -47,9 +47,8 @@ ALL_BOOT=$(addprefix boot/FStar., Util.fsti List.fsti			\
 			          Parser.Parse.fsti			\
 			          Tactics.Interpreter.fst		\
 			          Tactics.Interpreter.fsti \
-                TypeChecker.NBETerm.fst \
-                TypeChecker.NBETerm.fsti \
-                TypeChecker.NBE.fst \
+			          TypeChecker.NBETerm.fst \
+			          TypeChecker.NBETerm.fsti \
 			          Tests.Test.fst)
 
 boot/%.fsti: basic/boot/%.fsi | boot_dir
@@ -75,6 +74,10 @@ boot/FStar.TypeChecker.NBETerm.fst: typechecker/boot/FStar.TypeChecker.NBETerm.f
 	cp $^ $@
 	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
 	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
+
+# GM: surprised that I had to add this, does it make sense?
+boot/FStar.TypeChecker.NBETerm.fsti: typechecker/boot/FStar.TypeChecker.NBETerm.fsi | boot_dir
+	cp $^ $@
 
 boot/FStar.Tests.Test.fst: tests/boot/FStar.Tests.Test.fs | boot_dir
 	cp $^ $@
