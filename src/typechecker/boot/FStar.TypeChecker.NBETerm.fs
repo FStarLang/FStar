@@ -8,6 +8,7 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Errors
+open FStar.String
 
 module PC = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
@@ -289,17 +290,134 @@ let e_arrow1 (ea:embedding<'a>) (eb:embedding<'b>) =
     in
     mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb)))
 
-// let e_arrow2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) = 
-//   let em (f : 'a -> 'b -> 'c) : t = Lam((fun (ta:t) -> match unembed ea ta with 
-//                                            | Some a -> embed eb (f a)
-//                                            | None -> failwith "Cannot unembed argument"), 
-//                                     (fun _ -> type_of ea), None) 
-//   in
-//   let un (lam : t) : option<('a -> 'b)> =  
-//       match lam with 
-//       | Lam (ft, _, _) -> Some (fun (x:'a) -> match unembed eb (ft (embed ea x)) with 
-//                                          | Some b -> b 
-//                                          | None -> failwith "Cannot unembed function result")
-//       | _ -> None
-//   in
-//   mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb)))
+
+(* Interface for building primitive steps *)
+
+let arg_as_int    (a:arg) = fst a |> unembed e_int
+
+let arg_as_bool   (a:arg) = fst a |> unembed e_bool
+
+let arg_as_char   (a:arg) = fst a |> unembed e_char 
+
+let arg_as_string (a:arg) = fst a |> unembed e_string 
+
+let arg_as_list   (e:embedding<'a>) a = fst a |> unembed (e_list e)
+
+let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
+    match a with
+    | FV (fv1, [], [(Constant (Int i), _)])
+      when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) 
+                        "int_to_t" ->
+      Some (fv1, i) 
+    | _ -> None
+
+
+(* XXX a lot of code duplication. Same code as in cfg.fs *)
+let lift_unary
+    : ('a -> 'b) -> list<option<'a>> -> option<'b>
+    = fun f aopts ->
+        match aopts with
+        | [Some a] -> Some (f a)
+        | _ -> None
+
+
+let lift_binary
+    : ('a -> 'a -> 'b) -> list<option<'a>> -> option<'b>
+    = fun f aopts ->
+        match aopts with
+        | [Some a0; Some a1] -> Some (f a0 a1)
+        | _ -> None
+
+
+let unary_op
+    : (arg -> option<'a>)
+    -> ('a -> t)
+    -> args
+    -> option<t>
+    = fun as_a f args -> lift_unary f (List.map as_a args)
+
+
+let binary_op
+    :  (arg -> option<'a>)
+    -> ('a -> 'a -> t)
+    -> args
+    -> option<t>
+    = fun as_a f args -> lift_binary f (List.map as_a args)
+
+let unary_int_op (f:Z.t -> Z.t) =
+    unary_op arg_as_int (fun x -> embed e_int (f x))
+    
+let binary_int_op (f:Z.t -> Z.t -> Z.t) =
+    binary_op arg_as_int (fun x y -> embed e_int (f x y))
+
+let unary_bool_op (f:bool -> bool) =
+    unary_op arg_as_bool (fun x -> embed e_bool (f x))
+
+let binary_bool_op (f:bool -> bool -> bool) =
+    binary_op arg_as_bool (fun x y -> embed e_bool (f x y))
+
+let binary_string_op (f : string -> string -> string) =
+    binary_op arg_as_string (fun x y -> embed e_string (f x y))
+
+let mixed_binary_op
+       : (arg -> option<'a>)
+       -> (arg -> option<'b>)
+       -> ('c -> t)
+       -> ('a -> 'b -> 'c)
+       -> args
+       -> option<t>
+       = fun as_a as_b embed_c f args ->
+             match args with
+             | [a;b] ->
+                begin
+                match as_a a, as_b b with
+                | Some a, Some b -> Some (embed_c (f a b))
+                | _ -> None
+                end
+             | _ -> None
+
+// let list_of_string' rng (s:string) : t =
+//     let name l = mk (Tm_fvar (lid_as_fv l delta_constant None)) rng in
+//     let char_t = name PC.char_lid in
+//     let charterm c = mk (Tm_constant (Const_char c)) rng in
+//     U.mk_list char_t rng <| List.map charterm (list_of_string s)
+
+let string_of_list' rng (l:list<char>) : t =
+    let s = string_of_list l in
+    Constant (String (s, rng))
+
+let string_compare' rng (s1:string) (s2:string) : t =
+    let r = String.compare s1 s2 in
+    embed e_int (Z.big_int_of_string (BU.string_of_int r))
+
+
+let string_concat' args : option<t> =
+    match args with
+    | [a1; a2] ->
+        begin match arg_as_string a1 with
+        | Some s1 ->
+            begin match arg_as_list e_string a2 with
+            | Some s2 ->
+                let r = String.concat s1 s2 in
+                Some (embed e_string r)
+            | _ -> None
+            end
+        | _ -> None
+        end
+    | _ -> None
+
+let string_of_int (i:Z.t) : t =
+    embed e_string (Z.string_of_big_int i)
+
+let string_of_bool rng (b:bool) : t =
+    embed e_string (if b then "true" else "false")
+
+(*
+let decidable_eq (neg:bool) (args:args) : option<t> =
+    match args with
+    | [(_typ, _); (a1, _); (a2, _)] ->
+       Some (Constant (Bool (a1 = a2))) (* TODO write eq function *)
+    | _ ->
+        failwith "Unexpected number of arguments"
+
+*)
