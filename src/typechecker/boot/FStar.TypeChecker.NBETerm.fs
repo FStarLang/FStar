@@ -242,7 +242,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
                        as_arg (embed ea (fst x));
                        as_arg (embed eb (snd x))]
     in
-    let un (trm:t) : option<'a * 'b> =
+    let un (trm:t) : option<('a * 'b)> =
         match trm with
         | Construct (fvar, us, [_; _; (a, _); (b, _)]) when S.fv_eq_lid fvar PC.lid_Mktuple2 ->
           BU.bind_opt (unembed ea a) (fun a ->
