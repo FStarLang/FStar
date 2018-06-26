@@ -38,6 +38,8 @@ open FStar.Dyn
   * We should really allow for some metaprogramming in F*. Oh wait....
   *)
 
+let env_hook = BU.mk_ref None
+
 (* private *)
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with

@@ -540,6 +540,7 @@ let run_tactic_on_typ
     let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
     let ps, w = proofstate_of_goal_ty rng env typ in
 
+    Reflection.Basic.env_hook := Some env;
     if !tacdbg then
         BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ);
     let res, ms = BU.record_time (fun () -> run_safe tau ps) in
