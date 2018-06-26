@@ -36,6 +36,7 @@ let subset _ _ = failwith "FStar_List_Tot_Base.ml: Not implemented: subset"
 let noRepeats _ = failwith "FStar_List_Tot_Base.ml: Not implemented: noRepeats"
 let assoc x l = match List.assoc x l with exception Not_found -> None | x -> Some x
 let split = BatList.split
+let splitAt n l = BatList.split_at (Z.to_int n) l
 let unzip = split
 let rec unzip3 = function
   | [] -> ([],[],[])
