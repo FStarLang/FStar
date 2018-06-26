@@ -295,10 +295,8 @@ let (translate_univ :
             FStar_Syntax_Syntax.U_max uu____1424
         | FStar_Syntax_Syntax.U_unknown  -> u2
         | FStar_Syntax_Syntax.U_name uu____1427 -> u2
-        | FStar_Syntax_Syntax.U_zero  -> u2
-        | FStar_Syntax_Syntax.U_unif uu____1428 ->
-            failwith "Unknown or unconstrained universe"
-         in
+        | FStar_Syntax_Syntax.U_unif uu____1428 -> u2
+        | FStar_Syntax_Syntax.U_zero  -> u2  in
       let uu____1437 = aux u  in FStar_TypeChecker_NBETerm.Univ uu____1437
   
 let (make_rec_env :
