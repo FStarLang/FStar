@@ -218,6 +218,51 @@ let mk_tactic_interpretation_6 (reflect:bool)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
+let mk_tactic_interpretation_13 (reflect:bool)
+                                (t:'t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> tac<'r>)
+                                (e_t1: embedding<'t1>)
+                                (e_t2: embedding<'t2>)
+                                (e_t3: embedding<'t3>)
+                                (e_t4: embedding<'t4>)
+                                (e_t5: embedding<'t5>)
+                                (e_t6: embedding<'t6>)
+                                (e_t7: embedding<'t7>)
+                                (e_t8: embedding<'t8>)
+                                (e_t9: embedding<'t9>)
+                                (e_t10: embedding<'t10>)
+                                (e_t11: embedding<'t11>)
+                                (e_t12: embedding<'t12>)
+                                (e_t13: embedding<'t13>)
+                                (er:embedding<'r>)
+                                (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (embedded_state, _)] ->
+    BU.bind_opt (unembed E.e_proofstate embedded_state) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    log ps (fun () ->
+    BU.print2 "Reached %s, goals are: %s\n"
+            (Ident.string_of_lid nm)
+            (Print.term_to_string embedded_state));
+
+    BU.bind_opt (unembed e_t1 a1) (fun  a1 ->
+    BU.bind_opt (unembed e_t2 a2) (fun  a2 ->
+    BU.bind_opt (unembed e_t3 a3) (fun  a3 ->
+    BU.bind_opt (unembed e_t4 a4) (fun  a4 ->
+    BU.bind_opt (unembed e_t5 a5) (fun  a5 ->
+    BU.bind_opt (unembed e_t6 a6) (fun  a6 ->
+    BU.bind_opt (unembed e_t7 a7) (fun  a7 ->
+    BU.bind_opt (unembed e_t8 a8) (fun  a8 ->
+    BU.bind_opt (unembed e_t9 a9) (fun  a9 ->
+    BU.bind_opt (unembed e_t10 a10) (fun a10 ->
+    BU.bind_opt (unembed e_t11 a11) (fun a11 ->
+    BU.bind_opt (unembed e_t12 a12) (fun a12 ->
+    BU.bind_opt (unembed e_t13 a13) (fun a13 ->
+    let res = run (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps in
+    Some (embed (E.e_result er) (N.psc_range psc) res)))))))))))))))
+  | _ ->
+    failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
+
+
 let step_from_native_step (s: native_primitive_step): N.primitive_step =
     { N.name=s.name;
       N.arity=s.arity;
@@ -496,6 +541,26 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) : tac<'b> = //
 //IN F*: and unembed_tactic_0' (#b:Type) (eb:embedding b) (embedded_tac_b:term) : option (tac b) =
 and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term) : option<(tac<'b>)> = //JUST FSHARP
     Some <| unembed_tactic_0 eb embedded_tac_b
+
+//IN F*: let unembed_tactic_1_alt (#a:Type) (#r:Type) (ea:embedding a) (er:embedding r) (f:term) : option (a -> tac r) =
+let unembed_tactic_1_alt<'a,'r> (ea:embedding<'a>) (er:embedding<'r>) (f:term) : option<('a -> tac<'r>)> = //JUST FSHARP
+    Some (fun x ->
+      let rng = FStar.Range.dummyRange  in
+      let x_tm = embed ea rng x in
+      let app = S.mk_Tm_app f [as_arg x_tm] None rng in
+      let app = U.mk_reify app in
+      unembed_tactic_0 er app)
+
+let e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (proofstate -> __result<'r>))> =
+    let em (rng:range) (u:('a -> (proofstate -> __result<'r>))) : term = { U.exp_unit with pos = rng } in //VD: bogus embedding
+    let un (w: bool) (t0: term): option<('a -> (proofstate -> __result<'r>))> =
+        match unembed_tactic_1_alt ea er t0 with
+        | Some f -> Some (fun x -> run (f x))
+        | None -> None
+    in
+    let typ = S.t_term in //VD: bogus type
+    mk_emb em un typ
+
 
 let report_implicits ps (is : Env.implicits) : unit =
     let errs = List.map (fun imp ->
