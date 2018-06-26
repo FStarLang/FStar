@@ -217,6 +217,7 @@ and primitive_steps () : list<N.primitive_step> =
 
       mktac1 "get_guard_policy" get_guard_policy e_unit E.e_guard_policy;
       mktac1 "set_guard_policy" set_guard_policy E.e_guard_policy e_unit;
+      mktac1 "lax_on"           lax_on e_unit e_bool;
 
       decr_depth_step;
       incr_depth_step;
