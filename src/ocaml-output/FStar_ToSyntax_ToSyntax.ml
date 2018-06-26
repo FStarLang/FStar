@@ -1350,7 +1350,7 @@ let rec (desugar_data_pat :
           | [] -> ()
           | p1::[] ->
               let uu____3748 = pat_vars p1  in
-              FStar_All.pipe_right uu____3748 (fun a237  -> ())
+              FStar_All.pipe_right uu____3748 (fun a236  -> ())
           | p1::ps ->
               let pvars = pat_vars p1  in
               let aux p2 =
