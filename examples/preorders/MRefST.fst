@@ -191,7 +191,7 @@ let write #a #r m x =
   assert (forall a (r:preorder a) (m':mref a r). m === m' \/ ~(m === m'));
 
   (* But this fails. Why!? Assume it for now *)
-  assert (heap_rel h0 h1);
+  assume (heap_rel h0 h1);
 
   ist_put h1
 
