@@ -371,10 +371,11 @@ and translate_constant (c : sconst) : constant =
     | C.Const_range r -> Range r
     | _ -> failwith ("Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented")
 
-and translate_pat cfg (p : pat) : t =
+// GM: Not called?
+and translate_pat (p : pat) : t =
     match p.v with
     | Pat_constant c -> Constant (translate_constant c)
-    | Pat_cons (cfv, pats) -> iapp (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat cfg p, None)) pats) // Zoe : TODO universe args?
+    | Pat_cons (cfv, pats) -> iapp (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat p, None)) pats) // Zoe : TODO universe args?
     | Pat_var bvar -> mkAccuVar bvar
     | Pat_wild bvar -> mkAccuVar bvar
     | Pat_dot_term (bvar, t) -> failwith "Pat_dot_term not implemented"
