@@ -315,36 +315,22 @@ let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
 
 
 (* XXX a lot of code duplication. Same code as in cfg.fs *)
-let lift_unary
-    : ('a -> 'b) -> list<option<'a>> -> option<'b>
-    = fun f aopts ->
+let lift_unary (f : 'a -> 'b) (aopts : list<option<'a>>) : option<'b> =
         match aopts with
         | [Some a] -> Some (f a)
         | _ -> None
 
 
-let lift_binary
-    : ('a -> 'a -> 'b) -> list<option<'a>> -> option<'b>
-    = fun f aopts ->
+let lift_binary (f : 'a -> 'a -> 'b) (aopts : list<option<'a>>) : option<'b> =
         match aopts with
         | [Some a0; Some a1] -> Some (f a0 a1)
         | _ -> None
 
+let unary_op (as_a : arg -> option<'a>) (f : 'a -> t) (args : args) : option<t> =
+    lift_unary f (List.map as_a args)
 
-let unary_op
-    : (arg -> option<'a>)
-    -> ('a -> t)
-    -> args
-    -> option<t>
-    = fun as_a f args -> lift_unary f (List.map as_a args)
-
-
-let binary_op
-    :  (arg -> option<'a>)
-    -> ('a -> 'a -> t)
-    -> args
-    -> option<t>
-    = fun as_a f args -> lift_binary f (List.map as_a args)
+let binary_op (as_a : arg -> option<'a>) (f : 'a -> 'a -> t) (args : args) : option<t> =
+    lift_binary f (List.map as_a args)
 
 let unary_int_op (f:Z.t -> Z.t) =
     unary_op arg_as_int (fun x -> embed e_int (f x))
@@ -361,14 +347,8 @@ let binary_bool_op (f:bool -> bool -> bool) =
 let binary_string_op (f : string -> string -> string) =
     binary_op arg_as_string (fun x y -> embed e_string (f x y))
 
-let mixed_binary_op
-       : (arg -> option<'a>)
-       -> (arg -> option<'b>)
-       -> ('c -> t)
-       -> ('a -> 'b -> 'c)
-       -> args
-       -> option<t>
-       = fun as_a as_b embed_c f args ->
+let mixed_binary_op (as_a : arg -> option<'a>) (as_b : arg -> option<'b>)
+       (embed_c : 'c -> t) (f : 'a -> 'b -> 'c) (args : args) : option<t> =
              match args with
              | [a;b] ->
                 begin
