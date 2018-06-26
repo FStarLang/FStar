@@ -222,14 +222,11 @@ let translate_univ (bs:list<t>) (u:universe) : t =
 
         | U_unknown
         | U_name _
+        | U_unif _
         | U_zero ->
           u
-
-        | U_unif _ ->
-          failwith "Unknown or unconstrained universe"
     in
     Univ (aux u)
-
 
 (* Creates the environment of mutually recursive function definitions *)
 let make_rec_env (lbs:list<letbinding>) (bs:list<t>) : list<t> =
