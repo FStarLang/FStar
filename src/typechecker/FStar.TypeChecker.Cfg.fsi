@@ -73,7 +73,8 @@ type primitive_step = {
     auto_reflect:option<int>;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
-    interpretation:(psc -> args -> option<term>)
+    interpretation:(psc -> args -> option<term>);
+    interpretation_nbe:(NBE.args -> option<NBE.t>)
 }
 
 type debug_switches = {

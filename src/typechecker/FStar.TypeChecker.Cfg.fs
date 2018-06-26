@@ -417,8 +417,9 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              ]
     in
     let weak_ops =
-            [(PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, prims_to_fstar_range_step);
-             ]
+            [(PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, prims_to_fstar_range_step, 
+                                                                    NBE.prims_to_fstar_range_step);
+            ]
     in
     let bounded_arith_ops
         =
@@ -436,16 +437,22 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         let add_sub_mul_v =
           (bounded_signed_int_types @ bounded_unsigned_int_types)
           |> List.collect (fun m ->
-            [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.add_big_int x y)));
-             (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.sub_big_int x y)));
-             (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mult_big_int x y)));
-             (PC.p2l ["FStar"; m; "v"],   1, unary_op arg_as_bounded_int (fun r (int_to_t, x) -> EMB.embed EMB.e_int r x))])
+            [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.add_big_int x y)),
+                                             NBE.binary_op NBE.arg_as_bounded_int (fun (int_to_t, x) (_, y) -> NBE.int_as_bounded int_to_t (Z.add_big_int x y)));
+             (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.sub_big_int x y)),
+                                             NBE.binary_op NBE.arg_as_bounded_int (fun (int_to_t, x) (_, y) -> NBE.int_as_bounded int_to_t (Z.sub_big_int x y)));
+             (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mult_big_int x y)),
+                                             NBE.binary_op NBE.arg_as_bounded_int (fun (int_to_t, x) (_, y) -> NBE.int_as_bounded int_to_t (Z.mult_big_int x y)));
+             (PC.p2l ["FStar"; m; "v"],   1, unary_op arg_as_bounded_int (fun r (int_to_t, x) -> EMB.embed EMB.e_int r x),
+                                             NBE.unary_op NBE.arg_as_bounded_int (fun (int_to_t, x) -> NBE.embed NBE.e_int x))])
         in
         let div_mod_unsigned =
           bounded_unsigned_int_types
           |> List.collect (fun m ->
-            [(PC.p2l ["FStar"; m; "div"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.div_big_int x y)));
-             (PC.p2l ["FStar"; m; "rem"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mod_big_int x y)))])
+            [(PC.p2l ["FStar"; m; "div"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.div_big_int x y)),
+                                             NBE.binary_op NBE.arg_as_bounded_int (fun (int_to_t, x) (_, y) -> NBE.int_as_bounded int_to_t (Z.div_big_int x y)));
+             (PC.p2l ["FStar"; m; "rem"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mod_big_int x y)),
+                                             NBE.binary_op NBE.arg_as_bounded_int (fun (int_to_t, x) (_, y) -> NBE.int_as_bounded int_to_t (Z.mod_big_int x y)))])
         in
        add_sub_mul_v
        @ div_mod_unsigned
@@ -473,7 +480,8 @@ let equality_ops : BU.psmap<primitive_step> =
          auto_reflect=None;
          strong_reduction_ok=true;
          requires_binder_substitution=false;
-         interpretation = interp_prop}
+         interpretation = interp_prop;
+         interpretation_nbe = NBE.interp_prop}
     in
     let hetero_propositional_equality =
         {name = PC.eq3_lid;
@@ -481,7 +489,8 @@ let equality_ops : BU.psmap<primitive_step> =
          auto_reflect=None;
          strong_reduction_ok=true;
          requires_binder_substitution=false;
-         interpretation = interp_prop}
+         interpretation = interp_prop;
+         interpretation_nbe = NBE.interp_prop}
     in
 
     prim_from_list [propositional_equality; hetero_propositional_equality]

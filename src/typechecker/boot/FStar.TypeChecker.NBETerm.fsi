@@ -84,6 +84,8 @@ val type_of : embedding<'a> -> t
 val e_bool : embedding<bool>
 val e_string : embedding<string>
 val e_char : embedding<char>
+val e_int : embedding<Z.t>
+val e_range : embedding<Range.range>
 
 // Interface for NBE interpretations
 
@@ -92,6 +94,9 @@ val arg_as_bool : arg -> option<bool>
 val arg_as_char : arg -> option<FStar.Char.char>
 val arg_as_string : arg -> option<string>
 val arg_as_list : embedding<'a> -> arg -> option<list<'a>>
+val arg_as_bounded_int : arg -> option<(fv * Z.t)>
+
+val int_as_bounded : fv -> Z.t -> t
 
 val unary_int_op : (Z.t -> Z.t) -> (args -> option<t>)
 val binary_int_op : (Z.t -> Z.t -> Z.t) -> (args -> option<t>)
@@ -109,6 +114,7 @@ val string_concat' : args -> option<t>
 val list_of_string' : (string -> t)
 
 val decidable_eq : bool -> args -> option<t>
+val interp_prop : args -> option<t>
 
 val mixed_binary_op : (arg -> option<'a>) -> (arg -> option<'b>) -> ('c -> t) ->
                       ('a -> 'b -> 'c) -> args -> option<t>
@@ -116,3 +122,4 @@ val unary_op : (arg -> option<'a>) -> ('a -> t) -> (args -> option<t>)
 val binary_op : (arg -> option<'a>) -> ('a -> 'a -> t) -> (args -> option<t>)
 
 val dummy_interp : Ident.lid -> args -> option<t>
+val prims_to_fstar_range_step : args -> option<t>

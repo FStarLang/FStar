@@ -254,6 +254,16 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero] [as_arg (type_of ea);
                                                      as_arg (type_of eb)])
 
+// Embeddind range
+let e_range : embedding<Range.range> =
+    let em r = Constant (Range r) in
+    let un t =
+    match t with
+    | Constant (Range r) -> Some r
+    | _ -> None
+    in
+    mk_emb em un (lid_as_typ PC.range_lid [] [])
+
 // Emdedding lists
 let e_list (ea:embedding<'a>) =
     let em (l:list<'a>) : t =
@@ -304,13 +314,18 @@ let arg_as_string (a:arg) = fst a |> unembed e_string
 
 let arg_as_list   (e:embedding<'a>) (a:arg) = fst a |> unembed (e_list e)
 
-let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
+let arg_as_bounded_int ((a, _) : arg) : option<(fv * Z.t)> =
     match a with
     | FV (fv1, [], [(Constant (Int i), _)])
       when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) 
                         "int_to_t" ->
       Some (fv1, i) 
     | _ -> None
+
+let int_as_bounded int_to_t n =
+    let c = embed e_int n in
+    let int_to_t args = FV(int_to_t, [], args) in
+    int_to_t [as_arg c]
 
 
 (* XXX a lot of code duplication. Same code as in cfg.fs *)
@@ -417,12 +432,31 @@ let string_of_bool (b:bool) : t =
 let decidable_eq (neg:bool) (args:args) : option<t> =
     match args with
     | [(_typ, _); (a1, _); (a2, _)] -> failwith "decidable_eq not yet implemented"
-    | _ ->
-        failwith "Unexpected number of arguments"
+    | _ -> failwith "Unexpected number of arguments"
+
+let interp_prop (args:args) : option<t> =
+    match args with
+    | [(_typ, _); (a1, _); (a2, _)]    //eq2
+    | [(_typ, _); _; (a1, _); (a2, _)] ->    //eq3
+      failwith "propositional equality not yet implemented"
+      // (match U.eq_tm a1 a2 with
+      //  | U.Equal -> Some ({U.t_true with pos=r})
+      //  | U.NotEqual -> Some ({U.t_false with pos=r})
+      //  | _ -> None)
+   | _ -> failwith "Unexpected number of arguments"
 
 let dummy_interp (lid : Ident.lid) (args : args) : option<t> = 
     failwith ("No interpretation for " ^ (Ident.string_of_lid lid))
 
+
+let prims_to_fstar_range_step (args:args) : option<t> =
+    match args with
+    | [(a1, _)] ->
+      begin match unembed e_range a1 with
+      | Some r -> Some (embed e_range r)
+      | None -> None
+      end
+   | _ -> failwith "Unexpected number of arguments"
 
 // let e_arrow2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) =
 //   let em (f : 'a -> 'b -> 'c) : t = Lam((fun (ta:t) -> match unembed ea ta with
