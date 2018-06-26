@@ -176,7 +176,7 @@ type primitive_step = {
      strong_reduction_ok:bool;
      requires_binder_substitution:bool;
      interpretation:(psc -> args -> option<term>);
-     //interpretation_nbe:(NBE.args -> option<NBE.t>)
+     // interpretation_nbe:(NBE.args -> option<NBE.t>)
 }
 
 type cfg = {
