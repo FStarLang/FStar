@@ -32,16 +32,17 @@ let eq_instance_of_eqtype (#a:eqtype) : deq a =
   Mkdeq (fun x y -> x = y) (fun x y -> ())
 
 (* Two concrete instances *)
-[@instance] let eq_int : deq int  = eq_instance_of_eqtype
-[@instance] let eq_bool : deq bool  = eq_instance_of_eqtype
+[@instance] let eq_int : deq int = eq_instance_of_eqtype
+[@instance] let eq_bool : deq bool = eq_instance_of_eqtype
 
-(* A parametric instance *)
-[@instance] let eq_list (eqA : deq 'a) : deq (list 'a) =
-  let rec eqList (xs ys : list 'a) : Tot (b:bool{b <==> xs == ys}) = match xs, ys with
+let rec eqList [|deq 'a|] (xs ys : list 'a) : Tot (b:bool{b <==> xs == ys}) =
+  match xs, ys with
   | [], [] -> true
   | x::xs, y::ys -> eq_ok x y; eq x y && eqList xs ys
   | _, _ -> false
-  in
+
+(* A parametric instance *)
+[@instance] let eq_list (eqA : deq 'a) : deq (list 'a) =
   Mkdeq eqList (fun x y -> ())
 
 (* A few tests *)
@@ -51,9 +52,8 @@ let _ = assert (not (eq 1 2))
 let _ = assert (eq true true)
 let _ = assert (not (eq true false))
 
-// Need the assert_norm...
-let _ = assert_norm (eq [1;2] [1;2])
-let _ = assert_norm (not (eq [2;1] [1;2]))
+let _ = assert (eq [1;2] [1;2])
+let _ = assert (not (eq [2;1] [1;2]))
 
 
 (****************************************************************)
@@ -76,7 +76,7 @@ type additive a = {
  *)
 val mkadd : #a:Type -> zero:a -> plus:(a -> a -> a)
              -> Pure (additive a)
-                    (requires  (forall (x : a). plus zero x == x)
+                    (requires (forall (x : a). plus zero x == x)
                             /\ (forall (x : a). plus x zero == x)
                             /\ (forall (x y z : a).plus (plus x y) z == plus x (plus y z)))
                     (ensures (fun d -> Mkadditive?.zero d == zero /\ Mkadditive?.plus d == plus))
@@ -132,19 +132,16 @@ type num a = {
 [@instance] let num_eq  (d : num 'a) : deq 'a = d.eq_super
 [@instance] let add_num (d : num 'a) : additive 'a = d.add_super
 
-(* Note the `solve` in the superclass, meaning we don't have to give it explicitly.
- * Anyway, we should remove the need to even write that line. *)
-[@instance]
-let num_int : num int =
+let mknum (#a:Type) [|deq a|] [|additive a|] (f : a -> a -> a) : num a =
   { eq_super  = solve;
     add_super = solve;
-    minus     = (fun x y -> x - y); }
+    minus     = f; }
 
 [@instance]
-let num_bool : num bool =
-  { eq_super  = solve;
-    add_super = solve;
-    minus     = (fun x y -> x && not y) (* random crap *); }
+let num_int : num int = mknum (fun x y -> x - y)
+
+[@instance]
+let num_bool : num bool = mknum (fun x y -> x && not y)
 
 (****************************************************************)
 
