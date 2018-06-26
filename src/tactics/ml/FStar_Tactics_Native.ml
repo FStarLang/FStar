@@ -33,7 +33,7 @@ let register_plugin (s: string) (arity: Prims.int) (t: itac) =
            { N.name=FStar_Ident.lid_of_str s;
              N.arity=arity;
              N.auto_reflect=None;
-             N.strong_reduction_ok=false;
+             N.strong_reduction_ok=true;
              N.requires_binder_substitution = false;
              N.interpretation=t}
     in
