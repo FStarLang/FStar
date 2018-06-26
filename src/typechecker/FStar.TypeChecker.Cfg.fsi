@@ -77,15 +77,16 @@ type primitive_step = {
 }
 
 type debug_switches = {
-     gen              : bool;
-     primop           : bool;
-     unfolding        : bool;
-     b380             : bool;
-     wpe              : bool;
-     norm_delayed     : bool;
-     print_normalized : bool;
+    gen              : bool;
+    top              : bool;
+    cfg              : bool;
+    primop           : bool;
+    unfolding        : bool;
+    b380             : bool;
+    wpe              : bool;
+    norm_delayed     : bool;
+    print_normalized : bool;
 }
-
 
 type cfg = {
      steps: fsteps;
