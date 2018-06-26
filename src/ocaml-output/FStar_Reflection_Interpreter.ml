@@ -17,7 +17,7 @@ let int1 :
             fun args  ->
               match args with
               | (a,uu____65)::[] ->
-                  let uu____90 = FStar_Syntax_Embeddings.unembed ea a  in
+                  let uu____90 = FStar_Syntax_Embeddings.try_unembed ea a  in
                   FStar_Util.bind_opt uu____90
                     (fun a1  ->
                        let uu____96 =
@@ -46,11 +46,12 @@ let int2 :
               fun args  ->
                 match args with
                 | (a,uu____182)::(b,uu____184)::[] ->
-                    let uu____225 = FStar_Syntax_Embeddings.unembed ea a  in
+                    let uu____225 = FStar_Syntax_Embeddings.try_unembed ea a
+                       in
                     FStar_Util.bind_opt uu____225
                       (fun a1  ->
-                         let uu____231 = FStar_Syntax_Embeddings.unembed eb b
-                            in
+                         let uu____231 =
+                           FStar_Syntax_Embeddings.try_unembed eb b  in
                          FStar_Util.bind_opt uu____231
                            (fun b1  ->
                               let uu____237 =

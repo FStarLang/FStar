@@ -1,8 +1,8 @@
 FSTAR_HOME=../..
 KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
 INCLUDE_PATHS=$(KREMLIN_HOME)/kremlib
-EXCLUDED_FSTAR_FILES=Launch.fst CanonCommSemiring.fst WeakVsHNF.fst \
-		     Test.Math.Lemmas.fst CanonDeep.fst
+EXCLUDED_FSTAR_FILES=Launch.fst CanonCommSemiring.fst \
+		     Test.Math.Lemmas.fst CanonDeep.fst Typeclasses.fst
 FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
 all: verify-all #stringprintertest

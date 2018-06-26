@@ -536,12 +536,14 @@ let run_tactic_on_typ
     let env = { env with Env.instantiate_imp = false } in
     (* TODO: We do not faithfully expose universes to metaprograms *)
     let env = { env with Env.lax_universes = true } in
+    let env = { env with failhard = true } in
     let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
     let ps, w = proofstate_of_goal_ty rng env typ in
 
+    Reflection.Basic.env_hook := Some env;
     if !tacdbg then
         BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ);
-    let res, ms = BU.record_time (fun () -> run tau ps) in
+    let res, ms = BU.record_time (fun () -> run_safe tau ps) in
     if !tacdbg then
         BU.print3 "}\nTactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
     match res with
@@ -825,6 +827,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     end
 
 let splice (env:Env.env) (tau:term) : list<sigelt> =
+    if env.nosynth then [] else begin
     tacdbg := Env.debug env (Options.Other "Tac");
     let typ = S.t_decls in // running with goal type FStar.Reflection.Data.decls
     let gs, w = run_tactic_on_typ tau.pos tau.pos (reify_tactic tau) env typ in
@@ -845,3 +848,4 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     match unembed (e_list RE.e_sigelt) w with
     | Some sigelts -> sigelts
     | None -> Err.raise_error (Err.Fatal_SpliceUnembedFail, "splice: failed to unembed sigelts") typ.pos
+    end

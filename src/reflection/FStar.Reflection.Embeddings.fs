@@ -10,6 +10,7 @@ open FStar.Errors
 
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
+module I = FStar.Ident
 module SS = FStar.Syntax.Subst
 module BU = FStar.Util
 module Range = FStar.Range
@@ -101,6 +102,9 @@ let e_aqualv =
         match q with
         | Data.Q_Explicit -> ref_Q_Explicit.t
         | Data.Q_Implicit -> ref_Q_Implicit.t
+        | Data.Q_Meta t   ->
+            S.mk_Tm_app ref_Q_Meta.t [S.as_arg (embed e_term rng t)]
+                        None Range.dummyRange
         in { r with pos = rng }
     in
     let unembed_aqualv w (t : term) : option<aqualv> =
@@ -109,6 +113,10 @@ let e_aqualv =
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Explicit.lid -> Some Data.Q_Explicit
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Implicit.lid -> Some Data.Q_Implicit
+        | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_Q_Meta.lid ->
+            BU.bind_opt (unembed' w e_term t) (fun t ->
+            Some (Data.Q_Meta t))
+
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded aqualv: %s" (Print.term_to_string t)));
@@ -527,13 +535,38 @@ let e_sigelt =
     in
     mk_emb embed_sigelt unembed_sigelt fstar_refl_sigelt
 
+// TODO: It would be nice to have a
+// embed_as : ('a -> 'b) -> ('b -> 'a) -> embedding<'a> -> embedding<'b>
+// so we don't write these things
+let e_ident : embedding<I.ident> =
+    let repr = e_tuple2 e_range e_string in
+    let embed_ident (rng:Range.range) (i:I.ident) : term =
+        embed repr rng (I.range_of_id i, I.text_of_id i)
+    in
+    let unembed_ident w (t:term) : option<I.ident> =
+        match unembed' w repr t with
+        | Some (rng, s) -> Some (I.mk_ident (s, rng))
+        | None -> None
+    in
+    mk_emb embed_ident unembed_ident (S.t_tuple2_of S.t_range S.t_string)
+    // TODO: again a delta depth issue, should be this
+    (* fstar_refl_ident *)
+
+let e_univ_name =
+    (* TODO: Should be this, but there's a delta depth issue *)
+    (* set_type fstar_refl_univ_name e_ident *)
+    e_ident
+
+let e_univ_names = e_list e_univ_name
+
 let e_sigelt_view =
     let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
         match sev with
-        | Sg_Let (r, fv, ty, t) ->
+        | Sg_Let (r, fv, univs, ty, t) ->
             S.mk_Tm_app ref_Sg_Let.t
                         [S.as_arg (embed e_bool rng r);
                             S.as_arg (embed e_fv rng fv);
+                            S.as_arg (embed e_univ_names rng univs);
                             S.as_arg (embed e_term rng ty);
                             S.as_arg (embed e_term rng t)]
                         None rng
@@ -544,9 +577,10 @@ let e_sigelt_view =
                             S.as_arg (embed e_term rng ty)]
                         None rng
 
-        | Sg_Inductive (nm, bs, t, dcs) ->
+        | Sg_Inductive (nm, univs, bs, t, dcs) ->
             S.mk_Tm_app ref_Sg_Inductive.t
                         [S.as_arg (embed e_string_list rng nm);
+                            S.as_arg (embed e_univ_names rng univs);
                             S.as_arg (embed e_binders rng bs);
                             S.as_arg (embed e_term rng t);
                             S.as_arg (embed (e_list e_string_list)  rng dcs)]
@@ -559,19 +593,21 @@ let e_sigelt_view =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
-        | Tm_fvar fv, [(nm, _); (bs, _); (t, _); (dcs, _)] when S.fv_eq_lid fv ref_Sg_Inductive.lid ->
+        | Tm_fvar fv, [(nm, _); (us, _); (bs, _); (t, _); (dcs, _)] when S.fv_eq_lid fv ref_Sg_Inductive.lid ->
             BU.bind_opt (unembed' w e_string_list nm) (fun nm ->
+            BU.bind_opt (unembed' w e_univ_names us) (fun us ->
             BU.bind_opt (unembed' w e_binders bs) (fun bs ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
             BU.bind_opt (unembed' w (e_list e_string_list) dcs) (fun dcs ->
-            Some <| Sg_Inductive (nm, bs, t, dcs)))))
+            Some <| Sg_Inductive (nm, us, bs, t, dcs))))))
 
-        | Tm_fvar fv, [(r, _); (fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
+        | Tm_fvar fv, [(r, _); (fvar, _); (univs, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
             BU.bind_opt (unembed' w e_bool r) (fun r ->
             BU.bind_opt (unembed' w e_fv fvar) (fun fvar ->
+            BU.bind_opt (unembed' w e_univ_names univs) (fun univs ->
             BU.bind_opt (unembed' w e_term ty) (fun ty ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            Some <| Sg_Let (r, fvar, ty, t)))))
+            Some <| Sg_Let (r, fvar, univs, ty, t))))))
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Unk.lid ->
             Some Unk

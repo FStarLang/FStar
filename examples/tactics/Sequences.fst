@@ -63,7 +63,7 @@ let sequence_pruning () =
     //could use inspect t, but in this case ...
     if is_seq_t t
     then (prune_for_seq ();
-          dump "After pruning" ;
+          (* dump "After pruning" ; *)
           apply_lemma (`lemma_eq_elim)) //ok, we have a sequence equality; we're going to try to process it
     else fail "Not a sequence" //don't know about this goal, leave it untouched
   | _ -> fail "Not a sequence"

@@ -303,3 +303,48 @@ let modifies_upd'
   (ensures (modifies (loc_mreference r) h (HS.upd h r v)))
   [SMTPat (HS.upd h r v)]
 = modifies_upd r v h
+
+let modifies_ralloc_post'
+  (#a: Type)
+  (#rel: Preorder.preorder a)
+  (i: HS.rid)
+  (init: a)
+  (h: HS.mem)
+  (x: HST.mreference a rel { HST.is_eternal_region (HS.frameOf x) } )
+  (h' : HS.mem)
+: Lemma
+  (requires (HST.ralloc_post i init h x h'))
+  (ensures (modifies loc_none h h'))
+  [SMTPat (HST.ralloc_post i init h x h')]
+= modifies_ralloc_post i init h x h'
+
+let modifies_salloc_post'
+  (#a: Type)
+  (#rel: Preorder.preorder a)
+  (init: a)
+  (h: HS.mem)
+  (x: HST.mreference a rel { HS.is_stack_region (HS.frameOf x) } )
+  (h' : HS.mem)
+: Lemma
+  (requires (HST.salloc_post init h x h'))
+  (ensures (modifies loc_none h h'))
+  [SMTPat (HST.salloc_post init h x h')]
+= modifies_salloc_post init h x h'
+
+let modifies_free'
+  (#a: Type)
+  (#rel: Preorder.preorder a)
+  (r: HS.mreference a rel { HS.is_mm r } )
+  (m: HS.mem { m `HS.contains` r } )
+: Lemma
+  (modifies (loc_freed_mreference r) m (HS.free r m))
+  [SMTPat (HS.free r m)]
+= modifies_free r m
+
+let modifies_none_modifies'
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (HST.modifies_none h1 h2))
+  (ensures (modifies loc_none h1 h2))
+  [SMTPat (HST.modifies_none h1 h2)]
+= modifies_none_modifies h1 h2

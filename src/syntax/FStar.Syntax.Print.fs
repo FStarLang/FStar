@@ -264,8 +264,10 @@ and term_to_string x =
       | Tm_delayed _ ->   failwith "impossible"
       | Tm_app(_, []) ->  failwith "Empty args!"
 
-      // TODO: add an option to mark where this happens
-      | Tm_lazy i -> term_to_string (must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
+      | Tm_lazy i ->
+        "[lazy:" ^
+        term_to_string (must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
+        ^"]"
 
       | Tm_quoted (tm, { qkind = Quote_static  }) ->
         U.format1 "`(%s)" (term_to_string tm)
@@ -664,6 +666,9 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_pragma(ResetOptions None) -> "#reset-options"
       | Sig_pragma(ResetOptions (Some s)) -> U.format1 "#reset-options \"%s\"" s
       | Sig_pragma(SetOptions s) -> U.format1 "#set-options \"%s\"" s
+      | Sig_pragma(PushOptions None) -> "#push-options"
+      | Sig_pragma(PushOptions (Some s)) -> U.format1 "#push-options \"%s\"" s
+      | Sig_pragma(PopOptions) -> "#pop-options"
       | Sig_inductive_typ(lid, univs, tps, k, _, _) ->
         let quals_str = quals_to_string' x.sigquals in
         let binders_str = binders_to_string " " tps in

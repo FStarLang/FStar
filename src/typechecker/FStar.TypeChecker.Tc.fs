@@ -735,17 +735,15 @@ let cps_and_elaborate env ed =
 
   // we do not expect the return_elab to verify, since that may require internalizing monotonicity of WPs (i.e. continuation monad)
   let return_wp = register "return_wp" return_wp in
-  Options.push ();
-  sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries true")) :: !sigelts;
+  sigelts := mk_sigelt (Sig_pragma (PushOptions (Some "--admit_smt_queries true"))) :: !sigelts;
   let return_elab = register "return_elab" return_elab in
-  Options.pop();
+  sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
 
   // we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
   let bind_wp = register "bind_wp" bind_wp in
-  Options.push ();
-  sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries true")) :: !sigelts;
+  sigelts := mk_sigelt (Sig_pragma (PushOptions (Some "--admit_smt_queries true"))) :: !sigelts;
   let bind_elab = register "bind_elab" bind_elab in
-  Options.pop ();
+  sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     let params_un = SS.open_binders action.action_params in
@@ -1520,7 +1518,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
   | Some (errnos, _) ->
     if Env.debug env Options.Low then
         BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
-    let errs = Errors.catch_errors (fun () -> tc_decl' env se) in
+    let errs, _ = Errors.catch_errors (fun () -> tc_decl' env se) in
     if Env.debug env Options.Low then begin
         BU.print_string ">> Got issues: [\n";
         List.iter Errors.print_issue errs;
@@ -1671,11 +1669,11 @@ let tc_decls env ses =
     let ses', ses_elaborated, env = tc_decl env se in
     let ses' = ses' |> List.map (fun se ->
         if Env.debug env (Options.Other "UF")
-        then BU.print1 "About to elim vars from %s" (Print.sigelt_to_string se);
+        then BU.print1 "About to elim vars from %s\n" (Print.sigelt_to_string se);
         N.elim_uvars env se) in
     let ses_elaborated = ses_elaborated |> List.map (fun se ->
-        (* if Env.debug env (Options.Other "UF") *)
-        (* then printfn "About to elim vars from %s" (Print.sigelt_to_string se); *)
+        if Env.debug env (Options.Other "UF")
+        then BU.print1 "About to elim vars from (elaborated) %s\m" (Print.sigelt_to_string se);
         N.elim_uvars env se) in
 
     Env.promote_id_info env (fun t ->

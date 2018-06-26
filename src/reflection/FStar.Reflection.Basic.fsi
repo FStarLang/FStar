@@ -7,6 +7,13 @@ open FStar.Syntax.Embeddings
 open FStar.Order
 module Env = FStar.TypeChecker.Env
 open FStar.Reflection.Data
+open FStar.ST
+
+(* Tying a knot into the environment which started execution.
+ * Needed to inspect sigelts and the like without needing
+ * to explicitly pass it in. This entire module should really be in
+ * the TAC effect, and this crap is a symptom, let's move it. *)
+val env_hook : ref<option<Env.env>>
 
 (* Primitives *)
 val compare_bv     : bv -> bv -> order

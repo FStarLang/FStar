@@ -15,11 +15,17 @@ module Print = FStar.Syntax.Print
 module BU = FStar.Util
 module E = FStar.Reflection.Embeddings
 
+(* We use `try_unembed` instead of `unembedding`, since we very well
+ * might fail to unembed during the *previous* normalization stages
+ * of metaprograms. When actually running, we certainly expect
+ * everything to reduce to proper values and unembed just fine, but
+ * we cannot ignore this case. So, use `try_` so we don't generate
+ * spurious warnings. *)
 let int1 (m:lid) (f:'a -> 'r) (ea:embedding<'a>) (er:embedding<'r>)
                  (r:Range.range) (args : args) : option<term> =
     match args with
     | [(a, _)] ->
-        BU.bind_opt (unembed ea a) (fun a ->
+        BU.bind_opt (try_unembed ea a) (fun a ->
         Some (embed er r (f a)))
     | _ -> None
 
@@ -27,8 +33,8 @@ let int2 (m:lid) (f:'a -> 'b -> 'r) (ea:embedding<'a>) (eb:embedding<'b>) (er:em
                  (r:Range.range) (args : args) : option<term> =
     match args with
     | [(a, _); (b, _)] ->
-        BU.bind_opt (unembed ea a) (fun a ->
-        BU.bind_opt (unembed eb b) (fun b ->
+        BU.bind_opt (try_unembed ea a) (fun a ->
+        BU.bind_opt (try_unembed eb b) (fun b ->
         Some (embed er r (f a b))))
     | _ -> None
 

@@ -1,0 +1,105 @@
+[
+  "_Éí$µö²\u001eß\u000f\u001d\u0004ù.¸>",
+  [
+    [
+      "DeltaDepth.t",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
+      ],
+      0,
+      "eaa86009b4ff73eef9126676901a114d"
+    ],
+    [
+      "DeltaDepth.__proj__A__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_DeltaDepth_Tm_refine_5e57589849c6497f93798a0ea15a1df2"
+      ],
+      0,
+      "ce7ce2100bb8fb54f87ae130dbe165dd"
+    ],
+    [
+      "DeltaDepth.__proj__B__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.B",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_DeltaDepth_Tm_refine_90c35950d1e7f0a820470167e5c76674"
+      ],
+      0,
+      "5038e442ccb5a354b49f486e57d3ae0e"
+    ],
+    [
+      "DeltaDepth.m",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_DeltaDepth.A",
+        "disc_equation_DeltaDepth.A", "equation_DeltaDepth.v",
+        "projection_inverse_DeltaDepth.A__0"
+      ],
+      0,
+      "d6a9e46352601bbeff4a3c17b1dcd891"
+    ],
+    [
+      "DeltaDepth.t",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
+      ],
+      0,
+      "eb8aa9063418eece759e6924fef47ed5"
+    ],
+    [
+      "DeltaDepth.__proj__A__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_DeltaDepth_Tm_refine_5e57589849c6497f93798a0ea15a1df2"
+      ],
+      0,
+      "aa30b053002f781c9310b4bd4cfaafa5"
+    ],
+    [
+      "DeltaDepth.__proj__B__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.B",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_DeltaDepth_Tm_refine_90c35950d1e7f0a820470167e5c76674"
+      ],
+      0,
+      "3f7dc408372becf86c9cfa5025d07fce"
+    ],
+    [
+      "DeltaDepth.m",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_DeltaDepth.A",
+        "disc_equation_DeltaDepth.A", "equation_DeltaDepth.v",
+        "projection_inverse_DeltaDepth.A__0"
+      ],
+      0,
+      "3f95325720659066768233a6e48726ec"
+    ]
+  ]
+]

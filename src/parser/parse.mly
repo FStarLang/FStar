@@ -54,7 +54,7 @@ let logic_qualifier_deprecation_warning =
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
-%token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
+%token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BY
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
@@ -74,7 +74,7 @@ let logic_qualifier_deprecation_warning =
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
-%token PERC_BACKTICK
+%token BACKTICK_PERC
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
@@ -127,6 +127,10 @@ pragma:
       { SetOptions s }
   | PRAGMA_RESET_OPTIONS s_opt=string?
       { ResetOptions s_opt }
+  | PRAGMA_PUSH_OPTIONS s_opt=string?
+      { PushOptions s_opt }
+  | PRAGMA_POP_OPTIONS
+      { PopOptions }
 
 attribute:
   | LBRACK_AT x = list(atomicTerm) RBRACK
@@ -753,7 +757,7 @@ tmNoEqWith(X):
   | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | LBRACE e=recordExp RBRACE { e }
-  | PERC_BACKTICK e=atomicTerm
+  | BACKTICK_PERC e=atomicTerm
       { mk_term (VQuote e) (rhs2 parseState 1 3) Un }
   | op=TILDE e=atomicTerm
       { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }

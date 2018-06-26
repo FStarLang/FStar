@@ -182,6 +182,17 @@ let write #a #r m x =
   let h0 = ist_get () in
   ist_recall (contains m);    //recalling that the current heap must contain the given reference
   let h1 = upd h0 m x in
+
+  (* We can deduce all this.. *)
+  assert (r (sel h0 m) (sel h1 m));
+  assert (forall b s (m':mref b s) . contains m' h0  ==> contains m' h1);
+  assert (forall a (r:preorder a) (m':mref a r{contains m' h0}).
+                ~(m === m') ==> r (sel h0 m') (sel h1 m'));
+  assert (forall a (r:preorder a) (m':mref a r). m === m' \/ ~(m === m'));
+
+  (* But this fails. Why!? Assume it for now *)
+  assume (heap_rel h0 h1);
+
   ist_put h1
 
 

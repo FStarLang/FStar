@@ -22,9 +22,11 @@ type pattern =
 
 type branch = pattern * term  // | pattern -> term
 
+noeq
 type aqualv =
     | Q_Implicit
     | Q_Explicit
+    | Q_Meta of term
 
 type argv = term * aqualv
 
@@ -65,6 +67,8 @@ type sigelt_view =
   | Sg_Let :
       (r:bool) ->
       (fv:fv) ->
+      // TODO: range * string should be univ_name, but that's failing due to a bad delta-depth
+      (us:list (range * string)) ->
       (typ:typ) ->
       (def:term) ->
       sigelt_view
@@ -75,6 +79,8 @@ type sigelt_view =
   // (no mutually defined types for now)
   | Sg_Inductive :
       (nm:name) ->              // name of the inductive type being defined
+      // TODO: range * string should be univ_name, but that's failing due to a bad delta-depth
+      (univs:list (range * string)) -> // universe variables
       (params:binders) ->       // parameters
       (typ:typ) ->              // the type annotation for the inductive, i.e., indices -> Type #u
       (cts:list name) ->        // constructor names
