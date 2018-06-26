@@ -227,6 +227,7 @@ type norm_step =
     | Delta
     | Zeta
     | Iota
+    | Reify
     | UnfoldOnly of list<string>
     | UnfoldFully of list<string>
     | UnfoldAttr of attribute
@@ -239,6 +240,7 @@ let steps_Primops       = tdataconstr PC.steps_primops
 let steps_Delta         = tdataconstr PC.steps_delta
 let steps_Zeta          = tdataconstr PC.steps_zeta
 let steps_Iota          = tdataconstr PC.steps_iota
+let steps_Reify         = tdataconstr PC.steps_reify
 let steps_UnfoldOnly    = tdataconstr PC.steps_unfoldonly
 let steps_UnfoldFully   = tdataconstr PC.steps_unfoldonly
 let steps_UnfoldAttr    = tdataconstr PC.steps_unfoldattr
@@ -260,6 +262,8 @@ let e_norm_step =
             steps_Zeta
         | Iota ->
             steps_Iota
+        | Reify ->
+            steps_Reify
         | UnfoldOnly l ->
             S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed (e_list e_string) rng l)]
                         None rng
@@ -287,6 +291,8 @@ let e_norm_step =
             Some Zeta
         | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_iota ->
             Some Iota
+        | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_reify ->
+            Some Reify
         | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
             BU.bind_opt (unembed' w (e_list e_string) l) (fun ss ->
             Some <| UnfoldOnly ss)

@@ -17,6 +17,7 @@ type norm_step =
     | Delta
     | Zeta
     | Iota
+    | Reify
     | UnfoldOnly of list<string>
     | UnfoldFully of list<string>
     | UnfoldAttr of attribute
@@ -28,6 +29,7 @@ val steps_Primops       : term
 val steps_Delta         : term
 val steps_Zeta          : term
 val steps_Iota          : term
+val steps_Reify         : term
 val steps_UnfoldOnly    : term
 val steps_UnfoldFully   : term
 val steps_UnfoldAttr    : term

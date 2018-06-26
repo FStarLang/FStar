@@ -1171,6 +1171,7 @@ let tr_norm_step = function
     | EMB.Weak ->    [Weak]
     | EMB.HNF  ->    [HNF]
     | EMB.Primops -> [Primops]
+    | EMB.Reify ->   [Reify]
     | EMB.UnfoldOnly names ->
         [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
     | EMB.UnfoldFully names ->
