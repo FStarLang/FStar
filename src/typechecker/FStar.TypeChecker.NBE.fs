@@ -345,14 +345,13 @@ and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   let us = lb.lbunivs in
   // GM: Ugh! need this to use <| and get the inner lambda into ALL, but why !?
   let id x = x in
-  Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
-       List.map (fun _ -> (fun () -> id <| (Constant Unit, None))) us,
-       // Zoe: Bogus type! The idea is that we will never readback these lambdas
-       List.length us)
-
-  // NS, GM: always translating to universe-polymorphic binding is not great
-  //      1. it breaks CBV evaluation order of let bindings
-  //      2. it adds a spurious universe abstraction that iapp must handle (which is okay, but maybe a bit inelegant?)
+  match us with
+  | [] -> translate cfg bs lb.lbdef
+  | _ ->
+    Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
+          List.map (fun _ -> (fun () -> id <| (Constant Unit, None))) us,
+          // Zoe: Bogus type! The idea is that we will never readback these lambdas
+          List.length us)
   // Note, we only have universe polymorphic top-level pure terms (i.e., fvars bound to pure terms)
   // Thunking them is probably okay, since the common case is really top-level function
   // rather than top-level pure computation
@@ -534,7 +533,9 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_let((true, lbs), body) ->
       translate cfg (make_rec_env lbs bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
 
-    | Tm_meta (e, _) -> translate cfg bs e
+    | Tm_meta (e, _) ->
+      //TODO: we need to put the "meta" back when reading back
+      translate cfg bs e
 
     | Tm_lazy _ | Tm_quoted(_,_) -> failwith "Not yet handled"
 
@@ -564,15 +565,18 @@ and translate_monadic (m, ty) cfg bs e : t =
            else []
        in
        iapp (iapp (translate cfg' [] (U.un_uinst (snd ed.bind_repr)))
-                  [Univ U_unknown, None;
-                   Univ U_unknown, None])
+                  [Univ U_unknown, None;  //We are cheating here a bit
+                   Univ U_unknown, None]) //to avoid re-computing the universe of lb.lbtyp
+                                          //and ty below; but this should be okay since these
+                                          //arguments should not actually appear in the resulting
+                                          //term
            (
            [(translate cfg' bs lb.lbtyp, None); //translating the type of the bound term
             (translate cfg' bs ty, None)]       //and the body is sub-optimal; it is often unused
-           @maybe_range_arg
-           @[(Unknown, None) ; //unknown WP of lb.lbdef
+           @maybe_range_arg    //some effects take two additional range arguments for debugging
+           @[(Unknown, None) ; //unknown WP of lb.lbdef; same as the universe argument ... should not appear in the result
             (translate cfg bs lb.lbdef, None);
-            (Unknown, None) ; //unknown WP of body
+            (Unknown, None) ;  //unknown WP of body; ditto
             (translate cfg bs body_lam, None)]
            )
 
