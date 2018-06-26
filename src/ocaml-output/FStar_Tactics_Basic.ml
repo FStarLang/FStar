@@ -387,7 +387,7 @@ let (print_proof_state1 : Prims.string -> unit tac) =
     mk_tac
       (fun ps  ->
          let psc = ps.FStar_Tactics_Types.psc  in
-         let subst1 = FStar_TypeChecker_Normalize.psc_subst psc  in
+         let subst1 = FStar_TypeChecker_Cfg.psc_subst psc  in
          (let uu____764 = FStar_Tactics_Types.subst_proof_state subst1 ps  in
           dump_cur uu____764 msg);
          FStar_Tactics_Result.Success ((), ps))
@@ -397,7 +397,7 @@ let (print_proof_state : Prims.string -> unit tac) =
     mk_tac
       (fun ps  ->
          let psc = ps.FStar_Tactics_Types.psc  in
-         let subst1 = FStar_TypeChecker_Normalize.psc_subst psc  in
+         let subst1 = FStar_TypeChecker_Cfg.psc_subst psc  in
          (let uu____782 = FStar_Tactics_Types.subst_proof_state subst1 ps  in
           dump_proofstate uu____782 msg);
          FStar_Tactics_Result.Success ((), ps))
@@ -5493,8 +5493,7 @@ let (proofstate_of_goal_ty :
                 FStar_Tactics_Types.depth = (Prims.parse_int "0");
                 FStar_Tactics_Types.__dump =
                   (fun ps  -> fun msg  -> dump_proofstate ps msg);
-                FStar_Tactics_Types.psc =
-                  FStar_TypeChecker_Normalize.null_psc;
+                FStar_Tactics_Types.psc = FStar_TypeChecker_Cfg.null_psc;
                 FStar_Tactics_Types.entry_range = rng;
                 FStar_Tactics_Types.guard_policy = FStar_Tactics_Types.SMT;
                 FStar_Tactics_Types.freshness = (Prims.parse_int "0");

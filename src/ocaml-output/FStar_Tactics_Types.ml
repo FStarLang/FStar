@@ -254,7 +254,7 @@ type proofstate =
   smt_goals: goal Prims.list ;
   depth: Prims.int ;
   __dump: proofstate -> Prims.string -> unit ;
-  psc: FStar_TypeChecker_Normalize.psc ;
+  psc: FStar_TypeChecker_Cfg.psc ;
   entry_range: FStar_Range.range ;
   guard_policy: guard_policy ;
   freshness: Prims.int ;
@@ -340,7 +340,7 @@ let (__proj__Mkproofstate__item____dump :
         tac_verb_dbg = __fname__tac_verb_dbg;_} -> __fname____dump
   
 let (__proj__Mkproofstate__item__psc :
-  proofstate -> FStar_TypeChecker_Normalize.psc) =
+  proofstate -> FStar_TypeChecker_Cfg.psc) =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -468,13 +468,12 @@ let (tracepoint : proofstate -> unit) =
     if uu____637
     then
       let uu____640 =
-        let uu____641 = FStar_TypeChecker_Normalize.psc_subst ps.psc  in
+        let uu____641 = FStar_TypeChecker_Cfg.psc_subst ps.psc  in
         subst_proof_state uu____641 ps  in
       ps.__dump uu____640 "TRACE"
     else ()
   
-let (set_ps_psc :
-  FStar_TypeChecker_Normalize.psc -> proofstate -> proofstate) =
+let (set_ps_psc : FStar_TypeChecker_Cfg.psc -> proofstate -> proofstate) =
   fun psc  ->
     fun ps  ->
       let uu___249_653 = ps  in

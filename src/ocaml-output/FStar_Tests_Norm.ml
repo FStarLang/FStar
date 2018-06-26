@@ -77,7 +77,7 @@ let (mk_let :
           FStar_Range.dummyRange
   
 let (lid : Prims.string -> FStar_Ident.lident) =
-  fun x1  -> FStar_Ident.lid_of_path [x1] FStar_Range.dummyRange 
+  fun x1  -> FStar_Ident.lid_of_path ["Norm"; x1] FStar_Range.dummyRange 
 let (znat_l : FStar_Syntax_Syntax.fv) =
   let uu____104 = lid "Z"  in
   FStar_Syntax_Syntax.lid_as_fv uu____104 FStar_Syntax_Syntax.delta_constant
@@ -1456,7 +1456,7 @@ let (run_nbe :
     fun r  ->
       fun expected  ->
         run_either i r expected
-          (FStar_TypeChecker_NBE.normalize
+          (FStar_TypeChecker_NBE.test_normalize
              [FStar_TypeChecker_NBE.UnfoldUntil
                 FStar_Syntax_Syntax.delta_constant])
   
@@ -1596,6 +1596,8 @@ let (compare_times :
   
 let (run_all : unit -> unit) =
   fun uu____3784  ->
-    let l_int = run_all_interpreter_with_time ()  in
-    let l_nbe = run_all_nbe_with_time ()  in compare_times l_int l_nbe
+    (let uu____3786 = FStar_Syntax_Print.term_to_string znat  in
+     FStar_Util.print1 "%s" uu____3786);
+    (let l_int = run_all_interpreter_with_time ()  in
+     let l_nbe = run_all_nbe_with_time ()  in compare_times l_int l_nbe)
   

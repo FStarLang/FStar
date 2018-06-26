@@ -60,20 +60,19 @@ let int2 :
                               FStar_Pervasives_Native.Some uu____215))
                 | uu____217 -> FStar_Pervasives_Native.None
   
-let (reflection_primops :
-  FStar_TypeChecker_Normalize.primitive_step Prims.list) =
+let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
   let mklid nm = FStar_Reflection_Data.fstar_refl_basic_lid nm  in
   let mk1 l arity fn =
     {
-      FStar_TypeChecker_Normalize.name = l;
-      FStar_TypeChecker_Normalize.arity = arity;
-      FStar_TypeChecker_Normalize.auto_reflect = FStar_Pervasives_Native.None;
-      FStar_TypeChecker_Normalize.strong_reduction_ok = false;
-      FStar_TypeChecker_Normalize.requires_binder_substitution = false;
-      FStar_TypeChecker_Normalize.interpretation =
+      FStar_TypeChecker_Cfg.name = l;
+      FStar_TypeChecker_Cfg.arity = arity;
+      FStar_TypeChecker_Cfg.auto_reflect = FStar_Pervasives_Native.None;
+      FStar_TypeChecker_Cfg.strong_reduction_ok = false;
+      FStar_TypeChecker_Cfg.requires_binder_substitution = false;
+      FStar_TypeChecker_Cfg.interpretation =
         (fun ctxt  ->
            fun args  ->
-             let uu____261 = FStar_TypeChecker_Normalize.psc_range ctxt  in
+             let uu____261 = FStar_TypeChecker_Cfg.psc_range ctxt  in
              fn uu____261 args)
     }  in
   let mk11 nm f u1 em =
