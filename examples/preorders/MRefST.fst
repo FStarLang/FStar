@@ -185,13 +185,19 @@ let write #a #r m x =
 
   (* We can deduce all this.. *)
   assert (r (sel h0 m) (sel h1 m));
-  assert (forall b s (m':mref b s) . contains m' h0  ==> contains m' h1);
-  assert (forall a (r:preorder a) (m':mref a r{contains m' h0}).
-                ~(m === m') ==> r (sel h0 m') (sel h1 m'));
-  assert (forall a (r:preorder a) (m':mref a r). m === m' \/ ~(m === m'));
+  assert (forall b s (m':mref b s) . contains m' h0  ==> contains m' h1); //1st conjunct of heap_rel
+  
+  assert (forall b s (m':mref b s{contains m' h0}).
+                ~(addr_of m = addr_of m') ==> s (sel h0 m') (sel h1 m'));
 
-  (* But this fails. Why!? Assume it for now *)
-  assume (heap_rel h0 h1);
+  assert (forall a (r:preorder a) (m':mref a r). addr_of m = addr_of m' \/ ~(addr_of m = addr_of m'));
+  
+  assert (forall b s (m':mref b s{contains m' h0}) . s (sel h0 m') (sel h1 m')); //2nd conjunct of heap_rel
+
+  assert ((forall a r (m:mref a r) . contains m h0  ==> contains m h1) /\
+          (forall a (r:preorder a) (m:mref a r{contains m h0}) . r (sel h0 m) (sel h1 m))); //unfolded heap_rel succeeds
+
+  assume (heap_rel h0 h1); //non-unfolded heap_rel fails ?!?
 
   ist_put h1
 
