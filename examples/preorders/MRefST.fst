@@ -121,6 +121,7 @@ assume val ist_recall :  p:predicate heap{stable p heap_rel} ->
 
 (* References. *)
 
+let mref0 = mref
 type mref (a:Type) (r:preorder a) = m:mref a r{ist_witnessed (contains m)}
 
 
@@ -182,23 +183,8 @@ let write #a #r m x =
   let h0 = ist_get () in
   ist_recall (contains m);    //recalling that the current heap must contain the given reference
   let h1 = upd h0 m x in
-
-  (* We can deduce all this.. *)
-  assert (r (sel h0 m) (sel h1 m));
-  assert (forall b s (m':mref b s) . contains m' h0  ==> contains m' h1); //1st conjunct of heap_rel
-  
-  assert (forall b s (m':mref b s{contains m' h0}).
-                ~(addr_of m = addr_of m') ==> s (sel h0 m') (sel h1 m'));
-
-  assert (forall a (r:preorder a) (m':mref a r). addr_of m = addr_of m' \/ ~(addr_of m = addr_of m'));
-  
-  assert (forall b s (m':mref b s{contains m' h0}) . s (sel h0 m') (sel h1 m')); //2nd conjunct of heap_rel
-
-  assert ((forall a r (m:mref a r) . contains m h0  ==> contains m h1) /\
-          (forall a (r:preorder a) (m:mref a r{contains m h0}) . r (sel h0 m) (sel h1 m))); //unfolded heap_rel succeeds
-
-  assume (heap_rel h0 h1); //non-unfolded heap_rel fails ?!?
-
+  (* Help z3 figure out nothing else changed *)
+  assert (forall b s (m':mref0 b s{contains m' h0}). ~(addr_of m = addr_of m') ==> s (sel h0 m') (sel h1 m'));
   ist_put h1
 
 
