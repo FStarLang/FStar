@@ -704,6 +704,16 @@ let get_norm_request cfg (full_norm:term -> term) args =
     | _ ->
       None
 
+let nbe_eval (cfg:cfg) (s:steps) (tm:term) : term =
+    let delta_level =
+      if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
+      then [Unfold delta_constant]
+      else [NoDelta] in
+    log_nbe cfg (fun () -> BU.print1 "Invoking NBE with  %s\n" (Print.term_to_string tm));
+    let tm_norm = (cfg_env cfg).nbe s cfg.tcenv tm in
+    log_nbe cfg (fun () -> BU.print1 "Result of NBE is  %s\n" (Print.term_to_string tm_norm));
+    tm_norm
+
 let is_reify_head = function
     | App(_, {n=Tm_constant FC.Const_reify}, _, _)::_ ->
       true
@@ -972,14 +982,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
               norm cfg env stack hd
 
             | Some (s, tm) when is_nbe_request s ->
-              let delta_level =
-                if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
-                then [Unfold delta_constant]
-                else [NoDelta] in
               let tm' = closure_as_term cfg env tm in
-              log_nbe cfg (fun () -> BU.print1 "Invoking NBE with  %s\n" (Print.term_to_string tm'));
-              let tm_norm = (cfg_env cfg).nbe s cfg.tcenv tm' in
-              log_nbe cfg (fun () -> BU.print1 "Result of NBE is  %s\n" (Print.term_to_string tm_norm));
+              let tm_norm = nbe_eval cfg s tm' in
               norm cfg env stack tm_norm
               (* Zoe, NS:
                  This call to norm is needed to evaluate the continuation with the fully evaluated tm_norm
@@ -2306,7 +2310,11 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
 let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
-    norm c [] [] t
+    if is_nbe_request s then
+      nbe_eval c s t
+    else
+      norm c [] [] t
+
 let normalize s e t = normalize_with_primitive_steps [] s e t
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
