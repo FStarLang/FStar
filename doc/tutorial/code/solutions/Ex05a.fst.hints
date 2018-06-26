@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e63dcbadad1d66b58220eac19661fef6"
+      "90577d31e8b9fba54b0f5605e7a79491"
     ],
     [
       "Ex05a.reverse",
@@ -27,7 +27,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c05bf86507afe58bc64ace15537385fa"
+      "f72b01d8a235675603723c12f68d3d29"
     ],
     [
       "Ex05a.rev",
@@ -42,7 +42,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ec0c97f4c4ecccc6c10c50ea9ffad637"
+      "bee92331d6ad7e220aab052adca7b351"
     ],
     [
       "Ex05a.append_assoc",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "219602375009e44b54894f781d11c8d8"
+      "a72b96c5bcc111078ec5d8df854a935b"
     ],
     [
       "Ex05a.rev_is_ok_aux",
@@ -93,7 +93,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1d990729d8e2158350f0481d1e547ccc"
+      "c49f3120d7779ff512c259e5b82db8d1"
     ],
     [
       "Ex05a.append_nil",
@@ -113,7 +113,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b4862f4ec84fe9e3e510a8a54ad29d7c"
+      "8db051b59121d61ef56517aefb24b0b4"
     ],
     [
       "Ex05a.rev_is_ok",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "a9923bc4b5ae740ebae849bcd487ce80"
+      "8426553778c2f6ea5fc048f1300fc633"
     ],
     [
       "Ex05a.append",
@@ -136,7 +136,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e80468fa7c2e8cb5b155e52a4844b1a5"
+      "d674ca3fa7a74b1aa279895f2ad15dd4"
     ],
     [
       "Ex05a.reverse",
@@ -150,7 +150,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d10ac44d05c3ac43ad3ce380d9c612f5"
+      "83b4b1fa7148c3b32266c36469ead054"
     ],
     [
       "Ex05a.rev",
@@ -165,7 +165,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c5647076d1294aca2ebb23b32e5b1766"
+      "677fc9b019dee83ad77664808a7e8b89"
     ]
   ]
 ]

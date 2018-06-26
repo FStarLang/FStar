@@ -17,3 +17,7 @@ total reifiable reflectable new_effect {
      ; bind   = bind_id
      ; return = return_id
   }
+
+// Paranoid check that dm4f didn't mess up something
+[@fail]
+let _ = assert False

@@ -173,10 +173,11 @@ let norm_universe cfg (env:env) u =
                                BU.print1 "Univ (in norm_universe): %s\n" (Print.univ_to_string u)
                            else ();  aux u
                       | Dummy -> [u]
-                      | _ -> failwith "Impossible: universe variable bound to a term"
+                      | _ -> failwith (BU.format1 "Impossible: universe variable u@%s bound to a term"
+                                                   (string_of_int x))
                 with _ -> if cfg.steps.allow_unbound_universes
                           then [U_unknown]
-                          else failwith "Universe variable not found"
+                          else failwith ("Universe variable not found: u@" ^ string_of_int x)
             end
           | U_unif _ when cfg.steps.check_no_uvars ->
             [U_zero]
@@ -664,6 +665,7 @@ let tr_norm_step = function
     | EMB.Weak ->    [Weak]
     | EMB.HNF  ->    [HNF]
     | EMB.Primops -> [Primops]
+    | EMB.Reify ->   [Reify]
     | EMB.UnfoldOnly names ->
         [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
     | EMB.UnfoldFully names ->
@@ -822,24 +824,24 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
 
     // If it is handled primitively, then don't unfold
     | _ when Option.isSome (find_prim_step cfg fv) ->
-        log_unfolding cfg (fun () -> BU.print_string "should_unfold: primitive step, no\n");
+        log_unfolding cfg (fun () -> BU.print_string " >> It's a primop, not unfolding\n");
         no
 
     // Don't unfold HasMaskedEffect
     | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
             List.contains HasMaskedEffect qs ->
-        log_unfolding cfg (fun () -> BU.print_string "should_unfold: masked effect, no\n");
+        log_unfolding cfg (fun () -> BU.print_string " >> HasMaskedEffect, not unfolding\n");
         no
 
     // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
     | _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
-        log_unfolding cfg (fun () -> BU.print_string "should_unfold: masked effect, no\n");
+        log_unfolding cfg (fun () -> BU.print_string " >> tac_opaque, not unfolding\n");
         no
 
     // Recursive lets may only be unfolded when Zeta is on
     | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
             is_rec && not cfg.steps.zeta ->
-        log_unfolding cfg (fun () -> BU.print_string "should_unfold: recursive function without zeta, no\n");
+        log_unfolding cfg (fun () -> BU.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
         no
 
     // We're doing selectively unfolding, assume it to not unfold unless it meets the criteria
@@ -874,7 +876,6 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                                                (Print.delta_depth_to_string fv.fv_delta)
                                                (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
         yesno <| (cfg.delta_level |> BU.for_some (function
-             | UnfoldTacDelta
              | NoDelta -> false
              | InliningDelta
              | Eager_unfolding_only -> true
@@ -935,6 +936,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                         (Print.term_to_string t)
                                         (BU.string_of_int (List.length env))
                                         (stack_to_string (fst <| firstn 4 stack)));
+        log_cfg cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
         match t.n with
           | Tm_unknown
           | Tm_constant _
@@ -1080,30 +1082,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | App _ :: _
                 | Abs _ :: _
                 | [] ->
-                  if cfg.steps.weak //don't descend beneath a lambda if we're just doing weak reduction
-                  then let t =
-                           //if we're in the middle of processing a `normalize` request
-                           //then don't touch the body of the lambda, just close it
-                           //Otherwise, we may have a large lambda term because of uvar solutions ... at least reduce those away
-                           //This is trying to reach a middle ground between two bad performance problems
-                           //Which we should ultimately resolve by revising the unification algorithm to not produce such large terms
-                           if cfg.steps.in_full_norm_request
-                           then closure_as_term cfg env t //But, if the environment is non-empty, we need to substitute within the term
-                           else let steps' = {cfg.steps with
-                                        weak=false;
-                                        iota=false;
-                                        zeta=false;
-                                        primops=false;
-                                        do_not_unfold_pure_lets=true;
-                                        pure_subterms_within_computations=false;
-                                        simplify=false;
-                                        reify_=false;
-                                        no_full_norm=true;
-                                        unmeta=false;
-                                        unascribe=false } in
-                                let cfg' = {cfg with delta_level=[NoDelta]; steps=steps'} in
-                                norm cfg' env [] t
-                       in
+                  if cfg.steps.weak
+                  then let t = closure_as_term cfg env t in
                        rebuild cfg env stack t
                   else let bs, body, opening = open_term' bs body in
                        let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
@@ -1410,8 +1390,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                steps = List.fold_right fstep_add_one new_steps cfg.steps;
                delta_level = [Env.InliningDelta; Env.Eager_unfolding_only]
            }
-      else
-        { cfg with steps = { cfg.steps with zeta = false } }
+      else cfg
     in
     (* monadic annotations don't block reduction, but we need to put the label back *)
     let metadata = match m with
@@ -2307,13 +2286,19 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     then matches scrutinee branches
     else norm_and_rebuild_match ()
 
-
 let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
-    if is_nbe_request s then
-      nbe_eval c s t
-    else
-      norm c [] [] t
+    if is_nbe_request s then begin
+      log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
+      let r = nbe_eval c s t in
+      log_top c (fun () -> BU.print1 "}\nNormalization result = (%s)\n" (Print.term_to_string r));
+      r
+    end else begin
+      log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
+      let r = norm c [] [] t in
+      log_top c (fun () -> BU.print1 "}\nNormalization result = (%s)\n" (Print.term_to_string r));
+      r
+    end
 
 let normalize s e t = normalize_with_primitive_steps [] s e t
 let normalize_comp s e t = norm_comp (config s e) [] t
@@ -2389,7 +2374,8 @@ let normalize_refinement steps env t0 =
        | _ -> t in
    aux t
 
-let unfold_whnf env t = normalize [Primops; Weak; HNF; UnfoldUntil delta_constant; Beta] env t
+let unfold_whnf' steps env t = normalize (steps@[Primops; Weak; HNF; UnfoldUntil delta_constant; Beta]) env t
+let unfold_whnf  env t = unfold_whnf' [] env t
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
               @[Beta; DoNotUnfoldPureLets; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])

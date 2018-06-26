@@ -90,7 +90,7 @@ function fetch_mitls() {
     export_home MITLS "$(pwd)/mitls-fstar"
 }
 
-function do_tests () {
+function build_fstar () {
 
     if [[ -x /usr/bin/time ]]; then
         gnutime=/usr/bin/time
@@ -100,11 +100,32 @@ function do_tests () {
 
     result_file=result.txt
 
+    # $status_file is the name of a file that contains true if and
+    # only if the F* regression suite failed, false otherwise
+    # $orange_status_file is the name of a file that contains true
+    # if and only if some additional regression suite (HACL*,
+    # miTLS) broke, false otherwise
+    local status_file="status.txt"
+    local orange_status_file="orange_status.txt"
+    echo -n false > $status_file
+    echo false > $orange_status_file
+
+    if [ ! -d ulib ]; then
+      echo "I don't seem to be in the right directory, bailing"
+      return
+    fi
+
+    if [[ $target == "uregressions-ulong" ]]; then
+        export OTHERFLAGS="--record_hints $OTHERFLAGS"
+    fi
+
+    fetch_kremlin
+
     if ! make -C src -j $threads utest-prelude
     then
         echo Warm-up failed
         echo Failure > $result_file
-        return 1
+        return
     else
         fetch_vale &
         fetch_hacl &
@@ -123,16 +144,6 @@ function do_tests () {
         export_home HACL "$(pwd)/hacl-star"
         export_home KREMLIN "$(pwd)/kremlin"
         export_home FSTAR "$(pwd)"
-
-        # $status_file is the name of a file that contains true if and
-        # only if the F* regression suite failed, false otherwise
-        # $orange_status_file is the name of a file that contains true
-        # if and only if some additional regression suite (HACL*,
-        # miTLS) broke, false otherwise
-        local status_file="status.txt"
-        local orange_status_file="orange_status.txt"
-        echo -n false > $status_file
-        echo false > $orange_status_file
         
         # Once F* is built, run its main regression suite, along with more relevant
         # tests.
@@ -221,4 +232,9 @@ function do_tests () {
     fi
 }
 
-do_tests
+# Some environment variables we want
+export OCAMLRUNPARAM=b
+export OTHERFLAGS="--print_z3_statistics --use_hints --query_stats"
+export MAKEFLAGS="$MAKEFLAGS -Otarget"
+
+build_fstar

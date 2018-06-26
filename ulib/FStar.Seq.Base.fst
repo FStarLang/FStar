@@ -54,26 +54,26 @@ inline_for_extraction abstract let init #a len contents = if len = 0 then MkSeq 
 abstract val of_list: #a:Type -> list a -> Tot (seq a)
 let of_list #a l = MkSeq l
 
-abstract val lemma_of_list_length: #a:Type -> s:seq a -> l:list a -> Lemma
-  (requires (s == of_list #a l))
-  (ensures (length s = List.length l))
-  [SMTPat (length s = List.length l)]
-let lemma_of_list_length #a s l  = ()
+let lemma_of_list_length (#a:Type) (l:list a)
+  : Lemma (ensures (length (of_list #a l) == List.length l))
+          [SMTPat (length (of_list #a l))]
+  = ()
 
-abstract val lemma_of_list: #a:Type -> s:seq a -> l:list a -> i:nat{i < length s} -> Lemma
-  (requires (s == of_list l))
-  (ensures (s == of_list l /\ List.length l = length s /\ index s i == List.index l i))
-  [SMTPat (index s i == List.index l i)]
-let lemma_of_list #a s l i = ()
+let lemma_of_list (#a:Type) (l:list a) (i:nat{i < List.length l})
+  : Lemma (ensures (index (of_list #a l) i == List.index l i))
+          [SMTPat (index (of_list #a l) i)]
+  = ()
 
-private val exFalso0 : a:Type -> n:nat{n<0} -> Tot a
-let exFalso0 a n = ()
+abstract
+let empty #a : Tot (s:(seq a){length s=0}) = MkSeq []
 
-(* CH: Seq.empty or emptySeq would be a better name for this? *)
-abstract val createEmpty: #a:Type -> Tot (s:(seq a){length s=0})
-let createEmpty #a = MkSeq []
+[@(deprecated "Seq.empty")]
+unfold
+let createEmpty (#a:Type)
+    : Tot (s:(seq a){length s=0})
+    = empty #a
 
-let lemma_empty (#a:Type) (s:seq a) : Lemma (length s = 0 ==> s == createEmpty #a) = ()
+let lemma_empty (#a:Type) (s:seq a) : Lemma (length s = 0 ==> s == empty #a) = ()
 
 abstract val upd: #a:Type -> s:seq a -> n:nat{n < length s} -> a ->  Tot (seq a) (decreases (length s))
 let rec upd #a s n v = if n = 0 then cons v (tl s) else cons (hd s) (upd (tl s) (n - 1) v)
@@ -247,14 +247,14 @@ abstract let append_empty_l
   (#a: Type)
   (s: seq a)
 : Lemma
-  (ensures (append createEmpty s == s))
+  (ensures (append empty s == s))
 = List.append_nil_l (MkSeq?.l s)
 
 abstract let append_empty_r
   (#a: Type)
   (s: seq a)
 : Lemma
-  (ensures (append s createEmpty == s))
+  (ensures (append s empty == s))
 = List.append_l_nil (MkSeq?.l s)
 
 

@@ -156,7 +156,7 @@ let parse_empty : parser parse_ret_kind unit =
   parse_ret ()
 
 let serialize_empty : serializer parse_empty =
-  fun _ -> Seq.createEmpty
+  fun _ -> Seq.empty
 
 #set-options "--z3rlimit 16"
 

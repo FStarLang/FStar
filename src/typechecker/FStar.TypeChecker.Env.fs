@@ -73,7 +73,6 @@ type delta_level =
   | InliningDelta
   | Eager_unfolding_only
   | Unfold of delta_depth
-  | UnfoldTacDelta
 
 type mlift = {
   mlift_wp:universe -> typ -> typ -> typ ;
@@ -112,6 +111,7 @@ type env = {
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
   sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
+  attrtab        :BU.smap<list<sigelt>>;        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
@@ -124,6 +124,7 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
   lax_universes  :bool;                         (* don't check universe constraints *)
+  phase1         :bool;                         (* running in phase 1, phase 2 to come after *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
@@ -164,7 +165,14 @@ and guard_t = {
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
-and implicits = list<(string * term * ctx_uvar * Range.range)>
+and implicit = {
+    imp_reason : string;                  // Reason (in text) why the implicit was introduced
+    imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
+    imp_tm     : term;                    // The term, made up of the ctx_uvar
+    imp_range  : Range.range;             // Position where it was introduced
+    imp_meta   : option<(env * term)>;    // An optional metaprogram to try to fill it
+}
+and implicits = list<implicit>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
 
@@ -219,6 +227,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     modules= [];
     expected_typ=None;
     sigtab=new_sigtab();
+    attrtab=new_sigtab();
     is_pattern=false;
     instantiate_imp=true;
     effects={decls=[]; order=[]; joins=[]};
@@ -231,6 +240,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     admit=false;
     lax=false;
     lax_universes=false;
+    phase1=false;
     failhard=false;
     nosynth=false;
     uvar_subtyping=true;
@@ -254,6 +264,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
 
 let dsenv env = env.dsenv
 let sigtab env = env.sigtab
+let attrtab env = env.attrtab
 let gamma_cache env = env.gamma_cache
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -280,6 +291,7 @@ let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
     stack := env::!stack;
     {env with sigtab=BU.smap_copy (sigtab env);
+              attrtab=BU.smap_copy (attrtab env);
               gamma_cache=BU.smap_copy (gamma_cache env);
               identifier_info=BU.mk_ref !env.identifier_info;
               qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd;
@@ -467,15 +479,29 @@ let lookup_qname env (lid:lident) : qninfo =
         | Some se -> Some (Inr (se, None), U.range_of_sigelt se)
         | None -> None
 
+let lookup_attr (env:env) (attr:string) : list<sigelt> =
+    match BU.smap_try_find (attrtab env) attr with
+    | Some ses -> ses
+    | None -> []
+
+let add_se_to_attrtab env se =
+    let add_one env se attr = BU.smap_add (attrtab env) attr (se :: lookup_attr env attr) in
+    List.iter (fun attr ->
+                match (Subst.compress attr).n with
+                | Tm_fvar fv -> add_one env se (lid_of_fv fv).str
+                | _ -> ()) se.sigattrs
+
 let rec add_sigelt env se = match se.sigel with
     | Sig_bundle(ses, _) -> add_sigelts env ses
     | _ ->
     let lids = lids_of_sigelt se in
     List.iter (fun l -> BU.smap_add (sigtab env) l.str se) lids;
+    add_se_to_attrtab env se;
     match se.sigel with
     | Sig_new_effect(ne) ->
       ne.actions |> List.iter (fun a ->
           let se_let = U.action_as_lb ne.mname a a.action_defn.pos in
+          (* TODO: attrtab? *)
           BU.smap_add (sigtab env) a.action_name.str se_let)
     | _ -> ()
 
@@ -691,6 +717,11 @@ let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
 
 let lookup_definition delta_levels env lid =
     lookup_definition_qninfo delta_levels lid <| lookup_qname env lid
+
+let quals_of_qninfo (qninfo : qninfo) : option<list<qualifier>> =
+  match qninfo with
+  | Some (Inr (se, _), _) -> Some se.sigquals
+  | _ -> None
 
 let attrs_of_qninfo (qninfo : qninfo) : option<list<attribute>> =
   match qninfo with
@@ -1165,6 +1196,7 @@ let is_reifiable_function (env:env) (t:S.term) : bool =
 let push_sigelt env s =
   let sb = (lids_of_sigelt s, s) in
   let env = {env with gamma_sig = sb::env.gamma_sig} in
+  add_sigelt env s;
   env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
   build_lattice env s
 
@@ -1297,7 +1329,6 @@ let string_of_delta_level = function
   | InliningDelta -> "Inlining"
   | Eager_unfolding_only -> "Eager_unfolding_only"
   | Unfold d -> "Unfold " ^ Print.delta_depth_to_string d
-  | UnfoldTacDelta -> "UnfoldTac"
 
 let lidents env : list<lident> =
   let keys = List.collect fst env.gamma_sig in
@@ -1356,9 +1387,9 @@ let guard_form g = g.guard_f
 
 let is_trivial g = match g with
     | {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=i} ->
-      i |> BU.for_all (fun (_, _, ctx_uvar, _) ->
-           (ctx_uvar.ctx_uvar_should_check=Allow_unresolved)
-           || (match Unionfind.find ctx_uvar.ctx_uvar_head with
+      i |> BU.for_all (fun imp ->
+           (imp.imp_uvar.ctx_uvar_should_check=Allow_unresolved)
+           || (match Unionfind.find imp.imp_uvar.ctx_uvar_head with
                | Some _ -> true
                | None -> false))
     | _ -> false
@@ -1488,7 +1519,12 @@ let new_implicit_var_aux reason r env k should_check =
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
       let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
-      let g = {trivial_guard with implicits=[(reason, t, ctx_uvar, r)]} in
+      let imp = { imp_reason = reason
+                ; imp_tm     = t
+                ; imp_uvar   = ctx_uvar
+                ; imp_range  = r
+                ; imp_meta   = None } in
+      let g = {trivial_guard with implicits=[imp]} in
       t, [(ctx_uvar, r)], g
 
 (***************************************************)

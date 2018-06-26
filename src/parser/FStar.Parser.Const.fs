@@ -244,6 +244,7 @@ let steps_primops       = psnconst "primops"
 let steps_zeta          = psnconst "zeta"
 let steps_iota          = psnconst "iota"
 let steps_delta         = psnconst "delta"
+let steps_reify         = psnconst "reify_"
 let steps_unfoldonly    = psnconst "delta_only"
 let steps_unfoldfully   = psnconst "delta_fully"
 let steps_unfoldattr    = psnconst "delta_attr"
@@ -351,6 +352,10 @@ let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 let u_tac_lid = fstar_tactics_lid' ["Effect"; "__tac"]
+
+let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
+let tcnorm_lid     = fstar_tactics_lid' ["Typeclasses"; "tcnorm"]
+let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "instance"]
 
 let effect_TAC_lid = fstar_tactics_lid' ["Effect"; "TAC"] // actual effect
 let effect_Tac_lid = fstar_tactics_lid' ["Effect"; "Tac"] // trivial variant

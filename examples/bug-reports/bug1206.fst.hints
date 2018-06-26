@@ -11,7 +11,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "86ed0ff57110577909e9e29ea359cd02"
+      "70e6e004be5bced997c0deccf8fa894e"
     ],
     [
       "Bug1206.ser_id",
@@ -26,25 +26,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option"
       ],
       0,
-      "359f17cf366d24ed93f600915410b1e3"
-    ],
-    [
-      "Bug1206.ser'",
-      1,
-      1,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Pervasives.Native_pretyping_b53dbd183c526bc5d0f20d7b966ae125",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "fuel_guarded_inversion_Bug1206.bslice",
-        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
-        "proj_equation_Bug1206.BSlice_len"
-      ],
-      0,
-      "3494e902c8545c2b04bce99215695f1c"
+      "159d5c26c76428ffb9ca8e0d0efa0c90"
     ]
   ]
 ]

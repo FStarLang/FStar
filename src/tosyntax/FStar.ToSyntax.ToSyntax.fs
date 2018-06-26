@@ -42,11 +42,6 @@ module SS = FStar.Syntax.Subst
 let desugar_disjunctive_pattern pats when_opt branch =
     pats |> List.map (fun pat -> U.branch(pat, when_opt, branch))
 
-let trans_aqual = function
-  | Some AST.Implicit -> Some S.imp_tag
-  | Some AST.Equality -> Some S.Equality
-  | _ -> None
-
 let trans_qual r maybe_effect_id = function
   | AST.Private ->       S.Private
   | AST.Assumption ->    S.Assumption
@@ -75,6 +70,8 @@ let trans_qual r maybe_effect_id = function
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
   | AST.ResetOptions sopt -> S.ResetOptions sopt
+  | AST.PushOptions sopt -> S.PushOptions sopt
+  | AST.PopOptions -> S.PopOptions
   | AST.LightOff -> S.LightOff
 
 let as_imp = function
@@ -149,8 +146,8 @@ let op_as_term env arity rng op : option<S.term> =
       r C.read_lid delta_equational
     | "@" ->
       if Options.ml_ish ()
-      then r C.list_append_lid delta_equational
-      else r C.list_tot_append_lid delta_equational
+      then r C.list_append_lid     (Delta_equational_at_level 2)
+      else r C.list_tot_append_lid (Delta_equational_at_level 2)
     | "^" ->
       r C.strcat_lid delta_equational
     | "|>" ->
@@ -344,11 +341,6 @@ type bnd =
 let binder_of_bnd = function
   | LocalBinder (a, aq) -> a, aq
   | _ -> failwith "Impossible"
-let as_binder env imp = function
-  | (None, k) -> null_binder k, env
-  | (Some a, k) ->
-    let env, a = Env.push_bv env a in
-    ({a with sort=k}, trans_aqual imp), env
 
 type env_t = Env.env
 type lenv_t = list<bv>
@@ -646,7 +638,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
       | PatTvar(x, aq)
       | PatVar (x, aq) ->
         let imp = (aq=Some Implicit) in
-        let aq = trans_aqual aq in
+        let aq = trans_aqual env aq in
         let loc, env, xbv = resolvex loc env x in
         loc, env, LocalBinder(xbv, aq), pos <| Pat_var xbv, imp
 
@@ -1714,7 +1706,7 @@ and typars_of_binders env bs =
             | Some a, k ->
                 let env, a = push_bv env a in
                 let a = {a with sort=k} in
-                (env, (a, trans_aqual b.aqual)::out)
+                (env, (a, trans_aqual env b.aqual)::out)
             | _ -> raise_error (Errors.Fatal_UnexpectedBinder, "Unexpected binder") b.brange) (env, []) bs in
     env, List.rev tpars
 
@@ -1724,6 +1716,18 @@ and desugar_binder env b : option<ident> * S.term = match b.b with
   | TVariable x     -> Some x, mk (Tm_type U_unknown) None x.idRange
   | NoName t        -> None, desugar_typ env t
   | Variable x      -> Some x, tun
+
+and as_binder env imp = function
+  | (None, k) -> null_binder k, env
+  | (Some a, k) ->
+    let env, a = Env.push_bv env a in
+    ({a with sort=k}, trans_aqual env imp), env
+
+and trans_aqual env = function
+  | Some AST.Implicit -> Some S.imp_tag
+  | Some AST.Equality -> Some S.Equality
+  | Some (AST.Meta t) -> Some (S.Meta (desugar_term env t))
+  | None -> None
 
 // FIXME: Would be nice to add auto-generated docs to these
 let mk_data_discriminators quals env datas =
@@ -1818,7 +1822,7 @@ let mk_data_projector_names iquals env se =
                 | Some q -> q
             in
             let iquals =
-                if List.contains S.Abstract iquals
+                if List.contains S.Abstract iquals && not (List.contains S.Private iquals)
                 then S.Private::iquals
                 else iquals
             in
@@ -2065,7 +2069,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
         | Sig_inductive_typ(tname, _, tps, k, _, constrs) when (List.length constrs > 1)->
           let quals = se.sigquals in
-          let quals = if List.contains S.Abstract quals
+          let quals = if List.contains S.Abstract quals && not (List.contains S.Private quals)
                       then S.Private::quals
                       else quals in
           mk_data_discriminators quals env constrs

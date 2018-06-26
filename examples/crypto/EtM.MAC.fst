@@ -54,11 +54,11 @@ let genPost parent h0 (k:key) h1 =
   /\ extends k.region parent
   /\ fresh_region k.region h0 h1
   /\ contains h1 k.log
-  /\ sel h1 k.log == createEmpty
+  /\ sel h1 k.log == Seq.empty
   (* CH: equivalent definition makes gen fail:
          /\ (m_sel h1 k.log).length == 0
          can't even prove:
-           assert((createEmpty #key).length == 0); *)
+           assert((Seq.empty #key).length == 0); *)
 
 val keygen: parent:rid -> ST key
   (requires (fun _ -> HyperStack.ST.witnessed (region_contains_pred parent)))
@@ -67,7 +67,7 @@ val keygen: parent:rid -> ST key
 let keygen parent =
   let raw = random keysize in
   let region = new_region parent in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region Seq.empty in
   Key #region raw log
 
 val mac: k:key -> m:msg -> ST tag

@@ -101,7 +101,11 @@ type cfg = {
 
 val cfg_env: cfg -> Env.env
 
+val cfg_to_string : cfg -> string
+
 val log : cfg -> (unit -> unit) -> unit
+val log_top : cfg -> (unit -> unit) -> unit
+val log_cfg : cfg -> (unit -> unit) -> unit
 val log_primops : cfg -> (unit -> unit) -> unit
 val log_unfolding : cfg -> (unit -> unit) -> unit
 val log_nbe : cfg -> (unit -> unit) -> unit

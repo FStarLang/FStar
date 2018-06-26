@@ -3869,6 +3869,7 @@ let screate
     (fun _ -> ())
     (fun _ _ _ -> ())
     (fun _ _ _ -> ())
+    (fun _ _ -> ())
     (fun r a b ->
       cls.MG.same_mreference_aloc_preserved b h0 h1 (fun _ _ _ -> ())
     )
@@ -3878,8 +3879,8 @@ let screate
 // TODO: move to HyperStack?
 let domain_upd (#a:Type) (h:HS.mem) (x:HS.reference a{HS.live_region h (HS.frameOf x)}) (v:a) : Lemma
   (requires True)
-  (ensures  (Map.domain h.HS.h == Map.domain (HS.upd h x v).HS.h))
-  = let m = h.HS.h in
+  (ensures  (Map.domain (HS.get_hmap h) == Map.domain (HS.get_hmap (HS.upd h x v))))
+  = let m = (HS.get_hmap h) in
     let m' = Map.upd m (HS.frameOf x) (Heap.upd (Map.sel m (HS.frameOf x)) (HS.as_ref x) v) in
     Set.lemma_equal_intro (Map.domain m) (Map.domain m')
 
@@ -3915,6 +3916,7 @@ let ecreate
     (fun _ -> ())
     (fun _ _ _ -> ())
     (fun _ _ _ -> ())
+    (fun _ _ -> ())
     (fun r a b ->
       cls.MG.same_mreference_aloc_preserved b h0 h1 (fun _ _ _ -> ())
     )
@@ -4073,6 +4075,7 @@ let owrite
       MG.loc_disjoint_aloc_addresses_elim #_ #cls #(frameOf b) #(as_addr b) (LocPointer b) true (HS.frameOf p') (Set.singleton (HS.as_addr p'))
     )
     (fun _ _ _ -> ())
+    (fun _ _ -> ())
     (fun r' a' b' ->
       MG.loc_disjoint_aloc_elim #_ #cls #r' #a' #(frameOf b) #(as_addr b) b' (LocPointer b)
     )

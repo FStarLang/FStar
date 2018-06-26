@@ -113,9 +113,18 @@ add_hs_and_hst()
     add_module_abbrev 'HS'  'FStar.HyperStack'
 }
 
+replace_hs_mem_projectors()
+{
+    FILES=`ls *fst *fsti`
+    sed -i "s/\([^ \(]*\)\.HS\.h\([\ \)\n\r\t]\)/\(HS\.get_hmap\ \1\)\2/g" $FILES
+    sed -i "s/\([^ \(]*\)\.HS\.tip\([\ \)\n\r\t]\)/\(HS\.get_tip\ \1)\2/g" $FILES
+    sed -i "s/\([^ \(]*\)\.h\([\ \)\n\r\t]\)/\(HS\.get_hmap\ \1\)\2/g" $FILES
+    sed -i "s/\([^ \(]*\)\.tip\([\ \)\n\r\t]\)/\(HS\.get_tip\ \1\)\2/g" $FILES
+}
+
 help()
 {
-    echo "Usage: renamings.sh <rename_hyperheap | rename_mrref | add_hs_and_hst | replace <arg1> <arg2> | all>, where all is for applying all known upgrades"
+    echo "Usage: renamings.sh <rename_hyperheap | rename_mrref | add_hs_and_hst | replace_hs_mem_projectors | replace <arg1> <arg2> | all>, where all is for applying all known upgrades"
 }
 
 if [ "$#" -eq 0 ]; then
@@ -144,6 +153,9 @@ case $CMD in
 	    exit 1
 	fi
 	replace $2 $3
+	;;
+    replace_hs_mem_projectors)
+	replace_hs_mem_projectors
 	;;
     all)
 	echo "renaming hyperheap"

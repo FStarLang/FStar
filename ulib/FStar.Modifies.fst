@@ -314,12 +314,14 @@ let modifies_buffer_none_modifies h1 h2 =
   MG.modifies_none_intro #_ #cls h1 h2
     (fun _ -> ())
     (fun _ _ _ -> ())
+    (fun _ _ -> ())
 
 let modifies_0_modifies h1 h2 =
   B.lemma_reveal_modifies_0 h1 h2;
   MG.modifies_none_intro #_ #cls h1 h2
     (fun _ -> ())
     (fun _ _ _ -> ())
+    (fun _ _ -> ())
 
 let modifies_1_modifies #a b h1 h2 =
   B.lemma_reveal_modifies_1 b h1 h2;
@@ -330,6 +332,7 @@ let modifies_1_modifies #a b h1 h2 =
       MG.loc_disjoint_aloc_addresses_elim #_ #cls #(B.frameOf b) #(B.as_addr b) (LocBuffer b) true (HS.frameOf b') (Set.singleton (HS.as_addr b'))
     )
     (fun t' pre' b' -> ())
+    (fun r n -> ())
     (fun r' a' b' ->
       MG.loc_disjoint_aloc_elim #_ #cls #r' #a' #(B.frameOf b) #(B.as_addr b) b' (LocBuffer b)
     )
@@ -347,6 +350,7 @@ let modifies_2_modifies #a1 #a2 b1 b2 h1 h2 =
       MG.loc_disjoint_aloc_addresses_elim #_ #cls #(B.frameOf b2) #(B.as_addr b2) (LocBuffer b2) true (HS.frameOf b') (Set.singleton (HS.as_addr b'))
     )
     (fun _ _ _ -> ())
+    (fun _ _ -> ())
     (fun r' a' b' ->
       loc_disjoint_includes (MG.loc_of_aloc b') (loc_union (loc_buffer b1) (loc_buffer b2)) (MG.loc_of_aloc b') (loc_buffer b1);
       MG.loc_disjoint_aloc_elim #_ #cls #r' #a' #(B.frameOf b1) #(B.as_addr b1) b' (LocBuffer b1);
@@ -372,6 +376,7 @@ let modifies_3_modifies #a1 #a2 #a3 b1 b2 b3 h1 h2 =
       MG.loc_disjoint_aloc_addresses_elim #_ #cls #(B.frameOf b3) #(B.as_addr b3) (LocBuffer b3) true (HS.frameOf b') (Set.singleton (HS.as_addr b'))
     )
     (fun _ _ _ -> ())
+    (fun _ _ -> ())
     (fun r' a' b' ->
       loc_disjoint_includes (MG.loc_of_aloc b') (loc_union (loc_buffer b1) (loc_union (loc_buffer b2) (loc_buffer b3))) (MG.loc_of_aloc b') (loc_buffer b1);
       MG.loc_disjoint_aloc_elim #_ #cls #r' #a' #(B.frameOf b1) #(B.as_addr b1) b' (LocBuffer b1);
@@ -387,6 +392,7 @@ let modifies_buffer_rcreate_post_common #a r init len b h0 h1 =
   MG.modifies_none_intro #_ #cls h0 h1
     (fun _ -> ())
     (fun _ _ _ -> ())
+    (fun _ _ -> ())
 
 let mreference_live_buffer_unused_in_disjoint #t1 #pre #t2 h b1 b2 =
   loc_disjoint_includes (loc_freed_mreference b1) (loc_freed_mreference (B.content b2)) (loc_freed_mreference b1) (loc_buffer b2)
@@ -422,6 +428,14 @@ let loc_of_cloc l = l
 let loc_of_cloc_of_loc l = ()
 
 let cloc_of_loc_of_cloc l = ()
+
+let cloc_of_loc_none _ = ()
+
+let cloc_of_loc_union _ _ = ()
+
+let cloc_of_loc_addresses _ _ _ = ()
+
+let cloc_of_loc_regions _ _ = ()
 
 let loc_includes_to_cloc l1 l2 = ()
 

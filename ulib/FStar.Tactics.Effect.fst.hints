@@ -1,5 +1,5 @@
 [
-  "„PÑÇí§Ð0^\u0001õ\u001fã\u0015\f}",
+  "q\u0015†ëž2\u001cÈ‹\u0005ñ\"°]UÌ",
   [
     [
       "FStar.Tactics.Effect.__bind",
@@ -20,7 +20,7 @@
         "typing_FStar.Tactics.Types.set_proofstate_range"
       ],
       0,
-      "ac27010dec1ed102d7f8cd531193e511"
+      "94429f2253bb1b71cb1005eaab8a4dfb"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -36,7 +36,37 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "1a9c3099eb9ed9f9212c85d947fbe907"
+      "9927c385022b251de6fc0fd75d3c9ebf"
+    ],
+    [
+      "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____get_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "12a0ca943f939060767b4afa824f0094"
+    ],
+    [
+      "FStar.Tactics.Effect.TAC",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0e4245bd2ccbc5e6d701e06bb838e294"
+    ],
+    [
+      "FStar.Tactics.Effect.assert_by_tactic",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "cc71f7ae6eeeb331b971e63a0823ae46"
     ],
     [
       "FStar.Tactics.Effect.__bind",
@@ -46,18 +76,17 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Tactics.Effect_interpretation_Tm_arrow_64e9fbfe7638fce4dffc18967df04099",
-        "bool_inversion", "disc_equation_FStar.Tactics.Result.Failed",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Tactics.Result.Failed",
         "disc_equation_FStar.Tactics.Result.Success",
         "equation_FStar.Tactics.Effect.__tac",
         "lemma_FStar.Tactics.Result.result_split",
         "typing_FStar.Range.prims_to_fstar_range",
-        "typing_FStar.Tactics.Result.uu___is_Failed",
-        "typing_FStar.Tactics.Result.uu___is_Success",
         "typing_FStar.Tactics.Types.incr_depth",
         "typing_FStar.Tactics.Types.set_proofstate_range"
       ],
       0,
-      "e853cfc21a1ef1b129f573a8e8c1f73d"
+      "c8c01b2bc654c21d0843c5034636f2fe"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -73,7 +102,25 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "fed6ae900525f1c9dc8f5998c5f35f5e"
+      "54bc38f7660304520d467f78def5a772"
+    ],
+    [
+      "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____get_elab",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "64f0454ff855db618030b597d7c95dc4"
+    ],
+    [
+      "FStar.Tactics.Effect.TAC",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3232ea8bf4a48235e61bdcaf47d4fb06"
     ]
   ]
 ]

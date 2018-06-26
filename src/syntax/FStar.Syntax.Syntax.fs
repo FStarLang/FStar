@@ -48,6 +48,8 @@ type sconst = FStar.Const.sconst
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
+  | PushOptions of option<string>
+  | PopOptions
   | LightOff
 
 // IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]
@@ -59,14 +61,6 @@ type version = {
     major:int;
     minor:int
 }
-
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
-type arg_qualifier =
-  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Equality
-
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
-type aqual = option<arg_qualifier>
 
 // IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type universe =
@@ -289,6 +283,11 @@ and binding =
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
+and arg_qualifier =
+  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
+  | Meta of term
+  | Equality
+and aqual = option<arg_qualifier>
 
 type lcomp = { //a lazy computation
     eff_name: lident;
@@ -693,5 +692,5 @@ let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as
 let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev PC.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
-let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange
+let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange
 let unit_const = mk (Tm_constant FStar.Const.Const_unit) None Range.dummyRange

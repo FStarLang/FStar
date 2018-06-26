@@ -20,6 +20,9 @@ module FStar.Seq.Properties
 open FStar.Seq.Base
 module Seq = FStar.Seq.Base
 
+let lseq (a: Type) (l: nat) : Type =
+    s: Seq.seq a { Seq.length s == l }
+
 let indexable (#a:Type) (s:Seq.seq a) (j:int) = 0 <= j /\ j < Seq.length s
 
 val lemma_append_inj_l: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a{length s1 = length t1 /\ equal (append s1 s2) (append t1 t2)} -> i:nat{i < length s1}
@@ -622,7 +625,7 @@ let rec seq_to_list #a s =
 val seq_of_list: #a:Type -> l:list a -> Tot (s:seq a{L.length l = length s})
 let rec seq_of_list #a l =
   match l with
-  | [] -> createEmpty #a
+  | [] -> Seq.empty #a
   | hd::tl -> create 1 hd @| seq_of_list tl
 
 val lemma_seq_list_bij: #a:Type -> s:seq a -> Lemma
@@ -693,7 +696,7 @@ let contains_elim (#a:Type) (s:seq a) (x:a)
 	  (exists (k:nat). k < Seq.length s /\ Seq.index s k == x))
   = ()
 
-let lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.createEmpty x)) = ()
+let lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.empty x)) = ()
 
 let lemma_contains_singleton (#a:Type) (x:a) : Lemma (forall (y:a). contains (create 1 x) y ==> y == x) = ()
 
@@ -869,9 +872,9 @@ let slice_is_empty
   (i: nat {i <= length s})
 : Lemma
   (requires True)
-  (ensures (slice s i i == createEmpty))
+  (ensures (slice s i i == Seq.empty))
   [SMTPat (slice s i i)]
-= lemma_eq_elim (slice s i i) createEmpty
+= lemma_eq_elim (slice s i i) Seq.empty
 
 let slice_length
   (#a: Type)
@@ -921,3 +924,21 @@ let rec mem_seq_of_list
      lemma_mem_inversion (seq_of_list l)
     in
     mem_seq_of_list x q
+
+let lemma_of_list_induction (#a:Type) (l:list a)
+  :Lemma (match l with
+          | [] -> Seq.equal (Seq.of_list #a []) (Seq.empty #a)
+	  | hd::tl -> Seq.equal (Seq.of_list l) (cons hd (Seq.of_list tl)))
+  = match l with
+    | [] -> lemma_of_list_length l; lemma_empty (Seq.of_list #a [])
+    | _ ->
+      lemma_of_list_length l;
+      let aux (i:nat)
+        :Lemma (ensures  (i < List.Tot.length l ==>
+	                  Seq.index (Seq.of_list l) i == List.Tot.index l i))
+        = ()
+      in
+      FStar.Classical.forall_intro aux
+
+
+

@@ -45,6 +45,8 @@ type sconst = FStar.Const.sconst
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
+  | PushOptions of option<string>
+  | PopOptions
   | LightOff
 
 type memo<'a> = ref<option<'a>>
@@ -54,11 +56,6 @@ type version = {
     major:int;
     minor:int
 }
-
-type arg_qualifier =
-  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Equality
-type aqual = option<arg_qualifier>
 type universe =
   | U_zero
   | U_succ  of universe
@@ -268,6 +265,11 @@ and binding =
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
+and arg_qualifier =
+  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
+  | Meta of term
+  | Equality
+and aqual = option<arg_qualifier>
 
 type lcomp = { //a lazy computation
     eff_name: lident;

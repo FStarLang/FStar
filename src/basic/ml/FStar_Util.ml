@@ -289,6 +289,7 @@ let string_builder_append b s = BatBuffer.add_string b s
 
 let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
+let stack_dump () = Printexc.raw_backtrace_to_string (Printexc.get_callstack 1000)
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
 [@@deriving show]

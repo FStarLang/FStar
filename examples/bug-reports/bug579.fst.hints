@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "81be804ceb72f48472fe5e3edffeccd9"
+      "a2706f359a4f966ad7d19ad111fc91aa"
     ],
     [
       "Bug579.typing",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f6f8a01e73c3c26de2f5de0b4e598d2c"
+      "b515750829d6e066704e4697dbccdacc"
     ],
     [
       "Bug579.__proj__TyEqu__item__ht",
@@ -33,7 +33,7 @@
         "projection_inverse_Bug579.TyEqu_t2"
       ],
       0,
-      "4e8d8796870c6b73af726c44f757c638"
+      "616dd689a3fbbf39ee2b8e585a035449"
     ],
     [
       "Bug579.progress'",
@@ -47,7 +47,7 @@
         "subterm_ordering_Bug579.TyEqu"
       ],
       0,
-      "e7f9756ec61f8c313f782c3aa4cd84a5"
+      "b27f4b1520255f6d1b0a4ef32eec6e96"
     ],
     [
       "Bug579.progress",
@@ -63,7 +63,7 @@
         "projection_inverse_Bug579.TyEqu_t1", "subterm_ordering_Bug579.TyEqu"
       ],
       0,
-      "684b10f5849a93f2ea79bdab9c8848fb"
+      "b4601992b055649a6e870073943549b1"
     ]
   ]
 ]

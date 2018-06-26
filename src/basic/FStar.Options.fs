@@ -83,6 +83,9 @@ let as_list as_t x =
 let as_option as_t = function
   | Unset -> None
   | v -> Some (as_t v)
+let as_comma_string_list = function
+  | List ls -> List.flatten <| List.map (fun l -> split (as_string l) ",") ls
+  | _ -> failwith "Impos: expected String (comma list)"
 
 type optionstate = Util.smap<option_val>
 
@@ -115,6 +118,7 @@ let defaults =
      [
       ("__temp_no_proj"               , List []);
       ("__temp_fast_implicits"        , Bool false);
+      ("abort_on"                     , Int 0);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
       ("cache_checked_modules"        , Bool false);
@@ -231,6 +235,7 @@ let get_option s =
 let lookup_opt s c =
   c (get_option s)
 
+let get_abort_on                ()      = lookup_opt "abort_on"                 as_int
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
@@ -239,7 +244,7 @@ let get_cache_off               ()      = lookup_opt "cache_off"                
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
-let get_debug_level             ()      = lookup_opt "debug_level"              (as_list as_string)
+let get_debug_level             ()      = lookup_opt "debug_level"              as_comma_string_list
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
@@ -487,8 +492,17 @@ let pp_validate_dir p =
 let pp_lowercase s =
   mk_string (String.lowercase (as_string s))
 
+let abort_counter : ref<int> =
+    mk_ref 0
+
 let rec specs_with_types () : list<(char * string * opt_type * string)> =
      [( noshort,
+        "abort_on",
+        PostProcessed ((function Int x -> abort_counter := x; Int x
+                               | x -> failwith "?"), IntStr "non-negative integer"),
+        "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)");
+
+      ( noshort,
         "admit_smt_queries",
         BoolStr,
         "Admit SMT queries, unsafe! (default 'false')");
@@ -996,6 +1010,7 @@ and specs () : list<FStar.Getopt.opt> = // FIXME: Why does the interactive mode 
 //Several options can only be set at the time the process is created, and not controlled interactively via pragmas
 //Additionaly, the --smt option is a security concern
 let settable = function
+    | "abort_on"
     | "admit_smt_queries"
     | "admit_except"
     | "debug"
