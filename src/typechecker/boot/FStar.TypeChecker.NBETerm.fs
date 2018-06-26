@@ -376,11 +376,12 @@ let mixed_binary_op
                 end
              | _ -> None
 
-// let list_of_string' rng (s:string) : t =
-//     let name l = mk (Tm_fvar (lid_as_fv l delta_constant None)) rng in
-//     let char_t = name PC.char_lid in
-//     let charterm c = mk (Tm_constant (Const_char c)) rng in
-//     U.mk_list char_t rng <| List.map charterm (list_of_string s)
+let list_of_string' rng (s:string) : t =
+  embed (e_list e_char) (list_of_string s)
+  // let name l = mk (Tm_fvar (lid_as_fv l delta_constant None)) rng in
+  // let char_t = name PC.char_lid in
+  // let charterm c = mk (Tm_constant (Const_char c)) rng in
+  // U.mk_list char_t rng <| List.map charterm (list_of_string s)
 
 let string_of_list' rng (l:list<char>) : t =
     let s = string_of_list l in
@@ -412,12 +413,12 @@ let string_of_int (i:Z.t) : t =
 let string_of_bool rng (b:bool) : t =
     embed e_string (if b then "true" else "false")
 
-(*
 let decidable_eq (neg:bool) (args:args) : option<t> =
     match args with
-    | [(_typ, _); (a1, _); (a2, _)] ->
-       Some (Constant (Bool (a1 = a2))) (* TODO write eq function *)
+    | [(_typ, _); (a1, _); (a2, _)] -> failwith "decidable_eq not yet implemented"
     | _ ->
         failwith "Unexpected number of arguments"
 
-*)
+
+
+
