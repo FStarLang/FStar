@@ -4296,6 +4296,7 @@ let (tr_norm_step : FStar_Syntax_Embeddings.norm_step -> step Prims.list) =
     | FStar_Syntax_Embeddings.Weak  -> [Weak]
     | FStar_Syntax_Embeddings.HNF  -> [HNF]
     | FStar_Syntax_Embeddings.Primops  -> [Primops]
+    | FStar_Syntax_Embeddings.Reify  -> [Reify]
     | FStar_Syntax_Embeddings.UnfoldOnly names1 ->
         let uu____12044 =
           let uu____12047 =
