@@ -177,7 +177,7 @@ let bundle_as_inductive_families env ses quals attrs : UEnv.env * list<inductive
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
-                let metadata = extract_metadata (se.sigattrs @ attrs) in
+                let metadata = extract_metadata (se.sigattrs @ attrs) @ List.choose flag_of_qual quals in
                 let env = UEnv.extend_type_name env (S.lid_as_fv l delta_constant None) in
                 env, [{   iname=l
                         ; iparams=bs

@@ -184,7 +184,7 @@ let un_snoc #a s =
 val map: ('a -> Tot 'b) -> s:seq 'a -> Tot (seq 'b)
     (decreases (Seq.length s))
 let rec map f s =
-  if Seq.length s = 0 then Seq.createEmpty
+  if Seq.length s = 0 then Seq.empty
   else let prefix, last = un_snoc s in
        Seq.snoc (map f prefix) (f last)
 
@@ -282,7 +282,7 @@ let map_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 val collect: ('a -> Tot (seq 'b)) -> s:seq 'a -> Tot (seq 'b)
     (decreases (Seq.length s))
 let rec collect f s =
-  if Seq.length s = 0 then Seq.createEmpty
+  if Seq.length s = 0 then Seq.empty
   else let prefix, last = un_snoc s in
        Seq.append (collect f prefix) (f last)
 

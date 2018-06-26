@@ -4602,8 +4602,9 @@ let (check_sigelt_quals :
                   FStar_All.pipe_right quals
                     (FStar_Util.for_all
                        (fun x  ->
-                          (((x = FStar_Syntax_Syntax.Abstract) ||
-                              (inferred x))
+                          ((((x = FStar_Syntax_Syntax.Abstract) ||
+                               (x = FStar_Syntax_Syntax.NoExtract))
+                              || (inferred x))
                              || (visibility x))
                             || (has_eq x)))
                    in

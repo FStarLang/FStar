@@ -1860,8 +1860,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                steps = List.fold_right fstep_add_one new_steps cfg.steps;
                delta_level = [Env.Inlining; Env.Eager_unfolding_only]
            }
-      else
-        { cfg with steps = { cfg.steps with zeta = false } }
+      else cfg
     in
     (* monadic annotations don't block reduction, but we need to put the label back *)
     let metadata = match m with

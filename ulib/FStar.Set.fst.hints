@@ -127,7 +127,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "34bbbe1f42d763fe001ea16267b2e90b"
+      "875da14a69bb4b8688f15da47afca51c"
     ],
     [
       "FStar.Set.lemma_equal_intro",
@@ -242,7 +242,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "f846a423bf9198e63d2622580438fc88"
+      "d24acb6175bac780dbbc3aa8a7b6967e"
     ],
     [
       "FStar.Set.as_set'",

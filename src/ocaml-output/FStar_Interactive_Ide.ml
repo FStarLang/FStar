@@ -961,7 +961,7 @@ let (run_repl_ld_transactions :
                progress_callback task;
                (let uu____2411 = FStar_Options.restore_cmd_line_options false
                    in
-                FStar_All.pipe_right uu____2411 (fun a237  -> ()));
+                FStar_All.pipe_right uu____2411 (fun a236  -> ()));
                (let timestamped_task = update_task_timestamps task  in
                 let push_kind =
                   let uu____2414 = FStar_Options.lax ()  in
@@ -2666,7 +2666,7 @@ let run_push_with_deps :
        | FStar_Util.Inl (st1,deps) ->
            ((let uu____5932 = FStar_Options.restore_cmd_line_options false
                 in
-             FStar_All.pipe_right uu____5932 (fun a238  -> ()));
+             FStar_All.pipe_right uu____5932 (fun a237  -> ()));
             (let names1 =
                add_module_completions st1.repl_fname deps st1.repl_names  in
              run_push_without_deps

@@ -1709,6 +1709,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       | Sig_bundle _ ->
         if not (quals |> BU.for_all (fun x ->
               x=Abstract
+              || x=NoExtract
               || inferred x
               || visibility x
               || has_eq x))

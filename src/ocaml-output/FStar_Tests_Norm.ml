@@ -271,7 +271,7 @@ let (run :
          FStar_Util.print1 "%s: ... \n" uu____725);
         (let tcenv = FStar_Tests_Pars.init ()  in
          (let uu____728 = FStar_Main.process_args ()  in
-          FStar_All.pipe_right uu____728 (fun a243  -> ()));
+          FStar_All.pipe_right uu____728 (fun a242  -> ()));
          (let x1 =
             FStar_TypeChecker_Normalize.normalize
               [FStar_TypeChecker_Normalize.Beta;

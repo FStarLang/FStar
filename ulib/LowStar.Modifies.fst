@@ -215,6 +215,7 @@ let modifies_0_modifies h1 h2 =
   MG.modifies_none_intro #_ #cls h1 h2
     (fun r -> B.modifies_0_live_region h1 h2 r)
     (fun t pre b -> B.modifies_0_mreference #t #pre h1 h2 b)
+    (fun r n -> B.modifies_0_unused_in h1 h2 r n)
 
 let modifies_1_modifies #t b h1 h2 =
   if B.g_is_null b
@@ -232,6 +233,9 @@ let modifies_1_modifies #t b h1 h2 =
     (fun t pre p ->
       B.modifies_1_liveness b h1 h2 p
     )
+    (fun r n ->
+      B.modifies_1_unused_in b h1 h2 r n
+    )
     (fun r' a' b' ->
       loc_disjoint_sym (MG.loc_of_aloc b') (loc_buffer b);
       MG.loc_disjoint_aloc_elim #_ #cls #(B.frameOf b) #(B.as_addr b)  #r' #a' (B.abuffer_of_buffer b)  b';
@@ -248,6 +252,9 @@ let modifies_addr_of_modifies #t b h1 h2 =
     (fun r -> B.modifies_addr_of_live_region b h1 h2 r)
     (fun t pre p ->
       B.modifies_addr_of_mreference b h1 h2 p
+    )
+    (fun r n ->
+      B.modifies_addr_of_unused_in b h1 h2 r n
     )
 
 
@@ -272,6 +279,38 @@ let free_does_not_contain_addr = MG.free_does_not_contain_addr
 let does_not_contain_addr_elim = MG.does_not_contain_addr_elim
 
 let modifies_only_live_addresses = MG.modifies_only_live_addresses
+
+let loc_not_unused_in = MG.loc_not_unused_in _
+
+let loc_unused_in = MG.loc_unused_in _
+
+let loc_unused_in_not_unused_in_disjoint =
+  MG.loc_unused_in_not_unused_in_disjoint cls
+
+let live_loc_not_unused_in #t b h =
+  B.unused_in_equiv b h;
+  Classical.move_requires (MG.does_not_contain_addr_addr_unused_in h) (B.frameOf b, B.as_addr b);
+  MG.loc_addresses_not_unused_in cls (B.frameOf b) (Set.singleton (B.as_addr b)) h;
+  loc_includes_addresses_buffer false (B.frameOf b) (Set.singleton (B.as_addr b)) b;
+  MG.loc_includes_trans (loc_not_unused_in h) (loc_addresses false (B.frameOf b) (Set.singleton (B.as_addr b))) (loc_buffer b);
+  ()
+
+let unused_in_loc_unused_in #t b h =
+  B.unused_in_equiv b h;
+  Classical.move_requires (MG.addr_unused_in_does_not_contain_addr h) (B.frameOf b, B.as_addr b);
+  MG.loc_addresses_unused_in cls (B.frameOf b) (Set.singleton (B.as_addr b)) h;
+  loc_includes_addresses_buffer false (B.frameOf b) (Set.singleton (B.as_addr b)) b;
+  MG.loc_includes_trans (loc_unused_in h) (loc_addresses false (B.frameOf b) (Set.singleton (B.as_addr b))) (loc_buffer b);
+  ()
+
+let modifies_address_liveness_insensitive_unused_in =
+  MG.modifies_address_liveness_insensitive_unused_in cls
+
+let mreference_live_loc_not_unused_in =
+  MG.mreference_live_loc_not_unused_in cls
+
+let mreference_unused_in_loc_unused_in =
+  MG.mreference_unused_in_loc_unused_in cls
 
 
 let cloc_cls = cls

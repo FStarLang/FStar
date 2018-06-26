@@ -15,7 +15,7 @@ type string = S.seq U8.t
 type m t = (unit -> GTot (t * string))
 
 let ret (#t: Type0) (x: t) : Tot (m t) =
-  (fun () -> (x, S.createEmpty))
+  (fun () -> (x, Seq.empty))
 
 let s_append (#a: Type) (s1 s2: S.seq a) : Tot (s: S.seq a { S.length s == S.length s1 + S.length s2 } ) =
   S.append s1 s2

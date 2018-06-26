@@ -172,7 +172,6 @@ val createL
 let createL #a init =
   let len : P.array_length_t = UInt32.uint_to_t (List.Tot.length init) in
   let s = Seq.of_list init in
-  Seq.lemma_of_list_length s init;
   let content = P.screate (P.TArray len a) (Some s) in
   P.buffer_of_array_pointer content
 

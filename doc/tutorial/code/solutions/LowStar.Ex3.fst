@@ -34,11 +34,12 @@ let deref #a (h: HS.mem) (x: B.pointer a) = B.get h x 0
 
 /// Here's a well-formedness predicate on a finite list `xs: t a`
 /// in a given heap `h`
+unfold
 let ok #a (h: HS.mem) (xs: t a) =
   B.live h xs /\ //Temporal safety: the reference to the struct is live
   (let x = deref h xs in
    B.live h x.b /\  //Temporal safety: the array within the struct is live
-   B.disjoint x.b xs /\ //Anti-aliasing, needed for framing
+   M.loc_disjoint (M.loc_buffer x.b) (M.loc_buffer xs) /\ //Anti-aliasing, needed for framing
    B.len x.b = x.total_length /\ //Spatial safety: the total_length field really is the length
    x.first <= x.total_length)  //Spatial safety: the first field is within bounds of the array
 

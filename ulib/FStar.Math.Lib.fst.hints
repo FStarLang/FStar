@@ -122,7 +122,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0338e81330f49aef43e519efedc0bb0d"
+      "3e3330a6f41277786ec0b373fd5a2c6d"
     ],
     [
       "FStar.Math.Lib.slash_star_axiom",
@@ -583,7 +583,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "46842bbf5a57f718cd5b89a4e005591d"
+      "0cb9afb4891a3fa5511a021b651f037d"
     ],
     [
       "FStar.Math.Lib.log_2",
