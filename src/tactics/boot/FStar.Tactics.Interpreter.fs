@@ -288,15 +288,8 @@ let run_tactic_on_typ
                     : list<goal> // remaining goals
                     * term // witness
                     =
-    // This bit is really important: a typechecked tactic can contain many uvar redexes
-    // that make normalization SUPER slow (probably exponential). Doing this first pass
-    // gets rid of those redexes and leaves a much smaller term, which performs a lot better.
-    // TODO: This may be useless with the new representation?
     if !tacdbg then
-        BU.print1 "About to reduce uvars on: (%s) {\n" (Print.term_to_string tactic);
-    let tactic = N.reduce_uvar_solutions env tactic in
-    if !tacdbg then
-        BU.print1 "}\nTypechecking tactic: (%s) {\n" (Print.term_to_string tactic);
+        BU.print1 "Typechecking tactic: (%s) {\n" (Print.term_to_string tactic);
 
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed
