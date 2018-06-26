@@ -19,27 +19,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "24df5ebc6215ef05374e840dbe69a95b"
-    ],
-    [
-      "FStar.Reflection.Derived.Lemmas.list_ref",
-      2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.Reflection.Data.forall_list.fuel_instrumented",
-        "@fuel_irrelevance_FStar.Reflection.Data.forall_list.fuel_instrumented",
-        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
-        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil",
-        "equation_with_fuel_FStar.Reflection.Data.forall_list.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list", "l_and-interp",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "01b0a4964747cf55134ceee46db5671b"
+      "5a2827807eaaf3b339748393f7ae9abf"
     ]
   ]
 ]
