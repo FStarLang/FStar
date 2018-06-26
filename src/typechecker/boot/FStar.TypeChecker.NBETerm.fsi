@@ -26,12 +26,13 @@ type constant =
   | Int of Z.t
   | String of string * Range.range
   | Char of FStar.Char.char
+  | Range of Range.range
 
 //IN F*: type atom : Type0 =
 type atom = //JUST FSHARP
   | Var of var
   | Match of t *
-             (t -> t) * 
+             (t -> t) *
              ((t -> term) -> list<branch>)
   | Rec of letbinding * list<letbinding> * list<t>
 //IN F*: and t : Type0 =
@@ -44,7 +45,7 @@ and t = //JUST FSHARP
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Arrow of (list<t> -> t) * list<(unit -> arg)> 
+  | Arrow of (list<t> -> t) * list<(unit -> arg)>
 and arg = t * aqual
 and args = list<(arg)>
 
@@ -58,7 +59,7 @@ val constant_to_string : constant -> string
 val t_to_string : t -> string
 val atom_to_string : atom -> string
 
-// NBE term manipulation 
+// NBE term manipulation
 
 val isAccu : t -> bool
 val isNotAccu : t -> bool

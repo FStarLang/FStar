@@ -64,7 +64,7 @@
     <Compile Include="FStar.TypeChecker.PatternUtils.fs" />
     <Compile Include="FStar.TypeChecker.Normalize.fsi" />
     <Compile Include="FStar.TypeChecker.Normalize.fs" />
-    <Compile Include="boot/FStar.TypeChecker.NBE.fs" />
+    <Compile Include="FStar.TypeChecker.NBE.fs" />
     <Compile Include="FStar.TypeChecker.Err.fs" />
     <Compile Include="FStar.TypeChecker.Rel.fsi" />
     <Compile Include="FStar.TypeChecker.Rel.fs" />
