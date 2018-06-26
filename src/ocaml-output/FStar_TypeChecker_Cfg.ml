@@ -2190,10 +2190,54 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
               | uu____3401 -> FStar_Pervasives_Native.None)
          | uu____3406 -> FStar_Pervasives_Native.None)
     | uu____3409 -> FStar_Pervasives_Native.None  in
+  let string_split' psc args =
+    match args with
+    | a1::a2::[] ->
+        let uu____3483 = arg_as_list FStar_Syntax_Embeddings.e_char a1  in
+        (match uu____3483 with
+         | FStar_Pervasives_Native.Some s1 ->
+             let uu____3499 = arg_as_string a2  in
+             (match uu____3499 with
+              | FStar_Pervasives_Native.Some s2 ->
+                  let r = FStar_String.split s1 s2  in
+                  let uu____3508 =
+                    let uu____3509 =
+                      FStar_Syntax_Embeddings.e_list
+                        FStar_Syntax_Embeddings.e_string
+                       in
+                    FStar_Syntax_Embeddings.embed uu____3509 psc.psc_range r
+                     in
+                  FStar_Pervasives_Native.Some uu____3508
+              | uu____3516 -> FStar_Pervasives_Native.None)
+         | uu____3519 -> FStar_Pervasives_Native.None)
+    | uu____3525 -> FStar_Pervasives_Native.None  in
+  let string_substring' psc args =
+    match args with
+    | a1::a2::a3::[] ->
+        let uu____3556 =
+          let uu____3569 = arg_as_string a1  in
+          let uu____3572 = arg_as_int a2  in
+          let uu____3575 = arg_as_int a3  in
+          (uu____3569, uu____3572, uu____3575)  in
+        (match uu____3556 with
+         | (FStar_Pervasives_Native.Some s1,FStar_Pervasives_Native.Some
+            n1,FStar_Pervasives_Native.Some n2) ->
+             let n11 = FStar_BigInt.to_int_fs n1  in
+             let n21 = FStar_BigInt.to_int_fs n2  in
+             (try
+                let r = FStar_String.substring s1 n11 n21  in
+                let uu____3606 =
+                  FStar_Syntax_Embeddings.embed
+                    FStar_Syntax_Embeddings.e_string psc.psc_range r
+                   in
+                FStar_Pervasives_Native.Some uu____3606
+              with | uu____3612 -> FStar_Pervasives_Native.None)
+         | uu____3613 -> FStar_Pervasives_Native.None)
+    | uu____3626 -> FStar_Pervasives_Native.None  in
   let string_of_int1 rng i =
-    let uu____3431 = FStar_BigInt.string_of_big_int i  in
+    let uu____3640 = FStar_BigInt.string_of_big_int i  in
     FStar_Syntax_Embeddings.embed FStar_Syntax_Embeddings.e_string rng
-      uu____3431
+      uu____3640
      in
   let string_of_bool1 rng b =
     FStar_Syntax_Embeddings.embed FStar_Syntax_Embeddings.e_string rng
@@ -2202,35 +2246,35 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
   let mk_range1 psc args =
     match args with
     | fn::from_line::from_col::to_line::to_col::[] ->
-        let uu____3468 =
-          let uu____3489 = arg_as_string fn  in
-          let uu____3492 = arg_as_int from_line  in
-          let uu____3495 = arg_as_int from_col  in
-          let uu____3498 = arg_as_int to_line  in
-          let uu____3501 = arg_as_int to_col  in
-          (uu____3489, uu____3492, uu____3495, uu____3498, uu____3501)  in
-        (match uu____3468 with
+        let uu____3677 =
+          let uu____3698 = arg_as_string fn  in
+          let uu____3701 = arg_as_int from_line  in
+          let uu____3704 = arg_as_int from_col  in
+          let uu____3707 = arg_as_int to_line  in
+          let uu____3710 = arg_as_int to_col  in
+          (uu____3698, uu____3701, uu____3704, uu____3707, uu____3710)  in
+        (match uu____3677 with
          | (FStar_Pervasives_Native.Some fn1,FStar_Pervasives_Native.Some
             from_l,FStar_Pervasives_Native.Some
             from_c,FStar_Pervasives_Native.Some
             to_l,FStar_Pervasives_Native.Some to_c) ->
              let r =
-               let uu____3532 =
-                 let uu____3533 = FStar_BigInt.to_int_fs from_l  in
-                 let uu____3534 = FStar_BigInt.to_int_fs from_c  in
-                 FStar_Range.mk_pos uu____3533 uu____3534  in
-               let uu____3535 =
-                 let uu____3536 = FStar_BigInt.to_int_fs to_l  in
-                 let uu____3537 = FStar_BigInt.to_int_fs to_c  in
-                 FStar_Range.mk_pos uu____3536 uu____3537  in
-               FStar_Range.mk_range fn1 uu____3532 uu____3535  in
-             let uu____3538 =
+               let uu____3741 =
+                 let uu____3742 = FStar_BigInt.to_int_fs from_l  in
+                 let uu____3743 = FStar_BigInt.to_int_fs from_c  in
+                 FStar_Range.mk_pos uu____3742 uu____3743  in
+               let uu____3744 =
+                 let uu____3745 = FStar_BigInt.to_int_fs to_l  in
+                 let uu____3746 = FStar_BigInt.to_int_fs to_c  in
+                 FStar_Range.mk_pos uu____3745 uu____3746  in
+               FStar_Range.mk_range fn1 uu____3741 uu____3744  in
+             let uu____3747 =
                FStar_Syntax_Embeddings.embed FStar_Syntax_Embeddings.e_range
                  psc.psc_range r
                 in
-             FStar_Pervasives_Native.Some uu____3538
-         | uu____3539 -> FStar_Pervasives_Native.None)
-    | uu____3560 -> FStar_Pervasives_Native.None  in
+             FStar_Pervasives_Native.Some uu____3747
+         | uu____3748 -> FStar_Pervasives_Native.None)
+    | uu____3769 -> FStar_Pervasives_Native.None  in
   let decidable_eq neg psc args =
     let r = psc.psc_range  in
     let tru =
@@ -2240,133 +2284,162 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
       mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool false)) r
        in
     match args with
-    | (_typ,uu____3593)::(a1,uu____3595)::(a2,uu____3597)::[] ->
-        let uu____3654 = FStar_Syntax_Util.eq_tm a1 a2  in
-        (match uu____3654 with
+    | (_typ,uu____3802)::(a1,uu____3804)::(a2,uu____3806)::[] ->
+        let uu____3863 = FStar_Syntax_Util.eq_tm a1 a2  in
+        (match uu____3863 with
          | FStar_Syntax_Util.Equal  ->
              FStar_Pervasives_Native.Some (if neg then fal else tru)
          | FStar_Syntax_Util.NotEqual  ->
              FStar_Pervasives_Native.Some (if neg then tru else fal)
-         | uu____3659 -> FStar_Pervasives_Native.None)
-    | uu____3660 -> failwith "Unexpected number of arguments"  in
+         | uu____3868 -> FStar_Pervasives_Native.None)
+    | uu____3869 -> failwith "Unexpected number of arguments"  in
   let prims_to_fstar_range_step psc args =
     match args with
-    | (a1,uu____3695)::[] ->
-        let uu____3712 =
+    | (a1,uu____3904)::[] ->
+        let uu____3921 =
           FStar_Syntax_Embeddings.try_unembed FStar_Syntax_Embeddings.e_range
             a1
            in
-        (match uu____3712 with
+        (match uu____3921 with
          | FStar_Pervasives_Native.Some r ->
-             let uu____3718 =
+             let uu____3927 =
                FStar_Syntax_Embeddings.embed FStar_Syntax_Embeddings.e_range
                  psc.psc_range r
                 in
-             FStar_Pervasives_Native.Some uu____3718
+             FStar_Pervasives_Native.Some uu____3927
          | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None)
-    | uu____3719 -> failwith "Unexpected number of arguments"  in
+    | uu____3928 -> failwith "Unexpected number of arguments"  in
   let basic_ops =
-    let uu____3747 =
-      let uu____3764 =
-        let uu____3781 =
-          let uu____3798 =
-            let uu____3815 =
-              let uu____3832 =
-                let uu____3849 =
-                  let uu____3866 =
-                    let uu____3883 =
-                      let uu____3900 =
-                        let uu____3917 =
-                          let uu____3934 =
-                            let uu____3951 =
-                              let uu____3968 =
-                                let uu____3985 =
-                                  let uu____4002 =
-                                    let uu____4019 =
-                                      let uu____4036 =
-                                        let uu____4053 =
-                                          let uu____4070 =
-                                            let uu____4087 =
-                                              let uu____4104 =
-                                                let uu____4119 =
+    let uu____3956 =
+      let uu____3973 =
+        let uu____3990 =
+          let uu____4007 =
+            let uu____4024 =
+              let uu____4041 =
+                let uu____4058 =
+                  let uu____4075 =
+                    let uu____4092 =
+                      let uu____4109 =
+                        let uu____4126 =
+                          let uu____4143 =
+                            let uu____4160 =
+                              let uu____4177 =
+                                let uu____4194 =
+                                  let uu____4211 =
+                                    let uu____4228 =
+                                      let uu____4245 =
+                                        let uu____4262 =
+                                          let uu____4279 =
+                                            let uu____4296 =
+                                              let uu____4313 =
+                                                let uu____4328 =
                                                   FStar_Parser_Const.p2l
                                                     ["FStar";
                                                     "String";
                                                     "list_of_string"]
                                                    in
-                                                (uu____4119,
+                                                (uu____4328,
                                                   (Prims.parse_int "1"),
                                                   (unary_op arg_as_string
                                                      list_of_string'))
                                                  in
-                                              let uu____4128 =
-                                                let uu____4145 =
-                                                  let uu____4160 =
+                                              let uu____4337 =
+                                                let uu____4354 =
+                                                  let uu____4369 =
                                                     FStar_Parser_Const.p2l
                                                       ["FStar";
                                                       "String";
                                                       "string_of_list"]
                                                      in
-                                                  (uu____4160,
+                                                  (uu____4369,
                                                     (Prims.parse_int "1"),
                                                     (unary_op
                                                        (arg_as_list
                                                           FStar_Syntax_Embeddings.e_char)
                                                        string_of_list'))
                                                    in
-                                                let uu____4173 =
-                                                  let uu____4190 =
-                                                    let uu____4205 =
+                                                let uu____4382 =
+                                                  let uu____4399 =
+                                                    let uu____4414 =
                                                       FStar_Parser_Const.p2l
                                                         ["FStar";
                                                         "String";
                                                         "concat"]
                                                        in
-                                                    (uu____4205,
+                                                    (uu____4414,
                                                       (Prims.parse_int "2"),
                                                       string_concat')
                                                      in
-                                                  let uu____4214 =
-                                                    let uu____4231 =
-                                                      let uu____4246 =
+                                                  let uu____4423 =
+                                                    let uu____4440 =
+                                                      let uu____4455 =
                                                         FStar_Parser_Const.p2l
-                                                          ["Prims";
-                                                          "mk_range"]
+                                                          ["FStar";
+                                                          "String";
+                                                          "split"]
                                                          in
-                                                      (uu____4246,
-                                                        (Prims.parse_int "5"),
-                                                        mk_range1)
+                                                      (uu____4455,
+                                                        (Prims.parse_int "2"),
+                                                        string_split')
                                                        in
-                                                    [uu____4231]  in
-                                                  uu____4190 :: uu____4214
+                                                    let uu____4464 =
+                                                      let uu____4481 =
+                                                        let uu____4496 =
+                                                          FStar_Parser_Const.p2l
+                                                            ["FStar";
+                                                            "String";
+                                                            "substring"]
+                                                           in
+                                                        (uu____4496,
+                                                          (Prims.parse_int "3"),
+                                                          string_substring')
+                                                         in
+                                                      let uu____4505 =
+                                                        let uu____4522 =
+                                                          let uu____4537 =
+                                                            FStar_Parser_Const.p2l
+                                                              ["Prims";
+                                                              "mk_range"]
+                                                             in
+                                                          (uu____4537,
+                                                            (Prims.parse_int "5"),
+                                                            mk_range1)
+                                                           in
+                                                        [uu____4522]  in
+                                                      uu____4481 ::
+                                                        uu____4505
+                                                       in
+                                                    uu____4440 :: uu____4464
+                                                     in
+                                                  uu____4399 :: uu____4423
                                                    in
-                                                uu____4145 :: uu____4173  in
-                                              uu____4104 :: uu____4128  in
+                                                uu____4354 :: uu____4382  in
+                                              uu____4313 :: uu____4337  in
                                             (FStar_Parser_Const.op_notEq,
                                               (Prims.parse_int "3"),
                                               (decidable_eq true)) ::
-                                              uu____4087
+                                              uu____4296
                                              in
                                           (FStar_Parser_Const.op_Eq,
                                             (Prims.parse_int "3"),
                                             (decidable_eq false)) ::
-                                            uu____4070
+                                            uu____4279
                                            in
                                         (FStar_Parser_Const.string_compare,
                                           (Prims.parse_int "2"),
                                           (binary_op arg_as_string
                                              string_compare'))
-                                          :: uu____4053
+                                          :: uu____4262
                                          in
                                       (FStar_Parser_Const.string_of_bool_lid,
                                         (Prims.parse_int "1"),
                                         (unary_op arg_as_bool string_of_bool1))
-                                        :: uu____4036
+                                        :: uu____4245
                                        in
                                     (FStar_Parser_Const.string_of_int_lid,
                                       (Prims.parse_int "1"),
                                       (unary_op arg_as_int string_of_int1))
-                                      :: uu____4019
+                                      :: uu____4228
                                      in
                                   (FStar_Parser_Const.str_make_lid,
                                     (Prims.parse_int "2"),
@@ -2376,110 +2449,110 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                        (fun r  ->
                                           fun x  ->
                                             fun y  ->
-                                              let uu____4466 =
+                                              let uu____4785 =
                                                 FStar_BigInt.to_int_fs x  in
-                                              FStar_String.make uu____4466 y)))
-                                    :: uu____4002
+                                              FStar_String.make uu____4785 y)))
+                                    :: uu____4211
                                    in
                                 (FStar_Parser_Const.strcat_lid',
                                   (Prims.parse_int "2"),
                                   (binary_string_op
                                      (fun x  -> fun y  -> Prims.strcat x y)))
-                                  :: uu____3985
+                                  :: uu____4194
                                  in
                               (FStar_Parser_Const.strcat_lid,
                                 (Prims.parse_int "2"),
                                 (binary_string_op
                                    (fun x  -> fun y  -> Prims.strcat x y)))
-                                :: uu____3968
+                                :: uu____4177
                                in
                             (FStar_Parser_Const.op_Or, (Prims.parse_int "2"),
                               (binary_bool_op (fun x  -> fun y  -> x || y)))
-                              :: uu____3951
+                              :: uu____4160
                              in
                           (FStar_Parser_Const.op_And, (Prims.parse_int "2"),
                             (binary_bool_op (fun x  -> fun y  -> x && y))) ::
-                            uu____3934
+                            uu____4143
                            in
                         (FStar_Parser_Const.op_Negation,
                           (Prims.parse_int "1"),
                           (unary_bool_op (fun x  -> Prims.op_Negation x))) ::
-                          uu____3917
+                          uu____4126
                          in
                       (FStar_Parser_Const.op_Modulus, (Prims.parse_int "2"),
                         (binary_int_op
                            (fun x  -> fun y  -> FStar_BigInt.mod_big_int x y)))
-                        :: uu____3900
+                        :: uu____4109
                        in
                     (FStar_Parser_Const.op_GTE, (Prims.parse_int "2"),
                       (binary_op arg_as_int
                          (fun r  ->
                             fun x  ->
                               fun y  ->
-                                let uu____4661 = FStar_BigInt.ge_big_int x y
+                                let uu____4980 = FStar_BigInt.ge_big_int x y
                                    in
                                 FStar_Syntax_Embeddings.embed
-                                  FStar_Syntax_Embeddings.e_bool r uu____4661)))
-                      :: uu____3883
+                                  FStar_Syntax_Embeddings.e_bool r uu____4980)))
+                      :: uu____4092
                      in
                   (FStar_Parser_Const.op_GT, (Prims.parse_int "2"),
                     (binary_op arg_as_int
                        (fun r  ->
                           fun x  ->
                             fun y  ->
-                              let uu____4691 = FStar_BigInt.gt_big_int x y
+                              let uu____5010 = FStar_BigInt.gt_big_int x y
                                  in
                               FStar_Syntax_Embeddings.embed
-                                FStar_Syntax_Embeddings.e_bool r uu____4691)))
-                    :: uu____3866
+                                FStar_Syntax_Embeddings.e_bool r uu____5010)))
+                    :: uu____4075
                    in
                 (FStar_Parser_Const.op_LTE, (Prims.parse_int "2"),
                   (binary_op arg_as_int
                      (fun r  ->
                         fun x  ->
                           fun y  ->
-                            let uu____4721 = FStar_BigInt.le_big_int x y  in
+                            let uu____5040 = FStar_BigInt.le_big_int x y  in
                             FStar_Syntax_Embeddings.embed
-                              FStar_Syntax_Embeddings.e_bool r uu____4721)))
-                  :: uu____3849
+                              FStar_Syntax_Embeddings.e_bool r uu____5040)))
+                  :: uu____4058
                  in
               (FStar_Parser_Const.op_LT, (Prims.parse_int "2"),
                 (binary_op arg_as_int
                    (fun r  ->
                       fun x  ->
                         fun y  ->
-                          let uu____4751 = FStar_BigInt.lt_big_int x y  in
+                          let uu____5070 = FStar_BigInt.lt_big_int x y  in
                           FStar_Syntax_Embeddings.embed
-                            FStar_Syntax_Embeddings.e_bool r uu____4751)))
-                :: uu____3832
+                            FStar_Syntax_Embeddings.e_bool r uu____5070)))
+                :: uu____4041
                in
             (FStar_Parser_Const.op_Division, (Prims.parse_int "2"),
               (binary_int_op
                  (fun x  -> fun y  -> FStar_BigInt.div_big_int x y)))
-              :: uu____3815
+              :: uu____4024
              in
           (FStar_Parser_Const.op_Multiply, (Prims.parse_int "2"),
             (binary_int_op
                (fun x  -> fun y  -> FStar_BigInt.mult_big_int x y)))
-            :: uu____3798
+            :: uu____4007
            in
         (FStar_Parser_Const.op_Subtraction, (Prims.parse_int "2"),
           (binary_int_op (fun x  -> fun y  -> FStar_BigInt.sub_big_int x y)))
-          :: uu____3781
+          :: uu____3990
          in
       (FStar_Parser_Const.op_Addition, (Prims.parse_int "2"),
         (binary_int_op (fun x  -> fun y  -> FStar_BigInt.add_big_int x y)))
-        :: uu____3764
+        :: uu____3973
        in
     (FStar_Parser_Const.op_Minus, (Prims.parse_int "1"),
-      (unary_int_op (fun x  -> FStar_BigInt.minus_big_int x))) :: uu____3747
+      (unary_int_op (fun x  -> FStar_BigInt.minus_big_int x))) :: uu____3956
      in
   let weak_ops =
-    let uu____4906 =
-      let uu____4921 =
+    let uu____5225 =
+      let uu____5240 =
         FStar_Parser_Const.p2l ["FStar"; "Range"; "prims_to_fstar_range"]  in
-      (uu____4921, (Prims.parse_int "1"), prims_to_fstar_range_step)  in
-    [uu____4906]  in
+      (uu____5240, (Prims.parse_int "1"), prims_to_fstar_range_step)  in
+    [uu____5225]  in
   let bounded_arith_ops =
     let bounded_signed_int_types = ["Int8"; "Int16"; "Int32"; "Int64"]  in
     let bounded_unsigned_int_types =
@@ -2488,114 +2561,114 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
       let c =
         FStar_Syntax_Embeddings.embed FStar_Syntax_Embeddings.e_int r n1  in
       let int_to_t2 = FStar_Syntax_Syntax.fv_to_tm int_to_t1  in
-      let uu____5001 =
-        let uu____5006 =
-          let uu____5007 = FStar_Syntax_Syntax.as_arg c  in [uu____5007]  in
-        FStar_Syntax_Syntax.mk_Tm_app int_to_t2 uu____5006  in
-      uu____5001 FStar_Pervasives_Native.None r  in
+      let uu____5320 =
+        let uu____5325 =
+          let uu____5326 = FStar_Syntax_Syntax.as_arg c  in [uu____5326]  in
+        FStar_Syntax_Syntax.mk_Tm_app int_to_t2 uu____5325  in
+      uu____5320 FStar_Pervasives_Native.None r  in
     let add_sub_mul_v =
       FStar_All.pipe_right
         (FStar_List.append bounded_signed_int_types
            bounded_unsigned_int_types)
         (FStar_List.collect
            (fun m  ->
-              let uu____5087 =
-                let uu____5102 = FStar_Parser_Const.p2l ["FStar"; m; "add"]
+              let uu____5406 =
+                let uu____5421 = FStar_Parser_Const.p2l ["FStar"; m; "add"]
                    in
-                (uu____5102, (Prims.parse_int "2"),
+                (uu____5421, (Prims.parse_int "2"),
                   (binary_op arg_as_bounded_int
                      (fun r  ->
-                        fun uu____5124  ->
-                          fun uu____5125  ->
-                            match (uu____5124, uu____5125) with
-                            | ((int_to_t1,x),(uu____5144,y)) ->
-                                let uu____5154 = FStar_BigInt.add_big_int x y
+                        fun uu____5443  ->
+                          fun uu____5444  ->
+                            match (uu____5443, uu____5444) with
+                            | ((int_to_t1,x),(uu____5463,y)) ->
+                                let uu____5473 = FStar_BigInt.add_big_int x y
                                    in
-                                int_as_bounded r int_to_t1 uu____5154)))
+                                int_as_bounded r int_to_t1 uu____5473)))
                  in
-              let uu____5155 =
-                let uu____5172 =
-                  let uu____5187 = FStar_Parser_Const.p2l ["FStar"; m; "sub"]
+              let uu____5474 =
+                let uu____5491 =
+                  let uu____5506 = FStar_Parser_Const.p2l ["FStar"; m; "sub"]
                      in
-                  (uu____5187, (Prims.parse_int "2"),
+                  (uu____5506, (Prims.parse_int "2"),
                     (binary_op arg_as_bounded_int
                        (fun r  ->
-                          fun uu____5209  ->
-                            fun uu____5210  ->
-                              match (uu____5209, uu____5210) with
-                              | ((int_to_t1,x),(uu____5229,y)) ->
-                                  let uu____5239 =
+                          fun uu____5528  ->
+                            fun uu____5529  ->
+                              match (uu____5528, uu____5529) with
+                              | ((int_to_t1,x),(uu____5548,y)) ->
+                                  let uu____5558 =
                                     FStar_BigInt.sub_big_int x y  in
-                                  int_as_bounded r int_to_t1 uu____5239)))
+                                  int_as_bounded r int_to_t1 uu____5558)))
                    in
-                let uu____5240 =
-                  let uu____5257 =
-                    let uu____5272 =
+                let uu____5559 =
+                  let uu____5576 =
+                    let uu____5591 =
                       FStar_Parser_Const.p2l ["FStar"; m; "mul"]  in
-                    (uu____5272, (Prims.parse_int "2"),
+                    (uu____5591, (Prims.parse_int "2"),
                       (binary_op arg_as_bounded_int
                          (fun r  ->
-                            fun uu____5294  ->
-                              fun uu____5295  ->
-                                match (uu____5294, uu____5295) with
-                                | ((int_to_t1,x),(uu____5314,y)) ->
-                                    let uu____5324 =
+                            fun uu____5613  ->
+                              fun uu____5614  ->
+                                match (uu____5613, uu____5614) with
+                                | ((int_to_t1,x),(uu____5633,y)) ->
+                                    let uu____5643 =
                                       FStar_BigInt.mult_big_int x y  in
-                                    int_as_bounded r int_to_t1 uu____5324)))
+                                    int_as_bounded r int_to_t1 uu____5643)))
                      in
-                  let uu____5325 =
-                    let uu____5342 =
-                      let uu____5357 =
+                  let uu____5644 =
+                    let uu____5661 =
+                      let uu____5676 =
                         FStar_Parser_Const.p2l ["FStar"; m; "v"]  in
-                      (uu____5357, (Prims.parse_int "1"),
+                      (uu____5676, (Prims.parse_int "1"),
                         (unary_op arg_as_bounded_int
                            (fun r  ->
-                              fun uu____5375  ->
-                                match uu____5375 with
+                              fun uu____5694  ->
+                                match uu____5694 with
                                 | (int_to_t1,x) ->
                                     FStar_Syntax_Embeddings.embed
                                       FStar_Syntax_Embeddings.e_int r x)))
                        in
-                    [uu____5342]  in
-                  uu____5257 :: uu____5325  in
-                uu____5172 :: uu____5240  in
-              uu____5087 :: uu____5155))
+                    [uu____5661]  in
+                  uu____5576 :: uu____5644  in
+                uu____5491 :: uu____5559  in
+              uu____5406 :: uu____5474))
        in
     let div_mod_unsigned =
       FStar_All.pipe_right bounded_unsigned_int_types
         (FStar_List.collect
            (fun m  ->
-              let uu____5505 =
-                let uu____5520 = FStar_Parser_Const.p2l ["FStar"; m; "div"]
+              let uu____5824 =
+                let uu____5839 = FStar_Parser_Const.p2l ["FStar"; m; "div"]
                    in
-                (uu____5520, (Prims.parse_int "2"),
+                (uu____5839, (Prims.parse_int "2"),
                   (binary_op arg_as_bounded_int
                      (fun r  ->
-                        fun uu____5542  ->
-                          fun uu____5543  ->
-                            match (uu____5542, uu____5543) with
-                            | ((int_to_t1,x),(uu____5562,y)) ->
-                                let uu____5572 = FStar_BigInt.div_big_int x y
+                        fun uu____5861  ->
+                          fun uu____5862  ->
+                            match (uu____5861, uu____5862) with
+                            | ((int_to_t1,x),(uu____5881,y)) ->
+                                let uu____5891 = FStar_BigInt.div_big_int x y
                                    in
-                                int_as_bounded r int_to_t1 uu____5572)))
+                                int_as_bounded r int_to_t1 uu____5891)))
                  in
-              let uu____5573 =
-                let uu____5590 =
-                  let uu____5605 = FStar_Parser_Const.p2l ["FStar"; m; "rem"]
+              let uu____5892 =
+                let uu____5909 =
+                  let uu____5924 = FStar_Parser_Const.p2l ["FStar"; m; "rem"]
                      in
-                  (uu____5605, (Prims.parse_int "2"),
+                  (uu____5924, (Prims.parse_int "2"),
                     (binary_op arg_as_bounded_int
                        (fun r  ->
-                          fun uu____5627  ->
-                            fun uu____5628  ->
-                              match (uu____5627, uu____5628) with
-                              | ((int_to_t1,x),(uu____5647,y)) ->
-                                  let uu____5657 =
+                          fun uu____5946  ->
+                            fun uu____5947  ->
+                              match (uu____5946, uu____5947) with
+                              | ((int_to_t1,x),(uu____5966,y)) ->
+                                  let uu____5976 =
                                     FStar_BigInt.mod_big_int x y  in
-                                  int_as_bounded r int_to_t1 uu____5657)))
+                                  int_as_bounded r int_to_t1 uu____5976)))
                    in
-                [uu____5590]  in
-              uu____5505 :: uu____5573))
+                [uu____5909]  in
+              uu____5824 :: uu____5892))
        in
     FStar_List.append add_sub_mul_v div_mod_unsigned  in
   let strong_steps =
@@ -2610,55 +2683,55 @@ let (equality_ops : primitive_step FStar_Util.psmap) =
   let interp_prop psc args =
     let r = psc.psc_range  in
     match args with
-    | (_typ,uu____5789)::(a1,uu____5791)::(a2,uu____5793)::[] ->
-        let uu____5850 = FStar_Syntax_Util.eq_tm a1 a2  in
-        (match uu____5850 with
+    | (_typ,uu____6108)::(a1,uu____6110)::(a2,uu____6112)::[] ->
+        let uu____6169 = FStar_Syntax_Util.eq_tm a1 a2  in
+        (match uu____6169 with
          | FStar_Syntax_Util.Equal  ->
              FStar_Pervasives_Native.Some
-               (let uu___250_5854 = FStar_Syntax_Util.t_true  in
+               (let uu___252_6173 = FStar_Syntax_Util.t_true  in
                 {
                   FStar_Syntax_Syntax.n =
-                    (uu___250_5854.FStar_Syntax_Syntax.n);
+                    (uu___252_6173.FStar_Syntax_Syntax.n);
                   FStar_Syntax_Syntax.pos = r;
                   FStar_Syntax_Syntax.vars =
-                    (uu___250_5854.FStar_Syntax_Syntax.vars)
+                    (uu___252_6173.FStar_Syntax_Syntax.vars)
                 })
          | FStar_Syntax_Util.NotEqual  ->
              FStar_Pervasives_Native.Some
-               (let uu___251_5856 = FStar_Syntax_Util.t_false  in
+               (let uu___253_6175 = FStar_Syntax_Util.t_false  in
                 {
                   FStar_Syntax_Syntax.n =
-                    (uu___251_5856.FStar_Syntax_Syntax.n);
+                    (uu___253_6175.FStar_Syntax_Syntax.n);
                   FStar_Syntax_Syntax.pos = r;
                   FStar_Syntax_Syntax.vars =
-                    (uu___251_5856.FStar_Syntax_Syntax.vars)
+                    (uu___253_6175.FStar_Syntax_Syntax.vars)
                 })
-         | uu____5857 -> FStar_Pervasives_Native.None)
-    | (_typ,uu____5859)::uu____5860::(a1,uu____5862)::(a2,uu____5864)::[] ->
-        let uu____5937 = FStar_Syntax_Util.eq_tm a1 a2  in
-        (match uu____5937 with
+         | uu____6176 -> FStar_Pervasives_Native.None)
+    | (_typ,uu____6178)::uu____6179::(a1,uu____6181)::(a2,uu____6183)::[] ->
+        let uu____6256 = FStar_Syntax_Util.eq_tm a1 a2  in
+        (match uu____6256 with
          | FStar_Syntax_Util.Equal  ->
              FStar_Pervasives_Native.Some
-               (let uu___250_5941 = FStar_Syntax_Util.t_true  in
+               (let uu___252_6260 = FStar_Syntax_Util.t_true  in
                 {
                   FStar_Syntax_Syntax.n =
-                    (uu___250_5941.FStar_Syntax_Syntax.n);
+                    (uu___252_6260.FStar_Syntax_Syntax.n);
                   FStar_Syntax_Syntax.pos = r;
                   FStar_Syntax_Syntax.vars =
-                    (uu___250_5941.FStar_Syntax_Syntax.vars)
+                    (uu___252_6260.FStar_Syntax_Syntax.vars)
                 })
          | FStar_Syntax_Util.NotEqual  ->
              FStar_Pervasives_Native.Some
-               (let uu___251_5943 = FStar_Syntax_Util.t_false  in
+               (let uu___253_6262 = FStar_Syntax_Util.t_false  in
                 {
                   FStar_Syntax_Syntax.n =
-                    (uu___251_5943.FStar_Syntax_Syntax.n);
+                    (uu___253_6262.FStar_Syntax_Syntax.n);
                   FStar_Syntax_Syntax.pos = r;
                   FStar_Syntax_Syntax.vars =
-                    (uu___251_5943.FStar_Syntax_Syntax.vars)
+                    (uu___253_6262.FStar_Syntax_Syntax.vars)
                 })
-         | uu____5944 -> FStar_Pervasives_Native.None)
-    | uu____5945 -> failwith "Unexpected number of arguments"  in
+         | uu____6263 -> FStar_Pervasives_Native.None)
+    | uu____6264 -> failwith "Unexpected number of arguments"  in
   let propositional_equality =
     {
       name = FStar_Parser_Const.eq2_lid;
@@ -2684,14 +2757,14 @@ let (plugins :
   =
   let plugins = FStar_Util.mk_ref []  in
   let register p =
-    let uu____5975 =
-      let uu____5978 = FStar_ST.op_Bang plugins  in p :: uu____5978  in
-    FStar_ST.op_Colon_Equals plugins uu____5975  in
-  let retrieve uu____6078 = FStar_ST.op_Bang plugins  in (register, retrieve) 
+    let uu____6294 =
+      let uu____6297 = FStar_ST.op_Bang plugins  in p :: uu____6297  in
+    FStar_ST.op_Colon_Equals plugins uu____6294  in
+  let retrieve uu____6397 = FStar_ST.op_Bang plugins  in (register, retrieve) 
 let (register_plugin : primitive_step -> unit) =
   fun p  -> FStar_Pervasives_Native.fst plugins p 
 let (retrieve_plugins : unit -> primitive_step Prims.list) =
-  fun uu____6151  -> FStar_Pervasives_Native.snd plugins () 
+  fun uu____6470  -> FStar_Pervasives_Native.snd plugins () 
 let (config' :
   primitive_step Prims.list ->
     FStar_TypeChecker_Env.step Prims.list -> FStar_TypeChecker_Env.env -> cfg)
@@ -2702,78 +2775,78 @@ let (config' :
         let d =
           FStar_All.pipe_right s
             (FStar_List.collect
-               (fun uu___223_6192  ->
-                  match uu___223_6192 with
+               (fun uu___223_6511  ->
+                  match uu___223_6511 with
                   | FStar_TypeChecker_Env.UnfoldUntil k ->
                       [FStar_TypeChecker_Env.Unfold k]
                   | FStar_TypeChecker_Env.Eager_unfolding  ->
                       [FStar_TypeChecker_Env.Eager_unfolding_only]
                   | FStar_TypeChecker_Env.Inlining  ->
                       [FStar_TypeChecker_Env.InliningDelta]
-                  | uu____6196 -> []))
+                  | uu____6515 -> []))
            in
         let d1 =
           match d with
           | [] -> [FStar_TypeChecker_Env.NoDelta]
-          | uu____6202 -> d  in
-        let uu____6205 = to_fsteps s  in
-        let uu____6206 =
-          let uu____6207 =
+          | uu____6521 -> d  in
+        let uu____6524 = to_fsteps s  in
+        let uu____6525 =
+          let uu____6526 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "Norm")  in
-          let uu____6208 =
+          let uu____6527 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "NormTop")  in
-          let uu____6209 =
+          let uu____6528 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "NormCfg")  in
-          let uu____6210 =
+          let uu____6529 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "Primops")  in
-          let uu____6211 =
+          let uu____6530 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "Unfolding")
              in
-          let uu____6212 =
+          let uu____6531 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "380")  in
-          let uu____6213 =
+          let uu____6532 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "WPE")  in
-          let uu____6214 =
+          let uu____6533 =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "NormDelayed")
              in
-          let uu____6215 =
+          let uu____6534 =
             FStar_TypeChecker_Env.debug e
               (FStar_Options.Other "print_normalized_terms")
              in
           {
-            gen = uu____6207;
-            top = uu____6208;
-            cfg = uu____6209;
-            primop = uu____6210;
-            unfolding = uu____6211;
-            b380 = uu____6212;
-            wpe = uu____6213;
-            norm_delayed = uu____6214;
-            print_normalized = uu____6215
+            gen = uu____6526;
+            top = uu____6527;
+            cfg = uu____6528;
+            primop = uu____6529;
+            unfolding = uu____6530;
+            b380 = uu____6531;
+            wpe = uu____6532;
+            norm_delayed = uu____6533;
+            print_normalized = uu____6534
           }  in
-        let uu____6216 =
-          let uu____6219 =
-            let uu____6222 = retrieve_plugins ()  in
-            FStar_List.append uu____6222 psteps  in
-          add_steps built_in_primitive_steps uu____6219  in
-        let uu____6225 =
+        let uu____6535 =
+          let uu____6538 =
+            let uu____6541 = retrieve_plugins ()  in
+            FStar_List.append uu____6541 psteps  in
+          add_steps built_in_primitive_steps uu____6538  in
+        let uu____6544 =
           (FStar_Options.normalize_pure_terms_for_extraction ()) ||
-            (let uu____6227 =
+            (let uu____6546 =
                FStar_All.pipe_right s
                  (FStar_List.contains
                     FStar_TypeChecker_Env.PureSubtermsWithinComputations)
                 in
-             Prims.op_Negation uu____6227)
+             Prims.op_Negation uu____6546)
            in
         {
-          steps = uu____6205;
+          steps = uu____6524;
           tcenv = e;
-          debug = uu____6206;
+          debug = uu____6525;
           delta_level = d1;
-          primitive_steps = uu____6216;
+          primitive_steps = uu____6535;
           strong = false;
           memoize_lazy = true;
-          normalize_pure_lets = uu____6225;
+          normalize_pure_lets = uu____6544;
           reifying = false
         }
   
