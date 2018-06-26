@@ -22,6 +22,7 @@ module Ident = FStar.Ident
 module Env = FStar.TypeChecker.Env
 module Err = FStar.Errors
 module Z = FStar.BigInt
+module DsEnv = FStar.Syntax.DsEnv
 
 open FStar.Dyn
 
@@ -60,15 +61,28 @@ let inspect_fv (fv:fv) : list<string> =
 
 let pack_fv (ns:list<string>) : fv =
     let lid = PC.p2l ns in
-    let attr =
-        if Ident.lid_equals lid PC.cons_lid then Some Data_ctor else
-        if Ident.lid_equals lid PC.nil_lid  then Some Data_ctor else
-        if Ident.lid_equals lid PC.some_lid then Some Data_ctor else
-        if Ident.lid_equals lid PC.none_lid then Some Data_ctor else
-        None
+    let fallback () =
+        let quals =
+            if Ident.lid_equals lid PC.cons_lid then Some Data_ctor else
+            if Ident.lid_equals lid PC.nil_lid  then Some Data_ctor else
+            if Ident.lid_equals lid PC.some_lid then Some Data_ctor else
+            if Ident.lid_equals lid PC.none_lid then Some Data_ctor else
+            None
+        in
+        // FIXME: Get a proper delta depth
+        lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) quals
     in
-    // FIXME: Get a proper delta depth
-    lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) attr
+    match !env_hook with
+    | None -> fallback ()
+    | Some env ->
+     let qninfo = Env.lookup_qname env lid in
+     match qninfo with
+     | Some (BU.Inr (se, _us), _rng) ->
+         let quals = DsEnv.fv_qual_of_se se in
+         // FIXME: Get a proper delta depth
+         lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) quals
+     | _ ->
+         fallback ()
 
 // TODO: move to library?
 let rec last (l:list<'a>) : 'a =
