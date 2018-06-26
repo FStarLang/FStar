@@ -1351,6 +1351,10 @@ let rewrite_rec (ps : proofstate)
                 (env : Env.env)
                 (t : term) : ctrl_tac<term> =
     let t = SS.compress t in
+    (* GM: We should improve this bit, making a goal is not very cheap
+     * since the implicits must be kept in track and checked. Running with
+     * 0 goals is possible, but some tactics that depend on an environment,
+     * such as `norm_term`, will fail. *)
     bind (bind (add_irrelevant_goal "dummy"
                     env
                     U.t_true
