@@ -419,6 +419,7 @@ let decidable_eq (neg:bool) (args:args) : option<t> =
     | _ ->
         failwith "Unexpected number of arguments"
 
-
+let dummy_interp (lid : Ident.lid) (as : args) : option<t> = 
+  failwith ("No interpretation for " ^ (Ident.lid_as_string lid))
 
 
