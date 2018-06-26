@@ -70,3 +70,37 @@ val mkFV : fv -> list<universe> -> args -> t
 val mkAccuVar : var -> t
 val mkAccuMatch : t -> (t -> t) -> ((t -> term) -> list<branch>) -> t
 val mkAccuRec : letbinding -> list<letbinding> -> list<t> -> t
+
+type embedding<'a> = {
+  em  : 'a -> t;
+  un  : t -> option<'a>;
+  typ : t;
+}
+
+val embed : embedding<'a> -> 'a -> t
+val unembed : embedding<'a> -> t -> option<'a> 
+val type_of : embedding<'a> -> t
+
+val e_bool : embedding<bool>
+val e_string : embedding<string>
+
+// Interface for NBE interpretations
+
+val arg_as_int : arg -> option<Z.t>
+val arg_as_char : arg -> option<FStar.Char.char>
+val arg_as_string : arg -> option<string>
+
+val unary_int_op : (Z.t -> Z.t) -> (args -> option<t>)
+val binary_int_op : (Z.t -> Z.t -> Z.t) -> (args -> option<t>)
+
+val unary_bool_op : (bool -> bool) -> (args -> option<t>)
+val binary_bool_op : (bool -> bool -> bool) -> (args -> option<t>)
+
+val binary_string_op : (string -> string -> string) -> (args -> option<t>)
+
+val string_of_int : ()
+
+val mixed_binary_op : (arg -> 'a) -> (arg -> 'b) -> ('a -> 'b -> t) -> option<t>
+val unary_op : (arg -> option<'a>) -> ('a -> t) -> (args -> option<t>)
+val binary_op : (arg -> option<'a>) -> ('a -> 'a -> t) -> (args -> option<t>)
+

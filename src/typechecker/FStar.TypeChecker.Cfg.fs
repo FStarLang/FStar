@@ -149,7 +149,7 @@ type primitive_step = {
      strong_reduction_ok:bool;
      requires_binder_substitution:bool;
      interpretation:(psc -> args -> option<term>);
-     // interpretation_nbe:(NBE.args -> option<NBE.t>)
+     interpretation_nbe:(NBE.args -> option<NBE.t>)
 }
 
 type cfg = {
@@ -243,13 +243,14 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         -> option<term>
         = fun as_a f res args -> lift_binary (f res.psc_range) (List.map as_a args)
     in
-    let as_primitive_step is_strong (l, arity, f) = {
+    let as_primitive_step is_strong (l, arity, f, f_nbe) = {
         name=l;
         arity=arity;
         auto_reflect=None;
         strong_reduction_ok=is_strong;
         requires_binder_substitution=false;
-        interpretation=f
+        interpretation=f;
+        interpretation_nbe=f_nbe
     } in
     let unary_int_op (f:Z.t -> Z.t) =
         unary_op arg_as_int (fun r x -> EMB.embed EMB.e_int r (f x))
@@ -360,35 +361,59 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             end
         | _ -> failwith "Unexpected number of arguments"
     in
-    let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>))> =
-            [(PC.op_Minus,       1, unary_int_op (fun x -> Z.minus_big_int x));
-             (PC.op_Addition,    2, binary_int_op (fun x y -> Z.add_big_int x y));
-             (PC.op_Subtraction, 2, binary_int_op (fun x y -> Z.sub_big_int x y));
-             (PC.op_Multiply,    2, binary_int_op (fun x y -> Z.mult_big_int x y));
-             (PC.op_Division,    2, binary_int_op (fun x y -> Z.div_big_int x y));
-             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_bool r (Z.lt_big_int x y)));
-             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_bool r (Z.le_big_int x y)));
-             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_bool r (Z.gt_big_int x y)));
-             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_bool r (Z.ge_big_int x y)));
-             (PC.op_Modulus,     2, binary_int_op (fun x y -> Z.mod_big_int x y));
-             (PC.op_Negation,    1, unary_bool_op (fun x -> not x));
-             (PC.op_And,         2, binary_bool_op (fun x y -> x && y));
-             (PC.op_Or,          2, binary_bool_op (fun x y -> x || y));
-             (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
-             (PC.strcat_lid',    2, binary_string_op (fun x y -> x ^ y));
+    let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>) * (args -> option<NBE.t>))> =
+            [(PC.op_Minus,       1, unary_int_op (fun x -> Z.minus_big_int x), 
+                                    NBE.unary_int_op (fun x -> Z.minus_big_int x));
+             (PC.op_Addition,    2, binary_int_op (fun x y -> Z.add_big_int x y),
+                                    NBE.binary_int_op (fun x y -> Z.add_big_int x y));
+             (PC.op_Subtraction, 2, binary_int_op (fun x y -> Z.sub_big_int x y),
+                                    NBE.binary_int_op (fun x y -> Z.sub_big_int x y));
+             (PC.op_Multiply,    2, binary_int_op (fun x y -> Z.mult_big_int x y),
+                                    NBE.binary_int_op (fun x y -> Z.mult_big_int x y));
+             (PC.op_Division,    2, binary_int_op (fun x y -> Z.div_big_int x y),
+                                    NBE.binary_int_op (fun x y -> Z.div_big_int x y));
+             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_bool r (Z.lt_big_int x y)),
+                                    NBE.binary_op NBE.arg_as_int (fun x y -> NBE.embed NBE.e_bool (Z.lt_big_int x y)));
+             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_bool r (Z.le_big_int x y)),
+                                    NBE.binary_op NBE.arg_as_int (fun  x y -> NBE.embed NBE.e_bool (Z.le_big_int x y)));
+             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_bool r (Z.gt_big_int x y)),
+                                    NBE.binary_op NBE.arg_as_int (fun x y -> NBE.embed NBE.e_bool (Z.gt_big_int x y)));
+             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed EMB.e_bool r (Z.ge_big_int x y)),
+                                    NBE.binary_op NBE.arg_as_int (fun x y -> NBE.embed NBE.e_bool (Z.ge_big_int x y)));
+             (PC.op_Modulus,     2, binary_int_op (fun x y -> Z.mod_big_int x y),
+                                    NBE.binary_int_op (fun x y -> Z.mod_big_int x y));
+             (PC.op_Negation,    1, unary_bool_op (fun x -> not x),
+                                    NBE.unary_bool_op (fun x -> not x));
+             (PC.op_And,         2, binary_bool_op (fun x y -> x && y),
+                                    NBE.binary_bool_op (fun x y -> x && y));
+             (PC.op_Or,          2, binary_bool_op (fun x y -> x || y),
+                                    NBE.binary_bool_op (fun x y -> x || y));
+             (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y),
+                                    NBE.binary_string_op (fun x y -> x ^ y));
+             (PC.strcat_lid',    2, binary_string_op (fun x y -> x ^ y),
+                                    NBE.binary_string_op (fun x y -> x ^ y));
              (PC.str_make_lid,   2, mixed_binary_op arg_as_int arg_as_char (EMB.embed EMB.e_string)
-                                    (fun r (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y));
-             (PC.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
-             (PC.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
-             (PC.string_compare, 2, binary_op arg_as_string string_compare');
-             (PC.op_Eq,          3, decidable_eq false);
-             (PC.op_notEq,       3, decidable_eq true);
+                                    (fun r (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y),
+                                    NBE.mixed_binary_op NBE.arg_as_int NBE.arg_as_char (NBE.embed NBE.e_string)
+                                    (fun (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y));
+             (PC.string_of_int_lid, 1, unary_op arg_as_int string_of_int,
+                                       NBE.unary_op NBE.arg_as_int NBE.string_of_int);
+             (PC.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool,
+                                        NBE.unary_op NBE.arg_as_bool NBE.string_of_bool);
+             (PC.string_compare, 2, binary_op arg_as_string string_compare',
+                                    NBE.binary_op NBE.arg_as_string string_compare');
+             (PC.op_Eq,          3, decidable_eq false, 
+                                    NBE.decidable_eq false);
+             (PC.op_notEq,       3, decidable_eq true,
+                                    NBE.decidable_eq true);
              (PC.p2l ["FStar"; "String"; "list_of_string"],
-                                    1, unary_op arg_as_string list_of_string');
+                                 1, unary_op arg_as_string list_of_string', 
+                                    NBE.unary_op NBE.arg_as_string NBE.list_of_string');
              (PC.p2l ["FStar"; "String"; "string_of_list"],
-                                    1, unary_op (arg_as_list EMB.e_char) string_of_list');
-             (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
-             (PC.p2l ["Prims"; "mk_range"], 5, mk_range);
+                                    1, unary_op (arg_as_list EMB.e_char) string_of_list',
+                                       NBE.unary_op (arg_as_list EMB.e_char) string_of_list');
+             (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat', NBE.string_concat');
+             (PC.p2l ["Prims"; "mk_range"], 5, mk_range, dummy_interp);
              ]
     in
     let weak_ops =
