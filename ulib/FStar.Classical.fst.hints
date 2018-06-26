@@ -192,7 +192,16 @@
         "unit_typing"
       ],
       0,
-      "a1346e95bbd92ba4c14d06feba5c4bb8"
+      "5ea0fadb04beac4275308d69f37fe00f"
+    ],
+    [
+      "FStar.Classical.impl_intro_gen",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1739f77b0a1ae3d5b0b771e5ef5c28d3"
     ],
     [
       "FStar.Classical.ghost_lemma",
@@ -235,7 +244,22 @@
         "unit_typing"
       ],
       0,
-      "865614e49f2e9610e9a2124fc4fe40e2"
+      "1e1c65c3e09f7cdc174c60ee1a2656a7"
+    ],
+    [
+      "FStar.Classical.or_elim",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_typing"
+      ],
+      0,
+      "c846669874aeac575a5c6712230e99f9"
     ],
     [
       "FStar.Classical.excluded_middle",

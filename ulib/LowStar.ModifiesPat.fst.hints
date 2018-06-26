@@ -1,5 +1,5 @@
 [
-  "±\u001bz0~›Ø»»Bq\u0017‡-rV",
+  "\u0013)@ŠöÃu\rÄvC2å¶ˆ\u001a",
   [
     [
       "LowStar.ModifiesPat.loc_disjoint_union_r'",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_LowStar.Modifies.loc_includes_refl" ],
       0,
-      "6dd9728bc90b8ae4900a5f433c076fee"
+      "3923205977f6bb24815778f8936d9203"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_intro",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "2c3053434231dde4b9010c94d6909afe"
+      "522e72f73998b7a92a2a77efd8234460"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_live_region",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "242e80c8be34c2271708a27b366983a7"
+      "e8649a06e1cc7b9d3d4d73e2cddf9fdb"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_mreference_elim",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "7ab66179382296f41e187da653ed8633"
+      "2e5a9cd3e1bec60baf7f090ef828a6ce"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_buffer_elim",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "2c9fce05ca9abbca3ddc7b02b4065520"
+      "03ae3fe7e38e388e5900a068069b09eb"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_mreference_weak",
@@ -53,7 +53,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "b37cab709b35ebd9a3881cc62431fff2"
+      "6fff45dc72c2cc03fc9d6fbd352e4620"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_buffer_weak",
@@ -62,7 +62,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "4905d6d464f1554de947bbed9a087301"
+      "f450dbe64ad208ab3b524229a0a80370"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_region_weak",
@@ -71,7 +71,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "0bc98d34ace16be7b6420cf04b14a8b8"
+      "ddde71ff6321c7ad379baefb8d637817"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_region_mreference_weak",
@@ -84,7 +84,7 @@
         "typing_FStar.Monotonic.HyperStack.frameOf"
       ],
       0,
-      "c0fb4beab4c40f891484323a9ab8c0d8"
+      "063ad2d211a45ad02d9cfc2e753474a1"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_region_buffer_weak",
@@ -97,7 +97,7 @@
         "typing_LowStar.Buffer.frameOf"
       ],
       0,
-      "084526f963382fea0a6e85219ed49147"
+      "4da625a32a3a9db42654caecc61c1f76"
     ],
     [
       "LowStar.ModifiesPat.fresh_frame_modifies_inert",
@@ -109,7 +109,7 @@
         "lemma_LowStar.ModifiesPat.modifies_inert_intro"
       ],
       0,
-      "64c10e36eb9cba7abde398e5f6032744"
+      "2e4750993e6209da6b388bf7d1241bbe"
     ],
     [
       "LowStar.ModifiesPat.popped_modifies_inert",
@@ -126,7 +126,49 @@
         "typing_FStar.Set.singleton", "typing_LowStar.Modifies.loc_regions"
       ],
       0,
-      "f865c97e6263d2ecbc3cdfb346015a8f"
+      "d34d83fbdc28db4df6a193e3eceff042"
+    ],
+    [
+      "LowStar.ModifiesPat.modifies_inert_loc_unused_in",
+      1,
+      2,
+      1,
+      [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
+      0,
+      "ad32f533496f70ef07c7d5a4662218cf"
+    ],
+    [
+      "LowStar.ModifiesPat.unused_in_not_unused_in_disjoint_2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e939e0b40d9be5af64af53430162b586"
+    ],
+    [
+      "LowStar.ModifiesPat.unused_in_not_unused_in_disjoint_1",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_LowStar.Modifies.loc_includes_refl",
+        "lemma_LowStar.ModifiesPat.unused_in_not_unused_in_disjoint_2"
+      ],
+      0,
+      "b9b03d5f25a3163ccea25e474c0f1acd"
+    ],
+    [
+      "LowStar.ModifiesPat.unused_in_not_unused_in_disjoint_0",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_LowStar.Modifies.loc_includes_refl",
+        "lemma_LowStar.ModifiesPat.unused_in_not_unused_in_disjoint_2"
+      ],
+      0,
+      "10644b7fdcedd42d345ab29387901169"
     ],
     [
       "LowStar.ModifiesPat.modifies_upd'",
@@ -142,7 +184,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "f5c879fef855190304fae77d11bc36f0"
+      "9e504728785f42930dc915056192de86"
     ],
     [
       "LowStar.ModifiesPat.modifies_upd'",
@@ -158,7 +200,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "5bbd78fac8f3b61fa793fb345bec4715"
+      "b6b82e3e996d08f9b572ab509385969b"
     ]
   ]
 ]
