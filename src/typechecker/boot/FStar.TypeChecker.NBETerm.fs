@@ -8,6 +8,7 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Errors
+open FStar.Char
 
 module PC = FStar.Parser.Const
 module S = FStar.Syntax.Syntax

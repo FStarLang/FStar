@@ -75,9 +75,10 @@ boot/FStar.TypeChecker.NBETerm.fst: typechecker/boot/FStar.TypeChecker.NBETerm.f
 	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
 	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
 
-# GM: surprised that I had to add this, does it make sense?
 boot/FStar.TypeChecker.NBETerm.fsti: typechecker/boot/FStar.TypeChecker.NBETerm.fsi | boot_dir
 	cp $^ $@
+	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
+	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
 
 boot/FStar.Tests.Test.fst: tests/boot/FStar.Tests.Test.fs | boot_dir
 	cp $^ $@

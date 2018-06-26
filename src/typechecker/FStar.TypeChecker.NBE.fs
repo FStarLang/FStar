@@ -265,7 +265,7 @@ let app cfg (f:t) (x:t) (q:aqual) =
  // | Refinement (b, r) -> Refinement (b, app cfg  r x q)
   | Constant _ | Univ _ | Type_t _ | Unknown | Arrow _ -> failwith "Ill-typed application"
 
-let rec iapp (f:t) (args:args) =
+let rec iapp (f:t) (args:args) : t =
   match f with
   | Lam (f, targs, n) ->
     let m = List.length args in
@@ -349,7 +349,7 @@ and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   // GM: Ugh! need this to use <| and get the inner lambda into ALL, but why !?
   let id x = x in
   Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
-       List.Tot.map (fun _ -> (fun () -> id <| (Constant Unit, None))) us,
+       List.map (fun _ -> (fun () -> id <| (Constant Unit, None))) us,
        // Zoe: Bogus type! The idea is that we will never readback these lambdas
        List.length us)
 
@@ -540,7 +540,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_lazy _ | Tm_quoted(_,_) -> failwith "Not yet handled"
 
-and translate_monadic (m, t) cfg bs e =
+and translate_monadic (m, ty) cfg bs e : t =
    let e = U.unascribe e in
    match e.n with
    | Tm_let((false, [lb]), body) -> //elaborate this to M.bind
@@ -555,7 +555,7 @@ and translate_monadic (m, t) cfg bs e =
            let body_rc = {
                 residual_effect=m;
                 residual_flags=[];
-                residual_typ=Some t
+                residual_typ=Some ty
             } in
            S.mk (Tm_abs([(BU.left lb.lbname, None)], body, Some body_rc)) None body.pos
        in
@@ -570,7 +570,7 @@ and translate_monadic (m, t) cfg bs e =
                    Univ U_unknown, None])
            (
            [(translate cfg' bs lb.lbtyp, None); //translating the type of the bound term
-            (translate cfg' bs t, None)]        //and the body is sub-optimal; it is often unused
+            (translate cfg' bs ty, None)]       //and the body is sub-optimal; it is often unused
            @maybe_range_arg
            @[(Unknown, None) ; //unknown WP of lb.lbdef
             (translate cfg bs lb.lbdef, None);
@@ -586,15 +586,15 @@ and translate_monadic (m, t) cfg bs e =
 
    | _ -> failwith (BU.format1 "Unexpected case in translate_monadic: %s" (P.tag_of_term e))
 
-and translate_monadic_lift (msrc, mtgt, t) cfg bs e =
+and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
    let e = U.unascribe e in
    if U.is_pure_effect msrc || U.is_div_effect msrc
    then let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv mtgt) in
         let cfg' = {cfg with reifying=false} in
         iapp (iapp (translate cfg' [] (U.un_uinst (snd ed.return_repr)))
                    [Univ U_unknown, None])
-              [(translate cfg' bs t, None); //translating the type of the returned term
-               (translate cfg' bs e, None)] //translating the returned term itself
+              [(translate cfg' bs ty, None); //translating the type of the returned term
+               (translate cfg' bs e, None)]  //translating the returned term itself
    else
     match Env.monad_leq cfg.tcenv msrc mtgt with
     | None ->
@@ -613,7 +613,7 @@ and translate_monadic_lift (msrc, mtgt, t) cfg bs e =
       let lift_lam =
         let x = S.new_bv None S.tun in
         U.abs [(x, None)]
-              (lift U_unknown t S.tun (S.bv_to_name x))
+              (lift U_unknown ty S.tun (S.bv_to_name x))
               None
       in
       let cfg' = {cfg with reifying=false} in
