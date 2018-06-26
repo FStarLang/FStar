@@ -964,6 +964,8 @@ let resugar_qualifier : S.qualifier -> option<A.qualifier> = function
 let resugar_pragma = function
   | S.SetOptions s -> A.SetOptions s
   | S.ResetOptions s -> A.ResetOptions s
+  | S.PushOptions s -> A.PushOptions s
+  | S.PopOptions -> A.PopOptions
   | S.LightOff -> A.LightOff
 
 let resugar_typ env datacon_ses se : sigelts * A.tycon =

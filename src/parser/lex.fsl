@@ -254,6 +254,10 @@ rule token args = parse
      { PRAGMA_SET_OPTIONS }
  | "#reset-options"
      { PRAGMA_RESET_OPTIONS }
+ | "#push-options"
+     { PRAGMA_PUSH_OPTIONS }
+ | "#pop-options"
+     { PRAGMA_POP_OPTIONS }
  | int8
   { INT8 (trim_and_check_range lexbuf int8 0x80L "8-bit signed integer") }
  | (uint8 | char8)

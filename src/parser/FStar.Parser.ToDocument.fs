@@ -631,6 +631,8 @@ and p_rawDecl d = match d.d with
 and p_pragma = function
   | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
   | ResetOptions s_opt -> str "#reset-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
+  | PushOptions s_opt -> str "#push-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
+  | PopOptions -> str "#pop-options"
   | LightOff ->
       should_print_fs_typ_app := true ;
       str "#light \"off\""

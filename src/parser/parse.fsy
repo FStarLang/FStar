@@ -128,6 +128,8 @@ let logic_qualifier_deprecation_warning =
 %token PERCENT_LBRACK
 %token PIPE_RIGHT
 %token PRAGMALIGHT
+%token PRAGMA_POP_OPTIONS
+%token PRAGMA_PUSH_OPTIONS
 %token PRAGMA_RESET_OPTIONS
 %token PRAGMA_SET_OPTIONS
 %token PRIVATE
@@ -706,6 +708,12 @@ in
 | PRAGMA_RESET_OPTIONS option_string_
     {let (_1, s_opt) = ((), $2) in
       ( ResetOptions s_opt )}
+| PRAGMA_PUSH_OPTIONS option_string_
+    {let (_1, s_opt) = ((), $2) in
+      ( PushOptions s_opt )}
+| PRAGMA_POP_OPTIONS
+    {let _1 = () in
+      ( PopOptions )}
 
 attribute:
   LBRACK_AT list_atomicTerm_ RBRACK

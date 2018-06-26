@@ -1760,9 +1760,18 @@ let process_pragma p r =
       set_options Options.Set o
     | ResetOptions sopt ->
       Options.restore_cmd_line_options false |> ignore;
-      match sopt with
+      begin match sopt with
       | None -> ()
       | Some s -> set_options Options.Reset s
+      end
+    | PushOptions sopt ->
+      Options.push ();
+      begin match sopt with
+      | None -> ()
+      | Some s -> set_options Options.Reset s
+      end
+    | PopOptions ->
+      Options.pop ()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 let rec unbound_variables tm :  list<bv> =

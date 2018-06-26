@@ -436,6 +436,8 @@ let rec token = lexer
  | "#light" -> FStar_Options.add_light_off_file (L.source_file lexbuf); PRAGMALIGHT
  | "#set-options" -> PRAGMA_SET_OPTIONS
  | "#reset-options" -> PRAGMA_RESET_OPTIONS
+ | "#push-options" -> PRAGMA_PUSH_OPTIONS
+ | "#pop-options" -> PRAGMA_POP_OPTIONS
  | "__SOURCE_FILE__" -> STRING (L.source_file lexbuf)
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
 
