@@ -83,12 +83,15 @@ val type_of : embedding<'a> -> t
 
 val e_bool : embedding<bool>
 val e_string : embedding<string>
+val e_char : embedding<char>
 
 // Interface for NBE interpretations
 
 val arg_as_int : arg -> option<Z.t>
+val arg_as_bool : arg -> option<bool>
 val arg_as_char : arg -> option<FStar.Char.char>
 val arg_as_string : arg -> option<string>
+val arg_as_list : embedding<'a> -> arg -> option<list<'a>>
 
 val unary_int_op : (Z.t -> Z.t) -> (args -> option<t>)
 val binary_int_op : (Z.t -> Z.t -> Z.t) -> (args -> option<t>)
@@ -98,9 +101,18 @@ val binary_bool_op : (bool -> bool -> bool) -> (args -> option<t>)
 
 val binary_string_op : (string -> string -> string) -> (args -> option<t>)
 
-val string_of_int : ()
+val string_of_int : Z.t -> t
+val string_of_bool : bool -> t
+val string_of_list' : list<char> -> t
+val string_compare' : string -> string -> t
+val string_concat' : args -> option<t>
+val list_of_string' : (string -> t)
 
-val mixed_binary_op : (arg -> 'a) -> (arg -> 'b) -> ('a -> 'b -> t) -> option<t>
+val decidable_eq : bool -> args -> option<t>
+
+val mixed_binary_op : (arg -> option<'a>) -> (arg -> option<'b>) -> ('c -> t) ->
+                      ('a -> 'b -> 'c) -> args -> option<t>
 val unary_op : (arg -> option<'a>) -> ('a -> t) -> (args -> option<t>)
 val binary_op : (arg -> option<'a>) -> ('a -> 'a -> t) -> (args -> option<t>)
 
+val dummy_interp : Ident.lid -> args -> option<t>

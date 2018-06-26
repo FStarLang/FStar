@@ -361,7 +361,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             end
         | _ -> failwith "Unexpected number of arguments"
     in
-    let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>) * (args -> option<NBE.t>))> =
+    let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>) * (NBE.args -> option<NBE.t>))> =
             [(PC.op_Minus,       1, unary_int_op (fun x -> Z.minus_big_int x), 
                                     NBE.unary_int_op (fun x -> Z.minus_big_int x));
              (PC.op_Addition,    2, binary_int_op (fun x y -> Z.add_big_int x y),
@@ -401,7 +401,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              (PC.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool,
                                         NBE.unary_op NBE.arg_as_bool NBE.string_of_bool);
              (PC.string_compare, 2, binary_op arg_as_string string_compare',
-                                    NBE.binary_op NBE.arg_as_string string_compare');
+                                    NBE.binary_op NBE.arg_as_string NBE.string_compare');
              (PC.op_Eq,          3, decidable_eq false, 
                                     NBE.decidable_eq false);
              (PC.op_notEq,       3, decidable_eq true,
@@ -411,9 +411,9 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                                     NBE.unary_op NBE.arg_as_string NBE.list_of_string');
              (PC.p2l ["FStar"; "String"; "string_of_list"],
                                     1, unary_op (arg_as_list EMB.e_char) string_of_list',
-                                       NBE.unary_op (arg_as_list EMB.e_char) string_of_list');
+                                       NBE.unary_op (NBE.arg_as_list NBE.e_char) NBE.string_of_list');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat', NBE.string_concat');
-             (PC.p2l ["Prims"; "mk_range"], 5, mk_range, dummy_interp);
+             (PC.p2l ["Prims"; "mk_range"], 5, mk_range, NBE.dummy_interp (PC.p2l ["Prims"; "mk_range"]));
              ]
     in
     let weak_ops =

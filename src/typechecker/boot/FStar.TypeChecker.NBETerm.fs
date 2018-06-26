@@ -302,7 +302,7 @@ let arg_as_char   (a:arg) = fst a |> unembed e_char
 
 let arg_as_string (a:arg) = fst a |> unembed e_string 
 
-let arg_as_list   (e:embedding<'a>) a = fst a |> unembed (e_list e)
+let arg_as_list   (e:embedding<'a>) (a:arg) = fst a |> unembed (e_list e)
 
 let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
     match a with
@@ -377,18 +377,18 @@ let mixed_binary_op
                 end
              | _ -> None
 
-let list_of_string' rng (s:string) : t =
+let list_of_string' (s:string) : t =
   embed (e_list e_char) (list_of_string s)
   // let name l = mk (Tm_fvar (lid_as_fv l delta_constant None)) rng in
   // let char_t = name PC.char_lid in
   // let charterm c = mk (Tm_constant (Const_char c)) rng in
   // U.mk_list char_t rng <| List.map charterm (list_of_string s)
 
-let string_of_list' rng (l:list<char>) : t =
+let string_of_list' (l:list<char>) : t =
     let s = string_of_list l in
-    Constant (String (s, rng))
+    Constant (String (s, Range.dummyRange))
 
-let string_compare' rng (s1:string) (s2:string) : t =
+let string_compare' (s1:string) (s2:string) : t =
     let r = String.compare s1 s2 in
     embed e_int (Z.big_int_of_string (BU.string_of_int r))
 
@@ -411,7 +411,7 @@ let string_concat' args : option<t> =
 let string_of_int (i:Z.t) : t =
     embed e_string (Z.string_of_big_int i)
 
-let string_of_bool rng (b:bool) : t =
+let string_of_bool (b:bool) : t =
     embed e_string (if b then "true" else "false")
 
 let decidable_eq (neg:bool) (args:args) : option<t> =
