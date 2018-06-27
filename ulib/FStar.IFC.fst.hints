@@ -11,7 +11,7 @@
         "projection_inverse_FStar.IFC.SemiLattice_carrier"
       ],
       0,
-      "67558280ffce4190ab19e015892d20ec"
+      "6373fb6494d1363c5edf712ef6fab282"
     ],
     [
       "FStar.IFC.__proj__SemiLattice__item__lub",
@@ -25,7 +25,7 @@
         "refinement_interpretation_FStar.IFC_Tm_refine_edb2c6521da1348bce354e228735aede"
       ],
       0,
-      "219211efa16d00da26620aa453440601"
+      "38c3e9ea0afb69cde08fe9f35b07eb2f"
     ],
     [
       "FStar.IFC.reveal_hide",
@@ -34,7 +34,7 @@
       1,
       [ "@query", "equation_FStar.IFC.hide", "equation_FStar.IFC.reveal" ],
       0,
-      "2b3088896dd0e49e39fc0eed773026ba"
+      "7e9a9bcb949c3e5231eefc079a7afcef"
     ],
     [
       "FStar.IFC.hide_reveal",
@@ -43,7 +43,7 @@
       1,
       [ "@query", "equation_FStar.IFC.hide", "equation_FStar.IFC.reveal" ],
       0,
-      "c2057b1c8d70b21197a52c48a3ea721c"
+      "5bee1e8ab757d7e88a632fdf6c4b963b"
     ],
     [
       "FStar.IFC.map",
@@ -55,7 +55,7 @@
         "fuel_guarded_inversion_FStar.IFC.semi_lattice"
       ],
       0,
-      "a7e838ac1c0e10ec42280b8e99274241"
+      "3b70e1e5c90c6100c7f4c70109e83d82"
     ],
     [
       "FStar.IFC.join",
@@ -64,7 +64,33 @@
       1,
       [ "@query", "equation_FStar.IFC.reveal" ],
       0,
-      "45d91c33d9a39d3c436f15e777e70cd9"
+      "1cbb5d803f2d1f17220d4405d0536ec3"
+    ],
+    [
+      "FStar.IFC.__proj__SemiLattice__item__top",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_FStar.IFC.SemiLattice_carrier",
+        "projection_inverse_FStar.IFC.SemiLattice_carrier"
+      ],
+      0,
+      "dcf3810d4393415da11abe72e369fe17"
+    ],
+    [
+      "FStar.IFC.__proj__SemiLattice__item__lub",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "proj_equation_FStar.IFC.SemiLattice_carrier",
+        "projection_inverse_FStar.IFC.SemiLattice_carrier",
+        "refinement_interpretation_FStar.IFC_Tm_refine_edb2c6521da1348bce354e228735aede"
+      ],
+      0,
+      "a95e86da84e4b74cca2039ca49edb677"
     ]
   ]
 ]
