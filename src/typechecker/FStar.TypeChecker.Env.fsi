@@ -190,6 +190,7 @@ val lid_exists             : env -> lident -> bool
 val try_lookup_bv          : env -> bv -> option<(typ * Range.range)>
 val lookup_bv              : env -> bv -> typ * Range.range
 val lookup_qname           : env -> lident -> qninfo
+val lookup_sigelt          : env -> lident -> option<sigelt>
 val try_lookup_lid         : env -> lident -> option<((universes * typ) * Range.range)>
 val try_lookup_and_inst_lid: env -> universes -> lident -> option<(typ * Range.range)>
 val lookup_lid             : env -> lident -> (universes * typ) * Range.range
