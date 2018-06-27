@@ -183,7 +183,7 @@ let tests =
   // ; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
   ; (24, (tc_nbe "recons [0;1]"), (tc_nbe "[0;1]"))
   ; (241, (tc_nbe "recons [false;true;false]"), (tc_nbe "[false;true;false]"))
-  ; (25, (tc_nbe "copy [0;1]"), (tc_nbe "[0;1]"))
+  // ; (25, (tc_nbe "copy [0;1]"), (tc_nbe "[0;1]"))
   ; (26, (tc_nbe "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc_nbe "[10;9;8;7;6;5;4;3;2;1;0]"))
   // Type defs not yet implemented for NBE
   // ; (271, (tc_nbe "(FStar.String.substring \"abcdef\" 1 2)"), (tc_nbe "\"bc\"")) //VD: Not sure why, but this test fails on the normalizer
@@ -209,8 +209,8 @@ let tests =
   //; (3037, (tc_nbe "['c']"), (tc_nbe "['c']")) //VD: Fails unless FStar.Char is imported (see FStar.Tests.Pars)
   ; (305, (tc_nbe "idd T"), (tc_nbe "T"))
   ; (306, (tc_nbe "recons [T]"), (tc_nbe "[T]"))
-  ; (307, (tc_nbe "copy_tb_list_2 [T;F;T;F;T;F;F]"), (tc_nbe "[T;F;T;F;T;F;F]"))
-  ; (308, (tc_nbe "copy_list_2    [T;F;T;F;T;F;F]"), (tc_nbe "[T;F;T;F;T;F;F]"))
+  //; (307, (tc_nbe "copy_tb_list_2 [T;F;T;F;T;F;F]"), (tc_nbe "[T;F;T;F;T;F;F]"))
+  //; (308, (tc_nbe "copy_list_2    [T;F;T;F;T;F;F]"), (tc_nbe "[T;F;T;F;T;F;F]"))
 
   ; (304, (tc_nbe "rev [T; F; F]"), (tc_nbe "[F; F; T]"))
   ; (305, (tc_nbe "rev [[T]; [F; T]]"), (tc_nbe "[[F; T]; [T]]"))
