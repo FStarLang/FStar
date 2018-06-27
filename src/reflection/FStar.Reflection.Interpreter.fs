@@ -14,6 +14,8 @@ open FStar.Syntax.Embeddings
 module Print = FStar.Syntax.Print
 module BU = FStar.Util
 module E = FStar.Reflection.Embeddings
+module NBE = FStar.TypeChecker.NBETerm
+module Ident = FStar.Ident
 
 let int1 (m:lid) (f:'a -> 'r) (ea:embedding<'a>) (er:embedding<'r>)
                  (r:Range.range) (args : args) : option<term> =
@@ -41,7 +43,8 @@ let reflection_primops : list<Cfg.primitive_step> =
             Cfg.auto_reflect = None;
             Cfg.strong_reduction_ok = false;
             Cfg.requires_binder_substitution = false;
-            Cfg.interpretation = (fun ctxt args -> fn (Cfg.psc_range ctxt) args)
+            Cfg.interpretation = (fun ctxt args -> fn (Cfg.psc_range ctxt) args);
+            Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
         } in
     // GM: we need the annotation, otherwise F* will try to unify the types
     // for all mk1 calls. I guess a consequence that we don't generalize inner lets

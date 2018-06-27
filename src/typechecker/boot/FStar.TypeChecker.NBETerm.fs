@@ -290,14 +290,14 @@ let e_list (ea:embedding<'a>) =
 let e_arrow1 (ea:embedding<'a>) (eb:embedding<'b>) =
     let em (f : 'a -> 'b) : t = Lam((fun tas -> match unembed ea (List.hd tas) with
                                           | Some a -> embed eb (f a)
-                                          | None -> failwith "Cannot unembed argument"),
+                                          | None -> failwith "cannot unembed function argument"),
                                  [fun _ -> as_arg (type_of eb)], 1)
     in
     let un (lam : t) : option<('a -> 'b)> =
         match lam with
-        | Lam (ft, _, _) -> Some (fun (x:'a) -> match unembed eb (ft [embed ea x]) with
-                                           | Some b -> b
-                                           | None -> failwith "Cannot unembed function result")
+        | Lam (ft, _, _) -> Some (fun (x:'a) -> match unembed eb (ft [embed ea x]) with 
+                                           | Some x -> x
+                                           | None -> failwith "cannot unembed function result")
         | _ -> None
     in
     mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb)))

@@ -33,6 +33,7 @@ open FStar.Reflection.Basic
 open FStar.Reflection.Interpreter
 module RD = FStar.Reflection.Data
 module RE = FStar.Reflection.Embeddings
+module NBE = FStar.TypeChecker.NBETerm
 open FStar.Tactics.Native
 
 let tacdbg = BU.mk_ref false
@@ -226,7 +227,9 @@ let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
       Cfg.auto_reflect=Some (s.arity - 1);
       Cfg.strong_reduction_ok=s.strong_reduction_ok;
       Cfg.requires_binder_substitution = false; // GM: really?
-      Cfg.interpretation=(fun psc args -> s.tactic psc args) }
+      Cfg.interpretation=(fun psc args -> s.tactic psc args);
+      Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
+ }
 
 
 let rec e_tactic_0' (er : embedding<'r>) : embedding<tac<'r>> =
@@ -247,6 +250,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
       Cfg.strong_reduction_ok=false;
       Cfg.requires_binder_substitution = true;
       Cfg.interpretation=(fun psc args -> interpretation nm psc args);
+      Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
     } in
     let native_tactics = list_all () in
     let native_tactics_steps = List.map step_from_native_step native_tactics in
@@ -287,7 +291,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.auto_reflect=None;
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = false;
-         Cfg.interpretation = decr_depth_interp
+         Cfg.interpretation = decr_depth_interp;
+         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
          }
     in
     let incr_depth_interp psc (args : args) =
@@ -304,7 +309,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.auto_reflect=None;
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = false;
-         Cfg.interpretation = incr_depth_interp
+         Cfg.interpretation = incr_depth_interp;
+         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
          }
     in
     let tracepoint_interp psc (args : args) =
@@ -341,7 +347,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.auto_reflect=None;
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = false;
-         Cfg.interpretation = set_proofstate_range_interp
+         Cfg.interpretation = set_proofstate_range_interp;
+         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
         }
     in
     let tracepoint_step : Cfg.primitive_step =
@@ -351,7 +358,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.auto_reflect=None;
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = true;
-         Cfg.interpretation = tracepoint_interp
+         Cfg.interpretation = tracepoint_interp;
+         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
         }
     in
     let push_binder_step : Cfg.primitive_step =
@@ -361,7 +369,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.auto_reflect=None;
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = true;
-         Cfg.interpretation = push_binder_interp
+         Cfg.interpretation = push_binder_interp;
+         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
         }
     in
     [
