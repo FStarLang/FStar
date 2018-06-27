@@ -2737,18 +2737,18 @@ let (get_err_count : unit -> Prims.int) =
 let (wrapped_eh_add_one : error_handler -> issue -> unit) =
   fun h  ->
     fun issue  ->
+      h.eh_add_one issue;
       if issue.issue_level <> EInfo
       then
-        (let uu____4006 =
-           let uu____4007 = FStar_ST.op_Bang FStar_Options.abort_counter  in
-           uu____4007 - (Prims.parse_int "1")  in
-         FStar_ST.op_Colon_Equals FStar_Options.abort_counter uu____4006)
-      else ();
-      h.eh_add_one issue;
-      (let uu____4048 =
-         let uu____4049 = FStar_ST.op_Bang FStar_Options.abort_counter  in
-         uu____4049 = (Prims.parse_int "0")  in
-       if uu____4048 then failwith "Aborting due to --abort_on" else ())
+        ((let uu____4007 =
+            let uu____4008 = FStar_ST.op_Bang FStar_Options.abort_counter  in
+            uu____4008 - (Prims.parse_int "1")  in
+          FStar_ST.op_Colon_Equals FStar_Options.abort_counter uu____4007);
+         (let uu____4047 =
+            let uu____4048 = FStar_ST.op_Bang FStar_Options.abort_counter  in
+            uu____4048 = (Prims.parse_int "0")  in
+          if uu____4047 then failwith "Aborting due to --abort_on" else ()))
+      else ()
   
 let (add_one : issue -> unit) =
   fun issue  ->
