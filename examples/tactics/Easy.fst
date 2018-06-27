@@ -12,8 +12,8 @@ let easy_fill () =
     let _ = trytac (fun () -> apply (`lemma_from_squash); intro ()) in
     smt ()
 
-val easy : (#[easy_fill] _ : 'a) -> 'a
-let easy x = x
+val easy : #a:Type -> (#[easy_fill] _ : a) -> a
+let easy #a #x = x
 
 val plus_assoc : x:int -> y:int -> z:int -> Lemma ((x + y) + z == x + (y + z))
 let plus_assoc = easy
