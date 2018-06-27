@@ -71,15 +71,71 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
     ]
   | _ -> tfail "Not enough arguments to nondep_then"
   else
+  if hd `T.term_eq` (`(parse_synth))
+  then match tl with
+  | [k; qt1; t2; qp1; qf2] ->
+    let (p1, _) = qp1 in
+    let (t1, _) = qt1 in
+    let (f2, _) = qf2 in
+    let bx = T.fresh_binder t1 in
+    let x = T.pack (T.Tv_Var (T.bv_of_binder bx)) in
+    let f2' = T.pack (T.Tv_Abs bx (T.mk_app f2 [x, T.Q_Explicit])) in
+    let p1' = gen_parser32' p1 in
+    T.mk_app (`(parse32_synth)) [
+      k;
+      qt1;
+      t2;
+      qp1;
+      qf2;
+      (f2', T.Q_Explicit);
+      (p1', T.Q_Explicit);
+      ((`()), T.Q_Explicit);
+    ]
+  | _ -> tfail "Not enough arguments to synth"
+  else
   if L.length tl = 0
   then begin
     gen_parser32' (unfold_term p)
   end else
     tfail "Unknown parser combinator"
 
-let gen_parser32 (p: T.term) : T.Tac unit =
-  T.exact (gen_parser32' p)
-
 let p = parse_u8 `nondep_then` parse_ret 42
 
+let tsuccess () : T.Tac unit =
+  T.qed ();
+  T.print "Success!"
+
+let gen_parser32 (p: T.term) : T.Tac unit =
+  T.set_guard_policy T.Goal;
+  T.exact_guard (gen_parser32' p);
+  if T.ngoals () > 0
+  then begin
+    T.first [
+      (fun () ->
+        let _ = T.repeat (fun () -> T.forall_intro `T.or_else` T.implies_intro) in
+        T.print "Trying reflexivity";
+        T.trefl ();
+        tsuccess ()
+      );
+      (fun () ->
+        T.print "Trying SMT";
+        T.smt ();
+        tsuccess ()        
+      );
+    ]
+  end
+
 let q : parser32 p = T.synth_by_tactic (fun () -> gen_parser32 (`(p)))
+
+let p' = p `nondep_then` parse_u8
+
+// let p' = (parse_u8 `nondep_then` parse_ret 42) `nondep_then` parse_u8
+
+#push-options "--print_implicits"
+
+let q' : parser32 p' = T.synth_by_tactic (fun () -> gen_parser32 (`(p')))
+
+let r = parse_ret 42 `parse_synth` (fun x -> x + 1)
+
+let r' : parser32 r = T.synth_by_tactic (fun () -> gen_parser32 (`(r)))
+
