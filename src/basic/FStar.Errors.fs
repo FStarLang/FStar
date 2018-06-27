@@ -744,7 +744,8 @@ let mk_issue level range msg n =
 let get_err_count () = (!current_handler).eh_count_errors ()
 
 let wrapped_eh_add_one (h : error_handler) (issue : issue) : unit =
-    Options.abort_counter := !Options.abort_counter - 1;
+    if issue.issue_level <> EInfo then
+      Options.abort_counter := !Options.abort_counter - 1;
     h.eh_add_one issue;
     if !Options.abort_counter = 0
     then failwith "Aborting due to --abort_on"
