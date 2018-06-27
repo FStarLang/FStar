@@ -108,6 +108,7 @@ let fresh_bv_named          = from_tac_2 B.fresh_bv_named
 let change                  = from_tac_1 B.change
 let get_guard_policy        = from_tac_1 B.get_guard_policy
 let set_guard_policy        = from_tac_1 B.set_guard_policy
+let lax_on                  = from_tac_1 B.lax_on
 let dismiss                 = from_tac_1 B.dismiss
 let tadmit                  = from_tac_1 B.tadmit
 let inspect                 = from_tac_1 B.inspect

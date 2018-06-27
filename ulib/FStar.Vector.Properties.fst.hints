@@ -213,7 +213,7 @@
         "typing_FStar.Vector.Base.reveal"
       ],
       0,
-      "ff21ce414e177bf36bcb6ce5f0c2fbb6"
+      "106fe62221977f5ace71b370970544d2"
     ],
     [
       "FStar.Vector.Properties.tail_append",
@@ -302,7 +302,7 @@
         "typing_FStar.Vector.Properties.tail"
       ],
       0,
-      "d4083185b9d2ee6235f6f86b8ba8bf08"
+      "b699348262825e5ec64cfb07563baccd"
     ],
     [
       "FStar.Vector.Properties.coerce",
@@ -314,7 +314,7 @@
         "refinement_interpretation_FStar.Vector.Properties_Tm_refine_24a102650c3561bc6be37068de08feda"
       ],
       0,
-      "caf9efebcb0d8306541095cae9afbc41"
+      "212e694ad5198de40df9ac1df9b8a73f"
     ],
     [
       "FStar.Vector.Properties.append_inj",
@@ -323,17 +323,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_FStar.UInt32.t__uu___haseq", "b2t_def",
-        "equation_FStar.Vector.Base.len_t", "equation_Prims.squash",
-        "l_and-interp", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.Vector.Base_Tm_refine_e0a343048cb8452ce2db2783b020fdd3",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
+        "assumption_FStar.UInt32.t__uu___haseq",
+        "equation_FStar.Vector.Base.len_t",
+        "refinement_interpretation_FStar.Vector.Base_Tm_refine_e0a343048cb8452ce2db2783b020fdd3"
       ],
       0,
-      "084f2d29bbff86ccb9044e39f5720948"
+      "23e05004d98be8b7ce0b29b06c146e73"
     ],
     [
       "FStar.Vector.Properties.head",
@@ -342,7 +337,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "997d9a5972e4193e7912f224a9a0e16e"
+      "06735f9b742af89a5a2f5c9493029a84"
     ],
     [
       "FStar.Vector.Properties.head",

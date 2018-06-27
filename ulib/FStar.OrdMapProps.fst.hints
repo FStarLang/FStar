@@ -55,7 +55,8 @@
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
-        "equation_Prims.nat", "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "equation_Prims.nat", "int_inversion",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.OrdMap.choose_m", "lemma_FStar.OrdMap.contains_upd1",
         "lemma_FStar.OrdMap.eq_lemma", "lemma_FStar.OrdMap.size_empty",
         "lemma_FStar.OrdMap.size_remove", "primitive_Prims.op_Addition",
@@ -77,7 +78,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "bba3ab089b34a8a273d6529da8b8656e"
+      "6561b9939e05580b6a58f773863bf4f9"
     ]
   ]
 ]

@@ -92,7 +92,20 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "71f004858f4d14c81fabe8a9096e9d32"
+      "63f329f5a8b69b2e8a46b60f4bd984e9"
+    ],
+    [
+      "Vector.head",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Vector.VCons",
+        "equation_Prims.pos", "fuel_guarded_inversion_Vector.vector",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "a12dca5a77e3288556aaee7b74df3c1d"
     ],
     [
       "Vector.nth",
@@ -353,7 +366,16 @@
     ],
     [
       "Vector.head",
-      3,
+      4,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4357808c5956ffd320128805ad189e9d"
+    ],
+    [
+      "Vector.head",
+      5,
       2,
       1,
       [
@@ -362,7 +384,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "ed251b5f5e9396e3c231fdb5c81e6201"
+      "bd388ec73eb536496689629f27ef50ee"
     ],
     [
       "Vector.nth",

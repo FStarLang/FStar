@@ -492,7 +492,7 @@
       1,
       [ "@query", "assumption_BinaryTrees.tree__uu___haseq" ],
       0,
-      "bc68cee41580eae4ae57d435c94fb8e3"
+      "cbbafbf6e60ad9785402ebe556937812"
     ],
     [
       "BinaryTrees.revert_injective",
@@ -1042,7 +1042,7 @@
       1,
       [ "@query", "assumption_BinaryTrees.tree__uu___haseq" ],
       0,
-      "fb52451631c42da7ce4a8df8c22a4faf"
+      "02d0790cd82f1eb63e80ecce87e5777d"
     ],
     [
       "BinaryTrees.revert_fold",

@@ -1188,7 +1188,7 @@ let (interpret_plugin_as_term_fun :
                                     FStar_Util.string_of_int non_tvar_arity
                                      in
                                   Prims.strcat
-                                    "FStar_Tactics_Interpreter.mk_tactic_interpretation_"
+                                    "FStar_Tactics_InterpFuns.mk_tactic_interpretation_"
                                     uu____3128
                                    in
                                 str_to_top_name uu____3127  in

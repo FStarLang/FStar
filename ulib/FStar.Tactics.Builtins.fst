@@ -319,6 +319,10 @@ assume val get_guard_policy : unit -> Tac guard_policy
 (** Set the current guard policy. See [get_guard_policy} for an explanation *)
 assume val set_guard_policy : guard_policy -> Tac unit
 
+(** [lax_on] returns true iff the current environment has the
+`--lax` option set, and thus drops all verification conditions. *)
+assume val lax_on : unit -> Tac bool
+
 (** Ignore the current goal. If left unproven, this will fail after
 the tactic finishes. *)
 assume val dismiss : unit -> Tac unit

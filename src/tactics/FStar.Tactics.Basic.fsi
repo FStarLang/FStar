@@ -24,6 +24,7 @@ val bind : tac<'a> -> ('a -> tac<'b>) -> tac<'b>
 
 val get_guard_policy : unit -> tac<guard_policy>
 val set_guard_policy : guard_policy -> tac<unit>
+val lax_on : unit -> tac<bool>
 
 val fresh      : unit -> tac<Z.t>
 
