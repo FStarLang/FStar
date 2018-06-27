@@ -254,6 +254,7 @@ let steps_nbe           = psnconst "nbe"
 let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]
 let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
 let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
+let tcnorm_attr    =  p2l ["FStar"; "Pervasives"; "tcnorm"]
 let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
 let fail_attr      = psconst "fail"
@@ -354,7 +355,6 @@ let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 let u_tac_lid = fstar_tactics_lid' ["Effect"; "__tac"]
 
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
-let tcnorm_lid     = fstar_tactics_lid' ["Typeclasses"; "tcnorm"]
 let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "instance"]
 
 let effect_TAC_lid = fstar_tactics_lid' ["Effect"; "TAC"] // actual effect
