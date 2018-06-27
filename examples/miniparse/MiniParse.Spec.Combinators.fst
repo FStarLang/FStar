@@ -142,7 +142,6 @@ let parse_ret' (#t:Type) (v:t) : Tot (bare_parser t) =
 let parse_ret_kind : parser_kind =
   strong_parser_kind 0 0
 
-unfold
 let parse_ret (#t:Type) (v:t) : Tot (parser parse_ret_kind t) =
   parse_ret' v
 
