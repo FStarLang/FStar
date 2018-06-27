@@ -429,13 +429,15 @@ let regexp tvar        = '\'' (ident_start_char | constructor_start_char) tvar_c
 
 let rec token = lexer
  | "%splice" -> SPLICE
- | "%`" -> PERC_BACKTICK
+ | "`%" -> BACKTICK_PERC
  | "`#" -> BACKTICK_HASH
  | "`@" -> BACKTICK_AT
  | "quote" -> QUOTE
  | "#light" -> FStar_Options.add_light_off_file (L.source_file lexbuf); PRAGMALIGHT
  | "#set-options" -> PRAGMA_SET_OPTIONS
  | "#reset-options" -> PRAGMA_RESET_OPTIONS
+ | "#push-options" -> PRAGMA_PUSH_OPTIONS
+ | "#pop-options" -> PRAGMA_POP_OPTIONS
  | "__SOURCE_FILE__" -> STRING (L.source_file lexbuf)
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
 

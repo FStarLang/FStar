@@ -91,7 +91,7 @@ val to_seq_bytes: #t:serializable -> s:Seq.seq t ->
   Tot (s':Seq.seq UInt8.t{Seq.length s' = sizeof t * Seq.length s}) 
   (decreases (Seq.length s))
 let rec to_seq_bytes #t s =
-  if Seq.length s = 0 then Seq.createEmpty #UInt8.t
+  if Seq.length s = 0 then Seq.empty #UInt8.t
   else Seq.append (serialize #t (Seq.index s 0)) (to_seq_bytes (Seq.slice s 1 (Seq.length s)))
 
 assume val lemma_aux_0: x:nat -> y:pos -> Lemma
@@ -102,7 +102,7 @@ val of_seq_bytes: t:serializable -> s:Seq.seq UInt8.t{Seq.length s % sizeof t = 
   Tot (s':Seq.seq t{Seq.length s = sizeof t * Seq.length s'})
   (decreases (Seq.length s))
 let rec of_seq_bytes t s =
-  if Seq.length s = 0 then Seq.createEmpty #t
+  if Seq.length s = 0 then Seq.empty #t
   else begin
     lemma_aux_0 (Seq.length s) (sizeof t);
     Seq.append (Seq.create 1 (inflate t (Seq.slice s 0 (sizeof t)))) (of_seq_bytes t (Seq.slice s (sizeof t) (Seq.length s)))

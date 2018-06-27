@@ -216,7 +216,7 @@ let rec sl (i:int) : Tac unit =
     sl (i + 1)
 
   | Bind ->
-    unfold_first_occurrence (%`bind_wp);
+    unfold_first_occurrence (`%bind_wp);
     norm[];
     sl (i + 1)
 
@@ -246,19 +246,19 @@ let rec sl (i:int) : Tac unit =
     sl (i + 1)
 
   | Read ->
-    unfold_first_occurrence (%`read_wp);
+    unfold_first_occurrence (`%read_wp);
     norm[];
     eexists unit (fun () -> FStar.Tactics.split(); trefl());
     sl (i + 1)
 
   | Write ->
-    unfold_first_occurrence (%`write_wp);
+    unfold_first_occurrence (`%write_wp);
     norm[];
     eexists unit (fun () -> FStar.Tactics.split(); trefl());
     sl (i + 1)
 
   | FramePost ->
-    unfold_first_occurrence (%`frame_post);
+    unfold_first_occurrence (`%frame_post);
     norm[];
     FStar.Tactics.split(); smt(); //definedness
     sl (i + 1)
@@ -333,7 +333,7 @@ let __elim_exists (h:binder) :Tac unit
 let prelude' () : Tac unit =
   //take care of some auto_squash stuff
   //dump "start";
-  norm [delta_only [%`st_stronger; "Prims.auto_squash"]];
+  norm [delta_only [`%st_stronger; "Prims.auto_squash"]];
   mapply (`FStar.Squash.return_squash);
 
   //forall post m. 
@@ -342,8 +342,8 @@ let prelude' () : Tac unit =
 
   //wps are written in the style frame_wp (<small footprint wp> (frame_post post) ...
   //unfold frame_wp and frame_post in the annotated wp
-  unfold_first_occurrence (%`frame_wp);
-  unfold_first_occurrence (%`frame_post);
+  unfold_first_occurrence (`%frame_wp);
+  unfold_first_occurrence (`%frame_post);
   norm [];
 
   //unfolding frame_wp introduces two existentials m0 and m1 for frames

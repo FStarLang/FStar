@@ -937,12 +937,18 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
       e, lc
 
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
+  if Env.debug env Options.High then
+    BU.print3 "weaken_result_typ e=(%s) lc=(%s) t=(%s)\n"
+            (Print.term_to_string e)
+            (Print.lcomp_to_string lc)
+            (Print.term_to_string t);
   let use_eq =
     env.use_eq ||
     (match Env.effect_decl_opt env lc.eff_name with
+     // See issue #881 for why weakening result type of a reifiable computation is problematic
      | Some (ed, qualifiers) -> qualifiers |> List.contains Reifiable
      | _ -> false) in
-  let gopt = if use_eq //see issue #881 for why weakening result type of a reifiable computation is problematic
+  let gopt = if use_eq
              then Rel.try_teq true env lc.res_typ t, false
              else Rel.get_subtyping_predicate env lc.res_typ t, true in
   match gopt with
@@ -1090,7 +1096,11 @@ let maybe_instantiate (env:Env.env) e t =
   let torig = SS.compress t in
   if not env.instantiate_imp
   then e, torig, Env.trivial_guard
-  else let number_of_implicits t =
+  else begin
+       if Env.debug env Options.High then
+         BU.print2 "maybe_instantiate: starting check for (%s) of type (%s)\n"
+                 (Print.term_to_string e) (Print.term_to_string t);
+       let number_of_implicits t =
             let formals, _ = U.arrow_formals t in
             let n_implicits =
             match formals |> BU.prefix_until (fun (_, imp) -> imp=None || imp=Some Equality) with
@@ -1127,9 +1137,27 @@ let maybe_instantiate (env:Env.env) e t =
                   | _, (x, Some (Implicit dot))::rest ->
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
+                      if Env.debug env Options.High then
+                        BU.print1 "maybe_instantiate: Instantiating implicit with %s\n"
+                                (Print.term_to_string v);
                       let subst = NT(x, v)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
                       (v, Some (Implicit dot))::args, bs, subst, Env.conj_guard g g'
+
+                  | _, (x, Some (Meta tau))::rest ->
+                      let t = SS.subst subst x.sort in
+                      let v, _, g = new_implicit_var "Instantiation of meta argument" e.pos env t in
+                      if Env.debug env Options.High then
+                        BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
+                                (Print.term_to_string v);
+                      let mark_meta_implicits tau g =
+                          { g with implicits =
+                              List.map (fun imp -> { imp with imp_meta = Some (env, tau) }) g.implicits } in
+                      let g = mark_meta_implicits tau g in
+                      let subst = NT(x, v)::subst in
+                      let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
+                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
+
                  | _, bs -> [], bs, subst, Env.trivial_guard
               in
               let args, bs, subst, guard = aux [] (inst_n_binders t) bs in
@@ -1153,6 +1181,7 @@ let maybe_instantiate (env:Env.env) e t =
 
             | _ -> e, t, Env.trivial_guard
        end
+  end
 
 (**************************************************************************************)
 (* Generalizing types *)
@@ -1231,7 +1260,6 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let env_uvars = Env.uvars_in_env env in
      let gen_uvars uvs = BU.set_difference uvs env_uvars |> BU.set_elements in
      let univs_and_uvars_of_lec (lbname, e, c) =
-          let t = U.comp_result c |> SS.compress in
           let c = norm c in
           let t = U.comp_result c in
           let univs = Free.univs t in
@@ -1438,6 +1466,8 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
+  if debug env Options.Low then
+    BU.print1 "check_top_level, lc = %s\n" (Print.lcomp_to_string lc);
   let discharge g =
     force_trivial_guard env g;
     U.is_pure_lcomp lc in
@@ -1679,6 +1709,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       | Sig_bundle _ ->
         if not (quals |> BU.for_all (fun x ->
               x=Abstract
+              || x=NoExtract
               || inferred x
               || visibility x
               || has_eq x))

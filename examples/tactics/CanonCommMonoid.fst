@@ -152,7 +152,7 @@ let rec permute_via_swaps_correct_aux
 
 let permute_via_swaps_correct
   (#b:Type) (p:permute b) (pvs:permute_via_swaps p) : permute_correct p =
-     permute_via_swaps_correct_aux p pvs
+     fun #a -> permute_via_swaps_correct_aux p pvs #a
 
 (***** Sorting variables is a correct permutation
        (since it can be done by swaps) *)

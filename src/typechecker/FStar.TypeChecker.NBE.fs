@@ -24,6 +24,7 @@ module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module FC = FStar.Const
 module EMB = FStar.Syntax.Embeddings
+open FStar.TypeChecker.Cfg
 
 (* Utils *)
 
@@ -221,14 +222,11 @@ let translate_univ (bs:list<t>) (u:universe) : t =
 
         | U_unknown
         | U_name _
+        | U_unif _
         | U_zero ->
           u
-
-        | U_unif _ ->
-          failwith "Unknown or unconstrained universe"
     in
     Univ (aux u)
-
 
 (* Creates the environment of mutually recursive function definitions *)
 let make_rec_env (lbs:list<letbinding>) (bs:list<t>) : list<t> =
@@ -264,7 +262,7 @@ let app cfg (f:t) (x:t) (q:aqual) =
  // | Refinement (b, r) -> Refinement (b, app cfg  r x q)
   | Constant _ | Univ _ | Type_t _ | Unknown | Arrow _ -> failwith "Ill-typed application"
 
-let rec iapp (f:t) (args:args) =
+let rec iapp (f:t) (args:args) : t =
   match f with
   | Lam (f, targs, n) ->
     let m = List.length args in
@@ -344,16 +342,17 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
 (* translate a let-binding - local or global *)
 and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   let debug = debug cfg in
-
   let us = lb.lbunivs in
-  Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
-       List.map (fun _ -> (fun () -> (Constant Unit, None))) us,
-       // Zoe: Bogus type! The idea is that we will never readback these lambdas
-       List.length us)
-
-  // NS, GM: always translating to universe-polymorphic binding is not great
-  //      1. it breaks CBV evaluation order of let bindings
-  //      2. it adds a spurious universe abstraction that iapp must handle (which is okay, but maybe a bit inelegant?)
+  // GM: Ugh! need this to use <| and get the inner lambda into ALL, but why !?
+  let id x = x in
+  // NS: this seems to cause a regression, although it should be the right thing to do
+  // match us with
+  // | [] -> translate cfg bs lb.lbdef
+  // | _ ->
+    Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
+          List.map (fun _ -> (fun () -> id <| (Constant Unit, None))) us,
+          // Zoe: Bogus type! The idea is that we will never readback these lambdas
+          List.length us)
   // Note, we only have universe polymorphic top-level pure terms (i.e., fvars bound to pure terms)
   // Thunking them is probably okay, since the common case is really top-level function
   // rather than top-level pure computation
@@ -369,10 +368,11 @@ and translate_constant (c : sconst) : constant =
     | C.Const_range r -> Range r
     | _ -> failwith ("Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented")
 
-and translate_pat cfg (p : pat) : t =
+// GM: Not called?
+and translate_pat (p : pat) : t =
     match p.v with
     | Pat_constant c -> Constant (translate_constant c)
-    | Pat_cons (cfv, pats) -> iapp (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat cfg p, None)) pats) // Zoe : TODO universe args?
+    | Pat_cons (cfv, pats) -> iapp (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat p, None)) pats) // Zoe : TODO universe args?
     | Pat_var bvar -> mkAccuVar bvar
     | Pat_wild bvar -> mkAccuVar bvar
     | Pat_dot_term (bvar, t) -> failwith "Pat_dot_term not implemented"
@@ -438,8 +438,8 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_app({n=Tm_constant FC.Const_reify}, arg::more::args)
         when cfg.steps.reify_ ->
-      let reify, _ = U.head_and_args e in
-      let head = S.mk_Tm_app reify [arg] None e.pos in
+      let reifyh, _ = U.head_and_args e in
+      let head = S.mk_Tm_app reifyh [arg] None e.pos in
       translate cfg bs (S.mk_Tm_app head (more::args) None e.pos)
 
     | Tm_app({n=Tm_constant FC.Const_reify}, [arg])
@@ -534,11 +534,13 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_let((true, lbs), body) ->
       translate cfg (make_rec_env lbs bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
 
-    | Tm_meta (e, _) -> translate cfg bs e
+    | Tm_meta (e, _) ->
+      //TODO: we need to put the "meta" back when reading back
+      translate cfg bs e
 
     | Tm_lazy _ | Tm_quoted(_,_) -> failwith "Not yet handled"
 
-and translate_monadic (m, t) cfg bs e =
+and translate_monadic (m, ty) cfg bs e : t =
    let e = U.unascribe e in
    match e.n with
    | Tm_let((false, [lb]), body) -> //elaborate this to M.bind
@@ -553,7 +555,7 @@ and translate_monadic (m, t) cfg bs e =
            let body_rc = {
                 residual_effect=m;
                 residual_flags=[];
-                residual_typ=Some t
+                residual_typ=Some ty
             } in
            S.mk (Tm_abs([(BU.left lb.lbname, None)], body, Some body_rc)) None body.pos
        in
@@ -564,15 +566,18 @@ and translate_monadic (m, t) cfg bs e =
            else []
        in
        iapp (iapp (translate cfg' [] (U.un_uinst (snd ed.bind_repr)))
-                  [Univ U_unknown, None;
-                   Univ U_unknown, None])
+                  [Univ U_unknown, None;  //We are cheating here a bit
+                   Univ U_unknown, None]) //to avoid re-computing the universe of lb.lbtyp
+                                          //and ty below; but this should be okay since these
+                                          //arguments should not actually appear in the resulting
+                                          //term
            (
            [(translate cfg' bs lb.lbtyp, None); //translating the type of the bound term
-            (translate cfg' bs t, None)]        //and the body is sub-optimal; it is often unused
-           @maybe_range_arg
-           @[(Unknown, None) ; //unknown WP of lb.lbdef
+            (translate cfg' bs ty, None)]       //and the body is sub-optimal; it is often unused
+           @maybe_range_arg    //some effects take two additional range arguments for debugging
+           @[(Unknown, None) ; //unknown WP of lb.lbdef; same as the universe argument ... should not appear in the result
             (translate cfg bs lb.lbdef, None);
-            (Unknown, None) ; //unknown WP of body
+            (Unknown, None) ;  //unknown WP of body; ditto
             (translate cfg bs body_lam, None)]
            )
 
@@ -584,15 +589,15 @@ and translate_monadic (m, t) cfg bs e =
 
    | _ -> failwith (BU.format1 "Unexpected case in translate_monadic: %s" (P.tag_of_term e))
 
-and translate_monadic_lift (msrc, mtgt, t) cfg bs e =
+and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
    let e = U.unascribe e in
    if U.is_pure_effect msrc || U.is_div_effect msrc
    then let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv mtgt) in
         let cfg' = {cfg with reifying=false} in
         iapp (iapp (translate cfg' [] (U.un_uinst (snd ed.return_repr)))
                    [Univ U_unknown, None])
-              [(translate cfg' bs t, None); //translating the type of the returned term
-               (translate cfg' bs e, None)] //translating the returned term itself
+              [(translate cfg' bs ty, None); //translating the type of the returned term
+               (translate cfg' bs e, None)]  //translating the returned term itself
    else
     match Env.monad_leq cfg.tcenv msrc mtgt with
     | None ->
@@ -611,7 +616,7 @@ and translate_monadic_lift (msrc, mtgt, t) cfg bs e =
       let lift_lam =
         let x = S.new_bv None S.tun in
         U.abs [(x, None)]
-              (lift U_unknown t S.tun (S.bv_to_name x))
+              (lift U_unknown ty S.tun (S.bv_to_name x))
               None
       in
       let cfg' = {cfg with reifying=false} in

@@ -8,6 +8,7 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Errors
+open FStar.Char
 open FStar.String
 
 module PC = FStar.Parser.Const
@@ -243,7 +244,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
                        as_arg (embed ea (fst x));
                        as_arg (embed eb (snd x))]
     in
-    let un (trm:t) : option<'a * 'b> =
+    let un (trm:t) : option<('a * 'b)> =
         match trm with
         | Construct (fvar, us, [_; _; (a, _); (b, _)]) when S.fv_eq_lid fvar PC.lid_Mktuple2 ->
           BU.bind_opt (unembed ea a) (fun a ->
@@ -329,36 +330,22 @@ let int_as_bounded int_to_t n =
 
 
 (* XXX a lot of code duplication. Same code as in cfg.fs *)
-let lift_unary
-    : ('a -> 'b) -> list<option<'a>> -> option<'b>
-    = fun f aopts ->
+let lift_unary (f : 'a -> 'b) (aopts : list<option<'a>>) : option<'b> =
         match aopts with
         | [Some a] -> Some (f a)
         | _ -> None
 
 
-let lift_binary
-    : ('a -> 'a -> 'b) -> list<option<'a>> -> option<'b>
-    = fun f aopts ->
+let lift_binary (f : 'a -> 'a -> 'b) (aopts : list<option<'a>>) : option<'b> =
         match aopts with
         | [Some a0; Some a1] -> Some (f a0 a1)
         | _ -> None
 
+let unary_op (as_a : arg -> option<'a>) (f : 'a -> t) (args : args) : option<t> =
+    lift_unary f (List.map as_a args)
 
-let unary_op
-    : (arg -> option<'a>)
-    -> ('a -> t)
-    -> args
-    -> option<t>
-    = fun as_a f args -> lift_unary f (List.map as_a args)
-
-
-let binary_op
-    :  (arg -> option<'a>)
-    -> ('a -> 'a -> t)
-    -> args
-    -> option<t>
-    = fun as_a f args -> lift_binary f (List.map as_a args)
+let binary_op (as_a : arg -> option<'a>) (f : 'a -> 'a -> t) (args : args) : option<t> =
+    lift_binary f (List.map as_a args)
 
 let unary_int_op (f:Z.t -> Z.t) =
     unary_op arg_as_int (fun x -> embed e_int (f x))
@@ -375,14 +362,8 @@ let binary_bool_op (f:bool -> bool -> bool) =
 let binary_string_op (f : string -> string -> string) =
     binary_op arg_as_string (fun x y -> embed e_string (f x y))
 
-let mixed_binary_op
-       : (arg -> option<'a>)
-       -> (arg -> option<'b>)
-       -> ('c -> t)
-       -> ('a -> 'b -> 'c)
-       -> args
-       -> option<t>
-       = fun as_a as_b embed_c f args ->
+let mixed_binary_op (as_a : arg -> option<'a>) (as_b : arg -> option<'b>)
+       (embed_c : 'c -> t) (f : 'a -> 'b -> 'c) (args : args) : option<t> =
              match args with
              | [a;b] ->
                 begin
@@ -457,6 +438,40 @@ let prims_to_fstar_range_step (args:args) : option<t> =
       | None -> None
       end
    | _ -> failwith "Unexpected number of arguments"
+
+
+let string_split' args : option<t> =
+    match args with
+    | [a1; a2] ->
+        begin match arg_as_list e_char a1 with
+        | Some s1 ->
+            begin match arg_as_string a2 with
+            | Some s2 ->
+                let r = String.split s1 s2 in
+                Some (embed (e_list e_string) r)
+            | _ -> None
+            end
+        | _ -> None
+        end
+    | _ -> None
+
+
+let string_substring' args : option<t> =
+  match args with
+  | [a1; a2; a3] ->
+      begin match arg_as_string a1, arg_as_int a2, arg_as_int a3 with
+      | Some s1, Some n1, Some n2 ->
+        let n1 = Z.to_int_fs n1 in
+        let n2 = Z.to_int_fs n2 in
+        begin
+        try let r = String.substring s1 n1 n2 in
+            Some (embed e_string r)
+        with | _ -> None
+        end
+    | _ -> None
+    end
+
+| _ -> None
 
 // let e_arrow2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) =
 //   let em (f : 'a -> 'b -> 'c) : t = Lam((fun (ta:t) -> match unembed ea ta with

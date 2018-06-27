@@ -111,6 +111,9 @@ val string_of_bool : bool -> t
 val string_of_list' : list<char> -> t
 val string_compare' : string -> string -> t
 val string_concat' : args -> option<t>
+val string_substring' : args -> option<t>
+val string_split' : args -> option<t>
+
 val list_of_string' : (string -> t)
 
 val decidable_eq : bool -> args -> option<t>

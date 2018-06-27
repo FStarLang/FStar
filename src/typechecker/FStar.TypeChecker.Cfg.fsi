@@ -78,15 +78,16 @@ type primitive_step = {
 }
 
 type debug_switches = {
-     gen              : bool;
-     primop           : bool;
-     unfolding        : bool;
-     b380             : bool;
-     wpe              : bool;
-     norm_delayed     : bool;
-     print_normalized : bool;
+    gen              : bool;
+    top              : bool;
+    cfg              : bool;
+    primop           : bool;
+    unfolding        : bool;
+    b380             : bool;
+    wpe              : bool;
+    norm_delayed     : bool;
+    print_normalized : bool;
 }
-
 
 type cfg = {
      steps: fsteps;
@@ -97,12 +98,16 @@ type cfg = {
      strong : bool;                       // under a binder
      memoize_lazy : bool;
      normalize_pure_lets: bool;
-     reifying : bool
+     reifying : bool;
 }
 
 val cfg_env: cfg -> Env.env
 
+val cfg_to_string : cfg -> string
+
 val log : cfg -> (unit -> unit) -> unit
+val log_top : cfg -> (unit -> unit) -> unit
+val log_cfg : cfg -> (unit -> unit) -> unit
 val log_primops : cfg -> (unit -> unit) -> unit
 val log_unfolding : cfg -> (unit -> unit) -> unit
 val log_nbe : cfg -> (unit -> unit) -> unit

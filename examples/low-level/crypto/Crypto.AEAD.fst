@@ -56,7 +56,7 @@ let gen i rgn =
   if Flag.prf i then recall (PRF.itable i prf);
   let log : aead_log rgn i =
     if safeMac i 
-    then ref_as_aead_log (ralloc rgn Seq.createEmpty)
+    then ref_as_aead_log (ralloc rgn Seq.empty)
     else () in
   let ak = if CMA.skeyed i then Some (PRF.prf_sk0 #i prf) else None in 
   AEADState #i #Writer #rgn log prf ak

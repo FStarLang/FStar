@@ -87,7 +87,7 @@ val read_word: len:u32 -> b:wordB{length b == w len} -> ST word
   (ensures (fun h0 r h1 -> h0 == h1 /\ live h1 b /\ r == (sel_word h1 b)))
 let read_word len b =
   let h = ST.get() in
-  let s0 = Seq.createEmpty #byte in
+  let s0 = Seq.empty #byte in
   Seq.lemma_eq_intro s0 (Seq.slice (sel_word h b) 0 0);
   _read_word len b s0 0ul
 
@@ -853,7 +853,7 @@ val encode_bytes: txt:Seq.seq UInt8.t -> GTot text (decreases (Seq.length txt))
 let rec encode_bytes txt =
   let l = Seq.length txt in
   if l = 0 then
-    Seq.createEmpty
+    Seq.empty
   else
     let l0 = min l 16 in
     let w, txt = Seq.split txt l0 in
@@ -910,7 +910,7 @@ let append_as_seq h n m msg = ()
 
 val encode_bytes_empty: txt:Seq.seq UInt8.t -> Lemma
     (requires Seq.length txt == 0)
-    (ensures  encode_bytes txt == Seq.createEmpty)
+    (ensures  encode_bytes txt == Seq.empty)
     [SMTPat (encode_bytes txt); SMTPat (Seq.length txt == 0)]
 let encode_bytes_empty txt = ()
 
@@ -1027,7 +1027,7 @@ val poly1305_process:
 let poly1305_process msg len acc r =
   let h0 = ST.get () in
   let ctr, rem = U32.div len 16ul, U32.rem len 16ul in
-  let log0:log_t = if mac_log then Seq.createEmpty #word in
+  let log0:log_t = if mac_log then Seq.empty #word in
   if mac_log then poly_empty (ilog log0) (sel_elem h0 r);
   let log1 = poly1305_loop log0 msg acc r ctr in
   let h1 = ST.get () in

@@ -33,8 +33,8 @@ let (definition_lids :
     | FStar_Parser_AST.Tycon (uu____106,tys) ->
         FStar_All.pipe_right tys
           (FStar_List.collect
-             (fun uu___163_147  ->
-                match uu___163_147 with
+             (fun uu___165_147  ->
+                match uu___165_147 with
                 | (FStar_Parser_AST.TyconAbbrev
                    (id1,uu____157,uu____158,uu____159),uu____160) ->
                     let uu____173 = FStar_Ident.lid_of_ids [id1]  in
@@ -73,12 +73,12 @@ let rec (prefix_with_iface_decls :
                   ("KremlinPrivate", (impl1.FStar_Parser_AST.drange))))
             impl1.FStar_Parser_AST.drange FStar_Parser_AST.Expr
            in
-        let uu___167_316 = impl1  in
+        let uu___169_316 = impl1  in
         {
-          FStar_Parser_AST.d = (uu___167_316.FStar_Parser_AST.d);
-          FStar_Parser_AST.drange = (uu___167_316.FStar_Parser_AST.drange);
-          FStar_Parser_AST.doc = (uu___167_316.FStar_Parser_AST.doc);
-          FStar_Parser_AST.quals = (uu___167_316.FStar_Parser_AST.quals);
+          FStar_Parser_AST.d = (uu___169_316.FStar_Parser_AST.d);
+          FStar_Parser_AST.drange = (uu___169_316.FStar_Parser_AST.drange);
+          FStar_Parser_AST.doc = (uu___169_316.FStar_Parser_AST.doc);
+          FStar_Parser_AST.quals = (uu___169_316.FStar_Parser_AST.quals);
           FStar_Parser_AST.attrs = (krem_private ::
             (impl1.FStar_Parser_AST.attrs))
         }  in
@@ -89,8 +89,8 @@ let rec (prefix_with_iface_decls :
            | FStar_Parser_AST.Tycon (uu____341,tys) when
                FStar_All.pipe_right tys
                  (FStar_Util.for_some
-                    (fun uu___164_376  ->
-                       match uu___164_376 with
+                    (fun uu___166_376  ->
+                       match uu___166_376 with
                        | (FStar_Parser_AST.TyconAbstract uu____383,uu____384)
                            -> true
                        | uu____399 -> false))
@@ -200,8 +200,8 @@ let (check_initial_interface :
            | FStar_Parser_AST.Tycon (uu____715,tys) when
                FStar_All.pipe_right tys
                  (FStar_Util.for_some
-                    (fun uu___165_750  ->
-                       match uu___165_750 with
+                    (fun uu___167_750  ->
+                       match uu___167_750 with
                        | (FStar_Parser_AST.TyconAbstract uu____757,uu____758)
                            -> true
                        | uu____773 -> false))
@@ -378,8 +378,8 @@ let (interleave_module :
                       let uu____1252 =
                         let uu____1261 =
                           FStar_Util.prefix_until
-                            (fun uu___166_1280  ->
-                               match uu___166_1280 with
+                            (fun uu___168_1280  ->
+                               match uu___168_1280 with
                                | {
                                    FStar_Parser_AST.d = FStar_Parser_AST.Val
                                      uu____1281;

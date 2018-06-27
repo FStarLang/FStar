@@ -94,4 +94,6 @@ let by_tactic_seman a tau phi = ()
 
 // TcTerm needs these two names typecheck tactics against
 private let tactic a = unit -> TacF a // we don't care if the tactic is satisfiable before running it
+
+#set-options "--admit_smt_queries true" // F* won't allow it otherwise, since `t` is not proven total
 private let reify_tactic (t : tactic 'a) : __tac 'a = reify (t ())

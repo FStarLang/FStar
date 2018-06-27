@@ -289,13 +289,13 @@ val modifies_fresh_frame_popped'
 : Lemma
   (requires (
     HS.fresh_frame h0 h1 /\
-    modifies (loc_union (loc_regions (Set.singleton h1.HS.tip)) s) h1 h2 /\
-    h2.HS.tip == h1.HS.tip /\
+    modifies (loc_union (loc_regions (Set.singleton (HS.get_tip h1))) s) h1 h2 /\
+    (HS.get_tip h2) == (HS.get_tip h1) /\
     HS.popped h2 h3
   ))
   (ensures (
     modifies s h0 h3 /\
-    h3.HS.tip == h0.HS.tip
+    (HS.get_tip h3) == HS.get_tip h0
   ))
 
 val buffer_includes_gsub_r_gen

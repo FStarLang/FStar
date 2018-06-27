@@ -527,6 +527,7 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
 
+    (* GM: Why keep `t`? *)
     let t0 = SS.compress t in
     if Env.debug env.tcenv <| Options.Other "SMTEncoding"
     then BU.print3 "(%s) (%s)   %s\n" (Print.tag_of_term t) (Print.tag_of_term t0) (Print.term_to_string t0);
@@ -539,7 +540,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                              (Print.term_to_string t0)
                              (Print.term_to_string t))
 
-      | Tm_lazy i -> encode_term (U.unfold_lazy i) env
+      | Tm_lazy i ->
+        let e = U.unfold_lazy i in
+        if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+            BU.print2 ">> Unfolded (%s) ~> (%s)\n" (Print.term_to_string t0)
+                                                   (Print.term_to_string e);
+        encode_term e env
 
       | Tm_bvar x ->
         failwith (BU.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
@@ -556,6 +562,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         //
         // Actual encoding: `q ~> pack qv where qv is the view of q
         let tv = EMB.embed RE.e_term_view t.pos (R.inspect_ln qt) in
+        if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+            BU.print2 ">> Inspected (%s) ~> (%s)\n" (Print.term_to_string t0)
+                                                    (Print.term_to_string tv);
         let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
         encode_term t env
 
@@ -790,7 +799,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_app _ ->
         let head, args_e = U.head_and_args t0 in
         (* if Env.debug env.tcenv <| Options.Other "SMTEncoding" *)
-        (* then printfn "Encoding app head=%s, n_args=%d" (Print.term_to_string head) (List.length args_e); *)
+        (* then BU.print2 "Encoding app head=%s, n_args=%s\n" (Print.term_to_string head) *)
+        (*                                                    (string_of_int <| List.length args_e); *)
         begin
         match (SS.compress head).n, args_e with
         | _ when head_redex env head ->

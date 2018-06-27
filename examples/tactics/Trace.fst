@@ -123,7 +123,7 @@ let instrument (f : 'a) : Tac unit =
     let t = norm_term [delta] (mk_e_app t ii.args) in
     dup ();
     let t = instrument_body ii t in
-    dump "";
+    (* dump ""; *)
     let _ = focus (fun () -> exact_guard t; repeat smt) in
     norm [];
     trefl ()
@@ -136,10 +136,10 @@ let rec fall (n : mynat) : Tot mynat =
 // Because of the way we're building this recursive function, its termination is unprovable.
 // So admit queries for now.
 #set-options "--admit_smt_queries true"
-let rec fall' (n : mynat) =
+let rec fall' (n : mynat) (l : list mynat) =
     // We need to annotate the result type.. which sucks.
     // But we could use a tactic later :)
-    synth_by_tactic #(mynat -> list mynat -> (list mynat * mynat)) (fun () -> instrument fall) n
+    synth_by_tactic #(mynat -> list mynat -> (list mynat * mynat)) (fun () -> instrument fall) n l
 #set-options "--admit_smt_queries false"
 
 let _ = assert (fall' (S (S (S Z))) [] == ([Z; S Z; S (S Z); S (S (S Z))], Z))

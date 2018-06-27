@@ -26,7 +26,6 @@ module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 module NBE = FStar.TypeChecker.NBETerm
 
-
 type fsteps = {
      beta : bool;
      iota : bool;
@@ -55,6 +54,33 @@ type fsteps = {
      nbe_step:bool;
 }
 
+let steps_to_string steps =
+    (* Note: some are missing *)
+    String.concat "\n"
+        ["{";
+         BU.format1 "    beta = %s;"                              (string_of_bool steps.beta);
+         BU.format1 "    iota = %s;"                              (string_of_bool steps.iota);
+         BU.format1 "    zeta = %s;"                              (string_of_bool steps.zeta);
+         BU.format1 "    weak = %s;"                              (string_of_bool steps.weak);
+         BU.format1 "    hnf = %s;"                               (string_of_bool steps.hnf);
+         BU.format1 "    primops = %s;"                           (string_of_bool steps.primops);
+         BU.format1 "    do_not_unfold_pure_lets = %s;"           (string_of_bool steps.do_not_unfold_pure_lets);
+         BU.format1 "    unfold_tac = %s;"                        (string_of_bool steps.unfold_tac);
+         BU.format1 "    pure_subterms_within_computations = %s;" (string_of_bool steps.pure_subterms_within_computations);
+         BU.format1 "    simplify = %s;"                          (string_of_bool steps.simplify);
+         BU.format1 "    erase_universes = %s;"                   (string_of_bool steps.erase_universes);
+         BU.format1 "    allow_unbound_universes = %s;"           (string_of_bool steps.allow_unbound_universes);
+         BU.format1 "    reify_ = %s;"                            (string_of_bool steps.reify_);
+         BU.format1 "    compress_uvars = %s;"                    (string_of_bool steps.compress_uvars);
+         BU.format1 "    no_full_norm = %s;"                      (string_of_bool steps.no_full_norm);
+         BU.format1 "    check_no_uvars = %s;"                    (string_of_bool steps.check_no_uvars);
+         BU.format1 "    unmeta = %s;"                            (string_of_bool steps.unmeta);
+         BU.format1 "    unascribe = %s;"                         (string_of_bool steps.unascribe);
+         BU.format1 "    in_full_norm_request = %s;"              (string_of_bool steps.in_full_norm_request);
+         BU.format1 "    weakly_reduce_scrutinee = %s;"           (string_of_bool steps.weakly_reduce_scrutinee);
+         BU.format1 "    nbe_step = %s;"                          (string_of_bool steps.nbe_step);
+         "  }"]
+
 let default_steps : fsteps = {
     beta = true;
     iota = true;
@@ -80,7 +106,7 @@ let default_steps : fsteps = {
     unascribe = false;
     in_full_norm_request = false;
     weakly_reduce_scrutinee = true;
-    nbe_step = false
+    nbe_step = false;
 }
 
 let fstep_add_one s fs =
@@ -132,15 +158,16 @@ let psc_range psc = psc.psc_range
 let psc_subst psc = psc.psc_subst ()
 
 type debug_switches = {
-     gen              : bool;
-     primop           : bool;
-     unfolding        : bool;
-     b380             : bool;
-     wpe              : bool;
-     norm_delayed     : bool;
-     print_normalized : bool;
+    gen              : bool;
+    top              : bool;
+    cfg              : bool;
+    primop           : bool;
+    unfolding        : bool;
+    b380             : bool;
+    wpe              : bool;
+    norm_delayed     : bool;
+    print_normalized : bool;
 }
-
 
 type primitive_step = {
      name:Ident.lid;
@@ -161,9 +188,14 @@ type cfg = {
      strong : bool;                       // under a binder
      memoize_lazy : bool;
      normalize_pure_lets: bool;
-     reifying : bool
+     reifying : bool;
 }
 
+let cfg_to_string cfg =
+    String.concat "\n"
+        ["{";
+         BU.format1 "  steps = %s" (steps_to_string cfg.steps);
+         "}" ]
 
 let cfg_env cfg = cfg.tcenv
 
@@ -183,6 +215,12 @@ let is_prim_step cfg fv =
 
 let log cfg f =
     if cfg.debug.gen then f () else ()
+
+let log_top cfg f =
+    if cfg.debug.top then f () else ()
+
+let log_cfg cfg f =
+    if cfg.debug.cfg then f () else ()
 
 let log_primops cfg f =
     if cfg.debug.primop then f () else ()
@@ -314,6 +352,38 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             end
         | _ -> None
     in
+    let string_split' psc args : option<term> =
+        match args with
+        | [a1; a2] ->
+            begin match arg_as_list EMB.e_char a1 with
+            | Some s1 ->
+                begin match arg_as_string a2 with
+                | Some s2 ->
+                    let r = String.split s1 s2 in
+                    Some (EMB.embed (EMB.e_list EMB.e_string) psc.psc_range r)
+                | _ -> None
+                end
+            | _ -> None
+            end
+        | _ -> None
+    in
+    let string_substring' psc args : option<term> =
+        match args with
+        | [a1; a2; a3] ->
+            begin match arg_as_string a1, arg_as_int a2, arg_as_int a3 with
+            | Some s1, Some n1, Some n2 ->
+                let n1 = Z.to_int_fs n1 in
+                let n2 = Z.to_int_fs n2 in
+                (* Might raise an OOB exception *)
+                begin
+                try let r = String.substring s1 n1 n2 in
+                    Some (EMB.embed EMB.e_string psc.psc_range r)
+                with | _ -> None
+                end
+            | _ -> None
+            end
+        | _ -> None
+    in
     let string_of_int rng (i:Z.t) : term =
         EMB.embed EMB.e_string rng (Z.string_of_big_int i)
     in
@@ -409,9 +479,10 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              (PC.p2l ["FStar"; "String"; "list_of_string"],
                                  1, unary_op arg_as_string list_of_string', 
                                     NBE.unary_op NBE.arg_as_string NBE.list_of_string');
-             (PC.p2l ["FStar"; "String"; "string_of_list"],
-                                    1, unary_op (arg_as_list EMB.e_char) string_of_list',
-                                       NBE.unary_op (NBE.arg_as_list NBE.e_char) NBE.string_of_list');
+             (PC.p2l ["FStar"; "String"; "string_of_list"], 1, unary_op (arg_as_list EMB.e_char) string_of_list',
+                                                               NBE.unary_op (NBE.arg_as_list NBE.e_char) NBE.string_of_list');
+             (PC.p2l ["FStar"; "String"; "split"], 2, string_split', NBE.string_split');
+             (PC.p2l ["FStar"; "String"; "substring"], 3, string_substring', NBE.string_substring');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat', NBE.string_concat');
              (PC.p2l ["Prims"; "mk_range"], 5, mk_range, NBE.dummy_interp (PC.p2l ["Prims"; "mk_range"]));
              ]
@@ -515,13 +586,14 @@ let config' psteps s e =
         | UnfoldUntil k -> [Env.Unfold k]
         | Eager_unfolding -> [Env.Eager_unfolding_only]
         | Inlining -> [Env.InliningDelta]
-        | UnfoldTac -> [Env.UnfoldTacDelta]
         | _ -> []) in
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
     {tcenv=e;
      debug = { gen = Env.debug e (Options.Other "Norm")
+             ; top = Env.debug e (Options.Other "NormTop")
+             ; cfg = Env.debug e (Options.Other "NormCfg")
              ; primop = Env.debug e (Options.Other "Primops")
              ; unfolding = Env.debug e (Options.Other "Unfolding")
              ; b380 = Env.debug e (Options.Other "380")

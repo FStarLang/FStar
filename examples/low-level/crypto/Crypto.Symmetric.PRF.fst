@@ -172,7 +172,7 @@ val gen: rgn:region -> i:id -> ST (state i)
     s.rgn == rgn /\
     (prf i ==>
         ~ (h0 `HS.contains` (itable i s))
-    /\ HS.sel h1 (itable i s) == Seq.createEmpty #(entry s.mac_rgn i))))
+    /\ HS.sel h1 (itable i s) == Seq.empty #(entry s.mac_rgn i))))
 let gen rgn i =
   push_frame();
   let mac_rgn : (r:region{r `HH.extends` rgn}) = new_region rgn in
@@ -183,7 +183,7 @@ let gen rgn i =
   Block.init #i key keystate;
   let table: table_t rgn mac_rgn i =
     if prf i then
-      mktable i rgn mac_rgn (ralloc rgn (Seq.createEmpty #(entry mac_rgn i)))
+      mktable i rgn mac_rgn (ralloc rgn (Seq.empty #(entry mac_rgn i)))
     else ()
   in
   pop_frame();

@@ -19,7 +19,7 @@
         "token_correspondence_FStar.DM4F.MonadLaws.return_st"
       ],
       0,
-      "7c63d13dd04a1a3b989966a96e39d649"
+      "880f972a63ef109b64532b6520adee89"
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit_st",
@@ -36,7 +36,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "4aaa38f92611e70303fa8efa50797eeb"
+      "dbd635f8f14b94ae1f0fa47002746375"
     ],
     [
       "FStar.DM4F.MonadLaws.assoc_st",
@@ -50,7 +50,7 @@
         "interpretation_FStar.DM4F.MonadLaws_Tm_abs_f541716cfedab030d3e5d803d0c6034f"
       ],
       0,
-      "6d1353e73e6d27fa823919d331b958f0"
+      "6b2f99b0c37115bbaf8d3f21c4fc728d"
     ],
     [
       "FStar.DM4F.MonadLaws.bind_ifc",
@@ -73,7 +73,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "382354ec1b09d9e424ad738fcb58a5b2"
+      "e96d2eb1f4c56073eae087c5dacc8284"
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit",
@@ -111,7 +111,7 @@
         "typing_FStar.DM4F.MonadLaws.return_ifc"
       ],
       0,
-      "8bab620359dcf66e01ce2abdc1215c1c"
+      "ebb16286e5505c9e7254eea56f2aa463"
     ],
     [
       "FStar.DM4F.MonadLaws.right_unit",
@@ -135,7 +135,7 @@
         "token_correspondence_FStar.DM4F.MonadLaws.return_ifc"
       ],
       0,
-      "a927b08073ecf949e9045c92510813b3"
+      "52bd1771fe550ca8ab67841ea66832d9"
     ],
     [
       "FStar.DM4F.MonadLaws.associativity",
@@ -177,7 +177,7 @@
         "typing_tok_FStar.DM4F.MonadLaws.Low@tok"
       ],
       0,
-      "ba46683703d7f2add93b8f74c0549055"
+      "5fec3dcf7b5eb23c8942034463deddd2"
     ],
     [
       "FStar.DM4F.MonadLaws.bind_ifc",
@@ -200,7 +200,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "226588985bd419f799450fa2f1b3a497"
+      "8afa2c2e1ed60399682ad26073e2148f"
     ]
   ]
 ]

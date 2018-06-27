@@ -184,7 +184,7 @@ let un_snoc #a s =
 val map: ('a -> Tot 'b) -> s:seq 'a -> Tot (seq 'b)
     (decreases (Seq.length s))
 let rec map f s =
-  if Seq.length s = 0 then Seq.createEmpty
+  if Seq.length s = 0 then Seq.empty
   else let prefix, last = un_snoc s in
        Seq.snoc (map f prefix) (f last)
 
@@ -282,7 +282,7 @@ let map_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 val collect: ('a -> Tot (seq 'b)) -> s:seq 'a -> Tot (seq 'b)
     (decreases (Seq.length s))
 let rec collect f s =
-  if Seq.length s = 0 then Seq.createEmpty
+  if Seq.length s = 0 then Seq.empty
   else let prefix, last = un_snoc s in
        Seq.append (collect f prefix) (f last)
 
@@ -381,7 +381,7 @@ let new_seqn (#a:Type) (#l:rid) (#max:nat)
 		   modifies_ref i Set.empty h0 h1 /\
 		   fresh_ref c h0 h1 /\
 		   HS.sel h1 c = init /\
-		   FStar.Map.contains h1.h i))
+		   FStar.Map.contains (HS.get_hmap h1) i))
   = recall log; recall_region i;
     mr_witness log (at_most_log_len init log);
     ralloc i init
@@ -414,4 +414,4 @@ let testify_seqn (#a:Type0) (#i:rid) (#l:rid) (#log:log_t l a) (#max:nat) (ctr:s
 
 private let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
          (r:seqn i log 8) (h:mem)
-  = assert (HS.sel h r = Heap.sel (FStar.Map.sel h.h i) (HS.as_ref r))
+  = assert (HS.sel h r = Heap.sel (FStar.Map.sel (HS.get_hmap h) i) (HS.as_ref r))

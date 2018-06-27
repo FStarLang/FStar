@@ -17,6 +17,8 @@ abstract type heap = h:(nat * (nat -> Tot (option heap_cell)))
 
 abstract type mref (a:Type) (r:preorder_t a) = nat
 
+abstract let addr_of (#a:Type) (#r:preorder_t a) (m:mref a r) : nat = m
+
 
 (* Containment predicate on heaps. *)
 
@@ -26,6 +28,15 @@ abstract let contains (#a:Type) (#r:preorder_t a) (h:heap) (m:mref a r) : GTot T
     dfst v == a /\
     snd #(dfst v) #(preorder_t a) (dsnd v) == r
 
+let contains_same_addr_lemma (#a:Type) (#b:Type) (#r:preorder_t a) (#s:preorder_t b) (h:heap) (m:mref a r) (m':mref b s)
+  : Lemma (contains h m /\ contains h m' /\ addr_of m = addr_of m' ==> a == b /\ r == s)
+    [SMTPat (contains h m); SMTPat (contains h m'); SMTPat (addr_of m); SMTPat (addr_of m')]
+  = ()
+
+let contains_diff_addr_lemma (#a:Type) (#b:Type) (#r:preorder_t a) (#s:preorder_t b) (h:heap) (m:mref a r) (m':mref b s)
+  : Lemma (contains h m /\ contains h m' /\ ~(addr_of m = addr_of m') ==> ~(m === m'))
+    [SMTPat (contains h m); SMTPat (contains h m'); SMTPat (addr_of m); SMTPat (addr_of m')]
+  = ()
 
 (* Select. *)
 

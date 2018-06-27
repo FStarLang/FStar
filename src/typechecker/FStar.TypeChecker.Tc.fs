@@ -735,17 +735,15 @@ let cps_and_elaborate env ed =
 
   // we do not expect the return_elab to verify, since that may require internalizing monotonicity of WPs (i.e. continuation monad)
   let return_wp = register "return_wp" return_wp in
-  Options.push ();
-  sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries true")) :: !sigelts;
+  sigelts := mk_sigelt (Sig_pragma (PushOptions (Some "--admit_smt_queries true"))) :: !sigelts;
   let return_elab = register "return_elab" return_elab in
-  Options.pop();
+  sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
 
   // we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
   let bind_wp = register "bind_wp" bind_wp in
-  Options.push ();
-  sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries true")) :: !sigelts;
+  sigelts := mk_sigelt (Sig_pragma (PushOptions (Some "--admit_smt_queries true"))) :: !sigelts;
   let bind_elab = register "bind_elab" bind_elab in
-  Options.pop ();
+  sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     let params_un = SS.open_binders action.action_params in
@@ -970,6 +968,9 @@ let tc_assume (env:env) (ts:tscheme) (r:Range.range) :tscheme =
 let tc_inductive env ses quals lids =
     let env = Env.push env "tc_inductive" in
 
+    if Env.debug env Options.Low then
+        BU.print1 ">>>>>>>>>>>>>>tc_inductive %s\n" (FStar.Common.string_of_list Print.sigelt_to_string ses);
+
     let sig_bndle, tcs, datas = TcInductive.check_inductive_well_typedness env ses quals lids in
     (* we have a well-typed inductive;
             we still need to check whether or not it supports equality
@@ -1085,49 +1086,16 @@ let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
         | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 <> hd2 ->
             Some (hd1, n1, 0)
 
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 when hd1 = hd2 ->
+        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 (* when hd1 = hd2 *) ->
             if n1 <> n2
             then Some (hd1, n1, n2)
             else aux tl1 tl2
     in
     aux l1 l2
 
-(* [tc_decl env se] typechecks [se] in environment [env] and returns *)
-(* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
-let rec tc_decl env se: list<sigelt> * list<sigelt> =
-  let env = set_hint_correlator env se in
-  if Env.debug env Options.Low
-  then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
+let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
+  let env = env0 in
   TcUtil.check_sigelt_quals env se;
-  match get_fail_se se with
-  | Some (_, false) when not (Env.should_verify env) ->
-    (* If we're --laxing, and we didn't find fail_lax, then just ignore the definition *)
-    [], []
-
-  | Some (errnos, _) ->
-    if Env.debug env Options.Low then
-        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
-    let errs = Errors.catch_errors (fun () -> tc_decl' env se) in
-    if Env.debug env Options.Low then begin
-        BU.print_string ">> Got issues:\n";
-        List.iter Errors.print_issue errs;
-        BU.print_string ">> //Got issues:\n"
-    end;
-    begin match errs, check_multi_contained errnos (List.concatMap (fun i -> list_of_option i.issue_number) errs) with
-    | [], _ ->
-        List.iter Errors.print_issue errs;
-        raise_error (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded") se.sigrng
-    | _, Some (e, n1, n2) ->
-        List.iter Errors.print_issue errs;
-        raise_error (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
-                                                (string_of_int e) (string_of_int n1) (string_of_int n2)) se.sigrng
-    | _, None -> [], []
-    end
-
-  | None ->
-    tc_decl' env se
-
-and tc_decl' env se: list<sigelt> * list<sigelt> =
   let r = se.sigrng in
   match se.sigel with
   | Sig_inductive_typ _
@@ -1144,25 +1112,25 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
     *)
     let env = Env.set_range env r in
     let se = tc_lex_t env ses se.sigquals lids  in
-    [se], []
+    [se], [], env0
 
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in
     let ses =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
         //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
-        let ses = tc_inductive ({ env with lax = true }) ses se.sigquals lids |> fst |> N.elim_uvars env |> U.ses_of_sigbundle in
+        let ses = tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals lids |> fst |> N.elim_uvars env |> U.ses_of_sigbundle in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Inductive after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_bundle (ses, lids) }));
         ses
       end
       else ses
     in
     let sigbndle, projectors_ses = tc_inductive env ses se.sigquals lids in
-    [ sigbndle ], projectors_ses
+    [ sigbndle ], projectors_ses, env0
 
   | Sig_pragma(p) ->  //no need for two-phase here
     U.process_pragma p r;
-    [se], []
+    [se], [], env0
 
   | Sig_new_effect_for_free (ne) ->  //no need for two-phase here, the elaborated ses are typechecked from the main loop in tc_decls
       (* This is only an elaboration rule not a typechecking one *)
@@ -1175,12 +1143,12 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
           | None -> [ { se with sigel = Sig_new_effect (ne) } ]
       in
 
-      [], ses @ effect_and_lift_ses
+      [], ses @ effect_and_lift_ses, env0
 
   | Sig_new_effect(ne) ->
     let ne =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
-        let ne = tc_eff_decl ({ env with lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect in
+        let ne = tc_eff_decl ({ env with phase1 = true; lax = true }) ne |> (fun ne -> { se with sigel = Sig_new_effect ne }) |> N.elim_uvars env |> U.eff_decl_of_new_effect in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Effect decl after phase 1: %s\n" (Print.sigelt_to_string ({ se with sigel = Sig_new_effect ne }));
         ne
       end
@@ -1188,7 +1156,7 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
     in
     let ne = tc_eff_decl env ne in
     let se = { se with sigel = Sig_new_effect(ne) } in
-    [se], []
+    [se], [], env0
 
   | Sig_sub_effect(sub) ->  //no need to two-phase here, since lifts are already lax checked
     let ed_src = Env.get_effect_decl env sub.source in
@@ -1292,11 +1260,10 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
                                                              (lift |> must |> fst |> List.length |> string_of_int))) r;
     let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
     let se = { se with sigel = Sig_sub_effect(sub) } in
-    [se], []
+    [se], [], env0
 
   | Sig_effect_abbrev(lid, uvs, tps, c, flags) ->
     //assert (uvs = []); AR: not necessarily, two phases
-    let env0 = env in
 
     //AR: open universes in tps and c if needed
     let env, uvs, tps, c =
@@ -1326,13 +1293,13 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
                                   (List.length uvs |> BU.string_of_int)
                                   (Print.term_to_string t))) r);
     let se = { se with sigel = Sig_effect_abbrev(lid, uvs, tps, c, flags) } in
-    [se], []
+    [se], [], env0
 
   | Sig_declare_typ (_, _, _)
   | Sig_let (_, _)
       when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) ->
       (* Dummy declaration which must be erased since it has been elaborated somewhere else *)
-      [], []
+      [], [], env0
 
   | Sig_declare_typ(lid, uvs, t) -> //NS: No checks on the qualifiers?
     let env = Env.set_range env r in
@@ -1352,14 +1319,14 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
     in
 
     let uvs, t = tc_declare_typ env (uvs, t) se.sigrng in
-    [ { se with sigel = Sig_declare_typ (lid, uvs, t) }], []
+    [ { se with sigel = Sig_declare_typ (lid, uvs, t) }], [], env0
 
   | Sig_assume(lid, uvs, t) ->
     let env = Env.set_range env r in
 
     let uvs, t =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
-        let uvs, t = tc_assume ({ env with lax = true }) (uvs, t) se.sigrng in
+        let uvs, t = tc_assume ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Assume after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
         uvs, t
       end
@@ -1367,7 +1334,7 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
     in
 
     let uvs, t = tc_assume env (uvs, t) se.sigrng in
-    [ { se with sigel = Sig_assume (lid, uvs, t) }], []
+    [ { se with sigel = Sig_assume (lid, uvs, t) }], [], env0
 
   | Sig_main(e) ->
     let env = Env.set_range env r in
@@ -1376,7 +1343,7 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
     let e, _, g = check_expected_effect env (Some (U.ml_comp t_unit r)) (e, lcomp_comp c) in
     Rel.force_trivial_guard env (Env.conj_guard g1 g);
     let se = { se with sigel = Sig_main(e) } in
-    [se], []
+    [se], [], env0
 
   | Sig_splice (lids, t) ->
     if Options.debug_any () then
@@ -1389,7 +1356,9 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
         | None ->
             raise_error (Errors.Fatal_SplicedUndef, BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" (string_of_lid lid) (String.concat ", " <| List.map string_of_lid lids')) r
     ) lids;
-    [], ses
+    let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
+    let env = { env with dsenv = dsenv } in
+    [], ses, env
 
   | Sig_let(lbs, lids) ->
     let env = Env.set_range env r in
@@ -1496,7 +1465,7 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
             else e_lax
           | _ -> e_lax  //leave recursive lets as is
         in
-        let e = tc_maybe_toplevel_term ({ env0 with lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env0 |> drop_lbtyp in
+        let e = tc_maybe_toplevel_term ({ env0 with phase1 = true; lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env0 |> drop_lbtyp in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Let binding after phase 1: %s\n" (Print.term_to_string e);
         e
       end
@@ -1533,7 +1502,41 @@ and tc_decl' env se: list<sigelt> * list<sigelt> =
           then BU.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Print.term_to_string (*env*) lb.lbtyp)
           else "") |> String.concat "\n");
 
-    [se], []
+    [se], [], env0
+
+(* [tc_decl env se] typechecks [se] in environment [env] and returns *)
+(* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
+let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
+  let env = set_hint_correlator env se in
+  if Env.debug env Options.Low
+  then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
+  match get_fail_se se with
+  | Some (_, false) when not (Env.should_verify env) ->
+    (* If we're --laxing, and we didn't find fail_lax, then just ignore the definition *)
+    [], [], env
+
+  | Some (errnos, _) ->
+    if Env.debug env Options.Low then
+        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
+    let errs, _ = Errors.catch_errors (fun () -> tc_decl' env se) in
+    if Env.debug env Options.Low then begin
+        BU.print_string ">> Got issues: [\n";
+        List.iter Errors.print_issue errs;
+        BU.print_string ">>]\n"
+    end;
+    begin match errs, check_multi_contained errnos (List.concatMap (fun i -> list_of_option i.issue_number) errs) with
+    | [], _ ->
+        List.iter Errors.print_issue errs;
+        raise_error (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded") se.sigrng
+    | _, Some (e, n1, n2) ->
+        List.iter Errors.print_issue errs;
+        raise_error (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
+                                                (string_of_int e) (string_of_int n1) (string_of_int n2)) se.sigrng
+    | _, None -> [], [], env
+    end
+
+  | None ->
+    tc_decl' env se
 
 let for_export hidden se : list<sigelt> * list<lident> =
    (* Exporting symbols based on whether they have been marked 'abstract'
@@ -1643,6 +1646,8 @@ let for_export hidden se : list<sigelt> * list<lident> =
 (* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
 (* this was earlier part of tc_decl, but separating it might help if and when we cache type checked modules *)
 let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
+  if Env.debug env Options.Low
+  then BU.print1 ">>>>>>>>>>>>>>Adding top-level decl to environment: %s\n" (Print.sigelt_to_string se);
   match se.sigel with
   | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
@@ -1661,14 +1666,14 @@ let tc_decls env ses =
     if Env.debug env Options.Low
     then BU.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
 
-    let ses', ses_elaborated = tc_decl env se in
+    let ses', ses_elaborated, env = tc_decl env se in
     let ses' = ses' |> List.map (fun se ->
         if Env.debug env (Options.Other "UF")
-        then BU.print1 "About to elim vars from %s" (Print.sigelt_to_string se);
+        then BU.print1 "About to elim vars from %s\n" (Print.sigelt_to_string se);
         N.elim_uvars env se) in
     let ses_elaborated = ses_elaborated |> List.map (fun se ->
-        (* if Env.debug env (Options.Other "UF") *)
-        (* then printfn "About to elim vars from %s" (Print.sigelt_to_string se); *)
+        if Env.debug env (Options.Other "UF")
+        then BU.print1 "About to elim vars from (elaborated) %s\m" (Print.sigelt_to_string se);
         N.elim_uvars env se) in
 
     Env.promote_id_info env (fun t ->
@@ -2037,6 +2042,8 @@ let load_checked_module (en:env) (m:modul) :env =
 let check_module env m b =
   if Options.debug_any()
   then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
+  if Options.dump_module m.name.str
+  then BU.print1 "Module before type checking:\n%s\n" (Print.modul_to_string m);
 
   let env = {env with lax=not (Options.should_verify m.name.str)} in
   let m, m_iface_opt, env = tc_modul env m b in

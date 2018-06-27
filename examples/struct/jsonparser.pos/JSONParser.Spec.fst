@@ -3,7 +3,7 @@ module JSONParser.Spec
 let char   : eqtype = Char.char
 let string : eqtype = Seq.seq char
 
-let string_of_char (c: char): Tot string = Seq.cons c Seq.createEmpty
+let string_of_char (c: char): Tot string = Seq.cons c Seq.empty
 
 let double_quote   : char   = Char.char_of_int 34
 let s_double_quote : string = string_of_char double_quote
@@ -123,7 +123,7 @@ let rec gprint_object
   (l': list (key * json_schema) {List.Tot.strict_prefix_of l' l \/ l' == l})
 : GTot string
 = match l' with
-  | [] -> Seq.createEmpty
+  | [] -> Seq.empty
   | ((s, j')::q) ->
     object_rec_prereq j gprint l data l' s j' q;
     let (data' : as_gtype j') =
@@ -135,7 +135,7 @@ let rec gprint_object
       then
 	Seq.cons comma (gprint_object j gprint l data q)
       else
-	Seq.createEmpty
+	Seq.empty
     in
     Seq.append (gprint_string (Key?.s s)) (Seq.cons colon (Seq.append objprint suff))
 
@@ -197,7 +197,7 @@ let rec gparse_whitespace
        else s
 
 let gparse_whitespace_empty
-: squash (gparse_whitespace Seq.createEmpty == Seq.createEmpty)
+: squash (gparse_whitespace Seq.empty == Seq.empty)
 = ()
 
 let rec gparse_whitespace_append
@@ -209,7 +209,7 @@ let rec gparse_whitespace_append
   (decreases (Seq.length s_white))
 = if Seq.length s_white = 0
   then begin
-    Seq.lemma_eq_elim s_white Seq.createEmpty;
+    Seq.lemma_eq_elim s_white Seq.empty;
     Seq.append_empty_l s
   end else begin
     let _ : squash (s_white == Seq.cons (Seq.head s_white) (Seq.tail s_white)) =
@@ -260,7 +260,7 @@ let rec gparse_whitespace_exists
     FStar.Classical.exists_intro
       (fun s_white -> s == Seq.append s_white (gparse_whitespace s) /\
 	(forall (i: nat {i < Seq.length s_white }) . is_whitespace (Seq.index s_white i)))
-      Seq.createEmpty
+      Seq.empty
   end else
     FStar.Classical.exists_elim
       (exists s_white .
@@ -343,7 +343,7 @@ let rec gparse_string_contents_append_cons
   (decreases (Seq.length left))
 = if Seq.length left = 0
   then begin
-      Seq.lemma_eq_elim left Seq.createEmpty;
+      Seq.lemma_eq_elim left Seq.empty;
       Seq.append_empty_l (Seq.cons double_quote right);
       Seq.lemma_tl double_quote right;
       Seq.append_empty_r accu
@@ -398,7 +398,7 @@ let length_gparse_exact_char
 
 let gparse_string (s: string): GTot (option (string * string)) =
   match gparse_exact_char double_quote s with
-  | Some s_tail -> gparse_string_contents Seq.createEmpty s_tail
+  | Some s_tail -> gparse_string_contents Seq.empty s_tail
   | _ -> None
 
 let not_mem_double_quote_gparse_string
@@ -408,7 +408,7 @@ let not_mem_double_quote_gparse_string
   (ensures (~ (Seq.mem double_quote contents)))
 = match gparse_exact_char double_quote s with
   | Some s_tail -> begin
-      not_mem_double_quote_gparse_string_contents Seq.createEmpty s_tail contents s';
+      not_mem_double_quote_gparse_string_contents Seq.empty s_tail contents s';
       Seq.append_empty_l contents
     end
 
@@ -421,8 +421,8 @@ let gparse_string_append_cons_append_cons
    == Some (s_contents, s_tail))
 = let s2 = Seq.append s_contents (Seq.cons double_quote s_tail) in
   let _ = gparse_exact_char_append_cons s_white double_quote s2 in
-  let _ : squash (gparse_string_contents Seq.createEmpty s2 == Some (Seq.append Seq.createEmpty s_contents, s_tail)) =
-      gparse_string_contents_append_cons Seq.createEmpty s_contents s_tail
+  let _ : squash (gparse_string_contents Seq.empty s2 == Some (Seq.append Seq.empty s_contents, s_tail)) =
+      gparse_string_contents_append_cons Seq.empty s_contents s_tail
   in
   Seq.append_empty_l s_contents
 
@@ -447,7 +447,7 @@ let length_gparse_string
 = match gparse_exact_char double_quote s with
   | Some s_tail ->
     let _ = length_gparse_exact_char double_quote s s_tail in
-    let _ = length_gparse_string_contents Seq.createEmpty s_tail contents s' in
+    let _ = length_gparse_string_contents Seq.empty s_tail contents s' in
     Seq.append_empty_l contents
 
 let rec gparse_exact_string_contents
@@ -474,7 +474,7 @@ let rec gparse_exact_string_contents_append
   (decreases (Seq.length against))
 = if Seq.length against = 0
   then
-    let _ = Seq.lemma_eq_elim against Seq.createEmpty in
+    let _ = Seq.lemma_eq_elim against Seq.empty in
     Seq.append_empty_l tail
   else
     let _ = Seq.cons_head_tail against in
@@ -766,7 +766,7 @@ let gparse_object_gprint_object_aux_cons_nil
   (s3: string { Seq.length s3 < Seq.length s2 /\ gparse_exact_char colon s2 == Some s3 } )
   (data': as_gtype j' { DependentMap.sel data s' == data' } )
   (data0': as_gtype j' { DependentMap.sel data0 s' == data0' } )
-  (s4: string { Seq.length s4 < Seq.length s3  /\ gparse j' data0' s3 == Some (data', s4) /\ s4 == Seq.append Seq.createEmpty tail } )
+  (s4: string { Seq.length s4 < Seq.length s3  /\ gparse j' data0' s3 == Some (data', s4) /\ s4 == Seq.append Seq.empty tail } )
   (new_l_left: list (key * json_schema) { l == List.Tot.append new_l_left q /\ ~ (Cons? q) } )
   (new_data0: DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l)}) (object_as_type j as_gtype l) {new_data0 == DependentMap.upd data0 s' data' } )
   (new_hsel: (
@@ -882,7 +882,7 @@ let gparse_object_gprint_object_aux_cons_cons
   in
   let _ : squash (gparse_exact_char comma s4 == Some s5) =
     Seq.append_empty_l s4;
-    gparse_exact_char_append_cons Seq.createEmpty comma s5
+    gparse_exact_char_append_cons Seq.empty comma s5
   in
   let _ =
     gparse_object_cons_cons
@@ -939,7 +939,7 @@ let gparse_object_gprint_object_aux_cons
     then
       Seq.cons comma (gprint_object j gprint l data q)
     else
-      Seq.createEmpty
+      Seq.empty
   in
   let esuff = Seq.append objprint suff in
   let pkey = gprint_string (Key?.s s') in
@@ -953,7 +953,7 @@ let gparse_object_gprint_object_aux_cons
   assert (Seq.length s2 < Seq.length s);
   let _ : squash (gparse_exact_string (Key?.s s') s == Some s2) =
     Seq.append_empty_l s;
-    gparse_exact_string_gprint_string Seq.createEmpty (Key?.s s') s2
+    gparse_exact_string_gprint_string Seq.empty (Key?.s s') s2
   in
   let s3 = Seq.append esuff tail in
   let _ : squash (s2 == Seq.cons colon s3) =
@@ -962,7 +962,7 @@ let gparse_object_gprint_object_aux_cons
   assert (Seq.length s3 < Seq.length s2);
   let _ : squash (gparse_exact_char colon s2 == Some s3) =
     Seq.append_empty_l s2;
-    gparse_exact_char_append_cons Seq.createEmpty colon s3
+    gparse_exact_char_append_cons Seq.empty colon s3
   in
   let s4 = Seq.append suff tail in
   let _ : squash (s3 == Seq.append objprint s4) =
@@ -1085,7 +1085,7 @@ let gparse_gprint_aux
 = match j with
   | String ->
     Seq.append_empty_l (Seq.append (gprint j data) tail);
-    gparse_string_gprint_string Seq.createEmpty data tail;
+    gparse_string_gprint_string Seq.empty data tail;
     assert (gparse j data0 (Seq.append (gprint j data) tail) == Some (data, tail))
   | Object l ->
     let s = Seq.append (gprint j data) tail in
@@ -1102,7 +1102,7 @@ let gparse_gprint_aux
     in
     let _ : squash (gparse_exact_char left_brace s == Some s3) =
       Seq.append_empty_l s4;
-      gparse_exact_char_append_cons Seq.createEmpty left_brace s3
+      gparse_exact_char_append_cons Seq.empty left_brace s3
     in
     let s5 = Seq.cons right_brace tail in
     let _ : squash (s3 == Seq.append s0 s5) =
@@ -1118,7 +1118,7 @@ let gparse_gprint_aux
     in
     let _ : squash (gparse_exact_char right_brace s5 == Some tail) =
       Seq.append_empty_l s5;
-      gparse_exact_char_append_cons Seq.createEmpty right_brace tail
+      gparse_exact_char_append_cons Seq.empty right_brace tail
     in
     assert (gparse j data0 (Seq.append (gprint j data) tail) == gparse j data0 s);
     gparse_object_eq_some l data0 s s3 data s5 tail

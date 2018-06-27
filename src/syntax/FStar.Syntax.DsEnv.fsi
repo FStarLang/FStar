@@ -151,6 +151,7 @@ val lookup_letbinding_quals: env -> lident -> list<qualifier>
 val resolve_module_name: env:env -> lid:lident -> honor_ns:bool -> option<lident>
 val fail_if_qualified_by_curmodule: env -> lident -> unit
 val resolve_to_fully_qualified_name : env:env -> l:lident -> option<lident>
+val fv_qual_of_se : sigelt -> option<fv_qual>
 
 val push_bv: env -> ident -> env * bv
 val push_bv_mutable: env -> ident -> env * bv
@@ -160,6 +161,9 @@ val push_namespace: env -> lident -> env
 val push_include: env -> lident -> env
 val push_module_abbrev : env -> ident -> lident -> env
 val push_doc: env -> lident -> option<Parser.AST.fsdoc> -> env
+
+(* Won't fail on duplicates, use with caution *)
+val push_sigelt_force : env -> sigelt -> env
 
 val pop: unit -> env
 val push: env -> env

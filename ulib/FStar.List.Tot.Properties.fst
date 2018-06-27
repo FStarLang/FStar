@@ -22,6 +22,9 @@ operations on lists.
 module FStar.List.Tot.Properties
 open FStar.List.Tot.Base
 
+(** A list indexed by its length **)
+let llist a (n:nat) = l:list a {length l = n}
+
 (** Properties about mem **)
 
 (** The empty list has no elements *)

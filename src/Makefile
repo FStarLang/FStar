@@ -47,9 +47,8 @@ ALL_BOOT=$(addprefix boot/FStar., Util.fsti List.fsti			\
 			          Parser.Parse.fsti			\
 			          Tactics.Interpreter.fst		\
 			          Tactics.Interpreter.fsti \
-                TypeChecker.NBETerm.fst \
-                TypeChecker.NBETerm.fsti \
-                TypeChecker.NBE.fst \
+			          TypeChecker.NBETerm.fst \
+			          TypeChecker.NBETerm.fsti \
 			          Tests.Test.fst)
 
 boot/%.fsti: basic/boot/%.fsi | boot_dir
@@ -72,6 +71,11 @@ boot/FStar.Tactics.Interpreter.fst: tactics/boot/FStar.Tactics.Interpreter.fs | 
 
 #fix up by adding an annotation to suppress universe polymorphism in a mutually recursive type
 boot/FStar.TypeChecker.NBETerm.fst: typechecker/boot/FStar.TypeChecker.NBETerm.fs | boot_dir
+	cp $^ $@
+	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
+	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
+
+boot/FStar.TypeChecker.NBETerm.fsti: typechecker/boot/FStar.TypeChecker.NBETerm.fsi | boot_dir
 	cp $^ $@
 	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
 	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@

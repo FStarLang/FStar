@@ -218,6 +218,7 @@ val string_builder_append: string_builder -> string -> unit
 
 val message_of_exn: exn -> string
 val trace_of_exn: exn -> string
+val stack_dump : unit -> string
 
 exception SigInt
 type sigint_handler
