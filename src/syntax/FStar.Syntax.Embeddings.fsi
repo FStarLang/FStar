@@ -74,11 +74,10 @@ val e_string_list : embedding<list<string>>
 val mk_any_emb : typ -> embedding<term>
 
 (* These are different, really, we're not embedding functions *)
-val embed_arrow_1     : embedding<'a> -> embedding<'b> ->
-                        ('a -> 'b) -> args -> option<term>
+type norm_cb = term -> term // a callback to the normalizer
 
-val embed_arrow_2     : embedding<'a> -> embedding<'b> -> embedding<'c> ->
-                        ('a -> 'b -> 'c) -> args -> option<term>
+val embed_arrow_1     : n:norm_cb -> embedding<'a> -> embedding<'b> -> term -> ('a -> 'b) -> term
 
-val embed_arrow_3     : embedding<'a> -> embedding<'b> -> embedding<'c> -> embedding<'d> ->
-                        ('a -> 'b -> 'c -> 'd) -> args -> option<term>
+val embed_arrow_2     : n:norm_cb -> embedding<'a> -> embedding<'b> -> embedding<'c> -> term -> ('a -> 'b -> 'c) -> term
+
+val embed_arrow_3     : n:norm_cb -> embedding<'a> -> embedding<'b> -> embedding<'c> -> embedding<'d> -> term -> ('a -> 'b -> 'c -> 'd) -> term
