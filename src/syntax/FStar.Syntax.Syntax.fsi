@@ -83,20 +83,7 @@ type delta_depth =
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
 ///[@ PpxDerivingYoJson PpxDerivingShow ]
-// Different kinds of lazy terms. These are used to decide the unfolding
-// function, instead of keeping the closure inside the lazy node, since
-// that means we cannot have equality on terms (not serious) nor call
-// output_value on them (serious).
-type lazy_kind =
-  | BadLazy
-  | Lazy_bv
-  | Lazy_binder
-  | Lazy_fvar
-  | Lazy_comp
-  | Lazy_env
-  | Lazy_proofstate
-  | Lazy_sigelt
-  | Lazy_uvar
+
 
 type should_check_uvar =
   | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
@@ -257,6 +244,21 @@ and lazyinfo = {
     typ   : typ;
     rng   : Range.range;
 }
+// Different kinds of lazy terms. These are used to decide the unfolding
+// function, instead of keeping the closure inside the lazy node, since
+// that means we cannot have equality on terms (not serious) nor call
+// output_value on them (serious).
+and lazy_kind =
+  | BadLazy
+  | Lazy_bv
+  | Lazy_binder
+  | Lazy_fvar
+  | Lazy_comp
+  | Lazy_env
+  | Lazy_proofstate
+  | Lazy_sigelt
+  | Lazy_uvar
+  | Lazy_embedding of FStar.Common.thunk<term>
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * tscheme

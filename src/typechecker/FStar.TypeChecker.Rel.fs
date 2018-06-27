@@ -993,7 +993,7 @@ let head_matches_delta env t1 t2 : (match_result * option<(typ*typ)>) =
             (Print.term_to_string t1)
             (Print.term_to_string t2)
             (string_of_match_result (fst r))
-            (if snd r = None
+            (if Option.isNone (snd r)
              then "None"
              else snd r
                  |> must
@@ -1799,7 +1799,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
           let formula = p_guard rhs_prob in
           Inl ([rhs_prob], formula), wl
 
-        | (hd1, imp)::xs, (hd2, imp')::ys when (imp=imp') ->
+        | (hd1, imp)::xs, (hd2, imp')::ys when (U.eq_aqual imp imp' = U.Equal) ->
            let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
            let hd2 = {hd2 with sort=Subst.subst subst hd2.sort} in
            let prob, wl = mk_t_problem wl scope orig hd1.sort (invert_rel <| p_rel orig) hd2.sort None "Formal parameter" in

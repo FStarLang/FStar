@@ -100,6 +100,7 @@ let rename_binders (replace_xs:binders) (with_ys:binders) : subst_t =
     else failwith "Ill-formed substitution"
 
 open FStar.Syntax.Subst
+open FSharp.Compatibility.OCaml
 
 let rec unmeta e =
     let e = compress e in
@@ -443,10 +444,22 @@ let rec unlazy t =
     | Tm_lazy i -> unlazy <| unfold_lazy i
     | _ -> t
 
+let eq_lazy_kind k k' =
+    match k, k' with
+     | BadLazy, BadLazy
+     | Lazy_bv, Lazy_bv
+     | Lazy_binder, Lazy_binder
+     | Lazy_fvar, Lazy_fvar
+     | Lazy_comp, Lazy_comp
+     | Lazy_env, Lazy_env
+     | Lazy_proofstate, Lazy_proofstate
+     | Lazy_sigelt, Lazy_sigelt
+     | Lazy_uvar, Lazy_uvar -> true
+     | _ -> false
 let rec unlazy_as_t k t =
     match (compress t).n with
     | Tm_lazy ({lkind=k'; blob=v})
-        when k=k' ->
+        when eq_lazy_kind k k' ->
       FStar.Dyn.undyn v
     | _ ->
       failwith "Not a Tm_lazy of the expected kind"
@@ -519,7 +532,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       | Unknown, _
       | _, Unknown -> Unknown
     in
-    let equal_data f1 args1 f2 args2 =
+    let equal_data f1 (args1:Syntax.args) f2 (args2:Syntax.args) =
         // we got constructors! we know they are injective and disjoint, so we can do some
         // good analysis on them
         if fv_eq f1 f2
@@ -531,7 +544,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                                 //                (Ident.string_of_lid f1.fv_name.v));
                                 //NS: 05/06/2018 ...this does not always hold
                                 //    it's been succeeding because the assert is disabled in the non-debug builds
-                                assert (q1 = q2);
+                                //assert (q1 = q2);
                                 eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
         ) else NotEqual
     in
@@ -589,14 +602,42 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       equal_if (eq_univs u v)
 
     | Tm_quoted (t1, q1), Tm_quoted (t2, q2) ->
-      if q1 = q2
-      then eq_tm t1 t2
-      else Unknown
+      eq_and (eq_quoteinfo q1 q2) (fun () -> eq_tm t1 t2)
 
     | Tm_refine (t1, phi1), Tm_refine (t2, phi2) ->
       eq_and (eq_tm t1.sort t2.sort) (fun () -> eq_tm phi1 phi2)
 
     | _ -> Unknown
+
+and eq_quoteinfo q1 q2 =
+    if q1.qkind <> q2.qkind
+    then NotEqual
+    else eq_antiquotes q1.antiquotes q2.antiquotes
+
+and eq_antiquotes a1 a2 =
+    match a1, a2 with
+    | [], [] -> Equal
+    | [], _
+    | _, [] -> NotEqual
+    | (x1, b1, t1)::a1, (x2, b2, t2)::a2 ->
+      if not (bv_eq x1 x2 && b1 = b2)
+      then NotEqual
+      else match eq_tm t1 t2 with
+           | NotEqual -> NotEqual
+           | Unknown ->
+             (match eq_antiquotes a1 a2 with
+              | NotEqual -> NotEqual
+              | _ -> Unknown)
+            | Equal -> eq_antiquotes a1 a2
+
+and eq_aqual a1 a2 =
+    match a1, a2 with
+    | None, None -> Equal
+    | None, _
+    | _, None -> NotEqual
+    | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
+    | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
+    | _ -> NotEqual
 
 and branch_matches b1 b2 =
     let related_by f o1 o2 =
@@ -1622,7 +1663,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
     check "uvar" (u1.ctx_uvar_head = u2.ctx_uvar_head)
 
   | Tm_quoted (qt1, qi1), Tm_quoted (qt2, qi2) ->
-    (check "tm_quoted qi"      (qi1 = qi2)) &&
+    (check "tm_quoted qi"      (eq_quoteinfo qi1 qi2 = Equal)) &&
     (check "tm_quoted payload" (term_eq_dbg dbg qt1 qt2))
 
   | Tm_meta (t1, m1), Tm_meta (t2, m2) ->
@@ -1672,11 +1713,11 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
 
 and arg_eq_dbg (dbg : bool) a1 a2 =
     eqprod (fun t1 t2 -> check "arg tm" (term_eq_dbg dbg t1 t2))
-           (fun q1 q2 -> check "arg qual"  (q1 = q2))
+           (fun q1 q2 -> check "arg qual"  (eq_aqual q1 q2 = Equal))
            a1 a2
 and binder_eq_dbg (dbg : bool) b1 b2 =
     eqprod (fun b1 b2 -> check "binder sort"  (term_eq_dbg dbg b1.sort b2.sort))
-           (fun q1 q2 -> check "binder qual"  (q1 = q2))
+           (fun q1 q2 -> check "binder qual"  (eq_aqual q1 q2 = Equal))
            b1 b2
 and lcomp_eq_dbg (c1:lcomp) (c2:lcomp) = fail "lcomp" // TODO
 and residual_eq_dbg (r1:residual_comp) (r2:residual_comp) = fail "residual"

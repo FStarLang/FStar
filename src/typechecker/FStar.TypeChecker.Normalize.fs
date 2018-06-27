@@ -79,6 +79,35 @@ type step =
   | Unascribe
 and steps = list<step>
 
+let rec eq_step s1 s2 =
+  match s1, s2 with
+  | Beta, Beta
+  | Iota, Iota           //pattern matching
+  | Zeta, Zeta            //fixed points
+  | Weak, Weak            //Do not descend into binders
+  | HNF, HNF             //Only produce a head normal form
+  | Primops, Primops         //reduce primitive operators like +, -, *, /, etc.
+  | Eager_unfolding, Eager_unfolding
+  | Inlining, Inlining
+  | DoNotUnfoldPureLets, DoNotUnfoldPureLets
+  | UnfoldTac, UnfoldTac
+  | PureSubtermsWithinComputations, PureSubtermsWithinComputations
+  | Simplify, Simplify
+  | EraseUniverses, EraseUniverses
+  | AllowUnboundUniverses, AllowUnboundUniverses
+  | Reify, Reify
+  | CompressUvars, CompressUvars
+  | NoFullNorm, NoFullNorm
+  | CheckNoUvars, CheckNoUvars
+  | Unmeta, Unmeta
+  | Unascribe, Unascribe -> true
+  | Exclude s1, Exclude s2 -> eq_step s1 s2
+  | UnfoldUntil s1, UnfoldUntil s2 -> s1 = s2
+  | UnfoldOnly lids1, UnfoldOnly lids2
+  | UnfoldFully lids1, UnfoldFully lids2 -> List.length lids1 = List.length lids2 && List.forall2 Ident.lid_equals lids1 lids2
+  | UnfoldAttr a1, UnfoldAttr a2 -> eq_tm a1 a2 = Equal
+  | _ -> false
+
 let cases f d = function
   | Some x -> f x
   | None -> d
@@ -110,6 +139,63 @@ type fsteps = {
     weakly_reduce_scrutinee:bool;
 }
 
+let format_opt f = function
+    | None -> "None"
+    | Some x -> "Some ("^ f x ^ ")"
+
+let print_fsteps f =
+  let b = BU.string_of_bool in
+  BU.format
+  "{\n\
+    beta = %s;\n\
+    iota = %s;\n\
+    zeta = %s;\n\
+    weak = %s;\n\
+    hnf  = %s;\n\
+    primops = %s;\n\
+    do_not_unfold_pure_lets = %s;\n\
+    unfold_until = %s;\n\
+    unfold_only = %s;\n\
+    unfold_fully = %s;\n\
+    unfold_attr = %s;\n\
+    unfold_tac = %s;\n\
+    pure_subterms_within_computations = %s;\n\
+    simplify = %s;\n\
+    erase_universes = %s;\n\
+    allow_unbound_universes = %s;\n\
+    reify_ = %s;\n\
+    compress_uvars = %s;\n\
+    no_full_norm = %s;\n\
+    check_no_uvars = %s;\n\
+    unmeta = %s;\n\
+    unascribe = %s;\n\
+    in_full_norm_request = %s;\n\
+    weakly_reduce_scrutinee = %s;\n\
+  }"
+  [ f.beta |> b;
+    f.iota |> b;
+    f.zeta |> b;
+    f.weak |> b;
+    f.hnf  |> b;
+    f.primops |> b;
+    f.do_not_unfold_pure_lets |> b;
+    f.unfold_until |> format_opt Print.delta_depth_to_string;
+    f.unfold_only |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
+    f.unfold_fully |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
+    f.unfold_attr |> format_opt (fun xs -> List.map Print.term_to_string xs |> String.concat ", ");
+    f.unfold_tac |> b;
+    f.pure_subterms_within_computations |> b;
+    f.simplify |> b;
+    f.erase_universes |> b;
+    f.allow_unbound_universes |> b;
+    f.reify_ |> b; // fun fact: calling it 'reify' won't bootstrap :)
+    f.compress_uvars |> b;
+    f.no_full_norm |> b;
+    f.check_no_uvars |> b;
+    f.unmeta |> b;
+    f.unascribe |> b;
+    f.in_full_norm_request |> b;
+    f.weakly_reduce_scrutinee |> b]
 let default_steps : fsteps = {
     beta = true;
     iota = true;
@@ -1122,7 +1208,7 @@ let get_norm_request cfg (full_norm:term -> term) args =
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
       Some (inherited_steps @ s, tm)
     | [(steps, _); _; (tm, _)] ->
-      let add_exclude s z = if List.contains z s then s else Exclude z :: s in
+      let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
       begin
       match parse_steps (full_norm steps) with
       | None -> None
@@ -1331,9 +1417,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   | _ -> ());
             compress t
         in
-        log cfg  (fun () ->
-          BU.print4 ">>> %s\nNorm %s with with %s env elements top of the stack %s \n"
+        log cfg (fun () ->
+          BU.print5 ">>> %s (no_full_norm=%s)\nNorm %s  with with %s env elements top of the stack %s \n"
                                         (Print.tag_of_term t)
+                                        (BU.string_of_bool (cfg.steps.no_full_norm))
                                         (Print.term_to_string t)
                                         (BU.string_of_int (List.length env))
                                         (stack_to_string (fst <| firstn 4 stack)));
@@ -1365,6 +1452,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             when not (cfg.steps.no_full_norm)
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
+            if cfg.debug.print_normalized
+            then BU.print_string "Potential norm request ... \n";
             let cfg' = { cfg with steps = { cfg.steps with unfold_only = None
                                                          ; unfold_fully = None
                                                          ; do_not_unfold_pure_lets = false };
@@ -1373,6 +1462,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             begin
             match get_norm_request cfg (norm cfg' env []) args with
             | None -> //just normalize it as a normal application
+              if cfg.debug.print_normalized
+              then BU.print_string "Norm request None ... \n";
               let stack =
                 stack |>
                 List.fold_right
@@ -1383,6 +1474,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
               norm cfg env stack hd
 
             | Some (s, tm) ->
+              if cfg.debug.print_normalized
+              then BU.print1 "Starting norm request on %s ... \n" (Print.term_to_string tm);
               let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
                 then [Unfold delta_constant]
@@ -2729,13 +2822,15 @@ let config' psteps s e =
      memoize_lazy=true;
      normalize_pure_lets=
        (Options.normalize_pure_terms_for_extraction()
-        || not (s |> List.contains PureSubtermsWithinComputations))}
+        || not (s |> BU.for_some (eq_step PureSubtermsWithinComputations)))}
 
 let config s e = config' [] s e
 
 let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
-    log c (fun () -> BU.print1 "Starting normalizer for (%s)\n" (Print.term_to_string t));
+    log c (fun () -> BU.print2 "Starting normalizer for (%s)\ncfg.fsteps=%s\n"
+                  (Print.term_to_string t)
+                  (print_fsteps c.steps));
     norm c [] [] t
 let normalize s e t = normalize_with_primitive_steps [] s e t
 let normalize_comp s e t = norm_comp (config s e) [] t

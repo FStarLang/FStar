@@ -73,3 +73,14 @@ let runtime_assert b msg =
 
 let string_of_list (f : 'a -> string) (l : list<'a>) : string =
   "[" ^ String.concat ", " (List.map f l) ^ "]"
+
+open FStar.Util
+type thunk<'a> = ref<(Util.either<(unit -> 'a), 'a>)>
+let mk_thunk (f:unit -> 'a) : thunk<'a> = Util.mk_ref (Util.Inl f)
+let force_thunk (t:thunk<'a>) =
+    match !t with
+    | Inr a -> a
+    | Inl f ->
+      let a = f () in
+      t := Inr a;
+      a

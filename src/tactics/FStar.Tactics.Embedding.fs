@@ -70,8 +70,8 @@ let e_proofstate =
     in
     let unembed_proofstate w (t:term) : option<proofstate> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_proofstate ->
-            Some <| FStar.Dyn.undyn i.blob
+        | Tm_lazy {blob=b; lkind=Lazy_proofstate} ->
+            Some <| FStar.Dyn.undyn b
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded proofstate: %s" (Print.term_to_string t)));

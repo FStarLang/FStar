@@ -37,8 +37,8 @@ let e_bv =
     in
     let unembed_bv w (t:term) : option<bv> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_bv ->
-            Some (undyn i.blob)
+        | Tm_lazy {blob=b; lkind=Lazy_bv} ->
+            Some (undyn b)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv: %s" (Print.term_to_string t)));
@@ -52,8 +52,8 @@ let e_binder =
     in
     let unembed_binder w (t:term) : option<binder> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_binder ->
-            Some (undyn i.blob)
+        | Tm_lazy {blob=b; lkind=Lazy_binder} ->
+            Some (undyn b)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder: %s" (Print.term_to_string t)));
@@ -124,8 +124,8 @@ let e_fv =
     in
     let unembed_fv w (t:term) : option<fv> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_fvar ->
-            Some (undyn i.blob)
+        | Tm_lazy {blob=b; lkind=Lazy_fvar} ->
+            Some (undyn b)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded fvar: %s" (Print.term_to_string t)));
@@ -139,8 +139,8 @@ let e_comp =
     in
     let unembed_comp w (t:term) : option<comp> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_comp ->
-            Some (undyn i.blob)
+        | Tm_lazy {blob=b; lkind=Lazy_comp} ->
+            Some (undyn b)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp: %s" (Print.term_to_string t)));
@@ -154,8 +154,8 @@ let e_env =
     in
     let unembed_env w (t:term) : option<Env.env> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_env ->
-            Some (undyn i.blob)
+        | Tm_lazy {blob=b; lkind=Lazy_env} ->
+            Some (undyn b)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded env: %s" (Print.term_to_string t)));
@@ -518,8 +518,8 @@ let e_sigelt =
     in
     let unembed_sigelt w (t:term) : option<sigelt> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_sigelt ->
-            Some (undyn i.blob)
+        | Tm_lazy {blob=b; lkind=Lazy_sigelt} ->
+            Some (undyn b)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt: %s" (Print.term_to_string t)));
