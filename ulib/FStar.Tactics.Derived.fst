@@ -139,6 +139,10 @@ let compute () : Tac unit = norm [primops; iota; delta; zeta]
 
 let intros () : Tac (list binder) = repeat intro
 
+let intros' () = let _ = intros () in ()
+let destruct tm = let _ = t_destruct tm in ()
+let destruct_intros tm = seq (fun () -> let _ = t_destruct tm in ()) intros'
+
 private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
 

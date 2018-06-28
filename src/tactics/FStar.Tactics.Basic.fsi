@@ -92,6 +92,7 @@ val tadmit  : unit -> tac<unit>
 val qed     : unit -> tac<unit>
 
 val cases : term -> tac<(term * term)>
+val t_destruct : term -> tac<list<(fv * Z.t)>>
 
 val top_env : unit -> tac<env>
 val cur_env : unit -> tac<env>

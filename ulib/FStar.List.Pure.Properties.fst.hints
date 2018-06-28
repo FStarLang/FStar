@@ -39,7 +39,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "885201d8067402171ed43974ae5c3ca2"
+      "b29fbdd37eec660db1f6dcc487c21b74"
     ],
     [
       "FStar.List.Pure.Properties.splitAt_assoc",
@@ -79,7 +79,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "cecd4849df19ef075bd9fa7507c8a1f8"
+      "4ffc90e107a95821fcc25350e60ba366"
     ],
     [
       "FStar.List.Pure.Properties.splitAt_length_total",
@@ -109,7 +109,29 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "d0fff54efd25387d824aa224f4a26a44"
+      "77622fdc965cfabc1f70b2f4e07c18c5"
+    ],
+    [
+      "FStar.List.Pure.Properties.splitAt_length",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "a4c660d5d39e4d980a789bbdfe763c3c"
+    ],
+    [
+      "FStar.List.Pure.Properties.splitAt_assoc",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "0c5c28a2cdf4462da515046a8f4964a6"
     ]
   ]
 ]

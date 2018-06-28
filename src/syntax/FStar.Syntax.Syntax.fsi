@@ -521,6 +521,9 @@ val is_top_level:   list<letbinding> -> bool
 val next_id:        (unit -> int)
 val reset_gensym:   (unit -> unit)
 val freshen_bv:     bv -> bv
+val freshen_bvs:    list<bv> -> list<bv>
+val freshen_binder:  binder -> binder
+val freshen_binders: list<binder> -> list<binder>
 val gen_bv:         string -> option<Range.range> -> typ -> bv
 val new_bv:         option<range> -> typ -> bv
 val new_univ_name:  option<range> -> univ_name
