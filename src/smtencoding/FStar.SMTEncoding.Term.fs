@@ -549,7 +549,7 @@ let fresh_constructor rng (name, arg_sorts, sort, id) =
   let a_name = "constructor_distinct_" ^name in
   let a = {
     assumption_name=a_name;
-    assumption_caption=Some "Consrtructor distinct";
+    assumption_caption=Some "Constructor distinct";
     assumption_term=mkForall rng ([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng);
     assumption_fact_ids=[]
   } in
