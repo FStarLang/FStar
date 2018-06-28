@@ -359,7 +359,7 @@ let variable_not_found v =
 //Construct a new universe unification variable
 let new_u_univ () = U_unif (Unionfind.univ_fresh ())
 
-let mk_univ_subst formals us =
+let mk_univ_subst (formals : list<univ_name>) (us : universes) : list<subst_elt> =
     assert (List.length us = List.length formals);
     let n = List.length formals - 1 in
     us |> List.mapi (fun i u -> UN (n - i, u))
