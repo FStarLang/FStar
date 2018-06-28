@@ -57,10 +57,12 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
     ]
   | _ -> tfail "Not enough arguments to synth"
   else
-  if L.length tl = 0
-  then begin
-    gen_parser32' (unfold_term p)
-  end else
+  match T.inspect hd with
+  | T.Tv_FVar v ->
+    let env = T.cur_env () in
+    let t' = T.norm_term_env env [iota] (T.mk_app (unfold_term hd) tl) in
+    gen_parser32' t'
+  | _ ->
     tfail "Unknown parser combinator"
 
 let p = parse_u8 `nondep_then` parse_ret 42
@@ -83,4 +85,3 @@ let q' : parser32 p' = T.synth_by_tactic (fun () -> gen_parser32 (`(p')))
 let r = parse_ret 42 `parse_synth` (fun x -> x + 1)
 
 let r' : parser32 r = T.synth_by_tactic (fun () -> gen_parser32 (`(r)))
-
