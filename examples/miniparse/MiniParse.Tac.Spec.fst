@@ -6,19 +6,37 @@ include MiniParse.Spec.Int
 module T = FStar.Tactics
 module L = FStar.List.Tot
 
-(* Generate the parser specification (and its kind) from the type *)
+noeq
+type package (t: Type0) =
+  | Package :
+    (k: parser_kind) ->
+    (p: parser k t) ->
+    (s: serializer p) ->
+    package t
 
-let rec gen_parser' (p: T.term) : T.Tac (T.term * T.term) =
+let mk_package (#t: Type0) (#k: parser_kind) (#p: parser k t) (s: serializer p) : Tot (package t) =
+  Package k p s
+
+let package_parser_kind (#t: Type0) (p: package t) : Tot parser_kind =
+  Package?.k p
+
+let package_parser (#t: Type0) (p: package t) : Tot (parser (package_parser_kind p) t) =
+  Package?.p p
+
+let package_serializer (#t: Type0) (p: package t) : Tot (serializer (package_parser p)) =
+  Package?.s p
+
+let rec gen_package' (p: T.term) : T.Tac (T.term * T.term * T.term) =
   let (hd, tl) = app_head_tail p in
   if hd `T.term_eq` (`(FStar.UInt8.t))
   then begin
-    ((`(parse_u8_kind)), (`(parse_u8)))
+    ((`(parse_u8_kind)), (`(parse_u8)), (`(serialize_u8)))
   end else
   if hd `T.term_eq` (`(tuple2))
   then match tl with
   | [(t1, _); (t2, _)] ->
-    let (k1, p1) = gen_parser' t1 in
-    let (k2, p2) = gen_parser' t2 in
+    let (k1, p1, s1) = gen_package' t1 in
+    let (k2, p2, s2) = gen_package' t2 in
     let k = T.mk_app (`(and_then_kind)) [k1, T.Q_Explicit; k2, T.Q_Explicit] in
     let p = T.mk_app (`(nondep_then)) [
       (k1, T.Q_Implicit);
@@ -29,32 +47,42 @@ let rec gen_parser' (p: T.term) : T.Tac (T.term * T.term) =
       (p2, T.Q_Explicit);
     ]
     in
-    (k, p)
+    let s = T.mk_app (`(serialize_nondep_then)) [
+      (k1, T.Q_Implicit);
+      (t1, T.Q_Implicit);
+      (p1, T.Q_Explicit);
+      (s1, T.Q_Explicit);
+      ((`()), T.Q_Explicit);
+      (k2, T.Q_Implicit);
+      (t2, T.Q_Implicit);
+      (p2, T.Q_Explicit);
+      (s2, T.Q_Explicit);
+    ]
+    in
+    (k, p, s)
   | _ -> tfail "Not enough arguments to nondep_then"
   else
   if L.length tl = 0
   then begin
-    gen_parser' (unfold_term p)
+    gen_package' (unfold_term p)
   end else
     tfail "Unknown parser combinator"
 
-let gen_parser_kind (p: T.term) : T.Tac unit =
+let gen_package (t: T.term) : T.Tac unit =
   T.set_guard_policy T.Goal;
-  let (k, _) = gen_parser' p in
-  T.exact k;
-  T.qed ()
-
-let gen_parser (p: T.term) : T.Tac unit =
-  T.set_guard_policy T.Goal;
-  let (_, p') = gen_parser' p in
-  T.exact_guard p';
+  let (k, p, s) = gen_package' t in
+  let res = T.mk_app (`(mk_package)) [
+    (t, T.Q_Implicit);
+    (k, T.Q_Implicit);
+    (p, T.Q_Implicit);
+    (s, T.Q_Explicit);
+  ]
+  in
+  T.exact_guard res;
   tconclude ()
 
 type u8 = FStar.UInt8.t
 
 type t = (u8 * (u8 * u8))
 
-let k : parser_kind = T.synth_by_tactic (fun () -> gen_parser_kind (`t))
-
-let p : parser k t = T.synth_by_tactic (fun () -> gen_parser (`t))
-
+let p : package t = T.synth_by_tactic (fun () -> gen_package (`t))
