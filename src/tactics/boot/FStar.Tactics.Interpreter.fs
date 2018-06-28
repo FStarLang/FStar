@@ -194,6 +194,7 @@ and primitive_steps () : list<N.primitive_step> =
       mktac1 "tadmit"        tadmit  e_unit e_unit;
 
       mktac1 "cases"         cases RE.e_term (e_tuple2 RE.e_term RE.e_term);
+      mktac1 "t_destruct"    t_destruct RE.e_term (e_list (e_tuple2 RE.e_fv e_int));
 
       mktac1 "top_env"       top_env     e_unit RE.e_env;
       mktac1 "cur_env"       cur_env     e_unit RE.e_env;

@@ -205,7 +205,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "b705f002f48f836240dfeebc290faaa2"
+      "acda99d79062ccade97c112014c0f55a"
     ],
     [
       "CanonCommSwaps.lift_swap_cons",
@@ -251,7 +251,7 @@
         "unit_typing"
       ],
       0,
-      "d8850eb1e4ce7efa8fb745f7eaf93baf"
+      "8461bd382829ac4eb750a7b753ff8a70"
     ],
     [
       "CanonCommSwaps.lift_swaps_cons",
@@ -395,7 +395,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "13a689eef53f8817e45b967cd4c85f48"
+      "6c6a43fe98e7f293a522e8ec8db33459"
     ],
     [
       "CanonCommSwaps.apply_swap_aux",
@@ -410,11 +410,10 @@
         "assumption_Prims.HasEq_int",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_2",
-        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
+        "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -424,12 +423,10 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "subterm_ordering_Prims.Cons",
-        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "typing_FStar.List.Tot.Base.length"
+        "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6f2aab65ec042058a02d1455be75b826"
+      "24c16a9b875ca1ddf75603adecb0ba01"
     ],
     [
       "CanonCommSwaps.apply_swaps",
@@ -495,7 +492,7 @@
         "unit_typing"
       ],
       0,
-      "1d7049375b5f9d0111aacb25dd52290a"
+      "f5ac3b45d7066cae292ccc8c4b87ff55"
     ],
     [
       "CanonCommSwaps.lift_swaps_cons",

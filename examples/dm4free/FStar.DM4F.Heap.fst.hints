@@ -966,7 +966,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d6450c47a089e78dee79627bc6775ee7"
+      "5b08fc5585c0b11c6a2e64a009fed8ed"
     ],
     [
       "FStar.DM4F.Heap.fresh",
@@ -978,7 +978,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "edf823e7ce3d20e9ab5e1b25933bef45"
+      "3ab4a8dec01cc5db8d676d130457af2e"
     ],
     [
       "FStar.DM4F.Heap.only",
@@ -1062,7 +1062,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "976e722faac2c4ccb201fa9e99f9e18b"
+      "e312537537a5673610d567f500626a65"
     ],
     [
       "FStar.DM4F.Heap.modifies",
@@ -1074,7 +1074,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "61e31cd9389ff14a0137318563daaaeb"
+      "6c3e481b1bc6d8c888a4e412e19380ac"
     ],
     [
       "FStar.DM4F.Heap.lemma_modifies_trans",
@@ -1086,7 +1086,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "bdd04d579f588ecabc328e39d1f9c2f8"
+      "83a66ef51acb9121f507353f364faf32"
     ],
     [
       "FStar.DM4F.Heap.op_Hat_Plus_Plus",
@@ -1110,7 +1110,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "69d1c0ff52be2a68420359dfbcf48d6c"
+      "0d18ab2c8e736561db0237372b28e981"
     ],
     [
       "FStar.DM4F.Heap.op_Hat_Plus_Plus",
@@ -1122,7 +1122,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "6d578823adb79d9f1afad394968f83a2"
+      "ee5df8dbe24a0600a3641883682294fc"
     ],
     [
       "FStar.DM4F.Heap.op_Plus_Plus_Hat",
@@ -1146,7 +1146,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c5754ca28fbcbbce77c7cea1d82d6fff"
+      "285551e61aa3f1077020f253eefc1e2c"
     ],
     [
       "FStar.DM4F.Heap.op_Plus_Plus_Hat",
@@ -1158,7 +1158,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d62815de08a41ed5fca883ef31bd9d30"
+      "2775047d9e94ec73e60fd09acd05773d"
     ],
     [
       "FStar.DM4F.Heap.op_Hat_Plus_Hat",

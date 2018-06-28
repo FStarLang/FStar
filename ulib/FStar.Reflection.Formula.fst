@@ -138,12 +138,23 @@ let unsquash (t : term) : option term =
         else None
     | _ -> None
 
+let unsquash_total (t : term) : term =
+    match inspect_ln t with
+    | Tv_App l (r, Q_Explicit) ->
+        if is_name_imp squash_qn l
+        then r
+        else t
+    | _ -> t
+
 // Unsquashing
 let rec term_as_formula (t:term) : Tac formula =
     match unsquash t with
     | None -> F_Unknown
     | Some t ->
         term_as_formula' t
+
+let rec term_as_formula_total (t:term) : Tac formula =
+    term_as_formula' (unsquash_total t)
 
 let formula_as_term_view (f:formula) : Tot term_view =
     let mk_app' tv args = List.Tot.fold_left (fun tv a -> Tv_App (pack_ln tv) a) tv args in
