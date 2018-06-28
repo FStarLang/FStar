@@ -23,7 +23,7 @@ let parser32_correct
       U32.v consumed == (consumed' <: nat)
     )
 
-unfold
+inline_for_extraction
 let parser32
   (#k: parser_kind)
   (#t: Type0)
