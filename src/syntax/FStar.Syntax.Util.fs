@@ -100,7 +100,6 @@ let rename_binders (replace_xs:binders) (with_ys:binders) : subst_t =
     else failwith "Ill-formed substitution"
 
 open FStar.Syntax.Subst
-open FSharp.Compatibility.OCaml
 
 let rec unmeta e =
     let e = compress e in
@@ -469,7 +468,7 @@ let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option<range>) : term =
     let i = {
         lkind = k;
         blob  = mkdyn t;
-        typ   = typ;
+        ltyp   = typ;
         rng   = rng;
       } in
     mk (Tm_lazy i) None rng

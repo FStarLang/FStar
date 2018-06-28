@@ -18,7 +18,6 @@ module Ident = FStar.Ident
 module Err = FStar.Errors
 module Z = FStar.BigInt
 open FStar.Char
-open FSharp.Compatibility.OCaml
 
 type norm_cb = BU.either<Ident.lid,S.term> -> S.term
 let id_norm_cb : norm_cb = function
@@ -55,7 +54,7 @@ let type_of     (e:embedding<'a>)     = e.typ
 
 let lazy_embed rng (x:'a) (f:unit -> term) =
     S.mk (Tm_lazy({blob=FStar.Dyn.mkdyn x;
-                   typ=S.tun;
+                   ltyp=S.tun;
                    rng=rng;
                    lkind=Lazy_embedding (FStar.Common.mk_thunk f)}))
          None
@@ -411,8 +410,8 @@ let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) =
         | None -> raise Embedding_failure //TODO: dodgy
         | Some repr_f -> norm (BU.Inr repr_f))
     in
-    let un (f:term) w norm =
-        let f_wrapped (a:'a) =
+    let un (f:term) w norm : option<('a -> 'b)> =
+        let f_wrapped (a:'a) : 'b =
             let a_tm = embed ea a f.pos None norm in
             let b_tm = norm (BU.Inr (S.mk_Tm_app f [S.as_arg a_tm] None f.pos)) in
             match unembed eb b_tm w norm with

@@ -61,7 +61,7 @@ val uncurry_mlty_fun : t:mlty -> list<mlty> * mlty
 
 val interpret_plugin_as_term_fun :
                TypeChecker.Env.env
-            -> fv:lident
+            -> fv:S.fv
             -> t:S.typ
             -> ml_fv:mlexpr'
             -> option<(mlexpr * int * bool)>

@@ -226,9 +226,11 @@ let step_from_native_step (s: native_primitive_step): N.primitive_step =
       N.requires_binder_substitution = false; // GM: really?
       N.interpretation=(fun psc ncb args -> s.tactic psc args) }
 
-let mk_emb f g t =
-    mk_emb (fun x r norm _topt -> f r x norm)
-           (fun x w norm -> g w x norm) t
+let mk_emb (em:Range.range -> 'a -> norm_cb -> term)
+           (un:bool -> term -> norm_cb -> option<'a>)
+           (t:term) =
+    mk_emb (fun x r _topt norm -> em r x norm)
+           (fun x w norm -> un w x norm) t
 
 let rec e_tactic_0' (er : embedding<'r>) : embedding<tac<'r>> =
     mk_emb (fun _ _ _ -> failwith "Impossible: embedding tactic (0)?")
@@ -236,7 +238,7 @@ let rec e_tactic_0' (er : embedding<'r>) : embedding<tac<'r>> =
            S.t_unit // never used
 
 and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<'r>)> =
-    mk_emb (fun _ _ -> failwith "Impossible: embedding tactic (1)?")
+    mk_emb (fun _ _ _ -> failwith "Impossible: embedding tactic (1)?")
            (fun w t -> unembed_tactic_1 ea er t)
            S.t_unit // never used
 and primitive_steps () : list<N.primitive_step> =
@@ -247,7 +249,7 @@ and primitive_steps () : list<N.primitive_step> =
       N.auto_reflect=Some (arity - 1);
       N.strong_reduction_ok=false;
       N.requires_binder_substitution = true;
-      N.interpretation=(fun psc args -> interpretation nm psc args);
+      N.interpretation=(fun psc norm_cb args -> interpretation nm psc norm_cb args);
     } in
     let native_tactics = list_all () in
     let native_tactics_steps = List.map step_from_native_step native_tactics in
@@ -454,7 +456,7 @@ and primitive_steps () : list<N.primitive_step> =
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
 
-//IN F*: and unembed_tactic_1 (#a:Type) (#r:Type) (ea:embedding a) (er:embedding r) (f:term) : option (a -> tac r) =
+//IN F*: and unembed_tactic_1 (#a:Type) (#r:Type) (ea:embedding a) (er:embedding r) (f:term) (ncb:norm_cb) : option (a -> tac r) =
 and unembed_tactic_1<'a,'r> (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : option<('a -> tac<'r>)> = //JUST FSHARP
     Some (fun x ->
       let rng = FStar.Range.dummyRange  in
@@ -462,7 +464,7 @@ and unembed_tactic_1<'a,'r> (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:
       let app = S.mk_Tm_app f [as_arg x_tm] None rng in
       unembed_tactic_0 er app ncb)
 
-//IN F*: and unembed_tactic_0 (#b:Type) (eb:embedding b) (embedded_tac_b:term) : tac b =
+//IN F*: and unembed_tactic_0 (#b:Type) (eb:embedding b) (embedded_tac_b:term) (ncb:norm_cb) : tac b =
 and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) : tac<'b> = //JUST FSHARP
     bind get (fun proof_state ->
     let rng = embedded_tac_b.pos in
@@ -483,7 +485,7 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
         BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
 
     // F* requires more annotations.
-    // IN F*: let res : option<__result<b>> = unembed (E.e_result eb) result in
+    // IN F*: let res : option<__result<b>> = unembed (E.e_result eb) result ncb in
     let res = unembed (E.e_result eb) result ncb in //JUST FSHARP
 
     match res with
@@ -496,8 +498,8 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
     | None ->
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
     )
-//IN F*: and unembed_tactic_0' (#b:Type) (eb:embedding b) (embedded_tac_b:term) : option (tac b) =
-and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term)  (ncb:norm_cb) : option<(tac<'b>)> = //JUST FSHARP
+//IN F*: and unembed_tactic_0' (#b:Type) (eb:embedding b) (embedded_tac_b:term) (ncb:norm_cb) : option (tac b) =
+and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) : option<(tac<'b>)> = //JUST FSHARP
     Some <| unembed_tactic_0 eb embedded_tac_b ncb
 
 let report_implicits ps (is : Env.implicits) : unit =

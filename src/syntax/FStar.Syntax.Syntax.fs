@@ -256,7 +256,7 @@ and attribute = term
 and lazyinfo = {
     blob  : dyn;
     lkind : lazy_kind;
-    typ   : typ;
+    ltyp  : typ;
     rng   : Range.range;
 }
 // Different kinds of lazy terms. These are used to decide the unfolding

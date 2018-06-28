@@ -365,7 +365,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   // lazy terms have whichever type they're annotated with
   | Tm_lazy i ->
-    value_check_expected_typ env top (Inl i.typ) Env.trivial_guard
+    value_check_expected_typ env top (Inl i.ltyp) Env.trivial_guard
 
   | Tm_meta(e, Meta_desugared Meta_smt_pat) ->
     let e, c, g = tc_tot_or_gtot_term env e in

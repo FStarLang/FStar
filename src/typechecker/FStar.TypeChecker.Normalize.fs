@@ -798,7 +798,7 @@ let try_unembed_simple (emb:EMB.embedding<'a>) (x:term) : option<'a> =
 
 let built_in_primitive_steps : BU.psmap<primitive_step> =
     let norm_cb = EMB.id_norm_cb in
-    let try_unembed emb x = EMB.try_unembed emb x norm_cb in
+    let try_unembed (emb:EMB.embedding<'a>) (x:term) = EMB.try_unembed emb x norm_cb in
     let arg_as_int    (a:arg) = fst a |> try_unembed EMB.e_int in
     let arg_as_bool   (a:arg) = fst a |> try_unembed EMB.e_bool in
     let arg_as_char   (a:arg) = fst a |> try_unembed EMB.e_char in

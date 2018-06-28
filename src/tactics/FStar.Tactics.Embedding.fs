@@ -64,9 +64,11 @@ let t_result_of t  = U.mk_app t_result [S.as_arg t] // TODO: uinst on t_result?
 let t_guard_policy = S.tconst (fstar_tactics_lid' ["Types"; "guard_policy"])
 let t_direction    = S.tconst (fstar_tactics_lid' ["Types"; "direction"])
 
-let mk_emb f g t =
-    mk_emb (fun x r _topt _norm -> f r x)
-           (fun x w _norm -> g w x) t
+let mk_emb (em: Range.range -> 'a -> term)
+           (un: bool -> term -> option<'a>)
+           (t: term) =
+    mk_emb (fun x r _topt _norm -> em r x)
+           (fun x w _norm -> un w x) t
 let embed e r x = FStar.Syntax.Embeddings.embed e x r None id_norm_cb
 let unembed' w e x = FStar.Syntax.Embeddings.unembed e x w id_norm_cb
 
