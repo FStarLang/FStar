@@ -914,12 +914,12 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               ml_int_ty
 
             | None ->
-              let tv = EMB.embed (RE.e_term_view_aq aqs) t.pos (RD.Tv_Var bv) in
+              let tv = EMB.embed (RE.e_term_view_aq aqs) (RD.Tv_Var bv) t.pos None (fun x -> x) in
               let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
               term_as_mlexpr g t
             end
           | tv ->
-              let tv = EMB.embed (RE.e_term_view_aq aqs) t.pos tv in
+              let tv = EMB.embed (RE.e_term_view_aq aqs) tv t.pos None (fun x -> x) in
               let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
               term_as_mlexpr g t
           end

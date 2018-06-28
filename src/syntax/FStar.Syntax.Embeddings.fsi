@@ -40,21 +40,27 @@ val steps_UnfoldAttr    : term
  * able to unembed.
  *)
 
+type norm_cb = term -> term // a callback to the normalizer
+exception Embedding_failure
+exception Unembedding_failure
+type shadow_term = option<FStar.Common.thunk<term>>
+
+type embed_t = FStar.Range.range -> shadow_term -> norm_cb -> term
+type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we should warn on a failure
+
+type raw_embedder<'a>   = 'a -> embed_t
+type raw_unembedder<'a> = term -> unembed_t<'a>
+
 type embedding<'a>
-
-type raw_embedder<'a>    = Range.range -> 'a -> term
-type raw_unembedder'<'a> = bool -> term -> option<'a> // bool = whether we should warn on a failure
-type raw_unembedder<'a>  = term -> option<'a>
-
-val mk_emb : raw_embedder<'a> -> raw_unembedder'<'a> -> typ -> embedding<'a>
+val mk_emb : raw_embedder<'a> -> raw_unembedder<'a> -> typ -> embedding<'a>
 
 // embed: turning a value into a term (compiler internals -> userland)
 // unembed: interpreting a term as a value, which can fail (userland -> compiler internals)
-val embed       : embedding<'a> -> Range.range -> 'a -> term
-val unembed'    : bool -> embedding<'a> -> term -> option<'a>
-val unembed     : embedding<'a> -> term -> option<'a>
-val try_unembed : embedding<'a> -> term -> option<'a>
-val type_of     : embedding<'a> -> typ
+val embed        : embedding<'a> -> 'a -> embed_t
+val unembed      : embedding<'a> -> term -> unembed_t<'a>
+val warn_unembed : embedding<'a> -> term -> norm_cb -> option<'a>
+val try_unembed  : embedding<'a> -> term -> norm_cb -> option<'a>
+val type_of      : embedding<'a> -> typ
 
 (* Embeddings, both ways and containing type information *)
 val e_any         : embedding<term> // an identity
@@ -73,11 +79,4 @@ val e_string_list : embedding<list<string>>
 
 val mk_any_emb : typ -> embedding<term>
 
-(* These are different, really, we're not embedding functions *)
-type norm_cb = term -> term // a callback to the normalizer
-
-val embed_arrow_1     : n:norm_cb -> embedding<'a> -> embedding<'b> -> term -> ('a -> 'b) -> term
-
-val embed_arrow_2     : n:norm_cb -> embedding<'a> -> embedding<'b> -> embedding<'c> -> term -> ('a -> 'b -> 'c) -> term
-
-val embed_arrow_3     : n:norm_cb -> embedding<'a> -> embedding<'b> -> embedding<'c> -> embedding<'d> -> term -> ('a -> 'b -> 'c -> 'd) -> term
+val embed_arrow_1     : embedding<'a> -> embedding<'b> -> embedding<('a -> 'b)>

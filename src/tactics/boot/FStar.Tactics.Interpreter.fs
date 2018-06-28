@@ -226,6 +226,9 @@ let step_from_native_step (s: native_primitive_step): N.primitive_step =
       N.requires_binder_substitution = false; // GM: really?
       N.interpretation=(fun psc args -> s.tactic psc args) }
 
+let mk_emb f g t =
+    mk_emb (fun x r _topt _norm -> f r x)
+           (fun x w _norm -> g w x) t
 
 let rec e_tactic_0' (er : embedding<'r>) : embedding<tac<'r>> =
     mk_emb (fun _ _ -> failwith "Impossible: embedding tactic (0)?")

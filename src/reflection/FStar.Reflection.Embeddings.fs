@@ -30,6 +30,11 @@ open FStar.Dyn
 (* -------------------------------------------------------------------------------------- *)
 (* ------------------------------------- EMBEDDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
+let mk_emb f g t =
+    mk_emb (fun x r _topt _norm -> f r x)
+           (fun x w _norm -> g w x) t
+let embed e r x = embed e x r None (fun x -> x)
+let unembed' w e x = unembed e x w (fun x -> x)
 
 let e_bv =
     let embed_bv (rng:Range.range) (bv:bv) : term =

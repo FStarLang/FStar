@@ -15,6 +15,9 @@ module Print = FStar.Syntax.Print
 module BU = FStar.Util
 module E = FStar.Reflection.Embeddings
 
+let unembed ea a = unembed ea a true (fun x -> x)
+let embed ea r x = embed ea x r None (fun x -> x)
+
 let int1 (m:lid) (f:'a -> 'r) (ea:embedding<'a>) (er:embedding<'r>)
                  (r:Range.range) (args : args) : option<term> =
     match args with
