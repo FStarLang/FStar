@@ -313,31 +313,37 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
        mkFV fvar [] []
 
      | N.Should_unfold_reify
-     | N.Should_unfold_yes -> begin
-       match qninfo with
+     | N.Should_unfold_yes -> 
+       begin match qninfo with
        | Some (BU.Inr ({ sigel = Sig_let ((is_rec, lbs), names) }, _us_opt), _rng) ->
-          let lbm = find_let lbs fvar in
-          (match lbm with
-           | Some lb ->
-             if is_rec then
-               mkAccuRec lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty
-                                   since they are already present in the global environment *)
-             else
-               begin
-                  debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
-                  debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
-                  debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
-                  // VD: Don't unfold primops
-                  if Cfg.is_prim_step cfg fvar then
-                    mkFV fvar [] []
-                  else
-                    translate_letbinding cfg [] lb
+         let lbm = find_let lbs fvar in
+         begin match lbm with
+         | Some lb ->
+           if is_rec then
+             mkAccuRec lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty
+                                       since they are already present in the global environment *)
+           else 
+             begin
+               debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
+               debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
+               debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
+               begin match Cfg.find_prim_step cfg fvar with
+               | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
+               Lam ((fun args -> let args' = (List.map NBETerm.as_arg args) in 
+                              match prim_step.interpretation_nbe args' with 
+                              | Some x -> x
+                              | None -> mkFV fvar [] args'),
+                     List.init prim_step.arity (fun _ -> fun () -> (Constant Unit, None)), prim_step.arity)
+               | Some _ -> mkFV fvar [] []
+               | _ -> translate_letbinding cfg [] lb
                end
-           | None -> failwith "Could not find mutually recursive definition" (* TODO: is this correct? *))
+             end
+         | None -> failwith "Could not find mutually recursive definition" (* TODO: is this correct? *)
+         end
        | _ ->
         debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar));
         mkFV fvar [] [] (* Zoe : Z and S data constructors from the examples are not in the environment *)
-      end
+       end
 
 (* translate a let-binding - local or global *)
 and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
@@ -670,32 +676,10 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
          | [] -> tm
          | _ ->  U.mk_app tm args
       in
-      let tm () =
-        match us with
-        | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
-        | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange)
-      in
-      (match Cfg.find_prim_step cfg fv with
-       | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
-         (* TODO : can primops be universe polymorphic? *)
-         begin
-           let l = List.length args in
-           let args_1, args_2 = if l = prim_step.arity
-                                then args, []
-                                else List.splitAt prim_step.arity args
-           in
-           let psc = {
-             Cfg.psc_range = Range.dummyRange;
-             Cfg.psc_subst = (fun () -> if prim_step.requires_binder_substitution
-                                 then failwith "Cannot handle primops that require substitution"
-                                 else [])
-           } in
-           match prim_step.interpretation psc args_1 with
-           | Some tm -> U.mk_app tm args_2
-           | None -> tm ()
-         end
-       | _ -> tm ())
-
+      begin match us with
+      | _ :: _ -> apply (S.mk_Tm_uinst (S.mk (Tm_fvar fv) None Range.dummyRange) (List.rev us))
+      | [] -> apply (S.mk (Tm_fvar fv) None Range.dummyRange)
+      end
     | Accu (Var bv, []) ->
       S.bv_to_name bv
 

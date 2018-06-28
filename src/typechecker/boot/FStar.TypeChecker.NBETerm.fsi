@@ -71,6 +71,9 @@ val mkAccuVar : var -> t
 val mkAccuMatch : t -> (t -> t) -> ((t -> term) -> list<branch>) -> t
 val mkAccuRec : letbinding -> list<letbinding> -> list<t> -> t
 
+val as_arg : t -> arg
+val as_iarg : t -> arg
+
 type embedding<'a> = {
   em  : 'a -> t;
   un  : t -> option<'a>;
