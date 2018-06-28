@@ -211,7 +211,7 @@ let rec rewrite_all_context_equalities (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
     | x_t::bs -> begin
-        begin match term_as_formula (type_of_binder x_t) with
+        begin match term_as_formula_total (type_of_binder x_t) with
         | Comp (Eq _) lhs _ ->
             begin match inspect_ln lhs with
             | Tv_Var _ -> rewrite x_t
