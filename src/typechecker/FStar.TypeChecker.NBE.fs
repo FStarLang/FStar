@@ -310,7 +310,16 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
 
      | N.Should_unfold_no ->
        debug (fun () -> BU.print1 "(1) Decided to not unfold %s\n" (P.fv_to_string fvar));
-       mkFV fvar [] []
+       begin match Cfg.find_prim_step cfg fvar with
+       | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
+         Lam ((fun args -> let args' = (List.map NBETerm.as_arg args) in 
+              match prim_step.interpretation_nbe args' with 
+              | Some x -> x
+              | None -> mkFV fvar [] args'),
+              List.init prim_step.arity (fun _ -> fun () -> (Constant Unit, None)), prim_step.arity)
+       | _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
+       end
+
 
      | N.Should_unfold_reify
      | N.Should_unfold_yes -> 
@@ -327,22 +336,11 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
                debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
                debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
                debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
-               begin match Cfg.find_prim_step cfg fvar with
-               | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
-               Lam ((fun args -> let args' = (List.map NBETerm.as_arg args) in 
-                              match prim_step.interpretation_nbe args' with 
-                              | Some x -> x
-                              | None -> mkFV fvar [] args'),
-                     List.init prim_step.arity (fun _ -> fun () -> (Constant Unit, None)), prim_step.arity)
-               | Some _ -> mkFV fvar [] []
-               | _ -> translate_letbinding cfg [] lb
-               end
+               translate_letbinding cfg [] lb
              end
-         | None -> failwith "Could not find mutually recursive definition" (* TODO: is this correct? *)
+         | None -> failwith "Could not find let binding"
          end
-       | _ ->
-        debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar));
-        mkFV fvar [] [] (* Zoe : Z and S data constructors from the examples are not in the environment *)
+       | _ -> mkFV fvar [] []
        end
 
 (* translate a let-binding - local or global *)

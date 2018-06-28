@@ -417,8 +417,8 @@ let decidable_eq (neg:bool) (args:args) : option<t> =
 
 let interp_prop (args:args) : option<t> =
     match args with
-    | [(_typ, _); (a1, _); (a2, _)]    //eq2
-    | [(_typ, _); _; (a1, _); (a2, _)] ->    //eq3
+    | [(_u, _); (_typ, _); (a1, _); (a2, _)] ->  //eq2
+    //| [(_typ, _); _; (a1, _); (a2, _)] ->     //eq3
       failwith "propositional equality not yet implemented"
       // (match U.eq_tm a1 a2 with
       //  | U.Equal -> Some ({U.t_true with pos=r})
