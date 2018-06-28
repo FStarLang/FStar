@@ -5,7 +5,7 @@ include MiniParse.Spec.Combinators
 module B32 = FStar.Bytes
 module U32 = FStar.UInt32
 
-#reset-options "--z3rlimit 16 --max_fuel 8 --max_ifuel 8"
+#reset-options "--z3rlimit 16"
 
 inline_for_extraction
 let parse32_ret
@@ -38,6 +38,8 @@ let parse32_and_then
   | _ -> None
   ) <: (res: option (t' * U32.t) { parser32_correct (p `and_then` p') input res } ))
 
+#reset-options "--z3rlimit 64"
+
 inline_for_extraction
 let parse32_nondep_then
   (#k1: parser_kind)
@@ -60,6 +62,8 @@ let parse32_nondep_then
     end
   | _ -> None
   ) <: (res: option ((t1 * t2) * U32.t) { parser32_correct (p1 `nondep_then` p2) input res } ))
+
+#reset-options "--z3rlimit 32"
 
 let serialize32_kind_precond
   (k1 k2: parser_kind)

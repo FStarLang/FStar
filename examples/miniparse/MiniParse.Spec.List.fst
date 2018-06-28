@@ -61,7 +61,7 @@ let rec serialize_nlist
 = [@inline_let]
   let _ : squash (parse_nlist_kind' n k == parse_nlist_kind n k) = () in
   if n = 0
-  then fun _ -> Seq.createEmpty
+  then Serializer (fun _ -> Seq.createEmpty)
   else serialize_synth _ (synth_nlist (n - 1)) (serialize_nondep_then _ s () _ (serialize_nlist (n - 1) s)) (synth_nlist_recip (n - 1)) ()
 
 let serialize_nlist_nil
@@ -75,6 +75,8 @@ let serialize_nlist_nil
   ))
   (ensures (serialize (serialize_nlist 0 s) [] == Seq.createEmpty))
 = ()
+
+#set-options "--z3rlimit 16"
 
 let serialize_list_cons
   (#k: parser_kind)
@@ -123,6 +125,7 @@ let rec serialize_list_append
 = match l1 with
   | a :: q ->
     serialize_list_append (n1 - 1) n2 s q l2;
+    serialize_list_cons (n1 - 1) s a q;
     serialize_list_cons (n1 - 1 + n2) s a (L.append q l2);
     Seq.append_assoc (serialize s a) (serialize (serialize_nlist (n1 - 1) s) q) (serialize (serialize_nlist n2 s) l2)
   | [] ->

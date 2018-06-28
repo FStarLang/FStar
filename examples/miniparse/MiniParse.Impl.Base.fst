@@ -82,7 +82,7 @@ let serializer32_correct
   (input: t)
   (res: bytes32)
 : GTot Type0
-= B32.reveal res == s input
+= B32.reveal res == serialize s input
 
 let serializer32
   (#k: parser_kind)
@@ -98,7 +98,7 @@ let partial_serializer32
   (#p: parser k t)
   (s: serializer p)
 : Tot Type0
-= (input: t { Seq.length (s input) < 4294967296 } ) -> Tot (res: bytes32 { serializer32_correct s input res } )
+= (input: t { Seq.length (serialize s input) < 4294967296 } ) -> Tot (res: bytes32 { serializer32_correct s input res } )
 
 let serializer32_then_parser32
   (#k: parser_kind)
@@ -127,7 +127,7 @@ let parser32_then_serializer32
     U32.v consumed <= B32.length input /\
     s32 v == B32.b32slice input 0ul consumed
   ))
-= serializer_correct_implies_complete p s
+= serializer_correct_implies_complete p (Serializer?.f s)
 
 let parser32_then_serializer32'
   (#k: parser_kind)
@@ -177,8 +177,8 @@ let parser32_injective
     U32.v consumed2 <= B32.length input2 /\
     B32.b32slice input1 0ul consumed1 == B32.b32slice input2 0ul consumed2
   )))
-= assert (injective_precond p (B32.reveal input1) (B32.reveal input2));
-  assert (injective_postcond p (B32.reveal input1) (B32.reveal input2))
+= assert (injective_precond (coerce_to_bare_parser _ _ p) (B32.reveal input1) (B32.reveal input2));
+  assert (injective_postcond (coerce_to_bare_parser _ _ p) (B32.reveal input1) (B32.reveal input2))
 
 let serializer32_injective
   (#k: parser_kind)
