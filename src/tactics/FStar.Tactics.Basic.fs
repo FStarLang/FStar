@@ -1631,7 +1631,7 @@ let t_destruct (tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
     bind (cur_goal ()) (fun g ->
     bind (__tc (goal_env g) tm) (fun (tm, ty, guard) ->
     bind (proc_guard "destruct" (goal_env g) guard) (fun () ->
-    let h, _ = U.head_and_args' ty in
+    let h, args = U.head_and_args' ty in
     bind (match (U.un_uinst h).n with
           | Tm_fvar fv -> ret fv
           | _ -> fail "type is not an fv") (fun fv ->
@@ -1640,7 +1640,7 @@ let t_destruct (tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
     | None -> fail "type not found in environment"
     | Some se ->
     match se.sigel with
-    | Sig_inductive_typ (_lid, us, f_ps, ty, mut, c_lids) ->
+    | Sig_inductive_typ (_lid, us, t_ps, ty, mut, c_lids) ->
       (* High-level idea of this huge function:
        * For  Gamma |- w : phi  and  | C : ps -> bs -> t,  we generate a new goal
        *   Gamma |- w' : bs -> phi
@@ -1667,16 +1667,23 @@ let t_destruct (tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         (* Deconstruct its type, separating the parameters from the
                          * actual arguments (indices do not matter here). *)
                         let bs, comp = U.arrow_formals_comp ty in
-                        let a_ps, bs = List.splitAt nparam bs in
+                        let d_ps, bs = List.splitAt nparam bs in
                         failwhen (not (U.is_total_comp comp)) "not total?" (fun () ->
                         let mk_pat p = { v = p; p = tm.pos } in
                         let bs = freshen_binders bs in
-                        (* TODO: This is silly, let's keep aq in the Pat_cons *)
+                        (* TODO: This is silly, why don't we just keep aq in the Pat_cons? *)
                         let is_imp = function | Some (Implicit _) -> true
                                               | _ -> false
                         in
-                        let subpats = List.map (fun (bv, aq) ->
+                        failwhen (List.length args <> List.length d_ps) "params not match?" (fun () ->
+                        let d_ps_args = List.zip d_ps args in
+                        let subst = List.map (fun ((bv, _), (t, _)) -> NT (bv, t)) d_ps_args in
+                        let bs = SS.subst_binders subst bs in
+                        let subpats_1 = List.map (fun ((bv, _), (t, _)) ->
+                                                 (mk_pat (Pat_dot_term (bv, t)), true)) d_ps_args in
+                        let subpats_2 = List.map (fun (bv, aq) ->
                                                  (mk_pat (Pat_var bv), is_imp aq)) bs in
+                        let subpats = subpats_1 @ subpats_2 in
                         let pat = mk_pat (Pat_cons (fv, subpats)) in
                         let env = (goal_env g) in
                         let nty = U.arrow bs (mk_Total (goal_type g)) in
@@ -1684,7 +1691,7 @@ let t_destruct (tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let g' = mk_goal env uv g.opts false in
                         let brt = U.mk_app_binders uvt bs in
                         let br = SS.close_branch (pat, None, brt) in
-                        ret (g', br, (fv, Z.of_int_fs (List.length bs)))))
+                        ret (g', br, (fv, Z.of_int_fs (List.length bs))))))
                     | _ ->
                         fail "impossible: not a ctor")
                  c_lids) (fun goal_brs ->

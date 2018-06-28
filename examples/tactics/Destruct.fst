@@ -6,6 +6,10 @@ let intros' () = let _ = intros () in ()
 let destruct tm = let _ = t_destruct tm in ()
 let destruct_intros tm = seq (fun () -> let _ = t_destruct tm in ()) intros'
 
+let dump m =
+    (* Tactics.dump m; *)
+    ()
+
 (* An enum *)
 type t1 =
  | A1
@@ -61,21 +65,21 @@ let _ = assert_norm (f3 (B3 (2, "hello")) == 2)
 let _ = assert_norm (f3 (C3 false 25) == 3)
 
 (* Type param, which means universe polymorphism *)
-(* Not working yet, explodes with extracted interfaces *)
-(* type t4 a = *)
-(*  | A4 of a *)
-(*  | B4 of a * int *)
-(*  | C4 : nat -> a -> string -> t4 a *)
+type t4 a =
+ | A4 of a
+ | B4 of a * int
+ | C4 : nat -> a -> string -> t4 a
 
-(* let f4 #a (x:t4 a) : int = *)
-(*     synth_by_tactic (fun () -> destruct_intros (quote x); *)
-(*                                dump "41"; exact (`1); *)
-(*                                dump "42"; exact (`2); *)
-(*                                dump "43"; exact (`3)) *)
+(* Not using Type0 gives a universe unification error, why? *)
+let f4 (#a:Type0) (x:t4 a) : int =
+    synth_by_tactic (fun () -> destruct_intros (quote x);
+                               dump "41"; exact (`1);
+                               dump "42"; exact (`2);
+                               dump "43"; exact (`3))
 
-(* let _ = assert_norm (f4 (A4 1) == 1) *)
-(* let _ = assert_norm (f4 (B4 (false, 44)) == 2) *)
-(* let _ = assert_norm (f4 (C4 8 (-1) "hi") == 3) *)
+let _ = assert_norm (f4 (A4 1) == 1)
+let _ = assert_norm (f4 (B4 (false, 44)) == 2)
+let _ = assert_norm (f4 (C4 8 (-1) "hi") == 3)
 
 (* Both *)
 (* Implicits *)
