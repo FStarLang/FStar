@@ -1517,7 +1517,7 @@ let (fresh_constructor :
             {
               assumption_term = uu____4509;
               assumption_caption =
-                (FStar_Pervasives_Native.Some "Consrtructor distinct");
+                (FStar_Pervasives_Native.Some "Constructor distinct");
               assumption_name = a_name;
               assumption_fact_ids = []
             }  in
