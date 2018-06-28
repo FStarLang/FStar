@@ -1,6 +1,7 @@
 ﻿#light "off"
 module FStar.Syntax.Embeddings
 
+open FStar
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Range
@@ -17,8 +18,12 @@ module Ident = FStar.Ident
 module Err = FStar.Errors
 module Z = FStar.BigInt
 open FStar.Char
+open FSharp.Compatibility.OCaml
 
-type norm_cb = S.term -> S.term
+type norm_cb = BU.either<Ident.lid,S.term> -> S.term
+let id_norm_cb : norm_cb = function
+    | BU.Inr x -> x
+    | BU.Inl l -> S.fv_to_tm (S.lid_as_fv l delta_equational None)
 exception Embedding_failure
 exception Unembedding_failure
 type shadow_term = option<FStar.Common.thunk<term>>
@@ -387,7 +392,7 @@ let or_else (f: option<'a>) (g:unit -> 'a) =
     | Some x -> x
     | None -> g ()
 
-let embed_arrow_1 (ea:embedding<'a>) (eb:embedding<'b>) =
+let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) =
     let em (f:'a -> 'b) rng shadow_f norm =
         let f_wrapped (x:term) =
             let shadow_app = map_shadow shadow_f (fun f ->
@@ -399,17 +404,17 @@ let embed_arrow_1 (ea:embedding<'a>) (eb:embedding<'b>) =
             (fun () ->
                 match force_shadow shadow_app with
                 | None -> raise Embedding_failure
-                | Some app -> norm app)
+                | Some app -> norm (BU.Inr app))
         in
         lazy_embed rng f_wrapped (fun () ->
         match force_shadow shadow_f with
         | None -> raise Embedding_failure //TODO: dodgy
-        | Some repr_f -> norm repr_f)
+        | Some repr_f -> norm (BU.Inr repr_f))
     in
     let un (f:term) w norm =
         let f_wrapped (a:'a) =
             let a_tm = embed ea a f.pos None norm in
-            let b_tm = norm (S.mk_Tm_app f [S.as_arg a_tm] None f.pos) in
+            let b_tm = norm (BU.Inr (S.mk_Tm_app f [S.as_arg a_tm] None f.pos)) in
             match unembed eb b_tm w norm with
             | None -> raise Unembedding_failure
             | Some b -> b
@@ -423,3 +428,81 @@ let embed_arrow_1 (ea:embedding<'a>) (eb:embedding<'b>) =
               FStar.Range.dummyRange
     in
     mk_emb em un tarr
+
+ /////////////////////////////////////////////////////////////////////
+ //Registering top-level functions
+ /////////////////////////////////////////////////////////////////////
+
+let arrow_as_prim_step_1 (ea:embedding<'a>) (eb:embedding<'b>)
+                         (f:'a -> 'b) (n_tvars:int) (fv_lid:Ident.lid) norm
+   : args -> option<term> =
+    let rng = Ident.range_of_lid fv_lid in
+    let f_wrapped args =
+        let _tvar_args, rest_args = List.splitAt n_tvars args in
+        let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
+        let shadow_app =
+            Some (FStar.Common.mk_thunk (fun () -> S.mk_Tm_app (norm (BU.Inl fv_lid)) args None rng))
+        in
+        match
+            (BU.map_opt
+                (unembed ea x true norm) (fun x ->
+                 embed eb (f x) rng shadow_app norm))
+        with
+        | Some x -> Some x
+        | None ->
+            match force_shadow shadow_app with
+            | None -> None
+            | Some app -> Some (norm (BU.Inr app))
+    in
+    f_wrapped
+
+let arrow_as_prim_step_2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>)
+                         (f:'a -> 'b -> 'c) n_tvars fv_lid norm
+   : args -> option<term> =
+    let rng = Ident.range_of_lid fv_lid in
+    let f_wrapped args =
+        let _tvar_args, rest_args = List.splitAt n_tvars args in
+        let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
+        let y, _ = List.hd (List.tl rest_args) in
+        let shadow_app =
+            Some (FStar.Common.mk_thunk (fun () -> S.mk_Tm_app (norm (BU.Inl fv_lid)) args None rng))
+        in
+        match
+            (BU.bind_opt (unembed ea x true norm) (fun x ->
+             BU.bind_opt (unembed eb y true norm) (fun y ->
+             Some (embed ec (f x y) rng shadow_app norm))))
+        with
+        | Some x -> Some x
+        | None ->
+            match force_shadow shadow_app with
+            | None -> None
+            | Some app -> Some (norm (BU.Inr app))
+    in
+    f_wrapped
+
+let arrow_as_prim_step_3 (ea:embedding<'a>) (eb:embedding<'b>)
+                         (ec:embedding<'c>) (ed:embedding<'d>)
+                         (f:'a -> 'b -> 'c -> 'd) n_tvars fv_lid norm
+   : args -> option<term> =
+    let rng = Ident.range_of_lid fv_lid in
+    let f_wrapped args =
+        let _tvar_args, rest_args = List.splitAt n_tvars args in
+        let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
+        let y, _ = List.hd (List.tl rest_args) in
+        let z, _ = List.hd (List.tl (List.tl rest_args)) in
+        let shadow_app =
+            Some (FStar.Common.mk_thunk (fun () -> S.mk_Tm_app (norm (BU.Inl fv_lid)) args None rng))
+        in
+        match
+            (BU.bind_opt (unembed ea x true norm) (fun x ->
+             BU.bind_opt (unembed eb y true norm) (fun y ->
+             BU.bind_opt (unembed ec z true norm) (fun z ->
+             Some (embed ed (f x y z) rng shadow_app norm)))))
+        with
+        | Some x -> Some x
+        | None ->
+            match force_shadow shadow_app with
+            | None -> None
+            | Some app -> Some (norm (BU.Inr app))
+    in
+    f_wrapped

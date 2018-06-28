@@ -15,36 +15,36 @@ module Print = FStar.Syntax.Print
 module BU = FStar.Util
 module E = FStar.Reflection.Embeddings
 
-let unembed ea a = unembed ea a true (fun x -> x)
-let embed ea r x = embed ea x r None (fun x -> x)
+let unembed ea a norm_cb = unembed ea a true norm_cb
+let embed ea r x norm_cb = embed ea x r None norm_cb
 
 let int1 (m:lid) (f:'a -> 'r) (ea:embedding<'a>) (er:embedding<'r>)
-                 (r:Range.range) (args : args) : option<term> =
+                 (r:Range.range) n (args : args) : option<term> =
     match args with
     | [(a, _)] ->
-        BU.bind_opt (unembed ea a) (fun a ->
-        Some (embed er r (f a)))
+        BU.bind_opt (unembed ea a n) (fun a ->
+        Some (embed er r (f a) n))
     | _ -> None
 
 let int2 (m:lid) (f:'a -> 'b -> 'r) (ea:embedding<'a>) (eb:embedding<'b>) (er:embedding<'r>)
-                 (r:Range.range) (args : args) : option<term> =
+                 (r:Range.range) n (args : args) : option<term> =
     match args with
     | [(a, _); (b, _)] ->
-        BU.bind_opt (unembed ea a) (fun a ->
-        BU.bind_opt (unembed eb b) (fun b ->
-        Some (embed er r (f a b))))
+        BU.bind_opt (unembed ea a n) (fun a ->
+        BU.bind_opt (unembed eb b n) (fun b ->
+        Some (embed er r (f a b) n)))
     | _ -> None
 
 let reflection_primops : list<N.primitive_step> =
     let mklid (nm : string) : lid = fstar_refl_basic_lid nm in
-    let mk (l : lid) (arity : int) (fn : Range.range -> args -> option<term>) : N.primitive_step =
+    let mk (l : lid) (arity : int) (fn : Range.range -> norm_cb -> args -> option<term>) : N.primitive_step =
         {
             N.name = l;
             N.arity = arity;
             N.auto_reflect = None;
             N.strong_reduction_ok = false;
             N.requires_binder_substitution = false;
-            N.interpretation = (fun ctxt args -> fn (N.psc_range ctxt) args)
+            N.interpretation = (fun ctxt n args -> fn (N.psc_range ctxt) n args)
         } in
     // GM: we need the annotation, otherwise F* will try to unify the types
     // for all mk1 calls. I guess a consequence that we don't generalize inner lets

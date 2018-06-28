@@ -274,7 +274,7 @@ type primitive_step = {
     auto_reflect:option<int>;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
-    interpretation:(psc -> args -> option<term>)
+    interpretation:(psc -> FStar.Syntax.Embeddings.norm_cb -> args -> option<term>)
 }
 
 type closure =
@@ -792,12 +792,12 @@ let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
 (* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
 let embed_simple (emb:EMB.embedding<'a>) (x:'a) (r:Range.range) : term =
-    EMB.embed emb x r None (fun x -> x)
+    EMB.embed emb x r None EMB.id_norm_cb
 let try_unembed_simple (emb:EMB.embedding<'a>) (x:term) : option<'a> =
-    EMB.unembed emb x false (fun x -> x)
+    EMB.unembed emb x false EMB.id_norm_cb
 
 let built_in_primitive_steps : BU.psmap<primitive_step> =
-    let norm_cb = fun x -> x in
+    let norm_cb = EMB.id_norm_cb in
     let try_unembed emb x = EMB.try_unembed emb x norm_cb in
     let arg_as_int    (a:arg) = fst a |> try_unembed EMB.e_int in
     let arg_as_bool   (a:arg) = fst a |> try_unembed EMB.e_bool in
@@ -827,19 +827,21 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     in
     let unary_op
         :  (arg -> option<'a>)
-        -> (Range.range -> 'a -> term)
+        -> (Range.range -> EMB.norm_cb -> 'a -> term)
         -> psc
+        -> EMB.norm_cb
         -> args
         -> option<term>
-        = fun as_a f res args -> lift_unary (f res.psc_range) (List.map as_a args)
+        = fun as_a f res norm_cb args -> lift_unary (f res.psc_range norm_cb) (List.map as_a args)
     in
     let binary_op
         :  (arg -> option<'a>)
-        -> (Range.range -> 'a -> 'a -> term)
+        -> (Range.range -> EMB.norm_cb -> 'a -> 'a -> term)
         -> psc
+        -> EMB.norm_cb
         -> args
         -> option<term>
-        = fun as_a f res args -> lift_binary (f res.psc_range) (List.map as_a args)
+        = fun as_a f res n args -> lift_binary (f res.psc_range n) (List.map as_a args)
     in
     let as_primitive_step is_strong (l, arity, f) = {
         name=l;
@@ -850,53 +852,54 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         interpretation=f
     } in
     let unary_int_op (f:Z.t -> Z.t) =
-        unary_op arg_as_int (fun r x -> embed_simple EMB.e_int (f x) r)
+        unary_op arg_as_int (fun r _norm x -> embed_simple EMB.e_int (f x) r)
     in
     let binary_int_op (f:Z.t -> Z.t -> Z.t) =
-        binary_op arg_as_int (fun r x y -> embed_simple EMB.e_int (f x y) r)
+        binary_op arg_as_int (fun r _norm x y -> embed_simple EMB.e_int (f x y) r)
     in
     let unary_bool_op (f:bool -> bool) =
-        unary_op arg_as_bool (fun r x -> embed_simple EMB.e_bool (f x) r)
+        unary_op arg_as_bool (fun r _norm x -> embed_simple EMB.e_bool (f x) r)
     in
     let binary_bool_op (f:bool -> bool -> bool) =
-        binary_op arg_as_bool (fun r x y -> embed_simple EMB.e_bool (f x y) r)
+        binary_op arg_as_bool (fun r _norm x y -> embed_simple EMB.e_bool (f x y) r)
     in
     let binary_string_op (f : string -> string -> string) =
-        binary_op arg_as_string (fun r x y -> embed_simple EMB.e_string (f x y) r)
+        binary_op arg_as_string (fun r _norm x y -> embed_simple EMB.e_string (f x y) r)
     in
     let mixed_binary_op
            :  (arg -> option<'a>)
            -> (arg -> option<'b>)
            -> ('c -> Range.range -> term)
-           -> (Range.range -> 'a -> 'b -> 'c)
+           -> (Range.range -> EMB.norm_cb -> 'a -> 'b -> 'c)
            -> psc
+           -> EMB.norm_cb
            -> args
            -> option<term>
-           = fun as_a as_b embed_c f res args ->
+           = fun as_a as_b embed_c f res norm args ->
                  match args with
                  | [a;b] ->
                     begin
                     match as_a a, as_b b with
-                    | Some a, Some b -> Some (embed_c (f res.psc_range a b) res.psc_range)
+                    | Some a, Some b -> Some (embed_c (f res.psc_range norm a b) res.psc_range)
                     | _ -> None
                     end
                  | _ -> None
     in
-    let list_of_string' rng (s:string) : term =
+    let list_of_string' rng _n (s:string) : term =
         let name l = mk (Tm_fvar (lid_as_fv l delta_constant None)) rng in
         let char_t = name PC.char_lid in
         let charterm c = mk (Tm_constant (Const_char c)) rng in
         U.mk_list char_t rng <| List.map charterm (list_of_string s)
     in
-    let string_of_list' rng (l:list<char>) : term =
+    let string_of_list' rng _n (l:list<char>) : term =
         let s = string_of_list l in
         U.exp_string s
     in
-    let string_compare' rng (s1:string) (s2:string) : term =
+    let string_compare' rng _n (s1:string) (s2:string) : term =
         let r = String.compare s1 s2 in
         embed_simple EMB.e_int (Z.big_int_of_string (BU.string_of_int r)) rng
     in
-    let string_concat' psc args : option<term> =
+    let string_concat' psc _n args : option<term> =
         match args with
         | [a1; a2] ->
             begin match arg_as_string a1 with
@@ -911,13 +914,13 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             end
         | _ -> None
     in
-    let string_of_int rng (i:Z.t) : term =
+    let string_of_int rng _n (i:Z.t) : term =
         embed_simple EMB.e_string (Z.string_of_big_int i) rng
     in
-    let string_of_bool rng (b:bool) : term =
+    let string_of_bool rng _n (b:bool) : term =
         embed_simple EMB.e_string (if b then "true" else "false") rng
     in
-    let mk_range (psc:psc) args : option<term> =
+    let mk_range (psc:psc) _n args : option<term> =
       match args with
       | [fn; from_line; from_col; to_line; to_col] -> begin
         match arg_as_string fn,
@@ -934,7 +937,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         end
       | _ -> None
     in
-    let decidable_eq (neg:bool) (psc:psc) (args:args)
+    let decidable_eq (neg:bool) (psc:psc) _n (args:args)
         : option<term> =
         let r = psc.psc_range in
         let tru = mk (Tm_constant (FC.Const_bool true)) r in
@@ -949,7 +952,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             failwith "Unexpected number of arguments"
     in
     (* Really an identity, but only when the thing is an embedded range *)
-    let prims_to_fstar_range_step psc args : option<term> =
+    let prims_to_fstar_range_step psc _n args : option<term> =
         match args with
         | [(a1, _)] ->
             begin match try_unembed_simple EMB.e_range a1 with
@@ -958,16 +961,16 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             end
         | _ -> failwith "Unexpected number of arguments"
     in
-    let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>))> =
+    let basic_ops : list<(Ident.lid * int * (psc -> EMB.norm_cb -> args -> option<term>))> =
             [(PC.op_Minus,       1, unary_int_op (fun x -> Z.minus_big_int x));
              (PC.op_Addition,    2, binary_int_op (fun x y -> Z.add_big_int x y));
              (PC.op_Subtraction, 2, binary_int_op (fun x y -> Z.sub_big_int x y));
              (PC.op_Multiply,    2, binary_int_op (fun x y -> Z.mult_big_int x y));
              (PC.op_Division,    2, binary_int_op (fun x y -> Z.div_big_int x y));
-             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> embed_simple EMB.e_bool (Z.lt_big_int x y) r));
-             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> embed_simple EMB.e_bool (Z.le_big_int x y) r));
-             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> embed_simple EMB.e_bool (Z.gt_big_int x y) r));
-             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> embed_simple EMB.e_bool (Z.ge_big_int x y) r));
+             (PC.op_LT,          2, binary_op arg_as_int (fun r _n x y -> embed_simple EMB.e_bool (Z.lt_big_int x y) r));
+             (PC.op_LTE,         2, binary_op arg_as_int (fun r _n x y -> embed_simple EMB.e_bool (Z.le_big_int x y) r));
+             (PC.op_GT,          2, binary_op arg_as_int (fun r _n x y -> embed_simple EMB.e_bool (Z.gt_big_int x y) r));
+             (PC.op_GTE,         2, binary_op arg_as_int (fun r _n x y -> embed_simple EMB.e_bool (Z.ge_big_int x y) r));
              (PC.op_Modulus,     2, binary_int_op (fun x y -> Z.mod_big_int x y));
              (PC.op_Negation,    1, unary_bool_op (fun x -> not x));
              (PC.op_And,         2, binary_bool_op (fun x y -> x && y));
@@ -975,7 +978,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
              (PC.strcat_lid',    2, binary_string_op (fun x y -> x ^ y));
              (PC.str_make_lid,   2, mixed_binary_op arg_as_int arg_as_char (embed_simple EMB.e_string)
-                                    (fun r (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y));
+                                    (fun r _n (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y));
              (PC.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (PC.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
              (PC.string_compare, 2, binary_op arg_as_string string_compare');
@@ -1009,16 +1012,16 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         let add_sub_mul_v =
           (bounded_signed_int_types @ bounded_unsigned_int_types)
           |> List.collect (fun m ->
-            [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.add_big_int x y)));
-             (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.sub_big_int x y)));
-             (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mult_big_int x y)));
-             (PC.p2l ["FStar"; m; "v"],   1, unary_op arg_as_bounded_int (fun r (int_to_t, x) -> embed_simple EMB.e_int x r))])
+            [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r _n (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.add_big_int x y)));
+             (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r _n (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.sub_big_int x y)));
+             (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r _n (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mult_big_int x y)));
+             (PC.p2l ["FStar"; m; "v"],   1, unary_op arg_as_bounded_int (fun r _n (int_to_t, x) -> embed_simple EMB.e_int x r))])
         in
         let div_mod_unsigned =
           bounded_unsigned_int_types
           |> List.collect (fun m ->
-            [(PC.p2l ["FStar"; m; "div"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.div_big_int x y)));
-             (PC.p2l ["FStar"; m; "rem"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mod_big_int x y)))])
+            [(PC.p2l ["FStar"; m; "div"], 2, binary_op arg_as_bounded_int (fun r _n (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.div_big_int x y)));
+             (PC.p2l ["FStar"; m; "rem"], 2, binary_op arg_as_bounded_int (fun r _n (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mod_big_int x y)))])
         in
        add_sub_mul_v
        @ div_mod_unsigned
@@ -1028,7 +1031,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     prim_from_list <| (strong_steps @ weak_steps)
 
 let equality_ops : BU.psmap<primitive_step> =
-    let interp_prop (psc:psc) (args:args) : option<term> =
+    let interp_prop (psc:psc) _norm (args:args) : option<term> =
         let r = psc.psc_range in
         match args with
         | [(_typ, _); (a1, _); (a2, _)]    //eq2
@@ -1063,7 +1066,7 @@ let equality_ops : BU.psmap<primitive_step> =
 let unembed_binder_knot : ref<option<EMB.embedding<binder>>> = BU.mk_ref None
 let unembed_binder (t : term) : option<S.binder> =
     match !unembed_binder_knot with
-    | Some e -> EMB.unembed e t true (fun x -> x)
+    | Some e -> EMB.unembed e t true EMB.id_norm_cb
     | None ->
         Errors.log_issue t.pos (Errors.Warning_UnembedBinderKnot, "unembed_binder_knot is unset!");
         None
@@ -1092,7 +1095,7 @@ let mk_psc_subst cfg env =
             | _ -> subst)
         env []
 
-let reduce_primops cfg env stack tm =
+let reduce_primops norm_cb cfg env tm =
     if not cfg.steps.primops
     then tm
     else begin
@@ -1121,7 +1124,7 @@ let reduce_primops cfg env stack tm =
                                             then mk_psc_subst cfg env
                                             else []
                   } in
-                  match prim_step.interpretation psc args_1 with
+                  match prim_step.interpretation psc norm_cb args_1 with
                   | None ->
                       log_primops cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
                       tm
@@ -1161,8 +1164,8 @@ let reduce_primops cfg env stack tm =
          | _ -> tm
    end
 
-let reduce_equality cfg tm =
-    reduce_primops ({cfg with steps = { default_steps with primops = true };
+let reduce_equality norm_cb cfg tm =
+    reduce_primops norm_cb ({cfg with steps = { default_steps with primops = true };
                               primitive_steps=equality_ops}) tm
 
 (********************************************************************************************************************)
@@ -2192,12 +2195,22 @@ and maybe_simplify cfg env stack tm =
                    (Print.term_to_string tm) (Print.term_to_string tm');
     tm'
 
+and norm_cb cfg : EMB.norm_cb = function
+    | Inr x -> norm cfg [] [] x
+    | Inl l ->
+        match
+            Env.lookup_definition [Unfold delta_constant] cfg.tcenv l
+        with
+        | Some(_, t) -> t
+        | None -> S.fv_to_tm (S.lid_as_fv l delta_constant None)
+
+
 (*******************************************************************)
 (* Simplification steps are not part of definitional equality      *)
 (* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
 (*******************************************************************)
-and maybe_simplify_aux cfg env stack tm =
-    let tm = reduce_primops cfg env stack tm in
+and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
+    let tm = reduce_primops (norm_cb cfg) cfg env tm in
     if not <| cfg.steps.simplify then tm
     else
     let w t = {t with pos=tm.pos} in
@@ -2476,7 +2489,7 @@ and maybe_simplify_aux cfg env stack tm =
              //remove redundant auto_squashes
              t
            | _ ->
-             reduce_equality cfg env stack tm
+             reduce_equality (norm_cb cfg) cfg env tm
       end
     | Tm_refine (bv, t) ->
         begin match simp_t t with

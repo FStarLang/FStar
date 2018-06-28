@@ -66,7 +66,7 @@ type primitive_step = {
     auto_reflect:option<int>;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
-    interpretation:(psc -> args -> option<term>)
+    interpretation:(psc -> FStar.Syntax.Embeddings.norm_cb -> args -> option<term>)
 }
 
 val register_plugin: primitive_step -> unit

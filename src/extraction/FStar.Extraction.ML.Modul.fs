@@ -251,9 +251,10 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
     else match se.sigel with
          | Sig_let(lbs, lids) ->
            let mk_registration lb : list<mlmodule1> =
-              let fv = (right lb.lbname).fv_name.v in
+              let fv = right lb.lbname in
+              let fv_lid = fv.fv_name.v in
               let fv_t = lb.lbtyp in
-              let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv)) in
+              let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv_lid)) in
               match Util.interpret_plugin_as_term_fun g.tcenv fv fv_t ml_name_str with
               | Some (interp, arity, plugin) ->
                   let register =

@@ -1,6 +1,7 @@
 ﻿#light "off"
 module FStar.Syntax.Embeddings
 
+open FStar
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Char
@@ -40,7 +41,8 @@ val steps_UnfoldAttr    : term
  * able to unembed.
  *)
 
-type norm_cb = term -> term // a callback to the normalizer
+type norm_cb = FStar.Util.either<Ident.lident, term> -> term // a callback to the normalizer
+val id_norm_cb : norm_cb
 exception Embedding_failure
 exception Unembedding_failure
 type shadow_term = option<FStar.Common.thunk<term>>
@@ -76,7 +78,35 @@ val e_option      : embedding<'a> -> embedding<option<'a>>
 val e_list        : embedding<'a> -> embedding<list<'a>>
 val e_tuple2      : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
 val e_string_list : embedding<list<string>>
+val e_arrow       : embedding<'a> -> embedding<'b> -> embedding<('a -> 'b)>
 
 val mk_any_emb : typ -> embedding<term>
 
-val embed_arrow_1     : embedding<'a> -> embedding<'b> -> embedding<('a -> 'b)>
+(* Arity specific raw_embeddings of arrows; used to generate top-level
+   registrations of compiled functions in FStar.Extraction.ML.Util *)
+val arrow_as_prim_step_1:  embedding<'a>
+                        -> embedding<'b>
+                        -> ('a -> 'b)
+                        -> n_tvars:int
+                        -> repr_f:Ident.lid
+                        -> norm_cb
+                        -> (args -> option<term>)
+
+val arrow_as_prim_step_2:  embedding<'a>
+                        -> embedding<'b>
+                        -> embedding<'c>
+                        -> ('a -> 'b -> 'c)
+                        -> n_tvars:int
+                        -> repr_f:Ident.lid
+                        -> norm_cb
+                        -> (args -> option<term>)
+
+val arrow_as_prim_step_3:  embedding<'a>
+                        -> embedding<'b>
+                        -> embedding<'c>
+                        -> embedding<'d>
+                        -> ('a -> 'b -> 'c -> 'd)
+                        -> n_tvars:int
+                        -> repr_f:Ident.lid
+                        -> norm_cb
+                        -> (args -> option<term>)

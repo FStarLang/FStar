@@ -67,8 +67,8 @@ let t_direction    = S.tconst (fstar_tactics_lid' ["Types"; "direction"])
 let mk_emb f g t =
     mk_emb (fun x r _topt _norm -> f r x)
            (fun x w _norm -> g w x) t
-let embed e r x = FStar.Syntax.Embeddings.embed e x r None (fun x -> x)
-let unembed' w e x = FStar.Syntax.Embeddings.unembed e x w (fun x -> x)
+let embed e r x = FStar.Syntax.Embeddings.embed e x r None id_norm_cb
+let unembed' w e x = FStar.Syntax.Embeddings.unembed e x w id_norm_cb
 
 let e_proofstate =
     let embed_proofstate (rng:Range.range) (ps:proofstate) : term =

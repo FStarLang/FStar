@@ -30,6 +30,8 @@ open FStar.Parser.AST
 open FStar.Ident
 open FStar.Const
 open FStar.Errors
+open FStar.Syntax
+
 module C = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
@@ -2107,7 +2109,7 @@ let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
     let hd, args = U.head_and_args at in
     match (SS.compress hd).n, args with
     | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_attr ->
-        begin match EMB.unembed (EMB.e_list EMB.e_int) a1 true (fun x -> x) with
+        begin match EMB.unembed (EMB.e_list EMB.e_int) a1 true EMB.id_norm_cb with
         | Some [] ->
             raise_error (Errors.Error_EmptyFailErrs, "Found ill-applied fail, argument should be a non-empty list of integers") at.pos
 

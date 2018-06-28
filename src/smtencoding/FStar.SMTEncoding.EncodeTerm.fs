@@ -555,7 +555,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         // They should be equivalent to a fully spelled out view.
         //
         // Actual encoding: `q ~> pack qv where qv is the view of q
-        let tv = EMB.embed RE.e_term_view (R.inspect_ln qt) t.pos None (fun x -> x) in
+        let tv = EMB.embed RE.e_term_view (R.inspect_ln qt) t.pos None EMB.id_norm_cb in
         let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
         encode_term t env
 
