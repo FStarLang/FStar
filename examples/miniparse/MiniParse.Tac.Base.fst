@@ -88,7 +88,7 @@ let rec solve_goal () : T.Tac unit =
 
 let tconclude () : T.Tac unit =
   if T.ngoals () > 0
-  then begin
-    solve_goal ()
-  end
+  then
+    let _ = T.repeat solve_goal in
+    T.qed ()
   else T.print "No goals left"
