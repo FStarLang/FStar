@@ -40,39 +40,55 @@ let unfold_term (t: T.term) : T.Tac T.term =
   | T.Tv_FVar v -> unfold_fv v
   | _ -> tfail "Not a global variable"
 
-let tsuccess () : T.Tac unit =
+let tsuccess (s: string) : T.Tac unit =
   T.qed ();
-  T.print "Success!"
+  T.print ("Success: " ^ s)
 
 let rec solve_goal () : T.Tac unit =
-    T.first [
-      (fun () ->
-        let _ = T.repeat (fun () -> T.forall_intro `T.or_else` T.implies_intro) in
-        T.print "Trying reflexivity";
-        T.trefl ();
-        tsuccess ()
-      );
-      (fun () ->
-        T.print "split";
-        T.split ();
-        T.iseq [
-          solve_goal;
-          solve_goal;
-        ];
-        tsuccess ()
-      );
-      (fun () ->
-        T.print "Trying SMT";
+  match T.trytac (fun () -> T.first [
+    (fun () ->
+      T.print "Trying trivial";
+      T.trivial ();
+      tsuccess "trivial"
+    );
+    (fun () ->
+      T.print "Trying reflexivity";
+      T.trefl ();
+      tsuccess "reflexivity"
+    );
+    (fun () ->
+      T.print "Trying tassumption";
+      T.assumption ();
+      tsuccess "assumption"
+    );
+    (fun () ->
+      T.print "Trying return_squash; tassumption";
+      T.apply (`(FStar.Squash.return_squash));
+      T.assumption ();
+      tsuccess "return_squash assumption"
+    );
+  ]) with
+  | Some _ -> ()
+  | _ ->
+  begin match T.trytac T.forall_intro with
+  | Some _ -> solve_goal ()
+  | _ ->
+    begin match T.trytac T.implies_intro with
+    | Some _ -> solve_goal ()
+    | _ ->
+      begin match T.trytac T.split with
+      | Some _ -> T.iseq [ solve_goal; solve_goal ]
+      | _ ->
+        T.dump "MUST USE SMT FOR THIS ONE";
         T.smt ();
-        tsuccess ()
-      );
-    ];
-    tsuccess ()
+        tsuccess "smt"
+      end
+    end
+  end
 
 let tconclude () : T.Tac unit =
   if T.ngoals () > 0
   then begin
-    T.dump "a goal";
     solve_goal ()
   end
   else T.print "No goals left"
