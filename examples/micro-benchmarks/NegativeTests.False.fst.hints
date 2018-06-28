@@ -78,7 +78,7 @@
         "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "fb397a0c9d7a4e77f0c5cb3637f1258a"
+      "b2198b81091e80873e6f68854261ff0d"
     ],
     [
       "NegativeTests.False.foo",
@@ -87,7 +87,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "6184550d4b44d4851a5f5eab99df6975"
+      "97331e898ea43e3c0067c606aca39383"
     ],
     [
       "NegativeTests.False.f",

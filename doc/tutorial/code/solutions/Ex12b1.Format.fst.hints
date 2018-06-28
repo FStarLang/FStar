@@ -203,7 +203,7 @@
       1,
       [ "@query", "equation_Ex12b1.Format.uInt16" ],
       0,
-      "21a6e089e5dac9b5ae86ee204d21a49b"
+      "c4529c5c3fd8eee349895ba76cb8ca88"
     ],
     [
       "Ex12b1.Format.uint16_to_bytes",
@@ -212,7 +212,7 @@
       1,
       [ "@query", "equation_Ex12b1.Format.uInt16" ],
       0,
-      "a673226ee404437d2bdff00f8b3157ea"
+      "308bc0e19418776175c2b68304b8f689"
     ],
     [
       "Ex12b1.Format.UINT16_inj",
