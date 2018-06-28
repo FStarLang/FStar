@@ -95,12 +95,12 @@ let rec t_to_string (x:t) =
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
   | Construct (fv, us, l) ->
     "Construct (" ^ (P.fv_to_string fv) ^ ") [" ^
-    (String.concat "; "(List.map P.univ_to_string us)) ^ "] (" ^
-    (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
+    (String.concat "; "(List.map P.univ_to_string us)) ^ "] [" ^
+    (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ "]"
   | FV (fv, us, l) ->
     "FV (" ^ (P.fv_to_string fv) ^ ") [" ^
-    (String.concat "; "(List.map P.univ_to_string us)) ^ "] (" ^
-    (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
+    (String.concat "; "(List.map P.univ_to_string us)) ^ "] [" ^
+    (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ "]"
   | Constant c -> constant_to_string c
   | Univ u -> "Universe " ^ (P.univ_to_string u)
   | Type_t u -> "Type_t " ^ (P.univ_to_string u)
