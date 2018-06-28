@@ -5,6 +5,7 @@ include MiniParse.Impl.Int
 
 module T = FStar.Tactics
 module L = FStar.List.Tot
+module TS = MiniParse.Tac.Spec
 
 (* Generate the parser implementation from the parser specification *)
 
@@ -57,6 +58,25 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
     ]
   | _ -> tfail "Not enough arguments to synth"
   else
+  if hd `T.term_eq` (`(TS.package_parser))
+  then match tl with
+  | [qt; (pk, _)] ->
+    let (hd', tl') = app_head_tail pk in
+    if hd' `T.term_eq` (`(TS.mk_package))
+    then match tl' with
+    | [_; _; (p, _); _] ->
+      gen_parser32' p
+    | _ -> tfail "Not enough arguments to mk_package"
+    else begin match T.inspect hd with
+    | T.Tv_FVar v ->
+      let env = T.cur_env () in
+      let t' = T.norm_term_env env [iota] (T.mk_app (unfold_term hd') tl') in
+      gen_parser32' (T.mk_app hd [qt; (t', T.Q_Explicit)])
+    | _ -> tfail "Unknown parser package"
+    end
+  | _ ->
+    tfail "Not enough arguments to package_parser"
+  else
   match T.inspect hd with
   | T.Tv_FVar v ->
     let env = T.cur_env () in
@@ -85,3 +105,7 @@ let q' : parser32 p' = T.synth_by_tactic (fun () -> gen_parser32 (`(p')))
 let r = parse_ret 42 `parse_synth` (fun x -> x + 1)
 
 let r' : parser32 r = T.synth_by_tactic (fun () -> gen_parser32 (`(r)))
+
+let j : parser _ TS.t = TS.package_parser TS.p
+
+let j32 : parser32 j = T.synth_by_tactic (fun () -> gen_parser32 (`(j)))
