@@ -955,7 +955,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
             match (SS.compress hd).n with
             | Tm_uvar (ctx_uvar, _) ->
                 let goal = bnorm_goal ({ goal with goal_ctx_uvar = ctx_uvar }) in
-                ret ([goal], [])
+                ret [goal]
             | _ ->
                 let env = {(goal_env goal) with gamma=ctx_uvar.ctx_uvar_gamma} in
                 let g_typ =
@@ -968,13 +968,10 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                        let _, _, g_typ = env.type_of (Env.set_expected_typ env ctx_uvar.ctx_uvar_typ) term in
                        g_typ
                 in
-                bind (goal_from_guard "apply_lemma solved arg" (goal_env goal) g_typ goal.opts) (function
-                | None -> ret ([], [])
-                | Some g -> ret ([], [g])
-                )
-            )) (fun goals_ ->
-        let sub_goals = List.flatten (List.map fst goals_) in
-        let smt_goals = List.flatten (List.map snd goals_) in
+                bind (proc_guard "apply_lemma solved arg" (goal_env goal) g_typ) (fun () ->
+                ret []))
+            ) (fun sub_goals ->
+        let sub_goals = List.flatten sub_goals in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
         // it will be instantiated later. TODO: maybe keep and check later?
         let rec filter' (f : 'a -> list<'a> -> bool) (xs : list<'a>) : list<'a> =
@@ -987,8 +984,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
         bind (if not (istrivial (goal_env goal) (U.mk_squash U_zero pre)) //lemma preconditions are in U_zero
               then add_irrelevant_goal "apply_lemma precondition" (goal_env goal) pre goal.opts
               else ret ()) (fun _ ->
-        bind (add_smt_goals smt_goals) (fun _ ->
-        add_goals sub_goals))))))
+        add_goals sub_goals)))))
     )))))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
