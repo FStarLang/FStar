@@ -359,14 +359,17 @@ let variable_not_found v =
 //Construct a new universe unification variable
 let new_u_univ () = U_unif (Unionfind.univ_fresh ())
 
+let mk_univ_subst formals us =
+    assert (List.length us = List.length formals);
+    let n = List.length formals - 1 in
+    us |> List.mapi (fun i u -> UN (n - i, u))
+
 //Instantiate the universe variables in a type scheme with provided universes
 let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
     match ts, us with
     | ([], t), [] -> [], t
     | (formals, t), _ ->
-      assert (List.length us = List.length formals);
-      let n = List.length formals - 1 in
-      let vs = us |> List.mapi (fun i u -> UN (n - i, u)) in
+      let vs = mk_univ_subst formals us in
       us, Subst.subst vs t
 
 //Instantiate the universe variables in a type scheme with new unification variables
