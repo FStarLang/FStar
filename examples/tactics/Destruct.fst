@@ -85,7 +85,7 @@ let exact_smt t =
                      let _ = repeat smt in
                      ())
 
-(* Indices *)
+(* Indices + type params *)
 type vec (a:Type) : nat -> Type =
  | VNil : vec a 0
  | VCons : #n:nat -> a -> vec a n -> vec a (n + 1)
@@ -100,6 +100,13 @@ let _ = assert_norm (vlen (VNil #int) == 0)
 let _ = assert_norm (vlen (VCons 1 VNil) == 1)
 let _ = assert_norm (vlen (VCons 99 (VCons 1 VNil)) == 1)
 
-(* Both *)
-(* Implicits *)
-(* dependency *)
+(* Trying to take advantage of indices.. failing for now even if I try to use SMT *)
+type fin : nat -> Type =
+ | Z : #n:nat -> fin n
+ | S : #n:nat -> fin n -> fin (n + 1)
+
+[@(Pervasives.fail [228])]
+let decr (#b:nat) (n : fin (b + 1)) : fin b =
+    synth_by_tactic (fun () -> destruct (quote n);
+                               dump "61"; let [b1] = intros () in apply (`Z);
+                               dump "62"; let [b1;b2] = intros () in exact_guard (binder_to_term b2))
