@@ -45,6 +45,9 @@ let tsuccess (s: string) : T.Tac unit =
   T.print ("Success: " ^ s)
 
 let rec solve_goal () : T.Tac unit =
+  if T.ngoals () = 0
+  then ()
+  else
   match T.trytac (fun () -> T.first [
     (fun () ->
       T.print "Trying trivial";
@@ -86,9 +89,9 @@ let rec solve_goal () : T.Tac unit =
     end
   end
 
-let tconclude () : T.Tac unit =
+let rec tconclude () : T.Tac unit =
   if T.ngoals () > 0
   then
-    let _ = T.repeat solve_goal in
-    T.qed ()
+    let _ = solve_goal () in
+    tconclude ()
   else T.print "No goals left"
