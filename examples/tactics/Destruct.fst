@@ -70,8 +70,7 @@ type t4 a =
  | B4 of a * int
  | C4 : nat -> a -> string -> t4 a
 
-(* Not using Type0 gives a universe unification error, why? *)
-let f4 (#a:Type0) (x:t4 a) : int =
+let f4 (#a:Type) (x:t4 a) : int =
     synth_by_tactic (fun () -> destruct_intros (quote x);
                                dump "41"; exact (`1);
                                dump "42"; exact (`2);
@@ -80,6 +79,26 @@ let f4 (#a:Type0) (x:t4 a) : int =
 let _ = assert_norm (f4 (A4 1) == 1)
 let _ = assert_norm (f4 (B4 (false, 44)) == 2)
 let _ = assert_norm (f4 (C4 8 (-1) "hi") == 3)
+
+let exact_smt t =
+    focus (fun () -> exact t;
+                     let _ = repeat smt in
+                     ())
+
+(* Indices *)
+type vec (a:Type) : nat -> Type =
+ | VNil : vec a 0
+ | VCons : #n:nat -> a -> vec a n -> vec a (n + 1)
+
+(* Cheating.. *)
+let vlen (#a:Type0) (#n:nat) (v:vec a n) : nat =
+    synth_by_tactic (fun () -> destruct_intros (quote v);
+                               dump "51"; exact_smt (`0);
+                               dump "52"; exact_smt (`1))
+
+let _ = assert_norm (vlen (VNil #int) == 0)
+let _ = assert_norm (vlen (VCons 1 VNil) == 1)
+let _ = assert_norm (vlen (VCons 99 (VCons 1 VNil)) == 1)
 
 (* Both *)
 (* Implicits *)

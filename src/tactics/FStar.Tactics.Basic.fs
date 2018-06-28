@@ -1632,55 +1632,76 @@ let t_destruct (tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
     bind (__tc (goal_env g) tm) (fun (tm, ty, guard) ->
     bind (proc_guard "destruct" (goal_env g) guard) (fun () ->
     let h, args = U.head_and_args' ty in
-    bind (match (U.un_uinst h).n with
-          | Tm_fvar fv -> ret fv
-          | _ -> fail "type is not an fv") (fun fv ->
+    bind (match (SS.compress h).n with
+          | Tm_fvar fv -> ret (fv, [])
+          | Tm_uinst ({ n = Tm_fvar fv }, us) -> ret (fv, us)
+          | _ -> fail "type is not an fv") (fun (fv, a_us) ->
     let t_lid = lid_of_fv fv in
     match Env.lookup_sigelt (goal_env g) t_lid with
     | None -> fail "type not found in environment"
     | Some se ->
     match se.sigel with
-    | Sig_inductive_typ (_lid, us, t_ps, ty, mut, c_lids) ->
+    | Sig_inductive_typ (_lid, t_us, t_ps, t_ty, mut, c_lids) ->
       (* High-level idea of this huge function:
        * For  Gamma |- w : phi  and  | C : ps -> bs -> t,  we generate a new goal
        *   Gamma |- w' : bs -> phi
        * with
-       *   w = match tm with ... | C bs' -> w' bs' ...
+       *   w = match tm with ... | C .ps' bs' -> w' bs' ...
        * i.e., we do not intro the matched binders and let the
-       * user do that (with the returned arity)
-       * TODO: I think we need to add `ps` to the pattern (as inaccesible)
+       * user do that (with the returned arity). `.ps` represents inaccesible patterns
+       * for the type's parameters.
        *)
+
+      (* Instantiate formal universes to the actuals,
+       * and substitute accordingly in binders and types *)
+      failwhen (List.length a_us <> List.length t_us) "t_us don't match?" (fun () ->
+
+      (* Not needed currently? *)
+      (* let s = Env.mk_univ_subst t_us a_us in *)
+      (* let t_ps = SS.subst_binders s t_ps in *)
+      (* let t_ty = SS.subst         s t_ty in *)
+      let t_ps, t_ty = SS.open_term t_ps t_ty in
+
       bind (mapM (fun c_lid ->
                     match Env.lookup_sigelt (goal_env g) c_lid with
                     | None -> fail "ctor not found?"
                     | Some se ->
                     match se.sigel with
-                    | Sig_datacon (_c_lid, us, ty, _t_lid, nparam, mut) ->
+                    | Sig_datacon (_c_lid, c_us, c_ty, _t_lid, nparam, mut) ->
                         (* BU.print2 "ty of %s = %s\n" (Ident.string_of_lid c_lid) *)
-                        (*                             (Print.term_to_string ty); *)
+                        (*                             (Print.term_to_string c_ty); *)
                         let fv = S.lid_as_fv c_lid S.delta_constant (Some Data_ctor) in
+
+
+                        failwhen (List.length a_us <> List.length c_us) "t_us don't match?" (fun () ->
+                        let s = Env.mk_univ_subst c_us a_us in
+                        let c_ty = SS.subst s c_ty in
 
                         (* The constructor might be universe-polymorphic, just use
                          * fresh univ_uvars for its universes. *)
-                        let us, ty = Env.inst_tscheme (us, ty) in
+                        let c_us, c_ty = Env.inst_tscheme (c_us, c_ty) in
+
+                        (* BU.print2 "ty(2) of %s = %s\n" (Ident.string_of_lid c_lid) *)
+                        (*                                (Print.term_to_string c_ty); *)
 
                         (* Deconstruct its type, separating the parameters from the
                          * actual arguments (indices do not matter here). *)
-                        let bs, comp = U.arrow_formals_comp ty in
+                        let bs, comp = U.arrow_formals_comp c_ty in
+                        (* BU.print1 "bs = (%s)\n" (Print.binders_to_string ", " bs); *)
                         let d_ps, bs = List.splitAt nparam bs in
                         failwhen (not (U.is_total_comp comp)) "not total?" (fun () ->
                         let mk_pat p = { v = p; p = tm.pos } in
-                        let bs = freshen_binders bs in
                         (* TODO: This is silly, why don't we just keep aq in the Pat_cons? *)
                         let is_imp = function | Some (Implicit _) -> true
                                               | _ -> false
                         in
-                        failwhen (List.length args <> List.length d_ps) "params not match?" (fun () ->
-                        let d_ps_args = List.zip d_ps args in
-                        let subst = List.map (fun ((bv, _), (t, _)) -> NT (bv, t)) d_ps_args in
+                        let a_ps, a_is = List.splitAt nparam args in
+                        failwhen (List.length a_ps <> List.length d_ps) "params not match?" (fun () ->
+                        let d_ps_a_ps = List.zip d_ps a_ps in
+                        let subst = List.map (fun ((bv, _), (t, _)) -> NT (bv, t)) d_ps_a_ps in
                         let bs = SS.subst_binders subst bs in
                         let subpats_1 = List.map (fun ((bv, _), (t, _)) ->
-                                                 (mk_pat (Pat_dot_term (bv, t)), true)) d_ps_args in
+                                                 (mk_pat (Pat_dot_term (bv, t)), true)) d_ps_a_ps in
                         let subpats_2 = List.map (fun (bv, aq) ->
                                                  (mk_pat (Pat_var bv), is_imp aq)) bs in
                         let subpats = subpats_1 @ subpats_2 in
@@ -1691,7 +1712,7 @@ let t_destruct (tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let g' = mk_goal env uv g.opts false in
                         let brt = U.mk_app_binders uvt bs in
                         let br = SS.close_branch (pat, None, brt) in
-                        ret (g', br, (fv, Z.of_int_fs (List.length bs))))))
+                        ret (g', br, (fv, Z.of_int_fs (List.length bs)))))))
                     | _ ->
                         fail "impossible: not a ctor")
                  c_lids) (fun goal_brs ->
@@ -1699,7 +1720,7 @@ let t_destruct (tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
       let w = mk (Tm_match (tm, brs)) None tm.pos in
       bind (solve' g w) (fun () ->
       bind (add_goals goals) (fun () ->
-      ret infos)))
+      ret infos))))
 
     | _ -> fail "not an inductive type"))))
 
