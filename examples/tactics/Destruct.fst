@@ -102,13 +102,27 @@ let _ = assert_norm (vlen (VNil #int) == 0)
 let _ = assert_norm (vlen (VCons 1 VNil) == 1)
 let _ = assert_norm (vlen (VCons 99 (VCons 1 VNil)) == 1)
 
-(* Trying to take advantage of indices.. failing for now even if I try to use SMT *)
+(* Trying to take advantage of indices.. *)
 type fin : nat -> Type =
  | Z : #n:nat -> fin n
  | S : #n:nat -> fin n -> fin (n + 1)
 
+(* this one fails, we need to use the scrutinee equality (and SMT) in order to unify *)
 [@Pervasives.fail]
-let decr (#b:nat) (n : fin (b + 1)) : fin b =
+let decr1 (#b:nat) (n : fin (b + 1)) : fin b =
     synth_by_tactic (fun () -> destruct (quote n);
                                dump "61"; let [b1;_] = intros () in apply (`Z);
                                dump "62"; let [b1;b2;_] = intros () in exact_guard (binder_to_term b2))
+
+(* we can however *cut* by it, rewrite, and leave the trivial proof to SMT *)
+let decr2 (#s:nat) (m : fin (s + 1)) : fin s =
+    synth_by_tactic (fun () -> destruct (quote m);
+                               dump "71"; let [b1;_] = intros () in apply (`Z);
+                               dump "72"; let [b1;b2;_] = intros () in
+                                          let tn = binder_to_term b1 in
+					  // TODO: Ugh! We need the squash because z3 cannot
+					  // prove a Prims.equals, but only Prims.eq2
+                                          let beq = tcut (`squash (`@s == `#tn)) in
+                                          rewrite beq;
+                                          exact_guard (binder_to_term b2);
+                               dump "73")
