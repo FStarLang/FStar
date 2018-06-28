@@ -75,6 +75,67 @@ and args = list<arg>
 type head = t
 type annot = option<t>
 
+// Term equality
+
+let equal_if = function
+  | true -> U.Equal
+  | _ -> U.Unknown
+
+let equal_iff = function
+  | true -> U.Equal
+  | _ -> U.NotEqual
+  
+let eq_inj r1 r2 = 
+  match r1, r2 with
+  | U.Equal, U.Equal -> U.Equal
+  |  U.NotEqual, _
+  | _, U.NotEqual -> U.NotEqual
+  | U.Unknown, _
+  | _, U.Unknown -> U.Unknown
+
+let eq_and f g =
+  match f with
+  | U.Equal -> g()
+  | _ -> U.Unknown
+  
+let eq_constant (c1 : constant) (c2 : constant) = 
+match c1, c2 with 
+| Unit, Unit -> U.Equal
+| Bool b1, Bool b2 -> equal_iff (b1 = b2)
+| Int i1, Int i2 -> equal_iff (i1 = i2)
+| String (s1, _), String (s2, _) -> equal_iff (s1 = s2)
+| Char c1, Char c2 -> equal_iff (c1 = c2) 
+| Range r1, Range r2 -> U.Unknown (* Seems that ranges are opaque *)
+| _, _ -> U.NotEqual
+
+
+let rec eq_t (t1 : t) (t2 : t) : U.eq_result = 
+  match t1, t2 with 
+  | Lam _, Lam _ -> U.Unknown
+  | Accu(a1, as1), Accu(a2, as2) -> eq_and (eq_atom a1 a2) (fun () -> eq_args as1 as2)
+  | Construct(v1, us1, args1), Construct(v2, us2, args2)
+  | FV(v1, us1, args1), FV(v2, us2, args2) -> 
+    if S.fv_eq v1 v2 then 
+     eq_and (equal_iff (U.eq_univs_list us1 us2)) (fun () -> eq_args args1 args2)
+    else U.NotEqual
+  | Constant c1, Constant c2 -> eq_constant c1 c2 
+  | Type_t u1, Type_t u2 
+  | Univ u1, Univ u2 -> equal_iff (U.eq_univs u1 u2)
+  | Unknown, Unknown -> U.Equal 
+  | _, _ -> U.Unknown (* XXX following eq_tm *)
+
+and eq_atom (a1 : atom) (a2 : atom) : U.eq_result = 
+  match a1, a2 with 
+  | Var bv1, Var bv2 -> equal_if (bv_eq bv1 bv2) (* ZP : TODO if or iff?? *)
+  | _, _ -> U.Unknown (* XXX Cannot compare suspended matches (?) *)
+
+and eq_arg (a1 : arg) (a2 : arg) = eq_t (fst a1) (fst a2)
+and eq_args (as1 : args) (as2 : args) : U.eq_result =
+match as1, as2 with 
+| [], [] -> U.Equal
+| x :: xs, y :: ys -> eq_and (eq_arg x y) (fun () -> eq_args xs ys)
+| _, _ -> U.Unknown (* ZP: following tm_eq, but why not U.NotEqual? *)
+
 
 // Printing functions
 
@@ -114,6 +175,9 @@ and atom_to_string (a: atom) =
     | Match (t, _, _) -> "Match " ^ (t_to_string t)
     | Rec (_,_, l) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
+and arg_to_string (a : arg) = a |> fst |> t_to_string
+
+and args_to_string args = args |> List.map arg_to_string |> String.concat " "
 // NBE term manipulation
 
 let isAccu (trm:t) =
@@ -411,19 +475,29 @@ let string_of_bool (b:bool) : t =
     embed e_string (if b then "true" else "false")
 
 let decidable_eq (neg:bool) (args:args) : option<t> =
-    match args with
-    | [(_typ, _); (a1, _); (a2, _)] -> failwith "decidable_eq not yet implemented"
-    | _ -> failwith "Unexpected number of arguments"
+  let tru = embed e_bool true in 
+  let fal = embed e_bool false in 
+  match args with
+  | [(_univ, _); (_typ, _); (a1, _); (a2, _)] ->
+     //BU.print2 "Comparing %s and %s.\n" (t_to_string a1) (t_to_string a2);
+     begin match eq_t a1 a2 with
+     | U.Equal -> Some (if neg then fal else tru)
+     | U.NotEqual -> Some (if neg then tru else fal)
+     | _ -> None 
+     end
+  | _ ->
+   failwith "Unexpected number of arguments"
+
 
 let interp_prop (args:args) : option<t> =
     match args with
     | [(_u, _); (_typ, _); (a1, _); (a2, _)] ->  //eq2
     //| [(_typ, _); _; (a1, _); (a2, _)] ->     //eq3
-      failwith "propositional equality not yet implemented"
-      // (match U.eq_tm a1 a2 with
-      //  | U.Equal -> Some ({U.t_true with pos=r})
-      //  | U.NotEqual -> Some ({U.t_false with pos=r})
-      //  | _ -> None)
+      begin match eq_t a1 a2 with
+      | U.Equal -> Some (embed e_bool true)
+      | U.NotEqual -> Some (embed e_bool false)
+      | U.Unknown -> None
+      end
    | _ -> failwith "Unexpected number of arguments"
 
 let dummy_interp (lid : Ident.lid) (args : args) : option<t> = 

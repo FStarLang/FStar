@@ -52,12 +52,20 @@ and args = list<(arg)>
 type head = t
 type annot = option<t>
 
+// Term equality
+val eq_t : t -> t -> U.eq_result
+val eq_atom : atom -> atom -> U.eq_result
+val eq_arg : arg -> arg -> U.eq_result
+val eq_args : args -> args -> U.eq_result
+val eq_constant : constant -> constant -> U.eq_result
 
 // Printing functions
 
 val constant_to_string : constant -> string
 val t_to_string : t -> string
 val atom_to_string : atom -> string
+val arg_to_string : arg -> string
+val args_to_string : args -> string
 
 // NBE term manipulation
 

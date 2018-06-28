@@ -47,6 +47,7 @@ let reflection_primops : list<Cfg.primitive_step> =
         {
             Cfg.name = l;
             Cfg.arity = arity;
+            Cfg.univ_arity = 0; // Zoe : We might need to change that
             Cfg.auto_reflect = None;
             Cfg.strong_reduction_ok = false;
             Cfg.requires_binder_substitution = false;

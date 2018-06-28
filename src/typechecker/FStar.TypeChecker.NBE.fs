@@ -245,24 +245,9 @@ let find_let (lbs : list<letbinding>) (fvar : fv) =
                      then Some lb
                      else None)
 
-(* We are not targeting tagless normalization at this point *)
-let app cfg (f:t) (x:t) (q:aqual) =
-  debug cfg (fun () -> BU.print2 "When creating app: %s applied to %s\n" (t_to_string f) (t_to_string x));
-  match f with
-  | Lam (f, _, _) -> f [x]
-  | Accu (a, ts) -> Accu (a, (x,q)::ts)
-  | Construct (i, us, ts) ->
-    (match x with
-     | Univ u -> Construct (i, u::us, ts)
-     | _ -> Construct (i, us, (x,q)::ts))
-  | FV (i, us, ts) ->
-     (match x with
-     | Univ u -> FV (i, u::us, ts)
-     | _ -> FV (i, us, (x,q)::ts))
- // | Refinement (b, r) -> Refinement (b, app cfg  r x q)
-  | Constant _ | Univ _ | Type_t _ | Unknown | Arrow _ -> failwith "Ill-typed application"
-
-let rec iapp (f:t) (args:args) : t =
+(* uncurried application *)
+let rec iapp cfg (f:t) (args:args) : t =
+  debug cfg (fun () -> BU.print2 "App : %s @ %s\n" (t_to_string f) (args_to_string args));
   match f with
   | Lam (f, targs, n) ->
     let m = List.length args in
@@ -276,7 +261,7 @@ let rec iapp (f:t) (args:args) : t =
     else
       // extra arguments
       let (args, args') = List.splitAt n args in
-      iapp (f (List.map fst args)) args'
+      iapp cfg (f (List.map fst args)) args'
   | Accu (a, ts) -> Accu (a, List.rev_append args ts)
   | Construct (i, us, ts) ->
     let rec aux args us ts =
@@ -298,8 +283,10 @@ let rec iapp (f:t) (args:args) : t =
     FV (i, us', ts')
   | Constant _ | Univ _ | Type_t _ | Unknown | Arrow _ -> failwith "Ill-typed application"
 
+(* unary application *)
+let app cfg (f:t) (x:t) (q:aqual) = iapp cfg f [(x, q)]
 
-and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
+let rec translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
    let debug = debug cfg in
    let qninfo = Env.lookup_qname (Cfg.cfg_env cfg) (S.lid_of_fv fvar) in
    if is_constr qninfo || is_constr_fv fvar then mkConstruct fvar [] []
@@ -312,11 +299,14 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
        debug (fun () -> BU.print1 "(1) Decided to not unfold %s\n" (P.fv_to_string fvar));
        begin match Cfg.find_prim_step cfg fvar with
        | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
+         let arity = prim_step.arity + prim_step.univ_arity in
          Lam ((fun args -> let args' = (List.map NBETerm.as_arg args) in 
               match prim_step.interpretation_nbe args' with 
-              | Some x -> x
-              | None -> mkFV fvar [] args'),
-              List.init prim_step.arity (fun _ -> fun () -> (Constant Unit, None)), prim_step.arity)
+              | Some x -> debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
+                         x
+              | None -> debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar)); 
+                       iapp cfg (mkFV fvar [] []) args'),
+              List.init arity (fun _ -> fun () -> (Constant Unit, None)), arity)
        | _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        end
 
@@ -373,10 +363,10 @@ and translate_constant (c : sconst) : constant =
     | _ -> failwith ("Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented")
 
 // GM: Not called?
-and translate_pat (p : pat) : t =
+and translate_pat cfg (p : pat) : t =
     match p.v with
     | Pat_constant c -> Constant (translate_constant c)
-    | Pat_cons (cfv, pats) -> iapp (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat p, None)) pats) // Zoe : TODO universe args?
+    | Pat_cons (cfv, pats) -> iapp cfg (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat cfg p, None)) pats) // Zoe : TODO universe args?
     | Pat_var bvar -> mkAccuVar bvar
     | Pat_wild bvar -> mkAccuVar bvar
     | Pat_dot_term (bvar, t) -> failwith "Pat_dot_term not implemented"
@@ -399,12 +389,9 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       List.nth bs db.index
 
     | Tm_uinst(t, us) ->
-      debug (fun () -> BU.print3 "Term with univs: %s - %s\nUniv %s\n" (P.tag_of_term t)
-                                                                    (P.term_to_string t)
-                                                                    (List.map P.univ_to_string us |> String.concat ", "));
-      List.fold_left (fun head u -> app cfg head (translate_univ bs u) None)
-                     (translate cfg bs t)
-                     us
+      debug (fun () -> BU.print2 "Uinst term : %s\nUnivs : %s\n" (P.term_to_string t)
+                                                              (List.map P.univ_to_string us |> String.concat ", "));
+      iapp cfg (translate cfg bs t) (List.map (fun x -> as_arg (translate_univ bs x)) us)
 
     | Tm_type u ->
       Type_t (un_univ (translate_univ bs u))
@@ -423,11 +410,6 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_abs ([], _, _) -> failwith "Impossible: abstraction with no binders"
 
-    // | Tm_abs ([x], body, _) ->
-    //   debug (fun () -> BU.print2 "Tm_abs body : %s - %s\n" (P.tag_of_term body) (P.term_to_string body));
-    //   let x1 = fst x in
-    //   Lam ((fun (y:t) -> translate cfg (y::bs) body), (fun () -> translate cfg bs x1.sort), snd x)
-
     | Tm_abs (xs, body, _) ->
       Lam ((fun ys -> translate cfg (List.rev_append ys bs) body),
            List.map (fun x () -> (translate cfg bs (fst x).sort, snd x)) xs,
@@ -435,10 +417,6 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_fvar fvar ->
       translate_fv cfg bs fvar
-
-    // | Tm_app (e, [arg]) ->
-    //   debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string e) (P.term_to_string (fst arg)));
-    //   app cfg (translate cfg bs e) (translate cfg bs (fst arg)) (snd arg)
 
     | Tm_app({n=Tm_constant FC.Const_reify}, arg::more::args)
         when cfg.steps.reify_ ->
@@ -454,7 +432,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_app(head, args) ->
       debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string head) (P.args_to_string args));
-      iapp (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
+      iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
 
     | Tm_match(scrut, branches) ->
       let rec case (scrut : t) : t =
@@ -569,12 +547,12 @@ and translate_monadic (m, ty) cfg bs e : t =
                  translate cfg [] (EMB.embed EMB.e_range body.pos body.pos), None]
            else []
        in
-       iapp (iapp (translate cfg' [] (U.un_uinst (snd ed.bind_repr)))
-                  [Univ U_unknown, None;  //We are cheating here a bit
-                   Univ U_unknown, None]) //to avoid re-computing the universe of lb.lbtyp
-                                          //and ty below; but this should be okay since these
-                                          //arguments should not actually appear in the resulting
-                                          //term
+       iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (snd ed.bind_repr)))
+                      [Univ U_unknown, None;  //We are cheating here a bit
+                      Univ U_unknown, None])  //to avoid re-computing the universe of lb.lbtyp
+                                              //and ty below; but this should be okay since these
+                                              //arguments should not actually appear in the resulting
+                                              //term
            (
            [(translate cfg' bs lb.lbtyp, None); //translating the type of the bound term
             (translate cfg' bs ty, None)]       //and the body is sub-optimal; it is often unused
@@ -598,10 +576,10 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
    if U.is_pure_effect msrc || U.is_div_effect msrc
    then let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv mtgt) in
         let cfg' = {cfg with reifying=false} in
-        iapp (iapp (translate cfg' [] (U.un_uinst (snd ed.return_repr)))
-                   [Univ U_unknown, None])
-              [(translate cfg' bs ty, None); //translating the type of the returned term
-               (translate cfg' bs e, None)]  //translating the returned term itself
+        iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (snd ed.return_repr)))
+                       [Univ U_unknown, None])
+                       [(translate cfg' bs ty, None); //translating the type of the returned term
+                        (translate cfg' bs e, None)]  //translating the returned term itself
    else
     match Env.monad_leq cfg.tcenv msrc mtgt with
     | None ->
@@ -624,8 +602,8 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
               None
       in
       let cfg' = {cfg with reifying=false} in
-      iapp (translate cfg' [] lift_lam)
-           [(translate cfg bs e, None)]
+      iapp cfg (translate cfg' [] lift_lam)
+               [(translate cfg bs e, None)]
 
 (* [readback] creates named binders and not De Bruijn *)
 and readback (cfg:Cfg.cfg) (x:t) : term =
@@ -771,6 +749,7 @@ let normalize' (steps:list<Env.step>) (env : Env.env) (e:term) : term =
   let cfg = Cfg.config steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
+  debug cfg (fun () -> BU.print1 "Calling NBE with %s" (P.term_to_string e));
   readback cfg (translate cfg [] e)
 
 
@@ -779,6 +758,7 @@ let test_normalize (steps:list<step>) (env : Env.env) (e:term) : term =
   let cfg = Cfg.config (List.map step_as_normalizer_step steps) env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
+  debug cfg (fun () -> BU.print1 "Calling NBE with %s" (P.term_to_string e));
   readback cfg (translate cfg [] e)
 
 

@@ -70,6 +70,7 @@ val psc_subst : psc -> subst_t
 type primitive_step = {
     name:FStar.Ident.lid;
     arity:int;
+    univ_arity:int; // universe arity
     auto_reflect:option<int>;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
