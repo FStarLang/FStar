@@ -44,9 +44,7 @@ let tsuccess () : T.Tac unit =
   T.qed ();
   T.print "Success!"
 
-let tconclude () : T.Tac unit =
-  if T.ngoals () > 0
-  then begin
+let rec solve_goal () : T.Tac unit =
     T.first [
       (fun () ->
         let _ = T.repeat (fun () -> T.forall_intro `T.or_else` T.implies_intro) in
@@ -55,9 +53,26 @@ let tconclude () : T.Tac unit =
         tsuccess ()
       );
       (fun () ->
+        T.print "split";
+        T.split ();
+        T.iseq [
+          solve_goal;
+          solve_goal;
+        ];
+        tsuccess ()
+      );
+      (fun () ->
         T.print "Trying SMT";
         T.smt ();
         tsuccess ()
       );
-    ]
+    ];
+    tsuccess ()
+
+let tconclude () : T.Tac unit =
+  if T.ngoals () > 0
+  then begin
+    T.dump "a goal";
+    solve_goal ()
   end
+  else T.print "No goals left"
