@@ -17,7 +17,7 @@ type t1 =
  | C1
 
 let f1 (x:t1) : int =
-    synth_by_tactic (fun () -> destruct (quote x);
+    synth_by_tactic (fun () -> destruct_intros (quote x);
                                dump "11"; exact (`1);
                                dump "12"; exact (`2);
                                dump "13"; exact (`3))
@@ -38,8 +38,10 @@ let snd (a,b) = b
 let f2 (x:t2) : int =
     synth_by_tactic (fun () -> destruct (quote x);
                                dump "21"; let b = intro () in
+                                          let _eq = intro () in
                                           exact (binder_to_term b);
                                dump "22"; let b = intro () in
+                                          let _eq = intro () in
                                           let t = binder_to_term b in // TODO: should be let-bound automatically?
                                           exact (`(snd (`#t)));
                                dump "23"; intros' (); exact (`3))
@@ -105,8 +107,8 @@ type fin : nat -> Type =
  | Z : #n:nat -> fin n
  | S : #n:nat -> fin n -> fin (n + 1)
 
-[@(Pervasives.fail [228])]
+[@Pervasives.fail]
 let decr (#b:nat) (n : fin (b + 1)) : fin b =
     synth_by_tactic (fun () -> destruct (quote n);
-                               dump "61"; let [b1] = intros () in apply (`Z);
-                               dump "62"; let [b1;b2] = intros () in exact_guard (binder_to_term b2))
+                               dump "61"; let [b1;_] = intros () in apply (`Z);
+                               dump "62"; let [b1;b2;_] = intros () in exact_guard (binder_to_term b2))

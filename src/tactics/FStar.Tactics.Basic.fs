@@ -1629,11 +1629,11 @@ let failwhen (b:bool) (msg:string) (k:unit -> tac<'a>) : tac<'a> =
     then fail msg
     else k ()
 
-let t_destruct (tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
+let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
     bind (cur_goal ()) (fun g ->
-    bind (__tc (goal_env g) tm) (fun (tm, ty, guard) ->
+    bind (__tc (goal_env g) s_tm) (fun (s_tm, s_ty, guard) ->
     bind (proc_guard "destruct" (goal_env g) guard) (fun () ->
-    let h, args = U.head_and_args' ty in
+    let h, args = U.head_and_args' s_ty in
     bind (match (SS.compress h).n with
           | Tm_fvar fv -> ret (fv, [])
           | Tm_uinst ({ n = Tm_fvar fv }, us) -> ret (fv, us)
@@ -1692,7 +1692,7 @@ let t_destruct (tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         (* BU.print1 "bs = (%s)\n" (Print.binders_to_string ", " bs); *)
                         let d_ps, bs = List.splitAt nparam bs in
                         failwhen (not (U.is_total_comp comp)) "not total?" (fun () ->
-                        let mk_pat p = { v = p; p = tm.pos } in
+                        let mk_pat p = { v = p; p = s_tm.pos } in
                         (* TODO: This is silly, why don't we just keep aq in the Pat_cons? *)
                         let is_imp = function | Some (Implicit _) -> true
                                               | _ -> false
@@ -1709,17 +1709,30 @@ let t_destruct (tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let subpats = subpats_1 @ subpats_2 in
                         let pat = mk_pat (Pat_cons (fv, subpats)) in
                         let env = (goal_env g) in
-                        let nty = U.arrow bs (mk_Total (goal_type g)) in
+
+
+                        (* Add an argument stating the equality between the scrutinee
+                         * and the pattern, in-scope for this branch. *)
+                        let cod = goal_type g in
+                        let equ = env.universe_of env s_ty in
+                        (* Typecheck the pattern, to fill-in the universes and get an expression out of it *)
+                        let _ , _, _, pat_t, _, _ = TcTerm.tc_pat ({ env with lax = true }) true s_ty pat in
+                        let eq_b = S.gen_bv "breq" None (U.mk_squash equ (U.mk_eq2 equ s_ty s_tm pat_t)) in
+                        let cod = U.arrow [S.mk_binder eq_b] (mk_Total cod) in
+
+                        let nty = U.arrow bs (mk_Total cod) in
                         bind (new_uvar "destruct branch" env nty) (fun (uvt, uv) ->
                         let g' = mk_goal env uv g.opts false in
                         let brt = U.mk_app_binders uvt bs in
+                        (* Provide the scrutinee equality, which is trivially provable *)
+                        let brt = U.mk_app brt [S.as_arg U.exp_unit] in
                         let br = SS.close_branch (pat, None, brt) in
                         ret (g', br, (fv, Z.of_int_fs (List.length bs)))))))
                     | _ ->
                         fail "impossible: not a ctor")
                  c_lids) (fun goal_brs ->
       let goals, brs, infos = List.unzip3 goal_brs in
-      let w = mk (Tm_match (tm, brs)) None tm.pos in
+      let w = mk (Tm_match (s_tm, brs)) None s_tm.pos in
       bind (solve' g w) (fun () ->
       bind (add_goals goals) (fun () ->
       ret infos))))
