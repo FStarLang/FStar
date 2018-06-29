@@ -37,13 +37,17 @@ type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we
 
 type raw_embedder<'a>   = 'a -> embed_t
 type raw_unembedder<'a> = term -> unembed_t<'a>
+type printer<'a> = 'a -> string
 
 type embedding<'a> = {
   em : 'a -> embed_t;
   un : term -> unembed_t<'a>;
-  typ : typ
+  typ : typ;
+  print: printer<'a>
 }
-let mk_emb em un typ = { em = em ; un = un ; typ = typ }
+let unknown_printer typ = (fun _ -> BU.format1 "unknown %s" (Print.term_to_string typ))
+let mk_emb em un typ = { em = em ; un = un ; typ = typ; print=unknown_printer typ}
+let mk_emb_with_printer em un typ printer = { em = em ; un = un ; typ = typ; print=printer}
 
 (* Eta-expand to make F# happy *)
 let embed       (e:embedding<'a>) x   = e.em x
@@ -52,20 +56,38 @@ let warn_unembed (e:embedding<'a>) t n = unembed e t true n
 let try_unembed  (e:embedding<'a>) t n = unembed e t false n
 let type_of     (e:embedding<'a>)     = e.typ
 
-let lazy_embed rng ta (x:'a) (f:unit -> term) =
+let lazy_embed (pa:printer<'a>) rng ta (x:'a) (f:unit -> term) =
+    let thunk = FStar.Common.mk_thunk f in
+    let tm = FStar.Common.force_thunk thunk in
+    //BU.print3 "Embedding a %s\n\tvalue is %s\nthunked as a %s\n"
+    //            (Print.term_to_string ta)
+    //            (pa x)
+    //            (Print.term_to_string tm);
     S.mk (Tm_lazy({blob=FStar.Dyn.mkdyn x;
                    ltyp=S.tun;
                    rng=rng;
-                   lkind=Lazy_embedding (ta, FStar.Common.mk_thunk f)}))
+                   lkind=Lazy_embedding (ta, thunk)}))
          None
          rng
 
-let lazy_unembed (x:term) (ta:term) (f:term -> option<'a>) : option<'a> =
+let lazy_unembed (pa:printer<'a>) (x:term) (ta:term) (f:term -> option<'a>) : option<'a> =
     let x = SS.compress x in
     match x.n with
-    | Tm_lazy {blob=b; lkind=Lazy_embedding (tb, _)} ->
-      BU.print2 "Unembedding a %s as a %s\n" (Print.term_to_string tb) (Print.term_to_string ta);
-      Some (FStar.Dyn.undyn b)
+    | Tm_lazy {blob=b; lkind=Lazy_embedding (tb, t)}  ->
+      let a = FStar.Dyn.undyn b in
+      let tm = FStar.Common.force_thunk t in
+      //BU.print3 "Unembedding a %s as a %s\n unthunked a %s\n"
+      //          (Print.term_to_string tb)
+      //          (Print.term_to_string ta)
+      //          (Print.term_to_string tm);
+      //(match f tm with
+      // | None -> ()
+      // | Some a' ->
+      //   //if (a <> a')
+      //   //then failwith (BU.format2 "Unembedding is inconsistent:\n\texpected %s\n\tgot %s\n" (pa a') (pa a));
+      //   BU.print_string "Successful unembedding\n"
+      // );
+       Some a
     | _ -> f x
 
 let e_any =
@@ -74,7 +96,7 @@ let e_any =
     let typ = S.t_term in
     mk_emb em un typ
 
-let mk_any_emb typ = { em = e_any.em ; un = e_any.un ; typ = typ }
+let mk_any_emb typ = { em = e_any.em ; un = e_any.un ; typ = typ; print=unknown_printer typ }
 
 let e_unit =
     let em (u:unit) rng _topt _norm : term = { U.exp_unit with pos = rng } in
@@ -87,7 +109,7 @@ let e_unit =
             Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded unit: %s" (Print.term_to_string t));
             None
     in
-    mk_emb em un S.t_unit
+    mk_emb_with_printer em un S.t_unit (fun _ -> "()")
 
 let e_bool =
     let em (b:bool) rng _topt _norm : term =
@@ -103,7 +125,7 @@ let e_bool =
             Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded bool: %s" (Print.term_to_string t0));
             None
     in
-    mk_emb em un S.t_bool
+    mk_emb_with_printer em un S.t_bool BU.string_of_bool
 
 let e_char =
     let em (c:char) (rng:range) _topt _norm : term =
@@ -119,16 +141,16 @@ let e_char =
             Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded char: %s" (Print.term_to_string t0));
             None
     in
-    mk_emb em un S.t_char
+    mk_emb_with_printer em un S.t_char BU.string_of_char
 
 let e_int =
     let t_int = U.fvar_const PC.int_lid in
     let em (i:Z.t) (rng:range) _topt _norm : term =
-        lazy_embed rng t_int i (fun () -> U.exp_int (Z.string_of_big_int i))
+        lazy_embed BigInt.string_of_big_int rng t_int i (fun () -> U.exp_int (Z.string_of_big_int i))
     in
     let un (t0:term) (w:bool) _norm : option<Z.t> =
         let t = U.unmeta_safe t0 in
-        lazy_unembed t t_int (fun t ->
+        lazy_unembed BigInt.string_of_big_int t t_int (fun t ->
             match t.n with
             | Tm_constant(FStar.Const.Const_int (s, _)) ->
                 Some (Z.big_int_of_string s)
@@ -137,7 +159,7 @@ let e_int =
                 Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded int: %s" (Print.term_to_string t0)));
                 None)
     in
-    mk_emb em un S.t_int
+    mk_emb_with_printer em un S.t_int BigInt.string_of_big_int
 
 let e_string =
     let em (s:string) (rng:range) _topt _norm : term =
@@ -154,15 +176,18 @@ let e_string =
             Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded string: %s" (Print.term_to_string t0)));
             None
     in
-    mk_emb em un S.t_string
+    mk_emb_with_printer em un S.t_string (fun x -> "\"" ^ x ^ "\"")
 
 let e_option (ea : embedding<'a>) =
     let t_option_a =
         let t_opt = U.fvar_const PC.option_lid in
         S.mk_Tm_app t_opt [S.as_arg ea.typ] None Range.dummyRange
     in
+    let printer =
+        (function None -> "None" | Some x -> "(Some " ^ (ea.print x) ^")")
+    in
     let em (o:option<'a>) (rng:range) topt norm : term =
-        lazy_embed rng t_option_a o (fun () ->
+        lazy_embed printer rng t_option_a o (fun () ->
         match o with
         | None ->
           S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.none_lid) [U_zero])
@@ -184,7 +209,7 @@ let e_option (ea : embedding<'a>) =
     in
     let un (t0:term) (w:bool) norm : option<option<'a>> =
         let t = U.unmeta_safe t0 in
-        lazy_unembed t t_option_a (fun t ->
+        lazy_unembed printer t t_option_a (fun t ->
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
@@ -195,7 +220,7 @@ let e_option (ea : embedding<'a>) =
              Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded option: %s" (Print.term_to_string t0)));
              None)
     in
-    mk_emb em un (S.t_option_of (type_of ea))
+    mk_emb_with_printer em un (S.t_option_of (type_of ea)) printer
 
 let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     let t_pair_a_b =
@@ -203,8 +228,11 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
         S.mk_Tm_app t_tup2 [S.as_arg ea.typ; S.as_arg eb.typ]
                     None Range.dummyRange
     in
+    let printer (x, y) =
+        BU.format2 "(%s, %s)" (ea.print x) (eb.print y)
+    in
     let em (x:('a * 'b)) (rng:range) topt norm : term =
-        lazy_embed rng t_pair_a_b x (fun () ->
+        lazy_embed printer rng t_pair_a_b x (fun () ->
         let proj i ab =
             let proj_1, _ = U.mk_field_projector_name (PC.mk_tuple_data_lid 2 rng) (S.null_bv S.tun) i in
             let proj_1_tm = S.fv_to_tm (lid_as_fv proj_1 delta_equational None) in
@@ -227,7 +255,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     in
     let un (t0:term) (w:bool) norm : option<('a * 'b)> =
         let t = U.unmeta_safe t0 in
-        lazy_unembed t t_pair_a_b (fun t ->
+        lazy_unembed printer t t_pair_a_b (fun t ->
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv PC.lid_Mktuple2 ->
@@ -239,15 +267,18 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
             Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pair: %s" (Print.term_to_string t0)));
             None)
     in
-    mk_emb em un (S.t_tuple2_of (type_of ea) (type_of eb))
+    mk_emb_with_printer em un (S.t_tuple2_of (type_of ea) (type_of eb)) printer
 
 let e_list (ea:embedding<'a>) =
     let t_list_a =
         let t_list = U.fvar_const PC.list_lid in
         S.mk_Tm_app t_list [S.as_arg ea.typ] None Range.dummyRange
     in
+    let printer =
+        (fun (l:list<'a>) -> "[" ^ (List.map ea.print l |> String.concat "; ") ^ "]")
+    in
     let rec em (l:list<'a>) (rng:range) shadow_l norm : term =
-        lazy_embed rng t_list_a l (fun () ->
+        lazy_embed printer rng t_list_a l (fun () ->
         let t = S.iarg (type_of ea) in
         match l with
         | [] ->
@@ -280,7 +311,7 @@ let e_list (ea:embedding<'a>) =
     in
     let rec un (t0:term) (w:bool) norm : option<list<'a>> =
         let t = U.unmeta_safe t0 in
-        lazy_unembed t t_list_a (fun t ->
+        lazy_unembed printer t t_list_a (fun t ->
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, _
@@ -297,7 +328,7 @@ let e_list (ea:embedding<'a>) =
             Err.log_issue t0.pos (Err.Warning_NotEmbedded, BU.format1 "Not an embedded list: %s" (Print.term_to_string t0));
             None)
     in
-    mk_emb em un (S.t_list_of (type_of ea))
+    mk_emb_with_printer em un (S.t_list_of (type_of ea)) printer
 
 let e_string_list = e_list e_string
 
@@ -327,8 +358,9 @@ let steps_UnfoldAttr    = tdataconstr PC.steps_unfoldattr
 
 let e_norm_step =
     let t_norm_step = U.fvar_const (Ident.lid_of_str "FStar.Syntax.Embeddings.norm_step") in
+    let printer _ = "norm_step" in
     let em (n:norm_step) (rng:range) _topt norm : term =
-        lazy_embed rng t_norm_step n (fun () ->
+        lazy_embed printer rng t_norm_step n (fun () ->
         match n with
         | Simpl ->
             steps_Simpl
@@ -355,7 +387,7 @@ let e_norm_step =
     in
     let un (t0:term) (w:bool) norm : option<norm_step> =
         let t = U.unmeta_safe t0 in
-        lazy_unembed t t_norm_step (fun t ->
+        lazy_unembed printer t t_norm_step (fun t ->
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_simpl ->
@@ -385,7 +417,7 @@ let e_norm_step =
             Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t0)));
             None)
     in
-    mk_emb em un S.t_norm_step
+    mk_emb_with_printer em un S.t_norm_step printer
 
 
 let e_range =
@@ -401,19 +433,20 @@ let e_range =
             Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded range: %s" (Print.term_to_string t0)));
             None
     in
-    mk_emb em un S.t_range
+    mk_emb_with_printer em un S.t_range Range.string_of_range
 
 let or_else (f: option<'a>) (g:unit -> 'a) =
     match f with
     | Some x -> x
     | None -> g ()
 
-let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) =
+let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) : embedding<('a -> 'b)> =
     let t_arrow =
         S.mk (Tm_arrow([S.null_bv ea.typ, None],
                        S.mk_Total eb.typ))
               None Range.dummyRange
     in
+    let printer (f:'a -> 'b) = "<fun>" in
     let em (f:'a -> 'b) rng shadow_f norm =
         let f_wrapped (x:term) =
             let shadow_app = map_shadow shadow_f (fun f ->
@@ -427,13 +460,13 @@ let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) =
                 | None -> raise Embedding_failure
                 | Some app -> norm (BU.Inr app))
         in
-        lazy_embed rng t_arrow f_wrapped (fun () ->
+        lazy_embed (fun _ -> "<fun>") rng t_arrow f_wrapped (fun () ->
         match force_shadow shadow_f with
         | None -> raise Embedding_failure //TODO: dodgy
         | Some repr_f -> norm (BU.Inr repr_f))
     in
     let un (f:term) w norm : option<('a -> 'b)> =
-        lazy_unembed f t_arrow (fun f ->
+        lazy_unembed printer f t_arrow (fun f ->
         let f_wrapped (a:'a) : 'b =
             let a_tm = embed ea a f.pos None norm in
             let b_tm = norm (BU.Inr (S.mk_Tm_app f [S.as_arg a_tm] None f.pos)) in
