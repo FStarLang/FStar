@@ -286,6 +286,14 @@ let rec iapp cfg (f:t) (args:args) : t =
 (* unary application *)
 let app cfg (f:t) (x:t) (q:aqual) = iapp cfg f [(x, q)]
 
+(* Was List.init, but F* doesn't have this in ulib *)
+let rec tabulate (n:int) (f : int -> 'a) : list<'a> =
+    let rec aux i =
+        if i < n
+        then f i :: aux (i + 1)
+        else []
+    in aux 0
+
 let rec translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
    let debug = debug cfg in
    let qninfo = Env.lookup_qname (Cfg.cfg_env cfg) (S.lid_of_fv fvar) in
@@ -306,7 +314,8 @@ let rec translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
                          x
               | None -> debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar)); 
                        iapp cfg (mkFV fvar [] []) args'),
-              List.init arity (fun _ -> fun () -> (Constant Unit, None)), arity)
+              (let f (_:nat) () : t * S.aqual = (Constant Unit, None) in tabulate arity f),
+              arity)
        | _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        end
 
