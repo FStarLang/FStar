@@ -46,6 +46,8 @@ and t = //JUST FSHARP
   | Univ of universe
   | Unknown
   | Arrow of (list<t> -> t) * list<(unit -> arg)>
+  | Refinement of (t -> t) * (unit -> arg) 
+
 and arg = t * aqual
 and args = list<(arg)>
 

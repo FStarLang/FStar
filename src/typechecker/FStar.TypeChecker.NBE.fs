@@ -281,7 +281,7 @@ let rec iapp cfg (f:t) (args:args) : t =
     in
     let (us', ts') = aux args us ts in
     FV (i, us', ts')
-  | Constant _ | Univ _ | Type_t _ | Unknown | Arrow _ -> failwith "Ill-typed application"
+  | Constant _ | Univ _ | Type_t _ | Unknown | Refinement _ | Arrow _ -> failwith "Ill-typed application"
 
 (* unary application *)
 let app cfg (f:t) (x:t) (q:aqual) = iapp cfg f [(x, q)]
@@ -398,8 +398,8 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_arrow (bs, c) -> debug_term e; failwith "Tm_arrow: Not yet implemented"
 
-    | Tm_refine (db, tm) -> failwith "Tm_refine: Not yet implemented"
-    //  Refinement ((db, None), Lam ((fun (y:t) -> translate cfg (y::bs) tm), (fun () -> Constant Unit), None)) // XXX: Bogus type?
+    | Tm_refine (bv, tm) ->
+      Refinement ((fun (y:t) -> translate cfg (y::bs) tm), (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?
 
     | Tm_ascribed (t, _, _) -> translate cfg bs t
 
@@ -634,6 +634,15 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       let body = readback cfg (f accus) in
       U.abs args body None
 
+    | Refinement (f, targ) ->
+      let x =  S.new_bv None (readback cfg (fst (targ ()))) in 
+      let body = readback cfg (f (mkAccuVar x)) in 
+      U.refine x body
+//    let body = translate cfg [] (readback cfg r) in
+//    debug (fun () -> BU.print1 "Translated refinement body: %s\n" (t_to_string body));
+//    S.mk (Tm_refine(fst b, readback cfg body)) None Range.dummyRange
+
+
     | Construct (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
       let apply tm =
@@ -724,10 +733,6 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
           | _ -> U.mk_app head args)
     | Arrow _ -> failwith "Arrows not yet handled"
 
-    // | Refinement (b, r) ->
-    //    let body = translate cfg [] (readback cfg r) in
-    //    debug (fun () -> BU.print1 "Translated refinement body: %s\n" (t_to_string body));
-    //    S.mk (Tm_refine(fst b, readback cfg body)) None Range.dummyRange
 
 type step =
   | Primops

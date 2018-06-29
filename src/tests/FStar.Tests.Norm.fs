@@ -186,8 +186,8 @@ let tests =
   ; (25, (tc_nbe "copy [0;1]"), (tc_nbe "[0;1]"))
   ; (26, (tc_nbe "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc_nbe "[10;9;8;7;6;5;4;3;2;1;0]"))
   // Type defs not yet implemented for NBE
-  // ; (271, (tc_nbe "(FStar.String.substring \"abcdef\" 1 2)"), (tc_nbe "\"bc\"")) //VD: Not sure why, but this test fails on the normalizer
-  // ; (27, (tc_nbe "(rev (FStar.String.list_of_string \"abcd\"))"), (tc_nbe "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
+  ; (271, (tc_nbe "(FStar.String.substring \"abcdef\" 1 2)"), (tc_nbe "\"bc\"")) //VD: Not sure why, but this test fails on the normalizer
+  ; (27, (tc_nbe "(rev (FStar.String.list_of_string \"abcd\"))"), (tc_nbe "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
   ; (28, (tc_nbe "(fun x y z q -> z) T T F T"), (tc_nbe "F"))
   ; (29, (tc_nbe "[T; F]"), (tc_nbe "[T; F]"))
   ; (31, (tc_nbe "id_tb T"), (tc_nbe "T"))
@@ -217,7 +217,7 @@ let tests =
 
   ; (309, (tc_nbe "x1"), (tc_nbe "6"))
   ; (310, (tc_nbe "x2"), (tc_nbe "2"))
-  // ; (311, (tc_nbe "x3"), (tc_nbe "7"))
+  ; (311, (tc_nbe "x3"), (tc_nbe "7"))
 
   // Tests for primops
   ; (401, (tc_nbe "7 + 3"), (tc_nbe "10"))

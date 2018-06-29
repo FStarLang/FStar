@@ -56,7 +56,7 @@ and t = //JUST FSHARP
   | Univ of universe
   | Unknown (* For translating unknown types *)
   | Arrow of (list<t> -> t) * list<(unit -> arg)>
-  // Refinement of binder * t // VD: do we need to keep the aqual?
+  | Refinement of (t -> t) * (unit -> arg) 
   // | Arrow of list binder * comp_t
 and arg = t * aqual
 and args = list<arg>
@@ -74,6 +74,26 @@ and args = list<arg>
 
 type head = t
 type annot = option<t>
+
+// NBE term manipulation
+
+let isAccu (trm:t) =
+match trm with
+| Accu _ -> true
+| _ -> false
+
+let isNotAccu (x:t) =
+match x with
+| Accu (_, _) -> false
+| _ -> true
+
+
+let mkConstruct i us ts = Construct(i, us, ts)
+let mkFV i us ts = FV(i, us, ts)
+
+let mkAccuVar (v:var) = Accu(Var v, [])
+let mkAccuMatch (s:t) (cases: t -> t) (bs:((t -> term) -> list<branch>)) = Accu(Match (s, cases, bs), [])
+let mkAccuRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = Accu(Rec(b, bs, env), [])
 
 // Term equality
 
@@ -121,6 +141,9 @@ let rec eq_t (t1 : t) (t2 : t) : U.eq_result =
   | Constant c1, Constant c2 -> eq_constant c1 c2 
   | Type_t u1, Type_t u2 
   | Univ u1, Univ u2 -> equal_iff (U.eq_univs u1 u2)
+  | Refinement(r1, t1), Refinement(r2, t2) ->
+    let x =  S.new_bv None S.t_unit in (* bogus type *)
+    eq_and (eq_t (fst (t1 ())) (fst (t1 ()))) (fun () -> eq_t (r1 (mkAccuVar x)) (r2 (mkAccuVar x)))
   | Unknown, Unknown -> U.Equal 
   | _, _ -> U.Unknown (* XXX following eq_tm *)
 
@@ -166,7 +189,10 @@ let rec t_to_string (x:t) =
   | Univ u -> "Universe " ^ (P.univ_to_string u)
   | Type_t u -> "Type_t " ^ (P.univ_to_string u)
   | Arrow _ -> "Arrow" // TODO : revisit
-//  | Refinement ((b,_), t) -> "Refinement (" ^ (P.bv_to_string b) ^ ", " ^ (t_to_string t) ^ ")"
+  | Refinement (f, t) ->
+    let x =  S.new_bv None S.t_unit in (* bogus type *) 
+    let t = fst (t ()) in
+    "Refinement " ^ (P.bv_to_string x) ^ ":" ^ (t_to_string t) ^ "{" ^ (t_to_string (f (mkAccuVar x))) ^ "}"
   | Unknown -> "Unknown"
 
 and atom_to_string (a: atom) =
@@ -178,25 +204,6 @@ and atom_to_string (a: atom) =
 and arg_to_string (a : arg) = a |> fst |> t_to_string
 
 and args_to_string args = args |> List.map arg_to_string |> String.concat " "
-// NBE term manipulation
-
-let isAccu (trm:t) =
-  match trm with
-  | Accu _ -> true
-  | _ -> false
-
-let isNotAccu (x:t) =
-  match x with
-  | Accu (_, _) -> false
-  | _ -> true
-
-
-let mkConstruct i us ts = Construct(i, us, ts)
-let mkFV i us ts = FV(i, us, ts)
-
-let mkAccuVar (v:var) = Accu(Var v, [])
-let mkAccuMatch (s:t) (cases: t -> t) (bs:((t -> term) -> list<branch>)) = Accu(Match (s, cases, bs), [])
-let mkAccuRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = Accu(Rec(b, bs, env), [])
 
 // Embedding and de-embedding
 
