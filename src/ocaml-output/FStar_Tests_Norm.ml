@@ -279,7 +279,6 @@ let (run :
                 FStar_Syntax_Syntax.delta_constant;
               FStar_TypeChecker_Normalize.Primops] tcenv r
              in
-          FStar_Options.init ();
           FStar_Options.set_option "print_universes"
             (FStar_Options.Bool true);
           FStar_Options.set_option "print_implicits"
@@ -287,10 +286,11 @@ let (run :
           (let uu____745 =
              let uu____746 = FStar_Syntax_Util.unascribe x1  in
              FStar_Tests_Util.term_eq uu____746 expected  in
-           FStar_Tests_Util.always i uu____745)))
+           FStar_Tests_Util.always i uu____745);
+          FStar_Options.init ()))
   
 let (run_all : unit -> unit) =
-  fun uu____753  ->
+  fun uu____754  ->
     FStar_Util.print_string "Testing the normalizer\n";
     FStar_Tests_Pars.pars_and_tc_fragment
       "let rec copy (x:list int) : Tot (list int) = match x with | [] -> []  | hd::tl -> hd::copy tl";
@@ -301,204 +301,204 @@ let (run_all : unit -> unit) =
     FStar_Tests_Pars.pars_and_tc_fragment
       "type t = | A : int -> int -> t | B : int -> int -> t let f = function | A x y | B y x -> y - x";
     FStar_Options.__set_unit_tests ();
-    (let uu____761 =
-       let uu____762 =
-         let uu____765 =
-           let uu____768 =
-             let uu____771 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
-             [uu____771]  in
-           id :: uu____768  in
-         one :: uu____765  in
-       FStar_Tests_Util.app apply uu____762  in
-     let uu____772 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
-     run (Prims.parse_int "0") uu____761 uu____772);
-    (let uu____776 =
-       let uu____777 =
-         let uu____780 =
-           let uu____783 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
-           let uu____784 =
-             let uu____787 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
-             [uu____787]  in
-           uu____783 :: uu____784  in
-         tt :: uu____780  in
-       FStar_Tests_Util.app apply uu____777  in
-     let uu____788 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
-     run (Prims.parse_int "1") uu____776 uu____788);
-    (let uu____792 =
-       let uu____793 =
-         let uu____796 =
-           let uu____799 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
-           let uu____800 =
-             let uu____803 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
-             [uu____803]  in
-           uu____799 :: uu____800  in
-         ff :: uu____796  in
-       FStar_Tests_Util.app apply uu____793  in
-     let uu____804 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
-     run (Prims.parse_int "2") uu____792 uu____804);
-    (let uu____808 =
-       let uu____809 =
-         let uu____812 =
-           let uu____815 =
-             let uu____818 =
-               let uu____821 =
-                 let uu____824 =
-                   let uu____827 =
-                     let uu____830 = FStar_Tests_Util.nm FStar_Tests_Util.n
+    (let uu____762 =
+       let uu____763 =
+         let uu____766 =
+           let uu____769 =
+             let uu____772 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
+             [uu____772]  in
+           id :: uu____769  in
+         one :: uu____766  in
+       FStar_Tests_Util.app apply uu____763  in
+     let uu____773 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
+     run (Prims.parse_int "0") uu____762 uu____773);
+    (let uu____777 =
+       let uu____778 =
+         let uu____781 =
+           let uu____784 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
+           let uu____785 =
+             let uu____788 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
+             [uu____788]  in
+           uu____784 :: uu____785  in
+         tt :: uu____781  in
+       FStar_Tests_Util.app apply uu____778  in
+     let uu____789 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
+     run (Prims.parse_int "1") uu____777 uu____789);
+    (let uu____793 =
+       let uu____794 =
+         let uu____797 =
+           let uu____800 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
+           let uu____801 =
+             let uu____804 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
+             [uu____804]  in
+           uu____800 :: uu____801  in
+         ff :: uu____797  in
+       FStar_Tests_Util.app apply uu____794  in
+     let uu____805 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
+     run (Prims.parse_int "2") uu____793 uu____805);
+    (let uu____809 =
+       let uu____810 =
+         let uu____813 =
+           let uu____816 =
+             let uu____819 =
+               let uu____822 =
+                 let uu____825 =
+                   let uu____828 =
+                     let uu____831 = FStar_Tests_Util.nm FStar_Tests_Util.n
                         in
-                     let uu____831 =
-                       let uu____834 = FStar_Tests_Util.nm FStar_Tests_Util.m
+                     let uu____832 =
+                       let uu____835 = FStar_Tests_Util.nm FStar_Tests_Util.m
                           in
-                       [uu____834]  in
-                     uu____830 :: uu____831  in
-                   ff :: uu____827  in
-                 apply :: uu____824  in
-               apply :: uu____821  in
-             apply :: uu____818  in
-           apply :: uu____815  in
-         apply :: uu____812  in
-       FStar_Tests_Util.app apply uu____809  in
-     let uu____835 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
-     run (Prims.parse_int "3") uu____808 uu____835);
-    (let uu____839 =
-       let uu____840 =
-         let uu____843 =
-           let uu____846 =
-             let uu____849 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
-             let uu____850 =
-               let uu____853 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
-               [uu____853]  in
-             uu____849 :: uu____850  in
-           ff :: uu____846  in
-         apply :: uu____843  in
-       FStar_Tests_Util.app twice uu____840  in
-     let uu____854 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
-     run (Prims.parse_int "4") uu____839 uu____854);
-    (let uu____858 = minus one z  in run (Prims.parse_int "5") uu____858 one);
-    (let uu____860 = FStar_Tests_Util.app pred [one]  in
-     run (Prims.parse_int "6") uu____860 z);
-    (let uu____862 = minus one one  in run (Prims.parse_int "7") uu____862 z);
-    (let uu____864 = FStar_Tests_Util.app mul [one; one]  in
-     run (Prims.parse_int "8") uu____864 one);
-    (let uu____866 = FStar_Tests_Util.app mul [two; one]  in
-     run (Prims.parse_int "9") uu____866 two);
-    (let uu____868 =
-       let uu____869 =
-         let uu____872 = FStar_Tests_Util.app succ [one]  in [uu____872; one]
+                       [uu____835]  in
+                     uu____831 :: uu____832  in
+                   ff :: uu____828  in
+                 apply :: uu____825  in
+               apply :: uu____822  in
+             apply :: uu____819  in
+           apply :: uu____816  in
+         apply :: uu____813  in
+       FStar_Tests_Util.app apply uu____810  in
+     let uu____836 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
+     run (Prims.parse_int "3") uu____809 uu____836);
+    (let uu____840 =
+       let uu____841 =
+         let uu____844 =
+           let uu____847 =
+             let uu____850 = FStar_Tests_Util.nm FStar_Tests_Util.n  in
+             let uu____851 =
+               let uu____854 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
+               [uu____854]  in
+             uu____850 :: uu____851  in
+           ff :: uu____847  in
+         apply :: uu____844  in
+       FStar_Tests_Util.app twice uu____841  in
+     let uu____855 = FStar_Tests_Util.nm FStar_Tests_Util.m  in
+     run (Prims.parse_int "4") uu____840 uu____855);
+    (let uu____859 = minus one z  in run (Prims.parse_int "5") uu____859 one);
+    (let uu____861 = FStar_Tests_Util.app pred [one]  in
+     run (Prims.parse_int "6") uu____861 z);
+    (let uu____863 = minus one one  in run (Prims.parse_int "7") uu____863 z);
+    (let uu____865 = FStar_Tests_Util.app mul [one; one]  in
+     run (Prims.parse_int "8") uu____865 one);
+    (let uu____867 = FStar_Tests_Util.app mul [two; one]  in
+     run (Prims.parse_int "9") uu____867 two);
+    (let uu____869 =
+       let uu____870 =
+         let uu____873 = FStar_Tests_Util.app succ [one]  in [uu____873; one]
           in
-       FStar_Tests_Util.app mul uu____869  in
-     run (Prims.parse_int "10") uu____868 two);
-    (let uu____874 =
-       let uu____875 = encode (Prims.parse_int "10")  in
+       FStar_Tests_Util.app mul uu____870  in
+     run (Prims.parse_int "10") uu____869 two);
+    (let uu____875 =
        let uu____876 = encode (Prims.parse_int "10")  in
-       minus uu____875 uu____876  in
-     run (Prims.parse_int "11") uu____874 z);
-    (let uu____880 =
-       let uu____881 = encode (Prims.parse_int "100")  in
+       let uu____877 = encode (Prims.parse_int "10")  in
+       minus uu____876 uu____877  in
+     run (Prims.parse_int "11") uu____875 z);
+    (let uu____881 =
        let uu____882 = encode (Prims.parse_int "100")  in
-       minus uu____881 uu____882  in
-     run (Prims.parse_int "12") uu____880 z);
-    (let uu____886 =
-       let uu____887 = encode (Prims.parse_int "100")  in
-       let uu____888 =
-         let uu____891 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+       let uu____883 = encode (Prims.parse_int "100")  in
+       minus uu____882 uu____883  in
+     run (Prims.parse_int "12") uu____881 z);
+    (let uu____887 =
+       let uu____888 = encode (Prims.parse_int "100")  in
+       let uu____889 =
          let uu____892 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-         minus uu____891 uu____892  in
-       let_ FStar_Tests_Util.x uu____887 uu____888  in
-     run (Prims.parse_int "13") uu____886 z);
-    (let uu____896 =
-       let uu____897 = FStar_Tests_Util.app succ [one]  in
-       let uu____898 =
-         let uu____901 =
-           let uu____902 =
-             let uu____905 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-             let uu____906 =
-               let uu____909 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-               [uu____909]  in
-             uu____905 :: uu____906  in
-           FStar_Tests_Util.app mul uu____902  in
-         let uu____910 =
-           let uu____913 =
-             let uu____914 =
-               let uu____917 = FStar_Tests_Util.nm FStar_Tests_Util.y  in
-               let uu____918 =
-                 let uu____921 = FStar_Tests_Util.nm FStar_Tests_Util.y  in
-                 [uu____921]  in
-               uu____917 :: uu____918  in
-             FStar_Tests_Util.app mul uu____914  in
-           let uu____922 =
-             let uu____925 = FStar_Tests_Util.nm FStar_Tests_Util.h  in
+         let uu____893 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+         minus uu____892 uu____893  in
+       let_ FStar_Tests_Util.x uu____888 uu____889  in
+     run (Prims.parse_int "13") uu____887 z);
+    (let uu____897 =
+       let uu____898 = FStar_Tests_Util.app succ [one]  in
+       let uu____899 =
+         let uu____902 =
+           let uu____903 =
+             let uu____906 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+             let uu____907 =
+               let uu____910 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+               [uu____910]  in
+             uu____906 :: uu____907  in
+           FStar_Tests_Util.app mul uu____903  in
+         let uu____911 =
+           let uu____914 =
+             let uu____915 =
+               let uu____918 = FStar_Tests_Util.nm FStar_Tests_Util.y  in
+               let uu____919 =
+                 let uu____922 = FStar_Tests_Util.nm FStar_Tests_Util.y  in
+                 [uu____922]  in
+               uu____918 :: uu____919  in
+             FStar_Tests_Util.app mul uu____915  in
+           let uu____923 =
              let uu____926 = FStar_Tests_Util.nm FStar_Tests_Util.h  in
-             minus uu____925 uu____926  in
-           let_ FStar_Tests_Util.h uu____913 uu____922  in
-         let_ FStar_Tests_Util.y uu____901 uu____910  in
-       let_ FStar_Tests_Util.x uu____897 uu____898  in
-     run (Prims.parse_int "14") uu____896 z);
-    (let uu____930 =
-       let uu____931 = FStar_Tests_Util.app succ [one]  in
-       let uu____934 =
-         let uu____935 =
-           let uu____938 =
-             let uu____941 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-             let uu____942 =
-               let uu____945 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
-               [uu____945]  in
-             uu____941 :: uu____942  in
-           FStar_Tests_Util.app mul uu____938  in
-         let uu____946 =
-           let uu____947 =
-             let uu____950 =
-               let uu____953 = FStar_Tests_Util.nm FStar_Tests_Util.y  in
-               let uu____954 =
-                 let uu____957 = FStar_Tests_Util.nm FStar_Tests_Util.y  in
-                 [uu____957]  in
-               uu____953 :: uu____954  in
-             FStar_Tests_Util.app mul uu____950  in
-           let uu____958 =
-             let uu____959 = FStar_Tests_Util.nm FStar_Tests_Util.h  in
+             let uu____927 = FStar_Tests_Util.nm FStar_Tests_Util.h  in
+             minus uu____926 uu____927  in
+           let_ FStar_Tests_Util.h uu____914 uu____923  in
+         let_ FStar_Tests_Util.y uu____902 uu____911  in
+       let_ FStar_Tests_Util.x uu____898 uu____899  in
+     run (Prims.parse_int "14") uu____897 z);
+    (let uu____931 =
+       let uu____932 = FStar_Tests_Util.app succ [one]  in
+       let uu____935 =
+         let uu____936 =
+           let uu____939 =
+             let uu____942 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+             let uu____943 =
+               let uu____946 = FStar_Tests_Util.nm FStar_Tests_Util.x  in
+               [uu____946]  in
+             uu____942 :: uu____943  in
+           FStar_Tests_Util.app mul uu____939  in
+         let uu____947 =
+           let uu____948 =
+             let uu____951 =
+               let uu____954 = FStar_Tests_Util.nm FStar_Tests_Util.y  in
+               let uu____955 =
+                 let uu____958 = FStar_Tests_Util.nm FStar_Tests_Util.y  in
+                 [uu____958]  in
+               uu____954 :: uu____955  in
+             FStar_Tests_Util.app mul uu____951  in
+           let uu____959 =
              let uu____960 = FStar_Tests_Util.nm FStar_Tests_Util.h  in
-             minus uu____959 uu____960  in
-           mk_let FStar_Tests_Util.h uu____947 uu____958  in
-         mk_let FStar_Tests_Util.y uu____935 uu____946  in
-       mk_let FStar_Tests_Util.x uu____931 uu____934  in
-     run (Prims.parse_int "15") uu____930 z);
-    (let uu____964 =
-       let uu____965 = let uu____968 = snat znat  in snat uu____968  in
-       pred_nat uu____965  in
-     let uu____969 = snat znat  in
-     run (Prims.parse_int "16") uu____964 uu____969);
-    (let uu____973 =
-       let uu____974 = let uu____975 = snat znat  in snat uu____975  in
-       let uu____976 = snat znat  in minus_nat uu____974 uu____976  in
-     let uu____977 = snat znat  in
-     run (Prims.parse_int "17") uu____973 uu____977);
-    (let uu____981 =
-       let uu____982 = encode_nat (Prims.parse_int "100")  in
+             let uu____961 = FStar_Tests_Util.nm FStar_Tests_Util.h  in
+             minus uu____960 uu____961  in
+           mk_let FStar_Tests_Util.h uu____948 uu____959  in
+         mk_let FStar_Tests_Util.y uu____936 uu____947  in
+       mk_let FStar_Tests_Util.x uu____932 uu____935  in
+     run (Prims.parse_int "15") uu____931 z);
+    (let uu____965 =
+       let uu____966 = let uu____969 = snat znat  in snat uu____969  in
+       pred_nat uu____966  in
+     let uu____970 = snat znat  in
+     run (Prims.parse_int "16") uu____965 uu____970);
+    (let uu____974 =
+       let uu____975 = let uu____976 = snat znat  in snat uu____976  in
+       let uu____977 = snat znat  in minus_nat uu____975 uu____977  in
+     let uu____978 = snat znat  in
+     run (Prims.parse_int "17") uu____974 uu____978);
+    (let uu____982 =
        let uu____983 = encode_nat (Prims.parse_int "100")  in
-       minus_nat uu____982 uu____983  in
-     run (Prims.parse_int "18") uu____981 znat);
-    (let uu____985 =
-       let uu____986 = encode_nat (Prims.parse_int "10000")  in
-       let uu____987 = encode_nat (Prims.parse_int "10000")  in
-       minus_nat uu____986 uu____987  in
-     run (Prims.parse_int "19") uu____985 znat);
-    (let uu____989 =
-       let uu____990 = encode_nat (Prims.parse_int "10")  in
+       let uu____984 = encode_nat (Prims.parse_int "100")  in
+       minus_nat uu____983 uu____984  in
+     run (Prims.parse_int "18") uu____982 znat);
+    (let uu____986 =
+       let uu____987 = encode_nat (Prims.parse_int "1000")  in
+       let uu____988 = encode_nat (Prims.parse_int "1000")  in
+       minus_nat uu____987 uu____988  in
+     run (Prims.parse_int "19") uu____986 znat);
+    (let uu____990 =
        let uu____991 = encode_nat (Prims.parse_int "10")  in
-       minus_nat uu____990 uu____991  in
-     run (Prims.parse_int "20") uu____989 znat);
+       let uu____992 = encode_nat (Prims.parse_int "10")  in
+       minus_nat uu____991 uu____992  in
+     run (Prims.parse_int "20") uu____990 znat);
     FStar_Options.__clear_unit_tests ();
-    (let uu____994 = FStar_Tests_Pars.tc "recons [0;1]"  in
-     let uu____995 = FStar_Tests_Pars.tc "[0;1]"  in
-     run (Prims.parse_int "21") uu____994 uu____995);
-    (let uu____999 = FStar_Tests_Pars.tc "copy [0;1]"  in
-     let uu____1000 = FStar_Tests_Pars.tc "[0;1]"  in
-     run (Prims.parse_int "22") uu____999 uu____1000);
-    (let uu____1004 = FStar_Tests_Pars.tc "rev [0;1;2;3;4;5;6;7;8;9;10]"  in
-     let uu____1005 = FStar_Tests_Pars.tc "[10;9;8;7;6;5;4;3;2;1;0]"  in
-     run (Prims.parse_int "23") uu____1004 uu____1005);
-    (let uu____1009 = FStar_Tests_Pars.tc "f (B 5 3)"  in
-     let uu____1010 = FStar_Tests_Pars.tc "2"  in
-     run (Prims.parse_int "1062") uu____1009 uu____1010);
+    (let uu____995 = FStar_Tests_Pars.tc "recons [0;1]"  in
+     let uu____996 = FStar_Tests_Pars.tc "[0;1]"  in
+     run (Prims.parse_int "21") uu____995 uu____996);
+    (let uu____1000 = FStar_Tests_Pars.tc "copy [0;1]"  in
+     let uu____1001 = FStar_Tests_Pars.tc "[0;1]"  in
+     run (Prims.parse_int "22") uu____1000 uu____1001);
+    (let uu____1005 = FStar_Tests_Pars.tc "rev [0;1;2;3;4;5;6;7;8;9;10]"  in
+     let uu____1006 = FStar_Tests_Pars.tc "[10;9;8;7;6;5;4;3;2;1;0]"  in
+     run (Prims.parse_int "23") uu____1005 uu____1006);
+    (let uu____1010 = FStar_Tests_Pars.tc "f (B 5 3)"  in
+     let uu____1011 = FStar_Tests_Pars.tc "2"  in
+     run (Prims.parse_int "1062") uu____1010 uu____1011);
     FStar_Util.print_string "Normalizer ok\n"
   
