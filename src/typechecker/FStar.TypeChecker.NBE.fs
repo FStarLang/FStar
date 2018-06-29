@@ -520,7 +520,8 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       //TODO: we need to put the "meta" back when reading back
       translate cfg bs e
 
-    | Tm_lazy _ | Tm_quoted(_,_) -> failwith "Not yet handled"
+    | Tm_quoted(_,_)
+    | Tm_lazy _ -> failwith ("Not yet handled: " ^ P.tag_of_term (SS.compress e))
 
 and translate_monadic (m, ty) cfg bs e : t =
    let e = U.unascribe e in
@@ -568,6 +569,8 @@ and translate_monadic (m, ty) cfg bs e : t =
    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [(e, _)]) ->
      translate ({cfg with reifying=false}) bs e
 
+   | Tm_app _ ->
+     translate cfg bs e
 
    | _ -> failwith (BU.format1 "Unexpected case in translate_monadic: %s" (P.tag_of_term e))
 
