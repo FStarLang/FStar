@@ -351,10 +351,9 @@ and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   let us = lb.lbunivs in
   // GM: Ugh! need this to use <| and get the inner lambda into ALL, but why !?
   let id x = x in
-  // NS: this seems to cause a regression, although it should be the right thing to do
-  // match us with
-  // | [] -> translate cfg bs lb.lbdef
-  // | _ ->
+  match us with
+  | [] -> translate cfg bs lb.lbdef
+  | _ ->
     Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
           List.map (fun _ -> (fun () -> id <| (Constant Unit, None))) us,
           // Zoe: Bogus type! The idea is that we will never readback these lambdas
