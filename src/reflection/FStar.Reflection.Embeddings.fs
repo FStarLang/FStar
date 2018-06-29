@@ -18,6 +18,7 @@ module Print = FStar.Syntax.Print
 module Env = FStar.TypeChecker.Env
 module Err = FStar.Errors
 module Z = FStar.BigInt
+module EMB = FStar.Syntax.Embeddings
 open FStar.Reflection.Basic //needed for inspect_fv, but that feels wrong
 
 open FStar.Dyn
@@ -32,7 +33,8 @@ open FStar.Dyn
 (* -------------------------------------------------------------------------------------- *)
 let mk_emb f g t =
     mk_emb (fun x r _topt _norm -> f r x)
-           (fun x w _norm -> g w x) t
+           (fun x w _norm -> g w x)
+           (EMB.term_as_fv t)
 let embed e r x = embed e x r None id_norm_cb
 let unembed' w e x = unembed e x w id_norm_cb
 

@@ -230,7 +230,8 @@ let mk_emb (em:Range.range -> 'a -> norm_cb -> term)
            (un:bool -> term -> norm_cb -> option<'a>)
            (t:term) =
     mk_emb (fun x r _topt norm -> em r x norm)
-           (fun x w norm -> un w x norm) t
+           (fun x w norm -> un w x norm)
+           (FStar.Syntax.Embeddings.term_as_fv t)
 
 let rec e_tactic_0' (er : embedding<'r>) : embedding<tac<'r>> =
     mk_emb (fun _ _ _ -> failwith "Impossible: embedding tactic (0)?")

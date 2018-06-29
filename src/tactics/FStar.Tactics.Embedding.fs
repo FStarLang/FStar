@@ -59,7 +59,8 @@ let fstar_tactics_Drop  = lid_as_data_tm fstar_tactics_Drop_lid
 let fstar_tactics_Force = lid_as_data_tm fstar_tactics_Force_lid
 
 let t_proofstate   = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
-let t_result       = S.tconst (fstar_tactics_lid' ["Types"; "result"])
+let t_result_lid   = fstar_tactics_lid' ["Types"; "result"]
+let t_result       = S.tconst t_result_lid
 let t_result_of t  = U.mk_app t_result [S.as_arg t] // TODO: uinst on t_result?
 let t_guard_policy = S.tconst (fstar_tactics_lid' ["Types"; "guard_policy"])
 let t_direction    = S.tconst (fstar_tactics_lid' ["Types"; "direction"])
@@ -68,7 +69,8 @@ let mk_emb (em: Range.range -> 'a -> term)
            (un: bool -> term -> option<'a>)
            (t: term) =
     mk_emb (fun x r _topt _norm -> em r x)
-           (fun x w _norm -> un w x) t
+           (fun x w _norm -> un w x)
+           (FStar.Syntax.Embeddings.term_as_fv t)
 let embed e r x = FStar.Syntax.Embeddings.embed e x r None id_norm_cb
 let unembed' w e x = FStar.Syntax.Embeddings.unembed e x w id_norm_cb
 
@@ -91,7 +93,7 @@ let unfold_lazy_proofstate (i : lazyinfo) : term =
     U.exp_string "(((proofstate)))"
 
 let e_result (ea : embedding<'a>)  =
-    let embed_result (rng:Range.range) (res:__result<'a>) : term =
+    let embed_result (res:__result<'a>) (rng:Range.range) _ _ : term =
         match res with
         | Failed (msg, ps) ->
           S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed_tm [U_zero])
@@ -106,7 +108,7 @@ let e_result (ea : embedding<'a>)  =
                   S.as_arg (embed e_proofstate rng ps)]
                  None rng
     in
-    let unembed_result w (t:term) : option<__result<'a>> =
+    let unembed_result (t:term) w _ : option<__result<'a>> =
         let hd'_and_args tm =
           let tm = U.unascribe tm in
           let hd, args = U.head_and_args tm in
@@ -128,7 +130,12 @@ let e_result (ea : embedding<'a>)  =
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded tactic result: %s" (Print.term_to_string t)));
             None
     in
-    mk_emb embed_result unembed_result (t_result_of (type_of ea))
+    mk_emb_full
+        embed_result
+        unembed_result
+        (t_result_of (type_of ea))
+        (fun _ -> "")
+        (ET_app (t_result_lid |> Ident.string_of_lid, [emb_typ_of ea]))
 
 let e_direction =
     let embed_direction (rng:Range.range) (d : direction) : term =

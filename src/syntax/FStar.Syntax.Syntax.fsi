@@ -49,6 +49,14 @@ type pragma =
 
 type memo<'a> = ref<option<'a>>
 
+(* Simple types used in native compilation
+ * to record the types of lazily embedded terms
+ *)
+type emb_typ =
+  | ET_abstract
+  | ET_fun  of emb_typ * emb_typ
+  | ET_app  of string * list<emb_typ>
+
 //versioning for unification variables
 type version = {
     major:int;
@@ -238,7 +246,7 @@ and attribute = term
 and lazyinfo = {
     blob  : dyn;
     lkind : lazy_kind;
-    ltyp   : typ;
+    ltyp  : typ;
     rng   : Range.range;
 }
 // Different kinds of lazy terms. These are used to decide the unfolding
@@ -255,7 +263,7 @@ and lazy_kind =
   | Lazy_proofstate
   | Lazy_sigelt
   | Lazy_uvar
-  | Lazy_embedding of typ * FStar.Common.thunk<term>
+  | Lazy_embedding of emb_typ * FStar.Common.thunk<term>
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * tscheme

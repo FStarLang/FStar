@@ -54,7 +54,16 @@ type raw_embedder<'a>   = 'a -> embed_t
 type raw_unembedder<'a> = term -> unembed_t<'a>
 
 type embedding<'a>
-val mk_emb : raw_embedder<'a> -> raw_unembedder<'a> -> typ -> embedding<'a>
+val emb_typ_of: embedding<'a> -> emb_typ
+val term_as_fv: term -> fv //partial!
+val mk_emb : raw_embedder<'a> -> raw_unembedder<'a> -> fv -> embedding<'a>
+val mk_emb_full: raw_embedder<'a>
+              -> raw_unembedder<'a>
+              -> typ
+              -> ('a -> string)
+              -> emb_typ
+              -> embedding<'a>
+
 
 // embed: turning a value into a term (compiler internals -> userland)
 // unembed: interpreting a term as a value, which can fail (userland -> compiler internals)

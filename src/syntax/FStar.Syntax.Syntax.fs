@@ -53,6 +53,14 @@ type pragma =
 // IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]
 type memo<'a> = ref<option<'a>>
 
+(* Simple types used in native compilation
+ * to record the types of lazily embedded terms
+ *)
+type emb_typ =
+  | ET_abstract
+  | ET_fun  of emb_typ * emb_typ
+  | ET_app  of string * list<emb_typ>
+
 //versioning for unification variables
 // IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type version = {
@@ -272,7 +280,7 @@ and lazy_kind =
   | Lazy_proofstate
   | Lazy_sigelt
   | Lazy_uvar
-  | Lazy_embedding of typ * FStar.Common.thunk<term>
+  | Lazy_embedding of emb_typ * FStar.Common.thunk<term>
 
 and binding =
   | Binding_var      of bv
