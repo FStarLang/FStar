@@ -55,6 +55,9 @@ let rec drop (p: 'a -> bool) (l: list<'a>): list<'a> =
   | [] -> []
   | x::xs -> if p x then x::xs else drop p xs
 
+let fmap_opt (f : 'a -> 'b) (x : option<'a>) : option<'b> = 
+  BU.bind_opt x (fun x -> Some (f x))
+
 // NBE debuging
 
 let debug cfg f =
@@ -140,10 +143,7 @@ let rec test_args ts cnt =
   | [] -> cnt <= 0
   | t :: ts -> (not (isAccu (fst t))) && test_args ts (cnt - 1)
 
-(* Count the number of abstractions in the body of a let rec.
-   It accounts for abstractions instantiated inside the body.
-   This analysis needs further refinement, for example see the let in case.
-*)
+(* ZP: TODO change this! Count arity from type.. *)
 let rec count_abstractions (t : term) : int =
     match (SS.compress t).n with
     | Tm_delayed _ | Tm_unknown -> failwith "Impossible"
@@ -190,14 +190,14 @@ let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option<sigelt> =
   BU.bind_opt (Env.lookup_qname env lid) mapper
 
 let is_univ (tm : t)=
-match tm with
-| Univ _ -> true
-| _ -> false
+  match tm with
+  | Univ _ -> true
+  | _ -> false
 
 let un_univ (tm:t) : universe =
-match tm with
-| Univ u -> u
-| _ -> failwith "Not a universe"
+  match tm with
+  | Univ u -> u
+  | _ -> failwith "Not a universe"
 
 let is_constr_fv (fvar : fv) : bool =
   fvar.fv_qual = Some Data_ctor
@@ -207,27 +207,21 @@ let is_constr (q : qninfo) : bool =
   | Some (BU.Inr ({ sigel = Sig_datacon (_, _, _, _, _, _) }, _), _) -> true
   | _ -> false
 
-let translate_univ (bs:list<t>) (u:universe) : t =
-    let rec aux u =
-        let u = SS.compress_univ u in
-        match u with
-        | U_bvar i ->
-          let u' = List.nth bs i in //it has to be a Univ term at position i
-          (un_univ u')
+let translate_univ (bs:list<t>) (u:universe) : universe =
+  let rec aux u =
+    let u = SS.compress_univ u in
+      match u with
+      | U_bvar i ->
+        let u' = List.nth bs i in //it has to be a Univ term at position i
+        (un_univ u')
 
-        | U_succ u ->
-          U_succ (aux u)
+      | U_succ u -> U_succ (aux u)
 
-        | U_max us ->
-          U_max (List.map aux us)
+      | U_max us -> U_max (List.map aux us)
 
-        | U_unknown
-        | U_name _
-        | U_unif _
-        | U_zero ->
-          u
+      | U_unknown | U_name _ | U_unif _ | U_zero -> u
     in
-    Univ (aux u)
+    aux u
 
 (* Creates the environment of mutually recursive function definitions *)
 let make_rec_env (lbs:list<letbinding>) (bs:list<t>) : list<t> =
@@ -402,13 +396,15 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_uinst(t, us) ->
       debug (fun () -> BU.print2 "Uinst term : %s\nUnivs : %s\n" (P.term_to_string t)
                                                               (List.map P.univ_to_string us |> String.concat ", "));
-      iapp cfg (translate cfg bs t) (List.map (fun x -> as_arg (translate_univ bs x)) us)
+      iapp cfg (translate cfg bs t) (List.map (fun x -> as_arg (Univ (translate_univ bs x))) us)
 
     | Tm_type u ->
-      Type_t (un_univ (translate_univ bs u))
+      Type_t (translate_univ bs u)
 
-    | Tm_arrow (bs, c) -> debug_term e; failwith "Tm_arrow: Not yet implemented"
-
+    | Tm_arrow (xs, c) -> 
+      Arrow ((fun ys -> translate_comp cfg (List.rev_append ys bs) c),
+             List.map (fun x () -> (translate cfg bs (fst x).sort, snd x)) xs)
+             
     | Tm_refine (bv, tm) ->
       Refinement ((fun (y:t) -> translate cfg (y::bs) tm), (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?
 
@@ -537,6 +533,34 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_lazy li ->
       Lazy li
 
+and translate_comp cfg bs (c:S.comp) : comp = 
+  match c.n with 
+  | S.Total  (typ, u) -> Tot (translate cfg bs typ, fmap_opt (translate_univ bs) u)   
+  | S.GTotal (typ, u) -> GTot (translate cfg bs typ, fmap_opt (translate_univ bs) u)
+  | S.Comp   ctyp      -> Comp (translate_comp_typ cfg bs ctyp)
+  
+and readback_comp cfg (c: comp) : S.comp = 
+  let c' = 
+    match c with 
+    | Tot  (typ, u) -> S.Total (readback cfg typ, u)
+    | GTot (typ, u) -> S.GTotal (readback cfg typ, u)
+    | Comp ctyp     -> S.Comp (readback_comp_typ cfg ctyp)
+   in S.mk c' None Range.dummyRange
+ 
+and translate_comp_typ cfg bs (c:S.comp_typ) : comp_typ =
+  { comp_univs = List.map (translate_univ bs) c.comp_univs;
+    effect_name = c.effect_name;
+    result_typ = translate cfg bs c.result_typ;
+    effect_args = List.map (fun x -> translate cfg bs (fst x), snd x) c.effect_args;
+    flags = c.flags }
+
+and readback_comp_typ cfg (c:comp_typ) : S.comp_typ =
+  { S.comp_univs = c.comp_univs;
+    S.effect_name = c.effect_name;
+    S.result_typ = readback cfg c.result_typ;
+    S.effect_args = List.map (fun x -> readback cfg (fst x), snd x) c.effect_args;
+    S.flags = c.flags }
+
 and translate_monadic (m, ty) cfg bs e : t =
    let e = U.unascribe e in
    match e.n with
@@ -655,10 +679,15 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       let x =  S.new_bv None (readback cfg (fst (targ ()))) in 
       let body = readback cfg (f (mkAccuVar x)) in 
       U.refine x body
-//    let body = translate cfg [] (readback cfg r) in
-//    debug (fun () -> BU.print1 "Translated refinement body: %s\n" (t_to_string body));
-//    S.mk (Tm_refine(fst b, readback cfg body)) None Range.dummyRange
 
+    | Arrow (f, targs) ->
+      let (args, accus) = List.fold_left (fun (args, accus) tf ->
+                                            let (xt, q) = tf () in
+                                            let x = S.new_bv None (readback cfg xt) in
+                                            ((x, q) :: args, (mkAccuVar x) :: accus)) ([], []) targs
+      in
+      let cmp = readback_comp cfg (f accus) in
+      U.arrow args cmp
 
     | Construct (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
@@ -748,7 +777,6 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
          (match ts with
           | [] -> head
           | _ -> U.mk_app head args)
-    | Arrow _ -> failwith "Arrows not yet handled"
 
     | Quote (qt, qi) ->
         S.mk (Tm_quoted (qt, qi)) None Range.dummyRange

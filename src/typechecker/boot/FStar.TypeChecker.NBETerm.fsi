@@ -49,10 +49,21 @@ and t
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Arrow of (list<t> -> t) * list<(unit -> arg)>
+  | Arrow of (list<t> -> comp) * list<(unit -> arg)>
   | Refinement of (t -> t) * (unit -> arg) 
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
+and comp = 
+  | Tot of t * option<universe>
+  | GTot of t * option<universe>
+  | Comp of comp_typ
+and comp_typ = {
+  comp_univs:universes;
+  effect_name:lident;
+  result_typ:t;
+  effect_args:args;
+  flags:list<cflags>
+}
 
 and arg = t * aqual
 and args = list<(arg)>

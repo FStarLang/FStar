@@ -57,11 +57,23 @@ and t
   | Type_t of universe
   | Univ of universe
   | Unknown (* For translating unknown types *)
-  | Arrow of (list<t> -> t) * list<(unit -> arg)>
+  | Arrow of (list<t> -> comp) * list<(unit -> arg)>
   | Refinement of (t -> t) * (unit -> arg) 
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
   // | Arrow of list binder * comp_t
+and comp = 
+  | Tot of t * option<universe>
+  | GTot of t * option<universe>
+  | Comp of comp_typ
+and comp_typ = {
+  comp_univs:universes;
+  effect_name:lident;
+  result_typ:t;
+  effect_args:args;
+  flags:list<cflags>
+}
+
 and arg = t * aqual
 and args = list<arg>
 //NS:
@@ -235,8 +247,8 @@ let lid_as_typ (l:lident) (us:list<universe>) (args:args) : t =
 let as_iarg (a:t) : arg = (a, Some S.imp_tag)
 let as_arg (a:t) : arg = (a, None)
 
-//  Non-dependent arrow
-let make_arrow1 t1 (a:arg) : t = Arrow ((fun _ -> t1), [(fun _ -> a)])
+//  Non-dependent total arrow
+let make_arrow1 t1 (a:arg) : t = Arrow ((fun _ -> Tot (t1, None)), [(fun _ -> a)])
 
 // Emdebbing at abstract types
 let e_any : embedding<t> =
