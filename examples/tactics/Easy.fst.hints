@@ -1,5 +1,5 @@
 [
-  ":ê‰Ùvžø\u001f:\u0019£\u001cÝ\u0005u\u0006",
+  "¹±‰€ÌÔ!\u000f\u0013\nP´±¾¥‹",
   [
     [
       "Easy.lemma_from_squash",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "6eaf0d9417221da3ef234445786efdae"
+      "b683a6e5caa2c9b27db0fbd35199d902"
     ],
     [
       "Easy.plus_assoc",
@@ -20,7 +20,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "528e678d1437c79557650bf70e13a681"
+      "3d064f34dcf6e119187e455e13f9d882"
     ],
     [
       "Easy.plus_comm",
@@ -32,7 +32,7 @@
         "primitive_Prims.op_Addition"
       ],
       0,
-      "64c8f5a57681b8f18a58cdbd8646ce03"
+      "8c3f34f3ada6193fd8f5e2194978f230"
     ],
     [
       "Easy.easy_fill",
@@ -53,7 +53,7 @@
         "typing_FStar.Tactics.Result.uu___is_Success"
       ],
       0,
-      "3a86b3889cefcaa419bdfce98063ccc8"
+      "f017d2a6c7f2358f62cf5ab81a9a573e"
     ]
   ]
 ]

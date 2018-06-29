@@ -36,7 +36,10 @@ let register_plugin (s: string) (arity: Prims.int) (t: itac) =
              C.auto_reflect=None;
              C.strong_reduction_ok=false;
              C.requires_binder_substitution = false;
-             C.interpretation=t}
+             C.interpretation=t;
+             C.univ_arity=Z.of_int 0; (* TODO: bogus for now, just as in Tactics.Interpreter *)
+             C.interpretation_nbe = FStar_TypeChecker_NBETerm.dummy_interp (FStar_Ident.lid_of_str "_");
+          }
     in
     FStar_TypeChecker_Cfg.register_plugin step;
     BU.print1 "Registered plugin %s\n" s

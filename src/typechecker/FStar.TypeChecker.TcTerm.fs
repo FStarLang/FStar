@@ -1026,7 +1026,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
             | (hd, imp)::bs, (hd_expected, imp')::bs_expected ->
                begin match imp, imp' with
                     | None, Some (Implicit _)
-                    | Some (Implicit _), None ->
+                    | None, Some (Meta _)
+                    | Some (Implicit _), None
+                    | Some (Meta _), None ->
                       raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
                                    BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))
                                   (S.range_of_bv hd)

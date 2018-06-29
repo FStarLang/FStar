@@ -16,6 +16,7 @@ module BU = FStar.Util
 module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const
+open FStar.Char
 
 type var = bv
 type sort = int

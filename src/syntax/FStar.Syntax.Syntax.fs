@@ -615,10 +615,16 @@ let gen_bv : string -> option<Range.range> -> typ -> bv = fun s r t ->
   let id = mk_ident(s, range_of_ropt r) in
   {ppname=id; index=next_id(); sort=t}
 let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
+
 let freshen_bv bv =
     if is_null_bv bv
     then new_bv (Some (range_of_bv bv)) bv.sort
     else {bv with index=next_id()}
+let freshen_bvs bvs = List.map freshen_bv bvs
+
+let freshen_binder (b:binder) = let (bv, aq) = b in (freshen_bv bv, aq)
+let freshen_binders bs = List.map freshen_binder bs
+
 let new_univ_name ropt =
     let id = next_id() in
     mk_ident (Ident.reserved_prefix ^ Util.string_of_int id, range_of_ropt ropt)

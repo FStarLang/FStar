@@ -280,6 +280,14 @@ let rec iapp cfg (f:t) (args:args) : t =
 (* unary application *)
 let app cfg (f:t) (x:t) (q:aqual) = iapp cfg f [(x, q)]
 
+(* Was List.init, but F* doesn't have this in ulib *)
+let rec tabulate (n:int) (f : int -> 'a) : list<'a> =
+    let rec aux i =
+        if i < n
+        then f i :: aux (i + 1)
+        else []
+    in aux 0
+
 let rec translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
    let debug = debug cfg in
    let qninfo = Env.lookup_qname (Cfg.cfg_env cfg) (S.lid_of_fv fvar) in
@@ -300,7 +308,8 @@ let rec translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
                          x
               | None -> debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar)); 
                        iapp cfg (mkFV fvar [] []) args'),
-              List.init arity (fun _ -> fun () -> (Constant Unit, None)), arity)
+              (let f (_:int) () : t * S.aqual = (Constant Unit, None) in tabulate arity f),
+              arity)
        | _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        end
 
@@ -516,7 +525,8 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       //TODO: we need to put the "meta" back when reading back
       translate cfg bs e
 
-    | Tm_lazy _ | Tm_quoted(_,_) -> failwith "Not yet handled"
+    | Tm_quoted(_,_)
+    | Tm_lazy _ -> failwith ("Not yet handled: " ^ P.tag_of_term (SS.compress e))
 
 and translate_comp cfg bs (c:S.comp) : comp = 
   match c.n with 
@@ -592,6 +602,8 @@ and translate_monadic (m, ty) cfg bs e : t =
    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [(e, _)]) ->
      translate ({cfg with reifying=false}) bs e
 
+   | Tm_app _ ->
+     translate cfg bs e
 
    | _ -> failwith (BU.format1 "Unexpected case in translate_monadic: %s" (P.tag_of_term e))
 

@@ -280,6 +280,13 @@ the second (TODO: change this awful behaviour).
 *)
 assume val cases : term -> Tac (term * term)
 
+(** Destruct a value of an inductive type by matching on it. The generated
+match has one branch for each constructor and is therefore trivially
+exhaustive, no VC is generated for that purpose. It returns a list
+with the fvars of each constructor and their arities, in the order
+they appear as goals. *)
+assume val t_destruct : term -> Tac (list (fv * nat))
+
 (** Set command line options for the current goal. Mostly useful to
 change SMT encoding options such as [set_options "--z3rlimit 20"]. *)
 assume val set_options : string -> Tac unit
@@ -318,6 +325,10 @@ assume val get_guard_policy : unit -> Tac guard_policy
 
 (** Set the current guard policy. See [get_guard_policy} for an explanation *)
 assume val set_guard_policy : guard_policy -> Tac unit
+
+(** [lax_on] returns true iff the current environment has the
+`--lax` option set, and thus drops all verification conditions. *)
+assume val lax_on : unit -> Tac bool
 
 (** Ignore the current goal. If left unproven, this will fail after
 the tactic finishes. *)

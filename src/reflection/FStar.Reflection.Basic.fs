@@ -321,10 +321,7 @@ let lookup_attr (attr:term) (env:Env.env) : list<fv> =
 
 let lookup_typ (env:Env.env) (ns:list<string>) : option<sigelt> =
     let lid = PC.p2l ns in
-    match Env.lookup_qname env lid with
-    | None -> None
-    | Some (BU.Inl _, rng) -> None
-    | Some (BU.Inr (se, us), rng) -> Some se
+    Env.lookup_sigelt env lid
 
 let sigelt_attrs (se : sigelt) : list<attribute> =
     se.sigattrs
