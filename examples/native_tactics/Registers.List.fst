@@ -23,7 +23,7 @@ let rec const_map_n (n:nat) (x:'a) (r:regmap 'a) : regmap 'a =
   else const_map_n (n - 1) x (upd r n x)
 
 [@plugin]
-let rec identity_map (n:nat) (r:regmap nat) : regmap nat =
+let rec identity_map (n:nat) (r:regmap int) : regmap int =
   if n = 0 then r
   else identity_map (n - 1) (upd r n n)
 
