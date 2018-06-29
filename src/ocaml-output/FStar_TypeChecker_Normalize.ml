@@ -176,8 +176,8 @@ let cases :
   =
   fun f  ->
     fun d  ->
-      fun uu___243_303  ->
-        match uu___243_303 with
+      fun uu___244_303  ->
+        match uu___244_303 with
         | FStar_Pervasives_Native.Some x -> f x
         | FStar_Pervasives_Native.None  -> d
   
@@ -777,8 +777,8 @@ let format_opt :
       'Auu____1509 FStar_Pervasives_Native.option -> Prims.string
   =
   fun f  ->
-    fun uu___244_1524  ->
-      match uu___244_1524 with
+    fun uu___245_1524  ->
+      match uu___245_1524 with
       | FStar_Pervasives_Native.None  -> "None"
       | FStar_Pervasives_Native.Some x ->
           let uu____1530 =
@@ -962,739 +962,739 @@ let (default_steps : fsteps) =
 let (fstep_add_one : step -> fsteps -> fsteps) =
   fun s  ->
     fun fs  ->
-      let add_opt x uu___245_1722 =
-        match uu___245_1722 with
+      let add_opt x uu___246_1722 =
+        match uu___246_1722 with
         | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.Some [x]
         | FStar_Pervasives_Native.Some xs ->
             FStar_Pervasives_Native.Some (x :: xs)
          in
       match s with
       | Beta  ->
-          let uu___265_1742 = fs  in
+          let uu___266_1742 = fs  in
           {
             beta = true;
-            iota = (uu___265_1742.iota);
-            zeta = (uu___265_1742.zeta);
-            weak = (uu___265_1742.weak);
-            hnf = (uu___265_1742.hnf);
-            primops = (uu___265_1742.primops);
-            do_not_unfold_pure_lets = (uu___265_1742.do_not_unfold_pure_lets);
-            unfold_until = (uu___265_1742.unfold_until);
-            unfold_only = (uu___265_1742.unfold_only);
-            unfold_fully = (uu___265_1742.unfold_fully);
-            unfold_attr = (uu___265_1742.unfold_attr);
-            unfold_tac = (uu___265_1742.unfold_tac);
+            iota = (uu___266_1742.iota);
+            zeta = (uu___266_1742.zeta);
+            weak = (uu___266_1742.weak);
+            hnf = (uu___266_1742.hnf);
+            primops = (uu___266_1742.primops);
+            do_not_unfold_pure_lets = (uu___266_1742.do_not_unfold_pure_lets);
+            unfold_until = (uu___266_1742.unfold_until);
+            unfold_only = (uu___266_1742.unfold_only);
+            unfold_fully = (uu___266_1742.unfold_fully);
+            unfold_attr = (uu___266_1742.unfold_attr);
+            unfold_tac = (uu___266_1742.unfold_tac);
             pure_subterms_within_computations =
-              (uu___265_1742.pure_subterms_within_computations);
-            simplify = (uu___265_1742.simplify);
-            erase_universes = (uu___265_1742.erase_universes);
-            allow_unbound_universes = (uu___265_1742.allow_unbound_universes);
-            reify_ = (uu___265_1742.reify_);
-            compress_uvars = (uu___265_1742.compress_uvars);
-            no_full_norm = (uu___265_1742.no_full_norm);
-            check_no_uvars = (uu___265_1742.check_no_uvars);
-            unmeta = (uu___265_1742.unmeta);
-            unascribe = (uu___265_1742.unascribe);
-            in_full_norm_request = (uu___265_1742.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___265_1742.weakly_reduce_scrutinee)
+              (uu___266_1742.pure_subterms_within_computations);
+            simplify = (uu___266_1742.simplify);
+            erase_universes = (uu___266_1742.erase_universes);
+            allow_unbound_universes = (uu___266_1742.allow_unbound_universes);
+            reify_ = (uu___266_1742.reify_);
+            compress_uvars = (uu___266_1742.compress_uvars);
+            no_full_norm = (uu___266_1742.no_full_norm);
+            check_no_uvars = (uu___266_1742.check_no_uvars);
+            unmeta = (uu___266_1742.unmeta);
+            unascribe = (uu___266_1742.unascribe);
+            in_full_norm_request = (uu___266_1742.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___266_1742.weakly_reduce_scrutinee)
           }
       | Iota  ->
-          let uu___266_1743 = fs  in
+          let uu___267_1743 = fs  in
           {
-            beta = (uu___266_1743.beta);
+            beta = (uu___267_1743.beta);
             iota = true;
-            zeta = (uu___266_1743.zeta);
-            weak = (uu___266_1743.weak);
-            hnf = (uu___266_1743.hnf);
-            primops = (uu___266_1743.primops);
-            do_not_unfold_pure_lets = (uu___266_1743.do_not_unfold_pure_lets);
-            unfold_until = (uu___266_1743.unfold_until);
-            unfold_only = (uu___266_1743.unfold_only);
-            unfold_fully = (uu___266_1743.unfold_fully);
-            unfold_attr = (uu___266_1743.unfold_attr);
-            unfold_tac = (uu___266_1743.unfold_tac);
+            zeta = (uu___267_1743.zeta);
+            weak = (uu___267_1743.weak);
+            hnf = (uu___267_1743.hnf);
+            primops = (uu___267_1743.primops);
+            do_not_unfold_pure_lets = (uu___267_1743.do_not_unfold_pure_lets);
+            unfold_until = (uu___267_1743.unfold_until);
+            unfold_only = (uu___267_1743.unfold_only);
+            unfold_fully = (uu___267_1743.unfold_fully);
+            unfold_attr = (uu___267_1743.unfold_attr);
+            unfold_tac = (uu___267_1743.unfold_tac);
             pure_subterms_within_computations =
-              (uu___266_1743.pure_subterms_within_computations);
-            simplify = (uu___266_1743.simplify);
-            erase_universes = (uu___266_1743.erase_universes);
-            allow_unbound_universes = (uu___266_1743.allow_unbound_universes);
-            reify_ = (uu___266_1743.reify_);
-            compress_uvars = (uu___266_1743.compress_uvars);
-            no_full_norm = (uu___266_1743.no_full_norm);
-            check_no_uvars = (uu___266_1743.check_no_uvars);
-            unmeta = (uu___266_1743.unmeta);
-            unascribe = (uu___266_1743.unascribe);
-            in_full_norm_request = (uu___266_1743.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___266_1743.weakly_reduce_scrutinee)
+              (uu___267_1743.pure_subterms_within_computations);
+            simplify = (uu___267_1743.simplify);
+            erase_universes = (uu___267_1743.erase_universes);
+            allow_unbound_universes = (uu___267_1743.allow_unbound_universes);
+            reify_ = (uu___267_1743.reify_);
+            compress_uvars = (uu___267_1743.compress_uvars);
+            no_full_norm = (uu___267_1743.no_full_norm);
+            check_no_uvars = (uu___267_1743.check_no_uvars);
+            unmeta = (uu___267_1743.unmeta);
+            unascribe = (uu___267_1743.unascribe);
+            in_full_norm_request = (uu___267_1743.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___267_1743.weakly_reduce_scrutinee)
           }
       | Zeta  ->
-          let uu___267_1744 = fs  in
+          let uu___268_1744 = fs  in
           {
-            beta = (uu___267_1744.beta);
-            iota = (uu___267_1744.iota);
+            beta = (uu___268_1744.beta);
+            iota = (uu___268_1744.iota);
             zeta = true;
-            weak = (uu___267_1744.weak);
-            hnf = (uu___267_1744.hnf);
-            primops = (uu___267_1744.primops);
-            do_not_unfold_pure_lets = (uu___267_1744.do_not_unfold_pure_lets);
-            unfold_until = (uu___267_1744.unfold_until);
-            unfold_only = (uu___267_1744.unfold_only);
-            unfold_fully = (uu___267_1744.unfold_fully);
-            unfold_attr = (uu___267_1744.unfold_attr);
-            unfold_tac = (uu___267_1744.unfold_tac);
+            weak = (uu___268_1744.weak);
+            hnf = (uu___268_1744.hnf);
+            primops = (uu___268_1744.primops);
+            do_not_unfold_pure_lets = (uu___268_1744.do_not_unfold_pure_lets);
+            unfold_until = (uu___268_1744.unfold_until);
+            unfold_only = (uu___268_1744.unfold_only);
+            unfold_fully = (uu___268_1744.unfold_fully);
+            unfold_attr = (uu___268_1744.unfold_attr);
+            unfold_tac = (uu___268_1744.unfold_tac);
             pure_subterms_within_computations =
-              (uu___267_1744.pure_subterms_within_computations);
-            simplify = (uu___267_1744.simplify);
-            erase_universes = (uu___267_1744.erase_universes);
-            allow_unbound_universes = (uu___267_1744.allow_unbound_universes);
-            reify_ = (uu___267_1744.reify_);
-            compress_uvars = (uu___267_1744.compress_uvars);
-            no_full_norm = (uu___267_1744.no_full_norm);
-            check_no_uvars = (uu___267_1744.check_no_uvars);
-            unmeta = (uu___267_1744.unmeta);
-            unascribe = (uu___267_1744.unascribe);
-            in_full_norm_request = (uu___267_1744.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___267_1744.weakly_reduce_scrutinee)
+              (uu___268_1744.pure_subterms_within_computations);
+            simplify = (uu___268_1744.simplify);
+            erase_universes = (uu___268_1744.erase_universes);
+            allow_unbound_universes = (uu___268_1744.allow_unbound_universes);
+            reify_ = (uu___268_1744.reify_);
+            compress_uvars = (uu___268_1744.compress_uvars);
+            no_full_norm = (uu___268_1744.no_full_norm);
+            check_no_uvars = (uu___268_1744.check_no_uvars);
+            unmeta = (uu___268_1744.unmeta);
+            unascribe = (uu___268_1744.unascribe);
+            in_full_norm_request = (uu___268_1744.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___268_1744.weakly_reduce_scrutinee)
           }
       | Exclude (Beta ) ->
-          let uu___268_1745 = fs  in
+          let uu___269_1745 = fs  in
           {
             beta = false;
-            iota = (uu___268_1745.iota);
-            zeta = (uu___268_1745.zeta);
-            weak = (uu___268_1745.weak);
-            hnf = (uu___268_1745.hnf);
-            primops = (uu___268_1745.primops);
-            do_not_unfold_pure_lets = (uu___268_1745.do_not_unfold_pure_lets);
-            unfold_until = (uu___268_1745.unfold_until);
-            unfold_only = (uu___268_1745.unfold_only);
-            unfold_fully = (uu___268_1745.unfold_fully);
-            unfold_attr = (uu___268_1745.unfold_attr);
-            unfold_tac = (uu___268_1745.unfold_tac);
+            iota = (uu___269_1745.iota);
+            zeta = (uu___269_1745.zeta);
+            weak = (uu___269_1745.weak);
+            hnf = (uu___269_1745.hnf);
+            primops = (uu___269_1745.primops);
+            do_not_unfold_pure_lets = (uu___269_1745.do_not_unfold_pure_lets);
+            unfold_until = (uu___269_1745.unfold_until);
+            unfold_only = (uu___269_1745.unfold_only);
+            unfold_fully = (uu___269_1745.unfold_fully);
+            unfold_attr = (uu___269_1745.unfold_attr);
+            unfold_tac = (uu___269_1745.unfold_tac);
             pure_subterms_within_computations =
-              (uu___268_1745.pure_subterms_within_computations);
-            simplify = (uu___268_1745.simplify);
-            erase_universes = (uu___268_1745.erase_universes);
-            allow_unbound_universes = (uu___268_1745.allow_unbound_universes);
-            reify_ = (uu___268_1745.reify_);
-            compress_uvars = (uu___268_1745.compress_uvars);
-            no_full_norm = (uu___268_1745.no_full_norm);
-            check_no_uvars = (uu___268_1745.check_no_uvars);
-            unmeta = (uu___268_1745.unmeta);
-            unascribe = (uu___268_1745.unascribe);
-            in_full_norm_request = (uu___268_1745.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___268_1745.weakly_reduce_scrutinee)
+              (uu___269_1745.pure_subterms_within_computations);
+            simplify = (uu___269_1745.simplify);
+            erase_universes = (uu___269_1745.erase_universes);
+            allow_unbound_universes = (uu___269_1745.allow_unbound_universes);
+            reify_ = (uu___269_1745.reify_);
+            compress_uvars = (uu___269_1745.compress_uvars);
+            no_full_norm = (uu___269_1745.no_full_norm);
+            check_no_uvars = (uu___269_1745.check_no_uvars);
+            unmeta = (uu___269_1745.unmeta);
+            unascribe = (uu___269_1745.unascribe);
+            in_full_norm_request = (uu___269_1745.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___269_1745.weakly_reduce_scrutinee)
           }
       | Exclude (Iota ) ->
-          let uu___269_1746 = fs  in
+          let uu___270_1746 = fs  in
           {
-            beta = (uu___269_1746.beta);
+            beta = (uu___270_1746.beta);
             iota = false;
-            zeta = (uu___269_1746.zeta);
-            weak = (uu___269_1746.weak);
-            hnf = (uu___269_1746.hnf);
-            primops = (uu___269_1746.primops);
-            do_not_unfold_pure_lets = (uu___269_1746.do_not_unfold_pure_lets);
-            unfold_until = (uu___269_1746.unfold_until);
-            unfold_only = (uu___269_1746.unfold_only);
-            unfold_fully = (uu___269_1746.unfold_fully);
-            unfold_attr = (uu___269_1746.unfold_attr);
-            unfold_tac = (uu___269_1746.unfold_tac);
+            zeta = (uu___270_1746.zeta);
+            weak = (uu___270_1746.weak);
+            hnf = (uu___270_1746.hnf);
+            primops = (uu___270_1746.primops);
+            do_not_unfold_pure_lets = (uu___270_1746.do_not_unfold_pure_lets);
+            unfold_until = (uu___270_1746.unfold_until);
+            unfold_only = (uu___270_1746.unfold_only);
+            unfold_fully = (uu___270_1746.unfold_fully);
+            unfold_attr = (uu___270_1746.unfold_attr);
+            unfold_tac = (uu___270_1746.unfold_tac);
             pure_subterms_within_computations =
-              (uu___269_1746.pure_subterms_within_computations);
-            simplify = (uu___269_1746.simplify);
-            erase_universes = (uu___269_1746.erase_universes);
-            allow_unbound_universes = (uu___269_1746.allow_unbound_universes);
-            reify_ = (uu___269_1746.reify_);
-            compress_uvars = (uu___269_1746.compress_uvars);
-            no_full_norm = (uu___269_1746.no_full_norm);
-            check_no_uvars = (uu___269_1746.check_no_uvars);
-            unmeta = (uu___269_1746.unmeta);
-            unascribe = (uu___269_1746.unascribe);
-            in_full_norm_request = (uu___269_1746.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___269_1746.weakly_reduce_scrutinee)
+              (uu___270_1746.pure_subterms_within_computations);
+            simplify = (uu___270_1746.simplify);
+            erase_universes = (uu___270_1746.erase_universes);
+            allow_unbound_universes = (uu___270_1746.allow_unbound_universes);
+            reify_ = (uu___270_1746.reify_);
+            compress_uvars = (uu___270_1746.compress_uvars);
+            no_full_norm = (uu___270_1746.no_full_norm);
+            check_no_uvars = (uu___270_1746.check_no_uvars);
+            unmeta = (uu___270_1746.unmeta);
+            unascribe = (uu___270_1746.unascribe);
+            in_full_norm_request = (uu___270_1746.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___270_1746.weakly_reduce_scrutinee)
           }
       | Exclude (Zeta ) ->
-          let uu___270_1747 = fs  in
+          let uu___271_1747 = fs  in
           {
-            beta = (uu___270_1747.beta);
-            iota = (uu___270_1747.iota);
+            beta = (uu___271_1747.beta);
+            iota = (uu___271_1747.iota);
             zeta = false;
-            weak = (uu___270_1747.weak);
-            hnf = (uu___270_1747.hnf);
-            primops = (uu___270_1747.primops);
-            do_not_unfold_pure_lets = (uu___270_1747.do_not_unfold_pure_lets);
-            unfold_until = (uu___270_1747.unfold_until);
-            unfold_only = (uu___270_1747.unfold_only);
-            unfold_fully = (uu___270_1747.unfold_fully);
-            unfold_attr = (uu___270_1747.unfold_attr);
-            unfold_tac = (uu___270_1747.unfold_tac);
+            weak = (uu___271_1747.weak);
+            hnf = (uu___271_1747.hnf);
+            primops = (uu___271_1747.primops);
+            do_not_unfold_pure_lets = (uu___271_1747.do_not_unfold_pure_lets);
+            unfold_until = (uu___271_1747.unfold_until);
+            unfold_only = (uu___271_1747.unfold_only);
+            unfold_fully = (uu___271_1747.unfold_fully);
+            unfold_attr = (uu___271_1747.unfold_attr);
+            unfold_tac = (uu___271_1747.unfold_tac);
             pure_subterms_within_computations =
-              (uu___270_1747.pure_subterms_within_computations);
-            simplify = (uu___270_1747.simplify);
-            erase_universes = (uu___270_1747.erase_universes);
-            allow_unbound_universes = (uu___270_1747.allow_unbound_universes);
-            reify_ = (uu___270_1747.reify_);
-            compress_uvars = (uu___270_1747.compress_uvars);
-            no_full_norm = (uu___270_1747.no_full_norm);
-            check_no_uvars = (uu___270_1747.check_no_uvars);
-            unmeta = (uu___270_1747.unmeta);
-            unascribe = (uu___270_1747.unascribe);
-            in_full_norm_request = (uu___270_1747.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___270_1747.weakly_reduce_scrutinee)
+              (uu___271_1747.pure_subterms_within_computations);
+            simplify = (uu___271_1747.simplify);
+            erase_universes = (uu___271_1747.erase_universes);
+            allow_unbound_universes = (uu___271_1747.allow_unbound_universes);
+            reify_ = (uu___271_1747.reify_);
+            compress_uvars = (uu___271_1747.compress_uvars);
+            no_full_norm = (uu___271_1747.no_full_norm);
+            check_no_uvars = (uu___271_1747.check_no_uvars);
+            unmeta = (uu___271_1747.unmeta);
+            unascribe = (uu___271_1747.unascribe);
+            in_full_norm_request = (uu___271_1747.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___271_1747.weakly_reduce_scrutinee)
           }
       | Exclude uu____1748 -> failwith "Bad exclude"
       | Weak  ->
-          let uu___271_1749 = fs  in
+          let uu___272_1749 = fs  in
           {
-            beta = (uu___271_1749.beta);
-            iota = (uu___271_1749.iota);
-            zeta = (uu___271_1749.zeta);
+            beta = (uu___272_1749.beta);
+            iota = (uu___272_1749.iota);
+            zeta = (uu___272_1749.zeta);
             weak = true;
-            hnf = (uu___271_1749.hnf);
-            primops = (uu___271_1749.primops);
-            do_not_unfold_pure_lets = (uu___271_1749.do_not_unfold_pure_lets);
-            unfold_until = (uu___271_1749.unfold_until);
-            unfold_only = (uu___271_1749.unfold_only);
-            unfold_fully = (uu___271_1749.unfold_fully);
-            unfold_attr = (uu___271_1749.unfold_attr);
-            unfold_tac = (uu___271_1749.unfold_tac);
+            hnf = (uu___272_1749.hnf);
+            primops = (uu___272_1749.primops);
+            do_not_unfold_pure_lets = (uu___272_1749.do_not_unfold_pure_lets);
+            unfold_until = (uu___272_1749.unfold_until);
+            unfold_only = (uu___272_1749.unfold_only);
+            unfold_fully = (uu___272_1749.unfold_fully);
+            unfold_attr = (uu___272_1749.unfold_attr);
+            unfold_tac = (uu___272_1749.unfold_tac);
             pure_subterms_within_computations =
-              (uu___271_1749.pure_subterms_within_computations);
-            simplify = (uu___271_1749.simplify);
-            erase_universes = (uu___271_1749.erase_universes);
-            allow_unbound_universes = (uu___271_1749.allow_unbound_universes);
-            reify_ = (uu___271_1749.reify_);
-            compress_uvars = (uu___271_1749.compress_uvars);
-            no_full_norm = (uu___271_1749.no_full_norm);
-            check_no_uvars = (uu___271_1749.check_no_uvars);
-            unmeta = (uu___271_1749.unmeta);
-            unascribe = (uu___271_1749.unascribe);
-            in_full_norm_request = (uu___271_1749.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___271_1749.weakly_reduce_scrutinee)
+              (uu___272_1749.pure_subterms_within_computations);
+            simplify = (uu___272_1749.simplify);
+            erase_universes = (uu___272_1749.erase_universes);
+            allow_unbound_universes = (uu___272_1749.allow_unbound_universes);
+            reify_ = (uu___272_1749.reify_);
+            compress_uvars = (uu___272_1749.compress_uvars);
+            no_full_norm = (uu___272_1749.no_full_norm);
+            check_no_uvars = (uu___272_1749.check_no_uvars);
+            unmeta = (uu___272_1749.unmeta);
+            unascribe = (uu___272_1749.unascribe);
+            in_full_norm_request = (uu___272_1749.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___272_1749.weakly_reduce_scrutinee)
           }
       | HNF  ->
-          let uu___272_1750 = fs  in
+          let uu___273_1750 = fs  in
           {
-            beta = (uu___272_1750.beta);
-            iota = (uu___272_1750.iota);
-            zeta = (uu___272_1750.zeta);
-            weak = (uu___272_1750.weak);
+            beta = (uu___273_1750.beta);
+            iota = (uu___273_1750.iota);
+            zeta = (uu___273_1750.zeta);
+            weak = (uu___273_1750.weak);
             hnf = true;
-            primops = (uu___272_1750.primops);
-            do_not_unfold_pure_lets = (uu___272_1750.do_not_unfold_pure_lets);
-            unfold_until = (uu___272_1750.unfold_until);
-            unfold_only = (uu___272_1750.unfold_only);
-            unfold_fully = (uu___272_1750.unfold_fully);
-            unfold_attr = (uu___272_1750.unfold_attr);
-            unfold_tac = (uu___272_1750.unfold_tac);
+            primops = (uu___273_1750.primops);
+            do_not_unfold_pure_lets = (uu___273_1750.do_not_unfold_pure_lets);
+            unfold_until = (uu___273_1750.unfold_until);
+            unfold_only = (uu___273_1750.unfold_only);
+            unfold_fully = (uu___273_1750.unfold_fully);
+            unfold_attr = (uu___273_1750.unfold_attr);
+            unfold_tac = (uu___273_1750.unfold_tac);
             pure_subterms_within_computations =
-              (uu___272_1750.pure_subterms_within_computations);
-            simplify = (uu___272_1750.simplify);
-            erase_universes = (uu___272_1750.erase_universes);
-            allow_unbound_universes = (uu___272_1750.allow_unbound_universes);
-            reify_ = (uu___272_1750.reify_);
-            compress_uvars = (uu___272_1750.compress_uvars);
-            no_full_norm = (uu___272_1750.no_full_norm);
-            check_no_uvars = (uu___272_1750.check_no_uvars);
-            unmeta = (uu___272_1750.unmeta);
-            unascribe = (uu___272_1750.unascribe);
-            in_full_norm_request = (uu___272_1750.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___272_1750.weakly_reduce_scrutinee)
+              (uu___273_1750.pure_subterms_within_computations);
+            simplify = (uu___273_1750.simplify);
+            erase_universes = (uu___273_1750.erase_universes);
+            allow_unbound_universes = (uu___273_1750.allow_unbound_universes);
+            reify_ = (uu___273_1750.reify_);
+            compress_uvars = (uu___273_1750.compress_uvars);
+            no_full_norm = (uu___273_1750.no_full_norm);
+            check_no_uvars = (uu___273_1750.check_no_uvars);
+            unmeta = (uu___273_1750.unmeta);
+            unascribe = (uu___273_1750.unascribe);
+            in_full_norm_request = (uu___273_1750.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___273_1750.weakly_reduce_scrutinee)
           }
       | Primops  ->
-          let uu___273_1751 = fs  in
+          let uu___274_1751 = fs  in
           {
-            beta = (uu___273_1751.beta);
-            iota = (uu___273_1751.iota);
-            zeta = (uu___273_1751.zeta);
-            weak = (uu___273_1751.weak);
-            hnf = (uu___273_1751.hnf);
+            beta = (uu___274_1751.beta);
+            iota = (uu___274_1751.iota);
+            zeta = (uu___274_1751.zeta);
+            weak = (uu___274_1751.weak);
+            hnf = (uu___274_1751.hnf);
             primops = true;
-            do_not_unfold_pure_lets = (uu___273_1751.do_not_unfold_pure_lets);
-            unfold_until = (uu___273_1751.unfold_until);
-            unfold_only = (uu___273_1751.unfold_only);
-            unfold_fully = (uu___273_1751.unfold_fully);
-            unfold_attr = (uu___273_1751.unfold_attr);
-            unfold_tac = (uu___273_1751.unfold_tac);
+            do_not_unfold_pure_lets = (uu___274_1751.do_not_unfold_pure_lets);
+            unfold_until = (uu___274_1751.unfold_until);
+            unfold_only = (uu___274_1751.unfold_only);
+            unfold_fully = (uu___274_1751.unfold_fully);
+            unfold_attr = (uu___274_1751.unfold_attr);
+            unfold_tac = (uu___274_1751.unfold_tac);
             pure_subterms_within_computations =
-              (uu___273_1751.pure_subterms_within_computations);
-            simplify = (uu___273_1751.simplify);
-            erase_universes = (uu___273_1751.erase_universes);
-            allow_unbound_universes = (uu___273_1751.allow_unbound_universes);
-            reify_ = (uu___273_1751.reify_);
-            compress_uvars = (uu___273_1751.compress_uvars);
-            no_full_norm = (uu___273_1751.no_full_norm);
-            check_no_uvars = (uu___273_1751.check_no_uvars);
-            unmeta = (uu___273_1751.unmeta);
-            unascribe = (uu___273_1751.unascribe);
-            in_full_norm_request = (uu___273_1751.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___273_1751.weakly_reduce_scrutinee)
+              (uu___274_1751.pure_subterms_within_computations);
+            simplify = (uu___274_1751.simplify);
+            erase_universes = (uu___274_1751.erase_universes);
+            allow_unbound_universes = (uu___274_1751.allow_unbound_universes);
+            reify_ = (uu___274_1751.reify_);
+            compress_uvars = (uu___274_1751.compress_uvars);
+            no_full_norm = (uu___274_1751.no_full_norm);
+            check_no_uvars = (uu___274_1751.check_no_uvars);
+            unmeta = (uu___274_1751.unmeta);
+            unascribe = (uu___274_1751.unascribe);
+            in_full_norm_request = (uu___274_1751.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___274_1751.weakly_reduce_scrutinee)
           }
       | Eager_unfolding  -> fs
       | Inlining  -> fs
       | DoNotUnfoldPureLets  ->
-          let uu___274_1752 = fs  in
+          let uu___275_1752 = fs  in
           {
-            beta = (uu___274_1752.beta);
-            iota = (uu___274_1752.iota);
-            zeta = (uu___274_1752.zeta);
-            weak = (uu___274_1752.weak);
-            hnf = (uu___274_1752.hnf);
-            primops = (uu___274_1752.primops);
+            beta = (uu___275_1752.beta);
+            iota = (uu___275_1752.iota);
+            zeta = (uu___275_1752.zeta);
+            weak = (uu___275_1752.weak);
+            hnf = (uu___275_1752.hnf);
+            primops = (uu___275_1752.primops);
             do_not_unfold_pure_lets = true;
-            unfold_until = (uu___274_1752.unfold_until);
-            unfold_only = (uu___274_1752.unfold_only);
-            unfold_fully = (uu___274_1752.unfold_fully);
-            unfold_attr = (uu___274_1752.unfold_attr);
-            unfold_tac = (uu___274_1752.unfold_tac);
+            unfold_until = (uu___275_1752.unfold_until);
+            unfold_only = (uu___275_1752.unfold_only);
+            unfold_fully = (uu___275_1752.unfold_fully);
+            unfold_attr = (uu___275_1752.unfold_attr);
+            unfold_tac = (uu___275_1752.unfold_tac);
             pure_subterms_within_computations =
-              (uu___274_1752.pure_subterms_within_computations);
-            simplify = (uu___274_1752.simplify);
-            erase_universes = (uu___274_1752.erase_universes);
-            allow_unbound_universes = (uu___274_1752.allow_unbound_universes);
-            reify_ = (uu___274_1752.reify_);
-            compress_uvars = (uu___274_1752.compress_uvars);
-            no_full_norm = (uu___274_1752.no_full_norm);
-            check_no_uvars = (uu___274_1752.check_no_uvars);
-            unmeta = (uu___274_1752.unmeta);
-            unascribe = (uu___274_1752.unascribe);
-            in_full_norm_request = (uu___274_1752.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___274_1752.weakly_reduce_scrutinee)
+              (uu___275_1752.pure_subterms_within_computations);
+            simplify = (uu___275_1752.simplify);
+            erase_universes = (uu___275_1752.erase_universes);
+            allow_unbound_universes = (uu___275_1752.allow_unbound_universes);
+            reify_ = (uu___275_1752.reify_);
+            compress_uvars = (uu___275_1752.compress_uvars);
+            no_full_norm = (uu___275_1752.no_full_norm);
+            check_no_uvars = (uu___275_1752.check_no_uvars);
+            unmeta = (uu___275_1752.unmeta);
+            unascribe = (uu___275_1752.unascribe);
+            in_full_norm_request = (uu___275_1752.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___275_1752.weakly_reduce_scrutinee)
           }
       | UnfoldUntil d ->
-          let uu___275_1754 = fs  in
+          let uu___276_1754 = fs  in
           {
-            beta = (uu___275_1754.beta);
-            iota = (uu___275_1754.iota);
-            zeta = (uu___275_1754.zeta);
-            weak = (uu___275_1754.weak);
-            hnf = (uu___275_1754.hnf);
-            primops = (uu___275_1754.primops);
-            do_not_unfold_pure_lets = (uu___275_1754.do_not_unfold_pure_lets);
+            beta = (uu___276_1754.beta);
+            iota = (uu___276_1754.iota);
+            zeta = (uu___276_1754.zeta);
+            weak = (uu___276_1754.weak);
+            hnf = (uu___276_1754.hnf);
+            primops = (uu___276_1754.primops);
+            do_not_unfold_pure_lets = (uu___276_1754.do_not_unfold_pure_lets);
             unfold_until = (FStar_Pervasives_Native.Some d);
-            unfold_only = (uu___275_1754.unfold_only);
-            unfold_fully = (uu___275_1754.unfold_fully);
-            unfold_attr = (uu___275_1754.unfold_attr);
-            unfold_tac = (uu___275_1754.unfold_tac);
+            unfold_only = (uu___276_1754.unfold_only);
+            unfold_fully = (uu___276_1754.unfold_fully);
+            unfold_attr = (uu___276_1754.unfold_attr);
+            unfold_tac = (uu___276_1754.unfold_tac);
             pure_subterms_within_computations =
-              (uu___275_1754.pure_subterms_within_computations);
-            simplify = (uu___275_1754.simplify);
-            erase_universes = (uu___275_1754.erase_universes);
-            allow_unbound_universes = (uu___275_1754.allow_unbound_universes);
-            reify_ = (uu___275_1754.reify_);
-            compress_uvars = (uu___275_1754.compress_uvars);
-            no_full_norm = (uu___275_1754.no_full_norm);
-            check_no_uvars = (uu___275_1754.check_no_uvars);
-            unmeta = (uu___275_1754.unmeta);
-            unascribe = (uu___275_1754.unascribe);
-            in_full_norm_request = (uu___275_1754.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___275_1754.weakly_reduce_scrutinee)
+              (uu___276_1754.pure_subterms_within_computations);
+            simplify = (uu___276_1754.simplify);
+            erase_universes = (uu___276_1754.erase_universes);
+            allow_unbound_universes = (uu___276_1754.allow_unbound_universes);
+            reify_ = (uu___276_1754.reify_);
+            compress_uvars = (uu___276_1754.compress_uvars);
+            no_full_norm = (uu___276_1754.no_full_norm);
+            check_no_uvars = (uu___276_1754.check_no_uvars);
+            unmeta = (uu___276_1754.unmeta);
+            unascribe = (uu___276_1754.unascribe);
+            in_full_norm_request = (uu___276_1754.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___276_1754.weakly_reduce_scrutinee)
           }
       | UnfoldOnly lids ->
-          let uu___276_1758 = fs  in
+          let uu___277_1758 = fs  in
           {
-            beta = (uu___276_1758.beta);
-            iota = (uu___276_1758.iota);
-            zeta = (uu___276_1758.zeta);
-            weak = (uu___276_1758.weak);
-            hnf = (uu___276_1758.hnf);
-            primops = (uu___276_1758.primops);
-            do_not_unfold_pure_lets = (uu___276_1758.do_not_unfold_pure_lets);
-            unfold_until = (uu___276_1758.unfold_until);
+            beta = (uu___277_1758.beta);
+            iota = (uu___277_1758.iota);
+            zeta = (uu___277_1758.zeta);
+            weak = (uu___277_1758.weak);
+            hnf = (uu___277_1758.hnf);
+            primops = (uu___277_1758.primops);
+            do_not_unfold_pure_lets = (uu___277_1758.do_not_unfold_pure_lets);
+            unfold_until = (uu___277_1758.unfold_until);
             unfold_only = (FStar_Pervasives_Native.Some lids);
-            unfold_fully = (uu___276_1758.unfold_fully);
-            unfold_attr = (uu___276_1758.unfold_attr);
-            unfold_tac = (uu___276_1758.unfold_tac);
+            unfold_fully = (uu___277_1758.unfold_fully);
+            unfold_attr = (uu___277_1758.unfold_attr);
+            unfold_tac = (uu___277_1758.unfold_tac);
             pure_subterms_within_computations =
-              (uu___276_1758.pure_subterms_within_computations);
-            simplify = (uu___276_1758.simplify);
-            erase_universes = (uu___276_1758.erase_universes);
-            allow_unbound_universes = (uu___276_1758.allow_unbound_universes);
-            reify_ = (uu___276_1758.reify_);
-            compress_uvars = (uu___276_1758.compress_uvars);
-            no_full_norm = (uu___276_1758.no_full_norm);
-            check_no_uvars = (uu___276_1758.check_no_uvars);
-            unmeta = (uu___276_1758.unmeta);
-            unascribe = (uu___276_1758.unascribe);
-            in_full_norm_request = (uu___276_1758.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___276_1758.weakly_reduce_scrutinee)
+              (uu___277_1758.pure_subterms_within_computations);
+            simplify = (uu___277_1758.simplify);
+            erase_universes = (uu___277_1758.erase_universes);
+            allow_unbound_universes = (uu___277_1758.allow_unbound_universes);
+            reify_ = (uu___277_1758.reify_);
+            compress_uvars = (uu___277_1758.compress_uvars);
+            no_full_norm = (uu___277_1758.no_full_norm);
+            check_no_uvars = (uu___277_1758.check_no_uvars);
+            unmeta = (uu___277_1758.unmeta);
+            unascribe = (uu___277_1758.unascribe);
+            in_full_norm_request = (uu___277_1758.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___277_1758.weakly_reduce_scrutinee)
           }
       | UnfoldFully lids ->
-          let uu___277_1764 = fs  in
+          let uu___278_1764 = fs  in
           {
-            beta = (uu___277_1764.beta);
-            iota = (uu___277_1764.iota);
-            zeta = (uu___277_1764.zeta);
-            weak = (uu___277_1764.weak);
-            hnf = (uu___277_1764.hnf);
-            primops = (uu___277_1764.primops);
-            do_not_unfold_pure_lets = (uu___277_1764.do_not_unfold_pure_lets);
-            unfold_until = (uu___277_1764.unfold_until);
-            unfold_only = (uu___277_1764.unfold_only);
+            beta = (uu___278_1764.beta);
+            iota = (uu___278_1764.iota);
+            zeta = (uu___278_1764.zeta);
+            weak = (uu___278_1764.weak);
+            hnf = (uu___278_1764.hnf);
+            primops = (uu___278_1764.primops);
+            do_not_unfold_pure_lets = (uu___278_1764.do_not_unfold_pure_lets);
+            unfold_until = (uu___278_1764.unfold_until);
+            unfold_only = (uu___278_1764.unfold_only);
             unfold_fully = (FStar_Pervasives_Native.Some lids);
-            unfold_attr = (uu___277_1764.unfold_attr);
-            unfold_tac = (uu___277_1764.unfold_tac);
+            unfold_attr = (uu___278_1764.unfold_attr);
+            unfold_tac = (uu___278_1764.unfold_tac);
             pure_subterms_within_computations =
-              (uu___277_1764.pure_subterms_within_computations);
-            simplify = (uu___277_1764.simplify);
-            erase_universes = (uu___277_1764.erase_universes);
-            allow_unbound_universes = (uu___277_1764.allow_unbound_universes);
-            reify_ = (uu___277_1764.reify_);
-            compress_uvars = (uu___277_1764.compress_uvars);
-            no_full_norm = (uu___277_1764.no_full_norm);
-            check_no_uvars = (uu___277_1764.check_no_uvars);
-            unmeta = (uu___277_1764.unmeta);
-            unascribe = (uu___277_1764.unascribe);
-            in_full_norm_request = (uu___277_1764.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___277_1764.weakly_reduce_scrutinee)
+              (uu___278_1764.pure_subterms_within_computations);
+            simplify = (uu___278_1764.simplify);
+            erase_universes = (uu___278_1764.erase_universes);
+            allow_unbound_universes = (uu___278_1764.allow_unbound_universes);
+            reify_ = (uu___278_1764.reify_);
+            compress_uvars = (uu___278_1764.compress_uvars);
+            no_full_norm = (uu___278_1764.no_full_norm);
+            check_no_uvars = (uu___278_1764.check_no_uvars);
+            unmeta = (uu___278_1764.unmeta);
+            unascribe = (uu___278_1764.unascribe);
+            in_full_norm_request = (uu___278_1764.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___278_1764.weakly_reduce_scrutinee)
           }
       | UnfoldAttr attr ->
-          let uu___278_1768 = fs  in
+          let uu___279_1768 = fs  in
           {
-            beta = (uu___278_1768.beta);
-            iota = (uu___278_1768.iota);
-            zeta = (uu___278_1768.zeta);
-            weak = (uu___278_1768.weak);
-            hnf = (uu___278_1768.hnf);
-            primops = (uu___278_1768.primops);
-            do_not_unfold_pure_lets = (uu___278_1768.do_not_unfold_pure_lets);
-            unfold_until = (uu___278_1768.unfold_until);
-            unfold_only = (uu___278_1768.unfold_only);
-            unfold_fully = (uu___278_1768.unfold_fully);
+            beta = (uu___279_1768.beta);
+            iota = (uu___279_1768.iota);
+            zeta = (uu___279_1768.zeta);
+            weak = (uu___279_1768.weak);
+            hnf = (uu___279_1768.hnf);
+            primops = (uu___279_1768.primops);
+            do_not_unfold_pure_lets = (uu___279_1768.do_not_unfold_pure_lets);
+            unfold_until = (uu___279_1768.unfold_until);
+            unfold_only = (uu___279_1768.unfold_only);
+            unfold_fully = (uu___279_1768.unfold_fully);
             unfold_attr = (add_opt attr fs.unfold_attr);
-            unfold_tac = (uu___278_1768.unfold_tac);
+            unfold_tac = (uu___279_1768.unfold_tac);
             pure_subterms_within_computations =
-              (uu___278_1768.pure_subterms_within_computations);
-            simplify = (uu___278_1768.simplify);
-            erase_universes = (uu___278_1768.erase_universes);
-            allow_unbound_universes = (uu___278_1768.allow_unbound_universes);
-            reify_ = (uu___278_1768.reify_);
-            compress_uvars = (uu___278_1768.compress_uvars);
-            no_full_norm = (uu___278_1768.no_full_norm);
-            check_no_uvars = (uu___278_1768.check_no_uvars);
-            unmeta = (uu___278_1768.unmeta);
-            unascribe = (uu___278_1768.unascribe);
-            in_full_norm_request = (uu___278_1768.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___278_1768.weakly_reduce_scrutinee)
+              (uu___279_1768.pure_subterms_within_computations);
+            simplify = (uu___279_1768.simplify);
+            erase_universes = (uu___279_1768.erase_universes);
+            allow_unbound_universes = (uu___279_1768.allow_unbound_universes);
+            reify_ = (uu___279_1768.reify_);
+            compress_uvars = (uu___279_1768.compress_uvars);
+            no_full_norm = (uu___279_1768.no_full_norm);
+            check_no_uvars = (uu___279_1768.check_no_uvars);
+            unmeta = (uu___279_1768.unmeta);
+            unascribe = (uu___279_1768.unascribe);
+            in_full_norm_request = (uu___279_1768.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___279_1768.weakly_reduce_scrutinee)
           }
       | UnfoldTac  ->
-          let uu___279_1769 = fs  in
+          let uu___280_1769 = fs  in
           {
-            beta = (uu___279_1769.beta);
-            iota = (uu___279_1769.iota);
-            zeta = (uu___279_1769.zeta);
-            weak = (uu___279_1769.weak);
-            hnf = (uu___279_1769.hnf);
-            primops = (uu___279_1769.primops);
-            do_not_unfold_pure_lets = (uu___279_1769.do_not_unfold_pure_lets);
-            unfold_until = (uu___279_1769.unfold_until);
-            unfold_only = (uu___279_1769.unfold_only);
-            unfold_fully = (uu___279_1769.unfold_fully);
-            unfold_attr = (uu___279_1769.unfold_attr);
+            beta = (uu___280_1769.beta);
+            iota = (uu___280_1769.iota);
+            zeta = (uu___280_1769.zeta);
+            weak = (uu___280_1769.weak);
+            hnf = (uu___280_1769.hnf);
+            primops = (uu___280_1769.primops);
+            do_not_unfold_pure_lets = (uu___280_1769.do_not_unfold_pure_lets);
+            unfold_until = (uu___280_1769.unfold_until);
+            unfold_only = (uu___280_1769.unfold_only);
+            unfold_fully = (uu___280_1769.unfold_fully);
+            unfold_attr = (uu___280_1769.unfold_attr);
             unfold_tac = true;
             pure_subterms_within_computations =
-              (uu___279_1769.pure_subterms_within_computations);
-            simplify = (uu___279_1769.simplify);
-            erase_universes = (uu___279_1769.erase_universes);
-            allow_unbound_universes = (uu___279_1769.allow_unbound_universes);
-            reify_ = (uu___279_1769.reify_);
-            compress_uvars = (uu___279_1769.compress_uvars);
-            no_full_norm = (uu___279_1769.no_full_norm);
-            check_no_uvars = (uu___279_1769.check_no_uvars);
-            unmeta = (uu___279_1769.unmeta);
-            unascribe = (uu___279_1769.unascribe);
-            in_full_norm_request = (uu___279_1769.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___279_1769.weakly_reduce_scrutinee)
+              (uu___280_1769.pure_subterms_within_computations);
+            simplify = (uu___280_1769.simplify);
+            erase_universes = (uu___280_1769.erase_universes);
+            allow_unbound_universes = (uu___280_1769.allow_unbound_universes);
+            reify_ = (uu___280_1769.reify_);
+            compress_uvars = (uu___280_1769.compress_uvars);
+            no_full_norm = (uu___280_1769.no_full_norm);
+            check_no_uvars = (uu___280_1769.check_no_uvars);
+            unmeta = (uu___280_1769.unmeta);
+            unascribe = (uu___280_1769.unascribe);
+            in_full_norm_request = (uu___280_1769.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___280_1769.weakly_reduce_scrutinee)
           }
       | PureSubtermsWithinComputations  ->
-          let uu___280_1770 = fs  in
+          let uu___281_1770 = fs  in
           {
-            beta = (uu___280_1770.beta);
-            iota = (uu___280_1770.iota);
-            zeta = (uu___280_1770.zeta);
-            weak = (uu___280_1770.weak);
-            hnf = (uu___280_1770.hnf);
-            primops = (uu___280_1770.primops);
-            do_not_unfold_pure_lets = (uu___280_1770.do_not_unfold_pure_lets);
-            unfold_until = (uu___280_1770.unfold_until);
-            unfold_only = (uu___280_1770.unfold_only);
-            unfold_fully = (uu___280_1770.unfold_fully);
-            unfold_attr = (uu___280_1770.unfold_attr);
-            unfold_tac = (uu___280_1770.unfold_tac);
+            beta = (uu___281_1770.beta);
+            iota = (uu___281_1770.iota);
+            zeta = (uu___281_1770.zeta);
+            weak = (uu___281_1770.weak);
+            hnf = (uu___281_1770.hnf);
+            primops = (uu___281_1770.primops);
+            do_not_unfold_pure_lets = (uu___281_1770.do_not_unfold_pure_lets);
+            unfold_until = (uu___281_1770.unfold_until);
+            unfold_only = (uu___281_1770.unfold_only);
+            unfold_fully = (uu___281_1770.unfold_fully);
+            unfold_attr = (uu___281_1770.unfold_attr);
+            unfold_tac = (uu___281_1770.unfold_tac);
             pure_subterms_within_computations = true;
-            simplify = (uu___280_1770.simplify);
-            erase_universes = (uu___280_1770.erase_universes);
-            allow_unbound_universes = (uu___280_1770.allow_unbound_universes);
-            reify_ = (uu___280_1770.reify_);
-            compress_uvars = (uu___280_1770.compress_uvars);
-            no_full_norm = (uu___280_1770.no_full_norm);
-            check_no_uvars = (uu___280_1770.check_no_uvars);
-            unmeta = (uu___280_1770.unmeta);
-            unascribe = (uu___280_1770.unascribe);
-            in_full_norm_request = (uu___280_1770.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___280_1770.weakly_reduce_scrutinee)
+            simplify = (uu___281_1770.simplify);
+            erase_universes = (uu___281_1770.erase_universes);
+            allow_unbound_universes = (uu___281_1770.allow_unbound_universes);
+            reify_ = (uu___281_1770.reify_);
+            compress_uvars = (uu___281_1770.compress_uvars);
+            no_full_norm = (uu___281_1770.no_full_norm);
+            check_no_uvars = (uu___281_1770.check_no_uvars);
+            unmeta = (uu___281_1770.unmeta);
+            unascribe = (uu___281_1770.unascribe);
+            in_full_norm_request = (uu___281_1770.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___281_1770.weakly_reduce_scrutinee)
           }
       | Simplify  ->
-          let uu___281_1771 = fs  in
+          let uu___282_1771 = fs  in
           {
-            beta = (uu___281_1771.beta);
-            iota = (uu___281_1771.iota);
-            zeta = (uu___281_1771.zeta);
-            weak = (uu___281_1771.weak);
-            hnf = (uu___281_1771.hnf);
-            primops = (uu___281_1771.primops);
-            do_not_unfold_pure_lets = (uu___281_1771.do_not_unfold_pure_lets);
-            unfold_until = (uu___281_1771.unfold_until);
-            unfold_only = (uu___281_1771.unfold_only);
-            unfold_fully = (uu___281_1771.unfold_fully);
-            unfold_attr = (uu___281_1771.unfold_attr);
-            unfold_tac = (uu___281_1771.unfold_tac);
+            beta = (uu___282_1771.beta);
+            iota = (uu___282_1771.iota);
+            zeta = (uu___282_1771.zeta);
+            weak = (uu___282_1771.weak);
+            hnf = (uu___282_1771.hnf);
+            primops = (uu___282_1771.primops);
+            do_not_unfold_pure_lets = (uu___282_1771.do_not_unfold_pure_lets);
+            unfold_until = (uu___282_1771.unfold_until);
+            unfold_only = (uu___282_1771.unfold_only);
+            unfold_fully = (uu___282_1771.unfold_fully);
+            unfold_attr = (uu___282_1771.unfold_attr);
+            unfold_tac = (uu___282_1771.unfold_tac);
             pure_subterms_within_computations =
-              (uu___281_1771.pure_subterms_within_computations);
+              (uu___282_1771.pure_subterms_within_computations);
             simplify = true;
-            erase_universes = (uu___281_1771.erase_universes);
-            allow_unbound_universes = (uu___281_1771.allow_unbound_universes);
-            reify_ = (uu___281_1771.reify_);
-            compress_uvars = (uu___281_1771.compress_uvars);
-            no_full_norm = (uu___281_1771.no_full_norm);
-            check_no_uvars = (uu___281_1771.check_no_uvars);
-            unmeta = (uu___281_1771.unmeta);
-            unascribe = (uu___281_1771.unascribe);
-            in_full_norm_request = (uu___281_1771.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___281_1771.weakly_reduce_scrutinee)
+            erase_universes = (uu___282_1771.erase_universes);
+            allow_unbound_universes = (uu___282_1771.allow_unbound_universes);
+            reify_ = (uu___282_1771.reify_);
+            compress_uvars = (uu___282_1771.compress_uvars);
+            no_full_norm = (uu___282_1771.no_full_norm);
+            check_no_uvars = (uu___282_1771.check_no_uvars);
+            unmeta = (uu___282_1771.unmeta);
+            unascribe = (uu___282_1771.unascribe);
+            in_full_norm_request = (uu___282_1771.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___282_1771.weakly_reduce_scrutinee)
           }
       | EraseUniverses  ->
-          let uu___282_1772 = fs  in
+          let uu___283_1772 = fs  in
           {
-            beta = (uu___282_1772.beta);
-            iota = (uu___282_1772.iota);
-            zeta = (uu___282_1772.zeta);
-            weak = (uu___282_1772.weak);
-            hnf = (uu___282_1772.hnf);
-            primops = (uu___282_1772.primops);
-            do_not_unfold_pure_lets = (uu___282_1772.do_not_unfold_pure_lets);
-            unfold_until = (uu___282_1772.unfold_until);
-            unfold_only = (uu___282_1772.unfold_only);
-            unfold_fully = (uu___282_1772.unfold_fully);
-            unfold_attr = (uu___282_1772.unfold_attr);
-            unfold_tac = (uu___282_1772.unfold_tac);
+            beta = (uu___283_1772.beta);
+            iota = (uu___283_1772.iota);
+            zeta = (uu___283_1772.zeta);
+            weak = (uu___283_1772.weak);
+            hnf = (uu___283_1772.hnf);
+            primops = (uu___283_1772.primops);
+            do_not_unfold_pure_lets = (uu___283_1772.do_not_unfold_pure_lets);
+            unfold_until = (uu___283_1772.unfold_until);
+            unfold_only = (uu___283_1772.unfold_only);
+            unfold_fully = (uu___283_1772.unfold_fully);
+            unfold_attr = (uu___283_1772.unfold_attr);
+            unfold_tac = (uu___283_1772.unfold_tac);
             pure_subterms_within_computations =
-              (uu___282_1772.pure_subterms_within_computations);
-            simplify = (uu___282_1772.simplify);
+              (uu___283_1772.pure_subterms_within_computations);
+            simplify = (uu___283_1772.simplify);
             erase_universes = true;
-            allow_unbound_universes = (uu___282_1772.allow_unbound_universes);
-            reify_ = (uu___282_1772.reify_);
-            compress_uvars = (uu___282_1772.compress_uvars);
-            no_full_norm = (uu___282_1772.no_full_norm);
-            check_no_uvars = (uu___282_1772.check_no_uvars);
-            unmeta = (uu___282_1772.unmeta);
-            unascribe = (uu___282_1772.unascribe);
-            in_full_norm_request = (uu___282_1772.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___282_1772.weakly_reduce_scrutinee)
+            allow_unbound_universes = (uu___283_1772.allow_unbound_universes);
+            reify_ = (uu___283_1772.reify_);
+            compress_uvars = (uu___283_1772.compress_uvars);
+            no_full_norm = (uu___283_1772.no_full_norm);
+            check_no_uvars = (uu___283_1772.check_no_uvars);
+            unmeta = (uu___283_1772.unmeta);
+            unascribe = (uu___283_1772.unascribe);
+            in_full_norm_request = (uu___283_1772.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___283_1772.weakly_reduce_scrutinee)
           }
       | AllowUnboundUniverses  ->
-          let uu___283_1773 = fs  in
+          let uu___284_1773 = fs  in
           {
-            beta = (uu___283_1773.beta);
-            iota = (uu___283_1773.iota);
-            zeta = (uu___283_1773.zeta);
-            weak = (uu___283_1773.weak);
-            hnf = (uu___283_1773.hnf);
-            primops = (uu___283_1773.primops);
-            do_not_unfold_pure_lets = (uu___283_1773.do_not_unfold_pure_lets);
-            unfold_until = (uu___283_1773.unfold_until);
-            unfold_only = (uu___283_1773.unfold_only);
-            unfold_fully = (uu___283_1773.unfold_fully);
-            unfold_attr = (uu___283_1773.unfold_attr);
-            unfold_tac = (uu___283_1773.unfold_tac);
+            beta = (uu___284_1773.beta);
+            iota = (uu___284_1773.iota);
+            zeta = (uu___284_1773.zeta);
+            weak = (uu___284_1773.weak);
+            hnf = (uu___284_1773.hnf);
+            primops = (uu___284_1773.primops);
+            do_not_unfold_pure_lets = (uu___284_1773.do_not_unfold_pure_lets);
+            unfold_until = (uu___284_1773.unfold_until);
+            unfold_only = (uu___284_1773.unfold_only);
+            unfold_fully = (uu___284_1773.unfold_fully);
+            unfold_attr = (uu___284_1773.unfold_attr);
+            unfold_tac = (uu___284_1773.unfold_tac);
             pure_subterms_within_computations =
-              (uu___283_1773.pure_subterms_within_computations);
-            simplify = (uu___283_1773.simplify);
-            erase_universes = (uu___283_1773.erase_universes);
+              (uu___284_1773.pure_subterms_within_computations);
+            simplify = (uu___284_1773.simplify);
+            erase_universes = (uu___284_1773.erase_universes);
             allow_unbound_universes = true;
-            reify_ = (uu___283_1773.reify_);
-            compress_uvars = (uu___283_1773.compress_uvars);
-            no_full_norm = (uu___283_1773.no_full_norm);
-            check_no_uvars = (uu___283_1773.check_no_uvars);
-            unmeta = (uu___283_1773.unmeta);
-            unascribe = (uu___283_1773.unascribe);
-            in_full_norm_request = (uu___283_1773.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___283_1773.weakly_reduce_scrutinee)
+            reify_ = (uu___284_1773.reify_);
+            compress_uvars = (uu___284_1773.compress_uvars);
+            no_full_norm = (uu___284_1773.no_full_norm);
+            check_no_uvars = (uu___284_1773.check_no_uvars);
+            unmeta = (uu___284_1773.unmeta);
+            unascribe = (uu___284_1773.unascribe);
+            in_full_norm_request = (uu___284_1773.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___284_1773.weakly_reduce_scrutinee)
           }
       | Reify  ->
-          let uu___284_1774 = fs  in
+          let uu___285_1774 = fs  in
           {
-            beta = (uu___284_1774.beta);
-            iota = (uu___284_1774.iota);
-            zeta = (uu___284_1774.zeta);
-            weak = (uu___284_1774.weak);
-            hnf = (uu___284_1774.hnf);
-            primops = (uu___284_1774.primops);
-            do_not_unfold_pure_lets = (uu___284_1774.do_not_unfold_pure_lets);
-            unfold_until = (uu___284_1774.unfold_until);
-            unfold_only = (uu___284_1774.unfold_only);
-            unfold_fully = (uu___284_1774.unfold_fully);
-            unfold_attr = (uu___284_1774.unfold_attr);
-            unfold_tac = (uu___284_1774.unfold_tac);
+            beta = (uu___285_1774.beta);
+            iota = (uu___285_1774.iota);
+            zeta = (uu___285_1774.zeta);
+            weak = (uu___285_1774.weak);
+            hnf = (uu___285_1774.hnf);
+            primops = (uu___285_1774.primops);
+            do_not_unfold_pure_lets = (uu___285_1774.do_not_unfold_pure_lets);
+            unfold_until = (uu___285_1774.unfold_until);
+            unfold_only = (uu___285_1774.unfold_only);
+            unfold_fully = (uu___285_1774.unfold_fully);
+            unfold_attr = (uu___285_1774.unfold_attr);
+            unfold_tac = (uu___285_1774.unfold_tac);
             pure_subterms_within_computations =
-              (uu___284_1774.pure_subterms_within_computations);
-            simplify = (uu___284_1774.simplify);
-            erase_universes = (uu___284_1774.erase_universes);
-            allow_unbound_universes = (uu___284_1774.allow_unbound_universes);
+              (uu___285_1774.pure_subterms_within_computations);
+            simplify = (uu___285_1774.simplify);
+            erase_universes = (uu___285_1774.erase_universes);
+            allow_unbound_universes = (uu___285_1774.allow_unbound_universes);
             reify_ = true;
-            compress_uvars = (uu___284_1774.compress_uvars);
-            no_full_norm = (uu___284_1774.no_full_norm);
-            check_no_uvars = (uu___284_1774.check_no_uvars);
-            unmeta = (uu___284_1774.unmeta);
-            unascribe = (uu___284_1774.unascribe);
-            in_full_norm_request = (uu___284_1774.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___284_1774.weakly_reduce_scrutinee)
+            compress_uvars = (uu___285_1774.compress_uvars);
+            no_full_norm = (uu___285_1774.no_full_norm);
+            check_no_uvars = (uu___285_1774.check_no_uvars);
+            unmeta = (uu___285_1774.unmeta);
+            unascribe = (uu___285_1774.unascribe);
+            in_full_norm_request = (uu___285_1774.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___285_1774.weakly_reduce_scrutinee)
           }
       | CompressUvars  ->
-          let uu___285_1775 = fs  in
+          let uu___286_1775 = fs  in
           {
-            beta = (uu___285_1775.beta);
-            iota = (uu___285_1775.iota);
-            zeta = (uu___285_1775.zeta);
-            weak = (uu___285_1775.weak);
-            hnf = (uu___285_1775.hnf);
-            primops = (uu___285_1775.primops);
-            do_not_unfold_pure_lets = (uu___285_1775.do_not_unfold_pure_lets);
-            unfold_until = (uu___285_1775.unfold_until);
-            unfold_only = (uu___285_1775.unfold_only);
-            unfold_fully = (uu___285_1775.unfold_fully);
-            unfold_attr = (uu___285_1775.unfold_attr);
-            unfold_tac = (uu___285_1775.unfold_tac);
+            beta = (uu___286_1775.beta);
+            iota = (uu___286_1775.iota);
+            zeta = (uu___286_1775.zeta);
+            weak = (uu___286_1775.weak);
+            hnf = (uu___286_1775.hnf);
+            primops = (uu___286_1775.primops);
+            do_not_unfold_pure_lets = (uu___286_1775.do_not_unfold_pure_lets);
+            unfold_until = (uu___286_1775.unfold_until);
+            unfold_only = (uu___286_1775.unfold_only);
+            unfold_fully = (uu___286_1775.unfold_fully);
+            unfold_attr = (uu___286_1775.unfold_attr);
+            unfold_tac = (uu___286_1775.unfold_tac);
             pure_subterms_within_computations =
-              (uu___285_1775.pure_subterms_within_computations);
-            simplify = (uu___285_1775.simplify);
-            erase_universes = (uu___285_1775.erase_universes);
-            allow_unbound_universes = (uu___285_1775.allow_unbound_universes);
-            reify_ = (uu___285_1775.reify_);
+              (uu___286_1775.pure_subterms_within_computations);
+            simplify = (uu___286_1775.simplify);
+            erase_universes = (uu___286_1775.erase_universes);
+            allow_unbound_universes = (uu___286_1775.allow_unbound_universes);
+            reify_ = (uu___286_1775.reify_);
             compress_uvars = true;
-            no_full_norm = (uu___285_1775.no_full_norm);
-            check_no_uvars = (uu___285_1775.check_no_uvars);
-            unmeta = (uu___285_1775.unmeta);
-            unascribe = (uu___285_1775.unascribe);
-            in_full_norm_request = (uu___285_1775.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___285_1775.weakly_reduce_scrutinee)
+            no_full_norm = (uu___286_1775.no_full_norm);
+            check_no_uvars = (uu___286_1775.check_no_uvars);
+            unmeta = (uu___286_1775.unmeta);
+            unascribe = (uu___286_1775.unascribe);
+            in_full_norm_request = (uu___286_1775.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___286_1775.weakly_reduce_scrutinee)
           }
       | NoFullNorm  ->
-          let uu___286_1776 = fs  in
+          let uu___287_1776 = fs  in
           {
-            beta = (uu___286_1776.beta);
-            iota = (uu___286_1776.iota);
-            zeta = (uu___286_1776.zeta);
-            weak = (uu___286_1776.weak);
-            hnf = (uu___286_1776.hnf);
-            primops = (uu___286_1776.primops);
-            do_not_unfold_pure_lets = (uu___286_1776.do_not_unfold_pure_lets);
-            unfold_until = (uu___286_1776.unfold_until);
-            unfold_only = (uu___286_1776.unfold_only);
-            unfold_fully = (uu___286_1776.unfold_fully);
-            unfold_attr = (uu___286_1776.unfold_attr);
-            unfold_tac = (uu___286_1776.unfold_tac);
+            beta = (uu___287_1776.beta);
+            iota = (uu___287_1776.iota);
+            zeta = (uu___287_1776.zeta);
+            weak = (uu___287_1776.weak);
+            hnf = (uu___287_1776.hnf);
+            primops = (uu___287_1776.primops);
+            do_not_unfold_pure_lets = (uu___287_1776.do_not_unfold_pure_lets);
+            unfold_until = (uu___287_1776.unfold_until);
+            unfold_only = (uu___287_1776.unfold_only);
+            unfold_fully = (uu___287_1776.unfold_fully);
+            unfold_attr = (uu___287_1776.unfold_attr);
+            unfold_tac = (uu___287_1776.unfold_tac);
             pure_subterms_within_computations =
-              (uu___286_1776.pure_subterms_within_computations);
-            simplify = (uu___286_1776.simplify);
-            erase_universes = (uu___286_1776.erase_universes);
-            allow_unbound_universes = (uu___286_1776.allow_unbound_universes);
-            reify_ = (uu___286_1776.reify_);
-            compress_uvars = (uu___286_1776.compress_uvars);
+              (uu___287_1776.pure_subterms_within_computations);
+            simplify = (uu___287_1776.simplify);
+            erase_universes = (uu___287_1776.erase_universes);
+            allow_unbound_universes = (uu___287_1776.allow_unbound_universes);
+            reify_ = (uu___287_1776.reify_);
+            compress_uvars = (uu___287_1776.compress_uvars);
             no_full_norm = true;
-            check_no_uvars = (uu___286_1776.check_no_uvars);
-            unmeta = (uu___286_1776.unmeta);
-            unascribe = (uu___286_1776.unascribe);
-            in_full_norm_request = (uu___286_1776.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___286_1776.weakly_reduce_scrutinee)
+            check_no_uvars = (uu___287_1776.check_no_uvars);
+            unmeta = (uu___287_1776.unmeta);
+            unascribe = (uu___287_1776.unascribe);
+            in_full_norm_request = (uu___287_1776.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___287_1776.weakly_reduce_scrutinee)
           }
       | CheckNoUvars  ->
-          let uu___287_1777 = fs  in
+          let uu___288_1777 = fs  in
           {
-            beta = (uu___287_1777.beta);
-            iota = (uu___287_1777.iota);
-            zeta = (uu___287_1777.zeta);
-            weak = (uu___287_1777.weak);
-            hnf = (uu___287_1777.hnf);
-            primops = (uu___287_1777.primops);
-            do_not_unfold_pure_lets = (uu___287_1777.do_not_unfold_pure_lets);
-            unfold_until = (uu___287_1777.unfold_until);
-            unfold_only = (uu___287_1777.unfold_only);
-            unfold_fully = (uu___287_1777.unfold_fully);
-            unfold_attr = (uu___287_1777.unfold_attr);
-            unfold_tac = (uu___287_1777.unfold_tac);
+            beta = (uu___288_1777.beta);
+            iota = (uu___288_1777.iota);
+            zeta = (uu___288_1777.zeta);
+            weak = (uu___288_1777.weak);
+            hnf = (uu___288_1777.hnf);
+            primops = (uu___288_1777.primops);
+            do_not_unfold_pure_lets = (uu___288_1777.do_not_unfold_pure_lets);
+            unfold_until = (uu___288_1777.unfold_until);
+            unfold_only = (uu___288_1777.unfold_only);
+            unfold_fully = (uu___288_1777.unfold_fully);
+            unfold_attr = (uu___288_1777.unfold_attr);
+            unfold_tac = (uu___288_1777.unfold_tac);
             pure_subterms_within_computations =
-              (uu___287_1777.pure_subterms_within_computations);
-            simplify = (uu___287_1777.simplify);
-            erase_universes = (uu___287_1777.erase_universes);
-            allow_unbound_universes = (uu___287_1777.allow_unbound_universes);
-            reify_ = (uu___287_1777.reify_);
-            compress_uvars = (uu___287_1777.compress_uvars);
-            no_full_norm = (uu___287_1777.no_full_norm);
+              (uu___288_1777.pure_subterms_within_computations);
+            simplify = (uu___288_1777.simplify);
+            erase_universes = (uu___288_1777.erase_universes);
+            allow_unbound_universes = (uu___288_1777.allow_unbound_universes);
+            reify_ = (uu___288_1777.reify_);
+            compress_uvars = (uu___288_1777.compress_uvars);
+            no_full_norm = (uu___288_1777.no_full_norm);
             check_no_uvars = true;
-            unmeta = (uu___287_1777.unmeta);
-            unascribe = (uu___287_1777.unascribe);
-            in_full_norm_request = (uu___287_1777.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___287_1777.weakly_reduce_scrutinee)
+            unmeta = (uu___288_1777.unmeta);
+            unascribe = (uu___288_1777.unascribe);
+            in_full_norm_request = (uu___288_1777.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___288_1777.weakly_reduce_scrutinee)
           }
       | Unmeta  ->
-          let uu___288_1778 = fs  in
+          let uu___289_1778 = fs  in
           {
-            beta = (uu___288_1778.beta);
-            iota = (uu___288_1778.iota);
-            zeta = (uu___288_1778.zeta);
-            weak = (uu___288_1778.weak);
-            hnf = (uu___288_1778.hnf);
-            primops = (uu___288_1778.primops);
-            do_not_unfold_pure_lets = (uu___288_1778.do_not_unfold_pure_lets);
-            unfold_until = (uu___288_1778.unfold_until);
-            unfold_only = (uu___288_1778.unfold_only);
-            unfold_fully = (uu___288_1778.unfold_fully);
-            unfold_attr = (uu___288_1778.unfold_attr);
-            unfold_tac = (uu___288_1778.unfold_tac);
+            beta = (uu___289_1778.beta);
+            iota = (uu___289_1778.iota);
+            zeta = (uu___289_1778.zeta);
+            weak = (uu___289_1778.weak);
+            hnf = (uu___289_1778.hnf);
+            primops = (uu___289_1778.primops);
+            do_not_unfold_pure_lets = (uu___289_1778.do_not_unfold_pure_lets);
+            unfold_until = (uu___289_1778.unfold_until);
+            unfold_only = (uu___289_1778.unfold_only);
+            unfold_fully = (uu___289_1778.unfold_fully);
+            unfold_attr = (uu___289_1778.unfold_attr);
+            unfold_tac = (uu___289_1778.unfold_tac);
             pure_subterms_within_computations =
-              (uu___288_1778.pure_subterms_within_computations);
-            simplify = (uu___288_1778.simplify);
-            erase_universes = (uu___288_1778.erase_universes);
-            allow_unbound_universes = (uu___288_1778.allow_unbound_universes);
-            reify_ = (uu___288_1778.reify_);
-            compress_uvars = (uu___288_1778.compress_uvars);
-            no_full_norm = (uu___288_1778.no_full_norm);
-            check_no_uvars = (uu___288_1778.check_no_uvars);
+              (uu___289_1778.pure_subterms_within_computations);
+            simplify = (uu___289_1778.simplify);
+            erase_universes = (uu___289_1778.erase_universes);
+            allow_unbound_universes = (uu___289_1778.allow_unbound_universes);
+            reify_ = (uu___289_1778.reify_);
+            compress_uvars = (uu___289_1778.compress_uvars);
+            no_full_norm = (uu___289_1778.no_full_norm);
+            check_no_uvars = (uu___289_1778.check_no_uvars);
             unmeta = true;
-            unascribe = (uu___288_1778.unascribe);
-            in_full_norm_request = (uu___288_1778.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___288_1778.weakly_reduce_scrutinee)
+            unascribe = (uu___289_1778.unascribe);
+            in_full_norm_request = (uu___289_1778.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___289_1778.weakly_reduce_scrutinee)
           }
       | Unascribe  ->
-          let uu___289_1779 = fs  in
+          let uu___290_1779 = fs  in
           {
-            beta = (uu___289_1779.beta);
-            iota = (uu___289_1779.iota);
-            zeta = (uu___289_1779.zeta);
-            weak = (uu___289_1779.weak);
-            hnf = (uu___289_1779.hnf);
-            primops = (uu___289_1779.primops);
-            do_not_unfold_pure_lets = (uu___289_1779.do_not_unfold_pure_lets);
-            unfold_until = (uu___289_1779.unfold_until);
-            unfold_only = (uu___289_1779.unfold_only);
-            unfold_fully = (uu___289_1779.unfold_fully);
-            unfold_attr = (uu___289_1779.unfold_attr);
-            unfold_tac = (uu___289_1779.unfold_tac);
+            beta = (uu___290_1779.beta);
+            iota = (uu___290_1779.iota);
+            zeta = (uu___290_1779.zeta);
+            weak = (uu___290_1779.weak);
+            hnf = (uu___290_1779.hnf);
+            primops = (uu___290_1779.primops);
+            do_not_unfold_pure_lets = (uu___290_1779.do_not_unfold_pure_lets);
+            unfold_until = (uu___290_1779.unfold_until);
+            unfold_only = (uu___290_1779.unfold_only);
+            unfold_fully = (uu___290_1779.unfold_fully);
+            unfold_attr = (uu___290_1779.unfold_attr);
+            unfold_tac = (uu___290_1779.unfold_tac);
             pure_subterms_within_computations =
-              (uu___289_1779.pure_subterms_within_computations);
-            simplify = (uu___289_1779.simplify);
-            erase_universes = (uu___289_1779.erase_universes);
-            allow_unbound_universes = (uu___289_1779.allow_unbound_universes);
-            reify_ = (uu___289_1779.reify_);
-            compress_uvars = (uu___289_1779.compress_uvars);
-            no_full_norm = (uu___289_1779.no_full_norm);
-            check_no_uvars = (uu___289_1779.check_no_uvars);
-            unmeta = (uu___289_1779.unmeta);
+              (uu___290_1779.pure_subterms_within_computations);
+            simplify = (uu___290_1779.simplify);
+            erase_universes = (uu___290_1779.erase_universes);
+            allow_unbound_universes = (uu___290_1779.allow_unbound_universes);
+            reify_ = (uu___290_1779.reify_);
+            compress_uvars = (uu___290_1779.compress_uvars);
+            no_full_norm = (uu___290_1779.no_full_norm);
+            check_no_uvars = (uu___290_1779.check_no_uvars);
+            unmeta = (uu___290_1779.unmeta);
             unascribe = true;
-            in_full_norm_request = (uu___289_1779.in_full_norm_request);
-            weakly_reduce_scrutinee = (uu___289_1779.weakly_reduce_scrutinee)
+            in_full_norm_request = (uu___290_1779.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___290_1779.weakly_reduce_scrutinee)
           }
   
 let rec (to_fsteps : step Prims.list -> fsteps) =
@@ -2194,8 +2194,8 @@ let rec (env_to_string :
     FStar_All.pipe_right uu____3487 (FStar_String.concat "; ")
 
 and (closure_to_string : closure -> Prims.string) =
-  fun uu___246_3519  ->
-    match uu___246_3519 with
+  fun uu___247_3519  ->
+    match uu___247_3519 with
     | Clos (env,t,uu____3522,uu____3523) ->
         let uu____3568 =
           FStar_All.pipe_right (FStar_List.length env)
@@ -2207,8 +2207,8 @@ and (closure_to_string : closure -> Prims.string) =
     | Dummy  -> "dummy"
 
 let (stack_elt_to_string : stack_elt -> Prims.string) =
-  fun uu___247_3581  ->
-    match uu___247_3581 with
+  fun uu___248_3581  ->
+    match uu___248_3581 with
     | Arg (c,uu____3583,uu____3584) ->
         let uu____3585 = closure_to_string c  in
         FStar_Util.format1 "Closure %s" uu____3585
@@ -2242,8 +2242,8 @@ let (log_primops : cfg -> (unit -> unit) -> unit) =
 let (log_unfolding : cfg -> (unit -> unit) -> unit) =
   fun cfg  -> fun f  -> if (cfg.debug).unfolding then f () else () 
 let is_empty : 'Auu____3712 . 'Auu____3712 Prims.list -> Prims.bool =
-  fun uu___248_3719  ->
-    match uu___248_3719 with | [] -> true | uu____3722 -> false
+  fun uu___249_3719  ->
+    match uu___249_3719 with | [] -> true | uu____3722 -> false
   
 let (lookup_bvar :
   (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option,closure)
@@ -2442,8 +2442,8 @@ let rec (inline_closure_env :
                               (fun s1  ->
                                  FStar_All.pipe_right s1
                                    (FStar_List.map
-                                      (fun uu___249_4322  ->
-                                         match uu___249_4322 with
+                                      (fun uu___250_4322  ->
+                                         match uu___250_4322 with
                                          | FStar_Syntax_Syntax.NT (x,t1) ->
                                              let uu____4329 =
                                                let uu____4336 =
@@ -2456,16 +2456,16 @@ let rec (inline_closure_env :
                                          | FStar_Syntax_Syntax.NM (x,i) ->
                                              let x_i =
                                                FStar_Syntax_Syntax.bv_to_tm
-                                                 (let uu___294_4346 = x  in
+                                                 (let uu___295_4346 = x  in
                                                   {
                                                     FStar_Syntax_Syntax.ppname
                                                       =
-                                                      (uu___294_4346.FStar_Syntax_Syntax.ppname);
+                                                      (uu___295_4346.FStar_Syntax_Syntax.ppname);
                                                     FStar_Syntax_Syntax.index
                                                       = i;
                                                     FStar_Syntax_Syntax.sort
                                                       =
-                                                      (uu___294_4346.FStar_Syntax_Syntax.sort)
+                                                      (uu___295_4346.FStar_Syntax_Syntax.sort)
                                                   })
                                                 in
                                              let t1 =
@@ -2487,15 +2487,15 @@ let rec (inline_closure_env :
                                                "Impossible: subst invariant of uvar nodes"))))
                           in
                        let t1 =
-                         let uu___295_4358 = t  in
+                         let uu___296_4358 = t  in
                          {
                            FStar_Syntax_Syntax.n =
                              (FStar_Syntax_Syntax.Tm_uvar
                                 (uv, (s', (FStar_Pervasives_Native.snd s))));
                            FStar_Syntax_Syntax.pos =
-                             (uu___295_4358.FStar_Syntax_Syntax.pos);
+                             (uu___296_4358.FStar_Syntax_Syntax.pos);
                            FStar_Syntax_Syntax.vars =
-                             (uu___295_4358.FStar_Syntax_Syntax.vars)
+                             (uu___296_4358.FStar_Syntax_Syntax.vars)
                          }  in
                        rebuild_closure cfg env stack t1)
                 | FStar_Syntax_Syntax.Tm_type u ->
@@ -2519,12 +2519,12 @@ let rec (inline_closure_env :
                            "Impossible: term variable is bound to a universe"
                      | Dummy  ->
                          let x1 =
-                           let uu___296_4397 = x  in
+                           let uu___297_4397 = x  in
                            {
                              FStar_Syntax_Syntax.ppname =
-                               (uu___296_4397.FStar_Syntax_Syntax.ppname);
+                               (uu___297_4397.FStar_Syntax_Syntax.ppname);
                              FStar_Syntax_Syntax.index =
-                               (uu___296_4397.FStar_Syntax_Syntax.index);
+                               (uu___297_4397.FStar_Syntax_Syntax.index);
                              FStar_Syntax_Syntax.sort =
                                FStar_Syntax_Syntax.tun
                            }  in
@@ -2681,31 +2681,31 @@ let rec (inline_closure_env :
                              body
                             in
                          ((FStar_Util.Inl
-                             (let uu___297_5197 = x  in
+                             (let uu___298_5197 = x  in
                               {
                                 FStar_Syntax_Syntax.ppname =
-                                  (uu___297_5197.FStar_Syntax_Syntax.ppname);
+                                  (uu___298_5197.FStar_Syntax_Syntax.ppname);
                                 FStar_Syntax_Syntax.index =
-                                  (uu___297_5197.FStar_Syntax_Syntax.index);
+                                  (uu___298_5197.FStar_Syntax_Syntax.index);
                                 FStar_Syntax_Syntax.sort = typ
                               })), uu____5181))
                        in
                     (match uu____5151 with
                      | (nm,body1) ->
                          let lb1 =
-                           let uu___298_5215 = lb  in
+                           let uu___299_5215 = lb  in
                            {
                              FStar_Syntax_Syntax.lbname = nm;
                              FStar_Syntax_Syntax.lbunivs =
-                               (uu___298_5215.FStar_Syntax_Syntax.lbunivs);
+                               (uu___299_5215.FStar_Syntax_Syntax.lbunivs);
                              FStar_Syntax_Syntax.lbtyp = typ;
                              FStar_Syntax_Syntax.lbeff =
-                               (uu___298_5215.FStar_Syntax_Syntax.lbeff);
+                               (uu___299_5215.FStar_Syntax_Syntax.lbeff);
                              FStar_Syntax_Syntax.lbdef = def;
                              FStar_Syntax_Syntax.lbattrs =
-                               (uu___298_5215.FStar_Syntax_Syntax.lbattrs);
+                               (uu___299_5215.FStar_Syntax_Syntax.lbattrs);
                              FStar_Syntax_Syntax.lbpos =
-                               (uu___298_5215.FStar_Syntax_Syntax.lbpos)
+                               (uu___299_5215.FStar_Syntax_Syntax.lbpos)
                            }  in
                          let t1 =
                            mk
@@ -2745,16 +2745,16 @@ let rec (inline_closure_env :
                              FStar_Util.left lb.FStar_Syntax_Syntax.lbname
                               in
                            FStar_Util.Inl
-                             (let uu___299_5353 = x  in
+                             (let uu___300_5353 = x  in
                               {
                                 FStar_Syntax_Syntax.ppname =
-                                  (uu___299_5353.FStar_Syntax_Syntax.ppname);
+                                  (uu___300_5353.FStar_Syntax_Syntax.ppname);
                                 FStar_Syntax_Syntax.index =
-                                  (uu___299_5353.FStar_Syntax_Syntax.index);
+                                  (uu___300_5353.FStar_Syntax_Syntax.index);
                                 FStar_Syntax_Syntax.sort = ty
                               }))
                          in
-                      let uu___300_5354 = lb  in
+                      let uu___301_5354 = lb  in
                       let uu____5355 =
                         non_tail_inline_closure_env cfg env2
                           lb.FStar_Syntax_Syntax.lbdef
@@ -2762,15 +2762,15 @@ let rec (inline_closure_env :
                       {
                         FStar_Syntax_Syntax.lbname = nm;
                         FStar_Syntax_Syntax.lbunivs =
-                          (uu___300_5354.FStar_Syntax_Syntax.lbunivs);
+                          (uu___301_5354.FStar_Syntax_Syntax.lbunivs);
                         FStar_Syntax_Syntax.lbtyp = ty;
                         FStar_Syntax_Syntax.lbeff =
-                          (uu___300_5354.FStar_Syntax_Syntax.lbeff);
+                          (uu___301_5354.FStar_Syntax_Syntax.lbeff);
                         FStar_Syntax_Syntax.lbdef = uu____5355;
                         FStar_Syntax_Syntax.lbattrs =
-                          (uu___300_5354.FStar_Syntax_Syntax.lbattrs);
+                          (uu___301_5354.FStar_Syntax_Syntax.lbattrs);
                         FStar_Syntax_Syntax.lbpos =
-                          (uu___300_5354.FStar_Syntax_Syntax.lbpos)
+                          (uu___301_5354.FStar_Syntax_Syntax.lbpos)
                       }  in
                     let lbs1 =
                       FStar_All.pipe_right lbs
@@ -2839,14 +2839,14 @@ and (rebuild_closure :
                 | (bs1,uu____5581) ->
                     let lopt1 = close_lcomp_opt cfg env'' lopt  in
                     let uu____5601 =
-                      let uu___301_5604 = FStar_Syntax_Util.abs bs1 t lopt1
+                      let uu___302_5604 = FStar_Syntax_Util.abs bs1 t lopt1
                          in
                       {
                         FStar_Syntax_Syntax.n =
-                          (uu___301_5604.FStar_Syntax_Syntax.n);
+                          (uu___302_5604.FStar_Syntax_Syntax.n);
                         FStar_Syntax_Syntax.pos = r;
                         FStar_Syntax_Syntax.vars =
-                          (uu___301_5604.FStar_Syntax_Syntax.vars)
+                          (uu___302_5604.FStar_Syntax_Syntax.vars)
                       }  in
                     rebuild_closure cfg env stack1 uu____5601)
            | (Match (env1,branches,cfg1,r))::stack1 ->
@@ -2874,78 +2874,78 @@ and (rebuild_closure :
                               in
                            (match uu____5804 with
                             | (pats1,env4) ->
-                                ((let uu___302_6190 = p  in
+                                ((let uu___303_6190 = p  in
                                   {
                                     FStar_Syntax_Syntax.v =
                                       (FStar_Syntax_Syntax.Pat_cons
                                          (fv, (FStar_List.rev pats1)));
                                     FStar_Syntax_Syntax.p =
-                                      (uu___302_6190.FStar_Syntax_Syntax.p)
+                                      (uu___303_6190.FStar_Syntax_Syntax.p)
                                   }), env4))
                        | FStar_Syntax_Syntax.Pat_var x ->
                            let x1 =
-                             let uu___303_6209 = x  in
+                             let uu___304_6209 = x  in
                              let uu____6210 =
                                non_tail_inline_closure_env cfg1 env3
                                  x.FStar_Syntax_Syntax.sort
                                 in
                              {
                                FStar_Syntax_Syntax.ppname =
-                                 (uu___303_6209.FStar_Syntax_Syntax.ppname);
+                                 (uu___304_6209.FStar_Syntax_Syntax.ppname);
                                FStar_Syntax_Syntax.index =
-                                 (uu___303_6209.FStar_Syntax_Syntax.index);
+                                 (uu___304_6209.FStar_Syntax_Syntax.index);
                                FStar_Syntax_Syntax.sort = uu____6210
                              }  in
-                           ((let uu___304_6224 = p  in
+                           ((let uu___305_6224 = p  in
                              {
                                FStar_Syntax_Syntax.v =
                                  (FStar_Syntax_Syntax.Pat_var x1);
                                FStar_Syntax_Syntax.p =
-                                 (uu___304_6224.FStar_Syntax_Syntax.p)
+                                 (uu___305_6224.FStar_Syntax_Syntax.p)
                              }), (dummy :: env3))
                        | FStar_Syntax_Syntax.Pat_wild x ->
                            let x1 =
-                             let uu___305_6235 = x  in
+                             let uu___306_6235 = x  in
                              let uu____6236 =
                                non_tail_inline_closure_env cfg1 env3
                                  x.FStar_Syntax_Syntax.sort
                                 in
                              {
                                FStar_Syntax_Syntax.ppname =
-                                 (uu___305_6235.FStar_Syntax_Syntax.ppname);
+                                 (uu___306_6235.FStar_Syntax_Syntax.ppname);
                                FStar_Syntax_Syntax.index =
-                                 (uu___305_6235.FStar_Syntax_Syntax.index);
+                                 (uu___306_6235.FStar_Syntax_Syntax.index);
                                FStar_Syntax_Syntax.sort = uu____6236
                              }  in
-                           ((let uu___306_6250 = p  in
+                           ((let uu___307_6250 = p  in
                              {
                                FStar_Syntax_Syntax.v =
                                  (FStar_Syntax_Syntax.Pat_wild x1);
                                FStar_Syntax_Syntax.p =
-                                 (uu___306_6250.FStar_Syntax_Syntax.p)
+                                 (uu___307_6250.FStar_Syntax_Syntax.p)
                              }), (dummy :: env3))
                        | FStar_Syntax_Syntax.Pat_dot_term (x,t1) ->
                            let x1 =
-                             let uu___307_6266 = x  in
+                             let uu___308_6266 = x  in
                              let uu____6267 =
                                non_tail_inline_closure_env cfg1 env3
                                  x.FStar_Syntax_Syntax.sort
                                 in
                              {
                                FStar_Syntax_Syntax.ppname =
-                                 (uu___307_6266.FStar_Syntax_Syntax.ppname);
+                                 (uu___308_6266.FStar_Syntax_Syntax.ppname);
                                FStar_Syntax_Syntax.index =
-                                 (uu___307_6266.FStar_Syntax_Syntax.index);
+                                 (uu___308_6266.FStar_Syntax_Syntax.index);
                                FStar_Syntax_Syntax.sort = uu____6267
                              }  in
                            let t2 = non_tail_inline_closure_env cfg1 env3 t1
                               in
-                           ((let uu___308_6284 = p  in
+                           ((let uu___309_6284 = p  in
                              {
                                FStar_Syntax_Syntax.v =
                                  (FStar_Syntax_Syntax.Pat_dot_term (x1, t2));
                                FStar_Syntax_Syntax.p =
-                                 (uu___308_6284.FStar_Syntax_Syntax.p)
+                                 (uu___309_6284.FStar_Syntax_Syntax.p)
                              }), env3)
                         in
                      let uu____6289 = norm_pat env2 pat  in
@@ -3034,16 +3034,16 @@ and (close_binders :
                     match (uu____6803, uu____6804) with
                     | ((env1,out),(b,imp)) ->
                         let b1 =
-                          let uu___309_6944 = b  in
+                          let uu___310_6944 = b  in
                           let uu____6945 =
                             inline_closure_env cfg env1 []
                               b.FStar_Syntax_Syntax.sort
                              in
                           {
                             FStar_Syntax_Syntax.ppname =
-                              (uu___309_6944.FStar_Syntax_Syntax.ppname);
+                              (uu___310_6944.FStar_Syntax_Syntax.ppname);
                             FStar_Syntax_Syntax.index =
-                              (uu___309_6944.FStar_Syntax_Syntax.index);
+                              (uu___310_6944.FStar_Syntax_Syntax.index);
                             FStar_Syntax_Syntax.sort = uu____6945
                           }  in
                         let env2 = dummy :: env1  in
@@ -3094,8 +3094,8 @@ and (close_comp :
                  let flags1 =
                    FStar_All.pipe_right c1.FStar_Syntax_Syntax.flags
                      (FStar_List.map
-                        (fun uu___250_7202  ->
-                           match uu___250_7202 with
+                        (fun uu___251_7202  ->
+                           match uu___251_7202 with
                            | FStar_Syntax_Syntax.DECREASES t ->
                                let uu____7206 =
                                  inline_closure_env cfg env [] t  in
@@ -3103,7 +3103,7 @@ and (close_comp :
                            | f -> f))
                     in
                  let uu____7210 =
-                   let uu___310_7211 = c1  in
+                   let uu___311_7211 = c1  in
                    let uu____7212 =
                      FStar_List.map (norm_universe cfg env)
                        c1.FStar_Syntax_Syntax.comp_univs
@@ -3111,7 +3111,7 @@ and (close_comp :
                    {
                      FStar_Syntax_Syntax.comp_univs = uu____7212;
                      FStar_Syntax_Syntax.effect_name =
-                       (uu___310_7211.FStar_Syntax_Syntax.effect_name);
+                       (uu___311_7211.FStar_Syntax_Syntax.effect_name);
                      FStar_Syntax_Syntax.result_typ = rt;
                      FStar_Syntax_Syntax.effect_args = args;
                      FStar_Syntax_Syntax.flags = flags1
@@ -3125,8 +3125,8 @@ and (filter_out_lcomp_cflags :
   fun flags1  ->
     FStar_All.pipe_right flags1
       (FStar_List.filter
-         (fun uu___251_7222  ->
-            match uu___251_7222 with
+         (fun uu___252_7222  ->
+            match uu___252_7222 with
             | FStar_Syntax_Syntax.DECREASES uu____7223 -> false
             | uu____7226 -> true))
 
@@ -3144,20 +3144,20 @@ and (close_lcomp_opt :
             let flags1 =
               FStar_All.pipe_right rc.FStar_Syntax_Syntax.residual_flags
                 (FStar_List.filter
-                   (fun uu___252_7244  ->
-                      match uu___252_7244 with
+                   (fun uu___253_7244  ->
+                      match uu___253_7244 with
                       | FStar_Syntax_Syntax.DECREASES uu____7245 -> false
                       | uu____7248 -> true))
                in
             let rc1 =
-              let uu___311_7250 = rc  in
+              let uu___312_7250 = rc  in
               let uu____7251 =
                 FStar_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
                   (inline_closure_env cfg env [])
                  in
               {
                 FStar_Syntax_Syntax.residual_effect =
-                  (uu___311_7250.FStar_Syntax_Syntax.residual_effect);
+                  (uu___312_7250.FStar_Syntax_Syntax.residual_effect);
                 FStar_Syntax_Syntax.residual_typ = uu____7251;
                 FStar_Syntax_Syntax.residual_flags = flags1
               }  in
@@ -3811,23 +3811,23 @@ let (equality_ops : primitive_step FStar_Util.psmap) =
         (match uu____11793 with
          | FStar_Syntax_Util.Equal  ->
              FStar_Pervasives_Native.Some
-               (let uu___312_11797 = FStar_Syntax_Util.t_true  in
+               (let uu___313_11797 = FStar_Syntax_Util.t_true  in
                 {
                   FStar_Syntax_Syntax.n =
-                    (uu___312_11797.FStar_Syntax_Syntax.n);
+                    (uu___313_11797.FStar_Syntax_Syntax.n);
                   FStar_Syntax_Syntax.pos = r;
                   FStar_Syntax_Syntax.vars =
-                    (uu___312_11797.FStar_Syntax_Syntax.vars)
+                    (uu___313_11797.FStar_Syntax_Syntax.vars)
                 })
          | FStar_Syntax_Util.NotEqual  ->
              FStar_Pervasives_Native.Some
-               (let uu___313_11799 = FStar_Syntax_Util.t_false  in
+               (let uu___314_11799 = FStar_Syntax_Util.t_false  in
                 {
                   FStar_Syntax_Syntax.n =
-                    (uu___313_11799.FStar_Syntax_Syntax.n);
+                    (uu___314_11799.FStar_Syntax_Syntax.n);
                   FStar_Syntax_Syntax.pos = r;
                   FStar_Syntax_Syntax.vars =
-                    (uu___313_11799.FStar_Syntax_Syntax.vars)
+                    (uu___314_11799.FStar_Syntax_Syntax.vars)
                 })
          | uu____11800 -> FStar_Pervasives_Native.None)
     | (_typ,uu____11802)::uu____11803::(a1,uu____11805)::(a2,uu____11807)::[]
@@ -3836,23 +3836,23 @@ let (equality_ops : primitive_step FStar_Util.psmap) =
         (match uu____11880 with
          | FStar_Syntax_Util.Equal  ->
              FStar_Pervasives_Native.Some
-               (let uu___312_11884 = FStar_Syntax_Util.t_true  in
+               (let uu___313_11884 = FStar_Syntax_Util.t_true  in
                 {
                   FStar_Syntax_Syntax.n =
-                    (uu___312_11884.FStar_Syntax_Syntax.n);
+                    (uu___313_11884.FStar_Syntax_Syntax.n);
                   FStar_Syntax_Syntax.pos = r;
                   FStar_Syntax_Syntax.vars =
-                    (uu___312_11884.FStar_Syntax_Syntax.vars)
+                    (uu___313_11884.FStar_Syntax_Syntax.vars)
                 })
          | FStar_Syntax_Util.NotEqual  ->
              FStar_Pervasives_Native.Some
-               (let uu___313_11886 = FStar_Syntax_Util.t_false  in
+               (let uu___314_11886 = FStar_Syntax_Util.t_false  in
                 {
                   FStar_Syntax_Syntax.n =
-                    (uu___313_11886.FStar_Syntax_Syntax.n);
+                    (uu___314_11886.FStar_Syntax_Syntax.n);
                   FStar_Syntax_Syntax.pos = r;
                   FStar_Syntax_Syntax.vars =
-                    (uu___313_11886.FStar_Syntax_Syntax.vars)
+                    (uu___314_11886.FStar_Syntax_Syntax.vars)
                 })
          | uu____11887 -> FStar_Pervasives_Native.None)
     | uu____11888 -> failwith "Unexpected number of arguments"  in
@@ -3933,16 +3933,16 @@ let mk_psc_subst :
                               | FStar_Pervasives_Native.Some x ->
                                   let b1 =
                                     let uu____12190 =
-                                      let uu___314_12191 = bv  in
+                                      let uu___315_12191 = bv  in
                                       let uu____12192 =
                                         FStar_Syntax_Subst.subst subst1
                                           (FStar_Pervasives_Native.fst x).FStar_Syntax_Syntax.sort
                                          in
                                       {
                                         FStar_Syntax_Syntax.ppname =
-                                          (uu___314_12191.FStar_Syntax_Syntax.ppname);
+                                          (uu___315_12191.FStar_Syntax_Syntax.ppname);
                                         FStar_Syntax_Syntax.index =
-                                          (uu___314_12191.FStar_Syntax_Syntax.index);
+                                          (uu___315_12191.FStar_Syntax_Syntax.index);
                                         FStar_Syntax_Syntax.sort =
                                           uu____12192
                                       }  in
@@ -3959,8 +3959,8 @@ let mk_psc_subst :
                                     FStar_Syntax_Syntax.NT uu____12198  in
                                   let subst2 =
                                     FStar_List.filter
-                                      (fun uu___253_12221  ->
-                                         match uu___253_12221 with
+                                      (fun uu___254_12221  ->
+                                         match uu___254_12221 with
                                          | FStar_Syntax_Syntax.NT
                                              (uu____12222,{
                                                             FStar_Syntax_Syntax.n
@@ -4153,48 +4153,48 @@ let reduce_equality :
     fun cfg  ->
       fun tm  ->
         reduce_primops norm_cb
-          (let uu___315_12742 = cfg  in
+          (let uu___316_12742 = cfg  in
            {
              steps =
-               (let uu___316_12745 = default_steps  in
+               (let uu___317_12745 = default_steps  in
                 {
-                  beta = (uu___316_12745.beta);
-                  iota = (uu___316_12745.iota);
-                  zeta = (uu___316_12745.zeta);
-                  weak = (uu___316_12745.weak);
-                  hnf = (uu___316_12745.hnf);
+                  beta = (uu___317_12745.beta);
+                  iota = (uu___317_12745.iota);
+                  zeta = (uu___317_12745.zeta);
+                  weak = (uu___317_12745.weak);
+                  hnf = (uu___317_12745.hnf);
                   primops = true;
                   do_not_unfold_pure_lets =
-                    (uu___316_12745.do_not_unfold_pure_lets);
-                  unfold_until = (uu___316_12745.unfold_until);
-                  unfold_only = (uu___316_12745.unfold_only);
-                  unfold_fully = (uu___316_12745.unfold_fully);
-                  unfold_attr = (uu___316_12745.unfold_attr);
-                  unfold_tac = (uu___316_12745.unfold_tac);
+                    (uu___317_12745.do_not_unfold_pure_lets);
+                  unfold_until = (uu___317_12745.unfold_until);
+                  unfold_only = (uu___317_12745.unfold_only);
+                  unfold_fully = (uu___317_12745.unfold_fully);
+                  unfold_attr = (uu___317_12745.unfold_attr);
+                  unfold_tac = (uu___317_12745.unfold_tac);
                   pure_subterms_within_computations =
-                    (uu___316_12745.pure_subterms_within_computations);
-                  simplify = (uu___316_12745.simplify);
-                  erase_universes = (uu___316_12745.erase_universes);
+                    (uu___317_12745.pure_subterms_within_computations);
+                  simplify = (uu___317_12745.simplify);
+                  erase_universes = (uu___317_12745.erase_universes);
                   allow_unbound_universes =
-                    (uu___316_12745.allow_unbound_universes);
-                  reify_ = (uu___316_12745.reify_);
-                  compress_uvars = (uu___316_12745.compress_uvars);
-                  no_full_norm = (uu___316_12745.no_full_norm);
-                  check_no_uvars = (uu___316_12745.check_no_uvars);
-                  unmeta = (uu___316_12745.unmeta);
-                  unascribe = (uu___316_12745.unascribe);
+                    (uu___317_12745.allow_unbound_universes);
+                  reify_ = (uu___317_12745.reify_);
+                  compress_uvars = (uu___317_12745.compress_uvars);
+                  no_full_norm = (uu___317_12745.no_full_norm);
+                  check_no_uvars = (uu___317_12745.check_no_uvars);
+                  unmeta = (uu___317_12745.unmeta);
+                  unascribe = (uu___317_12745.unascribe);
                   in_full_norm_request =
-                    (uu___316_12745.in_full_norm_request);
+                    (uu___317_12745.in_full_norm_request);
                   weakly_reduce_scrutinee =
-                    (uu___316_12745.weakly_reduce_scrutinee)
+                    (uu___317_12745.weakly_reduce_scrutinee)
                 });
-             tcenv = (uu___315_12742.tcenv);
-             debug = (uu___315_12742.debug);
-             delta_level = (uu___315_12742.delta_level);
+             tcenv = (uu___316_12742.tcenv);
+             debug = (uu___316_12742.debug);
+             delta_level = (uu___316_12742.delta_level);
              primitive_steps = equality_ops;
-             strong = (uu___315_12742.strong);
-             memoize_lazy = (uu___315_12742.memoize_lazy);
-             normalize_pure_lets = (uu___315_12742.normalize_pure_lets)
+             strong = (uu___316_12742.strong);
+             memoize_lazy = (uu___316_12742.memoize_lazy);
+             normalize_pure_lets = (uu___316_12742.normalize_pure_lets)
            }) tm
   
 let is_norm_request :
@@ -4218,8 +4218,8 @@ let is_norm_request :
       | uu____12795 -> false
   
 let (tr_norm_step : FStar_Syntax_Embeddings.norm_step -> step Prims.list) =
-  fun uu___254_12808  ->
-    match uu___254_12808 with
+  fun uu___255_12808  ->
+    match uu___255_12808 with
     | FStar_Syntax_Embeddings.Zeta  -> [Zeta]
     | FStar_Syntax_Embeddings.Iota  -> [Iota]
     | FStar_Syntax_Embeddings.Delta  ->
@@ -4320,8 +4320,8 @@ let get_norm_request :
         | uu____13090 -> FStar_Pervasives_Native.None
   
 let (is_reify_head : stack_elt Prims.list -> Prims.bool) =
-  fun uu___255_13109  ->
-    match uu___255_13109 with
+  fun uu___256_13109  ->
+    match uu___256_13109 with
     | (App
         (uu____13112,{
                        FStar_Syntax_Syntax.n =
@@ -4714,8 +4714,8 @@ let decide_unfolding :
                       (let uu____15080 =
                          FStar_All.pipe_right cfg.delta_level
                            (FStar_Util.for_some
-                              (fun uu___256_15084  ->
-                                 match uu___256_15084 with
+                              (fun uu___257_15084  ->
+                                 match uu___257_15084 with
                                  | FStar_TypeChecker_Env.NoDelta  -> false
                                  | FStar_TypeChecker_Env.Inlining  -> true
                                  | FStar_TypeChecker_Env.Eager_unfolding_only
@@ -4740,52 +4740,52 @@ let decide_unfolding :
                     FStar_Pervasives_Native.Some (cfg, stack)
                 | (true ,true ,false ) ->
                     let cfg' =
-                      let uu___317_15126 = cfg  in
+                      let uu___318_15126 = cfg  in
                       {
                         steps =
-                          (let uu___318_15129 = cfg.steps  in
+                          (let uu___319_15129 = cfg.steps  in
                            {
-                             beta = (uu___318_15129.beta);
-                             iota = (uu___318_15129.iota);
-                             zeta = (uu___318_15129.zeta);
-                             weak = (uu___318_15129.weak);
-                             hnf = (uu___318_15129.hnf);
-                             primops = (uu___318_15129.primops);
+                             beta = (uu___319_15129.beta);
+                             iota = (uu___319_15129.iota);
+                             zeta = (uu___319_15129.zeta);
+                             weak = (uu___319_15129.weak);
+                             hnf = (uu___319_15129.hnf);
+                             primops = (uu___319_15129.primops);
                              do_not_unfold_pure_lets =
-                               (uu___318_15129.do_not_unfold_pure_lets);
+                               (uu___319_15129.do_not_unfold_pure_lets);
                              unfold_until =
                                (FStar_Pervasives_Native.Some
                                   FStar_Syntax_Syntax.delta_constant);
                              unfold_only = FStar_Pervasives_Native.None;
                              unfold_fully = FStar_Pervasives_Native.None;
                              unfold_attr = FStar_Pervasives_Native.None;
-                             unfold_tac = (uu___318_15129.unfold_tac);
+                             unfold_tac = (uu___319_15129.unfold_tac);
                              pure_subterms_within_computations =
-                               (uu___318_15129.pure_subterms_within_computations);
-                             simplify = (uu___318_15129.simplify);
+                               (uu___319_15129.pure_subterms_within_computations);
+                             simplify = (uu___319_15129.simplify);
                              erase_universes =
-                               (uu___318_15129.erase_universes);
+                               (uu___319_15129.erase_universes);
                              allow_unbound_universes =
-                               (uu___318_15129.allow_unbound_universes);
-                             reify_ = (uu___318_15129.reify_);
-                             compress_uvars = (uu___318_15129.compress_uvars);
-                             no_full_norm = (uu___318_15129.no_full_norm);
-                             check_no_uvars = (uu___318_15129.check_no_uvars);
-                             unmeta = (uu___318_15129.unmeta);
-                             unascribe = (uu___318_15129.unascribe);
+                               (uu___319_15129.allow_unbound_universes);
+                             reify_ = (uu___319_15129.reify_);
+                             compress_uvars = (uu___319_15129.compress_uvars);
+                             no_full_norm = (uu___319_15129.no_full_norm);
+                             check_no_uvars = (uu___319_15129.check_no_uvars);
+                             unmeta = (uu___319_15129.unmeta);
+                             unascribe = (uu___319_15129.unascribe);
                              in_full_norm_request =
-                               (uu___318_15129.in_full_norm_request);
+                               (uu___319_15129.in_full_norm_request);
                              weakly_reduce_scrutinee =
-                               (uu___318_15129.weakly_reduce_scrutinee)
+                               (uu___319_15129.weakly_reduce_scrutinee)
                            });
-                        tcenv = (uu___317_15126.tcenv);
-                        debug = (uu___317_15126.debug);
-                        delta_level = (uu___317_15126.delta_level);
-                        primitive_steps = (uu___317_15126.primitive_steps);
-                        strong = (uu___317_15126.strong);
-                        memoize_lazy = (uu___317_15126.memoize_lazy);
+                        tcenv = (uu___318_15126.tcenv);
+                        debug = (uu___318_15126.debug);
+                        delta_level = (uu___318_15126.delta_level);
+                        primitive_steps = (uu___318_15126.primitive_steps);
+                        strong = (uu___318_15126.strong);
+                        memoize_lazy = (uu___318_15126.memoize_lazy);
                         normalize_pure_lets =
-                          (uu___317_15126.normalize_pure_lets)
+                          (uu___318_15126.normalize_pure_lets)
                       }  in
                     let stack' = (Cfg cfg) :: stack  in
                     FStar_Pervasives_Native.Some (cfg', stack')
@@ -4939,48 +4939,48 @@ let rec (norm :
                 then FStar_Util.print_string "Potential norm request ... \n"
                 else ();
                 (let cfg' =
-                   let uu___319_15673 = cfg  in
+                   let uu___320_15673 = cfg  in
                    {
                      steps =
-                       (let uu___320_15676 = cfg.steps  in
+                       (let uu___321_15676 = cfg.steps  in
                         {
-                          beta = (uu___320_15676.beta);
-                          iota = (uu___320_15676.iota);
-                          zeta = (uu___320_15676.zeta);
-                          weak = (uu___320_15676.weak);
-                          hnf = (uu___320_15676.hnf);
-                          primops = (uu___320_15676.primops);
+                          beta = (uu___321_15676.beta);
+                          iota = (uu___321_15676.iota);
+                          zeta = (uu___321_15676.zeta);
+                          weak = (uu___321_15676.weak);
+                          hnf = (uu___321_15676.hnf);
+                          primops = (uu___321_15676.primops);
                           do_not_unfold_pure_lets = false;
-                          unfold_until = (uu___320_15676.unfold_until);
+                          unfold_until = (uu___321_15676.unfold_until);
                           unfold_only = FStar_Pervasives_Native.None;
                           unfold_fully = FStar_Pervasives_Native.None;
-                          unfold_attr = (uu___320_15676.unfold_attr);
-                          unfold_tac = (uu___320_15676.unfold_tac);
+                          unfold_attr = (uu___321_15676.unfold_attr);
+                          unfold_tac = (uu___321_15676.unfold_tac);
                           pure_subterms_within_computations =
-                            (uu___320_15676.pure_subterms_within_computations);
-                          simplify = (uu___320_15676.simplify);
-                          erase_universes = (uu___320_15676.erase_universes);
+                            (uu___321_15676.pure_subterms_within_computations);
+                          simplify = (uu___321_15676.simplify);
+                          erase_universes = (uu___321_15676.erase_universes);
                           allow_unbound_universes =
-                            (uu___320_15676.allow_unbound_universes);
-                          reify_ = (uu___320_15676.reify_);
-                          compress_uvars = (uu___320_15676.compress_uvars);
-                          no_full_norm = (uu___320_15676.no_full_norm);
-                          check_no_uvars = (uu___320_15676.check_no_uvars);
-                          unmeta = (uu___320_15676.unmeta);
-                          unascribe = (uu___320_15676.unascribe);
+                            (uu___321_15676.allow_unbound_universes);
+                          reify_ = (uu___321_15676.reify_);
+                          compress_uvars = (uu___321_15676.compress_uvars);
+                          no_full_norm = (uu___321_15676.no_full_norm);
+                          check_no_uvars = (uu___321_15676.check_no_uvars);
+                          unmeta = (uu___321_15676.unmeta);
+                          unascribe = (uu___321_15676.unascribe);
                           in_full_norm_request =
-                            (uu___320_15676.in_full_norm_request);
+                            (uu___321_15676.in_full_norm_request);
                           weakly_reduce_scrutinee =
-                            (uu___320_15676.weakly_reduce_scrutinee)
+                            (uu___321_15676.weakly_reduce_scrutinee)
                         });
-                     tcenv = (uu___319_15673.tcenv);
-                     debug = (uu___319_15673.debug);
+                     tcenv = (uu___320_15673.tcenv);
+                     debug = (uu___320_15673.debug);
                      delta_level =
                        [FStar_TypeChecker_Env.Unfold
                           FStar_Syntax_Syntax.delta_constant];
-                     primitive_steps = (uu___319_15673.primitive_steps);
-                     strong = (uu___319_15673.strong);
-                     memoize_lazy = (uu___319_15673.memoize_lazy);
+                     primitive_steps = (uu___320_15673.primitive_steps);
+                     strong = (uu___320_15673.strong);
+                     memoize_lazy = (uu___320_15673.memoize_lazy);
                      normalize_pure_lets = true
                    }  in
                  let uu____15681 =
@@ -5035,8 +5035,8 @@ let rec (norm :
                          let uu____15882 =
                            FStar_All.pipe_right s
                              (FStar_Util.for_some
-                                (fun uu___257_15887  ->
-                                   match uu___257_15887 with
+                                (fun uu___258_15887  ->
+                                   match uu___258_15887 with
                                    | UnfoldUntil uu____15888 -> true
                                    | UnfoldOnly uu____15889 -> true
                                    | UnfoldFully uu____15892 -> true
@@ -5048,48 +5048,48 @@ let rec (norm :
                               FStar_Syntax_Syntax.delta_constant]
                          else [FStar_TypeChecker_Env.NoDelta]  in
                        let cfg'1 =
-                         let uu___321_15900 = cfg  in
+                         let uu___322_15900 = cfg  in
                          let uu____15901 =
-                           let uu___322_15902 = to_fsteps s  in
+                           let uu___323_15902 = to_fsteps s  in
                            {
-                             beta = (uu___322_15902.beta);
-                             iota = (uu___322_15902.iota);
-                             zeta = (uu___322_15902.zeta);
-                             weak = (uu___322_15902.weak);
-                             hnf = (uu___322_15902.hnf);
-                             primops = (uu___322_15902.primops);
+                             beta = (uu___323_15902.beta);
+                             iota = (uu___323_15902.iota);
+                             zeta = (uu___323_15902.zeta);
+                             weak = (uu___323_15902.weak);
+                             hnf = (uu___323_15902.hnf);
+                             primops = (uu___323_15902.primops);
                              do_not_unfold_pure_lets =
-                               (uu___322_15902.do_not_unfold_pure_lets);
-                             unfold_until = (uu___322_15902.unfold_until);
-                             unfold_only = (uu___322_15902.unfold_only);
-                             unfold_fully = (uu___322_15902.unfold_fully);
-                             unfold_attr = (uu___322_15902.unfold_attr);
-                             unfold_tac = (uu___322_15902.unfold_tac);
+                               (uu___323_15902.do_not_unfold_pure_lets);
+                             unfold_until = (uu___323_15902.unfold_until);
+                             unfold_only = (uu___323_15902.unfold_only);
+                             unfold_fully = (uu___323_15902.unfold_fully);
+                             unfold_attr = (uu___323_15902.unfold_attr);
+                             unfold_tac = (uu___323_15902.unfold_tac);
                              pure_subterms_within_computations =
-                               (uu___322_15902.pure_subterms_within_computations);
-                             simplify = (uu___322_15902.simplify);
+                               (uu___323_15902.pure_subterms_within_computations);
+                             simplify = (uu___323_15902.simplify);
                              erase_universes =
-                               (uu___322_15902.erase_universes);
+                               (uu___323_15902.erase_universes);
                              allow_unbound_universes =
-                               (uu___322_15902.allow_unbound_universes);
-                             reify_ = (uu___322_15902.reify_);
-                             compress_uvars = (uu___322_15902.compress_uvars);
-                             no_full_norm = (uu___322_15902.no_full_norm);
-                             check_no_uvars = (uu___322_15902.check_no_uvars);
-                             unmeta = (uu___322_15902.unmeta);
-                             unascribe = (uu___322_15902.unascribe);
+                               (uu___323_15902.allow_unbound_universes);
+                             reify_ = (uu___323_15902.reify_);
+                             compress_uvars = (uu___323_15902.compress_uvars);
+                             no_full_norm = (uu___323_15902.no_full_norm);
+                             check_no_uvars = (uu___323_15902.check_no_uvars);
+                             unmeta = (uu___323_15902.unmeta);
+                             unascribe = (uu___323_15902.unascribe);
                              in_full_norm_request = true;
                              weakly_reduce_scrutinee =
-                               (uu___322_15902.weakly_reduce_scrutinee)
+                               (uu___323_15902.weakly_reduce_scrutinee)
                            }  in
                          {
                            steps = uu____15901;
-                           tcenv = (uu___321_15900.tcenv);
-                           debug = (uu___321_15900.debug);
+                           tcenv = (uu___322_15900.tcenv);
+                           debug = (uu___322_15900.debug);
                            delta_level;
-                           primitive_steps = (uu___321_15900.primitive_steps);
-                           strong = (uu___321_15900.strong);
-                           memoize_lazy = (uu___321_15900.memoize_lazy);
+                           primitive_steps = (uu___322_15900.primitive_steps);
+                           strong = (uu___322_15900.strong);
+                           memoize_lazy = (uu___322_15900.memoize_lazy);
                            normalize_pure_lets = true
                          }  in
                        let stack' =
@@ -5211,52 +5211,52 @@ let rec (norm :
                         then closure_as_term cfg env t1
                         else
                           (let steps' =
-                             let uu___323_16368 = cfg.steps  in
+                             let uu___324_16368 = cfg.steps  in
                              {
-                               beta = (uu___323_16368.beta);
+                               beta = (uu___324_16368.beta);
                                iota = false;
                                zeta = false;
                                weak = false;
-                               hnf = (uu___323_16368.hnf);
+                               hnf = (uu___324_16368.hnf);
                                primops = false;
                                do_not_unfold_pure_lets = true;
-                               unfold_until = (uu___323_16368.unfold_until);
-                               unfold_only = (uu___323_16368.unfold_only);
-                               unfold_fully = (uu___323_16368.unfold_fully);
-                               unfold_attr = (uu___323_16368.unfold_attr);
-                               unfold_tac = (uu___323_16368.unfold_tac);
+                               unfold_until = (uu___324_16368.unfold_until);
+                               unfold_only = (uu___324_16368.unfold_only);
+                               unfold_fully = (uu___324_16368.unfold_fully);
+                               unfold_attr = (uu___324_16368.unfold_attr);
+                               unfold_tac = (uu___324_16368.unfold_tac);
                                pure_subterms_within_computations = false;
                                simplify = false;
                                erase_universes =
-                                 (uu___323_16368.erase_universes);
+                                 (uu___324_16368.erase_universes);
                                allow_unbound_universes =
-                                 (uu___323_16368.allow_unbound_universes);
+                                 (uu___324_16368.allow_unbound_universes);
                                reify_ = false;
                                compress_uvars =
-                                 (uu___323_16368.compress_uvars);
+                                 (uu___324_16368.compress_uvars);
                                no_full_norm = true;
                                check_no_uvars =
-                                 (uu___323_16368.check_no_uvars);
+                                 (uu___324_16368.check_no_uvars);
                                unmeta = false;
                                unascribe = false;
                                in_full_norm_request =
-                                 (uu___323_16368.in_full_norm_request);
+                                 (uu___324_16368.in_full_norm_request);
                                weakly_reduce_scrutinee =
-                                 (uu___323_16368.weakly_reduce_scrutinee)
+                                 (uu___324_16368.weakly_reduce_scrutinee)
                              }  in
                            let cfg' =
-                             let uu___324_16370 = cfg  in
+                             let uu___325_16370 = cfg  in
                              {
                                steps = steps';
-                               tcenv = (uu___324_16370.tcenv);
-                               debug = (uu___324_16370.debug);
+                               tcenv = (uu___325_16370.tcenv);
+                               debug = (uu___325_16370.debug);
                                delta_level = [FStar_TypeChecker_Env.NoDelta];
                                primitive_steps =
-                                 (uu___324_16370.primitive_steps);
-                               strong = (uu___324_16370.strong);
-                               memoize_lazy = (uu___324_16370.memoize_lazy);
+                                 (uu___325_16370.primitive_steps);
+                               strong = (uu___325_16370.strong);
+                               memoize_lazy = (uu___325_16370.memoize_lazy);
                                normalize_pure_lets =
-                                 (uu___324_16370.normalize_pure_lets)
+                                 (uu___325_16370.normalize_pure_lets)
                              }  in
                            norm cfg' env [] t1)
                          in
@@ -5292,13 +5292,13 @@ let rec (norm :
                                        (FStar_Syntax_Subst.subst opening)
                                     in
                                  FStar_Pervasives_Native.Some
-                                   (let uu___325_16458 = rc  in
+                                   (let uu___326_16458 = rc  in
                                     {
                                       FStar_Syntax_Syntax.residual_effect =
-                                        (uu___325_16458.FStar_Syntax_Syntax.residual_effect);
+                                        (uu___326_16458.FStar_Syntax_Syntax.residual_effect);
                                       FStar_Syntax_Syntax.residual_typ = rct;
                                       FStar_Syntax_Syntax.residual_flags =
-                                        (uu___325_16458.FStar_Syntax_Syntax.residual_flags)
+                                        (uu___326_16458.FStar_Syntax_Syntax.residual_flags)
                                     })
                              | uu____16459 -> lopt  in
                            (log cfg
@@ -5312,18 +5312,18 @@ let rec (norm :
                                    uu____16466);
                             (let stack1 = (Cfg cfg) :: stack  in
                              let cfg1 =
-                               let uu___326_16477 = cfg  in
+                               let uu___327_16477 = cfg  in
                                {
-                                 steps = (uu___326_16477.steps);
-                                 tcenv = (uu___326_16477.tcenv);
-                                 debug = (uu___326_16477.debug);
-                                 delta_level = (uu___326_16477.delta_level);
+                                 steps = (uu___327_16477.steps);
+                                 tcenv = (uu___327_16477.tcenv);
+                                 debug = (uu___327_16477.debug);
+                                 delta_level = (uu___327_16477.delta_level);
                                  primitive_steps =
-                                   (uu___326_16477.primitive_steps);
+                                   (uu___327_16477.primitive_steps);
                                  strong = true;
-                                 memoize_lazy = (uu___326_16477.memoize_lazy);
+                                 memoize_lazy = (uu___327_16477.memoize_lazy);
                                  normalize_pure_lets =
-                                   (uu___326_16477.normalize_pure_lets)
+                                   (uu___327_16477.normalize_pure_lets)
                                }  in
                              norm cfg1 env'
                                ((Abs
@@ -5338,52 +5338,52 @@ let rec (norm :
                         then closure_as_term cfg env t1
                         else
                           (let steps' =
-                             let uu___323_16491 = cfg.steps  in
+                             let uu___324_16491 = cfg.steps  in
                              {
-                               beta = (uu___323_16491.beta);
+                               beta = (uu___324_16491.beta);
                                iota = false;
                                zeta = false;
                                weak = false;
-                               hnf = (uu___323_16491.hnf);
+                               hnf = (uu___324_16491.hnf);
                                primops = false;
                                do_not_unfold_pure_lets = true;
-                               unfold_until = (uu___323_16491.unfold_until);
-                               unfold_only = (uu___323_16491.unfold_only);
-                               unfold_fully = (uu___323_16491.unfold_fully);
-                               unfold_attr = (uu___323_16491.unfold_attr);
-                               unfold_tac = (uu___323_16491.unfold_tac);
+                               unfold_until = (uu___324_16491.unfold_until);
+                               unfold_only = (uu___324_16491.unfold_only);
+                               unfold_fully = (uu___324_16491.unfold_fully);
+                               unfold_attr = (uu___324_16491.unfold_attr);
+                               unfold_tac = (uu___324_16491.unfold_tac);
                                pure_subterms_within_computations = false;
                                simplify = false;
                                erase_universes =
-                                 (uu___323_16491.erase_universes);
+                                 (uu___324_16491.erase_universes);
                                allow_unbound_universes =
-                                 (uu___323_16491.allow_unbound_universes);
+                                 (uu___324_16491.allow_unbound_universes);
                                reify_ = false;
                                compress_uvars =
-                                 (uu___323_16491.compress_uvars);
+                                 (uu___324_16491.compress_uvars);
                                no_full_norm = true;
                                check_no_uvars =
-                                 (uu___323_16491.check_no_uvars);
+                                 (uu___324_16491.check_no_uvars);
                                unmeta = false;
                                unascribe = false;
                                in_full_norm_request =
-                                 (uu___323_16491.in_full_norm_request);
+                                 (uu___324_16491.in_full_norm_request);
                                weakly_reduce_scrutinee =
-                                 (uu___323_16491.weakly_reduce_scrutinee)
+                                 (uu___324_16491.weakly_reduce_scrutinee)
                              }  in
                            let cfg' =
-                             let uu___324_16493 = cfg  in
+                             let uu___325_16493 = cfg  in
                              {
                                steps = steps';
-                               tcenv = (uu___324_16493.tcenv);
-                               debug = (uu___324_16493.debug);
+                               tcenv = (uu___325_16493.tcenv);
+                               debug = (uu___325_16493.debug);
                                delta_level = [FStar_TypeChecker_Env.NoDelta];
                                primitive_steps =
-                                 (uu___324_16493.primitive_steps);
-                               strong = (uu___324_16493.strong);
-                               memoize_lazy = (uu___324_16493.memoize_lazy);
+                                 (uu___325_16493.primitive_steps);
+                               strong = (uu___325_16493.strong);
+                               memoize_lazy = (uu___325_16493.memoize_lazy);
                                normalize_pure_lets =
-                                 (uu___324_16493.normalize_pure_lets)
+                                 (uu___325_16493.normalize_pure_lets)
                              }  in
                            norm cfg' env [] t1)
                          in
@@ -5419,13 +5419,13 @@ let rec (norm :
                                        (FStar_Syntax_Subst.subst opening)
                                     in
                                  FStar_Pervasives_Native.Some
-                                   (let uu___325_16581 = rc  in
+                                   (let uu___326_16581 = rc  in
                                     {
                                       FStar_Syntax_Syntax.residual_effect =
-                                        (uu___325_16581.FStar_Syntax_Syntax.residual_effect);
+                                        (uu___326_16581.FStar_Syntax_Syntax.residual_effect);
                                       FStar_Syntax_Syntax.residual_typ = rct;
                                       FStar_Syntax_Syntax.residual_flags =
-                                        (uu___325_16581.FStar_Syntax_Syntax.residual_flags)
+                                        (uu___326_16581.FStar_Syntax_Syntax.residual_flags)
                                     })
                              | uu____16582 -> lopt  in
                            (log cfg
@@ -5439,18 +5439,18 @@ let rec (norm :
                                    uu____16589);
                             (let stack1 = (Cfg cfg) :: stack  in
                              let cfg1 =
-                               let uu___326_16600 = cfg  in
+                               let uu___327_16600 = cfg  in
                                {
-                                 steps = (uu___326_16600.steps);
-                                 tcenv = (uu___326_16600.tcenv);
-                                 debug = (uu___326_16600.debug);
-                                 delta_level = (uu___326_16600.delta_level);
+                                 steps = (uu___327_16600.steps);
+                                 tcenv = (uu___327_16600.tcenv);
+                                 debug = (uu___327_16600.debug);
+                                 delta_level = (uu___327_16600.delta_level);
                                  primitive_steps =
-                                   (uu___326_16600.primitive_steps);
+                                   (uu___327_16600.primitive_steps);
                                  strong = true;
-                                 memoize_lazy = (uu___326_16600.memoize_lazy);
+                                 memoize_lazy = (uu___327_16600.memoize_lazy);
                                  normalize_pure_lets =
-                                   (uu___326_16600.normalize_pure_lets)
+                                   (uu___327_16600.normalize_pure_lets)
                                }  in
                              norm cfg1 env'
                                ((Abs
@@ -5465,52 +5465,52 @@ let rec (norm :
                         then closure_as_term cfg env t1
                         else
                           (let steps' =
-                             let uu___323_16616 = cfg.steps  in
+                             let uu___324_16616 = cfg.steps  in
                              {
-                               beta = (uu___323_16616.beta);
+                               beta = (uu___324_16616.beta);
                                iota = false;
                                zeta = false;
                                weak = false;
-                               hnf = (uu___323_16616.hnf);
+                               hnf = (uu___324_16616.hnf);
                                primops = false;
                                do_not_unfold_pure_lets = true;
-                               unfold_until = (uu___323_16616.unfold_until);
-                               unfold_only = (uu___323_16616.unfold_only);
-                               unfold_fully = (uu___323_16616.unfold_fully);
-                               unfold_attr = (uu___323_16616.unfold_attr);
-                               unfold_tac = (uu___323_16616.unfold_tac);
+                               unfold_until = (uu___324_16616.unfold_until);
+                               unfold_only = (uu___324_16616.unfold_only);
+                               unfold_fully = (uu___324_16616.unfold_fully);
+                               unfold_attr = (uu___324_16616.unfold_attr);
+                               unfold_tac = (uu___324_16616.unfold_tac);
                                pure_subterms_within_computations = false;
                                simplify = false;
                                erase_universes =
-                                 (uu___323_16616.erase_universes);
+                                 (uu___324_16616.erase_universes);
                                allow_unbound_universes =
-                                 (uu___323_16616.allow_unbound_universes);
+                                 (uu___324_16616.allow_unbound_universes);
                                reify_ = false;
                                compress_uvars =
-                                 (uu___323_16616.compress_uvars);
+                                 (uu___324_16616.compress_uvars);
                                no_full_norm = true;
                                check_no_uvars =
-                                 (uu___323_16616.check_no_uvars);
+                                 (uu___324_16616.check_no_uvars);
                                unmeta = false;
                                unascribe = false;
                                in_full_norm_request =
-                                 (uu___323_16616.in_full_norm_request);
+                                 (uu___324_16616.in_full_norm_request);
                                weakly_reduce_scrutinee =
-                                 (uu___323_16616.weakly_reduce_scrutinee)
+                                 (uu___324_16616.weakly_reduce_scrutinee)
                              }  in
                            let cfg' =
-                             let uu___324_16618 = cfg  in
+                             let uu___325_16618 = cfg  in
                              {
                                steps = steps';
-                               tcenv = (uu___324_16618.tcenv);
-                               debug = (uu___324_16618.debug);
+                               tcenv = (uu___325_16618.tcenv);
+                               debug = (uu___325_16618.debug);
                                delta_level = [FStar_TypeChecker_Env.NoDelta];
                                primitive_steps =
-                                 (uu___324_16618.primitive_steps);
-                               strong = (uu___324_16618.strong);
-                               memoize_lazy = (uu___324_16618.memoize_lazy);
+                                 (uu___325_16618.primitive_steps);
+                               strong = (uu___325_16618.strong);
+                               memoize_lazy = (uu___325_16618.memoize_lazy);
                                normalize_pure_lets =
-                                 (uu___324_16618.normalize_pure_lets)
+                                 (uu___325_16618.normalize_pure_lets)
                              }  in
                            norm cfg' env [] t1)
                          in
@@ -5546,13 +5546,13 @@ let rec (norm :
                                        (FStar_Syntax_Subst.subst opening)
                                     in
                                  FStar_Pervasives_Native.Some
-                                   (let uu___325_16706 = rc  in
+                                   (let uu___326_16706 = rc  in
                                     {
                                       FStar_Syntax_Syntax.residual_effect =
-                                        (uu___325_16706.FStar_Syntax_Syntax.residual_effect);
+                                        (uu___326_16706.FStar_Syntax_Syntax.residual_effect);
                                       FStar_Syntax_Syntax.residual_typ = rct;
                                       FStar_Syntax_Syntax.residual_flags =
-                                        (uu___325_16706.FStar_Syntax_Syntax.residual_flags)
+                                        (uu___326_16706.FStar_Syntax_Syntax.residual_flags)
                                     })
                              | uu____16707 -> lopt  in
                            (log cfg
@@ -5566,18 +5566,18 @@ let rec (norm :
                                    uu____16714);
                             (let stack1 = (Cfg cfg) :: stack  in
                              let cfg1 =
-                               let uu___326_16725 = cfg  in
+                               let uu___327_16725 = cfg  in
                                {
-                                 steps = (uu___326_16725.steps);
-                                 tcenv = (uu___326_16725.tcenv);
-                                 debug = (uu___326_16725.debug);
-                                 delta_level = (uu___326_16725.delta_level);
+                                 steps = (uu___327_16725.steps);
+                                 tcenv = (uu___327_16725.tcenv);
+                                 debug = (uu___327_16725.debug);
+                                 delta_level = (uu___327_16725.delta_level);
                                  primitive_steps =
-                                   (uu___326_16725.primitive_steps);
+                                   (uu___327_16725.primitive_steps);
                                  strong = true;
-                                 memoize_lazy = (uu___326_16725.memoize_lazy);
+                                 memoize_lazy = (uu___327_16725.memoize_lazy);
                                  normalize_pure_lets =
-                                   (uu___326_16725.normalize_pure_lets)
+                                   (uu___327_16725.normalize_pure_lets)
                                }  in
                              norm cfg1 env'
                                ((Abs
@@ -5592,52 +5592,52 @@ let rec (norm :
                         then closure_as_term cfg env t1
                         else
                           (let steps' =
-                             let uu___323_16743 = cfg.steps  in
+                             let uu___324_16743 = cfg.steps  in
                              {
-                               beta = (uu___323_16743.beta);
+                               beta = (uu___324_16743.beta);
                                iota = false;
                                zeta = false;
                                weak = false;
-                               hnf = (uu___323_16743.hnf);
+                               hnf = (uu___324_16743.hnf);
                                primops = false;
                                do_not_unfold_pure_lets = true;
-                               unfold_until = (uu___323_16743.unfold_until);
-                               unfold_only = (uu___323_16743.unfold_only);
-                               unfold_fully = (uu___323_16743.unfold_fully);
-                               unfold_attr = (uu___323_16743.unfold_attr);
-                               unfold_tac = (uu___323_16743.unfold_tac);
+                               unfold_until = (uu___324_16743.unfold_until);
+                               unfold_only = (uu___324_16743.unfold_only);
+                               unfold_fully = (uu___324_16743.unfold_fully);
+                               unfold_attr = (uu___324_16743.unfold_attr);
+                               unfold_tac = (uu___324_16743.unfold_tac);
                                pure_subterms_within_computations = false;
                                simplify = false;
                                erase_universes =
-                                 (uu___323_16743.erase_universes);
+                                 (uu___324_16743.erase_universes);
                                allow_unbound_universes =
-                                 (uu___323_16743.allow_unbound_universes);
+                                 (uu___324_16743.allow_unbound_universes);
                                reify_ = false;
                                compress_uvars =
-                                 (uu___323_16743.compress_uvars);
+                                 (uu___324_16743.compress_uvars);
                                no_full_norm = true;
                                check_no_uvars =
-                                 (uu___323_16743.check_no_uvars);
+                                 (uu___324_16743.check_no_uvars);
                                unmeta = false;
                                unascribe = false;
                                in_full_norm_request =
-                                 (uu___323_16743.in_full_norm_request);
+                                 (uu___324_16743.in_full_norm_request);
                                weakly_reduce_scrutinee =
-                                 (uu___323_16743.weakly_reduce_scrutinee)
+                                 (uu___324_16743.weakly_reduce_scrutinee)
                              }  in
                            let cfg' =
-                             let uu___324_16745 = cfg  in
+                             let uu___325_16745 = cfg  in
                              {
                                steps = steps';
-                               tcenv = (uu___324_16745.tcenv);
-                               debug = (uu___324_16745.debug);
+                               tcenv = (uu___325_16745.tcenv);
+                               debug = (uu___325_16745.debug);
                                delta_level = [FStar_TypeChecker_Env.NoDelta];
                                primitive_steps =
-                                 (uu___324_16745.primitive_steps);
-                               strong = (uu___324_16745.strong);
-                               memoize_lazy = (uu___324_16745.memoize_lazy);
+                                 (uu___325_16745.primitive_steps);
+                               strong = (uu___325_16745.strong);
+                               memoize_lazy = (uu___325_16745.memoize_lazy);
                                normalize_pure_lets =
-                                 (uu___324_16745.normalize_pure_lets)
+                                 (uu___325_16745.normalize_pure_lets)
                              }  in
                            norm cfg' env [] t1)
                          in
@@ -5673,13 +5673,13 @@ let rec (norm :
                                        (FStar_Syntax_Subst.subst opening)
                                     in
                                  FStar_Pervasives_Native.Some
-                                   (let uu___325_16833 = rc  in
+                                   (let uu___326_16833 = rc  in
                                     {
                                       FStar_Syntax_Syntax.residual_effect =
-                                        (uu___325_16833.FStar_Syntax_Syntax.residual_effect);
+                                        (uu___326_16833.FStar_Syntax_Syntax.residual_effect);
                                       FStar_Syntax_Syntax.residual_typ = rct;
                                       FStar_Syntax_Syntax.residual_flags =
-                                        (uu___325_16833.FStar_Syntax_Syntax.residual_flags)
+                                        (uu___326_16833.FStar_Syntax_Syntax.residual_flags)
                                     })
                              | uu____16834 -> lopt  in
                            (log cfg
@@ -5693,18 +5693,18 @@ let rec (norm :
                                    uu____16841);
                             (let stack1 = (Cfg cfg) :: stack  in
                              let cfg1 =
-                               let uu___326_16852 = cfg  in
+                               let uu___327_16852 = cfg  in
                                {
-                                 steps = (uu___326_16852.steps);
-                                 tcenv = (uu___326_16852.tcenv);
-                                 debug = (uu___326_16852.debug);
-                                 delta_level = (uu___326_16852.delta_level);
+                                 steps = (uu___327_16852.steps);
+                                 tcenv = (uu___327_16852.tcenv);
+                                 debug = (uu___327_16852.debug);
+                                 delta_level = (uu___327_16852.delta_level);
                                  primitive_steps =
-                                   (uu___326_16852.primitive_steps);
+                                   (uu___327_16852.primitive_steps);
                                  strong = true;
-                                 memoize_lazy = (uu___326_16852.memoize_lazy);
+                                 memoize_lazy = (uu___327_16852.memoize_lazy);
                                  normalize_pure_lets =
-                                   (uu___326_16852.normalize_pure_lets)
+                                   (uu___327_16852.normalize_pure_lets)
                                }  in
                              norm cfg1 env'
                                ((Abs
@@ -5719,52 +5719,52 @@ let rec (norm :
                         then closure_as_term cfg env t1
                         else
                           (let steps' =
-                             let uu___323_16870 = cfg.steps  in
+                             let uu___324_16870 = cfg.steps  in
                              {
-                               beta = (uu___323_16870.beta);
+                               beta = (uu___324_16870.beta);
                                iota = false;
                                zeta = false;
                                weak = false;
-                               hnf = (uu___323_16870.hnf);
+                               hnf = (uu___324_16870.hnf);
                                primops = false;
                                do_not_unfold_pure_lets = true;
-                               unfold_until = (uu___323_16870.unfold_until);
-                               unfold_only = (uu___323_16870.unfold_only);
-                               unfold_fully = (uu___323_16870.unfold_fully);
-                               unfold_attr = (uu___323_16870.unfold_attr);
-                               unfold_tac = (uu___323_16870.unfold_tac);
+                               unfold_until = (uu___324_16870.unfold_until);
+                               unfold_only = (uu___324_16870.unfold_only);
+                               unfold_fully = (uu___324_16870.unfold_fully);
+                               unfold_attr = (uu___324_16870.unfold_attr);
+                               unfold_tac = (uu___324_16870.unfold_tac);
                                pure_subterms_within_computations = false;
                                simplify = false;
                                erase_universes =
-                                 (uu___323_16870.erase_universes);
+                                 (uu___324_16870.erase_universes);
                                allow_unbound_universes =
-                                 (uu___323_16870.allow_unbound_universes);
+                                 (uu___324_16870.allow_unbound_universes);
                                reify_ = false;
                                compress_uvars =
-                                 (uu___323_16870.compress_uvars);
+                                 (uu___324_16870.compress_uvars);
                                no_full_norm = true;
                                check_no_uvars =
-                                 (uu___323_16870.check_no_uvars);
+                                 (uu___324_16870.check_no_uvars);
                                unmeta = false;
                                unascribe = false;
                                in_full_norm_request =
-                                 (uu___323_16870.in_full_norm_request);
+                                 (uu___324_16870.in_full_norm_request);
                                weakly_reduce_scrutinee =
-                                 (uu___323_16870.weakly_reduce_scrutinee)
+                                 (uu___324_16870.weakly_reduce_scrutinee)
                              }  in
                            let cfg' =
-                             let uu___324_16872 = cfg  in
+                             let uu___325_16872 = cfg  in
                              {
                                steps = steps';
-                               tcenv = (uu___324_16872.tcenv);
-                               debug = (uu___324_16872.debug);
+                               tcenv = (uu___325_16872.tcenv);
+                               debug = (uu___325_16872.debug);
                                delta_level = [FStar_TypeChecker_Env.NoDelta];
                                primitive_steps =
-                                 (uu___324_16872.primitive_steps);
-                               strong = (uu___324_16872.strong);
-                               memoize_lazy = (uu___324_16872.memoize_lazy);
+                                 (uu___325_16872.primitive_steps);
+                               strong = (uu___325_16872.strong);
+                               memoize_lazy = (uu___325_16872.memoize_lazy);
                                normalize_pure_lets =
-                                 (uu___324_16872.normalize_pure_lets)
+                                 (uu___325_16872.normalize_pure_lets)
                              }  in
                            norm cfg' env [] t1)
                          in
@@ -5800,13 +5800,13 @@ let rec (norm :
                                        (FStar_Syntax_Subst.subst opening)
                                     in
                                  FStar_Pervasives_Native.Some
-                                   (let uu___325_16960 = rc  in
+                                   (let uu___326_16960 = rc  in
                                     {
                                       FStar_Syntax_Syntax.residual_effect =
-                                        (uu___325_16960.FStar_Syntax_Syntax.residual_effect);
+                                        (uu___326_16960.FStar_Syntax_Syntax.residual_effect);
                                       FStar_Syntax_Syntax.residual_typ = rct;
                                       FStar_Syntax_Syntax.residual_flags =
-                                        (uu___325_16960.FStar_Syntax_Syntax.residual_flags)
+                                        (uu___326_16960.FStar_Syntax_Syntax.residual_flags)
                                     })
                              | uu____16961 -> lopt  in
                            (log cfg
@@ -5820,18 +5820,18 @@ let rec (norm :
                                    uu____16968);
                             (let stack1 = (Cfg cfg) :: stack  in
                              let cfg1 =
-                               let uu___326_16979 = cfg  in
+                               let uu___327_16979 = cfg  in
                                {
-                                 steps = (uu___326_16979.steps);
-                                 tcenv = (uu___326_16979.tcenv);
-                                 debug = (uu___326_16979.debug);
-                                 delta_level = (uu___326_16979.delta_level);
+                                 steps = (uu___327_16979.steps);
+                                 tcenv = (uu___327_16979.tcenv);
+                                 debug = (uu___327_16979.debug);
+                                 delta_level = (uu___327_16979.delta_level);
                                  primitive_steps =
-                                   (uu___326_16979.primitive_steps);
+                                   (uu___327_16979.primitive_steps);
                                  strong = true;
-                                 memoize_lazy = (uu___326_16979.memoize_lazy);
+                                 memoize_lazy = (uu___327_16979.memoize_lazy);
                                  normalize_pure_lets =
-                                   (uu___326_16979.normalize_pure_lets)
+                                   (uu___327_16979.normalize_pure_lets)
                                }  in
                              norm cfg1 env'
                                ((Abs
@@ -5846,52 +5846,52 @@ let rec (norm :
                         then closure_as_term cfg env t1
                         else
                           (let steps' =
-                             let uu___323_17001 = cfg.steps  in
+                             let uu___324_17001 = cfg.steps  in
                              {
-                               beta = (uu___323_17001.beta);
+                               beta = (uu___324_17001.beta);
                                iota = false;
                                zeta = false;
                                weak = false;
-                               hnf = (uu___323_17001.hnf);
+                               hnf = (uu___324_17001.hnf);
                                primops = false;
                                do_not_unfold_pure_lets = true;
-                               unfold_until = (uu___323_17001.unfold_until);
-                               unfold_only = (uu___323_17001.unfold_only);
-                               unfold_fully = (uu___323_17001.unfold_fully);
-                               unfold_attr = (uu___323_17001.unfold_attr);
-                               unfold_tac = (uu___323_17001.unfold_tac);
+                               unfold_until = (uu___324_17001.unfold_until);
+                               unfold_only = (uu___324_17001.unfold_only);
+                               unfold_fully = (uu___324_17001.unfold_fully);
+                               unfold_attr = (uu___324_17001.unfold_attr);
+                               unfold_tac = (uu___324_17001.unfold_tac);
                                pure_subterms_within_computations = false;
                                simplify = false;
                                erase_universes =
-                                 (uu___323_17001.erase_universes);
+                                 (uu___324_17001.erase_universes);
                                allow_unbound_universes =
-                                 (uu___323_17001.allow_unbound_universes);
+                                 (uu___324_17001.allow_unbound_universes);
                                reify_ = false;
                                compress_uvars =
-                                 (uu___323_17001.compress_uvars);
+                                 (uu___324_17001.compress_uvars);
                                no_full_norm = true;
                                check_no_uvars =
-                                 (uu___323_17001.check_no_uvars);
+                                 (uu___324_17001.check_no_uvars);
                                unmeta = false;
                                unascribe = false;
                                in_full_norm_request =
-                                 (uu___323_17001.in_full_norm_request);
+                                 (uu___324_17001.in_full_norm_request);
                                weakly_reduce_scrutinee =
-                                 (uu___323_17001.weakly_reduce_scrutinee)
+                                 (uu___324_17001.weakly_reduce_scrutinee)
                              }  in
                            let cfg' =
-                             let uu___324_17003 = cfg  in
+                             let uu___325_17003 = cfg  in
                              {
                                steps = steps';
-                               tcenv = (uu___324_17003.tcenv);
-                               debug = (uu___324_17003.debug);
+                               tcenv = (uu___325_17003.tcenv);
+                               debug = (uu___325_17003.debug);
                                delta_level = [FStar_TypeChecker_Env.NoDelta];
                                primitive_steps =
-                                 (uu___324_17003.primitive_steps);
-                               strong = (uu___324_17003.strong);
-                               memoize_lazy = (uu___324_17003.memoize_lazy);
+                                 (uu___325_17003.primitive_steps);
+                               strong = (uu___325_17003.strong);
+                               memoize_lazy = (uu___325_17003.memoize_lazy);
                                normalize_pure_lets =
-                                 (uu___324_17003.normalize_pure_lets)
+                                 (uu___325_17003.normalize_pure_lets)
                              }  in
                            norm cfg' env [] t1)
                          in
@@ -5927,13 +5927,13 @@ let rec (norm :
                                        (FStar_Syntax_Subst.subst opening)
                                     in
                                  FStar_Pervasives_Native.Some
-                                   (let uu___325_17091 = rc  in
+                                   (let uu___326_17091 = rc  in
                                     {
                                       FStar_Syntax_Syntax.residual_effect =
-                                        (uu___325_17091.FStar_Syntax_Syntax.residual_effect);
+                                        (uu___326_17091.FStar_Syntax_Syntax.residual_effect);
                                       FStar_Syntax_Syntax.residual_typ = rct;
                                       FStar_Syntax_Syntax.residual_flags =
-                                        (uu___325_17091.FStar_Syntax_Syntax.residual_flags)
+                                        (uu___326_17091.FStar_Syntax_Syntax.residual_flags)
                                     })
                              | uu____17092 -> lopt  in
                            (log cfg
@@ -5947,18 +5947,18 @@ let rec (norm :
                                    uu____17099);
                             (let stack1 = (Cfg cfg) :: stack  in
                              let cfg1 =
-                               let uu___326_17110 = cfg  in
+                               let uu___327_17110 = cfg  in
                                {
-                                 steps = (uu___326_17110.steps);
-                                 tcenv = (uu___326_17110.tcenv);
-                                 debug = (uu___326_17110.debug);
-                                 delta_level = (uu___326_17110.delta_level);
+                                 steps = (uu___327_17110.steps);
+                                 tcenv = (uu___327_17110.tcenv);
+                                 debug = (uu___327_17110.debug);
+                                 delta_level = (uu___327_17110.delta_level);
                                  primitive_steps =
-                                   (uu___326_17110.primitive_steps);
+                                   (uu___327_17110.primitive_steps);
                                  strong = true;
-                                 memoize_lazy = (uu___326_17110.memoize_lazy);
+                                 memoize_lazy = (uu___327_17110.memoize_lazy);
                                  normalize_pure_lets =
-                                   (uu___326_17110.normalize_pure_lets)
+                                   (uu___327_17110.normalize_pure_lets)
                                }  in
                              norm cfg1 env'
                                ((Abs
@@ -5973,52 +5973,52 @@ let rec (norm :
                         then closure_as_term cfg env t1
                         else
                           (let steps' =
-                             let uu___323_17116 = cfg.steps  in
+                             let uu___324_17116 = cfg.steps  in
                              {
-                               beta = (uu___323_17116.beta);
+                               beta = (uu___324_17116.beta);
                                iota = false;
                                zeta = false;
                                weak = false;
-                               hnf = (uu___323_17116.hnf);
+                               hnf = (uu___324_17116.hnf);
                                primops = false;
                                do_not_unfold_pure_lets = true;
-                               unfold_until = (uu___323_17116.unfold_until);
-                               unfold_only = (uu___323_17116.unfold_only);
-                               unfold_fully = (uu___323_17116.unfold_fully);
-                               unfold_attr = (uu___323_17116.unfold_attr);
-                               unfold_tac = (uu___323_17116.unfold_tac);
+                               unfold_until = (uu___324_17116.unfold_until);
+                               unfold_only = (uu___324_17116.unfold_only);
+                               unfold_fully = (uu___324_17116.unfold_fully);
+                               unfold_attr = (uu___324_17116.unfold_attr);
+                               unfold_tac = (uu___324_17116.unfold_tac);
                                pure_subterms_within_computations = false;
                                simplify = false;
                                erase_universes =
-                                 (uu___323_17116.erase_universes);
+                                 (uu___324_17116.erase_universes);
                                allow_unbound_universes =
-                                 (uu___323_17116.allow_unbound_universes);
+                                 (uu___324_17116.allow_unbound_universes);
                                reify_ = false;
                                compress_uvars =
-                                 (uu___323_17116.compress_uvars);
+                                 (uu___324_17116.compress_uvars);
                                no_full_norm = true;
                                check_no_uvars =
-                                 (uu___323_17116.check_no_uvars);
+                                 (uu___324_17116.check_no_uvars);
                                unmeta = false;
                                unascribe = false;
                                in_full_norm_request =
-                                 (uu___323_17116.in_full_norm_request);
+                                 (uu___324_17116.in_full_norm_request);
                                weakly_reduce_scrutinee =
-                                 (uu___323_17116.weakly_reduce_scrutinee)
+                                 (uu___324_17116.weakly_reduce_scrutinee)
                              }  in
                            let cfg' =
-                             let uu___324_17118 = cfg  in
+                             let uu___325_17118 = cfg  in
                              {
                                steps = steps';
-                               tcenv = (uu___324_17118.tcenv);
-                               debug = (uu___324_17118.debug);
+                               tcenv = (uu___325_17118.tcenv);
+                               debug = (uu___325_17118.debug);
                                delta_level = [FStar_TypeChecker_Env.NoDelta];
                                primitive_steps =
-                                 (uu___324_17118.primitive_steps);
-                               strong = (uu___324_17118.strong);
-                               memoize_lazy = (uu___324_17118.memoize_lazy);
+                                 (uu___325_17118.primitive_steps);
+                               strong = (uu___325_17118.strong);
+                               memoize_lazy = (uu___325_17118.memoize_lazy);
                                normalize_pure_lets =
-                                 (uu___324_17118.normalize_pure_lets)
+                                 (uu___325_17118.normalize_pure_lets)
                              }  in
                            norm cfg' env [] t1)
                          in
@@ -6054,13 +6054,13 @@ let rec (norm :
                                        (FStar_Syntax_Subst.subst opening)
                                     in
                                  FStar_Pervasives_Native.Some
-                                   (let uu___325_17206 = rc  in
+                                   (let uu___326_17206 = rc  in
                                     {
                                       FStar_Syntax_Syntax.residual_effect =
-                                        (uu___325_17206.FStar_Syntax_Syntax.residual_effect);
+                                        (uu___326_17206.FStar_Syntax_Syntax.residual_effect);
                                       FStar_Syntax_Syntax.residual_typ = rct;
                                       FStar_Syntax_Syntax.residual_flags =
-                                        (uu___325_17206.FStar_Syntax_Syntax.residual_flags)
+                                        (uu___326_17206.FStar_Syntax_Syntax.residual_flags)
                                     })
                              | uu____17207 -> lopt  in
                            (log cfg
@@ -6074,18 +6074,18 @@ let rec (norm :
                                    uu____17214);
                             (let stack1 = (Cfg cfg) :: stack  in
                              let cfg1 =
-                               let uu___326_17225 = cfg  in
+                               let uu___327_17225 = cfg  in
                                {
-                                 steps = (uu___326_17225.steps);
-                                 tcenv = (uu___326_17225.tcenv);
-                                 debug = (uu___326_17225.debug);
-                                 delta_level = (uu___326_17225.delta_level);
+                                 steps = (uu___327_17225.steps);
+                                 tcenv = (uu___327_17225.tcenv);
+                                 debug = (uu___327_17225.debug);
+                                 delta_level = (uu___327_17225.delta_level);
                                  primitive_steps =
-                                   (uu___326_17225.primitive_steps);
+                                   (uu___327_17225.primitive_steps);
                                  strong = true;
-                                 memoize_lazy = (uu___326_17225.memoize_lazy);
+                                 memoize_lazy = (uu___327_17225.memoize_lazy);
                                  normalize_pure_lets =
-                                   (uu___326_17225.normalize_pure_lets)
+                                   (uu___327_17225.normalize_pure_lets)
                                }  in
                              norm cfg1 env'
                                ((Abs
@@ -6134,12 +6134,12 @@ let rec (norm :
                       let t2 =
                         mk
                           (FStar_Syntax_Syntax.Tm_refine
-                             ((let uu___327_17457 = x  in
+                             ((let uu___328_17457 = x  in
                                {
                                  FStar_Syntax_Syntax.ppname =
-                                   (uu___327_17457.FStar_Syntax_Syntax.ppname);
+                                   (uu___328_17457.FStar_Syntax_Syntax.ppname);
                                  FStar_Syntax_Syntax.index =
-                                   (uu___327_17457.FStar_Syntax_Syntax.index);
+                                   (uu___328_17457.FStar_Syntax_Syntax.index);
                                  FStar_Syntax_Syntax.sort = t_x
                                }), f)) t1.FStar_Syntax_Syntax.pos
                          in
@@ -6161,12 +6161,12 @@ let rec (norm :
                           let uu____17508 =
                             let uu____17515 =
                               FStar_Syntax_Subst.close closing f2  in
-                            ((let uu___328_17521 = x  in
+                            ((let uu___329_17521 = x  in
                               {
                                 FStar_Syntax_Syntax.ppname =
-                                  (uu___328_17521.FStar_Syntax_Syntax.ppname);
+                                  (uu___329_17521.FStar_Syntax_Syntax.ppname);
                                 FStar_Syntax_Syntax.index =
-                                  (uu___328_17521.FStar_Syntax_Syntax.index);
+                                  (uu___329_17521.FStar_Syntax_Syntax.index);
                                 FStar_Syntax_Syntax.sort = t_x
                               }), uu____17515)
                              in
@@ -6281,49 +6281,49 @@ let rec (norm :
                    (Prims.op_Negation (cfg.steps).weak)
                then
                  let cfg' =
-                   let uu___329_18010 = cfg  in
+                   let uu___330_18010 = cfg  in
                    {
                      steps =
-                       (let uu___330_18013 = cfg.steps  in
+                       (let uu___331_18013 = cfg.steps  in
                         {
-                          beta = (uu___330_18013.beta);
-                          iota = (uu___330_18013.iota);
-                          zeta = (uu___330_18013.zeta);
+                          beta = (uu___331_18013.beta);
+                          iota = (uu___331_18013.iota);
+                          zeta = (uu___331_18013.zeta);
                           weak = true;
-                          hnf = (uu___330_18013.hnf);
-                          primops = (uu___330_18013.primops);
+                          hnf = (uu___331_18013.hnf);
+                          primops = (uu___331_18013.primops);
                           do_not_unfold_pure_lets =
-                            (uu___330_18013.do_not_unfold_pure_lets);
-                          unfold_until = (uu___330_18013.unfold_until);
-                          unfold_only = (uu___330_18013.unfold_only);
-                          unfold_fully = (uu___330_18013.unfold_fully);
-                          unfold_attr = (uu___330_18013.unfold_attr);
-                          unfold_tac = (uu___330_18013.unfold_tac);
+                            (uu___331_18013.do_not_unfold_pure_lets);
+                          unfold_until = (uu___331_18013.unfold_until);
+                          unfold_only = (uu___331_18013.unfold_only);
+                          unfold_fully = (uu___331_18013.unfold_fully);
+                          unfold_attr = (uu___331_18013.unfold_attr);
+                          unfold_tac = (uu___331_18013.unfold_tac);
                           pure_subterms_within_computations =
-                            (uu___330_18013.pure_subterms_within_computations);
-                          simplify = (uu___330_18013.simplify);
-                          erase_universes = (uu___330_18013.erase_universes);
+                            (uu___331_18013.pure_subterms_within_computations);
+                          simplify = (uu___331_18013.simplify);
+                          erase_universes = (uu___331_18013.erase_universes);
                           allow_unbound_universes =
-                            (uu___330_18013.allow_unbound_universes);
-                          reify_ = (uu___330_18013.reify_);
-                          compress_uvars = (uu___330_18013.compress_uvars);
-                          no_full_norm = (uu___330_18013.no_full_norm);
-                          check_no_uvars = (uu___330_18013.check_no_uvars);
-                          unmeta = (uu___330_18013.unmeta);
-                          unascribe = (uu___330_18013.unascribe);
+                            (uu___331_18013.allow_unbound_universes);
+                          reify_ = (uu___331_18013.reify_);
+                          compress_uvars = (uu___331_18013.compress_uvars);
+                          no_full_norm = (uu___331_18013.no_full_norm);
+                          check_no_uvars = (uu___331_18013.check_no_uvars);
+                          unmeta = (uu___331_18013.unmeta);
+                          unascribe = (uu___331_18013.unascribe);
                           in_full_norm_request =
-                            (uu___330_18013.in_full_norm_request);
+                            (uu___331_18013.in_full_norm_request);
                           weakly_reduce_scrutinee =
-                            (uu___330_18013.weakly_reduce_scrutinee)
+                            (uu___331_18013.weakly_reduce_scrutinee)
                         });
-                     tcenv = (uu___329_18010.tcenv);
-                     debug = (uu___329_18010.debug);
-                     delta_level = (uu___329_18010.delta_level);
-                     primitive_steps = (uu___329_18010.primitive_steps);
-                     strong = (uu___329_18010.strong);
-                     memoize_lazy = (uu___329_18010.memoize_lazy);
+                     tcenv = (uu___330_18010.tcenv);
+                     debug = (uu___330_18010.debug);
+                     delta_level = (uu___330_18010.delta_level);
+                     primitive_steps = (uu___330_18010.primitive_steps);
+                     strong = (uu___330_18010.strong);
+                     memoize_lazy = (uu___330_18010.memoize_lazy);
                      normalize_pure_lets =
-                       (uu___329_18010.normalize_pure_lets)
+                       (uu___330_18010.normalize_pure_lets)
                    }  in
                  norm cfg' env ((Cfg cfg) :: stack1) head1
                else norm cfg env stack1 head1
@@ -6342,22 +6342,22 @@ let rec (norm :
                          match uu____18049 with
                          | (openings,lbunivs) ->
                              let cfg1 =
-                               let uu___331_18069 = cfg  in
+                               let uu___332_18069 = cfg  in
                                let uu____18070 =
                                  FStar_TypeChecker_Env.push_univ_vars
                                    cfg.tcenv lbunivs
                                   in
                                {
-                                 steps = (uu___331_18069.steps);
+                                 steps = (uu___332_18069.steps);
                                  tcenv = uu____18070;
-                                 debug = (uu___331_18069.debug);
-                                 delta_level = (uu___331_18069.delta_level);
+                                 debug = (uu___332_18069.debug);
+                                 delta_level = (uu___332_18069.delta_level);
                                  primitive_steps =
-                                   (uu___331_18069.primitive_steps);
-                                 strong = (uu___331_18069.strong);
-                                 memoize_lazy = (uu___331_18069.memoize_lazy);
+                                   (uu___332_18069.primitive_steps);
+                                 strong = (uu___332_18069.strong);
+                                 memoize_lazy = (uu___332_18069.memoize_lazy);
                                  normalize_pure_lets =
-                                   (uu___331_18069.normalize_pure_lets)
+                                   (uu___332_18069.normalize_pure_lets)
                                }  in
                              let norm1 t2 =
                                let uu____18077 =
@@ -6371,19 +6371,19 @@ let rec (norm :
                                 in
                              let lbdef = norm1 lb.FStar_Syntax_Syntax.lbdef
                                 in
-                             let uu___332_18081 = lb  in
+                             let uu___333_18081 = lb  in
                              {
                                FStar_Syntax_Syntax.lbname =
-                                 (uu___332_18081.FStar_Syntax_Syntax.lbname);
+                                 (uu___333_18081.FStar_Syntax_Syntax.lbname);
                                FStar_Syntax_Syntax.lbunivs = lbunivs;
                                FStar_Syntax_Syntax.lbtyp = lbtyp;
                                FStar_Syntax_Syntax.lbeff =
-                                 (uu___332_18081.FStar_Syntax_Syntax.lbeff);
+                                 (uu___333_18081.FStar_Syntax_Syntax.lbeff);
                                FStar_Syntax_Syntax.lbdef = lbdef;
                                FStar_Syntax_Syntax.lbattrs =
-                                 (uu___332_18081.FStar_Syntax_Syntax.lbattrs);
+                                 (uu___333_18081.FStar_Syntax_Syntax.lbattrs);
                                FStar_Syntax_Syntax.lbpos =
-                                 (uu___332_18081.FStar_Syntax_Syntax.lbpos)
+                                 (uu___333_18081.FStar_Syntax_Syntax.lbpos)
                              }))
                   in
                let uu____18082 =
@@ -6480,12 +6480,12 @@ let rec (norm :
                               let uu____18343 = FStar_List.hd bs  in
                               FStar_Pervasives_Native.fst uu____18343  in
                             FStar_Util.Inl
-                              (let uu___333_18359 = x  in
+                              (let uu___334_18359 = x  in
                                {
                                  FStar_Syntax_Syntax.ppname =
-                                   (uu___333_18359.FStar_Syntax_Syntax.ppname);
+                                   (uu___334_18359.FStar_Syntax_Syntax.ppname);
                                  FStar_Syntax_Syntax.index =
-                                   (uu___333_18359.FStar_Syntax_Syntax.index);
+                                   (uu___334_18359.FStar_Syntax_Syntax.index);
                                  FStar_Syntax_Syntax.sort = ty
                                })
                              in
@@ -6494,22 +6494,22 @@ let rec (norm :
                                FStar_Util.print_string
                                  "+++ Normalizing Tm_let -- definiens\n");
                           (let lb1 =
-                             let uu___334_18364 = lb  in
+                             let uu___335_18364 = lb  in
                              let uu____18365 =
                                norm cfg env [] lb.FStar_Syntax_Syntax.lbdef
                                 in
                              {
                                FStar_Syntax_Syntax.lbname = lbname;
                                FStar_Syntax_Syntax.lbunivs =
-                                 (uu___334_18364.FStar_Syntax_Syntax.lbunivs);
+                                 (uu___335_18364.FStar_Syntax_Syntax.lbunivs);
                                FStar_Syntax_Syntax.lbtyp = ty;
                                FStar_Syntax_Syntax.lbeff =
-                                 (uu___334_18364.FStar_Syntax_Syntax.lbeff);
+                                 (uu___335_18364.FStar_Syntax_Syntax.lbeff);
                                FStar_Syntax_Syntax.lbdef = uu____18365;
                                FStar_Syntax_Syntax.lbattrs =
-                                 (uu___334_18364.FStar_Syntax_Syntax.lbattrs);
+                                 (uu___335_18364.FStar_Syntax_Syntax.lbattrs);
                                FStar_Syntax_Syntax.lbpos =
-                                 (uu___334_18364.FStar_Syntax_Syntax.lbpos)
+                                 (uu___335_18364.FStar_Syntax_Syntax.lbpos)
                              }  in
                            let env' =
                              FStar_All.pipe_right bs
@@ -6519,18 +6519,18 @@ let rec (norm :
                               in
                            let stack1 = (Cfg cfg) :: stack  in
                            let cfg1 =
-                             let uu___335_18419 = cfg  in
+                             let uu___336_18419 = cfg  in
                              {
-                               steps = (uu___335_18419.steps);
-                               tcenv = (uu___335_18419.tcenv);
-                               debug = (uu___335_18419.debug);
-                               delta_level = (uu___335_18419.delta_level);
+                               steps = (uu___336_18419.steps);
+                               tcenv = (uu___336_18419.tcenv);
+                               debug = (uu___336_18419.debug);
+                               delta_level = (uu___336_18419.delta_level);
                                primitive_steps =
-                                 (uu___335_18419.primitive_steps);
+                                 (uu___336_18419.primitive_steps);
                                strong = true;
-                               memoize_lazy = (uu___335_18419.memoize_lazy);
+                               memoize_lazy = (uu___336_18419.memoize_lazy);
                                normalize_pure_lets =
-                                 (uu___335_18419.normalize_pure_lets)
+                                 (uu___336_18419.normalize_pure_lets)
                              }  in
                            log cfg1
                              (fun uu____18422  ->
@@ -6555,15 +6555,15 @@ let rec (norm :
                              norm cfg env [] lb.FStar_Syntax_Syntax.lbtyp  in
                            let lbname =
                              let uu____18475 =
-                               let uu___336_18476 =
+                               let uu___337_18476 =
                                  FStar_Util.left
                                    lb.FStar_Syntax_Syntax.lbname
                                   in
                                {
                                  FStar_Syntax_Syntax.ppname =
-                                   (uu___336_18476.FStar_Syntax_Syntax.ppname);
+                                   (uu___337_18476.FStar_Syntax_Syntax.ppname);
                                  FStar_Syntax_Syntax.index =
-                                   (uu___336_18476.FStar_Syntax_Syntax.index);
+                                   (uu___337_18476.FStar_Syntax_Syntax.index);
                                  FStar_Syntax_Syntax.sort = ty
                                }  in
                              FStar_Util.Inl uu____18475  in
@@ -6592,7 +6592,7 @@ let rec (norm :
                                  match lopt with
                                  | FStar_Pervasives_Native.Some rc ->
                                      let uu____18577 =
-                                       let uu___337_18578 = rc  in
+                                       let uu___338_18578 = rc  in
                                        let uu____18579 =
                                          FStar_Util.map_opt
                                            rc.FStar_Syntax_Syntax.residual_typ
@@ -6601,30 +6601,30 @@ let rec (norm :
                                        {
                                          FStar_Syntax_Syntax.residual_effect
                                            =
-                                           (uu___337_18578.FStar_Syntax_Syntax.residual_effect);
+                                           (uu___338_18578.FStar_Syntax_Syntax.residual_effect);
                                          FStar_Syntax_Syntax.residual_typ =
                                            uu____18579;
                                          FStar_Syntax_Syntax.residual_flags =
-                                           (uu___337_18578.FStar_Syntax_Syntax.residual_flags)
+                                           (uu___338_18578.FStar_Syntax_Syntax.residual_flags)
                                        }  in
                                      FStar_Pervasives_Native.Some uu____18577
                                  | uu____18588 -> lopt  in
                                let def =
                                  FStar_Syntax_Util.abs xs1 def_body1 lopt1
                                   in
-                               let uu___338_18594 = lb  in
+                               let uu___339_18594 = lb  in
                                {
                                  FStar_Syntax_Syntax.lbname = lbname;
                                  FStar_Syntax_Syntax.lbunivs =
-                                   (uu___338_18594.FStar_Syntax_Syntax.lbunivs);
+                                   (uu___339_18594.FStar_Syntax_Syntax.lbunivs);
                                  FStar_Syntax_Syntax.lbtyp = ty;
                                  FStar_Syntax_Syntax.lbeff =
-                                   (uu___338_18594.FStar_Syntax_Syntax.lbeff);
+                                   (uu___339_18594.FStar_Syntax_Syntax.lbeff);
                                  FStar_Syntax_Syntax.lbdef = def;
                                  FStar_Syntax_Syntax.lbattrs =
-                                   (uu___338_18594.FStar_Syntax_Syntax.lbattrs);
+                                   (uu___339_18594.FStar_Syntax_Syntax.lbattrs);
                                  FStar_Syntax_Syntax.lbpos =
-                                   (uu___338_18594.FStar_Syntax_Syntax.lbpos)
+                                   (uu___339_18594.FStar_Syntax_Syntax.lbpos)
                                }) lbs1
                        in
                     let env' =
@@ -6637,15 +6637,15 @@ let rec (norm :
                     (match uu____18628 with
                      | (lbs3,body3) ->
                          let t2 =
-                           let uu___339_18644 = t1  in
+                           let uu___340_18644 = t1  in
                            {
                              FStar_Syntax_Syntax.n =
                                (FStar_Syntax_Syntax.Tm_let
                                   ((true, lbs3), body3));
                              FStar_Syntax_Syntax.pos =
-                               (uu___339_18644.FStar_Syntax_Syntax.pos);
+                               (uu___340_18644.FStar_Syntax_Syntax.pos);
                              FStar_Syntax_Syntax.vars =
-                               (uu___339_18644.FStar_Syntax_Syntax.vars)
+                               (uu___340_18644.FStar_Syntax_Syntax.vars)
                            }  in
                          rebuild cfg env stack t2))
            | FStar_Syntax_Syntax.Tm_let (lbs,body) when
@@ -6660,15 +6660,15 @@ let rec (norm :
                         match uu____18768 with
                         | (rec_env,memos,i) ->
                             let bv =
-                              let uu___340_18889 =
+                              let uu___341_18889 =
                                 FStar_Util.left lb.FStar_Syntax_Syntax.lbname
                                  in
                               {
                                 FStar_Syntax_Syntax.ppname =
-                                  (uu___340_18889.FStar_Syntax_Syntax.ppname);
+                                  (uu___341_18889.FStar_Syntax_Syntax.ppname);
                                 FStar_Syntax_Syntax.index = i;
                                 FStar_Syntax_Syntax.sort =
-                                  (uu___340_18889.FStar_Syntax_Syntax.sort)
+                                  (uu___341_18889.FStar_Syntax_Syntax.sort)
                               }  in
                             let f_i = FStar_Syntax_Syntax.bv_to_tm bv  in
                             let fix_f_i =
@@ -6904,22 +6904,22 @@ and (reduce_impure_comp :
                     EraseUniverses;
                     Exclude Zeta;
                     Inlining]  in
-                  let uu___341_19904 = cfg  in
+                  let uu___342_19904 = cfg  in
                   let uu____19905 =
                     FStar_List.fold_right fstep_add_one new_steps cfg.steps
                      in
                   {
                     steps = uu____19905;
-                    tcenv = (uu___341_19904.tcenv);
-                    debug = (uu___341_19904.debug);
+                    tcenv = (uu___342_19904.tcenv);
+                    debug = (uu___342_19904.debug);
                     delta_level =
                       [FStar_TypeChecker_Env.Inlining;
                       FStar_TypeChecker_Env.Eager_unfolding_only];
-                    primitive_steps = (uu___341_19904.primitive_steps);
-                    strong = (uu___341_19904.strong);
-                    memoize_lazy = (uu___341_19904.memoize_lazy);
+                    primitive_steps = (uu___342_19904.primitive_steps);
+                    strong = (uu___342_19904.strong);
+                    memoize_lazy = (uu___342_19904.memoize_lazy);
                     normalize_pure_lets =
-                      (uu___341_19904.normalize_pure_lets)
+                      (uu___342_19904.normalize_pure_lets)
                   }
                 else cfg  in
               let metadata =
@@ -7016,21 +7016,21 @@ and (do_reify_monadic :
                                (match uu____20023 with
                                 | FStar_Pervasives_Native.Some e ->
                                     let lb1 =
-                                      let uu___342_20028 = lb  in
+                                      let uu___343_20028 = lb  in
                                       {
                                         FStar_Syntax_Syntax.lbname =
-                                          (uu___342_20028.FStar_Syntax_Syntax.lbname);
+                                          (uu___343_20028.FStar_Syntax_Syntax.lbname);
                                         FStar_Syntax_Syntax.lbunivs =
-                                          (uu___342_20028.FStar_Syntax_Syntax.lbunivs);
+                                          (uu___343_20028.FStar_Syntax_Syntax.lbunivs);
                                         FStar_Syntax_Syntax.lbtyp =
-                                          (uu___342_20028.FStar_Syntax_Syntax.lbtyp);
+                                          (uu___343_20028.FStar_Syntax_Syntax.lbtyp);
                                         FStar_Syntax_Syntax.lbeff =
                                           FStar_Parser_Const.effect_PURE_lid;
                                         FStar_Syntax_Syntax.lbdef = e;
                                         FStar_Syntax_Syntax.lbattrs =
-                                          (uu___342_20028.FStar_Syntax_Syntax.lbattrs);
+                                          (uu___343_20028.FStar_Syntax_Syntax.lbattrs);
                                         FStar_Syntax_Syntax.lbpos =
-                                          (uu___342_20028.FStar_Syntax_Syntax.lbpos)
+                                          (uu___343_20028.FStar_Syntax_Syntax.lbpos)
                                       }  in
                                     let uu____20029 = FStar_List.tl stack  in
                                     let uu____20030 =
@@ -7608,14 +7608,14 @@ and (norm_comp :
                | FStar_Pervasives_Native.None  ->
                    FStar_Pervasives_Native.None
                 in
-             let uu___343_21436 = comp  in
+             let uu___344_21436 = comp  in
              {
                FStar_Syntax_Syntax.n =
                  (FStar_Syntax_Syntax.Total (t1, uopt1));
                FStar_Syntax_Syntax.pos =
-                 (uu___343_21436.FStar_Syntax_Syntax.pos);
+                 (uu___344_21436.FStar_Syntax_Syntax.pos);
                FStar_Syntax_Syntax.vars =
-                 (uu___343_21436.FStar_Syntax_Syntax.vars)
+                 (uu___344_21436.FStar_Syntax_Syntax.vars)
              }
          | FStar_Syntax_Syntax.GTotal (t,uopt) ->
              let t1 = norm cfg env [] t  in
@@ -7629,14 +7629,14 @@ and (norm_comp :
                | FStar_Pervasives_Native.None  ->
                    FStar_Pervasives_Native.None
                 in
-             let uu___344_21461 = comp  in
+             let uu___345_21461 = comp  in
              {
                FStar_Syntax_Syntax.n =
                  (FStar_Syntax_Syntax.GTotal (t1, uopt1));
                FStar_Syntax_Syntax.pos =
-                 (uu___344_21461.FStar_Syntax_Syntax.pos);
+                 (uu___345_21461.FStar_Syntax_Syntax.pos);
                FStar_Syntax_Syntax.vars =
-                 (uu___344_21461.FStar_Syntax_Syntax.vars)
+                 (uu___345_21461.FStar_Syntax_Syntax.vars)
              }
          | FStar_Syntax_Syntax.Comp ct ->
              let norm_args =
@@ -7653,8 +7653,8 @@ and (norm_comp :
              let flags1 =
                FStar_All.pipe_right ct.FStar_Syntax_Syntax.flags
                  (FStar_List.map
-                    (fun uu___258_21547  ->
-                       match uu___258_21547 with
+                    (fun uu___259_21547  ->
+                       match uu___259_21547 with
                        | FStar_Syntax_Syntax.DECREASES t ->
                            let uu____21551 = norm cfg env [] t  in
                            FStar_Syntax_Syntax.DECREASES uu____21551
@@ -7666,23 +7666,23 @@ and (norm_comp :
                 in
              let result_typ =
                norm cfg env [] ct.FStar_Syntax_Syntax.result_typ  in
-             let uu___345_21559 = comp  in
+             let uu___346_21559 = comp  in
              {
                FStar_Syntax_Syntax.n =
                  (FStar_Syntax_Syntax.Comp
-                    (let uu___346_21562 = ct  in
+                    (let uu___347_21562 = ct  in
                      {
                        FStar_Syntax_Syntax.comp_univs = comp_univs;
                        FStar_Syntax_Syntax.effect_name =
-                         (uu___346_21562.FStar_Syntax_Syntax.effect_name);
+                         (uu___347_21562.FStar_Syntax_Syntax.effect_name);
                        FStar_Syntax_Syntax.result_typ = result_typ;
                        FStar_Syntax_Syntax.effect_args = effect_args;
                        FStar_Syntax_Syntax.flags = flags1
                      }));
                FStar_Syntax_Syntax.pos =
-                 (uu___345_21559.FStar_Syntax_Syntax.pos);
+                 (uu___346_21559.FStar_Syntax_Syntax.pos);
                FStar_Syntax_Syntax.vars =
-                 (uu___345_21559.FStar_Syntax_Syntax.vars)
+                 (uu___346_21559.FStar_Syntax_Syntax.vars)
              })
 
 and (norm_binder :
@@ -7693,14 +7693,14 @@ and (norm_binder :
         match uu____21565 with
         | (x,imp) ->
             let uu____21572 =
-              let uu___347_21573 = x  in
+              let uu___348_21573 = x  in
               let uu____21574 = norm cfg env [] x.FStar_Syntax_Syntax.sort
                  in
               {
                 FStar_Syntax_Syntax.ppname =
-                  (uu___347_21573.FStar_Syntax_Syntax.ppname);
+                  (uu___348_21573.FStar_Syntax_Syntax.ppname);
                 FStar_Syntax_Syntax.index =
-                  (uu___347_21573.FStar_Syntax_Syntax.index);
+                  (uu___348_21573.FStar_Syntax_Syntax.index);
                 FStar_Syntax_Syntax.sort = uu____21574
               }  in
             (uu____21572, imp)
@@ -7736,17 +7736,17 @@ and (norm_lcomp_opt :
               filter_out_lcomp_cflags rc.FStar_Syntax_Syntax.residual_flags
                in
             let uu____21728 =
-              let uu___348_21729 = rc  in
+              let uu___349_21729 = rc  in
               let uu____21730 =
                 FStar_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
                   (norm cfg env [])
                  in
               {
                 FStar_Syntax_Syntax.residual_effect =
-                  (uu___348_21729.FStar_Syntax_Syntax.residual_effect);
+                  (uu___349_21729.FStar_Syntax_Syntax.residual_effect);
                 FStar_Syntax_Syntax.residual_typ = uu____21730;
                 FStar_Syntax_Syntax.residual_flags =
-                  (uu___348_21729.FStar_Syntax_Syntax.residual_flags)
+                  (uu___349_21729.FStar_Syntax_Syntax.residual_flags)
               }  in
             FStar_Pervasives_Native.Some uu____21728
         | uu____21739 -> lopt
@@ -7771,8 +7771,8 @@ and (maybe_simplify :
 
 and (norm_cb : cfg -> FStar_Syntax_Embeddings.norm_cb) =
   fun cfg  ->
-    fun uu___259_21753  ->
-      match uu___259_21753 with
+    fun uu___260_21753  ->
+      match uu___260_21753 with
       | FStar_Util.Inr x -> norm cfg [] [] x
       | FStar_Util.Inl l ->
           let uu____21766 =
@@ -7806,13 +7806,13 @@ and (maybe_simplify_aux :
           then tm1
           else
             (let w t =
-               let uu___349_21812 = t  in
+               let uu___350_21812 = t  in
                {
                  FStar_Syntax_Syntax.n =
-                   (uu___349_21812.FStar_Syntax_Syntax.n);
+                   (uu___350_21812.FStar_Syntax_Syntax.n);
                  FStar_Syntax_Syntax.pos = (tm1.FStar_Syntax_Syntax.pos);
                  FStar_Syntax_Syntax.vars =
-                   (uu___349_21812.FStar_Syntax_Syntax.vars)
+                   (uu___350_21812.FStar_Syntax_Syntax.vars)
                }  in
              let simp_t t =
                let uu____21823 =
@@ -8920,13 +8920,13 @@ and (rebuild :
                let bs1 = norm_binders cfg env' bs  in
                let lopt1 = norm_lcomp_opt cfg env'' lopt  in
                let uu____27774 =
-                 let uu___350_27775 = FStar_Syntax_Util.abs bs1 t1 lopt1  in
+                 let uu___351_27775 = FStar_Syntax_Util.abs bs1 t1 lopt1  in
                  {
                    FStar_Syntax_Syntax.n =
-                     (uu___350_27775.FStar_Syntax_Syntax.n);
+                     (uu___351_27775.FStar_Syntax_Syntax.n);
                    FStar_Syntax_Syntax.pos = r;
                    FStar_Syntax_Syntax.vars =
-                     (uu___350_27775.FStar_Syntax_Syntax.vars)
+                     (uu___351_27775.FStar_Syntax_Syntax.vars)
                  }  in
                rebuild cfg env stack1 uu____27774
            | (Arg (Univ uu____27778,uu____27779,uu____27780))::uu____27781 ->
@@ -9101,57 +9101,57 @@ and (rebuild :
                       let new_delta =
                         FStar_All.pipe_right cfg1.delta_level
                           (FStar_List.filter
-                             (fun uu___260_28430  ->
-                                match uu___260_28430 with
+                             (fun uu___261_28430  ->
+                                match uu___261_28430 with
                                 | FStar_TypeChecker_Env.Inlining  -> true
                                 | FStar_TypeChecker_Env.Eager_unfolding_only 
                                     -> true
                                 | uu____28431 -> false))
                          in
                       let steps =
-                        let uu___351_28433 = cfg1.steps  in
+                        let uu___352_28433 = cfg1.steps  in
                         {
-                          beta = (uu___351_28433.beta);
-                          iota = (uu___351_28433.iota);
+                          beta = (uu___352_28433.beta);
+                          iota = (uu___352_28433.iota);
                           zeta = false;
-                          weak = (uu___351_28433.weak);
-                          hnf = (uu___351_28433.hnf);
-                          primops = (uu___351_28433.primops);
+                          weak = (uu___352_28433.weak);
+                          hnf = (uu___352_28433.hnf);
+                          primops = (uu___352_28433.primops);
                           do_not_unfold_pure_lets =
-                            (uu___351_28433.do_not_unfold_pure_lets);
+                            (uu___352_28433.do_not_unfold_pure_lets);
                           unfold_until = FStar_Pervasives_Native.None;
                           unfold_only = FStar_Pervasives_Native.None;
-                          unfold_fully = (uu___351_28433.unfold_fully);
+                          unfold_fully = (uu___352_28433.unfold_fully);
                           unfold_attr = FStar_Pervasives_Native.None;
                           unfold_tac = false;
                           pure_subterms_within_computations =
-                            (uu___351_28433.pure_subterms_within_computations);
-                          simplify = (uu___351_28433.simplify);
-                          erase_universes = (uu___351_28433.erase_universes);
+                            (uu___352_28433.pure_subterms_within_computations);
+                          simplify = (uu___352_28433.simplify);
+                          erase_universes = (uu___352_28433.erase_universes);
                           allow_unbound_universes =
-                            (uu___351_28433.allow_unbound_universes);
-                          reify_ = (uu___351_28433.reify_);
-                          compress_uvars = (uu___351_28433.compress_uvars);
-                          no_full_norm = (uu___351_28433.no_full_norm);
-                          check_no_uvars = (uu___351_28433.check_no_uvars);
-                          unmeta = (uu___351_28433.unmeta);
-                          unascribe = (uu___351_28433.unascribe);
+                            (uu___352_28433.allow_unbound_universes);
+                          reify_ = (uu___352_28433.reify_);
+                          compress_uvars = (uu___352_28433.compress_uvars);
+                          no_full_norm = (uu___352_28433.no_full_norm);
+                          check_no_uvars = (uu___352_28433.check_no_uvars);
+                          unmeta = (uu___352_28433.unmeta);
+                          unascribe = (uu___352_28433.unascribe);
                           in_full_norm_request =
-                            (uu___351_28433.in_full_norm_request);
+                            (uu___352_28433.in_full_norm_request);
                           weakly_reduce_scrutinee =
-                            (uu___351_28433.weakly_reduce_scrutinee)
+                            (uu___352_28433.weakly_reduce_scrutinee)
                         }  in
-                      let uu___352_28438 = cfg1  in
+                      let uu___353_28438 = cfg1  in
                       {
                         steps;
-                        tcenv = (uu___352_28438.tcenv);
-                        debug = (uu___352_28438.debug);
+                        tcenv = (uu___353_28438.tcenv);
+                        debug = (uu___353_28438.debug);
                         delta_level = new_delta;
-                        primitive_steps = (uu___352_28438.primitive_steps);
+                        primitive_steps = (uu___353_28438.primitive_steps);
                         strong = true;
-                        memoize_lazy = (uu___352_28438.memoize_lazy);
+                        memoize_lazy = (uu___353_28438.memoize_lazy);
                         normalize_pure_lets =
-                          (uu___352_28438.normalize_pure_lets)
+                          (uu___353_28438.normalize_pure_lets)
                       }  in
                     let norm_or_whnf env2 t2 =
                       if whnf
@@ -9178,74 +9178,74 @@ and (rebuild :
                              in
                           (match uu____28539 with
                            | (pats1,env3) ->
-                               ((let uu___353_28925 = p  in
+                               ((let uu___354_28925 = p  in
                                  {
                                    FStar_Syntax_Syntax.v =
                                      (FStar_Syntax_Syntax.Pat_cons
                                         (fv, (FStar_List.rev pats1)));
                                    FStar_Syntax_Syntax.p =
-                                     (uu___353_28925.FStar_Syntax_Syntax.p)
+                                     (uu___354_28925.FStar_Syntax_Syntax.p)
                                  }), env3))
                       | FStar_Syntax_Syntax.Pat_var x ->
                           let x1 =
-                            let uu___354_28944 = x  in
+                            let uu___355_28944 = x  in
                             let uu____28945 =
                               norm_or_whnf env2 x.FStar_Syntax_Syntax.sort
                                in
                             {
                               FStar_Syntax_Syntax.ppname =
-                                (uu___354_28944.FStar_Syntax_Syntax.ppname);
+                                (uu___355_28944.FStar_Syntax_Syntax.ppname);
                               FStar_Syntax_Syntax.index =
-                                (uu___354_28944.FStar_Syntax_Syntax.index);
+                                (uu___355_28944.FStar_Syntax_Syntax.index);
                               FStar_Syntax_Syntax.sort = uu____28945
                             }  in
-                          ((let uu___355_28959 = p  in
+                          ((let uu___356_28959 = p  in
                             {
                               FStar_Syntax_Syntax.v =
                                 (FStar_Syntax_Syntax.Pat_var x1);
                               FStar_Syntax_Syntax.p =
-                                (uu___355_28959.FStar_Syntax_Syntax.p)
+                                (uu___356_28959.FStar_Syntax_Syntax.p)
                             }), (dummy :: env2))
                       | FStar_Syntax_Syntax.Pat_wild x ->
                           let x1 =
-                            let uu___356_28970 = x  in
+                            let uu___357_28970 = x  in
                             let uu____28971 =
                               norm_or_whnf env2 x.FStar_Syntax_Syntax.sort
                                in
                             {
                               FStar_Syntax_Syntax.ppname =
-                                (uu___356_28970.FStar_Syntax_Syntax.ppname);
+                                (uu___357_28970.FStar_Syntax_Syntax.ppname);
                               FStar_Syntax_Syntax.index =
-                                (uu___356_28970.FStar_Syntax_Syntax.index);
+                                (uu___357_28970.FStar_Syntax_Syntax.index);
                               FStar_Syntax_Syntax.sort = uu____28971
                             }  in
-                          ((let uu___357_28985 = p  in
+                          ((let uu___358_28985 = p  in
                             {
                               FStar_Syntax_Syntax.v =
                                 (FStar_Syntax_Syntax.Pat_wild x1);
                               FStar_Syntax_Syntax.p =
-                                (uu___357_28985.FStar_Syntax_Syntax.p)
+                                (uu___358_28985.FStar_Syntax_Syntax.p)
                             }), (dummy :: env2))
                       | FStar_Syntax_Syntax.Pat_dot_term (x,t2) ->
                           let x1 =
-                            let uu___358_29001 = x  in
+                            let uu___359_29001 = x  in
                             let uu____29002 =
                               norm_or_whnf env2 x.FStar_Syntax_Syntax.sort
                                in
                             {
                               FStar_Syntax_Syntax.ppname =
-                                (uu___358_29001.FStar_Syntax_Syntax.ppname);
+                                (uu___359_29001.FStar_Syntax_Syntax.ppname);
                               FStar_Syntax_Syntax.index =
-                                (uu___358_29001.FStar_Syntax_Syntax.index);
+                                (uu___359_29001.FStar_Syntax_Syntax.index);
                               FStar_Syntax_Syntax.sort = uu____29002
                             }  in
                           let t3 = norm_or_whnf env2 t2  in
-                          ((let uu___359_29017 = p  in
+                          ((let uu___360_29017 = p  in
                             {
                               FStar_Syntax_Syntax.v =
                                 (FStar_Syntax_Syntax.Pat_dot_term (x1, t3));
                               FStar_Syntax_Syntax.p =
-                                (uu___359_29017.FStar_Syntax_Syntax.p)
+                                (uu___360_29017.FStar_Syntax_Syntax.p)
                             }), env2)
                        in
                     let branches1 =
@@ -9291,55 +9291,55 @@ and (rebuild :
                       if uu____29183
                       then
                         norm
-                          (let uu___360_29188 = cfg1  in
+                          (let uu___361_29188 = cfg1  in
                            {
                              steps =
-                               (let uu___361_29191 = cfg1.steps  in
+                               (let uu___362_29191 = cfg1.steps  in
                                 {
-                                  beta = (uu___361_29191.beta);
-                                  iota = (uu___361_29191.iota);
-                                  zeta = (uu___361_29191.zeta);
-                                  weak = (uu___361_29191.weak);
-                                  hnf = (uu___361_29191.hnf);
-                                  primops = (uu___361_29191.primops);
+                                  beta = (uu___362_29191.beta);
+                                  iota = (uu___362_29191.iota);
+                                  zeta = (uu___362_29191.zeta);
+                                  weak = (uu___362_29191.weak);
+                                  hnf = (uu___362_29191.hnf);
+                                  primops = (uu___362_29191.primops);
                                   do_not_unfold_pure_lets =
-                                    (uu___361_29191.do_not_unfold_pure_lets);
+                                    (uu___362_29191.do_not_unfold_pure_lets);
                                   unfold_until =
-                                    (uu___361_29191.unfold_until);
-                                  unfold_only = (uu___361_29191.unfold_only);
+                                    (uu___362_29191.unfold_until);
+                                  unfold_only = (uu___362_29191.unfold_only);
                                   unfold_fully =
-                                    (uu___361_29191.unfold_fully);
-                                  unfold_attr = (uu___361_29191.unfold_attr);
-                                  unfold_tac = (uu___361_29191.unfold_tac);
+                                    (uu___362_29191.unfold_fully);
+                                  unfold_attr = (uu___362_29191.unfold_attr);
+                                  unfold_tac = (uu___362_29191.unfold_tac);
                                   pure_subterms_within_computations =
-                                    (uu___361_29191.pure_subterms_within_computations);
-                                  simplify = (uu___361_29191.simplify);
+                                    (uu___362_29191.pure_subterms_within_computations);
+                                  simplify = (uu___362_29191.simplify);
                                   erase_universes =
-                                    (uu___361_29191.erase_universes);
+                                    (uu___362_29191.erase_universes);
                                   allow_unbound_universes =
-                                    (uu___361_29191.allow_unbound_universes);
-                                  reify_ = (uu___361_29191.reify_);
+                                    (uu___362_29191.allow_unbound_universes);
+                                  reify_ = (uu___362_29191.reify_);
                                   compress_uvars =
-                                    (uu___361_29191.compress_uvars);
+                                    (uu___362_29191.compress_uvars);
                                   no_full_norm =
-                                    (uu___361_29191.no_full_norm);
+                                    (uu___362_29191.no_full_norm);
                                   check_no_uvars =
-                                    (uu___361_29191.check_no_uvars);
-                                  unmeta = (uu___361_29191.unmeta);
-                                  unascribe = (uu___361_29191.unascribe);
+                                    (uu___362_29191.check_no_uvars);
+                                  unmeta = (uu___362_29191.unmeta);
+                                  unascribe = (uu___362_29191.unascribe);
                                   in_full_norm_request =
-                                    (uu___361_29191.in_full_norm_request);
+                                    (uu___362_29191.in_full_norm_request);
                                   weakly_reduce_scrutinee = false
                                 });
-                             tcenv = (uu___360_29188.tcenv);
-                             debug = (uu___360_29188.debug);
-                             delta_level = (uu___360_29188.delta_level);
+                             tcenv = (uu___361_29188.tcenv);
+                             debug = (uu___361_29188.debug);
+                             delta_level = (uu___361_29188.delta_level);
                              primitive_steps =
-                               (uu___360_29188.primitive_steps);
-                             strong = (uu___360_29188.strong);
-                             memoize_lazy = (uu___360_29188.memoize_lazy);
+                               (uu___361_29188.primitive_steps);
+                             strong = (uu___361_29188.strong);
+                             memoize_lazy = (uu___361_29188.memoize_lazy);
                              normalize_pure_lets =
-                               (uu___360_29188.normalize_pure_lets)
+                               (uu___361_29188.normalize_pure_lets)
                            }) scrutinee_env [] scrutinee
                       else scrutinee  in
                     let uu____29193 =
@@ -9525,8 +9525,8 @@ let (config' :
         let d =
           FStar_All.pipe_right s
             (FStar_List.collect
-               (fun uu___261_30417  ->
-                  match uu___261_30417 with
+               (fun uu___262_30417  ->
+                  match uu___262_30417 with
                   | UnfoldUntil k -> [FStar_TypeChecker_Env.Unfold k]
                   | Eager_unfolding  ->
                       [FStar_TypeChecker_Env.Eager_unfolding_only]
@@ -9653,13 +9653,13 @@ let (ghost_to_pure :
       match c.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Total uu____30587 -> c
       | FStar_Syntax_Syntax.GTotal (t,uopt) when non_info t ->
-          let uu___362_30606 = c  in
+          let uu___363_30606 = c  in
           {
             FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Total (t, uopt));
             FStar_Syntax_Syntax.pos =
-              (uu___362_30606.FStar_Syntax_Syntax.pos);
+              (uu___363_30606.FStar_Syntax_Syntax.pos);
             FStar_Syntax_Syntax.vars =
-              (uu___362_30606.FStar_Syntax_Syntax.vars)
+              (uu___363_30606.FStar_Syntax_Syntax.vars)
           }
       | FStar_Syntax_Syntax.Comp ct ->
           let l =
@@ -9688,42 +9688,42 @@ let (ghost_to_pure :
                     then FStar_Syntax_Syntax.TOTAL ::
                       (ct.FStar_Syntax_Syntax.flags)
                     else ct.FStar_Syntax_Syntax.flags  in
-                  let uu___363_30626 = ct  in
+                  let uu___364_30626 = ct  in
                   {
                     FStar_Syntax_Syntax.comp_univs =
-                      (uu___363_30626.FStar_Syntax_Syntax.comp_univs);
+                      (uu___364_30626.FStar_Syntax_Syntax.comp_univs);
                     FStar_Syntax_Syntax.effect_name = pure_eff;
                     FStar_Syntax_Syntax.result_typ =
-                      (uu___363_30626.FStar_Syntax_Syntax.result_typ);
+                      (uu___364_30626.FStar_Syntax_Syntax.result_typ);
                     FStar_Syntax_Syntax.effect_args =
-                      (uu___363_30626.FStar_Syntax_Syntax.effect_args);
+                      (uu___364_30626.FStar_Syntax_Syntax.effect_args);
                     FStar_Syntax_Syntax.flags = flags1
                   }
               | FStar_Pervasives_Native.None  ->
                   let ct1 =
                     FStar_TypeChecker_Env.unfold_effect_abbrev cfg.tcenv c
                      in
-                  let uu___364_30628 = ct1  in
+                  let uu___365_30628 = ct1  in
                   {
                     FStar_Syntax_Syntax.comp_univs =
-                      (uu___364_30628.FStar_Syntax_Syntax.comp_univs);
+                      (uu___365_30628.FStar_Syntax_Syntax.comp_univs);
                     FStar_Syntax_Syntax.effect_name =
                       FStar_Parser_Const.effect_PURE_lid;
                     FStar_Syntax_Syntax.result_typ =
-                      (uu___364_30628.FStar_Syntax_Syntax.result_typ);
+                      (uu___365_30628.FStar_Syntax_Syntax.result_typ);
                     FStar_Syntax_Syntax.effect_args =
-                      (uu___364_30628.FStar_Syntax_Syntax.effect_args);
+                      (uu___365_30628.FStar_Syntax_Syntax.effect_args);
                     FStar_Syntax_Syntax.flags =
-                      (uu___364_30628.FStar_Syntax_Syntax.flags)
+                      (uu___365_30628.FStar_Syntax_Syntax.flags)
                   }
                in
-            let uu___365_30629 = c  in
+            let uu___366_30629 = c  in
             {
               FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Comp ct1);
               FStar_Syntax_Syntax.pos =
-                (uu___365_30629.FStar_Syntax_Syntax.pos);
+                (uu___366_30629.FStar_Syntax_Syntax.pos);
               FStar_Syntax_Syntax.vars =
-                (uu___365_30629.FStar_Syntax_Syntax.vars)
+                (uu___366_30629.FStar_Syntax_Syntax.vars)
             }
           else c
       | uu____30631 -> c
@@ -9946,90 +9946,90 @@ let (eta_expand :
                          else
                            (let uu____31082 =
                               env.FStar_TypeChecker_Env.type_of
-                                (let uu___370_31090 = env  in
+                                (let uu___371_31090 = env  in
                                  {
                                    FStar_TypeChecker_Env.solver =
-                                     (uu___370_31090.FStar_TypeChecker_Env.solver);
+                                     (uu___371_31090.FStar_TypeChecker_Env.solver);
                                    FStar_TypeChecker_Env.range =
-                                     (uu___370_31090.FStar_TypeChecker_Env.range);
+                                     (uu___371_31090.FStar_TypeChecker_Env.range);
                                    FStar_TypeChecker_Env.curmodule =
-                                     (uu___370_31090.FStar_TypeChecker_Env.curmodule);
+                                     (uu___371_31090.FStar_TypeChecker_Env.curmodule);
                                    FStar_TypeChecker_Env.gamma =
-                                     (uu___370_31090.FStar_TypeChecker_Env.gamma);
+                                     (uu___371_31090.FStar_TypeChecker_Env.gamma);
                                    FStar_TypeChecker_Env.gamma_sig =
-                                     (uu___370_31090.FStar_TypeChecker_Env.gamma_sig);
+                                     (uu___371_31090.FStar_TypeChecker_Env.gamma_sig);
                                    FStar_TypeChecker_Env.gamma_cache =
-                                     (uu___370_31090.FStar_TypeChecker_Env.gamma_cache);
+                                     (uu___371_31090.FStar_TypeChecker_Env.gamma_cache);
                                    FStar_TypeChecker_Env.modules =
-                                     (uu___370_31090.FStar_TypeChecker_Env.modules);
+                                     (uu___371_31090.FStar_TypeChecker_Env.modules);
                                    FStar_TypeChecker_Env.expected_typ =
                                      FStar_Pervasives_Native.None;
                                    FStar_TypeChecker_Env.sigtab =
-                                     (uu___370_31090.FStar_TypeChecker_Env.sigtab);
+                                     (uu___371_31090.FStar_TypeChecker_Env.sigtab);
                                    FStar_TypeChecker_Env.attrtab =
-                                     (uu___370_31090.FStar_TypeChecker_Env.attrtab);
+                                     (uu___371_31090.FStar_TypeChecker_Env.attrtab);
                                    FStar_TypeChecker_Env.is_pattern =
-                                     (uu___370_31090.FStar_TypeChecker_Env.is_pattern);
+                                     (uu___371_31090.FStar_TypeChecker_Env.is_pattern);
                                    FStar_TypeChecker_Env.instantiate_imp =
-                                     (uu___370_31090.FStar_TypeChecker_Env.instantiate_imp);
+                                     (uu___371_31090.FStar_TypeChecker_Env.instantiate_imp);
                                    FStar_TypeChecker_Env.effects =
-                                     (uu___370_31090.FStar_TypeChecker_Env.effects);
+                                     (uu___371_31090.FStar_TypeChecker_Env.effects);
                                    FStar_TypeChecker_Env.generalize =
-                                     (uu___370_31090.FStar_TypeChecker_Env.generalize);
+                                     (uu___371_31090.FStar_TypeChecker_Env.generalize);
                                    FStar_TypeChecker_Env.letrecs =
-                                     (uu___370_31090.FStar_TypeChecker_Env.letrecs);
+                                     (uu___371_31090.FStar_TypeChecker_Env.letrecs);
                                    FStar_TypeChecker_Env.top_level =
-                                     (uu___370_31090.FStar_TypeChecker_Env.top_level);
+                                     (uu___371_31090.FStar_TypeChecker_Env.top_level);
                                    FStar_TypeChecker_Env.check_uvars =
-                                     (uu___370_31090.FStar_TypeChecker_Env.check_uvars);
+                                     (uu___371_31090.FStar_TypeChecker_Env.check_uvars);
                                    FStar_TypeChecker_Env.use_eq =
-                                     (uu___370_31090.FStar_TypeChecker_Env.use_eq);
+                                     (uu___371_31090.FStar_TypeChecker_Env.use_eq);
                                    FStar_TypeChecker_Env.is_iface =
-                                     (uu___370_31090.FStar_TypeChecker_Env.is_iface);
+                                     (uu___371_31090.FStar_TypeChecker_Env.is_iface);
                                    FStar_TypeChecker_Env.admit =
-                                     (uu___370_31090.FStar_TypeChecker_Env.admit);
+                                     (uu___371_31090.FStar_TypeChecker_Env.admit);
                                    FStar_TypeChecker_Env.lax = true;
                                    FStar_TypeChecker_Env.lax_universes =
-                                     (uu___370_31090.FStar_TypeChecker_Env.lax_universes);
+                                     (uu___371_31090.FStar_TypeChecker_Env.lax_universes);
                                    FStar_TypeChecker_Env.phase1 =
-                                     (uu___370_31090.FStar_TypeChecker_Env.phase1);
+                                     (uu___371_31090.FStar_TypeChecker_Env.phase1);
                                    FStar_TypeChecker_Env.failhard =
-                                     (uu___370_31090.FStar_TypeChecker_Env.failhard);
+                                     (uu___371_31090.FStar_TypeChecker_Env.failhard);
                                    FStar_TypeChecker_Env.nosynth =
-                                     (uu___370_31090.FStar_TypeChecker_Env.nosynth);
+                                     (uu___371_31090.FStar_TypeChecker_Env.nosynth);
                                    FStar_TypeChecker_Env.uvar_subtyping =
-                                     (uu___370_31090.FStar_TypeChecker_Env.uvar_subtyping);
+                                     (uu___371_31090.FStar_TypeChecker_Env.uvar_subtyping);
                                    FStar_TypeChecker_Env.tc_term =
-                                     (uu___370_31090.FStar_TypeChecker_Env.tc_term);
+                                     (uu___371_31090.FStar_TypeChecker_Env.tc_term);
                                    FStar_TypeChecker_Env.type_of =
-                                     (uu___370_31090.FStar_TypeChecker_Env.type_of);
+                                     (uu___371_31090.FStar_TypeChecker_Env.type_of);
                                    FStar_TypeChecker_Env.universe_of =
-                                     (uu___370_31090.FStar_TypeChecker_Env.universe_of);
+                                     (uu___371_31090.FStar_TypeChecker_Env.universe_of);
                                    FStar_TypeChecker_Env.check_type_of =
-                                     (uu___370_31090.FStar_TypeChecker_Env.check_type_of);
+                                     (uu___371_31090.FStar_TypeChecker_Env.check_type_of);
                                    FStar_TypeChecker_Env.use_bv_sorts = true;
                                    FStar_TypeChecker_Env.qtbl_name_and_index
                                      =
-                                     (uu___370_31090.FStar_TypeChecker_Env.qtbl_name_and_index);
+                                     (uu___371_31090.FStar_TypeChecker_Env.qtbl_name_and_index);
                                    FStar_TypeChecker_Env.normalized_eff_names
                                      =
-                                     (uu___370_31090.FStar_TypeChecker_Env.normalized_eff_names);
+                                     (uu___371_31090.FStar_TypeChecker_Env.normalized_eff_names);
                                    FStar_TypeChecker_Env.proof_ns =
-                                     (uu___370_31090.FStar_TypeChecker_Env.proof_ns);
+                                     (uu___371_31090.FStar_TypeChecker_Env.proof_ns);
                                    FStar_TypeChecker_Env.synth_hook =
-                                     (uu___370_31090.FStar_TypeChecker_Env.synth_hook);
+                                     (uu___371_31090.FStar_TypeChecker_Env.synth_hook);
                                    FStar_TypeChecker_Env.splice =
-                                     (uu___370_31090.FStar_TypeChecker_Env.splice);
+                                     (uu___371_31090.FStar_TypeChecker_Env.splice);
                                    FStar_TypeChecker_Env.is_native_tactic =
-                                     (uu___370_31090.FStar_TypeChecker_Env.is_native_tactic);
+                                     (uu___371_31090.FStar_TypeChecker_Env.is_native_tactic);
                                    FStar_TypeChecker_Env.identifier_info =
-                                     (uu___370_31090.FStar_TypeChecker_Env.identifier_info);
+                                     (uu___371_31090.FStar_TypeChecker_Env.identifier_info);
                                    FStar_TypeChecker_Env.tc_hooks =
-                                     (uu___370_31090.FStar_TypeChecker_Env.tc_hooks);
+                                     (uu___371_31090.FStar_TypeChecker_Env.tc_hooks);
                                    FStar_TypeChecker_Env.dsenv =
-                                     (uu___370_31090.FStar_TypeChecker_Env.dsenv);
+                                     (uu___371_31090.FStar_TypeChecker_Env.dsenv);
                                    FStar_TypeChecker_Env.dep_graph =
-                                     (uu___370_31090.FStar_TypeChecker_Env.dep_graph)
+                                     (uu___371_31090.FStar_TypeChecker_Env.dep_graph)
                                  }) t
                                in
                             match uu____31082 with
@@ -10038,88 +10038,88 @@ let (eta_expand :
                 | uu____31094 ->
                     let uu____31095 =
                       env.FStar_TypeChecker_Env.type_of
-                        (let uu___371_31103 = env  in
+                        (let uu___372_31103 = env  in
                          {
                            FStar_TypeChecker_Env.solver =
-                             (uu___371_31103.FStar_TypeChecker_Env.solver);
+                             (uu___372_31103.FStar_TypeChecker_Env.solver);
                            FStar_TypeChecker_Env.range =
-                             (uu___371_31103.FStar_TypeChecker_Env.range);
+                             (uu___372_31103.FStar_TypeChecker_Env.range);
                            FStar_TypeChecker_Env.curmodule =
-                             (uu___371_31103.FStar_TypeChecker_Env.curmodule);
+                             (uu___372_31103.FStar_TypeChecker_Env.curmodule);
                            FStar_TypeChecker_Env.gamma =
-                             (uu___371_31103.FStar_TypeChecker_Env.gamma);
+                             (uu___372_31103.FStar_TypeChecker_Env.gamma);
                            FStar_TypeChecker_Env.gamma_sig =
-                             (uu___371_31103.FStar_TypeChecker_Env.gamma_sig);
+                             (uu___372_31103.FStar_TypeChecker_Env.gamma_sig);
                            FStar_TypeChecker_Env.gamma_cache =
-                             (uu___371_31103.FStar_TypeChecker_Env.gamma_cache);
+                             (uu___372_31103.FStar_TypeChecker_Env.gamma_cache);
                            FStar_TypeChecker_Env.modules =
-                             (uu___371_31103.FStar_TypeChecker_Env.modules);
+                             (uu___372_31103.FStar_TypeChecker_Env.modules);
                            FStar_TypeChecker_Env.expected_typ =
                              FStar_Pervasives_Native.None;
                            FStar_TypeChecker_Env.sigtab =
-                             (uu___371_31103.FStar_TypeChecker_Env.sigtab);
+                             (uu___372_31103.FStar_TypeChecker_Env.sigtab);
                            FStar_TypeChecker_Env.attrtab =
-                             (uu___371_31103.FStar_TypeChecker_Env.attrtab);
+                             (uu___372_31103.FStar_TypeChecker_Env.attrtab);
                            FStar_TypeChecker_Env.is_pattern =
-                             (uu___371_31103.FStar_TypeChecker_Env.is_pattern);
+                             (uu___372_31103.FStar_TypeChecker_Env.is_pattern);
                            FStar_TypeChecker_Env.instantiate_imp =
-                             (uu___371_31103.FStar_TypeChecker_Env.instantiate_imp);
+                             (uu___372_31103.FStar_TypeChecker_Env.instantiate_imp);
                            FStar_TypeChecker_Env.effects =
-                             (uu___371_31103.FStar_TypeChecker_Env.effects);
+                             (uu___372_31103.FStar_TypeChecker_Env.effects);
                            FStar_TypeChecker_Env.generalize =
-                             (uu___371_31103.FStar_TypeChecker_Env.generalize);
+                             (uu___372_31103.FStar_TypeChecker_Env.generalize);
                            FStar_TypeChecker_Env.letrecs =
-                             (uu___371_31103.FStar_TypeChecker_Env.letrecs);
+                             (uu___372_31103.FStar_TypeChecker_Env.letrecs);
                            FStar_TypeChecker_Env.top_level =
-                             (uu___371_31103.FStar_TypeChecker_Env.top_level);
+                             (uu___372_31103.FStar_TypeChecker_Env.top_level);
                            FStar_TypeChecker_Env.check_uvars =
-                             (uu___371_31103.FStar_TypeChecker_Env.check_uvars);
+                             (uu___372_31103.FStar_TypeChecker_Env.check_uvars);
                            FStar_TypeChecker_Env.use_eq =
-                             (uu___371_31103.FStar_TypeChecker_Env.use_eq);
+                             (uu___372_31103.FStar_TypeChecker_Env.use_eq);
                            FStar_TypeChecker_Env.is_iface =
-                             (uu___371_31103.FStar_TypeChecker_Env.is_iface);
+                             (uu___372_31103.FStar_TypeChecker_Env.is_iface);
                            FStar_TypeChecker_Env.admit =
-                             (uu___371_31103.FStar_TypeChecker_Env.admit);
+                             (uu___372_31103.FStar_TypeChecker_Env.admit);
                            FStar_TypeChecker_Env.lax = true;
                            FStar_TypeChecker_Env.lax_universes =
-                             (uu___371_31103.FStar_TypeChecker_Env.lax_universes);
+                             (uu___372_31103.FStar_TypeChecker_Env.lax_universes);
                            FStar_TypeChecker_Env.phase1 =
-                             (uu___371_31103.FStar_TypeChecker_Env.phase1);
+                             (uu___372_31103.FStar_TypeChecker_Env.phase1);
                            FStar_TypeChecker_Env.failhard =
-                             (uu___371_31103.FStar_TypeChecker_Env.failhard);
+                             (uu___372_31103.FStar_TypeChecker_Env.failhard);
                            FStar_TypeChecker_Env.nosynth =
-                             (uu___371_31103.FStar_TypeChecker_Env.nosynth);
+                             (uu___372_31103.FStar_TypeChecker_Env.nosynth);
                            FStar_TypeChecker_Env.uvar_subtyping =
-                             (uu___371_31103.FStar_TypeChecker_Env.uvar_subtyping);
+                             (uu___372_31103.FStar_TypeChecker_Env.uvar_subtyping);
                            FStar_TypeChecker_Env.tc_term =
-                             (uu___371_31103.FStar_TypeChecker_Env.tc_term);
+                             (uu___372_31103.FStar_TypeChecker_Env.tc_term);
                            FStar_TypeChecker_Env.type_of =
-                             (uu___371_31103.FStar_TypeChecker_Env.type_of);
+                             (uu___372_31103.FStar_TypeChecker_Env.type_of);
                            FStar_TypeChecker_Env.universe_of =
-                             (uu___371_31103.FStar_TypeChecker_Env.universe_of);
+                             (uu___372_31103.FStar_TypeChecker_Env.universe_of);
                            FStar_TypeChecker_Env.check_type_of =
-                             (uu___371_31103.FStar_TypeChecker_Env.check_type_of);
+                             (uu___372_31103.FStar_TypeChecker_Env.check_type_of);
                            FStar_TypeChecker_Env.use_bv_sorts = true;
                            FStar_TypeChecker_Env.qtbl_name_and_index =
-                             (uu___371_31103.FStar_TypeChecker_Env.qtbl_name_and_index);
+                             (uu___372_31103.FStar_TypeChecker_Env.qtbl_name_and_index);
                            FStar_TypeChecker_Env.normalized_eff_names =
-                             (uu___371_31103.FStar_TypeChecker_Env.normalized_eff_names);
+                             (uu___372_31103.FStar_TypeChecker_Env.normalized_eff_names);
                            FStar_TypeChecker_Env.proof_ns =
-                             (uu___371_31103.FStar_TypeChecker_Env.proof_ns);
+                             (uu___372_31103.FStar_TypeChecker_Env.proof_ns);
                            FStar_TypeChecker_Env.synth_hook =
-                             (uu___371_31103.FStar_TypeChecker_Env.synth_hook);
+                             (uu___372_31103.FStar_TypeChecker_Env.synth_hook);
                            FStar_TypeChecker_Env.splice =
-                             (uu___371_31103.FStar_TypeChecker_Env.splice);
+                             (uu___372_31103.FStar_TypeChecker_Env.splice);
                            FStar_TypeChecker_Env.is_native_tactic =
-                             (uu___371_31103.FStar_TypeChecker_Env.is_native_tactic);
+                             (uu___372_31103.FStar_TypeChecker_Env.is_native_tactic);
                            FStar_TypeChecker_Env.identifier_info =
-                             (uu___371_31103.FStar_TypeChecker_Env.identifier_info);
+                             (uu___372_31103.FStar_TypeChecker_Env.identifier_info);
                            FStar_TypeChecker_Env.tc_hooks =
-                             (uu___371_31103.FStar_TypeChecker_Env.tc_hooks);
+                             (uu___372_31103.FStar_TypeChecker_Env.tc_hooks);
                            FStar_TypeChecker_Env.dsenv =
-                             (uu___371_31103.FStar_TypeChecker_Env.dsenv);
+                             (uu___372_31103.FStar_TypeChecker_Env.dsenv);
                            FStar_TypeChecker_Env.dep_graph =
-                             (uu___371_31103.FStar_TypeChecker_Env.dep_graph)
+                             (uu___372_31103.FStar_TypeChecker_Env.dep_graph)
                          }) t
                        in
                     (match uu____31095 with
@@ -10135,14 +10135,14 @@ let rec (elim_delayed_subst_term :
        in
     let t1 = FStar_Syntax_Subst.compress t  in
     let elim_bv x =
-      let uu___372_31187 = x  in
+      let uu___373_31187 = x  in
       let uu____31188 = elim_delayed_subst_term x.FStar_Syntax_Syntax.sort
          in
       {
         FStar_Syntax_Syntax.ppname =
-          (uu___372_31187.FStar_Syntax_Syntax.ppname);
+          (uu___373_31187.FStar_Syntax_Syntax.ppname);
         FStar_Syntax_Syntax.index =
-          (uu___372_31187.FStar_Syntax_Syntax.index);
+          (uu___373_31187.FStar_Syntax_Syntax.index);
         FStar_Syntax_Syntax.sort = uu____31188
       }  in
     match t1.FStar_Syntax_Syntax.n with
@@ -10157,7 +10157,7 @@ let rec (elim_delayed_subst_term :
     | FStar_Syntax_Syntax.Tm_unknown  -> t1
     | FStar_Syntax_Syntax.Tm_abs (bs,t2,rc_opt) ->
         let elim_rc rc =
-          let uu___373_31260 = rc  in
+          let uu___374_31260 = rc  in
           let uu____31261 =
             FStar_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
               elim_delayed_subst_term
@@ -10167,7 +10167,7 @@ let rec (elim_delayed_subst_term :
              in
           {
             FStar_Syntax_Syntax.residual_effect =
-              (uu___373_31260.FStar_Syntax_Syntax.residual_effect);
+              (uu___374_31260.FStar_Syntax_Syntax.residual_effect);
             FStar_Syntax_Syntax.residual_typ = uu____31261;
             FStar_Syntax_Syntax.residual_flags = uu____31270
           }  in
@@ -10207,27 +10207,27 @@ let rec (elim_delayed_subst_term :
         let rec elim_pat p =
           match p.FStar_Syntax_Syntax.v with
           | FStar_Syntax_Syntax.Pat_var x ->
-              let uu___374_31519 = p  in
+              let uu___375_31519 = p  in
               let uu____31520 =
                 let uu____31521 = elim_bv x  in
                 FStar_Syntax_Syntax.Pat_var uu____31521  in
               {
                 FStar_Syntax_Syntax.v = uu____31520;
                 FStar_Syntax_Syntax.p =
-                  (uu___374_31519.FStar_Syntax_Syntax.p)
+                  (uu___375_31519.FStar_Syntax_Syntax.p)
               }
           | FStar_Syntax_Syntax.Pat_wild x ->
-              let uu___375_31523 = p  in
+              let uu___376_31523 = p  in
               let uu____31524 =
                 let uu____31525 = elim_bv x  in
                 FStar_Syntax_Syntax.Pat_wild uu____31525  in
               {
                 FStar_Syntax_Syntax.v = uu____31524;
                 FStar_Syntax_Syntax.p =
-                  (uu___375_31523.FStar_Syntax_Syntax.p)
+                  (uu___376_31523.FStar_Syntax_Syntax.p)
               }
           | FStar_Syntax_Syntax.Pat_dot_term (x,t0) ->
-              let uu___376_31532 = p  in
+              let uu___377_31532 = p  in
               let uu____31533 =
                 let uu____31534 =
                   let uu____31541 = elim_bv x  in
@@ -10237,10 +10237,10 @@ let rec (elim_delayed_subst_term :
               {
                 FStar_Syntax_Syntax.v = uu____31533;
                 FStar_Syntax_Syntax.p =
-                  (uu___376_31532.FStar_Syntax_Syntax.p)
+                  (uu___377_31532.FStar_Syntax_Syntax.p)
               }
           | FStar_Syntax_Syntax.Pat_cons (fv,pats) ->
-              let uu___377_31565 = p  in
+              let uu___378_31565 = p  in
               let uu____31566 =
                 let uu____31567 =
                   let uu____31580 =
@@ -10256,7 +10256,7 @@ let rec (elim_delayed_subst_term :
               {
                 FStar_Syntax_Syntax.v = uu____31566;
                 FStar_Syntax_Syntax.p =
-                  (uu___377_31565.FStar_Syntax_Syntax.p)
+                  (uu___378_31565.FStar_Syntax_Syntax.p)
               }
           | uu____31629 -> p  in
         let elim_branch uu____31653 =
@@ -10301,24 +10301,24 @@ let rec (elim_delayed_subst_term :
         mk1 uu____31905
     | FStar_Syntax_Syntax.Tm_let (lbs,t2) ->
         let elim_lb lb =
-          let uu___378_31997 = lb  in
+          let uu___379_31997 = lb  in
           let uu____31998 =
             elim_delayed_subst_term lb.FStar_Syntax_Syntax.lbtyp  in
           let uu____32001 =
             elim_delayed_subst_term lb.FStar_Syntax_Syntax.lbdef  in
           {
             FStar_Syntax_Syntax.lbname =
-              (uu___378_31997.FStar_Syntax_Syntax.lbname);
+              (uu___379_31997.FStar_Syntax_Syntax.lbname);
             FStar_Syntax_Syntax.lbunivs =
-              (uu___378_31997.FStar_Syntax_Syntax.lbunivs);
+              (uu___379_31997.FStar_Syntax_Syntax.lbunivs);
             FStar_Syntax_Syntax.lbtyp = uu____31998;
             FStar_Syntax_Syntax.lbeff =
-              (uu___378_31997.FStar_Syntax_Syntax.lbeff);
+              (uu___379_31997.FStar_Syntax_Syntax.lbeff);
             FStar_Syntax_Syntax.lbdef = uu____32001;
             FStar_Syntax_Syntax.lbattrs =
-              (uu___378_31997.FStar_Syntax_Syntax.lbattrs);
+              (uu___379_31997.FStar_Syntax_Syntax.lbattrs);
             FStar_Syntax_Syntax.lbpos =
-              (uu___378_31997.FStar_Syntax_Syntax.lbpos)
+              (uu___379_31997.FStar_Syntax_Syntax.lbpos)
           }  in
         let uu____32004 =
           let uu____32005 =
@@ -10356,8 +10356,8 @@ and (elim_delayed_subst_cflags :
   =
   fun flags1  ->
     FStar_List.map
-      (fun uu___262_32117  ->
-         match uu___262_32117 with
+      (fun uu___263_32117  ->
+         match uu___263_32117 with
          | FStar_Syntax_Syntax.DECREASES t ->
              let uu____32121 = elim_delayed_subst_term t  in
              FStar_Syntax_Syntax.DECREASES uu____32121
@@ -10387,7 +10387,7 @@ and (elim_delayed_subst_comp :
         mk1 uu____32171
     | FStar_Syntax_Syntax.Comp ct ->
         let ct1 =
-          let uu___379_32190 = ct  in
+          let uu___380_32190 = ct  in
           let uu____32191 =
             elim_delayed_subst_term ct.FStar_Syntax_Syntax.result_typ  in
           let uu____32194 =
@@ -10396,9 +10396,9 @@ and (elim_delayed_subst_comp :
             elim_delayed_subst_cflags ct.FStar_Syntax_Syntax.flags  in
           {
             FStar_Syntax_Syntax.comp_univs =
-              (uu___379_32190.FStar_Syntax_Syntax.comp_univs);
+              (uu___380_32190.FStar_Syntax_Syntax.comp_univs);
             FStar_Syntax_Syntax.effect_name =
-              (uu___379_32190.FStar_Syntax_Syntax.effect_name);
+              (uu___380_32190.FStar_Syntax_Syntax.effect_name);
             FStar_Syntax_Syntax.result_typ = uu____32191;
             FStar_Syntax_Syntax.effect_args = uu____32194;
             FStar_Syntax_Syntax.flags = uu____32205
@@ -10407,8 +10407,8 @@ and (elim_delayed_subst_comp :
 
 and (elim_delayed_subst_meta :
   FStar_Syntax_Syntax.metadata -> FStar_Syntax_Syntax.metadata) =
-  fun uu___263_32208  ->
-    match uu___263_32208 with
+  fun uu___264_32208  ->
+    match uu___264_32208 with
     | FStar_Syntax_Syntax.Meta_pattern args ->
         let uu____32222 = FStar_List.map elim_delayed_subst_args args  in
         FStar_Syntax_Syntax.Meta_pattern uu____32222
@@ -10454,14 +10454,14 @@ and (elim_delayed_subst_binders :
          match uu____32369 with
          | (x,q) ->
              let uu____32388 =
-               let uu___380_32389 = x  in
+               let uu___381_32389 = x  in
                let uu____32390 =
                  elim_delayed_subst_term x.FStar_Syntax_Syntax.sort  in
                {
                  FStar_Syntax_Syntax.ppname =
-                   (uu___380_32389.FStar_Syntax_Syntax.ppname);
+                   (uu___381_32389.FStar_Syntax_Syntax.ppname);
                  FStar_Syntax_Syntax.index =
-                   (uu___380_32389.FStar_Syntax_Syntax.index);
+                   (uu___381_32389.FStar_Syntax_Syntax.index);
                  FStar_Syntax_Syntax.sort = uu____32390
                }  in
              (uu____32388, q)) bs
@@ -10595,22 +10595,22 @@ let rec (elim_uvars :
           let uu____33237 = elim_uvars_aux_t env univ_names binders typ  in
           (match uu____33237 with
            | (univ_names1,binders1,typ1) ->
-               let uu___381_33277 = s  in
+               let uu___382_33277 = s  in
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_inductive_typ
                       (lid, univ_names1, binders1, typ1, lids, lids'));
                  FStar_Syntax_Syntax.sigrng =
-                   (uu___381_33277.FStar_Syntax_Syntax.sigrng);
+                   (uu___382_33277.FStar_Syntax_Syntax.sigrng);
                  FStar_Syntax_Syntax.sigquals =
-                   (uu___381_33277.FStar_Syntax_Syntax.sigquals);
+                   (uu___382_33277.FStar_Syntax_Syntax.sigquals);
                  FStar_Syntax_Syntax.sigmeta =
-                   (uu___381_33277.FStar_Syntax_Syntax.sigmeta);
+                   (uu___382_33277.FStar_Syntax_Syntax.sigmeta);
                  FStar_Syntax_Syntax.sigattrs =
-                   (uu___381_33277.FStar_Syntax_Syntax.sigattrs)
+                   (uu___382_33277.FStar_Syntax_Syntax.sigattrs)
                })
       | FStar_Syntax_Syntax.Sig_bundle (sigs,lids) ->
-          let uu___382_33292 = s  in
+          let uu___383_33292 = s  in
           let uu____33293 =
             let uu____33294 =
               let uu____33303 = FStar_List.map (elim_uvars env) sigs  in
@@ -10619,49 +10619,49 @@ let rec (elim_uvars :
           {
             FStar_Syntax_Syntax.sigel = uu____33293;
             FStar_Syntax_Syntax.sigrng =
-              (uu___382_33292.FStar_Syntax_Syntax.sigrng);
+              (uu___383_33292.FStar_Syntax_Syntax.sigrng);
             FStar_Syntax_Syntax.sigquals =
-              (uu___382_33292.FStar_Syntax_Syntax.sigquals);
+              (uu___383_33292.FStar_Syntax_Syntax.sigquals);
             FStar_Syntax_Syntax.sigmeta =
-              (uu___382_33292.FStar_Syntax_Syntax.sigmeta);
+              (uu___383_33292.FStar_Syntax_Syntax.sigmeta);
             FStar_Syntax_Syntax.sigattrs =
-              (uu___382_33292.FStar_Syntax_Syntax.sigattrs)
+              (uu___383_33292.FStar_Syntax_Syntax.sigattrs)
           }
       | FStar_Syntax_Syntax.Sig_datacon (lid,univ_names,typ,lident,i,lids) ->
           let uu____33320 = elim_uvars_aux_t env univ_names [] typ  in
           (match uu____33320 with
            | (univ_names1,uu____33344,typ1) ->
-               let uu___383_33366 = s  in
+               let uu___384_33366 = s  in
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_datacon
                       (lid, univ_names1, typ1, lident, i, lids));
                  FStar_Syntax_Syntax.sigrng =
-                   (uu___383_33366.FStar_Syntax_Syntax.sigrng);
+                   (uu___384_33366.FStar_Syntax_Syntax.sigrng);
                  FStar_Syntax_Syntax.sigquals =
-                   (uu___383_33366.FStar_Syntax_Syntax.sigquals);
+                   (uu___384_33366.FStar_Syntax_Syntax.sigquals);
                  FStar_Syntax_Syntax.sigmeta =
-                   (uu___383_33366.FStar_Syntax_Syntax.sigmeta);
+                   (uu___384_33366.FStar_Syntax_Syntax.sigmeta);
                  FStar_Syntax_Syntax.sigattrs =
-                   (uu___383_33366.FStar_Syntax_Syntax.sigattrs)
+                   (uu___384_33366.FStar_Syntax_Syntax.sigattrs)
                })
       | FStar_Syntax_Syntax.Sig_declare_typ (lid,univ_names,typ) ->
           let uu____33372 = elim_uvars_aux_t env univ_names [] typ  in
           (match uu____33372 with
            | (univ_names1,uu____33396,typ1) ->
-               let uu___384_33418 = s  in
+               let uu___385_33418 = s  in
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_declare_typ
                       (lid, univ_names1, typ1));
                  FStar_Syntax_Syntax.sigrng =
-                   (uu___384_33418.FStar_Syntax_Syntax.sigrng);
+                   (uu___385_33418.FStar_Syntax_Syntax.sigrng);
                  FStar_Syntax_Syntax.sigquals =
-                   (uu___384_33418.FStar_Syntax_Syntax.sigquals);
+                   (uu___385_33418.FStar_Syntax_Syntax.sigquals);
                  FStar_Syntax_Syntax.sigmeta =
-                   (uu___384_33418.FStar_Syntax_Syntax.sigmeta);
+                   (uu___385_33418.FStar_Syntax_Syntax.sigmeta);
                  FStar_Syntax_Syntax.sigattrs =
-                   (uu___384_33418.FStar_Syntax_Syntax.sigattrs)
+                   (uu___385_33418.FStar_Syntax_Syntax.sigattrs)
                })
       | FStar_Syntax_Syntax.Sig_let ((b,lbs),lids) ->
           let lbs1 =
@@ -10686,66 +10686,66 @@ let rec (elim_uvars :
                           elim_delayed_subst_term uu____33471  in
                         let lbtyp = elim lb.FStar_Syntax_Syntax.lbtyp  in
                         let lbdef = elim lb.FStar_Syntax_Syntax.lbdef  in
-                        let uu___385_33476 = lb  in
+                        let uu___386_33476 = lb  in
                         {
                           FStar_Syntax_Syntax.lbname =
-                            (uu___385_33476.FStar_Syntax_Syntax.lbname);
+                            (uu___386_33476.FStar_Syntax_Syntax.lbname);
                           FStar_Syntax_Syntax.lbunivs = lbunivs;
                           FStar_Syntax_Syntax.lbtyp = lbtyp;
                           FStar_Syntax_Syntax.lbeff =
-                            (uu___385_33476.FStar_Syntax_Syntax.lbeff);
+                            (uu___386_33476.FStar_Syntax_Syntax.lbeff);
                           FStar_Syntax_Syntax.lbdef = lbdef;
                           FStar_Syntax_Syntax.lbattrs =
-                            (uu___385_33476.FStar_Syntax_Syntax.lbattrs);
+                            (uu___386_33476.FStar_Syntax_Syntax.lbattrs);
                           FStar_Syntax_Syntax.lbpos =
-                            (uu___385_33476.FStar_Syntax_Syntax.lbpos)
+                            (uu___386_33476.FStar_Syntax_Syntax.lbpos)
                         }))
              in
-          let uu___386_33477 = s  in
+          let uu___387_33477 = s  in
           {
             FStar_Syntax_Syntax.sigel =
               (FStar_Syntax_Syntax.Sig_let ((b, lbs1), lids));
             FStar_Syntax_Syntax.sigrng =
-              (uu___386_33477.FStar_Syntax_Syntax.sigrng);
+              (uu___387_33477.FStar_Syntax_Syntax.sigrng);
             FStar_Syntax_Syntax.sigquals =
-              (uu___386_33477.FStar_Syntax_Syntax.sigquals);
+              (uu___387_33477.FStar_Syntax_Syntax.sigquals);
             FStar_Syntax_Syntax.sigmeta =
-              (uu___386_33477.FStar_Syntax_Syntax.sigmeta);
+              (uu___387_33477.FStar_Syntax_Syntax.sigmeta);
             FStar_Syntax_Syntax.sigattrs =
-              (uu___386_33477.FStar_Syntax_Syntax.sigattrs)
+              (uu___387_33477.FStar_Syntax_Syntax.sigattrs)
           }
       | FStar_Syntax_Syntax.Sig_main t ->
-          let uu___387_33483 = s  in
+          let uu___388_33483 = s  in
           let uu____33484 =
             let uu____33485 = remove_uvar_solutions env t  in
             FStar_Syntax_Syntax.Sig_main uu____33485  in
           {
             FStar_Syntax_Syntax.sigel = uu____33484;
             FStar_Syntax_Syntax.sigrng =
-              (uu___387_33483.FStar_Syntax_Syntax.sigrng);
+              (uu___388_33483.FStar_Syntax_Syntax.sigrng);
             FStar_Syntax_Syntax.sigquals =
-              (uu___387_33483.FStar_Syntax_Syntax.sigquals);
+              (uu___388_33483.FStar_Syntax_Syntax.sigquals);
             FStar_Syntax_Syntax.sigmeta =
-              (uu___387_33483.FStar_Syntax_Syntax.sigmeta);
+              (uu___388_33483.FStar_Syntax_Syntax.sigmeta);
             FStar_Syntax_Syntax.sigattrs =
-              (uu___387_33483.FStar_Syntax_Syntax.sigattrs)
+              (uu___388_33483.FStar_Syntax_Syntax.sigattrs)
           }
       | FStar_Syntax_Syntax.Sig_assume (l,us,t) ->
           let uu____33489 = elim_uvars_aux_t env us [] t  in
           (match uu____33489 with
            | (us1,uu____33513,t1) ->
-               let uu___388_33535 = s  in
+               let uu___389_33535 = s  in
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_assume (l, us1, t1));
                  FStar_Syntax_Syntax.sigrng =
-                   (uu___388_33535.FStar_Syntax_Syntax.sigrng);
+                   (uu___389_33535.FStar_Syntax_Syntax.sigrng);
                  FStar_Syntax_Syntax.sigquals =
-                   (uu___388_33535.FStar_Syntax_Syntax.sigquals);
+                   (uu___389_33535.FStar_Syntax_Syntax.sigquals);
                  FStar_Syntax_Syntax.sigmeta =
-                   (uu___388_33535.FStar_Syntax_Syntax.sigmeta);
+                   (uu___389_33535.FStar_Syntax_Syntax.sigmeta);
                  FStar_Syntax_Syntax.sigattrs =
-                   (uu___388_33535.FStar_Syntax_Syntax.sigattrs)
+                   (uu___389_33535.FStar_Syntax_Syntax.sigattrs)
                })
       | FStar_Syntax_Syntax.Sig_new_effect_for_free uu____33536 ->
           failwith "Impossible: should have been desugared already"
@@ -10917,13 +10917,13 @@ let rec (elim_uvars :
                                (match uu____34211 with
                                 | (action_params,action_defn,action_typ) ->
                                     let a' =
-                                      let uu___389_34258 = a  in
+                                      let uu___390_34258 = a  in
                                       {
                                         FStar_Syntax_Syntax.action_name =
-                                          (uu___389_34258.FStar_Syntax_Syntax.action_name);
+                                          (uu___390_34258.FStar_Syntax_Syntax.action_name);
                                         FStar_Syntax_Syntax.action_unqualified_name
                                           =
-                                          (uu___389_34258.FStar_Syntax_Syntax.action_unqualified_name);
+                                          (uu___390_34258.FStar_Syntax_Syntax.action_unqualified_name);
                                         FStar_Syntax_Syntax.action_univs =
                                           action_univs;
                                         FStar_Syntax_Syntax.action_params =
@@ -10936,7 +10936,7 @@ let rec (elim_uvars :
                                     a')
                             in
                          let ed1 =
-                           let uu___390_34260 = ed  in
+                           let uu___391_34260 = ed  in
                            let uu____34261 =
                              elim_tscheme ed.FStar_Syntax_Syntax.ret_wp  in
                            let uu____34262 =
@@ -10972,9 +10972,9 @@ let rec (elim_uvars :
                               in
                            {
                              FStar_Syntax_Syntax.cattributes =
-                               (uu___390_34260.FStar_Syntax_Syntax.cattributes);
+                               (uu___391_34260.FStar_Syntax_Syntax.cattributes);
                              FStar_Syntax_Syntax.mname =
-                               (uu___390_34260.FStar_Syntax_Syntax.mname);
+                               (uu___391_34260.FStar_Syntax_Syntax.mname);
                              FStar_Syntax_Syntax.univs = univs1;
                              FStar_Syntax_Syntax.binders = binders;
                              FStar_Syntax_Syntax.signature = signature;
@@ -10993,24 +10993,24 @@ let rec (elim_uvars :
                              FStar_Syntax_Syntax.bind_repr = uu____34273;
                              FStar_Syntax_Syntax.actions = uu____34274;
                              FStar_Syntax_Syntax.eff_attrs =
-                               (uu___390_34260.FStar_Syntax_Syntax.eff_attrs)
+                               (uu___391_34260.FStar_Syntax_Syntax.eff_attrs)
                            }  in
-                         let uu___391_34277 = s  in
+                         let uu___392_34277 = s  in
                          {
                            FStar_Syntax_Syntax.sigel =
                              (FStar_Syntax_Syntax.Sig_new_effect ed1);
                            FStar_Syntax_Syntax.sigrng =
-                             (uu___391_34277.FStar_Syntax_Syntax.sigrng);
+                             (uu___392_34277.FStar_Syntax_Syntax.sigrng);
                            FStar_Syntax_Syntax.sigquals =
-                             (uu___391_34277.FStar_Syntax_Syntax.sigquals);
+                             (uu___392_34277.FStar_Syntax_Syntax.sigquals);
                            FStar_Syntax_Syntax.sigmeta =
-                             (uu___391_34277.FStar_Syntax_Syntax.sigmeta);
+                             (uu___392_34277.FStar_Syntax_Syntax.sigmeta);
                            FStar_Syntax_Syntax.sigattrs =
-                             (uu___391_34277.FStar_Syntax_Syntax.sigattrs)
+                             (uu___392_34277.FStar_Syntax_Syntax.sigattrs)
                          })))
       | FStar_Syntax_Syntax.Sig_sub_effect sub_eff ->
-          let elim_tscheme_opt uu___264_34298 =
-            match uu___264_34298 with
+          let elim_tscheme_opt uu___265_34298 =
+            match uu___265_34298 with
             | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
             | FStar_Pervasives_Native.Some (us,t) ->
                 let uu____34329 = elim_uvars_aux_t env us [] t  in
@@ -11019,50 +11019,50 @@ let rec (elim_uvars :
                      FStar_Pervasives_Native.Some (us1, t1))
              in
           let sub_eff1 =
-            let uu___392_34392 = sub_eff  in
+            let uu___393_34392 = sub_eff  in
             let uu____34393 =
               elim_tscheme_opt sub_eff.FStar_Syntax_Syntax.lift_wp  in
             let uu____34396 =
               elim_tscheme_opt sub_eff.FStar_Syntax_Syntax.lift  in
             {
               FStar_Syntax_Syntax.source =
-                (uu___392_34392.FStar_Syntax_Syntax.source);
+                (uu___393_34392.FStar_Syntax_Syntax.source);
               FStar_Syntax_Syntax.target =
-                (uu___392_34392.FStar_Syntax_Syntax.target);
+                (uu___393_34392.FStar_Syntax_Syntax.target);
               FStar_Syntax_Syntax.lift_wp = uu____34393;
               FStar_Syntax_Syntax.lift = uu____34396
             }  in
-          let uu___393_34399 = s  in
+          let uu___394_34399 = s  in
           {
             FStar_Syntax_Syntax.sigel =
               (FStar_Syntax_Syntax.Sig_sub_effect sub_eff1);
             FStar_Syntax_Syntax.sigrng =
-              (uu___393_34399.FStar_Syntax_Syntax.sigrng);
+              (uu___394_34399.FStar_Syntax_Syntax.sigrng);
             FStar_Syntax_Syntax.sigquals =
-              (uu___393_34399.FStar_Syntax_Syntax.sigquals);
+              (uu___394_34399.FStar_Syntax_Syntax.sigquals);
             FStar_Syntax_Syntax.sigmeta =
-              (uu___393_34399.FStar_Syntax_Syntax.sigmeta);
+              (uu___394_34399.FStar_Syntax_Syntax.sigmeta);
             FStar_Syntax_Syntax.sigattrs =
-              (uu___393_34399.FStar_Syntax_Syntax.sigattrs)
+              (uu___394_34399.FStar_Syntax_Syntax.sigattrs)
           }
       | FStar_Syntax_Syntax.Sig_effect_abbrev
           (lid,univ_names,binders,comp,flags1) ->
           let uu____34409 = elim_uvars_aux_c env univ_names binders comp  in
           (match uu____34409 with
            | (univ_names1,binders1,comp1) ->
-               let uu___394_34449 = s  in
+               let uu___395_34449 = s  in
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_effect_abbrev
                       (lid, univ_names1, binders1, comp1, flags1));
                  FStar_Syntax_Syntax.sigrng =
-                   (uu___394_34449.FStar_Syntax_Syntax.sigrng);
+                   (uu___395_34449.FStar_Syntax_Syntax.sigrng);
                  FStar_Syntax_Syntax.sigquals =
-                   (uu___394_34449.FStar_Syntax_Syntax.sigquals);
+                   (uu___395_34449.FStar_Syntax_Syntax.sigquals);
                  FStar_Syntax_Syntax.sigmeta =
-                   (uu___394_34449.FStar_Syntax_Syntax.sigmeta);
+                   (uu___395_34449.FStar_Syntax_Syntax.sigmeta);
                  FStar_Syntax_Syntax.sigattrs =
-                   (uu___394_34449.FStar_Syntax_Syntax.sigattrs)
+                   (uu___395_34449.FStar_Syntax_Syntax.sigattrs)
                })
       | FStar_Syntax_Syntax.Sig_pragma uu____34452 -> s
       | FStar_Syntax_Syntax.Sig_splice uu____34453 -> s
