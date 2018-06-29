@@ -215,7 +215,7 @@ let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
       Cfg.strong_reduction_ok=s.strong_reduction_ok;
       Cfg.requires_binder_substitution = false; // GM: really?
       Cfg.interpretation=(fun psc args -> s.tactic psc args);
-      Cfg.interpretation_nbe = (NBETerm.dummy_interp (Ident.lid_of_str "_"))
+      Cfg.interpretation_nbe = NBETerm.dummy_interp s.name;
    }
 
 let mk nm nunivs arity interpretation =
@@ -227,7 +227,7 @@ let mk nm nunivs arity interpretation =
   Cfg.strong_reduction_ok=false;
   Cfg.requires_binder_substitution = true;
   Cfg.interpretation=(fun psc args -> interpretation nm psc args);
-  Cfg.interpretation_nbe = (NBETerm.dummy_interp (Ident.lid_of_str "_"))
+  Cfg.interpretation_nbe = NBETerm.dummy_interp nm;
 }
 
 let native_tactics = list_all ()

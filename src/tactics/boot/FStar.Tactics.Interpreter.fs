@@ -60,14 +60,15 @@ and primitive_steps () : list<Cfg.primitive_step> =
         | _ -> failwith "Unexpected application of decr_depth"
     in
     let decr_depth_step : Cfg.primitive_step =
-        {Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth";
+        let nm = Ident.lid_of_str "FStar.Tactics.Types.decr_depth" in
+        {Cfg.name = nm;
          Cfg.arity = 1;
          Cfg.univ_arity=0;
          Cfg.auto_reflect=None;
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = false;
          Cfg.interpretation = decr_depth_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
+         Cfg.interpretation_nbe = NBE.dummy_interp nm;
          }
     in
     let incr_depth_interp psc (args : args) =
@@ -79,14 +80,15 @@ and primitive_steps () : list<Cfg.primitive_step> =
         | _ -> failwith "Unexpected application of incr_depth"
     in
     let incr_depth_step : Cfg.primitive_step =
-        {Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth";
+        let nm = Ident.lid_of_str "FStar.Tactics.Types.incr_depth" in
+        {Cfg.name = nm;
          Cfg.arity = 1;
          Cfg.univ_arity=0;
          Cfg.auto_reflect=None;
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = false;
          Cfg.interpretation = incr_depth_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
+         Cfg.interpretation_nbe = NBE.dummy_interp nm;
          }
     in
     let tracepoint_interp psc (args : args) =
@@ -125,7 +127,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = false;
          Cfg.interpretation = set_proofstate_range_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
+         Cfg.interpretation_nbe = (NBE.dummy_interp nm)
         }
     in
     let tracepoint_step : Cfg.primitive_step =
@@ -137,7 +139,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = true;
          Cfg.interpretation = tracepoint_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
+         Cfg.interpretation_nbe = (NBE.dummy_interp nm)
         }
     in
     let push_binder_step : Cfg.primitive_step =
@@ -149,7 +151,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = true;
          Cfg.interpretation = push_binder_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
+         Cfg.interpretation_nbe = (NBE.dummy_interp nm)
         }
     in
     (* NB: We need a PRECISE number for the universe arguments or NBE will
