@@ -1260,7 +1260,7 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
  * If all that is successful, the term is rewritten.
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : term) : tac<term> =
-    let t, lcomp, g = TcTerm.tc_term env t in
+    let t, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in
     if not (U.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
     else
@@ -1371,7 +1371,7 @@ let rewrite_rec (ps : proofstate)
           ret res)))) (fun (should_rewrite, ctrl) ->
     if not should_rewrite
     then ret (t, ctrl)
-    else let t, lcomp, g = TcTerm.tc_term env t in //re-typechecking the goal is expensive
+    else let t, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in //re-typechecking the goal is expensive
          if not (U.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
            ret (t, globalStop) // Don't do anything for possibly impure terms
          else
