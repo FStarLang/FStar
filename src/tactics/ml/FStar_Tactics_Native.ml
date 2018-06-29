@@ -14,7 +14,7 @@ type 'a __tac = FStar_Tactics_Types.proofstate -> 'a __result
 
 let r = dummyRange
 
-type itac = FStar_TypeChecker_Normalize.psc -> args -> term option
+type itac = FStar_TypeChecker_Normalize.psc -> FStar_Syntax_Embeddings.norm_cb -> args -> term option
 type native_primitive_step =
     { name: FStar_Ident.lid;
       arity: Prims.int;

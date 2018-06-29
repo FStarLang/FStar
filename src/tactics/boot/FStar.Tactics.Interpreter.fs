@@ -224,7 +224,7 @@ let step_from_native_step (s: native_primitive_step): N.primitive_step =
       N.auto_reflect=Some (s.arity - 1);
       N.strong_reduction_ok=s.strong_reduction_ok;
       N.requires_binder_substitution = false; // GM: really?
-      N.interpretation=(fun psc ncb args -> s.tactic psc args) }
+      N.interpretation=(fun psc ncb args -> s.tactic psc ncb args) }
 
 let mk_emb (em:Range.range -> 'a -> norm_cb -> term)
            (un:bool -> term -> norm_cb -> option<'a>)

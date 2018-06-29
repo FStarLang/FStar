@@ -7,7 +7,7 @@ open FStar.Syntax.Syntax
 open FStar.Range
 module N = FStar.TypeChecker.Normalize
 
-type itac = N.psc -> args -> option<term>
+type itac = N.psc -> FStar.Syntax.Embeddings.norm_cb -> args -> option<term>
 
 type native_primitive_step =
     { name: FStar.Ident.lid;

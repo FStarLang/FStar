@@ -104,7 +104,6 @@ type should_check_uvar =
   | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
   | Strict                (* Everything else is strict *)
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
