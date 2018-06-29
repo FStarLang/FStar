@@ -122,6 +122,7 @@ let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t
     in
     match branches with
     | [] -> failwith "Branch not found"
+    // TODO: Consider the when clause!
     | (p, _wopt, e)::branches ->
       match matches_pat scrut p with
       | BU.Inl matches ->
@@ -289,7 +290,7 @@ let rec iapp cfg (f:t) (args:args) : t =
 let app cfg (f:t) (x:t) (q:aqual) = iapp cfg f [(x, q)]
 
 (* Was List.init, but F* doesn't have this in ulib *)
-let rec tabulate (n:int) (f : int -> 'a) : list<'a> =
+let tabulate (n:int) (f : int -> 'a) : list<'a> =
     let rec aux i =
         if i < n
         then f i :: aux (i + 1)
@@ -499,7 +500,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
               (* Zoe: I'm not sure what this pattern binds, just speculating the translation *)
             | Pat_dot_term (bvar, tm) ->
               let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
-              (mkAccuVar x :: bs,
+              (bs,
                Pat_dot_term (x, readback (translate cfg bs tm)))
           in
           (bs, {p with v = p_new}) (* keep the info and change the pattern *)
