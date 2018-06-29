@@ -1974,10 +1974,6 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
         (* resulting application is reified again                                     *)
         (* ****************************************************************************)
 
-
-        let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv m) in
-        let _, bind_repr = ed.bind_repr in
-
         (* [maybe_unfold_action head] test whether [head] is an action and tries to unfold it if it is *)
         let maybe_unfold_action head : term * option<bool> =
           let maybe_extract_fv t =
@@ -2000,17 +1996,20 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
 
         (* Checking that the typechecker did its job correctly and hoisted all impure *)
         (* terms to explicit let-bindings (see TcTerm, monadic_application) *)
-        let _ =
+        (* GM: Now only when --defensive is on, so we don't waste cycles otherwise *)
+        if Options.defensive () then begin
           let is_arg_impure (e,q) =
             match (SS.compress e).n with
             | Tm_meta (e0, Meta_monadic_lift(m1, m2, t')) -> not (U.is_pure_effect m1)
             | _ -> false
           in
-          if BU.for_some is_arg_impure ((as_arg head_app)::args)
-          then failwith (BU.format1 "Incompatibility between typechecker and normalizer; \
-                                     this monadic application contains impure terms %s\n"
-                                    (Print.term_to_string head))
-        in
+          if BU.for_some is_arg_impure ((as_arg head_app)::args) then
+            Errors.log_issue head.pos
+                             (Errors.Warning_Defensive,
+                              BU.format1 "Incompatibility between typechecker and normalizer; \
+                                          this monadic application contains impure terms %s\n"
+                                          (Print.term_to_string head))
+        end;
 
         let head_app, found_action = maybe_unfold_action head_app in
         let mk tm = S.mk tm None head.pos in
