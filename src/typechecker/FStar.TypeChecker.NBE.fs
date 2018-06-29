@@ -314,7 +314,7 @@ let rec translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
                          x
               | None -> debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar)); 
                        iapp cfg (mkFV fvar [] []) args'),
-              (let f (_:nat) () : t * S.aqual = (Constant Unit, None) in tabulate arity f),
+              (let f (_:int) () : t * S.aqual = (Constant Unit, None) in tabulate arity f),
               arity)
        | _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        end
