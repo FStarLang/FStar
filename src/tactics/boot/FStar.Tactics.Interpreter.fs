@@ -60,6 +60,13 @@ and primitive_steps () : list<Cfg.primitive_step> =
 
         | _ -> failwith "Unexpected application of decr_depth"
     in
+    let decr_depth_interp_nbe (args : NBETerm.args) =
+        match args with
+        | [(ps, _)] ->
+            bind_opt (NBETerm.unembed E.e_proofstate_nbe ps) (fun ps ->
+            Some (NBETerm.embed E.e_proofstate_nbe (decr_depth ps)))
+        | _ -> failwith "Unexpected application of decr_depth"
+    in
     let decr_depth_step : Cfg.primitive_step =
         let nm = Ident.lid_of_str "FStar.Tactics.Types.decr_depth" in
         {Cfg.name = nm;
@@ -69,7 +76,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.strong_reduction_ok = true;
          Cfg.requires_binder_substitution = false;
          Cfg.interpretation = decr_depth_interp;
-         Cfg.interpretation_nbe = NBETerm.dummy_interp nm;
+         Cfg.interpretation_nbe = decr_depth_interp_nbe;
          }
     in
     let incr_depth_interp psc (args : args) =
@@ -78,6 +85,13 @@ and primitive_steps () : list<Cfg.primitive_step> =
             bind_opt (unembed E.e_proofstate ps) (fun ps ->
             let ps = set_ps_psc psc ps in
             Some (embed E.e_proofstate (Cfg.psc_range psc) (incr_depth ps)))
+        | _ -> failwith "Unexpected application of incr_depth"
+    in
+    let incr_depth_interp_nbe (args : NBETerm.args) =
+        match args with
+        | [(ps, _)] ->
+            bind_opt (NBETerm.unembed E.e_proofstate_nbe ps) (fun ps ->
+            Some (NBETerm.embed E.e_proofstate_nbe (incr_depth ps)))
         | _ -> failwith "Unexpected application of incr_depth"
     in
     let incr_depth_step : Cfg.primitive_step =
@@ -89,7 +103,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.strong_reduction_ok = true;
          Cfg.requires_binder_substitution = false;
          Cfg.interpretation = incr_depth_interp;
-         Cfg.interpretation_nbe = NBETerm.dummy_interp nm;
+         Cfg.interpretation_nbe = incr_depth_interp_nbe;
          }
     in
     let tracepoint_interp psc (args : args) =
@@ -101,6 +115,14 @@ and primitive_steps () : list<Cfg.primitive_step> =
             Some U.exp_unit)
         | _ -> failwith "Unexpected application of tracepoint"
     in
+    let tracepoint_interp_nbe (args : NBETerm.args) =
+        match args with
+        | [(ps, _)] ->
+            bind_opt (NBETerm.unembed E.e_proofstate_nbe ps) (fun ps ->
+            tracepoint ps;
+            Some (NBETerm.Constant NBETerm.Unit))
+        | _ -> failwith "Unexpected application of tracepoint"
+    in
     let set_proofstate_range_interp psc (args : args) =
         match args with
         | [(ps, _); (r, _)] ->
@@ -108,6 +130,15 @@ and primitive_steps () : list<Cfg.primitive_step> =
             bind_opt (unembed e_range r) (fun r ->
             let ps' = set_proofstate_range ps r in
             Some (embed E.e_proofstate (Cfg.psc_range psc) ps')))
+        | _ -> failwith "Unexpected application of set_proofstate_range"
+    in
+    let set_proofstate_range_interp_nbe (args : NBETerm.args) =
+        match args with
+        | [(ps, _); (r, _)] ->
+            bind_opt (NBETerm.unembed E.e_proofstate_nbe ps) (fun ps ->
+            bind_opt (NBETerm.unembed NBETerm.e_range r) (fun r ->
+            let ps' = set_proofstate_range ps r in
+            Some (NBETerm.embed E.e_proofstate_nbe ps')))
         | _ -> failwith "Unexpected application of set_proofstate_range"
     in
     let push_binder_interp psc (args:args) =
@@ -128,7 +159,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.strong_reduction_ok = true;
          Cfg.requires_binder_substitution = false;
          Cfg.interpretation = set_proofstate_range_interp;
-         Cfg.interpretation_nbe = NBETerm.dummy_interp nm;
+         Cfg.interpretation_nbe = set_proofstate_range_interp_nbe;
         }
     in
     let tracepoint_step : Cfg.primitive_step =
@@ -140,7 +171,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.strong_reduction_ok = true;
          Cfg.requires_binder_substitution = true;
          Cfg.interpretation = tracepoint_interp;
-         Cfg.interpretation_nbe = NBETerm.dummy_interp nm;
+         Cfg.interpretation_nbe = tracepoint_interp_nbe;
         }
     in
     let push_binder_step : Cfg.primitive_step =

@@ -19,6 +19,8 @@ module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module N = FStar.TypeChecker.Normalize
 module Err = FStar.Errors
+module NBETerm = FStar.TypeChecker.NBETerm
+module NBE = FStar.TypeChecker.NBE
 
 open FStar.Tactics.Types
 open FStar.Tactics.Result
@@ -59,6 +61,7 @@ let fstar_tactics_Drop  = lid_as_data_tm fstar_tactics_Drop_lid
 let fstar_tactics_Force = lid_as_data_tm fstar_tactics_Force_lid
 
 let t_proofstate   = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
+let fv_proofstate  = S.fvconst (fstar_tactics_lid' ["Types"; "proofstate"])
 let t_result       = S.tconst (fstar_tactics_lid' ["Types"; "result"])
 let t_result_of t  = U.mk_app t_result [S.as_arg t] // TODO: uinst on t_result?
 let t_guard_policy = S.tconst (fstar_tactics_lid' ["Types"; "guard_policy"])
@@ -81,6 +84,28 @@ let e_proofstate =
 
 let unfold_lazy_proofstate (i : lazyinfo) : term =
     U.exp_string "(((proofstate)))"
+
+let e_proofstate_nbe =
+    let embed_proofstate (ps:proofstate) : NBETerm.t =
+        let li = { lkind = Lazy_proofstate
+                 ; blob = FStar.Dyn.mkdyn ps
+                 ; typ = t_proofstate
+                 ; rng = Range.dummyRange }
+        in
+        NBETerm.Lazy li
+    in
+    let unembed_proofstate (t:NBETerm.t) : option<proofstate> =
+        match t with
+        | NBETerm.Lazy li when li.lkind = Lazy_proofstate ->
+            Some <| FStar.Dyn.undyn li.blob
+        | _ ->
+            (* if w then *)
+            (*     Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded proofstate: %s" (NBETerm.t_to_string t))); *)
+            None
+    in
+    { NBETerm.em = embed_proofstate
+    ; NBETerm.un = unembed_proofstate
+    ; NBETerm.typ = NBETerm.FV (fv_proofstate, [], []) }
 
 let e_result (ea : embedding<'a>)  =
     let embed_result (rng:Range.range) (res:__result<'a>) : term =
