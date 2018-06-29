@@ -817,12 +817,15 @@ let step_as_normalizer_step = function
   | UnfoldTac -> Env.UnfoldTac
   | Reify -> Env.Reify
 
-let normalize' (steps:list<Env.step>) (env : Env.env) (e:term) : term =
-  let cfg = Cfg.config steps env in
+let normalize_with_primitive_steps (ps : list<primitive_step>) (steps:list<Env.step>) (env : Env.env) (e:term) : term =
+  let cfg = Cfg.config' ps steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
   debug cfg (fun () -> BU.print1 "Calling NBE with %s" (P.term_to_string e));
   readback cfg (translate cfg [] e)
+
+let normalize' (steps:list<Env.step>) (env : Env.env) (e:term) : term =
+    normalize_with_primitive_steps [] steps env e
 
 
   (* ONLY FOR UNIT TESTS! *)

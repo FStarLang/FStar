@@ -33,7 +33,8 @@ open FStar.Reflection.Basic
 open FStar.Reflection.Interpreter
 module RD = FStar.Reflection.Data
 module RE = FStar.Reflection.Embeddings
-module NBE = FStar.TypeChecker.NBETerm
+module NBE = FStar.TypeChecker.NBE
+module NBETerm = FStar.TypeChecker.NBETerm
 open FStar.Tactics.Native
 open FStar.Tactics.InterpFuns
 
@@ -68,7 +69,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.strong_reduction_ok = true;
          Cfg.requires_binder_substitution = false;
          Cfg.interpretation = decr_depth_interp;
-         Cfg.interpretation_nbe = NBE.dummy_interp nm;
+         Cfg.interpretation_nbe = NBETerm.dummy_interp nm;
          }
     in
     let incr_depth_interp psc (args : args) =
@@ -88,7 +89,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.strong_reduction_ok = true;
          Cfg.requires_binder_substitution = false;
          Cfg.interpretation = incr_depth_interp;
-         Cfg.interpretation_nbe = NBE.dummy_interp nm;
+         Cfg.interpretation_nbe = NBETerm.dummy_interp nm;
          }
     in
     let tracepoint_interp psc (args : args) =
@@ -127,7 +128,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.strong_reduction_ok = true;
          Cfg.requires_binder_substitution = false;
          Cfg.interpretation = set_proofstate_range_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp nm)
+         Cfg.interpretation_nbe = NBETerm.dummy_interp nm;
         }
     in
     let tracepoint_step : Cfg.primitive_step =
@@ -139,7 +140,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.strong_reduction_ok = true;
          Cfg.requires_binder_substitution = true;
          Cfg.interpretation = tracepoint_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp nm)
+         Cfg.interpretation_nbe = NBETerm.dummy_interp nm;
         }
     in
     let push_binder_step : Cfg.primitive_step =
@@ -151,7 +152,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.strong_reduction_ok = true;
          Cfg.requires_binder_substitution = true;
          Cfg.interpretation = push_binder_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp nm)
+         Cfg.interpretation_nbe = NBETerm.dummy_interp nm;
         }
     in
     (* NB: We need a PRECISE number for the universe arguments or NBE will
@@ -272,13 +273,13 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) : tac<'b> = //
     let steps = [Env.Weak; Env.Reify; Env.UnfoldUntil delta_constant; Env.UnfoldTac; Env.Primops; Env.Unascribe] in
 
     // Maybe use NBE if the user asked for it
-    let steps = if Options.tactics_nbe ()
-                then Env.NBE :: steps
-                else steps
+    let norm_f = if Options.tactics_nbe ()
+                 then NBE.normalize_with_primitive_steps
+                 else N.normalize_with_primitive_steps
     in
     if proof_state.tac_verb_dbg then
         BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
-    let result = N.normalize_with_primitive_steps (primitive_steps ()) steps proof_state.main_context tm in
+    let result = norm_f (primitive_steps ()) steps proof_state.main_context tm in
     if proof_state.tac_verb_dbg then
         BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
 
