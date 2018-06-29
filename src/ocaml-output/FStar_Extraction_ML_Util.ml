@@ -214,8 +214,8 @@ let (udelta_unfold :
       FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option)
   =
   fun g  ->
-    fun uu___252_366  ->
-      match uu___252_366 with
+    fun uu___254_366  ->
+      match uu___254_366 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
           let uu____375 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1  in
           (match uu____375 with
@@ -257,8 +257,8 @@ let (eff_leq :
       | uu____408 -> false
   
 let (eff_to_string : FStar_Extraction_ML_Syntax.e_tag -> Prims.string) =
-  fun uu___253_417  ->
-    match uu___253_417 with
+  fun uu___255_417  ->
+    match uu___255_417 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -508,8 +508,8 @@ let is_type_abstraction :
     (('a,'b) FStar_Util.either,'c) FStar_Pervasives_Native.tuple2 Prims.list
       -> Prims.bool
   =
-  fun uu___254_1004  ->
-    match uu___254_1004 with
+  fun uu___256_1004  ->
+    match uu___256_1004 with
     | (FStar_Util.Inl uu____1015,uu____1016)::uu____1017 -> true
     | uu____1040 -> false
   
@@ -549,8 +549,8 @@ let (resugar_exp :
   
 let (record_field_path :
   FStar_Ident.lident Prims.list -> Prims.string Prims.list) =
-  fun uu___255_1113  ->
-    match uu___255_1113 with
+  fun uu___257_1113  ->
+    match uu___257_1113 with
     | f::uu____1119 ->
         let uu____1122 = FStar_Util.prefix f.FStar_Ident.ns  in
         (match uu____1122 with
@@ -1188,7 +1188,7 @@ let (interpret_plugin_as_term_fun :
                                     FStar_Util.string_of_int non_tvar_arity
                                      in
                                   Prims.strcat
-                                    "FStar_Tactics_Interpreter.mk_tactic_interpretation_"
+                                    "FStar_Tactics_InterpFuns.mk_tactic_interpretation_"
                                     uu____3128
                                    in
                                 str_to_top_name uu____3127  in
