@@ -134,6 +134,7 @@ let defaults =
       ("detail_hint_replay"           , Bool false);
       ("doc"                          , Bool false);
       ("dump_module"                  , List []);
+      ("eager_embedding"              , Bool false);
       ("eager_inference"              , Bool false);
       ("eager_subtyping"              , Bool false);
       ("expose_interfaces"            , Bool false);
@@ -251,6 +252,7 @@ let get_detail_errors           ()      = lookup_opt "detail_errors"            
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
+let get_eager_embedding         ()      = lookup_opt "eager_embedding"          as_bool
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
@@ -585,6 +587,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "dump_module",
         Accumulated (SimpleStr "module_name"),
         "");
+
+       ( noshort,
+        "eager_embedding",
+        Const (mk_bool true),
+        "Eagerly embed and unembed terms to primitive operations and plugins: not recommended except for benchmarking");
 
        ( noshort,
         "eager_inference",
@@ -1018,6 +1025,7 @@ let settable = function
     | "defensive"
     | "detail_errors"
     | "detail_hint_replay"
+    | "eager_embedding"
     | "eager_inference"
     | "eager_subtyping"
     | "hide_uvar_nums"
@@ -1269,6 +1277,7 @@ let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
+let eager_embedding              () = get_eager_embedding()
 let eager_subtyping              () = get_eager_subtyping()
 let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
