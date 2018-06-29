@@ -34,7 +34,7 @@ let register_plugin (s: string) (arity: Prims.int) (t: itac) =
            { C.name=FStar_Ident.lid_of_str s;
              C.arity=arity;
              C.auto_reflect=None;
-             C.strong_reduction_ok=false;
+             C.strong_reduction_ok=true;
              C.requires_binder_substitution = false;
              C.interpretation=t;
              C.univ_arity=Z.of_int 0; (* TODO: bogus for now, just as in Tactics.Interpreter *)
@@ -48,7 +48,7 @@ let register_tactic (s: string) (arity: Prims.int) (t: itac)=
     let step =
         { name=FStar_Ident.lid_of_str s;
           arity = arity;
-          strong_reduction_ok=false;
+          strong_reduction_ok=true;
           tactic=t } in
     compiled_tactics := step :: !compiled_tactics;
     BU.print1 "Registered tactic %s\n" s
