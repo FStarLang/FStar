@@ -62,7 +62,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
     let decr_depth_step : Cfg.primitive_step =
         {Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth";
          Cfg.arity = 1;
-         Cfg.univ_arity=0; // Zoe : We might need to change that
+         Cfg.univ_arity=0;
          Cfg.auto_reflect=None;
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = false;
@@ -81,7 +81,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
     let incr_depth_step : Cfg.primitive_step =
         {Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth";
          Cfg.arity = 1;
-         Cfg.univ_arity=0; // Zoe : We might need to change that
+         Cfg.univ_arity=0;
          Cfg.auto_reflect=None;
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = false;
@@ -120,7 +120,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
         let nm = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" in
         {Cfg.name = nm;
          Cfg.arity = 2;
-         Cfg.univ_arity=0; // Zoe : We might need to change that
+         Cfg.univ_arity=0;
          Cfg.auto_reflect=None;
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = false;
@@ -132,7 +132,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
         let nm = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" in
         {Cfg.name = nm;
          Cfg.arity = 1;
-         Cfg.univ_arity=0; // Zoe : We might need to change that
+         Cfg.univ_arity=0;
          Cfg.auto_reflect=None;
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = true;
@@ -144,7 +144,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
        let nm = E.fstar_tactics_lid' ["Builtins";"push_binder"] in
         {Cfg.name = nm;
          Cfg.arity = 2;
-         Cfg.univ_arity=0; // Zoe : We might need to change that
+         Cfg.univ_arity=0;
          Cfg.auto_reflect=None;
          Cfg.strong_reduction_ok = false;
          Cfg.requires_binder_substitution = true;
@@ -152,87 +152,90 @@ and primitive_steps () : list<Cfg.primitive_step> =
          Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
         }
     in
+    (* NB: We need a PRECISE number for the universe arguments or NBE will
+     * just go crazy. Most of the tactics work on ground types and thus have 0
+     * universe arguments. Those polymorphic, usually take 1 universe per Type argument. *)
     [
-      mktac2 "fail"          (fun _ -> fail) e_any e_string e_any; //nb: the e_any embedding is never used
-      mktac1 "trivial"       trivial e_unit e_unit;
-      mktac2 "__trytac"      (fun _ -> trytac) e_any (e_tactic_0' e_any) (e_option e_any);
-      mktac1 "intro"         intro e_unit RE.e_binder;
-      mktac1 "intro_rec"     intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder);
-      mktac1 "norm"          norm (e_list e_norm_step) e_unit;
-      mktac3 "norm_term_env" norm_term_env RE.e_env (e_list e_norm_step) RE.e_term RE.e_term;
-      mktac2 "norm_binder_type"
+      mktac2 1 "fail"          (fun _ -> fail) e_any e_string e_any; //nb: the e_any embedding is never used
+      mktac1 0 "trivial"       trivial e_unit e_unit;
+      mktac2 1 "__trytac"      (fun _ -> trytac) e_any (e_tactic_0' e_any) (e_option e_any);
+      mktac1 0 "intro"         intro e_unit RE.e_binder;
+      mktac1 0 "intro_rec"     intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder);
+      mktac1 0 "norm"          norm (e_list e_norm_step) e_unit;
+      mktac3 0 "norm_term_env" norm_term_env RE.e_env (e_list e_norm_step) RE.e_term RE.e_term;
+      mktac2 0 "norm_binder_type"
                                norm_binder_type (e_list e_norm_step) RE.e_binder e_unit;
-      mktac2 "rename_to"     rename_to RE.e_binder e_string e_unit;
-      mktac1 "binder_retype" binder_retype RE.e_binder e_unit;
-      mktac1 "revert"        revert e_unit e_unit;
-      mktac1 "clear_top"     clear_top e_unit e_unit;
-      mktac1 "clear"         clear RE.e_binder e_unit;
-      mktac1 "rewrite"       rewrite RE.e_binder e_unit;
-      mktac1 "smt"           smt e_unit e_unit;
-      mktac1 "refine_intro"  refine_intro e_unit e_unit;
-      mktac2 "t_exact"       t_exact e_bool RE.e_term e_unit;
-      mktac1 "apply"         (apply  true) RE.e_term e_unit;
-      mktac1 "apply_raw"     (apply false) RE.e_term e_unit;
-      mktac1 "apply_lemma"   apply_lemma RE.e_term e_unit;
+      mktac2 0 "rename_to"     rename_to RE.e_binder e_string e_unit;
+      mktac1 0 "binder_retype" binder_retype RE.e_binder e_unit;
+      mktac1 0 "revert"        revert e_unit e_unit;
+      mktac1 0 "clear_top"     clear_top e_unit e_unit;
+      mktac1 0 "clear"         clear RE.e_binder e_unit;
+      mktac1 0 "rewrite"       rewrite RE.e_binder e_unit;
+      mktac1 0 "smt"           smt e_unit e_unit;
+      mktac1 0 "refine_intro"  refine_intro e_unit e_unit;
+      mktac2 0 "t_exact"       t_exact e_bool RE.e_term e_unit;
+      mktac1 0 "apply"         (apply  true) RE.e_term e_unit;
+      mktac1 0 "apply_raw"     (apply false) RE.e_term e_unit;
+      mktac1 0 "apply_lemma"   apply_lemma RE.e_term e_unit;
       // A tac 5... oh my...
-      mktac5 "__divide"      (fun _ _ -> divide) e_any e_any e_int (e_tactic_0' e_any) (e_tactic_0' e_any)
+      mktac5 2 "__divide"      (fun _ _ -> divide) e_any e_any e_int (e_tactic_0' e_any) (e_tactic_0' e_any)
                                                             (e_tuple2 e_any e_any);
-      mktac2 "__seq"         seq (e_tactic_0' e_unit) (e_tactic_0' e_unit) e_unit;
+      mktac2 0 "__seq"         seq (e_tactic_0' e_unit) (e_tactic_0' e_unit) e_unit;
 
-      mktac1 "set_options"   set_options e_string e_unit;
+      mktac1 0 "set_options"   set_options e_string e_unit;
 
-      mktac1 "tc"            tc RE.e_term RE.e_term;
-      mktac1 "unshelve"      unshelve RE.e_term e_unit;
-      mktac2 "unquote"       unquote e_any RE.e_term e_any;
+      mktac1 0 "tc"            tc RE.e_term RE.e_term;
+      mktac1 0 "unshelve"      unshelve RE.e_term e_unit;
+      mktac2 1 "unquote"       unquote e_any RE.e_term e_any;
 
-      mktac1 "prune"         prune e_string e_unit;
-      mktac1 "addns"         addns e_string e_unit;
+      mktac1 0 "prune"         prune e_string e_unit;
+      mktac1 0 "addns"         addns e_string e_unit;
 
-      mktac1 "print"         print e_string e_unit;
-      mktac1 "debug"         debug e_string e_unit;
-      mktac1 "dump"          print_proof_state e_string e_unit;
-      mktac1 "dump1"         print_proof_state1 e_string e_unit;
+      mktac1 0 "print"         print e_string e_unit;
+      mktac1 0 "debug"         debug e_string e_unit;
+      mktac1 0 "dump"          print_proof_state e_string e_unit;
+      mktac1 0 "dump1"         print_proof_state1 e_string e_unit;
 
-      mktac2 "__pointwise"     pointwise E.e_direction (e_tactic_0' e_unit) e_unit;
-      mktac2 "__topdown_rewrite" topdown_rewrite
+      mktac2 0 "__pointwise"     pointwise E.e_direction (e_tactic_0' e_unit) e_unit;
+      mktac2 0 "__topdown_rewrite" topdown_rewrite
                                  (e_tactic_1 RE.e_term (e_tuple2 e_bool e_int))
                                  (e_tactic_0' e_unit)
                                  e_unit;
 
-      mktac1 "trefl"         trefl   e_unit e_unit;
-      mktac1 "later"         later   e_unit e_unit;
-      mktac1 "dup"           dup     e_unit e_unit;
-      mktac1 "flip"          flip    e_unit e_unit;
-      mktac1 "qed"           qed     e_unit e_unit;
-      mktac1 "dismiss"       dismiss e_unit e_unit;
-      mktac1 "tadmit"        tadmit  e_unit e_unit;
+      mktac1 0 "trefl"         trefl   e_unit e_unit;
+      mktac1 0 "later"         later   e_unit e_unit;
+      mktac1 0 "dup"           dup     e_unit e_unit;
+      mktac1 0 "flip"          flip    e_unit e_unit;
+      mktac1 0 "qed"           qed     e_unit e_unit;
+      mktac1 0 "dismiss"       dismiss e_unit e_unit;
+      mktac1 0 "tadmit"        tadmit  e_unit e_unit;
 
-      mktac1 "cases"         cases RE.e_term (e_tuple2 RE.e_term RE.e_term);
-      mktac1 "t_destruct"    t_destruct RE.e_term (e_list (e_tuple2 RE.e_fv e_int));
+      mktac1 0 "cases"         cases RE.e_term (e_tuple2 RE.e_term RE.e_term);
+      mktac1 0 "t_destruct"    t_destruct RE.e_term (e_list (e_tuple2 RE.e_fv e_int));
 
-      mktac1 "top_env"       top_env     e_unit RE.e_env;
-      mktac1 "cur_env"       cur_env     e_unit RE.e_env;
-      mktac1 "cur_goal"      cur_goal'   e_unit RE.e_term;
-      mktac1 "cur_witness"   cur_witness e_unit RE.e_term;
+      mktac1 0 "top_env"       top_env     e_unit RE.e_env;
+      mktac1 0 "cur_env"       cur_env     e_unit RE.e_env;
+      mktac1 0 "cur_goal"      cur_goal'   e_unit RE.e_term;
+      mktac1 0 "cur_witness"   cur_witness e_unit RE.e_term;
 
-      mktac1 "inspect"       inspect RE.e_term      RE.e_term_view;
-      mktac1 "pack"          pack    RE.e_term_view RE.e_term;
+      mktac1 0 "inspect"       inspect RE.e_term      RE.e_term_view;
+      mktac1 0 "pack"          pack    RE.e_term_view RE.e_term;
 
-      mktac1 "fresh"         fresh       e_unit e_int;
-      mktac1 "ngoals"        ngoals      e_unit e_int;
-      mktac1 "ngoals_smt"    ngoals_smt  e_unit e_int;
-      mktac1 "is_guard"      is_guard    e_unit e_bool;
+      mktac1 0 "fresh"         fresh       e_unit e_int;
+      mktac1 0 "ngoals"        ngoals      e_unit e_int;
+      mktac1 0 "ngoals_smt"    ngoals_smt  e_unit e_int;
+      mktac1 0 "is_guard"      is_guard    e_unit e_bool;
 
-      mktac2 "uvar_env"      uvar_env RE.e_env (e_option RE.e_term) RE.e_term;
-      mktac3 "unify_env"     unify_env RE.e_env RE.e_term RE.e_term e_bool;
-      mktac3 "launch_process" launch_process e_string (e_list e_string) e_string e_string;
+      mktac2 0 "uvar_env"      uvar_env RE.e_env (e_option RE.e_term) RE.e_term;
+      mktac3 0 "unify_env"     unify_env RE.e_env RE.e_term RE.e_term e_bool;
+      mktac3 0 "launch_process" launch_process e_string (e_list e_string) e_string e_string;
 
-      mktac2 "fresh_bv_named"  fresh_bv_named e_string RE.e_term RE.e_bv;
-      mktac1 "change"          change RE.e_term e_unit;
+      mktac2 0 "fresh_bv_named"  fresh_bv_named e_string RE.e_term RE.e_bv;
+      mktac1 0 "change"          change RE.e_term e_unit;
 
-      mktac1 "get_guard_policy" get_guard_policy e_unit E.e_guard_policy;
-      mktac1 "set_guard_policy" set_guard_policy E.e_guard_policy e_unit;
-      mktac1 "lax_on"           lax_on e_unit e_bool;
+      mktac1 0 "get_guard_policy" get_guard_policy e_unit E.e_guard_policy;
+      mktac1 0 "set_guard_policy" set_guard_policy E.e_guard_policy e_unit;
+      mktac1 0 "lax_on"           lax_on e_unit e_bool;
 
       decr_depth_step;
       incr_depth_step;
