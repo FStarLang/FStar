@@ -86,13 +86,14 @@ let run i r expected =
     let tcenv = Pars.init() in
     FStar.Main.process_args() |> ignore; //set the command line args for debugging
     let x = N.normalize [N.Beta; N.UnfoldUntil delta_constant; N.Primops] tcenv r in
-    Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
     Options.set_option "print_implicits" (Options.Bool true);
 //    BU.print1 "result = %s\n" (P.term_to_string x);
 //    BU.print1 "expected = %s\n\n" (P.term_to_string expected);
-    always i (term_eq (U.unascribe x) expected)
-
+    let r = always i (term_eq (U.unascribe x) expected) in
+    Options.init(); //reset them
+    r
+    
 let run_all () =
     BU.print_string "Testing the normalizer\n";
     let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
@@ -142,7 +143,7 @@ let run_all () =
     run 16 (pred_nat (snat (snat znat))) (snat znat);
     run 17 (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
     run 18 (minus_nat (encode_nat 100) (encode_nat 100)) znat;
-    run 19 (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
+    run 19 (minus_nat (encode_nat 1000) (encode_nat 1000)) znat;
     run 20 (minus_nat (encode_nat 10) (encode_nat 10)) znat;
 //    run 21 (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat; //this one takes about 30 sec and ~3.5GB of memory
     Options.__clear_unit_tests();

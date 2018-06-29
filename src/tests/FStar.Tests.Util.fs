@@ -17,6 +17,8 @@ module BU = FStar.Util
 
 open FStar.Ident
 open FStar.Range
+open FStar.Tests
+open FStar.Tests
 
 let always id b =
     if b
@@ -50,6 +52,8 @@ let rec term_eq' t1 t2 =
               && args_eq ct1.effect_args ct2.effect_args
             | _ -> false in
     match t1.n, t2.n with
+      | Tm_lazy l, _ -> term_eq' (must !lazy_chooser l.lkind l) t2
+      | _, Tm_lazy l -> term_eq' t1 (must !lazy_chooser l.lkind l)
       | Tm_bvar x, Tm_bvar y -> x.index = y.index
       | Tm_name x, Tm_name y -> S.bv_eq x y
       | Tm_fvar f, Tm_fvar g -> S.fv_eq f g
