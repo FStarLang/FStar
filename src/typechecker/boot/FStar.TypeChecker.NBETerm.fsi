@@ -29,15 +29,18 @@ type constant =
   | Char of FStar.Char.char
   | Range of Range.range
 
-//IN F*: type atom : Type0 =
-type atom = //JUST FSHARP
+type atom
+//IN F*: : Type0
+  =
   | Var of var
   | Match of t *
              (t -> t) *
              ((t -> term) -> list<branch>)
   | Rec of letbinding * list<letbinding> * list<t>
-//IN F*: and t : Type0 =
-and t = //JUST FSHARP
+
+and t
+//IN F*: : Type0
+  =
   | Lam of (list<t> -> t) * list<(unit -> arg)> * int
   | Accu of atom * args
   | Construct of fv * list<universe> * args

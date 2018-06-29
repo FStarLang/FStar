@@ -33,8 +33,9 @@ type constant =
   | Char of FStar.Char.char
   | Range of Range.range
 
-//IN F*: type atom : Type0 =
-type atom = //JUST FSHARP
+type atom
+//IN F*: : Type0
+  =
   | Var of var
   | Match of t * (* the scutinee *)
              (t -> t) * (* case analysis *)
@@ -44,8 +45,9 @@ type atom = //JUST FSHARP
              // NS: add a thunked pattern translations here
   | Rec of letbinding * list<letbinding> * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
   (* Zoe : a recursive function definition together with its block of mutually recursive function definitions and its environment *)
-//IN F*: and t : Type0 =
-and t = //JUST FSHARP
+and t
+//IN F*: : Type0
+  =
   | Lam of (list<t> -> t) * list<(unit -> arg)> * int  // Zoe : body * args * arrity
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
