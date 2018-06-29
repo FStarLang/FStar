@@ -329,10 +329,7 @@ let run_tactic_on_typ
                             else ())
                   (ps.goals @ ps.smt_goals);
 
-        // Check that all implicits are instantiated. This will also typecheck
-        // the implicits, so make it do a lax check because we certainly
-        // do not want to repeat all of the reasoning that took place in tactics.
-        // It would also most likely fail.
+        // Check that all implicits were instantiated
         if !tacdbg then
             BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
                                                                     (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
@@ -353,6 +350,8 @@ let run_tactic_on_typ
                                 (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
                                 ps.all_implicits);
         report_implicits ps g.implicits;
+        // /implicits
+
         if !tacdbg then
             dump_proofstate (subst_proof_state (N.psc_subst ps.psc) ps) "at the finish line";
         (ps.goals@ps.smt_goals, w)

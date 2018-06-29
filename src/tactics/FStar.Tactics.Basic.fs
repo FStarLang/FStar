@@ -298,6 +298,14 @@ let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
             ret false)
             end
 
+let compress_implicits : tac<unit> =
+    bind get (fun ps ->
+    let imps = ps.all_implicits in
+    let g = { Env.trivial_guard with implicits = imps } in
+    let g = Rel.resolve_implicits_tac ps.main_context g in
+    let ps' = { ps with all_implicits = g.implicits } in
+    set ps')
+
 let do_unify env t1 t2 : tac<bool> =
     bind idtac (fun () ->
     if Env.debug env (Options.Other "1346") then (
@@ -308,7 +316,8 @@ let do_unify env t1 t2 : tac<bool> =
     bind (__do_unify env t1 t2) (fun r ->
     if Env.debug env (Options.Other "1346") then
         Options.pop ();
-    ret r))
+    bind compress_implicits (fun _ ->
+    ret r)))
 
 let remove_solved_goals : tac<unit> =
     bind get (fun ps ->
@@ -428,7 +437,7 @@ let add_implicits (i:implicits) : tac<unit> =
 
 let new_uvar (reason:string) (env:env) (typ:typ) : tac<(term * ctx_uvar)> =
     //typ.pos should really never be a FStar.Range.range ... can it?
-    let u, ctx_uvar, g_u = TcUtil.new_implicit_var reason typ.pos env typ in
+    let u, ctx_uvar, g_u = Env.new_implicit_var_aux reason typ.pos env typ Allow_untyped in
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, fst (List.hd ctx_uvar)))
 
