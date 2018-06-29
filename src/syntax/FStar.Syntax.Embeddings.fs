@@ -52,18 +52,20 @@ let warn_unembed (e:embedding<'a>) t n = unembed e t true n
 let try_unembed  (e:embedding<'a>) t n = unembed e t false n
 let type_of     (e:embedding<'a>)     = e.typ
 
-let lazy_embed rng (x:'a) (f:unit -> term) =
+let lazy_embed rng ta (x:'a) (f:unit -> term) =
     S.mk (Tm_lazy({blob=FStar.Dyn.mkdyn x;
                    ltyp=S.tun;
                    rng=rng;
-                   lkind=Lazy_embedding (FStar.Common.mk_thunk f)}))
+                   lkind=Lazy_embedding (ta, FStar.Common.mk_thunk f)}))
          None
          rng
 
-let lazy_unembed (x:term) (f:term -> option<'a>) : option<'a> =
+let lazy_unembed (x:term) (ta:term) (f:term -> option<'a>) : option<'a> =
     let x = SS.compress x in
     match x.n with
-    | Tm_lazy {blob=b; lkind=Lazy_embedding _} -> Some (FStar.Dyn.undyn b)
+    | Tm_lazy {blob=b; lkind=Lazy_embedding (tb, _)} ->
+      BU.print2 "Unembedding a %s as a %s\n" (Print.term_to_string tb) (Print.term_to_string ta);
+      Some (FStar.Dyn.undyn b)
     | _ -> f x
 
 let e_any =
@@ -120,12 +122,13 @@ let e_char =
     mk_emb em un S.t_char
 
 let e_int =
+    let t_int = U.fvar_const PC.int_lid in
     let em (i:Z.t) (rng:range) _topt _norm : term =
-        lazy_embed rng i (fun () -> U.exp_int (Z.string_of_big_int i))
+        lazy_embed rng t_int i (fun () -> U.exp_int (Z.string_of_big_int i))
     in
     let un (t0:term) (w:bool) _norm : option<Z.t> =
         let t = U.unmeta_safe t0 in
-        lazy_unembed t (fun t ->
+        lazy_unembed t t_int (fun t ->
             match t.n with
             | Tm_constant(FStar.Const.Const_int (s, _)) ->
                 Some (Z.big_int_of_string s)
@@ -154,8 +157,12 @@ let e_string =
     mk_emb em un S.t_string
 
 let e_option (ea : embedding<'a>) =
+    let t_option_a =
+        let t_opt = U.fvar_const PC.option_lid in
+        S.mk_Tm_app t_opt [S.as_arg ea.typ] None Range.dummyRange
+    in
     let em (o:option<'a>) (rng:range) topt norm : term =
-        lazy_embed rng o (fun () ->
+        lazy_embed rng t_option_a o (fun () ->
         match o with
         | None ->
           S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.none_lid) [U_zero])
@@ -177,7 +184,7 @@ let e_option (ea : embedding<'a>) =
     in
     let un (t0:term) (w:bool) norm : option<option<'a>> =
         let t = U.unmeta_safe t0 in
-        lazy_unembed t (fun t ->
+        lazy_unembed t t_option_a (fun t ->
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
@@ -191,8 +198,13 @@ let e_option (ea : embedding<'a>) =
     mk_emb em un (S.t_option_of (type_of ea))
 
 let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
+    let t_pair_a_b =
+        let t_tup2 = U.fvar_const PC.lid_tuple2 in
+        S.mk_Tm_app t_tup2 [S.as_arg ea.typ; S.as_arg eb.typ]
+                    None Range.dummyRange
+    in
     let em (x:('a * 'b)) (rng:range) topt norm : term =
-        lazy_embed rng x (fun () ->
+        lazy_embed rng t_pair_a_b x (fun () ->
         let proj i ab =
             let proj_1, _ = U.mk_field_projector_name (PC.mk_tuple_data_lid 2 rng) (S.null_bv S.tun) i in
             let proj_1_tm = S.fv_to_tm (lid_as_fv proj_1 delta_equational None) in
@@ -215,7 +227,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     in
     let un (t0:term) (w:bool) norm : option<('a * 'b)> =
         let t = U.unmeta_safe t0 in
-        lazy_unembed t (fun t ->
+        lazy_unembed t t_pair_a_b (fun t ->
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv PC.lid_Mktuple2 ->
@@ -230,8 +242,12 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     mk_emb em un (S.t_tuple2_of (type_of ea) (type_of eb))
 
 let e_list (ea:embedding<'a>) =
+    let t_list_a =
+        let t_list = U.fvar_const PC.list_lid in
+        S.mk_Tm_app t_list [S.as_arg ea.typ] None Range.dummyRange
+    in
     let rec em (l:list<'a>) (rng:range) shadow_l norm : term =
-        lazy_embed rng l (fun () ->
+        lazy_embed rng t_list_a l (fun () ->
         let t = S.iarg (type_of ea) in
         match l with
         | [] ->
@@ -264,7 +280,7 @@ let e_list (ea:embedding<'a>) =
     in
     let rec un (t0:term) (w:bool) norm : option<list<'a>> =
         let t = U.unmeta_safe t0 in
-        lazy_unembed t (fun t ->
+        lazy_unembed t t_list_a (fun t ->
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, _
@@ -310,8 +326,9 @@ let steps_UnfoldFully   = tdataconstr PC.steps_unfoldonly
 let steps_UnfoldAttr    = tdataconstr PC.steps_unfoldattr
 
 let e_norm_step =
+    let t_norm_step = U.fvar_const (Ident.lid_of_str "FStar.Syntax.Embeddings.norm_step") in
     let em (n:norm_step) (rng:range) _topt norm : term =
-        lazy_embed rng n (fun () ->
+        lazy_embed rng t_norm_step n (fun () ->
         match n with
         | Simpl ->
             steps_Simpl
@@ -338,7 +355,7 @@ let e_norm_step =
     in
     let un (t0:term) (w:bool) norm : option<norm_step> =
         let t = U.unmeta_safe t0 in
-        lazy_unembed t (fun t ->
+        lazy_unembed t t_norm_step (fun t ->
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_simpl ->
@@ -392,6 +409,11 @@ let or_else (f: option<'a>) (g:unit -> 'a) =
     | None -> g ()
 
 let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) =
+    let t_arrow =
+        S.mk (Tm_arrow([S.null_bv ea.typ, None],
+                       S.mk_Total eb.typ))
+              None Range.dummyRange
+    in
     let em (f:'a -> 'b) rng shadow_f norm =
         let f_wrapped (x:term) =
             let shadow_app = map_shadow shadow_f (fun f ->
@@ -405,12 +427,13 @@ let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) =
                 | None -> raise Embedding_failure
                 | Some app -> norm (BU.Inr app))
         in
-        lazy_embed rng f_wrapped (fun () ->
+        lazy_embed rng t_arrow f_wrapped (fun () ->
         match force_shadow shadow_f with
         | None -> raise Embedding_failure //TODO: dodgy
         | Some repr_f -> norm (BU.Inr repr_f))
     in
     let un (f:term) w norm : option<('a -> 'b)> =
+        lazy_unembed f t_arrow (fun f ->
         let f_wrapped (a:'a) : 'b =
             let a_tm = embed ea a f.pos None norm in
             let b_tm = norm (BU.Inr (S.mk_Tm_app f [S.as_arg a_tm] None f.pos)) in
@@ -418,7 +441,7 @@ let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) =
             | None -> raise Unembedding_failure
             | Some b -> b
         in
-        Some f_wrapped
+        Some f_wrapped)
     in
     let tarr =
         S.mk (Tm_arrow ([S.mk_binder (S.new_bv None (type_of ea))],

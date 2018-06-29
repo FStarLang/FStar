@@ -272,7 +272,7 @@ and lazy_kind =
   | Lazy_proofstate
   | Lazy_sigelt
   | Lazy_uvar
-  | Lazy_embedding of FStar.Common.thunk<term>
+  | Lazy_embedding of typ * FStar.Common.thunk<term>
 
 and binding =
   | Binding_var      of bv

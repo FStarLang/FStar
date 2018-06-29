@@ -378,7 +378,9 @@ module REmb = FStar.Reflection.Embeddings
 exception NoTacticEmbedding of string
 
 let not_implemented_warning r t msg =
-    Errors.log_issue r (Errors.Warning_CallNotImplementedAsWarning, BU.format2 "Plugin %s will not run natively because %s.\n" t msg)
+    Errors.log_issue r
+        (Errors.Warning_CallNotImplementedAsWarning,
+         BU.format2 "Plugin %s will not run natively because %s.\n" t msg)
 
 type emb_loc =
     | S (* FStar.Syntax.Embeddings *)
@@ -474,6 +476,8 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
           let t = S.mk (Tm_arrow([b], S.mk_Total tail)) None t.pos in
           mk_embedding env t
 
+        | Tm_fvar _
+        | Tm_uinst _
         | Tm_app _ ->
           let head, args = U.head_and_args t in
           let n_args = List.length args in
@@ -573,6 +577,7 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
 
            `t` is really `forall type_vars. bs -> result_typ`
     *)
+    let tvar_arity = List.length type_vars in
     let non_tvar_arity = List.length bs in
     let tvar_names = List.mapi (fun i tv -> ("tv_" ^ string_of_int i)) type_vars in
     let tvar_context : list<(bv * string)> = List.map2 (fun b nm -> fst b, nm) type_vars tvar_names in
@@ -596,24 +601,32 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
           let fv_lid = fv.fv_name.v in
           if U.is_pure_comp c
           then begin
+            let ncb = str_to_name "ncb" in
             let embed_fun_N = mk_arrow_as_prim_step non_tvar_arity in
             let args = arg_unembeddings
                     @ [res_embedding;
                        lid_to_top_name fv_lid;
-                       fv_lid_embedded] in
+                       with_ty MLTY_Top <| MLE_Const (MLC_Int(string_of_int tvar_arity, None));
+                       fv_lid_embedded;
+                       ncb]
+            in
             let fun_embedding = w <| MLE_App(embed_fun_N, args) in
             let tabs = abstract_tvars tvar_names fun_embedding in
-            (mk_lam "_psc" tabs,
+            (mk_lam "_psc" (mk_lam "ncb" tabs),
              arity,
              true)
           end
           else if Ident.lid_equals (FStar.TypeChecker.Env.norm_eff_name tcenv (U.comp_effect_name c))
                                     PC.effect_TAC_lid
           then begin
-            let h = str_to_top_name ("FStar_Tactics_Interpreter.mk_tactic_interpretation_" ^ string_of_int non_tvar_arity) in
-            let tac_fun = w <| MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_" ^ string_of_int non_tvar_arity), [lid_to_top_name fv_lid]) in
+            let h = str_to_top_name ("FStar_Tactics_Interpreter.mk_tactic_interpretation_"
+                                     ^ string_of_int non_tvar_arity) in
+            let tac_fun = w <| MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_"
+                                                         ^ string_of_int non_tvar_arity),
+                          [lid_to_top_name fv_lid]) in
             let tac_lid_app = w <| MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [w ml_fv]) in
             let psc = str_to_name "psc" in
+            let ncb = str_to_name "ncb" in
             let all_args = str_to_name "args" in
             let args =
                 [w <| MLE_Const (MLC_Bool true); //trigger a TAC?.reflect
@@ -621,13 +634,14 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
                 arg_unembeddings @
                 [res_embedding;
                  tac_lid_app;
-                 psc] in
+                 psc;
+                 ncb] in
             let tabs =
               match tvar_names with
               | [] -> mk_lam "args" (w <| MLE_App (h, args@[all_args]))
               | _ -> abstract_tvars tvar_names (w <| MLE_App (h, args))
             in
-            (mk_lam "psc" tabs,
+            (mk_lam "psc" (mk_lam "ncb" tabs),
              arity + 1,
              false)
           end
