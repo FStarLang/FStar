@@ -399,11 +399,10 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Reflection.Data.argv",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a31d06a8d3b763081e9bf59b2b416287"
+      "7d3063f097fbc0e351a0e69e21cd70b3"
     ],
     [
       "FStar.Reflection.Derived.mk_tot_arr",
@@ -472,9 +471,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Data_pretyping_4121399001c86a80b7ed8f60ba4ae1b2",
         "binder_x_4121399001c86a80b7ed8f60ba4ae1b2_0",
-        "data_typing_intro_FStar.Reflection.Data.C_True@tok",
         "disc_equation_FStar.Reflection.Data.C_False",
         "disc_equation_FStar.Reflection.Data.C_Int",
         "disc_equation_FStar.Reflection.Data.C_String",
@@ -485,7 +482,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "68f039b4ef3185a8ca4d09f7ec4b94c3"
+      "df8222a313f3e12b0284ef62b2e3a0de"
     ],
     [
       "FStar.Reflection.Derived.compare_term",

@@ -17,7 +17,16 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0d2c404efcb6b163086154a1622064dd"
+      "0b15b1bd7916b8f0cdeb9c846bd43104"
+    ],
+    [
+      "Asm2.lemma_load",
+      2,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "d5860f5035e6434e512fbdb663cca01c"
     ],
     [
       "Asm2.lemma_store",
@@ -26,7 +35,16 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9f906c321db4f7f8a4aa6e8af0366e3e"
+      "71f734fb81bc7d16ad510bbb01f09b7e"
+    ],
+    [
+      "Asm2.lemma_store",
+      2,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "c1c3fd1826b0d0d63d9eacb4e83f54af"
     ],
     [
       "Asm2.lemma_copy",
@@ -61,7 +79,42 @@
         "token_correspondence_FStar.Map.upd", "typing_FStar.Map.contains"
       ],
       0,
-      "6a1cd6b03b6e6b530822fe2dc5019a7b"
+      "c8014ec1f60f8518df8869eb89cc4957"
+    ],
+    [
+      "Asm2.lemma_copy",
+      2,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "bool_inversion",
+        "equation_Asm2.contains", "equation_Asm2.lemma_load",
+        "equation_Asm2.lemma_store", "equation_Asm2.map",
+        "equation_Asm2.op_String_Access",
+        "equation_Asm2.op_String_Assignment", "equation_Asm2.state",
+        "equation_FStar.Set.eqtype", "function_token_typing_Prims.int",
+        "int_inversion", "int_typing", "lemma_FStar.Map.lemma_InDomUpd1",
+        "lemma_FStar.Map.lemma_SelUpd1", "lemma_FStar.Map.lemma_SelUpd2",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Asm2_Tm_refine_0920565650466f13cef7ffac0d3419dd",
+        "refinement_interpretation_Asm2_Tm_refine_0fec808428cfbfc343e7c3732cdff2a5",
+        "refinement_interpretation_Asm2_Tm_refine_1759ee49f5ae14ffe80c289f17086516",
+        "refinement_interpretation_Asm2_Tm_refine_21c697500cab9a3c8549e1f558a659e8",
+        "refinement_interpretation_Asm2_Tm_refine_3c0f54a60bffed4bd7ac64c645a58489",
+        "refinement_interpretation_Asm2_Tm_refine_6faa3aff1a3e9775f0ced40bad639a62",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_Asm2.contains",
+        "token_correspondence_Asm2.op_String_Access",
+        "token_correspondence_Asm2.op_String_Assignment",
+        "token_correspondence_FStar.Map.contains",
+        "token_correspondence_FStar.Map.sel",
+        "token_correspondence_FStar.Map.upd", "typing_FStar.Map.contains"
+      ],
+      0,
+      "2e225917d0f5ac6154893982ffb8fad7"
     ],
     [
       "Asm2.state",
@@ -74,16 +127,25 @@
     ],
     [
       "Asm2.lemma_load",
-      2,
+      3,
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d264bdf786d633d194bd0be928e55502"
+      "3440001c23fe479f6f753cf96aa41618"
     ],
     [
       "Asm2.lemma_load",
-      3,
+      4,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "46bd767ad8497cd89bcf90a9e349ebba"
+    ],
+    [
+      "Asm2.lemma_load",
+      5,
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -92,16 +154,25 @@
     ],
     [
       "Asm2.lemma_store",
-      2,
+      3,
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "005a90e4a6e921391ec229acf3c0f80b"
+      "b1555bbf3a5f1e286e53c6d89dcb3d16"
     ],
     [
       "Asm2.lemma_store",
-      3,
+      4,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "255e91b5e8227d8acdad0508761a7f40"
+    ],
+    [
+      "Asm2.lemma_store",
+      5,
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -110,16 +181,24 @@
     ],
     [
       "Asm2.lemma_copy",
-      2,
+      3,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "3d4628abe8301b0cebac2a49cd7a64e1"
+    ],
+    [
+      "Asm2.lemma_copy",
+      4,
       1,
       0,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Prims.HasEq_int", "bool_inversion",
-        "equation_Asm2.contains", "equation_Asm2.lemma_load",
-        "equation_Asm2.lemma_store", "equation_Asm2.map",
-        "equation_Asm2.op_String_Access",
+        "equation_Asm2.contains", "equation_Asm2.lemma_store",
+        "equation_Asm2.map", "equation_Asm2.op_String_Access",
         "equation_Asm2.op_String_Assignment", "equation_Asm2.state",
         "equation_FStar.Set.eqtype", "function_token_typing_Prims.int",
         "int_inversion", "int_typing", "lemma_FStar.Map.lemma_InDomUpd1",
@@ -141,11 +220,11 @@
         "token_correspondence_FStar.Map.upd", "typing_FStar.Map.contains"
       ],
       0,
-      "a058632108a00f7c2bc6b709c35afc47"
+      "92d229fefb0d4752d22b7b6b6d45f756"
     ],
     [
       "Asm2.lemma_copy",
-      3,
+      5,
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],

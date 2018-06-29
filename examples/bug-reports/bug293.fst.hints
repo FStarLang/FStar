@@ -20,7 +20,19 @@
         "refinement_interpretation_Bug293_Tm_refine_24a102650c3561bc6be37068de08feda"
       ],
       0,
-      "00933b97e804e413ccd382b513801ba5"
+      "937ccf44068cdd78cb1b34f9a3173be5"
+    ],
+    [
+      "Bug293.test",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "refinement_interpretation_Bug293_Tm_refine_24a102650c3561bc6be37068de08feda"
+      ],
+      0,
+      "900265e510b509f4e866bb6dc49e7a76"
     ]
   ]
 ]

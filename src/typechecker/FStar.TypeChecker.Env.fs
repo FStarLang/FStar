@@ -479,6 +479,12 @@ let lookup_qname env (lid:lident) : qninfo =
         | Some se -> Some (Inr (se, None), U.range_of_sigelt se)
         | None -> None
 
+let lookup_sigelt (env:env) (lid:lid) : option<sigelt> =
+    match lookup_qname env lid with
+    | None -> None
+    | Some (BU.Inl _, rng) -> None
+    | Some (BU.Inr (se, us), rng) -> Some se
+
 let lookup_attr (env:env) (attr:string) : list<sigelt> =
     match BU.smap_try_find (attrtab env) attr with
     | Some ses -> ses

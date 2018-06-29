@@ -193,7 +193,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f3038d71bb50c91b566ac4994eb41a06"
+      "c1c33032cbc4b4d44709b1c07fcab2e3"
     ],
     [
       "Ex06b.sorted_concat_lemma",
@@ -452,7 +452,7 @@
         "typing_Ex06b.append", "typing_Ex06b.mem", "typing_Ex06b.sorted"
       ],
       0,
-      "3a1b43bbd31553163f3ebf52b5d1f364"
+      "ff8e931e0eb75ac250265538046d6e1e"
     ],
     [
       "Ex06b.sort",

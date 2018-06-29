@@ -20,7 +20,19 @@
         "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "393312d4b745b3edd468f135fb1d64b3"
+      "60858d1074627ba8a1f8887e4a9b5eef"
+    ],
+    [
+      "NegativeTests.False.foo",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
+        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+      ],
+      0,
+      "77db11d9abff4a0cf69d1fba165923d8"
     ],
     [
       "NegativeTests.False.f",
@@ -46,18 +58,6 @@
     ],
     [
       "NegativeTests.False.foo",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
-        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
-      ],
-      0,
-      "41ad091590134c687b61ce1a84e0e1cd"
-    ],
-    [
-      "NegativeTests.False.foo",
       4,
       2,
       1,
@@ -66,7 +66,28 @@
         "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "88e0ef8d459ea59d4d19028ccba7adeb"
+      "42d042448a08832f79542706e15114fd"
+    ],
+    [
+      "NegativeTests.False.foo",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+      ],
+      0,
+      "b2198b81091e80873e6f68854261ff0d"
+    ],
+    [
+      "NegativeTests.False.foo",
+      6,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "97331e898ea43e3c0067c606aca39383"
     ],
     [
       "NegativeTests.False.f",
