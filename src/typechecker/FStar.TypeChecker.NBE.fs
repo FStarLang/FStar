@@ -242,7 +242,7 @@ let find_let (lbs : list<letbinding>) (fvar : fv) =
 
 (* uncurried application *)
 let rec iapp cfg (f:t) (args:args) : t =
-  debug cfg (fun () -> BU.print2 "App : %s @ %s\n" (t_to_string f) (args_to_string args));
+  debug cfg (fun () -> BU.print2 "App : %s @ (%s)\n" (t_to_string f) (args_to_string args));
   match f with
   | Lam (f, targs, n) ->
     let m = List.length args in
@@ -277,8 +277,8 @@ let rec iapp cfg (f:t) (args:args) : t =
     let (us', ts') = aux args us ts in
     FV (i, us', ts')
   | Quote _
-  | Lazy _
-  | Constant _ | Univ _ | Type_t _ | Unknown | Refinement _ | Arrow _ -> failwith "Ill-typed application"
+  | Lazy _ | Constant _ | Univ _ | Type_t _ | Unknown | Refinement _ | Arrow _ ->
+    failwith ("NBE ill-typed application: " ^ t_to_string f)
 
 (* unary application *)
 let app cfg (f:t) (x:t) (q:aqual) = iapp cfg f [(x, q)]
@@ -305,6 +305,7 @@ let rec translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
        begin match Cfg.find_prim_step cfg fvar with
        | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
          let arity = prim_step.arity + prim_step.univ_arity in
+         debug (fun () -> BU.print1 "Found a primop %s\n" (P.fv_to_string fvar));
          Lam ((fun args -> let args' = (List.map NBETerm.as_arg args) in 
               match prim_step.interpretation_nbe args' with 
               | Some x -> debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
@@ -313,7 +314,9 @@ let rec translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
                        iapp cfg (mkFV fvar [] []) args'),
               (let f (_:int) () : t * S.aqual = (Constant Unit, None) in tabulate arity f),
               arity)
-       | _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
+
+       | Some _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
+       | _      -> debug (fun () -> BU.print1 "(3) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        end
 
 
@@ -438,11 +441,12 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       translate cfg bs (fst arg)
 
     | Tm_app(head, args) ->
-      debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string head) (P.args_to_string args));
+      debug (fun () -> BU.print2 "Application: %s @ (%s)\n" (P.term_to_string head) (P.args_to_string args));
       iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
 
     | Tm_match(scrut, branches) ->
       let rec case (scrut : t) : t =
+        debug (fun () -> BU.print1 "Match case: (%s)\n" (P.term_to_string (readback cfg scrut)));
         match scrut with
         | Construct(c, us, args) -> (* Scrutinee is a constructed value *)
           (* Assuming that all the arguments to the pattern constructors
@@ -460,6 +464,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
             mkAccuMatch scrut case make_branches
           end
         | Constant c ->
+          debug (fun () -> BU.print1 "Match constant : %s\n" (t_to_string scrut));
           (* same as for construted values, but args are either empty or is a singleton list (for wildcard patterns) *)
           (match pickBranch cfg scrut branches with
            | Some (branch, []) ->
@@ -586,6 +591,7 @@ and translate_monadic (m, ty) cfg bs e : t =
                  translate cfg [] (EMB.embed EMB.e_range body.pos body.pos), None]
            else []
        in
+       let t =
        iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (snd ed.bind_repr)))
                       [Univ U_unknown, None;  //We are cheating here a bit
                       Univ U_unknown, None])  //to avoid re-computing the universe of lb.lbtyp
@@ -601,6 +607,9 @@ and translate_monadic (m, ty) cfg bs e : t =
             (Unknown, None) ;  //unknown WP of body; ditto
             (translate cfg bs body_lam, None)]
            )
+      in
+      debug cfg (fun () -> BU.print1 "translate_monadic: %s\n" (t_to_string t));
+      t
 
       end
 
@@ -617,10 +626,14 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
    if U.is_pure_effect msrc || U.is_div_effect msrc
    then let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv mtgt) in
         let cfg' = {cfg with reifying=false} in
+        let t =
         iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (snd ed.return_repr)))
                        [Univ U_unknown, None])
                        [(translate cfg' bs ty, None); //translating the type of the returned term
                         (translate cfg' bs e, None)]  //translating the returned term itself
+        in
+        debug cfg (fun () -> BU.print1 "translate_monadic_lift(1): %s\n" (t_to_string t));
+        t
    else
     match Env.monad_leq cfg.tcenv msrc mtgt with
     | None ->
@@ -643,8 +656,12 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
               None
       in
       let cfg' = {cfg with reifying=false} in
+      let t =
       iapp cfg (translate cfg' [] lift_lam)
                [(translate cfg bs e, None)]
+      in
+      debug cfg (fun () -> BU.print1 "translate_monadic_lift(2): %s\n" (t_to_string t));
+      t
 
 (* [readback] creates named binders and not De Bruijn *)
 and readback (cfg:Cfg.cfg) (x:t) : term =
