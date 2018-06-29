@@ -2198,10 +2198,11 @@ and maybe_simplify cfg env stack tm =
 and norm_cb cfg : EMB.norm_cb = function
     | Inr x -> norm cfg [] [] x
     | Inl l ->
+        //FStar.Syntax.DsEnv.try_lookup_lid cfg.tcenv.dsenv l |> fst
         match
-            Env.lookup_definition [Unfold delta_constant] cfg.tcenv l
+            FStar.Syntax.DsEnv.try_lookup_lid cfg.tcenv.dsenv l
         with
-        | Some(_, t) -> t
+        | Some(t, _) -> t
         | None -> S.fv_to_tm (S.lid_as_fv l delta_constant None)
 
 
