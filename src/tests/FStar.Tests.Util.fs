@@ -17,8 +17,6 @@ module BU = FStar.Util
 
 open FStar.Ident
 open FStar.Range
-open FStar.Tests
-open FStar.Tests
 
 let always id b =
     if b
