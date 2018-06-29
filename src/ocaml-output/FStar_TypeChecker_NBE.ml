@@ -1925,5 +1925,12 @@ let (test_normalize :
           (fun uu____5765  ->
              let uu____5766 = FStar_Syntax_Print.term_to_string e  in
              FStar_Util.print1 "Calling NBE with %s" uu____5766);
-        (let uu____5767 = translate cfg1 [] e  in readback cfg1 uu____5767)
+        (let r =
+           let uu____5768 = translate cfg1 [] e  in readback cfg1 uu____5768
+            in
+         debug cfg1
+           (fun uu____5772  ->
+              let uu____5773 = FStar_Syntax_Print.term_to_string r  in
+              FStar_Util.print1 "NBE returned %s" uu____5773);
+         r)
   
