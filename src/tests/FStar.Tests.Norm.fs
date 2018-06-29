@@ -317,5 +317,5 @@ let compare_times l_int l_nbe =
 let run_all () =
     BU.print1 "%s" (P.term_to_string znat);
     let l_int = run_all_interpreter_with_time () in
-    let l_nbe = run_all_nbe_with_time () in ()
+    let l_nbe = run_all_nbe_with_time () in
     compare_times l_int l_nbe
