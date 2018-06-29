@@ -59,6 +59,8 @@ and t
   | Unknown (* For translating unknown types *)
   | Arrow of (list<t> -> t) * list<(unit -> arg)>
   | Refinement of (t -> t) * (unit -> arg) 
+  | Quote of S.term * S.quoteinfo
+  | Lazy of S.lazyinfo
   // | Arrow of list binder * comp_t
 and arg = t * aqual
 and args = list<arg>
@@ -196,6 +198,8 @@ let rec t_to_string (x:t) =
     let t = fst (t ()) in
     "Refinement " ^ (P.bv_to_string x) ^ ":" ^ (t_to_string t) ^ "{" ^ (t_to_string (f (mkAccuVar x))) ^ "}"
   | Unknown -> "Unknown"
+  | Quote _ -> "Quote _"
+  | Lazy _ -> "Lazy _"
 
 and atom_to_string (a: atom) =
     match a with

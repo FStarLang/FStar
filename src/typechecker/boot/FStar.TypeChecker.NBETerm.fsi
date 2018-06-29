@@ -51,6 +51,8 @@ and t
   | Unknown
   | Arrow of (list<t> -> t) * list<(unit -> arg)>
   | Refinement of (t -> t) * (unit -> arg) 
+  | Quote of S.term * S.quoteinfo
+  | Lazy of S.lazyinfo
 
 and arg = t * aqual
 and args = list<(arg)>

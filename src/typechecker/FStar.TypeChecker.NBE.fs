@@ -281,6 +281,8 @@ let rec iapp cfg (f:t) (args:args) : t =
     in
     let (us', ts') = aux args us ts in
     FV (i, us', ts')
+  | Quote _
+  | Lazy _
   | Constant _ | Univ _ | Type_t _ | Unknown | Refinement _ | Arrow _ -> failwith "Ill-typed application"
 
 (* unary application *)
@@ -529,8 +531,11 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       //TODO: we need to put the "meta" back when reading back
       translate cfg bs e
 
-    | Tm_quoted(_,_)
-    | Tm_lazy _ -> failwith ("Not yet handled: " ^ P.tag_of_term (SS.compress e))
+    | Tm_quoted (qt, qi) ->
+      Quote (qt, qi)
+
+    | Tm_lazy li ->
+      Lazy li
 
 and translate_monadic (m, ty) cfg bs e : t =
    let e = U.unascribe e in
@@ -745,6 +750,11 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
           | _ -> U.mk_app head args)
     | Arrow _ -> failwith "Arrows not yet handled"
 
+    | Quote (qt, qi) ->
+        S.mk (Tm_quoted (qt, qi)) None Range.dummyRange
+
+    | Lazy li ->
+        S.mk (Tm_lazy li) None Range.dummyRange
 
 type step =
   | Primops
