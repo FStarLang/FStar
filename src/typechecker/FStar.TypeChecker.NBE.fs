@@ -797,6 +797,14 @@ let normalize' (steps:list<Env.step>) (env : Env.env) (e:term) : term =
   debug cfg (fun () -> BU.print1 "Calling NBE with %s" (P.term_to_string e));
   readback cfg (translate cfg [] e)
 
+let normalize'' psteps (steps:list<Env.step>)
+                (env : Env.env) (e:term) : term =  
+  let cfg = Cfg.config' psteps steps env in
+  //debug_sigmap env.sigtab;
+  let cfg = {cfg with steps={cfg.steps with reify_=true}} in
+  debug cfg (fun () -> BU.print1 "Calling NBE with %s" (P.term_to_string e));
+  readback cfg (translate cfg [] e)
+
 
   (* ONLY FOR UNIT TESTS! *)
 let test_normalize (steps:list<step>) (env : Env.env) (e:term) : term =
