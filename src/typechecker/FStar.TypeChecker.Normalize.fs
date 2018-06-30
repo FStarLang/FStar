@@ -2289,11 +2289,13 @@ let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
     if is_nbe_request s then begin
       log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
+      log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
       let r = nbe_eval c s t in
       log_top c (fun () -> BU.print1 "}\nNormalization result = (%s)\n" (Print.term_to_string r));
       r
     end else begin
       log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
+      log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
       let r = norm c [] [] t in
       log_top c (fun () -> BU.print1 "}\nNormalization result = (%s)\n" (Print.term_to_string r));
       r
