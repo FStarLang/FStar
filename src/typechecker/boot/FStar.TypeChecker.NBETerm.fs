@@ -341,7 +341,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
           Some (a, b)))
         | _ -> None
     in
-    mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero] [as_arg (type_of ea);
+    mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero;U_zero] [as_arg (type_of ea);
                                                      as_arg (type_of eb)])
 
 // Embeddind range
