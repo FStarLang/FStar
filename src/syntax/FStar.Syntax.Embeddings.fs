@@ -81,14 +81,23 @@ let warn_unembed (e:embedding<'a>) t n = unembed e t true n
 let try_unembed  (e:embedding<'a>) t n = unembed e t false n
 let type_of     (e:embedding<'a>)     = e.typ
 
+
+let rec emb_typ_to_string = function
+    | ET_abstract -> "abstract"
+    | ET_app (h, []) -> h
+    | ET_app(h, args) -> "(" ^h^ " " ^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
+    | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b
+
 let lazy_embed (pa:printer<'a>) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
-    // BU.print3 "Embedding a %s\n\tvalue is %s\nthunked as a %s\n"
-    //             (Print.term_to_string ta)
-    //             (pa x)
-    //             (Print.term_to_string (f()));
+    if Options.debug_any()
+    then BU.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
+                         (Print.term_to_string ta)
+                         (emb_typ_to_string et)
+                         (pa x);
     if Options.eager_embedding()
     then f()
-    else let thunk = FStar.Common.mk_thunk f in
+    else
+    let thunk = FStar.Common.mk_thunk f in
          S.mk (Tm_lazy({blob=FStar.Dyn.mkdyn x;
                         ltyp=S.tun;
                         rng=rng;
@@ -96,34 +105,54 @@ let lazy_embed (pa:printer<'a>) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
                None
                rng
 
-let rec emb_typ_to_string = function
-    | ET_abstract -> "abstract"
-    | ET_app (h, []) -> h
-    | ET_app(h, args) -> "(" ^h^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
-    | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ "-> " ^ emb_typ_to_string b
-
 let lazy_unembed (pa:printer<'a>) (et:emb_typ) (x:term) (ta:term) (f:term -> option<'a>) : option<'a> =
     let x = SS.compress x in
     match x.n with
     | Tm_lazy {blob=b; lkind=Lazy_embedding (et', t)}  ->
-      if Options.eager_embedding()
-      || et <> et'
-      then f (FStar.Common.force_thunk t)
+      if
+      Options.eager_embedding()
+      ||
+      et <> et'
+      then let _ = if Options.debug_any ()
+                   then BU.print3 "Unembed cancellation failed\n\t%s <> %s\n\tvalue is %s\n"
+                                (emb_typ_to_string et)
+                                (emb_typ_to_string et')
+                                (pa (FStar.Dyn.undyn b))
+           in
+           let aopt = f (FStar.Common.force_thunk t) in
+           f (FStar.Common.force_thunk t)
       else let a = FStar.Dyn.undyn b in
            let _ = if Options.debug_any ()
-                   then BU.print1 "Unembed cancelled for %s\n"
-                                (emb_typ_to_string et) in
+                   then BU.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
+                                (emb_typ_to_string et)
+                                (pa a)
+           in
             //BU.print4 "Unembedding a %s as a %s\n undyn a %s\n unthunked a %s\n"
            //     (Print.term_to_string tb)
            //     (Print.term_to_string ta)
            //     (pa a)
            //     (Print.term_to_string (FStar.Common.force_thunk t));
             Some a
-    | _ -> f x
+    | _ ->
+      let aopt = f x in
+      let _ = if Options.debug_any ()
+              then BU.print2 "Unembedding:\n\temb_typ=%s\n\tvalue is %s\n"
+                               (emb_typ_to_string et)
+                               (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
+      aopt
+
 
 let mk_any_emb typ =
-    let em = fun t _r _topt _norm -> t in
-    let un = fun t _w _n -> Some t in
+    let em = fun t _r _topt _norm ->
+      if Options.debug_any()
+      then BU.print1 "Embedding abstract: %s\n" (unknown_printer typ t);
+      t
+    in
+    let un = fun t _w _n ->
+      if Options.debug_any()
+      then BU.print1 "Unembedding abstract: %s\n" (unknown_printer typ t);
+      Some t
+    in
     mk_emb_full
         em
         un
