@@ -51,145 +51,35 @@ and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<
            S.t_unit // never used
 
 and primitive_steps () : list<Cfg.primitive_step> =
-    let decr_depth_interp psc (args : args) =
-        match args with
-        | [(ps, _)] ->
-            bind_opt (unembed E.e_proofstate ps) (fun ps ->
-            let ps = set_ps_psc psc ps in
-            Some (embed E.e_proofstate (Cfg.psc_range psc) (decr_depth ps)))
-
-        | _ -> failwith "Unexpected application of decr_depth"
-    in
-    let decr_depth_interp_nbe (args : NBETerm.args) =
-        match args with
-        | [(ps, _)] ->
-            bind_opt (NBETerm.unembed E.e_proofstate_nbe ps) (fun ps ->
-            Some (NBETerm.embed E.e_proofstate_nbe (decr_depth ps)))
-        | _ -> failwith "Unexpected application of decr_depth"
-    in
-    let decr_depth_step : Cfg.primitive_step =
-        let nm = Ident.lid_of_str "FStar.Tactics.Types.decr_depth" in
-        {Cfg.name = nm;
-         Cfg.arity = 1;
-         Cfg.univ_arity=0;
-         Cfg.auto_reflect=None;
-         Cfg.strong_reduction_ok = true;
-         Cfg.requires_binder_substitution = false;
-         Cfg.interpretation = decr_depth_interp;
-         Cfg.interpretation_nbe = decr_depth_interp_nbe;
-         }
-    in
-    let incr_depth_interp psc (args : args) =
-        match args with
-        | [(ps, _)] ->
-            bind_opt (unembed E.e_proofstate ps) (fun ps ->
-            let ps = set_ps_psc psc ps in
-            Some (embed E.e_proofstate (Cfg.psc_range psc) (incr_depth ps)))
-        | _ -> failwith "Unexpected application of incr_depth"
-    in
-    let incr_depth_interp_nbe (args : NBETerm.args) =
-        match args with
-        | [(ps, _)] ->
-            bind_opt (NBETerm.unembed E.e_proofstate_nbe ps) (fun ps ->
-            Some (NBETerm.embed E.e_proofstate_nbe (incr_depth ps)))
-        | _ -> failwith "Unexpected application of incr_depth"
-    in
-    let incr_depth_step : Cfg.primitive_step =
-        let nm = Ident.lid_of_str "FStar.Tactics.Types.incr_depth" in
-        {Cfg.name = nm;
-         Cfg.arity = 1;
-         Cfg.univ_arity=0;
-         Cfg.auto_reflect=None;
-         Cfg.strong_reduction_ok = true;
-         Cfg.requires_binder_substitution = false;
-         Cfg.interpretation = incr_depth_interp;
-         Cfg.interpretation_nbe = incr_depth_interp_nbe;
-         }
-    in
-    let tracepoint_interp psc (args : args) =
-        match args with
-        | [(ps, _)] ->
-            bind_opt (unembed E.e_proofstate ps) (fun ps ->
-            let ps = set_ps_psc psc ps in
-            tracepoint ps;
-            Some U.exp_unit)
-        | _ -> failwith "Unexpected application of tracepoint"
-    in
-    let tracepoint_interp_nbe (args : NBETerm.args) =
-        match args with
-        | [(ps, _)] ->
-            bind_opt (NBETerm.unembed E.e_proofstate_nbe ps) (fun ps ->
-            tracepoint ps;
-            Some (NBETerm.Constant NBETerm.Unit))
-        | _ -> failwith "Unexpected application of tracepoint"
-    in
-    let set_proofstate_range_interp psc (args : args) =
-        match args with
-        | [(ps, _); (r, _)] ->
-            bind_opt (unembed E.e_proofstate ps) (fun ps ->
-            bind_opt (unembed e_range r) (fun r ->
-            let ps' = set_proofstate_range ps r in
-            Some (embed E.e_proofstate (Cfg.psc_range psc) ps')))
-        | _ -> failwith "Unexpected application of set_proofstate_range"
-    in
-    let set_proofstate_range_interp_nbe (args : NBETerm.args) =
-        match args with
-        | [(ps, _); (r, _)] ->
-            bind_opt (NBETerm.unembed E.e_proofstate_nbe ps) (fun ps ->
-            bind_opt (NBETerm.unembed NBETerm.e_range r) (fun r ->
-            let ps' = set_proofstate_range ps r in
-            Some (NBETerm.embed E.e_proofstate_nbe ps')))
-        | _ -> failwith "Unexpected application of set_proofstate_range"
-    in
-    let push_binder_interp psc (args:args) =
-        match args with
-        | [(env_t, _); (b, _)] ->
-            bind_opt (unembed RE.e_env env_t) (fun env ->
-            bind_opt (unembed RE.e_binder b) (fun b ->
-            let env = Env.push_binders env [b] in
-            Some (embed RE.e_env env_t.pos env)))
-        | _ -> failwith "Unexpected application of push_binder"
-    in
-    let set_proofstate_range_step : Cfg.primitive_step =
-        let nm = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" in
-        {Cfg.name = nm;
-         Cfg.arity = 2;
-         Cfg.univ_arity=0;
-         Cfg.auto_reflect=None;
-         Cfg.strong_reduction_ok = true;
-         Cfg.requires_binder_substitution = false;
-         Cfg.interpretation = set_proofstate_range_interp;
-         Cfg.interpretation_nbe = set_proofstate_range_interp_nbe;
-        }
-    in
-    let tracepoint_step : Cfg.primitive_step =
-        let nm = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" in
-        {Cfg.name = nm;
-         Cfg.arity = 1;
-         Cfg.univ_arity=0;
-         Cfg.auto_reflect=None;
-         Cfg.strong_reduction_ok = true;
-         Cfg.requires_binder_substitution = true;
-         Cfg.interpretation = tracepoint_interp;
-         Cfg.interpretation_nbe = tracepoint_interp_nbe;
-        }
-    in
-    let push_binder_step : Cfg.primitive_step =
-       let nm = E.fstar_tactics_lid' ["Builtins";"push_binder"] in
-        {Cfg.name = nm;
-         Cfg.arity = 2;
-         Cfg.univ_arity=0;
-         Cfg.auto_reflect=None;
-         Cfg.strong_reduction_ok = true;
-         Cfg.requires_binder_substitution = true;
-         Cfg.interpretation = push_binder_interp;
-         Cfg.interpretation_nbe = NBETerm.dummy_interp nm;
-        }
-    in
     (* NB: We need a PRECISE number for the universe arguments or NBE will
      * just go crazy. Most of the tactics work on ground types and thus have 0
      * universe arguments. Those polymorphic, usually take 1 universe per Type argument. *)
+
+    (* mktot1/mktot2 uses names in FStar.Tactics.Builtins, we override these few who
+     * are in other modules: *)
+    let tracepoint =
+      { mktot1 0 "tracepoint" tracepoint E.e_proofstate e_unit
+        with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" }
+    in
+    let set_proofstate_range =
+      { mktot2 0 "set_proofstate_range" set_proofstate_range E.e_proofstate e_range E.e_proofstate
+        with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" }
+    in
+    let incr_depth =
+      { mktot1 0 "incr_depth" incr_depth E.e_proofstate E.e_proofstate
+        with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth" }
+    in
+    let decr_depth =
+      { mktot1 0 "decr_depth" decr_depth E.e_proofstate E.e_proofstate
+        with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth" }
+    in
     [
+      incr_depth;
+      decr_depth;
+      tracepoint;
+      set_proofstate_range;
+      mktot2 0 "push_binder"   (fun env b -> Env.push_binders env [b]) RE.e_env RE.e_binder RE.e_env;
+
       mktac2 1 "fail"          (fun _ -> fail) e_any e_string e_any; //nb: the e_any embedding is never used
       mktac1 0 "trivial"       trivial e_unit e_unit;
       mktac2 1 "__trytac"      (fun _ -> trytac) e_any (e_tactic_0' e_any) (e_option e_any);
@@ -270,13 +160,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "get_guard_policy" get_guard_policy e_unit E.e_guard_policy;
       mktac1 0 "set_guard_policy" set_guard_policy E.e_guard_policy e_unit;
       mktac1 0 "lax_on"           lax_on e_unit e_bool;
-
-      decr_depth_step;
-      incr_depth_step;
-      tracepoint_step;
-      set_proofstate_range_step;
-      push_binder_step
-    ]@reflection_primops @native_tactics_steps
+    ] @ reflection_primops @ native_tactics_steps
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
 

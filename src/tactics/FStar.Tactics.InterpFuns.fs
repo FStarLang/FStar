@@ -214,3 +214,41 @@ let mktac5 (nunivs:int) (name : string) (f : 'a -> 'b -> 'c -> 'd -> 'e -> tac<'
            (ed : embedding<'d>) (ee : embedding<'e>)
            (er : embedding<'r>) : Cfg.primitive_step =
     mk name 6 nunivs (mk_tactic_interpretation_5 f ea eb ec ed ee er)
+
+(* Total interpretations *)
+
+let mkt nm arity nunivs interpretation =
+  let nm = E.fstar_tactics_lid' ["Builtins"; nm] in
+  { Cfg.name                         = nm
+  ; Cfg.arity                        = arity
+  ; Cfg.univ_arity                   = nunivs
+  ; Cfg.auto_reflect                 = None
+  ; Cfg.strong_reduction_ok          = true
+  ; Cfg.requires_binder_substitution = false
+  ; Cfg.interpretation               = interpretation
+  ; Cfg.interpretation_nbe           = NBETerm.dummy_interp nm
+  }
+
+let mk_total_interpretation_1 (f:'a -> 'r)
+                              (ea:embedding<'a>) (er:embedding<'r>)
+                              (psc:Cfg.psc) (args:args) : option<term> =
+  BU.bind_opt (extract_1 ea args) (fun a ->
+  let r = f a in
+  Some (embed er (Cfg.psc_range psc) r))
+
+let mk_total_interpretation_2 (f:'a -> 'b -> 'r)
+                              (ea:embedding<'a>) (eb:embedding<'b>) (er:embedding<'r>)
+                              (psc:Cfg.psc) (args:args) : option<term> =
+  BU.bind_opt (extract_2 ea eb args) (fun (a, b) ->
+  let r = f a b in
+  Some (embed er (Cfg.psc_range psc) r))
+
+let mktot1 (nunivs:int) (name : string) (f : 'a -> 'r)
+           (ea : embedding<'a>)
+           (er : embedding<'r>) : Cfg.primitive_step =
+    mk name 1 nunivs (mk_total_interpretation_1 f ea er)
+
+let mktot2 (nunivs:int) (name : string) (f : 'a -> 'b -> 'r)
+           (ea : embedding<'a>) (eb:embedding<'b>)
+           (er : embedding<'r>) : Cfg.primitive_step =
+    mk name 2 nunivs (mk_total_interpretation_2 f ea eb er)
