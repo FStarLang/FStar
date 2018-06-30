@@ -32,12 +32,12 @@ let (guard_eq :
               let f1 =
                 let uu____82 = tcenv ()  in
                 FStar_TypeChecker_Normalize.normalize
-                  [FStar_TypeChecker_Normalize.EraseUniverses] uu____82 f
+                  [FStar_TypeChecker_Env.EraseUniverses] uu____82 f
                  in
               let f'1 =
                 let uu____84 = tcenv ()  in
                 FStar_TypeChecker_Normalize.normalize
-                  [FStar_TypeChecker_Normalize.EraseUniverses] uu____84 f'
+                  [FStar_TypeChecker_Env.EraseUniverses] uu____84 f'
                  in
               let uu____85 = FStar_Tests_Util.term_eq f1 f'1  in
               (uu____85, (FStar_TypeChecker_Common.NonTrivial f1),

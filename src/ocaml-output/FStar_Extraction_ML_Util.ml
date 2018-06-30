@@ -214,8 +214,8 @@ let (udelta_unfold :
       FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option)
   =
   fun g  ->
-    fun uu___251_366  ->
-      match uu___251_366 with
+    fun uu___254_366  ->
+      match uu___254_366 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
           let uu____375 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1  in
           (match uu____375 with
@@ -257,8 +257,8 @@ let (eff_leq :
       | uu____408 -> false
   
 let (eff_to_string : FStar_Extraction_ML_Syntax.e_tag -> Prims.string) =
-  fun uu___252_417  ->
-    match uu___252_417 with
+  fun uu___255_417  ->
+    match uu___255_417 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -508,8 +508,8 @@ let is_type_abstraction :
     (('a,'b) FStar_Util.either,'c) FStar_Pervasives_Native.tuple2 Prims.list
       -> Prims.bool
   =
-  fun uu___253_1004  ->
-    match uu___253_1004 with
+  fun uu___256_1004  ->
+    match uu___256_1004 with
     | (FStar_Util.Inl uu____1015,uu____1016)::uu____1017 -> true
     | uu____1040 -> false
   
@@ -549,8 +549,8 @@ let (resugar_exp :
   
 let (record_field_path :
   FStar_Ident.lident Prims.list -> Prims.string Prims.list) =
-  fun uu___254_1113  ->
-    match uu___254_1113 with
+  fun uu___257_1113  ->
+    match uu___257_1113 with
     | f::uu____1119 ->
         let uu____1122 = FStar_Util.prefix f.FStar_Ident.ns  in
         (match uu____1122 with
@@ -808,9 +808,9 @@ let (interpret_plugin_as_term_fun :
         fun ml_fv  ->
           let t1 =
             FStar_TypeChecker_Normalize.normalize
-              [FStar_TypeChecker_Normalize.EraseUniverses;
-              FStar_TypeChecker_Normalize.AllowUnboundUniverses;
-              FStar_TypeChecker_Normalize.UnfoldUntil
+              [FStar_TypeChecker_Env.EraseUniverses;
+              FStar_TypeChecker_Env.AllowUnboundUniverses;
+              FStar_TypeChecker_Env.UnfoldUntil
                 FStar_Syntax_Syntax.delta_constant] tcenv t
              in
           let w =

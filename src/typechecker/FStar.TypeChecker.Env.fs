@@ -37,11 +37,40 @@ module U  = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 
+type step =
+  | Beta
+  | Iota            //pattern matching
+  | Zeta            //fixed points
+  | Exclude of step //the first three kinds are included by default, unless Excluded explicity
+  | Weak            //Do not descend into binders
+  | HNF             //Only produce a head normal form
+  | Primops         //reduce primitive operators like +, -, *, /, etc.
+  | Eager_unfolding
+  | Inlining
+  | DoNotUnfoldPureLets
+  | UnfoldUntil of S.delta_depth
+  | UnfoldOnly  of list<FStar.Ident.lid>
+  | UnfoldFully of list<FStar.Ident.lid>
+  | UnfoldAttr of attribute
+  | UnfoldTac
+  | PureSubtermsWithinComputations
+  | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
+  | EraseUniverses
+  | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
+  | Reify
+  | CompressUvars
+  | NoFullNorm
+  | CheckNoUvars
+  | Unmeta          //remove all non-monadic metas.
+  | Unascribe
+  | NBE
+and steps = list<step>
+
 type sig_binding = list<lident> * sigelt
 
 type delta_level =
   | NoDelta
-  | Inlining
+  | InliningDelta
   | Eager_unfolding_only
   | Unfold of delta_depth
 
@@ -109,11 +138,12 @@ type env = {
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth_hook          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
   splice         :env -> term -> list<sigelt>;       (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
-  is_native_tactic: lid -> bool;                     (* callback into the native tactics engine *)
+  is_native_tactic: lid -> bool;                        (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
-  tc_hooks       : tcenv_hooks;                      (* hooks that the interactive more relies onto for symbol tracking *)
-  dsenv          : FStar.Syntax.DsEnv.env;           (* The desugaring environment from the front-end *)
-  dep_graph      : FStar.Parser.Dep.deps             (* The result of the dependency analysis *)
+  tc_hooks       : tcenv_hooks;                        (* hooks that the interactive more relies onto for symbol tracking *)
+  dsenv          : FStar.Syntax.DsEnv.env;             (* The desugaring environment from the front-end *)
+  dep_graph      : FStar.Parser.Dep.deps;              (* The result of the dependency analysis *)
+  nbe            : list<step> -> env -> term -> term; (* Callback to the NBE function *)
 }
 and solver_depth_t = int * int * int
 and solver_t = {
@@ -180,14 +210,14 @@ let visible_at d q = match d, q with
   | Eager_unfolding_only, Unfold_for_unification_and_vcgen
   | Unfold _,   Unfold_for_unification_and_vcgen
   | Unfold _,   Visible_default -> true
-  | Inlining, Inline_for_extraction -> true
+  | InliningDelta, Inline_for_extraction -> true
   | _ -> false
 
 let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env deps tc_term type_of universe_of check_type_of solver module_lid =
+let initial_env deps tc_term type_of universe_of check_type_of solver module_lid nbe =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -228,7 +258,8 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
     dsenv = FStar.Syntax.DsEnv.empty_env();
-    dep_graph = deps
+    dep_graph = deps;
+    nbe = nbe
   }
 
 let dsenv env = env.dsenv
@@ -1304,7 +1335,7 @@ let print_gamma gamma =
 
 let string_of_delta_level = function
   | NoDelta -> "NoDelta"
-  | Inlining -> "Inlining"
+  | InliningDelta -> "Inlining"
   | Eager_unfolding_only -> "Eager_unfolding_only"
   | Unfold d -> "Unfold " ^ Print.delta_depth_to_string d
 

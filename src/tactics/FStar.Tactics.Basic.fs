@@ -22,11 +22,13 @@ module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module TcTerm = FStar.TypeChecker.TcTerm
 module TcComm = FStar.TypeChecker.Common
+module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module UF = FStar.Syntax.Unionfind
 module EMB = FStar.Syntax.Embeddings
 module Err = FStar.Errors
 module Z = FStar.BigInt
+module Env = FStar.TypeChecker.Env
 open FStar.Reflection.Data
 open FStar.Reflection.Basic
 
@@ -206,14 +208,14 @@ let dump_proofstate ps msg =
 let print_proof_state1  (msg:string) : tac<unit> =
     mk_tac (fun ps ->
                    let psc = ps.psc in
-                   let subst = N.psc_subst psc in
+                   let subst = Cfg.psc_subst psc in
                    dump_cur (subst_proof_state subst ps) msg;
                    Success ((), ps))
 
 let print_proof_state (msg:string) : tac<unit> =
     mk_tac (fun ps ->
                    let psc = ps.psc in
-                   let subst = N.psc_subst psc in
+                   let subst = Cfg.psc_subst psc in
                    dump_proofstate (subst_proof_state subst ps) msg;
                    Success ((), ps))
 
@@ -528,7 +530,7 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
            end))
 
 let istrivial (e:env) (t:term) : bool =
-    let steps = [N.Reify; N.UnfoldUntil delta_constant; N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
+    let steps = [Env.Reify; Env.UnfoldUntil delta_constant; Env.Primops; Env.Simplify; Env.UnfoldTac; Env.Unmeta] in
     let t = normalize steps e t in
     is_true t
 
@@ -742,7 +744,7 @@ let norm (s : list<EMB.norm_step>) : tac<unit> =
     bind (cur_goal ()) (fun goal ->
     mlog (fun () -> BU.print1 "norm: witness = %s\n" (Print.term_to_string (goal_witness goal))) (fun _ ->
     // Translate to actual normalizer steps
-    let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
+    let steps = [Env.Reify; Env.UnfoldTac]@(N.tr_norm_steps s) in
     //let w = normalize steps (goal_env goal) (goal_witness goal) in
     let t = normalize steps (goal_env goal) (goal_type goal) in
     replace_cur (goal_with_type goal t)
@@ -758,7 +760,7 @@ let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = w
     in
     mlog (fun () -> BU.print1 "norm_term_env: t = %s\n" (Print.term_to_string t)) (fun () ->
     bind (__tc e t) (fun (t, _, _) ->
-    let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
+    let steps = [Env.Reify; Env.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
     ret t
     ))))
@@ -1107,7 +1109,7 @@ let norm_binder_type (s : list<EMB.norm_step>) (b : binder) : tac<unit> = wrap_e
     match split_env bv (goal_env goal) with
     | None -> fail "binder is not present in environment"
     | Some (e0, bvs) -> begin
-        let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
+        let steps = [Env.Reify; Env.UnfoldTac]@(N.tr_norm_steps s) in
         let sort' = normalize steps e0 bv.sort in
         let bv' = { bv with sort = sort' } in
         let env' = push_bvs e0 (bv'::bvs) in
@@ -1441,8 +1443,8 @@ let trefl () : tac<unit> = wrap_err "trefl" <|
             if b
             then solve' g U.exp_unit
             else
-            let l = N.normalize [N.UnfoldUntil delta_constant; N.Primops; N.UnfoldTac] (goal_env g) l in
-            let r = N.normalize [N.UnfoldUntil delta_constant; N.Primops; N.UnfoldTac] (goal_env g) r in
+            let l = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) l in
+            let r = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) r in
             bind (do_unify (goal_env g) l r) (fun b ->
             if b
             then solve' g U.exp_unit
@@ -1618,9 +1620,9 @@ let change (ty : typ) : tac<unit> = wrap_err "change" <|
          * we use the original one as the new goal. This is sometimes needed
          * since the unifier has some bugs. *)
         let steps =
-            [N.Reify; N.UnfoldUntil delta_constant;
-             N.AllowUnboundUniverses;
-             N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
+            [Env.Reify; Env.UnfoldUntil delta_constant;
+             Env.AllowUnboundUniverses;
+             Env.Primops; Env.Simplify; Env.UnfoldTac; Env.Unmeta] in
         let ng  = normalize steps (goal_env g) (goal_type g) in
         let nty = normalize steps (goal_env g) ty in
         bind (do_unify (goal_env g) ng nty) (fun b ->
@@ -1955,7 +1957,7 @@ let proofstate_of_goal_ty rng env typ =
         smt_goals = [];
         depth = 0;
         __dump = (fun ps msg -> dump_proofstate ps msg);
-        psc = N.null_psc;
+        psc = Cfg.null_psc;
         entry_range = rng;
         guard_policy = SMT;
         freshness = 0;

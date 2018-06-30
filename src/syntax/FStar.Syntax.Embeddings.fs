@@ -231,6 +231,7 @@ type norm_step =
     | UnfoldOnly of list<string>
     | UnfoldFully of list<string>
     | UnfoldAttr of attribute
+    | NBE
 
 (* the steps as terms *)
 let steps_Simpl         = tdataconstr PC.steps_simpl
@@ -244,6 +245,7 @@ let steps_Reify         = tdataconstr PC.steps_reify
 let steps_UnfoldOnly    = tdataconstr PC.steps_unfoldonly
 let steps_UnfoldFully   = tdataconstr PC.steps_unfoldonly
 let steps_UnfoldAttr    = tdataconstr PC.steps_unfoldattr
+let steps_NBE           = tdataconstr PC.steps_nbe
 
 let e_norm_step =
     let em (rng:range) (n:norm_step) : term =
@@ -272,6 +274,8 @@ let e_norm_step =
                         None rng
         | UnfoldAttr a ->
             S.mk_Tm_app steps_UnfoldAttr [S.as_arg a] None rng
+        | NBE ->
+            steps_NBE
     in
     let un (w:bool) (t0:term) : option<norm_step> =
         let t = U.unmeta_safe t0 in
@@ -291,6 +295,8 @@ let e_norm_step =
             Some Zeta
         | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_iota ->
             Some Iota
+        | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_nbe ->
+            Some NBE
         | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_reify ->
             Some Reify
         | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->

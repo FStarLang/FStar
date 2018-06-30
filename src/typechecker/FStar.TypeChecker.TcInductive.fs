@@ -45,7 +45,7 @@ module PP = FStar.Syntax.Print
 module UF = FStar.Syntax.Unionfind
 module C  = FStar.Parser.Const
 
-let unfold_whnf = N.unfold_whnf' [N.AllowUnboundUniverses]
+let unfold_whnf = N.unfold_whnf' [Env.AllowUnboundUniverses]
 
 let tc_tycon (env:env_t)     (* environment that contains all mutually defined type constructors *)
              (s:sigelt)      (* a Sig_inductive_type (aka tc) that needs to be type-checked *)
@@ -281,7 +281,7 @@ let already_unfolded (ilid:lident) (arrghs:args) (unfolded:unfolded_memo_t) (env
 let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfolded_memo_t) (env:env_t) :bool =
   debug_log env ("Checking strict positivity in type: " ^ (PP.term_to_string btype));
   //normalize the type to unfold any type abbreviations, TODO: what steps?
-  let btype = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env btype in
+  let btype = N.normalize [Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil delta_constant; Env.Iota; Env.Zeta; Env.AllowUnboundUniverses] env btype in
   debug_log env ("Checking strict positivity in type, after normalization: " ^ (PP.term_to_string btype));
   not (ty_occurs_in ty_lid btype) ||  //true if ty does not occur in btype
     (debug_log env ("ty does occur in this type, pressing ahead");
@@ -391,7 +391,7 @@ and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:u
      | _          -> failwith "Impossible! Expected universe unification variables") univ_unif_vars us);
 
   //normalize it, TODO: as before steps?
-  let dt = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil delta_constant; N.Iota; N.Zeta; N.AllowUnboundUniverses] env dt in
+  let dt = N.normalize [Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil delta_constant; Env.Iota; Env.Zeta; Env.AllowUnboundUniverses] env dt in
 
   debug_log env ("Checking nested positivity in the data constructor type: " ^ (PP.term_to_string dt));
   match (SS.compress dt).n with

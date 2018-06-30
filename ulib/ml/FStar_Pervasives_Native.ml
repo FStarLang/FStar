@@ -119,6 +119,8 @@ type norm_step =
     | Delta
     | Zeta
     | Iota
+    | Reify
+    | NBE
     | UnfoldOnly : string list -> norm_step
     | UnfoldFully : string list -> norm_step
 
@@ -131,5 +133,7 @@ let zeta    : norm_step = Zeta
 let iota    : norm_step = Iota
 let delta_only (s:string list) : norm_step = UnfoldOnly s
 let delta_fully (s:string list) : norm_step = UnfoldFully s
+let reify   : norm_step = Reify
+let nbe     : norm_step = NBE
                                             
 let singleton x = x
