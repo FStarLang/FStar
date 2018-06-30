@@ -116,7 +116,11 @@ val e_string : embedding<string>
 val e_char   : embedding<char>
 val e_int    : embedding<Z.t>
 val e_unit   : embedding<unit>
+val e_any    : embedding<t>
 val e_range  : embedding<Range.range>
+val e_list   : embedding<'a> -> embedding<list<'a>>
+val e_option : embedding<'a> -> embedding<option<'a>>
+val e_tuple2 : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
 
 // Interface for NBE interpretations
 

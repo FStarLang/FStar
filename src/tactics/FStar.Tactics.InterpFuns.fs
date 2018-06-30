@@ -322,42 +322,47 @@ let mk nm arity nunivs interp nbe_interp =
 let native_tactics = list_all ()
 let native_tactics_steps = List.map step_from_native_step native_tactics
 
+(* These functions are suboptimal, since they need to take embeddings for both
+ * the interpreter AND the NBE evaluator. Attempting to coallesce them
+ * is not easy, since we have some parametric e_any embeddings of differing types
+ * (S.embedding<term> vs NBETerm.embedding<NBETerm.t>). So we pass both of them.
+ * We also need to pass in two versions of the underlying primitive, since they
+ * will be instantiated differently (again term vs NBETerm.t). Such is life
+ * without higher-order polymorphism. *)
 let mktac1 (nunivs:int) (name : string)
-           (f : 'a -> tac<'r>)
-           (ea : embedding<'a>)
-           (er : embedding<'r>)
-           (nf : 'na -> tac<'nr>) // NBE Version
-           (nea : NBET.embedding<'na>)
-           (ner : NBET.embedding<'nr>)
+           (f : 'a -> tac<'r>) (ea : embedding<'a>) (er : embedding<'r>)
+           (nf : 'na -> tac<'nr>) (nea : NBET.embedding<'na>) (ner : NBET.embedding<'nr>)
            : Cfg.primitive_step =
     mk name 2 nunivs (mk_tactic_interpretation_1     f  ea  er)
                      (mk_tactic_nbe_interpretation_1 nf nea ner)
 
-let mktac2 (nunivs:int) (name : string) (f : 'a -> 'b -> tac<'r>)
-           (ea : embedding<'a>) (eb : embedding<'b>)
-           (er : embedding<'r>) : Cfg.primitive_step =
-    mk name 3 nunivs (mk_tactic_interpretation_2 f ea eb er)
-                     (NBET.dummy_interp (Ident.lid_of_str name))
+let mktac2 (nunivs:int) (name : string) 
+           (f : 'a -> 'b -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (er : embedding<'r>)
+           (nf : 'na -> 'nb -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (ner : NBET.embedding<'nr>)
+           : Cfg.primitive_step =
+    mk name 3 nunivs (mk_tactic_interpretation_2     f  ea  eb  er)
+                     (mk_tactic_nbe_interpretation_2 nf nea neb ner)
 
-let mktac3 (nunivs:int) (name : string) (f : 'a -> 'b -> 'c -> tac<'r>)
-           (ea : embedding<'a>) (eb : embedding<'b>) (ec : embedding<'c>)
-           (er : embedding<'r>) : Cfg.primitive_step =
+let mktac3 (nunivs:int) (name : string)
+           (f : 'a -> 'b -> 'c -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (ec : embedding<'c>)  (er : embedding<'r>)
+           (nf : 'na -> 'nb -> 'nc -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (nec : NBET.embedding<'nc>) (ner : NBET.embedding<'nr>)
+           : Cfg.primitive_step =
     mk name 4 nunivs (mk_tactic_interpretation_3 f ea eb ec er)
-                     (NBET.dummy_interp (Ident.lid_of_str name))
+                     (mk_tactic_nbe_interpretation_3 nf nea neb nec ner)
 
-let mktac4 (nunivs:int) (name : string) (f : 'a -> 'b -> 'c -> 'd -> tac<'r>)
-           (ea : embedding<'a>) (eb : embedding<'b>) (ec : embedding<'c>)
-           (ed : embedding<'d>)
-           (er : embedding<'r>) : Cfg.primitive_step =
+let mktac4 (nunivs:int) (name : string)
+           (f : 'a -> 'b -> 'c -> 'd -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (ec : embedding<'c>)  (ed : embedding<'d>)  (er : embedding<'r>)
+           (nf : 'na -> 'nb -> 'nc -> 'nd -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (nec : NBET.embedding<'nc>) (ned : NBET.embedding<'nd>) (ner : NBET.embedding<'nr>)
+           : Cfg.primitive_step =
     mk name 5 nunivs (mk_tactic_interpretation_4 f ea eb ec ed er)
-                     (NBET.dummy_interp (Ident.lid_of_str name))
+                     (mk_tactic_nbe_interpretation_4 nf nea neb nec ned ner)
 
-let mktac5 (nunivs:int) (name : string) (f : 'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
-           (ea : embedding<'a>) (eb : embedding<'b>) (ec : embedding<'c>)
-           (ed : embedding<'d>) (ee : embedding<'e>)
-           (er : embedding<'r>) : Cfg.primitive_step =
+let mktac5 (nunivs:int) (name : string)
+           (f : 'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (ec : embedding<'c>)  (ed : embedding<'d>)  (ee : embedding<'e>)  (er : embedding<'r>)
+           (nf : 'na -> 'nb -> 'nc -> 'nd -> 'ne -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (nec : NBET.embedding<'nc>) (ned : NBET.embedding<'nd>) (nee : NBET.embedding<'ne>) (ner : NBET.embedding<'nr>)
+           : Cfg.primitive_step =
     mk name 6 nunivs (mk_tactic_interpretation_5 f ea eb ec ed ee er)
-                     (NBET.dummy_interp (Ident.lid_of_str name))
+                     (mk_tactic_nbe_interpretation_5 nf nea neb nec ned nee ner)
 
 (* Total interpretations *)
 
