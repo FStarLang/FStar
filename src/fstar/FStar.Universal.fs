@@ -94,8 +94,7 @@ let init_env deps : TcEnv.env =
         solver
         Const.prims_lid
         (NBE.normalize'' 
-          (FStar.Tactics.Interpreter.primitive_steps () @ 
-           FStar.Reflection.Interpreter.reflection_primops))
+          (FStar.Tactics.Interpreter.primitive_steps ()))
   in
   (* Set up some tactics callbacks *)
   let env = { env with synth_hook = FStar.Tactics.Interpreter.synthesize } in
