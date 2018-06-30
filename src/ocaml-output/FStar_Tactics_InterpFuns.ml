@@ -691,9 +691,6 @@ let (step_from_native_step :
     FStar_TypeChecker_Cfg.primitive_step)
   =
   fun s  ->
-    let uu____1902 =
-      let uu____1909 = FStar_Ident.lid_of_str "_"  in
-      FStar_TypeChecker_NBETerm.dummy_interp uu____1909  in
     {
       FStar_TypeChecker_Cfg.name = (s.FStar_Tactics_Native.name);
       FStar_TypeChecker_Cfg.arity = (s.FStar_Tactics_Native.arity);
@@ -706,38 +703,39 @@ let (step_from_native_step :
       FStar_TypeChecker_Cfg.requires_binder_substitution = false;
       FStar_TypeChecker_Cfg.interpretation =
         (fun psc  -> fun args  -> s.FStar_Tactics_Native.tactic psc args);
-      FStar_TypeChecker_Cfg.interpretation_nbe = uu____1902
+      FStar_TypeChecker_Cfg.interpretation_nbe =
+        (FStar_TypeChecker_NBETerm.dummy_interp s.FStar_Tactics_Native.name)
     }
   
 let (mk :
   Prims.string ->
     Prims.int ->
-      (FStar_Ident.lid ->
-         FStar_TypeChecker_Cfg.psc ->
-           FStar_Syntax_Syntax.args ->
-             FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
-        -> FStar_TypeChecker_Cfg.primitive_step)
+      Prims.int ->
+        (FStar_Ident.lid ->
+           FStar_TypeChecker_Cfg.psc ->
+             FStar_Syntax_Syntax.args ->
+               FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+          -> FStar_TypeChecker_Cfg.primitive_step)
   =
   fun nm  ->
-    fun arity  ->
-      fun interpretation  ->
-        let nm1 = FStar_Tactics_Embedding.fstar_tactics_lid' ["Builtins"; nm]
-           in
-        let uu____1949 =
-          let uu____1956 = FStar_Ident.lid_of_str "_"  in
-          FStar_TypeChecker_NBETerm.dummy_interp uu____1956  in
-        {
-          FStar_TypeChecker_Cfg.name = nm1;
-          FStar_TypeChecker_Cfg.arity = arity;
-          FStar_TypeChecker_Cfg.univ_arity = (Prims.parse_int "0");
-          FStar_TypeChecker_Cfg.auto_reflect =
-            (FStar_Pervasives_Native.Some (arity - (Prims.parse_int "1")));
-          FStar_TypeChecker_Cfg.strong_reduction_ok = false;
-          FStar_TypeChecker_Cfg.requires_binder_substitution = true;
-          FStar_TypeChecker_Cfg.interpretation =
-            (fun psc  -> fun args  -> interpretation nm1 psc args);
-          FStar_TypeChecker_Cfg.interpretation_nbe = uu____1949
-        }
+    fun nunivs  ->
+      fun arity  ->
+        fun interpretation  ->
+          let nm1 =
+            FStar_Tactics_Embedding.fstar_tactics_lid' ["Builtins"; nm]  in
+          {
+            FStar_TypeChecker_Cfg.name = nm1;
+            FStar_TypeChecker_Cfg.arity = arity;
+            FStar_TypeChecker_Cfg.univ_arity = nunivs;
+            FStar_TypeChecker_Cfg.auto_reflect =
+              (FStar_Pervasives_Native.Some (arity - (Prims.parse_int "1")));
+            FStar_TypeChecker_Cfg.strong_reduction_ok = false;
+            FStar_TypeChecker_Cfg.requires_binder_substitution = true;
+            FStar_TypeChecker_Cfg.interpretation =
+              (fun psc  -> fun args  -> interpretation nm1 psc args);
+            FStar_TypeChecker_Cfg.interpretation_nbe =
+              (FStar_TypeChecker_NBETerm.dummy_interp nm1)
+          }
   
 let (native_tactics : FStar_Tactics_Native.native_primitive_step Prims.list)
   = FStar_Tactics_Native.list_all () 
@@ -745,75 +743,83 @@ let (native_tactics_steps : FStar_TypeChecker_Cfg.primitive_step Prims.list)
   = FStar_List.map step_from_native_step native_tactics 
 let mktac1 :
   'a 'r .
-    Prims.string ->
-      ('a -> 'r FStar_Tactics_Basic.tac) ->
-        'a FStar_Syntax_Embeddings.embedding ->
-          'r FStar_Syntax_Embeddings.embedding ->
-            FStar_TypeChecker_Cfg.primitive_step
-  =
-  fun name  ->
-    fun f  ->
-      fun ea  ->
-        fun er  ->
-          mk name (Prims.parse_int "2")
-            (mk_tactic_interpretation_1 false f ea er)
-  
-let mktac2 :
-  'a 'b 'r .
-    Prims.string ->
-      ('a -> 'b -> 'r FStar_Tactics_Basic.tac) ->
-        'a FStar_Syntax_Embeddings.embedding ->
-          'b FStar_Syntax_Embeddings.embedding ->
+    Prims.int ->
+      Prims.string ->
+        ('a -> 'r FStar_Tactics_Basic.tac) ->
+          'a FStar_Syntax_Embeddings.embedding ->
             'r FStar_Syntax_Embeddings.embedding ->
               FStar_TypeChecker_Cfg.primitive_step
   =
-  fun name  ->
-    fun f  ->
-      fun ea  ->
-        fun eb  ->
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun ea  ->
           fun er  ->
-            mk name (Prims.parse_int "3")
-              (mk_tactic_interpretation_2 false f ea eb er)
+            mk name (Prims.parse_int "2") nunivs
+              (mk_tactic_interpretation_1 false f ea er)
   
-let mktac3 :
-  'a 'b 'c 'r .
-    Prims.string ->
-      ('a -> 'b -> 'c -> 'r FStar_Tactics_Basic.tac) ->
-        'a FStar_Syntax_Embeddings.embedding ->
-          'b FStar_Syntax_Embeddings.embedding ->
-            'c FStar_Syntax_Embeddings.embedding ->
+let mktac2 :
+  'a 'b 'r .
+    Prims.int ->
+      Prims.string ->
+        ('a -> 'b -> 'r FStar_Tactics_Basic.tac) ->
+          'a FStar_Syntax_Embeddings.embedding ->
+            'b FStar_Syntax_Embeddings.embedding ->
               'r FStar_Syntax_Embeddings.embedding ->
                 FStar_TypeChecker_Cfg.primitive_step
   =
-  fun name  ->
-    fun f  ->
-      fun ea  ->
-        fun eb  ->
-          fun ec  ->
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun ea  ->
+          fun eb  ->
             fun er  ->
-              mk name (Prims.parse_int "4")
-                (mk_tactic_interpretation_3 false f ea eb ec er)
+              mk name (Prims.parse_int "3") nunivs
+                (mk_tactic_interpretation_2 false f ea eb er)
+  
+let mktac3 :
+  'a 'b 'c 'r .
+    Prims.int ->
+      Prims.string ->
+        ('a -> 'b -> 'c -> 'r FStar_Tactics_Basic.tac) ->
+          'a FStar_Syntax_Embeddings.embedding ->
+            'b FStar_Syntax_Embeddings.embedding ->
+              'c FStar_Syntax_Embeddings.embedding ->
+                'r FStar_Syntax_Embeddings.embedding ->
+                  FStar_TypeChecker_Cfg.primitive_step
+  =
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun ea  ->
+          fun eb  ->
+            fun ec  ->
+              fun er  ->
+                mk name (Prims.parse_int "4") nunivs
+                  (mk_tactic_interpretation_3 false f ea eb ec er)
   
 let mktac5 :
   'a 'b 'c 'd 'e 'r .
-    Prims.string ->
-      ('a -> 'b -> 'c -> 'd -> 'e -> 'r FStar_Tactics_Basic.tac) ->
-        'a FStar_Syntax_Embeddings.embedding ->
-          'b FStar_Syntax_Embeddings.embedding ->
-            'c FStar_Syntax_Embeddings.embedding ->
-              'd FStar_Syntax_Embeddings.embedding ->
-                'e FStar_Syntax_Embeddings.embedding ->
-                  'r FStar_Syntax_Embeddings.embedding ->
-                    FStar_TypeChecker_Cfg.primitive_step
+    Prims.int ->
+      Prims.string ->
+        ('a -> 'b -> 'c -> 'd -> 'e -> 'r FStar_Tactics_Basic.tac) ->
+          'a FStar_Syntax_Embeddings.embedding ->
+            'b FStar_Syntax_Embeddings.embedding ->
+              'c FStar_Syntax_Embeddings.embedding ->
+                'd FStar_Syntax_Embeddings.embedding ->
+                  'e FStar_Syntax_Embeddings.embedding ->
+                    'r FStar_Syntax_Embeddings.embedding ->
+                      FStar_TypeChecker_Cfg.primitive_step
   =
-  fun name  ->
-    fun f  ->
-      fun ea  ->
-        fun eb  ->
-          fun ec  ->
-            fun ed  ->
-              fun ee  ->
-                fun er  ->
-                  mk name (Prims.parse_int "6")
-                    (mk_tactic_interpretation_5 false f ea eb ec ed ee er)
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun ea  ->
+          fun eb  ->
+            fun ec  ->
+              fun ed  ->
+                fun ee  ->
+                  fun er  ->
+                    mk name (Prims.parse_int "6") nunivs
+                      (mk_tactic_interpretation_5 false f ea eb ec ed ee er)
   
