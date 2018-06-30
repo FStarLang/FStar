@@ -543,11 +543,16 @@ and readback_comp cfg (c: comp) : S.comp =
    in S.mk c' None Range.dummyRange
  
 and translate_comp_typ cfg bs (c:S.comp_typ) : comp_typ =
-  { comp_univs = List.map (translate_univ bs) c.comp_univs;
-    effect_name = c.effect_name;
-    result_typ = translate cfg bs c.result_typ;
-    effect_args = List.map (fun x -> translate cfg bs (fst x), snd x) c.effect_args;
-    flags = c.flags }
+  let { S.comp_univs  = comp_univs
+      ; S.effect_name = effect_name
+      ; S.result_typ  = result_typ
+      ; S.effect_args = effect_args
+      ; S.flags       = flags } = c in
+  { comp_univs = List.map (translate_univ bs) comp_univs;
+    effect_name = effect_name;
+    result_typ = translate cfg bs result_typ;
+    effect_args = List.map (fun x -> translate cfg bs (fst x), snd x) effect_args;
+    flags = flags }
 
 and readback_comp_typ cfg (c:comp_typ) : S.comp_typ =
   { S.comp_univs = c.comp_univs;
