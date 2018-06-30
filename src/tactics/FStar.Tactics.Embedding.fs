@@ -36,7 +36,8 @@ let fstar_tactics_lid' s = PC.fstar_tactics_lid' s
 let lid_as_tm l = S.lid_as_fv l delta_constant None |> S.fv_to_tm
 let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid' ["Effect"; s])
 
-let lid_as_data_tm l = S.fv_to_tm (S.lid_as_fv l delta_constant (Some Data_ctor))
+let lid_as_data_fv l = S.lid_as_fv l delta_constant (Some Data_ctor)
+let lid_as_data_tm l = S.fv_to_tm (lid_as_data_fv l)
 let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid' ["Effect";s])
 
 let fstar_tactics_Failed_lid  = fstar_tactics_lid' ["Result"; "Failed"]
@@ -44,6 +45,8 @@ let fstar_tactics_Success_lid = fstar_tactics_lid' ["Result"; "Success"]
 
 let fstar_tactics_Failed_tm  = lid_as_data_tm fstar_tactics_Failed_lid
 let fstar_tactics_Success_tm = lid_as_data_tm fstar_tactics_Success_lid
+let fstar_tactics_Failed_fv  = lid_as_data_fv fstar_tactics_Failed_lid
+let fstar_tactics_Success_fv = lid_as_data_fv fstar_tactics_Success_lid
 
 let fstar_tactics_topdown_lid = fstar_tactics_lid' ["Types"; "TopDown"]
 let fstar_tactics_bottomup_lid = fstar_tactics_lid' ["Types"; "BottomUp"]
@@ -103,8 +106,7 @@ let e_proofstate_nbe =
         | NBETerm.Lazy li when li.lkind = Lazy_proofstate ->
             Some <| FStar.Dyn.undyn li.blob
         | _ ->
-            (* if w then *)
-            (*     Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded proofstate: %s" (NBETerm.t_to_string t))); *)
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded NBE proofstate: %s" (NBETerm.t_to_string t)));
             None
     in
     { NBETerm.em = embed_proofstate
@@ -153,10 +155,23 @@ let e_result (ea : embedding<'a>)  =
 
 let e_result_nbe (ea : NBET.embedding<'a>)  =
     let embed_result (res:__result<'a>) : NBET.t =
-        failwith "e_result_nbe"
+        match res with
+        | Failed (msg, ps) ->
+            NBETerm.FV (fstar_tactics_Failed_fv
+            , [U_zero]
+            , [ NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps)
+              ; NBETerm.as_arg (NBETerm.embed NBETerm.e_string msg)
+              ; NBETerm.as_iarg (NBETerm.type_of ea) ])
+        | Success (a, ps) ->
+            NBETerm.FV (fstar_tactics_Success_fv
+            , [U_zero]
+            , [ NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps)
+              ; NBETerm.as_arg (NBETerm.embed ea a)
+              ; NBETerm.as_iarg (NBETerm.type_of ea) ])
     in
     let unembed_result (t:NBET.t) : option<__result<'a>> =
         None
+        (* unembed e_result (readback cfg t) *)
     in
     { NBETerm.em = embed_result
     ; NBETerm.un = unembed_result

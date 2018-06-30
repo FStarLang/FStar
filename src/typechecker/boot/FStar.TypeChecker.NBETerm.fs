@@ -350,7 +350,8 @@ let e_range : embedding<Range.range> =
     let un t =
     match t with
     | Constant (Range r) -> Some r
-    | _ -> None
+    | _ ->
+        None
     in
     mk_emb em un (lid_as_typ PC.range_lid [] [])
 
@@ -534,7 +535,8 @@ let prims_to_fstar_range_step (args:args) : option<t> =
     | [(a1, _)] ->
       begin match unembed e_range a1 with
       | Some r -> Some (embed e_range r)
-      | None -> None
+      | None ->
+        None
       end
    | _ -> failwith "Unexpected number of arguments"
 

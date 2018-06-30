@@ -115,7 +115,7 @@ let e_term_nbe_aq aq =
         match t with
         | NBETerm.Quote (tm, qi) ->
             // antiquotes!!????
-            Some (S.mk (Tm_quoted (tm, qi)) None Range.dummyRange)
+            Some tm
         | _ ->
             None
     in

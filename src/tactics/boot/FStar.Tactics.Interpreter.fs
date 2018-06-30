@@ -60,18 +60,22 @@ and primitive_steps () : list<Cfg.primitive_step> =
      * are in other modules: *)
     let tracepoint =
       { mktot1 0 "tracepoint" tracepoint E.e_proofstate e_unit
+                              tracepoint E.e_proofstate_nbe NBET.e_unit
         with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" }
     in
     let set_proofstate_range =
       { mktot2 0 "set_proofstate_range" set_proofstate_range E.e_proofstate e_range E.e_proofstate
+                                        set_proofstate_range E.e_proofstate_nbe NBET.e_range E.e_proofstate_nbe
         with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" }
     in
     let incr_depth =
       { mktot1 0 "incr_depth" incr_depth E.e_proofstate E.e_proofstate
+                              incr_depth E.e_proofstate_nbe E.e_proofstate_nbe
         with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth" }
     in
     let decr_depth =
       { mktot1 0 "decr_depth" decr_depth E.e_proofstate E.e_proofstate
+                              decr_depth E.e_proofstate_nbe E.e_proofstate_nbe
         with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth" }
     in
     [
@@ -79,7 +83,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
       decr_depth;
       tracepoint;
       set_proofstate_range;
-      mktot2 0 "push_binder"   (fun env b -> Env.push_binders env [b]) RE.e_env RE.e_binder RE.e_env;
+      (* mktot2 0 "push_binder"   (fun env b -> Env.push_binders env [b]) RE.e_env RE.e_binder RE.e_env; *)
 
       mktac2 1 "fail"          (fun _ -> fail) e_any e_string e_any; //nb: the e_any embedding is never used
       mktac1 0 "trivial"       trivial e_unit e_unit
