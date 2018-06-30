@@ -8,6 +8,8 @@ open FStar.Order
 open FStar.TypeChecker.Env
 open FStar.Reflection.Data
 
+module NBETerm = FStar.TypeChecker.NBETerm
+
 (* Embeddings *)
 val e_bv          : embedding<bv>
 val e_binder      : embedding<binder>
@@ -34,6 +36,8 @@ val e_attributes  : embedding<list<attribute>> (* This seems rather silly, but `
 val e_ident       : embedding<Ident.ident>
 val e_univ_name   : embedding<univ_name>
 val e_univ_names  : embedding<list<univ_name>>
+
+val e_term_nbe    : NBETerm.embedding<term>
 
 (* Useful for embedding antiquoted terms. They are only used for the embedding part,
  * so this is a bit hackish. *)

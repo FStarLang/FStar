@@ -35,6 +35,7 @@ module RD = FStar.Reflection.Data
 module RE = FStar.Reflection.Embeddings
 module NBE = FStar.TypeChecker.NBE
 module NBETerm = FStar.TypeChecker.NBETerm
+module NBET    = FStar.TypeChecker.NBETerm
 open FStar.Tactics.Native
 open FStar.Tactics.InterpFuns
 
@@ -81,44 +82,46 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktot2 0 "push_binder"   (fun env b -> Env.push_binders env [b]) RE.e_env RE.e_binder RE.e_env;
 
       mktac2 1 "fail"          (fun _ -> fail) e_any e_string e_any; //nb: the e_any embedding is never used
-      mktac1 0 "trivial"       trivial e_unit e_unit;
+      mktac1 0 "trivial"       trivial e_unit e_unit
+                               trivial NBET.e_unit NBET.e_unit;
       mktac2 1 "__trytac"      (fun _ -> trytac) e_any (e_tactic_0' e_any) (e_option e_any);
-      mktac1 0 "intro"         intro e_unit RE.e_binder;
-      mktac1 0 "intro_rec"     intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder);
-      mktac1 0 "norm"          norm (e_list e_norm_step) e_unit;
+      (* mktac1 0 "intro"         intro e_unit RE.e_binder; *)
+      (* mktac1 0 "intro_rec"     intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder); *)
+      (* mktac1 0 "norm"          norm (e_list e_norm_step) e_unit; *)
       mktac3 0 "norm_term_env" norm_term_env RE.e_env (e_list e_norm_step) RE.e_term RE.e_term;
       mktac2 0 "norm_binder_type"
                                norm_binder_type (e_list e_norm_step) RE.e_binder e_unit;
       mktac2 0 "rename_to"     rename_to RE.e_binder e_string e_unit;
-      mktac1 0 "binder_retype" binder_retype RE.e_binder e_unit;
-      mktac1 0 "revert"        revert e_unit e_unit;
-      mktac1 0 "clear_top"     clear_top e_unit e_unit;
-      mktac1 0 "clear"         clear RE.e_binder e_unit;
-      mktac1 0 "rewrite"       rewrite RE.e_binder e_unit;
-      mktac1 0 "smt"           smt e_unit e_unit;
-      mktac1 0 "refine_intro"  refine_intro e_unit e_unit;
+      (* mktac1 0 "binder_retype" binder_retype RE.e_binder e_unit; *)
+      (* mktac1 0 "revert"        revert e_unit e_unit; *)
+      (* mktac1 0 "clear_top"     clear_top e_unit e_unit; *)
+      (* mktac1 0 "clear"         clear RE.e_binder e_unit; *)
+      (* mktac1 0 "rewrite"       rewrite RE.e_binder e_unit; *)
+      (* mktac1 0 "smt"           smt e_unit e_unit; *)
+      (* mktac1 0 "refine_intro"  refine_intro e_unit e_unit; *)
       mktac2 0 "t_exact"       t_exact e_bool RE.e_term e_unit;
-      mktac1 0 "apply"         (apply  true) RE.e_term e_unit;
-      mktac1 0 "apply_raw"     (apply false) RE.e_term e_unit;
-      mktac1 0 "apply_lemma"   apply_lemma RE.e_term e_unit;
+      (* mktac1 0 "apply"         (apply  true) RE.e_term e_unit; *)
+      (* mktac1 0 "apply_raw"     (apply false) RE.e_term e_unit; *)
+      mktac1 0 "apply_lemma"   apply_lemma RE.e_term e_unit
+                               apply_lemma RE.e_term_nbe NBET.e_unit;
       // A tac 5... oh my...
       mktac5 2 "__divide"      (fun _ _ -> divide) e_any e_any e_int (e_tactic_0' e_any) (e_tactic_0' e_any)
                                                             (e_tuple2 e_any e_any);
       mktac2 0 "__seq"         seq (e_tactic_0' e_unit) (e_tactic_0' e_unit) e_unit;
 
-      mktac1 0 "set_options"   set_options e_string e_unit;
+      (* mktac1 0 "set_options"   set_options e_string e_unit; *)
 
-      mktac1 0 "tc"            tc RE.e_term RE.e_term;
-      mktac1 0 "unshelve"      unshelve RE.e_term e_unit;
+      (* mktac1 0 "tc"            tc RE.e_term RE.e_term; *)
+      (* mktac1 0 "unshelve"      unshelve RE.e_term e_unit; *)
       mktac2 1 "unquote"       unquote e_any RE.e_term e_any;
 
-      mktac1 0 "prune"         prune e_string e_unit;
-      mktac1 0 "addns"         addns e_string e_unit;
+      (* mktac1 0 "prune"         prune e_string e_unit; *)
+      (* mktac1 0 "addns"         addns e_string e_unit; *)
 
-      mktac1 0 "print"         print e_string e_unit;
-      mktac1 0 "debug"         debug e_string e_unit;
-      mktac1 0 "dump"          print_proof_state e_string e_unit;
-      mktac1 0 "dump1"         print_proof_state1 e_string e_unit;
+      (* mktac1 0 "print"         print e_string e_unit; *)
+      (* mktac1 0 "debug"         debug e_string e_unit; *)
+      (* mktac1 0 "dump"          print_proof_state e_string e_unit; *)
+      (* mktac1 0 "dump1"         print_proof_state1 e_string e_unit; *)
 
       mktac2 0 "__pointwise"     pointwise E.e_direction (e_tactic_0' e_unit) e_unit;
       mktac2 0 "__topdown_rewrite" topdown_rewrite
@@ -126,40 +129,40 @@ and primitive_steps () : list<Cfg.primitive_step> =
                                  (e_tactic_0' e_unit)
                                  e_unit;
 
-      mktac1 0 "trefl"         trefl   e_unit e_unit;
-      mktac1 0 "later"         later   e_unit e_unit;
-      mktac1 0 "dup"           dup     e_unit e_unit;
-      mktac1 0 "flip"          flip    e_unit e_unit;
-      mktac1 0 "qed"           qed     e_unit e_unit;
-      mktac1 0 "dismiss"       dismiss e_unit e_unit;
-      mktac1 0 "tadmit"        tadmit  e_unit e_unit;
+      (* mktac1 0 "trefl"         trefl   e_unit e_unit; *)
+      (* mktac1 0 "later"         later   e_unit e_unit; *)
+      (* mktac1 0 "dup"           dup     e_unit e_unit; *)
+      (* mktac1 0 "flip"          flip    e_unit e_unit; *)
+      (* mktac1 0 "qed"           qed     e_unit e_unit; *)
+      (* mktac1 0 "dismiss"       dismiss e_unit e_unit; *)
+      (* mktac1 0 "tadmit"        tadmit  e_unit e_unit; *)
 
-      mktac1 0 "cases"         cases RE.e_term (e_tuple2 RE.e_term RE.e_term);
-      mktac1 0 "t_destruct"    t_destruct RE.e_term (e_list (e_tuple2 RE.e_fv e_int));
+      (* mktac1 0 "cases"         cases RE.e_term (e_tuple2 RE.e_term RE.e_term); *)
+      (* mktac1 0 "t_destruct"    t_destruct RE.e_term (e_list (e_tuple2 RE.e_fv e_int)); *)
 
-      mktac1 0 "top_env"       top_env     e_unit RE.e_env;
-      mktac1 0 "cur_env"       cur_env     e_unit RE.e_env;
-      mktac1 0 "cur_goal"      cur_goal'   e_unit RE.e_term;
-      mktac1 0 "cur_witness"   cur_witness e_unit RE.e_term;
+      (* mktac1 0 "top_env"       top_env     e_unit RE.e_env; *)
+      (* mktac1 0 "cur_env"       cur_env     e_unit RE.e_env; *)
+      (* mktac1 0 "cur_goal"      cur_goal'   e_unit RE.e_term; *)
+      (* mktac1 0 "cur_witness"   cur_witness e_unit RE.e_term; *)
 
-      mktac1 0 "inspect"       inspect RE.e_term      RE.e_term_view;
-      mktac1 0 "pack"          pack    RE.e_term_view RE.e_term;
+      (* mktac1 0 "inspect"       inspect RE.e_term      RE.e_term_view; *)
+      (* mktac1 0 "pack"          pack    RE.e_term_view RE.e_term; *)
 
-      mktac1 0 "fresh"         fresh       e_unit e_int;
-      mktac1 0 "ngoals"        ngoals      e_unit e_int;
-      mktac1 0 "ngoals_smt"    ngoals_smt  e_unit e_int;
-      mktac1 0 "is_guard"      is_guard    e_unit e_bool;
+      (* mktac1 0 "fresh"         fresh       e_unit e_int; *)
+      (* mktac1 0 "ngoals"        ngoals      e_unit e_int; *)
+      (* mktac1 0 "ngoals_smt"    ngoals_smt  e_unit e_int; *)
+      (* mktac1 0 "is_guard"      is_guard    e_unit e_bool; *)
 
       mktac2 0 "uvar_env"      uvar_env RE.e_env (e_option RE.e_term) RE.e_term;
       mktac3 0 "unify_env"     unify_env RE.e_env RE.e_term RE.e_term e_bool;
       mktac3 0 "launch_process" launch_process e_string (e_list e_string) e_string e_string;
 
       mktac2 0 "fresh_bv_named"  fresh_bv_named e_string RE.e_term RE.e_bv;
-      mktac1 0 "change"          change RE.e_term e_unit;
+      (* mktac1 0 "change"          change RE.e_term e_unit; *)
 
-      mktac1 0 "get_guard_policy" get_guard_policy e_unit E.e_guard_policy;
-      mktac1 0 "set_guard_policy" set_guard_policy E.e_guard_policy e_unit;
-      mktac1 0 "lax_on"           lax_on e_unit e_bool;
+      (* mktac1 0 "get_guard_policy" get_guard_policy e_unit E.e_guard_policy; *)
+      (* mktac1 0 "set_guard_policy" set_guard_policy E.e_guard_policy e_unit; *)
+      (* mktac1 0 "lax_on"           lax_on e_unit e_bool; *)
     ] @ reflection_primops @ native_tactics_steps
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output

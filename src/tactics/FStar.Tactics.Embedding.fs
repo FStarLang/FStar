@@ -20,6 +20,7 @@ module TcUtil = FStar.TypeChecker.Util
 module N = FStar.TypeChecker.Normalize
 module Err = FStar.Errors
 module NBETerm = FStar.TypeChecker.NBETerm
+module NBET    = FStar.TypeChecker.NBETerm
 module NBE = FStar.TypeChecker.NBE
 
 open FStar.Tactics.Types
@@ -63,9 +64,12 @@ let fstar_tactics_Force = lid_as_data_tm fstar_tactics_Force_lid
 let t_proofstate   = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
 let fv_proofstate  = S.fvconst (fstar_tactics_lid' ["Types"; "proofstate"])
 let t_result       = S.tconst (fstar_tactics_lid' ["Types"; "result"])
+let fv_result      = S.fvconst (fstar_tactics_lid' ["Types"; "result"])
 let t_result_of t  = U.mk_app t_result [S.as_arg t] // TODO: uinst on t_result?
 let t_guard_policy = S.tconst (fstar_tactics_lid' ["Types"; "guard_policy"])
+let fv_guard_policy = S.fvconst (fstar_tactics_lid' ["Types"; "guard_policy"])
 let t_direction    = S.tconst (fstar_tactics_lid' ["Types"; "direction"])
+let fv_direction   = S.fvconst (fstar_tactics_lid' ["Types"; "direction"])
 
 let e_proofstate =
     let embed_proofstate (rng:Range.range) (ps:proofstate) : term =
@@ -147,6 +151,18 @@ let e_result (ea : embedding<'a>)  =
     in
     mk_emb embed_result unembed_result (t_result_of (type_of ea))
 
+let e_result_nbe (ea : NBET.embedding<'a>)  =
+    let embed_result (res:__result<'a>) : NBET.t =
+        failwith "e_result_nbe"
+    in
+    let unembed_result (t:NBET.t) : option<__result<'a>> =
+        None
+    in
+    { NBETerm.em = embed_result
+    ; NBETerm.un = unembed_result
+    ; NBETerm.typ = NBETerm.FV (fv_result, [], []) }
+
+
 let e_direction =
     let embed_direction (rng:Range.range) (d : direction) : term =
         match d with
@@ -163,6 +179,17 @@ let e_direction =
             None
     in
     mk_emb embed_direction unembed_direction t_direction
+
+let e_direction_nbe  =
+    let embed_direction (res:direction) : NBET.t =
+        failwith "e_direction_nbe"
+    in
+    let unembed_direction (t:NBET.t) : option<direction> =
+        None
+    in
+    { NBETerm.em = embed_direction
+    ; NBETerm.un = unembed_direction
+    ; NBETerm.typ = NBETerm.FV (fv_direction, [], []) }
 
 let e_guard_policy =
     let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =
@@ -184,3 +211,14 @@ let e_guard_policy =
             None
     in
     mk_emb embed_guard_policy unembed_guard_policy t_guard_policy
+
+let e_guard_policy_nbe  =
+    let embed_guard_policy (res:guard_policy) : NBET.t =
+        failwith "e_guard_policy_nbe"
+    in
+    let unembed_guard_policy (t:NBET.t) : option<guard_policy> =
+        None
+    in
+    { NBETerm.em = embed_guard_policy
+    ; NBETerm.un = unembed_guard_policy
+    ; NBETerm.typ = NBETerm.FV (fv_guard_policy, [], []) }

@@ -111,11 +111,12 @@ val embed : embedding<'a> -> 'a -> t
 val unembed : embedding<'a> -> t -> option<'a> 
 val type_of : embedding<'a> -> t
 
-val e_bool : embedding<bool>
+val e_bool   : embedding<bool>
 val e_string : embedding<string>
-val e_char : embedding<char>
-val e_int : embedding<Z.t>
-val e_range : embedding<Range.range>
+val e_char   : embedding<char>
+val e_int    : embedding<Z.t>
+val e_unit   : embedding<unit>
+val e_range  : embedding<Range.range>
 
 // Interface for NBE interpretations
 
