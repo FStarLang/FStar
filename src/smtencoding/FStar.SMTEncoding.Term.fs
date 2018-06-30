@@ -27,6 +27,8 @@ open FStar.Util
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 
+let escape (s:string) = BU.replace_char s '\'' '_'
+
 type sort =
   | Bool_sort
   | Int_sort
@@ -532,7 +534,7 @@ let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, a
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
 let fresh_token (tok_name, sort) id =
     let a_name = "fresh_token_" ^tok_name in
-    let a = {assumption_name=a_name;
+    let a = {assumption_name=escape a_name;
              assumption_caption=Some "fresh token";
              assumption_term=mkEq(mkInteger' id norng,
                                   mkApp(constr_id_of_sort sort,
@@ -548,7 +550,7 @@ let fresh_constructor rng (name, arg_sorts, sort, id) =
   let cid_app = mkApp(constr_id_of_sort sort, [capp]) norng in
   let a_name = "constructor_distinct_" ^name in
   let a = {
-    assumption_name=a_name;
+    assumption_name=escape a_name;
     assumption_caption=Some "Consrtructor distinct";
     assumption_term=mkForall rng ([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng);
     assumption_fact_ids=[]
@@ -569,7 +571,7 @@ let injective_constructor rng (name, fields, sort) =
             let proj_name = DeclFun(name, [sort], s, Some "Projector") in
             if projectible
             then let a = {
-                    assumption_name = "projection_inverse_"^name;
+                    assumption_name = escape ("projection_inverse_"^name);
                     assumption_caption = Some "Projection inverse";
                     assumption_term = mkForall rng ([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng);
                     assumption_fact_ids = []
@@ -719,7 +721,6 @@ let caption_to_string = function
     | Some c -> ";;;;;;;;;;;;;;;;" ^ c ^ "\n"
 
 let rec declToSmt' print_ranges z3options decl =
-  let escape (s:string) = BU.replace_char s '\'' '_' in
   match decl with
   | DefPrelude ->
     mkPrelude z3options
@@ -745,7 +746,7 @@ let rec declToSmt' print_ranges z3options decl =
         if Options.log_queries()
         then BU.format1 ";;; Fact-ids: %s\n" (String.concat "; " (fact_ids_to_string a.assumption_fact_ids))
         else "" in
-    let n = escape a.assumption_name in
+    let n = a.assumption_name in
     format4 "%s%s(assert (! %s\n:named %s))"
             (caption_to_string a.assumption_caption)
             fids
