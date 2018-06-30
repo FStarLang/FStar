@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "380c55fba1b859d82faaab6a2bc00a3a"
+      "39e713e9826a071924f11f3a922cbb3a"
     ],
     [
       "TestHeap.test0",
@@ -22,7 +22,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
       ],
       0,
-      "104c6d8d535f16637f671022a802c752"
+      "2fa84624e2eacc474c0415aa2abd8182"
     ],
     [
       "TestHeap.test1",
@@ -41,7 +41,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "5c1c18b7d5d24e61b64923b66bfe6720"
+      "639d8a986c832b9925cc0b20ac6e7e4e"
     ],
     [
       "TestHeap.test3",
@@ -57,7 +57,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "a38a61885294179eccd7c6d50fa37711"
+      "61e862eadec4a0f21ca0eb1b1d9e942d"
     ],
     [
       "TestHeap.test7",
@@ -76,7 +76,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "a22fe07884cde4a0970420d753c0ef9b"
+      "f17cebeaead10b440a0c312bb68a3bc2"
     ],
     [
       "TestHeap.test8",
@@ -92,7 +92,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
       ],
       0,
-      "a966edd4aaa01f265d12aafc7ca2d208"
+      "20e1676f2b4c1ab5df610944ab8599c7"
     ],
     [
       "TestHeap.DistinctXY",
@@ -101,7 +101,7 @@
       1,
       [ "@query" ],
       0,
-      "016d0ad97d45ce5186b44b7889c23c34"
+      "f14c0bccc897dae51013f0b5583c536b"
     ],
     [
       "TestHeap.test0",
@@ -115,7 +115,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
       ],
       0,
-      "6b4817724202ca8bbf7205f365711bf0"
+      "c255561ff1f093939dcf0dd20b48f80a"
     ],
     [
       "TestHeap.test1",
@@ -134,7 +134,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "5ff9c2189303f97ca622e7458b2383b4"
+      "4375390e86b80f063c91b028abc45fa3"
     ],
     [
       "TestHeap.test3",
@@ -150,7 +150,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "7be624cdbc57efa5cb70cb46ebfcfa3b"
+      "1a648c2cfa0e648a46c4afa67b1950b4"
     ],
     [
       "TestHeap.test7",
@@ -169,7 +169,7 @@
         "typing_FStar.Monotonic.Heap.upd", "typing_TestHeap.h"
       ],
       0,
-      "9df5bc6831ec66e7c28507ef98114405"
+      "17fd9257ef3a5720de30ff4fc83ee98c"
     ],
     [
       "TestHeap.test8",
@@ -185,7 +185,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_TestHeap.h"
       ],
       0,
-      "2f2df6f1ce8e4c02ad966058c84a15d4"
+      "53eaefc6b7ffc69cac75eb8cf47b4a35"
     ]
   ]
 ]
