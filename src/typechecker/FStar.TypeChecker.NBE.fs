@@ -125,6 +125,7 @@ let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t
     in
     match branches with
     | [] -> failwith "Branch not found"
+    // TODO: Consider the when clause!
     | (p, _wopt, e)::branches ->
       match matches_pat scrut p with
       | BU.Inl matches ->
@@ -275,13 +276,15 @@ let rec iapp cfg (f:t) (args:args) : t =
     in
     let (us', ts') = aux args us ts in
     FV (i, us', ts')
+  | Quote _
+  | Lazy _
   | Constant _ | Univ _ | Type_t _ | Unknown | Refinement _ | Arrow _ -> failwith "Ill-typed application"
 
 (* unary application *)
 let app cfg (f:t) (x:t) (q:aqual) = iapp cfg f [(x, q)]
 
 (* Was List.init, but F* doesn't have this in ulib *)
-let rec tabulate (n:int) (f : int -> 'a) : list<'a> =
+let tabulate (n:int) (f : int -> 'a) : list<'a> =
     let rec aux i =
         if i < n
         then f i :: aux (i + 1)
@@ -492,7 +495,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
               (* Zoe: I'm not sure what this pattern binds, just speculating the translation *)
             | Pat_dot_term (bvar, tm) ->
               let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
-              (mkAccuVar x :: bs,
+              (bs,
                Pat_dot_term (x, readback (translate cfg bs tm)))
           in
           (bs, {p with v = p_new}) (* keep the info and change the pattern *)
@@ -524,8 +527,11 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       //TODO: we need to put the "meta" back when reading back
       translate cfg bs e
 
-    | Tm_quoted(_,_)
-    | Tm_lazy _ -> failwith ("Not yet handled: " ^ P.tag_of_term (SS.compress e))
+    | Tm_quoted (qt, qi) ->
+      Quote (qt, qi)
+
+    | Tm_lazy li ->
+      Lazy li
 
 and translate_comp cfg bs (c:S.comp) : comp = 
   match c.n with 
@@ -777,6 +783,11 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
           | [] -> head
           | _ -> U.mk_app head args)
 
+    | Quote (qt, qi) ->
+        S.mk (Tm_quoted (qt, qi)) None Range.dummyRange
+
+    | Lazy li ->
+        S.mk (Tm_lazy li) None Range.dummyRange
 
 type step =
   | Primops

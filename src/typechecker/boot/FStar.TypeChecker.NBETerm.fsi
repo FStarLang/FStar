@@ -29,15 +29,18 @@ type constant =
   | Char of FStar.Char.char
   | Range of Range.range
 
-//IN F*: type atom : Type0 =
-type atom = //JUST FSHARP
+type atom
+//IN F*: : Type0
+  =
   | Var of var
   | Match of t *
              (t -> t) *
              ((t -> term) -> list<branch>)
   | Rec of letbinding * list<letbinding> * list<t>
-//IN F*: and t : Type0 =
-and t = //JUST FSHARP
+
+and t
+//IN F*: : Type0
+  =
   | Lam of (list<t> -> t) * list<(unit -> arg)> * int
   | Accu of atom * args
   | Construct of fv * list<universe> * args
@@ -47,7 +50,9 @@ and t = //JUST FSHARP
   | Univ of universe
   | Unknown
   | Arrow of (list<t> -> comp) * list<(unit -> arg)>
-  | Refinement of (t -> t) * (unit -> arg) 
+  | Refinement of (t -> t) * (unit -> arg)
+  | Quote of S.term * S.quoteinfo
+  | Lazy of S.lazyinfo
 and comp = 
   | Tot of t * option<universe>
   | GTot of t * option<universe>
@@ -58,7 +63,7 @@ and comp_typ = {
   result_typ:t;
   effect_args:args;
   flags:list<cflags>
-}
+  }
 
 and arg = t * aqual
 and args = list<(arg)>

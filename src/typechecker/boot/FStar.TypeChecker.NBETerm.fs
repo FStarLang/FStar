@@ -33,8 +33,9 @@ type constant =
   | Char of FStar.Char.char
   | Range of Range.range
 
-//IN F*: type atom : Type0 =
-type atom = //JUST FSHARP
+type atom
+//IN F*: : Type0
+  =
   | Var of var
   | Match of t * (* the scutinee *)
              (t -> t) * (* case analysis *)
@@ -44,8 +45,9 @@ type atom = //JUST FSHARP
              // NS: add a thunked pattern translations here
   | Rec of letbinding * list<letbinding> * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
   (* Zoe : a recursive function definition together with its block of mutually recursive function definitions and its environment *)
-//IN F*: and t : Type0 =
-and t = //JUST FSHARP
+and t
+//IN F*: : Type0
+  =
   | Lam of (list<t> -> t) * list<(unit -> arg)> * int  // Zoe : body * args * arrity
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
@@ -57,7 +59,9 @@ and t = //JUST FSHARP
   | Unknown (* For translating unknown types *)
   | Arrow of (list<t> -> comp) * list<(unit -> arg)>
   | Refinement of (t -> t) * (unit -> arg) 
-and comp = 
+  | Quote of S.term * S.quoteinfo
+  | Lazy of S.lazyinfo
+ and comp = 
   | Tot of t * option<universe>
   | GTot of t * option<universe>
   | Comp of comp_typ
@@ -205,6 +209,8 @@ let rec t_to_string (x:t) =
     let t = fst (t ()) in
     "Refinement " ^ (P.bv_to_string x) ^ ":" ^ (t_to_string t) ^ "{" ^ (t_to_string (f (mkAccuVar x))) ^ "}"
   | Unknown -> "Unknown"
+  | Quote _ -> "Quote _"
+  | Lazy _ -> "Lazy _"
 
 and atom_to_string (a: atom) =
     match a with

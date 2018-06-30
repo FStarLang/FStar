@@ -215,42 +215,42 @@ let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
       Cfg.strong_reduction_ok=s.strong_reduction_ok;
       Cfg.requires_binder_substitution = false; // GM: really?
       Cfg.interpretation=(fun psc args -> s.tactic psc args);
-      Cfg.interpretation_nbe = (NBETerm.dummy_interp (Ident.lid_of_str "_"))
+      Cfg.interpretation_nbe = NBETerm.dummy_interp s.name;
    }
 
-let mk nm arity interpretation =
+let mk nm nunivs arity interpretation =
   let nm = E.fstar_tactics_lid' ["Builtins";nm] in {
   Cfg.name=nm;
   Cfg.arity=arity;
-  Cfg.univ_arity=0; // Zoe : We might need to change that
+  Cfg.univ_arity=nunivs;
   Cfg.auto_reflect=Some (arity - 1);
   Cfg.strong_reduction_ok=false;
   Cfg.requires_binder_substitution = true;
   Cfg.interpretation=(fun psc args -> interpretation nm psc args);
-  Cfg.interpretation_nbe = (NBETerm.dummy_interp (Ident.lid_of_str "_"))
+  Cfg.interpretation_nbe = NBETerm.dummy_interp nm;
 }
 
 let native_tactics = list_all ()
 let native_tactics_steps = List.map step_from_native_step native_tactics
 
 // mktac0 cannot exist due to having a top-level effect
-let mktac1 (name : string) (f : 'a -> tac<'r>)
+let mktac1 (nunivs:int) (name : string) (f : 'a -> tac<'r>)
            (ea : embedding<'a>)
            (er : embedding<'r>) : Cfg.primitive_step =
-    mk name 2 (mk_tactic_interpretation_1 false f ea er)
+    mk name 2 nunivs (mk_tactic_interpretation_1 false f ea er)
 
-let mktac2 (name : string) (f : 'a -> 'b -> tac<'r>)
+let mktac2 (nunivs:int) (name : string) (f : 'a -> 'b -> tac<'r>)
            (ea : embedding<'a>) (eb : embedding<'b>)
            (er : embedding<'r>) : Cfg.primitive_step =
-    mk name 3 (mk_tactic_interpretation_2 false f ea eb er)
+    mk name 3 nunivs (mk_tactic_interpretation_2 false f ea eb er)
 
-let mktac3 (name : string) (f : 'a -> 'b -> 'c -> tac<'r>)
+let mktac3 (nunivs:int) (name : string) (f : 'a -> 'b -> 'c -> tac<'r>)
            (ea : embedding<'a>) (eb : embedding<'b>) (ec : embedding<'c>)
            (er : embedding<'r>) : Cfg.primitive_step =
-    mk name 4 (mk_tactic_interpretation_3 false f ea eb ec er)
+    mk name 4 nunivs (mk_tactic_interpretation_3 false f ea eb ec er)
 
-let mktac5 (name : string) (f : 'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
+let mktac5 (nunivs:int) (name : string) (f : 'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
            (ea : embedding<'a>) (eb : embedding<'b>) (ec : embedding<'c>)
            (ed : embedding<'d>) (ee : embedding<'e>)
            (er : embedding<'r>) : Cfg.primitive_step =
-    mk name 6 (mk_tactic_interpretation_5 false f ea eb ec ed ee er)
+    mk name 6 nunivs (mk_tactic_interpretation_5 false f ea eb ec ed ee er)
