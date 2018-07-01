@@ -36,12 +36,13 @@ type atom
   | Match of t *
              (t -> t) *
              ((t -> term) -> list<branch>)
-  | Rec of letbinding * list<letbinding> * list<t>
 
 and t
 //IN F*: : Type0
   =
-  | Lam of (list<t> -> t) * list<(unit -> arg)> * int
+  | Lam of (list<t> -> t)        //these expect their arguments in binder order (optimized for convenience beta reduction)
+        * list<(list<t> -> arg)> //these expect their arguments in reverse binder order (since this avoids reverses during readback)
+        * int  // Zoe : body * args * arity; this int is the length of the lists expected by the functions in the prior fields
   | Accu of atom * args
   | Construct of fv * list<universe> * args
   | FV of fv * list<universe> * args
@@ -53,6 +54,7 @@ and t
   | Refinement of (t -> t) * (unit -> arg) 
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
+  | Rec of letbinding * list<letbinding> * list<t> * args * int  * (list<t> -> letbinding -> t)
 and comp = 
   | Tot of t * option<universe>
   | GTot of t * option<universe>
@@ -96,7 +98,6 @@ val mkFV : fv -> list<universe> -> args -> t
 
 val mkAccuVar : var -> t
 val mkAccuMatch : t -> (t -> t) -> ((t -> term) -> list<branch>) -> t
-val mkAccuRec : letbinding -> list<letbinding> -> list<t> -> t
 
 val as_arg : t -> arg
 val as_iarg : t -> arg

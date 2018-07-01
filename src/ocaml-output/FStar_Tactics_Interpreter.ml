@@ -1420,14 +1420,14 @@ and unembed_tactic_1 :
           (fun x  ->
              let rng = FStar_Range.dummyRange  in
              let x_tm = FStar_Syntax_Embeddings.embed ea rng x  in
-             let app1 =
+             let app =
                let uu____1047 =
                  let uu____1052 =
                    let uu____1053 = FStar_Syntax_Syntax.as_arg x_tm  in
                    [uu____1053]  in
                  FStar_Syntax_Syntax.mk_Tm_app f uu____1052  in
                uu____1047 FStar_Pervasives_Native.None rng  in
-             unembed_tactic_0 er app1)
+             unembed_tactic_0 er app)
 
 and unembed_tactic_0 :
   'Ab .
@@ -1462,7 +1462,7 @@ and unembed_tactic_0 :
            let norm_f =
              let uu____1159 = FStar_Options.tactics_nbe ()  in
              if uu____1159
-             then FStar_TypeChecker_NBE.normalize_with_primitive_steps
+             then FStar_TypeChecker_NBE.normalize
              else FStar_TypeChecker_Normalize.normalize_with_primitive_steps
               in
            if proof_state.FStar_Tactics_Types.tac_verb_dbg
@@ -1520,12 +1520,12 @@ and unembed_tactic_nbe_1 :
         FStar_Pervasives_Native.Some
           (fun x  ->
              let x_tm = FStar_TypeChecker_NBETerm.embed ea x  in
-             let app1 =
+             let app =
                let uu____1248 =
                  let uu____1249 = FStar_TypeChecker_NBETerm.as_arg x_tm  in
                  [uu____1249]  in
                FStar_TypeChecker_NBE.iapp f uu____1248  in
-             unembed_tactic_nbe_0 er app1)
+             unembed_tactic_nbe_0 er app)
 
 and unembed_tactic_nbe_0 :
   'Ab .
