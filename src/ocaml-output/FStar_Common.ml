@@ -102,3 +102,15 @@ let force_thunk : 'a . 'a thunk -> 'a =
     | FStar_Util.Inl f ->
         let a = f ()  in (FStar_ST.op_Colon_Equals t (FStar_Util.Inr a); a)
   
+let tabulate : 'a . Prims.int -> (Prims.int -> 'a) -> 'a Prims.list =
+  fun n1  ->
+    fun f  ->
+      let rec aux i =
+        if i < n1
+        then
+          let uu____683 = f i  in
+          let uu____684 = aux (i + (Prims.parse_int "1"))  in uu____683 ::
+            uu____684
+        else []  in
+      aux (Prims.parse_int "0")
+  
