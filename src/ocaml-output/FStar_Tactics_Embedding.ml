@@ -325,20 +325,20 @@ let e_result_nbe :
       | FStar_Tactics_Result.Failed (msg,ps) ->
           let uu____842 =
             let uu____849 =
-              let uu____854 =
-                FStar_TypeChecker_NBETerm.embed e_proofstate_nbe ps  in
-              FStar_TypeChecker_NBETerm.as_arg uu____854  in
+              let uu____854 = FStar_TypeChecker_NBETerm.type_of ea  in
+              FStar_TypeChecker_NBETerm.as_iarg uu____854  in
             let uu____855 =
               let uu____862 =
                 let uu____867 =
-                  FStar_TypeChecker_NBETerm.embed
-                    FStar_TypeChecker_NBETerm.e_string msg
-                   in
+                  FStar_TypeChecker_NBETerm.embed e_proofstate_nbe ps  in
                 FStar_TypeChecker_NBETerm.as_arg uu____867  in
               let uu____868 =
                 let uu____875 =
-                  let uu____880 = FStar_TypeChecker_NBETerm.type_of ea  in
-                  FStar_TypeChecker_NBETerm.as_iarg uu____880  in
+                  let uu____880 =
+                    FStar_TypeChecker_NBETerm.embed
+                      FStar_TypeChecker_NBETerm.e_string msg
+                     in
+                  FStar_TypeChecker_NBETerm.as_arg uu____880  in
                 [uu____875]  in
               uu____862 :: uu____868  in
             uu____849 :: uu____855  in
@@ -347,17 +347,17 @@ let e_result_nbe :
       | FStar_Tactics_Result.Success (a,ps) ->
           let uu____899 =
             let uu____906 =
-              let uu____911 =
-                FStar_TypeChecker_NBETerm.embed e_proofstate_nbe ps  in
-              FStar_TypeChecker_NBETerm.as_arg uu____911  in
+              let uu____911 = FStar_TypeChecker_NBETerm.type_of ea  in
+              FStar_TypeChecker_NBETerm.as_iarg uu____911  in
             let uu____912 =
               let uu____919 =
                 let uu____924 = FStar_TypeChecker_NBETerm.embed ea a  in
                 FStar_TypeChecker_NBETerm.as_arg uu____924  in
               let uu____925 =
                 let uu____932 =
-                  let uu____937 = FStar_TypeChecker_NBETerm.type_of ea  in
-                  FStar_TypeChecker_NBETerm.as_iarg uu____937  in
+                  let uu____937 =
+                    FStar_TypeChecker_NBETerm.embed e_proofstate_nbe ps  in
+                  FStar_TypeChecker_NBETerm.as_arg uu____937  in
                 [uu____932]  in
               uu____919 :: uu____925  in
             uu____906 :: uu____912  in
