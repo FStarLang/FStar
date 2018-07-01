@@ -55,7 +55,7 @@ let rec drop (p: 'a -> bool) (l: list<'a>): list<'a> =
   | [] -> []
   | x::xs -> if p x then x::xs else drop p xs
 
-let fmap_opt (f : 'a -> 'b) (x : option<'a>) : option<'b> = 
+let fmap_opt (f : 'a -> 'b) (x : option<'a>) : option<'b> =
   BU.bind_opt x (fun x -> Some (f x))
 
 // NBE debuging
@@ -213,7 +213,7 @@ let translate_univ (bs:list<t>) (u:universe) : universe =
       match u with
       | U_bvar i ->
         if i < List.length bs
-        then 
+        then
           let u' = List.nth bs i in //it has to be a Univ term at position i
           (un_univ u')
         else failwith "Universe index out of bounds"
@@ -233,14 +233,6 @@ let find_let (lbs : list<letbinding>) (fvar : fv) =
                      if fv_eq name fvar
                      then Some lb
                      else None)
-
-(* Was List.init, but F* doesn't have this in ulib *)
-let tabulate (n:int) (f : int -> 'a) : list<'a> =
-  let rec aux i =
-    if i < n
-    then f i :: aux (i + 1)
-    else []
-  in aux 0
 
 (* uncurried application *)
 let rec iapp (f:t) (args:args) : t =
@@ -282,19 +274,19 @@ let rec iapp (f:t) (args:args) : t =
     let no_args = List.length args in
     let no_acc = List.length acc in
     let full_args = acc @ args in (* Not in reverse order *)
-    
-    if test_args full_args arity then (* compute *) 
-      begin 
-        if List.length full_args > arity then 
+
+    if test_args full_args arity then (* compute *)
+      begin
+        if List.length full_args > arity then
           let (rargs, res) = List.splitAt arity full_args in
-          let t = iapp (tr_lb (make_rec_env tr_lb lbs bs) lb) rargs in 
+          let t = iapp (tr_lb (make_rec_env tr_lb lbs bs) lb) rargs in
           iapp t res
-        else 
+        else
           iapp (tr_lb (make_rec_env tr_lb lbs bs) lb) full_args
       end
     else (* cannot reduce -- accumulate args *)
       Rec (lb, lbs, bs, full_args, arity, tr_lb)
-    
+
   | Quote _
   | Lazy _ | Constant _ | Univ _ | Type_t _ | Unknown | Refinement _ | Arrow _ ->
     failwith ("NBE ill-typed application: " ^ t_to_string f)
@@ -314,13 +306,13 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
        | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
          let arity = prim_step.arity + prim_step.univ_arity in
          debug (fun () -> BU.print1 "Found a primop %s\n" (P.fv_to_string fvar));
-         Lam ((fun args -> let args' = (List.map NBETerm.as_arg args) in 
-              match prim_step.interpretation_nbe args' with 
+         Lam ((fun args -> let args' = (List.map NBETerm.as_arg args) in
+              match prim_step.interpretation_nbe args' with
               | Some x -> debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
                          x
-              | None -> debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar)); 
+              | None -> debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
                        iapp (mkFV fvar [] []) args'),
-              (let f (_:int) _ : t * S.aqual = (Constant Unit, None) in tabulate arity f),
+              (let f (_:int) _ : t * S.aqual = (Constant Unit, None) in FStar.Common.tabulate arity f),
               arity)
 
        | Some _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
@@ -338,7 +330,7 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
            if is_rec then
              mkRec cfg lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty
                                since they are already present in the global environment *)
-           else 
+           else
              begin
                debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
                debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
@@ -368,7 +360,7 @@ and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   // rather than top-level pure computation
 
 
-and mkRec' callback (b:letbinding) (bs:list<letbinding>) (env:list<t>) = 
+and mkRec' callback (b:letbinding) (bs:list<letbinding>) (env:list<t>) =
   let ar = count_abstractions b.lbdef in
   Rec(b, bs, env, [], ar, callback)
 
@@ -429,15 +421,15 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_type u ->
       Type_t (translate_univ bs u)
 
-    | Tm_arrow (xs, c) -> 
+    | Tm_arrow (xs, c) ->
       Arrow ((fun ys -> translate_comp cfg (List.rev_append ys bs) c),
-              List.fold_right (fun x formals -> 
+              List.fold_right (fun x formals ->
                                    let next_formal prefix_of_xs_rev = (* will only be fully applied during readback *)
                                      translate cfg (List.append prefix_of_xs_rev bs) (fst x).sort,
                                      snd x
                                    in
                                    next_formal :: formals) xs [])
-             
+
     | Tm_refine (bv, tm) ->
       Refinement ((fun (y:t) -> translate cfg (y::bs) tm), (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?
 
@@ -452,7 +444,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_abs (xs, body, _) ->
       Lam ((fun ys -> translate cfg (List.rev_append ys bs) body),
-           List.fold_right (fun x formals -> 
+           List.fold_right (fun x formals ->
                              let next_formal prefix_of_xs_rev =
                                  translate cfg (List.append prefix_of_xs_rev bs) (fst x).sort,
                                  snd x
@@ -588,20 +580,20 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_lazy li ->
       Lazy li
 
-and translate_comp cfg bs (c:S.comp) : comp = 
-  match c.n with 
-  | S.Total  (typ, u) -> Tot (translate cfg bs typ, fmap_opt (translate_univ bs) u)   
+and translate_comp cfg bs (c:S.comp) : comp =
+  match c.n with
+  | S.Total  (typ, u) -> Tot (translate cfg bs typ, fmap_opt (translate_univ bs) u)
   | S.GTotal (typ, u) -> GTot (translate cfg bs typ, fmap_opt (translate_univ bs) u)
   | S.Comp   ctyp      -> Comp (translate_comp_typ cfg bs ctyp)
-  
-and readback_comp cfg (c: comp) : S.comp = 
-  let c' = 
-    match c with 
+
+and readback_comp cfg (c: comp) : S.comp =
+  let c' =
+    match c with
     | Tot  (typ, u) -> S.Total (readback cfg typ, u)
     | GTot (typ, u) -> S.GTotal (readback cfg typ, u)
     | Comp ctyp     -> S.Comp (readback_comp_typ cfg ctyp)
    in S.mk c' None Range.dummyRange
- 
+
 and translate_comp_typ cfg bs (c:S.comp_typ) : comp_typ =
   let { S.comp_univs  = comp_univs
       ; S.effect_name = effect_name
@@ -768,10 +760,10 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
                              let (xt, q) = tf accus_rev in
                              let x = S.new_bv None (readback cfg xt) in
                              ((x, q) :: args_rev,
-                             (mkAccuVar x) :: accus_rev)) 
+                             (mkAccuVar x) :: accus_rev))
                          ([], [])
-                         targs in 
-               
+                         targs in
+
       let cmp = readback_comp cfg (f (List.rev accus_rev)) in
       U.arrow (List.rev args_rev) cmp
 
@@ -843,10 +835,10 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       let head =
        (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
         match lb.lbname with
-        | BU.Inl bv -> S.mk (Tm_let((true, lbs), S.bv_to_name bv)) None Range.dummyRange 
+        | BU.Inl bv -> S.mk (Tm_let((true, lbs), S.bv_to_name bv)) None Range.dummyRange
         | BU.Inr fv -> S.mk (Tm_fvar fv) None Range.dummyRange
       in
-           
+
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
       (match args with
           | [] -> head
@@ -875,7 +867,7 @@ let step_as_normalizer_step = function
   | Reify -> Env.Reify
 
 let normalize psteps (steps:list<Env.step>)
-                (env : Env.env) (e:term) : term =  
+                (env : Env.env) (e:term) : term =
   let cfg = Cfg.config' psteps steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in

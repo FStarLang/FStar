@@ -962,7 +962,7 @@ let let_rec_arity (lb:letbinding) : int * option<(list<bool>)> =
     n_univs + List.length bs,
     U.map_opt dopt (fun d ->
        let d_bvs = FStar.Syntax.Free.names d in
-       List.replicate n_univs false
+       Common.tabulate n_univs (fun _ -> false)
        @ (bs |> List.map (fun (x, _) -> U.set_mem x d_bvs)))
 
 
