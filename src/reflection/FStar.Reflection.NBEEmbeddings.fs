@@ -45,9 +45,6 @@ let mk_lazy obj ty kind =
     }
     in Lazy li
 
-let mk_emb em un typ =
-    { em = em ; un = un ; typ = typ }
-
 let e_bv =
     let embed_bv (bv:bv) : t =
         mk_lazy bv fstar_refl_bv Lazy_bv

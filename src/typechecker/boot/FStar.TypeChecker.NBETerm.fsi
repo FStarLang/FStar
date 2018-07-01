@@ -107,6 +107,8 @@ type embedding<'a> = {
   typ : t;
 }
 
+val mk_emb : ('a -> t) -> (t -> option<'a>) -> t -> embedding<'a>
+
 val embed : embedding<'a> -> 'a -> t
 val unembed : embedding<'a> -> t -> option<'a> 
 val type_of : embedding<'a> -> t
