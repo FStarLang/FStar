@@ -322,6 +322,13 @@ let mk nm arity nunivs interp nbe_interp =
 let native_tactics = list_all ()
 let native_tactics_steps = List.map step_from_native_step native_tactics
 
+let rec drop n l =
+    if n = 0 then l
+    else
+        match l with
+        | [] -> failwith "drop: impossible"
+        | _::xs -> drop (n-1) xs
+
 (* These functions are suboptimal, since they need to take embeddings for both
  * the interpreter AND the NBE evaluator. Attempting to coallesce them
  * is not easy, since we have some parametric e_any embeddings of differing types
@@ -334,35 +341,35 @@ let mktac1 (nunivs:int) (name : string)
            (nf : 'na -> tac<'nr>) (nea : NBET.embedding<'na>) (ner : NBET.embedding<'nr>)
            : Cfg.primitive_step =
     mk name 2 nunivs (mk_tactic_interpretation_1     f  ea  er)
-                     (mk_tactic_nbe_interpretation_1 nf nea ner)
+                     (fun args -> mk_tactic_nbe_interpretation_1 nf nea ner (drop nunivs args))
 
 let mktac2 (nunivs:int) (name : string) 
            (f : 'a -> 'b -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (er : embedding<'r>)
            (nf : 'na -> 'nb -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (ner : NBET.embedding<'nr>)
            : Cfg.primitive_step =
     mk name 3 nunivs (mk_tactic_interpretation_2     f  ea  eb  er)
-                     (mk_tactic_nbe_interpretation_2 nf nea neb ner)
+                     (fun args -> mk_tactic_nbe_interpretation_2 nf nea neb ner (drop nunivs args))
 
 let mktac3 (nunivs:int) (name : string)
            (f : 'a -> 'b -> 'c -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (ec : embedding<'c>)  (er : embedding<'r>)
            (nf : 'na -> 'nb -> 'nc -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (nec : NBET.embedding<'nc>) (ner : NBET.embedding<'nr>)
            : Cfg.primitive_step =
     mk name 4 nunivs (mk_tactic_interpretation_3 f ea eb ec er)
-                     (mk_tactic_nbe_interpretation_3 nf nea neb nec ner)
+                     (fun args -> mk_tactic_nbe_interpretation_3 nf nea neb nec ner (drop nunivs args))
 
 let mktac4 (nunivs:int) (name : string)
            (f : 'a -> 'b -> 'c -> 'd -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (ec : embedding<'c>)  (ed : embedding<'d>)  (er : embedding<'r>)
            (nf : 'na -> 'nb -> 'nc -> 'nd -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (nec : NBET.embedding<'nc>) (ned : NBET.embedding<'nd>) (ner : NBET.embedding<'nr>)
            : Cfg.primitive_step =
     mk name 5 nunivs (mk_tactic_interpretation_4 f ea eb ec ed er)
-                     (mk_tactic_nbe_interpretation_4 nf nea neb nec ned ner)
+                     (fun args -> mk_tactic_nbe_interpretation_4 nf nea neb nec ned ner (drop nunivs args))
 
 let mktac5 (nunivs:int) (name : string)
            (f : 'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (ec : embedding<'c>)  (ed : embedding<'d>)  (ee : embedding<'e>)  (er : embedding<'r>)
            (nf : 'na -> 'nb -> 'nc -> 'nd -> 'ne -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (nec : NBET.embedding<'nc>) (ned : NBET.embedding<'nd>) (nee : NBET.embedding<'ne>) (ner : NBET.embedding<'nr>)
            : Cfg.primitive_step =
     mk name 6 nunivs (mk_tactic_interpretation_5 f ea eb ec ed ee er)
-                     (mk_tactic_nbe_interpretation_5 nf nea neb nec ned nee ner)
+                     (fun args -> mk_tactic_nbe_interpretation_5 nf nea neb nec ned nee ner (drop nunivs args))
 
 (* Total interpretations *)
 
@@ -417,7 +424,7 @@ let mktot1 (nunivs:int) (name : string)
            (ner : NBETerm.embedding<'nr>)
            : Cfg.primitive_step =
     mkt name 1 nunivs (mk_total_interpretation_1     f  ea  er)
-                      (mk_total_nbe_interpretation_1 nf nea ner)
+                      (fun args -> mk_total_nbe_interpretation_1 nf nea ner (drop nunivs args))
 
 let mktot2 (nunivs:int) (name : string)
            (f : 'a -> 'b -> 'r)
@@ -428,4 +435,4 @@ let mktot2 (nunivs:int) (name : string)
            (ner : NBETerm.embedding<'nr>) 
            : Cfg.primitive_step =
     mkt name 2 nunivs (mk_total_interpretation_2     f  ea  eb  er)
-                      (mk_total_nbe_interpretation_2 nf nea neb ner)
+                      (fun args -> mk_total_nbe_interpretation_2 nf nea neb ner (drop nunivs args))
