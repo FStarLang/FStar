@@ -36,6 +36,14 @@ open FStar.Dyn
 (* ------------------------------------- EMBEDDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
 
+(* PLEASE NOTE: Construct and FV accumulate their arguments BACKWARDS. That is,
+ * the expression (f 1 2) is stored as FV (f, [], [Constant (Int 2); Constant (Int 1)].
+ * So be careful when calling mkFV/mkConstruct and matching on them. *)
+
+(* On that note, we use this (inefficient, FIXME) hack in this module *)
+let mkFV fv us ts = mkFV fv (List.rev us) (List.rev ts)
+let mkConstruct fv us ts = mkConstruct fv (List.rev us) (List.rev ts)
+
 let mk_lazy obj ty kind =
     let li = {
           blob = FStar.Dyn.mkdyn obj
@@ -227,7 +235,7 @@ let rec e_pattern' () =
             BU.bind_opt (unembed e_const c) (fun c ->
             Some <| Pat_Constant c)
 
-        | Construct (fv, [], [(f, _); (ps, _)])when S.fv_eq_lid fv ref_Pat_Cons.lid ->
+        | Construct (fv, [], [(ps, _); (f, _)])when S.fv_eq_lid fv ref_Pat_Cons.lid ->
             BU.bind_opt (unembed e_fv f) (fun f ->
             BU.bind_opt (unembed (e_list (e_pattern' ())) ps) (fun ps ->
             Some <| Pat_Cons (f, ps)))
@@ -240,7 +248,7 @@ let rec e_pattern' () =
             BU.bind_opt (unembed e_bv bv) (fun bv ->
             Some <| Pat_Wild bv)
 
-        | Construct (fv, [], [(bv, _); (t, _)]) when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
+        | Construct (fv, [], [(t, _); (bv, _)]) when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
             BU.bind_opt (unembed e_bv bv) (fun bv ->
             BU.bind_opt (unembed e_term t) (fun t ->
             Some <| Pat_Dot_Term (bv, t)))
@@ -339,17 +347,17 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed e_fv f) (fun f ->
             Some <| Tv_FVar f)
 
-        | Construct (fv, _, [(l, _); (r, _)]) when S.fv_eq_lid fv ref_Tv_App.lid ->
+        | Construct (fv, _, [(r, _); (l, _)]) when S.fv_eq_lid fv ref_Tv_App.lid ->
             BU.bind_opt (unembed e_term l) (fun l ->
             BU.bind_opt (unembed e_argv r) (fun r ->
             Some <| Tv_App (l, r)))
 
-        | Construct (fv, _, [(b, _); (t, _)]) when S.fv_eq_lid fv ref_Tv_Abs.lid ->
+        | Construct (fv, _, [(t, _); (b, _)]) when S.fv_eq_lid fv ref_Tv_Abs.lid ->
             BU.bind_opt (unembed e_binder b) (fun b ->
             BU.bind_opt (unembed e_term t) (fun t ->
             Some <| Tv_Abs (b, t)))
 
-        | Construct (fv, _, [(b, _); (t, _)]) when S.fv_eq_lid fv ref_Tv_Arrow.lid ->
+        | Construct (fv, _, [(t, _); (b, _)]) when S.fv_eq_lid fv ref_Tv_Arrow.lid ->
             BU.bind_opt (unembed e_binder b) (fun b ->
             BU.bind_opt (unembed e_comp t) (fun c ->
             Some <| Tv_Arrow (b, c)))
@@ -358,7 +366,7 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed e_unit u) (fun u ->
             Some <| Tv_Type u)
 
-        | Construct (fv, _, [(b, _); (t, _)]) when S.fv_eq_lid fv ref_Tv_Refine.lid ->
+        | Construct (fv, _, [(t, _); (b, _)]) when S.fv_eq_lid fv ref_Tv_Refine.lid ->
             BU.bind_opt (unembed e_bv b) (fun b ->
             BU.bind_opt (unembed e_term t) (fun t ->
             Some <| Tv_Refine (b, t)))
@@ -367,30 +375,30 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed e_const c) (fun c ->
             Some <| Tv_Const c)
 
-        | Construct (fv, _, [(u, _); (l, _)]) when S.fv_eq_lid fv ref_Tv_Uvar.lid ->
+        | Construct (fv, _, [(l, _); (u, _)]) when S.fv_eq_lid fv ref_Tv_Uvar.lid ->
             BU.bind_opt (unembed e_int u) (fun u ->
             let ctx_u_s : ctx_uvar_and_subst = unlazy_as_t Lazy_uvar l in
             Some <| Tv_Uvar (u, ctx_u_s))
 
-        | Construct (fv, _, [(r, _); (b, _); (t1, _); (t2, _)]) when S.fv_eq_lid fv ref_Tv_Let.lid ->
+        | Construct (fv, _, [(t2, _); (t1, _); (b, _); (r, _)]) when S.fv_eq_lid fv ref_Tv_Let.lid ->
             BU.bind_opt (unembed e_bool r) (fun r ->
             BU.bind_opt (unembed e_bv b) (fun b ->
             BU.bind_opt (unembed e_term t1) (fun t1 ->
             BU.bind_opt (unembed e_term t2) (fun t2 ->
             Some <| Tv_Let (r, b, t1, t2)))))
 
-        | Construct (fv, _, [(t, _); (brs, _)]) when S.fv_eq_lid fv ref_Tv_Match.lid ->
+        | Construct (fv, _, [(brs, _); (t, _)]) when S.fv_eq_lid fv ref_Tv_Match.lid ->
             BU.bind_opt (unembed e_term t) (fun t ->
             BU.bind_opt (unembed (e_list e_branch) brs) (fun brs ->
             Some <| Tv_Match (t, brs)))
 
-        | Construct (fv, _, [(e, _); (t, _); (tacopt, _)]) when S.fv_eq_lid fv ref_Tv_AscT.lid ->
+        | Construct (fv, _, [(tacopt, _); (t, _); (e, _)]) when S.fv_eq_lid fv ref_Tv_AscT.lid ->
             BU.bind_opt (unembed e_term e) (fun e ->
             BU.bind_opt (unembed e_term t) (fun t ->
             BU.bind_opt (unembed (e_option e_term) tacopt) (fun tacopt ->
             Some <| Tv_AscribedT (e, t, tacopt))))
 
-        | Construct (fv, _, [(e, _); (c, _); (tacopt, _)]) when S.fv_eq_lid fv ref_Tv_AscC.lid ->
+        | Construct (fv, _, [(tacopt, _); (c, _); (e, _)]) when S.fv_eq_lid fv ref_Tv_AscC.lid ->
             BU.bind_opt (unembed e_term e) (fun e ->
             BU.bind_opt (unembed e_comp c) (fun c ->
             BU.bind_opt (unembed (e_option e_term) tacopt) (fun tacopt ->
@@ -416,7 +424,7 @@ let e_bv_view =
     in
     let unembed_bv_view (t : t) : option<bv_view> =
         match t with
-        | Construct (fv, _, [(nm, _); (idx, _); (s, _)]) when S.fv_eq_lid fv ref_Mk_bv.lid ->
+        | Construct (fv, _, [(s, _); (idx, _); (nm, _)]) when S.fv_eq_lid fv ref_Mk_bv.lid ->
             BU.bind_opt (unembed e_string nm) (fun nm ->
             BU.bind_opt (unembed e_int idx) (fun idx ->
             BU.bind_opt (unembed e_term s) (fun s ->
@@ -444,12 +452,12 @@ let e_comp_view =
     in
     let unembed_comp_view (t : t) : option<comp_view> =
         match t with
-        | Construct (fv, _, [(t, _); (md, _)]) when S.fv_eq_lid fv ref_C_Total.lid ->
+        | Construct (fv, _, [(md, _); (t, _)]) when S.fv_eq_lid fv ref_C_Total.lid ->
             BU.bind_opt (unembed e_term t) (fun t ->
             BU.bind_opt (unembed (e_option e_term) md) (fun md ->
             Some <| C_Total (t, md)))
 
-        | Construct (fv, _, [(pre, _); (post, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
+        | Construct (fv, _, [(post, _); (pre, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed e_term pre) (fun pre ->
             BU.bind_opt (unembed e_term post) (fun post ->
             Some <| C_Lemma (pre, post)))
@@ -551,7 +559,7 @@ let e_sigelt_view =
     in
     let unembed_sigelt_view (t:t) : option<sigelt_view> =
         match t with
-        | Construct (fv, _, [(nm, _); (us, _); (bs, _); (t, _); (dcs, _)]) when S.fv_eq_lid fv ref_Sg_Inductive.lid ->
+        | Construct (fv, _, [(dcs, _); (t, _); (bs, _); (us, _); (nm, _)]) when S.fv_eq_lid fv ref_Sg_Inductive.lid ->
             BU.bind_opt (unembed e_string_list nm) (fun nm ->
             BU.bind_opt (unembed e_univ_names us) (fun us ->
             BU.bind_opt (unembed e_binders bs) (fun bs ->
@@ -559,7 +567,7 @@ let e_sigelt_view =
             BU.bind_opt (unembed (e_list e_string_list) dcs) (fun dcs ->
             Some <| Sg_Inductive (nm, us, bs, t, dcs))))))
 
-        | Construct (fv, _, [(r, _); (fvar, _); (univs, _); (ty, _); (t, _)]) when S.fv_eq_lid fv ref_Sg_Let.lid ->
+        | Construct (fv, _, [(t, _); (ty, _); (univs, _); (fvar, _); (r, _)]) when S.fv_eq_lid fv ref_Sg_Let.lid ->
             BU.bind_opt (unembed e_bool r) (fun r ->
             BU.bind_opt (unembed e_fv fvar) (fun fvar ->
             BU.bind_opt (unembed e_univ_names univs) (fun univs ->
@@ -592,7 +600,7 @@ let e_exp =
             BU.bind_opt (unembed e_int i) (fun i ->
             Some <| Data.Var i)
 
-        | Construct (fv, _, [(e1, _); (e2, _)]) when S.fv_eq_lid fv ref_E_Mult.lid ->
+        | Construct (fv, _, [(e2, _); (e1, _)]) when S.fv_eq_lid fv ref_E_Mult.lid ->
             BU.bind_opt (unembed_exp e1) (fun e1 ->
             BU.bind_opt (unembed_exp e2) (fun e2 ->
             Some <| Data.Mult (e1, e2)))
