@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "ea4f1902ef7a64a0d6d9e1e512f90397"
+      "f11534aa38abcaa5603ab1ec27664167"
     ],
     [
       "LowStar.Ex3.repr",
@@ -44,7 +44,7 @@
         "typing_LowStar.Ex3.__proj__Mkt_struct__item__first"
       ],
       0,
-      "dea66a1d4b5c8124166e28f984d7cf78"
+      "93ba8ac740bd682b9ccfac00a52269cc"
     ],
     [
       "LowStar.Ex3.pop",
@@ -69,11 +69,11 @@
         "refinement_interpretation_LowStar.Ex3_Tm_refine_931e4239022cbf0b601e3460402e59c3",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
-        "typing_FStar.Seq.Base.createEmpty", "typing_FStar.Seq.Base.length",
+        "typing_FStar.Seq.Base.empty", "typing_FStar.Seq.Base.length",
         "typing_LowStar.Buffer.get"
       ],
       0,
-      "d87d887489702fd9c4fb65b17e449e5a"
+      "e5a7f03f0c5b723aee94d6b1bfcab127"
     ],
     [
       "LowStar.Ex3.ok",
@@ -82,7 +82,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "9d600ae863ac33f9a7192885940fe054"
+      "04ecbe5e5f6b20ba1a3196b6a44d3c46"
     ],
     [
       "LowStar.Ex3.repr",
@@ -118,7 +118,7 @@
         "typing_LowStar.Ex3.__proj__Mkt_struct__item__first"
       ],
       0,
-      "d6df9a0051a53bae04e77bbe94d3f484"
+      "9fb3d9533ac01a0f986119c1c6eb704b"
     ],
     [
       "LowStar.Ex3.pop",
@@ -143,11 +143,11 @@
         "refinement_interpretation_LowStar.Ex3_Tm_refine_931e4239022cbf0b601e3460402e59c3",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
-        "typing_FStar.Seq.Base.createEmpty", "typing_FStar.Seq.Base.length",
+        "typing_FStar.Seq.Base.empty", "typing_FStar.Seq.Base.length",
         "typing_LowStar.Buffer.get"
       ],
       0,
-      "af9f108b20fe56d4e32f69ceb60b4f8a"
+      "3ed8d2fffded6a419754b0573840af9a"
     ],
     [
       "LowStar.Ex3.malloc",
@@ -160,7 +160,7 @@
         "refinement_interpretation_LowStar.Ex3_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
       ],
       0,
-      "c2d96a77a0f00201fd5d7a43fbf682c7"
+      "99aeb317b61b807263a92b4d18a708f2"
     ]
   ]
 ]

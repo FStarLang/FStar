@@ -43,6 +43,7 @@ module Tc      = FStar.TypeChecker.Tc
 module TcTerm  = FStar.TypeChecker.TcTerm
 module BU      = FStar.Util
 module Dep     = FStar.Parser.Dep
+module NBE     = FStar.TypeChecker.NBE
 
 (* we write this version number to the cache files, and detect when loading the cache that the version number is same *)
 let cache_version_number = 4
@@ -92,6 +93,7 @@ let init_env deps : TcEnv.env =
         TcTerm.check_type_of_well_typed_term
         solver
         Const.prims_lid
+        NBE.normalize'
   in
   (* Set up some tactics callbacks *)
   let env = { env with synth_hook = FStar.Tactics.Interpreter.synthesize } in

@@ -185,6 +185,8 @@ type lift = {
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
+  | PushOptions of option<string>
+  | PopOptions
   | LightOff
 
 type decl' =

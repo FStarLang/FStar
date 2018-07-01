@@ -209,6 +209,8 @@ let modifies_free = MG.modifies_free #_ #cls
 
 let modifies_none_modifies = MG.modifies_none_modifies #_ #cls
 
+let modifies_upd = MG.modifies_upd #_ #cls
+
 let modifies_0_modifies h1 h2 =
   MG.modifies_none_intro #_ #cls h1 h2
     (fun r -> B.modifies_0_live_region h1 h2 r)

@@ -20,7 +20,7 @@
         "typing_FStar.Monotonic.HyperStack.is_eternal_region"
       ],
       0,
-      "419db42d5f3685374c3150faee0d0210"
+      "68ca49da3129c250576cda1b002611fd"
     ],
     [
       "EtM.AE.__proj__Key__item__km",
@@ -44,7 +44,7 @@
         "typing_FStar.Monotonic.HyperStack.is_eternal_region"
       ],
       0,
-      "b706028e3c2ed0239e9ee87e246dd51f"
+      "d406a0d0ccb4376ed3f3a4e6b0378747"
     ],
     [
       "EtM.AE.__proj__Key__item__log",
@@ -56,7 +56,7 @@
         "projection_inverse_EtM.AE.Key_region"
       ],
       0,
-      "61b296408f5cc3e3963eec7a42f64dab"
+      "8d745fc5894e6e647b35de3acb2d69df"
     ],
     [
       "EtM.AE.invariant",
@@ -76,7 +76,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "819f64240d0284bee2e46d3872741564"
+      "1f4401316144bff92f3c98fba0a9a59f"
     ],
     [
       "EtM.AE.genPost",
@@ -85,7 +85,7 @@
       1,
       [ "@query" ],
       0,
-      "02b5708ef786668ee8b3a9d029f0bb75"
+      "547e6465a565b1f66e3c94a6c8ee0ed0"
     ],
     [
       "EtM.AE.keygen",
@@ -219,7 +219,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "7cb823a1138aa2641ea6bd7d21428b7d"
+      "a5e1dca316b5b8019544c0debac1b2ff"
     ],
     [
       "EtM.AE.keygen",
@@ -244,6 +244,7 @@
         "equation_FStar.HyperStack.ST.is_eternal_region",
         "equation_FStar.HyperStack.ST.m_rref",
         "equation_FStar.HyperStack.ST.mref",
+        "equation_FStar.HyperStack.ST.ralloc_post",
         "equation_FStar.Monotonic.HyperHeap.disjoint",
         "equation_FStar.Monotonic.HyperHeap.hmap",
         "equation_FStar.Monotonic.HyperHeap.modifies_just",
@@ -295,10 +296,9 @@
         "lemma_FStar.Monotonic.HyperStack.lemma_mk_mem__projectors",
         "lemma_FStar.Set.lemma_equal_elim", "lemma_FStar.Set.mem_complement",
         "lemma_FStar.Set.mem_empty", "lemma_FStar.Set.mem_singleton",
-        "lemma_FStar.Set.mem_subset", "lemma_FStar.Set.mem_union",
-        "lemma_FStar.Set.subset_mem", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_GreaterThan",
+        "lemma_FStar.Set.mem_union", "lemma_FStar.Set.subset_mem",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Negation",
         "proj_equation_EtM.AE.Key_ke", "proj_equation_EtM.AE.Key_km",
         "proj_equation_EtM.AE.Key_log", "proj_equation_EtM.AE.Key_region",
@@ -339,13 +339,13 @@
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_FStar.Monotonic.HyperStack.is_stack_region",
         "typing_FStar.Monotonic.HyperStack.live_region",
-        "typing_FStar.Seq.Base.createEmpty", "typing_FStar.Seq.Base.seq",
+        "typing_FStar.Seq.Base.empty", "typing_FStar.Seq.Base.seq",
         "typing_FStar.Set.complement", "typing_FStar.Set.empty",
         "typing_FStar.Set.mem", "typing_FStar.Set.singleton",
         "typing_FStar.Set.union"
       ],
       0,
-      "8b56f5140f8ac5ab0370e7e7e3679fbb"
+      "ea4c6cf494bb7ac45edceb4e9d775aac"
     ],
     [
       "EtM.AE.encrypt",
@@ -464,7 +464,7 @@
         "typing_FStar.Set.singleton"
       ],
       0,
-      "ef7979323128c2e209f62fa29a61fdb8"
+      "965084e87c19e617c461575fe5cc0655"
     ],
     [
       "EtM.AE.decrypt",
@@ -486,7 +486,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "9cbe70f58a031f73a7526cb9e9666b1e"
+      "14f4b386eed658cf6e28e11fb8b6acfc"
     ],
     [
       "EtM.AE.decrypt",
@@ -607,7 +607,7 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "b932c1d1c1f96630abe430d8276637e8"
+      "2c3cdbd139001901c46dc958867fa4ee"
     ],
     [
       "EtM.AE.keygen",
@@ -616,7 +616,7 @@
       1,
       [ "@query" ],
       0,
-      "a5510fc9c7b8b63a8537e5e1fbb523e9"
+      "2c8c9f21f5dfd48563ace70c20f395e0"
     ],
     [
       "EtM.AE.decrypt",
@@ -638,7 +638,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "c5bc6cb47214b1906bf0a39b346f3f02"
+      "7ccb035492da59c4acf0c0c9d3feabcb"
     ]
   ]
 ]

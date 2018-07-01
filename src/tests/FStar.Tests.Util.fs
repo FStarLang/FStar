@@ -56,7 +56,7 @@ let rec term_eq' t1 t2 =
       | Tm_name x, Tm_name y -> S.bv_eq x y
       | Tm_fvar f, Tm_fvar g -> S.fv_eq f g
       | Tm_uinst (t, _), Tm_uinst(s, _) -> term_eq' t s
-      | Tm_constant c1, Tm_constant c2 -> c1=c2
+      | Tm_constant c1, Tm_constant c2 -> FStar.Const.eq_const c1 c2
       | Tm_type u, Tm_type v -> u=v
       | Tm_abs(xs, t, _), Tm_abs(ys, u, _) when (List.length xs = List.length ys) -> binders_eq xs ys && term_eq' t u
       | Tm_abs(xs, t, _), Tm_abs(ys, u, _) ->

@@ -1,18 +1,18 @@
 [
-  "^û√•1•£ê\u000fa9&∞\u0016àä",
+  "ÊâËr\u0019˙ëEÖÆçÊ?}pæ",
   [
     [
-      "Typeclasses.__proj__Mkdec__item__eq_ok",
+      "Typeclasses.__proj__Mkdeq__item__eq_ok",
       1,
       2,
       1,
       [
-        "@query", "proj_equation_Typeclasses.Mkdec_eq",
-        "projection_inverse_Typeclasses.Mkdec_eq",
-        "token_correspondence_Typeclasses.__proj__Mkdec__item__eq"
+        "@query", "proj_equation_Typeclasses.Mkdeq_eq",
+        "projection_inverse_Typeclasses.Mkdeq_eq",
+        "token_correspondence_Typeclasses.__proj__Mkdeq__item__eq"
       ],
       0,
-      "330ea456e44075d8d02c4ef258a131c2"
+      "db2590804f21ea5e67e11336bfe1bb5a"
     ],
     [
       "Typeclasses.eq_instance_of_eqtype",
@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "ed4c25e5c2693368b116c559b62e7add"
+      "e0c2f8c17771bcec2d5d958261146aac"
     ],
     [
       "Typeclasses.eq_int",
@@ -30,7 +30,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5c5a94472c257187fff8a7a9826794ca"
+      "bf295e863e74f8d896f6b83feadf24a2"
     ],
     [
       "Typeclasses.eq_bool",
@@ -39,17 +39,18 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "3045721a375cf385e5af6954ce6ce558"
+      "a4c46009d7085eb97ff6c4e3265fa916"
     ],
     [
-      "Typeclasses.eq_list",
+      "Typeclasses.eqList",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Typeclasses_interpretation_Tm_arrow_02a32f8dc02b3b383e593d80e04e85eb",
-        "Typeclasses_interpretation_Tm_arrow_bf3d0fa9fd3557dc4d8ee0b39d535b09",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_b0895b17d395db52ed5af57a308dc5ff_2",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Typeclasses.eq", "fuel_guarded_inversion_Prims.list",
         "fuel_guarded_inversion_Typeclasses.deq",
@@ -60,16 +61,32 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Typeclasses_Tm_refine_33b332edb7a86c0071d801ba115f8c0f",
-        "refinement_interpretation_Typeclasses_Tm_refine_f69da921f37c4c63d8386018a796510b",
+        "refinement_interpretation_Typeclasses_Tm_refine_3441efe8af242772ae4e234d82fb1eff",
         "subterm_ordering_Prims.Cons",
-        "token_correspondence_Typeclasses.__proj__Mkdec__item__eq",
-        "token_correspondence_Typeclasses.eq"
+        "token_correspondence_Typeclasses.__proj__Mkdeq__item__eq",
+        "token_correspondence_Typeclasses.eq", "typing_Typeclasses.eqList"
       ],
       0,
-      "015043c087b064df4a945c9d5acd0d28"
+      "2c16b456a5feac3ae24f6e937652e338"
     ],
     [
-      "Typeclasses.uu___67",
+      "Typeclasses.eq_list",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Typeclasses.eqList.fuel_instrumented",
+        "@fuel_irrelevance_Typeclasses.eqList.fuel_instrumented", "@query",
+        "fuel_guarded_inversion_Typeclasses.deq",
+        "refinement_interpretation_Typeclasses_Tm_refine_33b332edb7a86c0071d801ba115f8c0f",
+        "typing_Typeclasses.eqList"
+      ],
+      0,
+      "0cc46821a5e51298c8392efd964f5504"
+    ],
+    [
+      "Typeclasses.uu___73",
       1,
       2,
       1,
@@ -78,16 +95,16 @@
         "equation_Typeclasses.eq_instance_of_eqtype",
         "equation_Typeclasses.eq_int",
         "interpretation_Typeclasses_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
-        "primitive_Prims.op_Equality", "proj_equation_Typeclasses.Mkdec_eq",
+        "primitive_Prims.op_Equality", "proj_equation_Typeclasses.Mkdeq_eq",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Typeclasses.Mkdec_eq",
+        "projection_inverse_Typeclasses.Mkdeq_eq",
         "token_correspondence_Typeclasses.eq"
       ],
       0,
-      "1336e66cc9f87cf634601309b32e7abc"
+      "4e1dbe4d76473384d95770d088a440a5"
     ],
     [
-      "Typeclasses.uu___68",
+      "Typeclasses.uu___74",
       1,
       2,
       1,
@@ -96,17 +113,17 @@
         "equation_Typeclasses.eq_instance_of_eqtype",
         "equation_Typeclasses.eq_int",
         "interpretation_Typeclasses_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
-        "primitive_Prims.op_Equality", "proj_equation_Typeclasses.Mkdec_eq",
+        "primitive_Prims.op_Equality", "proj_equation_Typeclasses.Mkdeq_eq",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Typeclasses.Mkdec_eq",
+        "projection_inverse_Typeclasses.Mkdeq_eq",
         "token_correspondence_Typeclasses.eq"
       ],
       0,
-      "efce88c2825d8422f46f0fe9d319cb84"
+      "eba7c9f161a541f1f5381b64eb706ba5"
     ],
     [
-      "Typeclasses.uu___69",
+      "Typeclasses.uu___75",
       1,
       2,
       1,
@@ -114,16 +131,16 @@
         "@query", "equation_Typeclasses.eq", "equation_Typeclasses.eq_bool",
         "equation_Typeclasses.eq_instance_of_eqtype",
         "interpretation_Typeclasses_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
-        "primitive_Prims.op_Equality", "proj_equation_Typeclasses.Mkdec_eq",
+        "primitive_Prims.op_Equality", "proj_equation_Typeclasses.Mkdeq_eq",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Typeclasses.Mkdec_eq",
+        "projection_inverse_Typeclasses.Mkdeq_eq",
         "token_correspondence_Typeclasses.eq"
       ],
       0,
-      "69aff5b6a4a365b58220548848546130"
+      "fcf135550c1338f7f62519ec9621f9e8"
     ],
     [
-      "Typeclasses.uu___70",
+      "Typeclasses.uu___76",
       1,
       2,
       1,
@@ -131,74 +148,104 @@
         "@query", "equation_Typeclasses.eq", "equation_Typeclasses.eq_bool",
         "equation_Typeclasses.eq_instance_of_eqtype",
         "interpretation_Typeclasses_Tm_abs_a8e9a1bfa06cad34ed58efcac3205432",
-        "primitive_Prims.op_Equality", "proj_equation_Typeclasses.Mkdec_eq",
+        "primitive_Prims.op_Equality", "proj_equation_Typeclasses.Mkdeq_eq",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Typeclasses.Mkdec_eq",
+        "projection_inverse_Typeclasses.Mkdeq_eq",
         "token_correspondence_Typeclasses.eq"
       ],
       0,
-      "98d0ed5103d6e6707bcd5a643e1cd52b"
+      "aa9c1e4700ac0870c1ac8df8ec115631"
     ],
     [
-      "Typeclasses.uu___71",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1f32f0dd5050ca0a05cc9e476b240d4e"
-    ],
-    [
-      "Typeclasses.uu___72",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c44f922316d1a90ad43d2b8267df659b"
-    ],
-    [
-      "Typeclasses.__proj__Mkadd__item__zero_l",
+      "Typeclasses.uu___77",
       1,
       2,
       1,
       [
-        "@query", "proj_equation_Typeclasses.Mkadd_plus",
-        "proj_equation_Typeclasses.Mkadd_zero",
-        "projection_inverse_Typeclasses.Mkadd_plus",
-        "projection_inverse_Typeclasses.Mkadd_zero",
-        "token_correspondence_Typeclasses.__proj__Mkadd__item__plus"
+        "@MaxIFuel_assumption", "@query",
+        "Typeclasses_interpretation_Tm_arrow_8764acc43edd8eb2df329a90a3c0057a",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "equation_Typeclasses.eq",
+        "equation_Typeclasses.eq_int", "equation_Typeclasses.eq_list",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Typeclasses.eqList",
+        "function_token_typing_Typeclasses.eq_int", "int_typing",
+        "proj_equation_Typeclasses.Mkdeq_eq",
+        "projection_inverse_Typeclasses.Mkdeq_eq",
+        "refinement_interpretation_Typeclasses_Tm_refine_33b332edb7a86c0071d801ba115f8c0f",
+        "token_correspondence_Typeclasses.eq",
+        "token_correspondence_Typeclasses.eqList"
       ],
       0,
-      "f2531d015410c12aaacdc58ce6995ecf"
+      "8ed41c2e3df026c67a66453dfad8418c"
     ],
     [
-      "Typeclasses.__proj__Mkadd__item__zero_r",
+      "Typeclasses.uu___78",
       1,
       2,
       1,
       [
-        "@query", "proj_equation_Typeclasses.Mkadd_plus",
-        "proj_equation_Typeclasses.Mkadd_zero",
-        "projection_inverse_Typeclasses.Mkadd_plus",
-        "projection_inverse_Typeclasses.Mkadd_zero",
-        "token_correspondence_Typeclasses.__proj__Mkadd__item__plus"
+        "@MaxIFuel_assumption", "@query",
+        "Typeclasses_interpretation_Tm_arrow_8764acc43edd8eb2df329a90a3c0057a",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "equation_Typeclasses.eq",
+        "equation_Typeclasses.eq_int", "equation_Typeclasses.eq_list",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Typeclasses.eqList",
+        "function_token_typing_Typeclasses.eq_int", "int_typing",
+        "proj_equation_Typeclasses.Mkdeq_eq",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Typeclasses.Mkdeq_eq",
+        "refinement_interpretation_Typeclasses_Tm_refine_33b332edb7a86c0071d801ba115f8c0f",
+        "token_correspondence_Typeclasses.eq",
+        "token_correspondence_Typeclasses.eqList"
       ],
       0,
-      "c00016bfefabf638d070d98844e2eb42"
+      "0a45f15f3f7cc03de261430f2063d22b"
     ],
     [
-      "Typeclasses.__proj__Mkadd__item__plus_assoc",
+      "Typeclasses.__proj__Mkadditive__item__zero_l",
       1,
       2,
       1,
       [
-        "@query", "proj_equation_Typeclasses.Mkadd_plus",
-        "projection_inverse_Typeclasses.Mkadd_plus",
-        "token_correspondence_Typeclasses.__proj__Mkadd__item__plus"
+        "@query", "proj_equation_Typeclasses.Mkadditive_plus",
+        "proj_equation_Typeclasses.Mkadditive_zero",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
+        "projection_inverse_Typeclasses.Mkadditive_zero",
+        "token_correspondence_Typeclasses.__proj__Mkadditive__item__plus"
       ],
       0,
-      "d42087392a276e77a54aa34dd5c68131"
+      "f0f1e998afce46f0904eea0295d48f76"
+    ],
+    [
+      "Typeclasses.__proj__Mkadditive__item__zero_r",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Typeclasses.Mkadditive_plus",
+        "proj_equation_Typeclasses.Mkadditive_zero",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
+        "projection_inverse_Typeclasses.Mkadditive_zero",
+        "token_correspondence_Typeclasses.__proj__Mkadditive__item__plus"
+      ],
+      0,
+      "4edf59f8b85efa3c42014d75972d43a8"
+    ],
+    [
+      "Typeclasses.__proj__Mkadditive__item__plus_assoc",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Typeclasses.Mkadditive_plus",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
+        "token_correspondence_Typeclasses.__proj__Mkadditive__item__plus"
+      ],
+      0,
+      "ed1b5ac057177ed1a1ebab46b1587051"
     ],
     [
       "Typeclasses.mkadd",
@@ -206,13 +253,13 @@
       2,
       1,
       [
-        "@query", "proj_equation_Typeclasses.Mkadd_plus",
-        "proj_equation_Typeclasses.Mkadd_zero",
-        "projection_inverse_Typeclasses.Mkadd_plus",
-        "projection_inverse_Typeclasses.Mkadd_zero"
+        "@query", "proj_equation_Typeclasses.Mkadditive_plus",
+        "proj_equation_Typeclasses.Mkadditive_zero",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
+        "projection_inverse_Typeclasses.Mkadditive_zero"
       ],
       0,
-      "d5400d28aea8326a04fdacc9a1e6e26d"
+      "01204fe9f54b9c0a99292534d7a187ac"
     ],
     [
       "Typeclasses.add_int",
@@ -224,7 +271,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "32a5ba7d8248b890faae5e3fadce9922"
+      "22e31d7350504f59c5eeb4936fd94442"
     ],
     [
       "Typeclasses.add_bool",
@@ -236,7 +283,7 @@
         "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "5d268e27d37132a0eadc95948bb38363"
+      "e62256fd8dad3e5ab35d45623e15aa3c"
     ],
     [
       "Typeclasses.add_list",
@@ -245,10 +292,10 @@
       1,
       [ "@query" ],
       0,
-      "4efdbac663f95133e6a2206353460958"
+      "e9187933f1c0dd9aa79ad5d25fe9f33a"
     ],
     [
-      "Typeclasses.uu___73",
+      "Typeclasses.uu___79",
       1,
       2,
       1,
@@ -256,17 +303,17 @@
         "@query", "assumption_Prims.HasEq_int",
         "equation_Typeclasses.add_int", "equation_Typeclasses.mkadd",
         "equation_Typeclasses.plus", "primitive_Prims.op_Addition",
-        "proj_equation_Typeclasses.Mkadd_plus",
+        "proj_equation_Typeclasses.Mkadditive_plus",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Typeclasses.Mkadd_plus",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_Typeclasses.plus"
       ],
       0,
-      "bb9510db4b2898f515bd401d80f1ec3a"
+      "3f2d256699de18e01606ce49d60c6b44"
     ],
     [
-      "Typeclasses.uu___74",
+      "Typeclasses.uu___80",
       1,
       2,
       1,
@@ -275,16 +322,16 @@
         "bool_inversion", "equation_Typeclasses.add_bool",
         "equation_Typeclasses.mkadd", "equation_Typeclasses.plus",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
-        "proj_equation_Typeclasses.Mkadd_plus",
-        "projection_inverse_Typeclasses.Mkadd_plus",
+        "proj_equation_Typeclasses.Mkadditive_plus",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
         "token_correspondence_Prims.op_BarBar",
         "token_correspondence_Typeclasses.plus"
       ],
       0,
-      "083e1423efad8622a56d53ac8aad5583"
+      "31a66e6ee4f7f6ada580f277bd3d9f44"
     ],
     [
-      "Typeclasses.uu___75",
+      "Typeclasses.uu___81",
       1,
       2,
       1,
@@ -293,17 +340,17 @@
         "equation_Typeclasses.add_bool", "equation_Typeclasses.mkadd",
         "equation_Typeclasses.plus", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality",
-        "proj_equation_Typeclasses.Mkadd_plus",
+        "proj_equation_Typeclasses.Mkadditive_plus",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Typeclasses.Mkadd_plus",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
         "token_correspondence_Prims.op_BarBar",
         "token_correspondence_Typeclasses.plus"
       ],
       0,
-      "6c7276e16e310154982bf81683a664cf"
+      "a8a03097686072dee3f963f4aa21ff06"
     ],
     [
-      "Typeclasses.uu___76",
+      "Typeclasses.uu___82",
       1,
       2,
       1,
@@ -318,15 +365,15 @@
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "function_token_typing_Prims.int",
         "interpretation_FStar.List.Tot.Base_Tm_abs_bdbb3a5fa88a61f1cfb8a0d549d4efde",
-        "proj_equation_Typeclasses.Mkadd_plus",
+        "proj_equation_Typeclasses.Mkadditive_plus",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "projection_inverse_Typeclasses.Mkadd_plus",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
         "token_correspondence_Typeclasses.plus"
       ],
       0,
-      "345e301bbdde829eb328250db2b646a0"
+      "b5b0e7969bd77c3977f73a657957dc80"
     ],
     [
       "Typeclasses.sum",
@@ -343,25 +390,25 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "70b3dea20734c30256842495778dfeb6"
+      "8995b6335842e2b0f69ad747ef33f1d0"
     ],
     [
-      "Typeclasses.uu___77",
+      "Typeclasses.uu___83",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "6804f2a1a002c09e7818171436d6f19c"
+      "125fbab6ac7f0fa9d6935357e279dd5b"
     ],
     [
-      "Typeclasses.uu___78",
+      "Typeclasses.uu___84",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "41124227f1c01973a648537960727a5f"
+      "ae9bd56c06d43a6c1b85ffc355472846"
     ],
     [
       "Typeclasses.test1",
@@ -382,15 +429,15 @@
         "function_token_typing_Prims.int",
         "function_token_typing_Typeclasses.num_int", "int_inversion",
         "int_typing", "primitive_Prims.op_Addition",
-        "proj_equation_Typeclasses.Mkadd_plus",
-        "proj_equation_Typeclasses.Mkadd_zero",
+        "proj_equation_Typeclasses.Mkadditive_plus",
+        "proj_equation_Typeclasses.Mkadditive_zero",
         "proj_equation_Typeclasses.Mknum_add_super",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "projection_inverse_Typeclasses.Mkadd_plus",
-        "projection_inverse_Typeclasses.Mkadd_zero",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
+        "projection_inverse_Typeclasses.Mkadditive_zero",
         "projection_inverse_Typeclasses.Mknum_add_super",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_Typeclasses.plus",
@@ -409,13 +456,14 @@
         "@query", "equation_Typeclasses.add_int",
         "equation_Typeclasses.add_num", "equation_Typeclasses.eq_int",
         "equation_Typeclasses.minus", "equation_Typeclasses.mkadd",
-        "equation_Typeclasses.num_int", "equation_Typeclasses.plus",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "proj_equation_Typeclasses.Mkadd_plus",
+        "equation_Typeclasses.mknum", "equation_Typeclasses.num_int",
+        "equation_Typeclasses.plus", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction",
+        "proj_equation_Typeclasses.Mkadditive_plus",
         "proj_equation_Typeclasses.Mknum_add_super",
         "proj_equation_Typeclasses.Mknum_minus",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Typeclasses.Mkadd_plus",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
         "projection_inverse_Typeclasses.Mknum_add_super",
         "projection_inverse_Typeclasses.Mknum_minus",
         "token_correspondence_Prims.op_Addition",
@@ -424,20 +472,20 @@
         "token_correspondence_Typeclasses.plus"
       ],
       0,
-      "f49b946e7cd9369a2daaf52bae08b43c"
+      "ffa975d4afa6deea50d7e236e653a4e9"
     ],
     [
-      "Typeclasses.__proj__Mkdec__item__eq_ok",
+      "Typeclasses.__proj__Mkdeq__item__eq_ok",
       2,
       2,
       1,
       [
-        "@query", "proj_equation_Typeclasses.Mkdec_eq",
-        "projection_inverse_Typeclasses.Mkdec_eq",
-        "token_correspondence_Typeclasses.__proj__Mkdec__item__eq"
+        "@query", "proj_equation_Typeclasses.Mkdeq_eq",
+        "projection_inverse_Typeclasses.Mkdeq_eq",
+        "token_correspondence_Typeclasses.__proj__Mkdeq__item__eq"
       ],
       0,
-      "af94fa655ab0787f93c2aa9ab89bce68"
+      "ea5c2767f7705858401466149f6f17a1"
     ],
     [
       "Typeclasses.eq_instance_of_eqtype",
@@ -446,7 +494,7 @@
       1,
       [ "@query" ],
       0,
-      "c3fbfc7700ccf02ce10b16f0ba9adea9"
+      "3134eb19676bd2704e64816f1a9a725d"
     ],
     [
       "Typeclasses.eq_int",
@@ -455,7 +503,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d089acb5d097fe0438a67215020f0577"
+      "52e021cc638d29bbc72af9a926e18ff7"
     ],
     [
       "Typeclasses.eq_bool",
@@ -464,17 +512,18 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "1f52aedae8a66e8c36cbad04d80f0b22"
+      "2e7e9bad6f421d7dc20083fd7acc3d0d"
     ],
     [
-      "Typeclasses.eq_list",
+      "Typeclasses.eqList",
       2,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Typeclasses_interpretation_Tm_arrow_02a32f8dc02b3b383e593d80e04e85eb",
-        "Typeclasses_interpretation_Tm_arrow_bf3d0fa9fd3557dc4d8ee0b39d535b09",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_b0895b17d395db52ed5af57a308dc5ff_2",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Typeclasses.eq", "fuel_guarded_inversion_Prims.list",
         "fuel_guarded_inversion_Typeclasses.deq",
@@ -485,56 +534,72 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Typeclasses_Tm_refine_33b332edb7a86c0071d801ba115f8c0f",
-        "refinement_interpretation_Typeclasses_Tm_refine_f69da921f37c4c63d8386018a796510b",
+        "refinement_interpretation_Typeclasses_Tm_refine_3441efe8af242772ae4e234d82fb1eff",
         "subterm_ordering_Prims.Cons",
-        "token_correspondence_Typeclasses.__proj__Mkdec__item__eq",
-        "token_correspondence_Typeclasses.eq"
+        "token_correspondence_Typeclasses.__proj__Mkdeq__item__eq",
+        "token_correspondence_Typeclasses.eq", "typing_Typeclasses.eqList"
       ],
       0,
-      "723f710f4057f05090aff11af142a8c0"
+      "f9412fce9b1991146e9f53302ab53f37"
     ],
     [
-      "Typeclasses.__proj__Mkadd__item__zero_l",
+      "Typeclasses.eq_list",
       2,
       2,
       1,
       [
-        "@query", "proj_equation_Typeclasses.Mkadd_plus",
-        "proj_equation_Typeclasses.Mkadd_zero",
-        "projection_inverse_Typeclasses.Mkadd_plus",
-        "projection_inverse_Typeclasses.Mkadd_zero",
-        "token_correspondence_Typeclasses.__proj__Mkadd__item__plus"
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Typeclasses.eqList.fuel_instrumented",
+        "@fuel_irrelevance_Typeclasses.eqList.fuel_instrumented", "@query",
+        "fuel_guarded_inversion_Typeclasses.deq",
+        "refinement_interpretation_Typeclasses_Tm_refine_33b332edb7a86c0071d801ba115f8c0f",
+        "typing_Typeclasses.eqList"
       ],
       0,
-      "3f894cc864780f74916092dcecc5190b"
+      "6edd296f3b6cf5386177111f35aa9482"
     ],
     [
-      "Typeclasses.__proj__Mkadd__item__zero_r",
+      "Typeclasses.__proj__Mkadditive__item__zero_l",
       2,
       2,
       1,
       [
-        "@query", "proj_equation_Typeclasses.Mkadd_plus",
-        "proj_equation_Typeclasses.Mkadd_zero",
-        "projection_inverse_Typeclasses.Mkadd_plus",
-        "projection_inverse_Typeclasses.Mkadd_zero",
-        "token_correspondence_Typeclasses.__proj__Mkadd__item__plus"
+        "@query", "proj_equation_Typeclasses.Mkadditive_plus",
+        "proj_equation_Typeclasses.Mkadditive_zero",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
+        "projection_inverse_Typeclasses.Mkadditive_zero",
+        "token_correspondence_Typeclasses.__proj__Mkadditive__item__plus"
       ],
       0,
-      "81a1cd8e1ded69081678809f951ade06"
+      "587ea509b46f4abe0c2faa77c49926c1"
     ],
     [
-      "Typeclasses.__proj__Mkadd__item__plus_assoc",
+      "Typeclasses.__proj__Mkadditive__item__zero_r",
       2,
       2,
       1,
       [
-        "@query", "proj_equation_Typeclasses.Mkadd_plus",
-        "projection_inverse_Typeclasses.Mkadd_plus",
-        "token_correspondence_Typeclasses.__proj__Mkadd__item__plus"
+        "@query", "proj_equation_Typeclasses.Mkadditive_plus",
+        "proj_equation_Typeclasses.Mkadditive_zero",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
+        "projection_inverse_Typeclasses.Mkadditive_zero",
+        "token_correspondence_Typeclasses.__proj__Mkadditive__item__plus"
       ],
       0,
-      "a828b6340b5ee1e3e2bdf8381faa6afb"
+      "83bfb43e96068a703bf2994d2fd05b35"
+    ],
+    [
+      "Typeclasses.__proj__Mkadditive__item__plus_assoc",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Typeclasses.Mkadditive_plus",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
+        "token_correspondence_Typeclasses.__proj__Mkadditive__item__plus"
+      ],
+      0,
+      "2dc8200f87a8dea34a91c31a102ab89c"
     ],
     [
       "Typeclasses.mkadd",
@@ -542,13 +607,13 @@
       2,
       1,
       [
-        "@query", "proj_equation_Typeclasses.Mkadd_plus",
-        "proj_equation_Typeclasses.Mkadd_zero",
-        "projection_inverse_Typeclasses.Mkadd_plus",
-        "projection_inverse_Typeclasses.Mkadd_zero"
+        "@query", "proj_equation_Typeclasses.Mkadditive_plus",
+        "proj_equation_Typeclasses.Mkadditive_zero",
+        "projection_inverse_Typeclasses.Mkadditive_plus",
+        "projection_inverse_Typeclasses.Mkadditive_zero"
       ],
       0,
-      "d902cabb2d5e2b3143f1e1b803aae227"
+      "4b0e23d545dd42f2cfdb5dcd7fe147cc"
     ],
     [
       "Typeclasses.add_int",
@@ -560,7 +625,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "44b8e6e0fdc24d288ebbe133ca8bcaae"
+      "f98c91ea5bd22ba9f70316db059149a7"
     ],
     [
       "Typeclasses.add_bool",
@@ -572,7 +637,7 @@
         "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "87b7523d3816fb6640835e930a0179e1"
+      "4e7853e3e1e6c786b8e1a33e11377066"
     ],
     [
       "Typeclasses.add_list",
@@ -581,7 +646,7 @@
       1,
       [ "@query" ],
       0,
-      "75590fe0eb5b2b3793971217c391e145"
+      "ab8c7835220b5dd0177f409ff0bcba91"
     ],
     [
       "Typeclasses.sum",
@@ -598,7 +663,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f028b69be7c13da9ad94ed46f6682fdd"
+      "5196176181d12ad578b980ef9fb1c5e6"
     ]
   ]
 ]

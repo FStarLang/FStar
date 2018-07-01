@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9e21ff6e06e5379aff675a9f8ffa9274"
+      "4deaca4f04de23c92aded7d5b7dc81b6"
     ],
     [
       "Ex03c.fibonacci_greater_than_arg",
@@ -43,7 +43,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9ac810c1356bdab8845141ab7f8b8fa3"
+      "94a3d5278e01d8f0366db52808c9a026"
     ],
     [
       "Ex03c.fibonacci",
@@ -61,7 +61,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a96fb0ebbe0f06abfa6c8e4bfd271146"
+      "7e033eb9dd661842840f762006a88d52"
     ]
   ]
 ]

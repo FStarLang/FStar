@@ -53,7 +53,7 @@ let mk_lex_list vs =
 let is_eq = function
     | Some Equality -> true
     | _ -> false
-let steps env = [N.Beta; N.Eager_unfolding; N.NoFullNorm]
+let steps env = [Env.Beta; Env.Eager_unfolding; Env.NoFullNorm]
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
 let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
@@ -234,7 +234,7 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) :set<bv> =
 and get_pat_vars all pats = get_pat_vars' all false pats
 
 let check_pat_fvs rng env pats bs =
-    let pat_vars = get_pat_vars (List.map fst bs) (N.normalize [N.Beta] env pats) in
+    let pat_vars = get_pat_vars (List.map fst bs) (N.normalize [Env.Beta] env pats) in
     begin match bs |> BU.find_opt (fun (b, _) -> not(BU.set_mem b pat_vars)) with
         | None -> ()
         | Some (x,_) -> Errors.log_issue rng (Errors.Warning_PatternMissingBoundVar, (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
@@ -549,6 +549,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         in
         let e = mk (Tm_app(reflect_op, [(e, aqual)])) None top.pos in
         let e, c, g' = comp_check_expected_typ env e c in
+        let e = S.mk (Tm_meta(e, Meta_monadic(c.eff_name, c.res_typ))) None e.pos in
         e, c, Env.conj_guard g' g
     end
 
@@ -578,6 +579,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let t2 = mk_app t1 args2 in
     tc_term env t2
 
+  (* An ordinary application *)
   | Tm_app(head, args) ->
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
@@ -601,10 +603,17 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                        //         else c in
                        e, c, g
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
+    let e, c, implicits =
+        if U.is_tot_or_gtot_lcomp c
+        then let e, res_typ, implicits = TcUtil.maybe_instantiate env0 e c.res_typ in
+             e, U.set_result_typ_lc c res_typ, implicits
+        else e, c, Env.trivial_guard
+    in
     if Env.debug env Options.Extreme
     then BU.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
     let e, c, g' = comp_check_expected_typ env0 e c in
     let gres = Env.conj_guard g g' in
+    let gres = Env.conj_guard gres implicits in
     if Env.debug env Options.Extreme
     then BU.print2 "Guard from application node %s is %s\n"
                 (Print.term_to_string e)
@@ -1017,7 +1026,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
             | (hd, imp)::bs, (hd_expected, imp')::bs_expected ->
                begin match imp, imp' with
                     | None, Some (Implicit _)
-                    | Some (Implicit _), None ->
+                    | None, Some (Meta _)
+                    | Some (Implicit _), None
+                    | Some (Meta _), None ->
                       raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
                                    BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))
                                   (S.range_of_bv hd)
@@ -1152,7 +1163,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                     let letrecs = guard_letrecs envbody bs c in
                     let envbody = {envbody with letrecs=[]} in
                     letrecs |> List.fold_left (fun (env, letrec_binders) (l,t,u_names) ->
-//                        let t = N.normalize [N.EraseUniverses; N.Beta] env t in
+//                        let t = N.normalize [Env.EraseUniverses; Env.Beta] env t in
 //                        printfn "Checking let rec annot: %s\n" (Print.term_to_string t);
                         let t, _, _ = tc_term (Env.clear_expected_typ env |> fst) t in
                         let env = Env.push_let_binding env l (u_names, t) in
@@ -1653,27 +1664,7 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
         | _ -> //fallback
           check_application_args env head chead g_head args expected_topt
 
-
-(********************************************************************************************************************)
-(* Type-checking a pattern-matching branch                                                                          *)
-(* the pattern, when_clause and branch are closed                                                                   *)
-(* scrutinee is the logical name of the expression being matched; it is not in scope in the branch                  *)
-(*           but it is in scope for the VC of the branch                                                            *)
-(* env does not contain scrutinee, or any of the pattern-bound variables                                            *)
-(* the returned terms are well-formed in an environment extended with the scrutinee only                            *)
-(********************************************************************************************************************)
-and tc_eqn scrutinee env branch
-        : (pat * option<term> * term)                                                             (* checked branch *)
-        * term       (* the guard condition for taking this branch, used by the caller for the exhaustiveness check *)
-        * lident                                                                 (* effect label of the lcomp below *)
-        * list<cflags>                                                                      (* flags for each lcomp *)
-        * (bool -> lcomp)                    (* computation type of the branch, with or without a "return" equation *)
-        * guard_t =                                                                    (* well-formedness condition *)
-  let pattern, when_clause, branch_exp = SS.open_branch branch in
-  let cpat, _, cbr = branch in
-
-  (*<tc_pat>*)
-  let tc_pat (allow_implicits:bool) (pat_t:typ) p0 :
+and tc_pat env (allow_implicits:bool) (pat_t:typ) p0 :
         pat                          (* the type-checked, fully decorated pattern                                   *)
       * list<bv>                     (* all its bound variables, used for closing the type of the branch term       *)
       * Env.env                      (* the environment extended with all the binders                               *)
@@ -1745,7 +1736,7 @@ and tc_eqn scrutinee env branch
                                        (Print.term_to_string expected_pat_t))
                            exp.pos
     in
-    let norm_exp = N.normalize [N.Beta] env1 exp in
+    let norm_exp = N.normalize [Env.Beta] env1 exp in
     let uvs_to_string uvs =
         BU.set_elements uvs |>
         List.map (fun u -> Print.uvar_to_string u.ctx_uvar_head) |>
@@ -1769,8 +1760,25 @@ and tc_eqn scrutinee env branch
     then BU.print1 "Done checking pattern expression %s\n" (N.term_to_string env exp);
     let p = TcUtil.decorate_pattern env p exp in
     p, pat_bvs, pat_env, exp, guard_pat_annots, norm_exp
-  in
-  (*</tc_pat>*)
+
+
+(********************************************************************************************************************)
+(* Type-checking a pattern-matching branch                                                                          *)
+(* the pattern, when_clause and branch are closed                                                                   *)
+(* scrutinee is the logical name of the expression being matched; it is not in scope in the branch                  *)
+(*           but it is in scope for the VC of the branch                                                            *)
+(* env does not contain scrutinee, or any of the pattern-bound variables                                            *)
+(* the returned terms are well-formed in an environment extended with the scrutinee only                            *)
+(********************************************************************************************************************)
+and tc_eqn scrutinee env branch
+        : (pat * option<term> * term)                                                             (* checked branch *)
+        * term       (* the guard condition for taking this branch, used by the caller for the exhaustiveness check *)
+        * lident                                                                 (* effect label of the lcomp below *)
+        * list<cflags>                                                                      (* flags for each lcomp *)
+        * (bool -> lcomp)                    (* computation type of the branch, with or without a "return" equation *)
+        * guard_t =                                                                    (* well-formedness condition *)
+  let pattern, when_clause, branch_exp = SS.open_branch branch in
+  let cpat, _, cbr = branch in
 
   let pat_t = scrutinee.sort in
   let scrutinee_tm = S.bv_to_name scrutinee in
@@ -1778,7 +1786,7 @@ and tc_eqn scrutinee env branch
 
   (* 1. Check the pattern *)
   let pattern, pat_bvs, pat_env, pat_exp, guard_pat_annots, norm_pat_exp =
-    tc_pat true pat_t pattern
+    tc_pat env true pat_t pattern
   in
 
   (* 2. Check the when clause *)
@@ -1992,7 +2000,7 @@ and check_top_level_let env e =
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits env in
                  assert (univ_vars = []) ;
                  let _, univs, e1, c1, gvs = List.hd (TcUtil.generalize env false [lb.lbname, e1, lcomp_comp c1]) in
-                 let g1 = map_guard g1 <| N.normalize [N.Beta; N.DoNotUnfoldPureLets; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env in
+                 let g1 = map_guard g1 <| N.normalize [Env.Beta; Env.DoNotUnfoldPureLets; Env.CompressUvars; Env.NoFullNorm; Env.Exclude Env.Zeta] env in
                  let g1 = abstract_guard_n gvs g1 in
                  g1, e1, univs, U.lcomp_of_comp c1
          in
@@ -2008,7 +2016,7 @@ and check_top_level_let env e =
                       mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
             else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
                  let _ = Rel.force_trivial_guard env g1 in
-                 let c = lcomp_comp c1 |> N.normalize_comp [N.Beta; N.NoFullNorm; N.DoNotUnfoldPureLets] env in
+                 let c = lcomp_comp c1 |> N.normalize_comp [Env.Beta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] env in
                  let e2 = if Util.is_pure_comp c
                           then e2
                           else (Errors.log_issue (Env.get_range env) Err.top_level_effect;
@@ -2456,7 +2464,7 @@ let level_of_type env e t =
         | Tm_type u -> u
         | _ ->
           if retry
-          then let t = Normalize.normalize [N.UnfoldUntil delta_constant] env t in
+          then let t = Normalize.normalize [Env.UnfoldUntil delta_constant] env t in
                aux false t
           else let t_u, u = U.type_u() in
                let env = {env with lax=true} in
@@ -2565,7 +2573,7 @@ let rec universe_of_aux env e =
         | _ when retry ->
           //head is either an abs, so we have a beta-redex
           //      or a let,
-          let e = N.normalize [N.Beta; N.DoNotUnfoldPureLets] env e in
+          let e = N.normalize [Env.Beta; Env.DoNotUnfoldPureLets] env e in
           let hd, args = U.head_and_args e in
           type_of_head false hd args
         | _ ->
@@ -2580,7 +2588,7 @@ let rec universe_of_aux env e =
           t, args
      in
      let t, args = type_of_head true hd args in
-     let t = N.normalize [N.UnfoldUntil delta_constant] env t in
+     let t = N.normalize [Env.UnfoldUntil delta_constant] env t in
      let bs, res = U.arrow_formals_comp t in
      let res = U.comp_result res in
      if List.length bs = List.length args

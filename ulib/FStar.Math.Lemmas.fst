@@ -211,7 +211,7 @@ val lemma_eq_trans_2: w:int -> x:int -> y:int -> z:int -> Lemma
   (ensures  (w = z))
 let lemma_eq_trans_2 w x y z = ()
 
-#reset-options "--z3rlimit 80 --initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 0 --z3seed 1"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 1 --z3seed 1"
 private let lemma_mod_plus_0 (a:nat) (b:nat) (p:pos) : Lemma
   ((a + b * p) % p - a % p = p * (b + a / p - (a + b * p) / p))
   =
@@ -319,7 +319,7 @@ val lemma_mod_plus_distr_r: a:nat -> b:nat -> p:pos -> Lemma
 let lemma_mod_plus_distr_r a b p =
   lemma_mod_plus_distr_l b a p
 
-#reset-options "--z3rlimit 20"
+#reset-options "--z3rlimit 50"
 
 val lemma_mod_plus_mul_distr: a:nat -> b:nat -> c:nat -> p:pos -> Lemma
   (((a + b) * c) % p = ((((a % p) + (b % p)) % p) * (c % p)) % p)
@@ -492,7 +492,7 @@ let mod_pow2_div2 a m =
 // goes fine on Windows / CI with rlimit=40, but on Linux systems rlimit=400 is
 // needed. Leaving the high rlimit because it doesn't seem to deteriorate the
 // total verification time too much (I see ~40 seconds on my machine).
-#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr boxwrap"
+#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr boxwrap --z3rlimit 20"
 
 (* Lemma: Divided by a product is equivalent to being divided one by one *)
 val division_multiplication_lemma: a:nat -> b:pos -> c:pos ->

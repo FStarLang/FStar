@@ -31,4 +31,4 @@ clean:
 
 # Regenerate all hints for the regression test suite
 hints:
-	$(MAKE) OTHERFLAGS=--record_hints -C src/ uregressions
+	OTHERFLAGS=--record_hints $(MAKE) -C src/ uregressions

@@ -7,6 +7,13 @@ open FStar.Syntax.Embeddings
 open FStar.Order
 module Env = FStar.TypeChecker.Env
 open FStar.Reflection.Data
+open FStar.ST
+
+(* Tying a knot into the environment which started execution.
+ * Needed to inspect sigelts and the like without needing
+ * to explicitly pass it in. This entire module should really be in
+ * the TAC effect, and this crap is a symptom, let's move it. *)
+val env_hook : ref<option<Env.env>>
 
 (* Primitives *)
 val compare_bv     : bv -> bv -> order
@@ -17,6 +24,9 @@ val binders_of_env : Env.env -> binders
 val moduleof       : Env.env -> list<string>
 val term_eq        : term -> term -> bool
 val term_to_string : term -> string
+
+val sigelt_attrs     : sigelt -> list<attribute>
+val set_sigelt_attrs : list<attribute> -> sigelt -> sigelt
 
 (* Views *)
 val inspect_fv    : fv -> list<string>

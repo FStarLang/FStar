@@ -244,9 +244,11 @@ let steps_primops       = psnconst "primops"
 let steps_zeta          = psnconst "zeta"
 let steps_iota          = psnconst "iota"
 let steps_delta         = psnconst "delta"
+let steps_reify         = psnconst "reify_"
 let steps_unfoldonly    = psnconst "delta_only"
 let steps_unfoldfully   = psnconst "delta_fully"
 let steps_unfoldattr    = psnconst "delta_attr"
+let steps_nbe           = psnconst "nbe"
 
 (* attributes *)
 let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]

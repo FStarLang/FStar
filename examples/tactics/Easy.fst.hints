@@ -1,0 +1,59 @@
+[
+  "¹±‰€ÌÔ!\u000f\u0013\nP´±¾¥‹",
+  [
+    [
+      "Easy.lemma_from_squash",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "50446c4b4e086a79336a325073d2b5d8"
+    ],
+    [
+      "Easy.plus_assoc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "b0034de60e9a92e653df02eb5eeee95c"
+    ],
+    [
+      "Easy.plus_comm",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Addition"
+      ],
+      0,
+      "3a2b6c8e51efcc12de97ef11fce48422"
+    ],
+    [
+      "Easy.easy_fill",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "equation_FStar.Reflection.Types.binders",
+        "function_token_typing_FStar.Reflection.Types.binder",
+        "function_token_typing_FStar.Reflection.Types.binders",
+        "kinding_FStar.Pervasives.Native.option@tok",
+        "lemma_FStar.Tactics.Result.result_split",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Tactics.Result.uu___is_Failed",
+        "typing_FStar.Tactics.Result.uu___is_Success"
+      ],
+      0,
+      "bb0cd80a40fe65df36604c78381b66b0"
+    ]
+  ]
+]

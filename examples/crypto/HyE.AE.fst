@@ -35,7 +35,7 @@ let genPost parent m0 (k:key) m1 =
   /\ extends (key_region k) parent
   /\ fresh_region (key_region k) m0 m1
   /\ contains m1 (key_log k)
-  /\ sel m1 (key_log k) == createEmpty
+  /\ sel m1 (key_log k) == Seq.empty
 
 
 val keygen: parent:rid -> ST key
@@ -46,7 +46,7 @@ val keygen: parent:rid -> ST key
 let keygen parent =
   let raw = random keysize in
   let region = new_region parent in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region Seq.empty in
   Key #region raw log
 
 abstract val leak: k:key{not conf} -> Tot aes_key 

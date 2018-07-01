@@ -5,10 +5,11 @@ open FStar.Tactics.Types
 open FStar.Tactics.Basic
 open FStar.Syntax.Syntax
 open FStar.Range
+module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module EMB = FStar.Syntax.Embeddings
 
-type itac = N.psc -> EMB.norm_cb -> args -> option<term>
+type itac = Cfg.psc -> EMB.norm_cb -> args -> option<term>
 
 type native_primitive_step =
     { name: FStar.Ident.lid;

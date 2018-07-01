@@ -59,6 +59,11 @@ let mk_e_app (t : term) (args : list term) : Tot term =
     let e t = (t, Q_Explicit) in
     mk_app t (List.Tot.map e args)
 
+let rec mk_tot_arr (bs: list binder) (cod : term) : Tot term (decreases bs) =
+    match bs with
+    | [] -> cod
+    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr bs cod) None)))
+
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
     begin match inspect_comp c with
     | C_Total t _ ->
@@ -196,6 +201,7 @@ and compare_argv (a1 a2 : argv) : order =
     let a1, q1 = a1 in
     let a2, q2 = a2 in
     match q1, q2 with
+    (* We should never see Q_Meta here *)
     | Q_Implicit, Q_Explicit -> Lt
     | Q_Explicit, Q_Implicit -> Gt
     | _, _ -> compare_term a1 a2

@@ -139,6 +139,10 @@ let compute () : Tac unit = norm [primops; iota; delta; zeta]
 
 let intros () : Tac (list binder) = repeat intro
 
+let intros' () = let _ = intros () in ()
+let destruct tm = let _ = t_destruct tm in ()
+let destruct_intros tm = seq (fun () -> let _ = t_destruct tm in ()) intros'
+
 private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
 
@@ -211,7 +215,7 @@ let rec rewrite_all_context_equalities (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
     | x_t::bs -> begin
-        begin match term_as_formula (type_of_binder x_t) with
+        begin match term_as_formula_total (type_of_binder x_t) with
         | Comp (Eq _) lhs _ ->
             begin match inspect_ln lhs with
             | Tv_Var _ -> rewrite x_t
@@ -356,6 +360,15 @@ let solve_then #a #b (t1 : unit -> Tac a) (t2 : a -> Tac b) : Tac b =
     let y = t2 x in
     trefl ();
     y
+
+let add_elem (t : unit -> Tac 'a) : Tac 'a = focus (fun () ->
+    apply (`Cons);
+    focus (fun () ->
+      let x = t () in
+      qed ();
+      x
+    )
+  )
 
 (* Some syntax utility functions *)
 let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)

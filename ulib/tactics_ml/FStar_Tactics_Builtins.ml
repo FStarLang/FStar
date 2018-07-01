@@ -26,6 +26,7 @@ let tr_repr_steps =
               | Zeta          -> EMB.Zeta
               | Iota          -> EMB.Iota
               | UnfoldOnly ss -> EMB.UnfoldOnly ss
+              | NBE           -> EMB.NBE
     in List.map tr1
 
 let to_tac_0 (t: 'a __tac): 'a B.tac =
@@ -100,6 +101,7 @@ let qed                     = from_tac_1 B.qed
 let prune                   = from_tac_1 B.prune
 let addns                   = from_tac_1 B.addns
 let cases                   = from_tac_1 B.cases
+let t_destruct              = from_tac_1 B.t_destruct
 let set_options             = from_tac_1 B.set_options
 let uvar_env                = from_tac_2 B.uvar_env
 let unify_env               = from_tac_3 B.unify_env
@@ -108,6 +110,7 @@ let fresh_bv_named          = from_tac_2 B.fresh_bv_named
 let change                  = from_tac_1 B.change
 let get_guard_policy        = from_tac_1 B.get_guard_policy
 let set_guard_policy        = from_tac_1 B.set_guard_policy
+let lax_on                  = from_tac_1 B.lax_on
 let dismiss                 = from_tac_1 B.dismiss
 let tadmit                  = from_tac_1 B.tadmit
 let inspect                 = from_tac_1 B.inspect

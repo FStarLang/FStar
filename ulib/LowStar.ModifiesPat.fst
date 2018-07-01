@@ -292,3 +292,59 @@ let unused_in_not_unused_in_disjoint_0
   [SMTPat (loc_disjoint l1 l2); SMTPat (loc_unused_in h `loc_includes` l1); SMTPat (loc_not_unused_in h `loc_includes` l2)]
 = assert (loc_includes l1 l1);
   assert (loc_includes l2 l2)
+
+let modifies_upd'
+  (#t: Type) (#pre: Preorder.preorder t)
+  (r: HS.mreference t pre)
+  (v: t)
+  (h: HS.mem)
+: Lemma
+  (requires (HS.contains h r))
+  (ensures (modifies (loc_mreference r) h (HS.upd h r v)))
+  [SMTPat (HS.upd h r v)]
+= modifies_upd r v h
+
+let modifies_ralloc_post'
+  (#a: Type)
+  (#rel: Preorder.preorder a)
+  (i: HS.rid)
+  (init: a)
+  (h: HS.mem)
+  (x: HST.mreference a rel { HST.is_eternal_region (HS.frameOf x) } )
+  (h' : HS.mem)
+: Lemma
+  (requires (HST.ralloc_post i init h x h'))
+  (ensures (modifies loc_none h h'))
+  [SMTPat (HST.ralloc_post i init h x h')]
+= modifies_ralloc_post i init h x h'
+
+let modifies_salloc_post'
+  (#a: Type)
+  (#rel: Preorder.preorder a)
+  (init: a)
+  (h: HS.mem)
+  (x: HST.mreference a rel { HS.is_stack_region (HS.frameOf x) } )
+  (h' : HS.mem)
+: Lemma
+  (requires (HST.salloc_post init h x h'))
+  (ensures (modifies loc_none h h'))
+  [SMTPat (HST.salloc_post init h x h')]
+= modifies_salloc_post init h x h'
+
+let modifies_free'
+  (#a: Type)
+  (#rel: Preorder.preorder a)
+  (r: HS.mreference a rel { HS.is_mm r } )
+  (m: HS.mem { m `HS.contains` r } )
+: Lemma
+  (modifies (loc_freed_mreference r) m (HS.free r m))
+  [SMTPat (HS.free r m)]
+= modifies_free r m
+
+let modifies_none_modifies'
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (HST.modifies_none h1 h2))
+  (ensures (modifies loc_none h1 h2))
+  [SMTPat (HST.modifies_none h1 h2)]
+= modifies_none_modifies h1 h2

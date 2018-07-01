@@ -18,9 +18,11 @@ type norm_step =
     | Delta
     | Zeta
     | Iota
+    | Reify
     | UnfoldOnly of list<string>
     | UnfoldFully of list<string>
     | UnfoldAttr of attribute
+    | NBE
 
 val steps_Simpl         : term
 val steps_Weak          : term
@@ -29,9 +31,11 @@ val steps_Primops       : term
 val steps_Delta         : term
 val steps_Zeta          : term
 val steps_Iota          : term
+val steps_Reify         : term
 val steps_UnfoldOnly    : term
 val steps_UnfoldFully   : term
 val steps_UnfoldAttr    : term
+val steps_NBE           : term
 
 (*
  * Unmbedding functions return an option because they might fail
@@ -72,6 +76,8 @@ val unembed      : embedding<'a> -> term -> unembed_t<'a>
 val warn_unembed : embedding<'a> -> term -> norm_cb -> option<'a>
 val try_unembed  : embedding<'a> -> term -> norm_cb -> option<'a>
 val type_of      : embedding<'a> -> typ
+val set_type     : typ -> embedding<'a> -> embedding<'a>
+
 
 (* Embeddings, both ways and containing type information *)
 val e_any         : embedding<term> // an identity

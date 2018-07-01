@@ -80,6 +80,7 @@ let unembed     (e:embedding<'a>) t   = e.un t
 let warn_unembed (e:embedding<'a>) t n = unembed e t true n
 let try_unembed  (e:embedding<'a>) t n = unembed e t false n
 let type_of     (e:embedding<'a>)     = e.typ
+let set_type ty (e:embedding<'a>)     = { e with typ = ty }
 
 
 let rec emb_typ_to_string = function
@@ -334,7 +335,7 @@ let e_option (ea : embedding<'a>) =
             t
             t_option_a
             (fun t ->
-                let hd, args = U.head_and_args t in
+                let hd, args = U.head_and_args' t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
                 | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
@@ -399,7 +400,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
             t
             t_pair_a_b
             (fun t ->
-                let hd, args = U.head_and_args t in
+                let hd, args = U.head_and_args' t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv PC.lid_Mktuple2 ->
                     BU.bind_opt (unembed ea a w norm) (fun a ->
@@ -474,7 +475,7 @@ let e_list (ea:embedding<'a>) =
             t
             t_list_a
             (fun t ->
-                let hd, args = U.head_and_args t in
+                let hd, args = U.head_and_args' t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, _
                     when S.fv_eq_lid fv PC.nil_lid -> Some []
@@ -507,9 +508,11 @@ type norm_step =
     | Delta
     | Zeta
     | Iota
+    | Reify
     | UnfoldOnly of list<string>
     | UnfoldFully of list<string>
     | UnfoldAttr of attribute
+    | NBE
 
 (* the steps as terms *)
 let steps_Simpl         = tdataconstr PC.steps_simpl
@@ -519,9 +522,11 @@ let steps_Primops       = tdataconstr PC.steps_primops
 let steps_Delta         = tdataconstr PC.steps_delta
 let steps_Zeta          = tdataconstr PC.steps_zeta
 let steps_Iota          = tdataconstr PC.steps_iota
+let steps_Reify         = tdataconstr PC.steps_reify
 let steps_UnfoldOnly    = tdataconstr PC.steps_unfoldonly
 let steps_UnfoldFully   = tdataconstr PC.steps_unfoldonly
 let steps_UnfoldAttr    = tdataconstr PC.steps_unfoldattr
+let steps_NBE           = tdataconstr PC.steps_nbe
 
 let e_norm_step =
     let t_norm_step = U.fvar_const (Ident.lid_of_str "FStar.Syntax.Embeddings.norm_step") in
@@ -550,6 +555,10 @@ let e_norm_step =
                     steps_Zeta
                 | Iota ->
                     steps_Iota
+                | NBE ->
+                    steps_NBE
+                | Reify ->
+                    steps_Reify
                 | UnfoldOnly l ->
                     S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed (e_list e_string) l rng None norm)]
                                 None rng
@@ -583,6 +592,10 @@ let e_norm_step =
                     Some Zeta
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_iota ->
                     Some Iota
+                | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_nbe ->
+                    Some NBE
+                | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_reify ->
+                    Some Reify
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
                     BU.bind_opt (unembed (e_list e_string) l w norm) (fun ss ->
                     Some <| UnfoldOnly ss)

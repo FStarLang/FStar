@@ -160,7 +160,7 @@ let rec as_seq' (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i <= length vb})
          (decreases (length vb - i))
   = let v = get_view vb in
     if i = length vb
-    then Seq.createEmpty
+    then Seq.empty
     else let _ = view_indexing vb i in
          let _, s_i, suffix = split_at_i vb i h in
          View?.get v s_i `Seq.cons` as_seq' h vb (i + 1)

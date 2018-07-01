@@ -34,6 +34,7 @@ module PC = FStar.Parser.Const
 module Range = FStar.Range
 module S = FStar.Syntax.Syntax
 module N = FStar.TypeChecker.Normalize
+module Env = FStar.TypeChecker.Env
 
 
 let codegen_fsharp () = Options.codegen () = Some Options.FSharp
@@ -389,9 +390,9 @@ type emb_loc =
 let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
     let fv_lid = fv.fv_name.v in
     let t = N.normalize [
-      N.EraseUniverses;
-      N.AllowUnboundUniverses;
-      N.UnfoldUntil S.delta_constant // unfold abbreviations such as nat
+      Env.EraseUniverses;
+      Env.AllowUnboundUniverses;
+      Env.UnfoldUntil S.delta_constant // unfold abbreviations such as nat
     ] tcenv t in
     let w = with_ty MLTY_Top in
     let lid_to_name l     = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident l) in
@@ -619,11 +620,13 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
           else if Ident.lid_equals (FStar.TypeChecker.Env.norm_eff_name tcenv (U.comp_effect_name c))
                                     PC.effect_TAC_lid
           then begin
-            let h = str_to_top_name ("FStar_Tactics_Interpreter.mk_tactic_interpretation_"
-                                     ^ string_of_int non_tvar_arity) in
+            let h = str_to_top_name ("FStar_Tactics_InterpFuns.mk_tactic_interpretation_"
+                                     ^ string_of_int non_tvar_arity)
+            in
             let tac_fun = w <| MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_"
                                                          ^ string_of_int non_tvar_arity),
-                          [lid_to_top_name fv_lid]) in
+                          [lid_to_top_name fv_lid])
+            in
             let tac_lid_app = w <| MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [w ml_fv]) in
             let psc = str_to_name "psc" in
             let ncb = str_to_name "ncb" in

@@ -6,6 +6,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 module Options = FStar.Options
 module SS = FStar.Syntax.Subst
+module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module Range = FStar.Range
 
@@ -68,7 +69,7 @@ type proofstate = {
     depth        : int;          //depth for tracing and debugging
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying circularity
 
-    psc          : N.psc;        //primitive step context where we started execution
+    psc          : Cfg.psc;        //primitive step context where we started execution
     entry_range  : Range.range;  //position of entry, set by the use
     guard_policy : guard_policy; //guard policy: what to do with guards arising during tactic exec
     freshness    : int;          //a simple freshness counter for the fresh tactic
@@ -90,7 +91,7 @@ let incr_depth (ps:proofstate) : proofstate =
 
 let tracepoint ps : unit =
     if Options.tactic_trace () || (ps.depth <= Options.tactic_trace_d ())
-    then ps.__dump (subst_proof_state (N.psc_subst ps.psc) ps) "TRACE"
+    then ps.__dump (subst_proof_state (Cfg.psc_subst ps.psc) ps) "TRACE"
     else ()
 
 let set_ps_psc psc ps = { ps with psc = psc }

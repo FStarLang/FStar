@@ -22,6 +22,7 @@ module Ident = FStar.Ident
 module Env = FStar.TypeChecker.Env
 module Err = FStar.Errors
 module Z = FStar.BigInt
+module DsEnv = FStar.Syntax.DsEnv
 
 open FStar.Dyn
 
@@ -38,11 +39,13 @@ open FStar.Dyn
   * We should really allow for some metaprogramming in F*. Oh wait....
   *)
 
+let env_hook = BU.mk_ref None
+
 (* private *)
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with
-    | Some (Meta _) -> failwith "Sorry! cannot inspect TC arguments for now"
     | Some (Implicit _) -> Data.Q_Implicit
+    | Some (Meta t) -> Data.Q_Meta t
     | Some Equality
     | None -> Data.Q_Explicit
 
@@ -51,21 +54,35 @@ let pack_aqual (aqv : aqualv) : aqual =
     match aqv with
     | Data.Q_Explicit -> None
     | Data.Q_Implicit -> Some (Implicit false)
+    | Data.Q_Meta t   -> Some (Meta t)
 
 let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
 
 let pack_fv (ns:list<string>) : fv =
     let lid = PC.p2l ns in
-    let attr =
-        if Ident.lid_equals lid PC.cons_lid then Some Data_ctor else
-        if Ident.lid_equals lid PC.nil_lid  then Some Data_ctor else
-        if Ident.lid_equals lid PC.some_lid then Some Data_ctor else
-        if Ident.lid_equals lid PC.none_lid then Some Data_ctor else
-        None
+    let fallback () =
+        let quals =
+            if Ident.lid_equals lid PC.cons_lid then Some Data_ctor else
+            if Ident.lid_equals lid PC.nil_lid  then Some Data_ctor else
+            if Ident.lid_equals lid PC.some_lid then Some Data_ctor else
+            if Ident.lid_equals lid PC.none_lid then Some Data_ctor else
+            None
+        in
+        // FIXME: Get a proper delta depth
+        lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) quals
     in
-    // FIXME: Get a proper delta depth
-    lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) attr
+    match !env_hook with
+    | None -> fallback ()
+    | Some env ->
+     let qninfo = Env.lookup_qname env lid in
+     match qninfo with
+     | Some (BU.Inr (se, _us), _rng) ->
+         let quals = DsEnv.fv_qual_of_se se in
+         // FIXME: Get a proper delta depth
+         lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) quals
+     | _ ->
+         fallback ()
 
 // TODO: move to library?
 let rec last (l:list<'a>) : 'a =
@@ -304,34 +321,49 @@ let lookup_attr (attr:term) (env:Env.env) : list<fv> =
 
 let lookup_typ (env:Env.env) (ns:list<string>) : option<sigelt> =
     let lid = PC.p2l ns in
-    match Env.lookup_qname env lid with
-    | None -> None
-    | Some (BU.Inl _, rng) -> None
-    | Some (BU.Inr (se, us), rng) -> Some se
+    Env.lookup_sigelt env lid
+
+let sigelt_attrs (se : sigelt) : list<attribute> =
+    se.sigattrs
+
+let set_sigelt_attrs (attrs : list<attribute>) (se : sigelt) : sigelt =
+    { se with sigattrs = attrs }
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with
     | Sig_let ((r, [lb]), _) ->
         let fv = match lb.lbname with
                  | BU.Inr fv -> fv
-                 | BU.Inl _  -> failwith "global Sig_let has bv"
+                 | BU.Inl _  -> failwith "impossible: global Sig_let has bv"
         in
-        Sg_Let (r, fv, lb.lbtyp, lb.lbdef)
+        let s, us = SS.univ_var_opening lb.lbunivs in
+        let typ = SS.subst s lb.lbtyp in
+        let def = SS.subst s lb.lbdef in
+        Sg_Let (r, fv, lb.lbunivs, lb.lbtyp, lb.lbdef)
 
-    | Sig_inductive_typ (lid, us, bs, t, _, c_lids) ->
+    | Sig_inductive_typ (lid, us, bs, ty, _, c_lids) ->
         let nm = Ident.path_of_lid lid in
-        Sg_Inductive (nm, bs, t, List.map Ident.path_of_lid c_lids)
+        let s, us = SS.univ_var_opening us in
+        let bs = SS.subst_binders s bs in
+        let ty = SS.subst s ty in
+        Sg_Inductive (nm, us, bs, ty, List.map Ident.path_of_lid c_lids)
 
-    | Sig_datacon (lid, us, t, _, n, _) ->
-        Sg_Constructor (Ident.path_of_lid lid, t)
+    | Sig_datacon (lid, us, ty, _, n, _) ->
+        let s, us = SS.univ_var_opening us in
+        let ty = SS.subst s ty in
+        (* TODO: return universes *)
+        Sg_Constructor (Ident.path_of_lid lid, ty)
 
     | _ ->
         Unk
 
 let pack_sigelt (sv:sigelt_view) : sigelt =
     match sv with
-    | Sg_Let (r, fv, ty, def) ->
-        let lb = U.mk_letbinding (BU.Inr fv) [] ty PC.effect_Tot_lid def [] def.pos in
+    | Sg_Let (r, fv, univs, typ, def) ->
+        let s = SS.univ_var_closing univs in
+        let typ = SS.subst s typ in
+        let def = SS.subst s def in
+        let lb = U.mk_letbinding (BU.Inr fv) univs typ PC.effect_Tot_lid def [] def.pos in
         mk_sigelt <| Sig_let ((r, [lb]), [lid_of_fv fv])
 
     | Sg_Constructor _ ->
