@@ -170,8 +170,18 @@ let e_result_nbe (ea : NBET.embedding<'a>)  =
               ; NBETerm.as_iarg (NBETerm.type_of ea) ])
     in
     let unembed_result (t:NBET.t) : option<__result<'a>> =
-        None
-        (* unembed e_result (readback cfg t) *)
+        match t with
+        | NBETerm.FV (fv, _, [_t; (a, _); (ps, _)]) when S.fv_eq_lid fv fstar_tactics_Success_lid ->
+            BU.bind_opt (NBETerm.unembed ea a) (fun a ->
+            BU.bind_opt (NBETerm.unembed e_proofstate_nbe ps) (fun ps ->
+            Some (Success (a, ps))))
+
+        | NBETerm.FV (fv, _, [_t; (msg, _); (ps, _)]) when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
+            BU.bind_opt (NBETerm.unembed NBETerm.e_string msg) (fun msg ->
+            BU.bind_opt (NBETerm.unembed e_proofstate_nbe ps) (fun ps ->
+            Some (Failed (msg, ps))))
+        | _ ->
+            None
     in
     { NBETerm.em = embed_result
     ; NBETerm.un = unembed_result
@@ -200,7 +210,12 @@ let e_direction_nbe  =
         failwith "e_direction_nbe"
     in
     let unembed_direction (t:NBET.t) : option<direction> =
-        None
+        match t with
+        | NBETerm.FV (fv, _, []) when S.fv_eq_lid fv fstar_tactics_topdown_lid -> Some TopDown
+        | NBETerm.FV (fv, _, []) when S.fv_eq_lid fv fstar_tactics_bottomup_lid -> Some BottomUp
+        | _ ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded direction: %s" (NBETerm.t_to_string t)));
+            None
     in
     { NBETerm.em = embed_direction
     ; NBETerm.un = unembed_direction
@@ -232,7 +247,12 @@ let e_guard_policy_nbe  =
         failwith "e_guard_policy_nbe"
     in
     let unembed_guard_policy (t:NBET.t) : option<guard_policy> =
-        None
+        match t with
+        | NBETerm.FV (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SMT_lid   -> Some SMT
+        | NBETerm.FV (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Goal_lid  -> Some Goal
+        | NBETerm.FV (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Force_lid -> Some Force
+        | NBETerm.FV (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Drop_lid  -> Some Drop
+        | _ -> None
     in
     { NBETerm.em = embed_guard_policy
     ; NBETerm.un = unembed_guard_policy
