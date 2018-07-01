@@ -42,15 +42,35 @@ open FStar.Tactics.InterpFuns
 
 let tacdbg = BU.mk_ref false
 
-let rec e_tactic_0' (er : embedding<'r>) : embedding<tac<'r>> =
+// IN F*: let rec e_tactic_0 (#r:Type) (er : embedding r) : embedding (tac r)
+let rec e_tactic_0 (er : embedding<'r>) : embedding<tac<'r>> // JUST FSHARP
+    =
     mk_emb (fun _ _ -> failwith "Impossible: embedding tactic (0)?")
            (fun w t -> Some <| unembed_tactic_0 er t)
            S.t_unit // never used
 
-and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<'r>)> =
+// IN F*: and e_tactic_1 (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> tac r)
+and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<'r>)> // JUST FSHARP
+    =
     mk_emb (fun _ _ -> failwith "Impossible: embedding tactic (1)?")
            (fun w t -> unembed_tactic_1 ea er t)
            S.t_unit // never used
+
+// IN F*: and e_tactic_nbe_0 (#r:Type) (er : NBET.embedding r) : NBET.embedding (tac r)
+and e_tactic_nbe_0 (er : NBET.embedding<'r>) : NBET.embedding<tac<'r>> // JUST FSHARP
+    =
+    NBETerm.mk_emb
+           (fun _ -> failwith "Impossible: NBE embedding tactic (0)?")
+           (fun t -> Some <| unembed_tactic_nbe_0 er t)
+           (NBET.Constant NBET.Unit)
+
+// IN F*: and e_tactic_nbe_1 (#a:Type) (#r:Type) (ea : NBET.embedding a) (er : NBET.embedding r) : NBET.embedding (a -> tac r)
+and e_tactic_nbe_1 (ea : NBET.embedding<'a>) (er : NBET.embedding<'r>) : NBET.embedding<('a -> tac<'r>)> // JUST FSHARP
+    =
+    NBETerm.mk_emb
+           (fun _ -> failwith "Impossible: NBE embedding tactic (1)?")
+           (fun t -> unembed_tactic_nbe_1 ea er t)
+           (NBET.Constant NBET.Unit)
 
 and primitive_steps () : list<Cfg.primitive_step> =
     (* NB: We need a PRECISE number for the universe arguments or NBE will
@@ -96,20 +116,26 @@ and primitive_steps () : list<Cfg.primitive_step> =
 
       mktac1 0 "trivial"       trivial e_unit e_unit
                                trivial NBET.e_unit NBET.e_unit;
-      (* mktac2 1 "__trytac"      (fun _ -> trytac) e_any (e_tactic_0' e_any) (e_option e_any) *)
-      (*                          (fun _ -> trytac) NBET.e_any ? (NBET.e_option NBET.e_any); *)
+
+      mktac2 1 "__trytac"      (fun _ -> trytac) e_any (e_tactic_0 e_any) (e_option e_any)
+                               (fun _ -> trytac) NBET.e_any (e_tactic_nbe_0 NBET.e_any) (NBET.e_option NBET.e_any);
+
       mktac1 0 "intro"         intro e_unit RE.e_binder
                                intro NBET.e_unit NRE.e_binder;
 
       mktac1 0 "intro_rec"     intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder)
                                intro_rec NBET.e_unit (NBET.e_tuple2 NRE.e_binder NRE.e_binder);
                               
-      (* mktac1 0 "norm"          norm (e_list e_norm_step) e_unit *)
-      (*                          norm (NBET.e_list NBET.e_norm_step) NBET.e_unit; *)
+      mktac1 0 "norm"          norm (e_list e_norm_step) e_unit
+                               norm (NBET.e_list NBET.e_norm_step) NBET.e_unit;
 
-      (* mktac3 0 "norm_term_env" norm_term_env RE.e_env (e_list e_norm_step) RE.e_term RE.e_term; *)
-      (* mktac2 0 "norm_binder_type" *)
-      (*                          norm_binder_type (e_list e_norm_step) RE.e_binder e_unit; *)
+      mktac3 0 "norm_term_env" norm_term_env RE.e_env (e_list e_norm_step) RE.e_term RE.e_term
+                               norm_term_env NRE.e_env (NBET.e_list NBET.e_norm_step) NRE.e_term NRE.e_term;
+
+      mktac2 0 "norm_binder_type"
+                               norm_binder_type (e_list e_norm_step) RE.e_binder e_unit
+                               norm_binder_type (NBET.e_list NBET.e_norm_step) NRE.e_binder NBET.e_unit;
+
       mktac2 0 "rename_to"     rename_to RE.e_binder e_string e_unit
                                rename_to NRE.e_binder NBET.e_string NBET.e_unit;
 
@@ -146,11 +172,11 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "apply_lemma"   apply_lemma RE.e_term e_unit
                                apply_lemma NRE.e_term NBET.e_unit;
 
-      (* mktac5 2 "__divide"      (fun _ _ -> divide) e_any e_any e_int (e_tactic_0' e_any) (e_tactic_0' e_any) (e_tuple2 e_any e_any) *)
-      (*                          (fun _ _ -> divide) NBET.e_any NBET.e_any NBET.e_int (e_tactic_0' e_any) (e_tactic_0' e_any) (e_tuple2 e_any e_any); *)
+      mktac5 2 "__divide"      (fun _ _ -> divide) e_any e_any e_int (e_tactic_0 e_any) (e_tactic_0 e_any) (e_tuple2 e_any e_any)
+                               (fun _ _ -> divide) NBET.e_any NBET.e_any NBET.e_int (e_tactic_nbe_0 NBET.e_any) (e_tactic_nbe_0 NBET.e_any) (NBET.e_tuple2 NBET.e_any NBET.e_any);
 
-      (* mktac2 0 "__seq"         seq (e_tactic_0' e_unit) (e_tactic_0' e_unit) e_unit *)
-      (*                          seq (e_tactic_0' e_unit) (e_tactic_0' e_unit) e_unit; *)
+      mktac2 0 "__seq"         seq (e_tactic_0 e_unit) (e_tactic_0 e_unit) e_unit
+                               seq (e_tactic_nbe_0 NBET.e_unit) (e_tactic_nbe_0 NBET.e_unit) NBET.e_unit;
 
       mktac1 0 "set_options"   set_options e_string e_unit
                                set_options NBET.e_string NBET.e_unit;
@@ -161,8 +187,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "unshelve"      unshelve RE.e_term e_unit
                                unshelve NRE.e_term NBET.e_unit;
 
-      (* mktac2 1 "unquote"       unquote e_any RE.e_term e_any *)
-      (*                          unquote NBET.e_any NRE.e_term NBET.e_any; *)
+      mktac2 1 "unquote"       unquote e_any RE.e_term e_any
+                               (fun _ _ -> failwith "NBE unquote") NBET.e_any NRE.e_term NBET.e_any;
 
       mktac1 0 "prune"         prune e_string e_unit
                                prune NBET.e_string NBET.e_unit;
@@ -182,11 +208,11 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "dump1"         print_proof_state1 e_string e_unit
                                print_proof_state1 NBET.e_string NBET.e_unit;
 
-      (* mktac2 0 "__pointwise"   pointwise E.e_direction (e_tactic_0' e_unit) e_unit *)
-      (*                          pointwise E.e_direction_nbe (e_tactic_0' e_unit) e_unit; *)
+      mktac2 0 "__pointwise"   pointwise E.e_direction (e_tactic_0 e_unit) e_unit
+                               pointwise E.e_direction_nbe (e_tactic_nbe_0 NBET.e_unit) NBET.e_unit;
 
-      (* mktac2 0 "__topdown_rewrite" topdown_rewrite (e_tactic_1 RE.e_term (e_tuple2 e_bool e_int)) (e_tactic_0' e_unit) e_unit *)
-      (*                      topdown_rewrite (e_tactic_1 RE.e_term (e_tuple2 e_bool e_int)) (e_tactic_0' e_unit) e_unit; *)
+      mktac2 0 "__topdown_rewrite" topdown_rewrite (e_tactic_1 RE.e_term (e_tuple2 e_bool e_int)) (e_tactic_0 e_unit) e_unit
+                                   topdown_rewrite (e_tactic_nbe_1 NRE.e_term (NBET.e_tuple2 NBET.e_bool NBET.e_int)) (e_tactic_nbe_0 NBET.e_unit) NBET.e_unit;
 
       mktac1 0 "trefl"         trefl   e_unit e_unit
                                trefl   NBET.e_unit NBET.e_unit;
@@ -321,9 +347,35 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) : tac<'b> = //
     | None ->
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
     )
-//IN F*: and unembed_tactic_0' (#b:Type) (eb:embedding b) (embedded_tac_b:term) : option (tac b) =
-and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term) : option<(tac<'b>)> = //JUST FSHARP
-    Some <| unembed_tactic_0 eb embedded_tac_b
+
+//IN F*: and unembed_tactic_nbe_1 (#a:Type) (#r:Type) (ea:NBET.embedding a) (er:NBET.embedding r) (f:NBET.t) : option (a -> tac r) =
+and unembed_tactic_nbe_1<'a,'r> (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>) (f:NBET.t) : option<('a -> tac<'r>)> = //JUST FSHARP
+    Some (fun x ->
+      let x_tm = NBET.embed ea x in
+      let app = NBE.iapp f [NBET.as_arg x_tm] in
+      unembed_tactic_nbe_0 er app)
+
+//IN F*: and unembed_tactic_nbe_0 (#b:Type) (eb:NBET.embedding b) (embedded_tac_b:NBET.t) : tac b =
+and unembed_tactic_nbe_0<'b> (eb:NBET.embedding<'b>) (embedded_tac_b:NBET.t) : tac<'b> = //JUST FSHARP
+    bind get (fun proof_state ->
+
+    (* Applying is normalizing!!! *)
+    let result = NBE.iapp embedded_tac_b [NBET.as_arg (NBET.embed E.e_proofstate_nbe proof_state)] in
+
+    // F* requires more annotations.
+    // IN F*: let res : option<__result<b>> = NBET.unembed (E.e_result_nbe eb) result in
+    let res = NBET.unembed (E.e_result_nbe eb) result in //JUST FSHARP
+
+    match res with
+    | Some (Success (b, ps)) ->
+        bind (set ps) (fun _ -> ret b)
+
+    | Some (Failed (msg, ps)) ->
+        bind (set ps) (fun _ -> fail msg)
+
+    | None ->
+        Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck (in NBE)! Please file a bug report with a minimal reproduction of this issue.\n%s" (NBET.t_to_string result))) proof_state.main_context.range
+    )
 
 let report_implicits ps (is : Env.implicits) : unit =
     let errs = List.map (fun imp ->
