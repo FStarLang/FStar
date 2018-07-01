@@ -124,16 +124,16 @@ let e_proofstate_nbe =
 let e_result (ea : embedding<'a>)  =
     let embed_result (rng:Range.range) (res:__result<'a>) : term =
         match res with
-        | Failed (msg, ps) ->
-          S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed_tm [U_zero])
-                 [S.iarg (type_of ea);
-                  S.as_arg (embed e_string rng msg);
-                  S.as_arg (embed e_proofstate rng ps)]
-                 None rng
         | Success (a, ps) ->
           S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Success_tm [U_zero])
                  [S.iarg (type_of ea);
                   S.as_arg (embed ea rng a);
+                  S.as_arg (embed e_proofstate rng ps)]
+                 None rng
+        | Failed (msg, ps) ->
+          S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed_tm [U_zero])
+                 [S.iarg (type_of ea);
+                  S.as_arg (embed e_string rng msg);
                   S.as_arg (embed e_proofstate rng ps)]
                  None rng
     in
@@ -168,8 +168,8 @@ let e_result_nbe (ea : NBET.embedding<'a>)  =
             mkConstruct fstar_tactics_Failed_fv
               [U_zero]
               [ NBETerm.as_iarg (NBETerm.type_of ea)
-              ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps)
-              ; NBETerm.as_arg (NBETerm.embed NBETerm.e_string msg) ]
+              ; NBETerm.as_arg (NBETerm.embed NBETerm.e_string msg)
+              ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps) ]
         | Success (a, ps) ->
             mkConstruct fstar_tactics_Success_fv
               [U_zero]
