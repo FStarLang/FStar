@@ -431,7 +431,12 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_arrow (xs, c) -> 
       Arrow ((fun ys -> translate_comp cfg (List.rev_append ys bs) c),
-             List.map (fun x () -> (translate cfg bs (fst x).sort, snd x)) xs)
+              List.fold_right (fun x formals -> 
+                                   let next_formal prefix_of_xs_rev = (* will only be fully applied during readback *)
+                                     translate cfg (List.append prefix_of_xs_rev bs) (fst x).sort,
+                                     snd x
+                                   in
+                                   next_formal :: formals) xs [])
              
     | Tm_refine (bv, tm) ->
       Refinement ((fun (y:t) -> translate cfg (y::bs) tm), (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?
@@ -758,13 +763,17 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       U.refine x body
 
     | Arrow (f, targs) ->
-      let (args, accus) = List.fold_left (fun (args, accus) tf ->
-                                            let (xt, q) = tf () in
-                                            let x = S.new_bv None (readback cfg xt) in
-                                            ((x, q) :: args, (mkAccuVar x) :: accus)) ([], []) targs
-      in
-      let cmp = readback_comp cfg (f accus) in
-      U.arrow args cmp
+      let (args_rev, accus_rev) =
+          List.fold_left (fun (args_rev, accus_rev) tf ->
+                             let (xt, q) = tf accus_rev in
+                             let x = S.new_bv None (readback cfg xt) in
+                             ((x, q) :: args_rev,
+                             (mkAccuVar x) :: accus_rev)) 
+                         ([], [])
+                         targs in 
+               
+      let cmp = readback_comp cfg (f (List.rev accus_rev)) in
+      U.arrow (List.rev args_rev) cmp
 
     | Construct (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in

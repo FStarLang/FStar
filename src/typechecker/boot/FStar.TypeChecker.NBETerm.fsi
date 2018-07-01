@@ -50,8 +50,8 @@ and t
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Arrow of (list<t> -> comp) * list<(unit -> arg)>
-  | Refinement of (t -> t) * (unit -> arg) 
+  | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
+  | Refinement of (t -> t) * (unit -> arg)
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
   | Rec of letbinding * list<letbinding> * list<t> * args * int  * (list<t> -> letbinding -> t)
