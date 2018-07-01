@@ -46,7 +46,9 @@ type atom
 and t
 //IN F*: : Type0
   =
-  | Lam of (list<t> -> t) * list<(unit -> arg)> * int  // Zoe : body * args * arrity
+  | Lam of (list<t> -> t)        //these expect their arguments in binder order (optimized for convenience beta reduction)
+        * list<(list<t> -> arg)> //these expect their arguments in reverse binder order (since this avoids reverses during readback)
+        * int  // Zoe : body * args * arity; this int is the length of the lists expected by the functions in the prior fields
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<universe> * args (* Zoe: Data constructors *)

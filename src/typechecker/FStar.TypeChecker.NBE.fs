@@ -212,8 +212,11 @@ let translate_univ (bs:list<t>) (u:universe) : universe =
     let u = SS.compress_univ u in
       match u with
       | U_bvar i ->
-        let u' = List.nth bs i in //it has to be a Univ term at position i
-        (un_univ u')
+        if i < List.length bs
+        then 
+          let u' = List.nth bs i in //it has to be a Univ term at position i
+          (un_univ u')
+        else failwith "Universe index out of bounds"
 
       | U_succ u -> U_succ (aux u)
 
@@ -261,6 +264,7 @@ let rec iapp cfg (f:t) (args:args) : t =
     if m < n then
       // partial application
       let (_, targs') = List.splitAt m targs in
+      let targs' = List.map (fun targ -> (fun (l (* has length n - m *)) -> targ (List.rev (map_append fst args l)))) targs' in
       Lam ((fun l -> f (map_append fst args l)), targs', n - m)
     else if m = n then
       // full application
@@ -332,7 +336,8 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
                          x
               | None -> debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar)); 
                        iapp cfg (mkFV fvar [] []) args'),
-              (let f (_:int) () : t * S.aqual = (Constant Unit, None) in tabulate arity f),
+              (let f (_:int) _ : t * S.aqual = (Constant Unit, None) in
+               tabulate arity f),
               arity)
        | _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        end
@@ -370,7 +375,7 @@ and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   | [] -> translate cfg bs lb.lbdef
   | _ ->
     Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
-          List.map (fun _ -> (fun () -> id <| (Constant Unit, None))) us,
+          List.map (fun _ -> (fun _ts -> id <| (Constant Unit, None))) us,
           // Zoe: Bogus type! The idea is that we will never readback these lambdas
           List.length us)
   // Note, we only have universe polymorphic top-level pure terms (i.e., fvars bound to pure terms)
@@ -412,7 +417,9 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       Constant (translate_constant c)
 
     | Tm_bvar db -> //de Bruijn
-      List.nth bs db.index
+      if db.index < List.length bs
+      then List.nth bs db.index
+      else failwith "de Bruijn index out of bounds"
 
     | Tm_uinst(t, us) ->
       debug (fun () -> BU.print2 "Uinst term : %s\nUnivs : %s\n" (P.term_to_string t)
@@ -440,7 +447,14 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_abs (xs, body, _) ->
       Lam ((fun ys -> translate cfg (List.rev_append ys bs) body),
-           List.map (fun x () -> (translate cfg bs (fst x).sort, snd x)) xs,
+           List.fold_right (fun x formals -> 
+                             let next_formal prefix_of_xs_rev =
+                                 translate cfg (List.append prefix_of_xs_rev bs) (fst x).sort,
+                                 snd x
+                             in
+                             next_formal :: formals)
+                          xs
+                          [],
            List.length xs)
 
     | Tm_fvar fvar ->
@@ -693,13 +707,17 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       S.mk (Tm_type u) None Range.dummyRange
 
     | Lam (f, targs, arity) ->
-      let (args, accus) = List.fold_left (fun (args, accus) tf ->
-                                            let (xt, q) = tf () in
-                                            let x = S.new_bv None (readback cfg xt) in
-                                            ((x, q) :: args, (mkAccuVar x) :: accus)) ([], []) targs
+      let (args_rev, accus_rev) =
+          List.fold_left (fun (args_rev, accus_rev) tf ->
+                            let (xt, q) = tf accus_rev in
+                            let x = S.new_bv None (readback cfg xt) in
+                            ((x, q) :: args_rev,
+                            (mkAccuVar x) :: accus_rev))
+                         ([], [])
+                         targs
       in
-      let body = readback cfg (f accus) in
-      U.abs args body None
+      let body = readback cfg (f (List.rev accus_rev)) in
+      U.abs (List.rev args_rev) body None
 
     | Refinement (f, targ) ->
       let x =  S.new_bv None (readback cfg (fst (targ ()))) in 
