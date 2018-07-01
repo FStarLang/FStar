@@ -88,7 +88,8 @@ let (init_once : unit -> unit) =
         FStar_TypeChecker_TcTerm.type_of_tot_term
         FStar_TypeChecker_TcTerm.universe_of
         FStar_TypeChecker_TcTerm.check_type_of_well_typed_term solver1
-        FStar_Parser_Const.prims_lid FStar_TypeChecker_NBE.normalize'
+        FStar_Parser_Const.prims_lid
+        FStar_TypeChecker_NBE.normalize_for_unit_test
        in
     (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env;
     (let uu____224 =

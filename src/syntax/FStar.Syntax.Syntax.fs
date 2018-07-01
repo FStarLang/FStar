@@ -681,7 +681,8 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
 ///////////////////////////////////////////////////////////////////////
 let delta_constant = Delta_constant_at_level 0
 let delta_equational = Delta_equational_at_level 0
-let tconst l = mk (Tm_fvar(lid_as_fv l delta_constant None)) None Range.dummyRange
+let fvconst l = lid_as_fv l delta_constant None
+let tconst l = mk (Tm_fvar (fvconst l)) None Range.dummyRange
 let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_constant_at_level 1) None)) None Range.dummyRange
 let tdataconstr l = fv_to_tm (lid_as_fv l delta_constant (Some Data_ctor))
 let t_unit      = tconst PC.unit_lid

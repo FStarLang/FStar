@@ -9,6 +9,7 @@ module SS = FStar.Syntax.Subst
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module Range = FStar.Range
+module BU = FStar.Util
 
 (*
    f: x:int -> P

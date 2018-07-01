@@ -1456,8 +1456,8 @@ let (run_nbe :
     fun r  ->
       fun expected  ->
         run_either i r expected
-          (FStar_TypeChecker_NBE.test_normalize
-             [FStar_TypeChecker_NBE.UnfoldUntil
+          (FStar_TypeChecker_NBE.normalize_for_unit_test
+             [FStar_TypeChecker_Env.UnfoldUntil
                 FStar_Syntax_Syntax.delta_constant])
   
 let (run_interpreter_with_time :

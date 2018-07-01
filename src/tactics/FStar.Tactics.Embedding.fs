@@ -19,6 +19,9 @@ module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module N = FStar.TypeChecker.Normalize
 module Err = FStar.Errors
+module NBETerm = FStar.TypeChecker.NBETerm
+module NBET    = FStar.TypeChecker.NBETerm
+module NBE = FStar.TypeChecker.NBE
 
 open FStar.Tactics.Types
 open FStar.Tactics.Result
@@ -33,7 +36,8 @@ let fstar_tactics_lid' s = PC.fstar_tactics_lid' s
 let lid_as_tm l = S.lid_as_fv l delta_constant None |> S.fv_to_tm
 let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid' ["Effect"; s])
 
-let lid_as_data_tm l = S.fv_to_tm (S.lid_as_fv l delta_constant (Some Data_ctor))
+let lid_as_data_fv l = S.lid_as_fv l delta_constant (Some Data_ctor)
+let lid_as_data_tm l = S.fv_to_tm (lid_as_data_fv l)
 let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid' ["Effect";s])
 
 let fstar_tactics_Failed_lid  = fstar_tactics_lid' ["Result"; "Failed"]
@@ -41,6 +45,8 @@ let fstar_tactics_Success_lid = fstar_tactics_lid' ["Result"; "Success"]
 
 let fstar_tactics_Failed_tm  = lid_as_data_tm fstar_tactics_Failed_lid
 let fstar_tactics_Success_tm = lid_as_data_tm fstar_tactics_Success_lid
+let fstar_tactics_Failed_fv  = lid_as_data_fv fstar_tactics_Failed_lid
+let fstar_tactics_Success_fv = lid_as_data_fv fstar_tactics_Success_lid
 
 let fstar_tactics_topdown_lid = fstar_tactics_lid' ["Types"; "TopDown"]
 let fstar_tactics_bottomup_lid = fstar_tactics_lid' ["Types"; "BottomUp"]
@@ -59,11 +65,15 @@ let fstar_tactics_Drop  = lid_as_data_tm fstar_tactics_Drop_lid
 let fstar_tactics_Force = lid_as_data_tm fstar_tactics_Force_lid
 
 let t_proofstate   = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
+let fv_proofstate  = S.fvconst (fstar_tactics_lid' ["Types"; "proofstate"])
 let t_result_lid   = fstar_tactics_lid' ["Types"; "result"]
 let t_result       = S.tconst t_result_lid
+let fv_result      = S.fvconst (fstar_tactics_lid' ["Types"; "result"])
 let t_result_of t  = U.mk_app t_result [S.as_arg t] // TODO: uinst on t_result?
 let t_guard_policy = S.tconst (fstar_tactics_lid' ["Types"; "guard_policy"])
+let fv_guard_policy = S.fvconst (fstar_tactics_lid' ["Types"; "guard_policy"])
 let t_direction    = S.tconst (fstar_tactics_lid' ["Types"; "direction"])
+let fv_direction   = S.fvconst (fstar_tactics_lid' ["Types"; "direction"])
 
 let mk_emb (em: Range.range -> 'a -> term)
            (un: bool -> term -> option<'a>)
@@ -92,19 +102,48 @@ let e_proofstate =
 let unfold_lazy_proofstate (i : lazyinfo) : term =
     U.exp_string "(((proofstate)))"
 
+(* PLEASE NOTE: Construct and FV accumulate their arguments BACKWARDS. That is,
+ * the expression (f 1 2) is stored as FV (f, [], [Constant (Int 2); Constant (Int 1)].
+ * So be careful when calling mkFV/mkConstruct and matching on them. *)
+
+(* On that note, we use this (inefficient, FIXME) hack in this module *)
+let mkFV fv us ts = NBETerm.mkFV fv (List.rev us) (List.rev ts)
+let mkConstruct fv us ts = NBETerm.mkConstruct fv (List.rev us) (List.rev ts)
+
+let e_proofstate_nbe =
+    let embed_proofstate (ps:proofstate) : NBETerm.t =
+        let li = { lkind = Lazy_proofstate
+                 ; blob = FStar.Dyn.mkdyn ps
+                 ; typ = t_proofstate
+                 ; rng = Range.dummyRange }
+        in
+        NBETerm.Lazy li
+    in
+    let unembed_proofstate (t:NBETerm.t) : option<proofstate> =
+        match t with
+        | NBETerm.Lazy li when li.lkind = Lazy_proofstate ->
+            Some <| FStar.Dyn.undyn li.blob
+        | _ ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded NBE proofstate: %s" (NBETerm.t_to_string t)));
+            None
+    in
+    { NBETerm.em = embed_proofstate
+    ; NBETerm.un = unembed_proofstate
+    ; NBETerm.typ = mkFV fv_proofstate [] [] }
+
 let e_result (ea : embedding<'a>)  =
     let embed_result (res:__result<'a>) (rng:Range.range) _ _ : term =
         match res with
-        | Failed (msg, ps) ->
-          S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed_tm [U_zero])
-                 [S.iarg (type_of ea);
-                  S.as_arg (embed e_string rng msg);
-                  S.as_arg (embed e_proofstate rng ps)]
-                 None rng
         | Success (a, ps) ->
           S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Success_tm [U_zero])
                  [S.iarg (type_of ea);
                   S.as_arg (embed ea rng a);
+                  S.as_arg (embed e_proofstate rng ps)]
+                 None rng
+        | Failed (msg, ps) ->
+          S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed_tm [U_zero])
+                 [S.iarg (type_of ea);
+                  S.as_arg (embed e_string rng msg);
                   S.as_arg (embed e_proofstate rng ps)]
                  None rng
     in
@@ -137,6 +176,41 @@ let e_result (ea : embedding<'a>)  =
         (fun _ -> "")
         (ET_app (t_result_lid |> Ident.string_of_lid, [emb_typ_of ea]))
 
+let e_result_nbe (ea : NBET.embedding<'a>)  =
+    let embed_result (res:__result<'a>) : NBET.t =
+        match res with
+        | Failed (msg, ps) ->
+            mkConstruct fstar_tactics_Failed_fv
+              [U_zero]
+              [ NBETerm.as_iarg (NBETerm.type_of ea)
+              ; NBETerm.as_arg (NBETerm.embed NBETerm.e_string msg)
+              ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps) ]
+        | Success (a, ps) ->
+            mkConstruct fstar_tactics_Success_fv
+              [U_zero]
+              [ NBETerm.as_iarg (NBETerm.type_of ea)
+              ; NBETerm.as_arg (NBETerm.embed ea a)
+              ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps) ]
+    in
+    let unembed_result (t:NBET.t) : option<__result<'a>> =
+        match t with
+        | NBETerm.Construct (fv, _, [(ps, _); (a, _); _t]) when S.fv_eq_lid fv fstar_tactics_Success_lid ->
+            BU.bind_opt (NBETerm.unembed ea a) (fun a ->
+            BU.bind_opt (NBETerm.unembed e_proofstate_nbe ps) (fun ps ->
+            Some (Success (a, ps))))
+
+        | NBETerm.Construct (fv, _, [(ps, _); (msg, _); _t]) when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
+            BU.bind_opt (NBETerm.unembed NBETerm.e_string msg) (fun msg ->
+            BU.bind_opt (NBETerm.unembed e_proofstate_nbe ps) (fun ps ->
+            Some (Failed (msg, ps))))
+        | _ ->
+            None
+    in
+    { NBETerm.em = embed_result
+    ; NBETerm.un = unembed_result
+    ; NBETerm.typ = mkFV fv_result [] [] }
+
+
 let e_direction =
     let embed_direction (rng:Range.range) (d : direction) : term =
         match d with
@@ -153,6 +227,22 @@ let e_direction =
             None
     in
     mk_emb embed_direction unembed_direction t_direction
+
+let e_direction_nbe  =
+    let embed_direction (res:direction) : NBET.t =
+        failwith "e_direction_nbe"
+    in
+    let unembed_direction (t:NBET.t) : option<direction> =
+        match t with
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_topdown_lid -> Some TopDown
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_bottomup_lid -> Some BottomUp
+        | _ ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded direction: %s" (NBETerm.t_to_string t)));
+            None
+    in
+    { NBETerm.em = embed_direction
+    ; NBETerm.un = unembed_direction
+    ; NBETerm.typ = mkFV fv_direction [] [] }
 
 let e_guard_policy =
     let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =
@@ -174,3 +264,19 @@ let e_guard_policy =
             None
     in
     mk_emb embed_guard_policy unembed_guard_policy t_guard_policy
+
+let e_guard_policy_nbe  =
+    let embed_guard_policy (res:guard_policy) : NBET.t =
+        failwith "e_guard_policy_nbe"
+    in
+    let unembed_guard_policy (t:NBET.t) : option<guard_policy> =
+        match t with
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SMT_lid   -> Some SMT
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Goal_lid  -> Some Goal
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Force_lid -> Some Force
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Drop_lid  -> Some Drop
+        | _ -> None
+    in
+    { NBETerm.em = embed_guard_policy
+    ; NBETerm.un = unembed_guard_policy
+    ; NBETerm.typ = mkFV fv_guard_policy [] [] }

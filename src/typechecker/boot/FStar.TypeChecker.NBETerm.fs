@@ -20,7 +20,7 @@ module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const
 module Range = FStar.Range
-
+module SE = FStar.Syntax.Embeddings
 
 type var = bv
 type sort = int
@@ -33,8 +33,9 @@ type constant =
   | Char of FStar.Char.char
   | Range of Range.range
 
-//IN F*: type atom : Type0 =
-type atom = //JUST FSHARP
+type atom
+//IN F*: : Type0
+  =
   | Var of var
   | Match of t * (* the scutinee *)
              (t -> t) * (* case analysis *)
@@ -42,11 +43,12 @@ type atom = //JUST FSHARP
              (* the computation that reconstructs the pattern matching, parameterized by the readback function *)
              // ZP: Keep the original branches to reconstruct just the patterns
              // NS: add a thunked pattern translations here
-  | Rec of letbinding * list<letbinding> * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
-  (* Zoe : a recursive function definition together with its block of mutually recursive function definitions and its environment *)
-//IN F*: and t : Type0 =
-and t = //JUST FSHARP
-  | Lam of (list<t> -> t) * list<(unit -> arg)> * int  // Zoe : body * args * arrity
+and t
+//IN F*: : Type0
+  =
+  | Lam of (list<t> -> t)        //these expect their arguments in binder order (optimized for convenience beta reduction)
+        * list<(list<t> -> arg)> //these expect their arguments in reverse binder order (since this avoids reverses during readback)
+        * int  // Zoe : body * args * arity; this int is the length of the lists expected by the functions in the prior fields
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<universe> * args (* Zoe: Data constructors *)
@@ -55,9 +57,27 @@ and t = //JUST FSHARP
   | Type_t of universe
   | Univ of universe
   | Unknown (* For translating unknown types *)
-  | Arrow of (list<t> -> t) * list<(unit -> arg)>
+  | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
   | Refinement of (t -> t) * (unit -> arg) 
-  // | Arrow of list binder * comp_t
+  | Quote of S.term * S.quoteinfo
+  | Lazy of S.lazyinfo
+  | Rec of letbinding * list<letbinding> * list<t> * args * int  * (list<t> -> letbinding -> t)
+  (* Zoe : a recursive function definition together with its block of mutually 
+     recursive function definitions and its environment *)
+  (* args is th alrady accumulated arguments, the last argument is the arrity *)
+
+ and comp = 
+  | Tot of t * option<universe>
+  | GTot of t * option<universe>
+  | Comp of comp_typ
+and comp_typ = {
+  comp_univs:universes;
+  effect_name:lident;
+  result_typ:t;
+  effect_args:args;
+  flags:list<cflags>
+}
+
 and arg = t * aqual
 and args = list<arg>
 //NS:
@@ -93,7 +113,6 @@ let mkFV i us ts = FV(i, us, ts)
 
 let mkAccuVar (v:var) = Accu(Var v, [])
 let mkAccuMatch (s:t) (cases: t -> t) (bs:((t -> term) -> list<branch>)) = Accu(Match (s, cases, bs), [])
-let mkAccuRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = Accu(Rec(b, bs, env), [])
 
 // Term equality
 
@@ -173,7 +192,7 @@ let constant_to_string (c: constant) =
 
 let rec t_to_string (x:t) =
   match x with
-  | Lam _ -> "Lam"
+  | Lam (b, args, arity) -> BU.format2 "Lam (_, %s args, %s)" (BU.string_of_int (List.length args)) (BU.string_of_int arity)
   | Accu (a, l) ->
     "Accu (" ^ (atom_to_string a) ^ ") (" ^
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
@@ -194,12 +213,14 @@ let rec t_to_string (x:t) =
     let t = fst (t ()) in
     "Refinement " ^ (P.bv_to_string x) ^ ":" ^ (t_to_string t) ^ "{" ^ (t_to_string (f (mkAccuVar x))) ^ "}"
   | Unknown -> "Unknown"
+  | Quote _ -> "Quote _"
+  | Lazy _ -> "Lazy _"
+  | Rec (_,_, l, _, _, _) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
 and atom_to_string (a: atom) =
-    match a with
-    | Var v -> "Var " ^ (P.bv_to_string v)
-    | Match (t, _, _) -> "Match " ^ (t_to_string t)
-    | Rec (_,_, l) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
+  match a with
+  | Var v -> "Var " ^ (P.bv_to_string v)
+  | Match (t, _, _) -> "Match " ^ (t_to_string t)
 
 and arg_to_string (a : arg) = a |> fst |> t_to_string
 
@@ -229,8 +250,8 @@ let lid_as_typ (l:lident) (us:list<universe>) (args:args) : t =
 let as_iarg (a:t) : arg = (a, Some S.imp_tag)
 let as_arg (a:t) : arg = (a, None)
 
-//  Non-dependent arrow
-let make_arrow1 t1 (a:arg) : t = Arrow ((fun _ -> t1), [(fun _ -> a)])
+//  Non-dependent total arrow
+let make_arrow1 t1 (a:arg) : t = Arrow ((fun _ -> Tot (t1, None)), [(fun _ -> a)])
 
 // Emdebbing at abstract types
 let e_any : embedding<t> =
@@ -323,7 +344,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
           Some (a, b)))
         | _ -> None
     in
-    mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero] [as_arg (type_of ea);
+    mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero;U_zero] [as_arg (type_of ea);
                                                      as_arg (type_of eb)])
 
 // Embeddind range
@@ -332,7 +353,8 @@ let e_range : embedding<Range.range> =
     let un t =
     match t with
     | Constant (Range r) -> Some r
-    | _ -> None
+    | _ ->
+        None
     in
     mk_emb em un (lid_as_typ PC.range_lid [] [])
 
@@ -374,6 +396,62 @@ let e_arrow1 (ea:embedding<'a>) (eb:embedding<'b>) =
     in
     mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb)))
 
+let e_norm_step =
+    let em (n:SE.norm_step) : t =
+        match n with
+        | SE.Simpl   -> mkFV (lid_as_fv PC.steps_simpl     S.delta_constant None) [] []
+        | SE.Weak    -> mkFV (lid_as_fv PC.steps_weak      S.delta_constant None) [] []
+        | SE.HNF     -> mkFV (lid_as_fv PC.steps_hnf       S.delta_constant None) [] []
+        | SE.Primops -> mkFV (lid_as_fv PC.steps_primops   S.delta_constant None) [] []
+        | SE.Delta   -> mkFV (lid_as_fv PC.steps_delta     S.delta_constant None) [] []
+        | SE.Zeta    -> mkFV (lid_as_fv PC.steps_zeta      S.delta_constant None) [] []
+        | SE.Iota    -> mkFV (lid_as_fv PC.steps_iota      S.delta_constant None) [] []
+        | SE.Reify   -> mkFV (lid_as_fv PC.steps_reify     S.delta_constant None) [] []
+        | SE.NBE     -> mkFV (lid_as_fv PC.steps_nbe       S.delta_constant None) [] []
+        | SE.UnfoldOnly l ->
+                     mkFV (lid_as_fv PC.steps_unfoldonly S.delta_constant None)
+                          [] [as_arg (embed (e_list e_string) l)]
+
+        | SE.UnfoldFully l ->
+                     mkFV (lid_as_fv PC.steps_unfoldfully S.delta_constant None)
+                          [] [as_arg (embed (e_list e_string) l)]
+        | SE.UnfoldAttr a ->
+                failwith "NBE UnfoldAttr..."
+    in
+    let un (t0:t) : option<SE.norm_step> =
+        match t0 with
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_simpl ->
+            Some SE.Simpl
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_weak ->
+            Some SE.Weak
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_hnf ->
+            Some SE.HNF
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_primops ->
+            Some SE.Primops
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_delta ->
+            Some SE.Delta
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_zeta ->
+            Some SE.Zeta
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_iota ->
+            Some SE.Iota
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_nbe ->
+            Some SE.NBE
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_reify ->
+            Some SE.Reify
+        | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldonly ->
+            BU.bind_opt (unembed (e_list e_string) l) (fun ss ->
+            Some <| SE.UnfoldOnly ss)
+        | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldfully ->
+            BU.bind_opt (unembed (e_list e_string) l) (fun ss ->
+            Some <| SE.UnfoldFully ss)
+        (* | FV (fv, _, [_;(a, _)]) when S.fv_eq_lid fv PC.steps_unfoldattr -> *)
+        (*     Some (SE.UnfoldAttr a) *)
+        | _ ->
+            Errors.log_issue Range.dummyRange (Errors.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (t_to_string t0)));
+            None
+    in
+    mk_emb em un (mkFV (lid_as_fv PC.norm_step_lid delta_constant None) [] [])
+
 (* Interface for building primitive steps *)
 
 let arg_as_int    (a:arg) = fst a |> unembed e_int
@@ -391,7 +469,7 @@ let arg_as_bounded_int ((a, _) : arg) : option<(fv * Z.t)> =
     | FV (fv1, [], [(Constant (Int i), _)])
       when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) 
                         "int_to_t" ->
-      Some (fv1, i) 
+      Some (fv1, i)
     | _ -> None
 
 let int_as_bounded int_to_t n =
@@ -516,7 +594,8 @@ let prims_to_fstar_range_step (args:args) : option<t> =
     | [(a1, _)] ->
       begin match unembed e_range a1 with
       | Some r -> Some (embed e_range r)
-      | None -> None
+      | None ->
+        None
       end
    | _ -> failwith "Unexpected number of arguments"
 

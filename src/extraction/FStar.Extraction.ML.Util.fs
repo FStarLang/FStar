@@ -632,8 +632,7 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
             let ncb = str_to_name "ncb" in
             let all_args = str_to_name "args" in
             let args =
-                [w <| MLE_Const (MLC_Bool true); //trigger a TAC?.reflect
-                 tac_fun] @
+                [tac_fun] @
                 arg_unembeddings @
                 [res_embedding;
                  tac_lid_app;

@@ -49,7 +49,7 @@ let register_tactic (s: string) (arity: Prims.int) (t: itac)=
     let step =
         { name=FStar_Ident.lid_of_str s;
           arity = arity;
-          strong_reduction_ok=false;
+          strong_reduction_ok=true;
           tactic=t } in
     compiled_tactics := step :: !compiled_tactics;
     BU.print1 "Registered tactic %s\n" s

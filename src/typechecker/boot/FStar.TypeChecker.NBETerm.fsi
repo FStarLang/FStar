@@ -29,16 +29,20 @@ type constant =
   | Char of FStar.Char.char
   | Range of Range.range
 
-//IN F*: type atom : Type0 =
-type atom = //JUST FSHARP
+type atom
+//IN F*: : Type0
+  =
   | Var of var
   | Match of t *
              (t -> t) *
              ((t -> term) -> list<branch>)
-  | Rec of letbinding * list<letbinding> * list<t>
-//IN F*: and t : Type0 =
-and t = //JUST FSHARP
-  | Lam of (list<t> -> t) * list<(unit -> arg)> * int
+
+and t
+//IN F*: : Type0
+  =
+  | Lam of (list<t> -> t)        //these expect their arguments in binder order (optimized for convenience beta reduction)
+        * list<(list<t> -> arg)> //these expect their arguments in reverse binder order (since this avoids reverses during readback)
+        * int  // Zoe : body * args * arity; this int is the length of the lists expected by the functions in the prior fields
   | Accu of atom * args
   | Construct of fv * list<universe> * args
   | FV of fv * list<universe> * args
@@ -46,8 +50,22 @@ and t = //JUST FSHARP
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Arrow of (list<t> -> t) * list<(unit -> arg)>
-  | Refinement of (t -> t) * (unit -> arg) 
+  | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
+  | Refinement of (t -> t) * (unit -> arg)
+  | Quote of S.term * S.quoteinfo
+  | Lazy of S.lazyinfo
+  | Rec of letbinding * list<letbinding> * list<t> * args * int  * (list<t> -> letbinding -> t)
+and comp = 
+  | Tot of t * option<universe>
+  | GTot of t * option<universe>
+  | Comp of comp_typ
+and comp_typ = {
+  comp_univs:universes;
+  effect_name:lident;
+  result_typ:t;
+  effect_args:args;
+  flags:list<cflags>
+}
 
 and arg = t * aqual
 and args = list<(arg)>
@@ -80,7 +98,6 @@ val mkFV : fv -> list<universe> -> args -> t
 
 val mkAccuVar : var -> t
 val mkAccuMatch : t -> (t -> t) -> ((t -> term) -> list<branch>) -> t
-val mkAccuRec : letbinding -> list<letbinding> -> list<t> -> t
 
 val as_arg : t -> arg
 val as_iarg : t -> arg
@@ -91,15 +108,23 @@ type embedding<'a> = {
   typ : t;
 }
 
+val mk_emb : ('a -> t) -> (t -> option<'a>) -> t -> embedding<'a>
+
 val embed : embedding<'a> -> 'a -> t
 val unembed : embedding<'a> -> t -> option<'a> 
 val type_of : embedding<'a> -> t
 
-val e_bool : embedding<bool>
+val e_bool   : embedding<bool>
 val e_string : embedding<string>
-val e_char : embedding<char>
-val e_int : embedding<Z.t>
-val e_range : embedding<Range.range>
+val e_char   : embedding<char>
+val e_int    : embedding<Z.t>
+val e_unit   : embedding<unit>
+val e_any    : embedding<t>
+val e_range  : embedding<Range.range>
+val e_norm_step : embedding<Syntax.Embeddings.norm_step>
+val e_list   : embedding<'a> -> embedding<list<'a>>
+val e_option : embedding<'a> -> embedding<option<'a>>
+val e_tuple2 : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
 
 // Interface for NBE interpretations
 

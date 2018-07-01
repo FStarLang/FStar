@@ -616,15 +616,19 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              0,
              mk_range,
              NBETerm.dummy_interp (PC.p2l ["Prims"; "mk_range"]));
+         (PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"],
+             1, 
+             0, 
+             prims_to_fstar_range_step, 
+             NBE.prims_to_fstar_range_step);
         ]
     in
+    (* GM: Just remove strong_reduction_ok? There's currently no operator which requires that
+     * and it also seems unlikely since those that cannot work with open term might
+     * just fail to unembed their arguments. *)
     let weak_ops =
-        [(PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"],
-             1,
-             0,
-             prims_to_fstar_range_step,
-             NBETerm.prims_to_fstar_range_step);
-        ]
+            [
+            ]
     in
     let bounded_arith_ops
         =

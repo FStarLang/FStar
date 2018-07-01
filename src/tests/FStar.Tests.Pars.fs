@@ -60,7 +60,7 @@ let init_once () : unit =
                 TcTerm.check_type_of_well_typed_term
                 solver
                 Const.prims_lid 
-                NBE.normalize' in
+                NBE.normalize_for_unit_test in
   env.solver.init env;
   let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env()) in
   let env = {env with dsenv=dsenv} in

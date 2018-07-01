@@ -33,212 +33,269 @@ open FStar.Reflection.Basic
 open FStar.Reflection.Interpreter
 module RD = FStar.Reflection.Data
 module RE = FStar.Reflection.Embeddings
-module NBE = FStar.TypeChecker.NBETerm
+module NRE = FStar.Reflection.NBEEmbeddings
+module NBE = FStar.TypeChecker.NBE
+module NBETerm = FStar.TypeChecker.NBETerm
+module NBET    = FStar.TypeChecker.NBETerm
 open FStar.Tactics.Native
 open FStar.Tactics.InterpFuns
 
 let tacdbg = BU.mk_ref false
 
-let rec e_tactic_0' (er : embedding<'r>) : embedding<tac<'r>> =
+// IN F*: let rec e_tactic_0 (#r:Type) (er : embedding r) : embedding (tac r)
+let rec e_tactic_0 (er : embedding<'r>) : embedding<tac<'r>> // JUST FSHARP
+    =
     mk_emb (fun _ _ _ -> failwith "Impossible: embedding tactic (0)?")
-           (fun _w t norm -> Some <| unembed_tactic_0 er t norm)
+           (fun w t norm -> Some <| unembed_tactic_0 er t norm)
            S.t_unit // never used
 
-and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<'r>)> =
+// IN F*: and e_tactic_1 (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> tac r)
+and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<'r>)> // JUST FSHARP
+    =
     mk_emb (fun _ _ _ -> failwith "Impossible: embedding tactic (1)?")
            (fun w t -> unembed_tactic_1 ea er t)
            S.t_unit // never used
+
+// IN F*: and e_tactic_nbe_0 (#r:Type) (er : NBET.embedding r) : NBET.embedding (tac r)
+and e_tactic_nbe_0 (er : NBET.embedding<'r>) : NBET.embedding<tac<'r>> // JUST FSHARP
+    =
+    NBETerm.mk_emb
+           (fun _ -> failwith "Impossible: NBE embedding tactic (0)?")
+           (fun t -> Some <| unembed_tactic_nbe_0 er t)
+           (NBET.Constant NBET.Unit)
+
+// IN F*: and e_tactic_nbe_1 (#a:Type) (#r:Type) (ea : NBET.embedding a) (er : NBET.embedding r) : NBET.embedding (a -> tac r)
+and e_tactic_nbe_1 (ea : NBET.embedding<'a>) (er : NBET.embedding<'r>) : NBET.embedding<('a -> tac<'r>)> // JUST FSHARP
+    =
+    NBETerm.mk_emb
+           (fun _ -> failwith "Impossible: NBE embedding tactic (1)?")
+           (fun t -> unembed_tactic_nbe_1 ea er t)
+           (NBET.Constant NBET.Unit)
+
 and primitive_steps () : list<Cfg.primitive_step> =
-    let decr_depth_interp psc ncb (args : args) =
-        match args with
-        | [(ps, _)] ->
-            bind_opt (unembed E.e_proofstate ps ncb) (fun ps ->
-            let ps = set_ps_psc psc ps in
-            Some (embed E.e_proofstate (Cfg.psc_range psc) (decr_depth ps) ncb))
+    (* NB: We need a PRECISE number for the universe arguments or NBE will
+     * just go crazy. Most of the tactics work on ground types and thus have 0
+     * universe arguments. Those polymorphic, usually take 1 universe per Type argument. *)
 
-        | _ -> failwith "Unexpected application of decr_depth"
+    (* mktot1/mktot2 uses names in FStar.Tactics.Builtins, we override these few who
+     * are in other modules: *)
+    let tracepoint =
+      { mktot1 0 "tracepoint" tracepoint E.e_proofstate e_unit
+                              tracepoint E.e_proofstate_nbe NBET.e_unit
+        with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" }
     in
-    let decr_depth_step : Cfg.primitive_step =
-        {Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth";
-         Cfg.arity = 1;
-         Cfg.univ_arity=0; // Zoe : We might need to change that
-         Cfg.auto_reflect=None;
-         Cfg.strong_reduction_ok = false;
-         Cfg.requires_binder_substitution = false;
-         Cfg.interpretation = decr_depth_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
-         }
+    let set_proofstate_range =
+      { mktot2 0 "set_proofstate_range" set_proofstate_range E.e_proofstate e_range E.e_proofstate
+                                        set_proofstate_range E.e_proofstate_nbe NBET.e_range E.e_proofstate_nbe
+        with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" }
     in
-    let incr_depth_interp psc ncb (args : args) =
-        match args with
-        | [(ps, _)] ->
-            bind_opt (unembed E.e_proofstate ps ncb) (fun ps ->
-            let ps = set_ps_psc psc ps in
-            Some (embed E.e_proofstate (Cfg.psc_range psc) (incr_depth ps) ncb))
-        | _ -> failwith "Unexpected application of incr_depth"
+    let incr_depth =
+      { mktot1 0 "incr_depth" incr_depth E.e_proofstate E.e_proofstate
+                              incr_depth E.e_proofstate_nbe E.e_proofstate_nbe
+        with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth" }
     in
-    let incr_depth_step : Cfg.primitive_step =
-        {Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth";
-         Cfg.arity = 1;
-         Cfg.univ_arity=0; // Zoe : We might need to change that
-         Cfg.auto_reflect=None;
-         Cfg.strong_reduction_ok = false;
-         Cfg.requires_binder_substitution = false;
-         Cfg.interpretation = incr_depth_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
-         }
+    let decr_depth =
+      { mktot1 0 "decr_depth" decr_depth E.e_proofstate E.e_proofstate
+                              decr_depth E.e_proofstate_nbe E.e_proofstate_nbe
+        with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth" }
     in
-    let tracepoint_interp psc ncb (args : args) =
-        match args with
-        | [(ps, _)] ->
-            bind_opt (unembed E.e_proofstate ps ncb) (fun ps ->
-            let ps = set_ps_psc psc ps in
-            tracepoint ps;
-            Some U.exp_unit)
-        | _ -> failwith "Unexpected application of tracepoint"
-    in
-    let set_proofstate_range_interp psc ncb (args : args) =
-        match args with
-        | [(ps, _); (r, _)] ->
-            bind_opt (unembed E.e_proofstate ps ncb) (fun ps ->
-            bind_opt (unembed e_range r ncb) (fun r ->
-            let ps' = set_proofstate_range ps r in
-            Some (embed E.e_proofstate (Cfg.psc_range psc) ps' ncb)))
-        | _ -> failwith "Unexpected application of set_proofstate_range"
-    in
-    let push_binder_interp psc ncb (args:args) =
-        match args with
-        | [(env_t, _); (b, _)] ->
-            bind_opt (unembed RE.e_env env_t ncb) (fun env ->
-            bind_opt (unembed RE.e_binder b ncb) (fun b ->
-            let env = Env.push_binders env [b] in
-            Some (embed RE.e_env env_t.pos env ncb)))
-        | _ -> failwith "Unexpected application of push_binder"
-    in
-    let set_proofstate_range_step : Cfg.primitive_step =
-        let nm = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" in
-        {Cfg.name = nm;
-         Cfg.arity = 2;
-         Cfg.univ_arity=0; // Zoe : We might need to change that
-         Cfg.auto_reflect=None;
-         Cfg.strong_reduction_ok = false;
-         Cfg.requires_binder_substitution = false;
-         Cfg.interpretation = set_proofstate_range_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
-        }
-    in
-    let tracepoint_step : Cfg.primitive_step =
-        let nm = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" in
-        {Cfg.name = nm;
-         Cfg.arity = 1;
-         Cfg.univ_arity=0; // Zoe : We might need to change that
-         Cfg.auto_reflect=None;
-         Cfg.strong_reduction_ok = false;
-         Cfg.requires_binder_substitution = true;
-         Cfg.interpretation = tracepoint_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
-        }
-    in
-    let push_binder_step : Cfg.primitive_step =
-       let nm = E.fstar_tactics_lid' ["Builtins";"push_binder"] in
-        {Cfg.name = nm;
-         Cfg.arity = 2;
-         Cfg.univ_arity=0; // Zoe : We might need to change that
-         Cfg.auto_reflect=None;
-         Cfg.strong_reduction_ok = false;
-         Cfg.requires_binder_substitution = true;
-         Cfg.interpretation = push_binder_interp;
-         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
-        }
-    in
+    (* Sigh, due to lack to expressive typing we need to duplicate a bunch of information here,
+     * like which embeddings are needed for the arguments, but more annoyingly the underlying
+     * implementation. Would be nice to have something better in the not-so-long run. *)
     [
-      mktac2 "fail"          (fun _ -> fail) e_any e_string e_any; //nb: the e_any embedding is never used
-      mktac1 "trivial"       trivial e_unit e_unit;
-      mktac2 "__trytac"      (fun _ -> trytac) e_any (e_tactic_0' e_any) (e_option e_any);
-      mktac1 "intro"         intro e_unit RE.e_binder;
-      mktac1 "intro_rec"     intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder);
-      mktac1 "norm"          norm (e_list e_norm_step) e_unit;
-      mktac3 "norm_term_env" norm_term_env RE.e_env (e_list e_norm_step) RE.e_term RE.e_term;
-      mktac2 "norm_binder_type"
-                               norm_binder_type (e_list e_norm_step) RE.e_binder e_unit;
-      mktac2 "rename_to"     rename_to RE.e_binder e_string e_unit;
-      mktac1 "binder_retype" binder_retype RE.e_binder e_unit;
-      mktac1 "revert"        revert e_unit e_unit;
-      mktac1 "clear_top"     clear_top e_unit e_unit;
-      mktac1 "clear"         clear RE.e_binder e_unit;
-      mktac1 "rewrite"       rewrite RE.e_binder e_unit;
-      mktac1 "smt"           smt e_unit e_unit;
-      mktac1 "refine_intro"  refine_intro e_unit e_unit;
-      mktac2 "t_exact"       t_exact e_bool RE.e_term e_unit;
-      mktac1 "apply"         (apply  true) RE.e_term e_unit;
-      mktac1 "apply_raw"     (apply false) RE.e_term e_unit;
-      mktac1 "apply_lemma"   apply_lemma RE.e_term e_unit;
-      // A tac 5... oh my...
-      mktac5 "__divide"      (fun _ _ -> divide) e_any e_any e_int (e_tactic_0' e_any) (e_tactic_0' e_any)
-                                                            (e_tuple2 e_any e_any);
-      mktac2 "__seq"         seq (e_tactic_0' e_unit) (e_tactic_0' e_unit) e_unit;
+      incr_depth;
+      decr_depth;
+      tracepoint;
+      set_proofstate_range;
+      mktot2 0 "push_binder"   (fun env b -> Env.push_binders env [b]) RE.e_env RE.e_binder RE.e_env
+                               (fun env b -> Env.push_binders env [b]) NRE.e_env NRE.e_binder NRE.e_env;
 
-      mktac1 "set_options"   set_options e_string e_unit;
+      //nb: the e_any embedding is never used
+      mktac2 1 "fail"          (fun _ -> fail) e_any e_string e_any
+                               (fun _ -> fail) NBET.e_any NBET.e_string NBET.e_any;
 
-      mktac1 "tc"            tc RE.e_term RE.e_term;
-      mktac1 "unshelve"      unshelve RE.e_term e_unit;
-      mktac2 "unquote"       unquote e_any RE.e_term e_any;
+      mktac1 0 "trivial"       trivial e_unit e_unit
+                               trivial NBET.e_unit NBET.e_unit;
 
-      mktac1 "prune"         prune e_string e_unit;
-      mktac1 "addns"         addns e_string e_unit;
+      mktac2 1 "__trytac"      (fun _ -> trytac) e_any (e_tactic_0 e_any) (e_option e_any)
+                               (fun _ -> trytac) NBET.e_any (e_tactic_nbe_0 NBET.e_any) (NBET.e_option NBET.e_any);
 
-      mktac1 "print"         print e_string e_unit;
-      mktac1 "debug"         debug e_string e_unit;
-      mktac1 "dump"          print_proof_state e_string e_unit;
-      mktac1 "dump1"         print_proof_state1 e_string e_unit;
+      mktac1 0 "intro"         intro e_unit RE.e_binder
+                               intro NBET.e_unit NRE.e_binder;
 
-      mktac2 "__pointwise"     pointwise E.e_direction (e_tactic_0' e_unit) e_unit;
-      mktac2 "__topdown_rewrite" topdown_rewrite
-                                 (e_tactic_1 RE.e_term (e_tuple2 e_bool e_int))
-                                 (e_tactic_0' e_unit)
-                                 e_unit;
+      mktac1 0 "intro_rec"     intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder)
+                               intro_rec NBET.e_unit (NBET.e_tuple2 NRE.e_binder NRE.e_binder);
+                              
+      mktac1 0 "norm"          norm (e_list e_norm_step) e_unit
+                               norm (NBET.e_list NBET.e_norm_step) NBET.e_unit;
 
-      mktac1 "trefl"         trefl   e_unit e_unit;
-      mktac1 "later"         later   e_unit e_unit;
-      mktac1 "dup"           dup     e_unit e_unit;
-      mktac1 "flip"          flip    e_unit e_unit;
-      mktac1 "qed"           qed     e_unit e_unit;
-      mktac1 "dismiss"       dismiss e_unit e_unit;
-      mktac1 "tadmit"        tadmit  e_unit e_unit;
+      mktac3 0 "norm_term_env" norm_term_env RE.e_env (e_list e_norm_step) RE.e_term RE.e_term
+                               norm_term_env NRE.e_env (NBET.e_list NBET.e_norm_step) NRE.e_term NRE.e_term;
 
-      mktac1 "cases"         cases RE.e_term (e_tuple2 RE.e_term RE.e_term);
-      mktac1 "t_destruct"    t_destruct RE.e_term (e_list (e_tuple2 RE.e_fv e_int));
+      mktac2 0 "norm_binder_type"
+                               norm_binder_type (e_list e_norm_step) RE.e_binder e_unit
+                               norm_binder_type (NBET.e_list NBET.e_norm_step) NRE.e_binder NBET.e_unit;
 
-      mktac1 "top_env"       top_env     e_unit RE.e_env;
-      mktac1 "cur_env"       cur_env     e_unit RE.e_env;
-      mktac1 "cur_goal"      cur_goal'   e_unit RE.e_term;
-      mktac1 "cur_witness"   cur_witness e_unit RE.e_term;
+      mktac2 0 "rename_to"     rename_to RE.e_binder e_string e_unit
+                               rename_to NRE.e_binder NBET.e_string NBET.e_unit;
 
-      mktac1 "inspect"       inspect RE.e_term      RE.e_term_view;
-      mktac1 "pack"          pack    RE.e_term_view RE.e_term;
+      mktac1 0 "binder_retype" binder_retype RE.e_binder e_unit
+                               binder_retype NRE.e_binder NBET.e_unit;
 
-      mktac1 "fresh"         fresh       e_unit e_int;
-      mktac1 "ngoals"        ngoals      e_unit e_int;
-      mktac1 "ngoals_smt"    ngoals_smt  e_unit e_int;
-      mktac1 "is_guard"      is_guard    e_unit e_bool;
+      mktac1 0 "revert"        revert e_unit e_unit
+                               revert NBET.e_unit NBET.e_unit;
 
-      mktac2 "uvar_env"      uvar_env RE.e_env (e_option RE.e_term) RE.e_term;
-      mktac3 "unify_env"     unify_env RE.e_env RE.e_term RE.e_term e_bool;
-      mktac3 "launch_process" launch_process e_string (e_list e_string) e_string e_string;
+      mktac1 0 "clear_top"     clear_top e_unit e_unit
+                               clear_top NBET.e_unit NBET.e_unit;
 
-      mktac2 "fresh_bv_named"  fresh_bv_named e_string RE.e_term RE.e_bv;
-      mktac1 "change"          change RE.e_term e_unit;
+      mktac1 0 "clear"         clear RE.e_binder e_unit
+                               clear NRE.e_binder NBET.e_unit;
 
-      mktac1 "get_guard_policy" get_guard_policy e_unit E.e_guard_policy;
-      mktac1 "set_guard_policy" set_guard_policy E.e_guard_policy e_unit;
-      mktac1 "lax_on"           lax_on e_unit e_bool;
+      mktac1 0 "rewrite"       rewrite RE.e_binder e_unit
+                               rewrite NRE.e_binder NBET.e_unit;
 
-      decr_depth_step;
-      incr_depth_step;
-      tracepoint_step;
-      set_proofstate_range_step;
-      push_binder_step
-    ]@reflection_primops @native_tactics_steps
+      mktac1 0 "smt"           smt e_unit e_unit
+                               smt NBET.e_unit NBET.e_unit;
+
+      mktac1 0 "refine_intro"  refine_intro e_unit e_unit
+                               refine_intro NBET.e_unit NBET.e_unit;
+
+      mktac2 0 "t_exact"       t_exact e_bool RE.e_term e_unit
+                               t_exact NBET.e_bool NRE.e_term NBET.e_unit;
+
+      mktac1 0 "apply"         (apply  true) RE.e_term e_unit
+                               (apply  true) NRE.e_term NBET.e_unit;
+
+      mktac1 0 "apply_raw"     (apply false) RE.e_term e_unit
+                               (apply false) NRE.e_term NBET.e_unit;
+
+      mktac1 0 "apply_lemma"   apply_lemma RE.e_term e_unit
+                               apply_lemma NRE.e_term NBET.e_unit;
+
+      mktac5 2 "__divide"      (fun _ _ -> divide) e_any e_any e_int (e_tactic_0 e_any) (e_tactic_0 e_any) (e_tuple2 e_any e_any)
+                               (fun _ _ -> divide) NBET.e_any NBET.e_any NBET.e_int (e_tactic_nbe_0 NBET.e_any) (e_tactic_nbe_0 NBET.e_any) (NBET.e_tuple2 NBET.e_any NBET.e_any);
+
+      mktac2 0 "__seq"         seq (e_tactic_0 e_unit) (e_tactic_0 e_unit) e_unit
+                               seq (e_tactic_nbe_0 NBET.e_unit) (e_tactic_nbe_0 NBET.e_unit) NBET.e_unit;
+
+      mktac1 0 "set_options"   set_options e_string e_unit
+                               set_options NBET.e_string NBET.e_unit;
+
+      mktac1 0 "tc"            tc RE.e_term RE.e_term
+                               tc NRE.e_term NRE.e_term;
+
+      mktac1 0 "unshelve"      unshelve RE.e_term e_unit
+                               unshelve NRE.e_term NBET.e_unit;
+
+      mktac2 1 "unquote"       unquote e_any RE.e_term e_any
+                               (fun _ _ -> failwith "NBE unquote") NBET.e_any NRE.e_term NBET.e_any;
+
+      mktac1 0 "prune"         prune e_string e_unit
+                               prune NBET.e_string NBET.e_unit;
+
+      mktac1 0 "addns"         addns e_string e_unit
+                               addns NBET.e_string NBET.e_unit;
+
+      mktac1 0 "print"         print e_string e_unit
+                               print NBET.e_string NBET.e_unit;
+
+      mktac1 0 "debug"         debug e_string e_unit
+                               debug NBET.e_string NBET.e_unit;
+
+      mktac1 0 "dump"          print_proof_state e_string e_unit
+                               print_proof_state NBET.e_string NBET.e_unit;
+
+      mktac1 0 "dump1"         print_proof_state1 e_string e_unit
+                               print_proof_state1 NBET.e_string NBET.e_unit;
+
+      mktac2 0 "__pointwise"   pointwise E.e_direction (e_tactic_0 e_unit) e_unit
+                               pointwise E.e_direction_nbe (e_tactic_nbe_0 NBET.e_unit) NBET.e_unit;
+
+      mktac2 0 "__topdown_rewrite" topdown_rewrite (e_tactic_1 RE.e_term (e_tuple2 e_bool e_int)) (e_tactic_0 e_unit) e_unit
+                                   topdown_rewrite (e_tactic_nbe_1 NRE.e_term (NBET.e_tuple2 NBET.e_bool NBET.e_int)) (e_tactic_nbe_0 NBET.e_unit) NBET.e_unit;
+
+      mktac1 0 "trefl"         trefl   e_unit e_unit
+                               trefl   NBET.e_unit NBET.e_unit;
+
+      mktac1 0 "later"         later   e_unit e_unit
+                               later   NBET.e_unit NBET.e_unit;
+
+      mktac1 0 "dup"           dup     e_unit e_unit
+                               dup     NBET.e_unit NBET.e_unit;
+
+      mktac1 0 "flip"          flip    e_unit e_unit
+                               flip    NBET.e_unit NBET.e_unit;
+
+      mktac1 0 "qed"           qed     e_unit e_unit
+                               qed     NBET.e_unit NBET.e_unit;
+
+      mktac1 0 "dismiss"       dismiss e_unit e_unit
+                               dismiss NBET.e_unit NBET.e_unit;
+
+      mktac1 0 "tadmit"        tadmit  e_unit e_unit
+                               tadmit  NBET.e_unit NBET.e_unit;
+
+      mktac1 0 "cases"         cases RE.e_term (e_tuple2 RE.e_term RE.e_term)
+                               cases NRE.e_term (NBET.e_tuple2 NRE.e_term NRE.e_term);
+
+      mktac1 0 "t_destruct"    t_destruct RE.e_term (e_list (e_tuple2 RE.e_fv e_int))
+                               t_destruct NRE.e_term (NBET.e_list (NBET.e_tuple2 NRE.e_fv NBET.e_int));
+
+      mktac1 0 "top_env"       top_env     e_unit RE.e_env
+                               top_env     NBET.e_unit NRE.e_env;
+
+      mktac1 0 "cur_env"       cur_env     e_unit RE.e_env
+                               cur_env     NBET.e_unit NRE.e_env;
+
+      mktac1 0 "cur_goal"      cur_goal'   e_unit RE.e_term
+                               cur_goal'   NBET.e_unit NRE.e_term;
+
+      mktac1 0 "cur_witness"   cur_witness e_unit RE.e_term
+                               cur_witness NBET.e_unit NRE.e_term;
+
+      mktac1 0 "inspect"       inspect RE.e_term      RE.e_term_view
+                               inspect NRE.e_term     NRE.e_term_view;
+
+      mktac1 0 "pack"          pack    RE.e_term_view RE.e_term
+                               pack    NRE.e_term_view NRE.e_term;
+
+      mktac1 0 "fresh"         fresh       e_unit e_int
+                               fresh       NBET.e_unit NBET.e_int;
+
+      mktac1 0 "ngoals"        ngoals      e_unit e_int
+                               ngoals      NBET.e_unit NBET.e_int;
+
+      mktac1 0 "ngoals_smt"    ngoals_smt  e_unit e_int
+                               ngoals_smt  NBET.e_unit NBET.e_int;
+
+      mktac1 0 "is_guard"      is_guard    e_unit e_bool
+                               is_guard    NBET.e_unit NBET.e_bool;
+
+      mktac2 0 "uvar_env"      uvar_env RE.e_env (e_option RE.e_term) RE.e_term
+                               uvar_env NRE.e_env (NBET.e_option NRE.e_term) NRE.e_term;
+
+      mktac3 0 "unify_env"     unify_env RE.e_env RE.e_term RE.e_term e_bool
+                               unify_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
+
+      mktac3 0 "launch_process" launch_process e_string (e_list e_string) e_string e_string
+                                launch_process NBET.e_string (NBET.e_list NBET.e_string) NBET.e_string NBET.e_string;
+
+      mktac2 0 "fresh_bv_named"  fresh_bv_named e_string RE.e_term RE.e_bv
+                                 fresh_bv_named NBET.e_string NRE.e_term NRE.e_bv;
+
+      mktac1 0 "change"          change RE.e_term e_unit
+                                 change NRE.e_term NBET.e_unit;
+
+      mktac1 0 "get_guard_policy" get_guard_policy e_unit E.e_guard_policy
+                                  get_guard_policy NBET.e_unit E.e_guard_policy_nbe;
+
+      mktac1 0 "set_guard_policy" set_guard_policy E.e_guard_policy e_unit
+                                  set_guard_policy E.e_guard_policy_nbe NBET.e_unit;
+
+      mktac1 0 "lax_on"           lax_on e_unit e_bool
+                                  lax_on NBET.e_unit NBET.e_bool;
+
+    ] @ reflection_primops @ native_tactics_steps
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
 
@@ -266,13 +323,13 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
     let steps = [Env.Weak; Env.Reify; Env.UnfoldUntil delta_constant; Env.UnfoldTac; Env.Primops; Env.Unascribe] in
 
     // Maybe use NBE if the user asked for it
-    let steps = if Options.tactics_nbe ()
-                then Env.NBE :: steps
-                else steps
+    let norm_f = if Options.tactics_nbe ()
+                 then NBE.normalize
+                 else N.normalize_with_primitive_steps
     in
     if proof_state.tac_verb_dbg then
         BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
-    let result = N.normalize_with_primitive_steps (primitive_steps ()) steps proof_state.main_context tm in
+    let result = norm_f (primitive_steps ()) steps proof_state.main_context tm in
     if proof_state.tac_verb_dbg then
         BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
 
@@ -290,9 +347,35 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
     | None ->
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
     )
-//IN F*: and unembed_tactic_0' (#b:Type) (eb:embedding b) (embedded_tac_b:term) (ncb:norm_cb) : option (tac b) =
-and unembed_tactic_0'<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) : option<(tac<'b>)> = //JUST FSHARP
-    Some <| unembed_tactic_0 eb embedded_tac_b ncb
+
+//IN F*: and unembed_tactic_nbe_1 (#a:Type) (#r:Type) (ea:NBET.embedding a) (er:NBET.embedding r) (f:NBET.t) : option (a -> tac r) =
+and unembed_tactic_nbe_1<'a,'r> (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>) (f:NBET.t) : option<('a -> tac<'r>)> = //JUST FSHARP
+    Some (fun x ->
+      let x_tm = NBET.embed ea x in
+      let app = NBE.iapp f [NBET.as_arg x_tm] in
+      unembed_tactic_nbe_0 er app)
+
+//IN F*: and unembed_tactic_nbe_0 (#b:Type) (eb:NBET.embedding b) (embedded_tac_b:NBET.t) : tac b =
+and unembed_tactic_nbe_0<'b> (eb:NBET.embedding<'b>) (embedded_tac_b:NBET.t) : tac<'b> = //JUST FSHARP
+    bind get (fun proof_state ->
+
+    (* Applying is normalizing!!! *)
+    let result = NBE.iapp embedded_tac_b [NBET.as_arg (NBET.embed E.e_proofstate_nbe proof_state)] in
+
+    // F* requires more annotations.
+    // IN F*: let res : option<__result<b>> = NBET.unembed (E.e_result_nbe eb) result in
+    let res = NBET.unembed (E.e_result_nbe eb) result in //JUST FSHARP
+
+    match res with
+    | Some (Success (b, ps)) ->
+        bind (set ps) (fun _ -> ret b)
+
+    | Some (Failed (msg, ps)) ->
+        bind (set ps) (fun _ -> fail msg)
+
+    | None ->
+        Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck (in NBE)! Please file a bug report with a minimal reproduction of this issue.\n%s" (NBET.t_to_string result))) proof_state.main_context.range
+    )
 
 let report_implicits ps (is : Env.implicits) : unit =
     let errs = List.map (fun imp ->

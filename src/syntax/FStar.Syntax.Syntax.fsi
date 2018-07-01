@@ -552,6 +552,7 @@ val eq_pat : pat -> pat -> bool
 module C = FStar.Parser.Const
 val delta_constant  : delta_depth
 val delta_equational: delta_depth
+val fvconst         : lident -> fv
 val tconst          : lident -> term
 val tabbrev         : lident -> term
 val tdataconstr     : lident -> term
