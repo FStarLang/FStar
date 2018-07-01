@@ -157,13 +157,13 @@ let e_result_nbe (ea : NBET.embedding<'a>)  =
     let embed_result (res:__result<'a>) : NBET.t =
         match res with
         | Failed (msg, ps) ->
-            NBETerm.FV (fstar_tactics_Failed_fv
+            NBETerm.Construct (fstar_tactics_Failed_fv
             , [U_zero]
             , [ NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps)
               ; NBETerm.as_arg (NBETerm.embed NBETerm.e_string msg)
               ; NBETerm.as_iarg (NBETerm.type_of ea) ])
         | Success (a, ps) ->
-            NBETerm.FV (fstar_tactics_Success_fv
+            NBETerm.Construct (fstar_tactics_Success_fv
             , [U_zero]
             , [ NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps)
               ; NBETerm.as_arg (NBETerm.embed ea a)
@@ -171,12 +171,12 @@ let e_result_nbe (ea : NBET.embedding<'a>)  =
     in
     let unembed_result (t:NBET.t) : option<__result<'a>> =
         match t with
-        | NBETerm.FV (fv, _, [_t; (a, _); (ps, _)]) when S.fv_eq_lid fv fstar_tactics_Success_lid ->
+        | NBETerm.Construct (fv, _, [_t; (a, _); (ps, _)]) when S.fv_eq_lid fv fstar_tactics_Success_lid ->
             BU.bind_opt (NBETerm.unembed ea a) (fun a ->
             BU.bind_opt (NBETerm.unembed e_proofstate_nbe ps) (fun ps ->
             Some (Success (a, ps))))
 
-        | NBETerm.FV (fv, _, [_t; (msg, _); (ps, _)]) when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
+        | NBETerm.Construct (fv, _, [_t; (msg, _); (ps, _)]) when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
             BU.bind_opt (NBETerm.unembed NBETerm.e_string msg) (fun msg ->
             BU.bind_opt (NBETerm.unembed e_proofstate_nbe ps) (fun ps ->
             Some (Failed (msg, ps))))
@@ -211,8 +211,8 @@ let e_direction_nbe  =
     in
     let unembed_direction (t:NBET.t) : option<direction> =
         match t with
-        | NBETerm.FV (fv, _, []) when S.fv_eq_lid fv fstar_tactics_topdown_lid -> Some TopDown
-        | NBETerm.FV (fv, _, []) when S.fv_eq_lid fv fstar_tactics_bottomup_lid -> Some BottomUp
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_topdown_lid -> Some TopDown
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_bottomup_lid -> Some BottomUp
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded direction: %s" (NBETerm.t_to_string t)));
             None
@@ -248,10 +248,10 @@ let e_guard_policy_nbe  =
     in
     let unembed_guard_policy (t:NBET.t) : option<guard_policy> =
         match t with
-        | NBETerm.FV (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SMT_lid   -> Some SMT
-        | NBETerm.FV (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Goal_lid  -> Some Goal
-        | NBETerm.FV (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Force_lid -> Some Force
-        | NBETerm.FV (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Drop_lid  -> Some Drop
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SMT_lid   -> Some SMT
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Goal_lid  -> Some Goal
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Force_lid -> Some Force
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Drop_lid  -> Some Drop
         | _ -> None
     in
     { NBETerm.em = embed_guard_policy
