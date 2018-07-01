@@ -784,7 +784,7 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
        (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
         match lb.lbname with
         | BU.Inl bv -> S.mk (Tm_let((true, lbs), S.bv_to_name bv)) None Range.dummyRange 
-        | BU.Inr fv -> failwith "Not yet implemented"
+        | BU.Inr fv -> S.mk (Tm_fvar fv) None Range.dummyRange
       in
            
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
