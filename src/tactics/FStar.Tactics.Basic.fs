@@ -583,10 +583,13 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
 
 let tc (t : term) : tac<typ> = wrap_err "tc" <|
     bind (cur_goal ()) (fun goal ->
-    bind (__tc (goal_env goal) t) (fun (t, typ, guard) ->
-    bind (proc_guard "tc" (goal_env goal) guard) (fun _ ->
+    bind (__tc (goal_env goal) t) (fun (_, typ, _) ->
+    (* What about the guard? It doesn't matter! tc is only
+     * a way for metaprograms to query the typechecker, but
+     * the result has no effect on the proofstate and nor is it
+     * taken for a fact that the typing is correct. *)
     ret typ
-    )))
+    ))
 
 let add_irrelevant_goal reason env phi opts : tac<unit> =
     bind (mk_irrelevant_goal reason env phi opts) (fun goal ->
