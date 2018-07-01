@@ -114,15 +114,15 @@ let e_proofstate_nbe =
     let embed_proofstate (ps:proofstate) : NBETerm.t =
         let li = { lkind = Lazy_proofstate
                  ; blob = FStar.Dyn.mkdyn ps
-                 ; typ = t_proofstate
+                 ; ltyp = t_proofstate
                  ; rng = Range.dummyRange }
         in
         NBETerm.Lazy li
     in
     let unembed_proofstate (t:NBETerm.t) : option<proofstate> =
         match t with
-        | NBETerm.Lazy li when li.lkind = Lazy_proofstate ->
-            Some <| FStar.Dyn.undyn li.blob
+        | NBETerm.Lazy {blob=b; lkind = Lazy_proofstate} ->
+            Some <| FStar.Dyn.undyn b
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded NBE proofstate: %s" (NBETerm.t_to_string t)));
             None

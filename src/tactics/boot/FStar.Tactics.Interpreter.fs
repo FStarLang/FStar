@@ -46,15 +46,15 @@ let tacdbg = BU.mk_ref false
 let rec e_tactic_0 (er : embedding<'r>) : embedding<tac<'r>> // JUST FSHARP
     =
     mk_emb (fun _ _ _ -> failwith "Impossible: embedding tactic (0)?")
-           (fun w t norm -> Some <| unembed_tactic_0 er t norm)
-           S.t_unit // never used
+           (fun t w norm -> Some <| unembed_tactic_0 er t norm)
+           (FStar.Syntax.Embeddings.term_as_fv S.t_unit)
 
 // IN F*: and e_tactic_1 (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> tac r)
 and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<'r>)> // JUST FSHARP
     =
     mk_emb (fun _ _ _ -> failwith "Impossible: embedding tactic (1)?")
-           (fun w t -> unembed_tactic_1 ea er t)
-           S.t_unit // never used
+           (fun t w -> unembed_tactic_1 ea er t)
+           (FStar.Syntax.Embeddings.term_as_fv S.t_unit)
 
 // IN F*: and e_tactic_nbe_0 (#r:Type) (er : NBET.embedding r) : NBET.embedding (tac r)
 and e_tactic_nbe_0 (er : NBET.embedding<'r>) : NBET.embedding<tac<'r>> // JUST FSHARP
@@ -125,7 +125,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
 
       mktac1 0 "intro_rec"     intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder)
                                intro_rec NBET.e_unit (NBET.e_tuple2 NRE.e_binder NRE.e_binder);
-                              
+
       mktac1 0 "norm"          norm (e_list e_norm_step) e_unit
                                norm (NBET.e_list NBET.e_norm_step) NBET.e_unit;
 

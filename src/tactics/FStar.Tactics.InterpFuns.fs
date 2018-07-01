@@ -25,198 +25,14 @@ module RE    = FStar.Reflection.Embeddings
 module NBETerm = FStar.TypeChecker.NBETerm
 module NBET    = FStar.TypeChecker.NBETerm
 
-// <<<<<<< HEAD
 let unembed e t n = FStar.Syntax.Embeddings.unembed e t true n
 let embed e rng t n = FStar.Syntax.Embeddings.embed e t rng None n
 
-// let mk_tactic_interpretation_0 (reflect:bool)
-//                                (t:tac<'r>) (er:embedding<'r>)
-//                                (nm:Ident.lid) (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-//  (*  We have: t () embedded_state
-//      The idea is to:
-//         1. unembed the state
-//         2. run the `t` tactic (catching exceptions)
-//         3. embed the result and final state and return it to the normalizer
-//   *)
-//   match args with
-//   | [(embedded_state, _)] ->
-//     BU.bind_opt (unembed E.e_proofstate embedded_state ncb) (fun ps ->
-//     let ps = set_ps_psc psc ps in
-//     log ps (fun () ->
-//     BU.print2 "Reached %s, args are: %s\n"
-//             (Ident.string_of_lid nm)
-//             (Print.args_to_string args));
-//     let res = embed (E.e_result er) (Cfg.psc_range psc) (run_safe t ps) ncb in
-//     Some res)
-//   | _ ->
-//     failwith ("Unexpected application of tactic primitive")
-
-// let mk_tactic_interpretation_1 (reflect:bool)
-//                                (t:'a -> tac<'r>) (ea:embedding<'a>)
-//                                (er:embedding<'r>)
-//                                (nm:Ident.lid) (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-//   match args with
-//   | [(a, _); (embedded_state, _)] ->
-//     BU.bind_opt (unembed E.e_proofstate embedded_state ncb) (fun ps ->
-//     let ps = set_ps_psc psc ps in
-//     log ps (fun () ->
-//     BU.print2 "Reached %s, goals are: %s\n"
-//             (Ident.string_of_lid nm)
-//             (Print.term_to_string embedded_state));
-//     BU.bind_opt (unembed ea a ncb) (fun a ->
-//     let res = run_safe (t a) ps in
-//     Some (embed (E.e_result er) (Cfg.psc_range psc) res ncb)))
-//   | _ ->
-//     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
-
-// let mk_tactic_interpretation_1_env
-//                                (reflect:bool)
-//                                (t:Cfg.psc -> 'a -> tac<'r>) (ea:embedding<'a>)
-//                                (er:embedding<'r>)
-//                                (nm:Ident.lid) (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-//   match args with
-//   | [(a, _); (embedded_state, _)] ->
-//     BU.bind_opt (unembed E.e_proofstate embedded_state ncb) (fun ps ->
-//     let ps = set_ps_psc psc ps in
-//     log ps (fun () ->
-//     BU.print2 "Reached %s, goals are: %s\n"
-//             (Ident.string_of_lid nm)
-//             (Print.term_to_string embedded_state));
-//     BU.bind_opt (unembed ea a ncb) (fun a ->
-//     let res = run_safe (t psc a) ps in
-//     Some (embed (E.e_result er) (Cfg.psc_range psc) res ncb)))
-//   | _ ->
-//     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
-
-// let mk_tactic_interpretation_2 (reflect:bool)
-//                                (t:'a -> 'b -> tac<'r>)
-//                                (ea:embedding<'a>) (eb:embedding<'b>)
-//                                (er:embedding<'r>)
-//                                (nm:Ident.lid) (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-//   match args with
-//   | [(a, _); (b, _); (embedded_state, _)] ->
-//     BU.bind_opt (unembed E.e_proofstate embedded_state ncb) (fun ps ->
-//     let ps = set_ps_psc psc ps in
-//     log ps (fun () ->
-//     BU.print2 "Reached %s, goals are: %s\n"
-//             (Ident.string_of_lid nm)
-//             (Print.term_to_string embedded_state));
-//     BU.bind_opt (unembed ea a ncb) (fun a ->
-//     BU.bind_opt (unembed eb b ncb) (fun b ->
-//     let res = run_safe (t a b) ps in
-//     Some (embed (E.e_result er) (Cfg.psc_range psc) res ncb))))
-//   | _ ->
-//     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
-
-// let mk_tactic_interpretation_3 (reflect:bool)
-//                                (t:'a -> 'b -> 'c -> tac<'r>)
-//                                (ea:embedding<'a>)
-//                                (eb:embedding<'b>)
-//                                (ec:embedding<'c>)
-//                                (er:embedding<'r>)
-//                                (nm:Ident.lid) (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-//   match args with
-//   | [(a, _); (b, _); (c, _); (embedded_state, _)] ->
-//     BU.bind_opt (unembed E.e_proofstate embedded_state ncb) (fun ps ->
-//     let ps = set_ps_psc psc ps in
-//     log ps (fun () ->
-//     BU.print2 "Reached %s, goals are: %s\n"
-//             (Ident.string_of_lid nm)
-//             (Print.term_to_string embedded_state));
-//     BU.bind_opt (unembed ea a ncb) (fun a ->
-//     BU.bind_opt (unembed eb b ncb) (fun b ->
-//     BU.bind_opt (unembed ec c ncb) (fun c ->
-//     let res = run_safe (t a b c) ps in
-//     Some (embed (E.e_result er) (Cfg.psc_range psc) res ncb)))))
-//   | _ ->
-//     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
-
-// let mk_tactic_interpretation_4 (reflect:bool)
-//                                (t:'a -> 'b -> 'c -> 'd -> tac<'r>)
-//                                (ea:embedding<'a>)
-//                                (eb:embedding<'b>)
-//                                (ec:embedding<'c>)
-//                                (ed:embedding<'d>)
-//                                (er:embedding<'r>)
-//                                (nm:Ident.lid) (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-//   match args with
-//   | [(a, _); (b, _); (c, _); (d, _); (embedded_state, _)] ->
-//     BU.bind_opt (unembed E.e_proofstate embedded_state ncb) (fun ps ->
-//     let ps = set_ps_psc psc ps in
-//     log ps (fun () ->
-//     BU.print2 "Reached %s, goals are: %s\n"
-//             (Ident.string_of_lid nm)
-//             (Print.term_to_string embedded_state));
-//     BU.bind_opt (unembed ea a ncb) (fun a ->
-//     BU.bind_opt (unembed eb b ncb) (fun b ->
-//     BU.bind_opt (unembed ec c ncb) (fun c ->
-//     BU.bind_opt (unembed ed d ncb) (fun d ->
-//     let res = run_safe (t a b c d) ps in
-//     Some (embed (E.e_result er) (Cfg.psc_range psc) res ncb))))))
-//   | _ ->
-//     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
-
-// let mk_tactic_interpretation_5 (reflect:bool)
-//                                (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
-//                                (ea:embedding<'a>)
-//                                (eb:embedding<'b>)
-//                                (ec:embedding<'c>)
-//                                (ed:embedding<'d>)
-//                                (ee:embedding<'e>)
-//                                (er:embedding<'r>)
-//                                (nm:Ident.lid) (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-//   match args with
-//   | [(a, _); (b, _); (c, _); (d, _); (e, _); (embedded_state, _)] ->
-//     BU.bind_opt (unembed E.e_proofstate embedded_state ncb) (fun ps ->
-//     let ps = set_ps_psc psc ps in
-//     log ps (fun () ->
-//     BU.print2 "Reached %s, goals are: %s\n"
-//             (Ident.string_of_lid nm)
-//             (Print.term_to_string embedded_state));
-//     BU.bind_opt (unembed ea a ncb) (fun a ->
-//     BU.bind_opt (unembed eb b ncb) (fun b ->
-//     BU.bind_opt (unembed ec c ncb) (fun c ->
-//     BU.bind_opt (unembed ed d ncb) (fun d ->
-//     BU.bind_opt (unembed ee e ncb) (fun e ->
-//     let res = run_safe (t a b c d e) ps in
-//     Some (embed (E.e_result er) (Cfg.psc_range psc) res ncb)))))))
-//   | _ ->
-//     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
-
-// let mk_tactic_interpretation_6 (reflect:bool)
-//                                (t:'a -> 'b -> 'c -> 'd -> 'e -> 'f -> tac<'r>)
-//                                (ea:embedding<'a>)
-//                                (eb:embedding<'b>)
-//                                (ec:embedding<'c>)
-//                                (ed:embedding<'d>)
-//                                (ee:embedding<'e>)
-//                                (ef:embedding<'f>)
-//                                (er:embedding<'r>)
-//                                (nm:Ident.lid) (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-//   match args with
-//   | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _); (embedded_state, _)] ->
-//     BU.bind_opt (unembed E.e_proofstate embedded_state ncb) (fun ps ->
-//     let ps = set_ps_psc psc ps in
-//     log ps (fun () ->
-//     BU.print2 "Reached %s, goals are: %s\n"
-//             (Ident.string_of_lid nm)
-//             (Print.term_to_string embedded_state));
-//     BU.bind_opt (unembed ea a ncb) (fun a ->
-//     BU.bind_opt (unembed eb b ncb) (fun b ->
-//     BU.bind_opt (unembed ec c ncb) (fun c ->
-//     BU.bind_opt (unembed ed d ncb) (fun d ->
-//     BU.bind_opt (unembed ee e ncb) (fun e ->
-//     BU.bind_opt (unembed ef f ncb) (fun f ->
-//     let res = run_safe (t a b c d e f) ps in
-//     Some (embed (E.e_result er) (Cfg.psc_range psc) res ncb))))))))
-//   | _ ->
-//     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
-// =======
 let extract_1 (ea:embedding<'a>)
               (ncb:norm_cb) (args:args) : option<'a> =
     match args with
     | [(a, _)] ->
-      BU.bind_opt (unembed ea ncb a) (fun a ->
+      BU.bind_opt (unembed ea a ncb) (fun a ->
       Some a)
     | _ ->
       failwith "extract_1: wrong number of arguments"
@@ -225,8 +41,8 @@ let extract_2 (ea:embedding<'a>) (eb:embedding<'b>)
               (ncb:norm_cb) (args:args) : option<('a * 'b)> =
     match args with
     | [(a, _); (b, _)] ->
-      BU.bind_opt (unembed ea ncb a) (fun a ->
-      BU.bind_opt (unembed eb ncb b) (fun b ->
+      BU.bind_opt (unembed ea a ncb) (fun a ->
+      BU.bind_opt (unembed eb b ncb) (fun b ->
       Some (a, b)))
     | _ ->
       failwith "extract_2: wrong number of arguments"
@@ -235,9 +51,9 @@ let extract_3 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>)
               (ncb:norm_cb) (args:args) : option<('a * 'b * 'c)> =
     match args with
     | [(a, _); (b, _); (c, _)] ->
-      BU.bind_opt (unembed ea ncb a) (fun a ->
-      BU.bind_opt (unembed eb ncb b) (fun b ->
-      BU.bind_opt (unembed ec ncb c) (fun c ->
+      BU.bind_opt (unembed ea a ncb) (fun a ->
+      BU.bind_opt (unembed eb b ncb) (fun b ->
+      BU.bind_opt (unembed ec c ncb) (fun c ->
       Some (a, b, c))))
     | _ ->
       failwith "extract_3: wrong number of arguments"
@@ -246,10 +62,10 @@ let extract_4 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embed
               (ncb:norm_cb) (args:args) : option<('a * 'b * 'c * 'd)> =
     match args with
     | [(a, _); (b, _); (c, _); (d, _)] ->
-      BU.bind_opt (unembed ea ncb a) (fun a ->
-      BU.bind_opt (unembed eb ncb b) (fun b ->
-      BU.bind_opt (unembed ec ncb c) (fun c ->
-      BU.bind_opt (unembed ed ncb d) (fun d ->
+      BU.bind_opt (unembed ea a ncb) (fun a ->
+      BU.bind_opt (unembed eb b ncb) (fun b ->
+      BU.bind_opt (unembed ec c ncb) (fun c ->
+      BU.bind_opt (unembed ed d ncb) (fun d ->
       Some (a, b, c, d)))))
     | _ ->
       failwith "extract_4: wrong number of arguments"
@@ -259,11 +75,11 @@ let extract_5 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embed
               (ncb:norm_cb) (args:args) : option<('a * 'b * 'c * 'd * 'e)> =
     match args with
     | [(a, _); (b, _); (c, _); (d, _); (e, _)] ->
-      BU.bind_opt (unembed ea ncb a) (fun a ->
-      BU.bind_opt (unembed eb ncb b) (fun b ->
-      BU.bind_opt (unembed ec ncb c) (fun c ->
-      BU.bind_opt (unembed ed ncb d) (fun d ->
-      BU.bind_opt (unembed ee ncb e) (fun e ->
+      BU.bind_opt (unembed ea a ncb) (fun a ->
+      BU.bind_opt (unembed eb b ncb) (fun b ->
+      BU.bind_opt (unembed ec c ncb) (fun c ->
+      BU.bind_opt (unembed ed d ncb) (fun d ->
+      BU.bind_opt (unembed ee e ncb) (fun e ->
       Some (a, b, c, d, e))))))
     | _ ->
       failwith "extract_5: wrong number of arguments"
@@ -273,12 +89,12 @@ let extract_6 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embed
               (ncb:norm_cb) (args:args) : option<('a * 'b * 'c * 'd * 'e * 'f)> =
     match args with
     | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _)] ->
-      BU.bind_opt (unembed ea ncb a) (fun a ->
-      BU.bind_opt (unembed eb ncb b) (fun b ->
-      BU.bind_opt (unembed ec ncb c) (fun c ->
-      BU.bind_opt (unembed ed ncb d) (fun d ->
-      BU.bind_opt (unembed ee ncb e) (fun e ->
-      BU.bind_opt (unembed ef ncb f) (fun f ->
+      BU.bind_opt (unembed ea a ncb) (fun a ->
+      BU.bind_opt (unembed eb b ncb) (fun b ->
+      BU.bind_opt (unembed ec c ncb) (fun c ->
+      BU.bind_opt (unembed ed d ncb) (fun d ->
+      BU.bind_opt (unembed ee e ncb) (fun e ->
+      BU.bind_opt (unembed ef f ncb) (fun f ->
       Some (a, b, c, d, e, f)))))))
     | _ ->
       failwith "extract_6: wrong number of arguments"
@@ -288,13 +104,13 @@ let extract_7 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embed
               (ncb:norm_cb) (args:args) : option<('a * 'b * 'c * 'd * 'e * 'f * 'g)> =
     match args with
     | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _); (g, _)] ->
-      BU.bind_opt (unembed ea ncb a) (fun a ->
-      BU.bind_opt (unembed eb ncb b) (fun b ->
-      BU.bind_opt (unembed ec ncb c) (fun c ->
-      BU.bind_opt (unembed ed ncb d) (fun d ->
-      BU.bind_opt (unembed ee ncb e) (fun e ->
-      BU.bind_opt (unembed ef ncb f) (fun f ->
-      BU.bind_opt (unembed eg ncb g) (fun g ->
+      BU.bind_opt (unembed ea a ncb) (fun a ->
+      BU.bind_opt (unembed eb b ncb) (fun b ->
+      BU.bind_opt (unembed ec c ncb) (fun c ->
+      BU.bind_opt (unembed ed d ncb) (fun d ->
+      BU.bind_opt (unembed ee e ncb) (fun e ->
+      BU.bind_opt (unembed ef f ncb) (fun f ->
+      BU.bind_opt (unembed eg g ncb) (fun g ->
       Some (a, b, c, d, e, f, g))))))))
     | _ ->
       failwith "extract_7: wrong number of arguments"
@@ -393,7 +209,7 @@ let mk_tactic_interpretation_1 (t:'a -> tac<'r>)
   BU.bind_opt (extract_2 ea E.e_proofstate ncb args) (fun (a, ps) ->
   let ps = set_ps_psc psc ps in
   let r = run_safe (t a) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r))
+  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
 
 let mk_tactic_interpretation_2 (t:'a -> 'b -> tac<'r>)
                                (ea:embedding<'a>) (eb:embedding<'b>) (er:embedding<'r>)
@@ -401,7 +217,7 @@ let mk_tactic_interpretation_2 (t:'a -> 'b -> tac<'r>)
   BU.bind_opt (extract_3 ea eb E.e_proofstate ncb args) (fun (a, b, ps) ->
   let ps = set_ps_psc psc ps in
   let r = run_safe (t a b) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r))
+  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
 
 let mk_tactic_interpretation_3 (t:'a -> 'b -> 'c -> tac<'r>)
                                (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (er:embedding<'r>)
@@ -409,7 +225,7 @@ let mk_tactic_interpretation_3 (t:'a -> 'b -> 'c -> tac<'r>)
   BU.bind_opt (extract_4 ea eb ec E.e_proofstate ncb args) (fun (a, b, c, ps) ->
   let ps = set_ps_psc psc ps in
   let r = run_safe (t a b c) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r))
+  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
 
 let mk_tactic_interpretation_4 (t:'a -> 'b -> 'c -> 'd -> tac<'r>)
                                (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embedding<'d>)
@@ -418,7 +234,7 @@ let mk_tactic_interpretation_4 (t:'a -> 'b -> 'c -> 'd -> tac<'r>)
   BU.bind_opt (extract_5 ea eb ec ed E.e_proofstate ncb args) (fun (a, b, c, d, ps) ->
   let ps = set_ps_psc psc ps in
   let r = run_safe (t a b c d) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r))
+  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
 
 let mk_tactic_interpretation_5 (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
                                (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embedding<'d>)
@@ -427,7 +243,7 @@ let mk_tactic_interpretation_5 (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
   BU.bind_opt (extract_6 ea eb ec ed ee E.e_proofstate ncb args) (fun (a, b, c, d, e, ps) ->
   let ps = set_ps_psc psc ps in
   let r = run_safe (t a b c d e) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r))
+  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
 
 let mk_tactic_interpretation_6 (t:'a -> 'b -> 'c -> 'd -> 'e -> 'f -> tac<'r>)
                                (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embedding<'d>)
@@ -436,7 +252,7 @@ let mk_tactic_interpretation_6 (t:'a -> 'b -> 'c -> 'd -> 'e -> 'f -> tac<'r>)
   BU.bind_opt (extract_7 ea eb ec ed ee ef E.e_proofstate ncb args) (fun (a, b, c, d, e, f, ps) ->
   let ps = set_ps_psc psc ps in
   let r = run_safe (t a b c d e f) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r))
+  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
 
 let mk_tactic_nbe_interpretation_1 (t:'a -> tac<'r>)
                                (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>)
@@ -482,16 +298,7 @@ let mk_tactic_nbe_interpretation_6 (t:'a -> 'b -> 'c -> 'd -> 'e -> 'f -> tac<'r
   BU.bind_opt (extract_7_nbe ea eb ec ed ee ef E.e_proofstate_nbe args) (fun (a, b, c, d, e, f, ps) ->
   let r = run_safe (t a b c d e f) ps in
   Some (NBETerm.embed (E.e_result_nbe er) r))
-// >>>>>>> origin/guido_nbe
 
-// let mk_emb (em:Range.range -> 'a -> norm_cb -> term)
-//            (un:bool -> term -> norm_cb -> option<'a>)
-//            (t:term) =
-//     mk_emb (fun x r _topt norm -> em r x norm)
-//            (fun x w norm -> un w x norm)
-//            (FStar.Syntax.Embeddings.term_as_fv t)
-
-//let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
 let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
   { Cfg.name                         = s.name
   ; Cfg.arity                        = s.arity
@@ -539,7 +346,7 @@ let mktac1 (nunivs:int) (name : string)
     mk name 2 nunivs (mk_tactic_interpretation_1     f  ea  er)
                      (fun args -> mk_tactic_nbe_interpretation_1 nf nea ner (drop nunivs args))
 
-let mktac2 (nunivs:int) (name : string) 
+let mktac2 (nunivs:int) (name : string)
            (f : 'a -> 'b -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (er : embedding<'r>)
            (nf : 'na -> 'nb -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (ner : NBET.embedding<'nr>)
            : Cfg.primitive_step =
@@ -584,16 +391,16 @@ let mkt nm arity nunivs interp nbe_interp =
 let mk_total_interpretation_1 (f:'a -> 'r)
                               (ea:embedding<'a>) (er:embedding<'r>)
                               (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-  BU.bind_opt (extract_1 ea args) (fun a ->
+  BU.bind_opt (extract_1 ea ncb args) (fun a ->
   let r = f a in
-  Some (embed er (Cfg.psc_range psc) r))
+  Some (embed er (Cfg.psc_range psc) r ncb))
 
 let mk_total_interpretation_2 (f:'a -> 'b -> 'r)
                               (ea:embedding<'a>) (eb:embedding<'b>) (er:embedding<'r>)
                               (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-  BU.bind_opt (extract_2 ea eb args) (fun (a, b) ->
+  BU.bind_opt (extract_2 ea eb ncb args) (fun (a, b) ->
   let r = f a b in
-  Some (embed er (Cfg.psc_range psc) r))
+  Some (embed er (Cfg.psc_range psc) r ncb))
 
 let mk_total_nbe_interpretation_1 (f:'a -> 'r)
                               (ea:NBETerm.embedding<'a>) (er:NBETerm.embedding<'r>)
@@ -625,10 +432,10 @@ let mktot1 (nunivs:int) (name : string)
 let mktot2 (nunivs:int) (name : string)
            (f : 'a -> 'b -> 'r)
            (ea : embedding<'a>) (eb:embedding<'b>)
-           (er : embedding<'r>) 
+           (er : embedding<'r>)
            (nf : 'na -> 'nb -> 'nr)
            (nea : NBETerm.embedding<'na>) (neb:NBETerm.embedding<'nb>)
-           (ner : NBETerm.embedding<'nr>) 
+           (ner : NBETerm.embedding<'nr>)
            : Cfg.primitive_step =
     mkt name 2 nunivs (mk_total_interpretation_2     f  ea  eb  er)
                       (fun args -> mk_total_nbe_interpretation_2 nf nea neb ner (drop nunivs args))

@@ -48,7 +48,7 @@ let mk_lazy obj ty kind =
     let li = {
           blob = FStar.Dyn.mkdyn obj
         ; lkind = kind
-        ; FStar.Syntax.Syntax.typ = ty
+        ; ltyp = ty
         ; rng = Range.dummyRange
     }
     in Lazy li
@@ -59,8 +59,8 @@ let e_bv =
     in
     let unembed_bv (t:t) : option<bv> =
         match t with
-        | Lazy li when li.lkind = Lazy_bv ->
-            Some <| FStar.Dyn.undyn li.blob
+        | Lazy {blob=b; lkind=Lazy_bv} ->
+            Some <| FStar.Dyn.undyn b
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv: %s" (t_to_string t)));
             None
@@ -73,8 +73,8 @@ let e_binder =
     in
     let unembed_binder (t:t) : option<binder> =
         match t with
-        | Lazy li when li.lkind = Lazy_binder ->
-            Some (undyn li.blob)
+        | Lazy {blob=b; lkind=Lazy_binder} ->
+            Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder: %s" (t_to_string t)));
             None
@@ -145,8 +145,8 @@ let e_fv =
     in
     let unembed_fv (t:t) : option<fv> =
         match t with
-        | Lazy i when i.lkind = Lazy_fvar ->
-            Some (undyn i.blob)
+        | Lazy {blob=b; lkind=Lazy_fvar} ->
+            Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded fvar: %s" (t_to_string t)));
             None
@@ -159,8 +159,8 @@ let e_comp =
     in
     let unembed_comp (t:t) : option<S.comp> =
         match t with
-        | Lazy i when i.lkind = Lazy_comp ->
-            Some (undyn i.blob)
+        | Lazy {blob=b; lkind=Lazy_comp} ->
+            Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp: %s" (t_to_string t)));
             None
@@ -173,8 +173,8 @@ let e_env =
     in
     let unembed_env (t:t) : option<Env.env> =
         match t with
-        | Lazy i when i.lkind = Lazy_env ->
-            Some (undyn i.blob)
+        | Lazy {blob=b; lkind=Lazy_env} ->
+            Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded env: %s" (t_to_string t)));
             None
@@ -270,7 +270,7 @@ let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 let rec unlazy_as_t k t =
     match t with
     | Lazy ({lkind=k'; blob=v})
-        when k=k' ->
+        when U.eq_lazy_kind k k' ->
       FStar.Dyn.undyn v
     | _ ->
       failwith "Not a Lazy of the expected kind (NBE)"
@@ -497,8 +497,8 @@ let e_sigelt =
     in
     let unembed_sigelt (t:t) : option<sigelt> =
         match t with
-        | Lazy i when i.lkind = Lazy_sigelt ->
-            Some (undyn i.blob)
+        | Lazy {blob=b; lkind=Lazy_sigelt} ->
+            Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt: %s" (t_to_string t)));
             None
