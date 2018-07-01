@@ -40,7 +40,7 @@ let mk_lazy obj ty kind =
     let li = {
           blob = FStar.Dyn.mkdyn obj
         ; lkind = kind
-        ; typ = ty
+        ; FStar.Syntax.Syntax.typ = ty
         ; rng = Range.dummyRange
     }
     in Lazy li
@@ -271,8 +271,8 @@ let rec unlazy_as_t k t =
       failwith "Not a Lazy of the expected kind (NBE)"
 
 let e_term_view_aq aq =
-    let embed_term_view (t:term_view) : t =
-        match t with
+    let embed_term_view (tv:term_view) : t =
+        match tv with
         | Tv_FVar fv ->
             mkFV ref_Tv_Var.fv [] [as_arg (embed e_fv fv)]
 
