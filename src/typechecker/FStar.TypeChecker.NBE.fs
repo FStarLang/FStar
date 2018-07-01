@@ -636,6 +636,12 @@ and translate_monadic (m, ty) cfg bs e : t =
    | Tm_app _ ->
      translate cfg bs e
 
+   | Tm_match (sc, branches) ->
+     (* Commutation of reify with match. See the comment in the normalizer about it. *)
+     let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
+     let tm = S.mk (Tm_match(sc, branches)) None e.pos in
+     translate ({ cfg with reifying = false }) bs tm
+
    | _ -> failwith (BU.format1 "Unexpected case in translate_monadic: %s" (P.tag_of_term e))
 
 and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
