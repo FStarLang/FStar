@@ -43,8 +43,6 @@ type atom
              (* the computation that reconstructs the pattern matching, parameterized by the readback function *)
              // ZP: Keep the original branches to reconstruct just the patterns
              // NS: add a thunked pattern translations here
-  | Rec of letbinding * list<letbinding> * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
-  (* Zoe : a recursive function definition together with its block of mutually recursive function definitions and its environment *)
 and t
 //IN F*: : Type0
   =
@@ -61,6 +59,11 @@ and t
   | Refinement of (t -> t) * (unit -> arg) 
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
+  | Rec of letbinding * list<letbinding> * list<t> * args * int
+  (* Zoe : a recursive function definition together with its block of mutually 
+     recursive function definitions and its environment *)
+  (* args is th alrady accumulated arguments, the last argument is the arrity *)
+
  and comp = 
   | Tot of t * option<universe>
   | GTot of t * option<universe>
@@ -108,7 +111,6 @@ let mkFV i us ts = FV(i, us, ts)
 
 let mkAccuVar (v:var) = Accu(Var v, [])
 let mkAccuMatch (s:t) (cases: t -> t) (bs:((t -> term) -> list<branch>)) = Accu(Match (s, cases, bs), [])
-let mkAccuRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = Accu(Rec(b, bs, env), [])
 
 // Term equality
 
@@ -211,12 +213,12 @@ let rec t_to_string (x:t) =
   | Unknown -> "Unknown"
   | Quote _ -> "Quote _"
   | Lazy _ -> "Lazy _"
+  | Rec (_,_, l, _, _) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
 and atom_to_string (a: atom) =
-    match a with
-    | Var v -> "Var " ^ (P.bv_to_string v)
-    | Match (t, _, _) -> "Match " ^ (t_to_string t)
-    | Rec (_,_, l) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
+  match a with
+  | Var v -> "Var " ^ (P.bv_to_string v)
+  | Match (t, _, _) -> "Match " ^ (t_to_string t)
 
 and arg_to_string (a : arg) = a |> fst |> t_to_string
 

@@ -223,12 +223,16 @@ let translate_univ (bs:list<t>) (u:universe) : universe =
     in
     aux u
 
+let mkRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = 
+  let ar = count_abstractions b.lbdef in
+  Rec(b, bs, env, [], ar)
+
 (* Creates the environment of mutually recursive function definitions *)
 let make_rec_env (lbs:list<letbinding>) (bs:list<t>) : list<t> =
   let rec aux (lbs:list<letbinding>) (lbs0:list<letbinding>) (bs:list<t>) (bs0:list<t>) : list<t> =
   match lbs with
   | [] -> bs
-  | lb::lbs' -> aux lbs' lbs0 ((mkAccuRec lb lbs0 bs0) :: bs) bs0
+  | lb::lbs' -> aux lbs' lbs0 ((mkRec lb lbs0 bs0) :: bs) bs0
   in
   aux lbs lbs bs bs
 
@@ -239,6 +243,14 @@ let find_let (lbs : list<letbinding>) (fvar : fv) =
                      if fv_eq name fvar
                      then Some lb
                      else None)
+
+(* Was List.init, but F* doesn't have this in ulib *)
+let tabulate (n:int) (f : int -> 'a) : list<'a> =
+  let rec aux i =
+    if i < n
+    then f i :: aux (i + 1)
+    else []
+  in aux 0
 
 (* uncurried application *)
 let rec iapp cfg (f:t) (args:args) : t =
@@ -276,22 +288,31 @@ let rec iapp cfg (f:t) (args:args) : t =
     in
     let (us', ts') = aux args us ts in
     FV (i, us', ts')
+  | Rec(lb, lbs, bs, acc, arity) -> 
+    let no_args = List.length args in
+    let no_acc = List.length acc in
+    let full_args = acc @ args in (* Not in reverse order *)
+    
+    if test_args full_args arity then (* compute *) 
+      begin 
+        if List.length full_args > arity then 
+          let (rargs, res) = List.splitAt arity full_args in
+          let t = iapp cfg (translate_letbinding cfg (make_rec_env lbs bs) lb) rargs in 
+          iapp cfg t res
+        else 
+          iapp cfg (translate_letbinding cfg (make_rec_env lbs bs) lb) full_args
+      end
+    else (* cannot reduce -- accumulate args *)
+      Rec (lb, lbs, bs, full_args, arity)
+    
   | Quote _
   | Lazy _
   | Constant _ | Univ _ | Type_t _ | Unknown | Refinement _ | Arrow _ -> failwith "Ill-typed application"
 
 (* unary application *)
-let app cfg (f:t) (x:t) (q:aqual) = iapp cfg f [(x, q)]
+and app cfg (f:t) (x:t) (q:aqual) = iapp cfg f [(x, q)]
 
-(* Was List.init, but F* doesn't have this in ulib *)
-let tabulate (n:int) (f : int -> 'a) : list<'a> =
-    let rec aux i =
-        if i < n
-        then f i :: aux (i + 1)
-        else []
-    in aux 0
-
-let rec translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
+and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
    let debug = debug cfg in
    let qninfo = Env.lookup_qname (Cfg.cfg_env cfg) (S.lid_of_fv fvar) in
    if is_constr qninfo || is_constr_fv fvar then mkConstruct fvar [] []
@@ -325,8 +346,8 @@ let rec translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
          begin match lbm with
          | Some lb ->
            if is_rec then
-             mkAccuRec lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty
-                                       since they are already present in the global environment *)
+             mkRec lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty
+                               since they are already present in the global environment *)
            else 
              begin
                debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
@@ -521,7 +542,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       translate cfg bs' body
 
     | Tm_let((true, lbs), body) ->
-      translate cfg (make_rec_env lbs bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
+      translate cfg (make_rec_env lbs bs) body
 
     | Tm_meta (e, _) ->
       //TODO: we need to put the "meta" back when reading back
@@ -758,28 +779,16 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
        | [] -> head
        | _ -> U.mk_app head args)
 
-    | Accu (Rec(lb, lbs, bs), ts) ->
-       let rec curry hd args =
-       match args with
-       | [] -> hd
-       | [arg] -> app cfg hd (fst arg) (snd arg)
-       | arg :: args -> app cfg (curry hd args) (fst arg) (snd arg)
-       in
-       let args_no = count_abstractions lb.lbdef in
-       // Printf.printf "Args no. %d\n" args_no;
-       if test_args ts args_no then (* if the arguments are not symbolic and the application is not partial compute *)
-         readback cfg (curry (translate_letbinding cfg (make_rec_env lbs bs) lb) ts)
-       else (* otherwise do not unfold *)
-         let head =
-           (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
-           let f = match lb.lbname with
-                   | BU.Inl bv -> S.bv_to_name bv
-                   | BU.Inr fv -> failwith "Not yet implemented"
-           in
-           S.mk (Tm_let((true, lbs), f)) None Range.dummyRange
-         in
-         let args = map_rev (fun (x, q) -> (readback cfg x, q)) ts in
-         (match ts with
+    | Rec(lb, lbs, bs, args, arity) -> (* if this point is reached then we cannot unfold Rec *)
+      let head =
+       (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
+        match lb.lbname with
+        | BU.Inl bv -> S.mk (Tm_let((true, lbs), S.bv_to_name bv)) None Range.dummyRange 
+        | BU.Inr fv -> failwith "Not yet implemented"
+      in
+           
+      let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
+      (match args with
           | [] -> head
           | _ -> U.mk_app head args)
 
@@ -821,7 +830,7 @@ let normalize'' psteps (steps:list<Env.step>)
   readback cfg (translate cfg [] e)
 
 
-  (* ONLY FOR UNIT TESTS! *)
+(* ONLY FOR UNIT TESTS! *)
 let test_normalize (steps:list<step>) (env : Env.env) (e:term) : term =
   let cfg = Cfg.config (List.map step_as_normalizer_step steps) env in
   //debug_sigmap env.sigtab;

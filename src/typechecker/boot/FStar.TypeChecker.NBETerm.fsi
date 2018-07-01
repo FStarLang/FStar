@@ -36,7 +36,6 @@ type atom
   | Match of t *
              (t -> t) *
              ((t -> term) -> list<branch>)
-  | Rec of letbinding * list<letbinding> * list<t>
 
 and t
 //IN F*: : Type0
@@ -53,6 +52,7 @@ and t
   | Refinement of (t -> t) * (unit -> arg)
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
+  | Rec of letbinding * list<letbinding> * list<t> * args * int  
 and comp = 
   | Tot of t * option<universe>
   | GTot of t * option<universe>
@@ -96,7 +96,6 @@ val mkFV : fv -> list<universe> -> args -> t
 
 val mkAccuVar : var -> t
 val mkAccuMatch : t -> (t -> t) -> ((t -> term) -> list<branch>) -> t
-val mkAccuRec : letbinding -> list<letbinding> -> list<t> -> t
 
 val as_arg : t -> arg
 val as_iarg : t -> arg
