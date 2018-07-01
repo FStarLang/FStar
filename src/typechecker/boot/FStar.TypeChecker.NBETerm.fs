@@ -20,7 +20,7 @@ module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const
 module Range = FStar.Range
-
+module SE = FStar.Syntax.Embeddings
 
 type var = bv
 type sort = int
@@ -393,6 +393,62 @@ let e_arrow1 (ea:embedding<'a>) (eb:embedding<'b>) =
     in
     mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb)))
 
+let e_norm_step =
+    let em (n:SE.norm_step) : t =
+        match n with
+        | SE.Simpl   -> mkFV (lid_as_fv PC.steps_simpl     S.delta_constant None) [] []
+        | SE.Weak    -> mkFV (lid_as_fv PC.steps_weak      S.delta_constant None) [] []
+        | SE.HNF     -> mkFV (lid_as_fv PC.steps_hnf       S.delta_constant None) [] []
+        | SE.Primops -> mkFV (lid_as_fv PC.steps_primops   S.delta_constant None) [] []
+        | SE.Delta   -> mkFV (lid_as_fv PC.steps_delta     S.delta_constant None) [] []
+        | SE.Zeta    -> mkFV (lid_as_fv PC.steps_zeta      S.delta_constant None) [] []
+        | SE.Iota    -> mkFV (lid_as_fv PC.steps_iota      S.delta_constant None) [] []
+        | SE.Reify   -> mkFV (lid_as_fv PC.steps_reify     S.delta_constant None) [] []
+        | SE.NBE     -> mkFV (lid_as_fv PC.steps_nbe       S.delta_constant None) [] []
+        | SE.UnfoldOnly l ->
+                     mkFV (lid_as_fv PC.steps_unfoldonly S.delta_constant None)
+                          [] [as_arg (embed (e_list e_string) l)]
+
+        | SE.UnfoldFully l ->
+                     mkFV (lid_as_fv PC.steps_unfoldfully S.delta_constant None)
+                          [] [as_arg (embed (e_list e_string) l)]
+        | SE.UnfoldAttr a ->
+                failwith "NBE UnfoldAttr..."
+    in
+    let un (t0:t) : option<SE.norm_step> =
+        match t0 with
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_simpl ->
+            Some SE.Simpl
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_weak ->
+            Some SE.Weak
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_hnf ->
+            Some SE.HNF
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_primops ->
+            Some SE.Primops
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_delta ->
+            Some SE.Delta
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_zeta ->
+            Some SE.Zeta
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_iota ->
+            Some SE.Iota
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_nbe ->
+            Some SE.NBE
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_reify ->
+            Some SE.Reify
+        | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldonly ->
+            BU.bind_opt (unembed (e_list e_string) l) (fun ss ->
+            Some <| SE.UnfoldOnly ss)
+        | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldfully ->
+            BU.bind_opt (unembed (e_list e_string) l) (fun ss ->
+            Some <| SE.UnfoldFully ss)
+        (* | FV (fv, _, [_;(a, _)]) when S.fv_eq_lid fv PC.steps_unfoldattr -> *)
+        (*     Some (SE.UnfoldAttr a) *)
+        | _ ->
+            Errors.log_issue Range.dummyRange (Errors.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (t_to_string t0)));
+            None
+    in
+    mk_emb em un (mkFV (lid_as_fv PC.norm_step_lid delta_constant None) [] [])
+
 (* Interface for building primitive steps *)
 
 let arg_as_int    (a:arg) = fst a |> unembed e_int
@@ -410,7 +466,7 @@ let arg_as_bounded_int ((a, _) : arg) : option<(fv * Z.t)> =
     | FV (fv1, [], [(Constant (Int i), _)])
       when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) 
                         "int_to_t" ->
-      Some (fv1, i) 
+      Some (fv1, i)
     | _ -> None
 
 let int_as_bounded int_to_t n =
