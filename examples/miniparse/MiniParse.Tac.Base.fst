@@ -20,6 +20,26 @@ let app_head_tail (t: T.term) :
 = let (x, l) = app_head_rev_tail t in
   (x, L.rev l)
 
+inline_for_extraction
+let ctest (v: bool) (test: bool) : Tot Type =
+  (x: unit { test == v } )
+
+inline_for_extraction
+let mk_if_t (#t: Type) (test: bool) (x1: (ctest true test -> Tot t)) (x2: (ctest false test -> Tot t)) : Tot t =
+  if test then x1 () else x2 ()
+
+let mk_if (test ty e_true e_false: T.term) : T.Tac T.term =
+  let bt = T.fresh_binder (T.mk_app (`(ctest true)) [test, T.Q_Explicit]) in
+  let bf = T.fresh_binder (T.mk_app (`(ctest false)) [test, T.Q_Explicit]) in
+  let ft = T.pack (T.Tv_Abs bt e_true) in
+  let ff = T.pack (T.Tv_Abs bf e_false) in
+  T.mk_app (`(mk_if_t)) [
+    ty, T.Q_Implicit;
+    test, T.Q_Explicit;
+    ft, T.Q_Explicit;
+    ff, T.Q_Explicit;
+  ]
+
 let tfail (#a: Type) (s: Prims.string) : T.Tac a =
   T.debug ("Tactic failure: " ^ s);
   T.fail s
@@ -44,33 +64,37 @@ let tsuccess (s: string) : T.Tac unit =
   T.qed ();
   T.print ("Success: " ^ s)
 
-let rec solve_goal () : T.Tac unit =
-  if T.ngoals () = 0
-  then ()
-  else
-  match T.trytac (fun () -> T.first [
+let rec imm_solve_goal () : T.Tac unit =
+  T.first [
     (fun () ->
-      T.print "Trying trivial";
       T.trivial ();
       tsuccess "trivial"
     );
     (fun () ->
-      T.print "Trying reflexivity";
       T.trefl ();
       tsuccess "reflexivity"
     );
     (fun () ->
-      T.print "Trying tassumption";
       T.assumption ();
       tsuccess "assumption"
     );
     (fun () ->
-      T.print "Trying return_squash; tassumption";
-      T.apply (`(FStar.Squash.return_squash));
-      T.assumption ();
-      tsuccess "return_squash assumption"
+      T.norm [delta; zeta; iota; primops];
+      T.trivial ();
+      tsuccess "norm trivial"
     );
-  ]) with
+    (fun () ->
+      T.apply (`(FStar.Squash.return_squash));
+      imm_solve_goal ();
+      tsuccess "return_squash imm_solve"
+    );    
+  ]
+
+let rec solve_goal () : T.Tac unit =
+  if T.ngoals () = 0
+  then ()
+  else
+  match T.trytac imm_solve_goal with
   | Some _ -> ()
   | _ ->
   begin match T.trytac T.forall_intro with
