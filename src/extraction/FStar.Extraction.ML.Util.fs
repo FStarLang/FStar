@@ -557,15 +557,12 @@ let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
           then begin
             let h = str_to_top_name ("FStar_Tactics_InterpFuns.mk_tactic_interpretation_" ^ string_of_int non_tvar_arity) in
             let tac_fun = w <| MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_" ^ string_of_int non_tvar_arity), [lid_to_top_name fv]) in
-            let tac_lid_app = w <| MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [w ml_fv]) in
             let psc = str_to_name "psc" in
             let all_args = str_to_name "args" in
             let args =
-                [w <| MLE_Const (MLC_Bool true); //trigger a TAC?.reflect
-                 tac_fun] @
+                [tac_fun] @
                 arg_unembeddings @
                 [res_embedding;
-                 tac_lid_app;
                  psc] in
             let tabs =
               match tvar_names with
