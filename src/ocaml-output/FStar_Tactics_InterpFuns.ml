@@ -1040,6 +1040,19 @@ let (native_tactics : FStar_Tactics_Native.native_primitive_step Prims.list)
   = FStar_Tactics_Native.list_all () 
 let (native_tactics_steps : FStar_TypeChecker_Cfg.primitive_step Prims.list)
   = FStar_List.map step_from_native_step native_tactics 
+let rec drop :
+  'Auu____4949 .
+    Prims.int -> 'Auu____4949 Prims.list -> 'Auu____4949 Prims.list
+  =
+  fun n1  ->
+    fun l  ->
+      if n1 = (Prims.parse_int "0")
+      then l
+      else
+        (match l with
+         | [] -> failwith "drop: impossible"
+         | uu____4971::xs -> drop (n1 - (Prims.parse_int "1")) xs)
+  
 let mktac1 :
   'a 'na 'nr 'r .
     Prims.int ->
@@ -1062,7 +1075,9 @@ let mktac1 :
                 fun ner  ->
                   mk name (Prims.parse_int "2") nunivs
                     (mk_tactic_interpretation_1 f ea er)
-                    (mk_tactic_nbe_interpretation_1 nf nea ner)
+                    (fun args  ->
+                       let uu____5080 = drop nunivs args  in
+                       mk_tactic_nbe_interpretation_1 nf nea ner uu____5080)
   
 let mktac2 :
   'a 'b 'na 'nb 'nr 'r .
@@ -1090,7 +1105,10 @@ let mktac2 :
                     fun ner  ->
                       mk name (Prims.parse_int "3") nunivs
                         (mk_tactic_interpretation_2 f ea eb er)
-                        (mk_tactic_nbe_interpretation_2 nf nea neb ner)
+                        (fun args  ->
+                           let uu____5228 = drop nunivs args  in
+                           mk_tactic_nbe_interpretation_2 nf nea neb ner
+                             uu____5228)
   
 let mktac3 :
   'a 'b 'c 'na 'nb 'nc 'nr 'r .
@@ -1122,8 +1140,10 @@ let mktac3 :
                         fun ner  ->
                           mk name (Prims.parse_int "4") nunivs
                             (mk_tactic_interpretation_3 f ea eb ec er)
-                            (mk_tactic_nbe_interpretation_3 nf nea neb nec
-                               ner)
+                            (fun args  ->
+                               let uu____5414 = drop nunivs args  in
+                               mk_tactic_nbe_interpretation_3 nf nea neb nec
+                                 ner uu____5414)
   
 let mktac4 :
   'a 'b 'c 'd 'na 'nb 'nc 'nd 'nr 'r .
@@ -1160,8 +1180,10 @@ let mktac4 :
                             fun ner  ->
                               mk name (Prims.parse_int "5") nunivs
                                 (mk_tactic_interpretation_4 f ea eb ec ed er)
-                                (mk_tactic_nbe_interpretation_4 nf nea neb
-                                   nec ned ner)
+                                (fun args  ->
+                                   let uu____5638 = drop nunivs args  in
+                                   mk_tactic_nbe_interpretation_4 nf nea neb
+                                     nec ned ner uu____5638)
   
 let mktac5 :
   'a 'b 'c 'd 'e 'na 'nb 'nc 'nd 'ne 'nr 'r .
@@ -1205,8 +1227,10 @@ let mktac5 :
                                   mk name (Prims.parse_int "6") nunivs
                                     (mk_tactic_interpretation_5 f ea eb ec ed
                                        ee er)
-                                    (mk_tactic_nbe_interpretation_5 nf nea
-                                       neb nec ned nee ner)
+                                    (fun args  ->
+                                       let uu____5900 = drop nunivs args  in
+                                       mk_tactic_nbe_interpretation_5 nf nea
+                                         neb nec ned nee ner uu____5900)
   
 let (mkt :
   Prims.string ->
@@ -1253,14 +1277,14 @@ let mk_total_interpretation_1 :
       fun er  ->
         fun psc  ->
           fun args  ->
-            let uu____5938 = extract_1 ea args  in
-            FStar_Util.bind_opt uu____5938
+            let uu____6010 = extract_1 ea args  in
+            FStar_Util.bind_opt uu____6010
               (fun a  ->
                  let r = f a  in
-                 let uu____5946 =
-                   let uu____5947 = FStar_TypeChecker_Cfg.psc_range psc  in
-                   FStar_Syntax_Embeddings.embed er uu____5947 r  in
-                 FStar_Pervasives_Native.Some uu____5946)
+                 let uu____6018 =
+                   let uu____6019 = FStar_TypeChecker_Cfg.psc_range psc  in
+                   FStar_Syntax_Embeddings.embed er uu____6019 r  in
+                 FStar_Pervasives_Native.Some uu____6018)
   
 let mk_total_interpretation_2 :
   'a 'b 'r .
@@ -1278,17 +1302,17 @@ let mk_total_interpretation_2 :
         fun er  ->
           fun psc  ->
             fun args  ->
-              let uu____6023 = extract_2 ea eb args  in
-              FStar_Util.bind_opt uu____6023
-                (fun uu____6039  ->
-                   match uu____6039 with
+              let uu____6095 = extract_2 ea eb args  in
+              FStar_Util.bind_opt uu____6095
+                (fun uu____6111  ->
+                   match uu____6111 with
                    | (a,b) ->
                        let r = f a b  in
-                       let uu____6049 =
-                         let uu____6050 = FStar_TypeChecker_Cfg.psc_range psc
+                       let uu____6121 =
+                         let uu____6122 = FStar_TypeChecker_Cfg.psc_range psc
                             in
-                         FStar_Syntax_Embeddings.embed er uu____6050 r  in
-                       FStar_Pervasives_Native.Some uu____6049)
+                         FStar_Syntax_Embeddings.embed er uu____6122 r  in
+                       FStar_Pervasives_Native.Some uu____6121)
   
 let mk_total_nbe_interpretation_1 :
   'a 'r .
@@ -1302,12 +1326,12 @@ let mk_total_nbe_interpretation_1 :
     fun ea  ->
       fun er  ->
         fun args  ->
-          let uu____6100 = extract_1_nbe ea args  in
-          FStar_Util.bind_opt uu____6100
+          let uu____6172 = extract_1_nbe ea args  in
+          FStar_Util.bind_opt uu____6172
             (fun a  ->
                let r = f a  in
-               let uu____6108 = FStar_TypeChecker_NBETerm.embed er r  in
-               FStar_Pervasives_Native.Some uu____6108)
+               let uu____6180 = FStar_TypeChecker_NBETerm.embed er r  in
+               FStar_Pervasives_Native.Some uu____6180)
   
 let mk_total_nbe_interpretation_2 :
   'a 'b 'r .
@@ -1323,15 +1347,15 @@ let mk_total_nbe_interpretation_2 :
       fun eb  ->
         fun er  ->
           fun args  ->
-            let uu____6177 = extract_2_nbe ea eb args  in
-            FStar_Util.bind_opt uu____6177
-              (fun uu____6193  ->
-                 match uu____6193 with
+            let uu____6249 = extract_2_nbe ea eb args  in
+            FStar_Util.bind_opt uu____6249
+              (fun uu____6265  ->
+                 match uu____6265 with
                  | (a,b) ->
                      let r = f a b  in
-                     let uu____6203 = FStar_TypeChecker_NBETerm.embed er r
+                     let uu____6275 = FStar_TypeChecker_NBETerm.embed er r
                         in
-                     FStar_Pervasives_Native.Some uu____6203)
+                     FStar_Pervasives_Native.Some uu____6275)
   
 let mktot1 :
   'a 'na 'nr 'r .
@@ -1355,7 +1379,9 @@ let mktot1 :
                 fun ner  ->
                   mkt name (Prims.parse_int "1") nunivs
                     (mk_total_interpretation_1 f ea er)
-                    (mk_total_nbe_interpretation_1 nf nea ner)
+                    (fun args  ->
+                       let uu____6373 = drop nunivs args  in
+                       mk_total_nbe_interpretation_1 nf nea ner uu____6373)
   
 let mktot2 :
   'a 'b 'na 'nb 'nr 'r .
@@ -1383,5 +1409,8 @@ let mktot2 :
                     fun ner  ->
                       mkt name (Prims.parse_int "2") nunivs
                         (mk_total_interpretation_2 f ea eb er)
-                        (mk_total_nbe_interpretation_2 nf nea neb ner)
+                        (fun args  ->
+                           let uu____6513 = drop nunivs args  in
+                           mk_total_nbe_interpretation_2 nf nea neb ner
+                             uu____6513)
   
