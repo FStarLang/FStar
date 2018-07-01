@@ -58,6 +58,16 @@ let rec drop (p: 'a -> bool) (l: list<'a>): list<'a> =
 let fmap_opt (f : 'a -> 'b) (x : option<'a>) : option<'b> = 
   BU.bind_opt x (fun x -> Some (f x))
 
+let drop_until (f : 'a -> bool) (l : list<'a>) : list<'a> = 
+  let rec aux l = 
+    match l with 
+    | [] -> [] 
+    | x :: xs -> if f x then l else aux xs
+  in aux l
+
+let trim (l : list<bool>) : list<bool> = (* trim a list of booleans after the last true *)
+    List.rev (drop_until id (List.rev l)) 
+    
 // NBE debuging
 
 let debug cfg f =
@@ -137,11 +147,16 @@ let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t
         None
   in pickBranch_aux scrut branches branches
 
-(* Tests is the application is full and if none of the arguments is symbolic *)
-let rec test_args ts cnt =
-  match ts with
-  | [] -> cnt <= 0
-  | t :: ts -> (not (isAccu (fst t))) && test_args ts (cnt - 1)
+(* Tests is the application is full and if none of the recursive arguments is symbolic *)
+let test_args ts ar_list : (bool * args * args) = (* can unfold x full arg list x residual args *)
+  let rec aux ts ar_list acc b
+    match ts, ar_list with
+    | _, [] -> true, List.rev acc, ts
+    | [], _ :: _ -> (false, List.rev acc, [])  (* It's partial! *)
+    | t :: ts, b :: bs -> aux ts bs (t :: acc) (res && implies b (not (isAccu (fst t))))
+  in 
+  aux ts ar_list [] true
+
 
 (* ZP: TODO change this! Count arity from type.. *)
 let rec count_abstractions (t : term) : int =
@@ -279,18 +294,17 @@ let rec iapp (f:t) (args:args) : t =
     let (us', ts') = aux args us ts in
     FV (i, us', ts')
   | Rec(lb, lbs, bs, acc, arity, tr_lb) ->
-    let no_args = List.length args in
-    let no_acc = List.length acc in
     let full_args = acc @ args in (* Not in reverse order *)
+
+    let (can_unfold, args, res) = test_args full_args ar_list in
     
-    if test_args full_args arity then (* compute *) 
-      begin 
-        if List.length full_args > arity then 
-          let (rargs, res) = List.splitAt arity full_args in
-          let t = iapp (tr_lb (make_rec_env tr_lb lbs bs) lb) rargs in 
-          iapp t res
-        else 
-          iapp (tr_lb (make_rec_env tr_lb lbs bs) lb) full_args
+    if can_unfold then (* compute *) 
+      begin match res with 
+      | [] -> (* no residual args *)
+        iapp (tr_lb (make_rec_env tr_lb lbs bs) lb) args 
+      | _ :: _ ->
+        let t = iapp (tr_lb (make_rec_env tr_lb lbs bs) lb) args in 
+        iapp t res
       end
     else (* cannot reduce -- accumulate args *)
       Rec (lb, lbs, bs, full_args, arity, tr_lb)
@@ -369,8 +383,13 @@ and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
 
 
 and mkRec' callback (b:letbinding) (bs:list<letbinding>) (env:list<t>) = 
-  let ar = count_abstractions b.lbdef in
-  Rec(b, bs, env, [], ar, callback)
+  let (ar, maybe_lst) = let_rec_arity b in
+  let ar_lst = 
+    match maybe_lst with 
+    | None -> tabulate ar (fun _ -> true) (* treat all arguments as recursive *)
+    | Some lst -> trim lst 
+  in
+  Rec(b, bs, env, [], ar_lst, callback)
 
 and mkRec cfg b bs env = mkRec' (translate_letbinding cfg) b bs env
 
@@ -843,7 +862,8 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       let head =
        (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
         match lb.lbname with
-        | BU.Inl bv -> S.mk (Tm_let((true, lbs), S.bv_to_name bv)) None Range.dummyRange 
+        | BU.Inl bv -> 
+          failwith "Reading back of local recursive definitions is not supported yet." 
         | BU.Inr fv -> S.mk (Tm_fvar fv) None Range.dummyRange
       in
            
