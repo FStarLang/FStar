@@ -577,17 +577,20 @@ let e_sigelt =
 // so we don't write these things
 let e_ident : embedding<I.ident> =
     let repr = e_tuple2 e_range e_string in
-    let embed_ident (rng:Range.range) (i:I.ident) : term =
+    let embed_ident (i:I.ident) (rng:Range.range)  _ _ : term =
         embed repr rng (I.range_of_id i, I.text_of_id i)
     in
-    let unembed_ident w (t:term) : option<I.ident> =
+    let unembed_ident (t:term) w _ : option<I.ident> =
         match unembed' w repr t with
         | Some (rng, s) -> Some (I.mk_ident (s, rng))
         | None -> None
     in
-    mk_emb embed_ident unembed_ident (S.t_tuple2_of S.t_range S.t_string)
-    // TODO: again a delta depth issue, should be this
-    (* fstar_refl_ident *)
+    mk_emb_full
+      embed_ident
+      unembed_ident
+      (S.t_tuple2_of S.t_range S.t_string)
+      FStar.Ident.text_of_id
+      (emb_typ_of repr)
 
 let e_univ_name =
     (* TODO: Should be this, but there's a delta depth issue *)
