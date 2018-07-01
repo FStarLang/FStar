@@ -467,11 +467,15 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             end
         | _ -> failwith "Unexpected number of arguments"
     in
-    let basic_ops : list<(Ident.lid //name of primitive
-                          * int     //arity
-                          * int     //universe arity
-                          * (psc -> EMB.norm_cb -> args -> option<term>) //interp for normalizer
-                          * (NBETerm.args -> option<NBETerm.t>))> //interp for NBE
+    let basic_ops 
+      //this type annotation has to be on a single line for it to parse
+      //because our support for F# style type-applications is very limited
+      : list<(Ident.lid * int * int * (psc -> EMB.norm_cb -> args -> option<term>) * (NBETerm.args -> option<NBETerm.t>))>
+       //name of primitive
+          //arity
+          //universe arity
+          //interp for normalizer
+          //interp for NBE
       =
         [(PC.op_Minus,
              1,

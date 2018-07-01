@@ -91,3 +91,14 @@ let string_of_list :
         Prims.strcat uu____341 "]"  in
       Prims.strcat "[" uu____340
   
+type 'a thunk = (unit -> 'a,'a) FStar_Util.either FStar_ST.ref
+let mk_thunk : 'a . (unit -> 'a) -> 'a thunk =
+  fun f  -> FStar_Util.mk_ref (FStar_Util.Inl f) 
+let force_thunk : 'a . 'a thunk -> 'a =
+  fun t  ->
+    let uu____479 = FStar_ST.op_Bang t  in
+    match uu____479 with
+    | FStar_Util.Inr a -> a
+    | FStar_Util.Inl f ->
+        let a = f ()  in (FStar_ST.op_Colon_Equals t (FStar_Util.Inr a); a)
+  

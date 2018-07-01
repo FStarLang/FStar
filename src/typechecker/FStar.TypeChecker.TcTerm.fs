@@ -363,6 +363,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                None t.pos in
     t, lc, g
 
+  | Tm_lazy ({lkind=Lazy_embedding _ }) ->
+    tc_term env (U.unlazy top)
+
   // lazy terms have whichever type they're annotated with
   | Tm_lazy i ->
     value_check_expected_typ env top (Inl i.ltyp) Env.trivial_guard

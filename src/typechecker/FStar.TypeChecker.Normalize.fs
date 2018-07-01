@@ -2299,7 +2299,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     in
 
     if cfg.steps.iota
-    then matches scrutinee branches
+    then matches (U.unlazy scrutinee) branches
     else norm_and_rebuild_match ()
 
 let normalize_with_primitive_steps ps s e t =

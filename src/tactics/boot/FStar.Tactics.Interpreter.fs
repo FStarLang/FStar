@@ -45,14 +45,14 @@ let tacdbg = BU.mk_ref false
 // IN F*: let rec e_tactic_0 (#r:Type) (er : embedding r) : embedding (tac r)
 let rec e_tactic_0 (er : embedding<'r>) : embedding<tac<'r>> // JUST FSHARP
     =
-    mk_emb (fun _ _ _ -> failwith "Impossible: embedding tactic (0)?")
+    mk_emb (fun _ _ _ _ -> failwith "Impossible: embedding tactic (0)?")
            (fun t w norm -> Some <| unembed_tactic_0 er t norm)
            (FStar.Syntax.Embeddings.term_as_fv S.t_unit)
 
 // IN F*: and e_tactic_1 (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> tac r)
 and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<'r>)> // JUST FSHARP
     =
-    mk_emb (fun _ _ _ -> failwith "Impossible: embedding tactic (1)?")
+    mk_emb (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?")
            (fun t w -> unembed_tactic_1 ea er t)
            (FStar.Syntax.Embeddings.term_as_fv S.t_unit)
 
