@@ -443,6 +443,15 @@ let rec unlazy t =
     | Tm_lazy i -> unlazy <| unfold_lazy i
     | _ -> t
 
+let rec unlazy_emb t =
+    match (compress t).n with
+    | Tm_lazy i ->
+        begin match i.lkind with
+        | Lazy_embedding _ -> unlazy <| unfold_lazy i
+        | _ -> t
+        end
+    | _ -> t
+
 let eq_lazy_kind k k' =
     match k, k' with
      | BadLazy, BadLazy
