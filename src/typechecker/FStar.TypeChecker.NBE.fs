@@ -814,14 +814,7 @@ let step_as_normalizer_step = function
   | UnfoldTac -> Env.UnfoldTac
   | Reify -> Env.Reify
 
-let normalize' (steps:list<Env.step>) (env : Env.env) (e:term) : term =
-  let cfg = Cfg.config steps env in
-  //debug_sigmap env.sigtab;
-  let cfg = {cfg with steps={cfg.steps with reify_=true}} in
-  debug cfg (fun () -> BU.print1 "Calling NBE with %s" (P.term_to_string e));
-  readback cfg (translate cfg [] e)
-
-let normalize'' psteps (steps:list<Env.step>)
+let normalize psteps (steps:list<Env.step>)
                 (env : Env.env) (e:term) : term =  
   let cfg = Cfg.config' psteps steps env in
   //debug_sigmap env.sigtab;
@@ -829,15 +822,10 @@ let normalize'' psteps (steps:list<Env.step>)
   debug cfg (fun () -> BU.print1 "Calling NBE with %s" (P.term_to_string e));
   readback cfg (translate cfg [] e)
 
-
 (* ONLY FOR UNIT TESTS! *)
-let test_normalize (steps:list<step>) (env : Env.env) (e:term) : term =
-  let cfg = Cfg.config (List.map step_as_normalizer_step steps) env in
+let normalize_for_unit_test (steps:list<Env.step>) (env : Env.env) (e:term) : term =
+  let cfg = Cfg.config steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
   debug cfg (fun () -> BU.print1 "Calling NBE with %s" (P.term_to_string e));
-  let r = readback cfg (translate cfg [] e) in 
-  debug cfg (fun () -> BU.print1 "NBE returned %s" (P.term_to_string r)); r
-
-
-
+  readback cfg (translate cfg [] e)

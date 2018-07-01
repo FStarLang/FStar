@@ -93,7 +93,7 @@ let init_env deps : TcEnv.env =
         TcTerm.check_type_of_well_typed_term
         solver
         Const.prims_lid
-        (NBE.normalize'' 
+        (NBE.normalize
           (FStar.Tactics.Interpreter.primitive_steps ()))
   in
   (* Set up some tactics callbacks *)

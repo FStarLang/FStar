@@ -193,7 +193,7 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
     let env =
       let uu____252 =
         let uu____267 = FStar_Tactics_Interpreter.primitive_steps ()  in
-        FStar_TypeChecker_NBE.normalize'' uu____267  in
+        FStar_TypeChecker_NBE.normalize uu____267  in
       FStar_TypeChecker_Env.initial_env deps FStar_TypeChecker_TcTerm.tc_term
         FStar_TypeChecker_TcTerm.type_of_tot_term
         FStar_TypeChecker_TcTerm.universe_of
