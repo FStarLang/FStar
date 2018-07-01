@@ -532,7 +532,20 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       translate cfg bs e
 
     | Tm_quoted (qt, qi) ->
-      Quote (qt, qi)
+      let close t =
+        let bvs = List.map (fun _ -> S.new_bv None S.tun) bs in
+        let s1 = List.mapi (fun i bv -> DB (i, bv)) bvs in
+        let s2 = List.map (fun (bv, t) -> NT (bv, readback cfg t)) (List.zip bvs bs) in
+        SS.subst s2 (SS.subst s1 t)
+      in
+      begin match qi.qkind with
+      | Quote_dynamic ->
+        let qt = close qt in
+        Quote (qt, qi)
+      | Quote_static  ->
+        let qi = S.on_antiquoted close qi in
+        Quote (qt, qi)
+      end
 
     | Tm_lazy li ->
       Lazy li
