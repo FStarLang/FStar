@@ -203,10 +203,10 @@ let e_result :
   fun ea  ->
     let embed_result rng res =
       match res with
-      | FStar_Tactics_Result.Failed (msg,ps) ->
+      | FStar_Tactics_Result.Success (a,ps) ->
           let uu____286 =
             let uu____291 =
-              FStar_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Failed_tm
+              FStar_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Success_tm
                 [FStar_Syntax_Syntax.U_zero]
                in
             let uu____292 =
@@ -215,10 +215,7 @@ let e_result :
                 FStar_Syntax_Syntax.iarg uu____302  in
               let uu____303 =
                 let uu____314 =
-                  let uu____323 =
-                    FStar_Syntax_Embeddings.embed
-                      FStar_Syntax_Embeddings.e_string rng msg
-                     in
+                  let uu____323 = FStar_Syntax_Embeddings.embed ea rng a  in
                   FStar_Syntax_Syntax.as_arg uu____323  in
                 let uu____324 =
                   let uu____335 =
@@ -230,10 +227,10 @@ let e_result :
               uu____293 :: uu____303  in
             FStar_Syntax_Syntax.mk_Tm_app uu____291 uu____292  in
           uu____286 FStar_Pervasives_Native.None rng
-      | FStar_Tactics_Result.Success (a,ps) ->
+      | FStar_Tactics_Result.Failed (msg,ps) ->
           let uu____381 =
             let uu____386 =
-              FStar_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Success_tm
+              FStar_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Failed_tm
                 [FStar_Syntax_Syntax.U_zero]
                in
             let uu____387 =
@@ -242,7 +239,10 @@ let e_result :
                 FStar_Syntax_Syntax.iarg uu____397  in
               let uu____398 =
                 let uu____409 =
-                  let uu____418 = FStar_Syntax_Embeddings.embed ea rng a  in
+                  let uu____418 =
+                    FStar_Syntax_Embeddings.embed
+                      FStar_Syntax_Embeddings.e_string rng msg
+                     in
                   FStar_Syntax_Syntax.as_arg uu____418  in
                 let uu____419 =
                   let uu____430 =
@@ -330,14 +330,14 @@ let e_result_nbe :
             let uu____855 =
               let uu____862 =
                 let uu____867 =
-                  FStar_TypeChecker_NBETerm.embed e_proofstate_nbe ps  in
+                  FStar_TypeChecker_NBETerm.embed
+                    FStar_TypeChecker_NBETerm.e_string msg
+                   in
                 FStar_TypeChecker_NBETerm.as_arg uu____867  in
               let uu____868 =
                 let uu____875 =
                   let uu____880 =
-                    FStar_TypeChecker_NBETerm.embed
-                      FStar_TypeChecker_NBETerm.e_string msg
-                     in
+                    FStar_TypeChecker_NBETerm.embed e_proofstate_nbe ps  in
                   FStar_TypeChecker_NBETerm.as_arg uu____880  in
                 [uu____875]  in
               uu____862 :: uu____868  in
