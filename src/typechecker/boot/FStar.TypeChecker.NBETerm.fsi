@@ -50,7 +50,7 @@ and t
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Arrow of (list<t> -> comp) * list<(unit -> arg)>
+  | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
   | Refinement of (t -> t) * (unit -> arg)
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
