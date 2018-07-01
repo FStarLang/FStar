@@ -1,6 +1,6 @@
 module Imp
 
-#set-options "--debug Imp --debug_level SMTQuery"
+//#set-options "--debug Imp --debug_level SMTQuery"
 
 open FStar.Mul
 
@@ -14,9 +14,24 @@ type inst =
     | Sub : reg -> reg -> reg -> inst
     | Mul : reg -> reg -> reg -> inst
     | Const : rval -> reg -> inst
+    | If0 : reg -> prog -> prog -> inst
+    | Seq : prog -> inst
+and prog = list inst
 
-type prog = list inst
+module L = FStar.List.Tot
 
+let rec size : inst -> pos = function
+  | Add _ _ _
+  | Sub _ _ _
+  | Mul _ _ _
+  | Const _ _  -> 1
+  | If0 _ i j -> 1 + size_l i + size_l j
+  | Seq i -> 1 + size_l i
+
+and size_l : prog -> pos = function
+  | [] -> 1
+  | hd::tl -> size hd + size_l tl
+  
 val override : reg -> rval -> regmap -> regmap
 let override r v rm =
     fun r' ->
@@ -24,20 +39,23 @@ let override r v rm =
         then v
         else rm r'
 
-val step : inst -> regmap -> regmap
-let step i rm =
-    match i with
-    | Add r1 r2 r3 -> override r3 (rm r1 + rm r2) rm
-    | Sub r1 r2 r3 -> override r3 (rm r1 - rm r2) rm
-    | Mul r1 r2 r3 -> override r3 (rm r1 * rm r2) rm
-    | Const v r    -> override r v rm
-
-val run : prog -> regmap -> regmap
-let run prog rm = List.Tot.fold_left (fun rm i -> step i rm) rm prog
+let rec eval' (i:inst) (rm:regmap)
+    : Tot regmap (decreases (size i))
+    = match i with
+      | Add r1 r2 r3 -> override r3 (rm r1 + rm r2) rm
+      | Sub r1 r2 r3 -> override r3 (rm r1 - rm r2) rm
+      | Mul r1 r2 r3 -> override r3 (rm r1 * rm r2) rm
+      | Const v r    -> override r v rm
+      | Seq []       -> rm
+      | Seq (p::ps)   -> eval' (Seq ps) (eval' p rm)
+      | If0 r p0 p1  ->
+          if rm r = 0 
+          then eval' (Seq p0) rm
+          else eval' (Seq p1) rm
 
 (* Run in all zeros and get the 0th reg *)
 val eval : prog -> rval
-let eval p = let rm = run p (fun _ -> 0) in rm (R 0)
+let eval p = let rm = eval' (Seq p) (fun _ -> 0) in rm (R 0)
 
 let equiv p1 p2 = eval p1 == eval p2
 
@@ -148,13 +166,16 @@ let _ = assert_norm (eval (poly5' 2) == 63)
 let _ = assert_norm (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
 
 (* Same *)
-#push-options "--max_fuel 14"
+#push-options "--max_fuel 20"
 let _ = assert (eval (poly5' 1) == 6)
 let _ = assert (eval (poly5' 2) == 63)
 let _ = assert (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
+let _ = assert (forall x. poly5 x `equiv` poly5' x)
 #pop-options
 
 [@fail]
 let _ = assert (forall x. poly5 x `equiv` poly5' x)
 
-let _ = assert_norm (forall x. poly5 x `equiv` poly5' x)
+#set-options "--z3rlimit 100"
+[@fail]
+let _ = assert_norm (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
