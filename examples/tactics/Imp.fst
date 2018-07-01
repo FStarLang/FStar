@@ -3,6 +3,9 @@ module Imp
 //#set-options "--debug Imp --debug_level SMTQuery"
 
 open FStar.Mul
+open FStar.Tactics
+open CanonCommSemiring
+open FStar.Algebra.CommMonoid
 
 type rval = int
 type reg = | R of n:nat{n < 10}
@@ -14,8 +17,8 @@ type inst =
     | Sub : reg -> reg -> reg -> inst
     | Mul : reg -> reg -> reg -> inst
     | Const : rval -> reg -> inst
-    | If0 : reg -> prog -> prog -> inst
-    | Seq : prog -> inst
+    //| If0 : reg -> prog -> prog -> inst
+    //| Seq : prog -> inst
 and prog = list inst
 
 module L = FStar.List.Tot
@@ -25,13 +28,12 @@ let rec size : inst -> pos = function
   | Sub _ _ _
   | Mul _ _ _
   | Const _ _  -> 1
-  | If0 _ i j -> 1 + size_l i + size_l j
-  | Seq i -> 1 + size_l i
+  //| If0 _ i j -> 1 + size_l i + size_l j
+  //| Seq i -> 1 + size_l i
 
 and size_l : prog -> pos = function
   | [] -> 1
   | hd::tl -> size hd + size_l tl
-  
 val override : reg -> rval -> regmap -> regmap
 let override r v rm =
     fun r' ->
@@ -46,16 +48,17 @@ let rec eval' (i:inst) (rm:regmap)
       | Sub r1 r2 r3 -> override r3 (rm r1 - rm r2) rm
       | Mul r1 r2 r3 -> override r3 (rm r1 * rm r2) rm
       | Const v r    -> override r v rm
-      | Seq []       -> rm
-      | Seq (p::ps)   -> eval' (Seq ps) (eval' p rm)
-      | If0 r p0 p1  ->
-          if rm r = 0 
-          then eval' (Seq p0) rm
-          else eval' (Seq p1) rm
+      //| Seq []       -> rm
+//      | Seq (p::ps)   -> eval' (Seq ps) (eval' p rm)
+//      | If0 r p0 p1  ->
+//          if rm r = 0 
+//          then eval' (Seq p0) rm
+//          else eval' (Seq p1) rm
 
 (* Run in all zeros and get the 0th reg *)
 val eval : prog -> rval
-let eval p = let rm = eval' (Seq p) (fun _ -> 0) in rm (R 0)
+//let eval p = let rm = eval' (Seq p) (fun _ -> 0) in rm (R 0)
+let eval p = let rm = List.Tot.fold_left (fun r i -> eval' i r) (fun _ -> 0) p in rm (R 0)
 
 let equiv p1 p2 = eval p1 == eval p2
 
@@ -108,12 +111,12 @@ let _ = assert_norm (forall x y. equiv (add3 x y) (add4 x y))
 
 (* Without normalizing, they require fuel, or else fail *)
 #push-options "--max_fuel 0"
-[@fail] let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
-[@fail] let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
-[@fail] let _ = assert (forall x y. equiv (add1 x y) (add4 x y))
-[@fail] let _ = assert (forall x y. equiv (add2 x y) (add3 x y))
-[@fail] let _ = assert (forall x y. equiv (add2 x y) (add4 x y))
-[@fail] let _ = assert (forall x y. equiv (add3 x y) (add4 x y))
+[@Pervasives.fail] let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
+[@Pervasives.fail] let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
+[@Pervasives.fail] let _ = assert (forall x y. equiv (add1 x y) (add4 x y))
+[@Pervasives.fail] let _ = assert (forall x y. equiv (add2 x y) (add3 x y))
+[@Pervasives.fail] let _ = assert (forall x y. equiv (add2 x y) (add4 x y))
+[@Pervasives.fail] let _ = assert (forall x y. equiv (add3 x y) (add4 x y))
 #pop-options
 
 (* poly5 x = x^5 + x^4 + x^3 + x^2 + x^1 + 1 *)
@@ -137,11 +140,11 @@ let _ = assert_norm (eval (poly5 2) == 63)
 let _ = assert_norm (eval (poly5 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
 
 (* Bunch of fuel to even prove ground facts *)
-#push-options "--max_fuel 12"
-let _ = assert (eval (poly5 1) == 6)
-let _ = assert (eval (poly5 2) == 63)
-let _ = assert (eval (poly5 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
-#pop-options
+//#push-options "--max_fuel 12"
+//let _ = assert (eval (poly5 1) == 6)
+//let _ = assert (eval (poly5 2) == 63)
+//let _ = assert (eval (poly5 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
+//#pop-options
 
 (* A different way of computing it *)
 let poly5' x : prog = [
@@ -167,15 +170,32 @@ let _ = assert_norm (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 
 
 (* Same *)
 #push-options "--max_fuel 20"
-let _ = assert (eval (poly5' 1) == 6)
-let _ = assert (eval (poly5' 2) == 63)
-let _ = assert (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
-let _ = assert (forall x. poly5 x `equiv` poly5' x)
+//let _ = assert (eval (poly5' 1) == 6)
+//let _ = assert (eval (poly5' 2) == 63)
+//let _ = assert (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
+//let _ = assert (forall x. poly5 x `equiv` poly5' x)
 #pop-options
 
-[@fail]
-let _ = assert (forall x. poly5 x `equiv` poly5' x)
+//[@Pervasives.fail]
+//let _ = assert (forall x. poly5 x `equiv` poly5' x)
+//
+//#set-options "--z3rlimit 10"
+//let _ = assert_norm (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
 
-#set-options "--z3rlimit 100"
-[@fail]
-let _ = assert_norm (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
+#set-options "--max_fuel 0"
+// --tactic_trace"
+let _ = assert (forall x. poly5 x `equiv` poly5' x)
+          by (fun () -> let _ = forall_intros () in
+		     compute ();
+		     dump "after norm";
+		     canon_semiring int_cr;
+		     dump "final")
+
+// Takes long.. try again later
+//let _ = assert (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
+//          by (fun () -> let _ = forall_intros () in
+//		     compute ();
+//		     dump "after norm";
+//		     canon_semiring int_cr;
+//		     dump "final")
+//    
