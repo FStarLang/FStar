@@ -3014,7 +3014,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
     FStar_List.map (as_primitive_step true)
       (FStar_List.append basic_ops bounded_arith_ops)
      in
-  let weak_steps = FStar_List.map (as_primitive_step true) weak_ops  in
+  let weak_steps = FStar_List.map (as_primitive_step false) weak_ops  in
   FStar_All.pipe_left prim_from_list
     (FStar_List.append strong_steps weak_steps)
   
