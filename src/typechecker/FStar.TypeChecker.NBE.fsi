@@ -12,6 +12,8 @@ open FStar.TypeChecker.Normalize
 open FStar.TypeChecker.NBETerm
 module Cfg = FStar.TypeChecker.Cfg
 
+val iapp : t -> args -> t
+
 val normalize_for_unit_test : steps:list<Env.step>
                -> env : Env.env
                -> e:term

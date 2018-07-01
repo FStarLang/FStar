@@ -54,7 +54,7 @@ and t
   | Refinement of (t -> t) * (unit -> arg) 
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
-  | Rec of letbinding * list<letbinding> * list<t> * args * int  
+  | Rec of letbinding * list<letbinding> * list<t> * args * int  * (list<t> -> letbinding -> t)
 and comp = 
   | Tot of t * option<universe>
   | GTot of t * option<universe>

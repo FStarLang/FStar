@@ -61,7 +61,7 @@ and t
   | Refinement of (t -> t) * (unit -> arg) 
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
-  | Rec of letbinding * list<letbinding> * list<t> * args * int
+  | Rec of letbinding * list<letbinding> * list<t> * args * int  * (list<t> -> letbinding -> t)
   (* Zoe : a recursive function definition together with its block of mutually 
      recursive function definitions and its environment *)
   (* args is th alrady accumulated arguments, the last argument is the arrity *)
@@ -215,7 +215,7 @@ let rec t_to_string (x:t) =
   | Unknown -> "Unknown"
   | Quote _ -> "Quote _"
   | Lazy _ -> "Lazy _"
-  | Rec (_,_, l, _, _) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
+  | Rec (_,_, l, _, _, _) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
 and atom_to_string (a: atom) =
   match a with

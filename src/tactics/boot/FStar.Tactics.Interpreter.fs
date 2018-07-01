@@ -324,7 +324,7 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) : tac<'b> = //
 
     // Maybe use NBE if the user asked for it
     let norm_f = if Options.tactics_nbe ()
-                 then NBE.normalize_with_primitive_steps
+                 then NBE.normalize
                  else N.normalize_with_primitive_steps
     in
     if proof_state.tac_verb_dbg then

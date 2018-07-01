@@ -226,19 +226,6 @@ let translate_univ (bs:list<t>) (u:universe) : universe =
     in
     aux u
 
-let mkRec (b:letbinding) (bs:list<letbinding>) (env:list<t>) = 
-  let ar = count_abstractions b.lbdef in
-  Rec(b, bs, env, [], ar)
-
-(* Creates the environment of mutually recursive function definitions *)
-let make_rec_env (lbs:list<letbinding>) (bs:list<t>) : list<t> =
-  let rec aux (lbs:list<letbinding>) (lbs0:list<letbinding>) (bs:list<t>) (bs0:list<t>) : list<t> =
-  match lbs with
-  | [] -> bs
-  | lb::lbs' -> aux lbs' lbs0 ((mkRec lb lbs0 bs0) :: bs) bs0
-  in
-  aux lbs lbs bs bs
-
 let find_let (lbs : list<letbinding>) (fvar : fv) =
   BU.find_map lbs (fun lb -> match lb.lbname with
                    | BU.Inl _ -> failwith "find_let : impossible"
@@ -291,7 +278,7 @@ let rec iapp (f:t) (args:args) : t =
     in
     let (us', ts') = aux args us ts in
     FV (i, us', ts')
-  | Rec(lb, lbs, bs, acc, arity) -> 
+  | Rec(lb, lbs, bs, acc, arity, tr_lb) ->
     let no_args = List.length args in
     let no_acc = List.length acc in
     let full_args = acc @ args in (* Not in reverse order *)
@@ -300,20 +287,17 @@ let rec iapp (f:t) (args:args) : t =
       begin 
         if List.length full_args > arity then 
           let (rargs, res) = List.splitAt arity full_args in
-          let t = iapp cfg (translate_letbinding cfg (make_rec_env lbs bs) lb) rargs in 
-          iapp cfg t res
+          let t = iapp (tr_lb (make_rec_env tr_lb lbs bs) lb) rargs in 
+          iapp t res
         else 
-          iapp cfg (translate_letbinding cfg (make_rec_env lbs bs) lb) full_args
+          iapp (tr_lb (make_rec_env tr_lb lbs bs) lb) full_args
       end
     else (* cannot reduce -- accumulate args *)
-      Rec (lb, lbs, bs, full_args, arity)
+      Rec (lb, lbs, bs, full_args, arity, tr_lb)
     
   | Quote _
   | Lazy _ | Constant _ | Univ _ | Type_t _ | Unknown | Refinement _ | Arrow _ ->
     failwith ("NBE ill-typed application: " ^ t_to_string f)
-
-(* unary application *)
-let app (f:t) (x:t) (q:aqual) = iapp f [(x, q)]
 
 and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
    let debug = debug cfg in
@@ -352,7 +336,7 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
          begin match lbm with
          | Some lb ->
            if is_rec then
-             mkRec lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty
+             mkRec cfg lb [] [] (* ZP: both the environment and the lists of mutually defined functions are empty
                                since they are already present in the global environment *)
            else 
              begin
@@ -383,6 +367,21 @@ and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   // Thunking them is probably okay, since the common case is really top-level function
   // rather than top-level pure computation
 
+
+and mkRec' callback (b:letbinding) (bs:list<letbinding>) (env:list<t>) = 
+  let ar = count_abstractions b.lbdef in
+  Rec(b, bs, env, [], ar, callback)
+
+and mkRec cfg b bs env = mkRec' (translate_letbinding cfg) b bs env
+
+(* Creates the environment of mutually recursive function definitions *)
+and make_rec_env callback (lbs:list<letbinding>) (bs:list<t>) : list<t> =
+  let rec aux (lbs:list<letbinding>) (lbs0:list<letbinding>) (bs:list<t>) (bs0:list<t>) : list<t> =
+  match lbs with
+  | [] -> bs
+  | lb::lbs' -> aux lbs' lbs0 ((mkRec' callback lb lbs0 bs0) :: bs) bs0
+  in
+  aux lbs lbs bs bs
 
 and translate_constant (c : sconst) : constant =
     match c with
@@ -559,7 +558,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       translate cfg bs' body
 
     | Tm_let((true, lbs), body) ->
-      translate cfg (make_rec_env lbs bs) body
+      translate cfg (make_rec_env (translate_letbinding cfg) lbs bs) body
 
     | Tm_meta (e, _) ->
       //TODO: we need to put the "meta" back when reading back
@@ -831,7 +830,7 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
        | [] -> head
        | _ -> U.mk_app head args)
 
-    | Rec(lb, lbs, bs, args, arity) -> (* if this point is reached then we cannot unfold Rec *)
+    | Rec(lb, lbs, bs, args, arity, _cfg) -> (* if this point is reached then we cannot unfold Rec *)
       let head =
        (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
         match lb.lbname with
