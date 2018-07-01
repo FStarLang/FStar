@@ -167,15 +167,15 @@ let e_result_nbe (ea : NBET.embedding<'a>)  =
         | Failed (msg, ps) ->
             mkConstruct fstar_tactics_Failed_fv
               [U_zero]
-              [ NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps)
-              ; NBETerm.as_arg (NBETerm.embed NBETerm.e_string msg)
-              ; NBETerm.as_iarg (NBETerm.type_of ea) ]
+              [ NBETerm.as_iarg (NBETerm.type_of ea)
+              ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps)
+              ; NBETerm.as_arg (NBETerm.embed NBETerm.e_string msg) ]
         | Success (a, ps) ->
             mkConstruct fstar_tactics_Success_fv
               [U_zero]
-              [ NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps)
+              [ NBETerm.as_iarg (NBETerm.type_of ea)
               ; NBETerm.as_arg (NBETerm.embed ea a)
-              ; NBETerm.as_iarg (NBETerm.type_of ea) ]
+              ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps) ]
     in
     let unembed_result (t:NBET.t) : option<__result<'a>> =
         match t with
