@@ -262,6 +262,7 @@ val new_u_univ             : unit -> universe
 (* Instantiate the universe variables in a type scheme with new unification variables *)
 val inst_tscheme           : tscheme -> universes * term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
+val mk_univ_subst          : list<univ_name> -> universes -> list<subst_elt>
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env

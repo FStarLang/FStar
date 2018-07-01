@@ -431,10 +431,7 @@ let run_tactic_on_typ
                             else ())
                   (ps.goals @ ps.smt_goals);
 
-        // Check that all implicits are instantiated. This will also typecheck
-        // the implicits, so make it do a lax check because we certainly
-        // do not want to repeat all of the reasoning that took place in tactics.
-        // It would also most likely fail.
+        // Check that all implicits were instantiated
         if !tacdbg then
             BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
                                                                     (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
@@ -442,15 +439,23 @@ let run_tactic_on_typ
         let g = {Env.trivial_guard with Env.implicits=ps.all_implicits} in
         let g = TcRel.solve_deferred_constraints env g in
         if !tacdbg then
-            BU.print1 "Checked (1) implicits: %s\n" (FStar.Common.string_of_list
-                                                                    (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                                                    ps.all_implicits);
+            BU.print2 "Checked %s implicits (1): %s\n"
+                        (string_of_int (List.length ps.all_implicits))
+                        (FStar.Common.string_of_list
+                                (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
+                                ps.all_implicits);
         let g = TcRel.resolve_implicits_tac env g in
         if !tacdbg then
-            BU.print1 "Checked (2) implicits: %s\n" (FStar.Common.string_of_list
-                                                                    (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                                                    ps.all_implicits);
+            BU.print2 "Checked %s implicits (2): %s\n"
+                        (string_of_int (List.length ps.all_implicits))
+                        (FStar.Common.string_of_list
+                                (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
+                                ps.all_implicits);
         report_implicits ps g.implicits;
+        // /implicits
+
+        if !tacdbg then
+            dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the finish line";
         (ps.goals@ps.smt_goals, w)
 
     | Failed (s, ps) ->
@@ -689,11 +694,15 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     List.iter (fun g ->
         match getprop (goal_env g) (goal_type g) with
         | Some vc ->
+            begin
+            if !tacdbg then
+              BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
             let guard = { guard_f = FStar.TypeChecker.Common.NonTrivial vc
                         ; deferred = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
             TcRel.force_trivial_guard (goal_env g) guard
+            end
         | None ->
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos) gs;
     w

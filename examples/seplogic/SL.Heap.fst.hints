@@ -16,7 +16,7 @@
         "token_correspondence_Prims.op_LessThanOrEqual"
       ],
       0,
-      "61a58c3f582395845eeef03a50945c4a"
+      "b916a9003113e857feb105fbb61325a2"
     ],
     [
       "SL.Heap.disjoint_addrs",
@@ -37,7 +37,7 @@
         "token_correspondence_Prims.op_LessThanOrEqual"
       ],
       0,
-      "96ffce102e4bcd26a7a8ab17221838bd"
+      "563ab4a8f6d862d30ab5c433b7bb680c"
     ],
     [
       "SL.Heap.heap",
@@ -57,7 +57,7 @@
         "token_correspondence_Prims.op_LessThanOrEqual"
       ],
       0,
-      "7f4c967d17962c52da3806f859f20954"
+      "81adcbd8b3599ec900acaca61bb67353"
     ],
     [
       "SL.Heap.equal_heaps",
@@ -88,7 +88,7 @@
         "token_correspondence_Prims.op_LessThanOrEqual"
       ],
       0,
-      "cca50b9d76bc999ba5a58df3c30950d0"
+      "9cb90552608877b520b3b85481b01055"
     ],
     [
       "SL.Heap.memory",
@@ -107,7 +107,7 @@
         "token_correspondence_Prims.op_LessThanOrEqual"
       ],
       0,
-      "a765d8f5ef3fb8c5b59472e5e43cc6d1"
+      "1e9bc5a36faedd39b250ff063c76b50c"
     ],
     [
       "SL.Heap.equal_memories",
@@ -144,7 +144,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "35e1e8abda25bd0c8f7d4c1ea6e6752a"
+      "04e570770f2d99cdfe200bbe1c2fb3e1"
     ],
     [
       "SL.Heap.emp",
@@ -175,7 +175,7 @@
         "token_correspondence_SL.Heap.__proj__Mkmemory_rec__item__contents"
       ],
       0,
-      "6a5ba291c0a8f4660156e0130bc8da9e"
+      "ec24ca07df24f48086e3e96ddc83c464"
     ],
     [
       "SL.Heap.heap_memory",
@@ -195,7 +195,7 @@
         "token_correspondence_SL.Heap.__proj__Mkmemory_rec__item__contents"
       ],
       0,
-      "06efdef941dfcf7198b666efcd5a0aa2"
+      "7fe41303b2770f97b2ac8e35d32672e5"
     ],
     [
       "SL.Heap.join",
@@ -204,27 +204,25 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_257be5ee7da9f477702a7d2ee9bef0c9",
-        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "SL.Heap_interpretation_Tm_arrow_adb3d6048ba6a6be670a826f75c441a3",
         "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
         "bool_typing", "constructor_distinct_FStar.Pervasives.Native.Some",
-        "constructor_distinct_Tm_unit", "data_elim_SL.Heap.Mkheap_rec",
+        "constructor_distinct_Tm_unit",
+        "data_elim_FStar.Pervasives.Native.None",
+        "data_elim_SL.Heap.Mkheap_rec",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.OrdSet.cmp", "equation_FStar.OrdSet.total_order",
-        "equation_Prims.eqtype", "equation_Prims.logical",
-        "equation_Prims.nat", "equation_SL.Heap.addrs",
-        "equation_SL.Heap.disjoint_heaps", "equation_SL.Heap.heap",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_SL.Heap.addrs", "equation_SL.Heap.disjoint_heaps",
+        "equation_SL.Heap.heap",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_SL.Heap.heap_rec",
-        "function_token_typing_Prims.logical",
         "function_token_typing_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
         "interpretation_SL.Heap_Tm_abs_57163c8fc0b0c3f1b7b6f40202f0605c",
-        "kinding_Prims.dtuple2@tok",
         "lemma_FStar.OrdSet.lemma_intersect_symmetric",
         "lemma_FStar.OrdSet.mem_empty", "lemma_FStar.OrdSet.mem_intersect",
         "lemma_FStar.OrdSet.mem_union",
@@ -251,12 +249,12 @@
         "token_correspondence_Prims.op_LessThanOrEqual",
         "token_correspondence_SL.Heap.__proj__Mkheap_rec__item__memory",
         "typing_FStar.OrdSet.mem",
+        "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_SL.Heap.__proj__Mkheap_rec__item__hdomain",
-        "typing_SL.Heap.__proj__Mkheap_rec__item__next_addr",
-        "typing_SL.Heap_Tm_abs_8e79f8338fa78ede6dd0d546095ef0e8"
+        "typing_SL.Heap.__proj__Mkheap_rec__item__next_addr"
       ],
       0,
-      "28797da02587c588272ca7079382d21b"
+      "f6918dc3e86f3ece4ad396d0108cf266"
     ],
     [
       "SL.Heap.op_Bar_Greater",
@@ -298,7 +296,7 @@
         "typing_FStar.OrdSet.mem"
       ],
       0,
-      "34d14da0803b6b84a714c4839dda91b9"
+      "9c2df11998b67d23d7388ab3f76076e8"
     ],
     [
       "SL.Heap.op_Less_Star_Greater",
@@ -346,7 +344,7 @@
         "typing_SL.Heap.__proj__Mkmemory_rec__item__domain"
       ],
       0,
-      "4e482bc3606a6cdbba6a6c443d4282a0"
+      "e871dd58d38478f30f3bf4c2ce8d84ac"
     ],
     [
       "SL.Heap.split_heap",
@@ -404,7 +402,7 @@
         "typing_SL.Heap.__proj__Mkmemory_rec__item__domain"
       ],
       0,
-      "c611b529ed2b672d8b89a6eb73841478"
+      "f804b6ee9b5cff666402f559d03e8076"
     ],
     [
       "SL.Heap.mcontains",
@@ -420,7 +418,7 @@
         "refinement_interpretation_SL.Heap_Tm_refine_df7ccf5ec74e07facebd04237c078b00"
       ],
       0,
-      "c81596c21ad0454ba5468b9b2805be43"
+      "b141abaec7c22945dce749e64af51f9a"
     ],
     [
       "SL.Heap.sel",
@@ -448,7 +446,7 @@
         "unit_typing"
       ],
       0,
-      "99c143eb875381b88ae46accff390528"
+      "729884e2171b8684cb5b1dcc69016465"
     ],
     [
       "SL.Heap.upd'",
@@ -460,7 +458,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "6520baa0d1fab8c283413afead9b9499"
+      "094e4c0d01281ffff261951aed720b82"
     ],
     [
       "SL.Heap.upd",
@@ -502,7 +500,7 @@
         "unit_typing"
       ],
       0,
-      "8c18280d111a04e136ad611cca9120aa"
+      "c161d057e1995297cd631d88cfae0ed4"
     ],
     [
       "SL.Heap.addrs_in",
@@ -514,7 +512,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "61bb5f09dc318265ec31f975e888a3cf"
+      "bcade249bf5467de9bc9cba57c0175ad"
     ],
     [
       "SL.Heap.addrs_in",
@@ -538,7 +536,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "4091a0016278b56c75f09ef0a73936dc"
+      "9e63bab5dea7550ab6dd0ec70a35f42c"
     ],
     [
       "SL.Heap.lemma_disjoint_heaps_comm",
@@ -569,7 +567,7 @@
         "typing_SL.Heap.__proj__Mkheap_rec__item__hdomain"
       ],
       0,
-      "a8cc8299e29406a873cde7790d30dc79"
+      "38b2d25c9c93e7d39ea1baac2df7ee00"
     ],
     [
       "SL.Heap.lemma_sep_defined_disjoint_heaps",
@@ -601,7 +599,7 @@
         "typing_SL.Heap.heap_memory", "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "6c14ffd1f32b03567b9049c9a5a4a30c"
+      "828caa5d8bd2f490539c811654dfacaa"
     ],
     [
       "SL.Heap.lemma_join_comm",
@@ -614,7 +612,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "22d0ad14e1c5c7850674a6abb0122cd9"
+      "22c3c9d77ac3e2b6e182fe3f14deb4d9"
     ],
     [
       "SL.Heap.lemma_join_comm",
@@ -675,7 +673,7 @@
         "typing_SL.Heap.__proj__Mkheap_rec__item__memory"
       ],
       0,
-      "8c49594ca9b535220b45d21514ccd6e0"
+      "3e6838726563739f0f3d77eae4b5e071"
     ],
     [
       "SL.Heap.lemma_sep_unit",
@@ -742,7 +740,7 @@
         "typing_SL.Heap_Tm_abs_8e79f8338fa78ede6dd0d546095ef0e8"
       ],
       0,
-      "6d2b6cc1f735754bdb7d7425ddc077bc"
+      "9cd14af824788e8d647c326fdb213449"
     ],
     [
       "SL.Heap.lemma_sep_comm",
@@ -817,7 +815,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "1b96586c875644fafa2744e9ed8c801f"
+      "6af68a2481a6bb010a39a245847de634"
     ],
     [
       "SL.Heap.lemma_sep_assoc",
@@ -903,7 +901,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "9b75ed9de565d77f4ab20785fa9d4893"
+      "a522395da0be33c3068b5058053a8fc4"
     ],
     [
       "SL.Heap.lemma_sep_join",
@@ -916,7 +914,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "40983a025a90650687e98eadee02731f"
+      "c5a654b2dd6100c5895b98b601f99106"
     ],
     [
       "SL.Heap.lemma_sep_join",
@@ -983,7 +981,7 @@
         "typing_SL.Heap_Tm_abs_da9a84607e6e76b23c846235280ba30b"
       ],
       0,
-      "f740888550a34868d7a5e9dc1f0005fd"
+      "6ce260355ab1bb0bbb663aab95317f2c"
     ],
     [
       "SL.Heap.lemma_emp_defined",
@@ -1000,7 +998,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v"
       ],
       0,
-      "8c68d641949989b1a6e50d9822d9e6ba"
+      "560d4e4f99a7afd7321bd5c22227404f"
     ],
     [
       "SL.Heap.lemma_points_to_defined",
@@ -1017,7 +1015,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v"
       ],
       0,
-      "dc23c93b641b6d9d3c75424a10f3c225"
+      "0e60e138bb4fb81f03e116df9d4b51b2"
     ],
     [
       "SL.Heap.lemma_sep_defined",
@@ -1029,7 +1027,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4088cad7c6246db076864ad46b890ebe"
+      "46b715a38bca3d78f1bd057866f8a057"
     ],
     [
       "SL.Heap.lemma_sep_defined",
@@ -1075,7 +1073,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "460f00d4e9e3d1ee461a25074e2deb67"
+      "2aac1ec71ed5d2dde0bd96bf6f084d18"
     ],
     [
       "SL.Heap.lemma_heap_memory_defined",
@@ -1092,7 +1090,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v"
       ],
       0,
-      "760ee0cba501dd99e8b4de8668893ad5"
+      "0cefe260ace6c04934c5516a9d2651f0"
     ],
     [
       "SL.Heap.lemma_split_heap_disjoint",
@@ -1106,7 +1104,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "7783665364e9030a08bc1bf7d88aef3b"
+      "8b80783695f3fd0633b5c730afa16026"
     ],
     [
       "SL.Heap.lemma_split_heap_disjoint",
@@ -1163,7 +1161,7 @@
         "typing_SL.Heap.split_heap"
       ],
       0,
-      "16e610ebc80f42383868b0b6a648f1bb"
+      "94d3d8e874e8e6106ada211baefb9c44"
     ],
     [
       "SL.Heap.lemma_split_heap_join",
@@ -1182,7 +1180,7 @@
         "refinement_interpretation_SL.Heap_Tm_refine_b7c83e9262fb3d6acb42c7f0a7dfaed0"
       ],
       0,
-      "4dacd59b906f288c0d063401ba9cba25"
+      "b8a48c5355913d6b1e46f2850fb27fa7"
     ],
     [
       "SL.Heap.lemma_split_heap_join",
@@ -1267,7 +1265,7 @@
         "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "4acd0924988fd8d2b6b477cbbea383b9"
+      "4b4aedf0ed164a870cecec3ff3ae0653"
     ],
     [
       "SL.Heap.lemma_split_heap_memories",
@@ -1281,7 +1279,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "9d95c6b541dc541a4e49a4ad06f0c153"
+      "fc239e6de2b8fae422049d695a4a7013"
     ],
     [
       "SL.Heap.lemma_split_heap_memories",
@@ -1317,7 +1315,7 @@
         "refinement_interpretation_SL.Heap_Tm_refine_df7ccf5ec74e07facebd04237c078b00"
       ],
       0,
-      "767c45deaf432c2820cd323391580105"
+      "614fb7e0cbc006f46f263ad423d7d19b"
     ],
     [
       "SL.Heap.lemma_hcontains_mcontains",
@@ -1340,7 +1338,7 @@
         "token_correspondence_SL.Heap.__proj__Mkmemory_rec__item__contents"
       ],
       0,
-      "db16254fd92d47eed9857c467ed7a436"
+      "8707a79569cae98bc117953c3dbf62c9"
     ],
     [
       "SL.Heap.lemma_points_to_mcontains",
@@ -1363,7 +1361,7 @@
         "token_correspondence_SL.Heap.__proj__Mkmemory_rec__item__contents"
       ],
       0,
-      "08e84fe9bbd406276abde856cbfeb292"
+      "c41dfb258798821a869f5345c0c9d74c"
     ],
     [
       "SL.Heap.lemma_points_to_sel",
@@ -1376,7 +1374,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "d895459d83f69688220c41de108c2103"
+      "f9e65d5a57cf50941258a82031b9a1b8"
     ],
     [
       "SL.Heap.lemma_points_to_sel",
@@ -1404,7 +1402,7 @@
         "unit_typing"
       ],
       0,
-      "7cd54a2e4aa985b078b559955b6e10c8"
+      "2eb39802a70a556d04cd7170939437da"
     ],
     [
       "SL.Heap.lemma_points_to_upd",
@@ -1417,7 +1415,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "66996dd575e26f08e841c81377e0e39f"
+      "1771478ee0cea35c51aeffc11a37ff31"
     ],
     [
       "SL.Heap.lemma_points_to_upd",
@@ -1485,7 +1483,7 @@
         "unit_typing"
       ],
       0,
-      "b1b572f47722911a7931f0f1513d3083"
+      "c54420841870428ee676dfa16c5d7238"
     ],
     [
       "SL.Heap.lemma_addrs_in_emp",
@@ -1497,7 +1495,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "014c1e465cead1942d72d19d4e7323c4"
+      "43a76850f36e8c21d4884437b3726286"
     ],
     [
       "SL.Heap.lemma_addrs_in_emp",
@@ -1546,7 +1544,7 @@
         "typing_SL.Heap.addrs_in"
       ],
       0,
-      "14d6ce568f6e30b6bdcdb52f5bfc69d3"
+      "7ce890310e3c911475d8f6a654738e15"
     ],
     [
       "SL.Heap.Addrs_in_emp_axiom",
@@ -1558,7 +1556,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "fefdad87d2cbee118faab86a09e21fac"
+      "f6953ffdd1cd21e7b6019aa0b447505d"
     ],
     [
       "SL.Heap.lemma_addrs_in_disjoint_heaps",
@@ -1570,7 +1568,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8a713e46e1f2c0cde29f03102bfaa894"
+      "1f43cf7e1604234bb0087d7f8b120a54"
     ],
     [
       "SL.Heap.lemma_addrs_in_disjoint_heaps",
@@ -1618,7 +1616,7 @@
         "typing_SL.Heap.__proj__Mkheap_rec__item__hdomain"
       ],
       0,
-      "60868ba5395c869b1d25d6b855b5af69"
+      "4554f0fcae7ee3cfadb7ee28456c655c"
     ],
     [
       "SL.Heap.lemma_addrs_in_points_to",
@@ -1630,7 +1628,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "35fef8c7cbb4f09a1e8771443ccd21f6"
+      "f03319f1900c485d19c1e56d1e6a20b1"
     ],
     [
       "SL.Heap.lemma_addrs_in_points_to",
@@ -1685,7 +1683,7 @@
         "typing_SL.Heap.op_Bar_Greater"
       ],
       0,
-      "f67809723b807b7e9d25f15c1ef4c2db"
+      "9370819b8b6774fd95954dba34ec7223"
     ],
     [
       "SL.Heap.lemma_addrs_in_join",
@@ -1697,7 +1695,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "3df36005c037572cbb3bcab5c22a2065"
+      "4b82ccb76f315b67bba8183780a8a9fb"
     ],
     [
       "SL.Heap.lemma_addrs_in_join",
@@ -1753,7 +1751,7 @@
         "typing_SL.Heap.addrs_in", "typing_SL.Heap.op_Less_Star_Greater"
       ],
       0,
-      "b943f066616fd4288764cfdbced11c61"
+      "2f31d8a780e0772b79829a6bef447399"
     ]
   ]
 ]

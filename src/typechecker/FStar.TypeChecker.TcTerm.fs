@@ -1663,27 +1663,7 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
         | _ -> //fallback
           check_application_args env head chead g_head args expected_topt
 
-
-(********************************************************************************************************************)
-(* Type-checking a pattern-matching branch                                                                          *)
-(* the pattern, when_clause and branch are closed                                                                   *)
-(* scrutinee is the logical name of the expression being matched; it is not in scope in the branch                  *)
-(*           but it is in scope for the VC of the branch                                                            *)
-(* env does not contain scrutinee, or any of the pattern-bound variables                                            *)
-(* the returned terms are well-formed in an environment extended with the scrutinee only                            *)
-(********************************************************************************************************************)
-and tc_eqn scrutinee env branch
-        : (pat * option<term> * term)                                                             (* checked branch *)
-        * term       (* the guard condition for taking this branch, used by the caller for the exhaustiveness check *)
-        * lident                                                                 (* effect label of the lcomp below *)
-        * list<cflags>                                                                      (* flags for each lcomp *)
-        * (bool -> lcomp)                    (* computation type of the branch, with or without a "return" equation *)
-        * guard_t =                                                                    (* well-formedness condition *)
-  let pattern, when_clause, branch_exp = SS.open_branch branch in
-  let cpat, _, cbr = branch in
-
-  (*<tc_pat>*)
-  let tc_pat (allow_implicits:bool) (pat_t:typ) p0 :
+and tc_pat env (allow_implicits:bool) (pat_t:typ) p0 :
         pat                          (* the type-checked, fully decorated pattern                                   *)
       * list<bv>                     (* all its bound variables, used for closing the type of the branch term       *)
       * Env.env                      (* the environment extended with all the binders                               *)
@@ -1779,8 +1759,25 @@ and tc_eqn scrutinee env branch
     then BU.print1 "Done checking pattern expression %s\n" (N.term_to_string env exp);
     let p = TcUtil.decorate_pattern env p exp in
     p, pat_bvs, pat_env, exp, guard_pat_annots, norm_exp
-  in
-  (*</tc_pat>*)
+
+
+(********************************************************************************************************************)
+(* Type-checking a pattern-matching branch                                                                          *)
+(* the pattern, when_clause and branch are closed                                                                   *)
+(* scrutinee is the logical name of the expression being matched; it is not in scope in the branch                  *)
+(*           but it is in scope for the VC of the branch                                                            *)
+(* env does not contain scrutinee, or any of the pattern-bound variables                                            *)
+(* the returned terms are well-formed in an environment extended with the scrutinee only                            *)
+(********************************************************************************************************************)
+and tc_eqn scrutinee env branch
+        : (pat * option<term> * term)                                                             (* checked branch *)
+        * term       (* the guard condition for taking this branch, used by the caller for the exhaustiveness check *)
+        * lident                                                                 (* effect label of the lcomp below *)
+        * list<cflags>                                                                      (* flags for each lcomp *)
+        * (bool -> lcomp)                    (* computation type of the branch, with or without a "return" equation *)
+        * guard_t =                                                                    (* well-formedness condition *)
+  let pattern, when_clause, branch_exp = SS.open_branch branch in
+  let cpat, _, cbr = branch in
 
   let pat_t = scrutinee.sort in
   let scrutinee_tm = S.bv_to_name scrutinee in
@@ -1788,7 +1785,7 @@ and tc_eqn scrutinee env branch
 
   (* 1. Check the pattern *)
   let pattern, pat_bvs, pat_env, pat_exp, guard_pat_annots, norm_pat_exp =
-    tc_pat true pat_t pattern
+    tc_pat env true pat_t pattern
   in
 
   (* 2. Check the when clause *)
