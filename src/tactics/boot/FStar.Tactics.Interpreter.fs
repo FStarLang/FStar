@@ -155,7 +155,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
     [
       mktac2 "fail"          (fun _ -> fail) e_any e_string e_any; //nb: the e_any embedding is never used
       mktac1 "trivial"       trivial e_unit e_unit;
-      mktac2 "__trytac"      (fun _ -> trytac) e_any (e_tactic_0' e_any) (e_option e_any);
+      mktac2 "__catch"       (fun _ -> catch) e_any (e_tactic_0' e_any) (e_either e_string e_any);
       mktac1 "intro"         intro e_unit RE.e_binder;
       mktac1 "intro_rec"     intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder);
       mktac1 "norm"          norm (e_list e_norm_step) e_unit;

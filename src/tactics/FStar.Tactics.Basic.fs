@@ -234,7 +234,7 @@ let fail2 msg x y   = fail (BU.format2 msg x y)
 let fail3 msg x y z = fail (BU.format3 msg x y z)
 let fail4 msg x y z w = fail (BU.format4 msg x y z w)
 
-let trytac' (t : tac<'a>) : tac<either<string,'a>> =
+let catch (t : tac<'a>) : tac<either<string,'a>> =
     mk_tac (fun ps ->
             let tx = UF.new_transaction () in
             match run t ps with
@@ -247,7 +247,7 @@ let trytac' (t : tac<'a>) : tac<either<string,'a>> =
                 Success (Inl m, ps)
            )
 let trytac (t : tac<'a>) : tac<option<'a>> =
-    bind (trytac' t) (fun r ->
+    bind (catch t) (fun r ->
     match r with
     | Inr v -> ret (Some v)
     | Inl _ -> ret None)
@@ -805,11 +805,11 @@ let __exact_now set_expected_typ (t:term) : tac<unit> =
 
 let t_exact set_expected_typ tm : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "t_exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
-    bind (trytac' (__exact_now set_expected_typ tm)) (function
+    bind (catch (__exact_now set_expected_typ tm)) (function
     | Inr r -> ret r
     | Inl e ->
     mlog (fun () -> BU.print_string "__exact_now failed, trying refine...\n") (fun _ ->
-    bind (trytac' (bind (norm [EMB.Delta]) (fun _ ->
+    bind (catch (bind (norm [EMB.Delta]) (fun _ ->
                    bind (refine_intro ()) (fun _ ->
                    __exact_now set_expected_typ tm)))) (function
     | Inr r -> ret r
@@ -1296,7 +1296,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : 
                 ret ut))
           ))
        in
-       bind (trytac' rewrite_eq) (fun x ->
+       bind (catch rewrite_eq) (fun x ->
        match x with
        | Inl "SKIP" -> ret t
        | Inl e -> fail e

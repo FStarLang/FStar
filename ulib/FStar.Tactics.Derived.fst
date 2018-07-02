@@ -89,6 +89,11 @@ let guard (b : bool) : Tac unit =
     then ()
     else fail "guard failed"
 
+let trytac (t : unit -> Tac 'a) : Tac (option 'a) =
+    match catch t with
+    | Inl _ -> None
+    | Inr x -> Some x
+
 let or_else (#a:Type) (t1 : unit -> Tac a) (t2 : unit -> Tac a) : Tac a =
     match trytac t1 with
     | Some x -> x

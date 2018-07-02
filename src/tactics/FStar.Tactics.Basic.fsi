@@ -10,6 +10,7 @@ open FStar.Reflection.Data
 module Range = FStar.Range
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
+module BU = FStar.Util
 
 type goal = FStar.Tactics.Types.goal
 
@@ -51,7 +52,7 @@ val trivial : unit -> tac<unit>
 val smt : unit -> tac<unit>
 val divide : Z.t -> tac<'a> -> tac<'b> -> tac<('a * 'b)>
 val focus : tac<'a> -> tac<'a>
-val trytac : tac<'a> -> tac<option<'a>>
+val catch : tac<'a> -> tac<BU.either<string,'a>>
 val seq : tac<unit> -> tac<unit> -> tac<unit>
 val intro : unit -> tac<binder>
 val intro_rec : unit -> tac<(binder * binder)>
