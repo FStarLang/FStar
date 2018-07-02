@@ -234,6 +234,9 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 "set_guard_policy" set_guard_policy E.e_guard_policy e_unit;
       mktac1 "lax_on"           lax_on e_unit e_bool;
 
+      mktac2 "lget"             lget e_any e_string e_any;
+      mktac3 "lset"             lset e_any e_string e_any e_unit;
+
       decr_depth_step;
       incr_depth_step;
       tracepoint_step;

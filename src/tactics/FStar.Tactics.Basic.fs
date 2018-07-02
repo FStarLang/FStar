@@ -1950,6 +1950,18 @@ let pack (tv:term_view) : tac<term> =
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown None Range.dummyRange
 
+let lget (ty:term) (k:string) : tac<term> = wrap_err "lget" <|
+    bind get (fun ps ->
+    match BU.psmap_try_find ps.local_state k with
+    | None -> fail "not found"
+    | Some t -> unquote ty t
+    )
+
+let lset (_ty:term) (k:string) (t:term) : tac<unit> = wrap_err "lset" <|
+    bind get (fun ps ->
+    let ps = { ps with local_state = BU.psmap_add ps.local_state k t } in
+    set ps)
+
 let goal_of_goal_ty env typ : goal * guard_t =
     let u, ctx_uvars, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
     let ctx_uvar, _ = List.hd ctx_uvars in
@@ -1971,6 +1983,7 @@ let proofstate_of_goal_ty rng env typ =
         guard_policy = SMT;
         freshness = 0;
         tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
+        local_state = BU.psmap_empty ();
     }
     in
     (ps, (goal_witness g))

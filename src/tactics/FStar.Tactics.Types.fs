@@ -9,6 +9,7 @@ module SS = FStar.Syntax.Subst
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module Range = FStar.Range
+module BU = FStar.Util
 
 (*
    f: x:int -> P
@@ -74,6 +75,8 @@ type proofstate = {
     guard_policy : guard_policy; //guard policy: what to do with guards arising during tactic exec
     freshness    : int;          //a simple freshness counter for the fresh tactic
     tac_verb_dbg : bool;         //whether to print verbose debugging messages
+
+    local_state  : BU.psmap<term>; // local metaprogram state
 }
 
 let subst_proof_state subst ps =
