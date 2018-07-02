@@ -1117,10 +1117,13 @@ let (string_substring' : args -> t FStar_Pervasives_Native.option) =
              let n11 = FStar_BigInt.to_int_fs n1  in
              let n21 = FStar_BigInt.to_int_fs n2  in
              (try
-                let r = FStar_String.substring s1 n11 n21  in
-                let uu____4332 = embed e_string r  in
-                FStar_Pervasives_Native.Some uu____4332
-              with | uu____4338 -> FStar_Pervasives_Native.None)
-         | uu____4339 -> FStar_Pervasives_Native.None)
-    | uu____4352 -> FStar_Pervasives_Native.None
+                (fun uu___225_4328  ->
+                   match () with
+                   | () ->
+                       let r = FStar_String.substring s1 n11 n21  in
+                       let uu____4332 = embed e_string r  in
+                       FStar_Pervasives_Native.Some uu____4332) ()
+              with | uu___224_4334 -> FStar_Pervasives_Native.None)
+         | uu____4337 -> FStar_Pervasives_Native.None)
+    | uu____4350 -> FStar_Pervasives_Native.None
   
