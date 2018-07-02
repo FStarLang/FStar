@@ -377,41 +377,45 @@ let (setup_hooks : unit -> unit) =
 let (handle_error : Prims.exn -> unit) =
   fun e  ->
     if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
-    (let uu____753 = FStar_Options.trace_error ()  in
-     if uu____753
+    (let uu____741 = FStar_Options.trace_error ()  in
+     if uu____741
      then
-       let uu____754 = FStar_Util.message_of_exn e  in
-       let uu____755 = FStar_Util.trace_of_exn e  in
-       FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____754
-         uu____755
+       let uu____742 = FStar_Util.message_of_exn e  in
+       let uu____743 = FStar_Util.trace_of_exn e  in
+       FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____742
+         uu____743
      else
        if Prims.op_Negation (FStar_Errors.handleable e)
        then
-         (let uu____757 = FStar_Util.message_of_exn e  in
+         (let uu____745 = FStar_Util.message_of_exn e  in
           FStar_Util.print1_error
             "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-            uu____757)
+            uu____745)
        else ());
     cleanup ();
     report_errors []
   
-let main : 'Auu____772 . unit -> 'Auu____772 =
-  fun uu____777  ->
+let main : 'Auu____760 . unit -> 'Auu____760 =
+  fun uu____765  ->
     try
-      setup_hooks ();
-      (let uu____787 = FStar_Util.record_time go  in
-       match uu____787 with
-       | (uu____792,time) ->
-           ((let uu____795 = FStar_Options.query_stats ()  in
-             if uu____795
-             then
-               let uu____796 = FStar_Util.string_of_int time  in
-               let uu____797 =
-                 let uu____798 = FStar_Getopt.cmdline ()  in
-                 FStar_String.concat " " uu____798  in
-               FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____796 uu____797
-             else ());
-            cleanup ();
-            FStar_All.exit (Prims.parse_int "0")))
+      (fun uu___452_773  ->
+         match () with
+         | () ->
+             (setup_hooks ();
+              (let uu____775 = FStar_Util.record_time go  in
+               match uu____775 with
+               | (uu____780,time) ->
+                   ((let uu____783 = FStar_Options.query_stats ()  in
+                     if uu____783
+                     then
+                       let uu____784 = FStar_Util.string_of_int time  in
+                       let uu____785 =
+                         let uu____786 = FStar_Getopt.cmdline ()  in
+                         FStar_String.concat " " uu____786  in
+                       FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____784
+                         uu____785
+                     else ());
+                    cleanup ();
+                    FStar_All.exit (Prims.parse_int "0"))))) ()
     with | e -> (handle_error e; FStar_All.exit (Prims.parse_int "1"))
   

@@ -1,11 +1,14 @@
 open Prims
 let (has_cygpath : Prims.bool) =
   try
-    let t_out =
-      FStar_Util.run_process "has_cygpath" "which" ["cygpath"]
-        FStar_Pervasives_Native.None
-       in
-    (FStar_Util.trim_string t_out) = "/usr/bin/cygpath"
+    (fun uu___61_3  ->
+       match () with
+       | () ->
+           let t_out =
+             FStar_Util.run_process "has_cygpath" "which" ["cygpath"]
+               FStar_Pervasives_Native.None
+              in
+           (FStar_Util.trim_string t_out) = "/usr/bin/cygpath") ()
   with | uu____8 -> false 
 let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
   let cache = FStar_Util.smap_create (Prims.parse_int "20")  in
@@ -58,22 +61,22 @@ let rollback :
             if n1 = (Prims.parse_int "1")
             then pop ()
             else
-              ((let uu____236 = pop ()  in ());
+              ((let uu____232 = pop ()  in ());
                aux (n1 - (Prims.parse_int "1")))
            in
         let curdepth =
-          let uu____238 = FStar_ST.op_Bang stackref  in
-          FStar_List.length uu____238  in
+          let uu____234 = FStar_ST.op_Bang stackref  in
+          FStar_List.length uu____234  in
         let n1 =
           match depth with
           | FStar_Pervasives_Native.Some d -> curdepth - d
           | FStar_Pervasives_Native.None  -> (Prims.parse_int "1")  in
-        FStar_Util.atomically (fun uu____299  -> aux n1)
+        FStar_Util.atomically (fun uu____291  -> aux n1)
   
-let raise_failed_assertion : 'Auu____304 . Prims.string -> 'Auu____304 =
+let raise_failed_assertion : 'Auu____296 . Prims.string -> 'Auu____296 =
   fun msg  ->
-    let uu____310 = FStar_Util.format1 "Assertion failed: %s" msg  in
-    failwith uu____310
+    let uu____302 = FStar_Util.format1 "Assertion failed: %s" msg  in
+    failwith uu____302
   
 let (runtime_assert : Prims.bool -> Prims.string -> unit) =
   fun b  ->
@@ -84,10 +87,10 @@ let string_of_list :
   'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
   fun f  ->
     fun l  ->
-      let uu____348 =
-        let uu____349 =
-          let uu____350 = FStar_List.map f l  in
-          FStar_String.concat ", " uu____350  in
-        Prims.strcat uu____349 "]"  in
-      Prims.strcat "[" uu____348
+      let uu____340 =
+        let uu____341 =
+          let uu____342 = FStar_List.map f l  in
+          FStar_String.concat ", " uu____342  in
+        Prims.strcat uu____341 "]"  in
+      Prims.strcat "[" uu____340
   

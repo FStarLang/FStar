@@ -920,7 +920,11 @@ let (find_name : env -> Prims.string -> name) =
 let (find : env -> Prims.string -> Prims.int) =
   fun env  ->
     fun x  ->
-      try FStar_List.index (fun name  -> name.pretty = x) env.names
+      try
+        (fun uu___267_3294  ->
+           match () with
+           | () -> FStar_List.index (fun name  -> name.pretty = x) env.names)
+          ()
       with
       | uu____3301 ->
           let uu____3302 =
@@ -930,7 +934,10 @@ let (find : env -> Prims.string -> Prims.int) =
 let (find_t : env -> Prims.string -> Prims.int) =
   fun env  ->
     fun x  ->
-      try FStar_List.index (fun name  -> name = x) env.names_t
+      try
+        (fun uu___269_3314  ->
+           match () with
+           | () -> FStar_List.index (fun name  -> name = x) env.names_t) ()
       with
       | uu____3321 ->
           let uu____3322 =
@@ -964,9 +971,13 @@ let rec (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
                    FStar_Extraction_ML_Syntax.string_of_mlpath path
                 in
              try
-               FStar_Util.print1 "Attempting to translate module %s\n" m_name;
-               (let uu____3657 = translate_module m  in
-                FStar_Pervasives_Native.Some uu____3657)
+               (fun uu___271_3653  ->
+                  match () with
+                  | () ->
+                      (FStar_Util.print1
+                         "Attempting to translate module %s\n" m_name;
+                       (let uu____3657 = translate_module m  in
+                        FStar_Pervasives_Native.Some uu____3657))) ()
              with
              | e ->
                  ((let uu____3666 = FStar_Util.print_exn e  in
@@ -1132,12 +1143,15 @@ and (translate_let :
                          FStar_Pervasives_Native.None))
                    else
                      (try
-                        let body1 = translate_expr env3 body  in
-                        FStar_Pervasives_Native.Some
-                          (DFunction
-                             (FStar_Pervasives_Native.None, meta1,
-                               (FStar_List.length tvars), t1, name1, binders,
-                               body1))
+                        (fun uu___273_3914  ->
+                           match () with
+                           | () ->
+                               let body1 = translate_expr env3 body  in
+                               FStar_Pervasives_Native.Some
+                                 (DFunction
+                                    (FStar_Pervasives_Native.None, meta1,
+                                      (FStar_List.length tvars), t1, name1,
+                                      binders, body1))) ()
                       with
                       | e ->
                           let msg = FStar_Util.print_exn e  in
@@ -1248,12 +1262,15 @@ and (translate_let :
                          FStar_Pervasives_Native.None))
                    else
                      (try
-                        let body1 = translate_expr env3 body  in
-                        FStar_Pervasives_Native.Some
-                          (DFunction
-                             (FStar_Pervasives_Native.None, meta1,
-                               (FStar_List.length tvars), t1, name1, binders,
-                               body1))
+                        (fun uu___273_4116  ->
+                           match () with
+                           | () ->
+                               let body1 = translate_expr env3 body  in
+                               FStar_Pervasives_Native.Some
+                                 (DFunction
+                                    (FStar_Pervasives_Native.None, meta1,
+                                      (FStar_List.length tvars), t1, name1,
+                                      binders, body1))) ()
                       with
                       | e ->
                           let msg = FStar_Util.print_exn e  in
@@ -1299,10 +1316,14 @@ and (translate_let :
                let t1 = translate_type env1 t  in
                let name1 = ((env1.module_name), name)  in
                try
-                 let expr1 = translate_expr env1 expr  in
-                 FStar_Pervasives_Native.Some
-                   (DGlobal
-                      (meta1, name1, (FStar_List.length tvars), t1, expr1))
+                 (fun uu___275_4195  ->
+                    match () with
+                    | () ->
+                        let expr1 = translate_expr env1 expr  in
+                        FStar_Pervasives_Native.Some
+                          (DGlobal
+                             (meta1, name1, (FStar_List.length tvars), t1,
+                               expr1))) ()
                with
                | e ->
                    ((let uu____4215 =

@@ -8210,7 +8210,9 @@ let (type_of_tot_term :
              (uu___369_17911.FStar_TypeChecker_Env.dep_graph)
          }  in
        let uu____17918 =
-         try tc_tot_or_gtot_term env1 e
+         try
+           (fun uu___371_17932  ->
+              match () with | () -> tc_tot_or_gtot_term env1 e) ()
          with
          | FStar_Errors.Error (e1,msg,uu____17953) ->
              let uu____17954 = FStar_TypeChecker_Env.get_range env1  in
