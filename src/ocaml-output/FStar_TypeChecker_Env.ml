@@ -158,6 +158,7 @@ let rec (eq_step : step -> step -> Prims.bool) =
       | (CheckNoUvars ,CheckNoUvars ) -> true
       | (Unmeta ,Unmeta ) -> true
       | (Unascribe ,Unascribe ) -> true
+      | (NBE ,NBE ) -> true
       | (Exclude s11,Exclude s21) -> eq_step s11 s21
       | (UnfoldUntil s11,UnfoldUntil s21) -> s11 = s21
       | (UnfoldOnly lids1,UnfoldOnly lids2) ->
