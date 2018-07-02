@@ -2245,6 +2245,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         (* Inr false: p definitely does not match t *)
         (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
       = let scrutinee = U.unmeta scrutinee_orig in
+        let scrutinee = U.unlazy scrutinee in
         let head, args = U.head_and_args scrutinee in
         match p.v with
         | Pat_var bv
@@ -2299,7 +2300,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     in
 
     if cfg.steps.iota
-    then matches (U.unlazy scrutinee) branches
+    then matches scrutinee branches
     else norm_and_rebuild_match ()
 
 let normalize_with_primitive_steps ps s e t =

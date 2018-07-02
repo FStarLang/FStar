@@ -354,7 +354,19 @@ let rec push_subst s t =
     let mk t' = Syntax.mk t' None (mk_range t.pos s) in
     match t.n with
     | Tm_delayed _ -> failwith "Impossible"
-    | Tm_lazy i -> t
+
+    | Tm_lazy i ->
+        begin match i.lkind with
+        | Lazy_embedding _ ->
+            (* These might be open! Just unfold and descend.
+             * The hope is that this does not occur often and so
+             * we still get good performance. *)
+          let t = must !lazy_chooser i.lkind i in // Can't call Syntax.Util from here
+          push_subst s t
+        | _ ->
+            (* All others must be closed, so don't bother *)
+            t
+        end
 
     | Tm_constant _
     | Tm_fvar _

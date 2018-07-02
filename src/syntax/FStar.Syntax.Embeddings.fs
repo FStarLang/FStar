@@ -90,15 +90,14 @@ let rec emb_typ_to_string = function
     | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b
 
 let lazy_embed (pa:printer<'a>) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
-    if Options.debug_any()
+    if !Options.debug_embedding
     then BU.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
                          (Print.term_to_string ta)
                          (emb_typ_to_string et)
                          (pa x);
     if Options.eager_embedding()
     then f()
-    else
-    let thunk = FStar.Common.mk_thunk f in
+    else let thunk = FStar.Common.mk_thunk f in
          S.mk (Tm_lazy({blob=FStar.Dyn.mkdyn x;
                         ltyp=S.tun;
                         rng=rng;
@@ -111,32 +110,26 @@ let lazy_unembed (pa:printer<'a>) (et:emb_typ) (x:term) (ta:term) (f:term -> opt
     match x.n with
     | Tm_lazy {blob=b; lkind=Lazy_embedding (et', t)}  ->
       if
-      Options.eager_embedding()
-      ||
       et <> et'
-      then let _ = if Options.debug_any ()
-                   then BU.print3 "Unembed cancellation failed\n\t%s <> %s\n\tvalue is %s\n"
+      || Options.eager_embedding()
+      then let res = f (FStar.Common.force_thunk t) in
+           let _ = if !Options.debug_embedding
+                   then BU.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
                                 (emb_typ_to_string et)
                                 (emb_typ_to_string et')
-                                (pa (FStar.Dyn.undyn b))
+                                (match res with None -> "None" | Some x -> "Some " ^ (pa x))
            in
-           let aopt = f (FStar.Common.force_thunk t) in
-           f (FStar.Common.force_thunk t)
+           res
       else let a = FStar.Dyn.undyn b in
-           let _ = if Options.debug_any ()
+           let _ = if !Options.debug_embedding
                    then BU.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
                                 (emb_typ_to_string et)
                                 (pa a)
            in
-            //BU.print4 "Unembedding a %s as a %s\n undyn a %s\n unthunked a %s\n"
-           //     (Print.term_to_string tb)
-           //     (Print.term_to_string ta)
-           //     (pa a)
-           //     (Print.term_to_string (FStar.Common.force_thunk t));
-            Some a
+           Some a
     | _ ->
       let aopt = f x in
-      let _ = if Options.debug_any ()
+      let _ = if !Options.debug_embedding
               then BU.print2 "Unembedding:\n\temb_typ=%s\n\tvalue is %s\n"
                                (emb_typ_to_string et)
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
@@ -145,12 +138,12 @@ let lazy_unembed (pa:printer<'a>) (et:emb_typ) (x:term) (ta:term) (f:term -> opt
 
 let mk_any_emb typ =
     let em = fun t _r _topt _norm ->
-      if Options.debug_any()
+      if !Options.debug_embedding
       then BU.print1 "Embedding abstract: %s\n" (unknown_printer typ t);
       t
     in
     let un = fun t _w _n ->
-      if Options.debug_any()
+      if !Options.debug_embedding
       then BU.print1 "Unembedding abstract: %s\n" (unknown_printer typ t);
       Some t
     in
@@ -650,24 +643,24 @@ let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) : embedding<('a -> 'b)> =
     let emb_t_arr_a_b = ET_fun(ea.emb_typ, eb.emb_typ) in
     let printer (f:'a -> 'b) = "<fun>" in
     let em (f:'a -> 'b) rng shadow_f norm =
-        let f_wrapped (x:term) =
-            let shadow_app = map_shadow shadow_f (fun f ->
-                S.mk_Tm_app f [S.as_arg x] None rng)
-            in
-            or_else
-            (BU.map_opt (unembed ea x true norm) (fun x ->
-                embed eb (f x) rng shadow_app norm))
-            (fun () ->
-                match force_shadow shadow_app with
-                | None -> raise Embedding_failure
-                | Some app -> norm (BU.Inr app))
-        in
+        // let f_wrapped (x:term) =
+        //     let shadow_app = map_shadow shadow_f (fun f ->
+        //         S.mk_Tm_app f [S.as_arg x] None rng)
+        //     in
+        //     or_else
+        //     (BU.map_opt (unembed ea x true norm) (fun x ->
+        //         embed eb (f x) rng shadow_app norm))
+        //     (fun () ->
+        //         match force_shadow shadow_app with
+        //         | None -> raise Embedding_failure
+        //         | Some app -> norm (BU.Inr app))
+        // in
         lazy_embed
             (fun _ -> "<fun>")
             emb_t_arr_a_b
             rng
             t_arrow
-            f_wrapped
+            f //f_wrapped
             (fun () ->
                 match force_shadow shadow_f with
                 | None -> raise Embedding_failure //TODO: dodgy
@@ -764,3 +757,11 @@ let arrow_as_prim_step_3 (ea:embedding<'a>) (eb:embedding<'b>)
         | None -> force_shadow shadow_app
     in
     f_wrapped
+
+let debug_wrap (s:string) (f:unit -> 'a) =
+    if !Options.debug_embedding
+    then BU.print1 "++++starting %s\n" s;
+    let res = f () in
+    if !Options.debug_embedding
+    then BU.print1 "------ending %s\n" s;
+    res

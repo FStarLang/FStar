@@ -87,7 +87,8 @@ let rec eq_step s1 s2 =
   | NoFullNorm, NoFullNorm
   | CheckNoUvars, CheckNoUvars
   | Unmeta, Unmeta
-  | Unascribe, Unascribe -> true
+  | Unascribe, Unascribe
+  | NBE, NBE -> true
   | Exclude s1, Exclude s2 -> eq_step s1 s2
   | UnfoldUntil s1, UnfoldUntil s2 -> s1 = s2
   | UnfoldOnly lids1, UnfoldOnly lids2

@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Util
+open Prims
 open FStar.ST
 open FStar.All
 open FStar
@@ -387,7 +388,7 @@ type emb_loc =
     | S (* FStar.Syntax.Embeddings *)
     | R (* FStar.Reflection.Embeddings *)
 
-let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
+let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (arity_opt:option<int>) (ml_fv:mlexpr') =
     let fv_lid = fv.fv_name.v in
     let t = N.normalize [
       Env.EraseUniverses;
@@ -521,7 +522,13 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
      *)
     let abstract_tvars tvar_names (body:mlexpr) : mlexpr =
         match tvar_names with
-        | [] -> body
+        | [] ->
+          let body =
+              w <| MLE_App(str_to_name "FStar_Syntax_Embeddings.debug_wrap",
+                            [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid));
+                             mk_lam "_" (w <| MLE_App(body, [str_to_name "args"]))])
+          in
+          mk_lam "args" body
         | _ ->
           let args_tail = MLP_Var "args_tail" in
           let mk_cons hd_pat tail_pat =
@@ -552,11 +559,38 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
           let body =
               w <| MLE_Match(str_to_name "args", [branch; default_branch])
           in
+          let body =
+              w <| MLE_App(str_to_name "FStar_Syntax_Embeddings.debug_wrap",
+                            [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid));
+                             mk_lam "_" body])
+          in
           mk_lam "args" body
     in
     (* We're trying to register a plugin or tactic
        ml_fv which has source F* type t *)
     let bs, c = U.arrow_formals_comp t in
+    let bs, c =
+        match arity_opt with
+        | None -> bs, c
+        | Some n ->
+          let n_bs = List.length bs in
+          if n = n_bs then bs, c
+          else if n < n_bs
+          then let bs, rest = BU.first_N n bs in
+               BU.print2 "Restricting arity of %s to %s\n"
+                (Ident.string_of_lid fv_lid)
+                (BU.string_of_int n);
+               let c = S.mk_Total <| U.arrow rest c in
+               bs, c
+          else // n > bs
+               let msg =
+                BU.format3
+                    "Embedding not defined for %s; expected arity at least %s; got %s"
+                    (Ident.string_of_lid fv_lid)
+                    (BU.string_of_int n)
+                    (BU.string_of_int n_bs) in
+               raise (NoTacticEmbedding msg)
+    in
     let result_typ = U.comp_result c in
     let arity = List.length bs in
     let type_vars, bs =
@@ -627,7 +661,6 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
                                                          ^ string_of_int non_tvar_arity),
                           [lid_to_top_name fv_lid])
             in
-            let tac_lid_app = w <| MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [w ml_fv]) in
             let psc = str_to_name "psc" in
             let ncb = str_to_name "ncb" in
             let all_args = str_to_name "args" in
@@ -635,7 +668,6 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
                 [tac_fun] @
                 arg_unembeddings @
                 [res_embedding;
-                 tac_lid_app;
                  psc;
                  ncb] in
             let tabs =

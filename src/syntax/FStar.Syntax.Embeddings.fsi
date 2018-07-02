@@ -125,3 +125,5 @@ val arrow_as_prim_step_3:  embedding<'a>
                         -> repr_f:Ident.lid
                         -> norm_cb
                         -> (args -> option<term>)
+
+val debug_wrap : string -> (unit -> 'a) -> 'a

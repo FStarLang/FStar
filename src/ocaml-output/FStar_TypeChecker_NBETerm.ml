@@ -332,14 +332,14 @@ let (mkAccuMatch :
         -> t)
   = fun s  -> fun cases  -> fun bs  -> Accu ((Match (s, cases, bs)), []) 
 let (equal_if : Prims.bool -> FStar_Syntax_Util.eq_result) =
-  fun uu___271_1588  ->
-    if uu___271_1588
+  fun uu___226_1588  ->
+    if uu___226_1588
     then FStar_Syntax_Util.Equal
     else FStar_Syntax_Util.Unknown
   
 let (equal_iff : Prims.bool -> FStar_Syntax_Util.eq_result) =
-  fun uu___272_1594  ->
-    if uu___272_1594
+  fun uu___227_1594  ->
+    if uu___227_1594
     then FStar_Syntax_Util.Equal
     else FStar_Syntax_Util.NotEqual
   

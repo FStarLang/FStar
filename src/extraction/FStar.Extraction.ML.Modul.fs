@@ -26,6 +26,7 @@ open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
 open FStar.Extraction.ML.Util
 open FStar.Ident
+open FStar.Syntax
 
 module Term = FStar.Extraction.ML.Term
 module Print = FStar.Syntax.Print
@@ -244,34 +245,50 @@ let extract_bundle env se =
    is extracted along with an invocation to FStar.Tactics.Native.register_tactic or register_plugin,
    which installs the compiled term as a primitive step in the normalizer
  *)
+module EMB=FStar.Syntax.Embeddings
 let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
     let w = with_ty MLTY_Top in
-    if Options.codegen() <> Some Options.Plugin
-    || not (U.has_attribute se.sigattrs PC.plugin_attr)
-    then []
-    else match se.sigel with
-         | Sig_let(lbs, lids) ->
-           let mk_registration lb : list<mlmodule1> =
-              let fv = right lb.lbname in
-              let fv_lid = fv.fv_name.v in
-              let fv_t = lb.lbtyp in
-              let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv_lid)) in
-              match Util.interpret_plugin_as_term_fun g.tcenv fv fv_t ml_name_str with
-              | Some (interp, arity, plugin) ->
-                  let register =
-                    if plugin
-                    then "FStar_Tactics_Native.register_plugin"
-                    else "FStar_Tactics_Native.register_tactic"
-                  in
-                  let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str register)) in
-                  let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
-                  let app = with_ty MLTY_Top <| MLE_App (h, [w ml_name_str; w arity; interp]) in
-                  [MLM_Top app]
-              | None -> []
-           in
-           List.collect mk_registration (snd lbs)
-        | _ -> []
-
+    let plugin_with_arity attrs =
+        BU.find_map attrs (fun t ->
+              let head, args = U.head_and_args t in
+              if not (U.is_fvar PC.plugin_attr head)
+              then None
+              else match args with
+                   | [({n=Tm_constant (Const_int(s, _))}, _)] ->
+                     Some (Some (BU.int_of_string s))
+                   | _ -> Some None)
+    in
+    if Options.codegen() <> Some Options.Plugin then []
+    else match plugin_with_arity se.sigattrs with
+         | None -> []
+         | Some arity_opt ->
+           BU.print2 "Got plugin with attrs = %s; arity_opt=%s"
+                    (List.map Print.term_to_string se.sigattrs |> String.concat " ")
+                    (match arity_opt with None -> "None" | Some x -> "Some " ^ string_of_int x);
+           begin
+           match se.sigel with
+           | Sig_let(lbs, lids) ->
+               let mk_registration lb : list<mlmodule1> =
+                  let fv = right lb.lbname in
+                  let fv_lid = fv.fv_name.v in
+                  let fv_t = lb.lbtyp in
+                  let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv_lid)) in
+                  match Util.interpret_plugin_as_term_fun g.tcenv fv fv_t arity_opt ml_name_str with
+                  | Some (interp, arity, plugin) ->
+                      let register =
+                        if plugin
+                        then "FStar_Tactics_Native.register_plugin"
+                        else "FStar_Tactics_Native.register_tactic"
+                      in
+                      let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str register)) in
+                      let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
+                      let app = with_ty MLTY_Top <| MLE_App (h, [w ml_name_str; w arity; interp]) in
+                      [MLM_Top app]
+                  | None -> []
+               in
+               List.collect mk_registration (snd lbs)
+           | _ -> []
+           end
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
