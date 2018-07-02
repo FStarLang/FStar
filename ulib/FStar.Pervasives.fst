@@ -323,7 +323,7 @@ irreducible
 let inline_let : unit = ()
 
 irreducible
-let plugin : unit = ()
+let plugin (x:int) : unit = ()
 
 (*
  * we now erase all pure and ghost functions with unit return type to unit

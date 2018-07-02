@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Util
+open Prims
 open FStar
 open FStar.Ident
 open FStar.Extraction.ML.Syntax
@@ -63,5 +64,6 @@ val interpret_plugin_as_term_fun :
                TypeChecker.Env.env
             -> fv:S.fv
             -> t:S.typ
+            -> arity:option<int>
             -> ml_fv:mlexpr'
             -> option<(mlexpr * int * bool)>

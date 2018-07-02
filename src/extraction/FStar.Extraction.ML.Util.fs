@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Util
+open Prims
 open FStar.ST
 open FStar.All
 open FStar
@@ -387,7 +388,7 @@ type emb_loc =
     | S (* FStar.Syntax.Embeddings *)
     | R (* FStar.Reflection.Embeddings *)
 
-let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
+let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (arity_opt:option<int>) (ml_fv:mlexpr') =
     let fv_lid = fv.fv_name.v in
     let t = N.normalize [
       Env.EraseUniverses;
@@ -557,6 +558,28 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (ml_fv:mlexpr') =
     (* We're trying to register a plugin or tactic
        ml_fv which has source F* type t *)
     let bs, c = U.arrow_formals_comp t in
+    let bs, c =
+        match arity_opt with
+        | None -> bs, c
+        | Some n ->
+          let n_bs = List.length bs in
+          if n = n_bs then bs, c
+          else if n < n_bs
+          then let bs, rest = BU.first_N n bs in
+               BU.print2 "Restricting arity of %s to %s\n"
+                (Ident.string_of_lid fv_lid)
+                (BU.string_of_int n);
+               let c = S.mk_Total <| U.arrow rest c in
+               bs, c
+          else // n > bs
+               let msg =
+                BU.format3
+                    "Embedding not defined for %s; expected arity at least %s; got %s"
+                    (Ident.string_of_lid fv_lid)
+                    (BU.string_of_int n)
+                    (BU.string_of_int n_bs) in
+               raise (NoTacticEmbedding msg)
+    in
     let result_typ = U.comp_result c in
     let arity = List.length bs in
     let type_vars, bs =
