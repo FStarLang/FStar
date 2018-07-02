@@ -10,13 +10,12 @@ TAC_MODULES=Print\
     UnitTests\
     Bane\
     Canon\
+    Simple\
     SimpleTactic\
     Evens\
     Embeddings\
     Plugins\
     Registers.List
-
-    # Simple\
 
 # Tests for which the native tatics are declared and used in the same module
 ALL=Apply\
