@@ -522,7 +522,13 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (arity_opt:option<int>) (
      *)
     let abstract_tvars tvar_names (body:mlexpr) : mlexpr =
         match tvar_names with
-        | [] -> body
+        | [] ->
+          let body =
+              w <| MLE_App(str_to_name "FStar_Syntax_Embeddings.debug_wrap",
+                            [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid));
+                             mk_lam "_" (w <| MLE_App(body, [str_to_name "args"]))])
+          in
+          mk_lam "args" body
         | _ ->
           let args_tail = MLP_Var "args_tail" in
           let mk_cons hd_pat tail_pat =
@@ -552,6 +558,11 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (arity_opt:option<int>) (
           in
           let body =
               w <| MLE_Match(str_to_name "args", [branch; default_branch])
+          in
+          let body =
+              w <| MLE_App(str_to_name "FStar_Syntax_Embeddings.debug_wrap",
+                            [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid));
+                             mk_lam "_" body])
           in
           mk_lam "args" body
     in

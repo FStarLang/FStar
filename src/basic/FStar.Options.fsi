@@ -223,3 +223,5 @@ val _platform: ref<string>
 val _compiler: ref<string>
 val _date: ref<string>
 val _commit: ref<string>
+
+val debug_embedding: ref<bool>
