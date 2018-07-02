@@ -90,11 +90,11 @@ let rec emb_typ_to_string = function
     | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b
 
 let lazy_embed (pa:printer<'a>) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
-    if Options.debug_any()
-    then BU.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
-                         (Print.term_to_string ta)
-                         (emb_typ_to_string et)
-                         (pa x);
+    (* if Options.debug_any() *)
+    (* then BU.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n" *)
+    (*                      (Print.term_to_string ta) *)
+    (*                      (emb_typ_to_string et) *)
+    (*                      (pa x); *)
     if Options.eager_embedding()
     then f()
     else
@@ -136,10 +136,10 @@ let lazy_unembed (pa:printer<'a>) (et:emb_typ) (x:term) (ta:term) (f:term -> opt
             Some a
     | _ ->
       let aopt = f x in
-      let _ = if Options.debug_any ()
-              then BU.print2 "Unembedding:\n\temb_typ=%s\n\tvalue is %s\n"
-                               (emb_typ_to_string et)
-                               (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
+      (* let _ = if Options.debug_any () *)
+      (*         then BU.print2 "Unembedding:\n\temb_typ=%s\n\tvalue is %s\n" *)
+      (*                          (emb_typ_to_string et) *)
+      (*                          (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in *)
       aopt
 
 
