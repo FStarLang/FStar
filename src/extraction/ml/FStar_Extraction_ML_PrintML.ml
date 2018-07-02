@@ -270,16 +270,7 @@ and resugar_app f args es: expression =
        try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a *)
     assert (length es == 2);
     let s, cs = BatList.first es, BatList.last es in
-    let body = match s.expr with
-      | MLE_Fun (_, e) ->
-         (match e.expr with
-          | MLE_Match (_, branches) ->
-             assert (length branches == 1);
-             (match (hd branches) with
-              | (_, _, x) -> build_expr x)
-          | _ -> failwith "Cannot resugar FStar.All.try_with"
-         )
-      | _ -> failwith "Cannot resugar FStar.All.try_with" in
+    let body = Exp.apply (build_expr s) [(Nolabel, build_expr ml_unit)] in
     let variants = match cs.expr with
       | MLE_Fun (_, e) ->
          (match e.expr with
