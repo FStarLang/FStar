@@ -11059,9 +11059,13 @@ let (resolve_implicits' :
                                    else ());
                                   (let g1 =
                                      try
-                                       env2.FStar_TypeChecker_Env.check_type_of
-                                         must_total env2 tm1
-                                         ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ
+                                       (fun uu___405_26380  ->
+                                          match () with
+                                          | () ->
+                                              env2.FStar_TypeChecker_Env.check_type_of
+                                                must_total env2 tm1
+                                                ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ)
+                                         ()
                                      with
                                      | e when FStar_Errors.handleable e ->
                                          ((let uu____26382 =

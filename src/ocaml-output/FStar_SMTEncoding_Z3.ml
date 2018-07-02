@@ -54,12 +54,15 @@ let (z3hash_warning_message :
   fun uu____76  ->
     let run_proc_result =
       try
-        let uu____87 =
-          let uu____88 = FStar_Options.z3_exe ()  in
-          FStar_Util.run_process "z3_version" uu____88 ["-version"]
-            FStar_Pervasives_Native.None
-           in
-        FStar_Pervasives_Native.Some uu____87
+        (fun uu___125_84  ->
+           match () with
+           | () ->
+               let uu____87 =
+                 let uu____88 = FStar_Options.z3_exe ()  in
+                 FStar_Util.run_process "z3_version" uu____88 ["-version"]
+                   FStar_Pervasives_Native.None
+                  in
+               FStar_Pervasives_Native.Some uu____87) ()
       with | uu____94 -> FStar_Pervasives_Native.None  in
     match run_proc_result with
     | FStar_Pervasives_Native.None  ->
@@ -879,7 +882,10 @@ let (z3_job :
             fun uu____3689  ->
               let start = FStar_Util.now ()  in
               let uu____3693 =
-                try doZ3Exe r fresh input label_messages
+                try
+                  (fun uu___127_3703  ->
+                     match () with
+                     | () -> doZ3Exe r fresh input label_messages) ()
                 with
                 | e when
                     let uu____3717 = FStar_Options.trace_error ()  in
