@@ -270,17 +270,23 @@ and resugar_app f args es: expression =
        try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a *)
     assert (length es == 2);
     let s, cs = BatList.first es, BatList.last es in
+
     let body = Exp.apply (build_expr s) [(Nolabel, build_expr ml_unit)] in
-    let variants = match cs.expr with
-      | MLE_Fun (_, e) ->
-         (match e.expr with
-          | MLE_Match (_, branches) ->
-             map build_case branches
-          | _ -> [build_case (MLP_Wild, None, e)]
-         )
-      | _ -> failwith "Cannot resugar FStar.All.try_with" in
+    let variants = get_variants cs in
     Exp.try_ body variants
+
   | _ -> Exp.apply f args
+
+and get_variants (e : mlexpr) : Parsetree.case list =
+    match e.expr with
+    | MLE_Fun ([(id, _)], e) ->
+       (match e.expr with
+        | MLE_Match ({expr = MLE_Var id'}, branches) when id = id' ->
+           map build_case branches
+        | _ ->
+           [build_case (MLP_Var id, None, e)]
+       )
+    | _ -> failwith "Cannot resugar FStar.All.try_with (3)"
 
 and build_seq args =
   match args with
