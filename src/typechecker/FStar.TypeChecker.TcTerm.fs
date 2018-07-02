@@ -2736,6 +2736,36 @@ and universe_of_well_typed_term env t =
   | Some ({n=Tm_type u}) -> Some u
   | _ -> None
 
+let check_type_of_well_typed_term' must_total env t k =
+  let env = Env.set_expected_typ env k in
+  let env = {env with use_bv_sorts=true} in
+  let slow_check () =
+    if must_total
+    then let _, _, g = env.type_of env t in g
+    else let _, _, g = env.tc_term env t in g
+  in
+  match type_of_well_typed_term env t with
+  | None -> slow_check ()
+  | Some k' ->
+    if Env.debug env <| Options.Other "FastImplicits"
+    then BU.print4 "(%s) Fast check  %s : %s <:? %s\n"
+                                            (Range.string_of_range t.pos)
+                                            (Print.term_to_string t)
+                                            (Print.term_to_string k')
+                                            (Print.term_to_string k);
+    let b = Rel.subtype_nosmt env k' k in
+    let _ =
+      if Env.debug env <| Options.Other "FastImplicits"
+      then BU.print5 "(%s) Fast check %s: %s : %s <: %s\n"
+                                            (Range.string_of_range t.pos)
+                                            (if b then "succeeded" else "failed")
+                                            (Print.term_to_string t)
+                                            (Print.term_to_string k')
+                                            (Print.term_to_string k) in
+    if b
+    then Env.trivial_guard
+    else slow_check ()
+
 let check_type_of_well_typed_term must_total env t k =
   let env = Env.set_expected_typ env k in
   let env = {env with use_bv_sorts=true} in
@@ -2746,25 +2776,4 @@ let check_type_of_well_typed_term must_total env t k =
   in
   if not <| Options.__temp_fast_implicits()
   then slow_check()
-  else
-      match type_of_well_typed_term env t with
-      | None -> slow_check ()
-      | Some k' ->
-        if Env.debug env <| Options.Other "FastImplicits"
-        then BU.print4 "(%s) Fast check  %s : %s <:? %s\n"
-                                                (Range.string_of_range t.pos)
-                                                (Print.term_to_string t)
-                                                (Print.term_to_string k')
-                                                (Print.term_to_string k);
-        let b = Rel.subtype_nosmt env k' k in
-        let _ =
-          if Env.debug env <| Options.Other "FastImplicits"
-          then BU.print5 "(%s) Fast check %s: %s : %s <: %s\n"
-                                                (Range.string_of_range t.pos)
-                                                (if b then "succeeded" else "failed")
-                                                (Print.term_to_string t)
-                                                (Print.term_to_string k')
-                                                (Print.term_to_string k) in
-        if b
-        then Env.trivial_guard
-        else slow_check ()
+  else check_type_of_well_typed_term' must_total env t k
