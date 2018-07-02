@@ -270,6 +270,16 @@ and resugar_app f args es: expression =
        try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a *)
     assert (length es == 2);
     let s, cs = BatList.first es, BatList.last es in
+    (* We have FStar.All.try_with s cs, with s : unit -> ML 'a
+     *                                  and  cs : exn -> ML 'a
+     *
+     * We need to create an OCaml try..with, with a body and a
+     * set of cases for catching the exception.
+     *
+     * For the body, we simply translate `s ()` and we're done.
+     *
+     * For the cases, we can't a similar trick, so we try to reverse-engineer
+     * the shape of the term in order to obtain a proper set. See get_variants. *)
 
     let body = Exp.apply (build_expr s) [(Nolabel, build_expr ml_unit)] in
     let variants = get_variants cs in
