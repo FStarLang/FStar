@@ -631,6 +631,23 @@ let string_substring' args : option<t> =
 
 | _ -> None
 
+let mk_range args : option<t> =
+  match args with
+  | [fn; from_line; from_col; to_line; to_col] -> begin
+    match arg_as_string fn,
+          arg_as_int from_line,
+          arg_as_int from_col,
+          arg_as_int to_line,
+          arg_as_int to_col with
+    | Some fn, Some from_l, Some from_c, Some to_l, Some to_c ->
+      let r = FStar.Range.mk_range fn
+                (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
+                (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
+      Some (embed e_range r)
+    | _ -> None
+    end
+| _ -> None
+
 // let e_arrow2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) =
 //   let em (f : 'a -> 'b -> 'c) : t = Lam((fun (ta:t) -> match unembed ea ta with
 //                                            | Some a -> embed eb (f a)
