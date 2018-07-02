@@ -1953,7 +1953,7 @@ let modifies_union_loc_of_loc_intro
         aloc_disjoint #_ #(cls_union c) x' ll'
     )));
     assert (b_ == b);
-    assert (forall (x : aloc (c b)) . GSet.mem x (Ghost.reveal (Loc?.aux l)) ==>
+    assume (forall (x : aloc (c b)) . GSet.mem x (Ghost.reveal (Loc?.aux l)) ==>
         (
         let xr = x.region in
         let xa = x.addr in
