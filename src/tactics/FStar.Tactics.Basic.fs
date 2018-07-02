@@ -910,6 +910,7 @@ let lemma_or_sq (c : comp) : option<(term * term)> =
         None
 
 let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
+    bind get (fun ps ->
     mlog (fun () -> BU.print1 "apply_lemma: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     let is_unit_t t = match (SS.compress t).n with
     | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid -> true
@@ -982,7 +983,12 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                        let _, _, g_typ = env.type_of (Env.set_expected_typ env ctx_uvar.ctx_uvar_typ) term in
                        g_typ
                 in
-                bind (proc_guard "apply_lemma solved arg" (goal_env goal) g_typ) (fun () ->
+                bind (proc_guard
+                       (if ps.tac_verb_dbg
+                        then BU.format2 "apply_lemma solved arg %s to %s\n" (Print.ctx_uvar_to_string ctx_uvar)
+                                                                            (Print.term_to_string term)
+                        else "apply_lemma solved arg")
+                        (goal_env goal) g_typ) (fun () ->
                 ret []))
             ) (fun sub_goals ->
         let sub_goals = List.flatten sub_goals in
@@ -999,7 +1005,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
               then add_irrelevant_goal "apply_lemma precondition" (goal_env goal) pre goal.opts
               else ret ()) (fun _ ->
         add_goals sub_goals)))))
-    )))))
+    ))))))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
