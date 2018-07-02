@@ -325,6 +325,11 @@ let inline_let : unit = ()
 irreducible
 let plugin : unit = ()
 
+(* An attribute to mark things that the typechecker should *first*
+ * elaborate and typecheck, but unfold before verification. *)
+irreducible
+let tcnorm : unit = ()
+
 (*
  * we now erase all pure and ghost functions with unit return type to unit
  * this creates a small issue with abstract types. consider a module that
