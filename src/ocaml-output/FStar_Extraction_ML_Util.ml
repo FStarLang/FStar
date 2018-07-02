@@ -55,7 +55,7 @@ let (mlconst_of_const :
   =
   fun p  ->
     fun c  ->
-      try mlconst_of_const' c
+      try (fun uu___259_103  -> match () with | () -> mlconst_of_const' c) ()
       with
       | uu____108 ->
           let uu____109 =
@@ -1284,7 +1284,9 @@ let (interpret_plugin_as_term_fun :
                            uu____3246 :: accum_embeddings  in
                          aux uu____3243 env bs3
                       in
-                   (try aux [] tvar_context bs1
+                   (try
+                      (fun uu___261_3256  ->
+                         match () with | () -> aux [] tvar_context bs1) ()
                     with
                     | NoTacticEmbedding msg ->
                         ((let uu____3279 = FStar_Ident.string_of_lid fv  in

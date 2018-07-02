@@ -775,42 +775,48 @@ let rec (parse_opt_val :
     fun typ  ->
       fun str_val  ->
         try
-          match typ with
-          | Const c -> c
-          | IntStr uu____2728 ->
-              let uu____2729 = FStar_Util.safe_int_of_string str_val  in
-              (match uu____2729 with
-               | FStar_Pervasives_Native.Some v1 -> mk_int v1
-               | FStar_Pervasives_Native.None  ->
-                   FStar_Exn.raise (InvalidArgument opt_name))
-          | BoolStr  ->
-              let uu____2733 =
-                if str_val = "true"
-                then true
-                else
-                  if str_val = "false"
-                  then false
-                  else FStar_Exn.raise (InvalidArgument opt_name)
-                 in
-              mk_bool uu____2733
-          | PathStr uu____2736 -> mk_path str_val
-          | SimpleStr uu____2737 -> mk_string str_val
-          | EnumStr strs ->
-              if FStar_List.mem str_val strs
-              then mk_string str_val
-              else FStar_Exn.raise (InvalidArgument opt_name)
-          | OpenEnumStr uu____2742 -> mk_string str_val
-          | PostProcessed (pp,elem_spec) ->
-              let uu____2757 = parse_opt_val opt_name elem_spec str_val  in
-              pp uu____2757
-          | Accumulated elem_spec ->
-              let v1 = parse_opt_val opt_name elem_spec str_val  in
-              accumulated_option opt_name v1
-          | ReverseAccumulated elem_spec ->
-              let v1 = parse_opt_val opt_name elem_spec str_val  in
-              reverse_accumulated_option opt_name v1
-          | WithSideEffect (side_effect,elem_spec) ->
-              (side_effect (); parse_opt_val opt_name elem_spec str_val)
+          (fun uu___86_2726  ->
+             match () with
+             | () ->
+                 (match typ with
+                  | Const c -> c
+                  | IntStr uu____2728 ->
+                      let uu____2729 = FStar_Util.safe_int_of_string str_val
+                         in
+                      (match uu____2729 with
+                       | FStar_Pervasives_Native.Some v1 -> mk_int v1
+                       | FStar_Pervasives_Native.None  ->
+                           FStar_Exn.raise (InvalidArgument opt_name))
+                  | BoolStr  ->
+                      let uu____2733 =
+                        if str_val = "true"
+                        then true
+                        else
+                          if str_val = "false"
+                          then false
+                          else FStar_Exn.raise (InvalidArgument opt_name)
+                         in
+                      mk_bool uu____2733
+                  | PathStr uu____2736 -> mk_path str_val
+                  | SimpleStr uu____2737 -> mk_string str_val
+                  | EnumStr strs ->
+                      if FStar_List.mem str_val strs
+                      then mk_string str_val
+                      else FStar_Exn.raise (InvalidArgument opt_name)
+                  | OpenEnumStr uu____2742 -> mk_string str_val
+                  | PostProcessed (pp,elem_spec) ->
+                      let uu____2757 =
+                        parse_opt_val opt_name elem_spec str_val  in
+                      pp uu____2757
+                  | Accumulated elem_spec ->
+                      let v1 = parse_opt_val opt_name elem_spec str_val  in
+                      accumulated_option opt_name v1
+                  | ReverseAccumulated elem_spec ->
+                      let v1 = parse_opt_val opt_name elem_spec str_val  in
+                      reverse_accumulated_option opt_name v1
+                  | WithSideEffect (side_effect,elem_spec) ->
+                      (side_effect ();
+                       parse_opt_val opt_name elem_spec str_val))) ()
         with
         | InvalidArgument opt_name1 ->
             let uu____2776 =
@@ -2383,11 +2389,14 @@ let (set_options : options -> Prims.string -> FStar_Getopt.parse_cmdline_res)
         | Reset  -> resettable_specs
         | Restore  -> all_specs  in
       try
-        if s = ""
-        then FStar_Getopt.Success
-        else
-          FStar_Getopt.parse_string specs1
-            (fun s1  -> FStar_Exn.raise (File_argument s1)) s
+        (fun uu___88_5965  ->
+           match () with
+           | () ->
+               if s = ""
+               then FStar_Getopt.Success
+               else
+                 FStar_Getopt.parse_string specs1
+                   (fun s1  -> FStar_Exn.raise (File_argument s1)) s) ()
       with
       | File_argument s1 ->
           let uu____5976 =
@@ -2506,25 +2515,28 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
     | FStar_Pervasives_Native.None  ->
         let result =
           try
-            let uu____6259 = FStar_Util.is_path_absolute filename  in
-            if uu____6259
-            then
-              (if FStar_Util.file_exists filename
-               then FStar_Pervasives_Native.Some filename
-               else FStar_Pervasives_Native.None)
-            else
-              (let uu____6266 =
-                 let uu____6269 = include_path ()  in
-                 FStar_List.rev uu____6269  in
-               FStar_Util.find_map uu____6266
-                 (fun p  ->
-                    let path =
-                      if p = "."
-                      then filename
-                      else FStar_Util.join_paths p filename  in
-                    if FStar_Util.file_exists path
-                    then FStar_Pervasives_Native.Some path
-                    else FStar_Pervasives_Native.None))
+            (fun uu___90_6256  ->
+               match () with
+               | () ->
+                   let uu____6259 = FStar_Util.is_path_absolute filename  in
+                   if uu____6259
+                   then
+                     (if FStar_Util.file_exists filename
+                      then FStar_Pervasives_Native.Some filename
+                      else FStar_Pervasives_Native.None)
+                   else
+                     (let uu____6266 =
+                        let uu____6269 = include_path ()  in
+                        FStar_List.rev uu____6269  in
+                      FStar_Util.find_map uu____6266
+                        (fun p  ->
+                           let path =
+                             if p = "."
+                             then filename
+                             else FStar_Util.join_paths p filename  in
+                           if FStar_Util.file_exists path
+                           then FStar_Pervasives_Native.Some path
+                           else FStar_Pervasives_Native.None))) ()
           with | uu____6285 -> FStar_Pervasives_Native.None  in
         (match result with
          | FStar_Pervasives_Native.None  -> result
