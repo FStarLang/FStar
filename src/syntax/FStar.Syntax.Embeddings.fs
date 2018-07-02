@@ -176,6 +176,41 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     in
     mk_emb em un (S.t_tuple2_of (type_of ea) (type_of eb))
 
+let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
+    let em (rng:range) (s:BU.either<'a,'b>) : term =
+        match s with
+        | BU.Inl a ->
+            S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.inl_lid) [U_zero; U_zero])
+                        [S.iarg (type_of ea);
+                         S.iarg (type_of eb);
+                         S.as_arg (embed ea rng a)]
+                        None
+                        rng
+        | BU.Inr b ->
+            S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.inr_lid) [U_zero; U_zero])
+                        [S.iarg (type_of ea);
+                         S.iarg (type_of eb);
+                         S.as_arg (embed eb rng b)]
+                        None
+                        rng
+    in
+    let un (w:bool) (t0:term) : option<BU.either<'a,'b>> =
+        let t = U.unmeta_safe t0 in
+        let hd, args = U.head_and_args' t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.inl_lid ->
+            BU.bind_opt (unembed' w ea a) (fun a ->
+            Some (BU.Inl a))
+        | Tm_fvar fv, [_; (b, _)] when S.fv_eq_lid fv PC.inr_lid ->
+            BU.bind_opt (unembed' w eb b) (fun b ->
+            Some (BU.Inr b))
+        | _ ->
+            if w then
+            Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sum: %s" (Print.term_to_string t0)));
+            None
+    in
+    mk_emb em un (S.t_either_of (type_of ea) (type_of eb))
+
 let e_list (ea:embedding<'a>) =
     let em (rng:range) (l:list<'a>) : term =
         let t = S.iarg (type_of ea) in
