@@ -619,7 +619,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              5,
              0,
              mk_range,
-             NBETerm.dummy_interp (PC.p2l ["Prims"; "mk_range"]));
+             NBE.mk_range);
          (PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"],
              1, 
              0, 

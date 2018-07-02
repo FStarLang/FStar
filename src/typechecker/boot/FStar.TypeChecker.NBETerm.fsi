@@ -166,3 +166,5 @@ val binary_op : (arg -> option<'a>) -> ('a -> 'a -> t) -> (args -> option<t>)
 
 val dummy_interp : Ident.lid -> args -> option<t>
 val prims_to_fstar_range_step : args -> option<t>
+
+val mk_range : args -> option<t>
