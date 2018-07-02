@@ -2028,9 +2028,12 @@ and check_top_level_let env e =
          (* Unfold all @tcnorm subterms in the binding *)
          if Env.debug env Options.Medium then
                 BU.print1 "Let binding BEFORE tcnorm: %s\n" (Print.term_to_string e1);
-         let e1 = N.normalize [Env.UnfoldAttr tcnorm;
-                               Env.Exclude Env.Zeta;
-                               Env.NoFullNorm; Env.DoNotUnfoldPureLets] env e1 in
+         let e1 = if Options.tcnorm () then
+                    N.normalize [Env.UnfoldAttr tcnorm;
+                                 Env.Exclude Env.Beta; Env.Exclude Env.Zeta;
+                                 Env.NoFullNorm; Env.DoNotUnfoldPureLets] env e1
+                  else e1
+         in
          if Env.debug env Options.Medium then
                 BU.print1 "Let binding AFTER tcnorm: %s\n" (Print.term_to_string e1);
 

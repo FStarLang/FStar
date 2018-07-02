@@ -190,6 +190,7 @@ let defaults =
       ("tactic_raw_binders"           , Bool false);
       ("tactic_trace"                 , Bool false);
       ("tactic_trace_d"               , Int 0);
+      ("tcnorm"                       , Bool true);
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
       ("ugly"                         , Bool false);
@@ -304,6 +305,7 @@ let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       
 let get_tactic_trace            ()      = lookup_opt "tactic_trace"             as_bool
 let get_tactic_trace_d          ()      = lookup_opt "tactic_trace_d"           as_int
 let get_tactics_nbe             ()      = lookup_opt "__tactics_nbe"            as_bool
+let get_tcnorm                  ()      = lookup_opt "tcnorm"                   as_bool
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
@@ -854,6 +856,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Use NBE to evaluate metaprograms (experimental)");
 
        ( noshort,
+        "tcnorm",
+        BoolStr,
+        "Attempt to normalize definitions marked as tcnorm (default 'true')");
+
+       ( noshort,
         "timing",
         Const (mk_bool true),
         "Print the time it takes to verify each top-level definition");
@@ -1063,6 +1070,7 @@ let settable = function
     | "tactic_raw_binders"
     | "tactic_trace"
     | "tactic_trace_d"
+    | "tcnorm"
     | "__tactics_nbe"
     | "__temp_fast_implicits"
     | "__temp_no_proj"
@@ -1331,6 +1339,7 @@ let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactic_trace                 () = get_tactic_trace                ()
 let tactic_trace_d               () = get_tactic_trace_d              ()
 let tactics_nbe                  () = get_tactics_nbe                 ()
+let tcnorm                       () = get_tcnorm                      ()
 let timing                       () = get_timing                      ()
 let trace_error                  () = get_trace_error                 ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
