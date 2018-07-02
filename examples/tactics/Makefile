@@ -23,3 +23,13 @@ stringprintertest: $(CACHE_DIR)
 else
 stringprintertest:
 endif
+
+clean_imp_native:
+	rm -f ../native_tactics/Registers_List.ml ../native_tactics/Registers.List.ml ../native_tactics/Registers_List.cmxs
+
+imp_native: Imp.fst ../native_tactics/Registers.List.fst
+	$(MAKE) -C ../native_tactics Registers.List.ml
+	$(FSTAR) Imp.fst --include ../native_tactics/ --load Registers.List --warn_error -266
+
+imp: Imp.fst ../native_tactics Registers.List.ml
+	$(FSTAR) Imp.fst --include ../native_tactics/
