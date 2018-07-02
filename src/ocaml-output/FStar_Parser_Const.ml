@@ -198,6 +198,8 @@ let (inline_let_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inline_let"] 
 let (plugin_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "plugin"] 
+let (tcnorm_attr : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "tcnorm"] 
 let (dm4f_bind_range_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "dm4f_bind_range"] 
 let (must_erase_for_extraction_attr : FStar_Ident.lident) =
@@ -343,8 +345,6 @@ let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"]
 let (u_tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "__tac"] 
 let (tcresolve_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcresolve"] 
-let (tcnorm_lid : FStar_Ident.lid) =
-  fstar_tactics_lid' ["Typeclasses"; "tcnorm"] 
 let (tcinstance_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "instance"] 
 let (effect_TAC_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"] 
