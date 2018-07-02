@@ -25,8 +25,10 @@ let tr_repr_steps =
               | Delta         -> EMB.Delta
               | Zeta          -> EMB.Zeta
               | Iota          -> EMB.Iota
-              | UnfoldOnly ss -> EMB.UnfoldOnly ss
               | NBE           -> EMB.NBE
+              | Reify         -> EMB.Reify
+              | UnfoldOnly ss -> EMB.UnfoldOnly ss
+              | UnfoldFully ss -> EMB.UnfoldFully ss
     in List.map tr1
 
 let to_tac_0 (t: 'a __tac): 'a B.tac =
