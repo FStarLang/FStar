@@ -1,4 +1,4 @@
-module Imp
+module Registers.Imp
 //#set-options "--debug Imp --debug_level SMTQuery"
 open FStar.Mul
 module R = Registers.List
@@ -146,7 +146,7 @@ let long_zero x : prog =
     l `L.append` 
     [Const 0 (reg 0); Const 0 (reg 1); Const 0 (reg 2)]
 
-#set-options "--log_queries --debug Imp --debug_level SMTQuery --debug_level print_normalized_terms"
+#set-options "--debug Registers.Imp --debug_level print_normalized_terms"
 let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 #reset-options "--max_fuel 0"
 let _ = norm_assert (forall x. eval (x_times_42 x) == 42 * x)
