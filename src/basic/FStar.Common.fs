@@ -84,3 +84,11 @@ let force_thunk (t:thunk<'a>) =
       let a = f () in
       t := Inr a;
       a
+
+(* Was List.init, but F* doesn't have this in ulib *)
+let tabulate (n:int) (f : int -> 'a) : list<'a> =
+  let rec aux i =
+    if i < n
+    then f i :: aux (i + 1)
+    else []
+  in aux 0

@@ -54,8 +54,8 @@ and t
   | Refinement of (t -> t) * (unit -> arg)
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
-  | Rec of letbinding * list<letbinding> * list<t> * args * list bool  * (list<t> -> letbinding -> t)
-  (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity list x callback to translate letbinding *)
+  | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool>  * (list<t> -> letbinding -> t)
+  (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
 and comp = 
   | Tot of t * option<universe>
   | GTot of t * option<universe>

@@ -925,6 +925,47 @@ let rec arrow_formals k =
     let bs, c = arrow_formals_comp k in
     bs, comp_result c
 
+
+(* let_rec_arity e f:
+    if `f` is a let-rec bound name in e
+    then this function returns
+        1. f's type
+        2. the natural arity of f, i.e., the number of arguments including universes on which the let rec is defined
+        3. a list of booleans, one for each argument above, where the boolean is true iff the variable appears in the f's decreases clause
+    This is used by NBE for detecting potential non-terminating loops
+*)
+let let_rec_arity (lb:letbinding) : int * option<(list<bool>)> =
+    let rec arrow_until_decreases k =
+        let k = Subst.compress k in
+        match k.n with
+        | Tm_arrow(bs, c) ->
+            let bs, c = Subst.open_comp bs c in
+            let ct = comp_to_comp_typ c in
+           (match
+                ct.flags |> U.find_opt (function DECREASES _ -> true | _ -> false)
+            with
+            | Some (DECREASES d) ->
+                bs, Some d
+            | _ ->
+                if is_total_comp c
+                then let bs', d = arrow_until_decreases (comp_result c) in
+                      bs@bs', d
+                else bs, None)
+
+        | Tm_refine ({ sort = k }, _) ->
+            arrow_until_decreases k
+
+        | _ -> [], None
+    in
+    let bs, dopt = arrow_until_decreases lb.lbtyp in
+    let n_univs = List.length lb.lbunivs in
+    n_univs + List.length bs,
+    U.map_opt dopt (fun d ->
+       let d_bvs = FStar.Syntax.Free.names d in
+       Common.tabulate n_univs (fun _ -> false)
+       @ (bs |> List.map (fun (x, _) -> U.set_mem x d_bvs)))
+
+
 let abs_formals t =
     let subst_lcomp_opt s l = match l with
         | Some rc ->

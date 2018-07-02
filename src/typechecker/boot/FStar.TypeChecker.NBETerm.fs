@@ -61,8 +61,8 @@ and t
   | Refinement of (t -> t) * (unit -> arg) 
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
-  | Rec of letbinding * list<letbinding> * list<t> * args * list bool  * (list<t> -> letbinding -> t)
-  (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity list x callback to translate letbinding *)
+  | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
+  (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
 
  and comp = 
   | Tot of t * option<universe>
@@ -213,7 +213,7 @@ let rec t_to_string (x:t) =
   | Unknown -> "Unknown"
   | Quote _ -> "Quote _"
   | Lazy _ -> "Lazy _"
-  | Rec (_,_, l, _, _, _) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
+  | Rec (_,_, l, _, _, _, _) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
 and atom_to_string (a: atom) =
   match a with
