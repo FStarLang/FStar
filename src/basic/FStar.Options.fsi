@@ -119,7 +119,6 @@ val display_usage               : unit    -> unit
 val doc                         : unit    -> bool
 val dont_gen_projectors         : string  -> bool
 val dump_module                 : string  -> bool
-val eager_embedding             : unit    -> bool
 val eager_subtyping             : unit    -> bool
 val expose_interfaces           : unit    -> bool
 val file_list                   : unit    -> list<string>
@@ -225,3 +224,4 @@ val _date: ref<string>
 val _commit: ref<string>
 
 val debug_embedding: ref<bool>
+val eager_embedding: ref<bool>
