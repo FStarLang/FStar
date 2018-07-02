@@ -577,9 +577,6 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (arity_opt:option<int>) (
           if n = n_bs then bs, c
           else if n < n_bs
           then let bs, rest = BU.first_N n bs in
-               BU.print2 "Restricting arity of %s to %s\n"
-                (Ident.string_of_lid fv_lid)
-                (BU.string_of_int n);
                let c = S.mk_Total <| U.arrow rest c in
                bs, c
           else // n > bs
