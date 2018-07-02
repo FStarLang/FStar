@@ -32,6 +32,8 @@ let (smtpat_lid : FStar_Ident.lident) = pconst "smt_pat"
 let (smtpatOr_lid : FStar_Ident.lident) = pconst "smt_pat_or" 
 let (monadic_lid : FStar_Ident.lident) = pconst "M" 
 let (spinoff_lid : FStar_Ident.lident) = pconst "spinoff" 
+let (inl_lid : FStar_Ident.lident) = psconst "Inl" 
+let (inr_lid : FStar_Ident.lident) = psconst "Inr" 
 let (int8_lid : FStar_Ident.lident) = p2l ["FStar"; "Int8"; "t"] 
 let (uint8_lid : FStar_Ident.lident) = p2l ["FStar"; "UInt8"; "t"] 
 let (int16_lid : FStar_Ident.lident) = p2l ["FStar"; "Int16"; "t"] 
@@ -198,6 +200,8 @@ let (inline_let_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inline_let"] 
 let (plugin_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "plugin"] 
+let (tcnorm_attr : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "tcnorm"] 
 let (dm4f_bind_range_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "dm4f_bind_range"] 
 let (must_erase_for_extraction_attr : FStar_Ident.lident) =
@@ -343,8 +347,6 @@ let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"]
 let (u_tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "__tac"] 
 let (tcresolve_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcresolve"] 
-let (tcnorm_lid : FStar_Ident.lid) =
-  fstar_tactics_lid' ["Typeclasses"; "tcnorm"] 
 let (tcinstance_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "instance"] 
 let (effect_TAC_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"] 

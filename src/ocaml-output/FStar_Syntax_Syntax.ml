@@ -2707,6 +2707,20 @@ let (t_tuple2_of : term -> term -> term) =
         mk_Tm_app uu____8911 uu____8913  in
       uu____8906 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
+let (t_either_of : term -> term -> term) =
+  fun t1  ->
+    fun t2  ->
+      let uu____8979 =
+        let uu____8984 =
+          let uu____8985 = tabbrev FStar_Parser_Const.either_lid  in
+          mk_Tm_uinst uu____8985 [U_zero; U_zero]  in
+        let uu____8986 =
+          let uu____8987 = as_arg t1  in
+          let uu____8996 = let uu____9007 = as_arg t2  in [uu____9007]  in
+          uu____8987 :: uu____8996  in
+        mk_Tm_app uu____8984 uu____8986  in
+      uu____8979 FStar_Pervasives_Native.None FStar_Range.dummyRange
+  
 let (unit_const : term) =
   mk (Tm_constant FStar_Const.Const_unit) FStar_Pervasives_Native.None
     FStar_Range.dummyRange
