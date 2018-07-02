@@ -109,6 +109,7 @@ let inspect_const (c:sconst) : vconst =
 let rec inspect_ln (t:term) : term_view =
     let t = U.unascribe t in
     let t = U.un_uinst t in
+    let t = U.unlazy_emb t in
     match t.n with
     | Tm_meta (t, _) ->
         inspect_ln t

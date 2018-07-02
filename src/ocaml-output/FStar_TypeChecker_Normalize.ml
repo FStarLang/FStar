@@ -6860,120 +6860,119 @@ and (rebuild :
                  let rec matches_pat scrutinee_orig p =
                    let scrutinee1 = FStar_Syntax_Util.unmeta scrutinee_orig
                       in
-                   let uu____22333 =
-                     FStar_Syntax_Util.head_and_args scrutinee1  in
-                   match uu____22333 with
+                   let scrutinee2 = FStar_Syntax_Util.unlazy scrutinee1  in
+                   let uu____22334 =
+                     FStar_Syntax_Util.head_and_args scrutinee2  in
+                   match uu____22334 with
                    | (head1,args) ->
                        (match p.FStar_Syntax_Syntax.v with
                         | FStar_Syntax_Syntax.Pat_var bv ->
                             FStar_Util.Inl [(bv, scrutinee_orig)]
                         | FStar_Syntax_Syntax.Pat_wild bv ->
                             FStar_Util.Inl [(bv, scrutinee_orig)]
-                        | FStar_Syntax_Syntax.Pat_dot_term uu____22426 ->
+                        | FStar_Syntax_Syntax.Pat_dot_term uu____22427 ->
                             FStar_Util.Inl []
                         | FStar_Syntax_Syntax.Pat_constant s ->
-                            (match scrutinee1.FStar_Syntax_Syntax.n with
+                            (match scrutinee2.FStar_Syntax_Syntax.n with
                              | FStar_Syntax_Syntax.Tm_constant s' when
                                  FStar_Const.eq_const s s' ->
                                  FStar_Util.Inl []
-                             | uu____22465 ->
-                                 let uu____22466 =
-                                   let uu____22467 = is_cons head1  in
-                                   Prims.op_Negation uu____22467  in
-                                 FStar_Util.Inr uu____22466)
+                             | uu____22466 ->
+                                 let uu____22467 =
+                                   let uu____22468 = is_cons head1  in
+                                   Prims.op_Negation uu____22468  in
+                                 FStar_Util.Inr uu____22467)
                         | FStar_Syntax_Syntax.Pat_cons (fv,arg_pats) ->
-                            let uu____22492 =
-                              let uu____22493 =
+                            let uu____22493 =
+                              let uu____22494 =
                                 FStar_Syntax_Util.un_uinst head1  in
-                              uu____22493.FStar_Syntax_Syntax.n  in
-                            (match uu____22492 with
+                              uu____22494.FStar_Syntax_Syntax.n  in
+                            (match uu____22493 with
                              | FStar_Syntax_Syntax.Tm_fvar fv' when
                                  FStar_Syntax_Syntax.fv_eq fv fv' ->
                                  matches_args [] args arg_pats
-                             | uu____22511 ->
-                                 let uu____22512 =
-                                   let uu____22513 = is_cons head1  in
-                                   Prims.op_Negation uu____22513  in
-                                 FStar_Util.Inr uu____22512))
+                             | uu____22512 ->
+                                 let uu____22513 =
+                                   let uu____22514 = is_cons head1  in
+                                   Prims.op_Negation uu____22514  in
+                                 FStar_Util.Inr uu____22513))
                  
                  and matches_args out a p =
                    match (a, p) with
                    | ([],[]) -> FStar_Util.Inl out
-                   | ((t2,uu____22596)::rest_a,(p1,uu____22599)::rest_p) ->
-                       let uu____22653 = matches_pat t2 p1  in
-                       (match uu____22653 with
+                   | ((t2,uu____22597)::rest_a,(p1,uu____22600)::rest_p) ->
+                       let uu____22654 = matches_pat t2 p1  in
+                       (match uu____22654 with
                         | FStar_Util.Inl s ->
                             matches_args (FStar_List.append out s) rest_a
                               rest_p
                         | m -> m)
-                   | uu____22702 -> FStar_Util.Inr false
+                   | uu____22703 -> FStar_Util.Inr false
                   in
                  let rec matches scrutinee1 p =
                    match p with
                    | [] -> norm_and_rebuild_match ()
                    | (p1,wopt,b)::rest ->
-                       let uu____22822 = matches_pat scrutinee1 p1  in
-                       (match uu____22822 with
+                       let uu____22823 = matches_pat scrutinee1 p1  in
+                       (match uu____22823 with
                         | FStar_Util.Inr (false ) -> matches scrutinee1 rest
                         | FStar_Util.Inr (true ) -> norm_and_rebuild_match ()
                         | FStar_Util.Inl s ->
                             (FStar_TypeChecker_Cfg.log cfg1
-                               (fun uu____22862  ->
-                                  let uu____22863 =
-                                    FStar_Syntax_Print.pat_to_string p1  in
+                               (fun uu____22863  ->
                                   let uu____22864 =
-                                    let uu____22865 =
+                                    FStar_Syntax_Print.pat_to_string p1  in
+                                  let uu____22865 =
+                                    let uu____22866 =
                                       FStar_List.map
-                                        (fun uu____22875  ->
-                                           match uu____22875 with
-                                           | (uu____22880,t2) ->
+                                        (fun uu____22876  ->
+                                           match uu____22876 with
+                                           | (uu____22881,t2) ->
                                                FStar_Syntax_Print.term_to_string
                                                  t2) s
                                        in
-                                    FStar_All.pipe_right uu____22865
+                                    FStar_All.pipe_right uu____22866
                                       (FStar_String.concat "; ")
                                      in
                                   FStar_Util.print2
                                     "Matches pattern %s with subst = %s\n"
-                                    uu____22863 uu____22864);
+                                    uu____22864 uu____22865);
                              (let env0 = env1  in
                               let env2 =
                                 FStar_List.fold_left
                                   (fun env2  ->
-                                     fun uu____22912  ->
-                                       match uu____22912 with
+                                     fun uu____22913  ->
+                                       match uu____22913 with
                                        | (bv,t2) ->
-                                           let uu____22935 =
-                                             let uu____22942 =
-                                               let uu____22945 =
+                                           let uu____22936 =
+                                             let uu____22943 =
+                                               let uu____22946 =
                                                  FStar_Syntax_Syntax.mk_binder
                                                    bv
                                                   in
                                                FStar_Pervasives_Native.Some
-                                                 uu____22945
+                                                 uu____22946
                                                 in
-                                             let uu____22946 =
-                                               let uu____22947 =
-                                                 let uu____22978 =
+                                             let uu____22947 =
+                                               let uu____22948 =
+                                                 let uu____22979 =
                                                    FStar_Util.mk_ref
                                                      (FStar_Pervasives_Native.Some
                                                         ([], t2))
                                                     in
-                                                 ([], t2, uu____22978, false)
+                                                 ([], t2, uu____22979, false)
                                                   in
-                                               Clos uu____22947  in
-                                             (uu____22942, uu____22946)  in
-                                           uu____22935 :: env2) env1 s
+                                               Clos uu____22948  in
+                                             (uu____22943, uu____22947)  in
+                                           uu____22936 :: env2) env1 s
                                  in
-                              let uu____23091 = guard_when_clause wopt b rest
+                              let uu____23092 = guard_when_clause wopt b rest
                                  in
-                              norm cfg1 env2 stack1 uu____23091)))
+                              norm cfg1 env2 stack1 uu____23092)))
                     in
                  if
                    (cfg1.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.iota
-                 then
-                   let uu____23092 = FStar_Syntax_Util.unlazy scrutinee  in
-                   matches uu____23092 branches
+                 then matches scrutinee branches
                  else norm_and_rebuild_match ())))
 
 let (normalize_with_primitive_steps :

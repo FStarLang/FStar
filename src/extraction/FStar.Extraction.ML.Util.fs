@@ -661,7 +661,6 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (arity_opt:option<int>) (
                                                          ^ string_of_int non_tvar_arity),
                           [lid_to_top_name fv_lid])
             in
-            let tac_lid_app = w <| MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [w ml_fv]) in
             let psc = str_to_name "psc" in
             let ncb = str_to_name "ncb" in
             let all_args = str_to_name "args" in
@@ -669,7 +668,6 @@ let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (arity_opt:option<int>) (
                 [tac_fun] @
                 arg_unembeddings @
                 [res_embedding;
-                 tac_lid_app;
                  psc;
                  ncb] in
             let tabs =
