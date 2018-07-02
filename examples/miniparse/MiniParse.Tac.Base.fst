@@ -61,8 +61,28 @@ let unfold_term (t: T.term) : T.Tac T.term =
   | _ -> tfail "Not a global variable"
 
 let tsuccess (s: string) : T.Tac unit =
+  T.print ("Checking success for: " ^ s);
   T.qed ();
   T.print ("Success: " ^ s)
+
+let rec to_all_goals (t: unit -> T.Tac unit) : T.Tac unit =
+  if T.ngoals () = 0
+  then ()
+  else
+    let _ = T.divide 1 t (fun () -> to_all_goals t) in
+    ()
+
+let admit_others (t: unit -> T.Tac unit) : T.Tac unit =
+  if T.ngoals () = 0
+  then ()
+  else if T.ngoals () = 1
+  then t ()
+  else
+    tfail "There should be only one goal here"
+(*    
+    let _ = T.divide 1 t (fun () -> to_all_goals tadmit) in
+    ()
+*)    
 
 let rec imm_solve_goal () : T.Tac unit =
   T.first [
@@ -85,7 +105,7 @@ let rec imm_solve_goal () : T.Tac unit =
     );
     (fun () ->
       T.apply (`(FStar.Squash.return_squash));
-      imm_solve_goal ();
+      to_all_goals imm_solve_goal;
       tsuccess "return_squash imm_solve"
     );    
   ]
@@ -93,18 +113,38 @@ let rec imm_solve_goal () : T.Tac unit =
 let rec solve_goal () : T.Tac unit =
   if T.ngoals () = 0
   then ()
-  else
+  else begin
+    begin
+      if T.ngoals () > 1
+      then
+        tfail "More than one goal here"
+      else ()
+    end;
   match T.trytac imm_solve_goal with
   | Some _ -> ()
   | _ ->
-  begin match T.trytac T.forall_intro with
-  | Some _ -> solve_goal ()
+  begin match T.trytac (fun () -> T.with_policy T.Drop T.forall_intro) with
+  | Some _ ->
+    T.print ("Applied: forall_intro");
+    admit_others solve_goal
   | _ ->
-    begin match T.trytac T.implies_intro with
-    | Some _ -> solve_goal ()
+    begin match T.trytac (fun () -> T.with_policy T.Drop T.implies_intro) with
+    | Some _ ->
+      T.print ("Applied: implies_intro");
+      admit_others solve_goal
     | _ ->
-      begin match T.trytac T.split with
-      | Some _ -> T.iseq [ solve_goal; solve_goal ]
+      begin match T.trytac (fun () -> T.with_policy T.Drop T.split) with
+      | Some _ ->
+        let n = T.ngoals () in
+        if n > 2
+        then
+          tfail "There should be only at most 2 goals here"
+(*        
+          let _ = T.divide 2 (fun () -> to_all_goals solve_goal) (fun () -> to_all_goals T.tadmit) in
+          ()
+*)          
+        else
+          to_all_goals solve_goal
       | _ ->
         T.dump "MUST USE SMT FOR THIS ONE";
         T.smt ();
@@ -112,10 +152,12 @@ let rec solve_goal () : T.Tac unit =
       end
     end
   end
+  end
 
 let rec tconclude () : T.Tac unit =
   if T.ngoals () > 0
-  then
-    let _ = solve_goal () in
-    tconclude ()
-  else T.print "No goals left"
+  then begin
+    T.dump "Some goals left";
+    let _ = T.divide 1 solve_goal tconclude in
+    ()
+  end else T.print "No goals left"

@@ -148,6 +148,7 @@ let invert_function' (enum_ty val_ty: T.term) (f: T.term) : T.Tac T.term =
   | _ -> T.fail "Not a function"
 
 let invert_function (enum_ty val_ty: T.term) (f: T.term) : T.Tac unit =
+  T.set_guard_policy T.Goal;
   match T.inspect f with
   | T.Tv_FVar w ->
     let u = T.inspect_fv w in
@@ -166,7 +167,11 @@ let invert_function (enum_ty val_ty: T.term) (f: T.term) : T.Tac unit =
     end
   | _ -> T.fail "Not a global variable"
 
+#set-options "--no_smt"
+
 let g : U8.t -> Tot test = T.synth_by_tactic (fun () -> invert_function (`(test)) (`(U8.t)) (`(f)))
+
+#reset-options
 
 let rec tlen (#a: Type) (l: list a) : T.Tac T.term =
   match l with
@@ -206,6 +211,9 @@ let map_u8_to_bounded_u8
   let y' : bounded_u8 bound = f x in
   y'
 
+
+
+(*
 let rec mk_bounded_tenum_branches (ty: T.term) (bounded: T.term) (v: T.term) (accu: list T.branch) (l: list T.name) : T.Tac (list T.branch) =
   match l with
   | [] -> accu
