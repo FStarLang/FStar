@@ -23,11 +23,40 @@ open FStar.Ident
 open FStar.TypeChecker.Common
 module BU = FStar.Util
 
+type step =
+  | Beta
+  | Iota            //pattern matching
+  | Zeta            //fixed points
+  | Exclude of step //the first three kinds are included by default, unless Excluded explicity
+  | Weak            //Do not descend into binders
+  | HNF             //Only produce a head normal form
+  | Primops         //reduce primitive operators like +, -, *, /, etc.
+  | Eager_unfolding
+  | Inlining
+  | DoNotUnfoldPureLets
+  | UnfoldUntil of delta_depth
+  | UnfoldOnly  of list<FStar.Ident.lid>
+  | UnfoldFully of list<FStar.Ident.lid>
+  | UnfoldAttr of attribute
+  | UnfoldTac
+  | PureSubtermsWithinComputations
+  | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
+  | EraseUniverses
+  | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
+  | Reify
+  | CompressUvars
+  | NoFullNorm
+  | CheckNoUvars
+  | Unmeta          //remove all non-monadic metas.
+  | Unascribe
+  | NBE
+and steps = list<step>
+
 type sig_binding = list<lident> * sigelt
 
 type delta_level =
   | NoDelta
-  | Inlining
+  | InliningDelta // ZP : Trying to resolve name clash
   | Eager_unfolding_only
   | Unfold of delta_depth
 
@@ -109,8 +138,10 @@ type env = {
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
-  dep_graph      : FStar.Parser.Dep.deps          (* The result of the dependency analysis *)
+  dep_graph      : FStar.Parser.Dep.deps;         (* The result of the dependency analysis *)
+  nbe            : list<step> -> env -> term -> term;  (* Callback to the NBE function *)
 }
+
 and solver_depth_t = int * int * int
 and solver_t = {
     init         :env -> unit;
@@ -152,7 +183,8 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> term*typ*guard_t) ->
                   (env -> term -> universe) ->
                   (bool -> env -> term -> typ -> guard_t) ->
-                  solver_t -> lident -> env
+                  solver_t -> lident ->
+                  (list<step> -> env -> term -> term) -> env
 
 (* Some utilities *)
 val should_verify   : env -> bool
@@ -230,6 +262,7 @@ val new_u_univ             : unit -> universe
 (* Instantiate the universe variables in a type scheme with new unification variables *)
 val inst_tscheme           : tscheme -> universes * term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
+val mk_univ_subst          : list<univ_name> -> universes -> list<subst_elt>
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env

@@ -34,6 +34,7 @@ module PC = FStar.Parser.Const
 module Range = FStar.Range
 module S = FStar.Syntax.Syntax
 module N = FStar.TypeChecker.Normalize
+module Env = FStar.TypeChecker.Env
 
 
 let codegen_fsharp () = Options.codegen () = Some Options.FSharp
@@ -386,9 +387,9 @@ type emb_loc =
 
 let interpret_plugin_as_term_fun tcenv (fv:lident) (t:typ) (ml_fv:mlexpr') =
     let t = N.normalize [
-      N.EraseUniverses;
-      N.AllowUnboundUniverses;
-      N.UnfoldUntil S.delta_constant // unfold abbreviations such as nat
+      Env.EraseUniverses;
+      Env.AllowUnboundUniverses;
+      Env.UnfoldUntil S.delta_constant // unfold abbreviations such as nat
     ] tcenv t in
     let w = with_ty MLTY_Top in
     let lid_to_name l     = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident l) in

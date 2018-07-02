@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt64.t__uu___haseq" ],
       0,
-      "b81df76d82d307bd99be9802220bb167"
+      "1f2def1f4cfa9e6ef4bdf330eed72e46"
     ],
     [
       "Bug1091.jun21_2017_logand_fail",
@@ -25,7 +25,7 @@
         "uvar_typing_19"
       ],
       0,
-      "5681e7dca3704c6adee3a3ba745d56cf"
+      "13c9f2517fc81a6c5ae5a01af4cdb6e9"
     ],
     [
       "Bug1091.jun21_2017_logand",
@@ -37,7 +37,7 @@
         "haseqFStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
       0,
-      "4da865cfdc4cf442cd6adfe3e3ddc07f"
+      "6a40a2cb7c5db24154a898d9aec73b29"
     ],
     [
       "Bug1091.apr19_2017_mem",
@@ -52,7 +52,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f9d3e124d0d38694a046b447e8cba81b"
+      "ef386b56f3d9e1de40712e0612de93ca"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -64,7 +64,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ca2cd866ebdaaf53f081888707b28fc2"
+      "7fcdbc70fa6c55716f4cc2eb488bc956"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -76,7 +76,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ae6ac2f31628103503a21f386531def7"
+      "c52f3372fe7dcc192b1f4377c74df0ec"
     ],
     [
       "Bug1091.apr19_2017_mem_sanity",
@@ -88,7 +88,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3da00f6227c2710fbc9ae6c88d20712e"
+      "fbd61ef9c2ff0992d6b51747cf73ff2c"
     ],
     [
       "Bug1091.apr21_2017_ackermann_fail",
@@ -97,7 +97,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "bdf81b34e360b4d58c1be6a2c69f660d"
+      "f9aa83f498cdd12a00eada11f767f5e5"
     ],
     [
       "Bug1091.apr21_2017_ackermann_fail",
@@ -106,7 +106,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c621bd127b1f50413c7188a8b5885e69"
+      "f8db386c7f370e75fb16e666e7831dcb"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -128,7 +128,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "da06f2398c771fd4610df45322474b2f"
+      "7e9a010a3348b58613da5b1dbabb8daa"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -137,7 +137,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "54a52705c94c9cf62c005b5f0909a366"
+      "deb5489b0d3d06fbb86f3ec9e4c9a7c9"
     ],
     [
       "Bug1091.apr21_2017_ackermann",
@@ -146,7 +146,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ed5c2542363fa542fd8b7fa7092f2c60"
+      "f2368fc18b48f3018746b56ed22aba5b"
     ]
   ]
 ]

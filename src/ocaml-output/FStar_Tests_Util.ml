@@ -107,7 +107,7 @@ let rec (term_eq' :
          (t,uu____404),FStar_Syntax_Syntax.Tm_uinst (s,uu____406)) ->
           term_eq' t s
       | (FStar_Syntax_Syntax.Tm_constant c1,FStar_Syntax_Syntax.Tm_constant
-         c2) -> c1 = c2
+         c2) -> FStar_Const.eq_const c1 c2
       | (FStar_Syntax_Syntax.Tm_type u,FStar_Syntax_Syntax.Tm_type v1) ->
           u = v1
       | (FStar_Syntax_Syntax.Tm_abs

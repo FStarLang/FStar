@@ -96,7 +96,7 @@ let check_and_gen env t k =
 
 let check_nogen env t k =
     let t = tc_check_trivial_guard env t k in
-    [], N.normalize [N.Beta] env t
+    [], N.normalize [Env.Beta] env t
 
 let monad_signature env m s =
  let fail () = raise_error (Err.unexpected_signature_for_monad env m s) (range_of_lid m) in
@@ -296,7 +296,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
             tc_check_trivial_guard env ed.repr expected_k in
 
         let mk_repr' t wp =
-            let repr = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env repr in
+            let repr = N.normalize [Env.EraseUniverses; Env.AllowUnboundUniverses] env repr in
             mk (Tm_app(repr, [as_arg t; as_arg wp])) None Range.dummyRange in
 
         let mk_repr a wp =
@@ -412,8 +412,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
               (Print.term_to_string act_typ);
           let act_defn, _, g_a = tc_tot_or_gtot_term env' act.action_defn in
 
-          let act_defn = N.normalize [ N.UnfoldUntil S.delta_constant ] env act_defn in
-          let act_typ = N.normalize [ N.UnfoldUntil S.delta_constant; N.Eager_unfolding; N.Beta ] env act_typ in
+          let act_defn = N.normalize [ Env.UnfoldUntil S.delta_constant ] env act_defn in
+          let act_typ = N.normalize [ Env.UnfoldUntil S.delta_constant; Env.Eager_unfolding; Env.Beta ] env act_typ in
           // 2) This implies that [action_typ] has Type(k): good for us!
 
           // 3) Unify [action_typ] against [expected_k], because we also need
@@ -452,13 +452,13 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
           (* printfn "Checked action %s against type %s\n" *)
           (*         (Print.term_to_string act_defn) *)
-          (*         (Print.term_to_string (N.normalize [N.Beta] env act_typ)); *)
+          (*         (Print.term_to_string (N.normalize [Env.Beta] env act_typ)); *)
 
           //AR: if the action universes were already annotated, simply close, else generalize
           let univs, act_defn = if act.action_univs = [] then TcUtil.generalize_universes env act_defn else
                                 act.action_univs, SS.close_univ_vars act.action_univs act_defn
           in
-          let act_typ = N.normalize [N.Beta] env act_typ in
+          let act_typ = N.normalize [Env.Beta] env act_typ in
           let act_typ = Subst.close_univ_vars univs act_typ in
           {act with
               action_univs=univs;
@@ -555,7 +555,7 @@ let cps_and_elaborate env ed =
   in
 
   let effect_binders = List.map (fun (bv, qual) ->
-    { bv with sort = N.normalize [ N.EraseUniverses ] env bv.sort }, qual
+    { bv with sort = N.normalize [ Env.EraseUniverses ] env bv.sort }, qual
   ) effect_binders in
 
   // Every combinator found in the effect declaration is parameterized over
@@ -594,7 +594,7 @@ let cps_and_elaborate env ed =
   let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
   let wp_type = DMFF.star_type dmff_env repr in
   let _ = recheck_debug "*" env wp_type in
-  let wp_a = N.normalize [ N.Beta ] env (mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ]))) in
+  let wp_a = N.normalize [ Env.Beta ] env (mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ]))) in
 
   // Building: [a -> wp a -> Effect]
   let effect_signature =
@@ -645,7 +645,7 @@ let cps_and_elaborate env ed =
         let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
         let wp_b1 =
           let raw_wp_b1 = mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ])) in
-          N.normalize [ N.Beta ] env0 raw_wp_b1
+          N.normalize [ Env.Beta ] env0 raw_wp_b1
         in
         let bs, body, what' = U.abs_formals <| N.eta_expand_with_type env0 body (U.unascribe wp_b1) in
 
@@ -749,7 +749,7 @@ let cps_and_elaborate env ed =
     let params_un = SS.open_binders action.action_params in
     let action_params, env', _ = tc_tparams (DMFF.get_env dmff_env) params_un in
     let action_params = List.map (fun (bv, qual) ->
-      { bv with sort = N.normalize [ N.EraseUniverses ] env' bv.sort }, qual
+      { bv with sort = N.normalize [ Env.EraseUniverses ] env' bv.sort }, qual
     ) action_params in
     let dmff_env' = DMFF.set_env dmff_env env' in
     // We need to reverse-engineer what tc_eff_decl wants here...
@@ -1230,7 +1230,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       let wp_a_typ = S.bv_to_name wp_a in
       let repr_f = repr_type sub.source a_typ wp_a_typ in
       let repr_result =
-        let lift_wp = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env (snd lift_wp) in
+        let lift_wp = N.normalize [Env.EraseUniverses; Env.AllowUnboundUniverses] env (snd lift_wp) in
         let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
         repr_type sub.target a_typ lift_wp_a in
       let expected_k =
@@ -1311,7 +1311,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
     let uvs, t =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
-        let uvs, t = tc_declare_typ ({ env with lax = true }) (uvs, t) se.sigrng in //|> N.normalize [N.NoFullNorm; N.Beta; N.DoNotUnfoldPureLets] env in
+        let uvs, t = tc_declare_typ ({ env with lax = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Val declaration after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
         uvs, t
       end
@@ -1678,10 +1678,10 @@ let tc_decls env ses =
 
     Env.promote_id_info env (fun t ->
         N.normalize
-               [N.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
-                N.CheckNoUvars;
-                N.Beta; N.DoNotUnfoldPureLets; N.CompressUvars;
-                N.Exclude N.Zeta; N.Exclude N.Iota; N.NoFullNorm]
+               [Env.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
+                Env.CheckNoUvars;
+                Env.Beta; Env.DoNotUnfoldPureLets; Env.CompressUvars;
+                Env.Exclude Env.Zeta; Env.Exclude Env.Iota; Env.NoFullNorm]
               env
               t); //update the id_info table after having removed their uvars
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se) env in
@@ -2055,7 +2055,7 @@ let check_module env m b =
   then begin
     let normalize_toplevel_lets = fun se -> match se.sigel with
         | Sig_let ((b, lbs), ids) ->
-            let n = N.normalize [N.Beta ; N.Eager_unfolding; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.delta_constant ; N.AllowUnboundUniverses ] in
+            let n = N.normalize [Env.Beta ; Env.Eager_unfolding; Env.Reify ; Env.Inlining ; Env.Primops ; Env.UnfoldUntil S.delta_constant ; Env.AllowUnboundUniverses ] in
             let update lb =
                 let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
                 { lb with lbdef = n (Env.push_univ_vars env univnames) e }

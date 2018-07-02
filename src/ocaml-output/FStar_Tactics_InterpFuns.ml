@@ -5,7 +5,7 @@ let mk_tactic_interpretation_0 :
       'r FStar_Tactics_Basic.tac ->
         'r FStar_Syntax_Embeddings.embedding ->
           FStar_Ident.lid ->
-            FStar_TypeChecker_Normalize.psc ->
+            FStar_TypeChecker_Cfg.psc ->
               FStar_Syntax_Syntax.args ->
                 FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -34,8 +34,8 @@ let mk_tactic_interpretation_0 :
                        (let res =
                           let uu____99 = FStar_Tactics_Embedding.e_result er
                              in
-                          let uu____104 =
-                            FStar_TypeChecker_Normalize.psc_range psc  in
+                          let uu____104 = FStar_TypeChecker_Cfg.psc_range psc
+                             in
                           let uu____105 = FStar_Tactics_Basic.run_safe t ps1
                              in
                           FStar_Syntax_Embeddings.embed uu____99 uu____104
@@ -52,7 +52,7 @@ let mk_tactic_interpretation_1 :
         'a FStar_Syntax_Embeddings.embedding ->
           'r FStar_Syntax_Embeddings.embedding ->
             FStar_Ident.lid ->
-              FStar_TypeChecker_Normalize.psc ->
+              FStar_TypeChecker_Cfg.psc ->
                 FStar_Syntax_Syntax.args ->
                   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -94,8 +94,7 @@ let mk_tactic_interpretation_1 :
                                  let uu____261 =
                                    FStar_Tactics_Embedding.e_result er  in
                                  let uu____266 =
-                                   FStar_TypeChecker_Normalize.psc_range psc
-                                    in
+                                   FStar_TypeChecker_Cfg.psc_range psc  in
                                  FStar_Syntax_Embeddings.embed uu____261
                                    uu____266 res
                                   in
@@ -114,12 +113,11 @@ let mk_tactic_interpretation_1 :
 let mk_tactic_interpretation_1_env :
   'a 'r .
     Prims.bool ->
-      (FStar_TypeChecker_Normalize.psc -> 'a -> 'r FStar_Tactics_Basic.tac)
-        ->
+      (FStar_TypeChecker_Cfg.psc -> 'a -> 'r FStar_Tactics_Basic.tac) ->
         'a FStar_Syntax_Embeddings.embedding ->
           'r FStar_Syntax_Embeddings.embedding ->
             FStar_Ident.lid ->
-              FStar_TypeChecker_Normalize.psc ->
+              FStar_TypeChecker_Cfg.psc ->
                 FStar_Syntax_Syntax.args ->
                   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -161,8 +159,7 @@ let mk_tactic_interpretation_1_env :
                                  let uu____428 =
                                    FStar_Tactics_Embedding.e_result er  in
                                  let uu____433 =
-                                   FStar_TypeChecker_Normalize.psc_range psc
-                                    in
+                                   FStar_TypeChecker_Cfg.psc_range psc  in
                                  FStar_Syntax_Embeddings.embed uu____428
                                    uu____433 res
                                   in
@@ -186,7 +183,7 @@ let mk_tactic_interpretation_2 :
           'b FStar_Syntax_Embeddings.embedding ->
             'r FStar_Syntax_Embeddings.embedding ->
               FStar_Ident.lid ->
-                FStar_TypeChecker_Normalize.psc ->
+                FStar_TypeChecker_Cfg.psc ->
                   FStar_Syntax_Syntax.args ->
                     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -238,8 +235,7 @@ let mk_tactic_interpretation_2 :
                                           FStar_Tactics_Embedding.e_result er
                                            in
                                         let uu____638 =
-                                          FStar_TypeChecker_Normalize.psc_range
-                                            psc
+                                          FStar_TypeChecker_Cfg.psc_range psc
                                            in
                                         FStar_Syntax_Embeddings.embed
                                           uu____633 uu____638 res
@@ -265,7 +261,7 @@ let mk_tactic_interpretation_3 :
             'c FStar_Syntax_Embeddings.embedding ->
               'r FStar_Syntax_Embeddings.embedding ->
                 FStar_Ident.lid ->
-                  FStar_TypeChecker_Normalize.psc ->
+                  FStar_TypeChecker_Cfg.psc ->
                     FStar_Syntax_Syntax.args ->
                       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -326,7 +322,7 @@ let mk_tactic_interpretation_3 :
                                                    er
                                                   in
                                                let uu____886 =
-                                                 FStar_TypeChecker_Normalize.psc_range
+                                                 FStar_TypeChecker_Cfg.psc_range
                                                    psc
                                                   in
                                                FStar_Syntax_Embeddings.embed
@@ -355,7 +351,7 @@ let mk_tactic_interpretation_4 :
               'd FStar_Syntax_Embeddings.embedding ->
                 'r FStar_Syntax_Embeddings.embedding ->
                   FStar_Ident.lid ->
-                    FStar_TypeChecker_Normalize.psc ->
+                    FStar_TypeChecker_Cfg.psc ->
                       FStar_Syntax_Syntax.args ->
                         FStar_Syntax_Syntax.term
                           FStar_Pervasives_Native.option
@@ -426,7 +422,7 @@ let mk_tactic_interpretation_4 :
                                                           er
                                                          in
                                                       let uu____1177 =
-                                                        FStar_TypeChecker_Normalize.psc_range
+                                                        FStar_TypeChecker_Cfg.psc_range
                                                           psc
                                                          in
                                                       FStar_Syntax_Embeddings.embed
@@ -457,7 +453,7 @@ let mk_tactic_interpretation_5 :
                 'e FStar_Syntax_Embeddings.embedding ->
                   'r FStar_Syntax_Embeddings.embedding ->
                     FStar_Ident.lid ->
-                      FStar_TypeChecker_Normalize.psc ->
+                      FStar_TypeChecker_Cfg.psc ->
                         FStar_Syntax_Syntax.args ->
                           FStar_Syntax_Syntax.term
                             FStar_Pervasives_Native.option
@@ -540,7 +536,7 @@ let mk_tactic_interpretation_5 :
                                                                  er
                                                                 in
                                                              let uu____1511 =
-                                                               FStar_TypeChecker_Normalize.psc_range
+                                                               FStar_TypeChecker_Cfg.psc_range
                                                                  psc
                                                                 in
                                                              FStar_Syntax_Embeddings.embed
@@ -573,7 +569,7 @@ let mk_tactic_interpretation_6 :
                   'f FStar_Syntax_Embeddings.embedding ->
                     'r FStar_Syntax_Embeddings.embedding ->
                       FStar_Ident.lid ->
-                        FStar_TypeChecker_Normalize.psc ->
+                        FStar_TypeChecker_Cfg.psc ->
                           FStar_Syntax_Syntax.args ->
                             FStar_Syntax_Syntax.term
                               FStar_Pervasives_Native.option
@@ -670,7 +666,7 @@ let mk_tactic_interpretation_6 :
                                                                     er  in
                                                                     let uu____1888
                                                                     =
-                                                                    FStar_TypeChecker_Normalize.psc_range
+                                                                    FStar_TypeChecker_Cfg.psc_range
                                                                     psc  in
                                                                     FStar_Syntax_Embeddings.embed
                                                                     uu____1883
@@ -692,59 +688,68 @@ let mk_tactic_interpretation_6 :
   
 let (step_from_native_step :
   FStar_Tactics_Native.native_primitive_step ->
-    FStar_TypeChecker_Normalize.primitive_step)
+    FStar_TypeChecker_Cfg.primitive_step)
   =
   fun s  ->
+    let uu____1902 =
+      let uu____1909 = FStar_Ident.lid_of_str "_"  in
+      FStar_TypeChecker_NBETerm.dummy_interp uu____1909  in
     {
-      FStar_TypeChecker_Normalize.name = (s.FStar_Tactics_Native.name);
-      FStar_TypeChecker_Normalize.arity = (s.FStar_Tactics_Native.arity);
-      FStar_TypeChecker_Normalize.auto_reflect =
+      FStar_TypeChecker_Cfg.name = (s.FStar_Tactics_Native.name);
+      FStar_TypeChecker_Cfg.arity = (s.FStar_Tactics_Native.arity);
+      FStar_TypeChecker_Cfg.univ_arity = (Prims.parse_int "0");
+      FStar_TypeChecker_Cfg.auto_reflect =
         (FStar_Pervasives_Native.Some
            (s.FStar_Tactics_Native.arity - (Prims.parse_int "1")));
-      FStar_TypeChecker_Normalize.strong_reduction_ok =
+      FStar_TypeChecker_Cfg.strong_reduction_ok =
         (s.FStar_Tactics_Native.strong_reduction_ok);
-      FStar_TypeChecker_Normalize.requires_binder_substitution = false;
-      FStar_TypeChecker_Normalize.interpretation =
-        (fun psc  -> fun args  -> s.FStar_Tactics_Native.tactic psc args)
+      FStar_TypeChecker_Cfg.requires_binder_substitution = false;
+      FStar_TypeChecker_Cfg.interpretation =
+        (fun psc  -> fun args  -> s.FStar_Tactics_Native.tactic psc args);
+      FStar_TypeChecker_Cfg.interpretation_nbe = uu____1902
     }
   
 let (mk :
   Prims.string ->
     Prims.int ->
       (FStar_Ident.lid ->
-         FStar_TypeChecker_Normalize.psc ->
+         FStar_TypeChecker_Cfg.psc ->
            FStar_Syntax_Syntax.args ->
              FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
-        -> FStar_TypeChecker_Normalize.primitive_step)
+        -> FStar_TypeChecker_Cfg.primitive_step)
   =
   fun nm  ->
     fun arity  ->
       fun interpretation  ->
         let nm1 = FStar_Tactics_Embedding.fstar_tactics_lid' ["Builtins"; nm]
            in
+        let uu____1949 =
+          let uu____1956 = FStar_Ident.lid_of_str "_"  in
+          FStar_TypeChecker_NBETerm.dummy_interp uu____1956  in
         {
-          FStar_TypeChecker_Normalize.name = nm1;
-          FStar_TypeChecker_Normalize.arity = arity;
-          FStar_TypeChecker_Normalize.auto_reflect =
+          FStar_TypeChecker_Cfg.name = nm1;
+          FStar_TypeChecker_Cfg.arity = arity;
+          FStar_TypeChecker_Cfg.univ_arity = (Prims.parse_int "0");
+          FStar_TypeChecker_Cfg.auto_reflect =
             (FStar_Pervasives_Native.Some (arity - (Prims.parse_int "1")));
-          FStar_TypeChecker_Normalize.strong_reduction_ok = false;
-          FStar_TypeChecker_Normalize.requires_binder_substitution = true;
-          FStar_TypeChecker_Normalize.interpretation =
-            (fun psc  -> fun args  -> interpretation nm1 psc args)
+          FStar_TypeChecker_Cfg.strong_reduction_ok = false;
+          FStar_TypeChecker_Cfg.requires_binder_substitution = true;
+          FStar_TypeChecker_Cfg.interpretation =
+            (fun psc  -> fun args  -> interpretation nm1 psc args);
+          FStar_TypeChecker_Cfg.interpretation_nbe = uu____1949
         }
   
 let (native_tactics : FStar_Tactics_Native.native_primitive_step Prims.list)
   = FStar_Tactics_Native.list_all () 
-let (native_tactics_steps :
-  FStar_TypeChecker_Normalize.primitive_step Prims.list) =
-  FStar_List.map step_from_native_step native_tactics 
+let (native_tactics_steps : FStar_TypeChecker_Cfg.primitive_step Prims.list)
+  = FStar_List.map step_from_native_step native_tactics 
 let mktac1 :
   'a 'r .
     Prims.string ->
       ('a -> 'r FStar_Tactics_Basic.tac) ->
         'a FStar_Syntax_Embeddings.embedding ->
           'r FStar_Syntax_Embeddings.embedding ->
-            FStar_TypeChecker_Normalize.primitive_step
+            FStar_TypeChecker_Cfg.primitive_step
   =
   fun name  ->
     fun f  ->
@@ -760,7 +765,7 @@ let mktac2 :
         'a FStar_Syntax_Embeddings.embedding ->
           'b FStar_Syntax_Embeddings.embedding ->
             'r FStar_Syntax_Embeddings.embedding ->
-              FStar_TypeChecker_Normalize.primitive_step
+              FStar_TypeChecker_Cfg.primitive_step
   =
   fun name  ->
     fun f  ->
@@ -778,7 +783,7 @@ let mktac3 :
           'b FStar_Syntax_Embeddings.embedding ->
             'c FStar_Syntax_Embeddings.embedding ->
               'r FStar_Syntax_Embeddings.embedding ->
-                FStar_TypeChecker_Normalize.primitive_step
+                FStar_TypeChecker_Cfg.primitive_step
   =
   fun name  ->
     fun f  ->
@@ -799,7 +804,7 @@ let mktac5 :
               'd FStar_Syntax_Embeddings.embedding ->
                 'e FStar_Syntax_Embeddings.embedding ->
                   'r FStar_Syntax_Embeddings.embedding ->
-                    FStar_TypeChecker_Normalize.primitive_step
+                    FStar_TypeChecker_Cfg.primitive_step
   =
   fun name  ->
     fun f  ->

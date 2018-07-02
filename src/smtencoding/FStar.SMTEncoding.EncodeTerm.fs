@@ -96,10 +96,10 @@ let head_redex env t =
 
 let whnf env t =
     if head_normal env t then t
-    else N.normalize [N.Beta; N.Weak; N.HNF; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
-                      N.Eager_unfolding; N.EraseUniverses] env.tcenv t
-let norm env t = N.normalize [N.Beta; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
-                              N.Eager_unfolding; N.EraseUniverses] env.tcenv t
+    else N.normalize [Env.Beta; Env.Weak; Env.HNF; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
+                      Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
+let norm env t = N.normalize [Env.Beta; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
+                              Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
 
 let trivial_post t : Syntax.term =
     U.abs [null_binder t]
@@ -181,7 +181,7 @@ let is_an_eta_expansion env vars body =
 let check_pattern_vars env vars pats =
     let pats =
         pats |> List.map (fun (x, _) ->
-        N.normalize [N.Beta;N.AllowUnboundUniverses;N.EraseUniverses] env.tcenv x)
+        N.normalize [Env.Beta;Env.AllowUnboundUniverses;Env.EraseUniverses] env.tcenv x)
     in
     match pats with
     | [] -> ()
@@ -699,7 +699,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Tm_refine _ ->
-        let x, f = match N.normalize_refinement [N.Weak; N.HNF; N.EraseUniverses] env.tcenv t0 with
+        let x, f = match N.normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv t0 with
             | {n=Tm_refine(x, f)} ->
                let b, f = SS.open_term [x, None] f in
                fst (List.hd b), f
@@ -887,7 +887,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             match head_type with
             | None -> encode_partial_app None
             | Some head_type ->
-                let head_type = U.unrefine <| N.normalize_refinement [N.Weak; N.HNF; N.EraseUniverses] env.tcenv head_type in
+                let head_type = U.unrefine <| N.normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv head_type in
                 let formals, c = curried_arrow_formals_comp head_type in
                 begin
                 match head.n with

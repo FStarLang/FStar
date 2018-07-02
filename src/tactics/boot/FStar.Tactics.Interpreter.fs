@@ -20,7 +20,9 @@ module TcRel = FStar.TypeChecker.Rel
 module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module TcTerm = FStar.TypeChecker.TcTerm
+module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
+module Env = FStar.TypeChecker.Env
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.Tactics.Basic
@@ -31,6 +33,7 @@ open FStar.Reflection.Basic
 open FStar.Reflection.Interpreter
 module RD = FStar.Reflection.Data
 module RE = FStar.Reflection.Embeddings
+module NBE = FStar.TypeChecker.NBETerm
 open FStar.Tactics.Native
 open FStar.Tactics.InterpFuns
 
@@ -45,23 +48,26 @@ and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<
     mk_emb (fun _ _ -> failwith "Impossible: embedding tactic (1)?")
            (fun w t -> unembed_tactic_1 ea er t)
            S.t_unit // never used
-and primitive_steps () : list<N.primitive_step> =
+
+and primitive_steps () : list<Cfg.primitive_step> =
     let decr_depth_interp psc (args : args) =
         match args with
         | [(ps, _)] ->
             bind_opt (unembed E.e_proofstate ps) (fun ps ->
             let ps = set_ps_psc psc ps in
-            Some (embed E.e_proofstate (N.psc_range psc) (decr_depth ps)))
+            Some (embed E.e_proofstate (Cfg.psc_range psc) (decr_depth ps)))
 
         | _ -> failwith "Unexpected application of decr_depth"
     in
-    let decr_depth_step : N.primitive_step =
-        {N.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth";
-         N.arity = 1;
-         N.auto_reflect=None;
-         N.strong_reduction_ok = false;
-         N.requires_binder_substitution = false;
-         N.interpretation = decr_depth_interp
+    let decr_depth_step : Cfg.primitive_step =
+        {Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth";
+         Cfg.arity = 1;
+         Cfg.univ_arity=0; // Zoe : We might need to change that
+         Cfg.auto_reflect=None;
+         Cfg.strong_reduction_ok = false;
+         Cfg.requires_binder_substitution = false;
+         Cfg.interpretation = decr_depth_interp;
+         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
          }
     in
     let incr_depth_interp psc (args : args) =
@@ -69,16 +75,18 @@ and primitive_steps () : list<N.primitive_step> =
         | [(ps, _)] ->
             bind_opt (unembed E.e_proofstate ps) (fun ps ->
             let ps = set_ps_psc psc ps in
-            Some (embed E.e_proofstate (N.psc_range psc) (incr_depth ps)))
+            Some (embed E.e_proofstate (Cfg.psc_range psc) (incr_depth ps)))
         | _ -> failwith "Unexpected application of incr_depth"
     in
-    let incr_depth_step : N.primitive_step =
-        {N.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth";
-         N.arity = 1;
-         N.auto_reflect=None;
-         N.strong_reduction_ok = false;
-         N.requires_binder_substitution = false;
-         N.interpretation = incr_depth_interp
+    let incr_depth_step : Cfg.primitive_step =
+        {Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth";
+         Cfg.arity = 1;
+         Cfg.univ_arity=0; // Zoe : We might need to change that
+         Cfg.auto_reflect=None;
+         Cfg.strong_reduction_ok = false;
+         Cfg.requires_binder_substitution = false;
+         Cfg.interpretation = incr_depth_interp;
+         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
          }
     in
     let tracepoint_interp psc (args : args) =
@@ -96,7 +104,7 @@ and primitive_steps () : list<N.primitive_step> =
             bind_opt (unembed E.e_proofstate ps) (fun ps ->
             bind_opt (unembed e_range r) (fun r ->
             let ps' = set_proofstate_range ps r in
-            Some (embed E.e_proofstate (N.psc_range psc) ps')))
+            Some (embed E.e_proofstate (Cfg.psc_range psc) ps')))
         | _ -> failwith "Unexpected application of set_proofstate_range"
     in
     let push_binder_interp psc (args:args) =
@@ -108,34 +116,40 @@ and primitive_steps () : list<N.primitive_step> =
             Some (embed RE.e_env env_t.pos env)))
         | _ -> failwith "Unexpected application of push_binder"
     in
-    let set_proofstate_range_step : N.primitive_step =
+    let set_proofstate_range_step : Cfg.primitive_step =
         let nm = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" in
-        {N.name = nm;
-         N.arity = 2;
-         N.auto_reflect=None;
-         N.strong_reduction_ok = false;
-         N.requires_binder_substitution = false;
-         N.interpretation = set_proofstate_range_interp
+        {Cfg.name = nm;
+         Cfg.arity = 2;
+         Cfg.univ_arity=0; // Zoe : We might need to change that
+         Cfg.auto_reflect=None;
+         Cfg.strong_reduction_ok = false;
+         Cfg.requires_binder_substitution = false;
+         Cfg.interpretation = set_proofstate_range_interp;
+         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
         }
     in
-    let tracepoint_step : N.primitive_step =
+    let tracepoint_step : Cfg.primitive_step =
         let nm = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" in
-        {N.name = nm;
-         N.arity = 1;
-         N.auto_reflect=None;
-         N.strong_reduction_ok = false;
-         N.requires_binder_substitution = true;
-         N.interpretation = tracepoint_interp
+        {Cfg.name = nm;
+         Cfg.arity = 1;
+         Cfg.univ_arity=0; // Zoe : We might need to change that
+         Cfg.auto_reflect=None;
+         Cfg.strong_reduction_ok = false;
+         Cfg.requires_binder_substitution = true;
+         Cfg.interpretation = tracepoint_interp;
+         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
         }
     in
-    let push_binder_step : N.primitive_step =
+    let push_binder_step : Cfg.primitive_step =
        let nm = E.fstar_tactics_lid' ["Builtins";"push_binder"] in
-        {N.name = nm;
-         N.arity = 2;
-         N.auto_reflect=None;
-         N.strong_reduction_ok = false;
-         N.requires_binder_substitution = true;
-         N.interpretation = push_binder_interp
+        {Cfg.name = nm;
+         Cfg.arity = 2;
+         Cfg.univ_arity=0; // Zoe : We might need to change that
+         Cfg.auto_reflect=None;
+         Cfg.strong_reduction_ok = false;
+         Cfg.requires_binder_substitution = true;
+         Cfg.interpretation = push_binder_interp;
+         Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
         }
     in
     [
@@ -250,7 +264,13 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) : tac<'b> = //
     // normal form due to primitive steps. Consider `norm (steps 2)`: we need to normalize
     // `steps 2` before caling norm, or it will fail to unembed the set of steps. Further,
     // at this moment at least, the normalizer will not call into any step of arity > 1.
-    let steps = [N.Weak; N.Reify; N.UnfoldUntil delta_constant; N.UnfoldTac; N.Primops; N.Unascribe] in
+    let steps = [Env.Weak; Env.Reify; Env.UnfoldUntil delta_constant; Env.UnfoldTac; Env.Primops; Env.Unascribe] in
+
+    // Maybe use NBE if the user asked for it
+    let steps = if Options.tactics_nbe ()
+                then Env.NBE :: steps
+                else steps
+    in
     if proof_state.tac_verb_dbg then
         BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
     let result = N.normalize_with_primitive_steps (primitive_steps ()) steps proof_state.main_context tm in
@@ -329,10 +349,7 @@ let run_tactic_on_typ
                             else ())
                   (ps.goals @ ps.smt_goals);
 
-        // Check that all implicits are instantiated. This will also typecheck
-        // the implicits, so make it do a lax check because we certainly
-        // do not want to repeat all of the reasoning that took place in tactics.
-        // It would also most likely fail.
+        // Check that all implicits were instantiated
         if !tacdbg then
             BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
                                                                     (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
@@ -340,19 +357,27 @@ let run_tactic_on_typ
         let g = {Env.trivial_guard with Env.implicits=ps.all_implicits} in
         let g = TcRel.solve_deferred_constraints env g in
         if !tacdbg then
-            BU.print1 "Checked (1) implicits: %s\n" (FStar.Common.string_of_list
-                                                                    (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                                                    ps.all_implicits);
+            BU.print2 "Checked %s implicits (1): %s\n"
+                        (string_of_int (List.length ps.all_implicits))
+                        (FStar.Common.string_of_list
+                                (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
+                                ps.all_implicits);
         let g = TcRel.resolve_implicits_tac env g in
         if !tacdbg then
-            BU.print1 "Checked (2) implicits: %s\n" (FStar.Common.string_of_list
-                                                                    (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                                                    ps.all_implicits);
+            BU.print2 "Checked %s implicits (2): %s\n"
+                        (string_of_int (List.length ps.all_implicits))
+                        (FStar.Common.string_of_list
+                                (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
+                                ps.all_implicits);
         report_implicits ps g.implicits;
+        // /implicits
+
+        if !tacdbg then
+            dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the finish line";
         (ps.goals@ps.smt_goals, w)
 
     | Failed (s, ps) ->
-        dump_proofstate (subst_proof_state (N.psc_subst ps.psc) ps) "at the time of failure";
+        dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the time of failure";
         Err.raise_error (Err.Fatal_UserTacticFailure, (BU.format1 "user tactic failed: %s" s)) ps.entry_range
 
 // Polarity
@@ -532,7 +557,7 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         Dual ({t with n = tn}, p', gs@gs')
 
 let getprop (e:env) (t:term) : option<term> =
-    let tn = N.normalize [N.Weak; N.HNF; N.UnfoldUntil delta_constant] e t in
+    let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
     U.un_squash tn
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.optionstate)> =
@@ -587,11 +612,15 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     List.iter (fun g ->
         match getprop (goal_env g) (goal_type g) with
         | Some vc ->
+            begin
+            if !tacdbg then
+              BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
             let guard = { guard_f = FStar.TypeChecker.Common.NonTrivial vc
                         ; deferred = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
             TcRel.force_trivial_guard (goal_env g) guard
+            end
         | None ->
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos) gs;
     w
@@ -609,8 +638,8 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
         then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") typ.pos;
 
     // Fully normalize the witness
-    let w = N.normalize [N.Weak; N.HNF; N.UnfoldUntil delta_constant;
-                         N.Primops; N.Unascribe; N.Unmeta] env w in
+    let w = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant;
+                         Env.Primops; Env.Unascribe; Env.Unmeta] env w in
 
     if !tacdbg then
       BU.print1 "splice: got witness = %s\n" (Print.term_to_string w);

@@ -963,6 +963,12 @@ let measure_execution_time tag f =
   print2 "Execution time of %s: %s ms\n" tag (string_of_float (1000.0 *. (Sys.time() -. t)));
   retv
 
+let return_execution_time f =
+  let t1 = Sys.time () in
+  let retv = f () in
+  let t2 = Sys.time () in
+  (retv, 1000.0 *. (t2 -. t1))
+
 (** Hints. *)
 type hint = {
     hint_name:string;

@@ -191,6 +191,7 @@ let (steps_reify : FStar_Ident.lident) = psnconst "reify_"
 let (steps_unfoldonly : FStar_Ident.lident) = psnconst "delta_only" 
 let (steps_unfoldfully : FStar_Ident.lident) = psnconst "delta_fully" 
 let (steps_unfoldattr : FStar_Ident.lident) = psnconst "delta_attr" 
+let (steps_nbe : FStar_Ident.lident) = psnconst "nbe" 
 let (deprecated_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "deprecated"] 
 let (inline_let_attr : FStar_Ident.lident) =

@@ -3104,7 +3104,10 @@ let catch_errors :
     let old = FStar_ST.op_Bang current_handler  in
     FStar_ST.op_Colon_Equals current_handler newh;
     (let r =
-       try let r = f ()  in FStar_Pervasives_Native.Some r
+       try
+         (fun uu___82_5493  ->
+            match () with
+            | () -> let r = f ()  in FStar_Pervasives_Native.Some r) ()
        with | ex -> (err_exn ex; FStar_Pervasives_Native.None)  in
      let errs = newh.eh_report ()  in
      FStar_ST.op_Colon_Equals current_handler old; (errs, r))

@@ -1,6 +1,7 @@
 #light "off"
 module FStar.Reflection.Interpreter
 
+module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 open FStar.Reflection.Data
 open FStar.Reflection.Basic
@@ -14,6 +15,8 @@ open FStar.Syntax.Embeddings
 module Print = FStar.Syntax.Print
 module BU = FStar.Util
 module E = FStar.Reflection.Embeddings
+module NBE = FStar.TypeChecker.NBETerm
+module Ident = FStar.Ident
 
 (* We use `try_unembed` instead of `unembedding`, since we very well
  * might fail to unembed during the *previous* normalization stages
@@ -38,21 +41,23 @@ let int2 (m:lid) (f:'a -> 'b -> 'r) (ea:embedding<'a>) (eb:embedding<'b>) (er:em
         Some (embed er r (f a b))))
     | _ -> None
 
-let reflection_primops : list<N.primitive_step> =
+let reflection_primops : list<Cfg.primitive_step> =
     let mklid (nm : string) : lid = fstar_refl_basic_lid nm in
-    let mk (l : lid) (arity : int) (fn : Range.range -> args -> option<term>) : N.primitive_step =
+    let mk (l : lid) (arity : int) (fn : Range.range -> args -> option<term>) : Cfg.primitive_step =
         {
-            N.name = l;
-            N.arity = arity;
-            N.auto_reflect = None;
-            N.strong_reduction_ok = false;
-            N.requires_binder_substitution = false;
-            N.interpretation = (fun ctxt args -> fn (N.psc_range ctxt) args)
+            Cfg.name = l;
+            Cfg.arity = arity;
+            Cfg.univ_arity = 0; // Zoe : We might need to change that
+            Cfg.auto_reflect = None;
+            Cfg.strong_reduction_ok = false;
+            Cfg.requires_binder_substitution = false;
+            Cfg.interpretation = (fun ctxt args -> fn (Cfg.psc_range ctxt) args);
+            Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
         } in
     // GM: we need the annotation, otherwise F* will try to unify the types
     // for all mk1 calls. I guess a consequence that we don't generalize inner lets
-    let mk1 nm (f : 'a -> 'b)       u1 em    : N.primitive_step = let l = mklid nm in mk l 1 (int1 l f u1 em) in
-    let mk2 nm (f : 'a -> 'b -> 'c) u1 u2 em : N.primitive_step = let l = mklid nm in mk l 2 (int2 l f u1 u2 em) in
+    let mk1 nm (f : 'a -> 'b)       u1 em    : Cfg.primitive_step = let l = mklid nm in mk l 1 (int1 l f u1 em) in
+    let mk2 nm (f : 'a -> 'b -> 'c) u1 u2 em : Cfg.primitive_step = let l = mklid nm in mk l 2 (int2 l f u1 u2 em) in
     [
         mk1 "inspect_ln" inspect_ln E.e_term E.e_term_view;
         mk1 "pack_ln"    pack_ln    E.e_term_view E.e_term;

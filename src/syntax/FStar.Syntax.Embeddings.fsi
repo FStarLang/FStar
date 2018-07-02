@@ -21,6 +21,7 @@ type norm_step =
     | UnfoldOnly of list<string>
     | UnfoldFully of list<string>
     | UnfoldAttr of attribute
+    | NBE
 
 val steps_Simpl         : term
 val steps_Weak          : term
@@ -33,6 +34,7 @@ val steps_Reify         : term
 val steps_UnfoldOnly    : term
 val steps_UnfoldFully   : term
 val steps_UnfoldAttr    : term
+val steps_NBE           : term
 
 (*
  * Unmbedding functions return an option because they might fail
