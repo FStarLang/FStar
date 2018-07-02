@@ -157,7 +157,7 @@ let with_captured_errors' :
     fun sigint_handler  ->
       fun f  ->
         try
-          (fun uu___444_203  ->
+          (fun uu___449_203  ->
              match () with
              | () ->
                  FStar_Util.with_sigint_handler sigint_handler
@@ -1413,7 +1413,7 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
       let uu____3368 = assoc1 "query" "query-id" request  in
       FStar_All.pipe_right uu____3368 js_str  in
     try
-      (fun uu___450_3375  ->
+      (fun uu___455_3375  ->
          match () with
          | () ->
              let query =
@@ -1575,7 +1575,7 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
 let (deserialize_interactive_query : FStar_Util.json -> query) =
   fun js_query  ->
     try
-      (fun uu___452_3617  ->
+      (fun uu___457_3617  ->
          match () with | () -> unpack_interactive_query js_query) ()
     with | InvalidQuery msg -> { qq = (ProtocolViolation msg); qid = "?" }
     | UnexpectedJsonType (expected,got) -> wrap_js_failure "?" expected got
@@ -3156,7 +3156,7 @@ let run_and_rewind :
         let st1 = push_repl "run_and_rewind" FullCheck Noop st  in
         let results =
           try
-            (fun uu___462_7723  ->
+            (fun uu___467_7723  ->
                match () with
                | () ->
                    FStar_Util.with_sigint_handler FStar_Util.sigint_raise
@@ -3271,7 +3271,7 @@ let run_with_parsed_and_tc_term :
                      then aux ()
                      else
                        (try
-                          (fun uu___464_8141  -> match () with | () -> aux ())
+                          (fun uu___469_8141  -> match () with | () -> aux ())
                             ()
                         with
                         | e ->
@@ -3555,7 +3555,7 @@ let run_search :
         Prims.strcat (if term.st_negate then "-" else "") uu____8947  in
       let results =
         try
-          (fun uu___466_8971  ->
+          (fun uu___471_8971  ->
              match () with
              | () ->
                  let terms = parse1 search_str  in
@@ -3824,7 +3824,7 @@ let (interactive_mode : Prims.string -> unit) =
      then interactive_mode' init1
      else
        (try
-          (fun uu___468_9742  ->
+          (fun uu___473_9742  ->
              match () with | () -> interactive_mode' init1) ()
         with
         | e ->

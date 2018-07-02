@@ -930,7 +930,7 @@ let (find : env -> Prims.string -> Prims.int) =
   fun env  ->
     fun x  ->
       try
-        (fun uu___274_3309  ->
+        (fun uu___279_3309  ->
            match () with
            | () -> FStar_List.index (fun name  -> name.pretty = x) env.names)
           ()
@@ -944,7 +944,7 @@ let (find_t : env -> Prims.string -> Prims.int) =
   fun env  ->
     fun x  ->
       try
-        (fun uu___276_3329  ->
+        (fun uu___281_3329  ->
            match () with
            | () -> FStar_List.index (fun name  -> name = x) env.names_t) ()
       with
@@ -997,7 +997,7 @@ let rec (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
                    FStar_Extraction_ML_Syntax.string_of_mlpath path
                 in
              try
-               (fun uu___278_3715  ->
+               (fun uu___283_3715  ->
                   match () with
                   | () ->
                       (FStar_Util.print1
@@ -1187,7 +1187,7 @@ and (translate_let :
                          FStar_Pervasives_Native.None))
                    else
                      (try
-                        (fun uu___280_3997  ->
+                        (fun uu___285_3997  ->
                            match () with
                            | () ->
                                let body1 = translate_expr env3 body  in
@@ -1303,7 +1303,7 @@ and (translate_let :
                          FStar_Pervasives_Native.None))
                    else
                      (try
-                        (fun uu___280_4202  ->
+                        (fun uu___285_4202  ->
                            match () with
                            | () ->
                                let body1 = translate_expr env3 body  in
@@ -1355,7 +1355,7 @@ and (translate_let :
                let t1 = translate_type env1 t  in
                let name1 = ((env1.module_name), name)  in
                try
-                 (fun uu___282_4281  ->
+                 (fun uu___287_4281  ->
                     match () with
                     | () ->
                         let expr1 = translate_expr env1 expr  in

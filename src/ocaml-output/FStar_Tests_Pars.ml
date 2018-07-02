@@ -299,7 +299,7 @@ let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
 let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s  ->
     try
-      (fun uu___409_327  ->
+      (fun uu___414_327  ->
          match () with
          | () ->
              let tcenv = init ()  in
@@ -440,13 +440,13 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
        let uu____425 = FStar_Errors.report_all ()  in
        FStar_All.pipe_right uu____425 (fun a236  -> ())  in
      try
-       (fun uu___412_433  ->
+       (fun uu___417_433  ->
           match () with
           | () ->
               let tcenv = init ()  in
               let frag = frag_of_text s  in
               (try
-                 (fun uu___414_445  ->
+                 (fun uu___419_445  ->
                     match () with
                     | () ->
                         let uu____446 =
