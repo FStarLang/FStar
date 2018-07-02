@@ -5,21 +5,16 @@ module T = FStar.Tactics
 module U8 = FStar.UInt8
 
 inline_for_extraction
-let zero : nat = 0
-
-inline_for_extraction
-let succ (n: nat) = n + 1
-
-inline_for_extraction
 let mk_u8 (n: nat { n < 256 } ) : Tot U8.t = U8.uint_to_t n
 
-let rec mk_tenum_branches (ty: T.term) (v: T.term) (accu: list T.branch) (l: list T.name) : T.Tac (list T.branch) =
+let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.branch) (l: list T.name) : T.Tac (list T.branch) =
   match l with
   | [] -> accu
-  | n :: q -> 
-    let v' = T.mk_app (`(succ)) [v, T.Q_Explicit] in
+  | n :: q ->
+    let v' = v + 1 in
     let env = T.cur_env () in
-    let v = T.norm_term [delta; primops] (T.mk_app (`(mk_u8)) [v, T.Q_Explicit]) in
+    let v = T.mk_app (`(mk_u8)) [pack_nat v, T.Q_Explicit] in
+    let v = T.pack (T.Tv_AscribedT v vty None) in
     let pat =
       T.Pat_Cons (T.pack_fv n) []
     in
@@ -31,7 +26,7 @@ let rec mk_tenum_branches (ty: T.term) (v: T.term) (accu: list T.branch) (l: lis
       let pat = T.Pat_Var (T.bv_of_binder b) in
       let br = (pat, v) in
       accu' `List.Tot.append` [br]
-    | _ -> mk_tenum_branches ty v' accu' q
+    | _ -> mk_tenum_branches ty vty v' accu' q
     end
 
 let mk_function (t: T.term) (l: list T.branch) : T.Tac T.term =
@@ -56,20 +51,16 @@ let get_inductive_constructors (t: T.term) : T.Tac (list T.name) =
     end
   | _ -> T.fail "Not a free variable"
 
-let gen_synth' (t: T.term) : T.Tac T.term =
+let gen_synth' (t: T.term) (vt: T.term) : T.Tac T.term =
   let cts = get_inductive_constructors t in
   T.print ("Inductive type with " ^ string_of_int (List.Tot.length cts));
-  let f = mk_function t (mk_tenum_branches t (`(zero)) [] cts) in
+  let f = mk_function t (mk_tenum_branches t vt 0 [] cts) in
   T.print (T.term_to_string f);
   f
 
 let gen_synth (t: T.term) : T.Tac unit =
-  T.exact_guard (gen_synth' t);
+  T.exact_guard (gen_synth' t (`U8.t));
   tconclude ()
-
-type test = | TA | TB | TC | TD
-
-let f : test -> Tot U8.t = T.synth_by_tactic (fun () -> gen_synth (`(test)))
 
 let pat_of_term (t: T.term) : T.Tac T.pattern =
   let t = T.norm_term_env (T.cur_env ()) [delta; iota; primops] t in
@@ -84,30 +75,7 @@ let term_of_pat (t: T.pattern) : T.Tac (option T.term) =
   | T.Pat_Cons v [] -> Some (T.pack (T.Tv_FVar v))
   | _ -> None
 
-(*
-let rec invert_branches (ty: T.term) (last: option T.pattern) (accu: list T.branch) (l: list T.branch) : T.Tac (list T.branch) =
-  match l with
-  | [] ->
-    begin match last with
-    | None -> accu
-    | Some p ->
-      begin match term_of_pat p with
-      | Some v ->
-        let b = T.fresh_binder ty in
-        accu `List.Tot.append` [(T.Pat_Var (T.bv_of_binder b), v)]
-      | _ -> accu
-      end
-    end
-  | (p, t) :: q ->
-    begin match term_of_pat p with
-    | Some v ->
-      let p' = pat_of_term t in
-      invert_branches ty (Some p) ((p', v) :: accu) q
-    | _ -> invert_branches ty last accu q
-    end
-*)
-
-let rec invert_branches_with_cascade (enum_ty val_ty: T.term) (x: T.term) (accu: option T.term) (l: list T.branch) : T.Tac T.term =
+let rec invert_branches_with_cascade (enum_ty: T.term) (val_eq: T.term) (x: T.term) (accu: option T.term) (l: list T.branch) : T.Tac T.term =
   match l with
   | [] ->
     begin match accu with
@@ -120,19 +88,18 @@ let rec invert_branches_with_cascade (enum_ty val_ty: T.term) (x: T.term) (accu:
       let accu' = match accu with
       | None -> Some v
       | Some ac ->
-        let scrut = T.mk_app (`(op_Equality)) [
-          (val_ty, T.Q_Implicit);
+        let scrut = T.mk_app val_eq [
           (x, T.Q_Explicit);
           (t, T.Q_Explicit);
         ]
         in
         Some (mk_if scrut enum_ty v ac)
       in
-      invert_branches_with_cascade enum_ty val_ty x accu' q
-    | _ -> invert_branches_with_cascade enum_ty val_ty x accu q
+      invert_branches_with_cascade enum_ty val_eq x accu' q
+    | _ -> invert_branches_with_cascade enum_ty val_eq x accu q
     end
 
-let invert_function' (enum_ty val_ty: T.term) (f: T.term) : T.Tac T.term =
+let invert_function' (enum_ty val_ty: T.term) (teq: T.term) (f: T.term) : T.Tac T.term =
   match T.inspect f with
   | T.Tv_Abs b body ->
     begin match T.inspect body with
@@ -141,13 +108,13 @@ let invert_function' (enum_ty val_ty: T.term) (f: T.term) : T.Tac T.term =
       then
         let bx = T.fresh_binder val_ty in
         let x = T.pack (T.Tv_Var (T.bv_of_binder bx)) in
-        T.pack (T.Tv_Abs bx (invert_branches_with_cascade enum_ty val_ty x None br))
+        T.pack (T.Tv_Abs bx (invert_branches_with_cascade enum_ty teq x None br))
       else T.fail "Not a function destructing on its argument"
     | _ -> T.fail "Not a match"
     end
   | _ -> T.fail "Not a function"
 
-let invert_function (enum_ty val_ty: T.term) (f: T.term) : T.Tac unit =
+let invert_function (enum_ty val_ty: T.term) (teq: T.term) (f: T.term) : T.Tac unit =
   T.set_guard_policy T.Goal;
   match T.inspect f with
   | T.Tv_FVar w ->
@@ -159,7 +126,7 @@ let invert_function (enum_ty val_ty: T.term) (f: T.term) : T.Tac unit =
     else begin
       match T.inspect_sigelt (Some?.v s) with
       | T.Sg_Let _ _ _ _ def ->
-        let t = invert_function' enum_ty val_ty def in
+        let t = invert_function' enum_ty val_ty teq def in
         T.print (T.term_to_string t);
         T.exact_guard t;
         tconclude ()
@@ -167,27 +134,8 @@ let invert_function (enum_ty val_ty: T.term) (f: T.term) : T.Tac unit =
     end
   | _ -> T.fail "Not a global variable"
 
-#set-options "--no_smt"
-
-let g : U8.t -> Tot test = T.synth_by_tactic (fun () -> invert_function (`(test)) (`(U8.t)) (`(f)))
-
-#reset-options
-
-let rec tlen (#a: Type) (l: list a) : T.Tac T.term =
-  match l with
-  | [] -> `(zero)
-  | _ :: q -> T.mk_app (`(succ)) [tlen q, T.Q_Explicit]
-
-let tenum_bound' (t: T.term) : T.Tac T.term =
-  let cts = get_inductive_constructors t in
-  let f = tlen cts in
-  f
-
-let tenum_bound (t: T.term) : T.Tac unit =
-  T.exact (tenum_bound' t)
-
 inline_for_extraction
-let bounded_u8 (b: nat) : Tot Type0 = (x: U8.t { U8.v x < b } )
+let bounded_u8 (b: nat) : Tot eqtype = (x: U8.t { U8.v x < b } )
 
 inline_for_extraction
 let bounded_fun (a: Type) (b: nat) : Tot Type =
@@ -211,47 +159,24 @@ let map_u8_to_bounded_u8
   let y' : bounded_u8 bound = f x in
   y'
 
+let tenum_bound_nat (t: T.term) : T.Tac nat =
+  let c = get_inductive_constructors t in
+  List.Tot.length c
 
+let tenum_bound' (t: T.term) : T.Tac T.term =
+  pack_nat (tenum_bound_nat t)
 
-(*
-let rec mk_bounded_tenum_branches (ty: T.term) (bounded: T.term) (v: T.term) (accu: list T.branch) (l: list T.name) : T.Tac (list T.branch) =
-  match l with
-  | [] -> accu
-  | n :: q -> 
-    let pat =
-      T.Pat_Cons (T.pack_fv n) []
-    in
-    let v' = T.mk_app (`(succ)) [v, T.Q_Explicit] in
-    let v = T.mk_app bounded [v, T.Q_Explicit] in
-    let br : T.branch = (pat, v) in
-    let accu' = br :: accu in
-    begin match q with
-    | [] ->
-      let b = T.fresh_binder ty in
-      let pat = T.Pat_Var (T.bv_of_binder b) in
-      let br = (pat, v) in
-      accu' `List.Tot.append` [br]
-    | _ -> mk_bounded_tenum_branches ty bounded v' accu' q
-    end
-
-inline_for_extraction
-let coerce_bounded (bound: nat) (x: nat { x < bound } ) : Tot (bounded_nat bound) = x
+let tenum_bound (t: T.term) : T.Tac unit =
+  T.exact (tenum_bound' t)
 
 let gen_synth_bounded (t: T.term) : T.Tac unit =
   T.set_guard_policy T.Goal;
   let bound = tenum_bound' t in
-  let bnd = T.mk_app (`(coerce_bounded)) [bound, T.Q_Explicit] in
-  let cts = get_inductive_constructors t in
-  let f = mk_function t (mk_bounded_tenum_branches t bnd (`(zero)) [] cts) in
-  T.exact_guard f;
+  let vt = T.mk_app (`bounded_u8) [bound, T.Q_Explicit] in
+  T.exact_guard (gen_synth' t vt);
   tconclude ()
 
-let test_bound : nat = T.synth_by_tactic (fun () -> tenum_bound (`(test)))
-
-let f' : test -> Tot (bounded_nat test_bound) =
-  T.synth_by_tactic (fun () -> gen_synth_bounded (`(test)))
-
-let g' : bounded_nat test_bound -> Tot test = T.synth_by_tactic (fun () -> invert_function (`(bounded_nat test_bound)) (`(f')))
+(*
 
 let pred_pre
   (bound: nat { bound > 0 } )

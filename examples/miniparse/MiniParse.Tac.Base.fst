@@ -3,6 +3,9 @@ module MiniParse.Tac.Base
 module T = FStar.Tactics
 module L = FStar.List.Tot
 
+let pack_nat (n: nat) : T.Tac T.term =
+  T.pack (T.Tv_Const (T.C_Int n))
+
 let rec app_head_rev_tail (t: T.term) :
   T.Tac (T.term * list T.argv)
 =
