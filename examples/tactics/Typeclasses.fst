@@ -4,6 +4,8 @@ open FStar.Tactics
 module T = FStar.Tactics
 open FStar.Tactics.Typeclasses
 
+#set-options "--tcnorm true"
+
 (* An experiment on typeclasses using metaprogrammed arguments. *)
 
 (*
