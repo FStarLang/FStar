@@ -972,6 +972,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                 let goal = bnorm_goal ({ goal with goal_ctx_uvar = ctx_uvar }) in
                 ret [goal]
             | _ ->
+                mlog (fun () -> BU.print2 "apply_lemma: arg %s unified to (%s)\n"
+                                    (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
+                                    (Print.term_to_string term)) (fun () ->
                 let env = {(goal_env goal) with gamma=ctx_uvar.ctx_uvar_gamma} in
                 let g_typ =
                   // NS:01/24: use the fast path instead, knowing that term is at least well-typed
@@ -986,11 +989,11 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                                                                             (Print.term_to_string term)
                         else "apply_lemma solved arg")
                         (goal_env goal) g_typ) (fun () ->
-                ret []))
+                ret [])))
             ) (fun sub_goals ->
         let sub_goals = List.flatten sub_goals in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
-        // it will be instantiated later. TODO: maybe keep and check later?
+        // it will be instantiated later. It is tracked anyway in ps.implicits
         let rec filter' (f : 'a -> list<'a> -> bool) (xs : list<'a>) : list<'a> =
              match xs with
              | [] -> []
