@@ -417,5 +417,7 @@ let main : 'Auu____760 . unit -> 'Auu____760 =
                      else ());
                     cleanup ();
                     FStar_All.exit (Prims.parse_int "0"))))) ()
-    with | e -> (handle_error e; FStar_All.exit (Prims.parse_int "1"))
+    with
+    | uu___458_793 ->
+        (handle_error uu___458_793; FStar_All.exit (Prims.parse_int "1"))
   

@@ -9,23 +9,23 @@ let (has_cygpath : Prims.bool) =
                FStar_Pervasives_Native.None
               in
            (FStar_Util.trim_string t_out) = "/usr/bin/cygpath") ()
-  with | uu____8 -> false 
+  with | uu___60_6 -> false 
 let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
   let cache = FStar_Util.smap_create (Prims.parse_int "20")  in
   fun s  ->
     if has_cygpath && (FStar_Util.starts_with s "/")
     then
-      let uu____17 = FStar_Util.smap_try_find cache s  in
-      match uu____17 with
+      let uu____15 = FStar_Util.smap_try_find cache s  in
+      match uu____15 with
       | FStar_Pervasives_Native.Some s1 -> s1
       | FStar_Pervasives_Native.None  ->
           let label = "try_convert_file_name_to_mixed"  in
           let out =
-            let uu____23 =
+            let uu____21 =
               FStar_Util.run_process label "cygpath" ["-m"; s]
                 FStar_Pervasives_Native.None
                in
-            FStar_All.pipe_right uu____23 FStar_Util.trim_string  in
+            FStar_All.pipe_right uu____21 FStar_Util.trim_string  in
           (FStar_Util.smap_add cache s out; out)
     else s
   
@@ -39,10 +39,10 @@ let snapshot :
     fun stackref  ->
       fun arg  ->
         FStar_Util.atomically
-          (fun uu____102  ->
+          (fun uu____100  ->
              let len =
-               let uu____104 = FStar_ST.op_Bang stackref  in
-               FStar_List.length uu____104  in
+               let uu____102 = FStar_ST.op_Bang stackref  in
+               FStar_List.length uu____102  in
              let arg' = push arg  in (len, arg'))
   
 let rollback :
@@ -61,22 +61,22 @@ let rollback :
             if n1 = (Prims.parse_int "1")
             then pop ()
             else
-              ((let uu____232 = pop ()  in ());
+              ((let uu____230 = pop ()  in ());
                aux (n1 - (Prims.parse_int "1")))
            in
         let curdepth =
-          let uu____234 = FStar_ST.op_Bang stackref  in
-          FStar_List.length uu____234  in
+          let uu____232 = FStar_ST.op_Bang stackref  in
+          FStar_List.length uu____232  in
         let n1 =
           match depth with
           | FStar_Pervasives_Native.Some d -> curdepth - d
           | FStar_Pervasives_Native.None  -> (Prims.parse_int "1")  in
-        FStar_Util.atomically (fun uu____291  -> aux n1)
+        FStar_Util.atomically (fun uu____289  -> aux n1)
   
-let raise_failed_assertion : 'Auu____296 . Prims.string -> 'Auu____296 =
+let raise_failed_assertion : 'Auu____294 . Prims.string -> 'Auu____294 =
   fun msg  ->
-    let uu____302 = FStar_Util.format1 "Assertion failed: %s" msg  in
-    failwith uu____302
+    let uu____300 = FStar_Util.format1 "Assertion failed: %s" msg  in
+    failwith uu____300
   
 let (runtime_assert : Prims.bool -> Prims.string -> unit) =
   fun b  ->
@@ -87,10 +87,10 @@ let string_of_list :
   'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
   fun f  ->
     fun l  ->
-      let uu____340 =
-        let uu____341 =
-          let uu____342 = FStar_List.map f l  in
-          FStar_String.concat ", " uu____342  in
-        Prims.strcat uu____341 "]"  in
-      Prims.strcat "[" uu____340
+      let uu____338 =
+        let uu____339 =
+          let uu____340 = FStar_List.map f l  in
+          FStar_String.concat ", " uu____340  in
+        Prims.strcat uu____339 "]"  in
+      Prims.strcat "[" uu____338
   
