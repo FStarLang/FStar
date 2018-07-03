@@ -1953,17 +1953,19 @@ let modifies_union_loc_of_loc_intro
         aloc_disjoint #_ #(cls_union c) x' ll'
     )));
     assert (b_ == b);
-    assert (forall (x : aloc (c b)) . GSet.mem x (Ghost.reveal (Loc?.aux l)) ==>
-        (
-        let xr = x.region in
-        let xa = x.addr in
-        let xl : option (al b xr xa) = x.loc in
-        let xl' : option (aloc_union al xr xa) = if None? xl then None else Some (make_cls_union_aloc #al b (Some?.v xl)) in
-        let x' : aloc (cls_union c) = ALoc xr xa xl' in
-        GSet.mem x' (Ghost.reveal (Loc?.aux l')) /\
-        aloc_disjoint #_ #(cls_union c) x' ll' /\
-        aloc_disjoint #_ #(c b) x ll
-    ));
+    let f (x: aloc (c b)) : Lemma
+      (requires (GSet.mem x (Ghost.reveal (Loc?.aux l))))
+      (ensures (aloc_disjoint #_ #(c b) x ll))
+    = let xr = x.region in
+      let xa = x.addr in
+      let xl : option (al b xr xa) = x.loc in
+      let xl' : option (aloc_union al xr xa) = if None? xl then None else Some (make_cls_union_aloc #al b (Some?.v xl)) in
+      let x' : aloc (cls_union c) = ALoc xr xa xl' in
+      assert (GSet.mem x' (Ghost.reveal (Loc?.aux l')));
+      assert (aloc_disjoint #_ #(cls_union c) x' ll');
+      assert (aloc_disjoint #_ #(c b) x ll)
+    in
+    Classical.forall_intro (Classical.move_requires f);
     assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux l)) (GSet.singleton ll))
   )
 

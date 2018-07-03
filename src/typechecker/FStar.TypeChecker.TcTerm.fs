@@ -82,6 +82,8 @@ let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
          end in
     aux false kt
 
+let tcnorm = fvar Const.tcnorm_attr delta_constant None
+
 let push_binding env b =
   Env.push_bv env (fst b)
 
@@ -2027,6 +2029,17 @@ and check_top_level_let env e =
                  e2, c
          in
 
+         (* Unfold all @tcnorm subterms in the binding *)
+         if Env.debug env Options.Medium then
+                BU.print1 "Let binding BEFORE tcnorm: %s\n" (Print.term_to_string e1);
+         let e1 = if Options.tcnorm () then
+                    N.normalize [Env.UnfoldAttr tcnorm;
+                                 Env.Exclude Env.Beta; Env.Exclude Env.Zeta;
+                                 Env.NoFullNorm; Env.DoNotUnfoldPureLets] env e1
+                  else e1
+         in
+         if Env.debug env Options.Medium then
+                BU.print1 "Let binding AFTER tcnorm: %s\n" (Print.term_to_string e1);
 
          (* the result has the same effect as c1, except it returns unit *)
          let cres = Env.null_wp_for_eff env (U.comp_effect_name c1) U_zero t_unit in
@@ -2727,6 +2740,36 @@ and universe_of_well_typed_term env t =
   | Some ({n=Tm_type u}) -> Some u
   | _ -> None
 
+let check_type_of_well_typed_term' must_total env t k =
+  let env = Env.set_expected_typ env k in
+  let env = {env with use_bv_sorts=true} in
+  let slow_check () =
+    if must_total
+    then let _, _, g = env.type_of env t in g
+    else let _, _, g = env.tc_term env t in g
+  in
+  match type_of_well_typed_term env t with
+  | None -> slow_check ()
+  | Some k' ->
+    if Env.debug env <| Options.Other "FastImplicits"
+    then BU.print4 "(%s) Fast check  %s : %s <:? %s\n"
+                                            (Range.string_of_range t.pos)
+                                            (Print.term_to_string t)
+                                            (Print.term_to_string k')
+                                            (Print.term_to_string k);
+    let b = Rel.subtype_nosmt env k' k in
+    let _ =
+      if Env.debug env <| Options.Other "FastImplicits"
+      then BU.print5 "(%s) Fast check %s: %s : %s <: %s\n"
+                                            (Range.string_of_range t.pos)
+                                            (if b then "succeeded" else "failed")
+                                            (Print.term_to_string t)
+                                            (Print.term_to_string k')
+                                            (Print.term_to_string k) in
+    if b
+    then Env.trivial_guard
+    else slow_check ()
+
 let check_type_of_well_typed_term must_total env t k =
   let env = Env.set_expected_typ env k in
   let env = {env with use_bv_sorts=true} in
@@ -2737,25 +2780,4 @@ let check_type_of_well_typed_term must_total env t k =
   in
   if not <| Options.__temp_fast_implicits()
   then slow_check()
-  else
-      match type_of_well_typed_term env t with
-      | None -> slow_check ()
-      | Some k' ->
-        if Env.debug env <| Options.Other "FastImplicits"
-        then BU.print4 "(%s) Fast check  %s : %s <:? %s\n"
-                                                (Range.string_of_range t.pos)
-                                                (Print.term_to_string t)
-                                                (Print.term_to_string k')
-                                                (Print.term_to_string k);
-        let b = Rel.subtype_nosmt env k' k in
-        let _ =
-          if Env.debug env <| Options.Other "FastImplicits"
-          then BU.print5 "(%s) Fast check %s: %s : %s <: %s\n"
-                                                (Range.string_of_range t.pos)
-                                                (if b then "succeeded" else "failed")
-                                                (Print.term_to_string t)
-                                                (Print.term_to_string k')
-                                                (Print.term_to_string k) in
-        if b
-        then Env.trivial_guard
-        else slow_check ()
+  else check_type_of_well_typed_term' must_total env t k

@@ -130,6 +130,7 @@ val e_norm_step : embedding<Syntax.Embeddings.norm_step>
 val e_list   : embedding<'a> -> embedding<list<'a>>
 val e_option : embedding<'a> -> embedding<option<'a>>
 val e_tuple2 : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
+val e_either : embedding<'a> -> embedding<'b> -> embedding<BU.either<'a ,'b>>
 
 // Interface for NBE interpretations
 

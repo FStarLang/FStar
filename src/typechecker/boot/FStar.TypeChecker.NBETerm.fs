@@ -347,7 +347,35 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero;U_zero] [as_arg (type_of ea);
                                                      as_arg (type_of eb)])
 
-// Embeddind range
+let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
+    let em cb (s:BU.either<'a,'b>) : t =
+        match s with
+        | BU.Inl a ->
+        lid_as_constr (PC.inl_lid)
+                      [U_zero; U_zero]
+                      [as_iarg (type_of ea);
+                       as_iarg (type_of eb);
+                       as_arg (embed ea cb a)]
+        | BU.Inr b ->
+        lid_as_constr (PC.inr_lid)
+                      [U_zero; U_zero]
+                      [as_iarg (type_of ea);
+                       as_iarg (type_of eb);
+                       as_arg (embed eb cb b)]
+    in
+    let un cb (trm:t) : option<BU.either<'a,'b>> =
+        match trm with
+        | Construct (fvar, us, [_; _; (a, _)]) when S.fv_eq_lid fvar PC.inl_lid ->
+          BU.bind_opt (unembed ea cb a) (fun a ->
+          Some (BU.Inl a))
+        | Construct (fvar, us, [_; _; (b, _)]) when S.fv_eq_lid fvar PC.inr_lid ->
+          BU.bind_opt (unembed eb cb b) (fun b ->
+          Some (BU.Inr b))
+        | _ -> None
+    in
+    mk_emb em un (lid_as_typ PC.either_lid [U_zero;U_zero] [as_arg (type_of ea); as_arg (type_of eb)])
+
+// Embedding range
 let e_range : embedding<Range.range> =
     let em cb r = Constant (Range r) in
     let un cb t =

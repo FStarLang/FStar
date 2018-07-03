@@ -1,5 +1,4 @@
 module CanonCommSemiring
-#reset-options
 
 (*
 Commutative semiring (a ring with commutative multiplication and without an additive inverse)
@@ -53,10 +52,10 @@ type cr (a:Type) =
 
 let distribute_right (#a:Type) (r:cr a) : distribute_right_lemma a r.cm_add r.cm_mult =
   fun x y z ->
-    CM?.commutativity r.cm_add (cm_op r.cm_add x y) z;
-    CM?.commutativity r.cm_add x z;
-    CM?.commutativity r.cm_add y z;
-    r.distribute z x y
+    CM?.commutativity r.cm_mult (cm_op r.cm_add x y) z;
+    r.distribute z x y;
+    CM?.commutativity r.cm_mult x z;
+    CM?.commutativity r.cm_mult y z
 
 [@canon_attr]
 let int_cr : cr int =

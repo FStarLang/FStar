@@ -234,7 +234,7 @@ let fail2 msg x y   = fail (BU.format2 msg x y)
 let fail3 msg x y z = fail (BU.format3 msg x y z)
 let fail4 msg x y z w = fail (BU.format4 msg x y z w)
 
-let trytac' (t : tac<'a>) : tac<either<string,'a>> =
+let catch (t : tac<'a>) : tac<either<string,'a>> =
     mk_tac (fun ps ->
             let tx = UF.new_transaction () in
             match run t ps with
@@ -247,7 +247,7 @@ let trytac' (t : tac<'a>) : tac<either<string,'a>> =
                 Success (Inl m, ps)
            )
 let trytac (t : tac<'a>) : tac<option<'a>> =
-    bind (trytac' t) (fun r ->
+    bind (catch t) (fun r ->
     match r with
     | Inr v -> ret (Some v)
     | Inl _ -> ret None)
@@ -805,11 +805,11 @@ let __exact_now set_expected_typ (t:term) : tac<unit> =
 
 let t_exact set_expected_typ tm : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "t_exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
-    bind (trytac' (__exact_now set_expected_typ tm)) (function
+    bind (catch (__exact_now set_expected_typ tm)) (function
     | Inr r -> ret r
     | Inl e ->
     mlog (fun () -> BU.print_string "__exact_now failed, trying refine...\n") (fun _ ->
-    bind (trytac' (bind (norm [EMB.Delta]) (fun _ ->
+    bind (catch (bind (norm [EMB.Delta]) (fun _ ->
                    bind (refine_intro ()) (fun _ ->
                    __exact_now set_expected_typ tm)))) (function
     | Inr r -> ret r
@@ -972,16 +972,16 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                 let goal = bnorm_goal ({ goal with goal_ctx_uvar = ctx_uvar }) in
                 ret [goal]
             | _ ->
+                mlog (fun () -> BU.print2 "apply_lemma: arg %s unified to (%s)\n"
+                                    (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
+                                    (Print.term_to_string term)) (fun () ->
                 let env = {(goal_env goal) with gamma=ctx_uvar.ctx_uvar_gamma} in
                 let g_typ =
-                  if Options.__temp_fast_implicits()
-                  then // NS:01/24: use the fast path instead, knowing that term is at least well-typed
-                       // NS:05/25: protecting it under this option,
-                       //           since it causes a regression in examples/vale/*Math_i.fst
-                       FStar.TypeChecker.TcTerm.check_type_of_well_typed_term false env term ctx_uvar.ctx_uvar_typ
-                  else let term = bnorm env term in
-                       let _, _, g_typ = env.type_of (Env.set_expected_typ env ctx_uvar.ctx_uvar_typ) term in
-                       g_typ
+                  // NS:01/24: use the fast path instead, knowing that term is at least well-typed
+                  // NS:05/25: protecting it under this option,
+                  //           since it causes a regression in examples/vale/*Math_i.fst
+                  // GM: Made it the default, but setting must_total to true
+                  FStar.TypeChecker.TcTerm.check_type_of_well_typed_term' true env term ctx_uvar.ctx_uvar_typ
                 in
                 bind (proc_guard
                        (if ps.tac_verb_dbg
@@ -989,11 +989,11 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                                                                             (Print.term_to_string term)
                         else "apply_lemma solved arg")
                         (goal_env goal) g_typ) (fun () ->
-                ret []))
+                ret [])))
             ) (fun sub_goals ->
         let sub_goals = List.flatten sub_goals in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
-        // it will be instantiated later. TODO: maybe keep and check later?
+        // it will be instantiated later. It is tracked anyway in ps.implicits
         let rec filter' (f : 'a -> list<'a> -> bool) (xs : list<'a>) : list<'a> =
              match xs with
              | [] -> []
@@ -1296,7 +1296,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : 
                 ret ut))
           ))
        in
-       bind (trytac' rewrite_eq) (fun x ->
+       bind (catch rewrite_eq) (fun x ->
        match x with
        | Inl "SKIP" -> ret t
        | Inl e -> fail e
@@ -1951,6 +1951,18 @@ let pack (tv:term_view) : tac<term> =
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown None Range.dummyRange
 
+let lget (ty:term) (k:string) : tac<term> = wrap_err "lget" <|
+    bind get (fun ps ->
+    match BU.psmap_try_find ps.local_state k with
+    | None -> fail "not found"
+    | Some t -> unquote ty t
+    )
+
+let lset (_ty:term) (k:string) (t:term) : tac<unit> = wrap_err "lset" <|
+    bind get (fun ps ->
+    let ps = { ps with local_state = BU.psmap_add ps.local_state k t } in
+    set ps)
+
 let goal_of_goal_ty env typ : goal * guard_t =
     let u, ctx_uvars, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
     let ctx_uvar, _ = List.hd ctx_uvars in
@@ -1972,6 +1984,7 @@ let proofstate_of_goal_ty rng env typ =
         guard_policy = SMT;
         freshness = 0;
         tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
+        local_state = BU.psmap_empty ();
     }
     in
     (ps, (goal_witness g))

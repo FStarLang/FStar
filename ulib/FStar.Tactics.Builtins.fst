@@ -66,12 +66,13 @@ any type. This will fail at tactic runtime if the quoted term does not
 typecheck to type [a]. *)
 assume val unquote : #a:Type -> term -> Tac a
 
-assume private val __trytac : #a:Type -> __tac a -> __tac (option a)
-(** [trytac t] will attempt to run [t] and allow to recover from a failure.
-If [t] succeeds with return value [a], [trytac t] returns [Some a].
-On failure, it returns [None]. See also [or_else].
+assume private val __catch : #a:Type -> __tac a -> __tac (either string a)
+(** [catch t] will attempt to run [t] and allow to recover from a failure.
+If [t] succeeds with return value [a], [catch t] returns [Inr a].
+On failure, it returns [Inl msg], where [msg] is the error [t]
+raised. See also [or_else].
 *)
-let trytac (t : unit -> Tac 'a) = TAC?.reflect (__trytac (reify (t ())))
+let catch (t : unit -> Tac 'a) = TAC?.reflect (__catch (reify (t ())))
 
 (** [trivial] will discharge the goal if it's exactly [True] after
 doing normalization and simplification of it. *)
@@ -342,3 +343,6 @@ assume val inspect : term -> Tac term_view
 
 (** Pack a term view on a fully-named representation back into a term *)
 assume val pack    : term_view -> Tac term
+
+assume val lget     : #a:Type -> string -> Tac a
+assume val lset     : #a:Type -> string -> a -> Tac unit

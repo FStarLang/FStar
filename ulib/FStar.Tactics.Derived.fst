@@ -89,16 +89,23 @@ let guard (b : bool) : Tac unit =
     then ()
     else fail "guard failed"
 
+let trytac (t : unit -> Tac 'a) : Tac (option 'a) =
+    match catch t with
+    | Inl _ -> None
+    | Inr x -> Some x
+
 let or_else (#a:Type) (t1 : unit -> Tac a) (t2 : unit -> Tac a) : Tac a =
     match trytac t1 with
     | Some x -> x
     | None -> t2 ()
 
+val (<|>) : (unit -> Tac 'a) ->
+            (unit -> Tac 'a) ->
+            (unit -> Tac 'a)
+let (<|>) t1 t2 = fun () -> or_else t1 t2
+
 let rec first (ts : list (unit -> Tac 'a)) : Tac 'a =
-    match ts with
-    | [] -> fail "no tactics to try"
-    | [t] -> t ()
-    | t::ts -> or_else t (fun () -> first ts)
+    L.fold_right (<|>) ts (fun () -> fail "no tactics to try") ()
 
 let rec repeat (#a:Type) (t : unit -> Tac a) : Tac (list a) =
     match trytac t with
