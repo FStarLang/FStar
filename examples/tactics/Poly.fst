@@ -8,15 +8,15 @@ open FStar.Mul
 assume val modulo_addition_lemma (a:int) (n:pos) (b:int) : Lemma ((a + b * n) % n = a % n)
 assume val lemma_div_mod (a:int) (n:pos) : Lemma (a == (a / n) * n + a % n)
 
-// Actually goes through with a higher limit
-[@Pervasives.fail]
-let lemma_poly_multiply_smt n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 hh =
-  let r1_4 = r1 / 4 in
-  let h_r_expand = (h2 * (n * n) + h1 * n + h0) * ((r1_4 * 4) * n + r0) in
-  let hh_expand = (h2 * r0) * (n * n) + (h0 * (r1_4 * 4) + h1 * r0 + h2 * (5 * r1_4)) * n
-    + (h0 * r0 + h1 * (5 * r1_4)) in
-  let b = ((h2 * n + h1) * r1_4) in
-  assert (h_r_expand == hh_expand + b * (n * n * 4 + (-5)))
+// Might actually go through
+(* [@Pervasives.fail] *)
+(* let lemma_poly_multiply_smt n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 hh = *)
+(*   let r1_4 = r1 / 4 in *)
+(*   let h_r_expand = (h2 * (n * n) + h1 * n + h0) * ((r1_4 * 4) * n + r0) in *)
+(*   let hh_expand = (h2 * r0) * (n * n) + (h0 * (r1_4 * 4) + h1 * r0 + h2 * (5 * r1_4)) * n *)
+(*     + (h0 * r0 + h1 * (5 * r1_4)) in *)
+(*   let b = ((h2 * n + h1) * r1_4) in *)
+(*   assert (h_r_expand == hh_expand + b * (n * n * 4 + (-5))) *)
 
 let lemma_poly_multiply_lemma n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 hh =
   let r1_4 = r1 / 4 in
