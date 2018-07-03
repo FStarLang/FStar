@@ -3498,13 +3498,17 @@ let rec (norm :
                -> norm cfg env stack t11
            | FStar_Syntax_Syntax.Tm_ascribed (t11,(tc,tacopt),l) ->
                (match stack with
-                | (Match uu____10655)::uu____10656 ->
+                | (Match uu____10655)::uu____10656 when
+                    (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.beta
+                    ->
                     (FStar_TypeChecker_Cfg.log cfg
                        (fun uu____10669  ->
                           FStar_Util.print_string
                             "+++ Dropping ascription \n");
                      norm cfg env stack t11)
-                | (Arg uu____10670)::uu____10671 ->
+                | (Arg uu____10670)::uu____10671 when
+                    (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.beta
+                    ->
                     (FStar_TypeChecker_Cfg.log cfg
                        (fun uu____10682  ->
                           FStar_Util.print_string
@@ -3517,13 +3521,17 @@ let rec (norm :
                                      (FStar_Const.Const_reify );
                                    FStar_Syntax_Syntax.pos = uu____10684;
                                    FStar_Syntax_Syntax.vars = uu____10685;_},uu____10686,uu____10687))::uu____10688
+                    when
+                    (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.beta
                     ->
                     (FStar_TypeChecker_Cfg.log cfg
                        (fun uu____10695  ->
                           FStar_Util.print_string
                             "+++ Dropping ascription \n");
                      norm cfg env stack t11)
-                | (MemoLazy uu____10696)::uu____10697 ->
+                | (MemoLazy uu____10696)::uu____10697 when
+                    (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.beta
+                    ->
                     (FStar_TypeChecker_Cfg.log cfg
                        (fun uu____10708  ->
                           FStar_Util.print_string
