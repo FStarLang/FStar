@@ -44,6 +44,8 @@ open FStar.Dyn
 let mkFV fv us ts = mkFV fv (List.rev us) (List.rev ts)
 let mkConstruct fv us ts = mkConstruct fv (List.rev us) (List.rev ts)
 
+(* We still need to match on them in reverse order though, so this is pretty dumb *)
+
 let mk_lazy obj ty kind =
     let li = {
           blob = FStar.Dyn.mkdyn obj
@@ -235,7 +237,7 @@ let rec e_pattern' () =
             BU.bind_opt (unembed e_const cb c) (fun c ->
             Some <| Pat_Constant c)
 
-        | Construct (fv, [], [(ps, _); (f, _)])when S.fv_eq_lid fv ref_Pat_Cons.lid ->
+        | Construct (fv, [], [(ps, _); (f, _)]) when S.fv_eq_lid fv ref_Pat_Cons.lid ->
             BU.bind_opt (unembed e_fv cb f) (fun f ->
             BU.bind_opt (unembed (e_list (e_pattern' ())) cb ps) (fun ps ->
             Some <| Pat_Cons (f, ps)))
