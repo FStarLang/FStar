@@ -890,6 +890,8 @@ let rec head_matches env t1 t2 : match_result =
   let t1 = U.unmeta t1 in
   let t2 = U.unmeta t2 in
   match t1.n, t2.n with
+    | Tm_lazy ({lkind=Lazy_embedding _}), _ -> head_matches env (U.unlazy t1) t2
+    |  _, Tm_lazy({lkind=Lazy_embedding _}) -> head_matches env t1 (U.unlazy t2)
     | Tm_name x, Tm_name y -> if S.bv_eq x y then FullMatch else MisMatch(None, None)
     | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some (fv_delta_depth env f), Some (fv_delta_depth env g))
     | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches env f g |> head_match
