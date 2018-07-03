@@ -344,5 +344,6 @@ assume val inspect : term -> Tac term_view
 (** Pack a term view on a fully-named representation back into a term *)
 assume val pack    : term_view -> Tac term
 
-assume val lget     : #a:Type -> string -> Tac a
-assume val lset     : #a:Type -> string -> a -> Tac unit
+(* Guido: TODO: restore *)
+(* assume val lget     : #a:Type -> string -> Tac a *)
+(* assume val lset     : #a:Type -> string -> a -> Tac unit *)

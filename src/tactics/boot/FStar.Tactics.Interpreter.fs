@@ -295,12 +295,12 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "lax_on"           lax_on e_unit e_bool
                                   lax_on NBET.e_unit NBET.e_bool;
 
-      (* Guido: Very unsure about the NBE embeddings for these guys *)
-      mktac2 1 "lget"             lget e_any e_string RE.e_term
-                                  lget NRE.e_term NBET.e_string NRE.e_term;
+      (* Guido: TODO: restore these, needs careful thought for NBE *)
+      (* mktac2 1 "lget"             lget e_any e_string e_any *)
+      (*                             lget NRE.e_any NBET.e_string NBET.e_any; *)
 
-      mktac3 1 "lset"             lset e_any e_string RE.e_term e_unit
-                                  lset NRE.e_term NBET.e_string NRE.e_term NBET.e_unit;
+      (* mktac3 1 "lset"             lset e_any e_string RE.e_any e_unit *)
+      (*                             lset NRE.e_any NBET.e_string NRE.e_any NBET.e_unit; *)
 
     ] @ reflection_primops @ native_tactics_steps
 
