@@ -190,7 +190,7 @@ let defaults =
       ("tactic_raw_binders"           , Bool false);
       ("tactic_trace"                 , Bool false);
       ("tactic_trace_d"               , Int 0);
-      ("tcnorm"                       , Bool false);
+      ("tcnorm"                       , Bool true);
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
       ("ugly"                         , Bool false);
@@ -858,7 +858,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "tcnorm",
         BoolStr,
-        "Attempt to normalize definitions marked as tcnorm (default 'false')");
+        "Attempt to normalize definitions marked as tcnorm (default 'true')");
 
        ( noshort,
         "timing",
