@@ -281,7 +281,7 @@ let e_term_view_aq aq =
     let embed_term_view cb (tv:term_view) : t =
         match tv with
         | Tv_FVar fv ->
-            mkConstruct ref_Tv_Var.fv [] [as_arg (embed e_fv cb fv)]
+            mkConstruct ref_Tv_FVar.fv [] [as_arg (embed e_fv cb fv)]
 
         | Tv_BVar bv ->
             mkConstruct ref_Tv_BVar.fv [] [as_arg (embed e_bv cb bv)]
