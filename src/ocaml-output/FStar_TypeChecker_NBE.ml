@@ -567,7 +567,7 @@ and (translate_fv :
                                 in
                              let uu____3060 =
                                prim_step.FStar_TypeChecker_Cfg.interpretation_nbe
-                                 args'
+                                 iapp args'
                                 in
                              match uu____3060 with
                              | FStar_Pervasives_Native.Some x ->
