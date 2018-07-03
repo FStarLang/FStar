@@ -2,17 +2,17 @@ module MiniParse.Impl.Combinators
 include MiniParse.Impl.Base
 include MiniParse.Spec.Combinators
 
-module B32 = FStar.Bytes
+module B = LowStar.Buffer
+module M = LowStar.ModifiesPat
 module U32 = FStar.UInt32
-
-#reset-options "--z3rlimit 16"
+module HST = FStar.HyperStack.ST
 
 inline_for_extraction
 let parse32_ret
   (#t: Type)
   (x: t)
 : Tot (parser32 (parse_ret x))
-= (fun input -> ((Some (x, 0ul)) <: (res: option (t * U32.t) { parser32_correct (parse_ret x) input res } )))
+= fun _ _ -> let h = HST.get () in Some (x, 0ul)
 
 inline_for_extraction
 let parse32_and_then
@@ -26,19 +26,18 @@ let parse32_and_then
   (u: unit { and_then_cases_injective p' } )
   (p32' : ((x: t) -> Tot (parser32 (p' x))))
 : Tot (parser32 (p `and_then` p'))
-= fun (input: bytes32) ->
-  ((match p32 input with
+= fun (input: buffer8) (len: U32.t { len == B.len input } ) ->
+  match p32 input len with
   | Some (v, l) ->
-    let input' = B32.slice input l (B32.len input) in
-    begin match p32' v input' with
+    let input' = B.offset input l in
+    begin match p32' v input' (len `U32.sub` l) with
     | Some (v', l') ->
       Some (v', U32.add l l')
     | _ -> None
     end
   | _ -> None
-  ) <: (res: option (t' * U32.t) { parser32_correct (p `and_then` p') input res } ))
 
-#reset-options "--z3rlimit 64"
+#set-options "--z3rlimit 16"
 
 inline_for_extraction
 let parse32_nondep_then
@@ -51,19 +50,7 @@ let parse32_nondep_then
   (#p2: parser k2 t2)
   (p2' : parser32 p2)
 : Tot (parser32 (nondep_then p1 p2))
-= fun (input: bytes32) ->
-  ((match p1' input with
-  | Some (v, l) ->
-    let input' = B32.slice input l (B32.len input) in
-    begin match p2' input' with
-    | Some (v', l') ->
-      Some ((v, v'), U32.add l l')
-    | _ -> None
-    end
-  | _ -> None
-  ) <: (res: option ((t1 * t2) * U32.t) { parser32_correct (p1 `nondep_then` p2) input res } ))
-
-#reset-options "--z3rlimit 32"
+= parse32_and_then p1' _ () (fun x -> parse32_and_then p2' _ () (fun y -> parse32_ret (x, y)))
 
 let serialize32_kind_precond
   (k1 k2: parser_kind)
@@ -71,6 +58,8 @@ let serialize32_kind_precond
 = Some? k1.parser_kind_high &&
   Some? k2.parser_kind_high &&
   Some?.v k1.parser_kind_high + Some?.v k2.parser_kind_high < 4294967296
+
+#set-options "--z3rlimit 64"
 
 inline_for_extraction
 let serialize32_nondep_then
@@ -89,14 +78,25 @@ let serialize32_nondep_then
     serialize32_kind_precond k1 k2
   })
 : Tot (serializer32 (serialize_nondep_then p1 s1 u p2 s2))
-= fun (input: t1 * t2) ->
+= fun (output: buffer8) (l: U32.t { l == B.len output } ) (input: t1 * t2) ->
   match input with
   | (fs, sn) ->
-    let output1 = s1' fs in
-    let output2 = s2' sn in
-  ((B32.append output1 output2) <:
-    (res: bytes32 { serializer32_correct (serialize_nondep_then p1 s1 u p2 s2) input res } ))
+    begin match s1' output l fs with
+    | Some l1 ->
+      let h1 = HST.get () in
+      let output' = B.offset output l1 in
+      begin match s2' output' (l `U32.sub` l1) sn with
+      | Some l2 ->
+        let h2 = HST.get () in
+        assert (B.as_seq h1 (B.gsub output 0ul l1) == B.as_seq h2 (B.gsub output 0ul l1));
+        assert (Seq.append (B.as_seq h2 (B.gsub output 0ul l1)) (B.as_seq h2 (B.gsub output' 0ul l2)) `Seq.equal` B.as_seq h2 (B.gsub output 0ul (l1 `U32.add` l2)));
+        Some (l1 `U32.add` l2)
+      | _ -> None
+      end
+    | _ -> None
+    end
 
+(*
 inline_for_extraction
 let parse32_strengthen
   (#k: parser_kind)
@@ -116,6 +116,7 @@ let parse32_strengthen
     Some (x', consumed)
   | _ -> None
   ) <: (res: option ((x: t1 { p2 x}) * U32.t) { parser32_correct (parse_strengthen p1 p2 prf) xbytes res } ))
+*)
 
 inline_for_extraction
 let parse32_synth
