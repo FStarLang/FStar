@@ -49,6 +49,8 @@ unfold let g_compact (a:Type) (wp:__tac_wp a) : __tac_wp a =
 unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) =
     g_compact b (g_bind a b wp f)
 
+let __fail (a:Type0) (msg:string) : __tac a = fun (ps:proofstate) -> Failed #a msg ps
+
 (* total  *) //disable the termination check, although it remains reifiable
 [@ dm4f_bind_range ]
 reifiable reflectable new_effect {
@@ -56,6 +58,7 @@ reifiable reflectable new_effect {
   with repr     = __tac
      ; bind     = __bind
      ; return   = __ret
+     ; __fail   = __fail
 }
 effect Tac  (a:Type) = TAC a (fun i post -> forall j. post j)
 effect TacF (a:Type) = TAC a (fun _ _ -> False) // A variant that doesn't prove totality (nor type safety!)
@@ -65,6 +68,8 @@ let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
     fun ps p -> wp (fun x -> p (Success x ps))
 
 sub_effect DIV ~> TAC = lift_div_tac
+
+let fail_act (#a:Type) (msg:string) = TAC?.__fail a msg
 
 abstract
 let __by_tactic (t:__tac 'a) (p:Type) : Type = p
