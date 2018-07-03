@@ -1,4 +1,5 @@
 module MiniParse.Spec.TEnum
+include MiniParse.Spec.Combinators
 include MiniParse.Tac.Base
 
 module T = FStar.Tactics
@@ -176,60 +177,73 @@ let gen_synth_bounded (t: T.term) : T.Tac unit =
   T.exact_guard (gen_synth' t vt);
   tconclude ()
 
-(*
-
 let pred_pre
-  (bound: nat { bound > 0 } )
-  (pred: bounded_nat bound -> GTot Type0)
-  (x: bounded_nat (bound - 1))
+  (bound: nat { bound > 0 /\ bound <= 256 } )
+  (pred: bounded_u8 bound -> GTot Type0)
+  (x: bounded_u8 (bound - 1))
 : GTot Type0
-= pred (x + 1)
+= pred (x `U8.add` 1uy)
 
-let rec forall_bounded_nat
+let pred_large_bound
+  (bound: nat { bound > 256 } )
+  (pred: bounded_u8 bound -> GTot Type0)
+  (x: bounded_u8 (bound - 1))
+: GTot Type0
+= pred (x <: U8.t)
+
+let rec forall_bounded_u8
   (bound: nat)
-  (pred: (bounded_nat bound -> GTot Type0))
+  (pred: (bounded_u8 bound -> GTot Type0))
 : GTot Type0
 = if bound = 0
   then True
+  else if bound > 256
+  then
+    forall_bounded_u8 (bound - 1) (pred_large_bound bound pred)
   else
-    pred 0 /\ forall_bounded_nat (bound - 1) (pred_pre bound pred)
+    pred 0uy /\ forall_bounded_u8 (bound - 1) (pred_pre bound pred)
 
-let rec forall_bounded_nat_elim
+let rec forall_bounded_u8_elim
   (bound: nat)
-  (pred: (bounded_nat bound -> GTot Type0))
-  (x: bounded_nat bound)
+  (pred: (bounded_u8 bound -> GTot Type0))
+  (x: bounded_u8 bound)
 : Lemma
-  (requires (forall_bounded_nat bound pred))
+  (requires (forall_bounded_u8 bound pred))
   (ensures (pred x))
-= if x = 0
+  (decreases bound)
+= if bound = 0
+  then ()
+  else if bound > 256
+  then
+    let x' : bounded_u8 (bound - 1) = x <: U8.t in
+    forall_bounded_u8_elim (bound - 1) (pred_large_bound bound pred) x'
+  else if x = 0uy
   then ()
   else
-    forall_bounded_nat_elim (bound - 1) (pred_pre bound pred) (x - 1)
-
-module P = MiniParse.Spec.Combinators
+    forall_bounded_u8_elim (bound - 1) (pred_pre bound pred) (x `U8.sub` 1uy)
 
 let synth_injective_pred
   (b: nat)
   (t: Type)
-  (f1: (bounded_nat b -> GTot t))
-  (f2: (t -> GTot (bounded_nat b)))
-  (x: bounded_nat b)
+  (f1: (bounded_u8 b -> GTot t))
+  (f2: (t -> GTot (bounded_u8 b)))
+  (x: bounded_u8 b)
 : GTot Type0
 = f2 (f1 x) == x
 
 let synth_injective'
   (b: nat)
   (t: Type)
-  (f1: (bounded_nat b -> GTot t))
-  (f2: (t -> GTot (bounded_nat b)))
+  (f1: (bounded_u8 b -> GTot t))
+  (f2: (t -> GTot (bounded_u8 b)))
 : GTot Type0
-= forall_bounded_nat b (synth_injective_pred b t f1 f2)
+= forall_bounded_u8 b (synth_injective_pred b t f1 f2)
 
 let synth_injective_intro
   (b: nat)
   (t: Type)
-  (f1: (bounded_nat b -> GTot t))
-  (f2: (t -> GTot (bounded_nat b)))
-  (u: unit { synth_injective' b t f1 f2 } )
-: Tot (u' : unit { P.synth_injective f1 } )
-= Classical.forall_intro (Classical.move_requires (forall_bounded_nat_elim b (synth_injective_pred b t f1 f2)))
+  (f1: (bounded_u8 b -> GTot t))
+  (f2: (t -> GTot (bounded_u8 b)))
+  (u: squash (synth_injective' b t f1 f2))
+: Tot (u' : squash (synth_injective f1))
+= Classical.forall_intro (Classical.move_requires (forall_bounded_u8_elim b (synth_injective_pred b t f1 f2)))
