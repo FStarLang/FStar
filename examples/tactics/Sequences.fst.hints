@@ -12,7 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "0a29274bcce1aa9b400800691f7eadb6"
+      "13c25cd3bccf5a7293fe57d193d1eca6"
     ],
     [
       "Sequences.test",
@@ -35,49 +35,11 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "679340852d7c4ab9f9ddb85d8ada11bf"
+      "81b8d1eafc68943e2683a885d2873966"
     ],
     [
       "Sequences.test",
       2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_elim_Prims.Refl", "eq2-interp",
-        "equation_FStar.Seq.Properties.snoc", "equation_Prims.eq2",
-        "equation_Prims.nat", "equation_Prims.squash",
-        "fuel_guarded_inversion_Prims.equals", "int_inversion",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "unit_typing"
-      ],
-      0,
-      "0f19d198b536ad09977c6ee3ab9e892a"
-    ],
-    [
-      "Sequences.test",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
-        "equation_Prims.nat", "equation_Prims.squash", "int_inversion",
-        "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.length"
-      ],
-      0,
-      "46178ef2dfad0399ac74b91deec88a65"
-    ],
-    [
-      "Sequences.test",
-      4,
       2,
       1,
       [
@@ -106,7 +68,7 @@
         "unit_typing"
       ],
       0,
-      "21a6c4275cd85ae19b377975842a715c"
+      "d8ad0aa5492b6be3c103a2c78044e5d4"
     ]
   ]
 ]
