@@ -1,0 +1,29 @@
+[
+  "½8­D˜µ‹oûU*\u0014IN·z",
+  [
+    [
+      "Alt.uu___62",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "772d02923ee6b59bd0bff7244444b188"
+    ],
+    [
+      "Alt.uu___62",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
+      ],
+      0,
+      "37a8968b53ddf7a63ab0632cc58f4780"
+    ]
+  ]
+]

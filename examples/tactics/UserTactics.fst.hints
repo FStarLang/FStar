@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "711bc4d4b087a133bec494808c00a671"
+      "de94010eebb83b9ddfec5cab9e1ff769"
     ],
     [
       "UserTactics.f",
@@ -21,7 +21,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "327900fbe5ea0d4e6c08876142744dbe"
+      "b5693d292a0175b563777704ebb1c818"
     ],
     [
       "UserTactics.implicitly_unfolfed_before_preprocessing",
@@ -33,7 +33,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "eff7a67657fd99a1bda5736907f11b26"
+      "afa23f289a961f62f8728bef3fe98057"
     ],
     [
       "UserTactics.lemma_mul_comm",
@@ -42,7 +42,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "b3aeba19f5841fa336780c16e6777864"
+      "a43665ad4c785602ac5f87f93786405b"
     ],
     [
       "UserTactics.sqintro",
@@ -51,7 +51,31 @@
       1,
       [ "@query" ],
       0,
-      "5455eba8faffbab31326d4a73b0df9f5"
+      "83931077d3dfe76bc3dc6dba0b2fe679"
+    ],
+    [
+      "UserTactics.test_apply",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "eeb85f70463bd040b3ce1500ef76d6b5"
+    ],
+    [
+      "UserTactics.test_apply",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "b58ac89f6a738b793275ce274c4c9ed9"
     ],
     [
       "UserTactics.test_apply_ascription'",
@@ -60,7 +84,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "e09845826fbca82d2695abaee3df7fb4"
+      "7909d0393684db93be6a7dee194fee6d"
     ],
     [
       "UserTactics.test_apply_ascription",
@@ -69,7 +93,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "082741c1793bf4ae9fcd90d160afc937"
+      "7b7d693ba0280059284714305d89c154"
     ],
     [
       "UserTactics.f",
@@ -82,7 +106,7 @@
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0,
-      "99c11526e895c2ef536372507ca877f7"
+      "f271f92b98f8ab8fff881a8eb00fa13c"
     ],
     [
       "UserTactics.sqintro",
@@ -91,7 +115,7 @@
       1,
       [ "@query" ],
       0,
-      "0ae5b027f36a8d5dff67bf195c87632f"
+      "58bb3296dbbb076ce601afc821b14204"
     ]
   ]
 ]
