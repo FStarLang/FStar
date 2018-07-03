@@ -1,4 +1,4 @@
-.PHONY: all
+.PHONY: all package clean 0 1 2 3 hints
 
 all:
 	$(MAKE) -C src/ocaml-output

@@ -27,9 +27,6 @@ let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __ta
             end
         | Failed msg ps' -> Failed msg ps'
 
-(* Actions *)
-let __get () : __tac proofstate = fun s0 -> Success s0 s0
-
 let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
 
 (*
@@ -59,7 +56,6 @@ reifiable reflectable new_effect {
   with repr     = __tac
      ; bind     = __bind
      ; return   = __ret
-     ; __get    = __get
 }
 effect Tac  (a:Type) = TAC a (fun i post -> forall j. post j)
 effect TacF (a:Type) = TAC a (fun _ _ -> False) // A variant that doesn't prove totality (nor type safety!)

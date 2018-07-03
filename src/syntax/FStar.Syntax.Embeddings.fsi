@@ -7,6 +7,7 @@ open FStar.Char
 
 module Range = FStar.Range
 module Z = FStar.BigInt
+module BU = FStar.Util
 
 (* TODO: Find a better home for these *)
 type norm_step =
@@ -74,6 +75,7 @@ val e_range       : embedding<Range.range>
 val e_option      : embedding<'a> -> embedding<option<'a>>
 val e_list        : embedding<'a> -> embedding<list<'a>>
 val e_tuple2      : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
+val e_either      : embedding<'a> -> embedding<'b> -> embedding<BU.either<'a, 'b>>
 val e_string_list : embedding<list<string>>
 
 val mk_any_emb : typ -> embedding<term>

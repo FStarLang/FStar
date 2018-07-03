@@ -187,6 +187,7 @@ val tactic_raw_binders          : unit    -> bool
 val tactic_trace                : unit    -> bool
 val tactic_trace_d              : unit    -> int
 val tactics_nbe                 : unit    -> bool
+val tcnorm                      : unit    -> bool
 val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool
 val ugly                        : unit    -> bool

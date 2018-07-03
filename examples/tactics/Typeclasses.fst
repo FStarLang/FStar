@@ -4,6 +4,8 @@ open FStar.Tactics
 module T = FStar.Tactics
 open FStar.Tactics.Typeclasses
 
+#set-options "--tcnorm true"
+
 (* An experiment on typeclasses using metaprogrammed arguments. *)
 
 (*
@@ -166,3 +168,33 @@ let sandwich (#a:Type) [|num a|] (x y z : a) : a =
 
 let test1 = assert (sum [1;2;3;4;5;6] == 21)
 let test2 = assert (plus 40 (minus 10 8) == 42)
+
+
+(** Unfolding **)
+(* We do not want overloading to get in the way of verification, here's a first
+   attempt at how to unfold methods properly. There's logic in the typechecker
+   to unfold everything marked with @tcnorm just after phase 1. *)
+
+(* regular class *)
+noeq
+type inhab a = {
+    elem : unit -> a;
+}
+%splice[elem] (mk_class (`%inhab))
+
+(* mark with tcnorm. we need to write it as a match and not call the
+ * projector since the projector won't unfold (but it could..., maybe
+ * we need an UnfoldAttrFully?) *)
+[@tcnorm]
+let elem' #a [|d : inhab a|] =
+    match d with
+    | Mkinhab elem -> elem
+
+(* regular instance *)
+[@ instance tcnorm]
+let inhab_unit : inhab unit = { elem = fun () -> admit #unit () }
+
+(* This will only succeed if the found instance is inlined *)
+let f (u:unit) =
+  let t = elem' #unit () in
+  assert (forall y. y == 1)
