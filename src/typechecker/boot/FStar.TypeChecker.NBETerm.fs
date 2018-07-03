@@ -61,10 +61,8 @@ and t
   | Refinement of (t -> t) * (unit -> arg) 
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
-  | Rec of letbinding * list<letbinding> * list<t> * args * int  * (list<t> -> letbinding -> t)
-  (* Zoe : a recursive function definition together with its block of mutually 
-     recursive function definitions and its environment *)
-  (* args is th alrady accumulated arguments, the last argument is the arrity *)
+  | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
+  (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
 
  and comp = 
   | Tot of t * option<universe>
@@ -215,7 +213,7 @@ let rec t_to_string (x:t) =
   | Unknown -> "Unknown"
   | Quote _ -> "Quote _"
   | Lazy _ -> "Lazy _"
-  | Rec (_,_, l, _, _, _) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
+  | Rec (_,_, l, _, _, _, _) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
 and atom_to_string (a: atom) =
   match a with
@@ -631,6 +629,23 @@ let string_substring' args : option<t> =
     | _ -> None
     end
 
+| _ -> None
+
+let mk_range args : option<t> =
+  match args with
+  | [fn; from_line; from_col; to_line; to_col] -> begin
+    match arg_as_string fn,
+          arg_as_int from_line,
+          arg_as_int from_col,
+          arg_as_int to_line,
+          arg_as_int to_col with
+    | Some fn, Some from_l, Some from_c, Some to_l, Some to_c ->
+      let r = FStar.Range.mk_range fn
+                (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
+                (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
+      Some (embed e_range r)
+    | _ -> None
+    end
 | _ -> None
 
 // let e_arrow2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) =

@@ -123,6 +123,13 @@ let tc_nbe s =
     Rel.force_trivial_guard tcenv g;
     tm
 
+let tc_nbe_term tm =
+    let tcenv = init() in
+    let tcenv = {tcenv with top_level=false} in
+    let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
+    Rel.force_trivial_guard tcenv g;
+    tm
+
 let pars_and_tc_fragment (s:string) =
     Options.set_option "trace_error" (Options.Bool true);
     let report () = FStar.Errors.report_all () |> ignore in
