@@ -428,6 +428,7 @@ let e_list (ea:embedding<'a>) =
     in
     mk_emb em un (lid_as_typ PC.list_lid [U_zero] [as_arg (type_of ea)])
 
+let e_string_list = e_list e_string
 
 let e_arrow1 (ea:embedding<'a>) (eb:embedding<'b>) =
     let em cb (f : 'a -> 'b) : t = Lam((fun tas -> match unembed ea cb (List.hd tas) with
