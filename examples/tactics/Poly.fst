@@ -1,5 +1,7 @@
 module Poly
 
+#set-options "--lax" (* stopgap *)
+
 open CanonCommSemiring
 open FStar.Tactics
 open FStar.Mul
