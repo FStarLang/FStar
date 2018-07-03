@@ -103,16 +103,20 @@ val mkAccuMatch : t -> (t -> t) -> ((t -> term) -> list<branch>) -> t
 val as_arg : t -> arg
 val as_iarg : t -> arg
 
+type iapp_cb = t -> args -> t
+
 type embedding<'a> = {
-  em  : 'a -> t;
-  un  : t -> option<'a>;
+  em  : iapp_cb -> 'a -> t;
+  un  : iapp_cb -> t -> option<'a>;
   typ : t;
 }
 
-val mk_emb : ('a -> t) -> (t -> option<'a>) -> t -> embedding<'a>
+val mk_emb : (iapp_cb -> 'a -> t) ->
+             (iapp_cb -> t -> option<'a>) ->
+             t -> embedding<'a>
 
-val embed : embedding<'a> -> 'a -> t
-val unembed : embedding<'a> -> t -> option<'a> 
+val embed   : embedding<'a> -> iapp_cb -> 'a -> t
+val unembed : embedding<'a> -> iapp_cb -> t -> option<'a> 
 val type_of : embedding<'a> -> t
 
 val e_bool   : embedding<bool>

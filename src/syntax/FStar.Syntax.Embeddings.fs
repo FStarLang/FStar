@@ -33,7 +33,7 @@ let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
 let force_shadow (s:shadow_term) = BU.map_opt s FStar.Common.force_thunk
 
 type embed_t = FStar.Range.range -> shadow_term -> norm_cb -> term
-type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we
+type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we expect success, and should warn if unembedding fails
 
 type raw_embedder<'a>   = 'a -> embed_t
 type raw_unembedder<'a> = term -> unembed_t<'a>

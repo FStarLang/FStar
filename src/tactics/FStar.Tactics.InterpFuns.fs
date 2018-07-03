@@ -115,89 +115,89 @@ let extract_7 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embed
     | _ ->
       failwith "extract_7: wrong number of arguments"
 
-let extract_1_nbe (ea:NBETerm.embedding<'a>)
+let extract_1_nbe cb (ea:NBETerm.embedding<'a>)
               (args:NBETerm.args) : option<'a> =
     match args with
     | [(a, _)] ->
-      BU.bind_opt (NBETerm.unembed ea a) (fun a ->
+      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
       Some a)
     | _ ->
       failwith "extract_1_nbe: wrong number of arguments"
 
-let extract_2_nbe (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>)
+let extract_2_nbe cb (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>)
               (args:NBETerm.args) : option<('a * 'b)> =
     match args with
     | [(a, _); (b, _)] ->
-      BU.bind_opt (NBETerm.unembed ea a) (fun a ->
-      BU.bind_opt (NBETerm.unembed eb b) (fun b ->
+      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
+      BU.bind_opt (NBETerm.unembed eb cb b) (fun b ->
       Some (a, b)))
     | _ ->
       failwith "extract_2_nbe: wrong number of arguments"
 
-let extract_3_nbe (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>)
+let extract_3_nbe cb (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>)
               (args:NBETerm.args) : option<('a * 'b * 'c)> =
     match args with
     | [(a, _); (b, _); (c, _)] ->
-      BU.bind_opt (NBETerm.unembed ea a) (fun a ->
-      BU.bind_opt (NBETerm.unembed eb b) (fun b ->
-      BU.bind_opt (NBETerm.unembed ec c) (fun c ->
+      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
+      BU.bind_opt (NBETerm.unembed eb cb b) (fun b ->
+      BU.bind_opt (NBETerm.unembed ec cb c) (fun c ->
       Some (a, b, c))))
     | _ ->
       failwith "extract_3_nbe: wrong number of arguments"
 
-let extract_4_nbe (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>) (ed:NBETerm.embedding<'d>)
+let extract_4_nbe cb (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>) (ed:NBETerm.embedding<'d>)
               (args:NBETerm.args) : option<('a * 'b * 'c * 'd)> =
     match args with
     | [(a, _); (b, _); (c, _); (d, _)] ->
-      BU.bind_opt (NBETerm.unembed ea a) (fun a ->
-      BU.bind_opt (NBETerm.unembed eb b) (fun b ->
-      BU.bind_opt (NBETerm.unembed ec c) (fun c ->
-      BU.bind_opt (NBETerm.unembed ed d) (fun d ->
+      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
+      BU.bind_opt (NBETerm.unembed eb cb b) (fun b ->
+      BU.bind_opt (NBETerm.unembed ec cb c) (fun c ->
+      BU.bind_opt (NBETerm.unembed ed cb d) (fun d ->
       Some (a, b, c, d)))))
     | _ ->
       failwith "extract_4_nbe: wrong number of arguments"
 
-let extract_5_nbe (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>) (ed:NBETerm.embedding<'d>)
+let extract_5_nbe cb (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>) (ed:NBETerm.embedding<'d>)
               (ee:NBETerm.embedding<'e>)
               (args:NBETerm.args) : option<('a * 'b * 'c * 'd * 'e)> =
     match args with
     | [(a, _); (b, _); (c, _); (d, _); (e, _)] ->
-      BU.bind_opt (NBETerm.unembed ea a) (fun a ->
-      BU.bind_opt (NBETerm.unembed eb b) (fun b ->
-      BU.bind_opt (NBETerm.unembed ec c) (fun c ->
-      BU.bind_opt (NBETerm.unembed ed d) (fun d ->
-      BU.bind_opt (NBETerm.unembed ee e) (fun e ->
+      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
+      BU.bind_opt (NBETerm.unembed eb cb b) (fun b ->
+      BU.bind_opt (NBETerm.unembed ec cb c) (fun c ->
+      BU.bind_opt (NBETerm.unembed ed cb d) (fun d ->
+      BU.bind_opt (NBETerm.unembed ee cb e) (fun e ->
       Some (a, b, c, d, e))))))
     | _ ->
       failwith "extract_5_nbe: wrong number of arguments"
 
-let extract_6_nbe (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>) (ed:NBETerm.embedding<'d>)
+let extract_6_nbe cb (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>) (ed:NBETerm.embedding<'d>)
               (ee:NBETerm.embedding<'e>) (ef:NBETerm.embedding<'f>)
               (args:NBETerm.args) : option<('a * 'b * 'c * 'd * 'e * 'f)> =
     match args with
     | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _)] ->
-      BU.bind_opt (NBETerm.unembed ea a) (fun a ->
-      BU.bind_opt (NBETerm.unembed eb b) (fun b ->
-      BU.bind_opt (NBETerm.unembed ec c) (fun c ->
-      BU.bind_opt (NBETerm.unembed ed d) (fun d ->
-      BU.bind_opt (NBETerm.unembed ee e) (fun e ->
-      BU.bind_opt (NBETerm.unembed ef f) (fun f ->
+      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
+      BU.bind_opt (NBETerm.unembed eb cb b) (fun b ->
+      BU.bind_opt (NBETerm.unembed ec cb c) (fun c ->
+      BU.bind_opt (NBETerm.unembed ed cb d) (fun d ->
+      BU.bind_opt (NBETerm.unembed ee cb e) (fun e ->
+      BU.bind_opt (NBETerm.unembed ef cb f) (fun f ->
       Some (a, b, c, d, e, f)))))))
     | _ ->
       failwith "extract_6_nbe: wrong number of arguments"
 
-let extract_7_nbe (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>) (ed:NBETerm.embedding<'d>)
+let extract_7_nbe cb (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>) (ed:NBETerm.embedding<'d>)
               (ee:NBETerm.embedding<'e>) (ef:NBETerm.embedding<'f>) (eg:NBETerm.embedding<'g>)
               (args:NBETerm.args) : option<('a * 'b * 'c * 'd * 'e * 'f * 'g)> =
     match args with
     | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _); (g, _)] ->
-      BU.bind_opt (NBETerm.unembed ea a) (fun a ->
-      BU.bind_opt (NBETerm.unembed eb b) (fun b ->
-      BU.bind_opt (NBETerm.unembed ec c) (fun c ->
-      BU.bind_opt (NBETerm.unembed ed d) (fun d ->
-      BU.bind_opt (NBETerm.unembed ee e) (fun e ->
-      BU.bind_opt (NBETerm.unembed ef f) (fun f ->
-      BU.bind_opt (NBETerm.unembed eg g) (fun g ->
+      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
+      BU.bind_opt (NBETerm.unembed eb cb b) (fun b ->
+      BU.bind_opt (NBETerm.unembed ec cb c) (fun c ->
+      BU.bind_opt (NBETerm.unembed ed cb d) (fun d ->
+      BU.bind_opt (NBETerm.unembed ee cb e) (fun e ->
+      BU.bind_opt (NBETerm.unembed ef cb f) (fun f ->
+      BU.bind_opt (NBETerm.unembed eg cb g) (fun g ->
       Some (a, b, c, d, e, f, g))))))))
     | _ ->
       failwith "extract_7_nbe: wrong number of arguments"
@@ -254,50 +254,50 @@ let mk_tactic_interpretation_6 (t:'a -> 'b -> 'c -> 'd -> 'e -> 'f -> tac<'r>)
   let r = run_safe (t a b c d e f) ps in
   Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
 
-let mk_tactic_nbe_interpretation_1 (t:'a -> tac<'r>)
+let mk_tactic_nbe_interpretation_1 cb (t:'a -> tac<'r>)
                                (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>)
                                (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_2_nbe ea E.e_proofstate_nbe args) (fun (a, ps) ->
+  BU.bind_opt (extract_2_nbe cb ea E.e_proofstate_nbe args) (fun (a, ps) ->
   let r = run_safe (t a) ps in
-  Some (NBETerm.embed (E.e_result_nbe er) r))
+  Some (NBETerm.embed (E.e_result_nbe er) cb r))
 
-let mk_tactic_nbe_interpretation_2 (t:'a -> 'b -> tac<'r>)
+let mk_tactic_nbe_interpretation_2 cb (t:'a -> 'b -> tac<'r>)
                                (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (er:NBET.embedding<'r>)
                                (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_3_nbe ea eb E.e_proofstate_nbe args) (fun (a, b, ps) ->
+  BU.bind_opt (extract_3_nbe cb ea eb E.e_proofstate_nbe args) (fun (a, b, ps) ->
   let r = run_safe (t a b) ps in
-  Some (NBETerm.embed (E.e_result_nbe er) r))
+  Some (NBETerm.embed (E.e_result_nbe er) cb r))
 
-let mk_tactic_nbe_interpretation_3 (t:'a -> 'b -> 'c -> tac<'r>)
+let mk_tactic_nbe_interpretation_3 cb (t:'a -> 'b -> 'c -> tac<'r>)
                                (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (ec:NBET.embedding<'c>) (er:NBET.embedding<'r>)
                                (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_4_nbe ea eb ec E.e_proofstate_nbe args) (fun (a, b, c, ps) ->
+  BU.bind_opt (extract_4_nbe cb ea eb ec E.e_proofstate_nbe args) (fun (a, b, c, ps) ->
   let r = run_safe (t a b c) ps in
-  Some (NBETerm.embed (E.e_result_nbe er) r))
+  Some (NBETerm.embed (E.e_result_nbe er) cb r))
 
-let mk_tactic_nbe_interpretation_4 (t:'a -> 'b -> 'c -> 'd -> tac<'r>)
+let mk_tactic_nbe_interpretation_4 cb (t:'a -> 'b -> 'c -> 'd -> tac<'r>)
                                (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (ec:NBET.embedding<'c>) (ed:NBET.embedding<'d>)
                                (er:NBET.embedding<'r>)
                                (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_5_nbe ea eb ec ed E.e_proofstate_nbe args) (fun (a, b, c, d, ps) ->
+  BU.bind_opt (extract_5_nbe cb ea eb ec ed E.e_proofstate_nbe args) (fun (a, b, c, d, ps) ->
   let r = run_safe (t a b c d) ps in
-  Some (NBETerm.embed (E.e_result_nbe er) r))
+  Some (NBETerm.embed (E.e_result_nbe er) cb r))
 
-let mk_tactic_nbe_interpretation_5 (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
+let mk_tactic_nbe_interpretation_5 cb (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
                                (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (ec:NBET.embedding<'c>) (ed:NBET.embedding<'d>)
                                (ee:NBET.embedding<'e>) (er:NBET.embedding<'r>)
                                (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_6_nbe ea eb ec ed ee E.e_proofstate_nbe args) (fun (a, b, c, d, e, ps) ->
+  BU.bind_opt (extract_6_nbe cb ea eb ec ed ee E.e_proofstate_nbe args) (fun (a, b, c, d, e, ps) ->
   let r = run_safe (t a b c d e) ps in
-  Some (NBETerm.embed (E.e_result_nbe er) r))
+  Some (NBETerm.embed (E.e_result_nbe er) cb r))
 
-let mk_tactic_nbe_interpretation_6 (t:'a -> 'b -> 'c -> 'd -> 'e -> 'f -> tac<'r>)
+let mk_tactic_nbe_interpretation_6 cb (t:'a -> 'b -> 'c -> 'd -> 'e -> 'f -> tac<'r>)
                                (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (ec:NBET.embedding<'c>) (ed:NBET.embedding<'d>)
                                (ee:NBET.embedding<'e>) (ef:NBET.embedding<'f>) (er:NBET.embedding<'r>)
                                (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_7_nbe ea eb ec ed ee ef E.e_proofstate_nbe args) (fun (a, b, c, d, e, f, ps) ->
+  BU.bind_opt (extract_7_nbe cb ea eb ec ed ee ef E.e_proofstate_nbe args) (fun (a, b, c, d, e, f, ps) ->
   let r = run_safe (t a b c d e f) ps in
-  Some (NBETerm.embed (E.e_result_nbe er) r))
+  Some (NBETerm.embed (E.e_result_nbe er) cb r))
 
 let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
   { Cfg.name                         = s.name
@@ -307,7 +307,7 @@ let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
   ; Cfg.strong_reduction_ok          = s.strong_reduction_ok
   ; Cfg.requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
   ; Cfg.interpretation               = s.tactic
-  ; Cfg.interpretation_nbe           = NBETerm.dummy_interp s.name
+  ; Cfg.interpretation_nbe           = fun _cb -> NBETerm.dummy_interp s.name
   }
 
 let mk nm arity nunivs interp nbe_interp =
@@ -344,35 +344,35 @@ let mktac1 (nunivs:int) (name : string)
            (nf : 'na -> tac<'nr>) (nea : NBET.embedding<'na>) (ner : NBET.embedding<'nr>)
            : Cfg.primitive_step =
     mk name 2 nunivs (mk_tactic_interpretation_1     f  ea  er)
-                     (fun args -> mk_tactic_nbe_interpretation_1 nf nea ner (drop nunivs args))
+                     (fun cb args -> mk_tactic_nbe_interpretation_1 cb nf nea ner (drop nunivs args))
 
 let mktac2 (nunivs:int) (name : string)
            (f : 'a -> 'b -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (er : embedding<'r>)
            (nf : 'na -> 'nb -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (ner : NBET.embedding<'nr>)
            : Cfg.primitive_step =
     mk name 3 nunivs (mk_tactic_interpretation_2     f  ea  eb  er)
-                     (fun args -> mk_tactic_nbe_interpretation_2 nf nea neb ner (drop nunivs args))
+                     (fun cb args -> mk_tactic_nbe_interpretation_2 cb nf nea neb ner (drop nunivs args))
 
 let mktac3 (nunivs:int) (name : string)
            (f : 'a -> 'b -> 'c -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (ec : embedding<'c>)  (er : embedding<'r>)
            (nf : 'na -> 'nb -> 'nc -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (nec : NBET.embedding<'nc>) (ner : NBET.embedding<'nr>)
            : Cfg.primitive_step =
     mk name 4 nunivs (mk_tactic_interpretation_3 f ea eb ec er)
-                     (fun args -> mk_tactic_nbe_interpretation_3 nf nea neb nec ner (drop nunivs args))
+                     (fun cb args -> mk_tactic_nbe_interpretation_3 cb nf nea neb nec ner (drop nunivs args))
 
 let mktac4 (nunivs:int) (name : string)
            (f : 'a -> 'b -> 'c -> 'd -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (ec : embedding<'c>)  (ed : embedding<'d>)  (er : embedding<'r>)
            (nf : 'na -> 'nb -> 'nc -> 'nd -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (nec : NBET.embedding<'nc>) (ned : NBET.embedding<'nd>) (ner : NBET.embedding<'nr>)
            : Cfg.primitive_step =
     mk name 5 nunivs (mk_tactic_interpretation_4 f ea eb ec ed er)
-                     (fun args -> mk_tactic_nbe_interpretation_4 nf nea neb nec ned ner (drop nunivs args))
+                     (fun cb args -> mk_tactic_nbe_interpretation_4 cb nf nea neb nec ned ner (drop nunivs args))
 
 let mktac5 (nunivs:int) (name : string)
            (f : 'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (ec : embedding<'c>)  (ed : embedding<'d>)  (ee : embedding<'e>)  (er : embedding<'r>)
            (nf : 'na -> 'nb -> 'nc -> 'nd -> 'ne -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (nec : NBET.embedding<'nc>) (ned : NBET.embedding<'nd>) (nee : NBET.embedding<'ne>) (ner : NBET.embedding<'nr>)
            : Cfg.primitive_step =
     mk name 6 nunivs (mk_tactic_interpretation_5 f ea eb ec ed ee er)
-                     (fun args -> mk_tactic_nbe_interpretation_5 nf nea neb nec ned nee ner (drop nunivs args))
+                     (fun cb args -> mk_tactic_nbe_interpretation_5 cb nf nea neb nec ned nee ner (drop nunivs args))
 
 (* Total interpretations *)
 
@@ -402,21 +402,21 @@ let mk_total_interpretation_2 (f:'a -> 'b -> 'r)
   let r = f a b in
   Some (embed er (Cfg.psc_range psc) r ncb))
 
-let mk_total_nbe_interpretation_1 (f:'a -> 'r)
+let mk_total_nbe_interpretation_1 cb (f:'a -> 'r)
                               (ea:NBETerm.embedding<'a>) (er:NBETerm.embedding<'r>)
                               (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_1_nbe ea args) (fun a ->
+  BU.bind_opt (extract_1_nbe cb ea args) (fun a ->
   let r = f a in
-  Some (NBETerm.embed er r))
+  Some (NBETerm.embed er cb r))
 
-let mk_total_nbe_interpretation_2 (f:'a -> 'b -> 'r)
+let mk_total_nbe_interpretation_2 cb (f:'a -> 'b -> 'r)
                               (ea:NBETerm.embedding<'a>)
                               (eb:NBETerm.embedding<'b>)
                               (er:NBETerm.embedding<'r>)
                               (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_2_nbe ea eb args) (fun (a, b) ->
+  BU.bind_opt (extract_2_nbe cb ea eb args) (fun (a, b) ->
   let r = f a b in
-  Some (NBETerm.embed er r))
+  Some (NBETerm.embed er cb r))
 
 let mktot1 (nunivs:int) (name : string)
            (f : 'a -> 'r)
@@ -427,7 +427,7 @@ let mktot1 (nunivs:int) (name : string)
            (ner : NBETerm.embedding<'nr>)
            : Cfg.primitive_step =
     mkt name 1 nunivs (mk_total_interpretation_1     f  ea  er)
-                      (fun args -> mk_total_nbe_interpretation_1 nf nea ner (drop nunivs args))
+                      (fun cb args -> mk_total_nbe_interpretation_1 cb nf nea ner (drop nunivs args))
 
 let mktot2 (nunivs:int) (name : string)
            (f : 'a -> 'b -> 'r)
@@ -438,4 +438,4 @@ let mktot2 (nunivs:int) (name : string)
            (ner : NBETerm.embedding<'nr>)
            : Cfg.primitive_step =
     mkt name 2 nunivs (mk_total_interpretation_2     f  ea  eb  er)
-                      (fun args -> mk_total_nbe_interpretation_2 nf nea neb ner (drop nunivs args))
+                      (fun cb args -> mk_total_nbe_interpretation_2 cb nf nea neb ner (drop nunivs args))

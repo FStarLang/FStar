@@ -339,7 +339,7 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
          let arity = prim_step.arity + prim_step.univ_arity in
          debug (fun () -> BU.print1 "Found a primop %s\n" (P.fv_to_string fvar));
          Lam ((fun args -> let args' = (List.map NBETerm.as_arg args) in
-              match prim_step.interpretation_nbe args' with
+              match prim_step.interpretation_nbe iapp args' with
               | Some x -> debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
                          x
               | None -> debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
