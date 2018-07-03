@@ -239,11 +239,13 @@ let synth_injective'
 : GTot Type0
 = forall_bounded_u8 b (synth_injective_pred b t f1 f2)
 
-let synth_injective_intro
+val synth_injective_intro
   (b: nat)
   (t: Type)
   (f1: (bounded_u8 b -> GTot t))
   (f2: (t -> GTot (bounded_u8 b)))
   (u: squash (synth_injective' b t f1 f2))
 : Tot (u' : squash (synth_injective f1))
+
+let synth_injective_intro b t f1 f2 u
 = Classical.forall_intro (Classical.move_requires (forall_bounded_u8_elim b (synth_injective_pred b t f1 f2)))
