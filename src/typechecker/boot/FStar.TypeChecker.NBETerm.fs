@@ -170,11 +170,17 @@ let rec eq_t (t1 : t) (t2 : t) : U.eq_result =
   match t1, t2 with 
   | Lam _, Lam _ -> U.Unknown
   | Accu(a1, as1), Accu(a2, as2) -> eq_and (eq_atom a1 a2) (fun () -> eq_args as1 as2)
-  | Construct(v1, us1, args1), Construct(v2, us2, args2)
+  | Construct(v1, us1, args1), Construct(v2, us2, args2) ->
+    if S.fv_eq v1 v2 then
+        List.fold_left (fun acc ((a1, _), (a2, _)) ->
+                            eq_inj acc (eq_t a1 a2)) U.Equal <| List.zip args1 args2
+    else U.NotEqual
+
   | FV(v1, us1, args1), FV(v2, us2, args2) -> 
     if S.fv_eq v1 v2 then 
      eq_and (equal_iff (U.eq_univs_list us1 us2)) (fun () -> eq_args args1 args2)
-    else U.NotEqual
+    else U.Unknown
+
   | Constant c1, Constant c2 -> eq_constant c1 c2 
   | Type_t u1, Type_t u2 
   | Univ u1, Univ u2 -> equal_iff (U.eq_univs u1 u2)
