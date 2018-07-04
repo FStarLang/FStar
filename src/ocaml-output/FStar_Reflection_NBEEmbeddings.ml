@@ -568,7 +568,7 @@ let (e_term_view_aq :
               FStar_TypeChecker_NBETerm.as_arg uu____1591  in
             [uu____1586]  in
           mkConstruct
-            FStar_Reflection_Data.ref_Tv_Var.FStar_Reflection_Data.fv []
+            FStar_Reflection_Data.ref_Tv_FVar.FStar_Reflection_Data.fv []
             uu____1579
       | FStar_Reflection_Data.Tv_BVar bv ->
           let uu____1605 =

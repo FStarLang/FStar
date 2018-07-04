@@ -39,7 +39,7 @@ SHOULD_VERIFY_OPEN=bug045.fst bug057.fst bug064.fst bug065.fst bug071.fst bug121
   bug171b.fst bug171c.fst bug258.fst bug259.fst bug282.fst bug291.fst bug400.fst bug419.fst bug442.fst\
   bug442b.fst bug466.fst bug484.fst bug542.fst bug543.fst bug554.fst bug575.fst bug604.fst bug606.fst\
   bug626.fst bug682.fst bug715.fst bug739.fst bug815.fst bug815b.fst bug851.fst bug933.fst bug933b.fst\
-  bug1038.fst bug1055b.fst bug1091.fst bug1390.fst bug807d.fst
+  bug1038.fst bug1055b.fst bug1091.fst bug1390.fst bug807d.fst bug1486.fst
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_VERIFY_CLOSED.
@@ -84,7 +84,10 @@ SHOULD_NOT_VERIFY_NOT_WORKING=bug186.fst bug397b.fst
 ####################
 
 # These will be checked as part of the F* regressions.
-SHOULD_EXTRACT_CLOSED=bug086.fst bug314.fst bug540.fst bug541.fst bug589.fst ExtractionBug2.fst
+SHOULD_EXTRACT_CLOSED=bug086.fst bug314.fst bug540.fst bug541.fst bug589.fst ExtractionBug2.fst bug1485.fst
+
+# bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
+
 
 # These will not be checked, but the SHOULD_NOT_VERIFY_BROKEN examples are expected to work since their
 # corresponding GitHub issue is closed. Consider re-opening.

@@ -410,6 +410,93 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
         printer
         emb_t_pair_a_b
 
+let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
+    let t_sum_a_b =
+        let t_either = U.fvar_const PC.either_lid in
+        S.mk_Tm_app t_either [S.as_arg ea.typ; S.as_arg eb.typ]
+                    None Range.dummyRange
+    in
+    let emb_t_sum_a_b =
+        ET_app(PC.either_lid |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ])
+    in
+    let printer s =
+        match s with
+        | BU.Inl a -> BU.format1 "Inl %s" (ea.print a)
+        | BU.Inr b -> BU.format1 "Inr %s" (eb.print b)
+    in
+    let em (s:BU.either<'a,'b>) (rng:range) topt norm : term =
+        lazy_embed
+            printer
+            emb_t_sum_a_b
+            rng
+            t_sum_a_b
+            s
+            (* Eagerly compute which closure we want, but thunk the actual embedding *)
+            (match s with
+             | BU.Inl a ->
+                (fun () ->
+                let shadow_a = map_shadow topt (fun t ->
+                  let v = Ident.mk_ident ("v", rng) in
+                  let some_v = U.mk_field_projector_name_from_ident PC.inl_lid v in
+                  let some_v_tm = S.fv_to_tm (lid_as_fv some_v delta_equational None) in
+                  S.mk_Tm_app (S.mk_Tm_uinst some_v_tm [U_zero])
+                              [S.iarg (type_of ea); S.iarg (type_of eb); S.as_arg t]
+                              None
+                              rng)
+                in
+                S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.inl_lid) [U_zero;U_zero])
+                            [S.iarg (type_of ea);
+                             S.iarg (type_of eb);
+                             S.as_arg (embed ea a rng shadow_a norm)]
+                            None
+                            rng)
+             | BU.Inr b ->
+                (fun () ->
+                let shadow_b = map_shadow topt (fun t ->
+                  let v = Ident.mk_ident ("v", rng) in
+                  let some_v = U.mk_field_projector_name_from_ident PC.inr_lid v in
+                  let some_v_tm = S.fv_to_tm (lid_as_fv some_v delta_equational None) in
+                  S.mk_Tm_app (S.mk_Tm_uinst some_v_tm [U_zero])
+                              [S.iarg (type_of ea); S.iarg (type_of eb); S.as_arg t]
+                              None
+                              rng)
+                in
+                S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.inr_lid) [U_zero;U_zero])
+                            [S.iarg (type_of ea);
+                             S.iarg (type_of eb);
+                             S.as_arg (embed eb b rng shadow_b norm)]
+                            None
+                            rng)
+             )
+    in
+    let un (t0:term) (w:bool) norm : option<BU.either<'a, 'b>> =
+        let t = U.unmeta_safe t0 in
+        lazy_unembed
+            printer
+            emb_t_sum_a_b
+            t
+            t_sum_a_b
+            (fun t ->
+                let hd, args = U.head_and_args' t in
+                match (U.un_uinst hd).n, args with
+                | Tm_fvar fv, [_; _; (a, _)] when S.fv_eq_lid fv PC.inl_lid ->
+                    BU.bind_opt (unembed ea a w norm) (fun a ->
+                    Some (BU.Inl a))
+                | Tm_fvar fv, [_; _; (b, _)] when S.fv_eq_lid fv PC.inr_lid ->
+                    BU.bind_opt (unembed eb b w norm) (fun b ->
+                    Some (BU.Inr b))
+                | _ ->
+                    if w then
+                    Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sum: %s" (Print.term_to_string t0)));
+                    None)
+    in
+    mk_emb_full
+        em
+        un
+        (S.t_either_of (type_of ea) (type_of eb))
+        printer
+        emb_t_sum_a_b
+
 let e_list (ea:embedding<'a>) =
     let t_list_a =
         let t_list = U.fvar_const PC.list_lid in

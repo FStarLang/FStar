@@ -51,8 +51,10 @@ let fstar_tactics_Success_fv = lid_as_data_fv fstar_tactics_Success_lid
 let fstar_tactics_topdown_lid = fstar_tactics_lid' ["Types"; "TopDown"]
 let fstar_tactics_bottomup_lid = fstar_tactics_lid' ["Types"; "BottomUp"]
 
-let fstar_tactics_topdown = lid_as_data_tm fstar_tactics_topdown_lid
+let fstar_tactics_topdown  = lid_as_data_tm fstar_tactics_topdown_lid
 let fstar_tactics_bottomup = lid_as_data_tm fstar_tactics_bottomup_lid
+let fstar_tactics_topdown_fv  = lid_as_data_fv fstar_tactics_topdown_lid
+let fstar_tactics_bottomup_fv = lid_as_data_fv fstar_tactics_bottomup_lid
 
 let fstar_tactics_SMT_lid   = fstar_tactics_lid' ["Types"; "SMT"]
 let fstar_tactics_Goal_lid  = fstar_tactics_lid' ["Types"; "Goal"]
@@ -63,6 +65,10 @@ let fstar_tactics_SMT   = lid_as_data_tm fstar_tactics_SMT_lid
 let fstar_tactics_Goal  = lid_as_data_tm fstar_tactics_Goal_lid
 let fstar_tactics_Drop  = lid_as_data_tm fstar_tactics_Drop_lid
 let fstar_tactics_Force = lid_as_data_tm fstar_tactics_Force_lid
+let fstar_tactics_SMT_fv   = lid_as_data_fv fstar_tactics_SMT_lid
+let fstar_tactics_Goal_fv  = lid_as_data_fv fstar_tactics_Goal_lid
+let fstar_tactics_Drop_fv  = lid_as_data_fv fstar_tactics_Drop_lid
+let fstar_tactics_Force_fv = lid_as_data_fv fstar_tactics_Force_lid
 
 let t_proofstate   = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
 let fv_proofstate  = S.fvconst (fstar_tactics_lid' ["Types"; "proofstate"])
@@ -230,7 +236,9 @@ let e_direction =
 
 let e_direction_nbe  =
     let embed_direction cb (res:direction) : NBET.t =
-        failwith "e_direction_nbe"
+        match res with
+        | TopDown  -> mkConstruct fstar_tactics_topdown_fv [] []
+        | BottomUp -> mkConstruct fstar_tactics_bottomup_fv [] []
     in
     let unembed_direction cb (t:NBET.t) : option<direction> =
         match t with
@@ -266,8 +274,12 @@ let e_guard_policy =
     mk_emb embed_guard_policy unembed_guard_policy t_guard_policy
 
 let e_guard_policy_nbe  =
-    let embed_guard_policy cb (res:guard_policy) : NBET.t =
-        failwith "e_guard_policy_nbe"
+    let embed_guard_policy cb (p:guard_policy) : NBET.t =
+        match p with
+        | SMT   -> mkConstruct fstar_tactics_SMT_fv [] []
+        | Goal  -> mkConstruct fstar_tactics_Goal_fv [] []
+        | Force -> mkConstruct fstar_tactics_Force_fv [] []
+        | Drop  -> mkConstruct fstar_tactics_Drop_fv [] []
     in
     let unembed_guard_policy cb (t:NBET.t) : option<guard_policy> =
         match t with

@@ -11,6 +11,26 @@ open FStar.Errors
 open FStar.Char
 open FStar.String
 
+(**** NOTE: Don't say I didn't warn you! ***)
+(* FV and Construct accumulate arguments *in reverse order*.
+ * Therefore the embeddings must be aware of this and match/construct
+ * them properly
+ *
+ * For example, this is how we embed/unembed an `option a`:
+ *
+    embed:
+    match o with
+    | Some x ->
+         lid_as_constr PC.some_lid [U_zero] [as_arg (embed ea cb x); as_iarg (type_of ea)]
+
+    unembed:
+    match t with
+    | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.some_lid
+         BU.bind_opt (unembed ea cb a) (fun a -> Some (Some a))
+ *
+ * Note how the implicit argument is seemingly *after* the explicit one.
+ *)
+
 module PC = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
@@ -312,14 +332,14 @@ let e_option (ea : embedding<'a>) =
         | None ->
           lid_as_constr PC.none_lid [U_zero] [as_iarg (type_of ea)]
         | Some x ->
-          lid_as_constr PC.some_lid [U_zero] [as_iarg (type_of ea);
-                                              as_arg (embed ea cb x)]
+          lid_as_constr PC.some_lid [U_zero] [as_arg (embed ea cb x);
+                                              as_iarg (type_of ea)]
     in
     let un cb (trm:t) : option<option<'a>> =
         match trm with
         | Construct (fvar, us, args) when S.fv_eq_lid fvar PC.none_lid ->
           Some None
-        | Construct (fvar, us, [_; (a, _)]) when S.fv_eq_lid fvar PC.some_lid ->
+        | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.some_lid ->
           BU.bind_opt (unembed ea cb a) (fun a -> Some (Some a))
         | _ -> None
     in
@@ -330,24 +350,51 @@ let e_option (ea : embedding<'a>) =
 let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     let em cb (x:'a * 'b) : t =
         lid_as_constr (PC.lid_Mktuple2)
-                      [U_zero;U_zero]
-                      [as_iarg (type_of ea);
-                       as_iarg (type_of eb);
+                      [U_zero; U_zero]
+                      [as_arg (embed eb cb (snd x));
                        as_arg (embed ea cb (fst x));
-                       as_arg (embed eb cb (snd x))]
+                       as_iarg (type_of eb);
+                       as_iarg (type_of ea)]
     in
     let un cb (trm:t) : option<('a * 'b)> =
         match trm with
-        | Construct (fvar, us, [_; _; (a, _); (b, _)]) when S.fv_eq_lid fvar PC.lid_Mktuple2 ->
+        | Construct (fvar, us, [(b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple2 ->
           BU.bind_opt (unembed ea cb a) (fun a ->
           BU.bind_opt (unembed eb cb b) (fun b ->
           Some (a, b)))
         | _ -> None
     in
-    mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero;U_zero] [as_arg (type_of ea);
-                                                     as_arg (type_of eb)])
+    mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero;U_zero] [as_arg (type_of eb); as_arg (type_of ea)])
 
-// Embeddind range
+let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
+    let em cb (s:BU.either<'a,'b>) : t =
+        match s with
+        | BU.Inl a ->
+        lid_as_constr (PC.inl_lid)
+                      [U_zero; U_zero]
+                      [as_arg (embed ea cb a);
+                       as_iarg (type_of eb);
+                       as_iarg (type_of ea)]
+        | BU.Inr b ->
+        lid_as_constr (PC.inr_lid)
+                      [U_zero; U_zero]
+                      [as_arg (embed eb cb b);
+                       as_iarg (type_of eb);
+                       as_iarg (type_of ea)]
+    in
+    let un cb (trm:t) : option<BU.either<'a,'b>> =
+        match trm with
+        | Construct (fvar, us, [(a, _); _; _]) when S.fv_eq_lid fvar PC.inl_lid ->
+          BU.bind_opt (unembed ea cb a) (fun a ->
+          Some (BU.Inl a))
+        | Construct (fvar, us, [(b, _); _; _]) when S.fv_eq_lid fvar PC.inr_lid ->
+          BU.bind_opt (unembed eb cb b) (fun b ->
+          Some (BU.Inr b))
+        | _ -> None
+    in
+    mk_emb em un (lid_as_typ PC.either_lid [U_zero;U_zero] [as_arg (type_of eb); as_arg (type_of ea)])
+
+// Embedding range
 let e_range : embedding<Range.range> =
     let em cb r = Constant (Range r) in
     let un cb t =
@@ -363,15 +410,16 @@ let e_list (ea:embedding<'a>) =
     let em cb (l:list<'a>) : t =
         let typ = as_iarg (type_of ea) in
         let nil = lid_as_constr PC.nil_lid [U_zero] [typ] in
-        let cons hd tl = lid_as_constr PC.cons_lid [U_zero] [typ; as_arg (embed ea cb hd); as_arg tl] in
+        let cons hd tl = lid_as_constr PC.cons_lid [U_zero] [as_arg tl; as_arg (embed ea cb hd); typ] in
         List.fold_right cons l nil
     in
     let rec un cb (trm:t) : option<list<'a>> =
         match trm with
         | Construct (fv, _, _) when S.fv_eq_lid fv PC.nil_lid -> Some []
-        | Construct (fv, _, [(_, Some (Implicit _)); (hd, None); (tl, None)])
+        | Construct (fv, _, [(tl, None); (hd, None); (_, Some (Implicit _))])
           // Zoe: Not sure why this case is need; following Emdeddings.fs
-        | Construct (fv, _, [(hd, None); (tl, None)])
+          // GM: Maybe it's not, but I'm unsure on whether we can rely on all these terms being type-correct
+        | Construct (fv, _, [(tl, None); (hd, None)])
             when S.fv_eq_lid fv PC.cons_lid ->
           BU.bind_opt (unembed ea cb hd) (fun hd ->
           BU.bind_opt (un cb tl) (fun tl ->
@@ -380,6 +428,7 @@ let e_list (ea:embedding<'a>) =
     in
     mk_emb em un (lid_as_typ PC.list_lid [U_zero] [as_arg (type_of ea)])
 
+let e_string_list = e_list e_string
 
 let e_arrow1 (ea:embedding<'a>) (eb:embedding<'b>) =
     let em cb (f : 'a -> 'b) : t = Lam((fun tas -> match unembed ea cb (List.hd tas) with

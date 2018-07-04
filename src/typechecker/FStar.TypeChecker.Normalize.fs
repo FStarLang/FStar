@@ -1142,7 +1142,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               | Match _ :: _
               | Arg _ :: _
               | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _
-              | MemoLazy _ :: _ ->
+              | MemoLazy _ :: _ when cfg.steps.beta ->
                 log cfg  (fun () -> BU.print_string "+++ Dropping ascription \n");
                 norm cfg env stack t1 //ascriptions should not block reduction
               | _ ->

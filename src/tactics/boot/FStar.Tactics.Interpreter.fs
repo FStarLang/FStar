@@ -117,8 +117,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "trivial"       trivial e_unit e_unit
                                trivial NBET.e_unit NBET.e_unit;
 
-      mktac2 1 "__trytac"      (fun _ -> trytac) e_any (e_tactic_0 e_any) (e_option e_any)
-                               (fun _ -> trytac) NBET.e_any (e_tactic_nbe_0 NBET.e_any) (NBET.e_option NBET.e_any);
+      mktac2 1 "__catch"       (fun _ -> catch) e_any (e_tactic_0 e_any) (e_either e_string e_any)
+                               (fun _ -> catch) NBET.e_any (e_tactic_nbe_0 NBET.e_any) (NBET.e_either NBET.e_string NBET.e_any);
 
       mktac1 0 "intro"         intro e_unit RE.e_binder
                                intro NBET.e_unit NRE.e_binder;
@@ -294,6 +294,13 @@ and primitive_steps () : list<Cfg.primitive_step> =
 
       mktac1 0 "lax_on"           lax_on e_unit e_bool
                                   lax_on NBET.e_unit NBET.e_bool;
+
+      (* Guido: TODO: restore these, needs careful thought for NBE *)
+      (* mktac2 1 "lget"             lget e_any e_string e_any *)
+      (*                             lget NRE.e_any NBET.e_string NBET.e_any; *)
+
+      (* mktac3 1 "lset"             lset e_any e_string RE.e_any e_unit *)
+      (*                             lset NRE.e_any NBET.e_string NRE.e_any NBET.e_unit; *)
 
     ] @ reflection_primops @ native_tactics_steps
 

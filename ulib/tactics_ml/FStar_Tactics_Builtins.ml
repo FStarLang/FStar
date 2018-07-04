@@ -25,8 +25,10 @@ let tr_repr_steps =
               | Delta         -> EMB.Delta
               | Zeta          -> EMB.Zeta
               | Iota          -> EMB.Iota
-              | UnfoldOnly ss -> EMB.UnfoldOnly ss
               | NBE           -> EMB.NBE
+              | Reify         -> EMB.Reify
+              | UnfoldOnly ss -> EMB.UnfoldOnly ss
+              | UnfoldFully ss -> EMB.UnfoldFully ss
     in List.map tr1
 
 let to_tac_0 (t: 'a __tac): 'a B.tac =
@@ -116,10 +118,23 @@ let tadmit                  = from_tac_1 B.tadmit
 let inspect                 = from_tac_1 B.inspect
 let pack                    = from_tac_1 B.pack
 
+(* sigh *)
+let fix_either (s : ('a, 'b) FStar_Util.either) : ('a, 'b) FStar_Pervasives.either =
+    match s with
+    | FStar_Util.Inl a -> FStar_Pervasives.Inl a
+    | FStar_Util.Inr b -> FStar_Pervasives.Inr b
+
+(* SIGH *)
+let fmap f r =
+    match r with
+    | Success (a, ps) -> Success (f a, ps)
+    | Failed (msg, ps) -> Failed (msg, ps)
+
 (* Those that need some reification. Maybe we can do this somewhere else
  * or automatically, but keep it for now *)
-let __trytac (t: 'a __tac): ('a option) __tac = from_tac_1 B.trytac (to_tac_0 t)
-let trytac: (unit -> 'a __tac) -> ('a option) __tac = fun t -> __trytac (E.reify_tactic t)
+let __catch (t: 'a __tac): ((string, 'a) FStar_Pervasives.either) __tac =
+        fun ps -> fmap fix_either (from_tac_1 B.catch (to_tac_0 t) ps)
+let catch: (unit -> 'a __tac) -> ((string, 'a) FStar_Pervasives.either) __tac = fun t -> __catch (E.reify_tactic t)
 
 let __divide (n:int) (f: 'a __tac) (g: 'b __tac): ('a * 'b) __tac = from_tac_3 B.divide n (to_tac_0 f) (to_tac_0 g)
 let divide: int -> (unit -> 'a __tac) -> (unit -> 'b __tac) -> ('a * 'b) __tac =
