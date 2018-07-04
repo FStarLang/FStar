@@ -1713,7 +1713,7 @@ let path_disjoint_decomp
   (requires (path_disjoint p1 p2))
   (ensures (exists (d: path_disjoint_decomp_t p1 p2) . True))
 = path_disjoint_ind
-  (fun #v1 #v2 p1 p2 -> exists (d: path_disjoint_decomp_t p1 p2) . True)
+  (fun #v1 #v2 p1 p2 -> exists (d: path_disjoint_decomp_t #from #v1 #v2 p1 p2) . True)
   (fun #through #to1 #to2 p s1 s2 ->
     let d : path_disjoint_decomp_t (PathStep _ _ p s1) (PathStep _ _ p s2) =
       PathDisjointDecomp _ p _ s1 PathBase _ s2 PathBase ()
