@@ -6,10 +6,10 @@ open FStar.Classical
 let id x = x
 
 (* Sanity checks that we're properly tracking implicits *)
-[@(Pervasives.fail [217])] let _ = assert False by (fun () -> exact (quote (id _)))
-[@(Pervasives.fail [217])] let _ = assert True  by (fun () -> exact (quote (id _)))
-[@(Pervasives.fail [217])] let _ = assert False by (fun () -> exact (quote _))
-[@(Pervasives.fail [217])] let _ = assert True  by (fun () -> exact (quote _))
+[@(expect_failure [217])] let _ = assert False by (fun () -> exact (quote (id _)))
+[@(expect_failure [217])] let _ = assert True  by (fun () -> exact (quote (id _)))
+[@(expect_failure [217])] let _ = assert False by (fun () -> exact (quote _))
+[@(expect_failure [217])] let _ = assert True  by (fun () -> exact (quote _))
 
 (* A more elaborate test *)
 
@@ -28,7 +28,7 @@ let q x = False
 
 val fact: (h:squash (exists x. p x)) -> Lemma (exists x. q x)
 
-[@(Pervasives.fail [217])]
+[@(expect_failure [217])]
 let fact h =
    assert (exists x. q x) by
      (fun _ ->

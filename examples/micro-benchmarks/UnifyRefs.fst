@@ -13,34 +13,34 @@ let nat64 = natN pow2_64
  *
  * Keeping them in here, and thus CI, is a good way to not forget and to
  * not inadvertedly change the situation. If you find some test starts
- * passing, (and therefore failing due to the @fail) that's good, just
- * remove the @fail.
+ * passing, (and therefore failing due to the @expect_failure) that's good, just
+ * remove the @expect_failure.
  *
  * Do try to not add back any @fail's, please.
  *)
 
-[@fail]
+[@expect_failure]
 let nat32_to_nat64'0 (n:nat32) : nat64 = n
 
-[@fail]
+[@expect_failure]
 let nat32_to_nat64'1 (n:natN pow2_32) : nat64 = n
 
-[@fail]
+[@expect_failure]
 let nat32_to_nat64'2 (n:nat32) : natN pow2_64 = n
 
-[@fail]
+[@expect_failure]
 let nat32_to_nat64'3 (n:natN pow2_32) : natN pow2_64 = n
 
-[@fail]
+[@expect_failure]
 let nat64_to_nat32'0 (n:nat64 {n < pow2_32}) : nat32 = n
 
-[@fail]
+[@expect_failure]
 let nat64_to_nat32'1 (n:nat64 {n < pow2_32}) : natN pow2_32 = n
 
-[@fail]
+[@expect_failure]
 let nat64_to_nat32'2 (n:natN pow2_64 {n < pow2_32}) : nat32 = n
 
-[@fail]
+[@expect_failure]
 let nat64_to_nat32'3 (n:natN pow2_64 {n < pow2_32}) : natN pow2_32 = n
 
 (* Unfolding manually causes the unifier to do more work, and succeed *)

@@ -21,7 +21,7 @@ let _ = assert (h == 16)
 
 (* Types do not unify, so this fails *)
 val x : squash False
-[@ (Pervasives.fail [228])]
+[@ (expect_failure [228])]
 let x = assert_by_tactic False
             (fun () -> let w = cur_witness () in
                        let e = cur_env () in

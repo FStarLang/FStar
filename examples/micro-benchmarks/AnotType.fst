@@ -3,7 +3,7 @@ module AnotType
 (* If this is not first, we explode weirdly *)
 (* AnotType.fst(3,19-3,20): (Error 22) Top-level declaration AnotType.uu___is_A for a name that is already used in this module; top-level declarations must be unique in their module *)
 (* Huh???????? *)
-(* [@(fail [309])] *)
+(* [@(expect_failure [309])] *)
 (* type tc : int = | C *)
 
 type ta : Type = | A
@@ -11,7 +11,7 @@ type ta : Type = | A
 type tb : Type u#42 = | B
 
 (* Fails, Type0 != Type42 *)
-[@(fail [189])]
+[@(expect_failure [189])]
 let _ = ta == tb
 
 type td : eqtype = | D

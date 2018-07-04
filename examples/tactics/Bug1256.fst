@@ -30,7 +30,7 @@ let test (p:(unit -> Type0)) (q:(unit -> Type0))
                (* dump "D"; *)
                exact (pack (Tv_Var (bv_of_binder h))) )
 
-[@Pervasives.fail]
+[@expect_failure]
 let test2 (post:(unit -> Type0))
    = assert_by_tactic
             ((post ==  (fun x -> post ())) ==>
