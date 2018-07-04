@@ -188,7 +188,7 @@ let rec eq_t (t1 : t) (t2 : t) : U.eq_result =
   | Univ u1, Univ u2 -> equal_iff (U.eq_univs u1 u2)
   | Refinement(r1, t1), Refinement(r2, t2) ->
     let x =  S.new_bv None S.t_unit in (* bogus type *)
-    eq_and (eq_t (fst (t1 ())) (fst (t1 ()))) (fun () -> eq_t (r1 (mkAccuVar x)) (r2 (mkAccuVar x)))
+    eq_and (eq_t (fst (t1 ())) (fst (t2 ()))) (fun () -> eq_t (r1 (mkAccuVar x)) (r2 (mkAccuVar x)))
   | Unknown, Unknown -> U.Equal 
   | _, _ -> U.Unknown (* XXX following eq_tm *)
 
