@@ -489,6 +489,7 @@ let cur_goal () : tac<goal> =
 let tadmit () : tac<unit> = wrap_err "tadmit" <|
     bind get (fun ps ->
     bind (cur_goal ()) (fun g ->
+    // should somehow taint the state instead of just printing a warning
     Err.log_issue (goal_type g).pos
         (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
                     (goal_to_string ps g));
@@ -557,6 +558,8 @@ let getopts : tac<FStar.Options.optionstate> =
     | None -> ret (FStar.Options.peek ()))
 
 let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
+    mlog (fun () ->
+        BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
     bind (add_implicits g.implicits) (fun () ->
     bind getopts (fun opts ->
     match (Rel.simplify_guard e g).guard_f with
@@ -567,24 +570,32 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
         else // check the policy
     bind get (fun ps ->
     match ps.guard_policy with
-    | Drop -> ret () // should somehow taint
+    | Drop ->
+        // should somehow taint the state instead of just printing a warning
+        Err.log_issue e.range
+            (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted guard <%s>\n\n"
+                        (Rel.guard_to_string e g));
+        ret ()
     | Goal ->
+        mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (Rel.guard_to_string e g)) (fun () ->
         bind (mk_irrelevant_goal reason e f opts) (fun goal ->
         let goal = { goal with is_guard = true } in
-        push_goals [goal])
+        push_goals [goal]))
     | SMT ->
+        mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT goal\n" reason (Rel.guard_to_string e g)) (fun () ->
         bind (mk_irrelevant_goal reason e f opts) (fun goal ->
         let goal = { goal with is_guard = true } in
-        push_smt_goals [goal])
+        push_smt_goals [goal]))
     | Force ->
+        mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
         try if not (Env.is_trivial <| Rel.discharge_guard_no_smt e g)
             then
                 mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
-                fail1 "Forcing the guard failed %s)" reason)
+                fail1 "Forcing the guard failed (%s)" reason)
             else ret ()
         with
         | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
-               fail1 "Forcing the guard failed (%s)" reason))))
+               fail1 "Forcing the guard failed (%s)" reason))))))
 
 let tc (t : term) : tac<typ> = wrap_err "tc" <|
     bind (cur_goal ()) (fun goal ->
