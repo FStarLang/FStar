@@ -10,7 +10,7 @@ open FStar.Reflection.Data
 open FStar.Tactics.Types
 
 (** Simply fail *)
-assume val fail : #a:Type -> string -> Tac a
+assume val fail : #a:Type -> m:string -> TAC a (fun ps post -> post (FStar.Tactics.Result.Failed m ps))
 
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
@@ -227,13 +227,13 @@ assume val __topdown_rewrite : (term -> __tac (bool * int)) -> __tac unit -> __t
     of the form [Gamma |= t == ?u]. When [rw] proves the goal,
     the engine will rewrite [t] for [?u] in the original goal
     type.
-    
+
     The goal formula is traversed top-down and the traversal can be
     controlled by [snd (ctrl t)]:
-    
+
     When [snd (ctrl t) = 0], the traversal continues down through the
     position in the goal term.
-    
+
     When [snd (ctrl t) = 1], the traversal continues to the next
     sub-tree of the goal.
 

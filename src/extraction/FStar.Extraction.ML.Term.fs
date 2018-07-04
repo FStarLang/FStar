@@ -468,6 +468,16 @@ let basic_norm_steps = [
                 Env.AllowUnboundUniverses
     ]
 
+let comp_no_args c =
+    match c.n with
+    | Total _
+    | GTotal _ -> c
+    | Comp ct ->
+       let effect_args = List.map (fun (_, aq) -> (S.t_unit, aq)) ct.effect_args in
+       let ct = { ct with effect_args = effect_args } in
+       let c = { c with n = Comp ct } in
+       c
+
 let rec translate_term_to_mlty (g:env) (t0:term) : mlty =
     let arg_as_mlty (g:env) (a, _) : mlty =
         if is_type g a //This is just an optimization; we could in principle always emit erasedContent, at the expense of more magics
@@ -533,14 +543,15 @@ let rec translate_term_to_mlty (g:env) (t0:term) : mlty =
             let mlbs, env = binders_as_ml_binders env bs in
             let t_ret =
                 let eff = TcEnv.norm_eff_name env.tcenv (U.comp_effect_name c) in
+                let c = comp_no_args c in
                 let ed, qualifiers = must (TcEnv.effect_decl_opt env.tcenv eff) in
                 if qualifiers |> List.contains Reifiable
                 then let t = FStar.TypeChecker.Env.reify_comp env.tcenv c U_unknown in
-                     (* let _ = printfn "Translating comp type %s as %s\n" *)
-                     (*        (Print.comp_to_string c) (Print.term_to_string t) in *)
+                     debug env (fun () -> BU.print2 "Translating comp type %s as %s\n"
+                            (Print.comp_to_string c) (Print.term_to_string t));
                      let res = translate_term_to_mlty env t in
-                     (* let _ = printfn "Translated comp type %s as %s ... to %s\n" *)
-                     (*        (Print.comp_to_string c) (Print.term_to_string t) (Code.string_of_mlty env.currentModule res) in *)
+                     debug env (fun () -> BU.print3 "Translated comp type %s as %s ... to %s\n"
+                            (Print.comp_to_string c) (Print.term_to_string t) (Code.string_of_mlty env.currentModule res));
                      res
                 else translate_term_to_mlty env (U.comp_result c) in
             let erase = effect_as_etag env (U.comp_effect_name c) in

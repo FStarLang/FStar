@@ -5,6 +5,7 @@ open FStar.Reflection.Formula
 open FStar.Tactics.Types
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
+open FStar.Tactics.Result
 open FStar.Tactics.Util
 module L = FStar.List.Tot
 
@@ -84,7 +85,10 @@ let norm_term (s : list norm_step) (t : term) : Tac term =
 
 let idtac () : Tac unit = ()
 
-let guard (b : bool) : Tac unit =
+let guard (b : bool) : TAC unit (fun ps post -> if b
+                                                then post (Success () ps)
+                                                else forall m. post (Failed m ps)) // intentionally do not leak the message
+    =
     if b
     then ()
     else fail "guard failed"
