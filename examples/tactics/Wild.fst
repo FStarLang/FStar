@@ -34,5 +34,4 @@ let fact h =
      (fun _ ->
        apply_lemma (`exists_elim);
        exact (quote h);
-       exact (quote (fun x -> exists_weaken p q _ x))
-       ())
+       exact (quote (fun x -> exists_weaken p q _ x)))
