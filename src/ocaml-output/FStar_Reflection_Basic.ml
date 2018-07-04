@@ -214,8 +214,8 @@ let rec (inspect_ln :
            in
         let brs1 =
           FStar_List.map
-            (fun uu___223_726  ->
-               match uu___223_726 with
+            (fun uu___224_726  ->
+               match uu___224_726 with
                | (pat,uu____748,t4) ->
                    let uu____766 = inspect_pat pat  in (uu____766, t4)) brs
            in
@@ -261,8 +261,8 @@ let (inspect_comp :
            then
              let maybe_dec =
                FStar_List.tryFind
-                 (fun uu___224_865  ->
-                    match uu___224_865 with
+                 (fun uu___225_865  ->
+                    match uu___225_865 with
                     | FStar_Syntax_Syntax.DECREASES uu____866 -> true
                     | uu____869 -> false) ct.FStar_Syntax_Syntax.flags
                 in
@@ -378,8 +378,8 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
            in
         let brs1 =
           FStar_List.map
-            (fun uu___225_1150  ->
-               match uu___225_1150 with
+            (fun uu___226_1150  ->
+               match uu___226_1150 with
                | (pat,t1) ->
                    let uu____1167 = pack_pat pat  in
                    (uu____1167, FStar_Pervasives_Native.None, t1)) brs
@@ -463,15 +463,15 @@ let (set_sigelt_attrs :
   =
   fun attrs  ->
     fun se  ->
-      let uu___226_1380 = se  in
+      let uu___227_1380 = se  in
       {
-        FStar_Syntax_Syntax.sigel = (uu___226_1380.FStar_Syntax_Syntax.sigel);
+        FStar_Syntax_Syntax.sigel = (uu___227_1380.FStar_Syntax_Syntax.sigel);
         FStar_Syntax_Syntax.sigrng =
-          (uu___226_1380.FStar_Syntax_Syntax.sigrng);
+          (uu___227_1380.FStar_Syntax_Syntax.sigrng);
         FStar_Syntax_Syntax.sigquals =
-          (uu___226_1380.FStar_Syntax_Syntax.sigquals);
+          (uu___227_1380.FStar_Syntax_Syntax.sigquals);
         FStar_Syntax_Syntax.sigmeta =
-          (uu___226_1380.FStar_Syntax_Syntax.sigmeta);
+          (uu___227_1380.FStar_Syntax_Syntax.sigmeta);
         FStar_Syntax_Syntax.sigattrs = attrs
       }
   

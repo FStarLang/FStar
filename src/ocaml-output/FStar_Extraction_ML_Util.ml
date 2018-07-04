@@ -55,9 +55,9 @@ let (mlconst_of_const :
   =
   fun p  ->
     fun c  ->
-      try (fun uu___259_103  -> match () with | () -> mlconst_of_const' c) ()
+      try (fun uu___260_103  -> match () with | () -> mlconst_of_const' c) ()
       with
-      | uu___258_106 ->
+      | uu___259_106 ->
           let uu____107 =
             let uu____108 = FStar_Range.string_of_range p  in
             let uu____109 = FStar_Syntax_Print.const_to_string c  in
@@ -214,8 +214,8 @@ let (udelta_unfold :
       FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option)
   =
   fun g  ->
-    fun uu___254_364  ->
-      match uu___254_364 with
+    fun uu___255_364  ->
+      match uu___255_364 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
           let uu____373 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1  in
           (match uu____373 with
@@ -257,8 +257,8 @@ let (eff_leq :
       | uu____406 -> false
   
 let (eff_to_string : FStar_Extraction_ML_Syntax.e_tag -> Prims.string) =
-  fun uu___255_415  ->
-    match uu___255_415 with
+  fun uu___256_415  ->
+    match uu___256_415 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -508,8 +508,8 @@ let is_type_abstraction :
     (('a,'b) FStar_Util.either,'c) FStar_Pervasives_Native.tuple2 Prims.list
       -> Prims.bool
   =
-  fun uu___256_1002  ->
-    match uu___256_1002 with
+  fun uu___257_1002  ->
+    match uu___257_1002 with
     | (FStar_Util.Inl uu____1013,uu____1014)::uu____1015 -> true
     | uu____1038 -> false
   
@@ -549,8 +549,8 @@ let (resugar_exp :
   
 let (record_field_path :
   FStar_Ident.lident Prims.list -> Prims.string Prims.list) =
-  fun uu___257_1111  ->
-    match uu___257_1111 with
+  fun uu___258_1111  ->
+    match uu___258_1111 with
     | f::uu____1117 ->
         let uu____1120 = FStar_Util.prefix f.FStar_Ident.ns  in
         (match uu____1120 with
@@ -1285,7 +1285,7 @@ let (interpret_plugin_as_term_fun :
                          aux uu____3241 env bs3
                       in
                    (try
-                      (fun uu___261_3254  ->
+                      (fun uu___262_3254  ->
                          match () with | () -> aux [] tvar_context bs1) ()
                     with
                     | NoTacticEmbedding msg ->

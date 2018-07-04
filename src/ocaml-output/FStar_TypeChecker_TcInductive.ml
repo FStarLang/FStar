@@ -89,7 +89,7 @@ let (tc_tycon :
                                               | (t_type,u) ->
                                                   ((let uu____273 =
                                                       let uu____274 =
-                                                        FStar_TypeChecker_Rel.subtype_nosmt
+                                                        FStar_TypeChecker_Rel.subtype_nosmt_force
                                                           env1 t1 t_type
                                                          in
                                                       Prims.op_Negation
@@ -973,7 +973,7 @@ let (already_unfolded :
                            fun a  ->
                              fun a'  ->
                                b &&
-                                 (FStar_TypeChecker_Rel.teq_nosmt env
+                                 (FStar_TypeChecker_Rel.teq_nosmt_force env
                                     (FStar_Pervasives_Native.fst a)
                                     (FStar_Pervasives_Native.fst a'))) true
                         args l)) uu____2059
@@ -1748,7 +1748,7 @@ let (get_optimized_haseq_axiom :
                           let uu____4463 =
                             let uu____4464 = FStar_Syntax_Util.type_u ()  in
                             FStar_Pervasives_Native.fst uu____4464  in
-                          FStar_TypeChecker_Rel.subtype_nosmt en
+                          FStar_TypeChecker_Rel.subtype_nosmt_force en
                             (FStar_Pervasives_Native.fst b).FStar_Syntax_Syntax.sort
                             uu____4463) bs2
                       in
@@ -2781,7 +2781,7 @@ let (check_inductive_well_typedness :
                                                                  ->
                                                                  let uu____7383
                                                                    =
-                                                                   FStar_TypeChecker_Rel.teq_nosmt
+                                                                   FStar_TypeChecker_Rel.teq_nosmt_force
                                                                     env0
                                                                     inferred
                                                                     expected

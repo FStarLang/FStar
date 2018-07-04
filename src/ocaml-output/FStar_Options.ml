@@ -91,27 +91,27 @@ let (__set_unit_tests : unit -> unit) =
 let (__clear_unit_tests : unit -> unit) =
   fun uu____260  -> FStar_ST.op_Colon_Equals __unit_tests__ false 
 let (as_bool : option_val -> Prims.bool) =
-  fun uu___75_284  ->
-    match uu___75_284 with
+  fun uu___76_284  ->
+    match uu___76_284 with
     | Bool b -> b
     | uu____286 -> failwith "Impos: expected Bool"
   
 let (as_int : option_val -> Prims.int) =
-  fun uu___76_291  ->
-    match uu___76_291 with
+  fun uu___77_291  ->
+    match uu___77_291 with
     | Int b -> b
     | uu____293 -> failwith "Impos: expected Int"
   
 let (as_string : option_val -> Prims.string) =
-  fun uu___77_298  ->
-    match uu___77_298 with
+  fun uu___78_298  ->
+    match uu___78_298 with
     | String b -> b
     | Path b -> FStar_Common.try_convert_file_name_to_mixed b
     | uu____301 -> failwith "Impos: expected String"
   
 let (as_list' : option_val -> option_val Prims.list) =
-  fun uu___78_308  ->
-    match uu___78_308 with
+  fun uu___79_308  ->
+    match uu___79_308 with
     | List ts -> ts
     | uu____314 -> failwith "Impos: expected List"
   
@@ -130,15 +130,15 @@ let as_option :
       option_val -> 'Auu____354 FStar_Pervasives_Native.option
   =
   fun as_t  ->
-    fun uu___79_369  ->
-      match uu___79_369 with
+    fun uu___80_369  ->
+      match uu___80_369 with
       | Unset  -> FStar_Pervasives_Native.None
       | v1 ->
           let uu____373 = as_t v1  in FStar_Pervasives_Native.Some uu____373
   
 let (as_comma_string_list : option_val -> Prims.string Prims.list) =
-  fun uu___80_380  ->
-    match uu___80_380 with
+  fun uu___81_380  ->
+    match uu___81_380 with
     | List ls ->
         let uu____386 =
           FStar_List.map
@@ -531,8 +531,8 @@ let (get_warn_error : unit -> Prims.string) =
 let (get_use_extracted_interfaces : unit -> Prims.bool) =
   fun uu____1859  -> lookup_opt "use_extracted_interfaces" as_bool 
 let (dlevel : Prims.string -> debug_level_t) =
-  fun uu___81_1864  ->
-    match uu___81_1864 with
+  fun uu___82_1864  ->
+    match uu___82_1864 with
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
@@ -778,7 +778,7 @@ let rec (parse_opt_val :
     fun typ  ->
       fun str_val  ->
         try
-          (fun uu___86_2735  ->
+          (fun uu___87_2735  ->
              match () with
              | () ->
                  (match typ with
@@ -2265,8 +2265,8 @@ let rec (specs_with_types :
        in
     (FStar_Getopt.noshort, "abort_on",
       (PostProcessed
-         ((fun uu___82_5677  ->
-             match uu___82_5677 with
+         ((fun uu___83_5677  ->
+             match uu___83_5677 with
              | Int x -> (FStar_ST.op_Colon_Equals abort_counter x; Int x)
              | x -> failwith "?"), (IntStr "non-negative integer"))),
       "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)")
@@ -2285,8 +2285,8 @@ and (specs : unit -> FStar_Getopt.opt Prims.list) =
              mk_spec uu____5746) uu____5703
 
 let (settable : Prims.string -> Prims.bool) =
-  fun uu___83_5768  ->
-    match uu___83_5768 with
+  fun uu___84_5768  ->
+    match uu___84_5768 with
     | "abort_on" -> true
     | "admit_smt_queries" -> true
     | "admit_except" -> true
@@ -2402,7 +2402,7 @@ let (set_options : options -> Prims.string -> FStar_Getopt.parse_cmdline_res)
         | Reset  -> resettable_specs
         | Restore  -> all_specs  in
       try
-        (fun uu___88_5996  ->
+        (fun uu___89_5996  ->
            match () with
            | () ->
                if s = ""
@@ -2528,7 +2528,7 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
     | FStar_Pervasives_Native.None  ->
         let result =
           try
-            (fun uu___90_6287  ->
+            (fun uu___91_6287  ->
                match () with
                | () ->
                    let uu____6290 = FStar_Util.is_path_absolute filename  in
@@ -2550,7 +2550,7 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
                            if FStar_Util.file_exists path
                            then FStar_Pervasives_Native.Some path
                            else FStar_Pervasives_Native.None))) ()
-          with | uu___89_6312 -> FStar_Pervasives_Native.None  in
+          with | uu___90_6312 -> FStar_Pervasives_Native.None  in
         (match result with
          | FStar_Pervasives_Native.None  -> result
          | FStar_Pervasives_Native.Some f ->
@@ -2700,8 +2700,8 @@ let (codegen : unit -> codegen_t FStar_Pervasives_Native.option) =
   fun uu____6592  ->
     let uu____6593 = get_codegen ()  in
     FStar_Util.map_opt uu____6593
-      (fun uu___84_6597  ->
-         match uu___84_6597 with
+      (fun uu___85_6597  ->
+         match uu___85_6597 with
          | "OCaml" -> OCaml
          | "FSharp" -> FSharp
          | "Kremlin" -> Kremlin
