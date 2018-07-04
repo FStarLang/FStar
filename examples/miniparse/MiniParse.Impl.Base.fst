@@ -13,9 +13,8 @@ let buffer8 = B.buffer U8.t
 
 inline_for_extraction
 let parser32
-  (#k: parser_kind)
   (#t: Type0)
-  (p: parser k t)
+  (p: parser t)
 : Tot Type0
 = (input: buffer8) -> (l: U32.t { l == B.len input } ) -> HST.Stack (option (t * U32.t))
   (requires (fun h -> B.live h input))
@@ -30,9 +29,8 @@ let parser32
 inline_for_extraction
 let coerce_parser32
   (t2: Type0)
-  (#k: parser_kind)
   (#t1: Type0)
-  (#p: parser k t1)
+  (#p: parser t1)
   (p32: parser32 p)
   (u: unit { t2 == t1 } )
 : Tot (parser32 (coerce_parser t2 p))
@@ -40,9 +38,8 @@ let coerce_parser32
 
 inline_for_extraction
 let serializer32
-  (#k: parser_kind)
   (#t: Type0)
-  (#p: parser k t)
+  (#p: parser t)
   (s: serializer p)
 : Tot Type0
 = (output: buffer8) -> (l: U32.t { l == B.len output } ) -> (x: t) -> HST.Stack (option U32.t)

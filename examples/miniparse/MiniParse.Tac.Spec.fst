@@ -9,57 +9,47 @@ module L = FStar.List.Tot
 noeq
 type package (t: Type0) =
   | Package :
-    (k: parser_kind) ->
-    (p: parser k t) ->
+    (p: parser t) ->
     (s: serializer p) ->
     package t
 
-let mk_package (#t: Type0) (#k: parser_kind) (#p: parser k t) (s: serializer p) : Tot (package t) =
-  Package k p s
+let mk_package (#t: Type0) (#p: parser t) (s: serializer p) : Tot (package t) =
+  Package p s
 
-let package_parser_kind (#t: Type0) (p: package t) : Tot parser_kind =
-  Package?.k p
-
-let package_parser (#t: Type0) (p: package t) : Tot (parser (package_parser_kind p) t) =
+let package_parser (#t: Type0) (p: package t) : Tot (parser t) =
   Package?.p p
 
 let package_serializer (#t: Type0) (p: package t) : Tot (serializer (package_parser p)) =
   Package?.s p
 
-let rec gen_package' (p: T.term) : T.Tac (T.term * T.term * T.term) =
+let rec gen_package' (p: T.term) : T.Tac (T.term * T.term) =
   let (hd, tl) = app_head_tail p in
   if hd `T.term_eq` (`(FStar.UInt8.t))
   then begin
-    ((`(parse_u8_kind)), (`(parse_u8)), (`(serialize_u8)))
+    ((`(parse_u8)), (`(serialize_u8)))
   end else
   if hd `T.term_eq` (`(tuple2))
   then match tl with
   | [(t1, _); (t2, _)] ->
-    let (k1, p1, s1) = gen_package' t1 in
-    let (k2, p2, s2) = gen_package' t2 in
-    let k = T.mk_app (`(and_then_kind)) [k1, T.Q_Explicit; k2, T.Q_Explicit] in
+    let (p1, s1) = gen_package' t1 in
+    let (p2, s2) = gen_package' t2 in
     let p = T.mk_app (`(nondep_then)) [
-      (k1, T.Q_Implicit);
       (t1, T.Q_Implicit);
       (p1, T.Q_Explicit);
-      (k2, T.Q_Implicit);
       (t2, T.Q_Implicit);
       (p2, T.Q_Explicit);
     ]
     in
     let s = T.mk_app (`(serialize_nondep_then)) [
-      (k1, T.Q_Implicit);
       (t1, T.Q_Implicit);
-      (p1, T.Q_Explicit);
+      (p1, T.Q_Implicit);
       (s1, T.Q_Explicit);
-      ((`()), T.Q_Explicit);
-      (k2, T.Q_Implicit);
       (t2, T.Q_Implicit);
-      (p2, T.Q_Explicit);
+      (p2, T.Q_Implicit);
       (s2, T.Q_Explicit);
     ]
     in
-    (k, p, s)
+    (p, s)
   | _ -> tfail "Not enough arguments to nondep_then"
   else
   if L.length tl = 0
@@ -70,10 +60,9 @@ let rec gen_package' (p: T.term) : T.Tac (T.term * T.term * T.term) =
 
 let gen_package (t: T.term) : T.Tac unit =
   T.set_guard_policy T.Goal;
-  let (k, p, s) = gen_package' t in
+  let (p, s) = gen_package' t in
   let res = T.mk_app (`(mk_package)) [
     (t, T.Q_Implicit);
-    (k, T.Q_Implicit);
     (p, T.Q_Implicit);
     (s, T.Q_Explicit);
   ]

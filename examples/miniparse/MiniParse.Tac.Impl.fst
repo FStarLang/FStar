@@ -21,15 +21,13 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
   end else
   if hd `T.term_eq` (`(nondep_then))
   then match tl with
-  | [k1; t1; (p1, _); k2; t2; (p2, _)] ->
+  | [t1; (p1, _); t2; (p2, _)] ->
     let p1' = gen_parser32' p1 in
     let p2' = gen_parser32' p2 in
     T.mk_app (`(parse32_nondep_then)) [
-      k1;
       t1;
       (p1, T.Q_Implicit);
       (p1', T.Q_Explicit);
-      k2;
       t2;
       (p2, T.Q_Implicit);
       (p2', T.Q_Explicit);
@@ -38,7 +36,7 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
   else
   if hd `T.term_eq` (`(parse_synth))
   then match tl with
-  | [k; qt1; t2; qp1; qf2] ->
+  | [qt1; t2; qp1; qf2] ->
     let (p1, _) = qp1 in
     let (t1, _) = qt1 in
     let (f2, _) = qf2 in
@@ -47,7 +45,6 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
     let f2' = T.pack (T.Tv_Abs bx (T.mk_app f2 [x, T.Q_Explicit])) in
     let p1' = gen_parser32' p1 in
     T.mk_app (`(parse32_synth)) [
-      k;
       qt1;
       t2;
       qp1;
@@ -64,7 +61,7 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
     let (hd', tl') = app_head_tail pk in
     if hd' `T.term_eq` (`(TS.mk_package))
     then match tl' with
-    | [_; _; (p, _); _] ->
+    | [_; (p, _); _] ->
       gen_parser32' p
     | _ -> tfail "Not enough arguments to mk_package"
     else begin match T.inspect hd with
@@ -106,6 +103,6 @@ let r = parse_ret 42 `parse_synth` (fun x -> x + 1)
 
 let r' : parser32 r = T.synth_by_tactic (fun () -> gen_parser32 (`(r)))
 
-let j : parser _ TS.t = TS.package_parser TS.p
+let j : parser TS.t = TS.package_parser TS.p
 
 let j32 : parser32 j = T.synth_by_tactic (fun () -> gen_parser32 (`(j)))
