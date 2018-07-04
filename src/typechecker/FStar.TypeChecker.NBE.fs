@@ -96,7 +96,8 @@ let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t
         (* Inl ts: p matches t and ts are bindings for the branch *)
         (* Inr false: p definitely does not match t *)
         (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
-        match p.v with
+        debug cfg (fun () -> BU.print2 "matches_pat (%s, %s)\n" (t_to_string scrutinee) (P.pat_to_string p));
+        let r = match p.v with
         | Pat_var bv
         | Pat_wild bv ->
             BU.Inl [scrutinee]
@@ -138,6 +139,13 @@ let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t
 
             | _ -> //must be a variable
             BU.Inr true
+        in
+        let res_to_string = function
+        | BU.Inr b -> "Inr " ^ BU.string_of_bool b
+        | BU.Inl bs -> "Inl " ^ BU.string_of_int (List.length bs)
+        in
+        debug cfg (fun () -> BU.print3 "matches_pat (%s, %s) = %s\n" (t_to_string scrutinee) (P.pat_to_string p) (res_to_string r));
+        r
     in
     match branches with
     | [] -> failwith "Branch not found"
