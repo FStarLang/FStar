@@ -2,25 +2,23 @@ module MiniParse.Tac.Impl
 include MiniParse.Tac.Base
 include MiniParse.Impl.Combinators
 include MiniParse.Impl.Int
+include MiniParse.Impl.List
 
 module T = FStar.Tactics
 module L = FStar.List.Tot
 module TS = MiniParse.Tac.Spec
+module U32 = FStar.UInt32
+
+inline_for_extraction
+let mk_u32 (n: nat { n < 4294967296 } ) : Tot U32.t = U32.uint_to_t n
 
 (* Generate the parser implementation from the parser specification *)
 
 let rec gen_parser32' (p: T.term) : T.Tac T.term =
   let (hd, tl) = app_head_tail p in
-  if hd `T.term_eq` (`(parse_ret))
-  then begin
-    T.mk_app (`(parse32_ret)) tl
-  end else
-  if hd `T.term_eq` (`(parse_u8))
-  then begin
-    (`(parse32_u8))
-  end else
-  if hd `T.term_eq` (`(nondep_then))
-  then match tl with
+  if hd `T.term_eq` (`(parse_ret)) then T.mk_app (`(parse32_ret)) tl else
+  if hd `T.term_eq` (`(parse_u8)) then (`(parse32_u8)) else
+  if hd `T.term_eq` (`(nondep_then)) then match tl with
   | [t1; (p1, _); t2; (p2, _)] ->
     let p1' = gen_parser32' p1 in
     let p2' = gen_parser32' p2 in
@@ -73,6 +71,26 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
     end
   | _ ->
     tfail "Not enough arguments to package_parser"
+  else
+  if hd `T.term_eq` (`parse_nlist)
+  then match tl with
+  | [(n, _); (t, _); (p, _)] ->
+    let env = T.cur_env () in
+    let tv = T.inspect (T.norm_term_env env [delta; iota; zeta; primops] n) in
+    begin match tv with
+    | T.Tv_Const (T.C_Int _) ->
+      let n' = T.mk_app (`(mk_u32)) [T.pack tv, T.Q_Explicit] in
+      let p' = gen_parser32' p in
+      T.mk_app (`parse32_nlist) [
+        (n, T.Q_Explicit);
+        (n', T.Q_Explicit);
+        (t, T.Q_Implicit);
+        (p, T.Q_Implicit);
+        (p', T.Q_Explicit);
+      ]
+    | _ -> tfail "parse_nlist: not an integer constant"
+    end
+  | _ -> tfail "Not enough arguments to parse_nlist"
   else
   match T.inspect hd with
   | T.Tv_FVar v ->

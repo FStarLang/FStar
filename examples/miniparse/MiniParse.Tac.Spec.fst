@@ -2,6 +2,7 @@ module MiniParse.Tac.Spec
 include MiniParse.Tac.Base
 include MiniParse.Spec.Combinators
 include MiniParse.Spec.Int
+include MiniParse.Spec.List
 
 module T = FStar.Tactics
 module L = FStar.List.Tot
@@ -52,6 +53,21 @@ let rec gen_package' (p: T.term) : T.Tac (T.term * T.term) =
     (p, s)
   | _ -> tfail "Not enough arguments to nondep_then"
   else
+  if hd `T.term_eq` (`(nlist))
+  then match tl with
+  | [(n, _); (t, _)] ->
+    let (p, s) = gen_package' t in
+    let p' = T.mk_app (`(parse_nlist)) [(n, T.Q_Explicit); (t, T.Q_Implicit); (p, T.Q_Explicit)] in
+    let s' = T.mk_app (`(serialize_nlist)) [
+      (n, T.Q_Explicit);
+      (t, T.Q_Implicit);
+      (p, T.Q_Implicit);
+      (s, T.Q_Explicit);
+    ]
+    in
+    (p', s')
+  | _ -> tfail "Not enough arguments to nlist"
+  else
   if L.length tl = 0
   then begin
     gen_package' (unfold_term p)
@@ -72,6 +88,6 @@ let gen_package (t: T.term) : T.Tac unit =
 
 type u8 = FStar.UInt8.t
 
-type t = (u8 * (u8 * u8))
+type t = (u8 * (nlist 79 u8 * u8))
 
 let p : package t = T.synth_by_tactic (fun () -> gen_package (`t))
