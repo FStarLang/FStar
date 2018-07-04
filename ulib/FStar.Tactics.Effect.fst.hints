@@ -1,5 +1,5 @@
 [
-  "KÍO!∏É\u0011¥πX\u0000≥zhZQ",
+  "f<≥@\u0001IÃ7V7mö*~\u000e",
   [
     [
       "FStar.Tactics.Effect.__bind",
@@ -39,6 +39,24 @@
       "1d01cef03495a331b43aadd64d7ca7e4"
     ],
     [
+      "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____fail_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6e37238af071875a536b9a683160bf7d"
+    ],
+    [
+      "FStar.Tactics.Effect.TAC",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f8f0dee11d7e7381be9a4f8414a3af16"
+    ],
+    [
       "FStar.Tactics.Effect.assert_by_tactic",
       1,
       2,
@@ -48,7 +66,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "43fafcdcb39ac090d206f7366f65da21"
+      "e7a03681446a914e630ae82cc1980ecb"
     ],
     [
       "FStar.Tactics.Effect.__bind",
@@ -68,7 +86,7 @@
         "typing_FStar.Tactics.Types.set_proofstate_range"
       ],
       0,
-      "68d362e07fbdec3c01585da459f70df4"
+      "28ea1e701bc90d16451a49e9786af7c3"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -84,7 +102,25 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "d08bdbd59b348a624e42649159684746"
+      "04e6e36a0025547a66c49f2b4fc63173"
+    ],
+    [
+      "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____fail_elab",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d29cb6e2de23e77ace98b5f308c69f19"
+    ],
+    [
+      "FStar.Tactics.Effect.TAC",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "67a45cd00be459f3e5a3f83eb50545db"
     ]
   ]
 ]
