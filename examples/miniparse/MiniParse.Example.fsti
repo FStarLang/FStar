@@ -32,7 +32,7 @@ let g'_inverse: squash (synth_inverse g' f') =
   T.synth_by_tactic (fun () ->
     T.set_guard_policy T.Goal;
     T.norm [delta; zeta; iota; primops];
-    let x = T.with_policy T.Drop T.forall_intro in
+    let x = tforall_intro () in
     T.destruct (T.pack (T.Tv_Var (T.bv_of_binder x)));
     to_all_goals (fun () ->
       let y = T.intro () in

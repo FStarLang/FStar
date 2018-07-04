@@ -113,6 +113,12 @@ let rec imm_solve_goal () : T.Tac unit =
     );    
   ]
 
+let tforall_intro () = T.forall_intro ()
+
+let timplies_intro () = T.implies_intro ()
+
+let tsplit () = T.split ()
+
 let rec solve_goal () : T.Tac unit =
   if T.ngoals () = 0
   then ()
@@ -126,17 +132,17 @@ let rec solve_goal () : T.Tac unit =
   match T.trytac imm_solve_goal with
   | Some _ -> ()
   | _ ->
-  begin match T.trytac (fun () -> T.with_policy T.Drop T.forall_intro) with
+  begin match T.trytac tforall_intro with
   | Some _ ->
     T.print ("Applied: forall_intro");
     admit_others solve_goal
   | _ ->
-    begin match T.trytac (fun () -> T.with_policy T.Drop T.implies_intro) with
+    begin match T.trytac timplies_intro with
     | Some _ ->
       T.print ("Applied: implies_intro");
       admit_others solve_goal
     | _ ->
-      begin match T.trytac (fun () -> T.with_policy T.Drop T.split) with
+      begin match T.trytac tsplit with
       | Some _ ->
         let n = T.ngoals () in
         if n > 2
