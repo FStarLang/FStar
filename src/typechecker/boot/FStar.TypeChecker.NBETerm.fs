@@ -265,7 +265,7 @@ let lid_as_constr (l:lident) (us:list<universe>) (args:args) : t =
     mkConstruct (lid_as_fv l S.delta_constant (Some Data_ctor)) us args
 
 let lid_as_typ (l:lident) (us:list<universe>) (args:args) : t =
-    mkConstruct (lid_as_fv l S.delta_constant None) us args
+    mkFV (lid_as_fv l S.delta_constant None) us args
 
 let as_iarg (a:t) : arg = (a, Some S.imp_tag)
 let as_arg (a:t) : arg = (a, None)
