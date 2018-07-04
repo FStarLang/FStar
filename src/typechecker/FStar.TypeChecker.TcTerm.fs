@@ -1051,7 +1051,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                       let g2_env =
                         //cf issue #57 (the discussion at the end about subtyping vs. equality in check_binders)
                         //check that the context is more demanding of the argument type
-                        if Rel.teq_nosmt env t expected_t
+                        if Rel.teq_nosmt_force env t expected_t
                         then Env.trivial_guard
                         else match Rel.get_subtyping_prop env expected_t t with
                              | None ->
@@ -1728,7 +1728,7 @@ and tc_pat env (allow_implicits:bool) (pat_t:typ) p0 :
         //Without this, we will be able to conclude in the branch of the pattern,
         //with the equality Some #nat x = Some #int x
         //that nat=int and hence False
-        if Rel.teq_nosmt env1 lc.res_typ expected_pat_t
+        if Rel.teq_nosmt_force env1 lc.res_typ expected_pat_t
         then let env1 = Env.set_range env1 exp.pos in
              Rel.discharge_guard_no_smt env1 g |>
              Rel.resolve_implicits env1
@@ -2753,18 +2753,18 @@ let check_type_of_well_typed_term' must_total env t k =
                                             (Print.term_to_string t)
                                             (Print.term_to_string k')
                                             (Print.term_to_string k);
-    let b = Rel.subtype_nosmt env k' k in
+    let g = Rel.subtype_nosmt env k' k in
     let _ =
       if Env.debug env <| Options.Other "FastImplicits"
       then BU.print5 "(%s) Fast check %s: %s : %s <: %s\n"
                                             (Range.string_of_range t.pos)
-                                            (if b then "succeeded" else "failed")
+                                            (if Option.isSome g then "succeeded with guard" else "failed")
                                             (Print.term_to_string t)
                                             (Print.term_to_string k')
                                             (Print.term_to_string k) in
-    if b
-    then Env.trivial_guard
-    else slow_check ()
+    match g with
+    | None -> slow_check ()
+    | Some g -> g
 
 let check_type_of_well_typed_term must_total env t k =
   let env = Env.set_expected_typ env k in

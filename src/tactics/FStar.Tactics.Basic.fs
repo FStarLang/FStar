@@ -277,19 +277,27 @@ let wrap_err (pref:string) (t : tac<'a>) : tac<'a> =
 let set (p:proofstate) : tac<unit> =
     mk_tac (fun _ -> Success ((), p))
 
+let add_implicits (i:implicits) : tac<unit> =
+    bind get (fun p ->
+    set ({p with all_implicits=i@p.all_implicits}))
+
 let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
     let _ = if Env.debug env (Options.Other "1346") then
                   BU.print2 "%%%%%%%%do_unify %s =? %s\n"
                             (Print.term_to_string t1)
                             (Print.term_to_string t2) in
     try
-            let res = Rel.teq_nosmt env t1 t2 in
-            if Env.debug env (Options.Other "1346")
-            then (BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
-                                  (string_of_bool res)
-                                  (Print.term_to_string t1)
-                                  (Print.term_to_string t2));
-            ret res
+        let res = Rel.teq_nosmt env t1 t2 in
+        if Env.debug env (Options.Other "1346")
+        then (BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
+                              (FStar.Common.string_of_option (Rel.guard_to_string env) res)
+                              (Print.term_to_string t1)
+                              (Print.term_to_string t2));
+        match res with
+        | None -> ret false
+        | Some g ->
+            bind (add_implicits g.implicits) (fun () ->
+            ret true)
     with | Errors.Err (_, msg) -> begin
             mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
             ret false)
@@ -433,10 +441,6 @@ let replace_cur (g:goal) : tac<unit> =
     bind __dismiss (fun _ ->
     add_goals [g])
 
-let add_implicits (i:implicits) : tac<unit> =
-    bind get (fun p ->
-    set ({p with all_implicits=i@p.all_implicits}))
-
 let new_uvar (reason:string) (env:env) (typ:typ) : tac<(term * ctx_uvar)> =
     //typ.pos should really never be a FStar.Range.range ... can it?
     let u, ctx_uvar, g_u = Env.new_implicit_var_aux reason typ.pos env typ Allow_untyped in
@@ -553,6 +557,7 @@ let getopts : tac<FStar.Options.optionstate> =
     | None -> ret (FStar.Options.peek ()))
 
 let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
+    bind (add_implicits g.implicits) (fun () ->
     bind getopts (fun opts ->
     match (Rel.simplify_guard e g).guard_f with
     | TcComm.Trivial -> ret ()
@@ -579,7 +584,7 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
             else ret ()
         with
         | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
-               fail1 "Forcing the guard failed (%s)" reason)))
+               fail1 "Forcing the guard failed (%s)" reason))))
 
 let tc (t : term) : tac<typ> = wrap_err "tc" <|
     bind (cur_goal ()) (fun goal ->
