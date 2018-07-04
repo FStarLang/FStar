@@ -21,24 +21,7 @@ let f' : test -> Tot (bounded_u8 test_bound) = T.synth_by_tactic (fun () -> gen_
 let g' : bounded_u8 test_bound -> Tot test = T.synth_by_tactic (fun () -> invert_function  (`(test)) (`(bounded_u8 test_bound)) (`(op_Equality #(bounded_u8 test_bound))) (`(f')))
 
 let g'_injective: squash (synth_injective g') =
-  T.synth_by_tactic (fun () ->
-    T.set_guard_policy T.Goal;
-    T.apply (`(synth_injective_intro _ _ g' f'));
-    T.norm [delta; zeta; iota; primops];
-    T.trivial ()
-  )
+  T.synth_by_tactic (fun () -> synth_injective_solve (`f'))
 
 let g'_inverse: squash (synth_inverse g' f') =
-  T.synth_by_tactic (fun () ->
-    T.set_guard_policy T.Goal;
-    T.norm [delta; zeta; iota; primops];
-    let x = tforall_intro () in
-    T.destruct (T.pack (T.Tv_Var (T.bv_of_binder x)));
-    to_all_goals (fun () ->
-      let y = T.intro () in
-      T.rewrite y;
-      T.norm [delta; zeta; iota; primops];
-      T.trivial ();
-      T.qed ()
-    )
-  )
+  T.synth_by_tactic synth_inverse_solve

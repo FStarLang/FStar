@@ -249,3 +249,54 @@ val synth_injective_intro
 
 let synth_injective_intro b t f1 f2 u
 = Classical.forall_intro (Classical.move_requires (forall_bounded_u8_elim b (synth_injective_pred b t f1 f2)))
+
+let synth_inverse_solve () : T.Tac unit =
+  T.set_guard_policy T.Goal;
+  T.norm [delta; zeta; iota; primops];
+  let x = tforall_intro () in
+  T.destruct (T.pack (T.Tv_Var (T.bv_of_binder x)));
+  to_all_goals (fun () ->
+    let y = T.intro () in
+    T.rewrite y;
+    T.norm [delta; zeta; iota; primops];
+    T.trivial ();
+    T.qed ()
+  )
+
+let synth_injective_solve'
+  (b: T.term)
+  (t: T.term)
+  (f1: T.term)
+  (f2: T.term)
+: T.Tac unit =
+  T.set_guard_policy T.Goal;
+  T.apply (T.mk_app (`(synth_injective_intro)) [
+    b, T.Q_Explicit;
+    t, T.Q_Explicit;
+    f1, T.Q_Explicit;
+    f2, T.Q_Explicit;
+  ]);
+  T.norm [delta; zeta; iota; primops];
+  T.trivial ();
+  tsuccess "synth_injective_solve"
+
+let synth_injective_solve (f2: T.term) : T.Tac unit =
+  let (hd, tl) = app_head_tail (T.cur_goal ()) in
+  if hd `T.term_eq` (`squash)
+  then match tl with
+  | [(tl, _)] ->
+    let (hd', tl') = app_head_tail tl in
+    if hd' `T.term_eq` (`synth_injective)
+    then begin match tl' with
+    | [ (bt, _); (t, _); (f1, _)] ->
+      let (bt_hd, bt_tl) = app_head_tail bt in
+      if bt_hd `T.term_eq` (`bounded_u8)
+      then begin match bt_tl with
+      | [(b, _)] ->
+        synth_injective_solve' b t f1 f2
+      | _ -> tfail "not enough arguments to bounded_u8"
+      end else tfail "value type is not bounded_u8"
+    | _ -> tfail "not enough arguments to synth_injective"
+    end else tfail "Goal is not synth_injective"
+  | _ -> tfail "Not enough arguments to squash"
+  else tfail "Goal is not squash"
