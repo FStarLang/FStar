@@ -68,7 +68,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
              t, Rel.discharge_guard env' (Env.conj_guard guard_params (Env.conj_guard guard_indices g)) in
          let k = U.arrow indices (S.mk_Total t) in
          let t_type, u = U.type_u() in
-         if not (subtype_nosmt env t t_type) then
+         if not (subtype_nosmt_force env t t_type) then
              raise_error (Errors.Error_InductiveAnnotNotAType,
                           (BU.format2 "Type annotation %s for inductive %s is not a subtype of Type"
                                                 (Print.term_to_string t)
@@ -274,7 +274,7 @@ let already_unfolded (ilid:lident) (arrghs:args) (unfolded:unfolded_memo_t) (env
   List.existsML (fun (lid, l) ->
     Ident.lid_equals lid ilid &&
       (let args = fst (List.splitAt (List.length l) arrghs) in
-       List.fold_left2 (fun b a a' -> b && Rel.teq_nosmt env (fst a) (fst a')) true args l)
+       List.fold_left2 (fun b a a' -> b && Rel.teq_nosmt_force env (fst a) (fst a')) true args l)
   ) !unfolded
 
 //check if ty_lid occurs strictly positively in some binder type btype
@@ -560,7 +560,7 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list<subst_elt>) (us:
   //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
   //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
   let bs' = List.filter (fun b ->
-    Rel.subtype_nosmt en (fst b).sort  (fst (U.type_u ()))
+    Rel.subtype_nosmt_force en (fst b).sort  (fst (U.type_u ()))
   ) bs in
   let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None Range.dummyRange)) U.t_true bs' in
   //implication
@@ -988,7 +988,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
               if List.length univs = List.length (fst expected_typ)
               then let _, inferred = Env.inst_tscheme inferred_typ in
                    let _, expected = Env.inst_tscheme expected_typ in
-                   if Rel.teq_nosmt env0 inferred expected
+                   if Rel.teq_nosmt_force env0 inferred expected
                    then ()
                    else fail expected_typ inferred_typ
               else fail expected_typ inferred_typ

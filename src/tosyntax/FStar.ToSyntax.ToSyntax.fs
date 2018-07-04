@@ -2108,28 +2108,31 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
 let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
     let hd, args = U.head_and_args at in
     match (SS.compress hd).n, args with
-    | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_attr ->
+    | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_attr
+                              || S.fv_eq_lid fv C.fail_lax_attr ->
         begin match EMB.unembed (EMB.e_list EMB.e_int) a1 with
-        | Some [] ->
-            raise_error (Errors.Error_EmptyFailErrs, "Found ill-applied fail, argument should be a non-empty list of integers") at.pos
+        | Some es when List.length es > 0->
+            (* Is this an expect_lax_failure? *)
+            let b = S.fv_eq_lid fv C.fail_lax_attr in
+            Some (List.map FStar.BigInt.to_int_fs es, b)
 
-        | Some es -> Some (List.map FStar.BigInt.to_int_fs es, false)
-        | None ->
+        | _ ->
             if warn then
-                Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail, argument should be a non-empty list of integer literals");
+                Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied 'expect_failure', argument should be a non-empty list of integer literals");
             None
         end
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_attr ->
-        Some ([], false)
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_attr
+                       || S.fv_eq_lid fv C.fail_lax_attr ->
+        (* Is this an expect_lax_failure? *)
+        let b = S.fv_eq_lid fv C.fail_lax_attr in
+        Some ([], b)
 
-    | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_attr ->
+    | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_attr
+                      || S.fv_eq_lid fv C.fail_lax_attr ->
         if warn then
-            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail, argument should be a non-empty list of integer literals");
+            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied 'expect_failure', argument should be a non-empty list of integer literals");
         None
-
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_lax_attr ->
-        Some ([], true)
 
     | _ ->
         None

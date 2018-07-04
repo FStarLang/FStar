@@ -1571,7 +1571,7 @@ let (run_tactic_on_typ :
                                                     FStar_Tactics_Types.goal_witness
                                                       g1
                                                      in
-                                                  FStar_TypeChecker_Rel.teq_nosmt
+                                                  FStar_TypeChecker_Rel.teq_nosmt_force
                                                     uu____1517 uu____1518
                                                     FStar_Syntax_Util.exp_unit
                                                    in

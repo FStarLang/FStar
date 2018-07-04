@@ -259,8 +259,8 @@ let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
 let tcnorm_attr    =  p2l ["FStar"; "Pervasives"; "tcnorm"]
 let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
-let fail_attr      = psconst "fail"
-let fail_lax_attr  = psconst "fail_lax"
+let fail_attr      = psconst "expect_failure"
+let fail_lax_attr  = psconst "expect_lax_failure"
 let assume_strictly_positive_attr_lid = p2l ["FStar"; "Pervasives"; "assume_strictly_positive"]
 
 let gen_reset =

@@ -19,5 +19,5 @@ total reifiable reflectable new_effect {
   }
 
 // Paranoid check that dm4f didn't mess up something
-[@fail]
+[@expect_failure]
 let _ = assert False

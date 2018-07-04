@@ -821,15 +821,11 @@ type match_result =
   | HeadMatch of bool // true iff the heads MAY match after further unification, false if already the same
   | FullMatch
 
-let string_of_option f = function
-  | None -> "None"
-  | Some x -> "Some " ^ f x
-
 let string_of_match_result = function
     | MisMatch (d1, d2) ->
         "MisMatch ("
-        ^ string_of_option Print.delta_depth_to_string d1 ^ ") ("
-        ^ string_of_option Print.delta_depth_to_string d2 ^ ")"
+        ^ FStar.Common.string_of_option Print.delta_depth_to_string d1 ^ ") ("
+        ^ FStar.Common.string_of_option Print.delta_depth_to_string d2 ^ ")"
     | HeadMatch u -> "HeadMatch " ^ string_of_bool u
     | FullMatch -> "FullMatch"
 
@@ -3187,15 +3183,10 @@ let discharge_guard env g =
   | Some g -> g
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
-let discharge_guard_nosmt env g =
-    match discharge_guard' None env g false with
-    | Some _ -> true
-    | None   -> false
-
-let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
+let teq_nosmt (env:env) (t1:typ) (t2:typ) : option<guard_t> =
   match try_teq false env t1 t2 with
-  | None -> false
-  | Some g -> discharge_guard_nosmt env g
+  | None -> None
+  | Some g -> discharge_guard' None env g false
 
 let resolve_implicits' env must_total forcelax g =
   let unresolved ctx_u =
@@ -3217,11 +3208,14 @@ let resolve_implicits' env must_total forcelax g =
                     until_fixpoint (hd::out, changed) tl
                | Some (env, tau) ->
                     let t = env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau in
-                    let r = teq_nosmt env t tm in // let the unifier handle setting the variable
-                    if not r then
-                        failwith "resolve_implicits: unifying with an unresolved uvar failed?";
+                    // let the unifier handle setting the variable
+                    let extra =
+                        match teq_nosmt env t tm with
+                        | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
+                        | Some g -> g.implicits
+                    in
                     let hd = { hd with imp_meta = None } in
-                    until_fixpoint (out, changed) (hd::tl)
+                    until_fixpoint (out, changed) (hd :: (extra @ tl))
                end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl
@@ -3276,6 +3270,13 @@ let force_trivial_guard env g =
                                     (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
                                     imp.imp_reason) imp.imp_range
 
+let teq_nosmt_force (env:env) (t1:typ) (t2:typ) :bool =
+    match teq_nosmt env t1 t2 with
+    | None -> false
+    | Some g ->
+        force_trivial_guard env g;
+        true
+
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
     {trivial_guard with univ_ineqs=([], [u1,u2])}
@@ -3314,7 +3315,14 @@ let subtype_nosmt env t1 t2 =
     let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
     let g = with_guard env prob <| solve_and_commit env (singleton wl prob false) (fun _ -> None) in
     match g with
-    | None -> false
+    | None -> None
     | Some g ->
       let g = close_guard env [S.mk_binder x] g in
-      discharge_guard_nosmt env g
+      discharge_guard' None env g false
+
+let subtype_nosmt_force env t1 t2 =
+    match subtype_nosmt env t1 t2 with
+    | None -> false
+    | Some g ->
+        force_trivial_guard env g;
+        true

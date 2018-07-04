@@ -55,8 +55,8 @@ let type_of : 'a . 'a embedding -> FStar_Syntax_Syntax.typ = fun e  -> e.typ
 let set_type : 'a . FStar_Syntax_Syntax.typ -> 'a embedding -> 'a embedding =
   fun ty  ->
     fun e  ->
-      let uu___201_294 = e  in
-      { em = (uu___201_294.em); un = (uu___201_294.un); typ = ty }
+      let uu___202_294 = e  in
+      { em = (uu___202_294.em); un = (uu___202_294.un); typ = ty }
   
 type 'a raw_embedder = FStar_Range.range -> 'a -> FStar_Syntax_Syntax.term
 type 'a raw_unembedder' =
@@ -77,11 +77,11 @@ let (mk_any_emb :
   fun typ  -> { em = (e_any.em); un = (e_any.un); typ } 
 let (e_unit : unit embedding) =
   let em rng u =
-    let uu___202_444 = FStar_Syntax_Util.exp_unit  in
+    let uu___203_444 = FStar_Syntax_Util.exp_unit  in
     {
-      FStar_Syntax_Syntax.n = (uu___202_444.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___203_444.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___202_444.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___203_444.FStar_Syntax_Syntax.vars)
     }  in
   let un w t0 =
     let t = FStar_Syntax_Util.unascribe t0  in
@@ -107,11 +107,11 @@ let (e_bool : Prims.bool embedding) =
       if b
       then FStar_Syntax_Util.exp_true_bool
       else FStar_Syntax_Util.exp_false_bool  in
-    let uu___203_492 = t  in
+    let uu___204_492 = t  in
     {
-      FStar_Syntax_Syntax.n = (uu___203_492.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___204_492.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___203_492.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___204_492.FStar_Syntax_Syntax.vars)
     }  in
   let un w t0 =
     let t = FStar_Syntax_Util.unmeta_safe t0  in
@@ -134,11 +134,11 @@ let (e_bool : Prims.bool embedding) =
 let (e_char : FStar_Char.char embedding) =
   let em rng c =
     let t = FStar_Syntax_Util.exp_char c  in
-    let uu___204_541 = t  in
+    let uu___205_541 = t  in
     {
-      FStar_Syntax_Syntax.n = (uu___204_541.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___205_541.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___204_541.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___205_541.FStar_Syntax_Syntax.vars)
     }  in
   let un w t0 =
     let t = FStar_Syntax_Util.unmeta_safe t0  in
@@ -163,11 +163,11 @@ let (e_int : FStar_BigInt.t embedding) =
     let t =
       let uu____592 = FStar_BigInt.string_of_big_int i  in
       FStar_Syntax_Util.exp_int uu____592  in
-    let uu___205_593 = t  in
+    let uu___206_593 = t  in
     {
-      FStar_Syntax_Syntax.n = (uu___205_593.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.n = (uu___206_593.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___205_593.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___206_593.FStar_Syntax_Syntax.vars)
     }  in
   let un w t0 =
     let t = FStar_Syntax_Util.unmeta_safe t0  in
