@@ -11,7 +11,7 @@ assume val f : n:nat{n > 20} -> Lemma (p n)
 assume val g : n:nat -> Lemma (p n)
 
 // This must fail, we don't know if i > 20
-[@Pervasives.fail]
+[@expect_failure]
 let test1 (i:int) =
     assume (i >= 0);
     assert (True ==> p i) by

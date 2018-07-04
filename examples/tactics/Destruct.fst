@@ -108,7 +108,7 @@ type fin : nat -> Type =
  | S : #n:nat -> fin n -> fin (n + 1)
 
 (* this one fails, we need to use the scrutinee equality (and SMT) in order to unify *)
-[@Pervasives.fail]
+[@expect_failure]
 let decr1 (#b:nat) (n : fin (b + 1)) : fin b =
     synth_by_tactic (fun () -> destruct (quote n);
                                dump "61"; let [b1;_] = intros () in apply (`Z);

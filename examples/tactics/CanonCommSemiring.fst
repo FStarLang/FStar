@@ -29,13 +29,11 @@ unfold let cm_op = CM?.mult
 
 (***** Commutative semirings *)
 
-logic
 let distribute_left_lemma (a:Type) (cm_add:cm a) (cm_mult:cm a) =
   let (+) = cm_op cm_add in
   let ( * ) = cm_op cm_mult in
   x:a -> y:a -> z:a -> Lemma (x * (y + z) == x * y + x * z)
 
-logic
 let distribute_right_lemma (a:Type) (cm_add:cm a) (cm_mult:cm a) =
   let (+) = cm_op cm_add in
   let ( * ) = cm_op cm_mult in

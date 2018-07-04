@@ -1515,13 +1515,14 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
   then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
   match get_fail_se se with
   | Some (_, false) when not (Env.should_verify env) ->
-    (* If we're --laxing, and we didn't find fail_lax, then just ignore the definition *)
+    (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
     [], [], env
 
-  | Some (errnos, _) ->
+  | Some (errnos, lax) ->
+    let env' = if lax then { env with lax = true } else env in
     if Env.debug env Options.Low then
         BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
-    let errs, _ = Errors.catch_errors (fun () -> tc_decl' env se) in
+    let errs, _ = Errors.catch_errors (fun () -> tc_decl' env' se) in
     if Env.debug env Options.Low then begin
         BU.print_string ">> Got issues: [\n";
         List.iter Errors.print_issue errs;

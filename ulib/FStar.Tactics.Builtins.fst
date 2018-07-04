@@ -12,6 +12,12 @@ open FStar.Tactics.Types
 (** Simply fail *)
 assume val fail : #a:Type -> m:string -> TAC a (fun ps post -> post (FStar.Tactics.Result.Failed m ps))
 
+// NOTE: The only reason `fail` is assumed as a primitive is to enable
+// the TacFail debugging flag. We could instead define it like this,
+// obtaining the exact same spec and runtime behaviour (minus the
+// debugging flag).
+(* let fail = fail_act *)
+
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
 assume val top_env : unit -> Tac env

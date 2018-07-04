@@ -431,7 +431,7 @@ let run_tactic_on_typ
         if !tacdbg then
             BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w);
         List.iter (fun g -> if is_irrelevant g
-                            then if TcRel.teq_nosmt (goal_env g) (goal_witness g) U.exp_unit
+                            then if TcRel.teq_nosmt_force (goal_env g) (goal_witness g) U.exp_unit
                                  then ()
                                  else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s"
                                                     (Print.term_to_string (goal_witness g)))

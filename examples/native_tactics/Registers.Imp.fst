@@ -162,12 +162,12 @@ let _ = norm_assert (forall x y. equiv_norm (add3 x y) (add4 x y))
 
 
 (* Without normalizing, they require fuel, or else fail *)
-[@Pervasives.fail] let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
-[@Pervasives.fail] let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
-[@Pervasives.fail] let _ = assert (forall x y. equiv (add1 x y) (add4 x y))
-[@Pervasives.fail] let _ = assert (forall x y. equiv (add2 x y) (add3 x y))
-[@Pervasives.fail] let _ = assert (forall x y. equiv (add2 x y) (add4 x y))
-[@Pervasives.fail] let _ = assert (forall x y. equiv (add3 x y) (add4 x y))
+[@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
+[@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
+[@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add4 x y))
+[@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add3 x y))
+[@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add4 x y))
+[@expect_failure] let _ = assert (forall x y. equiv (add3 x y) (add4 x y))
 
 (* poly5 x = x^5 + x^4 + x^3 + x^2 + x^1 + 1 *)
 
@@ -235,7 +235,7 @@ let _ = assert (forall x. (eval (poly5 x) == eval (poly5' x)))
 // open CanonCommSemiring
 // open FStar.Algebra.CommMonoid
 
-// [@Pervasives.fail]
+// [@expect_failure]
 // let _ = assert (forall x. poly5 x `equiv` poly5' x)
 
 // #set-options "--z3rlimit 10"
