@@ -111,7 +111,7 @@ let mkFV fv us ts = NBETerm.mkFV fv (List.rev us) (List.rev ts)
 let mkConstruct fv us ts = NBETerm.mkConstruct fv (List.rev us) (List.rev ts)
 
 let e_proofstate_nbe =
-    let embed_proofstate (ps:proofstate) : NBETerm.t =
+    let embed_proofstate _cb (ps:proofstate) : NBETerm.t =
         let li = { lkind = Lazy_proofstate
                  ; blob = FStar.Dyn.mkdyn ps
                  ; ltyp = t_proofstate
@@ -119,7 +119,7 @@ let e_proofstate_nbe =
         in
         NBETerm.Lazy li
     in
-    let unembed_proofstate (t:NBETerm.t) : option<proofstate> =
+    let unembed_proofstate _cb (t:NBETerm.t) : option<proofstate> =
         match t with
         | NBETerm.Lazy {blob=b; lkind = Lazy_proofstate} ->
             Some <| FStar.Dyn.undyn b
@@ -177,31 +177,31 @@ let e_result (ea : embedding<'a>)  =
         (ET_app (t_result_lid |> Ident.string_of_lid, [emb_typ_of ea]))
 
 let e_result_nbe (ea : NBET.embedding<'a>)  =
-    let embed_result (res:__result<'a>) : NBET.t =
+    let embed_result cb (res:__result<'a>) : NBET.t =
         match res with
         | Failed (msg, ps) ->
             mkConstruct fstar_tactics_Failed_fv
               [U_zero]
               [ NBETerm.as_iarg (NBETerm.type_of ea)
-              ; NBETerm.as_arg (NBETerm.embed NBETerm.e_string msg)
-              ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps) ]
+              ; NBETerm.as_arg (NBETerm.embed NBETerm.e_string cb msg)
+              ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe cb ps) ]
         | Success (a, ps) ->
             mkConstruct fstar_tactics_Success_fv
               [U_zero]
               [ NBETerm.as_iarg (NBETerm.type_of ea)
-              ; NBETerm.as_arg (NBETerm.embed ea a)
-              ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe ps) ]
+              ; NBETerm.as_arg (NBETerm.embed ea cb a)
+              ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe cb ps) ]
     in
-    let unembed_result (t:NBET.t) : option<__result<'a>> =
+    let unembed_result cb (t:NBET.t) : option<__result<'a>> =
         match t with
         | NBETerm.Construct (fv, _, [(ps, _); (a, _); _t]) when S.fv_eq_lid fv fstar_tactics_Success_lid ->
-            BU.bind_opt (NBETerm.unembed ea a) (fun a ->
-            BU.bind_opt (NBETerm.unembed e_proofstate_nbe ps) (fun ps ->
+            BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
+            BU.bind_opt (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
             Some (Success (a, ps))))
 
         | NBETerm.Construct (fv, _, [(ps, _); (msg, _); _t]) when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
-            BU.bind_opt (NBETerm.unembed NBETerm.e_string msg) (fun msg ->
-            BU.bind_opt (NBETerm.unembed e_proofstate_nbe ps) (fun ps ->
+            BU.bind_opt (NBETerm.unembed NBETerm.e_string cb msg) (fun msg ->
+            BU.bind_opt (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
             Some (Failed (msg, ps))))
         | _ ->
             None
@@ -229,10 +229,10 @@ let e_direction =
     mk_emb embed_direction unembed_direction t_direction
 
 let e_direction_nbe  =
-    let embed_direction (res:direction) : NBET.t =
+    let embed_direction cb (res:direction) : NBET.t =
         failwith "e_direction_nbe"
     in
-    let unembed_direction (t:NBET.t) : option<direction> =
+    let unembed_direction cb (t:NBET.t) : option<direction> =
         match t with
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_topdown_lid -> Some TopDown
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_bottomup_lid -> Some BottomUp
@@ -266,10 +266,10 @@ let e_guard_policy =
     mk_emb embed_guard_policy unembed_guard_policy t_guard_policy
 
 let e_guard_policy_nbe  =
-    let embed_guard_policy (res:guard_policy) : NBET.t =
+    let embed_guard_policy cb (res:guard_policy) : NBET.t =
         failwith "e_guard_policy_nbe"
     in
-    let unembed_guard_policy (t:NBET.t) : option<guard_policy> =
+    let unembed_guard_policy cb (t:NBET.t) : option<guard_policy> =
         match t with
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SMT_lid   -> Some SMT
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Goal_lid  -> Some Goal

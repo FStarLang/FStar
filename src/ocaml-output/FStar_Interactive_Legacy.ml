@@ -163,13 +163,17 @@ let (check_frag :
     fun curmod  ->
       fun frag  ->
         try
-          let uu____329 = FStar_Universal.tc_one_fragment curmod env frag  in
-          match uu____329 with
-          | (m,env1) ->
-              let uu____352 =
-                let uu____361 = FStar_Errors.get_err_count ()  in
-                (m, env1, uu____361)  in
-              FStar_Pervasives_Native.Some uu____352
+          (fun uu___413_318  ->
+             match () with
+             | () ->
+                 let uu____329 =
+                   FStar_Universal.tc_one_fragment curmod env frag  in
+                 (match uu____329 with
+                  | (m,env1) ->
+                      let uu____352 =
+                        let uu____361 = FStar_Errors.get_err_count ()  in
+                        (m, env1, uu____361)  in
+                      FStar_Pervasives_Native.Some uu____352)) ()
         with
         | FStar_Errors.Error (e,msg,r) when
             let uu____391 = FStar_Options.trace_error ()  in

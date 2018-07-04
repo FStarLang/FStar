@@ -60,5 +60,15 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 	$(FSTAR) $*.fst --cache_checked_modules --codegen Plugin --extract $*
 	touch $@
 
+%.clean:
+	rm -f Registers_List.ml Registers.List.ml Registers_List.cmxs
+
+%.native: %.fst Registers.List.ml
+	$(FSTAR) $*.fst --load Registers.List --warn_error -266
+
+%.interp: %.fst Registers.List.fst
+	$(FSTAR) $*.fst
+
+
 clean:
 	rm -f *.test *.ml *.o *.cm[ix] *.cmxs

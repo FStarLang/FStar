@@ -262,9 +262,9 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
     else match plugin_with_arity se.sigattrs with
          | None -> []
          | Some arity_opt ->
-           BU.print2 "Got plugin with attrs = %s; arity_opt=%s"
-                    (List.map Print.term_to_string se.sigattrs |> String.concat " ")
-                    (match arity_opt with None -> "None" | Some x -> "Some " ^ string_of_int x);
+           // BU.print2 "Got plugin with attrs = %s; arity_opt=%s"
+           //          (List.map Print.term_to_string se.sigattrs |> String.concat " ")
+           //          (match arity_opt with None -> "None" | Some x -> "Some " ^ string_of_int x);
            begin
            match se.sigel with
            | Sig_let(lbs, lids) ->

@@ -75,7 +75,7 @@ type primitive_step = {
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
     interpretation:(psc -> FStar.Syntax.Embeddings.norm_cb -> args -> option<term>);
-    interpretation_nbe:(NBE.args -> option<NBE.t>)
+    interpretation_nbe:(NBE.iapp_cb -> NBE.args -> option<NBE.t>)
 }
 
 type debug_switches = {

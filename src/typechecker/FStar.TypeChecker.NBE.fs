@@ -256,7 +256,7 @@ let find_let (lbs : list<letbinding>) (fvar : fv) =
                      else None)
 
 (* uncurried application *)
-let rec iapp (f:t) (args:args) : t =
+let rec iapp (cfg : Cfg.cfg) (f:t) (args:args) : t =
   match f with
   | Lam (f, targs, n) ->
     let m = List.length args in
@@ -271,7 +271,7 @@ let rec iapp (f:t) (args:args) : t =
     else
       // extra arguments
       let (args, args') = List.splitAt n args in
-      iapp (f (List.map fst args)) args'
+      iapp cfg (f (List.map fst args)) args'
   | Accu (a, ts) -> Accu (a, List.rev_append args ts)
   | Construct (i, us, ts) ->
     let rec aux args us ts =
@@ -306,14 +306,21 @@ let rec iapp (f:t) (args:args) : t =
         let full_args = acc @ args in (* Not in reverse order *)
     
         let (can_unfold, args, res) = test_args full_args ar_lst in
-    
-        if can_unfold then (* compute *) 
-          begin match res with 
-          | [] -> (* no residual args *)
-            iapp (tr_lb (make_rec_env tr_lb lbs bs) lb) args 
-          | _ :: _ ->
-            let t = iapp (tr_lb (make_rec_env tr_lb lbs bs) lb) args in 
-            iapp t res
+
+        if not cfg.steps.zeta then 
+          begin 
+            debug cfg (fun () -> BU.print1 "Zeta is not set; will not unfold %s\n" (P.lbname_to_string lb.lbname)); 
+            Rec (lb, lbs, bs, full_args, 0, ar_lst, tr_lb)
+          end 
+        else if can_unfold then (* compute *) 
+          begin
+            debug cfg (fun () -> BU.print1 "Beta reducing recursive function %s\n" (P.lbname_to_string lb.lbname)); 
+             match res with 
+             | [] -> (* no residual args *)
+               iapp cfg (tr_lb (make_rec_env tr_lb lbs bs) lb) args 
+             | _ :: _ ->
+               let t = iapp cfg (tr_lb (make_rec_env tr_lb lbs bs) lb) args in 
+               iapp cfg t res
           end
         else (* cannot unfold -- accumulate args *)
           Rec (lb, lbs, bs, full_args, 0, ar_lst, tr_lb)
@@ -339,11 +346,11 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
          let arity = prim_step.arity + prim_step.univ_arity in
          debug (fun () -> BU.print1 "Found a primop %s\n" (P.fv_to_string fvar));
          Lam ((fun args -> let args' = (List.map NBETerm.as_arg args) in
-              match prim_step.interpretation_nbe args' with
+              match prim_step.interpretation_nbe (iapp cfg) args' with
               | Some x -> debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
                          x
               | None -> debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
-                       iapp (mkFV fvar [] []) args'),
+                       iapp cfg (mkFV fvar [] []) args'),
               (let f (_:int) _ : t * S.aqual = (Constant Unit, None) in FStar.Common.tabulate arity f),
               arity)
 
@@ -429,15 +436,6 @@ and translate_constant (c : sconst) : constant =
     | C.Const_range r -> Range r
     | _ -> failwith ("Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented")
 
-// GM: Not called?
-and translate_pat (p : pat) : t =
-    match p.v with
-    | Pat_constant c -> Constant (translate_constant c)
-    | Pat_cons (cfv, pats) -> iapp (mkConstruct cfv [] []) (List.map (fun (p,_) -> (translate_pat p, None)) pats) // Zoe : TODO universe args?
-    | Pat_var bvar -> mkAccuVar bvar
-    | Pat_wild bvar -> mkAccuVar bvar
-    | Pat_dot_term (bvar, t) -> failwith "Pat_dot_term not implemented"
-
 and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     let debug = debug cfg in
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
@@ -460,7 +458,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_uinst(t, us) ->
       debug (fun () -> BU.print2 "Uinst term : %s\nUnivs : %s\n" (P.term_to_string t)
                                                               (List.map P.univ_to_string us |> String.concat ", "));
-      iapp (translate cfg bs t) (List.map (fun x -> as_arg (Univ (translate_univ bs x))) us)
+      iapp cfg (translate cfg bs t) (List.map (fun x -> as_arg (Univ (translate_univ bs x))) us)
 
     | Tm_type u ->
       Type_t (translate_univ bs u)
@@ -515,9 +513,44 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_app(head, args) ->
       debug (fun () -> BU.print2 "Application: %s @ %s\n" (P.term_to_string head) (P.args_to_string args));
-      iapp (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
+      iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
 
     | Tm_match(scrut, branches) ->
+      (* Thunked computation that reconstructs the patterns *)
+      (* Zoe TODO : maybe rewrite in CPS? *)
+      let make_branches (readback:t -> term) : list<branch> =
+        let cfg = {cfg with steps={cfg.steps with zeta=false}} in // disable zeta flag
+        let rec process_pattern bs (p:pat) : list<t> * pat = (* returns new environment and pattern *)
+          let (bs, p_new) =
+            match p.v with
+            | Pat_constant c -> (bs, Pat_constant c)
+            | Pat_cons (fvar, args) ->
+              let (bs', args') =
+                  List.fold_left (fun (bs, args) (arg, b) ->
+                                    let (bs', arg') = process_pattern bs arg in
+                                    (bs', (arg', b) :: args)) (bs, []) args
+              in
+              (bs', Pat_cons (fvar, List.rev args'))
+            | Pat_var bvar ->
+              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
+              (mkAccuVar x :: bs, Pat_var x)
+            | Pat_wild bvar ->
+              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
+              (mkAccuVar x :: bs, Pat_wild x)
+              (* Zoe: I'm not sure what this pattern binds, just speculating the translation *)
+            | Pat_dot_term (bvar, tm) ->
+              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
+              (bs,
+               Pat_dot_term (x, readback (translate cfg bs tm)))
+          in
+          (bs, {p with v = p_new}) (* keep the info and change the pattern *)
+        in
+        List.map (fun (pat, when_clause, e) ->
+                  let (bs', pat') = process_pattern bs pat in
+                  (* TODO : handle when clause *)
+                  U.branch (pat', when_clause, readback (translate cfg bs' e))) branches
+      in
+
       let rec case (scrut : t) : t =
         debug (fun () -> BU.print1 "Match case: (%s)\n" (P.term_to_string (readback cfg scrut)));
         match scrut with
@@ -550,38 +583,6 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
         | _ ->
           mkAccuMatch scrut case make_branches
-      (* Thunked computation that reconstructs the patterns *)
-      (* Zoe TODO : maybe rewrite in CPS? *)
-      and make_branches (readback:t -> term) : list<branch> =
-        let rec process_pattern bs (p:pat) : list<t> * pat = (* returns new environment and pattern *)
-          let (bs, p_new) =
-            match p.v with
-            | Pat_constant c -> (bs, Pat_constant c)
-            | Pat_cons (fvar, args) ->
-              let (bs', args') =
-                  List.fold_left (fun (bs, args) (arg, b) ->
-                                    let (bs', arg') = process_pattern bs arg in
-                                    (bs', (arg', b) :: args)) (bs, []) args
-              in
-              (bs', Pat_cons (fvar, List.rev args'))
-            | Pat_var bvar ->
-              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
-              (mkAccuVar x :: bs, Pat_var x)
-            | Pat_wild bvar ->
-              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
-              (mkAccuVar x :: bs, Pat_wild x)
-              (* Zoe: I'm not sure what this pattern binds, just speculating the translation *)
-            | Pat_dot_term (bvar, tm) ->
-              let x = S.new_bv None (readback (translate cfg bs bvar.sort)) in
-              (bs,
-               Pat_dot_term (x, readback (translate cfg bs tm)))
-          in
-          (bs, {p with v = p_new}) (* keep the info and change the pattern *)
-        in
-        List.map (fun (pat, when_clause, e) ->
-                  let (bs', pat') = process_pattern bs pat in
-                  (* TODO : handle when clause *)
-                  U.branch (pat', when_clause, readback (translate cfg bs' e))) branches
       in
       case (translate cfg bs scrut)
 
@@ -683,7 +684,7 @@ and translate_monadic (m, ty) cfg bs e : t =
            else []
        in
        let t =
-       iapp (iapp (translate cfg' [] (U.un_uinst (snd ed.bind_repr)))
+       iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (snd ed.bind_repr)))
                       [Univ U_unknown, None;  //We are cheating here a bit
                       Univ U_unknown, None])  //to avoid re-computing the universe of lb.lbtyp
                                               //and ty below; but this should be okay since these
@@ -724,7 +725,7 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
    then let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv mtgt) in
         let cfg' = {cfg with reifying=false} in
         let t =
-        iapp (iapp (translate cfg' [] (U.un_uinst (snd ed.return_repr)))
+        iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (snd ed.return_repr)))
                        [Univ U_unknown, None])
                        [(translate cfg' bs ty, None); //translating the type of the returned term
                         (translate cfg' bs e, None)]  //translating the returned term itself
@@ -754,8 +755,8 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
       in
       let cfg' = {cfg with reifying=false} in
       let t =
-      iapp (translate cfg' [] lift_lam)
-           [(translate cfg bs e, None)]
+      iapp cfg (translate cfg' [] lift_lam)
+               [(translate cfg bs e, None)]
       in
       debug cfg (fun () -> BU.print1 "translate_monadic_lift(2): %s\n" (t_to_string t));
       t

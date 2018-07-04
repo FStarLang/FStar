@@ -401,20 +401,24 @@ let (handle_error : Prims.exn -> unit) =
 let main : 'Auu____818 . unit -> 'Auu____818 =
   fun uu____823  ->
     try
-      setup_hooks ();
-      (let uu____833 = FStar_Util.record_time go  in
-       match uu____833 with
-       | (uu____838,time) ->
-           ((let uu____841 = FStar_Options.query_stats ()  in
-             if uu____841
-             then
-               let uu____842 = FStar_Util.string_of_int time  in
-               let uu____843 =
-                 let uu____844 = FStar_Getopt.cmdline ()  in
-                 FStar_String.concat " " uu____844  in
-               FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____842 uu____843
-             else ());
-            cleanup ();
-            FStar_All.exit (Prims.parse_int "0")))
+      (fun uu___464_831  ->
+         match () with
+         | () ->
+             (setup_hooks ();
+              (let uu____833 = FStar_Util.record_time go  in
+               match uu____833 with
+               | (uu____838,time) ->
+                   ((let uu____841 = FStar_Options.query_stats ()  in
+                     if uu____841
+                     then
+                       let uu____842 = FStar_Util.string_of_int time  in
+                       let uu____843 =
+                         let uu____844 = FStar_Getopt.cmdline ()  in
+                         FStar_String.concat " " uu____844  in
+                       FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____842
+                         uu____843
+                     else ());
+                    cleanup ();
+                    FStar_All.exit (Prims.parse_int "0"))))) ()
     with | e -> (handle_error e; FStar_All.exit (Prims.parse_int "1"))
   

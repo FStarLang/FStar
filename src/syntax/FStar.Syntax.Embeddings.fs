@@ -33,7 +33,7 @@ let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
 let force_shadow (s:shadow_term) = BU.map_opt s FStar.Common.force_thunk
 
 type embed_t = FStar.Range.range -> shadow_term -> norm_cb -> term
-type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we
+type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we expect success, and should warn if unembedding fails
 
 type raw_embedder<'a>   = 'a -> embed_t
 type raw_unembedder<'a> = term -> unembed_t<'a>
@@ -95,7 +95,7 @@ let lazy_embed (pa:printer<'a>) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
                          (Print.term_to_string ta)
                          (emb_typ_to_string et)
                          (pa x);
-    if Options.eager_embedding()
+    if !Options.eager_embedding
     then f()
     else let thunk = FStar.Common.mk_thunk f in
          S.mk (Tm_lazy({blob=FStar.Dyn.mkdyn x;
@@ -109,9 +109,8 @@ let lazy_unembed (pa:printer<'a>) (et:emb_typ) (x:term) (ta:term) (f:term -> opt
     let x = SS.compress x in
     match x.n with
     | Tm_lazy {blob=b; lkind=Lazy_embedding (et', t)}  ->
-      if
-      et <> et'
-      || Options.eager_embedding()
+      if et <> et'
+      || !Options.eager_embedding
       then let res = f (FStar.Common.force_thunk t) in
            let _ = if !Options.debug_embedding
                    then BU.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"

@@ -157,8 +157,11 @@ let with_captured_errors' :
     fun sigint_handler  ->
       fun f  ->
         try
-          FStar_Util.with_sigint_handler sigint_handler
-            (fun uu____209  -> f env)
+          (fun uu___449_203  ->
+             match () with
+             | () ->
+                 FStar_Util.with_sigint_handler sigint_handler
+                   (fun uu____209  -> f env)) ()
         with
         | FStar_All.Failure msg ->
             let msg1 =
@@ -1410,163 +1413,170 @@ let (unpack_interactive_query : FStar_Util.json -> query) =
       let uu____3368 = assoc1 "query" "query-id" request  in
       FStar_All.pipe_right uu____3368 js_str  in
     try
-      let query =
-        let uu____3377 = assoc1 "query" "query" request  in
-        FStar_All.pipe_right uu____3377 js_str  in
-      let args =
-        let uu____3385 = assoc1 "query" "args" request  in
-        FStar_All.pipe_right uu____3385 js_assoc  in
-      let arg k = assoc1 "[args]" k args  in
-      let try_arg k =
-        let uu____3406 = try_assoc k args  in
-        match uu____3406 with
-        | FStar_Pervasives_Native.Some (FStar_Util.JsonNull ) ->
-            FStar_Pervasives_Native.None
-        | other -> other  in
-      let uu____3414 =
-        match query with
-        | "exit" -> Exit
-        | "pop" -> Pop
-        | "describe-protocol" -> DescribeProtocol
-        | "describe-repl" -> DescribeRepl
-        | "segment" ->
-            let uu____3415 =
-              let uu____3416 = arg "code"  in
-              FStar_All.pipe_right uu____3416 js_str  in
-            Segment uu____3415
-        | "peek" ->
-            let uu____3417 =
-              let uu____3418 =
-                let uu____3419 = arg "kind"  in
-                FStar_All.pipe_right uu____3419 js_pushkind  in
-              let uu____3420 =
-                let uu____3421 = arg "code"  in
-                FStar_All.pipe_right uu____3421 js_str  in
-              let uu____3422 =
-                let uu____3423 = arg "line"  in
-                FStar_All.pipe_right uu____3423 js_int  in
-              let uu____3424 =
-                let uu____3425 = arg "column"  in
-                FStar_All.pipe_right uu____3425 js_int  in
-              {
-                push_kind = uu____3418;
-                push_code = uu____3420;
-                push_line = uu____3422;
-                push_column = uu____3424;
-                push_peek_only = (query = "peek")
-              }  in
-            Push uu____3417
-        | "push" ->
-            let uu____3426 =
-              let uu____3427 =
-                let uu____3428 = arg "kind"  in
-                FStar_All.pipe_right uu____3428 js_pushkind  in
-              let uu____3429 =
-                let uu____3430 = arg "code"  in
-                FStar_All.pipe_right uu____3430 js_str  in
-              let uu____3431 =
-                let uu____3432 = arg "line"  in
-                FStar_All.pipe_right uu____3432 js_int  in
-              let uu____3433 =
-                let uu____3434 = arg "column"  in
-                FStar_All.pipe_right uu____3434 js_int  in
-              {
-                push_kind = uu____3427;
-                push_code = uu____3429;
-                push_line = uu____3431;
-                push_column = uu____3433;
-                push_peek_only = (query = "peek")
-              }  in
-            Push uu____3426
-        | "autocomplete" ->
-            let uu____3435 =
-              let uu____3440 =
-                let uu____3441 = arg "partial-symbol"  in
-                FStar_All.pipe_right uu____3441 js_str  in
-              let uu____3442 =
-                let uu____3443 = try_arg "context"  in
-                FStar_All.pipe_right uu____3443
-                  js_optional_completion_context
-                 in
-              (uu____3440, uu____3442)  in
-            AutoComplete uu____3435
-        | "lookup" ->
-            let uu____3448 =
-              let uu____3461 =
-                let uu____3462 = arg "symbol"  in
-                FStar_All.pipe_right uu____3462 js_str  in
-              let uu____3463 =
-                let uu____3464 = try_arg "context"  in
-                FStar_All.pipe_right uu____3464 js_optional_lookup_context
-                 in
-              let uu____3469 =
-                let uu____3472 =
-                  let uu____3481 = try_arg "location"  in
-                  FStar_All.pipe_right uu____3481
-                    (FStar_Util.map_option js_assoc)
-                   in
-                FStar_All.pipe_right uu____3472
-                  (FStar_Util.map_option
-                     (fun loc  ->
-                        let uu____3533 =
-                          let uu____3534 = assoc1 "[location]" "filename" loc
-                             in
-                          FStar_All.pipe_right uu____3534 js_str  in
-                        let uu____3535 =
-                          let uu____3536 = assoc1 "[location]" "line" loc  in
-                          FStar_All.pipe_right uu____3536 js_int  in
-                        let uu____3537 =
-                          let uu____3538 = assoc1 "[location]" "column" loc
-                             in
-                          FStar_All.pipe_right uu____3538 js_int  in
-                        (uu____3533, uu____3535, uu____3537)))
-                 in
-              let uu____3539 =
-                let uu____3542 = arg "requested-info"  in
-                FStar_All.pipe_right uu____3542 (js_list js_str)  in
-              (uu____3461, uu____3463, uu____3469, uu____3539)  in
-            Lookup uu____3448
-        | "compute" ->
-            let uu____3549 =
-              let uu____3558 =
-                let uu____3559 = arg "term"  in
-                FStar_All.pipe_right uu____3559 js_str  in
-              let uu____3560 =
-                let uu____3565 = try_arg "rules"  in
-                FStar_All.pipe_right uu____3565
-                  (FStar_Util.map_option (js_list js_reductionrule))
-                 in
-              (uu____3558, uu____3560)  in
-            Compute uu____3549
-        | "search" ->
-            let uu____3580 =
-              let uu____3581 = arg "terms"  in
-              FStar_All.pipe_right uu____3581 js_str  in
-            Search uu____3580
-        | "vfs-add" ->
-            let uu____3582 =
-              let uu____3589 =
-                let uu____3592 = try_arg "filename"  in
-                FStar_All.pipe_right uu____3592
-                  (FStar_Util.map_option js_str)
-                 in
-              let uu____3599 =
-                let uu____3600 = arg "contents"  in
-                FStar_All.pipe_right uu____3600 js_str  in
-              (uu____3589, uu____3599)  in
-            VfsAdd uu____3582
-        | uu____3603 ->
-            let uu____3604 = FStar_Util.format1 "Unknown query '%s'" query
-               in
-            ProtocolViolation uu____3604
-         in
-      { qq = uu____3414; qid }
+      (fun uu___455_3375  ->
+         match () with
+         | () ->
+             let query =
+               let uu____3377 = assoc1 "query" "query" request  in
+               FStar_All.pipe_right uu____3377 js_str  in
+             let args =
+               let uu____3385 = assoc1 "query" "args" request  in
+               FStar_All.pipe_right uu____3385 js_assoc  in
+             let arg k = assoc1 "[args]" k args  in
+             let try_arg k =
+               let uu____3406 = try_assoc k args  in
+               match uu____3406 with
+               | FStar_Pervasives_Native.Some (FStar_Util.JsonNull ) ->
+                   FStar_Pervasives_Native.None
+               | other -> other  in
+             let uu____3414 =
+               match query with
+               | "exit" -> Exit
+               | "pop" -> Pop
+               | "describe-protocol" -> DescribeProtocol
+               | "describe-repl" -> DescribeRepl
+               | "segment" ->
+                   let uu____3415 =
+                     let uu____3416 = arg "code"  in
+                     FStar_All.pipe_right uu____3416 js_str  in
+                   Segment uu____3415
+               | "peek" ->
+                   let uu____3417 =
+                     let uu____3418 =
+                       let uu____3419 = arg "kind"  in
+                       FStar_All.pipe_right uu____3419 js_pushkind  in
+                     let uu____3420 =
+                       let uu____3421 = arg "code"  in
+                       FStar_All.pipe_right uu____3421 js_str  in
+                     let uu____3422 =
+                       let uu____3423 = arg "line"  in
+                       FStar_All.pipe_right uu____3423 js_int  in
+                     let uu____3424 =
+                       let uu____3425 = arg "column"  in
+                       FStar_All.pipe_right uu____3425 js_int  in
+                     {
+                       push_kind = uu____3418;
+                       push_code = uu____3420;
+                       push_line = uu____3422;
+                       push_column = uu____3424;
+                       push_peek_only = (query = "peek")
+                     }  in
+                   Push uu____3417
+               | "push" ->
+                   let uu____3426 =
+                     let uu____3427 =
+                       let uu____3428 = arg "kind"  in
+                       FStar_All.pipe_right uu____3428 js_pushkind  in
+                     let uu____3429 =
+                       let uu____3430 = arg "code"  in
+                       FStar_All.pipe_right uu____3430 js_str  in
+                     let uu____3431 =
+                       let uu____3432 = arg "line"  in
+                       FStar_All.pipe_right uu____3432 js_int  in
+                     let uu____3433 =
+                       let uu____3434 = arg "column"  in
+                       FStar_All.pipe_right uu____3434 js_int  in
+                     {
+                       push_kind = uu____3427;
+                       push_code = uu____3429;
+                       push_line = uu____3431;
+                       push_column = uu____3433;
+                       push_peek_only = (query = "peek")
+                     }  in
+                   Push uu____3426
+               | "autocomplete" ->
+                   let uu____3435 =
+                     let uu____3440 =
+                       let uu____3441 = arg "partial-symbol"  in
+                       FStar_All.pipe_right uu____3441 js_str  in
+                     let uu____3442 =
+                       let uu____3443 = try_arg "context"  in
+                       FStar_All.pipe_right uu____3443
+                         js_optional_completion_context
+                        in
+                     (uu____3440, uu____3442)  in
+                   AutoComplete uu____3435
+               | "lookup" ->
+                   let uu____3448 =
+                     let uu____3461 =
+                       let uu____3462 = arg "symbol"  in
+                       FStar_All.pipe_right uu____3462 js_str  in
+                     let uu____3463 =
+                       let uu____3464 = try_arg "context"  in
+                       FStar_All.pipe_right uu____3464
+                         js_optional_lookup_context
+                        in
+                     let uu____3469 =
+                       let uu____3472 =
+                         let uu____3481 = try_arg "location"  in
+                         FStar_All.pipe_right uu____3481
+                           (FStar_Util.map_option js_assoc)
+                          in
+                       FStar_All.pipe_right uu____3472
+                         (FStar_Util.map_option
+                            (fun loc  ->
+                               let uu____3533 =
+                                 let uu____3534 =
+                                   assoc1 "[location]" "filename" loc  in
+                                 FStar_All.pipe_right uu____3534 js_str  in
+                               let uu____3535 =
+                                 let uu____3536 =
+                                   assoc1 "[location]" "line" loc  in
+                                 FStar_All.pipe_right uu____3536 js_int  in
+                               let uu____3537 =
+                                 let uu____3538 =
+                                   assoc1 "[location]" "column" loc  in
+                                 FStar_All.pipe_right uu____3538 js_int  in
+                               (uu____3533, uu____3535, uu____3537)))
+                        in
+                     let uu____3539 =
+                       let uu____3542 = arg "requested-info"  in
+                       FStar_All.pipe_right uu____3542 (js_list js_str)  in
+                     (uu____3461, uu____3463, uu____3469, uu____3539)  in
+                   Lookup uu____3448
+               | "compute" ->
+                   let uu____3549 =
+                     let uu____3558 =
+                       let uu____3559 = arg "term"  in
+                       FStar_All.pipe_right uu____3559 js_str  in
+                     let uu____3560 =
+                       let uu____3565 = try_arg "rules"  in
+                       FStar_All.pipe_right uu____3565
+                         (FStar_Util.map_option (js_list js_reductionrule))
+                        in
+                     (uu____3558, uu____3560)  in
+                   Compute uu____3549
+               | "search" ->
+                   let uu____3580 =
+                     let uu____3581 = arg "terms"  in
+                     FStar_All.pipe_right uu____3581 js_str  in
+                   Search uu____3580
+               | "vfs-add" ->
+                   let uu____3582 =
+                     let uu____3589 =
+                       let uu____3592 = try_arg "filename"  in
+                       FStar_All.pipe_right uu____3592
+                         (FStar_Util.map_option js_str)
+                        in
+                     let uu____3599 =
+                       let uu____3600 = arg "contents"  in
+                       FStar_All.pipe_right uu____3600 js_str  in
+                     (uu____3589, uu____3599)  in
+                   VfsAdd uu____3582
+               | uu____3603 ->
+                   let uu____3604 =
+                     FStar_Util.format1 "Unknown query '%s'" query  in
+                   ProtocolViolation uu____3604
+                in
+             { qq = uu____3414; qid }) ()
     with | InvalidQuery msg -> { qq = (ProtocolViolation msg); qid }
     | UnexpectedJsonType (expected,got) -> wrap_js_failure qid expected got
   
 let (deserialize_interactive_query : FStar_Util.json -> query) =
   fun js_query  ->
-    try unpack_interactive_query js_query
+    try
+      (fun uu___457_3617  ->
+         match () with | () -> unpack_interactive_query js_query) ()
     with | InvalidQuery msg -> { qq = (ProtocolViolation msg); qid = "?" }
     | UnexpectedJsonType (expected,got) -> wrap_js_failure "?" expected got
   
@@ -3146,11 +3156,15 @@ let run_and_rewind :
         let st1 = push_repl "run_and_rewind" FullCheck Noop st  in
         let results =
           try
-            FStar_Util.with_sigint_handler FStar_Util.sigint_raise
-              (fun uu____7734  ->
-                 let uu____7735 = task st1  in
-                 FStar_All.pipe_left (fun _0_30  -> FStar_Util.Inl _0_30)
-                   uu____7735)
+            (fun uu___467_7723  ->
+               match () with
+               | () ->
+                   FStar_Util.with_sigint_handler FStar_Util.sigint_raise
+                     (fun uu____7734  ->
+                        let uu____7735 = task st1  in
+                        FStar_All.pipe_left
+                          (fun _0_30  -> FStar_Util.Inl _0_30) uu____7735))
+              ()
           with | FStar_Util.SigInt  -> FStar_Util.Inl sigint_default
           | e -> FStar_Util.Inr e  in
         let st2 = pop_repl "run_and_rewind" st1  in
@@ -3256,7 +3270,9 @@ let run_with_parsed_and_tc_term :
                      if uu____8130
                      then aux ()
                      else
-                       (try aux ()
+                       (try
+                          (fun uu___469_8141  -> match () with | () -> aux ())
+                            ()
                         with
                         | e ->
                             let uu____8157 = FStar_Errors.issue_of_exn e  in
@@ -3539,30 +3555,37 @@ let run_search :
         Prims.strcat (if term.st_negate then "-" else "") uu____8947  in
       let results =
         try
-          let terms = parse1 search_str  in
-          let all_lidents = FStar_TypeChecker_Env.lidents tcenv  in
-          let all_candidates = FStar_List.map sc_of_lid all_lidents  in
-          let matches_all candidate =
-            FStar_List.for_all (st_matches candidate) terms  in
-          let cmp r1 r2 =
-            FStar_Util.compare (r1.sc_lid).FStar_Ident.str
-              (r2.sc_lid).FStar_Ident.str
-             in
-          let results = FStar_List.filter matches_all all_candidates  in
-          let sorted1 = FStar_Util.sort_with cmp results  in
-          let js = FStar_List.map (json_of_search_result tcenv) sorted1  in
-          match results with
-          | [] ->
-              let kwds =
-                let uu____9016 = FStar_List.map pprint_one terms  in
-                FStar_Util.concat_l " " uu____9016  in
-              let uu____9019 =
-                let uu____9020 =
-                  FStar_Util.format1 "No results found for query [%s]" kwds
-                   in
-                InvalidSearch uu____9020  in
-              FStar_Exn.raise uu____9019
-          | uu____9025 -> (QueryOK, (FStar_Util.JsonList js))
+          (fun uu___471_8971  ->
+             match () with
+             | () ->
+                 let terms = parse1 search_str  in
+                 let all_lidents = FStar_TypeChecker_Env.lidents tcenv  in
+                 let all_candidates = FStar_List.map sc_of_lid all_lidents
+                    in
+                 let matches_all candidate =
+                   FStar_List.for_all (st_matches candidate) terms  in
+                 let cmp r1 r2 =
+                   FStar_Util.compare (r1.sc_lid).FStar_Ident.str
+                     (r2.sc_lid).FStar_Ident.str
+                    in
+                 let results = FStar_List.filter matches_all all_candidates
+                    in
+                 let sorted1 = FStar_Util.sort_with cmp results  in
+                 let js =
+                   FStar_List.map (json_of_search_result tcenv) sorted1  in
+                 (match results with
+                  | [] ->
+                      let kwds =
+                        let uu____9016 = FStar_List.map pprint_one terms  in
+                        FStar_Util.concat_l " " uu____9016  in
+                      let uu____9019 =
+                        let uu____9020 =
+                          FStar_Util.format1
+                            "No results found for query [%s]" kwds
+                           in
+                        InvalidSearch uu____9020  in
+                      FStar_Exn.raise uu____9019
+                  | uu____9025 -> (QueryOK, (FStar_Util.JsonList js)))) ()
         with | InvalidSearch s -> (QueryNOK, (FStar_Util.JsonStr s))  in
       (results, (FStar_Util.Inl st))
   
@@ -3800,7 +3823,9 @@ let (interactive_mode : Prims.string -> unit) =
      if uu____9739
      then interactive_mode' init1
      else
-       (try interactive_mode' init1
+       (try
+          (fun uu___473_9742  ->
+             match () with | () -> interactive_mode' init1) ()
         with
         | e ->
             (FStar_Errors.set_handler FStar_Errors.default_handler;

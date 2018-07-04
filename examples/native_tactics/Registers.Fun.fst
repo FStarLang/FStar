@@ -16,3 +16,5 @@ let const_map_n #a (n:nat) (x:a) (r:regmap a) : regmap a = fun _ -> x
 
 [@(plugin 2)]
 let identity_map (n:int) (r:regmap int) : regmap int = fun x -> x
+
+let eta_map (n:int) (r:regmap 'a) = r

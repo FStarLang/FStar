@@ -60,16 +60,16 @@ and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<
 and e_tactic_nbe_0 (er : NBET.embedding<'r>) : NBET.embedding<tac<'r>> // JUST FSHARP
     =
     NBETerm.mk_emb
-           (fun _ -> failwith "Impossible: NBE embedding tactic (0)?")
-           (fun t -> Some <| unembed_tactic_nbe_0 er t)
+           (fun cb _ -> failwith "Impossible: NBE embedding tactic (0)?")
+           (fun cb t -> Some <| unembed_tactic_nbe_0 er cb t)
            (NBET.Constant NBET.Unit)
 
 // IN F*: and e_tactic_nbe_1 (#a:Type) (#r:Type) (ea : NBET.embedding a) (er : NBET.embedding r) : NBET.embedding (a -> tac r)
 and e_tactic_nbe_1 (ea : NBET.embedding<'a>) (er : NBET.embedding<'r>) : NBET.embedding<('a -> tac<'r>)> // JUST FSHARP
     =
     NBETerm.mk_emb
-           (fun _ -> failwith "Impossible: NBE embedding tactic (1)?")
-           (fun t -> unembed_tactic_nbe_1 ea er t)
+           (fun cb _ -> failwith "Impossible: NBE embedding tactic (1)?")
+           (fun cb t -> unembed_tactic_nbe_1 ea er cb t)
            (NBET.Constant NBET.Unit)
 
 and primitive_steps () : list<Cfg.primitive_step> =
@@ -348,23 +348,23 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
     )
 
-//IN F*: and unembed_tactic_nbe_1 (#a:Type) (#r:Type) (ea:NBET.embedding a) (er:NBET.embedding r) (f:NBET.t) : option (a -> tac r) =
-and unembed_tactic_nbe_1<'a,'r> (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>) (f:NBET.t) : option<('a -> tac<'r>)> = //JUST FSHARP
+//IN F*: and unembed_tactic_nbe_1 (#a:Type) (#r:Type) (ea:NBET.embedding a) (er:NBET.embedding r) (cb:NBET.iapp_cb) (f:NBET.t) : option (a -> tac r) =
+and unembed_tactic_nbe_1<'a,'r> (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>) (cb:NBET.iapp_cb) (f:NBET.t) : option<('a -> tac<'r>)> = //JUST FSHARP
     Some (fun x ->
-      let x_tm = NBET.embed ea x in
-      let app = NBE.iapp f [NBET.as_arg x_tm] in
-      unembed_tactic_nbe_0 er app)
+      let x_tm = NBET.embed ea cb x in
+      let app = cb f [NBET.as_arg x_tm] in
+      unembed_tactic_nbe_0 er cb app)
 
-//IN F*: and unembed_tactic_nbe_0 (#b:Type) (eb:NBET.embedding b) (embedded_tac_b:NBET.t) : tac b =
-and unembed_tactic_nbe_0<'b> (eb:NBET.embedding<'b>) (embedded_tac_b:NBET.t) : tac<'b> = //JUST FSHARP
+//IN F*: and unembed_tactic_nbe_0 (#b:Type) (eb:NBET.embedding b) (cb:NBET.iapp_cb) (embedded_tac_b:NBET.t) : tac b =
+and unembed_tactic_nbe_0<'b> (eb:NBET.embedding<'b>) (cb:NBET.iapp_cb) (embedded_tac_b:NBET.t) : tac<'b> = //JUST FSHARP
     bind get (fun proof_state ->
 
     (* Applying is normalizing!!! *)
-    let result = NBE.iapp embedded_tac_b [NBET.as_arg (NBET.embed E.e_proofstate_nbe proof_state)] in
+    let result = cb embedded_tac_b [NBET.as_arg (NBET.embed E.e_proofstate_nbe cb proof_state)] in
 
     // F* requires more annotations.
-    // IN F*: let res : option<__result<b>> = NBET.unembed (E.e_result_nbe eb) result in
-    let res = NBET.unembed (E.e_result_nbe eb) result in //JUST FSHARP
+    // IN F*: let res : option<__result<b>> = NBET.unembed (E.e_result_nbe eb) cb result in
+    let res = NBET.unembed (E.e_result_nbe eb) cb result in //JUST FSHARP
 
     match res with
     | Some (Success (b, ps)) ->

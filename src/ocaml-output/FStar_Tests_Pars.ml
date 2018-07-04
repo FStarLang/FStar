@@ -299,22 +299,27 @@ let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
 let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s  ->
     try
-      let tcenv = init ()  in
-      let uu____329 =
-        let uu____330 =
-          FStar_All.pipe_left
-            (fun _0_16  -> FStar_Parser_ParseIt.Fragment _0_16)
-            (frag_of_text s)
-           in
-        FStar_Parser_ParseIt.parse uu____330  in
-      match uu____329 with
-      | FStar_Parser_ParseIt.Term t ->
-          FStar_ToSyntax_ToSyntax.desugar_term
-            tcenv.FStar_TypeChecker_Env.dsenv t
-      | FStar_Parser_ParseIt.ParseError (e,msg,r) ->
-          FStar_Errors.raise_error (e, msg) r
-      | FStar_Parser_ParseIt.ASTFragment uu____335 ->
-          failwith "Impossible: parsing a Fragment always results in a Term"
+      (fun uu___414_327  ->
+         match () with
+         | () ->
+             let tcenv = init ()  in
+             let uu____329 =
+               let uu____330 =
+                 FStar_All.pipe_left
+                   (fun _0_16  -> FStar_Parser_ParseIt.Fragment _0_16)
+                   (frag_of_text s)
+                  in
+               FStar_Parser_ParseIt.parse uu____330  in
+             (match uu____329 with
+              | FStar_Parser_ParseIt.Term t ->
+                  FStar_ToSyntax_ToSyntax.desugar_term
+                    tcenv.FStar_TypeChecker_Env.dsenv t
+              | FStar_Parser_ParseIt.ParseError (e,msg,r) ->
+                  FStar_Errors.raise_error (e, msg) r
+              | FStar_Parser_ParseIt.ASTFragment uu____335 ->
+                  failwith
+                    "Impossible: parsing a Fragment always results in a Term"))
+        ()
     with
     | e when
         let uu____350 = FStar_Options.trace_error ()  in
@@ -529,35 +534,47 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
        let uu____444 = FStar_Errors.report_all ()  in
        FStar_All.pipe_right uu____444 (fun a236  -> ())  in
      try
-       let tcenv = init ()  in
-       let frag = frag_of_text s  in
-       try
-         let uu____465 =
-           let uu____472 = FStar_ST.op_Bang test_mod_ref  in
-           FStar_Universal.tc_one_fragment uu____472 tcenv frag  in
-         match uu____465 with
-         | (test_mod',tcenv') ->
-             (FStar_ST.op_Colon_Equals test_mod_ref test_mod';
-              FStar_ST.op_Colon_Equals tcenv_ref
-                (FStar_Pervasives_Native.Some tcenv');
-              (let n1 = FStar_Errors.get_err_count ()  in
-               if n1 <> (Prims.parse_int "0")
-               then
-                 (report ();
-                  (let uu____554 =
-                     let uu____559 =
-                       let uu____560 = FStar_Util.string_of_int n1  in
-                       FStar_Util.format1 "%s errors were reported" uu____560
-                        in
-                     (FStar_Errors.Fatal_ErrorsReported, uu____559)  in
-                   FStar_Errors.raise_err uu____554))
-               else ()))
-       with
-       | e ->
-           (report ();
-            FStar_Errors.raise_err
-              (FStar_Errors.Fatal_TcOneFragmentFailed,
-                (Prims.strcat "tc_one_fragment failed: " s)))
+       (fun uu___418_452  ->
+          match () with
+          | () ->
+              let tcenv = init ()  in
+              let frag = frag_of_text s  in
+              (try
+                 (fun uu___420_464  ->
+                    match () with
+                    | () ->
+                        let uu____465 =
+                          let uu____472 = FStar_ST.op_Bang test_mod_ref  in
+                          FStar_Universal.tc_one_fragment uu____472 tcenv
+                            frag
+                           in
+                        (match uu____465 with
+                         | (test_mod',tcenv') ->
+                             (FStar_ST.op_Colon_Equals test_mod_ref test_mod';
+                              FStar_ST.op_Colon_Equals tcenv_ref
+                                (FStar_Pervasives_Native.Some tcenv');
+                              (let n1 = FStar_Errors.get_err_count ()  in
+                               if n1 <> (Prims.parse_int "0")
+                               then
+                                 (report ();
+                                  (let uu____554 =
+                                     let uu____559 =
+                                       let uu____560 =
+                                         FStar_Util.string_of_int n1  in
+                                       FStar_Util.format1
+                                         "%s errors were reported" uu____560
+                                        in
+                                     (FStar_Errors.Fatal_ErrorsReported,
+                                       uu____559)
+                                      in
+                                   FStar_Errors.raise_err uu____554))
+                               else ())))) ()
+               with
+               | e ->
+                   (report ();
+                    FStar_Errors.raise_err
+                      (FStar_Errors.Fatal_TcOneFragmentFailed,
+                        (Prims.strcat "tc_one_fragment failed: " s))))) ()
      with
      | e when
          let uu____572 = FStar_Options.trace_error ()  in

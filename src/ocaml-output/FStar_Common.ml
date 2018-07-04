@@ -1,11 +1,14 @@
 open Prims
 let (has_cygpath : Prims.bool) =
   try
-    let t_out =
-      FStar_Util.run_process "has_cygpath" "which" ["cygpath"]
-        FStar_Pervasives_Native.None
-       in
-    (FStar_Util.trim_string t_out) = "/usr/bin/cygpath"
+    (fun uu___61_3  ->
+       match () with
+       | () ->
+           let t_out =
+             FStar_Util.run_process "has_cygpath" "which" ["cygpath"]
+               FStar_Pervasives_Native.None
+              in
+           (FStar_Util.trim_string t_out) = "/usr/bin/cygpath") ()
   with | uu____8 -> false 
 let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
   let cache = FStar_Util.smap_create (Prims.parse_int "20")  in

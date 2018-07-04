@@ -57,7 +57,7 @@ let reflection_primops : list<Cfg.primitive_step> =
             Cfg.strong_reduction_ok = false;
             Cfg.requires_binder_substitution = false;
             Cfg.interpretation = (fun ctxt n args -> fn (Cfg.psc_range ctxt) n args);
-            Cfg.interpretation_nbe = (NBE.dummy_interp (Ident.lid_of_str "_"))
+            Cfg.interpretation_nbe = (fun _cb args -> NBE.dummy_interp (Ident.lid_of_str "_") args);
         } in
     // GM: we need the annotation, otherwise F* will try to unify the types
     // for all mk1 calls. I guess a consequence that we don't generalize inner lets

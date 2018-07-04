@@ -39,7 +39,7 @@ let register_plugin (s: string) (arity: Prims.int) (t: itac) =
              C.requires_binder_substitution = false;
              C.interpretation=t;
              C.univ_arity=Z.of_int 0; (* TODO: bogus for now, just as in Tactics.Interpreter *)
-             C.interpretation_nbe = FStar_TypeChecker_NBETerm.dummy_interp (FStar_Ident.lid_of_str "_");
+             C.interpretation_nbe = fun _cb -> FStar_TypeChecker_NBETerm.dummy_interp (FStar_Ident.lid_of_str "_");
           }
     in
     FStar_TypeChecker_Cfg.register_plugin step;

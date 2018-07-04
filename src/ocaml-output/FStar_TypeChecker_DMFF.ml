@@ -1750,37 +1750,45 @@ and (star_type' :
                 then false
                 else
                   (try
-                     let non_dependent_or_raise s ty1 =
-                       let sinter =
-                         let uu____4851 = FStar_Syntax_Free.names ty1  in
-                         FStar_Util.set_intersect uu____4851 s  in
-                       let uu____4854 =
-                         let uu____4855 = FStar_Util.set_is_empty sinter  in
-                         Prims.op_Negation uu____4855  in
-                       if uu____4854
-                       then (debug1 ty1 sinter; FStar_Exn.raise Not_found)
-                       else ()  in
-                     let uu____4858 = FStar_Syntax_Subst.open_comp binders c
-                        in
-                     match uu____4858 with
-                     | (binders1,c1) ->
-                         let s =
-                           FStar_List.fold_left
-                             (fun s  ->
-                                fun uu____4882  ->
-                                  match uu____4882 with
-                                  | (bv,uu____4894) ->
-                                      (non_dependent_or_raise s
-                                         bv.FStar_Syntax_Syntax.sort;
-                                       FStar_Util.set_add bv s))
-                             FStar_Syntax_Syntax.no_names binders1
-                            in
-                         let ct = FStar_Syntax_Util.comp_result c1  in
-                         (non_dependent_or_raise s ct;
-                          (let k = n1 - (FStar_List.length binders1)  in
-                           if k > (Prims.parse_int "0")
-                           then is_non_dependent_arrow ct k
-                           else true))
+                     (fun uu___359_4828  ->
+                        match () with
+                        | () ->
+                            let non_dependent_or_raise s ty1 =
+                              let sinter =
+                                let uu____4851 = FStar_Syntax_Free.names ty1
+                                   in
+                                FStar_Util.set_intersect uu____4851 s  in
+                              let uu____4854 =
+                                let uu____4855 =
+                                  FStar_Util.set_is_empty sinter  in
+                                Prims.op_Negation uu____4855  in
+                              if uu____4854
+                              then
+                                (debug1 ty1 sinter; FStar_Exn.raise Not_found)
+                              else ()  in
+                            let uu____4858 =
+                              FStar_Syntax_Subst.open_comp binders c  in
+                            (match uu____4858 with
+                             | (binders1,c1) ->
+                                 let s =
+                                   FStar_List.fold_left
+                                     (fun s  ->
+                                        fun uu____4882  ->
+                                          match uu____4882 with
+                                          | (bv,uu____4894) ->
+                                              (non_dependent_or_raise s
+                                                 bv.FStar_Syntax_Syntax.sort;
+                                               FStar_Util.set_add bv s))
+                                     FStar_Syntax_Syntax.no_names binders1
+                                    in
+                                 let ct = FStar_Syntax_Util.comp_result c1
+                                    in
+                                 (non_dependent_or_raise s ct;
+                                  (let k = n1 - (FStar_List.length binders1)
+                                      in
+                                   if k > (Prims.parse_int "0")
+                                   then is_non_dependent_arrow ct k
+                                   else true)))) ()
                    with | Not_found  -> false)
             | uu____4914 ->
                 ((let uu____4916 =

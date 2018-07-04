@@ -103,29 +103,36 @@ let (should_fail :
   fun x1  ->
     fun y1  ->
       try
-        let g =
-          let uu____237 =
-            let uu____238 = tcenv ()  in
-            FStar_TypeChecker_Rel.teq uu____238 x1 y1  in
-          let uu____239 =
-            let uu____244 = tcenv ()  in
-            FStar_TypeChecker_Rel.solve_deferred_constraints uu____244  in
-          FStar_All.pipe_right uu____237 uu____239  in
-        match g.FStar_TypeChecker_Env.guard_f with
-        | FStar_TypeChecker_Common.Trivial  ->
-            let uu____245 =
-              let uu____246 = FStar_Syntax_Print.term_to_string x1  in
-              let uu____247 = FStar_Syntax_Print.term_to_string y1  in
-              FStar_Util.format2 "%s and %s should not be unifiable\n"
-                uu____246 uu____247
-               in
-            fail uu____245
-        | FStar_TypeChecker_Common.NonTrivial f ->
-            let uu____249 = FStar_Syntax_Print.term_to_string x1  in
-            let uu____250 = FStar_Syntax_Print.term_to_string y1  in
-            let uu____251 = FStar_Syntax_Print.term_to_string f  in
-            FStar_Util.print3 "%s and %s are unifiable if %s\n" uu____249
-              uu____250 uu____251
+        (fun uu___463_235  ->
+           match () with
+           | () ->
+               let g =
+                 let uu____237 =
+                   let uu____238 = tcenv ()  in
+                   FStar_TypeChecker_Rel.teq uu____238 x1 y1  in
+                 let uu____239 =
+                   let uu____244 = tcenv ()  in
+                   FStar_TypeChecker_Rel.solve_deferred_constraints uu____244
+                    in
+                 FStar_All.pipe_right uu____237 uu____239  in
+               (match g.FStar_TypeChecker_Env.guard_f with
+                | FStar_TypeChecker_Common.Trivial  ->
+                    let uu____245 =
+                      let uu____246 = FStar_Syntax_Print.term_to_string x1
+                         in
+                      let uu____247 = FStar_Syntax_Print.term_to_string y1
+                         in
+                      FStar_Util.format2
+                        "%s and %s should not be unifiable\n" uu____246
+                        uu____247
+                       in
+                    fail uu____245
+                | FStar_TypeChecker_Common.NonTrivial f ->
+                    let uu____249 = FStar_Syntax_Print.term_to_string x1  in
+                    let uu____250 = FStar_Syntax_Print.term_to_string y1  in
+                    let uu____251 = FStar_Syntax_Print.term_to_string f  in
+                    FStar_Util.print3 "%s and %s are unifiable if %s\n"
+                      uu____249 uu____250 uu____251)) ()
       with | FStar_Errors.Error (e,msg,r) -> FStar_Util.print1 "%s\n" msg
   
 let (unify' : Prims.string -> Prims.string -> unit) =

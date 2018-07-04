@@ -105,34 +105,6 @@ let e_term_aq aq =
 
 let e_term = e_term_aq []
 
-let e_term_nbe_aq aq =
-    let embed_term (t:term) : NBETerm.t =
-        let qi = { qkind = Quote_static; antiquotes = aq } in
-        NBETerm.Quote (t, qi)
-    in
-    let rec unembed_term (t:NBETerm.t) : option<term> =
-        (* let apply_antiquotes (t:term) (aq:antiquotations) : option<term> = *)
-        (*     BU.bind_opt (mapM_opt (fun (bv, b, e) -> *)
-        (*                            if b *)
-        (*                            then Some (NT (bv, e)) *)
-        (*                            else BU.bind_opt (unembed_term w e) (fun e -> Some (NT (bv, e)))) *)
-        (*                       aq) (fun s -> *)
-        (*     Some (SS.subst s t)) *)
-        (* in *)
-        match t with
-        | NBETerm.Quote (tm, qi) ->
-            // antiquotes!!????
-            Some tm
-        | _ ->
-            None
-    in
-    let fv_term = S.fvconst PC.term_lid in
-    { NBETerm.em = embed_term
-    ; NBETerm.un = unembed_term
-    ; NBETerm.typ = NBETerm.FV (fv_term, [], []) }
-
-let e_term_nbe = e_term_nbe_aq []
-
 let e_aqualv =
     let embed_aqualv (rng:Range.range) (q : aqualv) : term =
         let r =

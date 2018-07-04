@@ -57,7 +57,7 @@ let run_safe :
   =
   fun t  ->
     fun p  ->
-      try t.tac_f p
+      try (fun uu___355_154  -> match () with | () -> t.tac_f p) ()
       with
       | FStar_Errors.Err (uu____163,msg) ->
           FStar_Tactics_Result.Failed (msg, p)
@@ -532,7 +532,10 @@ let trytac_exn : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac =
   fun t  ->
     mk_tac
       (fun ps  ->
-         try let uu____1124 = trytac t  in run uu____1124 ps
+         try
+           (fun uu___358_1119  ->
+              match () with
+              | () -> let uu____1124 = trytac t  in run uu____1124 ps) ()
          with
          | FStar_Errors.Err (uu____1140,msg) ->
              (log ps
@@ -577,19 +580,26 @@ let (__do_unify :
              uu____1229
          else ());
         (try
-           let res = FStar_TypeChecker_Rel.teq_nosmt env t1 t2  in
-           (let uu____1241 =
-              FStar_TypeChecker_Env.debug env (FStar_Options.Other "1346")
-               in
-            if uu____1241
-            then
-              let uu____1242 = FStar_Util.string_of_bool res  in
-              let uu____1243 = FStar_Syntax_Print.term_to_string t1  in
-              let uu____1244 = FStar_Syntax_Print.term_to_string t2  in
-              FStar_Util.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
-                uu____1242 uu____1243 uu____1244
-            else ());
-           ret res
+           (fun uu___360_1236  ->
+              match () with
+              | () ->
+                  let res = FStar_TypeChecker_Rel.teq_nosmt env t1 t2  in
+                  ((let uu____1241 =
+                      FStar_TypeChecker_Env.debug env
+                        (FStar_Options.Other "1346")
+                       in
+                    if uu____1241
+                    then
+                      let uu____1242 = FStar_Util.string_of_bool res  in
+                      let uu____1243 = FStar_Syntax_Print.term_to_string t1
+                         in
+                      let uu____1244 = FStar_Syntax_Print.term_to_string t2
+                         in
+                      FStar_Util.print3
+                        "%%%%%%%%do_unify (RESULT %s) %s =? %s\n" uu____1242
+                        uu____1243 uu____1244
+                    else ());
+                   ret res)) ()
          with
          | FStar_Errors.Err (uu____1252,msg) ->
              mlog
@@ -1373,11 +1383,14 @@ let (__tc :
                       (uu___372_2099.FStar_TypeChecker_Env.nbe)
                   }  in
                 try
-                  let uu____2119 =
-                    (ps.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.type_of
-                      e1 t
-                     in
-                  ret uu____2119
+                  (fun uu___374_2110  ->
+                     match () with
+                     | () ->
+                         let uu____2119 =
+                           (ps.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.type_of
+                             e1 t
+                            in
+                         ret uu____2119) ()
                 with
                 | FStar_Errors.Err (uu____2146,msg) ->
                     let uu____2148 = tts e1 t  in
@@ -1528,31 +1541,35 @@ let (proc_guard :
                                  push_smt_goals [goal1])
                         | FStar_Tactics_Types.Force  ->
                             (try
-                               let uu____2329 =
-                                 let uu____2330 =
-                                   let uu____2331 =
-                                     FStar_TypeChecker_Rel.discharge_guard_no_smt
-                                       e g
-                                      in
-                                   FStar_All.pipe_left
-                                     FStar_TypeChecker_Env.is_trivial
-                                     uu____2331
-                                    in
-                                 Prims.op_Negation uu____2330  in
-                               if uu____2329
-                               then
-                                 mlog
-                                   (fun uu____2336  ->
-                                      let uu____2337 =
-                                        FStar_TypeChecker_Rel.guard_to_string
-                                          e g
-                                         in
-                                      FStar_Util.print1 "guard = %s\n"
-                                        uu____2337)
-                                   (fun uu____2339  ->
-                                      fail1 "Forcing the guard failed %s)"
-                                        reason)
-                               else ret ()
+                               (fun uu___379_2326  ->
+                                  match () with
+                                  | () ->
+                                      let uu____2329 =
+                                        let uu____2330 =
+                                          let uu____2331 =
+                                            FStar_TypeChecker_Rel.discharge_guard_no_smt
+                                              e g
+                                             in
+                                          FStar_All.pipe_left
+                                            FStar_TypeChecker_Env.is_trivial
+                                            uu____2331
+                                           in
+                                        Prims.op_Negation uu____2330  in
+                                      if uu____2329
+                                      then
+                                        mlog
+                                          (fun uu____2336  ->
+                                             let uu____2337 =
+                                               FStar_TypeChecker_Rel.guard_to_string
+                                                 e g
+                                                in
+                                             FStar_Util.print1 "guard = %s\n"
+                                               uu____2337)
+                                          (fun uu____2339  ->
+                                             fail1
+                                               "Forcing the guard failed %s)"
+                                               reason)
+                                      else ret ()) ()
                              with
                              | uu____2346 ->
                                  mlog
@@ -1678,11 +1695,15 @@ let divide :
           (fun p  ->
              let uu____2588 =
                try
-                 let uu____2622 =
-                   let uu____2631 = FStar_BigInt.to_int_fs n1  in
-                   FStar_List.splitAt uu____2631 p.FStar_Tactics_Types.goals
-                    in
-                 ret uu____2622
+                 (fun uu___385_2611  ->
+                    match () with
+                    | () ->
+                        let uu____2622 =
+                          let uu____2631 = FStar_BigInt.to_int_fs n1  in
+                          FStar_List.splitAt uu____2631
+                            p.FStar_Tactics_Types.goals
+                           in
+                        ret uu____2622) ()
                with | uu____2653 -> fail "divide: not enough goals"  in
              bind uu____2588
                (fun uu____2679  ->

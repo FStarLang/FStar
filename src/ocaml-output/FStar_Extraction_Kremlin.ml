@@ -929,7 +929,11 @@ let (find_name : env -> Prims.string -> name) =
 let (find : env -> Prims.string -> Prims.int) =
   fun env  ->
     fun x  ->
-      try FStar_List.index (fun name  -> name.pretty = x) env.names
+      try
+        (fun uu___279_3309  ->
+           match () with
+           | () -> FStar_List.index (fun name  -> name.pretty = x) env.names)
+          ()
       with
       | uu____3316 ->
           let uu____3317 =
@@ -939,7 +943,10 @@ let (find : env -> Prims.string -> Prims.int) =
 let (find_t : env -> Prims.string -> Prims.int) =
   fun env  ->
     fun x  ->
-      try FStar_List.index (fun name  -> name = x) env.names_t
+      try
+        (fun uu___281_3329  ->
+           match () with
+           | () -> FStar_List.index (fun name  -> name = x) env.names_t) ()
       with
       | uu____3336 ->
           let uu____3337 =
@@ -990,9 +997,13 @@ let rec (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
                    FStar_Extraction_ML_Syntax.string_of_mlpath path
                 in
              try
-               FStar_Util.print1 "Attempting to translate module %s\n" m_name;
-               (let uu____3719 = translate_module m  in
-                FStar_Pervasives_Native.Some uu____3719)
+               (fun uu___283_3715  ->
+                  match () with
+                  | () ->
+                      (FStar_Util.print1
+                         "Attempting to translate module %s\n" m_name;
+                       (let uu____3719 = translate_module m  in
+                        FStar_Pervasives_Native.Some uu____3719))) ()
              with
              | e ->
                  ((let uu____3728 = FStar_Util.print_exn e  in
@@ -1176,11 +1187,14 @@ and (translate_let :
                          FStar_Pervasives_Native.None))
                    else
                      (try
-                        let body1 = translate_expr env3 body  in
-                        FStar_Pervasives_Native.Some
-                          (DFunction
-                             (cc, meta1, (FStar_List.length tvars), t1,
-                               name1, binders, body1))
+                        (fun uu___285_3997  ->
+                           match () with
+                           | () ->
+                               let body1 = translate_expr env3 body  in
+                               FStar_Pervasives_Native.Some
+                                 (DFunction
+                                    (cc, meta1, (FStar_List.length tvars),
+                                      t1, name1, binders, body1))) ()
                       with
                       | e ->
                           let msg = FStar_Util.print_exn e  in
@@ -1289,11 +1303,14 @@ and (translate_let :
                          FStar_Pervasives_Native.None))
                    else
                      (try
-                        let body1 = translate_expr env3 body  in
-                        FStar_Pervasives_Native.Some
-                          (DFunction
-                             (cc, meta1, (FStar_List.length tvars), t1,
-                               name1, binders, body1))
+                        (fun uu___285_4202  ->
+                           match () with
+                           | () ->
+                               let body1 = translate_expr env3 body  in
+                               FStar_Pervasives_Native.Some
+                                 (DFunction
+                                    (cc, meta1, (FStar_List.length tvars),
+                                      t1, name1, binders, body1))) ()
                       with
                       | e ->
                           let msg = FStar_Util.print_exn e  in
@@ -1338,10 +1355,14 @@ and (translate_let :
                let t1 = translate_type env1 t  in
                let name1 = ((env1.module_name), name)  in
                try
-                 let expr1 = translate_expr env1 expr  in
-                 FStar_Pervasives_Native.Some
-                   (DGlobal
-                      (meta1, name1, (FStar_List.length tvars), t1, expr1))
+                 (fun uu___287_4281  ->
+                    match () with
+                    | () ->
+                        let expr1 = translate_expr env1 expr  in
+                        FStar_Pervasives_Native.Some
+                          (DGlobal
+                             (meta1, name1, (FStar_List.length tvars), t1,
+                               expr1))) ()
                with
                | e ->
                    ((let uu____4301 =
@@ -2685,16 +2706,18 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
             FStar_All.pipe_right uu____6703
               (FStar_Util.for_some
                  (fun c1  ->
-                    c1 = (FStar_Char.char_of_int (Prims.parse_int "0"))))
+                    let uu____6715 =
+                      FStar_Char.char_of_int (Prims.parse_int "0")  in
+                    c1 = uu____6715))
              in
           if uu____6702
           then
-            let uu____6715 =
+            let uu____6718 =
               FStar_Util.format1
                 "Refusing to translate a string literal that contains a null character: %s"
                 s
                in
-            failwith uu____6715
+            failwith uu____6718
           else ());
          EString s)
     | FStar_Extraction_ML_Syntax.MLC_Char c1 ->
@@ -2704,12 +2727,12 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
         let char_of_int1 = EQualified (["FStar"; "Char"], "char_of_int")  in
         EApp (char_of_int1, [c2])
     | FStar_Extraction_ML_Syntax.MLC_Int
-        (s,FStar_Pervasives_Native.Some uu____6728) ->
+        (s,FStar_Pervasives_Native.Some uu____6731) ->
         failwith
           "impossible: machine integer not desugared to a function call"
-    | FStar_Extraction_ML_Syntax.MLC_Float uu____6743 ->
+    | FStar_Extraction_ML_Syntax.MLC_Float uu____6746 ->
         failwith "todo: translate_expr [MLC_Float]"
-    | FStar_Extraction_ML_Syntax.MLC_Bytes uu____6744 ->
+    | FStar_Extraction_ML_Syntax.MLC_Bytes uu____6747 ->
         failwith "todo: translate_expr [MLC_Bytes]"
     | FStar_Extraction_ML_Syntax.MLC_Int (s,FStar_Pervasives_Native.None ) ->
         EConstant (CInt, s)
@@ -2721,7 +2744,7 @@ and (mk_op_app :
     fun w  ->
       fun op  ->
         fun args  ->
-          let uu____6765 =
-            let uu____6772 = FStar_List.map (translate_expr env) args  in
-            ((EOp (op, w)), uu____6772)  in
-          EApp uu____6765
+          let uu____6768 =
+            let uu____6775 = FStar_List.map (translate_expr env) args  in
+            ((EOp (op, w)), uu____6775)  in
+          EApp uu____6768
