@@ -290,6 +290,8 @@ val new_bv_set: unit -> set<bv>
 val new_fv_set: unit -> set<lident>
 val new_universe_names_set: unit -> set<univ_name>
 
+val eq_binding : binding -> binding -> bool
+
 type qualifier =
   | Assumption                             //no definition provided, just a declaration
   | New                                    //a fresh type constant, distinct from all prior type constructors

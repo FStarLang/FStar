@@ -133,10 +133,11 @@ let comp_to_typ (c:comp) : typ =
     | GTotal (t, _) -> t
     | Comp ct -> ct.result_typ
 
+let get_phi (g:goal) : option<term> =
+    U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
+
 let is_irrelevant (g:goal) : bool =
-    match U.un_squash (N.unfold_whnf (goal_env g) (goal_type g)) with
-    | Some t -> true
-    | _ -> false
+    Option.isSome (get_phi g)
 
 let print (msg:string) : tac<unit> =
     tacprint msg;
@@ -1497,6 +1498,66 @@ let flip () : tac<unit> =
     match ps.goals with
     | g1::g2::gs -> set ({ps with goals=g2::g1::gs})
     | _ -> fail "flip: less than 2 goals"
+    )
+
+// longest_prefix f l1 l2 = (p, r1, r2) ==> l1 = p@r1 /\ l2 = p@r2
+let rec longest_prefix (f : 'a -> 'a -> bool) (l1 : list<'a>) (l2 : list<'a>) : list<'a> * list<'a> * list<'a> =
+    let rec aux acc l1 l2 =
+        match l1, l2 with
+        | x::xs, y::ys ->
+            if f x y
+            then aux (x::acc) xs ys
+            else acc, xs, ys
+        | _ ->
+            acc, l1, l2
+    in
+    let pr, t1, t2 = aux [] l1 l2 in
+    List.rev pr, t1, t2
+
+
+// fix universes
+let join_goals g1 g2 : tac<goal> =
+    (* The one in Syntax.Util ignores null_binders, why? *)
+    let close_forall_no_univs bs f =
+        List.fold_right (fun b f -> U.mk_forall_no_univ (fst b) f) bs f
+    in
+    match get_phi g1 with
+    | None -> fail "goal 1 is not irrelevant"
+    | Some phi1 ->
+    match get_phi g2 with
+    | None -> fail "goal 2 is not irrelevant"
+    | Some phi2 ->
+
+    let gamma1 = g1.goal_ctx_uvar.ctx_uvar_gamma in
+    let gamma2 = g2.goal_ctx_uvar.ctx_uvar_gamma in
+    let gamma, r1, r2 = longest_prefix S.eq_binding (List.rev gamma1) (List.rev gamma2) in
+
+    let t1 = close_forall_no_univs (Env.binders_of_bindings r1) phi1 in
+    let t2 = close_forall_no_univs (Env.binders_of_bindings r2) phi2 in
+
+    bind (set_solution g1 U.exp_unit) (fun () ->
+    bind (set_solution g2 U.exp_unit) (fun () ->
+
+    let ng = U.mk_conj t1 t2 in
+    let nenv = { goal_env g1 with gamma = List.rev gamma
+                                ; gamma_cache = BU.smap_create 100 (* Paranoid? *)
+                                } in
+    bind (mk_irrelevant_goal "joined" nenv ng g1.opts) (fun goal ->
+    mlog (fun () -> BU.print3 "join_goals of\n(%s)\nand\n(%s)\n= (%s)\n"
+                (goal_to_string_verbose g1)
+                (goal_to_string_verbose g2)
+                (goal_to_string_verbose goal)) (fun () ->
+    ret goal))))
+
+let join () : tac<unit> =
+    bind get (fun ps ->
+    match ps.goals with
+    | g1::g2::gs ->
+        bind (set ({ ps with goals = gs })) (fun () ->
+        bind (join_goals g1 g2) (fun g12 ->
+        add_goals [g12]))
+
+    | _ -> fail "join: less than 2 goals"
     )
 
 let later () : tac<unit> =

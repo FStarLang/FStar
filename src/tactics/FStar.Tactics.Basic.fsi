@@ -91,6 +91,7 @@ val later   : unit -> tac<unit>
 val dismiss : unit -> tac<unit>
 val tadmit  : unit -> tac<unit>
 val qed     : unit -> tac<unit>
+val join    : unit -> tac<unit>
 
 val cases : term -> tac<(term * term)>
 val t_destruct : term -> tac<list<(fv * Z.t)>>

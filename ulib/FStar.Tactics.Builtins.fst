@@ -271,6 +271,7 @@ assume val dup : unit -> Tac unit
 
 (** Flip the order of the first two goals. *)
 assume val flip : unit -> Tac unit
+assume val join : unit -> Tac unit
 
 (** Succeed if there are no more goals left, and fail otherwise. *)
 assume val qed : unit -> Tac unit

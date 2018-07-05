@@ -507,6 +507,13 @@ let new_fv_set () :set<lident> = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
 let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name
 
+let eq_binding b1 b2 =
+    match b1, b2 with
+    | Binding_var bv1, Binding_var bv2 -> bv_eq bv1 bv2
+    | Binding_lid (lid1, _), Binding_lid (lid2, _) -> lid_equals lid1 lid2
+    | Binding_univ u1, Binding_univ u2 -> ident_equals u1 u2
+    | _ -> false
+
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
 let no_universe_names = new_universe_names_set ()

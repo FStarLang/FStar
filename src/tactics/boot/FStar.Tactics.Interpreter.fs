@@ -206,6 +206,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 "dismiss"       dismiss e_unit e_unit;
       mktac1 "tadmit"        tadmit  e_unit e_unit;
 
+      mktac1 "join"          join e_unit e_unit;
+
       mktac1 "cases"         cases RE.e_term (e_tuple2 RE.e_term RE.e_term);
       mktac1 "t_destruct"    t_destruct RE.e_term (e_list (e_tuple2 RE.e_fv e_int));
 
