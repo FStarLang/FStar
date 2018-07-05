@@ -16,6 +16,10 @@ let synth_nlist (#t: Type) (n: nat) (xy: t * nlist n t) : Tot (nlist (n + 1) t) 
   let (x, y) = xy in
   x :: y
 
+let synth_nlist_recip (#t: Type) (n: nat) (xy: nlist (n + 1) t) : Tot (t * nlist n t) =
+  let (x :: y) = xy in
+  (x , y)
+
 let rec parse_nlist
   (n: nat)
   (#t: Type0)
@@ -23,11 +27,11 @@ let rec parse_nlist
 : Tot (parser (nlist n t))
 = if n = 0
   then parse_ret []
-  else (p `nondep_then` parse_nlist (n - 1) p) `parse_synth` (synth_nlist (n - 1))
-
-let synth_nlist_recip (#t: Type) (n: nat) (xy: nlist (n + 1) t) : Tot (t * nlist n t) =
-  let (x :: y) = xy in
-  (x , y)
+  else
+    parse_synth
+      (p `nondep_then` parse_nlist (n - 1) p)
+      (synth_nlist (n - 1))
+      (synth_nlist_recip (n - 1))
 
 let rec serialize_nlist
   (n: nat)

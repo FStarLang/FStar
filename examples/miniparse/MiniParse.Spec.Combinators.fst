@@ -537,55 +537,26 @@ unfold
 let parse_fret (#t #t':Type) (f: t -> GTot t') (v:t) : Tot (parser t') =
   Parser (parse_fret' f v)
 
-let synth_injective
+let synth_inverse
   (#t1: Type0)
   (#t2: Type0)
-  (f: (t1 -> GTot t2))
+  (f2: (t1 -> GTot t2))
+  (g1: (t2 -> GTot t1))
 : GTot Type0
-= forall (x x' : t1) . f x == f x' ==> x == x'
-
-let synth_injective_intro
-  (#t1: Type0)
-  (#t2: Type0)
-  (f: (t1 -> GTot t2))
-: Lemma
-  (requires (forall (x x' : t1) . f x == f x' ==> x == x'))
-  (ensures (synth_injective f))
-= ()
+= (forall (x : t2) . f2 (g1 x) == x)
 
 let parse_synth
   (#t1: Type0)
   (#t2: Type0)
   (p1: parser t1)
   (f2: t1 -> GTot t2)
+  (g1: t2 -> GTot t1)
 : Pure (parser t2)
   (requires (
-    synth_injective f2
+    synth_inverse g1 f2
   ))
   (ensures (fun _ -> True))
 = (and_then p1 (fun v1 -> parse_fret f2 v1))
-
-let compose (#t1 #t2 #t3: Type) (f1: t1 -> GTot t2) (f2: t2 -> GTot t3) (x: t1) : GTot t3 =
-  let y1 = f1 x in
-  f2 y1
-
-let make_total_constant_size_parser_compose
-  (sz: nat)
-  (t1 t2: Type0)
-  (f1: ((s: bytes {Seq.length s == sz}) -> GTot t1))
-  (g2: t1 -> GTot t2)
-: Lemma
-  (requires (
-    make_total_constant_size_parser_precond sz t1 f1 /\
-    (forall x x' . g2 x == g2 x' ==> x == x')
-  ))
-  (ensures (
-    make_total_constant_size_parser_precond sz t1 f1 /\
-    make_total_constant_size_parser_precond sz t2 (f1 `compose` g2) /\
-    (forall x x' . g2 x == g2 x' ==> x == x') /\
-    (forall input . parse (make_total_constant_size_parser sz t2 (f1 `compose` g2)) input == parse (make_total_constant_size_parser sz t1 f1 `parse_synth` g2) input)
-  ))
-= ()
 
 val bare_serialize_synth
   (#t1: Type0)
@@ -608,21 +579,13 @@ val bare_serialize_synth_correct
   (g1: t2 -> GTot t1)
 : Lemma
   (requires (
-    (forall (x : t2) . f2 (g1 x) == x) /\
-    (forall (x x' : t1) . f2 x == f2 x' ==> x == x')
+    synth_inverse g1 f2 /\
+    synth_inverse f2 g1
   ))
-  (ensures (serializer_correct (parse_synth p1 f2) (bare_serialize_synth p1 f2 s1 g1 )))
+  (ensures (serializer_correct (parse_synth p1 f2 g1) (bare_serialize_synth p1 f2 s1 g1 )))
 
 let bare_serialize_synth_correct #k #t1 p1 f2 s1 g1 =
   ()
-
-let synth_inverse
-  (#t1: Type0)
-  (#t2: Type0)
-  (f2: (t1 -> GTot t2))
-  (g1: (t2 -> GTot t1))
-: GTot Type0
-= (forall (x : t2) . f2 (g1 x) == x)
 
 let synth_inverse_intro
   (#t1: Type0)
@@ -643,9 +606,9 @@ let serialize_synth
   (g1: t2 -> GTot t1)
   (u: unit {
     synth_inverse f2 g1 /\
-    synth_injective f2
+    synth_inverse g1 f2
   })
-: Tot (serializer (parse_synth p1 f2))
+: Tot (serializer (parse_synth p1 f2 g1))
 = bare_serialize_synth_correct p1 f2 s1 g1;
   Serializer (bare_serialize_synth p1 f2 s1 g1)
 

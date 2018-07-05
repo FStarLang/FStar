@@ -102,8 +102,8 @@ let admit_others (t: unit -> T.Tac unit) : T.Tac unit =
 *)    
 *)
 
-let rec imm_solve_goal () : T.Tac unit =
-  T.first [
+let rec imm_solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
+  T.first (List.Tot.append l [
     (fun () ->
       T.trivial ();
       tsuccess "trivial"
@@ -123,10 +123,10 @@ let rec imm_solve_goal () : T.Tac unit =
     );
     (fun () ->
       T.apply (`(FStar.Squash.return_squash));
-      to_all_goals imm_solve_goal;
+      to_all_goals (fun () -> imm_solve_goal l);
       tsuccess "return_squash imm_solve"
     );    
-  ]
+  ])
 
 let tforall_intro () = T.forall_intro ()
 
@@ -134,7 +134,7 @@ let timplies_intro () = T.implies_intro ()
 
 let tsplit () = T.split ()
 
-let rec solve_goal () : T.Tac unit =
+let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
   if T.ngoals () = 0
   then ()
   else begin
@@ -144,18 +144,18 @@ let rec solve_goal () : T.Tac unit =
         tfail "More than one goal here"
       else ()
     end;
-  match T.trytac imm_solve_goal with
+  match T.trytac (fun () -> imm_solve_goal l) with
   | Some _ -> ()
   | _ ->
   begin match T.trytac tforall_intro with
   | Some _ ->
     T.print ("Applied: forall_intro");
-    admit_others solve_goal
+    admit_others (fun () -> solve_goal l)
   | _ ->
     begin match T.trytac timplies_intro with
     | Some _ ->
       T.print ("Applied: implies_intro");
-      admit_others solve_goal
+      admit_others (fun () -> solve_goal l)
     | _ ->
       begin match T.trytac tsplit with
       | Some _ ->
@@ -168,7 +168,7 @@ let rec solve_goal () : T.Tac unit =
           ()
 *)          
         else
-          to_all_goals solve_goal
+          to_all_goals (fun () -> solve_goal l)
       | _ ->
         T.dump "MUST USE SMT FOR THIS ONE";
         T.smt ();
@@ -178,10 +178,12 @@ let rec solve_goal () : T.Tac unit =
   end
   end
 
-let rec tconclude () : T.Tac unit =
+let rec tconclude_with (l: list (unit -> T.Tac unit)) : T.Tac unit =
   if T.ngoals () > 0
   then begin
     T.dump "Some goals left";
-    let _ = T.divide 1 solve_goal tconclude in
+    let _ = T.divide 1 (fun () -> solve_goal l) (fun () -> tconclude_with l) in
     ()
   end else T.print "No goals left"
+
+let tconclude () : T.Tac unit = tconclude_with []

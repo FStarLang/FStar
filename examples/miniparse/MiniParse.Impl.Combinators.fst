@@ -96,11 +96,12 @@ let parse32_synth
   (#p1: parser t1)
   (p1' : parser32 p1)
   (f2: t1 -> GTot t2)
-  (f2': (x: t1) -> Tot (y: t2 { y == f2 x } )) 
+  (f2': (x: t1) -> Tot (y: t2 { y == f2 x } ))
+  (g1: t2 -> GTot t1)
   (u: unit {
-    synth_injective f2
+    synth_inverse g1 f2
   })
-: Tot (parser32 (parse_synth p1 f2))
+: Tot (parser32 (parse_synth p1 f2 g1))
 = fun (input: buffer8) (len: U32.t { len == B.len input } ) ->
     match p1' input len with
     | Some (v1, consumed) -> Some ((f2' v1 <: t2), consumed)
@@ -118,7 +119,7 @@ let serialize32_synth
   (g1': (x: t2) -> Tot (y: t1 { y == g1 x } ) )
   (u: unit {
     synth_inverse f2 g1 /\
-    synth_injective f2
+    synth_inverse g1 f2
   })
 : Tot (serializer32 (serialize_synth p1 f2 s1 g1 u))
 = fun (output: buffer8) (len: U32.t { len == B.len output } ) (input: t2) ->

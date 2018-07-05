@@ -35,7 +35,7 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
   else
   if hd `T.term_eq` (`(parse_synth))
   then match tl with
-  | [qt1; t2; qp1; qf2] ->
+  | [qt1; t2; qp1; qf2; qg1] ->
     let (p1, _) = qp1 in
     let (t1, _) = qt1 in
     let (f2, _) = qf2 in
@@ -50,6 +50,7 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
       (p1', T.Q_Explicit);
       qf2;
       (f2', T.Q_Explicit);
+      qg1;
       ((`()), T.Q_Explicit);
     ]
   | _ -> tfail "Not enough arguments to synth"
@@ -129,7 +130,10 @@ let gen_parser32 (p: T.term) : T.Tac unit =
   T.set_guard_policy T.Goal;
   let t = gen_parser32' p in
   T.exact_guard t;
-  tconclude ();
+  tconclude_with [
+    synth_inverse_forall_bounded_u8_solve;
+    synth_inverse_forall_tenum_solve;
+  ];
   T.print "gen_parser32 spits:";
   T.print (T.term_to_string t)
 
@@ -143,7 +147,11 @@ let p' = p `nondep_then` parse_u8
 
 let q' : parser32 p' = T.synth_by_tactic (fun () -> gen_parser32 (`(p')))
 
-let r = parse_ret 42 `parse_synth` (fun x -> x + 1)
+let r : parser int =
+  parse_synth
+    (parse_ret 42)
+    (fun x -> x + 1)
+    (fun x -> x - 1)
 
 let r' : parser32 r = T.synth_by_tactic (fun () -> gen_parser32 (`(r)))
 
