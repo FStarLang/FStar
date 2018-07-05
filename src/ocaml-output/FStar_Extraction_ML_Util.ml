@@ -55,9 +55,9 @@ let (mlconst_of_const :
   =
   fun p  ->
     fun c  ->
-      try (fun uu___264_103  -> match () with | () -> mlconst_of_const' c) ()
+      try (fun uu___265_103  -> match () with | () -> mlconst_of_const' c) ()
       with
-      | uu___263_106 ->
+      | uu___264_106 ->
           let uu____107 =
             let uu____108 = FStar_Range.string_of_range p  in
             let uu____109 = FStar_Syntax_Print.const_to_string c  in
@@ -214,8 +214,8 @@ let (udelta_unfold :
       FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option)
   =
   fun g  ->
-    fun uu___259_364  ->
-      match uu___259_364 with
+    fun uu___260_364  ->
+      match uu___260_364 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
           let uu____373 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1  in
           (match uu____373 with
@@ -257,8 +257,8 @@ let (eff_leq :
       | uu____406 -> false
   
 let (eff_to_string : FStar_Extraction_ML_Syntax.e_tag -> Prims.string) =
-  fun uu___260_415  ->
-    match uu___260_415 with
+  fun uu___261_415  ->
+    match uu___261_415 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -508,8 +508,8 @@ let is_type_abstraction :
     (('a,'b) FStar_Util.either,'c) FStar_Pervasives_Native.tuple2 Prims.list
       -> Prims.bool
   =
-  fun uu___261_1002  ->
-    match uu___261_1002 with
+  fun uu___262_1002  ->
+    match uu___262_1002 with
     | (FStar_Util.Inl uu____1013,uu____1014)::uu____1015 -> true
     | uu____1038 -> false
   
@@ -549,8 +549,8 @@ let (resugar_exp :
   
 let (record_field_path :
   FStar_Ident.lident Prims.list -> Prims.string Prims.list) =
-  fun uu___262_1111  ->
-    match uu___262_1111 with
+  fun uu___263_1111  ->
+    match uu___263_1111 with
     | f::uu____1117 ->
         let uu____1120 = FStar_Util.prefix f.FStar_Ident.ns  in
         (match uu____1120 with
@@ -1616,7 +1616,7 @@ let (interpret_plugin_as_term_fun :
                                 aux uu____4130 bs4
                              in
                           (try
-                             (fun uu___266_4144  ->
+                             (fun uu___267_4144  ->
                                 match () with
                                 | () ->
                                     let uu____4153 = aux [] bs2  in

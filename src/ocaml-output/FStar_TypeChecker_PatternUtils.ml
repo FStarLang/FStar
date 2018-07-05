@@ -41,12 +41,12 @@ let (pat_as_exp :
               | t -> tc_annot env1 t  in
             match uu____84 with
             | (t_x,guard) ->
-                ((let uu___254_150 = x  in
+                ((let uu___255_150 = x  in
                   {
                     FStar_Syntax_Syntax.ppname =
-                      (uu___254_150.FStar_Syntax_Syntax.ppname);
+                      (uu___255_150.FStar_Syntax_Syntax.ppname);
                     FStar_Syntax_Syntax.index =
-                      (uu___254_150.FStar_Syntax_Syntax.index);
+                      (uu___255_150.FStar_Syntax_Syntax.index);
                     FStar_Syntax_Syntax.sort = t_x
                   }), guard)
              in
@@ -80,12 +80,12 @@ let (pat_as_exp :
                      (match uu____265 with
                       | (t,uu____300,g) ->
                           let x1 =
-                            let uu___255_315 = x  in
+                            let uu___256_315 = x  in
                             {
                               FStar_Syntax_Syntax.ppname =
-                                (uu___255_315.FStar_Syntax_Syntax.ppname);
+                                (uu___256_315.FStar_Syntax_Syntax.ppname);
                               FStar_Syntax_Syntax.index =
-                                (uu___255_315.FStar_Syntax_Syntax.index);
+                                (uu___256_315.FStar_Syntax_Syntax.index);
                               FStar_Syntax_Syntax.sort = t
                             }  in
                           let uu____316 =
@@ -98,13 +98,13 @@ let (pat_as_exp :
                           (match uu____316 with
                            | (e,uu____351,g') ->
                                let p2 =
-                                 let uu___256_368 = p1  in
+                                 let uu___257_368 = p1  in
                                  {
                                    FStar_Syntax_Syntax.v =
                                      (FStar_Syntax_Syntax.Pat_dot_term
                                         (x1, e));
                                    FStar_Syntax_Syntax.p =
-                                     (uu___256_368.FStar_Syntax_Syntax.p)
+                                     (uu___257_368.FStar_Syntax_Syntax.p)
                                  }  in
                                let uu____371 =
                                  FStar_TypeChecker_Env.conj_guard g g'  in
@@ -189,13 +189,13 @@ let (pat_as_exp :
                          FStar_List.flatten
                         in
                      (uu____1040, uu____1051, uu____1062, env2, e, guard,
-                       (let uu___257_1080 = p1  in
+                       (let uu___258_1080 = p1  in
                         {
                           FStar_Syntax_Syntax.v =
                             (FStar_Syntax_Syntax.Pat_cons
                                (fv, (FStar_List.rev pats1)));
                           FStar_Syntax_Syntax.p =
-                            (uu___257_1080.FStar_Syntax_Syntax.p)
+                            (uu___258_1080.FStar_Syntax_Syntax.p)
                         })))
              in
           let rec elaborate_pat env1 p1 =
@@ -324,7 +324,7 @@ let (pat_as_exp :
                                      let uu____1675 = aux formals' pats'  in
                                      uu____1665 :: uu____1675)
                              in
-                          let uu___258_1690 = p1  in
+                          let uu___259_1690 = p1  in
                           let uu____1693 =
                             let uu____1694 =
                               let uu____1707 = aux f pats1  in
@@ -333,7 +333,7 @@ let (pat_as_exp :
                           {
                             FStar_Syntax_Syntax.v = uu____1693;
                             FStar_Syntax_Syntax.p =
-                              (uu___258_1690.FStar_Syntax_Syntax.p)
+                              (uu___259_1690.FStar_Syntax_Syntax.p)
                           }))
             | uu____1724 -> p1  in
           let one_pat allow_wc_dependence env1 p1 =
