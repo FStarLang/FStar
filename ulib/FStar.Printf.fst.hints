@@ -11,7 +11,7 @@
         "projection_inverse_FStar.Printf.MkExtension_a"
       ],
       0,
-      "f5fdfcbf9bbc6cc6e06e988df8d02b42"
+      "a7c7390ff0e754d3df7fbc6c0c3ee548"
     ],
     [
       "FStar.Printf.__proj__Extension__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_FStar.Printf_Tm_refine_3beb8710e53474127cdc6910faff6866"
       ],
       0,
-      "d62a11931bfb46610605247f6a85c9ae"
+      "8746882dd216d726737cd9521c83ec19"
     ],
     [
       "FStar.Printf.arg_type",
@@ -45,7 +45,7 @@
         "fuel_guarded_inversion_FStar.Printf.arg"
       ],
       0,
-      "b4485c43693b7a49d46814aab4b33e2e"
+      "161a6c42c99c37e1681e0fab2f5a5e15"
     ],
     [
       "FStar.Printf.string_of_arg",
@@ -92,7 +92,7 @@
         "projection_inverse_FStar.Printf.MkExtension_a"
       ],
       0,
-      "33a94258b45bc9f1cc3e6bd5a906fa45"
+      "145920615b35a5f3472b80ecee0cac08"
     ],
     [
       "FStar.Printf.__proj__Lit__item___0",
@@ -105,7 +105,7 @@
         "refinement_interpretation_FStar.Printf_Tm_refine_37423919295cd822d336ea93baad95f4"
       ],
       0,
-      "d74787dfe070a1fed1e9ebb96aa99c7f"
+      "ac4d0eadbf3f25d3053e6909019f3955"
     ],
     [
       "FStar.Printf.__proj__Arg__item___0",
@@ -118,7 +118,7 @@
         "refinement_interpretation_FStar.Printf_Tm_refine_d9dc5f03433d2ecffb05bfd949e65ef5"
       ],
       0,
-      "1dc97c281a31167c76d38ff982ba372e"
+      "00b965555a21b190d011b8b60cc06bb0"
     ],
     [
       "FStar.Printf.dir_type",
@@ -137,7 +137,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "f0ad0871f943180fac44005c0a5e6789"
+      "199645ab0ff91c1eca36a8b0591c0f1d"
     ],
     [
       "FStar.Printf.string_of_dirs",
@@ -171,11 +171,11 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "string_typing", "subterm_ordering_Prims.Cons",
-        "typing_FStar.Printf_Tm_abs_ddba6eda42baed14351c625eb5eb75c2",
+        "typing_FStar.Printf_Tm_abs_8e0712231851a000b748947c53201eb8",
         "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "958c0e233029dd1c8aa225d11283b294"
+      "e16c7272585746687cdedd5ebc62328a"
     ],
     [
       "FStar.Printf.parse_format",
@@ -205,7 +205,7 @@
         "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "18e4c44c1129da95ff209e457eb5862b"
+      "a2d3d1152debc25b58b2ef9dc7a831e4"
     ],
     [
       "FStar.Printf.sprintf",
@@ -278,11 +278,11 @@
         "typing_FStar.Printf.parse_format",
         "typing_FStar.Printf.parse_format_string",
         "typing_FStar.Printf_Tm_abs_40fe4346f56f10c8abb7d3e321d72fba",
-        "typing_FStar.Printf_Tm_abs_8ad9a6845c5fec1ab0c0f4aa047cd0fa",
+        "typing_FStar.Printf_Tm_abs_9f0752530f3265a8eb36f238a9fa91db",
         "typing_FStar.String.list_of_string", "unit_typing"
       ],
       0,
-      "eb7cbb6a023cf2531ac3324b39984b84"
+      "3b845a94e2411f926fe5bc4de0788439"
     ],
     [
       "FStar.Printf.test",
@@ -291,7 +291,7 @@
       1,
       [ "@query" ],
       0,
-      "018aa9ab2ad88cd0d105224f94105c0c"
+      "2b02016f8a74bb11207ce3ffc7b2c46b"
     ],
     [
       "FStar.Printf.ext_sprintf",
@@ -360,11 +360,11 @@
         "typing_FStar.Printf.parse_format",
         "typing_FStar.Printf.parse_format_string",
         "typing_FStar.Printf_Tm_abs_40fe4346f56f10c8abb7d3e321d72fba",
-        "typing_FStar.Printf_Tm_abs_8ad9a6845c5fec1ab0c0f4aa047cd0fa",
+        "typing_FStar.Printf_Tm_abs_9f0752530f3265a8eb36f238a9fa91db",
         "typing_FStar.String.list_of_string"
       ],
       0,
-      "7d80f2ad9aaa0f6b4cd11189e68404d5"
+      "26c259d9da4929002f620b407956fca3"
     ],
     [
       "FStar.Printf.something_to_string",
@@ -377,7 +377,7 @@
         "fuel_guarded_inversion_FStar.Printf.something"
       ],
       0,
-      "ed88bb84f16d97b5ea43b0be1cbf34e3"
+      "0bc10f3b2bb8305b120288f628dfed2c"
     ],
     [
       "FStar.Printf.parse_something",
@@ -389,7 +389,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a703bd9d143d30c18aba604ae93ad1b8"
+      "7df39a676b6b62f0c3158574baa96505"
     ],
     [
       "FStar.Printf.test_ext",
@@ -398,7 +398,7 @@
       1,
       [ "@query" ],
       0,
-      "b15578d5d31d6c2bf9a6c9ee4d361e49"
+      "e7f6733f07d5224682f41cf0eeeb558f"
     ],
     [
       "FStar.Printf.__proj__MkExtension__item__f",
@@ -410,7 +410,7 @@
         "projection_inverse_FStar.Printf.MkExtension_a"
       ],
       0,
-      "1d23a90ae8d5b2263c0375444dade786"
+      "43e989fd9bf2ab13339488c916e2de3f"
     ],
     [
       "FStar.Printf.__proj__Extension__item___0",
@@ -424,7 +424,7 @@
         "refinement_interpretation_FStar.Printf_Tm_refine_3beb8710e53474127cdc6910faff6866"
       ],
       0,
-      "1bfddec6ece6c1c44bb7078f02262160"
+      "fb9daa29a29a647dff76bfcfc75ba09d"
     ],
     [
       "FStar.Printf.arg_type",
@@ -444,7 +444,7 @@
         "fuel_guarded_inversion_FStar.Printf.arg"
       ],
       0,
-      "edfdc23de054de479b9a4bcd80a5e73f"
+      "60e85d9bde5bcbf70624bbd998d22941"
     ],
     [
       "FStar.Printf.string_of_arg",
@@ -469,7 +469,7 @@
         "projection_inverse_FStar.Printf.MkExtension_a"
       ],
       0,
-      "de7bcd5952c26cc77d3e6ef3bb2cf1d8"
+      "2fd665d16b86590da29e60b374dc9c0c"
     ],
     [
       "FStar.Printf.__proj__Lit__item___0",
@@ -482,7 +482,7 @@
         "refinement_interpretation_FStar.Printf_Tm_refine_37423919295cd822d336ea93baad95f4"
       ],
       0,
-      "7cd44583131ffb02806035c180dcf9ae"
+      "00784f6d6e13bb0ec91010d9fd99bf76"
     ],
     [
       "FStar.Printf.__proj__Arg__item___0",
@@ -495,7 +495,7 @@
         "refinement_interpretation_FStar.Printf_Tm_refine_d9dc5f03433d2ecffb05bfd949e65ef5"
       ],
       0,
-      "0c2d527ce30887125d3aae724eee84da"
+      "67125472bc707d7cd785a16a04c80d86"
     ],
     [
       "FStar.Printf.dir_type",
@@ -514,7 +514,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "a66905f37fbc62c840f04f04b0bfda3b"
+      "85427c46c4dcfa402ca400cd4c7a76a9"
     ],
     [
       "FStar.Printf.string_of_dirs",
@@ -548,11 +548,11 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "string_typing", "subterm_ordering_Prims.Cons",
-        "typing_FStar.Printf_Tm_abs_b77142884cc6d77d4246c565084736ad",
+        "typing_FStar.Printf_Tm_abs_79edae9e8d5e89aaa390185fc640776d",
         "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "c8982a89db70590bc1ccc35f2b8ae65f"
+      "93a6131e6aff1a303ff04808bcbd09de"
     ],
     [
       "FStar.Printf.parse_format",
@@ -582,7 +582,7 @@
         "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "ad63ee30f8caa7955fc77ce57260fc96"
+      "4c6ae82cb0523a58ceabdb3dd0733c0b"
     ],
     [
       "FStar.Printf.sprintf",
@@ -654,12 +654,12 @@
         "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_FStar.Printf.parse_format",
         "typing_FStar.Printf.parse_format_string",
-        "typing_FStar.Printf_Tm_abs_03e72519beef6b31f74acf6d9dadde5d",
         "typing_FStar.Printf_Tm_abs_40fe4346f56f10c8abb7d3e321d72fba",
+        "typing_FStar.Printf_Tm_abs_e4753813f7bd62cd6e84392201a1204d",
         "typing_FStar.String.list_of_string", "unit_typing"
       ],
       0,
-      "755f4714ec2f0f0399f62e4b805dda6c"
+      "47f89af2af501240f0c5a260b0ea35b6"
     ],
     [
       "FStar.Printf.sprintf",
@@ -700,7 +700,7 @@
         "typing_FStar.String.list_of_string", "unit_typing"
       ],
       0,
-      "e6ebc4f0f44df84945350f105e86e6f6"
+      "a6044a01098003d3f365ac43ed1ae3b1"
     ],
     [
       "FStar.Printf.test",
@@ -709,7 +709,7 @@
       1,
       [ "@query" ],
       0,
-      "ddcc65a1d5f2814632eac7d7ca990134"
+      "836ef03a366879390165f32e34baf212"
     ],
     [
       "FStar.Printf.ext_sprintf",
@@ -772,15 +772,17 @@
         "refinement_interpretation_FStar.Printf_Tm_refine_bd70ada1f79cd99b62c17ded8e76d3c1",
         "string_inversion",
         "token_correspondence_FStar.Printf.parse_format.fuel_instrumented",
+        "token_correspondence_FStar.Printf.string_of_dirs.fuel_instrumented",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_FStar.Printf.parse_format",
         "typing_FStar.Printf.parse_format_string",
-        "typing_FStar.Printf_Tm_abs_03e72519beef6b31f74acf6d9dadde5d",
+        "typing_FStar.Printf_Tm_abs_40fe4346f56f10c8abb7d3e321d72fba",
+        "typing_FStar.Printf_Tm_abs_e4753813f7bd62cd6e84392201a1204d",
         "typing_FStar.String.list_of_string"
       ],
       0,
-      "7fd4324e2cfccd56070d352d9b90bc4b"
+      "a1ff31d36b2b4e7bbd6a382acb1bc06c"
     ],
     [
       "FStar.Printf.ext_sprintf",
@@ -817,7 +819,7 @@
         "typing_FStar.String.list_of_string", "unit_typing"
       ],
       0,
-      "14f9352df0cd9d38c2867d61afbf282d"
+      "02c5ef80b6f64861b46c7d3e8230f0bf"
     ],
     [
       "FStar.Printf.something_to_string",
@@ -830,7 +832,7 @@
         "fuel_guarded_inversion_FStar.Printf.something"
       ],
       0,
-      "e157321d46d49c640bfb824212d74019"
+      "4fba2509c4004930fef4ea435ebf77d5"
     ],
     [
       "FStar.Printf.parse_something",
@@ -842,7 +844,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d151ff8cbb659e0a4c101fe339788806"
+      "3e2c77a4059c4122a1f124b601338e36"
     ],
     [
       "FStar.Printf.my_sprintf",
@@ -884,7 +886,7 @@
         "typing_FStar.String.list_of_string", "unit_typing"
       ],
       0,
-      "be01f548d6bfd291f5d4be749e12b28f"
+      "f5dc93f1c16a0cedb107a5a40360f59b"
     ],
     [
       "FStar.Printf.test_ext",
@@ -893,7 +895,7 @@
       1,
       [ "@query" ],
       0,
-      "925b83b5ed2ca84c418a7649013d8b16"
+      "18312a5ca3bfe2cfc5b3f87385e09e19"
     ]
   ]
 ]
