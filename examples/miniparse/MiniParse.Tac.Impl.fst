@@ -3,7 +3,7 @@ include MiniParse.Tac.Base
 include MiniParse.Impl.Combinators
 include MiniParse.Impl.Int
 include MiniParse.Impl.List
-include MiniParse.Impl.TEnum
+include MiniParse.Spec.TEnum
 
 module T = FStar.Tactics
 module L = FStar.List.Tot

@@ -545,6 +545,18 @@ let synth_inverse
 : GTot Type0
 = (forall (x : t2) . f2 (g1 x) == x)
 
+let parse_synth'
+  (#t1: Type0)
+  (#t2: Type0)
+  (p1: parser t1)
+  (f2: t1 -> GTot t2)
+: Pure (parser t2)
+  (requires (
+    forall (x x' : t1) . f2 x == f2 x' ==> x == x'
+  ))
+  (ensures (fun _ -> True))
+= (and_then p1 (fun v1 -> parse_fret f2 v1))
+
 let parse_synth
   (#t1: Type0)
   (#t2: Type0)
