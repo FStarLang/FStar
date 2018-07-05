@@ -44,16 +44,16 @@ let exact_guard (t : term) : Tac unit =
 let cur_module () : Tac (list string) =
     moduleof (cur_env ())
 
+let idtac () : Tac unit = ()
+
 let focus (f : unit -> Tac 'a) : Tac 'a =
-    let res, _ = divide 1 f (fun () -> ()) in
+    let res, () = divide 1 f idtac in
     res
 
 let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
     if n = 0
     then []
-    else let x = t () in
-         let xs = repeatn (n - 1) t in
-         x :: xs
+    else t () :: repeatn (n - 1) t
 
 let fresh_uvar (o : option typ) : Tac term =
     let e = cur_env () in
@@ -79,7 +79,7 @@ let exact_n (n : int) (t : term) : Tac unit =
 
 let fresh_bv t =
     (* These bvs are fresh anyway through a separate counter,
-     * but adding the integer allows for more readable code when
+     * but adding the integer allows for more readability when
      * generating code *)
     let i = fresh () in
     fresh_bv_named ("x" ^ string_of_int i) t
@@ -96,15 +96,12 @@ let norm_term (s : list norm_step) (t : term) : Tac term =
     let e = cur_env () in
     norm_term_env e s t
 
-let idtac () : Tac unit = ()
-
 let guard (b : bool) : TAC unit (fun ps post -> if b
                                                 then post (Success () ps)
                                                 else forall m. post (Failed m ps)) // intentionally do not leak the message
     =
-    if b
-    then ()
-    else fail "guard failed"
+    if not b then
+        fail "guard failed"
 
 let trytac (t : unit -> Tac 'a) : Tac (option 'a) =
     match catch t with
@@ -125,19 +122,17 @@ let rec first (ts : list (unit -> Tac 'a)) : Tac 'a =
     L.fold_right (<|>) ts (fun () -> fail "no tactics to try") ()
 
 let rec repeat (#a:Type) (t : unit -> Tac a) : Tac (list a) =
-    match trytac t with
-    | None -> []
-    | Some x -> let xs = repeat t in x::xs
+    match catch t with
+    | Inl _ -> []
+    | Inr x -> x :: repeat t
 
 let repeat1 (#a:Type) (t : unit -> Tac a) : Tac (list a) =
-    let x = t () in
-    x :: repeat t
-
+    t () :: repeat t
 
 let discard (tau : unit -> Tac 'a) : unit -> Tac unit =
     fun () -> let _ = tau () in ()
 
-// TODO: do we want some value of this?
+// TODO: do we want some value out of this?
 let rec repeatseq (#a:Type) (t : unit -> Tac a) : Tac unit =
     let _ = trytac (fun () -> (discard t) `seq` (discard (fun () -> repeatseq t))) in ()
 
@@ -284,8 +279,6 @@ let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
     pointwise (fun () -> grewrite' t1 t2 (pack_ln (Tv_Var (bv_of_binder e))))
 
-
-
 let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
     match ts with
     | t::ts -> let _ = divide 1 t (fun () -> iseq ts) in ()
@@ -330,7 +323,7 @@ let rec apply_squash_or_lem d t =
            (* Is the lemma an implication? We can try to intro *)
            match term_as_formula' post with
            | Implies p q ->
-               apply (`push1);
+               apply_lemma (`push1);
                apply_squash_or_lem (d-1) t
 
            | _ ->
@@ -366,9 +359,6 @@ let change_with t1 t2 =
         grewrite t1 t2;
         iseq [idtac; trivial]
     )
-
-private val conv : #x:Type -> #y:Type -> squash (y == x) -> x -> y
-private let conv #x #y eq w = w
 
 let change_sq t1 =
     change (mk_e_app (`squash) [t1])
