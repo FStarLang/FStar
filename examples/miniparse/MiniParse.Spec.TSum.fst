@@ -96,3 +96,64 @@ let serialize_tagged_union
 : Tot (serializer (parse_tagged_union pt tag_of_data p))
 = bare_serialize_tagged_union_correct st tag_of_data s;
   Serializer (bare_serialize_tagged_union st tag_of_data s)
+
+let sum_inverse_ty_to_data_to_ty
+  (#tag_t: Type0)
+  (#data_t: Type0)
+  (tag_of_data: (data_t -> GTot tag_t))
+  (#ty: ((t: tag_t) -> Tot Type0))
+  (ty_to_data: ((x: tag_t) -> (y: ty x) -> GTot (refine_with_tag tag_of_data x)))
+  (data_to_ty: ((x: tag_t) -> (y: refine_with_tag tag_of_data x) -> GTot (ty x)))
+: GTot Type0
+= forall (x: tag_t) . synth_inverse (data_to_ty x) (ty_to_data x)
+
+let sum_inverse_data_to_ty_to_data
+  (#tag_t: Type0)
+  (#data_t: Type0)
+  (tag_of_data: (data_t -> GTot tag_t))
+  (#ty: ((t: tag_t) -> Tot Type0))
+  (ty_to_data: ((x: tag_t) -> (y: ty x) -> GTot (refine_with_tag tag_of_data x)))
+  (data_to_ty: ((x: tag_t) -> (y: refine_with_tag tag_of_data x) -> GTot (ty x)))
+: GTot Type0
+= forall (x: tag_t) . synth_inverse (ty_to_data x) (data_to_ty x)
+
+let parse_sum
+  (#tag_t: Type0)
+  (pt: parser tag_t)
+  (#data_t: Type0)
+  (tag_of_data: (data_t -> GTot tag_t))
+  (#ty: ((t: tag_t) -> Tot Type0))
+  (p: ((t: tag_t) -> Tot (parser (ty t))))
+  (ty_to_data: ((x: tag_t) -> (y: ty x) -> GTot (refine_with_tag tag_of_data x)))
+  (data_to_ty: ((x: tag_t) -> (y: refine_with_tag tag_of_data x) -> GTot (ty x)))
+: Pure (parser data_t)
+  (requires (
+    sum_inverse_ty_to_data_to_ty tag_of_data ty_to_data data_to_ty /\
+    sum_inverse_data_to_ty_to_data tag_of_data ty_to_data data_to_ty
+  ))
+  (ensures (fun _ -> True))
+= parse_tagged_union
+    pt
+    tag_of_data
+    (fun x -> parse_synth (p x) (ty_to_data x) (data_to_ty x))
+
+let serialize_sum
+  (#tag_t: Type0)
+  (#pt: parser tag_t)
+  (st: serializer pt)
+  (#data_t: Type0)
+  (tag_of_data: (data_t -> GTot tag_t))
+  (#ty: ((t: tag_t) -> Tot Type0))
+  (#p: ((t: tag_t) -> Tot (parser (ty t))))
+  (s: ((t: tag_t) -> Tot (serializer (p t))))
+  (ty_to_data: ((x: tag_t) -> (y: ty x) -> GTot (refine_with_tag tag_of_data x)))
+  (data_to_ty: ((x: tag_t) -> (y: refine_with_tag tag_of_data x) -> GTot (ty x)))
+  (u: squash (
+    sum_inverse_ty_to_data_to_ty tag_of_data ty_to_data data_to_ty /\
+    sum_inverse_data_to_ty_to_data tag_of_data ty_to_data data_to_ty
+  ))
+: Tot (serializer (parse_sum pt tag_of_data p ty_to_data data_to_ty))
+= serialize_tagged_union
+    st
+    tag_of_data
+    (fun x -> serialize_synth (p x) (ty_to_data x) (s x) (data_to_ty x) ())
