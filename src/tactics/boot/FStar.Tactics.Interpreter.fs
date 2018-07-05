@@ -393,7 +393,7 @@ and unembed_tactic_1_alt<'a,'r> (ea:embedding<'a>) (er:embedding<'r>) (f:term) (
       let app = U.mk_reify app in
       unembed_tactic_0 er app ncb)
 
-//IN F*: and e_tactic_1_alt (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> proofstate -> __result r) =
+//IN F*: and e_tactic_1_alt (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> (proofstate -> __result r)) =
 and e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (proofstate -> __result<'r>))> = //JUST FSHARP
     let em = (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?") in
 //IN F*:    let un (t0: term) (w: bool) (n: norm_cb): option (a -> (proofstate -> __result r)) =
@@ -402,7 +402,7 @@ and e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (pro
         | Some f -> Some (fun x -> run (f x))
         | None -> None
     in
-    mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb)))
+    mk_emb em un (FStar.Syntax.Embeddings.term_as_fv t_unit)
 
 
 let report_implicits ps (is : Env.implicits) : unit =
