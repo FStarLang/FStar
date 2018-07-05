@@ -21,12 +21,25 @@ let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
 [t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
 always be the case since [w] is usually a uvar. *)
 let exact (t : term) : Tac unit =
-    with_policy SMT (fun () -> t_exact false t)
+    with_policy SMT (fun () -> t_exact true false t)
+
+(** [apply f] will attempt to produce a solution to the goal by an application
+of [f] to any amount of arguments (which need to be solved as further goals).
+The amount of arguments introduced is the least such that [f a_i] unifies
+with the goal's type. *)
+let apply (t : term) : Tac unit =
+    t_apply true t
+
+(** [apply_raw f] is like [apply], but will ask for all arguments
+regardless of whether they appear free in further goals. See the
+explanation in [t_apply]. *)
+let apply_raw (t : term) : Tac unit =
+    t_apply false t
 
 (** Like [exact], but allows for the term [e] to have a type [t] only
 under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
-    with_policy Goal (fun () -> t_exact false t)
+    with_policy Goal (fun () -> t_exact true false t)
 
 let cur_module () : Tac (list string) =
     moduleof (cur_env ())

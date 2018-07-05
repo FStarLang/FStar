@@ -172,19 +172,24 @@ with a single goal (they're "focused"). *)
 let seq (f:unit -> Tac unit) (g:unit -> Tac unit) : Tac unit =
   TAC?.reflect (__seq (reify (f ())) (reify (g ())))
 
-(** boolean is whether to set the expected type internally.
- * Just use `exact` from FStar.Tactics.Derived if you don't know what that means. *)
-assume val t_exact : bool -> term -> Tac unit
+(** First boolean is whether to attempt to intrpoduce a refinement
+before solving. In that case, a goal for the refinement formula will be
+added. Second boolean is whether to set the expected type internally.
+Just use `exact` from FStar.Tactics.Derived if you don't know what's up
+with all this. *)
+assume val t_exact : bool -> bool -> term -> Tac unit
 
-(** [apply f] will attempt to produce a solution to the goal by an application
-of [f] to any amount of arguments (which need to be solved as further goals).
-The amount of arguments introduced is the least such that [f a_i] unifies
-with the goal's type. *)
-assume val apply : term -> Tac unit
+(** Inner primitive for [apply], takes a boolean specifying whether
+to not ask for implicits that appear free in posterior goals. Example:
+when the boolean is true, applying transitivity to
+[|- a = c] will give two goals, [|- a = ?u] and [|- ?u = c] without
+asking to instantiate [?u] since it will most likely be constrained
+later by solving these goals. In any case, we track [?u] and will fail
+if it's not solved later.
 
-(** [apply_raw f] is like [apply], but will ask for all arguments regardless
-of whether they appear free in further goals. *)
-assume val apply_raw : term -> Tac unit
+You probably want [apply] from FStar.Tactics.Derived.
+*)
+assume val t_apply : bool -> term -> Tac unit
 
 (** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a Lemma
 ensuring [phi]. The arguments to [l] and its requires clause are introduced as new goals.

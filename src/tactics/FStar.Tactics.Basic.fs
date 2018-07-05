@@ -819,17 +819,18 @@ let __exact_now set_expected_typ (t:term) : tac<unit> =
                     (tts (goal_env goal) (goal_type goal))
                     (tts (goal_env goal) (goal_witness goal))))))))
 
-let t_exact set_expected_typ tm : tac<unit> = wrap_err "exact" <|
+let t_exact try_refine set_expected_typ tm : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "t_exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind (catch (__exact_now set_expected_typ tm)) (function
     | Inr r -> ret r
+    | Inl e when not (try_refine) -> fail e
     | Inl e ->
-    mlog (fun () -> BU.print_string "__exact_now failed, trying refine...\n") (fun _ ->
-    bind (catch (bind (norm [EMB.Delta]) (fun _ ->
-                   bind (refine_intro ()) (fun _ ->
-                   __exact_now set_expected_typ tm)))) (function
-    | Inr r -> ret r
-    | Inl _ -> fail e)))) // keep original error
+        mlog (fun () -> BU.print_string "__exact_now failed, trying refine...\n") (fun _ ->
+        bind (catch (bind (norm [EMB.Delta]) (fun _ ->
+                       bind (refine_intro ()) (fun _ ->
+                       __exact_now set_expected_typ tm)))) (function
+              | Inr r -> ret r
+              | Inl _ -> fail e)))) // keep original error
 
 let rec mapM (f : 'a -> tac<'b>) (l : list<'a>) : tac<list<'b>> =
     match l with
@@ -877,8 +878,8 @@ let try_match_by_application (e : env) (ty1 : term) (ty2 : term) : tac<list<(ter
 // without asking for |- ?u : Type first, which will most likely be instantiated when
 // solving any of these two goals. In any case, if ?u is not solved, we will later fail.
 // TODO: this should probably be made into a user tactic
-let apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
-    mlog (fun () -> BU.print1 "apply: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
+let t_apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
+    mlog (fun () -> BU.print1 "t_apply: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind (cur_goal ()) (fun goal ->
     let e = goal_env goal in
     bind (__tc e tm) (fun (tm, typ, guard) ->

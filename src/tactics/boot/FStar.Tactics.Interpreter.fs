@@ -170,9 +170,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 "rewrite"       rewrite RE.e_binder e_unit;
       mktac1 "smt"           smt e_unit e_unit;
       mktac1 "refine_intro"  refine_intro e_unit e_unit;
-      mktac2 "t_exact"       t_exact e_bool RE.e_term e_unit;
-      mktac1 "apply"         (apply  true) RE.e_term e_unit;
-      mktac1 "apply_raw"     (apply false) RE.e_term e_unit;
+      mktac3 "t_exact"       t_exact e_bool e_bool RE.e_term e_unit;
+      mktac2 "t_apply"       t_apply e_bool RE.e_term e_unit;
       mktac1 "apply_lemma"   apply_lemma RE.e_term e_unit;
       // A tac 5... oh my...
       mktac5 "__divide"      (fun _ _ -> divide) e_any e_any e_int (e_tactic_0' e_any) (e_tactic_0' e_any)
