@@ -53,6 +53,22 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
     ]
   | _ -> tfail "Not enough arguments to synth"
   else
+  if hd `T.term_eq` (`parse_filter)
+  then match tl with
+  | [(t, _); (p, _); (f, _)] ->
+    let bx = T.fresh_binder t in
+    let x = T.pack (T.Tv_Var (T.bv_of_binder bx)) in
+    let f' = T.pack (T.Tv_Abs bx (T.mk_app f [x, T.Q_Explicit])) in
+    let p' = gen_parser32' p in
+    T.mk_app (`parse32_filter) [
+      (t, T.Q_Implicit);
+      (p, T.Q_Implicit);
+      (p', T.Q_Explicit);
+      (f, T.Q_Explicit);
+      (f', T.Q_Explicit);
+    ]
+  | _ -> tfail "Not enough arguments to parse_filter"
+  else
   if hd `T.term_eq` (`(TS.package_parser))
   then match tl with
   | [qt; (pk, _)] ->
@@ -104,8 +120,11 @@ let p = parse_u8 `nondep_then` parse_ret 42
 
 let gen_parser32 (p: T.term) : T.Tac unit =
   T.set_guard_policy T.Goal;
-  T.exact_guard (gen_parser32' p);
-  tconclude ()
+  let t = gen_parser32' p in
+  T.exact_guard t;
+  tconclude ();
+  T.print "gen_parser32 spits:";
+  T.print (T.term_to_string t)
 
 let q : parser32 p = T.synth_by_tactic (fun () -> gen_parser32 (`(p)))
 

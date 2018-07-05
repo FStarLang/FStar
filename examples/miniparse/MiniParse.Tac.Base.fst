@@ -47,14 +47,25 @@ let tfail (#a: Type) (s: Prims.string) : T.Tac a =
   T.debug ("Tactic failure: " ^ s);
   T.fail s
 
+let rec string_of_name (n: T.name) : Tot string =
+  match n with
+  | [] -> ""
+  | [a] -> a
+  | a :: b -> a ^ "." ^ string_of_name b
+
 let unfold_fv (t: T.fv) : T.Tac T.term =
   let env = T.cur_env () in
   let n = T.inspect_fv t in
   match T.lookup_typ env n with
   | Some s ->
     begin match T.inspect_sigelt s with
-    | T.Sg_Let false _ _ _ def -> def
-    | _ -> tfail "Not a non-recursive let definition"
+    | T.Sg_Let false _ _ _ def ->
+      let nm = string_of_name n in
+      T.print ("Unfolded definition: " ^ nm);
+      def
+    | _ ->
+      let nm = string_of_name n in
+      tfail (nm ^ ": not a non-recursive let definition")
     end
   | _ -> tfail "Definition not found"
 
@@ -75,6 +86,9 @@ let rec to_all_goals (t: unit -> T.Tac unit) : T.Tac unit =
     let _ = T.divide 1 t (fun () -> to_all_goals t) in
     ()
 
+let admit_others = to_all_goals
+
+(*
 let admit_others (t: unit -> T.Tac unit) : T.Tac unit =
   if T.ngoals () = 0
   then ()
@@ -86,6 +100,7 @@ let admit_others (t: unit -> T.Tac unit) : T.Tac unit =
     let _ = T.divide 1 t (fun () -> to_all_goals tadmit) in
     ()
 *)    
+*)
 
 let rec imm_solve_goal () : T.Tac unit =
   T.first [
