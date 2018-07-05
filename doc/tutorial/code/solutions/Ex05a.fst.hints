@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e4b510794be0f31619cc1c904892fac8"
+      "def2590a50e6a163f3d97c3a6e1b5883"
     ],
     [
       "Ex05a.reverse",
@@ -27,7 +27,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3738542a7a845fcb6639542d360f9095"
+      "d808e20972f72dacb762499856ea043a"
     ],
     [
       "Ex05a.rev",
@@ -42,7 +42,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b5be20d03e94257fa4e780804bb481cb"
+      "7b53591e76745ff76c859dbdea986d82"
     ],
     [
       "Ex05a.append_assoc",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "37c9c86b259fa8bd857cbdf2096766a7"
+      "7a689aae28eb3cf006c5298d990c5ea8"
     ],
     [
       "Ex05a.rev_is_ok_aux",
@@ -93,7 +93,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1e5c075d94a8ac5d5ba8f00c8a5be8c0"
+      "85abab874f02312dbb59a845681871dc"
     ],
     [
       "Ex05a.append_nil",
@@ -113,7 +113,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9389d88107541a00f6435153e908dda4"
+      "3cbcc5f4aab5dddd29f12b7f5a9869f1"
     ],
     [
       "Ex05a.rev_is_ok",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "decf820751b3b99ce9ccff7c2f874f34"
+      "bdb78b75b253cdbbf3052ac36290f51c"
     ],
     [
       "Ex05a.append",
@@ -136,7 +136,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6fb74df0e8d6c600e462148dc6e0345d"
+      "2ce0cfc4b2e45f40e82ab271240c0e1f"
     ],
     [
       "Ex05a.reverse",
@@ -150,7 +150,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "13bd2fe905a45fa9cf678fc131432623"
+      "0c202d2d1ae0580ebcba113e01ef5e0f"
     ],
     [
       "Ex05a.rev",
@@ -165,7 +165,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3631b960ce76d76c79056987e315d77c"
+      "27e437a44cf70e4122b64afa4599420b"
     ]
   ]
 ]
