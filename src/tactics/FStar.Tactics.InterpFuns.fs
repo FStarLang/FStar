@@ -115,6 +115,32 @@ let extract_7 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embed
     | _ ->
       failwith "extract_7: wrong number of arguments"
 
+let extract_14 (e_t1: embedding<'t1>) (e_t2: embedding<'t2>) (e_t3: embedding<'t3>) (e_t4: embedding<'t4>)
+               (e_t5: embedding<'t5>) (e_t6: embedding<'t6>) (e_t7: embedding<'t7>) (e_t8: embedding<'t8>)
+               (e_t9: embedding<'t9>) (e_t10: embedding<'t10>) (e_t11: embedding<'t11>) (e_t12: embedding<'t12>)
+               (e_t13: embedding<'t13>) (e_t14:embedding<'t14>)
+               (ncb:norm_cb) (args:args) : option<('t1 * 't2 * 't3 * 't4 * 't5 * 't6 * 't7 * 't8 * 't9 * 't10 * 't11 * 't12 * 't13 * 't14)> =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _)] ->
+    BU.bind_opt (unembed e_t1 a1 ncb) (fun  a1 ->
+    BU.bind_opt (unembed e_t2 a2 ncb) (fun  a2 ->
+    BU.bind_opt (unembed e_t3 a3 ncb) (fun  a3 ->
+    BU.bind_opt (unembed e_t4 a4 ncb) (fun  a4 ->
+    BU.bind_opt (unembed e_t5 a5 ncb) (fun  a5 ->
+    BU.bind_opt (unembed e_t6 a6 ncb) (fun  a6 ->
+    BU.bind_opt (unembed e_t7 a7 ncb) (fun  a7 ->
+    BU.bind_opt (unembed e_t8 a8 ncb) (fun  a8 ->
+    BU.bind_opt (unembed e_t9 a9 ncb) (fun  a9 ->
+    BU.bind_opt (unembed e_t10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e_t11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e_t12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e_t13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e_t14 a14 ncb) (fun a14 ->
+    Some (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14)))))))))))))))
+  | _ ->
+    failwith "extract_14: wrong number of arguments"
+
+
 let extract_1_nbe cb (ea:NBETerm.embedding<'a>)
               (args:NBETerm.args) : option<'a> =
     match args with
@@ -252,6 +278,18 @@ let mk_tactic_interpretation_6 (t:'a -> 'b -> 'c -> 'd -> 'e -> 'f -> tac<'r>)
   BU.bind_opt (extract_7 ea eb ec ed ee ef E.e_proofstate ncb args) (fun (a, b, c, d, e, f, ps) ->
   let ps = set_ps_psc psc ps in
   let r = run_safe (t a b c d e f) ps in
+  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
+
+let mk_tactic_interpretation_13 (t:'t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> tac<'r>)
+                                (e_t1: embedding<'t1>) (e_t2: embedding<'t2>) (e_t3: embedding<'t3>) (e_t4: embedding<'t4>)
+                                (e_t5: embedding<'t5>) (e_t6: embedding<'t6>) (e_t7: embedding<'t7>) (e_t8: embedding<'t8>)
+                                (e_t9: embedding<'t9>) (e_t10: embedding<'t10>) (e_t11: embedding<'t11>) (e_t12: embedding<'t12>)
+                                (e_t13: embedding<'t13>) (er:embedding<'r>)
+                                (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
+  BU.bind_opt (extract_14 e_t1 e_t2 e_t3 e_t4 e_t5 e_t6 e_t7 e_t8 e_t9 e_t10 e_t11 e_t12 e_t13 E.e_proofstate ncb args) (
+  fun (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, ps) ->
+  let ps = set_ps_psc psc ps in
+  let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps in
   Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
 
 let mk_tactic_nbe_interpretation_1 cb (t:'a -> tac<'r>)
