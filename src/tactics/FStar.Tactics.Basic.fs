@@ -703,7 +703,7 @@ let intro () : tac<binder> = wrap_err "intro" <|
              //         (Print.binders_to_string ", " [b])
              //         (Print.term_to_string typ');
              bind (new_uvar "intro" env' typ') (fun (body, ctx_uvar) ->
-             let sol = U.abs [b] body None in
+             let sol = U.abs [b] body (Some (U.residual_comp_of_comp c)) in
              //BU.print1 "[intro]: solution is %s"
              //           (Print.term_to_string sol);
              //BU.print1 "[intro]: old goal is %s" (goal_to_string goal);
