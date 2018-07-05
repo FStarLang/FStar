@@ -2006,7 +2006,8 @@ let (intro : unit -> FStar_Syntax_Syntax.binder tac) =
                        | (body,ctx_uvar) ->
                            let sol =
                              FStar_Syntax_Util.abs [b] body
-                               FStar_Pervasives_Native.None
+                               (FStar_Pervasives_Native.Some
+                                  (FStar_Syntax_Util.residual_comp_of_comp c))
                               in
                            let uu____3074 = set_solution goal sol  in
                            bind uu____3074
