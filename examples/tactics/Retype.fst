@@ -11,10 +11,6 @@ assume val r : prop
 assume val l : unit -> Lemma (p == r)
 assume val l2 : unit -> Lemma (requires r) (ensures q)
 
-let assumption' () : Tac unit =
-    apply_raw (`FStar.Squash.return_squash);
-    assumption ()
-
 let tau () : Tac unit =
     let _ = implies_intro () in
     let _ = implies_intro () in
@@ -39,7 +35,7 @@ let tau () : Tac unit =
         else ();
 
         apply_lemma (quote l2);
-        assumption' ();
+        assumption ();
         qed ()
     | _ ->
         fail "should be impossible"
