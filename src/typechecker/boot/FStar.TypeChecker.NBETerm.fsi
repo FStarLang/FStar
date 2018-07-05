@@ -40,9 +40,10 @@ type atom
 and t
 //IN F*: : Type0
   =
-  | Lam of (list<t> -> t)        //these expect their arguments in binder order (optimized for convenience beta reduction)
-        * list<(list<t> -> arg)> //these expect their arguments in reverse binder order (since this avoids reverses during readback)
-        * int  // Zoe : body * args * arity; this int is the length of the lists expected by the functions in the prior fields
+  | Lam of (list<t> -> t)         //these expect their arguments in binder order (optimized for convenience beta reduction)
+        * list<(list<t> -> arg)>  //these expect their arguments in reverse binder order (since this avoids reverses during readback)
+        * int                     // arity
+        * option<(unit -> residual_comp)> // thunked residual comp
   | Accu of atom * args
   | Construct of fv * list<universe> * args
   | FV of fv * list<universe> * args
@@ -54,12 +55,14 @@ and t
   | Refinement of (t -> t) * (unit -> arg)
   | Quote of S.term * S.quoteinfo
   | Lazy of S.lazyinfo
-  | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool>  * (list<t> -> letbinding -> t)
+  | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
   (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
+
 and comp = 
   | Tot of t * option<universe>
   | GTot of t * option<universe>
   | Comp of comp_typ
+
 and comp_typ = {
   comp_univs:universes;
   effect_name:lident;
@@ -67,6 +70,25 @@ and comp_typ = {
   effect_args:args;
   flags:list<cflags>
 }
+
+and residual_comp = {
+  residual_effect:lident;
+  residual_typ   :option<t>;
+  residual_flags :list<cflags>
+}
+
+and cflags =
+  | TOTAL
+  | MLEFFECT
+  | RETURN
+  | PARTIAL_RETURN
+  | SOMETRIVIAL
+  | TRIVIAL_POSTCONDITION
+  | SHOULD_NOT_INLINE
+  | LEMMA
+  | CPS
+  | DECREASES of t
+
 
 and arg = t * aqual
 and args = list<(arg)>

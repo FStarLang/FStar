@@ -171,43 +171,6 @@ let test_args ts ar_list : (bool * args * args) = (* can unfold x full arg list 
   in 
   aux ts ar_list [] true
 
-
-(* ZP: TODO change this! Count arity from type.. *)
-let rec count_abstractions (t : term) : int =
-    match (SS.compress t).n with
-    | Tm_delayed _ | Tm_unknown -> failwith "Impossible"
-    | Tm_bvar _
-    | Tm_name _
-    | Tm_fvar _
-    | Tm_constant _
-    | Tm_type _
-    | Tm_arrow _
-    | Tm_uvar _
-    | Tm_refine _
-    | Tm_unknown -> 0
-
-    | Tm_uinst (t, _)  -> count_abstractions t
-
-    | Tm_abs (xs, body, _) ->
-      List.length xs + count_abstractions body
-
-    | Tm_app(head, args) ->
-      max (count_abstractions head - List.length args) 0
-
-    | Tm_match(scrut, branches) ->
-      (match branches with
-       | [] -> failwith "Branch not found"
-       (* count just one branch assuming it is well-typed *)
-       | (_, _, e) :: bs -> count_abstractions e)
-
-    | Tm_let (_, t)
-      (* This is not quite right. We need to somehow cound the abstractions of the let definition
-         as it might be used in head position. For instance we might have something like [let t = e in t]
-       *)
-    | Tm_meta (t, _)
-    | Tm_ascribed (t, _, _) -> count_abstractions t
-    | _ -> 0
-
 let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option<sigelt> =
   let mapper (lr, rng) =
     match lr with
@@ -266,13 +229,13 @@ let find_let (lbs : list<letbinding>) (fvar : fv) =
 (* uncurried application *)
 let rec iapp (cfg : Cfg.cfg) (f:t) (args:args) : t =
   match f with
-  | Lam (f, targs, n) ->
+  | Lam (f, targs, n, res) ->
     let m = List.length args in
     if m < n then
       // partial application
       let (_, targs') = List.splitAt m targs in
       let targs' = List.map (fun targ -> (fun (l (* has length n - m *)) -> targ (List.rev (map_append fst args l)))) targs' in
-      Lam ((fun l -> f (map_append fst args l)), targs', n - m)
+      Lam ((fun l -> f (map_append fst args l)), targs', n - m, res)
     else if m = n then
       // full application
       f (List.map fst args)
@@ -360,7 +323,7 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
               | None -> debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
                        iapp cfg (mkFV fvar [] []) args'),
               (let f (_:int) _ : t * S.aqual = (Constant Unit, None) in FStar.Common.tabulate arity f),
-              arity)
+              arity, None)
 
        | Some _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        | _      -> debug (fun () -> BU.print1 "(3) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
@@ -401,7 +364,7 @@ and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
     Lam ((fun us -> translate cfg (List.rev_append us bs) lb.lbdef),
           List.map (fun _ -> (fun _ts -> id <| (Constant Unit, None))) us,
           // Zoe: Bogus type! The idea is that we will never readback these lambdas
-          List.length us)
+          List.length us, None)
   // Note, we only have universe polymorphic top-level pure terms (i.e., fvars bound to pure terms)
   // Thunking them is probably okay, since the common case is really top-level function
   // rather than top-level pure computation
@@ -492,7 +455,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
 
     | Tm_abs ([], _, _) -> failwith "Impossible: abstraction with no binders"
 
-    | Tm_abs (xs, body, _) ->
+    | Tm_abs (xs, body, resc) ->
       Lam ((fun ys -> translate cfg (List.rev_append ys bs) body),
            List.fold_right (fun x formals ->
                              let next_formal prefix_of_xs_rev =
@@ -502,7 +465,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
                              next_formal :: formals)
                           xs
                           [],
-           List.length xs)
+           List.length xs, BU.map_opt resc (fun c -> (fun () -> translate_residual_comp cfg bs c)))
 
     | Tm_fvar fvar ->
       translate_fv cfg bs fvar
@@ -657,14 +620,53 @@ and translate_comp_typ cfg bs (c:S.comp_typ) : comp_typ =
     effect_name = effect_name;
     result_typ = translate cfg bs result_typ;
     effect_args = List.map (fun x -> translate cfg bs (fst x), snd x) effect_args;
-    flags = flags }
+    flags = List.map (translate_flag cfg bs) flags }
 
 and readback_comp_typ cfg (c:comp_typ) : S.comp_typ =
   { S.comp_univs = c.comp_univs;
     S.effect_name = c.effect_name;
     S.result_typ = readback cfg c.result_typ;
     S.effect_args = List.map (fun x -> readback cfg (fst x), snd x) c.effect_args;
-    S.flags = c.flags }
+    S.flags = List.map (readback_flag cfg) c.flags }
+
+and translate_residual_comp cfg bs (c:S.residual_comp) : residual_comp =
+    let { S.residual_effect  = residual_effect
+        ; S.residual_typ     = residual_typ
+        ; S.residual_flags   = residual_flags } = c in 
+    { residual_effect = residual_effect;
+      residual_typ = BU.map_opt residual_typ (translate cfg bs);
+      residual_flags = List.map (translate_flag cfg bs) residual_flags }
+
+and readback_residual_comp cfg (c:residual_comp) : S.residual_comp =
+    { S.residual_effect = c.residual_effect;
+      S.residual_typ = BU.map_opt c.residual_typ (readback cfg);
+      S.residual_flags = List.map (readback_flag cfg) c.residual_flags }
+
+and translate_flag cfg bs (f : S.cflags) : cflags =
+    match f with 
+    | S.TOTAL -> TOTAL
+    | S.MLEFFECT -> MLEFFECT
+    | S.RETURN -> RETURN
+    | S.PARTIAL_RETURN -> PARTIAL_RETURN
+    | S.SOMETRIVIAL -> SOMETRIVIAL
+    | S.TRIVIAL_POSTCONDITION -> TRIVIAL_POSTCONDITION
+    | S.SHOULD_NOT_INLINE -> SHOULD_NOT_INLINE
+    | S.LEMMA -> LEMMA 
+    | S.CPS -> CPS
+    | S.DECREASES tm -> DECREASES (translate cfg bs tm)
+
+and readback_flag cfg (f : cflags) : S.cflags =
+    match f with 
+    | TOTAL -> S.TOTAL
+    | MLEFFECT -> S.MLEFFECT
+    | RETURN -> S.RETURN
+    | PARTIAL_RETURN -> S.PARTIAL_RETURN
+    | SOMETRIVIAL -> S.SOMETRIVIAL
+    | TRIVIAL_POSTCONDITION -> S.TRIVIAL_POSTCONDITION
+    | SHOULD_NOT_INLINE -> S.SHOULD_NOT_INLINE
+    | LEMMA -> S.LEMMA 
+    | CPS -> S.CPS
+    | DECREASES t -> S.DECREASES (readback cfg t)
 
 and translate_monadic (m, ty) cfg bs e : t =
    let e = U.unascribe e in
@@ -679,9 +681,9 @@ and translate_monadic (m, ty) cfg bs e : t =
        let cfg' = {cfg with reifying=false} in
        let body_lam =
            let body_rc = {
-                residual_effect=m;
-                residual_flags=[];
-                residual_typ=Some ty
+                S.residual_effect=m;
+                S.residual_flags=[];
+                S.residual_typ=Some ty
             } in
            S.mk (Tm_abs([(BU.left lb.lbname, None)], body, Some body_rc)) None body.pos
        in
@@ -789,7 +791,7 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
     | Type_t u ->
       S.mk (Tm_type u) None Range.dummyRange
 
-    | Lam (f, targs, arity) ->
+    | Lam (f, targs, arity, resc) ->
       let (args_rev, accus_rev) =
           List.fold_left (fun (args_rev, accus_rev) tf ->
                             let (xt, q) = tf accus_rev in
@@ -800,7 +802,7 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
                          targs
       in
       let body = readback cfg (f (List.rev accus_rev)) in
-      U.abs (List.rev args_rev) body None
+      U.abs (List.rev args_rev) body (BU.map_opt resc (fun thunk -> readback_residual_comp cfg (thunk ())))
 
     | Refinement (f, targ) ->
       let x =  S.new_bv None (readback cfg (fst (targ ()))) in

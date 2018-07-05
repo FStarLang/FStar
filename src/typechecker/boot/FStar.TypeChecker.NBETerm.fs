@@ -66,9 +66,10 @@ type atom
 and t
 //IN F*: : Type0
   =
-  | Lam of (list<t> -> t)        //these expect their arguments in binder order (optimized for convenience beta reduction)
-        * list<(list<t> -> arg)> //these expect their arguments in reverse binder order (since this avoids reverses during readback)
-        * int  // Zoe : body * args * arity; this int is the length of the lists expected by the functions in the prior fields
+  | Lam of (list<t> -> t)         //these expect their arguments in binder order (optimized for convenience beta reduction)
+         * list<(list<t> -> arg)>  //these expect their arguments in reverse binder order (since this avoids reverses during readback)
+         * int                     // arity
+         * option<(unit -> residual_comp)> // thunked residual comp
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<universe> * args (* Zoe: Data constructors *)
@@ -84,16 +85,35 @@ and t
   | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
   (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
 
- and comp = 
+and comp = 
   | Tot of t * option<universe>
   | GTot of t * option<universe>
   | Comp of comp_typ
+
 and comp_typ = {
   comp_univs:universes;
   effect_name:lident;
   result_typ:t;
   effect_args:args;
   flags:list<cflags>
+ }
+
+and cflags =
+  | TOTAL
+  | MLEFFECT
+  | RETURN
+  | PARTIAL_RETURN
+  | SOMETRIVIAL
+  | TRIVIAL_POSTCONDITION
+  | SHOULD_NOT_INLINE
+  | LEMMA
+  | CPS
+  | DECREASES of t
+
+and residual_comp = {
+  residual_effect:lident;    
+  residual_typ   :option<t>;
+  residual_flags :list<cflags>
 }
 
 and arg = t * aqual
@@ -218,7 +238,7 @@ let constant_to_string (c: constant) =
 
 let rec t_to_string (x:t) =
   match x with
-  | Lam (b, args, arity) -> BU.format2 "Lam (_, %s args, %s)" (BU.string_of_int (List.length args)) (BU.string_of_int arity)
+  | Lam (b, args, arity, _) -> BU.format2 "Lam (_, %s args, %s)" (BU.string_of_int (List.length args)) (BU.string_of_int arity)
   | Accu (a, l) ->
     "Accu (" ^ (atom_to_string a) ^ ") (" ^
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
@@ -442,11 +462,11 @@ let e_arrow1 (ea:embedding<'a>) (eb:embedding<'b>) =
     let em cb (f : 'a -> 'b) : t = Lam((fun tas -> match unembed ea cb (List.hd tas) with
                                           | Some a -> embed eb cb (f a)
                                           | None -> failwith "cannot unembed function argument"),
-                                 [fun _ -> as_arg (type_of eb)], 1)
+                                    [fun _ -> as_arg (type_of eb)], 1, None)
     in
     let un cb (lam : t) : option<('a -> 'b)> =
         match lam with
-        | Lam (ft, _, _) -> Some (fun (x:'a) -> match unembed eb cb (ft [embed ea cb x]) with 
+        | Lam (ft, _, _, _) -> Some (fun (x:'a) -> match unembed eb cb (ft [embed ea cb x]) with 
                                            | Some x -> x
                                            | None -> failwith "cannot unembed function result")
         | _ -> None
