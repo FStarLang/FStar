@@ -77,11 +77,8 @@ let e_term_aq aq =
     in
     let rec unembed_term w (t:term) : option<term> =
         let apply_antiquotes (t:term) (aq:antiquotations) : option<term> =
-            BU.bind_opt (mapM_opt (fun (bv, b, e) ->
-                                   if b
-                                   then Some (NT (bv, e))
-                                   else BU.bind_opt (unembed_term w e) (fun e -> Some (NT (bv, e))))
-                              aq) (fun s ->
+            BU.bind_opt (mapM_opt (fun (bv, e) -> BU.bind_opt (unembed_term w e) (fun e -> Some (NT (bv, e))))
+                                   aq) (fun s ->
             Some (SS.subst s t))
         in
         match (SS.compress t).n with
