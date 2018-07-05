@@ -908,7 +908,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_quoted (qt, { qkind = Quote_dynamic }) ->
           let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
-          with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
+          with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Cannot evaluate open quotation at runtime")]),
           E_PURE,
           ml_int_ty
 
@@ -916,14 +916,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           begin match R.inspect_ln qt with
           | RD.Tv_Var bv ->
             begin match S.lookup_aq bv aqs with
-            | Some (false, tm) ->
+            | Some tm ->
               term_as_mlexpr g tm
-
-            | Some (true, tm) ->
-              let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
-              with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
-              E_PURE,
-              ml_int_ty
 
             | None ->
               let tv = EMB.embed (RE.e_term_view_aq aqs) t.pos (RD.Tv_Var bv) in

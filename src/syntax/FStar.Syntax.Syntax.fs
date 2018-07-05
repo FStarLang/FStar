@@ -174,7 +174,7 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbattrs:list<attribute>; //attrs
     lbpos  :range;           //original position of 'e'
 }
-and antiquotations = list<(bv * bool * term)>
+and antiquotations = list<(bv * term)>
 and quoteinfo = {
     qkind      : quote_kind;
     antiquotes : antiquotations;
@@ -486,12 +486,12 @@ let set_range_of_bv x r = {x with ppname=Ident.mk_ident(x.ppname.idText, r)}
 
 (* Helpers *)
 let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
-    let aq = List.map (fun (bv, b, t) -> (bv, b, f t)) qi.antiquotes in
+    let aq = List.map (fun (bv, t) -> (bv, f t)) qi.antiquotes in
     { qi with antiquotes = aq }
 
-let lookup_aq (bv : bv) (aq : antiquotations) : option<(bool * term)> =
-    match List.tryFind (fun (bv', _, _) -> bv_eq bv bv') aq with
-    | Some (_, b, e) -> Some (b, e)
+let lookup_aq (bv : bv) (aq : antiquotations) : option<term> =
+    match List.tryFind (fun (bv', _) -> bv_eq bv bv') aq with
+    | Some (_, e) -> Some e
     | None -> None
 
 (*********************************************************************************)
