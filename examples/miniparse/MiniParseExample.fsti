@@ -4,6 +4,7 @@ open MiniParse.Impl.Base
 
 type test = | TA | TB | TC | TD
 
+noextract
 val p : parser test
 
 val q : parser32 p

@@ -7,8 +7,10 @@ module B = LowStar.Buffer
 module U32 = FStar.UInt32
 module HST = FStar.HyperStack.ST
 
+inline_for_extraction
 let parse32_u8 : parser32 parse_u8 = make_total_constant_size_parser32 1 1ul (fun x -> Seq.index x 0) () (fun x -> B.index x 0ul)
 
+inline_for_extraction
 let serialize32_u8 : serializer32 serialize_u8 =
   (fun output (len: U32.t { len == B.len output } ) x ->
     let h = HST.get () in

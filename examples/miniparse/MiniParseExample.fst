@@ -7,6 +7,7 @@ module U8 = FStar.UInt8
 
 #set-options "--no_smt"
 
+(*
 let f : test -> Tot U8.t = T.synth_by_tactic (fun () -> gen_synth (`(test)))
 
 let g : U8.t -> Tot test = T.synth_by_tactic (fun () -> invert_function (`(test)) (`(U8.t)) (`(op_Equality #U8.t)) (`(f)))
@@ -22,6 +23,7 @@ let g'_inverse: squash (synth_inverse g' f') =
 
 let g'_injective: squash (synth_inverse f' g') =
   T.synth_by_tactic synth_inverse_forall_bounded_u8_solve
+*)
 
 let p = T.synth_by_tactic (fun () -> gen_enum_parser (`test))
 

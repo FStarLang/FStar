@@ -4,7 +4,8 @@ module Seq = FStar.Seq
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 
-type byte = U8.byte
+inline_for_extraction
+type byte = U8.t
 type bytes = Seq.seq byte
 
 /// parse a value of type t
