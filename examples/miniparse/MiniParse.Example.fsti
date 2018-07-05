@@ -25,3 +25,5 @@ let g'_injective: squash (synth_injective g') =
 
 let g'_inverse: squash (synth_inverse g' f') =
   T.synth_by_tactic synth_inverse_solve
+
+let p : parser test = T.synth_by_tactic (fun () -> gen_enum_parser (`test))

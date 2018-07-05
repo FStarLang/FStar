@@ -1,6 +1,7 @@
 module MiniParse.Spec.TEnum
 include MiniParse.Spec.Combinators
 include MiniParse.Tac.Base
+include MiniParse.Spec.Int
 
 module T = FStar.Tactics
 module U8 = FStar.UInt8
@@ -170,11 +171,14 @@ let tenum_bound' (t: T.term) : T.Tac T.term =
 let tenum_bound (t: T.term) : T.Tac unit =
   T.exact (tenum_bound' t)
 
-let gen_synth_bounded (t: T.term) : T.Tac unit =
-  T.set_guard_policy T.Goal;
+let gen_synth_bounded' (t: T.term) : T.Tac T.term =
   let bound = tenum_bound' t in
   let vt = T.mk_app (`bounded_u8) [bound, T.Q_Explicit] in
-  T.exact_guard (gen_synth' t vt);
+  gen_synth' t vt
+
+let gen_synth_bounded (t: T.term) : T.Tac unit =
+  T.set_guard_policy T.Goal;
+  T.exact_guard (gen_synth_bounded' t);
   tconclude ()
 
 let pred_pre
@@ -276,8 +280,14 @@ let synth_injective_solve'
     f1, T.Q_Explicit;
     f2, T.Q_Explicit;
   ]);
-  T.norm [delta; zeta; iota; primops];
-  T.trivial ();
+  let _ = T.divide 1 (fun () ->
+    T.norm [delta; zeta; iota; primops];
+    T.trivial ();
+    tsuccess "synth_injective_solve, main goal"
+  ) (fun () ->
+    tconclude ()
+  )
+  in
   tsuccess "synth_injective_solve"
 
 let synth_injective_solve (f2: T.term) : T.Tac unit =
@@ -300,3 +310,48 @@ let synth_injective_solve (f2: T.term) : T.Tac unit =
     end else tfail "Goal is not synth_injective"
   | _ -> tfail "Not enough arguments to squash"
   else tfail "Goal is not squash"
+
+inline_for_extraction
+let bounded_u8_eq (b: nat) : Tot (bounded_u8 b -> bounded_u8 b -> Tot bool) =
+  op_Equality
+
+let parse_bounded_u8 (b: nat) : Tot (parser (bounded_u8 b)) =
+  parse_filter parse_u8 (fun x -> U8.v x < b) `parse_synth` (fun x -> x <: bounded_u8 b)
+
+(* WARNING: the following tactic may leave some VC goals behind *)
+
+let gen_enum_parser' (enum: T.term) : T.Tac T.term =
+  let bound = tenum_bound' enum in
+  let f = gen_synth_bounded' enum in
+  let val_t = T.mk_app (`bounded_u8) [bound, T.Q_Explicit] in
+  let val_eq = T.mk_app (`bounded_u8_eq) [bound, T.Q_Explicit] in
+  let g = invert_function' enum val_t val_eq f in
+  let _ = T.tcut (T.mk_app (`squash) [T.mk_app (`synth_inverse) [
+    val_t, T.Q_Implicit;
+    enum, T.Q_Implicit;
+    g, T.Q_Explicit;
+    f, T.Q_Explicit;
+  ], T.Q_Explicit])
+  in
+  T.flip ();
+  T.focus synth_inverse_solve;
+  let _ = T.tcut (T.mk_app (`squash) [T.mk_app (`synth_injective) [
+    val_t, T.Q_Implicit;
+    enum, T.Q_Implicit;
+    g, T.Q_Explicit;
+  ], T.Q_Explicit])
+  in
+  T.flip ();
+  T.focus (fun () -> synth_injective_solve f);
+  let pbound = T.mk_app (`parse_bounded_u8) [bound, T.Q_Explicit] in
+  T.mk_app (`parse_synth) [
+    val_t, T.Q_Implicit;
+    enum, T.Q_Implicit;
+    pbound, T.Q_Explicit;
+    g, T.Q_Explicit;
+  ]
+
+let gen_enum_parser (enum: T.term) : T.Tac unit =
+  T.set_guard_policy T.Goal;
+  T.exact_guard (gen_enum_parser' enum);
+  tconclude ()
