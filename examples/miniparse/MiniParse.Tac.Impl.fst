@@ -3,6 +3,7 @@ include MiniParse.Tac.Base
 include MiniParse.Impl.Combinators
 include MiniParse.Impl.Int
 include MiniParse.Impl.List
+include MiniParse.Impl.TEnum
 
 module T = FStar.Tactics
 module L = FStar.List.Tot
@@ -45,13 +46,19 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
     T.mk_app (`(parse32_synth)) [
       qt1;
       t2;
-      qp1;
+      (p1, T.Q_Implicit);
+      (p1', T.Q_Explicit);
       qf2;
       (f2', T.Q_Explicit);
-      (p1', T.Q_Explicit);
       ((`()), T.Q_Explicit);
     ]
   | _ -> tfail "Not enough arguments to synth"
+  else
+  if hd `T.term_eq` (`parse_bounded_u8)
+  then match tl with
+  | [(b, _)] ->
+    T.mk_app (`parse32_bounded_u8) [(b, T.Q_Explicit)]
+  | _ -> tfail "not enough arguments to parse_bounded_u8"
   else
   if hd `T.term_eq` (`parse_filter)
   then match tl with

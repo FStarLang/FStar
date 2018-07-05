@@ -93,10 +93,10 @@ inline_for_extraction
 let parse32_synth
   (#t1: Type0)
   (#t2: Type0)
-  (p1: parser t1)
+  (#p1: parser t1)
+  (p1' : parser32 p1)
   (f2: t1 -> GTot t2)
   (f2': (x: t1) -> Tot (y: t2 { y == f2 x } )) 
-  (p1' : parser32 p1)
   (u: unit {
     synth_injective f2
   })

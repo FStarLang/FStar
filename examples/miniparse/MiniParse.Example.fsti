@@ -29,9 +29,7 @@ let g'_inverse: squash (synth_inverse g' f') =
 
 let p : parser test = T.synth_by_tactic (fun () -> gen_enum_parser (`test))
 
-(*
 let q : parser32 p = T.synth_by_tactic (fun () -> gen_parser32 (`p))
-*)
 
 #reset-options
 
