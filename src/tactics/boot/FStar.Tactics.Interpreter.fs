@@ -393,12 +393,16 @@ and unembed_tactic_1_alt<'a,'r> (ea:embedding<'a>) (er:embedding<'r>) (f:term) (
       let app = U.mk_reify app in
       unembed_tactic_0 er app ncb)
 
-// IN F*: and e_tactic_1_alt (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> tac r)
-and e_tactic_1_alt (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<'r>)> // JUST FSHARP
-    =
-    mk_emb (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?")
-           (fun t w -> unembed_tactic_1_alt ea er t)
-           (FStar.Syntax.Embeddings.term_as_fv S.t_unit)
+//IN F*: and e_tactic_1_alt (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> proofstate -> __result r) =
+and e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (proofstate -> __result<'r>))> = //JUST FSHARP
+    let em = (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?") in
+//IN F*:    let un (t0: term) (w: bool) (n: norm_cb): option (a -> (proofstate -> __result r)) =
+    let un (t0: term) (w: bool) (n: norm_cb): option<('a -> (proofstate -> __result<'r>))> = //JUST FSHARP
+        match unembed_tactic_1_alt ea er t0 n with
+        | Some f -> Some (fun x -> run (f x))
+        | None -> None
+    in
+    mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb)))
 
 
 let report_implicits ps (is : Env.implicits) : unit =

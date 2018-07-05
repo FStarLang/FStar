@@ -6,20 +6,20 @@ let rec e_tactic_0 :
       'Ar FStar_Tactics_Basic.tac FStar_Syntax_Embeddings.embedding
   =
   fun er  ->
-    let uu____327 =
+    let uu____330 =
       FStar_Syntax_Embeddings.term_as_fv FStar_Syntax_Syntax.t_unit  in
     FStar_Syntax_Embeddings.mk_emb
-      (fun uu____334  ->
-         fun uu____335  ->
-           fun uu____336  ->
-             fun uu____337  -> failwith "Impossible: embedding tactic (0)?")
+      (fun uu____337  ->
+         fun uu____338  ->
+           fun uu____339  ->
+             fun uu____340  -> failwith "Impossible: embedding tactic (0)?")
       (fun t  ->
          fun w  ->
            fun norm1  ->
-             let uu____370 = unembed_tactic_0 er t norm1  in
+             let uu____373 = unembed_tactic_0 er t norm1  in
              FStar_All.pipe_left
-               (fun _0_16  -> FStar_Pervasives_Native.Some _0_16) uu____370)
-      uu____327
+               (fun _0_16  -> FStar_Pervasives_Native.Some _0_16) uu____373)
+      uu____330
 
 and e_tactic_1 :
   'Aa 'Ar .
@@ -30,14 +30,14 @@ and e_tactic_1 :
   =
   fun ea  ->
     fun er  ->
-      let uu____389 =
+      let uu____392 =
         FStar_Syntax_Embeddings.term_as_fv FStar_Syntax_Syntax.t_unit  in
       FStar_Syntax_Embeddings.mk_emb
-        (fun uu____399  ->
-           fun uu____400  ->
-             fun uu____401  ->
-               fun uu____402  -> failwith "Impossible: embedding tactic (1)?")
-        (fun t  -> fun w  -> unembed_tactic_1 ea er t) uu____389
+        (fun uu____402  ->
+           fun uu____403  ->
+             fun uu____404  ->
+               fun uu____405  -> failwith "Impossible: embedding tactic (1)?")
+        (fun t  -> fun w  -> unembed_tactic_1 ea er t) uu____392
 
 and e_tactic_nbe_0 :
   'Ar .
@@ -47,12 +47,12 @@ and e_tactic_nbe_0 :
   fun er  ->
     FStar_TypeChecker_NBETerm.mk_emb
       (fun cb  ->
-         fun uu____440  -> failwith "Impossible: NBE embedding tactic (0)?")
+         fun uu____443  -> failwith "Impossible: NBE embedding tactic (0)?")
       (fun cb  ->
          fun t  ->
-           let uu____456 = unembed_tactic_nbe_0 er cb t  in
+           let uu____459 = unembed_tactic_nbe_0 er cb t  in
            FStar_All.pipe_left
-             (fun _0_17  -> FStar_Pervasives_Native.Some _0_17) uu____456)
+             (fun _0_17  -> FStar_Pervasives_Native.Some _0_17) uu____459)
       (FStar_TypeChecker_NBETerm.Constant FStar_TypeChecker_NBETerm.Unit)
 
 and e_tactic_nbe_1 :
@@ -66,42 +66,42 @@ and e_tactic_nbe_1 :
     fun er  ->
       FStar_TypeChecker_NBETerm.mk_emb
         (fun cb  ->
-           fun uu____485  -> failwith "Impossible: NBE embedding tactic (1)?")
+           fun uu____488  -> failwith "Impossible: NBE embedding tactic (1)?")
         (fun cb  -> fun t  -> unembed_tactic_nbe_1 ea er cb t)
         (FStar_TypeChecker_NBETerm.Constant FStar_TypeChecker_NBETerm.Unit)
 
 and (primitive_steps :
   unit -> FStar_TypeChecker_Cfg.primitive_step Prims.list) =
-  fun uu____506  ->
+  fun uu____509  ->
     let tracepoint1 =
-      let uu___349_510 =
+      let uu___349_513 =
         FStar_Tactics_InterpFuns.mktot1 (Prims.parse_int "0") "tracepoint"
           FStar_Tactics_Types.tracepoint FStar_Tactics_Embedding.e_proofstate
           FStar_Syntax_Embeddings.e_unit FStar_Tactics_Types.tracepoint
           FStar_Tactics_Embedding.e_proofstate_nbe
           FStar_TypeChecker_NBETerm.e_unit
          in
-      let uu____511 = FStar_Ident.lid_of_str "FStar.Tactics.Types.tracepoint"
+      let uu____514 = FStar_Ident.lid_of_str "FStar.Tactics.Types.tracepoint"
          in
       {
-        FStar_TypeChecker_Cfg.name = uu____511;
+        FStar_TypeChecker_Cfg.name = uu____514;
         FStar_TypeChecker_Cfg.arity =
-          (uu___349_510.FStar_TypeChecker_Cfg.arity);
+          (uu___349_513.FStar_TypeChecker_Cfg.arity);
         FStar_TypeChecker_Cfg.univ_arity =
-          (uu___349_510.FStar_TypeChecker_Cfg.univ_arity);
+          (uu___349_513.FStar_TypeChecker_Cfg.univ_arity);
         FStar_TypeChecker_Cfg.auto_reflect =
-          (uu___349_510.FStar_TypeChecker_Cfg.auto_reflect);
+          (uu___349_513.FStar_TypeChecker_Cfg.auto_reflect);
         FStar_TypeChecker_Cfg.strong_reduction_ok =
-          (uu___349_510.FStar_TypeChecker_Cfg.strong_reduction_ok);
+          (uu___349_513.FStar_TypeChecker_Cfg.strong_reduction_ok);
         FStar_TypeChecker_Cfg.requires_binder_substitution =
-          (uu___349_510.FStar_TypeChecker_Cfg.requires_binder_substitution);
+          (uu___349_513.FStar_TypeChecker_Cfg.requires_binder_substitution);
         FStar_TypeChecker_Cfg.interpretation =
-          (uu___349_510.FStar_TypeChecker_Cfg.interpretation);
+          (uu___349_513.FStar_TypeChecker_Cfg.interpretation);
         FStar_TypeChecker_Cfg.interpretation_nbe =
-          (uu___349_510.FStar_TypeChecker_Cfg.interpretation_nbe)
+          (uu___349_513.FStar_TypeChecker_Cfg.interpretation_nbe)
       }  in
     let set_proofstate_range1 =
-      let uu___350_513 =
+      let uu___350_516 =
         FStar_Tactics_InterpFuns.mktot2 (Prims.parse_int "0")
           "set_proofstate_range" FStar_Tactics_Types.set_proofstate_range
           FStar_Tactics_Embedding.e_proofstate
@@ -112,85 +112,85 @@ and (primitive_steps :
           FStar_TypeChecker_NBETerm.e_range
           FStar_Tactics_Embedding.e_proofstate_nbe
          in
-      let uu____514 =
+      let uu____517 =
         FStar_Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range"  in
       {
-        FStar_TypeChecker_Cfg.name = uu____514;
+        FStar_TypeChecker_Cfg.name = uu____517;
         FStar_TypeChecker_Cfg.arity =
-          (uu___350_513.FStar_TypeChecker_Cfg.arity);
+          (uu___350_516.FStar_TypeChecker_Cfg.arity);
         FStar_TypeChecker_Cfg.univ_arity =
-          (uu___350_513.FStar_TypeChecker_Cfg.univ_arity);
+          (uu___350_516.FStar_TypeChecker_Cfg.univ_arity);
         FStar_TypeChecker_Cfg.auto_reflect =
-          (uu___350_513.FStar_TypeChecker_Cfg.auto_reflect);
+          (uu___350_516.FStar_TypeChecker_Cfg.auto_reflect);
         FStar_TypeChecker_Cfg.strong_reduction_ok =
-          (uu___350_513.FStar_TypeChecker_Cfg.strong_reduction_ok);
+          (uu___350_516.FStar_TypeChecker_Cfg.strong_reduction_ok);
         FStar_TypeChecker_Cfg.requires_binder_substitution =
-          (uu___350_513.FStar_TypeChecker_Cfg.requires_binder_substitution);
+          (uu___350_516.FStar_TypeChecker_Cfg.requires_binder_substitution);
         FStar_TypeChecker_Cfg.interpretation =
-          (uu___350_513.FStar_TypeChecker_Cfg.interpretation);
+          (uu___350_516.FStar_TypeChecker_Cfg.interpretation);
         FStar_TypeChecker_Cfg.interpretation_nbe =
-          (uu___350_513.FStar_TypeChecker_Cfg.interpretation_nbe)
+          (uu___350_516.FStar_TypeChecker_Cfg.interpretation_nbe)
       }  in
     let incr_depth1 =
-      let uu___351_516 =
+      let uu___351_519 =
         FStar_Tactics_InterpFuns.mktot1 (Prims.parse_int "0") "incr_depth"
           FStar_Tactics_Types.incr_depth FStar_Tactics_Embedding.e_proofstate
           FStar_Tactics_Embedding.e_proofstate FStar_Tactics_Types.incr_depth
           FStar_Tactics_Embedding.e_proofstate_nbe
           FStar_Tactics_Embedding.e_proofstate_nbe
          in
-      let uu____517 = FStar_Ident.lid_of_str "FStar.Tactics.Types.incr_depth"
+      let uu____520 = FStar_Ident.lid_of_str "FStar.Tactics.Types.incr_depth"
          in
       {
-        FStar_TypeChecker_Cfg.name = uu____517;
+        FStar_TypeChecker_Cfg.name = uu____520;
         FStar_TypeChecker_Cfg.arity =
-          (uu___351_516.FStar_TypeChecker_Cfg.arity);
+          (uu___351_519.FStar_TypeChecker_Cfg.arity);
         FStar_TypeChecker_Cfg.univ_arity =
-          (uu___351_516.FStar_TypeChecker_Cfg.univ_arity);
+          (uu___351_519.FStar_TypeChecker_Cfg.univ_arity);
         FStar_TypeChecker_Cfg.auto_reflect =
-          (uu___351_516.FStar_TypeChecker_Cfg.auto_reflect);
+          (uu___351_519.FStar_TypeChecker_Cfg.auto_reflect);
         FStar_TypeChecker_Cfg.strong_reduction_ok =
-          (uu___351_516.FStar_TypeChecker_Cfg.strong_reduction_ok);
+          (uu___351_519.FStar_TypeChecker_Cfg.strong_reduction_ok);
         FStar_TypeChecker_Cfg.requires_binder_substitution =
-          (uu___351_516.FStar_TypeChecker_Cfg.requires_binder_substitution);
+          (uu___351_519.FStar_TypeChecker_Cfg.requires_binder_substitution);
         FStar_TypeChecker_Cfg.interpretation =
-          (uu___351_516.FStar_TypeChecker_Cfg.interpretation);
+          (uu___351_519.FStar_TypeChecker_Cfg.interpretation);
         FStar_TypeChecker_Cfg.interpretation_nbe =
-          (uu___351_516.FStar_TypeChecker_Cfg.interpretation_nbe)
+          (uu___351_519.FStar_TypeChecker_Cfg.interpretation_nbe)
       }  in
     let decr_depth1 =
-      let uu___352_519 =
+      let uu___352_522 =
         FStar_Tactics_InterpFuns.mktot1 (Prims.parse_int "0") "decr_depth"
           FStar_Tactics_Types.decr_depth FStar_Tactics_Embedding.e_proofstate
           FStar_Tactics_Embedding.e_proofstate FStar_Tactics_Types.decr_depth
           FStar_Tactics_Embedding.e_proofstate_nbe
           FStar_Tactics_Embedding.e_proofstate_nbe
          in
-      let uu____520 = FStar_Ident.lid_of_str "FStar.Tactics.Types.decr_depth"
+      let uu____523 = FStar_Ident.lid_of_str "FStar.Tactics.Types.decr_depth"
          in
       {
-        FStar_TypeChecker_Cfg.name = uu____520;
+        FStar_TypeChecker_Cfg.name = uu____523;
         FStar_TypeChecker_Cfg.arity =
-          (uu___352_519.FStar_TypeChecker_Cfg.arity);
+          (uu___352_522.FStar_TypeChecker_Cfg.arity);
         FStar_TypeChecker_Cfg.univ_arity =
-          (uu___352_519.FStar_TypeChecker_Cfg.univ_arity);
+          (uu___352_522.FStar_TypeChecker_Cfg.univ_arity);
         FStar_TypeChecker_Cfg.auto_reflect =
-          (uu___352_519.FStar_TypeChecker_Cfg.auto_reflect);
+          (uu___352_522.FStar_TypeChecker_Cfg.auto_reflect);
         FStar_TypeChecker_Cfg.strong_reduction_ok =
-          (uu___352_519.FStar_TypeChecker_Cfg.strong_reduction_ok);
+          (uu___352_522.FStar_TypeChecker_Cfg.strong_reduction_ok);
         FStar_TypeChecker_Cfg.requires_binder_substitution =
-          (uu___352_519.FStar_TypeChecker_Cfg.requires_binder_substitution);
+          (uu___352_522.FStar_TypeChecker_Cfg.requires_binder_substitution);
         FStar_TypeChecker_Cfg.interpretation =
-          (uu___352_519.FStar_TypeChecker_Cfg.interpretation);
+          (uu___352_522.FStar_TypeChecker_Cfg.interpretation);
         FStar_TypeChecker_Cfg.interpretation_nbe =
-          (uu___352_519.FStar_TypeChecker_Cfg.interpretation_nbe)
+          (uu___352_522.FStar_TypeChecker_Cfg.interpretation_nbe)
       }  in
-    let uu____521 =
-      let uu____524 =
-        let uu____527 =
-          let uu____530 =
-            let uu____533 =
-              let uu____536 =
+    let uu____524 =
+      let uu____527 =
+        let uu____530 =
+          let uu____533 =
+            let uu____536 =
+              let uu____539 =
                 FStar_Tactics_InterpFuns.mktot2 (Prims.parse_int "0")
                   "push_binder"
                   (fun env  ->
@@ -204,20 +204,20 @@ and (primitive_steps :
                   FStar_Reflection_NBEEmbeddings.e_binder
                   FStar_Reflection_NBEEmbeddings.e_env
                  in
-              let uu____593 =
-                let uu____596 =
+              let uu____596 =
+                let uu____599 =
                   FStar_Tactics_InterpFuns.mktac2 (Prims.parse_int "1")
-                    "fail" (fun uu____598  -> FStar_Tactics_Basic.fail)
+                    "fail" (fun uu____601  -> FStar_Tactics_Basic.fail)
                     FStar_Syntax_Embeddings.e_any
                     FStar_Syntax_Embeddings.e_string
                     FStar_Syntax_Embeddings.e_any
-                    (fun uu____600  -> FStar_Tactics_Basic.fail)
+                    (fun uu____603  -> FStar_Tactics_Basic.fail)
                     FStar_TypeChecker_NBETerm.e_any
                     FStar_TypeChecker_NBETerm.e_string
                     FStar_TypeChecker_NBETerm.e_any
                    in
-                let uu____601 =
-                  let uu____604 =
+                let uu____604 =
+                  let uu____607 =
                     FStar_Tactics_InterpFuns.mktac1 (Prims.parse_int "0")
                       "trivial" FStar_Tactics_Basic.trivial
                       FStar_Syntax_Embeddings.e_unit
@@ -226,31 +226,31 @@ and (primitive_steps :
                       FStar_TypeChecker_NBETerm.e_unit
                       FStar_TypeChecker_NBETerm.e_unit
                      in
-                  let uu____605 =
-                    let uu____608 =
-                      let uu____609 =
+                  let uu____608 =
+                    let uu____611 =
+                      let uu____612 =
                         e_tactic_0 FStar_Syntax_Embeddings.e_any  in
-                      let uu____614 =
+                      let uu____617 =
                         FStar_Syntax_Embeddings.e_either
                           FStar_Syntax_Embeddings.e_string
                           FStar_Syntax_Embeddings.e_any
                          in
-                      let uu____621 =
+                      let uu____624 =
                         e_tactic_nbe_0 FStar_TypeChecker_NBETerm.e_any  in
-                      let uu____626 =
+                      let uu____629 =
                         FStar_TypeChecker_NBETerm.e_either
                           FStar_TypeChecker_NBETerm.e_string
                           FStar_TypeChecker_NBETerm.e_any
                          in
                       FStar_Tactics_InterpFuns.mktac2 (Prims.parse_int "1")
                         "__catch"
-                        (fun uu____646  -> FStar_Tactics_Basic.catch)
-                        FStar_Syntax_Embeddings.e_any uu____609 uu____614
-                        (fun uu____648  -> FStar_Tactics_Basic.catch)
-                        FStar_TypeChecker_NBETerm.e_any uu____621 uu____626
+                        (fun uu____649  -> FStar_Tactics_Basic.catch)
+                        FStar_Syntax_Embeddings.e_any uu____612 uu____617
+                        (fun uu____651  -> FStar_Tactics_Basic.catch)
+                        FStar_TypeChecker_NBETerm.e_any uu____624 uu____629
                        in
-                    let uu____649 =
-                      let uu____652 =
+                    let uu____652 =
+                      let uu____655 =
                         FStar_Tactics_InterpFuns.mktac1 (Prims.parse_int "0")
                           "intro" FStar_Tactics_Basic.intro
                           FStar_Syntax_Embeddings.e_unit
@@ -259,14 +259,14 @@ and (primitive_steps :
                           FStar_TypeChecker_NBETerm.e_unit
                           FStar_Reflection_NBEEmbeddings.e_binder
                          in
-                      let uu____653 =
-                        let uu____656 =
-                          let uu____657 =
+                      let uu____656 =
+                        let uu____659 =
+                          let uu____660 =
                             FStar_Syntax_Embeddings.e_tuple2
                               FStar_Reflection_Embeddings.e_binder
                               FStar_Reflection_Embeddings.e_binder
                              in
-                          let uu____664 =
+                          let uu____667 =
                             FStar_TypeChecker_NBETerm.e_tuple2
                               FStar_Reflection_NBEEmbeddings.e_binder
                               FStar_Reflection_NBEEmbeddings.e_binder
@@ -274,72 +274,72 @@ and (primitive_steps :
                           FStar_Tactics_InterpFuns.mktac1
                             (Prims.parse_int "0") "intro_rec"
                             FStar_Tactics_Basic.intro_rec
-                            FStar_Syntax_Embeddings.e_unit uu____657
+                            FStar_Syntax_Embeddings.e_unit uu____660
                             FStar_Tactics_Basic.intro_rec
-                            FStar_TypeChecker_NBETerm.e_unit uu____664
+                            FStar_TypeChecker_NBETerm.e_unit uu____667
                            in
-                        let uu____679 =
-                          let uu____682 =
-                            let uu____683 =
+                        let uu____682 =
+                          let uu____685 =
+                            let uu____686 =
                               FStar_Syntax_Embeddings.e_list
                                 FStar_Syntax_Embeddings.e_norm_step
                                in
-                            let uu____688 =
+                            let uu____691 =
                               FStar_TypeChecker_NBETerm.e_list
                                 FStar_TypeChecker_NBETerm.e_norm_step
                                in
                             FStar_Tactics_InterpFuns.mktac1
                               (Prims.parse_int "0") "norm"
-                              FStar_Tactics_Basic.norm uu____683
+                              FStar_Tactics_Basic.norm uu____686
                               FStar_Syntax_Embeddings.e_unit
-                              FStar_Tactics_Basic.norm uu____688
+                              FStar_Tactics_Basic.norm uu____691
                               FStar_TypeChecker_NBETerm.e_unit
                              in
-                          let uu____697 =
-                            let uu____700 =
-                              let uu____701 =
+                          let uu____700 =
+                            let uu____703 =
+                              let uu____704 =
                                 FStar_Syntax_Embeddings.e_list
                                   FStar_Syntax_Embeddings.e_norm_step
                                  in
-                              let uu____706 =
+                              let uu____709 =
                                 FStar_TypeChecker_NBETerm.e_list
                                   FStar_TypeChecker_NBETerm.e_norm_step
                                  in
                               FStar_Tactics_InterpFuns.mktac3
                                 (Prims.parse_int "0") "norm_term_env"
                                 FStar_Tactics_Basic.norm_term_env
-                                FStar_Reflection_Embeddings.e_env uu____701
+                                FStar_Reflection_Embeddings.e_env uu____704
                                 FStar_Reflection_Embeddings.e_term
                                 FStar_Reflection_Embeddings.e_term
                                 FStar_Tactics_Basic.norm_term_env
                                 FStar_Reflection_NBEEmbeddings.e_env
-                                uu____706
+                                uu____709
                                 FStar_Reflection_NBEEmbeddings.e_term
                                 FStar_Reflection_NBEEmbeddings.e_term
                                in
-                            let uu____715 =
-                              let uu____718 =
-                                let uu____719 =
+                            let uu____718 =
+                              let uu____721 =
+                                let uu____722 =
                                   FStar_Syntax_Embeddings.e_list
                                     FStar_Syntax_Embeddings.e_norm_step
                                    in
-                                let uu____724 =
+                                let uu____727 =
                                   FStar_TypeChecker_NBETerm.e_list
                                     FStar_TypeChecker_NBETerm.e_norm_step
                                    in
                                 FStar_Tactics_InterpFuns.mktac2
                                   (Prims.parse_int "0") "norm_binder_type"
                                   FStar_Tactics_Basic.norm_binder_type
-                                  uu____719
+                                  uu____722
                                   FStar_Reflection_Embeddings.e_binder
                                   FStar_Syntax_Embeddings.e_unit
                                   FStar_Tactics_Basic.norm_binder_type
-                                  uu____724
+                                  uu____727
                                   FStar_Reflection_NBEEmbeddings.e_binder
                                   FStar_TypeChecker_NBETerm.e_unit
                                  in
-                              let uu____733 =
-                                let uu____736 =
+                              let uu____736 =
+                                let uu____739 =
                                   FStar_Tactics_InterpFuns.mktac2
                                     (Prims.parse_int "0") "rename_to"
                                     FStar_Tactics_Basic.rename_to
@@ -351,8 +351,8 @@ and (primitive_steps :
                                     FStar_TypeChecker_NBETerm.e_string
                                     FStar_TypeChecker_NBETerm.e_unit
                                    in
-                                let uu____737 =
-                                  let uu____740 =
+                                let uu____740 =
+                                  let uu____743 =
                                     FStar_Tactics_InterpFuns.mktac1
                                       (Prims.parse_int "0") "binder_retype"
                                       FStar_Tactics_Basic.binder_retype
@@ -362,8 +362,8 @@ and (primitive_steps :
                                       FStar_Reflection_NBEEmbeddings.e_binder
                                       FStar_TypeChecker_NBETerm.e_unit
                                      in
-                                  let uu____741 =
-                                    let uu____744 =
+                                  let uu____744 =
+                                    let uu____747 =
                                       FStar_Tactics_InterpFuns.mktac1
                                         (Prims.parse_int "0") "revert"
                                         FStar_Tactics_Basic.revert
@@ -373,8 +373,8 @@ and (primitive_steps :
                                         FStar_TypeChecker_NBETerm.e_unit
                                         FStar_TypeChecker_NBETerm.e_unit
                                        in
-                                    let uu____745 =
-                                      let uu____748 =
+                                    let uu____748 =
+                                      let uu____751 =
                                         FStar_Tactics_InterpFuns.mktac1
                                           (Prims.parse_int "0") "clear_top"
                                           FStar_Tactics_Basic.clear_top
@@ -384,8 +384,8 @@ and (primitive_steps :
                                           FStar_TypeChecker_NBETerm.e_unit
                                           FStar_TypeChecker_NBETerm.e_unit
                                          in
-                                      let uu____749 =
-                                        let uu____752 =
+                                      let uu____752 =
+                                        let uu____755 =
                                           FStar_Tactics_InterpFuns.mktac1
                                             (Prims.parse_int "0") "clear"
                                             FStar_Tactics_Basic.clear
@@ -395,8 +395,8 @@ and (primitive_steps :
                                             FStar_Reflection_NBEEmbeddings.e_binder
                                             FStar_TypeChecker_NBETerm.e_unit
                                            in
-                                        let uu____753 =
-                                          let uu____756 =
+                                        let uu____756 =
+                                          let uu____759 =
                                             FStar_Tactics_InterpFuns.mktac1
                                               (Prims.parse_int "0") "rewrite"
                                               FStar_Tactics_Basic.rewrite
@@ -406,8 +406,8 @@ and (primitive_steps :
                                               FStar_Reflection_NBEEmbeddings.e_binder
                                               FStar_TypeChecker_NBETerm.e_unit
                                              in
-                                          let uu____757 =
-                                            let uu____760 =
+                                          let uu____760 =
+                                            let uu____763 =
                                               FStar_Tactics_InterpFuns.mktac1
                                                 (Prims.parse_int "0") "smt"
                                                 FStar_Tactics_Basic.smt
@@ -417,8 +417,8 @@ and (primitive_steps :
                                                 FStar_TypeChecker_NBETerm.e_unit
                                                 FStar_TypeChecker_NBETerm.e_unit
                                                in
-                                            let uu____761 =
-                                              let uu____764 =
+                                            let uu____764 =
+                                              let uu____767 =
                                                 FStar_Tactics_InterpFuns.mktac1
                                                   (Prims.parse_int "0")
                                                   "refine_intro"
@@ -429,8 +429,8 @@ and (primitive_steps :
                                                   FStar_TypeChecker_NBETerm.e_unit
                                                   FStar_TypeChecker_NBETerm.e_unit
                                                  in
-                                              let uu____765 =
-                                                let uu____768 =
+                                              let uu____768 =
+                                                let uu____771 =
                                                   FStar_Tactics_InterpFuns.mktac2
                                                     (Prims.parse_int "0")
                                                     "t_exact"
@@ -443,8 +443,8 @@ and (primitive_steps :
                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                     FStar_TypeChecker_NBETerm.e_unit
                                                    in
-                                                let uu____769 =
-                                                  let uu____772 =
+                                                let uu____772 =
+                                                  let uu____775 =
                                                     FStar_Tactics_InterpFuns.mktac1
                                                       (Prims.parse_int "0")
                                                       "apply"
@@ -457,8 +457,8 @@ and (primitive_steps :
                                                       FStar_Reflection_NBEEmbeddings.e_term
                                                       FStar_TypeChecker_NBETerm.e_unit
                                                      in
-                                                  let uu____773 =
-                                                    let uu____776 =
+                                                  let uu____776 =
+                                                    let uu____779 =
                                                       FStar_Tactics_InterpFuns.mktac1
                                                         (Prims.parse_int "0")
                                                         "apply_raw"
@@ -471,8 +471,8 @@ and (primitive_steps :
                                                         FStar_Reflection_NBEEmbeddings.e_term
                                                         FStar_TypeChecker_NBETerm.e_unit
                                                        in
-                                                    let uu____777 =
-                                                      let uu____780 =
+                                                    let uu____780 =
+                                                      let uu____783 =
                                                         FStar_Tactics_InterpFuns.mktac1
                                                           (Prims.parse_int "0")
                                                           "apply_lemma"
@@ -483,30 +483,30 @@ and (primitive_steps :
                                                           FStar_Reflection_NBEEmbeddings.e_term
                                                           FStar_TypeChecker_NBETerm.e_unit
                                                          in
-                                                      let uu____781 =
-                                                        let uu____784 =
-                                                          let uu____785 =
+                                                      let uu____784 =
+                                                        let uu____787 =
+                                                          let uu____788 =
                                                             e_tactic_0
                                                               FStar_Syntax_Embeddings.e_any
                                                              in
-                                                          let uu____790 =
+                                                          let uu____793 =
                                                             e_tactic_0
                                                               FStar_Syntax_Embeddings.e_any
                                                              in
-                                                          let uu____795 =
+                                                          let uu____798 =
                                                             FStar_Syntax_Embeddings.e_tuple2
                                                               FStar_Syntax_Embeddings.e_any
                                                               FStar_Syntax_Embeddings.e_any
                                                              in
-                                                          let uu____802 =
+                                                          let uu____805 =
                                                             e_tactic_nbe_0
                                                               FStar_TypeChecker_NBETerm.e_any
                                                              in
-                                                          let uu____807 =
+                                                          let uu____810 =
                                                             e_tactic_nbe_0
                                                               FStar_TypeChecker_NBETerm.e_any
                                                              in
-                                                          let uu____812 =
+                                                          let uu____815 =
                                                             FStar_TypeChecker_NBETerm.e_tuple2
                                                               FStar_TypeChecker_NBETerm.e_any
                                                               FStar_TypeChecker_NBETerm.e_any
@@ -514,44 +514,44 @@ and (primitive_steps :
                                                           FStar_Tactics_InterpFuns.mktac5
                                                             (Prims.parse_int "2")
                                                             "__divide"
-                                                            (fun uu____837 
+                                                            (fun uu____840 
                                                                ->
-                                                               fun uu____838 
+                                                               fun uu____841 
                                                                  ->
                                                                  FStar_Tactics_Basic.divide)
                                                             FStar_Syntax_Embeddings.e_any
                                                             FStar_Syntax_Embeddings.e_any
                                                             FStar_Syntax_Embeddings.e_int
-                                                            uu____785
-                                                            uu____790
-                                                            uu____795
-                                                            (fun uu____841 
+                                                            uu____788
+                                                            uu____793
+                                                            uu____798
+                                                            (fun uu____844 
                                                                ->
-                                                               fun uu____842 
+                                                               fun uu____845 
                                                                  ->
                                                                  FStar_Tactics_Basic.divide)
                                                             FStar_TypeChecker_NBETerm.e_any
                                                             FStar_TypeChecker_NBETerm.e_any
                                                             FStar_TypeChecker_NBETerm.e_int
-                                                            uu____802
-                                                            uu____807
-                                                            uu____812
+                                                            uu____805
+                                                            uu____810
+                                                            uu____815
                                                            in
-                                                        let uu____843 =
-                                                          let uu____846 =
-                                                            let uu____847 =
+                                                        let uu____846 =
+                                                          let uu____849 =
+                                                            let uu____850 =
                                                               e_tactic_0
                                                                 FStar_Syntax_Embeddings.e_unit
                                                                in
-                                                            let uu____852 =
+                                                            let uu____855 =
                                                               e_tactic_0
                                                                 FStar_Syntax_Embeddings.e_unit
                                                                in
-                                                            let uu____857 =
+                                                            let uu____860 =
                                                               e_tactic_nbe_0
                                                                 FStar_TypeChecker_NBETerm.e_unit
                                                                in
-                                                            let uu____862 =
+                                                            let uu____865 =
                                                               e_tactic_nbe_0
                                                                 FStar_TypeChecker_NBETerm.e_unit
                                                                in
@@ -559,16 +559,16 @@ and (primitive_steps :
                                                               (Prims.parse_int "0")
                                                               "__seq"
                                                               FStar_Tactics_Basic.seq
-                                                              uu____847
-                                                              uu____852
+                                                              uu____850
+                                                              uu____855
                                                               FStar_Syntax_Embeddings.e_unit
                                                               FStar_Tactics_Basic.seq
-                                                              uu____857
-                                                              uu____862
+                                                              uu____860
+                                                              uu____865
                                                               FStar_TypeChecker_NBETerm.e_unit
                                                              in
-                                                          let uu____875 =
-                                                            let uu____878 =
+                                                          let uu____878 =
+                                                            let uu____881 =
                                                               FStar_Tactics_InterpFuns.mktac1
                                                                 (Prims.parse_int "0")
                                                                 "set_options"
@@ -579,8 +579,8 @@ and (primitive_steps :
                                                                 FStar_TypeChecker_NBETerm.e_string
                                                                 FStar_TypeChecker_NBETerm.e_unit
                                                                in
-                                                            let uu____879 =
-                                                              let uu____882 =
+                                                            let uu____882 =
+                                                              let uu____885 =
                                                                 FStar_Tactics_InterpFuns.mktac1
                                                                   (Prims.parse_int "0")
                                                                   "tc"
@@ -591,8 +591,8 @@ and (primitive_steps :
                                                                   FStar_Reflection_NBEEmbeddings.e_term
                                                                   FStar_Reflection_NBEEmbeddings.e_term
                                                                  in
-                                                              let uu____883 =
-                                                                let uu____886
+                                                              let uu____886 =
+                                                                let uu____889
                                                                   =
                                                                   FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -604,9 +604,9 @@ and (primitive_steps :
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                    in
-                                                                let uu____887
+                                                                let uu____890
                                                                   =
-                                                                  let uu____890
+                                                                  let uu____893
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac2
                                                                     (Prims.parse_int "1")
@@ -616,10 +616,10 @@ and (primitive_steps :
                                                                     FStar_Reflection_Embeddings.e_term
                                                                     FStar_Syntax_Embeddings.e_any
                                                                     (fun
-                                                                    uu____893
+                                                                    uu____896
                                                                      ->
                                                                     fun
-                                                                    uu____894
+                                                                    uu____897
                                                                      ->
                                                                     failwith
                                                                     "NBE unquote")
@@ -627,9 +627,9 @@ and (primitive_steps :
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_TypeChecker_NBETerm.e_any
                                                                      in
-                                                                  let uu____897
+                                                                  let uu____900
                                                                     =
-                                                                    let uu____900
+                                                                    let uu____903
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -641,9 +641,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____901
-                                                                    =
                                                                     let uu____904
+                                                                    =
+                                                                    let uu____907
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -655,9 +655,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____905
-                                                                    =
                                                                     let uu____908
+                                                                    =
+                                                                    let uu____911
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -669,9 +669,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____909
-                                                                    =
                                                                     let uu____912
+                                                                    =
+                                                                    let uu____915
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -683,9 +683,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____913
-                                                                    =
                                                                     let uu____916
+                                                                    =
+                                                                    let uu____919
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -697,9 +697,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____917
-                                                                    =
                                                                     let uu____920
+                                                                    =
+                                                                    let uu____923
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -711,16 +711,16 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____921
-                                                                    =
                                                                     let uu____924
                                                                     =
-                                                                    let uu____925
+                                                                    let uu____927
+                                                                    =
+                                                                    let uu____928
                                                                     =
                                                                     e_tactic_0
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                      in
-                                                                    let uu____930
+                                                                    let uu____933
                                                                     =
                                                                     e_tactic_nbe_0
                                                                     FStar_TypeChecker_NBETerm.e_unit
@@ -730,20 +730,20 @@ and (primitive_steps :
                                                                     "__pointwise"
                                                                     FStar_Tactics_Basic.pointwise
                                                                     FStar_Tactics_Embedding.e_direction
-                                                                    uu____925
+                                                                    uu____928
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Tactics_Basic.pointwise
                                                                     FStar_Tactics_Embedding.e_direction_nbe
-                                                                    uu____930
+                                                                    uu____933
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____939
-                                                                    =
                                                                     let uu____942
                                                                     =
-                                                                    let uu____943
+                                                                    let uu____945
                                                                     =
-                                                                    let uu____955
+                                                                    let uu____946
+                                                                    =
+                                                                    let uu____958
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_tuple2
                                                                     FStar_Syntax_Embeddings.e_bool
@@ -751,16 +751,16 @@ and (primitive_steps :
                                                                      in
                                                                     e_tactic_1
                                                                     FStar_Reflection_Embeddings.e_term
-                                                                    uu____955
+                                                                    uu____958
                                                                      in
-                                                                    let uu____966
+                                                                    let uu____969
                                                                     =
                                                                     e_tactic_0
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                      in
-                                                                    let uu____971
+                                                                    let uu____974
                                                                     =
-                                                                    let uu____983
+                                                                    let uu____986
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_tuple2
                                                                     FStar_TypeChecker_NBETerm.e_bool
@@ -768,9 +768,9 @@ and (primitive_steps :
                                                                      in
                                                                     e_tactic_nbe_1
                                                                     FStar_Reflection_NBEEmbeddings.e_term
-                                                                    uu____983
+                                                                    uu____986
                                                                      in
-                                                                    let uu____994
+                                                                    let uu____997
                                                                     =
                                                                     e_tactic_nbe_0
                                                                     FStar_TypeChecker_NBETerm.e_unit
@@ -779,17 +779,17 @@ and (primitive_steps :
                                                                     (Prims.parse_int "0")
                                                                     "__topdown_rewrite"
                                                                     FStar_Tactics_Basic.topdown_rewrite
-                                                                    uu____943
-                                                                    uu____966
+                                                                    uu____946
+                                                                    uu____969
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Tactics_Basic.topdown_rewrite
-                                                                    uu____971
-                                                                    uu____994
+                                                                    uu____974
+                                                                    uu____997
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____1021
-                                                                    =
                                                                     let uu____1024
+                                                                    =
+                                                                    let uu____1027
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -801,9 +801,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____1025
-                                                                    =
                                                                     let uu____1028
+                                                                    =
+                                                                    let uu____1031
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -815,9 +815,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____1029
-                                                                    =
                                                                     let uu____1032
+                                                                    =
+                                                                    let uu____1035
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -829,9 +829,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____1033
-                                                                    =
                                                                     let uu____1036
+                                                                    =
+                                                                    let uu____1039
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -843,9 +843,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____1037
-                                                                    =
                                                                     let uu____1040
+                                                                    =
+                                                                    let uu____1043
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -857,9 +857,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____1041
-                                                                    =
                                                                     let uu____1044
+                                                                    =
+                                                                    let uu____1047
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -871,9 +871,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____1045
-                                                                    =
                                                                     let uu____1048
+                                                                    =
+                                                                    let uu____1051
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -885,17 +885,17 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____1049
-                                                                    =
                                                                     let uu____1052
                                                                     =
-                                                                    let uu____1053
+                                                                    let uu____1055
+                                                                    =
+                                                                    let uu____1056
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_tuple2
                                                                     FStar_Reflection_Embeddings.e_term
                                                                     FStar_Reflection_Embeddings.e_term
                                                                      in
-                                                                    let uu____1060
+                                                                    let uu____1063
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_tuple2
                                                                     FStar_Reflection_NBEEmbeddings.e_term
@@ -906,50 +906,50 @@ and (primitive_steps :
                                                                     "cases"
                                                                     FStar_Tactics_Basic.cases
                                                                     FStar_Reflection_Embeddings.e_term
-                                                                    uu____1053
+                                                                    uu____1056
                                                                     FStar_Tactics_Basic.cases
                                                                     FStar_Reflection_NBEEmbeddings.e_term
-                                                                    uu____1060
+                                                                    uu____1063
                                                                      in
-                                                                    let uu____1075
-                                                                    =
                                                                     let uu____1078
                                                                     =
-                                                                    let uu____1079
+                                                                    let uu____1081
                                                                     =
-                                                                    let uu____1088
+                                                                    let uu____1082
+                                                                    =
+                                                                    let uu____1091
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_tuple2
                                                                     FStar_Reflection_Embeddings.e_fv
                                                                     FStar_Syntax_Embeddings.e_int
                                                                      in
                                                                     FStar_Syntax_Embeddings.e_list
-                                                                    uu____1088
+                                                                    uu____1091
                                                                      in
-                                                                    let uu____1099
+                                                                    let uu____1102
                                                                     =
-                                                                    let uu____1108
+                                                                    let uu____1111
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_tuple2
                                                                     FStar_Reflection_NBEEmbeddings.e_fv
                                                                     FStar_TypeChecker_NBETerm.e_int
                                                                      in
                                                                     FStar_TypeChecker_NBETerm.e_list
-                                                                    uu____1108
+                                                                    uu____1111
                                                                      in
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
                                                                     "t_destruct"
                                                                     FStar_Tactics_Basic.t_destruct
                                                                     FStar_Reflection_Embeddings.e_term
-                                                                    uu____1079
+                                                                    uu____1082
                                                                     FStar_Tactics_Basic.t_destruct
                                                                     FStar_Reflection_NBEEmbeddings.e_term
-                                                                    uu____1099
+                                                                    uu____1102
                                                                      in
-                                                                    let uu____1131
-                                                                    =
                                                                     let uu____1134
+                                                                    =
+                                                                    let uu____1137
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -961,9 +961,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                      in
-                                                                    let uu____1135
-                                                                    =
                                                                     let uu____1138
+                                                                    =
+                                                                    let uu____1141
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -975,9 +975,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                      in
-                                                                    let uu____1139
-                                                                    =
                                                                     let uu____1142
+                                                                    =
+                                                                    let uu____1145
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -989,9 +989,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                      in
-                                                                    let uu____1143
-                                                                    =
                                                                     let uu____1146
+                                                                    =
+                                                                    let uu____1149
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -1003,9 +1003,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                      in
-                                                                    let uu____1147
-                                                                    =
                                                                     let uu____1150
+                                                                    =
+                                                                    let uu____1153
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -1017,9 +1017,9 @@ and (primitive_steps :
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_term_view
                                                                      in
-                                                                    let uu____1151
-                                                                    =
                                                                     let uu____1154
+                                                                    =
+                                                                    let uu____1157
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -1031,9 +1031,9 @@ and (primitive_steps :
                                                                     FStar_Reflection_NBEEmbeddings.e_term_view
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                      in
-                                                                    let uu____1155
-                                                                    =
                                                                     let uu____1158
+                                                                    =
+                                                                    let uu____1161
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -1045,9 +1045,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_int
                                                                      in
-                                                                    let uu____1159
-                                                                    =
                                                                     let uu____1162
+                                                                    =
+                                                                    let uu____1165
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -1059,9 +1059,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_int
                                                                      in
-                                                                    let uu____1163
-                                                                    =
                                                                     let uu____1166
+                                                                    =
+                                                                    let uu____1169
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -1073,9 +1073,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_int
                                                                      in
-                                                                    let uu____1167
-                                                                    =
                                                                     let uu____1170
+                                                                    =
+                                                                    let uu____1173
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -1087,16 +1087,16 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_bool
                                                                      in
-                                                                    let uu____1171
-                                                                    =
                                                                     let uu____1174
                                                                     =
-                                                                    let uu____1175
+                                                                    let uu____1177
+                                                                    =
+                                                                    let uu____1178
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_option
                                                                     FStar_Reflection_Embeddings.e_term
                                                                      in
-                                                                    let uu____1180
+                                                                    let uu____1183
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_option
                                                                     FStar_Reflection_NBEEmbeddings.e_term
@@ -1106,16 +1106,16 @@ and (primitive_steps :
                                                                     "uvar_env"
                                                                     FStar_Tactics_Basic.uvar_env
                                                                     FStar_Reflection_Embeddings.e_env
-                                                                    uu____1175
+                                                                    uu____1178
                                                                     FStar_Reflection_Embeddings.e_term
                                                                     FStar_Tactics_Basic.uvar_env
                                                                     FStar_Reflection_NBEEmbeddings.e_env
-                                                                    uu____1180
+                                                                    uu____1183
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                      in
-                                                                    let uu____1189
-                                                                    =
                                                                     let uu____1192
+                                                                    =
+                                                                    let uu____1195
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac3
                                                                     (Prims.parse_int "0")
@@ -1131,16 +1131,16 @@ and (primitive_steps :
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_TypeChecker_NBETerm.e_bool
                                                                      in
-                                                                    let uu____1193
-                                                                    =
                                                                     let uu____1196
                                                                     =
-                                                                    let uu____1197
+                                                                    let uu____1199
+                                                                    =
+                                                                    let uu____1200
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_list
                                                                     FStar_Syntax_Embeddings.e_string
                                                                      in
-                                                                    let uu____1202
+                                                                    let uu____1205
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_list
                                                                     FStar_TypeChecker_NBETerm.e_string
@@ -1150,18 +1150,18 @@ and (primitive_steps :
                                                                     "launch_process"
                                                                     FStar_Tactics_Basic.launch_process
                                                                     FStar_Syntax_Embeddings.e_string
-                                                                    uu____1197
+                                                                    uu____1200
                                                                     FStar_Syntax_Embeddings.e_string
                                                                     FStar_Syntax_Embeddings.e_string
                                                                     FStar_Tactics_Basic.launch_process
                                                                     FStar_TypeChecker_NBETerm.e_string
-                                                                    uu____1202
+                                                                    uu____1205
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                      in
-                                                                    let uu____1211
-                                                                    =
                                                                     let uu____1214
+                                                                    =
+                                                                    let uu____1217
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac2
                                                                     (Prims.parse_int "0")
@@ -1175,9 +1175,9 @@ and (primitive_steps :
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_bv
                                                                      in
-                                                                    let uu____1215
-                                                                    =
                                                                     let uu____1218
+                                                                    =
+                                                                    let uu____1221
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -1189,9 +1189,9 @@ and (primitive_steps :
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____1219
-                                                                    =
                                                                     let uu____1222
+                                                                    =
+                                                                    let uu____1225
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -1203,9 +1203,9 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_Tactics_Embedding.e_guard_policy_nbe
                                                                      in
-                                                                    let uu____1223
-                                                                    =
                                                                     let uu____1226
+                                                                    =
+                                                                    let uu____1229
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -1217,9 +1217,9 @@ and (primitive_steps :
                                                                     FStar_Tactics_Embedding.e_guard_policy_nbe
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
-                                                                    let uu____1227
-                                                                    =
                                                                     let uu____1230
+                                                                    =
+                                                                    let uu____1233
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
@@ -1231,191 +1231,191 @@ and (primitive_steps :
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_bool
                                                                      in
-                                                                    [uu____1230]
+                                                                    [uu____1233]
                                                                      in
+                                                                    uu____1229
+                                                                    ::
+                                                                    uu____1230
+                                                                     in
+                                                                    uu____1225
+                                                                    ::
                                                                     uu____1226
-                                                                    ::
-                                                                    uu____1227
                                                                      in
+                                                                    uu____1221
+                                                                    ::
                                                                     uu____1222
-                                                                    ::
-                                                                    uu____1223
                                                                      in
+                                                                    uu____1217
+                                                                    ::
                                                                     uu____1218
-                                                                    ::
-                                                                    uu____1219
                                                                      in
+                                                                    uu____1199
+                                                                    ::
                                                                     uu____1214
-                                                                    ::
-                                                                    uu____1215
                                                                      in
+                                                                    uu____1195
+                                                                    ::
                                                                     uu____1196
-                                                                    ::
-                                                                    uu____1211
                                                                      in
+                                                                    uu____1177
+                                                                    ::
                                                                     uu____1192
-                                                                    ::
-                                                                    uu____1193
                                                                      in
+                                                                    uu____1173
+                                                                    ::
                                                                     uu____1174
-                                                                    ::
-                                                                    uu____1189
                                                                      in
+                                                                    uu____1169
+                                                                    ::
                                                                     uu____1170
-                                                                    ::
-                                                                    uu____1171
                                                                      in
+                                                                    uu____1165
+                                                                    ::
                                                                     uu____1166
-                                                                    ::
-                                                                    uu____1167
                                                                      in
+                                                                    uu____1161
+                                                                    ::
                                                                     uu____1162
-                                                                    ::
-                                                                    uu____1163
                                                                      in
+                                                                    uu____1157
+                                                                    ::
                                                                     uu____1158
-                                                                    ::
-                                                                    uu____1159
                                                                      in
+                                                                    uu____1153
+                                                                    ::
                                                                     uu____1154
-                                                                    ::
-                                                                    uu____1155
                                                                      in
+                                                                    uu____1149
+                                                                    ::
                                                                     uu____1150
-                                                                    ::
-                                                                    uu____1151
                                                                      in
+                                                                    uu____1145
+                                                                    ::
                                                                     uu____1146
-                                                                    ::
-                                                                    uu____1147
                                                                      in
+                                                                    uu____1141
+                                                                    ::
                                                                     uu____1142
-                                                                    ::
-                                                                    uu____1143
                                                                      in
+                                                                    uu____1137
+                                                                    ::
                                                                     uu____1138
-                                                                    ::
-                                                                    uu____1139
                                                                      in
+                                                                    uu____1081
+                                                                    ::
                                                                     uu____1134
-                                                                    ::
-                                                                    uu____1135
                                                                      in
+                                                                    uu____1055
+                                                                    ::
                                                                     uu____1078
-                                                                    ::
-                                                                    uu____1131
                                                                      in
+                                                                    uu____1051
+                                                                    ::
                                                                     uu____1052
-                                                                    ::
-                                                                    uu____1075
                                                                      in
+                                                                    uu____1047
+                                                                    ::
                                                                     uu____1048
-                                                                    ::
-                                                                    uu____1049
                                                                      in
+                                                                    uu____1043
+                                                                    ::
                                                                     uu____1044
-                                                                    ::
-                                                                    uu____1045
                                                                      in
+                                                                    uu____1039
+                                                                    ::
                                                                     uu____1040
-                                                                    ::
-                                                                    uu____1041
                                                                      in
+                                                                    uu____1035
+                                                                    ::
                                                                     uu____1036
-                                                                    ::
-                                                                    uu____1037
                                                                      in
+                                                                    uu____1031
+                                                                    ::
                                                                     uu____1032
-                                                                    ::
-                                                                    uu____1033
                                                                      in
+                                                                    uu____1027
+                                                                    ::
                                                                     uu____1028
-                                                                    ::
-                                                                    uu____1029
                                                                      in
+                                                                    uu____945
+                                                                    ::
                                                                     uu____1024
-                                                                    ::
-                                                                    uu____1025
                                                                      in
+                                                                    uu____927
+                                                                    ::
                                                                     uu____942
-                                                                    ::
-                                                                    uu____1021
                                                                      in
+                                                                    uu____923
+                                                                    ::
                                                                     uu____924
-                                                                    ::
-                                                                    uu____939
                                                                      in
+                                                                    uu____919
+                                                                    ::
                                                                     uu____920
-                                                                    ::
-                                                                    uu____921
                                                                      in
+                                                                    uu____915
+                                                                    ::
                                                                     uu____916
-                                                                    ::
-                                                                    uu____917
                                                                      in
+                                                                    uu____911
+                                                                    ::
                                                                     uu____912
-                                                                    ::
-                                                                    uu____913
                                                                      in
+                                                                    uu____907
+                                                                    ::
                                                                     uu____908
-                                                                    ::
-                                                                    uu____909
                                                                      in
+                                                                    uu____903
+                                                                    ::
                                                                     uu____904
-                                                                    ::
-                                                                    uu____905
                                                                      in
+                                                                  uu____893
+                                                                    ::
                                                                     uu____900
-                                                                    ::
-                                                                    uu____901
-                                                                     in
-                                                                  uu____890
-                                                                    ::
-                                                                    uu____897
                                                                    in
-                                                                uu____886 ::
-                                                                  uu____887
+                                                                uu____889 ::
+                                                                  uu____890
                                                                  in
-                                                              uu____882 ::
-                                                                uu____883
+                                                              uu____885 ::
+                                                                uu____886
                                                                in
-                                                            uu____878 ::
-                                                              uu____879
+                                                            uu____881 ::
+                                                              uu____882
                                                              in
-                                                          uu____846 ::
-                                                            uu____875
+                                                          uu____849 ::
+                                                            uu____878
                                                            in
-                                                        uu____784 ::
-                                                          uu____843
+                                                        uu____787 ::
+                                                          uu____846
                                                          in
-                                                      uu____780 :: uu____781
+                                                      uu____783 :: uu____784
                                                        in
-                                                    uu____776 :: uu____777
+                                                    uu____779 :: uu____780
                                                      in
-                                                  uu____772 :: uu____773  in
-                                                uu____768 :: uu____769  in
-                                              uu____764 :: uu____765  in
-                                            uu____760 :: uu____761  in
-                                          uu____756 :: uu____757  in
-                                        uu____752 :: uu____753  in
-                                      uu____748 :: uu____749  in
-                                    uu____744 :: uu____745  in
-                                  uu____740 :: uu____741  in
-                                uu____736 :: uu____737  in
-                              uu____718 :: uu____733  in
-                            uu____700 :: uu____715  in
-                          uu____682 :: uu____697  in
-                        uu____656 :: uu____679  in
-                      uu____652 :: uu____653  in
-                    uu____608 :: uu____649  in
-                  uu____604 :: uu____605  in
-                uu____596 :: uu____601  in
-              uu____536 :: uu____593  in
-            set_proofstate_range1 :: uu____533  in
-          tracepoint1 :: uu____530  in
-        decr_depth1 :: uu____527  in
-      incr_depth1 :: uu____524  in
-    FStar_List.append uu____521
+                                                  uu____775 :: uu____776  in
+                                                uu____771 :: uu____772  in
+                                              uu____767 :: uu____768  in
+                                            uu____763 :: uu____764  in
+                                          uu____759 :: uu____760  in
+                                        uu____755 :: uu____756  in
+                                      uu____751 :: uu____752  in
+                                    uu____747 :: uu____748  in
+                                  uu____743 :: uu____744  in
+                                uu____739 :: uu____740  in
+                              uu____721 :: uu____736  in
+                            uu____703 :: uu____718  in
+                          uu____685 :: uu____700  in
+                        uu____659 :: uu____682  in
+                      uu____655 :: uu____656  in
+                    uu____611 :: uu____652  in
+                  uu____607 :: uu____608  in
+                uu____599 :: uu____604  in
+              uu____539 :: uu____596  in
+            set_proofstate_range1 :: uu____536  in
+          tracepoint1 :: uu____533  in
+        decr_depth1 :: uu____530  in
+      incr_depth1 :: uu____527  in
+    FStar_List.append uu____524
       (FStar_List.append FStar_Reflection_Interpreter.reflection_primops
          FStar_Tactics_InterpFuns.native_tactics_steps)
 
@@ -1437,12 +1437,12 @@ and unembed_tactic_1 :
                let rng = FStar_Range.dummyRange  in
                let x_tm = FStar_Tactics_InterpFuns.embed ea rng x ncb  in
                let app =
-                 let uu____1258 =
-                   let uu____1263 =
-                     let uu____1264 = FStar_Syntax_Syntax.as_arg x_tm  in
-                     [uu____1264]  in
-                   FStar_Syntax_Syntax.mk_Tm_app f uu____1263  in
-                 uu____1258 FStar_Pervasives_Native.None rng  in
+                 let uu____1261 =
+                   let uu____1266 =
+                     let uu____1267 = FStar_Syntax_Syntax.as_arg x_tm  in
+                     [uu____1267]  in
+                   FStar_Syntax_Syntax.mk_Tm_app f uu____1266  in
+                 uu____1261 FStar_Pervasives_Native.None rng  in
                unembed_tactic_0 er app ncb)
 
 and unembed_tactic_0 :
@@ -1458,18 +1458,18 @@ and unembed_tactic_0 :
           (fun proof_state  ->
              let rng = embedded_tac_b.FStar_Syntax_Syntax.pos  in
              let tm =
-               let uu____1317 =
-                 let uu____1322 =
-                   let uu____1323 =
-                     let uu____1332 =
+               let uu____1320 =
+                 let uu____1325 =
+                   let uu____1326 =
+                     let uu____1335 =
                        FStar_Tactics_InterpFuns.embed
                          FStar_Tactics_Embedding.e_proofstate rng proof_state
                          ncb
                         in
-                     FStar_Syntax_Syntax.as_arg uu____1332  in
-                   [uu____1323]  in
-                 FStar_Syntax_Syntax.mk_Tm_app embedded_tac_b uu____1322  in
-               uu____1317 FStar_Pervasives_Native.None rng  in
+                     FStar_Syntax_Syntax.as_arg uu____1335  in
+                   [uu____1326]  in
+                 FStar_Syntax_Syntax.mk_Tm_app embedded_tac_b uu____1325  in
+               uu____1320 FStar_Pervasives_Native.None rng  in
              let steps =
                [FStar_TypeChecker_Env.Weak;
                FStar_TypeChecker_Env.Reify;
@@ -1479,53 +1479,53 @@ and unembed_tactic_0 :
                FStar_TypeChecker_Env.Primops;
                FStar_TypeChecker_Env.Unascribe]  in
              let norm_f =
-               let uu____1377 = FStar_Options.tactics_nbe ()  in
-               if uu____1377
+               let uu____1380 = FStar_Options.tactics_nbe ()  in
+               if uu____1380
                then FStar_TypeChecker_NBE.normalize
                else
                  FStar_TypeChecker_Normalize.normalize_with_primitive_steps
                 in
              if proof_state.FStar_Tactics_Types.tac_verb_dbg
              then
-               (let uu____1396 = FStar_Syntax_Print.term_to_string tm  in
-                FStar_Util.print1 "Starting normalizer with %s\n" uu____1396)
+               (let uu____1399 = FStar_Syntax_Print.term_to_string tm  in
+                FStar_Util.print1 "Starting normalizer with %s\n" uu____1399)
              else ();
              (let result =
-                let uu____1399 = primitive_steps ()  in
-                norm_f uu____1399 steps
+                let uu____1402 = primitive_steps ()  in
+                norm_f uu____1402 steps
                   proof_state.FStar_Tactics_Types.main_context tm
                  in
               if proof_state.FStar_Tactics_Types.tac_verb_dbg
               then
-                (let uu____1403 = FStar_Syntax_Print.term_to_string result
+                (let uu____1406 = FStar_Syntax_Print.term_to_string result
                     in
-                 FStar_Util.print1 "Reduced tactic: got %s\n" uu____1403)
+                 FStar_Util.print1 "Reduced tactic: got %s\n" uu____1406)
               else ();
               (let res =
-                 let uu____1410 = FStar_Tactics_Embedding.e_result eb  in
-                 FStar_Tactics_InterpFuns.unembed uu____1410 result ncb  in
+                 let uu____1413 = FStar_Tactics_Embedding.e_result eb  in
+                 FStar_Tactics_InterpFuns.unembed uu____1413 result ncb  in
                match res with
                | FStar_Pervasives_Native.Some (FStar_Tactics_Result.Success
                    (b,ps)) ->
-                   let uu____1425 = FStar_Tactics_Basic.set ps  in
-                   FStar_Tactics_Basic.bind uu____1425
-                     (fun uu____1429  -> FStar_Tactics_Basic.ret b)
+                   let uu____1428 = FStar_Tactics_Basic.set ps  in
+                   FStar_Tactics_Basic.bind uu____1428
+                     (fun uu____1432  -> FStar_Tactics_Basic.ret b)
                | FStar_Pervasives_Native.Some (FStar_Tactics_Result.Failed
                    (msg,ps)) ->
-                   let uu____1434 = FStar_Tactics_Basic.set ps  in
-                   FStar_Tactics_Basic.bind uu____1434
-                     (fun uu____1438  -> FStar_Tactics_Basic.fail msg)
+                   let uu____1437 = FStar_Tactics_Basic.set ps  in
+                   FStar_Tactics_Basic.bind uu____1437
+                     (fun uu____1441  -> FStar_Tactics_Basic.fail msg)
                | FStar_Pervasives_Native.None  ->
-                   let uu____1441 =
-                     let uu____1446 =
-                       let uu____1447 =
+                   let uu____1444 =
+                     let uu____1449 =
+                       let uu____1450 =
                          FStar_Syntax_Print.term_to_string result  in
                        FStar_Util.format1
                          "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s"
-                         uu____1447
+                         uu____1450
                         in
-                     (FStar_Errors.Fatal_TacticGotStuck, uu____1446)  in
-                   FStar_Errors.raise_error uu____1441
+                     (FStar_Errors.Fatal_TacticGotStuck, uu____1449)  in
+                   FStar_Errors.raise_error uu____1444
                      (proof_state.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.range)))
 
 and unembed_tactic_nbe_1 :
@@ -1545,10 +1545,10 @@ and unembed_tactic_nbe_1 :
             (fun x  ->
                let x_tm = FStar_TypeChecker_NBETerm.embed ea cb x  in
                let app =
-                 let uu____1477 =
-                   let uu____1478 = FStar_TypeChecker_NBETerm.as_arg x_tm  in
-                   [uu____1478]  in
-                 cb f uu____1477  in
+                 let uu____1480 =
+                   let uu____1481 = FStar_TypeChecker_NBETerm.as_arg x_tm  in
+                   [uu____1481]  in
+                 cb f uu____1480  in
                unembed_tactic_nbe_0 er cb app)
 
 and unembed_tactic_nbe_0 :
@@ -1563,41 +1563,41 @@ and unembed_tactic_nbe_0 :
         FStar_Tactics_Basic.bind FStar_Tactics_Basic.get
           (fun proof_state  ->
              let result =
-               let uu____1514 =
-                 let uu____1515 =
-                   let uu____1520 =
+               let uu____1517 =
+                 let uu____1518 =
+                   let uu____1523 =
                      FStar_TypeChecker_NBETerm.embed
                        FStar_Tactics_Embedding.e_proofstate_nbe cb
                        proof_state
                       in
-                   FStar_TypeChecker_NBETerm.as_arg uu____1520  in
-                 [uu____1515]  in
-               cb embedded_tac_b uu____1514  in
+                   FStar_TypeChecker_NBETerm.as_arg uu____1523  in
+                 [uu____1518]  in
+               cb embedded_tac_b uu____1517  in
              let res =
-               let uu____1540 = FStar_Tactics_Embedding.e_result_nbe eb  in
-               FStar_TypeChecker_NBETerm.unembed uu____1540 cb result  in
+               let uu____1543 = FStar_Tactics_Embedding.e_result_nbe eb  in
+               FStar_TypeChecker_NBETerm.unembed uu____1543 cb result  in
              match res with
              | FStar_Pervasives_Native.Some (FStar_Tactics_Result.Success
                  (b,ps)) ->
-                 let uu____1557 = FStar_Tactics_Basic.set ps  in
-                 FStar_Tactics_Basic.bind uu____1557
-                   (fun uu____1561  -> FStar_Tactics_Basic.ret b)
+                 let uu____1560 = FStar_Tactics_Basic.set ps  in
+                 FStar_Tactics_Basic.bind uu____1560
+                   (fun uu____1564  -> FStar_Tactics_Basic.ret b)
              | FStar_Pervasives_Native.Some (FStar_Tactics_Result.Failed
                  (msg,ps)) ->
-                 let uu____1566 = FStar_Tactics_Basic.set ps  in
-                 FStar_Tactics_Basic.bind uu____1566
-                   (fun uu____1570  -> FStar_Tactics_Basic.fail msg)
+                 let uu____1569 = FStar_Tactics_Basic.set ps  in
+                 FStar_Tactics_Basic.bind uu____1569
+                   (fun uu____1573  -> FStar_Tactics_Basic.fail msg)
              | FStar_Pervasives_Native.None  ->
-                 let uu____1573 =
-                   let uu____1578 =
-                     let uu____1579 =
+                 let uu____1576 =
+                   let uu____1581 =
+                     let uu____1582 =
                        FStar_TypeChecker_NBETerm.t_to_string result  in
                      FStar_Util.format1
                        "Tactic got stuck (in NBE)! Please file a bug report with a minimal reproduction of this issue.\n%s"
-                       uu____1579
+                       uu____1582
                       in
-                   (FStar_Errors.Fatal_TacticGotStuck, uu____1578)  in
-                 FStar_Errors.raise_error uu____1573
+                   (FStar_Errors.Fatal_TacticGotStuck, uu____1581)  in
+                 FStar_Errors.raise_error uu____1576
                    (proof_state.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.range)
 
 and unembed_tactic_1_alt :
@@ -1618,12 +1618,12 @@ and unembed_tactic_1_alt :
                let rng = FStar_Range.dummyRange  in
                let x_tm = FStar_Tactics_InterpFuns.embed ea rng x ncb  in
                let app =
-                 let uu____1610 =
-                   let uu____1615 =
-                     let uu____1616 = FStar_Syntax_Syntax.as_arg x_tm  in
-                     [uu____1616]  in
-                   FStar_Syntax_Syntax.mk_Tm_app f uu____1615  in
-                 uu____1610 FStar_Pervasives_Native.None rng  in
+                 let uu____1613 =
+                   let uu____1618 =
+                     let uu____1619 = FStar_Syntax_Syntax.as_arg x_tm  in
+                     [uu____1619]  in
+                   FStar_Syntax_Syntax.mk_Tm_app f uu____1618  in
+                 uu____1613 FStar_Pervasives_Native.None rng  in
                let app1 = FStar_Syntax_Util.mk_reify app  in
                unembed_tactic_0 er app1 ncb)
 
@@ -1631,43 +1631,49 @@ and e_tactic_1_alt :
   'Aa 'Ar .
     'Aa FStar_Syntax_Embeddings.embedding ->
       'Ar FStar_Syntax_Embeddings.embedding ->
-        ('Aa -> 'Ar FStar_Tactics_Basic.tac)
+        ('Aa ->
+           FStar_Tactics_Types.proofstate ->
+             'Ar FStar_Tactics_Result.__result)
           FStar_Syntax_Embeddings.embedding
   =
   fun ea  ->
     fun er  ->
-      let uu____1654 =
+      let em uu____1703 uu____1704 uu____1705 uu____1706 =
+        failwith "Impossible: embedding tactic (1)?"  in
+      let un t0 w n1 =
+        let uu____1774 = unembed_tactic_1_alt ea er t0 n1  in
+        match uu____1774 with
+        | FStar_Pervasives_Native.Some f ->
+            FStar_Pervasives_Native.Some
+              ((fun x  ->
+                  let uu____1816 = f x  in FStar_Tactics_Basic.run uu____1816))
+        | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None  in
+      let uu____1832 =
         FStar_Syntax_Embeddings.term_as_fv FStar_Syntax_Syntax.t_unit  in
-      FStar_Syntax_Embeddings.mk_emb
-        (fun uu____1664  ->
-           fun uu____1665  ->
-             fun uu____1666  ->
-               fun uu____1667  ->
-                 failwith "Impossible: embedding tactic (1)?")
-        (fun t  -> fun w  -> unembed_tactic_1_alt ea er t) uu____1654
+      FStar_Syntax_Embeddings.mk_emb em un uu____1832
 
 let report_implicits :
-  'Auu____1703 . 'Auu____1703 -> FStar_TypeChecker_Env.implicits -> unit =
+  'Auu____1847 . 'Auu____1847 -> FStar_TypeChecker_Env.implicits -> unit =
   fun ps  ->
     fun is  ->
       let errs =
         FStar_List.map
           (fun imp  ->
-             let uu____1732 =
-               let uu____1733 =
+             let uu____1876 =
+               let uu____1877 =
                  FStar_Syntax_Print.uvar_to_string
                    (imp.FStar_TypeChecker_Env.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head
                   in
-               let uu____1734 =
+               let uu____1878 =
                  FStar_Syntax_Print.term_to_string
                    (imp.FStar_TypeChecker_Env.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_typ
                   in
                FStar_Util.format3
                  "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
-                 uu____1733 uu____1734 imp.FStar_TypeChecker_Env.imp_reason
+                 uu____1877 uu____1878 imp.FStar_TypeChecker_Env.imp_reason
                 in
              (FStar_Errors.Error_UninstantiatedUnificationVarInTactic,
-               uu____1732, (imp.FStar_TypeChecker_Env.imp_range))) is
+               uu____1876, (imp.FStar_TypeChecker_Env.imp_range))) is
          in
       FStar_Errors.add_errors errs
   
@@ -1685,398 +1691,398 @@ let (run_tactic_on_typ :
       fun tactic  ->
         fun env  ->
           fun typ  ->
-            (let uu____1773 = FStar_ST.op_Bang tacdbg  in
-             if uu____1773
+            (let uu____1917 = FStar_ST.op_Bang tacdbg  in
+             if uu____1917
              then
-               let uu____1793 = FStar_Syntax_Print.term_to_string tactic  in
-               FStar_Util.print1 "Typechecking tactic: (%s) {\n" uu____1793
+               let uu____1937 = FStar_Syntax_Print.term_to_string tactic  in
+               FStar_Util.print1 "Typechecking tactic: (%s) {\n" uu____1937
              else ());
-            (let uu____1795 =
+            (let uu____1939 =
                FStar_TypeChecker_TcTerm.tc_reified_tactic env tactic  in
-             match uu____1795 with
-             | (uu____1808,uu____1809,g) ->
-                 ((let uu____1812 = FStar_ST.op_Bang tacdbg  in
-                   if uu____1812 then FStar_Util.print_string "}\n" else ());
+             match uu____1939 with
+             | (uu____1952,uu____1953,g) ->
+                 ((let uu____1956 = FStar_ST.op_Bang tacdbg  in
+                   if uu____1956 then FStar_Util.print_string "}\n" else ());
                   FStar_TypeChecker_Rel.force_trivial_guard env g;
                   FStar_Errors.stop_if_err ();
                   (let tau =
                      unembed_tactic_0 FStar_Syntax_Embeddings.e_unit tactic
                        FStar_Syntax_Embeddings.id_norm_cb
                       in
-                   let uu____1838 =
+                   let uu____1982 =
                      FStar_TypeChecker_Env.clear_expected_typ env  in
-                   match uu____1838 with
-                   | (env1,uu____1852) ->
+                   match uu____1982 with
+                   | (env1,uu____1996) ->
                        let env2 =
-                         let uu___353_1858 = env1  in
+                         let uu___353_2002 = env1  in
                          {
                            FStar_TypeChecker_Env.solver =
-                             (uu___353_1858.FStar_TypeChecker_Env.solver);
+                             (uu___353_2002.FStar_TypeChecker_Env.solver);
                            FStar_TypeChecker_Env.range =
-                             (uu___353_1858.FStar_TypeChecker_Env.range);
+                             (uu___353_2002.FStar_TypeChecker_Env.range);
                            FStar_TypeChecker_Env.curmodule =
-                             (uu___353_1858.FStar_TypeChecker_Env.curmodule);
+                             (uu___353_2002.FStar_TypeChecker_Env.curmodule);
                            FStar_TypeChecker_Env.gamma =
-                             (uu___353_1858.FStar_TypeChecker_Env.gamma);
+                             (uu___353_2002.FStar_TypeChecker_Env.gamma);
                            FStar_TypeChecker_Env.gamma_sig =
-                             (uu___353_1858.FStar_TypeChecker_Env.gamma_sig);
+                             (uu___353_2002.FStar_TypeChecker_Env.gamma_sig);
                            FStar_TypeChecker_Env.gamma_cache =
-                             (uu___353_1858.FStar_TypeChecker_Env.gamma_cache);
+                             (uu___353_2002.FStar_TypeChecker_Env.gamma_cache);
                            FStar_TypeChecker_Env.modules =
-                             (uu___353_1858.FStar_TypeChecker_Env.modules);
+                             (uu___353_2002.FStar_TypeChecker_Env.modules);
                            FStar_TypeChecker_Env.expected_typ =
-                             (uu___353_1858.FStar_TypeChecker_Env.expected_typ);
+                             (uu___353_2002.FStar_TypeChecker_Env.expected_typ);
                            FStar_TypeChecker_Env.sigtab =
-                             (uu___353_1858.FStar_TypeChecker_Env.sigtab);
+                             (uu___353_2002.FStar_TypeChecker_Env.sigtab);
                            FStar_TypeChecker_Env.attrtab =
-                             (uu___353_1858.FStar_TypeChecker_Env.attrtab);
+                             (uu___353_2002.FStar_TypeChecker_Env.attrtab);
                            FStar_TypeChecker_Env.is_pattern =
-                             (uu___353_1858.FStar_TypeChecker_Env.is_pattern);
+                             (uu___353_2002.FStar_TypeChecker_Env.is_pattern);
                            FStar_TypeChecker_Env.instantiate_imp = false;
                            FStar_TypeChecker_Env.effects =
-                             (uu___353_1858.FStar_TypeChecker_Env.effects);
+                             (uu___353_2002.FStar_TypeChecker_Env.effects);
                            FStar_TypeChecker_Env.generalize =
-                             (uu___353_1858.FStar_TypeChecker_Env.generalize);
+                             (uu___353_2002.FStar_TypeChecker_Env.generalize);
                            FStar_TypeChecker_Env.letrecs =
-                             (uu___353_1858.FStar_TypeChecker_Env.letrecs);
+                             (uu___353_2002.FStar_TypeChecker_Env.letrecs);
                            FStar_TypeChecker_Env.top_level =
-                             (uu___353_1858.FStar_TypeChecker_Env.top_level);
+                             (uu___353_2002.FStar_TypeChecker_Env.top_level);
                            FStar_TypeChecker_Env.check_uvars =
-                             (uu___353_1858.FStar_TypeChecker_Env.check_uvars);
+                             (uu___353_2002.FStar_TypeChecker_Env.check_uvars);
                            FStar_TypeChecker_Env.use_eq =
-                             (uu___353_1858.FStar_TypeChecker_Env.use_eq);
+                             (uu___353_2002.FStar_TypeChecker_Env.use_eq);
                            FStar_TypeChecker_Env.is_iface =
-                             (uu___353_1858.FStar_TypeChecker_Env.is_iface);
+                             (uu___353_2002.FStar_TypeChecker_Env.is_iface);
                            FStar_TypeChecker_Env.admit =
-                             (uu___353_1858.FStar_TypeChecker_Env.admit);
+                             (uu___353_2002.FStar_TypeChecker_Env.admit);
                            FStar_TypeChecker_Env.lax =
-                             (uu___353_1858.FStar_TypeChecker_Env.lax);
+                             (uu___353_2002.FStar_TypeChecker_Env.lax);
                            FStar_TypeChecker_Env.lax_universes =
-                             (uu___353_1858.FStar_TypeChecker_Env.lax_universes);
+                             (uu___353_2002.FStar_TypeChecker_Env.lax_universes);
                            FStar_TypeChecker_Env.phase1 =
-                             (uu___353_1858.FStar_TypeChecker_Env.phase1);
+                             (uu___353_2002.FStar_TypeChecker_Env.phase1);
                            FStar_TypeChecker_Env.failhard =
-                             (uu___353_1858.FStar_TypeChecker_Env.failhard);
+                             (uu___353_2002.FStar_TypeChecker_Env.failhard);
                            FStar_TypeChecker_Env.nosynth =
-                             (uu___353_1858.FStar_TypeChecker_Env.nosynth);
+                             (uu___353_2002.FStar_TypeChecker_Env.nosynth);
                            FStar_TypeChecker_Env.uvar_subtyping =
-                             (uu___353_1858.FStar_TypeChecker_Env.uvar_subtyping);
+                             (uu___353_2002.FStar_TypeChecker_Env.uvar_subtyping);
                            FStar_TypeChecker_Env.tc_term =
-                             (uu___353_1858.FStar_TypeChecker_Env.tc_term);
+                             (uu___353_2002.FStar_TypeChecker_Env.tc_term);
                            FStar_TypeChecker_Env.type_of =
-                             (uu___353_1858.FStar_TypeChecker_Env.type_of);
+                             (uu___353_2002.FStar_TypeChecker_Env.type_of);
                            FStar_TypeChecker_Env.universe_of =
-                             (uu___353_1858.FStar_TypeChecker_Env.universe_of);
+                             (uu___353_2002.FStar_TypeChecker_Env.universe_of);
                            FStar_TypeChecker_Env.check_type_of =
-                             (uu___353_1858.FStar_TypeChecker_Env.check_type_of);
+                             (uu___353_2002.FStar_TypeChecker_Env.check_type_of);
                            FStar_TypeChecker_Env.use_bv_sorts =
-                             (uu___353_1858.FStar_TypeChecker_Env.use_bv_sorts);
+                             (uu___353_2002.FStar_TypeChecker_Env.use_bv_sorts);
                            FStar_TypeChecker_Env.qtbl_name_and_index =
-                             (uu___353_1858.FStar_TypeChecker_Env.qtbl_name_and_index);
+                             (uu___353_2002.FStar_TypeChecker_Env.qtbl_name_and_index);
                            FStar_TypeChecker_Env.normalized_eff_names =
-                             (uu___353_1858.FStar_TypeChecker_Env.normalized_eff_names);
+                             (uu___353_2002.FStar_TypeChecker_Env.normalized_eff_names);
                            FStar_TypeChecker_Env.proof_ns =
-                             (uu___353_1858.FStar_TypeChecker_Env.proof_ns);
+                             (uu___353_2002.FStar_TypeChecker_Env.proof_ns);
                            FStar_TypeChecker_Env.synth_hook =
-                             (uu___353_1858.FStar_TypeChecker_Env.synth_hook);
+                             (uu___353_2002.FStar_TypeChecker_Env.synth_hook);
                            FStar_TypeChecker_Env.splice =
-                             (uu___353_1858.FStar_TypeChecker_Env.splice);
+                             (uu___353_2002.FStar_TypeChecker_Env.splice);
                            FStar_TypeChecker_Env.is_native_tactic =
-                             (uu___353_1858.FStar_TypeChecker_Env.is_native_tactic);
+                             (uu___353_2002.FStar_TypeChecker_Env.is_native_tactic);
                            FStar_TypeChecker_Env.identifier_info =
-                             (uu___353_1858.FStar_TypeChecker_Env.identifier_info);
+                             (uu___353_2002.FStar_TypeChecker_Env.identifier_info);
                            FStar_TypeChecker_Env.tc_hooks =
-                             (uu___353_1858.FStar_TypeChecker_Env.tc_hooks);
+                             (uu___353_2002.FStar_TypeChecker_Env.tc_hooks);
                            FStar_TypeChecker_Env.dsenv =
-                             (uu___353_1858.FStar_TypeChecker_Env.dsenv);
+                             (uu___353_2002.FStar_TypeChecker_Env.dsenv);
                            FStar_TypeChecker_Env.dep_graph =
-                             (uu___353_1858.FStar_TypeChecker_Env.dep_graph);
+                             (uu___353_2002.FStar_TypeChecker_Env.dep_graph);
                            FStar_TypeChecker_Env.nbe =
-                             (uu___353_1858.FStar_TypeChecker_Env.nbe)
+                             (uu___353_2002.FStar_TypeChecker_Env.nbe)
                          }  in
                        let env3 =
-                         let uu___354_1860 = env2  in
+                         let uu___354_2004 = env2  in
                          {
                            FStar_TypeChecker_Env.solver =
-                             (uu___354_1860.FStar_TypeChecker_Env.solver);
+                             (uu___354_2004.FStar_TypeChecker_Env.solver);
                            FStar_TypeChecker_Env.range =
-                             (uu___354_1860.FStar_TypeChecker_Env.range);
+                             (uu___354_2004.FStar_TypeChecker_Env.range);
                            FStar_TypeChecker_Env.curmodule =
-                             (uu___354_1860.FStar_TypeChecker_Env.curmodule);
+                             (uu___354_2004.FStar_TypeChecker_Env.curmodule);
                            FStar_TypeChecker_Env.gamma =
-                             (uu___354_1860.FStar_TypeChecker_Env.gamma);
+                             (uu___354_2004.FStar_TypeChecker_Env.gamma);
                            FStar_TypeChecker_Env.gamma_sig =
-                             (uu___354_1860.FStar_TypeChecker_Env.gamma_sig);
+                             (uu___354_2004.FStar_TypeChecker_Env.gamma_sig);
                            FStar_TypeChecker_Env.gamma_cache =
-                             (uu___354_1860.FStar_TypeChecker_Env.gamma_cache);
+                             (uu___354_2004.FStar_TypeChecker_Env.gamma_cache);
                            FStar_TypeChecker_Env.modules =
-                             (uu___354_1860.FStar_TypeChecker_Env.modules);
+                             (uu___354_2004.FStar_TypeChecker_Env.modules);
                            FStar_TypeChecker_Env.expected_typ =
-                             (uu___354_1860.FStar_TypeChecker_Env.expected_typ);
+                             (uu___354_2004.FStar_TypeChecker_Env.expected_typ);
                            FStar_TypeChecker_Env.sigtab =
-                             (uu___354_1860.FStar_TypeChecker_Env.sigtab);
+                             (uu___354_2004.FStar_TypeChecker_Env.sigtab);
                            FStar_TypeChecker_Env.attrtab =
-                             (uu___354_1860.FStar_TypeChecker_Env.attrtab);
+                             (uu___354_2004.FStar_TypeChecker_Env.attrtab);
                            FStar_TypeChecker_Env.is_pattern =
-                             (uu___354_1860.FStar_TypeChecker_Env.is_pattern);
+                             (uu___354_2004.FStar_TypeChecker_Env.is_pattern);
                            FStar_TypeChecker_Env.instantiate_imp =
-                             (uu___354_1860.FStar_TypeChecker_Env.instantiate_imp);
+                             (uu___354_2004.FStar_TypeChecker_Env.instantiate_imp);
                            FStar_TypeChecker_Env.effects =
-                             (uu___354_1860.FStar_TypeChecker_Env.effects);
+                             (uu___354_2004.FStar_TypeChecker_Env.effects);
                            FStar_TypeChecker_Env.generalize =
-                             (uu___354_1860.FStar_TypeChecker_Env.generalize);
+                             (uu___354_2004.FStar_TypeChecker_Env.generalize);
                            FStar_TypeChecker_Env.letrecs =
-                             (uu___354_1860.FStar_TypeChecker_Env.letrecs);
+                             (uu___354_2004.FStar_TypeChecker_Env.letrecs);
                            FStar_TypeChecker_Env.top_level =
-                             (uu___354_1860.FStar_TypeChecker_Env.top_level);
+                             (uu___354_2004.FStar_TypeChecker_Env.top_level);
                            FStar_TypeChecker_Env.check_uvars =
-                             (uu___354_1860.FStar_TypeChecker_Env.check_uvars);
+                             (uu___354_2004.FStar_TypeChecker_Env.check_uvars);
                            FStar_TypeChecker_Env.use_eq =
-                             (uu___354_1860.FStar_TypeChecker_Env.use_eq);
+                             (uu___354_2004.FStar_TypeChecker_Env.use_eq);
                            FStar_TypeChecker_Env.is_iface =
-                             (uu___354_1860.FStar_TypeChecker_Env.is_iface);
+                             (uu___354_2004.FStar_TypeChecker_Env.is_iface);
                            FStar_TypeChecker_Env.admit =
-                             (uu___354_1860.FStar_TypeChecker_Env.admit);
+                             (uu___354_2004.FStar_TypeChecker_Env.admit);
                            FStar_TypeChecker_Env.lax =
-                             (uu___354_1860.FStar_TypeChecker_Env.lax);
+                             (uu___354_2004.FStar_TypeChecker_Env.lax);
                            FStar_TypeChecker_Env.lax_universes = true;
                            FStar_TypeChecker_Env.phase1 =
-                             (uu___354_1860.FStar_TypeChecker_Env.phase1);
+                             (uu___354_2004.FStar_TypeChecker_Env.phase1);
                            FStar_TypeChecker_Env.failhard =
-                             (uu___354_1860.FStar_TypeChecker_Env.failhard);
+                             (uu___354_2004.FStar_TypeChecker_Env.failhard);
                            FStar_TypeChecker_Env.nosynth =
-                             (uu___354_1860.FStar_TypeChecker_Env.nosynth);
+                             (uu___354_2004.FStar_TypeChecker_Env.nosynth);
                            FStar_TypeChecker_Env.uvar_subtyping =
-                             (uu___354_1860.FStar_TypeChecker_Env.uvar_subtyping);
+                             (uu___354_2004.FStar_TypeChecker_Env.uvar_subtyping);
                            FStar_TypeChecker_Env.tc_term =
-                             (uu___354_1860.FStar_TypeChecker_Env.tc_term);
+                             (uu___354_2004.FStar_TypeChecker_Env.tc_term);
                            FStar_TypeChecker_Env.type_of =
-                             (uu___354_1860.FStar_TypeChecker_Env.type_of);
+                             (uu___354_2004.FStar_TypeChecker_Env.type_of);
                            FStar_TypeChecker_Env.universe_of =
-                             (uu___354_1860.FStar_TypeChecker_Env.universe_of);
+                             (uu___354_2004.FStar_TypeChecker_Env.universe_of);
                            FStar_TypeChecker_Env.check_type_of =
-                             (uu___354_1860.FStar_TypeChecker_Env.check_type_of);
+                             (uu___354_2004.FStar_TypeChecker_Env.check_type_of);
                            FStar_TypeChecker_Env.use_bv_sorts =
-                             (uu___354_1860.FStar_TypeChecker_Env.use_bv_sorts);
+                             (uu___354_2004.FStar_TypeChecker_Env.use_bv_sorts);
                            FStar_TypeChecker_Env.qtbl_name_and_index =
-                             (uu___354_1860.FStar_TypeChecker_Env.qtbl_name_and_index);
+                             (uu___354_2004.FStar_TypeChecker_Env.qtbl_name_and_index);
                            FStar_TypeChecker_Env.normalized_eff_names =
-                             (uu___354_1860.FStar_TypeChecker_Env.normalized_eff_names);
+                             (uu___354_2004.FStar_TypeChecker_Env.normalized_eff_names);
                            FStar_TypeChecker_Env.proof_ns =
-                             (uu___354_1860.FStar_TypeChecker_Env.proof_ns);
+                             (uu___354_2004.FStar_TypeChecker_Env.proof_ns);
                            FStar_TypeChecker_Env.synth_hook =
-                             (uu___354_1860.FStar_TypeChecker_Env.synth_hook);
+                             (uu___354_2004.FStar_TypeChecker_Env.synth_hook);
                            FStar_TypeChecker_Env.splice =
-                             (uu___354_1860.FStar_TypeChecker_Env.splice);
+                             (uu___354_2004.FStar_TypeChecker_Env.splice);
                            FStar_TypeChecker_Env.is_native_tactic =
-                             (uu___354_1860.FStar_TypeChecker_Env.is_native_tactic);
+                             (uu___354_2004.FStar_TypeChecker_Env.is_native_tactic);
                            FStar_TypeChecker_Env.identifier_info =
-                             (uu___354_1860.FStar_TypeChecker_Env.identifier_info);
+                             (uu___354_2004.FStar_TypeChecker_Env.identifier_info);
                            FStar_TypeChecker_Env.tc_hooks =
-                             (uu___354_1860.FStar_TypeChecker_Env.tc_hooks);
+                             (uu___354_2004.FStar_TypeChecker_Env.tc_hooks);
                            FStar_TypeChecker_Env.dsenv =
-                             (uu___354_1860.FStar_TypeChecker_Env.dsenv);
+                             (uu___354_2004.FStar_TypeChecker_Env.dsenv);
                            FStar_TypeChecker_Env.dep_graph =
-                             (uu___354_1860.FStar_TypeChecker_Env.dep_graph);
+                             (uu___354_2004.FStar_TypeChecker_Env.dep_graph);
                            FStar_TypeChecker_Env.nbe =
-                             (uu___354_1860.FStar_TypeChecker_Env.nbe)
+                             (uu___354_2004.FStar_TypeChecker_Env.nbe)
                          }  in
                        let env4 =
-                         let uu___355_1862 = env3  in
+                         let uu___355_2006 = env3  in
                          {
                            FStar_TypeChecker_Env.solver =
-                             (uu___355_1862.FStar_TypeChecker_Env.solver);
+                             (uu___355_2006.FStar_TypeChecker_Env.solver);
                            FStar_TypeChecker_Env.range =
-                             (uu___355_1862.FStar_TypeChecker_Env.range);
+                             (uu___355_2006.FStar_TypeChecker_Env.range);
                            FStar_TypeChecker_Env.curmodule =
-                             (uu___355_1862.FStar_TypeChecker_Env.curmodule);
+                             (uu___355_2006.FStar_TypeChecker_Env.curmodule);
                            FStar_TypeChecker_Env.gamma =
-                             (uu___355_1862.FStar_TypeChecker_Env.gamma);
+                             (uu___355_2006.FStar_TypeChecker_Env.gamma);
                            FStar_TypeChecker_Env.gamma_sig =
-                             (uu___355_1862.FStar_TypeChecker_Env.gamma_sig);
+                             (uu___355_2006.FStar_TypeChecker_Env.gamma_sig);
                            FStar_TypeChecker_Env.gamma_cache =
-                             (uu___355_1862.FStar_TypeChecker_Env.gamma_cache);
+                             (uu___355_2006.FStar_TypeChecker_Env.gamma_cache);
                            FStar_TypeChecker_Env.modules =
-                             (uu___355_1862.FStar_TypeChecker_Env.modules);
+                             (uu___355_2006.FStar_TypeChecker_Env.modules);
                            FStar_TypeChecker_Env.expected_typ =
-                             (uu___355_1862.FStar_TypeChecker_Env.expected_typ);
+                             (uu___355_2006.FStar_TypeChecker_Env.expected_typ);
                            FStar_TypeChecker_Env.sigtab =
-                             (uu___355_1862.FStar_TypeChecker_Env.sigtab);
+                             (uu___355_2006.FStar_TypeChecker_Env.sigtab);
                            FStar_TypeChecker_Env.attrtab =
-                             (uu___355_1862.FStar_TypeChecker_Env.attrtab);
+                             (uu___355_2006.FStar_TypeChecker_Env.attrtab);
                            FStar_TypeChecker_Env.is_pattern =
-                             (uu___355_1862.FStar_TypeChecker_Env.is_pattern);
+                             (uu___355_2006.FStar_TypeChecker_Env.is_pattern);
                            FStar_TypeChecker_Env.instantiate_imp =
-                             (uu___355_1862.FStar_TypeChecker_Env.instantiate_imp);
+                             (uu___355_2006.FStar_TypeChecker_Env.instantiate_imp);
                            FStar_TypeChecker_Env.effects =
-                             (uu___355_1862.FStar_TypeChecker_Env.effects);
+                             (uu___355_2006.FStar_TypeChecker_Env.effects);
                            FStar_TypeChecker_Env.generalize =
-                             (uu___355_1862.FStar_TypeChecker_Env.generalize);
+                             (uu___355_2006.FStar_TypeChecker_Env.generalize);
                            FStar_TypeChecker_Env.letrecs =
-                             (uu___355_1862.FStar_TypeChecker_Env.letrecs);
+                             (uu___355_2006.FStar_TypeChecker_Env.letrecs);
                            FStar_TypeChecker_Env.top_level =
-                             (uu___355_1862.FStar_TypeChecker_Env.top_level);
+                             (uu___355_2006.FStar_TypeChecker_Env.top_level);
                            FStar_TypeChecker_Env.check_uvars =
-                             (uu___355_1862.FStar_TypeChecker_Env.check_uvars);
+                             (uu___355_2006.FStar_TypeChecker_Env.check_uvars);
                            FStar_TypeChecker_Env.use_eq =
-                             (uu___355_1862.FStar_TypeChecker_Env.use_eq);
+                             (uu___355_2006.FStar_TypeChecker_Env.use_eq);
                            FStar_TypeChecker_Env.is_iface =
-                             (uu___355_1862.FStar_TypeChecker_Env.is_iface);
+                             (uu___355_2006.FStar_TypeChecker_Env.is_iface);
                            FStar_TypeChecker_Env.admit =
-                             (uu___355_1862.FStar_TypeChecker_Env.admit);
+                             (uu___355_2006.FStar_TypeChecker_Env.admit);
                            FStar_TypeChecker_Env.lax =
-                             (uu___355_1862.FStar_TypeChecker_Env.lax);
+                             (uu___355_2006.FStar_TypeChecker_Env.lax);
                            FStar_TypeChecker_Env.lax_universes =
-                             (uu___355_1862.FStar_TypeChecker_Env.lax_universes);
+                             (uu___355_2006.FStar_TypeChecker_Env.lax_universes);
                            FStar_TypeChecker_Env.phase1 =
-                             (uu___355_1862.FStar_TypeChecker_Env.phase1);
+                             (uu___355_2006.FStar_TypeChecker_Env.phase1);
                            FStar_TypeChecker_Env.failhard = true;
                            FStar_TypeChecker_Env.nosynth =
-                             (uu___355_1862.FStar_TypeChecker_Env.nosynth);
+                             (uu___355_2006.FStar_TypeChecker_Env.nosynth);
                            FStar_TypeChecker_Env.uvar_subtyping =
-                             (uu___355_1862.FStar_TypeChecker_Env.uvar_subtyping);
+                             (uu___355_2006.FStar_TypeChecker_Env.uvar_subtyping);
                            FStar_TypeChecker_Env.tc_term =
-                             (uu___355_1862.FStar_TypeChecker_Env.tc_term);
+                             (uu___355_2006.FStar_TypeChecker_Env.tc_term);
                            FStar_TypeChecker_Env.type_of =
-                             (uu___355_1862.FStar_TypeChecker_Env.type_of);
+                             (uu___355_2006.FStar_TypeChecker_Env.type_of);
                            FStar_TypeChecker_Env.universe_of =
-                             (uu___355_1862.FStar_TypeChecker_Env.universe_of);
+                             (uu___355_2006.FStar_TypeChecker_Env.universe_of);
                            FStar_TypeChecker_Env.check_type_of =
-                             (uu___355_1862.FStar_TypeChecker_Env.check_type_of);
+                             (uu___355_2006.FStar_TypeChecker_Env.check_type_of);
                            FStar_TypeChecker_Env.use_bv_sorts =
-                             (uu___355_1862.FStar_TypeChecker_Env.use_bv_sorts);
+                             (uu___355_2006.FStar_TypeChecker_Env.use_bv_sorts);
                            FStar_TypeChecker_Env.qtbl_name_and_index =
-                             (uu___355_1862.FStar_TypeChecker_Env.qtbl_name_and_index);
+                             (uu___355_2006.FStar_TypeChecker_Env.qtbl_name_and_index);
                            FStar_TypeChecker_Env.normalized_eff_names =
-                             (uu___355_1862.FStar_TypeChecker_Env.normalized_eff_names);
+                             (uu___355_2006.FStar_TypeChecker_Env.normalized_eff_names);
                            FStar_TypeChecker_Env.proof_ns =
-                             (uu___355_1862.FStar_TypeChecker_Env.proof_ns);
+                             (uu___355_2006.FStar_TypeChecker_Env.proof_ns);
                            FStar_TypeChecker_Env.synth_hook =
-                             (uu___355_1862.FStar_TypeChecker_Env.synth_hook);
+                             (uu___355_2006.FStar_TypeChecker_Env.synth_hook);
                            FStar_TypeChecker_Env.splice =
-                             (uu___355_1862.FStar_TypeChecker_Env.splice);
+                             (uu___355_2006.FStar_TypeChecker_Env.splice);
                            FStar_TypeChecker_Env.is_native_tactic =
-                             (uu___355_1862.FStar_TypeChecker_Env.is_native_tactic);
+                             (uu___355_2006.FStar_TypeChecker_Env.is_native_tactic);
                            FStar_TypeChecker_Env.identifier_info =
-                             (uu___355_1862.FStar_TypeChecker_Env.identifier_info);
+                             (uu___355_2006.FStar_TypeChecker_Env.identifier_info);
                            FStar_TypeChecker_Env.tc_hooks =
-                             (uu___355_1862.FStar_TypeChecker_Env.tc_hooks);
+                             (uu___355_2006.FStar_TypeChecker_Env.tc_hooks);
                            FStar_TypeChecker_Env.dsenv =
-                             (uu___355_1862.FStar_TypeChecker_Env.dsenv);
+                             (uu___355_2006.FStar_TypeChecker_Env.dsenv);
                            FStar_TypeChecker_Env.dep_graph =
-                             (uu___355_1862.FStar_TypeChecker_Env.dep_graph);
+                             (uu___355_2006.FStar_TypeChecker_Env.dep_graph);
                            FStar_TypeChecker_Env.nbe =
-                             (uu___355_1862.FStar_TypeChecker_Env.nbe)
+                             (uu___355_2006.FStar_TypeChecker_Env.nbe)
                          }  in
                        let rng =
-                         let uu____1864 = FStar_Range.use_range rng_goal  in
-                         let uu____1865 = FStar_Range.use_range rng_tac  in
-                         FStar_Range.range_of_rng uu____1864 uu____1865  in
-                       let uu____1866 =
+                         let uu____2008 = FStar_Range.use_range rng_goal  in
+                         let uu____2009 = FStar_Range.use_range rng_tac  in
+                         FStar_Range.range_of_rng uu____2008 uu____2009  in
+                       let uu____2010 =
                          FStar_Tactics_Basic.proofstate_of_goal_ty rng env4
                            typ
                           in
-                       (match uu____1866 with
+                       (match uu____2010 with
                         | (ps,w) ->
                             (FStar_ST.op_Colon_Equals
                                FStar_Reflection_Basic.env_hook
                                (FStar_Pervasives_Native.Some env4);
-                             (let uu____1904 = FStar_ST.op_Bang tacdbg  in
-                              if uu____1904
+                             (let uu____2048 = FStar_ST.op_Bang tacdbg  in
+                              if uu____2048
                               then
-                                let uu____1924 =
+                                let uu____2068 =
                                   FStar_Syntax_Print.term_to_string typ  in
                                 FStar_Util.print1
                                   "Running tactic with goal = (%s) {\n"
-                                  uu____1924
+                                  uu____2068
                               else ());
-                             (let uu____1926 =
+                             (let uu____2070 =
                                 FStar_Util.record_time
-                                  (fun uu____1936  ->
+                                  (fun uu____2080  ->
                                      FStar_Tactics_Basic.run_safe tau ps)
                                  in
-                              match uu____1926 with
+                              match uu____2070 with
                               | (res,ms) ->
-                                  ((let uu____1950 = FStar_ST.op_Bang tacdbg
+                                  ((let uu____2094 = FStar_ST.op_Bang tacdbg
                                        in
-                                    if uu____1950
+                                    if uu____2094
                                     then
-                                      let uu____1970 =
+                                      let uu____2114 =
                                         FStar_Syntax_Print.term_to_string
                                           tactic
                                          in
-                                      let uu____1971 =
+                                      let uu____2115 =
                                         FStar_Util.string_of_int ms  in
-                                      let uu____1972 =
+                                      let uu____2116 =
                                         FStar_Syntax_Print.lid_to_string
                                           env4.FStar_TypeChecker_Env.curmodule
                                          in
                                       FStar_Util.print3
                                         "}\nTactic %s ran in %s ms (%s)\n"
-                                        uu____1970 uu____1971 uu____1972
+                                        uu____2114 uu____2115 uu____2116
                                     else ());
                                    (match res with
                                     | FStar_Tactics_Result.Success
-                                        (uu____1980,ps1) ->
-                                        ((let uu____1983 =
+                                        (uu____2124,ps1) ->
+                                        ((let uu____2127 =
                                             FStar_ST.op_Bang tacdbg  in
-                                          if uu____1983
+                                          if uu____2127
                                           then
-                                            let uu____2003 =
+                                            let uu____2147 =
                                               FStar_Syntax_Print.term_to_string
                                                 w
                                                in
                                             FStar_Util.print1
                                               "Tactic generated proofterm %s\n"
-                                              uu____2003
+                                              uu____2147
                                           else ());
                                          FStar_List.iter
                                            (fun g1  ->
-                                              let uu____2010 =
+                                              let uu____2154 =
                                                 FStar_Tactics_Basic.is_irrelevant
                                                   g1
                                                  in
-                                              if uu____2010
+                                              if uu____2154
                                               then
-                                                let uu____2011 =
-                                                  let uu____2012 =
+                                                let uu____2155 =
+                                                  let uu____2156 =
                                                     FStar_Tactics_Types.goal_env
                                                       g1
                                                      in
-                                                  let uu____2013 =
+                                                  let uu____2157 =
                                                     FStar_Tactics_Types.goal_witness
                                                       g1
                                                      in
                                                   FStar_TypeChecker_Rel.teq_nosmt
-                                                    uu____2012 uu____2013
+                                                    uu____2156 uu____2157
                                                     FStar_Syntax_Util.exp_unit
                                                    in
-                                                (if uu____2011
+                                                (if uu____2155
                                                  then ()
                                                  else
-                                                   (let uu____2015 =
-                                                      let uu____2016 =
-                                                        let uu____2017 =
+                                                   (let uu____2159 =
+                                                      let uu____2160 =
+                                                        let uu____2161 =
                                                           FStar_Tactics_Types.goal_witness
                                                             g1
                                                            in
                                                         FStar_Syntax_Print.term_to_string
-                                                          uu____2017
+                                                          uu____2161
                                                          in
                                                       FStar_Util.format1
                                                         "Irrelevant tactic witness does not unify with (): %s"
-                                                        uu____2016
+                                                        uu____2160
                                                        in
-                                                    failwith uu____2015))
+                                                    failwith uu____2159))
                                               else ())
                                            (FStar_List.append
                                               ps1.FStar_Tactics_Types.goals
                                               ps1.FStar_Tactics_Types.smt_goals);
-                                         (let uu____2020 =
+                                         (let uu____2164 =
                                             FStar_ST.op_Bang tacdbg  in
-                                          if uu____2020
+                                          if uu____2164
                                           then
-                                            let uu____2040 =
+                                            let uu____2184 =
                                               FStar_Common.string_of_list
                                                 (fun imp  ->
                                                    FStar_Syntax_Print.ctx_uvar_to_string
@@ -2085,21 +2091,21 @@ let (run_tactic_on_typ :
                                                in
                                             FStar_Util.print1
                                               "About to check tactic implicits: %s\n"
-                                              uu____2040
+                                              uu____2184
                                           else ());
                                          (let g1 =
-                                            let uu___356_2045 =
+                                            let uu___356_2189 =
                                               FStar_TypeChecker_Env.trivial_guard
                                                in
                                             {
                                               FStar_TypeChecker_Env.guard_f =
-                                                (uu___356_2045.FStar_TypeChecker_Env.guard_f);
+                                                (uu___356_2189.FStar_TypeChecker_Env.guard_f);
                                               FStar_TypeChecker_Env.deferred
                                                 =
-                                                (uu___356_2045.FStar_TypeChecker_Env.deferred);
+                                                (uu___356_2189.FStar_TypeChecker_Env.deferred);
                                               FStar_TypeChecker_Env.univ_ineqs
                                                 =
-                                                (uu___356_2045.FStar_TypeChecker_Env.univ_ineqs);
+                                                (uu___356_2189.FStar_TypeChecker_Env.univ_ineqs);
                                               FStar_TypeChecker_Env.implicits
                                                 =
                                                 (ps1.FStar_Tactics_Types.all_implicits)
@@ -2108,16 +2114,16 @@ let (run_tactic_on_typ :
                                             FStar_TypeChecker_Rel.solve_deferred_constraints
                                               env4 g1
                                              in
-                                          (let uu____2048 =
+                                          (let uu____2192 =
                                              FStar_ST.op_Bang tacdbg  in
-                                           if uu____2048
+                                           if uu____2192
                                            then
-                                             let uu____2068 =
+                                             let uu____2212 =
                                                FStar_Util.string_of_int
                                                  (FStar_List.length
                                                     ps1.FStar_Tactics_Types.all_implicits)
                                                 in
-                                             let uu____2069 =
+                                             let uu____2213 =
                                                FStar_Common.string_of_list
                                                  (fun imp  ->
                                                     FStar_Syntax_Print.ctx_uvar_to_string
@@ -2126,22 +2132,22 @@ let (run_tactic_on_typ :
                                                 in
                                              FStar_Util.print2
                                                "Checked %s implicits (1): %s\n"
-                                               uu____2068 uu____2069
+                                               uu____2212 uu____2213
                                            else ());
                                           (let g3 =
                                              FStar_TypeChecker_Rel.resolve_implicits_tac
                                                env4 g2
                                               in
-                                           (let uu____2075 =
+                                           (let uu____2219 =
                                               FStar_ST.op_Bang tacdbg  in
-                                            if uu____2075
+                                            if uu____2219
                                             then
-                                              let uu____2095 =
+                                              let uu____2239 =
                                                 FStar_Util.string_of_int
                                                   (FStar_List.length
                                                      ps1.FStar_Tactics_Types.all_implicits)
                                                  in
-                                              let uu____2096 =
+                                              let uu____2240 =
                                                 FStar_Common.string_of_list
                                                   (fun imp  ->
                                                      FStar_Syntax_Print.ctx_uvar_to_string
@@ -2150,24 +2156,24 @@ let (run_tactic_on_typ :
                                                  in
                                               FStar_Util.print2
                                                 "Checked %s implicits (2): %s\n"
-                                                uu____2095 uu____2096
+                                                uu____2239 uu____2240
                                             else ());
                                            report_implicits ps1
                                              g3.FStar_TypeChecker_Env.implicits;
-                                           (let uu____2102 =
+                                           (let uu____2246 =
                                               FStar_ST.op_Bang tacdbg  in
-                                            if uu____2102
+                                            if uu____2246
                                             then
-                                              let uu____2122 =
-                                                let uu____2123 =
+                                              let uu____2266 =
+                                                let uu____2267 =
                                                   FStar_TypeChecker_Cfg.psc_subst
                                                     ps1.FStar_Tactics_Types.psc
                                                    in
                                                 FStar_Tactics_Types.subst_proof_state
-                                                  uu____2123 ps1
+                                                  uu____2267 ps1
                                                  in
                                               FStar_Tactics_Basic.dump_proofstate
-                                                uu____2122
+                                                uu____2266
                                                 "at the finish line"
                                             else ());
                                            ((FStar_List.append
@@ -2175,26 +2181,26 @@ let (run_tactic_on_typ :
                                                ps1.FStar_Tactics_Types.smt_goals),
                                              w))))
                                     | FStar_Tactics_Result.Failed (s,ps1) ->
-                                        ((let uu____2130 =
-                                            let uu____2131 =
+                                        ((let uu____2274 =
+                                            let uu____2275 =
                                               FStar_TypeChecker_Cfg.psc_subst
                                                 ps1.FStar_Tactics_Types.psc
                                                in
                                             FStar_Tactics_Types.subst_proof_state
-                                              uu____2131 ps1
+                                              uu____2275 ps1
                                              in
                                           FStar_Tactics_Basic.dump_proofstate
-                                            uu____2130
+                                            uu____2274
                                             "at the time of failure");
-                                         (let uu____2132 =
-                                            let uu____2137 =
+                                         (let uu____2276 =
+                                            let uu____2281 =
                                               FStar_Util.format1
                                                 "user tactic failed: %s" s
                                                in
                                             (FStar_Errors.Fatal_UserTacticFailure,
-                                              uu____2137)
+                                              uu____2281)
                                              in
-                                          FStar_Errors.raise_error uu____2132
+                                          FStar_Errors.raise_error uu____2276
                                             ps1.FStar_Tactics_Types.entry_range))))))))))
   
 type pol =
@@ -2202,12 +2208,12 @@ type pol =
   | Neg 
   | Both 
 let (uu___is_Pos : pol -> Prims.bool) =
-  fun projectee  -> match projectee with | Pos  -> true | uu____2149 -> false 
+  fun projectee  -> match projectee with | Pos  -> true | uu____2293 -> false 
 let (uu___is_Neg : pol -> Prims.bool) =
-  fun projectee  -> match projectee with | Neg  -> true | uu____2155 -> false 
+  fun projectee  -> match projectee with | Neg  -> true | uu____2299 -> false 
 let (uu___is_Both : pol -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Both  -> true | uu____2161 -> false
+    match projectee with | Both  -> true | uu____2305 -> false
   
 type 'a tres_m =
   | Unchanged of 'a 
@@ -2217,13 +2223,13 @@ type 'a tres_m =
   FStar_Pervasives_Native.tuple3 
 let uu___is_Unchanged : 'a . 'a tres_m -> Prims.bool =
   fun projectee  ->
-    match projectee with | Unchanged _0 -> true | uu____2216 -> false
+    match projectee with | Unchanged _0 -> true | uu____2360 -> false
   
 let __proj__Unchanged__item___0 : 'a . 'a tres_m -> 'a =
   fun projectee  -> match projectee with | Unchanged _0 -> _0 
 let uu___is_Simplified : 'a . 'a tres_m -> Prims.bool =
   fun projectee  ->
-    match projectee with | Simplified _0 -> true | uu____2256 -> false
+    match projectee with | Simplified _0 -> true | uu____2400 -> false
   
 let __proj__Simplified__item___0 :
   'a .
@@ -2232,7 +2238,7 @@ let __proj__Simplified__item___0 :
   = fun projectee  -> match projectee with | Simplified _0 -> _0 
 let uu___is_Dual : 'a . 'a tres_m -> Prims.bool =
   fun projectee  ->
-    match projectee with | Dual _0 -> true | uu____2310 -> false
+    match projectee with | Dual _0 -> true | uu____2454 -> false
   
 let __proj__Dual__item___0 :
   'a .
@@ -2241,7 +2247,7 @@ let __proj__Dual__item___0 :
         FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Dual _0 -> _0 
 type tres = FStar_Syntax_Syntax.term tres_m
-let tpure : 'Auu____2351 . 'Auu____2351 -> 'Auu____2351 tres_m =
+let tpure : 'Auu____2495 . 'Auu____2495 -> 'Auu____2495 tres_m =
   fun x  -> Unchanged x 
 let (flip : pol -> pol) =
   fun p  -> match p with | Pos  -> Neg | Neg  -> Pos | Both  -> Both 
@@ -2250,18 +2256,18 @@ let (by_tactic_interp :
   fun pol  ->
     fun e  ->
       fun t  ->
-        let uu____2379 = FStar_Syntax_Util.head_and_args t  in
-        match uu____2379 with
+        let uu____2523 = FStar_Syntax_Util.head_and_args t  in
+        match uu____2523 with
         | (hd1,args) ->
-            let uu____2422 =
-              let uu____2437 =
-                let uu____2438 = FStar_Syntax_Util.un_uinst hd1  in
-                uu____2438.FStar_Syntax_Syntax.n  in
-              (uu____2437, args)  in
-            (match uu____2422 with
+            let uu____2566 =
+              let uu____2581 =
+                let uu____2582 = FStar_Syntax_Util.un_uinst hd1  in
+                uu____2582.FStar_Syntax_Syntax.n  in
+              (uu____2581, args)  in
+            (match uu____2566 with
              | (FStar_Syntax_Syntax.Tm_fvar
                 fv,(rett,FStar_Pervasives_Native.Some
-                    (FStar_Syntax_Syntax.Implicit uu____2453))::(tactic,FStar_Pervasives_Native.None
+                    (FStar_Syntax_Syntax.Implicit uu____2597))::(tactic,FStar_Pervasives_Native.None
                                                                  )::(assertion,FStar_Pervasives_Native.None
                                                                     )::[])
                  when
@@ -2270,22 +2276,22 @@ let (by_tactic_interp :
                  ->
                  (match pol with
                   | Pos  ->
-                      let uu____2516 =
+                      let uu____2660 =
                         run_tactic_on_typ tactic.FStar_Syntax_Syntax.pos
                           assertion.FStar_Syntax_Syntax.pos tactic e
                           assertion
                          in
-                      (match uu____2516 with
-                       | (gs,uu____2524) ->
+                      (match uu____2660 with
+                       | (gs,uu____2668) ->
                            Simplified (FStar_Syntax_Util.t_true, gs))
                   | Both  ->
-                      let uu____2531 =
+                      let uu____2675 =
                         run_tactic_on_typ tactic.FStar_Syntax_Syntax.pos
                           assertion.FStar_Syntax_Syntax.pos tactic e
                           assertion
                          in
-                      (match uu____2531 with
-                       | (gs,uu____2539) ->
+                      (match uu____2675 with
+                       | (gs,uu____2683) ->
                            Dual (assertion, FStar_Syntax_Util.t_true, gs))
                   | Neg  -> Simplified (assertion, []))
              | (FStar_Syntax_Syntax.Tm_fvar
@@ -2295,33 +2301,33 @@ let (by_tactic_interp :
                  ->
                  (match pol with
                   | Pos  ->
-                      let uu____2582 =
-                        let uu____2589 =
-                          let uu____2592 =
-                            let uu____2593 =
+                      let uu____2726 =
+                        let uu____2733 =
+                          let uu____2736 =
+                            let uu____2737 =
                               FStar_Tactics_Basic.goal_of_goal_ty e assertion
                                in
                             FStar_All.pipe_left FStar_Pervasives_Native.fst
-                              uu____2593
+                              uu____2737
                              in
-                          [uu____2592]  in
-                        (FStar_Syntax_Util.t_true, uu____2589)  in
-                      Simplified uu____2582
+                          [uu____2736]  in
+                        (FStar_Syntax_Util.t_true, uu____2733)  in
+                      Simplified uu____2726
                   | Both  ->
-                      let uu____2604 =
-                        let uu____2613 =
-                          let uu____2616 =
-                            let uu____2617 =
+                      let uu____2748 =
+                        let uu____2757 =
+                          let uu____2760 =
+                            let uu____2761 =
                               FStar_Tactics_Basic.goal_of_goal_ty e assertion
                                in
                             FStar_All.pipe_left FStar_Pervasives_Native.fst
-                              uu____2617
+                              uu____2761
                              in
-                          [uu____2616]  in
-                        (assertion, FStar_Syntax_Util.t_true, uu____2613)  in
-                      Dual uu____2604
+                          [uu____2760]  in
+                        (assertion, FStar_Syntax_Util.t_true, uu____2757)  in
+                      Dual uu____2748
                   | Neg  -> Simplified (assertion, []))
-             | uu____2630 -> Unchanged t)
+             | uu____2774 -> Unchanged t)
   
 let explode :
   'a .
@@ -2337,17 +2343,17 @@ let explode :
   
 let comb1 : 'a 'b . ('a -> 'b) -> 'a tres_m -> 'b tres_m =
   fun f  ->
-    fun uu___348_2720  ->
-      match uu___348_2720 with
-      | Unchanged t -> let uu____2726 = f t  in Unchanged uu____2726
+    fun uu___348_2864  ->
+      match uu___348_2864 with
+      | Unchanged t -> let uu____2870 = f t  in Unchanged uu____2870
       | Simplified (t,gs) ->
-          let uu____2733 = let uu____2740 = f t  in (uu____2740, gs)  in
-          Simplified uu____2733
+          let uu____2877 = let uu____2884 = f t  in (uu____2884, gs)  in
+          Simplified uu____2877
       | Dual (tn,tp,gs) ->
-          let uu____2750 =
-            let uu____2759 = f tn  in
-            let uu____2760 = f tp  in (uu____2759, uu____2760, gs)  in
-          Dual uu____2750
+          let uu____2894 =
+            let uu____2903 = f tn  in
+            let uu____2904 = f tp  in (uu____2903, uu____2904, gs)  in
+          Dual uu____2894
   
 let comb2 :
   'a 'b 'c . ('a -> 'b -> 'c) -> 'a tres_m -> 'b tres_m -> 'c tres_m =
@@ -2356,33 +2362,33 @@ let comb2 :
       fun y  ->
         match (x, y) with
         | (Unchanged t1,Unchanged t2) ->
-            let uu____2823 = f t1 t2  in Unchanged uu____2823
+            let uu____2967 = f t1 t2  in Unchanged uu____2967
         | (Unchanged t1,Simplified (t2,gs)) ->
-            let uu____2835 = let uu____2842 = f t1 t2  in (uu____2842, gs)
+            let uu____2979 = let uu____2986 = f t1 t2  in (uu____2986, gs)
                in
-            Simplified uu____2835
+            Simplified uu____2979
         | (Simplified (t1,gs),Unchanged t2) ->
-            let uu____2856 = let uu____2863 = f t1 t2  in (uu____2863, gs)
+            let uu____3000 = let uu____3007 = f t1 t2  in (uu____3007, gs)
                in
-            Simplified uu____2856
+            Simplified uu____3000
         | (Simplified (t1,gs1),Simplified (t2,gs2)) ->
-            let uu____2882 =
-              let uu____2889 = f t1 t2  in
-              (uu____2889, (FStar_List.append gs1 gs2))  in
-            Simplified uu____2882
-        | uu____2892 ->
-            let uu____2901 = explode x  in
-            (match uu____2901 with
+            let uu____3026 =
+              let uu____3033 = f t1 t2  in
+              (uu____3033, (FStar_List.append gs1 gs2))  in
+            Simplified uu____3026
+        | uu____3036 ->
+            let uu____3045 = explode x  in
+            (match uu____3045 with
              | (n1,p1,gs1) ->
-                 let uu____2919 = explode y  in
-                 (match uu____2919 with
+                 let uu____3063 = explode y  in
+                 (match uu____3063 with
                   | (n2,p2,gs2) ->
-                      let uu____2937 =
-                        let uu____2946 = f n1 n2  in
-                        let uu____2947 = f p1 p2  in
-                        (uu____2946, uu____2947, (FStar_List.append gs1 gs2))
+                      let uu____3081 =
+                        let uu____3090 = f n1 n2  in
+                        let uu____3091 = f p1 p2  in
+                        (uu____3090, uu____3091, (FStar_List.append gs1 gs2))
                          in
-                      Dual uu____2937))
+                      Dual uu____3081))
   
 let comb_list : 'a . 'a tres_m Prims.list -> 'a Prims.list tres_m =
   fun rs  ->
@@ -2390,15 +2396,15 @@ let comb_list : 'a . 'a tres_m Prims.list -> 'a Prims.list tres_m =
       match rs1 with
       | [] -> acc
       | hd1::tl1 ->
-          let uu____3019 = comb2 (fun l  -> fun r  -> l :: r) hd1 acc  in
-          aux tl1 uu____3019
+          let uu____3163 = comb2 (fun l  -> fun r  -> l :: r) hd1 acc  in
+          aux tl1 uu____3163
        in
     aux (FStar_List.rev rs) (tpure [])
   
 let emit : 'a . FStar_Tactics_Basic.goal Prims.list -> 'a tres_m -> 'a tres_m
   =
   fun gs  ->
-    fun m  -> comb2 (fun uu____3067  -> fun x  -> x) (Simplified ((), gs)) m
+    fun m  -> comb2 (fun uu____3211  -> fun x  -> x) (Simplified ((), gs)) m
   
 let rec (traverse :
   (pol -> FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> tres) ->
@@ -2409,94 +2415,94 @@ let rec (traverse :
       fun e  ->
         fun t  ->
           let r =
-            let uu____3109 =
-              let uu____3110 = FStar_Syntax_Subst.compress t  in
-              uu____3110.FStar_Syntax_Syntax.n  in
-            match uu____3109 with
+            let uu____3253 =
+              let uu____3254 = FStar_Syntax_Subst.compress t  in
+              uu____3254.FStar_Syntax_Syntax.n  in
+            match uu____3253 with
             | FStar_Syntax_Syntax.Tm_uinst (t1,us) ->
                 let tr = traverse f pol e t1  in
-                let uu____3122 =
+                let uu____3266 =
                   comb1 (fun t'  -> FStar_Syntax_Syntax.Tm_uinst (t', us))
                    in
-                uu____3122 tr
+                uu____3266 tr
             | FStar_Syntax_Syntax.Tm_meta (t1,m) ->
                 let tr = traverse f pol e t1  in
-                let uu____3148 =
+                let uu____3292 =
                   comb1 (fun t'  -> FStar_Syntax_Syntax.Tm_meta (t', m))  in
-                uu____3148 tr
+                uu____3292 tr
             | FStar_Syntax_Syntax.Tm_app
                 ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-                   FStar_Syntax_Syntax.pos = uu____3168;
-                   FStar_Syntax_Syntax.vars = uu____3169;_},(p,uu____3171)::
-                 (q,uu____3173)::[])
+                   FStar_Syntax_Syntax.pos = uu____3312;
+                   FStar_Syntax_Syntax.vars = uu____3313;_},(p,uu____3315)::
+                 (q,uu____3317)::[])
                 when
                 FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.imp_lid
                 ->
                 let x =
-                  let uu____3229 =
+                  let uu____3373 =
                     FStar_Syntax_Util.mk_squash FStar_Syntax_Syntax.U_zero p
                      in
                   FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
-                    uu____3229
+                    uu____3373
                    in
                 let r1 = traverse f (flip pol) e p  in
                 let r2 =
-                  let uu____3232 = FStar_TypeChecker_Env.push_bv e x  in
-                  traverse f pol uu____3232 q  in
+                  let uu____3376 = FStar_TypeChecker_Env.push_bv e x  in
+                  traverse f pol uu____3376 q  in
                 comb2
                   (fun l  ->
                      fun r  ->
-                       let uu____3246 = FStar_Syntax_Util.mk_imp l r  in
-                       uu____3246.FStar_Syntax_Syntax.n) r1 r2
+                       let uu____3390 = FStar_Syntax_Util.mk_imp l r  in
+                       uu____3390.FStar_Syntax_Syntax.n) r1 r2
             | FStar_Syntax_Syntax.Tm_app
                 ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-                   FStar_Syntax_Syntax.pos = uu____3250;
-                   FStar_Syntax_Syntax.vars = uu____3251;_},(p,uu____3253)::
-                 (q,uu____3255)::[])
+                   FStar_Syntax_Syntax.pos = uu____3394;
+                   FStar_Syntax_Syntax.vars = uu____3395;_},(p,uu____3397)::
+                 (q,uu____3399)::[])
                 when
                 FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.iff_lid
                 ->
                 let xp =
-                  let uu____3311 =
+                  let uu____3455 =
                     FStar_Syntax_Util.mk_squash FStar_Syntax_Syntax.U_zero p
                      in
                   FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
-                    uu____3311
+                    uu____3455
                    in
                 let xq =
-                  let uu____3313 =
+                  let uu____3457 =
                     FStar_Syntax_Util.mk_squash FStar_Syntax_Syntax.U_zero q
                      in
                   FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
-                    uu____3313
+                    uu____3457
                    in
                 let r1 =
-                  let uu____3315 = FStar_TypeChecker_Env.push_bv e xq  in
-                  traverse f Both uu____3315 p  in
+                  let uu____3459 = FStar_TypeChecker_Env.push_bv e xq  in
+                  traverse f Both uu____3459 p  in
                 let r2 =
-                  let uu____3317 = FStar_TypeChecker_Env.push_bv e xp  in
-                  traverse f Both uu____3317 q  in
+                  let uu____3461 = FStar_TypeChecker_Env.push_bv e xp  in
+                  traverse f Both uu____3461 q  in
                 (match (r1, r2) with
-                 | (Unchanged uu____3324,Unchanged uu____3325) ->
+                 | (Unchanged uu____3468,Unchanged uu____3469) ->
                      comb2
                        (fun l  ->
                           fun r  ->
-                            let uu____3343 = FStar_Syntax_Util.mk_iff l r  in
-                            uu____3343.FStar_Syntax_Syntax.n) r1 r2
-                 | uu____3346 ->
-                     let uu____3355 = explode r1  in
-                     (match uu____3355 with
+                            let uu____3487 = FStar_Syntax_Util.mk_iff l r  in
+                            uu____3487.FStar_Syntax_Syntax.n) r1 r2
+                 | uu____3490 ->
+                     let uu____3499 = explode r1  in
+                     (match uu____3499 with
                       | (pn,pp,gs1) ->
-                          let uu____3373 = explode r2  in
-                          (match uu____3373 with
+                          let uu____3517 = explode r2  in
+                          (match uu____3517 with
                            | (qn,qp,gs2) ->
                                let t1 =
-                                 let uu____3394 =
+                                 let uu____3538 =
                                    FStar_Syntax_Util.mk_imp pn qp  in
-                                 let uu____3397 =
+                                 let uu____3541 =
                                    FStar_Syntax_Util.mk_imp qn pp  in
-                                 FStar_Syntax_Util.mk_conj uu____3394
-                                   uu____3397
+                                 FStar_Syntax_Util.mk_conj uu____3538
+                                   uu____3541
                                   in
                                Simplified
                                  ((t1.FStar_Syntax_Syntax.n),
@@ -2505,9 +2511,9 @@ let rec (traverse :
                 let r0 = traverse f pol e hd1  in
                 let r1 =
                   FStar_List.fold_right
-                    (fun uu____3461  ->
+                    (fun uu____3605  ->
                        fun r  ->
-                         match uu____3461 with
+                         match uu____3605 with
                          | (a,q) ->
                              let r' = traverse f pol e a  in
                              comb2
@@ -2519,96 +2525,96 @@ let rec (traverse :
                      fun args1  -> FStar_Syntax_Syntax.Tm_app (hd2, args1))
                   r0 r1
             | FStar_Syntax_Syntax.Tm_abs (bs,t1,k) ->
-                let uu____3613 = FStar_Syntax_Subst.open_term bs t1  in
-                (match uu____3613 with
+                let uu____3757 = FStar_Syntax_Subst.open_term bs t1  in
+                (match uu____3757 with
                  | (bs1,topen) ->
                      let e' = FStar_TypeChecker_Env.push_binders e bs1  in
                      let r0 =
                        FStar_List.map
-                         (fun uu____3653  ->
-                            match uu____3653 with
+                         (fun uu____3797  ->
+                            match uu____3797 with
                             | (bv,aq) ->
                                 let r =
                                   traverse f (flip pol) e
                                     bv.FStar_Syntax_Syntax.sort
                                    in
-                                let uu____3675 =
+                                let uu____3819 =
                                   comb1
                                     (fun s'  ->
-                                       ((let uu___357_3707 = bv  in
+                                       ((let uu___357_3851 = bv  in
                                          {
                                            FStar_Syntax_Syntax.ppname =
-                                             (uu___357_3707.FStar_Syntax_Syntax.ppname);
+                                             (uu___357_3851.FStar_Syntax_Syntax.ppname);
                                            FStar_Syntax_Syntax.index =
-                                             (uu___357_3707.FStar_Syntax_Syntax.index);
+                                             (uu___357_3851.FStar_Syntax_Syntax.index);
                                            FStar_Syntax_Syntax.sort = s'
                                          }), aq))
                                    in
-                                uu____3675 r) bs1
+                                uu____3819 r) bs1
                         in
                      let rbs = comb_list r0  in
                      let rt = traverse f pol e' topen  in
                      comb2
                        (fun bs2  ->
                           fun t2  ->
-                            let uu____3735 = FStar_Syntax_Util.abs bs2 t2 k
+                            let uu____3879 = FStar_Syntax_Util.abs bs2 t2 k
                                in
-                            uu____3735.FStar_Syntax_Syntax.n) rbs rt)
+                            uu____3879.FStar_Syntax_Syntax.n) rbs rt)
             | FStar_Syntax_Syntax.Tm_ascribed (t1,asc,ef) ->
-                let uu____3781 = traverse f pol e t1  in
-                let uu____3786 =
+                let uu____3925 = traverse f pol e t1  in
+                let uu____3930 =
                   comb1
                     (fun t2  -> FStar_Syntax_Syntax.Tm_ascribed (t2, asc, ef))
                    in
-                uu____3786 uu____3781
+                uu____3930 uu____3925
             | x -> tpure x  in
           match r with
           | Unchanged tn' ->
               f pol e
-                (let uu___358_3826 = t  in
+                (let uu___358_3970 = t  in
                  {
                    FStar_Syntax_Syntax.n = tn';
                    FStar_Syntax_Syntax.pos =
-                     (uu___358_3826.FStar_Syntax_Syntax.pos);
+                     (uu___358_3970.FStar_Syntax_Syntax.pos);
                    FStar_Syntax_Syntax.vars =
-                     (uu___358_3826.FStar_Syntax_Syntax.vars)
+                     (uu___358_3970.FStar_Syntax_Syntax.vars)
                  })
           | Simplified (tn',gs) ->
-              let uu____3833 =
+              let uu____3977 =
                 f pol e
-                  (let uu___359_3837 = t  in
+                  (let uu___359_3981 = t  in
                    {
                      FStar_Syntax_Syntax.n = tn';
                      FStar_Syntax_Syntax.pos =
-                       (uu___359_3837.FStar_Syntax_Syntax.pos);
+                       (uu___359_3981.FStar_Syntax_Syntax.pos);
                      FStar_Syntax_Syntax.vars =
-                       (uu___359_3837.FStar_Syntax_Syntax.vars)
+                       (uu___359_3981.FStar_Syntax_Syntax.vars)
                    })
                  in
-              emit gs uu____3833
+              emit gs uu____3977
           | Dual (tn,tp,gs) ->
               let rp =
                 f pol e
-                  (let uu___360_3847 = t  in
+                  (let uu___360_3991 = t  in
                    {
                      FStar_Syntax_Syntax.n = tp;
                      FStar_Syntax_Syntax.pos =
-                       (uu___360_3847.FStar_Syntax_Syntax.pos);
+                       (uu___360_3991.FStar_Syntax_Syntax.pos);
                      FStar_Syntax_Syntax.vars =
-                       (uu___360_3847.FStar_Syntax_Syntax.vars)
+                       (uu___360_3991.FStar_Syntax_Syntax.vars)
                    })
                  in
-              let uu____3848 = explode rp  in
-              (match uu____3848 with
-               | (uu____3857,p',gs') ->
+              let uu____3992 = explode rp  in
+              (match uu____3992 with
+               | (uu____4001,p',gs') ->
                    Dual
-                     ((let uu___361_3867 = t  in
+                     ((let uu___361_4011 = t  in
                        {
                          FStar_Syntax_Syntax.n = tn;
                          FStar_Syntax_Syntax.pos =
-                           (uu___361_3867.FStar_Syntax_Syntax.pos);
+                           (uu___361_4011.FStar_Syntax_Syntax.pos);
                          FStar_Syntax_Syntax.vars =
-                           (uu___361_3867.FStar_Syntax_Syntax.vars)
+                           (uu___361_4011.FStar_Syntax_Syntax.vars)
                        }), p', (FStar_List.append gs gs')))
   
 let (getprop :
@@ -2635,138 +2641,138 @@ let (preprocess :
   =
   fun env  ->
     fun goal  ->
-      (let uu____3910 =
+      (let uu____4054 =
          FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac")  in
-       FStar_ST.op_Colon_Equals tacdbg uu____3910);
-      (let uu____3931 = FStar_ST.op_Bang tacdbg  in
-       if uu____3931
+       FStar_ST.op_Colon_Equals tacdbg uu____4054);
+      (let uu____4075 = FStar_ST.op_Bang tacdbg  in
+       if uu____4075
        then
-         let uu____3951 =
-           let uu____3952 = FStar_TypeChecker_Env.all_binders env  in
-           FStar_All.pipe_right uu____3952
+         let uu____4095 =
+           let uu____4096 = FStar_TypeChecker_Env.all_binders env  in
+           FStar_All.pipe_right uu____4096
              (FStar_Syntax_Print.binders_to_string ",")
             in
-         let uu____3953 = FStar_Syntax_Print.term_to_string goal  in
-         FStar_Util.print2 "About to preprocess %s |= %s\n" uu____3951
-           uu____3953
+         let uu____4097 = FStar_Syntax_Print.term_to_string goal  in
+         FStar_Util.print2 "About to preprocess %s |= %s\n" uu____4095
+           uu____4097
        else ());
       (let initial = ((Prims.parse_int "1"), [])  in
-       let uu____3982 =
-         let uu____3991 = traverse by_tactic_interp Pos env goal  in
-         match uu____3991 with
+       let uu____4126 =
+         let uu____4135 = traverse by_tactic_interp Pos env goal  in
+         match uu____4135 with
          | Unchanged t' -> (t', [])
          | Simplified (t',gs) -> (t', gs)
-         | uu____4015 -> failwith "no"  in
-       match uu____3982 with
+         | uu____4159 -> failwith "no"  in
+       match uu____4126 with
        | (t',gs) ->
-           ((let uu____4043 = FStar_ST.op_Bang tacdbg  in
-             if uu____4043
+           ((let uu____4187 = FStar_ST.op_Bang tacdbg  in
+             if uu____4187
              then
-               let uu____4063 =
-                 let uu____4064 = FStar_TypeChecker_Env.all_binders env  in
-                 FStar_All.pipe_right uu____4064
+               let uu____4207 =
+                 let uu____4208 = FStar_TypeChecker_Env.all_binders env  in
+                 FStar_All.pipe_right uu____4208
                    (FStar_Syntax_Print.binders_to_string ", ")
                   in
-               let uu____4065 = FStar_Syntax_Print.term_to_string t'  in
+               let uu____4209 = FStar_Syntax_Print.term_to_string t'  in
                FStar_Util.print2 "Main goal simplified to: %s |- %s\n"
-                 uu____4063 uu____4065
+                 uu____4207 uu____4209
              else ());
             (let s = initial  in
              let s1 =
                FStar_List.fold_left
-                 (fun uu____4113  ->
+                 (fun uu____4257  ->
                     fun g  ->
-                      match uu____4113 with
+                      match uu____4257 with
                       | (n1,gs1) ->
                           let phi =
-                            let uu____4158 =
-                              let uu____4161 = FStar_Tactics_Types.goal_env g
+                            let uu____4302 =
+                              let uu____4305 = FStar_Tactics_Types.goal_env g
                                  in
-                              let uu____4162 =
+                              let uu____4306 =
                                 FStar_Tactics_Types.goal_type g  in
-                              getprop uu____4161 uu____4162  in
-                            match uu____4158 with
+                              getprop uu____4305 uu____4306  in
+                            match uu____4302 with
                             | FStar_Pervasives_Native.None  ->
-                                let uu____4163 =
-                                  let uu____4168 =
-                                    let uu____4169 =
-                                      let uu____4170 =
+                                let uu____4307 =
+                                  let uu____4312 =
+                                    let uu____4313 =
+                                      let uu____4314 =
                                         FStar_Tactics_Types.goal_type g  in
                                       FStar_Syntax_Print.term_to_string
-                                        uu____4170
+                                        uu____4314
                                        in
                                     FStar_Util.format1
                                       "Tactic returned proof-relevant goal: %s"
-                                      uu____4169
+                                      uu____4313
                                      in
                                   (FStar_Errors.Fatal_TacticProofRelevantGoal,
-                                    uu____4168)
+                                    uu____4312)
                                    in
-                                FStar_Errors.raise_error uu____4163
+                                FStar_Errors.raise_error uu____4307
                                   env.FStar_TypeChecker_Env.range
                             | FStar_Pervasives_Native.Some phi -> phi  in
-                          ((let uu____4173 = FStar_ST.op_Bang tacdbg  in
-                            if uu____4173
+                          ((let uu____4317 = FStar_ST.op_Bang tacdbg  in
+                            if uu____4317
                             then
-                              let uu____4193 = FStar_Util.string_of_int n1
+                              let uu____4337 = FStar_Util.string_of_int n1
                                  in
-                              let uu____4194 =
-                                let uu____4195 =
+                              let uu____4338 =
+                                let uu____4339 =
                                   FStar_Tactics_Types.goal_type g  in
-                                FStar_Syntax_Print.term_to_string uu____4195
+                                FStar_Syntax_Print.term_to_string uu____4339
                                  in
                               FStar_Util.print2 "Got goal #%s: %s\n"
-                                uu____4193 uu____4194
+                                uu____4337 uu____4338
                             else ());
                            (let gt' =
-                              let uu____4198 =
-                                let uu____4199 = FStar_Util.string_of_int n1
+                              let uu____4342 =
+                                let uu____4343 = FStar_Util.string_of_int n1
                                    in
                                 Prims.strcat "Could not prove goal #"
-                                  uu____4199
+                                  uu____4343
                                  in
-                              FStar_TypeChecker_Util.label uu____4198
+                              FStar_TypeChecker_Util.label uu____4342
                                 goal.FStar_Syntax_Syntax.pos phi
                                in
-                            let uu____4200 =
-                              let uu____4209 =
-                                let uu____4216 =
+                            let uu____4344 =
+                              let uu____4353 =
+                                let uu____4360 =
                                   FStar_Tactics_Types.goal_env g  in
-                                (uu____4216, gt',
+                                (uu____4360, gt',
                                   (g.FStar_Tactics_Types.opts))
                                  in
-                              uu____4209 :: gs1  in
-                            ((n1 + (Prims.parse_int "1")), uu____4200)))) s
+                              uu____4353 :: gs1  in
+                            ((n1 + (Prims.parse_int "1")), uu____4344)))) s
                  gs
                 in
-             let uu____4231 = s1  in
-             match uu____4231 with
-             | (uu____4252,gs1) ->
-                 let uu____4270 =
-                   let uu____4277 = FStar_Options.peek ()  in
-                   (env, t', uu____4277)  in
-                 uu____4270 :: gs1)))
+             let uu____4375 = s1  in
+             match uu____4375 with
+             | (uu____4396,gs1) ->
+                 let uu____4414 =
+                   let uu____4421 = FStar_Options.peek ()  in
+                   (env, t', uu____4421)  in
+                 uu____4414 :: gs1)))
   
 let (reify_tactic : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun a  ->
     let r =
-      let uu____4290 =
-        let uu____4291 =
+      let uu____4434 =
+        let uu____4435 =
           FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.reify_tactic_lid
             FStar_Syntax_Syntax.delta_equational FStar_Pervasives_Native.None
            in
-        FStar_Syntax_Syntax.fv_to_tm uu____4291  in
-      FStar_Syntax_Syntax.mk_Tm_uinst uu____4290 [FStar_Syntax_Syntax.U_zero]
+        FStar_Syntax_Syntax.fv_to_tm uu____4435  in
+      FStar_Syntax_Syntax.mk_Tm_uinst uu____4434 [FStar_Syntax_Syntax.U_zero]
        in
-    let uu____4292 =
-      let uu____4297 =
-        let uu____4298 = FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit
+    let uu____4436 =
+      let uu____4441 =
+        let uu____4442 = FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit
            in
-        let uu____4307 =
-          let uu____4318 = FStar_Syntax_Syntax.as_arg a  in [uu____4318]  in
-        uu____4298 :: uu____4307  in
-      FStar_Syntax_Syntax.mk_Tm_app r uu____4297  in
-    uu____4292 FStar_Pervasives_Native.None a.FStar_Syntax_Syntax.pos
+        let uu____4451 =
+          let uu____4462 = FStar_Syntax_Syntax.as_arg a  in [uu____4462]  in
+        uu____4442 :: uu____4451  in
+      FStar_Syntax_Syntax.mk_Tm_app r uu____4441  in
+    uu____4436 FStar_Pervasives_Native.None a.FStar_Syntax_Syntax.pos
   
 let (synthesize :
   FStar_TypeChecker_Env.env ->
@@ -2778,43 +2784,43 @@ let (synthesize :
       fun tau  ->
         if env.FStar_TypeChecker_Env.nosynth
         then
-          let uu____4368 =
-            let uu____4373 =
+          let uu____4512 =
+            let uu____4517 =
               FStar_TypeChecker_Util.fvar_const env
                 FStar_Parser_Const.magic_lid
                in
-            let uu____4374 =
-              let uu____4375 =
+            let uu____4518 =
+              let uu____4519 =
                 FStar_Syntax_Syntax.as_arg FStar_Syntax_Util.exp_unit  in
-              [uu____4375]  in
-            FStar_Syntax_Syntax.mk_Tm_app uu____4373 uu____4374  in
-          uu____4368 FStar_Pervasives_Native.None typ.FStar_Syntax_Syntax.pos
+              [uu____4519]  in
+            FStar_Syntax_Syntax.mk_Tm_app uu____4517 uu____4518  in
+          uu____4512 FStar_Pervasives_Native.None typ.FStar_Syntax_Syntax.pos
         else
-          ((let uu____4404 =
+          ((let uu____4548 =
               FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac")  in
-            FStar_ST.op_Colon_Equals tacdbg uu____4404);
-           (let uu____4424 =
-              let uu____4431 = reify_tactic tau  in
+            FStar_ST.op_Colon_Equals tacdbg uu____4548);
+           (let uu____4568 =
+              let uu____4575 = reify_tactic tau  in
               run_tactic_on_typ tau.FStar_Syntax_Syntax.pos
-                typ.FStar_Syntax_Syntax.pos uu____4431 env typ
+                typ.FStar_Syntax_Syntax.pos uu____4575 env typ
                in
-            match uu____4424 with
+            match uu____4568 with
             | (gs,w) ->
                 (FStar_List.iter
                    (fun g  ->
-                      let uu____4446 =
-                        let uu____4449 = FStar_Tactics_Types.goal_env g  in
-                        let uu____4450 = FStar_Tactics_Types.goal_type g  in
-                        getprop uu____4449 uu____4450  in
-                      match uu____4446 with
+                      let uu____4590 =
+                        let uu____4593 = FStar_Tactics_Types.goal_env g  in
+                        let uu____4594 = FStar_Tactics_Types.goal_type g  in
+                        getprop uu____4593 uu____4594  in
+                      match uu____4590 with
                       | FStar_Pervasives_Native.Some vc ->
-                          ((let uu____4453 = FStar_ST.op_Bang tacdbg  in
-                            if uu____4453
+                          ((let uu____4597 = FStar_ST.op_Bang tacdbg  in
+                            if uu____4597
                             then
-                              let uu____4473 =
+                              let uu____4617 =
                                 FStar_Syntax_Print.term_to_string vc  in
                               FStar_Util.print1 "Synthesis left a goal: %s\n"
-                                uu____4473
+                                uu____4617
                             else ());
                            (let guard =
                               {
@@ -2824,10 +2830,10 @@ let (synthesize :
                                 FStar_TypeChecker_Env.univ_ineqs = ([], []);
                                 FStar_TypeChecker_Env.implicits = []
                               }  in
-                            let uu____4484 = FStar_Tactics_Types.goal_env g
+                            let uu____4628 = FStar_Tactics_Types.goal_env g
                                in
                             FStar_TypeChecker_Rel.force_trivial_guard
-                              uu____4484 guard))
+                              uu____4628 guard))
                       | FStar_Pervasives_Native.None  ->
                           FStar_Errors.raise_error
                             (FStar_Errors.Fatal_OpenGoalsInSynthesis,
@@ -2844,31 +2850,31 @@ let (splice :
       if env.FStar_TypeChecker_Env.nosynth
       then []
       else
-        ((let uu____4501 =
+        ((let uu____4645 =
             FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac")  in
-          FStar_ST.op_Colon_Equals tacdbg uu____4501);
+          FStar_ST.op_Colon_Equals tacdbg uu____4645);
          (let typ = FStar_Syntax_Syntax.t_decls  in
-          let uu____4522 =
-            let uu____4529 = reify_tactic tau  in
+          let uu____4666 =
+            let uu____4673 = reify_tactic tau  in
             run_tactic_on_typ tau.FStar_Syntax_Syntax.pos
-              tau.FStar_Syntax_Syntax.pos uu____4529 env typ
+              tau.FStar_Syntax_Syntax.pos uu____4673 env typ
              in
-          match uu____4522 with
+          match uu____4666 with
           | (gs,w) ->
-              ((let uu____4539 =
+              ((let uu____4683 =
                   FStar_List.existsML
                     (fun g  ->
-                       let uu____4543 =
-                         let uu____4544 =
-                           let uu____4547 = FStar_Tactics_Types.goal_env g
+                       let uu____4687 =
+                         let uu____4688 =
+                           let uu____4691 = FStar_Tactics_Types.goal_env g
                               in
-                           let uu____4548 = FStar_Tactics_Types.goal_type g
+                           let uu____4692 = FStar_Tactics_Types.goal_type g
                               in
-                           getprop uu____4547 uu____4548  in
-                         FStar_Option.isSome uu____4544  in
-                       Prims.op_Negation uu____4543) gs
+                           getprop uu____4691 uu____4692  in
+                         FStar_Option.isSome uu____4688  in
+                       Prims.op_Negation uu____4687) gs
                    in
-                if uu____4539
+                if uu____4683
                 then
                   FStar_Errors.raise_error
                     (FStar_Errors.Fatal_OpenGoalsInSynthesis,
@@ -2884,21 +2890,21 @@ let (splice :
                     FStar_TypeChecker_Env.Unascribe;
                     FStar_TypeChecker_Env.Unmeta] env w
                    in
-                (let uu____4552 = FStar_ST.op_Bang tacdbg  in
-                 if uu____4552
+                (let uu____4696 = FStar_ST.op_Bang tacdbg  in
+                 if uu____4696
                  then
-                   let uu____4572 = FStar_Syntax_Print.term_to_string w1  in
-                   FStar_Util.print1 "splice: got witness = %s\n" uu____4572
+                   let uu____4716 = FStar_Syntax_Print.term_to_string w1  in
+                   FStar_Util.print1 "splice: got witness = %s\n" uu____4716
                  else ());
-                (let uu____4574 =
-                   let uu____4579 =
+                (let uu____4718 =
+                   let uu____4723 =
                      FStar_Syntax_Embeddings.e_list
                        FStar_Reflection_Embeddings.e_sigelt
                       in
-                   FStar_Tactics_InterpFuns.unembed uu____4579 w1
+                   FStar_Tactics_InterpFuns.unembed uu____4723 w1
                      FStar_Syntax_Embeddings.id_norm_cb
                     in
-                 match uu____4574 with
+                 match uu____4718 with
                  | FStar_Pervasives_Native.Some sigelts -> sigelts
                  | FStar_Pervasives_Native.None  ->
                      FStar_Errors.raise_error
