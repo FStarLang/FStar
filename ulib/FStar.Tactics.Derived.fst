@@ -199,9 +199,6 @@ let rec revert_all (bs:binders) : Tac unit =
     | _::tl -> revert ();
                revert_all tl
 
-private val __unrefine : #a:Type -> #p:(a -> Type) -> x:a{p x} -> squash (p x)
-private let __unrefine #a #p x = ()
-
 // Cannot define this inside `assumption` due to #1091
 private
 let rec __assumption_aux (bs : binders) : Tac unit =
@@ -210,13 +207,10 @@ let rec __assumption_aux (bs : binders) : Tac unit =
         fail "no assumption matches goal"
     | b::bs ->
         let t = pack_ln (Tv_Var (bv_of_binder b)) in
-           ((fun () -> exact t; qed ())
-        <|> (fun () -> apply (`FStar.Squash.return_squash); exact t; qed ())
-        <|> (fun () -> apply_lemma (`__unrefine); t_exact false true t; qed ())
-        <|> (fun () -> __assumption_aux bs)) ()
+        or_else (fun () -> exact t) (fun () -> __assumption_aux bs)
 
 let assumption () : Tac unit =
-    with_policy Force (fun () -> __assumption_aux (binders_of_env (cur_env ())))
+    __assumption_aux (binders_of_env (cur_env ()))
 
 let destruct_equality_implication (t:term) : Tac (option (formula * term)) =
     match term_as_formula t with
