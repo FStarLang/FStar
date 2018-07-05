@@ -21,7 +21,7 @@ let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __ta
         match r with
         | Success a ps' ->
             let ps' = set_proofstate_range ps' (FStar.Range.prims_to_fstar_range r2) in
-            // Force evaluation of __tracepoint q
+            // Force evaluation of __tracepoint q even on the interpreter
             begin match tracepoint ps' with
             | () -> t2 a (decr_depth ps')
             end
@@ -80,7 +80,6 @@ unfold let by_tactic (t : unit -> Tac 'a) (p:Type) : Type = __by_tactic (reify (
 // It should not lead to any inconsistency, as any time this term appears
 // during typechecking, it is forced to be fully applied and the tactic
 // is run. A failure of the tactic is a typechecking failure.
-// TODO: `a` is really fixed to unit for now. Make it consistent
 assume val synth_by_tactic : (#t:Type) -> (unit -> Tac unit) -> Tot t
 
 let assert_by_tactic (p:Type) (t:unit -> Tac unit)
@@ -90,10 +89,11 @@ let assert_by_tactic (p:Type) (t:unit -> Tac unit)
   = ()
 
 (* We don't peel off all `by_tactic`s in negative positions, so give the SMT a way to reason about them *)
-val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi) [SMTPat (by_tactic tau phi)]
+val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi)
+                                                                         [SMTPat (by_tactic tau phi)]
 let by_tactic_seman a tau phi = ()
 
-// TcTerm needs these two names typecheck tactics against
+// TcTerm needs these two names to typecheck tactics against
 private let tactic a = unit -> TacF a // we don't care if the tactic is satisfiable before running it
 
 #set-options "--admit_smt_queries true" // F* won't allow it otherwise, since `t` is not proven total
