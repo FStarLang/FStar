@@ -2104,10 +2104,11 @@ in
       ( mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un )}
 | BACKTICK_AT atomicTerm
     {let (_1, e) = ((), $2) in
-      ( mk_term (Antiquote (true, e)) (rhs2 parseState 1 3) Un )}
+      ( let q = mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un in
+        mk_term (Antiquote q) (rhs2 parseState 1 3) Un )}
 | BACKTICK_HASH atomicTerm
     {let (_1, e) = ((), $2) in
-      ( mk_term (Antiquote (false, e)) (rhs2 parseState 1 3) Un )}
+      ( mk_term (Antiquote e) (rhs2 parseState 1 3) Un )}
 | tmNoEqWith_appTerm_
     {let e = $1 in
       ( e )}
@@ -2178,10 +2179,11 @@ in
       ( mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un )}
 | BACKTICK_AT atomicTerm
     {let (_1, e) = ((), $2) in
-      ( mk_term (Antiquote (true, e)) (rhs2 parseState 1 3) Un )}
+      ( let q = mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un in
+        mk_term (Antiquote q) (rhs2 parseState 1 3) Un )}
 | BACKTICK_HASH atomicTerm
     {let (_1, e) = ((), $2) in
-      ( mk_term (Antiquote (false, e)) (rhs2 parseState 1 3) Un )}
+      ( mk_term (Antiquote e) (rhs2 parseState 1 3) Un )}
 | tmNoEqWith_tmRefinement_
     {let e = $1 in
       ( e )}

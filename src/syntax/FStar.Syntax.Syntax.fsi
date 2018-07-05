@@ -148,7 +148,7 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbattrs:list<attribute>; //attrs
     lbpos  :range;           //original position of 'e'
 }
-and antiquotations = list<(bv * bool * term)>
+and antiquotations = list<(bv * term)>
 and quoteinfo = {
     qkind      : quote_kind;
     antiquotes : antiquotations;
@@ -286,7 +286,7 @@ type lcomp = { //a lazy computation
 }
 
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
-val lookup_aq : bv -> antiquotations -> option<(bool * term)>
+val lookup_aq : bv -> antiquotations -> option<term>
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 val lazy_chooser : ref<option<(lazy_kind -> lazyinfo-> term)>>
@@ -296,6 +296,8 @@ type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
 val new_fv_set: unit -> set<lident>
 val new_universe_names_set: unit -> set<univ_name>
+
+val eq_binding : binding -> binding -> bool
 
 type qualifier =
   | Assumption                             //no definition provided, just a declaration

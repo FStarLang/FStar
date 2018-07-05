@@ -627,8 +627,8 @@ and eq_antiquotes a1 a2 =
     | [], [] -> Equal
     | [], _
     | _, [] -> NotEqual
-    | (x1, b1, t1)::a1, (x2, b2, t2)::a2 ->
-      if not (bv_eq x1 x2 && b1 = b2)
+    | (x1, t1)::a1, (x2, t2)::a2 ->
+      if not (bv_eq x1 x2)
       then NotEqual
       else match eq_tm t1 t2 with
            | NotEqual -> NotEqual

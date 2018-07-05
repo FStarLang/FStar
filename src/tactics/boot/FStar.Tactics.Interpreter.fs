@@ -160,14 +160,11 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "refine_intro"  refine_intro e_unit e_unit
                                refine_intro NBET.e_unit NBET.e_unit;
 
-      mktac2 0 "t_exact"       t_exact e_bool RE.e_term e_unit
-                               t_exact NBET.e_bool NRE.e_term NBET.e_unit;
+      mktac3 0 "t_exact"       t_exact e_bool e_bool RE.e_term e_unit
+                               t_exact NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
 
-      mktac1 0 "apply"         (apply  true) RE.e_term e_unit
-                               (apply  true) NRE.e_term NBET.e_unit;
-
-      mktac1 0 "apply_raw"     (apply false) RE.e_term e_unit
-                               (apply false) NRE.e_term NBET.e_unit;
+      mktac2 1 "t_apply"       t_apply e_bool RE.e_term e_unit
+                               t_apply NBET.e_bool NRE.e_term NBET.e_unit;
 
       mktac1 0 "apply_lemma"   apply_lemma RE.e_term e_unit
                                apply_lemma NRE.e_term NBET.e_unit;

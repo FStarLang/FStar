@@ -133,10 +133,11 @@ let comp_to_typ (c:comp) : typ =
     | GTotal (t, _) -> t
     | Comp ct -> ct.result_typ
 
+let get_phi (g:goal) : option<term> =
+    U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
+
 let is_irrelevant (g:goal) : bool =
-    match U.un_squash (N.unfold_whnf (goal_env g) (goal_type g)) with
-    | Some t -> true
-    | _ -> false
+    Option.isSome (get_phi g)
 
 let print (msg:string) : tac<unit> =
     tacprint msg;
@@ -703,7 +704,7 @@ let intro () : tac<binder> = wrap_err "intro" <|
              //         (Print.binders_to_string ", " [b])
              //         (Print.term_to_string typ');
              bind (new_uvar "intro" env' typ') (fun (body, ctx_uvar) ->
-             let sol = U.abs [b] body None in
+             let sol = U.abs [b] body (Some (U.residual_comp_of_comp c)) in
              //BU.print1 "[intro]: solution is %s"
              //           (Print.term_to_string sol);
              //BU.print1 "[intro]: old goal is %s" (goal_to_string goal);
@@ -819,17 +820,18 @@ let __exact_now set_expected_typ (t:term) : tac<unit> =
                     (tts (goal_env goal) (goal_type goal))
                     (tts (goal_env goal) (goal_witness goal))))))))
 
-let t_exact set_expected_typ tm : tac<unit> = wrap_err "exact" <|
+let t_exact try_refine set_expected_typ tm : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "t_exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind (catch (__exact_now set_expected_typ tm)) (function
     | Inr r -> ret r
+    | Inl e when not (try_refine) -> fail e
     | Inl e ->
-    mlog (fun () -> BU.print_string "__exact_now failed, trying refine...\n") (fun _ ->
-    bind (catch (bind (norm [EMB.Delta]) (fun _ ->
-                   bind (refine_intro ()) (fun _ ->
-                   __exact_now set_expected_typ tm)))) (function
-    | Inr r -> ret r
-    | Inl _ -> fail e)))) // keep original error
+        mlog (fun () -> BU.print_string "__exact_now failed, trying refine...\n") (fun _ ->
+        bind (catch (bind (norm [EMB.Delta]) (fun _ ->
+                       bind (refine_intro ()) (fun _ ->
+                       __exact_now set_expected_typ tm)))) (function
+              | Inr r -> ret r
+              | Inl _ -> fail e)))) // keep original error
 
 let rec mapM (f : 'a -> tac<'b>) (l : list<'a>) : tac<list<'b>> =
     match l with
@@ -877,8 +879,8 @@ let try_match_by_application (e : env) (ty1 : term) (ty2 : term) : tac<list<(ter
 // without asking for |- ?u : Type first, which will most likely be instantiated when
 // solving any of these two goals. In any case, if ?u is not solved, we will later fail.
 // TODO: this should probably be made into a user tactic
-let apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
-    mlog (fun () -> BU.print1 "apply: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
+let t_apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
+    mlog (fun () -> BU.print1 "t_apply: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind (cur_goal ()) (fun goal ->
     let e = goal_env goal in
     bind (__tc e tm) (fun (tm, typ, guard) ->
@@ -1496,6 +1498,66 @@ let flip () : tac<unit> =
     match ps.goals with
     | g1::g2::gs -> set ({ps with goals=g2::g1::gs})
     | _ -> fail "flip: less than 2 goals"
+    )
+
+// longest_prefix f l1 l2 = (p, r1, r2) ==> l1 = p@r1 /\ l2 = p@r2
+let rec longest_prefix (f : 'a -> 'a -> bool) (l1 : list<'a>) (l2 : list<'a>) : list<'a> * list<'a> * list<'a> =
+    let rec aux acc l1 l2 =
+        match l1, l2 with
+        | x::xs, y::ys ->
+            if f x y
+            then aux (x::acc) xs ys
+            else acc, xs, ys
+        | _ ->
+            acc, l1, l2
+    in
+    let pr, t1, t2 = aux [] l1 l2 in
+    List.rev pr, t1, t2
+
+
+// fix universes
+let join_goals g1 g2 : tac<goal> =
+    (* The one in Syntax.Util ignores null_binders, why? *)
+    let close_forall_no_univs bs f =
+        List.fold_right (fun b f -> U.mk_forall_no_univ (fst b) f) bs f
+    in
+    match get_phi g1 with
+    | None -> fail "goal 1 is not irrelevant"
+    | Some phi1 ->
+    match get_phi g2 with
+    | None -> fail "goal 2 is not irrelevant"
+    | Some phi2 ->
+
+    let gamma1 = g1.goal_ctx_uvar.ctx_uvar_gamma in
+    let gamma2 = g2.goal_ctx_uvar.ctx_uvar_gamma in
+    let gamma, r1, r2 = longest_prefix S.eq_binding (List.rev gamma1) (List.rev gamma2) in
+
+    let t1 = close_forall_no_univs (Env.binders_of_bindings r1) phi1 in
+    let t2 = close_forall_no_univs (Env.binders_of_bindings r2) phi2 in
+
+    bind (set_solution g1 U.exp_unit) (fun () ->
+    bind (set_solution g2 U.exp_unit) (fun () ->
+
+    let ng = U.mk_conj t1 t2 in
+    let nenv = { goal_env g1 with gamma = List.rev gamma
+                                ; gamma_cache = BU.smap_create 100 (* Paranoid? *)
+                                } in
+    bind (mk_irrelevant_goal "joined" nenv ng g1.opts) (fun goal ->
+    mlog (fun () -> BU.print3 "join_goals of\n(%s)\nand\n(%s)\n= (%s)\n"
+                (goal_to_string_verbose g1)
+                (goal_to_string_verbose g2)
+                (goal_to_string_verbose goal)) (fun () ->
+    ret goal))))
+
+let join () : tac<unit> =
+    bind get (fun ps ->
+    match ps.goals with
+    | g1::g2::gs ->
+        bind (set ({ ps with goals = gs })) (fun () ->
+        bind (join_goals g1 g2) (fun g12 ->
+        add_goals [g12]))
+
+    | _ -> fail "join: less than 2 goals"
     )
 
 let later () : tac<unit> =
