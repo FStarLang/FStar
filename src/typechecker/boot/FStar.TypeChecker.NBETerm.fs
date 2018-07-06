@@ -404,20 +404,22 @@ let e_option (ea : embedding<'a>) =
         ET_app(PC.option_lid |> Ident.string_of_lid, [ea.emb_typ])
     in
     let em cb (o:option<'a>) : t =
+        lazy_embed etyp o (fun () ->
         match o with
         | None ->
           lid_as_constr PC.none_lid [U_zero] [as_iarg (type_of ea)]
         | Some x ->
           lid_as_constr PC.some_lid [U_zero] [as_arg (embed ea cb x);
-                                              as_iarg (type_of ea)]
+                                              as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option<option<'a>> =
+        lazy_unembed etyp trm (fun trm ->
         match trm with
         | Construct (fvar, us, args) when S.fv_eq_lid fvar PC.none_lid ->
           Some None
         | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.some_lid ->
           BU.bind_opt (unembed ea cb a) (fun a -> Some (Some a))
-        | _ -> None
+        | _ -> None)
     in
     mk_emb em un (lid_as_typ PC.option_lid [U_zero] [as_arg (type_of ea)]) etyp
 
@@ -428,20 +430,22 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
         ET_app(PC.lid_tuple2 |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ])
     in
     let em cb (x:'a * 'b) : t =
+        lazy_embed etyp x (fun () ->
         lid_as_constr (PC.lid_Mktuple2)
                       [U_zero; U_zero]
                       [as_arg (embed eb cb (snd x));
                        as_arg (embed ea cb (fst x));
                        as_iarg (type_of eb);
-                       as_iarg (type_of ea)]
+                       as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option<('a * 'b)> =
+        lazy_unembed etyp trm (fun trm ->
         match trm with
         | Construct (fvar, us, [(b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple2 ->
           BU.bind_opt (unembed ea cb a) (fun a ->
           BU.bind_opt (unembed eb cb b) (fun b ->
           Some (a, b)))
-        | _ -> None
+        | _ -> None)
     in
     mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero;U_zero] [as_arg (type_of eb); as_arg (type_of ea)]) etyp
 
@@ -450,6 +454,7 @@ let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
         ET_app(PC.either_lid |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ])
     in
     let em cb (s:BU.either<'a,'b>) : t =
+        lazy_embed etyp s (fun () ->
         match s with
         | BU.Inl a ->
         lid_as_constr (PC.inl_lid)
@@ -462,9 +467,10 @@ let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
                       [U_zero; U_zero]
                       [as_arg (embed eb cb b);
                        as_iarg (type_of eb);
-                       as_iarg (type_of ea)]
+                       as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option<BU.either<'a,'b>> =
+        lazy_unembed etyp trm (fun trm ->
         match trm with
         | Construct (fvar, us, [(a, _); _; _]) when S.fv_eq_lid fvar PC.inl_lid ->
           BU.bind_opt (unembed ea cb a) (fun a ->
@@ -472,7 +478,7 @@ let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
         | Construct (fvar, us, [(b, _); _; _]) when S.fv_eq_lid fvar PC.inr_lid ->
           BU.bind_opt (unembed eb cb b) (fun b ->
           Some (BU.Inr b))
-        | _ -> None
+        | _ -> None)
     in
     mk_emb em un (lid_as_typ PC.either_lid [U_zero;U_zero] [as_arg (type_of eb); as_arg (type_of ea)]) etyp
 
@@ -493,12 +499,14 @@ let e_list (ea:embedding<'a>) =
         ET_app(PC.list_lid |> Ident.string_of_lid, [ea.emb_typ])
     in
     let em cb (l:list<'a>) : t =
+        lazy_embed etyp l (fun () ->
         let typ = as_iarg (type_of ea) in
         let nil = lid_as_constr PC.nil_lid [U_zero] [typ] in
         let cons hd tl = lid_as_constr PC.cons_lid [U_zero] [as_arg tl; as_arg (embed ea cb hd); typ] in
-        List.fold_right cons l nil
+        List.fold_right cons l nil)
     in
     let rec un cb (trm:t) : option<list<'a>> =
+        lazy_unembed etyp trm (fun trm ->
         match trm with
         | Construct (fv, _, _) when S.fv_eq_lid fv PC.nil_lid -> Some []
         | Construct (fv, _, [(tl, None); (hd, None); (_, Some (Implicit _))])
@@ -509,25 +517,30 @@ let e_list (ea:embedding<'a>) =
           BU.bind_opt (unembed ea cb hd) (fun hd ->
           BU.bind_opt (un cb tl) (fun tl ->
           Some (hd :: tl)))
-        | _ -> None
+        | _ -> None)
     in
     mk_emb em un (lid_as_typ PC.list_lid [U_zero] [as_arg (type_of ea)]) etyp
 
 let e_string_list = e_list e_string
 
-let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) =
+let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) : embedding<('a -> 'b)> =
     let etyp = ET_fun(ea.emb_typ, eb.emb_typ) in
-    let em cb (f : 'a -> 'b) : t = Lam((fun tas -> match unembed ea cb (List.hd tas) with
-                                          | Some a -> embed eb cb (f a)
-                                          | None -> failwith "cannot unembed function argument"),
-                                    [fun _ -> as_arg (type_of eb)], 1, None)
+    let em cb (f : 'a -> 'b) : t =
+        lazy_embed etyp f (fun () ->
+        Lam((fun tas -> match unembed ea cb (List.hd tas) with
+                        | Some a -> embed eb cb (f a)
+                        | None -> failwith "cannot unembed function argument"),
+                [fun _ -> as_arg (type_of eb)], 1, None))
     in
     let un cb (lam : t) : option<('a -> 'b)> =
-        match lam with
-        | Lam (ft, _, _, _) -> Some (fun (x:'a) -> match unembed eb cb (ft [embed ea cb x]) with
-                                           | Some x -> x
-                                           | None -> failwith "cannot unembed function result")
-        | _ -> None
+        let k (lam:t) : option<('a -> 'b)> =
+            match lam with
+            | Lam (ft, _, _, _) -> Some (fun (x:'a) -> match unembed eb cb (ft [embed ea cb x]) with
+                                               | Some x -> x
+                                               | None -> failwith "cannot unembed function result")
+            | _ -> None
+        in
+        lazy_unembed etyp lam k
     in
     mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb))) etyp
 
