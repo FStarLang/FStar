@@ -1,4 +1,6 @@
-FSTAR=fstar.exe $(OTHERFLAGS) --use_two_phase_tc false --use_extracted_interfaces false
+FSTAR_HOME=../..
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS) --use_two_phase_tc false --use_extracted_interfaces false
+FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
 all: prep
 	$(MAKE) -f Makefile.bench go
