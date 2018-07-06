@@ -92,3 +92,39 @@ let parse_bounded_u8 (b: nat) : Tot (parser (bounded_u8 b)) =
 
 let serialize_bounded_u8 (b: nat) : Tot (serializer (parse_bounded_u8 b)) =
   Serializer (fun x -> serialize serialize_u8 x)
+
+inline_for_extraction
+let bounded_u8_match_t (b: nat) (ty: (bounded_u8 b -> Tot Type)) : Tot Type =
+  (x: bounded_u8 b) -> Tot (ty x)
+
+inline_for_extraction
+let bounded_u8_match_t_aux (b: nat) (ty: (bounded_u8 b -> Tot Type)) (b': nat { b' <= b } ) : Tot Type =
+  (x: bounded_u8 b { U8.v x < b' } ) -> Tot (ty x)
+
+inline_for_extraction
+let bounded_u8_match_t_intro
+  (b: nat) (ty: (bounded_u8 b -> Tot Type))
+  (j: bounded_u8_match_t_aux b ty b)
+: Tot (bounded_u8_match_t b ty)
+= j
+
+inline_for_extraction
+let bounded_u8_match_t_aux_nil
+  (b: nat { b > 0 } ) (ty: (bounded_u8 b -> Tot Type))
+: Tot (bounded_u8_match_t_aux b ty 0)
+= fun _ -> false_elim ()
+
+inline_for_extraction
+let bounded_u8_match_t_aux_cons_nil
+  (b: nat { b > 0 } ) (ty: (bounded_u8 b -> Tot Type)) (t: Type) (t_correct: squash (t == ty 0uy)) (y: t)
+: Tot (bounded_u8_match_t_aux b ty 1)
+= fun _ -> y
+
+inline_for_extraction
+let bounded_u8_match_t_aux_cons
+  (b: nat) (ty: (bounded_u8 b -> Tot Type)) (b' : nat {b' < b /\ b' < 256 }) (t: Type) (t_correct: squash (t == ty (U8.uint_to_t b'))) (z: t) (y: bounded_u8_match_t_aux b ty b')
+ : Tot (bounded_u8_match_t_aux b ty (b' + 1))
+= fun (x: bounded_u8 b { U8.v x < b' + 1 } ) ->
+  if x `U8.lt` U8.uint_to_t b'
+  then y x
+  else (z <: ty x)

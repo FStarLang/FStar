@@ -36,24 +36,68 @@ let bidon = ()
 
 let j (x: nat) : Tot unit = assert (x > 2 ==> x + x > 4)
 
-let somme_p =
+#set-options "--z3rlimit 32"
+
+let somme_p' : unit =
+(
   [@inline_let]
-  let tod (x: somme) : Tot test = match x with
-  | U _ -> TA | V -> TB | W -> TC | _ -> TD
+  let imp0 =
+    (fun (x: somme) -> match x with
+    | U _ -> 0uy <: bounded_u8 4
+    | V -> 1uy <: bounded_u8 4
+    | W -> 2uy <: bounded_u8 4
+    | _ -> 3uy <: bounded_u8 4)
   in
   [@inline_let]
-  let ty (x: test) : Tot Type0 = match x with
-  | TA -> U8.t | _ -> unit
+  let imp1 =
+    (bounded_u8_match_t_intro 4 (fun _ -> Type0) (
+      bounded_u8_match_t_aux_cons 4 _ 3 Type0 () unit (
+      bounded_u8_match_t_aux_cons 4 _ 2 Type0 () unit (
+      bounded_u8_match_t_aux_cons 4 _ 1 Type0 () unit (
+      bounded_u8_match_t_aux_cons_nil 4 _ Type0 () U8.t
+    )))))  
   in
   [@inline_let]
-  let ps (x: test) : Tot (parser (ty x)) = match x with
-  | TA -> parse_u8 <: parser (ty x) | TB -> parse_empty <: parser (ty x) | TC -> parse_empty <: parser (ty x) | TD -> parse_empty <: parser (ty x)
+  let imp2 = (fun (x: bounded_u8 4) -> parser (imp1 x)) in
+  [@inline_let]
+  let imp3 =
+    bounded_u8_match_t_intro 4 imp2 (
+      bounded_u8_match_t_aux_cons 4 imp2 3 (parser unit) () parse_empty (
+      bounded_u8_match_t_aux_cons 4 imp2 2 (parser unit) () parse_empty (
+      bounded_u8_match_t_aux_cons 4 imp2 1 (parser unit) () parse_empty (
+      bounded_u8_match_t_aux_cons_nil 4 imp2 (parser U8.t) () parse_u8
+    ))))
   in
+  ()
+) <: unit by (fun () -> let open FStar.Tactics in
+    set_guard_policy Goal;
+    fail "here"
+)
+
+(*
+fail "here")
+
+(*
   parse_sum
-    p
-    tod
-    #ty
-    ps
+    (parse_bounded_u8 4)
+    imp0
+    #imp1
+    imp2
+    (fun (x: bounded_u8 4) y -> bounded_u8_match_t_intro 4 (refine_with_tag imp0) (
+      bounded_u8_match_t_aux_cons 4 _ 3 X (
+      bounded_u8_match_t_aux_cons 4 _ 2 W (
+      bounded_u8_match_t_aux_cons 4 _ 1 V (
+      bounded_u8_match_t_aux_cons 4 _ 0 (U y)
+    )))))
+
+    
+    (fun (x: bounded_u8 4) y -> bounded_u8_match_t_intro 4 _ (
+      bounded_u8_match_t_aux_cons 4 _ 3 () (
+      bounded_u8_match_t_aux_cons 4 _ 2 () (
+      bounded_u8_match_t_aux_cons 4 _ 1 () (
+      bounded_u8_match_t_aux_cons 4 _ 0 (let (U y) = y in y)
+    )))))
+
     (fun x y -> match x with
     | TA -> U y <: refine_with_tag tod x
     | TB -> V <: refine_with_tag tod x
