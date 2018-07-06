@@ -234,6 +234,9 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "tadmit"        tadmit  e_unit e_unit
                                tadmit  NBET.e_unit NBET.e_unit;
 
+      mktac1 0 "join"          join  e_unit e_unit
+                               join  NBET.e_unit NBET.e_unit;
+
       mktac1 0 "cases"         cases RE.e_term (e_tuple2 RE.e_term RE.e_term)
                                cases NRE.e_term (NBET.e_tuple2 NRE.e_term NRE.e_term);
 
