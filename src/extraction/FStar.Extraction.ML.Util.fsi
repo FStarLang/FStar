@@ -66,4 +66,4 @@ val interpret_plugin_as_term_fun :
             -> t:S.typ
             -> arity:option<int>
             -> ml_fv:mlexpr'
-            -> option<(mlexpr * int * bool)>
+            -> option<(mlexpr * mlexpr * int * bool)>

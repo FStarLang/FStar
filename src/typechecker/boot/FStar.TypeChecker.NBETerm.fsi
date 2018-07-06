@@ -58,7 +58,7 @@ and t
   | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
   (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
 
-and comp = 
+and comp =
   | Tot of t * option<universe>
   | GTot of t * option<universe>
   | Comp of comp_typ
@@ -138,7 +138,7 @@ val mk_emb : (iapp_cb -> 'a -> t) ->
              t -> embedding<'a>
 
 val embed   : embedding<'a> -> iapp_cb -> 'a -> t
-val unembed : embedding<'a> -> iapp_cb -> t -> option<'a> 
+val unembed : embedding<'a> -> iapp_cb -> t -> option<'a>
 val type_of : embedding<'a> -> t
 
 val e_bool   : embedding<bool>
@@ -154,6 +154,7 @@ val e_option : embedding<'a> -> embedding<option<'a>>
 val e_tuple2 : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
 val e_either : embedding<'a> -> embedding<'b> -> embedding<BU.either<'a ,'b>>
 val e_string_list : embedding<list<string>>
+val e_arrow1 : embedding<'a> -> embedding<'b> -> embedding<'a -> 'b>
 
 // Interface for NBE interpretations
 
