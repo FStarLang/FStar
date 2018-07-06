@@ -36,75 +36,76 @@ let bidon = ()
 
 let j (x: nat) : Tot unit = assert (x > 2 ==> x + x > 4)
 
-#set-options "--z3rlimit 32"
+#set-options "--z3rlimit 16"
 
-let somme_p' : unit =
-(
-  [@inline_let]
-  let imp0 =
-    (fun (x: somme) -> match x with
+  let imp0 (x: somme) : Tot (bounded_u8 4) = match x with
     | U _ -> 0uy <: bounded_u8 4
     | V -> 1uy <: bounded_u8 4
     | W -> 2uy <: bounded_u8 4
-    | _ -> 3uy <: bounded_u8 4)
-  in
-  [@inline_let]
-  let imp1 =
-    (bounded_u8_match_t_intro 4 (fun _ -> Type0) (
-      bounded_u8_match_t_aux_cons 4 _ 3 Type0 () unit (
-      bounded_u8_match_t_aux_cons 4 _ 2 Type0 () unit (
-      bounded_u8_match_t_aux_cons 4 _ 1 Type0 () unit (
-      bounded_u8_match_t_aux_cons_nil 4 _ Type0 () U8.t
-    )))))  
-  in
-  [@inline_let]
-  let imp2 = (fun (x: bounded_u8 4) -> parser (imp1 x)) in
-  [@inline_let]
-  let imp3 =
-    bounded_u8_match_t_intro 4 imp2 (
-      bounded_u8_match_t_aux_cons 4 imp2 3 (parser unit) () parse_empty (
-      bounded_u8_match_t_aux_cons 4 imp2 2 (parser unit) () parse_empty (
-      bounded_u8_match_t_aux_cons 4 imp2 1 (parser unit) () parse_empty (
-      bounded_u8_match_t_aux_cons_nil 4 imp2 (parser U8.t) () parse_u8
-    ))))
-  in
-  ()
-) <: unit by (fun () -> let open FStar.Tactics in
-    set_guard_policy Goal;
-    fail "here"
-)
+    | _ -> 3uy <: bounded_u8 4
 
-(*
-fail "here")
+#set-options "--print_universes --print_implicits"
 
-(*
+let c3 : sum_case #somme #(bounded_u8 4) imp0 3uy =
+  Case #(bounded_u8 4) #somme
+        unit
+        parse_empty
+        serialize_empty
+        (fun (_: unit) -> X <: refine_with_tag #(bounded_u8 4) #somme imp0 (3uy <: bounded_u8 4))
+        (fun (_: refine_with_tag #(bounded_u8 4) #somme imp0 (3uy <: bounded_u8 4)) -> ())
+        ()
+
+#set-options "--z3rlimit 64"
+
+let c2 : sum_case #somme #(bounded_u8 4) imp0 2uy =
+  Case #(bounded_u8 4) #somme
+        unit
+        parse_empty
+        serialize_empty
+        (fun (_: unit) -> W <: refine_with_tag #(bounded_u8 4) #somme imp0 (2uy <: bounded_u8 4))
+        (fun (x: refine_with_tag #(bounded_u8 4) #somme imp0 (2uy <: bounded_u8 4)) -> ())
+        ()
+
+let c1 : sum_case #somme #(bounded_u8 4) imp0 1uy =
+  Case #(bounded_u8 4) #somme
+        unit
+        parse_empty
+        serialize_empty
+        (fun (_: unit) -> V <: refine_with_tag #(bounded_u8 4) #somme imp0 (1uy <: bounded_u8 4))
+        (fun (_: refine_with_tag #(bounded_u8 4) #somme imp0 (1uy <: bounded_u8 4)) -> ())
+        ()
+
+let c0 : sum_case #somme #(bounded_u8 4) imp0 0uy =
+  Case #(bounded_u8 4) #somme
+        U8.t
+        parse_u8
+        serialize_u8
+        (fun (x: U8.t) -> U x <: refine_with_tag #(bounded_u8 4) #somme imp0 (0uy <: bounded_u8 4))
+        (fun (x: refine_with_tag #(bounded_u8 4) #somme imp0 0uy) -> (
+          match x with 
+          | U x -> x
+        ))
+        ()
+
+#reset-options
+
+let imp1 : (x: bounded_u8 4) -> Tot (sum_case #somme #(bounded_u8 4) imp0 x) =
+    (bounded_u8_match_t_intro 4 imp0 (
+      bounded_u8_match_t_aux_cons 4 imp0 3 3uy (
+        c3
+      ) (
+      bounded_u8_match_t_aux_cons 4 imp0 2 2uy (
+        c2
+      ) (
+      bounded_u8_match_t_aux_cons 4 imp0 1 1uy (
+        c1
+      ) (
+      bounded_u8_match_t_aux_cons_nil 4 imp0 (
+        c0
+      ))))))
+
+let somme_p =
   parse_sum
     (parse_bounded_u8 4)
     imp0
-    #imp1
-    imp2
-    (fun (x: bounded_u8 4) y -> bounded_u8_match_t_intro 4 (refine_with_tag imp0) (
-      bounded_u8_match_t_aux_cons 4 _ 3 X (
-      bounded_u8_match_t_aux_cons 4 _ 2 W (
-      bounded_u8_match_t_aux_cons 4 _ 1 V (
-      bounded_u8_match_t_aux_cons 4 _ 0 (U y)
-    )))))
-
-    
-    (fun (x: bounded_u8 4) y -> bounded_u8_match_t_intro 4 _ (
-      bounded_u8_match_t_aux_cons 4 _ 3 () (
-      bounded_u8_match_t_aux_cons 4 _ 2 () (
-      bounded_u8_match_t_aux_cons 4 _ 1 () (
-      bounded_u8_match_t_aux_cons 4 _ 0 (let (U y) = y in y)
-    )))))
-
-    (fun x y -> match x with
-    | TA -> U y <: refine_with_tag tod x
-    | TB -> V <: refine_with_tag tod x
-    | TC -> W <: refine_with_tag tod x
-    | TD -> X <: refine_with_tag tod x)
-    (fun x y -> match x with
-    | TB -> () <: ty x
-    | TA -> let (U v) = y in v <: ty x
-    | TC -> () <: ty x
-    | TD -> () <: ty x)
+    imp1

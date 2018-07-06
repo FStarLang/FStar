@@ -1,7 +1,9 @@
 module MiniParse.Spec.TSum
 include MiniParse.Spec.Combinators
+include MiniParse.Spec.Int
 
 module Seq = FStar.Seq
+module U8 = FStar.UInt8
 
 inline_for_extraction
 let refine_with_tag (#tag_t: Type0) (#data_t: Type0) (tag_of_data: (data_t -> GTot tag_t)) (x: tag_t) : Tot Type0 =
@@ -97,63 +99,97 @@ let serialize_tagged_union
 = bare_serialize_tagged_union_correct st tag_of_data s;
   Serializer (bare_serialize_tagged_union st tag_of_data s)
 
-let sum_inverse_ty_to_data_to_ty
+noeq
+type sum_case'
   (#tag_t: Type0)
   (#data_t: Type0)
-  (tag_of_data: (data_t -> GTot tag_t))
-  (#ty: ((t: tag_t) -> Tot Type0))
-  (ty_to_data: ((x: tag_t) -> (y: ty x) -> GTot (refine_with_tag tag_of_data x)))
-  (data_to_ty: ((x: tag_t) -> (y: refine_with_tag tag_of_data x) -> GTot (ty x)))
-: GTot Type0
-= forall (x: tag_t) . synth_inverse (data_to_ty x) (ty_to_data x)
+  (tag_of_data: (data_t -> Tot tag_t))
+  (case: tag_t)
+= | Case:
+    (ty: Type0) ->
+    (p: parser ty) -> 
+    (s: serializer p) ->
+    (ty_to_data: (ty -> Tot (refine_with_tag tag_of_data case))) ->
+    (data_to_ty: (refine_with_tag tag_of_data case -> Tot ty)) ->
+    (u: squash (synth_inverse ty_to_data data_to_ty /\ synth_inverse data_to_ty ty_to_data)) ->
+    sum_case' tag_of_data case
 
-let sum_inverse_data_to_ty_to_data
-  (#tag_t: Type0)
-  (#data_t: Type0)
-  (tag_of_data: (data_t -> GTot tag_t))
-  (#ty: ((t: tag_t) -> Tot Type0))
-  (ty_to_data: ((x: tag_t) -> (y: ty x) -> GTot (refine_with_tag tag_of_data x)))
-  (data_to_ty: ((x: tag_t) -> (y: refine_with_tag tag_of_data x) -> GTot (ty x)))
-: GTot Type0
-= forall (x: tag_t) . synth_inverse (ty_to_data x) (data_to_ty x)
+let sum_case = sum_case'
 
 let parse_sum
   (#tag_t: Type0)
   (pt: parser tag_t)
   (#data_t: Type0)
-  (tag_of_data: (data_t -> GTot tag_t))
-  (#ty: ((t: tag_t) -> Tot Type0))
-  (p: ((t: tag_t) -> Tot (parser (ty t))))
-  (ty_to_data: ((x: tag_t) -> (y: ty x) -> GTot (refine_with_tag tag_of_data x)))
-  (data_to_ty: ((x: tag_t) -> (y: refine_with_tag tag_of_data x) -> GTot (ty x)))
-: Pure (parser data_t)
-  (requires (
-    sum_inverse_ty_to_data_to_ty tag_of_data ty_to_data data_to_ty /\
-    sum_inverse_data_to_ty_to_data tag_of_data ty_to_data data_to_ty
-  ))
-  (ensures (fun _ -> True))
+  (tag_of_data: (data_t -> Tot tag_t))
+  (cases: ((x: tag_t) -> Tot (sum_case tag_of_data x)))
+: Tot (parser data_t)
 = parse_tagged_union
     pt
     tag_of_data
-    (fun x -> parse_synth (p x) (ty_to_data x) (data_to_ty x))
+    (fun x -> parse_synth ((cases x).p) ((cases x).ty_to_data) ((cases x).data_to_ty))
 
 let serialize_sum
   (#tag_t: Type0)
   (#pt: parser tag_t)
   (st: serializer pt)
   (#data_t: Type0)
-  (tag_of_data: (data_t -> GTot tag_t))
-  (#ty: ((t: tag_t) -> Tot Type0))
-  (#p: ((t: tag_t) -> Tot (parser (ty t))))
-  (s: ((t: tag_t) -> Tot (serializer (p t))))
-  (ty_to_data: ((x: tag_t) -> (y: ty x) -> GTot (refine_with_tag tag_of_data x)))
-  (data_to_ty: ((x: tag_t) -> (y: refine_with_tag tag_of_data x) -> GTot (ty x)))
-  (u: squash (
-    sum_inverse_ty_to_data_to_ty tag_of_data ty_to_data data_to_ty /\
-    sum_inverse_data_to_ty_to_data tag_of_data ty_to_data data_to_ty
-  ))
-: Tot (serializer (parse_sum pt tag_of_data p ty_to_data data_to_ty))
+  (tag_of_data: (data_t -> Tot tag_t))
+  (cases: ((x: tag_t) -> Tot (sum_case tag_of_data x)))
+: Tot (serializer (parse_sum pt tag_of_data cases))
 = serialize_tagged_union
     st
     tag_of_data
-    (fun x -> serialize_synth (p x) (ty_to_data x) (s x) (data_to_ty x) ())
+    (fun x -> serialize_synth _ ((cases x).ty_to_data) ((cases x).s) ((cases x).data_to_ty) ())
+
+inline_for_extraction
+let bounded_u8_match_t_aux
+  (b: nat)
+  (#data_t: Type0)
+  (tag_of_data: (data_t -> Tot (bounded_u8 b)))
+  (b': nat { b' <= b } )
+: Tot Type
+= (x: bounded_u8 b { U8.v x < b' } ) -> Tot (sum_case tag_of_data x)
+
+inline_for_extraction
+let bounded_u8_match_t_intro
+  (b: nat)
+  (#data_t: Type0)
+  (tag_of_data: (data_t -> Tot (bounded_u8 b)))
+  (j: bounded_u8_match_t_aux b tag_of_data b)
+  (x: bounded_u8 b)
+: Tot (sum_case tag_of_data x)
+= j x
+
+inline_for_extraction
+let bounded_u8_match_t_aux_nil
+  (b: nat)
+  (#data_t: Type0)
+  (tag_of_data: (data_t -> Tot (bounded_u8 b)))
+: Tot (bounded_u8_match_t_aux b tag_of_data 0)
+= fun _ -> false_elim ()
+
+inline_for_extraction
+let bounded_u8_match_t_aux_cons_nil
+  (b: nat { b > 0 } )
+  (#data_t: Type0)
+  (tag_of_data: (data_t -> Tot (bounded_u8 b)))
+  (y: sum_case #_ #(bounded_u8 b) tag_of_data 0uy)
+: Tot (bounded_u8_match_t_aux b tag_of_data 1)
+= fun (x: bounded_u8 b { U8.v x < 1 } )  -> (
+  y
+  )
+
+inline_for_extraction
+let bounded_u8_match_t_aux_cons
+  (b: nat { b > 0 } )
+  (#data_t: Type0)
+  (tag_of_data: (data_t -> Tot (bounded_u8 b)))
+  (b' : nat {b' < b /\ b' < 256 })
+  (b_: bounded_u8 b { U8.v b_ == b' } )
+  (z: sum_case #_ #(bounded_u8 b) tag_of_data b_)
+  (y: bounded_u8_match_t_aux b tag_of_data b')
+ : Tot (bounded_u8_match_t_aux b tag_of_data (b' + 1))
+= fun (x: bounded_u8 b { U8.v x < b' + 1 } ) ->
+  if x `U8.lt` U8.uint_to_t b'
+  then y x
+  else (z <: sum_case #_ #(bounded_u8 b) tag_of_data x)
