@@ -299,7 +299,7 @@ and primitive_steps () : list<Cfg.primitive_step> =
       (* mktac3 1 "lset"             lset e_any e_string RE.e_any e_unit *)
       (*                             lset NRE.e_any NBET.e_string NRE.e_any NBET.e_unit; *)
 
-    ] @ reflection_primops @ native_tactics_steps
+    ] @ reflection_primops @ (native_tactics_steps ())
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
 

@@ -25,7 +25,10 @@ type native_primitive_step =
 
 let compiled_tactics: native_primitive_step list ref = ref []
 
-let list_all () = !compiled_tactics
+let list_all () =
+    if FStar_Options.no_plugins ()
+    then []
+    else !compiled_tactics
 
 let is_native_tactic lid =
     BU.is_some (BU.try_find (fun x -> FStar_Ident.lid_equals lid x.name) !compiled_tactics)

@@ -322,8 +322,8 @@ let mk nm arity nunivs interp nbe_interp =
   ; Cfg.interpretation_nbe           = nbe_interp
   }
 
-let native_tactics = list_all ()
-let native_tactics_steps = List.map step_from_native_step native_tactics
+let native_tactics () = list_all ()
+let native_tactics_steps () = List.map step_from_native_step (native_tactics ())
 
 let rec drop n l =
     if n = 0 then l
