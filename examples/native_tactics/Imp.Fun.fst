@@ -1,7 +1,7 @@
-module Registers.Imp
+module Imp.Fun
 //#set-options "--debug Imp --debug_level SMTQuery"
 open FStar.Mul
-module R = Registers.List
+module R = Registers.Fun
 
 type rval   = int
 type reg_t  = x:nat{x<=10}

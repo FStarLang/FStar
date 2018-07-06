@@ -63,6 +63,7 @@ and e_tactic_nbe_0 (er : NBET.embedding<'r>) : NBET.embedding<tac<'r>> // JUST F
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (0)?")
            (fun cb t -> Some <| unembed_tactic_nbe_0 er cb t)
            (NBET.Constant NBET.Unit)
+           (emb_typ_of e_unit)
 
 // IN F*: and e_tactic_nbe_1 (#a:Type) (#r:Type) (ea : NBET.embedding a) (er : NBET.embedding r) : NBET.embedding (a -> tac r)
 and e_tactic_nbe_1 (ea : NBET.embedding<'a>) (er : NBET.embedding<'r>) : NBET.embedding<('a -> tac<'r>)> // JUST FSHARP
@@ -71,6 +72,7 @@ and e_tactic_nbe_1 (ea : NBET.embedding<'a>) (er : NBET.embedding<'r>) : NBET.em
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (1)?")
            (fun cb t -> unembed_tactic_nbe_1 ea er cb t)
            (NBET.Constant NBET.Unit)
+           (emb_typ_of e_unit)
 
 and primitive_steps () : list<Cfg.primitive_step> =
     (* NB: We need a PRECISE number for the universe arguments or NBE will

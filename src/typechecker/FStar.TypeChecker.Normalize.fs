@@ -988,8 +988,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
               norm cfg env stack hd
 
             | Some (s, tm) when is_nbe_request s ->
+              if cfg.debug.print_normalized
+              then BU.print1 "Starting NBE request on %s ... \n" (Print.term_to_string tm);
               let tm' = closure_as_term cfg env tm in
+              let start = BU.now() in
               let tm_norm = nbe_eval cfg s tm' in
+              let fin = BU.now () in
+              if cfg.debug.print_normalized
+              then BU.print3 "NBE'd (%s ms) %s\n\tto %s\n"
+                   (BU.string_of_int (snd (BU.time_diff start fin)))
+                   (Print.term_to_string tm')
+                   (Print.term_to_string tm_norm);
+
               norm cfg env stack tm_norm
               (* Zoe, NS:
                  This call to norm is needed to evaluate the continuation with the fully evaluated tm_norm

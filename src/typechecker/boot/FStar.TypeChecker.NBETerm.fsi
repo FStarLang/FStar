@@ -54,11 +54,11 @@ and t
   | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
   | Refinement of (t -> t) * (unit -> arg)
   | Quote of S.term * S.quoteinfo
-  | Lazy of S.lazyinfo
+  | Lazy of BU.either<S.lazyinfo, (Dyn.dyn * emb_typ * FStar.Common.thunk<t>)>
   | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
   (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
 
-and comp = 
+and comp =
   | Tot of t * option<universe>
   | GTot of t * option<universe>
   | Comp of comp_typ
@@ -131,14 +131,17 @@ type embedding<'a> = {
   em  : iapp_cb -> 'a -> t;
   un  : iapp_cb -> t -> option<'a>;
   typ : t;
+  emb_typ : emb_typ
 }
 
 val mk_emb : (iapp_cb -> 'a -> t) ->
              (iapp_cb -> t -> option<'a>) ->
-             t -> embedding<'a>
+             t ->
+             emb_typ ->
+             embedding<'a>
 
 val embed   : embedding<'a> -> iapp_cb -> 'a -> t
-val unembed : embedding<'a> -> iapp_cb -> t -> option<'a> 
+val unembed : embedding<'a> -> iapp_cb -> t -> option<'a>
 val type_of : embedding<'a> -> t
 
 val e_bool   : embedding<bool>
@@ -147,6 +150,7 @@ val e_char   : embedding<char>
 val e_int    : embedding<Z.t>
 val e_unit   : embedding<unit>
 val e_any    : embedding<t>
+val mk_any_emb : t -> embedding<t>
 val e_range  : embedding<Range.range>
 val e_norm_step : embedding<Syntax.Embeddings.norm_step>
 val e_list   : embedding<'a> -> embedding<list<'a>>
@@ -154,6 +158,38 @@ val e_option : embedding<'a> -> embedding<option<'a>>
 val e_tuple2 : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
 val e_either : embedding<'a> -> embedding<'b> -> embedding<BU.either<'a ,'b>>
 val e_string_list : embedding<list<string>>
+val e_arrow : embedding<'a> -> embedding<'b> -> embedding<('a -> 'b)>
+
+(* Arity specific raw_embeddings of arrows; used to generate top-level
+   registrations of compiled functions in FStar.Extraction.ML.Util *)
+val arrow_as_prim_step_1:  embedding<'a>
+                        -> embedding<'b>
+                        -> ('a -> 'b)
+                        -> n_tvars:int
+                        -> repr_f:Ident.lid
+                        -> iapp_cb
+                        -> (args -> option<t>)
+
+val arrow_as_prim_step_2:  embedding<'a>
+                        -> embedding<'b>
+                        -> embedding<'c>
+                        -> ('a -> 'b -> 'c)
+                        -> n_tvars:int
+                        -> repr_f:Ident.lid
+                        -> iapp_cb
+                        -> (args -> option<t>)
+
+val arrow_as_prim_step_3:  embedding<'a>
+                        -> embedding<'b>
+                        -> embedding<'c>
+                        -> embedding<'d>
+                        -> ('a -> 'b -> 'c -> 'd)
+                        -> n_tvars:int
+                        -> repr_f:Ident.lid
+                        -> iapp_cb
+                        -> (args -> option<t>)
+
+
 
 // Interface for NBE interpretations
 

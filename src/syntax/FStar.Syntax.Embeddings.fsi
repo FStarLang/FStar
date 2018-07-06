@@ -100,7 +100,9 @@ val e_arrow       : embedding<'a> -> embedding<'b> -> embedding<('a -> 'b)>
 val mk_any_emb : typ -> embedding<term>
 
 (* Arity specific raw_embeddings of arrows; used to generate top-level
-   registrations of compiled functions in FStar.Extraction.ML.Util *)
+   registrations of compiled functions in FStar.Extraction.ML.Util
+
+   See also FStar.TypeChecker.NBETerm.fsi *)
 val arrow_as_prim_step_1:  embedding<'a>
                         -> embedding<'b>
                         -> ('a -> 'b)

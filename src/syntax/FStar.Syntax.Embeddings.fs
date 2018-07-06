@@ -83,17 +83,11 @@ let type_of     (e:embedding<'a>)     = e.typ
 let set_type ty (e:embedding<'a>)     = { e with typ = ty }
 
 
-let rec emb_typ_to_string = function
-    | ET_abstract -> "abstract"
-    | ET_app (h, []) -> h
-    | ET_app(h, args) -> "(" ^h^ " " ^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
-    | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b
-
 let lazy_embed (pa:printer<'a>) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
     if !Options.debug_embedding
     then BU.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
                          (Print.term_to_string ta)
-                         (emb_typ_to_string et)
+                         (Print.emb_typ_to_string et)
                          (pa x);
     if !Options.eager_embedding
     then f()
@@ -114,23 +108,24 @@ let lazy_unembed (pa:printer<'a>) (et:emb_typ) (x:term) (ta:term) (f:term -> opt
       then let res = f (FStar.Common.force_thunk t) in
            let _ = if !Options.debug_embedding
                    then BU.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
-                                (emb_typ_to_string et)
-                                (emb_typ_to_string et')
+                                (Print.emb_typ_to_string et)
+                                (Print.emb_typ_to_string et')
                                 (match res with None -> "None" | Some x -> "Some " ^ (pa x))
            in
            res
       else let a = FStar.Dyn.undyn b in
            let _ = if !Options.debug_embedding
                    then BU.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
-                                (emb_typ_to_string et)
-                                (pa a)
+                                (Print.emb_typ_to_string et)
+                                  (pa a)
            in
            Some a
     | _ ->
       let aopt = f x in
       let _ = if !Options.debug_embedding
-              then BU.print2 "Unembedding:\n\temb_typ=%s\n\tvalue is %s\n"
-                               (emb_typ_to_string et)
+              then BU.print3 "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
+                               (Print.emb_typ_to_string et)
+                               (Print.term_to_string x)
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
       aopt
 
@@ -750,7 +745,18 @@ let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) : embedding<('a -> 'b)> =
             (fun () ->
                 match force_shadow shadow_f with
                 | None -> raise Embedding_failure //TODO: dodgy
-                | Some repr_f -> norm (BU.Inr repr_f))
+                | Some repr_f ->
+                  if !Options.debug_embedding then
+                  BU.print2 "e_arrow forced back to term using shadow %s; repr=%s\n"
+                                   (Print.term_to_string repr_f)
+                                   (BU.stack_dump());
+                  let res = norm (BU.Inr repr_f) in
+                  if !Options.debug_embedding then
+                  BU.print3 "e_arrow forced back to term using shadow %s; repr=%s\n\t%s\n"
+                                   (Print.term_to_string repr_f)
+                                   (Print.term_to_string res)
+                                   (BU.stack_dump());
+                  res)
     in
     let un (f:term) w norm : option<('a -> 'b)> =
         lazy_unembed
@@ -760,6 +766,10 @@ let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) : embedding<('a -> 'b)> =
             t_arrow
             (fun f ->
                 let f_wrapped (a:'a) : 'b =
+                    if !Options.debug_embedding then
+                    BU.print2 "Calling back into normalizer for %s\n%s\n"
+                              (Print.term_to_string f)
+                              (BU.stack_dump());
                     let a_tm = embed ea a f.pos None norm in
                     let b_tm = norm (BU.Inr (S.mk_Tm_app f [S.as_arg a_tm] None f.pos)) in
                     match unembed eb b_tm w norm with

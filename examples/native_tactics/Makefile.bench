@@ -1,0 +1,51 @@
+FSTAR=fstar.exe $(OTHERFLAGS) --use_two_phase_tc false --use_extracted_interfaces false
+
+all: prep
+	$(MAKE) -f Makefile.bench go
+
+go: $(addprefix List.Driver,    .native .native_eager) \
+    $(addprefix List.DriverNBE, .native .native_eager) \
+    $(addprefix Fun.Driver,     .native)
+# These are very slow, but should still be benchmarked
+# -- List.Driver.basic, Fun.Driver.basic
+
+# This is also very slow (or maybe looping ... I may have broken NBE somehow)
+# -- List.DriverNBE.basic
+# -- Fun.DriverNBE.basic
+
+# These don't work yet (I implemented support for it, but have not yet
+# been able to get it working)
+# Function-returning plugins with NBE: Fun.DriverNBE.native
+
+# And these configurations don't make sense. They amount to eagerly
+# embedding functions back, in which case native is useless
+#  Fun.Driver.native_eager
+#  Fun.DriverNBE.native_eager
+
+prep: $(addsuffix .fst.checked, Registers.List Registers.Fun		\
+				Imp.List Imp.Fun) \
+      $(addsuffix .ml, Registers.List Registers.Fun)
+
+%.fst.checked: %.fst
+	$(FSTAR) $*.fst --cache_checked_modules
+
+%.ml: %.fst.checked
+	$(FSTAR) $*.fst --codegen Plugin --extract $*
+	touch $@
+
+%.basic:
+	echo "*************Basic run for $* *******************"
+	$(FSTAR) Imp.$*.fst --warn_error -266
+
+%.native:
+	echo "*************Native run for $* **********************"
+	$(FSTAR) Imp.$*.fst --load Registers.$(basename $*) --warn_error -266
+
+%.native_eager:
+	echo "*************Eager embeddings run for $* ******************"
+	$(FSTAR) Imp.$*.fst --load Registers.$(basename $*) --warn_error -266 --eager_embedding
+
+clean:
+	rm -f Registers_List.ml Registers.List.ml Registers_List.cmxs
+	rm -f Registers_Fun.ml Registers.Fun.ml Registers_Fun.cmxs
+	rm -f *.checked
