@@ -1,5 +1,5 @@
 open Prims
-let (uu___466 : unit) = FStar_Version.dummy () 
+let (uu___467 : unit) = FStar_Version.dummy () 
 let (process_args :
   unit ->
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
@@ -363,6 +363,8 @@ let (lazy_chooser :
           FStar_Reflection_Embeddings.unfold_lazy_sigelt i
       | FStar_Syntax_Syntax.Lazy_proofstate  ->
           FStar_Tactics_Embedding.unfold_lazy_proofstate i
+      | FStar_Syntax_Syntax.Lazy_goal  ->
+          FStar_Tactics_Embedding.unfold_lazy_goal i
       | FStar_Syntax_Syntax.Lazy_uvar  ->
           FStar_Syntax_Util.exp_string "((uvar))"
       | FStar_Syntax_Syntax.Lazy_embedding (uu____630,t) ->
@@ -401,7 +403,7 @@ let (handle_error : Prims.exn -> unit) =
 let main : 'Auu____818 . unit -> 'Auu____818 =
   fun uu____823  ->
     try
-      (fun uu___468_831  ->
+      (fun uu___469_831  ->
          match () with
          | () ->
              (setup_hooks ();
@@ -421,6 +423,6 @@ let main : 'Auu____818 . unit -> 'Auu____818 =
                     cleanup ();
                     FStar_All.exit (Prims.parse_int "0"))))) ()
     with
-    | uu___467_851 ->
-        (handle_error uu___467_851; FStar_All.exit (Prims.parse_int "1"))
+    | uu___468_851 ->
+        (handle_error uu___468_851; FStar_All.exit (Prims.parse_int "1"))
   

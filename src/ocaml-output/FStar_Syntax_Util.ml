@@ -939,6 +939,8 @@ let (eq_lazy_kind :
       | (FStar_Syntax_Syntax.Lazy_env ,FStar_Syntax_Syntax.Lazy_env ) -> true
       | (FStar_Syntax_Syntax.Lazy_proofstate
          ,FStar_Syntax_Syntax.Lazy_proofstate ) -> true
+      | (FStar_Syntax_Syntax.Lazy_goal ,FStar_Syntax_Syntax.Lazy_goal ) ->
+          true
       | (FStar_Syntax_Syntax.Lazy_sigelt ,FStar_Syntax_Syntax.Lazy_sigelt )
           -> true
       | (FStar_Syntax_Syntax.Lazy_uvar ,FStar_Syntax_Syntax.Lazy_uvar ) ->
