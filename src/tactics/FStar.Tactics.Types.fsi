@@ -63,6 +63,9 @@ val goal_type: goal -> term
 val goal_with_type: goal -> term -> goal
 val goal_with_env: goal -> env -> goal
 
+val goals    : proofstate -> list<goal>
+val smtgoals : proofstate -> list<goal>
+
 val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> goal
 type direction =
     | TopDown

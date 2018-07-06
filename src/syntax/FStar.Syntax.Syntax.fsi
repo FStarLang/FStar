@@ -263,6 +263,7 @@ and lazy_kind =
   | Lazy_comp
   | Lazy_env
   | Lazy_proofstate
+  | Lazy_goal
   | Lazy_sigelt
   | Lazy_uvar
   | Lazy_embedding of emb_typ * FStar.Common.thunk<term>

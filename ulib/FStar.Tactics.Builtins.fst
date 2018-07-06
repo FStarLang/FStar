@@ -10,8 +10,9 @@ open FStar.Reflection.Data
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 
-(** Simply fail. The specs ensures that it fails, but hides the message. *)
-assume val fail : #a:Type -> m:string -> TacH a (requires (fun _ -> True)) (ensures (fun _ r -> Failed? r))
+(** Simply fail. The specs ensures that it fails *without changing the
+proofstate*, but hides the message. *)
+assume val fail : #a:Type -> m:string -> TacH a (requires (fun _ -> True)) (ensures (fun ps r -> Failed? r /\ Failed?.ps r == ps))
 
 // NOTE: The only reason `fail` is assumed as a primitive is to enable
 // the TacFail debugging flag. We could instead define it like this,
@@ -23,9 +24,6 @@ assume val fail : #a:Type -> m:string -> TacH a (requires (fun _ -> True)) (ensu
  * This works even if no goals are present. *)
 assume val top_env : unit -> Tac env
 
-(** [cur_env] returns the current goal's environment *)
-assume val cur_env : unit -> Tac env
-
 (** [push_binder] extends the environment with a single binder.
     This is useful as one traverses the syntax of a term,
     pushing binders as one traverses a binder in a lambda,
@@ -33,18 +31,6 @@ assume val cur_env : unit -> Tac env
     (though perhaps derived from) the environment in the proofstate *)
 (* TODO: move to FStar.Reflection.Basic? *)
 assume val push_binder : env -> binder -> env
-
-(** [cur_goal] returns the current goal's type *)
-assume val cur_goal : unit -> Tac term
-
-(** [cur_witness] returns the current goal's witness *)
-assume val cur_witness : unit -> Tac term
-
-(** [ngoals ()] returns the number of goals *)
-assume val ngoals : unit -> Tac int
-
-(** [ngoals_smt ()] returns the number of SMT goals *)
-assume val ngoals_smt : unit -> Tac int
 
 (** [fresh ()] returns a fresh integer. It does not get reset when
 catching a failure. *)

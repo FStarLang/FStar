@@ -503,16 +503,6 @@ let fresh () : tac<Z.t> =
     bind (set ps) (fun () ->
     ret (Z.of_int_fs n)))
 
-let ngoals () : tac<Z.t> =
-    bind get (fun ps ->
-    let n = List.length ps.goals in
-    ret (Z.of_int_fs n))
-
-let ngoals_smt () : tac<Z.t> =
-    bind get (fun ps ->
-    let n = List.length ps.smt_goals in
-    ret (Z.of_int_fs n))
-
 let is_guard () : tac<bool> =
     bind (cur_goal ()) (fun g ->
     ret g.is_guard)
@@ -1609,11 +1599,10 @@ let set_options (s : string) : tac<unit> = wrap_err "set_options" <|
     )
 
 let top_env     () : tac<env>  = bind get (fun ps -> ret <| ps.main_context)
-let cur_env     () : tac<env>  = bind (cur_goal ()) (fun g -> ret <| (goal_env g))
-let cur_goal'   () : tac<term> = bind (cur_goal ()) (fun g -> ret <| (goal_type g))
-let cur_witness () : tac<term> = bind (cur_goal ()) (fun g -> ret <| (goal_witness g))
 
-let lax_on () : tac<bool> = bind (cur_env ()) (fun e -> ret (Options.lax () || e.lax))
+let lax_on () : tac<bool> =
+    bind (cur_goal ()) (fun g ->
+    ret (Options.lax () || (goal_env g).lax))
 
 let unquote (ty : term) (tm : term) : tac<term> = wrap_err "unquote" <|
     mlog (fun () -> BU.print1 "unquote: tm = %s\n" (Print.term_to_string tm)) (fun _ ->

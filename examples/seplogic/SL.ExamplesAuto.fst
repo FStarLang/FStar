@@ -19,7 +19,7 @@ let memory_cm : cm memory =
 // (Error) user tactic failed: norm_term: Cannot type fun _ -> idtac () <: FStar.Tactics.Effect.TAC unit in context ((r1:SepLogic.Heap.ref Prims.int), (r2:SepLogic.Heap.ref Prims.int), (x:Prims.int), (y:Prims.int), (x:SL.Effect.post Prims.int), (x:SepLogic.Heap.memory), (uu___326511:SepLogic.Heap.defined (r1 |> x <*> r2 |> y) /\ x y (r1 |> 2 <*> r2 |> y))). Error = (Variable "a#327038" not found)
 let solve_frame_wp_fails (_:unit) : Tac unit =
   gpm #unit (fun (a:Type) (wp:st_wp a) (post:memory->post a) (m:memory)
-            (_ : goal(squash (frame_wp wp post m))) -> idtac()) ()
+            (_ : pm_goal(squash (frame_wp wp post m))) -> idtac()) ()
 
 let frame_wp_qn = ["SL" ; "Effect" ; "frame_wp"]
 let write_wp_qn = ["SL" ; "Effect" ; "write_wp"]

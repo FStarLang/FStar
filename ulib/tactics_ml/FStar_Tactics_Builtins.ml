@@ -63,12 +63,7 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
 (* Pointing to the internal primitives *)
 let fail                    = from_tac_1 B.fail
 let top_env                 = from_tac_1 B.top_env
-let cur_env                 = from_tac_1 B.cur_env
-let cur_goal                = from_tac_1 B.cur_goal'
-let cur_witness             = from_tac_1 B.cur_witness
 let fresh                   = from_tac_1 B.fresh
-let ngoals                  = from_tac_1 B.ngoals
-let ngoals_smt              = from_tac_1 B.ngoals_smt
 let is_guard                = from_tac_1 B.is_guard
 let refine_intro            = from_tac_1 B.refine_intro
 let tc                      = from_tac_1 B.tc

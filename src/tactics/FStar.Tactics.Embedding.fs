@@ -70,16 +70,18 @@ let fstar_tactics_Goal_fv  = lid_as_data_fv fstar_tactics_Goal_lid
 let fstar_tactics_Drop_fv  = lid_as_data_fv fstar_tactics_Drop_lid
 let fstar_tactics_Force_fv = lid_as_data_fv fstar_tactics_Force_lid
 
-let t_proofstate   = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
-let fv_proofstate  = S.fvconst (fstar_tactics_lid' ["Types"; "proofstate"])
-let t_result_lid   = fstar_tactics_lid' ["Types"; "result"]
-let t_result       = S.tconst t_result_lid
-let fv_result      = S.fvconst (fstar_tactics_lid' ["Types"; "result"])
-let t_result_of t  = U.mk_app t_result [S.as_arg t] // TODO: uinst on t_result?
-let t_guard_policy = S.tconst (fstar_tactics_lid' ["Types"; "guard_policy"])
+let t_proofstate    = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
+let fv_proofstate   = S.fvconst (fstar_tactics_lid' ["Types"; "proofstate"])
+let t_goal          = S.tconst (fstar_tactics_lid' ["Types"; "goal"])
+let fv_goal         = S.fvconst (fstar_tactics_lid' ["Types"; "goal"])
+let t_result_lid    = fstar_tactics_lid' ["Types"; "result"]
+let t_result        = S.tconst t_result_lid
+let fv_result       = S.fvconst (fstar_tactics_lid' ["Types"; "result"])
+let t_result_of t   = U.mk_app t_result [S.as_arg t] // TODO: uinst on t_result?
+let t_guard_policy  = S.tconst (fstar_tactics_lid' ["Types"; "guard_policy"])
 let fv_guard_policy = S.fvconst (fstar_tactics_lid' ["Types"; "guard_policy"])
-let t_direction    = S.tconst (fstar_tactics_lid' ["Types"; "direction"])
-let fv_direction   = S.fvconst (fstar_tactics_lid' ["Types"; "direction"])
+let t_direction     = S.tconst (fstar_tactics_lid' ["Types"; "direction"])
+let fv_direction    = S.fvconst (fstar_tactics_lid' ["Types"; "direction"])
 
 let mk_emb (em: Range.range -> 'a -> term)
            (un: bool -> term -> option<'a>)
@@ -138,6 +140,46 @@ let e_proofstate_nbe =
     ; NBETerm.un = unembed_proofstate
     ; NBETerm.typ = mkFV fv_proofstate [] []
     ; NBETerm.emb_typ = fv_as_emb_typ fv_proofstate }
+
+let e_goal =
+    let embed_goal (rng:Range.range) (g:goal) : term =
+        U.mk_lazy g t_goal Lazy_goal (Some rng)
+    in
+    let unembed_goal w (t:term) : option<goal> =
+        match (SS.compress t).n with
+        | Tm_lazy {blob=b; lkind=Lazy_goal} ->
+            Some <| FStar.Dyn.undyn b
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded goal: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed_goal unembed_goal t_goal
+
+let unfold_lazy_goal (i : lazyinfo) : term =
+    U.exp_string "(((goal)))"
+
+let e_goal_nbe =
+    let embed_goal _cb (ps:goal) : NBETerm.t =
+        let li = { lkind = Lazy_goal
+                 ; blob = FStar.Dyn.mkdyn ps
+                 ; ltyp = t_goal
+                 ; rng = Range.dummyRange }
+        in
+        NBETerm.Lazy (BU.Inl li)
+    in
+    let unembed_goal _cb (t:NBETerm.t) : option<goal> =
+        match t with
+        | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_goal}) ->
+            Some <| FStar.Dyn.undyn b
+        | _ ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded NBE goal: %s" (NBETerm.t_to_string t)));
+            None
+    in
+    { NBETerm.em = embed_goal
+    ; NBETerm.un = unembed_goal
+    ; NBETerm.typ = mkFV fv_goal [] []
+    ; NBETerm.emb_typ = fv_as_emb_typ fv_goal }
 
 let e_result (ea : embedding<'a>)  =
     let embed_result (res:__result<'a>) (rng:Range.range) _ _ : term =

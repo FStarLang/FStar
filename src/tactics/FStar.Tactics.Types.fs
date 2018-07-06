@@ -102,6 +102,9 @@ let set_ps_psc psc ps = { ps with psc = psc }
 let set_proofstate_range ps r =
     { ps with entry_range = Range.set_def_range ps.entry_range (Range.def_range r) }
 
+let goals    ps : list<goal> = ps.goals
+let smtgoals ps : list<goal> = ps.smt_goals
+
 type direction =
     | TopDown
     | BottomUp

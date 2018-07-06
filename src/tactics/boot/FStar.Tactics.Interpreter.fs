@@ -42,6 +42,16 @@ open FStar.Tactics.InterpFuns
 
 let tacdbg = BU.mk_ref false
 
+(* mktot1/mktot2 uses names in FStar.Tactics.Builtins, we override these few who
+ * are in other modules: *)
+let mktot1' uarity nm f ea er nf ena enr =
+  { mktot1  uarity nm f ea er nf ena enr
+    with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
+
+let mktot2' uarity nm f ea eb er nf ena enb enr =
+  { mktot2  uarity nm f ea eb er nf ena enb enr
+    with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
+
 // IN F*: let rec e_tactic_0 (#r:Type) (er : embedding r) : embedding (tac r)
 let rec e_tactic_0 (er : embedding<'r>) : embedding<tac<'r>> // JUST FSHARP
     =
@@ -79,36 +89,36 @@ and primitive_steps () : list<Cfg.primitive_step> =
      * just go crazy. Most of the tactics work on ground types and thus have 0
      * universe arguments. Those polymorphic, usually take 1 universe per Type argument. *)
 
-    (* mktot1/mktot2 uses names in FStar.Tactics.Builtins, we override these few who
-     * are in other modules: *)
-    let tracepoint =
-      { mktot1 0 "tracepoint" tracepoint E.e_proofstate e_unit
-                              tracepoint E.e_proofstate_nbe NBET.e_unit
-        with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" }
-    in
-    let set_proofstate_range =
-      { mktot2 0 "set_proofstate_range" set_proofstate_range E.e_proofstate e_range E.e_proofstate
-                                        set_proofstate_range E.e_proofstate_nbe NBET.e_range E.e_proofstate_nbe
-        with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" }
-    in
-    let incr_depth =
-      { mktot1 0 "incr_depth" incr_depth E.e_proofstate E.e_proofstate
-                              incr_depth E.e_proofstate_nbe E.e_proofstate_nbe
-        with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth" }
-    in
-    let decr_depth =
-      { mktot1 0 "decr_depth" decr_depth E.e_proofstate E.e_proofstate
-                              decr_depth E.e_proofstate_nbe E.e_proofstate_nbe
-        with Cfg.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth" }
-    in
     (* Sigh, due to lack to expressive typing we need to duplicate a bunch of information here,
      * like which embeddings are needed for the arguments, but more annoyingly the underlying
      * implementation. Would be nice to have something better in the not-so-long run. *)
-    [
-      incr_depth;
-      decr_depth;
-      tracepoint;
-      set_proofstate_range;
+    [ mktot1' 0 "tracepoint"  tracepoint E.e_proofstate e_unit
+                              tracepoint E.e_proofstate_nbe NBET.e_unit;
+
+      mktot2' 0 "set_proofstate_range" set_proofstate_range E.e_proofstate e_range E.e_proofstate
+                                       set_proofstate_range E.e_proofstate_nbe NBET.e_range E.e_proofstate_nbe;
+
+      mktot1' 0 "incr_depth" incr_depth E.e_proofstate E.e_proofstate
+                             incr_depth E.e_proofstate_nbe E.e_proofstate_nbe;
+
+      mktot1' 0 "decr_depth" decr_depth E.e_proofstate E.e_proofstate
+                             decr_depth E.e_proofstate_nbe E.e_proofstate_nbe;
+
+      mktot1' 0 "goals"       goals E.e_proofstate (e_list E.e_goal)
+                              goals E.e_proofstate_nbe (NBET.e_list E.e_goal_nbe);
+
+      mktot1' 0 "smtgoals"    smtgoals E.e_proofstate (e_list E.e_goal)
+                              smtgoals E.e_proofstate_nbe (NBET.e_list E.e_goal_nbe);
+
+      mktot1' 0 "goal_env"    goal_env E.e_goal RE.e_env
+                              goal_env E.e_goal_nbe NRE.e_env;
+
+      mktot1' 0 "goal_type"    goal_type E.e_goal RE.e_term
+                               goal_type E.e_goal_nbe NRE.e_term;
+
+      mktot1' 0 "goal_witness"  goal_witness E.e_goal RE.e_term
+                                goal_witness E.e_goal_nbe NRE.e_term;
+
       mktot2 0 "push_binder"   (fun env b -> Env.push_binders env [b]) RE.e_env RE.e_binder RE.e_env
                                (fun env b -> Env.push_binders env [b]) NRE.e_env NRE.e_binder NRE.e_env;
 
@@ -246,15 +256,6 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "top_env"       top_env     e_unit RE.e_env
                                top_env     NBET.e_unit NRE.e_env;
 
-      mktac1 0 "cur_env"       cur_env     e_unit RE.e_env
-                               cur_env     NBET.e_unit NRE.e_env;
-
-      mktac1 0 "cur_goal"      cur_goal'   e_unit RE.e_term
-                               cur_goal'   NBET.e_unit NRE.e_term;
-
-      mktac1 0 "cur_witness"   cur_witness e_unit RE.e_term
-                               cur_witness NBET.e_unit NRE.e_term;
-
       mktac1 0 "inspect"       inspect RE.e_term      RE.e_term_view
                                inspect NRE.e_term     NRE.e_term_view;
 
@@ -263,12 +264,6 @@ and primitive_steps () : list<Cfg.primitive_step> =
 
       mktac1 0 "fresh"         fresh       e_unit e_int
                                fresh       NBET.e_unit NBET.e_int;
-
-      mktac1 0 "ngoals"        ngoals      e_unit e_int
-                               ngoals      NBET.e_unit NBET.e_int;
-
-      mktac1 0 "ngoals_smt"    ngoals_smt  e_unit e_int
-                               ngoals_smt  NBET.e_unit NBET.e_int;
 
       mktac1 0 "is_guard"      is_guard    e_unit e_bool
                                is_guard    NBET.e_unit NBET.e_bool;

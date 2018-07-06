@@ -27,6 +27,11 @@ let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __ta
             end
         | Failed msg ps' -> Failed msg ps'
 
+(* Actions *)
+let __get () : __tac proofstate = fun s0 -> Success s0 s0
+
+let __fail (a:Type0) (msg:string) : __tac a = fun (ps:proofstate) -> Failed #a msg ps
+
 let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
 
 (*
@@ -49,8 +54,6 @@ unfold let g_compact (a:Type) (wp:__tac_wp a) : __tac_wp a =
 unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) =
     g_compact b (g_bind a b wp f)
 
-let __fail (a:Type0) (msg:string) : __tac a = fun (ps:proofstate) -> Failed #a msg ps
-
 [@ dm4f_bind_range ]
 reifiable reflectable new_effect {
   TAC : a:Type -> Effect
@@ -58,6 +61,7 @@ reifiable reflectable new_effect {
      ; bind     = __bind
      ; return   = __ret
      ; __fail   = __fail
+     ; __get    = __get
 }
 
 (* Hoare variant *)
@@ -76,6 +80,7 @@ let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
 
 sub_effect DIV ~> TAC = lift_div_tac
 
+let get = TAC?.__get
 let fail_act (#a:Type) (msg:string) = TAC?.__fail a msg
 
 abstract

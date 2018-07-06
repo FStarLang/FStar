@@ -9,6 +9,22 @@ open FStar.Tactics.Result
 open FStar.Tactics.Util
 module L = FStar.List.Tot
 
+
+(** Return the current *goal*, not its type. (Ignores SMT goals) *)
+let _cur_goal () =
+    match goals (get ()) with
+    | []   -> fail "no more goals"
+    | g::_ -> g
+
+(** [cur_env] returns the current goal's environment *)
+let cur_env () = goal_env (_cur_goal ())
+
+(** [cur_goal] returns the current goal's type *)
+let cur_goal () = goal_type (_cur_goal ())
+
+(** [cur_witness] returns the current goal's witness *)
+let cur_witness () = goal_witness (_cur_goal ())
+
 (** Set the guard policy only locally, without affecting calling code *)
 let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
     let old_pol = get_guard_policy () in
@@ -77,6 +93,12 @@ let exact_args (qs : list aqualv) (t : term) : Tac unit =
 let exact_n (n : int) (t : term) : Tac unit =
     exact_args (repeatn n (fun () -> Q_Explicit)) t
 
+(** [ngoals ()] returns the number of goals *)
+let ngoals () : Tac int = List.length (goals (get ()))
+
+(** [ngoals_smt ()] returns the number of SMT goals *)
+let ngoals_smt () : Tac int = List.length (smtgoals (get ()))
+
 let fresh_bv t =
     (* These bvs are fresh anyway through a separate counter,
      * but adding the integer allows for more readability when
@@ -98,7 +120,7 @@ let norm_term (s : list norm_step) (t : term) : Tac term =
 
 let guard (b : bool) : TAC unit (fun ps post -> if b
                                                 then post (Success () ps)
-                                                else forall m. post (Failed m ps)) // intentionally do not leak the message
+                                                else forall m. post (Failed m ps))
     =
     if not b then
         fail "guard failed"

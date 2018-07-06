@@ -29,9 +29,6 @@ val lax_on : unit -> tac<bool>
 
 val fresh      : unit -> tac<Z.t>
 
-val ngoals     : unit -> tac<Z.t>
-val ngoals_smt : unit -> tac<Z.t>
-
 val inspect : term -> tac<term_view>
 val pack    : term_view -> tac<term>
 
@@ -97,9 +94,6 @@ val cases : term -> tac<(term * term)>
 val t_destruct : term -> tac<list<(fv * Z.t)>>
 
 val top_env : unit -> tac<env>
-val cur_env : unit -> tac<env>
-val cur_goal' : unit -> tac<term>
-val cur_witness : unit -> tac<term>
 
 val unquote : typ -> term -> tac<term>
 val uvar_env : env -> option<typ> -> tac<term>
