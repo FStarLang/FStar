@@ -310,6 +310,20 @@ let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
   ; Cfg.interpretation_nbe           = fun _cb -> NBETerm.dummy_interp s.name
   }
 
+let timing_int (l:Ident.lid) f =
+    fun psc cb args ->
+        (* BU.print1 "Entering primitive %s {\n" (Ident.string_of_lid l); *)
+        let r = f psc cb args in
+        (* BU.print1 "%s }\n" (Ident.string_of_lid l); *)
+        r
+
+let timing_nbe (l:Ident.lid) f =
+    fun iapp_cb args ->
+        (* BU.print1 "Entering NBE primitive %s {\n" (Ident.string_of_lid l); *)
+        let r = f iapp_cb args in
+        (* BU.print1 "%s }\n" (Ident.string_of_lid l); *)
+        r
+
 let mk nm arity nunivs interp nbe_interp =
   let nm = E.fstar_tactics_lid' ["Builtins"; nm] in
   { Cfg.name                         = nm
@@ -318,8 +332,8 @@ let mk nm arity nunivs interp nbe_interp =
   ; Cfg.auto_reflect                 = Some (arity - 1)
   ; Cfg.strong_reduction_ok          = true
   ; Cfg.requires_binder_substitution = true
-  ; Cfg.interpretation               = interp
-  ; Cfg.interpretation_nbe           = nbe_interp
+  ; Cfg.interpretation               = timing_int nm interp
+  ; Cfg.interpretation_nbe           = timing_nbe nm nbe_interp
   }
 
 let native_tactics () = list_all ()
@@ -384,8 +398,8 @@ let mkt nm arity nunivs interp nbe_interp =
   ; Cfg.auto_reflect                 = None
   ; Cfg.strong_reduction_ok          = true
   ; Cfg.requires_binder_substitution = false
-  ; Cfg.interpretation               = interp
-  ; Cfg.interpretation_nbe           = nbe_interp
+  ; Cfg.interpretation               = timing_int nm interp
+  ; Cfg.interpretation_nbe           = timing_nbe nm nbe_interp
   }
 
 let mk_total_interpretation_1 (f:'a -> 'r)
