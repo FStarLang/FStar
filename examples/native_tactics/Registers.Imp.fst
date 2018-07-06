@@ -51,19 +51,6 @@ let eval p = let rm = eval' (Seq p) (R.create 0) in R.sel rm 0
 irreducible
 let unfold_defs = ()
 
-unfold
-let normal #a (e:a) =
-  FStar.Pervasives.norm 
-           [zeta;
-            iota;
-            delta_only [`%eval; `%eval'; `%R.upd; `%R.sel; `%R.eta_map; `%L.append; `%FStar.Mul.op_Star]; 
-            delta_attr unfold_defs; 
-            primops;
-            nbe
-  ] e
-
-let norm_assert (p:Type) : Lemma (requires (normal p)) (ensures p) = ()
-
 [@unfold_defs]
 let reg x = x
 
@@ -142,119 +129,140 @@ let long_zero x : prog =
     let l = l `L.append` l in
     let l = l `L.append` l in
     let l = l `L.append` l in
-    let l = l `L.append` l in    
+    let l = l `L.append` l in
+    let l = l `L.append` l in
+    let l = l `L.append` l in
+    // let l = l `L.append` l in
+    // let l = l `L.append` l in
+    // let l = l `L.append` l in
     l `L.append` 
     [Const 0 (reg 0); Const 0 (reg 1); Const 0 (reg 2)]
 
-#set-options "--debug Registers.Imp --debug_level print_normalized_terms"
+
+unfold
+let normal #a (e:a) =
+  FStar.Pervasives.norm 
+           [zeta;
+            iota;
+            delta_only [`%eval; `%eval'; `%R.upd; `%R.sel; `%R.eta_map; `%L.append; `%FStar.Mul.op_Star]; 
+            delta_attr unfold_defs; 
+            primops;
+            nbe
+  ] e
+
+let norm_assert (p:Type) : Lemma (requires (normal p)) (ensures True) = ()
+
+#set-options "--debug Registers.Imp --debug_level print_normalized_terms --admit_smt_queries true"
+// let _ = norm_assert (forall (x:int) rm. R.sel (eval' (Seq [Const x (reg 0)]) rm) 0 == x) // eval' (Seq [Const x (reg 0)]) rm == rm)
 let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
-#reset-options "--max_fuel 0"
-let _ = norm_assert (forall x. eval (x_times_42 x) == 42 * x)
+// let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
+// #reset-options "--max_fuel 0"
+// let _ = norm_assert (forall x. eval (x_times_42 x) == 42 * x)
 
 
-(* All of these identies are quite easy by normalization. *)
-let _ = norm_assert (forall x y. equiv_norm (add1 x y) (add2 x y))
-let _ = norm_assert (forall x y. equiv_norm (add1 x y) (add3 x y))
-let _ = norm_assert (forall x y. equiv_norm (add1 x y) (add4 x y))
-let _ = norm_assert (forall x y. equiv_norm (add2 x y) (add3 x y))
-let _ = norm_assert (forall x y. equiv_norm (add2 x y) (add4 x y))
-let _ = norm_assert (forall x y. equiv_norm (add3 x y) (add4 x y))
+// (* All of these identies are quite easy by normalization. *)
+// let _ = norm_assert (forall x y. equiv_norm (add1 x y) (add2 x y))
+// let _ = norm_assert (forall x y. equiv_norm (add1 x y) (add3 x y))
+// let _ = norm_assert (forall x y. equiv_norm (add1 x y) (add4 x y))
+// let _ = norm_assert (forall x y. equiv_norm (add2 x y) (add3 x y))
+// let _ = norm_assert (forall x y. equiv_norm (add2 x y) (add4 x y))
+// let _ = norm_assert (forall x y. equiv_norm (add3 x y) (add4 x y))
 
 
-(* Without normalizing, they require fuel, or else fail *)
-[@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
-[@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
-[@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add4 x y))
-[@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add3 x y))
-[@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add4 x y))
-[@expect_failure] let _ = assert (forall x y. equiv (add3 x y) (add4 x y))
+// (* Without normalizing, they require fuel, or else fail *)
+// [@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
+// [@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
+// [@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add4 x y))
+// [@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add3 x y))
+// [@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add4 x y))
+// [@expect_failure] let _ = assert (forall x y. equiv (add3 x y) (add4 x y))
 
-(* poly5 x = x^5 + x^4 + x^3 + x^2 + x^1 + 1 *)
+// (* poly5 x = x^5 + x^4 + x^3 + x^2 + x^1 + 1 *)
 
-[@unfold_defs]
-let poly5 x : prog = [
-    Const 1 (reg 0);
-    Const x (reg 1);
-    Mul (reg 1) (reg 1) (reg 2);
-    Mul (reg 1) (reg 2) (reg 3);
-    Mul (reg 1) (reg 3) (reg 4);
-    Mul (reg 1) (reg 4) (reg 5);
-    Add (reg 0) (reg 1) (reg 0);
-    Add (reg 0) (reg 2) (reg 0);
-    Add (reg 0) (reg 3) (reg 0);
-    Add (reg 0) (reg 4) (reg 0);
-    Add (reg 0) (reg 5) (reg 0);
-]
+// [@unfold_defs]
+// let poly5 x : prog = [
+//     Const 1 (reg 0);
+//     Const x (reg 1);
+//     Mul (reg 1) (reg 1) (reg 2);
+//     Mul (reg 1) (reg 2) (reg 3);
+//     Mul (reg 1) (reg 3) (reg 4);
+//     Mul (reg 1) (reg 4) (reg 5);
+//     Add (reg 0) (reg 1) (reg 0);
+//     Add (reg 0) (reg 2) (reg 0);
+//     Add (reg 0) (reg 3) (reg 0);
+//     Add (reg 0) (reg 4) (reg 0);
+//     Add (reg 0) (reg 5) (reg 0);
+// ]
 
-let _ = norm_assert (eval (poly5 1) == 6)
-let _ = norm_assert (eval (poly5 2) == 63)
-let _ = norm_assert (eval (poly5 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
+// let _ = norm_assert (eval (poly5 1) == 6)
+// let _ = norm_assert (eval (poly5 2) == 63)
+// let _ = norm_assert (eval (poly5 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
 
-(* Bunch of fuel to even prove ground facts *)
-#reset-options "--initial_fuel 20 --max_fuel 20"
-let _ = assert (eval (poly5 1) == 6)
-let _ = assert (eval (poly5 2) == 63)
-let _ = assert (eval (poly5 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
-#reset-options "--max_fuel 0"
+// (* Bunch of fuel to even prove ground facts *)
+// #reset-options "--initial_fuel 20 --max_fuel 20"
+// let _ = assert (eval (poly5 1) == 6)
+// let _ = assert (eval (poly5 2) == 63)
+// let _ = assert (eval (poly5 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
+// #reset-options "--max_fuel 0"
 
-(* A different way of computing it *)
-[@unfold_defs]
-let poly5' x : prog = [
-    Const 1 (reg 0);
-    Const x (reg 1);
-    Const 1 (reg 2);
-    Mul (reg 0) (reg 1) (reg 0);
-    Add (reg 0) (reg 2) (reg 0);
-    Mul (reg 0) (reg 1) (reg 0);
-    Add (reg 0) (reg 2) (reg 0);
-    Mul (reg 0) (reg 1) (reg 0);
-    Add (reg 0) (reg 2) (reg 0);
-    Mul (reg 0) (reg 1) (reg 0);
-    Add (reg 0) (reg 2) (reg 0);
-    Mul (reg 0) (reg 1) (reg 0);
-    Add (reg 0) (reg 2) (reg 0);
-]
+// (* A different way of computing it *)
+// [@unfold_defs]
+// let poly5' x : prog = [
+//     Const 1 (reg 0);
+//     Const x (reg 1);
+//     Const 1 (reg 2);
+//     Mul (reg 0) (reg 1) (reg 0);
+//     Add (reg 0) (reg 2) (reg 0);
+//     Mul (reg 0) (reg 1) (reg 0);
+//     Add (reg 0) (reg 2) (reg 0);
+//     Mul (reg 0) (reg 1) (reg 0);
+//     Add (reg 0) (reg 2) (reg 0);
+//     Mul (reg 0) (reg 1) (reg 0);
+//     Add (reg 0) (reg 2) (reg 0);
+//     Mul (reg 0) (reg 1) (reg 0);
+//     Add (reg 0) (reg 2) (reg 0);
+// ]
 
-(* Seems to do the same *)
-let _ = norm_assert (eval (poly5' 1) == 6)
-let _ = norm_assert (eval (poly5' 2) == 63)
-let _ = norm_assert (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
-let _ = norm_assert (forall x. eval (poly5 x) == eval (poly5' x))
+// (* Seems to do the same *)
+// let _ = norm_assert (eval (poly5' 1) == 6)
+// let _ = norm_assert (eval (poly5' 2) == 63)
+// let _ = norm_assert (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
+// let _ = norm_assert (forall x. eval (poly5 x) == eval (poly5' x))
 
-(* Same *)
-#reset-options "--initial_fuel 20 --max_fuel 20"
-let _ = assert (eval (poly5' 1) == 6)
-let _ = assert (eval (poly5' 2) == 63)
-let _ = assert (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
-let _ = assert (forall x. (eval (poly5 x) == eval (poly5' x)))
-#reset-options "--max_fuel 0"
+// (* Same *)
+// #reset-options "--initial_fuel 20 --max_fuel 20"
+// let _ = assert (eval (poly5' 1) == 6)
+// let _ = assert (eval (poly5' 2) == 63)
+// let _ = assert (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
+// let _ = assert (forall x. (eval (poly5 x) == eval (poly5' x)))
+// #reset-options "--max_fuel 0"
 
-//--------------------------------------------------------------------------------
+// //--------------------------------------------------------------------------------
 
-// open FStar.Tactics
-// open CanonCommSemiring
-// open FStar.Algebra.CommMonoid
+// // open FStar.Tactics
+// // open CanonCommSemiring
+// // open FStar.Algebra.CommMonoid
 
-// [@expect_failure]
-// let _ = assert (forall x. poly5 x `equiv` poly5' x)
+// // [@expect_failure]
+// // let _ = assert (forall x. poly5 x `equiv` poly5' x)
 
-// #set-options "--z3rlimit 10"
-// let _ = assert_norm (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
+// // #set-options "--z3rlimit 10"
+// // let _ = assert_norm (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
 
-// #set-options "--max_fuel 0"
-// // --tactic_trace"
-// let _ = assert (forall x. poly5 x `equiv` poly5' x)
-//           by (fun () -> let _ = forall_intros () in
-// 		     compute ();
-// 		     dump "after norm";
-// 		     canon_semiring int_cr;
-// 		     dump "final")
+// // #set-options "--max_fuel 0"
+// // // --tactic_trace"
+// // let _ = assert (forall x. poly5 x `equiv` poly5' x)
+// //           by (fun () -> let _ = forall_intros () in
+// // 		     compute ();
+// // 		     dump "after norm";
+// // 		     canon_semiring int_cr;
+// // 		     dump "final")
 
-// Takes long.. try again later
-//let _ = assert (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
-//          by (fun () -> let _ = forall_intros () in
-//		     compute ();
-//		     dump "after norm";
-//		     canon_semiring int_cr;
-//		     dump "final")
-//    
+// // Takes long.. try again later
+// //let _ = assert (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
+// //          by (fun () -> let _ = forall_intros () in
+// //		     compute ();
+// //		     dump "after norm";
+// //		     canon_semiring int_cr;
+// //		     dump "final")
+// //    

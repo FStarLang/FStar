@@ -3108,9 +3108,7 @@ let catch_errors :
          (fun uu___83_5493  ->
             match () with
             | () -> let r = f ()  in FStar_Pervasives_Native.Some r) ()
-       with
-       | uu___82_5499 -> (err_exn uu___82_5499; FStar_Pervasives_Native.None)
-        in
+       with | ex -> (err_exn ex; FStar_Pervasives_Native.None)  in
      let errs = newh.eh_report ()  in
      FStar_ST.op_Colon_Equals current_handler old; (errs, r))
   
