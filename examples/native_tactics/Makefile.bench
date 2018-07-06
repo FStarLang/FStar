@@ -23,7 +23,7 @@ go: $(addprefix List.Driver,    .native .native_eager) \
 #  Fun.DriverNBE.native_eager
 
 prep: $(addsuffix .fst.checked, Registers.List Registers.Fun		\
-                                Imp.List Imp.Fun) \
+				Imp.List Imp.Fun) \
       $(addsuffix .ml, Registers.List Registers.Fun)
 
 %.fst.checked: %.fst
@@ -35,7 +35,7 @@ prep: $(addsuffix .fst.checked, Registers.List Registers.Fun		\
 
 %.basic:
 	echo "*************Basic run for $* *******************"
-	$(FSTAR) Imp.List.Driver.fst --warn_error -266
+	$(FSTAR) Imp.$*.fst --warn_error -266
 
 %.native:
 	echo "*************Native run for $* **********************"
@@ -43,7 +43,7 @@ prep: $(addsuffix .fst.checked, Registers.List Registers.Fun		\
 
 %.native_eager:
 	echo "*************Eager embeddings run for $* ******************"
-	$(FSTAR) Imp.List.Driver.fst --load Registers.$(basename $*) --warn_error -266 --eager_embedding
+	$(FSTAR) Imp.$*.fst --load Registers.$(basename $*) --warn_error -266 --eager_embedding
 
 clean:
 	rm -f Registers_List.ml Registers.List.ml Registers_List.cmxs
