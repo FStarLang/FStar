@@ -5632,14 +5632,10 @@ let (change : FStar_Reflection_Data.typ -> unit tac) =
                                      replace_cur uu____10610
                                    else
                                      (let steps =
-                                        [FStar_TypeChecker_Env.Reify;
+                                        [FStar_TypeChecker_Env.AllowUnboundUniverses;
                                         FStar_TypeChecker_Env.UnfoldUntil
                                           FStar_Syntax_Syntax.delta_constant;
-                                        FStar_TypeChecker_Env.AllowUnboundUniverses;
-                                        FStar_TypeChecker_Env.Primops;
-                                        FStar_TypeChecker_Env.Simplify;
-                                        FStar_TypeChecker_Env.UnfoldTac;
-                                        FStar_TypeChecker_Env.Unmeta]  in
+                                        FStar_TypeChecker_Env.Primops]  in
                                       let ng =
                                         let uu____10616 =
                                           FStar_Tactics_Types.goal_env g  in

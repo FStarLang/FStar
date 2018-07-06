@@ -2301,6 +2301,8 @@ let (t_true : FStar_Syntax_Syntax.term) =
 let (tac_opaque_attr : FStar_Syntax_Syntax.term) = exp_string "tac_opaque" 
 let (dm4f_bind_range_attr : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.dm4f_bind_range_attr 
+let (tcdecltime_attr : FStar_Syntax_Syntax.term) =
+  fvar_const FStar_Parser_Const.tcdecltime_attr 
 let (t_ctx_uvar_and_sust : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.ctx_uvar_and_subst_lid 
 let (mk_conj_opt :

@@ -208,6 +208,7 @@ let (must_erase_for_extraction_attr : FStar_Ident.lident) =
   psconst "must_erase_for_extraction" 
 let (fail_attr : FStar_Ident.lident) = psconst "expect_failure" 
 let (fail_lax_attr : FStar_Ident.lident) = psconst "expect_lax_failure" 
+let (tcdecltime_attr : FStar_Ident.lident) = psconst "tcdecltime" 
 let (assume_strictly_positive_attr_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "assume_strictly_positive"] 
 let (gen_reset :

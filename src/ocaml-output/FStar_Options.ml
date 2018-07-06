@@ -258,6 +258,7 @@ let (defaults :
   ("no_extract", (List []));
   ("no_location_info", (Bool false));
   ("no_smt", (Bool false));
+  ("no_plugins", (Bool false));
   ("no_tactics", (Bool false));
   ("normalize_pure_terms_for_extraction", (Bool false));
   ("odir", Unset);
@@ -308,13 +309,13 @@ let (defaults :
   ("warn_error", (String ""));
   ("use_extracted_interfaces", (Bool false))] 
 let (init : unit -> unit) =
-  fun uu____1226  ->
+  fun uu____1230  ->
     let o = peek ()  in
     FStar_Util.smap_clear o;
     FStar_All.pipe_right defaults (FStar_List.iter set_option')
   
 let (clear : unit -> unit) =
-  fun uu____1243  ->
+  fun uu____1247  ->
     let o = FStar_Util.smap_create (Prims.parse_int "50")  in
     FStar_ST.op_Colon_Equals fstar_options [o];
     FStar_ST.op_Colon_Equals light_off_files [];
@@ -323,218 +324,220 @@ let (clear : unit -> unit) =
 let (_run : unit) = clear () 
 let (get_option : Prims.string -> option_val) =
   fun s  ->
-    let uu____1300 =
-      let uu____1303 = peek ()  in FStar_Util.smap_try_find uu____1303 s  in
-    match uu____1300 with
+    let uu____1304 =
+      let uu____1307 = peek ()  in FStar_Util.smap_try_find uu____1307 s  in
+    match uu____1304 with
     | FStar_Pervasives_Native.None  ->
         failwith
           (Prims.strcat "Impossible: option " (Prims.strcat s " not found"))
     | FStar_Pervasives_Native.Some s1 -> s1
   
 let lookup_opt :
-  'Auu____1313 . Prims.string -> (option_val -> 'Auu____1313) -> 'Auu____1313
-  = fun s  -> fun c  -> let uu____1329 = get_option s  in c uu____1329 
+  'Auu____1317 . Prims.string -> (option_val -> 'Auu____1317) -> 'Auu____1317
+  = fun s  -> fun c  -> let uu____1333 = get_option s  in c uu____1333 
 let (get_abort_on : unit -> Prims.int) =
-  fun uu____1334  -> lookup_opt "abort_on" as_int 
+  fun uu____1338  -> lookup_opt "abort_on" as_int 
 let (get_admit_smt_queries : unit -> Prims.bool) =
-  fun uu____1339  -> lookup_opt "admit_smt_queries" as_bool 
+  fun uu____1343  -> lookup_opt "admit_smt_queries" as_bool 
 let (get_admit_except : unit -> Prims.string FStar_Pervasives_Native.option)
-  = fun uu____1346  -> lookup_opt "admit_except" (as_option as_string) 
+  = fun uu____1350  -> lookup_opt "admit_except" (as_option as_string) 
 let (get_cache_checked_modules : unit -> Prims.bool) =
-  fun uu____1353  -> lookup_opt "cache_checked_modules" as_bool 
+  fun uu____1357  -> lookup_opt "cache_checked_modules" as_bool 
 let (get_cache_dir : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____1360  -> lookup_opt "cache_dir" (as_option as_string) 
+  fun uu____1364  -> lookup_opt "cache_dir" (as_option as_string) 
 let (get_cache_off : unit -> Prims.bool) =
-  fun uu____1367  -> lookup_opt "cache_off" as_bool 
+  fun uu____1371  -> lookup_opt "cache_off" as_bool 
 let (get_codegen : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____1374  -> lookup_opt "codegen" (as_option as_string) 
+  fun uu____1378  -> lookup_opt "codegen" (as_option as_string) 
 let (get_codegen_lib : unit -> Prims.string Prims.list) =
-  fun uu____1383  -> lookup_opt "codegen-lib" (as_list as_string) 
+  fun uu____1387  -> lookup_opt "codegen-lib" (as_list as_string) 
 let (get_debug : unit -> Prims.string Prims.list) =
-  fun uu____1392  -> lookup_opt "debug" (as_list as_string) 
+  fun uu____1396  -> lookup_opt "debug" (as_list as_string) 
 let (get_debug_level : unit -> Prims.string Prims.list) =
-  fun uu____1401  -> lookup_opt "debug_level" as_comma_string_list 
+  fun uu____1405  -> lookup_opt "debug_level" as_comma_string_list 
 let (get_defensive : unit -> Prims.string) =
-  fun uu____1408  -> lookup_opt "defensive" as_string 
+  fun uu____1412  -> lookup_opt "defensive" as_string 
 let (get_dep : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____1415  -> lookup_opt "dep" (as_option as_string) 
+  fun uu____1419  -> lookup_opt "dep" (as_option as_string) 
 let (get_detail_errors : unit -> Prims.bool) =
-  fun uu____1422  -> lookup_opt "detail_errors" as_bool 
+  fun uu____1426  -> lookup_opt "detail_errors" as_bool 
 let (get_detail_hint_replay : unit -> Prims.bool) =
-  fun uu____1427  -> lookup_opt "detail_hint_replay" as_bool 
+  fun uu____1431  -> lookup_opt "detail_hint_replay" as_bool 
 let (get_doc : unit -> Prims.bool) =
-  fun uu____1432  -> lookup_opt "doc" as_bool 
+  fun uu____1436  -> lookup_opt "doc" as_bool 
 let (get_dump_module : unit -> Prims.string Prims.list) =
-  fun uu____1439  -> lookup_opt "dump_module" (as_list as_string) 
+  fun uu____1443  -> lookup_opt "dump_module" (as_list as_string) 
 let (get_eager_subtyping : unit -> Prims.bool) =
-  fun uu____1446  -> lookup_opt "eager_subtyping" as_bool 
+  fun uu____1450  -> lookup_opt "eager_subtyping" as_bool 
 let (get_expose_interfaces : unit -> Prims.bool) =
-  fun uu____1451  -> lookup_opt "expose_interfaces" as_bool 
+  fun uu____1455  -> lookup_opt "expose_interfaces" as_bool 
 let (get_extract :
   unit -> Prims.string Prims.list FStar_Pervasives_Native.option) =
-  fun uu____1460  -> lookup_opt "extract" (as_option (as_list as_string)) 
+  fun uu____1464  -> lookup_opt "extract" (as_option (as_list as_string)) 
 let (get_extract_module : unit -> Prims.string Prims.list) =
-  fun uu____1473  -> lookup_opt "extract_module" (as_list as_string) 
+  fun uu____1477  -> lookup_opt "extract_module" (as_list as_string) 
 let (get_extract_namespace : unit -> Prims.string Prims.list) =
-  fun uu____1482  -> lookup_opt "extract_namespace" (as_list as_string) 
+  fun uu____1486  -> lookup_opt "extract_namespace" (as_list as_string) 
 let (get_fs_typ_app : unit -> Prims.bool) =
-  fun uu____1489  -> lookup_opt "fs_typ_app" as_bool 
+  fun uu____1493  -> lookup_opt "fs_typ_app" as_bool 
 let (get_hide_uvar_nums : unit -> Prims.bool) =
-  fun uu____1494  -> lookup_opt "hide_uvar_nums" as_bool 
+  fun uu____1498  -> lookup_opt "hide_uvar_nums" as_bool 
 let (get_hint_info : unit -> Prims.bool) =
-  fun uu____1499  -> lookup_opt "hint_info" as_bool 
+  fun uu____1503  -> lookup_opt "hint_info" as_bool 
 let (get_hint_file : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____1506  -> lookup_opt "hint_file" (as_option as_string) 
+  fun uu____1510  -> lookup_opt "hint_file" (as_option as_string) 
 let (get_in : unit -> Prims.bool) =
-  fun uu____1513  -> lookup_opt "in" as_bool 
+  fun uu____1517  -> lookup_opt "in" as_bool 
 let (get_ide : unit -> Prims.bool) =
-  fun uu____1518  -> lookup_opt "ide" as_bool 
+  fun uu____1522  -> lookup_opt "ide" as_bool 
 let (get_include : unit -> Prims.string Prims.list) =
-  fun uu____1525  -> lookup_opt "include" (as_list as_string) 
+  fun uu____1529  -> lookup_opt "include" (as_list as_string) 
 let (get_indent : unit -> Prims.bool) =
-  fun uu____1532  -> lookup_opt "indent" as_bool 
+  fun uu____1536  -> lookup_opt "indent" as_bool 
 let (get_initial_fuel : unit -> Prims.int) =
-  fun uu____1537  -> lookup_opt "initial_fuel" as_int 
+  fun uu____1541  -> lookup_opt "initial_fuel" as_int 
 let (get_initial_ifuel : unit -> Prims.int) =
-  fun uu____1542  -> lookup_opt "initial_ifuel" as_int 
+  fun uu____1546  -> lookup_opt "initial_ifuel" as_int 
 let (get_lax : unit -> Prims.bool) =
-  fun uu____1547  -> lookup_opt "lax" as_bool 
+  fun uu____1551  -> lookup_opt "lax" as_bool 
 let (get_load : unit -> Prims.string Prims.list) =
-  fun uu____1554  -> lookup_opt "load" (as_list as_string) 
+  fun uu____1558  -> lookup_opt "load" (as_list as_string) 
 let (get_log_queries : unit -> Prims.bool) =
-  fun uu____1561  -> lookup_opt "log_queries" as_bool 
+  fun uu____1565  -> lookup_opt "log_queries" as_bool 
 let (get_log_types : unit -> Prims.bool) =
-  fun uu____1566  -> lookup_opt "log_types" as_bool 
+  fun uu____1570  -> lookup_opt "log_types" as_bool 
 let (get_max_fuel : unit -> Prims.int) =
-  fun uu____1571  -> lookup_opt "max_fuel" as_int 
+  fun uu____1575  -> lookup_opt "max_fuel" as_int 
 let (get_max_ifuel : unit -> Prims.int) =
-  fun uu____1576  -> lookup_opt "max_ifuel" as_int 
+  fun uu____1580  -> lookup_opt "max_ifuel" as_int 
 let (get_min_fuel : unit -> Prims.int) =
-  fun uu____1581  -> lookup_opt "min_fuel" as_int 
+  fun uu____1585  -> lookup_opt "min_fuel" as_int 
 let (get_MLish : unit -> Prims.bool) =
-  fun uu____1586  -> lookup_opt "MLish" as_bool 
+  fun uu____1590  -> lookup_opt "MLish" as_bool 
 let (get_n_cores : unit -> Prims.int) =
-  fun uu____1591  -> lookup_opt "n_cores" as_int 
+  fun uu____1595  -> lookup_opt "n_cores" as_int 
 let (get_no_default_includes : unit -> Prims.bool) =
-  fun uu____1596  -> lookup_opt "no_default_includes" as_bool 
+  fun uu____1600  -> lookup_opt "no_default_includes" as_bool 
 let (get_no_extract : unit -> Prims.string Prims.list) =
-  fun uu____1603  -> lookup_opt "no_extract" (as_list as_string) 
+  fun uu____1607  -> lookup_opt "no_extract" (as_list as_string) 
 let (get_no_location_info : unit -> Prims.bool) =
-  fun uu____1610  -> lookup_opt "no_location_info" as_bool 
+  fun uu____1614  -> lookup_opt "no_location_info" as_bool 
+let (get_no_plugins : unit -> Prims.bool) =
+  fun uu____1619  -> lookup_opt "no_plugins" as_bool 
 let (get_no_smt : unit -> Prims.bool) =
-  fun uu____1615  -> lookup_opt "no_smt" as_bool 
+  fun uu____1624  -> lookup_opt "no_smt" as_bool 
 let (get_normalize_pure_terms_for_extraction : unit -> Prims.bool) =
-  fun uu____1620  -> lookup_opt "normalize_pure_terms_for_extraction" as_bool 
+  fun uu____1629  -> lookup_opt "normalize_pure_terms_for_extraction" as_bool 
 let (get_odir : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____1627  -> lookup_opt "odir" (as_option as_string) 
+  fun uu____1636  -> lookup_opt "odir" (as_option as_string) 
 let (get_ugly : unit -> Prims.bool) =
-  fun uu____1634  -> lookup_opt "ugly" as_bool 
+  fun uu____1643  -> lookup_opt "ugly" as_bool 
 let (get_prims : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____1641  -> lookup_opt "prims" (as_option as_string) 
+  fun uu____1650  -> lookup_opt "prims" (as_option as_string) 
 let (get_print_bound_var_types : unit -> Prims.bool) =
-  fun uu____1648  -> lookup_opt "print_bound_var_types" as_bool 
+  fun uu____1657  -> lookup_opt "print_bound_var_types" as_bool 
 let (get_print_effect_args : unit -> Prims.bool) =
-  fun uu____1653  -> lookup_opt "print_effect_args" as_bool 
+  fun uu____1662  -> lookup_opt "print_effect_args" as_bool 
 let (get_print_full_names : unit -> Prims.bool) =
-  fun uu____1658  -> lookup_opt "print_full_names" as_bool 
+  fun uu____1667  -> lookup_opt "print_full_names" as_bool 
 let (get_print_implicits : unit -> Prims.bool) =
-  fun uu____1663  -> lookup_opt "print_implicits" as_bool 
+  fun uu____1672  -> lookup_opt "print_implicits" as_bool 
 let (get_print_universes : unit -> Prims.bool) =
-  fun uu____1668  -> lookup_opt "print_universes" as_bool 
+  fun uu____1677  -> lookup_opt "print_universes" as_bool 
 let (get_print_z3_statistics : unit -> Prims.bool) =
-  fun uu____1673  -> lookup_opt "print_z3_statistics" as_bool 
+  fun uu____1682  -> lookup_opt "print_z3_statistics" as_bool 
 let (get_prn : unit -> Prims.bool) =
-  fun uu____1678  -> lookup_opt "prn" as_bool 
+  fun uu____1687  -> lookup_opt "prn" as_bool 
 let (get_query_stats : unit -> Prims.bool) =
-  fun uu____1683  -> lookup_opt "query_stats" as_bool 
+  fun uu____1692  -> lookup_opt "query_stats" as_bool 
 let (get_record_hints : unit -> Prims.bool) =
-  fun uu____1688  -> lookup_opt "record_hints" as_bool 
+  fun uu____1697  -> lookup_opt "record_hints" as_bool 
 let (get_reuse_hint_for :
   unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____1695  -> lookup_opt "reuse_hint_for" (as_option as_string) 
+  fun uu____1704  -> lookup_opt "reuse_hint_for" (as_option as_string) 
 let (get_silent : unit -> Prims.bool) =
-  fun uu____1702  -> lookup_opt "silent" as_bool 
+  fun uu____1711  -> lookup_opt "silent" as_bool 
 let (get_smt : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____1709  -> lookup_opt "smt" (as_option as_string) 
+  fun uu____1718  -> lookup_opt "smt" (as_option as_string) 
 let (get_smtencoding_elim_box : unit -> Prims.bool) =
-  fun uu____1716  -> lookup_opt "smtencoding.elim_box" as_bool 
+  fun uu____1725  -> lookup_opt "smtencoding.elim_box" as_bool 
 let (get_smtencoding_nl_arith_repr : unit -> Prims.string) =
-  fun uu____1721  -> lookup_opt "smtencoding.nl_arith_repr" as_string 
+  fun uu____1730  -> lookup_opt "smtencoding.nl_arith_repr" as_string 
 let (get_smtencoding_l_arith_repr : unit -> Prims.string) =
-  fun uu____1726  -> lookup_opt "smtencoding.l_arith_repr" as_string 
+  fun uu____1735  -> lookup_opt "smtencoding.l_arith_repr" as_string 
 let (get_tactic_raw_binders : unit -> Prims.bool) =
-  fun uu____1731  -> lookup_opt "tactic_raw_binders" as_bool 
+  fun uu____1740  -> lookup_opt "tactic_raw_binders" as_bool 
 let (get_tactic_trace : unit -> Prims.bool) =
-  fun uu____1736  -> lookup_opt "tactic_trace" as_bool 
+  fun uu____1745  -> lookup_opt "tactic_trace" as_bool 
 let (get_tactic_trace_d : unit -> Prims.int) =
-  fun uu____1741  -> lookup_opt "tactic_trace_d" as_int 
+  fun uu____1750  -> lookup_opt "tactic_trace_d" as_int 
 let (get_tactics_nbe : unit -> Prims.bool) =
-  fun uu____1746  -> lookup_opt "__tactics_nbe" as_bool 
+  fun uu____1755  -> lookup_opt "__tactics_nbe" as_bool 
 let (get_tcnorm : unit -> Prims.bool) =
-  fun uu____1751  -> lookup_opt "tcnorm" as_bool 
+  fun uu____1760  -> lookup_opt "tcnorm" as_bool 
 let (get_timing : unit -> Prims.bool) =
-  fun uu____1756  -> lookup_opt "timing" as_bool 
+  fun uu____1765  -> lookup_opt "timing" as_bool 
 let (get_trace_error : unit -> Prims.bool) =
-  fun uu____1761  -> lookup_opt "trace_error" as_bool 
+  fun uu____1770  -> lookup_opt "trace_error" as_bool 
 let (get_unthrottle_inductives : unit -> Prims.bool) =
-  fun uu____1766  -> lookup_opt "unthrottle_inductives" as_bool 
+  fun uu____1775  -> lookup_opt "unthrottle_inductives" as_bool 
 let (get_unsafe_tactic_exec : unit -> Prims.bool) =
-  fun uu____1771  -> lookup_opt "unsafe_tactic_exec" as_bool 
+  fun uu____1780  -> lookup_opt "unsafe_tactic_exec" as_bool 
 let (get_use_eq_at_higher_order : unit -> Prims.bool) =
-  fun uu____1776  -> lookup_opt "use_eq_at_higher_order" as_bool 
+  fun uu____1785  -> lookup_opt "use_eq_at_higher_order" as_bool 
 let (get_use_hints : unit -> Prims.bool) =
-  fun uu____1781  -> lookup_opt "use_hints" as_bool 
+  fun uu____1790  -> lookup_opt "use_hints" as_bool 
 let (get_use_hint_hashes : unit -> Prims.bool) =
-  fun uu____1786  -> lookup_opt "use_hint_hashes" as_bool 
+  fun uu____1795  -> lookup_opt "use_hint_hashes" as_bool 
 let (get_use_native_tactics :
   unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____1793  -> lookup_opt "use_native_tactics" (as_option as_string) 
+  fun uu____1802  -> lookup_opt "use_native_tactics" (as_option as_string) 
 let (get_use_tactics : unit -> Prims.bool) =
-  fun uu____1800  ->
-    let uu____1801 = lookup_opt "no_tactics" as_bool  in
-    Prims.op_Negation uu____1801
+  fun uu____1809  ->
+    let uu____1810 = lookup_opt "no_tactics" as_bool  in
+    Prims.op_Negation uu____1810
   
 let (get_using_facts_from :
   unit -> Prims.string Prims.list FStar_Pervasives_Native.option) =
-  fun uu____1810  ->
+  fun uu____1819  ->
     lookup_opt "using_facts_from" (as_option (as_list as_string))
   
 let (get_vcgen_optimize_bind_as_seq :
   unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____1823  ->
+  fun uu____1832  ->
     lookup_opt "vcgen.optimize_bind_as_seq" (as_option as_string)
   
 let (get_verify_module : unit -> Prims.string Prims.list) =
-  fun uu____1832  -> lookup_opt "verify_module" (as_list as_string) 
+  fun uu____1841  -> lookup_opt "verify_module" (as_list as_string) 
 let (get___temp_no_proj : unit -> Prims.string Prims.list) =
-  fun uu____1841  -> lookup_opt "__temp_no_proj" (as_list as_string) 
+  fun uu____1850  -> lookup_opt "__temp_no_proj" (as_list as_string) 
 let (get_version : unit -> Prims.bool) =
-  fun uu____1848  -> lookup_opt "version" as_bool 
+  fun uu____1857  -> lookup_opt "version" as_bool 
 let (get_warn_default_effects : unit -> Prims.bool) =
-  fun uu____1853  -> lookup_opt "warn_default_effects" as_bool 
+  fun uu____1862  -> lookup_opt "warn_default_effects" as_bool 
 let (get_z3cliopt : unit -> Prims.string Prims.list) =
-  fun uu____1860  -> lookup_opt "z3cliopt" (as_list as_string) 
+  fun uu____1869  -> lookup_opt "z3cliopt" (as_list as_string) 
 let (get_z3refresh : unit -> Prims.bool) =
-  fun uu____1867  -> lookup_opt "z3refresh" as_bool 
+  fun uu____1876  -> lookup_opt "z3refresh" as_bool 
 let (get_z3rlimit : unit -> Prims.int) =
-  fun uu____1872  -> lookup_opt "z3rlimit" as_int 
+  fun uu____1881  -> lookup_opt "z3rlimit" as_int 
 let (get_z3rlimit_factor : unit -> Prims.int) =
-  fun uu____1877  -> lookup_opt "z3rlimit_factor" as_int 
+  fun uu____1886  -> lookup_opt "z3rlimit_factor" as_int 
 let (get_z3seed : unit -> Prims.int) =
-  fun uu____1882  -> lookup_opt "z3seed" as_int 
+  fun uu____1891  -> lookup_opt "z3seed" as_int 
 let (get_use_two_phase_tc : unit -> Prims.bool) =
-  fun uu____1887  -> lookup_opt "use_two_phase_tc" as_bool 
+  fun uu____1896  -> lookup_opt "use_two_phase_tc" as_bool 
 let (get_no_positivity : unit -> Prims.bool) =
-  fun uu____1892  -> lookup_opt "__no_positivity" as_bool 
+  fun uu____1901  -> lookup_opt "__no_positivity" as_bool 
 let (get_ml_no_eta_expand_coertions : unit -> Prims.bool) =
-  fun uu____1897  -> lookup_opt "__ml_no_eta_expand_coertions" as_bool 
+  fun uu____1906  -> lookup_opt "__ml_no_eta_expand_coertions" as_bool 
 let (get_warn_error : unit -> Prims.string) =
-  fun uu____1902  -> lookup_opt "warn_error" as_string 
+  fun uu____1911  -> lookup_opt "warn_error" as_string 
 let (get_use_extracted_interfaces : unit -> Prims.bool) =
-  fun uu____1907  -> lookup_opt "use_extracted_interfaces" as_bool 
+  fun uu____1916  -> lookup_opt "use_extracted_interfaces" as_bool 
 let (dlevel : Prims.string -> debug_level_t) =
-  fun uu___82_1912  ->
-    match uu___82_1912 with
+  fun uu___82_1921  ->
+    match uu___82_1921 with
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
@@ -545,7 +548,7 @@ let (one_debug_level_geq : debug_level_t -> debug_level_t -> Prims.bool) =
   fun l1  ->
     fun l2  ->
       match l1 with
-      | Other uu____1924 -> l1 = l2
+      | Other uu____1933 -> l1 = l2
       | Low  -> l1 = l2
       | Medium  -> (l2 = Low) || (l2 = Medium)
       | High  -> ((l2 = Low) || (l2 = Medium)) || (l2 = High)
@@ -554,8 +557,8 @@ let (one_debug_level_geq : debug_level_t -> debug_level_t -> Prims.bool) =
   
 let (debug_level_geq : debug_level_t -> Prims.bool) =
   fun l2  ->
-    let uu____1930 = get_debug_level ()  in
-    FStar_All.pipe_right uu____1930
+    let uu____1939 = get_debug_level ()  in
+    FStar_All.pipe_right uu____1939
       (FStar_Util.for_some (fun l1  -> one_debug_level_geq (dlevel l1) l2))
   
 let (universe_include_path_base_dirs : Prims.string Prims.list) =
@@ -566,77 +569,77 @@ let (_compiler : Prims.string FStar_ST.ref) = FStar_Util.mk_ref ""
 let (_date : Prims.string FStar_ST.ref) = FStar_Util.mk_ref "" 
 let (_commit : Prims.string FStar_ST.ref) = FStar_Util.mk_ref "" 
 let (display_version : unit -> unit) =
-  fun uu____2063  ->
-    let uu____2064 =
-      let uu____2065 = FStar_ST.op_Bang _version  in
-      let uu____2085 = FStar_ST.op_Bang _platform  in
-      let uu____2105 = FStar_ST.op_Bang _compiler  in
-      let uu____2125 = FStar_ST.op_Bang _date  in
-      let uu____2145 = FStar_ST.op_Bang _commit  in
+  fun uu____2072  ->
+    let uu____2073 =
+      let uu____2074 = FStar_ST.op_Bang _version  in
+      let uu____2094 = FStar_ST.op_Bang _platform  in
+      let uu____2114 = FStar_ST.op_Bang _compiler  in
+      let uu____2134 = FStar_ST.op_Bang _date  in
+      let uu____2154 = FStar_ST.op_Bang _commit  in
       FStar_Util.format5
-        "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n" uu____2065
-        uu____2085 uu____2105 uu____2125 uu____2145
+        "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n" uu____2074
+        uu____2094 uu____2114 uu____2134 uu____2154
        in
-    FStar_Util.print_string uu____2064
+    FStar_Util.print_string uu____2073
   
 let display_usage_aux :
-  'Auu____2171 'Auu____2172 .
-    ('Auu____2171,Prims.string,'Auu____2172 FStar_Getopt.opt_variant,
+  'Auu____2180 'Auu____2181 .
+    ('Auu____2180,Prims.string,'Auu____2181 FStar_Getopt.opt_variant,
       Prims.string) FStar_Pervasives_Native.tuple4 Prims.list -> unit
   =
   fun specs  ->
     FStar_Util.print_string "fstar.exe [options] file[s]\n";
     FStar_List.iter
-      (fun uu____2220  ->
-         match uu____2220 with
-         | (uu____2231,flag,p,doc) ->
+      (fun uu____2229  ->
+         match uu____2229 with
+         | (uu____2240,flag,p,doc) ->
              (match p with
               | FStar_Getopt.ZeroArgs ig ->
                   if doc = ""
                   then
-                    let uu____2243 =
-                      let uu____2244 = FStar_Util.colorize_bold flag  in
-                      FStar_Util.format1 "  --%s\n" uu____2244  in
-                    FStar_Util.print_string uu____2243
+                    let uu____2252 =
+                      let uu____2253 = FStar_Util.colorize_bold flag  in
+                      FStar_Util.format1 "  --%s\n" uu____2253  in
+                    FStar_Util.print_string uu____2252
                   else
-                    (let uu____2246 =
-                       let uu____2247 = FStar_Util.colorize_bold flag  in
-                       FStar_Util.format2 "  --%s  %s\n" uu____2247 doc  in
-                     FStar_Util.print_string uu____2246)
-              | FStar_Getopt.OneArg (uu____2248,argname) ->
+                    (let uu____2255 =
+                       let uu____2256 = FStar_Util.colorize_bold flag  in
+                       FStar_Util.format2 "  --%s  %s\n" uu____2256 doc  in
+                     FStar_Util.print_string uu____2255)
+              | FStar_Getopt.OneArg (uu____2257,argname) ->
                   if doc = ""
                   then
-                    let uu____2256 =
-                      let uu____2257 = FStar_Util.colorize_bold flag  in
-                      let uu____2258 = FStar_Util.colorize_bold argname  in
-                      FStar_Util.format2 "  --%s %s\n" uu____2257 uu____2258
+                    let uu____2265 =
+                      let uu____2266 = FStar_Util.colorize_bold flag  in
+                      let uu____2267 = FStar_Util.colorize_bold argname  in
+                      FStar_Util.format2 "  --%s %s\n" uu____2266 uu____2267
                        in
-                    FStar_Util.print_string uu____2256
+                    FStar_Util.print_string uu____2265
                   else
-                    (let uu____2260 =
-                       let uu____2261 = FStar_Util.colorize_bold flag  in
-                       let uu____2262 = FStar_Util.colorize_bold argname  in
-                       FStar_Util.format3 "  --%s %s  %s\n" uu____2261
-                         uu____2262 doc
+                    (let uu____2269 =
+                       let uu____2270 = FStar_Util.colorize_bold flag  in
+                       let uu____2271 = FStar_Util.colorize_bold argname  in
+                       FStar_Util.format3 "  --%s %s  %s\n" uu____2270
+                         uu____2271 doc
                         in
-                     FStar_Util.print_string uu____2260))) specs
+                     FStar_Util.print_string uu____2269))) specs
   
 let (mk_spec :
   (FStar_BaseTypes.char,Prims.string,option_val FStar_Getopt.opt_variant,
     Prims.string) FStar_Pervasives_Native.tuple4 -> FStar_Getopt.opt)
   =
   fun o  ->
-    let uu____2290 = o  in
-    match uu____2290 with
+    let uu____2299 = o  in
+    match uu____2299 with
     | (ns,name,arg,desc) ->
         let arg1 =
           match arg with
           | FStar_Getopt.ZeroArgs f ->
-              let g uu____2326 =
-                let uu____2327 = f ()  in set_option name uu____2327  in
+              let g uu____2335 =
+                let uu____2336 = f ()  in set_option name uu____2336  in
               FStar_Getopt.ZeroArgs g
           | FStar_Getopt.OneArg (f,d) ->
-              let g x = let uu____2342 = f x  in set_option name uu____2342
+              let g x = let uu____2351 = f x  in set_option name uu____2351
                  in
               FStar_Getopt.OneArg (g, d)
            in
@@ -646,31 +649,31 @@ let (accumulated_option : Prims.string -> option_val -> option_val) =
   fun name  ->
     fun value  ->
       let prev_values =
-        let uu____2362 = lookup_opt name (as_option as_list')  in
-        FStar_Util.dflt [] uu____2362  in
+        let uu____2371 = lookup_opt name (as_option as_list')  in
+        FStar_Util.dflt [] uu____2371  in
       mk_list (value :: prev_values)
   
 let (reverse_accumulated_option : Prims.string -> option_val -> option_val) =
   fun name  ->
     fun value  ->
-      let uu____2385 =
-        let uu____2388 = lookup_opt name as_list'  in
-        FStar_List.append uu____2388 [value]  in
-      mk_list uu____2385
+      let uu____2394 =
+        let uu____2397 = lookup_opt name as_list'  in
+        FStar_List.append uu____2397 [value]  in
+      mk_list uu____2394
   
 let accumulate_string :
-  'Auu____2401 .
-    Prims.string -> ('Auu____2401 -> Prims.string) -> 'Auu____2401 -> unit
+  'Auu____2410 .
+    Prims.string -> ('Auu____2410 -> Prims.string) -> 'Auu____2410 -> unit
   =
   fun name  ->
     fun post_processor  ->
       fun value  ->
-        let uu____2422 =
-          let uu____2423 =
-            let uu____2424 = post_processor value  in mk_string uu____2424
+        let uu____2431 =
+          let uu____2432 =
+            let uu____2433 = post_processor value  in mk_string uu____2433
              in
-          accumulated_option name uu____2423  in
-        set_option name uu____2422
+          accumulated_option name uu____2432  in
+        set_option name uu____2431
   
 let (add_extract_module : Prims.string -> unit) =
   fun s  -> accumulate_string "extract_module" FStar_String.lowercase s 
@@ -694,41 +697,41 @@ type opt_type =
   | WithSideEffect of (unit -> unit,opt_type) FStar_Pervasives_Native.tuple2 
 let (uu___is_Const : opt_type -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Const _0 -> true | uu____2520 -> false
+    match projectee with | Const _0 -> true | uu____2529 -> false
   
 let (__proj__Const__item___0 : opt_type -> option_val) =
   fun projectee  -> match projectee with | Const _0 -> _0 
 let (uu___is_IntStr : opt_type -> Prims.bool) =
   fun projectee  ->
-    match projectee with | IntStr _0 -> true | uu____2534 -> false
+    match projectee with | IntStr _0 -> true | uu____2543 -> false
   
 let (__proj__IntStr__item___0 : opt_type -> Prims.string) =
   fun projectee  -> match projectee with | IntStr _0 -> _0 
 let (uu___is_BoolStr : opt_type -> Prims.bool) =
   fun projectee  ->
-    match projectee with | BoolStr  -> true | uu____2547 -> false
+    match projectee with | BoolStr  -> true | uu____2556 -> false
   
 let (uu___is_PathStr : opt_type -> Prims.bool) =
   fun projectee  ->
-    match projectee with | PathStr _0 -> true | uu____2554 -> false
+    match projectee with | PathStr _0 -> true | uu____2563 -> false
   
 let (__proj__PathStr__item___0 : opt_type -> Prims.string) =
   fun projectee  -> match projectee with | PathStr _0 -> _0 
 let (uu___is_SimpleStr : opt_type -> Prims.bool) =
   fun projectee  ->
-    match projectee with | SimpleStr _0 -> true | uu____2568 -> false
+    match projectee with | SimpleStr _0 -> true | uu____2577 -> false
   
 let (__proj__SimpleStr__item___0 : opt_type -> Prims.string) =
   fun projectee  -> match projectee with | SimpleStr _0 -> _0 
 let (uu___is_EnumStr : opt_type -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EnumStr _0 -> true | uu____2584 -> false
+    match projectee with | EnumStr _0 -> true | uu____2593 -> false
   
 let (__proj__EnumStr__item___0 : opt_type -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | EnumStr _0 -> _0 
 let (uu___is_OpenEnumStr : opt_type -> Prims.bool) =
   fun projectee  ->
-    match projectee with | OpenEnumStr _0 -> true | uu____2610 -> false
+    match projectee with | OpenEnumStr _0 -> true | uu____2619 -> false
   
 let (__proj__OpenEnumStr__item___0 :
   opt_type ->
@@ -736,7 +739,7 @@ let (__proj__OpenEnumStr__item___0 :
   = fun projectee  -> match projectee with | OpenEnumStr _0 -> _0 
 let (uu___is_PostProcessed : opt_type -> Prims.bool) =
   fun projectee  ->
-    match projectee with | PostProcessed _0 -> true | uu____2649 -> false
+    match projectee with | PostProcessed _0 -> true | uu____2658 -> false
   
 let (__proj__PostProcessed__item___0 :
   opt_type ->
@@ -744,7 +747,7 @@ let (__proj__PostProcessed__item___0 :
   = fun projectee  -> match projectee with | PostProcessed _0 -> _0 
 let (uu___is_Accumulated : opt_type -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Accumulated _0 -> true | uu____2684 -> false
+    match projectee with | Accumulated _0 -> true | uu____2693 -> false
   
 let (__proj__Accumulated__item___0 : opt_type -> opt_type) =
   fun projectee  -> match projectee with | Accumulated _0 -> _0 
@@ -752,13 +755,13 @@ let (uu___is_ReverseAccumulated : opt_type -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | ReverseAccumulated _0 -> true
-    | uu____2698 -> false
+    | uu____2707 -> false
   
 let (__proj__ReverseAccumulated__item___0 : opt_type -> opt_type) =
   fun projectee  -> match projectee with | ReverseAccumulated _0 -> _0 
 let (uu___is_WithSideEffect : opt_type -> Prims.bool) =
   fun projectee  ->
-    match projectee with | WithSideEffect _0 -> true | uu____2719 -> false
+    match projectee with | WithSideEffect _0 -> true | uu____2728 -> false
   
 let (__proj__WithSideEffect__item___0 :
   opt_type -> (unit -> unit,opt_type) FStar_Pervasives_Native.tuple2) =
@@ -767,12 +770,12 @@ exception InvalidArgument of Prims.string
 let (uu___is_InvalidArgument : Prims.exn -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | InvalidArgument uu____2757 -> true
-    | uu____2758 -> false
+    | InvalidArgument uu____2766 -> true
+    | uu____2767 -> false
   
 let (__proj__InvalidArgument__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee  ->
-    match projectee with | InvalidArgument uu____2765 -> uu____2765
+    match projectee with | InvalidArgument uu____2774 -> uu____2774
   
 let rec (parse_opt_val :
   Prims.string -> opt_type -> Prims.string -> option_val) =
@@ -780,20 +783,20 @@ let rec (parse_opt_val :
     fun typ  ->
       fun str_val  ->
         try
-          (fun uu___87_2783  ->
+          (fun uu___87_2792  ->
              match () with
              | () ->
                  (match typ with
                   | Const c -> c
-                  | IntStr uu____2785 ->
-                      let uu____2786 = FStar_Util.safe_int_of_string str_val
+                  | IntStr uu____2794 ->
+                      let uu____2795 = FStar_Util.safe_int_of_string str_val
                          in
-                      (match uu____2786 with
+                      (match uu____2795 with
                        | FStar_Pervasives_Native.Some v1 -> mk_int v1
                        | FStar_Pervasives_Native.None  ->
                            FStar_Exn.raise (InvalidArgument opt_name))
                   | BoolStr  ->
-                      let uu____2790 =
+                      let uu____2799 =
                         if str_val = "true"
                         then true
                         else
@@ -801,18 +804,18 @@ let rec (parse_opt_val :
                           then false
                           else FStar_Exn.raise (InvalidArgument opt_name)
                          in
-                      mk_bool uu____2790
-                  | PathStr uu____2793 -> mk_path str_val
-                  | SimpleStr uu____2794 -> mk_string str_val
+                      mk_bool uu____2799
+                  | PathStr uu____2802 -> mk_path str_val
+                  | SimpleStr uu____2803 -> mk_string str_val
                   | EnumStr strs ->
                       if FStar_List.mem str_val strs
                       then mk_string str_val
                       else FStar_Exn.raise (InvalidArgument opt_name)
-                  | OpenEnumStr uu____2799 -> mk_string str_val
+                  | OpenEnumStr uu____2808 -> mk_string str_val
                   | PostProcessed (pp,elem_spec) ->
-                      let uu____2814 =
+                      let uu____2823 =
                         parse_opt_val opt_name elem_spec str_val  in
-                      pp uu____2814
+                      pp uu____2823
                   | Accumulated elem_spec ->
                       let v1 = parse_opt_val opt_name elem_spec str_val  in
                       accumulated_option opt_name v1
@@ -824,9 +827,9 @@ let rec (parse_opt_val :
                        parse_opt_val opt_name elem_spec str_val))) ()
         with
         | InvalidArgument opt_name1 ->
-            let uu____2833 =
+            let uu____2842 =
               FStar_Util.format1 "Invalid argument to --%s" opt_name1  in
-            failwith uu____2833
+            failwith uu____2842
   
 let rec (desc_of_opt_type :
   opt_type -> Prims.string FStar_Pervasives_Native.option) =
@@ -843,20 +846,20 @@ let rec (desc_of_opt_type :
     | SimpleStr desc -> FStar_Pervasives_Native.Some desc
     | EnumStr strs -> desc_of_enum strs
     | OpenEnumStr (strs,desc) -> desc_of_enum (FStar_List.append strs [desc])
-    | PostProcessed (uu____2870,elem_spec) -> desc_of_opt_type elem_spec
+    | PostProcessed (uu____2879,elem_spec) -> desc_of_opt_type elem_spec
     | Accumulated elem_spec -> desc_of_opt_type elem_spec
     | ReverseAccumulated elem_spec -> desc_of_opt_type elem_spec
-    | WithSideEffect (uu____2880,elem_spec) -> desc_of_opt_type elem_spec
+    | WithSideEffect (uu____2889,elem_spec) -> desc_of_opt_type elem_spec
   
 let rec (arg_spec_of_opt_type :
   Prims.string -> opt_type -> option_val FStar_Getopt.opt_variant) =
   fun opt_name  ->
     fun typ  ->
       let parser = parse_opt_val opt_name typ  in
-      let uu____2907 = desc_of_opt_type typ  in
-      match uu____2907 with
+      let uu____2916 = desc_of_opt_type typ  in
+      match uu____2916 with
       | FStar_Pervasives_Native.None  ->
-          FStar_Getopt.ZeroArgs ((fun uu____2913  -> parser ""))
+          FStar_Getopt.ZeroArgs ((fun uu____2922  -> parser ""))
       | FStar_Pervasives_Native.Some desc ->
           FStar_Getopt.OneArg (parser, desc)
   
@@ -864,9 +867,9 @@ let (pp_validate_dir : option_val -> option_val) =
   fun p  -> let pp = as_string p  in FStar_Util.mkdir false pp; p 
 let (pp_lowercase : option_val -> option_val) =
   fun s  ->
-    let uu____2930 =
-      let uu____2931 = as_string s  in FStar_String.lowercase uu____2931  in
-    mk_string uu____2930
+    let uu____2939 =
+      let uu____2940 = as_string s  in FStar_String.lowercase uu____2940  in
+    mk_string uu____2939
   
 let (abort_counter : Prims.int FStar_ST.ref) =
   FStar_Util.mk_ref (Prims.parse_int "0") 
@@ -875,759 +878,755 @@ let rec (specs_with_types :
     (FStar_BaseTypes.char,Prims.string,opt_type,Prims.string)
       FStar_Pervasives_Native.tuple4 Prims.list)
   =
-  fun uu____2979  ->
-    let uu____2991 =
-      let uu____3003 =
-        let uu____3015 =
-          let uu____3027 =
-            let uu____3037 =
-              let uu____3038 = mk_bool true  in Const uu____3038  in
-            (FStar_Getopt.noshort, "cache_checked_modules", uu____3037,
+  fun uu____2988  ->
+    let uu____3000 =
+      let uu____3012 =
+        let uu____3024 =
+          let uu____3036 =
+            let uu____3046 =
+              let uu____3047 = mk_bool true  in Const uu____3047  in
+            (FStar_Getopt.noshort, "cache_checked_modules", uu____3046,
               "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying")
              in
-          let uu____3040 =
-            let uu____3052 =
-              let uu____3064 =
-                let uu____3074 =
-                  let uu____3075 = mk_bool true  in Const uu____3075  in
-                (FStar_Getopt.noshort, "cache_off", uu____3074,
+          let uu____3049 =
+            let uu____3061 =
+              let uu____3073 =
+                let uu____3083 =
+                  let uu____3084 = mk_bool true  in Const uu____3084  in
+                (FStar_Getopt.noshort, "cache_off", uu____3083,
                   "Do not read or write any .checked files")
                  in
-              let uu____3077 =
-                let uu____3089 =
-                  let uu____3101 =
-                    let uu____3113 =
-                      let uu____3125 =
-                        let uu____3137 =
-                          let uu____3149 =
-                            let uu____3161 =
-                              let uu____3171 =
-                                let uu____3172 = mk_bool true  in
-                                Const uu____3172  in
+              let uu____3086 =
+                let uu____3098 =
+                  let uu____3110 =
+                    let uu____3122 =
+                      let uu____3134 =
+                        let uu____3146 =
+                          let uu____3158 =
+                            let uu____3170 =
+                              let uu____3180 =
+                                let uu____3181 = mk_bool true  in
+                                Const uu____3181  in
                               (FStar_Getopt.noshort, "detail_errors",
-                                uu____3171,
+                                uu____3180,
                                 "Emit a detailed error report by asking the SMT solver many queries; will take longer;\n         implies n_cores=1")
                                in
-                            let uu____3174 =
-                              let uu____3186 =
-                                let uu____3196 =
-                                  let uu____3197 = mk_bool true  in
-                                  Const uu____3197  in
+                            let uu____3183 =
+                              let uu____3195 =
+                                let uu____3205 =
+                                  let uu____3206 = mk_bool true  in
+                                  Const uu____3206  in
                                 (FStar_Getopt.noshort, "detail_hint_replay",
-                                  uu____3196,
+                                  uu____3205,
                                   "Emit a detailed report for proof whose unsat core fails to replay;\n         implies n_cores=1")
                                  in
-                              let uu____3199 =
-                                let uu____3211 =
-                                  let uu____3221 =
-                                    let uu____3222 = mk_bool true  in
-                                    Const uu____3222  in
-                                  (FStar_Getopt.noshort, "doc", uu____3221,
+                              let uu____3208 =
+                                let uu____3220 =
+                                  let uu____3230 =
+                                    let uu____3231 = mk_bool true  in
+                                    Const uu____3231  in
+                                  (FStar_Getopt.noshort, "doc", uu____3230,
                                     "Extract Markdown documentation files for the input modules, as well as an index. Output is written to --odir directory.")
                                    in
-                                let uu____3224 =
-                                  let uu____3236 =
-                                    let uu____3248 =
-                                      let uu____3258 =
-                                        let uu____3259 = mk_bool true  in
-                                        Const uu____3259  in
+                                let uu____3233 =
+                                  let uu____3245 =
+                                    let uu____3257 =
+                                      let uu____3267 =
+                                        let uu____3268 = mk_bool true  in
+                                        Const uu____3268  in
                                       (FStar_Getopt.noshort,
-                                        "eager_inference", uu____3258,
+                                        "eager_inference", uu____3267,
                                         "Deprecated: Solve all type-inference constraints eagerly; more efficient but at the cost of generality")
                                        in
-                                    let uu____3261 =
-                                      let uu____3273 =
-                                        let uu____3283 =
-                                          let uu____3284 = mk_bool true  in
-                                          Const uu____3284  in
+                                    let uu____3270 =
+                                      let uu____3282 =
+                                        let uu____3292 =
+                                          let uu____3293 = mk_bool true  in
+                                          Const uu____3293  in
                                         (FStar_Getopt.noshort,
-                                          "eager_subtyping", uu____3283,
+                                          "eager_subtyping", uu____3292,
                                           "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)")
                                          in
-                                      let uu____3286 =
-                                        let uu____3298 =
-                                          let uu____3310 =
-                                            let uu____3322 =
-                                              let uu____3334 =
-                                                let uu____3344 =
-                                                  let uu____3345 =
+                                      let uu____3295 =
+                                        let uu____3307 =
+                                          let uu____3319 =
+                                            let uu____3331 =
+                                              let uu____3343 =
+                                                let uu____3353 =
+                                                  let uu____3354 =
                                                     mk_bool true  in
-                                                  Const uu____3345  in
+                                                  Const uu____3354  in
                                                 (FStar_Getopt.noshort,
                                                   "expose_interfaces",
-                                                  uu____3344,
+                                                  uu____3353,
                                                   "Explicitly break the abstraction imposed by the interface of any implementation file that appears on the command line (use with care!)")
                                                  in
-                                              let uu____3347 =
-                                                let uu____3359 =
-                                                  let uu____3369 =
-                                                    let uu____3370 =
+                                              let uu____3356 =
+                                                let uu____3368 =
+                                                  let uu____3378 =
+                                                    let uu____3379 =
                                                       mk_bool true  in
-                                                    Const uu____3370  in
+                                                    Const uu____3379  in
                                                   (FStar_Getopt.noshort,
                                                     "hide_uvar_nums",
-                                                    uu____3369,
+                                                    uu____3378,
                                                     "Don't print unification variable numbers")
                                                    in
-                                                let uu____3372 =
-                                                  let uu____3384 =
-                                                    let uu____3396 =
-                                                      let uu____3406 =
-                                                        let uu____3407 =
+                                                let uu____3381 =
+                                                  let uu____3393 =
+                                                    let uu____3405 =
+                                                      let uu____3415 =
+                                                        let uu____3416 =
                                                           mk_bool true  in
-                                                        Const uu____3407  in
+                                                        Const uu____3416  in
                                                       (FStar_Getopt.noshort,
                                                         "hint_info",
-                                                        uu____3406,
+                                                        uu____3415,
                                                         "Print information regarding hints (deprecated; use --query_stats instead)")
                                                        in
-                                                    let uu____3409 =
-                                                      let uu____3421 =
-                                                        let uu____3431 =
-                                                          let uu____3432 =
+                                                    let uu____3418 =
+                                                      let uu____3430 =
+                                                        let uu____3440 =
+                                                          let uu____3441 =
                                                             mk_bool true  in
-                                                          Const uu____3432
+                                                          Const uu____3441
                                                            in
                                                         (FStar_Getopt.noshort,
-                                                          "in", uu____3431,
+                                                          "in", uu____3440,
                                                           "Legacy interactive mode; reads input from stdin")
                                                          in
-                                                      let uu____3434 =
-                                                        let uu____3446 =
-                                                          let uu____3456 =
-                                                            let uu____3457 =
+                                                      let uu____3443 =
+                                                        let uu____3455 =
+                                                          let uu____3465 =
+                                                            let uu____3466 =
                                                               mk_bool true
                                                                in
-                                                            Const uu____3457
+                                                            Const uu____3466
                                                              in
                                                           (FStar_Getopt.noshort,
                                                             "ide",
-                                                            uu____3456,
+                                                            uu____3465,
                                                             "JSON-based interactive mode for IDEs")
                                                            in
-                                                        let uu____3459 =
-                                                          let uu____3471 =
-                                                            let uu____3483 =
-                                                              let uu____3493
+                                                        let uu____3468 =
+                                                          let uu____3480 =
+                                                            let uu____3492 =
+                                                              let uu____3502
                                                                 =
-                                                                let uu____3494
+                                                                let uu____3503
                                                                   =
                                                                   mk_bool
                                                                     true
                                                                    in
                                                                 Const
-                                                                  uu____3494
+                                                                  uu____3503
                                                                  in
                                                               (FStar_Getopt.noshort,
                                                                 "indent",
-                                                                uu____3493,
+                                                                uu____3502,
                                                                 "Parses and outputs the files on the command line")
                                                                in
-                                                            let uu____3496 =
-                                                              let uu____3508
+                                                            let uu____3505 =
+                                                              let uu____3517
                                                                 =
-                                                                let uu____3520
+                                                                let uu____3529
                                                                   =
-                                                                  let uu____3532
+                                                                  let uu____3541
                                                                     =
-                                                                    let uu____3542
+                                                                    let uu____3551
                                                                     =
-                                                                    let uu____3543
+                                                                    let uu____3552
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3543
+                                                                    uu____3552
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "lax",
-                                                                    uu____3542,
+                                                                    uu____3551,
                                                                     "Run the lax-type checker only (admit all verification conditions)")
                                                                      in
-                                                                  let uu____3545
+                                                                  let uu____3554
                                                                     =
-                                                                    let uu____3557
+                                                                    let uu____3566
                                                                     =
-                                                                    let uu____3569
+                                                                    let uu____3578
                                                                     =
-                                                                    let uu____3579
+                                                                    let uu____3588
                                                                     =
-                                                                    let uu____3580
+                                                                    let uu____3589
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3580
+                                                                    uu____3589
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "log_types",
-                                                                    uu____3579,
+                                                                    uu____3588,
                                                                     "Print types computed for data/val/let-bindings")
                                                                      in
-                                                                    let uu____3582
+                                                                    let uu____3591
                                                                     =
-                                                                    let uu____3594
+                                                                    let uu____3603
                                                                     =
-                                                                    let uu____3604
+                                                                    let uu____3613
                                                                     =
-                                                                    let uu____3605
+                                                                    let uu____3614
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3605
+                                                                    uu____3614
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "log_queries",
-                                                                    uu____3604,
+                                                                    uu____3613,
                                                                     "Log the Z3 queries in several queries-*.smt2 files, as we go")
                                                                      in
-                                                                    let uu____3607
+                                                                    let uu____3616
                                                                     =
-                                                                    let uu____3619
+                                                                    let uu____3628
                                                                     =
-                                                                    let uu____3631
+                                                                    let uu____3640
                                                                     =
-                                                                    let uu____3643
+                                                                    let uu____3652
                                                                     =
-                                                                    let uu____3655
+                                                                    let uu____3664
                                                                     =
-                                                                    let uu____3665
+                                                                    let uu____3674
                                                                     =
-                                                                    let uu____3666
+                                                                    let uu____3675
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3666
+                                                                    uu____3675
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "MLish",
-                                                                    uu____3665,
+                                                                    uu____3674,
                                                                     "Trigger various specializations for compiling the F* compiler itself (not meant for user code)")
                                                                      in
-                                                                    let uu____3668
+                                                                    let uu____3677
                                                                     =
-                                                                    let uu____3680
+                                                                    let uu____3689
                                                                     =
-                                                                    let uu____3692
+                                                                    let uu____3701
                                                                     =
-                                                                    let uu____3702
+                                                                    let uu____3711
                                                                     =
-                                                                    let uu____3703
+                                                                    let uu____3712
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3703
+                                                                    uu____3712
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "no_default_includes",
-                                                                    uu____3702,
+                                                                    uu____3711,
                                                                     "Ignore the default module search paths")
                                                                      in
-                                                                    let uu____3705
+                                                                    let uu____3714
                                                                     =
-                                                                    let uu____3717
+                                                                    let uu____3726
                                                                     =
-                                                                    let uu____3729
+                                                                    let uu____3738
                                                                     =
-                                                                    let uu____3739
+                                                                    let uu____3748
                                                                     =
-                                                                    let uu____3740
+                                                                    let uu____3749
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3740
+                                                                    uu____3749
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "no_location_info",
-                                                                    uu____3739,
+                                                                    uu____3748,
                                                                     "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)")
                                                                      in
-                                                                    let uu____3742
+                                                                    let uu____3751
                                                                     =
-                                                                    let uu____3754
+                                                                    let uu____3763
                                                                     =
-                                                                    let uu____3764
+                                                                    let uu____3773
                                                                     =
-                                                                    let uu____3765
+                                                                    let uu____3774
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3765
+                                                                    uu____3774
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "no_smt",
-                                                                    uu____3764,
+                                                                    uu____3773,
                                                                     "Do not send any queries to the SMT solver, and fail on them instead")
                                                                      in
-                                                                    let uu____3767
+                                                                    let uu____3776
                                                                     =
-                                                                    let uu____3779
+                                                                    let uu____3788
                                                                     =
-                                                                    let uu____3789
+                                                                    let uu____3798
                                                                     =
-                                                                    let uu____3790
+                                                                    let uu____3799
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3790
+                                                                    uu____3799
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "normalize_pure_terms_for_extraction",
-                                                                    uu____3789,
+                                                                    uu____3798,
                                                                     "Extract top-level pure terms after normalizing them. This can lead to very large code, but can result in more partial evaluation and compile-time specialization.")
                                                                      in
-                                                                    let uu____3792
+                                                                    let uu____3801
                                                                     =
-                                                                    let uu____3804
+                                                                    let uu____3813
                                                                     =
-                                                                    let uu____3816
+                                                                    let uu____3825
                                                                     =
-                                                                    let uu____3828
+                                                                    let uu____3837
                                                                     =
-                                                                    let uu____3838
+                                                                    let uu____3847
                                                                     =
-                                                                    let uu____3839
+                                                                    let uu____3848
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3839
+                                                                    uu____3848
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "print_bound_var_types",
-                                                                    uu____3838,
+                                                                    uu____3847,
                                                                     "Print the types of bound variables")
                                                                      in
-                                                                    let uu____3841
+                                                                    let uu____3850
                                                                     =
-                                                                    let uu____3853
+                                                                    let uu____3862
                                                                     =
-                                                                    let uu____3863
+                                                                    let uu____3872
                                                                     =
-                                                                    let uu____3864
+                                                                    let uu____3873
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3864
+                                                                    uu____3873
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "print_effect_args",
-                                                                    uu____3863,
+                                                                    uu____3872,
                                                                     "Print inferred predicate transformers for all computation types")
                                                                      in
-                                                                    let uu____3866
+                                                                    let uu____3875
                                                                     =
-                                                                    let uu____3878
+                                                                    let uu____3887
                                                                     =
-                                                                    let uu____3888
+                                                                    let uu____3897
                                                                     =
-                                                                    let uu____3889
+                                                                    let uu____3898
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3889
+                                                                    uu____3898
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "print_full_names",
-                                                                    uu____3888,
+                                                                    uu____3897,
                                                                     "Print full names of variables")
                                                                      in
-                                                                    let uu____3891
+                                                                    let uu____3900
                                                                     =
-                                                                    let uu____3903
+                                                                    let uu____3912
                                                                     =
-                                                                    let uu____3913
+                                                                    let uu____3922
                                                                     =
-                                                                    let uu____3914
+                                                                    let uu____3923
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3914
+                                                                    uu____3923
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "print_implicits",
-                                                                    uu____3913,
+                                                                    uu____3922,
                                                                     "Print implicit arguments")
                                                                      in
-                                                                    let uu____3916
+                                                                    let uu____3925
                                                                     =
-                                                                    let uu____3928
+                                                                    let uu____3937
                                                                     =
-                                                                    let uu____3938
+                                                                    let uu____3947
                                                                     =
-                                                                    let uu____3939
+                                                                    let uu____3948
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3939
+                                                                    uu____3948
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "print_universes",
-                                                                    uu____3938,
+                                                                    uu____3947,
                                                                     "Print universes")
                                                                      in
-                                                                    let uu____3941
+                                                                    let uu____3950
                                                                     =
-                                                                    let uu____3953
+                                                                    let uu____3962
                                                                     =
-                                                                    let uu____3963
+                                                                    let uu____3972
                                                                     =
-                                                                    let uu____3964
+                                                                    let uu____3973
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3964
+                                                                    uu____3973
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "print_z3_statistics",
-                                                                    uu____3963,
+                                                                    uu____3972,
                                                                     "Print Z3 statistics for each SMT query (deprecated; use --query_stats instead)")
                                                                      in
-                                                                    let uu____3966
+                                                                    let uu____3975
                                                                     =
-                                                                    let uu____3978
+                                                                    let uu____3987
                                                                     =
-                                                                    let uu____3988
+                                                                    let uu____3997
                                                                     =
-                                                                    let uu____3989
+                                                                    let uu____3998
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____3989
+                                                                    uu____3998
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "prn",
-                                                                    uu____3988,
+                                                                    uu____3997,
                                                                     "Print full names (deprecated; use --print_full_names instead)")
                                                                      in
-                                                                    let uu____3991
+                                                                    let uu____4000
                                                                     =
-                                                                    let uu____4003
+                                                                    let uu____4012
                                                                     =
-                                                                    let uu____4013
+                                                                    let uu____4022
                                                                     =
-                                                                    let uu____4014
+                                                                    let uu____4023
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4014
+                                                                    uu____4023
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "query_stats",
-                                                                    uu____4013,
+                                                                    uu____4022,
                                                                     "Print SMT query statistics")
                                                                      in
-                                                                    let uu____4016
+                                                                    let uu____4025
                                                                     =
-                                                                    let uu____4028
+                                                                    let uu____4037
                                                                     =
-                                                                    let uu____4038
+                                                                    let uu____4047
                                                                     =
-                                                                    let uu____4039
+                                                                    let uu____4048
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4039
+                                                                    uu____4048
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "record_hints",
-                                                                    uu____4038,
+                                                                    uu____4047,
                                                                     "Record a database of hints for efficient proof replay")
                                                                      in
-                                                                    let uu____4041
+                                                                    let uu____4050
                                                                     =
-                                                                    let uu____4053
+                                                                    let uu____4062
                                                                     =
-                                                                    let uu____4065
+                                                                    let uu____4074
                                                                     =
-                                                                    let uu____4075
+                                                                    let uu____4084
                                                                     =
-                                                                    let uu____4076
+                                                                    let uu____4085
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4076
+                                                                    uu____4085
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "silent",
-                                                                    uu____4075,
+                                                                    uu____4084,
                                                                     " ")  in
-                                                                    let uu____4078
+                                                                    let uu____4087
                                                                     =
-                                                                    let uu____4090
+                                                                    let uu____4099
                                                                     =
-                                                                    let uu____4102
+                                                                    let uu____4111
                                                                     =
-                                                                    let uu____4114
+                                                                    let uu____4123
                                                                     =
-                                                                    let uu____4126
+                                                                    let uu____4135
                                                                     =
-                                                                    let uu____4138
+                                                                    let uu____4147
                                                                     =
-                                                                    let uu____4148
+                                                                    let uu____4157
                                                                     =
-                                                                    let uu____4149
+                                                                    let uu____4158
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4149
+                                                                    uu____4158
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "tactic_raw_binders",
-                                                                    uu____4148,
+                                                                    uu____4157,
                                                                     "Do not use the lexical scope of tactics to improve binder names")
                                                                      in
-                                                                    let uu____4151
+                                                                    let uu____4160
                                                                     =
-                                                                    let uu____4163
+                                                                    let uu____4172
                                                                     =
-                                                                    let uu____4173
+                                                                    let uu____4182
                                                                     =
-                                                                    let uu____4174
+                                                                    let uu____4183
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4174
+                                                                    uu____4183
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "tactic_trace",
-                                                                    uu____4173,
+                                                                    uu____4182,
                                                                     "Print a depth-indexed trace of tactic execution (Warning: very verbose)")
                                                                      in
-                                                                    let uu____4176
+                                                                    let uu____4185
                                                                     =
-                                                                    let uu____4188
+                                                                    let uu____4197
                                                                     =
-                                                                    let uu____4200
+                                                                    let uu____4209
                                                                     =
-                                                                    let uu____4210
+                                                                    let uu____4219
                                                                     =
-                                                                    let uu____4211
+                                                                    let uu____4220
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4211
+                                                                    uu____4220
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "__tactics_nbe",
-                                                                    uu____4210,
+                                                                    uu____4219,
                                                                     "Use NBE to evaluate metaprograms (experimental)")
                                                                      in
-                                                                    let uu____4213
+                                                                    let uu____4222
                                                                     =
-                                                                    let uu____4225
+                                                                    let uu____4234
                                                                     =
-                                                                    let uu____4237
+                                                                    let uu____4246
                                                                     =
-                                                                    let uu____4247
+                                                                    let uu____4256
                                                                     =
-                                                                    let uu____4248
+                                                                    let uu____4257
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4248
+                                                                    uu____4257
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "timing",
-                                                                    uu____4247,
+                                                                    uu____4256,
                                                                     "Print the time it takes to verify each top-level definition")
                                                                      in
-                                                                    let uu____4250
+                                                                    let uu____4259
                                                                     =
-                                                                    let uu____4262
+                                                                    let uu____4271
                                                                     =
-                                                                    let uu____4272
+                                                                    let uu____4281
                                                                     =
-                                                                    let uu____4273
+                                                                    let uu____4282
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4273
+                                                                    uu____4282
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "trace_error",
-                                                                    uu____4272,
+                                                                    uu____4281,
                                                                     "Don't print an error message; show an exception trace instead")
                                                                      in
-                                                                    let uu____4275
+                                                                    let uu____4284
                                                                     =
-                                                                    let uu____4287
+                                                                    let uu____4296
                                                                     =
-                                                                    let uu____4297
+                                                                    let uu____4306
                                                                     =
-                                                                    let uu____4298
+                                                                    let uu____4307
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4298
+                                                                    uu____4307
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "ugly",
-                                                                    uu____4297,
+                                                                    uu____4306,
                                                                     "Emit output formatted for debugging")
                                                                      in
-                                                                    let uu____4300
+                                                                    let uu____4309
                                                                     =
-                                                                    let uu____4312
+                                                                    let uu____4321
                                                                     =
-                                                                    let uu____4322
+                                                                    let uu____4331
                                                                     =
-                                                                    let uu____4323
+                                                                    let uu____4332
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4323
+                                                                    uu____4332
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "unthrottle_inductives",
-                                                                    uu____4322,
+                                                                    uu____4331,
                                                                     "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)")
                                                                      in
-                                                                    let uu____4325
+                                                                    let uu____4334
                                                                     =
-                                                                    let uu____4337
+                                                                    let uu____4346
                                                                     =
-                                                                    let uu____4347
+                                                                    let uu____4356
                                                                     =
-                                                                    let uu____4348
+                                                                    let uu____4357
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4348
+                                                                    uu____4357
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "unsafe_tactic_exec",
-                                                                    uu____4347,
+                                                                    uu____4356,
                                                                     "Allow tactics to run external processes. WARNING: checking an untrusted F* file while using this option can have disastrous effects.")
                                                                      in
-                                                                    let uu____4350
+                                                                    let uu____4359
                                                                     =
-                                                                    let uu____4362
+                                                                    let uu____4371
                                                                     =
-                                                                    let uu____4372
+                                                                    let uu____4381
                                                                     =
-                                                                    let uu____4373
+                                                                    let uu____4382
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4373
+                                                                    uu____4382
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "use_eq_at_higher_order",
-                                                                    uu____4372,
+                                                                    uu____4381,
                                                                     "Use equality constraints when comparing higher-order types (Temporary)")
                                                                      in
-                                                                    let uu____4375
+                                                                    let uu____4384
                                                                     =
-                                                                    let uu____4387
+                                                                    let uu____4396
                                                                     =
-                                                                    let uu____4397
+                                                                    let uu____4406
                                                                     =
-                                                                    let uu____4398
+                                                                    let uu____4407
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4398
+                                                                    uu____4407
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "use_hints",
-                                                                    uu____4397,
+                                                                    uu____4406,
                                                                     "Use a previously recorded hints database for proof replay")
                                                                      in
-                                                                    let uu____4400
+                                                                    let uu____4409
                                                                     =
-                                                                    let uu____4412
+                                                                    let uu____4421
                                                                     =
-                                                                    let uu____4422
+                                                                    let uu____4431
                                                                     =
-                                                                    let uu____4423
+                                                                    let uu____4432
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4423
+                                                                    uu____4432
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "use_hint_hashes",
-                                                                    uu____4422,
+                                                                    uu____4431,
                                                                     "Admit queries if their hash matches the hash recorded in the hints database")
                                                                      in
-                                                                    let uu____4425
+                                                                    let uu____4434
                                                                     =
-                                                                    let uu____4437
+                                                                    let uu____4446
                                                                     =
-                                                                    let uu____4449
+                                                                    let uu____4458
                                                                     =
-                                                                    let uu____4459
+                                                                    let uu____4468
                                                                     =
-                                                                    let uu____4460
+                                                                    let uu____4469
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4460
+                                                                    uu____4469
+                                                                     in
+                                                                    (FStar_Getopt.noshort,
+                                                                    "no_plugins",
+                                                                    uu____4468,
+                                                                    "Do not run plugins natively and interpret them as usual instead")
+                                                                     in
+                                                                    let uu____4471
+                                                                    =
+                                                                    let uu____4483
+                                                                    =
+                                                                    let uu____4493
+                                                                    =
+                                                                    let uu____4494
+                                                                    =
+                                                                    mk_bool
+                                                                    true  in
+                                                                    Const
+                                                                    uu____4494
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "no_tactics",
-                                                                    uu____4459,
+                                                                    uu____4493,
                                                                     "Do not run the tactic engine before discharging a VC")
                                                                      in
-                                                                    let uu____4462
+                                                                    let uu____4496
                                                                     =
-                                                                    let uu____4474
-                                                                    =
-                                                                    let uu____4486
-                                                                    =
-                                                                    let uu____4498
-                                                                    =
-                                                                    let uu____4510
+                                                                    let uu____4508
                                                                     =
                                                                     let uu____4520
                                                                     =
-                                                                    let uu____4521
+                                                                    let uu____4532
                                                                     =
-                                                                    mk_bool
-                                                                    true  in
-                                                                    Const
-                                                                    uu____4521
-                                                                     in
-                                                                    (FStar_Getopt.noshort,
-                                                                    "__temp_fast_implicits",
-                                                                    uu____4520,
-                                                                    "Don't use this option yet")
-                                                                     in
-                                                                    let uu____4523
-                                                                    =
-                                                                    let uu____4535
-                                                                    =
-                                                                    let uu____4545
-                                                                    =
-                                                                    let uu____4546
+                                                                    let uu____4544
                                                                     =
                                                                     let uu____4554
                                                                     =
@@ -1638,230 +1637,252 @@ let rec (specs_with_types :
                                                                     Const
                                                                     uu____4555
                                                                      in
+                                                                    (FStar_Getopt.noshort,
+                                                                    "__temp_fast_implicits",
+                                                                    uu____4554,
+                                                                    "Don't use this option yet")
+                                                                     in
+                                                                    let uu____4557
+                                                                    =
+                                                                    let uu____4569
+                                                                    =
+                                                                    let uu____4579
+                                                                    =
+                                                                    let uu____4580
+                                                                    =
+                                                                    let uu____4588
+                                                                    =
+                                                                    let uu____4589
+                                                                    =
+                                                                    mk_bool
+                                                                    true  in
+                                                                    Const
+                                                                    uu____4589
+                                                                     in
                                                                     ((fun
-                                                                    uu____4561
+                                                                    uu____4595
                                                                      ->
                                                                     display_version
                                                                     ();
                                                                     FStar_All.exit
                                                                     (Prims.parse_int "0")),
-                                                                    uu____4554)
+                                                                    uu____4588)
                                                                      in
                                                                     WithSideEffect
-                                                                    uu____4546
+                                                                    uu____4580
                                                                      in
                                                                     (118,
                                                                     "version",
-                                                                    uu____4545,
+                                                                    uu____4579,
                                                                     "Display version number")
                                                                      in
-                                                                    let uu____4565
+                                                                    let uu____4599
                                                                     =
-                                                                    let uu____4577
+                                                                    let uu____4611
                                                                     =
-                                                                    let uu____4587
+                                                                    let uu____4621
                                                                     =
-                                                                    let uu____4588
+                                                                    let uu____4622
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4588
+                                                                    uu____4622
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "warn_default_effects",
-                                                                    uu____4587,
+                                                                    uu____4621,
                                                                     "Warn when (a -> b) is desugared to (a -> Tot b)")
                                                                      in
-                                                                    let uu____4590
-                                                                    =
-                                                                    let uu____4602
-                                                                    =
-                                                                    let uu____4614
-                                                                    =
                                                                     let uu____4624
                                                                     =
-                                                                    let uu____4625
+                                                                    let uu____4636
+                                                                    =
+                                                                    let uu____4648
+                                                                    =
+                                                                    let uu____4658
+                                                                    =
+                                                                    let uu____4659
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4625
+                                                                    uu____4659
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "z3refresh",
-                                                                    uu____4624,
+                                                                    uu____4658,
                                                                     "Restart Z3 after each query; useful for ensuring proof robustness")
                                                                      in
-                                                                    let uu____4627
+                                                                    let uu____4661
                                                                     =
-                                                                    let uu____4639
+                                                                    let uu____4673
                                                                     =
-                                                                    let uu____4651
-                                                                    =
-                                                                    let uu____4663
-                                                                    =
-                                                                    let uu____4675
-                                                                    =
-                                                                    let uu____4687
+                                                                    let uu____4685
                                                                     =
                                                                     let uu____4697
                                                                     =
-                                                                    let uu____4698
+                                                                    let uu____4709
+                                                                    =
+                                                                    let uu____4721
+                                                                    =
+                                                                    let uu____4731
+                                                                    =
+                                                                    let uu____4732
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4698
+                                                                    uu____4732
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "__no_positivity",
-                                                                    uu____4697,
+                                                                    uu____4731,
                                                                     "Don't check positivity of inductive types")
                                                                      in
-                                                                    let uu____4700
+                                                                    let uu____4734
                                                                     =
-                                                                    let uu____4712
+                                                                    let uu____4746
                                                                     =
-                                                                    let uu____4722
+                                                                    let uu____4756
                                                                     =
-                                                                    let uu____4723
+                                                                    let uu____4757
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4723
+                                                                    uu____4757
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "__ml_no_eta_expand_coertions",
-                                                                    uu____4722,
+                                                                    uu____4756,
                                                                     "Do not eta-expand coertions in generated OCaml")
                                                                      in
-                                                                    let uu____4725
-                                                                    =
-                                                                    let uu____4737
-                                                                    =
-                                                                    let uu____4749
-                                                                    =
-                                                                    let uu____4761
+                                                                    let uu____4759
                                                                     =
                                                                     let uu____4771
                                                                     =
-                                                                    let uu____4772
+                                                                    let uu____4783
                                                                     =
-                                                                    let uu____4780
+                                                                    let uu____4795
                                                                     =
-                                                                    let uu____4781
+                                                                    let uu____4805
+                                                                    =
+                                                                    let uu____4806
+                                                                    =
+                                                                    let uu____4814
+                                                                    =
+                                                                    let uu____4815
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4781
+                                                                    uu____4815
                                                                      in
                                                                     ((fun
-                                                                    uu____4786
+                                                                    uu____4820
                                                                      ->
                                                                     FStar_ST.op_Colon_Equals
                                                                     debug_embedding
                                                                     true),
-                                                                    uu____4780)
+                                                                    uu____4814)
                                                                      in
                                                                     WithSideEffect
-                                                                    uu____4772
+                                                                    uu____4806
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "__debug_embedding",
-                                                                    uu____4771,
+                                                                    uu____4805,
                                                                     "Debug messages for embeddings/unembeddings of natively compiled terms")
                                                                      in
-                                                                    let uu____4807
+                                                                    let uu____4841
                                                                     =
-                                                                    let uu____4819
+                                                                    let uu____4853
                                                                     =
-                                                                    let uu____4829
+                                                                    let uu____4863
                                                                     =
-                                                                    let uu____4830
+                                                                    let uu____4864
                                                                     =
-                                                                    let uu____4838
+                                                                    let uu____4872
                                                                     =
-                                                                    let uu____4839
+                                                                    let uu____4873
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4839
+                                                                    uu____4873
                                                                      in
                                                                     ((fun
-                                                                    uu____4844
+                                                                    uu____4878
                                                                      ->
                                                                     FStar_ST.op_Colon_Equals
                                                                     eager_embedding
                                                                     true),
-                                                                    uu____4838)
+                                                                    uu____4872)
                                                                      in
                                                                     WithSideEffect
-                                                                    uu____4830
+                                                                    uu____4864
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "eager_embedding",
-                                                                    uu____4829,
+                                                                    uu____4863,
                                                                     "Eagerly embed and unembed terms to primitive operations and plugins: not recommended except for benchmarking")
                                                                      in
-                                                                    let uu____4865
+                                                                    let uu____4899
                                                                     =
-                                                                    let uu____4877
+                                                                    let uu____4911
                                                                     =
-                                                                    let uu____4887
+                                                                    let uu____4921
                                                                     =
-                                                                    let uu____4888
+                                                                    let uu____4922
                                                                     =
-                                                                    let uu____4896
+                                                                    let uu____4930
                                                                     =
-                                                                    let uu____4897
+                                                                    let uu____4931
                                                                     =
                                                                     mk_bool
                                                                     true  in
                                                                     Const
-                                                                    uu____4897
+                                                                    uu____4931
                                                                      in
                                                                     ((fun
-                                                                    uu____4903
+                                                                    uu____4937
                                                                      ->
                                                                     (
-                                                                    let uu____4905
+                                                                    let uu____4939
                                                                     =
                                                                     specs ()
                                                                      in
                                                                     display_usage_aux
-                                                                    uu____4905);
+                                                                    uu____4939);
                                                                     FStar_All.exit
                                                                     (Prims.parse_int "0")),
-                                                                    uu____4896)
+                                                                    uu____4930)
                                                                      in
                                                                     WithSideEffect
-                                                                    uu____4888
+                                                                    uu____4922
                                                                      in
                                                                     (104,
                                                                     "help",
-                                                                    uu____4887,
+                                                                    uu____4921,
                                                                     "Display this information")
                                                                      in
-                                                                    [uu____4877]
+                                                                    [uu____4911]
                                                                      in
-                                                                    uu____4819
+                                                                    uu____4853
                                                                     ::
-                                                                    uu____4865
+                                                                    uu____4899
                                                                      in
-                                                                    uu____4761
+                                                                    uu____4795
                                                                     ::
-                                                                    uu____4807
+                                                                    uu____4841
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "use_extracted_interfaces",
                                                                     BoolStr,
                                                                     "Extract interfaces from the dependencies and use them for verification (default 'false')")
                                                                     ::
-                                                                    uu____4749
+                                                                    uu____4783
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "warn_error",
@@ -1869,22 +1890,22 @@ let rec (specs_with_types :
                                                                     ""),
                                                                     "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t- [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t- [-r] silences range [r]\n\t\t- [+r] enables range [r]\n\t\t- [@r] makes range [r] fatal.")
                                                                     ::
-                                                                    uu____4737
+                                                                    uu____4771
                                                                      in
-                                                                    uu____4712
+                                                                    uu____4746
                                                                     ::
-                                                                    uu____4725
+                                                                    uu____4759
                                                                      in
-                                                                    uu____4687
+                                                                    uu____4721
                                                                     ::
-                                                                    uu____4700
+                                                                    uu____4734
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "use_two_phase_tc",
                                                                     BoolStr,
                                                                     "Use the two phase typechecker (default 'true')")
                                                                     ::
-                                                                    uu____4675
+                                                                    uu____4709
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "z3seed",
@@ -1892,7 +1913,7 @@ let rec (specs_with_types :
                                                                     "positive_integer"),
                                                                     "Set the Z3 random seed (default 0)")
                                                                     ::
-                                                                    uu____4663
+                                                                    uu____4697
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "z3rlimit_factor",
@@ -1900,7 +1921,7 @@ let rec (specs_with_types :
                                                                     "positive_integer"),
                                                                     "Set the Z3 per-query resource limit multiplier. This is useful when, say, regenerating hints and you want to be more lax. (default 1)")
                                                                     ::
-                                                                    uu____4651
+                                                                    uu____4685
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "z3rlimit",
@@ -1908,11 +1929,11 @@ let rec (specs_with_types :
                                                                     "positive_integer"),
                                                                     "Set the Z3 per-query resource limit (default 5 units, taking roughtly 5s)")
                                                                     ::
-                                                                    uu____4639
+                                                                    uu____4673
                                                                      in
-                                                                    uu____4614
+                                                                    uu____4648
                                                                     ::
-                                                                    uu____4627
+                                                                    uu____4661
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "z3cliopt",
@@ -1921,19 +1942,19 @@ let rec (specs_with_types :
                                                                     "option")),
                                                                     "Z3 command line options")
                                                                     ::
-                                                                    uu____4602
+                                                                    uu____4636
                                                                      in
-                                                                    uu____4577
+                                                                    uu____4611
                                                                     ::
-                                                                    uu____4590
+                                                                    uu____4624
                                                                      in
-                                                                    uu____4535
+                                                                    uu____4569
                                                                     ::
-                                                                    uu____4565
+                                                                    uu____4599
                                                                      in
-                                                                    uu____4510
+                                                                    uu____4544
                                                                     ::
-                                                                    uu____4523
+                                                                    uu____4557
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "__temp_no_proj",
@@ -1942,7 +1963,7 @@ let rec (specs_with_types :
                                                                     "module_name")),
                                                                     "Don't generate projectors for this module")
                                                                     ::
-                                                                    uu____4498
+                                                                    uu____4532
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "vcgen.optimize_bind_as_seq",
@@ -1952,7 +1973,7 @@ let rec (specs_with_types :
                                                                     "with_type"]),
                                                                     "\n\t\tOptimize the generation of verification conditions, \n\t\t\tspecifically the construction of monadic `bind`,\n\t\t\tgenerating `seq` instead of `bind` when the first computation as a trivial post-condition.\n\t\t\tBy default, this optimization does not apply.\n\t\t\tWhen the `without_type` option is chosen, this imposes a cost on the SMT solver\n\t\t\tto reconstruct type information.\n\t\t\tWhen `with_type` is chosen, type information is provided to the SMT solver,\n\t\t\tbut at the cost of VC bloat, which may often be redundant.")
                                                                     ::
-                                                                    uu____4486
+                                                                    uu____4520
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "using_facts_from",
@@ -1961,11 +1982,15 @@ let rec (specs_with_types :
                                                                     "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'")),
                                                                     "\n\t\tPrunes the context to include only the facts from the given namespace or fact id. \n\t\t\tFacts can be include or excluded using the [+|-] qualifier. \n\t\t\tFor example --using_facts_from '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\tremove all facts from FStar.List.Tot.*, \n\t\t\t\tretain all remaining facts from FStar.List.*, \n\t\t\t\tremove all facts from FStar.Reflection.*, \n\t\t\t\tand retain all the rest.\n\t\tNote, the '+' is optional: --using_facts_from 'FStar.List' is equivalent to --using_facts_from '+FStar.List'. \n\t\tMultiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.")
                                                                     ::
-                                                                    uu____4474
+                                                                    uu____4508
                                                                      in
-                                                                    uu____4449
+                                                                    uu____4483
                                                                     ::
-                                                                    uu____4462
+                                                                    uu____4496
+                                                                     in
+                                                                    uu____4458
+                                                                    ::
+                                                                    uu____4471
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "use_native_tactics",
@@ -1973,50 +1998,50 @@ let rec (specs_with_types :
                                                                     "path"),
                                                                     "Use compiled tactics from <path>")
                                                                     ::
-                                                                    uu____4437
+                                                                    uu____4446
                                                                      in
-                                                                    uu____4412
+                                                                    uu____4421
                                                                     ::
-                                                                    uu____4425
+                                                                    uu____4434
                                                                      in
-                                                                    uu____4387
+                                                                    uu____4396
                                                                     ::
-                                                                    uu____4400
+                                                                    uu____4409
                                                                      in
-                                                                    uu____4362
+                                                                    uu____4371
                                                                     ::
-                                                                    uu____4375
+                                                                    uu____4384
                                                                      in
-                                                                    uu____4337
+                                                                    uu____4346
                                                                     ::
-                                                                    uu____4350
+                                                                    uu____4359
                                                                      in
-                                                                    uu____4312
+                                                                    uu____4321
                                                                     ::
-                                                                    uu____4325
+                                                                    uu____4334
                                                                      in
-                                                                    uu____4287
+                                                                    uu____4296
                                                                     ::
-                                                                    uu____4300
+                                                                    uu____4309
                                                                      in
-                                                                    uu____4262
+                                                                    uu____4271
                                                                     ::
-                                                                    uu____4275
+                                                                    uu____4284
                                                                      in
-                                                                    uu____4237
+                                                                    uu____4246
                                                                     ::
-                                                                    uu____4250
+                                                                    uu____4259
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "tcnorm",
                                                                     BoolStr,
                                                                     "Attempt to normalize definitions marked as tcnorm (default 'true')")
                                                                     ::
-                                                                    uu____4225
+                                                                    uu____4234
                                                                      in
-                                                                    uu____4200
+                                                                    uu____4209
                                                                     ::
-                                                                    uu____4213
+                                                                    uu____4222
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "tactic_trace_d",
@@ -2024,15 +2049,15 @@ let rec (specs_with_types :
                                                                     "positive_integer"),
                                                                     "Trace tactics up to a certain binding depth")
                                                                     ::
-                                                                    uu____4188
+                                                                    uu____4197
                                                                      in
-                                                                    uu____4163
+                                                                    uu____4172
                                                                     ::
-                                                                    uu____4176
+                                                                    uu____4185
                                                                      in
-                                                                    uu____4138
+                                                                    uu____4147
                                                                     ::
-                                                                    uu____4151
+                                                                    uu____4160
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "smtencoding.l_arith_repr",
@@ -2041,7 +2066,7 @@ let rec (specs_with_types :
                                                                     "boxwrap"]),
                                                                     "Toggle the representation of linear arithmetic functions in the SMT encoding:\n\t\ti.e., if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'; \n\t\tif 'native', use '+, -, -'; \n\t\t(default 'boxwrap')")
                                                                     ::
-                                                                    uu____4126
+                                                                    uu____4135
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "smtencoding.nl_arith_repr",
@@ -2051,14 +2076,14 @@ let rec (specs_with_types :
                                                                     "boxwrap"]),
                                                                     "Control the representation of non-linear arithmetic functions in the SMT encoding:\n\t\ti.e., if 'boxwrap' use 'Prims.op_Multiply, Prims.op_Division, Prims.op_Modulus'; \n\t\tif 'native' use '*, div, mod';\n\t\tif 'wrapped' use '_mul, _div, _mod : Int*Int -> Int'; \n\t\t(default 'boxwrap')")
                                                                     ::
-                                                                    uu____4114
+                                                                    uu____4123
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "smtencoding.elim_box",
                                                                     BoolStr,
                                                                     "Toggle a peephole optimization that eliminates redundant uses of boxing/unboxing in the SMT encoding (default 'false')")
                                                                     ::
-                                                                    uu____4102
+                                                                    uu____4111
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "smt",
@@ -2066,11 +2091,11 @@ let rec (specs_with_types :
                                                                     "path"),
                                                                     "Path to the Z3 SMT solver (we could eventually support other solvers)")
                                                                     ::
-                                                                    uu____4090
+                                                                    uu____4099
                                                                      in
-                                                                    uu____4065
+                                                                    uu____4074
                                                                     ::
-                                                                    uu____4078
+                                                                    uu____4087
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "reuse_hint_for",
@@ -2078,50 +2103,50 @@ let rec (specs_with_types :
                                                                     "toplevel_name"),
                                                                     "Optimistically, attempt using the recorded hint for <toplevel_name> (a top-level name in the current module) when trying to verify some other term 'g'")
                                                                     ::
-                                                                    uu____4053
+                                                                    uu____4062
                                                                      in
-                                                                    uu____4028
+                                                                    uu____4037
                                                                     ::
-                                                                    uu____4041
+                                                                    uu____4050
                                                                      in
-                                                                    uu____4003
+                                                                    uu____4012
                                                                     ::
-                                                                    uu____4016
+                                                                    uu____4025
                                                                      in
-                                                                    uu____3978
+                                                                    uu____3987
                                                                     ::
-                                                                    uu____3991
+                                                                    uu____4000
                                                                      in
-                                                                    uu____3953
+                                                                    uu____3962
                                                                     ::
-                                                                    uu____3966
+                                                                    uu____3975
                                                                      in
-                                                                    uu____3928
+                                                                    uu____3937
                                                                     ::
-                                                                    uu____3941
+                                                                    uu____3950
                                                                      in
-                                                                    uu____3903
+                                                                    uu____3912
                                                                     ::
-                                                                    uu____3916
+                                                                    uu____3925
                                                                      in
-                                                                    uu____3878
+                                                                    uu____3887
                                                                     ::
-                                                                    uu____3891
+                                                                    uu____3900
                                                                      in
-                                                                    uu____3853
+                                                                    uu____3862
                                                                     ::
-                                                                    uu____3866
+                                                                    uu____3875
                                                                      in
-                                                                    uu____3828
+                                                                    uu____3837
                                                                     ::
-                                                                    uu____3841
+                                                                    uu____3850
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "prims",
                                                                     (PathStr
                                                                     "file"),
                                                                     "") ::
-                                                                    uu____3816
+                                                                    uu____3825
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "odir",
@@ -2131,19 +2156,19 @@ let rec (specs_with_types :
                                                                     "dir"))),
                                                                     "Place output in directory <dir>")
                                                                     ::
-                                                                    uu____3804
+                                                                    uu____3813
                                                                      in
-                                                                    uu____3779
+                                                                    uu____3788
                                                                     ::
-                                                                    uu____3792
+                                                                    uu____3801
                                                                      in
-                                                                    uu____3754
+                                                                    uu____3763
                                                                     ::
-                                                                    uu____3767
+                                                                    uu____3776
                                                                      in
-                                                                    uu____3729
+                                                                    uu____3738
                                                                     ::
-                                                                    uu____3742
+                                                                    uu____3751
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "no_extract",
@@ -2152,11 +2177,11 @@ let rec (specs_with_types :
                                                                     "module name")),
                                                                     "Deprecated: use --extract instead; Do not extract code from this module")
                                                                     ::
-                                                                    uu____3717
+                                                                    uu____3726
                                                                      in
-                                                                    uu____3692
+                                                                    uu____3701
                                                                     ::
-                                                                    uu____3705
+                                                                    uu____3714
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "n_cores",
@@ -2164,11 +2189,11 @@ let rec (specs_with_types :
                                                                     "positive_integer"),
                                                                     "Maximum number of cores to use for the solver (implies detail_errors = false) (default 1)")
                                                                     ::
-                                                                    uu____3680
+                                                                    uu____3689
                                                                      in
-                                                                    uu____3655
+                                                                    uu____3664
                                                                     ::
-                                                                    uu____3668
+                                                                    uu____3677
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "min_fuel",
@@ -2176,7 +2201,7 @@ let rec (specs_with_types :
                                                                     "non-negative integer"),
                                                                     "Minimum number of unrolling of recursive functions to try (default 1)")
                                                                     ::
-                                                                    uu____3643
+                                                                    uu____3652
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "max_ifuel",
@@ -2184,7 +2209,7 @@ let rec (specs_with_types :
                                                                     "non-negative integer"),
                                                                     "Number of unrolling of inductive datatypes to try at most (default 2)")
                                                                     ::
-                                                                    uu____3631
+                                                                    uu____3640
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "max_fuel",
@@ -2192,15 +2217,15 @@ let rec (specs_with_types :
                                                                     "non-negative integer"),
                                                                     "Number of unrolling of recursive functions to try at most (default 8)")
                                                                     ::
-                                                                    uu____3619
+                                                                    uu____3628
                                                                      in
-                                                                    uu____3594
+                                                                    uu____3603
                                                                     ::
-                                                                    uu____3607
+                                                                    uu____3616
                                                                      in
-                                                                    uu____3569
+                                                                    uu____3578
                                                                     ::
-                                                                    uu____3582
+                                                                    uu____3591
                                                                      in
                                                                     (FStar_Getopt.noshort,
                                                                     "load",
@@ -2209,11 +2234,11 @@ let rec (specs_with_types :
                                                                     "module")),
                                                                     "Load compiled module")
                                                                     ::
-                                                                    uu____3557
+                                                                    uu____3566
                                                                      in
-                                                                  uu____3532
+                                                                  uu____3541
                                                                     ::
-                                                                    uu____3545
+                                                                    uu____3554
                                                                    in
                                                                 (FStar_Getopt.noshort,
                                                                   "initial_ifuel",
@@ -2221,17 +2246,17 @@ let rec (specs_with_types :
                                                                     "non-negative integer"),
                                                                   "Number of unrolling of inductive datatypes to try at first (default 1)")
                                                                   ::
-                                                                  uu____3520
+                                                                  uu____3529
                                                                  in
                                                               (FStar_Getopt.noshort,
                                                                 "initial_fuel",
                                                                 (IntStr
                                                                    "non-negative integer"),
                                                                 "Number of unrolling of recursive functions to try initially (default 2)")
-                                                                :: uu____3508
+                                                                :: uu____3517
                                                                in
-                                                            uu____3483 ::
-                                                              uu____3496
+                                                            uu____3492 ::
+                                                              uu____3505
                                                              in
                                                           (FStar_Getopt.noshort,
                                                             "include",
@@ -2239,24 +2264,24 @@ let rec (specs_with_types :
                                                                (PathStr
                                                                   "path")),
                                                             "A directory in which to search for files included on the command line")
-                                                            :: uu____3471
+                                                            :: uu____3480
                                                            in
-                                                        uu____3446 ::
-                                                          uu____3459
+                                                        uu____3455 ::
+                                                          uu____3468
                                                          in
-                                                      uu____3421 ::
-                                                        uu____3434
+                                                      uu____3430 ::
+                                                        uu____3443
                                                        in
-                                                    uu____3396 :: uu____3409
+                                                    uu____3405 :: uu____3418
                                                      in
                                                   (FStar_Getopt.noshort,
                                                     "hint_file",
                                                     (PathStr "path"),
                                                     "Read/write hints to <path> (instead of module-specific hints files)")
-                                                    :: uu____3384
+                                                    :: uu____3393
                                                    in
-                                                uu____3359 :: uu____3372  in
-                                              uu____3334 :: uu____3347  in
+                                                uu____3368 :: uu____3381  in
+                                              uu____3343 :: uu____3356  in
                                             (FStar_Getopt.noshort,
                                               "extract_namespace",
                                               (Accumulated
@@ -2265,7 +2290,7 @@ let rec (specs_with_types :
                                                       (SimpleStr
                                                          "namespace name")))),
                                               "Deprecated: use --extract instead; Only extract modules in the specified namespace")
-                                              :: uu____3322
+                                              :: uu____3331
                                              in
                                           (FStar_Getopt.noshort,
                                             "extract_module",
@@ -2274,95 +2299,95 @@ let rec (specs_with_types :
                                                   (pp_lowercase,
                                                     (SimpleStr "module_name")))),
                                             "Deprecated: use --extract instead; Only extract the specified modules (instead of the possibly-partial dependency graph)")
-                                            :: uu____3310
+                                            :: uu____3319
                                            in
                                         (FStar_Getopt.noshort, "extract",
                                           (Accumulated
                                              (SimpleStr
                                                 "One or more space-separated occurrences of '[+|-]( * | namespace | module)'")),
                                           "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\tModules can be extracted or not using the [+|-] qualifier. \n\t\t\tFor example --extract '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\tnot extract FStar.List.Tot.*, \n\t\t\t\textract remaining modules from FStar.List.*, \n\t\t\t\tnot extract FStar.Reflection.*, \n\t\t\t\tand extract all the rest.\n\t\tNote, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\tMultiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.")
-                                          :: uu____3298
+                                          :: uu____3307
                                          in
-                                      uu____3273 :: uu____3286  in
-                                    uu____3248 :: uu____3261  in
+                                      uu____3282 :: uu____3295  in
+                                    uu____3257 :: uu____3270  in
                                   (FStar_Getopt.noshort, "dump_module",
                                     (Accumulated (SimpleStr "module_name")),
-                                    "") :: uu____3236
+                                    "") :: uu____3245
                                    in
-                                uu____3211 :: uu____3224  in
-                              uu____3186 :: uu____3199  in
-                            uu____3161 :: uu____3174  in
+                                uu____3220 :: uu____3233  in
+                              uu____3195 :: uu____3208  in
+                            uu____3170 :: uu____3183  in
                           (FStar_Getopt.noshort, "dep",
                             (EnumStr ["make"; "graph"; "full"]),
                             "Output the transitive closure of the full dependency graph in three formats:\n\t 'graph': a format suitable the 'dot' tool from 'GraphViz'\n\t 'full': a format suitable for 'make', including dependences for producing .ml and .krml files\n\t 'make': (deprecated) a format suitable for 'make', including only dependences among source files")
-                            :: uu____3149
+                            :: uu____3158
                            in
                         (FStar_Getopt.noshort, "defensive",
                           (EnumStr ["no"; "warn"; "fail"]),
                           "Enable several internal sanity checks, useful to track bugs and report issues.\n\t\tif 'no', no checks are performed\n\t\tif 'warn', checks are performed and raise a warning when they fail\n\t\tif 'fail', like 'warn', but the compiler aborts instead of issuing a warning\n\t\t(default 'no')")
-                          :: uu____3137
+                          :: uu____3146
                          in
                       (FStar_Getopt.noshort, "debug_level",
                         (Accumulated
                            (OpenEnumStr
                               (["Low"; "Medium"; "High"; "Extreme"], "..."))),
                         "Control the verbosity of debugging info") ::
-                        uu____3125
+                        uu____3134
                        in
                     (FStar_Getopt.noshort, "debug",
                       (Accumulated (SimpleStr "module_name")),
                       "Print lots of debugging information while checking module")
-                      :: uu____3113
+                      :: uu____3122
                      in
                   (FStar_Getopt.noshort, "codegen-lib",
                     (Accumulated (SimpleStr "namespace")),
                     "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)")
-                    :: uu____3101
+                    :: uu____3110
                    in
                 (FStar_Getopt.noshort, "codegen",
                   (EnumStr ["OCaml"; "FSharp"; "Kremlin"; "Plugin"]),
                   "Generate code for further compilation to executable code, or build a compiler plugin")
-                  :: uu____3089
+                  :: uu____3098
                  in
-              uu____3064 :: uu____3077  in
+              uu____3073 :: uu____3086  in
             (FStar_Getopt.noshort, "cache_dir",
               (PostProcessed (pp_validate_dir, (PathStr "dir"))),
               "Read and write .checked and .checked.lax in directory <dir>")
-              :: uu____3052
+              :: uu____3061
              in
-          uu____3027 :: uu____3040  in
+          uu____3036 :: uu____3049  in
         (FStar_Getopt.noshort, "admit_except",
           (SimpleStr "[symbol|(symbol, id)]"),
           "Admit all queries, except those with label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)")
-          :: uu____3015
+          :: uu____3024
          in
       (FStar_Getopt.noshort, "admit_smt_queries", BoolStr,
-        "Admit SMT queries, unsafe! (default 'false')") :: uu____3003
+        "Admit SMT queries, unsafe! (default 'false')") :: uu____3012
        in
     (FStar_Getopt.noshort, "abort_on",
       (PostProcessed
-         ((fun uu___83_5859  ->
-             match uu___83_5859 with
+         ((fun uu___83_5902  ->
+             match uu___83_5902 with
              | Int x -> (FStar_ST.op_Colon_Equals abort_counter x; Int x)
              | x -> failwith "?"), (IntStr "non-negative integer"))),
       "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)")
-      :: uu____2991
+      :: uu____3000
 
 and (specs : unit -> FStar_Getopt.opt Prims.list) =
-  fun uu____5882  ->
-    let uu____5885 = specs_with_types ()  in
+  fun uu____5925  ->
+    let uu____5928 = specs_with_types ()  in
     FStar_List.map
-      (fun uu____5912  ->
-         match uu____5912 with
+      (fun uu____5955  ->
+         match uu____5955 with
          | (short,long,typ,doc) ->
-             let uu____5928 =
-               let uu____5940 = arg_spec_of_opt_type long typ  in
-               (short, long, uu____5940, doc)  in
-             mk_spec uu____5928) uu____5885
+             let uu____5971 =
+               let uu____5983 = arg_spec_of_opt_type long typ  in
+               (short, long, uu____5983, doc)  in
+             mk_spec uu____5971) uu____5928
 
 let (settable : Prims.string -> Prims.bool) =
-  fun uu___84_5950  ->
-    match uu___84_5950 with
+  fun uu___84_5993  ->
+    match uu___84_5993 with
     | "abort_on" -> true
     | "admit_smt_queries" -> true
     | "admit_except" -> true
@@ -2404,6 +2429,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "trace_error" -> true
     | "unthrottle_inductives" -> true
     | "use_eq_at_higher_order" -> true
+    | "no_plugins" -> true
     | "no_tactics" -> true
     | "normalize_pure_terms_for_extraction" -> true
     | "tactic_raw_binders" -> true
@@ -2420,7 +2446,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "z3refresh" -> true
     | "use_two_phase_tc" -> true
     | "vcgen.optimize_bind_as_seq" -> true
-    | uu____5951 -> false
+    | uu____5994 -> false
   
 let (resettable : Prims.string -> Prims.bool) =
   fun s  ->
@@ -2438,9 +2464,9 @@ let (settable_specs :
   =
   FStar_All.pipe_right all_specs
     (FStar_List.filter
-       (fun uu____6025  ->
-          match uu____6025 with
-          | (uu____6037,x,uu____6039,uu____6040) -> settable x))
+       (fun uu____6068  ->
+          match uu____6068 with
+          | (uu____6080,x,uu____6082,uu____6083) -> settable x))
   
 let (resettable_specs :
   (FStar_BaseTypes.char,Prims.string,unit FStar_Getopt.opt_variant,Prims.string)
@@ -2448,25 +2474,25 @@ let (resettable_specs :
   =
   FStar_All.pipe_right all_specs
     (FStar_List.filter
-       (fun uu____6102  ->
-          match uu____6102 with
-          | (uu____6114,x,uu____6116,uu____6117) -> resettable x))
+       (fun uu____6145  ->
+          match uu____6145 with
+          | (uu____6157,x,uu____6159,uu____6160) -> resettable x))
   
 let (display_usage : unit -> unit) =
-  fun uu____6128  ->
-    let uu____6129 = specs ()  in display_usage_aux uu____6129
+  fun uu____6171  ->
+    let uu____6172 = specs ()  in display_usage_aux uu____6172
   
 let (fstar_bin_directory : Prims.string) = FStar_Util.get_exec_dir () 
 exception File_argument of Prims.string 
 let (uu___is_File_argument : Prims.exn -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | File_argument uu____6153 -> true
-    | uu____6154 -> false
+    | File_argument uu____6196 -> true
+    | uu____6197 -> false
   
 let (__proj__File_argument__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee  ->
-    match projectee with | File_argument uu____6161 -> uu____6161
+    match projectee with | File_argument uu____6204 -> uu____6204
   
 let (set_options : options -> Prims.string -> FStar_Getopt.parse_cmdline_res)
   =
@@ -2478,7 +2504,7 @@ let (set_options : options -> Prims.string -> FStar_Getopt.parse_cmdline_res)
         | Reset  -> resettable_specs
         | Restore  -> all_specs  in
       try
-        (fun uu___89_6178  ->
+        (fun uu___89_6221  ->
            match () with
            | () ->
                if s = ""
@@ -2488,9 +2514,9 @@ let (set_options : options -> Prims.string -> FStar_Getopt.parse_cmdline_res)
                    (fun s1  -> FStar_Exn.raise (File_argument s1)) s) ()
       with
       | File_argument s1 ->
-          let uu____6189 =
+          let uu____6232 =
             FStar_Util.format1 "File %s is not a valid option" s1  in
-          FStar_Getopt.Error uu____6189
+          FStar_Getopt.Error uu____6232
   
 let (file_list_ : Prims.string Prims.list FStar_ST.ref) =
   FStar_Util.mk_ref [] 
@@ -2499,57 +2525,57 @@ let (parse_cmd_line :
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
       FStar_Pervasives_Native.tuple2)
   =
-  fun uu____6217  ->
+  fun uu____6260  ->
     let res =
       FStar_Getopt.parse_cmdline all_specs
         (fun i  ->
-           let uu____6222 =
-             let uu____6225 = FStar_ST.op_Bang file_list_  in
-             FStar_List.append uu____6225 [i]  in
-           FStar_ST.op_Colon_Equals file_list_ uu____6222)
+           let uu____6265 =
+             let uu____6268 = FStar_ST.op_Bang file_list_  in
+             FStar_List.append uu____6268 [i]  in
+           FStar_ST.op_Colon_Equals file_list_ uu____6265)
        in
-    let uu____6274 =
-      let uu____6277 = FStar_ST.op_Bang file_list_  in
-      FStar_List.map FStar_Common.try_convert_file_name_to_mixed uu____6277
+    let uu____6317 =
+      let uu____6320 = FStar_ST.op_Bang file_list_  in
+      FStar_List.map FStar_Common.try_convert_file_name_to_mixed uu____6320
        in
-    (res, uu____6274)
+    (res, uu____6317)
   
 let (file_list : unit -> Prims.string Prims.list) =
-  fun uu____6311  -> FStar_ST.op_Bang file_list_ 
+  fun uu____6354  -> FStar_ST.op_Bang file_list_ 
 let (restore_cmd_line_options : Prims.bool -> FStar_Getopt.parse_cmdline_res)
   =
   fun should_clear  ->
     let old_verify_module = get_verify_module ()  in
     if should_clear then clear () else init ();
     (let r =
-       let uu____6346 = specs ()  in
-       FStar_Getopt.parse_cmdline uu____6346 (fun x  -> ())  in
-     (let uu____6352 =
-        let uu____6357 =
-          let uu____6358 = FStar_List.map mk_string old_verify_module  in
-          List uu____6358  in
-        ("verify_module", uu____6357)  in
-      set_option' uu____6352);
+       let uu____6389 = specs ()  in
+       FStar_Getopt.parse_cmdline uu____6389 (fun x  -> ())  in
+     (let uu____6395 =
+        let uu____6400 =
+          let uu____6401 = FStar_List.map mk_string old_verify_module  in
+          List uu____6401  in
+        ("verify_module", uu____6400)  in
+      set_option' uu____6395);
      r)
   
 let (module_name_of_file_name : Prims.string -> Prims.string) =
   fun f  ->
     let f1 = FStar_Util.basename f  in
     let f2 =
-      let uu____6368 =
-        let uu____6369 =
-          let uu____6370 =
-            let uu____6371 = FStar_Util.get_file_extension f1  in
-            FStar_String.length uu____6371  in
-          (FStar_String.length f1) - uu____6370  in
-        uu____6369 - (Prims.parse_int "1")  in
-      FStar_String.substring f1 (Prims.parse_int "0") uu____6368  in
+      let uu____6411 =
+        let uu____6412 =
+          let uu____6413 =
+            let uu____6414 = FStar_Util.get_file_extension f1  in
+            FStar_String.length uu____6414  in
+          (FStar_String.length f1) - uu____6413  in
+        uu____6412 - (Prims.parse_int "1")  in
+      FStar_String.substring f1 (Prims.parse_int "0") uu____6411  in
     FStar_String.lowercase f2
   
 let (should_verify : Prims.string -> Prims.bool) =
   fun m  ->
-    let uu____6377 = get_lax ()  in
-    if uu____6377
+    let uu____6420 = get_lax ()  in
+    if uu____6420
     then false
     else
       (let l = get_verify_module ()  in
@@ -2557,67 +2583,67 @@ let (should_verify : Prims.string -> Prims.bool) =
   
 let (should_verify_file : Prims.string -> Prims.bool) =
   fun fn  ->
-    let uu____6387 = module_name_of_file_name fn  in should_verify uu____6387
+    let uu____6430 = module_name_of_file_name fn  in should_verify uu____6430
   
 let (dont_gen_projectors : Prims.string -> Prims.bool) =
   fun m  ->
-    let uu____6393 = get___temp_no_proj ()  in
-    FStar_List.contains m uu____6393
+    let uu____6436 = get___temp_no_proj ()  in
+    FStar_List.contains m uu____6436
   
 let (should_print_message : Prims.string -> Prims.bool) =
   fun m  ->
-    let uu____6401 = should_verify m  in
-    if uu____6401 then m <> "Prims" else false
+    let uu____6444 = should_verify m  in
+    if uu____6444 then m <> "Prims" else false
   
 let (include_path : unit -> Prims.string Prims.list) =
-  fun uu____6409  ->
-    let uu____6410 = get_no_default_includes ()  in
-    if uu____6410
+  fun uu____6452  ->
+    let uu____6453 = get_no_default_includes ()  in
+    if uu____6453
     then get_include ()
     else
       (let lib_paths =
-         let uu____6417 = FStar_Util.expand_environment_variable "FSTAR_LIB"
+         let uu____6460 = FStar_Util.expand_environment_variable "FSTAR_LIB"
             in
-         match uu____6417 with
+         match uu____6460 with
          | FStar_Pervasives_Native.None  ->
              let fstar_home = Prims.strcat fstar_bin_directory "/.."  in
              let defs = universe_include_path_base_dirs  in
-             let uu____6426 =
+             let uu____6469 =
                FStar_All.pipe_right defs
                  (FStar_List.map (fun x  -> Prims.strcat fstar_home x))
                 in
-             FStar_All.pipe_right uu____6426
+             FStar_All.pipe_right uu____6469
                (FStar_List.filter FStar_Util.file_exists)
          | FStar_Pervasives_Native.Some s -> [s]  in
-       let uu____6440 =
-         let uu____6443 = get_include ()  in
-         FStar_List.append uu____6443 ["."]  in
-       FStar_List.append lib_paths uu____6440)
+       let uu____6483 =
+         let uu____6486 = get_include ()  in
+         FStar_List.append uu____6486 ["."]  in
+       FStar_List.append lib_paths uu____6483)
   
 let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
   =
   let file_map = FStar_Util.smap_create (Prims.parse_int "100")  in
   fun filename  ->
-    let uu____6456 = FStar_Util.smap_try_find file_map filename  in
-    match uu____6456 with
+    let uu____6499 = FStar_Util.smap_try_find file_map filename  in
+    match uu____6499 with
     | FStar_Pervasives_Native.Some f -> FStar_Pervasives_Native.Some f
     | FStar_Pervasives_Native.None  ->
         let result =
           try
-            (fun uu___91_6469  ->
+            (fun uu___91_6512  ->
                match () with
                | () ->
-                   let uu____6472 = FStar_Util.is_path_absolute filename  in
-                   if uu____6472
+                   let uu____6515 = FStar_Util.is_path_absolute filename  in
+                   if uu____6515
                    then
                      (if FStar_Util.file_exists filename
                       then FStar_Pervasives_Native.Some filename
                       else FStar_Pervasives_Native.None)
                    else
-                     (let uu____6479 =
-                        let uu____6482 = include_path ()  in
-                        FStar_List.rev uu____6482  in
-                      FStar_Util.find_map uu____6479
+                     (let uu____6522 =
+                        let uu____6525 = include_path ()  in
+                        FStar_List.rev uu____6525  in
+                      FStar_Util.find_map uu____6522
                         (fun p  ->
                            let path =
                              if p = "."
@@ -2626,81 +2652,81 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
                            if FStar_Util.file_exists path
                            then FStar_Pervasives_Native.Some path
                            else FStar_Pervasives_Native.None))) ()
-          with | uu___90_6494 -> FStar_Pervasives_Native.None  in
+          with | uu___90_6537 -> FStar_Pervasives_Native.None  in
         (match result with
          | FStar_Pervasives_Native.None  -> result
          | FStar_Pervasives_Native.Some f ->
              (FStar_Util.smap_add file_map filename f; result))
   
 let (prims : unit -> Prims.string) =
-  fun uu____6505  ->
-    let uu____6506 = get_prims ()  in
-    match uu____6506 with
+  fun uu____6548  ->
+    let uu____6549 = get_prims ()  in
+    match uu____6549 with
     | FStar_Pervasives_Native.None  ->
         let filename = "prims.fst"  in
-        let uu____6510 = find_file filename  in
-        (match uu____6510 with
+        let uu____6553 = find_file filename  in
+        (match uu____6553 with
          | FStar_Pervasives_Native.Some result -> result
          | FStar_Pervasives_Native.None  ->
-             let uu____6514 =
+             let uu____6557 =
                FStar_Util.format1
                  "unable to find required file \"%s\" in the module search path.\n"
                  filename
                 in
-             failwith uu____6514)
+             failwith uu____6557)
     | FStar_Pervasives_Native.Some x -> x
   
 let (prims_basename : unit -> Prims.string) =
-  fun uu____6520  ->
-    let uu____6521 = prims ()  in FStar_Util.basename uu____6521
+  fun uu____6563  ->
+    let uu____6564 = prims ()  in FStar_Util.basename uu____6564
   
 let (pervasives : unit -> Prims.string) =
-  fun uu____6526  ->
+  fun uu____6569  ->
     let filename = "FStar.Pervasives.fst"  in
-    let uu____6528 = find_file filename  in
-    match uu____6528 with
+    let uu____6571 = find_file filename  in
+    match uu____6571 with
     | FStar_Pervasives_Native.Some result -> result
     | FStar_Pervasives_Native.None  ->
-        let uu____6532 =
+        let uu____6575 =
           FStar_Util.format1
             "unable to find required file \"%s\" in the module search path.\n"
             filename
            in
-        failwith uu____6532
+        failwith uu____6575
   
 let (pervasives_basename : unit -> Prims.string) =
-  fun uu____6537  ->
-    let uu____6538 = pervasives ()  in FStar_Util.basename uu____6538
+  fun uu____6580  ->
+    let uu____6581 = pervasives ()  in FStar_Util.basename uu____6581
   
 let (pervasives_native_basename : unit -> Prims.string) =
-  fun uu____6543  ->
+  fun uu____6586  ->
     let filename = "FStar.Pervasives.Native.fst"  in
-    let uu____6545 = find_file filename  in
-    match uu____6545 with
+    let uu____6588 = find_file filename  in
+    match uu____6588 with
     | FStar_Pervasives_Native.Some result -> FStar_Util.basename result
     | FStar_Pervasives_Native.None  ->
-        let uu____6549 =
+        let uu____6592 =
           FStar_Util.format1
             "unable to find required file \"%s\" in the module search path.\n"
             filename
            in
-        failwith uu____6549
+        failwith uu____6592
   
 let (prepend_output_dir : Prims.string -> Prims.string) =
   fun fname  ->
-    let uu____6555 = get_odir ()  in
-    match uu____6555 with
+    let uu____6598 = get_odir ()  in
+    match uu____6598 with
     | FStar_Pervasives_Native.None  -> fname
     | FStar_Pervasives_Native.Some x -> FStar_Util.join_paths x fname
   
 let (prepend_cache_dir : Prims.string -> Prims.string) =
   fun fpath  ->
-    let uu____6564 = get_cache_dir ()  in
-    match uu____6564 with
+    let uu____6607 = get_cache_dir ()  in
+    match uu____6607 with
     | FStar_Pervasives_Native.None  -> fpath
     | FStar_Pervasives_Native.Some x ->
-        let uu____6568 = FStar_Util.basename fpath  in
-        FStar_Util.join_paths x uu____6568
+        let uu____6611 = FStar_Util.basename fpath  in
+        FStar_Util.join_paths x uu____6611
   
 let (path_of_text : Prims.string -> Prims.string Prims.list) =
   fun text  -> FStar_String.split [46] text 
@@ -2717,9 +2743,9 @@ let (parse_settings :
         if FStar_Util.starts_with s "-"
         then
           (let path =
-             let uu____6634 =
+             let uu____6677 =
                FStar_Util.substring_from s (Prims.parse_int "1")  in
-             path_of_text uu____6634  in
+             path_of_text uu____6677  in
            (path, false))
         else
           (let s1 =
@@ -2728,29 +2754,29 @@ let (parse_settings :
              else s  in
            ((path_of_text s1), true))
        in
-    let uu____6642 =
+    let uu____6685 =
       FStar_All.pipe_right ns
         (FStar_List.collect
            (fun s  ->
               FStar_All.pipe_right (FStar_Util.split s " ")
                 (FStar_List.map parse_one_setting)))
        in
-    FStar_All.pipe_right uu____6642 FStar_List.rev
+    FStar_All.pipe_right uu____6685 FStar_List.rev
   
 let (__temp_no_proj : Prims.string -> Prims.bool) =
   fun s  ->
-    let uu____6712 = get___temp_no_proj ()  in
-    FStar_All.pipe_right uu____6712 (FStar_List.contains s)
+    let uu____6755 = get___temp_no_proj ()  in
+    FStar_All.pipe_right uu____6755 (FStar_List.contains s)
   
 let (__temp_fast_implicits : unit -> Prims.bool) =
-  fun uu____6721  -> lookup_opt "__temp_fast_implicits" as_bool 
+  fun uu____6764  -> lookup_opt "__temp_fast_implicits" as_bool 
 let (admit_smt_queries : unit -> Prims.bool) =
-  fun uu____6726  -> get_admit_smt_queries () 
+  fun uu____6769  -> get_admit_smt_queries () 
 let (admit_except : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____6733  -> get_admit_except () 
+  fun uu____6776  -> get_admit_except () 
 let (cache_checked_modules : unit -> Prims.bool) =
-  fun uu____6738  -> get_cache_checked_modules () 
-let (cache_off : unit -> Prims.bool) = fun uu____6743  -> get_cache_off () 
+  fun uu____6781  -> get_cache_checked_modules () 
+let (cache_off : unit -> Prims.bool) = fun uu____6786  -> get_cache_off () 
 type codegen_t =
   | OCaml 
   | FSharp 
@@ -2758,292 +2784,293 @@ type codegen_t =
   | Plugin 
 let (uu___is_OCaml : codegen_t -> Prims.bool) =
   fun projectee  ->
-    match projectee with | OCaml  -> true | uu____6749 -> false
+    match projectee with | OCaml  -> true | uu____6792 -> false
   
 let (uu___is_FSharp : codegen_t -> Prims.bool) =
   fun projectee  ->
-    match projectee with | FSharp  -> true | uu____6755 -> false
+    match projectee with | FSharp  -> true | uu____6798 -> false
   
 let (uu___is_Kremlin : codegen_t -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Kremlin  -> true | uu____6761 -> false
+    match projectee with | Kremlin  -> true | uu____6804 -> false
   
 let (uu___is_Plugin : codegen_t -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Plugin  -> true | uu____6767 -> false
+    match projectee with | Plugin  -> true | uu____6810 -> false
   
 let (codegen : unit -> codegen_t FStar_Pervasives_Native.option) =
-  fun uu____6774  ->
-    let uu____6775 = get_codegen ()  in
-    FStar_Util.map_opt uu____6775
-      (fun uu___85_6779  ->
-         match uu___85_6779 with
+  fun uu____6817  ->
+    let uu____6818 = get_codegen ()  in
+    FStar_Util.map_opt uu____6818
+      (fun uu___85_6822  ->
+         match uu___85_6822 with
          | "OCaml" -> OCaml
          | "FSharp" -> FSharp
          | "Kremlin" -> Kremlin
          | "Plugin" -> Plugin
-         | uu____6780 -> failwith "Impossible")
+         | uu____6823 -> failwith "Impossible")
   
 let (codegen_libs : unit -> Prims.string Prims.list Prims.list) =
-  fun uu____6789  ->
-    let uu____6790 = get_codegen_lib ()  in
-    FStar_All.pipe_right uu____6790
+  fun uu____6832  ->
+    let uu____6833 = get_codegen_lib ()  in
+    FStar_All.pipe_right uu____6833
       (FStar_List.map (fun x  -> FStar_Util.split x "."))
   
 let (debug_any : unit -> Prims.bool) =
-  fun uu____6807  -> let uu____6808 = get_debug ()  in uu____6808 <> [] 
+  fun uu____6850  -> let uu____6851 = get_debug ()  in uu____6851 <> [] 
 let (debug_module : Prims.string -> Prims.bool) =
   fun modul  ->
-    let uu____6818 = get_debug ()  in
-    FStar_All.pipe_right uu____6818 (FStar_List.contains modul)
+    let uu____6861 = get_debug ()  in
+    FStar_All.pipe_right uu____6861 (FStar_List.contains modul)
   
 let (debug_at_level : Prims.string -> debug_level_t -> Prims.bool) =
   fun modul  ->
     fun level  ->
-      (let uu____6835 = get_debug ()  in
-       FStar_All.pipe_right uu____6835 (FStar_List.contains modul)) &&
+      (let uu____6878 = get_debug ()  in
+       FStar_All.pipe_right uu____6878 (FStar_List.contains modul)) &&
         (debug_level_geq level)
   
 let (defensive : unit -> Prims.bool) =
-  fun uu____6844  -> let uu____6845 = get_defensive ()  in uu____6845 <> "no" 
+  fun uu____6887  -> let uu____6888 = get_defensive ()  in uu____6888 <> "no" 
 let (defensive_fail : unit -> Prims.bool) =
-  fun uu____6850  ->
-    let uu____6851 = get_defensive ()  in uu____6851 = "fail"
+  fun uu____6893  ->
+    let uu____6894 = get_defensive ()  in uu____6894 = "fail"
   
 let (dep : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____6858  -> get_dep () 
+  fun uu____6901  -> get_dep () 
 let (detail_errors : unit -> Prims.bool) =
-  fun uu____6863  -> get_detail_errors () 
+  fun uu____6906  -> get_detail_errors () 
 let (detail_hint_replay : unit -> Prims.bool) =
-  fun uu____6868  -> get_detail_hint_replay () 
-let (doc : unit -> Prims.bool) = fun uu____6873  -> get_doc () 
+  fun uu____6911  -> get_detail_hint_replay () 
+let (doc : unit -> Prims.bool) = fun uu____6916  -> get_doc () 
 let (dump_module : Prims.string -> Prims.bool) =
   fun s  ->
-    let uu____6879 = get_dump_module ()  in
-    FStar_All.pipe_right uu____6879 (FStar_List.contains s)
+    let uu____6922 = get_dump_module ()  in
+    FStar_All.pipe_right uu____6922 (FStar_List.contains s)
   
 let (eager_subtyping : unit -> Prims.bool) =
-  fun uu____6888  -> get_eager_subtyping () 
+  fun uu____6931  -> get_eager_subtyping () 
 let (expose_interfaces : unit -> Prims.bool) =
-  fun uu____6893  -> get_expose_interfaces () 
+  fun uu____6936  -> get_expose_interfaces () 
 let (fs_typ_app : Prims.string -> Prims.bool) =
   fun filename  ->
-    let uu____6899 = FStar_ST.op_Bang light_off_files  in
-    FStar_List.contains filename uu____6899
+    let uu____6942 = FStar_ST.op_Bang light_off_files  in
+    FStar_List.contains filename uu____6942
   
-let (full_context_dependency : unit -> Prims.bool) = fun uu____6929  -> true 
+let (full_context_dependency : unit -> Prims.bool) = fun uu____6972  -> true 
 let (hide_uvar_nums : unit -> Prims.bool) =
-  fun uu____6934  -> get_hide_uvar_nums () 
+  fun uu____6977  -> get_hide_uvar_nums () 
 let (hint_info : unit -> Prims.bool) =
-  fun uu____6939  -> (get_hint_info ()) || (get_query_stats ()) 
+  fun uu____6982  -> (get_hint_info ()) || (get_query_stats ()) 
 let (hint_file : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____6946  -> get_hint_file () 
-let (ide : unit -> Prims.bool) = fun uu____6951  -> get_ide () 
-let (indent : unit -> Prims.bool) = fun uu____6956  -> get_indent () 
+  fun uu____6989  -> get_hint_file () 
+let (ide : unit -> Prims.bool) = fun uu____6994  -> get_ide () 
+let (indent : unit -> Prims.bool) = fun uu____6999  -> get_indent () 
 let (initial_fuel : unit -> Prims.int) =
-  fun uu____6961  ->
-    let uu____6962 = get_initial_fuel ()  in
-    let uu____6963 = get_max_fuel ()  in Prims.min uu____6962 uu____6963
+  fun uu____7004  ->
+    let uu____7005 = get_initial_fuel ()  in
+    let uu____7006 = get_max_fuel ()  in Prims.min uu____7005 uu____7006
   
 let (initial_ifuel : unit -> Prims.int) =
-  fun uu____6968  ->
-    let uu____6969 = get_initial_ifuel ()  in
-    let uu____6970 = get_max_ifuel ()  in Prims.min uu____6969 uu____6970
+  fun uu____7011  ->
+    let uu____7012 = get_initial_ifuel ()  in
+    let uu____7013 = get_max_ifuel ()  in Prims.min uu____7012 uu____7013
   
 let (interactive : unit -> Prims.bool) =
-  fun uu____6975  -> (get_in ()) || (get_ide ()) 
-let (lax : unit -> Prims.bool) = fun uu____6980  -> get_lax () 
-let (load : unit -> Prims.string Prims.list) = fun uu____6987  -> get_load () 
-let (legacy_interactive : unit -> Prims.bool) = fun uu____6992  -> get_in () 
+  fun uu____7018  -> (get_in ()) || (get_ide ()) 
+let (lax : unit -> Prims.bool) = fun uu____7023  -> get_lax () 
+let (load : unit -> Prims.string Prims.list) = fun uu____7030  -> get_load () 
+let (legacy_interactive : unit -> Prims.bool) = fun uu____7035  -> get_in () 
 let (log_queries : unit -> Prims.bool) =
-  fun uu____6997  -> get_log_queries () 
-let (log_types : unit -> Prims.bool) = fun uu____7002  -> get_log_types () 
-let (max_fuel : unit -> Prims.int) = fun uu____7007  -> get_max_fuel () 
-let (max_ifuel : unit -> Prims.int) = fun uu____7012  -> get_max_ifuel () 
-let (min_fuel : unit -> Prims.int) = fun uu____7017  -> get_min_fuel () 
-let (ml_ish : unit -> Prims.bool) = fun uu____7022  -> get_MLish () 
+  fun uu____7040  -> get_log_queries () 
+let (log_types : unit -> Prims.bool) = fun uu____7045  -> get_log_types () 
+let (max_fuel : unit -> Prims.int) = fun uu____7050  -> get_max_fuel () 
+let (max_ifuel : unit -> Prims.int) = fun uu____7055  -> get_max_ifuel () 
+let (min_fuel : unit -> Prims.int) = fun uu____7060  -> get_min_fuel () 
+let (ml_ish : unit -> Prims.bool) = fun uu____7065  -> get_MLish () 
 let (set_ml_ish : unit -> unit) =
-  fun uu____7027  -> set_option "MLish" (Bool true) 
-let (n_cores : unit -> Prims.int) = fun uu____7032  -> get_n_cores () 
+  fun uu____7070  -> set_option "MLish" (Bool true) 
+let (n_cores : unit -> Prims.int) = fun uu____7075  -> get_n_cores () 
 let (no_default_includes : unit -> Prims.bool) =
-  fun uu____7037  -> get_no_default_includes () 
+  fun uu____7080  -> get_no_default_includes () 
 let (no_extract : Prims.string -> Prims.bool) =
   fun s  ->
     let s1 = FStar_String.lowercase s  in
-    let uu____7044 = get_no_extract ()  in
-    FStar_All.pipe_right uu____7044
+    let uu____7087 = get_no_extract ()  in
+    FStar_All.pipe_right uu____7087
       (FStar_Util.for_some (fun f  -> (FStar_String.lowercase f) = s1))
   
 let (normalize_pure_terms_for_extraction : unit -> Prims.bool) =
-  fun uu____7055  -> get_normalize_pure_terms_for_extraction () 
+  fun uu____7098  -> get_normalize_pure_terms_for_extraction () 
 let (no_location_info : unit -> Prims.bool) =
-  fun uu____7060  -> get_no_location_info () 
-let (no_smt : unit -> Prims.bool) = fun uu____7065  -> get_no_smt () 
+  fun uu____7103  -> get_no_location_info () 
+let (no_plugins : unit -> Prims.bool) = fun uu____7108  -> get_no_plugins () 
+let (no_smt : unit -> Prims.bool) = fun uu____7113  -> get_no_smt () 
 let (output_dir : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____7072  -> get_odir () 
-let (ugly : unit -> Prims.bool) = fun uu____7077  -> get_ugly () 
+  fun uu____7120  -> get_odir () 
+let (ugly : unit -> Prims.bool) = fun uu____7125  -> get_ugly () 
 let (print_bound_var_types : unit -> Prims.bool) =
-  fun uu____7082  -> get_print_bound_var_types () 
+  fun uu____7130  -> get_print_bound_var_types () 
 let (print_effect_args : unit -> Prims.bool) =
-  fun uu____7087  -> get_print_effect_args () 
+  fun uu____7135  -> get_print_effect_args () 
 let (print_implicits : unit -> Prims.bool) =
-  fun uu____7092  -> get_print_implicits () 
+  fun uu____7140  -> get_print_implicits () 
 let (print_real_names : unit -> Prims.bool) =
-  fun uu____7097  -> (get_prn ()) || (get_print_full_names ()) 
+  fun uu____7145  -> (get_prn ()) || (get_print_full_names ()) 
 let (print_universes : unit -> Prims.bool) =
-  fun uu____7102  -> get_print_universes () 
+  fun uu____7150  -> get_print_universes () 
 let (print_z3_statistics : unit -> Prims.bool) =
-  fun uu____7107  -> (get_print_z3_statistics ()) || (get_query_stats ()) 
+  fun uu____7155  -> (get_print_z3_statistics ()) || (get_query_stats ()) 
 let (query_stats : unit -> Prims.bool) =
-  fun uu____7112  -> get_query_stats () 
+  fun uu____7160  -> get_query_stats () 
 let (record_hints : unit -> Prims.bool) =
-  fun uu____7117  -> get_record_hints () 
+  fun uu____7165  -> get_record_hints () 
 let (reuse_hint_for : unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____7124  -> get_reuse_hint_for () 
-let (silent : unit -> Prims.bool) = fun uu____7129  -> get_silent () 
+  fun uu____7172  -> get_reuse_hint_for () 
+let (silent : unit -> Prims.bool) = fun uu____7177  -> get_silent () 
 let (smtencoding_elim_box : unit -> Prims.bool) =
-  fun uu____7134  -> get_smtencoding_elim_box () 
+  fun uu____7182  -> get_smtencoding_elim_box () 
 let (smtencoding_nl_arith_native : unit -> Prims.bool) =
-  fun uu____7139  ->
-    let uu____7140 = get_smtencoding_nl_arith_repr ()  in
-    uu____7140 = "native"
+  fun uu____7187  ->
+    let uu____7188 = get_smtencoding_nl_arith_repr ()  in
+    uu____7188 = "native"
   
 let (smtencoding_nl_arith_wrapped : unit -> Prims.bool) =
-  fun uu____7145  ->
-    let uu____7146 = get_smtencoding_nl_arith_repr ()  in
-    uu____7146 = "wrapped"
+  fun uu____7193  ->
+    let uu____7194 = get_smtencoding_nl_arith_repr ()  in
+    uu____7194 = "wrapped"
   
 let (smtencoding_nl_arith_default : unit -> Prims.bool) =
-  fun uu____7151  ->
-    let uu____7152 = get_smtencoding_nl_arith_repr ()  in
-    uu____7152 = "boxwrap"
+  fun uu____7199  ->
+    let uu____7200 = get_smtencoding_nl_arith_repr ()  in
+    uu____7200 = "boxwrap"
   
 let (smtencoding_l_arith_native : unit -> Prims.bool) =
-  fun uu____7157  ->
-    let uu____7158 = get_smtencoding_l_arith_repr ()  in
-    uu____7158 = "native"
+  fun uu____7205  ->
+    let uu____7206 = get_smtencoding_l_arith_repr ()  in
+    uu____7206 = "native"
   
 let (smtencoding_l_arith_default : unit -> Prims.bool) =
-  fun uu____7163  ->
-    let uu____7164 = get_smtencoding_l_arith_repr ()  in
-    uu____7164 = "boxwrap"
+  fun uu____7211  ->
+    let uu____7212 = get_smtencoding_l_arith_repr ()  in
+    uu____7212 = "boxwrap"
   
 let (tactic_raw_binders : unit -> Prims.bool) =
-  fun uu____7169  -> get_tactic_raw_binders () 
+  fun uu____7217  -> get_tactic_raw_binders () 
 let (tactic_trace : unit -> Prims.bool) =
-  fun uu____7174  -> get_tactic_trace () 
+  fun uu____7222  -> get_tactic_trace () 
 let (tactic_trace_d : unit -> Prims.int) =
-  fun uu____7179  -> get_tactic_trace_d () 
+  fun uu____7227  -> get_tactic_trace_d () 
 let (tactics_nbe : unit -> Prims.bool) =
-  fun uu____7184  -> get_tactics_nbe () 
-let (tcnorm : unit -> Prims.bool) = fun uu____7189  -> get_tcnorm () 
-let (timing : unit -> Prims.bool) = fun uu____7194  -> get_timing () 
+  fun uu____7232  -> get_tactics_nbe () 
+let (tcnorm : unit -> Prims.bool) = fun uu____7237  -> get_tcnorm () 
+let (timing : unit -> Prims.bool) = fun uu____7242  -> get_timing () 
 let (trace_error : unit -> Prims.bool) =
-  fun uu____7199  -> get_trace_error () 
+  fun uu____7247  -> get_trace_error () 
 let (unthrottle_inductives : unit -> Prims.bool) =
-  fun uu____7204  -> get_unthrottle_inductives () 
+  fun uu____7252  -> get_unthrottle_inductives () 
 let (unsafe_tactic_exec : unit -> Prims.bool) =
-  fun uu____7209  -> get_unsafe_tactic_exec () 
+  fun uu____7257  -> get_unsafe_tactic_exec () 
 let (use_eq_at_higher_order : unit -> Prims.bool) =
-  fun uu____7214  -> get_use_eq_at_higher_order () 
-let (use_hints : unit -> Prims.bool) = fun uu____7219  -> get_use_hints () 
+  fun uu____7262  -> get_use_eq_at_higher_order () 
+let (use_hints : unit -> Prims.bool) = fun uu____7267  -> get_use_hints () 
 let (use_hint_hashes : unit -> Prims.bool) =
-  fun uu____7224  -> get_use_hint_hashes () 
+  fun uu____7272  -> get_use_hint_hashes () 
 let (use_native_tactics :
   unit -> Prims.string FStar_Pervasives_Native.option) =
-  fun uu____7231  -> get_use_native_tactics () 
+  fun uu____7279  -> get_use_native_tactics () 
 let (use_tactics : unit -> Prims.bool) =
-  fun uu____7236  -> get_use_tactics () 
+  fun uu____7284  -> get_use_tactics () 
 let (using_facts_from :
   unit ->
     (Prims.string Prims.list,Prims.bool) FStar_Pervasives_Native.tuple2
       Prims.list)
   =
-  fun uu____7249  ->
-    let uu____7250 = get_using_facts_from ()  in
-    match uu____7250 with
+  fun uu____7297  ->
+    let uu____7298 = get_using_facts_from ()  in
+    match uu____7298 with
     | FStar_Pervasives_Native.None  -> [([], true)]
     | FStar_Pervasives_Native.Some ns -> parse_settings ns
   
 let (vcgen_optimize_bind_as_seq : unit -> Prims.bool) =
-  fun uu____7288  ->
-    let uu____7289 = get_vcgen_optimize_bind_as_seq ()  in
-    FStar_Option.isSome uu____7289
+  fun uu____7336  ->
+    let uu____7337 = get_vcgen_optimize_bind_as_seq ()  in
+    FStar_Option.isSome uu____7337
   
 let (vcgen_decorate_with_type : unit -> Prims.bool) =
-  fun uu____7296  ->
-    let uu____7297 = get_vcgen_optimize_bind_as_seq ()  in
-    match uu____7297 with
+  fun uu____7344  ->
+    let uu____7345 = get_vcgen_optimize_bind_as_seq ()  in
+    match uu____7345 with
     | FStar_Pervasives_Native.Some "with_type" -> true
-    | uu____7300 -> false
+    | uu____7348 -> false
   
 let (warn_default_effects : unit -> Prims.bool) =
-  fun uu____7307  -> get_warn_default_effects () 
+  fun uu____7355  -> get_warn_default_effects () 
 let (z3_exe : unit -> Prims.string) =
-  fun uu____7312  ->
-    let uu____7313 = get_smt ()  in
-    match uu____7313 with
+  fun uu____7360  ->
+    let uu____7361 = get_smt ()  in
+    match uu____7361 with
     | FStar_Pervasives_Native.None  -> FStar_Platform.exe "z3"
     | FStar_Pervasives_Native.Some s -> s
   
 let (z3_cliopt : unit -> Prims.string Prims.list) =
-  fun uu____7323  -> get_z3cliopt () 
-let (z3_refresh : unit -> Prims.bool) = fun uu____7328  -> get_z3refresh () 
-let (z3_rlimit : unit -> Prims.int) = fun uu____7333  -> get_z3rlimit () 
+  fun uu____7371  -> get_z3cliopt () 
+let (z3_refresh : unit -> Prims.bool) = fun uu____7376  -> get_z3refresh () 
+let (z3_rlimit : unit -> Prims.int) = fun uu____7381  -> get_z3rlimit () 
 let (z3_rlimit_factor : unit -> Prims.int) =
-  fun uu____7338  -> get_z3rlimit_factor () 
-let (z3_seed : unit -> Prims.int) = fun uu____7343  -> get_z3seed () 
+  fun uu____7386  -> get_z3rlimit_factor () 
+let (z3_seed : unit -> Prims.int) = fun uu____7391  -> get_z3seed () 
 let (use_two_phase_tc : unit -> Prims.bool) =
-  fun uu____7348  ->
+  fun uu____7396  ->
     (get_use_two_phase_tc ()) &&
-      (let uu____7350 = lax ()  in Prims.op_Negation uu____7350)
+      (let uu____7398 = lax ()  in Prims.op_Negation uu____7398)
   
 let (no_positivity : unit -> Prims.bool) =
-  fun uu____7355  -> get_no_positivity () 
+  fun uu____7403  -> get_no_positivity () 
 let (ml_no_eta_expand_coertions : unit -> Prims.bool) =
-  fun uu____7360  -> get_ml_no_eta_expand_coertions () 
+  fun uu____7408  -> get_ml_no_eta_expand_coertions () 
 let (warn_error : unit -> Prims.string) =
-  fun uu____7365  -> get_warn_error () 
+  fun uu____7413  -> get_warn_error () 
 let (use_extracted_interfaces : unit -> Prims.bool) =
-  fun uu____7370  -> get_use_extracted_interfaces () 
+  fun uu____7418  -> get_use_extracted_interfaces () 
 let (should_extract : Prims.string -> Prims.bool) =
   fun m  ->
     let m1 = FStar_String.lowercase m  in
-    let uu____7377 = get_extract ()  in
-    match uu____7377 with
+    let uu____7425 = get_extract ()  in
+    match uu____7425 with
     | FStar_Pervasives_Native.Some extract_setting ->
-        ((let uu____7388 =
-            let uu____7401 = get_no_extract ()  in
-            let uu____7404 = get_extract_namespace ()  in
-            let uu____7407 = get_extract_module ()  in
-            (uu____7401, uu____7404, uu____7407)  in
-          match uu____7388 with
+        ((let uu____7436 =
+            let uu____7449 = get_no_extract ()  in
+            let uu____7452 = get_extract_namespace ()  in
+            let uu____7455 = get_extract_module ()  in
+            (uu____7449, uu____7452, uu____7455)  in
+          match uu____7436 with
           | ([],[],[]) -> ()
-          | uu____7422 ->
+          | uu____7470 ->
               failwith
                 "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module");
          (let setting = parse_settings extract_setting  in
           let m_components = path_of_text m1  in
           let rec matches_path m_components1 path =
             match (m_components1, path) with
-            | (uu____7470,[]) -> true
+            | (uu____7518,[]) -> true
             | (m2::ms,p::ps) ->
                 (m2 = (FStar_String.lowercase p)) && (matches_path ms ps)
-            | uu____7489 -> false  in
-          let uu____7498 =
+            | uu____7537 -> false  in
+          let uu____7546 =
             FStar_All.pipe_right setting
               (FStar_Util.try_find
-                 (fun uu____7532  ->
-                    match uu____7532 with
-                    | (path,uu____7540) -> matches_path m_components path))
+                 (fun uu____7580  ->
+                    match uu____7580 with
+                    | (path,uu____7588) -> matches_path m_components path))
              in
-          match uu____7498 with
+          match uu____7546 with
           | FStar_Pervasives_Native.None  -> false
-          | FStar_Pervasives_Native.Some (uu____7551,flag) -> flag))
+          | FStar_Pervasives_Native.Some (uu____7599,flag) -> flag))
     | FStar_Pervasives_Native.None  ->
         let should_extract_namespace m2 =
-          let uu____7571 = get_extract_namespace ()  in
-          match uu____7571 with
+          let uu____7619 = get_extract_namespace ()  in
+          match uu____7619 with
           | [] -> false
           | ns ->
               FStar_All.pipe_right ns
@@ -3052,21 +3079,21 @@ let (should_extract : Prims.string -> Prims.bool) =
                       FStar_Util.starts_with m2 (FStar_String.lowercase n1)))
            in
         let should_extract_module m2 =
-          let uu____7587 = get_extract_module ()  in
-          match uu____7587 with
+          let uu____7635 = get_extract_module ()  in
+          match uu____7635 with
           | [] -> false
           | l ->
               FStar_All.pipe_right l
                 (FStar_Util.for_some
                    (fun n1  -> (FStar_String.lowercase n1) = m2))
            in
-        (let uu____7599 = no_extract m1  in Prims.op_Negation uu____7599) &&
-          (let uu____7601 =
-             let uu____7610 = get_extract_namespace ()  in
-             let uu____7613 = get_extract_module ()  in
-             (uu____7610, uu____7613)  in
-           (match uu____7601 with
+        (let uu____7647 = no_extract m1  in Prims.op_Negation uu____7647) &&
+          (let uu____7649 =
+             let uu____7658 = get_extract_namespace ()  in
+             let uu____7661 = get_extract_module ()  in
+             (uu____7658, uu____7661)  in
+           (match uu____7649 with
             | ([],[]) -> true
-            | uu____7624 ->
+            | uu____7672 ->
                 (should_extract_namespace m1) || (should_extract_module m1)))
   
