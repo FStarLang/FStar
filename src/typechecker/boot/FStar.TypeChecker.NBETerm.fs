@@ -534,11 +534,10 @@ let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) : embedding<('a -> 'b)> =
     in
     let un cb (lam : t) : option<('a -> 'b)> =
         let k (lam:t) : option<('a -> 'b)> =
-            match lam with
-            | Lam (ft, _, _, _) -> Some (fun (x:'a) -> match unembed eb cb (ft [embed ea cb x]) with
-                                               | Some x -> x
-                                               | None -> failwith "cannot unembed function result")
-            | _ -> None
+            let iapp = cb in
+            Some (fun (x:'a) -> match unembed eb cb (iapp lam [as_arg (embed ea cb x)]) with
+                                | Some y -> y
+                                | None -> failwith "cannot unembed function result")
         in
         lazy_unembed etyp lam k
     in
