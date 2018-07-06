@@ -1706,10 +1706,7 @@ let change (ty : typ) : tac<unit> = wrap_err "change" <|
          * and unify it with the fully normalized goal. If that succeeds,
          * we use the original one as the new goal. This is sometimes needed
          * since the unifier has some bugs. *)
-        let steps =
-            [Env.Reify; Env.UnfoldUntil delta_constant;
-             Env.AllowUnboundUniverses;
-             Env.Primops; Env.Simplify; Env.UnfoldTac; Env.Unmeta] in
+        let steps = [Env.AllowUnboundUniverses; Env.UnfoldUntil delta_constant; Env.Primops] in
         let ng  = normalize steps (goal_env g) (goal_type g) in
         let nty = normalize steps (goal_env g) ty in
         bind (do_unify (goal_env g) ng nty) (fun b ->
