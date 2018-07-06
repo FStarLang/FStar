@@ -292,21 +292,20 @@ val bytes_of_string: string -> bytes //abytes
 module B = LowStar.Buffer
 module M = LowStar.Modifies
 
-open FStar.Integers
 open FStar.HyperStack.ST
 
-type lbuffer (l:UInt32.t) = b:B.buffer UInt8.t {B.length b == v l}
+type lbuffer (l:UInt32.t) = b:B.buffer UInt8.t {B.length b == U32.v l}
 
-val of_buffer: l:UInt32.t -> buf:lbuffer l -> Stack (b:bytes{length b = v l})
+val of_buffer: l:UInt32.t -> buf:lbuffer l -> Stack (b:bytes{length b = U32.v l})
   (requires (fun h0 -> B.live h0 buf))
   (ensures  (fun h0 b h1 -> M.(modifies loc_none h0 h1) /\ b = hide (B.as_seq h0 buf)))
 
-val store_bytes: l:UInt32.t -> buf:lbuffer l -> i:UInt32.t{i <= l} -> b:bytes{length b = v l} -> Stack unit
+val store_bytes: l:UInt32.t -> buf:lbuffer l -> i:UInt32.t{U32.(i <=^ l)} -> b:bytes{length b = U32.v l} -> Stack unit
   (requires (fun h0 -> B.live h0 buf))
   (ensures  (fun h0 r h1 ->
     B.live h1 buf /\
     M.(modifies (loc_buffer buf) h0 h1) /\
-    reveal b = Seq.slice (B.as_seq h1 buf) 0 (v i)))
+    reveal b = Seq.slice (B.as_seq h1 buf) 0 (U32.v i)))
 
 (* JP: let's not add from_bytes here because we want to leave it up to the
 caller to allocate on the stack or on the heap *)
