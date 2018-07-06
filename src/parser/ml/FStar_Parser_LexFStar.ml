@@ -477,7 +477,7 @@ let rec token = lexer
  | (ieee64 | xieee64) -> IEEE64 (float_of_string (L.lexeme lexbuf))
  
  | (integer | xinteger | ieee64 | xieee64) ident_char+ ->
-   failwith "This is not a valid numeric literal."
+   failwith ("This is not a valid numeric literal: " ^ L.lexeme lexbuf)
 
  | "(*" '*'* "*)" -> token lexbuf (* avoid confusion with fsdoc *)
  | "(**" -> fsdoc (1,"",[]) lexbuf
