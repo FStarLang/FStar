@@ -723,13 +723,16 @@ let is_reify_head = function
       false
 
 let firstn k l = if List.length l < k then l,[] else first_N k l
-let should_reify cfg stack = match stack with
-    // TODO: we should likely ignore the meta-level stack elements, such as Memo
+let should_reify cfg stack =
+    let rec drop_irrel = function
+        | MemoLazy _ :: s -> drop_irrel s
+        | s -> s
+    in
+    match drop_irrel stack with
     | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ ->
         // BU.print1 "Found a reify on the stack. %s" "" ;
         cfg.steps.reify_
     | _ -> false
-
 
 let rec maybe_weakly_reduced tm :  bool =
     let aux_comp c =
@@ -917,8 +920,11 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
         Some (cfg', stack')
 
     | Should_unfold_reify ->
-        // Reifying, remove the reify from the stack
-        Some (cfg, List.tl stack)
+        // Reifying, adding a reflect on the stack to cancel the reify
+        // NB: The fv in the Const_reflect is bogus, it'll be ignored anyway
+        let ref = S.mk (Tm_constant (Const_reflect (S.lid_of_fv fv)))
+                       None Range.dummyRange in
+        Some (cfg, App (env, ref, None, Range.dummyRange) :: stack)
 
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
@@ -1520,26 +1526,6 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
         (* resulting application is reified again                                     *)
         (* ****************************************************************************)
 
-        (* [maybe_unfold_action head] test whether [head] is an action and tries to unfold it if it is *)
-        let maybe_unfold_action head : term * option<bool> =
-          let maybe_extract_fv t =
-            let t = match (SS.compress t).n with
-              | Tm_uinst (t, _) -> t
-              | _ -> head
-            in match (SS.compress t).n with
-              | Tm_fvar x -> Some x
-              | _ -> None
-          in
-          match maybe_extract_fv head with
-          | Some x when Env.is_action cfg.tcenv (S.lid_of_fv x) ->
-            (* Note that this is not a tail call, but it's a bounded (small) number of recursive steps *)
-            let head = norm cfg env [] head in
-            let action_unfolded = match maybe_extract_fv head with | Some _ -> Some true | _ -> Some false in
-            head, action_unfolded
-          | _ ->
-            head, None
-        in
-
         (* Checking that the typechecker did its job correctly and hoisted all impure *)
         (* terms to explicit let-bindings (see TcTerm, monadic_application) *)
         (* GM: Now only when --defensive is on, so we don't waste cycles otherwise *)
@@ -1557,21 +1543,43 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                                           (Print.term_to_string head))
         end;
 
-        let head_app, found_action = maybe_unfold_action head_app in
-        let mk tm = S.mk tm None head.pos in
-        let body = mk (Tm_app(head_app, args)) in
-        let body = match found_action with
-          (* This is not an action let's just keep the reify marker *)
-          | None -> U.mk_reify body
-
-          (* The action was found but not unfolded (maybe abstract ?) *)
-          | Some false -> mk (Tm_meta (body, Meta_monadic(m, t)))
-
-          (* An action was found and successfully unfolded *)
-          | Some true -> body
+        (* GM: I'm really suspicious of this code, I tried to change it the least
+         * when trying to fixing it but these two seem super weird. Why 2 of them?
+         * Why is it not calling rebuild? I'm gonna keep it for now. *)
+        let fallback1 () =
+            log cfg (fun () -> BU.print2 "Reified (2) <%s> to %s\n" (Print.term_to_string head0) "");
+            norm cfg env (List.tl stack) (U.mk_reify head)
         in
-        log cfg (fun () -> BU.print2 "Reified (2) <%s> to %s\n" (Print.term_to_string head0) (Print.term_to_string body));
-        norm cfg env (List.tl stack) body
+        let fallback2 () =
+            log cfg (fun () -> BU.print2 "Reified (3) <%s> to %s\n" (Print.term_to_string head0) "");
+            norm cfg env (List.tl stack) (mk (Tm_meta (head, Meta_monadic(m, t))) head0.pos)
+        in
+
+        (* This application case is only interesting for fully-applied dm4f actions. Otherwise,
+         * we just continue rebuilding. *)
+        begin match (U.un_uinst head_app).n with
+        | Tm_fvar fv ->
+            let lid = S.lid_of_fv fv in
+            let qninfo = Env.lookup_qname cfg.tcenv lid in
+            if not (Env.is_action cfg.tcenv lid) then fallback1 () else
+
+            (* GM: I think the action *must* be fully applied at this stage
+             * since we were triggered into this function by a Meta_monadic
+             * annotation. So we don't check anything. *)
+
+            (* Fallback if it does not have a definition. This happens,
+             * but I'm not sure why. *)
+            if Option.isNone (Env.lookup_definition_qninfo cfg.delta_level fv.fv_name.v qninfo)
+            then fallback2 ()
+            else
+
+            (* Turn it info (reify head) args, then do_unfold_fv will kick in on the head *)
+            let t = S.mk_Tm_app (U.mk_reify head_app) args None t.pos in
+            norm cfg env (List.tl stack) t
+
+        | _ ->
+            fallback1 ()
+        end
 
     // Doubly-annotated effect.. just take the outmost one. (unsure..)
     | Tm_meta(e, Meta_monadic _) ->
