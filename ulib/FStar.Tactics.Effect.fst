@@ -51,7 +51,6 @@ unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:__tac_wp a
 
 let __fail (a:Type0) (msg:string) : __tac a = fun (ps:proofstate) -> Failed #a msg ps
 
-(* total  *) //disable the termination check, although it remains reifiable
 [@ dm4f_bind_range ]
 reifiable reflectable new_effect {
   TAC : a:Type -> Effect
@@ -60,8 +59,16 @@ reifiable reflectable new_effect {
      ; return   = __ret
      ; __fail   = __fail
 }
-effect Tac  (a:Type) = TAC a (fun i post -> forall j. post j)
-effect TacF (a:Type) = TAC a (fun _ _ -> False) // A variant that doesn't prove totality (nor type safety!)
+
+(* Hoare variant *)
+effect TacH (a:Type) (pre : proofstate -> Tot Type0) (post : proofstate -> __result a -> Tot Type0) =
+    TAC a (fun ps post' -> pre ps /\ (forall r. post ps r ==> post' r))
+
+(* "Total" variant *)
+effect Tac (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ _ -> True))
+
+(* A variant that doesn't prove totality (nor type safety!) *)
+effect TacF (a:Type) = TacH a (requires (fun _ -> False)) (ensures (fun _ _ -> True))
 
 unfold
 let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =

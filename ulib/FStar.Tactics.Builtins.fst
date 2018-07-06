@@ -8,9 +8,10 @@ open FStar.Tactics.Effect
 open FStar.Reflection.Types
 open FStar.Reflection.Data
 open FStar.Tactics.Types
+open FStar.Tactics.Result
 
-(** Simply fail *)
-assume val fail : #a:Type -> m:string -> TAC a (fun ps post -> post (FStar.Tactics.Result.Failed m ps))
+(** Simply fail. The specs ensures that it fails, but hides the message. *)
+assume val fail : #a:Type -> m:string -> TacH a (requires (fun _ -> True)) (ensures (fun _ r -> Failed? r))
 
 // NOTE: The only reason `fail` is assumed as a primitive is to enable
 // the TacFail debugging flag. We could instead define it like this,
