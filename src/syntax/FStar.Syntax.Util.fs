@@ -1130,6 +1130,7 @@ let t_false = fvar_const PC.false_lid
 let t_true  = fvar_const PC.true_lid
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
+let tcdecltime_attr = fvar_const PC.tcdecltime_attr
 
 let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
 
