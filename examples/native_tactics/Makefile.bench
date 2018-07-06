@@ -7,7 +7,8 @@ all: prep
 
 go: $(addprefix List.Driver,    .native .native_eager) \
     $(addprefix List.DriverNBE, .native .native_eager) \
-    $(addprefix Fun.Driver,     .native)
+    $(addprefix Fun.Driver,     .native) \
+    $(addprefix Fun.DriverNBE,  .native)
 # These are very slow, but should still be benchmarked
 # -- List.Driver.basic, Fun.Driver.basic
 
