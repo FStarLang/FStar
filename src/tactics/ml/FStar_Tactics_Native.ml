@@ -17,7 +17,7 @@ type 'a __tac = FStar_Tactics_Types.proofstate -> 'a __result
 let r = dummyRange
 
 type itac = FStar_TypeChecker_Cfg.psc -> FStar_Syntax_Embeddings.norm_cb -> args -> term option
-type nbe_itac =  NBETerm.iapp_cb -> NBETerm.args -> NBE.t option
+type nbe_itac =  NBETerm.iapp_cb -> NBETerm.args -> NBETerm.t option
 
 type native_primitive_step =
     { name: FStar_Ident.lid;

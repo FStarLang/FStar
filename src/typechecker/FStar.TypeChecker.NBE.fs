@@ -58,21 +58,21 @@ let rec drop (p: 'a -> bool) (l: list<'a>): list<'a> =
 let fmap_opt (f : 'a -> 'b) (x : option<'a>) : option<'b> =
   BU.bind_opt x (fun x -> Some (f x))
 
-let drop_until (f : 'a -> bool) (l : list<'a>) : list<'a> = 
-  let rec aux l = 
-    match l with 
-    | [] -> [] 
+let drop_until (f : 'a -> bool) (l : list<'a>) : list<'a> =
+  let rec aux l =
+    match l with
+    | [] -> []
     | x :: xs -> if f x then l else aux xs
   in aux l
 
 let trim (l : list<bool>) : list<bool> = (* trim a list of booleans after the last true *)
-    List.rev (drop_until id (List.rev l)) 
+    List.rev (drop_until id (List.rev l))
 
 
 let implies b1 b2 =
-  match b1, b2 with 
+  match b1, b2 with
   | false, _ -> true
-  | true, b2 -> b2 
+  | true, b2 -> b2
 
 // NBE debuging
 
@@ -168,7 +168,7 @@ let test_args ts ar_list : (bool * args * args) = (* can unfold x full arg list 
     | _, [] -> true, List.rev acc, ts
     | [], _ :: _ -> (false, List.rev acc, [])  (* It's partial! *)
     | t :: ts, b :: bs -> aux ts bs (t :: acc) (res && implies b (not (isAccu (fst t))))
-  in 
+  in
   aux ts ar_list [] true
 
 let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option<sigelt> =
@@ -263,34 +263,34 @@ let rec iapp (cfg : Cfg.cfg) (f:t) (args:args) : t =
     let (us', ts') = aux args us ts in
     FV (i, us', ts')
   | Rec(lb, lbs, bs, acc, ar, ar_lst, tr_lb) ->
-    (* ZP : this can be made more efficient by storing the arity and avoiding test args for 
+    (* ZP : this can be made more efficient by storing the arity and avoiding test args for
             partial apps *)
     let no_args = List.length args in
     if (ar > no_args) then
       (* Application is still partial -- accumulate args *)
       Rec (lb, lbs, bs, acc @ args, ar - no_args, ar_lst, tr_lb)
-    else if (ar = 0) then 
+    else if (ar = 0) then
       (* Cannot unfold -- accumulate args *)
       Rec (lb, lbs, bs, acc @ args, ar, ar_lst, tr_lb)
     else (* Full application, test for unfolding. This should happen only once for each application *)
-      begin 
+      begin
         let full_args = acc @ args in (* Not in reverse order *)
-    
+
         let (can_unfold, args, res) = test_args full_args ar_lst in
 
-        if not cfg.steps.zeta then 
-          begin 
-            debug cfg (fun () -> BU.print1 "Zeta is not set; will not unfold %s\n" (P.lbname_to_string lb.lbname)); 
-            Rec (lb, lbs, bs, full_args, 0, ar_lst, tr_lb)
-          end 
-        else if can_unfold then (* compute *) 
+        if not cfg.steps.zeta then
           begin
-            debug cfg (fun () -> BU.print1 "Beta reducing recursive function %s\n" (P.lbname_to_string lb.lbname)); 
-             match res with 
+            debug cfg (fun () -> BU.print1 "Zeta is not set; will not unfold %s\n" (P.lbname_to_string lb.lbname));
+            Rec (lb, lbs, bs, full_args, 0, ar_lst, tr_lb)
+          end
+        else if can_unfold then (* compute *)
+          begin
+            debug cfg (fun () -> BU.print1 "Beta reducing recursive function %s\n" (P.lbname_to_string lb.lbname));
+             match res with
              | [] -> (* no residual args *)
-               iapp cfg (tr_lb (make_rec_env tr_lb lbs bs) lb) args 
+               iapp cfg (tr_lb (make_rec_env tr_lb lbs bs) lb) args
              | _ :: _ ->
-               let t = iapp cfg (tr_lb (make_rec_env tr_lb lbs bs) lb) args in 
+               let t = iapp cfg (tr_lb (make_rec_env tr_lb lbs bs) lb) args in
                iapp cfg t res
           end
         else (* cannot unfold -- accumulate args *)
@@ -370,18 +370,18 @@ and translate_letbinding (cfg:Cfg.cfg) (bs:list<t>) (lb:letbinding) : t =
   // rather than top-level pure computation
 
 
-and mkRec' callback (b:letbinding) (bs:list<letbinding>) (env:list<t>) = 
+and mkRec' callback (b:letbinding) (bs:list<letbinding>) (env:list<t>) =
   let (ar, maybe_lst) = U.let_rec_arity b in
-  let (ar, ar_lst) = 
-    match maybe_lst with 
-    | None -> 
+  let (ar, ar_lst) =
+    match maybe_lst with
+    | None ->
       //BU.print "No rec list\n" [];
       ar, FStar.Common.tabulate ar (fun _ -> true) (* treat all arguments as recursive *)
-    | Some lst -> 
+    | Some lst ->
       //BU.print "Trimming rec list\n" [];
       let l = trim lst in List.length l, l
   in
-  // BU.print2 "Creating rec definition with arrity %s : %s\n" 
+  // BU.print2 "Creating rec definition with arrity %s : %s\n"
   //   (BU.string_of_int ar) (P.list_to_string BU.string_of_bool ar_lst);
   // BU.print1 "Type of rec def: %s\n" (P.term_to_string b.lbtyp);
   Rec(b, bs, env, [], ar, ar_lst, callback)
@@ -594,7 +594,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       end
 
     | Tm_lazy li ->
-      Lazy li
+      Lazy (BU.Inl li)
 
 and translate_comp cfg bs (c:S.comp) : comp =
   match c.n with
@@ -632,7 +632,7 @@ and readback_comp_typ cfg (c:comp_typ) : S.comp_typ =
 and translate_residual_comp cfg bs (c:S.residual_comp) : residual_comp =
     let { S.residual_effect  = residual_effect
         ; S.residual_typ     = residual_typ
-        ; S.residual_flags   = residual_flags } = c in 
+        ; S.residual_flags   = residual_flags } = c in
     { residual_effect = residual_effect;
       residual_typ = BU.map_opt residual_typ (translate cfg bs);
       residual_flags = List.map (translate_flag cfg bs) residual_flags }
@@ -643,7 +643,7 @@ and readback_residual_comp cfg (c:residual_comp) : S.residual_comp =
       S.residual_flags = List.map (readback_flag cfg) c.residual_flags }
 
 and translate_flag cfg bs (f : S.cflags) : cflags =
-    match f with 
+    match f with
     | S.TOTAL -> TOTAL
     | S.MLEFFECT -> MLEFFECT
     | S.RETURN -> RETURN
@@ -651,12 +651,12 @@ and translate_flag cfg bs (f : S.cflags) : cflags =
     | S.SOMETRIVIAL -> SOMETRIVIAL
     | S.TRIVIAL_POSTCONDITION -> TRIVIAL_POSTCONDITION
     | S.SHOULD_NOT_INLINE -> SHOULD_NOT_INLINE
-    | S.LEMMA -> LEMMA 
+    | S.LEMMA -> LEMMA
     | S.CPS -> CPS
     | S.DECREASES tm -> DECREASES (translate cfg bs tm)
 
 and readback_flag cfg (f : cflags) : S.cflags =
-    match f with 
+    match f with
     | TOTAL -> S.TOTAL
     | MLEFFECT -> S.MLEFFECT
     | RETURN -> S.RETURN
@@ -664,7 +664,7 @@ and readback_flag cfg (f : cflags) : S.cflags =
     | SOMETRIVIAL -> S.SOMETRIVIAL
     | TRIVIAL_POSTCONDITION -> S.TRIVIAL_POSTCONDITION
     | SHOULD_NOT_INLINE -> S.SHOULD_NOT_INLINE
-    | LEMMA -> S.LEMMA 
+    | LEMMA -> S.LEMMA
     | CPS -> S.CPS
     | DECREASES t -> S.DECREASES (readback cfg t)
 
@@ -890,8 +890,8 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       let head =
        (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
         match lb.lbname with
-        | BU.Inl bv -> 
-          failwith "Reading back of local recursive definitions is not supported yet." 
+        | BU.Inl bv ->
+          failwith "Reading back of local recursive definitions is not supported yet."
         | BU.Inr fv -> S.mk (Tm_fvar fv) None Range.dummyRange
       in
 
@@ -903,8 +903,11 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
     | Quote (qt, qi) ->
         S.mk (Tm_quoted (qt, qi)) None Range.dummyRange
 
-    | Lazy li ->
+    | Lazy (BU.Inl li) ->
         S.mk (Tm_lazy li) None Range.dummyRange
+
+    | Lazy (BU.Inr (_, _, thunk)) ->
+        readback cfg (FStar.Common.force_thunk thunk)
 
 type step =
   | Primops

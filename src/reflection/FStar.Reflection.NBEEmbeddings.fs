@@ -43,6 +43,8 @@ open FStar.Dyn
 (* On that note, we use this (inefficient, FIXME) hack in this module *)
 let mkFV fv us ts = mkFV fv (List.rev us) (List.rev ts)
 let mkConstruct fv us ts = mkConstruct fv (List.rev us) (List.rev ts)
+let fv_as_emb_typ fv = S.ET_app (FStar.Ident.string_of_lid fv.fv_name.v, [])
+let mk_emb' x y fv = mk_emb x y (mkFV fv [] []) (fv_as_emb_typ fv)
 
 (* We still need to match on them in reverse order though, so this is pretty dumb *)
 
@@ -53,7 +55,7 @@ let mk_lazy obj ty kind =
         ; ltyp = ty
         ; rng = Range.dummyRange
     }
-    in Lazy li
+    in Lazy (BU.Inl li)
 
 let e_bv =
     let embed_bv cb (bv:bv) : t =
@@ -61,13 +63,14 @@ let e_bv =
     in
     let unembed_bv cb (t:t) : option<bv> =
         match t with
-        | Lazy {blob=b; lkind=Lazy_bv} ->
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_bv}) ->
             Some <| FStar.Dyn.undyn b
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_bv unembed_bv (mkFV fstar_refl_bv_fv [] [])
+    mk_emb' embed_bv unembed_bv fstar_refl_bv_fv
+
 
 let e_binder =
     let embed_binder cb (b:binder) : t =
@@ -75,13 +78,13 @@ let e_binder =
     in
     let unembed_binder cb (t:t) : option<binder> =
         match t with
-        | Lazy {blob=b; lkind=Lazy_binder} ->
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_binder}) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_binder unembed_binder (mkFV fstar_refl_binder_fv [] [])
+    mk_emb' embed_binder unembed_binder fstar_refl_binder_fv
 
 let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
     match l with
@@ -114,7 +117,8 @@ let e_term_aq aq =
     in
     { NBETerm.em = embed_term
     ; NBETerm.un = unembed_term
-    ; NBETerm.typ = mkFV fstar_refl_term_fv [] [] }
+    ; NBETerm.typ = mkFV fstar_refl_term_fv [] []
+    ; NBETerm.emb_typ = fv_as_emb_typ fstar_refl_term_fv }
 
 let e_term = e_term_aq []
 
@@ -137,7 +141,9 @@ let e_aqualv =
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded aqualv: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_aqualv unembed_aqualv (mkConstruct fstar_refl_aqualv_fv [] [])
+    mk_emb embed_aqualv unembed_aqualv
+        (mkConstruct fstar_refl_aqualv_fv [] [])
+        (fv_as_emb_typ fstar_refl_aqualv_fv)
 
 let e_binders = e_list e_binder
 
@@ -147,13 +153,13 @@ let e_fv =
     in
     let unembed_fv cb (t:t) : option<fv> =
         match t with
-        | Lazy {blob=b; lkind=Lazy_fvar} ->
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_fvar}) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded fvar: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_fv unembed_fv (mkFV fstar_refl_fv_fv [] [])
+    mk_emb' embed_fv unembed_fv fstar_refl_fv_fv
 
 let e_comp =
     let embed_comp cb (c:S.comp) : t =
@@ -161,13 +167,13 @@ let e_comp =
     in
     let unembed_comp cb (t:t) : option<S.comp> =
         match t with
-        | Lazy {blob=b; lkind=Lazy_comp} ->
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_comp}) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_comp unembed_comp (mkFV fstar_refl_comp_fv [] [])
+    mk_emb' embed_comp unembed_comp fstar_refl_comp_fv
 
 let e_env =
     let embed_env cb (e:Env.env) : t =
@@ -175,13 +181,13 @@ let e_env =
     in
     let unembed_env cb (t:t) : option<Env.env> =
         match t with
-        | Lazy {blob=b; lkind=Lazy_env} ->
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_env}) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded env: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_env unembed_env (mkFV fstar_refl_env_fv [] [])
+    mk_emb' embed_env unembed_env fstar_refl_env_fv
 
 let e_const =
     let embed_const cb (c:vconst) : t =
@@ -215,7 +221,7 @@ let e_const =
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded vconst: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_const unembed_const (mkFV fstar_refl_vconst_fv [] [])
+    mk_emb' embed_const unembed_const fstar_refl_vconst_fv
 
 let rec e_pattern' () =
     let embed_pattern cb (p : pattern) : t =
@@ -259,7 +265,7 @@ let rec e_pattern' () =
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pattern: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_pattern unembed_pattern (mkFV fstar_refl_pattern_fv [] [])
+    mk_emb' embed_pattern unembed_pattern fstar_refl_pattern_fv
 
 let e_pattern = e_pattern' ()
 
@@ -271,7 +277,7 @@ let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
 let rec unlazy_as_t k t =
     match t with
-    | Lazy ({lkind=k'; blob=v})
+    | Lazy (BU.Inl {lkind=k'; blob=v})
         when U.eq_lazy_kind k k' ->
       FStar.Dyn.undyn v
     | _ ->
@@ -413,7 +419,7 @@ let e_term_view_aq aq =
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded term_view: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_term_view unembed_term_view (mkFV fstar_refl_term_view_fv [] [])
+    mk_emb' embed_term_view unembed_term_view fstar_refl_term_view_fv
 
 
 let e_term_view = e_term_view_aq []
@@ -436,7 +442,7 @@ let e_bv_view =
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv_view: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_bv_view unembed_bv_view (mkFV fstar_refl_bv_view_fv [] [])
+    mk_emb' embed_bv_view unembed_bv_view fstar_refl_bv_view_fv
 
 let e_comp_view =
     let embed_comp_view cb (cv : comp_view) : t =
@@ -471,7 +477,7 @@ let e_comp_view =
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp_view: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_comp_view unembed_comp_view (mkFV fstar_refl_comp_view_fv [] [])
+    mk_emb' embed_comp_view unembed_comp_view fstar_refl_comp_view_fv
 
 
 (* TODO: move to, Syntax.Embeddings or somewhere better even *)
@@ -491,7 +497,7 @@ let e_order =
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded order: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_order unembed_order (mkFV (lid_as_fv PC.order_lid delta_constant None) [] [])
+    mk_emb' embed_order unembed_order (lid_as_fv PC.order_lid delta_constant None)
 
 let e_sigelt =
     let embed_sigelt cb (se:sigelt) : t =
@@ -499,13 +505,13 @@ let e_sigelt =
     in
     let unembed_sigelt cb (t:t) : option<sigelt> =
         match t with
-        | Lazy {blob=b; lkind=Lazy_sigelt} ->
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_sigelt}) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_sigelt unembed_sigelt (mkFV fstar_refl_sigelt_fv [] [])
+    mk_emb' embed_sigelt unembed_sigelt fstar_refl_sigelt_fv
 
 // TODO: It would be nice to have a
 // embed_as : ('a -> 'b) -> ('b -> 'a) -> embedding<'a> -> embedding<'b>
@@ -520,10 +526,17 @@ let e_ident : embedding<I.ident> =
         | Some (rng, s) -> Some (I.mk_ident (s, rng))
         | None -> None
     in
+    let range_fv = (lid_as_fv PC.range_lid  delta_constant None) in
+    let string_fv = (lid_as_fv PC.string_lid delta_constant None) in
+    let et =
+      ET_app (FStar.Ident.string_of_lid PC.lid_tuple2,
+              [fv_as_emb_typ range_fv;
+               fv_as_emb_typ string_fv])
+    in
     mk_emb embed_ident unembed_ident (mkFV (lid_as_fv PC.lid_tuple2 delta_constant None)
                                            [U_zero;U_zero]
-                                           [as_arg (mkFV (lid_as_fv PC.range_lid  delta_constant None) [] []);
-                                            as_arg (mkFV (lid_as_fv PC.string_lid delta_constant None) [] [])])
+                                           [as_arg (mkFV range_fv [] []);
+                                            as_arg (mkFV string_fv [] [])]) et
     // TODO: again a delta depth issue, should be this
     (* fstar_refl_ident *)
 
@@ -584,7 +597,7 @@ let e_sigelt_view =
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt_view: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_sigelt_view unembed_sigelt_view (mkFV fstar_refl_sigelt_view_fv [] [])
+    mk_emb' embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view_fv
 
 let e_exp =
     let rec embed_exp cb (e:exp) : t =
@@ -610,7 +623,7 @@ let e_exp =
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded exp: %s" (t_to_string t)));
             None
     in
-    mk_emb embed_exp unembed_exp (mkFV fstar_refl_exp_fv [] [])
+    mk_emb' embed_exp unembed_exp fstar_refl_exp_fv
 
 let e_binder_view = e_tuple2 e_bv e_aqualv
 

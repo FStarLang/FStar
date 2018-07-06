@@ -115,6 +115,7 @@ let unfold_lazy_proofstate (i : lazyinfo) : term =
 (* On that note, we use this (inefficient, FIXME) hack in this module *)
 let mkFV fv us ts = NBETerm.mkFV fv (List.rev us) (List.rev ts)
 let mkConstruct fv us ts = NBETerm.mkConstruct fv (List.rev us) (List.rev ts)
+let fv_as_emb_typ fv = S.ET_app (FStar.Ident.string_of_lid fv.fv_name.v, [])
 
 let e_proofstate_nbe =
     let embed_proofstate _cb (ps:proofstate) : NBETerm.t =
@@ -123,11 +124,11 @@ let e_proofstate_nbe =
                  ; ltyp = t_proofstate
                  ; rng = Range.dummyRange }
         in
-        NBETerm.Lazy li
+        NBETerm.Lazy (BU.Inl li)
     in
     let unembed_proofstate _cb (t:NBETerm.t) : option<proofstate> =
         match t with
-        | NBETerm.Lazy {blob=b; lkind = Lazy_proofstate} ->
+        | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_proofstate}) ->
             Some <| FStar.Dyn.undyn b
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded NBE proofstate: %s" (NBETerm.t_to_string t)));
@@ -135,7 +136,8 @@ let e_proofstate_nbe =
     in
     { NBETerm.em = embed_proofstate
     ; NBETerm.un = unembed_proofstate
-    ; NBETerm.typ = mkFV fv_proofstate [] [] }
+    ; NBETerm.typ = mkFV fv_proofstate [] []
+    ; NBETerm.emb_typ = fv_as_emb_typ fv_proofstate }
 
 let e_result (ea : embedding<'a>)  =
     let embed_result (res:__result<'a>) (rng:Range.range) _ _ : term =
@@ -214,7 +216,8 @@ let e_result_nbe (ea : NBET.embedding<'a>)  =
     in
     { NBETerm.em = embed_result
     ; NBETerm.un = unembed_result
-    ; NBETerm.typ = mkFV fv_result [] [] }
+    ; NBETerm.typ = mkFV fv_result [] []
+    ; NBETerm.emb_typ = fv_as_emb_typ fv_result }
 
 
 let e_direction =
@@ -250,7 +253,8 @@ let e_direction_nbe  =
     in
     { NBETerm.em = embed_direction
     ; NBETerm.un = unembed_direction
-    ; NBETerm.typ = mkFV fv_direction [] [] }
+    ; NBETerm.typ = mkFV fv_direction [] []
+    ; NBETerm.emb_typ = fv_as_emb_typ fv_direction}
 
 let e_guard_policy =
     let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =
@@ -291,4 +295,5 @@ let e_guard_policy_nbe  =
     in
     { NBETerm.em = embed_guard_policy
     ; NBETerm.un = unembed_guard_policy
-    ; NBETerm.typ = mkFV fv_guard_policy [] [] }
+    ; NBETerm.typ = mkFV fv_guard_policy [] []
+    ; NBETerm.emb_typ = fv_as_emb_typ fv_guard_policy }
