@@ -348,134 +348,134 @@ and (primitive_steps :
                                        in
                                     let uu____690 =
                                       let uu____693 =
-                                        FStar_Tactics_InterpFuns.mktac2
+                                        FStar_Tactics_InterpFuns.mktac3
                                           "t_exact"
                                           FStar_Tactics_Basic.t_exact
+                                          FStar_Syntax_Embeddings.e_bool
                                           FStar_Syntax_Embeddings.e_bool
                                           FStar_Reflection_Embeddings.e_term
                                           FStar_Syntax_Embeddings.e_unit
                                          in
                                       let uu____694 =
                                         let uu____697 =
-                                          FStar_Tactics_InterpFuns.mktac1
-                                            "apply"
-                                            (FStar_Tactics_Basic.apply true)
+                                          FStar_Tactics_InterpFuns.mktac2
+                                            "t_apply"
+                                            FStar_Tactics_Basic.t_apply
+                                            FStar_Syntax_Embeddings.e_bool
                                             FStar_Reflection_Embeddings.e_term
                                             FStar_Syntax_Embeddings.e_unit
                                            in
                                         let uu____698 =
                                           let uu____701 =
                                             FStar_Tactics_InterpFuns.mktac1
-                                              "apply_raw"
-                                              (FStar_Tactics_Basic.apply
-                                                 false)
+                                              "apply_lemma"
+                                              FStar_Tactics_Basic.apply_lemma
                                               FStar_Reflection_Embeddings.e_term
                                               FStar_Syntax_Embeddings.e_unit
                                              in
                                           let uu____702 =
                                             let uu____705 =
-                                              FStar_Tactics_InterpFuns.mktac1
-                                                "apply_lemma"
-                                                FStar_Tactics_Basic.apply_lemma
-                                                FStar_Reflection_Embeddings.e_term
-                                                FStar_Syntax_Embeddings.e_unit
-                                               in
-                                            let uu____706 =
-                                              let uu____709 =
-                                                let uu____710 =
-                                                  e_tactic_0'
-                                                    FStar_Syntax_Embeddings.e_any
-                                                   in
-                                                let uu____715 =
-                                                  e_tactic_0'
-                                                    FStar_Syntax_Embeddings.e_any
-                                                   in
-                                                let uu____720 =
-                                                  FStar_Syntax_Embeddings.e_tuple2
-                                                    FStar_Syntax_Embeddings.e_any
-                                                    FStar_Syntax_Embeddings.e_any
-                                                   in
-                                                FStar_Tactics_InterpFuns.mktac5
-                                                  "__divide"
-                                                  (fun uu____737  ->
-                                                     fun uu____738  ->
-                                                       FStar_Tactics_Basic.divide)
+                                              let uu____706 =
+                                                e_tactic_0'
                                                   FStar_Syntax_Embeddings.e_any
-                                                  FStar_Syntax_Embeddings.e_any
-                                                  FStar_Syntax_Embeddings.e_int
-                                                  uu____710 uu____715
-                                                  uu____720
                                                  in
-                                              let uu____739 =
-                                                let uu____742 =
-                                                  let uu____743 =
-                                                    e_tactic_0'
-                                                      FStar_Syntax_Embeddings.e_unit
-                                                     in
-                                                  let uu____748 =
-                                                    e_tactic_0'
-                                                      FStar_Syntax_Embeddings.e_unit
-                                                     in
-                                                  FStar_Tactics_InterpFuns.mktac2
-                                                    "__seq"
-                                                    FStar_Tactics_Basic.seq
-                                                    uu____743 uu____748
+                                              let uu____711 =
+                                                e_tactic_0'
+                                                  FStar_Syntax_Embeddings.e_any
+                                                 in
+                                              let uu____716 =
+                                                FStar_Syntax_Embeddings.e_tuple2
+                                                  FStar_Syntax_Embeddings.e_any
+                                                  FStar_Syntax_Embeddings.e_any
+                                                 in
+                                              FStar_Tactics_InterpFuns.mktac5
+                                                "__divide"
+                                                (fun uu____733  ->
+                                                   fun uu____734  ->
+                                                     FStar_Tactics_Basic.divide)
+                                                FStar_Syntax_Embeddings.e_any
+                                                FStar_Syntax_Embeddings.e_any
+                                                FStar_Syntax_Embeddings.e_int
+                                                uu____706 uu____711 uu____716
+                                               in
+                                            let uu____735 =
+                                              let uu____738 =
+                                                let uu____739 =
+                                                  e_tactic_0'
+                                                    FStar_Syntax_Embeddings.e_unit
+                                                   in
+                                                let uu____744 =
+                                                  e_tactic_0'
+                                                    FStar_Syntax_Embeddings.e_unit
+                                                   in
+                                                FStar_Tactics_InterpFuns.mktac2
+                                                  "__seq"
+                                                  FStar_Tactics_Basic.seq
+                                                  uu____739 uu____744
+                                                  FStar_Syntax_Embeddings.e_unit
+                                                 in
+                                              let uu____753 =
+                                                let uu____756 =
+                                                  FStar_Tactics_InterpFuns.mktac1
+                                                    "set_options"
+                                                    FStar_Tactics_Basic.set_options
+                                                    FStar_Syntax_Embeddings.e_string
                                                     FStar_Syntax_Embeddings.e_unit
                                                    in
                                                 let uu____757 =
                                                   let uu____760 =
                                                     FStar_Tactics_InterpFuns.mktac1
-                                                      "set_options"
-                                                      FStar_Tactics_Basic.set_options
-                                                      FStar_Syntax_Embeddings.e_string
-                                                      FStar_Syntax_Embeddings.e_unit
+                                                      "tc"
+                                                      FStar_Tactics_Basic.tc
+                                                      FStar_Reflection_Embeddings.e_term
+                                                      FStar_Reflection_Embeddings.e_term
                                                      in
                                                   let uu____761 =
                                                     let uu____764 =
                                                       FStar_Tactics_InterpFuns.mktac1
-                                                        "tc"
-                                                        FStar_Tactics_Basic.tc
+                                                        "unshelve"
+                                                        FStar_Tactics_Basic.unshelve
                                                         FStar_Reflection_Embeddings.e_term
-                                                        FStar_Reflection_Embeddings.e_term
+                                                        FStar_Syntax_Embeddings.e_unit
                                                        in
                                                     let uu____765 =
                                                       let uu____768 =
-                                                        FStar_Tactics_InterpFuns.mktac1
-                                                          "unshelve"
-                                                          FStar_Tactics_Basic.unshelve
+                                                        FStar_Tactics_InterpFuns.mktac2
+                                                          "unquote"
+                                                          FStar_Tactics_Basic.unquote
+                                                          FStar_Syntax_Embeddings.e_any
                                                           FStar_Reflection_Embeddings.e_term
-                                                          FStar_Syntax_Embeddings.e_unit
+                                                          FStar_Syntax_Embeddings.e_any
                                                          in
                                                       let uu____769 =
                                                         let uu____772 =
-                                                          FStar_Tactics_InterpFuns.mktac2
-                                                            "unquote"
-                                                            FStar_Tactics_Basic.unquote
-                                                            FStar_Syntax_Embeddings.e_any
-                                                            FStar_Reflection_Embeddings.e_term
-                                                            FStar_Syntax_Embeddings.e_any
+                                                          FStar_Tactics_InterpFuns.mktac1
+                                                            "prune"
+                                                            FStar_Tactics_Basic.prune
+                                                            FStar_Syntax_Embeddings.e_string
+                                                            FStar_Syntax_Embeddings.e_unit
                                                            in
                                                         let uu____773 =
                                                           let uu____776 =
                                                             FStar_Tactics_InterpFuns.mktac1
-                                                              "prune"
-                                                              FStar_Tactics_Basic.prune
+                                                              "addns"
+                                                              FStar_Tactics_Basic.addns
                                                               FStar_Syntax_Embeddings.e_string
                                                               FStar_Syntax_Embeddings.e_unit
                                                              in
                                                           let uu____777 =
                                                             let uu____780 =
                                                               FStar_Tactics_InterpFuns.mktac1
-                                                                "addns"
-                                                                FStar_Tactics_Basic.addns
+                                                                "print"
+                                                                FStar_Tactics_Basic.print
                                                                 FStar_Syntax_Embeddings.e_string
                                                                 FStar_Syntax_Embeddings.e_unit
                                                                in
                                                             let uu____781 =
                                                               let uu____784 =
                                                                 FStar_Tactics_InterpFuns.mktac1
-                                                                  "print"
-                                                                  FStar_Tactics_Basic.print
+                                                                  "debug"
+                                                                  FStar_Tactics_Basic.debug
                                                                   FStar_Syntax_Embeddings.e_string
                                                                   FStar_Syntax_Embeddings.e_unit
                                                                  in
@@ -483,8 +483,8 @@ and (primitive_steps :
                                                                 let uu____788
                                                                   =
                                                                   FStar_Tactics_InterpFuns.mktac1
-                                                                    "debug"
-                                                                    FStar_Tactics_Basic.debug
+                                                                    "dump"
+                                                                    FStar_Tactics_Basic.print_proof_state
                                                                     FStar_Syntax_Embeddings.e_string
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                    in
@@ -493,8 +493,8 @@ and (primitive_steps :
                                                                   let uu____792
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    "dump"
-                                                                    FStar_Tactics_Basic.print_proof_state
+                                                                    "dump1"
+                                                                    FStar_Tactics_Basic.print_proof_state1
                                                                     FStar_Syntax_Embeddings.e_string
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                      in
@@ -502,17 +502,7 @@ and (primitive_steps :
                                                                     =
                                                                     let uu____796
                                                                     =
-                                                                    FStar_Tactics_InterpFuns.mktac1
-                                                                    "dump1"
-                                                                    FStar_Tactics_Basic.print_proof_state1
-                                                                    FStar_Syntax_Embeddings.e_string
-                                                                    FStar_Syntax_Embeddings.e_unit
-                                                                     in
                                                                     let uu____797
-                                                                    =
-                                                                    let uu____800
-                                                                    =
-                                                                    let uu____801
                                                                     =
                                                                     e_tactic_0'
                                                                     FStar_Syntax_Embeddings.e_unit
@@ -521,16 +511,16 @@ and (primitive_steps :
                                                                     "__pointwise"
                                                                     FStar_Tactics_Basic.pointwise
                                                                     FStar_Tactics_Embedding.e_direction
-                                                                    uu____801
+                                                                    uu____797
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                      in
+                                                                    let uu____804
+                                                                    =
+                                                                    let uu____807
+                                                                    =
                                                                     let uu____808
                                                                     =
-                                                                    let uu____811
-                                                                    =
-                                                                    let uu____812
-                                                                    =
-                                                                    let uu____824
+                                                                    let uu____820
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_tuple2
                                                                     FStar_Syntax_Embeddings.e_bool
@@ -538,9 +528,9 @@ and (primitive_steps :
                                                                      in
                                                                     e_tactic_1
                                                                     FStar_Reflection_Embeddings.e_term
-                                                                    uu____824
+                                                                    uu____820
                                                                      in
-                                                                    let uu____835
+                                                                    let uu____831
                                                                     =
                                                                     e_tactic_0'
                                                                     FStar_Syntax_Embeddings.e_unit
@@ -548,8 +538,18 @@ and (primitive_steps :
                                                                     FStar_Tactics_InterpFuns.mktac2
                                                                     "__topdown_rewrite"
                                                                     FStar_Tactics_Basic.topdown_rewrite
-                                                                    uu____812
-                                                                    uu____835
+                                                                    uu____808
+                                                                    uu____831
+                                                                    FStar_Syntax_Embeddings.e_unit
+                                                                     in
+                                                                    let uu____847
+                                                                    =
+                                                                    let uu____850
+                                                                    =
+                                                                    FStar_Tactics_InterpFuns.mktac1
+                                                                    "trefl"
+                                                                    FStar_Tactics_Basic.trefl
+                                                                    FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                      in
                                                                     let uu____851
@@ -557,8 +557,8 @@ and (primitive_steps :
                                                                     let uu____854
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    "trefl"
-                                                                    FStar_Tactics_Basic.trefl
+                                                                    "later"
+                                                                    FStar_Tactics_Basic.later
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                      in
@@ -567,8 +567,8 @@ and (primitive_steps :
                                                                     let uu____858
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    "later"
-                                                                    FStar_Tactics_Basic.later
+                                                                    "dup"
+                                                                    FStar_Tactics_Basic.dup
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                      in
@@ -577,8 +577,8 @@ and (primitive_steps :
                                                                     let uu____862
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    "dup"
-                                                                    FStar_Tactics_Basic.dup
+                                                                    "flip"
+                                                                    FStar_Tactics_Basic.flip
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                      in
@@ -587,8 +587,8 @@ and (primitive_steps :
                                                                     let uu____866
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    "flip"
-                                                                    FStar_Tactics_Basic.flip
+                                                                    "qed"
+                                                                    FStar_Tactics_Basic.qed
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                      in
@@ -597,8 +597,8 @@ and (primitive_steps :
                                                                     let uu____870
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    "qed"
-                                                                    FStar_Tactics_Basic.qed
+                                                                    "dismiss"
+                                                                    FStar_Tactics_Basic.dismiss
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                      in
@@ -607,8 +607,8 @@ and (primitive_steps :
                                                                     let uu____874
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    "dismiss"
-                                                                    FStar_Tactics_Basic.dismiss
+                                                                    "tadmit"
+                                                                    FStar_Tactics_Basic.tadmit
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                      in
@@ -617,8 +617,8 @@ and (primitive_steps :
                                                                     let uu____878
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
-                                                                    "tadmit"
-                                                                    FStar_Tactics_Basic.tadmit
+                                                                    "join"
+                                                                    FStar_Tactics_Basic.join
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                      in
@@ -997,17 +997,17 @@ and (primitive_steps :
                                                                     ::
                                                                     uu____855
                                                                      in
-                                                                    uu____811
+                                                                    uu____850
                                                                     ::
                                                                     uu____851
                                                                      in
-                                                                    uu____800
+                                                                    uu____807
                                                                     ::
-                                                                    uu____808
+                                                                    uu____847
                                                                      in
                                                                     uu____796
                                                                     ::
-                                                                    uu____797
+                                                                    uu____804
                                                                      in
                                                                   uu____792
                                                                     ::
@@ -1033,9 +1033,9 @@ and (primitive_steps :
                                                     uu____764 :: uu____765
                                                      in
                                                   uu____760 :: uu____761  in
-                                                uu____742 :: uu____757  in
-                                              uu____709 :: uu____739  in
-                                            uu____705 :: uu____706  in
+                                                uu____756 :: uu____757  in
+                                              uu____738 :: uu____753  in
+                                            uu____705 :: uu____735  in
                                           uu____701 :: uu____702  in
                                         uu____697 :: uu____698  in
                                       uu____693 :: uu____694  in

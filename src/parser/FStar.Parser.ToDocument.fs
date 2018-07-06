@@ -1120,10 +1120,10 @@ and p_noSeqTerm' ps pb e = match e.tm with
     group (str "`" ^^ p_noSeqTerm ps pb e)
   | VQuote e ->
     group (str "`%" ^^ p_noSeqTerm ps pb e)
-  | Antiquote (false, e) ->
-    group (str "`#" ^^ p_noSeqTerm ps pb e)
-  | Antiquote (true, e) ->
+  | Antiquote ({ tm = Quote (e, Dynamic) }) ->
     group (str "`@" ^^ p_noSeqTerm ps pb e)
+  | Antiquote e ->
+    group (str "`#" ^^ p_noSeqTerm ps pb e)
   | _ -> p_typ ps pb e
 
 and p_attrs_opt = function

@@ -729,9 +729,10 @@ tmEqWith(X):
   | BACKTICK e=tmEqWith(X)
       { mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un }
   | BACKTICK_AT e=atomicTerm
-      { mk_term (Antiquote (true, e)) (rhs2 parseState 1 3) Un }
+      { let q = mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un in
+        mk_term (Antiquote q) (rhs2 parseState 1 3) Un }
   | BACKTICK_HASH e=atomicTerm
-      { mk_term (Antiquote (false, e)) (rhs2 parseState 1 3) Un }
+      { mk_term (Antiquote e) (rhs2 parseState 1 3) Un }
   | e=tmNoEqWith(X)
       { e }
 

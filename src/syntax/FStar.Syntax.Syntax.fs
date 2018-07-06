@@ -174,7 +174,7 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbattrs:list<attribute>; //attrs
     lbpos  :range;           //original position of 'e'
 }
-and antiquotations = list<(bv * bool * term)>
+and antiquotations = list<(bv * term)>
 and quoteinfo = {
     qkind      : quote_kind;
     antiquotes : antiquotations;
@@ -486,12 +486,12 @@ let set_range_of_bv x r = {x with ppname=Ident.mk_ident(x.ppname.idText, r)}
 
 (* Helpers *)
 let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
-    let aq = List.map (fun (bv, b, t) -> (bv, b, f t)) qi.antiquotes in
+    let aq = List.map (fun (bv, t) -> (bv, f t)) qi.antiquotes in
     { qi with antiquotes = aq }
 
-let lookup_aq (bv : bv) (aq : antiquotations) : option<(bool * term)> =
-    match List.tryFind (fun (bv', _, _) -> bv_eq bv bv') aq with
-    | Some (_, b, e) -> Some (b, e)
+let lookup_aq (bv : bv) (aq : antiquotations) : option<term> =
+    match List.tryFind (fun (bv', _) -> bv_eq bv bv') aq with
+    | Some (_, e) -> Some e
     | None -> None
 
 (*********************************************************************************)
@@ -506,6 +506,13 @@ let new_bv_set () : set<bv> = Util.new_set order_bv
 let new_fv_set () :set<lident> = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
 let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name
+
+let eq_binding b1 b2 =
+    match b1, b2 with
+    | Binding_var bv1, Binding_var bv2 -> bv_eq bv1 bv2
+    | Binding_lid (lid1, _), Binding_lid (lid2, _) -> lid_equals lid1 lid2
+    | Binding_univ u1, Binding_univ u2 -> ident_equals u1 u2
+    | _ -> false
 
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
