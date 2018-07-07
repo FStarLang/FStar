@@ -195,7 +195,7 @@ let is_univ (tm : t)=
 let un_univ (tm:t) : universe =
   match tm with
   | Univ u -> u
-  | _ -> failwith "Not a universe"
+  | t -> failwith ("Not a universe: " ^ t_to_string t)
 
 let is_constr_fv (fvar : fv) : bool =
   fvar.fv_qual = Some Data_ctor
@@ -303,7 +303,7 @@ let rec iapp (cfg : Cfg.cfg) (f:t) (args:args) : t =
           Rec (lb, lbs, bs, full_args, 0, ar_lst, tr_lb)
       end
 
-  | Quote _
+  | Quote _ | Reflect _
   | Lazy _ | Constant _ | Univ _ | Type_t _ | Unknown | Refinement _ | Arrow _ ->
     failwith ("NBE ill-typed application: " ^ t_to_string f)
 
@@ -490,6 +490,9 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [arg]) when cfg.reifying ->
       let cfg = {cfg with reifying=false} in
       translate cfg bs (fst arg)
+
+    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [arg]) ->
+      Reflect (translate cfg bs (fst arg))
 
     | Tm_app({n=Tm_constant FC.Const_reify}, [arg])
         when cfg.steps.reify_ ->
@@ -864,6 +867,10 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
       let body = readback cfg (f (mkAccuVar x)) in
       U.refine x body
 
+    | Reflect t ->
+      let tm = readback cfg t in
+      U.mk_reflect tm
+
     | Arrow (f, targs) ->
       let (args_rev, accus_rev) =
           List.fold_left (fun (args_rev, accus_rev) tf ->
@@ -987,15 +994,17 @@ let normalize psteps (steps:list<Env.step>)
   let cfg = Cfg.config' psteps steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
-  debug cfg (fun () -> BU.print1 "Calling NBE with %s" (P.term_to_string e));
-  readback cfg (translate cfg [] e)
+  debug cfg (fun () -> BU.print1 "Calling NBE with (%s) {\n" (P.term_to_string e));
+  let r = readback cfg (translate cfg [] e) in
+  debug cfg (fun () -> BU.print1 "}\nNBE returned (%s) {\n" (P.term_to_string r));
+  r
 
 (* ONLY FOR UNIT TESTS! *)
 let normalize_for_unit_test (steps:list<Env.step>) (env : Env.env) (e:term) : term =
   let cfg = Cfg.config steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
-  debug cfg (fun () -> BU.print1 "Calling NBE with %s" (P.term_to_string e));
+  debug cfg (fun () -> BU.print1 "Calling NBE with (%s) {\n" (P.term_to_string e));
   let r = readback cfg (translate cfg [] e) in
-  debug cfg (fun () -> BU.print1 "NBE returned %s" (P.term_to_string r));
+  debug cfg (fun () -> BU.print1 "}\nNBE returned (%s) {\n" (P.term_to_string r));
   r
