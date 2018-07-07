@@ -90,6 +90,7 @@ let e_term_aq aq =
                                    aq) (fun s ->
             Some (SS.subst s t))
         in
+        let t = U.unmeta t in
         match (SS.compress t).n with
         | Tm_quoted (tm, qi) ->
             apply_antiquotes tm qi.antiquotes

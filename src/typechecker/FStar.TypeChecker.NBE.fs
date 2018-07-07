@@ -718,8 +718,37 @@ and translate_monadic (m, ty) cfg bs e : t =
    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [(e, _)]) ->
      translate ({cfg with reifying=false}) bs e
 
-   | Tm_app _ ->
-     translate cfg bs e
+   | Tm_app (head, args) ->
+     debug cfg (fun () -> BU.print2 "translate_monadic app (%s) @ (%s)\n" (P.term_to_string head)
+                                                                          (P.args_to_string args));
+     let fallback1 () =
+         translate cfg bs e
+     in
+     let fallback2 () =
+         translate ({cfg with reifying=false}) bs (S.mk (Tm_meta (e, Meta_monadic (m, ty))) None e.pos)
+     in
+     begin match (U.un_uinst head).n with
+     | Tm_fvar fv ->
+        let lid = S.lid_of_fv fv in
+        let qninfo = Env.lookup_qname cfg.tcenv lid in
+        if not (Env.is_action cfg.tcenv lid) then fallback1 () else
+
+        (* GM: I think the action *must* be fully applied at this stage
+         * since we were triggered into this function by a Meta_monadic
+         * annotation. So we don't check anything. *)
+
+        (* Fallback if it does not have a definition. This happens,
+         * but I'm not sure why. *)
+        if Option.isNone (Env.lookup_definition_qninfo cfg.delta_level fv.fv_name.v qninfo)
+        then fallback2 ()
+        else
+
+        (* Turn it info (reify head) args, then translate_fv will kick in on the head *)
+        let e = S.mk_Tm_app (U.mk_reify head) args None e.pos in
+        translate ({cfg with reifying=false}) bs e
+     | _ ->
+        fallback1 ()
+     end
 
    | Tm_match (sc, branches) ->
      (* Commutation of reify with match. See the comment in the normalizer about it. *)
@@ -727,15 +756,25 @@ and translate_monadic (m, ty) cfg bs e : t =
      let tm = S.mk (Tm_match(sc, branches)) None e.pos in
      translate ({ cfg with reifying = false }) bs tm
 
+   | Tm_meta (t, Meta_monadic _) ->
+     translate_monadic (m, ty) cfg bs e
+
+   | Tm_meta (t, Meta_monadic_lift (msrc, mtgt, ty')) ->
+     translate_monadic_lift (msrc, mtgt, ty') cfg bs e
+
    | _ -> failwith (BU.format1 "Unexpected case in translate_monadic: %s" (P.tag_of_term e))
 
 and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
    let e = U.unascribe e in
    if U.is_pure_effect msrc || U.is_div_effect msrc
    then let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv mtgt) in
+        let ret = match (SS.compress (snd ed.return_repr)).n with
+                  | Tm_uinst (ret, [_]) -> S.mk (Tm_uinst (ret, [U_unknown])) None e.pos
+                  | _ -> failwith "NYI: Reification of indexed effect (NBE)"
+        in
         let cfg' = {cfg with reifying=false} in
         let t =
-        iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (snd ed.return_repr)))
+        iapp cfg' (iapp cfg' (translate cfg' [] ret)
                        [Univ U_unknown, None])
                        [(translate cfg' bs ty, None); //translating the type of the returned term
                         (translate cfg' bs e, None)]  //translating the returned term itself
@@ -754,9 +793,8 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
                             (Ident.text_of_lid mtgt))
 
     | Some {mlift={mlift_term=Some lift}} ->
-      (* We don't have any reasonable wp to provide so we just pass unknow *)
-      (* Usually the wp is only necessary to typecheck, so this should not *)
-      (* create a big issue. *)
+      (* We don't have any reasonable wp to provide so we just pass unknown *)
+      (* The wp is only necessary to typecheck, so this should not create an issue. *)
       let lift_lam =
         let x = S.new_bv None S.tun in
         U.abs [(x, None)]
