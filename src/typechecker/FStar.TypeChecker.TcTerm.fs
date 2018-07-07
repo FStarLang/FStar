@@ -356,22 +356,40 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _
   | Tm_unknown -> tc_value env e
 
-  // staticly quoted terms are of type `term` (FIXME: as long as its antiquotations are too) ...
-  | Tm_quoted (_, { qkind = Quote_static; antiquotes = aqs }) ->
-    value_check_expected_typ env top (Inl S.t_term) Env.trivial_guard
+  | Tm_quoted (qt, qi)  ->
+    begin match qi.qkind with
+    (* A static quote is of type `term`, as long as its antiquotations are too *)
+    | Quote_static ->
+        (* Typecheck the antiquotes expecting a term *)
+        let aqs = qi.antiquotes in
+        let env_tm = Env.set_expected_typ env t_term in
+        let (aqs_rev, guard) =
+            List.fold_right (fun (bv, tm) (aqs_rev, guard) ->
+                                    let tm, _, g = tc_term env_tm tm in
+                                    ((bv, tm)::aqs_rev, Env.conj_guard g guard)) aqs ([], Env.trivial_guard) in
+        let qi = { qi with antiquotes = List.rev aqs_rev } in
 
-  // ... but other ones are in the TAC effect
-  | Tm_quoted _ ->
-    let c = mk_Comp ({ comp_univs = [U_zero];
-                       effect_name = Const.effect_Tac_lid;
-                       result_typ = S.t_term;
-                       effect_args = [];
-                       flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
-                    }) in
-    let t, lc, g = value_check_expected_typ env top (Inr (U.lcomp_of_comp c)) Env.trivial_guard in
-    let t = mk (Tm_meta(t, Meta_monadic_lift (Const.effect_PURE_lid, Const.effect_TAC_lid, S.t_term)))
-               None t.pos in
-    t, lc, g
+        let tm = mk (Tm_quoted (qt, qi)) None top.pos in
+        value_check_expected_typ env tm (Inl S.t_term) guard
+
+    | Quote_dynamic ->
+        let c = mk_Comp ({ comp_univs = [U_zero];
+                           effect_name = Const.effect_Tac_lid;
+                           result_typ = S.t_term;
+                           effect_args = [];
+                           flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
+                        }) in
+
+        (* Typechecked the quoted term just to elaborate it *)
+        let env', _ = Env.clear_expected_typ env in
+        let qt, _, _ = tc_term ({ env' with lax = true }) qt in
+        let t = mk (Tm_quoted (qt, qi)) None top.pos in
+
+        let t, lc, g = value_check_expected_typ env top (Inr (U.lcomp_of_comp c)) Env.trivial_guard in
+        let t = mk (Tm_meta(t, Meta_monadic_lift (Const.effect_PURE_lid, Const.effect_TAC_lid, S.t_term)))
+                   None t.pos in
+        t, lc, g
+    end
 
   | Tm_lazy ({lkind=Lazy_embedding _ }) ->
     tc_term env (U.unlazy top)
