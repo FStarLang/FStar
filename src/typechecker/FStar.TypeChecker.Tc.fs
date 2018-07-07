@@ -1522,7 +1522,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
     let env' = if lax then { env with lax = true } else env in
     if Env.debug env Options.Low then
         BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
-    let errs, _ = Errors.catch_errors (fun () -> tc_decl' env' se) in
+    let errs, _ = Errors.catch_errors (fun () -> Options.with_saved_options (fun () -> tc_decl' env' se)) in
     if Env.debug env Options.Low then begin
         BU.print_string ">> Got issues: [\n";
         List.iter Errors.print_issue errs;

@@ -112,7 +112,12 @@ let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
 
 let with_saved_options f =
-  push (); let retv = f () in pop (); retv
+  push ();
+  try let retv = f () in
+      pop ();
+      retv
+  with | ex -> pop ();
+               raise ex
 
 let light_off_files : ref<list<string>> = Util.mk_ref []
 let add_light_off_file (filename:string) = light_off_files := filename :: !light_off_files
