@@ -23,11 +23,16 @@ val set : proofstate -> tac<unit>
 val get : tac<proofstate>
 val bind : tac<'a> -> ('a -> tac<'b>) -> tac<'b>
 
+val set_goals     : list<goal> -> tac<unit>
+val set_smt_goals : list<goal> -> tac<unit>
+
 val get_guard_policy : unit -> tac<guard_policy>
 val set_guard_policy : guard_policy -> tac<unit>
 val lax_on : unit -> tac<bool>
 
 val fresh      : unit -> tac<Z.t>
+
+val join    : unit -> tac<unit>
 
 val inspect : term -> tac<term_view>
 val pack    : term_view -> tac<term>
@@ -46,11 +51,10 @@ val print_proof_state  : string -> tac<unit>
 
 val fail : string -> tac<'a>
 val trivial : unit -> tac<unit>
-val smt : unit -> tac<unit>
 val divide : Z.t -> tac<'a> -> tac<'b> -> tac<('a * 'b)>
+val seq : tac<unit> -> tac<unit> -> tac<unit>
 val focus : tac<'a> -> tac<'a>
 val catch : tac<'a> -> tac<BU.either<string,'a>>
-val seq : tac<unit> -> tac<unit> -> tac<unit>
 val intro : unit -> tac<binder>
 val intro_rec : unit -> tac<(binder * binder)>
 val norm : list<EMB.norm_step> -> tac<unit>
@@ -67,7 +71,6 @@ val revert : unit -> tac<unit>
 val clear : binder -> tac<unit>
 val clear_top : unit -> tac<unit>
 val tc : term -> tac<typ>
-val is_guard : unit -> tac<bool>
 
 val is_irrelevant : goal -> bool
 
@@ -83,12 +86,7 @@ val topdown_rewrite: (term -> tac<(bool * FStar.BigInt.t)>) -> tac<unit> -> tac<
 val trefl : unit -> tac<unit>
 
 val dup     : unit -> tac<unit>
-val flip    : unit -> tac<unit>
-val later   : unit -> tac<unit>
-val dismiss : unit -> tac<unit>
 val tadmit  : unit -> tac<unit>
-val qed     : unit -> tac<unit>
-val join    : unit -> tac<unit>
 
 val cases : term -> tac<(term * term)>
 val t_destruct : term -> tac<list<(fv * Z.t)>>

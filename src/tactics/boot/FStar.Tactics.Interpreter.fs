@@ -104,11 +104,11 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktot1' 0 "decr_depth" decr_depth E.e_proofstate E.e_proofstate
                              decr_depth E.e_proofstate_nbe E.e_proofstate_nbe;
 
-      mktot1' 0 "goals"       goals E.e_proofstate (e_list E.e_goal)
-                              goals E.e_proofstate_nbe (NBET.e_list E.e_goal_nbe);
+      mktot1' 0 "goals_of"    goals_of E.e_proofstate (e_list E.e_goal)
+                              goals_of E.e_proofstate_nbe (NBET.e_list E.e_goal_nbe);
 
-      mktot1' 0 "smtgoals"    smtgoals E.e_proofstate (e_list E.e_goal)
-                              smtgoals E.e_proofstate_nbe (NBET.e_list E.e_goal_nbe);
+      mktot1' 0 "smt_goals_of" smt_goals_of E.e_proofstate (e_list E.e_goal)
+                               smt_goals_of E.e_proofstate_nbe (NBET.e_list E.e_goal_nbe);
 
       mktot1' 0 "goal_env"    goal_env E.e_goal RE.e_env
                               goal_env E.e_goal_nbe NRE.e_env;
@@ -119,12 +119,21 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktot1' 0 "goal_witness"  goal_witness E.e_goal RE.e_term
                                 goal_witness E.e_goal_nbe NRE.e_term;
 
+      mktot1' 0 "is_guard"      is_guard E.e_goal e_bool
+                                is_guard E.e_goal_nbe NBET.e_bool;
+
       mktot2 0 "push_binder"   (fun env b -> Env.push_binders env [b]) RE.e_env RE.e_binder RE.e_env
                                (fun env b -> Env.push_binders env [b]) NRE.e_env NRE.e_binder NRE.e_env;
 
       //nb: the e_any embedding is never used
       mktac2 1 "fail"          (fun _ -> fail) e_any e_string e_any
                                (fun _ -> fail) NBET.e_any NBET.e_string NBET.e_any;
+
+      mktac1 0 "set_goals"     set_goals (e_list E.e_goal) e_unit
+                               set_goals (NBET.e_list E.e_goal_nbe) (NBET.e_unit);
+
+      mktac1 0 "set_smt_goals" set_smt_goals (e_list E.e_goal) e_unit
+                               set_smt_goals (NBET.e_list E.e_goal_nbe) (NBET.e_unit);
 
       mktac1 0 "trivial"       trivial e_unit e_unit
                                trivial NBET.e_unit NBET.e_unit;
@@ -166,9 +175,6 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "rewrite"       rewrite RE.e_binder e_unit
                                rewrite NRE.e_binder NBET.e_unit;
 
-      mktac1 0 "smt"           smt e_unit e_unit
-                               smt NBET.e_unit NBET.e_unit;
-
       mktac1 0 "refine_intro"  refine_intro e_unit e_unit
                                refine_intro NBET.e_unit NBET.e_unit;
 
@@ -186,6 +192,9 @@ and primitive_steps () : list<Cfg.primitive_step> =
 
       mktac2 0 "__seq"         seq (e_tactic_0 e_unit) (e_tactic_0 e_unit) e_unit
                                seq (e_tactic_nbe_0 NBET.e_unit) (e_tactic_nbe_0 NBET.e_unit) NBET.e_unit;
+
+      mktac2 1 "__focus"       (fun _ -> focus) e_any (e_tactic_0 e_any) e_any
+                               (fun _ -> focus) NBET.e_any (e_tactic_nbe_0 NBET.e_any) NBET.e_any;
 
       mktac1 0 "set_options"   set_options e_string e_unit
                                set_options NBET.e_string NBET.e_unit;
@@ -226,20 +235,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "trefl"         trefl   e_unit e_unit
                                trefl   NBET.e_unit NBET.e_unit;
 
-      mktac1 0 "later"         later   e_unit e_unit
-                               later   NBET.e_unit NBET.e_unit;
-
       mktac1 0 "dup"           dup     e_unit e_unit
                                dup     NBET.e_unit NBET.e_unit;
-
-      mktac1 0 "flip"          flip    e_unit e_unit
-                               flip    NBET.e_unit NBET.e_unit;
-
-      mktac1 0 "qed"           qed     e_unit e_unit
-                               qed     NBET.e_unit NBET.e_unit;
-
-      mktac1 0 "dismiss"       dismiss e_unit e_unit
-                               dismiss NBET.e_unit NBET.e_unit;
 
       mktac1 0 "tadmit"        tadmit  e_unit e_unit
                                tadmit  NBET.e_unit NBET.e_unit;
@@ -264,9 +261,6 @@ and primitive_steps () : list<Cfg.primitive_step> =
 
       mktac1 0 "fresh"         fresh       e_unit e_int
                                fresh       NBET.e_unit NBET.e_int;
-
-      mktac1 0 "is_guard"      is_guard    e_unit e_bool
-                               is_guard    NBET.e_unit NBET.e_bool;
 
       mktac2 0 "uvar_env"      uvar_env RE.e_env (e_option RE.e_term) RE.e_term
                                uvar_env NRE.e_env (NBET.e_option NRE.e_term) NRE.e_term;

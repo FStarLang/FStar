@@ -9,21 +9,23 @@ open FStar.Tactics.Result
 open FStar.Tactics.Util
 module L = FStar.List.Tot
 
+let goals () : Tac (list goal) = goals_of (get ())
+let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
-let _cur_goal () =
-    match goals (get ()) with
+let _cur_goal () : Tac goal =
+    match goals () with
     | []   -> fail "no more goals"
     | g::_ -> g
 
 (** [cur_env] returns the current goal's environment *)
-let cur_env () = goal_env (_cur_goal ())
+let cur_env () : Tac env = goal_env (_cur_goal ())
 
 (** [cur_goal] returns the current goal's type *)
-let cur_goal () = goal_type (_cur_goal ())
+let cur_goal () : Tac typ = goal_type (_cur_goal ())
 
 (** [cur_witness] returns the current goal's witness *)
-let cur_witness () = goal_witness (_cur_goal ())
+let cur_witness () : Tac term = goal_witness (_cur_goal ())
 
 (** Set the guard policy only locally, without affecting calling code *)
 let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
@@ -32,6 +34,47 @@ let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
     let r = f () in
     set_guard_policy old_pol;
     r
+
+(** Ignore the current goal. If left unproven, this will fail after
+the tactic finishes. *)
+let dismiss () : Tac unit =
+    match goals () with
+    | [] -> fail "dismiss: no more goals"
+    | _::gs -> set_goals gs
+
+(** Flip the order of the first two goals. *)
+let flip () : Tac unit =
+    let gs = goals () in
+    match goals () with
+    | [] | [_]   -> fail "flip: less than two goals"
+    | g1::g2::gs -> set_goals (g2::g1::gs)
+
+(** Succeed if there are no more goals left, and fail otherwise. *)
+let qed () : Tac unit =
+    match goals () with
+    | [] -> ()
+    | _ -> fail "qed: not done!"
+
+(** [smt] will mark the current goal for being solved through the SMT.
+This does not immediately run the SMT: it just dumps the goal in the
+SMT bin. Note, if you dump a proof-relevant goal there, the engine will
+later raise an error. *)
+let smt () : Tac unit =
+    match goals (), smt_goals () with
+    | [], _ -> fail "smt: no active goals"
+    | g::gs, gs' ->
+        begin
+        set_goals gs;
+        set_smt_goals (g :: gs')
+        end
+
+let idtac () : Tac unit = ()
+
+(** Push the current goal to the back. *)
+let later () : Tac unit =
+    match goals () with
+    | g::gs -> set_goals (gs @ [g])
+    | _ -> fail "later: no goals"
 
 (** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
 [t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
@@ -60,12 +103,6 @@ let exact_guard (t : term) : Tac unit =
 let cur_module () : Tac (list string) =
     moduleof (cur_env ())
 
-let idtac () : Tac unit = ()
-
-let focus (f : unit -> Tac 'a) : Tac 'a =
-    let res, () = divide 1 f idtac in
-    res
-
 let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
     if n = 0
     then []
@@ -75,7 +112,7 @@ let fresh_uvar (o : option typ) : Tac term =
     let e = cur_env () in
     uvar_env e o
 
-let unify t1 t2 =
+let unify t1 t2 : Tac bool =
     let e = cur_env () in
     unify_env e t1 t2
 
@@ -94,22 +131,22 @@ let exact_n (n : int) (t : term) : Tac unit =
     exact_args (repeatn n (fun () -> Q_Explicit)) t
 
 (** [ngoals ()] returns the number of goals *)
-let ngoals () : Tac int = List.length (goals (get ()))
+let ngoals () : Tac int = List.length (goals ())
 
 (** [ngoals_smt ()] returns the number of SMT goals *)
-let ngoals_smt () : Tac int = List.length (smtgoals (get ()))
+let ngoals_smt () : Tac int = List.length (smt_goals ())
 
-let fresh_bv t =
+let fresh_bv t : Tac bv =
     (* These bvs are fresh anyway through a separate counter,
      * but adding the integer allows for more readability when
      * generating code *)
     let i = fresh () in
     fresh_bv_named ("x" ^ string_of_int i) t
 
-let fresh_binder_named nm t =
+let fresh_binder_named nm t : Tac binder =
     mk_binder (fresh_bv_named nm t)
 
-let fresh_binder t =
+let fresh_binder t : Tac binder =
     (* See comment in fresh_bv *)
     let i = fresh () in
     fresh_binder_named ("x" ^ string_of_int i) t
@@ -118,9 +155,10 @@ let norm_term (s : list norm_step) (t : term) : Tac term =
     let e = cur_env () in
     norm_term_env e s t
 
-let guard (b : bool) : TAC unit (fun ps post -> if b
-                                                then post (Success () ps)
-                                                else forall m. post (Failed m ps))
+let guard (b : bool) : TacH unit (requires (fun _ -> True))
+                                 (ensures (fun ps r -> if b
+                                                       then Success? r /\ Success?.ps r == ps
+                                                       else Failed? r  /\ Failed?.ps r == ps))
     =
     if not b then
         fail "guard failed"
@@ -165,6 +203,10 @@ let admit_all () : Tac unit =
     let _ = repeat tadmit in
     ()
 
+(** [is_guard] returns whether the current goal arised from a typechecking guard *)
+let is_guard () : Tac bool =
+    Tactics.Types.is_guard (_cur_goal ())
+
 let skip_guard () : Tac unit =
     if is_guard ()
     then smt ()
@@ -180,9 +222,9 @@ let compute () : Tac unit = norm [primops; iota; delta; zeta]
 
 let intros () : Tac (list binder) = repeat intro
 
-let intros' () = let _ = intros () in ()
-let destruct tm = let _ = t_destruct tm in ()
-let destruct_intros tm = seq (fun () -> let _ = t_destruct tm in ()) intros'
+let intros' () : Tac unit = let _ = intros () in ()
+let destruct tm : Tac unit = let _ = t_destruct tm in ()
+let destruct_intros tm : Tac unit = seq (fun () -> let _ = t_destruct tm in ()) intros'
 
 private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
@@ -376,13 +418,13 @@ assume val admit_goal : #a:Type -> unit ->
     Pure a (requires (by_tactic dump_admit a))
            (ensures (fun _ -> False))
 
-let change_with t1 t2 =
+let change_with t1 t2 : Tac unit =
     focus (fun () ->
         grewrite t1 t2;
         iseq [idtac; trivial]
     )
 
-let change_sq t1 =
+let change_sq (t1 : term) : Tac unit =
     change (mk_e_app (`squash) [t1])
 
 let finish_by (t : unit -> Tac 'a) : Tac 'a =

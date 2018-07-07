@@ -61,10 +61,12 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
           interpret_tac m ps
 
 (* Pointing to the internal primitives *)
+let get                     = from_tac_1 (fun () -> B.get) (* silly.. *)
+let set_goals               = from_tac_1 B.set_goals
+let set_smt_goals           = from_tac_1 B.set_smt_goals
 let fail                    = from_tac_1 B.fail
 let top_env                 = from_tac_1 B.top_env
 let fresh                   = from_tac_1 B.fresh
-let is_guard                = from_tac_1 B.is_guard
 let refine_intro            = from_tac_1 B.refine_intro
 let tc                      = from_tac_1 B.tc
 let unshelve                = from_tac_1 B.unshelve
@@ -81,7 +83,6 @@ let binder_retype           = from_tac_1 B.binder_retype
 let clear_top               = from_tac_1 B.clear_top
 let clear                   = from_tac_1 B.clear
 let rewrite                 = from_tac_1 B.rewrite
-let smt                     = from_tac_1 B.smt
 let t_exact                 = from_tac_3 B.t_exact
 let t_apply                 = from_tac_2 B.t_apply
 let apply_lemma             = from_tac_1 B.apply_lemma
@@ -90,10 +91,7 @@ let debug                   = from_tac_1 B.debug
 let dump                    = from_tac_1 B.print_proof_state
 let dump1                   = from_tac_1 B.print_proof_state1
 let trefl                   = from_tac_1 B.trefl
-let later                   = from_tac_1 B.later
 let dup                     = from_tac_1 B.dup
-let flip                    = from_tac_1 B.flip
-let qed                     = from_tac_1 B.qed
 let prune                   = from_tac_1 B.prune
 let addns                   = from_tac_1 B.addns
 let cases                   = from_tac_1 B.cases
@@ -107,7 +105,6 @@ let change                  = from_tac_1 B.change
 let get_guard_policy        = from_tac_1 B.get_guard_policy
 let set_guard_policy        = from_tac_1 B.set_guard_policy
 let lax_on                  = from_tac_1 B.lax_on
-let dismiss                 = from_tac_1 B.dismiss
 let tadmit                  = from_tac_1 B.tadmit
 let inspect                 = from_tac_1 B.inspect
 let pack                    = from_tac_1 B.pack
@@ -133,6 +130,10 @@ let catch: (unit -> 'a __tac) -> ((string, 'a) FStar_Pervasives.either) __tac = 
 let __divide (n:int) (f: 'a __tac) (g: 'b __tac): ('a * 'b) __tac = from_tac_3 B.divide n (to_tac_0 f) (to_tac_0 g)
 let divide: int -> (unit -> 'a __tac) -> (unit -> 'b __tac) -> ('a * 'b) __tac =
     fun n f g -> __divide n (f ()) (g ())
+
+let __focus (f: 'a __tac) : 'a __tac = from_tac_1 B.focus (to_tac_0 f)
+let focus: (unit -> 'a __tac) -> 'a __tac =
+    fun f -> __focus (f ())
 
 let __seq (t1: unit __tac) (t2: unit __tac): unit __tac = from_tac_2 B.seq (to_tac_0 t1) (to_tac_0 t2)
 let seq: (unit -> unit __tac) -> (unit -> unit __tac) -> unit __tac = fun f -> fun g -> __seq (f ()) (g ())

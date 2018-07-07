@@ -6,14 +6,16 @@ assume new type proofstate
 assume new type goal
 
 (* Returns the active goals *)
-val goals     : proofstate -> list goal
+val goals_of     : proofstate -> list goal
 (* Returns the goals marked for SMT *)
-val smtgoals : proofstate -> list goal
+val smt_goals_of : proofstate -> list goal
 
 (* Inspecting a goal *)
 val goal_env     : goal -> env
 val goal_type    : goal -> typ
 val goal_witness : goal -> term
+val is_guard     : goal -> bool (* A bit of helper info: did this goal come from a VC guard? *)
+
 
 (* Tracing *)
 val incr_depth : proofstate -> proofstate

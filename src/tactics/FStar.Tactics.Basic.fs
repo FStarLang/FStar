@@ -369,12 +369,6 @@ let __dismiss : tac<unit> =
     bind get (fun p ->
     set ({p with goals=List.tl p.goals}))
 
-let dismiss () : tac<unit> =
-    bind get (fun p ->
-    match p.goals with
-    | [] -> fail "dismiss: no more goals"
-    | _ -> __dismiss)
-
 let solve (goal : goal) (solution : term) : tac<unit> =
     let e = goal_env goal in
     mlog (fun () -> BU.print2 "solve %s := %s\n" (Print.term_to_string (goal_witness goal))
@@ -393,9 +387,16 @@ let solve' (goal : goal) (solution : term) : tac<unit> =
     bind __dismiss (fun () ->
     remove_solved_goals))
 
-let dismiss_all : tac<unit> =
-    bind get (fun p ->
-    set ({p with goals=[]}))
+(* These are UNTRUSTED! Goals don't really matter, implicits do. *)
+let set_goals (gs:list<goal>) : tac<unit> =
+    bind get (fun ps ->
+    set ({ ps with goals = gs }))
+
+let set_smt_goals (gs:list<goal>) : tac<unit> =
+    bind get (fun ps ->
+    set ({ ps with smt_goals = gs }))
+
+let dismiss_all : tac<unit> = set_goals []
 
 let nwarn = BU.mk_ref 0
 
@@ -504,10 +505,6 @@ let fresh () : tac<Z.t> =
     let ps = { ps with freshness = n + 1 } in
     bind (set ps) (fun () ->
     ret (Z.of_int_fs n)))
-
-let is_guard () : tac<bool> =
-    bind (cur_goal ()) (fun g ->
-    ret g.is_guard)
 
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
     let typ = U.mk_squash (env.universe_of env phi) phi in
@@ -618,14 +615,6 @@ let goal_from_guard (reason:string) (e:env) (g : guard_t) opts : tac<option<goal
         if istrivial e f then ret None else
         bind (mk_irrelevant_goal reason e f opts) (fun goal ->
         ret (Some ({ goal with is_guard = true })))
-
-let smt () : tac<unit> =
-    bind (cur_goal ()) (fun g ->
-    if is_irrelevant g then
-        bind __dismiss (fun _ -> add_smt_goals [g])
-    else
-        fail1 "goal is not irrelevant: cannot dispatch to smt (%s)" (tts (goal_env g) (goal_type g))
-    )
 
 let divide (n:Z.t) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     bind get (fun p ->
@@ -1485,13 +1474,6 @@ let dup () : tac<unit> =
     bind (add_goals [g']) (fun _ ->
     ret ())))))
 
-let flip () : tac<unit> =
-    bind get (fun ps ->
-    match ps.goals with
-    | g1::g2::gs -> set ({ps with goals=g2::g1::gs})
-    | _ -> fail "flip: less than 2 goals"
-    )
-
 // longest_prefix f l1 l2 = (p, r1, r2) ==> l1 = p@r1 /\ l2 = p@r2
 let rec longest_prefix (f : 'a -> 'a -> bool) (l1 : list<'a>) (l2 : list<'a>) : list<'a> * list<'a> * list<'a> =
     let rec aux acc l1 l2 =
@@ -1550,20 +1532,6 @@ let join () : tac<unit> =
         add_goals [g12]))
 
     | _ -> fail "join: less than 2 goals"
-    )
-
-let later () : tac<unit> =
-    bind get (fun ps ->
-    match ps.goals with
-    | [] -> ret ()
-    | g::gs -> set ({ps with goals=gs@[g]})
-    )
-
-let qed () : tac<unit> =
-    bind get (fun ps ->
-    match ps.goals with
-    | [] -> ret ()
-    | _ -> fail "Not done!"
     )
 
 (* TODO: special case of destruct? But `bool` is not an inductive.. *)

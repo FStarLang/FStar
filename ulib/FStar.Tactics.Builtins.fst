@@ -36,9 +36,6 @@ assume val push_binder : env -> binder -> env
 catching a failure. *)
 assume val fresh : unit -> Tac int
 
-(** [is_guard] returns whether the current goal arised from a typechecking guard *)
-assume val is_guard : unit -> Tac bool
-
 (** [refine_intro] will turn a goal of shape [w : x:t{phi}]
 into [w : t] and [phi{w/x}] *)
 assume val refine_intro : unit -> Tac unit
@@ -139,11 +136,6 @@ the variable [v] for [r] everywhere in the current goal type and witness/
 *)
 assume val rewrite : binder -> Tac unit
 
-(** [smt] will mark the current goal for being solved through the SMT.
-This does not immediately run the SMT:  it is a marker.
-This tactic never fails, and a goal marked for SMT cannot be brought back. *)
-assume val smt     : unit -> Tac unit
-
 assume val __divide : int -> __tac 'a -> __tac 'b -> __tac ('a * 'b)
 (** [divide n t1 t2] will split the current set of goals into the [n]
 first ones, and the rest. It then runs [t1] on the first set, and [t2]
@@ -151,7 +143,11 @@ on the second, returning both results (and concatenating remaining goals). *)
 let divide (n:int) (f:unit -> Tac 'a) (g:unit -> Tac 'b): Tac ('a * 'b) =
     TAC?.reflect (__divide n (reify (f ())) (reify (g ())))
 
-(* could be implemented using divide *)
+assume val __focus : __tac 'a -> __tac 'a
+(** [focus t] runs [t ()] on the current active goal, hiding all others
+and restoring them at the end. *)
+let focus (t : unit -> Tac 'a) : Tac 'a = TAC?.reflect (__focus (reify (t ())))
+
 assume val __seq : __tac unit -> __tac unit -> __tac unit
 (** Runs tactic [t1] on the current goal, and then tactic [t2] on *each*
 subgoal produced by [t1]. Each invocation of [t2] runs on a proofstate
@@ -244,9 +240,6 @@ let topdown_rewrite
     : Tac unit
     = TAC?.reflect (__topdown_rewrite (fun x -> reify (ctrl x)) (reify (rw ())))
 
-(** Push the current goal to the back. *)
-assume val later : unit -> Tac unit
-
 (** Given the current goal [Gamma |- w : t],
 [dup] will turn this goal into
 [Gamma |- ?u : t] and
@@ -255,13 +248,6 @@ a goal's witness in any way needed, by choosing
 some [?u] (possibly with exact) and then solving the other goal.
 *)
 assume val dup : unit -> Tac unit
-
-(** Flip the order of the first two goals. *)
-assume val flip : unit -> Tac unit
-assume val join : unit -> Tac unit
-
-(** Succeed if there are no more goals left, and fail otherwise. *)
-assume val qed : unit -> Tac unit
 
 // Proof namespace management
 (** [prune "A.B.C"] will mark all top-level definitions in module
@@ -330,10 +316,6 @@ assume val set_guard_policy : guard_policy -> Tac unit
 `--lax` option set, and thus drops all verification conditions. *)
 assume val lax_on : unit -> Tac bool
 
-(** Ignore the current goal. If left unproven, this will fail after
-the tactic finishes. *)
-assume val dismiss : unit -> Tac unit
-
 (** Admit the current goal. Raises a warning. *)
 assume val tadmit : unit -> Tac unit
 
@@ -343,6 +325,21 @@ assume val inspect : term -> Tac term_view
 (** Pack a term view on a fully-named representation back into a term *)
 assume val pack    : term_view -> Tac term
 
+(** Join the first two goals, which must be irrelevant, in a single
+one by finding a maximal prefix of their environment and reverting
+appropriately. Useful to minimize SMT queries that share internal
+obligations. *)
+assume val join : unit -> Tac unit
+
 (* Guido: TODO: restore *)
 (* assume val lget     : #a:Type -> string -> Tac a *)
 (* assume val lset     : #a:Type -> string -> a -> Tac unit *)
+
+(** Set the current set of active goals at will. Obligations remain
+in the implicits. *)
+assume val set_goals     : list goal -> Tac unit
+
+(** Set the current set of SMT goals at will. Obligations remain in the
+implicits. TODO: This is a really bad name, there's no special "SMT"
+about these goals. *)
+assume val set_smt_goals : list goal -> Tac unit
