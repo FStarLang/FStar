@@ -66,10 +66,12 @@ let run t p =
     t.tac_f p
 
 let run_safe t p =
-    try t.tac_f p
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> Failed (msg, p)
-         | e -> Failed (BU.message_of_exn e, p)
+    if Options.tactics_failhard ()
+    then run t p
+    else try run t p
+         with | Errors.Err (_, msg)
+              | Errors.Error (_, msg, _) -> Failed (msg, p)
+              | e -> Failed (BU.message_of_exn e, p)
 
 let rec log ps (f : unit -> unit) : unit =
     if ps.tac_verb_dbg

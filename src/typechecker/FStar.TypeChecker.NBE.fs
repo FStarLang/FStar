@@ -356,7 +356,7 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
                debug (fun() -> BU.print "Translate fv: it's a Sig_let\n" []);
                debug (fun () -> BU.print2 "Type of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbtyp)) (P.term_to_string (SS.compress lb.lbtyp)));
                debug (fun () -> BU.print2 "Body of lbdef: %s - %s\n" (P.tag_of_term (SS.compress lb.lbdef)) (P.term_to_string (SS.compress lb.lbdef)));
-               translate_letbinding cfg [] lb
+               translate_letbinding cfg bs lb
              end
          | None -> failwith "Could not find let binding"
          end
