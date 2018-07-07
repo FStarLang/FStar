@@ -280,8 +280,8 @@ type nbe_cbs = {
    translate : term -> t;
 }
 
-let iapp_cb cbs      = cbs.iapp
-let translate_cb cbs = cbs.translate
+let iapp_cb cbs    h a = cbs.iapp h a
+let translate_cb cbs t = cbs.translate t
 
 type embedding<'a> = {
   em  : nbe_cbs -> 'a -> t;
