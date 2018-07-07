@@ -277,10 +277,18 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
     let arg_as_string (a:arg) = fst a |> try_unembed_simple EMB.e_string in
     let arg_as_list   (e:EMB.embedding<'a>) a = fst a |> try_unembed_simple (EMB.e_list e) in
     let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
-        match (SS.compress a).n with
-        | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)])
+        let hd, args = U.head_and_args' a in
+        let a = U.unlazy_emb a in
+        match (SS.compress hd).n, args with
+        | Tm_fvar fv1, [(arg, _)]
             when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
-          Some (fv1, Z.big_int_of_string i)
+            let arg = U.unlazy_emb arg in
+            begin match (SS.compress arg).n with
+            | Tm_constant (FC.Const_int (i, None)) ->
+                Some (fv1, Z.big_int_of_string i)
+            | _ ->
+                None
+            end
         | _ -> None
     in
     let lift_unary
