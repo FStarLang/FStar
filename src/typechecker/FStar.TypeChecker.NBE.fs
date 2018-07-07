@@ -481,11 +481,15 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
     | Tm_fvar fvar ->
       translate_fv cfg bs fvar
 
-    | Tm_app({n=Tm_constant FC.Const_reify}, arg::more::args)
-        when cfg.steps.reify_ ->
-      let reifyh, _ = U.head_and_args e in
-      let head = S.mk_Tm_app reifyh [arg] None e.pos in
+    | Tm_app({n=Tm_constant FC.Const_reify},   arg::more::args)
+    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, arg::more::args) ->
+      let head, _ = U.head_and_args e in
+      let head = S.mk_Tm_app head [arg] None e.pos in
       translate cfg bs (S.mk_Tm_app head (more::args) None e.pos)
+
+    | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [arg]) when cfg.reifying ->
+      let cfg = {cfg with reifying=false} in
+      translate cfg bs (fst arg)
 
     | Tm_app({n=Tm_constant FC.Const_reify}, [arg])
         when cfg.steps.reify_ ->
