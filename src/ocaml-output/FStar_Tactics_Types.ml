@@ -549,16 +549,17 @@ let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
         local_state = (uu___261_741.local_state)
       }
   
-let (goals : proofstate -> goal Prims.list) = fun ps  -> ps.goals 
-let (smtgoals : proofstate -> goal Prims.list) = fun ps  -> ps.smt_goals 
+let (goals_of : proofstate -> goal Prims.list) = fun ps  -> ps.goals 
+let (smt_goals_of : proofstate -> goal Prims.list) = fun ps  -> ps.smt_goals 
+let (is_guard : goal -> Prims.bool) = fun g  -> g.is_guard 
 type direction =
   | TopDown 
   | BottomUp 
 let (uu___is_TopDown : direction -> Prims.bool) =
   fun projectee  ->
-    match projectee with | TopDown  -> true | uu____767 -> false
+    match projectee with | TopDown  -> true | uu____772 -> false
   
 let (uu___is_BottomUp : direction -> Prims.bool) =
   fun projectee  ->
-    match projectee with | BottomUp  -> true | uu____773 -> false
+    match projectee with | BottomUp  -> true | uu____778 -> false
   
