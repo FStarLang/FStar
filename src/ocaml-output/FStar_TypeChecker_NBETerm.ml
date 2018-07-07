@@ -74,7 +74,6 @@ and t =
   | Type_t of FStar_Syntax_Syntax.universe 
   | Univ of FStar_Syntax_Syntax.universe 
   | Unknown 
-  | Reflect of t 
   | Arrow of
   (t Prims.list -> comp,(t Prims.list ->
                            (t,FStar_Syntax_Syntax.aqual)
@@ -85,6 +84,7 @@ and t =
   (t -> t,unit ->
             (t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2)
   FStar_Pervasives_Native.tuple2 
+  | Reflect of t 
   | Quote of (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.quoteinfo)
   FStar_Pervasives_Native.tuple2 
   | Lazy of
@@ -212,15 +212,9 @@ let (uu___is_Unknown : t -> Prims.bool) =
   fun projectee  ->
     match projectee with | Unknown  -> true | uu____954 -> false
   
-let (uu___is_Reflect : t -> Prims.bool) =
-  fun projectee  ->
-    match projectee with | Reflect _0 -> true | uu____961 -> false
-  
-let (__proj__Reflect__item___0 : t -> t) =
-  fun projectee  -> match projectee with | Reflect _0 -> _0 
 let (uu___is_Arrow : t -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Arrow _0 -> true | uu____995 -> false
+    match projectee with | Arrow _0 -> true | uu____981 -> false
   
 let (__proj__Arrow__item___0 :
   t ->
@@ -232,7 +226,7 @@ let (__proj__Arrow__item___0 :
   = fun projectee  -> match projectee with | Arrow _0 -> _0 
 let (uu___is_Refinement : t -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Refinement _0 -> true | uu____1083 -> false
+    match projectee with | Refinement _0 -> true | uu____1069 -> false
   
 let (__proj__Refinement__item___0 :
   t ->
@@ -240,6 +234,12 @@ let (__proj__Refinement__item___0 :
               (t,FStar_Syntax_Syntax.aqual) FStar_Pervasives_Native.tuple2)
       FStar_Pervasives_Native.tuple2)
   = fun projectee  -> match projectee with | Refinement _0 -> _0 
+let (uu___is_Reflect : t -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Reflect _0 -> true | uu____1125 -> false
+  
+let (__proj__Reflect__item___0 : t -> t) =
+  fun projectee  -> match projectee with | Reflect _0 -> _0 
 let (uu___is_Quote : t -> Prims.bool) =
   fun projectee  ->
     match projectee with | Quote _0 -> true | uu____1143 -> false
