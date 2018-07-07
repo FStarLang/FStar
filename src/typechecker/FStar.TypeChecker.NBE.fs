@@ -997,7 +997,7 @@ let normalize psteps (steps:list<Env.step>)
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
   debug cfg (fun () -> BU.print1 "Calling NBE with (%s) {\n" (P.term_to_string e));
   let r = readback cfg (translate cfg [] e) in
-  debug cfg (fun () -> BU.print1 "}\nNBE returned (%s) {\n" (P.term_to_string r));
+  debug cfg (fun () -> BU.print1 "}\nNBE returned (%s)\n" (P.term_to_string r));
   r
 
 (* ONLY FOR UNIT TESTS! *)
@@ -1007,5 +1007,5 @@ let normalize_for_unit_test (steps:list<Env.step>) (env : Env.env) (e:term) : te
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
   debug cfg (fun () -> BU.print1 "Calling NBE with (%s) {\n" (P.term_to_string e));
   let r = readback cfg (translate cfg [] e) in
-  debug cfg (fun () -> BU.print1 "}\nNBE returned (%s) {\n" (P.term_to_string r));
+  debug cfg (fun () -> BU.print1 "}\nNBE returned (%s)\n" (P.term_to_string r));
   r
