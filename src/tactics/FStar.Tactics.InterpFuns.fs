@@ -318,9 +318,9 @@ let timing_int (l:Ident.lid) f =
         r
 
 let timing_nbe (l:Ident.lid) f =
-    fun iapp_cb args ->
+    fun nbe_cbs args ->
         (* BU.print1 "Entering NBE primitive %s {\n" (Ident.string_of_lid l); *)
-        let r = f iapp_cb args in
+        let r = f nbe_cbs args in
         (* BU.print1 "%s }\n" (Ident.string_of_lid l); *)
         r
 

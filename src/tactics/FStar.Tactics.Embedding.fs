@@ -126,11 +126,12 @@ let e_proofstate_nbe =
                  ; ltyp = t_proofstate
                  ; rng = Range.dummyRange }
         in
-        NBETerm.Lazy (BU.Inl li)
+        let thunk = FStar.Common.mk_thunk (fun () -> NBETerm.Constant (NBETerm.String ("(((proofstate.nbe)))", Range.dummyRange))) in
+        NBETerm.Lazy (BU.Inl li, thunk)
     in
     let unembed_proofstate _cb (t:NBETerm.t) : option<proofstate> =
         match t with
-        | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_proofstate}) ->
+        | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_proofstate}, _) ->
             Some <| FStar.Dyn.undyn b
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded NBE proofstate: %s" (NBETerm.t_to_string t)));
@@ -166,11 +167,12 @@ let e_goal_nbe =
                  ; ltyp = t_goal
                  ; rng = Range.dummyRange }
         in
-        NBETerm.Lazy (BU.Inl li)
+        let thunk = FStar.Common.mk_thunk (fun () -> NBETerm.Constant (NBETerm.String ("(((goal.nbe)))", Range.dummyRange))) in
+        NBETerm.Lazy (BU.Inl li, thunk)
     in
     let unembed_goal _cb (t:NBETerm.t) : option<goal> =
         match t with
-        | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_goal}) ->
+        | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_goal}, _) ->
             Some <| FStar.Dyn.undyn b
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded NBE goal: %s" (NBETerm.t_to_string t)));

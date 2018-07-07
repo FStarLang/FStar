@@ -205,7 +205,7 @@ type primitive_step = {
      strong_reduction_ok:bool;
      requires_binder_substitution:bool;
      interpretation:(psc -> EMB.norm_cb -> args -> option<term>);
-     interpretation_nbe:(NBETerm.iapp_cb -> NBETerm.args -> option<NBETerm.t>)
+     interpretation_nbe:(NBETerm.nbe_cbs -> NBETerm.args -> option<NBETerm.t>)
 }
 
 type cfg = {
@@ -475,7 +475,11 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
             end
         | _ -> failwith "Unexpected number of arguments"
     in
-    let bogus_cb h _args = h in
+    let bogus_cbs = {
+        NBE.iapp = (fun h _args -> h);
+        NBE.translate = (fun _ -> failwith "bogus_cbs translate");
+    }
+    in
     let basic_ops 
       //this type annotation has to be on a single line for it to parse
       //because our support for F# style type-applications is very limited
@@ -515,22 +519,22 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              2,
              0,
              binary_op arg_as_int (fun r x y -> embed_simple EMB.e_bool r (Z.lt_big_int x y)),
-             NBETerm.binary_op NBETerm.arg_as_int (fun x y -> NBETerm.embed NBETerm.e_bool bogus_cb (Z.lt_big_int x y)));
+             NBETerm.binary_op NBETerm.arg_as_int (fun x y -> NBETerm.embed NBETerm.e_bool bogus_cbs (Z.lt_big_int x y)));
          (PC.op_LTE,
              2,
              0,
              binary_op arg_as_int (fun r x y -> embed_simple EMB.e_bool r (Z.le_big_int x y)),
-             NBETerm.binary_op NBETerm.arg_as_int (fun  x y -> NBETerm.embed NBETerm.e_bool bogus_cb (Z.le_big_int x y)));
+             NBETerm.binary_op NBETerm.arg_as_int (fun  x y -> NBETerm.embed NBETerm.e_bool bogus_cbs (Z.le_big_int x y)));
          (PC.op_GT,
              2,
              0,
              binary_op arg_as_int (fun r x y -> embed_simple EMB.e_bool r (Z.gt_big_int x y)),
-             NBETerm.binary_op NBETerm.arg_as_int (fun x y -> NBETerm.embed NBETerm.e_bool bogus_cb (Z.gt_big_int x y)));
+             NBETerm.binary_op NBETerm.arg_as_int (fun x y -> NBETerm.embed NBETerm.e_bool bogus_cbs (Z.gt_big_int x y)));
          (PC.op_GTE,
              2,
              0,
              binary_op arg_as_int (fun r x y -> embed_simple EMB.e_bool r (Z.ge_big_int x y)),
-             NBETerm.binary_op NBETerm.arg_as_int (fun x y -> NBETerm.embed NBETerm.e_bool bogus_cb (Z.ge_big_int x y)));
+             NBETerm.binary_op NBETerm.arg_as_int (fun x y -> NBETerm.embed NBETerm.e_bool bogus_cbs (Z.ge_big_int x y)));
          (PC.op_Modulus,
              2,
              0,
@@ -572,7 +576,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              NBETerm.mixed_binary_op
                    NBETerm.arg_as_int
                    NBETerm.arg_as_char
-                   (NBETerm.embed NBETerm.e_string bogus_cb)
+                   (NBETerm.embed NBETerm.e_string bogus_cbs)
                    (fun (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y));
          (PC.string_of_int_lid,
              1,
@@ -694,7 +698,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                     (fun r (int_to_t, x) -> embed_simple EMB.e_int r x),
                   NBETerm.unary_op
                     NBETerm.arg_as_bounded_int
-                    (fun (int_to_t, x) -> NBETerm.embed NBETerm.e_int bogus_cb x))])
+                    (fun (int_to_t, x) -> NBETerm.embed NBETerm.e_int bogus_cbs x))])
         in
         let div_mod_unsigned =
           bounded_unsigned_int_types

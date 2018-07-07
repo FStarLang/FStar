@@ -49,7 +49,7 @@ let int2 (m:lid) (f:'a -> 'b -> 'r) (ea:embedding<'a>) (eb:embedding<'b>) (er:em
     | _ -> None
 
 let nbe_int1 (m:lid) (f:'a -> 'r) (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>)
-                     (cb:NBET.iapp_cb) (args : NBET.args) : option<NBET.t> =
+                     (cb:NBET.nbe_cbs) (args : NBET.args) : option<NBET.t> =
     match args with
     | [(a, _)] ->
         BU.bind_opt (NBET.unembed ea cb a) (fun a ->
@@ -57,7 +57,7 @@ let nbe_int1 (m:lid) (f:'a -> 'r) (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>
     | _ -> None
 
 let nbe_int2 (m:lid) (f:'a -> 'b -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (er:NBET.embedding<'r>)
-                     (cb:NBET.iapp_cb) (args : NBET.args) : option<NBET.t> =
+                     (cb:NBET.nbe_cbs) (args : NBET.args) : option<NBET.t> =
     match args with
     | [(a, _); (b, _)] ->
         BU.bind_opt (NBET.unembed ea cb a) (fun a ->
@@ -68,7 +68,7 @@ let nbe_int2 (m:lid) (f:'a -> 'b -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.embeddi
 let mklid (nm : string) : lid = fstar_refl_basic_lid nm
 
 let mk (l : lid) (arity : int) (fn     : Cfg.psc -> norm_cb -> args -> option<term>)
-                               (nbe_fn : NBET.iapp_cb -> NBET.args -> option<NBET.t>) : Cfg.primitive_step
+                               (nbe_fn : NBET.nbe_cbs -> NBET.args -> option<NBET.t>) : Cfg.primitive_step
   =
   { Cfg.name                         = l
   ; Cfg.arity                        = arity

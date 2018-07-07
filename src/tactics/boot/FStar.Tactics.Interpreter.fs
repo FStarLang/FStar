@@ -352,19 +352,19 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
     )
 
-//IN F*: and unembed_tactic_nbe_1 (#a:Type) (#r:Type) (ea:NBET.embedding a) (er:NBET.embedding r) (cb:NBET.iapp_cb) (f:NBET.t) : option (a -> tac r) =
-and unembed_tactic_nbe_1<'a,'r> (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>) (cb:NBET.iapp_cb) (f:NBET.t) : option<('a -> tac<'r>)> = //JUST FSHARP
+//IN F*: and unembed_tactic_nbe_1 (#a:Type) (#r:Type) (ea:NBET.embedding a) (er:NBET.embedding r) (cb:NBET.nbe_cbs) (f:NBET.t) : option (a -> tac r) =
+and unembed_tactic_nbe_1<'a,'r> (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>) (cb:NBET.nbe_cbs) (f:NBET.t) : option<('a -> tac<'r>)> = //JUST FSHARP
     Some (fun x ->
       let x_tm = NBET.embed ea cb x in
-      let app = cb f [NBET.as_arg x_tm] in
+      let app = NBET.iapp_cb cb f [NBET.as_arg x_tm] in
       unembed_tactic_nbe_0 er cb app)
 
-//IN F*: and unembed_tactic_nbe_0 (#b:Type) (eb:NBET.embedding b) (cb:NBET.iapp_cb) (embedded_tac_b:NBET.t) : tac b =
-and unembed_tactic_nbe_0<'b> (eb:NBET.embedding<'b>) (cb:NBET.iapp_cb) (embedded_tac_b:NBET.t) : tac<'b> = //JUST FSHARP
+//IN F*: and unembed_tactic_nbe_0 (#b:Type) (eb:NBET.embedding b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac b =
+and unembed_tactic_nbe_0<'b> (eb:NBET.embedding<'b>) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac<'b> = //JUST FSHARP
     bind get (fun proof_state ->
 
     (* Applying is normalizing!!! *)
-    let result = cb embedded_tac_b [NBET.as_arg (NBET.embed E.e_proofstate_nbe cb proof_state)] in
+    let result = NBET.iapp_cb cb embedded_tac_b [NBET.as_arg (NBET.embed E.e_proofstate_nbe cb proof_state)] in
 
     // F* requires more annotations.
     // IN F*: let res : option<__result<b>> = NBET.unembed (E.e_result_nbe eb) cb result in

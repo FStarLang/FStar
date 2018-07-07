@@ -86,21 +86,27 @@ let debug_term (t : term) =
 let debug_sigmap (m : BU.smap<sigelt>) =
   BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
 
-
+let rec unlazy t =
+    match t with
+    | Lazy (_, t) -> unlazy (FStar.Common.force_thunk t)
+    | t -> t
 
 let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t>)> =
   let rec pickBranch_aux (scrut : t) (branches : list<branch>) (branches0 : list<branch>) : option<(term * list<t>)> =
     //NS: adapted from FStar.TypeChecker.Normalize: rebuild_match
-    let rec matches_pat (scrutinee:t) (p:pat)
+    let rec matches_pat (scrutinee0:t) (p:pat)
         : BU.either<list<t>, bool> =
         (* Inl ts: p matches t and ts are bindings for the branch *)
         (* Inr false: p definitely does not match t *)
         (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
+        let scrutinee = unlazy scrutinee0 in
         debug cfg (fun () -> BU.print2 "matches_pat (%s, %s)\n" (t_to_string scrutinee) (P.pat_to_string p));
         let r = match p.v with
         | Pat_var bv
         | Pat_wild bv ->
-            BU.Inl [scrutinee]
+            // important to use the non-unfolded variant, some embeddings
+            // have no decent unfolding (i.e. they cheat)
+            BU.Inl [scrutinee0]
 
         | Pat_dot_term _ ->
             BU.Inl []
@@ -317,7 +323,12 @@ and translate_fv (cfg: Cfg.cfg) (bs:list<t>) (fvar:fv): t =
          let arity = prim_step.arity + prim_step.univ_arity in
          debug (fun () -> BU.print1 "Found a primop %s\n" (P.fv_to_string fvar));
          Lam ((fun args -> let args' = (List.map NBETerm.as_arg args) in
-              match prim_step.interpretation_nbe (iapp cfg) args' with
+              let callbacks = {
+                iapp = iapp cfg;
+                translate = translate cfg bs;
+              }
+              in
+              match prim_step.interpretation_nbe callbacks args' with
               | Some x -> debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
                          x
               | None -> debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
@@ -523,7 +534,9 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       in
 
       let rec case (scrut : t) : t =
-        debug (fun () -> BU.print1 "Match case: (%s)\n" (P.term_to_string (readback cfg scrut)));
+        debug (fun () -> BU.print2 "Match case: (%s) -- (%s)\n" (P.term_to_string (readback cfg scrut))
+                                                        (t_to_string scrut));
+        let scrut = unlazy scrut in
         match scrut with
         | Construct(c, us, args) -> (* Scrutinee is a constructed value *)
           (* Assuming that all the arguments to the pattern constructors
@@ -594,7 +607,7 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       end
 
     | Tm_lazy li ->
-      Lazy (BU.Inl li)
+      Lazy (BU.Inl li, FStar.Common.mk_thunk (fun () -> translate cfg bs (U.unfold_lazy li)))
 
 and translate_comp cfg bs (c:S.comp) : comp =
   match c.n with
@@ -941,10 +954,12 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
     | Quote (qt, qi) ->
         S.mk (Tm_quoted (qt, qi)) None Range.dummyRange
 
-    | Lazy (BU.Inl li) ->
+
+    // Need this case for "cheat" embeddings
+    | Lazy (BU.Inl li, _) ->
         S.mk (Tm_lazy li) None Range.dummyRange
 
-    | Lazy (BU.Inr (_, _, thunk)) ->
+    | Lazy (_, thunk) ->
         readback cfg (FStar.Common.force_thunk thunk)
 
 type step =

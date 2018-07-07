@@ -81,7 +81,7 @@ and t
   | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
   | Refinement of (t -> t) * (unit -> arg)
   | Quote of S.term * S.quoteinfo
-  | Lazy of BU.either<S.lazyinfo, (Dyn.dyn * emb_typ * FStar.Common.thunk<t>)>
+  | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * FStar.Common.thunk<t>
   | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
   (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
 
@@ -260,7 +260,8 @@ let rec t_to_string (x:t) =
     "Refinement " ^ (P.bv_to_string x) ^ ":" ^ (t_to_string t) ^ "{" ^ (t_to_string (f (mkAccuVar x))) ^ "}"
   | Unknown -> "Unknown"
   | Quote _ -> "Quote _"
-  | Lazy _ -> "Lazy _"
+  | Lazy (BU.Inl li, _) -> BU.format1 "Lazy (Inl {%s})" (P.term_to_string (U.unfold_lazy li))
+  | Lazy (BU.Inr (_, et), _) -> BU.format1 "Lazy (Inr (?, %s))" (P.emb_typ_to_string et)
   | Rec (_,_, l, _, _, _, _) -> "Rec (" ^ (String.concat "; " (List.map t_to_string l)) ^ ")"
 
 and atom_to_string (a: atom) =
@@ -274,18 +275,24 @@ and args_to_string args = args |> List.map arg_to_string |> String.concat " "
 
 // Embedding and de-embedding
 
-type iapp_cb = t -> args -> t
+type nbe_cbs = {
+   iapp : t -> args -> t;
+   translate : term -> t;
+}
+
+let iapp_cb cbs      = cbs.iapp
+let translate_cb cbs = cbs.translate
 
 type embedding<'a> = {
-  em  : iapp_cb -> 'a -> t;
-  un  : iapp_cb -> t -> option<'a>;
+  em  : nbe_cbs -> 'a -> t;
+  un  : nbe_cbs -> t -> option<'a>;
   typ : t;
   emb_typ : emb_typ
 }
 
 
-let embed   (e:embedding<'a>) (cb:iapp_cb) (x:'a) : t = e.em cb x
-let unembed (e:embedding<'a>) (cb:iapp_cb) (trm:t) : option<'a> = e.un cb trm
+let embed   (e:embedding<'a>) (cb:nbe_cbs) (x:'a) : t = e.em cb x
+let unembed (e:embedding<'a>) (cb:nbe_cbs) (trm:t) : option<'a> = e.un cb trm
 let type_of (e:embedding<'a>) : t = e.typ
 
 let mk_emb em un typ et = {em = em; un = un; typ = typ; emb_typ=et}
@@ -309,14 +316,15 @@ let lazy_embed (et:emb_typ) (x:'a) (f:unit -> t) =
     if !Options.eager_embedding
     then f()
     else let thunk = FStar.Common.mk_thunk f in
-         let li = FStar.Dyn.mkdyn x,
-                  et,
-                  thunk in
-         Lazy (BU.Inr li)
+         let li = FStar.Dyn.mkdyn x, et in
+         Lazy (BU.Inr li, thunk)
 
-let lazy_unembed (et:emb_typ) (x:t) (f:t -> option<'a>) : option<'a> =
+let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option<'a>) : option<'a> =
     match x with
-    | Lazy (BU.Inr (b, et', thunk)) ->
+    | Lazy (BU.Inl li, thunk) ->
+      f (FStar.Common.force_thunk thunk)
+
+    | Lazy (BU.Inr (b, et'), thunk) ->
       if et <> et'
       || !Options.eager_embedding
       then let res = f (FStar.Common.force_thunk thunk) in
@@ -413,7 +421,7 @@ let e_option (ea : embedding<'a>) =
                                               as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option<option<'a>> =
-        lazy_unembed etyp trm (fun trm ->
+        lazy_unembed cb etyp trm (fun trm ->
         match trm with
         | Construct (fvar, us, args) when S.fv_eq_lid fvar PC.none_lid ->
           Some None
@@ -439,7 +447,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
                        as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option<('a * 'b)> =
-        lazy_unembed etyp trm (fun trm ->
+        lazy_unembed cb etyp trm (fun trm ->
         match trm with
         | Construct (fvar, us, [(b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple2 ->
           BU.bind_opt (unembed ea cb a) (fun a ->
@@ -470,7 +478,7 @@ let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
                        as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option<BU.either<'a,'b>> =
-        lazy_unembed etyp trm (fun trm ->
+        lazy_unembed cb etyp trm (fun trm ->
         match trm with
         | Construct (fvar, us, [(a, _); _; _]) when S.fv_eq_lid fvar PC.inl_lid ->
           BU.bind_opt (unembed ea cb a) (fun a ->
@@ -506,7 +514,7 @@ let e_list (ea:embedding<'a>) =
         List.fold_right cons l nil)
     in
     let rec un cb (trm:t) : option<list<'a>> =
-        lazy_unembed etyp trm (fun trm ->
+        lazy_unembed cb etyp trm (fun trm ->
         match trm with
         | Construct (fv, _, _) when S.fv_eq_lid fv PC.nil_lid -> Some []
         | Construct (fv, _, [(tl, None); (hd, None); (_, Some (Implicit _))])
@@ -534,12 +542,11 @@ let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) : embedding<('a -> 'b)> =
     in
     let un cb (lam : t) : option<('a -> 'b)> =
         let k (lam:t) : option<('a -> 'b)> =
-            let iapp = cb in
-            Some (fun (x:'a) -> match unembed eb cb (iapp lam [as_arg (embed ea cb x)]) with
+            Some (fun (x:'a) -> match unembed eb cb (cb.iapp lam [as_arg (embed ea cb x)]) with
                                 | Some y -> y
                                 | None -> failwith "cannot unembed function result")
         in
-        lazy_unembed etyp lam k
+        lazy_unembed cb etyp lam k
     in
     mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb))) etyp
 
@@ -601,17 +608,20 @@ let e_norm_step =
 
 (* Interface for building primitive steps *)
 
-let bogus_cb h _args = h
+let bogus_cbs = {
+    iapp = (fun h _args -> h);
+    translate = (fun _ -> failwith "bogus_cbs translate");
+}
 
-let arg_as_int    (a:arg) = fst a |> unembed e_int bogus_cb
+let arg_as_int    (a:arg) = fst a |> unembed e_int bogus_cbs
 
-let arg_as_bool   (a:arg) = fst a |> unembed e_bool bogus_cb
+let arg_as_bool   (a:arg) = fst a |> unembed e_bool bogus_cbs
 
-let arg_as_char   (a:arg) = fst a |> unembed e_char  bogus_cb
+let arg_as_char   (a:arg) = fst a |> unembed e_char  bogus_cbs
 
-let arg_as_string (a:arg) = fst a |> unembed e_string  bogus_cb
+let arg_as_string (a:arg) = fst a |> unembed e_string  bogus_cbs
 
-let arg_as_list   (e:embedding<'a>) (a:arg) = fst a |> unembed (e_list e) bogus_cb
+let arg_as_list   (e:embedding<'a>) (a:arg) = fst a |> unembed (e_list e) bogus_cbs
 
 let arg_as_bounded_int ((a, _) : arg) : option<(fv * Z.t)> =
     match a with
@@ -622,7 +632,7 @@ let arg_as_bounded_int ((a, _) : arg) : option<(fv * Z.t)> =
     | _ -> None
 
 let int_as_bounded int_to_t n =
-    let c = embed e_int bogus_cb n in
+    let c = embed e_int bogus_cbs n in
     let int_to_t args = FV(int_to_t, [], args) in
     int_to_t [as_arg c]
 
@@ -646,19 +656,19 @@ let binary_op (as_a : arg -> option<'a>) (f : 'a -> 'a -> t) (args : args) : opt
     lift_binary f (List.map as_a args)
 
 let unary_int_op (f:Z.t -> Z.t) =
-    unary_op arg_as_int (fun x -> embed e_int bogus_cb (f x))
+    unary_op arg_as_int (fun x -> embed e_int bogus_cbs (f x))
 
 let binary_int_op (f:Z.t -> Z.t -> Z.t) =
-    binary_op arg_as_int (fun x y -> embed e_int bogus_cb (f x y))
+    binary_op arg_as_int (fun x y -> embed e_int bogus_cbs (f x y))
 
 let unary_bool_op (f:bool -> bool) =
-    unary_op arg_as_bool (fun x -> embed e_bool bogus_cb (f x))
+    unary_op arg_as_bool (fun x -> embed e_bool bogus_cbs (f x))
 
 let binary_bool_op (f:bool -> bool -> bool) =
-    binary_op arg_as_bool (fun x y -> embed e_bool bogus_cb (f x y))
+    binary_op arg_as_bool (fun x y -> embed e_bool bogus_cbs (f x y))
 
 let binary_string_op (f : string -> string -> string) =
-    binary_op arg_as_string (fun x y -> embed e_string bogus_cb (f x y))
+    binary_op arg_as_string (fun x y -> embed e_string bogus_cbs (f x y))
 
 let mixed_binary_op (as_a : arg -> option<'a>) (as_b : arg -> option<'b>)
        (embed_c : 'c -> t) (f : 'a -> 'b -> 'c) (args : args) : option<t> =
@@ -672,7 +682,7 @@ let mixed_binary_op (as_a : arg -> option<'a>) (as_b : arg -> option<'b>)
              | _ -> None
 
 let list_of_string' (s:string) : t =
-  embed (e_list e_char) bogus_cb (list_of_string s)
+  embed (e_list e_char) bogus_cbs (list_of_string s)
   // let name l = mk (Tm_fvar (lid_as_fv l delta_constant None)) rng in
   // let char_t = name PC.char_lid in
   // let charterm c = mk (Tm_constant (Const_char c)) rng in
@@ -684,7 +694,7 @@ let string_of_list' (l:list<char>) : t =
 
 let string_compare' (s1:string) (s2:string) : t =
     let r = String.compare s1 s2 in
-    embed e_int bogus_cb (Z.big_int_of_string (BU.string_of_int r))
+    embed e_int bogus_cbs (Z.big_int_of_string (BU.string_of_int r))
 
 
 let string_concat' args : option<t> =
@@ -695,7 +705,7 @@ let string_concat' args : option<t> =
             begin match arg_as_list e_string a2 with
             | Some s2 ->
                 let r = String.concat s1 s2 in
-                Some (embed e_string bogus_cb r)
+                Some (embed e_string bogus_cbs r)
             | _ -> None
             end
         | _ -> None
@@ -703,14 +713,14 @@ let string_concat' args : option<t> =
     | _ -> None
 
 let string_of_int (i:Z.t) : t =
-    embed e_string bogus_cb (Z.string_of_big_int i)
+    embed e_string bogus_cbs (Z.string_of_big_int i)
 
 let string_of_bool (b:bool) : t =
-    embed e_string bogus_cb (if b then "true" else "false")
+    embed e_string bogus_cbs (if b then "true" else "false")
 
 let decidable_eq (neg:bool) (args:args) : option<t> =
-  let tru = embed e_bool bogus_cb true in
-  let fal = embed e_bool bogus_cb false in
+  let tru = embed e_bool bogus_cbs true in
+  let fal = embed e_bool bogus_cbs false in
   match args with
   | [(_univ, _); (_typ, _); (a1, _); (a2, _)] ->
      //BU.print2 "Comparing %s and %s.\n" (t_to_string a1) (t_to_string a2);
@@ -728,8 +738,8 @@ let interp_prop (args:args) : option<t> =
     | [(_u, _); (_typ, _); (a1, _); (a2, _)] ->  //eq2
     //| [(_typ, _); _; (a1, _); (a2, _)] ->     //eq3
       begin match eq_t a1 a2 with
-      | U.Equal -> Some (embed e_bool bogus_cb true)
-      | U.NotEqual -> Some (embed e_bool bogus_cb false)
+      | U.Equal -> Some (embed e_bool bogus_cbs true)
+      | U.NotEqual -> Some (embed e_bool bogus_cbs false)
       | U.Unknown -> None
       end
    | _ -> failwith "Unexpected number of arguments"
@@ -741,8 +751,8 @@ let dummy_interp (lid : Ident.lid) (args : args) : option<t> =
 let prims_to_fstar_range_step (args:args) : option<t> =
     match args with
     | [(a1, _)] ->
-      begin match unembed e_range bogus_cb a1 with
-      | Some r -> Some (embed e_range bogus_cb r)
+      begin match unembed e_range bogus_cbs a1 with
+      | Some r -> Some (embed e_range bogus_cbs r)
       | None ->
         None
       end
@@ -757,7 +767,7 @@ let string_split' args : option<t> =
             begin match arg_as_string a2 with
             | Some s2 ->
                 let r = String.split s1 s2 in
-                Some (embed (e_list e_string) bogus_cb r)
+                Some (embed (e_list e_string) bogus_cbs r)
             | _ -> None
             end
         | _ -> None
@@ -774,7 +784,7 @@ let string_substring' args : option<t> =
         let n2 = Z.to_int_fs n2 in
         begin
         try let r = String.substring s1 n1 n2 in
-            Some (embed e_string bogus_cb r)
+            Some (embed e_string bogus_cbs r)
         with | _ -> None
         end
     | _ -> None
@@ -794,7 +804,7 @@ let mk_range args : option<t> =
       let r = FStar.Range.mk_range fn
                 (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
                 (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
-      Some (embed e_range bogus_cb r)
+      Some (embed e_range bogus_cbs r)
     | _ -> None
     end
 | _ -> None

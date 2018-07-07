@@ -48,22 +48,24 @@ let mk_emb' x y fv = mk_emb x y (mkFV fv [] []) (fv_as_emb_typ fv)
 
 (* We still need to match on them in reverse order though, so this is pretty dumb *)
 
-let mk_lazy obj ty kind =
+let mk_lazy cb obj ty kind =
     let li = {
           blob = FStar.Dyn.mkdyn obj
         ; lkind = kind
         ; ltyp = ty
         ; rng = Range.dummyRange
     }
-    in Lazy (BU.Inl li)
+    in
+    let thunk = FStar.Common.mk_thunk (fun () -> translate_cb cb (U.unfold_lazy li)) in
+    Lazy (BU.Inl li, thunk)
 
 let e_bv =
     let embed_bv cb (bv:bv) : t =
-        mk_lazy bv fstar_refl_bv Lazy_bv
+        mk_lazy cb bv fstar_refl_bv Lazy_bv
     in
     let unembed_bv cb (t:t) : option<bv> =
         match t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_bv}) ->
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_bv}, _) ->
             Some <| FStar.Dyn.undyn b
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv: %s" (t_to_string t)));
@@ -74,11 +76,11 @@ let e_bv =
 
 let e_binder =
     let embed_binder cb (b:binder) : t =
-        mk_lazy b fstar_refl_binder Lazy_binder
+        mk_lazy cb b fstar_refl_binder Lazy_binder
     in
     let unembed_binder cb (t:t) : option<binder> =
         match t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_binder}) ->
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_binder}, _) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder: %s" (t_to_string t)));
@@ -149,11 +151,11 @@ let e_binders = e_list e_binder
 
 let e_fv =
     let embed_fv cb (fv:fv) : t =
-        mk_lazy fv fstar_refl_fv Lazy_fvar
+        mk_lazy cb fv fstar_refl_fv Lazy_fvar
     in
     let unembed_fv cb (t:t) : option<fv> =
         match t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_fvar}) ->
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_fvar}, _) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded fvar: %s" (t_to_string t)));
@@ -163,11 +165,11 @@ let e_fv =
 
 let e_comp =
     let embed_comp cb (c:S.comp) : t =
-        mk_lazy c fstar_refl_comp Lazy_comp
+        mk_lazy cb c fstar_refl_comp Lazy_comp
     in
     let unembed_comp cb (t:t) : option<S.comp> =
         match t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_comp}) ->
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_comp}, _) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp: %s" (t_to_string t)));
@@ -177,11 +179,11 @@ let e_comp =
 
 let e_env =
     let embed_env cb (e:Env.env) : t =
-        mk_lazy e fstar_refl_env Lazy_env
+        mk_lazy cb e fstar_refl_env Lazy_env
     in
     let unembed_env cb (t:t) : option<Env.env> =
         match t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_env}) ->
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_env}, _) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded env: %s" (t_to_string t)));
@@ -277,7 +279,7 @@ let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
 let rec unlazy_as_t k t =
     match t with
-    | Lazy (BU.Inl {lkind=k'; blob=v})
+    | Lazy (BU.Inl {lkind=k'; blob=v}, _)
         when U.eq_lazy_kind k k' ->
       FStar.Dyn.undyn v
     | _ ->
@@ -314,7 +316,7 @@ let e_term_view_aq aq =
             mkConstruct ref_Tv_Const.fv [] [as_arg (embed e_const cb c)]
 
         | Tv_Uvar (u, d) ->
-            mkConstruct ref_Tv_Uvar.fv [] [as_arg (embed e_int cb u); as_arg (mk_lazy (u,d) U.t_ctx_uvar_and_sust Lazy_uvar)]
+            mkConstruct ref_Tv_Uvar.fv [] [as_arg (embed e_int cb u); as_arg (mk_lazy cb (u,d) U.t_ctx_uvar_and_sust Lazy_uvar)]
 
         | Tv_Let (r, b, t1, t2) ->
             mkConstruct ref_Tv_Let.fv [] [as_arg (embed e_bool cb r);
@@ -501,11 +503,11 @@ let e_order =
 
 let e_sigelt =
     let embed_sigelt cb (se:sigelt) : t =
-        mk_lazy se fstar_refl_sigelt Lazy_sigelt
+        mk_lazy cb se fstar_refl_sigelt Lazy_sigelt
     in
     let unembed_sigelt cb (t:t) : option<sigelt> =
         match t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_sigelt}) ->
+        | Lazy (BU.Inl {blob=b; lkind=Lazy_sigelt}, _) ->
             Some (undyn b)
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt: %s" (t_to_string t)));

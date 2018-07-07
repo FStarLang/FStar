@@ -54,7 +54,7 @@ and t
   | Arrow of (list<t> -> comp) * list<(list<t> -> arg)>
   | Refinement of (t -> t) * (unit -> arg)
   | Quote of S.term * S.quoteinfo
-  | Lazy of BU.either<S.lazyinfo, (Dyn.dyn * emb_typ * FStar.Common.thunk<t>)>
+  | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * FStar.Common.thunk<t>
   | Rec of letbinding * list<letbinding> * list<t> * args * int * list<bool> * (list<t> -> letbinding -> t)
   (* Current letbinding x mutually rec letbindings x rec env x argument accumulator x arity x arity list x callback to translate letbinding *)
 
@@ -125,23 +125,29 @@ val mkAccuMatch : t -> (t -> t) -> ((t -> term) -> list<branch>) -> t
 val as_arg : t -> arg
 val as_iarg : t -> arg
 
-type iapp_cb = t -> args -> t
+type nbe_cbs = {
+   iapp : t -> args -> t;
+   translate : term -> t;
+}
+
+val iapp_cb      : nbe_cbs -> t -> args -> t
+val translate_cb : nbe_cbs -> term -> t
 
 type embedding<'a> = {
-  em  : iapp_cb -> 'a -> t;
-  un  : iapp_cb -> t -> option<'a>;
+  em  : nbe_cbs -> 'a -> t;
+  un  : nbe_cbs -> t -> option<'a>;
   typ : t;
   emb_typ : emb_typ
 }
 
-val mk_emb : (iapp_cb -> 'a -> t) ->
-             (iapp_cb -> t -> option<'a>) ->
+val mk_emb : (nbe_cbs -> 'a -> t) ->
+             (nbe_cbs -> t -> option<'a>) ->
              t ->
              emb_typ ->
              embedding<'a>
 
-val embed   : embedding<'a> -> iapp_cb -> 'a -> t
-val unembed : embedding<'a> -> iapp_cb -> t -> option<'a>
+val embed   : embedding<'a> -> nbe_cbs -> 'a -> t
+val unembed : embedding<'a> -> nbe_cbs -> t -> option<'a>
 val type_of : embedding<'a> -> t
 
 val e_bool   : embedding<bool>
@@ -167,7 +173,7 @@ val arrow_as_prim_step_1:  embedding<'a>
                         -> ('a -> 'b)
                         -> n_tvars:int
                         -> repr_f:Ident.lid
-                        -> iapp_cb
+                        -> nbe_cbs
                         -> (args -> option<t>)
 
 val arrow_as_prim_step_2:  embedding<'a>
@@ -176,7 +182,7 @@ val arrow_as_prim_step_2:  embedding<'a>
                         -> ('a -> 'b -> 'c)
                         -> n_tvars:int
                         -> repr_f:Ident.lid
-                        -> iapp_cb
+                        -> nbe_cbs
                         -> (args -> option<t>)
 
 val arrow_as_prim_step_3:  embedding<'a>
@@ -186,7 +192,7 @@ val arrow_as_prim_step_3:  embedding<'a>
                         -> ('a -> 'b -> 'c -> 'd)
                         -> n_tvars:int
                         -> repr_f:Ident.lid
-                        -> iapp_cb
+                        -> nbe_cbs
                         -> (args -> option<t>)
 
 
