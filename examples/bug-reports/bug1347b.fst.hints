@@ -1,1 +1,41 @@
-[ "Ôç\u001fÓ8V\u007fÎÑ0˙\u001aíW!≥", [] ]
+[
+  "Ôç\u001fÓ8V\u007fÎÑ0˙\u001aíW!≥",
+  [
+    [
+      "Bug1347B.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v"
+      ],
+      0,
+      "94cb480113a6ea40372460abbb567551"
+    ],
+    [
+      "Bug1347B.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v", "true_interp"
+      ],
+      0,
+      "78e81f177279d8a5199056011a47f6f0"
+    ]
+  ]
+]

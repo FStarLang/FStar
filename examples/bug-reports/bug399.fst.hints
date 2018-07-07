@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_unit" ],
       0,
-      "929e5e51b3c7310650fc349def3602fe"
+      "8580621607bb8880fa70b5a595519cad"
     ],
     [
       "Bug399.fail2",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_unit" ],
       0,
-      "360055478db43ab8b6aba787b764facd"
+      "37a9c5b467e972b4bf01aabc6e559020"
     ],
     [
       "Bug399.works",
@@ -29,7 +29,7 @@
         "unit_inversion"
       ],
       0,
-      "64e1c998c7bd87d31a457d94c624ba67"
+      "a06cb148e3fa41bb7a8e1642bc236895"
     ]
   ]
 ]
