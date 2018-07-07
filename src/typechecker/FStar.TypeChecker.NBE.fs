@@ -860,6 +860,7 @@ and readback (cfg:Cfg.cfg) (x:t) : term =
                          targs
       in
       let body = readback cfg (f (List.rev accus_rev)) in
+      // GM: Isn't this closing the binders over the body/lcomp? Why?
       U.abs (List.rev args_rev) body (BU.map_opt resc (fun thunk -> readback_residual_comp cfg (thunk ())))
 
     | Refinement (f, targ) ->
