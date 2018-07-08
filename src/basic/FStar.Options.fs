@@ -111,14 +111,6 @@ let rollback depth = Common.rollback pop fstar_options depth
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
 
-let with_saved_options f =
-  push ();
-  try let retv = f () in
-      pop ();
-      retv
-  with | ex -> pop ();
-               raise ex
-
 let light_off_files : ref<list<string>> = Util.mk_ref []
 let add_light_off_file (filename:string) = light_off_files := filename :: !light_off_files
 
@@ -1410,6 +1402,22 @@ let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
+
+let with_saved_options f =
+  // take some care to not mess up the stack on errors
+  // (unless we're trying to track down an error)
+  if not (trace_error ()) then begin
+      push ();
+      try let retv = f () in
+          pop ();
+          retv
+      with | ex -> pop (); raise ex
+  end else begin
+      push ();
+      let retv = f () in
+      pop ();
+      retv
+  end
 
 let should_extract m =
     let m = String.lowercase m in
