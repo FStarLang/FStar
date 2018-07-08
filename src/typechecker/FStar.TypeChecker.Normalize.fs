@@ -913,7 +913,14 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
                      ; unfold_fully = None
                      ; unfold_attr  = None
                      ; unfold_until = Some delta_constant } } in
-        let stack' = (Cfg cfg) :: stack in
+
+        (* Take care to not change the stack's head if there's a universe
+         * instantiation, but we do need to keep the old cfg. *)
+        (* This is ugly, and a recurring problem, but I'm working around it for now *)
+        let stack' = match stack with
+                     | UnivArgs i :: stack' -> UnivArgs i :: Cfg cfg :: stack'
+                     | stack' -> Cfg cfg :: stack'
+        in
         Some (cfg', stack')
 
     | Should_unfold_reify ->
