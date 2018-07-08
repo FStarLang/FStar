@@ -2,13 +2,34 @@ FSTAR_HOME=../..
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS) --use_two_phase_tc false --use_extracted_interfaces false
 FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
+.SECONDARY:
+.PRECIOUS:
+
 all: prep
 	$(MAKE) -f Makefile.bench go
 
-go: $(addprefix List.Driver,    .native .native_eager) \
-    $(addprefix List.DriverNBE, .native .native_eager) \
-    $(addprefix Fun.Driver,     .native) \
-    $(addprefix Fun.DriverNBE,  .native)
+TESTS=\
+	Bench.Fun.Norm.Lazy.Size6.run\
+	Bench.Fun.NBE.Lazy.Size6.run\
+	Bench.Fun.Norm.Lazy.Size6.Load.run\
+	Bench.Fun.NBE.Lazy.Size6.Load.run\
+	Bench.List.Norm.Lazy.Size6.Load.run\
+	Bench.List.NBE.Lazy.Size6.Load.run
+
+# Way too much RAM:
+	# Bench.List.Norm.Lazy.Size8.run\
+	# Bench.List.NBE.Lazy.Size8.run\
+
+__go: $(TESTS)
+go:
+	$(MAKE) -f Makefile.bench __go 2>&1 | tee LOG
+	echo "----------- SUMMARY -----------"
+	grep '^Checked' LOG
+
+    #            $(addprefix List.Driver,    .native .native_eager) \
+    # $(addprefix List.DriverNBE, .native .native_eager) \
+    # $(addprefix Fun.Driver,     .native) \
+    # $(addprefix Fun.DriverNBE,  .native)
 # These are very slow, but should still be benchmarked
 # -- List.Driver.basic, Fun.Driver.basic
 
@@ -25,9 +46,8 @@ go: $(addprefix List.Driver,    .native .native_eager) \
 #  Fun.Driver.native_eager
 #  Fun.DriverNBE.native_eager
 
-prep: $(addsuffix .fst.checked, Registers.List Registers.Fun		\
-				Imp.List Imp.Fun) \
-      $(addsuffix .ml, Registers.List Registers.Fun)
+prep: $(addsuffix .fst.checked , Registers.List Registers.Fun Imp.List Imp.Fun) \
+      $(addsuffix .ml          , Registers.List Registers.Fun Imp.List Imp.Fun) \
 
 %.fst.checked: %.fst
 	$(FSTAR) $*.fst --cache_checked_modules
@@ -36,17 +56,14 @@ prep: $(addsuffix .fst.checked, Registers.List Registers.Fun		\
 	$(FSTAR) $*.fst --codegen Plugin --extract $*
 	touch $@
 
-%.basic:
-	echo "*************Basic run for $* *******************"
-	$(FSTAR) Imp.$*.fst --warn_error -266
+%.Load.run: %.fst
+	$(FSTAR) $*.fst --load Registers.List --load Registers.Fun  --warn_error -266 | grep Checked
 
-%.native:
-	echo "*************Native run for $* **********************"
-	$(FSTAR) Imp.$*.fst --load Registers.$(basename $*) --warn_error -266
+%.run: %.fst
+	$(FSTAR) $*.fst --warn_error -266 | grep Checked
 
-%.native_eager:
-	echo "*************Eager embeddings run for $* ******************"
-	$(FSTAR) Imp.$*.fst --load Registers.$(basename $*) --warn_error -266 --eager_embedding
+Bench.%.fst: ./makeimp.sh
+	./makeimp.sh $@
 
 clean:
 	rm -f Registers_List.ml Registers.List.ml Registers_List.cmxs
