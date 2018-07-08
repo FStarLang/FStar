@@ -10563,7 +10563,6 @@ let (discharge_guard' :
                   (let vc1 =
                      FStar_TypeChecker_Normalize.normalize
                        [FStar_TypeChecker_Env.Eager_unfolding;
-                       FStar_TypeChecker_Env.UnfoldTac;
                        FStar_TypeChecker_Env.Simplify;
                        FStar_TypeChecker_Env.Primops] env vc
                       in
