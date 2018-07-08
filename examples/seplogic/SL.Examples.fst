@@ -202,8 +202,7 @@ let write_read (r1 r2:ref int) (x y:int) =
   
   <: STATE int (fun p m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ p y ((r1 |> 2) <*> (r2 |> y))))
 
-  by (fun () ->
-      prelude ();
+  by (prelude ();
       process_command ();
       get_to_the_next_frame ();
       apply_lemma (`lemma_rewrite_sep_comm);
@@ -220,7 +219,7 @@ let swap (r1 r2:ref int) (x y:int)
 
      <: STATE unit (fun post m -> m == ((r1 |> x) <*> (r2 |> y)) /\ (defined m /\ post () ((r1 |> y) <*> (r2 |> x))))
 
-     by (fun () -> prelude ();
+     by (prelude ();
                 process_command ();
 		get_to_the_next_frame ();
 		process_command ();
@@ -245,7 +244,7 @@ let incr (r:ref int) (x:int)
 
      <: STATE int (fun post m -> m == (r |> x) /\ (defined m /\ post (x + 1) (r |> x + 1)))
 
-     by (fun () -> prelude ();
+     by (prelude ();
                 process_command ();
 		get_to_the_next_frame ();
 		process_command ();
@@ -263,7 +262,7 @@ let incr2 (r:ref int) (x:int)
 
     <: STATE int (fun post m -> m == (r |> x) /\ (defined m /\ post (x + 2) (r |> x + 2)))
 
-    by (fun () -> prelude ();
+    by (prelude ();
                process_command ();
 	       get_to_the_next_frame ();
 	       process_command ())
@@ -277,7 +276,7 @@ let rotate (r1 r2 r3:ref int) (x y z:int) =
   <: STATE int (fun post m -> m == ((r1 |> x) <*> ((r2 |> y) <*> (r3 |> z))) /\
                          (defined m /\ post z ((r1 |> z) <*> ((r2 |> x) <*> (r3 |> y)))))
 
-  by (fun () -> prelude ();
+  by (prelude ();
              apply_lemma (`lemma_rewrite_sep_comm);
              process_command ();
 	     get_to_the_next_frame ();
@@ -318,7 +317,7 @@ let cond_test (r1 r2:ref int) (x:int) (b:bool)
     <: STATE unit (fun p m -> m == ((r1 |> x) <*> (r2 |> x)) /\ (defined m /\ (b ==> p () ((r1 |> x + 1) <*> (r2 |> x))) /\
                                                                        (~ b ==> p () ((r1 |> x) <*> (r2 |> x + 2)))))
 
-    by (fun () -> prelude ();
+    by (prelude ();
                apply_lemma (`lemma_rw);
 	       get_to_the_next_frame ();
 	       apply_lemma (`lemma_inline_in_patterns_two);
@@ -471,7 +470,7 @@ let rec length (l:listptr)
 
     <: STATE int (fun p m -> exists (fl:list int). valid l fl m /\ p (List.Tot.length fl) m)
 
-    by (fun _ -> ignore (forall_intros ());
+    by (ignore (forall_intros ());
               ignore (repeatn 2 implies_and_elim);
 	      ignore (implies_intro ());
 	      apply_lemma (`__elim_valid_without_match);  //this is fragile
@@ -548,7 +547,7 @@ let rec append (l1 l2:listptr)
 				           (Some? l1 ==> l1 == l)                                             /\
 				           (valid l (List.Tot.append fl1 fl2) mf)) ==> p l mf))
 
-     by (fun () -> split (); smt (); 
+     by (split (); smt (); 
                 ignore (forall_intros ());
                 let h = implies_intro () in
 		let l = __elim_exists_return_binders2 h in
@@ -717,7 +716,7 @@ let rec rev_append (l1:listptr) (l2:listptr)
 				(forall mf l. ((Set.equal (dom mf) (Set.union (dom m1) (dom m2))) /\
 				          (valid l (List.Tot.rev_acc fl1 fl2) mf)) ==> p l mf))
 
-    by (fun () -> split (); smt (); 
+    by (split (); smt (); 
                ignore (forall_intros ());
                let h = implies_intro () in let l = __elim_exists_return_binders2 h in
 	       let fl1 = List.Tot.hd l in let fl2 = List.Tot.hd (List.Tot.tl l) in
@@ -822,7 +821,7 @@ let rev (l:listptr)
                                     (forall mf l. ((equal_dom m mf) /\
 				              (valid l (List.Tot.rev fl) mf)) ==> p l mf))
 
-    by (fun () -> ignore (forall_intro ());
+    by (ignore (forall_intro ());
                let m = forall_intro () in
 	       let h = implies_intro () in let l = __elim_exists_return_binders1 h in
 	       let fl = List.Tot.hd l in

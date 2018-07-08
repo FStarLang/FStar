@@ -37,7 +37,7 @@ let lemma_poly_multiply_canon n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 hh =
   let b = ((h2 * n + h1) * r1_4) in
   modulo_addition_lemma hh_expand p b;
   assert (h_r_expand == hh_expand + b * (n * n * 4 + (-5)))
-      by (fun () -> canon_semiring int_cr)
+      by (canon_semiring int_cr)
 
 val lemma_poly_reduce : n:int -> p:int -> h:int -> h2:int -> h10:int -> c:int -> hh:int -> Lemma
   (requires
@@ -57,4 +57,4 @@ let lemma_poly_reduce n p h h2 h10 c hh =
   lemma_div_mod h (n * n);
   modulo_addition_lemma hh_expand p h2_4;
   assert (h_expand == hh_expand + h2_4 * (n * n * 4 + (-5)))
-      by (fun () -> canon_semiring int_cr)
+      by (canon_semiring int_cr)
