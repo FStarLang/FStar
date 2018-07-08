@@ -498,8 +498,10 @@ tvar:
 /*                            Types and terms                                 */
 /******************************************************************************/
 
+thunk(X): | t=X { mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+
 ascribeTyp:
-  | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=atomicTerm {tactic}) { t, tacopt }
+  | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(atomicTerm) {tactic}) { t, tacopt }
 
 (* Remove for stratify *)
 ascribeKind:
@@ -530,7 +532,7 @@ term:
 
 noSeqTerm:
   | t=typ  { t }
-  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=typ {tactic})
+  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
       { mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
@@ -578,7 +580,7 @@ noSeqTerm:
       { let a = set_lid_range assume_lid (rhs parseState 1) in
         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
 
-  | ASSERT e=atomicTerm tactic_opt=option(BY tactic=typ {tactic})
+  | ASSERT e=atomicTerm tactic_opt=option(BY tactic=thunk(typ) {tactic})
       {
         match tactic_opt with
         | None ->
@@ -589,10 +591,8 @@ noSeqTerm:
           mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e; tac] (rhs2 parseState 1 4)
       }
 
-   | UNDERSCORE BY tactic=atomicTerm
+   | UNDERSCORE BY tactic=thunk(atomicTerm)
      {
-         (* thunk it *)
-         let tactic = mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], tactic)) (rhs parseState 3) Expr in
          let a = set_lid_range synth_lid (rhs parseState 1) in
          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
 

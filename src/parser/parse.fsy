@@ -233,36 +233,36 @@ in
 option___anonymous_5_:
   
     {    ( None )}
-| BY atomicTerm
+| BY thunk_atomicTerm_
     {let (_10, tactic0) = ((), $2) in
 let x =
   let tactic = tactic0 in
   let _1 = _10 in
-                                                                 (tactic)
+                                                                        (tactic)
 in
     ( Some x )}
 
 option___anonymous_6_:
   
     {    ( None )}
-| BY typ
+| BY thunk_typ_
     {let (_10, tactic0) = ((), $2) in
 let x =
   let tactic = tactic0 in
   let _1 = _10 in
-                                                              (tactic)
+                                                                     (tactic)
 in
     ( Some x )}
 
 option___anonymous_8_:
   
     {    ( None )}
-| BY typ
+| BY thunk_typ_
     {let (_10, tactic0) = ((), $2) in
 let x =
   let tactic = tactic0 in
   let _1 = _10 in
-                                                          (tactic)
+                                                                 (tactic)
 in
     ( Some x )}
 
@@ -1584,10 +1584,20 @@ tvar:
     {let tv = $1 in
             ( mk_ident(tv, rhs parseState 1) )}
 
+thunk_atomicTerm_:
+  atomicTerm
+    {let t = $1 in
+                ( mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+
+thunk_typ_:
+  typ
+    {let t = $1 in
+                ( mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+
 ascribeTyp:
   COLON tmArrow_tmNoEq_ option___anonymous_5_
     {let (_1, t, tacopt) = ((), $2, $3) in
-                                                                         ( t, tacopt )}
+                                                                                ( t, tacopt )}
 
 ascribeKind:
   COLON kind
@@ -1755,11 +1765,9 @@ in
           let a = set_lid_range assert_by_tactic_lid (rhs parseState 1) in
           mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e; tac] (rhs2 parseState 1 4)
       )}
-| UNDERSCORE BY atomicTerm
+| UNDERSCORE BY thunk_atomicTerm_
     {let (_1, _2, tactic) = ((), (), $3) in
      (
-         (* thunk it *)
-         let tactic = mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], tactic)) (rhs parseState 3) Expr in
          let a = set_lid_range synth_lid (rhs parseState 1) in
          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
 

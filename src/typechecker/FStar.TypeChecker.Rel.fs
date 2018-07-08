@@ -2872,7 +2872,7 @@ let ineqs_to_string ineqs =
 
 let guard_to_string (env:env) g =
   match g.guard_f, g.deferred, g.univ_ineqs with
-    | Trivial, [], (_, []) -> "{}"
+    | Trivial, [], (_, []) when not (Options.print_implicits ()) -> "{}"
     | _ ->
       let form = match g.guard_f with
           | Trivial -> "trivial"
