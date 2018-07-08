@@ -1482,6 +1482,10 @@ let map_guard g map = match g.guard_f with
   | Trivial -> g
   | NonTrivial f -> {g with guard_f=NonTrivial (map f)}
 
+let always_map_guard g map = match g.guard_f with
+  | Trivial -> {g with guard_f=NonTrivial (map U.t_true)}
+  | NonTrivial f -> {g with guard_f=NonTrivial (map f)}
+
 let trivial t = match t with
   | Trivial -> ()
   | NonTrivial _ -> failwith "impossible"

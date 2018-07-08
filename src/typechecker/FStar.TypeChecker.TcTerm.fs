@@ -312,6 +312,15 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
 
         letrecs |> List.map guard_one_letrec
 
+let wrap_guard_with_tactic_opt topt g =
+   match topt with
+   | None -> g
+   | Some tactic ->
+     (* We use always_map_guard so the annotation is there even for trivial
+      * guards. If the user writes (a <: b by fail ""), we should fail. *)
+     Env.always_map_guard g (fun g ->
+     Common.mk_by_tactic tactic (U.mk_squash U_zero g)) //guards are in U_zero
+
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
@@ -421,27 +430,24 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let expected_c, _, g = tc_comp env0 expected_c in
     let e, c', g' = tc_term (U.comp_result expected_c |> Env.set_expected_typ env0) e in
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, lcomp_comp c') in
-    let topt = tc_tactic_opt env0 topt in
+    let topt, gtac = tc_tactic_opt env0 topt in
     let e = mk (Tm_ascribed(e, (Inr expected_c, topt), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
     let lc = U.lcomp_of_comp expected_c in
     let f = Env.conj_guard g (Env.conj_guard g' g'') in
-    let f =
-        match topt with
-        | None -> f
-        | Some tactic ->
-          Env.map_guard f (fun f -> //guards are in U_zero
-          Common.mk_by_tactic tactic (U.mk_squash U_zero f)) in
     let e, c, f2 = comp_check_expected_typ env e lc in
-    let final_guard = Env.conj_guard f f2 in
-    e, c, final_guard
+    let final_guard = wrap_guard_with_tactic_opt topt (Env.conj_guard f f2) in
+    e, c, Env.conj_guard final_guard gtac
 
   | Tm_ascribed (e, (Inl t, topt), _) ->
     let k, u = U.type_u () in
     let t, _, f = tc_check_tot_or_gtot_term env t k in
+    let topt, gtac = tc_tactic_opt env topt in
     let e, c, g = tc_term (Env.set_expected_typ env t) e in
     let c, f = TcUtil.strengthen_precondition (Some (fun () -> return_all Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
-    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, None), Some c.eff_name)) None top.pos) c in
-    e, c, Env.conj_guard f (Env.conj_guard g f2)
+    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, topt), Some c.eff_name)) None top.pos) c in
+    let final_guard = Env.conj_guard f (Env.conj_guard g f2) in
+    let final_guard = wrap_guard_with_tactic_opt topt final_guard in
+    e, c, Env.conj_guard final_guard gtac
 
   (* Unary operators. Explicitly curry extra arguments *)
   | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest)
@@ -728,7 +734,7 @@ and tc_synth head env args rng =
     if Env.debug env <| Options.Other "Tac" then
         BU.print1 "Got %s\n" (Print.term_to_string t);
 
-    // TODO: fix, this gives a crappy error
+    // Should never trigger, meta-F* will check it before.
     TcUtil.check_uvars tau.pos t;
 
     t, U.lcomp_of_comp <| mk_Total typ, Env.trivial_guard
@@ -741,12 +747,13 @@ and tc_reified_tactic env tau =
     let env = { env with failhard = true } in
     tc_check_tot_or_gtot_term env tau t_tac_unit
 
-and tc_tactic_opt env topt =
+and tc_tactic_opt env topt : option<term> * guard_t =
     match topt with
-    | None -> None
+    | None ->
+        None, Env.trivial_guard
     | Some tactic ->
-        let tactic, _, _ = tc_tactic env tactic
-        in Some tactic
+        let tactic, _, g = tc_tactic env tactic
+        in Some tactic, g
 
 (************************************************************************************************************)
 (* Type-checking values:                                                                                    *)

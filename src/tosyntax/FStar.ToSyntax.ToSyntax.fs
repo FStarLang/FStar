@@ -606,7 +606,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
       | PatAscribed(p, (t, tacopt)) ->
         let _ = match tacopt with
                 | None -> ()
-                | Some _ -> raise_error (Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly, "Type ascriptions within patterns are cannot be associated with a tactic") orig.prange
+                | Some _ -> raise_error (Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly, "Type ascriptions within patterns cannot be associated with a tactic") orig.prange
         in
         let loc, env', binder, p, imp = aux loc env p in
         let annot_pat_var p t =
