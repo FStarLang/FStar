@@ -252,7 +252,7 @@ let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 // // #set-options "--max_fuel 0"
 // // // --tactic_trace"
 // // let _ = assert (forall x. poly5 x `equiv` poly5' x)
-// //           by (fun () -> let _ = forall_intros () in
+// //           by (let _ = forall_intros () in
 // // 		     compute ();
 // // 		     dump "after norm";
 // // 		     canon_semiring int_cr;
@@ -260,7 +260,7 @@ let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 
 // // Takes long.. try again later
 // //let _ = assert (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
-// //          by (fun () -> let _ = forall_intros () in
+// //          by (let _ = forall_intros () in
 // //		     compute ();
 // //		     dump "after norm";
 // //		     canon_semiring int_cr;
