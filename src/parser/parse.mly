@@ -589,6 +589,15 @@ noSeqTerm:
           mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e; tac] (rhs2 parseState 1 4)
       }
 
+   | UNDERSCORE BY tactic=atomicTerm
+     {
+         (* thunk it *)
+         let tactic = mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], tactic)) (rhs parseState 3) Expr in
+         let a = set_lid_range synth_lid (rhs parseState 1) in
+         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+
+     }
+
    | SYNTH tactic=atomicTerm
      {
          let a = set_lid_range synth_lid (rhs parseState 1) in
