@@ -1450,7 +1450,7 @@ let rec (desugar_data_pat :
                  | FStar_Pervasives_Native.Some uu____4041 ->
                      FStar_Errors.raise_error
                        (FStar_Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly,
-                         "Type ascriptions within patterns are cannot be associated with a tactic")
+                         "Type ascriptions within patterns cannot be associated with a tactic")
                        orig.FStar_Parser_AST.prange);
                 (let uu____4042 = aux loc env1 p2  in
                  match uu____4042 with
