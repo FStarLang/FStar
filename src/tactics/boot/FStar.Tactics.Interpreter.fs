@@ -376,6 +376,26 @@ and unembed_tactic_nbe_0<'b> (eb:NBET.embedding<'b>) (cb:NBET.nbe_cbs) (embedded
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck (in NBE)! Please file a bug report with a minimal reproduction of this issue.\n%s" (NBET.t_to_string result))) proof_state.main_context.range
     )
 
+//IN F*: and unembed_tactic_1_alt (#a:Type) (#r:Type) (ea:embedding a) (er:embedding r) (f:term) (ncb:norm_cb) : option (a -> tac r) =
+and unembed_tactic_1_alt<'a,'r> (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : option<('a -> tac<'r>)> = //JUST FSHARP
+    Some (fun x ->
+      let rng = FStar.Range.dummyRange  in
+      let x_tm = embed ea rng x ncb in
+      let app = S.mk_Tm_app f [as_arg x_tm] None rng in
+      unembed_tactic_0 er app ncb)
+
+//IN F*: and e_tactic_1_alt (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> (proofstate -> __result r)) =
+and e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (proofstate -> __result<'r>))> = //JUST FSHARP
+    let em = (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?") in
+//IN F*:    let un (t0: term) (w: bool) (n: norm_cb): option (a -> (proofstate -> __result r)) =
+    let un (t0: term) (w: bool) (n: norm_cb): option<('a -> (proofstate -> __result<'r>))> = //JUST FSHARP
+        match unembed_tactic_1_alt ea er t0 n with
+        | Some f -> Some (fun x -> run (f x))
+        | None -> None
+    in
+    mk_emb em un (FStar.Syntax.Embeddings.term_as_fv t_unit)
+
+
 let report_implicits ps (is : Env.implicits) : unit =
     let errs = List.map (fun imp ->
                 (Err.Error_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")

@@ -1,0 +1,14 @@
+make[2]: Entering directory '/home/guido/r/fstar/examples/native_tactics'
+../../bin/fstar.exe  --use_two_phase_tc false --use_extracted_interfaces false Bench.Fun.Norm.Lazy.Size6.fst --warn_error -266 | grep Checked
+Checked let test_Bench_Fun_Norm_Lazy_Size6 : _ in 307 milliseconds
+../../bin/fstar.exe  --use_two_phase_tc false --use_extracted_interfaces false Bench.Fun.NBE.Lazy.Size6.fst --warn_error -266 | grep Checked
+Checked let test_Bench_Fun_NBE_Lazy_Size6 : _ in 202 milliseconds
+../../bin/fstar.exe  --use_two_phase_tc false --use_extracted_interfaces false Bench.Fun.Norm.Lazy.Size6.fst --load Registers.List --load Registers.Fun  --warn_error -266 | grep Checked
+Checked let test_Bench_Fun_Norm_Lazy_Size6 : _ in 237 milliseconds
+../../bin/fstar.exe  --use_two_phase_tc false --use_extracted_interfaces false Bench.Fun.NBE.Lazy.Size6.fst --load Registers.List --load Registers.Fun  --warn_error -266 | grep Checked
+Checked let test_Bench_Fun_NBE_Lazy_Size6 : _ in 74 milliseconds
+../../bin/fstar.exe  --use_two_phase_tc false --use_extracted_interfaces false Bench.List.Norm.Lazy.Size6.fst --load Registers.List --load Registers.Fun  --warn_error -266 | grep Checked
+Checked let test_Bench_List_Norm_Lazy_Size6 : _ in 283 milliseconds
+../../bin/fstar.exe  --use_two_phase_tc false --use_extracted_interfaces false Bench.List.NBE.Lazy.Size6.fst --load Registers.List --load Registers.Fun  --warn_error -266 | grep Checked
+Checked let test_Bench_List_NBE_Lazy_Size6 : _ in 79 milliseconds
+make[2]: Leaving directory '/home/guido/r/fstar/examples/native_tactics'
