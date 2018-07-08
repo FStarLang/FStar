@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -uex
+set -ue
 
 # Benchmarking script
 
@@ -88,21 +88,22 @@ run () {
 	use_load=$5
 	LOAD=
 	if $use_load; then
-		LOAD="${LOAD} --load $MODULE"
+		LOAD="${LOAD} --load Registers.$REPR"
 	fi
+	EAGER=
 	if $use_eager; then
 		EAGER=--eager_embedding
 	fi
-	../../../bin/fstar.exe ${MODULE}.fst --codegen Plugin --extract ${MODULE} --include ..
+	echo ../../../bin/fstar.exe ${LOAD} ${EAGER} ${MODULE}.fst --include ..
 	../../../bin/fstar.exe ${LOAD} ${EAGER} ${MODULE}.fst --include ..
 }
 
 bench_all () {
 	for repr  in List Fun   ; do
 	for nbe   in true false ; do
-	for eager in true false ; do
+	for eager in false ; do
 	for load  in true false ; do
-	for len   in $(seq 1 4) ; do
+	for len   in $(seq 5 7) ; do
 		# NOTE! We use parentheses to run in a subshell and not
 		# leak the global variables across invocations. Do NOT delete them.
 		(test $repr $nbe $eager $len $load)
