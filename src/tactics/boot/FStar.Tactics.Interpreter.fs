@@ -390,7 +390,6 @@ and unembed_tactic_1_alt<'a,'r> (ea:embedding<'a>) (er:embedding<'r>) (f:term) (
       let rng = FStar.Range.dummyRange  in
       let x_tm = embed ea rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] None rng in
-      let app = U.mk_reify app in
       unembed_tactic_0 er app ncb)
 
 //IN F*: and e_tactic_1_alt (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> (proofstate -> __result r)) =

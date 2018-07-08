@@ -407,99 +407,94 @@ let canon_monoid (#a:Type) (cm:cm a) : Tac unit =
 //    It might be enough to move all them to the end of the list by
 //    a careful ordering and let the normalizer do its thing: *)
 
-// // remember if something is a constant or not
-// let is_const (t:term) : Tac bool = Tv_Const? (inspect t)
+// remember if something is a constant or not
+let is_const (t:term) : Tac bool = Tv_Const? (inspect t)
 
-// // sort things and put the constants last
-// let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
-//   match select_extra x vm, select_extra y vm with
-//   | false, false | true, true -> compare_of_bool (<) x y
-//   | false, true -> 1
-//   | true, false -> -1
+// sort things and put the constants last
+let const_compare (#a:Type) (vm:vmap a bool) (x y:var) =
+  match select_extra x vm, select_extra y vm with
+  | false, false | true, true -> compare_of_bool (<) x y
+  | false, true -> 1
+  | true, false -> -1
 
-// let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
-//   List.Tot.sortWith #nat (const_compare vm) xs
+let const_last (a:Type) (vm:vmap a bool) (xs:list var) : list var =
+  List.Tot.sortWith #nat (const_compare vm) xs
 
-// let canon_monoid_const #a cm = canon_monoid_with bool is_const false
-//   (fun a -> const_last a)
-// //  (fun #a m vm xs -> admit ()) #a cm
-//   (fun #a m vm xs -> sortWith_correct #bool (const_compare vm) #a m vm xs) #a cm
+let canon_monoid_const #a cm = canon_monoid_with bool is_const false
+  (fun a -> const_last a)
+//  (fun #a m vm xs -> admit ()) #a cm
+  (fun #a m vm xs -> sortWith_correct #bool (const_compare vm) #a m vm xs) #a cm
 
-// let lem1 (a b c d : int) =
-//   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-//   (fun _ -> canon_monoid_const int_plus_cm; trefl())
+let lem1 (a b c d : int) =
+  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+  (fun _ -> canon_monoid_const int_plus_cm; trefl())
 
 // (* Trying to only bring some constants to the front,
 //    as Nik said would be useful for separation logic *)
 
-// val term_mem: term -> list term -> Tot bool
-// let rec term_mem x = function
-//   | [] -> false
-//   | hd::tl -> if term_eq hd x then true else term_mem x tl
+// remember if something is a constant or not
+let is_special (ts:list term) (t:term) : Tac bool = t `term_mem` ts
 
-// // remember if something is a constant or not
-// let is_special (ts:list term) (t:term) : Tac bool = t `term_mem` ts
+// put the special things sorted before the non-special ones,
+// but don't change anything else
+let special_compare (#a:Type) (vm:vmap a bool) (x y:var) =
+  match select_extra x vm, select_extra y vm with
+  | false, false -> 0
+  | true, true -> compare_of_bool (<) x y
+  | false, true -> -1
+  | true, false -> 1
 
-// // put the special things sorted before the non-special ones,
-// // but don't change anything else
-// let special_compare (#a:Type) (vm:vmap a bool) (x y:var) =
-//   match select_extra x vm, select_extra y vm with
-//   | false, false -> 0
-//   | true, true -> compare_of_bool (<) x y
-//   | false, true -> -1
-//   | true, false -> 1
+let special_first (a:Type) (vm:vmap a bool) (xs:list var) : list var =
+  List.Tot.sortWith #nat (special_compare vm) xs
 
-// let special_first (a:Type) (vm:vmap a bool) (xs:list var) : list var =
-//   List.Tot.sortWith #nat (special_compare vm) xs
+let canon_monoid_special (ts:list term) =
+  canon_monoid_with bool (is_special ts) false
+    (fun a -> special_first a)
+//    (fun #a m vm xs -> admit ())
+    (fun #a m vm xs -> sortWith_correct #bool (special_compare vm) #a m vm xs)
 
-// let canon_monoid_special (ts:list term) =
-//   canon_monoid_with bool (is_special ts) false
-//     (fun a -> special_first a)
-// //    (fun #a m vm xs -> admit ())
-//     (fun #a m vm xs -> sortWith_correct #bool (special_compare vm) #a m vm xs)
+let lem2 (a b c d : int) =
+  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
+  (fun _ -> canon_monoid_special [quote a; quote b] int_plus_cm;
+            dump "this won't work, admitting"; admit1())
 
-// let lem2 (a b c d : int) =
-//   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-//   (fun _ -> canon_monoid_special [quote a; quote b] int_plus_cm;
-//             dump "this won't work, admitting"; admit1())
-
-// (* Trying to do something separation logic like. Want to
+(* Trying to do something separation logic like. Want to
 //    prove a goal of the form: given some concrete h0 and h1
 //    exists h1', h1 * h1' == h0. -- can use apply exists_intro to get an uvar
 //    Do this for an arbitrary commutative monoid. *)
 
-// let sep_logic
-// // TODO: this generality makes unfold_def fail with:
-// //       (Error) Variable "mult#1139342" not found
-// //       - Guido thinks this is related to
-// //         https://github.com/FStarLang/FStar/issues/1392
-// // (a:Type) (m:cm a) (x y z1 z2 z3 : a) = let op_Star = CM?.mult m in
-// // so working around it for now
-// (x y z1 z2 z3 : int) = let m = int_multiply_cm in let op_Star = op_Multiply in
-//   let h0 = z1 * CM?.unit m * (x * z2 * y * CM?.unit m) * z3 in
-//   let h1 = x * y in
-//   assert_by_tactic (exists h1'. h1 * h1' == h0)
-//   (fun _ -> apply_lemma (`exists_intro);
-//             flip();
-//             canon_monoid m;
-//             trefl()
-//             // this one blows up big time (takes up all RAM)
-//             // exact (cur_witness())
-//             // GM, May 8th: This goal is now skipped since its witness was solved already
-//             (* dismiss() *)
-//   )
+let sep_logic
+// TODO: this generality makes unfold_def fail with:
+//       (Error) Variable "mult#1139342" not found
+//       - Guido thinks this is related to
+//         https://github.com/FStarLang/FStar/issues/1392
+// (a:Type) (m:cm a) (x y z1 z2 z3 : a) = let op_Star = CM?.mult m in
+// so working around it for now
+(x y z1 z2 z3 : int) = let m = int_multiply_cm in let op_Star = op_Multiply in
+  let h0 = z1 * CM?.unit m * (x * z2 * y * CM?.unit m) * z3 in
+  let h1 = x * y in
+  assert_by_tactic (exists h1'. h1 * h1' == h0)
+  (fun _ -> apply_lemma (`exists_intro);
+            flip();
+            canon_monoid m;
+            trefl()
+            // this one blows up big time (takes up all RAM)
+            // exact (cur_witness())
+            // GM, May 8th: This goal is now skipped since its witness was solved already
+            (* dismiss() *)
+  )
 
-// (* TODO: Need better control of reduction:
+(* TODO: Need better control of reduction:
 //          - unfold_def still not good enough, see stopgap above *)
 
-// (* TODO: need a version of canon that works on assumption(s)
+(* TODO: need a version of canon that works on assumption(s)
 //          (canon_in / canon_all) *)
 
-// (* TODO: Wondering whether we should support arbitrary re-association?
+(* TODO: Wondering whether we should support arbitrary re-association?
 //          Could be useful for separation logic, but we might also just
 //          work around it. *)
 
-// (* TODO: would be nice to just find all terms of monoid type in the
+(* TODO: would be nice to just find all terms of monoid type in the
 //          goal and replace them with their canonicalization;
 //          basically use flatten_correct instead of monoid_reflect
 //          - for this to be efficient need Nik's pointwise' that can
@@ -507,7 +502,7 @@ let canon_monoid (#a:Type) (cm:cm a) : Tac unit =
 //          - even better, the user would have control over the place(s)
 //            where the canonicalization is done *)
 
-// (* TODO (open ended) Do the things used for reflective tactics really
+(* TODO (open ended) Do the things used for reflective tactics really
 //                      need to be this pure? Can we prove correctness of
 //                      denotations intrinsically / by monadic
 //                      reification for an effectful denotation? *)
