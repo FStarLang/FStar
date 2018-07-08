@@ -331,9 +331,10 @@ appropriately. Useful to minimize SMT queries that share internal
 obligations. *)
 assume val join : unit -> Tac unit
 
-(* Guido: TODO: restore *)
-(* assume val lget     : #a:Type -> string -> Tac a *)
-(* assume val lset     : #a:Type -> string -> a -> Tac unit *)
+(* Local metastate via a string-keyed map. [lget] fails if the
+found element is not typeable at the requested type. *)
+assume val lget     : #a:Type -> string -> Tac a
+assume val lset     : #a:Type -> string -> a -> Tac unit
 
 (** Set the current set of active goals at will. Obligations remain
 in the implicits. *)
