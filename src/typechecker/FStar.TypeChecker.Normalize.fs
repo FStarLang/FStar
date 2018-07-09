@@ -1430,6 +1430,10 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
 
 and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : typ) : term =
     (* Precondition: the stack head is an App (reify, ...) *)
+    begin match stack with
+    | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ -> ()
+    | _ -> failwith (BU.format1 "INTERNAL ERROR: do_reify_monadic: bad stack: %s" (stack_to_string stack))
+    end;
     let head0 = head in
     let head = U.unascribe head in
     log cfg (fun () -> BU.print2 "Reifying: (%s) %s\n" (Print.tag_of_term head) (Print.term_to_string head));
