@@ -181,7 +181,7 @@ let sort_via_swaps (#a:Type) (am : amap a)  (xs:list atom) :
   List.Tot.Properties.sortWith_permutation #nat (compare_of_bool (<)) xs;
   let ss = equal_counts_implies_swaps #nat xs (sort xs) in
   assert (sort xs == apply_swaps xs ss)
-    by (fun () -> dump "here"; admit1())
+      by (dump "here"; admit1 ())
   // this should just work from the type of ss,
   // but ss gets substituted by its definition in the WP
 
