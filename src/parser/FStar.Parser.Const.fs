@@ -362,7 +362,7 @@ let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "instance"]
 let effect_TAC_lid = fstar_tactics_lid' ["Effect"; "TAC"] // actual effect
 let effect_Tac_lid = fstar_tactics_lid' ["Effect"; "Tac"] // trivial variant
 
-let by_tactic_lid = fstar_tactics_lid' ["Effect"; "__by_tactic"]
+let by_tactic_lid = fstar_tactics_lid' ["Effect"; "with_tactic"]
 let synth_lid = fstar_tactics_lid' ["Effect"; "synth_by_tactic"]
 let assert_by_tactic_lid = fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
 let reify_tactic_lid = fstar_tactics_lid' ["Effect"; "reify_tactic"]

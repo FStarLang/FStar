@@ -87,9 +87,7 @@ let get = TAC?.__get
 let fail_act (#a:Type) (msg:string) = TAC?.__fail a msg
 
 abstract
-let __by_tactic (t:unit -> Tac 'a) (p:Type) : Type = p
-
-unfold let by_tactic (t : unit -> Tac 'a) (p:Type) : Type = __by_tactic t p
+let with_tactic (t : unit -> Tac 'a) (p:Type) : Type = p
 
 // This will run the tactic in order to (try to) produce a term of type t
 // It should not lead to any inconsistency, as any time this term appears
@@ -99,13 +97,13 @@ assume val synth_by_tactic : (#t:Type) -> (unit -> Tac unit) -> Tot t
 
 let assert_by_tactic (p:Type) (t:unit -> Tac unit)
   : Pure unit
-         (requires (set_range_of (by_tactic t (squash p)) (range_of t)))
+         (requires (set_range_of (with_tactic t (squash p)) (range_of t)))
          (ensures (fun _ -> p))
   = ()
 
-(* We don't peel off all `by_tactic`s in negative positions, so give the SMT a way to reason about them *)
-val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi)
-                                                                         [SMTPat (by_tactic tau phi)]
+(* We don't peel off all `with_tactic`s in negative positions, so give the SMT a way to reason about them *)
+val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (with_tactic tau phi ==> phi)
+                                                                         [SMTPat (with_tactic tau phi)]
 let by_tactic_seman a tau phi = ()
 
 // TcTerm needs these two names to typecheck tactics against

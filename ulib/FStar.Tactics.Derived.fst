@@ -418,7 +418,7 @@ let dump_admit () : Tac unit =
   admit1 ()
 
 assume val admit_goal : #a:Type -> unit ->
-    Pure a (requires (by_tactic dump_admit a))
+    Pure a (requires (with_tactic dump_admit a))
            (ensures (fun _ -> False))
 
 let change_with t1 t2 : Tac unit =
