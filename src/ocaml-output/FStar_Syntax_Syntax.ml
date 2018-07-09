@@ -2697,61 +2697,53 @@ let (t_tactic_unit : term) =
     let uu____8934 = let uu____8935 = as_arg t_unit  in [uu____8935]  in
     mk_Tm_app uu____8932 uu____8934  in
   uu____8927 FStar_Pervasives_Native.None FStar_Range.dummyRange 
-let (t_tac_unit : term) =
-  let uu____8962 =
-    let uu____8967 =
-      let uu____8968 = tabbrev FStar_Parser_Const.u_tac_lid  in
-      mk_Tm_uinst uu____8968 [U_zero]  in
-    let uu____8969 = let uu____8970 = as_arg t_unit  in [uu____8970]  in
-    mk_Tm_app uu____8967 uu____8969  in
-  uu____8962 FStar_Pervasives_Native.None FStar_Range.dummyRange 
 let (t_list_of : term -> term) =
   fun t  ->
-    let uu____9002 =
-      let uu____9007 =
-        let uu____9008 = tabbrev FStar_Parser_Const.list_lid  in
-        mk_Tm_uinst uu____9008 [U_zero]  in
-      let uu____9009 = let uu____9010 = as_arg t  in [uu____9010]  in
-      mk_Tm_app uu____9007 uu____9009  in
-    uu____9002 FStar_Pervasives_Native.None FStar_Range.dummyRange
+    let uu____8967 =
+      let uu____8972 =
+        let uu____8973 = tabbrev FStar_Parser_Const.list_lid  in
+        mk_Tm_uinst uu____8973 [U_zero]  in
+      let uu____8974 = let uu____8975 = as_arg t  in [uu____8975]  in
+      mk_Tm_app uu____8972 uu____8974  in
+    uu____8967 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let (t_option_of : term -> term) =
   fun t  ->
-    let uu____9042 =
-      let uu____9047 =
-        let uu____9048 = tabbrev FStar_Parser_Const.option_lid  in
-        mk_Tm_uinst uu____9048 [U_zero]  in
-      let uu____9049 = let uu____9050 = as_arg t  in [uu____9050]  in
-      mk_Tm_app uu____9047 uu____9049  in
-    uu____9042 FStar_Pervasives_Native.None FStar_Range.dummyRange
+    let uu____9007 =
+      let uu____9012 =
+        let uu____9013 = tabbrev FStar_Parser_Const.option_lid  in
+        mk_Tm_uinst uu____9013 [U_zero]  in
+      let uu____9014 = let uu____9015 = as_arg t  in [uu____9015]  in
+      mk_Tm_app uu____9012 uu____9014  in
+    uu____9007 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let (t_tuple2_of : term -> term -> term) =
   fun t1  ->
     fun t2  ->
-      let uu____9087 =
-        let uu____9092 =
-          let uu____9093 = tabbrev FStar_Parser_Const.lid_tuple2  in
-          mk_Tm_uinst uu____9093 [U_zero; U_zero]  in
-        let uu____9094 =
-          let uu____9095 = as_arg t1  in
-          let uu____9104 = let uu____9115 = as_arg t2  in [uu____9115]  in
-          uu____9095 :: uu____9104  in
-        mk_Tm_app uu____9092 uu____9094  in
-      uu____9087 FStar_Pervasives_Native.None FStar_Range.dummyRange
+      let uu____9052 =
+        let uu____9057 =
+          let uu____9058 = tabbrev FStar_Parser_Const.lid_tuple2  in
+          mk_Tm_uinst uu____9058 [U_zero; U_zero]  in
+        let uu____9059 =
+          let uu____9060 = as_arg t1  in
+          let uu____9069 = let uu____9080 = as_arg t2  in [uu____9080]  in
+          uu____9060 :: uu____9069  in
+        mk_Tm_app uu____9057 uu____9059  in
+      uu____9052 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let (t_either_of : term -> term -> term) =
   fun t1  ->
     fun t2  ->
-      let uu____9160 =
-        let uu____9165 =
-          let uu____9166 = tabbrev FStar_Parser_Const.either_lid  in
-          mk_Tm_uinst uu____9166 [U_zero; U_zero]  in
-        let uu____9167 =
-          let uu____9168 = as_arg t1  in
-          let uu____9177 = let uu____9188 = as_arg t2  in [uu____9188]  in
-          uu____9168 :: uu____9177  in
-        mk_Tm_app uu____9165 uu____9167  in
-      uu____9160 FStar_Pervasives_Native.None FStar_Range.dummyRange
+      let uu____9125 =
+        let uu____9130 =
+          let uu____9131 = tabbrev FStar_Parser_Const.either_lid  in
+          mk_Tm_uinst uu____9131 [U_zero; U_zero]  in
+        let uu____9132 =
+          let uu____9133 = as_arg t1  in
+          let uu____9142 = let uu____9153 = as_arg t2  in [uu____9153]  in
+          uu____9133 :: uu____9142  in
+        mk_Tm_app uu____9130 uu____9132  in
+      uu____9125 FStar_Pervasives_Native.None FStar_Range.dummyRange
   
 let (unit_const : term) =
   mk (Tm_constant FStar_Const.Const_unit) FStar_Pervasives_Native.None
