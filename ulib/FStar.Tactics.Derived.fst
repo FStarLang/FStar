@@ -119,6 +119,50 @@ let unify t1 t2 : Tac bool =
     let e = cur_env () in
     unify_env e t1 t2
 
+
+(** [divide n t1 t2] will split the current set of goals into the [n]
+first ones, and the rest. It then runs [t1] on the first set, and [t2]
+on the second, returning both results (and concatenating remaining goals). *)
+let divide (n:int) (l : unit -> Tac 'a) (r : unit -> Tac 'b) : Tac ('a * 'b) =
+    if n < 0 then
+      fail "divide: negative n";
+    let gs, sgs = goals (), smt_goals () in
+    let gs1, gs2 = List.Tot.splitAt n gs in
+
+    set_goals gs1; set_smt_goals [];
+    let x = l () in
+    let gsl, sgsl = goals (), smt_goals () in
+
+    set_goals gs2; set_smt_goals [];
+    let y = r () in
+    let gsr, sgsr = goals (), smt_goals () in
+
+    set_goals (gsl @ gsr); set_smt_goals (sgs @ sgsl @ sgsr);
+    (x, y)
+
+(** [focus t] runs [t ()] on the current active goal, hiding all others
+and restoring them at the end. *)
+let focus (t : unit -> Tac 'a) : Tac 'a =
+    match goals () with
+    | [] -> fail "focus: no goals"
+    | g::gs ->
+        let sgs = smt_goals () in
+        set_goals [g]; set_smt_goals [];
+        let x = t () in
+        set_goals (goals () @ gs); set_smt_goals (smt_goals () @ sgs);
+        x
+
+let rec mapAll (t : unit -> Tac unit) : Tac unit =
+    match goals () with
+    | [] -> ()
+    | _::_ -> let _ = divide 1 t (fun () -> mapAll t) in ()
+
+(** Runs tactic [t1] on the current goal, and then tactic [t2] on *each*
+subgoal produced by [t1]. Each invocation of [t2] runs on a proofstate
+with a single goal (they're "focused"). *)
+let rec seq (f : unit -> Tac unit) (g : unit -> Tac unit) : Tac unit =
+    focus (fun () -> f (); mapAll g)
+
 let exact_args (qs : list aqualv) (t : term) : Tac unit =
     focus (fun () ->
         let n = List.length qs in

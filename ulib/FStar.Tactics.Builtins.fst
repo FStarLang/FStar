@@ -135,20 +135,6 @@ the variable [v] for [r] everywhere in the current goal type and witness/
 *)
 assume val rewrite : binder -> Tac unit
 
-(** [divide n t1 t2] will split the current set of goals into the [n]
-first ones, and the rest. It then runs [t1] on the first set, and [t2]
-on the second, returning both results (and concatenating remaining goals). *)
-assume val divide : int -> (unit -> Tac 'a) -> (unit -> Tac 'b) -> Tac ('a * 'b)
-
-(** [focus t] runs [t ()] on the current active goal, hiding all others
-and restoring them at the end. *)
-assume val focus : (unit -> Tac 'a) -> Tac 'a
-
-(** Runs tactic [t1] on the current goal, and then tactic [t2] on *each*
-subgoal produced by [t1]. Each invocation of [t2] runs on a proofstate
-with a single goal (they're "focused"). *)
-assume val seq : (unit -> Tac unit) -> (unit -> Tac unit) -> Tac unit
-
 (** First boolean is whether to attempt to intrpoduce a refinement
 before solving. In that case, a goal for the refinement formula will be
 added. Second boolean is whether to set the expected type internally.

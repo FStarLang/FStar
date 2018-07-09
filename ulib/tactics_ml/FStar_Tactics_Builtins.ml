@@ -127,12 +127,6 @@ let fmap f r =
 let catch (t: unit -> 'a __tac): ((string, 'a) FStar_Pervasives.either) __tac =
         fun ps -> fmap fix_either (from_tac_1 B.catch (to_tac_0 (t ())) ps)
 
-let divide (n:int) (f: unit -> 'a __tac) (g: unit -> 'b __tac): ('a * 'b) __tac = from_tac_3 B.divide n (to_tac_0 (f ())) (to_tac_0 (g ()))
-
-let focus (f: unit -> 'a __tac) : 'a __tac = from_tac_1 B.focus (to_tac_0 (f ()))
-
-let seq (t1: unit -> unit __tac) (t2: unit -> unit __tac): unit __tac = from_tac_2 B.seq (to_tac_0 (t1 ())) (to_tac_0 (t2 ()))
-
 let t_pointwise (d : direction) (t: unit -> unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 (t ()))
 
 let topdown_rewrite (t1 : RT.term -> (bool * int) __tac) (t2 : unit -> unit __tac) : unit __tac =

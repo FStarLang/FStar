@@ -187,15 +187,6 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "apply_lemma"   apply_lemma RE.e_term e_unit
                                apply_lemma NRE.e_term NBET.e_unit;
 
-      mktac5 2 "divide"        (fun _ _ -> divide) e_any e_any e_int (e_tactic_thunk e_any) (e_tactic_thunk e_any) (e_tuple2 e_any e_any)
-                               (fun _ _ -> divide) NBET.e_any NBET.e_any NBET.e_int (e_tactic_nbe_thunk NBET.e_any) (e_tactic_nbe_thunk NBET.e_any) (NBET.e_tuple2 NBET.e_any NBET.e_any);
-
-      mktac2 0 "seq"           seq (e_tactic_thunk e_unit) (e_tactic_thunk e_unit) e_unit
-                               seq (e_tactic_nbe_thunk NBET.e_unit) (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
-
-      mktac2 1 "focus"         (fun _ -> focus) e_any (e_tactic_thunk e_any) e_any
-                               (fun _ -> focus) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) NBET.e_any;
-
       mktac1 0 "set_options"   set_options e_string e_unit
                                set_options NBET.e_string NBET.e_unit;
 
