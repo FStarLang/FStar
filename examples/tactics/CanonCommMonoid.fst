@@ -400,7 +400,7 @@ let canon_monoid (#a:Type) (cm:cm a) : Tac unit =
 
  let lem0 (a b c d : int) =
   assert (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  by (fun _ -> canon_monoid int_plus_cm; trefl())
+  by (canon_monoid int_plus_cm; trefl ())
 
 
 // (* Trying to enable computation with constants beyond unit.
