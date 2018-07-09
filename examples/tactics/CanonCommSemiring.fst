@@ -327,10 +327,7 @@ let canon_semiring_aux
             // dump (term_to_string te1);
             let te2 = quote_exp e2 in
             // dump (term_to_string te2);
-            mapply
-              (mk_app (`semiring_reflect)
-                [(ta, Q_Implicit); (tb, Q_Implicit); (tp, Q_Explicit); (tpc, Q_Explicit);
-                 (tr, Q_Explicit); (tvm, Q_Explicit); (te1, Q_Explicit); (te2, Q_Explicit); (t1, Q_Explicit); (t2, Q_Explicit)]);
+            mapply (`(semiring_reflect #(`#ta) #(`#tb) (`#tp) (`#tpc) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
             unfold_def tp;
             canon_norm ();
             later ();
@@ -350,12 +347,12 @@ let canon_semiring_aux
 
 
 let canon_semiring_with
-    (b:Type) (f:term -> Tac b) (def:b) (p:permute b) (pc:permute_correct p)
+    (b:Type) (f:term -> Tac b) (def:b) (tp:term) (tpc:term)
     (#a:Type) (r:cr a) : Tac unit =
   canon_semiring_aux a b
     (quote a) (unquote #a) (fun (x:a) -> quote x)
     (quote r) (quote (cm_op (r.cm_add))) (quote (cm_op (r.cm_mult))) (CM?.unit (r.cm_add))
-    (quote b) (fun (x:b) -> quote x) f def (quote p) (quote pc)
+    (quote b) (fun (x:b) -> quote x) f def tp tpc
 
 let is_not_const (t:term) : Tac bool =
   let (hd, tl) = collect_app_ref t in
@@ -370,8 +367,8 @@ let is_not_const (t:term) : Tac bool =
   | _ -> true
 
 let canon_semiring (#a:Type) (r:cr a) : Tac unit =
-  canon_semiring_with bool is_not_const true const_last
-    (fun #a m vm xs -> CCM.sortWith_correct #bool (CCM.const_compare vm) #a m vm xs)
+  canon_semiring_with bool is_not_const true (quote const_last)
+    (quote (fun #a m vm xs -> CCM.sortWith_correct #bool (CCM.const_compare vm) #a m vm xs))
     r
 
 #reset-options "--z3cliopt smt.arith.nl=false"
