@@ -16,6 +16,18 @@ let loc_disjoint_union_r'
   Classical.move_requires (loc_disjoint_includes s (loc_union s1 s2) s) s1;
   Classical.move_requires (loc_disjoint_includes s (loc_union s1 s2) s) s2
 
+let loc_disjoint_includes_l (b1 b1' : loc) (b2: loc) : Lemma
+  (requires (loc_includes b1 b1' /\ loc_disjoint b1 b2))
+  (ensures (loc_disjoint b1' b2))
+  [SMTPat (loc_disjoint b1' b2); SMTPat (loc_includes b1 b1')]
+= loc_disjoint_includes b1 b2 b1' b2
+
+let loc_disjoint_includes_r (b1 : loc) (b2 b2': loc) : Lemma
+  (requires (loc_includes b2 b2' /\ loc_disjoint b1 b2))
+  (ensures (loc_disjoint b1 b2'))
+  [SMTPat (loc_disjoint b1 b2'); SMTPat (loc_includes b2 b2')]
+= loc_disjoint_includes b1 b2 b1 b2'
+
 
 (* Patterns on modifies clauses *)
 
