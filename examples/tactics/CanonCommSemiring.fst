@@ -327,10 +327,7 @@ let canon_semiring_aux
             // dump (term_to_string te1);
             let te2 = quote_exp e2 in
             // dump (term_to_string te2);
-            mapply
-              (mk_app (`semiring_reflect)
-                [(ta, Q_Implicit); (tb, Q_Implicit); (tp, Q_Explicit); (tpc, Q_Explicit);
-                 (tr, Q_Explicit); (tvm, Q_Explicit); (te1, Q_Explicit); (te2, Q_Explicit); (t1, Q_Explicit); (t2, Q_Explicit)]);
+            mapply (`(semiring_reflect #(`#ta) #(`#tb) (`#tp) (`#tpc) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
             unfold_def tp;
             canon_norm ();
             later ();
