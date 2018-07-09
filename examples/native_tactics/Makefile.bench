@@ -9,12 +9,35 @@ all: prep
 	$(MAKE) -f Makefile.bench go
 
 TESTS=\
-	Bench.Fun.Norm.Lazy.Size6.run\
-	Bench.Fun.NBE.Lazy.Size6.run\
+	Bench.Fun.Norm.Lazy.Size6.Interpret.run\
+	Bench.Fun.NBE.Lazy.Size6.Interpret.run\
 	Bench.Fun.Norm.Lazy.Size6.Load.run\
 	Bench.Fun.NBE.Lazy.Size6.Load.run\
 	Bench.List.Norm.Lazy.Size6.Load.run\
-	Bench.List.NBE.Lazy.Size6.Load.run
+	Bench.List.NBE.Lazy.Size6.Load.run\
+	Bench.Fun.Norm.Lazy.Size7.Interpret.run\
+	Bench.Fun.NBE.Lazy.Size7.Interpret.run\
+	Bench.Fun.Norm.Lazy.Size7.Load.run\
+	Bench.Fun.NBE.Lazy.Size7.Load.run\
+	Bench.List.Norm.Lazy.Size7.Load.run\
+	Bench.List.NBE.Lazy.Size7.Load.run\
+	Bench.Fun.Norm.Lazy.Size8.Interpret.run\
+	Bench.Fun.NBE.Lazy.Size8.Interpret.run\
+	Bench.Fun.Norm.Lazy.Size8.Load.run\
+	Bench.Fun.NBE.Lazy.Size8.Load.run\
+	Bench.List.Norm.Lazy.Size8.Load.run\
+	Bench.List.NBE.Lazy.Size8.Load.run\
+	Bench.Fun.Norm.Lazy.Size9.Interpret.run\
+	Bench.Fun.NBE.Lazy.Size9.Interpret.run\
+	Bench.Fun.Norm.Lazy.Size9.Load.run\
+	Bench.Fun.NBE.Lazy.Size9.Load.run\
+	Bench.List.Norm.Lazy.Size9.Load.run\
+	Bench.List.NBE.Lazy.Size9.Load.run\
+	Bench.List.Norm.Lazy.Size6.Interpret.run\
+	Bench.List.NBE.Lazy.Size6.Interpret.run\
+	""
+
+"":
 
 # Way too much RAM:
 	# Bench.List.Norm.Lazy.Size8.run\
@@ -56,11 +79,11 @@ prep: $(addsuffix .fst.checked , Registers.List Registers.Fun Imp.List Imp.Fun) 
 	$(FSTAR) $*.fst --codegen Plugin --extract $*
 	touch $@
 
-%.Load.run: %.fst
-	$(FSTAR) $*.fst --load Registers.List --load Registers.Fun  --warn_error -266 | grep Checked
+%.Load.run: %.Load.fst
+	$(FSTAR) $< --load Registers.List --load Registers.Fun  --warn_error -266 | grep Checked
 
-%.run: %.fst
-	$(FSTAR) $*.fst --warn_error -266 | grep Checked
+%.Interpret.run: %.Interpret.fst
+	$(FSTAR) $< --warn_error -266 | grep Checked
 
 Bench.%.fst: ./makeimp.sh
 	./makeimp.sh $@

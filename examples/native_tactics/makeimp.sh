@@ -7,7 +7,8 @@ make () {
 	use_nbe=$2
 	use_eager=$3
 	LEN=$4
-	FILE=$5
+	use_load=$5
+	FILE=$6
 
 	STEPS=
                
@@ -52,8 +53,7 @@ let test_'"$MODULE_PLAIN"' = norm_assert (forall x y. equiv_norm (long_zero x) (
 }
 
 abort () {
-	echo "expected input Bench.(REPR).(STRATEGY).Size(SIZE).fst" &>2
-	echo "           or  Bench.(REPR).(STRATEGY).Size(SIZE).Load.fst" &>2
+	echo "expected input Bench.(REPR).(NBE/Norm).(Eager/Lazy).Size(SIZE).(Load/Interpret).fst" &>2
 	echo " (the Load is only used for the module name and file, otherwise ignored)" &>2
 
 }
@@ -84,4 +84,12 @@ fi
 LEN=${array[4]}
 LEN=${LEN/Size/}
 
-make $REPR $use_nbe $use_eager $LEN "$1"
+if ! [ x"${array[5]}" == x"Load" ]; then
+	use_load=true
+elif ! [ x"${array[5]}" == x"Interpret" ]; then
+	use_load=false
+else
+	abort
+fi
+
+make $REPR $use_nbe $use_eager $LEN $use_load "$1"
