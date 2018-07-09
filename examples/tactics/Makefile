@@ -1,8 +1,7 @@
 FSTAR_HOME=../..
 KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
 INCLUDE_PATHS=$(KREMLIN_HOME)/kremlib
-EXCLUDED_FSTAR_FILES=Launch.fst CanonCommSemiring.fst \
-		     Test.Math.Lemmas.fst CanonDeep.fst
+EXCLUDED_FSTAR_FILES=Launch.fst Test.Math.Lemmas.fst CanonDeep.fst
 FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
 all: verify-all #stringprintertest
@@ -23,3 +22,13 @@ stringprintertest: $(CACHE_DIR)
 else
 stringprintertest:
 endif
+
+canon-native:
+	$(FSTAR) --cache_checked_modules --codegen Plugin --extract 'CanonCommSemiring CanonCommMonoid CanonCommSwaps' CanonCommSemiring.fst
+	rm -f ./*.cmxs
+	cat CanonCommMonoid.ml.fixup >> CanonCommMonoid.ml
+	cat CanonCommSemiring.ml.fixup >> CanonCommSemiring.ml
+	env OCAMLPATH="../../bin/" ocamlfind ocamlopt -shared -I . -package fstar-tactics-lib -o ./CanonCommMonoid.cmxs ./CanonCommSwaps.ml ./CanonCommMonoid.ml
+	env OCAMLPATH="../../bin/" ocamlfind ocamlopt -shared -I . -package fstar-tactics-lib -o ./CanonCommSemiring.cmxs ./CanonCommSwaps.ml ./CanonCommMonoid.ml ./CanonCommSemiring.ml
+	$(FSTAR) --load CanonCommMonoid CanonCommMonoid.fst
+	$(FSTAR) --load CanonCommSemiring CanonCommSemiring.fst
