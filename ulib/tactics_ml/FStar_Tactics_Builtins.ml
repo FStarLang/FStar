@@ -134,5 +134,5 @@ let seq (t1: unit -> unit __tac) (t2: unit -> unit __tac): unit __tac = from_tac
 
 let t_pointwise (d : direction) (t: unit -> unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 (t ()))
 
-let topdown_rewrite (t1 : RT.term -> (bool * int) __tac) (t2 : unit __tac) : unit __tac =
-        from_tac_2 B.topdown_rewrite (to_tac_1 t1) (to_tac_0 t2)
+let topdown_rewrite (t1 : RT.term -> (bool * int) __tac) (t2 : unit -> unit __tac) : unit __tac =
+        from_tac_2 B.topdown_rewrite (to_tac_1 t1) (to_tac_0 (t2 ()))
