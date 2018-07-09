@@ -260,7 +260,7 @@ let canon_norm () : Tac unit =
     primops;
     iota;
     zeta;
-    delta_attr canon_attr;
+    delta_attr [`%canon_attr];
     delta_only [
       "FStar.Algebra.CommMonoid.int_plus_cm";
       "FStar.Algebra.CommMonoid.int_multiply_cm";

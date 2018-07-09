@@ -583,9 +583,9 @@ type norm_step =
     | Zeta
     | Iota
     | Reify
-    | UnfoldOnly of list<string>
+    | UnfoldOnly  of list<string>
     | UnfoldFully of list<string>
-    | UnfoldAttr of attribute
+    | UnfoldAttr  of list<string>
     | NBE
 
 (* the steps as terms *)
@@ -639,8 +639,10 @@ let e_norm_step =
                 | UnfoldFully l ->
                     S.mk_Tm_app steps_UnfoldFully [S.as_arg (embed (e_list e_string) l rng None norm)]
                                 None rng
-                | UnfoldAttr a ->
-                    S.mk_Tm_app steps_UnfoldAttr [S.as_arg a] None rng)
+                | UnfoldAttr l ->
+                    S.mk_Tm_app steps_UnfoldAttr [S.as_arg (embed (e_list e_string) l rng None norm)]
+                                None rng
+                )
     in
     let un (t0:term) (w:bool) norm : option<norm_step> =
         let t = U.unmeta_safe t0 in
@@ -676,8 +678,9 @@ let e_norm_step =
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldfully ->
                     BU.bind_opt (unembed (e_list e_string) l w norm) (fun ss ->
                     Some <| UnfoldFully ss)
-                | Tm_fvar fv, [_;(a, _)] when S.fv_eq_lid fv PC.steps_unfoldattr ->
-                    Some (UnfoldAttr a)
+                | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldattr ->
+                    BU.bind_opt (unembed (e_list e_string) l w norm) (fun ss ->
+                    Some <| UnfoldAttr ss)
                 | _ ->
                     if w then
                     Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t0)));

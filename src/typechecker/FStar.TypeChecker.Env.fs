@@ -51,7 +51,7 @@ type step =
   | UnfoldUntil of S.delta_depth
   | UnfoldOnly  of list<FStar.Ident.lid>
   | UnfoldFully of list<FStar.Ident.lid>
-  | UnfoldAttr of attribute
+  | UnfoldAttr  of list<FStar.Ident.lid>
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -92,8 +92,9 @@ let rec eq_step s1 s2 =
   | Exclude s1, Exclude s2 -> eq_step s1 s2
   | UnfoldUntil s1, UnfoldUntil s2 -> s1 = s2
   | UnfoldOnly lids1, UnfoldOnly lids2
-  | UnfoldFully lids1, UnfoldFully lids2 -> List.length lids1 = List.length lids2 && List.forall2 Ident.lid_equals lids1 lids2
-  | UnfoldAttr a1, UnfoldAttr a2 -> eq_tm a1 a2 = Equal
+  | UnfoldFully lids1, UnfoldFully lids2
+  | UnfoldAttr lids1, UnfoldAttr lids2 ->
+      List.length lids1 = List.length lids2 && List.forall2 Ident.lid_equals lids1 lids2
   | _ -> false
 
 type sig_binding = list<lident> * sigelt

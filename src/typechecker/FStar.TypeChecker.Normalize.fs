@@ -670,8 +670,8 @@ let tr_norm_step = function
         [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
     | EMB.UnfoldFully names ->
         [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
-    | EMB.UnfoldAttr t ->
-        [UnfoldUntil delta_constant; UnfoldAttr t]
+    | EMB.UnfoldAttr names ->
+        [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
     | EMB.NBE -> [NBE]
 
 let tr_norm_steps s =
@@ -866,7 +866,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
           | Some lids -> yesno <| BU.for_some (fv_eq_lid fv) lids)
         ;(match cfg.steps.unfold_attr with
           | None -> no
-          | Some ats -> yesno <| BU.for_some (fun at -> BU.for_some (U.attr_eq at) ats) attrs)
+          | Some lids -> yesno <| BU.for_some (fun at -> BU.for_some (fun lid -> U.is_fvar lid at) lids) attrs)
         ;(match cfg.steps.unfold_fully with
           | None -> no
           | Some lids -> fullyno <| BU.for_some (fv_eq_lid fv) lids)

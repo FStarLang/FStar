@@ -978,7 +978,7 @@ type step =
   | Primops
   | UnfoldUntil of delta_depth
   | UnfoldOnly  of list<FStar.Ident.lid>
-  | UnfoldAttr of attribute
+  | UnfoldAttr  of list<FStar.Ident.lid>
   | UnfoldTac
   | Reify
 
@@ -986,7 +986,7 @@ let step_as_normalizer_step = function
   | Primops -> Env.Primops
   | UnfoldUntil d -> Env.UnfoldUntil d
   | UnfoldOnly lids -> Env.UnfoldOnly lids
-  | UnfoldAttr attr -> Env.UnfoldAttr attr
+  | UnfoldAttr lids -> Env.UnfoldAttr lids
   | UnfoldTac -> Env.UnfoldTac
   | Reify -> Env.Reify
 

@@ -145,7 +145,7 @@ let normal #a (e:a) =
            [zeta;
             iota;
             delta_only [`%eval; `%eval'; `%R.upd; `%R.sel; `%R.eta_map; `%L.append; `%FStar.Mul.op_Star]; 
-            delta_attr unfold_defs; 
+            delta_attr [`%unfold_defs];
             primops;
             nbe
   ] e

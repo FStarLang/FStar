@@ -40,7 +40,7 @@ unfold
 let normal #a (e:a) =
   FStar.Pervasives.norm [zeta; iota;
                          delta_only [`%eval; `%eval'"'"'; `%R.upd; `%R.sel; `%R.eta_map; `%L.append; `%FStar.Mul.op_Star];
-                         delta_attr unfold_defs; '"$STEPS"'
+                         delta_attr [`%unfold_defs]; '"$STEPS"'
                          primops] e
 
 let norm_assert (p:Type) : Lemma (requires (normal p)) (ensures True) = ()

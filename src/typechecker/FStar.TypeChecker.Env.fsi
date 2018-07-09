@@ -37,7 +37,7 @@ type step =
   | UnfoldUntil of delta_depth
   | UnfoldOnly  of list<FStar.Ident.lid>
   | UnfoldFully of list<FStar.Ident.lid>
-  | UnfoldAttr of attribute
+  | UnfoldAttr  of list<FStar.Ident.lid>
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!

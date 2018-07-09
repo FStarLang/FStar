@@ -31,9 +31,9 @@ type fsteps = {
      primops : bool;
      do_not_unfold_pure_lets : bool;
      unfold_until : option<S.delta_depth>;
-     unfold_only : option<list<I.lid>>;
+     unfold_only  : option<list<I.lid>>;
      unfold_fully : option<list<I.lid>>;
-     unfold_attr : option<list<attribute>>;
+     unfold_attr  : option<list<I.lid>>;
      unfold_tac : bool;
      pure_subterms_within_computations : bool;
      simplify : bool;
@@ -94,7 +94,7 @@ let steps_to_string f =
     f.unfold_until |> format_opt Print.delta_depth_to_string;
     f.unfold_only |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_fully |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
-    f.unfold_attr |> format_opt (fun xs -> List.map Print.term_to_string xs |> String.concat ", ");
+    f.unfold_attr |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_tac |> b;
     f.pure_subterms_within_computations |> b;
     f.simplify |> b;
@@ -138,10 +138,6 @@ let default_steps : fsteps = {
 }
 
 let fstep_add_one s fs =
-    let add_opt x = function
-        | None -> Some [x]
-        | Some xs -> Some (x::xs)
-    in
     match s with
     | Beta -> { fs with beta = true }
     | Iota -> { fs with iota = true }
@@ -159,7 +155,7 @@ let fstep_add_one s fs =
     | UnfoldUntil d -> { fs with unfold_until = Some d }
     | UnfoldOnly  lids -> { fs with unfold_only  = Some lids }
     | UnfoldFully lids -> { fs with unfold_fully = Some lids }
-    | UnfoldAttr attr -> { fs with unfold_attr = add_opt attr fs.unfold_attr }
+    | UnfoldAttr  lids -> { fs with unfold_attr  = Some lids }
     | UnfoldTac ->  { fs with unfold_tac = true }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
     | Simplify ->  { fs with simplify = true }

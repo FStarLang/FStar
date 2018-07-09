@@ -20,9 +20,9 @@ type norm_step =
     | Zeta
     | Iota
     | Reify
-    | UnfoldOnly of list<string>
+    | UnfoldOnly  of list<string>
     | UnfoldFully of list<string>
-    | UnfoldAttr of attribute
+    | UnfoldAttr  of list<string>
     | NBE
 
 val steps_Simpl         : term

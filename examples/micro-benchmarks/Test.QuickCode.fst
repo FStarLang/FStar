@@ -8,7 +8,7 @@ irreducible
 let qattr = ()
 
 unfold let norm_simple #a (x:a) : a =
-  norm [iota; zeta; simplify; primops; delta_attr qattr; nbe] x
+  norm [iota; zeta; simplify; primops; delta_attr [`%qattr]; nbe] x
 
 type reg_file = int -> int
 
@@ -68,7 +68,7 @@ unfold let normal_steps : list string =
   ]
 
 unfold let normal (x:Type0) : Type0 =
-  norm [iota; zeta; simplify; primops; delta_attr qattr; delta_only normal_steps; nbe] x
+  norm [iota; zeta; simplify; primops; delta_attr [`%qattr]; delta_only normal_steps; nbe] x
 
 
 [@ "opaque_to_smt" qattr]
