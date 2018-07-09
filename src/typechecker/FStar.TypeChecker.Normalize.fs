@@ -921,7 +921,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
          * instantiation, but we do need to keep the old cfg. *)
         (* This is ugly, and a recurring problem, but I'm working around it for now *)
         let stack' = match stack with
-                     | UnivArgs i :: stack' -> UnivArgs i :: Cfg cfg :: stack'
+                     | UnivArgs (us, r) :: stack' -> UnivArgs (us, r) :: Cfg cfg :: stack'
                      | stack' -> Cfg cfg :: stack'
         in
         Some (cfg', stack')

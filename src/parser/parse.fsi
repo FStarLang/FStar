@@ -399,6 +399,8 @@ type nonTerminalId =
     | NONTERM_lident
     | NONTERM_uident
     | NONTERM_tvar
+    | NONTERM_thunk_atomicTerm_
+    | NONTERM_thunk_typ_
     | NONTERM_ascribeTyp
     | NONTERM_ascribeKind
     | NONTERM_kind
