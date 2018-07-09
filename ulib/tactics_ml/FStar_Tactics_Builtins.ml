@@ -121,28 +121,18 @@ let fmap f r =
     | Success (a, ps) -> Success (f a, ps)
     | Failed (msg, ps) -> Failed (msg, ps)
 
-(* Those that need some reification. Maybe we can do this somewhere else
+(* Those that need some translations. Maybe we can do this somewhere else
  * or automatically, but keep it for now *)
-let __catch (t: 'a __tac): ((string, 'a) FStar_Pervasives.either) __tac =
-        fun ps -> fmap fix_either (from_tac_1 B.catch (to_tac_0 t) ps)
-let catch: (unit -> 'a __tac) -> ((string, 'a) FStar_Pervasives.either) __tac = fun t -> __catch (E.reify_tactic t)
+let catch (t: unit -> 'a __tac): ((string, 'a) FStar_Pervasives.either) __tac =
+        fun ps -> fmap fix_either (from_tac_1 B.catch (to_tac_0 (t ())) ps)
 
-let __divide (n:int) (f: 'a __tac) (g: 'b __tac): ('a * 'b) __tac = from_tac_3 B.divide n (to_tac_0 f) (to_tac_0 g)
-let divide: int -> (unit -> 'a __tac) -> (unit -> 'b __tac) -> ('a * 'b) __tac =
-    fun n f g -> __divide n (f ()) (g ())
+let divide (n:int) (f: unit -> 'a __tac) (g: unit -> 'b __tac): ('a * 'b) __tac = from_tac_3 B.divide n (to_tac_0 (f ())) (to_tac_0 (g ()))
 
-let __focus (f: 'a __tac) : 'a __tac = from_tac_1 B.focus (to_tac_0 f)
-let focus: (unit -> 'a __tac) -> 'a __tac =
-    fun f -> __focus (f ())
+let focus (f: unit -> 'a __tac) : 'a __tac = from_tac_1 B.focus (to_tac_0 (f ()))
 
-let __seq (t1: unit __tac) (t2: unit __tac): unit __tac = from_tac_2 B.seq (to_tac_0 t1) (to_tac_0 t2)
-let seq: (unit -> unit __tac) -> (unit -> unit __tac) -> unit __tac = fun f -> fun g -> __seq (f ()) (g ())
+let seq (t1: unit -> unit __tac) (t2: unit -> unit __tac): unit __tac = from_tac_2 B.seq (to_tac_0 (t1 ())) (to_tac_0 (t2 ()))
 
-let __pointwise (d : direction) (t: unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 t)
-let pointwise:  (unit -> unit __tac) -> unit __tac = fun tau -> __pointwise BottomUp (E.reify_tactic tau)
-let pointwise': (unit -> unit __tac) -> unit __tac = fun tau -> __pointwise TopDown  (E.reify_tactic tau)
+let t_pointwise (d : direction) (t: unit -> unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 (t ()))
 
-let __topdown_rewrite (t1 : RT.term -> (bool * int) __tac) (t2 : unit __tac) : unit __tac =
-        from_tac_2 B.topdown_rewrite (to_tac_1 t1) (to_tac_0 t2)
-let topdown_rewrite : (RT.term -> (bool * int) __tac) -> (unit -> unit __tac) -> unit __tac =
-        fun t1 t2 -> __topdown_rewrite t1 (E.reify_tactic t2)
+let topdown_rewrite (t1 : RT.term -> (bool * int) __tac) (t2 : unit -> unit __tac) : unit __tac =
+        from_tac_2 B.topdown_rewrite (to_tac_1 t1) (to_tac_0 (t2 ()))

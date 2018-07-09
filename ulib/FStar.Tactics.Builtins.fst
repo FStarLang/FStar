@@ -57,15 +57,11 @@ any type. This will fail at tactic runtime if the quoted term does not
 typecheck to type [a]. *)
 assume val unquote : #a:Type -> term -> Tac a
 
-// TODO: Get rid of this guy and just assume `catch`
-assume private val __catch : #a:Type -> __tac a -> proofstate -> r : (__result (either string a)){Success? r}
 (** [catch t] will attempt to run [t] and allow to recover from a failure.
 If [t] succeeds with return value [a], [catch t] returns [Inr a].
 On failure, it returns [Inl msg], where [msg] is the error [t]
-raised. See also [or_else].
-*)
-let catch (t : unit -> Tac 'a) : TacH (either string 'a) (requires (fun _ -> True)) (ensures (fun _ps r -> Success? r)) =
-    TAC?.reflect (__catch (reify (t ())))
+raised. See also [or_else].  *)
+assume val catch : #a:Type -> (unit -> Tac a) -> TacS (either string a)
 
 (** [trivial] will discharge the goal if it's exactly [True] after
 doing normalization and simplification of it. *)
@@ -139,24 +135,19 @@ the variable [v] for [r] everywhere in the current goal type and witness/
 *)
 assume val rewrite : binder -> Tac unit
 
-assume val __divide : int -> __tac 'a -> __tac 'b -> __tac ('a * 'b)
 (** [divide n t1 t2] will split the current set of goals into the [n]
 first ones, and the rest. It then runs [t1] on the first set, and [t2]
 on the second, returning both results (and concatenating remaining goals). *)
-let divide (n:int) (f:unit -> Tac 'a) (g:unit -> Tac 'b): Tac ('a * 'b) =
-    TAC?.reflect (__divide n (reify (f ())) (reify (g ())))
+assume val divide : int -> (unit -> Tac 'a) -> (unit -> Tac 'b) -> Tac ('a * 'b)
 
-assume val __focus : __tac 'a -> __tac 'a
 (** [focus t] runs [t ()] on the current active goal, hiding all others
 and restoring them at the end. *)
-let focus (t : unit -> Tac 'a) : Tac 'a = TAC?.reflect (__focus (reify (t ())))
+assume val focus : (unit -> Tac 'a) -> Tac 'a
 
-assume val __seq : __tac unit -> __tac unit -> __tac unit
 (** Runs tactic [t1] on the current goal, and then tactic [t2] on *each*
 subgoal produced by [t1]. Each invocation of [t2] runs on a proofstate
 with a single goal (they're "focused"). *)
-let seq (f:unit -> Tac unit) (g:unit -> Tac unit) : Tac unit =
-  TAC?.reflect (__seq (reify (f ())) (reify (g ())))
+assume val seq : (unit -> Tac unit) -> (unit -> Tac unit) -> Tac unit
 
 (** First boolean is whether to attempt to intrpoduce a refinement
 before solving. In that case, a goal for the refinement formula will be
@@ -203,7 +194,6 @@ assume val dump1 : string -> Tac unit
 when trying to [apply] a reflexivity lemma. *)
 assume val trefl : unit -> Tac unit
 
-assume val __pointwise : direction -> __tac unit -> __tac unit
 (** (TODO: explain bettter) When running [pointwise tau] For every
 subterm [t'] of the goal's type [t], the engine will build a goal [Gamma
 |= t' == ?u] and run [tau] on it. When the tactic proves the goal,
@@ -211,11 +201,7 @@ the engine will rewrite [t'] for [?u] in the original goal type. This
 is done for every subterm, bottom-up. This allows to recurse over an
 unknown goal type. By inspecting the goal, the [tau] can then decide
 what to do (to not do anything, use [trefl]). *)
-(* TODO: move these away *)
-let pointwise  (tau : unit -> Tac unit) : Tac unit = TAC?.reflect (__pointwise BottomUp (reify (tau ())))
-let pointwise' (tau : unit -> Tac unit) : Tac unit = TAC?.reflect (__pointwise TopDown  (reify (tau ())))
-
-assume val __topdown_rewrite : (term -> __tac (bool * int)) -> __tac unit -> __tac unit
+assume val t_pointwise : direction -> (unit -> Tac unit) -> Tac unit
 
 (** [topdown_rewrite ctrl rw] is used to rewrite those sub-terms [t]
     of the goal on which [fst (ctrl t)] returns true.
@@ -237,11 +223,7 @@ assume val __topdown_rewrite : (term -> __tac (bool * int)) -> __tac unit -> __t
     When [snd (ctrl t) = 2], no more rewrites are performed in the
     goal.
 *)
-let topdown_rewrite
-       (ctrl : term -> Tac (bool * int))
-       (rw:unit -> Tac unit)
-    : Tac unit
-    = TAC?.reflect (__topdown_rewrite (fun x -> reify (ctrl x)) (reify (rw ())))
+assume val topdown_rewrite : (ctrl : term -> Tac (bool * int)) -> (rw:unit -> Tac unit) -> Tac unit
 
 (** Given the current goal [Gamma |- w : t],
 [dup] will turn this goal into

@@ -761,10 +761,6 @@ and tc_tactic env tau =
     let env = { env with failhard = true } in
     tc_check_tot_or_gtot_term env tau t_tactic_unit
 
-and tc_reified_tactic env tau =
-    let env = { env with failhard = true } in
-    tc_check_tot_or_gtot_term env tau t_tac_unit
-
 and tc_tactic_opt env topt : option<term> * guard_t =
     match topt with
     | None ->

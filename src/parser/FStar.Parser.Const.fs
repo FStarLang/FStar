@@ -355,7 +355,6 @@ let is_name (lid:lident) =
 let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStar.Range.dummyRange
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
-let u_tac_lid = fstar_tactics_lid' ["Effect"; "__tac"]
 
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
 let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "instance"]
