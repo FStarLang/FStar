@@ -782,7 +782,7 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       )}
-| SPLICE LBRACK loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__ RBRACK atomicTerm
+| SPLICE LBRACK loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__ RBRACK thunk_atomicTerm_
     {let (_1, _2, xs0, _4, t) = ((), (), $3, (), $5) in
 let ids =
   let xs = xs0 in
@@ -1086,9 +1086,9 @@ aqual:
                      ( q )}
 
 aqualUniverses:
-  HASH LBRACK tmNoEq RBRACK
+  HASH LBRACK thunk_tmNoEq_ RBRACK
     {let (_1, _2, t, _4) = ((), (), $3, ()) in
-                                ( Meta t )}
+                                       ( Meta t )}
 | HASH
     {let _1 = () in
               ( Implicit )}
@@ -1586,6 +1586,11 @@ tvar:
 
 thunk_atomicTerm_:
   atomicTerm
+    {let t = $1 in
+                ( mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+
+thunk_tmNoEq_:
+  tmNoEq
     {let t = $1 in
                 ( mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
 

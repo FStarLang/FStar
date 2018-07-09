@@ -62,7 +62,7 @@ let rec last (l : list 'a) : Tac 'a =
   | [x] -> x
   | _::xs -> last xs
 
-let mk_class (nm:string) () : Tac unit =
+let mk_class (nm:string) : Tac unit =
     (* sigh *)
     let ns = String.split ['.'] nm in
     let r = lookup_typ (cur_env ()) ns in

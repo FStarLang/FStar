@@ -1,5 +1,8 @@
 module Printers
 
+(* TODO: This is pretty much a blast-to-the-past of Meta-F*, we can do
+ * much better now. *)
+
 open FStar.Tactics
 module TD = FStar.Tactics.Derived
 module TU = FStar.Tactics.Util
@@ -128,7 +131,7 @@ type t1 =
 (* We need to provide the name of the generated definition
  * by hand, since desugaring this module occurs entirely
  * before running the metaprograms. *)
-%splice[t1_print] (fun () -> mk_printer (`t1))
+%splice[t1_print] (mk_printer (`t1))
 
 let _ = assert_norm (t1_print (A 5 "hey") = "(Printers.A 5 \"hey\")")
 let _ = assert_norm (t1_print (B (D "thing") 42) = "(Printers.B (Printers.D \"thing\") 42)")
