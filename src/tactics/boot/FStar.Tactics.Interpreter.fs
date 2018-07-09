@@ -52,35 +52,35 @@ let mktot2' uarity nm f ea eb er nf ena enb enr =
   { mktot2  uarity nm f ea eb er nf ena enb enr
     with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
 
-// IN F*: let rec e_tactic_0 (#r:Type) (er : embedding r) : embedding (tac r)
-let rec e_tactic_0 (er : embedding<'r>) : embedding<tac<'r>> // JUST FSHARP
+// IN F*: let rec e_tactic_thunk (#r:Type) (er : embedding r) : embedding (tac r)
+let rec e_tactic_thunk (er : embedding<'r>) : embedding<(tac<'r>)> // JUST FSHARP
     =
-    mk_emb (fun _ _ _ _ -> failwith "Impossible: embedding tactic (0)?")
-           (fun t w norm -> Some <| unembed_tactic_0 er t norm)
+    mk_emb (fun _ _ _ _ -> failwith "Impossible: embedding tactic (thunk)?")
+           (fun t w cb -> Some (unembed_tactic_1 e_unit er t cb ()))
            (FStar.Syntax.Embeddings.term_as_fv S.t_unit)
+
+// IN F*: and e_tactic_nbe_thunk (#r:Type) (er : NBET.embedding r) : NBET.embedding (tac r)
+and e_tactic_nbe_thunk (er : NBET.embedding<'r>) : NBET.embedding<tac<'r>> // JUST FSHARP
+    =
+    NBETerm.mk_emb
+           (fun cb _ -> failwith "Impossible: NBE embedding tactic (thunk)?")
+           (fun cb t -> Some (unembed_tactic_nbe_1 NBET.e_unit er cb t ()))
+           (NBET.Constant NBET.Unit)
+           (emb_typ_of e_unit)
 
 // IN F*: and e_tactic_1 (#a:Type) (#r:Type) (ea : embedding a) (er : embedding r) : embedding (a -> tac r)
 and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<'r>)> // JUST FSHARP
     =
     mk_emb (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?")
-           (fun t w -> unembed_tactic_1 ea er t)
+           (fun t w cb -> Some (unembed_tactic_1 ea er t cb))
            (FStar.Syntax.Embeddings.term_as_fv S.t_unit)
-
-// IN F*: and e_tactic_nbe_0 (#r:Type) (er : NBET.embedding r) : NBET.embedding (tac r)
-and e_tactic_nbe_0 (er : NBET.embedding<'r>) : NBET.embedding<tac<'r>> // JUST FSHARP
-    =
-    NBETerm.mk_emb
-           (fun cb _ -> failwith "Impossible: NBE embedding tactic (0)?")
-           (fun cb t -> Some <| unembed_tactic_nbe_0 er cb t)
-           (NBET.Constant NBET.Unit)
-           (emb_typ_of e_unit)
 
 // IN F*: and e_tactic_nbe_1 (#a:Type) (#r:Type) (ea : NBET.embedding a) (er : NBET.embedding r) : NBET.embedding (a -> tac r)
 and e_tactic_nbe_1 (ea : NBET.embedding<'a>) (er : NBET.embedding<'r>) : NBET.embedding<('a -> tac<'r>)> // JUST FSHARP
     =
     NBETerm.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (1)?")
-           (fun cb t -> unembed_tactic_nbe_1 ea er cb t)
+           (fun cb t -> Some (unembed_tactic_nbe_1 ea er cb t))
            (NBET.Constant NBET.Unit)
            (emb_typ_of e_unit)
 
@@ -138,8 +138,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "trivial"       trivial e_unit e_unit
                                trivial NBET.e_unit NBET.e_unit;
 
-      mktac2 1 "__catch"       (fun _ -> catch) e_any (e_tactic_0 e_any) (e_either e_string e_any)
-                               (fun _ -> catch) NBET.e_any (e_tactic_nbe_0 NBET.e_any) (NBET.e_either NBET.e_string NBET.e_any);
+      mktac2 1 "catch"         (fun _ -> catch) e_any (e_tactic_thunk e_any) (e_either e_string e_any)
+                               (fun _ -> catch) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either NBET.e_string NBET.e_any);
 
       mktac1 0 "intro"         intro e_unit RE.e_binder
                                intro NBET.e_unit NRE.e_binder;
@@ -187,14 +187,14 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "apply_lemma"   apply_lemma RE.e_term e_unit
                                apply_lemma NRE.e_term NBET.e_unit;
 
-      mktac5 2 "__divide"      (fun _ _ -> divide) e_any e_any e_int (e_tactic_0 e_any) (e_tactic_0 e_any) (e_tuple2 e_any e_any)
-                               (fun _ _ -> divide) NBET.e_any NBET.e_any NBET.e_int (e_tactic_nbe_0 NBET.e_any) (e_tactic_nbe_0 NBET.e_any) (NBET.e_tuple2 NBET.e_any NBET.e_any);
+      mktac5 2 "divide"        (fun _ _ -> divide) e_any e_any e_int (e_tactic_thunk e_any) (e_tactic_thunk e_any) (e_tuple2 e_any e_any)
+                               (fun _ _ -> divide) NBET.e_any NBET.e_any NBET.e_int (e_tactic_nbe_thunk NBET.e_any) (e_tactic_nbe_thunk NBET.e_any) (NBET.e_tuple2 NBET.e_any NBET.e_any);
 
-      mktac2 0 "__seq"         seq (e_tactic_0 e_unit) (e_tactic_0 e_unit) e_unit
-                               seq (e_tactic_nbe_0 NBET.e_unit) (e_tactic_nbe_0 NBET.e_unit) NBET.e_unit;
+      mktac2 0 "seq"           seq (e_tactic_thunk e_unit) (e_tactic_thunk e_unit) e_unit
+                               seq (e_tactic_nbe_thunk NBET.e_unit) (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
 
-      mktac2 1 "__focus"       (fun _ -> focus) e_any (e_tactic_0 e_any) e_any
-                               (fun _ -> focus) NBET.e_any (e_tactic_nbe_0 NBET.e_any) NBET.e_any;
+      mktac2 1 "focus"         (fun _ -> focus) e_any (e_tactic_thunk e_any) e_any
+                               (fun _ -> focus) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) NBET.e_any;
 
       mktac1 0 "set_options"   set_options e_string e_unit
                                set_options NBET.e_string NBET.e_unit;
@@ -226,11 +226,11 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "dump1"         print_proof_state1 e_string e_unit
                                print_proof_state1 NBET.e_string NBET.e_unit;
 
-      mktac2 0 "__pointwise"   pointwise E.e_direction (e_tactic_0 e_unit) e_unit
-                               pointwise E.e_direction_nbe (e_tactic_nbe_0 NBET.e_unit) NBET.e_unit;
+      mktac2 0 "t_pointwise"   pointwise E.e_direction (e_tactic_thunk e_unit) e_unit
+                               pointwise E.e_direction_nbe (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
 
-      mktac2 0 "__topdown_rewrite" topdown_rewrite (e_tactic_1 RE.e_term (e_tuple2 e_bool e_int)) (e_tactic_0 e_unit) e_unit
-                                   topdown_rewrite (e_tactic_nbe_1 NRE.e_term (NBET.e_tuple2 NBET.e_bool NBET.e_int)) (e_tactic_nbe_0 NBET.e_unit) NBET.e_unit;
+      mktac2 0 "topdown_rewrite"   topdown_rewrite (e_tactic_1 RE.e_term (e_tuple2 e_bool e_int)) (e_tactic_thunk e_unit) e_unit
+                                   topdown_rewrite (e_tactic_nbe_1 NRE.e_term (NBET.e_tuple2 NBET.e_bool NBET.e_int)) (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
 
       mktac1 0 "trefl"         trefl   e_unit e_unit
                                trefl   NBET.e_unit NBET.e_unit;
@@ -298,22 +298,27 @@ and primitive_steps () : list<Cfg.primitive_step> =
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
 
-//IN F*: and unembed_tactic_1 (#a:Type) (#r:Type) (ea:embedding a) (er:embedding r) (f:term) (ncb:norm_cb) : option (a -> tac r) =
-and unembed_tactic_1<'a,'r> (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : option<('a -> tac<'r>)> = //JUST FSHARP
-    Some (fun x ->
+//IN F*: and unembed_tactic_1 (#a:Type) (#r:Type) (ea:embedding a) (er:embedding r) (f:term) (ncb:norm_cb) : a -> tac r =
+and unembed_tactic_1<'a,'r> (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : 'a -> tac<'r> = //JUST FSHARP
+    fun x ->
       let rng = FStar.Range.dummyRange  in
       let x_tm = embed ea rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] None rng in
-      unembed_tactic_0 er app ncb)
+      unembed_tactic_0 er app ncb
 
 //IN F*: and unembed_tactic_0 (#b:Type) (eb:embedding b) (embedded_tac_b:term) (ncb:norm_cb) : tac b =
 and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) : tac<'b> = //JUST FSHARP
     bind get (fun proof_state ->
     let rng = embedded_tac_b.pos in
+
+    (* First, reify it from Tac a into __tac a *)
+    let embedded_tac_b = U.mk_reify embedded_tac_b in
+
     let tm = S.mk_Tm_app embedded_tac_b
                          [S.as_arg (embed E.e_proofstate rng proof_state ncb)]
                           None
                           rng in
+
 
     // Why not HNF? While we don't care about strong reduction we need more than head
     // normal form due to primitive steps. Consider `norm (steps 2)`: we need to normalize
@@ -347,12 +352,12 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
     )
 
-//IN F*: and unembed_tactic_nbe_1 (#a:Type) (#r:Type) (ea:NBET.embedding a) (er:NBET.embedding r) (cb:NBET.nbe_cbs) (f:NBET.t) : option (a -> tac r) =
-and unembed_tactic_nbe_1<'a,'r> (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>) (cb:NBET.nbe_cbs) (f:NBET.t) : option<('a -> tac<'r>)> = //JUST FSHARP
-    Some (fun x ->
+//IN F*: and unembed_tactic_nbe_1 (#a:Type) (#r:Type) (ea:NBET.embedding a) (er:NBET.embedding r) (cb:NBET.nbe_cbs) (f:NBET.t) : (a -> tac r) =
+and unembed_tactic_nbe_1<'a,'r> (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>) (cb:NBET.nbe_cbs) (f:NBET.t) : 'a -> tac<'r> = //JUST FSHARP
+    fun x ->
       let x_tm = NBET.embed ea cb x in
       let app = NBET.iapp_cb cb f [NBET.as_arg x_tm] in
-      unembed_tactic_nbe_0 er cb app)
+      unembed_tactic_nbe_0 er cb app
 
 //IN F*: and unembed_tactic_nbe_0 (#b:Type) (eb:NBET.embedding b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac b =
 and unembed_tactic_nbe_0<'b> (eb:NBET.embedding<'b>) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac<'b> = //JUST FSHARP
@@ -417,13 +422,13 @@ let run_tactic_on_typ
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed
      * so it won't get stuck. c.f #1307 *)
-    let _, _, g = TcTerm.tc_reified_tactic env tactic in
+    let _, _, g = TcTerm.tc_tactic env tactic in
     if !tacdbg then
         BU.print_string "}\n";
 
     TcRel.force_trivial_guard env g;
     Err.stop_if_err ();
-    let tau = unembed_tactic_0 e_unit tactic FStar.Syntax.Embeddings.id_norm_cb in
+    let tau = unembed_tactic_1 e_unit e_unit tactic FStar.Syntax.Embeddings.id_norm_cb in
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
     (* TODO: We do not faithfully expose universes to metaprograms *)
@@ -435,7 +440,7 @@ let run_tactic_on_typ
     Reflection.Basic.env_hook := Some env;
     if !tacdbg then
         BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ);
-    let res, ms = BU.record_time (fun () -> run_safe tau ps) in
+    let res, ms = BU.record_time (fun () -> run_safe (tau ()) ps) in
     if !tacdbg then
         BU.print3 "}\nTactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
     match res with
@@ -695,10 +700,6 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
     // Use default opts for main goal
     (env, t', FStar.Options.peek ()) :: gs
 
-let reify_tactic (a : term) : term =
-    let r = S.mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv PC.reify_tactic_lid delta_equational None)) [U_zero] in
-    mk_Tm_app r [S.iarg t_unit; S.as_arg a] None a.pos
-
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
     if env.nosynth
@@ -706,7 +707,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     else begin
     tacdbg := Env.debug env (Options.Other "Tac");
 
-    let gs, w = run_tactic_on_typ tau.pos typ.pos (reify_tactic tau) env typ in
+    let gs, w = run_tactic_on_typ tau.pos typ.pos tau env typ in
     // Check that all goals left are irrelevant and provable
     // TODO: It would be nicer to combine all of these into a guard and return
     // that to TcTerm, but the varying environments make it awkward.
@@ -731,7 +732,7 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     if env.nosynth then [] else begin
     tacdbg := Env.debug env (Options.Other "Tac");
     let typ = S.t_decls in // running with goal type FStar.Reflection.Data.decls
-    let gs, w = run_tactic_on_typ tau.pos tau.pos (reify_tactic tau) env typ in
+    let gs, w = run_tactic_on_typ tau.pos tau.pos tau env typ in
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
     // TODO: Do not retypecheck and do just like `synth`

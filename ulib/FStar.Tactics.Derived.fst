@@ -100,6 +100,9 @@ under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
     with_policy Goal (fun () -> t_exact true false t)
 
+let pointwise  (tau : unit -> Tac unit) : Tac unit = t_pointwise BottomUp tau
+let pointwise' (tau : unit -> Tac unit) : Tac unit = t_pointwise TopDown  tau
+
 let cur_module () : Tac (list string) =
     moduleof (cur_env ())
 

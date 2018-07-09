@@ -55,7 +55,7 @@ unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:__tac_wp a
     g_compact b (g_bind a b wp f)
 
 [@ dm4f_bind_range ]
-reifiable reflectable new_effect {
+reifiable new_effect {
   TAC : a:Type -> Effect
   with repr     = __tac
      ; bind     = __bind
@@ -71,6 +71,9 @@ effect TacH (a:Type) (pre : proofstate -> Tot Type0) (post : proofstate -> __res
 (* "Total" variant *)
 effect Tac (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ _ -> True))
 
+(* Metaprograms that succeed *)
+effect TacS (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ps r -> Success? r))
+
 (* A variant that doesn't prove totality (nor type safety!) *)
 effect TacF (a:Type) = TacH a (requires (fun _ -> False)) (ensures (fun _ _ -> True))
 
@@ -84,9 +87,9 @@ let get = TAC?.__get
 let fail_act (#a:Type) (msg:string) = TAC?.__fail a msg
 
 abstract
-let __by_tactic (t:__tac 'a) (p:Type) : Type = p
+let __by_tactic (t:unit -> Tac 'a) (p:Type) : Type = p
 
-unfold let by_tactic (t : unit -> Tac 'a) (p:Type) : Type = __by_tactic (reify (t ())) p
+unfold let by_tactic (t : unit -> Tac 'a) (p:Type) : Type = __by_tactic t p
 
 // This will run the tactic in order to (try to) produce a term of type t
 // It should not lead to any inconsistency, as any time this term appears
