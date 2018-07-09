@@ -16,8 +16,9 @@ assume val fail : #a:Type -> m:string -> TacH a (requires (fun _ -> True)) (ensu
 
 // NOTE: The only reason `fail` is assumed as a primitive is to enable
 // the TacFail debugging flag. We could instead define it like this,
-// obtaining the exact same spec and runtime behaviour (minus the
-// debugging flag).
+// with the exact same spec and runtime behaviour (minus the
+// debugging aspect).
+(* val fail : #a:Type -> m:string -> TacH a (requires (fun _ -> True)) (ensures (fun ps r -> Failed? r /\ Failed?.ps r == ps)) *)
 (* let fail = fail_act *)
 
 (** [top_env] returns the environment where the tactic started running.
@@ -56,13 +57,15 @@ any type. This will fail at tactic runtime if the quoted term does not
 typecheck to type [a]. *)
 assume val unquote : #a:Type -> term -> Tac a
 
-assume private val __catch : #a:Type -> __tac a -> __tac (either string a)
+// TODO: Get rid of this guy and just assume `catch`
+assume private val __catch : #a:Type -> __tac a -> proofstate -> r : (__result (either string a)){Success? r}
 (** [catch t] will attempt to run [t] and allow to recover from a failure.
 If [t] succeeds with return value [a], [catch t] returns [Inr a].
 On failure, it returns [Inl msg], where [msg] is the error [t]
 raised. See also [or_else].
 *)
-let catch (t : unit -> Tac 'a) = TAC?.reflect (__catch (reify (t ())))
+let catch (t : unit -> Tac 'a) : TacH (either string 'a) (requires (fun _ -> True)) (ensures (fun _ps r -> Success? r)) =
+    TAC?.reflect (__catch (reify (t ())))
 
 (** [trivial] will discharge the goal if it's exactly [True] after
 doing normalization and simplification of it. *)

@@ -71,6 +71,9 @@ effect TacH (a:Type) (pre : proofstate -> Tot Type0) (post : proofstate -> __res
 (* "Total" variant *)
 effect Tac (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ _ -> True))
 
+(* Metaprograms that succeed *)
+effect TacS (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ps r -> Success? r))
+
 (* A variant that doesn't prove totality (nor type safety!) *)
 effect TacF (a:Type) = TacH a (requires (fun _ -> False)) (ensures (fun _ _ -> True))
 
