@@ -86,22 +86,6 @@ let rec to_all_goals (t: unit -> T.Tac unit) : T.Tac unit =
     let _ = T.divide 1 t (fun () -> to_all_goals t) in
     ()
 
-let admit_others = to_all_goals
-
-(*
-let admit_others (t: unit -> T.Tac unit) : T.Tac unit =
-  if T.ngoals () = 0
-  then ()
-  else if T.ngoals () = 1
-  then t ()
-  else
-    tfail "There should be only one goal here"
-(*    
-    let _ = T.divide 1 t (fun () -> to_all_goals tadmit) in
-    ()
-*)    
-*)
-
 let rec imm_solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
   T.first (List.Tot.append l [
     (fun () ->
@@ -147,12 +131,12 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
   begin match T.trytac tforall_intro with
   | Some _ ->
     T.print ("Applied: forall_intro");
-    admit_others (fun () -> solve_goal l)
+    to_all_goals (fun () -> solve_goal l)
   | _ ->
     begin match T.trytac timplies_intro with
     | Some _ ->
       T.print ("Applied: implies_intro");
-      admit_others (fun () -> solve_goal l)
+      to_all_goals (fun () -> solve_goal l)
     | _ ->
       begin match T.trytac tsplit with
       | Some _ ->
