@@ -295,11 +295,11 @@ let quote_vm (#a #b:Type) (ta tb: term)
       (quote_pair (snd p), Q_Explicit)] in
   let tyentry = mk_e_app (`tuple2) [(`nat); t_a_star_b] in
   let tlist = quote_list tyentry quote_map_entry (fst vm) in
-  dump (term_to_string (tc tlist));
+  (* dump (term_to_string (tc tlist)); *)
   let tpair = quote_pair (snd vm) in
-  dump (term_to_string (tc tpair));
+  (* dump (term_to_string (tc tpair)); *)
   let tylist = mk_e_app (`list) [tyentry] in
-  dump (term_to_string (tc tylist));
+  (* dump (term_to_string (tc tylist)); *)
   mk_app (`Mktuple2) [(tylist, Q_Implicit); (t_a_star_b, Q_Implicit);
                       (tlist, Q_Explicit); (tpair, Q_Explicit)]
 
@@ -349,9 +349,9 @@ let canon_monoid_aux
                                             (tb, Q_Implicit);
                                             (tp, Q_Explicit);
                                             (tpc, Q_Explicit)]);
-          dump ("before unfold, tp = " ^ term_to_string tp);
+          (* dump ("before unfold, tp = " ^ term_to_string tp); *)
           unfold_topdown [(`canon); (`xsdenote); tp];
-          dump ("after unfold");
+          (* dump ("after unfold"); *)
           // would like to do only this norm [primops] but ...
           // for now having to do all this mess
           norm [delta_only [// term_to_string tp;
@@ -453,10 +453,10 @@ let canon_monoid_special (ts:list term) =
 //    (fun #a m vm xs -> admit ())
     (fun #a m vm xs -> sortWith_correct #bool (special_compare vm) #a m vm xs)
 
-let lem2 (a b c d : int) =
-  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid_special [quote a; quote b] int_plus_cm;
-            dump "this won't work, admitting"; admit1())
+(* let lem2 (a b c d : int) = *)
+(*   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1) *)
+(*   (fun _ -> canon_monoid_special [quote a; quote b] int_plus_cm; *)
+(*             dump "this won't work, admitting"; admit1()) *)
 
 (* Trying to do something separation logic like. Want to
 //    prove a goal of the form: given some concrete h0 and h1

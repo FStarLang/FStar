@@ -23,12 +23,14 @@ else
 stringprintertest:
 endif
 
-canon-native:
+CanonCommSemiring.cmxs CanonCommMonoid.cmxs:
 	$(FSTAR) --cache_checked_modules --codegen Plugin --extract 'CanonCommSemiring CanonCommMonoid CanonCommSwaps' CanonCommSemiring.fst
 	rm -f ./*.cmxs
 	cat CanonCommMonoid.ml.fixup >> CanonCommMonoid.ml
 	cat CanonCommSemiring.ml.fixup >> CanonCommSemiring.ml
 	env OCAMLPATH="../../bin/" ocamlfind ocamlopt -shared -I . -package fstar-tactics-lib -o ./CanonCommMonoid.cmxs ./CanonCommSwaps.ml ./CanonCommMonoid.ml
 	env OCAMLPATH="../../bin/" ocamlfind ocamlopt -shared -I . -package fstar-tactics-lib -o ./CanonCommSemiring.cmxs ./CanonCommSwaps.ml ./CanonCommMonoid.ml ./CanonCommSemiring.ml
+
+canon-native: CanonCommSemiring.cmxs CanonCommMonoid.cmxs
 	$(FSTAR) --load CanonCommMonoid CanonCommMonoid.fst
 	$(FSTAR) --load CanonCommSemiring CanonCommSemiring.fst

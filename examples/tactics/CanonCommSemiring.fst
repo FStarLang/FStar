@@ -337,7 +337,8 @@ let canon_semiring_aux
             canon_norm ();
             //dump ("after norm-right");
             trefl ();
-            dump "done"
+            (* dump "done"; *)
+            ()
           )
         | _ -> fail "Unexpected"
       )
