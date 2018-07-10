@@ -134,6 +134,7 @@ type token =
   | COLON_EQUALS
   | COLON_COLON
   | COLON
+  | CLASS
   | CHAR of (char)
   | BYTEARRAY of (bytes)
   | BY
@@ -284,6 +285,7 @@ type tokenId =
     | TOKEN_COLON_EQUALS
     | TOKEN_COLON_COLON
     | TOKEN_COLON
+    | TOKEN_CLASS
     | TOKEN_CHAR
     | TOKEN_BYTEARRAY
     | TOKEN_BY
@@ -400,6 +402,7 @@ type nonTerminalId =
     | NONTERM_uident
     | NONTERM_tvar
     | NONTERM_thunk_atomicTerm_
+    | NONTERM_thunk_tmNoEq_
     | NONTERM_thunk_typ_
     | NONTERM_ascribeTyp
     | NONTERM_ascribeKind

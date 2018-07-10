@@ -59,7 +59,7 @@ let logic_qualifier_deprecation_warning =
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
-%token OPEN REC MUTABLE THEN TRUE TRY TYPE EFFECT VAL
+%token OPEN REC MUTABLE THEN TRUE TRY TYPE CLASS EFFECT VAL
 %token INCLUDE
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
@@ -163,9 +163,11 @@ rawDecl:
   | MODULE uid=quident
       {  TopLevelModule uid }
   | TYPE tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
-      { Tycon (false, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
+      { Tycon (false, false, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
+  | CLASS tcdefs=separated_nonempty_list(AND,pair(option(FSDOC), typeDecl))
+      { Tycon (false, true, List.map (fun (doc, f) -> (f, doc)) tcdefs) }
   | EFFECT uid=uident tparams=typars EQUALS t=typ
-      { Tycon(true, [(TyconAbbrev(uid, tparams, None, t), None)]) }
+      { Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) }
   | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
         let r = rhs2 parseState 1 3 in
@@ -266,7 +268,7 @@ effectDefinition:
 
 effectDecl:
   | lid=lident action_params=binders EQUALS t=simpleTerm
-    { mk_decl (Tycon (false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] }
+    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm

@@ -46,6 +46,7 @@ let logic_qualifier_deprecation_warning =
 %token BY
 %token <bytes> BYTEARRAY
 %token <char> CHAR
+%token CLASS
 %token COLON
 %token COLON_COLON
 %token COLON_EQUALS
@@ -761,10 +762,13 @@ rawDecl:
       (  TopLevelModule uid )}
 | TYPE separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
     {let (_1, tcdefs) = ((), $2) in
-      ( Tycon (false, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
+      ( Tycon (false, false, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
+| CLASS separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
+    {let (_1, tcdefs) = ((), $2) in
+      ( Tycon (false, true, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
 | EFFECT uident typars EQUALS typ
     {let (_1, uid, tparams, _4, t) = ((), $2, $3, (), $5) in
-      ( Tycon(true, [(TyconAbbrev(uid, tparams, None, t), None)]) )}
+      ( Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) )}
 | LET letqualifier separated_nonempty_list_AND_letbinding_
     {let (_1, q, lbs) = ($1, $2, $3) in
       (
@@ -910,7 +914,7 @@ effectDefinition:
 effectDecl:
   lident binders EQUALS simpleTerm
     {let (lid, action_params, _3, t) = ($1, $2, (), $4) in
-    ( mk_decl (Tycon (false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] )}
+    ( mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
