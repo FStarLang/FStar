@@ -86,22 +86,6 @@ let rec to_all_goals (t: unit -> T.Tac unit) : T.Tac unit =
     let _ = T.divide 1 t (fun () -> to_all_goals t) in
     ()
 
-let admit_others = to_all_goals
-
-(*
-let admit_others (t: unit -> T.Tac unit) : T.Tac unit =
-  if T.ngoals () = 0
-  then ()
-  else if T.ngoals () = 1
-  then t ()
-  else
-    tfail "There should be only one goal here"
-(*    
-    let _ = T.divide 1 t (fun () -> to_all_goals tadmit) in
-    ()
-*)    
-*)
-
 let rec imm_solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
   T.first (List.Tot.append l [
     (fun () ->
@@ -144,18 +128,15 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
         tfail "More than one goal here"
       else ()
     end;
-  match T.trytac (fun () -> imm_solve_goal l) with
-  | Some _ -> ()
-  | _ ->
   begin match T.trytac tforall_intro with
   | Some _ ->
     T.print ("Applied: forall_intro");
-    admit_others (fun () -> solve_goal l)
+    to_all_goals (fun () -> solve_goal l)
   | _ ->
     begin match T.trytac timplies_intro with
     | Some _ ->
       T.print ("Applied: implies_intro");
-      admit_others (fun () -> solve_goal l)
+      to_all_goals (fun () -> solve_goal l)
     | _ ->
       begin match T.trytac tsplit with
       | Some _ ->
@@ -170,9 +151,13 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
         else
           to_all_goals (fun () -> solve_goal l)
       | _ ->
-        T.dump "MUST USE SMT FOR THIS ONE";
-        T.smt ();
-        tsuccess "smt"
+        begin match T.trytac (fun () -> imm_solve_goal l) with
+        | Some _ -> ()
+        | _ ->
+          T.dump "MUST USE SMT FOR THIS ONE";
+          T.smt ();
+          tsuccess "smt"
+        end
       end
     end
   end
@@ -187,3 +172,9 @@ let rec tconclude_with (l: list (unit -> T.Tac unit)) : T.Tac unit =
   end else T.print "No goals left"
 
 let tconclude () : T.Tac unit = tconclude_with []
+
+let according_to (pol: T.guard_policy) (t: (unit -> T.Tac unit)) : T.Tac unit =
+  match pol with
+  | T.SMT -> T.smt ()
+  | T.Drop -> T.tadmit ()
+  | _ -> T.with_policy pol t
