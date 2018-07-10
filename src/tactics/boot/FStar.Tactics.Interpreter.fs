@@ -433,7 +433,10 @@ let run_tactic_on_typ
         BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ);
     let res, ms = BU.record_time (fun () -> run_safe (tau ()) ps) in
     if !tacdbg then
-        BU.print3 "}\nTactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
+        BU.print_string "}\n";
+    if !tacdbg || Options.tactics_info () then
+        BU.print3 "Tactic %s ran in %s ms (%s)\n" (Print.term_to_string tactic) (string_of_int ms) (Print.lid_to_string env.curmodule);
+
     match res with
     | Success (_, ps) ->
         if !tacdbg then

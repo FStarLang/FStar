@@ -189,9 +189,11 @@ let defaults =
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
       ("tactics_failhard"             , Bool false);
+      ("tactics_info"                 , Bool false);
       ("tactic_raw_binders"           , Bool false);
       ("tactic_trace"                 , Bool false);
       ("tactic_trace_d"               , Int 0);
+
       ("tcnorm"                       , Bool true);
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
@@ -306,6 +308,7 @@ let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr"
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
 let get_tactics_failhard        ()      = lookup_opt "tactics_failhard"         as_bool
+let get_tactics_info            ()      = lookup_opt "tactics_info"             as_bool
 let get_tactic_trace            ()      = lookup_opt "tactic_trace"             as_bool
 let get_tactic_trace_d          ()      = lookup_opt "tactic_trace_d"           as_int
 let get_tactics_nbe             ()      = lookup_opt "__tactics_nbe"            as_bool
@@ -850,6 +853,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Do not recover from metaprogramming errors, and abort if one occurs");
 
        ( noshort,
+        "tactics_info",
+        Const (mk_bool true),
+        "Print some rough information on tactics, such as the time they take to run");
+
+       ( noshort,
         "tactic_trace",
         Const (mk_bool true),
         "Print a depth-indexed trace of tactic execution (Warning: very verbose)");
@@ -1096,6 +1104,7 @@ let settable = function
     | "normalize_pure_terms_for_extraction"
     | "tactic_raw_binders"
     | "tactics_failhard"
+    | "tactics_info"
     | "tactic_trace"
     | "tactic_trace_d"
     | "tcnorm"
@@ -1366,6 +1375,7 @@ let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactics_failhard             () = get_tactics_failhard            ()
+let tactics_info                 () = get_tactics_info                ()
 let tactic_trace                 () = get_tactic_trace                ()
 let tactic_trace_d               () = get_tactic_trace_d              ()
 let tactics_nbe                  () = get_tactics_nbe                 ()

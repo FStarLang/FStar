@@ -186,6 +186,7 @@ val smtencoding_l_arith_default : unit    -> bool
 val smtencoding_l_arith_native  : unit    -> bool
 val tactic_raw_binders          : unit    -> bool
 val tactics_failhard            : unit    -> bool
+val tactics_info                : unit    -> bool
 val tactic_trace                : unit    -> bool
 val tactic_trace_d              : unit    -> int
 val tactics_nbe                 : unit    -> bool
