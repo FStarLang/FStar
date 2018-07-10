@@ -29,7 +29,7 @@ and trywith t : Tac unit =
     (fun () -> apply t) `seq` tcresolve
 
 (* Solve an explicit argument by typeclass resolution *)
-unfold let solve (#a:Type) (#[tcresolve] ev : a) : Tot a = ev
+unfold let solve (#a:Type) (#[tcresolve ()] ev : a) : Tot a = ev
 
 (**** Generating methods from a class ****)
 
