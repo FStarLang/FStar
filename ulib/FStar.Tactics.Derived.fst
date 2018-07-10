@@ -27,6 +27,14 @@ let cur_goal () : Tac typ = goal_type (_cur_goal ())
 (** [cur_witness] returns the current goal's witness *)
 let cur_witness () : Tac term = goal_witness (_cur_goal ())
 
+(* [cur_goal_safe] will always return the current goal, without failing.
+It must be statically verified that there indeed is a goal in order to
+call it. *)
+let cur_goal_safe () : TacH goal (requires (fun ps -> ~(goals_of ps == [])))
+                                 (ensures (fun ps0 r -> exists g. r == Success g ps0))
+ = match goals_of (get ()) with
+   | g :: _ -> g
+
 (** Set the guard policy only locally, without affecting calling code *)
 let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
     let old_pol = get_guard_policy () in
