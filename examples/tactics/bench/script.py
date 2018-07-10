@@ -26,6 +26,9 @@ error_regex = re.compile(r'(Error \d+)')
 
 def run_fstar(module, options):
     result = subprocess.run([fstar_path, *options, module+'.fst'], cwd=tests_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if result.returncode != 0:
+        print('Got error, aborting: ' + result.stderr.decode('utf-8'))
+        exit ()
     return result
 
 def gen_native_plugin(module_name):
