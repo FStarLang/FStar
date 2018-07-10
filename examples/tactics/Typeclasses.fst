@@ -192,7 +192,17 @@ let elem' #a [|d : inhab a|] =
 [@ instance tcnorm]
 let inhab_unit : inhab unit = { elem = fun () -> admit #unit () }
 
-(* This will only succeed if the found instance is inlined *)
+(* This will only succeed if the found instance is inlined, sa
+ * can be seen from the failure if one uses --tcnorm false *)
 let f (u:unit) =
   let t = elem' #unit () in
   assert (forall y. y == 1)
+
+#set-options "--tcnorm false"
+
+[@expect_failure]
+let f_fail (u:unit) =
+  let t = elem' #unit () in
+  assert (forall y. y == 1)
+
+#set-options "--tcnorm true"
