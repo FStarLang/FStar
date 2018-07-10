@@ -15,10 +15,10 @@ class Config(Enum):
     smt = 3
 
 all_modules = \
-    [('Poly1', Config.smt, 'CanonCommSemiring', ['lemma_poly_multiply_smt']),
-     ('Poly2', Config.smt, 'CanonCommSemiring', ['lemma_poly_multiply_smt_manual']),
-     ('Poly3', Config.interp, 'CanonCommSemiring', ['lemma_poly_multiply_canon']),
-     ('Poly4', Config.native, 'CanonCommSemiring', ['lemma_poly_multiply_canon_native'])
+    [('bench/Poly1', Config.smt, 'CanonCommSemiring', ['lemma_poly_multiply_smt']),
+     ('bench/Poly2', Config.smt, 'CanonCommSemiring', ['lemma_poly_multiply_smt_manual']),
+     ('bench/Poly3', Config.interp, 'CanonCommSemiring', ['lemma_poly_multiply_canon']),
+     ('bench/Poly4', Config.native, 'CanonCommSemiring', ['lemma_poly_multiply_canon_native'])
     ]
 
 time_regex = re.compile(r'Checked let (?P<lemma>[a-zA-Z0-9\._]+).* in (?P<time>\d+) milliseconds\n')
@@ -27,8 +27,8 @@ error_regex = re.compile(r'(Error \d+)')
 def run_fstar(module, options):
     result = subprocess.run([fstar_path, *options, module+'.fst'], cwd=tests_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode != 0:
-        print('Got error, aborting: ' + result.stderr.decode('utf-8'))
-        exit ()
+        print('STDOUT ' + result.stdout.decode('utf-8'))
+        print('STDERR ' + result.stderr.decode('utf-8'))
     return result
 
 def gen_native_plugin(module_name):
