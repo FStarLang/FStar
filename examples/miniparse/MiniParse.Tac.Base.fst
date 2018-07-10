@@ -144,9 +144,6 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
         tfail "More than one goal here"
       else ()
     end;
-  match T.trytac (fun () -> imm_solve_goal l) with
-  | Some _ -> ()
-  | _ ->
   begin match T.trytac tforall_intro with
   | Some _ ->
     T.print ("Applied: forall_intro");
@@ -170,9 +167,13 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
         else
           to_all_goals (fun () -> solve_goal l)
       | _ ->
-        T.dump "MUST USE SMT FOR THIS ONE";
-        T.smt ();
-        tsuccess "smt"
+        begin match T.trytac (fun () -> imm_solve_goal l) with
+        | Some _ -> ()
+        | _ ->
+          T.dump "MUST USE SMT FOR THIS ONE";
+          T.smt ();
+          tsuccess "smt"
+        end
       end
     end
   end
