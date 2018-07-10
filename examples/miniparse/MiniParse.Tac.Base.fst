@@ -187,3 +187,9 @@ let rec tconclude_with (l: list (unit -> T.Tac unit)) : T.Tac unit =
   end else T.print "No goals left"
 
 let tconclude () : T.Tac unit = tconclude_with []
+
+let according_to (pol: T.guard_policy) (t: (unit -> T.Tac unit)) : T.Tac unit =
+  match pol with
+  | T.SMT -> T.smt ()
+  | T.Drop -> T.tadmit ()
+  | _ -> T.with_policy pol t

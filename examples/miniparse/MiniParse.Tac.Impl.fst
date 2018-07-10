@@ -126,18 +126,17 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
 
 let p = parse_u8 `nondep_then` parse_ret 42
 
-let gen_parser32 (p: T.term) : T.Tac unit =
-  T.set_guard_policy T.Goal;
+let gen_parser32 (pol: T.guard_policy) (p: T.term) : T.Tac unit =
   let t = gen_parser32' p in
   T.exact_guard t;
-  tconclude_with [
+  according_to pol (fun () -> tconclude_with [
     synth_inverse_forall_bounded_u8_solve;
     synth_inverse_forall_tenum_solve;
-  ];
+  ]);
   T.print "gen_parser32 spits:";
   T.print (T.term_to_string t)
 
-let q : parser32 p = T.synth_by_tactic (fun () -> gen_parser32 (`(p)))
+let q : parser32 p = T.synth_by_tactic (fun () -> gen_parser32 T.Goal (`(p)))
 
 let p' = p `nondep_then` parse_u8
 
@@ -145,7 +144,7 @@ let p' = p `nondep_then` parse_u8
 
 #push-options "--print_implicits"
 
-let q' : parser32 p' = T.synth_by_tactic (fun () -> gen_parser32 (`(p')))
+let q' : parser32 p' = T.synth_by_tactic (fun () -> gen_parser32 T.Goal (`(p')))
 
 let r : parser int =
   parse_synth
@@ -153,8 +152,8 @@ let r : parser int =
     (fun x -> x + 1)
     (fun x -> x - 1)
 
-let r' : parser32 r = T.synth_by_tactic (fun () -> gen_parser32 (`(r)))
+let r' : parser32 r = T.synth_by_tactic (fun () -> gen_parser32 T.Goal (`(r)))
 
 let j : parser TS.t = TS.package_parser TS.p
 
-let j32 : parser32 j = T.synth_by_tactic (fun () -> gen_parser32 (`(j)))
+let j32 : parser32 j = T.synth_by_tactic (fun () -> gen_parser32 T.Goal (`(j)))

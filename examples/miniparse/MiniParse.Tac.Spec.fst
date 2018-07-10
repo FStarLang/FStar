@@ -74,8 +74,7 @@ let rec gen_package' (p: T.term) : T.Tac (T.term * T.term) =
   end else
     tfail "Unknown parser combinator"
 
-let gen_package (t: T.term) : T.Tac unit =
-  T.set_guard_policy T.Goal;
+let gen_package (pol: T.guard_policy) (t: T.term) : T.Tac unit =
   let (p, s) = gen_package' t in
   let res = T.mk_app (`(mk_package)) [
     (t, T.Q_Implicit);
@@ -84,10 +83,10 @@ let gen_package (t: T.term) : T.Tac unit =
   ]
   in
   T.exact_guard res;
-  tconclude ()
+  according_to pol tconclude
 
 type u8 = FStar.UInt8.t
 
 type t = (u8 * (nlist 79 u8 * u8))
 
-let p : package t = T.synth_by_tactic (fun () -> gen_package (`t))
+let p : package t = T.synth_by_tactic (fun () -> gen_package T.Goal (`t))
