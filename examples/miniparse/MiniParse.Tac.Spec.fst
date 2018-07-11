@@ -10,17 +10,17 @@ module L = FStar.List.Tot
 noeq
 type package (t: Type0) =
   | Package :
-    (p: parser t) ->
-    (s: serializer p) ->
+    (p: parser_spec t) ->
+    (s: serializer_spec p) ->
     package t
 
-let mk_package (#t: Type0) (#p: parser t) (s: serializer p) : Tot (package t) =
+let mk_package (#t: Type0) (#p: parser_spec t) (s: serializer_spec p) : Tot (package t) =
   Package p s
 
-let package_parser (#t: Type0) (p: package t) : Tot (parser t) =
+let package_parser (#t: Type0) (p: package t) : Tot (parser_spec t) =
   Package?.p p
 
-let package_serializer (#t: Type0) (p: package t) : Tot (serializer (package_parser p)) =
+let package_serializer (#t: Type0) (p: package t) : Tot (serializer_spec (package_parser p)) =
   Package?.s p
 
 let rec gen_package' (p: T.term) : T.Tac (T.term * T.term) =
