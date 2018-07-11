@@ -3,6 +3,7 @@ include MiniParse.Tac.Base
 include MiniParse.Spec.Combinators
 include MiniParse.Spec.Int
 include MiniParse.Spec.List
+include MiniParse.Spec.TEnum
 
 module T = FStar.Tactics
 module L = FStar.List.Tot
@@ -67,12 +68,14 @@ let rec gen_package' (p: T.term) : T.Tac (T.term * T.term) =
     in
     (p', s')
   | _ -> tfail "Not enough arguments to nlist"
-  else
-  if L.length tl = 0
-  then begin
-    gen_package' (unfold_term p)
-  end else
-    tfail "Unknown parser combinator"
+  else match T.trytac (fun () -> gen_enum_specs p) with
+  | Some res -> res
+  | _ ->
+    if L.length tl = 0
+    then begin
+      gen_package' (unfold_term p)
+    end else
+      tfail "Unknown parser combinator"
 
 let gen_package (pol: T.guard_policy) (t: T.term) : T.Tac unit =
   let (p, s) = gen_package' t in
@@ -83,7 +86,12 @@ let gen_package (pol: T.guard_policy) (t: T.term) : T.Tac unit =
   ]
   in
   T.exact_guard res;
-  according_to pol tconclude
+  according_to pol (fun () -> tconclude_with [
+    synth_inverse_forall_bounded_u16_solve;
+    synth_inverse_forall_tenum_solve;  
+  ])
+
+let gen_specs = gen_package
 
 type u8 = FStar.UInt8.t
 

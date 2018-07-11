@@ -156,7 +156,7 @@ val synth_inverse_forall_bounded_u16_intro
 let synth_inverse_forall_bounded_u16_intro b t f1 f2 u
 = Classical.forall_intro (Classical.move_requires (forall_bounded_u16_elim b (synth_inverse_forall_bounded_u16_pred b t f1 f2)))
 
-let synth_inverse_forall_tenum_solve () : T.Tac unit =
+let synth_inverse_forall_tenum_solve' () : T.Tac unit =
   T.norm [delta; zeta; iota; primops];
   let x = tforall_intro () in
   T.destruct (T.pack (T.Tv_Var (T.bv_of_binder x)));
@@ -167,6 +167,23 @@ let synth_inverse_forall_tenum_solve () : T.Tac unit =
     T.trivial ();
     T.qed ()
   )
+
+let auto_squash_tm () : T.Tac T.term = T.pack (T.Tv_FVar (T.pack_fv ["Prims"; "auto_squash"]))
+
+let synth_inverse_forall_tenum_solve () : T.Tac unit =
+  let (hd, tl) = app_head_tail (T.cur_goal ()) in
+  let auto_squash = auto_squash_tm () in
+  if hd `T.term_eq` (`squash) || hd `T.term_eq` auto_squash
+  then match tl with
+  | [(g, _)] ->
+    let (hd', _) = app_head_tail g in
+    if hd' `T.term_eq` (`synth_inverse)
+    then match T.trytac synth_inverse_forall_tenum_solve' with
+    | Some _ -> ()
+    | _ -> (T.dump "synth_inverse_forall_tenum_solve FAILED here:"; tfail "synth_inverse_forall_tenum_solve failed")
+    else tfail "not a synth_inverse goal"
+  | _ -> tfail "not enough arguments to squash"
+  else tfail "not a squash"
 
 let synth_inverse_forall_bounded_u16_solve'
   (b: T.term)
@@ -189,8 +206,6 @@ let synth_inverse_forall_bounded_u16_solve'
   )
   in
   tsuccess "synth_inverse_forall_bounded_u16_solve"
-
-let auto_squash_tm () : T.Tac T.term = T.pack (T.Tv_FVar (T.pack_fv ["Prims"; "auto_squash"]))
 
 let synth_inverse_forall_bounded_u16_solve () : T.Tac unit =
   let (hd, tl) = app_head_tail (T.cur_goal ()) in
@@ -216,45 +231,42 @@ let synth_inverse_forall_bounded_u16_solve () : T.Tac unit =
   | _ -> tfail "Not enough arguments to squash"
   else tfail "Goal is not squash"
 
-(* WARNING: the following tactic may leave some VC goals behind *)
-
-let gen_enum_parser' (p: T.guard_policy) (enum: T.term) : T.Tac T.term =
+let gen_enum_specs (enum: T.term) : T.Tac (T.term * T.term) =
   let bound = tenum_bound' enum in
   let f = gen_synth_bounded' enum in
   let val_t = T.mk_app (`bounded_u16) [bound, T.Q_Explicit] in
   let val_eq = T.mk_app (`bounded_u16_eq) [bound, T.Q_Explicit] in
   let g = invert_function' enum val_t val_eq f in
-(*
-  let _ = T.tcut (T.mk_app (`squash) [T.mk_app (`synth_inverse) [
-    val_t, T.Q_Implicit;
-    enum, T.Q_Implicit;
-    g, T.Q_Explicit;
-    f, T.Q_Explicit;
-  ], T.Q_Explicit])
-  in
-  T.flip ();
-  T.focus (fun () -> according_to pol synth_inverse_forall_tenum_solve);
-  let _ = T.tcut (T.mk_app (`squash) [T.mk_app (`synth_inverse) [
-    enum, T.Q_Implicit;
-    val_t, T.Q_Implicit;
-    f, T.Q_Explicit;
-    g, T.Q_Explicit;
-  ], T.Q_Explicit])
-  in
-  T.flip ();
-  T.focus (fun () -> according_to pol synth_inverse_forall_bounded_u16_solve);
-*)  
   let pbound = T.mk_app (`parse_bounded_u16) [bound, T.Q_Explicit] in
-  T.mk_app (`parse_synth) [
-    val_t, T.Q_Implicit;
-    enum, T.Q_Implicit;
-    pbound, T.Q_Explicit;
-    g, T.Q_Explicit;
-    f, T.Q_Explicit;
-  ]
+  let sbound = T.mk_app (`serialize_bounded_u16) [bound, T.Q_Explicit] in
+  let p' =
+    T.mk_app (`parse_synth) [
+      val_t, T.Q_Implicit;
+      enum, T.Q_Implicit;
+      pbound, T.Q_Explicit;
+      g, T.Q_Explicit;
+      f, T.Q_Explicit;
+    ]
+  in
+  let s' =
+    T.mk_app (`serialize_synth) [
+      val_t, T.Q_Implicit;
+      enum, T.Q_Implicit;
+      pbound, T.Q_Implicit;
+      sbound, T.Q_Explicit;
+      g, T.Q_Explicit;
+      f, T.Q_Explicit;
+      (`()), T.Q_Explicit;
+    ]
+  in
+  (p', s')
+
+
+let gen_enum_parser' (enum: T.term) : T.Tac T.term =
+  let (p', _) = gen_enum_specs enum in p'
 
 let gen_enum_parser (pol: T.guard_policy) (enum: T.term) : T.Tac unit =
-  T.exact_guard (gen_enum_parser' pol enum);
+  T.exact_guard (gen_enum_parser' enum);
   according_to pol (fun () -> tconclude_with [
     synth_inverse_forall_bounded_u16_solve;
     synth_inverse_forall_tenum_solve;
