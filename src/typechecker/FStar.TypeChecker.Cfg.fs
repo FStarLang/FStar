@@ -774,8 +774,10 @@ let plugins =
   register, retrieve
 
 let register_plugin p = fst plugins p
-let retrieve_plugins () = snd plugins ()
-
+let retrieve_plugins () =
+    if Options.no_plugins ()
+    then []
+    else snd plugins ()
 
 let config' psteps s e =
     let d = s |> List.collect (function
