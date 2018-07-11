@@ -5,8 +5,8 @@ INCLUDE_PATHS=$(KREMLIN_HOME)/kremlib ..
 EXCLUDED_FSTAR_FILES=PolyStub.fst
 
 POLYS=$(foreach FACTOR,1 2 3,\
-      $(foreach SE, 0 1 2 3 4 5 6 7 8 9,\
-      $(foreach ED, 0 1 2 3 4 5 6 7 8 9,\
+      $(foreach SE, 0 1,\
+      $(foreach ED, 0 1,\
       $(foreach MODE, None Canon CanonNative,\
        Bench.Poly.$(MODE).Factor$(FACTOR).Seed$(SE)$(ED).fst ))))
 
