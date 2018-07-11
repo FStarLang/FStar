@@ -316,12 +316,12 @@ let nonempty_strong_parser_consumes_at_least_one_byte
     if len' > 0
     then ()
     else begin
-      assert (no_lookahead_weak_on p x' Seq.createEmpty);
-      assert (no_lookahead_on p Seq.createEmpty x);
-      assert (no_lookahead_on_precond p Seq.createEmpty x);
-      assert (no_lookahead_on_postcond p Seq.createEmpty x);
-      assert (injective_precond p Seq.createEmpty x);
-      assert (injective_postcond p Seq.createEmpty x)
+      assert (no_lookahead_weak_on p x' Seq.empty);
+      assert (no_lookahead_on p Seq.empty x);
+      assert (no_lookahead_on_precond p Seq.empty x);
+      assert (no_lookahead_on_postcond p Seq.empty x);
+      assert (injective_precond p Seq.empty x);
+      assert (injective_postcond p Seq.empty x)
     end
   in
   Classical.forall_intro (Classical.move_requires prf)

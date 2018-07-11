@@ -83,6 +83,9 @@ let as_list as_t x =
 let as_option as_t = function
   | Unset -> None
   | v -> Some (as_t v)
+let as_comma_string_list = function
+  | List ls -> List.flatten <| List.map (fun l -> split (as_string l) ",") ls
+  | _ -> failwith "Impos: expected String (comma list)"
 
 type optionstate = Util.smap<option_val>
 
@@ -115,6 +118,7 @@ let defaults =
      [
       ("__temp_no_proj"               , List []);
       ("__temp_fast_implicits"        , Bool false);
+      ("abort_on"                     , Int 0);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
       ("cache_checked_modules"        , Bool false);
@@ -186,6 +190,7 @@ let defaults =
       ("tactic_raw_binders"           , Bool false);
       ("tactic_trace"                 , Bool false);
       ("tactic_trace_d"               , Int 0);
+      ("tcnorm"                       , Bool true);
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
       ("ugly"                         , Bool false);
@@ -207,6 +212,7 @@ let defaults =
       ("use_two_phase_tc"             , Bool true);
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
+      ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , String "");
       ("use_extracted_interfaces"     , Bool false)]
 
@@ -231,6 +237,7 @@ let get_option s =
 let lookup_opt s c =
   c (get_option s)
 
+let get_abort_on                ()      = lookup_opt "abort_on"                 as_int
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
@@ -239,7 +246,7 @@ let get_cache_off               ()      = lookup_opt "cache_off"                
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
-let get_debug_level             ()      = lookup_opt "debug_level"              (as_list as_string)
+let get_debug_level             ()      = lookup_opt "debug_level"              as_comma_string_list
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
@@ -297,6 +304,8 @@ let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" 
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
 let get_tactic_trace            ()      = lookup_opt "tactic_trace"             as_bool
 let get_tactic_trace_d          ()      = lookup_opt "tactic_trace_d"           as_int
+let get_tactics_nbe             ()      = lookup_opt "__tactics_nbe"            as_bool
+let get_tcnorm                  ()      = lookup_opt "tcnorm"                   as_bool
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
@@ -487,8 +496,17 @@ let pp_validate_dir p =
 let pp_lowercase s =
   mk_string (String.lowercase (as_string s))
 
+let abort_counter : ref<int> =
+    mk_ref 0
+
 let rec specs_with_types () : list<(char * string * opt_type * string)> =
      [( noshort,
+        "abort_on",
+        PostProcessed ((function Int x -> abort_counter := x; Int x
+                               | x -> failwith "?"), IntStr "non-negative integer"),
+        "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)");
+
+      ( noshort,
         "admit_smt_queries",
         BoolStr,
         "Admit SMT queries, unsafe! (default 'false')");
@@ -833,6 +851,16 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Trace tactics up to a certain binding depth");
 
        ( noshort,
+        "__tactics_nbe",
+        Const (mk_bool true),
+        "Use NBE to evaluate metaprograms (experimental)");
+
+       ( noshort,
+        "tcnorm",
+        BoolStr,
+        "Attempt to normalize definitions marked as tcnorm (default 'true')");
+
+       ( noshort,
         "timing",
         Const (mk_bool true),
         "Print the time it takes to verify each top-level definition");
@@ -996,6 +1024,7 @@ and specs () : list<FStar.Getopt.opt> = // FIXME: Why does the interactive mode 
 //Several options can only be set at the time the process is created, and not controlled interactively via pragmas
 //Additionaly, the --smt option is a security concern
 let settable = function
+    | "abort_on"
     | "admit_smt_queries"
     | "admit_except"
     | "debug"
@@ -1041,6 +1070,8 @@ let settable = function
     | "tactic_raw_binders"
     | "tactic_trace"
     | "tactic_trace_d"
+    | "tcnorm"
+    | "__tactics_nbe"
     | "__temp_fast_implicits"
     | "__temp_no_proj"
     | "reuse_hint_for"
@@ -1307,6 +1338,8 @@ let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactic_trace                 () = get_tactic_trace                ()
 let tactic_trace_d               () = get_tactic_trace_d              ()
+let tactics_nbe                  () = get_tactics_nbe                 ()
+let tcnorm                       () = get_tcnorm                      ()
 let timing                       () = get_timing                      ()
 let trace_error                  () = get_trace_error                 ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()

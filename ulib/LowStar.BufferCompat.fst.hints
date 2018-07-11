@@ -1,26 +1,19 @@
 [
-  "UOq‰;.K\u0012ALv{∏x…^",
+  "\u0005Féó”˙À;‚Uµ\u0002\u001fNÙf",
   [
     [
-      "LowStar.BufferCompat.rfree",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "0ba762a84a01fa857f6ce69cf0552d6e"
-    ],
-    [
       "LowStar.BufferCompat.rcreate",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55",
+        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_d0636e9ebd413cbbf5e3e3257e4ec277"
       ],
       0,
-      "38a343fdb70b1fc5daa39a916a53aa65"
+      "bb81ed1c49ff935436c55eb8e2a9f310"
     ],
     [
       "LowStar.BufferCompat.rcreate_mm",
@@ -29,10 +22,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
       ],
       0,
-      "ce6ba1fdfa8438918668dca9b09f5ff0"
+      "57d27f7ae034a0f41a756741c402c680"
     ],
     [
       "LowStar.BufferCompat.create",
@@ -41,19 +35,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_f91c442f4e872efb5dc260d2bd566195"
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_9b063033f9f8b075fbdcde91a96a63d9"
       ],
       0,
-      "d065e9dfd1901a7b6f1f846722b0c6d3"
-    ],
-    [
-      "LowStar.BufferCompat.rfree",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c56a1848c4c6dbdf5ba4a23f929211bf"
+      "b648aef220c6e61dd65335308fc58451"
     ],
     [
       "LowStar.BufferCompat.rcreate",
@@ -62,10 +48,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
       ],
       0,
-      "c585af74bc03ae70674067efc82b9f21"
+      "a2f833e5de8e6942ded04134463543d5"
     ],
     [
       "LowStar.BufferCompat.rcreate_mm",
@@ -74,10 +61,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_5b03403a8d3fa4c655ec2b3c1e1359f8"
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
       ],
       0,
-      "14841ec346f593e3f828f3996b281c8e"
+      "fb51a1375bf99201b505811547398d2f"
     ],
     [
       "LowStar.BufferCompat.create",
@@ -86,10 +74,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_f91c442f4e872efb5dc260d2bd566195"
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "refinement_interpretation_LowStar.BufferCompat_Tm_refine_9b063033f9f8b075fbdcde91a96a63d9"
       ],
       0,
-      "85ae3f0f3091e4ff48413f245736d9a4"
+      "2ce98e5aac3c0e21054ba7fe641525b8"
     ]
   ]
 ]

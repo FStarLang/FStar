@@ -20,9 +20,12 @@ val tc_binders: env -> binders -> binders * env * guard_t * universes
 val tc_term: env -> term -> term * lcomp * guard_t
 val tc_maybe_toplevel_term: env -> term -> term * lcomp * guard_t
 val tc_comp: env -> comp -> comp * universe * guard_t
+val tc_pat : Env.env -> bool -> typ -> pat -> pat * list<bv> * Env.env * term * guard_t * term
 val type_of_tot_term: env -> term -> term * typ * guard_t
 val universe_of: env -> term -> universe
-val check_type_of_well_typed_term: bool -> env -> term -> typ -> guard_t
+
+val check_type_of_well_typed_term: bool -> env -> term -> typ -> guard_t  // guarded by --__temp_fast_implicits
+val check_type_of_well_typed_term': bool -> env -> term -> typ -> guard_t // always fast
 
 val tc_tot_or_gtot_term: env -> term -> term * lcomp * guard_t
 val tc_check_tot_or_gtot_term: env -> term -> typ -> term * lcomp * guard_t

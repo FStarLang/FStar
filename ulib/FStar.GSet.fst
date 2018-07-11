@@ -144,3 +144,13 @@ let comprehend_mem (#a: Type) (f: (a -> GTot bool)) (x: a) : Lemma
   (mem x (comprehend f) == f x)
   [SMTPat (mem x (comprehend f))]
 = ()
+
+abstract
+let of_set (#a: eqtype) (f: Set.set a) : Tot (set a) =
+  (fun x -> Set.mem x f)
+
+abstract
+let mem_of_set (#a: eqtype) (f: Set.set a) (x: a) : Lemma
+  (mem x (of_set f) <==> Set.mem x f)
+  [SMTPat (mem x (of_set f))]
+= ()

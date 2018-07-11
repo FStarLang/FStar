@@ -85,10 +85,10 @@ let mk_by_tactic tac f =
 let rec delta_depth_greater_than l m = match l, m with
     | Delta_equational_at_level i, Delta_equational_at_level j -> i > j
     | Delta_constant_at_level i,   Delta_constant_at_level j   -> i > j
-    | Delta_equational_at_level _, _                           -> true
-    | _, Delta_equational_at_level _                           -> false
     | Delta_abstract d, _                                      -> delta_depth_greater_than d m
     | _, Delta_abstract d                                      -> delta_depth_greater_than l d
+    | Delta_equational_at_level _, _                           -> true
+    | _, Delta_equational_at_level _                           -> false
 
 let rec decr_delta_depth = function
     | Delta_constant_at_level 0

@@ -10,7 +10,13 @@ open FStar.Reflection.Data
 open FStar.Tactics.Types
 
 (** Simply fail *)
-assume val fail : #a:Type -> string -> Tac a
+assume val fail : #a:Type -> m:string -> TAC a (fun ps post -> post (FStar.Tactics.Result.Failed m ps))
+
+// NOTE: The only reason `fail` is assumed as a primitive is to enable
+// the TacFail debugging flag. We could instead define it like this,
+// obtaining the exact same spec and runtime behaviour (minus the
+// debugging flag).
+(* let fail = fail_act *)
 
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
@@ -66,12 +72,13 @@ any type. This will fail at tactic runtime if the quoted term does not
 typecheck to type [a]. *)
 assume val unquote : #a:Type -> term -> Tac a
 
-assume private val __trytac : #a:Type -> __tac a -> __tac (option a)
-(** [trytac t] will attempt to run [t] and allow to recover from a failure.
-If [t] succeeds with return value [a], [trytac t] returns [Some a].
-On failure, it returns [None]. See also [or_else].
+assume private val __catch : #a:Type -> __tac a -> __tac (either string a)
+(** [catch t] will attempt to run [t] and allow to recover from a failure.
+If [t] succeeds with return value [a], [catch t] returns [Inr a].
+On failure, it returns [Inl msg], where [msg] is the error [t]
+raised. See also [or_else].
 *)
-let trytac (t : unit -> Tac 'a) = TAC?.reflect (__trytac (reify (t ())))
+let catch (t : unit -> Tac 'a) = TAC?.reflect (__catch (reify (t ())))
 
 (** [trivial] will discharge the goal if it's exactly [True] after
 doing normalization and simplification of it. *)
@@ -165,19 +172,24 @@ with a single goal (they're "focused"). *)
 let seq (f:unit -> Tac unit) (g:unit -> Tac unit) : Tac unit =
   TAC?.reflect (__seq (reify (f ())) (reify (g ())))
 
-(** boolean is whether to set the expected type internally.
- * Just use `exact` from FStar.Tactics.Derived if you don't know what that means. *)
-assume val t_exact : bool -> term -> Tac unit
+(** First boolean is whether to attempt to intrpoduce a refinement
+before solving. In that case, a goal for the refinement formula will be
+added. Second boolean is whether to set the expected type internally.
+Just use `exact` from FStar.Tactics.Derived if you don't know what's up
+with all this. *)
+assume val t_exact : bool -> bool -> term -> Tac unit
 
-(** [apply f] will attempt to produce a solution to the goal by an application
-of [f] to any amount of arguments (which need to be solved as further goals).
-The amount of arguments introduced is the least such that [f a_i] unifies
-with the goal's type. *)
-assume val apply : term -> Tac unit
+(** Inner primitive for [apply], takes a boolean specifying whether
+to not ask for implicits that appear free in posterior goals. Example:
+when the boolean is true, applying transitivity to
+[|- a = c] will give two goals, [|- a = ?u] and [|- ?u = c] without
+asking to instantiate [?u] since it will most likely be constrained
+later by solving these goals. In any case, we track [?u] and will fail
+if it's not solved later.
 
-(** [apply_raw f] is like [apply], but will ask for all arguments regardless
-of whether they appear free in further goals. *)
-assume val apply_raw : term -> Tac unit
+You probably want [apply] from FStar.Tactics.Derived.
+*)
+assume val t_apply : bool -> term -> Tac unit
 
 (** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a Lemma
 ensuring [phi]. The arguments to [l] and its requires clause are introduced as new goals.
@@ -226,13 +238,13 @@ assume val __topdown_rewrite : (term -> __tac (bool * int)) -> __tac unit -> __t
     of the form [Gamma |= t == ?u]. When [rw] proves the goal,
     the engine will rewrite [t] for [?u] in the original goal
     type.
-    
+
     The goal formula is traversed top-down and the traversal can be
     controlled by [snd (ctrl t)]:
-    
+
     When [snd (ctrl t) = 0], the traversal continues down through the
     position in the goal term.
-    
+
     When [snd (ctrl t) = 1], the traversal continues to the next
     sub-tree of the goal.
 
@@ -259,6 +271,7 @@ assume val dup : unit -> Tac unit
 
 (** Flip the order of the first two goals. *)
 assume val flip : unit -> Tac unit
+assume val join : unit -> Tac unit
 
 (** Succeed if there are no more goals left, and fail otherwise. *)
 assume val qed : unit -> Tac unit
@@ -280,6 +293,13 @@ the second (TODO: change this awful behaviour).
 *)
 assume val cases : term -> Tac (term * term)
 
+(** Destruct a value of an inductive type by matching on it. The generated
+match has one branch for each constructor and is therefore trivially
+exhaustive, no VC is generated for that purpose. It returns a list
+with the fvars of each constructor and their arities, in the order
+they appear as goals. *)
+assume val t_destruct : term -> Tac (list (fv * nat))
+
 (** Set command line options for the current goal. Mostly useful to
 change SMT encoding options such as [set_options "--z3rlimit 20"]. *)
 assume val set_options : string -> Tac unit
@@ -293,7 +313,7 @@ assume val uvar_env : env -> option typ -> Tac term
 whether unification was possible. When the tactic returns true, the
 terms have been unified, instantiating uvars as needed. When false,
 unification was not possible and no change to uvars occurs. *)
-assume val unify : term -> term -> Tac bool
+assume val unify_env : env -> term -> term -> Tac bool
 
 (** Launches an external process [prog] with arguments [args] and input
 [input] and returns the output. For security reasons, this can only be
@@ -319,6 +339,10 @@ assume val get_guard_policy : unit -> Tac guard_policy
 (** Set the current guard policy. See [get_guard_policy} for an explanation *)
 assume val set_guard_policy : guard_policy -> Tac unit
 
+(** [lax_on] returns true iff the current environment has the
+`--lax` option set, and thus drops all verification conditions. *)
+assume val lax_on : unit -> Tac bool
+
 (** Ignore the current goal. If left unproven, this will fail after
 the tactic finishes. *)
 assume val dismiss : unit -> Tac unit
@@ -331,3 +355,6 @@ assume val inspect : term -> Tac term_view
 
 (** Pack a term view on a fully-named representation back into a term *)
 assume val pack    : term_view -> Tac term
+
+assume val lget     : #a:Type -> string -> Tac a
+assume val lset     : #a:Type -> string -> a -> Tac unit

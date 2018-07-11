@@ -1,4 +1,5 @@
 module Bug1091
+//disabling of two phase tc here is intentional, as the bug happens only then
 #set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1 --use_two_phase_tc false"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -11,13 +12,13 @@ type jun21_2017_t = { low: U64.t; high: U64.t }
 
 assume val jun21_2017_v: jun21_2017_t -> n:nat{n < pow2 128}
 
-[@ (fail [66;19])]
+[@ (expect_failure [66;19])]
 let jun21_2017_logand_fail (a b: jun21_2017_t) : Pure jun21_2017_t
   (requires True)
   (ensures (fun r -> jun21_2017_v r = UInt.logand (jun21_2017_v a) (jun21_2017_v b))) = a
 
 assume val jun21_2017_vv: jun21_2017_t -> UInt.uint_t 128
-[@ (fail [19])]
+[@ (expect_failure [19])]
 let jun21_2017_logand (a b: jun21_2017_t) : Pure jun21_2017_t
   (requires True)
   (ensures (fun r -> jun21_2017_vv r = UInt.logand (jun21_2017_vv a) (jun21_2017_vv b))) = a
@@ -76,7 +77,7 @@ let rec apr19_2017_mem #a x xs =
         | [] -> false
         | hd :: tl -> if x = hd then true else apr19_2017_mem x tl
 
-[@ (FStar.Pervasives.fail [19;19;19])]
+[@ (expect_failure [19;19;19])]
 let apr19_2017_mem_sanity_fail #a x xs =
         assert_by_tactic (apr19_2017_mem x xs <==> apr19_2017_mem x xs) idtac
 
@@ -86,7 +87,7 @@ let apr19_2017_mem_sanity (#a:eqtype) (x:a) xs =
 ////////////////////////////////////////////////////////////////////////////////
 //April 21, 2017
 ////////////////////////////////////////////////////////////////////////////////
-[@ (FStar.Pervasives.fail [19])]
+[@ (expect_failure [19])]
 let rec apr21_2017_ackermann_fail m n =
   if m=0 then n + 1
   else if n = 0 then apr21_2017_ackermann_fail (m - 1) 1

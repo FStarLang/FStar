@@ -1,0 +1,115 @@
+[
+  "õ0\u0019QÕÒ\u0003Rç…áÃÊ\u000bB„",
+  [
+    [
+      "MiniParse.Impl.Base.parser32",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.UInt32.n", "equation_MiniParse.Spec.Base.byte",
+        "equation_MiniParse.Spec.Base.consumed_length", "equation_Prims.nat",
+        "function_token_typing_FStar.UInt32.n",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_cd046bc4a887ee7e1b05946e0bf5772b",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "7fdc30911f444d035f84a1cbf96f6bfb"
+    ],
+    [
+      "MiniParse.Impl.Base.coerce_parser32",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_MiniParse.Spec.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d"
+      ],
+      0,
+      "32652c00fb6fe623ca25fe9c2b8605ab"
+    ],
+    [
+      "MiniParse.Impl.Base.serializer32",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.UInt32_pretyping_041e3a67a2d2b51fd702f1f88cfc3b44",
+        "bool_inversion", "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "function_token_typing_FStar.UInt32.t",
+        "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_MiniParse.Impl.Base_Tm_refine_2c59a9baf159d6c046988ed35c4a8351",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "af1aa68a759a9150adab465c36a350ba"
+    ],
+    [
+      "MiniParse.Impl.Base.parser32",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.UInt32.n", "equation_MiniParse.Spec.Base.byte",
+        "equation_MiniParse.Spec.Base.consumed_length", "equation_Prims.nat",
+        "function_token_typing_FStar.UInt32.n",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_cd046bc4a887ee7e1b05946e0bf5772b",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "ed4c3a68d3191a51fbfe69bfa9b9e0f2"
+    ],
+    [
+      "MiniParse.Impl.Base.coerce_parser32",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_MiniParse.Spec.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d"
+      ],
+      0,
+      "cdfa8509a12d2112ad56e7728c4e7352"
+    ],
+    [
+      "MiniParse.Impl.Base.coerce_parser32",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_MiniParse.Spec.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d"
+      ],
+      0,
+      "0fce277c76118a3d0fac32de9581a3c7"
+    ],
+    [
+      "MiniParse.Impl.Base.serializer32",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.UInt32_pretyping_041e3a67a2d2b51fd702f1f88cfc3b44",
+        "bool_inversion", "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "function_token_typing_FStar.UInt32.t",
+        "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_MiniParse.Impl.Base_Tm_refine_2c59a9baf159d6c046988ed35c4a8351",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "bba2a8fe80821020660a44664df2df24"
+    ]
+  ]
+]

@@ -20,6 +20,9 @@ module FStar.Seq.Properties
 open FStar.Seq.Base
 module Seq = FStar.Seq.Base
 
+let lseq (a: Type) (l: nat) : Type =
+    s: Seq.seq a { Seq.length s == l }
+
 let indexable (#a:Type) (s:Seq.seq a) (j:int) = 0 <= j /\ j < Seq.length s
 
 val lemma_append_inj_l: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a{length s1 = length t1 /\ equal (append s1 s2) (append t1 t2)} -> i:nat{i < length s1}
@@ -230,24 +233,23 @@ let rec sorted_concat_lemma #a f lo pivot hi =
         lemma_append_cons lo (cons pivot hi);
         lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
 
-#set-options "--max_fuel 1 --initial_fuel 1 --z3rlimit 30"
 abstract val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
   (requires True)
   (ensures (fun x ->
-            ((length x = 5)
-             /\ (s == append (index x 0) (append (index x 1) (append (index x 2) (append (index x 3) (index x 4)))))
+            (length x = 5
+             /\ equal s (append (index x 0) (append (index x 1) (append (index x 2) (append (index x 3) (index x 4)))))
              /\ equal (index x 0) (slice s 0 i)
              /\ equal (index x 1) (slice s i (i+1))
              /\ equal (index x 2) (slice s (i+1) j)
              /\ equal (index x 3) (slice s j (j + 1))
              /\ equal (index x 4) (slice s (j + 1) (length s)))))
 let split_5 #a s i j =
-  let frag_lo, rest  = split_eq s i in
-  let frag_i,  rest  = split_eq rest 1 in
-  let frag_mid,rest  = split_eq rest (j - (i + 1)) in
-  let frag_j,frag_hi = split_eq rest 1 in
+  let frag_lo = slice s 0 i in
+  let frag_i = slice s i (i + 1) in
+  let frag_mid = slice s (i + 1) j in
+  let frag_j = slice s j (j + 1) in
+  let frag_hi = slice s (j + 1) (length s) in
   upd (upd (upd (upd (create 5 frag_lo) 1 frag_i) 2 frag_mid) 3 frag_j) 4 frag_hi
-#reset-options
 
 val lemma_swap_permutes_aux_frag_eq: #a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s}
                           -> i':nat -> j':nat{i' <= j' /\ j'<=length s /\
@@ -623,7 +625,7 @@ let rec seq_to_list #a s =
 val seq_of_list: #a:Type -> l:list a -> Tot (s:seq a{L.length l = length s})
 let rec seq_of_list #a l =
   match l with
-  | [] -> createEmpty #a
+  | [] -> Seq.empty #a
   | hd::tl -> create 1 hd @| seq_of_list tl
 
 val lemma_seq_list_bij: #a:Type -> s:seq a -> Lemma
@@ -694,7 +696,7 @@ let contains_elim (#a:Type) (s:seq a) (x:a)
 	  (exists (k:nat). k < Seq.length s /\ Seq.index s k == x))
   = ()
 
-let lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.createEmpty x)) = ()
+let lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.empty x)) = ()
 
 let lemma_contains_singleton (#a:Type) (x:a) : Lemma (forall (y:a). contains (create 1 x) y ==> y == x) = ()
 
@@ -870,9 +872,9 @@ let slice_is_empty
   (i: nat {i <= length s})
 : Lemma
   (requires True)
-  (ensures (slice s i i == createEmpty))
+  (ensures (slice s i i == Seq.empty))
   [SMTPat (slice s i i)]
-= lemma_eq_elim (slice s i i) createEmpty
+= lemma_eq_elim (slice s i i) Seq.empty
 
 let slice_length
   (#a: Type)
@@ -922,3 +924,21 @@ let rec mem_seq_of_list
      lemma_mem_inversion (seq_of_list l)
     in
     mem_seq_of_list x q
+
+let lemma_of_list_induction (#a:Type) (l:list a)
+  :Lemma (match l with
+          | [] -> Seq.equal (Seq.of_list #a []) (Seq.empty #a)
+	  | hd::tl -> Seq.equal (Seq.of_list l) (cons hd (Seq.of_list tl)))
+  = match l with
+    | [] -> lemma_of_list_length l; lemma_empty (Seq.of_list #a [])
+    | _ ->
+      lemma_of_list_length l;
+      let aux (i:nat)
+        :Lemma (ensures  (i < List.Tot.length l ==>
+	                  Seq.index (Seq.of_list l) i == List.Tot.index l i))
+        = ()
+      in
+      FStar.Classical.forall_intro aux
+
+
+

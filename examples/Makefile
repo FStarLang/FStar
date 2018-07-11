@@ -20,6 +20,7 @@ incl \
 struct \
 micro-benchmarks \
 tactics \
+miniparse \
 kv_parsing \
 lowparse \
 vale \

@@ -25,7 +25,10 @@ let tr_repr_steps =
               | Delta         -> EMB.Delta
               | Zeta          -> EMB.Zeta
               | Iota          -> EMB.Iota
+              | NBE           -> EMB.NBE
+              | Reify         -> EMB.Reify
               | UnfoldOnly ss -> EMB.UnfoldOnly ss
+              | UnfoldFully ss -> EMB.UnfoldFully ss
     in List.map tr1
 
 let to_tac_0 (t: 'a __tac): 'a B.tac =
@@ -84,9 +87,8 @@ let clear_top               = from_tac_1 B.clear_top
 let clear                   = from_tac_1 B.clear
 let rewrite                 = from_tac_1 B.rewrite
 let smt                     = from_tac_1 B.smt
-let t_exact                 = from_tac_2 B.t_exact
-let apply                   = from_tac_1 (B.apply true)
-let apply_raw               = from_tac_1 (B.apply false)
+let t_exact                 = from_tac_3 B.t_exact
+let t_apply                 = from_tac_2 B.t_apply
 let apply_lemma             = from_tac_1 B.apply_lemma
 let print                   = from_tac_1 B.print
 let debug                   = from_tac_1 B.debug
@@ -100,23 +102,38 @@ let qed                     = from_tac_1 B.qed
 let prune                   = from_tac_1 B.prune
 let addns                   = from_tac_1 B.addns
 let cases                   = from_tac_1 B.cases
+let t_destruct              = from_tac_1 B.t_destruct
 let set_options             = from_tac_1 B.set_options
 let uvar_env                = from_tac_2 B.uvar_env
-let unify                   = from_tac_2 B.unify
+let unify_env               = from_tac_3 B.unify_env
 let launch_process          = from_tac_3 B.launch_process
 let fresh_bv_named          = from_tac_2 B.fresh_bv_named
 let change                  = from_tac_1 B.change
 let get_guard_policy        = from_tac_1 B.get_guard_policy
 let set_guard_policy        = from_tac_1 B.set_guard_policy
+let lax_on                  = from_tac_1 B.lax_on
 let dismiss                 = from_tac_1 B.dismiss
 let tadmit                  = from_tac_1 B.tadmit
 let inspect                 = from_tac_1 B.inspect
 let pack                    = from_tac_1 B.pack
 
+(* sigh *)
+let fix_either (s : ('a, 'b) FStar_Util.either) : ('a, 'b) FStar_Pervasives.either =
+    match s with
+    | FStar_Util.Inl a -> FStar_Pervasives.Inl a
+    | FStar_Util.Inr b -> FStar_Pervasives.Inr b
+
+(* SIGH *)
+let fmap f r =
+    match r with
+    | Success (a, ps) -> Success (f a, ps)
+    | Failed (msg, ps) -> Failed (msg, ps)
+
 (* Those that need some reification. Maybe we can do this somewhere else
  * or automatically, but keep it for now *)
-let __trytac (t: 'a __tac): ('a option) __tac = from_tac_1 B.trytac (to_tac_0 t)
-let trytac: (unit -> 'a __tac) -> ('a option) __tac = fun t -> __trytac (E.reify_tactic t)
+let __catch (t: 'a __tac): ((string, 'a) FStar_Pervasives.either) __tac =
+        fun ps -> fmap fix_either (from_tac_1 B.catch (to_tac_0 t) ps)
+let catch: (unit -> 'a __tac) -> ((string, 'a) FStar_Pervasives.either) __tac = fun t -> __catch (E.reify_tactic t)
 
 let __divide (n:int) (f: 'a __tac) (g: 'b __tac): ('a * 'b) __tac = from_tac_3 B.divide n (to_tac_0 f) (to_tac_0 g)
 let divide: int -> (unit -> 'a __tac) -> (unit -> 'b __tac) -> ('a * 'b) __tac =

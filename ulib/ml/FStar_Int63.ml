@@ -65,5 +65,5 @@ let op_Less_Hat = lt
 let op_Less_Equals_Hat = lte
 
 let to_string = string_of_int
-let int_to_t s = s
+let int_to_t s = int_to_int63 s
 let __int_to_t = int_to_t

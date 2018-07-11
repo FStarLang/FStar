@@ -4,8 +4,10 @@ module FStar.Tactics.Types
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
+module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module Range = FStar.Range
+module BU = FStar.Util
 
 (*
    f: x:int -> P
@@ -33,16 +35,18 @@ type guard_policy =
 type proofstate = {
     main_context : env;          //the shared top-level context for all goals
     main_goal    : goal;         //this is read only; it helps keep track of the goal we started working on initially
-    all_implicits: implicits ;   //all the implicits currently open, partially resolved (unclear why we really need this)
+    all_implicits: implicits ;   //all the implicits currently open, partially resolved
     goals        : list<goal>;   //all the goals remaining to be solved
     smt_goals    : list<goal>;   //goals that have been deferred to SMT
     depth        : int;          //depth for tracing and debugging
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying circularity
-    psc          : N.psc;        //primitive step context where we started execution
+    psc          : Cfg.psc;        //primitive step context where we started execution
     entry_range  : Range.range;  //position of entry, set by the use
     guard_policy : guard_policy; //guard policy: what to do with guards arising during tactic exec
     freshness    : int;          //a simple freshness counter for the fresh tactic
     tac_verb_dbg : bool;         //whether to print verbose debugging messages
+
+    local_state  : BU.psmap<term>; // local metaprogram state
 }
 
 val decr_depth : proofstate -> proofstate
@@ -52,7 +56,7 @@ val set_proofstate_range : proofstate -> Range.range -> proofstate
 
 val subst_proof_state: subst_t -> proofstate -> proofstate
 
-val set_ps_psc : N.psc -> proofstate -> proofstate
+val set_ps_psc : Cfg.psc -> proofstate -> proofstate
 val goal_env: goal -> env
 val goal_witness: goal -> term
 val goal_type: goal -> term

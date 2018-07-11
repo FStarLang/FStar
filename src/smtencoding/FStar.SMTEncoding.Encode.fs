@@ -567,10 +567,10 @@ let encode_top_level_let :
 
             (* have another go, after unfolding all definitions *)
             | _ when not norm ->
-              let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.Weak; N.HNF;
+              let t_norm = N.normalize [Env.AllowUnboundUniverses; Env.Beta; Env.Weak; Env.HNF;
                                         (* we don't know if this will terminate; so don't do recursive steps *)
-                                        N.Exclude N.Zeta;
-                                        N.UnfoldUntil delta_constant; N.EraseUniverses] env.tcenv t_norm
+                                        Env.Exclude Env.Zeta;
+                                        Env.UnfoldUntil delta_constant; Env.EraseUniverses] env.tcenv t_norm
               in
                 aux true t_norm
 
@@ -938,7 +938,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_assume(l, us, f) ->
         let uvs, f = SS.open_univ_vars us f in
         let env = { env with tcenv = Env.push_univ_vars env.tcenv uvs } in
-        let f = N.normalize [N.Beta; N.Eager_unfolding] env.tcenv f in
+        let f = N.normalize [Env.Beta; Env.Eager_unfolding] env.tcenv f in
         let f, decls = encode_formula f env in
         let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^l.str)))] in
         decls@g, env
@@ -1291,7 +1291,7 @@ let encode_env_bindings (env:env_t) (bindings:list<S.binding>) : (decls_t * env_
           i+1, decls, env
 
         | S.Binding_var x ->
-            let t1 = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops; N.EraseUniverses] env.tcenv x.sort in
+            let t1 = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.EraseUniverses] env.tcenv x.sort in
             if Env.debug env.tcenv <| Options.Other "SMTEncoding"
             then (BU.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
             let t, decls' = encode_term t1 env in
@@ -1452,7 +1452,7 @@ let encode_query use_env_msg tcenv q
                       //if the assumption is of the form x:(forall y. P) etc.
                     | _ ->
                       x.sort in
-                let t = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify; N.Primops; N.EraseUniverses] env.tcenv t in
+                let t = N.normalize [Env.Eager_unfolding; Env.Beta; Env.Simplify; Env.Primops; Env.EraseUniverses] env.tcenv t in
                 Syntax.mk_binder ({x with sort=t})::out, rest
             | _ -> [], bindings in
         let closing, bindings = aux tcenv.gamma in

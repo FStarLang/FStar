@@ -35,7 +35,7 @@ let hide s = s
 let hide_reveal x = ()
 let reveal_hide x = ()
 
-let empty_bytes = S.createEmpty
+let empty_bytes = S.Seq.empty
 let empty_unique b = S.lemma_empty b
 
 let get b i = Seq.index b (U32.v i)
@@ -334,7 +334,7 @@ let utf8_encode s =
 // val get_binary: n:nat -> Tot (bytes)
 // let rec get_binary n =
 //   match n with
-//   | 0 -> Seq.createEmpty
+//   | 0 -> Seq.empty
 //   | _ -> Seq.append (get_binary (n / 2)) (of_list [U8.uint_to_t (n % 2)])
 // *)
 // (*
@@ -345,14 +345,14 @@ let utf8_encode s =
 //   | 1  -> (of_list [U8.uint_to_t 000000]) | 2  -> (of_list [U8.uint_to_t 00000])
 //   | 3  -> (of_list [U8.uint_to_t 0000])   | 4  -> (of_list [U8.uint_to_t 000])
 //   | 5  -> (of_list [U8.uint_to_t 00])     | 6  -> (of_list [U8.uint_to_t 0])
-//   | 7  -> Seq.createEmpty                 | 8  -> (of_list [U8.uint_to_t 000])
+//   | 7  -> Seq.empty                 | 8  -> (of_list [U8.uint_to_t 000])
 //   | 9  -> (of_list [U8.uint_to_t 00])     | 10 -> (of_list [U8.uint_to_t 0])
-//   | 11 -> Seq.createEmpty                 | 12 -> (of_list [U8.uint_to_t 0000])
+//   | 11 -> Seq.empty                 | 12 -> (of_list [U8.uint_to_t 0000])
 //   | 13 -> (of_list [U8.uint_to_t 000])    | 14 -> (of_list [U8.uint_to_t 00])
-//   | 15 -> (of_list [U8.uint_to_t 0])      | 16 -> Seq.createEmpty
+//   | 15 -> (of_list [U8.uint_to_t 0])      | 16 -> Seq.empty
 //   | 17 -> (of_list [U8.uint_to_t 000])    | 18 -> (of_list [U8.uint_to_t 00])
-//   | 19 -> (of_list [U8.uint_to_t 0])      | 20 -> Seq.createEmpty
-//   | _ -> Seq.createEmpty
+//   | 19 -> (of_list [U8.uint_to_t 0])      | 20 -> Seq.empty
+//   | _ -> Seq.empty
 
 // val binary_code_point: n:nat -> Tot (bytes)
 // let binary_code_point n =
@@ -365,7 +365,7 @@ let utf8_encode s =
 //     if n < 127 then Seq.append (of_list [U8.uint_to_t 0]) (code_point)
 //     else if n < 2047 then
 //       (of_list [U8.uint_to_t 110])
-//     else Seq.createEmpty
+//     else Seq.empty
 // *)
 // (*
 // #reset-options "--initial_fuel 1 --max_fuel 1"
@@ -375,7 +375,7 @@ let utf8_encode s =
 //  Tot (b:lbytes k {n == decode_little_endian b}) (decreases k)
 // let rec little_bytes len n =
 //  if len = 0ul then
-//    Seq.createEmpty
+//    Seq.empty
 //  else
 //    let len = len -^ 1ul in
 //    let byte = UInt8.uint_to_t (n % 256) in

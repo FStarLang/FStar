@@ -71,8 +71,8 @@ let (set_use_range : range -> rng -> range) =
     fun use_rng  ->
       if use_rng <> dummy_rng
       then
-        let uu___73_139 = r2  in
-        { def_range = (uu___73_139.def_range); use_range = use_rng }
+        let uu___76_139 = r2  in
+        { def_range = (uu___76_139.def_range); use_range = use_rng }
       else r2
   
 let (set_def_range : range -> rng -> range) =
@@ -80,8 +80,8 @@ let (set_def_range : range -> rng -> range) =
     fun def_rng  ->
       if def_rng <> dummy_rng
       then
-        let uu___74_151 = r2  in
-        { def_range = def_rng; use_range = (uu___74_151.use_range) }
+        let uu___77_151 = r2  in
+        { def_range = def_rng; use_range = (uu___77_151.use_range) }
       else r2
   
 let (mk_pos : Prims.int -> Prims.int -> pos) =
@@ -154,16 +154,16 @@ let (file_of_range : range -> Prims.string) =
 let (set_file_of_range : range -> Prims.string -> range) =
   fun r  ->
     fun f  ->
-      let uu___75_265 = r  in
+      let uu___78_265 = r  in
       {
         def_range =
-          (let uu___76_268 = r.def_range  in
+          (let uu___79_268 = r.def_range  in
            {
              file_name = f;
-             start_pos = (uu___76_268.start_pos);
-             end_pos = (uu___76_268.end_pos)
+             start_pos = (uu___79_268.start_pos);
+             end_pos = (uu___79_268.end_pos)
            });
-        use_range = (uu___75_265.use_range)
+        use_range = (uu___78_265.use_range)
       }
   
 let (string_of_rng : rng -> Prims.string) =
@@ -216,8 +216,8 @@ let (range_before_pos : range -> pos -> Prims.bool) =
   
 let (end_of_line : pos -> pos) =
   fun p  ->
-    let uu___77_384 = p  in
-    { line = (uu___77_384.line); col = FStar_Util.max_int }
+    let uu___80_384 = p  in
+    { line = (uu___80_384.line); col = FStar_Util.max_int }
   
 let (extend_to_end_of_line : range -> range) =
   fun r  ->

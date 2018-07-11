@@ -2036,30 +2036,6 @@ val modifies_loc_includes
   (ensures (modifies s1 h h'))
   [SMTPat (modifies s1 h h'); SMTPat (modifies s2 h h')]
 
-val modifies_regions_elim
-  (rs: Set.set HS.rid)
-  (h h' : HS.mem)
-: Lemma
-  (requires (
-    modifies (loc_regions rs) h h'
-  ))
-  (ensures (HS.modifies rs h h'))
-
-val modifies_addresses_elim
-  (r: HS.rid)
-  (a: Set.set nat)
-  (l: loc)
-  (h h' : HS.mem)
-: Lemma
-  (requires (
-    modifies (loc_union (loc_addresses r a) l) h h' /\
-    loc_disjoint (loc_regions (Set.singleton r)) l /\
-    HS.live_region h r
-  ))
-  (ensures (
-    HS.modifies_ref r a h h'
-  ))
-
 val modifies_trans
   (s12: loc)
   (h1 h2: HS.mem)
@@ -2071,7 +2047,7 @@ val modifies_trans
   [SMTPat (modifies s12 h1 h2); SMTPat (modifies s23 h2 h3)]
 
 let modifies_0 (h0 h1: HS.mem) : GTot Type0 =
-  modifies (loc_addresses h0.HS.tip Set.empty) h0 h1
+  modifies loc_none h0 h1
 
 let modifies_1 (#t: typ) (p: pointer t) (h0 h1: HS.mem) : GTot Type0 =
   modifies (loc_pointer p) h0 h1
@@ -2086,7 +2062,7 @@ val screate
   (ensures (fun (h0:HS.mem) b h1 ->
        unused_in b h0
      /\ live h1 b
-     /\ frameOf b = h0.HS.tip
+     /\ frameOf b = HS.get_tip h0
      /\ modifies_0 h0 h1
      /\ begin match s with
        | Some s' ->
@@ -2105,7 +2081,7 @@ val ecreate
   (ensures (fun (h0:HS.mem) b h1 -> unused_in b h0
     /\ live h1 b
     /\ frameOf b == r
-    /\ modifies (loc_addresses r Set.empty) h0 h1
+    /\ modifies_0 h0 h1
     /\ begin match s with
       | Some s' ->
 	readable h1 b /\
@@ -2174,40 +2150,6 @@ val write_union_field
     /\ is_active_union_field h1 p fd
   ))
 
-val no_upd_fresh: h0:HS.mem -> h1:HS.mem -> Lemma
-  (requires (HS.fresh_frame h0 h1))
-  (ensures  (modifies loc_none h0 h1))
-  [SMTPat (HS.fresh_frame h0 h1)]
-
-val no_upd_popped: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
-  (requires (live h0 b /\ frameOf b <> h0.HS.tip /\ HS.popped h0 h1))
-  (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
-  [SMTPatOr [
-    [SMTPat (live h0 b); SMTPat (HS.popped h0 h1)];
-    [SMTPat (readable h0 b); SMTPat (HS.popped h0 h1)];    
-    [SMTPat (gread h0 b); SMTPat (HS.popped h0 h1)];    
-    [SMTPat (live h1 b); SMTPat (HS.popped h0 h1)];
-    [SMTPat (readable h1 b); SMTPat (HS.popped h0 h1)];    
-    [SMTPat (gread h1 b); SMTPat (HS.popped h0 h1)];    
-  ]]
-
-val no_upd_popped_buffer: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:buffer t -> Lemma
-  (requires (buffer_live h0 b /\ frameOf_buffer b <> h0.HS.tip /\ HS.popped h0 h1))
-  (ensures  (
-    buffer_live h1 b /\ (
-    buffer_readable h0 b ==> (
-    buffer_readable h1 b /\
-    buffer_as_seq h1 b == buffer_as_seq h0 b
-  ))))
-  [SMTPatOr [
-    [SMTPat (buffer_live h0 b); SMTPat (HS.popped h0 h1)];
-    [SMTPat (buffer_readable h0 b); SMTPat (HS.popped h0 h1)];    
-    [SMTPat (buffer_as_seq h0 b); SMTPat (HS.popped h0 h1)];    
-    [SMTPat (buffer_live h1 b); SMTPat (HS.popped h0 h1)];
-    [SMTPat (buffer_readable h1 b); SMTPat (HS.popped h0 h1)];    
-    [SMTPat (buffer_as_seq h1 b); SMTPat (HS.popped h0 h1)];    
-  ]]
-
 val modifies_fresh_frame_popped
   (h0 h1: HS.mem)
   (s: loc)
@@ -2215,13 +2157,13 @@ val modifies_fresh_frame_popped
 : Lemma
   (requires (
     HS.fresh_frame h0 h1 /\
-    modifies (loc_union (loc_regions (HS.mod_set (Set.singleton h1.HS.tip))) s) h1 h2 /\
-    h2.HS.tip == h1.HS.tip /\
+    modifies (loc_union (loc_regions (HS.mod_set (Set.singleton (HS.get_tip h1)))) s) h1 h2 /\
+    (HS.get_tip h2) == (HS.get_tip h1) /\
     HS.popped h2 h3
   ))
   (ensures (
     modifies s h0 h3 /\
-    h3.HS.tip == h0.HS.tip
+    (HS.get_tip h3) == HS.get_tip h0
   ))
   [SMTPat (HS.fresh_frame h0 h1); SMTPat (HS.popped h2 h3); SMTPat (modifies s h0 h3)]
 
@@ -2243,6 +2185,7 @@ val modifies_loc_addresses_intro
   (h1 h2: HS.mem)
 : Lemma
   (requires (
+    HS.live_region h2 r /\
     modifies (loc_union (loc_regions (Set.singleton r)) l) h1 h2 /\
     HS.modifies_ref r a h1 h2
   ))
@@ -2499,3 +2442,35 @@ val buffer_includes_loc_includes
     [SMTPat (buffer_includes b1 b2)];
     [SMTPat (loc_includes(loc_buffer b1) (loc_buffer b2))]
   ]]
+
+
+
+/// Type class instantiation for compositionality with other kinds of memory locations than regions, references or buffers (just in case).
+/// No usage pattern has been found yet.
+
+module MG = FStar.ModifiesGen
+
+val cloc_aloc: HS.rid -> nat -> Tot Type0
+
+val cloc_cls: MG.cls cloc_aloc
+
+val cloc_of_loc (l: loc) : Tot (MG.loc cloc_cls)
+
+val loc_of_cloc (l: MG.loc cloc_cls) : Tot loc
+
+val loc_of_cloc_of_loc (l: loc) : Lemma
+  (loc_of_cloc (cloc_of_loc l) == l)
+  [SMTPat (loc_of_cloc (cloc_of_loc l))]
+
+val cloc_of_loc_of_cloc (l: MG.loc cloc_cls) : Lemma
+  (cloc_of_loc (loc_of_cloc l) == l)
+  [SMTPat (cloc_of_loc (loc_of_cloc l))]
+
+val loc_includes_to_cloc (l1 l2: loc) : Lemma
+  (loc_includes l1 l2 <==> MG.loc_includes (cloc_of_loc l1) (cloc_of_loc l2))
+
+val loc_disjoint_to_cloc (l1 l2: loc) : Lemma
+  (loc_disjoint l1 l2 <==> MG.loc_disjoint (cloc_of_loc l1) (cloc_of_loc l2))
+
+val modifies_to_cloc (l: loc) (h1 h2: HS.mem) : Lemma
+  (modifies l h1 h2 <==> MG.modifies (cloc_of_loc l) h1 h2)

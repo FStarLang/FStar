@@ -38,10 +38,8 @@ let increment_ok (h:heap) (r:addr) (n:t) =
   let post = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (h `contains` r /\ sel h r == n ==> post) solve
 
-#set-options "--use_two_phase_tc false"
 (*
  * Swapping two refs
- * TODO: fails with two phases
  *)
 let swap_ok (r1:addr) (r2:addr) (h:heap) (a:t) (b:t) =
   let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in

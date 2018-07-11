@@ -37,14 +37,42 @@ module U  = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 
+type step =
+  | Beta
+  | Iota            //pattern matching
+  | Zeta            //fixed points
+  | Exclude of step //the first three kinds are included by default, unless Excluded explicity
+  | Weak            //Do not descend into binders
+  | HNF             //Only produce a head normal form
+  | Primops         //reduce primitive operators like +, -, *, /, etc.
+  | Eager_unfolding
+  | Inlining
+  | DoNotUnfoldPureLets
+  | UnfoldUntil of S.delta_depth
+  | UnfoldOnly  of list<FStar.Ident.lid>
+  | UnfoldFully of list<FStar.Ident.lid>
+  | UnfoldAttr of attribute
+  | UnfoldTac
+  | PureSubtermsWithinComputations
+  | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
+  | EraseUniverses
+  | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
+  | Reify
+  | CompressUvars
+  | NoFullNorm
+  | CheckNoUvars
+  | Unmeta          //remove all non-monadic metas.
+  | Unascribe
+  | NBE
+and steps = list<step>
+
 type sig_binding = list<lident> * sigelt
 
 type delta_level =
   | NoDelta
-  | Inlining
+  | InliningDelta
   | Eager_unfolding_only
   | Unfold of delta_depth
-  | UnfoldTac
 
 type mlift = {
   mlift_wp:universe -> typ -> typ -> typ ;
@@ -83,6 +111,7 @@ type env = {
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
   sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
+  attrtab        :BU.smap<list<sigelt>>;        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
@@ -95,6 +124,7 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
   lax_universes  :bool;                         (* don't check universe constraints *)
+  phase1         :bool;                         (* running in phase 1, phase 2 to come after *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
@@ -108,11 +138,12 @@ type env = {
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth_hook          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
   splice         :env -> term -> list<sigelt>;       (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
-  is_native_tactic: lid -> bool;                     (* callback into the native tactics engine *)
+  is_native_tactic: lid -> bool;                        (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
-  tc_hooks       : tcenv_hooks;                      (* hooks that the interactive more relies onto for symbol tracking *)
-  dsenv          : FStar.Syntax.DsEnv.env;           (* The desugaring environment from the front-end *)
-  dep_graph      : FStar.Parser.Dep.deps             (* The result of the dependency analysis *)
+  tc_hooks       : tcenv_hooks;                        (* hooks that the interactive more relies onto for symbol tracking *)
+  dsenv          : FStar.Syntax.DsEnv.env;             (* The desugaring environment from the front-end *)
+  dep_graph      : FStar.Parser.Dep.deps;              (* The result of the dependency analysis *)
+  nbe            : list<step> -> env -> term -> term; (* Callback to the NBE function *)
 }
 and solver_depth_t = int * int * int
 and solver_t = {
@@ -134,7 +165,14 @@ and guard_t = {
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
-and implicits = list<(string * term * ctx_uvar * Range.range)>
+and implicit = {
+    imp_reason : string;                  // Reason (in text) why the implicit was introduced
+    imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
+    imp_tm     : term;                    // The term, made up of the ctx_uvar
+    imp_range  : Range.range;             // Position where it was introduced
+    imp_meta   : option<(env * term)>;    // An optional metaprogram to try to fill it
+}
+and implicits = list<implicit>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
 
@@ -172,14 +210,14 @@ let visible_at d q = match d, q with
   | Eager_unfolding_only, Unfold_for_unification_and_vcgen
   | Unfold _,   Unfold_for_unification_and_vcgen
   | Unfold _,   Visible_default -> true
-  | Inlining, Inline_for_extraction -> true
+  | InliningDelta, Inline_for_extraction -> true
   | _ -> false
 
 let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env deps tc_term type_of universe_of check_type_of solver module_lid =
+let initial_env deps tc_term type_of universe_of check_type_of solver module_lid nbe =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -189,6 +227,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     modules= [];
     expected_typ=None;
     sigtab=new_sigtab();
+    attrtab=new_sigtab();
     is_pattern=false;
     instantiate_imp=true;
     effects={decls=[]; order=[]; joins=[]};
@@ -201,6 +240,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     admit=false;
     lax=false;
     lax_universes=false;
+    phase1=false;
     failhard=false;
     nosynth=false;
     uvar_subtyping=true;
@@ -218,11 +258,13 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
     dsenv = FStar.Syntax.DsEnv.empty_env();
-    dep_graph = deps
+    dep_graph = deps;
+    nbe = nbe
   }
 
 let dsenv env = env.dsenv
 let sigtab env = env.sigtab
+let attrtab env = env.attrtab
 let gamma_cache env = env.gamma_cache
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -249,6 +291,7 @@ let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
     stack := env::!stack;
     {env with sigtab=BU.smap_copy (sigtab env);
+              attrtab=BU.smap_copy (attrtab env);
               gamma_cache=BU.smap_copy (gamma_cache env);
               identifier_info=BU.mk_ref !env.identifier_info;
               qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd;
@@ -347,14 +390,17 @@ let variable_not_found v =
 //Construct a new universe unification variable
 let new_u_univ () = U_unif (Unionfind.univ_fresh ())
 
+let mk_univ_subst (formals : list<univ_name>) (us : universes) : list<subst_elt> =
+    assert (List.length us = List.length formals);
+    let n = List.length formals - 1 in
+    us |> List.mapi (fun i u -> UN (n - i, u))
+
 //Instantiate the universe variables in a type scheme with provided universes
 let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
     match ts, us with
     | ([], t), [] -> [], t
     | (formals, t), _ ->
-      assert (List.length us = List.length formals);
-      let n = List.length formals - 1 in
-      let vs = us |> List.mapi (fun i u -> UN (n - i, u)) in
+      let vs = mk_univ_subst formals us in
       us, Subst.subst vs t
 
 //Instantiate the universe variables in a type scheme with new unification variables
@@ -436,15 +482,35 @@ let lookup_qname env (lid:lident) : qninfo =
         | Some se -> Some (Inr (se, None), U.range_of_sigelt se)
         | None -> None
 
+let lookup_sigelt (env:env) (lid:lid) : option<sigelt> =
+    match lookup_qname env lid with
+    | None -> None
+    | Some (BU.Inl _, rng) -> None
+    | Some (BU.Inr (se, us), rng) -> Some se
+
+let lookup_attr (env:env) (attr:string) : list<sigelt> =
+    match BU.smap_try_find (attrtab env) attr with
+    | Some ses -> ses
+    | None -> []
+
+let add_se_to_attrtab env se =
+    let add_one env se attr = BU.smap_add (attrtab env) attr (se :: lookup_attr env attr) in
+    List.iter (fun attr ->
+                match (Subst.compress attr).n with
+                | Tm_fvar fv -> add_one env se (lid_of_fv fv).str
+                | _ -> ()) se.sigattrs
+
 let rec add_sigelt env se = match se.sigel with
     | Sig_bundle(ses, _) -> add_sigelts env ses
     | _ ->
     let lids = lids_of_sigelt se in
     List.iter (fun l -> BU.smap_add (sigtab env) l.str se) lids;
+    add_se_to_attrtab env se;
     match se.sigel with
     | Sig_new_effect(ne) ->
       ne.actions |> List.iter (fun a ->
           let se_let = U.action_as_lb ne.mname a a.action_defn.pos in
+          (* TODO: attrtab? *)
           BU.smap_add (sigtab env) a.action_name.str se_let)
     | _ -> ()
 
@@ -660,6 +726,11 @@ let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
 
 let lookup_definition delta_levels env lid =
     lookup_definition_qninfo delta_levels lid <| lookup_qname env lid
+
+let quals_of_qninfo (qninfo : qninfo) : option<list<qualifier>> =
+  match qninfo with
+  | Some (Inr (se, _), _) -> Some se.sigquals
+  | _ -> None
 
 let attrs_of_qninfo (qninfo : qninfo) : option<list<attribute>> =
   match qninfo with
@@ -1134,6 +1205,7 @@ let is_reifiable_function (env:env) (t:S.term) : bool =
 let push_sigelt env s =
   let sb = (lids_of_sigelt s, s) in
   let env = {env with gamma_sig = sb::env.gamma_sig} in
+  add_sigelt env s;
   env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
   build_lattice env s
 
@@ -1263,10 +1335,9 @@ let print_gamma gamma =
 
 let string_of_delta_level = function
   | NoDelta -> "NoDelta"
-  | Inlining -> "Inlining"
+  | InliningDelta -> "Inlining"
   | Eager_unfolding_only -> "Eager_unfolding_only"
   | Unfold d -> "Unfold " ^ Print.delta_depth_to_string d
-  | UnfoldTac -> "UnfoldTac"
 
 let lidents env : list<lident> =
   let keys = List.collect fst env.gamma_sig in
@@ -1314,6 +1385,158 @@ let string_of_proof_ns env =
     List.map aux env.proof_ns
     |> List.rev
     |> String.concat " "
+
+
+(* ------------------------------------------------*)
+(* <guard_formula ops> Operations on guard_formula *)
+(* ------------------------------------------------*)
+let guard_of_guard_formula g = {guard_f=g; deferred=[]; univ_ineqs=([], []); implicits=[]}
+
+let guard_form g = g.guard_f
+
+let is_trivial g = match g with
+    | {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=i} ->
+      i |> BU.for_all (fun imp ->
+           (imp.imp_uvar.ctx_uvar_should_check=Allow_unresolved)
+           || (match Unionfind.find imp.imp_uvar.ctx_uvar_head with
+               | Some _ -> true
+               | None -> false))
+    | _ -> false
+
+let is_trivial_guard_formula g = match g with
+    | {guard_f=Trivial} -> true
+    | _ -> false
+
+let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=[]}
+
+let abstract_guard_n bs g =
+    match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f ->
+        let f' = U.abs bs f (Some (U.residual_tot U.ktype0)) in
+        ({ g with guard_f = NonTrivial f' })
+
+let abstract_guard b g =
+    abstract_guard_n [b] g
+
+let def_check_vars_in_set rng msg vset t =
+    if Options.defensive () then begin
+        let s = Free.names t in
+        if not (BU.set_is_empty <| BU.set_difference s vset)
+        then Errors.log_issue rng
+                    (Errors.Warning_Defensive,
+                     BU.format3 "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\n"
+                                      msg
+                                      (Print.term_to_string t)
+                                      (BU.set_elements s |> Print.bvs_to_string ",\n\t"))
+    end
+
+let def_check_closed_in rng msg l t =
+    if not (Options.defensive ()) then () else
+    def_check_vars_in_set rng msg (BU.as_set l Syntax.order_bv) t
+
+let def_check_closed_in_env rng msg e t =
+    if not (Options.defensive ()) then () else
+    def_check_closed_in rng msg (bound_vars e) t
+
+let def_check_guard_wf rng msg env g =
+    match g.guard_f with
+    | Trivial -> ()
+    | NonTrivial f -> def_check_closed_in_env rng msg env f
+
+let apply_guard g e = match g.guard_f with
+  | Trivial -> g
+  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) None f.pos}
+
+let map_guard g map = match g.guard_f with
+  | Trivial -> g
+  | NonTrivial f -> {g with guard_f=NonTrivial (map f)}
+
+let trivial t = match t with
+  | Trivial -> ()
+  | NonTrivial _ -> failwith "impossible"
+
+let conj_guard_f g1 g2 = match g1, g2 with
+  | Trivial, g
+  | g, Trivial -> g
+  | NonTrivial f1, NonTrivial f2 -> NonTrivial (U.mk_conj f1 f2)
+
+let check_trivial t = match (U.unmeta t).n with
+    | Tm_fvar tc when S.fv_eq_lid tc Const.true_lid -> Trivial
+    | _ -> NonTrivial t
+
+let imp_guard_f g1 g2 = match g1, g2 with
+  | Trivial, g -> g
+  | g, Trivial -> Trivial
+  | NonTrivial f1, NonTrivial f2 ->
+    let imp = U.mk_imp f1 f2 in check_trivial imp
+
+let binop_guard f g1 g2 = {guard_f=f g1.guard_f g2.guard_f;
+                           deferred=g1.deferred@g2.deferred;
+                           univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
+                                       snd g1.univ_ineqs@snd g2.univ_ineqs);
+                           implicits=g1.implicits@g2.implicits}
+let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
+let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
+
+let close_guard_univs us bs g =
+    match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f ->
+      let f =
+          List.fold_right2 (fun u b f ->
+              if Syntax.is_null_binder b then f
+              else U.mk_forall u (fst b) f)
+        us bs f in
+    {g with guard_f=NonTrivial f}
+
+let close_forall env bs f =
+    List.fold_right (fun b f ->
+            if Syntax.is_null_binder b then f
+            else let u = env.universe_of env (fst b).sort in
+                 U.mk_forall u (fst b) f)
+    bs f
+
+let close_guard env binders g =
+    match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f ->
+      {g with guard_f=NonTrivial (close_forall env binders f)}
+
+(* ------------------------------------------------*)
+(* </guard_formula ops>                            *)
+(* ------------------------------------------------*)
+
+(* Generating new implicit variables *)
+let new_implicit_var_aux reason r env k should_check =
+    match U.destruct k FStar.Parser.Const.range_of_lid with
+     | Some [_; (tm, _)] ->
+       let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) None tm.pos in
+       t, [], trivial_guard
+
+     | _ ->
+      let binders = all_binders env in
+      let gamma = env.gamma in
+      let ctx_uvar = {
+          ctx_uvar_head=FStar.Syntax.Unionfind.fresh();
+          ctx_uvar_gamma=gamma;
+          ctx_uvar_binders=binders;
+          ctx_uvar_typ=k;
+          ctx_uvar_reason=reason;
+          ctx_uvar_should_check=should_check;
+          ctx_uvar_range=r
+      } in
+      check_uvar_ctx_invariant reason r true gamma binders;
+      let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
+      let imp = { imp_reason = reason
+                ; imp_tm     = t
+                ; imp_uvar   = ctx_uvar
+                ; imp_range  = r
+                ; imp_meta   = None } in
+      let g = {trivial_guard with implicits=[imp]} in
+      t, [(ctx_uvar, r)], g
+
+(***************************************************)
 
 (* <Move> this out of here *)
 let dummy_solver = {

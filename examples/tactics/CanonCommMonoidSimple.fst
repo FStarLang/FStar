@@ -162,7 +162,7 @@ let rec permute_via_swaps_correct_aux (p:permute) (pvs:permute_via_swaps p)
 
 let permute_via_swaps_correct
   (p:permute) (pvs:permute_via_swaps p) : permute_correct p =
-     permute_via_swaps_correct_aux p pvs
+     fun #a -> permute_via_swaps_correct_aux p pvs #a
 
 // TODO In the general case, an arbitrary permutation can be done via
 // swaps. To show this we could for instance, write the permutation as
@@ -275,7 +275,7 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
       if term_eq t (quote a) then
         let (r1, ts, vm) = reification m [] (const (CM?.unit m)) t1 in
         let (r2, _, vm) = reification m ts vm t2 in
-         dump ("vm =" ^ term_to_string (quote vm));
+        // dump ("vm =" ^ term_to_string (quote vm));
         change_sq (quote (mdenote m vm r1 == mdenote m vm r2));
         // dump ("before =" ^ term_to_string (norm_term [delta;primops]
         //   (quote (mdenote m vm r1 == mdenote m vm r2))));
@@ -284,10 +284,10 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
         //           xsdenote m vm (canon r2)))));
         apply (`monoid_reflect);
         // dump ("after apply");
-        norm [delta_only [%`canon; %`xsdenote; %`flatten; %`sort;
-                %`select; %`assoc; %`fst; %`__proj__Mktuple2__item___1;
-                %`(@); %`append; %`List.Tot.Base.sortWith;
-                %`List.Tot.Base.partition; %`bool_of_compare; %`compare_of_bool;
+        norm [delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
+                `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
+                `%(@); `%append; `%List.Tot.Base.sortWith;
+                `%List.Tot.Base.partition; `%bool_of_compare; `%compare_of_bool;
            ]; primops]
         // ;dump "done"
       else fail "Goal should be an equality at the right monoid type"

@@ -314,7 +314,7 @@ assume val lemma_flatten_snoc (s:seq message) (m:message)
   :Lemma (requires True)
          (ensures  (flatten (snoc s m) == append (flatten s) m))
 
-assume val flatten_empty (u:unit) : Lemma (flatten Seq.createEmpty == Seq.createEmpty)
+assume val flatten_empty (u:unit) : Lemma (flatten Seq.empty == Seq.empty)
 
 (*****)
 
@@ -467,9 +467,9 @@ let send_file (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoi
     recall_connection_liveness c;
     let file_bytes0 = iarray_as_seq file in
     let from = ctr c h0 in
-    assert (Seq.equal (as_initialized_subseq file h0 0 0) Seq.createEmpty);
+    assert (Seq.equal (as_initialized_subseq file h0 0 0) Seq.empty);
     flatten_empty();
-    assert (Seq.equal (flatten (Seq.slice (log c h0) from from)) Seq.createEmpty);
+    assert (Seq.equal (flatten (Seq.slice (log c h0) from from)) Seq.empty);
     send_aux file c from 0;
     let h1 = ST.get () in
     let file_bytes1 = iarray_as_seq file in

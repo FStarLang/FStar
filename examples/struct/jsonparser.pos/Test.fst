@@ -43,7 +43,7 @@ Seq.cons Spec.left_brace (
 				    Seq.cons Spec.double_quote (
 				      Seq.cons Spec.right_brace (
 					Seq.cons Spec.right_brace (
-					  Seq.createEmpty
+					  Seq.empty
 )))))))))))))))))))))
 
 (* // This is too slow

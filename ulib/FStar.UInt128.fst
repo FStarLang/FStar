@@ -14,6 +14,8 @@ module Math = FStar.Math.Lemmas
 #reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
 #set-options "--normalize_pure_terms_for_extraction"
 
+// This type gets a special treatment in KreMLin and its definition is never
+// printed in the resulting C file.
 type uint128: Type0 = { low: U64.t; high: U64.t }
 
 let t = uint128

@@ -35,7 +35,7 @@ val keygen: parent:rid{HyperStack.ST.witnessed (region_contains_pred parent)} ->
 let keygen parent  =
   let pkey_raw, skey_raw = RSA.gen () in
   let region = new_region parent in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region Seq.empty in
   let pkey = PKey #region pkey_raw log in
   pkey, SKey skey_raw pkey
 

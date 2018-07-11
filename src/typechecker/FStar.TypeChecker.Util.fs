@@ -51,29 +51,6 @@ let report env errs =
 (************************************************************************)
 (* Unification variables *)
 (************************************************************************)
-let new_implicit_var_aux reason r env k should_check =
-    match U.destruct k C.range_of_lid with
-     | Some [_; (tm, _)] ->
-       let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) None tm.pos in
-       t, [], Rel.trivial_guard
-
-     | _ ->
-      let binders = Env.all_binders env in
-      let gamma = env.gamma in
-      let ctx_uvar = {
-          ctx_uvar_head=FStar.Syntax.Unionfind.fresh();
-          ctx_uvar_gamma=gamma;
-          ctx_uvar_binders=binders;
-          ctx_uvar_typ=k;
-          ctx_uvar_reason=reason;
-          ctx_uvar_should_check=should_check;
-          ctx_uvar_range=r
-      } in
-      check_uvar_ctx_invariant reason r true gamma binders;
-      let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
-      let g = {Rel.trivial_guard with implicits=[(reason, t, ctx_uvar, r)]} in
-      t, [(ctx_uvar, r)], g
-
 let new_implicit_var reason r env k =
     new_implicit_var_aux reason r env k Strict
 
@@ -169,146 +146,6 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 (* Utilities on patterns  *)
 (************************************************************************)
 
-(*
-  pat_as_exps allow_implicits env p:
-    Turns a pattern p into a triple:
-*)
-let pat_as_exp (allow_implicits:bool)
-               (env:Env.env)
-               (p:pat)
-               (tc_annot : Env.env -> term -> term * guard_t)
-    : (list<bv>          (* pattern-bound variables (which may appear in the branch of match) *)
-     * term              (* expressions corresponding to the pattern *)
-     * guard_t           (* guard for the annotations on the pattern bound variables *)  //AR: earlier tc_annot was forcing it to be trivial without assuming the equality of the scrutinee with the pattern
-                                                                                         //see the comment in tc_pat in TcTerm.fs
-     * pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
-    let check_bv (env:Env.env) (x:bv) :(bv * guard_t) =
-          let t_x, guard =
-              match (SS.compress x.sort) with
-              | {n=Tm_unknown} ->
-                let t, _ = U.type_u() in
-                let t, _, g = new_implicit_var_aux "pattern bv type" (S.range_of_bv x) env t Allow_untyped in
-                t, g
-              | t -> //user-decorated type
-                tc_annot env t
-          in
-          {x with sort=t_x}, guard
-    in
-    let rec pat_as_arg_with_env allow_wc_dependence env (p:pat) :
-                                    (list<bv>    //all pattern-bound vars including wild-cards, in proper order
-                                    * list<bv>   //just the accessible vars, for the disjunctive pattern test
-                                    * list<bv>   //just the wildcards
-                                    * Env.env    //env extending with the pattern-bound variables
-                                    * term       //the pattern as a term/typ
-                                    * guard_t    //guard for the type annotations on the pattern bvs
-                                    * pat) =     //the elaborated pattern itself
-        match p.v with
-           | Pat_constant c ->
-             let e =
-                match c with
-                | FStar.Const.Const_int(repr, Some sw) ->
-                  FStar.ToSyntax.ToSyntax.desugar_machine_integer env.dsenv repr sw p.p
-                | _ ->
-                  mk (Tm_constant c) None p.p
-             in
-             ([], [], [], env, e, Rel.trivial_guard, p)
-
-           | Pat_dot_term(x, _) ->
-             let k, _ = U.type_u () in
-             let t, _, g = new_implicit_var_aux "pat_dot_term type" (S.range_of_bv x) env k Allow_untyped in
-             let x = {x with sort=t} in
-             let e, _,  g' = new_implicit_var_aux "pat_dot_term" (S.range_of_bv x) env t Allow_untyped in
-             let p = {p with v=Pat_dot_term(x, e)} in
-             ([], [], [], env, e, Rel.conj_guard g g', p)
-
-           | Pat_wild x ->
-             let x, g = check_bv env x in
-             let env = if allow_wc_dependence then Env.push_bv env x else env in
-             let e = mk (Tm_name x) None p.p in
-             ([x], [], [x], env, e, g, p)
-
-           | Pat_var x ->
-             let x, g = check_bv env x in
-             let env = Env.push_bv env x in
-             let e = mk (Tm_name x) None p.p in
-             ([x], [x], [], env, e, g, p)
-
-           | Pat_cons(fv, pats) ->
-             let (b, a, w, env, args, guard, pats) =
-               pats |>
-               List.fold_left
-                 (fun (b, a, w, env, args, guard, pats) (p, imp) ->
-                    let (b', a', w', env, te, guard', pat) = pat_as_arg_with_env allow_wc_dependence env p in
-                    let arg = if imp then iarg te else as_arg te in
-                    (b'::b, a'::a, w'::w, env, arg::args, Rel.conj_guard guard guard', (pat, imp)::pats))
-               ([], [], [], env, [], Rel.trivial_guard, [])
-             in
-             let e = mk_Tm_app (Syntax.fv_to_tm fv) (args |> List.rev) None p.p in
-             (List.rev b |> List.flatten,
-              List.rev a |> List.flatten,
-              List.rev w |> List.flatten,
-              env,
-              e,
-              guard,
-              {p with v=Pat_cons(fv, List.rev pats)})
-    in
-
-    let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
-        let maybe_dot inaccessible a r =
-            if allow_implicits && inaccessible
-            then withinfo (Pat_dot_term(a, tun)) r
-            else withinfo (Pat_var a) r
-        in
-        match p.v with
-        | Pat_cons(fv, pats) ->
-          let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
-          let _, t = Env.lookup_datacon env fv.fv_name.v in
-          let f, _ = U.arrow_formals t in
-          let rec aux formals pats =
-              match formals, pats with
-              | [], [] -> []
-              | [], _::_ -> raise_error (Errors.Fatal_TooManyPatternArguments, ("Too many pattern arguments")) (range_of_lid fv.fv_name.v)
-              | _::_, [] -> //fill the rest with dot patterns (if allowed), if all the remaining formals are implicit
-                formals |>
-                List.map (fun (t, imp) ->
-                            match imp with
-                            | Some (Implicit inaccessible) ->
-                            let a = Syntax.new_bv (Some (Syntax.range_of_bv t)) tun in
-                            let r = range_of_lid fv.fv_name.v in
-                            maybe_dot inaccessible a r, true
-
-                            | _ ->
-                              raise_error (Errors.Fatal_InsufficientPatternArguments, (BU.format1 "Insufficient pattern arguments (%s)"
-                                                      (Print.pat_to_string p))) (range_of_lid fv.fv_name.v))
-
-              | f::formals', (p, p_imp)::pats' ->
-                begin
-                match f with
-                | (_, Some (Implicit _)) when p_imp ->
-                  (p, true)::aux formals' pats'
-
-                | (_, Some (Implicit inaccessible)) ->
-                  let a = Syntax.new_bv (Some p.p) tun in
-                  let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
-                  (p, true)::aux formals' pats
-
-                | (_, imp) ->
-                  (p, S.is_implicit imp)::aux formals' pats'
-                end
-         in
-         {p with v=Pat_cons(fv, aux f pats)}
-        | _ -> p in
-
-    let one_pat allow_wc_dependence env p =
-        let p = elaborate_pat env p in
-        let b, a, w, env, arg, guard, p = pat_as_arg_with_env allow_wc_dependence env p in
-        match b |> BU.find_dup bv_eq with
-            | Some x -> raise_error (Err.nonlinear_pattern_variable x) p.p
-            | _ -> b, a, w, arg, guard, p
-    in
-    let b, _, _, tm, guard, p = one_pat true env p in
-    b, tm, guard, p
-
 let decorate_pattern env p exp =
     let qq = p in
     let rec aux p e : pat  =
@@ -325,14 +162,14 @@ let decorate_pattern env p exp =
               then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
               if Env.debug env <| Options.Other "Pat"
               then BU.print2 "Pattern variable %s introduced at type %s\n" (Print.bv_to_string x) (Normalize.term_to_string env y.sort);
-              let s = Normalize.normalize [Normalize.Beta] env y.sort in
+              let s = Normalize.normalize [Env.Beta] env y.sort in
               let x = {x with sort=s} in
               pkg (Pat_var x)
 
             | Pat_wild x, Tm_name y ->
               if bv_eq x y |> not
               then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
-              let s = Normalize.normalize [Normalize.Beta] env y.sort in
+              let s = Normalize.normalize [Env.Beta] env y.sort in
               let x = {x with sort=s} in
               pkg (Pat_wild x)
 
@@ -557,7 +394,7 @@ let return_value env u_t_opt t v =
             then S.tun
             else let a, kwp = Env.wp_signature env C.effect_PURE_lid in
                  let k = SS.subst [NT(a, t)] kwp in
-                 N.normalize [N.Beta; N.NoFullNorm]
+                 N.normalize [Env.Beta; Env.NoFullNorm]
                             env
                             (mk_Tm_app (inst_effect_fun_with [u_t] env m m.ret_wp)
                                        [S.as_arg t; S.as_arg v]
@@ -627,7 +464,7 @@ let strengthen_precondition
             (lc:lcomp)
             (g0:guard_t)
     : lcomp * guard_t =
-    if Rel.is_trivial_guard_formula g0
+    if Env.is_trivial_guard_formula g0
     then lc, g0
     else let flags =
             let maybe_trivial_post, flags =
@@ -1100,12 +937,18 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
       e, lc
 
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
+  if Env.debug env Options.High then
+    BU.print3 "weaken_result_typ e=(%s) lc=(%s) t=(%s)\n"
+            (Print.term_to_string e)
+            (Print.lcomp_to_string lc)
+            (Print.term_to_string t);
   let use_eq =
     env.use_eq ||
     (match Env.effect_decl_opt env lc.eff_name with
+     // See issue #881 for why weakening result type of a reifiable computation is problematic
      | Some (ed, qualifiers) -> qualifiers |> List.contains Reifiable
      | _ -> false) in
-  let gopt = if use_eq //see issue #881 for why weakening result type of a reifiable computation is problematic
+  let gopt = if use_eq
              then Rel.try_teq true env lc.res_typ t, false
              else Rel.get_subtyping_predicate env lc.res_typ t, true in
   match gopt with
@@ -1114,7 +957,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
         then raise_error (Err.basic_type_error env (Some e) t lc.res_typ) e.pos
         else (
             subtype_fail env e lc.res_typ t; //log a sub-typing error
-            e, {lc with res_typ=t}, Rel.trivial_guard //and keep going to type-check the result of the program
+            e, {lc with res_typ=t}, Env.trivial_guard //and keep going to type-check the result of the program
         )
     | Some g, apply_guard ->
       match guard_form g with
@@ -1129,7 +972,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                 lcomp_comp lc
               else begin
                   //try to normalize one more time, since more unification variables may be resolved now
-                  let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops] env f in
+                  let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops] env f in
                   match (SS.compress f).n with
                       | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv C.true_lid ->
                         //it's trivial
@@ -1181,7 +1024,7 @@ let pure_or_ghost_pre_and_post env comp =
     let mk_post_type res_t ens =
         let x = S.new_bv None res_t in
         U.refine x (S.mk_Tm_app ens [S.as_arg (S.bv_to_name x)] None res_t.pos) in
-    let norm t = Normalize.normalize [N.Beta;N.Eager_unfolding;N.EraseUniverses] env t in
+    let norm t = Normalize.normalize [Env.Beta;Env.Eager_unfolding;Env.EraseUniverses] env t in
     if U.is_tot_or_gtot_comp comp
     then None, U.comp_result comp
     else begin match comp.n with
@@ -1217,7 +1060,7 @@ let pure_or_ghost_pre_and_post env comp =
 (* and returns the result of reifying t *)
 let reify_body (env:Env.env) (t:S.term) : S.term =
     let tm = U.mk_reify t in
-    let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env tm in
+    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses] env tm in
     if Env.debug env <| Options.Other "SMTEncodingReify"
     then BU.print2 "Reified body %s \nto %s\n"
         (Print.term_to_string tm)
@@ -1226,7 +1069,7 @@ let reify_body (env:Env.env) (t:S.term) : S.term =
 
 let reify_body_with_arg (env:Env.env) (head:S.term) (arg:S.arg): S.term =
     let tm = S.mk (S.Tm_app(head, [arg])) None head.pos in
-    let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env tm in
+    let tm' = N.normalize [Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses] env tm in
     if Env.debug env <| Options.Other "SMTEncodingReify"
     then BU.print2 "Reified body %s \nto %s\n"
         (Print.term_to_string tm)
@@ -1252,8 +1095,12 @@ let remove_reify (t: S.term): S.term =
 let maybe_instantiate (env:Env.env) e t =
   let torig = SS.compress t in
   if not env.instantiate_imp
-  then e, torig, Rel.trivial_guard
-  else let number_of_implicits t =
+  then e, torig, Env.trivial_guard
+  else begin
+       if Env.debug env Options.High then
+         BU.print2 "maybe_instantiate: starting check for (%s) of type (%s)\n"
+                 (Print.term_to_string e) (Print.term_to_string t);
+       let number_of_implicits t =
             let formals, _ = U.arrow_formals t in
             let n_implicits =
             match formals |> BU.prefix_until (fun (_, imp) -> imp=None || imp=Some Equality) with
@@ -1286,14 +1133,32 @@ let maybe_instantiate (env:Env.env) e t =
               //See issue #807 for why this is important
               let rec aux subst inst_n bs =
                   match inst_n, bs with
-                  | Some 0, _ -> [], bs, subst, Rel.trivial_guard //no more instantiations to do
+                  | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
                   | _, (x, Some (Implicit dot))::rest ->
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
+                      if Env.debug env Options.High then
+                        BU.print1 "maybe_instantiate: Instantiating implicit with %s\n"
+                                (Print.term_to_string v);
                       let subst = NT(x, v)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some (Implicit dot))::args, bs, subst, Rel.conj_guard g g'
-                 | _, bs -> [], bs, subst, Rel.trivial_guard
+                      (v, Some (Implicit dot))::args, bs, subst, Env.conj_guard g g'
+
+                  | _, (x, Some (Meta tau))::rest ->
+                      let t = SS.subst subst x.sort in
+                      let v, _, g = new_implicit_var "Instantiation of meta argument" e.pos env t in
+                      if Env.debug env Options.High then
+                        BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
+                                (Print.term_to_string v);
+                      let mark_meta_implicits tau g =
+                          { g with implicits =
+                              List.map (fun imp -> { imp with imp_meta = Some (env, tau) }) g.implicits } in
+                      let g = mark_meta_implicits tau g in
+                      let subst = NT(x, v)::subst in
+                      let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
+                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
+
+                 | _, bs -> [], bs, subst, Env.trivial_guard
               in
               let args, bs, subst, guard = aux [] (inst_n_binders t) bs in
               begin match args, bs with
@@ -1302,7 +1167,7 @@ let maybe_instantiate (env:Env.env) e t =
 
                 | _, [] when not (U.is_total_comp c) ->
                   //don't instantiate implicitly, if it has an effect
-                  e, torig, Rel.trivial_guard
+                  e, torig, Env.trivial_guard
 
                 | _ ->
 
@@ -1314,8 +1179,9 @@ let maybe_instantiate (env:Env.env) e t =
                   e, t, guard
               end
 
-            | _ -> e, t, Rel.trivial_guard
+            | _ -> e, t, Env.trivial_guard
        end
+  end
 
 (**************************************************************************************)
 (* Generalizing types *)
@@ -1365,7 +1231,7 @@ let check_universe_generalization
                       ^ Print.term_to_string t)) t.pos
 
 let generalize_universes (env:env) (t0:term) : tscheme =
-    let t = N.normalize [N.NoFullNorm; N.Beta; N.DoNotUnfoldPureLets] env t0 in
+    let t = N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env t0 in
     let univnames = gather_free_univnames env t in
     if Env.debug env <| Options.Other "Gen"
     then BU.print2 "generalizing universes in the term (post norm): %s with univnames: %s\n" (Print.term_to_string t) (Print.univ_names_to_string univnames);
@@ -1387,14 +1253,13 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let norm c =
         if debug env Options.Medium
         then BU.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
-         let c = Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm; N.DoNotUnfoldPureLets] env c in
+         let c = Normalize.normalize_comp [Env.Beta; Env.Exclude Env.Zeta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] env c in
          if debug env Options.Medium then
             BU.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
          c in
      let env_uvars = Env.uvars_in_env env in
      let gen_uvars uvs = BU.set_difference uvs env_uvars |> BU.set_elements in
      let univs_and_uvars_of_lec (lbname, e, c) =
-          let t = U.comp_result c |> SS.compress in
           let c = norm c in
           let t = U.comp_result c in
           let univs = Free.univs t in
@@ -1476,7 +1341,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
          match Unionfind.find u.ctx_uvar_head with
          | Some _ -> failwith "Unexpected instantiation of mutually recursive uvar"
          | _ ->
-           let k = N.normalize [N.Beta; N.Exclude N.Zeta] env u.ctx_uvar_typ in
+           let k = N.normalize [Env.Beta; Env.Exclude Env.Zeta] env u.ctx_uvar_typ in
            let bs, kres = U.arrow_formals k in
            let _ =
              //we only generalize variables at type k = a:Type{phi}
@@ -1517,7 +1382,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
             | _ ->
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
               let e0, c0 = e, c in
-              let c = N.normalize_comp [N.Beta; N.DoNotUnfoldPureLets; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env c in
+              let c = N.normalize_comp [Env.Beta; Env.DoNotUnfoldPureLets; Env.CompressUvars; Env.NoFullNorm; Env.Exclude Env.Zeta] env c in
               let e = N.reduce_uvar_solutions env e in
               let e =
                 if is_rec
@@ -1601,6 +1466,8 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
+  if debug env Options.Low then
+    BU.print1 "check_top_level, lc = %s\n" (Print.lcomp_to_string lc);
   let discharge g =
     force_trivial_guard env g;
     U.is_pure_lcomp lc in
@@ -1608,7 +1475,7 @@ let check_top_level env g lc : (bool * comp) =
   if U.is_total_lcomp lc
   then discharge g, lcomp_comp lc
   else let c = lcomp_comp lc in
-       let steps = [Normalize.Beta; Normalize.NoFullNorm; N.DoNotUnfoldPureLets] in
+       let steps = [Env.Beta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] in
        let c = Env.unfold_effect_abbrev env c
               |> S.mk_Comp
               |> Normalize.normalize_comp steps env
@@ -1618,7 +1485,7 @@ let check_top_level env g lc : (bool * comp) =
        let vc = mk_Tm_app (inst_effect_fun_with [u_t] env md md.trivial) [S.as_arg t; S.as_arg wp] None (Env.get_range env) in
        if Env.debug env <| Options.Other "Simplification"
        then BU.print1 "top-level VC: %s\n" (Print.term_to_string vc);
-       let g = Rel.conj_guard g (Rel.guard_of_guard_formula <| NonTrivial vc) in
+       let g = Env.conj_guard g (Env.guard_of_guard_formula <| NonTrivial vc) in
        discharge g, mk_Comp c
 
 (* Having already seen_args to head (from right to left),
@@ -1842,6 +1709,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       | Sig_bundle _ ->
         if not (quals |> BU.for_all (fun x ->
               x=Abstract
+              || x=NoExtract
               || inferred x
               || visibility x
               || has_eq x))
@@ -1897,14 +1765,14 @@ let must_erase_for_extraction (g:env) (t:typ) =
         | _ ->
           false
     and aux env t =
-        let t = N.normalize [N.Primops;
-                             N.Weak;
-                             N.HNF;
-                             N.UnfoldUntil delta_constant;
-                             N.Beta;
-                             N.AllowUnboundUniverses;
-                             N.Zeta;
-                             N.Iota] env t in
+        let t = N.normalize [Env.Primops;
+                             Env.Weak;
+                             Env.HNF;
+                             Env.UnfoldUntil delta_constant;
+                             Env.Beta;
+                             Env.AllowUnboundUniverses;
+                             Env.Zeta;
+                             Env.Iota] env t in
 //        debug g (fun () -> BU.print1 "aux %s\n" (Print.term_to_string t));
         let res = aux_whnf env t in
         if Env.debug env <| Options.Other "Extraction" then BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (Print.term_to_string t);

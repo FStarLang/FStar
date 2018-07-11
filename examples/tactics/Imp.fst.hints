@@ -1,23 +1,578 @@
 [
-  "rNÜëï\u001e®\\Ag9å*\u0017Û§",
+  "¨q\u0002ý\bCí\u00102\u000fN9d`åá",
   [
     [
-      "Imp.uu___61",
+      "Imp.reg",
       1,
       2,
       1,
-      [ "@query", "equation_Imp.f" ],
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqImp_Tm_refine_769ea0e4ced860124e50fb219e51194e",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
       0,
-      "853df53a700c2834365354b02e40398b"
+      "e4b229655c63f90c8fae85596a45f598"
     ],
     [
-      "Imp.uu___62",
+      "Imp.__proj__Add__item___0",
       1,
       2,
       1,
-      [ "@query", "equation_Imp.g" ],
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Add",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_e6ce28c4b80443ebde698de45d7d9ff5"
+      ],
       0,
-      "2da5ba4784a06ca5deba2e29a84e36b5"
+      "f6f030b0fab329283bcbb5c1b658c318"
+    ],
+    [
+      "Imp.__proj__Add__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Add",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_e6ce28c4b80443ebde698de45d7d9ff5"
+      ],
+      0,
+      "673838577e68462c70cc67159f18672b"
+    ],
+    [
+      "Imp.__proj__Add__item___2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Add",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_e6ce28c4b80443ebde698de45d7d9ff5"
+      ],
+      0,
+      "cd512fdf3130c6d6f361e13122621e77"
+    ],
+    [
+      "Imp.__proj__Sub__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Sub",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_6a21b5ee6f026c7c16d0946bc061a6f1"
+      ],
+      0,
+      "2b43a5ade4dbbc87216b6f4fc3f882b5"
+    ],
+    [
+      "Imp.__proj__Sub__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Sub",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_6a21b5ee6f026c7c16d0946bc061a6f1"
+      ],
+      0,
+      "47f9510ed14cde2b956ce30b8bd3ca62"
+    ],
+    [
+      "Imp.__proj__Sub__item___2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Sub",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_6a21b5ee6f026c7c16d0946bc061a6f1"
+      ],
+      0,
+      "91c437e494b52e79a8871fd3403bcc8a"
+    ],
+    [
+      "Imp.__proj__Mul__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Mul",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_eba13340a4747cc74a458556f1746952"
+      ],
+      0,
+      "a6eba061b5eb512ee143575930fff93a"
+    ],
+    [
+      "Imp.__proj__Mul__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Mul",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_eba13340a4747cc74a458556f1746952"
+      ],
+      0,
+      "10c721972c30813e2c773a4cb08e6d7a"
+    ],
+    [
+      "Imp.__proj__Mul__item___2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Mul",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_eba13340a4747cc74a458556f1746952"
+      ],
+      0,
+      "349c126b3c0ef1cf58853b12475de6db"
+    ],
+    [
+      "Imp.__proj__Const__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Const",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_01ac0c7f58b13b9a9cb14230122b0e7a"
+      ],
+      0,
+      "00c4e2fbab2dcdca5f9159cd0633e81c"
+    ],
+    [
+      "Imp.__proj__Const__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Const",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_01ac0c7f58b13b9a9cb14230122b0e7a"
+      ],
+      0,
+      "03a932daaf28d5dae19c24b11381abc3"
+    ],
+    [
+      "Imp.size",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_11d608631dbadd2a309a1e0eecb6824d_0",
+        "disc_equation_Imp.Add", "disc_equation_Imp.Const",
+        "disc_equation_Imp.Mul", "disc_equation_Imp.Sub",
+        "fuel_guarded_inversion_Imp.inst"
+      ],
+      0,
+      "b75827f37075e86cea1e12dbbc4f9db5"
+    ],
+    [
+      "Imp.size",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_c436a29572a007a00562c41c572f87a4_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Imp.prog", "equation_Prims.pos",
+        "fuel_guarded_inversion_Prims.list", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "f30f977e2b46a445a1e601650dc06178"
+    ],
+    [
+      "Imp.override",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Imp.reg__uu___haseq" ],
+      0,
+      "d22d0a354d45db803aadecb09574fe12"
+    ],
+    [
+      "Imp.eval'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_11d608631dbadd2a309a1e0eecb6824d_0",
+        "disc_equation_Imp.Add", "disc_equation_Imp.Const",
+        "disc_equation_Imp.Mul", "disc_equation_Imp.Sub",
+        "fuel_guarded_inversion_Imp.inst"
+      ],
+      0,
+      "6582a98875decb6579582c2d899b499a"
+    ],
+    [
+      "Imp.uu___66",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e935446cfeced0ae92e7826bb583ea09"
+    ],
+    [
+      "Imp.uu___67",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "da603bc9165cc377cda91fdddc1778ab"
+    ],
+    [
+      "Imp.uu___68",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "ae278586d9ba5b81b47ec71baa5a5787"
+    ],
+    [
+      "Imp.uu___69",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "4977b7273caf3ac3809eedc17847f749"
+    ],
+    [
+      "Imp.uu___70",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "68d716559cd0e29b426873b63f695003"
+    ],
+    [
+      "Imp.uu___71",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "e33e2a1a71aac7cb7f2182e21f9936d6"
+    ],
+    [
+      "Imp.uu___72",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1c08c3f38ac1768e69759f3e8eaa8098"
+    ],
+    [
+      "Imp.uu___79",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "36580bf7dd118c7a32ac539f8958d5d9"
+    ],
+    [
+      "Imp.uu___80",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "558af5fa8ac64759197c241031ecae95"
+    ],
+    [
+      "Imp.uu___81",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "25acae7449ffcae631baeb50e6958243"
+    ],
+    [
+      "Imp.uu___82",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "106d7d0e124cbe55600d62347ba72cc1"
+    ],
+    [
+      "Imp.uu___83",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f74070aa26ab443111f682fce30f8be8"
+    ],
+    [
+      "Imp.uu___84",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "64eb4419cf0be1c716c8204186aa4025"
+    ],
+    [
+      "Imp.uu___85",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_CanonCommMonoid.const_last",
+        "equation_CanonCommMonoid.sortWith", "equation_CanonCommMonoid.var",
+        "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Algebra.CommMonoid.cm",
+        "function_token_typing_FStar.List.Tot.Base.sortWith",
+        "interpretation_CanonCommMonoid_Tm_abs_886d64f12026dd7224b640a7007ae987",
+        "token_correspondence_CanonCommMonoid.sortWith"
+      ],
+      0,
+      "51139ce4ea1202b8e908bc19f0ef74e2"
+    ],
+    [
+      "Imp.uu___85",
+      2,
+      0,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "6ea237eeb5ec516dbfb2bd493f29be0a"
+    ],
+    [
+      "Imp.reg",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqImp_Tm_refine_769ea0e4ced860124e50fb219e51194e",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "733907506dac8a6f08d7d3a294d07226"
+    ],
+    [
+      "Imp.__proj__Add__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Add",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_e6ce28c4b80443ebde698de45d7d9ff5"
+      ],
+      0,
+      "29973a3a694dc5bddf29b7183368871c"
+    ],
+    [
+      "Imp.__proj__Add__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Add",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_e6ce28c4b80443ebde698de45d7d9ff5"
+      ],
+      0,
+      "515642bc34bf2b52aaba9251d99bb1c0"
+    ],
+    [
+      "Imp.__proj__Add__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Add",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_e6ce28c4b80443ebde698de45d7d9ff5"
+      ],
+      0,
+      "c2fed0431a3b98607405f207a5ea1fee"
+    ],
+    [
+      "Imp.__proj__Sub__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Sub",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_6a21b5ee6f026c7c16d0946bc061a6f1"
+      ],
+      0,
+      "7e817fd410193ce68ade908067955910"
+    ],
+    [
+      "Imp.__proj__Sub__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Sub",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_6a21b5ee6f026c7c16d0946bc061a6f1"
+      ],
+      0,
+      "42762684c4d2e03f498d281217f06d8f"
+    ],
+    [
+      "Imp.__proj__Sub__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Sub",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_6a21b5ee6f026c7c16d0946bc061a6f1"
+      ],
+      0,
+      "db136d3ee3e202af805e1e9db9995677"
+    ],
+    [
+      "Imp.__proj__Mul__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Mul",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_eba13340a4747cc74a458556f1746952"
+      ],
+      0,
+      "1674e9c8d23c189f76ae678b5021008c"
+    ],
+    [
+      "Imp.__proj__Mul__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Mul",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_eba13340a4747cc74a458556f1746952"
+      ],
+      0,
+      "e3be1f644709d75c070f4f595e70df61"
+    ],
+    [
+      "Imp.__proj__Mul__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Mul",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_eba13340a4747cc74a458556f1746952"
+      ],
+      0,
+      "035734200cfcf954adf9e744d4165651"
+    ],
+    [
+      "Imp.__proj__Const__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Const",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_01ac0c7f58b13b9a9cb14230122b0e7a"
+      ],
+      0,
+      "5d85e364b559689b49a9182d5f665b84"
+    ],
+    [
+      "Imp.__proj__Const__item___1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Imp.Const",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Imp_Tm_refine_01ac0c7f58b13b9a9cb14230122b0e7a"
+      ],
+      0,
+      "e64fde08ae3df20995cb5adda4c9cefc"
+    ],
+    [
+      "Imp.size",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_11d608631dbadd2a309a1e0eecb6824d_0",
+        "disc_equation_Imp.Add", "disc_equation_Imp.Const",
+        "disc_equation_Imp.Mul", "disc_equation_Imp.Sub",
+        "fuel_guarded_inversion_Imp.inst"
+      ],
+      0,
+      "2097f2e279a9026fa74e0ebe0af9a27a"
+    ],
+    [
+      "Imp.size",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_c436a29572a007a00562c41c572f87a4_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Imp.prog", "equation_Prims.pos",
+        "fuel_guarded_inversion_Prims.list", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "cc2fb4ad95efb1a5816c01a01091a55f"
+    ],
+    [
+      "Imp.override",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Imp.reg__uu___haseq" ],
+      0,
+      "78add2d9d3a59069bf7e77832039cf50"
+    ],
+    [
+      "Imp.eval'",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_11d608631dbadd2a309a1e0eecb6824d_0",
+        "disc_equation_Imp.Add", "disc_equation_Imp.Const",
+        "disc_equation_Imp.Mul", "disc_equation_Imp.Sub",
+        "fuel_guarded_inversion_Imp.inst"
+      ],
+      0,
+      "e3fbda5033b36a83677031f508b27484"
     ]
   ]
 ]

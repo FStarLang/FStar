@@ -19,7 +19,7 @@ module N = FStar.TypeChecker.Normalize
 
 let mkAssume (tm, cap, nm) =
     Assume ({
-        assumption_name=nm;
+        assumption_name=escape nm;
         assumption_caption=cap;
         assumption_term=tm;
         assumption_fact_ids=[]

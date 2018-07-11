@@ -262,6 +262,11 @@ and subst_comp' s t =
       | GTotal (t, uopt) -> mk_GTotal' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
+and subst_imp' s i =
+  match i with
+  | Some (Meta t) -> Some (Meta (subst' s t))
+  | i -> i
+
 let shift n s = match s with
     | DB(i, t) -> DB(i+n, t)
     | UN(i, t) -> UN(i+n, t)
@@ -270,7 +275,7 @@ let shift n s = match s with
     | NT _  -> s
 let shift_subst n s = List.map (shift n) s
 let shift_subst' n s = fst s |> List.map (shift_subst n), snd s
-let subst_binder' s (x, imp) = {x with sort=subst' s x.sort}, imp
+let subst_binder' s (x, imp) = {x with sort=subst' s x.sort}, subst_imp' s imp
 
 
 let subst_binders' s bs =
@@ -278,7 +283,11 @@ let subst_binders' s bs =
         if i=0 then subst_binder' s b
         else subst_binder' (shift_subst' i s) b)
 let subst_binders s (bs:binders) = subst_binders' ([s], NoUseRange) bs
+
+// NOTE: We don't descend into `imp` here since one cannot *apply* a
+// `Meta t` argument, so this would always be a no-op
 let subst_arg' s (t, imp) = (subst' s t, imp)
+
 let subst_args' s = List.map (subst_arg' s)
 let subst_pat' s p : (pat * int) =
     let rec aux n p : (pat * int) = match p.v with
@@ -465,6 +474,7 @@ let rec compress (t:term) =
 let subst s t = subst' ([s], NoUseRange) t
 let set_use_range r t = subst' ([], SomeUseRange (Range.set_def_range r (Range.use_range r))) t
 let subst_comp s t = subst_comp' ([s], NoUseRange) t
+let subst_imp s imp = subst_imp' ([s], NoUseRange) imp
 let closing_subst (bs:binders) =
     List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst
 let open_binders' bs =
@@ -472,6 +482,7 @@ let open_binders' bs =
         | [] -> [], o
         | (x, imp)::bs' ->
           let x' = {freshen_bv x with sort=subst o x.sort} in
+          let imp = subst_imp o imp in
           let o = DB(0, x')::shift_subst 1 o in
           let bs', o = aux bs' o in
           (x',imp)::bs', o in
@@ -534,6 +545,7 @@ let close_binders (bs:binders) : binders =
         | [] -> []
         | (x, imp)::tl ->
           let x = {x with sort=subst s x.sort} in
+          let imp = subst_imp s imp in
           let s' = NM(x, 0)::shift_subst 1 s in
           (x, imp)::aux s' tl in
     aux [] bs

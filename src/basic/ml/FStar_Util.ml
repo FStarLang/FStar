@@ -289,6 +289,7 @@ let string_builder_append b s = BatBuffer.add_string b s
 
 let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
+let stack_dump () = Printexc.raw_backtrace_to_string (Printexc.get_callstack 1000)
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
 [@@deriving show]
@@ -961,6 +962,12 @@ let measure_execution_time tag f =
   let retv = f () in
   print2 "Execution time of %s: %s ms\n" tag (string_of_float (1000.0 *. (Sys.time() -. t)));
   retv
+
+let return_execution_time f =
+  let t1 = Sys.time () in
+  let retv = f () in
+  let t2 = Sys.time () in
+  (retv, 1000.0 *. (t2 -. t1))
 
 (** Hints. *)
 type hint = {

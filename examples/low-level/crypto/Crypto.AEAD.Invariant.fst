@@ -188,7 +188,7 @@ let rec counterblocks i mac_rgn x l from_pos to_pos plain cipher =
   let blockl = v (Cipher.(blocklen (cipherAlg_of_id i))) in
   let remaining = to_pos - from_pos in
   if remaining = 0 then
-    Seq.createEmpty
+    Seq.empty
   else
     let l0 = minNat remaining blockl in
     let l_32 = UInt32.uint_to_t l0 in
@@ -573,7 +573,7 @@ let counterblocks_emp   (i:id)
 			(to_pos:nat{to_pos <= l /\ safelen i 0 PRF.(x.ctr)})
 			(plain:Plain.plain i l)
 			(cipher:lbytes l)
-   : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.createEmpty)
+   : Lemma (safeId i ==> counterblocks i rgn x l to_pos to_pos plain cipher == Seq.empty)
    = ()
 
 (*+ Lemmas about searching for entries in prf_blocks **)

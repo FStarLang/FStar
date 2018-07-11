@@ -33,11 +33,11 @@ let normalize (#t:Type) (x:t) : Tac unit =
   dup ();
   debug (term_to_string (quote x));
   exact (quote x);
-  norm [delta; delta_only [%`(add_1)]; delta_only [%`(set_to_1)]];
+  norm [delta; delta_only [`%(add_1)]; delta_only [`%(set_to_1)]];
   trefl ()
 
 // add_2' is like add_2 but has add_1 inlined (printing verifies this)
-let add_2' : int -> int = synth_by_tactic (fun () -> dump "wat"; normalize ((fun (x:int) -> add_1 (add_1 x))))
+let add_2' : int -> int = synth_by_tactic (fun () -> normalize ((fun (x:int) -> add_1 (add_1 x))))
 
 let create_add_1' : unit -> St unit = synth_by_tactic (fun () -> normalize ((fun (u:unit) ->
              push_frame();

@@ -38,6 +38,7 @@ let logic_qualifier_deprecation_warning =
 %token BACKTICK
 %token BACKTICK_AT
 %token BACKTICK_HASH
+%token BACKTICK_PERC
 %token BANG_LBRACE
 %token BAR
 %token BAR_RBRACK
@@ -125,9 +126,10 @@ let logic_qualifier_deprecation_warning =
 %token <string> OP_MIXFIX_ACCESS
 %token <string> OP_MIXFIX_ASSIGNMENT
 %token PERCENT_LBRACK
-%token PERC_BACKTICK
 %token PIPE_RIGHT
 %token PRAGMALIGHT
+%token PRAGMA_POP_OPTIONS
+%token PRAGMA_PUSH_OPTIONS
 %token PRAGMA_RESET_OPTIONS
 %token PRAGMA_SET_OPTIONS
 %token PRIVATE
@@ -706,6 +708,12 @@ in
 | PRAGMA_RESET_OPTIONS option_string_
     {let (_1, s_opt) = ((), $2) in
       ( ResetOptions s_opt )}
+| PRAGMA_PUSH_OPTIONS option_string_
+    {let (_1, s_opt) = ((), $2) in
+      ( PushOptions s_opt )}
+| PRAGMA_POP_OPTIONS
+    {let _1 = () in
+      ( PopOptions )}
 
 attribute:
   LBRACK_AT list_atomicTerm_ RBRACK
@@ -1078,7 +1086,10 @@ aqual:
                      ( q )}
 
 aqualUniverses:
-  HASH
+  HASH LBRACK tmNoEq RBRACK
+    {let (_1, _2, t, _4) = ((), (), $3, ()) in
+                                ( Meta t )}
+| HASH
     {let _1 = () in
               ( Implicit )}
 | DOLLAR
@@ -1289,7 +1300,23 @@ in
       ( lid, mk_pattern (PatVar (lid.ident, None)) (rhs parseState 1) )}
 
 patternOrMultibinder:
-  atomicPattern
+  LBRACK_BAR lident COLON simpleArrow BAR_RBRACK
+    {let (_1, i, _3, t, _5) = ((), $2, (), $4, ()) in
+      ( let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let w = mk_pattern (PatVar (i, Some (Meta mt)))
+                                 (rhs2 parseState 1 5) in
+        let asc = (t, None) in
+        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
+      )}
+| LBRACK_BAR simpleArrow BAR_RBRACK
+    {let (_1, t, _3) = ((), $2, ()) in
+      ( let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
+        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (Meta mt)))
+                                 (rhs2 parseState 1 3) in
+        let asc = (t, None) in
+        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 3)]
+      )}
+| atomicPattern
     {let pat = $1 in
                       ( [pat] )}
 | LPAREN aqualified_lident_ nonempty_list_aqualified_lident__ COLON simpleArrow refineOpt RPAREN
@@ -2077,10 +2104,11 @@ in
       ( mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un )}
 | BACKTICK_AT atomicTerm
     {let (_1, e) = ((), $2) in
-      ( mk_term (Antiquote (true, e)) (rhs2 parseState 1 3) Un )}
+      ( let q = mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un in
+        mk_term (Antiquote q) (rhs2 parseState 1 3) Un )}
 | BACKTICK_HASH atomicTerm
     {let (_1, e) = ((), $2) in
-      ( mk_term (Antiquote (false, e)) (rhs2 parseState 1 3) Un )}
+      ( mk_term (Antiquote e) (rhs2 parseState 1 3) Un )}
 | tmNoEqWith_appTerm_
     {let e = $1 in
       ( e )}
@@ -2151,10 +2179,11 @@ in
       ( mk_term (Quote (e, Static)) (rhs2 parseState 1 3) Un )}
 | BACKTICK_AT atomicTerm
     {let (_1, e) = ((), $2) in
-      ( mk_term (Antiquote (true, e)) (rhs2 parseState 1 3) Un )}
+      ( let q = mk_term (Quote (e, Dynamic)) (rhs2 parseState 1 3) Un in
+        mk_term (Antiquote q) (rhs2 parseState 1 3) Un )}
 | BACKTICK_HASH atomicTerm
     {let (_1, e) = ((), $2) in
-      ( mk_term (Antiquote (false, e)) (rhs2 parseState 1 3) Un )}
+      ( mk_term (Antiquote e) (rhs2 parseState 1 3) Un )}
 | tmNoEqWith_tmRefinement_
     {let e = $1 in
       ( e )}
@@ -2188,7 +2217,7 @@ tmNoEqWith_appTerm_:
 | LBRACE recordExp RBRACE
     {let (_1, e, _3) = ((), $2, ()) in
                               ( e )}
-| PERC_BACKTICK atomicTerm
+| BACKTICK_PERC atomicTerm
     {let (_1, e) = ((), $2) in
       ( mk_term (VQuote e) (rhs2 parseState 1 3) Un )}
 | TILDE atomicTerm
@@ -2227,7 +2256,7 @@ tmNoEqWith_tmRefinement_:
 | LBRACE recordExp RBRACE
     {let (_1, e, _3) = ((), $2, ()) in
                               ( e )}
-| PERC_BACKTICK atomicTerm
+| BACKTICK_PERC atomicTerm
     {let (_1, e) = ((), $2) in
       ( mk_term (VQuote e) (rhs2 parseState 1 3) Un )}
 | TILDE atomicTerm

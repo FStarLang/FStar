@@ -56,8 +56,15 @@
     <Compile Include="FStar.TypeChecker.Common.fs" />
     <Compile Include="FStar.TypeChecker.Env.fsi" />
     <Compile Include="FStar.TypeChecker.Env.fs" />
+    <Compile Include="boot/FStar.TypeChecker.NBETerm.fsi" />
+    <Compile Include="boot/FStar.TypeChecker.NBETerm.fs" />
+    <Compile Include="FStar.TypeChecker.Cfg.fsi" />
+    <Compile Include="FStar.TypeChecker.Cfg.fs" />
+    <Compile Include="FStar.TypeChecker.PatternUtils.fsi" />
+    <Compile Include="FStar.TypeChecker.PatternUtils.fs" />
     <Compile Include="FStar.TypeChecker.Normalize.fsi" />
     <Compile Include="FStar.TypeChecker.Normalize.fs" />
+    <Compile Include="FStar.TypeChecker.NBE.fs" />
     <Compile Include="FStar.TypeChecker.Err.fs" />
     <Compile Include="FStar.TypeChecker.Rel.fsi" />
     <Compile Include="FStar.TypeChecker.Rel.fs" />
@@ -92,7 +99,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core" >
+    <Reference Include="FSharp.Core">
       <HintPath>..\VS\packages\FSharp.Core.4.2.3/lib/net45/FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>

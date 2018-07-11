@@ -42,11 +42,6 @@ module SS = FStar.Syntax.Subst
 let desugar_disjunctive_pattern pats when_opt branch =
     pats |> List.map (fun pat -> U.branch(pat, when_opt, branch))
 
-let trans_aqual = function
-  | Some AST.Implicit -> Some S.imp_tag
-  | Some AST.Equality -> Some S.Equality
-  | _ -> None
-
 let trans_qual r maybe_effect_id = function
   | AST.Private ->       S.Private
   | AST.Assumption ->    S.Assumption
@@ -75,6 +70,8 @@ let trans_qual r maybe_effect_id = function
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
   | AST.ResetOptions sopt -> S.ResetOptions sopt
+  | AST.PushOptions sopt -> S.PushOptions sopt
+  | AST.PopOptions -> S.PopOptions
   | AST.LightOff -> S.LightOff
 
 let as_imp = function
@@ -149,8 +146,8 @@ let op_as_term env arity rng op : option<S.term> =
       r C.read_lid delta_equational
     | "@" ->
       if Options.ml_ish ()
-      then r C.list_append_lid delta_equational
-      else r C.list_tot_append_lid delta_equational
+      then r C.list_append_lid     (Delta_equational_at_level 2)
+      else r C.list_tot_append_lid (Delta_equational_at_level 2)
     | "^" ->
       r C.strcat_lid delta_equational
     | "|>" ->
@@ -344,11 +341,6 @@ type bnd =
 let binder_of_bnd = function
   | LocalBinder (a, aq) -> a, aq
   | _ -> failwith "Impossible"
-let as_binder env imp = function
-  | (None, k) -> null_binder k, env
-  | (Some a, k) ->
-    let env, a = Env.push_bv env a in
-    ({a with sort=k}, trans_aqual imp), env
 
 type env_t = Env.env
 type lenv_t = list<bv>
@@ -510,10 +502,12 @@ let rec desugar_universe t : Syntax.universe =
 let check_no_aq (aq : antiquotations) : unit =
     match aq with
     | [] -> ()
-    | (bv, b, e)::_ ->
+    | (bv, { n = Tm_quoted (e, { qkind = Quote_dynamic })})::_ ->
         raise_error (Errors.Fatal_UnexpectedAntiquotation,
-                      BU.format2 "Unexpected antiquotation: %s(%s)" (if b then "`@" else "`#")
-                                                                    (Print.term_to_string e)) e.pos
+                      BU.format1 "Unexpected antiquotation: `@(%s)" (Print.term_to_string e)) e.pos
+    | (bv, e)::_ ->
+        raise_error (Errors.Fatal_UnexpectedAntiquotation,
+                      BU.format1 "Unexpected antiquotation: `#(%s)" (Print.term_to_string e)) e.pos
 
 (* issue 769: check that other fields are also of the same record. If
    so, then return the record found by field name resolution. *)
@@ -646,7 +640,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
       | PatTvar(x, aq)
       | PatVar (x, aq) ->
         let imp = (aq=Some Implicit) in
-        let aq = trans_aqual aq in
+        let aq = trans_aqual env aq in
         let loc, env, xbv = resolvex loc env x in
         loc, env, LocalBinder(xbv, aq), pos <| Pat_var xbv, imp
 
@@ -1387,10 +1381,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                } in
       mk <| Tm_quoted (tm, qi), noaqs
 
-    | Antiquote (b, e) ->
+    | Antiquote e ->
         let bv = S.new_bv (Some e.range) S.tun in
         (* We use desugar_term, so the there can be double antiquotations *)
-        S.bv_to_name bv, [(bv, b, desugar_term env e)]
+        S.bv_to_name bv, [(bv, desugar_term env e)]
 
     | Quote (e, Dynamic) ->
       let qi = { qkind = Quote_dynamic
@@ -1714,7 +1708,7 @@ and typars_of_binders env bs =
             | Some a, k ->
                 let env, a = push_bv env a in
                 let a = {a with sort=k} in
-                (env, (a, trans_aqual b.aqual)::out)
+                (env, (a, trans_aqual env b.aqual)::out)
             | _ -> raise_error (Errors.Fatal_UnexpectedBinder, "Unexpected binder") b.brange) (env, []) bs in
     env, List.rev tpars
 
@@ -1724,6 +1718,18 @@ and desugar_binder env b : option<ident> * S.term = match b.b with
   | TVariable x     -> Some x, mk (Tm_type U_unknown) None x.idRange
   | NoName t        -> None, desugar_typ env t
   | Variable x      -> Some x, tun
+
+and as_binder env imp = function
+  | (None, k) -> null_binder k, env
+  | (Some a, k) ->
+    let env, a = Env.push_bv env a in
+    ({a with sort=k}, trans_aqual env imp), env
+
+and trans_aqual env = function
+  | Some AST.Implicit -> Some S.imp_tag
+  | Some AST.Equality -> Some S.Equality
+  | Some (AST.Meta t) -> Some (S.Meta (desugar_term env t))
+  | None -> None
 
 // FIXME: Would be nice to add auto-generated docs to these
 let mk_data_discriminators quals env datas =
@@ -1818,7 +1824,7 @@ let mk_data_projector_names iquals env se =
                 | Some q -> q
             in
             let iquals =
-                if List.contains S.Abstract iquals
+                if List.contains S.Abstract iquals && not (List.contains S.Private iquals)
                 then S.Private::iquals
                 else iquals
             in
@@ -2065,7 +2071,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
         | Sig_inductive_typ(tname, _, tps, k, _, constrs) when (List.length constrs > 1)->
           let quals = se.sigquals in
-          let quals = if List.contains S.Abstract quals
+          let quals = if List.contains S.Abstract quals && not (List.contains S.Private quals)
                       then S.Private::quals
                       else quals in
           mk_data_discriminators quals env constrs
@@ -2104,28 +2110,31 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
 let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
     let hd, args = U.head_and_args at in
     match (SS.compress hd).n, args with
-    | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_attr ->
+    | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_attr
+                              || S.fv_eq_lid fv C.fail_lax_attr ->
         begin match EMB.unembed (EMB.e_list EMB.e_int) a1 with
-        | Some [] ->
-            raise_error (Errors.Error_EmptyFailErrs, "Found ill-applied fail, argument should be a non-empty list of integers") at.pos
+        | Some es when List.length es > 0->
+            (* Is this an expect_lax_failure? *)
+            let b = S.fv_eq_lid fv C.fail_lax_attr in
+            Some (List.map FStar.BigInt.to_int_fs es, b)
 
-        | Some es -> Some (List.map FStar.BigInt.to_int_fs es, false)
-        | None ->
+        | _ ->
             if warn then
-                Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail, argument should be a non-empty list of integer literals");
+                Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied 'expect_failure', argument should be a non-empty list of integer literals");
             None
         end
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_attr ->
-        Some ([], false)
+    | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_attr
+                       || S.fv_eq_lid fv C.fail_lax_attr ->
+        (* Is this an expect_lax_failure? *)
+        let b = S.fv_eq_lid fv C.fail_lax_attr in
+        Some ([], b)
 
-    | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_attr ->
+    | Tm_fvar fv, _ when S.fv_eq_lid fv C.fail_attr
+                      || S.fv_eq_lid fv C.fail_lax_attr ->
         if warn then
-            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied fail, argument should be a non-empty list of integer literals");
+            Errors.log_issue at.pos (Errors.Warning_UnappliedFail, "Found ill-applied 'expect_failure', argument should be a non-empty list of integer literals");
         None
-
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.fail_lax_attr ->
-        Some ([], true)
 
     | _ ->
         None
@@ -2433,13 +2442,13 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   let trans_qual = trans_qual d.drange in
   match d.d with
   | Pragma p ->
-    let se = { sigel = Sig_pragma(trans_pragma p);
+    let p = trans_pragma p in
+    U.process_pragma p d.drange;
+    let se = { sigel = Sig_pragma p;
                sigquals = [];
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
                sigattrs = [] } in
-    if p = LightOff
-    then Options.set_ml_ish();
     env, [se]
 
   | Fsdoc _ -> env, []
@@ -2762,22 +2771,35 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
 /////////////////////////////////////////////////////////////////////////////////////////
 //External API for modules
 /////////////////////////////////////////////////////////////////////////////////////////
+let with_options (f:unit -> 'a) : 'a =
+    FStar.Options.push();
+    let res = f () in
+    let light = FStar.Options.ml_ish() in
+    FStar.Options.pop();
+    if light then FStar.Options.set_ml_ish();
+    res
+
 let ast_modul_to_modul modul : withenv<S.modul> =
     fun env ->
-        let env, modul = desugar_modul env modul in
-         modul,env
+        with_options (fun () ->
+        let e, m = desugar_modul env modul in
+        m, e)
 
 let decls_to_sigelts decls : withenv<S.sigelts> =
     fun env ->
+        with_options (fun () ->
         let env, sigelts = desugar_decls env decls in
-        sigelts, env
+        sigelts, env)
 
 let partial_ast_modul_to_modul modul a_modul : withenv<S.modul> =
     fun env ->
+        with_options (fun () ->
         let env, modul = desugar_partial_modul modul env a_modul in
-        modul, env
+        modul, env)
 
-let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) (erase_univs:S.term -> S.term) : withenv<unit> =
+let add_modul_to_env (m:Syntax.modul)
+                     (mii:module_inclusion_info)
+                     (erase_univs:S.term -> S.term) : withenv<unit> =
   fun en ->
       let erase_univs_ed ed =
           let erase_binders bs =
