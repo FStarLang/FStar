@@ -5,6 +5,6 @@ open MiniParse.Impl.Base
 type test = | TA | TB | TC | TD
 
 noextract
-val p : parser test
+val p : parser_spec test
 
-val q : parser32 p
+val q : parser_impl p

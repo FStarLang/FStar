@@ -12,7 +12,7 @@ let p = T.synth_by_tactic (fun () -> gen_enum_parser T.SMT (`test))
 
 #set-options "--z3rlimit 32"
 
-let q = T.synth_by_tactic (fun () -> gen_parser32 T.SMT (`p))
+let q = T.synth_by_tactic (fun () -> gen_parser_impl T.SMT (`p))
 
 #reset-options
  

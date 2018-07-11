@@ -23,8 +23,8 @@ let synth_nlist_recip (#t: Type) (n: nat) (xy: nlist (n + 1) t) : Tot (t * nlist
 let rec parse_nlist
   (n: nat)
   (#t: Type0)
-  (p: parser t)
-: Tot (parser (nlist n t))
+  (p: parser_spec t)
+: Tot (parser_spec (nlist n t))
 = if n = 0
   then parse_ret []
   else
@@ -36,17 +36,17 @@ let rec parse_nlist
 let rec serialize_nlist
   (n: nat)
   (#t: Type0)
-  (#p: parser t)
-  (s: serializer p)
-: Tot (serializer (parse_nlist n p))
+  (#p: parser_spec t)
+  (s: serializer_spec p)
+: Tot (serializer_spec (parse_nlist n p))
 = if n = 0
-  then Serializer (fun _ -> Seq.createEmpty)
+  then Serializer (fun _ -> Seq.empty)
   else serialize_synth _ (synth_nlist (n - 1)) (serialize_nondep_then s (serialize_nlist (n - 1) s)) (synth_nlist_recip (n - 1)) ()
 
 let serialize_nlist_nil
   (#t: Type0)
-  (p: parser t)
-  (s: serializer p)
+  (p: parser_spec t)
+  (s: serializer_spec p)
 : Lemma
   (ensures (serialize (serialize_nlist 0 s) [] == Seq.createEmpty))
 = ()
@@ -56,8 +56,8 @@ let serialize_nlist_nil
 let serialize_list_cons
   (#t: Type0)
   (n: nat)
-  (#p: parser t)
-  (s: serializer p)
+  (#p: parser_spec t)
+  (s: serializer_spec p)
   (a: t)
   (q: nlist n t)
 : Lemma
@@ -68,8 +68,8 @@ let serialize_list_cons
 
 let serialize_list_singleton
   (#t: Type0)
-  (#p: parser t)
-  (s: serializer p)
+  (#p: parser_spec t)
+  (s: serializer_spec p)
   (a: t)
 : Lemma
   (ensures (serialize (serialize_nlist 1 s) [a] == serialize s a))
@@ -83,8 +83,8 @@ let list_length_append (l1:list 'a) (l2:list 'a) :
 let rec serialize_list_append
   (#t: Type0)
   (n1 n2: nat)
-  (#p: parser t)
-  (s: serializer p)
+  (#p: parser_spec t)
+  (s: serializer_spec p)
   (l1: nlist n1 t)
   (l2: nlist n2 t)
 : Lemma

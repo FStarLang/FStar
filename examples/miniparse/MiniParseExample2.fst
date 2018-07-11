@@ -76,7 +76,7 @@ let imp1 : (x: bounded_u8 4) -> Tot (sum_case #somme #(bounded_u8 4) imp0 x) =
       ))))))
 
 noextract
-val somme_p : parser somme
+val somme_p : parser_spec somme
 
 let somme_p =
   parse_sum

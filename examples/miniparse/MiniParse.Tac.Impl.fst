@@ -15,15 +15,15 @@ let mk_u32 (n: nat { n < 4294967296 } ) : Tot U32.t = U32.uint_to_t n
 
 (* Generate the parser implementation from the parser specification *)
 
-let rec gen_parser32' (p: T.term) : T.Tac T.term =
+let rec gen_parser_impl' (p: T.term) : T.Tac T.term =
   let (hd, tl) = app_head_tail p in
-  if hd `T.term_eq` (`(parse_ret)) then T.mk_app (`(parse32_ret)) tl else
-  if hd `T.term_eq` (`(parse_u8)) then (`(parse32_u8)) else
+  if hd `T.term_eq` (`(parse_ret)) then T.mk_app (`(parse_ret_impl)) tl else
+  if hd `T.term_eq` (`(parse_u8)) then (`(parse_u8_impl)) else
   if hd `T.term_eq` (`(nondep_then)) then match tl with
   | [t1; (p1, _); t2; (p2, _)] ->
-    let p1' = gen_parser32' p1 in
-    let p2' = gen_parser32' p2 in
-    T.mk_app (`(parse32_nondep_then)) [
+    let p1' = gen_parser_impl' p1 in
+    let p2' = gen_parser_impl' p2 in
+    T.mk_app (`(parse_nondep_then_impl)) [
       t1;
       (p1, T.Q_Implicit);
       (p1', T.Q_Explicit);
@@ -42,8 +42,8 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
     let bx = T.fresh_binder t1 in
     let x = T.pack (T.Tv_Var (T.bv_of_binder bx)) in
     let f2' = T.pack (T.Tv_Abs bx (T.mk_app f2 [x, T.Q_Explicit])) in
-    let p1' = gen_parser32' p1 in
-    T.mk_app (`(parse32_synth)) [
+    let p1' = gen_parser_impl' p1 in
+    T.mk_app (`(parse_synth_impl)) [
       qt1;
       t2;
       (p1, T.Q_Implicit);
@@ -58,7 +58,7 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
   if hd `T.term_eq` (`parse_bounded_u8)
   then match tl with
   | [(b, _)] ->
-    T.mk_app (`parse32_bounded_u8) [(b, T.Q_Explicit)]
+    T.mk_app (`parse_bounded_u8_impl) [(b, T.Q_Explicit)]
   | _ -> tfail "not enough arguments to parse_bounded_u8"
   else
   if hd `T.term_eq` (`parse_filter)
@@ -67,8 +67,8 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
     let bx = T.fresh_binder t in
     let x = T.pack (T.Tv_Var (T.bv_of_binder bx)) in
     let f' = T.pack (T.Tv_Abs bx (T.mk_app f [x, T.Q_Explicit])) in
-    let p' = gen_parser32' p in
-    T.mk_app (`parse32_filter) [
+    let p' = gen_parser_impl' p in
+    T.mk_app (`parse_filter_impl) [
       (t, T.Q_Implicit);
       (p, T.Q_Implicit);
       (p', T.Q_Explicit);
@@ -84,13 +84,13 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
     if hd' `T.term_eq` (`(TS.mk_package))
     then match tl' with
     | [_; (p, _); _] ->
-      gen_parser32' p
+      gen_parser_impl' p
     | _ -> tfail "Not enough arguments to mk_package"
     else begin match T.inspect hd with
     | T.Tv_FVar v ->
       let env = T.cur_env () in
       let t' = T.norm_term_env env [iota] (T.mk_app (unfold_term hd') tl') in
-      gen_parser32' (T.mk_app hd [qt; (t', T.Q_Explicit)])
+      gen_parser_impl' (T.mk_app hd [qt; (t', T.Q_Explicit)])
     | _ -> tfail "Unknown parser package"
     end
   | _ ->
@@ -104,8 +104,8 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
     begin match tv with
     | T.Tv_Const (T.C_Int _) ->
       let n' = T.mk_app (`(mk_u32)) [T.pack tv, T.Q_Explicit] in
-      let p' = gen_parser32' p in
-      T.mk_app (`parse32_nlist) [
+      let p' = gen_parser_impl' p in
+      T.mk_app (`parse_nlist_impl) [
         (n, T.Q_Explicit);
         (n', T.Q_Explicit);
         (t, T.Q_Implicit);
@@ -120,23 +120,23 @@ let rec gen_parser32' (p: T.term) : T.Tac T.term =
   | T.Tv_FVar v ->
     let env = T.cur_env () in
     let t' = T.norm_term_env env [iota] (T.mk_app (unfold_term hd) tl) in
-    gen_parser32' t'
+    gen_parser_impl' t'
   | _ ->
     tfail "Unknown parser combinator"
 
 let p = parse_u8 `nondep_then` parse_ret 42
 
-let gen_parser32 (pol: T.guard_policy) (p: T.term) : T.Tac unit =
-  let t = gen_parser32' p in
+let gen_parser_impl (pol: T.guard_policy) (p: T.term) : T.Tac unit =
+  let t = gen_parser_impl' p in
   T.exact_guard t;
   according_to pol (fun () -> tconclude_with [
     synth_inverse_forall_bounded_u8_solve;
     synth_inverse_forall_tenum_solve;
   ]);
-  T.print "gen_parser32 spits:";
+  T.print "gen_parser_impl spits:";
   T.print (T.term_to_string t)
 
-let q : parser32 p = T.synth_by_tactic (fun () -> gen_parser32 T.Goal (`(p)))
+let q : parser_impl p = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal (`(p)))
 
 let p' = p `nondep_then` parse_u8
 
@@ -144,16 +144,16 @@ let p' = p `nondep_then` parse_u8
 
 #push-options "--print_implicits"
 
-let q' : parser32 p' = T.synth_by_tactic (fun () -> gen_parser32 T.Goal (`(p')))
+let q' : parser_impl p' = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal (`(p')))
 
-let r : parser int =
+let r : parser_spec int =
   parse_synth
     (parse_ret 42)
     (fun x -> x + 1)
     (fun x -> x - 1)
 
-let r' : parser32 r = T.synth_by_tactic (fun () -> gen_parser32 T.Goal (`(r)))
+let r' : parser_impl r = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal (`(r)))
 
-let j : parser TS.t = TS.package_parser TS.p
+let j : parser_spec TS.t = TS.package_parser TS.p
 
-let j32 : parser32 j = T.synth_by_tactic (fun () -> gen_parser32 T.Goal (`(j)))
+let j32 : parser_impl j = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal (`(j)))

@@ -3,9 +3,9 @@ include MiniParse.Spec.Combinators
 
 module U8 = FStar.UInt8
 
-let parse_u8 : parser U8.t = make_total_constant_size_parser 1 U8.t (fun x -> Seq.index x 0)
+let parse_u8 : parser_spec U8.t = make_total_constant_size_parser 1 U8.t (fun x -> Seq.index x 0)
 
-let serialize_u8 : serializer parse_u8 = Serializer (fun x -> Seq.create 1 x)
+let serialize_u8 : serializer_spec parse_u8 = Serializer (fun x -> Seq.create 1 x)
 
 inline_for_extraction
 let mk_u8 (n: nat { n < 256 } ) : Tot U8.t = U8.uint_to_t n
@@ -84,11 +84,11 @@ inline_for_extraction
 let bounded_u8_eq (b: nat) : Tot (bounded_u8 b -> bounded_u8 b -> Tot bool) =
   op_Equality
 
-let parse_bounded_u8 (b: nat) : Tot (parser (bounded_u8 b)) =
+let parse_bounded_u8 (b: nat) : Tot (parser_spec (bounded_u8 b)) =
   parse_synth
     (parse_filter parse_u8 (fun x -> U8.v x < b))
     (fun x -> x <: bounded_u8 b)
     (fun x -> x)
 
-let serialize_bounded_u8 (b: nat) : Tot (serializer (parse_bounded_u8 b)) =
+let serialize_bounded_u8 (b: nat) : Tot (serializer_spec (parse_bounded_u8 b)) =
   Serializer (fun x -> serialize serialize_u8 x)
