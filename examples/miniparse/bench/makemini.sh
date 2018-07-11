@@ -20,21 +20,21 @@ make1 () {
 
 	FLATMODULE=$(echo $MODULENAME | tr -d '.')
 
-	cat MiniStub.fst | sed "s/__MODULE__/${MODULENAME}/" \
-			 | sed "s/__SUFFIX__/${FLATMODULE}/" \
-			 | sed "s/__SIZE__/${SIZE}/" \
-			 | sed "s/__CTORS__/${CTORS}/" \
-			 | sed "s/__FACTOR__/${FACTOR}/" \
-			 | sed "s/__SEED__/${SEED}/" \
-			 | sed "s/__POLICY__/${POLICY}/" \
+	cat MiniStub.fst | sed "s/__MODULE__/${MODULENAME}/g" \
+			 | sed "s/__SUFFIX__/${FLATMODULE}/g" \
+			 | sed "s/__SIZE__/${SIZE}/g" \
+			 | sed "s/__CTORS__/${CTORS}/g" \
+			 | sed "s/__FACTOR__/${FACTOR}/g" \
+			 | sed "s/__SEED__/${SEED}/g" \
+			 | sed "s/__POLICY__/${POLICY}/g" \
 			 > $FILE
-	cat MiniStub.fsti | sed "s/__MODULE__/${MODULENAME}/" \
-			 | sed "s/__SUFFIX__/${FLATMODULE}/" \
-			 | sed "s/__SIZE__/${SIZE}/" \
-			 | sed "s/__CTORS__/${CTORS}/" \
-			 | sed "s/__FACTOR__/${FACTOR}/" \
-			 | sed "s/__SEED__/${SEED}/" \
-			 | sed "s/__POLICY__/${POLICY}/" \
+	cat MiniStub.fsti | sed "s/__MODULE__/${MODULENAME}/g" \
+			 | sed "s/__SUFFIX__/${FLATMODULE}/g" \
+			 | sed "s/__SIZE__/${SIZE}/g" \
+			 | sed "s/__CTORS__/${CTORS}/g" \
+			 | sed "s/__FACTOR__/${FACTOR}/g" \
+			 | sed "s/__SEED__/${SEED}/g" \
+			 | sed "s/__POLICY__/${POLICY}/g" \
 			 > ${FILE}i
 }
 

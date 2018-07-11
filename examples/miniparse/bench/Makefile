@@ -6,16 +6,17 @@ EXCLUDED_FSTAR_FILES=MiniStub.fst
 
 #Guido: Take SIZE > 1, or the the tactic may run out of goals
 # (should be fixed, but who actually needs a 1-case enum verified parser?)
-POLYS=$(foreach SIZE, 4 7 10,\
-      $(foreach FACTOR, 64 256 1024,\
-      $(foreach SE, 0 1 2 3 4,\
-      $(foreach ED, 0 1 2 3 4,\
-      $(foreach POLICY, SMT ,\
-       Bench.MiniParse.Size$(SIZE).Factor$(FACTOR).Seed$(SE)$(ED).$(POLICY).fst ))))) \
-       \
-      $(foreach SIZE, 4 7 10,\
-      $(foreach POLICY, Goal ,\
-       Bench.MiniParse.Size$(SIZE).Factor$(FACTOR).Seed$(SE)$(ED).$(POLICY).fst ))
+POLYS= $(foreach SIZE, 4 7 10,\
+       $(foreach POLICY, Goal ,\
+       Bench.MiniParse.Size$(SIZE).Factor1.Seed00.$(POLICY).fst ))
+
+# $(foreach SIZE, 4 7 10,\
+#       $(foreach FACTOR, 64 256 1024,\
+#       $(foreach SE, 0,\
+#       $(foreach ED, 0,\
+#       $(foreach POLICY, SMT ,\
+#        Bench.MiniParse.Size$(SIZE).Factor$(FACTOR).Seed$(SE)$(ED).$(POLICY).fst ))))) \
+#        \
 
 .depend: $(POLYS)
 
