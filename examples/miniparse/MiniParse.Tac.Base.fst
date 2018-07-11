@@ -25,7 +25,7 @@ let app_head_tail (t: T.term) :
 
 inline_for_extraction
 let ctest (v: bool) (test: bool) : Tot Type =
-  (x: unit { test == v } )
+  (x: squash (test == v))
 
 inline_for_extraction
 let mk_if_t (#t: Type) (test: bool) (x1: (ctest true test -> Tot t)) (x2: (ctest false test -> Tot t)) : Tot t =

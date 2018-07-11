@@ -10,3 +10,5 @@ type palette = nlist 18 (color * U8.t)
 val ps: package palette
 
 val p: parser_impl (package_parser ps)
+
+val s: serializer_impl (package_serializer ps)

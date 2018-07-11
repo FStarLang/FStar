@@ -47,7 +47,7 @@ let serialize_u16_impl : serializer_impl serialize_u16 =
       Some 2ul
     end
 
-#set-options "--z3rlimit 32"
+#set-options "--z3rlimit 64"
 
 inline_for_extraction
 let parse_bounded_u16_impl

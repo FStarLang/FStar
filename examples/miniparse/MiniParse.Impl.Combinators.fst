@@ -15,13 +15,18 @@ let parse_ret_impl
 = fun _ _ -> let h = HST.get () in Some (x, 0ul)
 
 inline_for_extraction
+let serialize_empty_impl
+: serializer_impl serialize_empty
+= fun _ _ _ -> let h = HST.get () in Some 0ul
+
+inline_for_extraction
 let parse_and_then_impl
   (#t:Type)
   (#p:parser_spec t)
   (p32: parser_impl p)
   (#t':Type)
   (p': (t -> Tot (parser_spec t')))
-  (u: unit { and_then_cases_injective p' } )
+  (u: squash (and_then_cases_injective p'))
   (p32' : ((x: t) -> Tot (parser_impl (p' x))))
 : Tot (parser_impl (p `and_then` p'))
 = fun (input: buffer8) (len: U32.t { len == B.len input } ) ->
@@ -98,9 +103,9 @@ let parse_synth_impl
   (f2: t1 -> GTot t2)
   (f2': (x: t1) -> Tot (y: t2 { y == f2 x } ))
   (g1: t2 -> GTot t1)
-  (u: unit {
+  (u: squash (
     synth_inverse g1 f2
-  })
+  ))
 : Tot (parser_impl (parse_synth p1 f2 g1))
 = fun (input: buffer8) (len: U32.t { len == B.len input } ) ->
     match p1' input len with
@@ -117,10 +122,10 @@ let serialize_synth_impl
   (f2: t1 -> GTot t2)
   (g1: t2 -> GTot t1)
   (g1': (x: t2) -> Tot (y: t1 { y == g1 x } ) )
-  (u: unit {
+  (u: squash (
     synth_inverse f2 g1 /\
     synth_inverse g1 f2
-  })
+  ))
 : Tot (serializer_impl (serialize_synth s1 f2 g1 u))
 = fun (output: buffer8) (len: U32.t { len == B.len output } ) (input: t2) ->
     let x = g1' input in
@@ -162,9 +167,9 @@ let make_constant_size_parser_impl
   (sz' : U32.t { U32.v sz' == sz } )
   (#t: Type0)
   (f: ((s: bytes {Seq.length s == sz}) -> GTot (option t)))
-  (u: unit {
+  (u: squash (
     make_constant_size_parser_precond sz t f
-  } )
+  ))
   (f' : (
     (s: buffer8 { B.length s == sz } ) ->
     HST.Stack (option t)
@@ -190,9 +195,9 @@ let make_total_constant_size_parser_impl
   (sz' : U32.t { U32.v sz' == sz } )
   (#t: Type0)
   (f: ((s: bytes {Seq.length s == sz}) -> GTot (t)))
-  (u: unit {
+  (u: squash (
     make_total_constant_size_parser_precond sz t f
-  })
+  ))
   (f' : (
     (s: buffer8 { B.length s == sz } ) ->
     HST.Stack t

@@ -610,10 +610,10 @@ let serialize_synth
   (s1: serializer_spec p1)
   (f2: t1 -> GTot t2)
   (g1: t2 -> GTot t1)
-  (u: unit {
+  (u: squash (
     synth_inverse f2 g1 /\
     synth_inverse g1 f2
-  })
+  ))
 : Tot (serializer_spec (parse_synth p1 f2 g1))
 = bare_serialize_synth_correct p1 f2 s1 g1;
   Serializer (bare_serialize_synth p1 f2 s1 g1)
@@ -679,6 +679,6 @@ let serialize_filter
 
 (* Helpers to define `if` combinators *)
 
-let cond_true (cond: bool) : Tot Type0 = (u: unit { cond == true } )
+let cond_true (cond: bool) : Tot Type0 = (u: squash (cond == true))
 
-let cond_false (cond: bool) : Tot Type0 = (u: unit { cond == false } )
+let cond_false (cond: bool) : Tot Type0 = (u: squash (cond == false))

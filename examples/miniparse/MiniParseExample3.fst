@@ -12,3 +12,5 @@ let ps = ps'
 let p' : parser_impl (package_parser ps') = _ by (gen_parser_impl Goal)
 
 let p = p'
+
+let s = _ by (gen_serializer_impl Goal)
