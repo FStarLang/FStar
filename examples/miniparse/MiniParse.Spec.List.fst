@@ -6,42 +6,97 @@ module L = FStar.List.Tot
 module U32 = FStar.UInt32
 module Classical = FStar.Classical
 
-inline_for_extraction
-let nlist (n: nat) (t: Type) : Tot Type0 =
-  (l: list t { L.length l == n } )
+// inline_for_extraction
+type nlist (n: nat) (t: Type) = (l: list t { L.length l == n } )
+
+// abstract
+let nlist_nil (#t: Type) : Tot (nlist 0 t) = []
+
+// abstract
+let nlist_nil_unique (t: Type) (l: nlist 0 t) : Lemma (l == nlist_nil) = ()
+
+// abstract
+let nlist_cons (#t: Type) (#n: nat) (a: t) (q: nlist n t) : Tot (nlist (n + 1) t) =
+  a :: q
+
+// abstract
+let nlist_destruct (#t: Type) (#n: nat) (x: nlist (n + 1) t) : Tot (t * nlist n t) =
+  let (a :: q) = x in
+  a, q
+
+// abstract
+let nlist_cons_unique (#t: Type) (#n: nat) (x: nlist (n + 1) t) : Lemma
+  (let (a, q) = nlist_destruct x in x == nlist_cons a q)
+= ()
 
 unfold let mul = Prims.op_Multiply
 
 let synth_nlist (#t: Type) (n: nat) (xy: t * nlist n t) : Tot (nlist (n + 1) t) =
   let (x, y) = xy in
-  x :: y
+  nlist_cons x y
 
 let synth_nlist_recip (#t: Type) (n: nat) (xy: nlist (n + 1) t) : Tot (t * nlist n t) =
-  let (x :: y) = xy in
-  (x , y)
+  nlist_destruct xy
 
-let rec parse_nlist
+// abstract
+let synth_inverse_1 (t: Type) (n: nat) : Lemma
+  (synth_inverse (synth_nlist #t n) (synth_nlist_recip n))
+= ()
+
+// abstract
+let synth_inverse_2 (t: Type) (n: nat) : Lemma
+  (synth_inverse (synth_nlist_recip #t n) (synth_nlist n))
+= ()
+
+let rec parse_nlist'
   (n: nat)
   (#t: Type0)
   (p: parser_spec t)
 : Tot (parser_spec (nlist n t))
 = if n = 0
-  then parse_ret []
-  else
+  then parse_ret nlist_nil
+  else begin
+    synth_inverse_1 t (n - 1);
+    synth_inverse_2 t (n - 1);
     parse_synth
-      (p `nondep_then` parse_nlist (n - 1) p)
+      (p `nondep_then` parse_nlist' (n - 1) p)
       (synth_nlist (n - 1))
       (synth_nlist_recip (n - 1))
+  end
 
-let rec serialize_nlist
+abstract
+let parse_nlist
+  (n: nat)
+  (#t: Type0)
+  (p: parser_spec t)
+: Tot (y: parser_spec (nlist n t) { y == parse_nlist' n p } )
+= parse_nlist' n p
+
+let rec serialize_nlist'
   (n: nat)
   (#t: Type0)
   (#p: parser_spec t)
   (s: serializer_spec p)
 : Tot (serializer_spec (parse_nlist n p))
 = if n = 0
-  then Serializer (fun _ -> Seq.empty)
-  else serialize_synth (serialize_nondep_then s (serialize_nlist (n - 1) s)) (synth_nlist (n - 1)) (synth_nlist_recip (n - 1)) ()
+  then begin
+    Classical.forall_intro (nlist_nil_unique t);
+    Serializer (fun _ -> Seq.empty)
+  end
+  else begin
+    synth_inverse_1 t (n - 1);
+    synth_inverse_2 t (n - 1);
+    serialize_synth (serialize_nondep_then s (serialize_nlist' (n - 1) s)) (synth_nlist (n - 1)) (synth_nlist_recip (n - 1)) ()
+  end
+
+abstract
+let serialize_nlist
+  (n: nat)
+  (#t: Type0)
+  (#p: parser_spec t)
+  (s: serializer_spec p)
+: Tot (y: serializer_spec (parse_nlist n p) { y == serialize_nlist' n s })
+= serialize_nlist' n s
 
 let serialize_nlist_nil
   (#t: Type0)
