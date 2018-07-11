@@ -447,11 +447,14 @@ let special_compare (#a:Type) (vm:vmap a bool) (x y:var) =
 let special_first (a:Type) (vm:vmap a bool) (xs:list var) : list var =
   List.Tot.sortWith #nat (special_compare vm) xs
 
+let special_first_correct : permute_correct special_first =
+    (fun #a m vm xs -> sortWith_correct #bool (special_compare vm) #a m vm xs)
+
 let canon_monoid_special (ts:list term) =
   canon_monoid_with bool (is_special ts) false
-    (fun a -> special_first a)
+    special_first
+    (fun #a -> special_first_correct #a) // eta the implicit due to an inference bug
 //    (fun #a m vm xs -> admit ())
-    (fun #a m vm xs -> sortWith_correct #bool (special_compare vm) #a m vm xs)
 
 (* let lem2 (a b c d : int) = *)
 (*   assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1) *)

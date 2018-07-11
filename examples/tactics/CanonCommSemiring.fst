@@ -367,9 +367,14 @@ let is_not_const (t:term) : Tac bool =
     )
   | _ -> true
 
+// GM: Jul 10 2018 (POPL-30h): Having this as a top-level means it's
+// typechecked only once, and we save a few queries.
+let const_last_correct : permute_correct const_last =
+    (fun #a m vm xs -> CCM.sortWith_correct #bool (CCM.const_compare vm) #a m vm xs)
+
 let canon_semiring (#a:Type) (r:cr a) : Tac unit =
   canon_semiring_with bool is_not_const true (quote const_last)
-    (quote (fun #a m vm xs -> CCM.sortWith_correct #bool (CCM.const_compare vm) #a m vm xs))
+    (quote (fun #a -> const_last_correct #a)) // eta the implicit due to a bug in inference
     r
 
 #reset-options "--z3cliopt smt.arith.nl=false"

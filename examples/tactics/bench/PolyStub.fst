@@ -9,7 +9,7 @@ assume val modulo_addition_lemma (a:int) (n:pos) (b:int) : Lemma ((a + b * n) % 
 assume val lemma_div_mod (a:int) (n:pos) : Lemma (a == (a / n) * n + a % n)
 
 
-#reset-options "--using_facts_from '-FStar.Tactics -CanonCommSemiring' --z3rlimit_factor __FACTOR__ --z3seed __SEED__"
+#reset-options "--using_facts_from '* -FStar.Tactics -CanonCommSemiring' --z3rlimit_factor __FACTOR__ --z3seed __SEED__"
 
 // To print timing
 #set-options "--hint_info"
