@@ -15,13 +15,15 @@ class Config(Enum):
     smt_1 = 3
     smt_2 = 4
     smt_3 = 5
+    interp2 = 6
 
 all_modules = \
     [('Poly1', Config.smt_1, 'CanonCommSemiring', ['lemma_poly_multiply']),
      ('Poly1', Config.smt_2, 'CanonCommSemiring', ['lemma_poly_multiply']),
      ('Poly1', Config.smt_3, 'CanonCommSemiring', ['lemma_poly_multiply']),
      ('Poly2', Config.interp, 'CanonCommSemiring', ['lemma_poly_multiply']),
-     ('Poly2', Config.native, 'CanonCommSemiring', ['lemma_poly_multiply'])
+     ('Poly2', Config.native, 'CanonCommSemiring', ['lemma_poly_multiply']),
+     ('Poly2', Config.interp2, 'CanonCommSemiring', ['lemma_poly_multiply']),
     ]
 
 time_regex = re.compile(r'Checked let (?P<lemma>[a-zA-Z0-9\._]+).* in (?P<time>\d+) milliseconds\n')
@@ -73,7 +75,7 @@ def run_tests ():
     # this will delete the contents of tactic_benchmarks.txt
     open('tactic_benchmarks.txt', 'w').close()
 
-    for seed in range(0,101,5):
+    for seed in range(0,150,1):
         for test in all_modules:
             module_name, config, tac_module_name, lemmas = test
 
@@ -87,6 +89,11 @@ def run_tests ():
             elif (config is Config.interp):
                 # Running interpreted tactic
                 results = run_fstar(module_name, ['--z3seed', str(seed)])
+
+            elif (config is Config.interp2):
+                # Running native tactics
+                # gen_native_plugin(tac_module_name)
+                results = run_fstar(module_name, ['--z3seed', str(seed), '--load', tac_module_name, '--no_plugins'])
 
             elif (config is Config.native):
                 # Running native tactics

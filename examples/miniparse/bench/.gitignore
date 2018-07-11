@@ -1,4 +1,3 @@
-*.tex
-*.txt
 *.ml
 Bench.*.fst
+Bench.*.fsti
