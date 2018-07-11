@@ -1,18 +1,24 @@
 FSTAR_HOME=../../..
+INCLUDE_PATHS=..
 KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
 INCLUDE_PATHS=$(KREMLIN_HOME)/kremlib ..
-EXCLUDED_FSTAR_FILES=
-FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
+EXCLUDED_FSTAR_FILES=PolyStub.fst
+
+POLYS=$(foreach FACTOR,1 2 3,\
+      $(foreach SE, 0 1 2 3 4 5 6 7 8 9,\
+      $(foreach ED, 0 1 2 3 4 5 6 7 8 9,\
+      $(foreach MODE, None Canon CanonNative,\
+       Bench.Poly.$(MODE).Factor$(FACTOR).Seed$(SE)$(ED).fst ))))
+
+.depend: $(POLYS)
+
+FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(POLYS) $(wildcard *.fst))
 
 all: verify-all
 
 # Guido: this is a hack, obviously. Just having it here causes evaluation
 # of the command. (yes, GNU make is super dangerous)
-x: $(shell rm -f _cache/Poly?.fst.checked)
-
-# For Poly4, load CanonCommSemiing
-_cache/Poly4.fst.checked: ../CanonCommSemiring.cmxs
-	$(FSTAR) --cache_checked_modules --odir _output --cache_dir _cache --include .. --use_extracted_interfaces true --use_hints --use_hint_hashes Poly4.fst --load CanonCommSemiring
+x: $(shell rm -f _cache/Bench.*.fst.checked)
 
 ../CanonCommSemiring.cmxs:
 	$(MAKE) -C .. canon-native
@@ -21,5 +27,14 @@ $(CACHE_DIR):
 	mkdir -p $@
 
 include ../../Makefile.common
+
+Bench.%.fst: ./makepoly.sh PolyStub.fst
+	./makepoly.sh $@
+
+CanonCommSemiring.cmxs: ../CanonCommSemiring.cmxs
+	ln -sf $< $@
+
+_cache/Bench.%.fst.checked: Bench.%.fst CanonCommSemiring.cmxs
+	$(FSTAR) --cache_off --odir _output --cache_dir _cache $< --load CanonCommSemiring --include ..
 
 verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))

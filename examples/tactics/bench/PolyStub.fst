@@ -1,4 +1,4 @@
-module Poly3
+module __MODULE__
 
 open CanonCommSemiring
 open FStar.Tactics
@@ -8,9 +8,17 @@ open FStar.Mul
 assume val modulo_addition_lemma (a:int) (n:pos) (b:int) : Lemma ((a + b * n) % n = a % n)
 assume val lemma_div_mod (a:int) (n:pos) : Lemma (a == (a / n) * n + a % n)
 
+
+#reset-options "--using_facts_from '-FStar.Tactics -CanonCommSemiring' --z3rlimit_factor __FACTOR__ --z3seed __SEED__"
+
+// To print timing
+#set-options "--hint_info"
+#set-options "--tactics_info"
+#set-options "--log_queries"
+
 [@tcdecltime]
-let lemma_poly_multiply_canon (n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 h1 h2 hh : int) : Lemma
-  (requires p > 0 /\ r1 >= 0 /\ n > 0 /\ 4 * (n * n) == p + 5 /\ r == r1 * n + r0 /\
+let lemma_poly_multiply___SUFFIX__ (p:pos) (n r h r0 r1 h0 h1 h2 s1 d0 d1 d2 h1 h2 hh : int) : Lemma
+  (requires r1 >= 0 /\ n > 0 /\ 4 * (n * n) == p + 5 /\ r == r1 * n + r0 /\
             h == h2 * (n * n) + h1 * n + h0 /\ s1 == r1 + (r1 / 4) /\ r1 % 4 == 0 /\
             d0 == h0 * r0 + h1 * s1 /\ d1 == h0 * r1 + h1 * r0 + h2 * s1 /\
             d2 == h2 * r0 /\ hh == d2 * (n * n) + d1 * n + d0)
@@ -21,5 +29,4 @@ let lemma_poly_multiply_canon (n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 h1 h2 hh : int
     + (h0 * r0 + h1 * (5 * r1_4)) in
   let b = ((h2 * n + h1) * r1_4) in
   modulo_addition_lemma hh_expand p b;
-  assert (h_r_expand == hh_expand + b * (n * n * 4 + (-5)))
-      by (canon_semiring int_cr)
+  assert (h_r_expand == hh_expand + b * (n * n * 4 + (-5))) __BY__
