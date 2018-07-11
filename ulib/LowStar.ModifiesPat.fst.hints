@@ -1,5 +1,5 @@
 [
-  "\u0013)@ŠöÃu\rÄvC2å¶ˆ\u001a",
+  "ê˜=P6upœáRßo³µíî",
   [
     [
       "LowStar.ModifiesPat.loc_disjoint_union_r'",
@@ -8,7 +8,25 @@
       1,
       [ "@query", "lemma_LowStar.Modifies.loc_includes_refl" ],
       0,
-      "b65213ab0eb5a74c75fb365237a757fb"
+      "a1b31596200b8bbe9bb65592df81d6ae"
+    ],
+    [
+      "LowStar.ModifiesPat.loc_disjoint_includes_l",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_LowStar.Modifies.loc_includes_refl" ],
+      0,
+      "2a7a7ba4168e0cd1f8c06135668bd52f"
+    ],
+    [
+      "LowStar.ModifiesPat.loc_disjoint_includes_r",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_LowStar.Modifies.loc_includes_refl" ],
+      0,
+      "845806aca3d4c7b22628c147acbd576f"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_intro",
@@ -17,7 +35,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "b2508772496df9201a39628d0151c3e5"
+      "13d0b654b69ce6efc4ab875ec23a425c"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_live_region",
@@ -26,7 +44,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "605d564f14d06beba58510e31e3d7cc6"
+      "4c68bae74a16897427c7319ff2f1d843"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_mreference_elim",
@@ -35,7 +53,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "981be71f58afaa883130104351a5899b"
+      "ef76c07c9eb8185fc0192f1a707f7245"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_buffer_elim",
@@ -44,7 +62,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "25d74228a1449884f81e494b43843769"
+      "1195bb1cf447a56bd28c4fbe3c9c32cd"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_mreference_weak",
@@ -53,7 +71,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "4f93f1cf70afa8673cb34c168e858827"
+      "5bd8d3ad7b986c221ca8efe425e1e619"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_buffer_weak",
@@ -62,7 +80,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "469194d78bb85bd155811ddd45cc2748"
+      "79eed15fef767b534bace9f032f690f8"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_region_weak",
@@ -71,7 +89,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "1159092da35e85b6a8f3eac1071772e9"
+      "fa6a11a41ef28c87aaaa8f7160c7dcbe"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_region_mreference_weak",
@@ -84,7 +102,7 @@
         "typing_FStar.Monotonic.HyperStack.frameOf"
       ],
       0,
-      "e9d68088ee98c556a5a41c76171d180a"
+      "99defe8126daf156a0a825ce1990586e"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_liveness_insensitive_region_buffer_weak",
@@ -97,7 +115,7 @@
         "typing_LowStar.Buffer.frameOf"
       ],
       0,
-      "7445d4ed0527ffdc20242bff89bf3dc3"
+      "5fceffff73fd8b24d23d7484ab908ac7"
     ],
     [
       "LowStar.ModifiesPat.fresh_frame_modifies_inert",
@@ -109,7 +127,7 @@
         "lemma_LowStar.ModifiesPat.modifies_inert_intro"
       ],
       0,
-      "a7c7500c5a9692d3e87f71d2dcbe7825"
+      "9d350b94166cd0c592852476463e8eea"
     ],
     [
       "LowStar.ModifiesPat.popped_modifies_inert",
@@ -126,7 +144,7 @@
         "typing_FStar.Set.singleton", "typing_LowStar.Modifies.loc_regions"
       ],
       0,
-      "0bfb2b9017e8a3a0d7ca409e8a622467"
+      "a90fcf0c178a2e38484ad99b90fed781"
     ],
     [
       "LowStar.ModifiesPat.modifies_inert_loc_unused_in",
@@ -135,7 +153,7 @@
       1,
       [ "@query", "equation_LowStar.ModifiesPat.modifies_inert" ],
       0,
-      "c3732f1d8474bccab1729eb8d911a566"
+      "0d73c4003a263dd51ddd889d7aae9860"
     ],
     [
       "LowStar.ModifiesPat.unused_in_not_unused_in_disjoint_2",
@@ -144,7 +162,7 @@
       1,
       [ "@query" ],
       0,
-      "7f097155eb663670340f7112f3cab312"
+      "cbf5017963ec77f1cf50a3d6c07bed8b"
     ],
     [
       "LowStar.ModifiesPat.unused_in_not_unused_in_disjoint_1",
@@ -156,7 +174,7 @@
         "lemma_LowStar.ModifiesPat.unused_in_not_unused_in_disjoint_2"
       ],
       0,
-      "5268b86fc4c87008b8e182ff134fbeb3"
+      "a9177a4ae800f80520c87ee59c6bf406"
     ],
     [
       "LowStar.ModifiesPat.unused_in_not_unused_in_disjoint_0",
@@ -168,7 +186,7 @@
         "lemma_LowStar.ModifiesPat.unused_in_not_unused_in_disjoint_2"
       ],
       0,
-      "f93dc75eecbb46b1f25818e2e4028516"
+      "3a2dd8eafcbe09644182ebb7b60011b7"
     ],
     [
       "LowStar.ModifiesPat.modifies_upd'",
@@ -184,7 +202,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "6c127d98cc28d90f7de10f067ec72397"
+      "e52945392f4399c115a9e8cb2e30b979"
     ],
     [
       "LowStar.ModifiesPat.modifies_upd'",
@@ -200,7 +218,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "98b207454f071052eaeeee51b30277fb"
+      "71e1e649e3b11e8bac225df499383d78"
     ]
   ]
 ]
