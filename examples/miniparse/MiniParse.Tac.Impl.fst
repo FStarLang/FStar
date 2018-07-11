@@ -126,17 +126,27 @@ let rec gen_parser_impl' (p: T.term) : T.Tac T.term =
 
 let p = parse_u8 `nondep_then` parse_ret 42
 
-let gen_parser_impl (pol: T.guard_policy) (p: T.term) : T.Tac unit =
-  let t = gen_parser_impl' p in
-  T.exact_guard t;
-  according_to pol (fun () -> tconclude_with [
-    synth_inverse_forall_bounded_u8_solve;
-    synth_inverse_forall_tenum_solve;
-  ]);
-  T.print "gen_parser_impl spits:";
-  T.print (T.term_to_string t)
+let gen_parser_impl (pol: T.guard_policy) : T.Tac unit =
+  let (hd, tl) = app_head_tail (T.cur_goal ()) in
+  let hd1 = T.inspect hd in
+  let hd2 = T.inspect (`parser_impl) in
+  match hd1, hd2, tl with
+  | T.Tv_FVar lid1, T.Tv_FVar lid2, [_; (p, _)] ->
+    if (let i1 = T.inspect_fv lid1 in let i2 = T.inspect_fv lid2 in i1 = i2)
+    then begin
+      let t = gen_parser_impl' p in
+      T.exact_guard t;
+      according_to pol (fun () -> tconclude_with [
+        synth_inverse_forall_bounded_u8_solve;
+        synth_inverse_forall_tenum_solve;
+      ]);
+      T.print "gen_parser_impl spits:";
+      T.print (T.term_to_string t)
+    end else
+      tfail "Not a parser_impl goal"
+  | _ -> tfail "Not a parser_impl goal"
 
-let q : parser_impl p = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal (`(p)))
+let q : parser_impl p = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal)
 
 let p' = p `nondep_then` parse_u8
 
@@ -144,7 +154,7 @@ let p' = p `nondep_then` parse_u8
 
 #push-options "--print_implicits"
 
-let q' : parser_impl p' = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal (`(p')))
+let q' : parser_impl p' = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal)
 
 let r : parser_spec int =
   parse_synth
@@ -152,8 +162,8 @@ let r : parser_spec int =
     (fun x -> x + 1)
     (fun x -> x - 1)
 
-let r' : parser_impl r = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal (`(r)))
+let r' : parser_impl r = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal)
 
 let j : parser_spec TS.t = TS.package_parser TS.p
 
-let j32 : parser_impl j = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal (`(j)))
+let j32 : parser_impl j = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal)
