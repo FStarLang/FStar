@@ -12,16 +12,21 @@ fstar_path = '../../bin/fstar.exe' # relative to tests_path
 class Config(Enum):
     interp = 1
     native = 2
-    smt = 3
+    smt_1 = 3
+    smt_2 = 4
+    smt_3 = 5
 
 all_modules = \
-    [('bench/Poly1', Config.smt, 'CanonCommSemiring', ['lemma_poly_multiply_smt']),
-     ('bench/Poly2', Config.smt, 'CanonCommSemiring', ['lemma_poly_multiply_smt_manual']),
-     ('bench/Poly3', Config.interp, 'CanonCommSemiring', ['lemma_poly_multiply_canon']),
-     ('bench/Poly4', Config.native, 'CanonCommSemiring', ['lemma_poly_multiply_canon_native'])
+    [('Poly1', Config.smt_1, 'CanonCommSemiring', ['lemma_poly_multiply']),
+     ('Poly1', Config.smt_2, 'CanonCommSemiring', ['lemma_poly_multiply']),
+     ('Poly1', Config.smt_3, 'CanonCommSemiring', ['lemma_poly_multiply']),
+     ('Poly2', Config.interp, 'CanonCommSemiring', ['lemma_poly_multiply']),
+     ('Poly2', Config.native, 'CanonCommSemiring', ['lemma_poly_multiply'])
     ]
 
 time_regex = re.compile(r'Checked let (?P<lemma>[a-zA-Z0-9\._]+).* in (?P<time>\d+) milliseconds\n')
+smt_time_regex = re.compile(r'in (?P<time>\d+) milliseconds with fuel')
+tactic_time_regex = re.compile(r'FStar.Tactics.Effect.TAC Prims.unit ran in (?P<time>\d+) ms') # this is overly specific for the general case
 error_regex = re.compile(r'(Error \d+)')
 
 def run_fstar(module, options):
@@ -35,16 +40,17 @@ def gen_native_plugin(module_name):
     options = ['--codegen', 'Plugin', '--extract', module_name]
     return run_fstar(module_name, options)
 
-def format_table(module_name, times, seed, config, errors, tablefmt, include_headers):
+def format_table(module_name, checking_time, smt_time, tactic_time, seed, config, errors, tablefmt, include_headers):
     if include_headers:
-        headers = ['Module', 'Lemma', 'Config', 'Seed', 'Result', 'Time (ms)']
+        headers = ['Module', 'Lemma', 'Config', 'z3seed', 'Result', 'Time (ms)', 'SMT (ms)', 'Tactics (ms)']
     else:
         headers = []
     if errors:
         result = 'Failed'
     else:
         result = 'Success'
-    rows = [(module_name, t[0], config.name, seed, result, t[1]) for t in times]
+    # rows = [(module_name, t[0], config.name, seed, result, t[1]) for t in times]
+    rows = [(module_name, checking_time[0], config.name, seed, result, checking_time[1], smt_time, tactic_time)]
     if rows:
         return tabulate(rows, headers, tablefmt=tablefmt)
     else:
@@ -65,15 +71,20 @@ def run_tests ():
     tables = []
 
     # this will delete the contents of tactic_benchmarks.txt
-    # open('tactic_benchmarks.txt', 'w').close()
+    open('tactic_benchmarks.txt', 'w').close()
 
-    for seed in range(0,101):
+    for seed in range(0,101,5):
         for test in all_modules:
             module_name, config, tac_module_name, lemmas = test
 
             print('Checking ' + module_name + ' with tactics from ' + tac_module_name + ' in ' + config.name + ' (z3seed ' + str(seed) + ')')
 
-            if (config in [Config.interp, Config.smt]):
+
+            if (config in [Config.smt_1, Config.smt_2, Config.smt_3]):
+                # Running SMT only
+                results = run_fstar(module_name, ['--z3seed', str(seed), '--z3rlimit_factor', config.name[-1:]])
+
+            elif (config is Config.interp):
                 # Running interpreted tactic
                 results = run_fstar(module_name, ['--z3seed', str(seed)])
 
@@ -82,11 +93,22 @@ def run_tests ():
                 # gen_native_plugin(tac_module_name)
                 results = run_fstar(module_name, ['--z3seed', str(seed), '--load', tac_module_name])
 
-            times = re.findall(time_regex, results.stdout.decode('utf-8'))
-            times = list(filter((lambda x: x[0] in lemmas), times))
+            results_stdout = results.stdout.decode('utf-8')
+            checking_times = re.findall(time_regex, results_stdout)
+            checking_times = list(filter((lambda x: x[0] in lemmas), checking_times))
+
+            assert (len(checking_times) == 1)
+            checking_time = checking_times[0]
+
             errors = re.findall(error_regex, results.stderr.decode('utf-8'))
 
-            table_plain = format_table(module_name, times, seed, config, errors, 'jira', False)
+            smt_times = re.findall(smt_time_regex, results_stdout)
+            smt_time = sum(map(int, smt_times))
+
+            tactic_times = re.findall(tactic_time_regex, results_stdout)
+            tactic_time = sum(map(int, tactic_times))
+
+            table_plain = format_table(module_name, checking_time, smt_time, tactic_time, seed, config, errors, 'jira', False)
             # table_latex = format_table(module_name, times, seed, config, errors, 'latex', True)
             if table_plain:
                 with open('tactic_benchmarks.txt', 'a') as f:

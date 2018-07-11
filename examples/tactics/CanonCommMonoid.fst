@@ -452,7 +452,7 @@ let special_first_correct : permute_correct special_first =
 
 let canon_monoid_special (ts:list term) =
   canon_monoid_with bool (is_special ts) false
-    special_first
+    (fun x -> special_first x)
     (fun #a -> special_first_correct #a) // eta the implicit due to an inference bug
 //    (fun #a m vm xs -> admit ())
 
