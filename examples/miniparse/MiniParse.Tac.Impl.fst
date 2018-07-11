@@ -55,11 +55,11 @@ let rec gen_parser_impl' (p: T.term) : T.Tac T.term =
     ]
   | _ -> tfail "Not enough arguments to synth"
   else
-  if hd `T.term_eq` (`parse_bounded_u8)
+  if hd `T.term_eq` (`parse_bounded_u16)
   then match tl with
   | [(b, _)] ->
-    T.mk_app (`parse_bounded_u8_impl) [(b, T.Q_Explicit)]
-  | _ -> tfail "not enough arguments to parse_bounded_u8"
+    T.mk_app (`parse_bounded_u16_impl) [(b, T.Q_Explicit)]
+  | _ -> tfail "not enough arguments to parse_bounded_u16"
   else
   if hd `T.term_eq` (`parse_filter)
   then match tl with
@@ -137,7 +137,7 @@ let gen_parser_impl (pol: T.guard_policy) : T.Tac unit =
       let t = gen_parser_impl' p in
       T.exact_guard t;
       according_to pol (fun () -> tconclude_with [
-        synth_inverse_forall_bounded_u8_solve;
+        synth_inverse_forall_bounded_u16_solve;
         synth_inverse_forall_tenum_solve;
       ]);
       T.print "gen_parser_impl spits:";

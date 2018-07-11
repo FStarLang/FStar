@@ -111,17 +111,17 @@ inline_for_extraction
 let serialize_synth_impl
   (#t1: Type0)
   (#t2: Type0)
-  (p1: parser_spec t1)
-  (f2: t1 -> GTot t2)
-  (s1: serializer_spec p1)
+  (#p1: parser_spec t1)
+  (#s1: serializer_spec p1)
   (s1' : serializer_impl s1)
+  (f2: t1 -> GTot t2)
   (g1: t2 -> GTot t1)
   (g1': (x: t2) -> Tot (y: t1 { y == g1 x } ) )
   (u: unit {
     synth_inverse f2 g1 /\
     synth_inverse g1 f2
   })
-: Tot (serializer_impl (serialize_synth p1 f2 s1 g1 u))
+: Tot (serializer_impl (serialize_synth s1 f2 g1 u))
 = fun (output: buffer8) (len: U32.t { len == B.len output } ) (input: t2) ->
     let x = g1' input in
     s1' output len x

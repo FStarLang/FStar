@@ -3,7 +3,7 @@ include MiniParse.Spec.Combinators
 include MiniParse.Spec.Int
 
 module Seq = FStar.Seq
-module U8 = FStar.UInt8
+module U16 = FStar.UInt16
 
 inline_for_extraction
 let refine_with_tag (#tag_t: Type0) (#data_t: Type0) (tag_of_data: (data_t -> GTot tag_t)) (x: tag_t) : Tot Type0 =
@@ -139,57 +139,57 @@ let serialize_sum
 = serialize_tagged_union
     st
     tag_of_data
-    (fun x -> serialize_synth _ ((cases x).ty_to_data) ((cases x).s) ((cases x).data_to_ty) ())
+    (fun x -> serialize_synth ((cases x).s) ((cases x).ty_to_data) ((cases x).data_to_ty) ())
 
 inline_for_extraction
-let bounded_u8_match_t_aux
+let bounded_u16_match_t_aux
   (b: nat)
   (#data_t: Type0)
-  (tag_of_data: (data_t -> Tot (bounded_u8 b)))
+  (tag_of_data: (data_t -> Tot (bounded_u16 b)))
   (b': nat { b' <= b } )
 : Tot Type
-= (x: bounded_u8 b { U8.v x < b' } ) -> Tot (sum_case tag_of_data x)
+= (x: bounded_u16 b { U16.v x < b' } ) -> Tot (sum_case tag_of_data x)
 
 inline_for_extraction
-let bounded_u8_match_t_intro
+let bounded_u16_match_t_intro
   (b: nat)
   (#data_t: Type0)
-  (tag_of_data: (data_t -> Tot (bounded_u8 b)))
-  (j: bounded_u8_match_t_aux b tag_of_data b)
-  (x: bounded_u8 b)
+  (tag_of_data: (data_t -> Tot (bounded_u16 b)))
+  (j: bounded_u16_match_t_aux b tag_of_data b)
+  (x: bounded_u16 b)
 : Tot (sum_case tag_of_data x)
 = j x
 
 inline_for_extraction
-let bounded_u8_match_t_aux_nil
+let bounded_u16_match_t_aux_nil
   (b: nat)
   (#data_t: Type0)
-  (tag_of_data: (data_t -> Tot (bounded_u8 b)))
-: Tot (bounded_u8_match_t_aux b tag_of_data 0)
+  (tag_of_data: (data_t -> Tot (bounded_u16 b)))
+: Tot (bounded_u16_match_t_aux b tag_of_data 0)
 = fun _ -> false_elim ()
 
 inline_for_extraction
-let bounded_u8_match_t_aux_cons_nil
+let bounded_u16_match_t_aux_cons_nil
   (b: nat { b > 0 } )
   (#data_t: Type0)
-  (tag_of_data: (data_t -> Tot (bounded_u8 b)))
-  (y: sum_case #_ #(bounded_u8 b) tag_of_data 0uy)
-: Tot (bounded_u8_match_t_aux b tag_of_data 1)
-= fun (x: bounded_u8 b { U8.v x < 1 } )  -> (
+  (tag_of_data: (data_t -> Tot (bounded_u16 b)))
+  (y: sum_case #_ #(bounded_u16 b) tag_of_data 0us)
+: Tot (bounded_u16_match_t_aux b tag_of_data 1)
+= fun (x: bounded_u16 b { U16.v x < 1 } )  -> (
   y
   )
 
 inline_for_extraction
-let bounded_u8_match_t_aux_cons
+let bounded_u16_match_t_aux_cons
   (b: nat { b > 0 } )
   (#data_t: Type0)
-  (tag_of_data: (data_t -> Tot (bounded_u8 b)))
+  (tag_of_data: (data_t -> Tot (bounded_u16 b)))
   (b' : nat {b' < b /\ b' < 256 })
-  (b_: bounded_u8 b { U8.v b_ == b' } )
-  (z: sum_case #_ #(bounded_u8 b) tag_of_data b_)
-  (y: bounded_u8_match_t_aux b tag_of_data b')
- : Tot (bounded_u8_match_t_aux b tag_of_data (b' + 1))
-= fun (x: bounded_u8 b { U8.v x < b' + 1 } ) ->
-  if x `U8.lt` U8.uint_to_t b'
+  (b_: bounded_u16 b { U16.v b_ == b' } )
+  (z: sum_case #_ #(bounded_u16 b) tag_of_data b_)
+  (y: bounded_u16_match_t_aux b tag_of_data b')
+ : Tot (bounded_u16_match_t_aux b tag_of_data (b' + 1))
+= fun (x: bounded_u16 b { U16.v x < b' + 1 } ) ->
+  if x `U16.lt` U16.uint_to_t b'
   then y x
-  else (z <: sum_case #_ #(bounded_u8 b) tag_of_data x)
+  else (z <: sum_case #_ #(bounded_u16 b) tag_of_data x)

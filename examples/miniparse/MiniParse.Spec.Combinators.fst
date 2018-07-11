@@ -606,9 +606,9 @@ let synth_inverse_intro
 let serialize_synth
   (#t1: Type0)
   (#t2: Type0)
-  (p1: parser_spec t1)
-  (f2: t1 -> GTot t2)
+  (#p1: parser_spec t1)
   (s1: serializer_spec p1)
+  (f2: t1 -> GTot t2)
   (g1: t2 -> GTot t1)
   (u: unit {
     synth_inverse f2 g1 /\

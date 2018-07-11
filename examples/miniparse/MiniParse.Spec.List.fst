@@ -41,7 +41,7 @@ let rec serialize_nlist
 : Tot (serializer_spec (parse_nlist n p))
 = if n = 0
   then Serializer (fun _ -> Seq.empty)
-  else serialize_synth _ (synth_nlist (n - 1)) (serialize_nondep_then s (serialize_nlist (n - 1) s)) (synth_nlist_recip (n - 1)) ()
+  else serialize_synth (serialize_nondep_then s (serialize_nlist (n - 1) s)) (synth_nlist (n - 1)) (synth_nlist_recip (n - 1)) ()
 
 let serialize_nlist_nil
   (#t: Type0)

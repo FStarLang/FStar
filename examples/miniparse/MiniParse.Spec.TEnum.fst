@@ -4,7 +4,7 @@ include MiniParse.Tac.Base
 include MiniParse.Spec.Int
 
 module T = FStar.Tactics
-module U8 = FStar.UInt8
+module U16 = FStar.UInt16
 
 let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.branch) (l: list T.name) : T.Tac (list T.branch) =
   match l with
@@ -12,7 +12,7 @@ let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.bran
   | n :: q ->
     let v' = v + 1 in
     let env = T.cur_env () in
-    let v = T.mk_app (`(mk_u8)) [pack_nat v, T.Q_Explicit] in
+    let v = T.mk_app (`(mk_u16)) [pack_nat v, T.Q_Explicit] in
     let v = T.pack (T.Tv_AscribedT v vty None) in
     let pat =
       T.Pat_Cons (T.pack_fv n) []
@@ -58,7 +58,7 @@ let gen_synth' (t: T.term) (vt: T.term) : T.Tac T.term =
   f
 
 let gen_synth (t: T.term) : T.Tac unit =
-  T.exact_guard (gen_synth' t (`U8.t));
+  T.exact_guard (gen_synth' t (`U16.t));
   tconclude ()
 
 let pat_of_term (t: T.term) : T.Tac T.pattern =
@@ -125,36 +125,36 @@ let tenum_bound (t: T.term) : T.Tac unit =
 
 let gen_synth_bounded' (t: T.term) : T.Tac T.term =
   let bound = tenum_bound' t in
-  let vt = T.mk_app (`bounded_u8) [bound, T.Q_Explicit] in
+  let vt = T.mk_app (`bounded_u16) [bound, T.Q_Explicit] in
   gen_synth' t vt
 
-let synth_inverse_forall_bounded_u8_pred
+let synth_inverse_forall_bounded_u16_pred
   (b: nat)
   (t: Type)
-  (f1: (bounded_u8 b -> GTot t))
-  (f2: (t -> GTot (bounded_u8 b)))
-  (x: bounded_u8 b)
+  (f1: (bounded_u16 b -> GTot t))
+  (f2: (t -> GTot (bounded_u16 b)))
+  (x: bounded_u16 b)
 : GTot Type0
 = f2 (f1 x) == x
 
-let synth_inverse_forall_bounded_u8'
+let synth_inverse_forall_bounded_u16'
   (b: nat)
   (t: Type)
-  (f1: (bounded_u8 b -> GTot t))
-  (f2: (t -> GTot (bounded_u8 b)))
+  (f1: (bounded_u16 b -> GTot t))
+  (f2: (t -> GTot (bounded_u16 b)))
 : GTot Type0
-= forall_bounded_u8 b (synth_inverse_forall_bounded_u8_pred b t f1 f2)
+= forall_bounded_u16 b (synth_inverse_forall_bounded_u16_pred b t f1 f2)
 
-val synth_inverse_forall_bounded_u8_intro
+val synth_inverse_forall_bounded_u16_intro
   (b: nat)
   (t: Type)
-  (f1: (bounded_u8 b -> GTot t))
-  (f2: (t -> GTot (bounded_u8 b)))
-  (u: squash (synth_inverse_forall_bounded_u8' b t f1 f2))
+  (f1: (bounded_u16 b -> GTot t))
+  (f2: (t -> GTot (bounded_u16 b)))
+  (u: squash (synth_inverse_forall_bounded_u16' b t f1 f2))
 : Tot (u' : squash (synth_inverse f2 f1))
 
-let synth_inverse_forall_bounded_u8_intro b t f1 f2 u
-= Classical.forall_intro (Classical.move_requires (forall_bounded_u8_elim b (synth_inverse_forall_bounded_u8_pred b t f1 f2)))
+let synth_inverse_forall_bounded_u16_intro b t f1 f2 u
+= Classical.forall_intro (Classical.move_requires (forall_bounded_u16_elim b (synth_inverse_forall_bounded_u16_pred b t f1 f2)))
 
 let synth_inverse_forall_tenum_solve () : T.Tac unit =
   T.norm [delta; zeta; iota; primops];
@@ -168,13 +168,13 @@ let synth_inverse_forall_tenum_solve () : T.Tac unit =
     T.qed ()
   )
 
-let synth_inverse_forall_bounded_u8_solve'
+let synth_inverse_forall_bounded_u16_solve'
   (b: T.term)
   (t: T.term)
   (f1: T.term)
   (f2: T.term)
 : T.Tac unit =
-  T.apply (T.mk_app (`(synth_inverse_forall_bounded_u8_intro)) [
+  T.apply (T.mk_app (`(synth_inverse_forall_bounded_u16_intro)) [
     b, T.Q_Explicit;
     t, T.Q_Explicit;
     f1, T.Q_Explicit;
@@ -183,16 +183,16 @@ let synth_inverse_forall_bounded_u8_solve'
   let _ = T.divide 1 (fun () ->
     T.norm [delta; zeta; iota; primops];
     T.trivial ();
-    tsuccess "synth_inverse_forall_bounded_u8_solve, main goal"
+    tsuccess "synth_inverse_forall_bounded_u16_solve, main goal"
   ) (fun () ->
     tconclude ()
   )
   in
-  tsuccess "synth_inverse_forall_bounded_u8_solve"
+  tsuccess "synth_inverse_forall_bounded_u16_solve"
 
 let auto_squash_tm () : T.Tac T.term = T.pack (T.Tv_FVar (T.pack_fv ["Prims"; "auto_squash"]))
 
-let synth_inverse_forall_bounded_u8_solve () : T.Tac unit =
+let synth_inverse_forall_bounded_u16_solve () : T.Tac unit =
   let (hd, tl) = app_head_tail (T.cur_goal ()) in
   let auto_squash = auto_squash_tm () in
   if hd `T.term_eq` (`squash) || hd `T.term_eq` auto_squash
@@ -203,14 +203,14 @@ let synth_inverse_forall_bounded_u8_solve () : T.Tac unit =
     then begin match tl' with
     | [ (t, _); (bt, _); (f2, _); (f1, _)] ->
       let (bt_hd, bt_tl) = app_head_tail bt in
-      if bt_hd `T.term_eq` (`bounded_u8)
+      if bt_hd `T.term_eq` (`bounded_u16)
       then begin match bt_tl with
       | [(b, _)] ->
-        synth_inverse_forall_bounded_u8_solve' b t f1 f2
-      | _ -> tfail "not enough arguments to bounded_u8"
+        synth_inverse_forall_bounded_u16_solve' b t f1 f2
+      | _ -> tfail "not enough arguments to bounded_u16"
       end else
         let s = T.term_to_string bt in
-        tfail ("value type " ^ s ^ " is not bounded_u8")
+        tfail ("value type " ^ s ^ " is not bounded_u16")
     | _ -> tfail "not enough arguments to synth_injective"
     end else tfail "Goal is not synth_injective"
   | _ -> tfail "Not enough arguments to squash"
@@ -221,8 +221,8 @@ let synth_inverse_forall_bounded_u8_solve () : T.Tac unit =
 let gen_enum_parser' (p: T.guard_policy) (enum: T.term) : T.Tac T.term =
   let bound = tenum_bound' enum in
   let f = gen_synth_bounded' enum in
-  let val_t = T.mk_app (`bounded_u8) [bound, T.Q_Explicit] in
-  let val_eq = T.mk_app (`bounded_u8_eq) [bound, T.Q_Explicit] in
+  let val_t = T.mk_app (`bounded_u16) [bound, T.Q_Explicit] in
+  let val_eq = T.mk_app (`bounded_u16_eq) [bound, T.Q_Explicit] in
   let g = invert_function' enum val_t val_eq f in
 (*
   let _ = T.tcut (T.mk_app (`squash) [T.mk_app (`synth_inverse) [
@@ -242,9 +242,9 @@ let gen_enum_parser' (p: T.guard_policy) (enum: T.term) : T.Tac T.term =
   ], T.Q_Explicit])
   in
   T.flip ();
-  T.focus (fun () -> according_to pol synth_inverse_forall_bounded_u8_solve);
+  T.focus (fun () -> according_to pol synth_inverse_forall_bounded_u16_solve);
 *)  
-  let pbound = T.mk_app (`parse_bounded_u8) [bound, T.Q_Explicit] in
+  let pbound = T.mk_app (`parse_bounded_u16) [bound, T.Q_Explicit] in
   T.mk_app (`parse_synth) [
     val_t, T.Q_Implicit;
     enum, T.Q_Implicit;
@@ -256,6 +256,6 @@ let gen_enum_parser' (p: T.guard_policy) (enum: T.term) : T.Tac T.term =
 let gen_enum_parser (pol: T.guard_policy) (enum: T.term) : T.Tac unit =
   T.exact_guard (gen_enum_parser' pol enum);
   according_to pol (fun () -> tconclude_with [
-    synth_inverse_forall_bounded_u8_solve;
+    synth_inverse_forall_bounded_u16_solve;
     synth_inverse_forall_tenum_solve;
   ])
