@@ -12,11 +12,11 @@ RUN md ${MYHOME}\FStar
 COPY / ${MYHOME}/FStar/
 WORKDIR ${MYHOME}/FStar
 
-RUN echo %DATE% %TIME% >> %BUILDLOGFILE%
+RUN powershell.exe -c Write-Host (Get-Date).ToString() >> %BUILDLOGFILE%
 COPY build.sh ${MYHOME}/FStar/build.sh
 RUN powershell.exe c:\ewerest\bash.ps1 ./build.sh %TARGET% %BUILDLOGFILE% %MAXTHREADS%
 
-RUN echo %DATE% %TIME% >> %BUILDLOGFILE%
+RUN powershell.exe -c Write-Host (Get-Date).ToString() >> %BUILDLOGFILE%
 
 # Generate query-stats.
 # List the hints that fail to replay.

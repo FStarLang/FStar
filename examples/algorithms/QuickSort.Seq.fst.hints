@@ -8,7 +8,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a94373f9092555b0566903250d15781f"
+      "07a2c5a067e9c352547a0448e7a90edb"
     ],
     [
       "QuickSort.Seq.partition",
@@ -75,7 +75,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "58f83693db072a206450b118e9eaf403"
+      "863c9005ebb83e44118d3056bbbb162d"
     ],
     [
       "QuickSort.Seq.sort",
@@ -136,7 +136,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8bbd75b52d3dcb853e9d8db627e834c5"
+      "cc14dbbf50e02b0976d614cb70536ffe"
     ],
     [
       "QuickSort.Seq.partition",
@@ -203,7 +203,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4f29c8adc63afb3815cf19692b5f9f7e"
+      "6e418edc20a354d82fcf6a7de4a33377"
     ],
     [
       "QuickSort.Seq.sort",
@@ -264,7 +264,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "92857a390609a4b413881a9d8e51b98e"
+      "29f98bbce6ff5e390741d0d3a22e0406"
     ]
   ]
 ]

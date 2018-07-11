@@ -505,12 +505,12 @@ let js_pushkind s : push_kind = match js_str s with
   | _ -> js_fail "push_kind" s
 
 let js_reductionrule s = match js_str s with
-  | "beta" -> FStar.TypeChecker.Normalize.Beta
-  | "delta" -> FStar.TypeChecker.Normalize.UnfoldUntil SS.delta_constant
-  | "iota" -> FStar.TypeChecker.Normalize.Iota
-  | "zeta" -> FStar.TypeChecker.Normalize.Zeta
-  | "reify" -> FStar.TypeChecker.Normalize.Reify
-  | "pure-subterms" -> FStar.TypeChecker.Normalize.PureSubtermsWithinComputations
+  | "beta" -> FStar.TypeChecker.Env.Beta
+  | "delta" -> FStar.TypeChecker.Env.UnfoldUntil SS.delta_constant
+  | "iota" -> FStar.TypeChecker.Env.Iota
+  | "zeta" -> FStar.TypeChecker.Env.Zeta
+  | "reify" -> FStar.TypeChecker.Env.Reify
+  | "pure-subterms" -> FStar.TypeChecker.Env.PureSubtermsWithinComputations
   | _ -> js_fail "reduction rule" s
 
 type completion_context =
@@ -570,7 +570,7 @@ type query' =
 | VfsAdd of option<string> (* fname *) * string (* contents *)
 | AutoComplete of string * completion_context
 | Lookup of string * lookup_context * option<position> * list<string>
-| Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
+| Compute of string * option<list<FStar.TypeChecker.Env.step>>
 | Search of string
 | GenericError of string
 | ProtocolViolation of string
@@ -1264,13 +1264,13 @@ let run_compute st term rules =
   let rules =
     (match rules with
      | Some rules -> rules
-     | None -> [FStar.TypeChecker.Normalize.Beta;
-               FStar.TypeChecker.Normalize.Iota;
-               FStar.TypeChecker.Normalize.Zeta;
-               FStar.TypeChecker.Normalize.UnfoldUntil SS.delta_constant])
-    @ [FStar.TypeChecker.Normalize.Inlining;
-       FStar.TypeChecker.Normalize.Eager_unfolding;
-       FStar.TypeChecker.Normalize.Primops] in
+     | None -> [FStar.TypeChecker.Env.Beta;
+               FStar.TypeChecker.Env.Iota;
+               FStar.TypeChecker.Env.Zeta;
+               FStar.TypeChecker.Env.UnfoldUntil SS.delta_constant])
+    @ [FStar.TypeChecker.Env.Inlining;
+       FStar.TypeChecker.Env.Eager_unfolding;
+       FStar.TypeChecker.Env.Primops] in
 
   let normalize_term tcenv rules t =
     FStar.TypeChecker.Normalize.normalize rules tcenv t in

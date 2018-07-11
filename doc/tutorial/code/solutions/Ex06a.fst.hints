@@ -14,7 +14,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d7dff1d7bd96c8cf31e258a60378964c"
+      "40dfcc4cc59d1756c140095a24921897"
     ],
     [
       "Ex06a.partition",
@@ -28,7 +28,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1aa7d86c972406967cf11d002583f4b6"
+      "6e45ef2fa4d7a90ee59a57e909c10464"
     ]
   ]
 ]

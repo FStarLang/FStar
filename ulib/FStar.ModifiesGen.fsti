@@ -485,6 +485,16 @@ val modifies_intro
     (requires (HS.contains h b))
     (ensures (HS.contains h' b))
   ))
+  (addr_unused_in: (
+    (r: HS.rid) ->
+    (n: nat) ->
+    Lemma
+    (requires (
+      HS.live_region h r /\
+      HS.live_region h' r /\ n `Heap.addr_unused_in` (HS.get_hmap h' `Map.sel` r)
+    ))
+    (ensures (n `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` r)))
+  ))
   (alocs: (
     (r: HS.rid) ->
     (a: nat) ->
@@ -512,6 +522,13 @@ val modifies_none_intro
     (requires (HS.contains h b))
     (ensures (HS.contains h' b /\ HS.sel h' b == HS.sel h b))
   ))
+  (addr_unused_in: (
+    (r: HS.rid) ->
+    (n: nat) ->
+    Lemma
+    (requires (HS.live_region h r /\ HS.live_region h' r /\ n `Heap.addr_unused_in` (HS.get_hmap h' `Map.sel` r)))
+    (ensures (n `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` r)))
+  ))
 : Lemma
   (modifies (loc_none #_ #c) h h')
 
@@ -530,6 +547,13 @@ val modifies_address_intro
     Lemma
     (requires ((r <> HS.frameOf b \/ n <> HS.as_addr b) /\ HS.contains h b))
     (ensures (HS.contains h' b /\ HS.sel h' b == HS.sel h b))
+  ))
+  (addr_unused_in: (
+    (r': HS.rid) ->
+    (n' : nat) ->
+    Lemma
+    (requires ((r' <> r \/ n' <> n) /\ HS.live_region h r' /\ HS.live_region h' r' /\ n' `Heap.addr_unused_in` (HS.get_hmap h' `Map.sel` r')))
+    (ensures (n' `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` r')))
   ))
 : Lemma
   (modifies (loc_addresses #_ #c false r (Set.singleton n)) h h')
@@ -557,6 +581,13 @@ val modifies_aloc_intro
     Lemma
     (requires (HS.contains h b))
     (ensures (HS.contains h' b))
+  ))
+  (addr_unused_in: (
+    (r: HS.rid) ->
+    (n: nat) ->
+    Lemma
+    (requires (HS.live_region h r /\ HS.live_region h' r /\ n `Heap.addr_unused_in` (HS.get_hmap h' `Map.sel` r)))
+    (ensures (n `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` r)))
   ))
   (alocs: (
     (x: al r n) ->
@@ -719,6 +750,12 @@ val fresh_frame_modifies
   (requires (HS.fresh_frame h0 h1))
   (ensures (modifies #_ #c loc_none h0 h1))
 
+val popped_modifies
+  (#aloc: aloc_t) (c: cls aloc)
+  (h0 h1: HS.mem) : Lemma
+  (requires (HS.popped h0 h1))
+  (ensures (modifies #_ #c (loc_region_only false (HS.get_tip h0)) h0 h1))
+
 val modifies_fresh_frame_popped
   (#aloc: aloc_t) (#c: cls aloc)
   (h0 h1: HS.mem)
@@ -799,6 +836,16 @@ val modifies_none_modifies
   (requires (HST.modifies_none h1 h2))
   (ensures (modifies (loc_none #_ #c) h1 h2))
 
+val modifies_upd
+  (#aloc: aloc_t) (#c: cls aloc)
+  (#t: Type) (#pre: Preorder.preorder t)
+  (r: HS.mreference t pre)
+  (v: t)
+  (h: HS.mem)
+: Lemma
+  (requires (HS.contains h r))
+  (ensures (modifies #_ #c (loc_mreference r) h (HS.upd h r v)))
+
 (** BEGIN TODO: move to FStar.Monotonic.HyperStack *)
 
 val does_not_contain_addr
@@ -828,6 +875,13 @@ val addr_unused_in_does_not_contain_addr
 : Lemma
   (requires (HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` (fst ra))))
   (ensures (h `does_not_contain_addr` ra))
+
+val does_not_contain_addr_addr_unused_in
+  (h: HS.mem)
+  (ra: HS.rid * nat)
+: Lemma
+  (requires (h `does_not_contain_addr` ra))
+  (ensures (HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` (fst ra))))
 
 val free_does_not_contain_addr
   (#a: Type0)
@@ -874,6 +928,53 @@ val modifies_only_live_addresses
     (forall x . Set.mem x a ==> h `does_not_contain_addr` (r, x))
   ))
   (ensures (modifies l h h'))
+
+
+val loc_not_unused_in (#al: aloc_t) (c: cls al) (h: HS.mem) : GTot (loc c)
+
+val loc_unused_in (#al: aloc_t) (c: cls al) (h: HS.mem) : GTot (loc c)
+
+val loc_addresses_unused_in (#al: aloc_t) (c: cls al) (r: HS.rid) (a: Set.set nat) (h: HS.mem) : Lemma
+  (requires (forall x . Set.mem x a ==> h `does_not_contain_addr` (r, x)))
+  (ensures (loc_unused_in c h `loc_includes` loc_addresses false r a))
+
+val loc_addresses_not_unused_in (#al: aloc_t) (c: cls al) (r: HS.rid) (a: Set.set nat) (h: HS.mem) : Lemma
+  (requires (forall x . Set.mem x a ==> ~ (h `does_not_contain_addr` (r, x))))
+  (ensures (loc_not_unused_in c h `loc_includes` loc_addresses false r a))
+
+val loc_unused_in_not_unused_in_disjoint (#al: aloc_t) (c: cls al) (h: HS.mem) : Lemma
+  (loc_unused_in c h `loc_disjoint` loc_not_unused_in c h)
+
+val modifies_address_liveness_insensitive_unused_in
+  (#al: aloc_t)
+  (c: cls al)
+  (h h' : HS.mem)
+: Lemma
+  (requires (modifies (address_liveness_insensitive_locs c) h h'))
+  (ensures (loc_not_unused_in c h' `loc_includes` loc_not_unused_in c h /\ loc_unused_in c h `loc_includes` loc_unused_in c h'))
+
+val mreference_live_loc_not_unused_in
+  (#al: aloc_t)
+  (c: cls al)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (h: HS.mem)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (h `HS.contains` r))
+  (ensures (loc_not_unused_in c h `loc_includes` loc_freed_mreference r /\ loc_not_unused_in c h `loc_includes` loc_mreference r))
+
+
+val mreference_unused_in_loc_unused_in
+  (#al: aloc_t)
+  (c: cls al)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (h: HS.mem)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (r `HS.unused_in` h))
+  (ensures (loc_unused_in c h `loc_includes` loc_freed_mreference r /\ loc_unused_in c h `loc_includes` loc_mreference r))
 
 
 (** * Compositionality *)

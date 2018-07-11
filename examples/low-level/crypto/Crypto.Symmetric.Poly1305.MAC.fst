@@ -133,7 +133,7 @@ let log_ref (r:rid) = if mac_log then ideal_log r else unit
 
 let ilog (#r:rid) (l:log_ref r{mac_log}) : Tot (ideal_log r) = l
 
-let text_0: itext = if mac_log then Seq.createEmpty #elem else ()
+let text_0: itext = if mac_log then Seq.empty #elem else ()
 
 // we have "norm h r" only as a state invariant
 noeq type state (i:id) =

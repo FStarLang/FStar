@@ -70,7 +70,7 @@ let lseq = Seq.lseq
 
 let rec lseq_of_vec (#a: Type0) (#n: nat) (l: vec a n) : Tot (lseq a n) =
   if n = 0
-  then Seq.createEmpty
+  then Seq.empty
   else Seq.cons (VCons?.vec_hd l) (lseq_of_vec (VCons?.vec_tl l))
 
 let rec vec_of_lseq (#a: Type0) (#n: nat) (l: lseq a n) : Tot (vec a n) =
@@ -108,7 +108,7 @@ let rec vec_of_lseq_of_vec #a #n l =
 
 let as_seq #a h b =
   match b with
-  | Null -> Seq.createEmpty
+  | Null -> Seq.empty
   | Buffer max_len content idx len ->
     Seq.slice (lseq_of_vec (HS.sel h content)) (U32.v idx) (U32.v idx + U32.v len)
 
@@ -188,6 +188,8 @@ let disjoint_includes_r #a1 #a2 b1 b2 b2' = ()
 let live_unused_in_disjoint #a1 #a2 h b1 b2 = ()
 
 let as_addr_disjoint #a1 #a2 b1 b2 = ()
+
+let disjoint_null a1 #a2 b2 = ()
 
 let gsub_disjoint #a b i1 len1 i2 len2 = ()
 
@@ -346,15 +348,26 @@ let modifies_0_preserves_mreferences (h1 h2: HS.mem) : GTot Type0 =
 let modifies_0_preserves_regions (h1 h2: HS.mem) : GTot Type0 =
   forall (r: HS.rid) . HS.live_region h1 r ==> HS.live_region h2 r
 
+let modifies_0_preserves_not_unused_in (h1 h2: HS.mem) : GTot Type0 =
+  forall (r: HS.rid) (n: nat) . (
+    HS.live_region h1 r /\ HS.live_region h2 r /\
+    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)  
+  ) ==> (
+    n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)
+  )
+
 let modifies_0' (h1 h2: HS.mem) : GTot Type0 =
   modifies_0_preserves_mreferences h1 h2 /\
-  modifies_0_preserves_regions h1 h2
+  modifies_0_preserves_regions h1 h2 /\
+  modifies_0_preserves_not_unused_in h1 h2
 
 let modifies_0 = modifies_0'
 
 let modifies_0_live_region h1 h2 r = ()
 
 let modifies_0_mreference #a #pre h1 h2 r = ()
+
+let modifies_0_unused_in h1 h2 r n = ()
 
 let modifies_1_preserves_mreferences
   (#a: Type) (b: buffer a)
@@ -386,6 +399,7 @@ let modifies_1'
 = modifies_0_preserves_regions h1 h2 /\
   modifies_1_preserves_mreferences b h1 h2 /\
   modifies_1_preserves_livenesses b h1 h2 /\
+  modifies_0_preserves_not_unused_in h1 h2 /\
   modifies_1_preserves_abuffers b h1 h2
 
 let modifies_1 = modifies_1'
@@ -394,24 +408,39 @@ let modifies_1_live_region #a b h1 h2 r = ()
 
 let modifies_1_liveness #a b h1 h2 #a' #pre r' = ()
 
+let modifies_1_unused_in #t b h1 h2 r n = ()
+
 let modifies_1_mreference #a b h1 h2 #a' #pre r' = ()
 
 let modifies_1_abuffer #a b h1 h2 b' = ()
 
 let modifies_1_null #a b h1 h2 = ()
 
+let modifies_addr_of_preserves_not_unused_in (#t:Type) (b: buffer t) (h1 h2: HS.mem) : GTot Type0 =
+  forall (r: HS.rid) (n: nat) . (
+    (r <> frameOf b \/ n <> as_addr b) /\
+    HS.live_region h1 r /\ HS.live_region h2 r /\
+    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)  
+  ) ==> (
+    n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)
+  )
+
 let modifies_addr_of'
   (#a: Type) (b: buffer a)
   (h1 h2: HS.mem)
 : GTot Type0
 = modifies_0_preserves_regions h1 h2 /\
-  modifies_1_preserves_mreferences b h1 h2
+  modifies_1_preserves_mreferences b h1 h2 /\
+  modifies_addr_of_preserves_not_unused_in b h1 h2
 
 let modifies_addr_of = modifies_addr_of'
 
 let modifies_addr_of_live_region #a b h1 h2 r = ()
 
 let modifies_addr_of_mreference #a b h1 h2 #a' #pre r' = ()
+
+let modifies_addr_of_unused_in #t b h1 h2 r n = ()
+
 
 
 (* Basic stateful operations *)
@@ -455,7 +484,6 @@ let g_upd_seq_as_seq (#a:Type) (b:buffer a) (s:lseq a (length b)) (h:HS.mem{live
     // prove modifies_1_preserves_abuffers
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ()
-#reset-options
 
 let upd #a b i v =
   let open HST in
@@ -466,6 +494,7 @@ let upd #a b i v =
   // prove modifies_1_preserves_abuffers
   Heap.lemma_distinct_addrs_distinct_preorders ();
   Heap.lemma_distinct_addrs_distinct_mm ()
+#reset-options
 
 (* Recall *)
 
@@ -539,7 +568,6 @@ let alloca #a init len =
 let alloca_of_list #a init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.of_list init in
-  Seq.lemma_of_list_length s init;
   let content: HST.reference (vec a (U32.v len)) =
     HST.salloc (vec_of_lseq s)
   in
@@ -549,7 +577,6 @@ let alloca_of_list #a init =
 let gcmalloc_of_list #a r init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.of_list init in
-  Seq.lemma_of_list_length s init;
   let content: HST.reference (vec a (U32.v len)) =
     HST.ralloc r (vec_of_lseq s)
   in

@@ -32,6 +32,8 @@ let (smtpat_lid : FStar_Ident.lident) = pconst "smt_pat"
 let (smtpatOr_lid : FStar_Ident.lident) = pconst "smt_pat_or" 
 let (monadic_lid : FStar_Ident.lident) = pconst "M" 
 let (spinoff_lid : FStar_Ident.lident) = pconst "spinoff" 
+let (inl_lid : FStar_Ident.lident) = psconst "Inl" 
+let (inr_lid : FStar_Ident.lident) = psconst "Inr" 
 let (int8_lid : FStar_Ident.lident) = p2l ["FStar"; "Int8"; "t"] 
 let (uint8_lid : FStar_Ident.lident) = p2l ["FStar"; "UInt8"; "t"] 
 let (int16_lid : FStar_Ident.lident) = p2l ["FStar"; "Int16"; "t"] 
@@ -187,21 +189,25 @@ let (steps_primops : FStar_Ident.lident) = psnconst "primops"
 let (steps_zeta : FStar_Ident.lident) = psnconst "zeta" 
 let (steps_iota : FStar_Ident.lident) = psnconst "iota" 
 let (steps_delta : FStar_Ident.lident) = psnconst "delta" 
+let (steps_reify : FStar_Ident.lident) = psnconst "reify_" 
 let (steps_unfoldonly : FStar_Ident.lident) = psnconst "delta_only" 
 let (steps_unfoldfully : FStar_Ident.lident) = psnconst "delta_fully" 
 let (steps_unfoldattr : FStar_Ident.lident) = psnconst "delta_attr" 
+let (steps_nbe : FStar_Ident.lident) = psnconst "nbe" 
 let (deprecated_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "deprecated"] 
 let (inline_let_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inline_let"] 
 let (plugin_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "plugin"] 
+let (tcnorm_attr : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "tcnorm"] 
 let (dm4f_bind_range_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "dm4f_bind_range"] 
 let (must_erase_for_extraction_attr : FStar_Ident.lident) =
   psconst "must_erase_for_extraction" 
-let (fail_attr : FStar_Ident.lident) = psconst "fail" 
-let (fail_lax_attr : FStar_Ident.lident) = psconst "fail_lax" 
+let (fail_attr : FStar_Ident.lident) = psconst "expect_failure" 
+let (fail_lax_attr : FStar_Ident.lident) = psconst "expect_lax_failure" 
 let (assume_strictly_positive_attr_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "assume_strictly_positive"] 
 let (gen_reset :
@@ -339,6 +345,10 @@ let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s  -> fstar_tactics_lid' [s] 
 let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"] 
 let (u_tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "__tac"] 
+let (tcresolve_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Typeclasses"; "tcresolve"] 
+let (tcinstance_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Typeclasses"; "instance"] 
 let (effect_TAC_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"] 
 let (effect_Tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "Tac"] 
 let (by_tactic_lid : FStar_Ident.lid) =

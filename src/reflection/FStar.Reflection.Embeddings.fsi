@@ -1,6 +1,7 @@
 #light "off"
 module FStar.Reflection.Embeddings
 
+open FStar
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.Order
@@ -28,6 +29,11 @@ val e_sigelt      : embedding<sigelt>
 val e_sigelt_view : embedding<sigelt_view>
 val e_bv_view     : embedding<bv_view>
 val e_exp         : embedding<exp>
+val e_attribute   : embedding<attribute>
+val e_attributes  : embedding<list<attribute>> (* This seems rather silly, but `attributes` is a keyword *)
+val e_ident       : embedding<Ident.ident>
+val e_univ_name   : embedding<univ_name>
+val e_univ_names  : embedding<list<univ_name>>
 
 (* Useful for embedding antiquoted terms. They are only used for the embedding part,
  * so this is a bit hackish. *)

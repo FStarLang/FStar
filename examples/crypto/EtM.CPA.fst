@@ -175,11 +175,11 @@ let keygen (parent:rid)
                modifies Set.empty m0 m1    /\
                extends k.region parent  /\
                fresh_region k.region m0 m1 /\
-               log k m1 == createEmpty /\
+               log k m1 == Seq.empty /\
                invariant k m1)) =
   let raw = CC.random keysize in
   let region = new_region parent in
-  let log = alloc_mref_seq region createEmpty in
+  let log = alloc_mref_seq region Seq.empty in
   Key #region raw log
 
 /// A primitive to sample a fresh iv distinct from others

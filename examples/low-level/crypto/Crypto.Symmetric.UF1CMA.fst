@@ -313,7 +313,7 @@ val start: #i:id -> st:state i -> StackInline (accBuffer i)
     Buffer.frameOf (MAC.as_buffer a.a) == h1.tip /\
     ~(h0 `Buffer.contains` (MAC.as_buffer (abuf a))) /\
     (mac_log ==>
-      HS.sel h1 (alog a) = Seq.createEmpty /\
+      HS.sel h1 (alog a) = Seq.empty /\
       ~(h0 `HS.contains` (alog a))) /\
     acc_inv st a h1 /\
     modifies_0 h0 h1))
@@ -324,10 +324,10 @@ let start #i st =
   let h1 = ST.get () in
   lemma_reveal_modifies_0 h0 h1;
   if mac_log then
-    let log = salloc #text Seq.createEmpty in
+    let log = salloc #text Seq.empty in
     let h2 = ST.get () in
     // Needed to prove disjointness of st.r and log
-    assert (HS.sel h2 (Buffer.content (MAC.as_buffer st.r)) =!= Seq.createEmpty);
+    assert (HS.sel h2 (Buffer.content (MAC.as_buffer st.r)) =!= Seq.empty);
     lemma_intro_modifies_0 h0 h2;
     MAC.frame_sel_elem h1 h2 a;
     MAC.poly_empty #i (HS.sel h2 log) (MAC.sel_elem h2 st.r);

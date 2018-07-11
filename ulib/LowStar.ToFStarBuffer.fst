@@ -13,13 +13,13 @@ module U32 = FStar.UInt32
 assume val new_to_old_ghost (#t: Type0) (b: New.buffer t) : GTot (Old.buffer t)
 assume val old_to_new_ghost (#t: Type0) (b: Old.buffer t) : GTot (New.buffer t)
 
-assume val new_to_old_st (#t: Type0) (b: New.buffer t) : HST.Stack (Old.buffer t)
+assume val new_to_old_st (#t: Type0) (b: New.buffer t) : HST.Stack (b' : Old.buffer t { b' == new_to_old_ghost b } )
   (requires (fun h -> New.live h b))
-  (ensures (fun h b' h' -> h' == h /\ b' == new_to_old_ghost b))
+  (ensures (fun h b' h' -> h' == h))
 
-assume val old_to_new_st (#t: Type0) (b: Old.buffer t) : HST.Stack (New.buffer t)
+assume val old_to_new_st (#t: Type0) (b: Old.buffer t) : HST.Stack (b' : New.buffer t { b' == old_to_new_ghost b })
   (requires (fun h -> Old.live h b))
-  (ensures (fun h b' h' -> h' == h /\ b' == old_to_new_ghost b))
+  (ensures (fun h b' h' -> h' == h))
 
 assume val new_to_old_to_new (#t: Type0) (b: New.buffer t) : Lemma
   (old_to_new_ghost (new_to_old_ghost b) == b)
@@ -99,7 +99,7 @@ assume val new_to_old_includes_right (#t: Type0) (b1: Old.buffer t) (b2: New.buf
     [SMTPat (old_to_new_ghost b1 `New.includes` b2)];
   ]]
 
-assume val new_to_old_disjoint (#t: Type0) (b1: New.buffer t) (b2: Old.buffer t) : Lemma
+assume val new_to_old_disjoint (#t1 #t2: Type0) (b1: New.buffer t1) (b2: Old.buffer t2) : Lemma
   ((new_to_old_ghost b1 `Old.disjoint` b2) <==> (b1 `New.disjoint` (old_to_new_ghost b2)))
   [SMTPatOr [
     [SMTPat (new_to_old_ghost b1 `Old.disjoint` b2)];
@@ -340,3 +340,78 @@ let new_fill
   ))
 = let b' = new_to_old_st b in
   Old.fill b' z len
+
+
+(* Conversions in the other way round, to have old buffer code call into new buffer code. Those are more aggressive. *)
+
+assume
+val loc_disjoint_new_disjoint_old
+  (#t1 #t2: Type)
+  (b1: New.buffer t1)
+  (b2: New.buffer t2)
+: Lemma
+  (requires (NewM.loc_disjoint (NewM.loc_buffer b1) (NewM.loc_buffer b2)))
+  (ensures (Old.disjoint (new_to_old_ghost b1) (new_to_old_ghost b2)))
+  [SMTPat (Old.disjoint (new_to_old_ghost b1) (new_to_old_ghost b2))]
+
+assume
+val modifies_modifies_0
+  (h h' : HS.mem)
+: Lemma
+  (requires (NewM.modifies NewM.loc_none h h'))
+  (ensures (Old.modifies_0 h h'))
+  [SMTPat (NewM.modifies NewM.loc_none h h')]
+
+assume
+val modifies_modifies_1
+  (#t: Type)
+  (b: Old.buffer t)
+  (h h' : HS.mem)
+: Lemma
+  (requires (NewM.modifies (NewM.loc_buffer (old_to_new_ghost b)) h h'))
+  (ensures (Old.modifies_1 b h h'))
+  [SMTPat (NewM.modifies (NewM.loc_buffer (old_to_new_ghost b)) h h')]
+
+assume
+val modifies_modifies_2
+  (#t1 #t2: Type)
+  (b1: Old.buffer t1)
+  (b2: Old.buffer t2)
+  (h h' : HS.mem)
+: Lemma
+  (requires (NewM.modifies (NewM.loc_buffer (old_to_new_ghost b1) `NewM.loc_union` NewM.loc_buffer (old_to_new_ghost b2)) h h'))
+  (ensures (Old.modifies_2 b1 b2 h h'))
+  [SMTPat (NewM.modifies (NewM.loc_buffer (old_to_new_ghost b1) `NewM.loc_union` NewM.loc_buffer (old_to_new_ghost b2)) h h')]
+
+
+/// Basic example of mutating an old buffer by converting it first to
+/// a new buffer.
+///
+/// The spec shows that all two flavors of modifies clauses can be
+/// proven and the precise contents are reflected into the new buffer
+
+let ex1' (#a:Type) (b:Old.buffer nat{Old.length b > 0}) (b1:Old.buffer a)
+  : HST.ST unit
+           (requires (fun h -> Old.live h b /\ Old.disjoint b b1 /\ Old.live h b1))
+           (ensures (fun h0 _ h1 ->
+             Old.get h1 b 0 == 0 /\
+             New.get h1 (old_to_new_ghost b) 0 == 0 /\
+             Old.as_seq h0 b1 == Old.as_seq h1 b1 /\
+             NewM.modifies (NewM.loc_buffer (old_to_new_ghost b)) h0 h1 /\
+             Old.modifies_1 b h0 h1)) =
+  let ne = old_to_new_st b in
+  New.upd ne 0ul 0
+
+let ex1'' (#a:Type) (b:New.buffer nat{New.length b > 0}) (b1:New.buffer a)
+  : HST.ST unit
+           (requires (fun h -> New.live h b /\ NewM.loc_disjoint (NewM.loc_buffer b) (NewM.loc_buffer b1) /\ New.live h b1))
+           (ensures (fun h0 _ h1 ->
+             New.get h1 b 0 == 0 /\
+             Old.get h1 (new_to_old_ghost b) 0 == 0 /\
+             New.as_seq h0 b1 == New.as_seq h1 b1 /\
+             NewM.modifies (NewM.loc_buffer b) h0 h1 /\
+             OldM.modifies (OldM.loc_buffer (new_to_old_ghost b)) h0 h1 /\
+             Old.modifies_1 (new_to_old_ghost b) h0 h1)) =
+  let old = new_to_old_st b in
+  let old1 = new_to_old_st b1 in
+  ex1' old old1

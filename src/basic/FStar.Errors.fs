@@ -743,11 +743,19 @@ let mk_issue level range msg n =
 
 let get_err_count () = (!current_handler).eh_count_errors ()
 
+let wrapped_eh_add_one (h : error_handler) (issue : issue) : unit =
+    h.eh_add_one issue;
+    if issue.issue_level <> EInfo then begin
+      Options.abort_counter := !Options.abort_counter - 1;
+      if !Options.abort_counter = 0 then
+        failwith "Aborting due to --abort_on"
+    end
+
 let add_one issue =
-    atomically (fun () -> (!current_handler).eh_add_one issue)
+    atomically (fun () -> wrapped_eh_add_one (!current_handler) issue)
 
 let add_many issues =
-    atomically (fun () -> List.iter (!current_handler).eh_add_one issues)
+    atomically (fun () -> List.iter (wrapped_eh_add_one (!current_handler)) issues)
 
 let report_all () =
     (!current_handler).eh_report ()
@@ -897,13 +905,13 @@ let update_flags l =
   let sorted = List.sortWith compare range in
   flags := aux [] 0 !flags sorted
 
-let catch_errors (f : unit -> 'a) : list<issue> =
+let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
     let newh = mk_default_handler false in
     let old = !current_handler in
     current_handler := newh;
-    let _ = try let _ = f () in ()
-            with | ex -> err_exn ex
+    let r = try let r = f () in Some r
+            with | ex -> err_exn ex; None
     in
     let errs = newh.eh_report() in
     current_handler := old;
-    errs
+    errs, r

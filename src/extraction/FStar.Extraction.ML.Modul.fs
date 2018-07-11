@@ -40,6 +40,7 @@ module PC = FStar.Parser.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
 module TcUtil = FStar.TypeChecker.Util
+module Env = FStar.TypeChecker.Env
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
@@ -177,7 +178,7 @@ let bundle_as_inductive_families env ses quals attrs : UEnv.env * list<inductive
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
-                let metadata = extract_metadata (se.sigattrs @ attrs) in
+                let metadata = extract_metadata (se.sigattrs @ attrs) @ List.choose flag_of_qual quals in
                 let env = UEnv.extend_type_name env (S.lid_as_fv l delta_constant None) in
                 env, [{   iname=l
                         ; iparams=bs
@@ -196,7 +197,7 @@ let extract_bundle env se =
         env_t * (mlsymbol * list<(mlsymbol * mlty)>)
         =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
-        let steps = [ N.Inlining; N.UnfoldUntil S.delta_constant; N.EraseUniverses; N.AllowUnboundUniverses ] in
+        let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses ] in
         let names = match (SS.compress (N.normalize steps env.tcenv ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
               List.map (fun ({ ppname = ppname }, _) -> ppname.idText) bs
@@ -372,7 +373,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             let tcenv, _, def_typ =
                 FStar.TypeChecker.Env.open_universes_in g.tcenv lb.lbunivs [lb.lbdef; lb.lbtyp] in
             tcenv, as_pair def_typ in
-          let lbtyp = FStar.TypeChecker.Normalize.normalize [FStar.TypeChecker.Normalize.Beta;FStar.TypeChecker.Normalize.UnfoldUntil delta_constant] tcenv lbtyp in
+          let lbtyp = FStar.TypeChecker.Normalize.normalize [Env.Beta;Env.UnfoldUntil delta_constant] tcenv lbtyp in
           let lbdef = FStar.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
           //eta expansion is important; see issue #490
           extract_typ_abbrev g (right lb.lbname) quals se.sigattrs lbdef

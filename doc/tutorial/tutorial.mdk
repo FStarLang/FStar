@@ -5846,9 +5846,51 @@ let test() =
 
 -->
 
+<!----------------------------------------------------------------------------------------->
+
+# Low\* Examples
+
+## Exercise 1: Machine integers
+
+
+~ Fragment {link="code/exercises/LowStar.Ex1.fst"}
+[INCLUDE=code/exercises/LowStar.Ex1.fst:DisplayFrag]
+~
+
+### Answer
+
+~ Fragment {link="code/solutions/LowStar.Ex1.fst"}
+[INCLUDE=code/solutions/LowStar.Ex1.fst:DisplayFrag]
+~
+
+## Exercise 2: References and buffers
+
+~ Fragment {link="code/exercises/LowStar.Ex2.fst"}
+[INCLUDE=code/exercises/LowStar.Ex2.fst:DisplayFrag]
+~
+
+### Answer
+
+~ Fragment {link="code/solutions/LowStar.Ex2.fst"}
+[INCLUDE=code/solutions/LowStar.Ex2.fst:DisplayFrag]
+~
+
+## Exercise 3: Finite lists
+
+~ Fragment {link="code/exercises/LowStar.Ex3.fst"}
+[INCLUDE=code/exercises/LowStar.Ex3.fst:DisplayFrag]
+~
+
+### Answer
+
+~ Fragment {link="code/solutions/LowStar.Ex3.fst"}
+[INCLUDE=code/solutions/LowStar.Ex3.fst:DisplayFrag]
+~
+
+
 # A note on this document 
 
-This document was created using Dan Leijen's <https://madoko.net> markdown processor. 
+This document was created using Daan Leijen's <https://madoko.net> markdown processor.
 
 If` you find any errors in it, or would like to improve it in any way,
 this is how you do it: 

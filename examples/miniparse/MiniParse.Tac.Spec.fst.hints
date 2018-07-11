@@ -1,0 +1,53 @@
+[
+  "f\u000e¥≈å”aWè\u007f\u0002\u0010[S\u001eŸ",
+  [
+    [
+      "MiniParse.Tac.Spec.__proj__Package__item__s",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_MiniParse.Tac.Spec.Package_p",
+        "projection_inverse_MiniParse.Tac.Spec.Package_p"
+      ],
+      0,
+      "5002ddb3986abdac116f76eac4eea7af"
+    ],
+    [
+      "MiniParse.Tac.Spec.gen_package'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "7ecaf526d7fa904a5f7ea531d9858a73"
+    ],
+    [
+      "MiniParse.Tac.Spec.__proj__Package__item__s",
+      2,
+      2,
+      1,
+      [
+        "@query", "proj_equation_MiniParse.Tac.Spec.Package_p",
+        "projection_inverse_MiniParse.Tac.Spec.Package_p"
+      ],
+      0,
+      "568691d19d37308b1cbd8ce0122cb228"
+    ],
+    [
+      "MiniParse.Tac.Spec.gen_package'",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "3ba091122881e954154ffb7832669dbd"
+    ]
+  ]
+]

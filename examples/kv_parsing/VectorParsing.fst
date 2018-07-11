@@ -123,7 +123,7 @@ let parse_vector =
 val encode_vector_data : v:vector -> b:bytes{length b == vector_length v}
 let rec encode_vector_data v =
   match v with
-  | [] -> createEmpty
+  | [] -> Seq.empty
   | e::es -> enc_elem e `append` encode_vector_data es
 
 val encode_vector : v:vector -> bytes
