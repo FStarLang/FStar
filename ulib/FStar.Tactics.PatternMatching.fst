@@ -8,9 +8,6 @@
 
 module FStar.Tactics.PatternMatching
 
-// JP: this file does not seem to type-check without this option.
-#set-options "--use_two_phase_tc true"
-
 /// Contents
 /// ========
 ///
@@ -316,6 +313,9 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     | PQn qn -> interp_qn qn cur_bindings tm
     | PType -> interp_type cur_bindings tm
     | PApp p_hd p_arg -> interp_app p_hd p_arg cur_bindings tm
+    // GM: Jul 11 2018, sadly this is needed, seems this monad layered
+    // on top of Tac causesq queries to be hard on Z3
+    | _ -> fail "?"
 
 (** Match a pattern `pat` against a term.
 Returns a result in the exception monad. **)
