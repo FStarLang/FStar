@@ -107,7 +107,7 @@ function build_fstar () {
     # miTLS) broke, false otherwise
     local status_file="status.txt"
     local orange_status_file="orange_status.txt"
-    local ORANGE_FILE=""
+    ORANGE_FILE=$(mktemp)
     echo -n false > $status_file
     echo false > $orange_status_file
 
