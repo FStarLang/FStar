@@ -444,6 +444,25 @@ let nondep_then
 : Tot (parser_spec (t1 * t2))
 = p1 `and_then` (fun v1 -> p2 `and_then` (fun v2 -> (parse_ret (v1, v2))))
 
+let nondep_then_eq
+  (#t1: Type0)
+  (p1: parser_spec t1)
+  (#t2: Type0)
+  (p2: parser_spec t2)
+  (b: bytes)
+: Lemma
+  (parse (nondep_then p1 p2) b == (match parse p1 b with
+  | Some (x1, consumed1) ->
+    let b' = Seq.slice b consumed1 (Seq.length b) in
+    begin match parse p2 b' with
+    | Some (x2, consumed2) ->
+      Some ((x1, x2), consumed1 + consumed2)
+    | _ -> None
+    end
+  | _ -> None
+  ))
+= ()
+
 let bare_serialize_nondep_then
   (#t1: Type0)
   (p1: parser_spec t1)
@@ -563,6 +582,20 @@ let parse_synth
   ))
   (ensures (fun _ -> True))
 = (and_then p1 (fun v1 -> parse_fret f2 v1))
+
+let parse_synth_eq
+  (#t1: Type0)
+  (#t2: Type0)
+  (p1: parser_spec t1)
+  (f2: t1 -> GTot t2)
+  (g1: t2 -> GTot t1)
+  (b: bytes)
+: Lemma
+  (requires (synth_inverse g1 f2))
+  (ensures (parse (parse_synth p1 f2 g1) b == (match parse p1 b with
+  | None -> None
+  | Some (x1, consumed) -> Some (f2 x1, consumed))))
+= ()
 
 val bare_serialize_synth
   (#t1: Type0)
