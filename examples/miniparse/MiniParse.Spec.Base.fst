@@ -333,7 +333,7 @@ let coerce_serializer
   (#t1: Type0)
   (#p: parser_spec t1)
   (s: serializer_spec p)
-  (u: unit { t2 == t1 } )
+  (u: squash (t2 == t1))
 : Tot (serializer_spec (coerce_parser t2 p))
 = s
 

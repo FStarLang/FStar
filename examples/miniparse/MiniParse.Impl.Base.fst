@@ -32,7 +32,7 @@ let coerce_parser_impl
   (#t1: Type0)
   (#p: parser_spec t1)
   (p32: parser_impl p)
-  (u: unit { t2 == t1 } )
+  (u: squash (t2 == t1))
 : Tot (parser_impl (coerce_parser t2 p))
 = p32
 
