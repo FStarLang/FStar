@@ -184,6 +184,36 @@ let parse_nlist_impl_body #t p0 pimpl n h0 b len rb rr i =
 
 #reset-options
 
+let list_rev_inv
+  (#t: Type)
+  (l: list t)
+  (b: bool)
+  (x: list t * list t)
+: GTot Type0
+= let (rem, acc) = x in
+  L.rev l == L.rev_acc rem acc /\
+  (b == false ==> rem == [])
+
+let list_rev
+  (#t: Type)
+  (l: list t)
+: Tot (l' : list t { l' == L.rev l } )
+= match l with
+  | [] -> []
+  | _ ->
+    let (_, l') =
+      CL.total_while
+        (fun (rem, _) -> L.length rem)
+        (list_rev_inv l)
+        (fun (rem, acc) ->
+          match rem with
+          | [] -> (false, (rem, acc))
+          | a :: q -> (true, (q, a :: acc))
+        )
+        (l, [])
+    in
+    l'
+
 #set-options "--z3rlimit 64"
 
 inline_for_extraction
@@ -207,7 +237,7 @@ let parse_nlist_impl
       (parse_nlist_impl_body p p32 n h1 b len rb rr)
   in
   let l = BO.op_Bang_Star rr in
-  let l' = L.rev l in
+  let l' = list_rev l in
   let consumed = BO.op_Bang_Star rb in
   let res : option (nlist n t * U32.t) =
     if stop
