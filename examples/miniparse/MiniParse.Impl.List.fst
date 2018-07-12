@@ -1,6 +1,7 @@
 module MiniParse.Impl.List
 include MiniParse.Spec.List
 include MiniParse.Impl.Base
+include MiniParse.Impl.Combinators // for seq_append_slice
 
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
@@ -21,7 +22,6 @@ let parse_nlist_impl_inv_easy
   (rr: B.pointer (list t))
   (h: HS.mem)
   (i: nat)
-  (stop: bool)
 : Tot Type0
 = M.loc_disjoint (M.loc_buffer rb) (M.loc_buffer rr) /\
   M.loc_disjoint (M.loc_buffer b) (M.loc_union (M.loc_buffer rb) (M.loc_buffer rr)) /\
@@ -41,7 +41,7 @@ let parse_nlist_impl_inv
   (i: nat)
   (stop: bool)
 : Tot Type0
-= parse_nlist_impl_inv_easy n h0 b rb rr h i stop /\ (
+= parse_nlist_impl_inv_easy n h0 b rb rr h i /\ (
   let off = BO.deref h rb in
   let b' = B.gsub b off (B.len b `U32.sub` off) in
   let p = parse (parse_nlist n p0) (B.as_seq h0 b) in
@@ -88,7 +88,7 @@ let parse_nlist_impl_inv_false_intro
 : Lemma
   (requires (
     parse_nlist_impl_inv p0 n h0 b rb rr h1 (i) false /\
-    parse_nlist_impl_inv_easy n h0 b rb rr h2 (i + 1) false /\
+    parse_nlist_impl_inv_easy n h0 b rb rr h2 (i + 1) /\
     off == BO.deref h1 rb /\
     off' == BO.deref h2 rb /\
     U32.v off' == U32.v off + consumed1 /\
@@ -160,7 +160,7 @@ let parse_nlist_impl_body #t p0 pimpl n h0 b len rb rr i =
     BO.op_Star_Equals rr (elem :: l1);
     let h = HST.get () in
 //    assume (M.modifies (M.loc_union (M.loc_buffer rb) (M.loc_buffer rr)) h0 h);
-    assert (parse_nlist_impl_inv_easy n h0 b rb rr h (U32.v i + 1) false);
+    assert (parse_nlist_impl_inv_easy n h0 b rb rr h (U32.v i + 1));
     parse_nlist_eq (n - U32.v i) p0 (B.as_seq h0 b');
     let phi () : Lemma (parse_nlist_impl_inv p0 n h0 b rb rr h (U32.v i + 1) false) =
       let p = parse (parse_nlist n p0) (B.as_seq h0 b) in
@@ -182,6 +182,10 @@ let parse_nlist_impl_body #t p0 pimpl n h0 b len rb rr i =
     phi ();
     false
 
+#reset-options
+
+#set-options "--z3rlimit 64"
+
 inline_for_extraction
 let parse_nlist_impl
   (n: nat)
@@ -191,27 +195,145 @@ let parse_nlist_impl
   (p32: parser_impl p)
 : Tot (parser_impl (parse_nlist n p))
 = fun b len ->
+  let h0 = HST.get () in
   HST.push_frame ();
   let rr : B.pointer (list t) = B.alloca [] 1ul in
   let rb : B.pointer (x: U32.t { U32.v x <= B.length b } ) = B.alloca 0ul 1ul in
-  let h0 = HST.get () in
+  let h1 = HST.get () in
+  assert (parse_nlist_impl_inv p n h1 b rb rr h1 0 false);
   let (_, stop) =
     CL.interruptible_for 0ul n'
-      (parse_nlist_impl_inv p n h0 b rb rr)
-      (parse_nlist_impl_body p p32 n h0 b len rb rr)
+      (parse_nlist_impl_inv p n h1 b rb rr)
+      (parse_nlist_impl_body p p32 n h1 b len rb rr)
   in
   let l = BO.op_Bang_Star rr in
+  let l' = L.rev l in
   let consumed = BO.op_Bang_Star rb in
   let res : option (nlist n t * U32.t) =
     if stop
     then None
-    else Some (L.rev l, consumed)
+    else Some (l', consumed)
   in
   HST.pop_frame ();
+  let h = HST.get () in
+  assert (M.modifies M.loc_none h0 h);
+  let phi () : Lemma (
+    match parse (parse_nlist n p) (B.as_seq h0 b), res with
+    | None, None -> True
+    | Some (y, consumed), Some (y', consumed') -> y == y' /\ U32.v consumed' == consumed
+    | _ -> False    
+  )
+  = if stop
+    then ()
+    else begin
+      assert (n - n == 0);
+      parse_nlist_eq 0 p (B.as_seq h0 (B.gsub b 0ul (B.len b `U32.sub` consumed)));
+      L.append_l_nil l';
+      ()
+    end
+  in
+  phi ();
   res
 
+let serialize_nlist_impl_inv_easy
+  (#t: Type0)
+  (n: nat)
+  (h0: HS.mem)
+  (b: buffer8)
+  (rb: B.pointer (x: U32.t { U32.v x <= B.length b } ))
+  (rr: B.pointer (list t))
+  (h: HS.mem)
+  (i: nat)
+: Tot Type0
+= M.loc_disjoint (M.loc_buffer rb) (M.loc_buffer rr) /\
+  M.loc_disjoint (M.loc_buffer b) (M.loc_union (M.loc_buffer rb) (M.loc_buffer rr)) /\
+  i <= n /\
+  B.live h0 b /\ B.live h b /\ B.live h rb /\ B.live h rr
 
-assume val serialize_nlist_impl
+let serialize_nlist_impl_inv
+  (n: nat)
+  (#t: Type0)
+  (#p: parser_spec t)
+  (s: serializer_spec p)
+  (b: buffer8)
+  (h0: HS.mem)
+  (l: nlist n t)
+  (rr: B.pointer (list t))
+  (rb: B.pointer (u: U32.t { U32.v u <= B.length b } ))
+  (h: HS.mem)
+  (i: nat)
+  (stop: bool)
+: Tot Type0
+= serialize_nlist_impl_inv_easy n h0 b rb rr h i /\ (
+  let off = BO.deref h rb in
+  let bl = B.gsub b 0ul off in
+  let ser = serialize (serialize_nlist n s) l in
+  let ll = BO.deref h rr in
+  if stop
+  then (
+    M.modifies (M.loc_union (M.loc_buffer b) (M.loc_union (M.loc_buffer rb) (M.loc_buffer rr))) h0 h /\
+    Seq.length ser > B.length b
+  )
+  else (    
+    M.modifies (M.loc_union (M.loc_buffer bl) (M.loc_union (M.loc_buffer rb) (M.loc_buffer rr))) h0 h /\
+    L.length ll == n - i /\
+    ser == Seq.append (B.as_seq h bl) (serialize (serialize_nlist (n - i) s) ll)
+  ))
+
+inline_for_extraction
+let serialize_nlist_impl_body
+  (n: nat)
+  (#t: Type0)
+  (#p: parser_spec t)
+  (#s: serializer_spec p)
+  (s32: serializer_impl s)
+  (b: buffer8)
+  (len: U32.t { len == B.len b } )
+  (h0: HS.mem)
+  (l: nlist n t)
+  (rr: B.pointer (list t))
+  (rb: B.pointer (u: U32.t { U32.v u <= B.length b } ))
+  (i: U32.t { 0 <= U32.v i /\ U32.v i < n } )
+: HST.Stack bool
+  (requires (fun h -> serialize_nlist_impl_inv n s b h0 l rr rb h (U32.v i) false))
+  (ensures (fun h stop h' ->
+    serialize_nlist_impl_inv n s b h0 l rr rb h (U32.v i) false /\
+    serialize_nlist_impl_inv n s b h0 l rr rb h' (U32.v i + 1) stop
+  ))
+= let off = BO.op_Bang_Star rb in
+  let b' = B.offset b off in
+  let aq = BO.op_Bang_Star rr in
+  let (a :: q) = aq in
+  serialize_list_cons (n - (U32.v i + 1)) s a q;
+  match s32 b' (len `U32.sub` off) a with
+  | None ->
+    true
+  | Some consumed ->
+    let off' = off `U32.add` consumed in
+    BO.op_Star_Equals rb off';
+    BO.op_Star_Equals rr q;
+    let h = HST.get () in
+    let phi () : Lemma
+      (serialize_nlist_impl_inv n s b h0 l rr rb h (U32.v i + 1) false)
+    =
+      assert_norm (U32.v 0ul == 0);
+      assert (U32.v off <= B.length b);
+      let bl_before = B.gsub b 0ul off in
+      let bl_after = B.gsub b 0ul off' in
+      let be = B.gsub b off consumed in
+      assert (B.as_seq h be == serialize s a);
+      seq_append_slice (B.as_seq h b) (U32.v off) (U32.v consumed);
+      assert (B.as_seq h bl_after == (B.as_seq h bl_before `Seq.append` B.as_seq h be));
+      Seq.append_assoc (B.as_seq h bl_before) (serialize s a) (serialize (serialize_nlist (n - (U32.v i + 1)) s) q);
+      assert (bl_before == B.gsub bl_after 0ul off);
+      assert (be == B.gsub bl_after off consumed);
+      assert (serialize_nlist_impl_inv n s b h0 l rr rb h (U32.v i + 1) false)
+    in
+    phi ();
+    false
+
+inline_for_extraction
+let serialize_nlist_impl
   (n: nat)
   (n' : U32.t { U32.v n' == n } )
   (#t: Type0)
@@ -219,3 +341,51 @@ assume val serialize_nlist_impl
   (#s: serializer_spec p)
   (s32: serializer_impl s)
 : Tot (serializer_impl (serialize_nlist n s))
+= fun b len l ->
+  let h0 = HST.get () in
+  HST.push_frame ();
+  let rr : B.pointer (list t) = B.alloca l 1ul in
+  let rb : B.pointer (x: U32.t { U32.v x <= B.length b } ) = B.alloca 0ul 1ul in
+  let h1 = HST.get () in
+  assert (B.as_seq h1 (B.gsub b 0ul 0ul) `Seq.equal` Seq.empty);
+  Seq.append_empty_l (serialize (serialize_nlist n s) l);
+  assert (serialize_nlist_impl_inv n s b h1 l rr rb h1 0 false);
+  let (_, stop) =
+    CL.interruptible_for 0ul n'
+      (serialize_nlist_impl_inv n s b h1 l rr rb)
+      (serialize_nlist_impl_body n s32 b len h1 l rr rb)
+  in
+  let consumed = BO.op_Bang_Star rb in
+  let res : option U32.t =
+    if stop
+    then None
+    else Some consumed
+  in
+  HST.pop_frame ();
+  let h = HST.get () in
+  let phi () : Lemma (
+    let len = Seq.length (serialize (serialize_nlist n s) l) in
+    match res with
+    | None ->
+      M.modifies (M.loc_buffer b) h h /\ len > B.length b
+    | Some len' ->
+      U32.v len' == len /\
+      len <= B.length b /\ (
+      let b' = B.gsub b 0ul len' in
+      M.modifies (M.loc_buffer b') h0 h /\
+      B.as_seq h b' == serialize (serialize_nlist n s) l
+  )) =
+    if stop
+    then ()
+    else begin
+      let b' = B.gsub b 0ul consumed in
+      assert (M.modifies (M.loc_buffer b') h0 h);
+      assert (n - n == 0);
+      serialize_nlist_nil p s;
+      assert (Seq.createEmpty #byte `Seq.equal` Seq.empty);
+      Seq.append_empty_r (B.as_seq h b');
+      ()
+    end
+  in
+  phi ();
+  res
