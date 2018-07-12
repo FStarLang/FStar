@@ -132,6 +132,26 @@ let serialize_synth_impl
     s1' output len x
 
 inline_for_extraction
+let serialize_synth_impl'
+  (#t1: Type0)
+  (#t2: Type0)
+  (g1': (x: t2) -> Tot t1)
+  (#p1: parser_spec t1)
+  (#s1: serializer_spec p1)
+  (s1' : serializer_impl s1)
+  (f2: t1 -> GTot t2)
+  (g1: t2 -> GTot t1)
+  (u: squash (
+    synth_inverse f2 g1 /\
+    synth_inverse g1 f2
+  ))
+  (v: squash (
+    (forall (x: t2) . g1' x == g1 x)  
+  ))
+: Tot (serializer_impl (serialize_synth s1 f2 g1 u))
+= serialize_synth_impl s1' f2 g1 (fun x -> g1' x) ()
+
+inline_for_extraction
 let parse_filter_impl
   (#t: Type0)
   (#p: parser_spec t)
