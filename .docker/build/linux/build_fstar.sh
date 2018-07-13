@@ -107,6 +107,7 @@ function build_fstar () {
     # miTLS) broke, false otherwise
     local status_file="status.txt"
     local orange_status_file="orange_status.txt"
+    ORANGE_FILE=$(mktemp)
     echo -n false > $status_file
     echo false > $orange_status_file
 
@@ -158,20 +159,20 @@ function build_fstar () {
           else
               timeout 480 scons -j $threads --FSTAR-MY-VERSION --MIN_TEST
           fi || {
-              test -n "$ORANGE_FILE" && { echo "min-test (Vale)" >> $ORANGE_FILE ; }
+              test -n "$ORANGE_FILE" && { echo " - min-test (Vale)" >> $ORANGE_FILE ; }
               echo true > $orange_status_file
           }
           cd ..
         } &
 
         { OTHERFLAGS='--use_two_phase_tc false --warn_error -276 --use_hint_hashes' timeout 480 make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify || {
-              test -n "$ORANGE_FILE" && { echo "Hacl.Hash.SHA2_256.fst-verify (HACL*)" >> $ORANGE_FILE ; }
+              test -n "$ORANGE_FILE" && { echo " - Hacl.Hash.SHA2_256.fst-verify (HACL*)" >> $ORANGE_FILE ; }
               echo true > $orange_status_file
           }
         } &
 
         { OTHERFLAGS='--use_hint_hashes' timeout 480 make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver || {
-              test -n "$ORANGE_FILE" && { echo "Crypto.AEAD.Encrypt.fst-ver (HACL*)" >> $ORANGE_FILE ; }
+              test -n "$ORANGE_FILE" && { echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >> $ORANGE_FILE ; }
               echo true > $orange_status_file
           }
         } &
@@ -180,19 +181,19 @@ function build_fstar () {
         {
             OTHERFLAGS=--use_hint_hashes timeout 480 make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver || \ 
             {
-                { echo "StreamAE.fst-ver (mitls)" >> $ORANGE_FILE; }
+                { echo " - StreamAE.fst-ver (mitls)" >> $ORANGE_FILE; }
                 echo true > $orange_status_file
             }
             
             OTHERFLAGS=--use_hint_hashes timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver || \
             {
-                { echo "Pkg.fst-ver (mitls verify)" >> $ORANGE_FILE; }
+                { echo " - Pkg.fst-ver (mitls verify)" >> $ORANGE_FILE; }
                 echo true > $orange_status_file
             }
             
             OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver || \
             {
-                { echo "Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >> $ORANGE_FILE; }
+                { echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >> $ORANGE_FILE; }
                 echo true > $orange_status_file
             }
         } &
@@ -214,7 +215,7 @@ function build_fstar () {
         echo "Searching for a diff in src/ocaml-output"
         if ! git diff --exit-code --name-only src/ocaml-output; then
             echo "GIT DIFF: the files in the list above have a git diff"
-            test -n "$ORANGE_FILE" && { echo "snapshot-diff (F*)" >> $ORANGE_FILE ; }
+            test -n "$ORANGE_FILE" && { echo " - snapshot-diff (F*)" >> $ORANGE_FILE ; }
             echo true > $orange_status_file
         fi
 
@@ -223,7 +224,7 @@ function build_fstar () {
             echo Failure > $result_file
         elif $(cat $orange_status_file) ; then
             echo "F* regression had breakages"
-            echo Success with breakages > $result_file
+            echo Success with breakages $(cat $ORANGE_FILE) > $result_file
         else
             echo "F* regression succeeded"
             echo Success > $result_file

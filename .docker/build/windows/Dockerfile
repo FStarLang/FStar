@@ -20,10 +20,10 @@ RUN powershell.exe -c Write-Host (Get-Date).ToString() >> %BUILDLOGFILE%
 
 # Generate query-stats.
 # List the hints that fail to replay.
-RUN powershell.exe c:\ewerest\bash.ps1 .scripts/query-stats.py -f %BUILDLOGFILE% -F html -o /cygdrive/c/ewerest/log_no_replay.html -n all '--filter=fstar_usedhints=+' '--filter=fstar_tag=-' -g
+RUN powershell.exe c:\ewerest\bash.ps1 .scripts/query-stats.py -f %BUILDLOGFILE% -F html -o c:/ewerest/log_no_replay.html -n all '--filter=fstar_usedhints=+' '--filter=fstar_tag=-' -g
 
 # Worst offenders (longest times)
-RUN powershell.exe c:\ewerest\bash.ps1 .scripts/query-stats.py -f %BUILDLOGFILE% -F html -o /cygdrive/c/ewerest/log_worst.html -c -g -n 10
+RUN powershell.exe c:\ewerest\bash.ps1 .scripts/query-stats.py -f %BUILDLOGFILE% -F html -o c:/ewerest/log_worst.html -c -g -n 10
 
 # Now seal the image, ready for SSH access.
 USER root
