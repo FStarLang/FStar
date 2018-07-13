@@ -56,8 +56,6 @@ let rec parse_nlist'
 = if n = 0
   then parse_ret nlist_nil
   else begin
-    synth_inverse_1 t (n - 1);
-    synth_inverse_2 t (n - 1);
     parse_synth
       (p `nondep_then` parse_nlist' (n - 1) p)
       (synth_nlist (n - 1))
@@ -71,6 +69,35 @@ let parse_nlist
   (p: parser_spec t)
 : Tot (y: parser_spec (nlist n t) { y == parse_nlist' n p } )
 = parse_nlist' n p
+
+let parse_nlist_eq
+  (n: nat)
+  (#t: Type0)
+  (p: parser_spec t)
+  (b: bytes)
+: Tot (squash (
+  parse (parse_nlist n p) b == (
+    if n = 0
+    then Some ([], 0)
+    else match parse p b with
+    | Some (elem, consumed) ->
+      let b' = Seq.slice b consumed (Seq.length b) in
+      begin match parse (parse_nlist (n - 1) p) b' with
+      | Some (q, consumed') -> Some (elem :: q, consumed + consumed')
+      | _ -> None
+      end
+    | _ -> None
+  )))
+= if n = 0
+  then ()
+  else begin
+    parse_synth_eq
+      (p `nondep_then` parse_nlist' (n - 1) p)
+      (synth_nlist (n - 1))
+      (synth_nlist_recip (n - 1))
+      b;
+    nondep_then_eq p (parse_nlist' (n - 1) p) b
+  end
 
 let rec serialize_nlist'
   (n: nat)

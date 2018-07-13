@@ -7,6 +7,7 @@ module U8 = FStar.UInt8
 type color = | Red | Blue | Green | Yellow
 type palette = nlist 18 (color * U8.t)
 
+noextract
 val ps: package palette
 
 val p: parser_impl (package_parser ps)
