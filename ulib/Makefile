@@ -57,10 +57,10 @@ fstartaclib.mgen: fstarlib.mgen
 ######################################################
 
 # relative path to build directory, which is ulib/ml/_build
-RELATIVE_OCAMLPATH=../../../bin/
+OCAMLPATH:=../../../bin/:$(OCAMLPATH)
 
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
-OCAMLBUILD=cd ../ && OCAMLPATH="$(OCAMLPATH):$(RELATIVE_OCAMLPATH)" ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
+OCAMLBUILD=cd ../ && OCAMLPATH="$(OCAMLPATH)" ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
 
 FSTARLIB_OCAMLBUILD=$(OCAMLBUILD) -build-dir ulib/ml/_build \
   -I ulib/ml \
