@@ -11,6 +11,8 @@ module HST = FStar.HyperStack.ST
 module B = LowStar.Buffer
 module S = FStar.Seq
 
+let root = Monotonic.HyperHeap.root
+
 assume type elem: eqtype u#0
 assume type hash: eqtype u#0
 assume val elem_init: elem
@@ -41,20 +43,21 @@ let rec pow2_is_pow2 n =
   if n = 0 then ()
   else pow2_is_pow2 (n - 1)
 
-val alloc_sz_lg: 
+val alloc_sz_lg:
   nelts:nat{nelts > 0} -> 
-  GTot (sz:nat{if sz = 0 
-    then nelts <= pow2 sz
-    else pow2 (sz - 1) < nelts && nelts <= pow2 sz})
+  GTot (sz:nat{sz > 0 && pow2 (sz - 1) <= nelts && nelts < pow2 sz})
 let rec alloc_sz_lg nelts =
-  if nelts = 1 then 0
-  else if nelts % 2 = 0 then 1 + alloc_sz_lg (nelts / 2)
-  else 1 + alloc_sz_lg ((nelts + 1) / 2)
+  if nelts = 1 then 1
+  else 1 + alloc_sz_lg (nelts / 2)
+
+unfold val alloc_sz: nelts:nat{nelts > 0} -> GTot nat
+unfold let alloc_sz nelts =
+  pow2 (alloc_sz_lg nelts) - 1
 
 val pow2_interval_unique:
   n:nat -> sz1:nat{sz1 > 0} -> sz2:nat{sz2 > 0} ->
-  Lemma (requires (pow2 (sz1 - 1) < n && n <= pow2 sz1 &&
-		  pow2 (sz2 - 1) < n && n <= pow2 sz2))
+  Lemma (requires (pow2 (sz1 - 1) <= n && n < pow2 sz1 &&
+		  pow2 (sz2 - 1) <= n && n < pow2 sz2))
 	(ensures (sz1 = sz2))
 let pow2_interval_unique n sz1 sz2 =
   if sz1 > sz2 
@@ -65,7 +68,7 @@ let pow2_interval_unique n sz1 sz2 =
 
 val alloc_sz_lg_inv:
   nelts:nat -> sz:nat{sz > 0} ->
-  Lemma (requires (pow2 (sz - 1) < nelts && nelts <= pow2 sz))
+  Lemma (requires (pow2 (sz - 1) <= nelts && nelts < pow2 sz))
 	(ensures (alloc_sz_lg nelts = sz))
 let alloc_sz_lg_inv nelts sz =
   pow2_interval_unique nelts sz (alloc_sz_lg nelts)
@@ -73,27 +76,24 @@ let alloc_sz_lg_inv nelts sz =
 val alloc_sz_lg_pow2:
   nelts:nat ->
   Lemma (requires (is_pow2 nelts))
-	(ensures (nelts = pow2 (alloc_sz_lg nelts)))
+	(ensures (nelts = pow2 (alloc_sz_lg nelts - 1)))
 let rec alloc_sz_lg_pow2 nelts =
   if nelts = 1 then ()
   else if nelts % 2 = 0 then alloc_sz_lg_pow2 (nelts / 2)
   else ()
 
 val alloc_sz_lg_pow2_inc:
-  nelts:nat ->
-  Lemma (requires (is_pow2 nelts))
+  nelts:nat{nelts > 0} ->
+  Lemma (requires (is_pow2 (nelts + 1)))
 	(ensures (alloc_sz_lg (nelts + 1) = 1 + alloc_sz_lg nelts))
-#set-options "--z3rlimit 10"
 let rec alloc_sz_lg_pow2_inc nelts =
   if nelts = 1 then ()
-  else if nelts % 2 = 0 then alloc_sz_lg_pow2_inc (nelts / 2)
-  else ()
+  else alloc_sz_lg_pow2_inc (nelts / 2)
 
 val alloc_sz_lg_not_pow2_inc:
   nelts:nat{nelts > 0} ->
-  Lemma (requires (~ (is_pow2 nelts)))
-	(ensures (alloc_sz_lg nelts = 
-       		 alloc_sz_lg (nelts + 1)))
+  Lemma (requires (~ (is_pow2 (nelts + 1))))
+	(ensures (alloc_sz_lg nelts = alloc_sz_lg (nelts + 1)))
 let alloc_sz_lg_not_pow2_inc nelts =
   let sz1 = alloc_sz_lg nelts in
   let sz2 = alloc_sz_lg (nelts + 1) in
@@ -110,7 +110,7 @@ noeq type merkle_tree =
 | MT: nelts:nat{nelts > 0 && nelts < pow2 max_num_elts_lg} -> 
       // The value buffer will be resized when elements are added.
       // Resizing mechanism will be similar to that of C++ vector.
-      values:elem_buf{B.length values = pow2 (alloc_sz_lg nelts)} ->
+      values:elem_buf{B.length values = alloc_sz nelts} ->
       // The actual number of internal roots should be equal to 
       // the number of "set" bits of `nelts`.
       iroots:hash_buf{B.length iroots = max_num_elts_lg} ->
@@ -127,12 +127,12 @@ val create_merkle_tree: unit ->
 	   B.live h1 (MT?.values mt) /\ B.freeable (MT?.values mt) /\
 	   B.live h1 (MT?.iroots mt)))
 let create_merkle_tree _ =
-  MT 1 (B.malloc Monotonic.HyperHeap.root elem_init 1ul)
-     (B.malloc Monotonic.HyperHeap.root hash_init (UInt32.uint_to_t max_num_elts_lg))
+  MT 1 (B.malloc root elem_init 1ul)
+     (B.malloc root hash_init (UInt32.uint_to_t max_num_elts_lg))
 
 // val init_merkle_tree: unit -> HST.St mtree_ptr
 // let init_merkle_tree _ =
-//   B.malloc Monotonic.HyperHeap.root (create_merkle_tree ()) 1ul
+//   B.malloc root (create_merkle_tree ()) 1ul
 
 /// Insertion
 
@@ -145,36 +145,47 @@ val insert_nelts:
 let insert_nelts nelts =
   nelts + 1
 
+val pow2_lt_le:
+  n:nat -> p:nat{p > 0} ->
+  Lemma (requires (is_pow2 n && n < pow2 p))
+	(ensures (n <= pow2 (p - 1)))
+let rec pow2_lt_le n p =
+  if n = 1 then ()
+  else pow2_lt_le (n / 2) (p - 1)
+
 val insert_values:
   nelts:nat{nelts > 0 && nelts < pow2 max_num_elts_lg - 1} -> 
-  vs:elem_buf{B.length vs = pow2 (alloc_sz_lg nelts)} ->
-  elem -> 
-  HST.ST (ivs:elem_buf{B.length ivs = pow2 (alloc_sz_lg (insert_nelts nelts))})
+  vs:elem_buf{B.length vs = alloc_sz nelts} ->
+  e:elem -> 
+  HST.ST (ivs:elem_buf{B.length ivs = alloc_sz (insert_nelts nelts)})
 	 (requires (fun h0 -> B.live h0 vs /\ B.freeable vs))
-	 // TODO: definitely need postconditions about "values"
-	 (ensures (fun h0 nvs h1 -> B.live h1 nvs /\ B.freeable nvs))
+	 (ensures (fun h0 nvs h1 -> 
+	   B.live h1 nvs /\ B.freeable nvs /\
+	   S.slice (B.as_seq h1 nvs) 0 nelts == S.slice (B.as_seq h0 vs) 0 nelts /\
+	   S.index (B.as_seq h1 nvs) nelts == e))
+#set-options "--z3rlimit 10"
 let insert_values nelts vs e =
-  if is_pow2 nelts 
-  then (// TODO: need a fine-grained control of indexing and allocation
-       assume (2 * nelts <= pow2 (max_num_elts_lg) - 1);
-       
-       let hh0 = HST.get () in
-       let nvs = B.malloc Monotonic.HyperHeap.root elem_init (UInt32.uint_to_t (2 * nelts)) in
-       B.live_unused_in_disjoint hh0 vs nvs;
-       alloc_sz_lg_pow2 nelts;
+  if is_pow2 (nelts + 1)
+  then (let hh0 = HST.get () in
+       // Need to prove `2 * nelts + 1` does not exceed the maximum before `B.malloc`
+       pow2_lt_le (nelts + 1) max_num_elts_lg; 
+       let nvs = B.malloc root elem_init (UInt32.uint_to_t (2 * nelts + 1)) in
 
+       // `blit` requires two buffers to be disjoint
+       B.live_unused_in_disjoint hh0 vs nvs;
+       loc_disjoint_buffer vs nvs;
        LowStar.BufferOps.blit vs 0ul nvs 0ul (UInt32.uint_to_t nelts);
+
        B.upd nvs (UInt32.uint_to_t nelts) e;
 
-       let hh1 = HST.get () in
-       B.free vs; // TODO: `B.free` the previous values buffer
-       let hh2 = HST.get () in
-       // TODO: there might be a relation between `B.free` and `modifies`
-       assume (modifies (loc_buffer vs) hh1 hh2);
+       // TODO: should be able to prove that `nvs` is not affected after `B.free`
+       // there might be a relation among `B.disjoint`, `B.free`, and `B.live`
+       // B.free vs;
+       // let hh2 = HST.get () in assume (B.live hh2 nvs);
 
-       alloc_sz_lg_pow2_inc nelts; nvs)
-  else (assume (nelts < pow2 (alloc_sz_lg nelts));
-       B.upd vs (UInt32.uint_to_t nelts) e;
+       alloc_sz_lg_pow2_inc nelts;
+       nvs)
+  else (B.upd vs (UInt32.uint_to_t nelts) e; 
        alloc_sz_lg_not_pow2_inc nelts;
        vs)
 
