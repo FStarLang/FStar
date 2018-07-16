@@ -120,7 +120,12 @@ noeq type merkle_tree =
 
 /// Initialization
 
-val create_merkle_tree: unit -> HST.St merkle_tree
+val create_merkle_tree: unit -> 
+  HST.ST merkle_tree
+	 (requires (fun _ -> true))
+	 (ensures (fun h0 mt h1 -> 
+	   B.live h1 (MT?.values mt) /\ B.freeable (MT?.values mt) /\
+	   B.live h1 (MT?.iroots mt)))
 let create_merkle_tree _ =
   MT 1 (B.malloc Monotonic.HyperHeap.root elem_init 1ul)
      (B.malloc Monotonic.HyperHeap.root hash_init (UInt32.uint_to_t max_num_elts_lg))
@@ -140,25 +145,14 @@ val insert_nelts:
 let insert_nelts nelts =
   nelts + 1
 
-// TODO: so inefficient if recursive; maybe it's already defined somewhere?
-val buffer_copy:
-  #a:Type -> l1:nat{l1 > 0} -> b1:B.buffer a{B.length b1 = l1} ->
-  b2:B.buffer a{B.length b2 >= l1} ->
-  HST.ST unit
-	 (requires (fun h0 -> B.live h0 b1 /\ B.live h0 b2 /\ B.disjoint b1 b2))
-	 (ensures (fun h0 _ h1 ->
-	   modifies (loc_buffer b2) h0 h1 /\
-	   B.as_seq h1 b1 == S.slice (B.as_seq h1 b2) 0 l1))
-let rec buffer_copy #a l1 b1 b2 =
-  admit () // Do we have iteration for buffers, or something like `memcpy`?
-
 val insert_values:
   nelts:nat{nelts > 0 && nelts < pow2 max_num_elts_lg - 1} -> 
   vs:elem_buf{B.length vs = pow2 (alloc_sz_lg nelts)} ->
   elem -> 
   HST.ST (ivs:elem_buf{B.length ivs = pow2 (alloc_sz_lg (insert_nelts nelts))})
-	 (requires (fun h0 -> B.live h0 vs))
-	 (ensures (fun h0 nvs h1 -> B.live h1 nvs)) // TODO: definitely need stronger postconditions
+	 (requires (fun h0 -> B.live h0 vs /\ B.freeable vs))
+	 // TODO: definitely need postconditions about "values"
+	 (ensures (fun h0 nvs h1 -> B.live h1 nvs /\ B.freeable nvs))
 let insert_values nelts vs e =
   if is_pow2 nelts 
   then (// TODO: need a fine-grained control of indexing and allocation
@@ -168,11 +162,15 @@ let insert_values nelts vs e =
        let nvs = B.malloc Monotonic.HyperHeap.root elem_init (UInt32.uint_to_t (2 * nelts)) in
        B.live_unused_in_disjoint hh0 vs nvs;
        alloc_sz_lg_pow2 nelts;
-       buffer_copy nelts vs nvs;
 
+       LowStar.BufferOps.blit vs 0ul nvs 0ul (UInt32.uint_to_t nelts);
        B.upd nvs (UInt32.uint_to_t nelts) e;
 
-       // B.free vs; // TODO: `B.free` the previous values buffer
+       let hh1 = HST.get () in
+       B.free vs; // TODO: `B.free` the previous values buffer
+       let hh2 = HST.get () in
+       // TODO: there might be a relation between `B.free` and `modifies`
+       assume (modifies (loc_buffer vs) hh1 hh2);
 
        alloc_sz_lg_pow2_inc nelts; nvs)
   else (assume (nelts < pow2 (alloc_sz_lg nelts));
