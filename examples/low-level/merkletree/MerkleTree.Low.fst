@@ -121,7 +121,7 @@ noeq type merkle_tree =
       iroots:hash_buf{B.length iroots = max_num_elts_lg} ->
       merkle_tree
 
-// let mtree_ptr = B.pointer merkle_tree
+let mtree_ptr = B.pointer merkle_tree
 
 /// Initialization
 
@@ -144,10 +144,10 @@ let create_merkle_tree _ =
 val mt_is_full: merkle_tree -> Tot bool
 let mt_is_full mt = MT?.nelts mt >= pow2 max_num_elts_lg - 1
 
-val insert_nelts: 
+unfold val insert_nelts: 
   nelts:nat{nelts < pow2 max_num_elts_lg - 1} ->
   Tot (inelts:nat{inelts < pow2 max_num_elts_lg})
-let insert_nelts nelts =
+unfold let insert_nelts nelts =
   nelts + 1
 
 val pow2_lt_le:
@@ -238,6 +238,15 @@ let rec num_iroots_of nelts =
   if nelts = 0 then 0
   else 1 + num_iroots_of (nelts - pow2 (pow2_floor nelts))
 
+val num_iroots_of_limit:
+  nelts_max_lg:nat -> nelts:nat{nelts < pow2 nelts_max_lg} ->
+  Lemma (num_iroots_of nelts <= nelts_max_lg)
+let rec num_iroots_of_limit nelts_max_lg nelts =
+  if nelts = 0 then ()
+  else num_iroots_of_limit 
+       (nelts_max_lg - 1) 
+       (nelts - pow2 (pow2_floor nelts))
+
 // val num_iroots_of_inv:
 //   nelts:nat{nelts > 0} ->
 //   Lemma (num_iroots_of nelts = 
@@ -272,29 +281,48 @@ unfold val iroots_of:
 unfold let iroots_of nelts vs =
   iroots_of_hashes nelts (seq_map hash_from_elem vs)
 
+// How to declare `values` as a ghost variable?
+#set-options "--z3rlimit 20"
 val insert_iroots:
-  nelts:nat{nelts > 0 && nelts < pow2 max_num_elts_lg} -> 
+  nelts:nat{nelts > 0 && nelts < pow2 max_num_elts_lg - 1} ->
   values:elem_buf{B.length values = alloc_sz nelts} ->
   irs:hash_buf{B.length irs = max_num_elts_lg} ->
-  nv:elem -> 
-  Tot (nirs:hash_buf{B.length nirs = max_num_elts_lg})
+  nv:elem ->
+  HST.ST unit
+	 (requires (fun h0 ->
+	   B.live h0 values /\ B.live h0 irs /\ B.disjoint values irs /\
+	   (num_iroots_of_limit max_num_elts_lg nelts;
+	     iroots_of nelts (S.slice (B.as_seq h0 values) 0 nelts) =
+	     S.slice (B.as_seq h0 irs) 0 (num_iroots_of nelts))))
+	 (ensures (fun h0 _ h1 ->
+	   modifies (loc_buffer irs) h0 h1 /\
+	   (num_iroots_of_limit max_num_elts_lg (nelts + 1);
+	     iroots_of (nelts + 1) (S.append (S.slice (B.as_seq h0 values) 0 nelts) (S.create 1 nv)) =
+	     S.slice (B.as_seq h1 irs) 0 (num_iroots_of (nelts + 1)))))
 let rec insert_iroots nelts values irs nv =
-  admit ()  
+  admit ()
 
 val insert: 
   mt:merkle_tree -> e:elem -> 
   HST.ST merkle_tree
 	 (requires (fun h0 -> 
+	   MT?.nelts mt < pow2 max_num_elts_lg - 1 /\
+	   B.disjoint (MT?.values mt) (MT?.iroots mt) /\
 	   B.live h0 (MT?.values mt) /\ B.freeable (MT?.values mt) /\
 	   B.live h0 (MT?.iroots mt) /\ B.freeable (MT?.iroots mt) /\
-	   ~ (mt_is_full mt)))
+	   ~ (mt_is_full mt) /\
+	   (num_iroots_of_limit max_num_elts_lg (MT?.nelts mt);
+	     iroots_of (MT?.nelts mt) (S.slice (B.as_seq h0 (MT?.values mt)) 0 (MT?.nelts mt)) =
+	     S.slice (B.as_seq h0 (MT?.iroots mt)) 0 (num_iroots_of (MT?.nelts mt)))))
 	 (ensures (fun h0 _ h1 -> true))
 let insert mt e =
-  MT (insert_nelts (MT?.nelts mt))
-     (insert_values (MT?.nelts mt) (MT?.values mt) e)
-     (insert_iroots (MT?.nelts mt) (MT?.values mt) (MT?.iroots mt) e)
+  let nnelts = insert_nelts (MT?.nelts mt) in
+  let niroots = (insert_iroots (MT?.nelts mt) (MT?.values mt) (MT?.iroots mt) e; MT?.iroots mt) in
+  let nvalues = insert_values (MT?.nelts mt) (MT?.values mt) e in
+  assert (nnelts > 0 && nnelts < pow2 max_num_elts_lg);
+  assert (B.length nvalues = alloc_sz nnelts);
+  assert (B.length niroots = max_num_elts_lg);
+  admit () // MT nnelts nvalues niroots
 
 /// Getting the Merkle root
-
-
 
