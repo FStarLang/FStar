@@ -19,9 +19,14 @@ assume val elem_init: elem
 assume val hash_init: hash
 let elem_buf = B.buffer elem
 let hash_buf = B.buffer hash
+let elem_seq = S.seq elem
+let hash_seq = S.seq hash
 
 assume val hash_from_elem: elem -> Tot hash
+
 assume val hash_from_hashes: hash -> hash -> Tot hash
+assume val hash_init_idem: 
+  h:hash -> Lemma (hash_from_hashes h hash_init = h)
 
 // This number says that the maximum number of values is (2^32 - 1)
 let max_num_elts_lg = 32
@@ -189,24 +194,105 @@ let insert_values nelts vs e =
        alloc_sz_lg_not_pow2_inc nelts;
        vs)
 
+val merkle_root_of_pow2:
+  #nelts:nat{is_pow2 nelts} -> vs:hash_seq{S.length vs = nelts} -> 
+  GTot hash
+let rec merkle_root_of_pow2 #nelts vs =
+  if nelts = 1 then S.index vs 0
+  else 
+    let lrt = merkle_root_of_pow2 #(nelts / 2) (S.slice vs 0 (nelts / 2)) in
+    let rrt = merkle_root_of_pow2 #(nelts / 2) (S.slice vs (nelts / 2) nelts) in
+    hash_from_hashes lrt rrt
+
+val padding_to_pow2:
+  nelts:nat{nelts > 0} -> GTot (sz:nat{
+    if nelts = 1 then sz = 0
+    else sz > 0 && pow2 (sz - 1) < nelts && nelts <= pow2 sz})
+let rec padding_to_pow2 nelts =
+  if nelts = 1 then 0
+  else if nelts % 2 = 0 then 1 + padding_to_pow2 (nelts / 2)
+  else 1 + padding_to_pow2 ((nelts + 1) / 2)
+
+val pad_hashes_pow2:
+  vs:hash_seq{S.length vs > 0} -> 
+  GTot (pvs:hash_seq{
+    S.length pvs = pow2 (padding_to_pow2 (S.length vs)) && 
+    S.slice pvs 0 (S.length vs) = vs})
+let pad_hashes_pow2 vs =
+  let pad = S.create (pow2 (padding_to_pow2 (S.length vs)) - S.length vs) hash_init in
+  S.append_slices vs pad;
+  S.append vs pad
+
+val merkle_root_of_hashes: vs:hash_seq{S.length vs > 0} -> GTot hash
+let merkle_root_of_hashes vs =
+  merkle_root_of_pow2 #(pow2 (padding_to_pow2 (S.length vs))) 
+		      (pad_hashes_pow2 vs)
+
+val pow2_floor: 
+  n:nat{n > 0} -> GTot (p:nat{pow2 p <= n && n < pow2 (p + 1)})
+let rec pow2_floor n =
+  if n = 1 then 0 else 1 + pow2_floor (n / 2)
+
+val num_iroots_of: nelts:nat -> GTot nat
+let rec num_iroots_of nelts =
+  if nelts = 0 then 0
+  else 1 + num_iroots_of (nelts - pow2 (pow2_floor nelts))
+
+// val num_iroots_of_inv:
+//   nelts:nat{nelts > 0} ->
+//   Lemma (num_iroots_of nelts = 
+
+// val merkle_root_of_iroots: 
+//   nelts:nat{nelts > 0} -> 
+//   iroots:hash_seq{S.length iroots = num_iroots_of nelts} ->
+//   GTot hash
+// let rec merkle_root_of_iroots nelts iroots =
+//   if nelts = 1 then S.index iroots 0
+//   else if nelts % 2 = 0 then 
+
+val iroots_of_hashes:
+  nelts:nat -> hs:hash_seq{S.length hs = nelts} ->
+  GTot (iroots:hash_seq{S.length iroots = num_iroots_of nelts})
+let rec iroots_of_hashes nelts hs =
+  if nelts = 0 then hs
+  else S.cons (merkle_root_of_pow2 #(pow2 (pow2_floor nelts))
+				   (S.slice hs 0 (pow2 (pow2_floor nelts))))
+	      (iroots_of_hashes (nelts - (pow2 (pow2_floor nelts)))
+			 (S.slice hs (pow2 (pow2_floor nelts)) nelts))
+
+val seq_map: 
+  #a:Type -> #b:Type -> (f: a -> b) -> s:S.seq a -> 
+  Tot (fs:S.seq b{S.length fs = S.length s}) (decreases (S.length s))
+let rec seq_map #a #b f s =
+  if S.length s = 0 then S.empty
+  else S.cons (f (S.head s)) (seq_map f (S.tail s))
+
+unfold val iroots_of: 
+  nelts:nat -> es:elem_seq{S.length es = nelts} -> GTot hash_seq
+unfold let iroots_of nelts vs =
+  iroots_of_hashes nelts (seq_map hash_from_elem vs)
+
 val insert_iroots:
+  nelts:nat{nelts > 0 && nelts < pow2 max_num_elts_lg} -> 
+  values:elem_buf{B.length values = alloc_sz nelts} ->
   irs:hash_buf{B.length irs = max_num_elts_lg} ->
-  elem -> Tot (nirs:hash_buf{B.length nirs = max_num_elts_lg})
-let insert_iroots irs e =
-  admit ()
+  nv:elem -> 
+  Tot (nirs:hash_buf{B.length nirs = max_num_elts_lg})
+let rec insert_iroots nelts values irs nv =
+  admit ()  
 
 val insert: 
   mt:merkle_tree -> e:elem -> 
   HST.ST merkle_tree
 	 (requires (fun h0 -> 
-	   B.live h0 (MT?.values mt) /\
-	   B.live h0 (MT?.iroots mt) /\
+	   B.live h0 (MT?.values mt) /\ B.freeable (MT?.values mt) /\
+	   B.live h0 (MT?.iroots mt) /\ B.freeable (MT?.iroots mt) /\
 	   ~ (mt_is_full mt)))
 	 (ensures (fun h0 _ h1 -> true))
 let insert mt e =
   MT (insert_nelts (MT?.nelts mt))
      (insert_values (MT?.nelts mt) (MT?.values mt) e)
-     (insert_iroots (MT?.iroots mt) e)
+     (insert_iroots (MT?.nelts mt) (MT?.values mt) (MT?.iroots mt) e)
 
 /// Getting the Merkle root
 
