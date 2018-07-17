@@ -24,13 +24,12 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver Positivity.uver DoNotation.uver \
 	 Pruning.uver NormVsSMT.uver Unit1.TopLevelPats.uver AssumeRequires.uver TwoPhaseTC.uver \
 	 IntNormalization.uver Subtyping.uver Test.HyperStack.uver Raising.uver RangeStep.uver \
-	 WPExtensionality.uver UnifyMatch.uver \
+	 WPExtensionality.uver UnifyMatch.uver UnifyRefs.uver \
 	 NegativeTests.BST.uver     NegativeTests.Heap.uver  NegativeTests.ShortCircuiting.uver \
 	 NegativeTests.Bug260.uver  NegativeTests.Neg.uver   NegativeTests.Termination.uver \
 	 NegativeTests.False.uver   NegativeTests.Set.uver   NegativeTests.Positivity.uver \
 	 NegativeTests.ZZImplicitFalse.uver StableErr.uver   ChrisCheck.uver PatCoerce.uver \
-	 OccursCheckOnArrows.uver
-	#TestHasEq.uver #temporarily removed from mac_universes branch
+	 OccursCheckOnArrows.uver Test.Integers.uver AnotType.uver Test.ReifyNBE.fst TestHasEq.uver
 
 basictests: $(VERFILES)
 	$(FSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^

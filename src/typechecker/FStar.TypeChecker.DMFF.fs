@@ -67,8 +67,8 @@ let gen_wps_for_free
 =
   // [wp_a] has been type-checked and contains universe unification variables;
   // we want to re-use [wp_a] and make it re-generalize accordingly
-  let wp_a = N.normalize [N.Beta; N.EraseUniverses] env wp_a in
-  let a = { a with sort = N.normalize [ N.EraseUniverses ] env a.sort } in
+  let wp_a = N.normalize [Env.Beta; Env.EraseUniverses] env wp_a in
+  let a = { a with sort = N.normalize [ Env.EraseUniverses ] env a.sort } in
 
   // Debugging
   let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s in
@@ -371,7 +371,7 @@ let gen_wps_for_free
   in
   let rec mk_rel rel t x y =
     let mk_rel = mk_rel rel in
-    let t = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.delta_constant ] env t in
+    let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant ] env t in
     match (SS.compress t).n with
     | Tm_type _ ->
         (* BU.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
@@ -410,7 +410,7 @@ let gen_wps_for_free
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
     let rec mk_stronger t x y =
-        let t = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.delta_constant ] env t in
+        let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant ] env t in
         match (SS.compress t).n with
         | Tm_type _ -> U.mk_imp x y
         | Tm_app (head, args) when is_tuple_constructor (SS.compress head) ->
@@ -657,7 +657,7 @@ and star_type' env t =
              if is_non_dependent_arrow ty (List.length args)
              then
                // We need to check that the result of the application is a datatype
-                let res = N.normalize [N.EraseUniverses; N.Inlining ; N.UnfoldUntil S.delta_constant] env.env t in
+                let res = N.normalize [Env.EraseUniverses; Env.Inlining ; Env.UnfoldUntil S.delta_constant] env.env t in
                 begin match (SS.compress res).n with
                   | Tm_app _ -> true
                   | _ ->
@@ -820,7 +820,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
-      if not (is_unknown t2.n) && not (Rel.is_trivial (Rel.teq env.env t1 t2)) then
+      if not (is_unknown t2.n) && not (Env.is_trivial (Rel.teq env.env t1 t2)) then
         raise_err (Errors.Fatal_TypeMismatch, (BU.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
           (Print.term_to_string e) (Print.term_to_string t1) (Print.term_to_string t2)))
     in
@@ -905,7 +905,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 and infer (env: env) (e: term): nm * term * term =
   // BU.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
-  let normalize = N.normalize [ N.Beta; N.Eager_unfolding; N.UnfoldUntil S.delta_constant; N.EraseUniverses ] env.env in
+  let normalize = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] env.env in
   match (SS.compress e).n with
   | Tm_bvar bv ->
       failwith "I failed to open a binder... boo"
@@ -1345,7 +1345,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 // A helper --------------------------------------------------------------------
 
 (* KM : why is there both NoDeltaSteps and UnfoldUntil Delta_constant ? *)
-let n = N.normalize [ N.Beta; N.UnfoldUntil delta_constant; N.DoNotUnfoldPureLets; N.Eager_unfolding; N.EraseUniverses ]
+let n = N.normalize [ Env.Beta; Env.UnfoldUntil delta_constant; Env.DoNotUnfoldPureLets; Env.Eager_unfolding; Env.EraseUniverses ]
 
 // Exported definitions -------------------------------------------------------
 

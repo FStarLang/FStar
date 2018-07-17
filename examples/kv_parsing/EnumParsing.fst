@@ -275,7 +275,7 @@ val encode_numbers_tag: numbers_tag -> b:bytes{length b == 1}
 let encode_numbers_tag t = Seq.create 1 t
 
 val encode_Nothing : b:bytes{length b == 0}
-let encode_Nothing = Seq.createEmpty
+let encode_Nothing = Seq.empty
 
 val encode_OneNum : n:U32.t -> b:bytes{length b == 4}
 let encode_OneNum n = encode_u32 n

@@ -111,7 +111,7 @@ let refl_modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
 	let r = itable i t in
 	let c0 = HS.sel h r in
 	let emp = Seq.slice c0 (Seq.length c0) (Seq.length c0) in
-	cut (Seq.equal Seq.createEmpty emp);
+	cut (Seq.equal Seq.empty emp);
 	FStar.Classical.forall_intro (Seq.contains_elim emp)
       else ()
 
@@ -495,7 +495,7 @@ let enxor #i iv aead_st #aadlen aad #len plain_b cipher_tag ak =
     counterblocks_emp i t.mac_rgn x (v len) 0 plain cipher;
     assert (safeId i ==> Seq.equal (HS.sel h_init (itable i t))
 				   (Seq.append (HS.sel h_init (itable i t))
-				 	        Seq.createEmpty)) in
+				 	        Seq.empty)) in
   let h0 = get () in 						
   counter_enxor t x len len plain_b cipher_b h_init;
   let h1 = get () in 

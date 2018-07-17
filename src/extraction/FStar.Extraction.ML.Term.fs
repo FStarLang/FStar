@@ -45,6 +45,7 @@ module R  = FStar.Reflection.Basic
 module RD = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
 module RE = FStar.Reflection.Embeddings
+  module Env = FStar.TypeChecker.Env
 
 exception Un_extractable
 
@@ -169,7 +170,7 @@ let rec is_arity env t =
     | Tm_arrow(_, c) ->
       is_arity env (FStar.Syntax.Util.comp_result c)
     | Tm_fvar _ ->
-      let t = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.UnfoldUntil delta_constant] env.tcenv t in
+      let t = N.normalize [Env.AllowUnboundUniverses; Env.EraseUniverses; Env.UnfoldUntil delta_constant] env.tcenv t in
       begin match (SS.compress t).n with
         | Tm_fvar _ -> false
         | _ -> is_arity env t
@@ -458,14 +459,24 @@ let bv_as_mlty (g:env) (bv:bv) =
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
 let basic_norm_steps = [
-                N.Beta;
-                N.Eager_unfolding;
-                N.Iota;
-                N.Zeta;
-                N.Inlining;
-                N.EraseUniverses;
-                N.AllowUnboundUniverses
+                Env.Beta;
+                Env.Eager_unfolding;
+                Env.Iota;
+                Env.Zeta;
+                Env.Inlining;
+                Env.EraseUniverses;
+                Env.AllowUnboundUniverses
     ]
+
+let comp_no_args c =
+    match c.n with
+    | Total _
+    | GTotal _ -> c
+    | Comp ct ->
+       let effect_args = List.map (fun (_, aq) -> (S.t_unit, aq)) ct.effect_args in
+       let ct = { ct with effect_args = effect_args } in
+       let c = { c with n = Comp ct } in
+       c
 
 let rec translate_term_to_mlty (g:env) (t0:term) : mlty =
     let arg_as_mlty (g:env) (a, _) : mlty =
@@ -480,7 +491,7 @@ let rec translate_term_to_mlty (g:env) (t0:term) : mlty =
         else
             let formals, _ =
                 let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid g.tcenv fv.fv_name.v in
-                let fvty = N.normalize [N.UnfoldUntil delta_constant] g.tcenv fvty in
+                let fvty = N.normalize [Env.UnfoldUntil delta_constant] g.tcenv fvty in
                 U.arrow_formals fvty in
             let mlargs = List.map (arg_as_mlty g) args in
             let mlargs =
@@ -532,14 +543,15 @@ let rec translate_term_to_mlty (g:env) (t0:term) : mlty =
             let mlbs, env = binders_as_ml_binders env bs in
             let t_ret =
                 let eff = TcEnv.norm_eff_name env.tcenv (U.comp_effect_name c) in
+                let c = comp_no_args c in
                 let ed, qualifiers = must (TcEnv.effect_decl_opt env.tcenv eff) in
                 if qualifiers |> List.contains Reifiable
                 then let t = FStar.TypeChecker.Env.reify_comp env.tcenv c U_unknown in
-                     (* let _ = printfn "Translating comp type %s as %s\n" *)
-                     (*        (Print.comp_to_string c) (Print.term_to_string t) in *)
+                     debug env (fun () -> BU.print2 "Translating comp type %s as %s\n"
+                            (Print.comp_to_string c) (Print.term_to_string t));
                      let res = translate_term_to_mlty env t in
-                     (* let _ = printfn "Translated comp type %s as %s ... to %s\n" *)
-                     (*        (Print.comp_to_string c) (Print.term_to_string t) (Code.string_of_mlty env.currentModule res) in *)
+                     debug env (fun () -> BU.print3 "Translated comp type %s as %s ... to %s\n"
+                            (Print.comp_to_string c) (Print.term_to_string t) (Code.string_of_mlty env.currentModule res));
                      res
                 else translate_term_to_mlty env (U.comp_result c) in
             let erase = effect_as_etag env (U.comp_effect_name c) in
@@ -586,7 +598,7 @@ let rec translate_term_to_mlty (g:env) (t0:term) : mlty =
     else let mlt = aux g t0 in
          if is_top_ty mlt
          then //Try normalizing t fully, this time with Delta steps, and translate again, to see if we can get a better translation for it
-              let t = N.normalize (N.UnfoldUntil delta_constant::basic_norm_steps) g.tcenv t0 in
+              let t = N.normalize (Env.UnfoldUntil delta_constant::basic_norm_steps) g.tcenv t0 in
               aux g t
     else mlt
 
@@ -896,7 +908,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_quoted (qt, { qkind = Quote_dynamic }) ->
           let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
-          with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
+          with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Cannot evaluate open quotation at runtime")]),
           E_PURE,
           ml_int_ty
 
@@ -904,14 +916,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           begin match R.inspect_ln qt with
           | RD.Tv_Var bv ->
             begin match S.lookup_aq bv aqs with
-            | Some (false, tm) ->
+            | Some tm ->
               term_as_mlexpr g tm
-
-            | Some (true, tm) ->
-              let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
-              with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Open quotation at runtime")]),
-              E_PURE,
-              ml_int_ty
 
             | None ->
               let tv = EMB.embed (RE.e_term_view_aq aqs) t.pos (RD.Tv_Var bv) in
@@ -1017,11 +1023,11 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           in
           begin match head.n, (SS.compress head).n with
             | Tm_uvar _, _ -> //This should be a resolved uvar --- so reduce it before extraction
-              let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
+              let t = N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr g t
 
             | _, Tm_abs(bs, _, Some rc) when is_total rc -> //this is a beta_redex --- also reduce it before extraction
-              let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
+              let t = N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr g t
 
             | _, Tm_constant Const_reify ->
@@ -1204,9 +1210,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                     let lbdef =
                         if Options.ml_ish()
                         then lb.lbdef
-                        else N.normalize [N.AllowUnboundUniverses; N.EraseUniverses;
-                                             N.Inlining; N.Eager_unfolding;
-                                             N.Exclude N.Zeta; N.PureSubtermsWithinComputations; N.Primops]
+                        else N.normalize [Env.AllowUnboundUniverses; Env.EraseUniverses;
+                                             Env.Inlining; Env.Eager_unfolding;
+                                             Env.Exclude Env.Zeta; Env.PureSubtermsWithinComputations; Env.Primops]
                                 tcenv lb.lbdef in
                     {lb with lbdef=lbdef})
             else lbs in

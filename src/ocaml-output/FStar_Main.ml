@@ -1,5 +1,5 @@
 open Prims
-let (uu___450 : unit) = FStar_Version.dummy () 
+let (uu___457 : unit) = FStar_Version.dummy () 
 let (process_args :
   unit ->
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
@@ -75,7 +75,7 @@ let (report_errors :
   =
   fun fmods  ->
     (let uu____147 = FStar_Errors.report_all ()  in
-     FStar_All.pipe_right uu____147 (fun a241  -> ()));
+     FStar_All.pipe_right uu____147 (fun a240  -> ()));
     (let nerrs = FStar_Errors.get_err_count ()  in
      if nerrs > (Prims.parse_int "0")
      then
@@ -335,9 +335,9 @@ let go : 'Auu____395 . 'Auu____395 -> unit =
                                             module_names_and_times
                                             (Prims.parse_int "0"))))
                              else
-                               FStar_Errors.log_issue FStar_Range.dummyRange
+                               FStar_Errors.raise_error
                                  (FStar_Errors.Error_MissingFileName,
-                                   "no file provided\n"))))))))
+                                   "No file provided") FStar_Range.dummyRange)))))))
   
 let (lazy_chooser :
   FStar_Syntax_Syntax.lazy_kind ->
@@ -398,7 +398,7 @@ let (handle_error : Prims.exn -> unit) =
 let main : 'Auu____760 . unit -> 'Auu____760 =
   fun uu____765  ->
     try
-      (fun uu___452_773  ->
+      (fun uu___459_773  ->
          match () with
          | () ->
              (setup_hooks ();
@@ -417,5 +417,7 @@ let main : 'Auu____760 . unit -> 'Auu____760 =
                      else ());
                     cleanup ();
                     FStar_All.exit (Prims.parse_int "0"))))) ()
-    with | e -> (handle_error e; FStar_All.exit (Prims.parse_int "1"))
+    with
+    | uu___458_793 ->
+        (handle_error uu___458_793; FStar_All.exit (Prims.parse_int "1"))
   

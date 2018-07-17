@@ -43,6 +43,7 @@ module Tc      = FStar.TypeChecker.Tc
 module TcTerm  = FStar.TypeChecker.TcTerm
 module BU      = FStar.Util
 module Dep     = FStar.Parser.Dep
+module NBE     = FStar.TypeChecker.NBE
 
 (* we write this version number to the cache files, and detect when loading the cache that the version number is same *)
 let cache_version_number = 4
@@ -92,6 +93,7 @@ let init_env deps : TcEnv.env =
         TcTerm.check_type_of_well_typed_term
         solver
         Const.prims_lid
+        NBE.normalize'
   in
   (* Set up some tactics callbacks *)
   let env = { env with synth_hook = FStar.Tactics.Interpreter.synthesize } in
@@ -215,11 +217,11 @@ let load_module_from_cache
                 Inl "Stale"
                 end
             | _ ->
-                Inl "Stale"
+                Inl "Unable to compute digest of"
     in
     fun env fn ->
         let cache_file = Dep.cache_file_name fn in
-        let fail tag should_warn =
+        let fail tag should_warn cache_file =
              invalidate_cache();
              if should_warn then
                  FStar.Errors.log_issue
@@ -233,14 +235,14 @@ let load_module_from_cache
         | _ ->
           if BU.file_exists cache_file then
             match load env fn cache_file with
-            | Inl msg -> fail msg true
+            | Inl msg -> fail msg true cache_file
             | Inr res -> Some res
           else
             match FStar.Options.find_file (FStar.Util.basename cache_file) with
-            | None -> fail "Absent" false //do not warn if the file was not found
+            | None -> fail "Absent" false cache_file //do not warn if the file was not found
             | Some alt_cache_file ->
               match load env fn alt_cache_file with
-              | Inl msg -> fail msg true
+              | Inl msg -> fail msg true alt_cache_file
               | Inr res ->
                 //found a valid .checked file somewhere else in the include path
                 //copy it to the destination, if we are supposed to be verifying this file
@@ -313,6 +315,8 @@ let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and 
             then store_module_to_cache env fn (fst tcmod) tcmod_iface_opt mii;
             tcmod, env, None
       | Some (tcmod, tcmod_iface_opt, mii) ->
+            if Options.dump_module tcmod.name.str
+            then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
             let tcmod =
             if tcmod.is_interface then tcmod
             else

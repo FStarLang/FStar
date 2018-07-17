@@ -55,6 +55,8 @@ let smtpat_lid      = pconst "smt_pat"
 let smtpatOr_lid    = pconst "smt_pat_or"
 let monadic_lid     = pconst "M"
 let spinoff_lid     = pconst "spinoff"
+let inl_lid         = psconst "Inl"
+let inr_lid         = psconst "Inr"
 
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid  = p2l ["FStar"; "UInt8"; "t"]
@@ -244,18 +246,21 @@ let steps_primops       = psnconst "primops"
 let steps_zeta          = psnconst "zeta"
 let steps_iota          = psnconst "iota"
 let steps_delta         = psnconst "delta"
+let steps_reify         = psnconst "reify_"
 let steps_unfoldonly    = psnconst "delta_only"
 let steps_unfoldfully   = psnconst "delta_fully"
 let steps_unfoldattr    = psnconst "delta_attr"
+let steps_nbe           = psnconst "nbe"
 
 (* attributes *)
 let deprecated_attr = p2l ["FStar"; "Pervasives"; "deprecated"]
 let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
 let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
+let tcnorm_attr    =  p2l ["FStar"; "Pervasives"; "tcnorm"]
 let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
-let fail_attr      = psconst "fail"
-let fail_lax_attr  = psconst "fail_lax"
+let fail_attr      = psconst "expect_failure"
+let fail_lax_attr  = psconst "expect_lax_failure"
 let assume_strictly_positive_attr_lid = p2l ["FStar"; "Pervasives"; "assume_strictly_positive"]
 
 let gen_reset =
@@ -350,6 +355,9 @@ let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 let u_tac_lid = fstar_tactics_lid' ["Effect"; "__tac"]
+
+let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
+let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "instance"]
 
 let effect_TAC_lid = fstar_tactics_lid' ["Effect"; "TAC"] // actual effect
 let effect_Tac_lid = fstar_tactics_lid' ["Effect"; "Tac"] // trivial variant

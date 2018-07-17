@@ -1,5 +1,4 @@
 module CanonCommSemiring
-#reset-options
 
 (*
 Commutative semiring (a ring with commutative multiplication and without an additive inverse)
@@ -30,13 +29,11 @@ unfold let cm_op = CM?.mult
 
 (***** Commutative semirings *)
 
-logic
 let distribute_left_lemma (a:Type) (cm_add:cm a) (cm_mult:cm a) =
   let (+) = cm_op cm_add in
   let ( * ) = cm_op cm_mult in
   x:a -> y:a -> z:a -> Lemma (x * (y + z) == x * y + x * z)
 
-logic
 let distribute_right_lemma (a:Type) (cm_add:cm a) (cm_mult:cm a) =
   let (+) = cm_op cm_add in
   let ( * ) = cm_op cm_mult in
@@ -53,10 +50,10 @@ type cr (a:Type) =
 
 let distribute_right (#a:Type) (r:cr a) : distribute_right_lemma a r.cm_add r.cm_mult =
   fun x y z ->
-    CM?.commutativity r.cm_add (cm_op r.cm_add x y) z;
-    CM?.commutativity r.cm_add x z;
-    CM?.commutativity r.cm_add y z;
-    r.distribute z x y
+    CM?.commutativity r.cm_mult (cm_op r.cm_add x y) z;
+    r.distribute z x y;
+    CM?.commutativity r.cm_mult x z;
+    CM?.commutativity r.cm_mult y z
 
 [@canon_attr]
 let int_cr : cr int =

@@ -30,11 +30,11 @@ let replace_point (#a:Type) (m:monoid a) (rhs:exp a) =
               [(quote a, Q_Explicit);
                (quote m, Q_Explicit);
                (quote rhs, Q_Explicit)] in
-     dump "before replace point";
+     (* dump "before replace point"; *)
      apply_lemma t;
-     dump "after replace point";
+     (* dump "after replace point"; *)
      norm [delta;primops;zeta];
-     dump "after replace norm";
+     (* dump "after replace norm"; *)
      trefl ())
 
 let should_rewrite (#a:Type) (m:monoid a) (everywhere:bool) (t:term) : Tac (bool * int) =

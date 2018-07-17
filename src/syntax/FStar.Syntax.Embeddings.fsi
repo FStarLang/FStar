@@ -7,6 +7,7 @@ open FStar.Char
 
 module Range = FStar.Range
 module Z = FStar.BigInt
+module BU = FStar.Util
 
 (* TODO: Find a better home for these *)
 type norm_step =
@@ -17,9 +18,11 @@ type norm_step =
     | Delta
     | Zeta
     | Iota
+    | Reify
     | UnfoldOnly of list<string>
     | UnfoldFully of list<string>
     | UnfoldAttr of attribute
+    | NBE
 
 val steps_Simpl         : term
 val steps_Weak          : term
@@ -28,9 +31,11 @@ val steps_Primops       : term
 val steps_Delta         : term
 val steps_Zeta          : term
 val steps_Iota          : term
+val steps_Reify         : term
 val steps_UnfoldOnly    : term
 val steps_UnfoldFully   : term
 val steps_UnfoldAttr    : term
+val steps_NBE           : term
 
 (*
  * Unmbedding functions return an option because they might fail
@@ -55,6 +60,7 @@ val unembed'    : bool -> embedding<'a> -> term -> option<'a>
 val unembed     : embedding<'a> -> term -> option<'a>
 val try_unembed : embedding<'a> -> term -> option<'a>
 val type_of     : embedding<'a> -> typ
+val set_type    : typ -> embedding<'a> -> embedding<'a>
 
 (* Embeddings, both ways and containing type information *)
 val e_any         : embedding<term> // an identity
@@ -69,6 +75,7 @@ val e_range       : embedding<Range.range>
 val e_option      : embedding<'a> -> embedding<option<'a>>
 val e_list        : embedding<'a> -> embedding<list<'a>>
 val e_tuple2      : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
+val e_either      : embedding<'a> -> embedding<'b> -> embedding<BU.either<'a, 'b>>
 val e_string_list : embedding<list<string>>
 
 val mk_any_emb : typ -> embedding<term>

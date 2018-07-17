@@ -11,3 +11,7 @@ noeq type raise0 (a : Type u#a) : Type u#(max a (b + 1)) =
 let raise_t a = raise0 a
 let raise_val #a x = Ret x
 let downgrade_val #a x = match x with Ret x0 -> x0
+
+let downgrade_val_raise_val #a x = ()
+
+let raise_val_downgrade_val #a x = ()

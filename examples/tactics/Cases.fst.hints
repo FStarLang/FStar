@@ -8,7 +8,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "69ec707975d2ad52aee912f6825f1b6b"
+      "7c6404fe561791b78df3b7ab423f8128"
     ],
     [
       "Cases.test_cases_unsquash",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "0657f1b89eb4819daf568065597ee8b2"
+      "1c1ca90bfd582037e083a7468d72ada6"
     ],
     [
       "Cases.test_cases_bool",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "c0693a7935c0e201ffc612d0446d73f1"
+      "072fa46fce7b6495ead982af7c61939d"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "7aadb23f9b0f1dd0b3836b4c2045bce7"
+      "a6926bd94e5b5ac944c5b17f4805d514"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9d180b641addac4e950be2eb3536e329"
+      "903141047a55b1167a7807931b71f5ce"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -58,7 +58,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1504397f0b02c8f412afef0c50b73f0d"
+      "f53e68b21a890dde9d71415a7e09cc6f"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -72,7 +72,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "467b4c893f80833d8a746c748adc541b"
+      "bf9b940dd08eb7744c3d2601bf759b4e"
     ]
   ]
 ]

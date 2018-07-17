@@ -7,7 +7,7 @@ module T = FStar.Tactics
 module HST = FStar.HyperStack.ST
 module B = FStar.Buffer
 
-#reset-options "--z3rlimit 32 --use_two_phase_tc true --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
+#reset-options "--z3rlimit 32 --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
 let rec example (x: U32.t) : Tot (m unit) (decreases (U32.v x)) =
   _ <-- print_char (Ca.uint32_to_uint8 x) ;
@@ -23,7 +23,7 @@ let example_sz (x: U32.t) : Tot (m_sz (example x)) =
   coerce_sz
     _
     (example_do_while x)
-    (T.synth_by_tactic (fun () -> mk_sz (example_do_while x)))
+    (T.synth_by_tactic u#1 (fun () -> mk_sz (example_do_while x)))
     (example x)
     ()
 
@@ -121,7 +121,7 @@ let print_list_cipher_suite_sz (l: list cipher_suite) : Tot (m_sz (print_list_ci
   coerce_sz
     _
     (print_list_cipher_suite_spec_do_while l)
-    (T.synth_by_tactic (fun () -> mk_sz (print_list_cipher_suite_spec_do_while l)))
+    (T.synth_by_tactic u#1 (fun () -> mk_sz (print_list_cipher_suite_spec_do_while l)))
     (print_list_cipher_suite_spec l)
     ()
 

@@ -123,7 +123,7 @@ let parse_vector =
 val encode_vector_data : v:vector -> b:bytes{length b == vector_length v}
 let rec encode_vector_data v =
   match v with
-  | [] -> createEmpty
+  | [] -> Seq.empty
   | e::es -> enc_elem e `append` encode_vector_data es
 
 val encode_vector : v:vector -> bytes
@@ -158,7 +158,7 @@ let do_while_readonly #t init #a buf inv f =
     let h1 = get() in
     let ptr_val = B.create #t init 1ul in
     assert (ptr_val `B.unused_in` h1 /\
-           B.frameOf ptr_val == h1.tip);
+           B.frameOf ptr_val == get_tip h1);
     let h = get() in
     let _ = begin
         do_while

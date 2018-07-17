@@ -270,26 +270,33 @@ and resugar_app f args es: expression =
        try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a *)
     assert (length es == 2);
     let s, cs = BatList.first es, BatList.last es in
-    let body = match s.expr with
-      | MLE_Fun (_, e) ->
-         (match e.expr with
-          | MLE_Match (_, branches) ->
-             assert (length branches == 1);
-             (match (hd branches) with
-              | (_, _, x) -> build_expr x)
-          | _ -> failwith "Cannot resugar FStar.All.try_with"
-         )
-      | _ -> failwith "Cannot resugar FStar.All.try_with" in
-    let variants = match cs.expr with
-      | MLE_Fun (_, e) ->
-         (match e.expr with
-          | MLE_Match (_, branches) ->
-             map build_case branches
-          | _ -> [build_case (MLP_Wild, None, e)]
-         )
-      | _ -> failwith "Cannot resugar FStar.All.try_with" in
+    (* We have FStar.All.try_with s cs, with s : unit -> ML 'a
+     *                                  and  cs : exn -> ML 'a
+     *
+     * We need to create an OCaml try..with, with a body and a
+     * set of cases for catching the exception.
+     *
+     * For the body, we simply translate `s ()` and we're done.
+     *
+     * For the cases, we can't a similar trick, so we try to reverse-engineer
+     * the shape of the term in order to obtain a proper set. See get_variants. *)
+
+    let body = Exp.apply (build_expr s) [(Nolabel, build_expr ml_unit)] in
+    let variants = get_variants cs in
     Exp.try_ body variants
+
   | _ -> Exp.apply f args
+
+and get_variants (e : mlexpr) : Parsetree.case list =
+    match e.expr with
+    | MLE_Fun ([(id, _)], e) ->
+       (match e.expr with
+        | MLE_Match ({expr = MLE_Var id'}, branches) when id = id' ->
+           map build_case branches
+        | _ ->
+           [build_case (MLP_Var id, None, e)]
+       )
+    | _ -> failwith "Cannot resugar FStar.All.try_with (3)"
 
 and build_seq args =
   match args with
@@ -299,10 +306,10 @@ and build_seq args =
 
 and build_constructor_expr ((path, sym), exp): expression =
   let path', name =
-    (match sym with
-    | "Cons" -> ([], "::")
-    | "Nil" -> ([], "[]")
-    | x -> (path, x)) in
+    (match path, sym with
+    | ["Prims"], "Cons" -> ([], "::")
+    | ["Prims"], "Nil" -> ([], "[]")
+    | path, x -> (path, x)) in
   match exp with
   | [] -> Exp.construct (path_to_ident(path', name)) None
   | [e] ->

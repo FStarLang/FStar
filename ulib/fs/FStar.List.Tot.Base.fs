@@ -37,6 +37,7 @@ let subset _ _ = failwith "FStar.List.Tot.Base.fs: Not implemented: subset"
 let noRepeats _ = failwith "FStar.List.Tot.Base.fs: Not implemented: noRepeats"
 let assoc x l = OCamlList.try_assoc x l
 let split = List.unzip
+let splitAt = List.splitAt
 let unzip = List.unzip
 
 let unzip3 = List.unzip3

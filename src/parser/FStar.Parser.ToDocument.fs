@@ -645,6 +645,8 @@ and p_rawDecl d = match d.d with
 and p_pragma = function
   | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
   | ResetOptions s_opt -> str "#reset-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
+  | PushOptions s_opt -> str "#push-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
+  | PopOptions -> str "#pop-options"
   | LightOff ->
       should_print_fs_typ_app := true ;
       str "#light \"off\""
@@ -823,6 +825,7 @@ and p_letqualifier = function
 and p_aqual = function
   | Implicit -> str "#"
   | Equality -> str "$"
+  | Meta t -> str "#[" ^^ p_term false false t ^^ str "]"
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1131,11 +1134,11 @@ and p_noSeqTerm' ps pb e = match e.tm with
   | Quote (e, Static) ->
     group (str "`" ^^ p_noSeqTerm ps pb e)
   | VQuote e ->
-    group (str "%`" ^^ p_noSeqTerm ps pb e)
-  | Antiquote (false, e) ->
-    group (str "`#" ^^ p_noSeqTerm ps pb e)
-  | Antiquote (true, e) ->
+    group (str "`%" ^^ p_noSeqTerm ps pb e)
+  | Antiquote ({ tm = Quote (e, Dynamic) }) ->
     group (str "`@" ^^ p_noSeqTerm ps pb e)
+  | Antiquote e ->
+    group (str "`#" ^^ p_noSeqTerm ps pb e)
   | _ -> p_typ ps pb e
 
 and p_attrs_opt = function
@@ -1392,6 +1395,7 @@ and p_argTerm arg_imp = match arg_imp with
       Errors.log_issue e.range (Errors.Warning_UnexpectedFsTypApp, "Unexpected FsTypApp, output might not be formatted correctly.") ;
       surround 2 1 langle (p_indexingTerm e) rangle
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
+  | (e, HashBrace t) -> str "#[" ^^ p_indexingTerm t ^^ str "]" ^^ p_indexingTerm e
   | (e, Nothing) -> p_indexingTerm e
 
 and p_fsTypArg (e, _) = p_indexingTerm e

@@ -459,7 +459,6 @@ let rec r_while_correct
     r_while_correct b b' c c' p s1 s1' (fuel - 1)
   else ()
 
-#set-options "--use_two_phase_tc false"  //AR: pattern of forall_intro_2
 let rec r_while
   (b b' : exp bool)
   (c c' : computation)
@@ -471,9 +470,23 @@ let rec r_while
   (ensures (
     exec_equiv (gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right))) (gand p (gnot (gor (exp_to_gexp b Left) (exp_to_gexp b' Right)))) (while b c) (while b' c')
   ))
-= Classical.forall_intro_2 (fun x -> Classical.move_requires (r_while_terminates b b' c c' p x));
-  Classical.forall_intro_3 (fun x y -> Classical.move_requires (r_while_correct b b' c c' p x y))
-#set-options "--use_two_phase_tc true"  //AR: reenable
+= let g (s0 s0':heap)
+  :Lemma ((exec_equiv (gand p (gand (exp_to_gexp b Left) (exp_to_gexp b' Right))) (gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right))) c c' /\
+    holds (interp (gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right)))) s0 s0') ==>
+          (terminates_on (reify_computation (while b c)) s0 <==>
+           terminates_on (reify_computation (while b' c')) s0'))
+  = Classical.move_requires (r_while_terminates b b' c c' p s0) s0'
+  in
+  let h (s0 s0':heap) (fuel:nat)
+  :Lemma ((exec_equiv (gand p (gand (exp_to_gexp b Left) (exp_to_gexp b' Right))) (gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right))) c c' /\
+    holds (interp (gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right)))) s0 s0' /\
+    fst (reify_computation (while b c) fuel s0) == true /\
+    fst (reify_computation (while b' c') fuel s0') == true) ==>
+          (holds (interp (gand p (gnot (gor (exp_to_gexp b Left) (exp_to_gexp b' Right))))) (snd (reify_computation (while b c) fuel s0)) (snd (reify_computation (while b' c') fuel s0'))))
+  = Classical.move_requires (r_while_correct b b' c c' p s0 s0') fuel
+  in
+  Classical.forall_intro_2 g;
+  Classical.forall_intro_3 h
 
 let is_per (p: gexp bool) = Benton2004.is_per (interp p)
 

@@ -48,6 +48,8 @@ type sconst = FStar.Const.sconst
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
+  | PushOptions of option<string>
+  | PopOptions
   | LightOff
 
 // IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]
@@ -59,14 +61,6 @@ type version = {
     major:int;
     minor:int
 }
-
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
-type arg_qualifier =
-  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Equality
-
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
-type aqual = option<arg_qualifier>
 
 // IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type universe =
@@ -180,7 +174,7 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbattrs:list<attribute>; //attrs
     lbpos  :range;           //original position of 'e'
 }
-and antiquotations = list<(bv * bool * term)>
+and antiquotations = list<(bv * term)>
 and quoteinfo = {
     qkind      : quote_kind;
     antiquotes : antiquotations;
@@ -289,6 +283,11 @@ and binding =
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
+and arg_qualifier =
+  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
+  | Meta of term
+  | Equality
+and aqual = option<arg_qualifier>
 
 type lcomp = { //a lazy computation
     eff_name: lident;
@@ -487,12 +486,12 @@ let set_range_of_bv x r = {x with ppname=Ident.mk_ident(x.ppname.idText, r)}
 
 (* Helpers *)
 let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
-    let aq = List.map (fun (bv, b, t) -> (bv, b, f t)) qi.antiquotes in
+    let aq = List.map (fun (bv, t) -> (bv, f t)) qi.antiquotes in
     { qi with antiquotes = aq }
 
-let lookup_aq (bv : bv) (aq : antiquotations) : option<(bool * term)> =
-    match List.tryFind (fun (bv', _, _) -> bv_eq bv bv') aq with
-    | Some (_, b, e) -> Some (b, e)
+let lookup_aq (bv : bv) (aq : antiquotations) : option<term> =
+    match List.tryFind (fun (bv', _) -> bv_eq bv bv') aq with
+    | Some (_, e) -> Some e
     | None -> None
 
 (*********************************************************************************)
@@ -507,6 +506,13 @@ let new_bv_set () : set<bv> = Util.new_set order_bv
 let new_fv_set () :set<lident> = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
 let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name
+
+let eq_binding b1 b2 =
+    match b1, b2 with
+    | Binding_var bv1, Binding_var bv2 -> bv_eq bv1 bv2
+    | Binding_lid (lid1, _), Binding_lid (lid2, _) -> lid_equals lid1 lid2
+    | Binding_univ u1, Binding_univ u2 -> ident_equals u1 u2
+    | _ -> false
 
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
@@ -616,10 +622,14 @@ let gen_bv : string -> option<Range.range> -> typ -> bv = fun s r t ->
   let id = mk_ident(s, range_of_ropt r) in
   {ppname=id; index=next_id(); sort=t}
 let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
+
 let freshen_bv bv =
     if is_null_bv bv
     then new_bv (Some (range_of_bv bv)) bv.sort
     else {bv with index=next_id()}
+
+let freshen_binder (b:binder) = let (bv, aq) = b in (freshen_bv bv, aq)
+
 let new_univ_name ropt =
     let id = next_id() in
     mk_ident (Ident.reserved_prefix ^ Util.string_of_int id, range_of_ropt ropt)
@@ -693,5 +703,6 @@ let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as
 let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev PC.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
-let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange
+let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange
+let t_either_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange
 let unit_const = mk (Tm_constant FStar.Const.Const_unit) None Range.dummyRange

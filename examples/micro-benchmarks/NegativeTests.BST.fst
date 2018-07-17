@@ -18,11 +18,11 @@ let test_node_1 () = Node #1 None 1 #1 None
 let test_node_2 (l:int) (t:tree l) = Node (Some t) (l + 1) #(l + 1) None
 let test_node_3 (l:int) (t1:tree l) (t2:tree (l + 2)) = Node (Some t1) (l + 1) (Some t2)
 
-[@(fail [19])]
+[@(expect_failure [19])]
 let bad_node_1 () = Node #0 None 1 #2 None                                              //fails: needs to be Node #1 None 1 #1 None
 
-[@(fail [19])]
+[@(expect_failure [19])]
 let bad_node_2 (l:int) (t:tree l) = Node (Some t) l #(l + 1) None                       //fails: needs to be (l + 1) in the middle
 
-[@(fail [19])]
+[@(expect_failure [19])]
 let bad_node_3 (l:int) (t1:tree l) (t2:tree (l + 1)) = Node (Some t1) (l + 1) (Some t2) //fails: t2 must be at least tree (l + 2)

@@ -127,6 +127,7 @@ type decls_t = list<decl>
 type error_label = (fv * string * Range.range)
 type error_labels = list<error_label>
 
+val escape: string -> string
 val abstr: list<fv> -> term -> term
 val inst: list<term> -> term -> term
 val subst: term -> fv -> term -> term

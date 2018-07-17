@@ -26,6 +26,7 @@ val path_of_text        : string -> path
 val path_of_ns          : list<ident> -> path
 val path_of_lid         : lident -> path
 val ids_of_lid          : lident -> list<ident>
+val range_of_id         : ident -> Range.range
 
 val lid_of_ns_and_id    : list<ident> -> ident -> lident
 val lid_of_ids          : list<ident> -> lident

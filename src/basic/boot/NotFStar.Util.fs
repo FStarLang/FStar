@@ -209,6 +209,7 @@ let string_builder_append (s: string_builder) (t:string) = s.Append t |> ignore
 
 let message_of_exn (e:exn) = e.Message
 let trace_of_exn (e:exn) = e.StackTrace
+let stack_dump () = (System.Diagnostics.StackTrace ()).ToString ()
 type set<'a> = (list<'a> * ('a -> 'a -> bool))
 
 let set_is_empty ((s, _):set<'a>) =
@@ -892,8 +893,17 @@ let measure_execution_time tag f =
   let timer = new System.Diagnostics.Stopwatch () in
   timer.Start();
   let retv = f () in
+  timer.Stop();
   print2 "Execution time (%s): %s ms" tag (string_of_int64 timer.ElapsedMilliseconds);
   retv
+
+let return_execution_time f =
+  let timer = new System.Diagnostics.Stopwatch () in
+  timer.Start();
+  let retv = f () in
+  timer.Stop();
+  (retv, float_of_int64 timer.ElapsedMilliseconds)
+
 
 (** Hints. *)
 type hint = {

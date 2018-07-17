@@ -1,0 +1,77 @@
+[
+  "ÝÍ£²\u000e\u0012ét¾V®–`S©Œ",
+  [
+    [
+      "UnifyRefs.nat32_to_nat64'4",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "78793aec5a642d722e7f1fe0857de992"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'5",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "6c75042afafa2999bb1124a2b845c153"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'4",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "38b7931ab00ccd2225a1842339242aa1"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0450e3da4e2fe16599a78e1a377f895e"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'4",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "f352cbe02b19c6433bd166de6f560d1d"
+    ],
+    [
+      "UnifyRefs.nat32_to_nat64'5",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "0d5daae138e7a848489ae97b055905a6"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'4",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "22f028f777d1f60bc547e73b955bf3e9"
+    ],
+    [
+      "UnifyRefs.nat64_to_nat32'5",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c93472c203e4d6b36816f7a34f21013e"
+    ]
+  ]
+]
