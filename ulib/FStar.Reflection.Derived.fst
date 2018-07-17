@@ -261,12 +261,13 @@ let destruct_tuple (t : term) : option (list term) =
     let head, args = collect_app t in
     match inspect_ln head with
     | Tv_FVar fv ->
-        if List.Tot.contains (inspect_fv fv) [mktuple2_qn; mktuple3_qn; mktuple4_qn; mktuple5_qn;
-                                              mktuple6_qn; mktuple7_qn; mktuple8_qn]
+        if List.Tot.mem
+                (inspect_fv fv) [mktuple2_qn; mktuple3_qn; mktuple4_qn; mktuple5_qn;
+                                 mktuple6_qn; mktuple7_qn; mktuple8_qn]
         then Some (List.Tot.concatMap (fun (t, q) ->
                                       match q with
-                                      | Q_Implicit -> []
-                                      | Q_Explicit -> [t]) args)
+                                      | Q_Explicit -> [t]
+                                      | _ -> []) args)
         else None
     | _ -> None
 
