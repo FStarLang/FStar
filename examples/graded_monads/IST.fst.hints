@@ -1,0 +1,38 @@
+[
+  "g¦u\u0010‡K+\u0000G©Ö¿\bäþ ",
+  [
+    [
+      "IST.op_Greater_Less",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0d7dc885a4e4b6420695cb464091d7f5"
+    ],
+    [
+      "IST.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_IST.lift_div_gmst",
+        "equation_Prims.logical", "int_inversion",
+        "interpretation_IST_Tm_abs_57a0b3604dde9598e0f90c7508dec56e",
+        "interpretation_IST_Tm_abs_8dd08a8484bf10985063a9f6cdb55482",
+        "l_quant_interp", "primitive_Prims.op_Addition"
+      ],
+      0,
+      "8aa54f21e3799c1762e8cd0d8d1b4e85"
+    ],
+    [
+      "IST.op_Greater_Less",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2af060ffa1dc52e88f187d0ed8671d1c"
+    ]
+  ]
+]
