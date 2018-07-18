@@ -82,6 +82,7 @@ let rec extract_meta x =
       | "FStar.Pervasives.CInline" -> Some CInline
       | "FStar.Pervasives.Substitute" -> Some Substitute
       | "FStar.Pervasives.Gc" -> Some GCType
+      | "FStar.Pervasives.CAbstractStruct" -> Some CAbstract
       | _ -> None
       end
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } ->
