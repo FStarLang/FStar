@@ -29,23 +29,26 @@ assume val hash_init_idem:
   h:hash -> Lemma (hash_from_hashes h hash_init = h)
 
 // This number says that the maximum number of values is (2^32 - 1)
-let max_nelts_sz = 32
+unfold let max_nelts_sz = 32
 
 /// Mapping sequences (why is it not in the library?)
 
 val seq_map: 
   #a:Type -> #b:Type -> f:(a -> b) -> s:S.seq a -> 
-  Tot (fs:S.seq b{S.length fs = S.length s}) (decreases (S.length s))
+  Tot (fs:S.seq b{
+    S.length fs = S.length s /\
+    (forall (i:nat{i < S.length fs}). S.index fs i == f (S.index s i))})
+    (decreases (S.length s))
 let rec seq_map #a #b f s =
   if S.length s = 0 then S.empty
   else S.cons (f (S.head s)) (seq_map f (S.tail s))
 
-// val seq_map_create:
-//   #a:Type -> #b:Type -> f: (a -> b) -> 
-//   len:nat -> ia:a ->
-//   Lemma (seq_map f (S.create len ia) == S.create len (f ia))
-// let rec seq_map_create #a #b f len ia =
-//   admit ()
+val seq_map_create:
+  #a:Type -> #b:Type -> f: (a -> b) -> 
+  len:nat -> ia:a ->
+  Lemma (seq_map f (S.create len ia) == S.create len (f ia))
+let seq_map_create #a #b f len ia =
+  S.lemma_eq_intro (seq_map f (S.create len ia)) (S.create len (f ia))
 
 /// Allocation by power of two
 
@@ -205,13 +208,16 @@ val create_merkle_tree: unit ->
 	   B.freeable (MT?.values mt) /\ 
 	   B.disjoint (MT?.values mt) (MT?.iroots mt) /\
 	   merkle_tree_wf h1 mt))
-let create_merkle_tree _ =
+let create_merkle_tree _ = 
   let values = B.malloc root elem_init 1ul in
+  let hh0 = HST.get () in
   let iroots = B.malloc root (hash_from_elem elem_init) (UInt32.uint_to_t max_nelts_sz) in
-  // let hh = HST.get () in
-  // assume (B.disjoint values iroots);
-  // assume (iroots_of max_nelts_sz 1 (S.slice (B.as_seq hh values) 0 1) = S.slice (B.as_seq hh iroots) 0 1);
-  admit (); MT 1 values iroots
+  let hh1 = HST.get () in
+  B.live_unused_in_disjoint hh0 values iroots;
+  S.lemma_eq_intro (iroots_of max_nelts_sz 1 (S.slice (B.as_seq hh1 values) 0 1))
+		   (S.slice (B.as_seq hh1 iroots) 0 1);
+  assert (iroots_of max_nelts_sz 1 (S.slice (B.as_seq hh1 values) 0 1) = S.slice (B.as_seq hh1 iroots) 0 1);
+  MT 1 values iroots
 
 // val init_merkle_tree: unit -> HST.St mtree_ptr
 // let init_merkle_tree _ =
