@@ -2,6 +2,8 @@ module IMSTsub
 
 (* A proof-of-concept example of indexed effects (the state-and-preorder indexed MST effect) encoded using standard F* WP calculi *)
 
+(* Warning, as demonstrated in the function (g) below, the proposed way of subtyping preorders + witness/recall lead to inconsistency *)
+
 open FStar.Preorder
 
 module W = FStar.Monotonic.Witnessed
@@ -135,7 +137,7 @@ open FStar.Mul
 
 let f ()
   : IMST unit (idx nat nat_rel (fun p s0 -> p () s0))
-  = ()
+  = () // without setting unfold for lift_div_imst this fails
 
 let g () 
   : IMST nat (idx nat nat_rel (fun p s0 -> forall s1 . s1 > s0 ==>  p s0 s1))
