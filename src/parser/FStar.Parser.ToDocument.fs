@@ -475,9 +475,17 @@ let rec place_comments_until_pos k lbegin pos_end meta_decl doc =
       let end_correction = if meta_decl.has_qs then 1 else 0 in
       let fsdoc_correction = if meta_decl.has_fsdoc then 1 else 0 in
       let lnum = line_of_pos pos_end - lbegin in
+
       let lnum = if lnum >= 2 then lnum - end_correction else lnum in //make up for incorrect range information in declarations with qualifiers
       let lnum = min 2 lnum in //puts a limit of at most one empty line between decls
-      let lnum = if lnum >= 2 then lnum - fsdoc_correction else lnum in
+      let lnum = if lnum = 2 then lnum - fsdoc_correction else lnum in
+
+      // if a declaration has both attributes and qualifiers, insert 2 spaces between the comment and the declaration
+      // this is not ideal but, given that the number of lines of the declaration unpredictably changes after the prettypriting,
+      // depending on the original positioning of the attributes and qualifiers, it makes sure that neither (1) the attributes are on the same
+      // line as the last line of the comment nor (2) idempotence of prettyprinting is broken
+      let lnum = if meta_decl.has_qs && meta_decl.has_attrs then 3 else lnum in
+
       doc ^^ repeat lnum hardline //^^ (str <| string_of_int lbegin) ^^ (str "*") ^^ (str <| string_of_int (line_of_pos pos_end)) ^^ (str "+") ^^ (str <| string_of_int (end_correction)) ^^ (str "+") ^^ (str <| string_of_int (fsdoc_correction))
 
 (* [separate_map_with_comments prefix sep f xs extract_range] is the document *)
