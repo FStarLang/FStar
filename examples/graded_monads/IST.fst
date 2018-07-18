@@ -1,12 +1,12 @@
 module IST
 
-(* A proof-of-concept example of state-indexed STATE effect *)
+(* A proof-of-concept example of indexed effects (the state-indexed STATE effect) encoded using standard F* WP calculi *)
 
 open FStar.Preorder
 
-(* The state-indexed ST effect; defined explicitly due to the pi-types used in it *)
+(* The state-indexed STATE effect; defined explicitly due to the pi-types used in it *)
 
-(* s is at universe level 0 because otherwise sub_effect complains about being too universe polymorphic *)
+//s is at universe level 0 because otherwise sub_effect complains about being too universe polymorphic
 
 let st_post (s:Type0) (a:Type) = a -> s -> Type0
 let st_wp   (a:Type)           = s:Type0 -> s -> st_post s a -> Type0
@@ -59,7 +59,7 @@ let st_trivial (a:Type) (wp:st_wp a) =
 new_effect {
   STATE : result:Type -> wp:st_wp result -> Effect
   with 
-     //repr         = s:Type0 -> s -> M (a * s) (* pi-types currently not supported by DM4F *)
+     //repr         = s:Type0 -> s -> M (a * s) //pi-types currently not supported by DM4F
        return_wp    = st_return
      ; bind_wp      = st_bind
      ; if_then_else = st_if_then_else
