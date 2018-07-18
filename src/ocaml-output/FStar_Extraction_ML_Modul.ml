@@ -102,6 +102,9 @@ let rec (extract_meta :
                FStar_Extraction_ML_Syntax.Substitute
          | "FStar.Pervasives.Gc" ->
              FStar_Pervasives_Native.Some FStar_Extraction_ML_Syntax.GCType
+         | "FStar.Pervasives.CAbstractStruct" ->
+             FStar_Pervasives_Native.Some
+               FStar_Extraction_ML_Syntax.CAbstract
          | uu____214 -> FStar_Pervasives_Native.None)
     | {
         FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_app

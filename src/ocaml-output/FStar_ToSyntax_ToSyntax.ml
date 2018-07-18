@@ -4847,6 +4847,7 @@ let (mk_data_discriminators :
             (FStar_List.filter
                (fun uu___248_16011  ->
                   match uu___248_16011 with
+                  | FStar_Syntax_Syntax.NoExtract  -> true
                   | FStar_Syntax_Syntax.Abstract  -> true
                   | FStar_Syntax_Syntax.Private  -> true
                   | uu____16012 -> false))
@@ -4951,6 +4952,8 @@ let (mk_indexed_projector_names :
                                        (FStar_List.filter
                                           (fun uu___250_16184  ->
                                              match uu___250_16184 with
+                                             | FStar_Syntax_Syntax.NoExtract 
+                                                 -> true
                                              | FStar_Syntax_Syntax.Abstract 
                                                  -> true
                                              | FStar_Syntax_Syntax.Private 
