@@ -1,5 +1,8 @@
 module SL.ExamplesAuto
 
+(* cf. #1323, #1465 *)
+module SLHeap = SL.Heap
+
 open SL.Heap
 open SL.Effect
 open FStar.Algebra.CommMonoid
@@ -283,7 +286,7 @@ let rec sl (i:int) : Tac unit =
 
     //introduce another uvar for the _frame_
     let env = cur_env () in
-    let frame = uvar_env env (Some (`SL.Heap.memory)) in
+    let frame = uvar_env env (Some (`SLHeap.memory)) in
 
     //make the term equating the fp join frame with the current memory
     let tp :term = mk_app (`eq2)
