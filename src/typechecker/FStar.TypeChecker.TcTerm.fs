@@ -355,7 +355,39 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_unknown -> tc_value env e
 
   | Tm_quoted (qt, qi)  ->
+    let projl = function
+      | BU.Inl x -> x
+      | BU.Inr _ -> failwith "projl fail"
+    in
+    let non_trivial_antiquotes qi =
+        let is_name t =
+            match (SS.compress t).n with
+            | Tm_name _ -> true
+            | _ -> false
+        in
+        BU.for_some (fun (_, t) -> not (is_name t)) qi.antiquotes
+    in
     begin match qi.qkind with
+    (* In this case, let-bind all antiquotations so we're sure that effects
+     * are properly handled. *)
+    | Quote_static when non_trivial_antiquotes qi ->
+        let e0 = e in
+        let newbvs = List.map (fun _ -> S.new_bv None S.t_term) qi.antiquotes in
+
+        let z = List.zip qi.antiquotes newbvs in
+
+        let lbs = List.map (fun ((bv, t), bv') ->
+                                U.close_univs_and_mk_letbinding None (BU.Inl bv') []
+                                                                S.t_term Const.effect_Tot_lid
+                                                                t [] t.pos)
+                           z in
+        let qi = { qi with antiquotes = List.map (fun ((bv, _), bv') ->
+                                            (bv, S.bv_to_name bv')) z } in
+        let nq = mk (Tm_quoted (qt, qi)) None top.pos in
+        let e = List.fold_left (fun t lb -> mk (Tm_let ((false, [lb]),
+                                                        SS.close [S.mk_binder (projl lb.lbname)] t)) None top.pos) nq lbs in
+        tc_maybe_toplevel_term env e
+
     (* A static quote is of type `term`, as long as its antiquotations are too *)
     | Quote_static ->
         (* Typecheck the antiquotes expecting a term *)
@@ -2128,7 +2160,7 @@ and check_inner_let env e =
                         (Print.term_to_string t);
              e, ({cres with res_typ=t}), Env.conj_guard g_ex guard)
 
-    | _ -> failwith "Impossible"
+    | _ -> failwith "Impossible (inner let with more than one lb)"
 
 (******************************************************************************)
 (* top-level let rec's may be generalized, if they are not annotated          *)
