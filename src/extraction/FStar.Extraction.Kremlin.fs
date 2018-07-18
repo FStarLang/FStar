@@ -75,6 +75,7 @@ and flag =
   | Const of string
   | Prologue of string
   | Epilogue of string
+  | Abstract
 
 and fsdoc = string
 
@@ -369,6 +370,7 @@ and translate_flags flags =
     | Syntax.CConst s -> Some (Const s)
     | Syntax.CPrologue s -> Some (Prologue s)
     | Syntax.CEpilogue s -> Some (Epilogue s)
+    | Syntax.CAbstract -> Some Abstract
     | _ -> None // is this all of them?
   ) flags
 

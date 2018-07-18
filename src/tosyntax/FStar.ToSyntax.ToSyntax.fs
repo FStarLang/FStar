@@ -1734,6 +1734,7 @@ and trans_aqual env = function
 // FIXME: Would be nice to add auto-generated docs to these
 let mk_data_discriminators quals env datas =
     let quals = quals |> List.filter (function
+        | S.NoExtract
         | S.Abstract
         | S.Private -> true
         | _ -> false)
@@ -1770,6 +1771,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
         in
         let quals =
             let iquals = iquals |> List.filter (function
+                | S.NoExtract
                 | S.Abstract
                 | S.Private -> true
                 | _ -> false)
