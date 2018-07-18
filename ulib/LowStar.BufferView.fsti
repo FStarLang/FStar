@@ -169,7 +169,7 @@ unfold
 let modifies (#b: _)
              (vb:buffer b)
              (h h':HS.mem)
-    = B.modifies_1 (as_buffer vb) h h'
+    = B.modifies (B.loc_buffer (as_buffer vb)) h h'
 
 /// `upd_modifies`: Footprint of `upd`
 val upd_modifies (#b: _)
