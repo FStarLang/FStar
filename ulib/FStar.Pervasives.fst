@@ -308,6 +308,11 @@ type __internal_ocaml_attributes =
      * *const *p" either. *)
   | CCConv of string
     (* A calling convention for C, one of stdcall, cdecl, fastcall *)
+  | CAbstractStruct
+    (* KreMLin-only: for types that compile to struct types (records and
+     * inductives), indicate that the header file should only contain a forward
+     * declaration, which in turn forces the client to only ever use this type
+     * through a pointer. *)
 
 (* Some supported attributes encoded using functions. *)
 
