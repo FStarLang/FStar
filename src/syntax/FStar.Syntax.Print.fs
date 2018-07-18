@@ -275,11 +275,17 @@ and term_to_string x =
         term_to_string (must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
         ^"]"
 
-      | Tm_quoted (tm, { qkind = Quote_static  }) ->
-        U.format1 "`(%s)" (term_to_string tm)
-
-      | Tm_quoted (tm, { qkind = Quote_dynamic }) ->
-        U.format1 "quote (%s)" (term_to_string tm)
+      | Tm_quoted (tm, qi) ->
+        begin match qi.qkind with
+        | Quote_static ->
+            let print_aq (bv, t) =
+              U.format2 "%s -> %s" (bv_to_string bv) (term_to_string t)
+            in
+            U.format2 "`(%s)%s" (term_to_string tm)
+                                (FStar.Common.string_of_list print_aq qi.antiquotes)
+        | Quote_dynamic ->
+            U.format1 "quote (%s)" (term_to_string tm)
+        end
 
       | Tm_meta(t, Meta_pattern ps) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
