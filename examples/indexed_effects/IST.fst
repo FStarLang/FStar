@@ -1,8 +1,9 @@
 module IST
 
-(* A proof-of-concept example of indexed effects (the state-indexed STATE effect) encoded using standard F* WP calculi *)
+(* 
+   A proof-of-concept example of indexed effects (the state-indexed STATE effect) encoded using standard F* WP calculi 
+*)
 
-open FStar.Preorder
 
 (* The state-indexed STATE effect; defined explicitly due to the pi-types used in it *)
 
@@ -75,8 +76,8 @@ new_effect {
 
 (* Standard lifting *)
 
-let lift_div_gmst (a:Type) (wp:pure_wp a) (s:Type0) (s0:s) (p:st_post s a) = wp (fun x -> p x s0)
-sub_effect DIV ~> STATE = lift_div_gmst
+let lift_div_st (a:Type) (wp:pure_wp a) (s:Type0) (s0:s) (p:st_post s a) = wp (fun x -> p x s0)
+sub_effect DIV ~> STATE = lift_div_st
 
 
 (* Non-indexed ST WPs and syntactic sugar for writing effect indices *)
@@ -88,11 +89,11 @@ let (><) (#a:Type) (s:Type0) (wp:st_wp' a s) : st_wp a
   = fun s' s0 post -> s == s' /\ wp s0 post
 
 
-(* Standard, but now indexed get and put actions *)
+(* Standard, but now state-indexed get and put actions *)
 
-assume val get (#s:Type) (_:unit) : STATE s (s >< (fun s0 p -> p s0 s0))
+assume val get (#s:Type0) (_:unit) : STATE s (s >< (fun s0 p -> p s0 s0))
 
-assume val put (#s:Type) (s1:s) : STATE unit (s >< (fun s0 p -> p () s1))
+assume val put (#s:Type0) (s1:s) : STATE unit (s >< (fun s0 p -> p () s1))
 
 
 (* Some sample code *)
