@@ -148,6 +148,15 @@ let g ()
     recall #nat #nat_rel (fun n -> n > 0);
     let s2 = get #nat #nat_rel () in
     assert (s2 > 0);
+    witness #nat #eq_rel (fun n -> n = s2);
+    put #nat #nat_rel (s1 * 43);
+    recall #nat #eq_rel (fun n -> n = s2);
+    let s3 = get #nat #nat_rel () in
+    assert (s1 > 0);
+    assert (s2 = s1 * 42);
+    assert (s3 = s1 * 43);
+    assert (s3 = s2); 
+    assert (False); // WOOPS!!!
     s0
 
 let h ()

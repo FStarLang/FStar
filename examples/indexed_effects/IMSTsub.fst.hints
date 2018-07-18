@@ -1,5 +1,5 @@
 [
-  "¶°ÖÚ”\u0019¯dK\\ùá©>ê ",
+  "\u0017\u00055Û\u0001Ìf\u0011)\u001a»C<\u001a?¿",
   [
     [
       "IMSTsub.idx",
@@ -66,23 +66,31 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "b2t_def",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.stable", "equation_IMSTsub.nat_rel",
+        "equation_FStar.Preorder.stable", "equation_IMSTsub.eq_rel",
+        "equation_IMSTsub.eq_rel_", "equation_IMSTsub.nat_rel",
         "equation_IMSTsub.nat_rel_", "equation_Prims.nat",
-        "function_token_typing_IMSTsub.nat_rel", "int_inversion",
+        "function_token_typing_IMSTsub.nat_rel",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_inversion",
         "interpretation_IMSTsub_Tm_abs_1661f7094403c88cb824263727456b29",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
+        "interpretation_IMSTsub_Tm_abs_d9a75bd1316d3da79fefcbceeb1ea684",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_IMSTsub.eq_rel_",
         "token_correspondence_IMSTsub.nat_rel_"
       ],
       0,
-      "3c4c0ed99acab8a0a2cddd73a6981ba6"
+      "22a08e79154cb91782a5edb12cf068ef"
     ],
     [
       "IMSTsub.h",
@@ -106,7 +114,7 @@
         "token_correspondence_IMSTsub.nat_rel_"
       ],
       0,
-      "3c196d867a337489adb6cceba5c99d98"
+      "aa3aa0bfe6c33d7dfecae66d7b30005d"
     ],
     [
       "IMSTsub.idx",
@@ -115,7 +123,7 @@
       1,
       [ "@query" ],
       0,
-      "a9ed7b65502fbc38a9dd0deec8c3a7e9"
+      "8b5d8cd3a6f3089db6f3bb72458fc0db"
     ],
     [
       "IMSTsub.nat_rel",
@@ -130,7 +138,7 @@
         "token_correspondence_IMSTsub.nat_rel_"
       ],
       0,
-      "e9c07b017fca5710f9cadf0b105c1f5d"
+      "e16c20010412f2341d8e044233fbd8a4"
     ],
     [
       "IMSTsub.eq_rel'",
@@ -142,7 +150,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d2da40eb13693438f481c4520a01e693"
+      "0c1f4adb2c3a8d40876f262e5a865c7f"
     ],
     [
       "IMSTsub.eq_rel",
@@ -156,7 +164,7 @@
         "token_correspondence_IMSTsub.eq_rel_"
       ],
       0,
-      "b01b96650a23cc2c5992d30084d0edb6"
+      "ec15ecc215af971949bc8079a55e051d"
     ]
   ]
 ]
