@@ -1,5 +1,5 @@
 [
-  "Тк╪ ║В√┌Т╟≥$\u000b╔дЫ",
+  "ХЬ!p≤╞╥зд<а рь%щ",
   [
     [
       "IMST.op_Greater_Less",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_FStar.Pervasives.dfst" ],
       0,
-      "8c31be3c23ab40c1e589008de6101cf9"
+      "d46bb7bb3e5c790a422e10efa107164f"
     ],
     [
       "IMST.get",
@@ -21,7 +21,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "87abfb999a77b3e969be5922f5f1bd63"
+      "a71b8e26fb3cd5ae8ae6e6243436b985"
     ],
     [
       "IMST.put",
@@ -34,7 +34,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "8ee818845c893d387b8e34fc186500bc"
+      "71017a07562fb55a8f35f5a2fd21dfb4"
     ],
     [
       "IMST.witness",
@@ -47,7 +47,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "252cc801860133d9f6c483f298c4830f"
+      "7595aeea6df936d8a4846fbcad55fdbc"
     ],
     [
       "IMST.recall",
@@ -60,7 +60,53 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "f16a42229234b425f59e2dcf4c109da0"
+      "ef7f879efcc4fdc7be55f8ee5126e084"
+    ],
+    [
+      "IMST.nat_rel",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.Preorder.preorder_rel",
+        "equation_IMST.nat_rel_", "equation_Prims.nat",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "token_correspondence_IMST.nat_rel_"
+      ],
+      0,
+      "53d192f7972578cc6befc6811d06d12b"
+    ],
+    [
+      "IMST.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Pervasives.dfst", "equation_FStar.Pervasives.dsnd",
+        "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.stable", "equation_IMST.nat_rel",
+        "equation_IMST.nat_rel_", "equation_Prims.nat",
+        "function_token_typing_IMST.nat_rel", "int_inversion",
+        "interpretation_IMST_Tm_abs_1661f7094403c88cb824263727456b29",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "proj_equation_Prims.Mkdtuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__2",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_FStar.Pervasives.dsnd",
+        "token_correspondence_IMST.nat_rel_"
+      ],
+      0,
+      "3798cf55973ac952734cbc47aca05228"
     ],
     [
       "IMST.op_Greater_Less",
@@ -69,7 +115,7 @@
       1,
       [ "@query", "equation_FStar.Pervasives.dfst" ],
       0,
-      "1c002309fb76b884d2dc455be87e2808"
+      "4afd17f9d9d3c8c51dc317d04dc8d128"
     ],
     [
       "IMST.get",
@@ -82,7 +128,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "87e05dc8bd08d607463042b59c5ca603"
+      "8e00f9daa9f2a945a3d23f880e4a9909"
     ],
     [
       "IMST.put",
@@ -95,7 +141,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "f71a47bfa54751fc797b2f878b675669"
+      "5d9f455e9f6aafec2b3c34ff46c14ce5"
     ],
     [
       "IMST.witness",
@@ -108,7 +154,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "4831c157b7630fb6e7447bfecb90dfbc"
+      "79362c0b50dfb7ca1eb2930cbe859ba4"
     ],
     [
       "IMST.recall",
@@ -121,7 +167,39 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "12fca1e7f4d1c59e028f5f08c0615a0d"
+      "dd7295be1843b607a2f1cf166b17cf77"
+    ],
+    [
+      "IMST.nat_rel",
+      2,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.Preorder.preorder_rel",
+        "equation_IMST.nat_rel_", "equation_Prims.nat",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "token_correspondence_IMST.nat_rel_"
+      ],
+      0,
+      "46e436bf790e294b82e5056dea062dd4"
+    ],
+    [
+      "IMST.f",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Pervasives.dfst", "equation_IMST.nat_rel",
+        "equation_Prims.nat", "int_inversion",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "b6ae4eb90f3ec9b49318873d65c46daf"
     ]
   ]
 ]

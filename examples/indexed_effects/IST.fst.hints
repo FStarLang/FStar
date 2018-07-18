@@ -1,5 +1,5 @@
 [
-  "g¶u\u0010áK+\u0000G©÷ø\b‰˛ ",
+  "B\u0010ª\u001bÅ+n¢\u000eˇRË\u0005âÿA",
   [
     [
       "IST.op_Greater_Less",
@@ -8,22 +8,29 @@
       1,
       [ "@query" ],
       0,
-      "0d7dc885a4e4b6420695cb464091d7f5"
+      "ea6e932c9650dabe321e7e405ab2d7af"
     ],
     [
       "IST.f",
       1,
       2,
       1,
+      [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
+      0,
+      "3dd5a69aceb7b83d83faf096eb278343"
+    ],
+    [
+      "IST.g",
+      1,
+      2,
+      1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_IST.lift_div_gmst",
-        "equation_Prims.logical", "int_inversion",
-        "interpretation_IST_Tm_abs_57a0b3604dde9598e0f90c7508dec56e",
-        "interpretation_IST_Tm_abs_8dd08a8484bf10985063a9f6cdb55482",
-        "l_quant_interp", "primitive_Prims.op_Addition"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat", "int_typing",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "8aa54f21e3799c1762e8cd0d8d1b4e85"
+      "2993ca40bcc016e9b6bc5308ed85bc29"
     ],
     [
       "IST.op_Greater_Less",
@@ -32,7 +39,7 @@
       1,
       [ "@query" ],
       0,
-      "2af060ffa1dc52e88f187d0ed8671d1c"
+      "8b8a08bcf4d37f4551e4bdaba951ee79"
     ]
   ]
 ]
