@@ -1,6 +1,15 @@
 // Interface
 
-typedef uint32_t hash_t;
+#def SIZE 32
+
+typedef uint8_t[32] hash_t;
+typedef uint8_t* path_t 
+
+typedef acc; // a pointer to mutable MT state
+acc create(uint32_t log2);
+void extend(acc a, hash_t v);
+void get_root(acc a, /*output*/ hash_t root);
+uint32_t get_path(acc a, /*output*/ path_t path);
 
 typedef struct extend_response_s
 {

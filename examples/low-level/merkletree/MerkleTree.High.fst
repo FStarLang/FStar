@@ -125,7 +125,11 @@ val iroots_of_hashes:
   GTot (iroots:hash_seq{S.length iroots = num_iroots_of nelts})
 let rec iroots_of_hashes nelts hs =
   if nelts = 0 then hs
-  else S.cons (merkle_root_of_pow2 #(pow2 (pow2_floor nelts))
+  else
+//    let m = pow2 (pow2_floor nelts) in 
+//    let hs0, hs1 = S.split hs m in 
+//    merkle_root_of_pow2 #m hs0 :: iroots_of_hashes (nelts - m) hs1
+  S.cons (merkle_root_of_pow2 #(pow2 (pow2_floor nelts))
 				   (S.slice hs 0 (pow2 (pow2_floor nelts))))
 	      (iroots_of_hashes (nelts - (pow2 (pow2_floor nelts)))
 				(S.slice hs (pow2 (pow2_floor nelts)) nelts))
@@ -146,6 +150,19 @@ noeq type merkle_tree =
       // the number of "set" bits of `nelts`.
       iroots:hash_seq{S.length iroots = num_iroots_of nelts} ->
       merkle_tree
+
+(*
+//OR
+noeq type mt (values: elem_seq) = 
+| MT': 
+    nelts:nat {nelts = s.length values} * 
+    iroots:hash_seq {iroots = iroots_of values} 
+
+let insert vs v (mt vs): mt (S.snoc vs v)
+
+//OR 
+let mt (values: elem_seq) = (s.length values, iroots_of values)
+*)
 
 /// Well-formedness
 
@@ -179,7 +196,7 @@ unfold let insert_nelts nelts =
 
 val insert_values: elem_seq -> elem -> GTot elem_seq
 let insert_values vs nv = 
-  S.append vs (S.create 1 nv)
+  S.append vs (S.create 1 nv) // S.snoc vs nv
 
 // val merge_iroots_seq:
 //   sz1:nat -> nelts1:nat{nelts1 = pow2 sz1 && nelts1 < pow2 max_nelts_sz - 1} ->
