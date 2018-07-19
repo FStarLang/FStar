@@ -65,11 +65,18 @@ unfold private let liveness_and_disjointness (st:hsl_state) (h:mem) :Type0 =
 
 (* an invariant on the sequence content between p0 and p1 in the buffer *)
 [@"opaque_to_smt"]
-unfold private let null_terminator_invariant (st:hsl_state) (h:mem{liveness_and_disjointness st h}) :GTot Type0 =
-  let buf, p0, p1 = hsl_get_buf st, hsl_get_p0 st, hsl_get_p1 st in
-  let subseq_size = sel h p1 -^ sel h p0 in
-  let subseq = Buffer.as_seq h (Buffer.gsub buf (sel h p0) subseq_size) in
-  forall (i:nat). i < v subseq_size ==> Seq.index subseq i =!= 0ul
+unfold private let null_terminator_invariant_buf
+  (len:u32) (buf:Buffer.buffer u32) (p0 p1:u32)
+  (h:mem{Buffer.len buf == len /\ p1 <=^ len /\ p0 <=^ p1}) :GTot Type0
+  = let subseq_size = p1 -^ p0 in
+    let subseq = Buffer.as_seq h (Buffer.gsub buf p0 subseq_size) in
+    forall (i:nat). i < v subseq_size ==> Seq.index subseq i =!= 0ul
+
+(* an invariant on the sequence content between p0 and p1 in the buffer *)
+[@"opaque_to_smt"]
+unfold private let null_terminator_invariant (st:hsl_state) (h:mem{liveness_and_disjointness st h}) :GTot Type0 
+  = let buf, p0, p1 = hsl_get_buf st, sel h (hsl_get_p0 st), sel h (hsl_get_p1 st) in
+    null_terminator_invariant_buf (hsl_get_len st) buf p0 p1 h
 
 [@"opaque_to_smt"]
 unfold private let hsl_invariant_predicate (st:hsl_state) (h:mem) :Type0 =
@@ -119,6 +126,10 @@ let lemma_frame_hsl_invariant (st:hsl_state) (l:loc) (h0 h1:mem)
 
 assume val fresh_loc: Mods.loc -> mem -> mem -> Type0
 
+(*
+ * Creating of HSL state
+ * Assuming freshness and disjointness for now
+ *)
 let hsl_create (len:u32{len >^ 0ul})
   :ST hsl_state (requires (fun h0       -> True))
                 (ensures  (fun h0 st h1 -> Buffer.len (hsl_get_buf st) == len               /\
@@ -141,11 +152,36 @@ let hsl_create (len:u32{len >^ 0ul})
 				                          (TSet.singleton (Mods.loc_buffer buf)))));
     st
 
-// let hsl_process (st:hsl_state) (p:u32)
-//   :ST unit (requires (fun h0      -> hsl_invariant st h0  /\
-//                                   p <=^ hsl_get_len st /\
-// 				  p >^ sel h0 (hsl_get_p1 st)))
-//            (ensures  (fun h0 _ h1 -> hsl_invariant st h1 /\
-// 	                          Mods.modifies (Mods.loc_union (Mods.loc_mreference (hsl_get_p0 st))
-// 				                                (Mods.loc_mreference (hsl_get_p1 st))) h0 h1))
-//   = check_internal_invariant st p
+(*
+ * Auxiliary function for processing the buffer, skip ahead
+ *)
+private let rec aux_process (len:u32) (b:Buffer.buffer u32) (p0 p1 p:u32)
+  :ST u32 (requires (fun h0      -> Buffer.live h0 b /\
+                                 len == Buffer.len b /\ p <=^ len /\ p1 <=^ p /\ p0 <=^ p1 /\
+                                 null_terminator_invariant_buf len b p0 p1 h0))
+          (ensures  (fun h0 r h1 -> Buffer.live h1 b /\ 
+	                         r <=^ p /\ null_terminator_invariant_buf len b r p h1 /\
+	                         Mods.modifies loc_none h0 h1))
+  = if p = p1 then p0
+    else
+      let c = Buffer.index b p1 in
+      if c = 0ul then aux_process len b (p1 +^ 1ul) (p1 +^ 1ul) p
+      else aux_process len b p0 (p1 +^ 1ul) p
+
+(*
+ * Main process function that client (Record) calls once it has appended some data to the input buffer
+ * It updates the p0 and p1 pointers, so that p1 points to p (the input index)
+ * And maintains the invariant
+ *)
+let hsl_process (st:hsl_state) (p:u32)
+  :ST unit (requires (fun h0      -> hsl_invariant st h0 /\  //invariant holds
+                                  p <=^ hsl_get_len st /\  //the new index upto which client wrote is in bounds
+				  sel h0 (hsl_get_p1 st) <^ p))  //p1 < p, i.e. some new data is there
+           (ensures  (fun h0 _ h1 -> hsl_invariant st h1 /\  //invariants holds again
+	                          sel h1 (hsl_get_p1 st) == p /\  //p1 has been updated to p
+	                          Mods.modifies (Mods.loc_union (Mods.loc_mreference (hsl_get_p0 st))
+				                                (Mods.loc_mreference (hsl_get_p1 st))) h0 h1))
+  = let len, buf, p0, p1 = hsl_get_len st, hsl_get_buf st, hsl_get_p0 st, hsl_get_p1 st in
+    let new_p0 = aux_process len buf (!p0) (!p1) p in
+    p0 := new_p0;
+    p1 := p
