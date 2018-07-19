@@ -52,6 +52,7 @@ inline_for_extraction abstract val init: #a:Type -> len:nat -> contents: (i:nat 
 inline_for_extraction abstract let init #a len contents = if len = 0 then MkSeq [] else init_aux len 0 contents
 
 abstract val of_list: #a:Type -> list a -> Tot (seq a)
+[@(deprecated "seq_of_list")]
 let of_list #a l = MkSeq l
 
 let lemma_of_list_length (#a:Type) (l:list a)
