@@ -4,6 +4,9 @@ open FStar.All
 open FStar.Mul
 open FStar.Seq
 
+// open EverCrypt.Hash
+// open MerkleTree.Spec
+
 module List = FStar.List.Tot
 module S = FStar.Seq
 
@@ -31,9 +34,8 @@ let rec seq_map #a #b f s =
   if S.length s = 0 then S.empty
   else S.cons (f (S.head s)) (seq_map f (S.tail s))
 
-/// Power of two
+/// Power of two (TODO: use a bit vector; division is expensive)
 
-// TODO: optimize using bit manipulation
 val is_pow2: nat -> Tot bool
 let rec is_pow2 n =
   if n = 0 then false
@@ -120,15 +122,15 @@ let rec num_iroots_of nelts =
   else 1 + num_iroots_of (nelts - pow2 (pow2_floor nelts))
 
 val iroots_of_hashes:
-  nelts:nat -> 
-  hs:hash_seq{S.length hs = nelts} ->
+  nelts:nat -> hs:hash_seq{S.length hs = nelts} ->
   GTot (iroots:hash_seq{S.length iroots = num_iroots_of nelts})
 let rec iroots_of_hashes nelts hs =
   if nelts = 0 then hs
-  else S.cons (merkle_root_of_pow2 #(pow2 (pow2_floor nelts))
-				   (S.slice hs 0 (pow2 (pow2_floor nelts))))
-	      (iroots_of_hashes (nelts - (pow2 (pow2_floor nelts)))
-				(S.slice hs (pow2 (pow2_floor nelts)) nelts))
+  else
+    let n_floor = pow2 (pow2_floor nelts) in
+    let hs0, hs1 = S.split hs n_floor in
+    S.cons (merkle_root_of_pow2 #n_floor hs0) 
+	   (iroots_of_hashes (nelts - n_floor) hs1)
 
 unfold val iroots_of: 
   nelts:nat -> es:elem_seq{S.length es = nelts} -> GTot hash_seq
@@ -139,33 +141,13 @@ unfold let iroots_of nelts vs =
 
 noeq type merkle_tree =
 | MT: nelts:nat{nelts > 0} -> 
-      // The value buffer will be resized when elements are added.
-      // Resizing mechanism will be similar to that of C++ vector.
       values:elem_seq{S.length values = nelts} ->
-      // The actual number of internal roots should be equal to 
-      // the number of "set" bits of `nelts`.
-      iroots:hash_seq{S.length iroots = num_iroots_of nelts} ->
+      iroots:hash_seq{iroots = iroots_of nelts values} ->
       merkle_tree
 
-/// Well-formedness
+/// Creating a merkle tree instance
 
-unfold val merkle_tree_elems_wf:
-  nelts:nat{nelts > 0} -> 
-  values:elem_seq{S.length values = nelts} ->
-  iroots:hash_seq{S.length iroots = num_iroots_of nelts} ->
-  GTot bool
-unfold let merkle_tree_elems_wf nelts values iroots =
-  iroots_of nelts values = iroots
-
-unfold val merkle_tree_wf: merkle_tree -> GTot bool
-unfold let merkle_tree_wf mt =
-  merkle_tree_elems_wf (MT?.nelts mt) (MT?.values mt) (MT?.iroots mt)
-
-type wf_merkle_tree = mt:merkle_tree{merkle_tree_wf mt}
-
-/// Initialization
-
-val create_merkle_tree: unit -> wf_merkle_tree
+val create_merkle_tree: unit -> merkle_tree
 let create_merkle_tree _ = 
   S.lemma_eq_elim (iroots_of 1 (S.create 1 elem_init))
   		  (S.create 1 (hash_from_elem elem_init));
@@ -174,12 +156,10 @@ let create_merkle_tree _ =
 /// Insertion
 
 unfold val insert_nelts: nat -> GTot nat
-unfold let insert_nelts nelts =
-  nelts + 1
+unfold let insert_nelts nelts = nelts + 1
 
 val insert_values: elem_seq -> elem -> GTot elem_seq
-let insert_values vs nv = 
-  S.append vs (S.create 1 nv)
+let insert_values vs nv = S.snoc vs nv
 
 // val merge_iroots_seq:
 //   sz1:nat -> nelts1:nat{nelts1 = pow2 sz1 && nelts1 < pow2 max_nelts_sz - 1} ->
@@ -206,7 +186,7 @@ val insert_iroots:
 let rec insert_iroots nelts irs nh =
   admit ()
 
-val insert: mt:wf_merkle_tree -> e:elem -> GTot wf_merkle_tree
+val insert: mt:merkle_tree -> e:elem -> GTot merkle_tree
 let insert mt e =
   let nnelts = insert_nelts (MT?.nelts mt) in
   let niroots = insert_iroots (MT?.nelts mt) (MT?.iroots mt) (hash_from_elem e) in
@@ -252,7 +232,7 @@ let rec merkle_root_of_iroots irs =
   merkle_root_of_iroots' hash_init irs
 
 val merkle_root_of_iroots_ok:
-  mt:wf_merkle_tree ->
+  mt:merkle_tree ->
   Lemma (merkle_root_of_iroots (MT?.iroots mt) =
 	merkle_root_of_hashes (seq_map hash_from_elem (MT?.values mt)))
 let merkle_root_of_iroots_ok mt =

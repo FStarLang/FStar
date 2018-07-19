@@ -23,25 +23,6 @@ let hash_buf = B.buffer hash
 // This number says that the maximum number of values is (2^32 - 1)
 unfold let max_nelts_sz = 32
 
-/// Mapping sequences (why is it not in the library?)
-
-val seq_map: 
-  #a:Type -> #b:Type -> f:(a -> b) -> s:S.seq a -> 
-  Tot (fs:S.seq b{
-    S.length fs = S.length s /\
-    (forall (i:nat{i < S.length fs}). S.index fs i == f (S.index s i))})
-    (decreases (S.length s))
-let rec seq_map #a #b f s =
-  if S.length s = 0 then S.empty
-  else S.cons (f (S.head s)) (seq_map f (S.tail s))
-
-// val seq_map_create:
-//   #a:Type -> #b:Type -> f: (a -> b) -> 
-//   len:nat -> ia:a ->
-//   Lemma (seq_map f (S.create len ia) == S.create len (f ia))
-// let seq_map_create #a #b f len ia =
-//   S.lemma_eq_elim (seq_map f (S.create len ia)) (S.create len (f ia))
-
 /// Allocation by power of two
 
 val alloc_sz_lg:
@@ -90,27 +71,28 @@ noeq type merkle_tree =
 let mtree_ptr = B.pointer merkle_tree
 
 val num_iroots_of_bound: 
-  #nelts_sz:nat -> nelts:nat{nelts < pow2 nelts_sz} -> 
+  nelts_sz:nat -> nelts:nat{nelts < pow2 nelts_sz} -> 
   GTot (nirs:nat{nirs = num_iroots_of nelts && nirs <= nelts_sz})
-let rec num_iroots_of_bound #nelts_sz nelts =
+let rec num_iroots_of_bound nelts_sz nelts =
   if nelts = 0 then 0
-  else 1 + num_iroots_of_bound #(nelts_sz - 1) (nelts - pow2 (pow2_floor nelts))
-
-val merkle_tree_lift: HS.mem -> merkle_tree -> GTot (High.merkle_tree)
-let merkle_tree_lift h mt =
-  High.MT (MT?.nelts mt) 
-	  (S.slice (B.as_seq h (MT?.values mt)) 0 (MT?.nelts mt))
-	  (S.slice (B.as_seq h (MT?.iroots mt)) 
-	    0 (num_iroots_of_bound #max_nelts_sz (MT?.nelts mt)))
-
-/// Low-level well-formedness
+  else 1 + num_iroots_of_bound (nelts_sz - 1) (nelts - pow2 (pow2_floor nelts))
 
 unfold val merkle_tree_wf: HS.mem -> merkle_tree -> GTot Type0
 unfold let merkle_tree_wf h mt =
-  B.live h (MT?.values mt) /\ B.freeable (MT?.values mt) /\ 
-  B.live h (MT?.iroots mt) /\
-  B.disjoint (MT?.values mt) (MT?.iroots mt) /\
-  High.merkle_tree_wf (merkle_tree_lift h mt)
+  let nelts = MT?.nelts mt in
+  let vs = MT?.values mt in
+  let irs = MT?.iroots mt in
+  B.live h vs /\ B.freeable vs /\ B.live h irs /\ B.disjoint vs irs /\
+  iroots_of nelts (S.slice (B.as_seq h vs) 0 nelts) =
+  S.slice (B.as_seq h irs) 0 (num_iroots_of_bound max_nelts_sz nelts)
+
+val merkle_tree_lift: 
+  h:HS.mem -> mt:merkle_tree{merkle_tree_wf h mt} -> GTot (High.merkle_tree)
+let merkle_tree_lift h mt =
+  High.MT (MT?.nelts mt) 
+	  (S.slice (B.as_seq h (MT?.values mt)) 0 (MT?.nelts mt))
+	  (S.slice (B.as_seq h (MT?.iroots mt))
+		   0 (num_iroots_of_bound max_nelts_sz (MT?.nelts mt)))
 
 /// Initialization
 
@@ -128,9 +110,8 @@ let create_merkle_tree _ =
   		   (S.slice (B.as_seq hh1 iroots) 0 1);
   MT 1 values iroots
 
-// val init_merkle_tree: unit -> HST.St mtree_ptr
-// let init_merkle_tree _ =
-//   B.malloc root (create_merkle_tree ()) 1ul
+val create: unit -> HST.St mtree_ptr
+let create _ = B.malloc root (create_merkle_tree ()) 1ul
 
 /// Insertion
 
@@ -197,9 +178,9 @@ val insert_iroots:
 	 (requires (fun h0 -> B.live h0 irs))
 	 (ensures (fun h0 _ h1 -> 
 	   modifies (loc_buffer irs) h0 h1 /\
-	   S.slice (B.as_seq h1 irs) 0 (num_iroots_of_bound #max_nelts_sz (insert_nelts nelts)) ==
+	   S.slice (B.as_seq h1 irs) 0 (num_iroots_of_bound max_nelts_sz (insert_nelts nelts)) ==
 	   High.insert_iroots 
-	     nelts (S.slice (B.as_seq h0 irs) 0 (num_iroots_of_bound #max_nelts_sz nelts)) 
+	     nelts (S.slice (B.as_seq h0 irs) 0 (num_iroots_of_bound max_nelts_sz nelts)) 
 	     (hash_from_elem nv)))
 let rec insert_iroots nirs irs nv =
   admit ()
