@@ -904,16 +904,12 @@ let live_loc_not_unused_in #t b h =
   unused_in_equiv b h;
   Classical.move_requires (MG.does_not_contain_addr_addr_unused_in h) (frameOf b, as_addr b);
   MG.loc_addresses_not_unused_in cls (frameOf b) (Set.singleton (as_addr b)) h;
-  loc_includes_addresses_buffer false (frameOf b) (Set.singleton (as_addr b)) b;
-  MG.loc_includes_trans (loc_not_unused_in h) (loc_addresses false (frameOf b) (Set.singleton (as_addr b))) (loc_buffer b);
   ()
 
 let unused_in_loc_unused_in #t b h =
   unused_in_equiv b h;
   Classical.move_requires (MG.addr_unused_in_does_not_contain_addr h) (frameOf b, as_addr b);
   MG.loc_addresses_unused_in cls (frameOf b) (Set.singleton (as_addr b)) h;
-  loc_includes_addresses_buffer false (frameOf b) (Set.singleton (as_addr b)) b;
-  MG.loc_includes_trans (loc_unused_in h) (loc_addresses false (frameOf b) (Set.singleton (as_addr b))) (loc_buffer b);
   ()
 
 let modifies_address_liveness_insensitive_unused_in =

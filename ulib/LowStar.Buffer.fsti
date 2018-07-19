@@ -661,6 +661,14 @@ val loc_disjoint_includes
   (requires (loc_includes p1 p1' /\ loc_includes p2 p2' /\ loc_disjoint p1 p2))
   (ensures (loc_disjoint p1' p2'))
 
+let loc_disjoint_includes'
+  (p1 p2 p1' p2' : loc)
+: Lemma
+  (requires (loc_includes p1 p1' /\ loc_includes p2 p2' /\ loc_disjoint p1 p2))
+  (ensures (loc_disjoint p1' p2'))
+  [SMTPat (loc_disjoint p1 p2); SMTPat (loc_disjoint p1' p2')]
+= loc_disjoint_includes p1 p2 p1' p2'
+
 let loc_disjoint_union_r'
   (s s1 s2: loc)
 : Lemma
@@ -1224,12 +1232,12 @@ val loc_unused_in_not_unused_in_disjoint (h: HS.mem) : Lemma
 
 val live_loc_not_unused_in (#t: Type) (b: buffer t) (h: HS.mem) : Lemma
   (requires (live h b))
-  (ensures (loc_not_unused_in h `loc_includes` loc_buffer b))
+  (ensures (loc_not_unused_in h `loc_includes` loc_addr_of_buffer b))
   [SMTPat (live h b)]
 
 val unused_in_loc_unused_in (#t: Type) (b: buffer t) (h: HS.mem) : Lemma
   (requires (unused_in b h))
-  (ensures (loc_unused_in h `loc_includes` loc_buffer b))
+  (ensures (loc_unused_in h `loc_includes` loc_addr_of_buffer b))
   [SMTPat (unused_in b h)]
 
 val modifies_address_liveness_insensitive_unused_in
