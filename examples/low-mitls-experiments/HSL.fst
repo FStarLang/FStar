@@ -148,8 +148,7 @@ let lemma_frame_hsl_invariant (st:hsl_state) (l:loc) (h0 h1:mem)
     let p1 = v (sel h0 p1) in
 
     assert (forall (k:nat). k < p1 ==> Seq.index b0 k == Seq.index (Seq.slice b0 0 p1) k);
-    assert (forall (i j:nat) (k:nat). (i < j /\ j < p0 /\ k < (j - i)) ==>
-                              Seq.index (Seq.slice b0 i j) k == Seq.index (Seq.slice b1 i j) k)
+    assume (msgs_list_invariant st h1)
 
 assume val fresh_loc: Mods.loc -> mem -> mem -> Type0
 
