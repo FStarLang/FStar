@@ -148,33 +148,38 @@ function build_fstar () {
         
         # Once F* is built, run its main regression suite, along with more relevant
         # tests.
-        { 
+        {
             $gnutime make -C src -j $threads -k $target && echo -n true > $status_file; 
             echo Done building FStar
         } &
 
-        { cd vale
-          if [[ "$OS" == "Windows_NT" ]]; then
-              timeout 480 ./scons_cygwin.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST
-          else
-              timeout 480 scons -j $threads --FSTAR-MY-VERSION --MIN_TEST
-          fi || {
-              test -n "$ORANGE_FILE" && { echo " - min-test (Vale)" >> $ORANGE_FILE ; }
-              echo true > $orange_status_file
-          }
-          cd ..
+        { 
+            cd vale
+            if [[ "$OS" == "Windows_NT" ]]; then
+                timeout 480 ./scons_cygwin.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST
+            else
+                timeout 480 scons -j $threads --FSTAR-MY-VERSION --MIN_TEST
+            fi || {
+                { echo " - min-test (Vale)" >> $ORANGE_FILE ; }
+                echo true > $orange_status_file
+            }
+            cd ..
         } &
 
-        { OTHERFLAGS='--use_two_phase_tc false --warn_error -276 --use_hint_hashes' timeout 480 make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify || {
-              test -n "$ORANGE_FILE" && { echo " - Hacl.Hash.SHA2_256.fst-verify (HACL*)" >> $ORANGE_FILE ; }
-              echo true > $orange_status_file
+        { 
+            OTHERFLAGS='--use_two_phase_tc false --warn_error -276 --use_hint_hashes' timeout 480 make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify || \
+            {
+                { echo " - Hacl.Hash.SHA2_256.fst-verify (HACL*)" >> $ORANGE_FILE ; }
+                echo true > $orange_status_file
           }
         } &
 
-        { OTHERFLAGS='--use_hint_hashes' timeout 480 make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver || {
-              test -n "$ORANGE_FILE" && { echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >> $ORANGE_FILE ; }
-              echo true > $orange_status_file
-          }
+        {
+            OTHERFLAGS='--use_hint_hashes' timeout 480 make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver || \ 
+            {
+                { echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >> $ORANGE_FILE ; }
+                echo true > $orange_status_file
+            }
         } &
 
         # We now run all (hardcoded) tests in mitls-fstar@master
@@ -215,7 +220,7 @@ function build_fstar () {
         echo "Searching for a diff in src/ocaml-output"
         if ! git diff --exit-code --name-only src/ocaml-output; then
             echo "GIT DIFF: the files in the list above have a git diff"
-            test -n "$ORANGE_FILE" && { echo " - snapshot-diff (F*)" >> $ORANGE_FILE ; }
+            { echo " - snapshot-diff (F*)" >> $ORANGE_FILE ; }
             echo true > $orange_status_file
         fi
 

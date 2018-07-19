@@ -47,23 +47,50 @@ abstract let hsl_get_p0 (st:hsl_state) :reference u32 = st.p0
 abstract let hsl_get_p1 (st:hsl_state) :reference u32 = st.p1
 abstract let hsl_get_msgs (st:hsl_state) :reference (list (u32 * u32)) = st.msgs
 
-(*
- * Helper to state pairwise disjointness of locations
- *)
-[@"opaque_to_smt"]
-unfold private let loc_pairwise_disjoint (s:TSet.set loc) :Type0 =
-  forall (l1 l2:loc). TSet.mem l1 s ==> TSet.mem l2 s ==> Mods.loc_disjoint l1 l2
+abstract
+let rec loc_disjoint_from_list (l: loc) (ls: list loc) : GTot Type0 = match ls with [] -> True | a :: q -> loc_disjoint l a /\ loc_disjoint_from_list l q
+
+abstract
+let loc_disjoint_from_list_nil (l: loc) : Lemma
+  (loc_disjoint_from_list l [])
+  [SMTPat (loc_disjoint_from_list l [])]
+= ()
+
+abstract
+let loc_disjoint_from_list_cons (l a: loc) (q: list loc) : Lemma
+  (loc_disjoint_from_list l (a :: q) <==> (loc_disjoint l a /\ loc_disjoint_from_list l q))
+  [SMTPat (loc_disjoint_from_list l (a :: q))]
+= ()
+
+abstract
+let rec loc_pairwise_disjoint (l: list loc) : GTot Type0 = match l with [] -> True | a :: q -> loc_disjoint_from_list a q /\ loc_pairwise_disjoint q
+
+abstract
+let loc_pairwise_disjoint_nil : squash (loc_pairwise_disjoint []) = ()
+
+abstract
+let loc_pairwise_disjoint_cons_nil (a: loc) : Lemma
+  (loc_pairwise_disjoint [a])
+  [SMTPat (loc_pairwise_disjoint [a])]
+= ()
+
+abstract
+let loc_pairwise_disjoint_cons (a: loc) (q: list loc) : Lemma
+  (loc_pairwise_disjoint (a :: q) <==> (loc_disjoint_from_list a q /\ loc_pairwise_disjoint q))
+  [SMTPat (loc_pairwise_disjoint (a :: q))]
+= ()
 
 (* Liveness and disjointness *)
 [@"opaque_to_smt"]
 unfold private let liveness_and_disjointness (st:hsl_state) (h:mem) :Type0 =
   let len, buf, p0, p1, msgs = hsl_get_len st, hsl_get_buf st, hsl_get_p0 st, hsl_get_p1 st, hsl_get_msgs st in
   
-  //we used to have !{} syntax, which is now repurposed for Set, would be nice to have some such syntax for TSet
-  loc_pairwise_disjoint (TSet.union (TSet.singleton (Mods.loc_mreference p0))
-                                    (TSet.union (TSet.singleton (Mods.loc_mreference p1))
-				                (TSet.union (TSet.singleton (Mods.loc_buffer buf))
-						            (TSet.singleton (Mods.loc_mreference msgs))))) /\
+  loc_pairwise_disjoint [
+    Mods.loc_mreference p0;
+    Mods.loc_mreference p1;
+    Mods.loc_buffer buf;
+    Mods.loc_mreference msgs;
+  ] /\
 
   Buffer.live h buf /\ contains h p0 /\ contains h p1 /\ contains h msgs /\  //liveness
   Buffer.len buf == len /\  //buffer length
@@ -132,7 +159,6 @@ let hsl_footprint (st:hsl_state) (h:mem{hsl_invariant st h}) =
 (*
  * Framing the HSL invariant across its footprint
  *)
-#set-options "--z3rlimit 30"
 let lemma_frame_hsl_invariant (st:hsl_state) (l:loc) (h0 h1:mem)
   :Lemma (requires (hsl_invariant st h0                  /\
                     loc_disjoint l (hsl_footprint st h0) /\
@@ -152,7 +178,6 @@ let lemma_frame_hsl_invariant (st:hsl_state) (l:loc) (h0 h1:mem)
 
 assume val fresh_loc: Mods.loc -> mem -> mem -> Type0
 
-#reset-options
 (*
  * Creating of HSL state
  * Assuming freshness and disjointness for now
@@ -177,10 +202,12 @@ let hsl_create (len:u32{len >^ 0ul})
     assume (fresh_loc (loc_mreference (hsl_get_p0 st)) h0 h2);
     assume (fresh_loc (loc_mreference (hsl_get_p1 st)) h0 h2);
     assume (fresh_loc (loc_mreference (hsl_get_msgs st)) h0 h2);
-    assume (loc_pairwise_disjoint (TSet.union (TSet.singleton (Mods.loc_mreference p0))
-                                              (TSet.union (TSet.singleton (Mods.loc_mreference p1))
-				                          (TSet.union (TSet.singleton (Mods.loc_buffer buf))
-							              (TSet.singleton (Mods.loc_mreference msgs))))));
+    assume (loc_pairwise_disjoint [
+      Mods.loc_mreference p0;
+      Mods.loc_mreference p1;
+      Mods.loc_buffer buf;
+      Mods.loc_mreference msgs;
+    ]);
     st
 
 (*
@@ -208,6 +235,8 @@ private let rec aux_process (b:Buffer.buffer u32) (p0 p1 p:u32) (l:list (u32 * u
         else aux_process b (p1 +^ 1ul) (p1 +^ 1ul) p ((p0, p1)::l)  //else add it to the list
       else aux_process b p0 (p1 +^ 1ul) p l
 
+#set-options "--z3rlimit 16"
+
 (*
  * Main process function that client (Record) calls once it has appended some data to the input buffer
  * It updates the p0 and p1 pointers, so that p1 points to p (the input index)
@@ -221,7 +250,8 @@ let hsl_process (st:hsl_state) (p:u32)
            (ensures  (fun h0 _ h1 -> hsl_invariant st h1 /\  //invariants holds again
 	                          sel h1 (hsl_get_p1 st) == p /\  //p1 has been updated to p
 	                          Mods.modifies (Mods.loc_union (Mods.loc_mreference (hsl_get_p0 st))
-				                                (Mods.loc_mreference (hsl_get_p1 st))) h0 h1))
+                                                (Mods.loc_union (Mods.loc_mreference (hsl_get_msgs st))
+				                                (Mods.loc_mreference (hsl_get_p1 st)))) h0 h1))
   = let len, buf, p0, p1, msgs = hsl_get_len st, hsl_get_buf st, hsl_get_p0 st, hsl_get_p1 st, hsl_get_msgs st in
     let new_p0, new_msgs = aux_process buf !p0 !p1 p !msgs in
     p0 := new_p0;
