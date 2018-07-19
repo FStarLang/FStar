@@ -1277,7 +1277,7 @@ let unused_in_not_unused_in_disjoint_2
 : Lemma
   (requires (loc_unused_in h `loc_includes` l1 /\ loc_not_unused_in h `loc_includes` l2 /\ l1 `loc_includes` l1' /\ l2 `loc_includes` l2' ))
   (ensures (loc_disjoint l1'  l2' ))
-  [SMTPat (loc_disjoint l1' l2'); SMTPat (loc_unused_in h `loc_includes` l1); SMTPat (loc_not_unused_in h `loc_includes` l2); SMTPat (l1 `loc_includes` l1') ; SMTPat (l2 `loc_includes` l2' )]
+  [SMTPat (loc_disjoint l1' l2'); SMTPat (loc_unused_in h `loc_includes` l1); SMTPat (loc_not_unused_in h `loc_includes` l2)]
 = loc_includes_trans (loc_unused_in h) l1 l1' ;
   loc_includes_trans (loc_not_unused_in h) l2 l2'  ;
   loc_unused_in_not_unused_in_disjoint h ;
