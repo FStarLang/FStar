@@ -215,7 +215,11 @@ val gsub (#a: Type) (b: buffer a) (i: U32.t) (len: U32.t) : Ghost (buffer a)
 val live_gsub (#a: Type) (h: HS.mem) (b: buffer a) (i: U32.t) (len: U32.t) : Lemma
   (requires (U32.v i + U32.v len <= length b))
   (ensures (live h (gsub b i len) <==> live h b))
-  [SMTPat (live h (gsub b i len))]
+  [SMTPatOr [
+    [SMTPat (live h (gsub b i len))];
+    [SMTPat (live h b); SMTPat (gsub b i len);]
+  ]]
+
 
 val gsub_is_null (#t: Type) (b: buffer t) (i: U32.t) (len: U32.t) : Lemma
   (requires (U32.v i + U32.v len <= length b))
