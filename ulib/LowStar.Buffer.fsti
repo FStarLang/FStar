@@ -1840,7 +1840,7 @@ let rec blit
     Seq.cons_head_tail (Seq.slice (as_seq h1 dst) (U32.v idx_dst + U32.v len') (length dst))
   end
 
-#set-options "--z3rlimit 16" // necessary here because of assign_list in the .fsti itself
+#set-options "--z3rlimit 32" // necessary here because of assign_list in the .fsti itself
 
 module L = FStar.List.Tot
 
