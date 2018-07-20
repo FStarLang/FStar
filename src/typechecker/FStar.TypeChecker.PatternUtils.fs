@@ -59,15 +59,8 @@ let pat_as_exp (allow_implicits:bool)
                                                                                          //see the comment in tc_pat in TcTerm.fs
      * pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
     let check_bv (env:Env.env) (x:bv) :(bv * guard_t) =
-          let t_x, guard =
-              match (SS.compress x.sort) with
-              | {n=Tm_unknown} ->
-                let t, _ = U.type_u() in
-                let t, _, g = new_implicit_var_aux "pattern bv type" (S.range_of_bv x) env t Allow_untyped in
-                t, g
-              | t -> //user-decorated type
-                tc_annot env t
-          in
+          let t, _ = U.type_u() in
+          let t_x, _, guard = new_implicit_var_aux "pattern bv type" (S.range_of_bv x) env t Allow_untyped in
           {x with sort=t_x}, guard
     in
     let rec pat_as_arg_with_env allow_wc_dependence env (p:pat) :
