@@ -561,6 +561,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             end ;
             u
     in
+    let ef = U.comp_effect_name (lcomp_comp c) in
+    if not (is_user_reifiable_effect env ef) then
+        raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" ef.str)) e.pos;
     let repr = Env.reify_comp env (lcomp_comp c) u_c in
     let e = mk (Tm_app(reify_op, [(e, aqual)])) None top.pos in
     let c = S.mk_Total repr |> U.lcomp_of_comp in
@@ -568,16 +571,14 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     e, c, Env.conj_guard g g'
 
   | Tm_app({n=Tm_constant (Const_reflect l)}, [(e, aqual)])->
-    if Option.isSome aqual
-    then Errors.log_issue e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReflect, "Qualifier on argument to reflect is irrelevant and will be ignored");
-    let no_reflect () = raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) e.pos in
+    if Option.isSome aqual then
+        Errors.log_issue e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReflect, "Qualifier on argument to reflect is irrelevant and will be ignored");
+    if not (is_user_reifiable_effect env l) then
+        raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) e.pos;
     let reflect_op, _ = U.head_and_args top in
     begin match Env.effect_decl_opt env l with
-    | None -> no_reflect()
+    | None -> failwith "internal error: user reifiable effect has no decl?"
     | Some (ed, qualifiers) ->
-      if not (qualifiers |> S.contains_reflectable) then
-        no_reflect ()
-      else
         let env_no_ex, topt = Env.clear_expected_typ env in
         let expected_repr_typ, res_typ, wp, g0 =
           let u = Env.new_u_univ () in

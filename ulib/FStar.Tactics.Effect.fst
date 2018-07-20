@@ -55,7 +55,7 @@ unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:__tac_wp a
     g_compact b (g_bind a b wp f)
 
 [@ dm4f_bind_range ]
-reifiable new_effect {
+new_effect {
   TAC : a:Type -> Effect
   with repr     = __tac
      ; bind     = __bind
@@ -106,8 +106,4 @@ val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (with_t
                                                                          [SMTPat (with_tactic tau phi)]
 let by_tactic_seman a tau phi = ()
 
-// TcTerm needs these two names to typecheck tactics against
 private let tactic a = unit -> TacF a // we don't care if the tactic is satisfiable before running it
-
-#set-options "--admit_smt_queries true" // F* won't allow it otherwise, since `t` is not proven total
-private let reify_tactic (t : tactic 'a) : __tac 'a = reify (t ())

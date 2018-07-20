@@ -301,7 +301,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_datacon _ ->
           extract_bundle g se
 
-        | Sig_new_effect ed when se.sigquals |> List.contains Reifiable ->
+        | Sig_new_effect ed when Env.is_reifiable_effect g.tcenv ed.mname ->
           let extend_env g lid ml_name tm tysc =
             let g, mangled_name = extend_fv' g (S.lid_as_fv lid delta_equational None) ml_name tysc false false in
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then

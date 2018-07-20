@@ -1161,9 +1161,7 @@ let effect_repr_aux only_reifiable env c u_c =
     match effect_decl_opt env effect_name with
     | None -> None
     | Some (ed, qualifiers) ->
-        if only_reifiable && not (qualifiers |> List.contains Reifiable)
-        then None
-        else match ed.repr.n with
+        match ed.repr.n with
         | Tm_unknown -> None
         | _ ->
           let c = unfold_effect_abbrev env c in
@@ -1182,20 +1180,24 @@ let effect_repr_aux only_reifiable env c u_c =
 
 let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c
 
-let reify_comp env c u_c : term =
-    let no_reify l = raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l))) (get_range env) in
-    match effect_repr_aux true env c u_c with
-    | None -> no_reify (U.comp_effect_name c)
-    | Some tm -> tm
+(* [is_reifiable_* env x] returns true if the effect name/computational *)
+(* effect (of a body or codomain of an arrow) [x] is reifiable. *)
 
-(* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
-(* a body or codomain of an arrow) [x] is reifiable *)
+(* [is_user_reifiable_* env x] is more restrictive, and only allows *)
+(* reifying effects marked with the `reifiable` keyword. (For instance, TAC *)
+(* is reifiable but not user-reifiable.) *)
 
-let is_reifiable_effect (env:env) (effect_lid:lident) : bool =
+let is_user_reifiable_effect (env:env) (effect_lid:lident) : bool =
+    let effect_lid = norm_eff_name env effect_lid in
     let quals = lookup_effect_quals env effect_lid in
     List.contains Reifiable quals
 
-let is_reifiable (env:env) (c:S.residual_comp) : bool =
+let is_reifiable_effect (env:env) (effect_lid:lident) : bool =
+    let effect_lid = norm_eff_name env effect_lid in
+    is_user_reifiable_effect env effect_lid
+    || Ident.lid_equals effect_lid Const.effect_TAC_lid
+
+let is_reifiable_rc (env:env) (c:S.residual_comp) : bool =
     is_reifiable_effect env c.residual_effect
 
 let is_reifiable_comp (env:env) (c:S.comp) : bool =
@@ -1207,6 +1209,14 @@ let is_reifiable_function (env:env) (t:S.term) : bool =
     match (compress t).n with
     | Tm_arrow (_, c) -> is_reifiable_comp env c
     | _ -> false
+
+let reify_comp env c u_c : term =
+    let l = U.comp_effect_name c in
+    if not (is_reifiable_effect env l) then
+        raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l))) (get_range env);
+    match effect_repr_aux true env c u_c with
+    | None -> failwith "internal error: reifiable effect has no repr?"
+    | Some tm -> tm
 
 
 ///////////////////////////////////////////////////////////

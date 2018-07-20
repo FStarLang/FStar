@@ -138,7 +138,7 @@ let effect_as_etag =
             let ed_opt = TcEnv.effect_decl_opt g.tcenv l in
             match ed_opt with
             | Some (ed, qualifiers) ->
-                if qualifiers |> List.contains Reifiable
+                if TcEnv.is_reifiable_effect g.tcenv ed.mname
                 then E_PURE
                 else E_IMPURE
             | None -> E_IMPURE
@@ -545,7 +545,7 @@ let rec translate_term_to_mlty (g:env) (t0:term) : mlty =
                 let eff = TcEnv.norm_eff_name env.tcenv (U.comp_effect_name c) in
                 let c = comp_no_args c in
                 let ed, qualifiers = must (TcEnv.effect_decl_opt env.tcenv eff) in
-                if qualifiers |> List.contains Reifiable
+                if TcEnv.is_reifiable_effect g.tcenv ed.mname
                 then let t = FStar.TypeChecker.Env.reify_comp env.tcenv c U_unknown in
                      debug env (fun () -> BU.print2 "Translating comp type %s as %s\n"
                             (Print.comp_to_string c) (Print.term_to_string t));
@@ -938,7 +938,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           begin match t.n with
             | Tm_let((false, [lb]), body) when (BU.is_left lb.lbname) ->
               let ed, qualifiers = must (TypeChecker.Env.effect_decl_opt g.tcenv m) in
-              if qualifiers |> List.contains Reifiable |> not
+              if not (TcEnv.is_reifiable_effect g.tcenv ed.mname)
               then term_as_mlexpr g t
               else
                 failwith "This should not happen (should have been handled at Tm_abs level)"
@@ -991,13 +991,13 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                  end
           end
 
-        | Tm_abs(bs, body, copt (* the annotated computation type of the body *)) ->
+        | Tm_abs(bs, body, rcopt (* the annotated computation type of the body *)) ->
           let bs, body = SS.open_term bs body in
           let ml_bs, env = binders_as_ml_binders g bs in
           let body =
-            match copt with
-            | Some c ->
-                if TcEnv.is_reifiable env.tcenv c
+            match rcopt with
+            | Some rc ->
+                if TcEnv.is_reifiable_rc env.tcenv rc
                 then TcUtil.reify_body env.tcenv body
                 else body
             | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in

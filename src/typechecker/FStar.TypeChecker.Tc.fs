@@ -1166,15 +1166,13 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
     let expected_k  = U.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
     let repr_type eff_name a wp =
-      let no_reify l = raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) (Env.get_range env) in
+      if not (is_reifiable_effect env eff_name) then
+          raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" eff_name.str)) (Env.get_range env);
       match Env.effect_decl_opt env eff_name with
-      | None -> no_reify eff_name
+      | None -> failwith "internal error: reifiable effect has no decl?"
       | Some (ed, qualifiers) ->
           let repr = Env.inst_effect_fun_with [U_unknown] env ed ([], ed.repr) in
-          if not (qualifiers |> List.contains Reifiable) then
-            no_reify eff_name
-          else
-            mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
+          mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
     in
     let lift, lift_wp =
       match sub.lift, sub.lift_wp with

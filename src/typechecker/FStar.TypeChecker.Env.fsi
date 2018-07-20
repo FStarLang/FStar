@@ -303,13 +303,18 @@ val comp_to_comp_typ    : env -> comp -> comp_typ
 val unfold_effect_abbrev: env -> comp -> comp_typ
 val effect_repr         : env -> comp -> universe -> option<term>
 val reify_comp          : env -> comp -> universe -> term
+
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)
-val is_reifiable_effect : env -> lident -> bool
-val is_reifiable : env -> residual_comp -> bool
-val is_reifiable_comp : env -> comp -> bool
-val is_reifiable_function : env -> term -> bool
+val is_reifiable_effect      : env -> lident -> bool
+val is_reifiable_rc          : env -> residual_comp -> bool
+val is_reifiable_comp        : env -> comp -> bool
+val is_reifiable_function    : env -> term -> bool
 
+(* [is_user_reifiable_* env x] is more restrictive, and only allows *)
+(* reifying effects marked with the `reifiable` keyword. (For instance, TAC *)
+(* is reifiable but not user-reifiable.) *)
+val is_user_reifiable_effect : env -> lident -> bool
 
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders
