@@ -175,7 +175,7 @@ function build_fstar () {
         } &
 
         {
-            OTHERFLAGS='--use_hint_hashes' timeout 480 make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver || \ 
+            OTHERFLAGS='--use_hint_hashes' timeout 480 make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver || \
             {
                 { echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >> $ORANGE_FILE ; }
                 echo true > $orange_status_file
@@ -184,7 +184,7 @@ function build_fstar () {
 
         # We now run all (hardcoded) tests in mitls-fstar@master
         {
-            OTHERFLAGS=--use_hint_hashes timeout 480 make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver || \ 
+            OTHERFLAGS=--use_hint_hashes timeout 480 make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver || \
             {
                 { echo " - StreamAE.fst-ver (mitls)" >> $ORANGE_FILE; }
                 echo true > $orange_status_file
