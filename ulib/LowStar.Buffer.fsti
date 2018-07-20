@@ -442,6 +442,14 @@ val loc_includes_trans
   (requires (loc_includes s1 s2 /\ loc_includes s2 s3))
   (ensures (loc_includes s1 s3))
 
+let loc_includes_trans'
+  (s1 s2 s3: loc)
+: Lemma
+  (requires (loc_includes s1 s2 /\ loc_includes s2 s3))
+  (ensures (loc_includes s1 s3))
+  [SMTPat (loc_includes s1 s2); SMTPat (loc_includes s2 s3)]
+= loc_includes_trans s1 s2 s3
+
 val loc_includes_union_r
   (s s1 s2: loc)
 : Lemma

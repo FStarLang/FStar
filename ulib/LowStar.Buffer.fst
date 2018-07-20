@@ -992,7 +992,7 @@ let g_upd' (#a:Type)
       let v = vec_of_lseq (Seq.upd s0 (U32.v (Buffer?.idx b) + i) v) in
       HS.upd h (Buffer?.content b) v
 
-#set-options "--z3rlimit 16"
+#set-options "--z3rlimit 32"
 
 let g_upd'_as_seq (#a:Type)
                      (b:buffer a)
