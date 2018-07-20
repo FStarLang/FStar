@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#set -x 
+#set -x
 
 target=$1
 out_file=$2
@@ -62,7 +62,7 @@ function fetch_kremlin() {
 
 function fetch_and_make_kremlin() {
   fetch_kremlin
-  
+
   # Default build target is minimal, unless specified otherwise
   local target
   if [[ $1 == "" ]]; then
@@ -102,14 +102,11 @@ function build_fstar () {
 
     # $status_file is the name of a file that contains true if and
     # only if the F* regression suite failed, false otherwise
-    # $orange_status_file is the name of a file that contains true
-    # if and only if some additional regression suite (HACL*,
-    # miTLS) broke, false otherwise
-    local status_file="status.txt"
-    local orange_status_file="orange_status.txt"
-    ORANGE_FILE=$(mktemp)
-    echo -n false > $status_file
-    echo false > $orange_status_file
+    status_file="status.txt"
+    echo false > $status_file
+
+    ORANGE_FILE="orange_file.txt"
+    echo '' > $ORANGE_FILE
 
     if [ ! -d ulib ]; then
       echo "I don't seem to be in the right directory, bailing"
@@ -132,11 +129,11 @@ function build_fstar () {
         fetch_hacl &
         fetch_and_make_kremlin &
         fetch_mitls &
-        { 
+        {
             if [ ! -d hacl-star-old ]; then
                 git clone https://github.com/mitls/hacl-star hacl-star-old
                 cd hacl-star-old && git reset --hard 98755f79579a0c153140e8d9a186145beafacf8f
-            fi 
+            fi
         } &
         wait
 
@@ -145,51 +142,47 @@ function build_fstar () {
         export_home HACL "$(pwd)/hacl-star"
         export_home KREMLIN "$(pwd)/kremlin"
         export_home FSTAR "$(pwd)"
-        
+
         # Once F* is built, run its main regression suite, along with more relevant
         # tests.
         {
-            $gnutime make -C src -j $threads -k $target && echo -n true > $status_file; 
+            $gnutime make -C src -j $threads -k $target && echo true > $status_file;
             echo Done building FStar
         } &
 
-        { 
+        {
+            has_error="false"
             cd vale
             if [[ "$OS" == "Windows_NT" ]]; then
                 ## This hack for determining the success of a vale run is needed
                 ## because somehow scons is not returning the error code properly
                 timeout 480 ./scons_cygwin.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output
-                
+
                 ## adds "min-test (Vale)" to the ORANGE_FILE
                 ##      if this string vvvv is present in vale_output
-                ! grep -qi 'scons: building terminated because of errors.' vale_output || \
-                {
-                    { echo " - min-test (Vale)" >> $ORANGE_FILE ; }
-                    echo true > $orange_status_file
-                }
+                ! grep -qi 'scons: building terminated because of errors.' vale_output || has_error="true"
             else
-                timeout 480 scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || \
-                {
-                    { echo " - min-test (Vale)" >> $ORANGE_FILE ; }
-                    echo true > $orange_status_file
-                }
+                timeout 480 scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || has_error="true"
             fi
             cd ..
+
+            echo $has_error
+            if [[ $has_error == "true" ]]; then
+                echo " - min-test (Vale)" >> $ORANGE_FILE ;
+            fi
         } &
 
-        { 
+        {
             OTHERFLAGS='--use_two_phase_tc false --warn_error -276 --use_hint_hashes' timeout 480 make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify || \
             {
                 { echo " - Hacl.Hash.SHA2_256.fst-verify (HACL*)" >> $ORANGE_FILE ; }
-                echo true > $orange_status_file
-          }
+            }
         } &
 
         {
             OTHERFLAGS='--use_hint_hashes' timeout 480 make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver || \
             {
                 { echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >> $ORANGE_FILE ; }
-                echo true > $orange_status_file
             }
         } &
 
@@ -198,19 +191,16 @@ function build_fstar () {
             OTHERFLAGS=--use_hint_hashes timeout 480 make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver || \
             {
                 { echo " - StreamAE.fst-ver (mitls)" >> $ORANGE_FILE; }
-                echo true > $orange_status_file
             }
-            
+
             OTHERFLAGS=--use_hint_hashes timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver || \
             {
                 { echo " - Pkg.fst-ver (mitls verify)" >> $ORANGE_FILE; }
-                echo true > $orange_status_file
             }
-            
+
             OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver || \
             {
                 { echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >> $ORANGE_FILE; }
-                echo true > $orange_status_file
             }
         } &
 
@@ -232,20 +222,19 @@ function build_fstar () {
         if ! git diff --exit-code --name-only src/ocaml-output; then
             echo "GIT DIFF: the files in the list above have a git diff"
             { echo " - snapshot-diff (F*)" >> $ORANGE_FILE ; }
-            echo true > $orange_status_file
         fi
 
         if [[ $(cat $status_file) != "true" ]]; then
             echo "F* regression failed"
             echo Failure > $result_file
-        elif $(cat $orange_status_file) ; then
+        elif [[ $(cat $ORANGE_FILE) != "" ]]; then
             echo "F* regression had breakages"
             echo Success with breakages $(cat $ORANGE_FILE) > $result_file
         else
             echo "F* regression succeeded"
             echo Success > $result_file
         fi
-        
+
     fi
 }
 
