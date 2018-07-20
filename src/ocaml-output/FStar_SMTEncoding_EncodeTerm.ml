@@ -2518,7 +2518,7 @@ and (encode_term :
                      let uu____6371 =
                        (is_impure rc) &&
                          (let uu____6373 =
-                            FStar_TypeChecker_Env.is_reifiable
+                            FStar_TypeChecker_Env.is_reifiable_rc
                               env.FStar_SMTEncoding_Env.tcenv rc
                              in
                           Prims.op_Negation uu____6373)
@@ -2537,7 +2537,7 @@ and (encode_term :
                         | (vars,guards,envbody,decls,uu____6405) ->
                             let body2 =
                               let uu____6419 =
-                                FStar_TypeChecker_Env.is_reifiable
+                                FStar_TypeChecker_Env.is_reifiable_rc
                                   env.FStar_SMTEncoding_Env.tcenv rc
                                  in
                               if uu____6419
