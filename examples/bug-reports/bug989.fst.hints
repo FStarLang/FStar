@@ -15,7 +15,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1e82dc17631dd859fe631731e97f8bd0"
+      "3d9cdf21f82bce473d225cabd7d0a406"
     ],
     [
       "Bug989.foo",
@@ -29,7 +29,7 @@
         "primitive_Prims.op_Equality"
       ],
       0,
-      "11450f85830e6846b15194886a035c23"
+      "67b086b4b42de67cbc8073b9f647e938"
     ],
     [
       "Bug989.f",
@@ -41,7 +41,7 @@
         "disc_equation_Bug989.B", "fuel_guarded_inversion_Bug989.t"
       ],
       0,
-      "94973362391320b0d1c17420ca96f269"
+      "1a5f81aff85a4fa8b4dae28675e880b0"
     ]
   ]
 ]

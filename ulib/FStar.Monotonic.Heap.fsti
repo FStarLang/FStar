@@ -163,7 +163,10 @@ val lemma_free_addr_unused_in
 val lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:heap) (r1:mref a rel) (r2:mref a rel)
   :Lemma (requires (h `contains` r1 /\ addr_of r1 = addr_of r2 /\ is_mm r1 == is_mm r2))
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-	 [SMTPat (sel h r1); SMTPat (sel h r2)]
+         [SMTPatOr [
+	   [SMTPat (sel h r1); SMTPat (sel h r2)];
+           [SMTPat (h `contains` r1); SMTPat (h `contains` r2)];
+         ]]
 
 (*
   * AR: this is true only if the preorder is same, else r2 may not be contained in h

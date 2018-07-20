@@ -58,3 +58,5 @@ let serialize_tagged_union_impl
     | _ -> None
     end
   | _ -> None
+
+#reset-options

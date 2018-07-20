@@ -758,7 +758,7 @@ and translate_expr env e: expr =
       EPopFrame
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3; e4; e5 ]) when (
       string_of_mlpath p = "FStar.Buffer.blit" ||
-      string_of_mlpath p = "LowStar.BufferOps.blit"
+      string_of_mlpath p = "LowStar.Buffer.blit"
     ) ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.fill") ->

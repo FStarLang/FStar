@@ -898,14 +898,21 @@ let slice_slice
   [SMTPat (slice (slice s i1 j1) i2 j2)]
 = lemma_eq_elim (slice (slice s i1 j1) i2 j2) (slice s (i1 + i2) (i1 + j2))
 
+let lemma_seq_of_list_induction (#a:Type) (l:list a)
+  :Lemma (requires True)
+         (ensures (let s = seq_of_list l in
+	           match l with
+	           | []    -> Seq.equal s empty
+		   | hd::tl -> head s == hd /\ tail s == seq_of_list tl))
+	 [SMTPat (seq_of_list l)]
+  = if List.Tot.length l > 0 then lemma_tl (List.Tot.hd l) (seq_of_list (List.Tot.tl l))
+
 let seq_of_list_tl
   (#a: Type)
   (l: list a { List.Tot.length l > 0 } )
 : Lemma
   (requires True)
-  (ensures (seq_of_list (List.Tot.tl l) == tail (seq_of_list l)))
-  [SMTPat (seq_of_list (List.Tot.tl l))]
-= lemma_tl (List.Tot.hd l) (seq_of_list (List.Tot.tl l))
+  (ensures (seq_of_list (List.Tot.tl l) == tail (seq_of_list l))) = ()
 
 let rec mem_seq_of_list
   (#a: eqtype)
@@ -941,4 +948,37 @@ let lemma_of_list_induction (#a:Type) (l:list a)
       FStar.Classical.forall_intro aux
 
 
+(****** sortWith ******)
+abstract let sortWith (#a:eqtype) (f:a -> a -> Tot int) (s:seq a) :seq a
+  = seq_of_list (List.Tot.Base.sortWith f (seq_to_list s))
 
+let rec lemma_seq_to_list_permutation (#a:eqtype) (s:seq a)
+  :Lemma (requires True) (ensures (forall x. count x s == List.Tot.Base.count x (seq_to_list s))) (decreases (length s))
+  = if length s > 0 then lemma_seq_to_list_permutation (slice s 1 (length s))
+
+let rec lemma_seq_of_list_permutation (#a:eqtype) (l:list a)
+  :Lemma (forall x. List.Tot.Base.count x l == count x (seq_of_list l))
+  = match l with
+    | []   -> ()
+    | _::tl -> lemma_seq_of_list_permutation tl
+
+let rec lemma_seq_of_list_sorted (#a:Type) (f:a -> a -> Tot bool) (l:list a)
+  :Lemma (requires (List.Tot.Properties.sorted f l)) (ensures  (sorted f (seq_of_list l)))
+  = if length (seq_of_list l) > 1 then lemma_seq_of_list_sorted f (List.Tot.Base.tl l)
+
+let lemma_seq_sortwith_correctness (#a:eqtype) (f:a -> a -> Tot int) (s:seq a)
+  :Lemma (requires (total_order a (List.Tot.Base.bool_of_compare f)))
+         (ensures  (let s' = sortWith f s in sorted (List.Tot.Base.bool_of_compare f) s' /\ permutation a s s'))
+  = let l = seq_to_list s in
+    let l' = List.Tot.Base.sortWith f l in
+    let s' = seq_of_list l' in
+    let cmp = List.Tot.Base.bool_of_compare f in
+
+    (* sortedness *)
+    List.Tot.Properties.sortWith_sorted f l;  //the list returned by List.sortWith is sorted
+    lemma_seq_of_list_sorted cmp l';  //seq_of_list preserves sortedness
+
+    (* permutation *)
+    lemma_seq_to_list_permutation s;  //seq_to_list is a permutation
+    List.Tot.Properties.sortWith_permutation f l;  //List.sortWith is a permutation
+    lemma_seq_of_list_permutation l'  //seq_of_list is a permutation
