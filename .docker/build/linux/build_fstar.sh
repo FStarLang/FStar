@@ -157,12 +157,24 @@ function build_fstar () {
             cd vale
             if [[ "$OS" == "Windows_NT" ]]; then
                 timeout 480 ./scons_cygwin.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST
+                ## This hack for determining the success of a vale run is needed
+                ## because somehow scons is not returning the error code properly
+                timeout 480 ./scons_cygwin.sh -j 4 --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output
+                
+                ## adds "min-test (Vale)" to the ORANGE_FILE
+                ##      if this string vvvv is present in vale_output
+                ! grep -qi 'scons: building terminated because of errors.' vale_output || \
+                {
+                    { echo " - min-test (Vale)" >> $ORANGE_FILE ; }
+                    echo true > $orange_status_file
+                }
             else
-                timeout 480 scons -j $threads --FSTAR-MY-VERSION --MIN_TEST
-            fi || {
-                { echo " - min-test (Vale)" >> $ORANGE_FILE ; }
-                echo true > $orange_status_file
-            }
+                timeout 480 scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || \
+                {
+                    { echo " - min-test (Vale)" >> $ORANGE_FILE ; }
+                    echo true > $orange_status_file
+                }
+            fi
             cd ..
         } &
 
