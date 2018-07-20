@@ -41,3 +41,7 @@ let ( *= ) (#a: Type) (p: B.pointer a) (v: a) : HST.Stack unit
     B.modifies (B.loc_buffer p) h0 h1
   ))
 = B.upd p 0ul v
+
+// TODO: remove
+inline_for_extraction
+let blit = B.blit
