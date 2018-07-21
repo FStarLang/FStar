@@ -83,14 +83,13 @@ unfold let merkle_tree_wf h mt =
   let vs = MT?.values mt in
   let irs = MT?.iroots mt in
   B.live h vs /\ B.freeable vs /\ B.live h irs /\ B.disjoint vs irs /\
-  iroots_of nelts (S.slice (B.as_seq h vs) 0 nelts) =
+  iroots_of (S.slice (B.as_seq h vs) 0 nelts) =
   S.slice (B.as_seq h irs) 0 (num_iroots_of_bound max_nelts_sz nelts)
 
 val merkle_tree_lift: 
   h:HS.mem -> mt:merkle_tree{merkle_tree_wf h mt} -> GTot (High.merkle_tree)
 let merkle_tree_lift h mt =
-  High.MT (MT?.nelts mt) 
-	  (S.slice (B.as_seq h (MT?.values mt)) 0 (MT?.nelts mt))
+  High.MT (S.slice (B.as_seq h (MT?.values mt)) 0 (MT?.nelts mt))
 	  (S.slice (B.as_seq h (MT?.iroots mt))
 		   0 (num_iroots_of_bound max_nelts_sz (MT?.nelts mt)))
 
@@ -106,7 +105,7 @@ let create_merkle_tree _ =
   let iroots = B.malloc root (hash_from_elem elem_init) (UInt32.uint_to_t max_nelts_sz) in
   let hh1 = HST.get () in
   B.live_unused_in_disjoint hh0 values iroots;
-  S.lemma_eq_intro (iroots_of 1 (S.slice (B.as_seq hh1 values) 0 1))
+  S.lemma_eq_intro (iroots_of (S.slice (B.as_seq hh1 values) 0 1))
   		   (S.slice (B.as_seq hh1 iroots) 0 1);
   MT 1 values iroots
 
@@ -120,9 +119,7 @@ let mt_is_full mt = MT?.nelts mt >= pow2 max_nelts_sz - 1
 
 val insert_nelts: 
   nelts:nat{nelts < pow2 max_nelts_sz - 1} ->
-  Tot (inelts:nat{
-      inelts = High.insert_nelts nelts && 
-      inelts < pow2 max_nelts_sz})
+  Tot (inelts:nat{inelts < pow2 max_nelts_sz})
 let insert_nelts nelts =
   nelts + 1
 
@@ -136,7 +133,7 @@ val insert_values:
 	   B.live h1 nvs /\ B.freeable nvs /\
 	   S.slice (B.as_seq h1 nvs) 0 (insert_nelts nelts) ==
 	   High.insert_values (S.slice (B.as_seq h0 vs) 0 nelts) e))
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 40"
 let insert_values nelts vs e =
   if is_pow2 (nelts + 1)
   then (let hh0 = HST.get () in
@@ -166,7 +163,6 @@ let insert_values nelts vs e =
        let hh1 = HST.get () in
        S.lemma_eq_elim (S.slice (B.as_seq hh1 vs) 0 (insert_nelts nelts))
        		       (High.insert_values (S.slice (B.as_seq hh0 vs) 0 nelts) e);
-
        alloc_sz_lg_not_pow2_inc nelts;
        vs)
 
@@ -176,12 +172,12 @@ val insert_iroots:
   nv:elem ->
   HST.ST unit
 	 (requires (fun h0 -> B.live h0 irs))
-	 (ensures (fun h0 _ h1 -> 
-	   modifies (loc_buffer irs) h0 h1 /\
-	   S.slice (B.as_seq h1 irs) 0 (num_iroots_of_bound max_nelts_sz (insert_nelts nelts)) ==
-	   High.insert_iroots 
-	     nelts (S.slice (B.as_seq h0 irs) 0 (num_iroots_of_bound max_nelts_sz nelts)) 
-	     (hash_from_elem nv)))
+	 (ensures (fun h0 _ h1 -> modifies (loc_buffer irs) h0 h1))
+	 // TODO: `High.insert_roots` requires values as an argument.
+	 // S.slice (B.as_seq h1 irs) 0 (num_iroots_of_bound max_nelts_sz (insert_nelts nelts)) ==
+	 // High.insert_iroots
+	 //   (S.slice (B.as_seq h0 irs) 0 (num_iroots_of_bound max_nelts_sz nelts)) 
+	 //   (hash_from_elem nv)))
 let rec insert_iroots nirs irs nv =
   admit ()
 
