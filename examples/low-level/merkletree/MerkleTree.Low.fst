@@ -196,22 +196,6 @@ let insert mt e =
 
 /// Getting the Merkle root
 
-val merkle_root_of_iroots':
-  acc:hash ->
-  nirs:nat{nirs <= max_nelts_sz} ->
-  irs:hash_buf{B.length irs = max_nelts_sz} -> 
-  HST.ST hash
-	 (requires (fun h0 -> B.live h0 irs))
-	 (ensures (fun h0 hs h1 -> 
-	   h1 == h0 /\
-	   High.merkle_root_of_iroots' acc (B.as_seq h0 irs) = hs))
-let rec merkle_root_of_iroots' acc nirs irs =
-  // if nirs = 0 then acc
-  // else merkle_root_of_iroots'
-  //      (hash_from_hashes (B.index irs (UInt32.uint_to_t (nirs - 1))) acc)
-  //      (nirs - 1) irs
-  admit () // TODO: need to prove `High.merkle_root_of_iroots'`
-
 val merkle_root_of_iroots:
   nirs:nat{nirs <= max_nelts_sz} ->
   irs:hash_buf{B.length irs = max_nelts_sz} -> 
@@ -221,5 +205,5 @@ val merkle_root_of_iroots:
 	   h1 == h0 /\
 	   High.merkle_root_of_iroots (B.as_seq h0 irs) = hs))
 let merkle_root_of_iroots nirs irs =
-  merkle_root_of_iroots' hash_init nirs irs
+  admit ()
 
