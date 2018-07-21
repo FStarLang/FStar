@@ -304,8 +304,11 @@ let rec insert_iroots vs irs nv =
     merge_iroots vs0 (S.create 1 (S.head irs)) (insert_values vs1 nv) 
 		 (insert_iroots vs1 (S.tail irs) nv))
 
-// TODO: refinements
-val insert: mt:merkle_tree -> e:elem -> GTot merkle_tree
+val insert: 
+  mt:merkle_tree -> e:elem -> 
+  GTot (imt:merkle_tree{
+    MT?.values imt = insert_values (MT?.values mt) e &&
+    MT?.iroots imt = insert_iroots (MT?.values mt) (MT?.iroots mt) e})
 let insert mt e =
   let nvalues = insert_values (MT?.values mt) e in
   let niroots = insert_iroots (MT?.values mt) (MT?.iroots mt) e in
