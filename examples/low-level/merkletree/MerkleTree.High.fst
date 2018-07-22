@@ -184,11 +184,30 @@ let pow2_floor_pow2_pow2 p q =
   Math.Lemmas.pow2_lt_compat p q;
   pow2_floor_pow2_less p (pow2 q)
 
+val pow2_lt_compat_inv:
+  p:nat -> q:nat ->
+  Lemma (requires (pow2 p < pow2 q))
+	(ensures (p < q))
+let rec pow2_lt_compat_inv p q =
+  if q <= p then Math.Lemmas.pow2_le_compat p q
+  else ()
+
+val pow2_le_compat_inv:
+  p:nat -> q:nat ->
+  Lemma (requires (pow2 p <= pow2 q))
+	(ensures (p <= q))
+let rec pow2_le_compat_inv p q =
+  if q < p then Math.Lemmas.pow2_lt_compat p q
+  else ()
+
 val not_pow2_floor_ceil:
   n:nat{n > 0 && not (is_pow2 n)} ->
   Lemma (pow2_floor n + 1 = pow2_ceil n)
 let not_pow2_floor_ceil n =
-  admit ()
+  let fl = pow2_floor n in
+  let cl = pow2_ceil n in
+  pow2_le_compat_inv fl cl;
+  pow2_lt_compat_inv (cl - 1) (fl + 1)
 
 /// Invariants between internal roots and values
 
@@ -410,10 +429,20 @@ let rec merkle_root_of_iroots_ok_hashes vs irs =
        let pvs = pad_hashes_pow2 vs in
        assert (merkle_root_of_hashes vs = merkle_root_of_pow2 pvs);
        assert (S.length pvs > 1);
+
+       // merkle_root_of_pow2_inv (S.slice pvs 0 (S.length pvs / 2))
+       // 			       (S.slice pvs (S.length pvs / 2) (S.length pvs));
+       // admit ())
+       // S.lemma_split pvs (S.length pvs / 2);
+       // admit ())
        // assert (merkle_root_of_pow2 pvs =
-       // 	      hash_from_hashes 
-       // 	      	(merkle_root_of_pow2 (S.slice pvs 0 (S.length pvs / 2)))
-       // 	      	(merkle_root_of_pow2 (S.slice pvs (S.length pvs / 2) (S.length pvs))));
+       // 	      (let lhs, rhs = S.split pvs (S.length pvs / 2) in
+       // 		let lrt = merkle_root_of_pow2 lhs in
+       // 		let rrt = merkle_root_of_pow2 rhs in
+       // 		hash_from_hashes lrt rrt));
+       // hash_from_hashes 
+       // 	(merkle_root_of_pow2 (S.slice pvs 0 (S.length pvs / 2)))
+       // 	(merkle_root_of_pow2 (S.slice pvs (S.length pvs / 2) (S.length pvs))));
 
        // not_pow2_floor_ceil (S.length vs);
        // Math.Lemmas.pow2_double_mult (pow2_floor (S.length vs));
