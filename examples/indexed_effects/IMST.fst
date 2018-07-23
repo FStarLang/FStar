@@ -73,9 +73,6 @@ new_effect {
      //repr'        = s:Type0 -> rel:preorder s -> s0:s -> M (a * s1:s{rel s0 s1})
                                                               // - pi-types currently not supported by DM4F;
                                                               //   refinement types also currently not supported by DM4F
-                                                              // - will also raise the problem of needing to subtype postconditions according to rel
-                                                              // - however, the precise typing would (highly likely) needed for reification purposes; 
-                                                              //   another example with same issues is (exn:Type -> exns:set exn -> M (either a e:exn{mem e exns}))
        return_wp    = st_return
      ; bind_wp      = st_bind
      ; if_then_else = st_if_then_else
@@ -87,6 +84,15 @@ new_effect {
      ; null_wp      = st_null
      ; trivial      = st_trivial
 }
+
+// For effects where subtyping parameters is sound, e.g., 
+//
+//   exn:Type -> exns:set exn -> M (either a e:exn{mem e exns})
+//
+// there is also the problem of needing to subtype postconditions according to the chosen (subset) order on exns.
+//
+// The precise typing would (highly likely) be needed to ensure that reification/reflection are sound.
+
 
 
 (* Standard lifting *)
