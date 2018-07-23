@@ -29,6 +29,7 @@ type branch = pattern * term
 type aqualv =
     | Q_Implicit
     | Q_Explicit
+    | Q_Meta of term
 
 type argv = term * aqualv
 
@@ -63,8 +64,8 @@ type comp_view =
     | C_Unknown
 
 type sigelt_view =
-    | Sg_Let of bool * fv * typ * term
-    | Sg_Inductive of name * list<binder> * typ * list<name> // name, params, type, constructors
+    | Sg_Let of bool * fv * list<univ_name> * typ * term
+    | Sg_Inductive of name * list<univ_name> * list<binder> * typ * list<name> // name, params, type, constructors
     | Sg_Constructor of name * typ
     | Unk
 
@@ -121,6 +122,8 @@ let fstar_refl_comp             = mk_refl_types_lid_as_term "comp"
 let fstar_refl_binder           = mk_refl_types_lid_as_term "binder"
 let fstar_refl_sigelt           = mk_refl_types_lid_as_term "sigelt"
 let fstar_refl_term             = mk_refl_types_lid_as_term "term"
+let fstar_refl_ident            = mk_refl_types_lid_as_term "ident"
+let fstar_refl_univ_name        = mk_refl_types_lid_as_term "univ_name"
 
 (* auxiliary types *)
 let fstar_refl_aqualv           = mk_refl_data_lid_as_term "aqualv"
@@ -146,6 +149,7 @@ let ref_Mk_bv =
 (* quals *)
 let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"
 let ref_Q_Implicit = fstar_refl_data_const "Q_Implicit"
+let ref_Q_Meta     = fstar_refl_data_const "Q_Meta"
 
 (* const *)
 let ref_C_Unit   = fstar_refl_data_const "C_Unit"

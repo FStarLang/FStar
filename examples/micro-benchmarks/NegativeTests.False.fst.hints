@@ -1,5 +1,5 @@
 [
-  "_\f\u001b\u0005 GNFÿÌ‹p¼Ôæ†",
+  "“%I@¶7^¨\u0002{tó&É©ê",
   [
     [
       "NegativeTests.False.foo",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "00b557502048fd75b59073491b35df73"
+      "7f6ff9c40c992d931bd542308d38ddee"
     ],
     [
       "NegativeTests.False.foo",
@@ -20,7 +20,19 @@
         "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "bb6f6e238e4a97d15270904f1244408b"
+      "330111e2dd50729e70c1d95b3e19dd1b"
+    ],
+    [
+      "NegativeTests.False.foo",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
+        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+      ],
+      0,
+      "dd65990c40edeb29c33257969a745437"
     ],
     [
       "NegativeTests.False.f",
@@ -33,7 +45,7 @@
         "haseqPrims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "0de5b8b7db91cc4cd5e762084cbbeffd"
+      "958e224cc74ec1df179c66ed09a3d915"
     ],
     [
       "NegativeTests.False.f",
@@ -42,19 +54,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
       0,
-      "84a5063f8b2e745b05f1d881084fed5f"
-    ],
-    [
-      "NegativeTests.False.foo",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
-        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
-      ],
-      0,
-      "cf38fcdfcc858454f23046549d6e3a46"
+      "39a35989d6ce388b2c49eb7055dc79f7"
     ],
     [
       "NegativeTests.False.foo",
@@ -66,7 +66,28 @@
         "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "a89aaa00ec3bcb7bae54bd61df4f9b04"
+      "ef196bbf849104b07b9d54674a542a4b"
+    ],
+    [
+      "NegativeTests.False.foo",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+      ],
+      0,
+      "570dfaae46c43e7135bbacef75b83691"
+    ],
+    [
+      "NegativeTests.False.foo",
+      6,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "b9dd3ed9bf6ba1b59a746e4451e151d7"
     ],
     [
       "NegativeTests.False.f",
@@ -79,7 +100,7 @@
         "haseqPrims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "4baf6c4a2e000a1b4b1190718ba39feb"
+      "0755bc9b90b40a7c2a50ed074398a643"
     ]
   ]
 ]

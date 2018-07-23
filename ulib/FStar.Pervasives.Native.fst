@@ -89,6 +89,8 @@ noeq type norm_step =
   | UnfoldOnly:list string -> norm_step // each string is a fully qualified name like `A.M.f`
   | UnfoldFully:list string -> norm_step // idem
   | UnfoldAttr:#t:Type0 -> a:t -> norm_step
+  | NBE // use NBE instead of the normalizer
+  | Reify
 
 // Helpers, so we don't expose the actual inductive
 abstract let simplify : norm_step = Simpl
@@ -101,6 +103,8 @@ abstract let iota     : norm_step = Iota
 abstract let delta_only (s:list string) : norm_step = UnfoldOnly s
 abstract let delta_fully (s:list string) : norm_step = UnfoldFully s
 abstract let delta_attr (#t:Type)(a:t) : norm_step = UnfoldAttr a
+abstract let nbe      : norm_step = NBE
+abstract let reify_   : norm_step = Reify
 
 // Normalization marker
 abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x

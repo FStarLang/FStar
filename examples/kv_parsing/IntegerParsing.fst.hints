@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "867802336e40191a4f103507154d2e09"
+      "bb6c5beb5527590f89b6df1e124aa47a"
     ],
     [
       "IntegerParsing.u16_array",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "372e106c8c1fb3df9e4d8e1aec230d54"
+      "a14043018a91af9ca77105870b2d5c97"
     ],
     [
       "IntegerParsing.u16_array",
@@ -33,7 +33,7 @@
         "haseqIntegerParsing_Tm_refine_67a0f7da090ddd7cabafb21bf5e2ed60"
       ],
       0,
-      "51dea702b0d5092c64c06a3a945b1d5b"
+      "68899c84cd74357bd9e9c714fa90b7ad"
     ],
     [
       "IntegerParsing.u16_array",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6df12dc0012c6a9871913ef5cf61d826"
+      "83d5de5520953a85dc20ddfcb40b81e8"
     ],
     [
       "IntegerParsing.__proj__U16Array__item__len16",
@@ -60,7 +60,7 @@
       1,
       [ "@query" ],
       0,
-      "45b051cbbd2952520f2dc35e75b50dc0"
+      "ba81211d8d5a5e6f053a8c1db1999b87"
     ],
     [
       "IntegerParsing.__proj__U16Array__item__a16",
@@ -69,7 +69,7 @@
       1,
       [ "@query" ],
       0,
-      "e9b73c8ea864d4dfe6b538b7f16ecc79"
+      "3204e390911cd7ca6cde5438718310a6"
     ],
     [
       "IntegerParsing.__proj__U16Array__item__a16",
@@ -81,7 +81,7 @@
         "projection_inverse_IntegerParsing.U16Array_len16"
       ],
       0,
-      "290e67d58783a86c656fa9049c3662cc"
+      "5c3f40f94b7f38f08f73b3eb6141ffa4"
     ],
     [
       "IntegerParsing.u32_array",
@@ -90,7 +90,7 @@
       1,
       [ "@query" ],
       0,
-      "2fc3f3cf4bf31afec00122abf2a5b271"
+      "33f86d03197f1fd22a3a9ac818e2bee1"
     ],
     [
       "IntegerParsing.u32_array",
@@ -99,7 +99,7 @@
       1,
       [ "@query" ],
       0,
-      "4499818cc5433d32f469f7ebce69e256"
+      "8b659b537ba99fe691cbf8384833c12e"
     ],
     [
       "IntegerParsing.u32_array",
@@ -115,7 +115,7 @@
         "haseqIntegerParsing_Tm_refine_81c227cb3788ac9527a15eab9f2e5b39"
       ],
       0,
-      "e23a850e0721901dbb76a2107ca66b14"
+      "46373fd5a60766b7fb81e5a610c6047b"
     ],
     [
       "IntegerParsing.u32_array",
@@ -133,7 +133,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b4ae6a677db64f344989b30672c1641e"
+      "eb141b1abd157507b85532ff6a86b5d3"
     ],
     [
       "IntegerParsing.__proj__U32Array__item__len32",
@@ -142,7 +142,7 @@
       1,
       [ "@query" ],
       0,
-      "1000b32ce4e6d89126fbad8809f0978c"
+      "6bd24b6bc489bfe9836993dbde57b18c"
     ],
     [
       "IntegerParsing.__proj__U32Array__item__a32",
@@ -151,7 +151,7 @@
       1,
       [ "@query" ],
       0,
-      "8d1d881e12083e7a4f77a76bcb920a2a"
+      "c7b1f96c6b73abbc26d226018c296cc7"
     ],
     [
       "IntegerParsing.__proj__U32Array__item__a32",
@@ -163,7 +163,7 @@
         "projection_inverse_IntegerParsing.U32Array_len32"
       ],
       0,
-      "bc08560051d49298f43f50d6d5fde61c"
+      "e3b761570e5fe22343838925303d686b"
     ],
     [
       "IntegerParsing.parse_u8",
@@ -175,7 +175,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ef9a890b0618a2a7704473da845cc117"
+      "683997849fed8265be75f2693b5de903"
     ],
     [
       "IntegerParsing.parse_u16",
@@ -206,7 +206,7 @@
         "typing_FStar.Kremlin.Endianness.be_to_n"
       ],
       0,
-      "8007dd627cf02522d608ec805ab339bc"
+      "dfd9c7f1153f334be30f90982381d650"
     ],
     [
       "IntegerParsing.parse_u32",
@@ -239,7 +239,7 @@
         "typing_FStar.Kremlin.Endianness.be_to_n"
       ],
       0,
-      "7be37b00eef62f7fdb8cae882b5e2d8a"
+      "b4657166d555ea200c863941d212a91f"
     ],
     [
       "IntegerParsing.parse_u16_array",
@@ -270,7 +270,7 @@
         "typing_FStar.Seq.Base.length", "typing_FStar.UInt16.v"
       ],
       0,
-      "c98b5f711c002060ad54a1da387520f9"
+      "6aae90c35cfd6c93e1e9c656bbac73a7"
     ],
     [
       "IntegerParsing.parse_u32_array",
@@ -302,7 +302,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "ac4f331148a0a2a14ffee66f9eae2d95"
+      "c55330458a7d11141f0d5e00c19b1b87"
     ],
     [
       "IntegerParsing.u16_array_st",
@@ -311,7 +311,7 @@
       1,
       [ "@query" ],
       0,
-      "d229a1255b5077bfe432fdd691879678"
+      "78923729b16ca8849a2fac8b465d6972"
     ],
     [
       "IntegerParsing.__proj__U16ArraySt__item__len16_st",
@@ -320,7 +320,7 @@
       1,
       [ "@query" ],
       0,
-      "0ea71b55ed90ec27d387887409d029bc"
+      "1ab0fbc93dd68791b93bc265e856ce3e"
     ],
     [
       "IntegerParsing.__proj__U16ArraySt__item__a16_st",
@@ -329,7 +329,7 @@
       1,
       [ "@query" ],
       0,
-      "901b505da4d4d176c2354287a1cbc812"
+      "943bed116576882501fc94569c651515"
     ],
     [
       "IntegerParsing.__proj__U16ArraySt__item__a16_st",
@@ -341,7 +341,7 @@
         "projection_inverse_IntegerParsing.U16ArraySt_len16_st"
       ],
       0,
-      "7acd575d608002d10d853ae6ba193f8c"
+      "a3bec6faf315fbd6aeac3861dcdd89fb"
     ],
     [
       "IntegerParsing.__proj__U32ArraySt__item__a32_st",
@@ -353,7 +353,7 @@
         "projection_inverse_IntegerParsing.U32ArraySt_len32_st"
       ],
       0,
-      "656809681e167e0b9a0f4cb41b7613f1"
+      "b386a0beffe6bb6aa9b407f349829078"
     ],
     [
       "IntegerParsing.as_u16_array",
@@ -369,7 +369,7 @@
         "typing_IntegerParsing.__proj__U16ArraySt__item__a16_st"
       ],
       0,
-      "9f236268a2cef1707fa4c589c378cde5"
+      "929414e3752b7d8cfc58bde6677bafc7"
     ],
     [
       "IntegerParsing.as_u32_array",
@@ -385,7 +385,7 @@
         "typing_IntegerParsing.__proj__U32ArraySt__item__a32_st"
       ],
       0,
-      "b8b50fbebed2bf5a4da9e6bacef3bc16"
+      "96fbc80c0de42da6d43332c0615e50cf"
     ],
     [
       "IntegerParsing.parse_u8_st_nochk",
@@ -453,7 +453,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "6c6200917243e2d43a5dbbf8ad9ae2ff"
+      "b1c85a98bc0f03221b41a5183226826d"
     ],
     [
       "IntegerParsing.parse_u8_st_nochk",
@@ -485,7 +485,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "ae012268bc53ba2188a520458af619d3"
+      "e69aad48b4120a5be5d27bff73705c21"
     ],
     [
       "IntegerParsing.parse_u8_st",
@@ -609,7 +609,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "e38010f49fc52465d26f233c9b2dc30a"
+      "733c00553f4248eafbc77f7831aebab2"
     ],
     [
       "IntegerParsing.parse_u8_st",
@@ -638,7 +638,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "846d244c4a6cabdf566fb4b48e989da8"
+      "8818465e9d0b0168738b7358922b3124"
     ],
     [
       "IntegerParsing.parse_u16_st_nochk",
@@ -727,7 +727,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "9ab5f1d5d778551e940b2c399486295f"
+      "b267f4340cc5f0505a43d8d61ba73487"
     ],
     [
       "IntegerParsing.parse_u16_st_nochk",
@@ -759,7 +759,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "699e7bbe49c960d9498b34312925445d"
+      "4a8de0621ed80fed5956952395be3a5f"
     ],
     [
       "IntegerParsing.parse_u16_st",
@@ -883,7 +883,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "2022af001154eab4eeb69d28ba696482"
+      "c9cdc2937266cf711c8f055e2a9e8b7c"
     ],
     [
       "IntegerParsing.parse_u16_st",
@@ -912,7 +912,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "3aa62552d1ce0c6d65c4fa05dbbcdc13"
+      "fd04ab467a7e4672818c0b0016a97815"
     ],
     [
       "IntegerParsing.parse_u32_st_nochk",
@@ -1001,7 +1001,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "810cad4a6832fd9687e2ad4fcbe1e076"
+      "5e2c1bc78f3b0429e9e0c160fa991512"
     ],
     [
       "IntegerParsing.parse_u32_st_nochk",
@@ -1034,7 +1034,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "acf3ebf91a02519c0a0da7a2180c4cd3"
+      "41973bebadddb4d49dad993c77eab7ee"
     ],
     [
       "IntegerParsing.parse_u32_st",
@@ -1155,7 +1155,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "c66a48708aed80de4dd391c510c5178b"
+      "04346d24ef792f5300cdae077334e8ff"
     ],
     [
       "IntegerParsing.parse_u32_st",
@@ -1185,7 +1185,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "782aa7486e423fed1637ac2d813986d4"
+      "93a06ed602ef8b45a17392572c3a9e2a"
     ],
     [
       "IntegerParsing.parse_u16_array_nochk",
@@ -1322,7 +1322,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "a8efb523959c57f513ee1e3f7db31f3f"
+      "d00c794dfbfd407360971d7f460e7aa4"
     ],
     [
       "IntegerParsing.parse_u16_array_nochk",
@@ -1355,7 +1355,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "904954257c58d8311c2769d8e585e60a"
+      "1f60387071be39bff23088e1ba527f5b"
     ],
     [
       "IntegerParsing.parse_u32_array_nochk",
@@ -1489,7 +1489,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "bc1d4724a792af095d71b74b41ee7fa0"
+      "165c07de6599f04c0586cc66128363cc"
     ],
     [
       "IntegerParsing.parse_u32_array_nochk",
@@ -1522,7 +1522,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "6d7d6f9e006d17f6bf01b19523b5ce40"
+      "23c279287fbdcf9c0c0461d186ca58a8"
     ],
     [
       "IntegerParsing.validate_u16_array_st",
@@ -1663,7 +1663,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "f33363f459088bbb3ad59a9aaba846a9"
+      "2f4afcc54e93f93d55e108c9d6a1ba27"
     ],
     [
       "IntegerParsing.validate_u16_array_st",
@@ -1689,7 +1689,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "d61ac7835f1475e3c00fbd9a8f541570"
+      "be113b4b86f4f9bb1a344ffb15584f8c"
     ],
     [
       "IntegerParsing.u32_array_bound_is",
@@ -1720,7 +1720,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "7ec3180314953437fe26f0ea6a38a95e"
+      "8ad963432b6c6d0a4bdc4da51eafac99"
     ],
     [
       "IntegerParsing.validate_u32_array_st",
@@ -1826,7 +1826,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "94ba44ea5a2396788f4f79801c7f5867"
+      "7048db38bac1254c1b680466c4b0fa74"
     ],
     [
       "IntegerParsing.validate_u32_array_st",
@@ -1852,7 +1852,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "d6efa029555e3de1197b4c4ee743b25d"
+      "749642cc8012c8781dc1c6823daacd5b"
     ],
     [
       "IntegerParsing.encode_u8",
@@ -1871,7 +1871,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0b7b6411a5dc757847dbe1fc60c58b83"
+      "3504072e453fae4123cdc26ab399af5c"
     ],
     [
       "IntegerParsing.encode_u16",
@@ -1888,7 +1888,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "878afe37da05faf7e1bc3e8aaffc4a7c"
+      "8b8d83caf3a68f9c2c64a8b1c86edcf8"
     ],
     [
       "IntegerParsing.encode_u32",
@@ -1910,7 +1910,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "9daf1e5ffefd77b67dc0070367be73ab"
+      "df35be7c35a2b62c924d1299298eec7a"
     ],
     [
       "IntegerParsing.encode_u16_array",
@@ -1919,7 +1919,7 @@
       1,
       [ "@query" ],
       0,
-      "875742e2b3cb42ae10afde0292d90f85"
+      "29ad09db329f7466fc3e980b73f10991"
     ],
     [
       "IntegerParsing.encode_u32_array",
@@ -1928,7 +1928,7 @@
       1,
       [ "@query" ],
       0,
-      "2afc6a2db6dd1362b8d4e8e0ae89d071"
+      "c4f2b455b0876d9e0f0d620abe23fe0a"
     ],
     [
       "IntegerParsing.upd_len_1",
@@ -1940,7 +1940,7 @@
         "refinement_interpretation_IntegerParsing_Tm_refine_0e8e6d303853d84bc6b6f6552f57fff5"
       ],
       0,
-      "56e8ca55dfc338363af9cebddd2e5d81"
+      "19224c2531c23bbed6f9791ed6e763b9"
     ],
     [
       "IntegerParsing.upd_len_1",
@@ -1967,7 +1967,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "602349b69c321f7bc67cdc8bfeaa68f7"
+      "366dd5a8f75ffe7d94c1116e3a3c98e6"
     ],
     [
       "IntegerParsing.ser_byte",
@@ -2064,7 +2064,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "8528b7f7118064b51f545a921cbd8014"
+      "bacf6d4838116df914cc077d8314ae4b"
     ],
     [
       "IntegerParsing.n_to_be_inv",
@@ -2085,7 +2085,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "6fde542060d707f98e9d70fc7cd4df33"
+      "ab05d70960366efedd0909ea5366eac5"
     ],
     [
       "IntegerParsing.store_be_inv",
@@ -2103,7 +2103,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "27062a43d366436318772ef522840bce"
+      "752930ad276d39f7731e1ac296f3fabe"
     ],
     [
       "IntegerParsing.store_be_inv",
@@ -2121,7 +2121,25 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "6e53bc7c2fe23a54bbb3fe846873a8b5"
+      "f428f8637505dd7978f7422c41db8c50"
+    ],
+    [
+      "IntegerParsing.store_be_inv",
+      3,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "function_token_typing_FStar.UInt32.n",
+        "lemma_FStar.Buffer.lemma_size", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
+        "typing_FStar.UInt32.v"
+      ],
+      0,
+      "532fc5fe20e628a6346354566c800ec0"
     ],
     [
       "IntegerParsing.ser_u16",
@@ -2212,7 +2230,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "a60ae0ce4856254b2fbb47b6793d3931"
+      "450a3e1897d6da858491ecfb7817c242"
     ],
     [
       "IntegerParsing.ser_u32",
@@ -2302,7 +2320,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "a4dd9e2d191e9694361dc79467260c2b"
+      "445fe6178373926891fb3ec0566a6d4e"
     ],
     [
       "IntegerParsing.enc_u16_array_st",
@@ -2315,7 +2333,7 @@
         "refinement_interpretation_IntegerParsing_Tm_refine_9834a243ad38517d628f708ee085bc54"
       ],
       0,
-      "889978bb9ae3f008d23b21608cb840dc"
+      "1c33f7b6799f1e53e752b7f97c21ae84"
     ],
     [
       "IntegerParsing.ser_u16_array",
@@ -2337,7 +2355,7 @@
         "typing_IntegerParsing.__proj__U16ArraySt__item__a16_st"
       ],
       0,
-      "b8b2f0c34aad9a895259e899583adc8d"
+      "5021cec48819d337f64d64f50701c33b"
     ],
     [
       "IntegerParsing.ser_u16_array",
@@ -2377,7 +2395,7 @@
         "typing_IntegerParsing.encode_u16"
       ],
       0,
-      "9dd2fb425056518d1bc710d52f92ec4f"
+      "c8a27723c62cea997794e3711069f799"
     ],
     [
       "IntegerParsing.enc_u32_array_st",
@@ -2390,7 +2408,7 @@
         "refinement_interpretation_IntegerParsing_Tm_refine_01b2fceba02f49722cb73362c77b09cb"
       ],
       0,
-      "4fc6bdd502a45725c56a0fff7877aebf"
+      "f26cbbf412714817a49378f6b907eb5a"
     ],
     [
       "IntegerParsing.ser_u32_array",
@@ -2412,7 +2430,7 @@
         "typing_IntegerParsing.__proj__U32ArraySt__item__a32_st"
       ],
       0,
-      "bb7e392c6f660f81e3357cdc5ad315d8"
+      "4ce6dc50320fb2f944105732b3281872"
     ],
     [
       "IntegerParsing.ser_u32_array",
@@ -2452,7 +2470,7 @@
         "typing_IntegerParsing.encode_u32"
       ],
       0,
-      "222d8a74791a8bef022d1c23879a49aa"
+      "30a990ea8b0b2c9229e7b61c71491fd4"
     ],
     [
       "IntegerParsing.u16_array",
@@ -2461,7 +2479,7 @@
       1,
       [ "@query" ],
       0,
-      "dc0593f9424363621b15934f0e2e7fab"
+      "5cd047805a2bdba99a873aefa27597e5"
     ],
     [
       "IntegerParsing.u16_array",
@@ -2470,7 +2488,7 @@
       1,
       [ "@query" ],
       0,
-      "6d3670e9cb34ae387a64dee5a16750bd"
+      "794693090f06fa1a02a485d1c26fe31f"
     ],
     [
       "IntegerParsing.u16_array",
@@ -2486,7 +2504,7 @@
         "haseqIntegerParsing_Tm_refine_67a0f7da090ddd7cabafb21bf5e2ed60"
       ],
       0,
-      "cbc19ba75bd4e6d91c2af727d6faeeaa"
+      "ff8466faed46c7d3285811b90305ef52"
     ],
     [
       "IntegerParsing.u16_array",
@@ -2504,7 +2522,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5c0186adf730f561677d54366e9a90e7"
+      "fd6744bb7dbccc26cc6206fa3501de8f"
     ],
     [
       "IntegerParsing.__proj__U16Array__item__len16",
@@ -2513,7 +2531,7 @@
       1,
       [ "@query" ],
       0,
-      "0395c9e226c50838c016a7d86922c43b"
+      "530798ba96418c020d8877a16089be23"
     ],
     [
       "IntegerParsing.__proj__U16Array__item__a16",
@@ -2522,7 +2540,7 @@
       1,
       [ "@query" ],
       0,
-      "d3c942df62fa6f14cca7799d9b3360e7"
+      "02cf0b381bb3b56ab60ce2172b0aafbb"
     ],
     [
       "IntegerParsing.__proj__U16Array__item__a16",
@@ -2534,7 +2552,7 @@
         "projection_inverse_IntegerParsing.U16Array_len16"
       ],
       0,
-      "b2555e18a3aa0cbd0b06729831132b6b"
+      "c7608dbfe275edeb9a617ac684dc4136"
     ],
     [
       "IntegerParsing.u32_array",
@@ -2543,7 +2561,7 @@
       1,
       [ "@query" ],
       0,
-      "b8ebc61f221b90fd809d4870f2a85048"
+      "1a285631cdb7bdadab50245e25a9c4f7"
     ],
     [
       "IntegerParsing.u32_array",
@@ -2552,7 +2570,7 @@
       1,
       [ "@query" ],
       0,
-      "4ad9bda6653d7611e031b4a5c64caeb2"
+      "a939157e9a029aff0f7d791dcfdcfc8d"
     ],
     [
       "IntegerParsing.u32_array",
@@ -2568,7 +2586,7 @@
         "haseqIntegerParsing_Tm_refine_81c227cb3788ac9527a15eab9f2e5b39"
       ],
       0,
-      "79a0934021fc99b0ebc607db48fb221e"
+      "247c561e8fe807d24a344b52a2f06fc7"
     ],
     [
       "IntegerParsing.u32_array",
@@ -2586,7 +2604,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5e24773b1ae29bf8e71d2762501d3638"
+      "f7887938d0a2fc594601d9a2ad286c83"
     ],
     [
       "IntegerParsing.__proj__U32Array__item__len32",
@@ -2595,7 +2613,7 @@
       1,
       [ "@query" ],
       0,
-      "d756e25e3700fa876709858e54ff21b0"
+      "147b0d863cd349de558db4cad7e25112"
     ],
     [
       "IntegerParsing.__proj__U32Array__item__a32",
@@ -2604,7 +2622,7 @@
       1,
       [ "@query" ],
       0,
-      "8ee3422360accf8e5fa7a938b630fbb8"
+      "1b8ca3d7266046a383c32a355ca556f5"
     ],
     [
       "IntegerParsing.__proj__U32Array__item__a32",
@@ -2616,7 +2634,7 @@
         "projection_inverse_IntegerParsing.U32Array_len32"
       ],
       0,
-      "4171ba331fe8438f27f1ae7a8073ea11"
+      "80696baec66f2b6d0154519bd782e03a"
     ],
     [
       "IntegerParsing.parse_u8",
@@ -2628,7 +2646,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "4378d2e50cf92018d2d8d191b49036f3"
+      "af1ade992f0cfaf0633e675d552d681b"
     ],
     [
       "IntegerParsing.parse_u16",
@@ -2659,7 +2677,7 @@
         "typing_FStar.Kremlin.Endianness.be_to_n"
       ],
       0,
-      "52898489671636f83aacb2d0fa9afa3c"
+      "4f5015e1c676843b0c43892aebb3033c"
     ],
     [
       "IntegerParsing.parse_u32",
@@ -2692,7 +2710,7 @@
         "typing_FStar.Kremlin.Endianness.be_to_n"
       ],
       0,
-      "b1df6ccc572743b38e92247fd5ecd729"
+      "c7580c82e082f876992e50c98b97c483"
     ],
     [
       "IntegerParsing.parse_u16_array",
@@ -2723,7 +2741,7 @@
         "typing_FStar.Seq.Base.length", "typing_FStar.UInt16.v"
       ],
       0,
-      "ecf618349f36704cb5195aeca68bf01b"
+      "049e41982bc6e05702acd3a830eb46ae"
     ],
     [
       "IntegerParsing.parse_u32_array",
@@ -2755,7 +2773,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "09a9c22777d9724dfe4a0ceaec687ddd"
+      "f3fb9cf589bc5dd746a694de5a96c827"
     ],
     [
       "IntegerParsing.u16_array_st",
@@ -2764,7 +2782,7 @@
       1,
       [ "@query" ],
       0,
-      "837be85115fdab9d51af3de401e25b7f"
+      "2667c806f82faae799527177acd8ca33"
     ],
     [
       "IntegerParsing.__proj__U16ArraySt__item__len16_st",
@@ -2773,7 +2791,7 @@
       1,
       [ "@query" ],
       0,
-      "486bcc1cfd7afe8d74ca8826b8a5dd64"
+      "44d3a1c9476808454c44808bbff82bad"
     ],
     [
       "IntegerParsing.__proj__U16ArraySt__item__a16_st",
@@ -2782,7 +2800,7 @@
       1,
       [ "@query" ],
       0,
-      "54c058897b890814d51572b55c7ae8bb"
+      "a2a3600b6d999744d93dd01b18ee5ca6"
     ],
     [
       "IntegerParsing.__proj__U16ArraySt__item__a16_st",
@@ -2794,7 +2812,7 @@
         "projection_inverse_IntegerParsing.U16ArraySt_len16_st"
       ],
       0,
-      "deb82c02d9b4778b844cc56cfc469dae"
+      "6b0f9785273cbb21b678c4c4df0a9ee7"
     ],
     [
       "IntegerParsing.__proj__U32ArraySt__item__a32_st",
@@ -2806,7 +2824,7 @@
         "projection_inverse_IntegerParsing.U32ArraySt_len32_st"
       ],
       0,
-      "62105332fbec08560c6cfd30821c232b"
+      "3694642ea7967b9a145d238b15a108e8"
     ],
     [
       "IntegerParsing.as_u16_array",
@@ -2823,7 +2841,7 @@
         "typing_IntegerParsing.__proj__U16ArraySt__item__a16_st"
       ],
       0,
-      "c1001b8aa4dade85115cb20c1216e667"
+      "03357035f3e4f0e4c52a1cb1bcdf7013"
     ],
     [
       "IntegerParsing.as_u32_array",
@@ -2840,7 +2858,7 @@
         "typing_IntegerParsing.__proj__U32ArraySt__item__a32_st"
       ],
       0,
-      "f54fad4ac03a990241d3333027885670"
+      "dc03b598eb377624c0a2e3c662835d28"
     ],
     [
       "IntegerParsing.parse_u8_st_nochk",
@@ -2872,7 +2890,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "cee0f61d9f3d99ce87036a2dd2859a26"
+      "c90f62c1d7ada8abd63ac07600999cd1"
     ],
     [
       "IntegerParsing.parse_u8_st",
@@ -2901,7 +2919,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "6ff6e41a2c75d5b360817d2d40d27128"
+      "b0b26c2ceb1d7b887f95b3c96f9c16ff"
     ],
     [
       "IntegerParsing.parse_u16_st_nochk",
@@ -2933,7 +2951,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "7288fa71b040d8415dc40990ea98354e"
+      "46e48728eb58e32fa7075e16378cb371"
     ],
     [
       "IntegerParsing.parse_u16_st",
@@ -2962,7 +2980,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "ba10a091cbba98fe20cd993ec56d052f"
+      "7e567149de7a4925c331eb2447836225"
     ],
     [
       "IntegerParsing.parse_u32_st_nochk",
@@ -2995,7 +3013,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "12fd54c28b7da639432f2b8be3e97754"
+      "2e6832b4ea507edac278162b6868e653"
     ],
     [
       "IntegerParsing.parse_u32_st",
@@ -3025,7 +3043,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "c49639dd6ee1de482a8617c8d17282e2"
+      "0469248de57656c9e7f98ee685fa5106"
     ],
     [
       "IntegerParsing.parse_u16_array_nochk",
@@ -3058,7 +3076,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "f11dd1a590ec6b17461e1909881ad1f1"
+      "4d03be83f293dd734d2ba3dcdad18b8f"
     ],
     [
       "IntegerParsing.parse_u32_array_nochk",
@@ -3091,7 +3109,7 @@
         "typing_Slice.as_seq"
       ],
       0,
-      "f85a15f4f106fe76b30dff646b5121aa"
+      "f0d225957dc2b97dde8f6c53a65603d7"
     ],
     [
       "IntegerParsing.validate_u16_array_st",
@@ -3124,7 +3142,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "a2c20a68b5fb147badaae4e39481b0b2"
+      "9e5a11efe5ee70781912f9c783c7b0d9"
     ],
     [
       "IntegerParsing.u32_array_bound_is",
@@ -3133,7 +3151,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ea8a996bfb740c36ebc6563a5c33c010"
+      "beaf8fc1bd229eb86b738987b4829d5b"
     ],
     [
       "IntegerParsing.validate_u32_array_st",
@@ -3166,7 +3184,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "92865b39ea530f4cb5c46b839b6609f9"
+      "67f0574742e1edeb477463db4b30a7dd"
     ],
     [
       "IntegerParsing.encode_u8",
@@ -3185,7 +3203,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "3aa7200e84967f84cb3922529af909c1"
+      "0d33fb60718e97e5d66cd7e44451e812"
     ],
     [
       "IntegerParsing.encode_u16",
@@ -3202,7 +3220,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c9c991caec0d552f7a1087ea6e059f70"
+      "e46bcd88fc991aad8ff9461c53c22ac0"
     ],
     [
       "IntegerParsing.encode_u32",
@@ -3224,7 +3242,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "565934f0d6a8f104010ff9fe6288c6cd"
+      "8bf2bf3e67528fa15ac41afa9f507bbf"
     ],
     [
       "IntegerParsing.encode_u16_array",
@@ -3233,7 +3251,7 @@
       1,
       [ "@query" ],
       0,
-      "43dd57644c3f44f577b026e5afa7d67f"
+      "c897c0942e107700fc0ad680123fd9ed"
     ],
     [
       "IntegerParsing.encode_u16_array",
@@ -3242,7 +3260,7 @@
       1,
       [ "@query" ],
       0,
-      "bb1b6714be6192590bc74e3da65fde7e"
+      "afec99cd3d158a62d4f888653c4fcf2e"
     ],
     [
       "IntegerParsing.encode_u32_array",
@@ -3251,7 +3269,7 @@
       1,
       [ "@query" ],
       0,
-      "81ee471db0b3803279bf2bda705a68dd"
+      "29aa8cec5eedeac96be5906d70b92581"
     ],
     [
       "IntegerParsing.encode_u32_array",
@@ -3260,7 +3278,7 @@
       1,
       [ "@query" ],
       0,
-      "62aa4333833debc1604b33124e0751d6"
+      "7ae5e2a7c0d599be425a8356cf46fd4a"
     ],
     [
       "IntegerParsing.upd_len_1",
@@ -3272,7 +3290,7 @@
         "refinement_interpretation_IntegerParsing_Tm_refine_0e8e6d303853d84bc6b6f6552f57fff5"
       ],
       0,
-      "d9880e917168627f29826582bdf3c3a8"
+      "f2dc6af7e665fcd6226466f8f827445f"
     ],
     [
       "IntegerParsing.ser_byte",
@@ -3369,7 +3387,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "6451d2a7d090d941a5b67b24a5e8528f"
+      "8d284d84b57b600127e12d6562744580"
     ],
     [
       "IntegerParsing.n_to_be_inv",
@@ -3390,11 +3408,11 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "ba7ac3547ad410f94a06f9f69c4103b0"
+      "057973b1df559691be3a682f395b231d"
     ],
     [
       "IntegerParsing.store_be_inv",
-      3,
+      4,
       1,
       1,
       [
@@ -3408,7 +3426,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "9ce1b087d7803ac1ad779c1fcddc93dc"
+      "d0db85956c5adf186392001d9655c270"
     ],
     [
       "IntegerParsing.ser_u16",
@@ -3499,7 +3517,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "e2dee7f60c2487b7142580a3cf766768"
+      "52f4c79c4adae222d73395658cf12d2c"
     ],
     [
       "IntegerParsing.ser_u32",
@@ -3589,7 +3607,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "7048f9390137faac8f3c1c4ef933905b"
+      "9082fdf4bce1d62949419c65337ede57"
     ],
     [
       "IntegerParsing.enc_u16_array_st",
@@ -3602,7 +3620,7 @@
         "refinement_interpretation_IntegerParsing_Tm_refine_9834a243ad38517d628f708ee085bc54"
       ],
       0,
-      "9b9b004c96f05f0f52c7e3f2c3ddba9a"
+      "3a066ea80a942437b869ea6f9260ae1d"
     ],
     [
       "IntegerParsing.ser_u16_array",
@@ -3642,7 +3660,7 @@
         "typing_IntegerParsing.encode_u16"
       ],
       0,
-      "98d210d57fe34f51542f4143e78ff446"
+      "7a766b862957ea25dbc3664827da70fa"
     ],
     [
       "IntegerParsing.ser_u16_array",
@@ -3664,7 +3682,7 @@
         "typing_IntegerParsing.__proj__U16ArraySt__item__a16_st"
       ],
       0,
-      "1134833b79c2351964344a46573e19f8"
+      "db12ea03f76701ff14f7276429eba0d8"
     ],
     [
       "IntegerParsing.enc_u32_array_st",
@@ -3677,7 +3695,7 @@
         "refinement_interpretation_IntegerParsing_Tm_refine_01b2fceba02f49722cb73362c77b09cb"
       ],
       0,
-      "7cdf1a58cf18393e34f2fd9cfa6c91d2"
+      "a50d125e4d3f1b3765c0f72b28903676"
     ],
     [
       "IntegerParsing.ser_u32_array",
@@ -3717,7 +3735,7 @@
         "typing_IntegerParsing.encode_u32"
       ],
       0,
-      "8e11f305fdab33bb6f590497f6479060"
+      "88032736a1c00db260394b9e45b59a74"
     ],
     [
       "IntegerParsing.ser_u32_array",
@@ -3739,7 +3757,7 @@
         "typing_IntegerParsing.__proj__U32ArraySt__item__a32_st"
       ],
       0,
-      "c3c205db5e92a8e3473dc26a9d5767f5"
+      "32903dab63f95bf51ece0b6b5954b068"
     ]
   ]
 ]

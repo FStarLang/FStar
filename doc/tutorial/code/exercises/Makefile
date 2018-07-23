@@ -29,7 +29,10 @@ Ex12c.Format.fst \
 Ex12d.Pad.fst \
 Ex12e.Pad.fst \
 Ex12f.TMAC.fst \
-Ex12g.TMAC2.fst
+Ex12g.TMAC2.fst \
+LowStar.Ex1.fst \
+LowStar.Ex2.fst \
+LowStar.Ex3.fst
 
 FSTAR_HOME=../../../../
 include ../Makefile.include

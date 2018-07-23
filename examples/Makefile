@@ -20,8 +20,10 @@ incl \
 struct \
 micro-benchmarks \
 tactics \
+miniparse \
 kv_parsing \
 lowparse \
+low-mitls-experiments \
 vale \
 seplogic \
 hello \

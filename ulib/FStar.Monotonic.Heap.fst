@@ -172,6 +172,7 @@ let lemma_alloc #a rel h0 x mm =
 let lemma_free_mm_sel #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_free_mm_contains #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_free_mm_unused #a #b #rel1 #rel2 h0 r1 r2 = ()
+let lemma_free_addr_unused_in #a #rel h r n = ()
 let lemma_sel_same_addr #a #rel h r1 r2 = ()
 let lemma_sel_upd1 #a #rel h r1 x r2 = ()
 let lemma_sel_upd2 #a #b #rel1 #rel2 h r1 r2 x = ()

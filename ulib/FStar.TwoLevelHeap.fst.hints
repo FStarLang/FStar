@@ -11,7 +11,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "87b16792ad2f3af82f2a0c61dd385e96"
+      "0d4d5e8ec463b404d57285b32a137fbe"
     ],
     [
       "FStar.TwoLevelHeap.lemma_as_ref_inj",
@@ -25,7 +25,7 @@
         "equation_FStar.TwoLevelHeap.rid", "int_inversion", "unit_typing"
       ],
       0,
-      "348de3f9c63987dc9f5809ca488b0fca"
+      "1428cb3643c638f0d3af38bb0def305c"
     ],
     [
       "FStar.TwoLevelHeap.new_region",
@@ -37,7 +37,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "0d03a80edc3996c6e690352a63f2481c"
+      "1175874025b5509ae1c76413ba7a2ed2"
     ],
     [
       "FStar.TwoLevelHeap.sel",
@@ -49,7 +49,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "0413ecb4194873e07db3d09eeaac2e3e"
+      "e26315b14dbe806d7b018dcf0b540b49"
     ],
     [
       "FStar.TwoLevelHeap.upd",
@@ -61,7 +61,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "7ee8c2b402caf963d6f6228e14669d35"
+      "2d0aa49120cd2b181ab127fcd956e0de"
     ],
     [
       "FStar.TwoLevelHeap.ralloc",
@@ -73,7 +73,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "cec56fb996f2c9bb9280f73663783c6b"
+      "086500c815ebea9ade3606fde548ba4b"
     ],
     [
       "FStar.TwoLevelHeap.op_Colon_Equals",
@@ -85,7 +85,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "603014fd7551616b5a09cf8c4bb631de"
+      "253ab0febdbf627d08b3a2c23604f0ef"
     ],
     [
       "FStar.TwoLevelHeap.op_Bang",
@@ -97,7 +97,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "14184751d1193b9c19c40d26bf122bd9"
+      "268a4931c6ef7347c5cf486d8480f38c"
     ],
     [
       "FStar.TwoLevelHeap.modifies",
@@ -109,7 +109,19 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "f8249c531bb1fc2cd9dca44cffc3d3f9"
+      "ed535811fd1928dbf4ee5aa30fda0d59"
+    ],
+    [
+      "FStar.TwoLevelHeap.modifies",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "d0954374ac5e1673da7eefa2782e2b18"
     ],
     [
       "FStar.TwoLevelHeap.fresh_region",
@@ -121,7 +133,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "1822ed03c437b5e26ffa1755daed1170"
+      "4fed69dac4ce34d05625b3b07f498320"
     ],
     [
       "FStar.TwoLevelHeap.contains_ref",
@@ -133,7 +145,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "1a1e1851c2d05dacd793645359f2f2d9"
+      "fc2de4a31b899117335450f478f4ad74"
     ],
     [
       "FStar.TwoLevelHeap.fresh_rref",
@@ -145,7 +157,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "86ed509948a42825bfbaeb2bc5561d71"
+      "714bb30dda3e342ffe254cb25dce2065"
     ],
     [
       "FStar.TwoLevelHeap.t",
@@ -157,7 +169,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "77681d11574613a39ab10188a1ede9e0"
+      "ba3dce44dcf1606c9438ec74e67a4334"
     ],
     [
       "FStar.TwoLevelHeap.new_region",
@@ -169,7 +181,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "d8d98a1e4cc2444c0dc7bc570540e5f6"
+      "ddddf0b897123e69f2f39029d120e5be"
     ],
     [
       "FStar.TwoLevelHeap.sel",
@@ -181,7 +193,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "20c43f5e8868026fa0c77d16cdee4dbd"
+      "4435960285da2da706a927cff84d6390"
     ],
     [
       "FStar.TwoLevelHeap.upd",
@@ -193,7 +205,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "fbcd2429408ebd45ab4a9888a9e664a5"
+      "36219d005b1894149f873e0592d32afb"
     ],
     [
       "FStar.TwoLevelHeap.upd",
@@ -205,7 +217,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "22ff3b0214c35e760ba304bc93256a25"
+      "c7a1c403bd64abfda97b03cd83f29e62"
     ],
     [
       "FStar.TwoLevelHeap.ralloc",
@@ -217,7 +229,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "58ee39e15b153e4b6eae66b08969e728"
+      "96423d4ddb5c75dbab00cbdddc7026a7"
     ],
     [
       "FStar.TwoLevelHeap.op_Colon_Equals",
@@ -229,7 +241,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "3f93251f0ab619608991d3ed8b397273"
+      "4ffe2d73f0656f426095e2b7bea73bb9"
     ],
     [
       "FStar.TwoLevelHeap.op_Bang",
@@ -241,19 +253,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "edc6df520017fff76c0efc3030b81736"
-    ],
-    [
-      "FStar.TwoLevelHeap.modifies",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.TwoLevelHeap.rid"
-      ],
-      0,
-      "1782cdac09a7af9d7bdaab671dbdb4b2"
+      "affee15716d3fe14bf36109d8aec7a23"
     ],
     [
       "FStar.TwoLevelHeap.modifies",
@@ -265,7 +265,31 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "d9c7fc7d730d52345b0fc4a096d766ae"
+      "331daac2d22ad4d0135a5668fcf47d2a"
+    ],
+    [
+      "FStar.TwoLevelHeap.modifies",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "66e823ecf6ec4e1f2ab49cb13938c8e8"
+    ],
+    [
+      "FStar.TwoLevelHeap.modifies",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0,
+      "5a398e24f7a1c9ca455b202b93b83cae"
     ],
     [
       "FStar.TwoLevelHeap.fresh_region",
@@ -277,7 +301,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "d7cd83ae566f41c40edca183ea69f5cb"
+      "99f3db2f7da3066ea2e2fba89a1e99b7"
     ],
     [
       "FStar.TwoLevelHeap.contains_ref",
@@ -289,7 +313,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "7bd4b0f99c5e110f8d69f675d4f88436"
+      "ca30fc4d9d1dce44a8598bee8de12c35"
     ],
     [
       "FStar.TwoLevelHeap.fresh_rref",
@@ -301,7 +325,7 @@
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0,
-      "3d79c67d829389dd7014e80143363c39"
+      "6398fcf40c7c0d7e1a46980072aa65dd"
     ]
   ]
 ]

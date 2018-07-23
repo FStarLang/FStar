@@ -52,6 +52,7 @@ and decl =
   | DTypeFlat of lident * list<flag> * int * fields_t
   | DExternal of option<cc> * list<flag> * lident * typ
   | DTypeVariant of lident * list<flag> * int * branches_t
+  | DTypeAbstractStruct of lident
 
 and cc =
   | StdCall
@@ -75,6 +76,7 @@ and flag =
   | Const of string
   | Prologue of string
   | Epilogue of string
+  | Abstract
 
 and fsdoc = string
 
@@ -369,6 +371,7 @@ and translate_flags flags =
     | Syntax.CConst s -> Some (Const s)
     | Syntax.CPrologue s -> Some (Prologue s)
     | Syntax.CEpilogue s -> Some (Epilogue s)
+    | Syntax.CAbstract -> Some Abstract
     | _ -> None // is this all of them?
   ) flags
 
@@ -505,7 +508,9 @@ and translate_type_decl env ty: option<decl> =
     | (assumed, name, _mangled_name, args, flags, Some (MLTD_Abbrev t)) ->
         let name = env.module_name, name in
         let env = List.fold_left (fun env name -> extend_t env name) env args in
-        if assumed then
+        if assumed && List.mem Syntax.CAbstract flags then
+          Some (DTypeAbstractStruct name)
+        else if assumed then
           let name = string_of_mlpath name in
           BU.print1_warning "Not extracting type definition %s to KreMLin (assumed type)\n" name;
           // JP: TODO: shall we be smarter here?
@@ -754,7 +759,10 @@ and translate_expr env e: expr =
       EPushFrame
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.pop_frame") ->
       EPopFrame
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3; e4; e5 ]) when (string_of_mlpath p = "FStar.Buffer.blit") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3; e4; e5 ]) when (
+      string_of_mlpath p = "FStar.Buffer.blit" ||
+      string_of_mlpath p = "LowStar.Buffer.blit"
+    ) ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.fill") ->
       EBufFill (translate_expr env e1, translate_expr env e2, translate_expr env e3)

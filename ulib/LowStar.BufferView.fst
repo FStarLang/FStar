@@ -142,7 +142,7 @@ let sel_upd2 (#b:_) (vb:buffer b)
 let sel_upd (#b:_)
             (vb:buffer b)
             (i:nat{i < length vb})
-            (j:nat{j < length vb /\ i<>j})
+            (j:nat{j < length vb})
             (x:b)
             (h:HS.mem{live h vb}) =
     if i=j then sel_upd1 vb i x h
@@ -160,7 +160,7 @@ let rec as_seq' (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i <= length vb})
          (decreases (length vb - i))
   = let v = get_view vb in
     if i = length vb
-    then Seq.createEmpty
+    then Seq.empty
     else let _ = view_indexing vb i in
          let _, s_i, suffix = split_at_i vb i h in
          View?.get v s_i `Seq.cons` as_seq' h vb (i + 1)

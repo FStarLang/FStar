@@ -11,6 +11,7 @@ module U32 = FStar.UInt32
 module G = FStar.Ghost
 module Seq = FStar.Seq
 module B = LowStar.Buffer
+module L = FStar.List.Tot
 
 inline_for_extraction
 unfold
@@ -37,8 +38,10 @@ let ( *= ) (#a: Type) (p: B.pointer a) (v: a) : HST.Stack unit
   (ensures (fun h0 _ h1 ->
     B.live h1 p /\
     B.as_seq h1 p `Seq.equal` Seq.create 1 v /\
-    B.modifies_1 p h0 h1
+    B.modifies (B.loc_buffer p) h0 h1
   ))
 = B.upd p 0ul v
 
-module M = LowStar.Modifies // many people will forget about it, so add it here so that it appears in the dependencies, and so its patterns will be in the SMT verification context without polluting the F* scope
+// TODO: remove
+inline_for_extraction
+let blit = B.blit

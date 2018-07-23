@@ -2,11 +2,11 @@
 module NegativeTests.Termination
 val bug15 : m : int -> Tot (z : int ->
             Lemma (ensures (False)))
-[@ (fail [19])]
+[@ (expect_failure [19])]
 let rec bug15 m l = bug15 m l
 
 val repeat_diverge : int -> int -> Tot int
-[@ (fail [19])]
+[@ (expect_failure [19])]
 let rec repeat_diverge n count =
   match count with
   | 0 -> 0
@@ -14,14 +14,14 @@ let rec repeat_diverge n count =
 
 
 val ackermann_bad: m:int -> n:int -> Tot int
-[@ (fail [19])]
+[@ (expect_failure [19])]
 let rec ackermann_bad m n = (* expected failure *)
   if m=0 then n + 1
   else if n = 0 then ackermann_bad (m - 1) 1
   else ackermann_bad (m - 1) (ackermann_bad m (n - 1))
 
 val length_bad: list 'a -> Tot nat
-[@ (fail [19])]
+[@ (expect_failure [19])]
 let rec length_bad l = match l with (* expect failure *)
   | [] -> 0
   | _::tl -> 1 + length_bad l
@@ -33,7 +33,7 @@ let rec sumto i f =
   else f i + sumto (i-1) f
 
 val strangeZeroBad: nat -> Tot nat
-[@ (fail [19])]
+[@ (expect_failure [19])]
 let rec strangeZeroBad v = (* expect failure *)
   if v = 0
   then 0
@@ -44,7 +44,7 @@ type snat =
   | S : snat -> snat
 
 val t1 : snat -> Tot bool
-[@ (fail [19])]
+[@ (expect_failure [19])]
 let rec t1 n =
   match n with
   | O        -> true
@@ -52,7 +52,7 @@ let rec t1 n =
   | S (S n') -> t1 (S (S n')) //termination check should fail
 
 val plus : snat -> snat -> Tot snat
-[@ (fail [19])]
+[@ (expect_failure [19])]
 let rec plus n m =
   match n with
     | O -> m
@@ -60,21 +60,21 @@ let rec plus n m =
     | S (S n') -> plus (S (S n')) m //termination check should fail
 
 val plus' : snat -> snat -> Tot snat
-[@ (fail [19])]
+[@ (expect_failure [19])]
 let plus' n m =
   match n with //patterns are incomplete
     | O -> m
     | S O -> m
 
 val minus : snat -> snat -> Tot snat
-[@ (fail [19])]
+[@ (expect_failure [19])]
 let rec minus (n : snat) (m : snat) : snat =
   match n, m with
   | O   , _    -> O
   | S n', m' -> minus (S n') m' //termination check should fail
 
 val xxx : snat -> Tot snat
-[@ (fail [19])]
+[@ (expect_failure [19])]
 let rec xxx (n : snat) : snat =
   match n, 42 with
   | O, 42   -> O

@@ -68,7 +68,7 @@ assume val to_seq: #a:sized_type -> h:mem -> b:buffer a ->
 (* let to_seq #a h b = *)
 (*   let seq_bytes = as_seq h b in *)
 (*   let rec mk_seq_a (s:Seq.seq UInt8.t) : Tot (s':Seq.seq a) (decreases (Seq.length s)) = *)
-(*     if Seq.length s = 0 then Seq.createEmpty #a *)
+(*     if Seq.length s = 0 then Seq.empty #a *)
 (*     else Seq.append #a (mk_seq_a (Seq.slice s (sizeof a) (Seq.length s))) (Seq.create 1 (inflate a (Seq.slice s 0 (sizeof a)))) in *)
 (*   mk_seq_a seq_bytes *)
 

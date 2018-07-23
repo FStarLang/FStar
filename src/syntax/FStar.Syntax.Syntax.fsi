@@ -45,6 +45,8 @@ type sconst = FStar.Const.sconst
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
+  | PushOptions of option<string>
+  | PopOptions
   | LightOff
 
 type memo<'a> = ref<option<'a>>
@@ -54,11 +56,6 @@ type version = {
     major:int;
     minor:int
 }
-
-type arg_qualifier =
-  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Equality
-type aqual = option<arg_qualifier>
 type universe =
   | U_zero
   | U_succ  of universe
@@ -159,7 +156,7 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbattrs:list<attribute>; //attrs
     lbpos  :range;           //original position of 'e'
 }
-and antiquotations = list<(bv * bool * term)>
+and antiquotations = list<(bv * term)>
 and quoteinfo = {
     qkind      : quote_kind;
     antiquotes : antiquotations;
@@ -268,6 +265,11 @@ and binding =
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
+and arg_qualifier =
+  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
+  | Meta of term
+  | Equality
+and aqual = option<arg_qualifier>
 
 type lcomp = { //a lazy computation
     eff_name: lident;
@@ -277,7 +279,7 @@ type lcomp = { //a lazy computation
 }
 
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
-val lookup_aq : bv -> antiquotations -> option<(bool * term)>
+val lookup_aq : bv -> antiquotations -> option<term>
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 val lazy_chooser : ref<option<(lazy_kind -> lazyinfo-> term)>>
@@ -287,6 +289,8 @@ type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
 val new_fv_set: unit -> set<lident>
 val new_universe_names_set: unit -> set<univ_name>
+
+val eq_binding : binding -> binding -> bool
 
 type qualifier =
   | Assumption                             //no definition provided, just a declaration
@@ -519,6 +523,7 @@ val is_top_level:   list<letbinding> -> bool
 val next_id:        (unit -> int)
 val reset_gensym:   (unit -> unit)
 val freshen_bv:     bv -> bv
+val freshen_binder:  binder -> binder
 val gen_bv:         string -> option<Range.range> -> typ -> bv
 val new_bv:         option<range> -> typ -> bv
 val new_univ_name:  option<range> -> univ_name
@@ -563,4 +568,5 @@ val t_tac_unit      : term
 val t_list_of       : term -> term
 val t_option_of     : term -> term
 val t_tuple2_of     : term -> term -> term
+val t_either_of     : term -> term -> term
 val unit_const      : term

@@ -5,6 +5,7 @@ open FStar.Reflection.Formula
 open FStar.Tactics.Types
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
+open FStar.Tactics.Result
 open FStar.Tactics.Util
 module L = FStar.List.Tot
 
@@ -20,12 +21,25 @@ let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
 [t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
 always be the case since [w] is usually a uvar. *)
 let exact (t : term) : Tac unit =
-    with_policy SMT (fun () -> t_exact false t)
+    with_policy SMT (fun () -> t_exact true false t)
+
+(** [apply f] will attempt to produce a solution to the goal by an application
+of [f] to any amount of arguments (which need to be solved as further goals).
+The amount of arguments introduced is the least such that [f a_i] unifies
+with the goal's type. *)
+let apply (t : term) : Tac unit =
+    t_apply true t
+
+(** [apply_raw f] is like [apply], but will ask for all arguments
+regardless of whether they appear free in further goals. See the
+explanation in [t_apply]. *)
+let apply_raw (t : term) : Tac unit =
+    t_apply false t
 
 (** Like [exact], but allows for the term [e] to have a type [t] only
 under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
-    with_policy Goal (fun () -> t_exact false t)
+    with_policy Goal (fun () -> t_exact true false t)
 
 let cur_module () : Tac (list string) =
     moduleof (cur_env ())
@@ -84,21 +98,31 @@ let norm_term (s : list norm_step) (t : term) : Tac term =
 
 let idtac () : Tac unit = ()
 
-let guard (b : bool) : Tac unit =
+let guard (b : bool) : TAC unit (fun ps post -> if b
+                                                then post (Success () ps)
+                                                else forall m. post (Failed m ps)) // intentionally do not leak the message
+    =
     if b
     then ()
     else fail "guard failed"
+
+let trytac (t : unit -> Tac 'a) : Tac (option 'a) =
+    match catch t with
+    | Inl _ -> None
+    | Inr x -> Some x
 
 let or_else (#a:Type) (t1 : unit -> Tac a) (t2 : unit -> Tac a) : Tac a =
     match trytac t1 with
     | Some x -> x
     | None -> t2 ()
 
+val (<|>) : (unit -> Tac 'a) ->
+            (unit -> Tac 'a) ->
+            (unit -> Tac 'a)
+let (<|>) t1 t2 = fun () -> or_else t1 t2
+
 let rec first (ts : list (unit -> Tac 'a)) : Tac 'a =
-    match ts with
-    | [] -> fail "no tactics to try"
-    | [t] -> t ()
-    | t::ts -> or_else t (fun () -> first ts)
+    L.fold_right (<|>) ts (fun () -> fail "no tactics to try") ()
 
 let rec repeat (#a:Type) (t : unit -> Tac a) : Tac (list a) =
     match trytac t with
@@ -138,6 +162,10 @@ let whnf    () : Tac unit = norm [weak; hnf; primops]
 let compute () : Tac unit = norm [primops; iota; delta; zeta]
 
 let intros () : Tac (list binder) = repeat intro
+
+let intros' () = let _ = intros () in ()
+let destruct tm = let _ = t_destruct tm in ()
+let destruct_intros tm = seq (fun () -> let _ = t_destruct tm in ()) intros'
 
 private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
@@ -211,7 +239,7 @@ let rec rewrite_all_context_equalities (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
     | x_t::bs -> begin
-        begin match term_as_formula (type_of_binder x_t) with
+        begin match term_as_formula_total (type_of_binder x_t) with
         | Comp (Eq _) lhs _ ->
             begin match inspect_ln lhs with
             | Tv_Var _ -> rewrite x_t
@@ -357,6 +385,33 @@ let solve_then #a #b (t1 : unit -> Tac a) (t2 : a -> Tac b) : Tac b =
     trefl ();
     y
 
+let add_elem (t : unit -> Tac 'a) : Tac 'a = focus (fun () ->
+    apply (`Cons);
+    focus (fun () ->
+      let x = t () in
+      qed ();
+      x
+    )
+  )
+
 (* Some syntax utility functions *)
 let bv_to_term (bv : bv) : Tac term = pack (Tv_Var bv)
 let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_to_term bv
+
+(*
+ * Specialize a function by partially evaluating it
+ * For example:
+ *   let rec foo (l:list int) (x:int) :St int =
+       match l with
+       | [] -> x
+       | hd::tl -> x + foo tl x
+
+     let f :int -> St int = synth_by_tactic (specialize (foo [1; 2]) [%`foo])
+
+ * would make the definition of f as x + x + x
+ *
+ * f is the term that needs to be specialized
+ * l is the list of names to be delta-ed
+ *)
+let specialize (#a:Type) (f:a) (l:list string) :unit -> Tac unit
+  = fun () -> solve_then (fun () -> exact (quote f)) (fun () -> norm [delta_only l; iota; zeta])

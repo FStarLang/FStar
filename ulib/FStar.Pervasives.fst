@@ -308,6 +308,11 @@ type __internal_ocaml_attributes =
      * *const *p" either. *)
   | CCConv of string
     (* A calling convention for C, one of stdcall, cdecl, fastcall *)
+  | CAbstractStruct
+    (* KreMLin-only: for types that compile to struct types (records and
+     * inductives), indicate that the header file should only contain a forward
+     * declaration, which in turn forces the client to only ever use this type
+     * through a pointer. *)
 
 (* Some supported attributes encoded using functions. *)
 
@@ -324,6 +329,11 @@ let inline_let : unit = ()
 
 irreducible
 let plugin : unit = ()
+
+(* An attribute to mark things that the typechecker should *first*
+ * elaborate and typecheck, but unfold before verification. *)
+irreducible
+let tcnorm : unit = ()
 
 (*
  * we now erase all pure and ghost functions with unit return type to unit
@@ -346,15 +356,15 @@ let dm4f_bind_range : unit = ()
  * checked that the definition raises exactly those errors in the
  * specified multiplicity, but order does not matter. *)
 irreducible
-let fail (errs : list int) : unit = ()
+let expect_failure (errs : list int) : unit = ()
 
-(** When --lax is present, we ignore both previous attributes since some definitions
+(** When --lax is present, we the previous attribute since some definitions
  * only fail when verification is turned on. With this attribute, one can ensure
- * that a definition fails lax-checking too.
- *
- * (Note: this will NOT turn on --lax for you.) *)
+ * that a definition fails while lax-checking too. Same semantics as above,
+ * but lax mode will be turned on for the definition.
+ *)
 irreducible
-let fail_lax : unit = ()
+let expect_lax_failure (errs : list int) : unit = ()
 
 (**
  * **THIS ATTRIBUTE IS AN ESCAPE HATCH AND CAN BREAK SOUNDNESS**

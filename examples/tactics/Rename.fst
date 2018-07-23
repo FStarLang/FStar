@@ -15,7 +15,7 @@ let l1 (x : bool) (y : int) (z : unit) =
             (fun () ->
                 let h0 = implies_intro () in
                 let h1 = implies_intro () in
-                dump "Test";
+                (* dump "Test"; *)
                 exact (quote p))
 
 // this error should show pretty binders too

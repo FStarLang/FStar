@@ -18,7 +18,7 @@ val add_loop: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
 
 val add_loop: l:nat{ l <= 16 } -> lbytes l -> lbytes l -> Tot (lbytes l)
 let rec add_loop l a b = 
-  if l = 0 then Seq.createEmpty 
+  if l = 0 then Seq.empty 
   else
     let r = add_loop (l-1) (tail a) (tail b) in 
     cons (UInt8.logxor (head a) (head b)) r

@@ -174,20 +174,20 @@ let rec wp_code (inss : list ins) (post: state -> Type0) (s0:state) : Type0 =
     end
 
 let wp_code_delta = [
-  %`(wp_code);
-  %`(all_regs_match);
-  %`(regs_match);
-  %`(eval_operand_norm);
-  %`(update_reg);
-  %`(update_mem);
-  %`(eval_maddr);
-  %`(Mkstate?.regs);
-  %`(Mkstate?.ok);
-  %`(Mkstate?.flags);
-  %`(Mkstate?.mem);
-  %`(valid_operand_norm);
-  %`(valid_maddr_norm);
-  %`(augment)
+  `%(wp_code);
+  `%(all_regs_match);
+  `%(regs_match);
+  `%(eval_operand_norm);
+  `%(update_reg);
+  `%(update_mem);
+  `%(eval_maddr);
+  `%(Mkstate?.regs);
+  `%(Mkstate?.ok);
+  `%(Mkstate?.flags);
+  `%(Mkstate?.mem);
+  `%(valid_operand_norm);
+  `%(valid_maddr_norm);
+  `%(augment)
   ]
 
 

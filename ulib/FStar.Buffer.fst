@@ -826,20 +826,20 @@ val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
      /\ frameOf b == (HS.get_tip h0)
      /\ Map.domain (HS.get_hmap h1) == Map.domain (HS.get_hmap h0)
      /\ modifies_0 h0 h1
-     /\ as_seq h1 b == Seq.of_list init
+     /\ as_seq h1 b == Seq.seq_of_list init
      /\ q #a len b))
 #set-options "--initial_fuel 1 --max_fuel 1" //the normalize_term (length init) in the pre-condition will be unfolded
 	                                     //whereas the L.length init below will not
 let createL #a init =
   let len = UInt32.uint_to_t (FStar.List.Tot.length init) in
-  let s = Seq.of_list init in
-  lemma_of_list_length s init;
+  let s = Seq.seq_of_list init in
   let content: reference (lseq a (v len)) =
-    salloc (Seq.of_list init) in
+    salloc (Seq.seq_of_list init) in
   let b = MkBuffer len content 0ul len in
   let h = HST.get() in
   assert (Seq.equal (as_seq h b) (sel h b));
   b
+
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h (HS.frameOf x)}) (v:a) : Lemma
@@ -1424,3 +1424,27 @@ let lemma_equal_domains_2 (h0 h1 h2 h3 h4:mem) : Lemma
   (ensures  (equal_domains h0 h4))
   [SMTPat (fresh_frame h0 h1); SMTPat (modifies_0 h1 h2); SMTPat (popped h3 h4)]
   = ()
+
+#reset-options "--z3rlimit 50"
+
+let rec assignL #a (l: list a) (b: buffer a): Stack unit
+  (requires (fun h0 ->
+    live h0 b /\
+    length b = List.Tot.length l))
+  (ensures (fun h0 _ h1 ->
+    live h1 b /\
+    modifies_1 b h0 h1 /\
+    as_seq h1 b == Seq.seq_of_list l))
+= lemma_seq_of_list_induction l;
+  match l with
+  | [] -> ()
+  | hd :: tl ->
+      let b_hd = sub b 0ul 1ul in
+      let b_tl = offset b 1ul in
+      b_hd.(0ul) <- hd;
+      assignL tl b_tl;
+      let h = HST.get () in
+      assert (get h b_hd 0 == hd);
+      assert (as_seq h b_tl == Seq.seq_of_list tl);
+      assert (Seq.equal (as_seq h b) (Seq.append (as_seq h b_hd) (as_seq h b_tl)));
+      assert (Seq.equal (as_seq h b) (Seq.seq_of_list l))

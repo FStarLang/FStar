@@ -31,15 +31,6 @@ open FStar.Const
    expressions, formulas, types, and so on
  *)
 type level = | Un | Expr | Type_level | Kind | Formula
-type imp =
-    | FsTypApp
-    | Hash
-    | UnivApp
-    | Nothing
-type arg_qualifier =
-    | Implicit
-    | Equality
-type aqual = option<arg_qualifier>
 
 // let rec mutable makes no sense, so just don't do it
 type let_qualifier =
@@ -88,7 +79,7 @@ type term' =
   | Labeled   of term * string * bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
-  | Antiquote of bool * term   (* Antiquotation within a quoted term. Boolean is true when value. *)
+  | Antiquote of term  (* Antiquotation within a quoted term *)
   | Quote     of term * quote_kind
   | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
 
@@ -121,6 +112,17 @@ and pattern' =
 and pattern = {pat:pattern'; prange:range}
 
 and branch = (pattern * option<term> * term)
+and arg_qualifier =
+    | Implicit
+    | Equality
+    | Meta of term
+and aqual = option<arg_qualifier>
+and imp =
+    | FsTypApp
+    | Hash
+    | UnivApp
+    | HashBrace of term
+    | Nothing
 
 type knd = term
 type typ = term
@@ -183,6 +185,8 @@ type lift = {
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
+  | PushOptions of option<string>
+  | PopOptions
   | LightOff
 
 type decl' =

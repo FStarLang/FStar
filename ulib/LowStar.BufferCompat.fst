@@ -26,7 +26,7 @@ let rfree
     (not (g_is_null b)) /\
     Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\ 
     (HS.get_tip h1) == (HS.get_tip h0) /\
-    modifies_addr_of b h0 h1 /\
+    modifies (loc_addr_of_buffer b) h0 h1 /\
     HS.live_region h1 (frameOf b)
   ))
 = free b
@@ -89,7 +89,7 @@ let createL
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
     rcreate_post_common (HS.get_tip h) len b h h' /\
-    as_seq h' b == Seq.of_list init /\
+    as_seq h' b == Seq.seq_of_list init /\
     createL_post #a len b
   ))
 = alloca_of_list init

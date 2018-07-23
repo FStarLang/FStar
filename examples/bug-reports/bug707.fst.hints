@@ -19,7 +19,81 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "7fbd5e7e053dd7a8d559c5019acee62e"
+      "e9946e450557ed8ddf08ad085b08eb3d"
+    ],
+    [
+      "Bug707._dm4f_STEXN_bind_wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "function_token_typing_Prims.int",
+        "kinding_FStar.Pervasives.Native.option@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "d7dd213620b2ee18e09101e39a55cd36"
+    ],
+    [
+      "Bug707._dm4f_STEXN___proj__STEXN__item__get_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8dee77d3998e820c503904ee4fe4c9a9"
+    ],
+    [
+      "Bug707._dm4f_STEXN___proj__STEXN__item__put_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "375d1835f80e0a6d4ce01db2ba89ce92"
+    ],
+    [
+      "Bug707._dm4f_STEXN___proj__STEXN__item__raise_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d3a291e8d4e6eefd90fa3fd58b0c155b"
+    ],
+    [
+      "Bug707.STEXN",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "46f5f1115e1334425f0df0acccea2ddb"
+    ],
+    [
+      "Bug707.STEXN",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9a8bd2f7a7896596b2ef532962d22228"
+    ],
+    [
+      "Bug707.STEXN",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "db119185b31584e71fe2b13007b892cd"
     ]
   ]
 ]

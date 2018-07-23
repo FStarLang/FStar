@@ -47,8 +47,8 @@ type txtlen_32 = l:UInt32.t {l <=^ txtmax}
 //16-09-18 where is it in the libraries?
 private let min (a:nat) (b:nat) : nat = if a <= b then a else b
 
-val lemma_append_nil: #a:_ -> s:Seq.seq a -> Lemma (s == Seq.append s Seq.createEmpty)
-let lemma_append_nil #a s = assert (Seq.equal s (Seq.append s Seq.createEmpty))
+val lemma_append_nil: #a:_ -> s:Seq.seq a -> Lemma (s == Seq.append s Seq.empty)
+let lemma_append_nil #a s = assert (Seq.equal s (Seq.append s Seq.empty))
 
 
 (* * *********************************************)
@@ -66,7 +66,7 @@ val encode_bytes: txt:Seq.seq UInt8.t ->
 let rec encode_bytes txt =
   let l = Seq.length txt in
   if l = 0 then 
-    Seq.createEmpty
+    Seq.empty
   else if l < 16 then
     Seq.create 1 (pad_0 txt (16 - l))
   else
@@ -440,7 +440,7 @@ let accumulate #i st aadlen aad txtlen cipher  =
       let cbytes = Buffer.as_seq h cipher in 
       let abytes = Buffer.as_seq h aad in 
       let lbytes = Buffer.as_seq h4 final_word in 
-      assert(equal (HS.sel h0 al) createEmpty);
+      assert(equal (HS.sel h0 al) Seq.empty);
       lemma_append_nil (encode_bytes abytes);
       assert(equal (HS.sel h1 al) (encode_bytes abytes));
       assert(equal (HS.sel h2 al) (encode_bytes cbytes @| encode_bytes abytes));

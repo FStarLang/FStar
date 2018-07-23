@@ -12,7 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "cadf6d4ae9c3c46f13cb33ee4fa8a24b"
+      "d6c7dce42914167397ab1975bd36ac92"
     ],
     [
       "Sequences.test",
@@ -35,51 +35,11 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "a1f41ed33ca55462761c70d91f2702f7"
+      "dd6cf5fef875e86026370487f25f0745"
     ],
     [
       "Sequences.test",
       2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_elim_Prims.Refl", "eq2-interp",
-        "equation_FStar.Seq.Properties.snoc", "equation_Prims.eq2",
-        "equation_Prims.nat", "equation_Prims.squash",
-        "fuel_guarded_inversion_Prims.equals", "int_inversion",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "unit_typing"
-      ],
-      0,
-      "9dfa80810bdf09cf5754723ddf3d7284"
-    ],
-    [
-      "Sequences.test",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_elim_Prims.Refl", "eq2-interp",
-        "equation_FStar.Seq.Properties.snoc", "equation_Prims.eq2",
-        "equation_Prims.nat", "equation_Prims.squash",
-        "fuel_guarded_inversion_Prims.equals", "int_inversion",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "unit_typing"
-      ],
-      0,
-      "cd5b36c7c9bc34db085339488b6d5796"
-    ],
-    [
-      "Sequences.test",
-      4,
       2,
       1,
       [
@@ -108,7 +68,7 @@
         "unit_typing"
       ],
       0,
-      "66746a1b3e18e2bf665d993218318b03"
+      "cfaff03f44ddf06853dc776ec97fa9f1"
     ]
   ]
 ]

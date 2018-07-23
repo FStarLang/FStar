@@ -123,7 +123,7 @@ let instrument (f : 'a) : Tac unit =
     let t = norm_term [delta] (mk_e_app t ii.args) in
     dup ();
     let t = instrument_body ii t in
-    dump "";
+    (* dump ""; *)
     let _ = focus (fun () -> exact_guard t; repeat smt) in
     norm [];
     trefl ()

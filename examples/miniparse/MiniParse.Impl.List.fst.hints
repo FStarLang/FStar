@@ -1,0 +1,41 @@
+[
+  "Ú¿9Ë\u001e]\u0006¾Œ”‚gÜ_W&",
+  [
+    [
+      "MiniParse.Impl.List.parse32_nlist",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d33ad50e0a5ad14d6586b40a5dd0f738"
+    ],
+    [
+      "MiniParse.Impl.List.serialize32_nlist",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ad9e8602d881667c625fde9818a87edf"
+    ],
+    [
+      "MiniParse.Impl.List.parse32_nlist",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "514700d90e044cfc27c31ad5d6e778dd"
+    ],
+    [
+      "MiniParse.Impl.List.serialize32_nlist",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a385edd525203d2723c094ab828e9f6c"
+    ]
+  ]
+]

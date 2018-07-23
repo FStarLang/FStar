@@ -8,10 +8,10 @@
       1,
       [ "@query" ],
       0,
-      "3fc33cc07349d35d36c534c694aa9b4f"
+      "7666f3d3ed10410c0c6d768164ed7950"
     ],
     [
-      "ImmutableSTwHeaps.12165",
+      "ImmutableSTwHeaps.12509",
       1,
       2,
       1,
@@ -21,7 +21,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "204201343423fbdffc102d2fc6603bcc"
+      "567dfe6d1b4ff7c68ec788e5835a5372"
     ],
     [
       "ImmutableSTwHeaps.ist_witnessed",
@@ -34,7 +34,20 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "313b7baef9266d2bac608aca32f239e1"
+      "cfc0319aa5824a3d4f4a5a822d688d7a"
+    ],
+    [
+      "ImmutableSTwHeaps.ist_witnessed",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_ImmutableSTwHeaps.heap_rel",
+        "token_correspondence_ImmutableSTwHeaps.heap_rel"
+      ],
+      0,
+      "075591257fce7cdff799b97c32eb89c4"
     ],
     [
       "ImmutableSTwHeaps.ist_witness",
@@ -47,7 +60,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "f35f7f1bab44917c309ec17b97329063"
+      "049b04427a6dbcb27720a671acaa2810"
     ],
     [
       "ImmutableSTwHeaps.ist_recall",
@@ -60,7 +73,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "9ae422a90e9a55714c3376569fa58dff"
+      "7bc7097df718a6373a43effe5d057ed8"
     ],
     [
       "ImmutableSTwHeaps.alloc",
@@ -86,7 +99,7 @@
         "typing_ImmutableSTwHeaps.upd"
       ],
       0,
-      "f82d10eca64836e681ffb029a1d23884"
+      "b14ad7805540c136e56e54e13c074a26"
     ],
     [
       "ImmutableSTwHeaps.read",
@@ -98,7 +111,7 @@
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_fcc3ae3430dace306efd930c647e1fda"
       ],
       0,
-      "9cac12992211297bb90fffd95d422e23"
+      "95e84aede0115426ea1b7b00602db69d"
     ],
     [
       "ImmutableSTwHeaps.write",
@@ -122,7 +135,7 @@
         "typing_ImmutableSTwHeaps.upd"
       ],
       0,
-      "65aaf2befe26f7e68e985c473f2b34af"
+      "061c50c81c6d80af95660d6dd4412999"
     ],
     [
       "ImmutableSTwHeaps.heap_rel",
@@ -131,10 +144,10 @@
       1,
       [ "@query" ],
       0,
-      "766b48ec48117106aa3b866c5fd49037"
+      "221ead822d3bd3de60ca34e11624b69b"
     ],
     [
-      "ImmutableSTwHeaps.17102",
+      "ImmutableSTwHeaps.17726",
       1,
       2,
       1,
@@ -144,20 +157,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "2b0857f9f8ea29cefb4e9cc8eaaf50a6"
-    ],
-    [
-      "ImmutableSTwHeaps.ist_witnessed",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_ImmutableSTwHeaps.heap_rel",
-        "token_correspondence_ImmutableSTwHeaps.heap_rel"
-      ],
-      0,
-      "ffdc027207fd46127db7299638d6feb3"
+      "0603ff446f96cee78de0dcf4ea7ade86"
     ],
     [
       "ImmutableSTwHeaps.ist_witnessed",
@@ -170,7 +170,33 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "91f5a846a4d8c5f58822addea6a3c17f"
+      "6b1847cc1e46a34f427e601b72e5d832"
+    ],
+    [
+      "ImmutableSTwHeaps.ist_witnessed",
+      4,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_ImmutableSTwHeaps.heap_rel",
+        "token_correspondence_ImmutableSTwHeaps.heap_rel"
+      ],
+      0,
+      "7669658755217963b88d724ac9b30dce"
+    ],
+    [
+      "ImmutableSTwHeaps.ist_witnessed",
+      5,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_ImmutableSTwHeaps.heap_rel",
+        "token_correspondence_ImmutableSTwHeaps.heap_rel"
+      ],
+      0,
+      "2de4a316de110ce2873128091e8cfc04"
     ],
     [
       "ImmutableSTwHeaps.ist_witness",
@@ -183,7 +209,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "a53fafb5dc0c1d6d2a6a4118b3461880"
+      "af0474c4a153f7b61d590483b58aa162"
     ],
     [
       "ImmutableSTwHeaps.ist_recall",
@@ -196,7 +222,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "bc89d356629862d00d51c5459f6b1f91"
+      "6de3eb19612601ac2071a8d00ce3edd1"
     ]
   ]
 ]

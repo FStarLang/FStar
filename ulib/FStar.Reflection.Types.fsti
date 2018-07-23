@@ -10,5 +10,7 @@ assume new type sigelt
 assume new type ctx_uvar_and_subst
 
 type name : eqtype = list string
+type ident = range * string
+type univ_name = ident
 type typ     = term
 type binders = list binder
