@@ -89,7 +89,7 @@ let createL
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
     rcreate_post_common (HS.get_tip h) len b h h' /\
-    as_seq h' b == Seq.of_list init /\
+    as_seq h' b == Seq.seq_of_list init /\
     createL_post #a len b
   ))
 = alloca_of_list init
