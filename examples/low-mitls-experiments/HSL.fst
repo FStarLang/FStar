@@ -47,39 +47,6 @@ abstract let hsl_get_p0 (st:hsl_state) :reference u32 = st.p0
 abstract let hsl_get_p1 (st:hsl_state) :reference u32 = st.p1
 abstract let hsl_get_msgs (st:hsl_state) :reference (list (u32 * u32)) = st.msgs
 
-abstract
-let rec loc_disjoint_from_list (l: loc) (ls: list loc) : GTot Type0 = match ls with [] -> True | a :: q -> loc_disjoint l a /\ loc_disjoint_from_list l q
-
-abstract
-let loc_disjoint_from_list_nil (l: loc) : Lemma
-  (loc_disjoint_from_list l [])
-  [SMTPat (loc_disjoint_from_list l [])]
-= ()
-
-abstract
-let loc_disjoint_from_list_cons (l a: loc) (q: list loc) : Lemma
-  (loc_disjoint_from_list l (a :: q) <==> (loc_disjoint l a /\ loc_disjoint_from_list l q))
-  [SMTPat (loc_disjoint_from_list l (a :: q))]
-= ()
-
-abstract
-let rec loc_pairwise_disjoint (l: list loc) : GTot Type0 = match l with [] -> True | a :: q -> loc_disjoint_from_list a q /\ loc_pairwise_disjoint q
-
-abstract
-let loc_pairwise_disjoint_nil : squash (loc_pairwise_disjoint []) = ()
-
-abstract
-let loc_pairwise_disjoint_cons_nil (a: loc) : Lemma
-  (loc_pairwise_disjoint [a])
-  [SMTPat (loc_pairwise_disjoint [a])]
-= ()
-
-abstract
-let loc_pairwise_disjoint_cons (a: loc) (q: list loc) : Lemma
-  (loc_pairwise_disjoint (a :: q) <==> (loc_disjoint_from_list a q /\ loc_pairwise_disjoint q))
-  [SMTPat (loc_pairwise_disjoint (a :: q))]
-= ()
-
 (* Liveness and disjointness *)
 [@"opaque_to_smt"]
 unfold private let liveness_and_disjointness (st:hsl_state) (h:mem) :Type0 =
