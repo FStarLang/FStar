@@ -68,7 +68,14 @@ let st_trivial (a:Type) (wp:st_wp a)
 new_effect {
   IMST : result:Type -> wp:st_wp result -> Effect
   with 
-     //repr         = s:Type0 -> s -> M (a * s) //pi-types currently not supported by DM4F
+     //repr         = s:Type0 -> preorder s -> s -> M (a * s) // - pi-types currently not supported by DM4F
+     
+     //repr'        = s:Type0 -> rel:preorder s -> s0:s -> M (a * s1:s{rel s0 s1})
+                                                              // - pi-types currently not supported by DM4F;
+                                                              //   refinement types also currently not supported by DM4F
+                                                              // - will also raise the problem of needing to subtype postconditions according to rel
+                                                              // - however, the precise typing would (highly likely) needed for reification purposes; 
+                                                              //   another example with same issues is (exn:Type -> exns:set exn -> M (either a e:exn{mem e exns}))
        return_wp    = st_return
      ; bind_wp      = st_bind
      ; if_then_else = st_if_then_else
