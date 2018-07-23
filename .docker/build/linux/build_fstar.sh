@@ -166,23 +166,25 @@ function build_fstar () {
             fi
             cd ..
 
-            echo $has_error
             if [[ $has_error == "true" ]]; then
-                echo " - min-test (Vale)" >> $ORANGE_FILE ;
+                echo "Error - min-test (Vale)"
+                echo " - min-test (Vale)" >> $ORANGE_FILE;
             fi
         } &
 
         {
             OTHERFLAGS='--use_two_phase_tc false --warn_error -276 --use_hint_hashes' timeout 480 make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify || \
             {
-                { echo " - Hacl.Hash.SHA2_256.fst-verify (HACL*)" >> $ORANGE_FILE ; }
+                echo "Error - Hacl.Hash.SHA2_256.fst-verify (HACL*)"
+                echo " - Hacl.Hash.SHA2_256.fst-verify (HACL*)" >> $ORANGE_FILE;
             }
         } &
 
         {
             OTHERFLAGS='--use_hint_hashes' timeout 480 make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver || \
             {
-                { echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >> $ORANGE_FILE ; }
+                echo "Error - Crypto.AEAD.Encrypt.fst-ver (HACL*)"
+                echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >> $ORANGE_FILE;
             }
         } &
 
@@ -190,17 +192,20 @@ function build_fstar () {
         {
             OTHERFLAGS=--use_hint_hashes timeout 480 make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver || \
             {
-                { echo " - StreamAE.fst-ver (mitls)" >> $ORANGE_FILE; }
+                echo "Error - StreamAE.fst-ver (mitls)"
+                echo " - StreamAE.fst-ver (mitls)" >> $ORANGE_FILE;
             }
 
             OTHERFLAGS=--use_hint_hashes timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver || \
             {
-                { echo " - Pkg.fst-ver (mitls verify)" >> $ORANGE_FILE; }
+                echo "Error - Pkg.fst-ver (mitls verify)"
+                echo " - Pkg.fst-ver (mitls verify)" >> $ORANGE_FILE;
             }
 
             OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver || \
             {
-                { echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >> $ORANGE_FILE; }
+                echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
+                echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >> $ORANGE_FILE;
             }
         } &
 
