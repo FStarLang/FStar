@@ -52,6 +52,7 @@ and decl =
   | DTypeFlat of lident * list<flag> * int * fields_t
   | DExternal of option<cc> * list<flag> * lident * typ
   | DTypeVariant of lident * list<flag> * int * branches_t
+  | DTypeAbstractStruct of lident
 
 and cc =
   | StdCall
@@ -507,7 +508,9 @@ and translate_type_decl env ty: option<decl> =
     | (assumed, name, _mangled_name, args, flags, Some (MLTD_Abbrev t)) ->
         let name = env.module_name, name in
         let env = List.fold_left (fun env name -> extend_t env name) env args in
-        if assumed then
+        if assumed && List.mem Syntax.CAbstract flags then
+          Some (DTypeAbstractStruct name)
+        else if assumed then
           let name = string_of_mlpath name in
           BU.print1_warning "Not extracting type definition %s to KreMLin (assumed type)\n" name;
           // JP: TODO: shall we be smarter here?
