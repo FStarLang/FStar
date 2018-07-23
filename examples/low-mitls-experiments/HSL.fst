@@ -107,6 +107,10 @@ unfold private let hsl_invariant_predicate (st:hsl_state) (h:mem)
 (* Finally, the abstract invariant and its elimination *)
 abstract let hsl_invariant (st:hsl_state) (h:mem) = hsl_invariant_predicate st h
 
+(*
+ * This is a place where we can control what clients get to derive from the invariant
+ * For now, we put everything in here
+ *)
 let lemma_hsl_invariant_elim (st:hsl_state) (h:mem)
   :Lemma (requires (hsl_invariant st h))
          (ensures  (hsl_invariant_predicate st h))
@@ -114,7 +118,7 @@ let lemma_hsl_invariant_elim (st:hsl_state) (h:mem)
   = ()
 
 (*
- * HSL footprint = p0, p1, buffer contents between p0 and p1, and msgs
+ * HSL footprint = p0, p1, buffer contents between 0 and p1, and msgs
  * This is not abstract, so that the client (Record) can append the buffer after p1, and use the framing lemma
  *)
 let hsl_footprint (st:hsl_state) (h:mem{hsl_invariant st h}) =
@@ -131,17 +135,7 @@ let lemma_frame_hsl_invariant (st:hsl_state) (l:loc) (h0 h1:mem)
                     loc_disjoint l (hsl_footprint st h0) /\
 		    Mods.modifies l h0 h1))
 	 (ensures  (hsl_invariant st h1 /\ hsl_footprint st h1 == hsl_footprint st h0))
-	 [SMTPat (hsl_invariant st h0); SMTPat (loc_disjoint l (hsl_footprint st h0));
-	  SMTPat (Mods.modifies l h0 h1)]
-  = let buf, p0, p1, msgs = hsl_get_buf st, hsl_get_p0 st, hsl_get_p1 st, hsl_get_msgs st in
-
-    let b0 = Buffer.as_seq h0 buf in
-    let b1 = Buffer.as_seq h0 buf in
-    let p0 = v (sel h0 p0) in
-    let p1 = v (sel h0 p1) in
-
-    assert (forall (k:nat). k < p1 ==> Seq.index b0 k == Seq.index (Seq.slice b0 0 p1) k);
-    assume (msgs_list_invariant st h1)
+  = ()
 
 assume val fresh_loc: Mods.loc -> mem -> mem -> Type0
 
