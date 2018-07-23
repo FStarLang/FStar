@@ -914,7 +914,10 @@ let rec lemma_seq_of_list_index (#a:Type) (l:list a) (i:nat{i < List.Tot.length 
   = match l with
     | []    -> ()
     | hd::tl -> if i = 0 then () else lemma_seq_of_list_index tl (i - 1)
-      
+
+[@(deprecated "seq_of_list")]
+let of_list (#a:Type) (l:list a) :seq a = seq_of_list l
+
 let seq_of_list_tl
   (#a: Type)
   (l: list a { List.Tot.length l > 0 } )
