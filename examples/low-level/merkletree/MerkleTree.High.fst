@@ -336,6 +336,27 @@ let merge_iroots vs1 irs1 vs2 irs2 =
   else (iroots_of_pow2_diff vs1 vs2; 
        S.append irs1 irs2)
 
+val iroots_of_hashes_head:
+  vs:hash_seq{S.length vs > 0} ->
+  irs:hash_seq{iroots_of_hashes vs = irs} ->
+  Lemma (merkle_root_of_pow2 (S.slice vs 0 (pow2 (pow2_floor (S.length vs)))) = 
+	S.head irs)
+let iroots_of_hashes_head vs irs =
+  let n_floor = pow2 (pow2_floor (S.length vs)) in
+  let hs0, hs1 = S.split vs n_floor in 
+  S.head_cons (merkle_root_of_pow2 (S.slice vs 0 n_floor)) (iroots_of_hashes hs1)
+
+val iroots_of_hashes_tail:
+  vs:hash_seq{S.length vs > 0} ->
+  irs:hash_seq{iroots_of_hashes vs = irs} ->
+  Lemma (iroots_of_hashes (S.slice vs (pow2 (pow2_floor (S.length vs))) (S.length vs)) =
+	S.tail irs)
+#set-options "--z3rlimit 10"
+let iroots_of_hashes_tail vs irs =
+  let n_floor = pow2 (pow2_floor (S.length vs)) in
+  S.lemma_tl (merkle_root_of_pow2 (S.slice vs 0 n_floor))
+	     (iroots_of_hashes (S.slice vs n_floor (S.length vs)))
+
 val iroots_of_head:
   vs:elem_seq{S.length vs > 0} ->
   Lemma (iroots_of (S.slice vs 0 (pow2 (pow2_floor (S.length vs)))) =
@@ -361,7 +382,7 @@ val insert_iroots:
   nv:elem ->
   GTot (iirs:hash_seq{iroots_of (insert_values vs nv) = iirs})
        (decreases (S.length irs))
-#set-options "--z3rlimit 10"
+#set-options "--z3rlimit 40"
 let rec insert_iroots vs irs nv =
   if S.length vs = 0
   then (S.create 1 (hash_from_elem nv))
@@ -388,24 +409,27 @@ let insert mt e =
 
 /// Getting the Merkle root
 
-val pad_hashes_pow2:
-  vs:hash_seq{S.length vs > 0} -> 
-  GTot (pvs:hash_seq{
-    S.length pvs = pow2 (pow2_ceil (S.length vs)) && 
-    S.slice pvs 0 (S.length vs) = vs})
-let pad_hashes_pow2 vs =
-  let pad = S.create (pow2 (pow2_ceil (S.length vs)) - S.length vs) hash_init in
-  S.append_slices vs pad;
-  S.append vs pad
+val pad_hashes: hash_seq -> nat -> hash_seq
+let pad_hashes hs len =
+  S.append hs (S.create len hash_init)
 
-val pad_hashes_pow2_pow2:
+val pad_hashes_pow2_ceil:
+  hs:hash_seq{S.length hs > 0} -> 
+  GTot (phs:hash_seq{
+    S.length phs = pow2 (pow2_ceil (S.length hs)) && 
+    S.slice phs 0 (S.length hs) = hs})
+let pad_hashes_pow2_ceil hs =
+  S.append_slices hs (S.create (pow2 (pow2_ceil (S.length hs)) - S.length hs) hash_init);
+  pad_hashes hs (pow2 (pow2_ceil (S.length hs)) - S.length hs)
+
+val pad_hashes_pow2_ceil_pow2:
   vs:hash_seq{is_pow2 (S.length vs)} ->
-  Lemma (pad_hashes_pow2 vs = vs)
-let pad_hashes_pow2_pow2 vs = ()
+  Lemma (pad_hashes_pow2_ceil vs = vs)
+let pad_hashes_pow2_ceil_pow2 vs = ()
 
 val merkle_root_of_hashes: vs:hash_seq{S.length vs > 0} -> GTot hash
 let merkle_root_of_hashes vs =
-  merkle_root_of_pow2 (pad_hashes_pow2 vs)
+  merkle_root_of_pow2 (pad_hashes_pow2_ceil vs)
 
 val merkle_root_of_iroots: 
   irs:hash_seq{S.length irs > 0} -> 
@@ -418,7 +442,7 @@ val merkle_root_of_iroots_ok_hashes:
   vs:hash_seq{S.length vs > 0} ->
   irs:hash_seq{iroots_of_hashes vs = irs} ->
   Lemma (merkle_root_of_iroots irs = merkle_root_of_hashes vs)
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 40"
 let rec merkle_root_of_iroots_ok_hashes vs irs =
   if is_pow2 (S.length vs)
   then (assert (irs = S.cons (merkle_root_of_pow2 vs) S.empty);
@@ -426,37 +450,26 @@ let rec merkle_root_of_iroots_ok_hashes vs irs =
   else (assert (S.length irs > 1);
        assert (merkle_root_of_iroots irs =
 	      hash_from_hashes (S.head irs) (merkle_root_of_iroots (S.tail irs)));
-       let pvs = pad_hashes_pow2 vs in
+
+       let pvs = pad_hashes_pow2_ceil vs in
        assert (merkle_root_of_hashes vs = merkle_root_of_pow2 pvs);
        assert (S.length pvs > 1);
 
-       // merkle_root_of_pow2_inv (S.slice pvs 0 (S.length pvs / 2))
-       // 			       (S.slice pvs (S.length pvs / 2) (S.length pvs));
-       // admit ())
-       // S.lemma_split pvs (S.length pvs / 2);
-       // admit ())
-       // assert (merkle_root_of_pow2 pvs =
-       // 	      (let lhs, rhs = S.split pvs (S.length pvs / 2) in
-       // 		let lrt = merkle_root_of_pow2 lhs in
-       // 		let rrt = merkle_root_of_pow2 rhs in
-       // 		hash_from_hashes lrt rrt));
-       // hash_from_hashes 
-       // 	(merkle_root_of_pow2 (S.slice pvs 0 (S.length pvs / 2)))
-       // 	(merkle_root_of_pow2 (S.slice pvs (S.length pvs / 2) (S.length pvs))));
+       let lhs, rhs = S.split pvs (S.length pvs / 2) in
 
-       // not_pow2_floor_ceil (S.length vs);
-       // Math.Lemmas.pow2_double_mult (pow2_floor (S.length vs));
-       // assert (2 * pow2 (pow2_floor (S.length vs)) = pow2 (pow2_ceil (S.length vs)));
-       // assert (pow2 (pow2_floor (S.length vs)) = pow2 (pow2_ceil (S.length vs)) / 2);
-       // assert (S.head irs = merkle_root_of_pow2 (S.slice vs 0 (pow2 (pow2_floor (S.length vs)))));
-       // !!! assume (S.head irs = merkle_root_of_pow2 (S.slice pvs 0 (S.length pvs / 2)));
+       iroots_of_hashes_head vs irs;
+       not_pow2_floor_ceil (S.length vs);
+       Math.Lemmas.pow2_double_mult (pow2_floor (S.length vs));
+       assert (pow2 (pow2_floor (S.length vs)) = S.length pvs / 2);
+       assert (merkle_root_of_pow2 lhs = S.head irs);
 
-       // assert (merkle_root_of_iroots (S.tail irs) =
-       // 	      merkle_root_of_hashes (S.slice vs (pow2 (pow2_floor (length vs))) (length vs)));
+       // iroots_of_hashes_tail vs irs;
+       // merkle_root_of_iroots_ok_hashes (S.slice vs (pow2 (pow2_floor (S.length vs))) (S.length vs)) (S.tail irs);
        // TODO HERE: should prove that any length of padding will not change the merkle root value.
-       // !!! assume (merkle_root_of_iroots (S.tail irs) =
-       // 	      merkle_root_of_pow2 (S.slice pvs (S.length pvs / 2) (S.length pvs)));
-       admit ())
+       assume (is_pow2 (S.length rhs));
+       assume (merkle_root_of_pow2 rhs = merkle_root_of_iroots (S.tail irs));
+
+       ())
 
 val merkle_root_of_iroots_ok:
   mt:merkle_tree ->
