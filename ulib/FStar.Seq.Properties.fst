@@ -907,6 +907,14 @@ let lemma_seq_of_list_induction (#a:Type) (l:list a)
 	 [SMTPat (seq_of_list l)]
   = if List.Tot.length l > 0 then lemma_tl (List.Tot.hd l) (seq_of_list (List.Tot.tl l))
 
+let rec lemma_seq_of_list_index (#a:Type) (l:list a) (i:nat{i < List.Tot.length l})
+  :Lemma (requires True)
+         (ensures  (index (seq_of_list l) i == List.Tot.index l i))
+	 [SMTPat (index (seq_of_list l) i)]
+  = match l with
+    | []    -> ()
+    | hd::tl -> if i = 0 then () else lemma_seq_of_list_index tl (i - 1)
+      
 let seq_of_list_tl
   (#a: Type)
   (l: list a { List.Tot.length l > 0 } )
@@ -932,24 +940,8 @@ let rec mem_seq_of_list
     in
     mem_seq_of_list x q
 
-let lemma_of_list_induction (#a:Type) (l:list a)
-  :Lemma (match l with
-          | [] -> Seq.equal (Seq.of_list #a []) (Seq.empty #a)
-	  | hd::tl -> Seq.equal (Seq.of_list l) (cons hd (Seq.of_list tl)))
-  = match l with
-    | [] -> lemma_of_list_length l; lemma_empty (Seq.of_list #a [])
-    | _ ->
-      lemma_of_list_length l;
-      let aux (i:nat)
-        :Lemma (ensures  (i < List.Tot.length l ==>
-	                  Seq.index (Seq.of_list l) i == List.Tot.index l i))
-        = ()
-      in
-      FStar.Classical.forall_intro aux
-
-
 (****** sortWith ******)
-abstract let sortWith (#a:eqtype) (f:a -> a -> Tot int) (s:seq a) :seq a
+let sortWith (#a:eqtype) (f:a -> a -> Tot int) (s:seq a) :seq a
   = seq_of_list (List.Tot.Base.sortWith f (seq_to_list s))
 
 let rec lemma_seq_to_list_permutation (#a:eqtype) (s:seq a)
