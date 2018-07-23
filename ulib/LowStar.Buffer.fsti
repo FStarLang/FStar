@@ -1820,7 +1820,7 @@ val alloca_of_list
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
     alloc_post_common (HS.get_tip h) len b h h' /\
-    as_seq h' b == Seq.of_list init /\
+    as_seq h' b == Seq.seq_of_list init /\
     alloc_of_list_post #a len b
   ))
 
@@ -1838,7 +1838,7 @@ val gcmalloc_of_list
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
     alloc_post_common r len b h h' /\
-    as_seq h' b == Seq.of_list init
+    as_seq h' b == Seq.seq_of_list init
   ))
 
 /// Derived operations
