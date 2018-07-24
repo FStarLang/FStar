@@ -248,13 +248,13 @@ let (document_decl : (Prims.string -> unit) -> FStar_Parser_AST.decl -> unit)
              (match fsdoc with
               | FStar_Pervasives_Native.Some (doc1,_kw) ->
                   w (Prims.strcat "\n" doc1)
-              | uu____1107 -> ());
+              | uu____1117 -> ());
              w "")
       else ()
   
 let document_toplevel :
-  'Auu____1117 .
-    'Auu____1117 ->
+  'Auu____1127 .
+    'Auu____1127 ->
       FStar_Parser_AST.decl ->
         (Prims.string FStar_Pervasives_Native.option,Prims.string
                                                        FStar_Pervasives_Native.option)
@@ -263,38 +263,38 @@ let document_toplevel :
   fun name  ->
     fun topdecl  ->
       match topdecl.FStar_Parser_AST.d with
-      | FStar_Parser_AST.TopLevelModule uu____1136 ->
+      | FStar_Parser_AST.TopLevelModule uu____1146 ->
           (match topdecl.FStar_Parser_AST.doc with
            | FStar_Pervasives_Native.Some (doc1,kw) ->
-               let uu____1159 =
+               let uu____1179 =
                  FStar_List.tryFind
-                   (fun uu____1173  ->
-                      match uu____1173 with | (k,v1) -> k = "summary") kw
+                   (fun uu____1193  ->
+                      match uu____1193 with | (k,v1) -> k = "summary") kw
                   in
-               (match uu____1159 with
+               (match uu____1179 with
                 | FStar_Pervasives_Native.None  ->
                     (FStar_Pervasives_Native.None,
                       (FStar_Pervasives_Native.Some doc1))
-                | FStar_Pervasives_Native.Some (uu____1196,summary) ->
+                | FStar_Pervasives_Native.Some (uu____1216,summary) ->
                     ((FStar_Pervasives_Native.Some summary),
                       (FStar_Pervasives_Native.Some doc1)))
            | FStar_Pervasives_Native.None  ->
                (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None))
-      | uu____1210 ->
+      | uu____1230 ->
           FStar_Errors.raise_err
             (FStar_Errors.Fatal_NotTopLevelModule, "Not Top-level Module")
   
 let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lident) =
   fun m  ->
-    let uu____1224 =
+    let uu____1244 =
       match m with
       | FStar_Parser_AST.Module (n1,d) -> (n1, d, "module")
-      | FStar_Parser_AST.Interface (n1,d,uu____1251) -> (n1, d, "interface")
+      | FStar_Parser_AST.Interface (n1,d,uu____1271) -> (n1, d, "interface")
        in
-    match uu____1224 with
+    match uu____1244 with
     | (name,decls,_mt) ->
-        let uu____1265 = one_toplevel decls  in
-        (match uu____1265 with
+        let uu____1285 = one_toplevel decls  in
+        (match uu____1285 with
          | FStar_Pervasives_Native.Some (top_decl,other_decls) ->
              let on =
                FStar_Options.prepend_output_dir
@@ -304,8 +304,8 @@ let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lident) =
              let w = FStar_Util.append_to_file fd  in
              let no_summary = "fsdoc: no-summary-found"  in
              let no_comment = "fsdoc: no-comment-found"  in
-             let uu____1295 = document_toplevel name top_decl  in
-             (match uu____1295 with
+             let uu____1315 = document_toplevel name top_decl  in
+             (match uu____1315 with
               | (summary,comment) ->
                   let summary1 =
                     match summary with
@@ -315,40 +315,40 @@ let (document_module : FStar_Parser_AST.modul -> FStar_Ident.lident) =
                     match comment with
                     | FStar_Pervasives_Native.Some s -> s
                     | FStar_Pervasives_Native.None  -> no_comment  in
-                  ((let uu____1319 =
+                  ((let uu____1339 =
                       FStar_Util.format "# module %s" [name.FStar_Ident.str]
                        in
-                    w uu____1319);
-                   (let uu____1321 = FStar_Util.format "%s\n" [summary1]  in
-                    w uu____1321);
-                   (let uu____1323 = FStar_Util.format "%s\n" [comment1]  in
-                    w uu____1323);
+                    w uu____1339);
+                   (let uu____1341 = FStar_Util.format "%s\n" [summary1]  in
+                    w uu____1341);
+                   (let uu____1343 = FStar_Util.format "%s\n" [comment1]  in
+                    w uu____1343);
                    FStar_List.iter (document_decl w) other_decls;
                    FStar_Util.close_file fd;
                    name))
          | FStar_Pervasives_Native.None  ->
-             let uu____1332 =
-               let uu____1337 =
+             let uu____1352 =
+               let uu____1357 =
                  FStar_Util.format1 "No singleton toplevel in module %s"
                    name.FStar_Ident.str
                   in
-               (FStar_Errors.Fatal_NonSingletonTopLevel, uu____1337)  in
-             FStar_Errors.raise_err uu____1332)
+               (FStar_Errors.Fatal_NonSingletonTopLevel, uu____1357)  in
+             FStar_Errors.raise_err uu____1352)
   
 let (generate : Prims.string Prims.list -> unit) =
   fun files  ->
     let modules =
       FStar_List.map
         (fun fn  ->
-           let uu____1353 = FStar_Parser_Driver.parse_file fn  in
-           FStar_Pervasives_Native.fst uu____1353) files
+           let uu____1373 = FStar_Parser_Driver.parse_file fn  in
+           FStar_Pervasives_Native.fst uu____1373) files
        in
     let mods = FStar_List.map document_module modules  in
     let on = FStar_Options.prepend_output_dir "index.md"  in
     let fd = FStar_Util.open_file_for_writing on  in
     FStar_List.iter
       (fun m  ->
-         let uu____1379 = FStar_Util.format "%s\n" [m.FStar_Ident.str]  in
-         FStar_Util.append_to_file fd uu____1379) mods;
+         let uu____1399 = FStar_Util.format "%s\n" [m.FStar_Ident.str]  in
+         FStar_Util.append_to_file fd uu____1399) mods;
     FStar_Util.close_file fd
   

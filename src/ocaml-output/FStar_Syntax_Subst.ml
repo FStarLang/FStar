@@ -1796,7 +1796,7 @@ let (open_term_1 :
       let uu____6098 = open_term [b] t  in
       match uu____6098 with
       | (b1::[],t1) -> (b1, t1)
-      | uu____6139 -> failwith "impossible: open_term_1"
+      | uu____6147 -> failwith "impossible: open_term_1"
   
 let (open_term_bvs :
   FStar_Syntax_Syntax.bv Prims.list ->
@@ -1806,13 +1806,13 @@ let (open_term_bvs :
   =
   fun bvs  ->
     fun t  ->
-      let uu____6168 =
-        let uu____6173 = FStar_List.map FStar_Syntax_Syntax.mk_binder bvs  in
-        open_term uu____6173 t  in
-      match uu____6168 with
+      let uu____6176 =
+        let uu____6181 = FStar_List.map FStar_Syntax_Syntax.mk_binder bvs  in
+        open_term uu____6181 t  in
+      match uu____6176 with
       | (bs,t1) ->
-          let uu____6188 = FStar_List.map FStar_Pervasives_Native.fst bs  in
-          (uu____6188, t1)
+          let uu____6196 = FStar_List.map FStar_Pervasives_Native.fst bs  in
+          (uu____6196, t1)
   
 let (open_term_bv :
   FStar_Syntax_Syntax.bv ->
@@ -1822,8 +1822,8 @@ let (open_term_bv :
   =
   fun bv  ->
     fun t  ->
-      let uu____6215 = open_term_bvs [bv] t  in
-      match uu____6215 with
+      let uu____6223 = open_term_bvs [bv] t  in
+      match uu____6223 with
       | (bv1::[],t1) -> (bv1, t1)
-      | uu____6230 -> failwith "impossible: open_term_bv"
+      | uu____6238 -> failwith "impossible: open_term_bv"
   
