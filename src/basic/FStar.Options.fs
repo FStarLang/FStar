@@ -116,7 +116,8 @@ type optionstate = Util.smap<option_val>
  *      (orig + A) (orig)
  *      (orig)
  *
- * No stack should ever be empty!
+ * No stack should ever be empty! Any of these failwiths should never be
+ * triggered externally. IOW, the API should protect this invariant.
  *)
 let fstar_options : ref<list<list<optionstate>>> = Util.mk_ref []
 
@@ -132,6 +133,7 @@ let push () = // already signal-atomic
 let internal_pop () =
     let curstack = List.hd !fstar_options in
     match curstack with
+    | [] -> failwith "impossible: empty current option stack"
     | [_] -> false
     | _::tl -> (fstar_options := tl :: List.tl !fstar_options; true)
 
@@ -143,6 +145,7 @@ let internal_push () =
 let set o =
     match !fstar_options with
     | [] -> failwith "set on empty option stack"
+    | []::_ -> failwith "set on empty current option stack"
     | (_::tl)::os -> fstar_options := ((o::tl)::os)
 
 let snapshot () = Common.snapshot push fstar_options ()
