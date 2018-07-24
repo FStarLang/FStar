@@ -208,8 +208,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "print"         print e_string e_unit
                                print NBET.e_string NBET.e_unit;
 
-      mktac1 0 "debug"         debug e_string e_unit
-                               debug NBET.e_string NBET.e_unit;
+      mktac1 0 "debugging"     debugging e_unit e_bool
+                               debugging NBET.e_unit NBET.e_bool;
 
       mktac1 0 "dump"          print_proof_state e_string e_unit
                                print_proof_state NBET.e_string NBET.e_unit;

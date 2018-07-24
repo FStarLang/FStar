@@ -63,6 +63,11 @@ let qed () : Tac unit =
     | [] -> ()
     | _ -> fail "qed: not done!"
 
+(** [debug str] is similar to [print str], but will only print the message
+if the [--debug] option was given for the current module. *)
+let debug (m:string) : Tac unit =
+    if debugging () then print m
+
 (** [smt] will mark the current goal for being solved through the SMT.
 This does not immediately run the SMT: it just dumps the goal in the
 SMT bin. Note, if you dump a proof-relevant goal there, the engine will

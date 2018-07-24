@@ -145,12 +145,9 @@ let print (msg:string) : tac<unit> =
     tacprint msg;
     ret ()
 
-let debug (msg:string) : tac<unit> =
+let debugging () : tac<bool> =
     bind get (fun ps ->
-    if Options.debug_module (Ident.string_of_lid ps.main_context.curmodule)
-    then tacprint msg
-    else ();
-    ret ())
+    ret (Options.debug_module (Ident.string_of_lid ps.main_context.curmodule)))
 
 let dump_goal ps goal =
     tacprint (goal_to_string ps goal);
