@@ -1,1 +1,81 @@
-[ "d\u0013ùvRì¼˜~¿M^Ãûèå", [] ]
+[
+  "|\u0002¤?k¶àÁýð”LóBú\u0015",
+  [
+    [
+      "Poly.modulo_addition_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "2dd971786b7127eac217f6649be6b1f0"
+    ],
+    [
+      "Poly.lemma_div_mod",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "118b55f7509f17b036d7bd6755c210f1"
+    ],
+    [
+      "Poly.lemma_poly_multiply_canon",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "ef42731a4a2b07570c24d8542ff135d5"
+    ],
+    [
+      "Poly.modulo_addition_lemma",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "1521093b1a6b07b7f7314f1e85ae86b7"
+    ],
+    [
+      "Poly.lemma_div_mod",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "f367c70b7f23704067e4f390e80fc242"
+    ],
+    [
+      "Poly.lemma_poly_multiply_canon",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "4b78f70a0638fc0eb7d933509d5a75f2"
+    ]
+  ]
+]

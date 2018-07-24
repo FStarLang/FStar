@@ -11,7 +11,7 @@
         "projection_inverse_ProgramEquivalence.C_inv"
       ],
       0,
-      "949bb81ba038628b2e672351c6ceb82e"
+      "36767babff7b4e9274a9710539f761fe"
     ],
     [
       "ProgramEquivalence.increment",
@@ -27,7 +27,7 @@
         "token_correspondence_ProgramEquivalence.__proj__C__item__inv"
       ],
       0,
-      "45d237509eb332e93f98c7c5449ea48e"
+      "31666d439fd889dd21f13d0011ae3ff4"
     ],
     [
       "ProgramEquivalence.get",
@@ -43,7 +43,7 @@
         "token_correspondence_ProgramEquivalence.__proj__C__item__inv"
       ],
       0,
-      "404de424854f54c501ce260d5a99019a"
+      "5852e85e8645814edb4a8617eeae7148"
     ],
     [
       "ProgramEquivalence.inv_0",
@@ -52,7 +52,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a6a2b5a317e8dc3619fa1d2b903e6780"
+      "e7ca74e3279f7de12e668b3d3d5e3ba3"
     ],
     [
       "ProgramEquivalence.incr_0",
@@ -78,7 +78,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8ddead95b9f55a3facf50ad8a85bad44"
+      "0791ee2d71e927ed9e1c2835cf6f4e15"
     ],
     [
       "ProgramEquivalence.get_0",
@@ -102,7 +102,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "6f04d9ca969b7260ecac4127e671b284"
+      "87bfe7642e12224c9973ecfc9123d1e3"
     ],
     [
       "ProgramEquivalence.init_counter_0",
@@ -140,7 +140,7 @@
         "typing_ProgramEquivalence.__proj__C__item__fp"
       ],
       0,
-      "fd4e9f7385e2d39cd3937171fef1dda7"
+      "d7d1cd59d71785b0561fb912c957a216"
     ],
     [
       "ProgramEquivalence.inv_1",
@@ -163,7 +163,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "209aaadb95c285ce05e1bf9647439775"
+      "25ab6e5cad3683e0d9ab2305e30f318f"
     ],
     [
       "ProgramEquivalence.incr_1",
@@ -194,7 +194,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "f15a9013db1daaad9f77458e894d4b34"
+      "657cc9b2bcc720c9610db03a7a79b9d6"
     ],
     [
       "ProgramEquivalence.get_1",
@@ -225,7 +225,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "c8164097d72477a10658511ba6de02f3"
+      "b12f348b4af32104d8a3d459f7df3498"
     ],
     [
       "ProgramEquivalence.counter_0",
@@ -238,7 +238,7 @@
         "token_correspondence_ProgramEquivalence.inv_0"
       ],
       0,
-      "cdd36ea3f2a0a3c58cc0520ef98009b9"
+      "adfdbc16bbb01c48aaa64f810b1873d8"
     ],
     [
       "ProgramEquivalence.counter_1",
@@ -251,7 +251,7 @@
         "token_correspondence_ProgramEquivalence.inv_1"
       ],
       0,
-      "9c9543f415a3762c5c9d6974a9659add"
+      "46cc16d3cad10908cf7540cfd54ba85c"
     ],
     [
       "ProgramEquivalence.init_counter_1",
@@ -311,7 +311,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e348ce5ce5a20e749b23fd18f6f1d77f"
+      "2485cc6d48d27de5e270ccbc72764cba"
     ],
     [
       "ProgramEquivalence.ref_not_in_fp",
@@ -323,7 +323,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5400b06337ce0f4d4737d987a1b67fc7"
+      "1d50abb42a9824c619ddf35e5cf500d6"
     ],
     [
       "ProgramEquivalence.observational_equivalence'",
@@ -339,9 +339,7 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_ProgramEquivalence.increment_m.fuel_instrumented",
         "@query", "FStar.DM4F.Heap.ST.__proj__STATE__item__get_equality",
-        "FStar.DM4F.Heap.ST.__proj__STATE__item__get_token_correspondence",
         "FStar.DM4F.Heap.ST.__proj__STATE__item__put_equality",
-        "FStar.DM4F.Heap.ST.__proj__STATE__item__put_token_correspondence",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "ProgramEquivalence_interpretation_Tm_arrow_0f56e2e362ba49ee2aa5a74ab58032d3",
@@ -351,8 +349,7 @@
         "binder_x_e1abf8d70ef080b612ca8cf43cbeae49_2",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_4",
         "binder_x_ffcb47ea43e69e20fb22a4cfa690626f_3",
-        "constructor_distinct_Prims.Cons",
-        "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Prims.Cons",
+        "constructor_distinct_Prims.Cons", "data_elim_Prims.Cons",
         "data_elim_ProgramEquivalence.C", "eq2-interp",
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.DM4F.Heap.ST.read_weak",
@@ -387,8 +384,8 @@
         "function_token_typing_ProgramEquivalence.__proj__C__item__inv",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion", "int_typing",
-        "interpretation_FStar.DM4F.Heap.ST_Tm_abs_42a79cea2f7d589b114020780503b960",
-        "interpretation_FStar.DM4F.Heap.ST_Tm_abs_714d83bc16ab055753ca46c02fc167ad",
+        "interpretation_FStar.DM4F.Heap.ST_Tm_abs_5045fd2947aab30e65b48e933aad1c5c",
+        "interpretation_FStar.DM4F.Heap.ST_Tm_abs_6e8daedf8ae3cb1a4dcf1009855286f5",
         "interpretation_FStar.DM4F.ST_Tm_abs_493a6a2efdc1ba856d2ec47940085959",
         "interpretation_FStar.DM4F.ST_Tm_abs_4e96b01f83e004339dd29f46135d3c51",
         "interpretation_FStar.DM4F.ST_Tm_abs_be1f098a73b727536eabaf253dd83852",
@@ -400,7 +397,7 @@
         "interpretation_ProgramEquivalence_Tm_abs_c73e5aaf52b533251d45d6d6faa84d2b",
         "interpretation_ProgramEquivalence_Tm_abs_cde073d00723c6982cc122bf53e940f2",
         "interpretation_ProgramEquivalence_Tm_abs_ff90d65fcd16ee4bb5de9ed3923ab510",
-        "l_and-interp", "l_or-interp", "l_quant_interp__6160",
+        "l_and-interp", "l_or-interp", "l_quant_interp__6477",
         "lemma_FStar.DM4F.Heap.lemma_sel_tot_is_sel_if_contains_a_well_typed",
         "lemma_FStar.DM4F.Heap.lemma_upd_tot_is_upd_if_contains_a_well_typed",
         "lemma_FStar.DM4F.Heap.sel_upd1", "lemma_FStar.DM4F.Heap.sel_upd2",
@@ -439,7 +436,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "397e6890280d6a2242ed1f53b6f8452f"
+      "7e188836b36926c944f7c8b88b28e09d"
     ],
     [
       "ProgramEquivalence.counts_even_numbers",
@@ -453,9 +450,7 @@
         "@fuel_correspondence_ProgramEquivalence.increment_m.fuel_instrumented",
         "@fuel_irrelevance_ProgramEquivalence.increment_m.fuel_instrumented",
         "@query", "FStar.DM4F.Heap.ST.__proj__STATE__item__get_equality",
-        "FStar.DM4F.Heap.ST.__proj__STATE__item__get_token_correspondence",
         "FStar.DM4F.Heap.ST.__proj__STATE__item__put_equality",
-        "FStar.DM4F.Heap.ST.__proj__STATE__item__put_token_correspondence",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "ProgramEquivalence_interpretation_Tm_arrow_0f56e2e362ba49ee2aa5a74ab58032d3",
         "assumption_Prims.HasEq_int",
@@ -486,8 +481,8 @@
         "function_token_typing_Prims.nat",
         "function_token_typing_ProgramEquivalence.__proj__C__item__inv",
         "int_inversion", "int_typing",
-        "interpretation_FStar.DM4F.Heap.ST_Tm_abs_42a79cea2f7d589b114020780503b960",
-        "interpretation_FStar.DM4F.Heap.ST_Tm_abs_714d83bc16ab055753ca46c02fc167ad",
+        "interpretation_FStar.DM4F.Heap.ST_Tm_abs_5045fd2947aab30e65b48e933aad1c5c",
+        "interpretation_FStar.DM4F.Heap.ST_Tm_abs_6e8daedf8ae3cb1a4dcf1009855286f5",
         "interpretation_FStar.DM4F.ST_Tm_abs_493a6a2efdc1ba856d2ec47940085959",
         "interpretation_FStar.DM4F.ST_Tm_abs_4e96b01f83e004339dd29f46135d3c51",
         "interpretation_FStar.DM4F.ST_Tm_abs_be1f098a73b727536eabaf253dd83852",
@@ -497,7 +492,7 @@
         "interpretation_ProgramEquivalence_Tm_abs_25bb10f17d12bfe78f920397f50273e0",
         "interpretation_ProgramEquivalence_Tm_abs_273d8a487f3a47d1045a549bd9726c4b",
         "interpretation_ProgramEquivalence_Tm_abs_cde073d00723c6982cc122bf53e940f2",
-        "l_and-interp", "l_or-interp", "l_quant_interp__6468",
+        "l_and-interp", "l_or-interp", "l_quant_interp__6477",
         "lemma_FStar.DM4F.Heap.lemma_sel_tot_is_sel_if_contains_a_well_typed",
         "lemma_FStar.DM4F.Heap.lemma_upd_tot_is_upd_if_contains_a_well_typed",
         "lemma_FStar.DM4F.Heap.sel_upd1", "primitive_Prims.op_Addition",
@@ -526,7 +521,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1288c55a88666e41d0deabd69c9cbc97"
+      "7b1540fc7025aa2d0d6e2a1b4d70ef9d"
     ],
     [
       "ProgramEquivalence.__proj__C__item__c",
@@ -538,7 +533,7 @@
         "projection_inverse_ProgramEquivalence.C_inv"
       ],
       0,
-      "664f783557b253897f25465dc17acfbb"
+      "e6ca6ea4375c5498ddc4e70c9f11d10a"
     ],
     [
       "ProgramEquivalence.increment",
@@ -554,7 +549,7 @@
         "token_correspondence_ProgramEquivalence.__proj__C__item__inv"
       ],
       0,
-      "82080dd478c63a501435bc31db53a413"
+      "f42ecc9ea44e5eea23f9796003c26790"
     ],
     [
       "ProgramEquivalence.get",
@@ -570,7 +565,7 @@
         "token_correspondence_ProgramEquivalence.__proj__C__item__inv"
       ],
       0,
-      "b68f97b117a64bd3c4e190db112ecd63"
+      "9b5a6418f07e32900ffce571f87db673"
     ],
     [
       "ProgramEquivalence.inv_0",
@@ -579,7 +574,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4f57369229911876457d76b97c29a84e"
+      "c46486b5fef2439f73456c96c99acbe5"
     ],
     [
       "ProgramEquivalence.incr_0",
@@ -605,7 +600,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c8b2050da704e6f69235367bb9113a6a"
+      "28a2ca52773a3109945d61fd5d453382"
     ],
     [
       "ProgramEquivalence.get_0",
@@ -629,7 +624,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "0880af63af8fc3c8bdc39e399b46caf0"
+      "6a104371c3a60e5105dfaf263da6945e"
     ],
     [
       "ProgramEquivalence.init_counter_0",
@@ -667,7 +662,7 @@
         "typing_ProgramEquivalence.__proj__C__item__fp"
       ],
       0,
-      "26f70cc496b80ac90a78af3ae7552973"
+      "f8b540521e187c3adc761dadcc433f94"
     ],
     [
       "ProgramEquivalence.inv_1",
@@ -690,7 +685,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "a59b8be27b9c543489325330891e162c"
+      "1964355bfaa2b4e3d010770839ad4587"
     ],
     [
       "ProgramEquivalence.incr_1",
@@ -721,7 +716,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "6b894ade0879c2100376ac075c500196"
+      "4eaa74c05e2a24fc1e485a2a36ef6b3b"
     ],
     [
       "ProgramEquivalence.get_1",
@@ -752,7 +747,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "28463220d95370d91870a9c09a96b8ae"
+      "9c7aae856eec8e3fa383f6567a5a8c65"
     ],
     [
       "ProgramEquivalence.counter_0",
@@ -765,7 +760,7 @@
         "token_correspondence_ProgramEquivalence.inv_0"
       ],
       0,
-      "a957e54218cd5cca8019dad3d08f261a"
+      "b0ca423369a9d2636e500869c3f37dd6"
     ],
     [
       "ProgramEquivalence.counter_1",
@@ -778,7 +773,7 @@
         "token_correspondence_ProgramEquivalence.inv_1"
       ],
       0,
-      "0e2065dec14a41d6577f4caba2f1f3a4"
+      "5e18416995a198c9cd0208ce0e55d5e7"
     ],
     [
       "ProgramEquivalence.init_counter_1",
@@ -821,7 +816,7 @@
         "typing_ProgramEquivalence.__proj__C__item__fp"
       ],
       0,
-      "9ef98d9096bd8e27ec573412d9505ca2"
+      "ee842bdd21bd1c87de09574c14fed1f3"
     ],
     [
       "ProgramEquivalence.increment_m",
@@ -837,7 +832,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0a8fd33f0018710874f1a0ef032d7ce3"
+      "4b671b9fa24cf9169477b1fd256853cf"
     ],
     [
       "ProgramEquivalence.ref_not_in_fp",
@@ -849,7 +844,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0c5ec441509524bcea1134fb4daecb17"
+      "0aad2ca67e4116667020f5f3e86fa206"
     ],
     [
       "ProgramEquivalence.observational_equivalence'",
@@ -865,7 +860,7 @@
         "refinement_interpretation_ProgramEquivalence_Tm_refine_62a743791b63ba8269fbb4ad5655e284"
       ],
       0,
-      "2c418e16d917f3624b9a8d33a72fff90"
+      "3ece2e726e3df71da517d72d9f899676"
     ],
     [
       "ProgramEquivalence.counts_even_numbers",
@@ -877,7 +872,7 @@
         "refinement_interpretation_ProgramEquivalence_Tm_refine_62a743791b63ba8269fbb4ad5655e284"
       ],
       0,
-      "334e40780835fc89248a04501c095e9c"
+      "b0e2ae6c9726aa87fd7d6e73937213e3"
     ]
   ]
 ]

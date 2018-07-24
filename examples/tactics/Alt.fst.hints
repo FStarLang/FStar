@@ -1,5 +1,5 @@
 [
-  "Ω8≠Dòµão˚U*\u0014IN∑z",
+  "?B‹Óké2YÎQ\u00035Ym\u0006s",
   [
     [
       "Alt.uu___62",
@@ -8,22 +8,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "190e3a6dbe5c3df4eee2ccb43a947315"
-    ],
-    [
-      "Alt.uu___62",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
       ],
       0,
-      "3c5677000edef96f3f4c6ea52569ba8d"
+      "c13a508b9017b125f9e0f6d1429fd407"
     ]
   ]
 ]

@@ -5,35 +5,6 @@
       "Bug1270.test",
       1,
       2,
-      2,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "data_elim_FStar.Tactics.Result.Failed",
-        "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.Reflection.Basic.binders_of_env",
-        "equation_FStar.Reflection.Types.binders",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.Tactics.Types.proofstate",
-        "function_token_typing_Prims.unit",
-        "typing_FStar.Reflection.Basic.binders_of_env", "unit_inversion",
-        "unit_typing"
-      ],
-      0,
-      "902a232e72abfb862aa94e88e6c4a93e"
-    ],
-    [
-      "Bug1270.test",
-      2,
-      2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
@@ -45,7 +16,7 @@
         "typing_FStar.Reflection.Basic.binders_of_env"
       ],
       0,
-      "19733d18e63838e0b05f70be36b32b1d"
+      "8cd05389ab115c0c6155f5d769040ca1"
     ]
   ]
 ]
