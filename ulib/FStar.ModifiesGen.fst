@@ -179,6 +179,8 @@ let loc_of_aloc #al #c #r #n b =
       (fun _ -> GSet.empty)
       (Ghost.hide (GSet.singleton (ALoc r n (Some b))))
 
+let loc_of_aloc_not_none #al #c #r #n b = ()
+
 let loc_addresses #al #c preserve_liveness r n =
   let regions = (Ghost.hide (Set.singleton r)) in
   Loc
@@ -372,7 +374,12 @@ let loc_includes_union_l #al #c s1 s2 s =
 
 let loc_includes_none #al #c s = ()
 
+let loc_includes_none_elim #al #c s =
+  assert (s `loc_equal` loc_none)
+
 let loc_includes_aloc #al #c #r #n b1 b2 = ()
+
+let loc_includes_aloc_elim #aloc #c #r1 #r2 #n1 #n2 b1 b2 = ()
 
 let addrs_of_loc_loc_of_aloc
   (#al: aloc_t)

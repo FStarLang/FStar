@@ -165,6 +165,7 @@ type meta =
   | CConst of string
   | CCConv of string
   | Erased
+  | CAbstract
 
 // rename
 type metadata = list<meta>

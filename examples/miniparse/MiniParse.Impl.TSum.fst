@@ -29,6 +29,8 @@ let parse32_tagged_union
     end
   | _ -> None
 
+#set-options "--z3rlimit 16"
+
 inline_for_extraction
 let serialize32_tagged_union
   (#tag_t: Type0)
@@ -56,3 +58,5 @@ let serialize32_tagged_union
     | _ -> None
     end
   | _ -> None
+
+#reset-options
