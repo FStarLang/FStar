@@ -52,8 +52,13 @@ val restore_cmd_line_options    : bool    -> parse_cmdline_res //inits or clears
 
 type optionstate = Util.smap<option_val>
 (* Control the option stack *)
+(* Briefly, push/pop are used by the interactive mode and internal_*
+ * by #push-options/#pop-options. Read the comment in the .fs for more
+ * details. *)
 val push                        : unit -> unit
 val pop                         : unit -> unit
+val internal_push               : unit -> unit
+val internal_pop                : unit -> unit
 val snapshot                    : unit -> (int * unit)
 val rollback                    : option<int> -> unit
 val peek                        : unit -> optionstate

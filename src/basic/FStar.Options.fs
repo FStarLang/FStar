@@ -92,19 +92,58 @@ let as_comma_string_list = function
 
 type optionstate = Util.smap<option_val>
 
-let fstar_options : ref<list<optionstate> > = Util.mk_ref []
-let peek () = List.hd !fstar_options
+
+(* The option state is a stack of stacks. Why? First, we need to
+ * support #push-options and #pop-options, which provide the user with
+ * a stack-like option control, useful for rlimits and whatnot. Second,
+ * there's the interactive mode, which allows to traverse a file and
+ * backtrack over it, and must update this state accordingly. So for
+ * instance consider the following code:
+ *
+ *   1. #push-options "A"
+ *   2. let f = ...
+ *   3. #pop-options
+ *
+ * Running in batch mode starts with a singleton stack, then pushes,
+ * then pops. In the interactive mode, say we go over line 1. Then
+ * our current state is a stack with two elements (original state and
+ * state+"A"), but we need the previous state too to backtrack if we run
+ * C-c C-p or whatever. We can also go over line 3, and still we need
+ * to keep track of everything to backtrack. After processing the lines
+ * one-by-one in the interactive mode, the stacks are: (top at the head)
+ *
+ *      (orig)
+ *      (orig + A) (orig)
+ *      (orig)
+ *
+ * No stack should ever be empty!
+ *)
+let fstar_options : ref<list<list<optionstate>>> = Util.mk_ref []
+
+let peek () = List.hd (List.hd !fstar_options)
 let pop  () = // already signal-atomic
     match !fstar_options with
     | []
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
 let push () = // already signal-atomic
-    fstar_options := Util.smap_copy (peek()) :: !fstar_options
+    fstar_options := List.map Util.smap_copy (List.hd !fstar_options) :: !fstar_options
+
+let internal_pop () =
+    let curstack = List.hd !fstar_options in
+    let stack' = List.tl curstack in
+    fstar_options := stack' :: List.tl !fstar_options
+
+let internal_push () =
+    let curstack = List.hd !fstar_options in
+    let stack' = Util.smap_copy (List.hd curstack) :: curstack in
+    fstar_options := stack' :: List.tl !fstar_options
+
 let set o =
     match !fstar_options with
     | [] -> failwith "set on empty option stack"
-    | _::os -> fstar_options := (o::os)
+    | (_::tl)::os -> fstar_options := ((o::tl)::os)
+
 let snapshot () = Common.snapshot push fstar_options ()
 let rollback depth = Common.rollback pop fstar_options depth
 
@@ -227,7 +266,7 @@ let init () =
 
 let clear () =
    let o = Util.smap_create 50 in
-   fstar_options := [o];                                 //clear and reset the options stack
+   fstar_options := [[o]];                               //clear and reset the options stack
    light_off_files := [];
    init()
 

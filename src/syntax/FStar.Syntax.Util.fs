@@ -1864,13 +1864,13 @@ let process_pragma p r =
       | Some s -> set_options Options.Reset s
       end
     | PushOptions sopt ->
-      Options.push ();
+      Options.internal_push ();
       begin match sopt with
       | None -> ()
       | Some s -> set_options Options.Reset s
       end
     | PopOptions ->
-      Options.pop ()
+      Options.internal_pop ()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 let rec unbound_variables tm :  list<bv> =
