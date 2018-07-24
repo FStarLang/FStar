@@ -2981,6 +2981,7 @@ let (mk_discriminator_and_indexed_projectors :
                                     match uu___343_7788 with
                                     | FStar_Syntax_Syntax.Abstract  ->
                                         Prims.op_Negation only_decl
+                                    | FStar_Syntax_Syntax.NoExtract  -> true
                                     | FStar_Syntax_Syntax.Private  -> true
                                     | uu____7789 -> false) iquals
                                 in
@@ -3347,6 +3348,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                       (fun uu___345_8457  ->
                                                          match uu___345_8457
                                                          with
+                                                         | FStar_Syntax_Syntax.NoExtract
+                                                              -> true
                                                          | FStar_Syntax_Syntax.Abstract
                                                               -> true
                                                          | FStar_Syntax_Syntax.Private

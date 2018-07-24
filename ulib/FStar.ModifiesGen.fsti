@@ -159,6 +159,13 @@ val loc_of_aloc
   (b: aloc r n)
 : GTot (loc c)
 
+val loc_of_aloc_not_none
+  (#aloc: aloc_t) (#c: cls aloc)
+  (#r: HS.rid)
+  (#n: nat)
+  (b: aloc r n)
+: Lemma (loc_of_aloc #_ #c b == loc_none ==> False)
+
 val loc_addresses
   (#aloc: aloc_t) (#c: cls aloc)
   (preserve_liveness: bool)
@@ -243,6 +250,14 @@ val loc_includes_none
 : Lemma
   (loc_includes s loc_none)
 
+val loc_includes_none_elim
+  (#aloc: aloc_t) (#c: cls aloc)
+  (s: loc c)
+: Lemma
+  (requires (loc_includes loc_none s))
+  (ensures (s == loc_none))
+
+
 val loc_includes_aloc
   (#aloc: aloc_t) (#c: cls aloc)
   (#r: HS.rid)
@@ -251,6 +266,16 @@ val loc_includes_aloc
 : Lemma
   (requires (c.aloc_includes b1 b2))
   (ensures (loc_includes (loc_of_aloc b1) (loc_of_aloc #_ #c b2)))
+
+val loc_includes_aloc_elim
+  (#aloc: aloc_t) (#c: cls aloc)
+  (#r1 #r2: HS.rid)
+  (#n1 #n2: nat)
+  (b1: aloc r1 n1)
+  (b2: aloc r2 n2)
+: Lemma
+  (requires (loc_includes (loc_of_aloc b1) (loc_of_aloc #_ #c b2)))
+  (ensures (r1 == r2 /\ n1 == n2 /\ c.aloc_includes b1 b2))
 
 val loc_includes_addresses_aloc
   (#aloc: aloc_t) (#c: cls aloc)
