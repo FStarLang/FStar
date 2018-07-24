@@ -637,6 +637,27 @@ val loc_disjoint
   (s1 s2: loc)
 : GTot Type0
 
+[@"opaque_to_smt"]
+private let rec loc_disjoint_from_list (l:loc) (ls:list loc) :Type0 =
+  match ls with
+  | []    -> True
+  | hd::tl -> loc_disjoint l hd /\ loc_disjoint_from_list l tl
+
+[@"opaque_to_smt"]
+private let rec loc_pairwise_disjoint_aux (l:list loc) :Type0 =
+  match l with
+  | []    -> True
+  | hd::tl -> loc_disjoint_from_list hd tl /\ loc_pairwise_disjoint_aux tl
+
+(*
+ * Use this to state pairwise disjointness for the locations in l
+ * It is unfolded to conjunction of loc_disjoint for all pairs of locations in l
+ *)
+[@"opaque_to_smt"]
+unfold let loc_pairwise_disjoint (l:list loc) :Type0 =
+  norm [iota; zeta; delta; delta_only ["LowStar.Buffer.loc_disjoint_from_list";
+                                       "LowStar.Buffer.loc_pairwise_disjoint_aux"]] (loc_pairwise_disjoint_aux l)
+
 val loc_disjoint_sym
   (s1 s2: loc)
 : Lemma
@@ -1799,7 +1820,7 @@ val alloca_of_list
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
     alloc_post_common (HS.get_tip h) len b h h' /\
-    as_seq h' b == Seq.of_list init /\
+    as_seq h' b == Seq.seq_of_list init /\
     alloc_of_list_post #a len b
   ))
 
@@ -1817,7 +1838,7 @@ val gcmalloc_of_list
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
     alloc_post_common r len b h h' /\
-    as_seq h' b == Seq.of_list init
+    as_seq h' b == Seq.seq_of_list init
   ))
 
 /// Derived operations

@@ -51,20 +51,6 @@ private abstract let rec init_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents
 inline_for_extraction abstract val init: #a:Type -> len:nat -> contents: (i:nat { i < len } -> Tot a) -> Tot (seq a)
 inline_for_extraction abstract let init #a len contents = if len = 0 then MkSeq [] else init_aux len 0 contents
 
-abstract val of_list: #a:Type -> list a -> Tot (seq a)
-[@(deprecated "seq_of_list")]
-let of_list #a l = MkSeq l
-
-let lemma_of_list_length (#a:Type) (l:list a)
-  : Lemma (ensures (length (of_list #a l) == List.length l))
-          [SMTPat (length (of_list #a l))]
-  = ()
-
-let lemma_of_list (#a:Type) (l:list a) (i:nat{i < List.length l})
-  : Lemma (ensures (index (of_list #a l) i == List.index l i))
-          [SMTPat (index (of_list #a l) i)]
-  = ()
-
 abstract
 let empty #a : Tot (s:(seq a){length s=0}) = MkSeq []
 

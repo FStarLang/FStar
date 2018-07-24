@@ -826,15 +826,15 @@ val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
      /\ frameOf b == (HS.get_tip h0)
      /\ Map.domain (HS.get_hmap h1) == Map.domain (HS.get_hmap h0)
      /\ modifies_0 h0 h1
-     /\ as_seq h1 b == Seq.of_list init
+     /\ as_seq h1 b == Seq.seq_of_list init
      /\ q #a len b))
 #set-options "--initial_fuel 1 --max_fuel 1" //the normalize_term (length init) in the pre-condition will be unfolded
 	                                     //whereas the L.length init below will not
 let createL #a init =
   let len = UInt32.uint_to_t (FStar.List.Tot.length init) in
-  let s = Seq.of_list init in
+  let s = Seq.seq_of_list init in
   let content: reference (lseq a (v len)) =
-    salloc (Seq.of_list init) in
+    salloc (Seq.seq_of_list init) in
   let b = MkBuffer len content 0ul len in
   let h = HST.get() in
   assert (Seq.equal (as_seq h b) (sel h b));
@@ -1434,15 +1434,10 @@ let rec assignL #a (l: list a) (b: buffer a): Stack unit
   (ensures (fun h0 _ h1 ->
     live h1 b /\
     modifies_1 b h0 h1 /\
-    as_seq h1 b == Seq.of_list l))
-= lemma_of_list_induction l;
+    as_seq h1 b == Seq.seq_of_list l))
+= lemma_seq_of_list_induction l;
   match l with
-  | [] ->
-      let h = HST.get () in
-      assert (length b = List.Tot.length l);
-      assert_norm (List.Tot.length l = 0);
-      assert (Seq.length (as_seq h b) = 0);
-      assert (Seq.equal (as_seq h b) (Seq.empty #a))
+  | [] -> ()
   | hd :: tl ->
       let b_hd = sub b 0ul 1ul in
       let b_tl = offset b 1ul in
@@ -1450,6 +1445,6 @@ let rec assignL #a (l: list a) (b: buffer a): Stack unit
       assignL tl b_tl;
       let h = HST.get () in
       assert (get h b_hd 0 == hd);
-      assert (as_seq h b_tl == Seq.of_list tl);
+      assert (as_seq h b_tl == Seq.seq_of_list tl);
       assert (Seq.equal (as_seq h b) (Seq.append (as_seq h b_hd) (as_seq h b_tl)));
-      assert (as_seq h b == Seq.of_list l)
+      assert (Seq.equal (as_seq h b) (Seq.seq_of_list l))

@@ -47,39 +47,6 @@ abstract let hsl_get_p0 (st:hsl_state) :reference u32 = st.p0
 abstract let hsl_get_p1 (st:hsl_state) :reference u32 = st.p1
 abstract let hsl_get_msgs (st:hsl_state) :reference (list (u32 * u32)) = st.msgs
 
-abstract
-let rec loc_disjoint_from_list (l: loc) (ls: list loc) : GTot Type0 = match ls with [] -> True | a :: q -> loc_disjoint l a /\ loc_disjoint_from_list l q
-
-abstract
-let loc_disjoint_from_list_nil (l: loc) : Lemma
-  (loc_disjoint_from_list l [])
-  [SMTPat (loc_disjoint_from_list l [])]
-= ()
-
-abstract
-let loc_disjoint_from_list_cons (l a: loc) (q: list loc) : Lemma
-  (loc_disjoint_from_list l (a :: q) <==> (loc_disjoint l a /\ loc_disjoint_from_list l q))
-  [SMTPat (loc_disjoint_from_list l (a :: q))]
-= ()
-
-abstract
-let rec loc_pairwise_disjoint (l: list loc) : GTot Type0 = match l with [] -> True | a :: q -> loc_disjoint_from_list a q /\ loc_pairwise_disjoint q
-
-abstract
-let loc_pairwise_disjoint_nil : squash (loc_pairwise_disjoint []) = ()
-
-abstract
-let loc_pairwise_disjoint_cons_nil (a: loc) : Lemma
-  (loc_pairwise_disjoint [a])
-  [SMTPat (loc_pairwise_disjoint [a])]
-= ()
-
-abstract
-let loc_pairwise_disjoint_cons (a: loc) (q: list loc) : Lemma
-  (loc_pairwise_disjoint (a :: q) <==> (loc_disjoint_from_list a q /\ loc_pairwise_disjoint q))
-  [SMTPat (loc_pairwise_disjoint (a :: q))]
-= ()
-
 (* Liveness and disjointness *)
 [@"opaque_to_smt"]
 unfold private let liveness_and_disjointness (st:hsl_state) (h:mem) :Type0 =
@@ -140,6 +107,10 @@ unfold private let hsl_invariant_predicate (st:hsl_state) (h:mem)
 (* Finally, the abstract invariant and its elimination *)
 abstract let hsl_invariant (st:hsl_state) (h:mem) = hsl_invariant_predicate st h
 
+(*
+ * This is a place where we can control what clients get to derive from the invariant
+ * For now, we put everything in here
+ *)
 let lemma_hsl_invariant_elim (st:hsl_state) (h:mem)
   :Lemma (requires (hsl_invariant st h))
          (ensures  (hsl_invariant_predicate st h))
@@ -147,7 +118,7 @@ let lemma_hsl_invariant_elim (st:hsl_state) (h:mem)
   = ()
 
 (*
- * HSL footprint = p0, p1, buffer contents between p0 and p1, and msgs
+ * HSL footprint = p0, p1, buffer contents between 0 and p1, and msgs
  * This is not abstract, so that the client (Record) can append the buffer after p1, and use the framing lemma
  *)
 let hsl_footprint (st:hsl_state) (h:mem{hsl_invariant st h}) =
@@ -164,17 +135,7 @@ let lemma_frame_hsl_invariant (st:hsl_state) (l:loc) (h0 h1:mem)
                     loc_disjoint l (hsl_footprint st h0) /\
 		    Mods.modifies l h0 h1))
 	 (ensures  (hsl_invariant st h1 /\ hsl_footprint st h1 == hsl_footprint st h0))
-	 [SMTPat (hsl_invariant st h0); SMTPat (loc_disjoint l (hsl_footprint st h0));
-	  SMTPat (Mods.modifies l h0 h1)]
-  = let buf, p0, p1, msgs = hsl_get_buf st, hsl_get_p0 st, hsl_get_p1 st, hsl_get_msgs st in
-
-    let b0 = Buffer.as_seq h0 buf in
-    let b1 = Buffer.as_seq h0 buf in
-    let p0 = v (sel h0 p0) in
-    let p1 = v (sel h0 p1) in
-
-    assert (forall (k:nat). k < p1 ==> Seq.index b0 k == Seq.index (Seq.slice b0 0 p1) k);
-    assume (msgs_list_invariant st h1)
+  = ()
 
 assume val fresh_loc: Mods.loc -> mem -> mem -> Type0
 
