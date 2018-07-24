@@ -517,7 +517,7 @@ val loc_includes_gsub_buffer_l
 : Lemma
   (requires (UInt32.v i1 + UInt32.v len1 <= (length b) /\ UInt32.v i1 <= UInt32.v i2 /\ UInt32.v i2 + UInt32.v len2 <= UInt32.v i1 + UInt32.v len1))
   (ensures (UInt32.v i1 + UInt32.v len1 <= (length b) /\ UInt32.v i1 <= UInt32.v i2 /\ UInt32.v i2 + UInt32.v len2 <= UInt32.v i1 + UInt32.v len1 /\ loc_includes (loc_buffer (gsub b i1 len1)) (loc_buffer (gsub b i2 len2))))
-  [SMTPat (loc_includes (loc_buffer (gsub b i1 len1)) (loc_buffer (gsub b i2 len2)))]
+  [SMTPat (gsub b i1 len1); SMTPat (gsub b i2 len2)]
 
 /// If the contents of a buffer are equal in two given heaps, then so
 /// are the contents of any of its sub-buffers.
@@ -804,7 +804,7 @@ val loc_disjoint_gsub_buffer
     UInt32.v i2 + UInt32.v len2 <= (length b) /\
     loc_disjoint (loc_buffer (gsub b i1 len1)) (loc_buffer (gsub b i2 len2))
   ))
-  [SMTPat (loc_disjoint (loc_buffer (gsub b i1 len1)) (loc_buffer (gsub b i2 len2)))]
+  [SMTPat (gsub b i1 len1); SMTPat (gsub b i2 len2)]
 
 
 /// If two sets of addresses correspond to different regions or are
