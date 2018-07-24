@@ -750,13 +750,13 @@ and (primitive_steps :
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
-                                                                    "debug"
-                                                                    FStar_Tactics_Basic.debug
-                                                                    FStar_Syntax_Embeddings.e_string
+                                                                    "debugging"
+                                                                    FStar_Tactics_Basic.debugging
                                                                     FStar_Syntax_Embeddings.e_unit
-                                                                    FStar_Tactics_Basic.debug
-                                                                    FStar_TypeChecker_NBETerm.e_string
+                                                                    FStar_Syntax_Embeddings.e_bool
+                                                                    FStar_Tactics_Basic.debugging
                                                                     FStar_TypeChecker_NBETerm.e_unit
+                                                                    FStar_TypeChecker_NBETerm.e_bool
                                                                      in
                                                                     let uu____1126
                                                                     =
