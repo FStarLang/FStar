@@ -138,8 +138,8 @@ let gen_parser_impl (pol: T.guard_policy) : T.Tac unit =
         synth_inverse_forall_bounded_u16_solve;
         synth_inverse_forall_tenum_solve;
       ]);
-      T.print "gen_parser_impl spits:";
-      T.print (T.term_to_string t)
+      T.debug "gen_parser_impl spits:";
+      T.debug (T.term_to_string t)
     end else
       tfail "Not a parser_impl goal"
   | _ -> tfail "Not a parser_impl goal"
@@ -166,17 +166,17 @@ let rec gen_serializer_impl (pol: T.guard_policy) : T.Tac unit =
       begin
         if hd `T.term_eq` (`(serialize_empty)) then begin
           T.with_policy pol (fun () -> T.apply (`(serialize_empty_impl)));
-          T.print ("Applied serialize_empty_impl; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
+          T.debug ("Applied serialize_empty_impl; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
           _default ()
         end else
         if hd `T.term_eq` (`(serialize_u8)) then begin
           T.with_policy pol (fun () -> T.apply (`(serialize_u8_impl)));
-          T.print ("Applied serialize_u8_impl; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
+          T.debug ("Applied serialize_u8_impl; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
           _default ()
         end else
         if hd `T.term_eq` (`(serialize_nondep_then)) then begin
           T.with_policy pol (fun () -> T.apply (`(serialize_nondep_then_impl)));
-          T.print ("Applied serialize_nondep_then_impl; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
+          T.debug ("Applied serialize_nondep_then_impl; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
           let _ =
             T.divide 1
               (fun () -> gen_serializer_impl pol) (fun () ->
@@ -198,19 +198,19 @@ let rec gen_serializer_impl (pol: T.guard_policy) : T.Tac unit =
             qt2;
             (g1', T.Q_Explicit);
           ]));
-          T.print ("Applied serialize_synth_impl'; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
+          T.debug ("Applied serialize_synth_impl'; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
           let _ = T.divide 1 (fun () -> gen_serializer_impl pol) _default in
           ()
         | _ -> tfail "Not enough arguments to synth"
         else
         if hd `T.term_eq` (`serialize_bounded_u16) then begin
           T.with_policy pol (fun () -> T.apply (`serialize_bounded_u16_impl));
-          T.print ("Applied serialize_bounded_u16_impl'; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
+          T.debug ("Applied serialize_bounded_u16_impl'; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
           _default ()
         end else
         if hd `T.term_eq` (`serialize_filter) then begin
           T.with_policy pol (fun () -> T.apply (`serialize_filter_impl));
-          T.print ("Applied serialize_filter_impl'; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");          
+          T.debug ("Applied serialize_filter_impl'; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");          
           let _ = T.divide 1 (fun () -> gen_serializer_impl pol) _default in
           ()
         end else
@@ -249,7 +249,7 @@ let rec gen_serializer_impl (pol: T.guard_policy) : T.Tac unit =
               (n, T.Q_Explicit);
               (n', T.Q_Explicit);
             ]));
-          T.print ("Applied serialize_nlist_impl'; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
+          T.debug ("Applied serialize_nlist_impl'; " ^ string_of_int (T.ngoals ()) ^ " goals remaining");
           let _ = T.divide 1 (fun () -> gen_serializer_impl pol) _default in
             ()
           | _ -> tfail "serialize_nlist: not an integer constant"

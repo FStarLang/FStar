@@ -61,7 +61,7 @@ let unfold_fv (t: T.fv) : T.Tac T.term =
     begin match T.inspect_sigelt s with
     | T.Sg_Let false _ _ _ def ->
       let nm = string_of_name n in
-      T.print ("Unfolded definition: " ^ nm);
+      T.debug ("Unfolded definition: " ^ nm);
       def
     | _ ->
       let nm = string_of_name n in
@@ -75,9 +75,9 @@ let unfold_term (t: T.term) : T.Tac T.term =
   | _ -> tfail "Not a global variable"
 
 let tsuccess (s: string) : T.Tac unit =
-  T.print ("Checking success for: " ^ s);
+  T.debug ("Checking success for: " ^ s);
   T.qed ();
-  T.print ("Success: " ^ s)
+  T.debug ("Success: " ^ s)
 
 let rec to_all_goals (t: unit -> T.Tac unit) : T.Tac unit =
   if T.ngoals () = 0
@@ -130,12 +130,12 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
     end;
   begin match T.trytac tforall_intro with
   | Some _ ->
-    T.print ("Applied: forall_intro");
+    T.debug ("Applied: forall_intro");
     to_all_goals (fun () -> solve_goal l)
   | _ ->
     begin match T.trytac timplies_intro with
     | Some _ ->
-      T.print ("Applied: implies_intro");
+      T.debug ("Applied: implies_intro");
       to_all_goals (fun () -> solve_goal l)
     | _ ->
       begin match T.trytac tsplit with
@@ -169,7 +169,7 @@ let rec tconclude_with (l: list (unit -> T.Tac unit)) : T.Tac unit =
     T.dump "Some goals left";
     let _ = T.divide 1 (fun () -> solve_goal l) (fun () -> tconclude_with l) in
     ()
-  end else T.print "No goals left"
+  end else T.debug "No goals left"
 
 let tconclude () : T.Tac unit = tconclude_with []
 

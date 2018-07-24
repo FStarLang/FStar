@@ -52,9 +52,9 @@ let get_inductive_constructors (t: T.term) : T.Tac (list T.name) =
 
 let gen_synth' (t: T.term) (vt: T.term) : T.Tac T.term =
   let cts = get_inductive_constructors t in
-  T.print ("Inductive type with " ^ string_of_int (List.Tot.length cts));
+  T.debug ("Inductive type with " ^ string_of_int (List.Tot.length cts));
   let f = mk_function t (mk_tenum_branches t vt 0 [] cts) in
-  T.print (T.term_to_string f);
+  T.debug (T.term_to_string f);
   f
 
 let gen_synth (t: T.term) : T.Tac unit =
