@@ -42,7 +42,7 @@ let parse_nlist_impl_inv
   (stop: bool)
 : Tot Type0
 = parse_nlist_impl_inv_easy n h0 b rb rr h i /\ (
-  let off = BO.deref h rb in
+  let off = B.deref h rb in
   let b' = B.gsub b off (B.len b `U32.sub` off) in
   let p = parse (parse_nlist n p0) (B.as_seq h0 b) in
   let p' = parse (parse_nlist (n - i) p0) (B.as_seq h0 b') in
@@ -51,7 +51,7 @@ let parse_nlist_impl_inv
   else match p, p' with
   | Some (l, consumed), Some (l', consumed') ->
     consumed == U32.v off + consumed' /\
-    l == L.append (L.rev (BO.deref h rr)) l'
+    l == L.append (L.rev (B.deref h rr)) l'
   | None, None -> True
   | _ -> False
   )
@@ -89,8 +89,8 @@ let parse_nlist_impl_inv_false_intro
   (requires (
     parse_nlist_impl_inv p0 n h0 b rb rr h1 (i) false /\
     parse_nlist_impl_inv_easy n h0 b rb rr h2 (i + 1) /\
-    off == BO.deref h1 rb /\
-    off' == BO.deref h2 rb /\
+    off == B.deref h1 rb /\
+    off' == B.deref h2 rb /\
     U32.v off' == U32.v off + consumed1 /\
     b' == B.gsub b off (B.len b `U32.sub` off) /\
     b'_after == B.gsub b off' (B.len b `U32.sub` off') /\
@@ -102,7 +102,7 @@ let parse_nlist_impl_inv_false_intro
     parse (parse_nlist (n - i) p0) (B.as_seq h0 b') == Some (l'_before, consumed_before) /\
     consumed_after <= Seq.length (B.as_seq h0 b'_after) /\
     parse (parse_nlist (n - (i + 1)) p0) (B.as_seq h0 b'_after) == Some (l'_after, consumed_after) /\
-    BO.deref h2 rr == elem :: BO.deref h1 rr /\
+    B.deref h2 rr == elem :: B.deref h1 rr /\
     True
   ))
   (ensures (
@@ -111,7 +111,7 @@ let parse_nlist_impl_inv_false_intro
 = parse_nlist_eq (n - i) p0 (B.as_seq h0 b');
   assert (b'_after == B.gsub b' (U32.uint_to_t consumed1) (B.len b `U32.sub` off'));
   assert (consumed == U32.v off + consumed_before);
-  let l1 = BO.deref h1 rr in
+  let l1 = B.deref h1 rr in
   assert (l == L.append (L.rev l1) l'_before);
   assert (consumed == U32.v off' + consumed_after);
   assert (l'_before == elem :: l'_after);
@@ -166,7 +166,7 @@ let parse_nlist_impl_body #t p0 pimpl n h0 b len rb rr i =
       let p = parse (parse_nlist n p0) (B.as_seq h0 b) in
       let i = U32.v i in
       let b'_after = B.gsub b off' (len `U32.sub` off') in
-      assert (off' == BO.deref h rb);
+      assert (off' == B.deref h rb);
       assert (b'_after == B.gsub b off' (B.len b `U32.sub` off'));
       let p'_before = parse (parse_nlist (n - i) p0) (B.as_seq h0 b') in
       let p'_after = parse (parse_nlist (n - (i + 1)) p0) (B.as_seq h0 b'_after) in
@@ -295,10 +295,10 @@ let serialize_nlist_impl_inv
   (stop: bool)
 : Tot Type0
 = serialize_nlist_impl_inv_easy n h0 b rb rr h i /\ (
-  let off = BO.deref h rb in
+  let off = B.deref h rb in
   let bl = B.gsub b 0ul off in
   let ser = serialize (serialize_nlist n s) l in
-  let ll = BO.deref h rr in
+  let ll = B.deref h rr in
   if stop
   then (
     M.modifies (M.loc_union (M.loc_buffer b) (M.loc_union (M.loc_buffer rb) (M.loc_buffer rr))) h0 h /\
