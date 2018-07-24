@@ -131,8 +131,9 @@ let push () = // already signal-atomic
 
 let internal_pop () =
     let curstack = List.hd !fstar_options in
-    let stack' = List.tl curstack in
-    fstar_options := stack' :: List.tl !fstar_options
+    match curstack with
+    | [_] -> false
+    | _::tl -> (fstar_options := tl :: List.tl !fstar_options; true)
 
 let internal_push () =
     let curstack = List.hd !fstar_options in

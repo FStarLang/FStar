@@ -1870,7 +1870,9 @@ let process_pragma p r =
       | Some s -> set_options Options.Reset s
       end
     | PopOptions ->
-      Options.internal_pop ()
+      if Options.internal_pop ()
+      then ()
+      else Errors.raise_error (Errors.Fatal_FailToProcessPragma, "Cannot #pop-options, stack would become empty") r
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 let rec unbound_variables tm :  list<bv> =

@@ -58,7 +58,7 @@ type optionstate = Util.smap<option_val>
 val push                        : unit -> unit
 val pop                         : unit -> unit
 val internal_push               : unit -> unit
-val internal_pop                : unit -> unit
+val internal_pop                : unit -> bool (* returns whether it worked or not, false should be taken as a hard error *)
 val snapshot                    : unit -> (int * unit)
 val rollback                    : option<int> -> unit
 val peek                        : unit -> optionstate
