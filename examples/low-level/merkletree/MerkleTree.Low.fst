@@ -90,17 +90,6 @@ let rec pow2_floor_pow2 p =
 
 /// About hash buffer
 
-val copy_hash: 
-  src:hash{B.length src = hash_size} -> dst:hash{B.length dst = hash_size} -> 
-  HST.ST unit
-	 (requires (fun h0 -> 
-	   B.live h0 src /\ B.live h0 dst /\ B.disjoint src dst))
-	 (ensures (fun h0 _ h1 ->
-	   modifies (loc_buffer dst) h0 h1 /\
-	   B.as_seq h1 dst = B.as_seq h0 src))
-let copy_hash src dst =
-  blit src 0ul dst 0ul (U32.uint_to_t hash_size)
-
 val buffer_for_each:
   #a:Type -> h:HS.mem -> b:B.buffer a -> 
   prop:(a -> GTot Type0) -> GTot Type0
@@ -116,6 +105,7 @@ val buffer_for_each_gsub:
 		  buffer_for_each h (B.gsub b i (len - i)) prop))
 	(ensures (buffer_for_each h b prop))
 let buffer_for_each_gsub #a h b prop i len =
+  // TODO: need to reason about S.slice and S.append
   admit ()
 
 val hash_buf_allocated: 
@@ -249,19 +239,16 @@ val insert_values:
   HST.ST (ivs:hash_buf)
 	 (requires (fun h0 -> B.live h0 e /\ B.live h0 vs /\ B.freeable vs))
 	 (ensures (fun h0 ivs h1 -> B.live h1 ivs /\ B.freeable ivs))
-// #set-options "--z3rlimit 10"
 let insert_values nelts nvs vs e =
-  // if nelts = nvs 
-  // then (assume (2 * U32.v nelts + 1 <= UInt.max_int U32.n);
-  //      let ivs = create_hashes (2ul * nelts + 1ul) in
-  //      LowStar.BufferOps.blit vs 0ul ivs 0ul nelts;
-  //      init_hashes_partial nelts (nelts + 1ul) ivs;
-  //      copy_hash e (B.index ivs nelts);
-  //      B.free vs;
-  //      let hh2 = HST.get () in assume (B.live hh2 ivs);
-  //      ivs)
-  // else admit ()
-  admit ()
+  if nelts = nvs 
+  then (assume (2 * U32.v nelts + 1 <= UInt.max_int U32.n);
+       let ivs = create_hashes (2ul * nelts + 1ul) in
+       LowStar.BufferOps.blit vs 0ul ivs 0ul nelts;
+       B.upd ivs nelts e;
+       init_hashes_partial nelts (nelts + 1ul) ivs;
+       B.free vs;
+       ivs)
+  else (B.upd vs nelts e; vs)
 
 val num_iroots_of: nelts:uint32_t -> Tot uint32_t
 let rec num_iroots_of nelts =
