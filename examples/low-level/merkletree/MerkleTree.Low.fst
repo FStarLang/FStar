@@ -189,8 +189,8 @@ noeq type merkle_tree =
 | MT: nelts:uint32_t ->
       // The value buffer will be resized when elements are added.
       // Resizing mechanism will be similar to that of C++ vector.
-      values_sz:uint32_t{values_sz >= nelts} ->
-      values:hash_buf{B.length values = U32.v values_sz} ->
+      nvalues:uint32_t{nvalues >= nelts} ->
+      values:hash_buf{B.length values = U32.v nvalues} ->
       // The actual number of internal roots should be equal to 
       // the number of "set" bits of `nelts`.
       iroots:hash_buf{B.length iroots = U32.n} ->
@@ -207,7 +207,7 @@ val create_hashes:
 	 (ensures (fun h0 hs h1 ->
 	   B.unused_in hs h0 /\ B.live h1 hs /\
 	   B.length hs = U32.v len /\
-	   modifies (loc_buffer hs) h0 h1 /\
+	   modifies loc_none h0 h1 /\
 	   B.freeable hs))
 let create_hashes len = 
   B.malloc root B.null len
@@ -252,12 +252,13 @@ let create_merkle_tree _ =
 
 /// Insertion
 
+// NOTE: it is using the `vs` pointer directly (not copying the hash value).
 val insert_values:
   nelts:uint32_t{U32.v nelts < UInt.max_int U32.n} ->
   nvs:uint32_t{nvs >= nelts && U32.v nvs <= UInt.max_int U32.n} ->
   vs:hash_buf{B.length vs = U32.v nvs} ->
   e:hash{B.length e = hash_size} -> 
-  HST.ST (ivs:hash_buf)
+  HST.ST (ivs:hash_buf{B.length ivs = (if nelts = nvs then 2 * U32.v nelts + 1 else U32.v nvs)})
 	 (requires (fun h0 -> B.live h0 e /\ B.live h0 vs /\ B.freeable vs))
 	 (ensures (fun h0 ivs h1 -> B.live h1 ivs /\ B.freeable ivs))
 let insert_values nelts nvs vs e =
@@ -271,43 +272,85 @@ let insert_values nelts nvs vs e =
        ivs)
   else (B.upd vs nelts e; vs)
 
-// val num_iroots_of: nelts:uint32_t -> Tot uint32_t
-// let rec num_iroots_of nelts =
-//   if nelts = 0ul then 0ul
-//   else 1ul +% num_iroots_of (nelts -% uint32_pow2 (uint32_pow2_floor nelts))
-val insert_iroots:
-  nelts:uint32_t{nelts > 0ul} ->
-  irs:hash_buf ->
-  nv:hash ->
+val copy_hash: 
+  src:hash{B.length src = hash_size} -> dst:hash{B.length dst = hash_size} -> 
   HST.ST unit
-	 (requires (fun h0 -> B.live h0 irs))
+	 (requires (fun h0 -> 
+	   B.live h0 src /\ B.live h0 dst /\ B.disjoint src dst))
+	 (ensures (fun h0 _ h1 ->
+	   modifies (loc_buffer dst) h0 h1 /\
+	   B.as_seq h1 dst = B.as_seq h0 src))
+let copy_hash src dst =
+  blit src 0ul dst 0ul (U32.uint_to_t hash_size)
+
+val insert_iroots:
+  nelts:uint32_t{U32.v nelts < UInt.max_int U32.n} ->
+  nirs:uint32_t ->
+  irs:hash_buf ->
+  nv:hash{B.length nv = hash_size} ->
+  HST.ST unit
+	 (requires (fun h0 -> 
+	   B.live h0 irs /\ hash_buf_allocated h0 irs /\
+	   B.live h0 nv))
 	 (ensures (fun h0 _ h1 -> true))
-// #set-options "--z3rlimit 20"
-let rec insert_iroots nelts irs nv =
-  // if nelts = 1ul
-  // then (assume (B.length irs > 0);
-  //      hash_from_hashes (B.index irs 0ul) nv (B.index irs 0ul))
-  // else if uint32_is_pow2 nelts
-  // then B.upd (B.index irs 1ul) 0ul (B.index nv 0ul)
-  // else (insert_iroots (nelts -% uint32_pow2 (uint32_pow2_floor nelts))
-  // 		      (B.sub irs 1ul (num_iroots_of nelts - 1))
-  // 		      nv;
-  //      if nelts +% 1ul = uint32_pow2 (uint32_pow2_floor nelts +% 1ul)
-  //      then hash_from_hashes (B.index irs 0ul) (B.index irs 1ul) 
-  //      			     (B.index irs 0ul)
-  //      else ())
+#set-options "--z3rlimit 20"
+let rec insert_iroots nelts nirs irs nv =
+  if nelts = 0ul
+  then (assume (B.length irs > 0);
+       let hh0 = HST.get () in assert (B.live hh0 (B.get hh0 irs 0));
+       assume (B.disjoint nv (B.index irs 0ul));
+       copy_hash nv (B.index irs 0ul))
+  else (assume (nirs > 0ul);
+       assume (B.length irs >= U32.v nirs);
+       let hh0 = HST.get () in
+       hash_buf_allocated_gsub hh0 irs 1ul (nirs - 1ul);
+       insert_iroots (nelts - uint32_pow2 (uint32_pow2_floor nelts))
+		     (nirs - 1ul)
+		     (B.sub irs 1ul (nirs - 1ul))
+		     nv;
+       assume (uint32_pow2_floor nelts + 1ul < 32ul);
+       if nelts + 1ul = uint32_pow2 (uint32_pow2_floor nelts + 1ul)
+       then (let hh1 = HST.get () in
+	    assume (B.length irs > 1);
+	    assume (B.live hh1 irs);
+	    assume (B.live hh1 (B.get hh1 irs 0));
+	    assume (B.live hh1 (B.get hh1 irs 1));
+	    hash_from_hashes (B.index irs 0ul) (B.index irs 1ul)
+			     (B.index irs 0ul))
+       else ())
+
+val num_iroots_of: nelts:uint32_t -> Tot uint32_t
+let rec num_iroots_of nelts =
   admit ()
 
-val insert: 
-  mt:mt_ptr -> e:hash -> 
-  HST.ST merkle_tree
-	 (requires (fun h0 -> true))
+val insert:
+  mt:mt_ptr ->
+  e:hash{B.length e = hash_size} -> 
+  HST.ST unit
+	 (requires (fun h0 -> 
+	   B.live h0 mt /\ 
+	   B.live h0 (MT?.values (B.get h0 mt 0)) /\
+	   B.live h0 (MT?.iroots (B.get h0 mt 0)) /\
+	   B.freeable (MT?.values (B.get h0 mt 0)) /\
+	   B.live h0 e))
 	 (ensures (fun h0 nmt h1 -> true))
 let insert mt e =
-  // let nnelts = insert_nelts (MT?.nelts mt) in
-  // let niroots = insert_iroots (MT?.nelts mt) (MT?.iroots mt) e; MT?.iroots mt in
-  // let nvalues = insert_values (MT?.nelts mt) (MT?.values mt) e in
-  admit () // MT nnelts nvalues niroots
+  let mtv = B.index mt 0ul in
+  if U32.v (MT?.nelts mtv) >= UInt.max_int U32.n then ()
+  else (let nelts = MT?.nelts mtv in
+       let nvalues = MT?.nvalues mtv in
+       let inelts = nelts + 1ul in
+       assume (2 * U32.v nelts + 1 <= UInt.max_int U32.n);
+       let invalues = if nelts = nvalues then 2ul * nelts + 1ul else nvalues in
+       let ivalues = insert_values nelts nvalues (MT?.values mtv) e in
+       let nirs = num_iroots_of nelts in
+       let hh0 = HST.get () in 
+       assume (B.live hh0 (MT?.iroots mtv) /\ hash_buf_allocated hh0 (MT?.iroots mtv));
+       assume (B.live hh0 e);
+       insert_iroots nelts nirs (MT?.iroots mtv) e;
+       let hh1 = HST.get () in 
+       assume (B.live hh1 mt);
+       B.upd mt 0ul (MT inelts invalues ivalues (MT?.iroots mtv)))
 
 /// Getting the Merkle root
 
