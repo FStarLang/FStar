@@ -22,6 +22,9 @@ open FStar.Classical
 open FStar.Algebra.CommMonoid
 module CCM = CanonCommMonoid
 
+(* Only dump when debugging is on *)
+let dump m = if debugging () then dump m
+
 irreducible let canon_attr = ()
 
 [@canon_attr]

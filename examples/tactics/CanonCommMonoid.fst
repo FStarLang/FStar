@@ -13,6 +13,9 @@ open CanonCommSwaps
    - http://poleiro.info/posts/2015-04-13-writing-reflective-tactics.html
 *)
 
+(* Only dump when debugging is on *)
+let dump m = if debugging () then dump m
+
 (***** Expression syntax *)
 
 let var : eqtype = nat
