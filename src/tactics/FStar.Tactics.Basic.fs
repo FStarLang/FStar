@@ -509,11 +509,25 @@ let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
     let goal = mk_goal env ctx_uvar opts false in
     ret goal)
 
+(* Annoying duplication here *)
 let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
-    try ret (ps.main_context.type_of e t)
+    try ret (TcTerm.type_of_tot_term e t)
+    with | Errors.Err (_, msg)
+         | Errors.Error (_, msg, _) -> begin
+           fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
+                                                  (Env.all_binders e |> Print.binders_to_string ", ")
+                                                  msg
+           end))
+
+let __tc_ghost (e : env) (t : term) : tac<(term * typ * guard_t)> =
+    bind get (fun ps ->
+    mlog (fun () -> BU.print1 "Tac> __tc_ghost(%s)\n" (Print.term_to_string t)) (fun () ->
+    let e = {e with uvar_subtyping=false} in
+    try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
+        ret (t, lc.res_typ, g)
     with | Errors.Err (_, msg)
          | Errors.Error (_, msg, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
@@ -749,7 +763,6 @@ let norm (s : list<EMB.norm_step>) : tac<unit> =
     ))
 
 let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = wrap_err "norm_term" <|
-    mlog (fun () -> BU.print1 "norm_term: tm = %s\n" (Print.term_to_string t)) (fun _ ->
     bind get (fun ps ->
     (* We need a set of options, but there might be no goals, so do this *)
     let opts = match ps.goals with
@@ -760,6 +773,7 @@ let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = w
     bind (__tc e t) (fun (t, _, _) ->
     let steps = [Env.Reify; Env.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
+    mlog (fun () -> BU.print1 "norm_term_env: t' = %s\n" (Print.term_to_string t)) (fun () ->
     ret t
     ))))
 
@@ -1575,7 +1589,7 @@ let unquote (ty : term) (tm : term) : tac<term> = wrap_err "unquote" <|
     mlog (fun () -> BU.print1 "unquote: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind (cur_goal ()) (fun goal ->
     let env = Env.set_expected_typ (goal_env goal) ty in
-    bind (__tc env tm) (fun (tm, typ, guard) ->
+    bind (__tc_ghost env tm) (fun (tm, typ, guard) ->
     mlog (fun () -> BU.print1 "unquote: tm' = %s\n" (Print.term_to_string tm)) (fun _ ->
     mlog (fun () -> BU.print1 "unquote: typ = %s\n" (Print.term_to_string typ)) (fun _ ->
     bind (proc_guard "unquote" env guard) (fun () ->
