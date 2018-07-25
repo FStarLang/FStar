@@ -1796,7 +1796,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "054099b3a7b0452f637cd0d4e7041464"
+      "b5a5165e0772bdeac143607a941a33ae"
     ],
     [
       "LowParse.Spec.Combinators.bare_serialize_synth_correct",
@@ -3024,7 +3024,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "6f4fddf140da38a36d44f2ae9d80a159"
+      "d6062d1aab6c131e53f1cc2aa88e00a8"
     ],
     [
       "LowParse.Spec.Combinators.serialize_synth",
