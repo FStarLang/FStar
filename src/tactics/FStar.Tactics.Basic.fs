@@ -749,7 +749,6 @@ let norm (s : list<EMB.norm_step>) : tac<unit> =
     ))
 
 let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = wrap_err "norm_term" <|
-    mlog (fun () -> BU.print1 "norm_term: tm = %s\n" (Print.term_to_string t)) (fun _ ->
     bind get (fun ps ->
     (* We need a set of options, but there might be no goals, so do this *)
     let opts = match ps.goals with
@@ -760,6 +759,7 @@ let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = w
     bind (__tc e t) (fun (t, _, _) ->
     let steps = [Env.Reify; Env.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
+    mlog (fun () -> BU.print1 "norm_term_env: t' = %s\n" (Print.term_to_string t)) (fun () ->
     ret t
     ))))
 
