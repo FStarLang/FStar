@@ -1671,11 +1671,15 @@ and tc_pat env (pat_t:typ) p0 :
       * Env.env                      (* the environment extended with all the binders                               *)
       * term                         (* terms corresponding to the pattern                                          *)
       * term                         (* the same term in normal form                                                *)
+      * guard_t                      (* unresolved implicits *)
       =
     let rec check_nested_pattern env (p:pat) (t:typ)
         : list<bv>
         * term
-        * pat =
+        * pat
+        * guard_t =
+        if Env.debug env <| Options.Other "Patterns"
+        then BU.print2 "Checking pattern %s at type %s\n" (Print.pat_to_string p) (Print.term_to_string t);
         match p.v with
         | Pat_dot_term _ ->
           failwith (BU.format1 "Impossible: Expected an undecorated pattern, got %s" (Print.pat_to_string p))
@@ -1685,44 +1689,45 @@ and tc_pat env (pat_t:typ) p0 :
           let x = {x with sort=t} in
           [x],
           S.bv_to_name x,
-          {p with v=Pat_var x}
+          {p with v=Pat_var x},
+          Env.trivial_guard
 
         | Pat_constant c ->
           let t_base, _ = Rel.base_and_refinement_maybe_delta true env t in
           let _, e_c, _, _ = PatternUtils.pat_as_exp env p in
           let env = Env.set_expected_typ env t_base in
           let e_c, _lc, g = tc_tot_or_gtot_term env e_c in
-          Rel.force_trivial_guard env g;
           [],
           e_c,
-          p
+          p,
+          Rel.discharge_guard_no_smt env g
 
-        | Pat_cons(fv, pats) ->
-          let pats = List.filter (fun (x, _) -> match x.v with Pat_dot_term _ -> false | _ -> true) pats in
+        | Pat_cons(fv, sub_pats) ->
+          let sub_pats = List.filter (fun (x, _) -> match x.v with Pat_dot_term _ -> false | _ -> true) sub_pats in
           let simple_pat =
-            let xs = List.map (fun (p, b) -> S.withinfo (Pat_var (S.new_bv (Some p.p) S.tun)) p.p, b) pats in
+            let xs = List.map (fun (p, b) -> S.withinfo (Pat_var (S.new_bv (Some p.p) S.tun)) p.p, b) sub_pats in
             {p with v = Pat_cons (fv, xs)}
           in
           let simple_bvs, simple_pat_e, guard, simple_pat_elab =
             PatternUtils.pat_as_exp env simple_pat
           in
-          if List.length simple_bvs <> List.length pats
+          if List.length simple_bvs <> List.length sub_pats
           then failwith "Impossible: pattern bvar mismatch";
           let simple_pat_e, _, g =
             let env = Env.push_bvs env simple_bvs in
             let t_base, _ = Rel.base_and_refinement_maybe_delta true env t in
             tc_tot_or_gtot_term (Env.set_expected_typ env t_base) simple_pat_e
           in
-          Rel.force_trivial_guard env (Env.conj_guard g guard);
-          let _env, bvs, pats, subst =
+          let g = Rel.discharge_guard_no_smt env (Env.conj_guard g guard) in
+          let _env, bvs, checked_sub_pats, subst, g =
             List.fold_left2
-              (fun (env, bvs, pats, subst) (p, b) x ->
+              (fun (env, bvs, pats, subst, g) (p, b) x ->
                 let expected_t = SS.subst subst x.sort in
-                let bvs_p, e_p, p = check_nested_pattern env p expected_t in
+                let bvs_p, e_p, p, g' = check_nested_pattern env p expected_t in
                 let env = Env.push_bvs env bvs_p in
-                env, bvs@bvs_p, pats@[(p,b)], NT(x, e_p)::subst)
-              (env, [], pats, [])
-              pats
+                env, bvs@bvs_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g')
+              (env, [], [], [], g)
+              sub_pats
               simple_bvs
           in
           let pat_e = SS.subst subst simple_pat_e in
@@ -1750,20 +1755,23 @@ and tc_pat env (pat_t:typ) p0 :
               in
               match pat.v with
               | Pat_cons(fv, simple_pats) ->
-                let nested_pats = aux simple_pats simple_bvs pats in
+                let nested_pats = aux simple_pats simple_bvs checked_sub_pats in
                 {pat with v=Pat_cons(fv, nested_pats)}
               | _ -> failwith "Impossible"
           in
           bvs,
           pat_e,
-          reconstruct_nested_pat simple_pat_elab
+          reconstruct_nested_pat simple_pat_elab,
+          g
     in
-    if Env.debug env Options.High
+    if Env.debug env <| Options.Other "Patterns"
     then BU.print1 "Checking pattern: %s\n" (Print.pat_to_string p0);
-    let bvs, pat_e, pat = check_nested_pattern env p0 pat_t in
-    if Env.debug env Options.High
-    then BU.print1 "Done checking pattern expression %s\n" (N.term_to_string env pat_e);
-    pat, bvs, Env.push_bvs env bvs, pat_e, N.normalize [Env.Beta] env pat_e
+    let bvs, pat_e, pat, g = check_nested_pattern env p0 pat_t in
+    if Env.debug env <| Options.Other "Patterns"
+    then BU.print2 "Done checking pattern %s as expression %s\n"
+                    (Print.pat_to_string pat)
+                    (Print.term_to_string pat_e);
+    pat, bvs, Env.push_bvs env bvs, pat_e, N.normalize [Env.Beta] env pat_e, g
 
 
 (********************************************************************************************************************)
@@ -1789,7 +1797,7 @@ and tc_eqn scrutinee env branch
   let scrutinee_env, _ = Env.push_bv env scrutinee |> Env.clear_expected_typ in
 
   (* 1. Check the pattern *)
-  let pattern, pat_bvs, pat_env, pat_exp, norm_pat_exp =
+  let pattern, pat_bvs, pat_env, pat_exp, norm_pat_exp, guard_pat =
     tc_pat env pat_t pattern
   in
 
@@ -1878,7 +1886,7 @@ and tc_eqn scrutinee env branch
     c_weak.cflags,
     maybe_return_c_weak,
     Env.close_guard env binders g_when_weak,
-    g_branch
+    Env.conj_guard guard_pat g_branch
   in
 
   (* 6. Building the guard for this branch;                                                             *)
