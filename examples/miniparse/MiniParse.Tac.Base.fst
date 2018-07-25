@@ -154,7 +154,8 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
         begin match T.trytac (fun () -> imm_solve_goal l) with
         | Some _ -> ()
         | _ ->
-          T.dump "MUST USE SMT FOR THIS ONE";
+          if T.debugging () then
+            T.dump "MUST USE SMT FOR THIS ONE";
           T.smt ();
           tsuccess "smt"
         end
@@ -166,7 +167,8 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
 let rec tconclude_with (l: list (unit -> T.Tac unit)) : T.Tac unit =
   if T.ngoals () > 0
   then begin
-    T.dump "Some goals left";
+    if T.debugging () then
+      T.dump "Some goals left";
     let _ = T.divide 1 (fun () -> solve_goal l) (fun () -> tconclude_with l) in
     ()
   end else T.debug "No goals left"
