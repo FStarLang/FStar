@@ -2152,11 +2152,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let try_match_heuristic env orig wl s1 s2 t1t2_opt =
         let try_solve_branch scrutinee p =
             let (_t, uv, _args), wl = destruct_flex_t scrutinee wl  in
-            let tc_annot env t =
-                let t, _, g = env.type_of ({env with lax=true; use_bv_sorts=true}) t in
-                t, g
-            in
-            let xs, pat_term, _, _ = PatternUtils.pat_as_exp true env p tc_annot in
+            let xs, pat_term, _, _ = PatternUtils.pat_as_exp true env p in
             let subst, wl =
                 List.fold_left (fun (subst, wl) x ->
                     let t_x = SS.subst subst x.sort in

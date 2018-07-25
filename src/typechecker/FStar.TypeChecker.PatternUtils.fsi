@@ -35,7 +35,6 @@ open FStar.Syntax
 val pat_as_exp: allow_implicits:bool
               -> env:Env.env
               -> p:pat
-              -> tc_annot : (Env.env -> term -> term * guard_t)
               -> list<bv>           (* pattern-bound variables (which may appear in the branch of match) *)
                 * term              (* expressions corresponding to the pattern *)
                 * guard_t           (* guard for the annotations on the pattern bound variables *)

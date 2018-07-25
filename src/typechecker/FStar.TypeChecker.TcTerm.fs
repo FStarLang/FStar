@@ -1677,13 +1677,8 @@ and tc_pat env (allow_implicits:bool) (pat_t:typ) p0 :
                                      //this guard is well-formed for list<bv>
       * term                         (* the same term in normal form                                                *)
       =
-    let tc_annot env t =
-        let tu, u = U.type_u () in
-        let t, _, g = tc_check_tot_or_gtot_term env t tu in
-        t, g  //AR: this used to force the guard, but now we defer it to be checked alongwith the guard for the branches
-    in
     //an expression for each clause in a disjunctive pattern
-    let pat_bvs, exp, guard_pat_annots, p = PatternUtils.pat_as_exp allow_implicits env p0 tc_annot in
+    let pat_bvs, exp, guard_pat_annots, p = PatternUtils.pat_as_exp allow_implicits env p0 in
     if Env.debug env Options.High then begin
         BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
         BU.print1 "pat_bvs = [%s]\n" (Print.bvs_to_string ", " pat_bvs)
