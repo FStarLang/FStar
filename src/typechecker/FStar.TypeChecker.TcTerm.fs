@@ -1684,7 +1684,13 @@ and tc_pat env (pat_t:typ) p0 :
         | Pat_dot_term _ ->
           failwith (BU.format1 "Impossible: Expected an undecorated pattern, got %s" (Print.pat_to_string p))
 
-        | Pat_wild x
+        | Pat_wild x ->
+          let x = {x with sort=t} in
+          [x],
+          S.bv_to_name x,
+          {p with v=Pat_wild x},
+          Env.trivial_guard
+
         | Pat_var x ->
           let x = {x with sort=t} in
           [x],
