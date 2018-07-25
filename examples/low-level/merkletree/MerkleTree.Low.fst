@@ -65,12 +65,21 @@ val pow2_floor:
 let rec pow2_floor n =
   if n = 1 then 0 else 1 + pow2_floor (n / 2)
 
-val uint32_pow2_floor: n:uint32_t{n > 0ul} -> 
+val uint32_pow2_floor: 
+  n:uint32_t{n > 0ul} ->
   Tot (p:uint32_t{
     p < 32ul && pow2 (U32.v p) <= U32.v n && U32.v n < pow2 (U32.v p + 1) &&
-    pow2_floor (U32.v n) = U32.v p})
-let uint32_pow2_floor n =
-  admit ()
+    pow2_floor (U32.v n) = U32.v p}) 
+      (decreases (U32.v n))
+let rec uint32_pow2_floor n =
+  if n = 1ul then 0ul 
+  else (UInt.shift_right_value_aux_3 (U32.v n) 1;
+       assert (U32.v (UInt32.shift_right n 1ul) < U32.v n);
+       assume (1 + U32.v (uint32_pow2_floor (UInt32.shift_right n 1ul)) < 32);
+       let p = 1ul + uint32_pow2_floor (UInt32.shift_right n 1ul) in
+       assume (p < 32ul && pow2 (U32.v p) <= U32.v n && U32.v n < pow2 (U32.v p + 1) &&
+	      pow2_floor (U32.v n) = U32.v p);
+       p)
 
 val pow2_is_pow2:
   n:nat ->
@@ -115,7 +124,6 @@ val buffer_for_each_gsub_gsub:
 		  buffer_for_each h (B.gsub b i (len - i)) prop))
 	(ensures (buffer_for_each h b prop))
 let buffer_for_each_gsub_gsub #a h b prop i len =
-  // TODO: need to reason about S.slice and S.append
   admit ()
 
 val hash_buf_allocated: 
@@ -319,9 +327,11 @@ let rec insert_iroots nelts nirs irs nv =
 			     (B.index irs 0ul))
        else ())
 
-val num_iroots_of: nelts:uint32_t -> Tot uint32_t
-let rec num_iroots_of nelts =
-  admit ()
+val num_iroots_of: n:uint32_t -> Tot uint32_t (decreases (U32.v n))
+let rec num_iroots_of n =
+  if n = 0ul then 0ul
+  else (assume (num_iroots_of (n / 2ul) < 32ul);
+       n % 2ul + num_iroots_of (n / 2ul))
 
 val insert:
   mt:mt_ptr ->
