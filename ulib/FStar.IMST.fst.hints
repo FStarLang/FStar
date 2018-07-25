@@ -1,0 +1,127 @@
+[
+  "Än%“\u0010›–Dº‰Li+?ê€",
+  [
+    [
+      "FStar.IMST.op_Greater_Less",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Pervasives.dfst" ],
+      0,
+      "8b5b06006b57817232a206db24653863"
+    ],
+    [
+      "FStar.IMST.get",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.dfst",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__1"
+      ],
+      0,
+      "05e589bf9b1177db6d45c707a242f38e"
+    ],
+    [
+      "FStar.IMST.put",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.dfst",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__1"
+      ],
+      0,
+      "be133ba5f5c8f2cf97d3728d01bf4f98"
+    ],
+    [
+      "FStar.IMST.witness",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.dfst",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__1"
+      ],
+      0,
+      "968acbb9382d1625d33d25059f22c1a1"
+    ],
+    [
+      "FStar.IMST.recall",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.dfst",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__1"
+      ],
+      0,
+      "9bf5da21f109327e18a5aa320aa806f5"
+    ],
+    [
+      "FStar.IMST.op_Greater_Less",
+      2,
+      2,
+      1,
+      [ "@query", "equation_FStar.Pervasives.dfst" ],
+      0,
+      "54294f5b5c7ae7f9dd6e91365daf7efc"
+    ],
+    [
+      "FStar.IMST.get",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.dfst",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__1"
+      ],
+      0,
+      "0b785eec9e2ceeb7d685d4bfac6e83cf"
+    ],
+    [
+      "FStar.IMST.put",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.dfst",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__1"
+      ],
+      0,
+      "ebaeddaf3eeb72bf3cd3ab92fafa1c88"
+    ],
+    [
+      "FStar.IMST.witness",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.dfst",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__1"
+      ],
+      0,
+      "f5ac259966dddf0f58794e6b6e5950b7"
+    ],
+    [
+      "FStar.IMST.recall",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.dfst",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__1"
+      ],
+      0,
+      "ed7c56d15e35090c1b193d40bc682ef0"
+    ]
+  ]
+]
