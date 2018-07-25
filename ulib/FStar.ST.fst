@@ -43,10 +43,10 @@ let lemma_functoriality p q = W.lemma_witnessed_weakening heap_rel p q
 
 (***** Intatiating FStar.IMST to a heap-specific ST effect *****)
 
-new_effect GST = IMST (* intermediate step to generate a "fresh" copy of IMST *)
+new_effect IST = IMST (* intermediate step to generate a "fresh" copy of IMST, and hide global state operations *)
 
-unfold let lift_imst_gst (a:Type) (wp:st_wp a) = wp
-sub_effect IMST ~> GST = lift_imst_gst
+unfold let lift_imst_ist (a:Type) (wp:st_wp a) = wp
+sub_effect IMST ~> IST = lift_imst_ist
 
 let st_pre            = st_pre_h heap
 let st_post' (a:Type) (pre:Type) = st_post_h' heap a pre
@@ -54,7 +54,8 @@ let st_post  (a:Type) = st_post_h heap a
 let st_wp (a:Type)    = st_wp_h heap a
 
 effect STATE a (wp:st_wp a) = 
-  GST a ((|heap , heap_rel|) >< wp) (* intatiating IMST effect with heap and heap_rel *)
+  //IST a ((|heap , heap_rel|) >< wp) (* intatiating IMST effect with heap and heap_rel *)
+  IST a (fun s rel post s0 -> s == heap /\ (forall x y . rel x y <==> heap_rel x y) /\ wp post s0)
 
 effect State (a:Type) (wp:st_wp a) = STATE a wp
 
