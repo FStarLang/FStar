@@ -727,7 +727,7 @@
         "unit_typing"
       ],
       0,
-      "40b90dbbf776be7aeeab1f764730aea2"
+      "583952002653ce6d48e5ae77f67c6a4e"
     ],
     [
       "Benton2004.DDCC.eval_equiv_const",
@@ -840,7 +840,7 @@
         "typing_FStar.Pervasives.Native.snd", "unit_typing"
       ],
       0,
-      "200f50003ea255bf31dfa2b872f0925e"
+      "29c237bfe83ced5f12aff8280d197c7f"
     ],
     [
       "Benton2004.DDCC.d_seq",
@@ -1221,7 +1221,7 @@
         "unit_typing"
       ],
       0,
-      "a568e33ecf402f54d5e9f20cf90e3116"
+      "4f57cdc75bd8b2bc35eba84b8090f7fa"
     ],
     [
       "Benton2004.DDCC.d_das",
@@ -1303,7 +1303,7 @@
         "unit_typing"
       ],
       0,
-      "6987d7d50abea3dee06a90122d4dd23b"
+      "607da893efec7c92057b44c9fa65309c"
     ],
     [
       "Benton2004.DDCC.d_bre",
