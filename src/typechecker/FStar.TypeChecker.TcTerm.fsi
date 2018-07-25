@@ -20,7 +20,7 @@ val tc_binders: env -> binders -> binders * env * guard_t * universes
 val tc_term: env -> term -> term * lcomp * guard_t
 val tc_maybe_toplevel_term: env -> term -> term * lcomp * guard_t
 val tc_comp: env -> comp -> comp * universe * guard_t
-val tc_pat : Env.env -> bool -> typ -> pat -> pat * list<bv> * Env.env * term * guard_t * term
+val tc_pat : Env.env -> typ -> pat -> pat * list<bv> * Env.env * term * term
 val type_of_tot_term: env -> term -> term * typ * guard_t
 val universe_of: env -> term -> universe
 

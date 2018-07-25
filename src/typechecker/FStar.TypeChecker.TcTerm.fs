@@ -32,6 +32,7 @@ open FStar.Syntax.Util
 open FStar.Const
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
+
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
@@ -378,7 +379,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e, c, g = tc_check_tot_or_gtot_term env e t in
     let pats, g' =
         let env, _ = Env.clear_expected_typ env in
-        tc_pats env pats in
+        tc_smt_pats env pats in
     let g' = {g' with guard_f=Trivial} in //The pattern may have some VCs associated with it, but these are irrelevant.
     mk (Tm_meta(e, Meta_pattern pats)) None top.pos,
     c,
@@ -1664,97 +1665,105 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
         | _ -> //fallback
           check_application_args env head chead g_head args expected_topt
 
-and tc_pat env (allow_implicits:bool) (pat_t:typ) p0 :
+and tc_pat env (pat_t:typ) p0 :
         pat                          (* the type-checked, fully decorated pattern                                   *)
       * list<bv>                     (* all its bound variables, used for closing the type of the branch term       *)
       * Env.env                      (* the environment extended with all the binders                               *)
       * term                         (* terms corresponding to the pattern                                          *)
-      * guard_t                      (* accumulated guard for well-typedness of the type annotations on pattern bvs *)
-                                     //AR: for dependent patterns, this requires the equality of scrutinee and
-                                     //the pattern which is available later in the typechecking for branches
-                                     //so, here we just accumulate the guard, and return it
-                                     //the caller will add it to the g_branches later
-                                     //this guard is well-formed for list<bv>
       * term                         (* the same term in normal form                                                *)
       =
-    //an expression for each clause in a disjunctive pattern
-    let pat_bvs, exp, guard_pat_annots, p = PatternUtils.pat_as_exp allow_implicits env p0 in
-    if Env.debug env Options.High then begin
-        BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
-        BU.print1 "pat_bvs = [%s]\n" (Print.bvs_to_string ", " pat_bvs)
-    end;
-    let pat_env = List.fold_left Env.push_bv env pat_bvs in
-    let env1, _ = Env.clear_expected_typ pat_env in
-    //This is_pattern flag is crucial to check that every variable in the pattern
-    //has exactly its expected type, rather than just a sub-type. see #1062
-    let env1 = {env1 with Env.is_pattern=true} in
-    let expected_pat_t = Rel.unrefine env pat_t in
-    if Env.debug env Options.High
-    then BU.print2 "Checking pattern expression %s against expected type %s\n"
-                    (Print.term_to_string exp)
-                    (Print.term_to_string pat_t);
+    let rec check_nested_pattern env (p:pat) (t:typ)
+        : list<bv>
+        * term
+        * pat =
+        match p.v with
+        | Pat_dot_term _ ->
+          failwith (BU.format1 "Impossible: Expected an undecorated pattern, got %s" (Print.pat_to_string p))
 
-    let env1 = Env.set_expected_typ env1 expected_pat_t in
-    let exp, lc, g = tc_tot_or_gtot_term env1 exp in
-    //To support nested patterns, it's important to
-    //only keep the unification/subtyping constraints and to discard the logical guard for patterns
-    //Consider the following:
-    //   t = x:(int * int){fst x = snd x}
-    //   o : option t
-    //and
-    //   match o with Some #t (MkTuple2 #int #int a b)
-    //In this case, the guard_f will require (a = b), because of the refinement on t
-    //But, this is impossible to prove for two fresh ints a and b
-    //Instead, we check below that the inferred type for the entire pattern is unifiable
-    //with the expected type.
-    //This should guarantee that the equality assumption between the scrutinee and the pattern
-    //is at least well-typed and the branch gets to use any implied relations among the
-    //pattern-bound variables, e.g., a=b in this case
-    let g = {g with guard_f= Trivial} in
+        | Pat_wild x
+        | Pat_var x ->
+          let x = {x with sort=t} in
+          [x],
+          S.bv_to_name x,
+          {p with v=Pat_var x}
 
-    let _ =
-        //But, it's really important to confirm that the inferred type of the pattern
-        //unifies with the expected pattern type.
-        //Otherwise, its easy to get inconsistent;
-        //e.g., if expected_pat_t is (option nat)
-        //and   lc.res_typ is (option int)
-        //Rel.teq_nosmt below will forbid producing a logical guard (int = nat)
-        //Without this, we will be able to conclude in the branch of the pattern,
-        //with the equality Some #nat x = Some #int x
-        //that nat=int and hence False
-        if Rel.teq_nosmt_force env1 lc.res_typ expected_pat_t
-        then let env1 = Env.set_range env1 exp.pos in
-             Rel.discharge_guard_no_smt env1 g |>
-             Rel.resolve_implicits env1
-        else raise_error (Errors.Fatal_MismatchedPatternType, BU.format2 "Inferred type of pattern (%s) is incompatible with the type of the scrutinee (%s)"
-                                       (Print.term_to_string lc.res_typ)
-                                       (Print.term_to_string expected_pat_t))
-                           exp.pos
+        | Pat_constant c ->
+          let t_base, _ = Rel.base_and_refinement_maybe_delta true env t in
+          let _, e_c, _, _ = PatternUtils.pat_as_exp env p in
+          let env = Env.set_expected_typ env t_base in
+          let e_c, _lc, g = tc_tot_or_gtot_term env e_c in
+          Rel.force_trivial_guard env g;
+          [],
+          e_c,
+          p
+
+        | Pat_cons(fv, pats) ->
+          let pats = List.filter (fun (x, _) -> match x.v with Pat_dot_term _ -> false | _ -> true) pats in
+          let simple_pat =
+            let xs = List.map (fun (p, b) -> S.withinfo (Pat_var (S.new_bv (Some p.p) S.tun)) p.p, b) pats in
+            {p with v = Pat_cons (fv, xs)}
+          in
+          let simple_bvs, simple_pat_e, guard, simple_pat_elab =
+            PatternUtils.pat_as_exp env simple_pat
+          in
+          if List.length simple_bvs <> List.length pats
+          then failwith "Impossible: pattern bvar mismatch";
+          let simple_pat_e, _, g =
+            let env = Env.push_bvs env simple_bvs in
+            let t_base, _ = Rel.base_and_refinement_maybe_delta true env t in
+            tc_tot_or_gtot_term (Env.set_expected_typ env t_base) simple_pat_e
+          in
+          Rel.force_trivial_guard env (Env.conj_guard g guard);
+          let _env, bvs, pats, subst =
+            List.fold_left2
+              (fun (env, bvs, pats, subst) (p, b) x ->
+                let expected_t = SS.subst subst x.sort in
+                let bvs_p, e_p, p = check_nested_pattern env p expected_t in
+                let env = Env.push_bvs env bvs_p in
+                env, bvs@bvs_p, pats@[(p,b)], NT(x, e_p)::subst)
+              (env, [], pats, [])
+              pats
+              simple_bvs
+          in
+          let pat_e = SS.subst subst simple_pat_e in
+          let reconstruct_nested_pat pat =
+              let rec aux simple_pats bvs sub_pats =
+                match simple_pats with
+                | [] -> []
+                | (hd, b)::simple_pats ->
+                  match hd.v with
+                  | Pat_dot_term(x, e) ->
+                    let e = SS.subst subst e in
+                    let hd = {hd with v=Pat_dot_term(x, e)} in
+                    (hd, b) :: aux simple_pats bvs sub_pats
+                  | Pat_var x ->
+                    begin
+                      match bvs, sub_pats with
+                      | x'::bvs, (hd, _)::sub_pats
+                          when S.bv_eq x x' ->
+                        (hd, b) :: aux simple_pats bvs sub_pats
+
+                      | _ ->
+                        failwith "Impossible: simple pat variable mismatch"
+                    end
+                  | _ -> failwith "Impossible: expected a simple pattern"
+              in
+              match pat.v with
+              | Pat_cons(fv, simple_pats) ->
+                let nested_pats = aux simple_pats simple_bvs pats in
+                {pat with v=Pat_cons(fv, nested_pats)}
+              | _ -> failwith "Impossible"
+          in
+          bvs,
+          pat_e,
+          reconstruct_nested_pat simple_pat_elab
     in
-    let norm_exp = N.normalize [Env.Beta] env1 exp in
-    let uvs_to_string uvs =
-        BU.set_elements uvs |>
-        List.map (fun u -> Print.uvar_to_string u.ctx_uvar_head) |>
-        String.concat ", "
-    in
-    let uvs1 = Free.uvars norm_exp in
-    let uvs2 = Free.uvars expected_pat_t in
-    if Env.debug env (Options.Other "Free") then begin
-        BU.print2 ">> free_1(%s) = %s\n" (Print.term_to_string norm_exp) (uvs_to_string uvs1);
-        BU.print2 ">> free_2(%s) = %s\n" (Print.term_to_string expected_pat_t) (uvs_to_string uvs2)
-    end;
-    if not <| BU.set_is_subset_of uvs1 uvs2
-    then (let unresolved = BU.set_difference uvs1 uvs2 in
-            raise_error (Errors.Fatal_UnresolvedPatternVar, (BU.format3 "Implicit pattern variables in %s could not be resolved against expected type %s;\
-                                        Variables {%s} were unresolved; please bind them explicitly"
-                                (N.term_to_string env norm_exp)
-                                (N.term_to_string env expected_pat_t)
-                                (uvs_to_string unresolved))) p.p);
-
     if Env.debug env Options.High
-    then BU.print1 "Done checking pattern expression %s\n" (N.term_to_string env exp);
-    let p = TcUtil.decorate_pattern env p exp in
-    p, pat_bvs, pat_env, exp, guard_pat_annots, norm_exp
+    then BU.print1 "Checking pattern: %s\n" (Print.pat_to_string p0);
+    let bvs, pat_e, pat = check_nested_pattern env p0 pat_t in
+    if Env.debug env Options.High
+    then BU.print1 "Done checking pattern expression %s\n" (N.term_to_string env pat_e);
+    pat, bvs, Env.push_bvs env bvs, pat_e, N.normalize [Env.Beta] env pat_e
 
 
 (********************************************************************************************************************)
@@ -1780,8 +1789,8 @@ and tc_eqn scrutinee env branch
   let scrutinee_env, _ = Env.push_bv env scrutinee |> Env.clear_expected_typ in
 
   (* 1. Check the pattern *)
-  let pattern, pat_bvs, pat_env, pat_exp, guard_pat_annots, norm_pat_exp =
-    tc_pat env true pat_t pattern
+  let pattern, pat_bvs, pat_env, pat_exp, norm_pat_exp =
+    tc_pat env pat_t pattern
   in
 
   (* 2. Check the when clause *)
@@ -1798,7 +1807,6 @@ and tc_eqn scrutinee env branch
   (* 3. Check the branch *)
   let branch_exp, c, g_branch = tc_term pat_env branch_exp in
 
-  let g_branch = Env.conj_guard guard_pat_annots g_branch in  //AR: add the guard from the type annotations on pattern bvars
   Env.def_check_guard_wf cbr.pos "tc_eqn.1" pat_env g_branch;
 
   (* 4. Lift the when clause to a logical condition. *)
@@ -2401,7 +2409,7 @@ and tc_binders env bs =
           b::bs, env', Env.conj_guard g (Env.close_guard_univs [u] [b] g'), u::us in
     aux env bs
 
-and tc_pats env pats =
+and tc_smt_pats env pats =
     let tc_args env args : Syntax.args * guard_t =
        //an optimization for checking arguments in cases where we know that their types match the types of the corresponding formal parameters
        //notably, this is used when checking the application  (?u x1 ... xn). NS: which we do not currently do!
