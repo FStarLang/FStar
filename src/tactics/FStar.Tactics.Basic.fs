@@ -1810,7 +1810,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let cod = goal_type g in
                         let equ = env.universe_of env s_ty in
                         (* Typecheck the pattern, to fill-in the universes and get an expression out of it *)
-                        let _ , _, _, pat_t, _, _ = TcTerm.tc_pat ({ env with lax = true }) true s_ty pat in
+                        let _ , _, _, pat_t, _ = TcTerm.tc_pat ({ env with lax = true }) s_ty pat in
                         let eq_b = S.gen_bv "breq" None (U.mk_squash equ (U.mk_eq2 equ s_ty s_tm pat_t)) in
                         let cod = U.arrow [S.mk_binder eq_b] (mk_Total cod) in
 

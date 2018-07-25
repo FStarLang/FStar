@@ -32,10 +32,9 @@ open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
 open FStar.Syntax
 
-val pat_as_exp: allow_implicits:bool
-              -> env:Env.env
+val pat_as_exp:  env:Env.env
               -> p:pat
               -> list<bv>           (* pattern-bound variables (which may appear in the branch of match) *)
                 * term              (* expressions corresponding to the pattern *)
-                * guard_t           (* guard for the annotations on the pattern bound variables *)
+                * guard_t           (* guard with all implicits introduced in the pattern *)
                 * pat               (* decorated pattern, with all the missing implicit args in p filled in *)
