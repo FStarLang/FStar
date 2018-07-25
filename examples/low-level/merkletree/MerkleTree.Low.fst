@@ -100,11 +100,21 @@ val buffer_for_each_gsub:
   #a:Type -> h:HS.mem -> b:B.buffer a ->
   prop:(a -> GTot Type0) ->
   i:uint32_t -> len:uint32_t ->
+  Lemma (requires (U32.v i + U32.v len <= B.length b /\
+		  buffer_for_each h b prop))
+	(ensures (buffer_for_each h (B.gsub b i len) prop))
+let buffer_for_each_gsub #a h b prop i len =
+  admit ()
+
+val buffer_for_each_gsub_gsub:
+  #a:Type -> h:HS.mem -> b:B.buffer a ->
+  prop:(a -> GTot Type0) ->
+  i:uint32_t -> len:uint32_t ->
   Lemma (requires (B.length b = U32.v len /\ i <= len /\
 		  buffer_for_each h (B.gsub b 0ul i) prop /\
 		  buffer_for_each h (B.gsub b i (len - i)) prop))
 	(ensures (buffer_for_each h b prop))
-let buffer_for_each_gsub #a h b prop i len =
+let buffer_for_each_gsub_gsub #a h b prop i len =
   // TODO: need to reason about S.slice and S.append
   admit ()
 
@@ -117,14 +127,25 @@ let hash_buf_allocated h hs =
 val hash_buf_allocated_gsub:
   h:HS.mem -> hs:hash_buf ->
   i:uint32_t -> len:uint32_t ->
+  Lemma (requires (U32.v i + U32.v len <= B.length hs /\
+		  hash_buf_allocated h hs))
+	(ensures (hash_buf_allocated h (B.gsub hs i len)))
+let hash_buf_allocated_gsub h hs i len =
+  buffer_for_each_gsub h hs 
+  (fun hb -> B.live h hb /\ B.length hb = hash_size)
+  i len
+
+val hash_buf_allocated_gsub_gsub:
+  h:HS.mem -> hs:hash_buf ->
+  i:uint32_t -> len:uint32_t ->
   Lemma (requires (B.length hs = U32.v len /\ i <= len /\
 		  hash_buf_allocated h (B.gsub hs 0ul i) /\
 		  hash_buf_allocated h (B.gsub hs i (len - i))))
 	(ensures (hash_buf_allocated h hs))
 	[SMTPat (hash_buf_allocated h (B.gsub hs 0ul i));
 	SMTPat (hash_buf_allocated h (B.gsub hs i (len - i)))]
-let hash_buf_allocated_gsub h hs i len =
-  buffer_for_each_gsub h hs 
+let hash_buf_allocated_gsub_gsub h hs i len =
+  buffer_for_each_gsub_gsub h hs 
   (fun hb -> B.live h hb /\ B.length hb = hash_size)
   i len
 
@@ -250,12 +271,10 @@ let insert_values nelts nvs vs e =
        ivs)
   else (B.upd vs nelts e; vs)
 
-val num_iroots_of: nelts:uint32_t -> Tot uint32_t
-let rec num_iroots_of nelts =
-  admit ()
-  // if nelts = 0ul then 0ul
-  // else 1ul +% num_iroots_of (nelts -% uint32_pow2 (uint32_pow2_floor nelts))
-
+// val num_iroots_of: nelts:uint32_t -> Tot uint32_t
+// let rec num_iroots_of nelts =
+//   if nelts = 0ul then 0ul
+//   else 1ul +% num_iroots_of (nelts -% uint32_pow2 (uint32_pow2_floor nelts))
 val insert_iroots:
   nelts:uint32_t{nelts > 0ul} ->
   irs:hash_buf ->
@@ -263,7 +282,7 @@ val insert_iroots:
   HST.ST unit
 	 (requires (fun h0 -> B.live h0 irs))
 	 (ensures (fun h0 _ h1 -> true))
-#set-options "--z3rlimit 20"
+// #set-options "--z3rlimit 20"
 let rec insert_iroots nelts irs nv =
   // if nelts = 1ul
   // then (assume (B.length irs > 0);
@@ -278,7 +297,7 @@ let rec insert_iroots nelts irs nv =
   //      			     (B.index irs 0ul)
   //      else ())
   admit ()
-  
+
 val insert: 
   mt:mt_ptr -> e:hash -> 
   HST.ST merkle_tree
@@ -293,11 +312,22 @@ let insert mt e =
 /// Getting the Merkle root
 
 val merkle_root_of_iroots:
-  nirs:nat{nirs <= U32.n} ->
-  irs:hash_buf{B.length irs = U32.n} -> 
-  HST.ST hash
-	 (requires (fun h0 -> B.live h0 irs))
-	 (ensures (fun h0 hs h1 -> h1 == h0))
-let merkle_root_of_iroots nirs irs =
-  admit ()
+  nirs:uint32_t{U32.v nirs <= U32.n} ->
+  irs:hash_buf{B.length irs = U32.v nirs} -> 
+  acc:hash{B.length acc = hash_size} ->
+  HST.ST unit
+	 (requires (fun h0 -> 
+	   B.live h0 irs /\ hash_buf_allocated h0 irs /\
+	   B.live h0 acc /\ B.disjoint irs acc))
+	 (ensures (fun h0 _ h1 -> 
+	   B.live h1 acc /\ modifies (loc_buffer acc) h0 h1))
+let rec merkle_root_of_iroots nirs irs acc =
+  if nirs = 0ul then ()
+  else (let hh0 = HST.get () in
+       hash_buf_allocated_gsub hh0 irs 1ul (nirs - 1ul);
+       assert (B.live hh0 (B.get hh0 irs 0));
+       merkle_root_of_iroots (nirs - 1ul) (B.sub irs 1ul (nirs - 1ul)) acc;
+       let hh1 = HST.get () in
+       assert (B.live hh1 (B.get hh1 irs 0));
+       hash_from_hashes (B.index irs 0ul) acc acc)
 
