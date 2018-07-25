@@ -4,6 +4,8 @@ open FStar.Preorder
 
 module W = FStar.Monotonic.Witnessed
 
+(***** State-and-preorder indexed monotonic state effect *****)
+
 let st_pre   (s:Type u#1) = s -> GTot Type0
 let st_post' (s:Type u#1) (a:Type) (pre:Type) = a -> (_:s{pre}) -> GTot Type0
 let st_post  (s:Type u#1) (a:Type) = st_post_h' s a True
@@ -62,9 +64,9 @@ let st_trivial (a:Type) (wp:st_wp a)
 new_effect {
   IMST : result:Type -> wp:st_wp result -> Effect
   with 
-     //repr         = s:Type0 -> preorder s -> s -> M (a * s) // - pi-types currently not supported by DM4F
+     //repr         = s:Type u#1 -> preorder s -> s -> M (a * s) // - pi-types currently not supported by DM4F
      
-     //repr'        = s:Type0 -> rel:preorder s -> s0:s -> M (a * s1:s{rel s0 s1})
+     //repr'        = s:Type u#1 -> rel:preorder s -> s0:s -> M (a * s1:s{rel s0 s1})
                                                               // - pi-types currently not supported by DM4F;
                                                               //   refinement types also currently not supported by DM4F
        return_wp    = st_return
@@ -78,15 +80,6 @@ new_effect {
      ; null_wp      = st_null
      ; trivial      = st_trivial
 }
-
-// For effects where subtyping parameters is sound, e.g., 
-//
-//   exn:Type -> exns:set exn -> M (either a e:exn{mem e exns})
-//
-// there is also the problem of needing to subtype postconditions according to the chosen (subset) order on exns.
-//
-// The precise typing would (highly likely) be needed to ensure that reification/reflection are sound.
-
 
 
 (* Standard lifting *)
