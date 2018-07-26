@@ -1681,7 +1681,13 @@ and tc_pat env (pat_t:typ) p0 :
                             (Print.term_to_string scrutinee_t)
                             (Print.term_to_string pat_t))
         | Some g ->
-            let _ = Rel.solve_deferred_constraints env g in
+            let g' = Rel.solve_deferred_constraints env g in
+            let pat_t = N.normalize [Env.Beta] env pat_t in
+            let scrutinee_t = N.normalize [Env.Beta] env scrutinee_t in
+            if Env.debug env <| Options.Other "Patterns"
+            then BU.print2 "pat_type = %s; scrutinee_t = %s\n"
+                            (Print.term_to_string pat_t)
+                            (Print.term_to_string scrutinee_t);
             let head_p, args_p = U.head_and_args pat_t in
             let head_s, args_s = U.head_and_args scrutinee_t in
             if Rel.teq_nosmt_force env head_p head_s
@@ -1689,11 +1695,17 @@ and tc_pat env (pat_t:typ) p0 :
                  | Tm_fvar f ->
                    if not <| Env.is_type_constructor env (S.lid_of_fv f)
                    then fail "Pattern matching a non-inductive type";
-                   let n = Env.num_inductive_ty_params env (S.lid_of_fv f) in
                    if List.length args_p <> List.length args_s
                    then fail "Type of pattern does not match type of scrutinee";
-                   let params_p, _ = BU.first_N n args_p in
-                   let params_s, _ = BU.first_N n args_s in
+                   let params_p, params_s =
+                       match Env.num_inductive_ty_params env (S.lid_of_fv f) with
+                       | None ->
+                         args_p, args_s
+                       | Some n ->
+                         let params_p, _ = BU.first_N n args_p in
+                         let params_s, _ = BU.first_N n args_s in
+                         params_p, params_s
+                   in
                    if not <|
                       List.forall2
                         (fun (p, _) (s, _) -> Rel.teq_nosmt_force env p s)
@@ -1738,16 +1750,31 @@ and tc_pat env (pat_t:typ) p0 :
           Rel.discharge_guard_no_smt env g
 
         | Pat_cons(fv, sub_pats) ->
-          let sub_pats = List.filter (fun (x, _) -> match x.v with Pat_dot_term _ -> false | _ -> true) sub_pats in
           let simple_pat =
-            let xs = List.map (fun (p, b) -> S.withinfo (Pat_var (S.new_bv (Some p.p) S.tun)) p.p, b) sub_pats in
-            {p with v = Pat_cons (fv, xs)}
+            let simple_sub_pats =
+                List.map (fun (p, b) ->
+                    match p.v with
+                    | Pat_dot_term _ -> p, b
+                    | _ -> S.withinfo (Pat_var (S.new_bv (Some p.p) S.tun)) p.p, b)
+                sub_pats in
+            {p with v = Pat_cons (fv, simple_sub_pats)}
+          in
+          let sub_pats =
+            sub_pats
+            |> List.filter (fun (x, _) ->
+                            match x.v with
+                            | Pat_dot_term _ -> false
+                            | _ -> true)
           in
           let simple_bvs, simple_pat_e, guard, simple_pat_elab =
-            PatternUtils.pat_as_exp env simple_pat
+              PatternUtils.pat_as_exp env simple_pat
           in
           if List.length simple_bvs <> List.length sub_pats
-          then failwith "Impossible: pattern bvar mismatch";
+          then failwith (BU.format4 "(%s) Impossible: pattern bvar mismatch: %s; expected %s sub pats; got %s"
+                                          (Range.string_of_range p.p)
+                                          (Print.pat_to_string simple_pat)
+                                          (BU.string_of_int (List.length sub_pats))
+                                          (BU.string_of_int (List.length simple_bvs)));
           let simple_pat_e, g =
             let env = Env.push_bvs env simple_bvs in
             let t_base, _ = Rel.base_and_refinement_maybe_delta true env t in

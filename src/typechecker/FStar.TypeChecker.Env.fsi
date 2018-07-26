@@ -253,7 +253,7 @@ val is_action              : env -> lident -> bool
 val is_interpreted         : (env -> term -> bool)
 val is_irreducible         : env -> lident -> bool
 val is_type_constructor    : env -> lident -> bool
-val num_inductive_ty_params: env -> lident -> int
+val num_inductive_ty_params: env -> lident -> option<int>
 
 (* Universe instantiation *)
 
