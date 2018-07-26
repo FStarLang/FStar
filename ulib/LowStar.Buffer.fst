@@ -128,6 +128,10 @@ let gsub_is_null #a b i len = ()
 
 let len_gsub #a b i len' = ()
 
+let frameOf_gsub #a b i len = ()
+
+let as_addr_gsub #a b i len = ()
+
 let gsub_gsub #a b i1 len1 i2 len2 = ()
 
 let gsub_zero_length #a b = ()
@@ -712,15 +716,6 @@ let loc_disjoint_gsub_buffer #t b i1 len1 i2 len2 =
 
 let loc_disjoint_addresses = MG.loc_disjoint_addresses_intro #_ #cls
 
-let loc_disjoint_buffer_addresses #t p preserve_liveness r n =
-  MG.loc_disjoint_aloc_addresses_intro #_ #cls #(frameOf p) #(as_addr p) (ubuffer_of_buffer p) preserve_liveness r n
-
-let loc_disjoint_buffer_regions #t p preserve_liveness r =
-  MG.loc_disjoint_regions #_ #cls false preserve_liveness (Set.singleton (frameOf p)) r;
-  loc_includes_region_buffer false (Set.singleton (frameOf p)) p;
-  loc_includes_refl (loc_regions preserve_liveness r);
-  MG.loc_disjoint_includes (loc_regions false (Set.singleton (frameOf p))) (loc_regions preserve_liveness r) (loc_buffer p) (loc_regions preserve_liveness r)
-
 let loc_disjoint_regions = MG.loc_disjoint_regions #_ #cls
 
 let modifies = MG.modifies
@@ -920,6 +915,37 @@ let mreference_live_loc_not_unused_in =
 
 let mreference_unused_in_loc_unused_in =
   MG.mreference_unused_in_loc_unused_in cls
+
+let modifies_inert = modifies
+
+let modifies_inert_intro s h1 h2 = ()
+
+let modifies_inert_live_region = modifies_live_region
+
+let modifies_inert_mreference_elim = modifies_mreference_elim
+
+let modifies_inert_buffer_elim = modifies_buffer_elim
+
+let modifies_inert_liveness_insensitive_mreference_weak = modifies_liveness_insensitive_mreference_weak
+
+let modifies_inert_liveness_insensitive_buffer_weak = modifies_liveness_insensitive_buffer_weak
+
+let modifies_inert_liveness_insensitive_region_weak = modifies_liveness_insensitive_region_weak
+
+let modifies_inert_liveness_insensitive_region_mreference_weak = modifies_liveness_insensitive_region_mreference_weak
+
+
+let modifies_inert_liveness_insensitive_region_buffer_weak = modifies_liveness_insensitive_region_buffer_weak
+
+let fresh_frame_modifies_inert = fresh_frame_modifies
+
+let popped_modifies_inert = popped_modifies
+
+let modifies_inert_loc_unused_in l h1 h2 l' =
+  modifies_loc_includes address_liveness_insensitive_locs h1 h2 l;
+  modifies_address_liveness_insensitive_unused_in h1 h2;
+  loc_includes_trans (loc_unused_in h1) (loc_unused_in h2) l'
+
 
 let disjoint_neq #a1 #a2 b1 b2 =
   if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2
@@ -1155,6 +1181,21 @@ let gcmalloc_of_list #a r init =
   in
   let b = Buffer len content 0ul len in
   b
+
+let rec blit #t src idx_src dst idx_dst len
+= let h0 = HST.get () in
+  if len = 0ul then ()
+  else begin
+    let len' = U32.(len -^ 1ul) in
+    blit #t src idx_src dst idx_dst len';
+    let z = U32.(index src (idx_src +^ len')) in
+    upd dst (U32.(idx_dst +^ len')) z;
+    let h1 = HST.get() in
+    Seq.snoc_slice_index (as_seq h1 dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len');
+    Seq.cons_head_tail (Seq.slice (as_seq h0 dst) (U32.v idx_dst + U32.v len') (length dst));
+    Seq.cons_head_tail (Seq.slice (as_seq h1 dst) (U32.v idx_dst + U32.v len') (length dst))
+  end
+
 
 
 (* type class *)
