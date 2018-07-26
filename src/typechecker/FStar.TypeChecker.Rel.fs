@@ -2939,26 +2939,26 @@ let with_guard_no_simp env prob dopt = match dopt with
       Some ({guard_f=(p_guard prob |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
 
 let try_teq smt_ok env t1 t2 : option<guard_t> =
- if debug env <| Options.Other "Rel"
- then BU.print2 "try_teq of %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
- let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
- let g = with_guard env prob <| solve_and_commit env (singleton wl prob smt_ok) (fun _ -> None) in
- g
+     if debug env <| Options.Other "Rel"
+     then BU.print2 "try_teq of %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+     let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
+     let g = with_guard env prob <| solve_and_commit env (singleton wl prob smt_ok) (fun _ -> None) in
+     g
 
 let teq env t1 t2 : guard_t =
- match try_teq true env t1 t2 with
+    match try_teq true env t1 t2 with
     | None ->
-      FStar.Errors.log_issue
+        FStar.Errors.log_issue
             (Env.get_range env)
             (Err.basic_type_error env None t2 t1);
-      trivial_guard
+        trivial_guard
     | Some g ->
-      if debug env <| Options.Other "Rel"
-      then BU.print3 "teq of %s and %s succeeded with guard %s\n"
+        if debug env <| Options.Other "Rel"
+        then BU.print3 "teq of %s and %s succeeded with guard %s\n"
                         (Print.term_to_string t1)
                         (Print.term_to_string t2)
                         (guard_to_string env g);
-      g
+        g
 
 let subtype_fail env e t1 t2 =
     Errors.log_issue (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)

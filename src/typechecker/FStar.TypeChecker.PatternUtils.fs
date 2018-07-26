@@ -45,6 +45,58 @@ module C = FStar.Parser.Const
 (* Utilities on patterns  *)
 (************************************************************************)
 
+let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
+    let maybe_dot inaccessible a r =
+        if inaccessible
+        then withinfo (Pat_dot_term(a, tun)) r
+        else withinfo (Pat_var a) r
+    in
+    match p.v with
+    | Pat_cons(fv, pats) ->
+        let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
+        let _, t = Env.lookup_datacon env fv.fv_name.v in
+        let f, _ = U.arrow_formals t in
+        let rec aux formals pats =
+            match formals, pats with
+            | [], [] -> []
+            | [], _::_ ->
+                raise_error (Errors.Fatal_TooManyPatternArguments,
+                            "Too many pattern arguments")
+                            (range_of_lid fv.fv_name.v)
+            | _::_, [] -> //fill the rest with dot patterns, if all the remaining formals are implicit
+            formals |>
+            List.map
+                (fun (t, imp) ->
+                    match imp with
+                    | Some (Implicit inaccessible) ->
+                    let a = Syntax.new_bv (Some (Syntax.range_of_bv t)) tun in
+                    let r = range_of_lid fv.fv_name.v in
+                    maybe_dot inaccessible a r, true
+
+                    | _ ->
+                    raise_error (Errors.Fatal_InsufficientPatternArguments,
+                                BU.format1 "Insufficient pattern arguments (%s)"
+                                            (Print.pat_to_string p))
+                                (range_of_lid fv.fv_name.v))
+
+            | f::formals', (p, p_imp)::pats' ->
+            begin
+            match f with
+            | (_, Some (Implicit _)) when p_imp ->
+                (p, true)::aux formals' pats'
+
+            | (_, Some (Implicit inaccessible)) ->
+                let a = Syntax.new_bv (Some p.p) tun in
+                let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
+                (p, true)::aux formals' pats
+
+            | (_, imp) ->
+                (p, S.is_implicit imp)::aux formals' pats'
+            end
+        in
+        {p with v=Pat_cons(fv, aux f pats)}
+    | _ -> p
+
 (*
   pat_as_exps allow_implicits env p:
     Turns a pattern p into a triple:
@@ -118,59 +170,6 @@ let pat_as_exp (env:Env.env)
               guard,
               {p with v=Pat_cons(fv, List.rev pats)})
     in
-
-    let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
-        let maybe_dot inaccessible a r =
-            if inaccessible
-            then withinfo (Pat_dot_term(a, tun)) r
-            else withinfo (Pat_var a) r
-        in
-        match p.v with
-        | Pat_cons(fv, pats) ->
-          let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
-          let _, t = Env.lookup_datacon env fv.fv_name.v in
-          let f, _ = U.arrow_formals t in
-          let rec aux formals pats =
-              match formals, pats with
-              | [], [] -> []
-              | [], _::_ ->
-                 raise_error (Errors.Fatal_TooManyPatternArguments,
-                              "Too many pattern arguments")
-                             (range_of_lid fv.fv_name.v)
-              | _::_, [] -> //fill the rest with dot patterns, if all the remaining formals are implicit
-                formals |>
-                List.map
-                    (fun (t, imp) ->
-                     match imp with
-                     | Some (Implicit inaccessible) ->
-                       let a = Syntax.new_bv (Some (Syntax.range_of_bv t)) tun in
-                       let r = range_of_lid fv.fv_name.v in
-                       maybe_dot inaccessible a r, true
-
-                     | _ ->
-                       raise_error (Errors.Fatal_InsufficientPatternArguments,
-                                    BU.format1 "Insufficient pattern arguments (%s)"
-                                                (Print.pat_to_string p))
-                                   (range_of_lid fv.fv_name.v))
-
-              | f::formals', (p, p_imp)::pats' ->
-                begin
-                match f with
-                | (_, Some (Implicit _)) when p_imp ->
-                  (p, true)::aux formals' pats'
-
-                | (_, Some (Implicit inaccessible)) ->
-                  let a = Syntax.new_bv (Some p.p) tun in
-                  let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
-                  (p, true)::aux formals' pats
-
-                | (_, imp) ->
-                  (p, S.is_implicit imp)::aux formals' pats'
-                end
-         in
-         {p with v=Pat_cons(fv, aux f pats)}
-        | _ -> p in
-
     let one_pat env p =
         let p = elaborate_pat env p in
         let b, a, w, env, arg, guard, p = pat_as_arg_with_env env p in
