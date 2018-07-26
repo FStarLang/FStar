@@ -1,6 +1,9 @@
 module MerkleTree.Low
 
+// TODO1: Use high-level spec for correctness
 // open MerkleTree.High
+
+// TODO2: Use `EverCrypt.Hash` directly
 // open EverCrypt.Hash
 
 open FStar.All
@@ -17,6 +20,7 @@ module HST = FStar.HyperStack.ST
 module B = LowStar.Buffer
 module S = FStar.Seq
 
+// TODO1
 // module High = MerkleTree.High
 
 let root = Monotonic.HyperHeap.root
@@ -29,8 +33,10 @@ type uint8_t = U8.t
 noextract val hash_size: nat
 noextract let hash_size = 32
 type hash = b:B.buffer uint8_t
+type vhash = h:hash{B.length h = hash_size}
 let hash_buf = B.buffer hash
 
+// TODO2: When `EverCrypt.Hash` is connected if we define it.
 assume val hash_from_hashes: 
   src1:hash -> src2:hash -> dst:hash -> 
   HST.ST unit
@@ -44,9 +50,8 @@ assume val hash_from_hashes:
 val uint32_pow2: 
   sz:uint32_t{sz < 32ul} -> Tot (p:uint32_t{U32.v p = pow2 (U32.v sz)})
 let uint32_pow2 sz =
-  let p = UInt32.shift_left 1ul sz in
-  assume (U32.v p = pow2 (U32.v sz));
-  p
+  Math.Lemmas.pow2_lt_compat U32.n (U32.v sz);
+  UInt32.shift_left 1ul sz
 
 val is_pow2: nat -> GTot bool
 let rec is_pow2 n =
@@ -54,32 +59,30 @@ let rec is_pow2 n =
   else if n = 1 then true
   else (n % 2 = 0 && is_pow2 (n / 2))
 
-val uint32_is_pow2: n:uint32_t -> Tot (b:bool{b = is_pow2 (U32.v n)})
-let uint32_is_pow2 n =
-  let b = n <> 0ul && UInt32.logor n (n -% 1ul) = 0ul in
-  assume (b = is_pow2 (U32.v n));
-  b
-
 val pow2_floor: 
   n:nat{n > 0} -> GTot (p:nat{pow2 p <= n && n < pow2 (p + 1)})
 let rec pow2_floor n =
   if n = 1 then 0 else 1 + pow2_floor (n / 2)
 
-val uint32_pow2_floor: 
-  n:uint32_t{n > 0ul} ->
+val uint32_pow2_floor':
+  #sz:nat{sz > 0 && sz <= 32} ->
+  n:uint32_t{n > 0ul && U32.v n < pow2 sz} ->
   Tot (p:uint32_t{
-    p < 32ul && pow2 (U32.v p) <= U32.v n && U32.v n < pow2 (U32.v p + 1) &&
-    pow2_floor (U32.v n) = U32.v p}) 
+    U32.v p < sz && pow2 (U32.v p) <= U32.v n && 
+    U32.v n < pow2 (U32.v p + 1)})
       (decreases (U32.v n))
-let rec uint32_pow2_floor n =
-  if n = 1ul then 0ul 
-  else (UInt.shift_right_value_aux_3 (U32.v n) 1;
-       assert (U32.v (UInt32.shift_right n 1ul) < U32.v n);
-       assume (1 + U32.v (uint32_pow2_floor (UInt32.shift_right n 1ul)) < 32);
-       let p = 1ul + uint32_pow2_floor (UInt32.shift_right n 1ul) in
-       assume (p < 32ul && pow2 (U32.v p) <= U32.v n && U32.v n < pow2 (U32.v p + 1) &&
-	      pow2_floor (U32.v n) = U32.v p);
-       p)
+let rec uint32_pow2_floor' #sz n =
+  if n = 1ul then 0ul
+  else (1ul + uint32_pow2_floor' #(sz - 1) (UInt32.shift_right n 1ul))
+
+val uint32_pow2_floor:
+  n:uint32_t{n > 0ul} ->
+  Tot (p:uint32_t{ 
+    p < 32ul && pow2 (U32.v p) <= U32.v n && 
+    U32.v n < pow2 (U32.v p + 1)})
+      (decreases (U32.v n))
+let uint32_pow2_floor n =
+  uint32_pow2_floor' #32 n
 
 val pow2_is_pow2:
   n:nat ->
@@ -88,14 +91,6 @@ val pow2_is_pow2:
 let rec pow2_is_pow2 n =
   if n = 0 then ()
   else pow2_is_pow2 (n - 1)
-
-val pow2_floor_pow2:
-  p:nat -> 
-  Lemma (pow2_floor (pow2 p) = p)
-	[SMTPat (pow2_floor (pow2 p))]
-let rec pow2_floor_pow2 p =
-  if p = 0 then ()
-  else pow2_floor_pow2 (p - 1)
 
 /// About hash buffer
 
@@ -113,7 +108,8 @@ val buffer_for_each_gsub:
 		  buffer_for_each h b prop))
 	(ensures (buffer_for_each h (B.gsub b i len) prop))
 let buffer_for_each_gsub #a h b prop i len =
-  admit ()
+  assert (forall (j:nat{j < B.length (B.gsub b i len)}).
+	 B.get h (B.gsub b i len) j == B.get h b (U32.v i + j))
 
 val buffer_for_each_gsub_gsub:
   #a:Type -> h:HS.mem -> b:B.buffer a ->
@@ -124,7 +120,9 @@ val buffer_for_each_gsub_gsub:
 		  buffer_for_each h (B.gsub b i (len - i)) prop))
 	(ensures (buffer_for_each h b prop))
 let buffer_for_each_gsub_gsub #a h b prop i len =
-  admit ()
+  assert (forall (j:nat{j < U32.v i}). B.get h b j == B.get h (B.gsub b 0ul i) j);
+  assert (forall (j:nat{j >= U32.v i && j < B.length b}).
+	 B.get h b j == B.get h (B.gsub b i (len - i)) (j - U32.v i))
 
 val hash_buf_allocated: 
   h:HS.mem -> hs:hash_buf -> GTot Type0
@@ -159,37 +157,37 @@ let hash_buf_allocated_gsub_gsub h hs i len =
 
 /// Allocation by power of two
 
-val alloc_sz_lg:
-  nelts:nat{nelts > 0} -> 
-  GTot (sz:nat{sz > 0 && pow2 (sz - 1) <= nelts && nelts < pow2 sz})
-let rec alloc_sz_lg nelts = pow2_floor nelts + 1
+// val alloc_sz_lg:
+//   nelts:nat{nelts > 0} -> 
+//   GTot (sz:nat{sz > 0 && pow2 (sz - 1) <= nelts && nelts < pow2 sz})
+// let rec alloc_sz_lg nelts = pow2_floor nelts + 1
 
-unfold val alloc_sz: nelts:nat -> GTot nat
-unfold let alloc_sz nelts =
-  if nelts = 0 then 0
-  else pow2 (alloc_sz_lg nelts) - 1
+// unfold val alloc_sz: nelts:nat -> GTot nat
+// unfold let alloc_sz nelts =
+//   if nelts = 0 then 0
+//   else pow2 (alloc_sz_lg nelts) - 1
 
-val alloc_sz_lg_pow2_inc:
-  nelts:nat{nelts > 0} ->
-  Lemma (requires (is_pow2 (nelts + 1)))
-	(ensures (alloc_sz_lg (nelts + 1) = 1 + alloc_sz_lg nelts))
-let rec alloc_sz_lg_pow2_inc nelts =
-  if nelts = 1 then ()
-  else alloc_sz_lg_pow2_inc (nelts / 2)
+// val alloc_sz_lg_pow2_inc:
+//   nelts:nat{nelts > 0} ->
+//   Lemma (requires (is_pow2 (nelts + 1)))
+// 	(ensures (alloc_sz_lg (nelts + 1) = 1 + alloc_sz_lg nelts))
+// let rec alloc_sz_lg_pow2_inc nelts =
+//   if nelts = 1 then ()
+//   else alloc_sz_lg_pow2_inc (nelts / 2)
 
-val alloc_sz_lg_not_pow2_inc:
-  nelts:nat{nelts > 0} ->
-  Lemma (requires (~ (is_pow2 (nelts + 1))))
-	(ensures (alloc_sz_lg nelts = alloc_sz_lg (nelts + 1)))
-let alloc_sz_lg_not_pow2_inc nelts =
-  let sz1 = alloc_sz_lg nelts in
-  let sz2 = alloc_sz_lg (nelts + 1) in
-  if sz1 > sz2 
-  then Math.Lemmas.pow2_le_compat (sz1 - 1) sz2
-  else if sz1 < sz2
-  then (Math.Lemmas.pow2_le_compat (sz2 - 1) sz1;
-       assert (nelts = pow2 sz1))
-  else ()
+// val alloc_sz_lg_not_pow2_inc:
+//   nelts:nat{nelts > 0} ->
+//   Lemma (requires (~ (is_pow2 (nelts + 1))))
+// 	(ensures (alloc_sz_lg nelts = alloc_sz_lg (nelts + 1)))
+// let alloc_sz_lg_not_pow2_inc nelts =
+//   let sz1 = alloc_sz_lg nelts in
+//   let sz2 = alloc_sz_lg (nelts + 1) in
+//   if sz1 > sz2 
+//   then Math.Lemmas.pow2_le_compat (sz1 - 1) sz2
+//   else if sz1 < sz2
+//   then (Math.Lemmas.pow2_le_compat (sz2 - 1) sz1;
+//        assert (nelts = pow2 sz1))
+//   else ()
 
 /// Low-level Merkle tree data structure
 
@@ -199,8 +197,9 @@ noeq type merkle_tree =
       // Resizing mechanism will be similar to that of C++ vector.
       nvalues:uint32_t{nvalues >= nelts} ->
       values:hash_buf{B.length values = U32.v nvalues} ->
-      // The actual number of internal roots should be equal to 
-      // the number of "set" bits of `nelts`.
+      // The actual number of internal root values should be equal to 
+      // the number of "set" bits of `nelts`. The maximum number is
+      // U32.n (=32), so we pre-allocate the buffer.
       iroots:hash_buf{B.length iroots = U32.n} ->
       merkle_tree
 
@@ -208,6 +207,8 @@ let mt_ptr = B.pointer merkle_tree
 
 /// Initialization
 
+// Allocate a buffer storing "pointers" to hashes.
+// The initial value for each pointer is null.
 val create_hashes:
   len:uint32_t{len > 0ul} ->
   HST.ST hash_buf
@@ -228,7 +229,6 @@ val init_hashes:
 	   hash_buf_allocated h1 hs /\
 	   B.live h1 hs /\ 
 	   modifies (loc_buffer hs) h0 h1))
-#set-options "--z3rlimit 10"
 let rec init_hashes len hs =
   if len = 0ul then ()
   else (B.upd hs 0ul (B.malloc root (UInt8.uint_to_t 0) 32ul);
@@ -260,12 +260,12 @@ let create_merkle_tree _ =
 
 /// Insertion
 
-// NOTE: it is using the `vs` pointer directly (not copying the hash value).
+// NOTE: it DIRECTLY stores the `vs` pointer value (not copying the hash value).
 val insert_values:
   nelts:uint32_t{U32.v nelts < UInt.max_int U32.n} ->
-  nvs:uint32_t{nvs >= nelts && U32.v nvs <= UInt.max_int U32.n} ->
+  nvs:uint32_t{nvs >= nelts} ->
   vs:hash_buf{B.length vs = U32.v nvs} ->
-  e:hash{B.length e = hash_size} -> 
+  e:vhash ->
   HST.ST (ivs:hash_buf{B.length ivs = (if nelts = nvs then 2 * U32.v nelts + 1 else U32.v nvs)})
 	 (requires (fun h0 -> B.live h0 e /\ B.live h0 vs /\ B.freeable vs))
 	 (ensures (fun h0 ivs h1 -> B.live h1 ivs /\ B.freeable ivs))
@@ -281,7 +281,7 @@ let insert_values nelts nvs vs e =
   else (B.upd vs nelts e; vs)
 
 val copy_hash: 
-  src:hash{B.length src = hash_size} -> dst:hash{B.length dst = hash_size} -> 
+  src:vhash -> dst:vhash -> 
   HST.ST unit
 	 (requires (fun h0 -> 
 	   B.live h0 src /\ B.live h0 dst /\ B.disjoint src dst))
@@ -295,7 +295,7 @@ val insert_iroots:
   nelts:uint32_t{U32.v nelts < UInt.max_int U32.n} ->
   nirs:uint32_t ->
   irs:hash_buf ->
-  nv:hash{B.length nv = hash_size} ->
+  nv:vhash ->
   HST.ST unit
 	 (requires (fun h0 -> 
 	   B.live h0 irs /\ hash_buf_allocated h0 irs /\
@@ -337,8 +337,7 @@ let rec num_iroots_of n =
        n % 2ul + num_iroots_of (n / 2ul))
 
 val insert:
-  mt:mt_ptr ->
-  e:hash{B.length e = hash_size} -> 
+  mt:mt_ptr -> e:vhash ->
   HST.ST unit
 	 (requires (fun h0 -> 
 	   B.live h0 mt /\ 
@@ -370,7 +369,7 @@ let insert mt e =
 val merkle_root_of_iroots:
   nirs:uint32_t{U32.v nirs <= U32.n} ->
   irs:hash_buf{B.length irs = U32.v nirs} -> 
-  acc:hash{B.length acc = hash_size} ->
+  acc:vhash ->
   HST.ST unit
 	 (requires (fun h0 -> 
 	   B.live h0 irs /\ hash_buf_allocated h0 irs /\
@@ -388,8 +387,7 @@ let rec merkle_root_of_iroots nirs irs acc =
        hash_from_hashes (B.index irs 0ul) acc acc)
 
 val get_root:
-  mt:mt_ptr ->
-  rt:hash{B.length rt = hash_size} -> 
+  mt:mt_ptr -> rt:vhash ->
   HST.ST unit
 	 (requires (fun h0 -> 
 	   B.live h0 mt /\ 
