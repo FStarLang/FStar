@@ -19,7 +19,22 @@ void get_root(mt_ptr mt, hash_t root)
 
 int main()
 {
-  /* mt_ptr mt = create(); */
-  /* hash_t elt = (hash_t )malloc(32); */
+  mt_ptr mt = create();
+  hash_t elt = (hash_t )malloc(32);
+
+  for (int i = 0; i < 32; ++i) {
+    elt[i] = 0;
+  }
+  elt[31] = 1;
+
+  for (int j = 0; j < 100; ++j) {
+    insert(mt, elt);
+  }
+
+  hash_t root = (hash_t )malloc(32);
+  get_root(mt, root);
+
+  printf("Merkle Tree Test: %d %d\n", elt[31], root[31]);
+  
   return 0;
 }
