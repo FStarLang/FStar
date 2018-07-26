@@ -779,6 +779,12 @@ let retrieve_plugins () =
     then []
     else snd plugins ()
 
+let add_nbe s = // ZP : Turns nbe flag on, to be used as the default norm strategy
+    if Options.use_nbe () 
+    then { s with nbe_step = true }
+    else s
+
+
 let config' psteps s e =
     let d = s |> List.collect (function
         | UnfoldUntil k -> [Env.Unfold k]
@@ -788,7 +794,7 @@ let config' psteps s e =
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
-    {tcenv=e;
+    {tcenv = e;
      debug = { gen = Env.debug e (Options.Other "Norm")
              ; top = Env.debug e (Options.Other "NormTop")
              ; cfg = Env.debug e (Options.Other "NormCfg")
@@ -798,14 +804,14 @@ let config' psteps s e =
              ; wpe  = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
              ; print_normalized = Env.debug e (Options.Other "print_normalized_terms") };
-     steps=to_fsteps s;
-     delta_level=d;
-     primitive_steps= add_steps built_in_primitive_steps (retrieve_plugins () @ psteps);
-     strong=false;
-     memoize_lazy=true;
-     normalize_pure_lets=
+     steps = to_fsteps s |> add_nbe ;
+     delta_level = d;
+     primitive_steps = add_steps built_in_primitive_steps (retrieve_plugins () @ psteps);
+     strong = false;
+     memoize_lazy = true;
+     normalize_pure_lets = 
        (Options.normalize_pure_terms_for_extraction()
         || not (s |> BU.for_some (eq_step PureSubtermsWithinComputations)));
-     reifying=false}
+     reifying = false}
 
 let config s e = config' [] s e
