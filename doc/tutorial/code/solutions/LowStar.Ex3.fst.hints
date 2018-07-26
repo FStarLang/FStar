@@ -12,7 +12,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cf50f66b070215a0562aa769ba26bcd0"
       ],
       0,
-      "1fe9b8b95f524af7e07c3be7686d2d30"
+      "f8cd3340677d8e08401065591c35abba"
     ],
     [
       "LowStar.Ex3.ok",
@@ -21,7 +21,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "5512c54ab078e238887a21078682b5bc"
+      "211ddbd897a28b1b209c0d24a565099f"
     ],
     [
       "LowStar.Ex3.repr",
@@ -59,7 +59,7 @@
         "typing_LowStar.Ex3.__proj__Mkt_struct__item__first"
       ],
       0,
-      "830326ad947a9ab1b45bfca980edb4f2"
+      "7f3602dbe1b3c397255024cf875414cb"
     ],
     [
       "LowStar.Ex3.full",
@@ -73,7 +73,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "166587815f5ef2d7776aa0dc77d28ef4"
+      "56b2cd9a4bf4bf65b5d8455441e9105e"
     ],
     [
       "LowStar.Ex3.pop",
@@ -168,7 +168,7 @@
         "typing_LowStar.Ex3.repr"
       ],
       0,
-      "72e52cd97720c65fe1681a4be98d5114"
+      "b05fa4ed24732c57447be0ee6712d95c"
     ],
     [
       "LowStar.Ex3.push",
@@ -260,7 +260,7 @@
         "typing_LowStar.Ex3.repr"
       ],
       0,
-      "5e39200661a66742f9226ff9e6991607"
+      "673270081a6b3b0dd9eaddb87b091998"
     ],
     [
       "LowStar.Ex3.create",
@@ -309,22 +309,23 @@
         "lemma_FStar.Monotonic.HyperHeap.lemma_root_has_color_zero",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "lemma_FStar.Seq.Base.lemma_index_create",
-        "lemma_FStar.Set.lemma_equal_elim", "lemma_FStar.Set.mem_singleton",
-        "lemma_FStar.UInt32.uv_inv", "lemma_LowStar.Buffer.len_gsub",
+        "lemma_FStar.Set.lemma_equal_elim", "lemma_FStar.UInt32.uv_inv",
+        "lemma_LowStar.Buffer.len_gsub",
         "lemma_LowStar.Buffer.length_as_seq",
         "lemma_LowStar.Buffer.live_loc_not_unused_in",
+        "lemma_LowStar.Buffer.loc_disjoint_includes_r",
         "lemma_LowStar.Buffer.loc_disjoint_sym_",
-        "lemma_LowStar.Buffer.loc_includes_addresses_buffer",
+        "lemma_LowStar.Buffer.loc_includes_addresses_addresses_2",
+        "lemma_LowStar.Buffer.loc_includes_addresses_buffer_",
         "lemma_LowStar.Buffer.loc_includes_none",
-        "lemma_LowStar.Buffer.loc_includes_trans_",
         "lemma_LowStar.Buffer.loc_union_loc_none_r",
         "lemma_LowStar.Buffer.modifies_inert_intro",
         "lemma_LowStar.Buffer.modifies_inert_liveness_insensitive_buffer_weak",
         "lemma_LowStar.Buffer.modifies_trans",
         "lemma_LowStar.Buffer.unused_in_loc_unused_in",
-        "lemma_LowStar.Buffer.unused_in_not_unused_in_disjoint_1",
+        "lemma_LowStar.Buffer.unused_in_not_unused_in_disjoint_2",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "proj_equation_LowStar.Ex3.Mkt_struct_b",
         "proj_equation_LowStar.Ex3.Mkt_struct_first",
@@ -359,11 +360,10 @@
         "typing_LowStar.Buffer.gsub", "typing_LowStar.Buffer.len",
         "typing_LowStar.Buffer.length",
         "typing_LowStar.Buffer.loc_addresses",
-        "typing_LowStar.Buffer.loc_buffer",
-        "typing_LowStar.Buffer.loc_not_unused_in", "typing_LowStar.Ex3.repr"
+        "typing_LowStar.Buffer.loc_buffer", "typing_LowStar.Ex3.repr"
       ],
       0,
-      "6bc93af55537224f81fe85a3f9c0224c"
+      "db80b0356e6f74d0d754ea3d48992dbe"
     ],
     [
       "LowStar.Ex3.main",
@@ -450,7 +450,7 @@
         "typing_LowStar.Ex3.repr", "typing_Prims.pow2"
       ],
       0,
-      "43edc82d71f083697edd34033661f804"
+      "590c0e17cef4e9a12f0a669d27ee4979"
     ],
     [
       "LowStar.Ex3.deref",
@@ -463,7 +463,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cf50f66b070215a0562aa769ba26bcd0"
       ],
       0,
-      "82e0ed6c75eb3a7bbea5fc4f0453e59f"
+      "2c122e4d3aa8b5ce43f63814ccde939a"
     ],
     [
       "LowStar.Ex3.ok",
@@ -472,7 +472,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "4542c75e5ac98ffe20ddd2c7582fb23d"
+      "c65c5a6aea51e9a50e9ee4a7e2e89218"
     ],
     [
       "LowStar.Ex3.repr",
@@ -510,7 +510,7 @@
         "typing_LowStar.Ex3.__proj__Mkt_struct__item__first"
       ],
       0,
-      "435dae26840ee431f714a34477a8cd25"
+      "88394b63f518b187d477daebe0d1119d"
     ],
     [
       "LowStar.Ex3.repr",
@@ -525,7 +525,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cf50f66b070215a0562aa769ba26bcd0"
       ],
       0,
-      "99c092d0601694ad18ba22ef881712c2"
+      "4e5190f52aa730d0aee91caf585c96ed"
     ],
     [
       "LowStar.Ex3.empty",
@@ -540,7 +540,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cf50f66b070215a0562aa769ba26bcd0"
       ],
       0,
-      "9a5714a0a4374a70bff115cbce79a770"
+      "29f4d111351d3fdebf6e077943c5d076"
     ],
     [
       "LowStar.Ex3.full",
@@ -554,7 +554,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d5b4fe1fe740edd10385e38c30b59584"
+      "5a1b21198890006f8358d81478c2f7c7"
     ],
     [
       "LowStar.Ex3.full",
@@ -569,7 +569,7 @@
         "refinement_interpretation_LowStar.Buffer_Tm_refine_cf50f66b070215a0562aa769ba26bcd0"
       ],
       0,
-      "a701a911f39a74ef3f161b9ce630cca0"
+      "c49dde0354f11597727e092f5c81c9d8"
     ],
     [
       "LowStar.Ex3.pop",
@@ -598,7 +598,7 @@
         "typing_LowStar.Buffer.get"
       ],
       0,
-      "9b8e84ec51af67a3836e0b8b4c64d9f6"
+      "8459f02730be7569051cdccb1dfb1273"
     ],
     [
       "LowStar.Ex3.push",
@@ -611,7 +611,7 @@
         "refinement_interpretation_LowStar.Ex3_Tm_refine_37c9c8c49a85c518e5556a725b8063bb"
       ],
       0,
-      "f490b71b247df485d1d37a06b91b9d31"
+      "79dbea1f5e70049f49a054d6f893c78a"
     ],
     [
       "LowStar.Ex3.malloc",
@@ -624,7 +624,7 @@
         "refinement_interpretation_LowStar.Ex3_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
       ],
       0,
-      "766adbd2f9e5f206e9d6c3419584828e"
+      "d7c6d702954a1d485ccf93819d3ef87c"
     ],
     [
       "LowStar.Ex3.create",
@@ -640,7 +640,7 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "cda0624b1ebe841bd9ba2a7457d00c40"
+      "6a0135f0041375d21125e520d0c3df7e"
     ]
   ]
 ]
