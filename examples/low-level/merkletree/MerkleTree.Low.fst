@@ -12,7 +12,7 @@ open LowStar.Modifies
 open LowStar.BufferOps
 open FStar.Seq
 open FStar.Integers
-open FStar.BitVector
+open FStar.Ghost
 
 module List = FStar.List.Tot
 module HS = FStar.HyperStack
@@ -65,15 +65,16 @@ let rec pow2_floor n =
   if n = 1 then 0 else 1 + pow2_floor (n / 2)
 
 val uint32_pow2_floor':
-  #sz:nat{sz > 0 && sz <= 32} ->
-  n:uint32_t{n > 0ul && U32.v n < pow2 sz} ->
+  sz:erased nat{reveal sz > 0 && reveal sz <= 32} ->
+  n:uint32_t{n > 0ul && U32.v n < pow2 (reveal sz)} ->
   Tot (p:uint32_t{
-    U32.v p < sz && pow2 (U32.v p) <= U32.v n && 
+    U32.v p < reveal sz && pow2 (U32.v p) <= U32.v n && 
     U32.v n < pow2 (U32.v p + 1)})
       (decreases (U32.v n))
-let rec uint32_pow2_floor' #sz n =
+let rec uint32_pow2_floor' sz n =
   if n = 1ul then 0ul
-  else (1ul + uint32_pow2_floor' #(sz - 1) (UInt32.shift_right n 1ul))
+  else (1ul + uint32_pow2_floor' (hide (reveal sz - 1))
+       	      			 (UInt32.shift_right n 1ul))
 
 val uint32_pow2_floor:
   n:uint32_t{n > 0ul} ->
@@ -82,7 +83,7 @@ val uint32_pow2_floor:
     U32.v n < pow2 (U32.v p + 1)})
       (decreases (U32.v n))
 let uint32_pow2_floor n =
-  uint32_pow2_floor' #32 n
+  uint32_pow2_floor' (hide 32) n
 
 val pow2_is_pow2:
   n:nat ->
@@ -91,6 +92,22 @@ val pow2_is_pow2:
 let rec pow2_is_pow2 n =
   if n = 0 then ()
   else pow2_is_pow2 (n - 1)
+
+val pow2_lt_compat_inv:
+  p:nat -> q:nat ->
+  Lemma (requires (pow2 p < pow2 q))
+	(ensures (p < q))
+let rec pow2_lt_compat_inv p q =
+  if q <= p then Math.Lemmas.pow2_le_compat p q
+  else ()
+
+val pow2_le_compat_inv:
+  p:nat -> q:nat ->
+  Lemma (requires (pow2 p <= pow2 q))
+	(ensures (p <= q))
+let rec pow2_le_compat_inv p q =
+  if q < p then Math.Lemmas.pow2_lt_compat p q
+  else ()
 
 /// About hash buffer
 
@@ -155,40 +172,6 @@ let hash_buf_allocated_gsub_gsub h hs i len =
   (fun hb -> B.live h hb /\ B.length hb = hash_size)
   i len
 
-/// Allocation by power of two
-
-// val alloc_sz_lg:
-//   nelts:nat{nelts > 0} -> 
-//   GTot (sz:nat{sz > 0 && pow2 (sz - 1) <= nelts && nelts < pow2 sz})
-// let rec alloc_sz_lg nelts = pow2_floor nelts + 1
-
-// unfold val alloc_sz: nelts:nat -> GTot nat
-// unfold let alloc_sz nelts =
-//   if nelts = 0 then 0
-//   else pow2 (alloc_sz_lg nelts) - 1
-
-// val alloc_sz_lg_pow2_inc:
-//   nelts:nat{nelts > 0} ->
-//   Lemma (requires (is_pow2 (nelts + 1)))
-// 	(ensures (alloc_sz_lg (nelts + 1) = 1 + alloc_sz_lg nelts))
-// let rec alloc_sz_lg_pow2_inc nelts =
-//   if nelts = 1 then ()
-//   else alloc_sz_lg_pow2_inc (nelts / 2)
-
-// val alloc_sz_lg_not_pow2_inc:
-//   nelts:nat{nelts > 0} ->
-//   Lemma (requires (~ (is_pow2 (nelts + 1))))
-// 	(ensures (alloc_sz_lg nelts = alloc_sz_lg (nelts + 1)))
-// let alloc_sz_lg_not_pow2_inc nelts =
-//   let sz1 = alloc_sz_lg nelts in
-//   let sz2 = alloc_sz_lg (nelts + 1) in
-//   if sz1 > sz2 
-//   then Math.Lemmas.pow2_le_compat (sz1 - 1) sz2
-//   else if sz1 < sz2
-//   then (Math.Lemmas.pow2_le_compat (sz2 - 1) sz1;
-//        assert (nelts = pow2 sz1))
-//   else ()
-
 /// Low-level Merkle tree data structure
 
 noeq type merkle_tree =
@@ -196,6 +179,7 @@ noeq type merkle_tree =
       // The value buffer will be resized when elements are added.
       // Resizing mechanism will be similar to that of C++ vector.
       nvalues:uint32_t{nvalues >= nelts} ->
+      nvsz:erased nat{U32.v nvalues = pow2 (reveal nvsz) - 1} ->
       values:hash_buf{B.length values = U32.v nvalues} ->
       // The actual number of internal root values should be equal to 
       // the number of "set" bits of `nelts`. The maximum number is
@@ -256,7 +240,7 @@ let create_merkle_tree _ =
   let values = B.null in
   let iroots = create_hashes 32ul in
   init_hashes 32ul iroots;
-  B.malloc root (MT 0ul 0ul values iroots) 1ul
+  B.malloc root (MT 0ul 0ul (hide 0) values iroots) 1ul
 
 /// Insertion
 
@@ -264,14 +248,17 @@ let create_merkle_tree _ =
 val insert_values:
   nelts:uint32_t{U32.v nelts < UInt.max_int U32.n} ->
   nvs:uint32_t{nvs >= nelts} ->
+  nvsz:erased nat{U32.v nvs = pow2 (reveal nvsz) - 1} ->  
   vs:hash_buf{B.length vs = U32.v nvs} ->
   e:vhash ->
   HST.ST (ivs:hash_buf{B.length ivs = (if nelts = nvs then 2 * U32.v nelts + 1 else U32.v nvs)})
 	 (requires (fun h0 -> B.live h0 e /\ B.live h0 vs /\ B.freeable vs))
 	 (ensures (fun h0 ivs h1 -> B.live h1 ivs /\ B.freeable ivs))
-let insert_values nelts nvs vs e =
+#set-options "--z3rlimit 20"
+let insert_values nelts nvs nvsz vs e =
   if nelts = nvs 
-  then (assume (2 * U32.v nelts + 1 <= UInt.max_int U32.n);
+  then (pow2_lt_compat_inv (reveal nvsz) U32.n;
+       assert (2 * U32.v nelts + 1 <= UInt.max_int U32.n);
        let ivs = create_hashes (2ul * nelts + 1ul) in
        LowStar.BufferOps.blit vs 0ul ivs 0ul nelts;
        B.upd ivs nelts e;
@@ -327,7 +314,7 @@ let rec insert_iroots nelts nirs irs nv =
 			     (B.index irs 0ul))
        else ())
 
-val num_iroots_of: 
+val num_iroots_of:
   n:uint32_t -> 
   Tot (nirs:uint32_t{U32.v nirs <= U32.n}) 
       (decreases (U32.v n))
@@ -354,7 +341,8 @@ let insert mt e =
   let nvalues = MT?.nvalues mtv in
   let inelts = nelts + 1ul in
   let invalues = if nelts = nvalues then 2ul * nelts + 1ul else nvalues in
-  let ivalues = insert_values nelts nvalues (MT?.values mtv) e in
+  let invsz = hide (if nelts = nvalues then reveal (MT?.nvsz mtv) + 1 else reveal (MT?.nvsz mtv)) in
+  let ivalues = insert_values nelts nvalues (MT?.nvsz mtv) (MT?.values mtv) e in
   let nirs = num_iroots_of nelts in
   let hh0 = HST.get () in 
   assume (B.live hh0 (MT?.iroots mtv) /\ hash_buf_allocated hh0 (MT?.iroots mtv));
@@ -362,7 +350,7 @@ let insert mt e =
   insert_iroots nelts nirs (MT?.iroots mtv) e;
   let hh1 = HST.get () in 
   assume (B.live hh1 mt);
-  B.upd mt 0ul (MT inelts invalues ivalues (MT?.iroots mtv))
+  B.upd mt 0ul (MT inelts invalues invsz ivalues (MT?.iroots mtv))
 
 /// Getting the Merkle root
 
