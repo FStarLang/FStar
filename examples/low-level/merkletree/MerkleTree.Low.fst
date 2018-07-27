@@ -45,6 +45,24 @@ assume val hash_from_hashes:
 	 (ensures (fun h0 _ h1 ->
 	   modifies (loc_buffer dst) h0 h1))
 
+/// Utilities
+
+val modifies_union_weakened_left:
+  s1:loc -> s2:loc ->
+  h1:HS.mem -> h2:HS.mem ->
+  Lemma (requires (modifies s1 h1 h2))
+	(ensures (modifies (loc_union s1 s2) h1 h2))
+let modifies_union_weakened_left s1 s2 h1 h2 =
+  loc_includes_union_l s1 s2 s1
+
+val modifies_union_weakened_right:
+  s1:loc -> s2:loc ->
+  h1:HS.mem -> h2:HS.mem ->
+  Lemma (requires (modifies s2 h1 h2))
+	(ensures (modifies (loc_union s1 s2) h1 h2))
+let modifies_union_weakened_right s1 s2 h1 h2 =
+  loc_includes_union_l s1 s2 s2
+
 /// Power of 2
 
 val uint32_pow2: 
@@ -212,6 +230,63 @@ let rec loc_hashes_as_seq_eq hs h1 h2 =
   if B.length hs = 0 then ()
   else loc_hashes_as_seq_eq (B.gsub hs 1ul (B.len hs - 1ul)) h1 h2
 
+val loc_includes_union_left:
+  s1: loc -> s2: loc ->
+  Lemma (loc_includes (loc_union s1 s2) s1)
+let loc_includes_union_left s1 s2 =
+  loc_includes_union_l s1 s2 s1
+
+val loc_includes_union_right:
+  s1: loc -> s2: loc ->
+  Lemma (loc_includes (loc_union s1 s2) s2)
+let loc_includes_union_right s1 s2 =
+  loc_includes_union_l s1 s2 s2
+
+val loc_includes_union_lift_left:
+  s: loc -> s1: loc -> s2: loc ->
+  Lemma (requires (loc_includes s1 s2))
+	(ensures (loc_includes (loc_union s s1) (loc_union s s2)))
+let loc_includes_union_lift_left s s1 s2 =
+  loc_includes_union_left s s1;
+  loc_includes_union_right s s1;
+  loc_includes_union_r (loc_union s s1) s s2
+
+val loc_includes_union_lift_right:
+  s: loc -> s1: loc -> s2: loc ->
+  Lemma (requires (loc_includes s1 s2))
+	(ensures (loc_includes (loc_union s1 s) (loc_union s2 s)))
+let loc_includes_union_lift_right s s1 s2 =
+  loc_includes_union_left s1 s;
+  loc_includes_union_right s1 s;
+  loc_includes_union_r (loc_union s1 s) s s2
+
+val loc_hashes_gsub_includes':
+  h:HS.mem -> hs:hash_buf -> len:uint32_t ->
+  Lemma (requires (U32.v len <= B.length hs))
+	(ensures (loc_includes (loc_hashes h hs) 
+			       (loc_hashes h (B.gsub hs 0ul len))))
+	(decreases (B.length hs))
+let rec loc_hashes_gsub_includes' h hs len =
+  if len = 0ul then ()
+  else (loc_hashes_gsub_includes' h (B.gsub hs 1ul (B.len hs - 1ul)) (len - 1ul);
+       loc_includes_union_lift_left (loc_buffer (B.get h hs 0))
+				    (loc_hashes h (B.gsub hs 1ul (B.len hs - 1ul)))
+				    (loc_hashes h (B.gsub (B.gsub hs 0ul len) 1ul (len - 1ul))))
+
+val loc_hashes_gsub_includes:
+  h:HS.mem -> hs:hash_buf ->
+  i:uint32_t -> len:uint32_t ->
+  Lemma (requires (U32.v i + U32.v len <= B.length hs))
+	(ensures (loc_includes (loc_hashes h hs) 
+			       (loc_hashes h (B.gsub hs i len))))
+	(decreases (B.length hs))
+let rec loc_hashes_gsub_includes h hs i len =
+  if len = 0ul then ()
+  else if i = 0ul then loc_hashes_gsub_includes' h hs len
+  else (loc_hashes_gsub_includes h (B.gsub hs 1ul (B.len hs - 1ul)) (i - 1ul) len;
+       loc_includes_union_right (loc_buffer (B.get h hs 0))
+				(loc_hashes h (B.gsub hs 1ul (B.len hs - 1ul))))
+
 val hash_buf_disjoint_ext:
   h:HS.mem -> hs:hash_buf -> 
   #a:Type -> e:B.buffer a -> GTot Type0
@@ -226,7 +301,7 @@ val hash_buf_disjoint_ext_gsub:
 		  hash_buf_disjoint_ext h hs e))
 	(ensures (hash_buf_disjoint_ext h (B.gsub hs i len) e))
 let hash_buf_disjoint_ext_gsub h hs i len #a e =
-  admit ()
+  loc_hashes_gsub_includes h hs i len
 
 val hash_buf_disjoint_ext_gsub_gsub:
   h:HS.mem -> hs:hash_buf ->
@@ -335,8 +410,9 @@ val insert_values:
 	 (ensures (fun h0 ivs h1 -> B.live h1 ivs /\ B.freeable ivs))
 #set-options "--z3rlimit 20"
 let insert_values nelts nvs nvsz vs e =
-  if nelts = nvs 
-  then (pow2_lt_compat_inv (reveal nvsz) U32.n;
+  if nelts = nvs
+  then (let hh0 = HST.get () in
+       pow2_lt_compat_inv (reveal nvsz) U32.n;
        assert (2 * U32.v nelts + 1 <= UInt.max_int U32.n);
        let ivs = create_hashes (2ul * nelts + 1ul) in
        LowStar.BufferOps.blit vs 0ul ivs 0ul nelts;
@@ -357,22 +433,6 @@ val copy_hash:
 	   B.as_seq h1 dst = B.as_seq h0 src))
 let copy_hash src dst =
   blit src 0ul dst 0ul 32ul
-
-val modifies_union_weakened_left:
-  s1:loc -> s2:loc ->
-  h1:HS.mem -> h2:HS.mem ->
-  Lemma (requires (modifies s1 h1 h2))
-	(ensures (modifies (loc_union s1 s2) h1 h2))
-let modifies_union_weakened_left s1 s2 h1 h2 =
-  admit ()
-
-val modifies_union_weakened_right:
-  s1:loc -> s2:loc ->
-  h1:HS.mem -> h2:HS.mem ->
-  Lemma (requires (modifies s2 h1 h2))
-	(ensures (modifies (loc_union s1 s2) h1 h2))
-let modifies_union_weakened_right s1 s2 h1 h2 =
-  admit ()
 
 val insert_iroots:
   nirs:erased nat{reveal nirs <= U32.n} ->
