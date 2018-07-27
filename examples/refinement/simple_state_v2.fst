@@ -72,28 +72,25 @@ type lcomp 'a (c : comp 'a) =
                   snd res == lstate_as_state h' ls /\ fst res == r)))
 
 
+//Monad operations of low_comp, just a reader monad
+val lreturn : (x:'a) -> lcomp 'a (return x)
+let lreturn (x:'a) = fun (ls:lstate) -> x
 
-// Monad operations of low_comp, just a reader monad
-val lreturn : 'a -> lcomp a (return 'a)
-let lreturn (x : 'a) = fun s -> x 
-
-val lbind : lcomp 'a 'c1 -> ('a -> lcomp 'b 'c2) -> lcomp 'b (bind 'c1 'c2)
-let lbind (m : lcomp 'a) (f : 'a -> lcomp 'b) = 
+val lbind : (#c1:comp 'a) -> (#c2:('a -> comp 'b)) -> 
+            lcomp 'a c1 -> (x:'a -> lcomp 'b (c2 x)) -> lcomp 'b (bind c1 c2)
+let lbind (#c1:comp 'a) (#c2:('a -> comp 'b)) (m : lcomp 'a c1) (f : (x:'a) -> lcomp 'b (c2 x)) = 
     fun s -> let a = m s in f a s
 
-val lwrite : i:nat{ i < 2 } -> v:mint -> low_type unit (write i v)
+val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp unit (write i v)
 let lwrite i v = fun (b1, b2) -> if i = 0 then b1.(0ul) <- v else b2.(0ul) <- v
 
-val lread : i:nat{ i < 2 } -> low_type mint (read i)
+val lread : i:nat{ i < 2 } -> lcomp mint (read i)
 let lread i = fun (b1, b2) -> if i = 0 then b1.(0ul) else b2.(0ul)
 
-
-val low_swap_and_sum : low_type int (swap_and_sum ())
-let low_swap_and_sum = fun ls ->
-  
-  let (v1 : mint) = lread 0 ls in 
-  let (v2 : mint) = lread 1 ls in
-  lwrite 0 v2 ls;
-  lwrite 1 v1 ls;
-  U32.v v1 + U32.v v2
- 
+val low_swap_and_sum : lcomp int (swap_and_sum ())
+let low_swap_and_sum =
+   lbind (lread 0) (fun x0 -> 
+   lbind (lread 1) (fun x1 -> 
+   lbind (lwrite 0 x1) (fun () -> 
+   lbind (lwrite 1 x0) (fun () ->
+   lreturn (U32.v x0 + U32.v x1))))) 
