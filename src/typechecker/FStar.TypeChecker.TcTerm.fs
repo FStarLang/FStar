@@ -1695,12 +1695,12 @@ and tc_pat env (pat_t:typ) p0 :
           | Some n ->
               let params_s, indices_s = BU.first_N n args_s in
               let indices_s, guard =
-                  List.mapFold
-                    (fun guard (_, b) ->
+                  List.fold_right
+                    (fun (_, b) (out, guard) ->
                         let t, g' = new_uvar() in
-                        (t, b), Env.conj_guard guard g')
-                    Env.trivial_guard
+                        (t, b)::out, Env.conj_guard guard g')
                     indices_s
+                    ([], Env.trivial_guard)
               in
               S.mk_Tm_app head_s (params_s@indices_s) None scrutinee_t.pos,
               guard
