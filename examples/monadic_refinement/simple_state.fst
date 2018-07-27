@@ -13,6 +13,7 @@ open LowStar.Buffer
 open LowStar.BufferOps
 open LowStar.Modifies
 
+// High-level state
 type mint = U32.t
 type state = mint * mint
 type comp 'a = state -> 'a * state
@@ -37,6 +38,7 @@ let write i v =
         else ((), (fst s, v))
 
 
+// swap_and_sum spec
 val swap_and_sum : unit -> comp int
 let swap_and_sum () = 
   bind (read 0) (fun x0 -> 
@@ -46,7 +48,7 @@ let swap_and_sum () =
   return (U32.v x0 + U32.v x1)))))
 
 
-
+// Low-level implementation
 type bref = b:B.buffer mint { B.length b = 1 } 
 
 val heap_as_state : HS.mem -> bref -> bref -> GTot state
