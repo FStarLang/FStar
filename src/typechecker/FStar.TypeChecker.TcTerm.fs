@@ -1556,6 +1556,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
              * to find an instance for it. We might not even be able to, since instances
              * are for concrete types.
              *)
+            let tau = SS.subst subst tau in
             let tau, _, g_tau = tc_tactic env tau in
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
@@ -1588,6 +1589,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                                                (Print.bv_to_string x)
                                                (Print.term_to_string e))) e.pos in
             let targ = SS.subst subst x.sort in
+            let aqual = SS.subst_imp subst aqual in
             let x = {x with sort=targ} in
             if debug env Options.Extreme
             then BU.print5 "\tFormal is %s : %s\tType of arg %s (after subst %s) = %s\n"
@@ -2455,6 +2457,13 @@ and tc_binder env (x, imp) =
                    (Print.term_to_string x.sort)
                    (Print.term_to_string tu);
     let t, _, g = tc_check_tot_or_gtot_term env x.sort tu in //ghost effect ok in the types of binders
+    let imp, g' =
+        match imp with
+        | Some (Meta tau) ->
+            let tau, _, g = tc_tactic env tau in
+            Some (Meta tau), g
+        | _ -> imp, Env.trivial_guard
+    in
     let x = {x with sort=t}, imp in
     if Env.debug env Options.High
     then BU.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string (fst x)) (Print.term_to_string t);

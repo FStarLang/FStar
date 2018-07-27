@@ -480,10 +480,15 @@ and rebuild_closure cfg env stack t =
 
     | _ -> failwith "Impossible: unexpected stack element"
 
+and close_imp cfg env imp =
+    match imp with
+    | Some (S.Meta t) -> Some (S.Meta (inline_closure_env cfg env [] t))
+    | i -> i
 
 and close_binders cfg env bs =
     let env, bs = bs |> List.fold_left (fun (env, out) (b, imp) ->
             let b = {b with sort = inline_closure_env cfg env [] b.sort} in
+            let imp = close_imp cfg env imp in
             let env = dummy::env in
             env, ((b,imp)::out)) (env, []) in
     List.rev bs, env
@@ -1698,8 +1703,14 @@ and norm_comp : cfg -> env -> comp -> comp =
                                              effect_args = effect_args;
                                              flags       = flags}) }
 
-and norm_binder : cfg -> env -> binder -> binder =
-    fun cfg env (x, imp) -> {x with sort=norm cfg env [] x.sort}, imp
+and norm_binder (cfg:Cfg.cfg) (env:env) (b:binder) : binder =
+    let (x, imp) = b in
+    let x = { x with sort = norm cfg env [] x.sort } in
+    let imp = match imp with
+              | Some (S.Meta t) -> Some (S.Meta (closure_as_term cfg env t))
+              | i -> i
+    in
+    (x, imp)
 
 and norm_binders : cfg -> env -> binders -> binders =
     fun cfg env bs ->
