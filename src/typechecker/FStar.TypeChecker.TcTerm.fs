@@ -1681,8 +1681,17 @@ and tc_pat env (pat_t:typ) p0 :
           let t_x, _, guard = new_implicit_var_aux "pattern index" p0.p env t Allow_untyped in
           t_x, guard
         in
+        if Env.debug env <| Options.Other "Patterns"
+        then BU.print1 "$$$$$$$$$$$$Type of scrutineee is %s\n"
+                        (Print.term_to_string scrutinee_t);
+        let scrutinee_t = N.normalize [Env.UnfoldUntil delta_constant] env scrutinee_t in
+        if Env.debug env <| Options.Other "Patterns"
+        then BU.print1 "$$$$$$$$$$$$Unfolded type of scrutineee is %s\n"
+                        (Print.term_to_string scrutinee_t);
         let scrutinee_t, _ = Rel.base_and_refinement_maybe_delta true env scrutinee_t in
-        let scrutinee_t = N.unfold_whnf env scrutinee_t in
+        if Env.debug env <| Options.Other "Patterns"
+        then BU.print1 "$$$$$$$$$$$$Base type of scrutineee is %s\n"
+                        (Print.term_to_string scrutinee_t);
         let head_s, args_s = U.head_and_args scrutinee_t in
         match (U.un_uinst head_s).n with
         | Tm_fvar f ->
