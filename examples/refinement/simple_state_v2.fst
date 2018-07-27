@@ -23,7 +23,7 @@ val return : 'a -> comp 'a
 let return (x : 'a) = fun s -> (x, s)
 
 val bind : comp 'a -> ('a -> comp 'b) -> comp 'b
-let bind (m : comp 'a) (f : 'a -> comp 'b) = 
+let bind (m : comp 'a) (f : x:'a -> comp 'b (fun s' -> exists s, m s = (x, s')) post) = 
   fun s -> let (a, s1) = m s in f a s1
   
 
@@ -45,7 +45,9 @@ let swap_and_sum () =
   bind (read 1) (fun x1 -> 
   bind (write 0 x1) (fun () -> 
   bind (write 1 x0) (fun () ->
-  return (U32.v x0 + U32.v x1)))))
+  bind (read 0) (fun x0' -> 
+  assert (x0' == x1);
+  return (U32.v x0 + U32.v x1))))))
 
 
 // Low-level implementation writen in a "monadic" stype
@@ -93,4 +95,4 @@ let low_swap_and_sum =
    lbind (lread 1) (fun x1 -> 
    lbind (lwrite 0 x1) (fun () -> 
    lbind (lwrite 1 x0) (fun () ->
-   lreturn (U32.v x0 + U32.v x1))))) 
+   lreturn (U32.v x0 + U32.v x1)))))
