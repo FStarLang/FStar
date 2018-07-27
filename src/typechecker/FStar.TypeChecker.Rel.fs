@@ -1877,7 +1877,6 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //    (Print.binders_to_string ", " bs_lhs)
         //    (Print.term_to_string t_res_lhs)
         //    (Print.term_to_string rhs);
-        let bs_lhs_args = List.map (fun (x, i) -> S.bv_to_name x, i) bs_lhs in
         let rhs_hd, args = U.head_and_args rhs in
         let args_rhs, last_arg_rhs = BU.prefix args in
         let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
