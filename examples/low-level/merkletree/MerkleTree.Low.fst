@@ -443,23 +443,27 @@ val insert:
 	   
 	   B.live h0 e /\
 	   B.disjoint iroots e /\
-	   hash_buf_disjoint_ext h0 iroots e))
+	   hash_buf_disjoint_ext h0 iroots e /\
+	   hash_buf_disjoint_ext h0 iroots values /\
+	   hash_buf_disjoint_ext h0 iroots mt))
 	 (ensures (fun h0 _ h1 -> true))
 let insert mt e =
   let mtv = B.index mt 0ul in
-  // if MT?.nelts mtv >= UInt32.uint_to_t (UInt.max_int U32.n) then ()
   let nelts = MT?.nelts mtv in
   assume (2 * U32.v nelts + 1 <= UInt.max_int U32.n);
   let nvalues = MT?.nvalues mtv in
+  let iroots = MT?.iroots mtv in
+  insert_iroots (hide 32) nelts iroots e;
+
   let inelts = nelts + 1ul in
   let invalues = if nelts = nvalues then 2ul * nelts + 1ul else nvalues in
   let invsz = hide (if nelts = nvalues then reveal (MT?.nvsz mtv) + 1 else reveal (MT?.nvsz mtv)) in
+
+  let hh1 = HST.get () in assert (B.live hh1 mt);
+
   let ivalues = insert_values nelts nvalues (MT?.nvsz mtv) (MT?.values mtv) e in
-  let hh0 = HST.get () in 
-  insert_iroots (hide 32) nelts (MT?.iroots mtv) e;
-  let hh1 = HST.get () in 
-  assume (B.live hh1 mt);
-  B.upd mt 0ul (MT inelts invalues invsz ivalues (MT?.iroots mtv))
+  let hh2 = HST.get () in assume (B.live hh2 mt);
+  B.upd mt 0ul (MT inelts invalues invsz ivalues iroots)
 
 /// Getting the Merkle root
 
