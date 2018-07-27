@@ -59,6 +59,12 @@ let rec is_pow2 n =
   else if n = 1 then true
   else (n % 2 = 0 && is_pow2 (n / 2))
 
+val uint32_is_pow2: n:uint32_t -> Tot (b:bool{b = is_pow2 (U32.v n)})
+let uint32_is_pow2 n =
+  let b = n <> 0ul && UInt32.logor n (n -% 1ul) = 0ul in
+  assume (b = is_pow2 (U32.v n));
+  b
+
 val pow2_floor: 
   n:nat{n > 0} -> GTot (p:nat{pow2 p <= n && n < pow2 (p + 1)})
 let rec pow2_floor n =
@@ -172,6 +178,47 @@ let hash_buf_allocated_gsub_gsub h hs i len =
   (fun hb -> B.live h hb /\ B.length hb = hash_size)
   i len
 
+val hash_buf_disjoint:
+  h:HS.mem -> hs:hash_buf -> e:hash -> GTot Type0
+let hash_buf_disjoint h hs e =
+  buffer_for_each h hs
+  (fun hb -> B.disjoint hb e)
+
+val hash_buf_disjoint_gsub:
+  h:HS.mem -> hs:hash_buf ->
+  i:uint32_t -> len:uint32_t ->
+  e:hash ->
+  Lemma (requires (U32.v i + U32.v len <= B.length hs /\
+		  hash_buf_disjoint h hs e))
+	(ensures (hash_buf_disjoint h (B.gsub hs i len) e))
+let hash_buf_disjoint_gsub h hs i len e =
+  buffer_for_each_gsub h hs 
+  (fun hb -> B.disjoint hb e)
+  i len
+
+val hash_buf_disjoint_gsub_gsub:
+  h:HS.mem -> hs:hash_buf ->
+  i:uint32_t -> len:uint32_t ->
+  e:hash ->
+  Lemma (requires (B.length hs = U32.v len /\ i <= len /\
+		  hash_buf_disjoint h (B.gsub hs 0ul i) e /\
+		  hash_buf_disjoint h (B.gsub hs i (len - i)) e))
+	(ensures (hash_buf_disjoint h hs e))
+	[SMTPat (hash_buf_disjoint h (B.gsub hs 0ul i) e);
+	SMTPat (hash_buf_disjoint h (B.gsub hs i (len - i)) e)]
+let hash_buf_disjoint_gsub_gsub h hs i len e =
+  buffer_for_each_gsub_gsub h hs 
+  (fun hb -> B.disjoint hb e)
+  i len
+
+val loc_hashes: 
+  h:HS.mem -> hs:hash_buf -> 
+  GTot loc (decreases (B.length hs))
+let rec loc_hashes h hs =
+  if B.length hs = 0 then loc_none
+  else loc_union (loc_buffer (B.get h hs 0)) 
+		 (loc_hashes h (B.gsub hs 1ul (UInt32.uint_to_t (B.length hs - 1))))
+
 /// Low-level Merkle tree data structure
 
 noeq type merkle_tree =
@@ -273,55 +320,44 @@ val copy_hash:
 	 (requires (fun h0 -> 
 	   B.live h0 src /\ B.live h0 dst /\ B.disjoint src dst))
 	 (ensures (fun h0 _ h1 ->
+	   B.live h1 src /\ B.live h1 dst /\
 	   modifies (loc_buffer dst) h0 h1 /\
 	   B.as_seq h1 dst = B.as_seq h0 src))
 let copy_hash src dst =
   blit src 0ul dst 0ul 32ul
 
 val insert_iroots:
-  nelts:uint32_t{U32.v nelts < UInt.max_int U32.n} ->
-  nirs:uint32_t ->
-  irs:hash_buf ->
+  nirs:erased nat{reveal nirs <= U32.n} ->
+  nelts:uint32_t{U32.v nelts < pow2 (reveal nirs) - 1} ->
+  irs:hash_buf{B.length irs = reveal nirs} ->
   nv:vhash ->
   HST.ST unit
 	 (requires (fun h0 -> 
 	   B.live h0 irs /\ hash_buf_allocated h0 irs /\
-	   B.live h0 nv))
+	   B.live h0 nv /\ B.disjoint irs nv /\ hash_buf_disjoint h0 irs nv))
 	 (ensures (fun h0 _ h1 -> true))
 #set-options "--z3rlimit 20"
-let rec insert_iroots nelts nirs irs nv =
+let rec insert_iroots nirs nelts irs nv =
+  let hh0 = HST.get () in
   if nelts = 0ul
-  then (assume (B.length irs > 0);
-       let hh0 = HST.get () in assert (B.live hh0 (B.get hh0 irs 0));
-       assume (B.disjoint nv (B.index irs 0ul));
+  then (assert (B.live hh0 (B.get hh0 irs 0));
        copy_hash nv (B.index irs 0ul))
-  else (assume (nirs > 0ul);
-       assume (B.length irs >= U32.v nirs);
-       let hh0 = HST.get () in
-       hash_buf_allocated_gsub hh0 irs 1ul (nirs - 1ul);
-       insert_iroots (nelts - uint32_pow2 (uint32_pow2_floor nelts))
-		     (nirs - 1ul)
-		     (B.sub irs 1ul (nirs - 1ul))
-		     nv;
-       assume (uint32_pow2_floor nelts + 1ul < 32ul);
-       if nelts + 1ul = uint32_pow2 (uint32_pow2_floor nelts + 1ul)
+  else (hash_buf_allocated_gsub hh0 irs 1ul (B.len irs - 1ul);
+       hash_buf_disjoint_gsub hh0 irs 1ul (B.len irs - 1ul) nv;
+       insert_iroots (hide (reveal nirs - 1))
+		     (nelts - uint32_pow2 (uint32_pow2_floor nelts))
+		     (B.offset irs 1ul) nv;
+
+       Math.Lemmas.pow2_le_compat U32.n (reveal nirs); // (nelts + 1ul) \in uint32_t
+       if uint32_is_pow2 (nelts + 1ul)
        then (let hh1 = HST.get () in
-	    assume (B.length irs > 1);
+	    assert (B.length irs > 1);
 	    assume (B.live hh1 irs);
 	    assume (B.live hh1 (B.get hh1 irs 0));
 	    assume (B.live hh1 (B.get hh1 irs 1));
 	    hash_from_hashes (B.index irs 0ul) (B.index irs 1ul)
-			     (B.index irs 0ul))
+	    		     (B.index irs 0ul))
        else ())
-
-val num_iroots_of:
-  n:uint32_t -> 
-  Tot (nirs:uint32_t{U32.v nirs <= U32.n}) 
-      (decreases (U32.v n))
-let rec num_iroots_of n =
-  if n = 0ul then 0ul
-  else (assume (num_iroots_of (n / 2ul) < 32ul);
-       n % 2ul + num_iroots_of (n / 2ul))
 
 val insert:
   mt:mt_ptr -> e:vhash ->
@@ -343,11 +379,11 @@ let insert mt e =
   let invalues = if nelts = nvalues then 2ul * nelts + 1ul else nvalues in
   let invsz = hide (if nelts = nvalues then reveal (MT?.nvsz mtv) + 1 else reveal (MT?.nvsz mtv)) in
   let ivalues = insert_values nelts nvalues (MT?.nvsz mtv) (MT?.values mtv) e in
-  let nirs = num_iroots_of nelts in
   let hh0 = HST.get () in 
-  assume (B.live hh0 (MT?.iroots mtv) /\ hash_buf_allocated hh0 (MT?.iroots mtv));
+  assume (B.live hh0 (MT?.iroots mtv) /\ hash_buf_allocated hh0 (MT?.iroots mtv) /\
+	 hash_buf_disjoint hh0 (MT?.iroots mtv) e /\ B.disjoint (MT?.iroots mtv) e);
   assume (B.live hh0 e);
-  insert_iroots nelts nirs (MT?.iroots mtv) e;
+  insert_iroots (hide 32) nelts (MT?.iroots mtv) e;
   let hh1 = HST.get () in 
   assume (B.live hh1 mt);
   B.upd mt 0ul (MT inelts invalues invsz ivalues (MT?.iroots mtv))
@@ -356,7 +392,7 @@ let insert mt e =
 
 val merkle_root_of_iroots:
   nirs:uint32_t{U32.v nirs <= U32.n} ->
-  irs:hash_buf{B.length irs = U32.v nirs} -> 
+  irs:hash_buf{B.length irs >= U32.v nirs} -> 
   acc:vhash ->
   HST.ST unit
 	 (requires (fun h0 -> 
@@ -374,6 +410,15 @@ let rec merkle_root_of_iroots nirs irs acc =
        assert (B.live hh1 (B.get hh1 irs 0));
        hash_from_hashes (B.index irs 0ul) acc acc)
 
+val uint32_num_iroots_of:
+  sz:erased nat{reveal sz <= U32.n} -> 
+  n:uint32_t{U32.v n < pow2 (reveal sz)} ->
+  Tot (nirs:uint32_t{U32.v nirs <= reveal sz}) 
+       (decreases (U32.v n))
+let rec uint32_num_iroots_of sz n =
+  if n = 0ul then 0ul
+  else (n % 2ul + uint32_num_iroots_of (hide (reveal sz - 1)) (n / 2ul))
+
 val get_root:
   mt:mt_ptr -> rt:vhash ->
   HST.ST unit
@@ -390,6 +435,6 @@ let get_root mt rt =
   let mtv = B.index mt 0ul in
   let nelts = MT?.nelts mtv in
   let irs = MT?.iroots mtv in
-  assume (B.length irs = U32.v (num_iroots_of nelts));
-  merkle_root_of_iroots (num_iroots_of nelts) irs rt
+  let nirs = uint32_num_iroots_of (hide 32) nelts in
+  merkle_root_of_iroots nirs irs rt
 
