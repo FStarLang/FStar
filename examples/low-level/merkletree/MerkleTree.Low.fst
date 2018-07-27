@@ -59,9 +59,12 @@ let rec is_pow2 n =
   else if n = 1 then true
   else (n % 2 = 0 && is_pow2 (n / 2))
 
-val uint32_is_pow2: n:uint32_t -> Tot (b:bool{b = is_pow2 (U32.v n)})
+val uint32_is_pow2: 
+  n:uint32_t -> 
+  Tot (b:bool{b = is_pow2 (U32.v n)})
+      (decreases (U32.v n))
 let uint32_is_pow2 n =
-  let b = n <> 0ul && UInt32.logor n (n -% 1ul) = 0ul in
+  let b = n <> 0ul && UInt32.logor n (n - 1ul) = 0ul in
   assume (b = is_pow2 (U32.v n));
   b
 
@@ -178,38 +181,18 @@ let hash_buf_allocated_gsub_gsub h hs i len =
   (fun hb -> B.live h hb /\ B.length hb = hash_size)
   i len
 
-val hash_buf_disjoint:
-  h:HS.mem -> hs:hash_buf -> e:hash -> GTot Type0
-let hash_buf_disjoint h hs e =
-  buffer_for_each h hs
-  (fun hb -> B.disjoint hb e)
-
-val hash_buf_disjoint_gsub:
+val hash_buf_allocated_gsub_hd_tl:
   h:HS.mem -> hs:hash_buf ->
-  i:uint32_t -> len:uint32_t ->
-  e:hash ->
-  Lemma (requires (U32.v i + U32.v len <= B.length hs /\
-		  hash_buf_disjoint h hs e))
-	(ensures (hash_buf_disjoint h (B.gsub hs i len) e))
-let hash_buf_disjoint_gsub h hs i len e =
-  buffer_for_each_gsub h hs 
-  (fun hb -> B.disjoint hb e)
-  i len
-
-val hash_buf_disjoint_gsub_gsub:
-  h:HS.mem -> hs:hash_buf ->
-  i:uint32_t -> len:uint32_t ->
-  e:hash ->
-  Lemma (requires (B.length hs = U32.v len /\ i <= len /\
-		  hash_buf_disjoint h (B.gsub hs 0ul i) e /\
-		  hash_buf_disjoint h (B.gsub hs i (len - i)) e))
-	(ensures (hash_buf_disjoint h hs e))
-	[SMTPat (hash_buf_disjoint h (B.gsub hs 0ul i) e);
-	SMTPat (hash_buf_disjoint h (B.gsub hs i (len - i)) e)]
-let hash_buf_disjoint_gsub_gsub h hs i len e =
+  len:uint32_t{len > 0ul} ->
+  Lemma (requires (B.length hs = U32.v len /\
+		  B.live h (B.get h hs 0) /\ B.length (B.get h hs 0) = hash_size /\
+		  hash_buf_allocated h (B.gsub hs 1ul (len - 1ul))))
+	(ensures (hash_buf_allocated h hs))
+	[SMTPat (hash_buf_allocated h (B.gsub hs 1ul (len - 1ul)))]
+let hash_buf_allocated_gsub_hd_tl h hs len =
   buffer_for_each_gsub_gsub h hs 
-  (fun hb -> B.disjoint hb e)
-  i len
+  (fun hb -> B.live h hb /\ B.length hb = hash_size)
+  1ul len
 
 val loc_hashes: 
   h:HS.mem -> hs:hash_buf -> 
@@ -217,7 +200,56 @@ val loc_hashes:
 let rec loc_hashes h hs =
   if B.length hs = 0 then loc_none
   else loc_union (loc_buffer (B.get h hs 0)) 
-		 (loc_hashes h (B.gsub hs 1ul (UInt32.uint_to_t (B.length hs - 1))))
+		 (loc_hashes h (B.gsub hs 1ul (B.len hs - 1ul)))
+
+val loc_hashes_as_seq_eq:
+  hs:hash_buf -> h1:HS.mem -> h2:HS.mem ->
+  Lemma (requires (B.as_seq h1 hs == B.as_seq h2 hs))
+  	(ensures (loc_hashes h1 hs == loc_hashes h2 hs))
+	(decreases (B.length hs))
+	[SMTPat (B.as_seq h1 hs); SMTPat (B.as_seq h2 hs)]
+let rec loc_hashes_as_seq_eq hs h1 h2 =
+  if B.length hs = 0 then ()
+  else loc_hashes_as_seq_eq (B.gsub hs 1ul (B.len hs - 1ul)) h1 h2
+
+val hash_buf_disjoint_ext:
+  h:HS.mem -> hs:hash_buf -> 
+  #a:Type -> e:B.buffer a -> GTot Type0
+let hash_buf_disjoint_ext h hs #a e =
+  loc_disjoint (loc_hashes h hs) (loc_buffer e)
+
+val hash_buf_disjoint_ext_gsub:
+  h:HS.mem -> hs:hash_buf ->
+  i:uint32_t -> len:uint32_t ->
+  #a:Type -> e:B.buffer a ->
+  Lemma (requires (U32.v i + U32.v len <= B.length hs /\
+		  hash_buf_disjoint_ext h hs e))
+	(ensures (hash_buf_disjoint_ext h (B.gsub hs i len) e))
+let hash_buf_disjoint_ext_gsub h hs i len #a e =
+  admit ()
+
+val hash_buf_disjoint_ext_gsub_gsub:
+  h:HS.mem -> hs:hash_buf ->
+  i:uint32_t -> len:uint32_t ->
+  #a:Type -> e:B.buffer a ->
+  Lemma (requires (B.length hs = U32.v len /\ i <= len /\
+		  hash_buf_disjoint_ext h (B.gsub hs 0ul i) e /\
+		  hash_buf_disjoint_ext h (B.gsub hs i (len - i)) e))
+	(ensures (hash_buf_disjoint_ext h hs e))
+	[SMTPat (hash_buf_disjoint_ext h (B.gsub hs 0ul i) e);
+	SMTPat (hash_buf_disjoint_ext h (B.gsub hs i (len - i)) e)]
+let hash_buf_disjoint_ext_gsub_gsub h hs i len #a e =
+  admit ()
+
+val hash_buf_disjoint:
+  h:HS.mem -> hs:hash_buf -> GTot Type0 (decreases (B.length hs))
+let rec hash_buf_disjoint h hs =
+// forall (i:nat{i < B.length hs}) (j:nat{j < B.length hs}).
+//   i <> j ==> (B.disjoint (B.get h hs i) (B.get h hs j))
+  if B.length hs = 0 then True
+  else (let ths = B.gsub hs 1ul (B.len hs - 1ul) in
+       loc_disjoint (loc_buffer (B.get h hs 0)) (loc_hashes h ths) /\
+       hash_buf_disjoint h ths)
 
 /// Low-level Merkle tree data structure
 
@@ -326,6 +358,22 @@ val copy_hash:
 let copy_hash src dst =
   blit src 0ul dst 0ul 32ul
 
+val modifies_union_weakened_left:
+  s1:loc -> s2:loc ->
+  h1:HS.mem -> h2:HS.mem ->
+  Lemma (requires (modifies s1 h1 h2))
+	(ensures (modifies (loc_union s1 s2) h1 h2))
+let modifies_union_weakened_left s1 s2 h1 h2 =
+  admit ()
+
+val modifies_union_weakened_right:
+  s1:loc -> s2:loc ->
+  h1:HS.mem -> h2:HS.mem ->
+  Lemma (requires (modifies s2 h1 h2))
+	(ensures (modifies (loc_union s1 s2) h1 h2))
+let modifies_union_weakened_right s1 s2 h1 h2 =
+  admit ()
+
 val insert_iroots:
   nirs:erased nat{reveal nirs <= U32.n} ->
   nelts:uint32_t{U32.v nelts < pow2 (reveal nirs) - 1} ->
@@ -333,41 +381,69 @@ val insert_iroots:
   nv:vhash ->
   HST.ST unit
 	 (requires (fun h0 -> 
-	   B.live h0 irs /\ hash_buf_allocated h0 irs /\
-	   B.live h0 nv /\ B.disjoint irs nv /\ hash_buf_disjoint h0 irs nv))
-	 (ensures (fun h0 _ h1 -> true))
-#set-options "--z3rlimit 20"
+	   B.live h0 irs /\ hash_buf_allocated h0 irs /\ B.live h0 nv /\ 
+	   B.disjoint irs nv /\ hash_buf_disjoint_ext h0 irs nv /\
+	   hash_buf_disjoint_ext h0 irs irs /\
+	   hash_buf_disjoint h0 irs))
+	 (ensures (fun h0 _ h1 -> 
+	   modifies (loc_hashes h0 irs) h0 h1 /\ // only affects internal root hash values
+	   hash_buf_allocated h1 irs)) // internal roots are still alive!
+#set-options "--z3rlimit 60"
 let rec insert_iroots nirs nelts irs nv =
   let hh0 = HST.get () in
   if nelts = 0ul
   then (assert (B.live hh0 (B.get hh0 irs 0));
        copy_hash nv (B.index irs 0ul))
   else (hash_buf_allocated_gsub hh0 irs 1ul (B.len irs - 1ul);
-       hash_buf_disjoint_gsub hh0 irs 1ul (B.len irs - 1ul) nv;
+       hash_buf_disjoint_ext_gsub hh0 irs 1ul (B.len irs - 1ul) nv;
+       hash_buf_disjoint_ext_gsub hh0 irs 1ul (B.len irs - 1ul) irs;
        insert_iroots (hide (reveal nirs - 1))
 		     (nelts - uint32_pow2 (uint32_pow2_floor nelts))
 		     (B.offset irs 1ul) nv;
 
+       let hh1 = HST.get () in
+       let tirs = B.offset irs 1ul in
+       assert (B.get hh0 irs 0 == B.get hh1 irs 0);
+       assert (loc_hashes hh0 tirs == loc_hashes hh1 tirs);
+       assert (loc_disjoint (loc_buffer (B.get hh0 irs 0)) (loc_hashes hh0 tirs));
+       assert (loc_disjoint (loc_buffer (B.get hh1 irs 0)) (loc_hashes hh0 tirs));
+       B.modifies_buffer_elim (B.get hh1 irs 0) (loc_hashes hh1 tirs) hh0 hh1;
+       assert (B.live hh1 (B.get hh1 irs 0));
+
+       assert (hash_buf_allocated hh1 tirs);
+       assert (B.live hh1 (B.get hh1 irs 1));
+       assert (B.length (B.get hh1 irs 1) = hash_size);
+       assert (hash_buf_allocated hh1 irs);
+       modifies_union_weakened_right (loc_buffer (B.get hh0 irs 0))
+       				     (loc_hashes hh0 tirs)
+       				     hh0 hh1);
+
        Math.Lemmas.pow2_le_compat U32.n (reveal nirs); // (nelts + 1ul) \in uint32_t
        if uint32_is_pow2 (nelts + 1ul)
-       then (let hh1 = HST.get () in
-	    assert (B.length irs > 1);
-	    assume (B.live hh1 irs);
-	    assume (B.live hh1 (B.get hh1 irs 0));
-	    assume (B.live hh1 (B.get hh1 irs 1));
-	    hash_from_hashes (B.index irs 0ul) (B.index irs 1ul)
-	    		     (B.index irs 0ul))
-       else ())
+       then (assert (B.length irs > 1);
+       	    hash_from_hashes (B.index irs 0ul) (B.index irs 1ul)
+       	    		     (B.index irs 0ul))
+       else ()
 
 val insert:
   mt:mt_ptr -> e:vhash ->
   HST.ST unit
 	 (requires (fun h0 -> 
+	   let mtv = B.get h0 mt 0 in
+	   let values = MT?.values mtv in
+	   let iroots = MT?.iroots mtv in
 	   B.live h0 mt /\ 
-	   B.live h0 (MT?.values (B.get h0 mt 0)) /\
-	   B.live h0 (MT?.iroots (B.get h0 mt 0)) /\
-	   B.freeable (MT?.values (B.get h0 mt 0)) /\
-	   B.live h0 e))
+	   B.live h0 values /\
+	   B.freeable values /\
+
+	   B.live h0 iroots /\
+	   hash_buf_allocated h0 iroots /\
+	   hash_buf_disjoint h0 iroots /\
+	   hash_buf_disjoint_ext h0 iroots iroots /\
+	   
+	   B.live h0 e /\
+	   B.disjoint iroots e /\
+	   hash_buf_disjoint_ext h0 iroots e))
 	 (ensures (fun h0 _ h1 -> true))
 let insert mt e =
   let mtv = B.index mt 0ul in
@@ -380,9 +456,6 @@ let insert mt e =
   let invsz = hide (if nelts = nvalues then reveal (MT?.nvsz mtv) + 1 else reveal (MT?.nvsz mtv)) in
   let ivalues = insert_values nelts nvalues (MT?.nvsz mtv) (MT?.values mtv) e in
   let hh0 = HST.get () in 
-  assume (B.live hh0 (MT?.iroots mtv) /\ hash_buf_allocated hh0 (MT?.iroots mtv) /\
-	 hash_buf_disjoint hh0 (MT?.iroots mtv) e /\ B.disjoint (MT?.iroots mtv) e);
-  assume (B.live hh0 e);
   insert_iroots (hide 32) nelts (MT?.iroots mtv) e;
   let hh1 = HST.get () in 
   assume (B.live hh1 mt);
