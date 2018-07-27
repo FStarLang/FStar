@@ -1682,12 +1682,12 @@ and tc_pat env (pat_t:typ) p0 :
           t_x, guard
         in
         let scrutinee_t, _ = Rel.base_and_refinement_maybe_delta true env scrutinee_t in
-        let scrutinee_t = N.normalize [Env.Beta] env scrutinee_t in
+        let scrutinee_t = N.unfold_whnf env scrutinee_t in
         let head_s, args_s = U.head_and_args scrutinee_t in
         match (U.un_uinst head_s).n with
         | Tm_fvar f ->
           if not <| Env.is_type_constructor env (S.lid_of_fv f)
-          then fail "Pattern matching a non-inductive type";
+          then fail (BU.format1 "Pattern matching a non-inductive type: %s" (Print.term_to_string scrutinee_t));
           begin
           match Env.num_inductive_ty_params env (S.lid_of_fv f) with
           | None ->
