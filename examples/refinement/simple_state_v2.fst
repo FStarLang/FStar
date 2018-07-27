@@ -50,7 +50,7 @@ let swap_and_sum () =
 
 // Low-level implementation writen in a "monadic" stype
 
-type bref = b:B.buffer mint { B.length b = 1 } // XXX pointers already exists
+type bref = b:B.buffer mint { B.length b = 1 } // XXX pointers already exist
 
 type lstate = bref * bref 
 
