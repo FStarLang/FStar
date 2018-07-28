@@ -303,6 +303,21 @@ val hash_buf_disjoint_ext_gsub:
 let hash_buf_disjoint_ext_gsub h hs i len #a e =
   loc_hashes_gsub_includes h hs i len
 
+val loc_hashes_gsub_gsub:
+  h:HS.mem -> hs:hash_buf -> i:uint32_t ->
+  Lemma (requires (U32.v i <= B.length hs))
+	(ensures (loc_hashes h hs ==
+		 loc_union (loc_hashes h (B.gsub hs 0ul i))
+			   (loc_hashes h (B.gsub hs i (B.len hs - i)))))
+	(decreases (U32.v i))
+let rec loc_hashes_gsub_gsub h hs i =
+  if i = 0ul then ()
+  else (loc_hashes_gsub_gsub h (B.gsub hs 1ul (B.len hs - 1ul)) (i - 1ul);
+       loc_union_assoc
+	 (loc_buffer (B.get h hs 0))
+	 (loc_hashes h (B.gsub (B.gsub hs 1ul (B.len hs - 1ul)) 0ul (i - 1ul)))
+	 (loc_hashes h (B.gsub (B.gsub hs 1ul (B.len hs - 1ul)) (i - 1ul) (B.len hs - i))))
+
 val hash_buf_disjoint_ext_gsub_gsub:
   h:HS.mem -> hs:hash_buf ->
   i:uint32_t -> len:uint32_t ->
@@ -314,7 +329,11 @@ val hash_buf_disjoint_ext_gsub_gsub:
 	[SMTPat (hash_buf_disjoint_ext h (B.gsub hs 0ul i) e);
 	SMTPat (hash_buf_disjoint_ext h (B.gsub hs i (len - i)) e)]
 let hash_buf_disjoint_ext_gsub_gsub h hs i len #a e =
-  admit ()
+  loc_disjoint_union_r 
+    (loc_buffer e) 
+    (loc_hashes h (B.gsub hs 0ul i))
+    (loc_hashes h (B.gsub hs i (len - i)));
+  loc_hashes_gsub_gsub h hs i
 
 val hash_buf_disjoint:
   h:HS.mem -> hs:hash_buf -> GTot Type0 (decreases (B.length hs))
@@ -400,16 +419,22 @@ let create_merkle_tree _ =
 
 // NOTE: it DIRECTLY stores the `vs` pointer value (not copying the hash value).
 val insert_values:
+  mt:erased mt_ptr ->
   nelts:uint32_t{U32.v nelts < UInt.max_int U32.n} ->
   nvs:uint32_t{nvs >= nelts} ->
   nvsz:erased nat{U32.v nvs = pow2 (reveal nvsz) - 1} ->  
   vs:hash_buf{B.length vs = U32.v nvs} ->
   e:vhash ->
   HST.ST (ivs:hash_buf{B.length ivs = (if nelts = nvs then 2 * U32.v nelts + 1 else U32.v nvs)})
-	 (requires (fun h0 -> B.live h0 e /\ B.live h0 vs /\ B.freeable vs))
-	 (ensures (fun h0 ivs h1 -> B.live h1 ivs /\ B.freeable ivs))
+	 (requires (fun h0 -> 
+	   B.live h0 e /\ B.live h0 vs /\ B.freeable vs /\
+	   B.live h0 (reveal mt) /\ B.disjoint (reveal mt) vs))
+	 (ensures (fun h0 ivs h1 -> 
+	   B.live h1 ivs /\ B.freeable ivs /\
+	   modifies (loc_union (loc_buffer ivs) (loc_addr_of_buffer vs)) h0 h1 /\
+	   B.disjoint (reveal mt) ivs))
 #set-options "--z3rlimit 20"
-let insert_values nelts nvs nvsz vs e =
+let insert_values mt nelts nvs nvsz vs e =
   if nelts = nvs
   then (let hh0 = HST.get () in
        pow2_lt_compat_inv (reveal nvsz) U32.n;
@@ -492,9 +517,11 @@ val insert:
 	   let mtv = B.get h0 mt 0 in
 	   let values = MT?.values mtv in
 	   let iroots = MT?.iroots mtv in
-	   B.live h0 mt /\ 
+	   B.live h0 mt /\
 	   B.live h0 values /\
 	   B.freeable values /\
+	   // B.disjoint mt values /\
+	   loc_disjoint (loc_buffer mt) (loc_addr_of_buffer values) /\
 
 	   B.live h0 iroots /\
 	   hash_buf_allocated h0 iroots /\
@@ -510,19 +537,21 @@ val insert:
 let insert mt e =
   let mtv = B.index mt 0ul in
   let nelts = MT?.nelts mtv in
-  assume (2 * U32.v nelts + 1 <= UInt.max_int U32.n);
+  let values = MT?.values mtv in
   let nvalues = MT?.nvalues mtv in
   let iroots = MT?.iroots mtv in
+  assume (2 * U32.v nelts + 1 <= UInt.max_int U32.n);
   insert_iroots (hide 32) nelts iroots e;
 
   let inelts = nelts + 1ul in
   let invalues = if nelts = nvalues then 2ul * nelts + 1ul else nvalues in
   let invsz = hide (if nelts = nvalues then reveal (MT?.nvsz mtv) + 1 else reveal (MT?.nvsz mtv)) in
-
-  let hh1 = HST.get () in assert (B.live hh1 mt);
-
-  let ivalues = insert_values nelts nvalues (MT?.nvsz mtv) (MT?.values mtv) e in
-  let hh2 = HST.get () in assume (B.live hh2 mt);
+  // let hh1 = HST.get () in assert (B.live hh1 mt);
+  let ivalues = insert_values (hide mt) nelts nvalues (MT?.nvsz mtv) values e in
+  loc_disjoint_union_r (loc_buffer mt)
+		       (loc_buffer ivalues)
+		       (loc_addr_of_buffer values);
+  // let hh2 = HST.get () in assert (B.live hh2 mt);
   B.upd mt 0ul (MT inelts invalues invsz ivalues iroots)
 
 /// Getting the Merkle root
