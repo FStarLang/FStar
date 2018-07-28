@@ -506,6 +506,12 @@ let rec insert_iroots nirs nelts irs nv =
        	    		     (B.index irs 0ul))
        else ()
 
+val insert_maximum_helper:
+  sz:nat -> n:uint32_t{U32.v n = pow2 sz - 1 && U32.v n < UInt.max_int U32.n} ->
+  Lemma (2 * U32.v n + 1 <= UInt.max_int U32.n)
+let insert_maximum_helper sz n =
+  pow2_lt_compat_inv sz U32.n
+
 val insert:
   mt:mt_ptr -> e:vhash ->
   HST.ST unit
@@ -543,8 +549,11 @@ let insert mt e =
   insert_iroots (hide 32) nelts iroots e;
 
   let inelts = nelts + 1ul in
-  assume (2 * U32.v nelts + 1 <= UInt.max_int U32.n);
-  let invalues = if nelts = nvalues then 2ul * nelts + 1ul else nvalues in
+  let invalues = 
+    if nelts = nvalues 
+    then (insert_maximum_helper (reveal (MT?.nvsz mtv)) nelts;
+	 2ul * nelts + 1ul)
+    else nvalues in
   let invsz = hide (if nelts = nvalues then reveal (MT?.nvsz mtv) + 1 else reveal (MT?.nvsz mtv)) in
   // let hh1 = HST.get () in assert (B.live hh1 mt);
   let ivalues = insert_values (hide mt) nelts nvalues (MT?.nvsz mtv) values e in
