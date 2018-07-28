@@ -78,13 +78,9 @@ let rec is_pow2 n =
   else (n % 2 = 0 && is_pow2 (n / 2))
 
 val uint32_is_pow2: 
-  n:uint32_t -> 
-  Tot (b:bool{b = is_pow2 (U32.v n)})
-      (decreases (U32.v n))
+  n:uint32_t -> Tot bool (decreases (U32.v n))
 let uint32_is_pow2 n =
-  let b = n <> 0ul && UInt32.logor n (n - 1ul) = 0ul in
-  assume (b = is_pow2 (U32.v n));
-  b
+  n <> 0ul && UInt32.logor n (n - 1ul) = 0ul
 
 val pow2_floor: 
   n:nat{n > 0} -> GTot (p:nat{pow2 p <= n && n < pow2 (p + 1)})
@@ -515,12 +511,16 @@ val insert:
   HST.ST unit
 	 (requires (fun h0 -> 
 	   let mtv = B.get h0 mt 0 in
+	   let nelts = MT?.nelts mtv in
 	   let values = MT?.values mtv in
 	   let iroots = MT?.iroots mtv in
+
+	   U32.v nelts < UInt.max_int U32.n /\
+
 	   B.live h0 mt /\
 	   B.live h0 values /\
 	   B.freeable values /\
-	   // B.disjoint mt values /\
+	   // `B.disjoint mt values` should be better.
 	   loc_disjoint (loc_buffer mt) (loc_addr_of_buffer values) /\
 
 	   B.live h0 iroots /\
@@ -540,10 +540,10 @@ let insert mt e =
   let values = MT?.values mtv in
   let nvalues = MT?.nvalues mtv in
   let iroots = MT?.iroots mtv in
-  assume (2 * U32.v nelts + 1 <= UInt.max_int U32.n);
   insert_iroots (hide 32) nelts iroots e;
 
   let inelts = nelts + 1ul in
+  assume (2 * U32.v nelts + 1 <= UInt.max_int U32.n);
   let invalues = if nelts = nvalues then 2ul * nelts + 1ul else nvalues in
   let invsz = hide (if nelts = nvalues then reveal (MT?.nvsz mtv) + 1 else reveal (MT?.nvsz mtv)) in
   // let hh1 = HST.get () in assert (B.live hh1 mt);
