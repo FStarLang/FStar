@@ -5920,7 +5920,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
              match uu____15831 with
              | ((_t,uv,_args),wl2) ->
                  let uu____15842 =
-                   FStar_TypeChecker_PatternUtils.pat_as_exp env1 p  in
+                   FStar_TypeChecker_PatternUtils.pat_as_exp true env1 p  in
                  (match uu____15842 with
                   | (xs,pat_term,uu____15857,uu____15858) ->
                       let uu____15863 =

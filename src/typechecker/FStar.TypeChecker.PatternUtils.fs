@@ -127,7 +127,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
      * term              (* expressions corresponding to the pattern *)
      * guard_t           (* guard with just the implicit variables introduced in the pattern *)
      * pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
-    let intro_bv (env:Env.env) (x:bv) :(bv * guard_t * env) =
+    let intro_bv (env:Env.env) (x:bv) :(bv * guard_t * Env.env) =
         if not introduce_bv_uvars
         then {x with sort=S.tun}, Env.trivial_guard, env
         else let t, _ = U.type_u() in
