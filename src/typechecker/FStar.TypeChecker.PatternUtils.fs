@@ -101,16 +101,20 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
   pat_as_exps allow_implicits env p:
     Turns a pattern p into a triple:
 *)
-let pat_as_exp (env:Env.env)
+let pat_as_exp (introduce_bv_uvars:bool)
+               (env:Env.env)
                (p:pat)
     : (list<bv>          (* pattern-bound variables (which may appear in the branch of match) *)
      * term              (* expressions corresponding to the pattern *)
      * guard_t           (* guard with just the implicit variables introduced in the pattern *)
      * pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
-    let check_bv (env:Env.env) (x:bv) :(bv * guard_t) =
-          let t, _ = U.type_u() in
-          let t_x, _, guard = new_implicit_var_aux "pattern bv type" (S.range_of_bv x) env t Allow_untyped in
-          {x with sort=t_x}, guard
+    let intro_bv (env:Env.env) (x:bv) :(bv * guard_t * env) =
+        if not introduce_bv_uvars
+        then {x with sort=S.tun}, Env.trivial_guard, env
+        else let t, _ = U.type_u() in
+             let t_x, _, guard = new_implicit_var_aux "pattern bv type" (S.range_of_bv x) env t Allow_untyped in
+             let x = {x with sort=t_x} in
+             x, guard, Env.push_bv env x
     in
     let rec pat_as_arg_with_env env (p:pat) :
                                     (list<bv>    //all pattern-bound vars including wild-cards, in proper order
@@ -140,14 +144,12 @@ let pat_as_exp (env:Env.env)
              ([], [], [], env, e, conj_guard g g', p)
 
            | Pat_wild x ->
-             let x, g = check_bv env x in
-             let env = Env.push_bv env x in
+             let x, g, env = intro_bv env x in
              let e = mk (Tm_name x) None p.p in
              ([x], [], [x], env, e, g, p)
 
            | Pat_var x ->
-             let x, g = check_bv env x in
-             let env = Env.push_bv env x in
+             let x, g, env = intro_bv env x in
              let e = mk (Tm_name x) None p.p in
              ([x], [x], [], env, e, g, p)
 

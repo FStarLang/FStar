@@ -33,7 +33,8 @@ open FStar.TypeChecker.Common
 open FStar.Syntax
 
 val elaborate_pat : env -> pat -> pat
-val pat_as_exp:  env:Env.env
+val pat_as_exp:  introduce_bv_uvars:bool
+              -> env:Env.env
               -> p:pat
               -> list<bv>           (* pattern-bound variables (which may appear in the branch of match) *)
                 * term              (* expressions corresponding to the pattern *)

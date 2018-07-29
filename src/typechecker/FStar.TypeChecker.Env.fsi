@@ -259,6 +259,7 @@ val num_inductive_ty_params: env -> lident -> option<int>
 
 (* Construct a new universe unification variable *)
 val new_u_univ             : unit -> universe
+val inst_tscheme_with      : tscheme -> universes -> universes * term
 (* Instantiate the universe variables in a type scheme with new unification variables *)
 val inst_tscheme           : tscheme -> universes * term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
