@@ -110,11 +110,13 @@ let rec compare_const (c1 c2 : vconst) : order =
     | C_True, C_True -> Eq
     | C_False, C_False -> Eq
     | C_String s1, C_String s2 -> order_from_int (String.compare s1 s2)
+    | C_Range r1, C_Range r2 -> Eq
     | C_Unit,  _ -> Lt    | _, C_Unit  -> Gt
     | C_Int _, _ -> Lt    | _, C_Int _ -> Gt
     | C_True,  _ -> Lt    | _, C_True  -> Gt
     | C_False, _ -> Lt    | _, C_False -> Gt
     | C_String _, _ -> Lt | _, C_String _ -> Gt
+    | C_Range _, _ -> Lt  | _, C_Range _ -> Gt
 
 let compare_binder (b1 b2 : binder) : order =
     let bv1, _ = inspect_binder b1 in
