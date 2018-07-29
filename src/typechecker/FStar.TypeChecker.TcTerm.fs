@@ -1701,7 +1701,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
        then BU.print2 "$$$$$$$$$$$$pat_typ_ok? %s vs. %s\n"
                (Print.term_to_string pat_t)
                (Print.term_to_string scrutinee_t);
-       let fail msg =
+       let fail : string -> 'a = fun msg ->
          let msg = BU.format3 "Type of pattern (%s) does not match type of scrutinee (%s)%s"
                                         (Print.term_to_string pat_t)
                                         (Print.term_to_string scrutinee_t)
