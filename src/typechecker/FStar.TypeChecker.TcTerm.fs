@@ -1696,40 +1696,64 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         in
         aux scrutinee_t
     in
-    let pat_typ_ok env pat_t scrutinee_t =
+    let pat_typ_ok env pat_t scrutinee_t : guard_t =
        if Env.debug env <| Options.Other "Patterns"
        then BU.print2 "$$$$$$$$$$$$pat_typ_ok? %s vs. %s\n"
                (Print.term_to_string pat_t)
                (Print.term_to_string scrutinee_t);
-       let pat_t = N.normalize [Env.Beta] env pat_t in
-       let head_p, args_p = U.head_and_args pat_t in
        let head_s, args_s = U.head_and_args scrutinee_t in
-       if Rel.teq_nosmt_force env head_p head_s
-       then match (U.un_uinst head_p).n with
-            | Tm_fvar f ->
-              if not <| Env.is_type_constructor env (S.lid_of_fv f)
-              then fail "Pattern matching a non-inductive type";
+       let pat_t = N.normalize [Env.Beta] env pat_t in
+       match U.un_uinst head_s with
+       | {n=Tm_fvar _} ->
+           let head_p, args_p = U.head_and_args pat_t in
+           if Rel.teq_nosmt_force env head_p head_s
+           then match (U.un_uinst head_p).n with
+                | Tm_fvar f ->
+                  if not <| Env.is_type_constructor env (S.lid_of_fv f)
+                  then fail "Pattern matching a non-inductive type";
 
-              if List.length args_p <> List.length args_s
-              then fail "Type of pattern does not match type of scrutinee";
+                  if List.length args_p <> List.length args_s
+                  then fail (BU.format2 "Type of pattern (%s) does not match type of scrutinee (%s)"
+                                        (Print.term_to_string pat_t)
+                                        (Print.term_to_string scrutinee_t));
 
-              let params_p, params_s =
-                    match Env.num_inductive_ty_params env (S.lid_of_fv f) with
-                    | None ->
-                      args_p, args_s
-                    | Some n ->
-                      let params_p, _ = BU.first_N n args_p in
-                      let params_s, _ = BU.first_N n args_s in
-                      params_p, params_s
-              in
+                  let params_p, params_s =
+                        match Env.num_inductive_ty_params env (S.lid_of_fv f) with
+                        | None ->
+                          args_p, args_s
+                        | Some n ->
+                          let params_p, _ = BU.first_N n args_p in
+                          let params_s, _ = BU.first_N n args_s in
+                          params_p, params_s
+                  in
 
-              if not <|
-                 List.forall2
-                    (fun (p, _) (s, _) -> Rel.teq_nosmt_force env p s)
-                    params_p
-                    params_s
-              then fail "Type of pattern does not match type of scrutinee"
-            | _ -> fail "Pattern matching a non-inductive type"
+                  List.fold_left2
+                        (fun out (p, _) (s, _) ->
+                            match Rel.teq_nosmt env p s with
+                            | None ->
+                              fail (BU.format2 "Type of pattern does not match type of scrutinee; parameter %s <> parameter %s"
+                                            (Print.term_to_string p)
+                                            (Print.term_to_string s))
+                            | Some g ->
+                              let g = Rel.discharge_guard_no_smt env g in
+                              Env.conj_guard g out)
+                        Env.trivial_guard
+                        params_p
+                        params_s
+
+                | _ -> fail "Pattern matching a non-inductive type"
+            else fail (BU.format2 "Type of pattern does not match type of scrutinee; head mismatch %s vs %s"
+                                    (Print.term_to_string head_p)
+                                    (Print.term_to_string head_s))
+
+       | _ ->
+         match Rel.teq_nosmt env pat_t scrutinee_t with
+         | None -> fail (BU.format2 "Type of pattern (%s) does not match tyep of scrutinee (%s)"
+                                     (Print.term_to_string pat_t)
+                                     (Print.term_to_string scrutinee_t))
+         | Some g ->
+           let g = Rel.discharge_guard_no_smt env g in
+           g
     in
     let type_of_simple_pat env (e:term) : term * typ * list<bv> * guard_t =
         let head, args = U.head_and_args e in
@@ -1837,13 +1861,14 @@ and tc_pat env (pat_t:typ) (p0:pat) :
               let simple_pat_e, simple_pat_t, simple_bvs, guard =
                   type_of_simple_pat env simple_pat_e
               in
+              let g' = pat_typ_ok env simple_pat_t (expected_pat_typ env p0.p t) in
+              let guard = Env.conj_guard guard g' in
               if Env.debug env <| Options.Other "Patterns"
               then BU.print3 "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n"
                             (Print.term_to_string simple_pat_e)
                             (Print.term_to_string simple_pat_t)
                             (List.map (fun x -> "(" ^ Print.bv_to_string x ^ " : " ^ Print.term_to_string x.sort ^ ")") simple_bvs
                               |> String.concat " ");
-              pat_typ_ok env simple_pat_t (expected_pat_typ env p0.p t);
               simple_pat_e, simple_bvs, guard
           in
           let _env, bvs, checked_sub_pats, subst, g =
