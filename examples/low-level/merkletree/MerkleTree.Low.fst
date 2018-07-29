@@ -168,7 +168,10 @@ val hash_buf_allocated:
   h:HS.mem -> hs:hash_buf -> GTot Type0
 let hash_buf_allocated h hs =
   buffer_for_each h hs
-  (fun hb -> B.live h hb /\ B.length hb = hash_size)
+  (fun hb -> 
+    B.live h hb /\ 
+    B.length hb = hash_size /\ 
+    B.freeable hb)
 
 val hash_buf_allocated_gsub:
   h:HS.mem -> hs:hash_buf ->
@@ -178,7 +181,7 @@ val hash_buf_allocated_gsub:
 	(ensures (hash_buf_allocated h (B.gsub hs i len)))
 let hash_buf_allocated_gsub h hs i len =
   buffer_for_each_gsub h hs 
-  (fun hb -> B.live h hb /\ B.length hb = hash_size)
+  (fun hb -> B.live h hb /\ B.length hb = hash_size /\ B.freeable hb)
   i len
 
 val hash_buf_allocated_gsub_gsub:
@@ -192,7 +195,7 @@ val hash_buf_allocated_gsub_gsub:
 	SMTPat (hash_buf_allocated h (B.gsub hs i (len - i)))]
 let hash_buf_allocated_gsub_gsub h hs i len =
   buffer_for_each_gsub_gsub h hs 
-  (fun hb -> B.live h hb /\ B.length hb = hash_size)
+  (fun hb -> B.live h hb /\ B.length hb = hash_size /\ B.freeable hb)
   i len
 
 val hash_buf_allocated_gsub_hd_tl:
@@ -200,12 +203,13 @@ val hash_buf_allocated_gsub_hd_tl:
   len:uint32_t{len > 0ul} ->
   Lemma (requires (B.length hs = U32.v len /\
 		  B.live h (B.get h hs 0) /\ B.length (B.get h hs 0) = hash_size /\
+		  B.freeable (B.get h hs 0) /\
 		  hash_buf_allocated h (B.gsub hs 1ul (len - 1ul))))
 	(ensures (hash_buf_allocated h hs))
 	[SMTPat (hash_buf_allocated h (B.gsub hs 1ul (len - 1ul)))]
 let hash_buf_allocated_gsub_hd_tl h hs len =
   buffer_for_each_gsub_gsub h hs 
-  (fun hb -> B.live h hb /\ B.length hb = hash_size)
+  (fun hb -> B.live h hb /\ B.length hb = hash_size /\ B.freeable hb)
   1ul len
 
 val loc_hashes: 
@@ -438,7 +442,7 @@ let insert_values mt nelts nvs nvsz vs e =
        let ivs = create_hashes (2ul * nelts + 1ul) in
        LowStar.BufferOps.blit vs 0ul ivs 0ul nelts;
        B.upd ivs nelts e;
-       init_hashes_partial nelts (nelts + 1ul) ivs;
+       // init_hashes_partial nelts (nelts + 1ul) ivs;
        B.free vs;
        ivs)
   else (B.upd vs nelts e; vs)
@@ -469,41 +473,30 @@ val insert_iroots:
 	 (ensures (fun h0 _ h1 -> 
 	   modifies (loc_hashes h0 irs) h0 h1 /\ // only affects internal root hash values
 	   hash_buf_allocated h1 irs)) // internal roots are still alive!
-#set-options "--z3rlimit 60"
+#set-options "--z3rlimit 40"
 let rec insert_iroots nirs nelts irs nv =
   let hh0 = HST.get () in
   if nelts = 0ul
-  then (assert (B.live hh0 (B.get hh0 irs 0));
-       copy_hash nv (B.index irs 0ul))
+  then copy_hash nv (B.index irs 0ul)
   else (hash_buf_allocated_gsub hh0 irs 1ul (B.len irs - 1ul);
        hash_buf_disjoint_ext_gsub hh0 irs 1ul (B.len irs - 1ul) nv;
        hash_buf_disjoint_ext_gsub hh0 irs 1ul (B.len irs - 1ul) irs;
+       
        insert_iroots (hide (reveal nirs - 1))
 		     (nelts - uint32_pow2 (uint32_pow2_floor nelts))
 		     (B.offset irs 1ul) nv;
 
        let hh1 = HST.get () in
        let tirs = B.offset irs 1ul in
-       assert (B.get hh0 irs 0 == B.get hh1 irs 0);
-       assert (loc_hashes hh0 tirs == loc_hashes hh1 tirs);
-       assert (loc_disjoint (loc_buffer (B.get hh0 irs 0)) (loc_hashes hh0 tirs));
-       assert (loc_disjoint (loc_buffer (B.get hh1 irs 0)) (loc_hashes hh0 tirs));
        B.modifies_buffer_elim (B.get hh1 irs 0) (loc_hashes hh1 tirs) hh0 hh1;
-       assert (B.live hh1 (B.get hh1 irs 0));
-
-       assert (hash_buf_allocated hh1 tirs);
-       assert (B.live hh1 (B.get hh1 irs 1));
-       assert (B.length (B.get hh1 irs 1) = hash_size);
-       assert (hash_buf_allocated hh1 irs);
        modifies_union_weakened_right (loc_buffer (B.get hh0 irs 0))
        				     (loc_hashes hh0 tirs)
        				     hh0 hh1);
+       Math.Lemmas.pow2_le_compat U32.n (reveal nirs);
 
-       Math.Lemmas.pow2_le_compat U32.n (reveal nirs); // (nelts + 1ul) \in uint32_t
        if uint32_is_pow2 (nelts + 1ul)
-       then (assert (B.length irs > 1);
-       	    hash_from_hashes (B.index irs 0ul) (B.index irs 1ul)
-       	    		     (B.index irs 0ul))
+       then hash_from_hashes (B.index irs 0ul) (B.index irs 1ul)
+       	    		     (B.index irs 0ul)
        else ()
 
 val insert_maximum_helper:
@@ -612,4 +605,78 @@ let get_root mt rt =
   let irs = MT?.iroots mtv in
   let nirs = uint32_num_iroots_of (hide 32) nelts in
   merkle_root_of_iroots nirs irs rt
+
+/// Freeing the Merkle tree
+
+val free_hashes:
+  len:uint32_t ->
+  hs:hash_buf{B.length hs = U32.v len} ->
+  HST.ST unit
+	 (requires (fun h0 -> 
+	   B.live h0 hs /\ hash_buf_allocated h0 hs /\
+	   hash_buf_disjoint h0 hs /\
+	   hash_buf_disjoint_ext h0 hs hs))
+	 (ensures (fun h0 _ h1 -> modifies (loc_hashes h0 hs) h0 h1))
+	 (decreases (U32.v len))
+let rec free_hashes len hs = 
+  if len = 0ul then ()
+  else (let hh0 = HST.get () in
+       hash_buf_allocated_gsub hh0 hs 1ul (len - 1ul);
+       hash_buf_disjoint_ext_gsub hh0 hs 1ul (len - 1ul) hs;
+       free_hashes (len - 1ul) (B.sub hs 1ul (len - 1ul));
+
+       B.free (B.index hs 0ul);
+       
+       let hh1 = HST.get () in
+       assume (modifies (loc_hashes hh0 hs) hh0 hh1))
+
+val free_merkle_tree: 
+  mt:mt_ptr ->
+  HST.ST unit
+	 (requires (fun h0 -> 
+	   let mtv = B.get h0 mt 0 in
+	   let nelts = MT?.nelts mtv in
+	   let values = MT?.values mtv in
+	   let values_alloc = B.gsub values 0ul nelts in
+	   let iroots = MT?.iroots mtv in
+
+	   B.live h0 mt /\ B.freeable mt /\
+	   B.live h0 values /\ B.freeable values /\
+	   hash_buf_allocated h0 values_alloc /\
+	   hash_buf_disjoint h0 values_alloc /\
+	   hash_buf_disjoint_ext h0 values_alloc values /\
+	   hash_buf_disjoint_ext h0 values_alloc mt /\
+	   
+	   B.live h0 iroots /\ B.freeable iroots /\
+	   hash_buf_allocated h0 iroots /\
+	   hash_buf_disjoint h0 iroots /\
+	   hash_buf_disjoint_ext h0 iroots iroots /\
+	   hash_buf_disjoint_ext h0 iroots values /\
+	   hash_buf_disjoint_ext h0 iroots mt /\
+
+	   B.disjoint values iroots /\
+	   B.disjoint values mt /\
+	   B.disjoint iroots mt))
+	 (ensures (fun h0 _ h1 -> true))
+#set-options "--z3rlimit 40"
+let free_merkle_tree mt =
+  let mtv = B.index mt 0ul in
+  let nelts = MT?.nelts mtv in
+  let values = MT?.values mtv in
+  let values_alloc = B.sub values 0ul nelts in
+  let iroots = MT?.iroots mtv in
+  free_hashes 32ul iroots;
+  B.free iroots;
+  
+  let hh0 = HST.get () in
+  assume (B.live hh0 values /\ B.freeable values /\
+  	 hash_buf_allocated hh0 values_alloc /\
+  	 hash_buf_disjoint hh0 values_alloc /\
+  	 hash_buf_disjoint_ext hh0 values_alloc values);
+  free_hashes nelts values_alloc;
+  B.free values;
+
+  let hh1 = HST.get () in 
+  assume (B.live hh1 mt /\ B.freeable mt);
+  B.free mt
 

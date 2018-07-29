@@ -9,6 +9,7 @@ typedef merkle_tree *mt_ptr;
 mt_ptr create();
 void insert(mt_ptr mt, hash_t v);
 void get_root(mt_ptr mt, /*output*/ hash_t root);
+void free_mt(mt_ptr mt);
 
 // tester
 int main();
