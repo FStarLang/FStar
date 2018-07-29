@@ -82,6 +82,25 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
             | f::formals', (p, p_imp)::pats' ->
             begin
             match f with
+            | (_, Some (Implicit inaccessible))
+                when inaccessible && p_imp -> //we have an inaccessible pattern but the user wrote a pattern there explicitly
+              begin
+              match p.v with
+              | Pat_dot_term _ ->
+                (p, true)::aux formals' pats'
+
+              | Pat_wild _ -> //it's ok; it's not going to be bound anyway
+                let a = Syntax.new_bv (Some p.p) tun in
+                let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
+                (p, true)::aux formals' pats'
+
+              | _ ->
+                raise_error (Errors.Fatal_InsufficientPatternArguments,
+                             BU.format1 "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
+                                         (Print.pat_to_string p))
+                             p.p
+              end
+
             | (_, Some (Implicit _)) when p_imp ->
                 (p, true)::aux formals' pats'
 

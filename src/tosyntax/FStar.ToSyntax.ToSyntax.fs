@@ -293,7 +293,7 @@ let rec uncurry bs t = match t.tm with
     | _ -> bs, t
 
 let rec is_var_pattern p = match p.pat with
-  | PatWild
+  | PatWild _
   | PatTvar(_, _)
   | PatVar(_, _) -> true
   | PatAscribed(p, _) -> is_var_pattern p
@@ -306,7 +306,7 @@ let rec is_app_pattern p = match p.pat with
 
 let replace_unit_pattern p = match p.pat with
   | PatConst FStar.Const.Const_unit ->
-    mk_pattern (PatAscribed (mk_pattern PatWild p.prange, (unit_ty, None))) p.prange
+    mk_pattern (PatAscribed (mk_pattern (PatWild None) p.prange, (unit_ty, None))) p.prange
   | _ -> p
 
 let rec destruct_app_pattern env is_top_level p = match p.pat with
@@ -325,7 +325,7 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
       List.fold_left gather_pattern_bound_vars_maybe_top acc
   in
   match p.pat with
-  | PatWild
+  | PatWild _
   | PatConst _
   | PatVar (_, Some Implicit)
   | PatName _
@@ -631,9 +631,11 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<annotated_pat>) =
         in
         loc, env', binder, p, annots'@annots, imp
 
-      | PatWild ->
+      | PatWild aq ->
+        let imp = (aq=Some Implicit) in
+        let aq = trans_aqual env aq in
         let x = S.new_bv (Some p.prange) tun in
-        loc, env, LocalBinder(x, None), pos <| Pat_wild x, [], false
+        loc, env, LocalBinder(x, aq), pos <| Pat_wild x, [], imp
 
       | PatConst c ->
         let x = S.new_bv (Some p.prange) tun in
@@ -694,7 +696,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<annotated_pat>) =
         let fields = fields |> List.map (fun (f, p) -> (f.ident, p)) in
         let args = record.fields |> List.map (fun (f, _) ->
           match fields |> List.tryFind (fun (g, _) -> f.idText = g.idText) with
-            | None -> mk_pattern PatWild p.prange
+            | None -> mk_pattern (PatWild None) p.prange
             | Some (_, p) -> p) in
         let app = mk_pattern (PatApp(mk_pattern (PatName (lid_of_ids (record.typename.ns @ [record.constrname]))) p.prange, args)) p.prange in
         let env, e, b, p, annots, _ = aux loc env app in
@@ -1124,7 +1126,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Seq(t1, t2) ->
       (* Convert it to a letbinding, desugar it, and then slap a Meta_desugared sequence on it to keep track of this *)
       (* TODO: GM: Maybe we don't really care about that *)
-      let t = mk_term (Let(NoLetQualifier, [None, (mk_pattern PatWild t1.range,t1)], t2)) top.range Expr in
+      let t = mk_term (Let(NoLetQualifier, [None, (mk_pattern (PatWild None) t1.range,t1)], t2)) top.range Expr in
       let tm, s = desugar_term_aq env t in
       mk (Tm_meta(tm, Meta_desugared Sequence)), s
 
@@ -1456,7 +1458,7 @@ and desugar_comp r env t =
         (* The postcondition for Lemma is thunked, to allow to assume the precondition
          * (c.f. #57), so add the thunking here *)
         let thunk_ens_ (ens : AST.term) : AST.term =
-            let wildpat = mk_pattern PatWild ens.range in
+            let wildpat = mk_pattern (PatWild None) ens.range in
             mk_term (Abs ([wildpat], ens)) ens.range Expr
         in
         let thunk_ens (e, i) = (thunk_ens_ e, i) in

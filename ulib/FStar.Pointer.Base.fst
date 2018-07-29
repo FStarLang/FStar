@@ -141,7 +141,7 @@ noeq type buffer_root (t: typ) =
 
 let buffer_root_length (#t: typ) (b: buffer_root t): Tot UInt32.t = match b with
 | BufferRootSingleton _ -> 1ul
-| BufferRootArray #t #len _ -> len
+| BufferRootArray #_ #len _ -> len
 
 noeq type _buffer (t: typ) =
 | Buffer:
