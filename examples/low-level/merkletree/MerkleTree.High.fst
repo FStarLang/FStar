@@ -3,17 +3,22 @@ module MerkleTree.High
 open FStar.All
 open FStar.Mul
 open FStar.Seq
+open FStar.Integers
 
 module List = FStar.List.Tot
 module S = FStar.Seq
 
-assume type hash: eqtype u#0
-assume val hash_init: hash
+module U8 = FStar.UInt8
+type uint8_t = U8.t
+
+val hash_size: nat
+let hash_size = 32
+
+type bytes = S.seq UInt8.t
+type hash = b:bytes{S.length b = hash_size}
 let hash_seq = S.seq hash
 
 assume val hash_from_hashes: hash -> hash -> Tot hash
-assume val hash_init_idem: 
-  h:hash -> Lemma (hash_from_hashes h hash_init = h)
 
 /// About FStar.Seq.Base.seq (the library is not that rich enough..)
 
@@ -270,15 +275,15 @@ let iroots_of_hashes_pow2_diff hs1 hs2 =
 /// High-level Merkle tree data structure
 
 noeq type merkle_tree =
-| MT: values:hash_seq{S.length values > 0} ->
+| MT: values:hash_seq ->
       iroots:hash_seq{iroots = iroots_of_hashes values} ->
       merkle_tree
 
 /// Creating a merkle tree instance
 
 val create_merkle_tree: unit -> merkle_tree
-let create_merkle_tree _ = 
-  MT (S.create 1 hash_init) (S.create 1 hash_init)
+let create_merkle_tree _ =
+  MT S.empty S.empty
 
 /// Insertion
 
@@ -337,7 +342,7 @@ let iroots_of_tail vs =
 	     (iroots_of_hashes (S.slice vs n_floor (S.length vs)))
 
 val insert_iroots:
-  vs:hash_seq{S.length vs > 0} ->
+  vs:hash_seq ->
   irs:hash_seq{iroots_of_hashes vs = irs} ->
   nv:hash ->
   GTot (iirs:hash_seq{iroots_of_hashes (insert_values vs nv) = iirs})
@@ -399,12 +404,17 @@ let rec merkle_root_of_iroots_ok_hashes vs irs =
 
 val merkle_root_of_iroots_ok:
   mt:merkle_tree ->
-  Lemma (merkle_root_of_iroots (MT?.iroots mt) = 
-	merkle_root_of_hashes (MT?.values mt))
+  Lemma (requires (S.length (MT?.iroots mt) > 0))
+	(ensures (merkle_root_of_iroots (MT?.iroots mt) = 
+		 merkle_root_of_hashes (MT?.values mt)))
 let merkle_root_of_iroots_ok mt =
   merkle_root_of_iroots_ok_hashes
     (MT?.values mt)
     (MT?.iroots mt)
+
+// assume val hash_init: hash
+// assume val hash_init_idem: 
+//   h:hash -> Lemma (hash_from_hashes h hash_init = h)
 
 // val pad_hashes: hash_seq -> nat -> hash_seq
 // let pad_hashes hs len =
