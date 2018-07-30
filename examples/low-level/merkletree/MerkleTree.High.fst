@@ -3,23 +3,14 @@ module MerkleTree.High
 open FStar.All
 open FStar.Mul
 open FStar.Seq
-// open FStar.BitVector
-
-// open EverCrypt.Hash
-// open MerkleTree.Spec
 
 module List = FStar.List.Tot
 module S = FStar.Seq
-module BV = FStar.BitVector
 
-assume type elem: eqtype u#0
 assume type hash: eqtype u#0
-assume val elem_init: elem
 assume val hash_init: hash
-let elem_seq = S.seq elem
 let hash_seq = S.seq hash
 
-assume val hash_from_elem: elem -> Tot hash
 assume val hash_from_hashes: hash -> hash -> Tot hash
 assume val hash_init_idem: 
   h:hash -> Lemma (hash_from_hashes h hash_init = h)
@@ -79,7 +70,7 @@ val seq_create_one_cons:
 let seq_create_one_cons #a ia =
   S.lemma_eq_elim (S.create 1 ia) (S.cons ia S.empty)
 
-/// Power of two (TODO: use a bit vector; division is expensive)
+/// Power of two
 
 val is_pow2: nat -> Tot bool
 let rec is_pow2 n =
@@ -212,7 +203,6 @@ let not_pow2_floor_ceil n =
 /// Invariants between internal roots and values
 
 type hash_seq_pow2 = hs:hash_seq{is_pow2 (S.length hs)}
-type elem_seq_pow2 = vs:elem_seq{is_pow2 (S.length vs)}
 
 val merkle_root_of_pow2:
   hs:hash_seq_pow2 -> GTot hash (decreases (S.length hs))
@@ -277,63 +267,35 @@ let iroots_of_hashes_pow2_diff hs1 hs2 =
     (S.append (S.cons (merkle_root_of_pow2 hs1) S.empty)
 	      (iroots_of_hashes hs2))
 
-val iroots_of: elem_seq -> GTot hash_seq
-let iroots_of vs = 
-  iroots_of_hashes (seq_map hash_from_elem vs)
-
-val iroots_of_pow2_same:
-  vs1:elem_seq_pow2 ->
-  vs2:elem_seq{S.length vs2 = S.length vs1} ->
-  Lemma (iroots_of (S.append vs1 vs2) =
-	S.create 1 (hash_from_hashes 
-	  (S.index (iroots_of vs1) 0)
-	  (S.index (iroots_of vs2) 0)))
-let iroots_of_pow2_same vs1 vs2 =
-  seq_map_append hash_from_elem vs1 vs2;
-  iroots_of_hashes_pow2_same
-    (seq_map hash_from_elem vs1)
-    (seq_map hash_from_elem vs2)
-
-val iroots_of_pow2_diff:
-  vs1:elem_seq_pow2 ->
-  vs2:elem_seq{S.length vs1 > S.length vs2} ->
-  Lemma (iroots_of (S.append vs1 vs2) =
-	S.append (iroots_of vs1) (iroots_of vs2))
-let iroots_of_pow2_diff vs1 vs2 =
-  seq_map_append hash_from_elem vs1 vs2;
-  iroots_of_hashes_pow2_diff
-    (seq_map hash_from_elem vs1)
-    (seq_map hash_from_elem vs2)
-
 /// High-level Merkle tree data structure
 
 noeq type merkle_tree =
-| MT: values:elem_seq{S.length values > 0} ->
-      iroots:hash_seq{iroots = iroots_of values} ->
+| MT: values:hash_seq{S.length values > 0} ->
+      iroots:hash_seq{iroots = iroots_of_hashes values} ->
       merkle_tree
 
 /// Creating a merkle tree instance
 
 val create_merkle_tree: unit -> merkle_tree
 let create_merkle_tree _ = 
-  MT (S.create 1 elem_init) (S.create 1 (hash_from_elem elem_init))
+  MT (S.create 1 hash_init) (S.create 1 hash_init)
 
 /// Insertion
 
-val insert_values: elem_seq -> elem -> GTot elem_seq
+val insert_values: hash_seq -> hash -> GTot hash_seq
 let insert_values vs nv = S.snoc vs nv
 
 val merge_iroots:
-  vs1:elem_seq_pow2 -> 
-  irs1:hash_seq{iroots_of vs1 = irs1} ->
-  vs2:elem_seq{S.length vs1 >= S.length vs2} ->
-  irs2:hash_seq{iroots_of vs2 = irs2} ->
-  GTot (mirs:hash_seq{iroots_of (S.append vs1 vs2) = mirs})
+  vs1:hash_seq_pow2 -> 
+  irs1:hash_seq{iroots_of_hashes vs1 = irs1} ->
+  vs2:hash_seq{S.length vs1 >= S.length vs2} ->
+  irs2:hash_seq{iroots_of_hashes vs2 = irs2} ->
+  GTot (mirs:hash_seq{iroots_of_hashes (S.append vs1 vs2) = mirs})
 let merge_iroots vs1 irs1 vs2 irs2 =
   if S.length vs1 = S.length vs2
-  then (iroots_of_pow2_same vs1 vs2; 
+  then (iroots_of_hashes_pow2_same vs1 vs2; 
        S.create 1 (hash_from_hashes (S.index irs1 0) (S.index irs2 0)))
-  else (iroots_of_pow2_diff vs1 vs2; 
+  else (iroots_of_hashes_pow2_diff vs1 vs2; 
        S.append irs1 irs2)
 
 val iroots_of_hashes_head:
@@ -358,36 +320,34 @@ let iroots_of_hashes_tail vs irs =
 	     (iroots_of_hashes (S.slice vs n_floor (S.length vs)))
 
 val iroots_of_head:
-  vs:elem_seq{S.length vs > 0} ->
-  Lemma (iroots_of (S.slice vs 0 (pow2 (pow2_floor (S.length vs)))) =
-	S.create 1 (S.head (iroots_of vs)))
+  vs:hash_seq{S.length vs > 0} ->
+  Lemma (iroots_of_hashes (S.slice vs 0 (pow2 (pow2_floor (S.length vs)))) =
+	S.create 1 (S.head (iroots_of_hashes vs)))
 let iroots_of_head vs =
-  let hs = seq_map hash_from_elem vs in
   let n_floor = pow2 (pow2_floor (S.length vs)) in
-  assert (S.head (iroots_of vs) = merkle_root_of_pow2 (S.slice hs 0 n_floor))
+  assert (S.head (iroots_of_hashes vs) = merkle_root_of_pow2 (S.slice vs 0 n_floor))
 
 val iroots_of_tail:
-  vs:elem_seq{S.length vs > 0} ->
-  Lemma (iroots_of (S.slice vs (pow2 (pow2_floor (S.length vs))) (S.length vs)) =
-	S.tail (iroots_of vs))
+  vs:hash_seq{S.length vs > 0} ->
+  Lemma (iroots_of_hashes (S.slice vs (pow2 (pow2_floor (S.length vs))) (S.length vs)) =
+	S.tail (iroots_of_hashes vs))
 let iroots_of_tail vs =
-  let hs = seq_map hash_from_elem vs in
   let n_floor = pow2 (pow2_floor (S.length vs)) in
-  S.lemma_tl (merkle_root_of_pow2 (S.slice hs 0 n_floor))
-	     (iroots_of_hashes (S.slice hs n_floor (S.length hs)))
+  S.lemma_tl (merkle_root_of_pow2 (S.slice vs 0 n_floor))
+	     (iroots_of_hashes (S.slice vs n_floor (S.length vs)))
 
 val insert_iroots:
-  vs:elem_seq{S.length vs > 0} ->
-  irs:hash_seq{iroots_of vs = irs} ->
-  nv:elem ->
-  GTot (iirs:hash_seq{iroots_of (insert_values vs nv) = iirs})
+  vs:hash_seq{S.length vs > 0} ->
+  irs:hash_seq{iroots_of_hashes vs = irs} ->
+  nv:hash ->
+  GTot (iirs:hash_seq{iroots_of_hashes (insert_values vs nv) = iirs})
        (decreases (S.length irs))
 #set-options "--z3rlimit 40"
 let rec insert_iroots vs irs nv =
   if S.length vs = 0
-  then (S.create 1 (hash_from_elem nv))
+  then S.create 1 nv
   else if is_pow2 (S.length vs)
-  then merge_iroots vs irs (S.create 1 nv) (S.create 1 (hash_from_elem nv))
+  then merge_iroots vs irs (S.create 1 nv) (S.create 1 nv)
   else
     (let vs0, vs1 = S.split vs (pow2 (pow2_floor (S.length vs))) in
     lemma_split vs (pow2 (pow2_floor (S.length vs)));
@@ -398,7 +358,7 @@ let rec insert_iroots vs irs nv =
 		 (insert_iroots vs1 (S.tail irs) nv))
 
 val insert: 
-  mt:merkle_tree -> e:elem -> 
+  mt:merkle_tree -> e:hash -> 
   GTot (imt:merkle_tree{
     MT?.values imt = insert_values (MT?.values mt) e &&
     MT?.iroots imt = insert_iroots (MT?.values mt) (MT?.iroots mt) e})
@@ -439,11 +399,11 @@ let rec merkle_root_of_iroots_ok_hashes vs irs =
 
 val merkle_root_of_iroots_ok:
   mt:merkle_tree ->
-  Lemma (merkle_root_of_iroots (MT?.iroots mt) =
-	merkle_root_of_hashes (seq_map hash_from_elem (MT?.values mt)))
+  Lemma (merkle_root_of_iroots (MT?.iroots mt) = 
+	merkle_root_of_hashes (MT?.values mt))
 let merkle_root_of_iroots_ok mt =
   merkle_root_of_iroots_ok_hashes
-    (seq_map hash_from_elem (MT?.values mt))
+    (MT?.values mt)
     (MT?.iroots mt)
 
 // val pad_hashes: hash_seq -> nat -> hash_seq
