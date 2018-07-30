@@ -246,6 +246,14 @@ val as_addr_gsub (#a: Type) (b: buffer a) (i: U32.t) (len : U32.t) : Lemma
   (ensures (as_addr (gsub b i len) == as_addr b))
   [SMTPat (as_addr (gsub b i len))]
 
+val gsub_inj
+  (#t: Type)
+  (b1 b2: buffer t)
+  (i1 i2: U32.t)
+  (len1 len2: U32.t)
+: Lemma
+  (requires (U32.v i1 + U32.v len1 <= length b1 /\ U32.v i2 + U32.v len2 <= length b2 /\ gsub b1 i1 len1 == gsub b2 i2 len2))
+  (ensures (len1 == len2 /\ (b1 == b2 ==> i1 == i2) /\ ((i1 == i2 /\ length b1 == length b2) ==> b1 == b2)))
 
 /// Nesting two ``gsub`` collapses into one ``gsub``, transitively.
 
@@ -256,7 +264,6 @@ val gsub_gsub (#a: Type) (b: buffer a) (i1: U32.t) (len1: U32.t) (i2: U32.t) (le
     gsub (gsub b i1 len1) i2 len2 == gsub b (U32.add i1 i2) len2
   ))
   [SMTPat (gsub (gsub b i1 len1) i2 len2)]
-
 
 /// A buffer ``b`` is equal to its "largest" sub-buffer, at index 0 and
 /// length ``len b``.
