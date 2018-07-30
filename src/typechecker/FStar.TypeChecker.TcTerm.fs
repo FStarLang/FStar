@@ -1694,7 +1694,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                    let t' = N.normalize [Env.Beta] env t' in
                    aux t'
         in
-        aux scrutinee_t
+        aux (N.normalize [Env.Beta] env scrutinee_t)
     in
     let pat_typ_ok env pat_t scrutinee_t : guard_t =
        if Env.debug env <| Options.Other "Patterns"
@@ -1825,14 +1825,18 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           Env.trivial_guard
 
         | Pat_constant _ ->
-          let t_base, _ = Rel.base_and_refinement_maybe_delta true env t in
           let _, e_c, _, _ = PatternUtils.pat_as_exp false env p in
-          let env = Env.set_expected_typ env t_base in
-          let e_c, _lc, g = tc_tot_or_gtot_term env e_c in
+          let e_c, lc, g = tc_tot_or_gtot_term env e_c in
+          Rel.force_trivial_guard env g;
+          let expected_t = expected_pat_typ env p0.p t in
+          if not (Rel.teq_nosmt_force env lc.res_typ expected_t)
+          then fail (BU.format2 "Type of pattern (%s) does not match type of scrutinee (%s)"
+                                (Print.term_to_string lc.res_typ)
+                                (Print.term_to_string expected_t));
           [],
           e_c,
           p,
-          Rel.discharge_guard_no_smt env g
+          Env.trivial_guard
 
         | Pat_cons(fv, sub_pats) ->
           let simple_pat =
