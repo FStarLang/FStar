@@ -1532,8 +1532,8 @@ let join_goals g1 g2 : tac<goal> =
     let gamma2 = g2.goal_ctx_uvar.ctx_uvar_gamma in
     let gamma, r1, r2 = longest_prefix S.eq_binding (List.rev gamma1) (List.rev gamma2) in
 
-    let t1 = close_forall_no_univs (Env.binders_of_bindings r1) phi1 in
-    let t2 = close_forall_no_univs (Env.binders_of_bindings r2) phi2 in
+    let t1 = close_forall_no_univs (Env.binders_of_bindings (List.rev r1)) phi1 in
+    let t2 = close_forall_no_univs (Env.binders_of_bindings (List.rev r2)) phi2 in
 
     bind (set_solution g1 U.exp_unit) (fun () ->
     bind (set_solution g2 U.exp_unit) (fun () ->
