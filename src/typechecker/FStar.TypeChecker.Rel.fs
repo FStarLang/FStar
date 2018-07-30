@@ -2017,11 +2017,11 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                     ?u := (fun y1..ym -> ?w z1...zk)
                     ?v := (fun y1'..ym' -> ?w z1...zk)
                  *)
-                 let sub_prob, wl =
-                    //is it strictly necessary to add this sub problem?
-                    //we don't in other cases
-                      mk_t_problem wl [] orig t_res_lhs EQ t_res_rhs None "flex-flex typing"
-                 in
+                 //let sub_prob, wl =
+                 //   //is it strictly necessary to add this sub problem?
+                 //   //we don't in other cases
+                 //     mk_t_problem wl [] orig t_res_lhs EQ t_res_rhs None "flex-flex typing"
+                 //in
                  let ctx_w, (ctx_l, ctx_r) =
                     maximal_prefix u_lhs.ctx_uvar_binders
                                    u_rhs.ctx_uvar_binders
@@ -2057,7 +2057,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                      else let s2 = TERM(u_rhs, U.abs binders_rhs w_app (Some (U.residual_tot t_res_lhs))) in
                           [s1;s2]
                  in
-                 solve env (attempt [sub_prob] (solve_prob orig None sol wl))
+                 solve env (solve_prob orig None sol wl)
 
           | _ ->
             giveup_or_defer env orig wl "flex-flex: non-patterns"
