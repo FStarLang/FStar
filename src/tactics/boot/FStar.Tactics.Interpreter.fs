@@ -229,8 +229,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "dup"           dup     e_unit e_unit
                                dup     NBET.e_unit NBET.e_unit;
 
-      mktac1 0 "tadmit"        tadmit  e_unit e_unit
-                               tadmit  NBET.e_unit NBET.e_unit;
+      mktac1 0 "tadmit_t"      tadmit_t  RE.e_term e_unit
+                               tadmit_t  NRE.e_term NBET.e_unit;
 
       mktac1 0 "join"          join  e_unit e_unit
                                join  NBET.e_unit NBET.e_unit;

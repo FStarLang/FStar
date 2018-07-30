@@ -256,6 +256,8 @@ let discard (tau : unit -> Tac 'a) : unit -> Tac unit =
 let rec repeatseq (#a:Type) (t : unit -> Tac a) : Tac unit =
     let _ = trytac (fun () -> (discard t) `seq` (discard (fun () -> repeatseq t))) in ()
 
+let tadmit () = tadmit_t (`())
+
 let admit1 () : Tac unit =
     tadmit ()
 

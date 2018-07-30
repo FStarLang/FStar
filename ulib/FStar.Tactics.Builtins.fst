@@ -287,8 +287,9 @@ assume val set_guard_policy : guard_policy -> Tac unit
 `--lax` option set, and thus drops all verification conditions. *)
 assume val lax_on : unit -> Tac bool
 
-(** Admit the current goal. Raises a warning. *)
-assume val tadmit : unit -> Tac unit
+(** Admit the current goal and set the witness to the given term.
+Absolutely unsafe. Raises a warning. *)
+assume val tadmit_t : term -> Tac unit
 
 (** View a term in a fully-named representation *)
 assume val inspect : term -> Tac term_view

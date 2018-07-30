@@ -487,14 +487,14 @@ let cur_goal () : tac<goal> =
                 (Print.term_to_string t);
         ret hd)
 
-let tadmit () : tac<unit> = wrap_err "tadmit" <|
+let tadmit_t (t:term) : tac<unit> = wrap_err "tadmit_t" <|
     bind get (fun ps ->
     bind (cur_goal ()) (fun g ->
     // should somehow taint the state instead of just printing a warning
     Err.log_issue (goal_type g).pos
         (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
                     (goal_to_string ps g));
-    solve' g U.exp_unit))
+    solve' g t))
 
 let fresh () : tac<Z.t> =
     bind get (fun ps ->
