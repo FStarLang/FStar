@@ -507,9 +507,13 @@ let collect_one
     | SubEffect { lift_op = ReifiableLift (t0, t1) } ->
         collect_term t0;
         collect_term t1
-    | Tycon (_, ts) ->
+    | Tycon (_, tc, ts) ->
+        begin
+        if tc then
+            record_lid Const.mk_class_lid;
         let ts = List.map (fun (x,docnik) -> x) ts in
         List.iter collect_tycon ts
+        end
     | Exception (_, t) ->
         iter_opt t collect_term
     | NewEffect ed ->
@@ -656,10 +660,10 @@ let collect_one
     | Ensures (t, _)
     | Labeled (t, _, _) ->
         collect_term t
+    | Quote (t, _)
+    | Antiquote t
     | VQuote t ->
         collect_term t
-    | Quote _
-    | Antiquote _ -> ()
     | Attributes cattributes  ->
         List.iter collect_term cattributes
 

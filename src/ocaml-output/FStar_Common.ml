@@ -106,3 +106,26 @@ let string_of_option :
       | FStar_Pervasives_Native.Some x ->
           let uu____370 = f x  in Prims.strcat "Some " uu____370
   
+type 'a thunk = (unit -> 'a,'a) FStar_Util.either FStar_ST.ref
+let mk_thunk : 'a . (unit -> 'a) -> 'a thunk =
+  fun f  -> FStar_Util.mk_ref (FStar_Util.Inl f) 
+let force_thunk : 'a . 'a thunk -> 'a =
+  fun t  ->
+    let uu____505 = FStar_ST.op_Bang t  in
+    match uu____505 with
+    | FStar_Util.Inr a -> a
+    | FStar_Util.Inl f ->
+        let a = f ()  in (FStar_ST.op_Colon_Equals t (FStar_Util.Inr a); a)
+  
+let tabulate : 'a . Prims.int -> (Prims.int -> 'a) -> 'a Prims.list =
+  fun n1  ->
+    fun f  ->
+      let rec aux i =
+        if i < n1
+        then
+          let uu____709 = f i  in
+          let uu____710 = aux (i + (Prims.parse_int "1"))  in uu____709 ::
+            uu____710
+        else []  in
+      aux (Prims.parse_int "0")
+  

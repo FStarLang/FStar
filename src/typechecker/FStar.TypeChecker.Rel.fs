@@ -458,8 +458,8 @@ let find_univ_uvar u s = BU.find_map s (function
 (* ------------------------------------------------*)
 (* <normalization>                                *)
 (* ------------------------------------------------*)
-let whnf env t     = SS.compress (N.normalize [Env.Beta; Env.Weak; Env.HNF] env (U.unmeta t))
-let sn env t       = SS.compress (N.normalize [Env.Beta] env t)
+let whnf env t     = SS.compress (N.normalize [Env.Beta; Env.Weak; Env.HNF] env (U.unmeta t)) |> U.unlazy_emb
+let sn env t       = SS.compress (N.normalize [Env.Beta] env t) |> U.unlazy_emb
 let norm_arg env t = sn env (fst t), snd t
 let sn_binders env (binders:binders) =
     binders |> List.map (fun (x, imp) -> {x with sort=sn env x.sort}, imp)
@@ -886,6 +886,8 @@ let rec head_matches env t1 t2 : match_result =
   let t1 = U.unmeta t1 in
   let t2 = U.unmeta t2 in
   match t1.n, t2.n with
+    | Tm_lazy ({lkind=Lazy_embedding _}), _ -> head_matches env (U.unlazy t1) t2
+    |  _, Tm_lazy({lkind=Lazy_embedding _}) -> head_matches env t1 (U.unlazy t2)
     | Tm_name x, Tm_name y -> if S.bv_eq x y then FullMatch else MisMatch(None, None)
     | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some (fv_delta_depth env f), Some (fv_delta_depth env g))
     | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches env f g |> head_match
@@ -989,7 +991,7 @@ let head_matches_delta env t1 t2 : (match_result * option<(typ*typ)>) =
             (Print.term_to_string t1)
             (Print.term_to_string t2)
             (string_of_match_result (fst r))
-            (if snd r = None
+            (if Option.isNone (snd r)
              then "None"
              else snd r
                  |> must
@@ -1795,7 +1797,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
           let formula = p_guard rhs_prob in
           Inl ([rhs_prob], formula), wl
 
-        | (hd1, imp)::xs, (hd2, imp')::ys when (imp=imp') ->
+        | (hd1, imp)::xs, (hd2, imp')::ys when (U.eq_aqual imp imp' = U.Equal) ->
            let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
            let hd2 = {hd2 with sort=Subst.subst subst hd2.sort} in
            let prob, wl = mk_t_problem wl scope orig hd1.sort (invert_rel <| p_rel orig) hd2.sort None "Formal parameter" in
@@ -2870,7 +2872,7 @@ let ineqs_to_string ineqs =
 
 let guard_to_string (env:env) g =
   match g.guard_f, g.deferred, g.univ_ineqs with
-    | Trivial, [], (_, []) -> "{}"
+    | Trivial, [], (_, []) when not (Options.print_implicits ()) -> "{}"
     | _ ->
       let form = match g.guard_f with
           | Trivial -> "trivial"

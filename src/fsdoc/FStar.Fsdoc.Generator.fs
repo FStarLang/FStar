@@ -129,8 +129,9 @@ let string_of_decl' d =
         "let " ^ (String.concat ", " termty')
   | Main _ -> "main ..."
   | Assume(i, t) -> "assume " ^ i.idText ^ ":" ^ (term_to_string t)
-  | Tycon(_, tys) ->
-            "type " ^
+  | Tycon(_, tc, tys) ->
+        let s = if tc then "class" else "type" in
+            s ^
              (tys |> List.map (fun (t,d)-> (string_of_tycon t) ^ " " ^ (string_of_fsdoco d))
                  |> String.concat " and ") (* SI: sep will be "," for Record but "and" for Variant *)
   | Val(i, t) -> "val " ^ i.idText ^ ":" ^ (term_to_string t)
@@ -166,7 +167,7 @@ let decl_documented (d:decl) =
         // or it's an fsdoc
         | Fsdoc _ -> true
         // or the tycon is documented
-        | Tycon(_,ty) -> tycon_documented ty
+        | Tycon(_,_,ty) -> tycon_documented ty
         // no other way to document a decl right now
         | _ -> false
         end

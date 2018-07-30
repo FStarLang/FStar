@@ -19,4 +19,4 @@ let foo (x:nat) =
 (
   let yz:(int * int) = g0 x in
   ()
-) <: (Lemma True) by t1
+) <: (Lemma True) by t1 ()

@@ -328,7 +328,7 @@ irreducible
 let inline_let : unit = ()
 
 irreducible
-let plugin : unit = ()
+let plugin (x:int) : unit = ()
 
 (* An attribute to mark things that the typechecker should *first*
  * elaborate and typecheck, but unfold before verification. *)
@@ -365,6 +365,10 @@ let expect_failure (errs : list int) : unit = ()
  *)
 irreducible
 let expect_lax_failure (errs : list int) : unit = ()
+
+(** Print the time it took to typecheck a top-level definition *)
+irreducible
+let tcdecltime : unit = ()
 
 (**
  * **THIS ATTRIBUTE IS AN ESCAPE HATCH AND CAN BREAK SOUNDNESS**

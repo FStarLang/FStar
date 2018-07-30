@@ -872,92 +872,93 @@ let (collect_one :
                FStar_Parser_AST.lift_op = FStar_Parser_AST.ReifiableLift
                  (t0,t1);_}
              -> (collect_term t0; collect_term t1)
-         | FStar_Parser_AST.Tycon (uu____2612,ts) ->
-             let ts1 =
-               FStar_List.map
-                 (fun uu____2642  -> match uu____2642 with | (x,docnik) -> x)
-                 ts
-                in
-             FStar_List.iter collect_tycon ts1
-         | FStar_Parser_AST.Exception (uu____2655,t) ->
+         | FStar_Parser_AST.Tycon (uu____2612,tc,ts) ->
+             (if tc then record_lid FStar_Parser_Const.mk_class_lid else ();
+              (let ts1 =
+                 FStar_List.map
+                   (fun uu____2645  ->
+                      match uu____2645 with | (x,docnik) -> x) ts
+                  in
+               FStar_List.iter collect_tycon ts1))
+         | FStar_Parser_AST.Exception (uu____2658,t) ->
              FStar_Util.iter_opt t collect_term
          | FStar_Parser_AST.NewEffect ed -> collect_effect_decl ed
-         | FStar_Parser_AST.Fsdoc uu____2662 -> ()
-         | FStar_Parser_AST.Pragma uu____2663 -> ()
+         | FStar_Parser_AST.Fsdoc uu____2665 -> ()
+         | FStar_Parser_AST.Pragma uu____2666 -> ()
          | FStar_Parser_AST.TopLevelModule lid ->
              (FStar_Util.incr num_of_toplevelmods;
-              (let uu____2699 =
-                 let uu____2700 = FStar_ST.op_Bang num_of_toplevelmods  in
-                 uu____2700 > (Prims.parse_int "1")  in
-               if uu____2699
+              (let uu____2702 =
+                 let uu____2703 = FStar_ST.op_Bang num_of_toplevelmods  in
+                 uu____2703 > (Prims.parse_int "1")  in
+               if uu____2702
                then
-                 let uu____2742 =
-                   let uu____2747 =
-                     let uu____2748 = string_of_lid lid true  in
+                 let uu____2745 =
+                   let uu____2750 =
+                     let uu____2751 = string_of_lid lid true  in
                      FStar_Util.format1
                        "Automatic dependency analysis demands one module per file (module %s not supported)"
-                       uu____2748
+                       uu____2751
                       in
-                   (FStar_Errors.Fatal_OneModulePerFile, uu____2747)  in
-                 let uu____2749 = FStar_Ident.range_of_lid lid  in
-                 FStar_Errors.raise_error uu____2742 uu____2749
+                   (FStar_Errors.Fatal_OneModulePerFile, uu____2750)  in
+                 let uu____2752 = FStar_Ident.range_of_lid lid  in
+                 FStar_Errors.raise_error uu____2745 uu____2752
                else ()))
        
-       and collect_tycon uu___112_2751 =
-         match uu___112_2751 with
-         | FStar_Parser_AST.TyconAbstract (uu____2752,binders,k) ->
+       and collect_tycon uu___112_2754 =
+         match uu___112_2754 with
+         | FStar_Parser_AST.TyconAbstract (uu____2755,binders,k) ->
              (collect_binders binders; FStar_Util.iter_opt k collect_term)
-         | FStar_Parser_AST.TyconAbbrev (uu____2764,binders,k,t) ->
+         | FStar_Parser_AST.TyconAbbrev (uu____2767,binders,k,t) ->
              (collect_binders binders;
               FStar_Util.iter_opt k collect_term;
               collect_term t)
-         | FStar_Parser_AST.TyconRecord (uu____2778,binders,k,identterms) ->
+         | FStar_Parser_AST.TyconRecord (uu____2781,binders,k,identterms) ->
              (collect_binders binders;
               FStar_Util.iter_opt k collect_term;
               FStar_List.iter
-                (fun uu____2824  ->
-                   match uu____2824 with
-                   | (uu____2833,t,uu____2835) -> collect_term t) identterms)
-         | FStar_Parser_AST.TyconVariant (uu____2840,binders,k,identterms) ->
+                (fun uu____2827  ->
+                   match uu____2827 with
+                   | (uu____2836,t,uu____2838) -> collect_term t) identterms)
+         | FStar_Parser_AST.TyconVariant (uu____2843,binders,k,identterms) ->
              (collect_binders binders;
               FStar_Util.iter_opt k collect_term;
               FStar_List.iter
-                (fun uu____2899  ->
-                   match uu____2899 with
-                   | (uu____2912,t,uu____2914,uu____2915) ->
+                (fun uu____2902  ->
+                   match uu____2902 with
+                   | (uu____2915,t,uu____2917,uu____2918) ->
                        FStar_Util.iter_opt t collect_term) identterms)
        
-       and collect_effect_decl uu___113_2924 =
-         match uu___113_2924 with
-         | FStar_Parser_AST.DefineEffect (uu____2925,binders,t,decls) ->
+       and collect_effect_decl uu___113_2927 =
+         match uu___113_2927 with
+         | FStar_Parser_AST.DefineEffect (uu____2928,binders,t,decls) ->
              (collect_binders binders; collect_term t; collect_decls decls)
-         | FStar_Parser_AST.RedefineEffect (uu____2939,binders,t) ->
+         | FStar_Parser_AST.RedefineEffect (uu____2942,binders,t) ->
              (collect_binders binders; collect_term t)
        
        and collect_binders binders = FStar_List.iter collect_binder binders
        
-       and collect_binder uu___114_2950 =
-         match uu___114_2950 with
-         | { FStar_Parser_AST.b = FStar_Parser_AST.Annotated (uu____2951,t);
-             FStar_Parser_AST.brange = uu____2953;
-             FStar_Parser_AST.blevel = uu____2954;
-             FStar_Parser_AST.aqual = uu____2955;_} -> collect_term t
-         | { FStar_Parser_AST.b = FStar_Parser_AST.TAnnotated (uu____2958,t);
-             FStar_Parser_AST.brange = uu____2960;
-             FStar_Parser_AST.blevel = uu____2961;
-             FStar_Parser_AST.aqual = uu____2962;_} -> collect_term t
+       and collect_binder uu___114_2953 =
+         match uu___114_2953 with
+         | { FStar_Parser_AST.b = FStar_Parser_AST.Annotated (uu____2954,t);
+             FStar_Parser_AST.brange = uu____2956;
+             FStar_Parser_AST.blevel = uu____2957;
+             FStar_Parser_AST.aqual = uu____2958;_} -> collect_term t
+         | { FStar_Parser_AST.b = FStar_Parser_AST.TAnnotated (uu____2961,t);
+             FStar_Parser_AST.brange = uu____2963;
+             FStar_Parser_AST.blevel = uu____2964;
+             FStar_Parser_AST.aqual = uu____2965;_} -> collect_term t
          | { FStar_Parser_AST.b = FStar_Parser_AST.NoName t;
-             FStar_Parser_AST.brange = uu____2966;
-             FStar_Parser_AST.blevel = uu____2967;
-             FStar_Parser_AST.aqual = uu____2968;_} -> collect_term t
-         | uu____2971 -> ()
+             FStar_Parser_AST.brange = uu____2969;
+             FStar_Parser_AST.blevel = uu____2970;
+             FStar_Parser_AST.aqual = uu____2971;_} -> collect_term t
+         | uu____2974 -> ()
        
        and collect_term t = collect_term' t.FStar_Parser_AST.tm
        
-       and collect_constant uu___115_2973 =
-         match uu___115_2973 with
+       and collect_constant uu___115_2976 =
+         match uu___115_2976 with
          | FStar_Const.Const_int
-             (uu____2974,FStar_Pervasives_Native.Some (signedness,width)) ->
+             (uu____2977,FStar_Pervasives_Native.Some (signedness,width)) ->
              let u =
                match signedness with
                | FStar_Const.Unsigned  -> "u"
@@ -968,42 +969,42 @@ let (collect_one :
                | FStar_Const.Int16  -> "16"
                | FStar_Const.Int32  -> "32"
                | FStar_Const.Int64  -> "64"  in
-             let uu____2989 =
-               let uu____2990 = FStar_Util.format2 "fstar.%sint%s" u w  in
-               PreferInterface uu____2990  in
-             add_dep deps uu____2989
-         | FStar_Const.Const_char uu____3024 ->
+             let uu____2992 =
+               let uu____2993 = FStar_Util.format2 "fstar.%sint%s" u w  in
+               PreferInterface uu____2993  in
+             add_dep deps uu____2992
+         | FStar_Const.Const_char uu____3027 ->
              add_dep deps (PreferInterface "fstar.char")
-         | FStar_Const.Const_float uu____3059 ->
+         | FStar_Const.Const_float uu____3062 ->
              add_dep deps (PreferInterface "fstar.float")
-         | uu____3093 -> ()
+         | uu____3096 -> ()
        
-       and collect_term' uu___116_3094 =
-         match uu___116_3094 with
+       and collect_term' uu___116_3097 =
+         match uu___116_3097 with
          | FStar_Parser_AST.Wild  -> ()
          | FStar_Parser_AST.Const c -> collect_constant c
          | FStar_Parser_AST.Op (s,ts) ->
-             ((let uu____3103 =
-                 let uu____3104 = FStar_Ident.text_of_id s  in
-                 uu____3104 = "@"  in
-               if uu____3103
+             ((let uu____3106 =
+                 let uu____3107 = FStar_Ident.text_of_id s  in
+                 uu____3107 = "@"  in
+               if uu____3106
                then
-                 let uu____3105 =
-                   let uu____3106 =
-                     let uu____3107 =
+                 let uu____3108 =
+                   let uu____3109 =
+                     let uu____3110 =
                        FStar_Ident.path_of_text "FStar.List.Tot.Base.append"
                         in
-                     FStar_Ident.lid_of_path uu____3107
+                     FStar_Ident.lid_of_path uu____3110
                        FStar_Range.dummyRange
                       in
-                   FStar_Parser_AST.Name uu____3106  in
-                 collect_term' uu____3105
+                   FStar_Parser_AST.Name uu____3109  in
+                 collect_term' uu____3108
                else ());
               FStar_List.iter collect_term ts)
-         | FStar_Parser_AST.Tvar uu____3109 -> ()
-         | FStar_Parser_AST.Uvar uu____3110 -> ()
+         | FStar_Parser_AST.Tvar uu____3112 -> ()
+         | FStar_Parser_AST.Uvar uu____3113 -> ()
          | FStar_Parser_AST.Var lid -> record_lid lid
-         | FStar_Parser_AST.Projector (lid,uu____3113) -> record_lid lid
+         | FStar_Parser_AST.Projector (lid,uu____3116) -> record_lid lid
          | FStar_Parser_AST.Discrim lid -> record_lid lid
          | FStar_Parser_AST.Name lid -> record_lid lid
          | FStar_Parser_AST.Construct (lid,termimps) ->
@@ -1011,19 +1012,19 @@ let (collect_one :
               then record_lid lid
               else ();
               FStar_List.iter
-                (fun uu____3143  ->
-                   match uu____3143 with | (t,uu____3149) -> collect_term t)
+                (fun uu____3146  ->
+                   match uu____3146 with | (t,uu____3152) -> collect_term t)
                 termimps)
          | FStar_Parser_AST.Abs (pats,t) ->
              (collect_patterns pats; collect_term t)
-         | FStar_Parser_AST.App (t1,t2,uu____3159) ->
+         | FStar_Parser_AST.App (t1,t2,uu____3162) ->
              (collect_term t1; collect_term t2)
-         | FStar_Parser_AST.Let (uu____3161,patterms,t) ->
+         | FStar_Parser_AST.Let (uu____3164,patterms,t) ->
              (FStar_List.iter
-                (fun uu____3211  ->
-                   match uu____3211 with
+                (fun uu____3214  ->
+                   match uu____3214 with
                    | (attrs_opt,(pat,t1)) ->
-                       ((let uu____3240 =
+                       ((let uu____3243 =
                            FStar_Util.map_opt attrs_opt
                              (FStar_List.iter collect_term)
                             in
@@ -1033,7 +1034,7 @@ let (collect_one :
               collect_term t)
          | FStar_Parser_AST.LetOpen (lid,t) ->
              (record_open true lid; collect_term t)
-         | FStar_Parser_AST.Bind (uu____3249,t1,t2) ->
+         | FStar_Parser_AST.Bind (uu____3252,t1,t2) ->
              (collect_term t1; collect_term t2)
          | FStar_Parser_AST.Seq (t1,t2) -> (collect_term t1; collect_term t2)
          | FStar_Parser_AST.If (t1,t2,t3) ->
@@ -1049,10 +1050,10 @@ let (collect_one :
          | FStar_Parser_AST.Record (t,idterms) ->
              (FStar_Util.iter_opt t collect_term;
               FStar_List.iter
-                (fun uu____3345  ->
-                   match uu____3345 with | (uu____3350,t1) -> collect_term t1)
+                (fun uu____3348  ->
+                   match uu____3348 with | (uu____3353,t1) -> collect_term t1)
                 idterms)
-         | FStar_Parser_AST.Project (t,uu____3353) -> collect_term t
+         | FStar_Parser_AST.Project (t,uu____3356) -> collect_term t
          | FStar_Parser_AST.Product (binders,t) ->
              (collect_binders binders; collect_term t)
          | FStar_Parser_AST.Sum (binders,t) ->
@@ -1067,15 +1068,15 @@ let (collect_one :
               collect_term t)
          | FStar_Parser_AST.Refine (binder,t) ->
              (collect_binder binder; collect_term t)
-         | FStar_Parser_AST.NamedTyp (uu____3409,t) -> collect_term t
+         | FStar_Parser_AST.NamedTyp (uu____3412,t) -> collect_term t
          | FStar_Parser_AST.Paren t -> collect_term t
-         | FStar_Parser_AST.Requires (t,uu____3413) -> collect_term t
-         | FStar_Parser_AST.Ensures (t,uu____3419) -> collect_term t
-         | FStar_Parser_AST.Labeled (t,uu____3425,uu____3426) ->
+         | FStar_Parser_AST.Requires (t,uu____3416) -> collect_term t
+         | FStar_Parser_AST.Ensures (t,uu____3422) -> collect_term t
+         | FStar_Parser_AST.Labeled (t,uu____3428,uu____3429) ->
              collect_term t
+         | FStar_Parser_AST.Quote (t,uu____3431) -> collect_term t
+         | FStar_Parser_AST.Antiquote t -> collect_term t
          | FStar_Parser_AST.VQuote t -> collect_term t
-         | FStar_Parser_AST.Quote uu____3428 -> ()
-         | FStar_Parser_AST.Antiquote uu____3433 -> ()
          | FStar_Parser_AST.Attributes cattributes ->
              FStar_List.iter collect_term cattributes
        

@@ -8,7 +8,7 @@ open FStar.Range
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 
-type itac = Cfg.psc -> args -> option<term>
+type itac = Cfg.psc -> FStar.Syntax.Embeddings.norm_cb -> args -> option<term>
 
 type native_primitive_step =
     { name: FStar.Ident.lid;

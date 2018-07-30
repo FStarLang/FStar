@@ -208,6 +208,7 @@ let (must_erase_for_extraction_attr : FStar_Ident.lident) =
   psconst "must_erase_for_extraction" 
 let (fail_attr : FStar_Ident.lident) = psconst "expect_failure" 
 let (fail_lax_attr : FStar_Ident.lident) = psconst "expect_lax_failure" 
+let (tcdecltime_attr : FStar_Ident.lident) = psconst "tcdecltime" 
 let (assume_strictly_positive_attr_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "assume_strictly_positive"] 
 let (gen_reset :
@@ -344,7 +345,8 @@ let (fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
 let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s  -> fstar_tactics_lid' [s] 
 let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"] 
-let (u_tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "__tac"] 
+let (mk_class_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Typeclasses"; "mk_class"] 
 let (tcresolve_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcresolve"] 
 let (tcinstance_lid : FStar_Ident.lid) =
@@ -352,13 +354,11 @@ let (tcinstance_lid : FStar_Ident.lid) =
 let (effect_TAC_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"] 
 let (effect_Tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "Tac"] 
 let (by_tactic_lid : FStar_Ident.lid) =
-  fstar_tactics_lid' ["Effect"; "__by_tactic"] 
+  fstar_tactics_lid' ["Effect"; "with_tactic"] 
 let (synth_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "synth_by_tactic"] 
 let (assert_by_tactic_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "assert_by_tactic"] 
-let (reify_tactic_lid : FStar_Ident.lid) =
-  fstar_tactics_lid' ["Effect"; "reify_tactic"] 
 let (fstar_syntax_syntax_term : FStar_Ident.lident) =
   FStar_Ident.lid_of_str "FStar.Syntax.Syntax.term" 
 let (binder_lid : FStar_Ident.lident) =

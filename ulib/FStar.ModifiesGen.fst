@@ -852,6 +852,8 @@ let modifies_intro_strong #al #c l h h' regions mrefs lives unused_ins alocs =
     assert (loc_disjoint_region_liveness_tags (loc_mreference p) l);
     // FIXME: WHY WHY WHY is this assert necessary?
     assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_mreference p))) (Ghost.reveal (Loc?.aux l)));
+    // FIXME: Now this one is too :)
+    assert ((loc_disjoint (loc_mreference p) l) /\ HS.contains h p);
     mrefs t pre p
   );
   Classical.forall_intro_3 (fun t pre p -> Classical.move_requires (lives t pre) p);
@@ -1760,7 +1762,7 @@ let union_loc_of_loc_includes_intro
   let doms = aloc_domain (cls_union c) (Loc?.regions smaller) (Loc?.live_addrs smaller) in
   assert (doml `loc_aux_includes` doms)
 
-#set-options "--z3rlimit 32"
+#set-options "--z3rlimit 64"
 
 let union_loc_of_loc_includes_elim
   (#al: (bool -> HS.rid -> nat -> Tot Type))

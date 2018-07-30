@@ -12,7 +12,7 @@ let rec big_phi (n : int) =
         big_phi (n - 1)
     end
 
-let for_you12 : Type0 = synth_by_tactic (fun () -> big_phi 12)
+let for_you : Type0 = synth_by_tactic (fun () -> big_phi 8)
 
 let rec repeat_or_fail (t : unit -> Tac unit) : Tac unit =
      match trytac t with
@@ -20,7 +20,7 @@ let rec repeat_or_fail (t : unit -> Tac unit) : Tac unit =
      | Some x -> repeat_or_fail t
 
 let mytac () =
-    norm [delta_only ["Bane.Lib.for_you12"]];
+    norm [delta_only ["Bane.Lib.for_you"]];
     seq (fun () -> repeatseq split)
         (fun () -> or_else (fun () -> let _ = repeat split in ()) trivial)
 

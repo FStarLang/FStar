@@ -1,5 +1,5 @@
 {"kind": "protocol-info", "rest": "[...]"}
-{"kind": "response", "query-id": "1", "response": [{"level": "error", "message": "Syntax error: Parsing.Parse_error", "ranges": [{"beg": [1, 19], "end": [1, 19], "fname": "<input>"}]}], "status": "failure"}
+{"kind": "response", "query-id": "1", "response": [{"level": "error", "message": "Syntax error: Parsing.Parse_error(Also see: <input>(1,19-1,19))", "ranges": [{"beg": [387, 0], "end": [387, 40], "fname": "FStar.Pervasives.fst"}]}], "status": "failure"}
 {"kind": "response", "query-id": "2", "response": "Current module unset", "status": "failure"}
 {"kind": "response", "query-id": "3", "response": "Current module unset", "status": "failure"}
 {"kind": "response", "query-id": "4", "response": "Current module unset", "status": "failure"}

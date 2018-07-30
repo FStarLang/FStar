@@ -82,8 +82,6 @@ let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
          end in
     aux false kt
 
-let tcnorm = fvar Const.tcnorm_attr delta_constant None
-
 let push_binding env b =
   Env.push_bv env (fst b)
 
@@ -312,6 +310,15 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
 
         letrecs |> List.map guard_one_letrec
 
+let wrap_guard_with_tactic_opt topt g =
+   match topt with
+   | None -> g
+   | Some tactic ->
+     (* We use always_map_guard so the annotation is there even for trivial
+      * guards. If the user writes (a <: b by fail ""), we should fail. *)
+     Env.always_map_guard g (fun g ->
+     Common.mk_by_tactic tactic (U.mk_squash U_zero g)) //guards are in U_zero
+
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
@@ -347,26 +354,79 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _
   | Tm_unknown -> tc_value env e
 
-  // staticly quoted terms are of type `term` (FIXME: as long as its antiquotations are too) ...
-  | Tm_quoted (_, { qkind = Quote_static; antiquotes = aqs }) ->
-    value_check_expected_typ env top (Inl S.t_term) Env.trivial_guard
+  | Tm_quoted (qt, qi)  ->
+    let projl = function
+      | BU.Inl x -> x
+      | BU.Inr _ -> failwith "projl fail"
+    in
+    let non_trivial_antiquotes qi =
+        let is_name t =
+            match (SS.compress t).n with
+            | Tm_name _ -> true
+            | _ -> false
+        in
+        BU.for_some (fun (_, t) -> not (is_name t)) qi.antiquotes
+    in
+    begin match qi.qkind with
+    (* In this case, let-bind all antiquotations so we're sure that effects
+     * are properly handled. *)
+    | Quote_static when non_trivial_antiquotes qi ->
+        let e0 = e in
+        let newbvs = List.map (fun _ -> S.new_bv None S.t_term) qi.antiquotes in
 
-  // ... but other ones are in the TAC effect
-  | Tm_quoted _ ->
-    let c = mk_Comp ({ comp_univs = [U_zero];
-                       effect_name = Const.effect_Tac_lid;
-                       result_typ = S.t_term;
-                       effect_args = [];
-                       flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
-                    }) in
-    let t, lc, g = value_check_expected_typ env top (Inr (U.lcomp_of_comp c)) Env.trivial_guard in
-    let t = mk (Tm_meta(t, Meta_monadic_lift (Const.effect_PURE_lid, Const.effect_TAC_lid, S.t_term)))
-               None t.pos in
-    t, lc, g
+        let z = List.zip qi.antiquotes newbvs in
+
+        let lbs = List.map (fun ((bv, t), bv') ->
+                                U.close_univs_and_mk_letbinding None (BU.Inl bv') []
+                                                                S.t_term Const.effect_Tot_lid
+                                                                t [] t.pos)
+                           z in
+        let qi = { qi with antiquotes = List.map (fun ((bv, _), bv') ->
+                                            (bv, S.bv_to_name bv')) z } in
+        let nq = mk (Tm_quoted (qt, qi)) None top.pos in
+        let e = List.fold_left (fun t lb -> mk (Tm_let ((false, [lb]),
+                                                        SS.close [S.mk_binder (projl lb.lbname)] t)) None top.pos) nq lbs in
+        tc_maybe_toplevel_term env e
+
+    (* A static quote is of type `term`, as long as its antiquotations are too *)
+    | Quote_static ->
+        (* Typecheck the antiquotes expecting a term *)
+        let aqs = qi.antiquotes in
+        let env_tm = Env.set_expected_typ env t_term in
+        let (aqs_rev, guard) =
+            List.fold_right (fun (bv, tm) (aqs_rev, guard) ->
+                                    let tm, _, g = tc_term env_tm tm in
+                                    ((bv, tm)::aqs_rev, Env.conj_guard g guard)) aqs ([], Env.trivial_guard) in
+        let qi = { qi with antiquotes = List.rev aqs_rev } in
+
+        let tm = mk (Tm_quoted (qt, qi)) None top.pos in
+        value_check_expected_typ env tm (Inl S.t_term) guard
+
+    | Quote_dynamic ->
+        let c = mk_Comp ({ comp_univs = [U_zero];
+                           effect_name = Const.effect_Tac_lid;
+                           result_typ = S.t_term;
+                           effect_args = [];
+                           flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
+                        }) in
+
+        (* Typechecked the quoted term just to elaborate it *)
+        let env', _ = Env.clear_expected_typ env in
+        let qt, _, _ = tc_term ({ env' with lax = true }) qt in
+        let t = mk (Tm_quoted (qt, qi)) None top.pos in
+
+        let t, lc, g = value_check_expected_typ env top (Inr (U.lcomp_of_comp c)) Env.trivial_guard in
+        let t = mk (Tm_meta(t, Meta_monadic_lift (Const.effect_PURE_lid, Const.effect_TAC_lid, S.t_term)))
+                   None t.pos in
+        t, lc, g
+    end
+
+  | Tm_lazy ({lkind=Lazy_embedding _ }) ->
+    tc_term env (U.unlazy top)
 
   // lazy terms have whichever type they're annotated with
   | Tm_lazy i ->
-    value_check_expected_typ env top (Inl i.typ) Env.trivial_guard
+    value_check_expected_typ env top (Inl i.ltyp) Env.trivial_guard
 
   | Tm_meta(e, Meta_desugared Meta_smt_pat) ->
     let e, c, g = tc_tot_or_gtot_term env e in
@@ -418,27 +478,24 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let expected_c, _, g = tc_comp env0 expected_c in
     let e, c', g' = tc_term (U.comp_result expected_c |> Env.set_expected_typ env0) e in
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, lcomp_comp c') in
-    let topt = tc_tactic_opt env0 topt in
+    let topt, gtac = tc_tactic_opt env0 topt in
     let e = mk (Tm_ascribed(e, (Inr expected_c, topt), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
     let lc = U.lcomp_of_comp expected_c in
     let f = Env.conj_guard g (Env.conj_guard g' g'') in
-    let f =
-        match topt with
-        | None -> f
-        | Some tactic ->
-          Env.map_guard f (fun f -> //guards are in U_zero
-          Common.mk_by_tactic tactic (U.mk_squash U_zero f)) in
     let e, c, f2 = comp_check_expected_typ env e lc in
-    let final_guard = Env.conj_guard f f2 in
-    e, c, final_guard
+    let final_guard = wrap_guard_with_tactic_opt topt (Env.conj_guard f f2) in
+    e, c, Env.conj_guard final_guard gtac
 
   | Tm_ascribed (e, (Inl t, topt), _) ->
     let k, u = U.type_u () in
     let t, _, f = tc_check_tot_or_gtot_term env t k in
+    let topt, gtac = tc_tactic_opt env topt in
     let e, c, g = tc_term (Env.set_expected_typ env t) e in
     let c, f = TcUtil.strengthen_precondition (Some (fun () -> return_all Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
-    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, None), Some c.eff_name)) None top.pos) c in
-    e, c, Env.conj_guard f (Env.conj_guard g f2)
+    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, topt), Some c.eff_name)) None top.pos) c in
+    let final_guard = Env.conj_guard f (Env.conj_guard g f2) in
+    let final_guard = wrap_guard_with_tactic_opt topt final_guard in
+    e, c, Env.conj_guard final_guard gtac
 
   (* Unary operators. Explicitly curry extra arguments *)
   | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest)
@@ -504,6 +561,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             end ;
             u
     in
+    let ef = U.comp_effect_name (lcomp_comp c) in
+    if not (is_user_reifiable_effect env ef) then
+        raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" ef.str)) e.pos;
     let repr = Env.reify_comp env (lcomp_comp c) u_c in
     let e = mk (Tm_app(reify_op, [(e, aqual)])) None top.pos in
     let c = S.mk_Total repr |> U.lcomp_of_comp in
@@ -511,16 +571,14 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     e, c, Env.conj_guard g g'
 
   | Tm_app({n=Tm_constant (Const_reflect l)}, [(e, aqual)])->
-    if Option.isSome aqual
-    then Errors.log_issue e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReflect, "Qualifier on argument to reflect is irrelevant and will be ignored");
-    let no_reflect () = raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) e.pos in
+    if Option.isSome aqual then
+        Errors.log_issue e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReflect, "Qualifier on argument to reflect is irrelevant and will be ignored");
+    if not (is_user_reifiable_effect env l) then
+        raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) e.pos;
     let reflect_op, _ = U.head_and_args top in
     begin match Env.effect_decl_opt env l with
-    | None -> no_reflect()
+    | None -> failwith "internal error: user reifiable effect has no decl?"
     | Some (ed, qualifiers) ->
-      if not (qualifiers |> S.contains_reflectable) then
-        no_reflect ()
-      else
         let env_no_ex, topt = Env.clear_expected_typ env in
         let expected_repr_typ, res_typ, wp, g0 =
           let u = Env.new_u_univ () in
@@ -725,7 +783,7 @@ and tc_synth head env args rng =
     if Env.debug env <| Options.Other "Tac" then
         BU.print1 "Got %s\n" (Print.term_to_string t);
 
-    // TODO: fix, this gives a crappy error
+    // Should never trigger, meta-F* will check it before.
     TcUtil.check_uvars tau.pos t;
 
     t, U.lcomp_of_comp <| mk_Total typ, Env.trivial_guard
@@ -734,16 +792,13 @@ and tc_tactic env tau =
     let env = { env with failhard = true } in
     tc_check_tot_or_gtot_term env tau t_tactic_unit
 
-and tc_reified_tactic env tau =
-    let env = { env with failhard = true } in
-    tc_check_tot_or_gtot_term env tau t_tac_unit
-
-and tc_tactic_opt env topt =
+and tc_tactic_opt env topt : option<term> * guard_t =
     match topt with
-    | None -> None
+    | None ->
+        None, Env.trivial_guard
     | Some tactic ->
-        let tactic, _, _ = tc_tactic env tactic
-        in Some tactic
+        let tactic, _, g = tc_tactic env tactic
+        in Some tactic, g
 
 (************************************************************************************************************)
 (* Type-checking values:                                                                                    *)
@@ -1648,7 +1703,8 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
         | Tm_arrow(bs, c) when (U.is_total_comp c && List.length bs=List.length args) ->
           let res_t = U.comp_result c in
           let args, guard, ghost = List.fold_left2 (fun (seen, guard, ghost) (e, aq) (b, aq') ->
-                if aq<>aq' then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") e.pos;
+                if eq_aqual aq aq' <> Equal
+                then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") e.pos;
                 let e, c, g = tc_check_tot_or_gtot_term env e b.sort in //NS: this forbids stuff like !x && y, maybe that's ok
                 let short = TcUtil.short_circuit head seen in
                 let g = Env.imp_guard (Env.guard_of_guard_formula short) g in
@@ -2028,7 +2084,7 @@ and check_top_level_let env e =
          if Env.debug env Options.Medium then
                 BU.print1 "Let binding BEFORE tcnorm: %s\n" (Print.term_to_string e1);
          let e1 = if Options.tcnorm () then
-                    N.normalize [Env.UnfoldAttr tcnorm;
+                    N.normalize [Env.UnfoldAttr [Const.tcnorm_attr];
                                  Env.Exclude Env.Beta; Env.Exclude Env.Zeta;
                                  Env.NoFullNorm; Env.DoNotUnfoldPureLets] env e1
                   else e1
@@ -2105,7 +2161,7 @@ and check_inner_let env e =
                         (Print.term_to_string t);
              e, ({cres with res_typ=t}), Env.conj_guard g_ex guard)
 
-    | _ -> failwith "Impossible"
+    | _ -> failwith "Impossible (inner let with more than one lb)"
 
 (******************************************************************************)
 (* top-level let rec's may be generalized, if they are not annotated          *)

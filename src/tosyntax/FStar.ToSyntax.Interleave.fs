@@ -35,7 +35,7 @@ let is_val x d = match d.d with
     | _ -> false
 
 let is_type x d = match d.d with
-    | Tycon(_, tys) ->
+    | Tycon(_, _, tys) ->
         tys |> Util.for_some (fun (t,_) -> id_of_tycon t = x.idText)
     | _ -> false
 
@@ -44,7 +44,7 @@ let definition_lids d =
     match d.d with
     | TopLevelLet(_, defs) ->
         lids_of_let defs
-    | Tycon(_, tys) ->
+    | Tycon(_, _, tys) ->
         tys |> List.collect (function
                 | TyconAbbrev (id, _, _, _), _
                 | TyconRecord (id, _, _, _), _
@@ -143,7 +143,7 @@ let rec prefix_with_iface_decls
    | [] -> [], [qualify_kremlin_private impl]
    | iface_hd::iface_tl -> begin
      match iface_hd.d with
-     | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
+     | Tycon(_, _, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
         raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface, "Interface contains an abstract 'type' declaration; use 'val' instead") impl.drange
 
      | Val(x, t) ->
@@ -191,7 +191,7 @@ let check_initial_interface (iface:list<decl>) =
         | [] -> ()
         | hd::tl -> begin
             match hd.d with
-            | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
+            | Tycon(_, _, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
               raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface, "Interface contains an abstract 'type' declaration; use 'val' instead") hd.drange
 
             | Val(x, t) ->  //we have a 'val x' in the interface

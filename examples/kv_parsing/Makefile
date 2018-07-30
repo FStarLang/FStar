@@ -24,7 +24,7 @@ EXTRACT_FILES := IntegerParsing.fst \
 		 EnumParsing.fst \
 		 VectorParsing.fst
 
-FSTAR_INCLUDE_PATHS:=--include $(KREMLIN_HOME)/kremlib
+FSTAR_INCLUDE_PATHS:=--include $(KREMLIN_HOME)/kremlib/compat
 
 OTHERFLAGS+=$(FSTAR_INCLUDE_PATHS) --z3rlimit_factor 4
 

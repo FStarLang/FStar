@@ -17,6 +17,6 @@ assume val c2 : unit -> ST unit (requires (fun h0 -> psi)) (ensures (fun h0 () h
 val c3 : unit -> ST unit (requires (fun h0 -> phi)) (ensures (fun h0 () h1 -> xi))
 let c3 () = c1 (); c2 (); assert_by_tactic xi idtac
 
-// by_tactic is in negative position, should be peeled off!
+// with_tactic is in negative position, should be peeled off!
 val c4 : unit -> ST unit (requires (fun h0 -> phi)) (ensures (fun h0 () h1 -> xi))
 let c4 () = c3 ()
