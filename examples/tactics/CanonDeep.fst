@@ -6,6 +6,9 @@ open FStar.Reflection.Arith
 open FStar.Mul
 module O = FStar.Order
 
+(* Only dump when debugging is on *)
+let dump m = if debugging () then dump m
+
 (* TODO: The implementation from FStar.Tactics.Canon seems *very* naive:
    - it repeatedly turns terms into exprs, but that's fixed below
    - more importantly, a lot of work seems to be done repeatedly and

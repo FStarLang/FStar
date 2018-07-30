@@ -37,7 +37,7 @@ type step =
   | UnfoldUntil of delta_depth
   | UnfoldOnly  of list<FStar.Ident.lid>
   | UnfoldFully of list<FStar.Ident.lid>
-  | UnfoldAttr of attribute
+  | UnfoldAttr  of list<FStar.Ident.lid>
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -51,6 +51,8 @@ type step =
   | Unascribe
   | NBE
 and steps = list<step>
+
+val eq_step : step -> step -> bool
 
 type sig_binding = list<lident> * sigelt
 
@@ -302,13 +304,18 @@ val comp_to_comp_typ    : env -> comp -> comp_typ
 val unfold_effect_abbrev: env -> comp -> comp_typ
 val effect_repr         : env -> comp -> universe -> option<term>
 val reify_comp          : env -> comp -> universe -> term
+
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)
-val is_reifiable_effect : env -> lident -> bool
-val is_reifiable : env -> residual_comp -> bool
-val is_reifiable_comp : env -> comp -> bool
-val is_reifiable_function : env -> term -> bool
+val is_reifiable_effect      : env -> lident -> bool
+val is_reifiable_rc          : env -> residual_comp -> bool
+val is_reifiable_comp        : env -> comp -> bool
+val is_reifiable_function    : env -> term -> bool
 
+(* [is_user_reifiable_* env x] is more restrictive, and only allows *)
+(* reifying effects marked with the `reifiable` keyword. (For instance, TAC *)
+(* is reifiable but not user-reifiable.) *)
+val is_user_reifiable_effect : env -> lident -> bool
 
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders
@@ -332,6 +339,7 @@ val close_guard_univs         : universes -> binders -> guard_t -> guard_t
 val close_guard               : env -> binders -> guard_t -> guard_t
 val apply_guard               : guard_t -> term -> guard_t
 val map_guard                 : guard_t -> (term -> term) -> guard_t
+val always_map_guard          : guard_t -> (term -> term) -> guard_t
 val trivial_guard             : guard_t
 val is_trivial                : guard_t -> bool
 val is_trivial_guard_formula  : guard_t -> bool

@@ -1304,7 +1304,13 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         failwith "mismatch";
       mk (Tm_app (head, List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_implicit q then "implicit" else "explicit" in
-        if q <> q' then Errors.log_issue head.pos (Errors.Warning_IncoherentImplicitQualifier, (BU.format2 "Incoherent implicit qualifiers %s %s\n" (print_implicit q) (print_implicit q'))) ;
+        if eq_aqual q q' <> Equal
+        then Errors.log_issue
+                    head.pos
+                    (Errors.Warning_IncoherentImplicitQualifier,
+                     BU.format2 "Incoherent implicit qualifiers %s %s\n"
+                                (print_implicit q)
+                                (print_implicit q')) ;
         trans_F_ env arg wp_arg, q)
       args wp_args))
   | Tm_arrow (binders, comp) ->

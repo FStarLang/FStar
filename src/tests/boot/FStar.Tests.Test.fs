@@ -12,6 +12,7 @@ module BU = FStar.Util
 let main argv =
     BU.print_string "Initializing ...\n";
     try
+        FStar.Main.setup_hooks();
         Pars.init() |> ignore;
         Norm.run_all ();
         if Unif.run_all () then () else exit 1;

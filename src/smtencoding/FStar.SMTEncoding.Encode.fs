@@ -859,7 +859,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_sub_effect _ -> [], env
 
      | Sig_new_effect(ed) ->
-       if se.sigquals |> List.contains Reifiable |> not
+       if not (Env.is_reifiable_effect env.tcenv ed.mname)
        then [], env
        else (* The basic idea:
                     1. Encode M.bind_repr: a:Type -> b:Type -> wp_a -> wp_b -> f:st_repr a wp_a -> g:(a -> st_repr b) : st_repr b

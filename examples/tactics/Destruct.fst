@@ -119,10 +119,9 @@ let decr2 (#s:nat) (m : fin (s + 1)) : fin s =
     synth_by_tactic (fun () -> destruct (quote m);
                                dump "71"; let [b1;_] = intros () in apply (`Z);
                                dump "72"; let [b1;b2;_] = intros () in
-                                          let tn = binder_to_term b1 in
                                           // TODO: Ugh! We need the squash because z3 cannot
                                           // prove a Prims.equals, but only Prims.eq2
-                                          let beq = tcut (`squash (`@s == `#tn)) in
+                                          let beq = tcut (`squash (`@s == `#(binder_to_term b1))) in
                                           rewrite beq;
                                           exact_guard (binder_to_term b2);
                                dump "73")

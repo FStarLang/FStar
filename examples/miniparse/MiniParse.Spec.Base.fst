@@ -220,21 +220,21 @@ let no_lookahead_ext
 = Classical.forall_intro_2 (fun b1 -> Classical.move_requires (no_lookahead_on_ext p1 p2 b1))
 
 noeq
-type parser
+type parser_spec
   (t: Type0)
 = | Parser : (f: bare_parser t {
     no_lookahead_weak f /\
     injective f /\
     no_lookahead f
-  } ) -> parser t
+  } ) -> parser_spec t
 
 (* AR: see bug#1349 *)
-unfold let coerce_to_bare_parser (t:Type0) (p:parser t)
+unfold let coerce_to_bare_parser (t:Type0) (p:parser_spec t)
   :Tot (bare_parser t) = Parser?.f p
 
 let parse
   (#t: Type0)
-  (p: parser t)
+  (p: parser_spec t)
   (input: bytes)
 : GTot (option (t * consumed_length input))
 = bparse (coerce_to_bare_parser _ p) input
@@ -255,8 +255,8 @@ unfold
 let coerce_parser
   (t2: Type0)
   (#t1: Type0)
-  (p: parser t1)
-: Pure (parser t2)
+  (p: parser_spec t1)
+: Pure (parser_spec t2)
   (requires (t2 == t1))
   (ensures (fun _ -> True))
 = p
@@ -271,17 +271,17 @@ let bare_serializer
 
 let serializer_correct
   (#t: Type0)
-  (p: parser t)
+  (p: parser_spec t)
   (f: bare_serializer t)
 : GTot Type0
 = forall (x: t) . parse p (f x) == Some (x, Seq.length (f x))
 
 let serializer_correct_ext
   (#t1: Type0)
-  (p1: parser t1)
+  (p1: parser_spec t1)
   (f: bare_serializer t1)
   (#t2: Type0)
-  (p2: parser t2)
+  (p2: parser_spec t2)
 : Lemma
   (requires (t1 == t2 /\ (forall (input: bytes) . parse p1 input == parse p2 input)))
   (ensures (serializer_correct p1 f <==> serializer_correct p2 f))
@@ -289,7 +289,7 @@ let serializer_correct_ext
 
 let serializer_complete
   (#t: Type0)
-  (p: parser t)
+  (p: parser_spec t)
   (f: bare_serializer t)
 : GTot Type0
 = forall (s: bytes) .
@@ -300,7 +300,7 @@ let serializer_complete
 
 let serializer_correct_implies_complete
   (#t: Type0)
-  (p: parser t)
+  (p: parser_spec t)
   (f: bare_serializer t)
 : Lemma
   (requires (serializer_correct p f))
@@ -322,28 +322,28 @@ let serializer_correct_implies_complete
   Classical.forall_intro (Classical.move_requires prf)
 
 noeq
-type serializer
+type serializer_spec
   (#t: Type0)
-  (p: parser t)
-= | Serializer : (f: bare_serializer t { serializer_correct p f } ) -> serializer p
+  (p: parser_spec t)
+= | Serializer : (f: bare_serializer t { serializer_correct p f } ) -> serializer_spec p
 
 unfold
 let coerce_serializer
   (t2: Type0)
   (#t1: Type0)
-  (#p: parser t1)
-  (s: serializer p)
-  (u: unit { t2 == t1 } )
-: Tot (serializer (coerce_parser t2 p))
+  (#p: parser_spec t1)
+  (s: serializer_spec p)
+  (u: squash (t2 == t1))
+: Tot (serializer_spec (coerce_parser t2 p))
 = s
 
 let serialize_ext
   (#t1: Type0)
-  (p1: parser t1)
-  (s1: serializer p1)
+  (p1: parser_spec t1)
+  (s1: serializer_spec p1)
   (#t2: Type0)
-  (p2: parser t2)
-: Pure (serializer p2)
+  (p2: parser_spec t2)
+: Pure (serializer_spec p2)
   (requires (t1 == t2 /\ (forall (input: bytes) . parse p1 input == parse p2 input)))
   (ensures (fun _ -> True))
 = serializer_correct_ext p1 (Serializer?.f s1) p2;
@@ -351,27 +351,27 @@ let serialize_ext
 
 let serialize_ext'
   (#t1: Type0)
-  (p1: parser t1)
-  (s1: serializer p1)
+  (p1: parser_spec t1)
+  (s1: serializer_spec p1)
   (#t2: Type0)
-  (p2: parser t2)
-: Pure (serializer p2)
+  (p2: parser_spec t2)
+: Pure (serializer_spec p2)
   (requires (t1 == t2 /\ p1 == p2))
   (ensures (fun _ -> True))
 = serialize_ext p1 s1 p2
 
 let serialize
   (#t: Type0)
-  (#p: parser t)
-  (s: serializer p)
+  (#p: parser_spec t)
+  (s: serializer_spec p)
   (x: t)
 : GTot bytes
 = Serializer?.f s x
 
 let serializer_unique
   (#t: Type0)
-  (p: parser t)
-  (s1 s2: serializer p)
+  (p: parser_spec t)
+  (s1 s2: serializer_spec p)
   (x: t)
 : Lemma
   (serialize s1 x == serialize s2 x)
@@ -379,8 +379,8 @@ let serializer_unique
 
 let serializer_injective
   (#t: Type0)
-  (p: parser t)
-  (s: serializer p)
+  (p: parser_spec t)
+  (s: serializer_spec p)
   (x1 x2: t)
 : Lemma
   (requires (serialize s x1 == serialize s x2))
@@ -389,8 +389,8 @@ let serializer_injective
 
 let serializer_parser_unique'
   (#t: Type0)
-  (p1: parser t)
-  (p2: parser t)
+  (p1: parser_spec t)
+  (p2: parser_spec t)
   (s: bare_serializer t)
   (x: bytes)
 : Lemma
@@ -416,8 +416,8 @@ let serializer_parser_unique'
 
 let serializer_parser_unique
   (#t: Type0)
-  (p1: parser t)
-  (p2: parser t)
+  (p1: parser_spec t)
+  (p2: parser_spec t)
   (s: bare_serializer t)
   (x: bytes)
 : Lemma

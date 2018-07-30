@@ -30,6 +30,8 @@ open FStar.Parser.AST
 open FStar.Ident
 open FStar.Const
 open FStar.Errors
+open FStar.Syntax
+
 module C = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
@@ -612,7 +614,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<annotated_pat>) =
       | PatAscribed(p, (t, tacopt)) ->
         let _ = match tacopt with
                 | None -> ()
-                | Some _ -> raise_error (Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly, "Type ascriptions within patterns are cannot be associated with a tactic") orig.prange
+                | Some _ -> raise_error (Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly, "Type ascriptions within patterns cannot be associated with a tactic") orig.prange
         in
         let loc, env', binder, p, annots, imp = aux loc env p in
         let annot_pat_var p t =
@@ -2119,7 +2121,7 @@ let get_fail_attr warn (at : S.term) : option<(list<int> * bool)> =
     match (SS.compress hd).n, args with
     | Tm_fvar fv, [(a1, _)] when S.fv_eq_lid fv C.fail_attr
                               || S.fv_eq_lid fv C.fail_lax_attr ->
-        begin match EMB.unembed (EMB.e_list EMB.e_int) a1 with
+        begin match EMB.unembed (EMB.e_list EMB.e_int) a1 true EMB.id_norm_cb with
         | Some es when List.length es > 0->
             (* Is this an expect_lax_failure? *)
             let b = S.fv_eq_lid fv C.fail_lax_attr in
@@ -2177,7 +2179,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
 
     let name_of_eff_decl decl =
       match decl.d with
-      | Tycon(_, [TyconAbbrev(name, _, _, _), _]) -> Ident.text_of_id name
+      | Tycon(_, _, [TyconAbbrev(name, _, _, _), _]) -> Ident.text_of_id name
       | _ -> failwith "Malformed effect member declaration."
     in
 
@@ -2193,7 +2195,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     let binders = Subst.close_binders binders in
     let actions_docs = actions |> List.map (fun d ->
         match d.d with
-        | Tycon(_, [TyconAbbrev(name, action_params, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), doc]) when not for_free ->
+        | Tycon(_, _,[TyconAbbrev(name, action_params, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), doc]) when not for_free ->
             // When the effect is not for free, user has to provide a pair of
             // the definition and its cps'd type.
             let env, action_params = desugar_binders env action_params in
@@ -2206,7 +2208,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
               action_defn=Subst.close (binders @ action_params) (desugar_term env def);
               action_typ=Subst.close (binders @ action_params) (desugar_typ env cps_type)
             }, doc
-        | Tycon(_, [TyconAbbrev(name, action_params, _, defn), doc]) when for_free ->
+        | Tycon(_, _, [TyconAbbrev(name, action_params, _, defn), doc]) when for_free ->
             // When for free, the user just provides the definition and the rest
             // is elaborated
             let env, action_params = desugar_binders env action_params in
@@ -2473,10 +2475,56 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   | ModuleAbbrev(x, l) ->
     Env.push_module_abbrev env x l, []
 
-  | Tycon(is_effect, tcs) ->
-    let quals = if is_effect then Effect_qual :: d.quals else d.quals in
+  | Tycon(is_effect, typeclass, tcs) ->
+    let quals = d.quals in
+    let quals = if is_effect then Effect_qual :: quals else quals in
+    let quals = if typeclass then Noeq        :: quals else quals in
     let tcs = List.map (fun (x,_) -> x) tcs in
-    desugar_tycon env d (List.map (trans_qual None) quals) tcs
+    let env, ses = desugar_tycon env d (List.map (trans_qual None) quals) tcs in
+
+    (* Handling typeclasses: we typecheck the tcs as usual, and then need to add
+     * %splice[new_meth_lids] (mk_class type_lid)
+     * where the tricky bit is getting the new_meth_lids. To do so,
+     * we traverse the new declarations marked with "Projector", and get
+     * the field names. This is pretty ugly. *)
+    let mkclass lid =
+        U.abs [S.mk_binder (S.new_bv None S.tun)]
+              (U.mk_app (S.tabbrev C.mk_class_lid)
+                        [S.as_arg (U.exp_string (string_of_lid lid))])
+              None
+    in
+    let get_meths se =
+        let rec get_fname quals =
+            match quals with
+            | S.Projector (_, id) :: _ -> Some id
+            | _ :: quals -> get_fname quals
+            | [] -> None
+        in
+        match get_fname se.sigquals with
+        | None -> []
+        | Some id ->
+            let id = U.unmangle_field_name id in
+            [qualify env id]
+    in
+    let rec splice_decl meths se =
+        match se.sigel with
+        | Sig_bundle (ses, _) -> List.concatMap (splice_decl meths) ses
+        | Sig_inductive_typ (lid, _, _, _, _, _) ->
+           [{ sigel = Sig_splice(meths , mkclass lid);
+              sigquals = [];
+              sigrng = d.drange;
+              sigmeta = default_sigmeta;
+              sigattrs = [] }]
+        | _ -> []
+    in
+    let extra =
+        if typeclass
+        then let meths = List.concatMap get_meths ses in
+             List.concatMap (splice_decl meths) ses
+        else []
+    in
+    let env = List.fold_left push_sigelt env extra in
+    env, ses @ extra
 
   | TopLevelLet(isrec, lets) ->
     let quals = d.quals in

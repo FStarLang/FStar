@@ -33,5 +33,6 @@ assume val lookup_attr    : term -> env -> list fv
 assume val term_eq        : term -> term -> bool
 assume val term_to_string : term -> string
 
-assume val sigelt_attrs     : sigelt -> list attribute
-assume val set_sigelt_attrs : list attribute -> sigelt -> sigelt
+(* Attributes are terms, not to be confused with Prims.attribute *)
+assume val sigelt_attrs     : sigelt -> list term
+assume val set_sigelt_attrs : list term -> sigelt -> sigelt

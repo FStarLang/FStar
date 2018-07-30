@@ -1027,7 +1027,7 @@ let decl'_to_decl se d' =
 let resugar_tscheme'' env name (ts:S.tscheme) =
   let (univs, typ) = ts in
   let name = I.mk_ident (name, typ.pos) in
-  mk_decl typ.pos [] (A.Tycon(false, [(A.TyconAbbrev(name, [], None, resugar_term' env typ), None)]))
+  mk_decl typ.pos [] (A.Tycon(false, false, [(A.TyconAbbrev(name, [], None, resugar_term' env typ), None)]))
 
 let resugar_tscheme' env (ts:S.tscheme) =
   resugar_tscheme'' env "tsheme" ts
@@ -1044,9 +1044,9 @@ let resugar_eff_decl' env for_free r q ed =
     if for_free then
       let a = A.Construct ((I.lid_of_str "construct"), [(action_defn, A.Nothing);(action_typ, A.Nothing)]) in
       let t = A.mk_term a r A.Un in
-      mk_decl r q (A.Tycon(false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, t ), None)]))
+      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, t ), None)]))
     else
-      mk_decl r q (A.Tycon(false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, action_defn), None)]))
+      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, action_defn), None)]))
   in
   let eff_name = ed.mname.ident in
   let eff_binders, eff_typ = SS.open_term ed.binders ed.signature in
@@ -1095,7 +1095,7 @@ let resugar_sigelt' env se : option<A.decl> =
     begin match leftover_datacons with
       | [] -> //true
         (* TODO : documentation should be retrieved from the desugaring environment at some point *)
-        Some (decl'_to_decl se (Tycon (false, List.map (fun tyc -> tyc, None) tycons)))
+        Some (decl'_to_decl se (Tycon (false, false, List.map (fun tyc -> tyc, None) tycons)))
       | [se] ->
         //assert (se.sigquals |> BU.for_some (function | ExceptionConstructor -> true | _ -> false));
         (* Exception constructor declaration case *)
@@ -1156,7 +1156,7 @@ let resugar_sigelt' env se : option<A.decl> =
     let bs, c = SS.open_comp bs c in
     let bs = if (Options.print_implicits()) then bs else filter_imp bs in
     let bs = bs |> map_opt (fun b -> resugar_binder' env b se.sigrng) in
-    Some (decl'_to_decl se (A.Tycon(false, [A.TyconAbbrev(lid.ident, bs, None, resugar_comp' env c), None])))
+    Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(lid.ident, bs, None, resugar_comp' env c), None])))
 
   | Sig_pragma p ->
     Some (decl'_to_decl se (A.Pragma (resugar_pragma p)))

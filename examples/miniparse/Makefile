@@ -19,7 +19,7 @@ verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTA
 
 ifdef KREMLIN_HOME
 miniparse: $(CACHE_DIR)
-	 [ ! -f $(KREMLIN_HOME)/krml ] || [ ! -x $(KREMLIN_HOME)/krml ] || $(KREMLIN_HOME)/krml -tmpdir miniparse -bundle 'MiniParse.\*' -drop 'FStar.Tactics.\*' -drop 'FStar.Reflection.\*' MiniParseExample.fst -skip-linking
+	 [ ! -f $(KREMLIN_HOME)/krml ] || [ ! -x $(KREMLIN_HOME)/krml ] || $(KREMLIN_HOME)/krml -tmpdir miniparse -bundle 'MiniParse.\*' -drop 'FStar.Tactics.\*' -drop 'FStar.Reflection.\*' MiniParseExample3.fst -skip-linking
 else
 miniparse:
 endif

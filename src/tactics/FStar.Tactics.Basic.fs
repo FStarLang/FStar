@@ -66,10 +66,12 @@ let run t p =
     t.tac_f p
 
 let run_safe t p =
-    try t.tac_f p
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> Failed (msg, p)
-         | e -> Failed (BU.message_of_exn e, p)
+    if Options.tactics_failhard ()
+    then run t p
+    else try run t p
+         with | Errors.Err (_, msg)
+              | Errors.Error (_, msg, _) -> Failed (msg, p)
+              | e -> Failed (BU.message_of_exn e, p)
 
 let rec log ps (f : unit -> unit) : unit =
     if ps.tac_verb_dbg
@@ -143,12 +145,9 @@ let print (msg:string) : tac<unit> =
     tacprint msg;
     ret ()
 
-let debug (msg:string) : tac<unit> =
+let debugging () : tac<bool> =
     bind get (fun ps ->
-    if Options.debug_module (Ident.string_of_lid ps.main_context.curmodule)
-    then tacprint msg
-    else ();
-    ret ())
+    ret (Options.debug_module (Ident.string_of_lid ps.main_context.curmodule)))
 
 let dump_goal ps goal =
     tacprint (goal_to_string ps goal);
@@ -367,12 +366,6 @@ let __dismiss : tac<unit> =
     bind get (fun p ->
     set ({p with goals=List.tl p.goals}))
 
-let dismiss () : tac<unit> =
-    bind get (fun p ->
-    match p.goals with
-    | [] -> fail "dismiss: no more goals"
-    | _ -> __dismiss)
-
 let solve (goal : goal) (solution : term) : tac<unit> =
     let e = goal_env goal in
     mlog (fun () -> BU.print2 "solve %s := %s\n" (Print.term_to_string (goal_witness goal))
@@ -391,9 +384,16 @@ let solve' (goal : goal) (solution : term) : tac<unit> =
     bind __dismiss (fun () ->
     remove_solved_goals))
 
-let dismiss_all : tac<unit> =
-    bind get (fun p ->
-    set ({p with goals=[]}))
+(* These are UNTRUSTED! Goals don't really matter, implicits do. *)
+let set_goals (gs:list<goal>) : tac<unit> =
+    bind get (fun ps ->
+    set ({ ps with goals = gs }))
+
+let set_smt_goals (gs:list<goal>) : tac<unit> =
+    bind get (fun ps ->
+    set ({ ps with smt_goals = gs }))
+
+let dismiss_all : tac<unit> = set_goals []
 
 let nwarn = BU.mk_ref 0
 
@@ -503,31 +503,45 @@ let fresh () : tac<Z.t> =
     bind (set ps) (fun () ->
     ret (Z.of_int_fs n)))
 
-let ngoals () : tac<Z.t> =
-    bind get (fun ps ->
-    let n = List.length ps.goals in
-    ret (Z.of_int_fs n))
-
-let ngoals_smt () : tac<Z.t> =
-    bind get (fun ps ->
-    let n = List.length ps.smt_goals in
-    ret (Z.of_int_fs n))
-
-let is_guard () : tac<bool> =
-    bind (cur_goal ()) (fun g ->
-    ret g.is_guard)
-
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
     let typ = U.mk_squash (env.universe_of env phi) phi in
     bind (new_uvar reason env typ) (fun (_, ctx_uvar) ->
     let goal = mk_goal env ctx_uvar opts false in
     ret goal)
 
+(* Annoying duplication here *)
 let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
-    try ret (ps.main_context.type_of e t)
+    try ret (TcTerm.type_of_tot_term e t)
+    with | Errors.Err (_, msg)
+         | Errors.Error (_, msg, _) -> begin
+           fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
+                                                  (Env.all_binders e |> Print.binders_to_string ", ")
+                                                  msg
+           end))
+
+let __tc_ghost (e : env) (t : term) : tac<(term * typ * guard_t)> =
+    bind get (fun ps ->
+    mlog (fun () -> BU.print1 "Tac> __tc_ghost(%s)\n" (Print.term_to_string t)) (fun () ->
+    let e = {e with uvar_subtyping=false} in
+    try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
+        ret (t, lc.res_typ, g)
+    with | Errors.Err (_, msg)
+         | Errors.Error (_, msg, _) -> begin
+           fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
+                                                  (Env.all_binders e |> Print.binders_to_string ", ")
+                                                  msg
+           end))
+
+let __tc_lax (e : env) (t : term) : tac<(term * typ * guard_t)> =
+    bind get (fun ps ->
+    mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
+    let e = {e with uvar_subtyping=false} in
+    let e = {e with lax = true} in
+    try let t, lc, g = TcTerm.tc_term e t in
+        ret (t, lc.res_typ, g)
     with | Errors.Err (_, msg)
          | Errors.Error (_, msg, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
@@ -600,8 +614,8 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
 
 let tc (t : term) : tac<typ> = wrap_err "tc" <|
     bind (cur_goal ()) (fun goal ->
-    bind (__tc (goal_env goal) t) (fun (_, typ, _) ->
-    (* What about the guard? It doesn't matter! tc is only
+    bind (__tc_lax (goal_env goal) t) (fun (_, typ, _) ->
+    (* Why lax? What about the guard? It doesn't matter! tc is only
      * a way for metaprograms to query the typechecker, but
      * the result has no effect on the proofstate and nor is it
      * taken for a fact that the typing is correct. *)
@@ -626,14 +640,6 @@ let goal_from_guard (reason:string) (e:env) (g : guard_t) opts : tac<option<goal
         if istrivial e f then ret None else
         bind (mk_irrelevant_goal reason e f opts) (fun goal ->
         ret (Some ({ goal with is_guard = true })))
-
-let smt () : tac<unit> =
-    bind (cur_goal ()) (fun g ->
-    if is_irrelevant g then
-        bind __dismiss (fun _ -> add_smt_goals [g])
-    else
-        fail1 "goal is not irrelevant: cannot dispatch to smt (%s)" (tts (goal_env g) (goal_type g))
-    )
 
 let divide (n:Z.t) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     bind get (fun p ->
@@ -771,7 +777,6 @@ let norm (s : list<EMB.norm_step>) : tac<unit> =
     ))
 
 let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = wrap_err "norm_term" <|
-    mlog (fun () -> BU.print1 "norm_term: tm = %s\n" (Print.term_to_string t)) (fun _ ->
     bind get (fun ps ->
     (* We need a set of options, but there might be no goals, so do this *)
     let opts = match ps.goals with
@@ -779,9 +784,11 @@ let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = w
                | _ -> FStar.Options.peek ()
     in
     mlog (fun () -> BU.print1 "norm_term_env: t = %s\n" (Print.term_to_string t)) (fun () ->
-    bind (__tc e t) (fun (t, _, _) ->
+    // only for elaborating lifts and all that, we don't care if it's actually well-typed
+    bind (__tc_lax e t) (fun (t, _, _) ->
     let steps = [Env.Reify; Env.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
+    mlog (fun () -> BU.print1 "norm_term_env: t' = %s\n" (Print.term_to_string t)) (fun () ->
     ret t
     ))))
 
@@ -1493,13 +1500,6 @@ let dup () : tac<unit> =
     bind (add_goals [g']) (fun _ ->
     ret ())))))
 
-let flip () : tac<unit> =
-    bind get (fun ps ->
-    match ps.goals with
-    | g1::g2::gs -> set ({ps with goals=g2::g1::gs})
-    | _ -> fail "flip: less than 2 goals"
-    )
-
 // longest_prefix f l1 l2 = (p, r1, r2) ==> l1 = p@r1 /\ l2 = p@r2
 let rec longest_prefix (f : 'a -> 'a -> bool) (l1 : list<'a>) (l2 : list<'a>) : list<'a> * list<'a> * list<'a> =
     let rec aux acc l1 l2 =
@@ -1560,20 +1560,6 @@ let join () : tac<unit> =
     | _ -> fail "join: less than 2 goals"
     )
 
-let later () : tac<unit> =
-    bind get (fun ps ->
-    match ps.goals with
-    | [] -> ret ()
-    | g::gs -> set ({ps with goals=gs@[g]})
-    )
-
-let qed () : tac<unit> =
-    bind get (fun ps ->
-    match ps.goals with
-    | [] -> ret ()
-    | _ -> fail "Not done!"
-    )
-
 (* TODO: special case of destruct? But `bool` is not an inductive.. *)
 let cases (t : term) : tac<(term * term)> = wrap_err "cases" <|
     bind (cur_goal ()) (fun g ->
@@ -1609,17 +1595,16 @@ let set_options (s : string) : tac<unit> = wrap_err "set_options" <|
     )
 
 let top_env     () : tac<env>  = bind get (fun ps -> ret <| ps.main_context)
-let cur_env     () : tac<env>  = bind (cur_goal ()) (fun g -> ret <| (goal_env g))
-let cur_goal'   () : tac<term> = bind (cur_goal ()) (fun g -> ret <| (goal_type g))
-let cur_witness () : tac<term> = bind (cur_goal ()) (fun g -> ret <| (goal_witness g))
 
-let lax_on () : tac<bool> = bind (cur_env ()) (fun e -> ret (Options.lax () || e.lax))
+let lax_on () : tac<bool> =
+    bind (cur_goal ()) (fun g ->
+    ret (Options.lax () || (goal_env g).lax))
 
 let unquote (ty : term) (tm : term) : tac<term> = wrap_err "unquote" <|
     mlog (fun () -> BU.print1 "unquote: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind (cur_goal ()) (fun goal ->
     let env = Env.set_expected_typ (goal_env goal) ty in
-    bind (__tc env tm) (fun (tm, typ, guard) ->
+    bind (__tc_ghost env tm) (fun (tm, typ, guard) ->
     mlog (fun () -> BU.print1 "unquote: tm' = %s\n" (Print.term_to_string tm)) (fun _ ->
     mlog (fun () -> BU.print1 "unquote: typ = %s\n" (Print.term_to_string typ)) (fun _ ->
     bind (proc_guard "unquote" env guard) (fun () ->
@@ -1706,10 +1691,7 @@ let change (ty : typ) : tac<unit> = wrap_err "change" <|
          * and unify it with the fully normalized goal. If that succeeds,
          * we use the original one as the new goal. This is sometimes needed
          * since the unifier has some bugs. *)
-        let steps =
-            [Env.Reify; Env.UnfoldUntil delta_constant;
-             Env.AllowUnboundUniverses;
-             Env.Primops; Env.Simplify; Env.UnfoldTac; Env.Unmeta] in
+        let steps = [Env.AllowUnboundUniverses; Env.UnfoldUntil delta_constant; Env.Primops] in
         let ng  = normalize steps (goal_env g) (goal_type g) in
         let nty = normalize steps (goal_env g) ty in
         bind (do_unify (goal_env g) ng nty) (fun b ->
@@ -1850,6 +1832,7 @@ let rec init (l:list<'a>) : list<'a> =
 let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
     let t = U.unascribe t in
     let t = U.un_uinst t in
+    let t = U.unlazy_emb t in
     match t.n with
     | Tm_meta (t, _) ->
         inspect t

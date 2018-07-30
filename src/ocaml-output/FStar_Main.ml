@@ -1,5 +1,5 @@
 open Prims
-let (uu___457 : unit) = FStar_Version.dummy () 
+let (uu___467 : unit) = FStar_Version.dummy () 
 let (process_args :
   unit ->
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
@@ -341,7 +341,8 @@ let go : 'Auu____395 . 'Auu____395 -> unit =
   
 let (lazy_chooser :
   FStar_Syntax_Syntax.lazy_kind ->
-    FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term)
+    FStar_Syntax_Syntax.lazyinfo ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun k  ->
     fun i  ->
@@ -362,11 +363,15 @@ let (lazy_chooser :
           FStar_Reflection_Embeddings.unfold_lazy_sigelt i
       | FStar_Syntax_Syntax.Lazy_proofstate  ->
           FStar_Tactics_Embedding.unfold_lazy_proofstate i
+      | FStar_Syntax_Syntax.Lazy_goal  ->
+          FStar_Tactics_Embedding.unfold_lazy_goal i
       | FStar_Syntax_Syntax.Lazy_uvar  ->
           FStar_Syntax_Util.exp_string "((uvar))"
+      | FStar_Syntax_Syntax.Lazy_embedding (uu____630,t) ->
+          FStar_Common.force_thunk t
   
 let (setup_hooks : unit -> unit) =
-  fun uu____628  ->
+  fun uu____686  ->
     FStar_ST.op_Colon_Equals FStar_Syntax_Syntax.lazy_chooser
       (FStar_Pervasives_Native.Some lazy_chooser);
     FStar_ST.op_Colon_Equals FStar_Syntax_Util.tts_f
@@ -377,47 +382,47 @@ let (setup_hooks : unit -> unit) =
 let (handle_error : Prims.exn -> unit) =
   fun e  ->
     if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
-    (let uu____741 = FStar_Options.trace_error ()  in
-     if uu____741
+    (let uu____799 = FStar_Options.trace_error ()  in
+     if uu____799
      then
-       let uu____742 = FStar_Util.message_of_exn e  in
-       let uu____743 = FStar_Util.trace_of_exn e  in
-       FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____742
-         uu____743
+       let uu____800 = FStar_Util.message_of_exn e  in
+       let uu____801 = FStar_Util.trace_of_exn e  in
+       FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____800
+         uu____801
      else
        if Prims.op_Negation (FStar_Errors.handleable e)
        then
-         (let uu____745 = FStar_Util.message_of_exn e  in
+         (let uu____803 = FStar_Util.message_of_exn e  in
           FStar_Util.print1_error
             "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-            uu____745)
+            uu____803)
        else ());
     cleanup ();
     report_errors []
   
-let main : 'Auu____760 . unit -> 'Auu____760 =
-  fun uu____765  ->
+let main : 'Auu____818 . unit -> 'Auu____818 =
+  fun uu____823  ->
     try
-      (fun uu___459_773  ->
+      (fun uu___469_831  ->
          match () with
          | () ->
              (setup_hooks ();
-              (let uu____775 = FStar_Util.record_time go  in
-               match uu____775 with
-               | (uu____780,time) ->
-                   ((let uu____783 = FStar_Options.query_stats ()  in
-                     if uu____783
+              (let uu____833 = FStar_Util.record_time go  in
+               match uu____833 with
+               | (uu____838,time) ->
+                   ((let uu____841 = FStar_Options.query_stats ()  in
+                     if uu____841
                      then
-                       let uu____784 = FStar_Util.string_of_int time  in
-                       let uu____785 =
-                         let uu____786 = FStar_Getopt.cmdline ()  in
-                         FStar_String.concat " " uu____786  in
-                       FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____784
-                         uu____785
+                       let uu____842 = FStar_Util.string_of_int time  in
+                       let uu____843 =
+                         let uu____844 = FStar_Getopt.cmdline ()  in
+                         FStar_String.concat " " uu____844  in
+                       FStar_Util.print2 "TOTAL TIME %s ms: %s\n" uu____842
+                         uu____843
                      else ());
                     cleanup ();
                     FStar_All.exit (Prims.parse_int "0"))))) ()
     with
-    | uu___458_793 ->
-        (handle_error uu___458_793; FStar_All.exit (Prims.parse_int "1"))
+    | uu___468_851 ->
+        (handle_error uu___468_851; FStar_All.exit (Prims.parse_int "1"))
   

@@ -1103,7 +1103,7 @@ let maybe_instantiate (env:Env.env) e t =
        let number_of_implicits t =
             let formals, _ = U.arrow_formals t in
             let n_implicits =
-            match formals |> BU.prefix_until (fun (_, imp) -> imp=None || imp=Some Equality) with
+            match formals |> BU.prefix_until (fun (_, imp) -> Option.isNone imp || U.eq_aqual imp (Some Equality) = U.Equal) with
                 | None -> List.length formals
                 | Some (implicits, _first_explicit, _rest) -> List.length implicits in
             n_implicits

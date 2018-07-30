@@ -93,7 +93,8 @@ let init_env deps : TcEnv.env =
         TcTerm.check_type_of_well_typed_term
         solver
         Const.prims_lid
-        NBE.normalize'
+        (NBE.normalize
+          (FStar.Tactics.Interpreter.primitive_steps ()))
   in
   (* Set up some tactics callbacks *)
   let env = { env with synth_hook = FStar.Tactics.Interpreter.synthesize } in
@@ -323,7 +324,7 @@ let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and 
                 let use_interface_from_the_cache = Options.use_extracted_interfaces () && pre_fn = None &&
                                                 (not (Options.expose_interfaces ()  && Options.should_verify tcmod.name.str)) in
                 if use_interface_from_the_cache then
-                if tcmod_iface_opt = None then
+                if Option.isNone tcmod_iface_opt then
                 begin
                     FStar.Errors.log_issue (Range.mk_range tcmod.name.str
                                                         (Range.mk_pos 0 0)

@@ -1,55 +1,17 @@
 open Prims
-type annotated_pat =
-  (FStar_Syntax_Syntax.pat,(FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.typ)
-                             FStar_Pervasives_Native.tuple2 Prims.list)
-    FStar_Pervasives_Native.tuple2
 let (desugar_disjunctive_pattern :
-  (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t,(FStar_Syntax_Syntax.bv,
-                                                             FStar_Syntax_Syntax.term'
-                                                               FStar_Syntax_Syntax.syntax)
-                                                             FStar_Pervasives_Native.tuple2
-                                                             Prims.list)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
+  FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t Prims.list ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
       FStar_Pervasives_Native.option ->
-      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.branch Prims.list)
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+        FStar_Syntax_Syntax.branch Prims.list)
   =
-  fun annotated_pats  ->
+  fun pats  ->
     fun when_opt  ->
       fun branch1  ->
-        FStar_All.pipe_right annotated_pats
+        FStar_All.pipe_right pats
           (FStar_List.map
-             (fun uu____104  ->
-                match uu____104 with
-                | (pat,annots) ->
-                    let branch2 =
-                      FStar_List.fold_left
-                        (fun br  ->
-                           fun uu____159  ->
-                             match uu____159 with
-                             | (bv,ty) ->
-                                 let lb =
-                                   let uu____177 =
-                                     FStar_Syntax_Syntax.bv_to_name bv  in
-                                   FStar_Syntax_Util.mk_letbinding
-                                     (FStar_Util.Inl bv) [] ty
-                                     FStar_Parser_Const.effect_Tot_lid
-                                     uu____177 [] br.FStar_Syntax_Syntax.pos
-                                    in
-                                 let branch2 =
-                                   let uu____183 =
-                                     let uu____184 =
-                                       FStar_Syntax_Syntax.mk_binder bv  in
-                                     [uu____184]  in
-                                   FStar_Syntax_Subst.close uu____183 branch1
-                                    in
-                                 FStar_Syntax_Syntax.mk
-                                   (FStar_Syntax_Syntax.Tm_let
-                                      ((false, [lb]), branch2))
-                                   FStar_Pervasives_Native.None
-                                   br.FStar_Syntax_Syntax.pos) branch1 annots
-                       in
-                    FStar_Syntax_Util.branch (pat, when_opt, branch2)))
+             (fun pat  -> FStar_Syntax_Util.branch (pat, when_opt, branch1)))
   
 let (trans_qual :
   FStar_Range.range ->
@@ -58,8 +20,8 @@ let (trans_qual :
   =
   fun r  ->
     fun maybe_effect_id  ->
-      fun uu___232_237  ->
-        match uu___232_237 with
+      fun uu___236_74  ->
+        match uu___236_74 with
         | FStar_Parser_AST.Private  -> FStar_Syntax_Syntax.Private
         | FStar_Parser_AST.Assumption  -> FStar_Syntax_Syntax.Assumption
         | FStar_Parser_AST.Unfold_for_unification_and_vcgen  ->
@@ -104,8 +66,8 @@ let (trans_qual :
                 "Unsupported qualifier") r
   
 let (trans_pragma : FStar_Parser_AST.pragma -> FStar_Syntax_Syntax.pragma) =
-  fun uu___233_246  ->
-    match uu___233_246 with
+  fun uu___237_83  ->
+    match uu___237_83 with
     | FStar_Parser_AST.SetOptions s -> FStar_Syntax_Syntax.SetOptions s
     | FStar_Parser_AST.ResetOptions sopt ->
         FStar_Syntax_Syntax.ResetOptions sopt
@@ -118,25 +80,25 @@ let (as_imp :
   FStar_Parser_AST.imp ->
     FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
   =
-  fun uu___234_260  ->
-    match uu___234_260 with
+  fun uu___238_97  ->
+    match uu___238_97 with
     | FStar_Parser_AST.Hash  ->
         FStar_Pervasives_Native.Some FStar_Syntax_Syntax.imp_tag
-    | uu____263 -> FStar_Pervasives_Native.None
+    | uu____100 -> FStar_Pervasives_Native.None
   
 let arg_withimp_e :
-  'Auu____270 .
+  'Auu____107 .
     FStar_Parser_AST.imp ->
-      'Auu____270 ->
-        ('Auu____270,FStar_Syntax_Syntax.arg_qualifier
+      'Auu____107 ->
+        ('Auu____107,FStar_Syntax_Syntax.arg_qualifier
                        FStar_Pervasives_Native.option)
           FStar_Pervasives_Native.tuple2
   = fun imp  -> fun t  -> (t, (as_imp imp)) 
 let arg_withimp_t :
-  'Auu____295 .
+  'Auu____132 .
     FStar_Parser_AST.imp ->
-      'Auu____295 ->
-        ('Auu____295,FStar_Syntax_Syntax.arg_qualifier
+      'Auu____132 ->
+        ('Auu____132,FStar_Syntax_Syntax.arg_qualifier
                        FStar_Pervasives_Native.option)
           FStar_Pervasives_Native.tuple2
   =
@@ -145,7 +107,7 @@ let arg_withimp_t :
       match imp with
       | FStar_Parser_AST.Hash  ->
           (t, (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.imp_tag))
-      | uu____314 -> (t, FStar_Pervasives_Native.None)
+      | uu____151 -> (t, FStar_Pervasives_Native.None)
   
 let (contains_binder : FStar_Parser_AST.binder Prims.list -> Prims.bool) =
   fun binders  ->
@@ -153,49 +115,49 @@ let (contains_binder : FStar_Parser_AST.binder Prims.list -> Prims.bool) =
       (FStar_Util.for_some
          (fun b  ->
             match b.FStar_Parser_AST.b with
-            | FStar_Parser_AST.Annotated uu____331 -> true
-            | uu____336 -> false))
+            | FStar_Parser_AST.Annotated uu____168 -> true
+            | uu____173 -> false))
   
 let rec (unparen : FStar_Parser_AST.term -> FStar_Parser_AST.term) =
   fun t  ->
     match t.FStar_Parser_AST.tm with
     | FStar_Parser_AST.Paren t1 -> unparen t1
-    | uu____343 -> t
+    | uu____180 -> t
   
 let (tm_type_z : FStar_Range.range -> FStar_Parser_AST.term) =
   fun r  ->
-    let uu____349 =
-      let uu____350 = FStar_Ident.lid_of_path ["Type0"] r  in
-      FStar_Parser_AST.Name uu____350  in
-    FStar_Parser_AST.mk_term uu____349 r FStar_Parser_AST.Kind
+    let uu____186 =
+      let uu____187 = FStar_Ident.lid_of_path ["Type0"] r  in
+      FStar_Parser_AST.Name uu____187  in
+    FStar_Parser_AST.mk_term uu____186 r FStar_Parser_AST.Kind
   
 let (tm_type : FStar_Range.range -> FStar_Parser_AST.term) =
   fun r  ->
-    let uu____356 =
-      let uu____357 = FStar_Ident.lid_of_path ["Type"] r  in
-      FStar_Parser_AST.Name uu____357  in
-    FStar_Parser_AST.mk_term uu____356 r FStar_Parser_AST.Kind
+    let uu____193 =
+      let uu____194 = FStar_Ident.lid_of_path ["Type"] r  in
+      FStar_Parser_AST.Name uu____194  in
+    FStar_Parser_AST.mk_term uu____193 r FStar_Parser_AST.Kind
   
 let rec (is_comp_type :
   FStar_Syntax_DsEnv.env -> FStar_Parser_AST.term -> Prims.bool) =
   fun env  ->
     fun t  ->
-      let uu____368 =
-        let uu____369 = unparen t  in uu____369.FStar_Parser_AST.tm  in
-      match uu____368 with
+      let uu____205 =
+        let uu____206 = unparen t  in uu____206.FStar_Parser_AST.tm  in
+      match uu____205 with
       | FStar_Parser_AST.Name l ->
-          let uu____371 = FStar_Syntax_DsEnv.try_lookup_effect_name env l  in
-          FStar_All.pipe_right uu____371 FStar_Option.isSome
-      | FStar_Parser_AST.Construct (l,uu____377) ->
-          let uu____390 = FStar_Syntax_DsEnv.try_lookup_effect_name env l  in
-          FStar_All.pipe_right uu____390 FStar_Option.isSome
-      | FStar_Parser_AST.App (head1,uu____396,uu____397) ->
+          let uu____208 = FStar_Syntax_DsEnv.try_lookup_effect_name env l  in
+          FStar_All.pipe_right uu____208 FStar_Option.isSome
+      | FStar_Parser_AST.Construct (l,uu____214) ->
+          let uu____227 = FStar_Syntax_DsEnv.try_lookup_effect_name env l  in
+          FStar_All.pipe_right uu____227 FStar_Option.isSome
+      | FStar_Parser_AST.App (head1,uu____233,uu____234) ->
           is_comp_type env head1
       | FStar_Parser_AST.Paren t1 -> failwith "impossible"
-      | FStar_Parser_AST.Ascribed (t1,uu____400,uu____401) ->
+      | FStar_Parser_AST.Ascribed (t1,uu____237,uu____238) ->
           is_comp_type env t1
-      | FStar_Parser_AST.LetOpen (uu____406,t1) -> is_comp_type env t1
-      | uu____408 -> false
+      | FStar_Parser_AST.LetOpen (uu____243,t1) -> is_comp_type env t1
+      | uu____245 -> false
   
 let (unit_ty : FStar_Parser_AST.term) =
   FStar_Parser_AST.mk_term
@@ -207,20 +169,20 @@ let (compile_op_lid :
   fun n1  ->
     fun s  ->
       fun r  ->
-        let uu____424 =
-          let uu____427 =
-            let uu____428 =
-              let uu____433 = FStar_Parser_AST.compile_op n1 s r  in
-              (uu____433, r)  in
-            FStar_Ident.mk_ident uu____428  in
-          [uu____427]  in
-        FStar_All.pipe_right uu____424 FStar_Ident.lid_of_ids
+        let uu____261 =
+          let uu____264 =
+            let uu____265 =
+              let uu____270 = FStar_Parser_AST.compile_op n1 s r  in
+              (uu____270, r)  in
+            FStar_Ident.mk_ident uu____265  in
+          [uu____264]  in
+        FStar_All.pipe_right uu____261 FStar_Ident.lid_of_ids
   
 let op_as_term :
-  'Auu____446 .
+  'Auu____283 .
     FStar_Syntax_DsEnv.env ->
       Prims.int ->
-        'Auu____446 ->
+        'Auu____283 ->
           FStar_Ident.ident ->
             FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
@@ -229,18 +191,18 @@ let op_as_term :
       fun rng  ->
         fun op  ->
           let r l dd =
-            let uu____482 =
-              let uu____483 =
-                let uu____484 =
+            let uu____319 =
+              let uu____320 =
+                let uu____321 =
                   FStar_Ident.set_lid_range l op.FStar_Ident.idRange  in
-                FStar_Syntax_Syntax.lid_as_fv uu____484 dd
+                FStar_Syntax_Syntax.lid_as_fv uu____321 dd
                   FStar_Pervasives_Native.None
                  in
-              FStar_All.pipe_right uu____483 FStar_Syntax_Syntax.fv_to_tm  in
-            FStar_Pervasives_Native.Some uu____482  in
-          let fallback uu____492 =
-            let uu____493 = FStar_Ident.text_of_id op  in
-            match uu____493 with
+              FStar_All.pipe_right uu____320 FStar_Syntax_Syntax.fv_to_tm  in
+            FStar_Pervasives_Native.Some uu____319  in
+          let fallback uu____329 =
+            let uu____330 = FStar_Ident.text_of_id op  in
+            match uu____330 with
             | "=" ->
                 r FStar_Parser_Const.op_Eq
                   FStar_Syntax_Syntax.delta_equational
@@ -284,8 +246,8 @@ let op_as_term :
                 r FStar_Parser_Const.read_lid
                   FStar_Syntax_Syntax.delta_equational
             | "@" ->
-                let uu____496 = FStar_Options.ml_ish ()  in
-                if uu____496
+                let uu____333 = FStar_Options.ml_ish ()  in
+                if uu____333
                 then
                   r FStar_Parser_Const.list_append_lid
                     (FStar_Syntax_Syntax.Delta_equational_at_level
@@ -333,22 +295,22 @@ let op_as_term :
                 r FStar_Parser_Const.iff_lid
                   (FStar_Syntax_Syntax.Delta_constant_at_level
                      (Prims.parse_int "2"))
-            | uu____500 -> FStar_Pervasives_Native.None  in
-          let uu____501 =
-            let uu____508 =
+            | uu____337 -> FStar_Pervasives_Native.None  in
+          let uu____338 =
+            let uu____345 =
               compile_op_lid arity op.FStar_Ident.idText
                 op.FStar_Ident.idRange
                in
-            FStar_Syntax_DsEnv.try_lookup_lid env uu____508  in
-          match uu____501 with
+            FStar_Syntax_DsEnv.try_lookup_lid env uu____345  in
+          match uu____338 with
           | FStar_Pervasives_Native.Some t ->
               FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst t)
-          | uu____520 -> fallback ()
+          | uu____357 -> fallback ()
   
 let (sort_ftv : FStar_Ident.ident Prims.list -> FStar_Ident.ident Prims.list)
   =
   fun ftv  ->
-    let uu____538 =
+    let uu____375 =
       FStar_Util.remove_dups
         (fun x  -> fun y  -> x.FStar_Ident.idText = y.FStar_Ident.idText) ftv
        in
@@ -357,7 +319,7 @@ let (sort_ftv : FStar_Ident.ident Prims.list -> FStar_Ident.ident Prims.list)
          (fun x  ->
             fun y  ->
               FStar_String.compare x.FStar_Ident.idText y.FStar_Ident.idText))
-      uu____538
+      uu____375
   
 let rec (free_type_vars_b :
   FStar_Syntax_DsEnv.env ->
@@ -368,17 +330,17 @@ let rec (free_type_vars_b :
   fun env  ->
     fun binder  ->
       match binder.FStar_Parser_AST.b with
-      | FStar_Parser_AST.Variable uu____585 -> (env, [])
+      | FStar_Parser_AST.Variable uu____422 -> (env, [])
       | FStar_Parser_AST.TVariable x ->
-          let uu____589 = FStar_Syntax_DsEnv.push_bv env x  in
-          (match uu____589 with | (env1,uu____601) -> (env1, [x]))
-      | FStar_Parser_AST.Annotated (uu____604,term) ->
-          let uu____606 = free_type_vars env term  in (env, uu____606)
-      | FStar_Parser_AST.TAnnotated (id1,uu____612) ->
-          let uu____613 = FStar_Syntax_DsEnv.push_bv env id1  in
-          (match uu____613 with | (env1,uu____625) -> (env1, []))
+          let uu____426 = FStar_Syntax_DsEnv.push_bv env x  in
+          (match uu____426 with | (env1,uu____438) -> (env1, [x]))
+      | FStar_Parser_AST.Annotated (uu____441,term) ->
+          let uu____443 = free_type_vars env term  in (env, uu____443)
+      | FStar_Parser_AST.TAnnotated (id1,uu____449) ->
+          let uu____450 = FStar_Syntax_DsEnv.push_bv env id1  in
+          (match uu____450 with | (env1,uu____462) -> (env1, []))
       | FStar_Parser_AST.NoName t ->
-          let uu____629 = free_type_vars env t  in (env, uu____629)
+          let uu____466 = free_type_vars env t  in (env, uu____466)
 
 and (free_type_vars :
   FStar_Syntax_DsEnv.env ->
@@ -386,26 +348,26 @@ and (free_type_vars :
   =
   fun env  ->
     fun t  ->
-      let uu____636 =
-        let uu____637 = unparen t  in uu____637.FStar_Parser_AST.tm  in
-      match uu____636 with
-      | FStar_Parser_AST.Labeled uu____640 ->
+      let uu____473 =
+        let uu____474 = unparen t  in uu____474.FStar_Parser_AST.tm  in
+      match uu____473 with
+      | FStar_Parser_AST.Labeled uu____477 ->
           failwith "Impossible --- labeled source term"
       | FStar_Parser_AST.Tvar a ->
-          let uu____650 = FStar_Syntax_DsEnv.try_lookup_id env a  in
-          (match uu____650 with
+          let uu____487 = FStar_Syntax_DsEnv.try_lookup_id env a  in
+          (match uu____487 with
            | FStar_Pervasives_Native.None  -> [a]
-           | uu____663 -> [])
+           | uu____500 -> [])
       | FStar_Parser_AST.Wild  -> []
-      | FStar_Parser_AST.Const uu____670 -> []
-      | FStar_Parser_AST.Uvar uu____671 -> []
-      | FStar_Parser_AST.Var uu____672 -> []
-      | FStar_Parser_AST.Projector uu____673 -> []
-      | FStar_Parser_AST.Discrim uu____678 -> []
-      | FStar_Parser_AST.Name uu____679 -> []
-      | FStar_Parser_AST.Requires (t1,uu____681) -> free_type_vars env t1
-      | FStar_Parser_AST.Ensures (t1,uu____687) -> free_type_vars env t1
-      | FStar_Parser_AST.NamedTyp (uu____692,t1) -> free_type_vars env t1
+      | FStar_Parser_AST.Const uu____507 -> []
+      | FStar_Parser_AST.Uvar uu____508 -> []
+      | FStar_Parser_AST.Var uu____509 -> []
+      | FStar_Parser_AST.Projector uu____510 -> []
+      | FStar_Parser_AST.Discrim uu____515 -> []
+      | FStar_Parser_AST.Name uu____516 -> []
+      | FStar_Parser_AST.Requires (t1,uu____518) -> free_type_vars env t1
+      | FStar_Parser_AST.Ensures (t1,uu____524) -> free_type_vars env t1
+      | FStar_Parser_AST.NamedTyp (uu____529,t1) -> free_type_vars env t1
       | FStar_Parser_AST.Paren t1 -> failwith "impossible"
       | FStar_Parser_AST.Ascribed (t1,t',tacopt) ->
           let ts = t1 :: t' ::
@@ -414,72 +376,72 @@ and (free_type_vars :
              | FStar_Pervasives_Native.Some t2 -> [t2])
              in
           FStar_List.collect (free_type_vars env) ts
-      | FStar_Parser_AST.Construct (uu____710,ts) ->
+      | FStar_Parser_AST.Construct (uu____547,ts) ->
           FStar_List.collect
-            (fun uu____731  ->
-               match uu____731 with | (t1,uu____739) -> free_type_vars env t1)
+            (fun uu____568  ->
+               match uu____568 with | (t1,uu____576) -> free_type_vars env t1)
             ts
-      | FStar_Parser_AST.Op (uu____740,ts) ->
+      | FStar_Parser_AST.Op (uu____577,ts) ->
           FStar_List.collect (free_type_vars env) ts
-      | FStar_Parser_AST.App (t1,t2,uu____748) ->
-          let uu____749 = free_type_vars env t1  in
-          let uu____752 = free_type_vars env t2  in
-          FStar_List.append uu____749 uu____752
+      | FStar_Parser_AST.App (t1,t2,uu____585) ->
+          let uu____586 = free_type_vars env t1  in
+          let uu____589 = free_type_vars env t2  in
+          FStar_List.append uu____586 uu____589
       | FStar_Parser_AST.Refine (b,t1) ->
-          let uu____757 = free_type_vars_b env b  in
-          (match uu____757 with
+          let uu____594 = free_type_vars_b env b  in
+          (match uu____594 with
            | (env1,f) ->
-               let uu____772 = free_type_vars env1 t1  in
-               FStar_List.append f uu____772)
+               let uu____609 = free_type_vars env1 t1  in
+               FStar_List.append f uu____609)
       | FStar_Parser_AST.Product (binders,body) ->
-          let uu____781 =
+          let uu____618 =
             FStar_List.fold_left
-              (fun uu____801  ->
+              (fun uu____638  ->
                  fun binder  ->
-                   match uu____801 with
+                   match uu____638 with
                    | (env1,free) ->
-                       let uu____821 = free_type_vars_b env1 binder  in
-                       (match uu____821 with
+                       let uu____658 = free_type_vars_b env1 binder  in
+                       (match uu____658 with
                         | (env2,f) -> (env2, (FStar_List.append f free))))
               (env, []) binders
              in
-          (match uu____781 with
+          (match uu____618 with
            | (env1,free) ->
-               let uu____852 = free_type_vars env1 body  in
-               FStar_List.append free uu____852)
+               let uu____689 = free_type_vars env1 body  in
+               FStar_List.append free uu____689)
       | FStar_Parser_AST.Sum (binders,body) ->
-          let uu____861 =
+          let uu____698 =
             FStar_List.fold_left
-              (fun uu____881  ->
+              (fun uu____718  ->
                  fun binder  ->
-                   match uu____881 with
+                   match uu____718 with
                    | (env1,free) ->
-                       let uu____901 = free_type_vars_b env1 binder  in
-                       (match uu____901 with
+                       let uu____738 = free_type_vars_b env1 binder  in
+                       (match uu____738 with
                         | (env2,f) -> (env2, (FStar_List.append f free))))
               (env, []) binders
              in
-          (match uu____861 with
+          (match uu____698 with
            | (env1,free) ->
-               let uu____932 = free_type_vars env1 body  in
-               FStar_List.append free uu____932)
-      | FStar_Parser_AST.Project (t1,uu____936) -> free_type_vars env t1
+               let uu____769 = free_type_vars env1 body  in
+               FStar_List.append free uu____769)
+      | FStar_Parser_AST.Project (t1,uu____773) -> free_type_vars env t1
       | FStar_Parser_AST.Attributes cattributes ->
           FStar_List.collect (free_type_vars env) cattributes
-      | FStar_Parser_AST.Abs uu____940 -> []
-      | FStar_Parser_AST.Let uu____947 -> []
-      | FStar_Parser_AST.LetOpen uu____968 -> []
-      | FStar_Parser_AST.If uu____973 -> []
-      | FStar_Parser_AST.QForall uu____980 -> []
-      | FStar_Parser_AST.QExists uu____993 -> []
-      | FStar_Parser_AST.Record uu____1006 -> []
-      | FStar_Parser_AST.Match uu____1019 -> []
-      | FStar_Parser_AST.TryWith uu____1034 -> []
-      | FStar_Parser_AST.Bind uu____1049 -> []
-      | FStar_Parser_AST.Quote uu____1056 -> []
-      | FStar_Parser_AST.VQuote uu____1061 -> []
-      | FStar_Parser_AST.Antiquote uu____1062 -> []
-      | FStar_Parser_AST.Seq uu____1063 -> []
+      | FStar_Parser_AST.Abs uu____777 -> []
+      | FStar_Parser_AST.Let uu____784 -> []
+      | FStar_Parser_AST.LetOpen uu____805 -> []
+      | FStar_Parser_AST.If uu____810 -> []
+      | FStar_Parser_AST.QForall uu____817 -> []
+      | FStar_Parser_AST.QExists uu____830 -> []
+      | FStar_Parser_AST.Record uu____843 -> []
+      | FStar_Parser_AST.Match uu____856 -> []
+      | FStar_Parser_AST.TryWith uu____871 -> []
+      | FStar_Parser_AST.Bind uu____886 -> []
+      | FStar_Parser_AST.Quote uu____893 -> []
+      | FStar_Parser_AST.VQuote uu____898 -> []
+      | FStar_Parser_AST.Antiquote uu____899 -> []
+      | FStar_Parser_AST.Seq uu____900 -> []
 
 let (head_and_args :
   FStar_Parser_AST.term ->
@@ -489,9 +451,9 @@ let (head_and_args :
   =
   fun t  ->
     let rec aux args t1 =
-      let uu____1116 =
-        let uu____1117 = unparen t1  in uu____1117.FStar_Parser_AST.tm  in
-      match uu____1116 with
+      let uu____953 =
+        let uu____954 = unparen t1  in uu____954.FStar_Parser_AST.tm  in
+      match uu____953 with
       | FStar_Parser_AST.App (t2,arg,imp) -> aux ((arg, imp) :: args) t2
       | FStar_Parser_AST.Construct (l,args') ->
           ({
@@ -499,7 +461,7 @@ let (head_and_args :
              FStar_Parser_AST.range = (t1.FStar_Parser_AST.range);
              FStar_Parser_AST.level = (t1.FStar_Parser_AST.level)
            }, (FStar_List.append args' args))
-      | uu____1159 -> (t1, args)  in
+      | uu____996 -> (t1, args)  in
     aux [] t
   
 let (close :
@@ -507,8 +469,8 @@ let (close :
   fun env  ->
     fun t  ->
       let ftv =
-        let uu____1183 = free_type_vars env t  in
-        FStar_All.pipe_left sort_ftv uu____1183  in
+        let uu____1020 = free_type_vars env t  in
+        FStar_All.pipe_left sort_ftv uu____1020  in
       if (FStar_List.length ftv) = (Prims.parse_int "0")
       then t
       else
@@ -516,12 +478,12 @@ let (close :
            FStar_All.pipe_right ftv
              (FStar_List.map
                 (fun x  ->
-                   let uu____1201 =
-                     let uu____1202 =
-                       let uu____1207 = tm_type x.FStar_Ident.idRange  in
-                       (x, uu____1207)  in
-                     FStar_Parser_AST.TAnnotated uu____1202  in
-                   FStar_Parser_AST.mk_binder uu____1201
+                   let uu____1038 =
+                     let uu____1039 =
+                       let uu____1044 = tm_type x.FStar_Ident.idRange  in
+                       (x, uu____1044)  in
+                     FStar_Parser_AST.TAnnotated uu____1039  in
+                   FStar_Parser_AST.mk_binder uu____1038
                      x.FStar_Ident.idRange FStar_Parser_AST.Type_level
                      (FStar_Pervasives_Native.Some FStar_Parser_AST.Implicit)))
             in
@@ -536,8 +498,8 @@ let (close_fun :
   fun env  ->
     fun t  ->
       let ftv =
-        let uu____1224 = free_type_vars env t  in
-        FStar_All.pipe_left sort_ftv uu____1224  in
+        let uu____1061 = free_type_vars env t  in
+        FStar_All.pipe_left sort_ftv uu____1061  in
       if (FStar_List.length ftv) = (Prims.parse_int "0")
       then t
       else
@@ -545,22 +507,22 @@ let (close_fun :
            FStar_All.pipe_right ftv
              (FStar_List.map
                 (fun x  ->
-                   let uu____1242 =
-                     let uu____1243 =
-                       let uu____1248 = tm_type x.FStar_Ident.idRange  in
-                       (x, uu____1248)  in
-                     FStar_Parser_AST.TAnnotated uu____1243  in
-                   FStar_Parser_AST.mk_binder uu____1242
+                   let uu____1079 =
+                     let uu____1080 =
+                       let uu____1085 = tm_type x.FStar_Ident.idRange  in
+                       (x, uu____1085)  in
+                     FStar_Parser_AST.TAnnotated uu____1080  in
+                   FStar_Parser_AST.mk_binder uu____1079
                      x.FStar_Ident.idRange FStar_Parser_AST.Type_level
                      (FStar_Pervasives_Native.Some FStar_Parser_AST.Implicit)))
             in
          let t1 =
-           let uu____1250 =
-             let uu____1251 = unparen t  in uu____1251.FStar_Parser_AST.tm
+           let uu____1087 =
+             let uu____1088 = unparen t  in uu____1088.FStar_Parser_AST.tm
               in
-           match uu____1250 with
-           | FStar_Parser_AST.Product uu____1252 -> t
-           | uu____1259 ->
+           match uu____1087 with
+           | FStar_Parser_AST.Product uu____1089 -> t
+           | uu____1096 ->
                FStar_Parser_AST.mk_term
                  (FStar_Parser_AST.App
                     ((FStar_Parser_AST.mk_term
@@ -587,26 +549,26 @@ let rec (uncurry :
       match t.FStar_Parser_AST.tm with
       | FStar_Parser_AST.Product (binders,t1) ->
           uncurry (FStar_List.append bs binders) t1
-      | uu____1295 -> (bs, t)
+      | uu____1132 -> (bs, t)
   
 let rec (is_var_pattern : FStar_Parser_AST.pattern -> Prims.bool) =
   fun p  ->
     match p.FStar_Parser_AST.pat with
-    | FStar_Parser_AST.PatWild uu____1303 -> true
-    | FStar_Parser_AST.PatTvar (uu____1306,uu____1307) -> true
-    | FStar_Parser_AST.PatVar (uu____1312,uu____1313) -> true
-    | FStar_Parser_AST.PatAscribed (p1,uu____1319) -> is_var_pattern p1
-    | uu____1332 -> false
+    | FStar_Parser_AST.PatWild  -> true
+    | FStar_Parser_AST.PatTvar (uu____1140,uu____1141) -> true
+    | FStar_Parser_AST.PatVar (uu____1146,uu____1147) -> true
+    | FStar_Parser_AST.PatAscribed (p1,uu____1153) -> is_var_pattern p1
+    | uu____1166 -> false
   
 let rec (is_app_pattern : FStar_Parser_AST.pattern -> Prims.bool) =
   fun p  ->
     match p.FStar_Parser_AST.pat with
-    | FStar_Parser_AST.PatAscribed (p1,uu____1339) -> is_app_pattern p1
+    | FStar_Parser_AST.PatAscribed (p1,uu____1173) -> is_app_pattern p1
     | FStar_Parser_AST.PatApp
-        ({ FStar_Parser_AST.pat = FStar_Parser_AST.PatVar uu____1352;
-           FStar_Parser_AST.prange = uu____1353;_},uu____1354)
+        ({ FStar_Parser_AST.pat = FStar_Parser_AST.PatVar uu____1186;
+           FStar_Parser_AST.prange = uu____1187;_},uu____1188)
         -> true
-    | uu____1365 -> false
+    | uu____1199 -> false
   
 let (replace_unit_pattern :
   FStar_Parser_AST.pattern -> FStar_Parser_AST.pattern) =
@@ -615,12 +577,11 @@ let (replace_unit_pattern :
     | FStar_Parser_AST.PatConst (FStar_Const.Const_unit ) ->
         FStar_Parser_AST.mk_pattern
           (FStar_Parser_AST.PatAscribed
-             ((FStar_Parser_AST.mk_pattern
-                 (FStar_Parser_AST.PatWild FStar_Pervasives_Native.None)
+             ((FStar_Parser_AST.mk_pattern FStar_Parser_AST.PatWild
                  p.FStar_Parser_AST.prange),
                (unit_ty, FStar_Pervasives_Native.None)))
           p.FStar_Parser_AST.prange
-    | uu____1379 -> p
+    | uu____1213 -> p
   
 let rec (destruct_app_pattern :
   FStar_Syntax_DsEnv.env ->
@@ -638,27 +599,27 @@ let rec (destruct_app_pattern :
       fun p  ->
         match p.FStar_Parser_AST.pat with
         | FStar_Parser_AST.PatAscribed (p1,t) ->
-            let uu____1449 = destruct_app_pattern env is_top_level1 p1  in
-            (match uu____1449 with
-             | (name,args,uu____1492) ->
+            let uu____1283 = destruct_app_pattern env is_top_level1 p1  in
+            (match uu____1283 with
+             | (name,args,uu____1326) ->
                  (name, args, (FStar_Pervasives_Native.Some t)))
         | FStar_Parser_AST.PatApp
             ({
                FStar_Parser_AST.pat = FStar_Parser_AST.PatVar
-                 (id1,uu____1542);
-               FStar_Parser_AST.prange = uu____1543;_},args)
+                 (id1,uu____1376);
+               FStar_Parser_AST.prange = uu____1377;_},args)
             when is_top_level1 ->
-            let uu____1553 =
-              let uu____1558 = FStar_Syntax_DsEnv.qualify env id1  in
-              FStar_Util.Inr uu____1558  in
-            (uu____1553, args, FStar_Pervasives_Native.None)
+            let uu____1387 =
+              let uu____1392 = FStar_Syntax_DsEnv.qualify env id1  in
+              FStar_Util.Inr uu____1392  in
+            (uu____1387, args, FStar_Pervasives_Native.None)
         | FStar_Parser_AST.PatApp
             ({
                FStar_Parser_AST.pat = FStar_Parser_AST.PatVar
-                 (id1,uu____1580);
-               FStar_Parser_AST.prange = uu____1581;_},args)
+                 (id1,uu____1414);
+               FStar_Parser_AST.prange = uu____1415;_},args)
             -> ((FStar_Util.Inl id1), args, FStar_Pervasives_Native.None)
-        | uu____1611 -> failwith "Not an app pattern"
+        | uu____1445 -> failwith "Not an app pattern"
   
 let rec (gather_pattern_bound_vars_maybe_top :
   FStar_Ident.ident FStar_Util.set ->
@@ -669,29 +630,29 @@ let rec (gather_pattern_bound_vars_maybe_top :
       let gather_pattern_bound_vars_from_list =
         FStar_List.fold_left gather_pattern_bound_vars_maybe_top acc  in
       match p.FStar_Parser_AST.pat with
-      | FStar_Parser_AST.PatWild uu____1661 -> acc
-      | FStar_Parser_AST.PatConst uu____1664 -> acc
+      | FStar_Parser_AST.PatWild  -> acc
+      | FStar_Parser_AST.PatConst uu____1495 -> acc
       | FStar_Parser_AST.PatVar
-          (uu____1665,FStar_Pervasives_Native.Some (FStar_Parser_AST.Implicit
+          (uu____1496,FStar_Pervasives_Native.Some (FStar_Parser_AST.Implicit
            ))
           -> acc
-      | FStar_Parser_AST.PatName uu____1668 -> acc
-      | FStar_Parser_AST.PatTvar uu____1669 -> acc
-      | FStar_Parser_AST.PatOp uu____1676 -> acc
+      | FStar_Parser_AST.PatName uu____1499 -> acc
+      | FStar_Parser_AST.PatTvar uu____1500 -> acc
+      | FStar_Parser_AST.PatOp uu____1507 -> acc
       | FStar_Parser_AST.PatApp (phead,pats) ->
           gather_pattern_bound_vars_from_list (phead :: pats)
-      | FStar_Parser_AST.PatVar (x,uu____1684) -> FStar_Util.set_add x acc
+      | FStar_Parser_AST.PatVar (x,uu____1515) -> FStar_Util.set_add x acc
       | FStar_Parser_AST.PatList pats ->
           gather_pattern_bound_vars_from_list pats
-      | FStar_Parser_AST.PatTuple (pats,uu____1693) ->
+      | FStar_Parser_AST.PatTuple (pats,uu____1524) ->
           gather_pattern_bound_vars_from_list pats
       | FStar_Parser_AST.PatOr pats ->
           gather_pattern_bound_vars_from_list pats
       | FStar_Parser_AST.PatRecord guarded_pats ->
-          let uu____1708 =
+          let uu____1539 =
             FStar_List.map FStar_Pervasives_Native.snd guarded_pats  in
-          gather_pattern_bound_vars_from_list uu____1708
-      | FStar_Parser_AST.PatAscribed (pat,uu____1716) ->
+          gather_pattern_bound_vars_from_list uu____1539
+      | FStar_Parser_AST.PatAscribed (pat,uu____1547) ->
           gather_pattern_bound_vars_maybe_top acc pat
   
 let (gather_pattern_bound_vars :
@@ -715,7 +676,7 @@ type bnd =
   FStar_Pervasives_Native.tuple2 
 let (uu___is_LocalBinder : bnd -> Prims.bool) =
   fun projectee  ->
-    match projectee with | LocalBinder _0 -> true | uu____1778 -> false
+    match projectee with | LocalBinder _0 -> true | uu____1609 -> false
   
 let (__proj__LocalBinder__item___0 :
   bnd ->
@@ -724,7 +685,7 @@ let (__proj__LocalBinder__item___0 :
   = fun projectee  -> match projectee with | LocalBinder _0 -> _0 
 let (uu___is_LetBinder : bnd -> Prims.bool) =
   fun projectee  ->
-    match projectee with | LetBinder _0 -> true | uu____1814 -> false
+    match projectee with | LetBinder _0 -> true | uu____1645 -> false
   
 let (__proj__LetBinder__item___0 :
   bnd ->
@@ -738,10 +699,10 @@ let (binder_of_bnd :
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
       FStar_Pervasives_Native.tuple2)
   =
-  fun uu___235_1860  ->
-    match uu___235_1860 with
+  fun uu___239_1691  ->
+    match uu___239_1691 with
     | LocalBinder (a,aq) -> (a, aq)
-    | uu____1867 -> failwith "Impossible"
+    | uu____1698 -> failwith "Impossible"
   
 type env_t = FStar_Syntax_DsEnv.env
 type lenv_t = FStar_Syntax_Syntax.bv Prims.list
@@ -754,8 +715,8 @@ let (mk_lb :
     FStar_Range.range) FStar_Pervasives_Native.tuple5 ->
     FStar_Syntax_Syntax.letbinding)
   =
-  fun uu____1900  ->
-    match uu____1900 with
+  fun uu____1731  ->
+    match uu____1731 with
     | (attrs,n1,t,e,pos) ->
         {
           FStar_Syntax_Syntax.lbname = n1;
@@ -781,20 +742,20 @@ let (mk_ref_read :
   =
   fun tm  ->
     let tm' =
-      let uu____1980 =
-        let uu____1997 =
-          let uu____2000 =
+      let uu____1811 =
+        let uu____1828 =
+          let uu____1831 =
             FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.sread_lid
               FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
              in
-          FStar_Syntax_Syntax.fv_to_tm uu____2000  in
-        let uu____2001 =
-          let uu____2012 =
-            let uu____2021 = FStar_Syntax_Syntax.as_implicit false  in
-            (tm, uu____2021)  in
-          [uu____2012]  in
-        (uu____1997, uu____2001)  in
-      FStar_Syntax_Syntax.Tm_app uu____1980  in
+          FStar_Syntax_Syntax.fv_to_tm uu____1831  in
+        let uu____1832 =
+          let uu____1843 =
+            let uu____1852 = FStar_Syntax_Syntax.as_implicit false  in
+            (tm, uu____1852)  in
+          [uu____1843]  in
+        (uu____1828, uu____1832)  in
+      FStar_Syntax_Syntax.Tm_app uu____1811  in
     FStar_Syntax_Syntax.mk tm' FStar_Pervasives_Native.None
       tm.FStar_Syntax_Syntax.pos
   
@@ -804,20 +765,20 @@ let (mk_ref_alloc :
   =
   fun tm  ->
     let tm' =
-      let uu____2068 =
-        let uu____2085 =
-          let uu____2088 =
+      let uu____1899 =
+        let uu____1916 =
+          let uu____1919 =
             FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.salloc_lid
               FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
              in
-          FStar_Syntax_Syntax.fv_to_tm uu____2088  in
-        let uu____2089 =
-          let uu____2100 =
-            let uu____2109 = FStar_Syntax_Syntax.as_implicit false  in
-            (tm, uu____2109)  in
-          [uu____2100]  in
-        (uu____2085, uu____2089)  in
-      FStar_Syntax_Syntax.Tm_app uu____2068  in
+          FStar_Syntax_Syntax.fv_to_tm uu____1919  in
+        let uu____1920 =
+          let uu____1931 =
+            let uu____1940 = FStar_Syntax_Syntax.as_implicit false  in
+            (tm, uu____1940)  in
+          [uu____1931]  in
+        (uu____1916, uu____1920)  in
+      FStar_Syntax_Syntax.Tm_app uu____1899  in
     FStar_Syntax_Syntax.mk tm' FStar_Pervasives_Native.None
       tm.FStar_Syntax_Syntax.pos
   
@@ -831,59 +792,59 @@ let (mk_ref_assign :
     fun t2  ->
       fun pos  ->
         let tm =
-          let uu____2170 =
-            let uu____2187 =
-              let uu____2190 =
+          let uu____2001 =
+            let uu____2018 =
+              let uu____2021 =
                 FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.swrite_lid
                   FStar_Syntax_Syntax.delta_constant
                   FStar_Pervasives_Native.None
                  in
-              FStar_Syntax_Syntax.fv_to_tm uu____2190  in
-            let uu____2191 =
-              let uu____2202 =
-                let uu____2211 = FStar_Syntax_Syntax.as_implicit false  in
-                (t1, uu____2211)  in
-              let uu____2218 =
-                let uu____2229 =
-                  let uu____2238 = FStar_Syntax_Syntax.as_implicit false  in
-                  (t2, uu____2238)  in
-                [uu____2229]  in
-              uu____2202 :: uu____2218  in
-            (uu____2187, uu____2191)  in
-          FStar_Syntax_Syntax.Tm_app uu____2170  in
+              FStar_Syntax_Syntax.fv_to_tm uu____2021  in
+            let uu____2022 =
+              let uu____2033 =
+                let uu____2042 = FStar_Syntax_Syntax.as_implicit false  in
+                (t1, uu____2042)  in
+              let uu____2049 =
+                let uu____2060 =
+                  let uu____2069 = FStar_Syntax_Syntax.as_implicit false  in
+                  (t2, uu____2069)  in
+                [uu____2060]  in
+              uu____2033 :: uu____2049  in
+            (uu____2018, uu____2022)  in
+          FStar_Syntax_Syntax.Tm_app uu____2001  in
         FStar_Syntax_Syntax.mk tm FStar_Pervasives_Native.None pos
   
 let (generalize_annotated_univs :
   FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt) =
   fun s  ->
     let bs_univnames bs =
-      let uu____2296 =
-        let uu____2311 =
+      let uu____2127 =
+        let uu____2142 =
           FStar_Util.new_set FStar_Syntax_Syntax.order_univ_name  in
         FStar_List.fold_left
           (fun uvs  ->
-             fun uu____2330  ->
-               match uu____2330 with
-               | ({ FStar_Syntax_Syntax.ppname = uu____2341;
-                    FStar_Syntax_Syntax.index = uu____2342;
-                    FStar_Syntax_Syntax.sort = t;_},uu____2344)
+             fun uu____2161  ->
+               match uu____2161 with
+               | ({ FStar_Syntax_Syntax.ppname = uu____2172;
+                    FStar_Syntax_Syntax.index = uu____2173;
+                    FStar_Syntax_Syntax.sort = t;_},uu____2175)
                    ->
-                   let uu____2351 = FStar_Syntax_Free.univnames t  in
-                   FStar_Util.set_union uvs uu____2351) uu____2311
+                   let uu____2182 = FStar_Syntax_Free.univnames t  in
+                   FStar_Util.set_union uvs uu____2182) uu____2142
          in
-      FStar_All.pipe_right bs uu____2296  in
+      FStar_All.pipe_right bs uu____2127  in
     let empty_set = FStar_Util.new_set FStar_Syntax_Syntax.order_univ_name
        in
     match s.FStar_Syntax_Syntax.sigel with
-    | FStar_Syntax_Syntax.Sig_inductive_typ uu____2367 ->
+    | FStar_Syntax_Syntax.Sig_inductive_typ uu____2198 ->
         failwith
           "Impossible: collect_annotated_universes: bare data/type constructor"
-    | FStar_Syntax_Syntax.Sig_datacon uu____2384 ->
+    | FStar_Syntax_Syntax.Sig_datacon uu____2215 ->
         failwith
           "Impossible: collect_annotated_universes: bare data/type constructor"
     | FStar_Syntax_Syntax.Sig_bundle (sigs,lids) ->
         let uvs =
-          let uu____2410 =
+          let uu____2241 =
             FStar_All.pipe_right sigs
               (FStar_List.fold_left
                  (fun uvs  ->
@@ -891,258 +852,258 @@ let (generalize_annotated_univs :
                       let se_univs =
                         match se.FStar_Syntax_Syntax.sigel with
                         | FStar_Syntax_Syntax.Sig_inductive_typ
-                            (uu____2431,uu____2432,bs,t,uu____2435,uu____2436)
+                            (uu____2262,uu____2263,bs,t,uu____2266,uu____2267)
                             ->
-                            let uu____2445 = bs_univnames bs  in
-                            let uu____2448 = FStar_Syntax_Free.univnames t
+                            let uu____2276 = bs_univnames bs  in
+                            let uu____2279 = FStar_Syntax_Free.univnames t
                                in
-                            FStar_Util.set_union uu____2445 uu____2448
+                            FStar_Util.set_union uu____2276 uu____2279
                         | FStar_Syntax_Syntax.Sig_datacon
-                            (uu____2451,uu____2452,t,uu____2454,uu____2455,uu____2456)
+                            (uu____2282,uu____2283,t,uu____2285,uu____2286,uu____2287)
                             -> FStar_Syntax_Free.univnames t
-                        | uu____2461 ->
+                        | uu____2292 ->
                             failwith
                               "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
                          in
                       FStar_Util.set_union uvs se_univs) empty_set)
              in
-          FStar_All.pipe_right uu____2410 FStar_Util.set_elements  in
+          FStar_All.pipe_right uu____2241 FStar_Util.set_elements  in
         let usubst = FStar_Syntax_Subst.univ_var_closing uvs  in
-        let uu___261_2469 = s  in
-        let uu____2470 =
-          let uu____2471 =
-            let uu____2480 =
+        let uu___265_2300 = s  in
+        let uu____2301 =
+          let uu____2302 =
+            let uu____2311 =
               FStar_All.pipe_right sigs
                 (FStar_List.map
                    (fun se  ->
                       match se.FStar_Syntax_Syntax.sigel with
                       | FStar_Syntax_Syntax.Sig_inductive_typ
-                          (lid,uu____2498,bs,t,lids1,lids2) ->
-                          let uu___262_2511 = se  in
-                          let uu____2512 =
-                            let uu____2513 =
-                              let uu____2530 =
+                          (lid,uu____2329,bs,t,lids1,lids2) ->
+                          let uu___266_2342 = se  in
+                          let uu____2343 =
+                            let uu____2344 =
+                              let uu____2361 =
                                 FStar_Syntax_Subst.subst_binders usubst bs
                                  in
-                              let uu____2531 =
-                                let uu____2532 =
+                              let uu____2362 =
+                                let uu____2363 =
                                   FStar_Syntax_Subst.shift_subst
                                     (FStar_List.length bs) usubst
                                    in
-                                FStar_Syntax_Subst.subst uu____2532 t  in
-                              (lid, uvs, uu____2530, uu____2531, lids1,
+                                FStar_Syntax_Subst.subst uu____2363 t  in
+                              (lid, uvs, uu____2361, uu____2362, lids1,
                                 lids2)
                                in
-                            FStar_Syntax_Syntax.Sig_inductive_typ uu____2513
+                            FStar_Syntax_Syntax.Sig_inductive_typ uu____2344
                              in
                           {
-                            FStar_Syntax_Syntax.sigel = uu____2512;
+                            FStar_Syntax_Syntax.sigel = uu____2343;
                             FStar_Syntax_Syntax.sigrng =
-                              (uu___262_2511.FStar_Syntax_Syntax.sigrng);
+                              (uu___266_2342.FStar_Syntax_Syntax.sigrng);
                             FStar_Syntax_Syntax.sigquals =
-                              (uu___262_2511.FStar_Syntax_Syntax.sigquals);
+                              (uu___266_2342.FStar_Syntax_Syntax.sigquals);
                             FStar_Syntax_Syntax.sigmeta =
-                              (uu___262_2511.FStar_Syntax_Syntax.sigmeta);
+                              (uu___266_2342.FStar_Syntax_Syntax.sigmeta);
                             FStar_Syntax_Syntax.sigattrs =
-                              (uu___262_2511.FStar_Syntax_Syntax.sigattrs)
+                              (uu___266_2342.FStar_Syntax_Syntax.sigattrs)
                           }
                       | FStar_Syntax_Syntax.Sig_datacon
-                          (lid,uu____2546,t,tlid,n1,lids1) ->
-                          let uu___263_2555 = se  in
-                          let uu____2556 =
-                            let uu____2557 =
-                              let uu____2572 =
+                          (lid,uu____2377,t,tlid,n1,lids1) ->
+                          let uu___267_2386 = se  in
+                          let uu____2387 =
+                            let uu____2388 =
+                              let uu____2403 =
                                 FStar_Syntax_Subst.subst usubst t  in
-                              (lid, uvs, uu____2572, tlid, n1, lids1)  in
-                            FStar_Syntax_Syntax.Sig_datacon uu____2557  in
+                              (lid, uvs, uu____2403, tlid, n1, lids1)  in
+                            FStar_Syntax_Syntax.Sig_datacon uu____2388  in
                           {
-                            FStar_Syntax_Syntax.sigel = uu____2556;
+                            FStar_Syntax_Syntax.sigel = uu____2387;
                             FStar_Syntax_Syntax.sigrng =
-                              (uu___263_2555.FStar_Syntax_Syntax.sigrng);
+                              (uu___267_2386.FStar_Syntax_Syntax.sigrng);
                             FStar_Syntax_Syntax.sigquals =
-                              (uu___263_2555.FStar_Syntax_Syntax.sigquals);
+                              (uu___267_2386.FStar_Syntax_Syntax.sigquals);
                             FStar_Syntax_Syntax.sigmeta =
-                              (uu___263_2555.FStar_Syntax_Syntax.sigmeta);
+                              (uu___267_2386.FStar_Syntax_Syntax.sigmeta);
                             FStar_Syntax_Syntax.sigattrs =
-                              (uu___263_2555.FStar_Syntax_Syntax.sigattrs)
+                              (uu___267_2386.FStar_Syntax_Syntax.sigattrs)
                           }
-                      | uu____2575 ->
+                      | uu____2406 ->
                           failwith
                             "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"))
                in
-            (uu____2480, lids)  in
-          FStar_Syntax_Syntax.Sig_bundle uu____2471  in
+            (uu____2311, lids)  in
+          FStar_Syntax_Syntax.Sig_bundle uu____2302  in
         {
-          FStar_Syntax_Syntax.sigel = uu____2470;
+          FStar_Syntax_Syntax.sigel = uu____2301;
           FStar_Syntax_Syntax.sigrng =
-            (uu___261_2469.FStar_Syntax_Syntax.sigrng);
+            (uu___265_2300.FStar_Syntax_Syntax.sigrng);
           FStar_Syntax_Syntax.sigquals =
-            (uu___261_2469.FStar_Syntax_Syntax.sigquals);
+            (uu___265_2300.FStar_Syntax_Syntax.sigquals);
           FStar_Syntax_Syntax.sigmeta =
-            (uu___261_2469.FStar_Syntax_Syntax.sigmeta);
+            (uu___265_2300.FStar_Syntax_Syntax.sigmeta);
           FStar_Syntax_Syntax.sigattrs =
-            (uu___261_2469.FStar_Syntax_Syntax.sigattrs)
+            (uu___265_2300.FStar_Syntax_Syntax.sigattrs)
         }
-    | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____2581,t) ->
+    | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____2412,t) ->
         let uvs =
-          let uu____2584 = FStar_Syntax_Free.univnames t  in
-          FStar_All.pipe_right uu____2584 FStar_Util.set_elements  in
-        let uu___264_2589 = s  in
-        let uu____2590 =
-          let uu____2591 =
-            let uu____2598 = FStar_Syntax_Subst.close_univ_vars uvs t  in
-            (lid, uvs, uu____2598)  in
-          FStar_Syntax_Syntax.Sig_declare_typ uu____2591  in
+          let uu____2415 = FStar_Syntax_Free.univnames t  in
+          FStar_All.pipe_right uu____2415 FStar_Util.set_elements  in
+        let uu___268_2420 = s  in
+        let uu____2421 =
+          let uu____2422 =
+            let uu____2429 = FStar_Syntax_Subst.close_univ_vars uvs t  in
+            (lid, uvs, uu____2429)  in
+          FStar_Syntax_Syntax.Sig_declare_typ uu____2422  in
         {
-          FStar_Syntax_Syntax.sigel = uu____2590;
+          FStar_Syntax_Syntax.sigel = uu____2421;
           FStar_Syntax_Syntax.sigrng =
-            (uu___264_2589.FStar_Syntax_Syntax.sigrng);
+            (uu___268_2420.FStar_Syntax_Syntax.sigrng);
           FStar_Syntax_Syntax.sigquals =
-            (uu___264_2589.FStar_Syntax_Syntax.sigquals);
+            (uu___268_2420.FStar_Syntax_Syntax.sigquals);
           FStar_Syntax_Syntax.sigmeta =
-            (uu___264_2589.FStar_Syntax_Syntax.sigmeta);
+            (uu___268_2420.FStar_Syntax_Syntax.sigmeta);
           FStar_Syntax_Syntax.sigattrs =
-            (uu___264_2589.FStar_Syntax_Syntax.sigattrs)
+            (uu___268_2420.FStar_Syntax_Syntax.sigattrs)
         }
     | FStar_Syntax_Syntax.Sig_let ((b,lbs),lids) ->
         let lb_univnames lb =
-          let uu____2620 =
+          let uu____2451 =
             FStar_Syntax_Free.univnames lb.FStar_Syntax_Syntax.lbtyp  in
-          let uu____2623 =
+          let uu____2454 =
             match (lb.FStar_Syntax_Syntax.lbdef).FStar_Syntax_Syntax.n with
-            | FStar_Syntax_Syntax.Tm_abs (bs,e,uu____2630) ->
+            | FStar_Syntax_Syntax.Tm_abs (bs,e,uu____2461) ->
                 let uvs1 = bs_univnames bs  in
                 let uvs2 =
                   match e.FStar_Syntax_Syntax.n with
                   | FStar_Syntax_Syntax.Tm_ascribed
-                      (uu____2663,(FStar_Util.Inl t,uu____2665),uu____2666)
+                      (uu____2494,(FStar_Util.Inl t,uu____2496),uu____2497)
                       -> FStar_Syntax_Free.univnames t
                   | FStar_Syntax_Syntax.Tm_ascribed
-                      (uu____2713,(FStar_Util.Inr c,uu____2715),uu____2716)
+                      (uu____2544,(FStar_Util.Inr c,uu____2546),uu____2547)
                       -> FStar_Syntax_Free.univnames_comp c
-                  | uu____2763 -> empty_set  in
+                  | uu____2594 -> empty_set  in
                 FStar_Util.set_union uvs1 uvs2
             | FStar_Syntax_Syntax.Tm_ascribed
-                (uu____2764,(FStar_Util.Inl t,uu____2766),uu____2767) ->
+                (uu____2595,(FStar_Util.Inl t,uu____2597),uu____2598) ->
                 FStar_Syntax_Free.univnames t
             | FStar_Syntax_Syntax.Tm_ascribed
-                (uu____2814,(FStar_Util.Inr c,uu____2816),uu____2817) ->
+                (uu____2645,(FStar_Util.Inr c,uu____2647),uu____2648) ->
                 FStar_Syntax_Free.univnames_comp c
-            | uu____2864 -> empty_set  in
-          FStar_Util.set_union uu____2620 uu____2623  in
+            | uu____2695 -> empty_set  in
+          FStar_Util.set_union uu____2451 uu____2454  in
         let all_lb_univs =
-          let uu____2868 =
+          let uu____2699 =
             FStar_All.pipe_right lbs
               (FStar_List.fold_left
                  (fun uvs  ->
                     fun lb  ->
-                      let uu____2884 = lb_univnames lb  in
-                      FStar_Util.set_union uvs uu____2884) empty_set)
+                      let uu____2715 = lb_univnames lb  in
+                      FStar_Util.set_union uvs uu____2715) empty_set)
              in
-          FStar_All.pipe_right uu____2868 FStar_Util.set_elements  in
+          FStar_All.pipe_right uu____2699 FStar_Util.set_elements  in
         let usubst = FStar_Syntax_Subst.univ_var_closing all_lb_univs  in
-        let uu___265_2894 = s  in
-        let uu____2895 =
-          let uu____2896 =
-            let uu____2903 =
-              let uu____2904 =
+        let uu___269_2725 = s  in
+        let uu____2726 =
+          let uu____2727 =
+            let uu____2734 =
+              let uu____2735 =
                 FStar_All.pipe_right lbs
                   (FStar_List.map
                      (fun lb  ->
-                        let uu___266_2916 = lb  in
-                        let uu____2917 =
+                        let uu___270_2747 = lb  in
+                        let uu____2748 =
                           FStar_Syntax_Subst.subst usubst
                             lb.FStar_Syntax_Syntax.lbtyp
                            in
-                        let uu____2920 =
+                        let uu____2751 =
                           FStar_Syntax_Subst.subst usubst
                             lb.FStar_Syntax_Syntax.lbdef
                            in
                         {
                           FStar_Syntax_Syntax.lbname =
-                            (uu___266_2916.FStar_Syntax_Syntax.lbname);
+                            (uu___270_2747.FStar_Syntax_Syntax.lbname);
                           FStar_Syntax_Syntax.lbunivs = all_lb_univs;
-                          FStar_Syntax_Syntax.lbtyp = uu____2917;
+                          FStar_Syntax_Syntax.lbtyp = uu____2748;
                           FStar_Syntax_Syntax.lbeff =
-                            (uu___266_2916.FStar_Syntax_Syntax.lbeff);
-                          FStar_Syntax_Syntax.lbdef = uu____2920;
+                            (uu___270_2747.FStar_Syntax_Syntax.lbeff);
+                          FStar_Syntax_Syntax.lbdef = uu____2751;
                           FStar_Syntax_Syntax.lbattrs =
-                            (uu___266_2916.FStar_Syntax_Syntax.lbattrs);
+                            (uu___270_2747.FStar_Syntax_Syntax.lbattrs);
                           FStar_Syntax_Syntax.lbpos =
-                            (uu___266_2916.FStar_Syntax_Syntax.lbpos)
+                            (uu___270_2747.FStar_Syntax_Syntax.lbpos)
                         }))
                  in
-              (b, uu____2904)  in
-            (uu____2903, lids)  in
-          FStar_Syntax_Syntax.Sig_let uu____2896  in
+              (b, uu____2735)  in
+            (uu____2734, lids)  in
+          FStar_Syntax_Syntax.Sig_let uu____2727  in
         {
-          FStar_Syntax_Syntax.sigel = uu____2895;
+          FStar_Syntax_Syntax.sigel = uu____2726;
           FStar_Syntax_Syntax.sigrng =
-            (uu___265_2894.FStar_Syntax_Syntax.sigrng);
+            (uu___269_2725.FStar_Syntax_Syntax.sigrng);
           FStar_Syntax_Syntax.sigquals =
-            (uu___265_2894.FStar_Syntax_Syntax.sigquals);
+            (uu___269_2725.FStar_Syntax_Syntax.sigquals);
           FStar_Syntax_Syntax.sigmeta =
-            (uu___265_2894.FStar_Syntax_Syntax.sigmeta);
+            (uu___269_2725.FStar_Syntax_Syntax.sigmeta);
           FStar_Syntax_Syntax.sigattrs =
-            (uu___265_2894.FStar_Syntax_Syntax.sigattrs)
+            (uu___269_2725.FStar_Syntax_Syntax.sigattrs)
         }
-    | FStar_Syntax_Syntax.Sig_assume (lid,uu____2928,fml) ->
+    | FStar_Syntax_Syntax.Sig_assume (lid,uu____2759,fml) ->
         let uvs =
-          let uu____2931 = FStar_Syntax_Free.univnames fml  in
-          FStar_All.pipe_right uu____2931 FStar_Util.set_elements  in
-        let uu___267_2936 = s  in
-        let uu____2937 =
-          let uu____2938 =
-            let uu____2945 = FStar_Syntax_Subst.close_univ_vars uvs fml  in
-            (lid, uvs, uu____2945)  in
-          FStar_Syntax_Syntax.Sig_assume uu____2938  in
+          let uu____2762 = FStar_Syntax_Free.univnames fml  in
+          FStar_All.pipe_right uu____2762 FStar_Util.set_elements  in
+        let uu___271_2767 = s  in
+        let uu____2768 =
+          let uu____2769 =
+            let uu____2776 = FStar_Syntax_Subst.close_univ_vars uvs fml  in
+            (lid, uvs, uu____2776)  in
+          FStar_Syntax_Syntax.Sig_assume uu____2769  in
         {
-          FStar_Syntax_Syntax.sigel = uu____2937;
+          FStar_Syntax_Syntax.sigel = uu____2768;
           FStar_Syntax_Syntax.sigrng =
-            (uu___267_2936.FStar_Syntax_Syntax.sigrng);
+            (uu___271_2767.FStar_Syntax_Syntax.sigrng);
           FStar_Syntax_Syntax.sigquals =
-            (uu___267_2936.FStar_Syntax_Syntax.sigquals);
+            (uu___271_2767.FStar_Syntax_Syntax.sigquals);
           FStar_Syntax_Syntax.sigmeta =
-            (uu___267_2936.FStar_Syntax_Syntax.sigmeta);
+            (uu___271_2767.FStar_Syntax_Syntax.sigmeta);
           FStar_Syntax_Syntax.sigattrs =
-            (uu___267_2936.FStar_Syntax_Syntax.sigattrs)
+            (uu___271_2767.FStar_Syntax_Syntax.sigattrs)
         }
-    | FStar_Syntax_Syntax.Sig_effect_abbrev (lid,uu____2947,bs,c,flags1) ->
+    | FStar_Syntax_Syntax.Sig_effect_abbrev (lid,uu____2778,bs,c,flags1) ->
         let uvs =
-          let uu____2956 =
-            let uu____2959 = bs_univnames bs  in
-            let uu____2962 = FStar_Syntax_Free.univnames_comp c  in
-            FStar_Util.set_union uu____2959 uu____2962  in
-          FStar_All.pipe_right uu____2956 FStar_Util.set_elements  in
+          let uu____2787 =
+            let uu____2790 = bs_univnames bs  in
+            let uu____2793 = FStar_Syntax_Free.univnames_comp c  in
+            FStar_Util.set_union uu____2790 uu____2793  in
+          FStar_All.pipe_right uu____2787 FStar_Util.set_elements  in
         let usubst = FStar_Syntax_Subst.univ_var_closing uvs  in
-        let uu___268_2970 = s  in
-        let uu____2971 =
-          let uu____2972 =
-            let uu____2985 = FStar_Syntax_Subst.subst_binders usubst bs  in
-            let uu____2986 = FStar_Syntax_Subst.subst_comp usubst c  in
-            (lid, uvs, uu____2985, uu____2986, flags1)  in
-          FStar_Syntax_Syntax.Sig_effect_abbrev uu____2972  in
+        let uu___272_2801 = s  in
+        let uu____2802 =
+          let uu____2803 =
+            let uu____2816 = FStar_Syntax_Subst.subst_binders usubst bs  in
+            let uu____2817 = FStar_Syntax_Subst.subst_comp usubst c  in
+            (lid, uvs, uu____2816, uu____2817, flags1)  in
+          FStar_Syntax_Syntax.Sig_effect_abbrev uu____2803  in
         {
-          FStar_Syntax_Syntax.sigel = uu____2971;
+          FStar_Syntax_Syntax.sigel = uu____2802;
           FStar_Syntax_Syntax.sigrng =
-            (uu___268_2970.FStar_Syntax_Syntax.sigrng);
+            (uu___272_2801.FStar_Syntax_Syntax.sigrng);
           FStar_Syntax_Syntax.sigquals =
-            (uu___268_2970.FStar_Syntax_Syntax.sigquals);
+            (uu___272_2801.FStar_Syntax_Syntax.sigquals);
           FStar_Syntax_Syntax.sigmeta =
-            (uu___268_2970.FStar_Syntax_Syntax.sigmeta);
+            (uu___272_2801.FStar_Syntax_Syntax.sigmeta);
           FStar_Syntax_Syntax.sigattrs =
-            (uu___268_2970.FStar_Syntax_Syntax.sigattrs)
+            (uu___272_2801.FStar_Syntax_Syntax.sigattrs)
         }
-    | uu____2989 -> s
+    | uu____2820 -> s
   
 let (is_special_effect_combinator : Prims.string -> Prims.bool) =
-  fun uu___236_2994  ->
-    match uu___236_2994 with
+  fun uu___240_2825  ->
+    match uu___240_2825 with
     | "repr" -> true
     | "post" -> true
     | "pre" -> true
     | "wp" -> true
-    | uu____2995 -> false
+    | uu____2826 -> false
   
 let rec (sum_to_universe :
   FStar_Syntax_Syntax.universe -> Prims.int -> FStar_Syntax_Syntax.universe)
@@ -1152,8 +1113,8 @@ let rec (sum_to_universe :
       if n1 = (Prims.parse_int "0")
       then u
       else
-        (let uu____3007 = sum_to_universe u (n1 - (Prims.parse_int "1"))  in
-         FStar_Syntax_Syntax.U_succ uu____3007)
+        (let uu____2838 = sum_to_universe u (n1 - (Prims.parse_int "1"))  in
+         FStar_Syntax_Syntax.U_succ uu____2838)
   
 let (int_to_universe : Prims.int -> FStar_Syntax_Syntax.universe) =
   fun n1  -> sum_to_universe FStar_Syntax_Syntax.U_zero n1 
@@ -1162,17 +1123,17 @@ let rec (desugar_maybe_non_constant_universe :
     (Prims.int,FStar_Syntax_Syntax.universe) FStar_Util.either)
   =
   fun t  ->
-    let uu____3026 =
-      let uu____3027 = unparen t  in uu____3027.FStar_Parser_AST.tm  in
-    match uu____3026 with
+    let uu____2857 =
+      let uu____2858 = unparen t  in uu____2858.FStar_Parser_AST.tm  in
+    match uu____2857 with
     | FStar_Parser_AST.Wild  ->
-        let uu____3032 =
-          let uu____3033 = FStar_Syntax_Unionfind.univ_fresh ()  in
-          FStar_Syntax_Syntax.U_unif uu____3033  in
-        FStar_Util.Inr uu____3032
+        let uu____2863 =
+          let uu____2864 = FStar_Syntax_Unionfind.univ_fresh ()  in
+          FStar_Syntax_Syntax.U_unif uu____2864  in
+        FStar_Util.Inr uu____2863
     | FStar_Parser_AST.Uvar u ->
         FStar_Util.Inr (FStar_Syntax_Syntax.U_name u)
-    | FStar_Parser_AST.Const (FStar_Const.Const_int (repr,uu____3044)) ->
+    | FStar_Parser_AST.Const (FStar_Const.Const_int (repr,uu____2875)) ->
         let n1 = FStar_Util.int_of_string repr  in
         (if n1 < (Prims.parse_int "0")
          then
@@ -1189,85 +1150,85 @@ let rec (desugar_maybe_non_constant_universe :
         (match (u1, u2) with
          | (FStar_Util.Inl n1,FStar_Util.Inl n2) -> FStar_Util.Inl (n1 + n2)
          | (FStar_Util.Inl n1,FStar_Util.Inr u) ->
-             let uu____3109 = sum_to_universe u n1  in
-             FStar_Util.Inr uu____3109
+             let uu____2940 = sum_to_universe u n1  in
+             FStar_Util.Inr uu____2940
          | (FStar_Util.Inr u,FStar_Util.Inl n1) ->
-             let uu____3120 = sum_to_universe u n1  in
-             FStar_Util.Inr uu____3120
+             let uu____2951 = sum_to_universe u n1  in
+             FStar_Util.Inr uu____2951
          | (FStar_Util.Inr u11,FStar_Util.Inr u21) ->
-             let uu____3131 =
-               let uu____3136 =
-                 let uu____3137 = FStar_Parser_AST.term_to_string t  in
+             let uu____2962 =
+               let uu____2967 =
+                 let uu____2968 = FStar_Parser_AST.term_to_string t  in
                  Prims.strcat
                    "This universe might contain a sum of two universe variables "
-                   uu____3137
+                   uu____2968
                   in
                (FStar_Errors.Fatal_UniverseMightContainSumOfTwoUnivVars,
-                 uu____3136)
+                 uu____2967)
                 in
-             FStar_Errors.raise_error uu____3131 t.FStar_Parser_AST.range)
-    | FStar_Parser_AST.App uu____3142 ->
+             FStar_Errors.raise_error uu____2962 t.FStar_Parser_AST.range)
+    | FStar_Parser_AST.App uu____2973 ->
         let rec aux t1 univargs =
-          let uu____3176 =
-            let uu____3177 = unparen t1  in uu____3177.FStar_Parser_AST.tm
+          let uu____3007 =
+            let uu____3008 = unparen t1  in uu____3008.FStar_Parser_AST.tm
              in
-          match uu____3176 with
-          | FStar_Parser_AST.App (t2,targ,uu____3184) ->
+          match uu____3007 with
+          | FStar_Parser_AST.App (t2,targ,uu____3015) ->
               let uarg = desugar_maybe_non_constant_universe targ  in
               aux t2 (uarg :: univargs)
           | FStar_Parser_AST.Var max_lid1 ->
               if
                 FStar_List.existsb
-                  (fun uu___237_3207  ->
-                     match uu___237_3207 with
-                     | FStar_Util.Inr uu____3212 -> true
-                     | uu____3213 -> false) univargs
+                  (fun uu___241_3038  ->
+                     match uu___241_3038 with
+                     | FStar_Util.Inr uu____3043 -> true
+                     | uu____3044 -> false) univargs
               then
-                let uu____3218 =
-                  let uu____3219 =
+                let uu____3049 =
+                  let uu____3050 =
                     FStar_List.map
-                      (fun uu___238_3228  ->
-                         match uu___238_3228 with
+                      (fun uu___242_3059  ->
+                         match uu___242_3059 with
                          | FStar_Util.Inl n1 -> int_to_universe n1
                          | FStar_Util.Inr u -> u) univargs
                      in
-                  FStar_Syntax_Syntax.U_max uu____3219  in
-                FStar_Util.Inr uu____3218
+                  FStar_Syntax_Syntax.U_max uu____3050  in
+                FStar_Util.Inr uu____3049
               else
                 (let nargs =
                    FStar_List.map
-                     (fun uu___239_3245  ->
-                        match uu___239_3245 with
+                     (fun uu___243_3076  ->
+                        match uu___243_3076 with
                         | FStar_Util.Inl n1 -> n1
-                        | FStar_Util.Inr uu____3251 -> failwith "impossible")
+                        | FStar_Util.Inr uu____3082 -> failwith "impossible")
                      univargs
                     in
-                 let uu____3252 =
+                 let uu____3083 =
                    FStar_List.fold_left
                      (fun m  -> fun n1  -> if m > n1 then m else n1)
                      (Prims.parse_int "0") nargs
                     in
-                 FStar_Util.Inl uu____3252)
-          | uu____3258 ->
-              let uu____3259 =
-                let uu____3264 =
-                  let uu____3265 =
-                    let uu____3266 = FStar_Parser_AST.term_to_string t1  in
-                    Prims.strcat uu____3266 " in universe context"  in
-                  Prims.strcat "Unexpected term " uu____3265  in
-                (FStar_Errors.Fatal_UnexpectedTermInUniverse, uu____3264)  in
-              FStar_Errors.raise_error uu____3259 t1.FStar_Parser_AST.range
+                 FStar_Util.Inl uu____3083)
+          | uu____3089 ->
+              let uu____3090 =
+                let uu____3095 =
+                  let uu____3096 =
+                    let uu____3097 = FStar_Parser_AST.term_to_string t1  in
+                    Prims.strcat uu____3097 " in universe context"  in
+                  Prims.strcat "Unexpected term " uu____3096  in
+                (FStar_Errors.Fatal_UnexpectedTermInUniverse, uu____3095)  in
+              FStar_Errors.raise_error uu____3090 t1.FStar_Parser_AST.range
            in
         aux t []
-    | uu____3275 ->
-        let uu____3276 =
-          let uu____3281 =
-            let uu____3282 =
-              let uu____3283 = FStar_Parser_AST.term_to_string t  in
-              Prims.strcat uu____3283 " in universe context"  in
-            Prims.strcat "Unexpected term " uu____3282  in
-          (FStar_Errors.Fatal_UnexpectedTermInUniverse, uu____3281)  in
-        FStar_Errors.raise_error uu____3276 t.FStar_Parser_AST.range
+    | uu____3106 ->
+        let uu____3107 =
+          let uu____3112 =
+            let uu____3113 =
+              let uu____3114 = FStar_Parser_AST.term_to_string t  in
+              Prims.strcat uu____3114 " in universe context"  in
+            Prims.strcat "Unexpected term " uu____3113  in
+          (FStar_Errors.Fatal_UnexpectedTermInUniverse, uu____3112)  in
+        FStar_Errors.raise_error uu____3107 t.FStar_Parser_AST.range
   
 let rec (desugar_universe :
   FStar_Parser_AST.term -> FStar_Syntax_Syntax.universe) =
@@ -1286,51 +1247,51 @@ let (check_no_aq : FStar_Syntax_Syntax.antiquotations -> unit) =
               (e,{
                    FStar_Syntax_Syntax.qkind =
                      FStar_Syntax_Syntax.Quote_dynamic ;
-                   FStar_Syntax_Syntax.antiquotes = uu____3313;_});
-            FStar_Syntax_Syntax.pos = uu____3314;
-            FStar_Syntax_Syntax.vars = uu____3315;_})::uu____3316
+                   FStar_Syntax_Syntax.antiquotes = uu____3144;_});
+            FStar_Syntax_Syntax.pos = uu____3145;
+            FStar_Syntax_Syntax.vars = uu____3146;_})::uu____3147
         ->
-        let uu____3347 =
-          let uu____3352 =
-            let uu____3353 = FStar_Syntax_Print.term_to_string e  in
-            FStar_Util.format1 "Unexpected antiquotation: `@(%s)" uu____3353
+        let uu____3178 =
+          let uu____3183 =
+            let uu____3184 = FStar_Syntax_Print.term_to_string e  in
+            FStar_Util.format1 "Unexpected antiquotation: `@(%s)" uu____3184
              in
-          (FStar_Errors.Fatal_UnexpectedAntiquotation, uu____3352)  in
-        FStar_Errors.raise_error uu____3347 e.FStar_Syntax_Syntax.pos
-    | (bv,e)::uu____3356 ->
-        let uu____3375 =
-          let uu____3380 =
-            let uu____3381 = FStar_Syntax_Print.term_to_string e  in
-            FStar_Util.format1 "Unexpected antiquotation: `#(%s)" uu____3381
+          (FStar_Errors.Fatal_UnexpectedAntiquotation, uu____3183)  in
+        FStar_Errors.raise_error uu____3178 e.FStar_Syntax_Syntax.pos
+    | (bv,e)::uu____3187 ->
+        let uu____3206 =
+          let uu____3211 =
+            let uu____3212 = FStar_Syntax_Print.term_to_string e  in
+            FStar_Util.format1 "Unexpected antiquotation: `#(%s)" uu____3212
              in
-          (FStar_Errors.Fatal_UnexpectedAntiquotation, uu____3380)  in
-        FStar_Errors.raise_error uu____3375 e.FStar_Syntax_Syntax.pos
+          (FStar_Errors.Fatal_UnexpectedAntiquotation, uu____3211)  in
+        FStar_Errors.raise_error uu____3206 e.FStar_Syntax_Syntax.pos
   
 let check_fields :
-  'Auu____3390 .
+  'Auu____3221 .
     FStar_Syntax_DsEnv.env ->
-      (FStar_Ident.lident,'Auu____3390) FStar_Pervasives_Native.tuple2
+      (FStar_Ident.lident,'Auu____3221) FStar_Pervasives_Native.tuple2
         Prims.list -> FStar_Range.range -> FStar_Syntax_DsEnv.record_or_dc
   =
   fun env  ->
     fun fields  ->
       fun rg  ->
-        let uu____3418 = FStar_List.hd fields  in
-        match uu____3418 with
-        | (f,uu____3428) ->
+        let uu____3249 = FStar_List.hd fields  in
+        match uu____3249 with
+        | (f,uu____3259) ->
             (FStar_Syntax_DsEnv.fail_if_qualified_by_curmodule env f;
              (let record =
                 FStar_Syntax_DsEnv.fail_or env
                   (FStar_Syntax_DsEnv.try_lookup_record_by_field_name env) f
                  in
-              let check_field uu____3440 =
-                match uu____3440 with
-                | (f',uu____3446) ->
+              let check_field uu____3271 =
+                match uu____3271 with
+                | (f',uu____3277) ->
                     (FStar_Syntax_DsEnv.fail_if_qualified_by_curmodule env f';
-                     (let uu____3448 =
+                     (let uu____3279 =
                         FStar_Syntax_DsEnv.belongs_to_record env f' record
                          in
-                      if uu____3448
+                      if uu____3279
                       then ()
                       else
                         (let msg =
@@ -1344,15 +1305,16 @@ let check_fields :
                            (FStar_Errors.Fatal_FieldsNotBelongToSameRecordType,
                              msg) rg)))
                  in
-              (let uu____3452 = FStar_List.tl fields  in
-               FStar_List.iter check_field uu____3452);
+              (let uu____3283 = FStar_List.tl fields  in
+               FStar_List.iter check_field uu____3283);
               (match () with | () -> record)))
   
 let rec (desugar_data_pat :
   FStar_Syntax_DsEnv.env ->
     FStar_Parser_AST.pattern ->
       Prims.bool ->
-        (env_t,bnd,annotated_pat Prims.list) FStar_Pervasives_Native.tuple3)
+        (env_t,bnd,FStar_Syntax_Syntax.pat Prims.list)
+          FStar_Pervasives_Native.tuple3)
   =
   fun env  ->
     fun p  ->
@@ -1360,101 +1322,101 @@ let rec (desugar_data_pat :
         let check_linear_pattern_variables pats r =
           let rec pat_vars p1 =
             match p1.FStar_Syntax_Syntax.v with
-            | FStar_Syntax_Syntax.Pat_dot_term uu____3841 ->
+            | FStar_Syntax_Syntax.Pat_dot_term uu____3672 ->
                 FStar_Syntax_Syntax.no_names
-            | FStar_Syntax_Syntax.Pat_wild uu____3848 ->
+            | FStar_Syntax_Syntax.Pat_wild uu____3679 ->
                 FStar_Syntax_Syntax.no_names
-            | FStar_Syntax_Syntax.Pat_constant uu____3849 ->
+            | FStar_Syntax_Syntax.Pat_constant uu____3680 ->
                 FStar_Syntax_Syntax.no_names
             | FStar_Syntax_Syntax.Pat_var x ->
                 FStar_Util.set_add x FStar_Syntax_Syntax.no_names
-            | FStar_Syntax_Syntax.Pat_cons (uu____3851,pats1) ->
-                let aux out uu____3889 =
-                  match uu____3889 with
-                  | (p2,uu____3901) ->
+            | FStar_Syntax_Syntax.Pat_cons (uu____3682,pats1) ->
+                let aux out uu____3720 =
+                  match uu____3720 with
+                  | (p2,uu____3732) ->
                       let intersection =
-                        let uu____3909 = pat_vars p2  in
-                        FStar_Util.set_intersect uu____3909 out  in
-                      let uu____3912 = FStar_Util.set_is_empty intersection
+                        let uu____3740 = pat_vars p2  in
+                        FStar_Util.set_intersect uu____3740 out  in
+                      let uu____3743 = FStar_Util.set_is_empty intersection
                          in
-                      if uu____3912
+                      if uu____3743
                       then
-                        let uu____3915 = pat_vars p2  in
-                        FStar_Util.set_union out uu____3915
+                        let uu____3746 = pat_vars p2  in
+                        FStar_Util.set_union out uu____3746
                       else
                         (let duplicate_bv =
-                           let uu____3920 =
+                           let uu____3751 =
                              FStar_Util.set_elements intersection  in
-                           FStar_List.hd uu____3920  in
-                         let uu____3923 =
-                           let uu____3928 =
+                           FStar_List.hd uu____3751  in
+                         let uu____3754 =
+                           let uu____3759 =
                              FStar_Util.format1
                                "Non-linear patterns are not permitted. %s appears more than once in this pattern."
                                (duplicate_bv.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
                               in
                            (FStar_Errors.Fatal_NonLinearPatternNotPermitted,
-                             uu____3928)
+                             uu____3759)
                             in
-                         FStar_Errors.raise_error uu____3923 r)
+                         FStar_Errors.raise_error uu____3754 r)
                    in
                 FStar_List.fold_left aux FStar_Syntax_Syntax.no_names pats1
              in
           match pats with
           | [] -> ()
           | p1::[] ->
-              let uu____3948 = pat_vars p1  in
-              FStar_All.pipe_right uu____3948 (fun a236  -> ())
+              let uu____3779 = pat_vars p1  in
+              FStar_All.pipe_right uu____3779 (fun a236  -> ())
           | p1::ps ->
               let pvars = pat_vars p1  in
               let aux p2 =
-                let uu____3976 =
-                  let uu____3977 = pat_vars p2  in
-                  FStar_Util.set_eq pvars uu____3977  in
-                if uu____3976
+                let uu____3807 =
+                  let uu____3808 = pat_vars p2  in
+                  FStar_Util.set_eq pvars uu____3808  in
+                if uu____3807
                 then ()
                 else
                   (let nonlinear_vars =
-                     let uu____3984 = pat_vars p2  in
-                     FStar_Util.set_symmetric_difference pvars uu____3984  in
+                     let uu____3815 = pat_vars p2  in
+                     FStar_Util.set_symmetric_difference pvars uu____3815  in
                    let first_nonlinear_var =
-                     let uu____3988 = FStar_Util.set_elements nonlinear_vars
+                     let uu____3819 = FStar_Util.set_elements nonlinear_vars
                         in
-                     FStar_List.hd uu____3988  in
-                   let uu____3991 =
-                     let uu____3996 =
+                     FStar_List.hd uu____3819  in
+                   let uu____3822 =
+                     let uu____3827 =
                        FStar_Util.format1
                          "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
                          (first_nonlinear_var.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
                         in
-                     (FStar_Errors.Fatal_IncoherentPatterns, uu____3996)  in
-                   FStar_Errors.raise_error uu____3991 r)
+                     (FStar_Errors.Fatal_IncoherentPatterns, uu____3827)  in
+                   FStar_Errors.raise_error uu____3822 r)
                  in
               FStar_List.iter aux ps
            in
         (match (is_mut, (p.FStar_Parser_AST.pat)) with
-         | (false ,uu____4000) -> ()
-         | (true ,FStar_Parser_AST.PatVar uu____4001) -> ()
-         | (true ,uu____4008) ->
+         | (false ,uu____3831) -> ()
+         | (true ,FStar_Parser_AST.PatVar uu____3832) -> ()
+         | (true ,uu____3839) ->
              FStar_Errors.raise_error
                (FStar_Errors.Fatal_LetMutableForVariablesOnly,
                  "let-mutable is for variables only")
                p.FStar_Parser_AST.prange);
         (let resolvex l e x =
-           let uu____4031 =
+           let uu____3862 =
              FStar_All.pipe_right l
                (FStar_Util.find_opt
                   (fun y  ->
                      (y.FStar_Syntax_Syntax.ppname).FStar_Ident.idText =
                        x.FStar_Ident.idText))
               in
-           match uu____4031 with
+           match uu____3862 with
            | FStar_Pervasives_Native.Some y -> (l, e, y)
-           | uu____4047 ->
-               let uu____4050 =
+           | uu____3878 ->
+               let uu____3881 =
                  if is_mut
                  then FStar_Syntax_DsEnv.push_bv_mutable e x
                  else FStar_Syntax_DsEnv.push_bv e x  in
-               (match uu____4050 with | (e1,x1) -> ((x1 :: l), e1, x1))
+               (match uu____3881 with | (e1,x1) -> ((x1 :: l), e1, x1))
             in
          let rec aux' top loc env1 p1 =
            let pos q =
@@ -1462,155 +1424,174 @@ let rec (desugar_data_pat :
            let pos_r r q = FStar_Syntax_Syntax.withinfo q r  in
            let orig = p1  in
            match p1.FStar_Parser_AST.pat with
-           | FStar_Parser_AST.PatOr uu____4200 -> failwith "impossible"
+           | FStar_Parser_AST.PatOr uu____3993 -> failwith "impossible"
            | FStar_Parser_AST.PatOp op ->
-               let uu____4222 =
-                 let uu____4223 =
-                   let uu____4224 =
-                     let uu____4231 =
-                       let uu____4232 =
-                         let uu____4237 =
+               let uu____4009 =
+                 let uu____4010 =
+                   let uu____4011 =
+                     let uu____4018 =
+                       let uu____4019 =
+                         let uu____4024 =
                            FStar_Parser_AST.compile_op (Prims.parse_int "0")
                              op.FStar_Ident.idText op.FStar_Ident.idRange
                             in
-                         (uu____4237, (op.FStar_Ident.idRange))  in
-                       FStar_Ident.mk_ident uu____4232  in
-                     (uu____4231, FStar_Pervasives_Native.None)  in
-                   FStar_Parser_AST.PatVar uu____4224  in
+                         (uu____4024, (op.FStar_Ident.idRange))  in
+                       FStar_Ident.mk_ident uu____4019  in
+                     (uu____4018, FStar_Pervasives_Native.None)  in
+                   FStar_Parser_AST.PatVar uu____4011  in
                  {
-                   FStar_Parser_AST.pat = uu____4223;
+                   FStar_Parser_AST.pat = uu____4010;
                    FStar_Parser_AST.prange = (p1.FStar_Parser_AST.prange)
                  }  in
-               aux loc env1 uu____4222
+               aux loc env1 uu____4009
            | FStar_Parser_AST.PatAscribed (p2,(t,tacopt)) ->
                ((match tacopt with
                  | FStar_Pervasives_Native.None  -> ()
-                 | FStar_Pervasives_Native.Some uu____4254 ->
+                 | FStar_Pervasives_Native.Some uu____4041 ->
                      FStar_Errors.raise_error
                        (FStar_Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly,
-                         "Type ascriptions within patterns are cannot be associated with a tactic")
+                         "Type ascriptions within patterns cannot be associated with a tactic")
                        orig.FStar_Parser_AST.prange);
-                (let uu____4255 = aux loc env1 p2  in
-                 match uu____4255 with
-                 | (loc1,env',binder,p3,annots,imp) ->
+                (let uu____4042 = aux loc env1 p2  in
+                 match uu____4042 with
+                 | (loc1,env',binder,p3,imp) ->
                      let annot_pat_var p4 t1 =
                        match p4.FStar_Syntax_Syntax.v with
                        | FStar_Syntax_Syntax.Pat_var x ->
-                           let uu___269_4340 = p4  in
+                           let uu___273_4100 = p4  in
                            {
                              FStar_Syntax_Syntax.v =
                                (FStar_Syntax_Syntax.Pat_var
-                                  (let uu___270_4345 = x  in
+                                  (let uu___274_4105 = x  in
                                    {
                                      FStar_Syntax_Syntax.ppname =
-                                       (uu___270_4345.FStar_Syntax_Syntax.ppname);
+                                       (uu___274_4105.FStar_Syntax_Syntax.ppname);
                                      FStar_Syntax_Syntax.index =
-                                       (uu___270_4345.FStar_Syntax_Syntax.index);
+                                       (uu___274_4105.FStar_Syntax_Syntax.index);
                                      FStar_Syntax_Syntax.sort = t1
                                    }));
                              FStar_Syntax_Syntax.p =
-                               (uu___269_4340.FStar_Syntax_Syntax.p)
+                               (uu___273_4100.FStar_Syntax_Syntax.p)
                            }
                        | FStar_Syntax_Syntax.Pat_wild x ->
-                           let uu___271_4347 = p4  in
+                           let uu___275_4107 = p4  in
                            {
                              FStar_Syntax_Syntax.v =
                                (FStar_Syntax_Syntax.Pat_wild
-                                  (let uu___272_4352 = x  in
+                                  (let uu___276_4112 = x  in
                                    {
                                      FStar_Syntax_Syntax.ppname =
-                                       (uu___272_4352.FStar_Syntax_Syntax.ppname);
+                                       (uu___276_4112.FStar_Syntax_Syntax.ppname);
                                      FStar_Syntax_Syntax.index =
-                                       (uu___272_4352.FStar_Syntax_Syntax.index);
+                                       (uu___276_4112.FStar_Syntax_Syntax.index);
                                      FStar_Syntax_Syntax.sort = t1
                                    }));
                              FStar_Syntax_Syntax.p =
-                               (uu___271_4347.FStar_Syntax_Syntax.p)
+                               (uu___275_4107.FStar_Syntax_Syntax.p)
                            }
-                       | uu____4353 when top -> p4
-                       | uu____4354 ->
+                       | uu____4113 when top -> p4
+                       | uu____4114 ->
                            FStar_Errors.raise_error
                              (FStar_Errors.Fatal_TypeWithinPatternsAllowedOnVariablesOnly,
                                "Type ascriptions within patterns are only allowed on variables")
                              orig.FStar_Parser_AST.prange
                         in
-                     let uu____4357 =
+                     let uu____4117 =
                        match binder with
-                       | LetBinder uu____4378 -> failwith "impossible"
+                       | LetBinder uu____4130 -> failwith "impossible"
                        | LocalBinder (x,aq) ->
                            let t1 =
-                             let uu____4402 = close_fun env1 t  in
-                             desugar_term env1 uu____4402  in
-                           let x1 =
-                             let uu___273_4404 = x  in
-                             {
-                               FStar_Syntax_Syntax.ppname =
-                                 (uu___273_4404.FStar_Syntax_Syntax.ppname);
-                               FStar_Syntax_Syntax.index =
-                                 (uu___273_4404.FStar_Syntax_Syntax.index);
-                               FStar_Syntax_Syntax.sort = t1
-                             }  in
-                           ([(x1, t1)], (LocalBinder (x1, aq)))
+                             let uu____4150 = close_fun env1 t  in
+                             desugar_term env1 uu____4150  in
+                           (if
+                              (match (x.FStar_Syntax_Syntax.sort).FStar_Syntax_Syntax.n
+                               with
+                               | FStar_Syntax_Syntax.Tm_unknown  -> false
+                               | uu____4152 -> true)
+                            then
+                              (let uu____4153 =
+                                 let uu____4158 =
+                                   let uu____4159 =
+                                     FStar_Syntax_Print.bv_to_string x  in
+                                   let uu____4160 =
+                                     FStar_Syntax_Print.term_to_string
+                                       x.FStar_Syntax_Syntax.sort
+                                      in
+                                   let uu____4161 =
+                                     FStar_Syntax_Print.term_to_string t1  in
+                                   FStar_Util.format3
+                                     "Multiple ascriptions for %s in pattern, type %s was shadowed by %s\n"
+                                     uu____4159 uu____4160 uu____4161
+                                    in
+                                 (FStar_Errors.Warning_MultipleAscriptions,
+                                   uu____4158)
+                                  in
+                               FStar_Errors.log_issue
+                                 orig.FStar_Parser_AST.prange uu____4153)
+                            else ();
+                            (let uu____4163 = annot_pat_var p3 t1  in
+                             (uu____4163,
+                               (LocalBinder
+                                  ((let uu___277_4169 = x  in
+                                    {
+                                      FStar_Syntax_Syntax.ppname =
+                                        (uu___277_4169.FStar_Syntax_Syntax.ppname);
+                                      FStar_Syntax_Syntax.index =
+                                        (uu___277_4169.FStar_Syntax_Syntax.index);
+                                      FStar_Syntax_Syntax.sort = t1
+                                    }), aq)))))
                         in
-                     (match uu____4357 with
-                      | (annots',binder1) ->
-                          (loc1, env', binder1, p3,
-                            (FStar_List.append annots' annots), imp))))
-           | FStar_Parser_AST.PatWild aq ->
-               let imp =
-                 aq =
-                   (FStar_Pervasives_Native.Some FStar_Parser_AST.Implicit)
-                  in
-               let aq1 = trans_aqual env1 aq  in
+                     (match uu____4117 with
+                      | (p4,binder1) -> (loc1, env', binder1, p4, imp))))
+           | FStar_Parser_AST.PatWild  ->
                let x =
                  FStar_Syntax_Syntax.new_bv
                    (FStar_Pervasives_Native.Some (p1.FStar_Parser_AST.prange))
                    FStar_Syntax_Syntax.tun
                   in
-               let uu____4469 =
+               let uu____4191 =
                  FStar_All.pipe_left pos (FStar_Syntax_Syntax.Pat_wild x)  in
-               (loc, env1, (LocalBinder (x, aq1)), uu____4469, [], imp)
+               (loc, env1, (LocalBinder (x, FStar_Pervasives_Native.None)),
+                 uu____4191, false)
            | FStar_Parser_AST.PatConst c ->
                let x =
                  FStar_Syntax_Syntax.new_bv
                    (FStar_Pervasives_Native.Some (p1.FStar_Parser_AST.prange))
                    FStar_Syntax_Syntax.tun
                   in
-               let uu____4482 =
+               let uu____4200 =
                  FStar_All.pipe_left pos (FStar_Syntax_Syntax.Pat_constant c)
                   in
                (loc, env1, (LocalBinder (x, FStar_Pervasives_Native.None)),
-                 uu____4482, [], false)
+                 uu____4200, false)
            | FStar_Parser_AST.PatTvar (x,aq) ->
                let imp =
                  aq =
                    (FStar_Pervasives_Native.Some FStar_Parser_AST.Implicit)
                   in
                let aq1 = trans_aqual env1 aq  in
-               let uu____4503 = resolvex loc env1 x  in
-               (match uu____4503 with
+               let uu____4217 = resolvex loc env1 x  in
+               (match uu____4217 with
                 | (loc1,env2,xbv) ->
-                    let uu____4531 =
+                    let uu____4239 =
                       FStar_All.pipe_left pos
                         (FStar_Syntax_Syntax.Pat_var xbv)
                        in
-                    (loc1, env2, (LocalBinder (xbv, aq1)), uu____4531, [],
-                      imp))
+                    (loc1, env2, (LocalBinder (xbv, aq1)), uu____4239, imp))
            | FStar_Parser_AST.PatVar (x,aq) ->
                let imp =
                  aq =
                    (FStar_Pervasives_Native.Some FStar_Parser_AST.Implicit)
                   in
                let aq1 = trans_aqual env1 aq  in
-               let uu____4552 = resolvex loc env1 x  in
-               (match uu____4552 with
+               let uu____4256 = resolvex loc env1 x  in
+               (match uu____4256 with
                 | (loc1,env2,xbv) ->
-                    let uu____4580 =
+                    let uu____4278 =
                       FStar_All.pipe_left pos
                         (FStar_Syntax_Syntax.Pat_var xbv)
                        in
-                    (loc1, env2, (LocalBinder (xbv, aq1)), uu____4580, [],
-                      imp))
+                    (loc1, env2, (LocalBinder (xbv, aq1)), uu____4278, imp))
            | FStar_Parser_AST.PatName l ->
                let l1 =
                  FStar_Syntax_DsEnv.fail_or env1
@@ -1621,31 +1602,30 @@ let rec (desugar_data_pat :
                    (FStar_Pervasives_Native.Some (p1.FStar_Parser_AST.prange))
                    FStar_Syntax_Syntax.tun
                   in
-               let uu____4594 =
+               let uu____4288 =
                  FStar_All.pipe_left pos
                    (FStar_Syntax_Syntax.Pat_cons (l1, []))
                   in
                (loc, env1, (LocalBinder (x, FStar_Pervasives_Native.None)),
-                 uu____4594, [], false)
+                 uu____4288, false)
            | FStar_Parser_AST.PatApp
                ({ FStar_Parser_AST.pat = FStar_Parser_AST.PatName l;
-                  FStar_Parser_AST.prange = uu____4620;_},args)
+                  FStar_Parser_AST.prange = uu____4310;_},args)
                ->
-               let uu____4626 =
+               let uu____4316 =
                  FStar_List.fold_right
                    (fun arg  ->
-                      fun uu____4685  ->
-                        match uu____4685 with
-                        | (loc1,env2,annots,args1) ->
-                            let uu____4762 = aux loc1 env2 arg  in
-                            (match uu____4762 with
-                             | (loc2,env3,uu____4807,arg1,ans,imp) ->
-                                 (loc2, env3, (FStar_List.append ans annots),
-                                   ((arg1, imp) :: args1)))) args
-                   (loc, env1, [], [])
+                      fun uu____4357  ->
+                        match uu____4357 with
+                        | (loc1,env2,args1) ->
+                            let uu____4405 = aux loc1 env2 arg  in
+                            (match uu____4405 with
+                             | (loc2,env3,uu____4434,arg1,imp) ->
+                                 (loc2, env3, ((arg1, imp) :: args1)))) args
+                   (loc, env1, [])
                   in
-               (match uu____4626 with
-                | (loc1,env2,annots,args1) ->
+               (match uu____4316 with
+                | (loc1,env2,args1) ->
                     let l1 =
                       FStar_Syntax_DsEnv.fail_or env2
                         (FStar_Syntax_DsEnv.try_lookup_datacon env2) l
@@ -1656,52 +1636,51 @@ let rec (desugar_data_pat :
                            (p1.FStar_Parser_AST.prange))
                         FStar_Syntax_Syntax.tun
                        in
-                    let uu____4929 =
+                    let uu____4504 =
                       FStar_All.pipe_left pos
                         (FStar_Syntax_Syntax.Pat_cons (l1, args1))
                        in
                     (loc1, env2,
                       (LocalBinder (x, FStar_Pervasives_Native.None)),
-                      uu____4929, annots, false))
-           | FStar_Parser_AST.PatApp uu____4944 ->
+                      uu____4504, false))
+           | FStar_Parser_AST.PatApp uu____4519 ->
                FStar_Errors.raise_error
                  (FStar_Errors.Fatal_UnexpectedPattern, "Unexpected pattern")
                  p1.FStar_Parser_AST.prange
            | FStar_Parser_AST.PatList pats ->
-               let uu____4972 =
+               let uu____4541 =
                  FStar_List.fold_right
                    (fun pat  ->
-                      fun uu____5023  ->
-                        match uu____5023 with
-                        | (loc1,env2,annots,pats1) ->
-                            let uu____5084 = aux loc1 env2 pat  in
-                            (match uu____5084 with
-                             | (loc2,env3,uu____5125,pat1,ans,uu____5128) ->
-                                 (loc2, env3, (FStar_List.append ans annots),
-                                   (pat1 :: pats1)))) pats
-                   (loc, env1, [], [])
+                      fun uu____4574  ->
+                        match uu____4574 with
+                        | (loc1,env2,pats1) ->
+                            let uu____4606 = aux loc1 env2 pat  in
+                            (match uu____4606 with
+                             | (loc2,env3,uu____4631,pat1,uu____4633) ->
+                                 (loc2, env3, (pat1 :: pats1)))) pats
+                   (loc, env1, [])
                   in
-               (match uu____4972 with
-                | (loc1,env2,annots,pats1) ->
+               (match uu____4541 with
+                | (loc1,env2,pats1) ->
                     let pat =
-                      let uu____5222 =
-                        let uu____5225 =
-                          let uu____5232 =
+                      let uu____4676 =
+                        let uu____4679 =
+                          let uu____4686 =
                             FStar_Range.end_range p1.FStar_Parser_AST.prange
                              in
-                          pos_r uu____5232  in
-                        let uu____5233 =
-                          let uu____5234 =
-                            let uu____5247 =
+                          pos_r uu____4686  in
+                        let uu____4687 =
+                          let uu____4688 =
+                            let uu____4701 =
                               FStar_Syntax_Syntax.lid_as_fv
                                 FStar_Parser_Const.nil_lid
                                 FStar_Syntax_Syntax.delta_constant
                                 (FStar_Pervasives_Native.Some
                                    FStar_Syntax_Syntax.Data_ctor)
                                in
-                            (uu____5247, [])  in
-                          FStar_Syntax_Syntax.Pat_cons uu____5234  in
-                        FStar_All.pipe_left uu____5225 uu____5233  in
+                            (uu____4701, [])  in
+                          FStar_Syntax_Syntax.Pat_cons uu____4688  in
+                        FStar_All.pipe_left uu____4679 uu____4687  in
                       FStar_List.fold_right
                         (fun hd1  ->
                            fun tl1  ->
@@ -1710,20 +1689,20 @@ let rec (desugar_data_pat :
                                  hd1.FStar_Syntax_Syntax.p
                                  tl1.FStar_Syntax_Syntax.p
                                 in
-                             let uu____5279 =
-                               let uu____5280 =
-                                 let uu____5293 =
+                             let uu____4733 =
+                               let uu____4734 =
+                                 let uu____4747 =
                                    FStar_Syntax_Syntax.lid_as_fv
                                      FStar_Parser_Const.cons_lid
                                      FStar_Syntax_Syntax.delta_constant
                                      (FStar_Pervasives_Native.Some
                                         FStar_Syntax_Syntax.Data_ctor)
                                     in
-                                 (uu____5293, [(hd1, false); (tl1, false)])
+                                 (uu____4747, [(hd1, false); (tl1, false)])
                                   in
-                               FStar_Syntax_Syntax.Pat_cons uu____5280  in
-                             FStar_All.pipe_left (pos_r r) uu____5279) pats1
-                        uu____5222
+                               FStar_Syntax_Syntax.Pat_cons uu____4734  in
+                             FStar_All.pipe_left (pos_r r) uu____4733) pats1
+                        uu____4676
                        in
                     let x =
                       FStar_Syntax_Syntax.new_bv
@@ -1733,23 +1712,22 @@ let rec (desugar_data_pat :
                        in
                     (loc1, env2,
                       (LocalBinder (x, FStar_Pervasives_Native.None)), pat,
-                      annots, false))
+                      false))
            | FStar_Parser_AST.PatTuple (args,dep1) ->
-               let uu____5339 =
+               let uu____4789 =
                  FStar_List.fold_left
-                   (fun uu____5397  ->
+                   (fun uu____4829  ->
                       fun p2  ->
-                        match uu____5397 with
-                        | (loc1,env2,annots,pats) ->
-                            let uu____5475 = aux loc1 env2 p2  in
-                            (match uu____5475 with
-                             | (loc2,env3,uu____5520,pat,ans,uu____5523) ->
-                                 (loc2, env3, (FStar_List.append ans annots),
-                                   ((pat, false) :: pats))))
-                   (loc, env1, [], []) args
+                        match uu____4829 with
+                        | (loc1,env2,pats) ->
+                            let uu____4878 = aux loc1 env2 p2  in
+                            (match uu____4878 with
+                             | (loc2,env3,uu____4907,pat,uu____4909) ->
+                                 (loc2, env3, ((pat, false) :: pats))))
+                   (loc, env1, []) args
                   in
-               (match uu____5339 with
-                | (loc1,env2,annots,args1) ->
+               (match uu____4789 with
+                | (loc1,env2,args1) ->
                     let args2 = FStar_List.rev args1  in
                     let l =
                       if dep1
@@ -1762,29 +1740,29 @@ let rec (desugar_data_pat :
                           (FStar_List.length args2)
                           p1.FStar_Parser_AST.prange
                        in
-                    let uu____5669 =
+                    let uu____5004 =
                       FStar_Syntax_DsEnv.fail_or env2
                         (FStar_Syntax_DsEnv.try_lookup_lid env2) l
                        in
-                    (match uu____5669 with
-                     | (constr,uu____5697) ->
+                    (match uu____5004 with
+                     | (constr,uu____5026) ->
                          let l1 =
                            match constr.FStar_Syntax_Syntax.n with
                            | FStar_Syntax_Syntax.Tm_fvar fv -> fv
-                           | uu____5700 -> failwith "impossible"  in
+                           | uu____5029 -> failwith "impossible"  in
                          let x =
                            FStar_Syntax_Syntax.new_bv
                              (FStar_Pervasives_Native.Some
                                 (p1.FStar_Parser_AST.prange))
                              FStar_Syntax_Syntax.tun
                             in
-                         let uu____5702 =
+                         let uu____5031 =
                            FStar_All.pipe_left pos
                              (FStar_Syntax_Syntax.Pat_cons (l1, args2))
                             in
                          (loc1, env2,
                            (LocalBinder (x, FStar_Pervasives_Native.None)),
-                           uu____5702, annots, false)))
+                           uu____5031, false)))
            | FStar_Parser_AST.PatRecord [] ->
                FStar_Errors.raise_error
                  (FStar_Errors.Fatal_UnexpectedPattern, "Unexpected pattern")
@@ -1795,92 +1773,91 @@ let rec (desugar_data_pat :
                let fields1 =
                  FStar_All.pipe_right fields
                    (FStar_List.map
-                      (fun uu____5777  ->
-                         match uu____5777 with
+                      (fun uu____5100  ->
+                         match uu____5100 with
                          | (f,p2) -> ((f.FStar_Ident.ident), p2)))
                   in
                let args =
                  FStar_All.pipe_right record.FStar_Syntax_DsEnv.fields
                    (FStar_List.map
-                      (fun uu____5807  ->
-                         match uu____5807 with
-                         | (f,uu____5813) ->
-                             let uu____5814 =
+                      (fun uu____5130  ->
+                         match uu____5130 with
+                         | (f,uu____5136) ->
+                             let uu____5137 =
                                FStar_All.pipe_right fields1
                                  (FStar_List.tryFind
-                                    (fun uu____5840  ->
-                                       match uu____5840 with
-                                       | (g,uu____5846) ->
+                                    (fun uu____5163  ->
+                                       match uu____5163 with
+                                       | (g,uu____5169) ->
                                            f.FStar_Ident.idText =
                                              g.FStar_Ident.idText))
                                 in
-                             (match uu____5814 with
+                             (match uu____5137 with
                               | FStar_Pervasives_Native.None  ->
                                   FStar_Parser_AST.mk_pattern
-                                    (FStar_Parser_AST.PatWild
-                                       FStar_Pervasives_Native.None)
+                                    FStar_Parser_AST.PatWild
                                     p1.FStar_Parser_AST.prange
-                              | FStar_Pervasives_Native.Some (uu____5851,p2)
+                              | FStar_Pervasives_Native.Some (uu____5174,p2)
                                   -> p2)))
                   in
                let app =
-                 let uu____5858 =
-                   let uu____5859 =
-                     let uu____5866 =
-                       let uu____5867 =
-                         let uu____5868 =
+                 let uu____5181 =
+                   let uu____5182 =
+                     let uu____5189 =
+                       let uu____5190 =
+                         let uu____5191 =
                            FStar_Ident.lid_of_ids
                              (FStar_List.append
                                 (record.FStar_Syntax_DsEnv.typename).FStar_Ident.ns
                                 [record.FStar_Syntax_DsEnv.constrname])
                             in
-                         FStar_Parser_AST.PatName uu____5868  in
-                       FStar_Parser_AST.mk_pattern uu____5867
+                         FStar_Parser_AST.PatName uu____5191  in
+                       FStar_Parser_AST.mk_pattern uu____5190
                          p1.FStar_Parser_AST.prange
                         in
-                     (uu____5866, args)  in
-                   FStar_Parser_AST.PatApp uu____5859  in
-                 FStar_Parser_AST.mk_pattern uu____5858
+                     (uu____5189, args)  in
+                   FStar_Parser_AST.PatApp uu____5182  in
+                 FStar_Parser_AST.mk_pattern uu____5181
                    p1.FStar_Parser_AST.prange
                   in
-               let uu____5871 = aux loc env1 app  in
-               (match uu____5871 with
-                | (env2,e,b,p2,annots,uu____5915) ->
+               let uu____5194 = aux loc env1 app  in
+               (match uu____5194 with
+                | (env2,e,b,p2,uu____5223) ->
                     let p3 =
                       match p2.FStar_Syntax_Syntax.v with
                       | FStar_Syntax_Syntax.Pat_cons (fv,args1) ->
-                          let uu____5951 =
-                            let uu____5952 =
-                              let uu____5965 =
-                                let uu___274_5966 = fv  in
-                                let uu____5967 =
-                                  let uu____5970 =
-                                    let uu____5971 =
-                                      let uu____5978 =
+                          let uu____5251 =
+                            let uu____5252 =
+                              let uu____5265 =
+                                let uu___278_5266 = fv  in
+                                let uu____5267 =
+                                  let uu____5270 =
+                                    let uu____5271 =
+                                      let uu____5278 =
                                         FStar_All.pipe_right
                                           record.FStar_Syntax_DsEnv.fields
                                           (FStar_List.map
                                              FStar_Pervasives_Native.fst)
                                          in
                                       ((record.FStar_Syntax_DsEnv.typename),
-                                        uu____5978)
+                                        uu____5278)
                                        in
                                     FStar_Syntax_Syntax.Record_ctor
-                                      uu____5971
+                                      uu____5271
                                      in
-                                  FStar_Pervasives_Native.Some uu____5970  in
+                                  FStar_Pervasives_Native.Some uu____5270  in
                                 {
                                   FStar_Syntax_Syntax.fv_name =
-                                    (uu___274_5966.FStar_Syntax_Syntax.fv_name);
+                                    (uu___278_5266.FStar_Syntax_Syntax.fv_name);
                                   FStar_Syntax_Syntax.fv_delta =
-                                    (uu___274_5966.FStar_Syntax_Syntax.fv_delta);
-                                  FStar_Syntax_Syntax.fv_qual = uu____5967
+                                    (uu___278_5266.FStar_Syntax_Syntax.fv_delta);
+                                  FStar_Syntax_Syntax.fv_qual = uu____5267
                                 }  in
-                              (uu____5965, args1)  in
-                            FStar_Syntax_Syntax.Pat_cons uu____5952  in
-                          FStar_All.pipe_left pos uu____5951
-                      | uu____6003 -> p2  in
-                    (env2, e, b, p3, annots, false))
+                              (uu____5265, args1)  in
+                            FStar_Syntax_Syntax.Pat_cons uu____5252  in
+                          FStar_All.pipe_left pos uu____5251
+                      | uu____5305 -> p2  in
+                    (env2, e, b, p3, false))
          
          and aux loc env1 p1 = aux' false loc env1 p1
           in
@@ -1889,37 +1866,34 @@ let rec (desugar_data_pat :
            match p1.FStar_Parser_AST.pat with
            | FStar_Parser_AST.PatOr [] -> failwith "impossible"
            | FStar_Parser_AST.PatOr (p2::ps) ->
-               let uu____6085 = aux' true loc env1 p2  in
-               (match uu____6085 with
-                | (loc1,env2,var,p3,ans,uu____6127) ->
-                    let uu____6140 =
+               let uu____5359 = aux' true loc env1 p2  in
+               (match uu____5359 with
+                | (loc1,env2,var,p3,uu____5386) ->
+                    let uu____5391 =
                       FStar_List.fold_left
-                        (fun uu____6189  ->
+                        (fun uu____5423  ->
                            fun p4  ->
-                             match uu____6189 with
+                             match uu____5423 with
                              | (loc2,env3,ps1) ->
-                                 let uu____6254 = aux' true loc2 env3 p4  in
-                                 (match uu____6254 with
-                                  | (loc3,env4,uu____6293,p5,ans1,uu____6296)
-                                      -> (loc3, env4, ((p5, ans1) :: ps1))))
+                                 let uu____5456 = aux' true loc2 env3 p4  in
+                                 (match uu____5456 with
+                                  | (loc3,env4,uu____5481,p5,uu____5483) ->
+                                      (loc3, env4, (p5 :: ps1))))
                         (loc1, env2, []) ps
                        in
-                    (match uu____6140 with
+                    (match uu____5391 with
                      | (loc2,env3,ps1) ->
-                         let pats = (p3, ans) :: (FStar_List.rev ps1)  in
+                         let pats = p3 :: (FStar_List.rev ps1)  in
                          (env3, var, pats)))
-           | uu____6455 ->
-               let uu____6456 = aux' true loc env1 p1  in
-               (match uu____6456 with
-                | (loc1,env2,vars,pat,ans,b) -> (env2, vars, [(pat, ans)]))
+           | uu____5534 ->
+               let uu____5535 = aux' true loc env1 p1  in
+               (match uu____5535 with
+                | (loc1,env2,vars,pat,b) -> (env2, vars, [pat]))
             in
-         let uu____6549 = aux_maybe_or env p  in
-         match uu____6549 with
+         let uu____5575 = aux_maybe_or env p  in
+         match uu____5575 with
          | (env1,b,pats) ->
-             ((let uu____6604 =
-                 FStar_List.map FStar_Pervasives_Native.fst pats  in
-               check_linear_pattern_variables uu____6604
-                 p.FStar_Parser_AST.prange);
+             (check_linear_pattern_variables pats p.FStar_Parser_AST.prange;
               (env1, b, pats)))
 
 and (desugar_binding_pat_maybe_top :
@@ -1927,98 +1901,100 @@ and (desugar_binding_pat_maybe_top :
     FStar_Syntax_DsEnv.env ->
       FStar_Parser_AST.pattern ->
         Prims.bool ->
-          (env_t,bnd,annotated_pat Prims.list) FStar_Pervasives_Native.tuple3)
+          (env_t,bnd,FStar_Syntax_Syntax.pat Prims.list)
+            FStar_Pervasives_Native.tuple3)
   =
   fun top  ->
     fun env  ->
       fun p  ->
         fun is_mut  ->
           let mklet x =
-            let uu____6655 =
-              let uu____6656 =
-                let uu____6667 = FStar_Syntax_DsEnv.qualify env x  in
-                (uu____6667,
+            let uu____5634 =
+              let uu____5635 =
+                let uu____5646 = FStar_Syntax_DsEnv.qualify env x  in
+                (uu____5646,
                   (FStar_Syntax_Syntax.tun, FStar_Pervasives_Native.None))
                  in
-              LetBinder uu____6656  in
-            (env, uu____6655, [])  in
+              LetBinder uu____5635  in
+            (env, uu____5634, [])  in
           if top
           then
             match p.FStar_Parser_AST.pat with
             | FStar_Parser_AST.PatOp x ->
-                let uu____6695 =
-                  let uu____6696 =
-                    let uu____6701 =
+                let uu____5674 =
+                  let uu____5675 =
+                    let uu____5680 =
                       FStar_Parser_AST.compile_op (Prims.parse_int "0")
                         x.FStar_Ident.idText x.FStar_Ident.idRange
                        in
-                    (uu____6701, (x.FStar_Ident.idRange))  in
-                  FStar_Ident.mk_ident uu____6696  in
-                mklet uu____6695
-            | FStar_Parser_AST.PatVar (x,uu____6703) -> mklet x
+                    (uu____5680, (x.FStar_Ident.idRange))  in
+                  FStar_Ident.mk_ident uu____5675  in
+                mklet uu____5674
+            | FStar_Parser_AST.PatVar (x,uu____5682) -> mklet x
             | FStar_Parser_AST.PatAscribed
                 ({
                    FStar_Parser_AST.pat = FStar_Parser_AST.PatVar
-                     (x,uu____6709);
-                   FStar_Parser_AST.prange = uu____6710;_},(t,tacopt))
+                     (x,uu____5688);
+                   FStar_Parser_AST.prange = uu____5689;_},(t,tacopt))
                 ->
                 let tacopt1 = FStar_Util.map_opt tacopt (desugar_term env)
                    in
-                let uu____6730 =
-                  let uu____6731 =
-                    let uu____6742 = FStar_Syntax_DsEnv.qualify env x  in
-                    let uu____6743 =
-                      let uu____6750 = desugar_term env t  in
-                      (uu____6750, tacopt1)  in
-                    (uu____6742, uu____6743)  in
-                  LetBinder uu____6731  in
-                (env, uu____6730, [])
-            | uu____6761 ->
+                let uu____5709 =
+                  let uu____5710 =
+                    let uu____5721 = FStar_Syntax_DsEnv.qualify env x  in
+                    let uu____5722 =
+                      let uu____5729 = desugar_term env t  in
+                      (uu____5729, tacopt1)  in
+                    (uu____5721, uu____5722)  in
+                  LetBinder uu____5710  in
+                (env, uu____5709, [])
+            | uu____5740 ->
                 FStar_Errors.raise_error
                   (FStar_Errors.Fatal_UnexpectedPattern,
                     "Unexpected pattern at the top-level")
                   p.FStar_Parser_AST.prange
           else
-            (let uu____6771 = desugar_data_pat env p is_mut  in
-             match uu____6771 with
+            (let uu____5750 = desugar_data_pat env p is_mut  in
+             match uu____5750 with
              | (env1,binder,p1) ->
                  let p2 =
                    match p1 with
-                   | ({
-                        FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_var
-                          uu____6800;
-                        FStar_Syntax_Syntax.p = uu____6801;_},uu____6802)::[]
-                       -> []
-                   | ({
-                        FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_wild
-                          uu____6815;
-                        FStar_Syntax_Syntax.p = uu____6816;_},uu____6817)::[]
-                       -> []
-                   | uu____6830 -> p1  in
+                   | {
+                       FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_var
+                         uu____5779;
+                       FStar_Syntax_Syntax.p = uu____5780;_}::[] -> []
+                   | {
+                       FStar_Syntax_Syntax.v = FStar_Syntax_Syntax.Pat_wild
+                         uu____5781;
+                       FStar_Syntax_Syntax.p = uu____5782;_}::[] -> []
+                   | uu____5783 -> p1  in
                  (env1, binder, p2))
 
 and (desugar_binding_pat :
   FStar_Syntax_DsEnv.env ->
     FStar_Parser_AST.pattern ->
-      (env_t,bnd,annotated_pat Prims.list) FStar_Pervasives_Native.tuple3)
+      (env_t,bnd,FStar_Syntax_Syntax.pat Prims.list)
+        FStar_Pervasives_Native.tuple3)
   = fun env  -> fun p  -> desugar_binding_pat_maybe_top false env p false
 
 and (desugar_match_pat_maybe_top :
   Prims.bool ->
     FStar_Syntax_DsEnv.env ->
       FStar_Parser_AST.pattern ->
-        (env_t,annotated_pat Prims.list) FStar_Pervasives_Native.tuple2)
+        (env_t,FStar_Syntax_Syntax.pat Prims.list)
+          FStar_Pervasives_Native.tuple2)
   =
-  fun uu____6837  ->
+  fun uu____5790  ->
     fun env  ->
       fun pat  ->
-        let uu____6840 = desugar_data_pat env pat false  in
-        match uu____6840 with | (env1,uu____6856,pat1) -> (env1, pat1)
+        let uu____5793 = desugar_data_pat env pat false  in
+        match uu____5793 with | (env1,uu____5809,pat1) -> (env1, pat1)
 
 and (desugar_match_pat :
   FStar_Syntax_DsEnv.env ->
     FStar_Parser_AST.pattern ->
-      (env_t,annotated_pat Prims.list) FStar_Pervasives_Native.tuple2)
+      (env_t,FStar_Syntax_Syntax.pat Prims.list)
+        FStar_Pervasives_Native.tuple2)
   = fun env  -> fun p  -> desugar_match_pat_maybe_top false env p
 
 and (desugar_term_aq :
@@ -2037,8 +2013,8 @@ and (desugar_term :
   =
   fun env  ->
     fun e  ->
-      let uu____6875 = desugar_term_aq env e  in
-      match uu____6875 with | (t,aq) -> (check_no_aq aq; t)
+      let uu____5828 = desugar_term_aq env e  in
+      match uu____5828 with | (t,aq) -> (check_no_aq aq; t)
 
 and (desugar_typ_aq :
   FStar_Syntax_DsEnv.env ->
@@ -2056,8 +2032,8 @@ and (desugar_typ :
   =
   fun env  ->
     fun e  ->
-      let uu____6892 = desugar_typ_aq env e  in
-      match uu____6892 with | (t,aq) -> (check_no_aq aq; t)
+      let uu____5845 = desugar_typ_aq env e  in
+      match uu____5845 with | (t,aq) -> (check_no_aq aq; t)
 
 and (desugar_machine_integer :
   FStar_Syntax_DsEnv.env ->
@@ -2068,9 +2044,9 @@ and (desugar_machine_integer :
   =
   fun env  ->
     fun repr  ->
-      fun uu____6902  ->
+      fun uu____5855  ->
         fun range  ->
-          match uu____6902 with
+          match uu____5855 with
           | (signedness,width) ->
               let tnm =
                 Prims.strcat "FStar."
@@ -2085,19 +2061,19 @@ and (desugar_machine_integer :
                          | FStar_Const.Int32  -> "32"
                          | FStar_Const.Int64  -> "64")))
                  in
-              ((let uu____6912 =
-                  let uu____6913 =
+              ((let uu____5865 =
+                  let uu____5866 =
                     FStar_Const.within_bounds repr signedness width  in
-                  Prims.op_Negation uu____6913  in
-                if uu____6912
+                  Prims.op_Negation uu____5866  in
+                if uu____5865
                 then
-                  let uu____6914 =
-                    let uu____6919 =
+                  let uu____5867 =
+                    let uu____5872 =
                       FStar_Util.format2
                         "%s is not in the expected range for %s" repr tnm
                        in
-                    (FStar_Errors.Error_OutOfRange, uu____6919)  in
-                  FStar_Errors.log_issue range uu____6914
+                    (FStar_Errors.Error_OutOfRange, uu____5872)  in
+                  FStar_Errors.log_issue range uu____5867
                 else ());
                (let private_intro_nm =
                   Prims.strcat tnm
@@ -2116,51 +2092,51 @@ and (desugar_machine_integer :
                            | FStar_Const.Signed  -> "") "int_to_t"))
                    in
                 let lid =
-                  let uu____6924 = FStar_Ident.path_of_text intro_nm  in
-                  FStar_Ident.lid_of_path uu____6924 range  in
+                  let uu____5877 = FStar_Ident.path_of_text intro_nm  in
+                  FStar_Ident.lid_of_path uu____5877 range  in
                 let lid1 =
-                  let uu____6928 = FStar_Syntax_DsEnv.try_lookup_lid env lid
+                  let uu____5881 = FStar_Syntax_DsEnv.try_lookup_lid env lid
                      in
-                  match uu____6928 with
-                  | FStar_Pervasives_Native.Some (intro_term,uu____6938) ->
+                  match uu____5881 with
+                  | FStar_Pervasives_Native.Some (intro_term,uu____5891) ->
                       (match intro_term.FStar_Syntax_Syntax.n with
                        | FStar_Syntax_Syntax.Tm_fvar fv ->
                            let private_lid =
-                             let uu____6947 =
+                             let uu____5900 =
                                FStar_Ident.path_of_text private_intro_nm  in
-                             FStar_Ident.lid_of_path uu____6947 range  in
+                             FStar_Ident.lid_of_path uu____5900 range  in
                            let private_fv =
-                             let uu____6949 =
+                             let uu____5902 =
                                FStar_Syntax_Util.incr_delta_depth
                                  fv.FStar_Syntax_Syntax.fv_delta
                                 in
                              FStar_Syntax_Syntax.lid_as_fv private_lid
-                               uu____6949 fv.FStar_Syntax_Syntax.fv_qual
+                               uu____5902 fv.FStar_Syntax_Syntax.fv_qual
                               in
-                           let uu___275_6950 = intro_term  in
+                           let uu___279_5903 = intro_term  in
                            {
                              FStar_Syntax_Syntax.n =
                                (FStar_Syntax_Syntax.Tm_fvar private_fv);
                              FStar_Syntax_Syntax.pos =
-                               (uu___275_6950.FStar_Syntax_Syntax.pos);
+                               (uu___279_5903.FStar_Syntax_Syntax.pos);
                              FStar_Syntax_Syntax.vars =
-                               (uu___275_6950.FStar_Syntax_Syntax.vars)
+                               (uu___279_5903.FStar_Syntax_Syntax.vars)
                            }
-                       | uu____6951 ->
+                       | uu____5904 ->
                            failwith
                              (Prims.strcat "Unexpected non-fvar for "
                                 intro_nm))
                   | FStar_Pervasives_Native.None  ->
-                      let uu____6958 =
-                        let uu____6963 =
+                      let uu____5911 =
+                        let uu____5916 =
                           FStar_Util.format1
                             "Unexpected numeric literal.  Restart F* to load %s."
                             tnm
                            in
                         (FStar_Errors.Fatal_UnexpectedNumericLiteral,
-                          uu____6963)
+                          uu____5916)
                          in
-                      FStar_Errors.raise_error uu____6958 range
+                      FStar_Errors.raise_error uu____5911 range
                    in
                 let repr1 =
                   FStar_Syntax_Syntax.mk
@@ -2169,19 +2145,19 @@ and (desugar_machine_integer :
                           (repr, FStar_Pervasives_Native.None)))
                     FStar_Pervasives_Native.None range
                    in
-                let uu____6979 =
-                  let uu____6986 =
-                    let uu____6987 =
-                      let uu____7004 =
-                        let uu____7015 =
-                          let uu____7024 =
+                let uu____5932 =
+                  let uu____5939 =
+                    let uu____5940 =
+                      let uu____5957 =
+                        let uu____5968 =
+                          let uu____5977 =
                             FStar_Syntax_Syntax.as_implicit false  in
-                          (repr1, uu____7024)  in
-                        [uu____7015]  in
-                      (lid1, uu____7004)  in
-                    FStar_Syntax_Syntax.Tm_app uu____6987  in
-                  FStar_Syntax_Syntax.mk uu____6986  in
-                uu____6979 FStar_Pervasives_Native.None range))
+                          (repr1, uu____5977)  in
+                        [uu____5968]  in
+                      (lid1, uu____5957)  in
+                    FStar_Syntax_Syntax.Tm_app uu____5940  in
+                  FStar_Syntax_Syntax.mk uu____5939  in
+                uu____5932 FStar_Pervasives_Native.None range))
 
 and (desugar_name :
   (FStar_Syntax_Syntax.term' -> FStar_Syntax_Syntax.term) ->
@@ -2194,16 +2170,16 @@ and (desugar_name :
       fun env  ->
         fun resolve  ->
           fun l  ->
-            let uu____7073 =
-              let uu____7082 =
+            let uu____6026 =
+              let uu____6035 =
                 (if resolve
                  then FStar_Syntax_DsEnv.try_lookup_lid_with_attributes
                  else
                    FStar_Syntax_DsEnv.try_lookup_lid_with_attributes_no_resolve)
                   env
                  in
-              FStar_Syntax_DsEnv.fail_or env uu____7082 l  in
-            match uu____7073 with
+              FStar_Syntax_DsEnv.fail_or env uu____6035 l  in
+            match uu____6026 with
             | (tm,mut,attrs) ->
                 let warn_if_deprecated attrs1 =
                   FStar_List.iter
@@ -2213,30 +2189,30 @@ and (desugar_name :
                            ({
                               FStar_Syntax_Syntax.n =
                                 FStar_Syntax_Syntax.Tm_fvar fv;
-                              FStar_Syntax_Syntax.pos = uu____7137;
-                              FStar_Syntax_Syntax.vars = uu____7138;_},args)
+                              FStar_Syntax_Syntax.pos = uu____6090;
+                              FStar_Syntax_Syntax.vars = uu____6091;_},args)
                            when
                            FStar_Ident.lid_equals
                              (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                              FStar_Parser_Const.deprecated_attr
                            ->
                            let msg =
-                             let uu____7165 =
+                             let uu____6118 =
                                FStar_Syntax_Print.term_to_string tm  in
-                             Prims.strcat uu____7165 " is deprecated"  in
+                             Prims.strcat uu____6118 " is deprecated"  in
                            let msg1 =
                              if
                                (FStar_List.length args) >
                                  (Prims.parse_int "0")
                              then
-                               let uu____7175 =
-                                 let uu____7176 =
-                                   let uu____7179 = FStar_List.hd args  in
-                                   FStar_Pervasives_Native.fst uu____7179  in
-                                 uu____7176.FStar_Syntax_Syntax.n  in
-                               match uu____7175 with
+                               let uu____6128 =
+                                 let uu____6129 =
+                                   let uu____6132 = FStar_List.hd args  in
+                                   FStar_Pervasives_Native.fst uu____6132  in
+                                 uu____6129.FStar_Syntax_Syntax.n  in
+                               match uu____6128 with
                                | FStar_Syntax_Syntax.Tm_constant
-                                   (FStar_Const.Const_string (s,uu____7201))
+                                   (FStar_Const.Const_string (s,uu____6154))
                                    when
                                    Prims.op_Negation
                                      ((FStar_Util.trim_string s) = "")
@@ -2244,10 +2220,10 @@ and (desugar_name :
                                    Prims.strcat msg
                                      (Prims.strcat ", use "
                                         (Prims.strcat s " instead"))
-                               | uu____7202 -> msg
+                               | uu____6155 -> msg
                              else msg  in
-                           let uu____7204 = FStar_Ident.range_of_lid l  in
-                           FStar_Errors.log_issue uu____7204
+                           let uu____6157 = FStar_Ident.range_of_lid l  in
+                           FStar_Errors.log_issue uu____6157
                              (FStar_Errors.Warning_DeprecatedDefinition,
                                msg1)
                        | FStar_Syntax_Syntax.Tm_fvar fv when
@@ -2256,27 +2232,27 @@ and (desugar_name :
                              FStar_Parser_Const.deprecated_attr
                            ->
                            let msg =
-                             let uu____7207 =
+                             let uu____6160 =
                                FStar_Syntax_Print.term_to_string tm  in
-                             Prims.strcat uu____7207 " is deprecated"  in
-                           let uu____7208 = FStar_Ident.range_of_lid l  in
-                           FStar_Errors.log_issue uu____7208
+                             Prims.strcat uu____6160 " is deprecated"  in
+                           let uu____6161 = FStar_Ident.range_of_lid l  in
+                           FStar_Errors.log_issue uu____6161
                              (FStar_Errors.Warning_DeprecatedDefinition, msg)
-                       | uu____7209 -> ()) attrs1
+                       | uu____6162 -> ()) attrs1
                    in
                 (warn_if_deprecated attrs;
                  (let tm1 = setpos tm  in
                   if mut
                   then
-                    let uu____7214 =
-                      let uu____7215 =
-                        let uu____7222 = mk_ref_read tm1  in
-                        (uu____7222,
+                    let uu____6167 =
+                      let uu____6168 =
+                        let uu____6175 = mk_ref_read tm1  in
+                        (uu____6175,
                           (FStar_Syntax_Syntax.Meta_desugared
                              FStar_Syntax_Syntax.Mutable_rval))
                          in
-                      FStar_Syntax_Syntax.Tm_meta uu____7215  in
-                    FStar_All.pipe_left mk1 uu____7214
+                      FStar_Syntax_Syntax.Tm_meta uu____6168  in
+                    FStar_All.pipe_left mk1 uu____6167
                   else tm1))
 
 and (desugar_attributes :
@@ -2286,20 +2262,20 @@ and (desugar_attributes :
   fun env  ->
     fun cattributes  ->
       let desugar_attribute t =
-        let uu____7240 =
-          let uu____7241 = unparen t  in uu____7241.FStar_Parser_AST.tm  in
-        match uu____7240 with
+        let uu____6193 =
+          let uu____6194 = unparen t  in uu____6194.FStar_Parser_AST.tm  in
+        match uu____6193 with
         | FStar_Parser_AST.Var
-            { FStar_Ident.ns = uu____7242; FStar_Ident.ident = uu____7243;
-              FStar_Ident.nsstr = uu____7244; FStar_Ident.str = "cps";_}
+            { FStar_Ident.ns = uu____6195; FStar_Ident.ident = uu____6196;
+              FStar_Ident.nsstr = uu____6197; FStar_Ident.str = "cps";_}
             -> FStar_Syntax_Syntax.CPS
-        | uu____7247 ->
-            let uu____7248 =
-              let uu____7253 =
-                let uu____7254 = FStar_Parser_AST.term_to_string t  in
-                Prims.strcat "Unknown attribute " uu____7254  in
-              (FStar_Errors.Fatal_UnknownAttribute, uu____7253)  in
-            FStar_Errors.raise_error uu____7248 t.FStar_Parser_AST.range
+        | uu____6200 ->
+            let uu____6201 =
+              let uu____6206 =
+                let uu____6207 = FStar_Parser_AST.term_to_string t  in
+                Prims.strcat "Unknown attribute " uu____6207  in
+              (FStar_Errors.Fatal_UnknownAttribute, uu____6206)  in
+            FStar_Errors.raise_error uu____6201 t.FStar_Parser_AST.range
          in
       FStar_List.map desugar_attribute cattributes
 
@@ -2320,429 +2296,429 @@ and (desugar_term_maybe_top :
         let noaqs = []  in
         let join_aqs aqs = FStar_List.flatten aqs  in
         let setpos e =
-          let uu___276_7337 = e  in
+          let uu___280_6290 = e  in
           {
-            FStar_Syntax_Syntax.n = (uu___276_7337.FStar_Syntax_Syntax.n);
+            FStar_Syntax_Syntax.n = (uu___280_6290.FStar_Syntax_Syntax.n);
             FStar_Syntax_Syntax.pos = (top.FStar_Parser_AST.range);
             FStar_Syntax_Syntax.vars =
-              (uu___276_7337.FStar_Syntax_Syntax.vars)
+              (uu___280_6290.FStar_Syntax_Syntax.vars)
           }  in
-        let uu____7340 =
-          let uu____7341 = unparen top  in uu____7341.FStar_Parser_AST.tm  in
-        match uu____7340 with
+        let uu____6293 =
+          let uu____6294 = unparen top  in uu____6294.FStar_Parser_AST.tm  in
+        match uu____6293 with
         | FStar_Parser_AST.Wild  -> ((setpos FStar_Syntax_Syntax.tun), noaqs)
-        | FStar_Parser_AST.Labeled uu____7346 ->
-            let uu____7353 = desugar_formula env top  in (uu____7353, noaqs)
+        | FStar_Parser_AST.Labeled uu____6299 ->
+            let uu____6306 = desugar_formula env top  in (uu____6306, noaqs)
         | FStar_Parser_AST.Requires (t,lopt) ->
-            let uu____7360 = desugar_formula env t  in (uu____7360, noaqs)
+            let uu____6313 = desugar_formula env t  in (uu____6313, noaqs)
         | FStar_Parser_AST.Ensures (t,lopt) ->
-            let uu____7367 = desugar_formula env t  in (uu____7367, noaqs)
+            let uu____6320 = desugar_formula env t  in (uu____6320, noaqs)
         | FStar_Parser_AST.Attributes ts ->
             failwith
               "Attributes should not be desugared by desugar_term_maybe_top"
         | FStar_Parser_AST.Const (FStar_Const.Const_int
             (i,FStar_Pervasives_Native.Some size)) ->
-            let uu____7391 =
+            let uu____6344 =
               desugar_machine_integer env i size top.FStar_Parser_AST.range
                in
-            (uu____7391, noaqs)
+            (uu____6344, noaqs)
         | FStar_Parser_AST.Const c ->
-            let uu____7393 = mk1 (FStar_Syntax_Syntax.Tm_constant c)  in
-            (uu____7393, noaqs)
+            let uu____6346 = mk1 (FStar_Syntax_Syntax.Tm_constant c)  in
+            (uu____6346, noaqs)
         | FStar_Parser_AST.Op
             ({ FStar_Ident.idText = "=!="; FStar_Ident.idRange = r;_},args)
             ->
             let e =
-              let uu____7401 =
-                let uu____7402 =
-                  let uu____7409 = FStar_Ident.mk_ident ("==", r)  in
-                  (uu____7409, args)  in
-                FStar_Parser_AST.Op uu____7402  in
-              FStar_Parser_AST.mk_term uu____7401 top.FStar_Parser_AST.range
+              let uu____6354 =
+                let uu____6355 =
+                  let uu____6362 = FStar_Ident.mk_ident ("==", r)  in
+                  (uu____6362, args)  in
+                FStar_Parser_AST.Op uu____6355  in
+              FStar_Parser_AST.mk_term uu____6354 top.FStar_Parser_AST.range
                 top.FStar_Parser_AST.level
                in
-            let uu____7412 =
-              let uu____7413 =
-                let uu____7414 =
-                  let uu____7421 = FStar_Ident.mk_ident ("~", r)  in
-                  (uu____7421, [e])  in
-                FStar_Parser_AST.Op uu____7414  in
-              FStar_Parser_AST.mk_term uu____7413 top.FStar_Parser_AST.range
+            let uu____6365 =
+              let uu____6366 =
+                let uu____6367 =
+                  let uu____6374 = FStar_Ident.mk_ident ("~", r)  in
+                  (uu____6374, [e])  in
+                FStar_Parser_AST.Op uu____6367  in
+              FStar_Parser_AST.mk_term uu____6366 top.FStar_Parser_AST.range
                 top.FStar_Parser_AST.level
                in
-            desugar_term_aq env uu____7412
-        | FStar_Parser_AST.Op (op_star,uu____7425::uu____7426::[]) when
-            (let uu____7431 = FStar_Ident.text_of_id op_star  in
-             uu____7431 = "*") &&
-              (let uu____7433 =
+            desugar_term_aq env uu____6365
+        | FStar_Parser_AST.Op (op_star,uu____6378::uu____6379::[]) when
+            (let uu____6384 = FStar_Ident.text_of_id op_star  in
+             uu____6384 = "*") &&
+              (let uu____6386 =
                  op_as_term env (Prims.parse_int "2")
                    top.FStar_Parser_AST.range op_star
                   in
-               FStar_All.pipe_right uu____7433 FStar_Option.isNone)
+               FStar_All.pipe_right uu____6386 FStar_Option.isNone)
             ->
             let rec flatten1 t =
               match t.FStar_Parser_AST.tm with
               | FStar_Parser_AST.Op
                   ({ FStar_Ident.idText = "*";
-                     FStar_Ident.idRange = uu____7448;_},t1::t2::[])
+                     FStar_Ident.idRange = uu____6401;_},t1::t2::[])
                   ->
-                  let uu____7453 = flatten1 t1  in
-                  FStar_List.append uu____7453 [t2]
-              | uu____7456 -> [t]  in
-            let uu____7457 =
-              let uu____7482 =
-                let uu____7505 =
-                  let uu____7508 = unparen top  in flatten1 uu____7508  in
-                FStar_All.pipe_right uu____7505
+                  let uu____6406 = flatten1 t1  in
+                  FStar_List.append uu____6406 [t2]
+              | uu____6409 -> [t]  in
+            let uu____6410 =
+              let uu____6435 =
+                let uu____6458 =
+                  let uu____6461 = unparen top  in flatten1 uu____6461  in
+                FStar_All.pipe_right uu____6458
                   (FStar_List.map
                      (fun t  ->
-                        let uu____7543 = desugar_typ_aq env t  in
-                        match uu____7543 with
+                        let uu____6496 = desugar_typ_aq env t  in
+                        match uu____6496 with
                         | (t',aq) ->
-                            let uu____7554 = FStar_Syntax_Syntax.as_arg t'
+                            let uu____6507 = FStar_Syntax_Syntax.as_arg t'
                                in
-                            (uu____7554, aq)))
+                            (uu____6507, aq)))
                  in
-              FStar_All.pipe_right uu____7482 FStar_List.unzip  in
-            (match uu____7457 with
+              FStar_All.pipe_right uu____6435 FStar_List.unzip  in
+            (match uu____6410 with
              | (targs,aqs) ->
-                 let uu____7663 =
-                   let uu____7668 =
+                 let uu____6616 =
+                   let uu____6621 =
                      FStar_Parser_Const.mk_tuple_lid
                        (FStar_List.length targs) top.FStar_Parser_AST.range
                       in
                    FStar_Syntax_DsEnv.fail_or env
-                     (FStar_Syntax_DsEnv.try_lookup_lid env) uu____7668
+                     (FStar_Syntax_DsEnv.try_lookup_lid env) uu____6621
                     in
-                 (match uu____7663 with
-                  | (tup,uu____7686) ->
-                      let uu____7687 =
+                 (match uu____6616 with
+                  | (tup,uu____6639) ->
+                      let uu____6640 =
                         mk1 (FStar_Syntax_Syntax.Tm_app (tup, targs))  in
-                      (uu____7687, (join_aqs aqs))))
+                      (uu____6640, (join_aqs aqs))))
         | FStar_Parser_AST.Tvar a ->
-            let uu____7701 =
-              let uu____7702 =
-                let uu____7705 =
+            let uu____6654 =
+              let uu____6655 =
+                let uu____6658 =
                   FStar_Syntax_DsEnv.fail_or2
                     (FStar_Syntax_DsEnv.try_lookup_id env) a
                    in
-                FStar_Pervasives_Native.fst uu____7705  in
-              FStar_All.pipe_left setpos uu____7702  in
-            (uu____7701, noaqs)
+                FStar_Pervasives_Native.fst uu____6658  in
+              FStar_All.pipe_left setpos uu____6655  in
+            (uu____6654, noaqs)
         | FStar_Parser_AST.Uvar u ->
-            let uu____7717 =
-              let uu____7722 =
-                let uu____7723 =
-                  let uu____7724 = FStar_Ident.text_of_id u  in
-                  Prims.strcat uu____7724 " in non-universe context"  in
-                Prims.strcat "Unexpected universe variable " uu____7723  in
-              (FStar_Errors.Fatal_UnexpectedUniverseVariable, uu____7722)  in
-            FStar_Errors.raise_error uu____7717 top.FStar_Parser_AST.range
+            let uu____6670 =
+              let uu____6675 =
+                let uu____6676 =
+                  let uu____6677 = FStar_Ident.text_of_id u  in
+                  Prims.strcat uu____6677 " in non-universe context"  in
+                Prims.strcat "Unexpected universe variable " uu____6676  in
+              (FStar_Errors.Fatal_UnexpectedUniverseVariable, uu____6675)  in
+            FStar_Errors.raise_error uu____6670 top.FStar_Parser_AST.range
         | FStar_Parser_AST.Op (s,args) ->
-            let uu____7735 =
+            let uu____6688 =
               op_as_term env (FStar_List.length args)
                 top.FStar_Parser_AST.range s
                in
-            (match uu____7735 with
+            (match uu____6688 with
              | FStar_Pervasives_Native.None  ->
-                 let uu____7742 =
-                   let uu____7747 =
-                     let uu____7748 = FStar_Ident.text_of_id s  in
+                 let uu____6695 =
+                   let uu____6700 =
+                     let uu____6701 = FStar_Ident.text_of_id s  in
                      Prims.strcat "Unexpected or unbound operator: "
-                       uu____7748
+                       uu____6701
                       in
                    (FStar_Errors.Fatal_UnepxectedOrUnboundOperator,
-                     uu____7747)
+                     uu____6700)
                     in
-                 FStar_Errors.raise_error uu____7742
+                 FStar_Errors.raise_error uu____6695
                    top.FStar_Parser_AST.range
              | FStar_Pervasives_Native.Some op ->
                  if (FStar_List.length args) > (Prims.parse_int "0")
                  then
-                   let uu____7758 =
-                     let uu____7783 =
+                   let uu____6711 =
+                     let uu____6736 =
                        FStar_All.pipe_right args
                          (FStar_List.map
                             (fun t  ->
-                               let uu____7845 = desugar_term_aq env t  in
-                               match uu____7845 with
+                               let uu____6798 = desugar_term_aq env t  in
+                               match uu____6798 with
                                | (t',s1) ->
                                    ((t', FStar_Pervasives_Native.None), s1)))
                         in
-                     FStar_All.pipe_right uu____7783 FStar_List.unzip  in
-                   (match uu____7758 with
+                     FStar_All.pipe_right uu____6736 FStar_List.unzip  in
+                   (match uu____6711 with
                     | (args1,aqs) ->
-                        let uu____7978 =
+                        let uu____6931 =
                           mk1 (FStar_Syntax_Syntax.Tm_app (op, args1))  in
-                        (uu____7978, (join_aqs aqs)))
+                        (uu____6931, (join_aqs aqs)))
                  else (op, noaqs))
-        | FStar_Parser_AST.Construct (n1,(a,uu____7994)::[]) when
+        | FStar_Parser_AST.Construct (n1,(a,uu____6947)::[]) when
             n1.FStar_Ident.str = "SMTPat" ->
-            let uu____8009 =
-              let uu___277_8010 = top  in
-              let uu____8011 =
-                let uu____8012 =
-                  let uu____8019 =
-                    let uu___278_8020 = top  in
-                    let uu____8021 =
-                      let uu____8022 =
+            let uu____6962 =
+              let uu___281_6963 = top  in
+              let uu____6964 =
+                let uu____6965 =
+                  let uu____6972 =
+                    let uu___282_6973 = top  in
+                    let uu____6974 =
+                      let uu____6975 =
                         FStar_Ident.lid_of_path ["Prims"; "smt_pat"]
                           top.FStar_Parser_AST.range
                          in
-                      FStar_Parser_AST.Var uu____8022  in
+                      FStar_Parser_AST.Var uu____6975  in
                     {
-                      FStar_Parser_AST.tm = uu____8021;
+                      FStar_Parser_AST.tm = uu____6974;
                       FStar_Parser_AST.range =
-                        (uu___278_8020.FStar_Parser_AST.range);
+                        (uu___282_6973.FStar_Parser_AST.range);
                       FStar_Parser_AST.level =
-                        (uu___278_8020.FStar_Parser_AST.level)
+                        (uu___282_6973.FStar_Parser_AST.level)
                     }  in
-                  (uu____8019, a, FStar_Parser_AST.Nothing)  in
-                FStar_Parser_AST.App uu____8012  in
+                  (uu____6972, a, FStar_Parser_AST.Nothing)  in
+                FStar_Parser_AST.App uu____6965  in
               {
-                FStar_Parser_AST.tm = uu____8011;
+                FStar_Parser_AST.tm = uu____6964;
                 FStar_Parser_AST.range =
-                  (uu___277_8010.FStar_Parser_AST.range);
+                  (uu___281_6963.FStar_Parser_AST.range);
                 FStar_Parser_AST.level =
-                  (uu___277_8010.FStar_Parser_AST.level)
+                  (uu___281_6963.FStar_Parser_AST.level)
               }  in
-            desugar_term_maybe_top top_level env uu____8009
-        | FStar_Parser_AST.Construct (n1,(a,uu____8025)::[]) when
+            desugar_term_maybe_top top_level env uu____6962
+        | FStar_Parser_AST.Construct (n1,(a,uu____6978)::[]) when
             n1.FStar_Ident.str = "SMTPatT" ->
             (FStar_Errors.log_issue top.FStar_Parser_AST.range
                (FStar_Errors.Warning_SMTPatTDeprecated,
                  "SMTPatT is deprecated; please just use SMTPat");
-             (let uu____8041 =
-                let uu___279_8042 = top  in
-                let uu____8043 =
-                  let uu____8044 =
-                    let uu____8051 =
-                      let uu___280_8052 = top  in
-                      let uu____8053 =
-                        let uu____8054 =
+             (let uu____6994 =
+                let uu___283_6995 = top  in
+                let uu____6996 =
+                  let uu____6997 =
+                    let uu____7004 =
+                      let uu___284_7005 = top  in
+                      let uu____7006 =
+                        let uu____7007 =
                           FStar_Ident.lid_of_path ["Prims"; "smt_pat"]
                             top.FStar_Parser_AST.range
                            in
-                        FStar_Parser_AST.Var uu____8054  in
+                        FStar_Parser_AST.Var uu____7007  in
                       {
-                        FStar_Parser_AST.tm = uu____8053;
+                        FStar_Parser_AST.tm = uu____7006;
                         FStar_Parser_AST.range =
-                          (uu___280_8052.FStar_Parser_AST.range);
+                          (uu___284_7005.FStar_Parser_AST.range);
                         FStar_Parser_AST.level =
-                          (uu___280_8052.FStar_Parser_AST.level)
+                          (uu___284_7005.FStar_Parser_AST.level)
                       }  in
-                    (uu____8051, a, FStar_Parser_AST.Nothing)  in
-                  FStar_Parser_AST.App uu____8044  in
+                    (uu____7004, a, FStar_Parser_AST.Nothing)  in
+                  FStar_Parser_AST.App uu____6997  in
                 {
-                  FStar_Parser_AST.tm = uu____8043;
+                  FStar_Parser_AST.tm = uu____6996;
                   FStar_Parser_AST.range =
-                    (uu___279_8042.FStar_Parser_AST.range);
+                    (uu___283_6995.FStar_Parser_AST.range);
                   FStar_Parser_AST.level =
-                    (uu___279_8042.FStar_Parser_AST.level)
+                    (uu___283_6995.FStar_Parser_AST.level)
                 }  in
-              desugar_term_maybe_top top_level env uu____8041))
-        | FStar_Parser_AST.Construct (n1,(a,uu____8057)::[]) when
+              desugar_term_maybe_top top_level env uu____6994))
+        | FStar_Parser_AST.Construct (n1,(a,uu____7010)::[]) when
             n1.FStar_Ident.str = "SMTPatOr" ->
-            let uu____8072 =
-              let uu___281_8073 = top  in
-              let uu____8074 =
-                let uu____8075 =
-                  let uu____8082 =
-                    let uu___282_8083 = top  in
-                    let uu____8084 =
-                      let uu____8085 =
+            let uu____7025 =
+              let uu___285_7026 = top  in
+              let uu____7027 =
+                let uu____7028 =
+                  let uu____7035 =
+                    let uu___286_7036 = top  in
+                    let uu____7037 =
+                      let uu____7038 =
                         FStar_Ident.lid_of_path ["Prims"; "smt_pat_or"]
                           top.FStar_Parser_AST.range
                          in
-                      FStar_Parser_AST.Var uu____8085  in
+                      FStar_Parser_AST.Var uu____7038  in
                     {
-                      FStar_Parser_AST.tm = uu____8084;
+                      FStar_Parser_AST.tm = uu____7037;
                       FStar_Parser_AST.range =
-                        (uu___282_8083.FStar_Parser_AST.range);
+                        (uu___286_7036.FStar_Parser_AST.range);
                       FStar_Parser_AST.level =
-                        (uu___282_8083.FStar_Parser_AST.level)
+                        (uu___286_7036.FStar_Parser_AST.level)
                     }  in
-                  (uu____8082, a, FStar_Parser_AST.Nothing)  in
-                FStar_Parser_AST.App uu____8075  in
+                  (uu____7035, a, FStar_Parser_AST.Nothing)  in
+                FStar_Parser_AST.App uu____7028  in
               {
-                FStar_Parser_AST.tm = uu____8074;
+                FStar_Parser_AST.tm = uu____7027;
                 FStar_Parser_AST.range =
-                  (uu___281_8073.FStar_Parser_AST.range);
+                  (uu___285_7026.FStar_Parser_AST.range);
                 FStar_Parser_AST.level =
-                  (uu___281_8073.FStar_Parser_AST.level)
+                  (uu___285_7026.FStar_Parser_AST.level)
               }  in
-            desugar_term_maybe_top top_level env uu____8072
+            desugar_term_maybe_top top_level env uu____7025
         | FStar_Parser_AST.Name
-            { FStar_Ident.ns = uu____8086; FStar_Ident.ident = uu____8087;
-              FStar_Ident.nsstr = uu____8088; FStar_Ident.str = "Type0";_}
+            { FStar_Ident.ns = uu____7039; FStar_Ident.ident = uu____7040;
+              FStar_Ident.nsstr = uu____7041; FStar_Ident.str = "Type0";_}
             ->
-            let uu____8091 =
+            let uu____7044 =
               mk1 (FStar_Syntax_Syntax.Tm_type FStar_Syntax_Syntax.U_zero)
                in
-            (uu____8091, noaqs)
+            (uu____7044, noaqs)
         | FStar_Parser_AST.Name
-            { FStar_Ident.ns = uu____8092; FStar_Ident.ident = uu____8093;
-              FStar_Ident.nsstr = uu____8094; FStar_Ident.str = "Type";_}
+            { FStar_Ident.ns = uu____7045; FStar_Ident.ident = uu____7046;
+              FStar_Ident.nsstr = uu____7047; FStar_Ident.str = "Type";_}
             ->
-            let uu____8097 =
+            let uu____7050 =
               mk1 (FStar_Syntax_Syntax.Tm_type FStar_Syntax_Syntax.U_unknown)
                in
-            (uu____8097, noaqs)
+            (uu____7050, noaqs)
         | FStar_Parser_AST.Construct
-            ({ FStar_Ident.ns = uu____8098; FStar_Ident.ident = uu____8099;
-               FStar_Ident.nsstr = uu____8100; FStar_Ident.str = "Type";_},
+            ({ FStar_Ident.ns = uu____7051; FStar_Ident.ident = uu____7052;
+               FStar_Ident.nsstr = uu____7053; FStar_Ident.str = "Type";_},
              (t,FStar_Parser_AST.UnivApp )::[])
             ->
-            let uu____8118 =
-              let uu____8119 =
-                let uu____8120 = desugar_universe t  in
-                FStar_Syntax_Syntax.Tm_type uu____8120  in
-              mk1 uu____8119  in
-            (uu____8118, noaqs)
+            let uu____7071 =
+              let uu____7072 =
+                let uu____7073 = desugar_universe t  in
+                FStar_Syntax_Syntax.Tm_type uu____7073  in
+              mk1 uu____7072  in
+            (uu____7071, noaqs)
         | FStar_Parser_AST.Name
-            { FStar_Ident.ns = uu____8121; FStar_Ident.ident = uu____8122;
-              FStar_Ident.nsstr = uu____8123; FStar_Ident.str = "Effect";_}
+            { FStar_Ident.ns = uu____7074; FStar_Ident.ident = uu____7075;
+              FStar_Ident.nsstr = uu____7076; FStar_Ident.str = "Effect";_}
             ->
-            let uu____8126 =
+            let uu____7079 =
               mk1 (FStar_Syntax_Syntax.Tm_constant FStar_Const.Const_effect)
                in
-            (uu____8126, noaqs)
+            (uu____7079, noaqs)
         | FStar_Parser_AST.Name
-            { FStar_Ident.ns = uu____8127; FStar_Ident.ident = uu____8128;
-              FStar_Ident.nsstr = uu____8129; FStar_Ident.str = "True";_}
+            { FStar_Ident.ns = uu____7080; FStar_Ident.ident = uu____7081;
+              FStar_Ident.nsstr = uu____7082; FStar_Ident.str = "True";_}
             ->
-            let uu____8132 =
-              let uu____8133 =
+            let uu____7085 =
+              let uu____7086 =
                 FStar_Ident.set_lid_range FStar_Parser_Const.true_lid
                   top.FStar_Parser_AST.range
                  in
-              FStar_Syntax_Syntax.fvar uu____8133
+              FStar_Syntax_Syntax.fvar uu____7086
                 FStar_Syntax_Syntax.delta_constant
                 FStar_Pervasives_Native.None
                in
-            (uu____8132, noaqs)
+            (uu____7085, noaqs)
         | FStar_Parser_AST.Name
-            { FStar_Ident.ns = uu____8134; FStar_Ident.ident = uu____8135;
-              FStar_Ident.nsstr = uu____8136; FStar_Ident.str = "False";_}
+            { FStar_Ident.ns = uu____7087; FStar_Ident.ident = uu____7088;
+              FStar_Ident.nsstr = uu____7089; FStar_Ident.str = "False";_}
             ->
-            let uu____8139 =
-              let uu____8140 =
+            let uu____7092 =
+              let uu____7093 =
                 FStar_Ident.set_lid_range FStar_Parser_Const.false_lid
                   top.FStar_Parser_AST.range
                  in
-              FStar_Syntax_Syntax.fvar uu____8140
+              FStar_Syntax_Syntax.fvar uu____7093
                 FStar_Syntax_Syntax.delta_constant
                 FStar_Pervasives_Native.None
                in
-            (uu____8139, noaqs)
+            (uu____7092, noaqs)
         | FStar_Parser_AST.Projector
             (eff_name,{ FStar_Ident.idText = txt;
-                        FStar_Ident.idRange = uu____8143;_})
+                        FStar_Ident.idRange = uu____7096;_})
             when
             (is_special_effect_combinator txt) &&
               (FStar_Syntax_DsEnv.is_effect_name env eff_name)
             ->
             (FStar_Syntax_DsEnv.fail_if_qualified_by_curmodule env eff_name;
-             (let uu____8145 =
+             (let uu____7098 =
                 FStar_Syntax_DsEnv.try_lookup_effect_defn env eff_name  in
-              match uu____8145 with
+              match uu____7098 with
               | FStar_Pervasives_Native.Some ed ->
                   let lid = FStar_Syntax_Util.dm4f_lid ed txt  in
-                  let uu____8154 =
+                  let uu____7107 =
                     FStar_Syntax_Syntax.fvar lid
                       (FStar_Syntax_Syntax.Delta_constant_at_level
                          (Prims.parse_int "1")) FStar_Pervasives_Native.None
                      in
-                  (uu____8154, noaqs)
+                  (uu____7107, noaqs)
               | FStar_Pervasives_Native.None  ->
-                  let uu____8155 =
-                    let uu____8156 = FStar_Ident.text_of_lid eff_name  in
+                  let uu____7108 =
+                    let uu____7109 = FStar_Ident.text_of_lid eff_name  in
                     FStar_Util.format2
                       "Member %s of effect %s is not accessible (using an effect abbreviation instead of the original effect ?)"
-                      uu____8156 txt
+                      uu____7109 txt
                      in
-                  failwith uu____8155))
+                  failwith uu____7108))
         | FStar_Parser_AST.Var l ->
             (FStar_Syntax_DsEnv.fail_if_qualified_by_curmodule env l;
-             (let uu____8163 = desugar_name mk1 setpos env true l  in
-              (uu____8163, noaqs)))
+             (let uu____7116 = desugar_name mk1 setpos env true l  in
+              (uu____7116, noaqs)))
         | FStar_Parser_AST.Name l ->
             (FStar_Syntax_DsEnv.fail_if_qualified_by_curmodule env l;
-             (let uu____8166 = desugar_name mk1 setpos env true l  in
-              (uu____8166, noaqs)))
+             (let uu____7119 = desugar_name mk1 setpos env true l  in
+              (uu____7119, noaqs)))
         | FStar_Parser_AST.Projector (l,i) ->
             (FStar_Syntax_DsEnv.fail_if_qualified_by_curmodule env l;
              (let name =
-                let uu____8177 = FStar_Syntax_DsEnv.try_lookup_datacon env l
+                let uu____7130 = FStar_Syntax_DsEnv.try_lookup_datacon env l
                    in
-                match uu____8177 with
-                | FStar_Pervasives_Native.Some uu____8186 ->
+                match uu____7130 with
+                | FStar_Pervasives_Native.Some uu____7139 ->
                     FStar_Pervasives_Native.Some (true, l)
                 | FStar_Pervasives_Native.None  ->
-                    let uu____8191 =
+                    let uu____7144 =
                       FStar_Syntax_DsEnv.try_lookup_root_effect_name env l
                        in
-                    (match uu____8191 with
+                    (match uu____7144 with
                      | FStar_Pervasives_Native.Some new_name ->
                          FStar_Pervasives_Native.Some (false, new_name)
-                     | uu____8205 -> FStar_Pervasives_Native.None)
+                     | uu____7158 -> FStar_Pervasives_Native.None)
                  in
               match name with
               | FStar_Pervasives_Native.Some (resolve,new_name) ->
-                  let uu____8222 =
-                    let uu____8223 =
+                  let uu____7175 =
+                    let uu____7176 =
                       FStar_Syntax_Util.mk_field_projector_name_from_ident
                         new_name i
                        in
-                    desugar_name mk1 setpos env resolve uu____8223  in
-                  (uu____8222, noaqs)
-              | uu____8224 ->
-                  let uu____8231 =
-                    let uu____8236 =
+                    desugar_name mk1 setpos env resolve uu____7176  in
+                  (uu____7175, noaqs)
+              | uu____7177 ->
+                  let uu____7184 =
+                    let uu____7189 =
                       FStar_Util.format1
                         "Data constructor or effect %s not found"
                         l.FStar_Ident.str
                        in
-                    (FStar_Errors.Fatal_EffectNotFound, uu____8236)  in
-                  FStar_Errors.raise_error uu____8231
+                    (FStar_Errors.Fatal_EffectNotFound, uu____7189)  in
+                  FStar_Errors.raise_error uu____7184
                     top.FStar_Parser_AST.range))
         | FStar_Parser_AST.Discrim lid ->
             (FStar_Syntax_DsEnv.fail_if_qualified_by_curmodule env lid;
-             (let uu____8243 = FStar_Syntax_DsEnv.try_lookup_datacon env lid
+             (let uu____7196 = FStar_Syntax_DsEnv.try_lookup_datacon env lid
                  in
-              match uu____8243 with
+              match uu____7196 with
               | FStar_Pervasives_Native.None  ->
-                  let uu____8250 =
-                    let uu____8255 =
+                  let uu____7203 =
+                    let uu____7208 =
                       FStar_Util.format1 "Data constructor %s not found"
                         lid.FStar_Ident.str
                        in
-                    (FStar_Errors.Fatal_DataContructorNotFound, uu____8255)
+                    (FStar_Errors.Fatal_DataContructorNotFound, uu____7208)
                      in
-                  FStar_Errors.raise_error uu____8250
+                  FStar_Errors.raise_error uu____7203
                     top.FStar_Parser_AST.range
-              | uu____8260 ->
+              | uu____7213 ->
                   let lid' = FStar_Syntax_Util.mk_discriminator lid  in
-                  let uu____8264 = desugar_name mk1 setpos env true lid'  in
-                  (uu____8264, noaqs)))
+                  let uu____7217 = desugar_name mk1 setpos env true lid'  in
+                  (uu____7217, noaqs)))
         | FStar_Parser_AST.Construct (l,args) ->
             (FStar_Syntax_DsEnv.fail_if_qualified_by_curmodule env l;
-             (let uu____8280 = FStar_Syntax_DsEnv.try_lookup_datacon env l
+             (let uu____7233 = FStar_Syntax_DsEnv.try_lookup_datacon env l
                  in
-              match uu____8280 with
+              match uu____7233 with
               | FStar_Pervasives_Native.Some head1 ->
                   let head2 = mk1 (FStar_Syntax_Syntax.Tm_fvar head1)  in
                   (match args with
                    | [] -> (head2, noaqs)
-                   | uu____8299 ->
-                       let uu____8306 =
+                   | uu____7252 ->
+                       let uu____7259 =
                          FStar_Util.take
-                           (fun uu____8330  ->
-                              match uu____8330 with
-                              | (uu____8335,imp) ->
+                           (fun uu____7283  ->
+                              match uu____7283 with
+                              | (uu____7288,imp) ->
                                   imp = FStar_Parser_AST.UnivApp) args
                           in
-                       (match uu____8306 with
+                       (match uu____7259 with
                         | (universes,args1) ->
                             let universes1 =
                               FStar_List.map
@@ -2751,23 +2727,23 @@ and (desugar_term_maybe_top :
                                      (FStar_Pervasives_Native.fst x))
                                 universes
                                in
-                            let uu____8380 =
-                              let uu____8405 =
+                            let uu____7333 =
+                              let uu____7358 =
                                 FStar_List.map
-                                  (fun uu____8448  ->
-                                     match uu____8448 with
+                                  (fun uu____7401  ->
+                                     match uu____7401 with
                                      | (t,imp) ->
-                                         let uu____8465 =
+                                         let uu____7418 =
                                            desugar_term_aq env t  in
-                                         (match uu____8465 with
+                                         (match uu____7418 with
                                           | (te,aq) ->
                                               ((arg_withimp_e imp te), aq)))
                                   args1
                                  in
-                              FStar_All.pipe_right uu____8405
+                              FStar_All.pipe_right uu____7358
                                 FStar_List.unzip
                                in
-                            (match uu____8380 with
+                            (match uu____7333 with
                              | (args2,aqs) ->
                                  let head3 =
                                    if universes1 = []
@@ -2777,22 +2753,22 @@ and (desugar_term_maybe_top :
                                        (FStar_Syntax_Syntax.Tm_uinst
                                           (head2, universes1))
                                     in
-                                 let uu____8606 =
+                                 let uu____7559 =
                                    mk1
                                      (FStar_Syntax_Syntax.Tm_app
                                         (head3, args2))
                                     in
-                                 (uu____8606, (join_aqs aqs)))))
+                                 (uu____7559, (join_aqs aqs)))))
               | FStar_Pervasives_Native.None  ->
                   let err =
-                    let uu____8624 =
+                    let uu____7577 =
                       FStar_Syntax_DsEnv.try_lookup_effect_name env l  in
-                    match uu____8624 with
+                    match uu____7577 with
                     | FStar_Pervasives_Native.None  ->
                         (FStar_Errors.Fatal_ConstructorNotFound,
                           (Prims.strcat "Constructor "
                              (Prims.strcat l.FStar_Ident.str " not found")))
-                    | FStar_Pervasives_Native.Some uu____8631 ->
+                    | FStar_Pervasives_Native.Some uu____7584 ->
                         (FStar_Errors.Fatal_UnexpectedEffect,
                           (Prims.strcat "Effect "
                              (Prims.strcat l.FStar_Ident.str
@@ -2800,148 +2776,148 @@ and (desugar_term_maybe_top :
                      in
                   FStar_Errors.raise_error err top.FStar_Parser_AST.range))
         | FStar_Parser_AST.Sum (binders,t) ->
-            let uu____8642 =
+            let uu____7595 =
               FStar_List.fold_left
-                (fun uu____8687  ->
+                (fun uu____7640  ->
                    fun b  ->
-                     match uu____8687 with
+                     match uu____7640 with
                      | (env1,tparams,typs) ->
-                         let uu____8744 = desugar_binder env1 b  in
-                         (match uu____8744 with
+                         let uu____7697 = desugar_binder env1 b  in
+                         (match uu____7697 with
                           | (xopt,t1) ->
-                              let uu____8773 =
+                              let uu____7726 =
                                 match xopt with
                                 | FStar_Pervasives_Native.None  ->
-                                    let uu____8782 =
+                                    let uu____7735 =
                                       FStar_Syntax_Syntax.new_bv
                                         (FStar_Pervasives_Native.Some
                                            (top.FStar_Parser_AST.range))
                                         FStar_Syntax_Syntax.tun
                                        in
-                                    (env1, uu____8782)
+                                    (env1, uu____7735)
                                 | FStar_Pervasives_Native.Some x ->
                                     FStar_Syntax_DsEnv.push_bv env1 x
                                  in
-                              (match uu____8773 with
+                              (match uu____7726 with
                                | (env2,x) ->
-                                   let uu____8802 =
-                                     let uu____8805 =
-                                       let uu____8808 =
-                                         let uu____8809 =
+                                   let uu____7755 =
+                                     let uu____7758 =
+                                       let uu____7761 =
+                                         let uu____7762 =
                                            no_annot_abs tparams t1  in
                                          FStar_All.pipe_left
                                            FStar_Syntax_Syntax.as_arg
-                                           uu____8809
+                                           uu____7762
                                           in
-                                       [uu____8808]  in
-                                     FStar_List.append typs uu____8805  in
+                                       [uu____7761]  in
+                                     FStar_List.append typs uu____7758  in
                                    (env2,
                                      (FStar_List.append tparams
-                                        [(((let uu___283_8835 = x  in
+                                        [(((let uu___287_7788 = x  in
                                             {
                                               FStar_Syntax_Syntax.ppname =
-                                                (uu___283_8835.FStar_Syntax_Syntax.ppname);
+                                                (uu___287_7788.FStar_Syntax_Syntax.ppname);
                                               FStar_Syntax_Syntax.index =
-                                                (uu___283_8835.FStar_Syntax_Syntax.index);
+                                                (uu___287_7788.FStar_Syntax_Syntax.index);
                                               FStar_Syntax_Syntax.sort = t1
                                             })),
                                            FStar_Pervasives_Native.None)]),
-                                     uu____8802)))) (env, [], [])
+                                     uu____7755)))) (env, [], [])
                 (FStar_List.append binders
                    [FStar_Parser_AST.mk_binder (FStar_Parser_AST.NoName t)
                       t.FStar_Parser_AST.range FStar_Parser_AST.Type_level
                       FStar_Pervasives_Native.None])
                in
-            (match uu____8642 with
-             | (env1,uu____8863,targs) ->
-                 let uu____8885 =
-                   let uu____8890 =
+            (match uu____7595 with
+             | (env1,uu____7816,targs) ->
+                 let uu____7838 =
+                   let uu____7843 =
                      FStar_Parser_Const.mk_dtuple_lid
                        (FStar_List.length targs) top.FStar_Parser_AST.range
                       in
                    FStar_Syntax_DsEnv.fail_or env1
-                     (FStar_Syntax_DsEnv.try_lookup_lid env1) uu____8890
+                     (FStar_Syntax_DsEnv.try_lookup_lid env1) uu____7843
                     in
-                 (match uu____8885 with
-                  | (tup,uu____8900) ->
-                      let uu____8901 =
+                 (match uu____7838 with
+                  | (tup,uu____7853) ->
+                      let uu____7854 =
                         FStar_All.pipe_left mk1
                           (FStar_Syntax_Syntax.Tm_app (tup, targs))
                          in
-                      (uu____8901, noaqs)))
+                      (uu____7854, noaqs)))
         | FStar_Parser_AST.Product (binders,t) ->
-            let uu____8920 = uncurry binders t  in
-            (match uu____8920 with
+            let uu____7873 = uncurry binders t  in
+            (match uu____7873 with
              | (bs,t1) ->
-                 let rec aux env1 bs1 uu___240_8964 =
-                   match uu___240_8964 with
+                 let rec aux env1 bs1 uu___244_7917 =
+                   match uu___244_7917 with
                    | [] ->
                        let cod =
                          desugar_comp top.FStar_Parser_AST.range env1 t1  in
-                       let uu____8980 =
+                       let uu____7933 =
                          FStar_Syntax_Util.arrow (FStar_List.rev bs1) cod  in
-                       FStar_All.pipe_left setpos uu____8980
+                       FStar_All.pipe_left setpos uu____7933
                    | hd1::tl1 ->
                        let bb = desugar_binder env1 hd1  in
-                       let uu____9004 =
+                       let uu____7957 =
                          as_binder env1 hd1.FStar_Parser_AST.aqual bb  in
-                       (match uu____9004 with
+                       (match uu____7957 with
                         | (b,env2) -> aux env2 (b :: bs1) tl1)
                     in
-                 let uu____9037 = aux env [] bs  in (uu____9037, noaqs))
+                 let uu____7990 = aux env [] bs  in (uu____7990, noaqs))
         | FStar_Parser_AST.Refine (b,f) ->
-            let uu____9046 = desugar_binder env b  in
-            (match uu____9046 with
-             | (FStar_Pervasives_Native.None ,uu____9057) ->
+            let uu____7999 = desugar_binder env b  in
+            (match uu____7999 with
+             | (FStar_Pervasives_Native.None ,uu____8010) ->
                  failwith "Missing binder in refinement"
              | b1 ->
-                 let uu____9071 =
+                 let uu____8024 =
                    as_binder env FStar_Pervasives_Native.None b1  in
-                 (match uu____9071 with
-                  | ((x,uu____9087),env1) ->
+                 (match uu____8024 with
+                  | ((x,uu____8040),env1) ->
                       let f1 = desugar_formula env1 f  in
-                      let uu____9100 =
-                        let uu____9101 = FStar_Syntax_Util.refine x f1  in
-                        FStar_All.pipe_left setpos uu____9101  in
-                      (uu____9100, noaqs)))
+                      let uu____8053 =
+                        let uu____8054 = FStar_Syntax_Util.refine x f1  in
+                        FStar_All.pipe_left setpos uu____8054  in
+                      (uu____8053, noaqs)))
         | FStar_Parser_AST.Abs (binders,body) ->
             let binders1 =
               FStar_All.pipe_right binders
                 (FStar_List.map replace_unit_pattern)
                in
-            let uu____9119 =
+            let uu____8072 =
               FStar_List.fold_left
-                (fun uu____9139  ->
+                (fun uu____8092  ->
                    fun pat  ->
-                     match uu____9139 with
+                     match uu____8092 with
                      | (env1,ftvs) ->
                          (match pat.FStar_Parser_AST.pat with
                           | FStar_Parser_AST.PatAscribed
-                              (uu____9165,(t,FStar_Pervasives_Native.None ))
+                              (uu____8118,(t,FStar_Pervasives_Native.None ))
                               ->
-                              let uu____9175 =
-                                let uu____9178 = free_type_vars env1 t  in
-                                FStar_List.append uu____9178 ftvs  in
-                              (env1, uu____9175)
+                              let uu____8128 =
+                                let uu____8131 = free_type_vars env1 t  in
+                                FStar_List.append uu____8131 ftvs  in
+                              (env1, uu____8128)
                           | FStar_Parser_AST.PatAscribed
-                              (uu____9183,(t,FStar_Pervasives_Native.Some
+                              (uu____8136,(t,FStar_Pervasives_Native.Some
                                            tac))
                               ->
-                              let uu____9194 =
-                                let uu____9197 = free_type_vars env1 t  in
-                                let uu____9200 =
-                                  let uu____9203 = free_type_vars env1 tac
+                              let uu____8147 =
+                                let uu____8150 = free_type_vars env1 t  in
+                                let uu____8153 =
+                                  let uu____8156 = free_type_vars env1 tac
                                      in
-                                  FStar_List.append uu____9203 ftvs  in
-                                FStar_List.append uu____9197 uu____9200  in
-                              (env1, uu____9194)
-                          | uu____9208 -> (env1, ftvs))) (env, []) binders1
+                                  FStar_List.append uu____8156 ftvs  in
+                                FStar_List.append uu____8150 uu____8153  in
+                              (env1, uu____8147)
+                          | uu____8161 -> (env1, ftvs))) (env, []) binders1
                in
-            (match uu____9119 with
-             | (uu____9217,ftv) ->
+            (match uu____8072 with
+             | (uu____8170,ftv) ->
                  let ftv1 = sort_ftv ftv  in
                  let binders2 =
-                   let uu____9229 =
+                   let uu____8182 =
                      FStar_All.pipe_right ftv1
                        (FStar_List.map
                           (fun a  ->
@@ -2952,25 +2928,25 @@ and (desugar_term_maybe_top :
                                        FStar_Parser_AST.Implicit)))
                                top.FStar_Parser_AST.range))
                       in
-                   FStar_List.append uu____9229 binders1  in
-                 let rec aux env1 bs sc_pat_opt uu___241_9286 =
-                   match uu___241_9286 with
+                   FStar_List.append uu____8182 binders1  in
+                 let rec aux env1 bs sc_pat_opt uu___245_8239 =
+                   match uu___245_8239 with
                    | [] ->
-                       let uu____9313 = desugar_term_aq env1 body  in
-                       (match uu____9313 with
+                       let uu____8266 = desugar_term_aq env1 body  in
+                       (match uu____8266 with
                         | (body1,aq) ->
                             let body2 =
                               match sc_pat_opt with
                               | FStar_Pervasives_Native.Some (sc,pat) ->
                                   let body2 =
-                                    let uu____9350 =
-                                      let uu____9351 =
+                                    let uu____8303 =
+                                      let uu____8304 =
                                         FStar_Syntax_Syntax.pat_bvs pat  in
-                                      FStar_All.pipe_right uu____9351
+                                      FStar_All.pipe_right uu____8304
                                         (FStar_List.map
                                            FStar_Syntax_Syntax.mk_binder)
                                        in
-                                    FStar_Syntax_Subst.close uu____9350 body1
+                                    FStar_Syntax_Subst.close uu____8303 body1
                                      in
                                   FStar_Syntax_Syntax.mk
                                     (FStar_Syntax_Syntax.Tm_match
@@ -2980,43 +2956,42 @@ and (desugar_term_maybe_top :
                                     FStar_Pervasives_Native.None
                                     body2.FStar_Syntax_Syntax.pos
                               | FStar_Pervasives_Native.None  -> body1  in
-                            let uu____9420 =
-                              let uu____9423 =
+                            let uu____8373 =
+                              let uu____8376 =
                                 no_annot_abs (FStar_List.rev bs) body2  in
-                              setpos uu____9423  in
-                            (uu____9420, aq))
+                              setpos uu____8376  in
+                            (uu____8373, aq))
                    | p::rest ->
-                       let uu____9438 = desugar_binding_pat env1 p  in
-                       (match uu____9438 with
+                       let uu____8391 = desugar_binding_pat env1 p  in
+                       (match uu____8391 with
                         | (env2,b,pat) ->
                             let pat1 =
                               match pat with
                               | [] -> FStar_Pervasives_Native.None
-                              | (p1,uu____9472)::[] ->
-                                  FStar_Pervasives_Native.Some p1
-                              | uu____9487 ->
+                              | p1::[] -> FStar_Pervasives_Native.Some p1
+                              | uu____8427 ->
                                   FStar_Errors.raise_error
                                     (FStar_Errors.Fatal_UnsupportedDisjuctivePatterns,
                                       "Disjunctive patterns are not supported in abstractions")
                                     p.FStar_Parser_AST.prange
                                in
-                            let uu____9494 =
+                            let uu____8434 =
                               match b with
-                              | LetBinder uu____9535 -> failwith "Impossible"
+                              | LetBinder uu____8475 -> failwith "Impossible"
                               | LocalBinder (x,aq) ->
                                   let sc_pat_opt1 =
                                     match (pat1, sc_pat_opt) with
                                     | (FStar_Pervasives_Native.None
-                                       ,uu____9603) -> sc_pat_opt
+                                       ,uu____8543) -> sc_pat_opt
                                     | (FStar_Pervasives_Native.Some
                                        p1,FStar_Pervasives_Native.None ) ->
-                                        let uu____9657 =
-                                          let uu____9666 =
+                                        let uu____8597 =
+                                          let uu____8606 =
                                             FStar_Syntax_Syntax.bv_to_name x
                                              in
-                                          (uu____9666, p1)  in
+                                          (uu____8606, p1)  in
                                         FStar_Pervasives_Native.Some
-                                          uu____9657
+                                          uu____8597
                                     | (FStar_Pervasives_Native.Some
                                        p1,FStar_Pervasives_Native.Some
                                        (sc,p')) ->
@@ -3024,61 +2999,61 @@ and (desugar_term_maybe_top :
                                                  (p'.FStar_Syntax_Syntax.v))
                                          with
                                          | (FStar_Syntax_Syntax.Tm_name
-                                            uu____9728,uu____9729) ->
+                                            uu____8668,uu____8669) ->
                                              let tup2 =
-                                               let uu____9731 =
+                                               let uu____8671 =
                                                  FStar_Parser_Const.mk_tuple_data_lid
                                                    (Prims.parse_int "2")
                                                    top.FStar_Parser_AST.range
                                                   in
                                                FStar_Syntax_Syntax.lid_as_fv
-                                                 uu____9731
+                                                 uu____8671
                                                  FStar_Syntax_Syntax.delta_constant
                                                  (FStar_Pervasives_Native.Some
                                                     FStar_Syntax_Syntax.Data_ctor)
                                                 in
                                              let sc1 =
-                                               let uu____9735 =
-                                                 let uu____9742 =
-                                                   let uu____9743 =
-                                                     let uu____9760 =
+                                               let uu____8675 =
+                                                 let uu____8682 =
+                                                   let uu____8683 =
+                                                     let uu____8700 =
                                                        mk1
                                                          (FStar_Syntax_Syntax.Tm_fvar
                                                             tup2)
                                                         in
-                                                     let uu____9763 =
-                                                       let uu____9774 =
+                                                     let uu____8703 =
+                                                       let uu____8714 =
                                                          FStar_Syntax_Syntax.as_arg
                                                            sc
                                                           in
-                                                       let uu____9783 =
-                                                         let uu____9794 =
-                                                           let uu____9803 =
+                                                       let uu____8723 =
+                                                         let uu____8734 =
+                                                           let uu____8743 =
                                                              FStar_Syntax_Syntax.bv_to_name
                                                                x
                                                               in
                                                            FStar_All.pipe_left
                                                              FStar_Syntax_Syntax.as_arg
-                                                             uu____9803
+                                                             uu____8743
                                                             in
-                                                         [uu____9794]  in
-                                                       uu____9774 ::
-                                                         uu____9783
+                                                         [uu____8734]  in
+                                                       uu____8714 ::
+                                                         uu____8723
                                                         in
-                                                     (uu____9760, uu____9763)
+                                                     (uu____8700, uu____8703)
                                                       in
                                                    FStar_Syntax_Syntax.Tm_app
-                                                     uu____9743
+                                                     uu____8683
                                                     in
                                                  FStar_Syntax_Syntax.mk
-                                                   uu____9742
+                                                   uu____8682
                                                   in
-                                               uu____9735
+                                               uu____8675
                                                  FStar_Pervasives_Native.None
                                                  top.FStar_Parser_AST.range
                                                 in
                                              let p2 =
-                                               let uu____9854 =
+                                               let uu____8794 =
                                                  FStar_Range.union_ranges
                                                    p'.FStar_Syntax_Syntax.p
                                                    p1.FStar_Syntax_Syntax.p
@@ -3088,57 +3063,57 @@ and (desugar_term_maybe_top :
                                                     (tup2,
                                                       [(p', false);
                                                       (p1, false)]))
-                                                 uu____9854
+                                                 uu____8794
                                                 in
                                              FStar_Pervasives_Native.Some
                                                (sc1, p2)
                                          | (FStar_Syntax_Syntax.Tm_app
-                                            (uu____9897,args),FStar_Syntax_Syntax.Pat_cons
-                                            (uu____9899,pats)) ->
+                                            (uu____8837,args),FStar_Syntax_Syntax.Pat_cons
+                                            (uu____8839,pats)) ->
                                              let tupn =
-                                               let uu____9942 =
+                                               let uu____8882 =
                                                  FStar_Parser_Const.mk_tuple_data_lid
                                                    ((Prims.parse_int "1") +
                                                       (FStar_List.length args))
                                                    top.FStar_Parser_AST.range
                                                   in
                                                FStar_Syntax_Syntax.lid_as_fv
-                                                 uu____9942
+                                                 uu____8882
                                                  FStar_Syntax_Syntax.delta_constant
                                                  (FStar_Pervasives_Native.Some
                                                     FStar_Syntax_Syntax.Data_ctor)
                                                 in
                                              let sc1 =
-                                               let uu____9954 =
-                                                 let uu____9955 =
-                                                   let uu____9972 =
+                                               let uu____8894 =
+                                                 let uu____8895 =
+                                                   let uu____8912 =
                                                      mk1
                                                        (FStar_Syntax_Syntax.Tm_fvar
                                                           tupn)
                                                       in
-                                                   let uu____9975 =
-                                                     let uu____9986 =
-                                                       let uu____9997 =
-                                                         let uu____10006 =
+                                                   let uu____8915 =
+                                                     let uu____8926 =
+                                                       let uu____8937 =
+                                                         let uu____8946 =
                                                            FStar_Syntax_Syntax.bv_to_name
                                                              x
                                                             in
                                                          FStar_All.pipe_left
                                                            FStar_Syntax_Syntax.as_arg
-                                                           uu____10006
+                                                           uu____8946
                                                           in
-                                                       [uu____9997]  in
+                                                       [uu____8937]  in
                                                      FStar_List.append args
-                                                       uu____9986
+                                                       uu____8926
                                                       in
-                                                   (uu____9972, uu____9975)
+                                                   (uu____8912, uu____8915)
                                                     in
                                                  FStar_Syntax_Syntax.Tm_app
-                                                   uu____9955
+                                                   uu____8895
                                                   in
-                                               mk1 uu____9954  in
+                                               mk1 uu____8894  in
                                              let p2 =
-                                               let uu____10054 =
+                                               let uu____8994 =
                                                  FStar_Range.union_ranges
                                                    p'.FStar_Syntax_Syntax.p
                                                    p1.FStar_Syntax_Syntax.p
@@ -3148,61 +3123,61 @@ and (desugar_term_maybe_top :
                                                     (tupn,
                                                       (FStar_List.append pats
                                                          [(p1, false)])))
-                                                 uu____10054
+                                                 uu____8994
                                                 in
                                              FStar_Pervasives_Native.Some
                                                (sc1, p2)
-                                         | uu____10095 ->
+                                         | uu____9035 ->
                                              failwith "Impossible")
                                      in
                                   ((x, aq), sc_pat_opt1)
                                in
-                            (match uu____9494 with
+                            (match uu____8434 with
                              | (b1,sc_pat_opt1) ->
                                  aux env2 (b1 :: bs) sc_pat_opt1 rest))
                     in
                  aux env [] FStar_Pervasives_Native.None binders2)
         | FStar_Parser_AST.App
-            (uu____10188,uu____10189,FStar_Parser_AST.UnivApp ) ->
+            (uu____9128,uu____9129,FStar_Parser_AST.UnivApp ) ->
             let rec aux universes e =
-              let uu____10211 =
-                let uu____10212 = unparen e  in
-                uu____10212.FStar_Parser_AST.tm  in
-              match uu____10211 with
+              let uu____9151 =
+                let uu____9152 = unparen e  in uu____9152.FStar_Parser_AST.tm
+                 in
+              match uu____9151 with
               | FStar_Parser_AST.App (e1,t,FStar_Parser_AST.UnivApp ) ->
                   let univ_arg = desugar_universe t  in
                   aux (univ_arg :: universes) e1
-              | uu____10222 ->
-                  let uu____10223 = desugar_term_aq env e  in
-                  (match uu____10223 with
+              | uu____9162 ->
+                  let uu____9163 = desugar_term_aq env e  in
+                  (match uu____9163 with
                    | (head1,aq) ->
-                       let uu____10236 =
+                       let uu____9176 =
                          mk1
                            (FStar_Syntax_Syntax.Tm_uinst (head1, universes))
                           in
-                       (uu____10236, aq))
+                       (uu____9176, aq))
                in
             aux [] top
-        | FStar_Parser_AST.App uu____10243 ->
+        | FStar_Parser_AST.App uu____9183 ->
             let rec aux args aqs e =
-              let uu____10320 =
-                let uu____10321 = unparen e  in
-                uu____10321.FStar_Parser_AST.tm  in
-              match uu____10320 with
+              let uu____9260 =
+                let uu____9261 = unparen e  in uu____9261.FStar_Parser_AST.tm
+                 in
+              match uu____9260 with
               | FStar_Parser_AST.App (e1,t,imp) when
                   imp <> FStar_Parser_AST.UnivApp ->
-                  let uu____10339 = desugar_term_aq env t  in
-                  (match uu____10339 with
+                  let uu____9279 = desugar_term_aq env t  in
+                  (match uu____9279 with
                    | (t1,aq) ->
                        let arg = arg_withimp_e imp t1  in
                        aux (arg :: args) (aq :: aqs) e1)
-              | uu____10387 ->
-                  let uu____10388 = desugar_term_aq env e  in
-                  (match uu____10388 with
+              | uu____9327 ->
+                  let uu____9328 = desugar_term_aq env e  in
+                  (match uu____9328 with
                    | (head1,aq) ->
-                       let uu____10409 =
+                       let uu____9349 =
                          mk1 (FStar_Syntax_Syntax.Tm_app (head1, args))  in
-                       (uu____10409, (join_aqs (aq :: aqs))))
+                       (uu____9349, (join_aqs (aq :: aqs))))
                in
             aux [] [] top
         | FStar_Parser_AST.Bind (x,t1,t2) ->
@@ -3221,11 +3196,11 @@ and (desugar_term_maybe_top :
               FStar_Parser_AST.mk_term (FStar_Parser_AST.Var bind_lid)
                 x.FStar_Ident.idRange FStar_Parser_AST.Expr
                in
-            let uu____10469 =
+            let uu____9409 =
               FStar_Parser_AST.mkExplicitApp bind1 [t1; k]
                 top.FStar_Parser_AST.range
                in
-            desugar_term_aq env uu____10469
+            desugar_term_aq env uu____9409
         | FStar_Parser_AST.Seq (t1,t2) ->
             let t =
               FStar_Parser_AST.mk_term
@@ -3233,147 +3208,146 @@ and (desugar_term_maybe_top :
                    (FStar_Parser_AST.NoLetQualifier,
                      [(FStar_Pervasives_Native.None,
                         ((FStar_Parser_AST.mk_pattern
-                            (FStar_Parser_AST.PatWild
-                               FStar_Pervasives_Native.None)
+                            FStar_Parser_AST.PatWild
                             t1.FStar_Parser_AST.range), t1))], t2))
                 top.FStar_Parser_AST.range FStar_Parser_AST.Expr
                in
-            let uu____10521 = desugar_term_aq env t  in
-            (match uu____10521 with
+            let uu____9461 = desugar_term_aq env t  in
+            (match uu____9461 with
              | (tm,s) ->
-                 let uu____10532 =
+                 let uu____9472 =
                    mk1
                      (FStar_Syntax_Syntax.Tm_meta
                         (tm,
                           (FStar_Syntax_Syntax.Meta_desugared
                              FStar_Syntax_Syntax.Sequence)))
                     in
-                 (uu____10532, s))
+                 (uu____9472, s))
         | FStar_Parser_AST.LetOpen (lid,e) ->
             let env1 = FStar_Syntax_DsEnv.push_namespace env lid  in
-            let uu____10538 =
-              let uu____10551 = FStar_Syntax_DsEnv.expect_typ env1  in
-              if uu____10551 then desugar_typ_aq else desugar_term_aq  in
-            uu____10538 env1 e
+            let uu____9478 =
+              let uu____9491 = FStar_Syntax_DsEnv.expect_typ env1  in
+              if uu____9491 then desugar_typ_aq else desugar_term_aq  in
+            uu____9478 env1 e
         | FStar_Parser_AST.Let (qual,lbs,body) ->
             let is_rec = qual = FStar_Parser_AST.Rec  in
-            let ds_let_rec_or_app uu____10606 =
+            let ds_let_rec_or_app uu____9546 =
               let bindings = lbs  in
               let funs =
                 FStar_All.pipe_right bindings
                   (FStar_List.map
-                     (fun uu____10749  ->
-                        match uu____10749 with
+                     (fun uu____9689  ->
+                        match uu____9689 with
                         | (attr_opt,(p,def)) ->
-                            let uu____10807 = is_app_pattern p  in
-                            if uu____10807
+                            let uu____9747 = is_app_pattern p  in
+                            if uu____9747
                             then
-                              let uu____10838 =
+                              let uu____9778 =
                                 destruct_app_pattern env top_level p  in
-                              (attr_opt, uu____10838, def)
+                              (attr_opt, uu____9778, def)
                             else
                               (match FStar_Parser_AST.un_function p def with
                                | FStar_Pervasives_Native.Some (p1,def1) ->
-                                   let uu____10920 =
+                                   let uu____9860 =
                                      destruct_app_pattern env top_level p1
                                       in
-                                   (attr_opt, uu____10920, def1)
-                               | uu____10965 ->
+                                   (attr_opt, uu____9860, def1)
+                               | uu____9905 ->
                                    (match p.FStar_Parser_AST.pat with
                                     | FStar_Parser_AST.PatAscribed
                                         ({
                                            FStar_Parser_AST.pat =
                                              FStar_Parser_AST.PatVar
-                                             (id1,uu____11003);
+                                             (id1,uu____9943);
                                            FStar_Parser_AST.prange =
-                                             uu____11004;_},t)
+                                             uu____9944;_},t)
                                         ->
                                         if top_level
                                         then
-                                          let uu____11052 =
-                                            let uu____11073 =
-                                              let uu____11078 =
+                                          let uu____9992 =
+                                            let uu____10013 =
+                                              let uu____10018 =
                                                 FStar_Syntax_DsEnv.qualify
                                                   env id1
                                                  in
-                                              FStar_Util.Inr uu____11078  in
-                                            (uu____11073, [],
+                                              FStar_Util.Inr uu____10018  in
+                                            (uu____10013, [],
                                               (FStar_Pervasives_Native.Some t))
                                              in
-                                          (attr_opt, uu____11052, def)
+                                          (attr_opt, uu____9992, def)
                                         else
                                           (attr_opt,
                                             ((FStar_Util.Inl id1), [],
                                               (FStar_Pervasives_Native.Some t)),
                                             def)
                                     | FStar_Parser_AST.PatVar
-                                        (id1,uu____11169) ->
+                                        (id1,uu____10109) ->
                                         if top_level
                                         then
-                                          let uu____11204 =
-                                            let uu____11225 =
-                                              let uu____11230 =
+                                          let uu____10144 =
+                                            let uu____10165 =
+                                              let uu____10170 =
                                                 FStar_Syntax_DsEnv.qualify
                                                   env id1
                                                  in
-                                              FStar_Util.Inr uu____11230  in
-                                            (uu____11225, [],
+                                              FStar_Util.Inr uu____10170  in
+                                            (uu____10165, [],
                                               FStar_Pervasives_Native.None)
                                              in
-                                          (attr_opt, uu____11204, def)
+                                          (attr_opt, uu____10144, def)
                                         else
                                           (attr_opt,
                                             ((FStar_Util.Inl id1), [],
                                               FStar_Pervasives_Native.None),
                                             def)
-                                    | uu____11320 ->
+                                    | uu____10260 ->
                                         FStar_Errors.raise_error
                                           (FStar_Errors.Fatal_UnexpectedLetBinding,
                                             "Unexpected let binding")
                                           p.FStar_Parser_AST.prange))))
                  in
-              let uu____11351 =
+              let uu____10291 =
                 FStar_List.fold_left
-                  (fun uu____11424  ->
-                     fun uu____11425  ->
-                       match (uu____11424, uu____11425) with
-                       | ((env1,fnames,rec_bindings),(_attr_opt,(f,uu____11533,uu____11534),uu____11535))
+                  (fun uu____10364  ->
+                     fun uu____10365  ->
+                       match (uu____10364, uu____10365) with
+                       | ((env1,fnames,rec_bindings),(_attr_opt,(f,uu____10473,uu____10474),uu____10475))
                            ->
-                           let uu____11652 =
+                           let uu____10592 =
                              match f with
                              | FStar_Util.Inl x ->
-                                 let uu____11678 =
+                                 let uu____10618 =
                                    FStar_Syntax_DsEnv.push_bv env1 x  in
-                                 (match uu____11678 with
+                                 (match uu____10618 with
                                   | (env2,xx) ->
-                                      let uu____11697 =
-                                        let uu____11700 =
+                                      let uu____10637 =
+                                        let uu____10640 =
                                           FStar_Syntax_Syntax.mk_binder xx
                                            in
-                                        uu____11700 :: rec_bindings  in
+                                        uu____10640 :: rec_bindings  in
                                       (env2, (FStar_Util.Inl xx),
-                                        uu____11697))
+                                        uu____10637))
                              | FStar_Util.Inr l ->
-                                 let uu____11708 =
+                                 let uu____10648 =
                                    FStar_Syntax_DsEnv.push_top_level_rec_binding
                                      env1 l.FStar_Ident.ident
                                      FStar_Syntax_Syntax.delta_equational
                                     in
-                                 (uu____11708, (FStar_Util.Inr l),
+                                 (uu____10648, (FStar_Util.Inr l),
                                    rec_bindings)
                               in
-                           (match uu____11652 with
+                           (match uu____10592 with
                             | (env2,lbname,rec_bindings1) ->
                                 (env2, (lbname :: fnames), rec_bindings1)))
                   (env, [], []) funs
                  in
-              match uu____11351 with
+              match uu____10291 with
               | (env',fnames,rec_bindings) ->
                   let fnames1 = FStar_List.rev fnames  in
                   let rec_bindings1 = FStar_List.rev rec_bindings  in
-                  let desugar_one_def env1 lbname uu____11856 =
-                    match uu____11856 with
-                    | (attrs_opt,(uu____11892,args,result_t),def) ->
+                  let desugar_one_def env1 lbname uu____10796 =
+                    match uu____10796 with
+                    | (attrs_opt,(uu____10832,args,result_t),def) ->
                         let args1 =
                           FStar_All.pipe_right args
                             (FStar_List.map replace_unit_pattern)
@@ -3384,18 +3358,18 @@ and (desugar_term_maybe_top :
                           | FStar_Pervasives_Native.None  -> def
                           | FStar_Pervasives_Native.Some (t,tacopt) ->
                               let t1 =
-                                let uu____11980 = is_comp_type env1 t  in
-                                if uu____11980
+                                let uu____10920 = is_comp_type env1 t  in
+                                if uu____10920
                                 then
-                                  ((let uu____11982 =
+                                  ((let uu____10922 =
                                       FStar_All.pipe_right args1
                                         (FStar_List.tryFind
                                            (fun x  ->
-                                              let uu____11992 =
+                                              let uu____10932 =
                                                 is_var_pattern x  in
-                                              Prims.op_Negation uu____11992))
+                                              Prims.op_Negation uu____10932))
                                        in
-                                    match uu____11982 with
+                                    match uu____10922 with
                                     | FStar_Pervasives_Native.None  -> ()
                                     | FStar_Pervasives_Native.Some p ->
                                         FStar_Errors.raise_error
@@ -3404,20 +3378,20 @@ and (desugar_term_maybe_top :
                                           p.FStar_Parser_AST.prange);
                                    t)
                                 else
-                                  (let uu____11995 =
+                                  (let uu____10935 =
                                      ((FStar_Options.ml_ish ()) &&
-                                        (let uu____11997 =
+                                        (let uu____10937 =
                                            FStar_Syntax_DsEnv.try_lookup_effect_name
                                              env1
                                              FStar_Parser_Const.effect_ML_lid
                                             in
-                                         FStar_Option.isSome uu____11997))
+                                         FStar_Option.isSome uu____10937))
                                        &&
                                        ((Prims.op_Negation is_rec) ||
                                           ((FStar_List.length args1) <>
                                              (Prims.parse_int "0")))
                                       in
-                                   if uu____11995
+                                   if uu____10935
                                    then FStar_Parser_AST.ml_comp t
                                    else FStar_Parser_AST.tot_comp t)
                                  in
@@ -3429,7 +3403,7 @@ and (desugar_term_maybe_top :
                         let def2 =
                           match args1 with
                           | [] -> def1
-                          | uu____12004 ->
+                          | uu____10944 ->
                               FStar_Parser_AST.mk_term
                                 (FStar_Parser_AST.un_curry_abs args1 def1)
                                 top.FStar_Parser_AST.range
@@ -3440,15 +3414,15 @@ and (desugar_term_maybe_top :
                           match lbname with
                           | FStar_Util.Inl x -> FStar_Util.Inl x
                           | FStar_Util.Inr l ->
-                              let uu____12019 =
-                                let uu____12020 =
+                              let uu____10959 =
+                                let uu____10960 =
                                   FStar_Syntax_Util.incr_delta_qualifier
                                     body1
                                    in
-                                FStar_Syntax_Syntax.lid_as_fv l uu____12020
+                                FStar_Syntax_Syntax.lid_as_fv l uu____10960
                                   FStar_Pervasives_Native.None
                                  in
-                              FStar_Util.Inr uu____12019
+                              FStar_Util.Inr uu____10959
                            in
                         let body2 =
                           if is_rec
@@ -3469,19 +3443,19 @@ and (desugar_term_maybe_top :
                       (desugar_one_def (if is_rec then env' else env))
                       fnames1 funs
                      in
-                  let uu____12097 = desugar_term_aq env' body  in
-                  (match uu____12097 with
+                  let uu____11037 = desugar_term_aq env' body  in
+                  (match uu____11037 with
                    | (body1,aq) ->
-                       let uu____12110 =
-                         let uu____12113 =
-                           let uu____12114 =
-                             let uu____12127 =
+                       let uu____11050 =
+                         let uu____11053 =
+                           let uu____11054 =
+                             let uu____11067 =
                                FStar_Syntax_Subst.close rec_bindings1 body1
                                 in
-                             ((is_rec, lbs1), uu____12127)  in
-                           FStar_Syntax_Syntax.Tm_let uu____12114  in
-                         FStar_All.pipe_left mk1 uu____12113  in
-                       (uu____12110, aq))
+                             ((is_rec, lbs1), uu____11067)  in
+                           FStar_Syntax_Syntax.Tm_let uu____11054  in
+                         FStar_All.pipe_left mk1 uu____11053  in
+                       (uu____11050, aq))
                in
             let ds_non_rec attrs_opt pat t1 t2 =
               let attrs =
@@ -3493,25 +3467,25 @@ and (desugar_term_maybe_top :
               let t11 = desugar_term env t1  in
               let is_mutable = qual = FStar_Parser_AST.Mutable  in
               let t12 = if is_mutable then mk_ref_alloc t11 else t11  in
-              let uu____12207 =
+              let uu____11147 =
                 desugar_binding_pat_maybe_top top_level env pat is_mutable
                  in
-              match uu____12207 with
+              match uu____11147 with
               | (env1,binder,pat1) ->
-                  let uu____12229 =
+                  let uu____11169 =
                     match binder with
                     | LetBinder (l,(t,_tacopt)) ->
-                        let uu____12255 = desugar_term_aq env1 t2  in
-                        (match uu____12255 with
+                        let uu____11195 = desugar_term_aq env1 t2  in
+                        (match uu____11195 with
                          | (body1,aq) ->
                              let fv =
-                               let uu____12269 =
+                               let uu____11209 =
                                  FStar_Syntax_Util.incr_delta_qualifier t12
                                   in
-                               FStar_Syntax_Syntax.lid_as_fv l uu____12269
+                               FStar_Syntax_Syntax.lid_as_fv l uu____11209
                                  FStar_Pervasives_Native.None
                                 in
-                             let uu____12270 =
+                             let uu____11210 =
                                FStar_All.pipe_left mk1
                                  (FStar_Syntax_Syntax.Tm_let
                                     ((false,
@@ -3521,49 +3495,48 @@ and (desugar_term_maybe_top :
                                             (t12.FStar_Syntax_Syntax.pos))]),
                                       body1))
                                 in
-                             (uu____12270, aq))
-                    | LocalBinder (x,uu____12300) ->
-                        let uu____12301 = desugar_term_aq env1 t2  in
-                        (match uu____12301 with
+                             (uu____11210, aq))
+                    | LocalBinder (x,uu____11240) ->
+                        let uu____11241 = desugar_term_aq env1 t2  in
+                        (match uu____11241 with
                          | (body1,aq) ->
                              let body2 =
                                match pat1 with
                                | [] -> body1
-                               | ({
-                                    FStar_Syntax_Syntax.v =
-                                      FStar_Syntax_Syntax.Pat_wild
-                                      uu____12315;
-                                    FStar_Syntax_Syntax.p = uu____12316;_},uu____12317)::[]
+                               | {
+                                   FStar_Syntax_Syntax.v =
+                                     FStar_Syntax_Syntax.Pat_wild uu____11255;
+                                   FStar_Syntax_Syntax.p = uu____11256;_}::[]
                                    -> body1
-                               | uu____12330 ->
-                                   let uu____12333 =
-                                     let uu____12340 =
-                                       let uu____12341 =
-                                         let uu____12364 =
+                               | uu____11257 ->
+                                   let uu____11260 =
+                                     let uu____11267 =
+                                       let uu____11268 =
+                                         let uu____11291 =
                                            FStar_Syntax_Syntax.bv_to_name x
                                             in
-                                         let uu____12367 =
+                                         let uu____11294 =
                                            desugar_disjunctive_pattern pat1
                                              FStar_Pervasives_Native.None
                                              body1
                                             in
-                                         (uu____12364, uu____12367)  in
+                                         (uu____11291, uu____11294)  in
                                        FStar_Syntax_Syntax.Tm_match
-                                         uu____12341
+                                         uu____11268
                                         in
-                                     FStar_Syntax_Syntax.mk uu____12340  in
-                                   uu____12333 FStar_Pervasives_Native.None
+                                     FStar_Syntax_Syntax.mk uu____11267  in
+                                   uu____11260 FStar_Pervasives_Native.None
                                      top.FStar_Parser_AST.range
                                 in
-                             let uu____12407 =
-                               let uu____12410 =
-                                 let uu____12411 =
-                                   let uu____12424 =
-                                     let uu____12427 =
-                                       let uu____12428 =
+                             let uu____11334 =
+                               let uu____11337 =
+                                 let uu____11338 =
+                                   let uu____11351 =
+                                     let uu____11354 =
+                                       let uu____11355 =
                                          FStar_Syntax_Syntax.mk_binder x  in
-                                       [uu____12428]  in
-                                     FStar_Syntax_Subst.close uu____12427
+                                       [uu____11355]  in
+                                     FStar_Syntax_Subst.close uu____11354
                                        body2
                                       in
                                    ((false,
@@ -3571,31 +3544,31 @@ and (desugar_term_maybe_top :
                                          (attrs, (FStar_Util.Inl x),
                                            (x.FStar_Syntax_Syntax.sort), t12,
                                            (t12.FStar_Syntax_Syntax.pos))]),
-                                     uu____12424)
+                                     uu____11351)
                                     in
-                                 FStar_Syntax_Syntax.Tm_let uu____12411  in
-                               FStar_All.pipe_left mk1 uu____12410  in
-                             (uu____12407, aq))
+                                 FStar_Syntax_Syntax.Tm_let uu____11338  in
+                               FStar_All.pipe_left mk1 uu____11337  in
+                             (uu____11334, aq))
                      in
-                  (match uu____12229 with
+                  (match uu____11169 with
                    | (tm,aq) ->
                        if is_mutable
                        then
-                         let uu____12491 =
+                         let uu____11418 =
                            FStar_All.pipe_left mk1
                              (FStar_Syntax_Syntax.Tm_meta
                                 (tm,
                                   (FStar_Syntax_Syntax.Meta_desugared
                                      FStar_Syntax_Syntax.Mutable_alloc)))
                             in
-                         (uu____12491, aq)
+                         (uu____11418, aq)
                        else (tm, aq))
                in
-            let uu____12503 = FStar_List.hd lbs  in
-            (match uu____12503 with
+            let uu____11430 = FStar_List.hd lbs  in
+            (match uu____11430 with
              | (attrs,(head_pat,defn)) ->
-                 let uu____12547 = is_rec || (is_app_pattern head_pat)  in
-                 if uu____12547
+                 let uu____11474 = is_rec || (is_app_pattern head_pat)  in
+                 if uu____11474
                  then ds_let_rec_or_app ()
                  else ds_non_rec attrs head_pat defn body)
         | FStar_Parser_AST.If (t1,t2,t3) ->
@@ -3605,53 +3578,53 @@ and (desugar_term_maybe_top :
                 FStar_Syntax_Syntax.tun
                in
             let t_bool1 =
-              let uu____12560 =
-                let uu____12561 =
+              let uu____11487 =
+                let uu____11488 =
                   FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.bool_lid
                     FStar_Syntax_Syntax.delta_constant
                     FStar_Pervasives_Native.None
                    in
-                FStar_Syntax_Syntax.Tm_fvar uu____12561  in
-              mk1 uu____12560  in
-            let uu____12562 = desugar_term_aq env t1  in
-            (match uu____12562 with
+                FStar_Syntax_Syntax.Tm_fvar uu____11488  in
+              mk1 uu____11487  in
+            let uu____11489 = desugar_term_aq env t1  in
+            (match uu____11489 with
              | (t1',aq1) ->
-                 let uu____12573 = desugar_term_aq env t2  in
-                 (match uu____12573 with
+                 let uu____11500 = desugar_term_aq env t2  in
+                 (match uu____11500 with
                   | (t2',aq2) ->
-                      let uu____12584 = desugar_term_aq env t3  in
-                      (match uu____12584 with
+                      let uu____11511 = desugar_term_aq env t3  in
+                      (match uu____11511 with
                        | (t3',aq3) ->
-                           let uu____12595 =
-                             let uu____12596 =
-                               let uu____12597 =
-                                 let uu____12620 =
-                                   let uu____12637 =
-                                     let uu____12652 =
+                           let uu____11522 =
+                             let uu____11523 =
+                               let uu____11524 =
+                                 let uu____11547 =
+                                   let uu____11564 =
+                                     let uu____11579 =
                                        FStar_Syntax_Syntax.withinfo
                                          (FStar_Syntax_Syntax.Pat_constant
                                             (FStar_Const.Const_bool true))
                                          t2.FStar_Parser_AST.range
                                         in
-                                     (uu____12652,
+                                     (uu____11579,
                                        FStar_Pervasives_Native.None, t2')
                                       in
-                                   let uu____12665 =
-                                     let uu____12682 =
-                                       let uu____12697 =
+                                   let uu____11592 =
+                                     let uu____11609 =
+                                       let uu____11624 =
                                          FStar_Syntax_Syntax.withinfo
                                            (FStar_Syntax_Syntax.Pat_wild x)
                                            t3.FStar_Parser_AST.range
                                           in
-                                       (uu____12697,
+                                       (uu____11624,
                                          FStar_Pervasives_Native.None, t3')
                                         in
-                                     [uu____12682]  in
-                                   uu____12637 :: uu____12665  in
-                                 (t1', uu____12620)  in
-                               FStar_Syntax_Syntax.Tm_match uu____12597  in
-                             mk1 uu____12596  in
-                           (uu____12595, (join_aqs [aq1; aq2; aq3])))))
+                                     [uu____11609]  in
+                                   uu____11564 :: uu____11592  in
+                                 (t1', uu____11547)  in
+                               FStar_Syntax_Syntax.Tm_match uu____11524  in
+                             mk1 uu____11523  in
+                           (uu____11522, (join_aqs [aq1; aq2; aq3])))))
         | FStar_Parser_AST.TryWith (e,branches) ->
             let r = top.FStar_Parser_AST.range  in
             let handler = FStar_Parser_AST.mk_function branches r r  in
@@ -3676,70 +3649,70 @@ and (desugar_term_maybe_top :
                in
             desugar_term_aq env a2
         | FStar_Parser_AST.Match (e,branches) ->
-            let desugar_branch uu____12888 =
-              match uu____12888 with
+            let desugar_branch uu____11815 =
+              match uu____11815 with
               | (pat,wopt,b) ->
-                  let uu____12910 = desugar_match_pat env pat  in
-                  (match uu____12910 with
+                  let uu____11837 = desugar_match_pat env pat  in
+                  (match uu____11837 with
                    | (env1,pat1) ->
                        let wopt1 =
                          match wopt with
                          | FStar_Pervasives_Native.None  ->
                              FStar_Pervasives_Native.None
                          | FStar_Pervasives_Native.Some e1 ->
-                             let uu____12941 = desugar_term env1 e1  in
-                             FStar_Pervasives_Native.Some uu____12941
+                             let uu____11868 = desugar_term env1 e1  in
+                             FStar_Pervasives_Native.Some uu____11868
                           in
-                       let uu____12946 = desugar_term_aq env1 b  in
-                       (match uu____12946 with
+                       let uu____11873 = desugar_term_aq env1 b  in
+                       (match uu____11873 with
                         | (b1,aq) ->
-                            let uu____12959 =
+                            let uu____11886 =
                               desugar_disjunctive_pattern pat1 wopt1 b1  in
-                            (uu____12959, aq)))
+                            (uu____11886, aq)))
                in
-            let uu____12964 = desugar_term_aq env e  in
-            (match uu____12964 with
+            let uu____11891 = desugar_term_aq env e  in
+            (match uu____11891 with
              | (e1,aq) ->
-                 let uu____12975 =
-                   let uu____13006 =
-                     let uu____13039 = FStar_List.map desugar_branch branches
+                 let uu____11902 =
+                   let uu____11933 =
+                     let uu____11966 = FStar_List.map desugar_branch branches
                         in
-                     FStar_All.pipe_right uu____13039 FStar_List.unzip  in
-                   FStar_All.pipe_right uu____13006
-                     (fun uu____13257  ->
-                        match uu____13257 with
+                     FStar_All.pipe_right uu____11966 FStar_List.unzip  in
+                   FStar_All.pipe_right uu____11933
+                     (fun uu____12184  ->
+                        match uu____12184 with
                         | (x,y) -> ((FStar_List.flatten x), y))
                     in
-                 (match uu____12975 with
+                 (match uu____11902 with
                   | (brs,aqs) ->
-                      let uu____13476 =
+                      let uu____12403 =
                         FStar_All.pipe_left mk1
                           (FStar_Syntax_Syntax.Tm_match (e1, brs))
                          in
-                      (uu____13476, (join_aqs (aq :: aqs)))))
+                      (uu____12403, (join_aqs (aq :: aqs)))))
         | FStar_Parser_AST.Ascribed (e,t,tac_opt) ->
             let annot =
-              let uu____13519 = is_comp_type env t  in
-              if uu____13519
+              let uu____12446 = is_comp_type env t  in
+              if uu____12446
               then
-                let uu____13528 = desugar_comp t.FStar_Parser_AST.range env t
+                let uu____12455 = desugar_comp t.FStar_Parser_AST.range env t
                    in
-                FStar_Util.Inr uu____13528
+                FStar_Util.Inr uu____12455
               else
-                (let uu____13536 = desugar_term env t  in
-                 FStar_Util.Inl uu____13536)
+                (let uu____12463 = desugar_term env t  in
+                 FStar_Util.Inl uu____12463)
                in
             let tac_opt1 = FStar_Util.map_opt tac_opt (desugar_term env)  in
-            let uu____13550 = desugar_term_aq env e  in
-            (match uu____13550 with
+            let uu____12477 = desugar_term_aq env e  in
+            (match uu____12477 with
              | (e1,aq) ->
-                 let uu____13561 =
+                 let uu____12488 =
                    FStar_All.pipe_left mk1
                      (FStar_Syntax_Syntax.Tm_ascribed
                         (e1, (annot, tac_opt1), FStar_Pervasives_Native.None))
                     in
-                 (uu____13561, aq))
-        | FStar_Parser_AST.Record (uu____13594,[]) ->
+                 (uu____12488, aq))
+        | FStar_Parser_AST.Record (uu____12521,[]) ->
             FStar_Errors.raise_error
               (FStar_Errors.Fatal_UnexpectedEmptyRecord,
                 "Unexpected empty record") top.FStar_Parser_AST.range
@@ -3747,37 +3720,37 @@ and (desugar_term_maybe_top :
             let record = check_fields env fields top.FStar_Parser_AST.range
                in
             let user_ns =
-              let uu____13635 = FStar_List.hd fields  in
-              match uu____13635 with | (f,uu____13647) -> f.FStar_Ident.ns
+              let uu____12562 = FStar_List.hd fields  in
+              match uu____12562 with | (f,uu____12574) -> f.FStar_Ident.ns
                in
             let get_field xopt f =
               let found =
                 FStar_All.pipe_right fields
                   (FStar_Util.find_opt
-                     (fun uu____13693  ->
-                        match uu____13693 with
-                        | (g,uu____13699) ->
+                     (fun uu____12620  ->
+                        match uu____12620 with
+                        | (g,uu____12626) ->
                             f.FStar_Ident.idText =
                               (g.FStar_Ident.ident).FStar_Ident.idText))
                  in
               let fn = FStar_Ident.lid_of_ids (FStar_List.append user_ns [f])
                  in
               match found with
-              | FStar_Pervasives_Native.Some (uu____13705,e) -> (fn, e)
+              | FStar_Pervasives_Native.Some (uu____12632,e) -> (fn, e)
               | FStar_Pervasives_Native.None  ->
                   (match xopt with
                    | FStar_Pervasives_Native.None  ->
-                       let uu____13719 =
-                         let uu____13724 =
+                       let uu____12646 =
+                         let uu____12651 =
                            FStar_Util.format2
                              "Field %s of record type %s is missing"
                              f.FStar_Ident.idText
                              (record.FStar_Syntax_DsEnv.typename).FStar_Ident.str
                             in
                          (FStar_Errors.Fatal_MissingFieldInRecord,
-                           uu____13724)
+                           uu____12651)
                           in
-                       FStar_Errors.raise_error uu____13719
+                       FStar_Errors.raise_error uu____12646
                          top.FStar_Parser_AST.range
                    | FStar_Pervasives_Native.Some x ->
                        (fn,
@@ -3793,47 +3766,47 @@ and (desugar_term_maybe_top :
             let recterm =
               match eopt with
               | FStar_Pervasives_Native.None  ->
-                  let uu____13732 =
-                    let uu____13743 =
+                  let uu____12659 =
+                    let uu____12670 =
                       FStar_All.pipe_right record.FStar_Syntax_DsEnv.fields
                         (FStar_List.map
-                           (fun uu____13774  ->
-                              match uu____13774 with
-                              | (f,uu____13784) ->
-                                  let uu____13785 =
-                                    let uu____13786 =
+                           (fun uu____12701  ->
+                              match uu____12701 with
+                              | (f,uu____12711) ->
+                                  let uu____12712 =
+                                    let uu____12713 =
                                       get_field FStar_Pervasives_Native.None
                                         f
                                        in
                                     FStar_All.pipe_left
-                                      FStar_Pervasives_Native.snd uu____13786
+                                      FStar_Pervasives_Native.snd uu____12713
                                      in
-                                  (uu____13785, FStar_Parser_AST.Nothing)))
+                                  (uu____12712, FStar_Parser_AST.Nothing)))
                        in
-                    (user_constrname, uu____13743)  in
-                  FStar_Parser_AST.Construct uu____13732
+                    (user_constrname, uu____12670)  in
+                  FStar_Parser_AST.Construct uu____12659
               | FStar_Pervasives_Native.Some e ->
                   let x = FStar_Ident.gen e.FStar_Parser_AST.range  in
                   let xterm =
-                    let uu____13804 =
-                      let uu____13805 = FStar_Ident.lid_of_ids [x]  in
-                      FStar_Parser_AST.Var uu____13805  in
-                    FStar_Parser_AST.mk_term uu____13804
+                    let uu____12731 =
+                      let uu____12732 = FStar_Ident.lid_of_ids [x]  in
+                      FStar_Parser_AST.Var uu____12732  in
+                    FStar_Parser_AST.mk_term uu____12731
                       x.FStar_Ident.idRange FStar_Parser_AST.Expr
                      in
                   let record1 =
-                    let uu____13807 =
-                      let uu____13820 =
+                    let uu____12734 =
+                      let uu____12747 =
                         FStar_All.pipe_right record.FStar_Syntax_DsEnv.fields
                           (FStar_List.map
-                             (fun uu____13850  ->
-                                match uu____13850 with
-                                | (f,uu____13860) ->
+                             (fun uu____12777  ->
+                                match uu____12777 with
+                                | (f,uu____12787) ->
                                     get_field
                                       (FStar_Pervasives_Native.Some xterm) f))
                          in
-                      (FStar_Pervasives_Native.None, uu____13820)  in
-                    FStar_Parser_AST.Record uu____13807  in
+                      (FStar_Pervasives_Native.None, uu____12747)  in
+                    FStar_Parser_AST.Record uu____12734  in
                   FStar_Parser_AST.Let
                     (FStar_Parser_AST.NoLetQualifier,
                       [(FStar_Pervasives_Native.None,
@@ -3849,60 +3822,60 @@ and (desugar_term_maybe_top :
               FStar_Parser_AST.mk_term recterm top.FStar_Parser_AST.range
                 top.FStar_Parser_AST.level
                in
-            let uu____13920 = desugar_term_aq env recterm1  in
-            (match uu____13920 with
+            let uu____12847 = desugar_term_aq env recterm1  in
+            (match uu____12847 with
              | (e,s) ->
                  (match e.FStar_Syntax_Syntax.n with
                   | FStar_Syntax_Syntax.Tm_app
                       ({
                          FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar
                            fv;
-                         FStar_Syntax_Syntax.pos = uu____13936;
-                         FStar_Syntax_Syntax.vars = uu____13937;_},args)
+                         FStar_Syntax_Syntax.pos = uu____12863;
+                         FStar_Syntax_Syntax.vars = uu____12864;_},args)
                       ->
-                      let uu____13963 =
-                        let uu____13964 =
-                          let uu____13965 =
-                            let uu____13982 =
-                              let uu____13985 =
+                      let uu____12890 =
+                        let uu____12891 =
+                          let uu____12892 =
+                            let uu____12909 =
+                              let uu____12912 =
                                 FStar_Ident.set_lid_range
                                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                                   e.FStar_Syntax_Syntax.pos
                                  in
-                              let uu____13986 =
-                                let uu____13989 =
-                                  let uu____13990 =
-                                    let uu____13997 =
+                              let uu____12913 =
+                                let uu____12916 =
+                                  let uu____12917 =
+                                    let uu____12924 =
                                       FStar_All.pipe_right
                                         record.FStar_Syntax_DsEnv.fields
                                         (FStar_List.map
                                            FStar_Pervasives_Native.fst)
                                        in
                                     ((record.FStar_Syntax_DsEnv.typename),
-                                      uu____13997)
+                                      uu____12924)
                                      in
-                                  FStar_Syntax_Syntax.Record_ctor uu____13990
+                                  FStar_Syntax_Syntax.Record_ctor uu____12917
                                    in
-                                FStar_Pervasives_Native.Some uu____13989  in
-                              FStar_Syntax_Syntax.fvar uu____13985
+                                FStar_Pervasives_Native.Some uu____12916  in
+                              FStar_Syntax_Syntax.fvar uu____12912
                                 FStar_Syntax_Syntax.delta_constant
-                                uu____13986
+                                uu____12913
                                in
-                            (uu____13982, args)  in
-                          FStar_Syntax_Syntax.Tm_app uu____13965  in
-                        FStar_All.pipe_left mk1 uu____13964  in
-                      (uu____13963, s)
-                  | uu____14026 -> (e, s)))
+                            (uu____12909, args)  in
+                          FStar_Syntax_Syntax.Tm_app uu____12892  in
+                        FStar_All.pipe_left mk1 uu____12891  in
+                      (uu____12890, s)
+                  | uu____12953 -> (e, s)))
         | FStar_Parser_AST.Project (e,f) ->
             (FStar_Syntax_DsEnv.fail_if_qualified_by_curmodule env f;
-             (let uu____14030 =
+             (let uu____12957 =
                 FStar_Syntax_DsEnv.fail_or env
                   (FStar_Syntax_DsEnv.try_lookup_dc_by_field_name env) f
                  in
-              match uu____14030 with
+              match uu____12957 with
               | (constrname,is_rec) ->
-                  let uu____14045 = desugar_term_aq env e  in
-                  (match uu____14045 with
+                  let uu____12972 = desugar_term_aq env e  in
+                  (match uu____12972 with
                    | (e1,s) ->
                        let projname =
                          FStar_Syntax_Util.mk_field_projector_name_from_ident
@@ -3915,65 +3888,65 @@ and (desugar_term_maybe_top :
                              (FStar_Syntax_Syntax.Record_projector
                                 (constrname, (f.FStar_Ident.ident)))
                          else FStar_Pervasives_Native.None  in
-                       let uu____14063 =
-                         let uu____14064 =
-                           let uu____14065 =
-                             let uu____14082 =
-                               let uu____14085 =
-                                 let uu____14086 = FStar_Ident.range_of_lid f
+                       let uu____12990 =
+                         let uu____12991 =
+                           let uu____12992 =
+                             let uu____13009 =
+                               let uu____13012 =
+                                 let uu____13013 = FStar_Ident.range_of_lid f
                                     in
                                  FStar_Ident.set_lid_range projname
-                                   uu____14086
+                                   uu____13013
                                   in
-                               FStar_Syntax_Syntax.fvar uu____14085
+                               FStar_Syntax_Syntax.fvar uu____13012
                                  (FStar_Syntax_Syntax.Delta_equational_at_level
                                     (Prims.parse_int "1")) qual
                                 in
-                             let uu____14087 =
-                               let uu____14098 =
+                             let uu____13014 =
+                               let uu____13025 =
                                  FStar_Syntax_Syntax.as_arg e1  in
-                               [uu____14098]  in
-                             (uu____14082, uu____14087)  in
-                           FStar_Syntax_Syntax.Tm_app uu____14065  in
-                         FStar_All.pipe_left mk1 uu____14064  in
-                       (uu____14063, s))))
-        | FStar_Parser_AST.NamedTyp (uu____14135,e) -> desugar_term_aq env e
+                               [uu____13025]  in
+                             (uu____13009, uu____13014)  in
+                           FStar_Syntax_Syntax.Tm_app uu____12992  in
+                         FStar_All.pipe_left mk1 uu____12991  in
+                       (uu____12990, s))))
+        | FStar_Parser_AST.NamedTyp (uu____13062,e) -> desugar_term_aq env e
         | FStar_Parser_AST.Paren e -> failwith "impossible"
         | FStar_Parser_AST.VQuote e ->
             let tm = desugar_term env e  in
-            let uu____14144 =
-              let uu____14145 = FStar_Syntax_Subst.compress tm  in
-              uu____14145.FStar_Syntax_Syntax.n  in
-            (match uu____14144 with
+            let uu____13071 =
+              let uu____13072 = FStar_Syntax_Subst.compress tm  in
+              uu____13072.FStar_Syntax_Syntax.n  in
+            (match uu____13071 with
              | FStar_Syntax_Syntax.Tm_fvar fv ->
-                 let uu____14153 =
-                   let uu___284_14154 =
-                     let uu____14155 =
-                       let uu____14156 = FStar_Syntax_Syntax.lid_of_fv fv  in
-                       FStar_Ident.string_of_lid uu____14156  in
-                     FStar_Syntax_Util.exp_string uu____14155  in
+                 let uu____13080 =
+                   let uu___288_13081 =
+                     let uu____13082 =
+                       let uu____13083 = FStar_Syntax_Syntax.lid_of_fv fv  in
+                       FStar_Ident.string_of_lid uu____13083  in
+                     FStar_Syntax_Util.exp_string uu____13082  in
                    {
                      FStar_Syntax_Syntax.n =
-                       (uu___284_14154.FStar_Syntax_Syntax.n);
+                       (uu___288_13081.FStar_Syntax_Syntax.n);
                      FStar_Syntax_Syntax.pos = (e.FStar_Parser_AST.range);
                      FStar_Syntax_Syntax.vars =
-                       (uu___284_14154.FStar_Syntax_Syntax.vars)
+                       (uu___288_13081.FStar_Syntax_Syntax.vars)
                    }  in
-                 (uu____14153, noaqs)
-             | uu____14157 ->
-                 let uu____14158 =
-                   let uu____14163 =
-                     let uu____14164 = FStar_Syntax_Print.term_to_string tm
+                 (uu____13080, noaqs)
+             | uu____13084 ->
+                 let uu____13085 =
+                   let uu____13090 =
+                     let uu____13091 = FStar_Syntax_Print.term_to_string tm
                         in
                      Prims.strcat "VQuote, expected an fvar, got: "
-                       uu____14164
+                       uu____13091
                       in
-                   (FStar_Errors.Fatal_UnexpectedTermVQuote, uu____14163)  in
-                 FStar_Errors.raise_error uu____14158
+                   (FStar_Errors.Fatal_UnexpectedTermVQuote, uu____13090)  in
+                 FStar_Errors.raise_error uu____13085
                    top.FStar_Parser_AST.range)
         | FStar_Parser_AST.Quote (e,FStar_Parser_AST.Static ) ->
-            let uu____14170 = desugar_term_aq env e  in
-            (match uu____14170 with
+            let uu____13097 = desugar_term_aq env e  in
+            (match uu____13097 with
              | (tm,vts) ->
                  let qi =
                    {
@@ -3981,55 +3954,55 @@ and (desugar_term_maybe_top :
                        FStar_Syntax_Syntax.Quote_static;
                      FStar_Syntax_Syntax.antiquotes = vts
                    }  in
-                 let uu____14182 =
+                 let uu____13109 =
                    FStar_All.pipe_left mk1
                      (FStar_Syntax_Syntax.Tm_quoted (tm, qi))
                     in
-                 (uu____14182, noaqs))
+                 (uu____13109, noaqs))
         | FStar_Parser_AST.Antiquote e ->
             let bv =
               FStar_Syntax_Syntax.new_bv
                 (FStar_Pervasives_Native.Some (e.FStar_Parser_AST.range))
                 FStar_Syntax_Syntax.tun
                in
-            let uu____14187 = FStar_Syntax_Syntax.bv_to_name bv  in
-            let uu____14188 =
-              let uu____14189 =
-                let uu____14196 = desugar_term env e  in (bv, uu____14196)
+            let uu____13114 = FStar_Syntax_Syntax.bv_to_name bv  in
+            let uu____13115 =
+              let uu____13116 =
+                let uu____13123 = desugar_term env e  in (bv, uu____13123)
                  in
-              [uu____14189]  in
-            (uu____14187, uu____14188)
+              [uu____13116]  in
+            (uu____13114, uu____13115)
         | FStar_Parser_AST.Quote (e,FStar_Parser_AST.Dynamic ) ->
             let qi =
               {
                 FStar_Syntax_Syntax.qkind = FStar_Syntax_Syntax.Quote_dynamic;
                 FStar_Syntax_Syntax.antiquotes = []
               }  in
-            let uu____14221 =
-              let uu____14222 =
-                let uu____14223 =
-                  let uu____14230 = desugar_term env e  in (uu____14230, qi)
+            let uu____13148 =
+              let uu____13149 =
+                let uu____13150 =
+                  let uu____13157 = desugar_term env e  in (uu____13157, qi)
                    in
-                FStar_Syntax_Syntax.Tm_quoted uu____14223  in
-              FStar_All.pipe_left mk1 uu____14222  in
-            (uu____14221, noaqs)
-        | uu____14235 when
+                FStar_Syntax_Syntax.Tm_quoted uu____13150  in
+              FStar_All.pipe_left mk1 uu____13149  in
+            (uu____13148, noaqs)
+        | uu____13162 when
             top.FStar_Parser_AST.level = FStar_Parser_AST.Formula ->
-            let uu____14236 = desugar_formula env top  in
-            (uu____14236, noaqs)
-        | uu____14237 ->
-            let uu____14238 =
-              let uu____14243 =
-                let uu____14244 = FStar_Parser_AST.term_to_string top  in
-                Prims.strcat "Unexpected term: " uu____14244  in
-              (FStar_Errors.Fatal_UnexpectedTerm, uu____14243)  in
-            FStar_Errors.raise_error uu____14238 top.FStar_Parser_AST.range
+            let uu____13163 = desugar_formula env top  in
+            (uu____13163, noaqs)
+        | uu____13164 ->
+            let uu____13165 =
+              let uu____13170 =
+                let uu____13171 = FStar_Parser_AST.term_to_string top  in
+                Prims.strcat "Unexpected term: " uu____13171  in
+              (FStar_Errors.Fatal_UnexpectedTerm, uu____13170)  in
+            FStar_Errors.raise_error uu____13165 top.FStar_Parser_AST.range
 
 and (not_ascribed : FStar_Parser_AST.term -> Prims.bool) =
   fun t  ->
     match t.FStar_Parser_AST.tm with
-    | FStar_Parser_AST.Ascribed uu____14250 -> false
-    | uu____14259 -> true
+    | FStar_Parser_AST.Ascribed uu____13177 -> false
+    | uu____13186 -> true
 
 and (desugar_args :
   FStar_Syntax_DsEnv.env ->
@@ -4043,11 +4016,11 @@ and (desugar_args :
     fun args  ->
       FStar_All.pipe_right args
         (FStar_List.map
-           (fun uu____14296  ->
-              match uu____14296 with
+           (fun uu____13223  ->
+              match uu____13223 with
               | (a,imp) ->
-                  let uu____14309 = desugar_term env a  in
-                  arg_withimp_e imp uu____14309))
+                  let uu____13236 = desugar_term env a  in
+                  arg_withimp_e imp uu____13236))
 
 and (desugar_comp :
   FStar_Range.range ->
@@ -4059,53 +4032,53 @@ and (desugar_comp :
     fun env  ->
       fun t  ->
         let fail1 err = FStar_Errors.raise_error err r  in
-        let is_requires uu____14341 =
-          match uu____14341 with
-          | (t1,uu____14347) ->
-              let uu____14348 =
-                let uu____14349 = unparen t1  in
-                uu____14349.FStar_Parser_AST.tm  in
-              (match uu____14348 with
-               | FStar_Parser_AST.Requires uu____14350 -> true
-               | uu____14357 -> false)
+        let is_requires uu____13268 =
+          match uu____13268 with
+          | (t1,uu____13274) ->
+              let uu____13275 =
+                let uu____13276 = unparen t1  in
+                uu____13276.FStar_Parser_AST.tm  in
+              (match uu____13275 with
+               | FStar_Parser_AST.Requires uu____13277 -> true
+               | uu____13284 -> false)
            in
-        let is_ensures uu____14367 =
-          match uu____14367 with
-          | (t1,uu____14373) ->
-              let uu____14374 =
-                let uu____14375 = unparen t1  in
-                uu____14375.FStar_Parser_AST.tm  in
-              (match uu____14374 with
-               | FStar_Parser_AST.Ensures uu____14376 -> true
-               | uu____14383 -> false)
+        let is_ensures uu____13294 =
+          match uu____13294 with
+          | (t1,uu____13300) ->
+              let uu____13301 =
+                let uu____13302 = unparen t1  in
+                uu____13302.FStar_Parser_AST.tm  in
+              (match uu____13301 with
+               | FStar_Parser_AST.Ensures uu____13303 -> true
+               | uu____13310 -> false)
            in
-        let is_app head1 uu____14398 =
-          match uu____14398 with
-          | (t1,uu____14404) ->
-              let uu____14405 =
-                let uu____14406 = unparen t1  in
-                uu____14406.FStar_Parser_AST.tm  in
-              (match uu____14405 with
+        let is_app head1 uu____13325 =
+          match uu____13325 with
+          | (t1,uu____13331) ->
+              let uu____13332 =
+                let uu____13333 = unparen t1  in
+                uu____13333.FStar_Parser_AST.tm  in
+              (match uu____13332 with
                | FStar_Parser_AST.App
                    ({ FStar_Parser_AST.tm = FStar_Parser_AST.Var d;
-                      FStar_Parser_AST.range = uu____14408;
-                      FStar_Parser_AST.level = uu____14409;_},uu____14410,uu____14411)
+                      FStar_Parser_AST.range = uu____13335;
+                      FStar_Parser_AST.level = uu____13336;_},uu____13337,uu____13338)
                    -> (d.FStar_Ident.ident).FStar_Ident.idText = head1
-               | uu____14412 -> false)
+               | uu____13339 -> false)
            in
-        let is_smt_pat uu____14422 =
-          match uu____14422 with
-          | (t1,uu____14428) ->
-              let uu____14429 =
-                let uu____14430 = unparen t1  in
-                uu____14430.FStar_Parser_AST.tm  in
-              (match uu____14429 with
+        let is_smt_pat uu____13349 =
+          match uu____13349 with
+          | (t1,uu____13355) ->
+              let uu____13356 =
+                let uu____13357 = unparen t1  in
+                uu____13357.FStar_Parser_AST.tm  in
+              (match uu____13356 with
                | FStar_Parser_AST.Construct
                    (cons1,({
                              FStar_Parser_AST.tm = FStar_Parser_AST.Construct
-                               (smtpat,uu____14433);
-                             FStar_Parser_AST.range = uu____14434;
-                             FStar_Parser_AST.level = uu____14435;_},uu____14436)::uu____14437::[])
+                               (smtpat,uu____13360);
+                             FStar_Parser_AST.range = uu____13361;
+                             FStar_Parser_AST.level = uu____13362;_},uu____13363)::uu____13364::[])
                    ->
                    (FStar_Ident.lid_equals cons1 FStar_Parser_Const.cons_lid)
                      &&
@@ -4116,20 +4089,20 @@ and (desugar_comp :
                    (cons1,({
                              FStar_Parser_AST.tm = FStar_Parser_AST.Var
                                smtpat;
-                             FStar_Parser_AST.range = uu____14476;
-                             FStar_Parser_AST.level = uu____14477;_},uu____14478)::uu____14479::[])
+                             FStar_Parser_AST.range = uu____13403;
+                             FStar_Parser_AST.level = uu____13404;_},uu____13405)::uu____13406::[])
                    ->
                    (FStar_Ident.lid_equals cons1 FStar_Parser_Const.cons_lid)
                      &&
                      (FStar_Util.for_some
                         (fun s  -> smtpat.FStar_Ident.str = s)
                         ["smt_pat"; "smt_pat_or"])
-               | uu____14504 -> false)
+               | uu____13431 -> false)
            in
         let is_decreases = is_app "decreases"  in
         let pre_process_comp_typ t1 =
-          let uu____14536 = head_and_args t1  in
-          match uu____14536 with
+          let uu____13463 = head_and_args t1  in
+          match uu____13463 with
           | (head1,args) ->
               (match head1.FStar_Parser_AST.tm with
                | FStar_Parser_AST.Name lemma when
@@ -4163,21 +4136,19 @@ and (desugar_comp :
                       in
                    let thunk_ens_ ens =
                      let wildpat =
-                       FStar_Parser_AST.mk_pattern
-                         (FStar_Parser_AST.PatWild
-                            FStar_Pervasives_Native.None)
+                       FStar_Parser_AST.mk_pattern FStar_Parser_AST.PatWild
                          ens.FStar_Parser_AST.range
                         in
                      FStar_Parser_AST.mk_term
                        (FStar_Parser_AST.Abs ([wildpat], ens))
                        ens.FStar_Parser_AST.range FStar_Parser_AST.Expr
                       in
-                   let thunk_ens uu____14634 =
-                     match uu____14634 with
+                   let thunk_ens uu____13561 =
+                     match uu____13561 with
                      | (e,i) ->
-                         let uu____14645 = thunk_ens_ e  in (uu____14645, i)
+                         let uu____13572 = thunk_ens_ e  in (uu____13572, i)
                       in
-                   let fail_lemma uu____14657 =
+                   let fail_lemma uu____13584 =
                      let expected_one_of =
                        ["Lemma post";
                        "Lemma (ensures post)";
@@ -4204,85 +4175,85 @@ and (desugar_comp :
                      | smtpat::[] when is_smt_pat smtpat -> fail_lemma ()
                      | dec::[] when is_decreases dec -> fail_lemma ()
                      | ens::[] ->
-                         let uu____14737 =
-                           let uu____14744 =
-                             let uu____14751 = thunk_ens ens  in
-                             [uu____14751; nil_pat]  in
-                           req_true :: uu____14744  in
-                         unit_tm :: uu____14737
+                         let uu____13664 =
+                           let uu____13671 =
+                             let uu____13678 = thunk_ens ens  in
+                             [uu____13678; nil_pat]  in
+                           req_true :: uu____13671  in
+                         unit_tm :: uu____13664
                      | req::ens::[] when
                          (is_requires req) && (is_ensures ens) ->
-                         let uu____14798 =
-                           let uu____14805 =
-                             let uu____14812 = thunk_ens ens  in
-                             [uu____14812; nil_pat]  in
-                           req :: uu____14805  in
-                         unit_tm :: uu____14798
+                         let uu____13725 =
+                           let uu____13732 =
+                             let uu____13739 = thunk_ens ens  in
+                             [uu____13739; nil_pat]  in
+                           req :: uu____13732  in
+                         unit_tm :: uu____13725
                      | ens::smtpat::[] when
-                         (((let uu____14861 = is_requires ens  in
-                            Prims.op_Negation uu____14861) &&
-                             (let uu____14863 = is_smt_pat ens  in
-                              Prims.op_Negation uu____14863))
+                         (((let uu____13788 = is_requires ens  in
+                            Prims.op_Negation uu____13788) &&
+                             (let uu____13790 = is_smt_pat ens  in
+                              Prims.op_Negation uu____13790))
                             &&
-                            (let uu____14865 = is_decreases ens  in
-                             Prims.op_Negation uu____14865))
+                            (let uu____13792 = is_decreases ens  in
+                             Prims.op_Negation uu____13792))
                            && (is_smt_pat smtpat)
                          ->
-                         let uu____14866 =
-                           let uu____14873 =
-                             let uu____14880 = thunk_ens ens  in
-                             [uu____14880; smtpat]  in
-                           req_true :: uu____14873  in
-                         unit_tm :: uu____14866
+                         let uu____13793 =
+                           let uu____13800 =
+                             let uu____13807 = thunk_ens ens  in
+                             [uu____13807; smtpat]  in
+                           req_true :: uu____13800  in
+                         unit_tm :: uu____13793
                      | ens::dec::[] when
                          (is_ensures ens) && (is_decreases dec) ->
-                         let uu____14927 =
-                           let uu____14934 =
-                             let uu____14941 = thunk_ens ens  in
-                             [uu____14941; nil_pat; dec]  in
-                           req_true :: uu____14934  in
-                         unit_tm :: uu____14927
+                         let uu____13854 =
+                           let uu____13861 =
+                             let uu____13868 = thunk_ens ens  in
+                             [uu____13868; nil_pat; dec]  in
+                           req_true :: uu____13861  in
+                         unit_tm :: uu____13854
                      | ens::dec::smtpat::[] when
                          ((is_ensures ens) && (is_decreases dec)) &&
                            (is_smt_pat smtpat)
                          ->
-                         let uu____15001 =
-                           let uu____15008 =
-                             let uu____15015 = thunk_ens ens  in
-                             [uu____15015; smtpat; dec]  in
-                           req_true :: uu____15008  in
-                         unit_tm :: uu____15001
+                         let uu____13928 =
+                           let uu____13935 =
+                             let uu____13942 = thunk_ens ens  in
+                             [uu____13942; smtpat; dec]  in
+                           req_true :: uu____13935  in
+                         unit_tm :: uu____13928
                      | req::ens::dec::[] when
                          ((is_requires req) && (is_ensures ens)) &&
                            (is_decreases dec)
                          ->
-                         let uu____15075 =
-                           let uu____15082 =
-                             let uu____15089 = thunk_ens ens  in
-                             [uu____15089; nil_pat; dec]  in
-                           req :: uu____15082  in
-                         unit_tm :: uu____15075
+                         let uu____14002 =
+                           let uu____14009 =
+                             let uu____14016 = thunk_ens ens  in
+                             [uu____14016; nil_pat; dec]  in
+                           req :: uu____14009  in
+                         unit_tm :: uu____14002
                      | req::ens::smtpat::[] when
                          ((is_requires req) && (is_ensures ens)) &&
                            (is_smt_pat smtpat)
                          ->
-                         let uu____15149 =
-                           let uu____15156 =
-                             let uu____15163 = thunk_ens ens  in
-                             [uu____15163; smtpat]  in
-                           req :: uu____15156  in
-                         unit_tm :: uu____15149
+                         let uu____14076 =
+                           let uu____14083 =
+                             let uu____14090 = thunk_ens ens  in
+                             [uu____14090; smtpat]  in
+                           req :: uu____14083  in
+                         unit_tm :: uu____14076
                      | req::ens::dec::smtpat::[] when
                          (((is_requires req) && (is_ensures ens)) &&
                             (is_smt_pat smtpat))
                            && (is_decreases dec)
                          ->
-                         let uu____15228 =
-                           let uu____15235 =
-                             let uu____15242 = thunk_ens ens  in
-                             [uu____15242; dec; smtpat]  in
-                           req :: uu____15235  in
-                         unit_tm :: uu____15228
+                         let uu____14155 =
+                           let uu____14162 =
+                             let uu____14169 = thunk_ens ens  in
+                             [uu____14169; dec; smtpat]  in
+                           req :: uu____14162  in
+                         unit_tm :: uu____14155
                      | _other -> fail_lemma ()  in
                    let head_and_attributes =
                      FStar_Syntax_DsEnv.fail_or env
@@ -4292,64 +4263,64 @@ and (desugar_comp :
                    (head_and_attributes, args1)
                | FStar_Parser_AST.Name l when
                    FStar_Syntax_DsEnv.is_effect_name env l ->
-                   let uu____15304 =
+                   let uu____14231 =
                      FStar_Syntax_DsEnv.fail_or env
                        (FStar_Syntax_DsEnv.try_lookup_effect_name_and_attributes
                           env) l
                       in
-                   (uu____15304, args)
+                   (uu____14231, args)
                | FStar_Parser_AST.Name l when
-                   (let uu____15332 = FStar_Syntax_DsEnv.current_module env
+                   (let uu____14259 = FStar_Syntax_DsEnv.current_module env
                        in
-                    FStar_Ident.lid_equals uu____15332
+                    FStar_Ident.lid_equals uu____14259
                       FStar_Parser_Const.prims_lid)
                      && ((l.FStar_Ident.ident).FStar_Ident.idText = "Tot")
                    ->
-                   let uu____15333 =
-                     let uu____15340 =
+                   let uu____14260 =
+                     let uu____14267 =
                        FStar_Ident.set_lid_range
                          FStar_Parser_Const.effect_Tot_lid
                          head1.FStar_Parser_AST.range
                         in
-                     (uu____15340, [])  in
-                   (uu____15333, args)
+                     (uu____14267, [])  in
+                   (uu____14260, args)
                | FStar_Parser_AST.Name l when
-                   (let uu____15358 = FStar_Syntax_DsEnv.current_module env
+                   (let uu____14285 = FStar_Syntax_DsEnv.current_module env
                        in
-                    FStar_Ident.lid_equals uu____15358
+                    FStar_Ident.lid_equals uu____14285
                       FStar_Parser_Const.prims_lid)
                      && ((l.FStar_Ident.ident).FStar_Ident.idText = "GTot")
                    ->
-                   let uu____15359 =
-                     let uu____15366 =
+                   let uu____14286 =
+                     let uu____14293 =
                        FStar_Ident.set_lid_range
                          FStar_Parser_Const.effect_GTot_lid
                          head1.FStar_Parser_AST.range
                         in
-                     (uu____15366, [])  in
-                   (uu____15359, args)
+                     (uu____14293, [])  in
+                   (uu____14286, args)
                | FStar_Parser_AST.Name l when
                    (((l.FStar_Ident.ident).FStar_Ident.idText = "Type") ||
                       ((l.FStar_Ident.ident).FStar_Ident.idText = "Type0"))
                      || ((l.FStar_Ident.ident).FStar_Ident.idText = "Effect")
                    ->
-                   let uu____15382 =
-                     let uu____15389 =
+                   let uu____14309 =
+                     let uu____14316 =
                        FStar_Ident.set_lid_range
                          FStar_Parser_Const.effect_Tot_lid
                          head1.FStar_Parser_AST.range
                         in
-                     (uu____15389, [])  in
-                   (uu____15382, [(t1, FStar_Parser_AST.Nothing)])
-               | uu____15412 ->
+                     (uu____14316, [])  in
+                   (uu____14309, [(t1, FStar_Parser_AST.Nothing)])
+               | uu____14339 ->
                    let default_effect =
-                     let uu____15414 = FStar_Options.ml_ish ()  in
-                     if uu____15414
+                     let uu____14341 = FStar_Options.ml_ish ()  in
+                     if uu____14341
                      then FStar_Parser_Const.effect_ML_lid
                      else
-                       ((let uu____15417 =
+                       ((let uu____14344 =
                            FStar_Options.warn_default_effects ()  in
-                         if uu____15417
+                         if uu____14344
                          then
                            FStar_Errors.log_issue
                              head1.FStar_Parser_AST.range
@@ -4358,141 +4329,141 @@ and (desugar_comp :
                          else ());
                         FStar_Parser_Const.effect_Tot_lid)
                       in
-                   let uu____15419 =
-                     let uu____15426 =
+                   let uu____14346 =
+                     let uu____14353 =
                        FStar_Ident.set_lid_range default_effect
                          head1.FStar_Parser_AST.range
                         in
-                     (uu____15426, [])  in
-                   (uu____15419, [(t1, FStar_Parser_AST.Nothing)]))
+                     (uu____14353, [])  in
+                   (uu____14346, [(t1, FStar_Parser_AST.Nothing)]))
            in
-        let uu____15449 = pre_process_comp_typ t  in
-        match uu____15449 with
+        let uu____14376 = pre_process_comp_typ t  in
+        match uu____14376 with
         | ((eff,cattributes),args) ->
             (if (FStar_List.length args) = (Prims.parse_int "0")
              then
-               (let uu____15498 =
-                  let uu____15503 =
-                    let uu____15504 = FStar_Syntax_Print.lid_to_string eff
+               (let uu____14425 =
+                  let uu____14430 =
+                    let uu____14431 = FStar_Syntax_Print.lid_to_string eff
                        in
                     FStar_Util.format1 "Not enough args to effect %s"
-                      uu____15504
+                      uu____14431
                      in
-                  (FStar_Errors.Fatal_NotEnoughArgsToEffect, uu____15503)  in
-                fail1 uu____15498)
+                  (FStar_Errors.Fatal_NotEnoughArgsToEffect, uu____14430)  in
+                fail1 uu____14425)
              else ();
-             (let is_universe uu____15515 =
-                match uu____15515 with
-                | (uu____15520,imp) -> imp = FStar_Parser_AST.UnivApp  in
-              let uu____15522 = FStar_Util.take is_universe args  in
-              match uu____15522 with
+             (let is_universe uu____14442 =
+                match uu____14442 with
+                | (uu____14447,imp) -> imp = FStar_Parser_AST.UnivApp  in
+              let uu____14449 = FStar_Util.take is_universe args  in
+              match uu____14449 with
               | (universes,args1) ->
                   let universes1 =
                     FStar_List.map
-                      (fun uu____15581  ->
-                         match uu____15581 with
+                      (fun uu____14508  ->
+                         match uu____14508 with
                          | (u,imp) -> desugar_universe u) universes
                      in
-                  let uu____15588 =
-                    let uu____15603 = FStar_List.hd args1  in
-                    let uu____15612 = FStar_List.tl args1  in
-                    (uu____15603, uu____15612)  in
-                  (match uu____15588 with
+                  let uu____14515 =
+                    let uu____14530 = FStar_List.hd args1  in
+                    let uu____14539 = FStar_List.tl args1  in
+                    (uu____14530, uu____14539)  in
+                  (match uu____14515 with
                    | (result_arg,rest) ->
                        let result_typ =
                          desugar_typ env
                            (FStar_Pervasives_Native.fst result_arg)
                           in
                        let rest1 = desugar_args env rest  in
-                       let uu____15667 =
-                         let is_decrease uu____15705 =
-                           match uu____15705 with
-                           | (t1,uu____15715) ->
+                       let uu____14594 =
+                         let is_decrease uu____14632 =
+                           match uu____14632 with
+                           | (t1,uu____14642) ->
                                (match t1.FStar_Syntax_Syntax.n with
                                 | FStar_Syntax_Syntax.Tm_app
                                     ({
                                        FStar_Syntax_Syntax.n =
                                          FStar_Syntax_Syntax.Tm_fvar fv;
-                                       FStar_Syntax_Syntax.pos = uu____15725;
-                                       FStar_Syntax_Syntax.vars = uu____15726;_},uu____15727::[])
+                                       FStar_Syntax_Syntax.pos = uu____14652;
+                                       FStar_Syntax_Syntax.vars = uu____14653;_},uu____14654::[])
                                     ->
                                     FStar_Syntax_Syntax.fv_eq_lid fv
                                       FStar_Parser_Const.decreases_lid
-                                | uu____15766 -> false)
+                                | uu____14693 -> false)
                             in
                          FStar_All.pipe_right rest1
                            (FStar_List.partition is_decrease)
                           in
-                       (match uu____15667 with
+                       (match uu____14594 with
                         | (dec,rest2) ->
                             let decreases_clause =
                               FStar_All.pipe_right dec
                                 (FStar_List.map
-                                   (fun uu____15882  ->
-                                      match uu____15882 with
-                                      | (t1,uu____15892) ->
+                                   (fun uu____14809  ->
+                                      match uu____14809 with
+                                      | (t1,uu____14819) ->
                                           (match t1.FStar_Syntax_Syntax.n
                                            with
                                            | FStar_Syntax_Syntax.Tm_app
-                                               (uu____15901,(arg,uu____15903)::[])
+                                               (uu____14828,(arg,uu____14830)::[])
                                                ->
                                                FStar_Syntax_Syntax.DECREASES
                                                  arg
-                                           | uu____15942 -> failwith "impos")))
+                                           | uu____14869 -> failwith "impos")))
                                in
                             let no_additional_args =
                               let is_empty l =
                                 match l with
                                 | [] -> true
-                                | uu____15959 -> false  in
+                                | uu____14886 -> false  in
                               (((is_empty decreases_clause) &&
                                   (is_empty rest2))
                                  && (is_empty cattributes))
                                 && (is_empty universes1)
                                in
-                            let uu____15970 =
+                            let uu____14897 =
                               no_additional_args &&
                                 (FStar_Ident.lid_equals eff
                                    FStar_Parser_Const.effect_Tot_lid)
                                in
-                            if uu____15970
+                            if uu____14897
                             then FStar_Syntax_Syntax.mk_Total result_typ
                             else
-                              (let uu____15974 =
+                              (let uu____14901 =
                                  no_additional_args &&
                                    (FStar_Ident.lid_equals eff
                                       FStar_Parser_Const.effect_GTot_lid)
                                   in
-                               if uu____15974
+                               if uu____14901
                                then FStar_Syntax_Syntax.mk_GTotal result_typ
                                else
                                  (let flags1 =
-                                    let uu____15981 =
+                                    let uu____14908 =
                                       FStar_Ident.lid_equals eff
                                         FStar_Parser_Const.effect_Lemma_lid
                                        in
-                                    if uu____15981
+                                    if uu____14908
                                     then [FStar_Syntax_Syntax.LEMMA]
                                     else
-                                      (let uu____15985 =
+                                      (let uu____14912 =
                                          FStar_Ident.lid_equals eff
                                            FStar_Parser_Const.effect_Tot_lid
                                           in
-                                       if uu____15985
+                                       if uu____14912
                                        then [FStar_Syntax_Syntax.TOTAL]
                                        else
-                                         (let uu____15989 =
+                                         (let uu____14916 =
                                             FStar_Ident.lid_equals eff
                                               FStar_Parser_Const.effect_ML_lid
                                              in
-                                          if uu____15989
+                                          if uu____14916
                                           then [FStar_Syntax_Syntax.MLEFFECT]
                                           else
-                                            (let uu____15993 =
+                                            (let uu____14920 =
                                                FStar_Ident.lid_equals eff
                                                  FStar_Parser_Const.effect_GTot_lid
                                                 in
-                                             if uu____15993
+                                             if uu____14920
                                              then
                                                [FStar_Syntax_Syntax.SOMETRIVIAL]
                                              else [])))
@@ -4500,11 +4471,11 @@ and (desugar_comp :
                                   let flags2 =
                                     FStar_List.append flags1 cattributes  in
                                   let rest3 =
-                                    let uu____16011 =
+                                    let uu____14938 =
                                       FStar_Ident.lid_equals eff
                                         FStar_Parser_Const.effect_Lemma_lid
                                        in
-                                    if uu____16011
+                                    if uu____14938
                                     then
                                       match rest2 with
                                       | req::ens::(pat,aq)::[] ->
@@ -4523,13 +4494,13 @@ and (desugar_comp :
                                                     [FStar_Syntax_Syntax.U_zero]
                                                    in
                                                 let pattern =
-                                                  let uu____16100 =
+                                                  let uu____15027 =
                                                     FStar_Ident.set_lid_range
                                                       FStar_Parser_Const.pattern_lid
                                                       pat.FStar_Syntax_Syntax.pos
                                                      in
                                                   FStar_Syntax_Syntax.fvar
-                                                    uu____16100
+                                                    uu____15027
                                                     FStar_Syntax_Syntax.delta_constant
                                                     FStar_Pervasives_Native.None
                                                    in
@@ -4540,11 +4511,11 @@ and (desugar_comp :
                                                         FStar_Syntax_Syntax.imp_tag))]
                                                   FStar_Pervasives_Native.None
                                                   pat.FStar_Syntax_Syntax.pos
-                                            | uu____16121 -> pat  in
-                                          let uu____16122 =
-                                            let uu____16133 =
-                                              let uu____16144 =
-                                                let uu____16153 =
+                                            | uu____15048 -> pat  in
+                                          let uu____15049 =
+                                            let uu____15060 =
+                                              let uu____15071 =
+                                                let uu____15080 =
                                                   FStar_Syntax_Syntax.mk
                                                     (FStar_Syntax_Syntax.Tm_meta
                                                        (pat1,
@@ -4553,11 +4524,11 @@ and (desugar_comp :
                                                     FStar_Pervasives_Native.None
                                                     pat1.FStar_Syntax_Syntax.pos
                                                    in
-                                                (uu____16153, aq)  in
-                                              [uu____16144]  in
-                                            ens :: uu____16133  in
-                                          req :: uu____16122
-                                      | uu____16194 -> rest2
+                                                (uu____15080, aq)  in
+                                              [uu____15071]  in
+                                            ens :: uu____15060  in
+                                          req :: uu____15049
+                                      | uu____15121 -> rest2
                                     else rest2  in
                                   FStar_Syntax_Syntax.mk_Comp
                                     {
@@ -4584,30 +4555,30 @@ and (desugar_formula :
         | "==>" -> FStar_Pervasives_Native.Some FStar_Parser_Const.imp_lid
         | "<==>" -> FStar_Pervasives_Native.Some FStar_Parser_Const.iff_lid
         | "~" -> FStar_Pervasives_Native.Some FStar_Parser_Const.not_lid
-        | uu____16218 -> FStar_Pervasives_Native.None  in
+        | uu____15145 -> FStar_Pervasives_Native.None  in
       let mk1 t =
         FStar_Syntax_Syntax.mk t FStar_Pervasives_Native.None
           f.FStar_Parser_AST.range
          in
       let setpos t =
-        let uu___285_16239 = t  in
+        let uu___289_15166 = t  in
         {
-          FStar_Syntax_Syntax.n = (uu___285_16239.FStar_Syntax_Syntax.n);
+          FStar_Syntax_Syntax.n = (uu___289_15166.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = (f.FStar_Parser_AST.range);
           FStar_Syntax_Syntax.vars =
-            (uu___285_16239.FStar_Syntax_Syntax.vars)
+            (uu___289_15166.FStar_Syntax_Syntax.vars)
         }  in
       let desugar_quant q b pats body =
         let tk =
           desugar_binder env
-            (let uu___286_16281 = b  in
+            (let uu___290_15208 = b  in
              {
-               FStar_Parser_AST.b = (uu___286_16281.FStar_Parser_AST.b);
+               FStar_Parser_AST.b = (uu___290_15208.FStar_Parser_AST.b);
                FStar_Parser_AST.brange =
-                 (uu___286_16281.FStar_Parser_AST.brange);
+                 (uu___290_15208.FStar_Parser_AST.brange);
                FStar_Parser_AST.blevel = FStar_Parser_AST.Formula;
                FStar_Parser_AST.aqual =
-                 (uu___286_16281.FStar_Parser_AST.aqual)
+                 (uu___290_15208.FStar_Parser_AST.aqual)
              })
            in
         let desugar_pats env1 pats1 =
@@ -4616,23 +4587,23 @@ and (desugar_formula :
                FStar_All.pipe_right es
                  (FStar_List.map
                     (fun e  ->
-                       let uu____16344 = desugar_term env1 e  in
+                       let uu____15271 = desugar_term env1 e  in
                        FStar_All.pipe_left
-                         (arg_withimp_t FStar_Parser_AST.Nothing) uu____16344)))
+                         (arg_withimp_t FStar_Parser_AST.Nothing) uu____15271)))
             pats1
            in
         match tk with
         | (FStar_Pervasives_Native.Some a,k) ->
-            let uu____16357 = FStar_Syntax_DsEnv.push_bv env a  in
-            (match uu____16357 with
+            let uu____15284 = FStar_Syntax_DsEnv.push_bv env a  in
+            (match uu____15284 with
              | (env1,a1) ->
                  let a2 =
-                   let uu___287_16367 = a1  in
+                   let uu___291_15294 = a1  in
                    {
                      FStar_Syntax_Syntax.ppname =
-                       (uu___287_16367.FStar_Syntax_Syntax.ppname);
+                       (uu___291_15294.FStar_Syntax_Syntax.ppname);
                      FStar_Syntax_Syntax.index =
-                       (uu___287_16367.FStar_Syntax_Syntax.index);
+                       (uu___291_15294.FStar_Syntax_Syntax.index);
                      FStar_Syntax_Syntax.sort = k
                    }  in
                  let pats1 = desugar_pats env1 pats  in
@@ -4640,57 +4611,57 @@ and (desugar_formula :
                  let body2 =
                    match pats1 with
                    | [] -> body1
-                   | uu____16393 ->
+                   | uu____15320 ->
                        mk1
                          (FStar_Syntax_Syntax.Tm_meta
                             (body1, (FStar_Syntax_Syntax.Meta_pattern pats1)))
                     in
                  let body3 =
-                   let uu____16407 =
-                     let uu____16410 =
-                       let uu____16411 = FStar_Syntax_Syntax.mk_binder a2  in
-                       [uu____16411]  in
-                     no_annot_abs uu____16410 body2  in
-                   FStar_All.pipe_left setpos uu____16407  in
-                 let uu____16432 =
-                   let uu____16433 =
-                     let uu____16450 =
-                       let uu____16453 =
+                   let uu____15334 =
+                     let uu____15337 =
+                       let uu____15338 = FStar_Syntax_Syntax.mk_binder a2  in
+                       [uu____15338]  in
+                     no_annot_abs uu____15337 body2  in
+                   FStar_All.pipe_left setpos uu____15334  in
+                 let uu____15359 =
+                   let uu____15360 =
+                     let uu____15377 =
+                       let uu____15380 =
                          FStar_Ident.set_lid_range q
                            b.FStar_Parser_AST.brange
                           in
-                       FStar_Syntax_Syntax.fvar uu____16453
+                       FStar_Syntax_Syntax.fvar uu____15380
                          (FStar_Syntax_Syntax.Delta_constant_at_level
                             (Prims.parse_int "1"))
                          FStar_Pervasives_Native.None
                         in
-                     let uu____16454 =
-                       let uu____16465 = FStar_Syntax_Syntax.as_arg body3  in
-                       [uu____16465]  in
-                     (uu____16450, uu____16454)  in
-                   FStar_Syntax_Syntax.Tm_app uu____16433  in
-                 FStar_All.pipe_left mk1 uu____16432)
-        | uu____16504 -> failwith "impossible"  in
+                     let uu____15381 =
+                       let uu____15392 = FStar_Syntax_Syntax.as_arg body3  in
+                       [uu____15392]  in
+                     (uu____15377, uu____15381)  in
+                   FStar_Syntax_Syntax.Tm_app uu____15360  in
+                 FStar_All.pipe_left mk1 uu____15359)
+        | uu____15431 -> failwith "impossible"  in
       let push_quant q binders pats body =
         match binders with
         | b::b'::_rest ->
             let rest = b' :: _rest  in
             let body1 =
-              let uu____16584 = q (rest, pats, body)  in
-              let uu____16591 =
+              let uu____15511 = q (rest, pats, body)  in
+              let uu____15518 =
                 FStar_Range.union_ranges b'.FStar_Parser_AST.brange
                   body.FStar_Parser_AST.range
                  in
-              FStar_Parser_AST.mk_term uu____16584 uu____16591
+              FStar_Parser_AST.mk_term uu____15511 uu____15518
                 FStar_Parser_AST.Formula
                in
-            let uu____16592 = q ([b], [], body1)  in
-            FStar_Parser_AST.mk_term uu____16592 f.FStar_Parser_AST.range
+            let uu____15519 = q ([b], [], body1)  in
+            FStar_Parser_AST.mk_term uu____15519 f.FStar_Parser_AST.range
               FStar_Parser_AST.Formula
-        | uu____16601 -> failwith "impossible"  in
-      let uu____16604 =
-        let uu____16605 = unparen f  in uu____16605.FStar_Parser_AST.tm  in
-      match uu____16604 with
+        | uu____15528 -> failwith "impossible"  in
+      let uu____15531 =
+        let uu____15532 = unparen f  in uu____15532.FStar_Parser_AST.tm  in
+      match uu____15531 with
       | FStar_Parser_AST.Labeled (f1,l,p) ->
           let f2 = desugar_formula env f1  in
           FStar_All.pipe_left mk1
@@ -4698,30 +4669,30 @@ and (desugar_formula :
                (f2,
                  (FStar_Syntax_Syntax.Meta_labeled
                     (l, (f2.FStar_Syntax_Syntax.pos), p))))
-      | FStar_Parser_AST.QForall ([],uu____16612,uu____16613) ->
+      | FStar_Parser_AST.QForall ([],uu____15539,uu____15540) ->
           failwith "Impossible: Quantifier without binders"
-      | FStar_Parser_AST.QExists ([],uu____16624,uu____16625) ->
+      | FStar_Parser_AST.QExists ([],uu____15551,uu____15552) ->
           failwith "Impossible: Quantifier without binders"
       | FStar_Parser_AST.QForall (_1::_2::_3,pats,body) ->
           let binders = _1 :: _2 :: _3  in
-          let uu____16656 =
+          let uu____15583 =
             push_quant (fun x  -> FStar_Parser_AST.QForall x) binders pats
               body
              in
-          desugar_formula env uu____16656
+          desugar_formula env uu____15583
       | FStar_Parser_AST.QExists (_1::_2::_3,pats,body) ->
           let binders = _1 :: _2 :: _3  in
-          let uu____16692 =
+          let uu____15619 =
             push_quant (fun x  -> FStar_Parser_AST.QExists x) binders pats
               body
              in
-          desugar_formula env uu____16692
+          desugar_formula env uu____15619
       | FStar_Parser_AST.QForall (b::[],pats,body) ->
           desugar_quant FStar_Parser_Const.forall_lid b pats body
       | FStar_Parser_AST.QExists (b::[],pats,body) ->
           desugar_quant FStar_Parser_Const.exists_lid b pats body
       | FStar_Parser_AST.Paren f1 -> failwith "impossible"
-      | uu____16735 -> desugar_term env f
+      | uu____15662 -> desugar_term env f
 
 and (typars_of_binders :
   FStar_Syntax_DsEnv.env ->
@@ -4732,55 +4703,55 @@ and (typars_of_binders :
   =
   fun env  ->
     fun bs  ->
-      let uu____16740 =
+      let uu____15667 =
         FStar_List.fold_left
-          (fun uu____16773  ->
+          (fun uu____15700  ->
              fun b  ->
-               match uu____16773 with
+               match uu____15700 with
                | (env1,out) ->
                    let tk =
                      desugar_binder env1
-                       (let uu___288_16817 = b  in
+                       (let uu___292_15744 = b  in
                         {
                           FStar_Parser_AST.b =
-                            (uu___288_16817.FStar_Parser_AST.b);
+                            (uu___292_15744.FStar_Parser_AST.b);
                           FStar_Parser_AST.brange =
-                            (uu___288_16817.FStar_Parser_AST.brange);
+                            (uu___292_15744.FStar_Parser_AST.brange);
                           FStar_Parser_AST.blevel = FStar_Parser_AST.Formula;
                           FStar_Parser_AST.aqual =
-                            (uu___288_16817.FStar_Parser_AST.aqual)
+                            (uu___292_15744.FStar_Parser_AST.aqual)
                         })
                       in
                    (match tk with
                     | (FStar_Pervasives_Native.Some a,k) ->
-                        let uu____16832 = FStar_Syntax_DsEnv.push_bv env1 a
+                        let uu____15759 = FStar_Syntax_DsEnv.push_bv env1 a
                            in
-                        (match uu____16832 with
+                        (match uu____15759 with
                          | (env2,a1) ->
                              let a2 =
-                               let uu___289_16850 = a1  in
+                               let uu___293_15777 = a1  in
                                {
                                  FStar_Syntax_Syntax.ppname =
-                                   (uu___289_16850.FStar_Syntax_Syntax.ppname);
+                                   (uu___293_15777.FStar_Syntax_Syntax.ppname);
                                  FStar_Syntax_Syntax.index =
-                                   (uu___289_16850.FStar_Syntax_Syntax.index);
+                                   (uu___293_15777.FStar_Syntax_Syntax.index);
                                  FStar_Syntax_Syntax.sort = k
                                }  in
-                             let uu____16851 =
-                               let uu____16858 =
-                                 let uu____16863 =
+                             let uu____15778 =
+                               let uu____15785 =
+                                 let uu____15790 =
                                    trans_aqual env2 b.FStar_Parser_AST.aqual
                                     in
-                                 (a2, uu____16863)  in
-                               uu____16858 :: out  in
-                             (env2, uu____16851))
-                    | uu____16874 ->
+                                 (a2, uu____15790)  in
+                               uu____15785 :: out  in
+                             (env2, uu____15778))
+                    | uu____15801 ->
                         FStar_Errors.raise_error
                           (FStar_Errors.Fatal_UnexpectedBinder,
                             "Unexpected binder") b.FStar_Parser_AST.brange))
           (env, []) bs
          in
-      match uu____16740 with | (env1,tpars) -> (env1, (FStar_List.rev tpars))
+      match uu____15667 with | (env1,tpars) -> (env1, (FStar_List.rev tpars))
 
 and (desugar_binder :
   FStar_Syntax_DsEnv.env ->
@@ -4792,21 +4763,21 @@ and (desugar_binder :
     fun b  ->
       match b.FStar_Parser_AST.b with
       | FStar_Parser_AST.TAnnotated (x,t) ->
-          let uu____16945 = desugar_typ env t  in
-          ((FStar_Pervasives_Native.Some x), uu____16945)
+          let uu____15872 = desugar_typ env t  in
+          ((FStar_Pervasives_Native.Some x), uu____15872)
       | FStar_Parser_AST.Annotated (x,t) ->
-          let uu____16950 = desugar_typ env t  in
-          ((FStar_Pervasives_Native.Some x), uu____16950)
+          let uu____15877 = desugar_typ env t  in
+          ((FStar_Pervasives_Native.Some x), uu____15877)
       | FStar_Parser_AST.TVariable x ->
-          let uu____16954 =
+          let uu____15881 =
             FStar_Syntax_Syntax.mk
               (FStar_Syntax_Syntax.Tm_type FStar_Syntax_Syntax.U_unknown)
               FStar_Pervasives_Native.None x.FStar_Ident.idRange
              in
-          ((FStar_Pervasives_Native.Some x), uu____16954)
+          ((FStar_Pervasives_Native.Some x), uu____15881)
       | FStar_Parser_AST.NoName t ->
-          let uu____16958 = desugar_typ env t  in
-          (FStar_Pervasives_Native.None, uu____16958)
+          let uu____15885 = desugar_typ env t  in
+          (FStar_Pervasives_Native.None, uu____15885)
       | FStar_Parser_AST.Variable x ->
           ((FStar_Pervasives_Native.Some x), FStar_Syntax_Syntax.tun)
 
@@ -4822,27 +4793,27 @@ and (as_binder :
   =
   fun env  ->
     fun imp  ->
-      fun uu___242_16966  ->
-        match uu___242_16966 with
+      fun uu___246_15893  ->
+        match uu___246_15893 with
         | (FStar_Pervasives_Native.None ,k) ->
-            let uu____16988 = FStar_Syntax_Syntax.null_binder k  in
-            (uu____16988, env)
+            let uu____15915 = FStar_Syntax_Syntax.null_binder k  in
+            (uu____15915, env)
         | (FStar_Pervasives_Native.Some a,k) ->
-            let uu____17005 = FStar_Syntax_DsEnv.push_bv env a  in
-            (match uu____17005 with
+            let uu____15932 = FStar_Syntax_DsEnv.push_bv env a  in
+            (match uu____15932 with
              | (env1,a1) ->
-                 let uu____17022 =
-                   let uu____17029 = trans_aqual env1 imp  in
-                   ((let uu___290_17035 = a1  in
+                 let uu____15949 =
+                   let uu____15956 = trans_aqual env1 imp  in
+                   ((let uu___294_15962 = a1  in
                      {
                        FStar_Syntax_Syntax.ppname =
-                         (uu___290_17035.FStar_Syntax_Syntax.ppname);
+                         (uu___294_15962.FStar_Syntax_Syntax.ppname);
                        FStar_Syntax_Syntax.index =
-                         (uu___290_17035.FStar_Syntax_Syntax.index);
+                         (uu___294_15962.FStar_Syntax_Syntax.index);
                        FStar_Syntax_Syntax.sort = k
-                     }), uu____17029)
+                     }), uu____15956)
                     in
-                 (uu____17022, env1))
+                 (uu____15949, env1))
 
 and (trans_aqual :
   FStar_Syntax_DsEnv.env ->
@@ -4850,17 +4821,17 @@ and (trans_aqual :
       FStar_Syntax_Syntax.aqual)
   =
   fun env  ->
-    fun uu___243_17043  ->
-      match uu___243_17043 with
+    fun uu___247_15970  ->
+      match uu___247_15970 with
       | FStar_Pervasives_Native.Some (FStar_Parser_AST.Implicit ) ->
           FStar_Pervasives_Native.Some FStar_Syntax_Syntax.imp_tag
       | FStar_Pervasives_Native.Some (FStar_Parser_AST.Equality ) ->
           FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Equality
       | FStar_Pervasives_Native.Some (FStar_Parser_AST.Meta t) ->
-          let uu____17047 =
-            let uu____17048 = desugar_term env t  in
-            FStar_Syntax_Syntax.Meta uu____17048  in
-          FStar_Pervasives_Native.Some uu____17047
+          let uu____15974 =
+            let uu____15975 = desugar_term env t  in
+            FStar_Syntax_Syntax.Meta uu____15975  in
+          FStar_Pervasives_Native.Some uu____15974
       | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
 
 let (mk_data_discriminators :
@@ -4874,28 +4845,28 @@ let (mk_data_discriminators :
         let quals1 =
           FStar_All.pipe_right quals
             (FStar_List.filter
-               (fun uu___244_17084  ->
-                  match uu___244_17084 with
+               (fun uu___248_16011  ->
+                  match uu___248_16011 with
                   | FStar_Syntax_Syntax.NoExtract  -> true
                   | FStar_Syntax_Syntax.Abstract  -> true
                   | FStar_Syntax_Syntax.Private  -> true
-                  | uu____17085 -> false))
+                  | uu____16012 -> false))
            in
         let quals2 q =
-          let uu____17098 =
-            (let uu____17101 = FStar_Syntax_DsEnv.iface env  in
-             Prims.op_Negation uu____17101) ||
+          let uu____16025 =
+            (let uu____16028 = FStar_Syntax_DsEnv.iface env  in
+             Prims.op_Negation uu____16028) ||
               (FStar_Syntax_DsEnv.admitted_iface env)
              in
-          if uu____17098
+          if uu____16025
           then FStar_List.append (FStar_Syntax_Syntax.Assumption :: q) quals1
           else FStar_List.append q quals1  in
         FStar_All.pipe_right datas
           (FStar_List.map
              (fun d  ->
                 let disc_name = FStar_Syntax_Util.mk_discriminator d  in
-                let uu____17115 = FStar_Ident.range_of_lid disc_name  in
-                let uu____17116 =
+                let uu____16042 = FStar_Ident.range_of_lid disc_name  in
+                let uu____16043 =
                   quals2
                     [FStar_Syntax_Syntax.OnlyName;
                     FStar_Syntax_Syntax.Discriminator d]
@@ -4904,8 +4875,8 @@ let (mk_data_discriminators :
                   FStar_Syntax_Syntax.sigel =
                     (FStar_Syntax_Syntax.Sig_declare_typ
                        (disc_name, [], FStar_Syntax_Syntax.tun));
-                  FStar_Syntax_Syntax.sigrng = uu____17115;
-                  FStar_Syntax_Syntax.sigquals = uu____17116;
+                  FStar_Syntax_Syntax.sigrng = uu____16042;
+                  FStar_Syntax_Syntax.sigquals = uu____16043;
                   FStar_Syntax_Syntax.sigmeta =
                     FStar_Syntax_Syntax.default_sigmeta;
                   FStar_Syntax_Syntax.sigattrs = []
@@ -4925,37 +4896,37 @@ let (mk_indexed_projector_names :
         fun lid  ->
           fun fields  ->
             let p = FStar_Ident.range_of_lid lid  in
-            let uu____17155 =
+            let uu____16082 =
               FStar_All.pipe_right fields
                 (FStar_List.mapi
                    (fun i  ->
-                      fun uu____17193  ->
-                        match uu____17193 with
-                        | (x,uu____17203) ->
-                            let uu____17208 =
+                      fun uu____16120  ->
+                        match uu____16120 with
+                        | (x,uu____16130) ->
+                            let uu____16135 =
                               FStar_Syntax_Util.mk_field_projector_name lid x
                                 i
                                in
-                            (match uu____17208 with
-                             | (field_name,uu____17216) ->
+                            (match uu____16135 with
+                             | (field_name,uu____16143) ->
                                  let only_decl =
-                                   ((let uu____17220 =
+                                   ((let uu____16147 =
                                        FStar_Syntax_DsEnv.current_module env
                                         in
                                      FStar_Ident.lid_equals
                                        FStar_Parser_Const.prims_lid
-                                       uu____17220)
+                                       uu____16147)
                                       ||
                                       (fvq <> FStar_Syntax_Syntax.Data_ctor))
                                      ||
-                                     (let uu____17222 =
-                                        let uu____17223 =
+                                     (let uu____16149 =
+                                        let uu____16150 =
                                           FStar_Syntax_DsEnv.current_module
                                             env
                                            in
-                                        uu____17223.FStar_Ident.str  in
+                                        uu____16150.FStar_Ident.str  in
                                       FStar_Options.dont_gen_projectors
-                                        uu____17222)
+                                        uu____16149)
                                     in
                                  let no_decl =
                                    FStar_Syntax_Syntax.is_type
@@ -4964,30 +4935,30 @@ let (mk_indexed_projector_names :
                                  let quals q =
                                    if only_decl
                                    then
-                                     let uu____17239 =
+                                     let uu____16166 =
                                        FStar_List.filter
-                                         (fun uu___245_17243  ->
-                                            match uu___245_17243 with
+                                         (fun uu___249_16170  ->
+                                            match uu___249_16170 with
                                             | FStar_Syntax_Syntax.Abstract 
                                                 -> false
-                                            | uu____17244 -> true) q
+                                            | uu____16171 -> true) q
                                         in
                                      FStar_Syntax_Syntax.Assumption ::
-                                       uu____17239
+                                       uu____16166
                                    else q  in
                                  let quals1 =
                                    let iquals1 =
                                      FStar_All.pipe_right iquals
                                        (FStar_List.filter
-                                          (fun uu___246_17257  ->
-                                             match uu___246_17257 with
+                                          (fun uu___250_16184  ->
+                                             match uu___250_16184 with
                                              | FStar_Syntax_Syntax.NoExtract 
                                                  -> true
                                              | FStar_Syntax_Syntax.Abstract 
                                                  -> true
                                              | FStar_Syntax_Syntax.Private 
                                                  -> true
-                                             | uu____17258 -> false))
+                                             | uu____16185 -> false))
                                       in
                                    quals (FStar_Syntax_Syntax.OnlyName ::
                                      (FStar_Syntax_Syntax.Projector
@@ -4995,14 +4966,14 @@ let (mk_indexed_projector_names :
                                      :: iquals1)
                                     in
                                  let decl =
-                                   let uu____17260 =
+                                   let uu____16187 =
                                      FStar_Ident.range_of_lid field_name  in
                                    {
                                      FStar_Syntax_Syntax.sigel =
                                        (FStar_Syntax_Syntax.Sig_declare_typ
                                           (field_name, [],
                                             FStar_Syntax_Syntax.tun));
-                                     FStar_Syntax_Syntax.sigrng = uu____17260;
+                                     FStar_Syntax_Syntax.sigrng = uu____16187;
                                      FStar_Syntax_Syntax.sigquals = quals1;
                                      FStar_Syntax_Syntax.sigmeta =
                                        FStar_Syntax_Syntax.default_sigmeta;
@@ -5012,12 +4983,12 @@ let (mk_indexed_projector_names :
                                  then [decl]
                                  else
                                    (let dd =
-                                      let uu____17265 =
+                                      let uu____16192 =
                                         FStar_All.pipe_right quals1
                                           (FStar_List.contains
                                              FStar_Syntax_Syntax.Abstract)
                                          in
-                                      if uu____17265
+                                      if uu____16192
                                       then
                                         FStar_Syntax_Syntax.Delta_abstract
                                           (FStar_Syntax_Syntax.Delta_equational_at_level
@@ -5027,16 +4998,16 @@ let (mk_indexed_projector_names :
                                           (Prims.parse_int "1")
                                        in
                                     let lb =
-                                      let uu____17270 =
-                                        let uu____17275 =
+                                      let uu____16197 =
+                                        let uu____16202 =
                                           FStar_Syntax_Syntax.lid_as_fv
                                             field_name dd
                                             FStar_Pervasives_Native.None
                                            in
-                                        FStar_Util.Inr uu____17275  in
+                                        FStar_Util.Inr uu____16202  in
                                       {
                                         FStar_Syntax_Syntax.lbname =
-                                          uu____17270;
+                                          uu____16197;
                                         FStar_Syntax_Syntax.lbunivs = [];
                                         FStar_Syntax_Syntax.lbtyp =
                                           FStar_Syntax_Syntax.tun;
@@ -5049,28 +5020,28 @@ let (mk_indexed_projector_names :
                                           FStar_Range.dummyRange
                                       }  in
                                     let impl =
-                                      let uu____17279 =
-                                        let uu____17280 =
-                                          let uu____17287 =
-                                            let uu____17290 =
-                                              let uu____17291 =
+                                      let uu____16206 =
+                                        let uu____16207 =
+                                          let uu____16214 =
+                                            let uu____16217 =
+                                              let uu____16218 =
                                                 FStar_All.pipe_right
                                                   lb.FStar_Syntax_Syntax.lbname
                                                   FStar_Util.right
                                                  in
                                               FStar_All.pipe_right
-                                                uu____17291
+                                                uu____16218
                                                 (fun fv  ->
                                                    (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
                                                in
-                                            [uu____17290]  in
-                                          ((false, [lb]), uu____17287)  in
+                                            [uu____16217]  in
+                                          ((false, [lb]), uu____16214)  in
                                         FStar_Syntax_Syntax.Sig_let
-                                          uu____17280
+                                          uu____16207
                                          in
                                       {
                                         FStar_Syntax_Syntax.sigel =
-                                          uu____17279;
+                                          uu____16206;
                                         FStar_Syntax_Syntax.sigrng = p;
                                         FStar_Syntax_Syntax.sigquals = quals1;
                                         FStar_Syntax_Syntax.sigmeta =
@@ -5079,7 +5050,7 @@ let (mk_indexed_projector_names :
                                       }  in
                                     if no_decl then [impl] else [decl; impl]))))
                in
-            FStar_All.pipe_right uu____17155 FStar_List.flatten
+            FStar_All.pipe_right uu____16082 FStar_List.flatten
   
 let (mk_data_projector_names :
   FStar_Syntax_Syntax.qualifier Prims.list ->
@@ -5091,29 +5062,29 @@ let (mk_data_projector_names :
       fun se  ->
         match se.FStar_Syntax_Syntax.sigel with
         | FStar_Syntax_Syntax.Sig_datacon
-            (lid,uu____17335,t,uu____17337,n1,uu____17339) when
-            let uu____17344 =
+            (lid,uu____16262,t,uu____16264,n1,uu____16266) when
+            let uu____16271 =
               FStar_Ident.lid_equals lid FStar_Parser_Const.lexcons_lid  in
-            Prims.op_Negation uu____17344 ->
-            let uu____17345 = FStar_Syntax_Util.arrow_formals t  in
-            (match uu____17345 with
-             | (formals,uu____17363) ->
+            Prims.op_Negation uu____16271 ->
+            let uu____16272 = FStar_Syntax_Util.arrow_formals t  in
+            (match uu____16272 with
+             | (formals,uu____16290) ->
                  (match formals with
                   | [] -> []
-                  | uu____17392 ->
-                      let filter_records uu___247_17408 =
-                        match uu___247_17408 with
+                  | uu____16319 ->
+                      let filter_records uu___251_16335 =
+                        match uu___251_16335 with
                         | FStar_Syntax_Syntax.RecordConstructor
-                            (uu____17411,fns) ->
+                            (uu____16338,fns) ->
                             FStar_Pervasives_Native.Some
                               (FStar_Syntax_Syntax.Record_ctor (lid, fns))
-                        | uu____17423 -> FStar_Pervasives_Native.None  in
+                        | uu____16350 -> FStar_Pervasives_Native.None  in
                       let fv_qual =
-                        let uu____17425 =
+                        let uu____16352 =
                           FStar_Util.find_map se.FStar_Syntax_Syntax.sigquals
                             filter_records
                            in
-                        match uu____17425 with
+                        match uu____16352 with
                         | FStar_Pervasives_Native.None  ->
                             FStar_Syntax_Syntax.Data_ctor
                         | FStar_Pervasives_Native.Some q -> q  in
@@ -5127,12 +5098,12 @@ let (mk_data_projector_names :
                                   FStar_Syntax_Syntax.Private iquals))
                         then FStar_Syntax_Syntax.Private :: iquals
                         else iquals  in
-                      let uu____17435 = FStar_Util.first_N n1 formals  in
-                      (match uu____17435 with
-                       | (uu____17464,rest) ->
+                      let uu____16362 = FStar_Util.first_N n1 formals  in
+                      (match uu____16362 with
+                       | (uu____16391,rest) ->
                            mk_indexed_projector_names iquals1 fv_qual env lid
                              rest)))
-        | uu____17498 -> []
+        | uu____16425 -> []
   
 let (mk_typ_abbrev :
   FStar_Ident.lident ->
@@ -5155,40 +5126,40 @@ let (mk_typ_abbrev :
               fun quals  ->
                 fun rng  ->
                   let dd =
-                    let uu____17576 =
+                    let uu____16503 =
                       FStar_All.pipe_right quals
                         (FStar_List.contains FStar_Syntax_Syntax.Abstract)
                        in
-                    if uu____17576
+                    if uu____16503
                     then
-                      let uu____17579 =
+                      let uu____16506 =
                         FStar_Syntax_Util.incr_delta_qualifier t  in
-                      FStar_Syntax_Syntax.Delta_abstract uu____17579
+                      FStar_Syntax_Syntax.Delta_abstract uu____16506
                     else FStar_Syntax_Util.incr_delta_qualifier t  in
                   let lb =
-                    let uu____17582 =
-                      let uu____17587 =
+                    let uu____16509 =
+                      let uu____16514 =
                         FStar_Syntax_Syntax.lid_as_fv lid dd
                           FStar_Pervasives_Native.None
                          in
-                      FStar_Util.Inr uu____17587  in
-                    let uu____17588 =
+                      FStar_Util.Inr uu____16514  in
+                    let uu____16515 =
                       if FStar_Util.is_some kopt
                       then
-                        let uu____17593 =
-                          let uu____17596 =
+                        let uu____16520 =
+                          let uu____16523 =
                             FStar_All.pipe_right kopt FStar_Util.must  in
-                          FStar_Syntax_Syntax.mk_Total uu____17596  in
-                        FStar_Syntax_Util.arrow typars uu____17593
+                          FStar_Syntax_Syntax.mk_Total uu____16523  in
+                        FStar_Syntax_Util.arrow typars uu____16520
                       else FStar_Syntax_Syntax.tun  in
-                    let uu____17600 = no_annot_abs typars t  in
+                    let uu____16527 = no_annot_abs typars t  in
                     {
-                      FStar_Syntax_Syntax.lbname = uu____17582;
+                      FStar_Syntax_Syntax.lbname = uu____16509;
                       FStar_Syntax_Syntax.lbunivs = uvs;
-                      FStar_Syntax_Syntax.lbtyp = uu____17588;
+                      FStar_Syntax_Syntax.lbtyp = uu____16515;
                       FStar_Syntax_Syntax.lbeff =
                         FStar_Parser_Const.effect_Tot_lid;
-                      FStar_Syntax_Syntax.lbdef = uu____17600;
+                      FStar_Syntax_Syntax.lbdef = uu____16527;
                       FStar_Syntax_Syntax.lbattrs = [];
                       FStar_Syntax_Syntax.lbpos = rng
                     }  in
@@ -5214,32 +5185,32 @@ let rec (desugar_tycon :
       fun quals  ->
         fun tcs  ->
           let rng = d.FStar_Parser_AST.drange  in
-          let tycon_id uu___248_17651 =
-            match uu___248_17651 with
-            | FStar_Parser_AST.TyconAbstract (id1,uu____17653,uu____17654) ->
+          let tycon_id uu___252_16578 =
+            match uu___252_16578 with
+            | FStar_Parser_AST.TyconAbstract (id1,uu____16580,uu____16581) ->
                 id1
             | FStar_Parser_AST.TyconAbbrev
-                (id1,uu____17664,uu____17665,uu____17666) -> id1
+                (id1,uu____16591,uu____16592,uu____16593) -> id1
             | FStar_Parser_AST.TyconRecord
-                (id1,uu____17676,uu____17677,uu____17678) -> id1
+                (id1,uu____16603,uu____16604,uu____16605) -> id1
             | FStar_Parser_AST.TyconVariant
-                (id1,uu____17708,uu____17709,uu____17710) -> id1
+                (id1,uu____16635,uu____16636,uu____16637) -> id1
              in
           let binder_to_term b =
             match b.FStar_Parser_AST.b with
-            | FStar_Parser_AST.Annotated (x,uu____17754) ->
-                let uu____17755 =
-                  let uu____17756 = FStar_Ident.lid_of_ids [x]  in
-                  FStar_Parser_AST.Var uu____17756  in
-                FStar_Parser_AST.mk_term uu____17755 x.FStar_Ident.idRange
+            | FStar_Parser_AST.Annotated (x,uu____16681) ->
+                let uu____16682 =
+                  let uu____16683 = FStar_Ident.lid_of_ids [x]  in
+                  FStar_Parser_AST.Var uu____16683  in
+                FStar_Parser_AST.mk_term uu____16682 x.FStar_Ident.idRange
                   FStar_Parser_AST.Expr
             | FStar_Parser_AST.Variable x ->
-                let uu____17758 =
-                  let uu____17759 = FStar_Ident.lid_of_ids [x]  in
-                  FStar_Parser_AST.Var uu____17759  in
-                FStar_Parser_AST.mk_term uu____17758 x.FStar_Ident.idRange
+                let uu____16685 =
+                  let uu____16686 = FStar_Ident.lid_of_ids [x]  in
+                  FStar_Parser_AST.Var uu____16686  in
+                FStar_Parser_AST.mk_term uu____16685 x.FStar_Ident.idRange
                   FStar_Parser_AST.Expr
-            | FStar_Parser_AST.TAnnotated (a,uu____17761) ->
+            | FStar_Parser_AST.TAnnotated (a,uu____16688) ->
                 FStar_Parser_AST.mk_term (FStar_Parser_AST.Tvar a)
                   a.FStar_Ident.idRange FStar_Parser_AST.Type_level
             | FStar_Parser_AST.TVariable a ->
@@ -5261,21 +5232,21 @@ let rec (desugar_tycon :
               match b.FStar_Parser_AST.aqual with
               | FStar_Pervasives_Native.Some (FStar_Parser_AST.Implicit ) ->
                   FStar_Parser_AST.Hash
-              | uu____17792 -> FStar_Parser_AST.Nothing  in
+              | uu____16719 -> FStar_Parser_AST.Nothing  in
             FStar_List.fold_left
               (fun out  ->
                  fun b  ->
-                   let uu____17800 =
-                     let uu____17801 =
-                       let uu____17808 = binder_to_term b  in
-                       (out, uu____17808, (imp_of_aqual b))  in
-                     FStar_Parser_AST.App uu____17801  in
-                   FStar_Parser_AST.mk_term uu____17800
+                   let uu____16727 =
+                     let uu____16728 =
+                       let uu____16735 = binder_to_term b  in
+                       (out, uu____16735, (imp_of_aqual b))  in
+                     FStar_Parser_AST.App uu____16728  in
+                   FStar_Parser_AST.mk_term uu____16727
                      out.FStar_Parser_AST.range out.FStar_Parser_AST.level) t
               binders
              in
-          let tycon_record_as_variant uu___249_17820 =
-            match uu___249_17820 with
+          let tycon_record_as_variant uu___253_16747 =
+            match uu___253_16747 with
             | FStar_Parser_AST.TyconRecord (id1,parms,kopt,fields) ->
                 let constrName =
                   FStar_Ident.mk_ident
@@ -5284,53 +5255,53 @@ let rec (desugar_tycon :
                    in
                 let mfields =
                   FStar_List.map
-                    (fun uu____17876  ->
-                       match uu____17876 with
-                       | (x,t,uu____17887) ->
-                           let uu____17892 =
-                             let uu____17893 =
-                               let uu____17898 =
+                    (fun uu____16803  ->
+                       match uu____16803 with
+                       | (x,t,uu____16814) ->
+                           let uu____16819 =
+                             let uu____16820 =
+                               let uu____16825 =
                                  FStar_Syntax_Util.mangle_field_name x  in
-                               (uu____17898, t)  in
-                             FStar_Parser_AST.Annotated uu____17893  in
-                           FStar_Parser_AST.mk_binder uu____17892
+                               (uu____16825, t)  in
+                             FStar_Parser_AST.Annotated uu____16820  in
+                           FStar_Parser_AST.mk_binder uu____16819
                              x.FStar_Ident.idRange FStar_Parser_AST.Expr
                              FStar_Pervasives_Native.None) fields
                    in
                 let result =
-                  let uu____17900 =
-                    let uu____17901 =
-                      let uu____17902 = FStar_Ident.lid_of_ids [id1]  in
-                      FStar_Parser_AST.Var uu____17902  in
-                    FStar_Parser_AST.mk_term uu____17901
+                  let uu____16827 =
+                    let uu____16828 =
+                      let uu____16829 = FStar_Ident.lid_of_ids [id1]  in
+                      FStar_Parser_AST.Var uu____16829  in
+                    FStar_Parser_AST.mk_term uu____16828
                       id1.FStar_Ident.idRange FStar_Parser_AST.Type_level
                      in
-                  apply_binders uu____17900 parms  in
+                  apply_binders uu____16827 parms  in
                 let constrTyp =
                   FStar_Parser_AST.mk_term
                     (FStar_Parser_AST.Product
                        (mfields, (with_constructor_effect result)))
                     id1.FStar_Ident.idRange FStar_Parser_AST.Type_level
                    in
-                let uu____17906 =
+                let uu____16833 =
                   FStar_All.pipe_right fields
                     (FStar_List.map
-                       (fun uu____17933  ->
-                          match uu____17933 with
-                          | (x,uu____17943,uu____17944) ->
+                       (fun uu____16860  ->
+                          match uu____16860 with
+                          | (x,uu____16870,uu____16871) ->
                               FStar_Syntax_Util.unmangle_field_name x))
                    in
                 ((FStar_Parser_AST.TyconVariant
                     (id1, parms, kopt,
                       [(constrName, (FStar_Pervasives_Native.Some constrTyp),
                          FStar_Pervasives_Native.None, false)])),
-                  uu____17906)
-            | uu____17997 -> failwith "impossible"  in
-          let desugar_abstract_tc quals1 _env mutuals uu___250_18036 =
-            match uu___250_18036 with
+                  uu____16833)
+            | uu____16924 -> failwith "impossible"  in
+          let desugar_abstract_tc quals1 _env mutuals uu___254_16963 =
+            match uu___254_16963 with
             | FStar_Parser_AST.TyconAbstract (id1,binders,kopt) ->
-                let uu____18060 = typars_of_binders _env binders  in
-                (match uu____18060 with
+                let uu____16987 = typars_of_binders _env binders  in
+                (match uu____16987 with
                  | (_env',typars) ->
                      let k =
                        match kopt with
@@ -5340,15 +5311,15 @@ let rec (desugar_tycon :
                            desugar_term _env' k
                         in
                      let tconstr =
-                       let uu____18096 =
-                         let uu____18097 =
-                           let uu____18098 = FStar_Ident.lid_of_ids [id1]  in
-                           FStar_Parser_AST.Var uu____18098  in
-                         FStar_Parser_AST.mk_term uu____18097
+                       let uu____17023 =
+                         let uu____17024 =
+                           let uu____17025 = FStar_Ident.lid_of_ids [id1]  in
+                           FStar_Parser_AST.Var uu____17025  in
+                         FStar_Parser_AST.mk_term uu____17024
                            id1.FStar_Ident.idRange
                            FStar_Parser_AST.Type_level
                           in
-                       apply_binders uu____18096 binders  in
+                       apply_binders uu____17023 binders  in
                      let qlid = FStar_Syntax_DsEnv.qualify _env id1  in
                      let typars1 = FStar_Syntax_Subst.close_binders typars
                         in
@@ -5373,40 +5344,40 @@ let rec (desugar_tycon :
                          id1 FStar_Syntax_Syntax.delta_constant
                         in
                      (_env1, _env2, se, tconstr))
-            | uu____18109 -> failwith "Unexpected tycon"  in
+            | uu____17036 -> failwith "Unexpected tycon"  in
           let push_tparams env1 bs =
-            let uu____18151 =
+            let uu____17078 =
               FStar_List.fold_left
-                (fun uu____18185  ->
-                   fun uu____18186  ->
-                     match (uu____18185, uu____18186) with
+                (fun uu____17112  ->
+                   fun uu____17113  ->
+                     match (uu____17112, uu____17113) with
                      | ((env2,tps),(x,imp)) ->
-                         let uu____18255 =
+                         let uu____17182 =
                            FStar_Syntax_DsEnv.push_bv env2
                              x.FStar_Syntax_Syntax.ppname
                             in
-                         (match uu____18255 with
+                         (match uu____17182 with
                           | (env3,y) -> (env3, ((y, imp) :: tps))))
                 (env1, []) bs
                in
-            match uu____18151 with
+            match uu____17078 with
             | (env2,bs1) -> (env2, (FStar_List.rev bs1))  in
           match tcs with
           | (FStar_Parser_AST.TyconAbstract (id1,bs,kopt))::[] ->
               let kopt1 =
                 match kopt with
                 | FStar_Pervasives_Native.None  ->
-                    let uu____18346 = tm_type_z id1.FStar_Ident.idRange  in
-                    FStar_Pervasives_Native.Some uu____18346
-                | uu____18347 -> kopt  in
+                    let uu____17273 = tm_type_z id1.FStar_Ident.idRange  in
+                    FStar_Pervasives_Native.Some uu____17273
+                | uu____17274 -> kopt  in
               let tc = FStar_Parser_AST.TyconAbstract (id1, bs, kopt1)  in
-              let uu____18355 = desugar_abstract_tc quals env [] tc  in
-              (match uu____18355 with
-               | (uu____18368,uu____18369,se,uu____18371) ->
+              let uu____17282 = desugar_abstract_tc quals env [] tc  in
+              (match uu____17282 with
+               | (uu____17295,uu____17296,se,uu____17298) ->
                    let se1 =
                      match se.FStar_Syntax_Syntax.sigel with
                      | FStar_Syntax_Syntax.Sig_inductive_typ
-                         (l,uu____18374,typars,k,[],[]) ->
+                         (l,uu____17301,typars,k,[],[]) ->
                          let quals1 = se.FStar_Syntax_Syntax.sigquals  in
                          let quals2 =
                            if
@@ -5414,25 +5385,25 @@ let rec (desugar_tycon :
                                FStar_Syntax_Syntax.Assumption quals1
                            then quals1
                            else
-                             ((let uu____18391 =
-                                 let uu____18392 = FStar_Options.ml_ish ()
+                             ((let uu____17318 =
+                                 let uu____17319 = FStar_Options.ml_ish ()
                                     in
-                                 Prims.op_Negation uu____18392  in
-                               if uu____18391
+                                 Prims.op_Negation uu____17319  in
+                               if uu____17318
                                then
-                                 let uu____18393 =
-                                   let uu____18398 =
-                                     let uu____18399 =
+                                 let uu____17320 =
+                                   let uu____17325 =
+                                     let uu____17326 =
                                        FStar_Syntax_Print.lid_to_string l  in
                                      FStar_Util.format1
                                        "Adding an implicit 'assume new' qualifier on %s"
-                                       uu____18399
+                                       uu____17326
                                       in
                                    (FStar_Errors.Warning_AddImplicitAssumeNewQualifier,
-                                     uu____18398)
+                                     uu____17325)
                                     in
                                  FStar_Errors.log_issue
-                                   se.FStar_Syntax_Syntax.sigrng uu____18393
+                                   se.FStar_Syntax_Syntax.sigrng uu____17320
                                else ());
                               FStar_Syntax_Syntax.Assumption
                               ::
@@ -5443,74 +5414,74 @@ let rec (desugar_tycon :
                          let t =
                            match typars with
                            | [] -> k
-                           | uu____18408 ->
-                               let uu____18409 =
-                                 let uu____18416 =
-                                   let uu____18417 =
-                                     let uu____18432 =
+                           | uu____17335 ->
+                               let uu____17336 =
+                                 let uu____17343 =
+                                   let uu____17344 =
+                                     let uu____17359 =
                                        FStar_Syntax_Syntax.mk_Total k  in
-                                     (typars, uu____18432)  in
-                                   FStar_Syntax_Syntax.Tm_arrow uu____18417
+                                     (typars, uu____17359)  in
+                                   FStar_Syntax_Syntax.Tm_arrow uu____17344
                                     in
-                                 FStar_Syntax_Syntax.mk uu____18416  in
-                               uu____18409 FStar_Pervasives_Native.None
+                                 FStar_Syntax_Syntax.mk uu____17343  in
+                               uu____17336 FStar_Pervasives_Native.None
                                  se.FStar_Syntax_Syntax.sigrng
                             in
-                         let uu___291_18448 = se  in
+                         let uu___295_17375 = se  in
                          {
                            FStar_Syntax_Syntax.sigel =
                              (FStar_Syntax_Syntax.Sig_declare_typ (l, [], t));
                            FStar_Syntax_Syntax.sigrng =
-                             (uu___291_18448.FStar_Syntax_Syntax.sigrng);
+                             (uu___295_17375.FStar_Syntax_Syntax.sigrng);
                            FStar_Syntax_Syntax.sigquals = quals2;
                            FStar_Syntax_Syntax.sigmeta =
-                             (uu___291_18448.FStar_Syntax_Syntax.sigmeta);
+                             (uu___295_17375.FStar_Syntax_Syntax.sigmeta);
                            FStar_Syntax_Syntax.sigattrs =
-                             (uu___291_18448.FStar_Syntax_Syntax.sigattrs)
+                             (uu___295_17375.FStar_Syntax_Syntax.sigattrs)
                          }
-                     | uu____18449 -> failwith "Impossible"  in
+                     | uu____17376 -> failwith "Impossible"  in
                    let env1 = FStar_Syntax_DsEnv.push_sigelt env se1  in
                    let env2 =
-                     let uu____18452 = FStar_Syntax_DsEnv.qualify env1 id1
+                     let uu____17379 = FStar_Syntax_DsEnv.qualify env1 id1
                         in
-                     FStar_Syntax_DsEnv.push_doc env1 uu____18452
+                     FStar_Syntax_DsEnv.push_doc env1 uu____17379
                        d.FStar_Parser_AST.doc
                       in
                    (env2, [se1]))
           | (FStar_Parser_AST.TyconAbbrev (id1,binders,kopt,t))::[] ->
-              let uu____18465 = typars_of_binders env binders  in
-              (match uu____18465 with
+              let uu____17392 = typars_of_binders env binders  in
+              (match uu____17392 with
                | (env',typars) ->
                    let kopt1 =
                      match kopt with
                      | FStar_Pervasives_Native.None  ->
-                         let uu____18499 =
+                         let uu____17426 =
                            FStar_Util.for_some
-                             (fun uu___251_18501  ->
-                                match uu___251_18501 with
+                             (fun uu___255_17428  ->
+                                match uu___255_17428 with
                                 | FStar_Syntax_Syntax.Effect  -> true
-                                | uu____18502 -> false) quals
+                                | uu____17429 -> false) quals
                             in
-                         if uu____18499
+                         if uu____17426
                          then
                            FStar_Pervasives_Native.Some
                              FStar_Syntax_Syntax.teff
                          else FStar_Pervasives_Native.None
                      | FStar_Pervasives_Native.Some k ->
-                         let uu____18507 = desugar_term env' k  in
-                         FStar_Pervasives_Native.Some uu____18507
+                         let uu____17434 = desugar_term env' k  in
+                         FStar_Pervasives_Native.Some uu____17434
                       in
                    let t0 = t  in
                    let quals1 =
-                     let uu____18512 =
+                     let uu____17439 =
                        FStar_All.pipe_right quals
                          (FStar_Util.for_some
-                            (fun uu___252_18516  ->
-                               match uu___252_18516 with
+                            (fun uu___256_17443  ->
+                               match uu___256_17443 with
                                | FStar_Syntax_Syntax.Logic  -> true
-                               | uu____18517 -> false))
+                               | uu____17444 -> false))
                         in
-                     if uu____18512
+                     if uu____17439
                      then quals
                      else
                        if
@@ -5520,40 +5491,40 @@ let rec (desugar_tycon :
                       in
                    let qlid = FStar_Syntax_DsEnv.qualify env id1  in
                    let se =
-                     let uu____18526 =
+                     let uu____17453 =
                        FStar_All.pipe_right quals1
                          (FStar_List.contains FStar_Syntax_Syntax.Effect)
                         in
-                     if uu____18526
+                     if uu____17453
                      then
-                       let uu____18529 =
-                         let uu____18536 =
-                           let uu____18537 = unparen t  in
-                           uu____18537.FStar_Parser_AST.tm  in
-                         match uu____18536 with
+                       let uu____17456 =
+                         let uu____17463 =
+                           let uu____17464 = unparen t  in
+                           uu____17464.FStar_Parser_AST.tm  in
+                         match uu____17463 with
                          | FStar_Parser_AST.Construct (head1,args) ->
-                             let uu____18558 =
+                             let uu____17485 =
                                match FStar_List.rev args with
-                               | (last_arg,uu____18588)::args_rev ->
-                                   let uu____18600 =
-                                     let uu____18601 = unparen last_arg  in
-                                     uu____18601.FStar_Parser_AST.tm  in
-                                   (match uu____18600 with
+                               | (last_arg,uu____17515)::args_rev ->
+                                   let uu____17527 =
+                                     let uu____17528 = unparen last_arg  in
+                                     uu____17528.FStar_Parser_AST.tm  in
+                                   (match uu____17527 with
                                     | FStar_Parser_AST.Attributes ts ->
                                         (ts, (FStar_List.rev args_rev))
-                                    | uu____18629 -> ([], args))
-                               | uu____18638 -> ([], args)  in
-                             (match uu____18558 with
+                                    | uu____17556 -> ([], args))
+                               | uu____17565 -> ([], args)  in
+                             (match uu____17485 with
                               | (cattributes,args1) ->
-                                  let uu____18677 =
+                                  let uu____17604 =
                                     desugar_attributes env cattributes  in
                                   ((FStar_Parser_AST.mk_term
                                       (FStar_Parser_AST.Construct
                                          (head1, args1))
                                       t.FStar_Parser_AST.range
-                                      t.FStar_Parser_AST.level), uu____18677))
-                         | uu____18688 -> (t, [])  in
-                       match uu____18529 with
+                                      t.FStar_Parser_AST.level), uu____17604))
+                         | uu____17615 -> (t, [])  in
+                       match uu____17456 with
                        | (t1,cattributes) ->
                            let c =
                              desugar_comp t1.FStar_Parser_AST.range env' t1
@@ -5565,10 +5536,10 @@ let rec (desugar_tycon :
                            let quals2 =
                              FStar_All.pipe_right quals1
                                (FStar_List.filter
-                                  (fun uu___253_18710  ->
-                                     match uu___253_18710 with
+                                  (fun uu___257_17637  ->
+                                     match uu___257_17637 with
                                      | FStar_Syntax_Syntax.Effect  -> false
-                                     | uu____18711 -> true))
+                                     | uu____17638 -> true))
                               in
                            {
                              FStar_Syntax_Syntax.sigel =
@@ -5593,23 +5564,23 @@ let rec (desugar_tycon :
                        d.FStar_Parser_AST.doc
                       in
                    (env2, [se]))
-          | (FStar_Parser_AST.TyconRecord uu____18718)::[] ->
+          | (FStar_Parser_AST.TyconRecord uu____17645)::[] ->
               let trec = FStar_List.hd tcs  in
-              let uu____18742 = tycon_record_as_variant trec  in
-              (match uu____18742 with
+              let uu____17669 = tycon_record_as_variant trec  in
+              (match uu____17669 with
                | (t,fs) ->
-                   let uu____18759 =
-                     let uu____18762 =
-                       let uu____18763 =
-                         let uu____18772 =
-                           let uu____18775 =
+                   let uu____17686 =
+                     let uu____17689 =
+                       let uu____17690 =
+                         let uu____17699 =
+                           let uu____17702 =
                              FStar_Syntax_DsEnv.current_module env  in
-                           FStar_Ident.ids_of_lid uu____18775  in
-                         (uu____18772, fs)  in
-                       FStar_Syntax_Syntax.RecordType uu____18763  in
-                     uu____18762 :: quals  in
-                   desugar_tycon env d uu____18759 [t])
-          | uu____18780::uu____18781 ->
+                           FStar_Ident.ids_of_lid uu____17702  in
+                         (uu____17699, fs)  in
+                       FStar_Syntax_Syntax.RecordType uu____17690  in
+                     uu____17689 :: quals  in
+                   desugar_tycon env d uu____17686 [t])
+          | uu____17707::uu____17708 ->
               let env0 = env  in
               let mutuals =
                 FStar_List.map
@@ -5618,86 +5589,86 @@ let rec (desugar_tycon :
                        (tycon_id x)) tcs
                  in
               let rec collect_tcs quals1 et tc =
-                let uu____18948 = et  in
-                match uu____18948 with
+                let uu____17875 = et  in
+                match uu____17875 with
                 | (env1,tcs1) ->
                     (match tc with
-                     | FStar_Parser_AST.TyconRecord uu____19173 ->
+                     | FStar_Parser_AST.TyconRecord uu____18100 ->
                          let trec = tc  in
-                         let uu____19197 = tycon_record_as_variant trec  in
-                         (match uu____19197 with
+                         let uu____18124 = tycon_record_as_variant trec  in
+                         (match uu____18124 with
                           | (t,fs) ->
-                              let uu____19256 =
-                                let uu____19259 =
-                                  let uu____19260 =
-                                    let uu____19269 =
-                                      let uu____19272 =
+                              let uu____18183 =
+                                let uu____18186 =
+                                  let uu____18187 =
+                                    let uu____18196 =
+                                      let uu____18199 =
                                         FStar_Syntax_DsEnv.current_module
                                           env1
                                          in
-                                      FStar_Ident.ids_of_lid uu____19272  in
-                                    (uu____19269, fs)  in
-                                  FStar_Syntax_Syntax.RecordType uu____19260
+                                      FStar_Ident.ids_of_lid uu____18199  in
+                                    (uu____18196, fs)  in
+                                  FStar_Syntax_Syntax.RecordType uu____18187
                                    in
-                                uu____19259 :: quals1  in
-                              collect_tcs uu____19256 (env1, tcs1) t)
+                                uu____18186 :: quals1  in
+                              collect_tcs uu____18183 (env1, tcs1) t)
                      | FStar_Parser_AST.TyconVariant
                          (id1,binders,kopt,constructors) ->
-                         let uu____19359 =
+                         let uu____18286 =
                            desugar_abstract_tc quals1 env1 mutuals
                              (FStar_Parser_AST.TyconAbstract
                                 (id1, binders, kopt))
                             in
-                         (match uu____19359 with
-                          | (env2,uu____19419,se,tconstr) ->
+                         (match uu____18286 with
+                          | (env2,uu____18346,se,tconstr) ->
                               (env2,
                                 ((FStar_Util.Inl
                                     (se, constructors, tconstr, quals1)) ::
                                 tcs1)))
                      | FStar_Parser_AST.TyconAbbrev (id1,binders,kopt,t) ->
-                         let uu____19568 =
+                         let uu____18495 =
                            desugar_abstract_tc quals1 env1 mutuals
                              (FStar_Parser_AST.TyconAbstract
                                 (id1, binders, kopt))
                             in
-                         (match uu____19568 with
-                          | (env2,uu____19628,se,tconstr) ->
+                         (match uu____18495 with
+                          | (env2,uu____18555,se,tconstr) ->
                               (env2,
                                 ((FStar_Util.Inr (se, binders, t, quals1)) ::
                                 tcs1)))
-                     | uu____19753 ->
+                     | uu____18680 ->
                          failwith "Unrecognized mutual type definition")
                  in
-              let uu____19800 =
+              let uu____18727 =
                 FStar_List.fold_left (collect_tcs quals) (env, []) tcs  in
-              (match uu____19800 with
+              (match uu____18727 with
                | (env1,tcs1) ->
                    let tcs2 = FStar_List.rev tcs1  in
                    let docs_tps_sigelts =
                      FStar_All.pipe_right tcs2
                        (FStar_List.collect
-                          (fun uu___255_20305  ->
-                             match uu___255_20305 with
+                          (fun uu___259_19232  ->
+                             match uu___259_19232 with
                              | FStar_Util.Inr
                                  ({
                                     FStar_Syntax_Syntax.sigel =
                                       FStar_Syntax_Syntax.Sig_inductive_typ
-                                      (id1,uvs,tpars,k,uu____20370,uu____20371);
-                                    FStar_Syntax_Syntax.sigrng = uu____20372;
+                                      (id1,uvs,tpars,k,uu____19297,uu____19298);
+                                    FStar_Syntax_Syntax.sigrng = uu____19299;
                                     FStar_Syntax_Syntax.sigquals =
-                                      uu____20373;
-                                    FStar_Syntax_Syntax.sigmeta = uu____20374;
+                                      uu____19300;
+                                    FStar_Syntax_Syntax.sigmeta = uu____19301;
                                     FStar_Syntax_Syntax.sigattrs =
-                                      uu____20375;_},binders,t,quals1)
+                                      uu____19302;_},binders,t,quals1)
                                  ->
                                  let t1 =
-                                   let uu____20438 =
+                                   let uu____19365 =
                                      typars_of_binders env1 binders  in
-                                   match uu____20438 with
+                                   match uu____19365 with
                                    | (env2,tpars1) ->
-                                       let uu____20465 =
+                                       let uu____19392 =
                                          push_tparams env2 tpars1  in
-                                       (match uu____20465 with
+                                       (match uu____19392 with
                                         | (env_tps,tpars2) ->
                                             let t1 = desugar_typ env_tps t
                                                in
@@ -5708,27 +5679,27 @@ let rec (desugar_tycon :
                                             FStar_Syntax_Subst.close tpars3
                                               t1)
                                     in
-                                 let uu____20494 =
-                                   let uu____20513 =
+                                 let uu____19421 =
+                                   let uu____19440 =
                                      mk_typ_abbrev id1 uvs tpars
                                        (FStar_Pervasives_Native.Some k) t1
                                        [id1] quals1 rng
                                       in
                                    ((id1, (d.FStar_Parser_AST.doc)), [],
-                                     uu____20513)
+                                     uu____19440)
                                     in
-                                 [uu____20494]
+                                 [uu____19421]
                              | FStar_Util.Inl
                                  ({
                                     FStar_Syntax_Syntax.sigel =
                                       FStar_Syntax_Syntax.Sig_inductive_typ
-                                      (tname,univs1,tpars,k,mutuals1,uu____20573);
-                                    FStar_Syntax_Syntax.sigrng = uu____20574;
+                                      (tname,univs1,tpars,k,mutuals1,uu____19500);
+                                    FStar_Syntax_Syntax.sigrng = uu____19501;
                                     FStar_Syntax_Syntax.sigquals =
                                       tname_quals;
-                                    FStar_Syntax_Syntax.sigmeta = uu____20576;
+                                    FStar_Syntax_Syntax.sigmeta = uu____19503;
                                     FStar_Syntax_Syntax.sigattrs =
-                                      uu____20577;_},constrs,tconstr,quals1)
+                                      uu____19504;_},constrs,tconstr,quals1)
                                  ->
                                  let mk_tot t =
                                    let tot1 =
@@ -5745,27 +5716,27 @@ let rec (desugar_tycon :
                                      t.FStar_Parser_AST.level
                                     in
                                  let tycon = (tname, tpars, k)  in
-                                 let uu____20675 = push_tparams env1 tpars
+                                 let uu____19602 = push_tparams env1 tpars
                                     in
-                                 (match uu____20675 with
+                                 (match uu____19602 with
                                   | (env_tps,tps) ->
                                       let data_tpars =
                                         FStar_List.map
-                                          (fun uu____20742  ->
-                                             match uu____20742 with
-                                             | (x,uu____20754) ->
+                                          (fun uu____19669  ->
+                                             match uu____19669 with
+                                             | (x,uu____19681) ->
                                                  (x,
                                                    (FStar_Pervasives_Native.Some
                                                       (FStar_Syntax_Syntax.Implicit
                                                          true)))) tps
                                          in
                                       let tot_tconstr = mk_tot tconstr  in
-                                      let uu____20758 =
-                                        let uu____20785 =
+                                      let uu____19685 =
+                                        let uu____19712 =
                                           FStar_All.pipe_right constrs
                                             (FStar_List.map
-                                               (fun uu____20893  ->
-                                                  match uu____20893 with
+                                               (fun uu____19820  ->
+                                                  match uu____19820 with
                                                   | (id1,topt,doc1,of_notation)
                                                       ->
                                                       let t =
@@ -5798,10 +5769,10 @@ let rec (desugar_tycon :
                                                                t -> t)
                                                          in
                                                       let t1 =
-                                                        let uu____20947 =
+                                                        let uu____19874 =
                                                           close env_tps t  in
                                                         desugar_term env_tps
-                                                          uu____20947
+                                                          uu____19874
                                                          in
                                                       let name =
                                                         FStar_Syntax_DsEnv.qualify
@@ -5812,54 +5783,54 @@ let rec (desugar_tycon :
                                                           tname_quals
                                                           (FStar_List.collect
                                                              (fun
-                                                                uu___254_20958
+                                                                uu___258_19885
                                                                  ->
-                                                                match uu___254_20958
+                                                                match uu___258_19885
                                                                 with
                                                                 | FStar_Syntax_Syntax.RecordType
                                                                     fns ->
                                                                     [
                                                                     FStar_Syntax_Syntax.RecordConstructor
                                                                     fns]
-                                                                | uu____20970
+                                                                | uu____19897
                                                                     -> []))
                                                          in
                                                       let ntps =
                                                         FStar_List.length
                                                           data_tpars
                                                          in
-                                                      let uu____20978 =
-                                                        let uu____20997 =
-                                                          let uu____20998 =
-                                                            let uu____20999 =
-                                                              let uu____21014
+                                                      let uu____19905 =
+                                                        let uu____19924 =
+                                                          let uu____19925 =
+                                                            let uu____19926 =
+                                                              let uu____19941
                                                                 =
-                                                                let uu____21015
+                                                                let uu____19942
                                                                   =
-                                                                  let uu____21018
+                                                                  let uu____19945
                                                                     =
                                                                     FStar_All.pipe_right
                                                                     t1
                                                                     FStar_Syntax_Util.name_function_binders
                                                                      in
                                                                   FStar_Syntax_Syntax.mk_Total
-                                                                    uu____21018
+                                                                    uu____19945
                                                                    in
                                                                 FStar_Syntax_Util.arrow
                                                                   data_tpars
-                                                                  uu____21015
+                                                                  uu____19942
                                                                  in
                                                               (name, univs1,
-                                                                uu____21014,
+                                                                uu____19941,
                                                                 tname, ntps,
                                                                 mutuals1)
                                                                in
                                                             FStar_Syntax_Syntax.Sig_datacon
-                                                              uu____20999
+                                                              uu____19926
                                                              in
                                                           {
                                                             FStar_Syntax_Syntax.sigel
-                                                              = uu____20998;
+                                                              = uu____19925;
                                                             FStar_Syntax_Syntax.sigrng
                                                               = rng;
                                                             FStar_Syntax_Syntax.sigquals
@@ -5871,14 +5842,14 @@ let rec (desugar_tycon :
                                                               = []
                                                           }  in
                                                         ((name, doc1), tps,
-                                                          uu____20997)
+                                                          uu____19924)
                                                          in
-                                                      (name, uu____20978)))
+                                                      (name, uu____19905)))
                                            in
                                         FStar_All.pipe_left FStar_List.split
-                                          uu____20785
+                                          uu____19712
                                          in
-                                      (match uu____20758 with
+                                      (match uu____19685 with
                                        | (constrNames,constrs1) ->
                                            ((tname, (d.FStar_Parser_AST.doc)),
                                              [],
@@ -5897,31 +5868,31 @@ let rec (desugar_tycon :
                                                  []
                                              })
                                            :: constrs1))
-                             | uu____21233 -> failwith "impossible"))
+                             | uu____20160 -> failwith "impossible"))
                       in
                    let name_docs =
                      FStar_All.pipe_right docs_tps_sigelts
                        (FStar_List.map
-                          (fun uu____21359  ->
-                             match uu____21359 with
-                             | (name_doc,uu____21385,uu____21386) -> name_doc))
+                          (fun uu____20286  ->
+                             match uu____20286 with
+                             | (name_doc,uu____20312,uu____20313) -> name_doc))
                       in
                    let sigelts =
                      FStar_All.pipe_right docs_tps_sigelts
                        (FStar_List.map
-                          (fun uu____21458  ->
-                             match uu____21458 with
-                             | (uu____21477,uu____21478,se) -> se))
+                          (fun uu____20385  ->
+                             match uu____20385 with
+                             | (uu____20404,uu____20405,se) -> se))
                       in
-                   let uu____21504 =
-                     let uu____21511 =
+                   let uu____20431 =
+                     let uu____20438 =
                        FStar_List.collect FStar_Syntax_Util.lids_of_sigelt
                          sigelts
                         in
                      FStar_Syntax_MutRecTy.disentangle_abbrevs_from_bundle
-                       sigelts quals uu____21511 rng
+                       sigelts quals uu____20438 rng
                       in
-                   (match uu____21504 with
+                   (match uu____20431 with
                     | (bundle,abbrevs) ->
                         let env2 = FStar_Syntax_DsEnv.push_sigelt env0 bundle
                            in
@@ -5932,9 +5903,9 @@ let rec (desugar_tycon :
                         let data_ops =
                           FStar_All.pipe_right docs_tps_sigelts
                             (FStar_List.collect
-                               (fun uu____21573  ->
-                                  match uu____21573 with
-                                  | (uu____21594,tps,se) ->
+                               (fun uu____20500  ->
+                                  match uu____20500 with
+                                  | (uu____20521,tps,se) ->
                                       mk_data_projector_names quals env3 se))
                            in
                         let discs =
@@ -5943,7 +5914,7 @@ let rec (desugar_tycon :
                                (fun se  ->
                                   match se.FStar_Syntax_Syntax.sigel with
                                   | FStar_Syntax_Syntax.Sig_inductive_typ
-                                      (tname,uu____21641,tps,k,uu____21644,constrs)
+                                      (tname,uu____20568,tps,k,uu____20571,constrs)
                                       when
                                       (FStar_List.length constrs) >
                                         (Prims.parse_int "1")
@@ -5965,7 +5936,7 @@ let rec (desugar_tycon :
                                         else quals1  in
                                       mk_data_discriminators quals2 env3
                                         constrs
-                                  | uu____21663 -> []))
+                                  | uu____20590 -> []))
                            in
                         let ops = FStar_List.append discs data_ops  in
                         let env4 =
@@ -5975,8 +5946,8 @@ let rec (desugar_tycon :
                         let env5 =
                           FStar_List.fold_left
                             (fun acc  ->
-                               fun uu____21680  ->
-                                 match uu____21680 with
+                               fun uu____20607  ->
+                                 match uu____20607 with
                                  | (lid,doc1) ->
                                      FStar_Syntax_DsEnv.push_doc env4 lid
                                        doc1) env4 name_docs
@@ -5996,28 +5967,28 @@ let (desugar_binders :
   =
   fun env  ->
     fun binders  ->
-      let uu____21723 =
+      let uu____20650 =
         FStar_List.fold_left
-          (fun uu____21758  ->
+          (fun uu____20685  ->
              fun b  ->
-               match uu____21758 with
+               match uu____20685 with
                | (env1,binders1) ->
-                   let uu____21802 = desugar_binder env1 b  in
-                   (match uu____21802 with
+                   let uu____20729 = desugar_binder env1 b  in
+                   (match uu____20729 with
                     | (FStar_Pervasives_Native.Some a,k) ->
-                        let uu____21825 =
+                        let uu____20752 =
                           as_binder env1 b.FStar_Parser_AST.aqual
                             ((FStar_Pervasives_Native.Some a), k)
                            in
-                        (match uu____21825 with
+                        (match uu____20752 with
                          | (binder,env2) -> (env2, (binder :: binders1)))
-                    | uu____21878 ->
+                    | uu____20805 ->
                         FStar_Errors.raise_error
                           (FStar_Errors.Fatal_MissingNameInBinder,
                             "Missing name in binder")
                           b.FStar_Parser_AST.brange)) (env, []) binders
          in
-      match uu____21723 with
+      match uu____20650 with
       | (env1,binders1) -> (env1, (FStar_List.rev binders1))
   
 let (push_reflect_effect :
@@ -6029,23 +6000,23 @@ let (push_reflect_effect :
     fun quals  ->
       fun effect_name  ->
         fun range  ->
-          let uu____21979 =
+          let uu____20906 =
             FStar_All.pipe_right quals
               (FStar_Util.for_some
-                 (fun uu___256_21984  ->
-                    match uu___256_21984 with
-                    | FStar_Syntax_Syntax.Reflectable uu____21985 -> true
-                    | uu____21986 -> false))
+                 (fun uu___260_20911  ->
+                    match uu___260_20911 with
+                    | FStar_Syntax_Syntax.Reflectable uu____20912 -> true
+                    | uu____20913 -> false))
              in
-          if uu____21979
+          if uu____20906
           then
             let monad_env =
               FStar_Syntax_DsEnv.enter_monad_scope env
                 effect_name.FStar_Ident.ident
                in
             let reflect_lid =
-              let uu____21989 = FStar_Ident.id_of_text "reflect"  in
-              FStar_All.pipe_right uu____21989
+              let uu____20916 = FStar_Ident.id_of_text "reflect"  in
+              FStar_All.pipe_right uu____20916
                 (FStar_Syntax_DsEnv.qualify monad_env)
                in
             let quals1 =
@@ -6073,40 +6044,42 @@ let (get_fail_attr :
   =
   fun warn  ->
     fun at1  ->
-      let uu____22021 = FStar_Syntax_Util.head_and_args at1  in
-      match uu____22021 with
+      let uu____20948 = FStar_Syntax_Util.head_and_args at1  in
+      match uu____20948 with
       | (hd1,args) ->
-          let uu____22072 =
-            let uu____22087 =
-              let uu____22088 = FStar_Syntax_Subst.compress hd1  in
-              uu____22088.FStar_Syntax_Syntax.n  in
-            (uu____22087, args)  in
-          (match uu____22072 with
-           | (FStar_Syntax_Syntax.Tm_fvar fv,(a1,uu____22111)::[]) when
+          let uu____20999 =
+            let uu____21014 =
+              let uu____21015 = FStar_Syntax_Subst.compress hd1  in
+              uu____21015.FStar_Syntax_Syntax.n  in
+            (uu____21014, args)  in
+          (match uu____20999 with
+           | (FStar_Syntax_Syntax.Tm_fvar fv,(a1,uu____21038)::[]) when
                (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.fail_attr)
                  ||
                  (FStar_Syntax_Syntax.fv_eq_lid fv
                     FStar_Parser_Const.fail_lax_attr)
                ->
-               let uu____22146 =
-                 let uu____22151 =
-                   FStar_Syntax_Embeddings.e_list
-                     FStar_Syntax_Embeddings.e_int
-                    in
-                 FStar_Syntax_Embeddings.unembed uu____22151 a1  in
-               (match uu____22146 with
+               let uu____21073 =
+                 let uu____21078 =
+                   let uu____21087 =
+                     FStar_Syntax_Embeddings.e_list
+                       FStar_Syntax_Embeddings.e_int
+                      in
+                   FStar_Syntax_Embeddings.unembed uu____21087 a1  in
+                 uu____21078 true FStar_Syntax_Embeddings.id_norm_cb  in
+               (match uu____21073 with
                 | FStar_Pervasives_Native.Some es when
                     (FStar_List.length es) > (Prims.parse_int "0") ->
                     let b =
                       FStar_Syntax_Syntax.fv_eq_lid fv
                         FStar_Parser_Const.fail_lax_attr
                        in
-                    let uu____22172 =
-                      let uu____22179 =
+                    let uu____21112 =
+                      let uu____21119 =
                         FStar_List.map FStar_BigInt.to_int_fs es  in
-                      (uu____22179, b)  in
-                    FStar_Pervasives_Native.Some uu____22172
-                | uu____22190 ->
+                      (uu____21119, b)  in
+                    FStar_Pervasives_Native.Some uu____21112
+                | uu____21130 ->
                     (if warn
                      then
                        FStar_Errors.log_issue at1.FStar_Syntax_Syntax.pos
@@ -6125,7 +6098,7 @@ let (get_fail_attr :
                    FStar_Parser_Const.fail_lax_attr
                   in
                FStar_Pervasives_Native.Some ([], b)
-           | (FStar_Syntax_Syntax.Tm_fvar fv,uu____22232) when
+           | (FStar_Syntax_Syntax.Tm_fvar fv,uu____21172) when
                (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.fail_attr)
                  ||
                  (FStar_Syntax_Syntax.fv_eq_lid fv
@@ -6138,7 +6111,7 @@ let (get_fail_attr :
                       "Found ill-applied 'expect_failure', argument should be a non-empty list of integer literals")
                 else ();
                 FStar_Pervasives_Native.None)
-           | uu____22261 -> FStar_Pervasives_Native.None)
+           | uu____21201 -> FStar_Pervasives_Native.None)
   
 let rec (desugar_effect :
   FStar_Syntax_DsEnv.env ->
@@ -6164,18 +6137,18 @@ let rec (desugar_effect :
                   let env0 = env  in
                   let monad_env =
                     FStar_Syntax_DsEnv.enter_monad_scope env eff_name  in
-                  let uu____22430 = desugar_binders monad_env eff_binders  in
-                  match uu____22430 with
+                  let uu____21370 = desugar_binders monad_env eff_binders  in
+                  match uu____21370 with
                   | (env1,binders) ->
                       let eff_t = desugar_term env1 eff_typ  in
                       let for_free =
-                        let uu____22469 =
-                          let uu____22470 =
-                            let uu____22479 =
+                        let uu____21409 =
+                          let uu____21410 =
+                            let uu____21419 =
                               FStar_Syntax_Util.arrow_formals eff_t  in
-                            FStar_Pervasives_Native.fst uu____22479  in
-                          FStar_List.length uu____22470  in
-                        uu____22469 = (Prims.parse_int "1")  in
+                            FStar_Pervasives_Native.fst uu____21419  in
+                          FStar_List.length uu____21410  in
+                        uu____21409 = (Prims.parse_int "1")  in
                       let mandatory_members =
                         let rr_members = ["repr"; "return"; "bind"]  in
                         if for_free
@@ -6196,40 +6169,40 @@ let rec (desugar_effect :
                       let name_of_eff_decl decl =
                         match decl.FStar_Parser_AST.d with
                         | FStar_Parser_AST.Tycon
-                            (uu____22525,(FStar_Parser_AST.TyconAbbrev
-                                          (name,uu____22527,uu____22528,uu____22529),uu____22530)::[])
+                            (uu____21465,uu____21466,(FStar_Parser_AST.TyconAbbrev
+                                                      (name,uu____21468,uu____21469,uu____21470),uu____21471)::[])
                             -> FStar_Ident.text_of_id name
-                        | uu____22563 ->
+                        | uu____21504 ->
                             failwith "Malformed effect member declaration."
                          in
-                      let uu____22564 =
+                      let uu____21505 =
                         FStar_List.partition
                           (fun decl  ->
-                             let uu____22576 = name_of_eff_decl decl  in
-                             FStar_List.mem uu____22576 mandatory_members)
+                             let uu____21517 = name_of_eff_decl decl  in
+                             FStar_List.mem uu____21517 mandatory_members)
                           eff_decls
                          in
-                      (match uu____22564 with
+                      (match uu____21505 with
                        | (mandatory_members_decls,actions) ->
-                           let uu____22593 =
+                           let uu____21534 =
                              FStar_All.pipe_right mandatory_members_decls
                                (FStar_List.fold_left
-                                  (fun uu____22622  ->
+                                  (fun uu____21563  ->
                                      fun decl  ->
-                                       match uu____22622 with
+                                       match uu____21563 with
                                        | (env2,out) ->
-                                           let uu____22642 =
+                                           let uu____21583 =
                                              desugar_decl env2 decl  in
-                                           (match uu____22642 with
+                                           (match uu____21583 with
                                             | (env3,ses) ->
-                                                let uu____22655 =
-                                                  let uu____22658 =
+                                                let uu____21596 =
+                                                  let uu____21599 =
                                                     FStar_List.hd ses  in
-                                                  uu____22658 :: out  in
-                                                (env3, uu____22655)))
+                                                  uu____21599 :: out  in
+                                                (env3, uu____21596)))
                                   (env1, []))
                               in
-                           (match uu____22593 with
+                           (match uu____21534 with
                             | (env2,decls) ->
                                 let binders1 =
                                   FStar_Syntax_Subst.close_binders binders
@@ -6240,40 +6213,37 @@ let rec (desugar_effect :
                                        (fun d1  ->
                                           match d1.FStar_Parser_AST.d with
                                           | FStar_Parser_AST.Tycon
-                                              (uu____22726,(FStar_Parser_AST.TyconAbbrev
-                                                            (name,action_params,uu____22729,
-                                                             {
-                                                               FStar_Parser_AST.tm
-                                                                 =
-                                                                 FStar_Parser_AST.Construct
-                                                                 (uu____22730,
-                                                                  (def,uu____22732)::
-                                                                  (cps_type,uu____22734)::[]);
-                                                               FStar_Parser_AST.range
-                                                                 =
-                                                                 uu____22735;
-                                                               FStar_Parser_AST.level
-                                                                 =
-                                                                 uu____22736;_}),doc1)::[])
+                                              (uu____21668,uu____21669,
+                                               (FStar_Parser_AST.TyconAbbrev
+                                                (name,action_params,uu____21672,
+                                                 {
+                                                   FStar_Parser_AST.tm =
+                                                     FStar_Parser_AST.Construct
+                                                     (uu____21673,(def,uu____21675)::
+                                                      (cps_type,uu____21677)::[]);
+                                                   FStar_Parser_AST.range =
+                                                     uu____21678;
+                                                   FStar_Parser_AST.level =
+                                                     uu____21679;_}),doc1)::[])
                                               when Prims.op_Negation for_free
                                               ->
-                                              let uu____22788 =
+                                              let uu____21731 =
                                                 desugar_binders env2
                                                   action_params
                                                  in
-                                              (match uu____22788 with
+                                              (match uu____21731 with
                                                | (env3,action_params1) ->
                                                    let action_params2 =
                                                      FStar_Syntax_Subst.close_binders
                                                        action_params1
                                                       in
-                                                   let uu____22826 =
-                                                     let uu____22827 =
+                                                   let uu____21769 =
+                                                     let uu____21770 =
                                                        FStar_Syntax_DsEnv.qualify
                                                          env3 name
                                                         in
-                                                     let uu____22828 =
-                                                       let uu____22829 =
+                                                     let uu____21771 =
+                                                       let uu____21772 =
                                                          desugar_term env3
                                                            def
                                                           in
@@ -6281,10 +6251,10 @@ let rec (desugar_effect :
                                                          (FStar_List.append
                                                             binders1
                                                             action_params2)
-                                                         uu____22829
+                                                         uu____21772
                                                         in
-                                                     let uu____22836 =
-                                                       let uu____22837 =
+                                                     let uu____21779 =
+                                                       let uu____21780 =
                                                          desugar_typ env3
                                                            cps_type
                                                           in
@@ -6292,11 +6262,11 @@ let rec (desugar_effect :
                                                          (FStar_List.append
                                                             binders1
                                                             action_params2)
-                                                         uu____22837
+                                                         uu____21780
                                                         in
                                                      {
                                                        FStar_Syntax_Syntax.action_name
-                                                         = uu____22827;
+                                                         = uu____21770;
                                                        FStar_Syntax_Syntax.action_unqualified_name
                                                          = name;
                                                        FStar_Syntax_Syntax.action_univs
@@ -6304,32 +6274,33 @@ let rec (desugar_effect :
                                                        FStar_Syntax_Syntax.action_params
                                                          = action_params2;
                                                        FStar_Syntax_Syntax.action_defn
-                                                         = uu____22828;
+                                                         = uu____21771;
                                                        FStar_Syntax_Syntax.action_typ
-                                                         = uu____22836
+                                                         = uu____21779
                                                      }  in
-                                                   (uu____22826, doc1))
+                                                   (uu____21769, doc1))
                                           | FStar_Parser_AST.Tycon
-                                              (uu____22846,(FStar_Parser_AST.TyconAbbrev
-                                                            (name,action_params,uu____22849,defn),doc1)::[])
+                                              (uu____21789,uu____21790,
+                                               (FStar_Parser_AST.TyconAbbrev
+                                                (name,action_params,uu____21793,defn),doc1)::[])
                                               when for_free ->
-                                              let uu____22884 =
+                                              let uu____21828 =
                                                 desugar_binders env2
                                                   action_params
                                                  in
-                                              (match uu____22884 with
+                                              (match uu____21828 with
                                                | (env3,action_params1) ->
                                                    let action_params2 =
                                                      FStar_Syntax_Subst.close_binders
                                                        action_params1
                                                       in
-                                                   let uu____22922 =
-                                                     let uu____22923 =
+                                                   let uu____21866 =
+                                                     let uu____21867 =
                                                        FStar_Syntax_DsEnv.qualify
                                                          env3 name
                                                         in
-                                                     let uu____22924 =
-                                                       let uu____22925 =
+                                                     let uu____21868 =
+                                                       let uu____21869 =
                                                          desugar_term env3
                                                            defn
                                                           in
@@ -6337,11 +6308,11 @@ let rec (desugar_effect :
                                                          (FStar_List.append
                                                             binders1
                                                             action_params2)
-                                                         uu____22925
+                                                         uu____21869
                                                         in
                                                      {
                                                        FStar_Syntax_Syntax.action_name
-                                                         = uu____22923;
+                                                         = uu____21867;
                                                        FStar_Syntax_Syntax.action_unqualified_name
                                                          = name;
                                                        FStar_Syntax_Syntax.action_univs
@@ -6349,13 +6320,13 @@ let rec (desugar_effect :
                                                        FStar_Syntax_Syntax.action_params
                                                          = action_params2;
                                                        FStar_Syntax_Syntax.action_defn
-                                                         = uu____22924;
+                                                         = uu____21868;
                                                        FStar_Syntax_Syntax.action_typ
                                                          =
                                                          FStar_Syntax_Syntax.tun
                                                      }  in
-                                                   (uu____22922, doc1))
-                                          | uu____22934 ->
+                                                   (uu____21866, doc1))
+                                          | uu____21878 ->
                                               FStar_Errors.raise_error
                                                 (FStar_Errors.Fatal_MalformedActionDeclaration,
                                                   "Malformed action declaration; if this is an \"effect for free\", just provide the direct-style declaration. If this is not an \"effect for free\", please provide a pair of the definition and its cps-type with arrows inserted in the right place (see examples).")
@@ -6369,24 +6340,24 @@ let rec (desugar_effect :
                                   FStar_Syntax_Subst.close binders1 eff_t  in
                                 let lookup1 s =
                                   let l =
-                                    let uu____22966 =
+                                    let uu____21910 =
                                       FStar_Ident.mk_ident
                                         (s, (d.FStar_Parser_AST.drange))
                                        in
                                     FStar_Syntax_DsEnv.qualify env2
-                                      uu____22966
+                                      uu____21910
                                      in
-                                  let uu____22967 =
-                                    let uu____22968 =
+                                  let uu____21911 =
+                                    let uu____21912 =
                                       FStar_Syntax_DsEnv.fail_or env2
                                         (FStar_Syntax_DsEnv.try_lookup_definition
                                            env2) l
                                        in
                                     FStar_All.pipe_left
                                       (FStar_Syntax_Subst.close binders1)
-                                      uu____22968
+                                      uu____21912
                                      in
-                                  ([], uu____22967)  in
+                                  ([], uu____21911)  in
                                 let mname =
                                   FStar_Syntax_DsEnv.qualify env0 eff_name
                                    in
@@ -6400,25 +6371,25 @@ let rec (desugar_effect :
                                   if for_free
                                   then
                                     let dummy_tscheme =
-                                      let uu____22985 =
+                                      let uu____21929 =
                                         FStar_Syntax_Syntax.mk
                                           FStar_Syntax_Syntax.Tm_unknown
                                           FStar_Pervasives_Native.None
                                           FStar_Range.dummyRange
                                          in
-                                      ([], uu____22985)  in
-                                    let uu____22992 =
-                                      let uu____22993 =
-                                        let uu____22994 =
-                                          let uu____22995 = lookup1 "repr"
+                                      ([], uu____21929)  in
+                                    let uu____21936 =
+                                      let uu____21937 =
+                                        let uu____21938 =
+                                          let uu____21939 = lookup1 "repr"
                                              in
                                           FStar_Pervasives_Native.snd
-                                            uu____22995
+                                            uu____21939
                                            in
-                                        let uu____23004 = lookup1 "return"
+                                        let uu____21948 = lookup1 "return"
                                            in
-                                        let uu____23005 = lookup1 "bind"  in
-                                        let uu____23006 =
+                                        let uu____21949 = lookup1 "bind"  in
+                                        let uu____21950 =
                                           FStar_List.map (desugar_term env2)
                                             attrs
                                            in
@@ -6452,21 +6423,21 @@ let rec (desugar_effect :
                                           FStar_Syntax_Syntax.trivial =
                                             dummy_tscheme;
                                           FStar_Syntax_Syntax.repr =
-                                            uu____22994;
+                                            uu____21938;
                                           FStar_Syntax_Syntax.return_repr =
-                                            uu____23004;
+                                            uu____21948;
                                           FStar_Syntax_Syntax.bind_repr =
-                                            uu____23005;
+                                            uu____21949;
                                           FStar_Syntax_Syntax.actions =
                                             actions1;
                                           FStar_Syntax_Syntax.eff_attrs =
-                                            uu____23006
+                                            uu____21950
                                         }  in
                                       FStar_Syntax_Syntax.Sig_new_effect_for_free
-                                        uu____22993
+                                        uu____21937
                                        in
                                     {
-                                      FStar_Syntax_Syntax.sigel = uu____22992;
+                                      FStar_Syntax_Syntax.sigel = uu____21936;
                                       FStar_Syntax_Syntax.sigrng =
                                         (d.FStar_Parser_AST.drange);
                                       FStar_Syntax_Syntax.sigquals =
@@ -6478,57 +6449,57 @@ let rec (desugar_effect :
                                   else
                                     (let rr =
                                        FStar_Util.for_some
-                                         (fun uu___257_23012  ->
-                                            match uu___257_23012 with
+                                         (fun uu___261_21956  ->
+                                            match uu___261_21956 with
                                             | FStar_Syntax_Syntax.Reifiable 
                                                 -> true
                                             | FStar_Syntax_Syntax.Reflectable
-                                                uu____23013 -> true
-                                            | uu____23014 -> false)
+                                                uu____21957 -> true
+                                            | uu____21958 -> false)
                                          qualifiers
                                         in
                                      let un_ts =
                                        ([], FStar_Syntax_Syntax.tun)  in
-                                     let uu____23028 =
-                                       let uu____23029 =
-                                         let uu____23030 =
+                                     let uu____21972 =
+                                       let uu____21973 =
+                                         let uu____21974 =
                                            lookup1 "return_wp"  in
-                                         let uu____23031 = lookup1 "bind_wp"
+                                         let uu____21975 = lookup1 "bind_wp"
                                             in
-                                         let uu____23032 =
+                                         let uu____21976 =
                                            lookup1 "if_then_else"  in
-                                         let uu____23033 = lookup1 "ite_wp"
+                                         let uu____21977 = lookup1 "ite_wp"
                                             in
-                                         let uu____23034 = lookup1 "stronger"
+                                         let uu____21978 = lookup1 "stronger"
                                             in
-                                         let uu____23035 = lookup1 "close_wp"
+                                         let uu____21979 = lookup1 "close_wp"
                                             in
-                                         let uu____23036 = lookup1 "assert_p"
+                                         let uu____21980 = lookup1 "assert_p"
                                             in
-                                         let uu____23037 = lookup1 "assume_p"
+                                         let uu____21981 = lookup1 "assume_p"
                                             in
-                                         let uu____23038 = lookup1 "null_wp"
+                                         let uu____21982 = lookup1 "null_wp"
                                             in
-                                         let uu____23039 = lookup1 "trivial"
+                                         let uu____21983 = lookup1 "trivial"
                                             in
-                                         let uu____23040 =
+                                         let uu____21984 =
                                            if rr
                                            then
-                                             let uu____23041 = lookup1 "repr"
+                                             let uu____21985 = lookup1 "repr"
                                                 in
                                              FStar_All.pipe_left
                                                FStar_Pervasives_Native.snd
-                                               uu____23041
+                                               uu____21985
                                            else FStar_Syntax_Syntax.tun  in
-                                         let uu____23057 =
+                                         let uu____22001 =
                                            if rr
                                            then lookup1 "return"
                                            else un_ts  in
-                                         let uu____23059 =
+                                         let uu____22003 =
                                            if rr
                                            then lookup1 "bind"
                                            else un_ts  in
-                                         let uu____23061 =
+                                         let uu____22005 =
                                            FStar_List.map (desugar_term env2)
                                              attrs
                                             in
@@ -6542,42 +6513,42 @@ let rec (desugar_effect :
                                            FStar_Syntax_Syntax.signature =
                                              eff_t1;
                                            FStar_Syntax_Syntax.ret_wp =
-                                             uu____23030;
+                                             uu____21974;
                                            FStar_Syntax_Syntax.bind_wp =
-                                             uu____23031;
+                                             uu____21975;
                                            FStar_Syntax_Syntax.if_then_else =
-                                             uu____23032;
+                                             uu____21976;
                                            FStar_Syntax_Syntax.ite_wp =
-                                             uu____23033;
+                                             uu____21977;
                                            FStar_Syntax_Syntax.stronger =
-                                             uu____23034;
+                                             uu____21978;
                                            FStar_Syntax_Syntax.close_wp =
-                                             uu____23035;
+                                             uu____21979;
                                            FStar_Syntax_Syntax.assert_p =
-                                             uu____23036;
+                                             uu____21980;
                                            FStar_Syntax_Syntax.assume_p =
-                                             uu____23037;
+                                             uu____21981;
                                            FStar_Syntax_Syntax.null_wp =
-                                             uu____23038;
+                                             uu____21982;
                                            FStar_Syntax_Syntax.trivial =
-                                             uu____23039;
+                                             uu____21983;
                                            FStar_Syntax_Syntax.repr =
-                                             uu____23040;
+                                             uu____21984;
                                            FStar_Syntax_Syntax.return_repr =
-                                             uu____23057;
+                                             uu____22001;
                                            FStar_Syntax_Syntax.bind_repr =
-                                             uu____23059;
+                                             uu____22003;
                                            FStar_Syntax_Syntax.actions =
                                              actions1;
                                            FStar_Syntax_Syntax.eff_attrs =
-                                             uu____23061
+                                             uu____22005
                                          }  in
                                        FStar_Syntax_Syntax.Sig_new_effect
-                                         uu____23029
+                                         uu____21973
                                         in
                                      {
                                        FStar_Syntax_Syntax.sigel =
-                                         uu____23028;
+                                         uu____21972;
                                        FStar_Syntax_Syntax.sigrng =
                                          (d.FStar_Parser_AST.drange);
                                        FStar_Syntax_Syntax.sigquals =
@@ -6597,17 +6568,17 @@ let rec (desugar_effect :
                                   FStar_All.pipe_right actions_docs
                                     (FStar_List.fold_left
                                        (fun env5  ->
-                                          fun uu____23087  ->
-                                            match uu____23087 with
+                                          fun uu____22031  ->
+                                            match uu____22031 with
                                             | (a,doc1) ->
                                                 let env6 =
-                                                  let uu____23101 =
+                                                  let uu____22045 =
                                                     FStar_Syntax_Util.action_as_lb
                                                       mname a
                                                       (a.FStar_Syntax_Syntax.action_defn).FStar_Syntax_Syntax.pos
                                                      in
                                                   FStar_Syntax_DsEnv.push_sigelt
-                                                    env5 uu____23101
+                                                    env5 uu____22045
                                                    in
                                                 FStar_Syntax_DsEnv.push_doc
                                                   env6
@@ -6647,30 +6618,30 @@ and (desugar_redefine_effect :
                 let env0 = env  in
                 let env1 = FStar_Syntax_DsEnv.enter_monad_scope env eff_name
                    in
-                let uu____23125 = desugar_binders env1 eff_binders  in
-                match uu____23125 with
+                let uu____22069 = desugar_binders env1 eff_binders  in
+                match uu____22069 with
                 | (env2,binders) ->
-                    let uu____23162 =
-                      let uu____23173 = head_and_args defn  in
-                      match uu____23173 with
+                    let uu____22106 =
+                      let uu____22117 = head_and_args defn  in
+                      match uu____22117 with
                       | (head1,args) ->
                           let lid =
                             match head1.FStar_Parser_AST.tm with
                             | FStar_Parser_AST.Name l -> l
-                            | uu____23210 ->
-                                let uu____23211 =
-                                  let uu____23216 =
-                                    let uu____23217 =
-                                      let uu____23218 =
+                            | uu____22154 ->
+                                let uu____22155 =
+                                  let uu____22160 =
+                                    let uu____22161 =
+                                      let uu____22162 =
                                         FStar_Parser_AST.term_to_string head1
                                          in
-                                      Prims.strcat uu____23218 " not found"
+                                      Prims.strcat uu____22162 " not found"
                                        in
-                                    Prims.strcat "Effect " uu____23217  in
+                                    Prims.strcat "Effect " uu____22161  in
                                   (FStar_Errors.Fatal_EffectNotFound,
-                                    uu____23216)
+                                    uu____22160)
                                    in
-                                FStar_Errors.raise_error uu____23211
+                                FStar_Errors.raise_error uu____22155
                                   d.FStar_Parser_AST.drange
                              in
                           let ed =
@@ -6678,25 +6649,25 @@ and (desugar_redefine_effect :
                               (FStar_Syntax_DsEnv.try_lookup_effect_defn env2)
                               lid
                              in
-                          let uu____23220 =
+                          let uu____22164 =
                             match FStar_List.rev args with
-                            | (last_arg,uu____23250)::args_rev ->
-                                let uu____23262 =
-                                  let uu____23263 = unparen last_arg  in
-                                  uu____23263.FStar_Parser_AST.tm  in
-                                (match uu____23262 with
+                            | (last_arg,uu____22194)::args_rev ->
+                                let uu____22206 =
+                                  let uu____22207 = unparen last_arg  in
+                                  uu____22207.FStar_Parser_AST.tm  in
+                                (match uu____22206 with
                                  | FStar_Parser_AST.Attributes ts ->
                                      (ts, (FStar_List.rev args_rev))
-                                 | uu____23291 -> ([], args))
-                            | uu____23300 -> ([], args)  in
-                          (match uu____23220 with
+                                 | uu____22235 -> ([], args))
+                            | uu____22244 -> ([], args)  in
+                          (match uu____22164 with
                            | (cattributes,args1) ->
-                               let uu____23343 = desugar_args env2 args1  in
-                               let uu____23344 =
+                               let uu____22287 = desugar_args env2 args1  in
+                               let uu____22288 =
                                  desugar_attributes env2 cattributes  in
-                               (lid, ed, uu____23343, uu____23344))
+                               (lid, ed, uu____22287, uu____22288))
                        in
-                    (match uu____23162 with
+                    (match uu____22106 with
                      | (ed_lid,ed,args,cattributes) ->
                          let binders1 =
                            FStar_Syntax_Subst.close_binders binders  in
@@ -6710,106 +6681,106 @@ and (desugar_redefine_effect :
                                 "Unexpected number of arguments to effect constructor")
                               defn.FStar_Parser_AST.range
                           else ();
-                          (let uu____23380 =
+                          (let uu____22324 =
                              FStar_Syntax_Subst.open_term'
                                ed.FStar_Syntax_Syntax.binders
                                FStar_Syntax_Syntax.t_unit
                               in
-                           match uu____23380 with
-                           | (ed_binders,uu____23394,ed_binders_opening) ->
-                               let sub1 uu____23407 =
-                                 match uu____23407 with
+                           match uu____22324 with
+                           | (ed_binders,uu____22338,ed_binders_opening) ->
+                               let sub1 uu____22351 =
+                                 match uu____22351 with
                                  | (us,x) ->
                                      let x1 =
-                                       let uu____23421 =
+                                       let uu____22365 =
                                          FStar_Syntax_Subst.shift_subst
                                            (FStar_List.length us)
                                            ed_binders_opening
                                           in
-                                       FStar_Syntax_Subst.subst uu____23421 x
+                                       FStar_Syntax_Subst.subst uu____22365 x
                                         in
                                      let s =
                                        FStar_Syntax_Util.subst_of_list
                                          ed_binders args
                                         in
-                                     let uu____23425 =
-                                       let uu____23426 =
+                                     let uu____22369 =
+                                       let uu____22370 =
                                          FStar_Syntax_Subst.subst s x1  in
-                                       (us, uu____23426)  in
+                                       (us, uu____22370)  in
                                      FStar_Syntax_Subst.close_tscheme
-                                       binders1 uu____23425
+                                       binders1 uu____22369
                                   in
                                let mname =
                                  FStar_Syntax_DsEnv.qualify env0 eff_name  in
                                let ed1 =
-                                 let uu____23435 =
-                                   let uu____23436 =
+                                 let uu____22379 =
+                                   let uu____22380 =
                                      sub1
                                        ([],
                                          (ed.FStar_Syntax_Syntax.signature))
                                       in
-                                   FStar_Pervasives_Native.snd uu____23436
+                                   FStar_Pervasives_Native.snd uu____22380
                                     in
-                                 let uu____23451 =
+                                 let uu____22395 =
                                    sub1 ed.FStar_Syntax_Syntax.ret_wp  in
-                                 let uu____23452 =
+                                 let uu____22396 =
                                    sub1 ed.FStar_Syntax_Syntax.bind_wp  in
-                                 let uu____23453 =
+                                 let uu____22397 =
                                    sub1 ed.FStar_Syntax_Syntax.if_then_else
                                     in
-                                 let uu____23454 =
+                                 let uu____22398 =
                                    sub1 ed.FStar_Syntax_Syntax.ite_wp  in
-                                 let uu____23455 =
+                                 let uu____22399 =
                                    sub1 ed.FStar_Syntax_Syntax.stronger  in
-                                 let uu____23456 =
+                                 let uu____22400 =
                                    sub1 ed.FStar_Syntax_Syntax.close_wp  in
-                                 let uu____23457 =
+                                 let uu____22401 =
                                    sub1 ed.FStar_Syntax_Syntax.assert_p  in
-                                 let uu____23458 =
+                                 let uu____22402 =
                                    sub1 ed.FStar_Syntax_Syntax.assume_p  in
-                                 let uu____23459 =
+                                 let uu____22403 =
                                    sub1 ed.FStar_Syntax_Syntax.null_wp  in
-                                 let uu____23460 =
+                                 let uu____22404 =
                                    sub1 ed.FStar_Syntax_Syntax.trivial  in
-                                 let uu____23461 =
-                                   let uu____23462 =
+                                 let uu____22405 =
+                                   let uu____22406 =
                                      sub1 ([], (ed.FStar_Syntax_Syntax.repr))
                                       in
-                                   FStar_Pervasives_Native.snd uu____23462
+                                   FStar_Pervasives_Native.snd uu____22406
                                     in
-                                 let uu____23477 =
+                                 let uu____22421 =
                                    sub1 ed.FStar_Syntax_Syntax.return_repr
                                     in
-                                 let uu____23478 =
+                                 let uu____22422 =
                                    sub1 ed.FStar_Syntax_Syntax.bind_repr  in
-                                 let uu____23479 =
+                                 let uu____22423 =
                                    FStar_List.map
                                      (fun action  ->
-                                        let uu____23487 =
+                                        let uu____22431 =
                                           FStar_Syntax_DsEnv.qualify env2
                                             action.FStar_Syntax_Syntax.action_unqualified_name
                                            in
-                                        let uu____23488 =
-                                          let uu____23489 =
+                                        let uu____22432 =
+                                          let uu____22433 =
                                             sub1
                                               ([],
                                                 (action.FStar_Syntax_Syntax.action_defn))
                                              in
                                           FStar_Pervasives_Native.snd
-                                            uu____23489
+                                            uu____22433
                                            in
-                                        let uu____23504 =
-                                          let uu____23505 =
+                                        let uu____22448 =
+                                          let uu____22449 =
                                             sub1
                                               ([],
                                                 (action.FStar_Syntax_Syntax.action_typ))
                                              in
                                           FStar_Pervasives_Native.snd
-                                            uu____23505
+                                            uu____22449
                                            in
                                         {
                                           FStar_Syntax_Syntax.action_name =
-                                            uu____23487;
+                                            uu____22431;
                                           FStar_Syntax_Syntax.action_unqualified_name
                                             =
                                             (action.FStar_Syntax_Syntax.action_unqualified_name);
@@ -6818,9 +6789,9 @@ and (desugar_redefine_effect :
                                           FStar_Syntax_Syntax.action_params =
                                             (action.FStar_Syntax_Syntax.action_params);
                                           FStar_Syntax_Syntax.action_defn =
-                                            uu____23488;
+                                            uu____22432;
                                           FStar_Syntax_Syntax.action_typ =
-                                            uu____23504
+                                            uu____22448
                                         }) ed.FStar_Syntax_Syntax.actions
                                     in
                                  {
@@ -6831,46 +6802,46 @@ and (desugar_redefine_effect :
                                      (ed.FStar_Syntax_Syntax.univs);
                                    FStar_Syntax_Syntax.binders = binders1;
                                    FStar_Syntax_Syntax.signature =
-                                     uu____23435;
-                                   FStar_Syntax_Syntax.ret_wp = uu____23451;
-                                   FStar_Syntax_Syntax.bind_wp = uu____23452;
+                                     uu____22379;
+                                   FStar_Syntax_Syntax.ret_wp = uu____22395;
+                                   FStar_Syntax_Syntax.bind_wp = uu____22396;
                                    FStar_Syntax_Syntax.if_then_else =
-                                     uu____23453;
-                                   FStar_Syntax_Syntax.ite_wp = uu____23454;
-                                   FStar_Syntax_Syntax.stronger = uu____23455;
-                                   FStar_Syntax_Syntax.close_wp = uu____23456;
-                                   FStar_Syntax_Syntax.assert_p = uu____23457;
-                                   FStar_Syntax_Syntax.assume_p = uu____23458;
-                                   FStar_Syntax_Syntax.null_wp = uu____23459;
-                                   FStar_Syntax_Syntax.trivial = uu____23460;
-                                   FStar_Syntax_Syntax.repr = uu____23461;
+                                     uu____22397;
+                                   FStar_Syntax_Syntax.ite_wp = uu____22398;
+                                   FStar_Syntax_Syntax.stronger = uu____22399;
+                                   FStar_Syntax_Syntax.close_wp = uu____22400;
+                                   FStar_Syntax_Syntax.assert_p = uu____22401;
+                                   FStar_Syntax_Syntax.assume_p = uu____22402;
+                                   FStar_Syntax_Syntax.null_wp = uu____22403;
+                                   FStar_Syntax_Syntax.trivial = uu____22404;
+                                   FStar_Syntax_Syntax.repr = uu____22405;
                                    FStar_Syntax_Syntax.return_repr =
-                                     uu____23477;
+                                     uu____22421;
                                    FStar_Syntax_Syntax.bind_repr =
-                                     uu____23478;
-                                   FStar_Syntax_Syntax.actions = uu____23479;
+                                     uu____22422;
+                                   FStar_Syntax_Syntax.actions = uu____22423;
                                    FStar_Syntax_Syntax.eff_attrs =
                                      (ed.FStar_Syntax_Syntax.eff_attrs)
                                  }  in
                                let se =
                                  let for_free =
-                                   let uu____23522 =
-                                     let uu____23523 =
-                                       let uu____23532 =
+                                   let uu____22466 =
+                                     let uu____22467 =
+                                       let uu____22476 =
                                          FStar_Syntax_Util.arrow_formals
                                            ed1.FStar_Syntax_Syntax.signature
                                           in
                                        FStar_Pervasives_Native.fst
-                                         uu____23532
+                                         uu____22476
                                         in
-                                     FStar_List.length uu____23523  in
-                                   uu____23522 = (Prims.parse_int "1")  in
-                                 let uu____23563 =
-                                   let uu____23566 =
+                                     FStar_List.length uu____22467  in
+                                   uu____22466 = (Prims.parse_int "1")  in
+                                 let uu____22507 =
+                                   let uu____22510 =
                                      trans_qual1
                                        (FStar_Pervasives_Native.Some mname)
                                       in
-                                   FStar_List.map uu____23566 quals  in
+                                   FStar_List.map uu____22510 quals  in
                                  {
                                    FStar_Syntax_Syntax.sigel =
                                      (if for_free
@@ -6882,7 +6853,7 @@ and (desugar_redefine_effect :
                                           ed1);
                                    FStar_Syntax_Syntax.sigrng =
                                      (d.FStar_Parser_AST.drange);
-                                   FStar_Syntax_Syntax.sigquals = uu____23563;
+                                   FStar_Syntax_Syntax.sigquals = uu____22507;
                                    FStar_Syntax_Syntax.sigmeta =
                                      FStar_Syntax_Syntax.default_sigmeta;
                                    FStar_Syntax_Syntax.sigattrs = []
@@ -6906,30 +6877,30 @@ and (desugar_redefine_effect :
                                                a.FStar_Syntax_Syntax.action_name
                                               in
                                            let env6 =
-                                             let uu____23588 =
+                                             let uu____22532 =
                                                FStar_Syntax_Util.action_as_lb
                                                  mname a
                                                  (a.FStar_Syntax_Syntax.action_defn).FStar_Syntax_Syntax.pos
                                                 in
                                              FStar_Syntax_DsEnv.push_sigelt
-                                               env5 uu____23588
+                                               env5 uu____22532
                                               in
                                            FStar_Syntax_DsEnv.push_doc env6
                                              a.FStar_Syntax_Syntax.action_name
                                              doc1) env4)
                                   in
                                let env6 =
-                                 let uu____23590 =
+                                 let uu____22534 =
                                    FStar_All.pipe_right quals
                                      (FStar_List.contains
                                         FStar_Parser_AST.Reflectable)
                                     in
-                                 if uu____23590
+                                 if uu____22534
                                  then
                                    let reflect_lid =
-                                     let uu____23594 =
+                                     let uu____22538 =
                                        FStar_Ident.id_of_text "reflect"  in
-                                     FStar_All.pipe_right uu____23594
+                                     FStar_All.pipe_right uu____22538
                                        (FStar_Syntax_DsEnv.qualify monad_env)
                                       in
                                    let quals1 =
@@ -6963,11 +6934,11 @@ and (mk_comment_attr :
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun d  ->
-    let uu____23604 =
+    let uu____22548 =
       match d.FStar_Parser_AST.doc with
       | FStar_Pervasives_Native.None  -> ("", [])
       | FStar_Pervasives_Native.Some fsdoc -> fsdoc  in
-    match uu____23604 with
+    match uu____22548 with
     | (text,kv) ->
         let summary =
           match FStar_List.assoc "summary" kv with
@@ -6977,19 +6948,19 @@ and (mk_comment_attr :
            in
         let pp =
           match FStar_List.assoc "type" kv with
-          | FStar_Pervasives_Native.Some uu____23655 ->
-              let uu____23656 =
-                let uu____23657 =
+          | FStar_Pervasives_Native.Some uu____22599 ->
+              let uu____22600 =
+                let uu____22601 =
                   FStar_Parser_ToDocument.signature_to_document d  in
                 FStar_Pprint.pretty_string 0.95 (Prims.parse_int "80")
-                  uu____23657
+                  uu____22601
                  in
-              Prims.strcat "\n  " uu____23656
-          | uu____23658 -> ""  in
+              Prims.strcat "\n  " uu____22600
+          | uu____22602 -> ""  in
         let other =
           FStar_List.filter_map
-            (fun uu____23671  ->
-               match uu____23671 with
+            (fun uu____22615  ->
+               match uu____22615 with
                | (k,v1) ->
                    if (k <> "summary") && (k <> "type")
                    then
@@ -7005,16 +6976,16 @@ and (mk_comment_attr :
           Prims.strcat summary (Prims.strcat pp (Prims.strcat other1 text))
            in
         let fv =
-          let uu____23689 = FStar_Ident.lid_of_str "FStar.Pervasives.Comment"
+          let uu____22633 = FStar_Ident.lid_of_str "FStar.Pervasives.Comment"
              in
-          FStar_Syntax_Syntax.fvar uu____23689
+          FStar_Syntax_Syntax.fvar uu____22633
             FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
            in
         let arg = FStar_Syntax_Util.exp_string str  in
-        let uu____23691 =
-          let uu____23702 = FStar_Syntax_Syntax.as_arg arg  in [uu____23702]
+        let uu____22635 =
+          let uu____22646 = FStar_Syntax_Syntax.as_arg arg  in [uu____22646]
            in
-        FStar_Syntax_Util.mk_app fv uu____23691
+        FStar_Syntax_Util.mk_app fv uu____22635
 
 and (desugar_decl_aux :
   env_t ->
@@ -7023,52 +6994,52 @@ and (desugar_decl_aux :
   =
   fun env  ->
     fun d  ->
-      let uu____23733 = desugar_decl_noattrs env d  in
-      match uu____23733 with
+      let uu____22677 = desugar_decl_noattrs env d  in
+      match uu____22677 with
       | (env1,sigelts) ->
           let attrs = d.FStar_Parser_AST.attrs  in
           let attrs1 = FStar_List.map (desugar_term env1) attrs  in
           let attrs2 =
-            let uu____23751 = mk_comment_attr d  in uu____23751 :: attrs1  in
-          let uu____23752 =
+            let uu____22695 = mk_comment_attr d  in uu____22695 :: attrs1  in
+          let uu____22696 =
             FStar_List.mapi
               (fun i  ->
                  fun sigelt  ->
                    if i = (Prims.parse_int "0")
                    then
-                     let uu___292_23758 = sigelt  in
+                     let uu___296_22702 = sigelt  in
                      {
                        FStar_Syntax_Syntax.sigel =
-                         (uu___292_23758.FStar_Syntax_Syntax.sigel);
+                         (uu___296_22702.FStar_Syntax_Syntax.sigel);
                        FStar_Syntax_Syntax.sigrng =
-                         (uu___292_23758.FStar_Syntax_Syntax.sigrng);
+                         (uu___296_22702.FStar_Syntax_Syntax.sigrng);
                        FStar_Syntax_Syntax.sigquals =
-                         (uu___292_23758.FStar_Syntax_Syntax.sigquals);
+                         (uu___296_22702.FStar_Syntax_Syntax.sigquals);
                        FStar_Syntax_Syntax.sigmeta =
-                         (uu___292_23758.FStar_Syntax_Syntax.sigmeta);
+                         (uu___296_22702.FStar_Syntax_Syntax.sigmeta);
                        FStar_Syntax_Syntax.sigattrs = attrs2
                      }
                    else
-                     (let uu___293_23760 = sigelt  in
-                      let uu____23761 =
+                     (let uu___297_22704 = sigelt  in
+                      let uu____22705 =
                         FStar_List.filter
                           (fun at1  ->
-                             let uu____23767 = get_fail_attr false at1  in
-                             FStar_Option.isNone uu____23767) attrs2
+                             let uu____22711 = get_fail_attr false at1  in
+                             FStar_Option.isNone uu____22711) attrs2
                          in
                       {
                         FStar_Syntax_Syntax.sigel =
-                          (uu___293_23760.FStar_Syntax_Syntax.sigel);
+                          (uu___297_22704.FStar_Syntax_Syntax.sigel);
                         FStar_Syntax_Syntax.sigrng =
-                          (uu___293_23760.FStar_Syntax_Syntax.sigrng);
+                          (uu___297_22704.FStar_Syntax_Syntax.sigrng);
                         FStar_Syntax_Syntax.sigquals =
-                          (uu___293_23760.FStar_Syntax_Syntax.sigquals);
+                          (uu___297_22704.FStar_Syntax_Syntax.sigquals);
                         FStar_Syntax_Syntax.sigmeta =
-                          (uu___293_23760.FStar_Syntax_Syntax.sigmeta);
-                        FStar_Syntax_Syntax.sigattrs = uu____23761
+                          (uu___297_22704.FStar_Syntax_Syntax.sigmeta);
+                        FStar_Syntax_Syntax.sigattrs = uu____22705
                       })) sigelts
              in
-          (env1, uu____23752)
+          (env1, uu____22696)
 
 and (desugar_decl :
   env_t ->
@@ -7077,14 +7048,14 @@ and (desugar_decl :
   =
   fun env  ->
     fun d  ->
-      let uu____23788 = desugar_decl_aux env d  in
-      match uu____23788 with
+      let uu____22732 = desugar_decl_aux env d  in
+      match uu____22732 with
       | (env1,ses) ->
-          let uu____23799 =
+          let uu____22743 =
             FStar_All.pipe_right ses
               (FStar_List.map generalize_annotated_univs)
              in
-          (env1, uu____23799)
+          (env1, uu____22743)
 
 and (desugar_decl_noattrs :
   env_t ->
@@ -7109,55 +7080,140 @@ and (desugar_decl_noattrs :
                 FStar_Syntax_Syntax.sigattrs = []
               }  in
             (env, [se])))
-      | FStar_Parser_AST.Fsdoc uu____23827 -> (env, [])
+      | FStar_Parser_AST.Fsdoc uu____22771 -> (env, [])
       | FStar_Parser_AST.TopLevelModule id1 -> (env, [])
       | FStar_Parser_AST.Open lid ->
           let env1 = FStar_Syntax_DsEnv.push_namespace env lid  in (env1, [])
       | FStar_Parser_AST.Include lid ->
           let env1 = FStar_Syntax_DsEnv.push_include env lid  in (env1, [])
       | FStar_Parser_AST.ModuleAbbrev (x,l) ->
-          let uu____23835 = FStar_Syntax_DsEnv.push_module_abbrev env x l  in
-          (uu____23835, [])
-      | FStar_Parser_AST.Tycon (is_effect,tcs) ->
-          let quals =
+          let uu____22779 = FStar_Syntax_DsEnv.push_module_abbrev env x l  in
+          (uu____22779, [])
+      | FStar_Parser_AST.Tycon (is_effect,typeclass,tcs) ->
+          let quals = d.FStar_Parser_AST.quals  in
+          let quals1 =
             if is_effect
-            then FStar_Parser_AST.Effect_qual :: (d.FStar_Parser_AST.quals)
-            else d.FStar_Parser_AST.quals  in
+            then FStar_Parser_AST.Effect_qual :: quals
+            else quals  in
+          let quals2 =
+            if typeclass then FStar_Parser_AST.Noeq :: quals1 else quals1  in
           let tcs1 =
             FStar_List.map
-              (fun uu____23872  ->
-                 match uu____23872 with | (x,uu____23880) -> x) tcs
+              (fun uu____22824  ->
+                 match uu____22824 with | (x,uu____22832) -> x) tcs
              in
-          let uu____23885 =
-            FStar_List.map (trans_qual1 FStar_Pervasives_Native.None) quals
-             in
-          desugar_tycon env d uu____23885 tcs1
+          let uu____22837 =
+            let uu____22842 =
+              FStar_List.map (trans_qual1 FStar_Pervasives_Native.None)
+                quals2
+               in
+            desugar_tycon env d uu____22842 tcs1  in
+          (match uu____22837 with
+           | (env1,ses) ->
+               let mkclass lid =
+                 let uu____22859 =
+                   let uu____22860 =
+                     let uu____22867 =
+                       FStar_Syntax_Syntax.new_bv
+                         FStar_Pervasives_Native.None FStar_Syntax_Syntax.tun
+                        in
+                     FStar_Syntax_Syntax.mk_binder uu____22867  in
+                   [uu____22860]  in
+                 let uu____22880 =
+                   let uu____22883 =
+                     FStar_Syntax_Syntax.tabbrev
+                       FStar_Parser_Const.mk_class_lid
+                      in
+                   let uu____22886 =
+                     let uu____22897 =
+                       let uu____22906 =
+                         let uu____22907 = FStar_Ident.string_of_lid lid  in
+                         FStar_Syntax_Util.exp_string uu____22907  in
+                       FStar_Syntax_Syntax.as_arg uu____22906  in
+                     [uu____22897]  in
+                   FStar_Syntax_Util.mk_app uu____22883 uu____22886  in
+                 FStar_Syntax_Util.abs uu____22859 uu____22880
+                   FStar_Pervasives_Native.None
+                  in
+               let get_meths se =
+                 let rec get_fname quals3 =
+                   match quals3 with
+                   | (FStar_Syntax_Syntax.Projector
+                       (uu____22946,id1))::uu____22948 ->
+                       FStar_Pervasives_Native.Some id1
+                   | uu____22951::quals4 -> get_fname quals4
+                   | [] -> FStar_Pervasives_Native.None  in
+                 let uu____22955 = get_fname se.FStar_Syntax_Syntax.sigquals
+                    in
+                 match uu____22955 with
+                 | FStar_Pervasives_Native.None  -> []
+                 | FStar_Pervasives_Native.Some id1 ->
+                     let id2 = FStar_Syntax_Util.unmangle_field_name id1  in
+                     let uu____22962 = FStar_Syntax_DsEnv.qualify env1 id2
+                        in
+                     [uu____22962]
+                  in
+               let rec splice_decl meths se =
+                 match se.FStar_Syntax_Syntax.sigel with
+                 | FStar_Syntax_Syntax.Sig_bundle (ses1,uu____22983) ->
+                     FStar_List.concatMap (splice_decl meths) ses1
+                 | FStar_Syntax_Syntax.Sig_inductive_typ
+                     (lid,uu____22993,uu____22994,uu____22995,uu____22996,uu____22997)
+                     ->
+                     let uu____23006 =
+                       let uu____23007 =
+                         let uu____23008 =
+                           let uu____23015 = mkclass lid  in
+                           (meths, uu____23015)  in
+                         FStar_Syntax_Syntax.Sig_splice uu____23008  in
+                       {
+                         FStar_Syntax_Syntax.sigel = uu____23007;
+                         FStar_Syntax_Syntax.sigrng =
+                           (d.FStar_Parser_AST.drange);
+                         FStar_Syntax_Syntax.sigquals = [];
+                         FStar_Syntax_Syntax.sigmeta =
+                           FStar_Syntax_Syntax.default_sigmeta;
+                         FStar_Syntax_Syntax.sigattrs = []
+                       }  in
+                     [uu____23006]
+                 | uu____23018 -> []  in
+               let extra =
+                 if typeclass
+                 then
+                   let meths = FStar_List.concatMap get_meths ses  in
+                   FStar_List.concatMap (splice_decl meths) ses
+                 else []  in
+               let env2 =
+                 FStar_List.fold_left FStar_Syntax_DsEnv.push_sigelt env1
+                   extra
+                  in
+               (env2, (FStar_List.append ses extra)))
       | FStar_Parser_AST.TopLevelLet (isrec,lets) ->
           let quals = d.FStar_Parser_AST.quals  in
           let expand_toplevel_pattern =
             (isrec = FStar_Parser_AST.NoLetQualifier) &&
               (match lets with
                | ({
-                    FStar_Parser_AST.pat = FStar_Parser_AST.PatOp uu____23907;
-                    FStar_Parser_AST.prange = uu____23908;_},uu____23909)::[]
+                    FStar_Parser_AST.pat = FStar_Parser_AST.PatOp uu____23048;
+                    FStar_Parser_AST.prange = uu____23049;_},uu____23050)::[]
                    -> false
                | ({
                     FStar_Parser_AST.pat = FStar_Parser_AST.PatVar
-                      uu____23918;
-                    FStar_Parser_AST.prange = uu____23919;_},uu____23920)::[]
+                      uu____23059;
+                    FStar_Parser_AST.prange = uu____23060;_},uu____23061)::[]
                    -> false
                | ({
                     FStar_Parser_AST.pat = FStar_Parser_AST.PatAscribed
                       ({
                          FStar_Parser_AST.pat = FStar_Parser_AST.PatVar
-                           uu____23935;
-                         FStar_Parser_AST.prange = uu____23936;_},uu____23937);
-                    FStar_Parser_AST.prange = uu____23938;_},uu____23939)::[]
+                           uu____23076;
+                         FStar_Parser_AST.prange = uu____23077;_},uu____23078);
+                    FStar_Parser_AST.prange = uu____23079;_},uu____23080)::[]
                    -> false
-               | (p,uu____23967)::[] ->
-                   let uu____23976 = is_app_pattern p  in
-                   Prims.op_Negation uu____23976
-               | uu____23977 -> false)
+               | (p,uu____23108)::[] ->
+                   let uu____23117 = is_app_pattern p  in
+                   Prims.op_Negation uu____23117
+               | uu____23118 -> false)
              in
           if Prims.op_Negation expand_toplevel_pattern
           then
@@ -7174,19 +7230,19 @@ and (desugar_decl_noattrs :
                         d.FStar_Parser_AST.drange FStar_Parser_AST.Expr)))
                 d.FStar_Parser_AST.drange FStar_Parser_AST.Expr
                in
-            let uu____24050 = desugar_term_maybe_top true env as_inner_let
+            let uu____23191 = desugar_term_maybe_top true env as_inner_let
                in
-            (match uu____24050 with
+            (match uu____23191 with
              | (ds_lets,aq) ->
                  (check_no_aq aq;
-                  (let uu____24062 =
-                     let uu____24063 =
+                  (let uu____23203 =
+                     let uu____23204 =
                        FStar_All.pipe_left FStar_Syntax_Subst.compress
                          ds_lets
                         in
-                     uu____24063.FStar_Syntax_Syntax.n  in
-                   match uu____24062 with
-                   | FStar_Syntax_Syntax.Tm_let (lbs,uu____24073) ->
+                     uu____23204.FStar_Syntax_Syntax.n  in
+                   match uu____23203 with
+                   | FStar_Syntax_Syntax.Tm_let (lbs,uu____23214) ->
                        let fvs =
                          FStar_All.pipe_right
                            (FStar_Pervasives_Native.snd lbs)
@@ -7197,74 +7253,74 @@ and (desugar_decl_noattrs :
                           in
                        let quals1 =
                          match quals with
-                         | uu____24106::uu____24107 ->
+                         | uu____23247::uu____23248 ->
                              FStar_List.map
                                (trans_qual1 FStar_Pervasives_Native.None)
                                quals
-                         | uu____24110 ->
+                         | uu____23251 ->
                              FStar_All.pipe_right
                                (FStar_Pervasives_Native.snd lbs)
                                (FStar_List.collect
-                                  (fun uu___258_24125  ->
-                                     match uu___258_24125 with
+                                  (fun uu___262_23266  ->
+                                     match uu___262_23266 with
                                      | {
                                          FStar_Syntax_Syntax.lbname =
-                                           FStar_Util.Inl uu____24128;
+                                           FStar_Util.Inl uu____23269;
                                          FStar_Syntax_Syntax.lbunivs =
-                                           uu____24129;
+                                           uu____23270;
                                          FStar_Syntax_Syntax.lbtyp =
-                                           uu____24130;
+                                           uu____23271;
                                          FStar_Syntax_Syntax.lbeff =
-                                           uu____24131;
+                                           uu____23272;
                                          FStar_Syntax_Syntax.lbdef =
-                                           uu____24132;
+                                           uu____23273;
                                          FStar_Syntax_Syntax.lbattrs =
-                                           uu____24133;
+                                           uu____23274;
                                          FStar_Syntax_Syntax.lbpos =
-                                           uu____24134;_}
+                                           uu____23275;_}
                                          -> []
                                      | {
                                          FStar_Syntax_Syntax.lbname =
                                            FStar_Util.Inr fv;
                                          FStar_Syntax_Syntax.lbunivs =
-                                           uu____24146;
+                                           uu____23287;
                                          FStar_Syntax_Syntax.lbtyp =
-                                           uu____24147;
+                                           uu____23288;
                                          FStar_Syntax_Syntax.lbeff =
-                                           uu____24148;
+                                           uu____23289;
                                          FStar_Syntax_Syntax.lbdef =
-                                           uu____24149;
+                                           uu____23290;
                                          FStar_Syntax_Syntax.lbattrs =
-                                           uu____24150;
+                                           uu____23291;
                                          FStar_Syntax_Syntax.lbpos =
-                                           uu____24151;_}
+                                           uu____23292;_}
                                          ->
                                          FStar_Syntax_DsEnv.lookup_letbinding_quals
                                            env
                                            (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v))
                           in
                        let quals2 =
-                         let uu____24165 =
+                         let uu____23306 =
                            FStar_All.pipe_right lets1
                              (FStar_Util.for_some
-                                (fun uu____24196  ->
-                                   match uu____24196 with
-                                   | (uu____24209,(uu____24210,t)) ->
+                                (fun uu____23337  ->
+                                   match uu____23337 with
+                                   | (uu____23350,(uu____23351,t)) ->
                                        t.FStar_Parser_AST.level =
                                          FStar_Parser_AST.Formula))
                             in
-                         if uu____24165
+                         if uu____23306
                          then FStar_Syntax_Syntax.Logic :: quals1
                          else quals1  in
                        let lbs1 =
-                         let uu____24228 =
+                         let uu____23369 =
                            FStar_All.pipe_right quals2
                              (FStar_List.contains
                                 FStar_Syntax_Syntax.Abstract)
                             in
-                         if uu____24228
+                         if uu____23369
                          then
-                           let uu____24231 =
+                           let uu____23372 =
                              FStar_All.pipe_right
                                (FStar_Pervasives_Native.snd lbs)
                                (FStar_List.map
@@ -7273,35 +7329,35 @@ and (desugar_decl_noattrs :
                                        FStar_Util.right
                                          lb.FStar_Syntax_Syntax.lbname
                                         in
-                                     let uu___294_24245 = lb  in
+                                     let uu___298_23386 = lb  in
                                      {
                                        FStar_Syntax_Syntax.lbname =
                                          (FStar_Util.Inr
-                                            (let uu___295_24247 = fv  in
+                                            (let uu___299_23388 = fv  in
                                              {
                                                FStar_Syntax_Syntax.fv_name =
-                                                 (uu___295_24247.FStar_Syntax_Syntax.fv_name);
+                                                 (uu___299_23388.FStar_Syntax_Syntax.fv_name);
                                                FStar_Syntax_Syntax.fv_delta =
                                                  (FStar_Syntax_Syntax.Delta_abstract
                                                     (fv.FStar_Syntax_Syntax.fv_delta));
                                                FStar_Syntax_Syntax.fv_qual =
-                                                 (uu___295_24247.FStar_Syntax_Syntax.fv_qual)
+                                                 (uu___299_23388.FStar_Syntax_Syntax.fv_qual)
                                              }));
                                        FStar_Syntax_Syntax.lbunivs =
-                                         (uu___294_24245.FStar_Syntax_Syntax.lbunivs);
+                                         (uu___298_23386.FStar_Syntax_Syntax.lbunivs);
                                        FStar_Syntax_Syntax.lbtyp =
-                                         (uu___294_24245.FStar_Syntax_Syntax.lbtyp);
+                                         (uu___298_23386.FStar_Syntax_Syntax.lbtyp);
                                        FStar_Syntax_Syntax.lbeff =
-                                         (uu___294_24245.FStar_Syntax_Syntax.lbeff);
+                                         (uu___298_23386.FStar_Syntax_Syntax.lbeff);
                                        FStar_Syntax_Syntax.lbdef =
-                                         (uu___294_24245.FStar_Syntax_Syntax.lbdef);
+                                         (uu___298_23386.FStar_Syntax_Syntax.lbdef);
                                        FStar_Syntax_Syntax.lbattrs =
-                                         (uu___294_24245.FStar_Syntax_Syntax.lbattrs);
+                                         (uu___298_23386.FStar_Syntax_Syntax.lbattrs);
                                        FStar_Syntax_Syntax.lbpos =
-                                         (uu___294_24245.FStar_Syntax_Syntax.lbpos)
+                                         (uu___298_23386.FStar_Syntax_Syntax.lbpos)
                                      }))
                               in
-                           ((FStar_Pervasives_Native.fst lbs), uu____24231)
+                           ((FStar_Pervasives_Native.fst lbs), uu____23372)
                          else lbs  in
                        let names1 =
                          FStar_All.pipe_right fvs
@@ -7333,17 +7389,17 @@ and (desugar_decl_noattrs :
                                   d.FStar_Parser_AST.doc) env1 names1
                           in
                        (env2, [s])
-                   | uu____24274 ->
+                   | uu____23415 ->
                        failwith "Desugaring a let did not produce a let")))
           else
-            (let uu____24280 =
+            (let uu____23421 =
                match lets with
                | (pat,body)::[] -> (pat, body)
-               | uu____24299 ->
+               | uu____23440 ->
                    failwith
                      "expand_toplevel_pattern should only allow single definition lets"
                 in
-             match uu____24280 with
+             match uu____23421 with
              | (pat,body) ->
                  let fresh_toplevel_name =
                    FStar_Ident.gen FStar_Range.dummyRange  in
@@ -7356,40 +7412,40 @@ and (desugar_decl_noattrs :
                       in
                    match pat.FStar_Parser_AST.pat with
                    | FStar_Parser_AST.PatAscribed (pat1,ty) ->
-                       let uu___296_24335 = pat1  in
+                       let uu___300_23476 = pat1  in
                        {
                          FStar_Parser_AST.pat =
                            (FStar_Parser_AST.PatAscribed (var_pat, ty));
                          FStar_Parser_AST.prange =
-                           (uu___296_24335.FStar_Parser_AST.prange)
+                           (uu___300_23476.FStar_Parser_AST.prange)
                        }
-                   | uu____24342 -> var_pat  in
+                   | uu____23483 -> var_pat  in
                  let main_let =
                    desugar_decl env
-                     (let uu___297_24349 = d  in
+                     (let uu___301_23490 = d  in
                       {
                         FStar_Parser_AST.d =
                           (FStar_Parser_AST.TopLevelLet
                              (isrec, [(fresh_pat, body)]));
                         FStar_Parser_AST.drange =
-                          (uu___297_24349.FStar_Parser_AST.drange);
+                          (uu___301_23490.FStar_Parser_AST.drange);
                         FStar_Parser_AST.doc =
-                          (uu___297_24349.FStar_Parser_AST.doc);
+                          (uu___301_23490.FStar_Parser_AST.doc);
                         FStar_Parser_AST.quals = (FStar_Parser_AST.Private ::
                           (d.FStar_Parser_AST.quals));
                         FStar_Parser_AST.attrs =
-                          (uu___297_24349.FStar_Parser_AST.attrs)
+                          (uu___301_23490.FStar_Parser_AST.attrs)
                       })
                     in
-                 let build_projection uu____24385 id1 =
-                   match uu____24385 with
+                 let build_projection uu____23526 id1 =
+                   match uu____23526 with
                    | (env1,ses) ->
                        let main =
-                         let uu____24406 =
-                           let uu____24407 =
+                         let uu____23547 =
+                           let uu____23548 =
                              FStar_Ident.lid_of_ids [fresh_toplevel_name]  in
-                           FStar_Parser_AST.Var uu____24407  in
-                         FStar_Parser_AST.mk_term uu____24406
+                           FStar_Parser_AST.Var uu____23548  in
+                         FStar_Parser_AST.mk_term uu____23547
                            FStar_Range.dummyRange FStar_Parser_AST.Expr
                           in
                        let lid = FStar_Ident.lid_of_ids [id1]  in
@@ -7417,13 +7473,13 @@ and (desugar_decl_noattrs :
                               (FStar_Parser_AST.NoLetQualifier,
                                 [(bv_pat, body1)])) FStar_Range.dummyRange []
                           in
-                       let uu____24457 = desugar_decl env1 id_decl  in
-                       (match uu____24457 with
+                       let uu____23598 = desugar_decl env1 id_decl  in
+                       (match uu____23598 with
                         | (env2,ses') -> (env2, (FStar_List.append ses ses')))
                     in
                  let bvs =
-                   let uu____24475 = gather_pattern_bound_vars pat  in
-                   FStar_All.pipe_right uu____24475 FStar_Util.set_elements
+                   let uu____23616 = gather_pattern_bound_vars pat  in
+                   FStar_All.pipe_right uu____23616 FStar_Util.set_elements
                     in
                  FStar_List.fold_left build_projection main_let bvs)
       | FStar_Parser_AST.Main t ->
@@ -7457,19 +7513,19 @@ and (desugar_decl_noattrs :
       | FStar_Parser_AST.Val (id1,t) ->
           let quals = d.FStar_Parser_AST.quals  in
           let t1 =
-            let uu____24498 = close_fun env t  in
-            desugar_term env uu____24498  in
+            let uu____23639 = close_fun env t  in
+            desugar_term env uu____23639  in
           let quals1 =
-            let uu____24502 =
+            let uu____23643 =
               (FStar_Syntax_DsEnv.iface env) &&
                 (FStar_Syntax_DsEnv.admitted_iface env)
                in
-            if uu____24502
+            if uu____23643
             then FStar_Parser_AST.Assumption :: quals
             else quals  in
           let lid = FStar_Syntax_DsEnv.qualify env id1  in
           let se =
-            let uu____24508 =
+            let uu____23649 =
               FStar_List.map (trans_qual1 FStar_Pervasives_Native.None)
                 quals1
                in
@@ -7477,7 +7533,7 @@ and (desugar_decl_noattrs :
               FStar_Syntax_Syntax.sigel =
                 (FStar_Syntax_Syntax.Sig_declare_typ (lid, [], t1));
               FStar_Syntax_Syntax.sigrng = (d.FStar_Parser_AST.drange);
-              FStar_Syntax_Syntax.sigquals = uu____24508;
+              FStar_Syntax_Syntax.sigquals = uu____23649;
               FStar_Syntax_Syntax.sigmeta =
                 FStar_Syntax_Syntax.default_sigmeta;
               FStar_Syntax_Syntax.sigattrs = []
@@ -7487,13 +7543,13 @@ and (desugar_decl_noattrs :
             FStar_Syntax_DsEnv.push_doc env1 lid d.FStar_Parser_AST.doc  in
           (env2, [se])
       | FStar_Parser_AST.Exception (id1,FStar_Pervasives_Native.None ) ->
-          let uu____24516 =
+          let uu____23657 =
             FStar_Syntax_DsEnv.fail_or env
               (FStar_Syntax_DsEnv.try_lookup_lid env)
               FStar_Parser_Const.exn_lid
              in
-          (match uu____24516 with
-           | (t,uu____24530) ->
+          (match uu____23657 with
+           | (t,uu____23671) ->
                let l = FStar_Syntax_DsEnv.qualify env id1  in
                let qual = [FStar_Syntax_Syntax.ExceptionConstructor]  in
                let se =
@@ -7533,20 +7589,20 @@ and (desugar_decl_noattrs :
       | FStar_Parser_AST.Exception (id1,FStar_Pervasives_Native.Some term) ->
           let t = desugar_term env term  in
           let t1 =
-            let uu____24560 =
-              let uu____24569 = FStar_Syntax_Syntax.null_binder t  in
-              [uu____24569]  in
-            let uu____24588 =
-              let uu____24591 =
-                let uu____24592 =
+            let uu____23701 =
+              let uu____23710 = FStar_Syntax_Syntax.null_binder t  in
+              [uu____23710]  in
+            let uu____23729 =
+              let uu____23732 =
+                let uu____23733 =
                   FStar_Syntax_DsEnv.fail_or env
                     (FStar_Syntax_DsEnv.try_lookup_lid env)
                     FStar_Parser_Const.exn_lid
                    in
-                FStar_Pervasives_Native.fst uu____24592  in
-              FStar_All.pipe_left FStar_Syntax_Syntax.mk_Total uu____24591
+                FStar_Pervasives_Native.fst uu____23733  in
+              FStar_All.pipe_left FStar_Syntax_Syntax.mk_Total uu____23732
                in
-            FStar_Syntax_Util.arrow uu____24560 uu____24588  in
+            FStar_Syntax_Util.arrow uu____23701 uu____23729  in
           let l = FStar_Syntax_DsEnv.qualify env id1  in
           let qual = [FStar_Syntax_Syntax.ExceptionConstructor]  in
           let se =
@@ -7594,53 +7650,53 @@ and (desugar_decl_noattrs :
             attrs
       | FStar_Parser_AST.SubEffect l ->
           let lookup1 l1 =
-            let uu____24653 =
+            let uu____23794 =
               FStar_Syntax_DsEnv.try_lookup_effect_name env l1  in
-            match uu____24653 with
+            match uu____23794 with
             | FStar_Pervasives_Native.None  ->
-                let uu____24656 =
-                  let uu____24661 =
-                    let uu____24662 =
-                      let uu____24663 = FStar_Syntax_Print.lid_to_string l1
+                let uu____23797 =
+                  let uu____23802 =
+                    let uu____23803 =
+                      let uu____23804 = FStar_Syntax_Print.lid_to_string l1
                          in
-                      Prims.strcat uu____24663 " not found"  in
-                    Prims.strcat "Effect name " uu____24662  in
-                  (FStar_Errors.Fatal_EffectNotFound, uu____24661)  in
-                FStar_Errors.raise_error uu____24656
+                      Prims.strcat uu____23804 " not found"  in
+                    Prims.strcat "Effect name " uu____23803  in
+                  (FStar_Errors.Fatal_EffectNotFound, uu____23802)  in
+                FStar_Errors.raise_error uu____23797
                   d.FStar_Parser_AST.drange
             | FStar_Pervasives_Native.Some l2 -> l2  in
           let src = lookup1 l.FStar_Parser_AST.msource  in
           let dst = lookup1 l.FStar_Parser_AST.mdest  in
-          let uu____24667 =
+          let uu____23808 =
             match l.FStar_Parser_AST.lift_op with
             | FStar_Parser_AST.NonReifiableLift t ->
-                let uu____24685 =
-                  let uu____24688 =
-                    let uu____24689 = desugar_term env t  in
-                    ([], uu____24689)  in
-                  FStar_Pervasives_Native.Some uu____24688  in
-                (uu____24685, FStar_Pervasives_Native.None)
+                let uu____23826 =
+                  let uu____23829 =
+                    let uu____23830 = desugar_term env t  in
+                    ([], uu____23830)  in
+                  FStar_Pervasives_Native.Some uu____23829  in
+                (uu____23826, FStar_Pervasives_Native.None)
             | FStar_Parser_AST.ReifiableLift (wp,t) ->
-                let uu____24702 =
-                  let uu____24705 =
-                    let uu____24706 = desugar_term env wp  in
-                    ([], uu____24706)  in
-                  FStar_Pervasives_Native.Some uu____24705  in
-                let uu____24713 =
-                  let uu____24716 =
-                    let uu____24717 = desugar_term env t  in
-                    ([], uu____24717)  in
-                  FStar_Pervasives_Native.Some uu____24716  in
-                (uu____24702, uu____24713)
+                let uu____23843 =
+                  let uu____23846 =
+                    let uu____23847 = desugar_term env wp  in
+                    ([], uu____23847)  in
+                  FStar_Pervasives_Native.Some uu____23846  in
+                let uu____23854 =
+                  let uu____23857 =
+                    let uu____23858 = desugar_term env t  in
+                    ([], uu____23858)  in
+                  FStar_Pervasives_Native.Some uu____23857  in
+                (uu____23843, uu____23854)
             | FStar_Parser_AST.LiftForFree t ->
-                let uu____24729 =
-                  let uu____24732 =
-                    let uu____24733 = desugar_term env t  in
-                    ([], uu____24733)  in
-                  FStar_Pervasives_Native.Some uu____24732  in
-                (FStar_Pervasives_Native.None, uu____24729)
+                let uu____23870 =
+                  let uu____23873 =
+                    let uu____23874 = desugar_term env t  in
+                    ([], uu____23874)  in
+                  FStar_Pervasives_Native.Some uu____23873  in
+                (FStar_Pervasives_Native.None, uu____23870)
              in
-          (match uu____24667 with
+          (match uu____23808 with
            | (lift_wp,lift) ->
                let se =
                  {
@@ -7662,14 +7718,14 @@ and (desugar_decl_noattrs :
       | FStar_Parser_AST.Splice (ids,t) ->
           let t1 = desugar_term env t  in
           let se =
-            let uu____24767 =
-              let uu____24768 =
-                let uu____24775 =
+            let uu____23908 =
+              let uu____23909 =
+                let uu____23916 =
                   FStar_List.map (FStar_Syntax_DsEnv.qualify env) ids  in
-                (uu____24775, t1)  in
-              FStar_Syntax_Syntax.Sig_splice uu____24768  in
+                (uu____23916, t1)  in
+              FStar_Syntax_Syntax.Sig_splice uu____23909  in
             {
-              FStar_Syntax_Syntax.sigel = uu____24767;
+              FStar_Syntax_Syntax.sigel = uu____23908;
               FStar_Syntax_Syntax.sigrng = (d.FStar_Parser_AST.drange);
               FStar_Syntax_Syntax.sigquals = [];
               FStar_Syntax_Syntax.sigmeta =
@@ -7686,35 +7742,35 @@ let (desugar_decls :
   =
   fun env  ->
     fun decls  ->
-      let uu____24801 =
+      let uu____23942 =
         FStar_List.fold_left
-          (fun uu____24821  ->
+          (fun uu____23962  ->
              fun d  ->
-               match uu____24821 with
+               match uu____23962 with
                | (env1,sigelts) ->
-                   let uu____24841 = desugar_decl env1 d  in
-                   (match uu____24841 with
+                   let uu____23982 = desugar_decl env1 d  in
+                   (match uu____23982 with
                     | (env2,se) -> (env2, (FStar_List.append sigelts se))))
           (env, []) decls
          in
-      match uu____24801 with
+      match uu____23942 with
       | (env1,sigelts) ->
-          let rec forward acc uu___260_24886 =
-            match uu___260_24886 with
+          let rec forward acc uu___264_24027 =
+            match uu___264_24027 with
             | se1::se2::sigelts1 ->
                 (match ((se1.FStar_Syntax_Syntax.sigel),
                          (se2.FStar_Syntax_Syntax.sigel))
                  with
                  | (FStar_Syntax_Syntax.Sig_declare_typ
-                    uu____24900,FStar_Syntax_Syntax.Sig_let uu____24901) ->
-                     let uu____24914 =
-                       let uu____24917 =
-                         let uu___298_24918 = se2  in
-                         let uu____24919 =
-                           let uu____24922 =
+                    uu____24041,FStar_Syntax_Syntax.Sig_let uu____24042) ->
+                     let uu____24055 =
+                       let uu____24058 =
+                         let uu___302_24059 = se2  in
+                         let uu____24060 =
+                           let uu____24063 =
                              FStar_List.filter
-                               (fun uu___259_24936  ->
-                                  match uu___259_24936 with
+                               (fun uu___263_24077  ->
+                                  match uu___263_24077 with
                                   | {
                                       FStar_Syntax_Syntax.n =
                                         FStar_Syntax_Syntax.Tm_app
@@ -7722,43 +7778,43 @@ let (desugar_decls :
                                            FStar_Syntax_Syntax.n =
                                              FStar_Syntax_Syntax.Tm_fvar fv;
                                            FStar_Syntax_Syntax.pos =
-                                             uu____24940;
+                                             uu____24081;
                                            FStar_Syntax_Syntax.vars =
-                                             uu____24941;_},uu____24942);
-                                      FStar_Syntax_Syntax.pos = uu____24943;
-                                      FStar_Syntax_Syntax.vars = uu____24944;_}
+                                             uu____24082;_},uu____24083);
+                                      FStar_Syntax_Syntax.pos = uu____24084;
+                                      FStar_Syntax_Syntax.vars = uu____24085;_}
                                       when
-                                      let uu____24971 =
-                                        let uu____24972 =
+                                      let uu____24112 =
+                                        let uu____24113 =
                                           FStar_Syntax_Syntax.lid_of_fv fv
                                            in
-                                        FStar_Ident.string_of_lid uu____24972
+                                        FStar_Ident.string_of_lid uu____24113
                                          in
-                                      uu____24971 =
+                                      uu____24112 =
                                         "FStar.Pervasives.Comment"
                                       -> true
-                                  | uu____24973 -> false)
+                                  | uu____24114 -> false)
                                se1.FStar_Syntax_Syntax.sigattrs
                               in
-                           FStar_List.append uu____24922
+                           FStar_List.append uu____24063
                              se2.FStar_Syntax_Syntax.sigattrs
                             in
                          {
                            FStar_Syntax_Syntax.sigel =
-                             (uu___298_24918.FStar_Syntax_Syntax.sigel);
+                             (uu___302_24059.FStar_Syntax_Syntax.sigel);
                            FStar_Syntax_Syntax.sigrng =
-                             (uu___298_24918.FStar_Syntax_Syntax.sigrng);
+                             (uu___302_24059.FStar_Syntax_Syntax.sigrng);
                            FStar_Syntax_Syntax.sigquals =
-                             (uu___298_24918.FStar_Syntax_Syntax.sigquals);
+                             (uu___302_24059.FStar_Syntax_Syntax.sigquals);
                            FStar_Syntax_Syntax.sigmeta =
-                             (uu___298_24918.FStar_Syntax_Syntax.sigmeta);
-                           FStar_Syntax_Syntax.sigattrs = uu____24919
+                             (uu___302_24059.FStar_Syntax_Syntax.sigmeta);
+                           FStar_Syntax_Syntax.sigattrs = uu____24060
                          }  in
-                       uu____24917 :: se1 :: acc  in
-                     forward uu____24914 sigelts1
-                 | uu____24978 -> forward (se1 :: acc) (se2 :: sigelts1))
+                       uu____24058 :: se1 :: acc  in
+                     forward uu____24055 sigelts1
+                 | uu____24119 -> forward (se1 :: acc) (se2 :: sigelts1))
             | sigelts1 -> FStar_List.rev_append acc sigelts1  in
-          let uu____24986 = forward [] sigelts  in (env1, uu____24986)
+          let uu____24127 = forward [] sigelts  in (env1, uu____24127)
   
 let (open_prims_all :
   (FStar_Parser_AST.decoration Prims.list -> FStar_Parser_AST.decl)
@@ -7782,41 +7838,41 @@ let (desugar_modul_common :
       fun m  ->
         let env1 =
           match (curmod, m) with
-          | (FStar_Pervasives_Native.None ,uu____25047) -> env
+          | (FStar_Pervasives_Native.None ,uu____24188) -> env
           | (FStar_Pervasives_Native.Some
              { FStar_Syntax_Syntax.name = prev_lid;
-               FStar_Syntax_Syntax.declarations = uu____25051;
-               FStar_Syntax_Syntax.exports = uu____25052;
-               FStar_Syntax_Syntax.is_interface = uu____25053;_},FStar_Parser_AST.Module
-             (current_lid,uu____25055)) when
+               FStar_Syntax_Syntax.declarations = uu____24192;
+               FStar_Syntax_Syntax.exports = uu____24193;
+               FStar_Syntax_Syntax.is_interface = uu____24194;_},FStar_Parser_AST.Module
+             (current_lid,uu____24196)) when
               (FStar_Ident.lid_equals prev_lid current_lid) &&
                 (FStar_Options.interactive ())
               -> env
-          | (FStar_Pervasives_Native.Some prev_mod,uu____25063) ->
-              let uu____25066 =
+          | (FStar_Pervasives_Native.Some prev_mod,uu____24204) ->
+              let uu____24207 =
                 FStar_Syntax_DsEnv.finish_module_or_interface env prev_mod
                  in
-              FStar_Pervasives_Native.fst uu____25066
+              FStar_Pervasives_Native.fst uu____24207
            in
-        let uu____25071 =
+        let uu____24212 =
           match m with
           | FStar_Parser_AST.Interface (mname,decls,admitted) ->
-              let uu____25107 =
+              let uu____24248 =
                 FStar_Syntax_DsEnv.prepare_module_or_interface true admitted
                   env1 mname FStar_Syntax_DsEnv.default_mii
                  in
-              (uu____25107, mname, decls, true)
+              (uu____24248, mname, decls, true)
           | FStar_Parser_AST.Module (mname,decls) ->
-              let uu____25124 =
+              let uu____24265 =
                 FStar_Syntax_DsEnv.prepare_module_or_interface false false
                   env1 mname FStar_Syntax_DsEnv.default_mii
                  in
-              (uu____25124, mname, decls, false)
+              (uu____24265, mname, decls, false)
            in
-        match uu____25071 with
+        match uu____24212 with
         | ((env2,pop_when_done),mname,decls,intf) ->
-            let uu____25154 = desugar_decls env2 decls  in
-            (match uu____25154 with
+            let uu____24295 = desugar_decls env2 decls  in
+            (match uu____24295 with
              | (env3,sigelts) ->
                  let modul =
                    {
@@ -7844,23 +7900,23 @@ let (desugar_partial_modul :
     fun env  ->
       fun m  ->
         let m1 =
-          let uu____25216 =
+          let uu____24357 =
             (FStar_Options.interactive ()) &&
-              (let uu____25218 =
-                 let uu____25219 =
-                   let uu____25220 = FStar_Options.file_list ()  in
-                   FStar_List.hd uu____25220  in
-                 FStar_Util.get_file_extension uu____25219  in
-               FStar_List.mem uu____25218 ["fsti"; "fsi"])
+              (let uu____24359 =
+                 let uu____24360 =
+                   let uu____24361 = FStar_Options.file_list ()  in
+                   FStar_List.hd uu____24361  in
+                 FStar_Util.get_file_extension uu____24360  in
+               FStar_List.mem uu____24359 ["fsti"; "fsi"])
              in
-          if uu____25216 then as_interface m else m  in
-        let uu____25224 = desugar_modul_common curmod env m1  in
-        match uu____25224 with
+          if uu____24357 then as_interface m else m  in
+        let uu____24365 = desugar_modul_common curmod env m1  in
+        match uu____24365 with
         | (env1,modul,pop_when_done) ->
             if pop_when_done
             then
-              let uu____25242 = FStar_Syntax_DsEnv.pop ()  in
-              (uu____25242, modul)
+              let uu____24383 = FStar_Syntax_DsEnv.pop ()  in
+              (uu____24383, modul)
             else (env1, modul)
   
 let (desugar_modul :
@@ -7870,32 +7926,32 @@ let (desugar_modul :
   =
   fun env  ->
     fun m  ->
-      let uu____25262 =
+      let uu____24403 =
         desugar_modul_common FStar_Pervasives_Native.None env m  in
-      match uu____25262 with
+      match uu____24403 with
       | (env1,modul,pop_when_done) ->
-          let uu____25276 =
+          let uu____24417 =
             FStar_Syntax_DsEnv.finish_module_or_interface env1 modul  in
-          (match uu____25276 with
+          (match uu____24417 with
            | (env2,modul1) ->
-               ((let uu____25288 =
+               ((let uu____24429 =
                    FStar_Options.dump_module
                      (modul1.FStar_Syntax_Syntax.name).FStar_Ident.str
                     in
-                 if uu____25288
+                 if uu____24429
                  then
-                   let uu____25289 =
+                   let uu____24430 =
                      FStar_Syntax_Print.modul_to_string modul1  in
                    FStar_Util.print1 "Module after desugaring:\n%s\n"
-                     uu____25289
+                     uu____24430
                  else ());
-                (let uu____25291 =
+                (let uu____24432 =
                    if pop_when_done
                    then
                      FStar_Syntax_DsEnv.export_interface
                        modul1.FStar_Syntax_Syntax.name env2
                    else env2  in
-                 (uu____25291, modul1))))
+                 (uu____24432, modul1))))
   
 let with_options : 'a . (unit -> 'a) -> 'a =
   fun f  ->
@@ -7913,9 +7969,9 @@ let (ast_modul_to_modul :
   fun modul  ->
     fun env  ->
       with_options
-        (fun uu____25338  ->
-           let uu____25339 = desugar_modul env modul  in
-           match uu____25339 with | (e,m) -> (m, e))
+        (fun uu____24479  ->
+           let uu____24480 = desugar_modul env modul  in
+           match uu____24480 with | (e,m) -> (m, e))
   
 let (decls_to_sigelts :
   FStar_Parser_AST.decl Prims.list ->
@@ -7924,9 +7980,9 @@ let (decls_to_sigelts :
   fun decls  ->
     fun env  ->
       with_options
-        (fun uu____25380  ->
-           let uu____25381 = desugar_decls env decls  in
-           match uu____25381 with | (env1,sigelts) -> (sigelts, env1))
+        (fun uu____24521  ->
+           let uu____24522 = desugar_decls env decls  in
+           match uu____24522 with | (env1,sigelts) -> (sigelts, env1))
   
 let (partial_ast_modul_to_modul :
   FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
@@ -7937,9 +7993,9 @@ let (partial_ast_modul_to_modul :
     fun a_modul  ->
       fun env  ->
         with_options
-          (fun uu____25435  ->
-             let uu____25436 = desugar_partial_modul modul env a_modul  in
-             match uu____25436 with | (env1,modul1) -> (modul1, env1))
+          (fun uu____24576  ->
+             let uu____24577 = desugar_partial_modul modul env a_modul  in
+             match uu____24577 with | (env1,modul1) -> (modul1, env1))
   
 let (add_modul_to_env :
   FStar_Syntax_Syntax.modul ->
@@ -7955,51 +8011,51 @@ let (add_modul_to_env :
             let erase_binders bs =
               match bs with
               | [] -> []
-              | uu____25534 ->
+              | uu____24675 ->
                   let t =
-                    let uu____25544 =
+                    let uu____24685 =
                       FStar_Syntax_Syntax.mk
                         (FStar_Syntax_Syntax.Tm_abs
                            (bs, FStar_Syntax_Syntax.t_unit,
                              FStar_Pervasives_Native.None))
                         FStar_Pervasives_Native.None FStar_Range.dummyRange
                        in
-                    erase_univs uu____25544  in
-                  let uu____25557 =
-                    let uu____25558 = FStar_Syntax_Subst.compress t  in
-                    uu____25558.FStar_Syntax_Syntax.n  in
-                  (match uu____25557 with
-                   | FStar_Syntax_Syntax.Tm_abs (bs1,uu____25570,uu____25571)
+                    erase_univs uu____24685  in
+                  let uu____24698 =
+                    let uu____24699 = FStar_Syntax_Subst.compress t  in
+                    uu____24699.FStar_Syntax_Syntax.n  in
+                  (match uu____24698 with
+                   | FStar_Syntax_Syntax.Tm_abs (bs1,uu____24711,uu____24712)
                        -> bs1
-                   | uu____25596 -> failwith "Impossible")
+                   | uu____24737 -> failwith "Impossible")
                in
-            let uu____25605 =
-              let uu____25612 = erase_binders ed.FStar_Syntax_Syntax.binders
+            let uu____24746 =
+              let uu____24753 = erase_binders ed.FStar_Syntax_Syntax.binders
                  in
-              FStar_Syntax_Subst.open_term' uu____25612
+              FStar_Syntax_Subst.open_term' uu____24753
                 FStar_Syntax_Syntax.t_unit
                in
-            match uu____25605 with
-            | (binders,uu____25614,binders_opening) ->
+            match uu____24746 with
+            | (binders,uu____24755,binders_opening) ->
                 let erase_term t =
-                  let uu____25622 =
-                    let uu____25623 =
+                  let uu____24763 =
+                    let uu____24764 =
                       FStar_Syntax_Subst.subst binders_opening t  in
-                    erase_univs uu____25623  in
-                  FStar_Syntax_Subst.close binders uu____25622  in
-                let erase_tscheme uu____25641 =
-                  match uu____25641 with
+                    erase_univs uu____24764  in
+                  FStar_Syntax_Subst.close binders uu____24763  in
+                let erase_tscheme uu____24782 =
+                  match uu____24782 with
                   | (us,t) ->
                       let t1 =
-                        let uu____25661 =
+                        let uu____24802 =
                           FStar_Syntax_Subst.shift_subst
                             (FStar_List.length us) binders_opening
                            in
-                        FStar_Syntax_Subst.subst uu____25661 t  in
-                      let uu____25664 =
-                        let uu____25665 = erase_univs t1  in
-                        FStar_Syntax_Subst.close binders uu____25665  in
-                      ([], uu____25664)
+                        FStar_Syntax_Subst.subst uu____24802 t  in
+                      let uu____24805 =
+                        let uu____24806 = erase_univs t1  in
+                        FStar_Syntax_Subst.close binders uu____24806  in
+                      ([], uu____24805)
                    in
                 let erase_action action =
                   let opening =
@@ -8011,13 +8067,13 @@ let (add_modul_to_env :
                   let erased_action_params =
                     match action.FStar_Syntax_Syntax.action_params with
                     | [] -> []
-                    | uu____25688 ->
+                    | uu____24829 ->
                         let bs =
-                          let uu____25698 =
+                          let uu____24839 =
                             FStar_Syntax_Subst.subst_binders opening
                               action.FStar_Syntax_Syntax.action_params
                              in
-                          FStar_All.pipe_left erase_binders uu____25698  in
+                          FStar_All.pipe_left erase_binders uu____24839  in
                         let t =
                           FStar_Syntax_Syntax.mk
                             (FStar_Syntax_Syntax.Tm_abs
@@ -8026,161 +8082,161 @@ let (add_modul_to_env :
                             FStar_Pervasives_Native.None
                             FStar_Range.dummyRange
                            in
-                        let uu____25738 =
-                          let uu____25739 =
-                            let uu____25742 =
+                        let uu____24879 =
+                          let uu____24880 =
+                            let uu____24883 =
                               FStar_Syntax_Subst.close binders t  in
-                            FStar_Syntax_Subst.compress uu____25742  in
-                          uu____25739.FStar_Syntax_Syntax.n  in
-                        (match uu____25738 with
+                            FStar_Syntax_Subst.compress uu____24883  in
+                          uu____24880.FStar_Syntax_Syntax.n  in
+                        (match uu____24879 with
                          | FStar_Syntax_Syntax.Tm_abs
-                             (bs1,uu____25744,uu____25745) -> bs1
-                         | uu____25770 -> failwith "Impossible")
+                             (bs1,uu____24885,uu____24886) -> bs1
+                         | uu____24911 -> failwith "Impossible")
                      in
                   let erase_term1 t =
-                    let uu____25777 =
-                      let uu____25778 = FStar_Syntax_Subst.subst opening t
+                    let uu____24918 =
+                      let uu____24919 = FStar_Syntax_Subst.subst opening t
                          in
-                      erase_univs uu____25778  in
-                    FStar_Syntax_Subst.close binders uu____25777  in
-                  let uu___299_25779 = action  in
-                  let uu____25780 =
+                      erase_univs uu____24919  in
+                    FStar_Syntax_Subst.close binders uu____24918  in
+                  let uu___303_24920 = action  in
+                  let uu____24921 =
                     erase_term1 action.FStar_Syntax_Syntax.action_defn  in
-                  let uu____25781 =
+                  let uu____24922 =
                     erase_term1 action.FStar_Syntax_Syntax.action_typ  in
                   {
                     FStar_Syntax_Syntax.action_name =
-                      (uu___299_25779.FStar_Syntax_Syntax.action_name);
+                      (uu___303_24920.FStar_Syntax_Syntax.action_name);
                     FStar_Syntax_Syntax.action_unqualified_name =
-                      (uu___299_25779.FStar_Syntax_Syntax.action_unqualified_name);
+                      (uu___303_24920.FStar_Syntax_Syntax.action_unqualified_name);
                     FStar_Syntax_Syntax.action_univs = [];
                     FStar_Syntax_Syntax.action_params = erased_action_params;
-                    FStar_Syntax_Syntax.action_defn = uu____25780;
-                    FStar_Syntax_Syntax.action_typ = uu____25781
+                    FStar_Syntax_Syntax.action_defn = uu____24921;
+                    FStar_Syntax_Syntax.action_typ = uu____24922
                   }  in
-                let uu___300_25782 = ed  in
-                let uu____25783 = FStar_Syntax_Subst.close_binders binders
+                let uu___304_24923 = ed  in
+                let uu____24924 = FStar_Syntax_Subst.close_binders binders
                    in
-                let uu____25784 = erase_term ed.FStar_Syntax_Syntax.signature
+                let uu____24925 = erase_term ed.FStar_Syntax_Syntax.signature
                    in
-                let uu____25785 = erase_tscheme ed.FStar_Syntax_Syntax.ret_wp
+                let uu____24926 = erase_tscheme ed.FStar_Syntax_Syntax.ret_wp
                    in
-                let uu____25786 =
+                let uu____24927 =
                   erase_tscheme ed.FStar_Syntax_Syntax.bind_wp  in
-                let uu____25787 =
+                let uu____24928 =
                   erase_tscheme ed.FStar_Syntax_Syntax.if_then_else  in
-                let uu____25788 = erase_tscheme ed.FStar_Syntax_Syntax.ite_wp
+                let uu____24929 = erase_tscheme ed.FStar_Syntax_Syntax.ite_wp
                    in
-                let uu____25789 =
+                let uu____24930 =
                   erase_tscheme ed.FStar_Syntax_Syntax.stronger  in
-                let uu____25790 =
+                let uu____24931 =
                   erase_tscheme ed.FStar_Syntax_Syntax.close_wp  in
-                let uu____25791 =
+                let uu____24932 =
                   erase_tscheme ed.FStar_Syntax_Syntax.assert_p  in
-                let uu____25792 =
+                let uu____24933 =
                   erase_tscheme ed.FStar_Syntax_Syntax.assume_p  in
-                let uu____25793 =
+                let uu____24934 =
                   erase_tscheme ed.FStar_Syntax_Syntax.null_wp  in
-                let uu____25794 =
+                let uu____24935 =
                   erase_tscheme ed.FStar_Syntax_Syntax.trivial  in
-                let uu____25795 = erase_term ed.FStar_Syntax_Syntax.repr  in
-                let uu____25796 =
+                let uu____24936 = erase_term ed.FStar_Syntax_Syntax.repr  in
+                let uu____24937 =
                   erase_tscheme ed.FStar_Syntax_Syntax.return_repr  in
-                let uu____25797 =
+                let uu____24938 =
                   erase_tscheme ed.FStar_Syntax_Syntax.bind_repr  in
-                let uu____25798 =
+                let uu____24939 =
                   FStar_List.map erase_action ed.FStar_Syntax_Syntax.actions
                    in
                 {
                   FStar_Syntax_Syntax.cattributes =
-                    (uu___300_25782.FStar_Syntax_Syntax.cattributes);
+                    (uu___304_24923.FStar_Syntax_Syntax.cattributes);
                   FStar_Syntax_Syntax.mname =
-                    (uu___300_25782.FStar_Syntax_Syntax.mname);
+                    (uu___304_24923.FStar_Syntax_Syntax.mname);
                   FStar_Syntax_Syntax.univs = [];
-                  FStar_Syntax_Syntax.binders = uu____25783;
-                  FStar_Syntax_Syntax.signature = uu____25784;
-                  FStar_Syntax_Syntax.ret_wp = uu____25785;
-                  FStar_Syntax_Syntax.bind_wp = uu____25786;
-                  FStar_Syntax_Syntax.if_then_else = uu____25787;
-                  FStar_Syntax_Syntax.ite_wp = uu____25788;
-                  FStar_Syntax_Syntax.stronger = uu____25789;
-                  FStar_Syntax_Syntax.close_wp = uu____25790;
-                  FStar_Syntax_Syntax.assert_p = uu____25791;
-                  FStar_Syntax_Syntax.assume_p = uu____25792;
-                  FStar_Syntax_Syntax.null_wp = uu____25793;
-                  FStar_Syntax_Syntax.trivial = uu____25794;
-                  FStar_Syntax_Syntax.repr = uu____25795;
-                  FStar_Syntax_Syntax.return_repr = uu____25796;
-                  FStar_Syntax_Syntax.bind_repr = uu____25797;
-                  FStar_Syntax_Syntax.actions = uu____25798;
+                  FStar_Syntax_Syntax.binders = uu____24924;
+                  FStar_Syntax_Syntax.signature = uu____24925;
+                  FStar_Syntax_Syntax.ret_wp = uu____24926;
+                  FStar_Syntax_Syntax.bind_wp = uu____24927;
+                  FStar_Syntax_Syntax.if_then_else = uu____24928;
+                  FStar_Syntax_Syntax.ite_wp = uu____24929;
+                  FStar_Syntax_Syntax.stronger = uu____24930;
+                  FStar_Syntax_Syntax.close_wp = uu____24931;
+                  FStar_Syntax_Syntax.assert_p = uu____24932;
+                  FStar_Syntax_Syntax.assume_p = uu____24933;
+                  FStar_Syntax_Syntax.null_wp = uu____24934;
+                  FStar_Syntax_Syntax.trivial = uu____24935;
+                  FStar_Syntax_Syntax.repr = uu____24936;
+                  FStar_Syntax_Syntax.return_repr = uu____24937;
+                  FStar_Syntax_Syntax.bind_repr = uu____24938;
+                  FStar_Syntax_Syntax.actions = uu____24939;
                   FStar_Syntax_Syntax.eff_attrs =
-                    (uu___300_25782.FStar_Syntax_Syntax.eff_attrs)
+                    (uu___304_24923.FStar_Syntax_Syntax.eff_attrs)
                 }
              in
           let push_sigelt1 env se =
             match se.FStar_Syntax_Syntax.sigel with
             | FStar_Syntax_Syntax.Sig_new_effect ed ->
                 let se' =
-                  let uu___301_25814 = se  in
-                  let uu____25815 =
-                    let uu____25816 = erase_univs_ed ed  in
-                    FStar_Syntax_Syntax.Sig_new_effect uu____25816  in
+                  let uu___305_24955 = se  in
+                  let uu____24956 =
+                    let uu____24957 = erase_univs_ed ed  in
+                    FStar_Syntax_Syntax.Sig_new_effect uu____24957  in
                   {
-                    FStar_Syntax_Syntax.sigel = uu____25815;
+                    FStar_Syntax_Syntax.sigel = uu____24956;
                     FStar_Syntax_Syntax.sigrng =
-                      (uu___301_25814.FStar_Syntax_Syntax.sigrng);
+                      (uu___305_24955.FStar_Syntax_Syntax.sigrng);
                     FStar_Syntax_Syntax.sigquals =
-                      (uu___301_25814.FStar_Syntax_Syntax.sigquals);
+                      (uu___305_24955.FStar_Syntax_Syntax.sigquals);
                     FStar_Syntax_Syntax.sigmeta =
-                      (uu___301_25814.FStar_Syntax_Syntax.sigmeta);
+                      (uu___305_24955.FStar_Syntax_Syntax.sigmeta);
                     FStar_Syntax_Syntax.sigattrs =
-                      (uu___301_25814.FStar_Syntax_Syntax.sigattrs)
+                      (uu___305_24955.FStar_Syntax_Syntax.sigattrs)
                   }  in
                 let env1 = FStar_Syntax_DsEnv.push_sigelt env se'  in
                 push_reflect_effect env1 se.FStar_Syntax_Syntax.sigquals
                   ed.FStar_Syntax_Syntax.mname se.FStar_Syntax_Syntax.sigrng
             | FStar_Syntax_Syntax.Sig_new_effect_for_free ed ->
                 let se' =
-                  let uu___302_25820 = se  in
-                  let uu____25821 =
-                    let uu____25822 = erase_univs_ed ed  in
-                    FStar_Syntax_Syntax.Sig_new_effect_for_free uu____25822
+                  let uu___306_24961 = se  in
+                  let uu____24962 =
+                    let uu____24963 = erase_univs_ed ed  in
+                    FStar_Syntax_Syntax.Sig_new_effect_for_free uu____24963
                      in
                   {
-                    FStar_Syntax_Syntax.sigel = uu____25821;
+                    FStar_Syntax_Syntax.sigel = uu____24962;
                     FStar_Syntax_Syntax.sigrng =
-                      (uu___302_25820.FStar_Syntax_Syntax.sigrng);
+                      (uu___306_24961.FStar_Syntax_Syntax.sigrng);
                     FStar_Syntax_Syntax.sigquals =
-                      (uu___302_25820.FStar_Syntax_Syntax.sigquals);
+                      (uu___306_24961.FStar_Syntax_Syntax.sigquals);
                     FStar_Syntax_Syntax.sigmeta =
-                      (uu___302_25820.FStar_Syntax_Syntax.sigmeta);
+                      (uu___306_24961.FStar_Syntax_Syntax.sigmeta);
                     FStar_Syntax_Syntax.sigattrs =
-                      (uu___302_25820.FStar_Syntax_Syntax.sigattrs)
+                      (uu___306_24961.FStar_Syntax_Syntax.sigattrs)
                   }  in
                 let env1 = FStar_Syntax_DsEnv.push_sigelt env se'  in
                 push_reflect_effect env1 se.FStar_Syntax_Syntax.sigquals
                   ed.FStar_Syntax_Syntax.mname se.FStar_Syntax_Syntax.sigrng
-            | uu____25824 -> FStar_Syntax_DsEnv.push_sigelt env se  in
-          let uu____25825 =
+            | uu____24965 -> FStar_Syntax_DsEnv.push_sigelt env se  in
+          let uu____24966 =
             FStar_Syntax_DsEnv.prepare_module_or_interface false false en
               m.FStar_Syntax_Syntax.name mii
              in
-          match uu____25825 with
+          match uu____24966 with
           | (en1,pop_when_done) ->
               let en2 =
-                let uu____25837 =
+                let uu____24978 =
                   FStar_Syntax_DsEnv.set_current_module en1
                     m.FStar_Syntax_Syntax.name
                    in
-                FStar_List.fold_left push_sigelt1 uu____25837
+                FStar_List.fold_left push_sigelt1 uu____24978
                   m.FStar_Syntax_Syntax.exports
                  in
               let env = FStar_Syntax_DsEnv.finish en2 m  in
-              let uu____25839 =
+              let uu____24980 =
                 if pop_when_done
                 then
                   FStar_Syntax_DsEnv.export_interface
                     m.FStar_Syntax_Syntax.name env
                 else env  in
-              ((), uu____25839)
+              ((), uu____24980)
   
