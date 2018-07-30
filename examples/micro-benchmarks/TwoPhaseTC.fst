@@ -85,18 +85,14 @@ let f18 (p:int -> Type0) (f:(x:int -> squash (p x))) :Lemma (forall (x:int). p x
 (*
  * This tests the type annotations on the dependent patterns.
  * Consider ExIntro IP hp in the function f21.
- * In the first phase, it is elaborated to: ExIntro (#uu1:Type0) (#uu2:@0 -> Type0) IP (hp:@0 IP)
- * Where @0, @1 etc. are de-bruijn variables.
- * When it is typechecked in the second phase, the annotation @0 IP for hp is typechecked
- * and the typechecker tries to prove that IP has type #uu1, which it fails to prove without any contextual information.
- * To prove it, we need the information that the scrutinee h is equal to the pattern ExIntro ... and then
- * type equalities kick in, I think.
+ * In the first phase, it is elaborated to: ExIntro (#.uu1:Type0) (#.uu2:.uu1 -> Type0) IP (hp:@0 IP)
+ * The second phase re-uses the solutions to the dot patterns computed in the first phase
  *)
 type f19 =
   | IP : f19
 
-noeq type f20 : a:Type0 -> (a -> Type0) -> Type u#1 =
-  | ExIntro : #a:Type0 -> #p:(a -> Type0) -> x:a -> p x -> f20 a p
+noeq type f20 (a:Type0) (p:a -> Type0) : Type u#1 =
+  | ExIntro : x:a -> p x -> f20 a p
 
 val f21 : f20 f19 (fun (p:f19) -> unit) -> Tot unit
   let f21 h =
