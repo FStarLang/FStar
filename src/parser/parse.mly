@@ -500,7 +500,7 @@ tvar:
 /*                            Types and terms                                 */
 /******************************************************************************/
 
-thunk(X): | t=X { mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
 
 ascribeTyp:
   | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(atomicTerm) {tactic}) { t, tacopt }

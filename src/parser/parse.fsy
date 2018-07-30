@@ -1591,17 +1591,17 @@ tvar:
 thunk_atomicTerm_:
   atomicTerm
     {let t = $1 in
-                ( mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+                ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
 
 thunk_tmNoEq_:
   tmNoEq
     {let t = $1 in
-                ( mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+                ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
 
 thunk_typ_:
   typ
     {let t = $1 in
-                ( mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+                ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
 
 ascribeTyp:
   COLON tmArrow_tmNoEq_ option___anonymous_5_
