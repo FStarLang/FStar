@@ -14,7 +14,7 @@ open CanonCommSwaps
 *)
 
 (* Only dump when debugging is on *)
-let dump m = if debugging () then dump m
+private let dump m = if debugging () then dump m
 
 (***** Expression syntax *)
 
