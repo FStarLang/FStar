@@ -1127,6 +1127,15 @@ let freeable = freeable'
 let free #a b =
   HST.rfree (Buffer?.content b)
 
+let freeable_length #a b = ()
+
+let freeable_disjoint #a1 #a2 b1 b2 =
+  if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2
+  then
+    MG.loc_disjoint_aloc_elim #_ #cls #(frameOf b1) #(as_addr b1) #(frameOf b2) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
+  else ()
+
+
 (* Allocation *)
 
 let alloc_common
