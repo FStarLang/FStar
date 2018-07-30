@@ -323,10 +323,14 @@ let wrap_guard_with_tactic_opt topt g =
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
 let rec tc_term env e =
+    if Env.debug env Options.Medium then
+        BU.print3 "(%s) Starting tc_term of %s (%s) {\n" (Range.string_of_range <| Env.get_range env)
+                                                         (Print.term_to_string e)
+                                                         (Print.tag_of_term (SS.compress e));
     let r, ms = BU.record_time (fun () ->
                     tc_maybe_toplevel_term ({env with top_level=false}) e) in
     if Env.debug env Options.Medium then begin
-        BU.print4 "(%s) tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
+        BU.print4 "(%s) } tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
                                                         (Print.term_to_string e)
                                                         (Print.tag_of_term (SS.compress e))
                                                         (string_of_int ms);
@@ -1676,12 +1680,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         | Tm_arrow(bs, c) ->
             let bs, c = SS.open_comp bs c in
             let head_info = head, chead, ghead, U.lcomp_of_comp c in
-            // if Env.debug env Options.Extreme
-            // then printfn "######tc_args of head %s @ %s with formals=%s and result type=%s"
-            //                       (Print.term_to_string head)
-            //                       (Print.term_to_string tf)
-            //                       (Print.binders_to_string ", " bs)
-            //                       (Print.comp_to_string c);
+            if Env.debug env Options.Extreme
+            then BU.print4 "######tc_args of head %s @ %s with formals=%s and result type=%s\n"
+                                  (Print.term_to_string head)
+                                  (Print.term_to_string tf)
+                                  (Print.binders_to_string ", " bs)
+                                  (Print.comp_to_string c);
             tc_args head_info ([], [], [], guard, []) bs args
 
         | Tm_refine (bv,_) ->
