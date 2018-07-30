@@ -1239,8 +1239,8 @@ let (cur_goal : unit -> FStar_Tactics_Types.goal tac) =
                       uu____1903 uu____1904);
                    ret hd1)))
   
-let (tadmit : unit -> unit tac) =
-  fun uu____1911  ->
+let (tadmit_t : FStar_Syntax_Syntax.term -> unit tac) =
+  fun t  ->
     let uu____1914 =
       bind get
         (fun ps  ->
@@ -1258,9 +1258,9 @@ let (tadmit : unit -> unit tac) =
                       in
                    (FStar_Errors.Warning_TacAdmit, uu____1936)  in
                  FStar_Errors.log_issue uu____1927 uu____1931);
-                solve' g FStar_Syntax_Util.exp_unit))
+                solve' g t))
        in
-    FStar_All.pipe_left (wrap_err "tadmit") uu____1914
+    FStar_All.pipe_left (wrap_err "tadmit_t") uu____1914
   
 let (fresh : unit -> FStar_BigInt.t tac) =
   fun uu____1948  ->

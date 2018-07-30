@@ -896,12 +896,12 @@ and (primitive_steps :
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mktac1
                                                                     (Prims.parse_int "0")
-                                                                    "tadmit"
-                                                                    FStar_Tactics_Basic.tadmit
+                                                                    "tadmit_t"
+                                                                    FStar_Tactics_Basic.tadmit_t
+                                                                    FStar_Reflection_Embeddings.e_term
                                                                     FStar_Syntax_Embeddings.e_unit
-                                                                    FStar_Syntax_Embeddings.e_unit
-                                                                    FStar_Tactics_Basic.tadmit
-                                                                    FStar_TypeChecker_NBETerm.e_unit
+                                                                    FStar_Tactics_Basic.tadmit_t
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                      in
                                                                     let uu____1246
