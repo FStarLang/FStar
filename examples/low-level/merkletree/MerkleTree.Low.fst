@@ -1,7 +1,6 @@
 module MerkleTree.Low
 
-// TODO1: Use high-level spec for correctness
-// open MerkleTree.High
+open MerkleTree.High
 
 // TODO2: Use `EverCrypt.Hash` directly
 // open EverCrypt.Hash
@@ -20,8 +19,7 @@ module HST = FStar.HyperStack.ST
 module B = LowStar.Buffer
 module S = FStar.Seq
 
-// TODO1
-// module High = MerkleTree.High
+module High = MerkleTree.High
 
 let root = Monotonic.HyperHeap.root
 
@@ -30,20 +28,23 @@ module U8 = FStar.UInt8
 type uint32_t = U32.t
 type uint8_t = U8.t
 
-noextract val hash_size: nat
-noextract let hash_size = 32
 type hash = b:B.buffer uint8_t
 type vhash = h:hash{B.length h = hash_size}
 let hash_buf = B.buffer hash
 
 // TODO2: When `EverCrypt.Hash` is connected if we define it.
 assume val hash_from_hashes: 
-  src1:hash -> src2:hash -> dst:hash -> 
+  src1:vhash -> src2:vhash -> dst:vhash -> 
   HST.ST unit
 	 (requires (fun h0 ->
 	   B.live h0 src1 /\ B.live h0 src2 /\ B.live h0 dst))
 	 (ensures (fun h0 _ h1 ->
-	   modifies (loc_buffer dst) h0 h1))
+	   // Memory safety
+	   modifies (loc_buffer dst) h0 h1 /\
+	   // Correctness
+	   High.hash_from_hashes 
+	     (B.as_seq h1 src1) 
+	     (B.as_seq h1 src2) = B.as_seq h1 dst)) 
 
 /// Utilities
 
@@ -71,21 +72,14 @@ let uint32_pow2 sz =
   Math.Lemmas.pow2_lt_compat U32.n (U32.v sz);
   UInt32.shift_left 1ul sz
 
-val is_pow2: nat -> GTot bool
-let rec is_pow2 n =
-  if n = 0 then false
-  else if n = 1 then true
-  else (n % 2 = 0 && is_pow2 (n / 2))
-
 val uint32_is_pow2: 
-  n:uint32_t -> Tot bool (decreases (U32.v n))
+  n:uint32_t -> 
+  Tot (b:bool{b = is_pow2 (U32.v n)})
+      (decreases (U32.v n))
 let uint32_is_pow2 n =
-  n <> 0ul && UInt32.logor n (n - 1ul) = 0ul
-
-val pow2_floor: 
-  n:nat{n > 0} -> GTot (p:nat{pow2 p <= n && n < pow2 (p + 1)})
-let rec pow2_floor n =
-  if n = 1 then 0 else 1 + pow2_floor (n / 2)
+  let b = n <> 0ul && UInt32.logor n (n - 1ul) = 0ul in
+  assume (b = is_pow2 (U32.v n));
+  b
 
 val uint32_pow2_floor':
   sz:erased nat{reveal sz > 0 && reveal sz <= 32} ->
@@ -108,58 +102,34 @@ val uint32_pow2_floor:
 let uint32_pow2_floor n =
   uint32_pow2_floor' (hide 32) n
 
-val pow2_is_pow2:
-  n:nat ->
-  Lemma (is_pow2 (pow2 n))
-	[SMTPat (is_pow2 (pow2 n))]
-let rec pow2_is_pow2 n =
-  if n = 0 then ()
-  else pow2_is_pow2 (n - 1)
-
-val pow2_lt_compat_inv:
-  p:nat -> q:nat ->
-  Lemma (requires (pow2 p < pow2 q))
-	(ensures (p < q))
-let rec pow2_lt_compat_inv p q =
-  if q <= p then Math.Lemmas.pow2_le_compat p q
-  else ()
-
-val pow2_le_compat_inv:
-  p:nat -> q:nat ->
-  Lemma (requires (pow2 p <= pow2 q))
-	(ensures (p <= q))
-let rec pow2_le_compat_inv p q =
-  if q < p then Math.Lemmas.pow2_lt_compat p q
-  else ()
-
 /// About hash buffer
 
-val buffer_for_each:
+val buffer_forall:
   #a:Type -> h:HS.mem -> b:B.buffer a -> 
   prop:(a -> GTot Type0) -> GTot Type0
-let buffer_for_each #a h b prop =
+let buffer_forall #a h b prop =
   forall (i:nat{i < B.length b}). prop (B.get h b i)
 
-val buffer_for_each_gsub:
+val buffer_forall_gsub:
   #a:Type -> h:HS.mem -> b:B.buffer a ->
   prop:(a -> GTot Type0) ->
   i:uint32_t -> len:uint32_t ->
   Lemma (requires (U32.v i + U32.v len <= B.length b /\
-		  buffer_for_each h b prop))
-	(ensures (buffer_for_each h (B.gsub b i len) prop))
-let buffer_for_each_gsub #a h b prop i len =
+		  buffer_forall h b prop))
+	(ensures (buffer_forall h (B.gsub b i len) prop))
+let buffer_forall_gsub #a h b prop i len =
   assert (forall (j:nat{j < B.length (B.gsub b i len)}).
 	 B.get h (B.gsub b i len) j == B.get h b (U32.v i + j))
 
-val buffer_for_each_gsub_gsub:
+val buffer_forall_gsub_gsub:
   #a:Type -> h:HS.mem -> b:B.buffer a ->
   prop:(a -> GTot Type0) ->
   i:uint32_t -> len:uint32_t ->
   Lemma (requires (B.length b = U32.v len /\ i <= len /\
-		  buffer_for_each h (B.gsub b 0ul i) prop /\
-		  buffer_for_each h (B.gsub b i (len - i)) prop))
-	(ensures (buffer_for_each h b prop))
-let buffer_for_each_gsub_gsub #a h b prop i len =
+		  buffer_forall h (B.gsub b 0ul i) prop /\
+		  buffer_forall h (B.gsub b i (len - i)) prop))
+	(ensures (buffer_forall h b prop))
+let buffer_forall_gsub_gsub #a h b prop i len =
   assert (forall (j:nat{j < U32.v i}). B.get h b j == B.get h (B.gsub b 0ul i) j);
   assert (forall (j:nat{j >= U32.v i && j < B.length b}).
 	 B.get h b j == B.get h (B.gsub b i (len - i)) (j - U32.v i))
@@ -167,7 +137,7 @@ let buffer_for_each_gsub_gsub #a h b prop i len =
 val hash_buf_allocated: 
   h:HS.mem -> hs:hash_buf -> GTot Type0
 let hash_buf_allocated h hs =
-  buffer_for_each h hs
+  buffer_forall h hs
   (fun hb -> 
     B.live h hb /\ 
     B.length hb = hash_size /\ 
@@ -180,7 +150,7 @@ val hash_buf_allocated_gsub:
 		  hash_buf_allocated h hs))
 	(ensures (hash_buf_allocated h (B.gsub hs i len)))
 let hash_buf_allocated_gsub h hs i len =
-  buffer_for_each_gsub h hs 
+  buffer_forall_gsub h hs 
   (fun hb -> B.live h hb /\ B.length hb = hash_size /\ B.freeable hb)
   i len
 
@@ -194,7 +164,7 @@ val hash_buf_allocated_gsub_gsub:
 	[SMTPat (hash_buf_allocated h (B.gsub hs 0ul i));
 	SMTPat (hash_buf_allocated h (B.gsub hs i (len - i)))]
 let hash_buf_allocated_gsub_gsub h hs i len =
-  buffer_for_each_gsub_gsub h hs 
+  buffer_forall_gsub_gsub h hs 
   (fun hb -> B.live h hb /\ B.length hb = hash_size /\ B.freeable hb)
   i len
 
@@ -208,7 +178,7 @@ val hash_buf_allocated_gsub_hd_tl:
 	(ensures (hash_buf_allocated h hs))
 	[SMTPat (hash_buf_allocated h (B.gsub hs 1ul (len - 1ul)))]
 let hash_buf_allocated_gsub_hd_tl h hs len =
-  buffer_for_each_gsub_gsub h hs 
+  buffer_forall_gsub_gsub h hs 
   (fun hb -> B.live h hb /\ B.length hb = hash_size /\ B.freeable hb)
   1ul len
 
@@ -310,6 +280,7 @@ val loc_hashes_gsub_gsub:
 		 loc_union (loc_hashes h (B.gsub hs 0ul i))
 			   (loc_hashes h (B.gsub hs i (B.len hs - i)))))
 	(decreases (U32.v i))
+#set-options "--z3rlimit 10"
 let rec loc_hashes_gsub_gsub h hs i =
   if i = 0ul then ()
   else (loc_hashes_gsub_gsub h (B.gsub hs 1ul (B.len hs - 1ul)) (i - 1ul);
@@ -361,6 +332,13 @@ noeq type merkle_tree =
       merkle_tree
 
 let mt_ptr = B.pointer merkle_tree
+
+// val lift_mt: HS.mem -> merkle_tree -> GTot High.merkle_tree
+// let lift_mt h mt =
+//   let values = B.as_seq h (MT?.values mt) in
+//   let iroots = B.as_seq h (MT?.iroots mt) in
+//   assume (iroots = iroots_of_hashes values);
+//   High.MT values iroots
 
 /// Initialization
 
@@ -473,7 +451,7 @@ val insert_iroots:
 	 (ensures (fun h0 _ h1 -> 
 	   modifies (loc_hashes h0 irs) h0 h1 /\ // only affects internal root hash values
 	   hash_buf_allocated h1 irs)) // internal roots are still alive!
-#set-options "--z3rlimit 40"
+#set-options "--z3rlimit 60"
 let rec insert_iroots nirs nelts irs nv =
   let hh0 = HST.get () in
   if nelts = 0ul

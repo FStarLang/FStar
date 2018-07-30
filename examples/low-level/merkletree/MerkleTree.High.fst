@@ -11,8 +11,8 @@ module S = FStar.Seq
 module U8 = FStar.UInt8
 type uint8_t = U8.t
 
-val hash_size: nat
-let hash_size = 32
+noextract val hash_size: nat
+noextract let hash_size = 32
 
 type bytes = S.seq UInt8.t
 type hash = b:bytes{S.length b = hash_size}
@@ -347,7 +347,7 @@ val insert_iroots:
   nv:hash ->
   GTot (iirs:hash_seq{iroots_of_hashes (insert_values vs nv) = iirs})
        (decreases (S.length irs))
-#set-options "--z3rlimit 40"
+#set-options "--z3rlimit 60"
 let rec insert_iroots vs irs nv =
   if S.length vs = 0
   then S.create 1 nv
