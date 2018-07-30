@@ -6342,13 +6342,12 @@ let (t_destruct :
                                                                     FStar_TypeChecker_Env.nbe
                                                                     =
                                                                     (uu___423_11767.FStar_TypeChecker_Env.nbe)
-                                                                    }) true
-                                                                    s_ty pat
-                                                                     in
+                                                                    }) s_ty
+                                                                    pat  in
                                                                     match uu____11750
                                                                     with
                                                                     | 
-                                                                    (uu____11780,uu____11781,uu____11782,pat_t,uu____11784,uu____11785)
+                                                                    (uu____11780,uu____11781,uu____11782,pat_t,uu____11784,_guard_pat)
                                                                     ->
                                                                     let eq_b
                                                                     =
