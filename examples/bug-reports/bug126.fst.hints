@@ -388,7 +388,7 @@
         "typing_Bug126.value", "typing_tok_Bug126.TUnit@tok"
       ],
       0,
-      "dfcbd96f27a98a71eccc95cdbbd0d73b"
+      "b33832a89cfdda6441c0772a727bb1bd"
     ],
     [
       "Bug126.invert_lam",
@@ -423,7 +423,7 @@
         "typing_tok_Bug126.TUnit@tok"
       ],
       0,
-      "95fa6e7ed84e91312f9120168e3c07dc"
+      "78120ddec0fe7990fb9d27d05011f10d"
     ]
   ]
 ]
