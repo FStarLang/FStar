@@ -241,7 +241,7 @@
       1,
       [ "@query", "lemma_SL.Heap.lemma_points_to_defined" ],
       0,
-      "31e25f2566b60ec9eac68b385bc9a146"
+      "80bc53d0cc8dedf194b5cfa8474c43a8"
     ],
     [
       "SL.Shallow.write_without_framing",
@@ -271,7 +271,7 @@
         "token_correspondence_SL.Shallow.write_wp", "unit_typing"
       ],
       0,
-      "6164394a9f77d44ee64dfe3c82ae87ff"
+      "424e4d048bbff20d835b7039645137b6"
     ],
     [
       "SL.Shallow.write_with_framing",
@@ -484,7 +484,7 @@
       1,
       [ "@query", "lemma_SL.Heap.lemma_points_to_defined" ],
       0,
-      "a0371c5e7f338d4117f81bed859566d1"
+      "333f3693faafbb2f069f7514f9bd53b9"
     ],
     [
       "SL.Shallow.write_without_framing",
@@ -514,7 +514,7 @@
         "token_correspondence_SL.Shallow.write_wp", "unit_typing"
       ],
       0,
-      "059cee8ff5aaf9d64c2cf88c1a48e9f8"
+      "1a4259d9551aeb317e4bbeee5d8844ac"
     ],
     [
       "SL.Shallow.write_with_framing",
