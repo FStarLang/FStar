@@ -288,7 +288,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
-    dsenv = FStar.Syntax.DsEnv.empty_env();
+    dsenv = FStar.Syntax.DsEnv.empty_env deps;
     dep_graph = deps;
     nbe = nbe
   }

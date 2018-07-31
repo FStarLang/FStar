@@ -492,6 +492,8 @@ let collect_one
     | Include lid
     | Open lid ->
         record_open false lid
+    | Friend lid ->
+        add_dep deps (UseImplementation (lowercase_join_longident lid true))
     | ModuleAbbrev (ident, lid) ->
         if record_module_alias ident lid
         then add_dep deps (PreferInterface (lowercase_join_longident lid true))
@@ -1172,3 +1174,6 @@ let print deps =
       raise_err (Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
   | None ->
       assert false
+
+let module_has_interface (Mk (_, fsmap, _)) module_name =
+    has_interface fsmap (lowercase_module_name (Ident.string_of_lid module_name))

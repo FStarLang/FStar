@@ -70,6 +70,7 @@ let logic_qualifier_deprecation_warning =
 %token EXISTS
 %token FALSE
 %token FORALL
+%token FRIEND
 %token <fsdoc> FSDOC
 %token <fsdoc> FSDOC_STANDALONE
 %token FUN
@@ -751,6 +752,9 @@ rawDecl:
 | OPEN quident
     {let (_1, uid) = ((), $2) in
       ( Open uid )}
+| FRIEND quident
+    {let (_1, uid) = ((), $2) in
+      ( Friend uid )}
 | INCLUDE quident
     {let (_1, uid) = ((), $2) in
       ( Include uid )}

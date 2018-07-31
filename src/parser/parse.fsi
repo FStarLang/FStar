@@ -111,6 +111,7 @@ type token =
   | FUN
   | FSDOC_STANDALONE of (fsdoc)
   | FSDOC of (fsdoc)
+  | FRIEND
   | FORALL
   | FALSE
   | EXISTS
@@ -262,6 +263,7 @@ type tokenId =
     | TOKEN_FUN
     | TOKEN_FSDOC_STANDALONE
     | TOKEN_FSDOC
+    | TOKEN_FRIEND
     | TOKEN_FORALL
     | TOKEN_FALSE
     | TOKEN_EXISTS

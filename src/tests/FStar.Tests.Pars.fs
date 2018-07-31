@@ -59,10 +59,10 @@ let init_once () : unit =
                 TcTerm.universe_of
                 TcTerm.check_type_of_well_typed_term
                 solver
-                Const.prims_lid 
+                Const.prims_lid
                 NBE.normalize_for_unit_test in
   env.solver.init env;
-  let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env()) in
+  let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env FStar.Parser.Dep.empty_deps) in
   let env = {env with dsenv=dsenv} in
   let _prims_mod, _, env = Tc.check_module env prims_mod false in
   // needed to run tests with chars
