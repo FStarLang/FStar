@@ -471,10 +471,10 @@ let rec apply_squash_or_lem d t =
 let mapply (t : term) : Tac unit =
     apply_squash_or_lem 10 t
 
-val admit_dump : #a:Type -> (#[tadmit_t (quote (fun () -> admit #a () <: Admit a))] x : (unit -> Admit a)) -> unit -> Admit a
+val admit_dump : #a:Type -> (#[(dump "Admitting"; exact (quote (fun () -> admit #a () <: Admit a)))] x : (unit -> Admit a)) -> unit -> Admit a
 let admit_dump #a #x () = x ()
 
-val magic_dump : #a:Type -> (#[tadmit_t (quote (magic #a ()))] x : a) -> unit -> Tot a
+val magic_dump : #a:Type -> (#[(dump "Admitting"; exact (quote (magic #a ())))] x : a) -> unit -> Tot a
 let magic_dump #a #x () = x
 
 let change_with t1 t2 : Tac unit =
