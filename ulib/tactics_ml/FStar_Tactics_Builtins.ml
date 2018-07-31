@@ -106,7 +106,7 @@ let change                  = from_tac_1 B.change
 let get_guard_policy        = from_tac_1 B.get_guard_policy
 let set_guard_policy        = from_tac_1 B.set_guard_policy
 let lax_on                  = from_tac_1 B.lax_on
-let tadmit                  = from_tac_1 B.tadmit
+let tadmit_t                = from_tac_1 B.tadmit_t
 let inspect                 = from_tac_1 B.inspect
 let pack                    = from_tac_1 B.pack
 

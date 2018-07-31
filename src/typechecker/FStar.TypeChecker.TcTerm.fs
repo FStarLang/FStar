@@ -323,10 +323,14 @@ let wrap_guard_with_tactic_opt topt g =
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
 let rec tc_term env e =
+    if Env.debug env Options.Medium then
+        BU.print3 "(%s) Starting tc_term of %s (%s) {\n" (Range.string_of_range <| Env.get_range env)
+                                                         (Print.term_to_string e)
+                                                         (Print.tag_of_term (SS.compress e));
     let r, ms = BU.record_time (fun () ->
                     tc_maybe_toplevel_term ({env with top_level=false}) e) in
     if Env.debug env Options.Medium then begin
-        BU.print4 "(%s) tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
+        BU.print4 "(%s) } tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
                                                         (Print.term_to_string e)
                                                         (Print.tag_of_term (SS.compress e))
                                                         (string_of_int ms);
@@ -1552,6 +1556,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
              * to find an instance for it. We might not even be able to, since instances
              * are for concrete types.
              *)
+            let tau = SS.subst subst tau in
             let tau, _, g_tau = tc_tactic env tau in
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
@@ -1584,6 +1589,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                                                (Print.bv_to_string x)
                                                (Print.term_to_string e))) e.pos in
             let targ = SS.subst subst x.sort in
+            let aqual = SS.subst_imp subst aqual in
             let x = {x with sort=targ} in
             if debug env Options.Extreme
             then BU.print5 "\tFormal is %s : %s\tType of arg %s (after subst %s) = %s\n"
@@ -1676,12 +1682,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         | Tm_arrow(bs, c) ->
             let bs, c = SS.open_comp bs c in
             let head_info = head, chead, ghead, U.lcomp_of_comp c in
-            // if Env.debug env Options.Extreme
-            // then printfn "######tc_args of head %s @ %s with formals=%s and result type=%s"
-            //                       (Print.term_to_string head)
-            //                       (Print.term_to_string tf)
-            //                       (Print.binders_to_string ", " bs)
-            //                       (Print.comp_to_string c);
+            if Env.debug env Options.Extreme
+            then BU.print4 "######tc_args of head %s @ %s with formals=%s and result type=%s\n"
+                                  (Print.term_to_string head)
+                                  (Print.term_to_string tf)
+                                  (Print.binders_to_string ", " bs)
+                                  (Print.comp_to_string c);
             tc_args head_info ([], [], [], guard, []) bs args
 
         | Tm_refine (bv,_) ->
@@ -2628,6 +2634,13 @@ and tc_binder env (x, imp) =
                    (Print.term_to_string x.sort)
                    (Print.term_to_string tu);
     let t, _, g = tc_check_tot_or_gtot_term env x.sort tu in //ghost effect ok in the types of binders
+    let imp, g' =
+        match imp with
+        | Some (Meta tau) ->
+            let tau, _, g = tc_tactic env tau in
+            Some (Meta tau), g
+        | _ -> imp, Env.trivial_guard
+    in
     let x = {x with sort=t}, imp in
     if Env.debug env Options.High
     then BU.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string (fst x)) (Print.term_to_string t);

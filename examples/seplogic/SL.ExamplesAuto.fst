@@ -16,7 +16,7 @@ open FStar.List
 #reset-options "--__temp_fast_implicits"
 
 let memory_cm : cm memory =
-  CM emp (<*>) (fun x -> admit()) (fun x y z -> ()) (fun x y -> ())
+  CM emp (<*>) (fun x -> lemma_sep_unit' x) (fun x y z -> ()) (fun x y -> ())
 
 // Fails when called
 // (Error) user tactic failed: norm_term: Cannot type fun _ -> idtac () <: FStar.Tactics.Effect.TAC unit in context ((r1:SepLogic.Heap.ref Prims.int), (r2:SepLogic.Heap.ref Prims.int), (x:Prims.int), (y:Prims.int), (x:SL.Effect.post Prims.int), (x:SepLogic.Heap.memory), (uu___326511:SepLogic.Heap.defined (r1 |> x <*> r2 |> y) /\ x y (r1 |> 2 <*> r2 |> y))). Error = (Variable "a#327038" not found)
@@ -100,9 +100,12 @@ let sort_sl (a:Type) (vm:vmap a string) (xs:list var) : Tot (list var) =
     (fun x y -> FStar.String.compare (select_extra y vm)
                                      (select_extra x vm)) xs
 
+let sort_sl_correct : permute_correct sort_sl =
+  fun #a m vm xs -> sortWith_correct (fun x y -> FStar.String.compare (select_extra y vm) (select_extra x vm)) #a m vm xs
+
 let canon_monoid_sl (fp:list term) : Tac unit =
   canon_monoid_with string (pointsto_to_string fp) ""
-                            sort_sl (fun #a m vm xs -> admit()) memory_cm
+                            sort_sl (fun #a -> sort_sl_correct #a) memory_cm
 
 let binder_to_term (b : binder) : Tac term =
   let bv, _ = inspect_binder b in pack (Tv_Var bv)

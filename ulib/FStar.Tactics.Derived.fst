@@ -256,6 +256,8 @@ let discard (tau : unit -> Tac 'a) : unit -> Tac unit =
 let rec repeatseq (#a:Type) (t : unit -> Tac a) : Tac unit =
     let _ = trytac (fun () -> (discard t) `seq` (discard (fun () -> repeatseq t))) in ()
 
+let tadmit () = tadmit_t (`())
+
 let admit1 () : Tac unit =
     tadmit ()
 
@@ -469,14 +471,11 @@ let rec apply_squash_or_lem d t =
 let mapply (t : term) : Tac unit =
     apply_squash_or_lem 10 t
 
-private
-let dump_admit () : Tac unit =
-  //clear_top (); // gets rid of the unit binder
-  admit1 ()
+val admit_dump : #a:Type -> (#[(dump "Admitting"; exact (quote (fun () -> admit #a () <: Admit a)))] x : (unit -> Admit a)) -> unit -> Admit a
+let admit_dump #a #x () = x ()
 
-assume val admit_goal : #a:Type -> unit ->
-    Pure a (requires (with_tactic dump_admit a))
-           (ensures (fun _ -> False))
+val magic_dump : #a:Type -> (#[(dump "Admitting"; exact (quote (magic #a ())))] x : a) -> unit -> Tot a
+let magic_dump #a #x () = x
 
 let change_with t1 t2 : Tac unit =
     focus (fun () ->
