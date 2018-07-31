@@ -1,7 +1,5 @@
 module MerkleTree.Low
 
-open MerkleTree.High
-
 // TODO2: Use `EverCrypt.Hash` directly
 // open EverCrypt.Hash
 
@@ -13,10 +11,15 @@ open FStar.Seq
 open FStar.Integers
 open FStar.Ghost
 
+open MerkleTree.High
+// TODO3: Use the vector library for hash values
+// open LowStar.Vector
+
 module List = FStar.List.Tot
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module B = LowStar.Buffer
+// module V = LowStar.Vector
 module S = FStar.Seq
 
 module High = MerkleTree.High
@@ -39,9 +42,9 @@ assume val hash_from_hashes:
 	 (requires (fun h0 ->
 	   B.live h0 src1 /\ B.live h0 src2 /\ B.live h0 dst))
 	 (ensures (fun h0 _ h1 ->
-	   // Memory safety
+	   // memory safety
 	   modifies (loc_buffer dst) h0 h1 /\
-	   // Correctness
+	   // correctness
 	   High.hash_from_hashes 
 	     (B.as_seq h1 src1) 
 	     (B.as_seq h1 src2) = B.as_seq h1 dst)) 
@@ -101,6 +104,18 @@ val uint32_pow2_floor:
       (decreases (U32.v n))
 let uint32_pow2_floor n =
   uint32_pow2_floor' (hide 32) n
+
+val uint32_num_of_ones:
+  sz:erased nat{reveal sz <= U32.n} -> 
+  n:uint32_t{U32.v n < pow2 (reveal sz)} ->
+  Tot (nirs:uint32_t{U32.v nirs <= reveal sz /\ High.num_of_ones (U32.v n) = U32.v nirs})
+      (decreases (U32.v n))
+#set-options "--z3rlimit 40"
+let rec uint32_num_of_ones sz n =
+  if n = 0ul then 0ul
+  else (let nones = n % 2ul + uint32_num_of_ones (hide (reveal sz - 1)) (n / 2ul) in
+       assume (High.num_of_ones (U32.v n) = U32.v nones);
+       nones)
 
 /// About hash buffer
 
@@ -280,7 +295,7 @@ val loc_hashes_gsub_gsub:
 		 loc_union (loc_hashes h (B.gsub hs 0ul i))
 			   (loc_hashes h (B.gsub hs i (B.len hs - i)))))
 	(decreases (U32.v i))
-#set-options "--z3rlimit 10"
+#set-options "--z3rlimit 20"
 let rec loc_hashes_gsub_gsub h hs i =
   if i = 0ul then ()
   else (loc_hashes_gsub_gsub h (B.gsub hs 1ul (B.len hs - 1ul)) (i - 1ul);
@@ -333,12 +348,61 @@ noeq type merkle_tree =
 
 let mt_ptr = B.pointer merkle_tree
 
-// val lift_mt: HS.mem -> merkle_tree -> GTot High.merkle_tree
-// let lift_mt h mt =
-//   let values = B.as_seq h (MT?.values mt) in
-//   let iroots = B.as_seq h (MT?.iroots mt) in
-//   assume (iroots = iroots_of_hashes values);
-//   High.MT values iroots
+// val hashes_as_seq: HS.mem -> hash_buf -> GTot High.hash_seq
+val hashes_as_seq: 
+  h:HS.mem -> hb:hash_buf{hash_buf_allocated h hb} ->
+  GTot (hs:High.hash_seq{S.length hs = B.length hb})
+       (decreases (B.length hb))
+let rec hashes_as_seq h hb =
+  if B.length hb = 0 then S.empty
+  else (hash_buf_allocated_gsub h hb 1ul (B.len hb - 1ul);
+       S.cons (B.as_seq h (B.get h hb 0))
+	      (hashes_as_seq h (B.gsub hb 1ul (B.len hb - 1ul))))
+
+// val hashes_as_seq_gsub:
+//   h:HS.mem -> hb:hash_buf{hash_buf_allocated h hb} ->
+//   i:uint32_t ->
+//   len:uint32_t{U32.v i + U32.v len <= B.length hb} ->
+//   Lemma (ensures (hashes_as_seq h (B.gsub hb i len) =
+// 		 S.slice (hashes_as_seq h hb) (U32.v i) (U32.v i + U32.v len)))
+// 	(decreases (U32.v len))
+// 	[SMTPat (hashes_as_seq h hb); SMTPat (B.gsub hb i len)]
+// let rec hashes_as_seq_gsub h hb i len =
+//   // if len = 0ul then ()
+//   // else hashes_as_seq_gsub h hb (i + 1ul) (len - 1ul)
+//   admit ()
+
+// val hashes_as_seq_gsub_gsub:
+//   h:HS.mem -> hb:hash_buf{hash_buf_allocated h hb} ->
+//   len:uint32_t{U32.v len = B.length hb} ->
+//   i:uint32_t{i < len} ->
+//   Lemma (ensures (hashes_as_seq h hb =
+// 		 S.append (hashes_as_seq h (B.gsub hb 0ul i))
+// 			  (hashes_as_seq h (B.gsub hb i (len - i)))))
+// 	[SMTPat (hashes_as_seq h (B.gsub hb 0ul i));
+// 	SMTPat (hashes_as_seq h (B.gsub hb i (len - i)))]
+// let hashes_as_seq_gsub_gsub h hb len i =
+//   admit ()
+
+val merkle_tree_wf: HS.mem -> merkle_tree -> GTot Type0
+let merkle_tree_wf h mt =
+  let nelts = MT?.nelts mt in
+  let nirs = uint32_num_of_ones (hide 32) nelts in
+  let values = B.gsub (MT?.values mt) 0ul nelts in
+  let iroots = B.gsub (MT?.iroots mt) 0ul nirs in
+  hash_buf_allocated h values /\
+  hash_buf_allocated h iroots /\
+  iroots_of_hashes (hashes_as_seq h values) = hashes_as_seq h iroots
+
+val lift_mt: 
+  h:HS.mem -> mt:merkle_tree{merkle_tree_wf h mt} -> 
+  GTot High.merkle_tree
+let lift_mt h mt =
+  let nelts = MT?.nelts mt in
+  let nirs = uint32_num_of_ones (hide 32) nelts in
+  let values = hashes_as_seq h (B.gsub (MT?.values mt) 0ul nelts) in
+  let iroots = hashes_as_seq h (B.gsub (MT?.iroots mt) 0ul nirs) in
+  High.MT values iroots
 
 /// Initialization
 
@@ -386,7 +450,8 @@ let rec init_hashes_partial idx len hs =
 val create_merkle_tree: unit -> 
   HST.ST mt_ptr
 	 (requires (fun _ -> true))
-	 (ensures (fun h0 mt h1 -> true))
+	 (ensures (fun h0 mt h1 ->
+	   merkle_tree_wf h1 (B.get h1 mt 0)))
 let create_merkle_tree _ = 
   let values = B.null in
   let iroots = create_hashes 32ul in
@@ -404,13 +469,22 @@ val insert_values:
   vs:hash_buf{B.length vs = U32.v nvs} ->
   e:vhash ->
   HST.ST (ivs:hash_buf{B.length ivs = (if nelts = nvs then 2 * U32.v nelts + 1 else U32.v nvs)})
-	 (requires (fun h0 -> 
-	   B.live h0 e /\ B.live h0 vs /\ B.freeable vs /\
+	 (requires (fun h0 ->
+	   // hash_buf_allocated h0 (B.gsub vs 0ul nelts) /\
+	   B.live h0 e /\ B.freeable e /\ 
+	   B.live h0 vs /\ B.freeable vs /\
 	   B.live h0 (reveal mt) /\ B.disjoint (reveal mt) vs))
-	 (ensures (fun h0 ivs h1 -> 
+	 (ensures (fun h0 ivs h1 ->
+	   // memory safety
+	   // hash_buf_allocated h1 (B.gsub ivs 0ul (nelts + 1ul)) /\
 	   B.live h1 ivs /\ B.freeable ivs /\
 	   modifies (loc_union (loc_buffer ivs) (loc_addr_of_buffer vs)) h0 h1 /\
 	   B.disjoint (reveal mt) ivs))
+	   // correctness
+	   // High.insert_values 
+	   //   (hashes_as_seq h0 (B.gsub vs 0ul nelts))
+	   //   (B.as_seq h0 e) =
+	   // hashes_as_seq h1 (B.gsub ivs 0ul (nelts + 1ul))))
 #set-options "--z3rlimit 20"
 let insert_values mt nelts nvs nvsz vs e =
   if nelts = nvs
@@ -423,7 +497,10 @@ let insert_values mt nelts nvs nvsz vs e =
        // init_hashes_partial nelts (nelts + 1ul) ivs;
        B.free vs;
        ivs)
-  else (B.upd vs nelts e; vs)
+  else (B.upd vs nelts e;
+       // let hh0 = HST.get () in
+       // hash_buf_allocated_gsub_gsub hh0 (B.gsub vs 0ul (nelts + 1ul)) nelts (nelts + 1ul);
+       vs)
 
 val copy_hash: 
   src:vhash -> dst:vhash -> 
@@ -505,7 +582,7 @@ val insert:
 	   hash_buf_disjoint h0 iroots /\
 	   hash_buf_disjoint_ext h0 iroots iroots /\
 	   
-	   B.live h0 e /\
+	   B.live h0 e /\ B.freeable e /\
 	   B.disjoint iroots e /\
 	   hash_buf_disjoint_ext h0 iroots e /\
 	   hash_buf_disjoint_ext h0 iroots values /\
@@ -556,15 +633,6 @@ let rec merkle_root_of_iroots nirs irs acc =
        assert (B.live hh1 (B.get hh1 irs 0));
        hash_from_hashes (B.index irs 0ul) acc acc)
 
-val uint32_num_iroots_of:
-  sz:erased nat{reveal sz <= U32.n} -> 
-  n:uint32_t{U32.v n < pow2 (reveal sz)} ->
-  Tot (nirs:uint32_t{U32.v nirs <= reveal sz}) 
-       (decreases (U32.v n))
-let rec uint32_num_iroots_of sz n =
-  if n = 0ul then 0ul
-  else (n % 2ul + uint32_num_iroots_of (hide (reveal sz - 1)) (n / 2ul))
-
 val get_root:
   mt:mt_ptr -> rt:vhash ->
   HST.ST unit
@@ -581,7 +649,7 @@ let get_root mt rt =
   let mtv = B.index mt 0ul in
   let nelts = MT?.nelts mtv in
   let irs = MT?.iroots mtv in
-  let nirs = uint32_num_iroots_of (hide 32) nelts in
+  let nirs = uint32_num_of_ones (hide 32) nelts in
   merkle_root_of_iroots nirs irs rt
 
 /// Freeing the Merkle tree

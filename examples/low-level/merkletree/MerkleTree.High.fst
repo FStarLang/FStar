@@ -205,6 +205,11 @@ let not_pow2_floor_ceil n =
   pow2_le_compat_inv fl cl;
   pow2_lt_compat_inv (cl - 1) (fl + 1)
 
+val num_of_ones: nelts:nat -> GTot nat
+let rec num_of_ones nelts =
+  if nelts = 0 then 0
+  else 1 + num_of_ones (nelts - pow2 (pow2_floor nelts))
+
 /// Invariants between internal roots and values
 
 type hash_seq_pow2 = hs:hash_seq{is_pow2 (S.length hs)}
@@ -230,14 +235,9 @@ let merkle_root_of_pow2_inv hs1 hs2 =
   assert (S.length (S.append hs1 hs2) / 2 = S.length hs1);
   lemma_split_append hs1 hs2
 
-val num_iroots_of: nelts:nat -> GTot nat
-let rec num_iroots_of nelts =
-  if nelts = 0 then 0
-  else 1 + num_iroots_of (nelts - pow2 (pow2_floor nelts))
-
 val iroots_of_hashes:
   hs:hash_seq -> 
-  GTot (iroots:hash_seq{S.length iroots = num_iroots_of (S.length hs)})
+  GTot (iroots:hash_seq{S.length iroots = num_of_ones (S.length hs)})
        (decreases (S.length hs))
 let rec iroots_of_hashes hs =
   if S.length hs = 0 then hs
