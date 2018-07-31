@@ -5258,11 +5258,15 @@ let (join_goals :
                 | (gamma,r1,r2) ->
                     let t1 =
                       let uu____9650 =
-                        FStar_TypeChecker_Env.binders_of_bindings r1  in
+                        FStar_TypeChecker_Env.binders_of_bindings
+                          (FStar_List.rev r1)
+                         in
                       close_forall_no_univs1 uu____9650 phi1  in
                     let t2 =
                       let uu____9660 =
-                        FStar_TypeChecker_Env.binders_of_bindings r2  in
+                        FStar_TypeChecker_Env.binders_of_bindings
+                          (FStar_List.rev r2)
+                         in
                       close_forall_no_univs1 uu____9660 phi2  in
                     let uu____9669 =
                       set_solution g1 FStar_Syntax_Util.exp_unit  in
