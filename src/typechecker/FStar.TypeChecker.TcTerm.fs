@@ -1737,13 +1737,15 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         raise_error (Errors.Fatal_MismatchedPatternType, msg) p0.p
     in
     let expected_pat_typ env pos scrutinee_t : typ  =
-        let rec aux t =
+        let rec aux norm t =
             let t = U.unrefine t in
             let head, args = U.head_and_args t in
             match (SS.compress head).n with
             | Tm_uinst ({n=Tm_fvar f}, us) -> unfold_once t f us args
             | Tm_fvar f -> unfold_once t f [] args
-            | _ -> t
+            | _ ->
+              if norm then t
+              else aux true (N.normalize [Env.HNF; Env.Unmeta; Env.Unascribe; Env.UnfoldUntil delta_constant] env t)
         and unfold_once t f us args =
             if Env.is_type_constructor env f.fv_name.v
             then t
@@ -1753,9 +1755,9 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                    let _, head_def = Env.inst_tscheme_with head_def_ts us in
                    let t' = S.mk_Tm_app head_def args None t.pos in
                    let t' = N.normalize [Env.Beta; Env.Iota] env t' in
-                   aux t'
+                   aux false t'
         in
-        aux (N.normalize [Env.Beta;Env.Iota] env scrutinee_t)
+        aux false (N.normalize [Env.Beta;Env.Iota] env scrutinee_t)
     in
     let pat_typ_ok env pat_t scrutinee_t : guard_t =
        if Env.debug env <| Options.Other "Patterns"
