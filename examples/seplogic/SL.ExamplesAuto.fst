@@ -100,11 +100,6 @@ let sort_sl (a:Type) (vm:vmap a string) (xs:list var) : Tot (list var) =
     (fun x y -> FStar.String.compare (select_extra y vm)
                                      (select_extra x vm)) xs
 
-let sort_sl (a:Type) (vm:vmap a string) (xs:list var) : Tot (list var) =
-  List.Tot.sortWith #var
-    (fun x y -> FStar.String.compare (select_extra y vm)
-                                     (select_extra x vm)) xs
-
 let sort_sl_correct : permute_correct sort_sl =
   fun #a m vm xs -> sortWith_correct (fun x y -> FStar.String.compare (select_extra y vm) (select_extra x vm)) #a m vm xs
 
