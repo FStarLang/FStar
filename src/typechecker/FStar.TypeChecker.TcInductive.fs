@@ -372,7 +372,7 @@ and ty_nested_positive_in_inductive (ty_lid:lident) (ilid:lident) (us:universes)
     else
       //TODO: is there a better way to get the number of binders of the inductive?
       //note that num_ibs gives us only the type parameters, and not inductives, which is what we need since we will substitute them in the data constructor type
-      let num_ibs = num_inductive_ty_params env ilid in
+      let num_ibs = Option.get (num_inductive_ty_params env ilid) in
       debug_log env ("Checking nested positivity, number of type parameters is " ^ (string_of_int num_ibs) ^ ", also adding to the memo table");
       //update the memo table with the inductive name and the args, note we keep only the parameters and not indices
       unfolded := !unfolded @ [ilid, fst (List.splitAt num_ibs args)];

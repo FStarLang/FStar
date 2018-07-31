@@ -1,5 +1,5 @@
 [
-  "™®\u0014äÆÖıò¯{ÿ˝Ì\u0001˛Õ",
+  "—_nåç√˙bH»v=äÇÆZ",
   [
     [
       "TwoPhaseTC.conjunction_monoid",
@@ -146,6 +146,19 @@
       "fb67d465d3b12bf458f27ed21ef0b848"
     ],
     [
+      "TwoPhaseTC.foo_1451",
+      1,
+      0,
+      0,
+      [
+        "@query", "constructor_distinct_BoxBool",
+        "constructor_distinct_BoxInt", "equation_TwoPhaseTC.bar_1451",
+        "projection_inverse_FStar.Pervasives.Native.Some_v"
+      ],
+      0,
+      "e6c7720b0fe04b8d80d7343b300f150e"
+    ],
+    [
       "TwoPhaseTC.false_elim",
       2,
       0,
@@ -156,7 +169,7 @@
         "refinement_interpretation_TwoPhaseTC_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
       ],
       0,
-      "a715eacfe7af6098032b95e504a9f311"
+      "198b26e7c59f5a39075df36eb5330c32"
     ],
     [
       "TwoPhaseTC.f12",
@@ -165,7 +178,7 @@
       0,
       [ "@query" ],
       0,
-      "7c977aa1f885b2df9cc815bfe8a4ba9e"
+      "2ca1b04fe50e4767faf19568c95d5a2b"
     ],
     [
       "TwoPhaseTC.f13",
@@ -182,7 +195,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2c61921802873eff428a54a6bea6cd1d"
+      "34e138a0632e298f3132c42d39023085"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__p",
@@ -194,7 +207,7 @@
         "projection_inverse_TwoPhaseTC.ExIntro_a"
       ],
       0,
-      "b583b62620fea703332d44eaaa310215"
+      "725b819a2d093e65f33923644739f795"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__x",
@@ -206,7 +219,7 @@
         "projection_inverse_TwoPhaseTC.ExIntro_a"
       ],
       0,
-      "b1ac7238df68c1d44086a367a5cd3841"
+      "b4768eb1c8217e6cb037125e1029adbb"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item___3",
@@ -221,7 +234,7 @@
         "token_correspondence_TwoPhaseTC.__proj__ExIntro__item__p"
       ],
       0,
-      "e1373a66900d77a852c24c5ab6797b1d"
+      "bff30d8760ee792c48d9ded0431ca3a3"
     ]
   ]
 ]

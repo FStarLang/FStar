@@ -397,9 +397,9 @@ atomicPattern:
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
   | UNDERSCORE
-      { mk_pattern PatWild (rhs parseState 1) }
+      { mk_pattern (PatWild None) (rhs parseState 1) }
   | HASH UNDERSCORE
-      { mk_pattern (PatVar (gen (rhs2 parseState 1 2), Some Implicit)) (rhs parseState 1) }
+      { mk_pattern (PatWild (Some Implicit)) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
   | qual_id=aqualified(lident)
@@ -502,7 +502,7 @@ tvar:
 /*                            Types and terms                                 */
 /******************************************************************************/
 
-thunk(X): | t=X { mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
 
 ascribeTyp:
   | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(atomicTerm) {tactic}) { t, tacopt }

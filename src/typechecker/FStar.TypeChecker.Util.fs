@@ -146,74 +146,74 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 (* Utilities on patterns  *)
 (************************************************************************)
 
-let decorate_pattern env p exp =
-    let qq = p in
-    let rec aux p e : pat  =
-        let pkg q = withinfo q p.p in
-        let e = U.unmeta e in
-        match p.v, e.n with
-            | _, Tm_uinst(e, _) -> aux p e
+//let decorate_pattern env p exp =
+//    let qq = p in
+//    let rec aux p e : pat  =
+//        let pkg q = withinfo q p.p in
+//        let e = U.unmeta e in
+//        match p.v, e.n with
+//            | _, Tm_uinst(e, _) -> aux p e
 
-            | Pat_constant _, _ ->
-              pkg p.v
+//            | Pat_constant _, _ ->
+//              pkg p.v
 
-            | Pat_var x, Tm_name y ->
-              if not (bv_eq x y)
-              then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
-              if Env.debug env <| Options.Other "Pat"
-              then BU.print2 "Pattern variable %s introduced at type %s\n" (Print.bv_to_string x) (Normalize.term_to_string env y.sort);
-              let s = Normalize.normalize [Env.Beta] env y.sort in
-              let x = {x with sort=s} in
-              pkg (Pat_var x)
+//            | Pat_var x, Tm_name y ->
+//              if not (bv_eq x y)
+//              then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
+//              if Env.debug env <| Options.Other "Pat"
+//              then BU.print2 "Pattern variable %s introduced at type %s\n" (Print.bv_to_string x) (Normalize.term_to_string env y.sort);
+//              let s = Normalize.normalize [Env.Beta] env y.sort in
+//              let x = {x with sort=s} in
+//              pkg (Pat_var x)
 
-            | Pat_wild x, Tm_name y ->
-              if bv_eq x y |> not
-              then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
-              let s = Normalize.normalize [Env.Beta] env y.sort in
-              let x = {x with sort=s} in
-              pkg (Pat_wild x)
+//            | Pat_wild x, Tm_name y ->
+//              if bv_eq x y |> not
+//              then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
+//              let s = Normalize.normalize [Env.Beta] env y.sort in
+//              let x = {x with sort=s} in
+//              pkg (Pat_wild x)
 
-            | Pat_dot_term(x, _), _ ->
-              pkg (Pat_dot_term(x, e))
+//            | Pat_dot_term(x, _), _ ->
+//              pkg (Pat_dot_term(x, e))
 
-            | Pat_cons(fv, []), Tm_fvar fv' ->
-              if not (Syntax.fv_eq fv fv')
-              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
-              pkg (Pat_cons(fv', []))
+//            | Pat_cons(fv, []), Tm_fvar fv' ->
+//              if not (Syntax.fv_eq fv fv')
+//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
+//              pkg (Pat_cons(fv', []))
 
-            | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args)
-            | Pat_cons(fv, argpats), Tm_app({n=Tm_uinst({n=Tm_fvar(fv')}, _)}, args) ->
+//            | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args)
+//            | Pat_cons(fv, argpats), Tm_app({n=Tm_uinst({n=Tm_fvar(fv')}, _)}, args) ->
 
-              if fv_eq fv fv' |> not
-              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
+//              if fv_eq fv fv' |> not
+//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
 
-              let fv = fv' in
-              let rec match_args matched_pats args argpats = match args, argpats with
-                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats))
-                | arg::args, (argpat, _)::argpats ->
-                  begin match arg, argpat.v with
-                        | (e, Some (Implicit true)), Pat_dot_term _ ->
-                          let x = Syntax.new_bv (Some p.p) S.tun in
-                          let q = withinfo (Pat_dot_term(x, e)) p.p in
-                          match_args ((q, true)::matched_pats) args argpats
+//              let fv = fv' in
+//              let rec match_args matched_pats args argpats = match args, argpats with
+//                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats))
+//                | arg::args, (argpat, _)::argpats ->
+//                  begin match arg, argpat.v with
+//                        | (e, Some (Implicit true)), Pat_dot_term _ ->
+//                          let x = Syntax.new_bv (Some p.p) S.tun in
+//                          let q = withinfo (Pat_dot_term(x, e)) p.p in
+//                          match_args ((q, true)::matched_pats) args argpats
 
-                        | (e, imp), _ ->
-                          let pat = aux argpat e, S.is_implicit imp in
-                          match_args (pat::matched_pats) args argpats
-                 end
+//                        | (e, imp), _ ->
+//                          let pat = aux argpat e, S.is_implicit imp in
+//                          match_args (pat::matched_pats) args argpats
+//                 end
 
-                | _ -> failwith (BU.format2 "Unexpected number of pattern arguments: \n\t%s\n\t%s\n" (Print.pat_to_string p) (Print.term_to_string e)) in
+//                | _ -> failwith (BU.format2 "Unexpected number of pattern arguments: \n\t%s\n\t%s\n" (Print.pat_to_string p) (Print.term_to_string e)) in
 
-              match_args [] args argpats
+//              match_args [] args argpats
 
-           | _ ->
-            failwith (BU.format3
-                            "(%s) Impossible: pattern to decorate is %s; expression is %s\n"
-                            (Range.string_of_range qq.p)
-                            (Print.pat_to_string qq)
-                            (Print.term_to_string exp))
-    in
-    aux p exp
+//           | _ ->
+//            failwith (BU.format3
+//                            "(%s) Impossible: pattern to decorate is %s; expression is %s\n"
+//                            (Range.string_of_range qq.p)
+//                            (Print.pat_to_string qq)
+//                            (Print.term_to_string exp))
+//    in
+//    aux p exp
 
  let rec decorated_pattern_as_term (pat:pat) : list<bv> * term =
     let mk f : term = mk f None pat.p in
@@ -586,14 +586,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             | _ -> aux()
           in
           let try_simplify () =
-            let rec maybe_close t x c =
-                match (N.unfold_whnf env t).n with
-                | Tm_refine(y, _) ->
-                  maybe_close y.sort x c
-                | Tm_fvar fv
-                    when S.fv_eq_lid fv C.unit_lid ->
-                  close_comp env [x] c
-                | _ -> c
+            let maybe_close t x c =
+              let t = N.normalize_refinement N.whnf_steps env t in
+              match t.n with
+              | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid -> close_comp env [x] c
+              | _ -> c
             in
             if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
             then if U.is_tot_or_gtot_comp c1
@@ -1098,8 +1095,8 @@ let maybe_instantiate (env:Env.env) e t =
   then e, torig, Env.trivial_guard
   else begin
        if Env.debug env Options.High then
-         BU.print2 "maybe_instantiate: starting check for (%s) of type (%s)\n"
-                 (Print.term_to_string e) (Print.term_to_string t);
+         BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
+                 (Print.term_to_string e) (Print.term_to_string t) (FStar.Common.string_of_option Print.term_to_string (Env.expected_typ env));
        let number_of_implicits t =
             let formals, _ = U.arrow_formals t in
             let n_implicits =

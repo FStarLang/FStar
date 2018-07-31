@@ -104,6 +104,7 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_bool true  -> C_True
     | FStar.Const.Const_bool false -> C_False
     | FStar.Const.Const_string (s, _) -> C_String s
+    | FStar.Const.Const_range r -> C_Range r
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 let rec inspect_ln (t:term) : term_view =
@@ -236,6 +237,7 @@ let pack_const (c:vconst) : sconst =
     | C_True    -> C.Const_bool true
     | C_False   -> C.Const_bool false
     | C_String s -> C.Const_string (s, Range.dummyRange)
+    | C_Range  r -> C.Const_range r
 
 // TODO: pass in range?
 let pack_ln (tv:term_view) : term =

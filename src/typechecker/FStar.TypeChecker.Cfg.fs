@@ -762,7 +762,26 @@ let equality_ops : BU.psmap<primitive_step> =
 
     prim_from_list [propositional_equality; hetero_propositional_equality]
 
+(* Profiling the time each different primitive step consumes *)
+let primop_time_map : BU.smap<int> = BU.smap_create 50
 
+let primop_time_reset () =
+    BU.smap_clear primop_time_map
+
+let primop_time_count (nm : string) (ms : int) : unit =
+    match BU.smap_try_find primop_time_map nm with
+    | None     -> BU.smap_add primop_time_map nm ms
+    | Some ms0 -> BU.smap_add primop_time_map nm (ms0 + ms)
+
+let fixto n s =
+    if String.length s < n
+    then (make (n - String.length s) ' ') ^ s
+    else s
+
+let primop_time_report () : string =
+    let pairs = BU.smap_fold primop_time_map (fun nm ms rest -> (nm, ms)::rest) [] in
+    let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
+    List.fold_right (fun (nm, ms) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (BU.string_of_int ms)) nm) ^ rest) pairs ""
 
 let plugins =
   let plugins = BU.mk_ref [] in

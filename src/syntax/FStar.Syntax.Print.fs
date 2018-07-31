@@ -391,7 +391,10 @@ and pat_to_string x =
       then U.format2 "%s:%s" (bv_to_string x) (term_to_string x.sort)
       else bv_to_string x
     | Pat_constant c -> const_to_string c
-    | Pat_wild x -> if (Options.print_real_names()) then "Pat_wild " ^ (bv_to_string x) else "_"
+    | Pat_wild x ->
+      if Options.print_bound_var_types()
+      then U.format2 "_wild_%s:%s" (bv_to_string x) (term_to_string x.sort)
+      else bv_to_string x
 
 
 and lbs_to_string quals lbs =
@@ -471,7 +474,7 @@ and arg_to_string = function
 
 and args_to_string args =
     let args = if (Options.print_implicits()) then args else filter_imp args in
-    args |> List.map arg_to_string |> String.concat "; "
+    args |> List.map arg_to_string |> String.concat " "
 
 and comp_to_string' env c =
   if Options.ugly ()

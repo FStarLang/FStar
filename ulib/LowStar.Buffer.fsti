@@ -1702,6 +1702,22 @@ val free
     HS.live_region h1 (frameOf b)
   ))
 
+val freeable_length (#a: Type) (b: buffer a) : Lemma
+  (requires (freeable b))
+  (ensures (length b > 0))
+  [SMTPat (freeable b)]
+
+val freeable_disjoint (#a1 #a2: Type) (b1: buffer a1) (b2: buffer a2) : Lemma
+  (requires (freeable b1 /\ length b2 > 0 /\ disjoint b1 b2))
+  (ensures (frameOf b1 <> frameOf b2 \/ as_addr b1 <> as_addr b2))
+
+let freeable_disjoint' (#a1 #a2: Type) (b1: buffer a1) (b2: buffer a2) : Lemma
+  (requires (freeable b1 /\ length b2 > 0 /\ disjoint b1 b2))
+  (ensures (loc_disjoint (loc_addr_of_buffer b1) (loc_addr_of_buffer b2)))
+  [SMTPat (freeable b1); SMTPat (disjoint b1 b2)]
+= freeable_disjoint b1 b2
+
+
 /// Allocation. This is the common postcondition of all allocation
 /// operators, which tells that the resulting buffer is fresh, and
 /// specifies its initial contents.

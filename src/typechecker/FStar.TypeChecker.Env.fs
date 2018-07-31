@@ -926,8 +926,10 @@ let is_type_constructor env lid =
 
 let num_inductive_ty_params env lid =
   match lookup_qname env lid with
-  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _) }, _), _) -> List.length tps
-  | _ -> raise_error (name_not_found lid) (range_of_lid lid)
+  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _) }, _), _) ->
+    Some (List.length tps)
+  | _ ->
+    None
 
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
