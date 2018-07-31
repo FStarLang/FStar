@@ -134,7 +134,7 @@
         "typing_FStar.Pervasives.Native.snd", "typing_NatHeap.ref"
       ],
       0,
-      "28ce279e542dc63833a23101707cc539"
+      "ffd37e361dd1dc0b63bdbe173ccc5428"
     ],
     [
       "ImmutableST.read",
@@ -159,7 +159,7 @@
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0,
-      "8f30b37332f6cc9881a1c6061a89e7a5"
+      "531506271ab83abccb682492c8ad8e92"
     ],
     [
       "ImmutableST.write",
@@ -177,7 +177,7 @@
       1,
       [ "@query", "equation_ImmutableST.heap_rel" ],
       0,
-      "879978683e25eb371efc39db27ad10ad"
+      "146ecfcca09b0a8bb489fb818dfdd6e8"
     ],
     [
       "ImmutableST.write_nop",
@@ -225,7 +225,7 @@
       "09a6a11fc0b34b11d32f84385a0e5825"
     ],
     [
-      "ImmutableST.10427",
+      "ImmutableST.10388",
       1,
       2,
       1,

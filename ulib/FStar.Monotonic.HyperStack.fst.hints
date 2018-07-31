@@ -316,7 +316,7 @@
         "typing_FStar.Monotonic.HyperStack.is_stack_region"
       ],
       0,
-      "6a6c98bacf75bb583b27a44f7244fddc"
+      "20658422fdcd080678646ea0d96f6950"
     ],
     [
       "FStar.Monotonic.HyperStack.popped",
@@ -391,7 +391,7 @@
         "typing_FStar.Set.singleton"
       ],
       0,
-      "979eedb6e96556ecab19ecdaf1c99096"
+      "9a746591c36c0b439995b93a71ea0317"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_as_ref_inj",
@@ -1005,7 +1005,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "57c6a51149d7f66cfda2ad7231ccd828"
+      "82e8538dbd421ab001052731ebe3dab0"
     ],
     [
       "FStar.Monotonic.HyperStack.modifies_drop_tip",
@@ -2411,7 +2411,7 @@
         "typing_FStar.Set.singleton"
       ],
       0,
-      "0e90e262ecfd14ba5666b36369203db5"
+      "f26f388821b450fcb20ea968f4fdd8cc"
     ],
     [
       "FStar.Monotonic.HyperStack.upd",

@@ -51,6 +51,7 @@ val normalize:            steps -> Env.env -> term -> term
 val normalize_universe:   Env.env -> universe -> universe
 val normalize_comp:       steps -> Env.env -> comp -> comp
 val normalize_refinement: steps -> Env.env -> typ -> typ
+val whnf_steps: list<step>
 val unfold_whnf':         steps -> Env.env -> term -> term
 val unfold_whnf:          Env.env -> term -> term
 val reduce_uvar_solutions:Env.env -> term -> term
