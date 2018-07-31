@@ -586,14 +586,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             | _ -> aux()
           in
           let try_simplify () =
-            let rec maybe_close t x c =
-                match (N.unfold_whnf env t).n with
-                | Tm_refine(y, _) ->
-                  maybe_close y.sort x c
-                | Tm_fvar fv
-                    when S.fv_eq_lid fv C.unit_lid ->
-                  close_comp env [x] c
-                | _ -> c
+            let maybe_close t x c =
+              let t = N.normalize_refinement N.whnf_steps env t in
+              match t.n with
+              | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid -> close_comp env [x] c
+              | _ -> c
             in
             if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
             then if U.is_tot_or_gtot_comp c1
@@ -1098,8 +1095,8 @@ let maybe_instantiate (env:Env.env) e t =
   then e, torig, Env.trivial_guard
   else begin
        if Env.debug env Options.High then
-         BU.print2 "maybe_instantiate: starting check for (%s) of type (%s)\n"
-                 (Print.term_to_string e) (Print.term_to_string t);
+         BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
+                 (Print.term_to_string e) (Print.term_to_string t) (FStar.Common.string_of_option Print.term_to_string (Env.expected_typ env));
        let number_of_implicits t =
             let formals, _ = U.arrow_formals t in
             let n_implicits =

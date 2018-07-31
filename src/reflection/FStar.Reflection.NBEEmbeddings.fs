@@ -199,6 +199,7 @@ let e_const =
         | C_False    -> mkConstruct ref_C_False.fv   [] []
         | C_Int i    -> mkConstruct ref_C_Int.fv     [] [as_arg (Constant (Int i))]
         | C_String s -> mkConstruct ref_C_String.fv  [] [as_arg (embed e_string cb s)]
+        | C_Range r  -> mkConstruct ref_C_Range.fv   [] [as_arg (embed e_range cb r)]
     in
     let unembed_const cb (t:t) : option<vconst> =
         match t with
@@ -218,6 +219,10 @@ let e_const =
         | Construct (fv, [], [(s, _)]) when S.fv_eq_lid fv ref_C_String.lid ->
             BU.bind_opt (unembed e_string cb s) (fun s ->
             Some <| C_String s)
+
+        | Construct (fv, [], [(r, _)]) when S.fv_eq_lid fv ref_C_Range.lid ->
+            BU.bind_opt (unembed e_range cb r) (fun r ->
+            Some <| C_Range r)
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded vconst: %s" (t_to_string t)));

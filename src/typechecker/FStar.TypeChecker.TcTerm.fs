@@ -325,11 +325,16 @@ let wrap_guard_with_tactic_opt topt g =
 let rec tc_term env e =
     let r, ms = BU.record_time (fun () ->
                     tc_maybe_toplevel_term ({env with top_level=false}) e) in
-    if Env.debug env Options.Medium then
+    if Env.debug env Options.Medium then begin
         BU.print4 "(%s) tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
                                                         (Print.term_to_string e)
                                                         (Print.tag_of_term (SS.compress e))
                                                         (string_of_int ms);
+        let e, _ , _ = r in
+        BU.print3 "(%s) Result is: %s (%s)\n" (Range.string_of_range <| Env.get_range env)
+                                              (Print.term_to_string e)
+                                              (Print.tag_of_term (SS.compress e))
+    end;
     r
 
 and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked and elaborated version of e            *)

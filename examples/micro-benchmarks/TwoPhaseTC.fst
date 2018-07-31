@@ -99,6 +99,13 @@ val f21 : f20 f19 (fun (p:f19) -> unit) -> Tot unit
   let ExIntro IP hp = h in
   ()
 
+(*
+ * #1451
+ *)
+let bar_1451 (#a:Type) (l1:option _) (l2:option a) = ~ (l1 === l2)
+
+let foo_1451 () = assert (bar_1451 (Some 0) (Some true))
+
 
 (* This gives error in reguaring ... try with printing phase 1 message, and with --ugly
 open FStar.All

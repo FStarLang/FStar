@@ -16,6 +16,7 @@ type vconst =
     | C_True
     | C_False
     | C_String of string
+    | C_Range of Range.range
 
 type pattern =
     | Pat_Constant of vconst
@@ -188,6 +189,7 @@ let ref_C_True   = fstar_refl_data_const "C_True"
 let ref_C_False  = fstar_refl_data_const "C_False"
 let ref_C_Int    = fstar_refl_data_const "C_Int"
 let ref_C_String = fstar_refl_data_const "C_String"
+let ref_C_Range  = fstar_refl_data_const "C_Range"
 
 (* pattern *)
 let ref_Pat_Constant = fstar_refl_data_const "Pat_Constant"

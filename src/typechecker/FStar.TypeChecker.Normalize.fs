@@ -595,7 +595,15 @@ let reduce_primops norm_cb cfg env tm =
                                             then mk_psc_subst cfg env
                                             else []
                   } in
-                  match prim_step.interpretation psc norm_cb args_1 with
+                  let r =
+                      if false
+                      then begin let (r, ms) = BU.record_time (fun () -> prim_step.interpretation psc norm_cb args_1) in
+                                 primop_time_count (Ident.string_of_lid fv.fv_name.v) ms;
+                                 r
+                           end
+                      else prim_step.interpretation psc norm_cb args_1
+                  in
+                  match r with
                   | None ->
                       log_primops cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
                       tm
@@ -2423,8 +2431,10 @@ let normalize_refinement steps env t0 =
        | _ -> t in
    aux t
 
-let unfold_whnf' steps env t = normalize (steps@[Primops; Weak; HNF; UnfoldUntil delta_constant; Beta]) env t
+let whnf_steps = [Primops; Weak; HNF; UnfoldUntil delta_constant; Beta]
+let unfold_whnf' steps env t = normalize (steps@whnf_steps) env t
 let unfold_whnf  env t = unfold_whnf' [] env t
+
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
               @[Beta; DoNotUnfoldPureLets; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])

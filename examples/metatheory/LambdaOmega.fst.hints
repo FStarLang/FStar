@@ -719,7 +719,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "26296678ee86f6f94625a538a8757d8f"
+      "e3ef83945316899bf911582dc4f9e347"
     ],
     [
       "LambdaOmega.tsub_lam_comp",
@@ -764,7 +764,7 @@
         "token_correspondence_LambdaOmega.tsub_lam"
       ],
       0,
-      "0436795858c0ea06a0770096bd0809ac"
+      "7c1852783e3f816996d489dc30d3d463"
     ],
     [
       "LambdaOmega.tsubst_id",
