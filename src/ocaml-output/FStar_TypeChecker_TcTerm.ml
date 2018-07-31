@@ -6090,13 +6090,15 @@ and (tc_pat :
                            in
                         let t'1 =
                           FStar_TypeChecker_Normalize.normalize
-                            [FStar_TypeChecker_Env.Beta] env1 t'
+                            [FStar_TypeChecker_Env.Beta;
+                            FStar_TypeChecker_Env.Iota] env1 t'
                            in
                         aux t'1))
            in
           let uu____16242 =
             FStar_TypeChecker_Normalize.normalize
-              [FStar_TypeChecker_Env.Beta] env1 scrutinee_t
+              [FStar_TypeChecker_Env.Beta; FStar_TypeChecker_Env.Iota] env1
+              scrutinee_t
              in
           aux uu____16242  in
         let pat_typ_ok env1 pat_t1 scrutinee_t =
