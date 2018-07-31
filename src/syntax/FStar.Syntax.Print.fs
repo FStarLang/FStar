@@ -471,7 +471,7 @@ and arg_to_string = function
 
 and args_to_string args =
     let args = if (Options.print_implicits()) then args else filter_imp args in
-    args |> List.map arg_to_string |> String.concat "; "
+    args |> List.map arg_to_string |> String.concat " "
 
 and comp_to_string' env c =
   if Options.ugly ()
