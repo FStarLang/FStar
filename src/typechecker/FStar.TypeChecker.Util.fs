@@ -586,14 +586,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             | _ -> aux()
           in
           let try_simplify () =
-            let rec maybe_close t x c =
-                match (N.unfold_whnf env t).n with
-                | Tm_refine(y, _) ->
-                  maybe_close y.sort x c
-                | Tm_fvar fv
-                    when S.fv_eq_lid fv C.unit_lid ->
-                  close_comp env [x] c
-                | _ -> c
+            let maybe_close t x c =
+              let t = N.normalize_refinement N.whnf_steps env t in
+              match t.n with
+              | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid -> close_comp env [x] c
+              | _ -> c
             in
             if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
             then if U.is_tot_or_gtot_comp c1
