@@ -1752,10 +1752,10 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                  | Some head_def_ts ->
                    let _, head_def = Env.inst_tscheme_with head_def_ts us in
                    let t' = S.mk_Tm_app head_def args None t.pos in
-                   let t' = N.normalize [Env.Beta] env t' in
+                   let t' = N.normalize [Env.Beta; Env.Iota] env t' in
                    aux t'
         in
-        aux (N.normalize [Env.Beta] env scrutinee_t)
+        aux (N.normalize [Env.Beta;Env.Iota] env scrutinee_t)
     in
     let pat_typ_ok env pat_t scrutinee_t : guard_t =
        if Env.debug env <| Options.Other "Patterns"
