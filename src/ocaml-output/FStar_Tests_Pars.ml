@@ -94,7 +94,8 @@ let (init_once : unit -> unit) =
     (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env;
     (let uu____224 =
        let uu____229 = FStar_Options.prims ()  in
-       let uu____230 = FStar_Syntax_DsEnv.empty_env ()  in
+       let uu____230 =
+         FStar_Syntax_DsEnv.empty_env FStar_Parser_Dep.empty_deps  in
        parse_mod uu____229 uu____230  in
      match uu____224 with
      | (dsenv1,prims_mod) ->

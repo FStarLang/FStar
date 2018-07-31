@@ -2266,7 +2266,7 @@ let (initial_env :
                     FStar_Util.mk_ref
                       FStar_TypeChecker_Common.id_info_table_empty
                      in
-                  let uu____10167 = FStar_Syntax_DsEnv.empty_env ()  in
+                  let uu____10167 = FStar_Syntax_DsEnv.empty_env deps  in
                   {
                     solver;
                     range = FStar_Range.dummyRange;

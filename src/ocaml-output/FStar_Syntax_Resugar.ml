@@ -2552,7 +2552,8 @@ let (resugar_sigelt' :
       | FStar_Syntax_Syntax.Sig_main uu____8322 ->
           FStar_Pervasives_Native.None
   
-let (empty_env : FStar_Syntax_DsEnv.env) = FStar_Syntax_DsEnv.empty_env () 
+let (empty_env : FStar_Syntax_DsEnv.env) =
+  FStar_Syntax_DsEnv.empty_env FStar_Parser_Dep.empty_deps 
 let noenv : 'a . (FStar_Syntax_DsEnv.env -> 'a) -> 'a = fun f  -> f empty_env 
 let (resugar_term : FStar_Syntax_Syntax.term -> FStar_Parser_AST.term) =
   fun t  -> let uu____8343 = noenv resugar_term'  in uu____8343 t 
