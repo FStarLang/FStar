@@ -2463,6 +2463,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     let env = Env.push_namespace env lid in
     env, []
 
+  | Friend lid ->
+
   | Include lid ->
     let env = Env.push_include env lid in
     env, []
