@@ -1176,4 +1176,4 @@ let print deps =
       assert false
 
 let module_has_interface (Mk (_, fsmap, _)) module_name =
-    has_interface fsmap (lowercase_module_name (Ident.string_of_lid module_name))
+    has_interface fsmap (String.lowercase (Ident.string_of_lid module_name))
