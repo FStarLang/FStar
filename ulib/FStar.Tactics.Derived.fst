@@ -471,7 +471,7 @@ let mapply (t : term) : Tac unit =
 
 private
 let dump_admit () : Tac unit =
-  clear_top (); // gets rid of the unit binder
+  //clear_top (); // gets rid of the unit binder
   admit1 ()
 
 assume val admit_goal : #a:Type -> unit ->
