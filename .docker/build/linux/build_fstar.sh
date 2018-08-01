@@ -169,7 +169,8 @@ function build_fstar() {
 
         fetch_kremlin
 
-        if [! make -C src -j $threads utest-prelude]; then
+        if ! make -C src -j $threads utest-prelude
+        then
             echo Warm-up failed
             echo Failure >$result_file
         else
