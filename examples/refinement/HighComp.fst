@@ -1,23 +1,43 @@
 module HighComp
 
 module U32 = FStar.UInt32
-  
+
+
+
 type mint = U32.t
 type state = mint * mint
 //type state = int
 
 // High-level specs live in [comp]
 let comp a = state -> M (a * state)
+
+type hwp 'a = state -> ('a * state -> Type) -> Type
+
 // [comp] type with wp 
-let comp_wp (a:Type) (wp : state -> (a * state -> Type) -> Type)  = s0:state -> PURE (a * state) (wp s0)
+type comp_wp 'a (wp : hwp 'a) = s0:state -> PURE ('a * state) (wp s0)
+
 let comp_p (a:Type) (pre : state -> Type) (post : state -> a * state -> Type) : GTot Type  = 
     s0:state -> Pure (a * state) (pre s0) (post s0)
+
+// can I get these for free?
+let return_wp (x : 'a) : hwp 'a = fun s0 post -> post (x, s0) 
+
+let bind_wp (wp1 : state -> ('a * state -> Type) -> Type) 
+            (wp2 : 'a -> state -> ('b * state -> Type) -> Type) : state -> ('b * state -> Type) -> Type = 
+            fun s0 post -> wp1 s0 (function (x, s1) -> wp2 x s1 post)
 
 val hreturn : (a:Type) -> a -> comp a
 let hreturn (a:Type) (x : a) = fun s -> (x, s)
 
+val hreturn' : (#a:Type) -> (x:a) -> comp_wp a (return_wp x)
+let hreturn' (#a:Type) (x : a) = fun s -> (x, s)
+
 val hbind : (a:Type) -> (b:Type) -> comp a -> (a -> comp b) -> comp b
 let hbind (a:Type) (b:Type) (m : comp a) (f : a -> comp b) = 
+    fun s -> let (a, s1) = m s in f a s1
+
+let hbind' (#a:Type) (#b:Type) (#wp1:hwp a) (#wp2:a -> hwp b) (m : comp_wp a wp1) (f : (x:a) -> comp_wp b (wp2 x)) :
+  comp_wp b (bind_wp wp1 wp2) = 
     fun s -> let (a, s1) = m s in f a s1
 
 val hread : i:int -> comp mint
