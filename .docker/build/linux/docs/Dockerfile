@@ -18,10 +18,12 @@ RUN rm -f commitinfofilename.json
 WORKDIR ${MYHOME}/FStar
 
 # ADD SSH KEY
+RUN mkdir -p ${MYHOME}/.ssh
+RUN chown everest ${MYHOME}/.ssh
+RUN chmod 700 ${MYHOME}/.ssh
+COPY --chown=everest id_rsa ${MYHOME}/.ssh/id_rsa
+RUN chmod 600 ${MYHOME}/.ssh/id_rsa
 RUN eval $(ssh-agent)
-COPY --chown=everest id_rsa ${MYHOME}/FStar/id_rsa
-RUN ssh-add -k ${MYHOME}/FStar/id_rsa
-RUN rm ${MYHOME}/FStar/id_rsa
 
 # Build FStar docs
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
@@ -34,4 +36,5 @@ RUN ./build.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} || true
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 
 # Remove ssh identities.
-RUN ssh-add -D
+RUN rm ${MYHOME}/.ssh/id_rsa
+RUN eval $(ssh-agent) && ssh-add -D
