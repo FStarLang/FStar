@@ -90,14 +90,52 @@ function fetch_mitls() {
     export_home MITLS "$(pwd)/mitls-fstar"
 }
 
-function build_fstar () {
-
-    if [[ -x /usr/bin/time ]]; then
-        gnutime=/usr/bin/time
-    else
-        gnutime=""
+function refresh_fstar_hints() {
+    if [ -f ".scripts/git_rm_stale_hints.sh" ]; then
+        ./.scripts/git_rm_stale_hints.sh
     fi
 
+    refresh_hints "git@github.com:FStarLang/FStar.git" "git ls-files src/ocaml-output/ | xargs git add" "regenerate hints + ocaml snapshot" "."
+}
+
+# Note: this performs an _approximate_ refresh of the hints, in the sense that
+# since the hint refreshing job takes about 80 minutes, it's very likely someone
+# merged to $CI_BRANCH in the meanwhile, which would invalidate some hints. So, we
+# reset to origin/$CI_BRANCH, take in our hints, and push. This is short enough that
+# the chances of someone merging in-between fetch and push are low.
+function refresh_hints() {
+    local remote=$1
+    local extra="$2"
+    local msg="$3"
+    local hints_dir="$4"
+
+    # Add all the hints, even those not under version control
+    find $hints_dir -iname '*.hints' -and -not -path '*/.*' -and -not -path '*/dependencies/*' | xargs git add
+
+    # Without the eval, this was doing weird stuff such as,
+    # when $2 = "git ls-files src/ocaml-output/ | xargs git add",
+    # outputting the list of files to stdout
+    eval "$extra"
+
+    git commit --allow-empty -m "[CI] $msg"
+    # Memorize that commit
+    commit=$(git rev-parse HEAD)
+    # Drop any other files that were modified as part of the build (e.g.
+    # parse.fsi)
+    git reset --hard HEAD
+    # Move to whatever is the most recent master (that most likely changed in the
+    # meantime)
+    git fetch
+    git checkout $CI_BRANCH
+    git reset --hard origin/$CI_BRANCH
+    # Silent, always-successful merge
+    export GIT_MERGE_AUTOEDIT=no
+    git merge $commit -Xtheirs
+    # Push.
+    git push $remote $CI_BRANCH
+}
+
+function build_fstar () {
     result_file=result.txt
 
     # $status_file is the name of a file that contains true if and
@@ -108,19 +146,9 @@ function build_fstar () {
     ORANGE_FILE="orange_file.txt"
     echo '' > $ORANGE_FILE
 
-    if [ ! -d ulib ]; then
-      echo "I don't seem to be in the right directory, bailing"
-      return
-    fi
-
-    if [[ $target == "uregressions-ulong" ]]; then
-        export OTHERFLAGS="--record_hints $OTHERFLAGS"
-    fi
-
     fetch_kremlin
 
-    if ! make -C src -j $threads utest-prelude
-    then
+    if [! make -C src -j $threads utest-prelude]; then
         echo Warm-up failed
         echo Failure > $result_file
         return
@@ -206,7 +234,6 @@ function build_fstar () {
             {
                 echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
                 echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >> $ORANGE_FILE;
-            }
         } &
 
         # JP: doesn't work because it leads to uint128 being verified in the wrong Z3
@@ -239,7 +266,6 @@ function build_fstar () {
             echo "F* regression succeeded"
             echo Success > $result_file
         fi
-
     fi
 }
 
@@ -248,4 +274,31 @@ export OCAMLRUNPARAM=b
 export OTHERFLAGS="--print_z3_statistics --use_hints --query_stats"
 export MAKEFLAGS="$MAKEFLAGS -Otarget"
 
-build_fstar
+if [[ -x /usr/bin/time ]]; then
+    gnutime=/usr/bin/time
+else
+    gnutime=""
+fi
+
+if [ ! -d ulib ]; then
+    echo "I don't seem to be in the right directory, bailing"
+    return
+fi
+
+if [[ $target == "uregressions" ]]; then
+    build_fstar
+elif [[ $target == "uregressions-ulong" ]]; then
+    export OTHERFLAGS="--record_hints $OTHERFLAGS"
+    build_fstar
+    refresh_fstar_hints
+elif [[ $target == "fstar-docs" ]]; then
+    # First - get fstar built
+    make -C src/ocaml-output clean
+    make -C src/ocaml-output -j $threads
+
+    # Second - run fstar with the --doc flag
+    .ci/fsdoc.sh
+else
+    echo "Invalid target"
+    echo Failure > $result_file
+fi
