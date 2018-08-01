@@ -115,8 +115,6 @@ let (goal_env : goal -> FStar_TypeChecker_Env.env) =
       FStar_TypeChecker_Env.tc_hooks =
         (uu___249_62.FStar_TypeChecker_Env.tc_hooks);
       FStar_TypeChecker_Env.dsenv = (uu___249_62.FStar_TypeChecker_Env.dsenv);
-      FStar_TypeChecker_Env.dep_graph =
-        (uu___249_62.FStar_TypeChecker_Env.dep_graph);
       FStar_TypeChecker_Env.nbe = (uu___249_62.FStar_TypeChecker_Env.nbe)
     }
   

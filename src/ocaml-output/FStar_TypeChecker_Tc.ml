@@ -106,8 +106,6 @@ let (set_hint_correlator :
               (uu___369_54.FStar_TypeChecker_Env.tc_hooks);
             FStar_TypeChecker_Env.dsenv =
               (uu___369_54.FStar_TypeChecker_Env.dsenv);
-            FStar_TypeChecker_Env.dep_graph =
-              (uu___369_54.FStar_TypeChecker_Env.dep_graph);
             FStar_TypeChecker_Env.nbe =
               (uu___369_54.FStar_TypeChecker_Env.nbe)
           }
@@ -209,8 +207,6 @@ let (set_hint_correlator :
               (uu___370_104.FStar_TypeChecker_Env.tc_hooks);
             FStar_TypeChecker_Env.dsenv =
               (uu___370_104.FStar_TypeChecker_Env.dsenv);
-            FStar_TypeChecker_Env.dep_graph =
-              (uu___370_104.FStar_TypeChecker_Env.dep_graph);
             FStar_TypeChecker_Env.nbe =
               (uu___370_104.FStar_TypeChecker_Env.nbe)
           }
@@ -1486,9 +1482,6 @@ let (tc_eff_decl :
                                                      FStar_TypeChecker_Env.dsenv
                                                        =
                                                        (uu___374_2677.FStar_TypeChecker_Env.dsenv);
-                                                     FStar_TypeChecker_Env.dep_graph
-                                                       =
-                                                       (uu___374_2677.FStar_TypeChecker_Env.dep_graph);
                                                      FStar_TypeChecker_Env.nbe
                                                        =
                                                        (uu___374_2677.FStar_TypeChecker_Env.nbe)
@@ -1826,9 +1819,6 @@ let (tc_eff_decl :
                                                        FStar_TypeChecker_Env.dsenv
                                                          =
                                                          (uu___376_2948.FStar_TypeChecker_Env.dsenv);
-                                                       FStar_TypeChecker_Env.dep_graph
-                                                         =
-                                                         (uu___376_2948.FStar_TypeChecker_Env.dep_graph);
                                                        FStar_TypeChecker_Env.nbe
                                                          =
                                                          (uu___376_2948.FStar_TypeChecker_Env.nbe)
@@ -4515,8 +4505,6 @@ let (tc_decl' :
                               (uu___384_7944.FStar_TypeChecker_Env.tc_hooks);
                             FStar_TypeChecker_Env.dsenv =
                               (uu___384_7944.FStar_TypeChecker_Env.dsenv);
-                            FStar_TypeChecker_Env.dep_graph =
-                              (uu___384_7944.FStar_TypeChecker_Env.dep_graph);
                             FStar_TypeChecker_Env.nbe =
                               (uu___384_7944.FStar_TypeChecker_Env.nbe)
                           }) ses se.FStar_Syntax_Syntax.sigquals lids
@@ -4693,8 +4681,6 @@ let (tc_decl' :
                               (uu___388_8056.FStar_TypeChecker_Env.tc_hooks);
                             FStar_TypeChecker_Env.dsenv =
                               (uu___388_8056.FStar_TypeChecker_Env.dsenv);
-                            FStar_TypeChecker_Env.dep_graph =
-                              (uu___388_8056.FStar_TypeChecker_Env.dep_graph);
                             FStar_TypeChecker_Env.nbe =
                               (uu___388_8056.FStar_TypeChecker_Env.nbe)
                           }) ne
@@ -5090,8 +5076,6 @@ let (tc_decl' :
                                 (uu___392_9031.FStar_TypeChecker_Env.tc_hooks);
                               FStar_TypeChecker_Env.dsenv =
                                 (uu___392_9031.FStar_TypeChecker_Env.dsenv);
-                              FStar_TypeChecker_Env.dep_graph =
-                                (uu___392_9031.FStar_TypeChecker_Env.dep_graph);
                               FStar_TypeChecker_Env.nbe =
                                 (uu___392_9031.FStar_TypeChecker_Env.nbe)
                             }  in
@@ -5622,8 +5606,6 @@ let (tc_decl' :
                           (uu___396_9905.FStar_TypeChecker_Env.tc_hooks);
                         FStar_TypeChecker_Env.dsenv =
                           (uu___396_9905.FStar_TypeChecker_Env.dsenv);
-                        FStar_TypeChecker_Env.dep_graph =
-                          (uu___396_9905.FStar_TypeChecker_Env.dep_graph);
                         FStar_TypeChecker_Env.nbe =
                           (uu___396_9905.FStar_TypeChecker_Env.nbe)
                       }) (uvs, t) se.FStar_Syntax_Syntax.sigrng
@@ -5760,8 +5742,6 @@ let (tc_decl' :
                         (uu___398_10018.FStar_TypeChecker_Env.tc_hooks);
                       FStar_TypeChecker_Env.dsenv =
                         (uu___398_10018.FStar_TypeChecker_Env.dsenv);
-                      FStar_TypeChecker_Env.dep_graph =
-                        (uu___398_10018.FStar_TypeChecker_Env.dep_graph);
                       FStar_TypeChecker_Env.nbe =
                         (uu___398_10018.FStar_TypeChecker_Env.nbe)
                     }) (uvs, t) se.FStar_Syntax_Syntax.sigrng
@@ -5969,8 +5949,6 @@ let (tc_decl' :
                   FStar_TypeChecker_Env.tc_hooks =
                     (uu___401_10208.FStar_TypeChecker_Env.tc_hooks);
                   FStar_TypeChecker_Env.dsenv = dsenv1;
-                  FStar_TypeChecker_Env.dep_graph =
-                    (uu___401_10208.FStar_TypeChecker_Env.dep_graph);
                   FStar_TypeChecker_Env.nbe =
                     (uu___401_10208.FStar_TypeChecker_Env.nbe)
                 }  in
@@ -6293,8 +6271,6 @@ let (tc_decl' :
                       (uu___405_11083.FStar_TypeChecker_Env.tc_hooks);
                     FStar_TypeChecker_Env.dsenv =
                       (uu___405_11083.FStar_TypeChecker_Env.dsenv);
-                    FStar_TypeChecker_Env.dep_graph =
-                      (uu___405_11083.FStar_TypeChecker_Env.dep_graph);
                     FStar_TypeChecker_Env.nbe =
                       (uu___405_11083.FStar_TypeChecker_Env.nbe)
                   }  in
@@ -6449,8 +6425,6 @@ let (tc_decl' :
                                    (uu___408_11163.FStar_TypeChecker_Env.tc_hooks);
                                  FStar_TypeChecker_Env.dsenv =
                                    (uu___408_11163.FStar_TypeChecker_Env.dsenv);
-                                 FStar_TypeChecker_Env.dep_graph =
-                                   (uu___408_11163.FStar_TypeChecker_Env.dep_graph);
                                  FStar_TypeChecker_Env.nbe =
                                    (uu___408_11163.FStar_TypeChecker_Env.nbe)
                                }) e
@@ -6687,8 +6661,6 @@ let (tc_decl :
                    (uu___410_11472.FStar_TypeChecker_Env.tc_hooks);
                  FStar_TypeChecker_Env.dsenv =
                    (uu___410_11472.FStar_TypeChecker_Env.dsenv);
-                 FStar_TypeChecker_Env.dep_graph =
-                   (uu___410_11472.FStar_TypeChecker_Env.dep_graph);
                  FStar_TypeChecker_Env.nbe =
                    (uu___410_11472.FStar_TypeChecker_Env.nbe)
                }
@@ -7282,8 +7254,6 @@ let (check_exports :
               (uu___416_12985.FStar_TypeChecker_Env.tc_hooks);
             FStar_TypeChecker_Env.dsenv =
               (uu___416_12985.FStar_TypeChecker_Env.dsenv);
-            FStar_TypeChecker_Env.dep_graph =
-              (uu___416_12985.FStar_TypeChecker_Env.dep_graph);
             FStar_TypeChecker_Env.nbe =
               (uu___416_12985.FStar_TypeChecker_Env.nbe)
           }  in
@@ -7958,8 +7928,6 @@ let (tc_partial_modul :
              (uu___423_14327.FStar_TypeChecker_Env.tc_hooks);
            FStar_TypeChecker_Env.dsenv =
              (uu___423_14327.FStar_TypeChecker_Env.dsenv);
-           FStar_TypeChecker_Env.dep_graph =
-             (uu___423_14327.FStar_TypeChecker_Env.dep_graph);
            FStar_TypeChecker_Env.nbe =
              (uu___423_14327.FStar_TypeChecker_Env.nbe)
          }  in
@@ -8197,8 +8165,6 @@ and (finish_partial_modul :
                         (uu___426_14557.FStar_TypeChecker_Env.tc_hooks);
                       FStar_TypeChecker_Env.dsenv =
                         (uu___426_14557.FStar_TypeChecker_Env.dsenv);
-                      FStar_TypeChecker_Env.dep_graph =
-                        (uu___426_14557.FStar_TypeChecker_Env.dep_graph);
                       FStar_TypeChecker_Env.nbe =
                         (uu___426_14557.FStar_TypeChecker_Env.nbe)
                     }  in
@@ -8451,8 +8417,6 @@ let (check_module :
                (uu___430_14804.FStar_TypeChecker_Env.tc_hooks);
              FStar_TypeChecker_Env.dsenv =
                (uu___430_14804.FStar_TypeChecker_Env.dsenv);
-             FStar_TypeChecker_Env.dep_graph =
-               (uu___430_14804.FStar_TypeChecker_Env.dep_graph);
              FStar_TypeChecker_Env.nbe =
                (uu___430_14804.FStar_TypeChecker_Env.nbe)
            }  in

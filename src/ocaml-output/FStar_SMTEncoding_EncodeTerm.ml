@@ -1460,8 +1460,6 @@ and (encode_term :
                                 (uu___354_4113.FStar_TypeChecker_Env.tc_hooks);
                               FStar_TypeChecker_Env.dsenv =
                                 (uu___354_4113.FStar_TypeChecker_Env.dsenv);
-                              FStar_TypeChecker_Env.dep_graph =
-                                (uu___354_4113.FStar_TypeChecker_Env.dep_graph);
                               FStar_TypeChecker_Env.nbe =
                                 (uu___354_4113.FStar_TypeChecker_Env.nbe)
                             }) res

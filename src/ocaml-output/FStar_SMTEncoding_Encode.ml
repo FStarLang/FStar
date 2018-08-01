@@ -1329,8 +1329,6 @@ let (encode_free_var :
                                        (uu___372_4712.FStar_TypeChecker_Env.tc_hooks);
                                      FStar_TypeChecker_Env.dsenv =
                                        (uu___372_4712.FStar_TypeChecker_Env.dsenv);
-                                     FStar_TypeChecker_Env.dep_graph =
-                                       (uu___372_4712.FStar_TypeChecker_Env.dep_graph);
                                      FStar_TypeChecker_Env.nbe =
                                        (uu___372_4712.FStar_TypeChecker_Env.nbe)
                                    }) comp FStar_Syntax_Syntax.U_unknown
@@ -2152,8 +2150,6 @@ let (encode_top_level_let :
                          (uu___375_6368.FStar_TypeChecker_Env.tc_hooks);
                        FStar_TypeChecker_Env.dsenv =
                          (uu___375_6368.FStar_TypeChecker_Env.dsenv);
-                       FStar_TypeChecker_Env.dep_graph =
-                         (uu___375_6368.FStar_TypeChecker_Env.dep_graph);
                        FStar_TypeChecker_Env.nbe =
                          (uu___375_6368.FStar_TypeChecker_Env.nbe)
                      }) c FStar_Syntax_Syntax.U_unknown

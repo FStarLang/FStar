@@ -1863,13 +1863,33 @@ let (print : deps -> unit) =
           (FStar_Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
     | FStar_Pervasives_Native.None  -> ()
   
+let (print_fsmap :
+  (Prims.string FStar_Pervasives_Native.option,Prims.string
+                                                 FStar_Pervasives_Native.option)
+    FStar_Pervasives_Native.tuple2 FStar_Util.smap -> Prims.string)
+  =
+  fun fsmap  ->
+    FStar_Util.smap_fold fsmap
+      (fun k  ->
+         fun uu____5812  ->
+           fun s  ->
+             match uu____5812 with
+             | (v0,v1) ->
+                 let uu____5832 =
+                   let uu____5833 =
+                     FStar_Util.format3 "%s -> (%s, %s)" k
+                       (FStar_Util.dflt "_" v0) (FStar_Util.dflt "_" v1)
+                      in
+                   Prims.strcat "; " uu____5833  in
+                 Prims.strcat s uu____5832) ""
+  
 let (module_has_interface : deps -> FStar_Ident.lident -> Prims.bool) =
-  fun uu____5780  ->
+  fun uu____5842  ->
     fun module_name  ->
-      match uu____5780 with
-      | Mk (uu____5782,fsmap,uu____5784) ->
-          let uu____5789 =
-            let uu____5790 = FStar_Ident.string_of_lid module_name  in
-            FStar_String.lowercase uu____5790  in
-          has_interface fsmap uu____5789
+      match uu____5842 with
+      | Mk (uu____5844,fsmap,uu____5846) ->
+          let uu____5851 =
+            let uu____5852 = FStar_Ident.string_of_lid module_name  in
+            FStar_String.lowercase uu____5852  in
+          has_interface fsmap uu____5851
   

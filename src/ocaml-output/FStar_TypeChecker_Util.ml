@@ -3714,8 +3714,6 @@ let (check_and_ascribe :
                 (uu___361_8868.FStar_TypeChecker_Env.tc_hooks);
               FStar_TypeChecker_Env.dsenv =
                 (uu___361_8868.FStar_TypeChecker_Env.dsenv);
-              FStar_TypeChecker_Env.dep_graph =
-                (uu___361_8868.FStar_TypeChecker_Env.dep_graph);
               FStar_TypeChecker_Env.nbe =
                 (uu___361_8868.FStar_TypeChecker_Env.nbe)
             }  in

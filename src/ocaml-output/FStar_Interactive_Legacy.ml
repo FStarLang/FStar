@@ -137,8 +137,6 @@ let (push_with_kind :
                 (uu___413_268.FStar_TypeChecker_Env.tc_hooks);
               FStar_TypeChecker_Env.dsenv =
                 (uu___413_268.FStar_TypeChecker_Env.dsenv);
-              FStar_TypeChecker_Env.dep_graph =
-                (uu___413_268.FStar_TypeChecker_Env.dep_graph);
               FStar_TypeChecker_Env.nbe =
                 (uu___413_268.FStar_TypeChecker_Env.nbe)
             }  in
