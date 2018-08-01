@@ -7,11 +7,11 @@ out_file=$2
 threads=$3
 
 function export_home() {
-  if command -v cygpath >/dev/null 2>&1; then
-    export $1_HOME=$(cygpath -m "$2")
-  else
-    export $1_HOME="$2"
-  fi
+    if command -v cygpath >/dev/null 2>&1; then
+        export $1_HOME=$(cygpath -m "$2")
+    else
+        export $1_HOME="$2"
+    fi
 }
 
 function fetch_vale() {
@@ -37,7 +37,7 @@ function fetch_hacl() {
 
     cd hacl-star
     git fetch origin
-    local ref=$( if [ -f ../.hacl_version ]; then cat ../.hacl_version | tr -d '\r\n'; else echo origin/master; fi )
+    local ref=$(if [ -f ../.hacl_version ]; then cat ../.hacl_version | tr -d '\r\n'; else echo origin/master; fi)
     echo Switching to HACL $ref
     git reset --hard $ref
     cd ..
@@ -53,7 +53,7 @@ function fetch_kremlin() {
 
     cd kremlin
     git fetch origin
-    local ref=$( if [ -f ../.kremlin_version ]; then cat ../.kremlin_version | tr -d '\r\n'; else echo origin/master; fi )
+    local ref=$(if [ -f ../.kremlin_version ]; then cat ../.kremlin_version | tr -d '\r\n'; else echo origin/master; fi)
     echo Switching to KreMLin $ref
     git reset --hard $ref
     cd ..
@@ -61,19 +61,19 @@ function fetch_kremlin() {
 }
 
 function fetch_and_make_kremlin() {
-  fetch_kremlin
+    fetch_kremlin
 
-  # Default build target is minimal, unless specified otherwise
-  local target
-  if [[ $1 == "" ]]; then
-    target="minimal"
-  else
-    target="$1"
-  fi
+    # Default build target is minimal, unless specified otherwise
+    local target
+    if [[ $1 == "" ]]; then
+        target="minimal"
+    else
+        target="$1"
+    fi
 
-  make -C kremlin -j $threads $target || \
-    (cd kremlin && git clean -fdx && make -j $threads $target)
-  export PATH="$(pwd)/kremlin:$PATH"
+    make -C kremlin -j $threads $target ||
+        (cd kremlin && git clean -fdx && make -j $threads $target)
+    export PATH="$(pwd)/kremlin:$PATH"
 }
 
 # By default, mitls-fstar master works against F* stable. Can also be overridden.
@@ -83,7 +83,7 @@ function fetch_mitls() {
     fi
     cd mitls-fstar
     git fetch origin
-    local ref=$( if [ -f ../.mitls_version ]; then cat ../.mitls_version | tr -d '\r\n'; else echo origin/master; fi )
+    local ref=$(if [ -f ../.mitls_version ]; then cat ../.mitls_version | tr -d '\r\n'; else echo origin/master; fi)
     echo Switching to mitls-fstar $ref
     git reset --hard $ref
     cd ..
@@ -135,23 +135,12 @@ function refresh_hints() {
     git push $remote $CI_BRANCH
 }
 
-function build_fstar () {
-    result_file=result.txt
-
-    # $status_file is the name of a file that contains true if and
-    # only if the F* regression suite failed, false otherwise
-    status_file="status.txt"
-    echo false > $status_file
-
-    ORANGE_FILE="orange_file.txt"
-    echo '' > $ORANGE_FILE
-
+function build_fstar() {
     fetch_kremlin
 
     if [! make -C src -j $threads utest-prelude]; then
         echo Warm-up failed
-        echo Failure > $result_file
-        return
+        echo Failure >$result_file
     else
         fetch_vale &
         fetch_hacl &
@@ -174,7 +163,7 @@ function build_fstar () {
         # Once F* is built, run its main regression suite, along with more relevant
         # tests.
         {
-            $gnutime make -C src -j $threads -k $target && echo true > $status_file;
+            $gnutime make -C src -j $threads -k $target && echo true >$status_file
             echo Done building FStar
         } &
 
@@ -196,56 +185,57 @@ function build_fstar () {
 
             if [[ $has_error == "true" ]]; then
                 echo "Error - min-test (Vale)"
-                echo " - min-test (Vale)" >> $ORANGE_FILE;
+                echo " - min-test (Vale)" >>$ORANGE_FILE
             fi
         } &
 
         {
-            OTHERFLAGS='--use_two_phase_tc false --warn_error -276 --use_hint_hashes' timeout 480 make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify || \
-            {
-                echo "Error - Hacl.Hash.SHA2_256.fst-verify (HACL*)"
-                echo " - Hacl.Hash.SHA2_256.fst-verify (HACL*)" >> $ORANGE_FILE;
-            }
+            OTHERFLAGS='--use_two_phase_tc false --warn_error -276 --use_hint_hashes' timeout 480 make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
+                {
+                    echo "Error - Hacl.Hash.SHA2_256.fst-verify (HACL*)"
+                    echo " - Hacl.Hash.SHA2_256.fst-verify (HACL*)" >>$ORANGE_FILE
+                }
         } &
 
         {
-            OTHERFLAGS='--use_hint_hashes' timeout 480 make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver || \
-            {
-                echo "Error - Crypto.AEAD.Encrypt.fst-ver (HACL*)"
-                echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >> $ORANGE_FILE;
-            }
+            OTHERFLAGS='--use_hint_hashes' timeout 480 make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver ||
+                {
+                    echo "Error - Crypto.AEAD.Encrypt.fst-ver (HACL*)"
+                    echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >>$ORANGE_FILE
+                }
         } &
 
         # We now run all (hardcoded) tests in mitls-fstar@master
         {
-            OTHERFLAGS=--use_hint_hashes timeout 480 make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver || \
-            {
-                echo "Error - StreamAE.fst-ver (mitls)"
-                echo " - StreamAE.fst-ver (mitls)" >> $ORANGE_FILE;
-            }
+            OTHERFLAGS=--use_hint_hashes timeout 480 make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
+                {
+                    echo "Error - StreamAE.fst-ver (mitls)"
+                    echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
+                }
 
-            OTHERFLAGS=--use_hint_hashes timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver || \
-            {
-                echo "Error - Pkg.fst-ver (mitls verify)"
-                echo " - Pkg.fst-ver (mitls verify)" >> $ORANGE_FILE;
-            }
+            OTHERFLAGS=--use_hint_hashes timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+                {
+                    echo "Error - Pkg.fst-ver (mitls verify)"
+                    echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
+                }
 
-            OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver || \
-            {
-                echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
-                echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >> $ORANGE_FILE;
+            OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+                {
+                    echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
+                    echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >>$ORANGE_FILE
+                }
         } &
 
         # JP: doesn't work because it leads to uint128 being verified in the wrong Z3
         # context (?) meaning that some proof obligations fail
         # { cd kremlin/test && timeout 480 ../krml -warn-error @4 -static-header FStar -no-prefix \
-            #     Test128 Test128.fst -verify -verbose -fnouint128 -tmpdir .output/Test128.out || \
-            #   echo "test/Test128.test (KreMLin)" >> $ORANGE_FILE; } &
+        #     Test128 Test128.fst -verify -verbose -fnouint128 -tmpdir .output/Test128.out || \
+        #   echo "test/Test128.test (KreMLin)" >> $ORANGE_FILE; } &
 
         # { cd kremlin/test && timeout 480 ../krml -warn-error @4 -add-include '"kremstr.h"' \
-            #     main-Server.c -tmpdir .output/Server.out -no-prefix Server -verify \
-            #     Server.fst -verbose || \
-            #   echo "test/Server.test (KreMLin)" >> $ORANGE_FILE; } &
+        #     main-Server.c -tmpdir .output/Server.out -no-prefix Server -verify \
+        #     Server.fst -verbose || \
+        #   echo "test/Server.test (KreMLin)" >> $ORANGE_FILE; } &
         wait
 
         # Make it an orange if there's a git diff. Note: FStar_Version.ml is in the
@@ -253,18 +243,18 @@ function build_fstar () {
         echo "Searching for a diff in src/ocaml-output"
         if ! git diff --exit-code --name-only src/ocaml-output; then
             echo "GIT DIFF: the files in the list above have a git diff"
-            { echo " - snapshot-diff (F*)" >> $ORANGE_FILE ; }
+            { echo " - snapshot-diff (F*)" >>$ORANGE_FILE; }
         fi
 
         if [[ $(cat $status_file) != "true" ]]; then
             echo "F* regression failed"
-            echo Failure > $result_file
+            echo Failure >$result_file
         elif [[ $(cat $ORANGE_FILE) != "" ]]; then
             echo "F* regression had breakages"
-            echo Success with breakages $(cat $ORANGE_FILE) > $result_file
+            echo Success with breakages $(cat $ORANGE_FILE) >$result_file
         else
             echo "F* regression succeeded"
-            echo Success > $result_file
+            echo Success >$result_file
         fi
     fi
 }
@@ -273,6 +263,16 @@ function build_fstar () {
 export OCAMLRUNPARAM=b
 export OTHERFLAGS="--print_z3_statistics --use_hints --query_stats"
 export MAKEFLAGS="$MAKEFLAGS -Otarget"
+
+result_file="result.txt"
+
+# $status_file is the name of a file that contains true if and
+# only if the F* regression suite failed, false otherwise
+status_file="status.txt"
+echo false >$status_file
+
+ORANGE_FILE="orange_file.txt"
+echo '' >$ORANGE_FILE
 
 if [[ -x /usr/bin/time ]]; then
     gnutime=/usr/bin/time
@@ -300,5 +300,5 @@ elif [[ $target == "fstar-docs" ]]; then
     .ci/fsdoc.sh
 else
     echo "Invalid target"
-    echo Failure > $result_file
+    echo Failure >$result_file
 fi
