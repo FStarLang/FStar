@@ -140,7 +140,6 @@ type env = {
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
-  dep_graph      : FStar.Parser.Dep.deps;         (* The result of the dependency analysis *)
   nbe            : list<step> -> env -> term -> term;  (* Callback to the NBE function *)
 }
 

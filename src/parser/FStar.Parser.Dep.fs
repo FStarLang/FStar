@@ -1175,5 +1175,13 @@ let print deps =
   | None ->
       assert false
 
+let print_fsmap fsmap =
+    smap_fold fsmap (fun k (v0, v1) s ->
+        s
+        ^ "; "
+        ^ BU.format3 "%s -> (%s, %s)"
+                k (BU.dflt "_" v0) (BU.dflt "_" v1))
+        ""
+
 let module_has_interface (Mk (_, fsmap, _)) module_name =
     has_interface fsmap (String.lowercase (Ident.string_of_lid module_name))

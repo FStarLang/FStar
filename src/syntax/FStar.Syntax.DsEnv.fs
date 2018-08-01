@@ -175,6 +175,7 @@ let empty_env deps = {curmodule=None;
                     ds_hooks=default_ds_hooks;
                     dep_graph=deps}
 let dep_graph env = env.dep_graph
+let set_dep_graph env ds = {env with dep_graph=ds}
 let sigmap env = env.sigmap
 let has_all_in_scope env =
   List.existsb (fun (m, _) ->

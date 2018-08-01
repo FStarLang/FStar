@@ -173,7 +173,6 @@ type env = {
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                        (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;             (* The desugaring environment from the front-end *)
-  dep_graph      : FStar.Parser.Dep.deps;              (* The result of the dependency analysis *)
   nbe            : list<step> -> env -> term -> term; (* Callback to the NBE function *)
 }
 and solver_depth_t = int * int * int
@@ -224,8 +223,8 @@ let default_tc_hooks =
 let tc_hooks (env: env) = env.tc_hooks
 let set_tc_hooks env hooks = { env with tc_hooks = hooks }
 
-let set_dep_graph e g = {e with dep_graph=g}
-let dep_graph e = e.dep_graph
+let set_dep_graph e g = {e with dsenv=DsEnv.set_dep_graph e.dsenv g}
+let dep_graph e = DsEnv.dep_graph e.dsenv
 
 type env_t = env
 
@@ -289,7 +288,6 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
     dsenv = FStar.Syntax.DsEnv.empty_env deps;
-    dep_graph = deps;
     nbe = nbe
   }
 
