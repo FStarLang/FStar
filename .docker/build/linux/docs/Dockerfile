@@ -19,9 +19,9 @@ WORKDIR ${MYHOME}/FStar
 
 # ADD SSH KEY
 RUN eval $(ssh-agent)
-COPY --chown=everest /home/builder/everbld-ssh-privatekey/id_rsa ${MYHOME}/id_rsa
-RUN ssh-add -k ${MYHOME}/id_rsa
-RUN rm ${MYHOME}/id_rsa
+COPY --chown=everest id_rsa ${MYHOME}/FStar/id_rsa
+RUN ssh-add -k ${MYHOME}/FStar/id_rsa
+RUN rm ${MYHOME}/FStar/id_rsa
 
 # Build FStar docs
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
