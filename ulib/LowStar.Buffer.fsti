@@ -1297,6 +1297,21 @@ val loc_unused_in (h: HS.mem) : GTot loc
 val loc_unused_in_not_unused_in_disjoint (h: HS.mem) : Lemma
   (loc_disjoint (loc_unused_in h) (loc_not_unused_in h))
 
+val not_live_region_loc_not_unused_in_disjoint
+  (h0: HS.mem)
+  (r: HS.rid)
+: Lemma
+  (requires (~ (HS.live_region h0 r)))
+  (ensures (loc_disjoint (loc_region_only false r) (loc_not_unused_in h0)))
+
+let fresh_frame_loc_not_unused_in_disjoint
+  (h0 h1: HS.mem)
+: Lemma
+  (requires (HS.fresh_frame h0 h1))
+  (ensures (loc_disjoint (loc_region_only false (HS.get_tip h1)) (loc_not_unused_in h0)))
+  [SMTPat (HS.fresh_frame h0 h1)]
+= not_live_region_loc_not_unused_in_disjoint h0 (HS.get_tip h1)
+
 val live_loc_not_unused_in (#t: Type) (b: buffer t) (h: HS.mem) : Lemma
   (requires (live h b))
   (ensures (loc_not_unused_in h `loc_includes` loc_addr_of_buffer b))

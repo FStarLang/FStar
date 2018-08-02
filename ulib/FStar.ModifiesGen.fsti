@@ -970,6 +970,15 @@ val loc_addresses_not_unused_in (#al: aloc_t) (c: cls al) (r: HS.rid) (a: Set.se
 val loc_unused_in_not_unused_in_disjoint (#al: aloc_t) (c: cls al) (h: HS.mem) : Lemma
   (loc_unused_in c h `loc_disjoint` loc_not_unused_in c h)
 
+val not_live_region_loc_not_unused_in_disjoint
+  (#al: aloc_t)
+  (c: cls al)
+  (h0: HS.mem)
+  (r: HS.rid)
+: Lemma
+  (requires (~ (HS.live_region h0 r)))
+  (ensures (loc_disjoint (loc_region_only false r) (loc_not_unused_in c h0)))
+
 val modifies_address_liveness_insensitive_unused_in
   (#al: aloc_t)
   (c: cls al)

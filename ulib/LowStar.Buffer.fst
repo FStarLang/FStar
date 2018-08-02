@@ -895,6 +895,8 @@ let loc_unused_in = MG.loc_unused_in _
 let loc_unused_in_not_unused_in_disjoint =
   MG.loc_unused_in_not_unused_in_disjoint cls
 
+let not_live_region_loc_not_unused_in_disjoint = MG.not_live_region_loc_not_unused_in_disjoint cls
+
 let live_loc_not_unused_in #t b h =
   unused_in_equiv b h;
   Classical.move_requires (MG.does_not_contain_addr_addr_unused_in h) (frameOf b, as_addr b);
