@@ -132,6 +132,8 @@ let frameOf_gsub #a b i len = ()
 
 let as_addr_gsub #a b i len = ()
 
+let gsub_inj #t b1 b2 i1 i2 len1 len2 = ()
+
 let gsub_gsub #a b i1 len1 i2 len2 = ()
 
 let gsub_zero_length #a b = ()
