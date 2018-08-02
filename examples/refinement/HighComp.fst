@@ -50,6 +50,20 @@ let hwrite (i:int) (v:mint) : comp unit =
     fun s -> if i = 0 then ((), (v, snd s))
           else ((), (fst s, v))
 
+let write_wp (i:nat) (v:mint) : hwp unit = fun s0 post -> post (hwrite i v s0)
+
+let read_wp (i:nat) : hwp mint = fun s0 post -> post (hread i s0)
+
+val hread' : i:int -> comp_wp mint (read_wp i)
+let hread' (i:int) : comp_wp mint (read_wp i) = 
+    fun s -> if i = 0 then (fst s, s) 
+          else (snd s, s)
+
+val hwrite' : i:int -> v:mint -> comp_wp unit (write_wp i v)
+let hwrite' (i:int) (v:mint) : comp_wp unit (write_wp i v) =
+    fun s -> if i = 0 then ((), (v, snd s))
+          else ((), (fst s, v))
+
 val dread : unit -> comp state
 let dread (_ : unit) : comp state = fun s -> (s, s) 
 
