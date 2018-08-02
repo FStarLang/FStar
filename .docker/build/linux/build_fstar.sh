@@ -137,6 +137,8 @@ function refresh_hints() {
 
 function build_fstar() {
     local localTarget=$1
+    local timeout=960
+
     result_file="result.txt"
 
     # $status_file is the name of a file that contains true if and
@@ -208,13 +210,13 @@ function build_fstar() {
                 if [[ "$OS" == "Windows_NT" ]]; then
                     ## This hack for determining the success of a vale run is needed
                     ## because somehow scons is not returning the error code properly
-                    timeout 480 ./scons_cygwin.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output
+                    timeout $timeout ./scons_cygwin.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output
 
                     ## adds "min-test (Vale)" to the ORANGE_FILE
                     ##      if this string vvvv is present in vale_output
                     ! grep -qi 'scons: building terminated because of errors.' vale_output || has_error="true"
                 else
-                    timeout 480 scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || has_error="true"
+                    timeout $timeout scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || has_error="true"
                 fi
                 cd ..
 
@@ -225,7 +227,7 @@ function build_fstar() {
             } &
 
             {
-                OTHERFLAGS='--use_two_phase_tc false --warn_error -276 --use_hint_hashes' timeout 480 make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
+                OTHERFLAGS='--use_two_phase_tc false --warn_error -276 --use_hint_hashes' timeout $timeout make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
                     {
                         echo "Error - Hacl.Hash.SHA2_256.fst-verify (HACL*)"
                         echo " - Hacl.Hash.SHA2_256.fst-verify (HACL*)" >>$ORANGE_FILE
@@ -233,7 +235,7 @@ function build_fstar() {
             } &
 
             {
-                OTHERFLAGS='--use_hint_hashes' timeout 480 make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver ||
+                OTHERFLAGS='--use_hint_hashes' timeout $timeout make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver ||
                     {
                         echo "Error - Crypto.AEAD.Encrypt.fst-ver (HACL*)"
                         echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >>$ORANGE_FILE
@@ -242,19 +244,19 @@ function build_fstar() {
 
             # We now run all (hardcoded) tests in mitls-fstar@master
             {
-                OTHERFLAGS=--use_hint_hashes timeout 480 make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
+                OTHERFLAGS=--use_hint_hashes timeout $timeout make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
                     {
                         echo "Error - StreamAE.fst-ver (mitls)"
                         echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
                     }
 
-                OTHERFLAGS=--use_hint_hashes timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+                OTHERFLAGS=--use_hint_hashes timeout $timeout make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
                     {
                         echo "Error - Pkg.fst-ver (mitls verify)"
                         echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
                     }
 
-                OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+                OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" timeout $timeout make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
                     {
                         echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
                         echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >>$ORANGE_FILE
