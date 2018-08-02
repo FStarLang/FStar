@@ -1094,6 +1094,26 @@ let fresh_frame_modifies #al c h0 h1 =
     (fun r a x ->
       c.same_mreference_aloc_preserved #r #a x h0 h1 (fun _ _ _ -> ()))
 
+let new_region_modifies
+  #al
+  (c: cls al)
+  (m0: HS.mem)
+  (r0: HS.rid)
+: Lemma
+  (requires (HS.is_eternal_region r0 /\ HS.live_region m0 r0))
+  (ensures (
+    let (_, m1) = HS.new_eternal_region m0 r0 None in
+    modifies (loc_none #_ #c) m0 m1
+  ))
+= let (_, m1) = HS.new_eternal_region m0 r0 None in
+  modifies_intro_strong #_ #c loc_none m0 m1
+    (fun _ -> ())
+    (fun _ _ _ -> ())
+    (fun _ _ _ -> ())
+    (fun _ _ -> ())
+    (fun r a x ->
+      c.same_mreference_aloc_preserved #r #a x m0 m1 (fun _ _ _ -> ()))
+
 let popped_modifies #al c h0 h1 =
   let l = loc_region_only #_ #c false (HS.get_tip h0) in
   modifies_preserves_mreferences_intro l h0 h1 (fun t pre p ->
