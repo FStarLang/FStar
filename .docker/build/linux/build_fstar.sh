@@ -158,7 +158,10 @@ function build_fstar() {
         return
     fi
 
-    if [[ $localTarget == "fstar-docs" ]]; then
+    if [[ $localTarget == "fstar-binary-build" ]]; then
+        fetch_kremlin
+        ./.scripts/process_build.sh && echo true >$status_file
+    elif [[ $localTarget == "fstar-docs" ]]; then
         # First - get fstar built
         # Second - run fstar with the --doc flag
         make -C src/ocaml-output clean && make -C src/ocaml-output -j $threads && .ci/fsdoc.sh && echo true >$status_file
