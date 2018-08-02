@@ -7,15 +7,15 @@ module U32 = FStar.UInt32
 
 open HighComp
 open FStar.HyperStack
-open FStar.HyperStack.ST 
-open LowStar.Buffer  
+open FStar.HyperStack.ST
+open LowStar.Buffer
 open LowStar.BufferOps
 open LowStar.Modifies
 
 
 type bref = b:B.buffer mint { B.length b = 1 } // XXX pointers already exist
 
-type lstate = bref * bref 
+type lstate = bref * bref
 
 val well_formed : HS.mem -> lstate -> GTot Type0
 let well_formed h = fun (b1, b2) -> live h b1 /\ live h b2 /\ disjoint b1 b2
@@ -25,58 +25,58 @@ let lstate_as_state h  = fun (b1, b2) -> (B.get h b1 0, B.get h b2 0)
 
 
 
-type lcomp 'a (c : comp 'a) = 
+type lcomp 'a (c : comp 'a) =
     (ls:lstate) ->
     Stack 'a
       (requires (fun h -> well_formed h ls))
-      (ensures  (fun h r h' -> 
+      (ensures  (fun h r h' ->
                    well_formed h' ls /\
                    modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
-                   (let s0 = lstate_as_state h ls in 
+                   (let s0 = lstate_as_state h ls in
                     let (res : 'a * state) = c s0 in
                     let s1 = lstate_as_state h' ls in
                     snd res == s1 /\ fst res == r )))
 
 
-let lcomp_wp (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) = 
+let lcomp_wp (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
      (ls:lstate) ->
      Stack a
        (requires (fun h -> well_formed h ls))
-       (ensures  (fun h r h' -> 
+       (ensures  (fun h r h' ->
                     well_formed h' ls /\
                     modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
-                    (let s0 = lstate_as_state h ls in 
+                    (let s0 = lstate_as_state h ls in
                      wp s0 (fun _ -> True) ==>
                      (let res = c s0 in
-                      snd res == lstate_as_state h' ls /\ fst res == r)))) 
+                      snd res == lstate_as_state h' ls /\ fst res == r))))
 
 
-let lcomp_p (a:Type) pre post (c : comp_p a pre post) = 
+let lcomp_p (a:Type) pre post (c : comp_p a pre post) =
     (ls:lstate) ->
     Stack a
       (requires (fun h -> well_formed h ls))
-      (ensures  (fun h r h' -> 
+      (ensures  (fun h r h' ->
                    well_formed h' ls /\
                    modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
-                     
-                   (let s0 = lstate_as_state h ls in 
+
+                   (let s0 = lstate_as_state h ls in
                      pre s0 /\
                      (let res = c s0 in
-                     snd res == lstate_as_state h' ls /\ fst res == r)))) 
+                     snd res == lstate_as_state h' ls /\ fst res == r))))
 
 
-let reif (#a:Type) (wp:state -> (a * state -> Type) -> Type) (c : unit -> HIGH a wp) : 
+let reif (#a:Type) (wp:state -> (a * state -> Type) -> Type) (c : unit -> HIGH a wp) :
   comp_wp a wp = reify (c ())
 
 
-let lcomp_r (a:Type) (wp:state -> (a * state -> Type) -> Type) (c : unit -> HIGH a wp) = 
+let lcomp_r (a:Type) (wp:state -> (a * state -> Type) -> Type) (c : unit -> HIGH a wp) =
   (ls:lstate) ->
   Stack a
     (requires (fun h -> well_formed h ls))
-    (ensures  (fun h r h' -> 
+    (ensures  (fun h r h' ->
                  well_formed h' ls /\
                  modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
-                 (let s0 = lstate_as_state h ls in 
+                 (let s0 = lstate_as_state h ls in
                   wp s0 (fun _ -> True) /\
                   (let res = reif wp c s0 in
                   // let res = reify (c ()) s0 in XXX using reify directly fails
@@ -93,10 +93,17 @@ let lwrite i v = fun (b1, b2) -> if i = 0 then b1.(0ul) <- v else b2.(0ul) <- v
 val lread : i:nat{ i < 2 } -> lcomp_wp mint (read_wp i) (hread' i)
 let lread i = fun (b1, b2) -> if i = 0 then b1.(0ul) else b2.(0ul)
 
+let monotonic (#a: Type) (wp: hwp a) = forall (s: state) p1 p2. (forall x. p1 x ==> p2 x) ==>
+  wp s p1 ==> wp s p2
 
-// let lbind (#a:Type) (#b:Type) #wp1 #wp2 (#c1:comp_wp a wp1) (#c2:(x:a -> comp_wp b (wp2 x))) 
-//     (m : lcomp_wp a wp1 c1) (f : (x:a) -> lcomp_wp b (wp2 x) (c2 x)) :
-//     lcomp_wp b (bind_wp wp1 wp2) (hbind' c1 c2) = 
-//     fun s -> let a = m s in f a s
-          
-                   
+let lbind (#a:Type) (#b:Type)
+  (#wp1: state -> (a * state -> Type) -> Type)
+  (#wp2: a -> state -> (b * state -> Type) -> Type)
+  (#c1:comp_wp a wp1) (#c2:(x:a -> comp_wp b (wp2 x)))
+  (m: lcomp_wp a wp1 c1) (f: (x:a) -> lcomp_wp b (wp2 x) (c2 x)):
+    lcomp_wp b (bind_wp wp1 wp2) (hbind' c1 c2) =
+      fun s ->
+        assume (monotonic wp1);
+        let a = m s in let r = f a s in r
+
+
