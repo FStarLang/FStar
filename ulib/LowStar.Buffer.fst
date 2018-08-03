@@ -789,6 +789,8 @@ let no_upd_fresh_region = MG.no_upd_fresh_region
 
 let fresh_frame_modifies = MG.fresh_frame_modifies #_ cls
 
+let new_region_modifies = MG.new_region_modifies #_ cls
+
 let popped_modifies = MG.popped_modifies #_ cls
 
 let modifies_fresh_frame_popped = MG.modifies_fresh_frame_popped
@@ -942,6 +944,8 @@ let modifies_inert_liveness_insensitive_region_mreference_weak = modifies_livene
 let modifies_inert_liveness_insensitive_region_buffer_weak = modifies_liveness_insensitive_region_buffer_weak
 
 let fresh_frame_modifies_inert = fresh_frame_modifies
+
+let new_region_modifies_inert = new_region_modifies
 
 let popped_modifies_inert = popped_modifies
 
