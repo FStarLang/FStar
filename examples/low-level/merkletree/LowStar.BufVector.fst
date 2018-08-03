@@ -112,29 +112,11 @@ let create #a #blen len =
   assume (MHS.fresh_region nrid hh0 hh2);
   bv
   
-// val assign:
-//   #a:Type -> #blen:uint32_t{blen > 0ul} ->
-//   bv:buf_vector a blen -> 
-//   i:uint32_t{i < V.size_of bv} -> v:lbuf a blen ->
-//   HST.ST unit
-//     (requires (fun h0 ->
-//       B.live h0 v /\ not (B.g_is_null v) /\
-//       buf_vector_invariant h0 bv))
-//     (ensures (fun h0 _ h1 -> 
-//       buf_vector_invariant h1 bv))
-// let assign #a #blen bv i v =
-//   let buf = V.index bv i in
-//   if B.is_null buf then
-//     admit () // V.assign bv i v
-//   else (assume (B.disjoint v buf);
-//        B.blit v 0ul buf 0ul blen)
-
 // insert_pointer: ...
 
 val insert_copy:
   #a:Type0 -> ia:a -> #blen:uint32_t{blen > 0ul} ->
   bv:buf_vector a blen{not (V.is_full bv)} ->
-  rid:HH.rid{rid = V.frameOf bv} ->
   v:lbuf a blen ->
   HST.ST (buf_vector a blen)
     (requires (fun h0 -> 
@@ -142,8 +124,8 @@ val insert_copy:
       buf_vector_invariant h0 bv))
     (ensures (fun h0 ibv h1 -> 
       buf_vector_invariant h1 ibv))
-let insert_copy #a ia #blen bv rid v =
-  let nrid = new_region_ rid in
+let insert_copy #a ia #blen bv v =
+  let nrid = new_region_ (V.frameOf bv) in
   let nv = B.malloc nrid ia blen in
   B.blit v 0ul nv 0ul blen;
   admit (); V.insert bv nv
@@ -151,7 +133,6 @@ let insert_copy #a ia #blen bv rid v =
 val assign_copy:
   #a:Type0 -> ia:a -> #blen:uint32_t{blen > 0ul} ->
   bv:buf_vector a blen ->
-  rid:HH.rid{rid = V.frameOf bv} ->
   i:uint32_t{i < V.size_of bv} ->
   v:lbuf a blen ->
   HST.ST unit
@@ -160,10 +141,10 @@ val assign_copy:
       buf_vector_invariant h0 bv))
     (ensures (fun h0 _ h1 -> 
       buf_vector_invariant h1 bv))
-let assign_copy #a ia #blen bv rid i v =
+let assign_copy #a ia #blen bv i v =
   let iv = V.index bv i in
   if B.is_null iv 
-  then (let nrid = new_region_ rid in
+  then (let nrid = new_region_ (V.frameOf bv) in
        let nv = B.malloc nrid ia blen in
        B.blit v 0ul nv 0ul blen;
        admit (); V.assign bv i nv)

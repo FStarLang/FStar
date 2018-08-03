@@ -4,8 +4,10 @@ open FStar.All
 open FStar.Integers
 open LowStar.Modifies
 
+module HH = FStar.Monotonic.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
+module MHS = FStar.Monotonic.HyperStack
 module B = LowStar.Buffer
 module S = FStar.Seq
 
@@ -51,7 +53,7 @@ unfold val loc_addr_of_vector: #a:Type -> vector a -> GTot loc
 unfold let loc_addr_of_vector #a vec =
   B.loc_addr_of_buffer (Vec?.vs vec)
 
-unfold val frameOf: #a:Type -> vector a -> GTot Monotonic.HyperHeap.rid
+unfold val frameOf: #a:Type -> vector a -> Tot HH.rid
 unfold let frameOf #a vec =
   B.frameOf (Vec?.vs vec)
 
@@ -77,7 +79,7 @@ unfold let is_full #a vstr =
 
 val create_rid:
   #a:Type -> len:uint32_t{len > 0ul} -> v:a ->
-  rid:Monotonic.HyperHeap.rid{HST.is_eternal_region rid} ->
+  rid:HH.rid{HST.is_eternal_region rid} ->
   HST.ST (vector a)
 	 (requires (fun h0 -> true))
 	 (ensures (fun h0 vec h1 -> 
@@ -94,17 +96,17 @@ val create:
   HST.ST (vector a)
 	 (requires (fun h0 -> true))
 	 (ensures (fun h0 vec h1 -> 
-	   frameOf vec = Monotonic.HyperHeap.root /\
+	   frameOf vec = HH.root /\
 	   live h1 vec /\ freeable vec /\
 	   modifies loc_none h0 h1 /\
 	   size_of vec = len /\
 	   S.equal (as_seq h1 vec) (S.create (U32.v len) v)))
 let create #a len v =
-  create_rid len v Monotonic.HyperHeap.root
+  create_rid len v HH.root
 
 val create_reserve:
   #a:Type -> len:uint32_t{len > 0ul} -> ia:a ->
-  rid:Monotonic.HyperHeap.rid{HST.is_eternal_region rid} ->
+  rid:HH.rid{HST.is_eternal_region rid} ->
   HST.ST (vector a)
 	 (requires (fun h0 -> true))
 	 (ensures (fun h0 vec h1 -> 
@@ -187,7 +189,7 @@ let insert #a vec v =
   if sz = cap 
   then (let ncap = new_capacity cap in
        // let nvs = B.malloc (B.frameOf vs) v ncap in
-       let nvs = B.malloc Monotonic.HyperHeap.root v ncap in
+       let nvs = B.malloc HH.root v ncap in
        B.blit vs 0ul nvs 0ul sz;
        B.upd nvs sz v;
        // B.free vs; // TODO!

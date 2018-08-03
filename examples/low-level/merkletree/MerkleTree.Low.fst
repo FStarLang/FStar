@@ -196,7 +196,6 @@ let create_merkle_tree _ =
 // NOTE: it copies the value of `vs` buffer.
 val insert_value:
   vs:hash_vec{not (V.is_full vs)} ->
-  rid:HH.rid{rid = V.frameOf vs} ->
   nv:hash ->
   HST.ST (ivs:hash_vec)
 	 (requires (fun h0 ->
@@ -204,8 +203,8 @@ val insert_value:
 	   B.live h0 nv /\ not (B.g_is_null nv)))
 	 (ensures (fun h0 ivs h1 -> 
 	   BV.buf_vector_invariant h1 ivs))
-let insert_value vs rid nv =
-  BV.insert_copy (UInt8.uint_to_t 0) vs rid nv
+let insert_value vs nv =
+  BV.insert_copy (UInt8.uint_to_t 0) vs nv
 
 val insert_iroots:
   irs:hash_vec ->
@@ -246,6 +245,7 @@ let rec insert_iroots irs nvalues nv =
 val insert_maximum_helper:
   sz:nat -> n:uint32_t{U32.v n = pow2 sz - 1 && U32.v n < UInt.max_int U32.n} ->
   Lemma (2 * U32.v n + 1 <= UInt.max_int U32.n)
+#set-options "--z3rlimit 10"
 let insert_maximum_helper sz n =
   pow2_lt_compat_inv sz U32.n
 
@@ -253,7 +253,7 @@ val insert:
   mt:mt_ptr -> nv:hash ->
   HST.ST unit
 	 (requires (fun h0 -> 
-	   B.live h0 mt /\ not (B.g_is_null mt) /\
+	   B.live h0 mt /\ B.freeable mt /\
 	   (let mtv = B.get h0 mt 0 in
 	   merkle_tree_wf h0 mtv /\
 	   not (V.is_full (MT?.values mtv))) /\
@@ -266,8 +266,9 @@ let insert mt nv =
   let nvalues = V.size_of values in
   let iroots = MT?.iroots mtv in
   insert_iroots iroots nvalues nv;
-  let ivalues = insert_value values (admit ()) nv in
-  admit (); B.upd mt 0ul (MT ivalues iroots)
+  admit ();
+  let ivalues = insert_value values nv in
+  B.upd mt 0ul (MT ivalues iroots)
 
 /// Getting the Merkle root
 
@@ -291,7 +292,7 @@ val get_root:
   mt:mt_ptr -> rt:hash ->
   HST.ST unit
 	 (requires (fun h0 -> 
-	   B.live h0 mt /\ not (B.g_is_null mt) /\
+	   B.live h0 mt /\ B.freeable mt /\
 	   merkle_tree_wf h0 (B.get h0 mt 0) /\
 	   B.live h0 rt /\ not (B.g_is_null rt)))
 	 (ensures (fun h0 _ h1 ->
@@ -311,7 +312,8 @@ val free_merkle_tree:
   mt:mt_ptr ->
   HST.ST unit
 	 (requires (fun h0 -> 
-	   B.live h0 mt /\ merkle_tree_wf h0 (B.get h0 mt 0)))
+	   B.live h0 mt /\ B.freeable mt /\
+	   merkle_tree_wf h0 (B.get h0 mt 0)))
 	 (ensures (fun h0 _ h1 -> true))
 	 // Should have sth. like: modifies (loc_mt mt) h0 h1
 let free_merkle_tree mt =
