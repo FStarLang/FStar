@@ -246,6 +246,14 @@ val as_addr_gsub (#a: Type) (b: buffer a) (i: U32.t) (len : U32.t) : Lemma
   (ensures (as_addr (gsub b i len) == as_addr b))
   [SMTPat (as_addr (gsub b i len))]
 
+val gsub_inj
+  (#t: Type)
+  (b1 b2: buffer t)
+  (i1 i2: U32.t)
+  (len1 len2: U32.t)
+: Lemma
+  (requires (U32.v i1 + U32.v len1 <= length b1 /\ U32.v i2 + U32.v len2 <= length b2 /\ gsub b1 i1 len1 == gsub b2 i2 len2))
+  (ensures (len1 == len2 /\ (b1 == b2 ==> i1 == i2) /\ ((i1 == i2 /\ length b1 == length b2) ==> b1 == b2)))
 
 /// Nesting two ``gsub`` collapses into one ``gsub``, transitively.
 
@@ -256,7 +264,6 @@ val gsub_gsub (#a: Type) (b: buffer a) (i1: U32.t) (len1: U32.t) (i2: U32.t) (le
     gsub (gsub b i1 len1) i2 len2 == gsub b (U32.add i1 i2) len2
   ))
   [SMTPat (gsub (gsub b i1 len1) i2 len2)]
-
 
 /// A buffer ``b`` is equal to its "largest" sub-buffer, at index 0 and
 /// length ``len b``.
@@ -1094,6 +1101,14 @@ val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
   (requires (HS.fresh_frame h0 h1))
   (ensures (modifies loc_none h0 h1))
 
+val new_region_modifies (m0: HS.mem) (r0: HS.rid) (col: option int) : Lemma
+  (requires (HS.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_eternal_color (Some?.v col))))
+  (ensures (
+    let (_, m1) = HS.new_eternal_region m0 r0 col in
+    modifies loc_none m0 m1
+  ))
+  [SMTPat (HS.new_eternal_region m0 r0 col)]
+
 val popped_modifies (h0 h1: HS.mem) : Lemma
   (requires (HS.popped h0 h1))
   (ensures (modifies (loc_region_only false (HS.get_tip h0)) h0 h1))
@@ -1296,6 +1311,21 @@ val loc_unused_in (h: HS.mem) : GTot loc
 
 val loc_unused_in_not_unused_in_disjoint (h: HS.mem) : Lemma
   (loc_disjoint (loc_unused_in h) (loc_not_unused_in h))
+
+val not_live_region_loc_not_unused_in_disjoint
+  (h0: HS.mem)
+  (r: HS.rid)
+: Lemma
+  (requires (~ (HS.live_region h0 r)))
+  (ensures (loc_disjoint (loc_region_only false r) (loc_not_unused_in h0)))
+
+let fresh_frame_loc_not_unused_in_disjoint
+  (h0 h1: HS.mem)
+: Lemma
+  (requires (HS.fresh_frame h0 h1))
+  (ensures (loc_disjoint (loc_region_only false (HS.get_tip h1)) (loc_not_unused_in h0)))
+  [SMTPat (HS.fresh_frame h0 h1)]
+= not_live_region_loc_not_unused_in_disjoint h0 (HS.get_tip h1)
 
 val live_loc_not_unused_in (#t: Type) (b: buffer t) (h: HS.mem) : Lemma
   (requires (live h b))

@@ -132,6 +132,8 @@ let frameOf_gsub #a b i len = ()
 
 let as_addr_gsub #a b i len = ()
 
+let gsub_inj #t b1 b2 i1 i2 len1 len2 = ()
+
 let gsub_gsub #a b i1 len1 i2 len2 = ()
 
 let gsub_zero_length #a b = ()
@@ -787,6 +789,8 @@ let no_upd_fresh_region = MG.no_upd_fresh_region
 
 let fresh_frame_modifies = MG.fresh_frame_modifies #_ cls
 
+let new_region_modifies = MG.new_region_modifies #_ cls
+
 let popped_modifies = MG.popped_modifies #_ cls
 
 let modifies_fresh_frame_popped = MG.modifies_fresh_frame_popped
@@ -894,6 +898,8 @@ let loc_unused_in = MG.loc_unused_in _
 
 let loc_unused_in_not_unused_in_disjoint =
   MG.loc_unused_in_not_unused_in_disjoint cls
+
+let not_live_region_loc_not_unused_in_disjoint = MG.not_live_region_loc_not_unused_in_disjoint cls
 
 let live_loc_not_unused_in #t b h =
   unused_in_equiv b h;
