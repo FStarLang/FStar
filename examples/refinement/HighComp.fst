@@ -35,14 +35,12 @@ let hreturn' (#a:Type) (x : a) = fun s -> (x, s)
 
 val hbind : (a:Type) -> (b:Type) -> comp a -> (a -> comp b) -> comp b
 let hbind (a:Type) (b:Type) (m : comp a) (f : a -> comp b) =
-    fun s -> let (a, s1) = m s in f a s1
-
-#set-options "--debug HighComp --debug_level SMTQuery"
+    fun s -> let (x, s1) = m s in f x s1
 
 let hbind' (#a:Type) (#b:Type) (#wp1:hwp a) (#wp2:a -> hwp b) (m : comp_wp a wp1) (f : (x:a) -> comp_wp b (wp2 x)) :
   comp_wp b (bind_wp wp1 wp2) =
   fun s ->
-    admit ();
+    admit (); // Probably due to a bug
     let (a, s1) = m s in
     f a s1
 
