@@ -1698,6 +1698,8 @@ val upd
 
 val recallable (#a: Type) (b: buffer a) : GTot Type0
 
+val recallable_null (#a: Type) : Lemma (recallable (null #a)) [SMTPat (recallable (null #a))]
+
 val recallable_includes (#a: Type) (larger smaller: buffer a) : Lemma
   (requires (larger `includes` smaller))
   (ensures (recallable larger <==> recallable smaller))

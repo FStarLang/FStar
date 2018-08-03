@@ -1107,6 +1107,8 @@ let recallable' (#a: Type) (b: buffer a) : GTot Type0 =
 
 let recallable = recallable'
 
+let recallable_null #a = ()
+
 let recallable_includes #a larger smaller =
   if Null? larger || Null? smaller
   then ()
