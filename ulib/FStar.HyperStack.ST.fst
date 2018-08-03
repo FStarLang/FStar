@@ -448,6 +448,8 @@ let new_colored_region (r0:rid) (c:int)
                 HS.fresh_region r1 m0 m1                         /\
 	        HS.color r1 = c                                  /\
 		is_eternal_region r1                             /\
+                HS.live_region m0 r0 /\
+                (r1, m1) == HS.new_eternal_region m0 r0 (Some c) /\
 	        get_hmap m1 == Map.upd (get_hmap m0) r1 Heap.emp /\
 		get_tip m1 == get_tip m0))
   = if r0 <> HS.root then gst_recall (region_contains_pred r0);  //recall containment of r0
