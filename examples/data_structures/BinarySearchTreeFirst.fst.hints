@@ -44,15 +44,6 @@
       "fa127b1efafa2682f565e130be13f043"
     ],
     [
-      "BinarySearchTreeFirst.__proj__Node__item__l",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "e0ec1b87936cade314a9e0ac0588949b"
-    ],
-    [
       "BinarySearchTreeFirst.__proj__Node__item__left",
       1,
       2,
@@ -63,16 +54,7 @@
         "projection_inverse_BinarySearchTreeFirst.Node_l"
       ],
       0,
-      "9899d0f973dc041cd832c4eeeb3ccc45"
-    ],
-    [
-      "BinarySearchTreeFirst.__proj__Node__item__n",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "7a5ac0305eb5c1b3d0939f7a8df525d9"
+      "1135ced8456c59dc7c65ae92aa282eca"
     ],
     [
       "BinarySearchTreeFirst.__proj__Node__item__right",
@@ -81,7 +63,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1e03a04a2497e489f837a66b32bde0f7"
+      "86fe95bf53ac368a7ad65e28d891deac"
     ],
     [
       "BinarySearchTreeFirst.__proj__Node__item__right",
@@ -98,7 +80,7 @@
         "projection_inverse_BinarySearchTreeFirst.Node_n"
       ],
       0,
-      "e05734b93dc14d7eb4b998c13e703134"
+      "76cb7effe38851d36319abeda51c90c9"
     ],
     [
       "BinarySearchTreeFirst.leaf",
@@ -112,7 +94,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "19978388b82e00b8802a16e4e5fa24a1"
+      "73634e40630d0a71aa359ad52caa1c62"
     ],
     [
       "BinarySearchTreeFirst.insert",
@@ -145,7 +127,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "f0209604907609c28da101a7c352dab5"
+      "d0e0e6aff17a857b7783164f0fc796d7"
     ],
     [
       "BinarySearchTreeFirst.contains",
@@ -169,7 +151,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Some"
       ],
       0,
-      "995de0d090063bba5b8b60ba3c33f54f"
+      "54fc1bbb19d786dd7507dbc5eb9e039c"
     ],
     [
       "BinarySearchTreeFirst.in_order_opt",
@@ -192,7 +174,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "80192dcb4ad3bc0169675147306433d3"
+      "74fcd9b139e66c25354d7162f44a2fde"
     ],
     [
       "BinarySearchTreeFirst.index_is_max",
@@ -201,7 +183,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "02e80b0f2db5084639e46ce54ba52cf8"
+      "23528bec00da38e8a3a4f04fa293f8d1"
     ],
     [
       "BinarySearchTreeFirst.index_is_max2",
@@ -210,7 +192,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f17c780ba7b1e155139f592ace44a95d"
+      "aac1acb529a398798ae5710e89fe6e92"
     ],
     [
       "BinarySearchTreeFirst.tree",
@@ -219,7 +201,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b968d0ff256595d4c84b6475f4162b69"
+      "000b9fd2f9fce9f000b7c9b57191e424"
     ],
     [
       "BinarySearchTreeFirst.tree",
@@ -228,7 +210,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "dcd5111eeba7c67d0305ce4294a8961f"
+      "6a64fc25f4dca5a1e24e1fb15b90c5e1"
     ],
     [
       "BinarySearchTreeFirst.tree",
@@ -237,7 +219,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f52fb301b62c5b107a6237cfa4519124"
+      "b4d05a9f58c938795dafbfce45b5fd03"
     ],
     [
       "BinarySearchTreeFirst.tree",
@@ -252,16 +234,7 @@
         "int_inversion", "kinding_BinarySearchTreeFirst.tree@tok"
       ],
       0,
-      "66033fa4d110f842030a9cf323436a28"
-    ],
-    [
-      "BinarySearchTreeFirst.__proj__Node__item__l",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "9501879ab38b9aa053502839465fa033"
+      "f2ceeff79f5a48fbe0594844d672b645"
     ],
     [
       "BinarySearchTreeFirst.__proj__Node__item__left",
@@ -274,16 +247,7 @@
         "projection_inverse_BinarySearchTreeFirst.Node_l"
       ],
       0,
-      "260018397c97f8e5786f24c3e26984e0"
-    ],
-    [
-      "BinarySearchTreeFirst.__proj__Node__item__n",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "237652a18ce1f65cfcc7d0f221d1709e"
+      "2c9dedc745fcd15e4ba057d44adedd3b"
     ],
     [
       "BinarySearchTreeFirst.__proj__Node__item__right",
@@ -292,7 +256,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e8ef0b93c4ccb2c079cf89be2071f606"
+      "88e3e0b0e9ffa0692a79accc85ebf153"
     ],
     [
       "BinarySearchTreeFirst.__proj__Node__item__right",
@@ -309,7 +273,7 @@
         "projection_inverse_BinarySearchTreeFirst.Node_n"
       ],
       0,
-      "0f96c86f732ddc1738085118020e3acd"
+      "cd46ea9745ba02bc187ea9c2f91eb0c5"
     ],
     [
       "BinarySearchTreeFirst.leaf",
@@ -323,7 +287,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "1d8bdfebe930e129613bea0bf9e39433"
+      "17282f40eb371e1ad043658eb447f3ed"
     ],
     [
       "BinarySearchTreeFirst.insert",
@@ -355,7 +319,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "005cba7200d14ea80018c994d93734fb"
+      "462c15287bd15522c408367f7b212ad6"
     ],
     [
       "BinarySearchTreeFirst.contains",
@@ -379,7 +343,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Some"
       ],
       0,
-      "ef665145a1a0d9c6aa632862117ffe8b"
+      "b2a7ece36e6c2243ca7a1fbeb03efa0a"
     ],
     [
       "BinarySearchTreeFirst.in_order_opt",
@@ -402,7 +366,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "13c038cb818e1eb21919ab4b49ecf91b"
+      "db54c039928084215805e7a37b0c2dd5"
     ],
     [
       "BinarySearchTreeFirst.index_is_max",
@@ -411,7 +375,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "21b116c46894a0193ba93aac90ee1064"
+      "bf1427ad95e3883612926e54cb9e7e7c"
     ],
     [
       "BinarySearchTreeFirst.index_is_max2",
@@ -420,7 +384,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "515e32c583d2c8b6a50ebd2c33d9efb4"
+      "94bae3954eb00478a40c4e7ca4eb084d"
     ]
   ]
 ]
