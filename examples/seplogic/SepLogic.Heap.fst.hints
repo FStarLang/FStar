@@ -88,7 +88,7 @@
         "token_correspondence_Prims.op_LessThanOrEqual"
       ],
       0,
-      "017c6b493099ed60d2a6e08f9619c8d9"
+      "8724e367b249fa90b84042befb41b073"
     ],
     [
       "SepLogic.Heap.memory",
@@ -2773,15 +2773,6 @@
       "4dea8d70787a7ce38f9ac9b22ee1cb6f"
     ],
     [
-      "SepLogic.Heap.lemma_fresh_or_old_trans'''",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "198fb9b2d6064b865fb005722e44c594"
-    ],
-    [
       "SepLogic.Heap.lemma_fresh_or_old_trans",
       1,
       2,
@@ -2793,7 +2784,7 @@
         "refinement_interpretation_SepLogic.Heap_Tm_refine_b6d19cc943546da1d666395806a8c68f"
       ],
       0,
-      "fbeb4ef77040f9928f3ad0eb2cb336a9"
+      "7f397424d92376cd586a474f7b2208b7"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_disjoint'",
@@ -2869,16 +2860,7 @@
         "typing_SepLogic.Heap_Tm_abs_8e79f8338fa78ede6dd0d546095ef0e8"
       ],
       0,
-      "e20f443be33169b692949fae0d585ede"
-    ],
-    [
-      "SepLogic.Heap.lemma_fresh_or_old_disjoint''",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "5750df1a48abe646f0e2303ab22a2a76"
+      "66e09c4e125643fc35fb7fb854352414"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_disjoint",
@@ -2887,7 +2869,7 @@
       1,
       [ "@query", "equation_SepLogic.Heap.fresh_or_old" ],
       0,
-      "01fb93c32968d76bb88458967c080c6f"
+      "0f1bb7b35000f2c47e1ed2943b4b8cc4"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_sep'",
@@ -2963,7 +2945,7 @@
         "typing_SepLogic.Heap.op_Less_Star_Greater", "unit_typing"
       ],
       0,
-      "9812d8ffe29a6a447bb106501f1bc26f"
+      "93da2f1cdf357c13985578d941a3faba"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_sep''",
@@ -2984,7 +2966,7 @@
         "typing_SepLogic.Heap.op_Less_Star_Greater", "unit_typing"
       ],
       0,
-      "fe8e02872742e72aff843fd87d20262d"
+      "7a5286b903280e65e4519a18f2cac93d"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_sep'''",
@@ -2996,7 +2978,7 @@
         "refinement_interpretation_SepLogic.Heap_Tm_refine_884f07b7e5ce30236146cc4c38c4b151"
       ],
       0,
-      "2a8792e52a176e9aa5b2f4d8809ddbd1"
+      "f9ff1c01346e12ed447620e8ff998c78"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_sep''''",
@@ -3005,7 +2987,7 @@
       1,
       [ "@query", "equation_SepLogic.Heap.fresh_or_old" ],
       0,
-      "6b6d26c70bf47fe048d6eac362bba486"
+      "adf73f5776916e6f04f1ac061b72c3da"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_sep",
@@ -3019,7 +3001,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "2cc9ee771070282ab6371e872e8decb2"
+      "ea423b8f946937b11033cb0672880a34"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_sep",
@@ -3028,7 +3010,7 @@
       1,
       [ "@query", "lemma_SepLogic.Heap.lemma_fresh_or_old_disjoint" ],
       0,
-      "3e9fef9694b573295281ae653cb1f3be"
+      "ab116a827c241b210eabe6e297700f83"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_alloc",
@@ -3100,7 +3082,7 @@
         "typing_SepLogic.Heap.op_Bar_Greater", "unit_typing"
       ],
       0,
-      "63615430fcb0c031841e4935a902f235"
+      "b47dd3af843ae678210a71bda75e7651"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_dealloc",
@@ -3113,7 +3095,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "7762222868b6e1cabf49ffbde6c49f41"
+      "9de967cd585f9d031ea3b20fc3736509"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_dealloc",
@@ -3167,7 +3149,7 @@
         "typing_SepLogic.Heap.heap_memory"
       ],
       0,
-      "a229c390c86c2e182b4222584a4bad59"
+      "7e1096817ab5070892cd9000ab5011fb"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_upd",
@@ -3180,7 +3162,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "7ee0ed780db0a746f7c8cb196e1a6c2f"
+      "29b38ef25bb2070e4805c1b064d5f2d0"
     ],
     [
       "SepLogic.Heap.lemma_fresh_or_old_upd",
@@ -3233,7 +3215,7 @@
         "typing_SepLogic.Heap.upd_"
       ],
       0,
-      "d9cd08b7b6a27e594101ee09f83567ee"
+      "cac28496c6518a68ae8cc1d88ad4f06d"
     ]
   ]
 ]

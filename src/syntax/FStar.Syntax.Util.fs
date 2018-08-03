@@ -892,7 +892,7 @@ let abs bs t lopt =
   | _ ->
     let body = compress (Subst.close bs t) in
     match body.n with
-        | Tm_abs(bs', t, lopt') ->  //AR: if the body is an Tm_abs, we can combine the binders and use lopt' ==> ignoring lopt?
+        | Tm_abs(bs', t, lopt') ->  //AR: if the body is an Tm_abs, we can combine the binders and use lopt', ignoring lopt, since lopt will be Tot (non-informative anyway)
           mk (Tm_abs(close_binders bs@bs', t, close_lopt lopt')) None t.pos
         | _ ->
           mk (Tm_abs(close_binders bs, body, close_lopt lopt)) None t.pos

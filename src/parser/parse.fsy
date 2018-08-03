@@ -1275,10 +1275,10 @@ in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | UNDERSCORE
     {let _1 = () in
-      ( mk_pattern PatWild (rhs parseState 1) )}
+      ( mk_pattern (PatWild None) (rhs parseState 1) )}
 | HASH UNDERSCORE
     {let (_1, _2) = ((), ()) in
-      ( mk_pattern (PatVar (gen (rhs2 parseState 1 2), Some Implicit)) (rhs parseState 1) )}
+      ( mk_pattern (PatWild (Some Implicit)) (rhs parseState 1) )}
 | constant
     {let c = $1 in
       ( mk_pattern (PatConst c) (rhs parseState 1) )}
@@ -1591,17 +1591,17 @@ tvar:
 thunk_atomicTerm_:
   atomicTerm
     {let t = $1 in
-                ( mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+                ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
 
 thunk_tmNoEq_:
   tmNoEq
     {let t = $1 in
-                ( mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+                ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
 
 thunk_typ_:
   typ
     {let t = $1 in
-                ( mk_term (Abs ([mk_pattern PatWild (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+                ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
 
 ascribeTyp:
   COLON tmArrow_tmNoEq_ option___anonymous_5_

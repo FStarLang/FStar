@@ -250,7 +250,7 @@ and subst_comp_typ' s t =
             comp_univs=List.map (subst_univ (fst s)) t.comp_univs;
             result_typ=subst' s t.result_typ;
             flags=subst_flags' s t.flags;
-            effect_args=List.map (fun (t, imp) -> subst' s t, imp) t.effect_args}
+            effect_args=List.map (fun (t, imp) -> subst' s t, subst_imp' s imp) t.effect_args}
 
 and subst_comp' s t =
   match s with

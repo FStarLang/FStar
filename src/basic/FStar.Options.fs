@@ -1459,6 +1459,7 @@ let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
 let with_saved_options f =
   // take some care to not mess up the stack on errors
   // (unless we're trying to track down an error)
+  // TODO: This assumes `f` does not mess with the stack!
   if not (trace_error ()) then begin
       push ();
       try let retv = f () in

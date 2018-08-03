@@ -97,7 +97,7 @@ and binder' =
 and binder = {b:binder'; brange:range; blevel:level; aqual:aqual}
 
 and pattern' =
-  | PatWild
+  | PatWild     of option<arg_qualifier>
   | PatConst    of sconst
   | PatApp      of pattern * list<pattern>
   | PatVar      of ident * option<arg_qualifier>
@@ -335,7 +335,7 @@ let mkAdmitMagic r =
     let admit_magic = mk_term(Seq(admit, magic)) r Expr in
     admit_magic
 
-let mkWildAdmitMagic r = (mk_pattern PatWild r, None, mkAdmitMagic r)
+let mkWildAdmitMagic r = (mk_pattern (PatWild None) r, None, mkAdmitMagic r)
 
 let focusBranches branches r =
     let should_filter = Util.for_some fst branches in
@@ -403,7 +403,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                         let x_var = mk_term (Var (lid_of_ids [x])) phi.range Formula in
                         let pat_branch = (pat, None, phi)in
                         let otherwise_branch =
-                            (mk_pattern PatWild phi.range, None,
+                            (mk_pattern (PatWild None) phi.range, None,
                              mk_term (Name (lid_of_path ["False"] phi.range)) phi.range Formula)
                         in
                         mk_term (Match (x_var, [pat_branch ; otherwise_branch])) phi.range Formula
@@ -626,7 +626,8 @@ and aqual_to_string = function
   | _ -> ""
 
 and pat_to_string x = match x.pat with
-  | PatWild -> "_"
+  | PatWild None -> "_"
+  | PatWild _ -> "#_"
   | PatConst c -> C.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
   | PatTvar (i, aq)

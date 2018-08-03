@@ -5,6 +5,14 @@ ARG BUILDLOGFILE
 ARG MAXTHREADS
 ARG TARGET
 
+# ADD SSH KEY
+RUN mkdir -p ${MYHOME}/.ssh
+RUN chown everest ${MYHOME}/.ssh
+RUN chmod 700 ${MYHOME}/.ssh
+COPY --chown=everest id_rsa ${MYHOME}/.ssh/id_rsa
+RUN chmod 600 ${MYHOME}/.ssh/id_rsa
+RUN eval $(ssh-agent)
+
 #BUILD FSTAR
 RUN mkdir ${MYHOME}/FStar
 COPY --chown=everest / ${MYHOME}/FStar/
@@ -25,3 +33,7 @@ RUN bash -c ".scripts/query-stats.py -f ${BUILDLOGFILE} -F html -o log_no_replay
 
 # Worst offenders (longest times)
 RUN bash -c ".scripts/query-stats.py -f ${BUILDLOGFILE} -F html -o log_worst.html -c -g -n 10"
+
+# Remove ssh identities.
+RUN rm ${MYHOME}/.ssh/id_rsa
+RUN eval $(ssh-agent) && ssh-add -D

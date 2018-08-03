@@ -487,14 +487,14 @@ let cur_goal () : tac<goal> =
                 (Print.term_to_string t);
         ret hd)
 
-let tadmit () : tac<unit> = wrap_err "tadmit" <|
+let tadmit_t (t:term) : tac<unit> = wrap_err "tadmit_t" <|
     bind get (fun ps ->
     bind (cur_goal ()) (fun g ->
     // should somehow taint the state instead of just printing a warning
     Err.log_issue (goal_type g).pos
         (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
                     (goal_to_string ps g));
-    solve' g U.exp_unit))
+    solve' g t))
 
 let fresh () : tac<Z.t> =
     bind get (fun ps ->
@@ -1532,8 +1532,8 @@ let join_goals g1 g2 : tac<goal> =
     let gamma2 = g2.goal_ctx_uvar.ctx_uvar_gamma in
     let gamma, r1, r2 = longest_prefix S.eq_binding (List.rev gamma1) (List.rev gamma2) in
 
-    let t1 = close_forall_no_univs (Env.binders_of_bindings r1) phi1 in
-    let t2 = close_forall_no_univs (Env.binders_of_bindings r2) phi2 in
+    let t1 = close_forall_no_univs (Env.binders_of_bindings (List.rev r1)) phi1 in
+    let t2 = close_forall_no_univs (Env.binders_of_bindings (List.rev r2)) phi2 in
 
     bind (set_solution g1 U.exp_unit) (fun () ->
     bind (set_solution g2 U.exp_unit) (fun () ->
@@ -1792,7 +1792,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let cod = goal_type g in
                         let equ = env.universe_of env s_ty in
                         (* Typecheck the pattern, to fill-in the universes and get an expression out of it *)
-                        let _ , _, _, pat_t, _, _ = TcTerm.tc_pat ({ env with lax = true }) true s_ty pat in
+                        let _ , _, _, pat_t, _, _guard_pat = TcTerm.tc_pat ({ env with lax = true }) s_ty pat in
                         let eq_b = S.gen_bv "breq" None (U.mk_squash equ (U.mk_eq2 equ s_ty s_tm pat_t)) in
                         let cod = U.arrow [S.mk_binder eq_b] (mk_Total cod) in
 

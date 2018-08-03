@@ -674,7 +674,7 @@ let collect_one
     collect_pattern' p.pat
 
   and collect_pattern' = function
-    | PatWild
+    | PatWild _
     | PatOp _
     | PatConst _ ->
         ()

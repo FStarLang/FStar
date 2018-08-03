@@ -229,8 +229,8 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "dup"           dup     e_unit e_unit
                                dup     NBET.e_unit NBET.e_unit;
 
-      mktac1 0 "tadmit"        tadmit  e_unit e_unit
-                               tadmit  NBET.e_unit NBET.e_unit;
+      mktac1 0 "tadmit_t"      tadmit_t  RE.e_term e_unit
+                               tadmit_t  NRE.e_term NBET.e_unit;
 
       mktac1 0 "join"          join  e_unit e_unit
                                join  NBET.e_unit NBET.e_unit;
@@ -392,13 +392,13 @@ and e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (pro
     mk_emb em un (FStar.Syntax.Embeddings.term_as_fv t_unit)
 
 
-let report_implicits ps (is : Env.implicits) : unit =
+let report_implicits rng ps (is : Env.implicits) : unit =
     let errs = List.map (fun imp ->
                 (Err.Error_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
                              (Print.term_to_string imp.imp_uvar.ctx_uvar_typ)
                              imp.imp_reason,
-                 imp.imp_range)) is in
+                 rng)) is in
     Err.add_errors errs
 
 let run_tactic_on_typ
@@ -469,7 +469,7 @@ let run_tactic_on_typ
                         (FStar.Common.string_of_list
                                 (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
                                 ps.all_implicits);
-        report_implicits ps g.implicits;
+        report_implicits rng_goal ps g.implicits;
         // /implicits
 
         if !tacdbg then

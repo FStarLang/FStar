@@ -1094,6 +1094,16 @@ let fresh_frame_modifies #al c h0 h1 =
     (fun r a x ->
       c.same_mreference_aloc_preserved #r #a x h0 h1 (fun _ _ _ -> ()))
 
+let new_region_modifies #al c m0 r0 col
+= let (_, m1) = HS.new_eternal_region m0 r0 col in
+  modifies_intro_strong #_ #c loc_none m0 m1
+    (fun _ -> ())
+    (fun _ _ _ -> ())
+    (fun _ _ _ -> ())
+    (fun _ _ -> ())
+    (fun r a x ->
+      c.same_mreference_aloc_preserved #r #a x m0 m1 (fun _ _ _ -> ()))
+
 let popped_modifies #al c h0 h1 =
   let l = loc_region_only #_ #c false (HS.get_tip h0) in
   modifies_preserves_mreferences_intro l h0 h1 (fun t pre p ->
@@ -1478,6 +1488,13 @@ let loc_addresses_not_unused_in #al c r a h = ()
 
 let loc_unused_in_not_unused_in_disjoint #al c h =
   assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)))
+
+let not_live_region_loc_not_unused_in_disjoint #al c h0 r
+= let l1 = loc_region_only false r in
+  let l2 = loc_not_unused_in c h0 in
+  assert (loc_disjoint_region_liveness_tags l1 l2);
+  assert (loc_disjoint_addrs l1 l2);
+  assert (loc_disjoint_aux l1 l2)
 
 #set-options "--z3rlimit 16"
 
