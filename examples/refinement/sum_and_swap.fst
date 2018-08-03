@@ -40,12 +40,12 @@ let swap_and_sum' () =
   hreturn' (U32.v x0 + U32.v x1))))))
 
 
-val lswap_and_sum : unit -> lcomp_wp int sum_wp (swap_and_sum' ())
-let lswap_and_sum () =  
-  lbind (lread 0) (fun x0 -> 
-  lbind (lread 1) (fun x1 -> 
-  lbind (lwrite 0 x1) (fun () -> 
-  lbind (lwrite 1 x0) (fun () ->
-  lbind (lread 0) (fun x0' -> 
-  lreturn (U32.v x0 + U32.v x1))))))
+// val lswap_and_sum : unit -> lcomp_wp int sum_wp (swap_and_sum' ())
+// let lswap_and_sum () =  
+//   lbind (lread 0) (fun x0 -> 
+//   lbind (lread 1) (fun x1 -> 
+//   lbind (lwrite 0 x1) (fun () -> 
+//   lbind (lwrite 1 x0) (fun () ->
+//   lbind (lread 0) (fun x0' -> 
+//   lreturn (U32.v x0 + U32.v x1))))))
   
