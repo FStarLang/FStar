@@ -1862,6 +1862,9 @@ val alloca_of_list
     alloc_of_list_post #a len b
   ))
 
+unfold let gcmalloc_of_list_pre (#a: Type0) (init: list a) : GTot Type0 =
+  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
+
 val gcmalloc_of_list
   (#a: Type0)
   (r: HS.rid)
@@ -1872,7 +1875,7 @@ val gcmalloc_of_list
     alloc_post_static r len b /\
     alloc_of_list_post len b
   } )
-  (requires (fun h -> HST.is_eternal_region r /\ alloc_of_list_pre #a init))
+  (requires (fun h -> HST.is_eternal_region r /\ gcmalloc_of_list_pre #a init))
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
     alloc_post_common r len b h h' /\
