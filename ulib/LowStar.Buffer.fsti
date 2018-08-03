@@ -472,13 +472,23 @@ val loc_includes_union_r
 : Lemma
   (requires (loc_includes s s1 /\ loc_includes s s2))
   (ensures (loc_includes s (loc_union s1 s2)))
-  [SMTPat (loc_includes s (loc_union s1 s2))]
 
 val loc_includes_union_l
   (s1 s2 s: loc)
 : Lemma
   (requires (loc_includes s1 s \/ loc_includes s2 s))
   (ensures (loc_includes (loc_union s1 s2) s))
+
+let loc_includes_union_r'
+  (s s1 s2: loc)
+: Lemma
+  (loc_includes s (loc_union s1 s2) <==> (loc_includes s s1 /\ loc_includes s s2))
+  [SMTPat (loc_includes s (loc_union s1 s2))]
+= Classical.move_requires (loc_includes_union_r s s1) s2;
+  Classical.move_requires (loc_includes_union_l s1 s2) s1;
+  Classical.move_requires (loc_includes_union_l s1 s2) s2;
+  Classical.move_requires (loc_includes_trans s (loc_union s1 s2)) s1;
+  Classical.move_requires (loc_includes_trans s (loc_union s1 s2)) s2
 
 val loc_includes_none
   (s: loc)
