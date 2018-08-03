@@ -1107,6 +1107,7 @@ val new_region_modifies (m0: HS.mem) (r0: HS.rid) : Lemma
     let (_, m1) = HS.new_eternal_region m0 r0 None in
     modifies loc_none m0 m1
   ))
+  [SMTPat (HS.new_eternal_region m0 r0 None)]
 
 val popped_modifies (h0 h1: HS.mem) : Lemma
   (requires (HS.popped h0 h1))
@@ -1520,14 +1521,6 @@ val fresh_frame_modifies_inert
   (requires (HS.fresh_frame h0 h1))
   (ensures (modifies_inert loc_none h0 h1))
   [SMTPat (HS.fresh_frame h0 h1)]
-
-val new_region_modifies_inert (m0: HS.mem) (r0: HS.rid) : Lemma
-  (requires (HS.is_eternal_region r0 /\ HS.live_region m0 r0))
-  (ensures (
-    let (_, m1) = HS.new_eternal_region m0 r0 None in
-    modifies_inert loc_none m0 m1
-  ))
-  [SMTPat (HS.new_eternal_region m0 r0 None)]
 
 val popped_modifies_inert
   (h0 h1: HS.mem)

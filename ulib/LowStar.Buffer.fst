@@ -945,8 +945,6 @@ let modifies_inert_liveness_insensitive_region_buffer_weak = modifies_liveness_i
 
 let fresh_frame_modifies_inert = fresh_frame_modifies
 
-let new_region_modifies_inert = new_region_modifies
-
 let popped_modifies_inert = popped_modifies
 
 let modifies_inert_loc_unused_in l h1 h2 l' =
