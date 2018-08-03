@@ -308,7 +308,7 @@ val insert_iroots:
   nv:hash ->
   GTot (iirs:hash_seq{iroots_of_hashes (insert_values vs nv) = iirs})
        (decreases (S.length irs))
-#set-options "--z3rlimit 60"
+#set-options "--z3rlimit 80"
 let rec insert_iroots vs irs nv =
   if S.length vs = 0
   then S.create 1 nv
