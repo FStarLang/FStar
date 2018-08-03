@@ -113,7 +113,7 @@ let live_not_unused_in' (#a: Type) (h: HS.mem) (b: buffer a) : Lemma
 /// ``frameOf b`` returns the identifier of the region in which the
 /// buffer ``b`` lives.
 
-val frameOf (#a: Type) (b: buffer a) : GTot HS.rid
+val frameOf (#a: Type) (b: buffer a) : Tot HS.rid
 
 
 /// ``as_addr b`` returns the abstract address of the buffer in its

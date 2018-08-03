@@ -48,7 +48,7 @@ let live_not_unused_in #a h b = ()
 
 (* Regions and addresses, for allocation purposes *)
 
-let frameOf #a b = if g_is_null b then HS.root else HS.frameOf (Buffer?.content b)
+let frameOf #a b = if Null? b then HS.root else HS.frameOf (Buffer?.content b)
 
 let as_addr #a b = if g_is_null b then 0 else HS.as_addr (Buffer?.content b)
 
