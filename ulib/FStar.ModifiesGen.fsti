@@ -954,20 +954,6 @@ val does_not_contain_addr_elim
 
 (** END TODO *)
 
-val modifies_only_live_addresses
-  (#aloc: aloc_t) (#c: cls aloc)
-  (r: HS.rid)
-  (a: Set.set nat)
-  (l: loc c)
-  (h h' : HS.mem)
-: Lemma
-  (requires (
-    modifies (loc_union (loc_addresses false r a) l) h h' /\
-    (forall x . Set.mem x a ==> h `does_not_contain_addr` (r, x))
-  ))
-  (ensures (modifies l h h'))
-
-
 val loc_not_unused_in (#al: aloc_t) (c: cls al) (h: HS.mem) : GTot (loc c)
 
 val loc_unused_in (#al: aloc_t) (c: cls al) (h: HS.mem) : GTot (loc c)
@@ -999,6 +985,35 @@ val modifies_address_liveness_insensitive_unused_in
 : Lemma
   (requires (modifies (address_liveness_insensitive_locs c) h h'))
   (ensures (loc_not_unused_in c h' `loc_includes` loc_not_unused_in c h /\ loc_unused_in c h `loc_includes` loc_unused_in c h'))
+
+val modifies_only_not_unused_in
+  (#al: aloc_t)
+  (#c: cls al)
+  (l: loc c)
+  (h h' : HS.mem)
+: Lemma
+  (requires (modifies (loc_unused_in c h `loc_union` l) h h'))
+  (ensures (modifies l h h'))
+
+let modifies_only_live_addresses
+  (#aloc: aloc_t) (#c: cls aloc)
+  (r: HS.rid)
+  (a: Set.set nat)
+  (l: loc c)
+  (h h' : HS.mem)
+: Lemma
+  (requires (
+    modifies (loc_union (loc_addresses false r a) l) h h' /\
+    (forall x . Set.mem x a ==> h `does_not_contain_addr` (r, x))
+  ))
+  (ensures (modifies l h h'))
+= loc_addresses_unused_in c r a h;
+  loc_includes_refl l;
+  loc_includes_union_l (loc_unused_in c h) l l;
+  loc_includes_union_l (loc_unused_in c h) l (loc_addresses false r a);
+  loc_includes_union_r (loc_union (loc_unused_in c h) l) (loc_addresses false r a) l;
+  modifies_loc_includes (loc_union (loc_unused_in c h) l) h h' (loc_union (loc_addresses false r a) l);
+  modifies_only_not_unused_in l h h'
 
 val mreference_live_loc_not_unused_in
   (#al: aloc_t)

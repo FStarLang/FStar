@@ -1343,6 +1343,16 @@ val modifies_address_liveness_insensitive_unused_in
   (requires (modifies (address_liveness_insensitive_locs) h h'))
   (ensures (loc_not_unused_in h' `loc_includes` loc_not_unused_in h /\ loc_unused_in h `loc_includes` loc_unused_in h'))
 
+/// Addresses that have not been allocated yet can be removed from
+/// modifies clauses.
+
+val modifies_only_not_unused_in
+  (l: loc)
+  (h h' : HS.mem)
+: Lemma
+  (requires (modifies (loc_union (loc_unused_in h) l) h h'))
+  (ensures (modifies l h h'))
+
 val mreference_live_loc_not_unused_in
   (#t: Type)
   (#pre: Preorder.preorder t)
@@ -1698,6 +1708,8 @@ val upd
 
 val recallable (#a: Type) (b: buffer a) : GTot Type0
 
+val recallable_null (#a: Type) : Lemma (recallable (null #a)) [SMTPat (recallable (null #a))]
+
 val recallable_includes (#a: Type) (larger smaller: buffer a) : Lemma
   (requires (larger `includes` smaller))
   (ensures (recallable larger <==> recallable smaller))
@@ -1862,6 +1874,9 @@ val alloca_of_list
     alloc_of_list_post #a len b
   ))
 
+unfold let gcmalloc_of_list_pre (#a: Type0) (init: list a) : GTot Type0 =
+  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
+
 val gcmalloc_of_list
   (#a: Type0)
   (r: HS.rid)
@@ -1872,7 +1887,7 @@ val gcmalloc_of_list
     alloc_post_static r len b /\
     alloc_of_list_post len b
   } )
-  (requires (fun h -> HST.is_eternal_region r /\ alloc_of_list_pre #a init))
+  (requires (fun h -> HST.is_eternal_region r /\ gcmalloc_of_list_pre #a init))
   (ensures (fun h b h' ->
     let len = FStar.List.Tot.length init in
     alloc_post_common r len b h h' /\
