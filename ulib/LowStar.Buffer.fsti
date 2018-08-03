@@ -1343,6 +1343,16 @@ val modifies_address_liveness_insensitive_unused_in
   (requires (modifies (address_liveness_insensitive_locs) h h'))
   (ensures (loc_not_unused_in h' `loc_includes` loc_not_unused_in h /\ loc_unused_in h `loc_includes` loc_unused_in h'))
 
+/// Addresses that have not been allocated yet can be removed from
+/// modifies clauses.
+
+val modifies_only_not_unused_in
+  (l: loc)
+  (h h' : HS.mem)
+: Lemma
+  (requires (modifies (loc_union (loc_unused_in h) l) h h'))
+  (ensures (modifies l h h'))
+
 val mreference_live_loc_not_unused_in
   (#t: Type)
   (#pre: Preorder.preorder t)

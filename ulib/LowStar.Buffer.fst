@@ -916,6 +916,8 @@ let unused_in_loc_unused_in #t b h =
 let modifies_address_liveness_insensitive_unused_in =
   MG.modifies_address_liveness_insensitive_unused_in cls
 
+let modifies_only_not_unused_in = MG.modifies_only_not_unused_in
+
 let mreference_live_loc_not_unused_in =
   MG.mreference_live_loc_not_unused_in cls
 
