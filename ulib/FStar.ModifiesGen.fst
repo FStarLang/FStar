@@ -1094,8 +1094,8 @@ let fresh_frame_modifies #al c h0 h1 =
     (fun r a x ->
       c.same_mreference_aloc_preserved #r #a x h0 h1 (fun _ _ _ -> ()))
 
-let new_region_modifies #al c m0 r0
-= let (_, m1) = HS.new_eternal_region m0 r0 None in
+let new_region_modifies #al c m0 r0 col
+= let (_, m1) = HS.new_eternal_region m0 r0 col in
   modifies_intro_strong #_ #c loc_none m0 m1
     (fun _ -> ())
     (fun _ _ _ -> ())

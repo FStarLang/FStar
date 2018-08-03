@@ -1101,13 +1101,13 @@ val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
   (requires (HS.fresh_frame h0 h1))
   (ensures (modifies loc_none h0 h1))
 
-val new_region_modifies (m0: HS.mem) (r0: HS.rid) : Lemma
-  (requires (HS.is_eternal_region r0 /\ HS.live_region m0 r0))
+val new_region_modifies (m0: HS.mem) (r0: HS.rid) (col: option int) : Lemma
+  (requires (HS.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_eternal_color (Some?.v col))))
   (ensures (
-    let (_, m1) = HS.new_eternal_region m0 r0 None in
+    let (_, m1) = HS.new_eternal_region m0 r0 col in
     modifies loc_none m0 m1
   ))
-  [SMTPat (HS.new_eternal_region m0 r0 None)]
+  [SMTPat (HS.new_eternal_region m0 r0 col)]
 
 val popped_modifies (h0 h1: HS.mem) : Lemma
   (requires (HS.popped h0 h1))
