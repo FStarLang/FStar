@@ -3,6 +3,7 @@
 target=$1
 out_file=$2
 threads=$3
+branchname=$4
 
 tail -f $out_file &
 tail_pd=$!

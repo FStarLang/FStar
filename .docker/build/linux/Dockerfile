@@ -4,6 +4,7 @@ FROM everest_base_image:1
 ARG BUILDLOGFILE
 ARG MAXTHREADS
 ARG TARGET
+ARG BRANCHNAME
 
 # ADD SSH KEY
 RUN mkdir -p ${MYHOME}/.ssh
@@ -23,7 +24,7 @@ COPY --chown=everest build_fstar.sh ${MYHOME}/FStar/build_fstar.sh
 RUN chmod +x build_fstar.sh
 COPY --chown=everest build.sh ${MYHOME}/FStar/build.sh
 RUN chmod +x build.sh
-RUN ./build.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} || true
+RUN ./build.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} || true
 
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 
