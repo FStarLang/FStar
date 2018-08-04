@@ -112,6 +112,19 @@ function refresh_hints() {
     local msg="$3"
     local hints_dir="$4"
 
+    # Figure out the branch
+    if [[ $BUILD_SOURCEBRANCHNAME != "" ]]; then
+        CI_BRANCH=${BUILD_SOURCEBRANCHNAME##refs/heads/}
+        echo "... running in a VSTS environment, branch=$CI_BRANCH"
+    else
+        echo "... trying to figure out the current branch"
+        CI_BRANCH=$(git symbolic-ref HEAD) # fails if not on a branch
+        CI_BRANCH=${CI_BRANCH##refs/heads/}
+        tput setaf 1
+        echo "... not running in a VSTS environment, $CI_BRANCH is the working directory's current branch"
+        tput sgr0
+    fi
+
     # Add all the hints, even those not under version control
     find $hints_dir -iname '*.hints' -and -not -path '*/.*' -and -not -path '*/dependencies/*' | xargs git add
 
