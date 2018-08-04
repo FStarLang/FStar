@@ -41,18 +41,18 @@ let root = HH.root
 
 /// The invariant
 
-val buf_vector_invariant_liveness:
+val bv_inv_liveness:
   #a:Type0 -> #blen:uint32_t{blen > 0ul} -> 
   h:HS.mem -> bv:buf_vector a blen -> GTot Type0
-let buf_vector_invariant_liveness #a #blen h bv =
+let bv_inv_liveness #a #blen h bv =
   V.live h bv /\ V.freeable bv /\
   V.forall_prop h bv 
     (fun b -> B.live h b /\ (B.g_is_null b \/ B.freeable b))
 
-val buf_vector_invariant_region:
+val bv_inv_region:
   #a:Type0 -> #blen:uint32_t{blen > 0ul} -> 
   h:HS.mem -> bv:buf_vector a blen -> GTot Type0
-let buf_vector_invariant_region #a #blen h bv =
+let bv_inv_region #a #blen h bv =
   HST.is_eternal_region (V.frameOf bv) /\
   V.forall_prop h bv 
     (fun b -> 
@@ -64,18 +64,27 @@ let buf_vector_invariant_region #a #blen h bv =
       B.g_is_null b1 \/ B.g_is_null b2 \/
       B.frameOf b1 <> B.frameOf b2)
 
-val buf_vector_invariant:
+val bv_inv:
   #a:Type0 -> #blen:uint32_t{blen > 0ul} -> 
   h:HS.mem -> bv:buf_vector a blen -> GTot Type0
-let buf_vector_invariant #a #blen h bv =
-  buf_vector_invariant_liveness h bv /\
-  buf_vector_invariant_region h bv
+let bv_inv #a #blen h bv =
+  bv_inv_liveness h bv /\
+  bv_inv_region h bv
 
 val buf_vector_loc: 
   #a:Type0 -> #blen:uint32_t{blen > 0ul} -> 
   bv:buf_vector a blen -> GTot loc
 let buf_vector_loc #a #blen bv =
   B.loc_regions false (FStar.Set.singleton (V.frameOf bv))
+
+/// Facts related to the invariant
+
+// val bv_inv_extend:
+//   #a:Type0 -> #blen:uint32_t{blen > 0ul} -> 
+//   h:HS.mem -> bv:buf_vector a blen ->
+//   v:lbuf a blen ->
+//   Lemma (requires (bv_inv h bv))
+// 	(ensures (bv_inv h (V.insert bv v)))
 
 /// Construction
 
@@ -85,7 +94,7 @@ val create_rid:
   HST.ST (buf_vector a blen)
     (requires (fun h0 -> true))
     (ensures (fun h0 bv h1 ->
-      buf_vector_invariant h1 bv /\
+      bv_inv h1 bv /\
       V.frameOf bv = rid /\
       modifies loc_none h0 h1 /\
       V.size_of bv = len))
@@ -98,18 +107,16 @@ val create:
   HST.ST (buf_vector a blen)
     (requires (fun h0 -> true))
     (ensures (fun h0 bv h1 ->
-      buf_vector_invariant h1 bv /\
+      bv_inv h1 bv /\
       MHS.fresh_region (V.frameOf bv) h0 h1 /\
       modifies loc_none h0 h1 /\
       V.size_of bv = len))
 let create #a #blen len =
-  let hh0 = HST.get () in
   let nrid = new_region_ root in
   let hh1 = HST.get () in
-  assert (MHS.fresh_region nrid hh0 hh1);
   let bv = create_rid #a #blen len nrid in
   let hh2 = HST.get () in
-  assume (MHS.fresh_region nrid hh0 hh2);
+  B.modifies_live_region loc_none hh1 hh2 nrid;
   bv
   
 // insert_pointer: ...
@@ -121,9 +128,9 @@ val insert_copy:
   HST.ST (buf_vector a blen)
     (requires (fun h0 -> 
       B.live h0 v /\ not (B.g_is_null v) /\
-      buf_vector_invariant h0 bv))
+      bv_inv h0 bv))
     (ensures (fun h0 ibv h1 -> 
-      buf_vector_invariant h1 ibv))
+      bv_inv h1 ibv))
 let insert_copy #a ia #blen bv v =
   let nrid = new_region_ (V.frameOf bv) in
   let nv = B.malloc nrid ia blen in
@@ -138,9 +145,9 @@ val assign_copy:
   HST.ST unit
     (requires (fun h0 -> 
       B.live h0 v /\ not (B.g_is_null v) /\
-      buf_vector_invariant h0 bv))
+      bv_inv h0 bv))
     (ensures (fun h0 _ h1 -> 
-      buf_vector_invariant h1 bv))
+      bv_inv h1 bv))
 let assign_copy #a ia #blen bv i v =
   let iv = V.index bv i in
   if B.is_null iv 
@@ -155,7 +162,7 @@ val free_bufs:
   bv:buf_vector a blen ->
   idx:uint32_t{idx < V.size_of bv} ->
   HST.ST unit
-    (requires (fun h0 -> buf_vector_invariant h0 bv))
+    (requires (fun h0 -> bv_inv h0 bv))
     (ensures (fun h0 _ h1 -> true))
 let rec free_bufs #a #blen bv idx =
   admit ();
@@ -167,7 +174,7 @@ val free:
   #a:Type0 -> #blen:uint32_t{blen > 0ul} ->
   bv:buf_vector a blen ->
   HST.ST unit
-    (requires (fun h0 -> buf_vector_invariant h0 bv))
+    (requires (fun h0 -> bv_inv h0 bv))
     (ensures (fun h0 _ h1 -> modifies (buf_vector_loc bv) h0 h1))
 let free #a #blen bv =
   (if V.size_of bv = 0ul then () else free_bufs bv (V.size_of bv - 1ul));

@@ -34,8 +34,11 @@ module U8 = FStar.UInt8
 type uint32_t = U32.t
 type uint8_t = U8.t
 
-type hash = BV.lbuf uint8_t (UInt32.uint_to_t hash_size)
-let hash_vec = BV.buf_vector uint8_t (UInt32.uint_to_t hash_size)
+val uint32_hash_size: uint32_t
+let uint32_hash_size = 32ul
+
+type hash = BV.lbuf uint8_t uint32_hash_size
+let hash_vec = BV.buf_vector uint8_t uint32_hash_size
 
 // TODO1: When `EverCrypt.Hash` is connected if we define it.
 assume val hash_from_hashes: 
@@ -120,8 +123,15 @@ let uint32_pow2 sz =
   Math.Lemmas.pow2_lt_compat U32.n (U32.v sz);
   UInt32.shift_left 1ul sz
 
+val uint32_is_pow2_ok:
+  n:uint32_t{n > 0ul} ->
+  Lemma (requires (UInt32.logor n (n - 1ul) = 0ul))
+	(ensures (is_pow2 (U32.v n)))
+
+
+
 val uint32_is_pow2: 
-  n:uint32_t -> 
+  n:uint32_t ->
   Tot (b:bool{b = is_pow2 (U32.v n)})
       (decreases (U32.v n))
 let uint32_is_pow2 n =
@@ -157,10 +167,9 @@ val uint32_num_of_ones:
       (decreases (U32.v n))
 let rec uint32_num_of_ones sz n =
   if n = 0ul then 0ul
-  else (admit ())
-  // let nones = n % 2ul + uint32_num_of_ones (hide (reveal sz - 1)) (n / 2ul) in
-  // assume (High.num_of_ones (U32.v n) = U32.v nones);
-  // nones)
+  else (let nones = n % 2ul + uint32_num_of_ones (hide (reveal sz - 1)) (n / 2ul) in
+       assume (High.num_of_ones (U32.v n) = U32.v nones);
+       nones)
 
 /// Low-level Merkle tree data structure
 
@@ -174,8 +183,8 @@ let mt_ptr = B.pointer merkle_tree
 val merkle_tree_wf: HS.mem -> merkle_tree -> GTot Type0
 let merkle_tree_wf h mt =
   // memory safety
-  BV.buf_vector_invariant h (MT?.values mt) /\
-  BV.buf_vector_invariant h (MT?.iroots mt) /\
+  BV.bv_inv h (MT?.values mt) /\
+  BV.bv_inv h (MT?.iroots mt) /\
   V.frameOf (MT?.values mt) <> V.frameOf (MT?.iroots mt)
 
 /// Initialization
@@ -199,12 +208,12 @@ val insert_value:
   nv:hash ->
   HST.ST (ivs:hash_vec)
 	 (requires (fun h0 ->
-	   BV.buf_vector_invariant h0 vs /\
+	   BV.bv_inv h0 vs /\
 	   B.live h0 nv /\ not (B.g_is_null nv)))
 	 (ensures (fun h0 ivs h1 -> 
-	   BV.buf_vector_invariant h1 ivs))
+	   BV.bv_inv h1 ivs))
 let insert_value vs nv =
-  BV.insert_copy (UInt8.uint_to_t 0) vs nv
+  BV.insert_copy 0uy vs nv
 
 val insert_iroots:
   irs:hash_vec ->
@@ -212,10 +221,10 @@ val insert_iroots:
   nv:hash ->
   HST.ST unit
 	 (requires (fun h0 -> 
-	   BV.buf_vector_invariant h0 irs /\
+	   BV.bv_inv h0 irs /\
 	   B.live h0 nv /\ not (B.g_is_null nv)))
 	 (ensures (fun h0 _ h1 ->
-	   BV.buf_vector_invariant h1 irs))
+	   BV.bv_inv h1 irs))
 let rec insert_iroots irs nvalues nv =
   admit ()
   // let hh0 = HST.get () in
@@ -278,7 +287,7 @@ val merkle_root_of_iroots:
   acc:hash ->
   HST.ST unit
 	 (requires (fun h0 ->
-	   BV.buf_vector_invariant h0 irs /\
+	   BV.bv_inv h0 irs /\
 	   B.live h0 acc /\ not (B.g_is_null acc)))
 	 (ensures (fun h0 _ h1 ->
 	   modifies (loc_buffer acc) h0 h1))

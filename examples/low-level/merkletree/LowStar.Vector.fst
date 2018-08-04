@@ -14,7 +14,8 @@ module S = FStar.Seq
 type uint32_t = UInt32.t
 
 val max_uint32: uint32_t
-let max_uint32 = UInt32.uint_to_t (UInt.max_int UInt32.n)
+let max_uint32 = 4294967295ul // 2^32 - 1
+// UInt32.uint_to_t (UInt.max_int UInt32.n)
 
 module U32 = FStar.UInt32
 
