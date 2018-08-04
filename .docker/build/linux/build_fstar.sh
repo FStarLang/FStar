@@ -40,6 +40,7 @@ function fetch_hacl() {
     local ref=$(if [ -f ../.hacl_version ]; then cat ../.hacl_version | tr -d '\r\n'; else echo origin/master; fi)
     echo Switching to HACL $ref
     git reset --hard $ref
+    git clean -fdx
     cd ..
     export_home HACL "$(pwd)/hacl-star"
     export_home EVERCRYPT "$(pwd)/hacl-star/providers"
@@ -73,6 +74,7 @@ function fetch_and_make_kremlin() {
 
     make -C kremlin -j $threads $localTarget ||
         (cd kremlin && git clean -fdx && make -j $threads $localTarget)
+    OTHERFLAGS='--admit_smt_queries true' make -C kremlin/kremlib -j $threads
     export PATH="$(pwd)/kremlin:$PATH"
 }
 
@@ -86,6 +88,7 @@ function fetch_mitls() {
     local ref=$(if [ -f ../.mitls_version ]; then cat ../.mitls_version | tr -d '\r\n'; else echo origin/master; fi)
     echo Switching to mitls-fstar $ref
     git reset --hard $ref
+    git clean -fdx
     cd ..
     export_home MITLS "$(pwd)/mitls-fstar"
 }
@@ -227,10 +230,10 @@ function build_fstar() {
             } &
 
             {
-                OTHERFLAGS='--use_two_phase_tc false --warn_error -276 --use_hint_hashes' timeout $timeout make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
+                OTHERFLAGS='--warn_error -276 --use_hint_hashes' timeout $timeout make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
                     {
-                        echo "Error - Hacl.Hash.SHA2_256.fst-verify (HACL*)"
-                        echo " - Hacl.Hash.SHA2_256.fst-verify (HACL*)" >>$ORANGE_FILE
+                        echo "Error - Hacl.Impl.SHA2_256.fst-verify (HACL*)"
+                        echo " - Hacl.Impl.SHA2_256.fst-verify (HACL*)" >>$ORANGE_FILE
                     }
             } &
 
