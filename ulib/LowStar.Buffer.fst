@@ -14,7 +14,7 @@ noeq
 type buffer' (a: Type0) : Type0 =
 | Null
 | Buffer:
-  (max_length: U32.t { U32.v max_length > 0 } ) ->
+  (max_length: U32.t ) ->
   (content: HST.reference (vec a (U32.v max_length))) ->
   (idx: U32.t) ->
   (length: U32.t { U32.v idx + U32.v length <= U32.v max_length } ) ->
@@ -916,6 +916,8 @@ let unused_in_loc_unused_in #t b h =
 let modifies_address_liveness_insensitive_unused_in =
   MG.modifies_address_liveness_insensitive_unused_in cls
 
+let modifies_only_not_unused_in = MG.modifies_only_not_unused_in
+
 let mreference_live_loc_not_unused_in =
   MG.mreference_live_loc_not_unused_in cls
 
@@ -1107,6 +1109,8 @@ let recallable' (#a: Type) (b: buffer a) : GTot Type0 =
 
 let recallable = recallable'
 
+let recallable_null #a = ()
+
 let recallable_includes #a larger smaller =
   if Null? larger || Null? smaller
   then ()
@@ -1125,6 +1129,7 @@ let freeable' (#a: Type) (b: buffer a) : GTot Type0 =
   (not (g_is_null b)) /\
   HS.is_mm (Buffer?.content b) /\
   HST.is_eternal_region (frameOf b) /\
+  U32.v (Buffer?.max_length b) > 0 /\
   Buffer?.idx b == 0ul /\
   Buffer?.length b == Buffer?.max_length b
 
