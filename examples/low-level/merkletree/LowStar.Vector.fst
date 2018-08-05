@@ -235,85 +235,89 @@ val fold_left:
 let fold_left #a #b vec f ib =
   fold_left_buffer (Vec?.sz vec) (B.sub (Vec?.vs vec) 0ul (Vec?.sz vec)) f ib
 
-val forall_prop_seq:
-  #a:Type -> seq:S.seq a -> p:(a -> GTot Type0) -> GTot Type0
-let forall_prop_seq #a seq p =
-  forall (i:nat{i < S.length seq}). p (S.index seq i)
-
-val forall_prop_buffer:
-  #a:Type -> h:HS.mem -> buf:B.buffer a ->
+val forall_seq:
+  #a:Type -> seq:S.seq a ->
+  i:nat -> j:nat{i <= j && j <= S.length seq} ->
   p:(a -> GTot Type0) -> GTot Type0
-let forall_prop_buffer #a h buf p =
-  forall_prop_seq (B.as_seq h buf) p
+let forall_seq #a seq i j p =
+  forall (idx:nat{i <= idx && idx < j}). 
+    p (S.index seq idx)
 
-val forall_prop: 
-  #a:Type -> h:HS.mem -> vec:vector a -> 
-  p:(a -> Tot Type0) -> GTot Type0
-let forall_prop #a h vec p =
-  forall_prop_seq (as_seq h vec) p
-
-val forall_two_prop_seq:
-  #a:Type -> seq:S.seq a -> p:(a -> a -> GTot Type0) -> GTot Type0
-let forall_two_prop_seq #a seq p =
-  forall (i:nat{i < S.length seq}) (j:nat{j < S.length seq && i <> j}).
-    p (S.index seq i) (S.index seq j)
-
-val forall_two_prop_buffer:
+val forall_buffer:
   #a:Type -> h:HS.mem -> buf:B.buffer a ->
-  p:(a -> a -> GTot Type0) -> GTot Type0
-let forall_two_prop_buffer #a h buf p =
-  forall_two_prop_seq (B.as_seq h buf) p
+  i:nat -> j:nat{i <= j && j <= B.length buf} ->
+  p:(a -> GTot Type0) -> GTot Type0
+let forall_buffer #a h buf i j p =
+  forall_seq (B.as_seq h buf) i j p
 
-val forall_two_prop:
+val forall_: 
+  #a:Type -> h:HS.mem -> vec:vector a ->
+  i:nat -> j:nat{i <= j && j <= U32.v (size_of vec)} ->
+  p:(a -> Tot Type0) -> GTot Type0
+let forall_ #a h vec i j p =
+  forall_seq (as_seq h vec) i j p
+
+val forall_all:
+  #a:Type -> h:HS.mem -> vec:vector a ->
+  p:(a -> Tot Type0) -> GTot Type0
+let forall_all #a h vec p =
+  forall_ h vec 0 (U32.v (size_of vec)) p
+
+val forall2_seq:
+  #a:Type -> seq:S.seq a -> 
+  i:nat -> j:nat{i <= j && j <= S.length seq} ->
+  p:(a -> a -> GTot Type0) -> GTot Type0
+let forall2_seq #a seq i j p =
+  forall (k:nat{i <= k && k < j}) (l:nat{i <= l && l < j}).
+    p (S.index seq k) (S.index seq l)
+
+val forall2_buffer:
+  #a:Type -> h:HS.mem -> buf:B.buffer a ->
+  i:nat -> j:nat{i <= j && j <= B.length buf} ->
+  p:(a -> a -> GTot Type0) -> GTot Type0
+let forall2_buffer #a h buf i j p =
+  forall2_seq (B.as_seq h buf) i j p
+
+val forall2:
+  #a:Type -> h:HS.mem -> vec:vector a -> 
+  i:nat -> j:nat{i <= j && j <= U32.v (size_of vec)} ->
+  p:(a -> a -> GTot Type0) -> GTot Type0
+let forall2 #a h vec i j p =
+  forall2_seq (as_seq h vec) i j p
+
+val forall2_all:
   #a:Type -> h:HS.mem -> vec:vector a -> 
   p:(a -> a -> GTot Type0) -> GTot Type0
-let forall_two_prop #a h vec p =
-  forall_two_prop_seq (as_seq h vec) p
-
+let forall2_all #a h vec p =
+  forall2 h vec 0 (U32.v (size_of vec)) p
 
 (*! Facts *)
 
-val forall_prop_0:
-  #a:Type -> h:HS.mem -> vec:vector a{size_of vec = 0ul} ->
-  p:(a -> Tot Type0) ->
-  Lemma (forall_prop h vec p)
-let forall_prop_0 #a h vec p = ()
+// val forall_append:
+//   #a:Type -> h:HS.mem -> vec:vector a ->
+//   i:nat -> j:nat{i <= j} -> k:nat{j <= k && k <= U32.v (size_of vec)} ->
+//   p:(a -> Tot Type0) ->
+//   Lemma (requires (forall_ h vec i j p /\ forall_ h vec j k p))
+// 	(ensures (forall_ h vec i k p))
+// let forall_append #a h vec i j k p = ()
 
-val forall_prop_1:
-  #a:Type -> h:HS.mem -> vec:vector a{size_of vec = 1ul} ->
-  p:(a -> Tot Type0) ->
-  Lemma (forall_prop h vec p <==> p (S.index (as_seq h vec) 0))
-let forall_prop_1 #a h vec p = ()
-
-val forall_two_prop_0:
-  #a:Type -> h:HS.mem -> vec:vector a{size_of vec = 0ul} ->
-  p:(a -> a -> Tot Type0) ->
-  Lemma (forall_two_prop h vec p)
-let forall_two_prop_0 #a h vec p = ()
-
-val forall_two_prop_1:
-  #a:Type -> h:HS.mem -> vec:vector a{size_of vec = 1ul} ->
-  p:(a -> a -> Tot Type0) ->
-  Lemma (forall_two_prop h vec p)
-let forall_two_prop_1 #a h vec p = ()
-
-// val forall_prop_buffer_consistent:
+// val forall_buffer_consistent:
 //   #a:Type -> h:HS.mem -> len:uint32_t{len > 0ul} ->
 //   buf:B.buffer a{B.len buf = len} ->
 //   vec:vector a ->
 //   p:(a -> Tot Type0) ->
 //   Lemma (requires (S.equal (as_seq h vec) (B.as_seq h buf) /\
-// 		  forall_prop_buffer h buf p))
+// 		  forall_buffer h buf p))
 // 	(ensures (forall_prop h vec p))
-// let forall_prop_buffer_consistent #a h len buf vec p = ()
+// let forall_buffer_consistent #a h len buf vec p = ()
 
-// val forall_two_prop_buffer_consistent:
+// val forall2_buffer_consistent:
 //   #a:Type -> h:HS.mem -> len:uint32_t{len > 0ul} ->
 //   buf:B.buffer a{B.len buf = len} ->
 //   vec:vector a ->
 //   p:(a -> a -> Tot Type0) ->
 //   Lemma (requires (S.equal (as_seq h vec) (B.as_seq h buf) /\
-// 		  forall_two_prop_buffer h buf p))
-// 	(ensures (forall_two_prop h vec p))
-// let forall_two_prop_buffer_consistent #a h len buf vec p = ()
+// 		  forall2_buffer h buf p))
+// 	(ensures (forall2 h vec p))
+// let forall2_buffer_consistent #a h len buf vec p = ()
 

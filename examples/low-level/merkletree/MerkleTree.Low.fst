@@ -34,27 +34,26 @@ module U8 = FStar.UInt8
 type uint32_t = U32.t
 type uint8_t = U8.t
 
-val uint32_hash_size: uint32_t
-let uint32_hash_size = 32ul
+val hash_size: uint32_t
+let hash_size = 32ul
 
-type hash = BV.lbuf uint8_t uint32_hash_size
-let hash_vec = BV.buf_vector uint8_t uint32_hash_size
+type hash = B.buffer uint8_t
+type hash_vec = BV.buf_vector uint8_t
 
 // TODO1: When `EverCrypt.Hash` is connected if we define it.
 assume val hash_from_hashes: 
   src1:hash -> src2:hash -> dst:hash -> 
   HST.ST unit
 	 (requires (fun h0 ->
-	   B.live h0 src1 /\ not (B.g_is_null src1) /\
-	   B.live h0 src2 /\ not (B.g_is_null src2) /\
-	   B.live h0 dst /\ not (B.g_is_null dst)))
+	   BV.buffer_inv_liveness hash_size h0 src1 /\
+	   BV.buffer_inv_liveness hash_size h0 src2 /\
+	   BV.buffer_inv_liveness hash_size h0 dst))
 	 (ensures (fun h0 _ h1 ->
 	   // memory safety
 	   modifies (loc_buffer dst) h0 h1 /\
 	   // correctness
-	   High.hash_from_hashes 
-	     (B.as_seq h1 src1) 
-	     (B.as_seq h1 src2) = B.as_seq h1 dst)) 
+	   High.hash_from_hashes (B.as_seq h1 src1) (B.as_seq h1 src2) = 
+	   B.as_seq h1 dst)) 
 
 /// Sequence mapping
 
@@ -123,19 +122,12 @@ let uint32_pow2 sz =
   Math.Lemmas.pow2_lt_compat U32.n (U32.v sz);
   UInt32.shift_left 1ul sz
 
-val uint32_is_pow2_ok:
-  n:uint32_t{n > 0ul} ->
-  Lemma (requires (UInt32.logor n (n - 1ul) = 0ul))
-	(ensures (is_pow2 (U32.v n)))
-
-
-
 val uint32_is_pow2: 
   n:uint32_t ->
   Tot (b:bool{b = is_pow2 (U32.v n)})
       (decreases (U32.v n))
 let uint32_is_pow2 n =
-  let b = n <> 0ul && UInt32.logor n (n - 1ul) = 0ul in
+  let b = n <> 0ul && UInt32.logand n (n - 1ul) = 0ul in
   assume (b = is_pow2 (U32.v n));
   b
 
@@ -163,12 +155,12 @@ let uint32_pow2_floor n =
 val uint32_num_of_ones:
   sz:erased nat{reveal sz <= U32.n} -> 
   n:uint32_t{U32.v n < pow2 (reveal sz)} ->
-  Tot (nirs:uint32_t{U32.v nirs <= reveal sz /\ High.num_of_ones (U32.v n) = U32.v nirs})
+  Tot (nirs:uint32_t{U32.v nirs <= reveal sz}) // /\ High.num_of_ones (U32.v n) = U32.v nirs})
       (decreases (U32.v n))
 let rec uint32_num_of_ones sz n =
   if n = 0ul then 0ul
   else (let nones = n % 2ul + uint32_num_of_ones (hide (reveal sz - 1)) (n / 2ul) in
-       assume (High.num_of_ones (U32.v n) = U32.v nones);
+       // assume (High.num_of_ones (U32.v n) = U32.v nones);
        nones)
 
 /// Low-level Merkle tree data structure
@@ -183,8 +175,8 @@ let mt_ptr = B.pointer merkle_tree
 val merkle_tree_wf: HS.mem -> merkle_tree -> GTot Type0
 let merkle_tree_wf h mt =
   // memory safety
-  BV.bv_inv h (MT?.values mt) /\
-  BV.bv_inv h (MT?.iroots mt) /\
+  BV.bv_inv hash_size h (MT?.values mt) /\
+  BV.bv_inv hash_size h (MT?.iroots mt) /\
   V.frameOf (MT?.values mt) <> V.frameOf (MT?.iroots mt)
 
 /// Initialization
@@ -195,9 +187,8 @@ val create_merkle_tree: unit ->
 	 (ensures (fun h0 mt h1 ->
 	   merkle_tree_wf h1 (B.get h1 mt 0)))
 let create_merkle_tree _ =
-  let values = BV.create 1ul in
-  let iroots = BV.create 32ul in
-  // fresh_regions_neq (V.frameOf values) (V.frameOf iroots) hh0 hh1 hh2;
+  let values = BV.create 0uy hash_size 1ul in
+  let iroots = BV.create 0uy hash_size 32ul in
   B.malloc root (MT values iroots) 1ul
 
 /// Insertion
@@ -207,49 +198,32 @@ val insert_value:
   vs:hash_vec{not (V.is_full vs)} ->
   nv:hash ->
   HST.ST (ivs:hash_vec)
-	 (requires (fun h0 ->
-	   BV.bv_inv h0 vs /\
-	   B.live h0 nv /\ not (B.g_is_null nv)))
-	 (ensures (fun h0 ivs h1 -> 
-	   BV.bv_inv h1 ivs))
+	 (requires (fun h0 -> 
+	   BV.buffer_inv_liveness hash_size h0 nv /\ BV.bv_inv hash_size h0 vs))
+	 (ensures (fun h0 ivs h1 -> BV.bv_inv hash_size h1 ivs))
 let insert_value vs nv =
-  BV.insert_copy 0uy vs nv
+  BV.insert_copy 0uy hash_size vs nv
+
+(*! TODO; from here :P *)
 
 val insert_iroots:
-  irs:hash_vec ->
-  nvalues:uint32_t{U32.v nvalues < pow2 (U32.v (V.size_of irs)) - 1} ->
-  nv:hash ->
+  irs:hash_vec{V.size_of irs = 32ul} ->
+  cpos:uint32_t{cpos < 32ul} ->
+  // Current positions of internal roots, represented as a bitvector.
+  irps:uint32_t{U32.v irps < pow2 (U32.v (32ul - cpos)) - 1} ->
+  acc:hash ->
   HST.ST unit
 	 (requires (fun h0 -> 
-	   BV.bv_inv h0 irs /\
-	   B.live h0 nv /\ not (B.g_is_null nv)))
+	   BV.buffer_inv_liveness hash_size h0 acc /\
+	   BV.bv_inv hash_size h0 irs))
 	 (ensures (fun h0 _ h1 ->
-	   BV.bv_inv h1 irs))
-let rec insert_iroots irs nvalues nv =
+	   BV.bv_inv hash_size h1 irs))
+let rec insert_iroots irs cpos irps acc =
   admit ()
-  // let hh0 = HST.get () in
-  // if nvalues = 0ul
-  // then copy_hash nv (B.index irs 0ul)
-  // else (hash_buf_allocated_gsub hh0 irs 1ul (B.len irs - 1ul);
-  //      hash_buf_disjoint_ext_gsub hh0 irs 1ul (B.len irs - 1ul) nv;
-  //      hash_buf_disjoint_ext_gsub hh0 irs 1ul (B.len irs - 1ul) irs;
-       
-  //      insert_iroots (hide (reveal nirs - 1))
-  // 		     (nvalues - uint32_pow2 (uint32_pow2_floor nvalues))
-  // 		     (B.offset irs 1ul) nv;
-
-  //      let hh1 = HST.get () in
-  //      let tirs = B.offset irs 1ul in
-  //      B.modifies_buffer_elim (B.get hh1 irs 0) (loc_hashes hh1 tirs) hh0 hh1;
-  //      modifies_union_weakened_right (loc_buffer (B.get hh0 irs 0))
-  //      				     (loc_hashes hh0 tirs)
-  //      				     hh0 hh1);
-  //      Math.Lemmas.pow2_le_compat U32.n (reveal nirs);
-
-  //      if uint32_is_pow2 (nvalues + 1ul)
-  //      then hash_from_hashes (B.index irs 0ul) (B.index irs 1ul)
-  //      	    		     (B.index irs 0ul)
-  //      else ()
+  // if irps % 2ul = 0ul
+  // then BV.assign_copy 0uy irs cpos acc
+  // else (hash_from_hashes (BV.value_of irs cpos) acc acc;
+  //      insert_iroots irs (cpos + 1ul) (irps / 2) acc)
 
 val insert_maximum_helper:
   sz:nat -> n:uint32_t{U32.v n = pow2 sz - 1 && U32.v n < UInt.max_int U32.n} ->
@@ -261,12 +235,12 @@ let insert_maximum_helper sz n =
 val insert:
   mt:mt_ptr -> nv:hash ->
   HST.ST unit
-	 (requires (fun h0 -> 
+	 (requires (fun h0 ->
+	   BV.buffer_inv_liveness hash_size h0 nv /\
 	   B.live h0 mt /\ B.freeable mt /\
 	   (let mtv = B.get h0 mt 0 in
 	   merkle_tree_wf h0 mtv /\
-	   not (V.is_full (MT?.values mtv))) /\
-	   B.live h0 nv /\ not (B.g_is_null nv)))
+	   not (V.is_full (MT?.values mtv)))))
 	 (ensures (fun h0 _ h1 ->
 	   merkle_tree_wf h1 (B.get h1 mt 0)))
 let insert mt nv =
@@ -274,46 +248,48 @@ let insert mt nv =
   let values = MT?.values mtv in
   let nvalues = V.size_of values in
   let iroots = MT?.iroots mtv in
-  insert_iroots iroots nvalues nv;
+  insert_iroots iroots 0ul nvalues nv;
   admit ();
   let ivalues = insert_value values nv in
   B.upd mt 0ul (MT ivalues iroots)
 
 /// Getting the Merkle root
 
-val merkle_root_of_iroots:
-  irs:hash_vec ->
-  iidx:uint32_t{iidx < V.size_of irs} ->
-  acc:hash ->
-  HST.ST unit
-	 (requires (fun h0 ->
-	   BV.bv_inv h0 irs /\
-	   B.live h0 acc /\ not (B.g_is_null acc)))
-	 (ensures (fun h0 _ h1 ->
-	   modifies (loc_buffer acc) h0 h1))
-let rec merkle_root_of_iroots irs iidx acc =
-  if iidx = 0ul 
-  then (admit (); hash_from_hashes (V.index irs 0ul) acc acc)
-  else (admit (); hash_from_hashes (V.index irs iidx) acc acc;
-       merkle_root_of_iroots irs (iidx - 1ul) acc)
+// TODO: need to redefine following the new representation of internal roots.
 
-val get_root:
-  mt:mt_ptr -> rt:hash ->
-  HST.ST unit
-	 (requires (fun h0 -> 
-	   B.live h0 mt /\ B.freeable mt /\
-	   merkle_tree_wf h0 (B.get h0 mt 0) /\
-	   B.live h0 rt /\ not (B.g_is_null rt)))
-	 (ensures (fun h0 _ h1 ->
-	   modifies (loc_buffer rt) h0 h1))
-let get_root mt rt =
-  let mtv = B.index mt 0ul in
-  let values = MT?.values mtv in
-  let nvalues = V.size_of values in
-  if nvalues = 0ul then ()
-  else (let iroots = MT?.iroots mtv in
-       let nirs = uint32_num_of_ones (hide 32) nvalues in
-       merkle_root_of_iroots iroots (nirs - 1ul) rt)
+// val merkle_root_of_iroots:
+//   irs:hash_vec ->
+//   iidx:uint32_t{iidx < V.size_of irs} ->
+//   acc:hash ->
+//   HST.ST unit
+// 	 (requires (fun h0 ->
+// 	   BV.buffer_inv_liveness hash_size h0 acc /\
+// 	   BV.bv_inv hash_size h0 irs))
+// 	 (ensures (fun h0 _ h1 ->
+// 	   modifies (loc_buffer acc) h0 h1))
+// let rec merkle_root_of_iroots irs iidx acc =
+//   if iidx = 0ul 
+//   then (admit (); hash_from_hashes (V.index irs 0ul) acc acc)
+//   else (admit (); hash_from_hashes (V.index irs iidx) acc acc;
+//        merkle_root_of_iroots irs (iidx - 1ul) acc)
+
+// val get_root:
+//   mt:mt_ptr -> rt:hash ->
+//   HST.ST unit
+// 	 (requires (fun h0 -> 
+// 	   BV.buffer_inv_liveness hash_size h0 rt /\
+// 	   B.live h0 mt /\ B.freeable mt /\
+// 	   merkle_tree_wf h0 (B.get h0 mt 0)))
+// 	 (ensures (fun h0 _ h1 ->
+// 	   modifies (loc_buffer rt) h0 h1))
+// let get_root mt rt =
+//   let mtv = B.index mt 0ul in
+//   let values = MT?.values mtv in
+//   let nvalues = V.size_of values in
+//   if nvalues = 0ul then ()
+//   else (let iroots = MT?.iroots mtv in
+//        let nirs = uint32_num_of_ones (hide 32) nvalues in
+//        merkle_root_of_iroots iroots (nirs - 1ul) rt)
 
 /// Freeing the Merkle tree
 
@@ -324,11 +300,11 @@ val free_merkle_tree:
 	   B.live h0 mt /\ B.freeable mt /\
 	   merkle_tree_wf h0 (B.get h0 mt 0)))
 	 (ensures (fun h0 _ h1 -> true))
-	 // Should have sth. like: modifies (loc_mt mt) h0 h1
+	 // TODO: should have sth. like: modifies (loc_mt mt) h0 h1
 let free_merkle_tree mt =
   let mtv = B.index mt 0ul in
   admit ();
-  BV.free (MT?.values mtv);
-  BV.free (MT?.iroots mtv);
+  BV.free hash_size (MT?.values mtv);
+  BV.free hash_size (MT?.iroots mtv);
   B.free mt
 
