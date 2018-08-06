@@ -513,6 +513,8 @@ let is_tactic t =
 
 exception Let_rec_unencodeable
 
+let copy_env (en:env_t) = { en with cache = BU.smap_copy en.cache }  //Make a copy of all the mutable state of env_t, central place for keeping track of mutable fields in env_t
+
 let encode_top_level_let :
     env_t -> (bool * list<letbinding>) -> list<qualifier> -> list<decl> * env_t =
     fun env (is_rec, bindings) quals ->
@@ -615,6 +617,18 @@ let encode_top_level_let :
         in
         let toks_fvbs = List.rev toks in
         let decls = List.rev decls |> List.flatten in
+        (*
+         * AR: decls are the declarations for the top-level lets
+         *     if one of the let body contains a let rec (inner let rec), we simply return decls at that point, inner let recs are not encoded to the solver yet (see Inner_let_rec below)
+         *     the way it is implemented currently is that, the call to encode the let body throws an exception Inner_let_rec which is caught below in this function
+         *     and the exception handler simply returns decls
+         *     however, it seems to mess up the env cache
+         *     basically, the let rec can be quite deep in the body, and then traversing the body before it, we might encode new decls, add them to the cache etc.
+         *     since the cache is stateful, this would mean that there would be some symbols in the cache but not in the returned decls list (which only contains the top-level lets)
+         *     this results in z3 errors
+         *     so, taking a snapshot of the env, and return this env in handling of the Inner_let_rec (see also #1502)
+         *)
+        let env_decls = copy_env env in
         let typs = List.rev typs in
 
         let mk_app rng curry fvb vars =
@@ -806,7 +820,7 @@ let encode_top_level_let :
         if quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false)
         || typs  |> BU.for_some (fun t -> not <| (U.is_pure_or_ghost_function t ||
                                                   is_reifiable_function env.tcenv t))
-        then decls, env
+        then decls, env_decls
         else
           try
             if not is_rec
@@ -815,7 +829,7 @@ let encode_top_level_let :
               encode_non_rec_lbdef bindings typs toks_fvbs env
             else
               encode_rec_lbdefs bindings typs toks_fvbs env
-          with Inner_let_rec -> decls, env  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
+          with Inner_let_rec -> decls, env_decls  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
 
     with Let_rec_unencodeable ->
       let msg = bindings |> List.map (fun lb -> Print.lbname_to_string lb.lbname) |> String.concat " and " in
@@ -1341,10 +1355,11 @@ let get_env cmn tcenv = match !last_env with
 let set_env env = match !last_env with
     | [] -> failwith "Empty env stack"
     | _::tl -> last_env := env::tl
+
 let push_env () = match !last_env with
     | [] -> failwith "Empty env stack"
     | hd::tl ->
-      let top = {hd with cache = BU.smap_copy hd.cache} in
+      let top = copy_env hd in
       last_env := top::hd::tl
 let pop_env () = match !last_env with
     | [] -> failwith "Popping an empty stack"
