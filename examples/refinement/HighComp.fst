@@ -20,6 +20,7 @@ let comp_p (a:Type) (pre : state -> Type) (post : state -> a * state -> Type) : 
     s0:state -> Pure (a * state) (pre s0) (post s0)
 
 // can I get these for free?
+unfold
 let return_wp (x : 'a) : hwp 'a = fun s0 post -> post (x, s0)
 
 unfold

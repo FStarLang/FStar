@@ -19,7 +19,7 @@ let swap_and_sum () =
   hreturn int (U32.v x0 + U32.v x1))))))
  
 
-
+unfold
 let sum_wp : hwp int  = fun s0 post -> let (r1, r2) = s0 in post (U32.v r1 + U32.v r2, (r2, r1))
 
 val hswap_and_sum : unit -> HIGH int sum_wp 
@@ -30,22 +30,22 @@ let hswap_and_sum () =
   let _  = HIGH?.put 1 x0 in
   U32.v x0 + U32.v x1
 
-//val swap_and_sum' : unit -> comp_wp int sum_wp 
-let swap_and_sum' () =  
-  hbind' (hread' 0) (fun x0 -> 
-  hbind' (hread' 1) (fun x1 -> 
-  hbind' (hwrite' 0 x1) (fun () -> 
-  hbind' (hwrite' 1 x0) (fun () ->
-  hbind' (hread' 0) (fun x0' -> 
-  hreturn' (U32.v x0 + U32.v x1))))))
+// val swap_and_sum' : unit -> comp_wp int sum_wp 
+// let swap_and_sum' () =  
+//   hbind' (hread' 0) (fun x0 -> 
+//   hbind' (hread' 1) (fun x1 -> 
+//   hbind' (hwrite' 0 x1) (fun () -> 
+//   hbind' (hwrite' 1 x0) (fun () ->
+//   hbind' (hread' 0) (fun x0' -> 
+//   hreturn' (U32.v x0 + U32.v x1))))))
 
 
-// val lswap_and_sum : unit -> lcomp_wp int sum_wp (swap_and_sum' ())
-// let lswap_and_sum () =  
-//   lbind (lread 0) (fun x0 -> 
-//   lbind (lread 1) (fun x1 -> 
-//   lbind (lwrite 0 x1) (fun () -> 
-//   lbind (lwrite 1 x0) (fun () ->
-//   lbind (lread 0) (fun x0' -> 
-//   lreturn (U32.v x0 + U32.v x1))))))
+val lswap_and_sum : unit -> lcomp_wp int sum_wp (reif sum_wp hswap_and_sum)
+let lswap_and_sum () =  
+  lbind (lread 0) (fun x0 -> 
+  lbind (lread 1) (fun x1 -> 
+  lbind (lwrite 0 x1) (fun () -> 
+  lbind (lwrite 1 x0) (fun () ->
+  lbind (lread 0) (fun x0' -> 
+  lreturn (U32.v x0 + U32.v x1))))))
   
