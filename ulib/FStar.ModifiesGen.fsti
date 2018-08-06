@@ -782,7 +782,7 @@ val new_region_modifies
   (r0: HS.rid)
   (col: option int)
 : Lemma
-  (requires (HS.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_eternal_color (Some?.v col))))
+  (requires (HST.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_eternal_color (Some?.v col))))
   (ensures (
     let (_, m1) = HS.new_eternal_region m0 r0 col in
     modifies (loc_none #_ #c) m0 m1

@@ -1112,7 +1112,7 @@ val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
   (ensures (modifies loc_none h0 h1))
 
 val new_region_modifies (m0: HS.mem) (r0: HS.rid) (col: option int) : Lemma
-  (requires (HS.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_eternal_color (Some?.v col))))
+  (requires (HST.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_eternal_color (Some?.v col))))
   (ensures (
     let (_, m1) = HS.new_eternal_region m0 r0 col in
     modifies loc_none m0 m1
