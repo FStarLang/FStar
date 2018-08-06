@@ -160,7 +160,7 @@ val uint32_num_of_ones:
 let rec uint32_num_of_ones sz n =
   if n = 0ul then 0ul
   else (let nones = n % 2ul + uint32_num_of_ones (hide (reveal sz - 1)) (n / 2ul) in
-       // assume (High.num_of_ones (U32.v n) = U32.v nones);
+       // Later TODO: (High.num_of_ones (U32.v n) = U32.v nones);
        nones)
 
 /// Low-level Merkle tree data structure
@@ -184,6 +184,10 @@ let merkle_tree_wf h mt =
   HH.disjoint (V.frameOf values) (V.frameOf iroots) /\
   BV.bv_inv hash_size h values /\
   BV.bv_inv hash_size h iroots
+
+val merkle_tree_rloc: mt_ptr -> GTot loc
+let merkle_tree_rloc mt =
+  B.loc_all_regions_from false (B.frameOf mt)
 
 /// Initialization
 
@@ -245,32 +249,71 @@ val insert:
 	   merkle_tree_wf h0 mt /\
 	   not (V.is_full (MT?.values (B.get h0 mt 0)))))
 	 (ensures (fun h0 _ h1 -> merkle_tree_wf h1 mt))
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 40"
 let insert mt nv =
   let mtv = B.index mt 0ul in
   let values = MT?.values mtv in
   let nvalues = V.size_of values in
   let ivalues = insert_value values nv in
+
+  let hh0 = HST.get () in
+  assert (BV.bv_inv hash_size hh0 ivalues);
+
   let iroots = MT?.iroots mtv in
   insert_iroots iroots 0ul nvalues nv;
-  let hh = HST.get () in
-  B.upd mt 0ul (MT ivalues iroots)
+
+  let hh1 = HST.get () in
+  assert (BV.bv_inv hash_size hh1 iroots);
+  assert (loc_disjoint 
+	   (BV.buf_vector_rloc ivalues)
+	   (loc_union (loc_buffer nv) (buf_vector_rloc iroots)));
+  assert (BV.bv_inv hash_size hh1 ivalues);
+
+  B.upd mt 0ul (MT ivalues iroots);
+
+  let hh2 = HST.get () in
+  assert (loc_disjoint (BV.buf_vector_rloc ivalues)
+		       (loc_buffer mt));
+  assert (BV.bv_inv hash_size hh2 ivalues);
+  assert (loc_disjoint (BV.buf_vector_rloc iroots)
+		       (loc_buffer mt));
+  assert (BV.bv_inv hash_size hh2 iroots)
 
 /// Getting the Merkle root
+
+val compress_or_init:
+  actd:bool -> acc:hash -> nh:hash ->
+  HST.ST unit
+	 (requires (fun h0 -> 
+	   BV.buffer_inv_liveness hash_size h0 acc /\
+	   BV.buffer_inv_liveness hash_size h0 nh /\
+	   HH.disjoint (B.frameOf nh) (B.frameOf acc)))
+	 (ensures (fun h0 _ h1 ->
+	   modifies (loc_buffer acc) h0 h1))
+let compress_or_init actd acc nh =
+  if actd
+  then hash_from_hashes nh acc acc
+  else B.blit nh 0ul acc 0ul hash_size
 
 val merkle_root_of_iroots:
   irs:hash_vec{V.size_of irs = 32ul} ->
   cpos:uint32_t{cpos < 32ul} ->
   irps:uint32_t{U32.v irps < pow2 (U32.v (32ul - cpos))} ->
-  acc:hash ->
+  acc:hash -> actd:bool ->
   HST.ST unit
 	 (requires (fun h0 ->
 	   BV.buffer_inv_liveness hash_size h0 acc /\
-	   BV.bv_inv hash_size h0 irs))
+	   BV.bv_inv hash_size h0 irs /\
+	   HH.disjoint (V.frameOf irs) (B.frameOf acc)))
 	 (ensures (fun h0 _ h1 ->
 	   modifies (loc_buffer acc) h0 h1))
-let rec merkle_root_of_iroots irs cpos irps acc =
-  admit ()
+let rec merkle_root_of_iroots irs cpos irps acc actd =
+  if cpos = 31ul 
+  then compress_or_init actd acc (V.index irs cpos)
+  else (if irps % 2ul = 0ul
+       then merkle_root_of_iroots irs (cpos + 1ul) (irps / 2ul) acc actd
+       else (compress_or_init actd acc (V.index irs cpos);
+  	    merkle_root_of_iroots irs (cpos + 1ul) (irps / 2ul) acc true))
 
 val get_root:
   mt:mt_ptr -> rt:hash ->
@@ -278,7 +321,8 @@ val get_root:
 	 (requires (fun h0 ->
 	   BV.buffer_inv_liveness hash_size h0 rt /\
 	   B.live h0 mt /\ B.freeable mt /\
-	   merkle_tree_wf h0 mt))
+	   merkle_tree_wf h0 mt /\
+	   HH.disjoint (B.frameOf mt) (B.frameOf rt)))
 	 (ensures (fun h0 _ h1 ->
 	   modifies (loc_buffer rt) h0 h1))
 let get_root mt rt =
@@ -286,7 +330,7 @@ let get_root mt rt =
   let values = MT?.values mtv in
   let nvalues = V.size_of values in
   let iroots = MT?.iroots mtv in
-  merkle_root_of_iroots iroots 0ul nvalues rt
+  merkle_root_of_iroots iroots 0ul nvalues rt false
 
 /// Freeing the Merkle tree
 
@@ -296,12 +340,22 @@ val free_merkle_tree:
 	 (requires (fun h0 -> 
 	   B.live h0 mt /\ B.freeable mt /\
 	   merkle_tree_wf h0 mt))
-	 (ensures (fun h0 _ h1 -> true))
-	 // TODO: should have sth. like: modifies (loc_mt mt) h0 h1
+	 (ensures (fun h0 _ h1 -> modifies (merkle_tree_rloc mt) h0 h1))
 let free_merkle_tree mt =
   let mtv = B.index mt 0ul in
-  admit ();
+
+  let hh0 = HST.get () in
+  assert (BV.bv_inv hash_size hh0 (MT?.values mtv));
+  assert (BV.bv_inv hash_size hh0 (MT?.iroots mtv));
+  
   BV.free hash_size (MT?.values mtv);
+
+  let hh1 = HST.get () in
+  assert (loc_disjoint 
+	   (BV.buf_vector_rloc (MT?.values mtv))
+	   (BV.buf_vector_rloc (MT?.iroots mtv)));
+  assert (BV.bv_inv hash_size hh1 (MT?.iroots mtv));
+
   BV.free hash_size (MT?.iroots mtv);
   B.free mt
 

@@ -59,9 +59,7 @@ val bv_inv_region:
 let bv_inv_region #a h bv =
   HST.is_eternal_region (V.frameOf bv) /\
   V.forall_all h bv 
-    (fun b -> 
-      HH.extends (B.frameOf b) (V.frameOf bv) /\ 
-      HH.disjoint (B.frameOf b) (V.frameOf bv)) /\
+    (fun b -> HH.extends (B.frameOf b) (V.frameOf bv)) /\
   V.forall2_all h bv
     (fun b1 b2 -> HH.disjoint (B.frameOf b1) (B.frameOf b2))
 
