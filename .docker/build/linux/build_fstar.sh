@@ -147,14 +147,14 @@ function build_fstar() {
     local localTarget=$1
     local timeout=960
 
-    result_file="result.txt"
+    result_file="../result.txt"
 
     # $status_file is the name of a file that contains true if and
     # only if the F* regression suite failed, false otherwise
-    status_file="status.txt"
+    status_file="../status.txt"
     echo false >$status_file
 
-    ORANGE_FILE="orange_file.txt"
+    ORANGE_FILE="../orange_file.txt"
     echo '' >$ORANGE_FILE
 
     if [[ -x /usr/bin/time ]]; then
@@ -314,4 +314,6 @@ export OCAMLRUNPARAM=b
 export OTHERFLAGS="--print_z3_statistics --use_hints --query_stats"
 export MAKEFLAGS="$MAKEFLAGS -Otarget"
 
+cd FStar
 build_fstar $target
+cd ..
