@@ -51,7 +51,7 @@ let swap_and_sum' () =
   hreturn' (U32.v x0 + U32.v x1)))))
 
 
-val lswap_and_sum : unit -> lcomp_wp' int sum_wp (reif sum_wp hswap_and_sum)
+val lswap_and_sum : unit -> lcomp_wp' int sum_wp swap_and_sum' // (reif sum_wp hswap_and_sum)
 let lswap_and_sum () =  
   lbind (lread 0) (fun x0 -> 
   lbind (lread 1) (fun x1 -> 
