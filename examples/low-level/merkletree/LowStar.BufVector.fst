@@ -61,9 +61,9 @@ let bv_inv_region #a h bv =
   V.forall_all h bv 
     (fun b -> 
       HH.extends (B.frameOf b) (V.frameOf bv) /\ 
-      B.frameOf b <> V.frameOf bv) /\
+      HH.disjoint (B.frameOf b) (V.frameOf bv)) /\
   V.forall2_all h bv
-    (fun b1 b2 -> B.frameOf b1 <> B.frameOf b2)
+    (fun b1 b2 -> HH.disjoint (B.frameOf b1) (B.frameOf b2))
 
 val bv_inv:
   #a:Type0 -> blen:uint32_t{blen > 0ul} -> 
@@ -74,16 +74,23 @@ let bv_inv #a blen h bv =
 val buf_vector_rloc: 
   #a:Type0 -> bv:buf_vector a -> GTot loc
 let buf_vector_rloc #a bv =
-  B.loc_regions false (FStar.Set.singleton (V.frameOf bv))
+  B.loc_all_regions_from false (V.frameOf bv)
 
 /// Facts related to the invariant
 
-// val bv_inv_extend:
-//   #a:Type0 -> #blen:uint32_t{blen > 0ul} -> 
-//   h:HS.mem -> bv:buf_vector a blen ->
-//   v:abuf a blen ->
-//   Lemma (requires (bv_inv h bv))
-// 	(ensures (bv_inv h (V.insert bv v)))
+val bv_inv_preserved:
+  #a:Type0 -> blen:uint32_t{blen > 0ul} ->
+  bv:buf_vector a ->
+  dloc:loc -> h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (bv_inv blen h0 bv /\ 
+		  loc_disjoint (buf_vector_rloc bv) dloc /\
+		  modifies dloc h0 h1))
+	(ensures (bv_inv blen h1 bv))
+	[SMTPat (bv_inv blen h0 bv);
+	SMTPat (loc_disjoint (buf_vector_rloc bv) dloc);
+	SMTPat (modifies dloc h0 h1)]
+let bv_inv_preserved #a blen bv dloc h0 h1 =
+  admit ()
 
 /// Construction
 
@@ -96,23 +103,46 @@ private val create_:
       V.live h0 bv /\ V.freeable bv /\
       HST.is_eternal_region (V.frameOf bv)))
     (ensures (fun h0 _ h1 ->
+      // Only the vector elements are changed.
       V.live h0 bv /\ V.freeable bv /\
       HST.is_eternal_region (V.frameOf bv) /\
-      modifies (V.loc_vector bv) h0 h1 /\
-      V.forall_ h1 bv 0 (U32.v cidx) 
+      modifies (V.loc_vector_within bv 0ul cidx) h0 h1 /\
+
+      // The elements are `malloc`ed pointers in a subregion 
+      // of the vector region.
+      V.forall_ h1 bv 0ul cidx
 	(fun b -> B.live h1 b /\ B.len b = blen /\ B.freeable b) /\
-      V.forall_ h1 bv 0 (U32.v cidx)
+      V.forall_ h1 bv 0ul cidx
 	(fun b -> HH.extends (B.frameOf b) (V.frameOf bv) /\ 
 		  B.frameOf b <> V.frameOf bv) /\
-      V.forall2 h1 bv 0 (U32.v cidx)
+      V.forall2 h1 bv 0ul cidx
 	(fun b1 b2 -> B.frameOf b1 <> B.frameOf b2)))
     (decreases (U32.v cidx))
-private let rec create_ #a #blen ia vec cidx =
+private let rec create_ #a #blen ia bv cidx =
   if cidx = 0ul then ()
-  else (let nrid = new_region_ (V.frameOf vec) in
-       V.assign vec (cidx - 1ul) (B.malloc nrid ia blen);
-       admit ();
-       create_ #a #blen ia vec (cidx - 1ul))
+  else (let nrid = new_region_ (V.frameOf bv) in
+       V.assign bv (cidx - 1ul) (B.malloc nrid ia blen);
+
+       let hh1 = HST.get () in
+       create_ #a #blen ia bv (cidx - 1ul);
+
+       let hh2 = HST.get () in
+       // `V.forall_` properties for a single assignment is automatically
+       // verified, but need to prove that such properties are preserved
+       // after disjoint state transitions.
+       V.forall_disjoint_not_affected
+	 bv (cidx - 1ul) cidx
+	 (fun b -> B.live hh1 b /\ B.len b = blen /\ B.freeable b /\
+		   HH.extends (B.frameOf b) (V.frameOf bv) /\ 
+       		   B.frameOf b <> V.frameOf bv)
+	 (V.loc_vector_within bv 0ul (cidx - 1ul))
+	 hh1 hh2;
+
+       assume (V.forall_ hh2 bv 0ul (cidx - 1ul)
+	      (fun b -> B.frameOf b <> B.frameOf (V.get hh2 bv (cidx - 1ul)) /\
+			B.frameOf (V.get hh2 bv (cidx - 1ul)) <> B.frameOf b));
+       V.forall2_extend hh2 bv 0ul (cidx - 1ul)
+	 (fun b1 b2 -> B.frameOf b1 <> B.frameOf b2))
 
 val create_rid:
   #a:Type0 -> ia:a -> blen:uint32_t{blen > 0ul} ->
@@ -127,6 +157,7 @@ val create_rid:
 let create_rid #a ia blen len rid =
   let vec = V.create_rid len (B.null #a) rid in
   create_ #a #blen ia vec len;
+  admit ();
   vec
 
 val create:
@@ -142,8 +173,6 @@ val create:
 let create #a ia blen len =
   let nrid = new_region_ root in
   create_rid ia blen len nrid
-  
-// insert_pointer: ...
 
 val insert_copy:
   #a:Type0 -> ia:a -> blen:uint32_t{blen > 0ul} ->
@@ -153,7 +182,10 @@ val insert_copy:
     (requires (fun h0 -> 
       buffer_inv_liveness blen h0 v /\ bv_inv blen h0 bv))
     (ensures (fun h0 ibv h1 -> 
-      bv_inv blen h1 ibv))
+      V.frameOf bv = V.frameOf ibv /\
+      modifies (buf_vector_rloc bv) h0 h1 /\
+      bv_inv blen h1 ibv /\
+      buffer_inv_liveness blen h1 v))
 let insert_copy #a ia blen bv v =
   let nrid = new_region_ (V.frameOf bv) in
   let nv = B.malloc nrid ia blen in
@@ -161,15 +193,16 @@ let insert_copy #a ia blen bv v =
   admit (); V.insert bv nv
 
 val assign_copy:
-  #a:Type0 -> ia:a -> blen:uint32_t{blen > 0ul} ->
+  #a:Type0 -> blen:uint32_t{blen > 0ul} ->
   bv:buf_vector a ->
   i:uint32_t{i < V.size_of bv} -> v:B.buffer a ->
   HST.ST unit
     (requires (fun h0 ->
       buffer_inv_liveness blen h0 v /\ bv_inv blen h0 bv))
     (ensures (fun h0 _ h1 -> 
+      modifies (buf_vector_rloc bv) h0 h1 /\
       bv_inv blen h1 bv))
-let assign_copy #a ia blen bv i v =
+let assign_copy #a blen bv i v =
   let iv = V.index bv i in
   admit (); B.blit v 0ul iv 0ul blen
 
@@ -179,7 +212,7 @@ val free_bufs:
   idx:uint32_t{idx < V.size_of bv} ->
   HST.ST unit
     (requires (fun h0 -> bv_inv blen h0 bv))
-    (ensures (fun h0 _ h1 -> true))
+    (ensures (fun h0 _ h1 -> modifies (buf_vector_rloc bv) h0 h1))
 let rec free_bufs #a blen bv idx =
   admit ();
   B.free (V.index bv idx);

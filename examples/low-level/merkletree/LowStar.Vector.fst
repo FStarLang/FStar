@@ -36,28 +36,6 @@ val as_seq: HS.mem -> #a:Type -> vec:vector a -> GTot (S.seq a)
 let as_seq h #a vec =
   B.as_seq h (B.gsub (Vec?.vs vec) 0ul (Vec?.sz vec))
 
-/// Memory-related
-
-unfold val live: #a:Type -> HS.mem -> vector a -> GTot Type0
-unfold let live #a h vec =
-  B.live h (Vec?.vs vec)
-
-unfold val freeable: #a:Type -> vector a -> GTot Type0
-unfold let freeable #a vec =
-  B.freeable (Vec?.vs vec)
-
-unfold val loc_vector: #a:Type -> vector a -> GTot loc
-unfold let loc_vector #a vec =
-  B.loc_buffer (Vec?.vs vec)
-
-unfold val loc_addr_of_vector: #a:Type -> vector a -> GTot loc
-unfold let loc_addr_of_vector #a vec =
-  B.loc_addr_of_buffer (Vec?.vs vec)
-
-unfold val frameOf: #a:Type -> vector a -> Tot HH.rid
-unfold let frameOf #a vec =
-  B.frameOf (Vec?.vs vec)
-
 /// Capacity
 
 unfold val size_of: #a:Type -> vec:vector a -> Tot uint32_t
@@ -75,6 +53,34 @@ unfold let is_empty #a vec =
 unfold val is_full: #a:Type -> vstr:vector_str a -> GTot bool
 unfold let is_full #a vstr =
   Vec?.sz vstr >= max_uint32
+
+/// Memory-related
+
+unfold val live: #a:Type -> HS.mem -> vector a -> GTot Type0
+unfold let live #a h vec =
+  B.live h (Vec?.vs vec)
+
+unfold val freeable: #a:Type -> vector a -> GTot Type0
+unfold let freeable #a vec =
+  B.freeable (Vec?.vs vec)
+
+unfold val loc_vector_within: 
+  #a:Type -> vec:vector a -> 
+  i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} -> GTot loc
+unfold let loc_vector_within #a vec i j =
+  B.loc_buffer (B.gsub (Vec?.vs vec) i (j - i))
+
+unfold val loc_vector: #a:Type -> vector a -> GTot loc
+unfold let loc_vector #a vec =
+  B.loc_buffer (Vec?.vs vec)
+
+unfold val loc_addr_of_vector: #a:Type -> vector a -> GTot loc
+unfold let loc_addr_of_vector #a vec =
+  B.loc_addr_of_buffer (Vec?.vs vec)
+
+unfold val frameOf: #a:Type -> vector a -> Tot HH.rid
+unfold let frameOf #a vec =
+  B.frameOf (Vec?.vs vec)
 
 /// Construction
 
@@ -143,13 +149,18 @@ let free #a vec =
 
 /// Element access
 
+val get:
+  #a:Type -> h:HS.mem -> vec:vector a -> 
+  i:uint32_t{i < size_of vec} -> GTot a
+let get #a h vec i =
+  B.get h (Vec?.vs vec) (U32.v i)
+
 val index: 
   #a:Type -> vec:vector a -> i:uint32_t -> 
   HST.ST a
-    (requires (fun h0 -> live h0 vec /\ i < Vec?.sz vec))
+    (requires (fun h0 -> live h0 vec /\ i < size_of vec))
     (ensures (fun h0 v h1 -> 
-      h0 == h1 /\
-      S.index (as_seq h1 vec) (U32.v i) == v))
+      h0 == h1 /\ S.index (as_seq h1 vec) (U32.v i) == v))
 let index #a vec i =
   B.index (Vec?.vs vec) i
 
@@ -157,12 +168,14 @@ val assign:
   #a:Type -> vec:vector a -> 
   i:uint32_t -> v:a ->
   HST.ST unit
-    (requires (fun h0 -> live h0 vec /\ i < Vec?.sz vec))
+    (requires (fun h0 -> live h0 vec /\ i < size_of vec))
     (ensures (fun h0 _ h1 -> 
-      modifies (loc_buffer (Vec?.vs vec)) h0 h1 /\
+      modifies (loc_vector_within #a vec i (i + 1ul)) h0 h1 /\
       S.equal (as_seq h1 vec) (S.upd (as_seq h0 vec) (U32.v i) v)))
 let assign #a vec i v =
-  B.upd (Vec?.vs vec) i v
+  B.upd (Vec?.vs vec) i v;
+  // TODO: The `modifies` postcondition of `B.upd` is coarse-grained.
+  admit ()
 
 /// Operations
 
@@ -252,16 +265,16 @@ let forall_buffer #a h buf i j p =
 
 val forall_: 
   #a:Type -> h:HS.mem -> vec:vector a ->
-  i:nat -> j:nat{i <= j && j <= U32.v (size_of vec)} ->
+  i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
   p:(a -> Tot Type0) -> GTot Type0
 let forall_ #a h vec i j p =
-  forall_seq (as_seq h vec) i j p
+  forall_seq (as_seq h vec) (U32.v i) (U32.v j) p
 
 val forall_all:
   #a:Type -> h:HS.mem -> vec:vector a ->
   p:(a -> Tot Type0) -> GTot Type0
 let forall_all #a h vec p =
-  forall_ h vec 0 (U32.v (size_of vec)) p
+  forall_ h vec 0ul (size_of vec) p
 
 val forall2_seq:
   #a:Type -> seq:S.seq a -> 
@@ -280,26 +293,42 @@ let forall2_buffer #a h buf i j p =
 
 val forall2:
   #a:Type -> h:HS.mem -> vec:vector a -> 
-  i:nat -> j:nat{i <= j && j <= U32.v (size_of vec)} ->
+  i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
   p:(a -> a -> GTot Type0) -> GTot Type0
 let forall2 #a h vec i j p =
-  forall2_seq (as_seq h vec) i j p
+  forall2_seq (as_seq h vec) (U32.v i) (U32.v j) p
 
 val forall2_all:
   #a:Type -> h:HS.mem -> vec:vector a -> 
   p:(a -> a -> GTot Type0) -> GTot Type0
 let forall2_all #a h vec p =
-  forall2 h vec 0 (U32.v (size_of vec)) p
+  forall2 h vec 0ul (size_of vec) p
 
 (*! Facts *)
 
-// val forall_append:
-//   #a:Type -> h:HS.mem -> vec:vector a ->
-//   i:nat -> j:nat{i <= j} -> k:nat{j <= k && k <= U32.v (size_of vec)} ->
-//   p:(a -> Tot Type0) ->
-//   Lemma (requires (forall_ h vec i j p /\ forall_ h vec j k p))
-// 	(ensures (forall_ h vec i k p))
-// let forall_append #a h vec i j k p = ()
+val forall_disjoint_not_affected:
+  #a:Type -> vec:vector a ->
+  i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
+  p:(a -> Tot Type0) ->
+  dloc:loc -> h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (live h0 vec /\
+		  loc_disjoint (loc_vector_within vec i j) dloc /\
+		  forall_ h0 vec i j p /\
+		  modifies dloc h0 h1))
+	(ensures (forall_ h1 vec i j p))
+let forall_disjoint_not_affected #a vec i j p dloc h0 h1 =
+  admit ()
+
+val forall2_extend:
+  #a:Type -> h:HS.mem -> vec:vector a ->
+  i:uint32_t -> j:uint32_t{i <= j && j < size_of vec} ->
+  p:(a -> a -> Tot Type0) ->
+  Lemma (requires (forall2 h vec i j p /\
+		  forall_ h vec i j (fun a -> p a (get h vec j) /\
+					      p (get h vec j) a)))
+	(ensures (forall2 h vec i (j + 1ul) p))
+let forall2_extend #a h vec i j p = 
+  admit ()
 
 // val forall_buffer_consistent:
 //   #a:Type -> h:HS.mem -> len:uint32_t{len > 0ul} ->
