@@ -729,7 +729,7 @@
         "typing_MiniParse.Spec.List.serialize_nlist", "unit_typing"
       ],
       0,
-      "2e9a4efa145cbaf55a310d5a82d34efb"
+      "f34e8d3bb7d4c622771cc9daf7954cbe"
     ],
     [
       "MiniParse.Impl.List.serialize_nlist_impl",
