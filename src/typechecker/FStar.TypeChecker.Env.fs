@@ -1526,6 +1526,8 @@ let binop_guard f g1 g2 = {guard_f=f g1.guard_f g2.guard_f;
 let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
 let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
 
+let conj_guards gs = List.fold_left conj_guard trivial_guard gs
+
 let close_guard_univs us bs g =
     match g.guard_f with
     | Trivial -> g

@@ -344,6 +344,7 @@ val trivial_guard             : guard_t
 val is_trivial                : guard_t -> bool
 val is_trivial_guard_formula  : guard_t -> bool
 val conj_guard                : guard_t -> guard_t -> guard_t
+val conj_guards               : list<guard_t> -> guard_t
 val abstract_guard            : binder -> guard_t -> guard_t
 val abstract_guard_n          : list<binder> -> guard_t -> guard_t
 val imp_guard                 : guard_t -> guard_t -> guard_t
