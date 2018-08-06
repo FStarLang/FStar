@@ -24,7 +24,6 @@ val lstate_as_state : HS.mem -> lstate -> GTot state
 let lstate_as_state h  = fun (b1, b2) -> (B.get h b1 0, B.get h b2 0)
 
 
-
 type lcomp 'a (c : comp 'a) =
     (ls:lstate) ->
     Stack 'a
@@ -46,9 +45,21 @@ let lcomp_wp (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a
                     well_formed h' ls /\
                     modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
                     (let s0 = lstate_as_state h ls in
-                     wp s0 (fun _ -> True) ==>
+                     wp s0 (fun _ -> True) /\
                      (let res = c s0 in
                       snd res == lstate_as_state h' ls /\ fst res == r))))
+
+let lcomp_wp' (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
+    (ls:lstate) ->
+    Stack a
+      (requires (fun h -> well_formed h ls))
+      (ensures  (fun h r h' ->
+      well_formed h' ls /\
+      modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
+      (let s0 = lstate_as_state h ls in
+       wp s0 (fun _ -> True) /\
+       (let res = c s0 in
+       snd res == lstate_as_state h' ls /\ fst res == r))))
 
 
 let lcomp_p (a:Type) pre post (c : comp_p a pre post) =
