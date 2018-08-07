@@ -1,5 +1,5 @@
 [
-  "‡Ôƒ/§JUXØ\f\f×™“–a",
+  "ô\u000bÚ­rÂ‰©˜(\u000f'j}×3",
   [
     [
       "LowStar.Buffer.live_is_null",
@@ -756,7 +756,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
-        "equation_FStar.Monotonic.HyperStack.is_eternal_region",
+        "equation_FStar.HyperStack.ST.is_eternal_region",
         "equation_FStar.Monotonic.HyperStack.live_region",
         "equation_Prims.squash", "function_token_typing_Prims.int",
         "l_and-interp", "l_or-interp", "lemma_FStar.Pervasives.invertOption",
@@ -764,7 +764,7 @@
         "unit_typing"
       ],
       0,
-      "5121787194b7c953cd9636cd701765d2"
+      "3d568aa35a112fd4c4744f5fb377f386"
     ],
     [
       "LowStar.Buffer.modifies_loc_addresses_intro",
@@ -1129,8 +1129,7 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
         "bool_typing", "constructor_distinct_Prims.Cons",
-        "constructor_distinct_Prims.Nil", "constructor_distinct_Tm_unit",
-        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil",
         "equation_FStar.Monotonic.HyperStack.live_region",
         "equation_FStar.Monotonic.HyperStack.mem",
@@ -1155,7 +1154,6 @@
         "lemma_FStar.Seq.Base.lemma_index_upd1",
         "lemma_FStar.Seq.Base.lemma_len_append",
         "lemma_FStar.Seq.Properties.cons_index_slice",
-        "lemma_FStar.Seq.Properties.lemma_seq_of_list_induction",
         "lemma_FStar.Seq.Properties.slice_length",
         "lemma_FStar.UInt32.vu_inv", "lemma_LowStar.Buffer.as_seq_gsub",
         "lemma_LowStar.Buffer.len_gsub",
@@ -1194,7 +1192,6 @@
         "typing_FStar.List.Tot.Base.length",
         "typing_FStar.Monotonic.HyperStack.live_region",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.empty",
-        "typing_FStar.Seq.Base.upd",
         "typing_FStar.Seq.Properties.seq_of_list", "typing_FStar.UInt.fits",
         "typing_FStar.UInt32.sub", "typing_FStar.UInt32.uint_to_t",
         "typing_FStar.UInt32.v", "typing_LowStar.Buffer.as_seq",
@@ -1203,7 +1200,7 @@
         "typing_LowStar.Buffer.loc_union", "unit_inversion", "unit_typing"
       ],
       0,
-      "8e825a7181b35d468151d5e6cfefe281"
+      "3aa4d597233fbf099e3edafead550830"
     ],
     [
       "LowStar.Buffer.cloc_of_loc_addresses",

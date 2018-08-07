@@ -84,7 +84,6 @@
         "equation_LowParse.Spec.Combinators.parse_ret_kind",
         "equation_Prims.eq2", "equation_Prims.eqtype", "equation_Prims.nat",
         "equation_Prims.squash",
-        "equation_with_fuel_Prims.pow2.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_LowParse.Spec.Base.parser_kind_",
         "fuel_guarded_inversion_Prims.equals",
@@ -105,7 +104,7 @@
         "lemma_FStar.UInt.pow2_values", "lemma_FStar.UInt32.vu_inv",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_LowParse.Spec.Base.Mkparser_kind__parser_kind_high",
         "proj_equation_LowParse.Spec.Base.Mkparser_kind__parser_kind_low",
@@ -148,7 +147,7 @@
         "typing_LowParse.Spec.Combinators.and_then_bare", "unit_typing"
       ],
       0,
-      "2c3ac97c14957f8942d6204561aaf680"
+      "64b583a05a114ec2c22b95bfd550aff4"
     ],
     [
       "LowParse.SLow.Combinators.parse32_nondep_then",
@@ -264,7 +263,7 @@
         "unit_typing"
       ],
       0,
-      "c102b508dd9d62602ab10fd145911930"
+      "300fa729ae8d507cce74cd5e7af5f672"
     ],
     [
       "LowParse.SLow.Combinators.serialize32_kind_precond",
@@ -435,7 +434,7 @@
         "typing_LowParse.Spec.Base.parse", "unit_typing"
       ],
       0,
-      "9b8412fd3c7de6ffd8247d3a6c1729a1"
+      "9809ef77c67f86e1fb215f62f519f48b"
     ],
     [
       "LowParse.SLow.Combinators.parse32_synth",
@@ -1291,7 +1290,6 @@
         "equation_LowParse.Spec.Combinators.parse_ret_kind",
         "equation_Prims.eq2", "equation_Prims.eqtype", "equation_Prims.nat",
         "equation_Prims.squash",
-        "equation_with_fuel_Prims.pow2.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_LowParse.Spec.Base.parser_kind_",
         "fuel_guarded_inversion_Prims.equals",
@@ -1312,7 +1310,7 @@
         "lemma_FStar.UInt.pow2_values", "lemma_FStar.UInt32.vu_inv",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_LowParse.Spec.Base.Mkparser_kind__parser_kind_high",
         "proj_equation_LowParse.Spec.Base.Mkparser_kind__parser_kind_low",
@@ -1355,7 +1353,7 @@
         "typing_LowParse.Spec.Combinators.and_then_bare", "unit_typing"
       ],
       0,
-      "c6a6b9c76d5172d0a7a1b7a6bb00bc47"
+      "50c9a6da86528b49cbce7b22bfa25f33"
     ],
     [
       "LowParse.SLow.Combinators.parse32_and_then",
@@ -1483,7 +1481,7 @@
         "unit_typing"
       ],
       0,
-      "30904b464b5955aecff9032eb79061a2"
+      "72e547c59968cc79085dde737c5ba51b"
     ],
     [
       "LowParse.SLow.Combinators.serialize32_kind_precond",
@@ -1654,7 +1652,7 @@
         "typing_LowParse.Spec.Base.parse", "unit_typing"
       ],
       0,
-      "ef0934747dd27b79c2b355ae6156db77"
+      "f09dea58c0ab1364432b259aa5ab0387"
     ],
     [
       "LowParse.SLow.Combinators.parse32_synth",

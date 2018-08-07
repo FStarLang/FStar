@@ -1,5 +1,5 @@
 [
-  " \u0006·<:S…\u000f|é‡,,G†X",
+  "ÉŽlì\u0019ÎúÕÆ \u0018†¤\u000f£ˆ",
   [
     [
       "FStar.ModifiesGen.__proj__Cls__item__aloc_includes_refl",
@@ -309,7 +309,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
-        "equation_FStar.Monotonic.HyperStack.is_eternal_region",
+        "equation_FStar.HyperStack.ST.is_eternal_region",
         "equation_FStar.Monotonic.HyperStack.live_region",
         "equation_Prims.squash", "function_token_typing_Prims.int",
         "l_and-interp", "l_or-interp", "lemma_FStar.Pervasives.invertOption",
@@ -317,7 +317,7 @@
         "unit_typing"
       ],
       0,
-      "464361b4c911df62f12e9d4c6d2f8528"
+      "8c207bfffe99a182f26d0b1768b9a417"
     ],
     [
       "FStar.ModifiesGen.modifies_loc_addresses_intro",

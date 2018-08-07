@@ -3734,7 +3734,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
-        "equation_FStar.Monotonic.HyperStack.is_eternal_region",
+        "equation_FStar.HyperStack.ST.is_eternal_region",
         "equation_FStar.Monotonic.HyperStack.live_region",
         "equation_Prims.squash", "function_token_typing_Prims.int",
         "l_and-interp", "l_or-interp", "lemma_FStar.Pervasives.invertOption",
@@ -3742,7 +3742,7 @@
         "unit_typing"
       ],
       0,
-      "7017754cd3ae2556b411aa420a003a70"
+      "f35036c49d35840e6f817dd8a263e1f8"
     ],
     [
       "LowStar.Buffer.new_region_modifies",
@@ -3754,7 +3754,7 @@
         "equation_LowStar.Buffer.modifies"
       ],
       0,
-      "cf82c99576c8b5a64110625a8ca6b605"
+      "59d14deb5125ec6795637fc17b0d2d81"
     ],
     [
       "LowStar.Buffer.popped_modifies",
@@ -5314,7 +5314,7 @@
         "typing_LowStar.Buffer.vec_of_lseq", "well-founded-ordering-on-nat"
       ],
       0,
-      "bd3ec71e8cfda2b0fa982909d7b2d596"
+      "760df40de3f1679b25cd8c7e83994c18"
     ],
     [
       "LowStar.Buffer.g_upd_seq_as_seq'",
@@ -5833,7 +5833,7 @@
         "typing_LowStar.Buffer.ubuffer___3416", "unit_typing"
       ],
       0,
-      "ceb315bc166ba07d8c897cb3d02a43de"
+      "f7a45a0300df293a14e6eeba238a67d4"
     ],
     [
       "LowStar.Buffer.recallable'",
@@ -6724,7 +6724,7 @@
         "typing_LowStar.Buffer.lseq_of_vec"
       ],
       0,
-      "87ca8e5c74362c1aa08222707b19b9b1"
+      "3cdeaaf7ca7be67ad9b96fd344242c6c"
     ],
     [
       "LowStar.Buffer.gcmalloc_of_list",
