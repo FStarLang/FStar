@@ -82,6 +82,11 @@ unfold val frameOf: #a:Type -> vector a -> Tot HH.rid
 unfold let frameOf #a vec =
   B.frameOf (Vec?.vs vec)
 
+unfold val hmap_dom_eq: h0:HS.mem -> h1:HS.mem -> GTot Type0
+unfold let hmap_dom_eq h0 h1 =
+  Set.equal (Map.domain (MHS.get_hmap h0))
+	    (Map.domain (MHS.get_hmap h1))
+
 /// Construction
 
 val create_rid:
@@ -153,7 +158,7 @@ val get:
   #a:Type -> h:HS.mem -> vec:vector a -> 
   i:uint32_t{i < size_of vec} -> GTot a
 let get #a h vec i =
-  B.get h (Vec?.vs vec) (U32.v i)
+  S.index (as_seq h vec) (U32.v i)
 
 val index: 
   #a:Type -> vec:vector a -> i:uint32_t -> 
@@ -165,11 +170,12 @@ let index #a vec i =
   B.index (Vec?.vs vec) i
 
 val assign:
-  #a:Type -> vec:vector a -> 
+  #a:Type -> vec:vector a ->
   i:uint32_t -> v:a ->
   HST.ST unit
     (requires (fun h0 -> live h0 vec /\ i < size_of vec))
-    (ensures (fun h0 _ h1 -> 
+    (ensures (fun h0 _ h1 ->
+      hmap_dom_eq h0 h1 /\
       modifies (loc_vector_within #a vec i (i + 1ul)) h0 h1 /\
       S.equal (as_seq h1 vec) (S.upd (as_seq h0 vec) (U32.v i) v)))
 let assign #a vec i v =
@@ -190,8 +196,11 @@ private let new_capacity cap =
 val insert: 
   #a:Type -> vec:vector a -> v:a -> 
   HST.ST (vector a)
-    (requires (fun h0 -> live h0 vec /\ not (is_full vec)))
+    (requires (fun h0 -> 
+      live h0 vec /\ not (is_full vec) /\
+      HST.is_eternal_region (frameOf vec)))
     (ensures (fun h0 nvec h1 ->
+      hmap_dom_eq h0 h1 /\
       live h1 vec /\
       modifies (loc_union (loc_buffer (Vec?.vs vec)) 
 			  (loc_buffer (Vec?.vs nvec))) h0 h1 /\
@@ -202,8 +211,7 @@ let insert #a vec v =
   let vs = Vec?.vs vec in
   if sz = cap 
   then (let ncap = new_capacity cap in
-       // let nvs = B.malloc (B.frameOf vs) v ncap in
-       let nvs = B.malloc HH.root v ncap in
+       let nvs = B.malloc (B.frameOf vs) v ncap in
        B.blit vs 0ul nvs 0ul sz;
        B.upd nvs sz v;
        // B.free vs; // TODO!
@@ -305,6 +313,18 @@ let forall2_all #a h vec p =
   forall2 h vec 0ul (size_of vec) p
 
 (*! Facts *)
+
+val get_preserved:
+  #a:Type -> vec:vector a ->
+  i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
+  k:uint32_t{(k < i || j <= k) && k < size_of vec} ->
+  h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (modifies (loc_vector_within vec i j) h0 h1))
+	(ensures (get h0 vec k == get h1 vec k))
+	[SMTPat (modifies (loc_vector_within vec i j) h0 h1);
+	SMTPat (get h0 vec k)]
+let get_preserved #a vec i j k h0 h1 =
+  admit ()
 
 val forall_preserved:
   #a:Type -> vec:vector a ->
