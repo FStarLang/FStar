@@ -81,15 +81,60 @@ val loc_buffer:
 let loc_buffer #a h bv i =
   B.loc_buffer (S.index (V.as_seq h bv) i)
 
+val loc_buffers:
+  #a:Type0 -> h:HS.mem -> bv:buf_vector a -> 
+  i:nat -> j:nat{i <= j && j <= U32.v (V.size_of bv)} -> 
+  GTot loc
+let rec loc_buffers #a h bv i j =
+  if i = j then loc_none
+  else loc_union (loc_buffers h bv i (j - 1))
+		 (loc_buffer h bv (j - 1))
+
 /// Facts related to the invariant
 
 val buf_vector_rloc_includes_loc_buffer:
-  #a:Type0 -> blen:uint32_t{blen > 0ul} ->
-  h:HS.mem -> bv:buf_vector a ->
+  #a:Type0 -> h:HS.mem -> bv:buf_vector a ->
   Lemma (requires (bv_inv_region h bv))
 	(ensures (forall (i:nat{i < U32.v (V.size_of bv)}).
 	  loc_includes (buf_vector_rloc bv) (loc_buffer h bv i)))
-let buf_vector_rloc_includes_loc_buffer #a blen h bv = ()
+let buf_vector_rloc_includes_loc_buffer #a h bv = ()
+
+val buf_vector_rloc_includes_loc_vector:
+  #a:Type0 -> h:HS.mem -> bv:buf_vector a ->
+  Lemma (loc_includes (buf_vector_rloc bv) (V.loc_vector bv))
+let buf_vector_rloc_includes_loc_vector #a h bv = ()
+
+val buf_vector_rloc_includes_loc_buffers:
+  #a:Type0 -> h:HS.mem -> bv:buf_vector a ->
+  i:nat -> j:nat{i <= j && j <= U32.v (V.size_of bv)} -> 
+  Lemma (requires (bv_inv_region h bv))
+	(ensures (loc_includes (buf_vector_rloc bv) 
+			       (loc_buffers h bv i j)))
+let rec buf_vector_rloc_includes_loc_buffers #a h bv i j =
+  if i = j then ()
+  else (buf_vector_rloc_includes_loc_buffers h bv i (j - 1);
+       loc_includes_union_r (buf_vector_rloc bv)
+			    (loc_buffers h bv i (j - 1))
+			    (loc_buffer h bv (j - 1)))
+
+val loc_vector_loc_buffer_disjoint:
+  #a:Type0 -> h:HS.mem -> bv:buf_vector a ->
+  Lemma (requires (bv_inv_region h bv))
+	(ensures (forall (i:nat{i < U32.v (V.size_of bv)}).
+	  loc_disjoint (V.loc_vector bv) (loc_buffer h bv i)))
+let loc_vector_loc_buffer_disjoint #a h bv = ()
+
+val loc_vector_loc_buffers_disjoint:
+  #a:Type0 -> h:HS.mem -> bv:buf_vector a ->
+  i:nat -> j:nat{i <= j && j <= U32.v (V.size_of bv)} -> 
+  Lemma (requires (bv_inv_region h bv))
+	(ensures (loc_disjoint (V.loc_vector bv) (loc_buffers h bv i j)))
+let rec loc_vector_loc_buffers_disjoint #a h bv i j =
+  if i = j then ()
+  else (loc_vector_loc_buffers_disjoint h bv i (j - 1);
+       loc_disjoint_union_r (V.loc_vector bv)
+			    (loc_buffers h bv i (j - 1))
+			    (loc_buffer h bv (j - 1)))
 
 val bv_inv_preserved:
   #a:Type0 -> blen:uint32_t{blen > 0ul} ->
@@ -103,8 +148,8 @@ val bv_inv_preserved:
 	SMTPat (loc_disjoint (buf_vector_rloc bv) dloc);
 	SMTPat (modifies dloc h0 h1)]
 let bv_inv_preserved #a blen bv dloc h0 h1 =
-  assert (loc_includes (buf_vector_rloc bv) (V.loc_vector bv));
-  buf_vector_rloc_includes_loc_buffer blen h0 bv;
+  buf_vector_rloc_includes_loc_vector h0 bv;
+  buf_vector_rloc_includes_loc_buffer h0 bv;
 
   // liveness
   assert (forall (i:nat{i < (U32.v (V.size_of bv))}).
@@ -240,21 +285,28 @@ val assign_copy:
   i:uint32_t{i < V.size_of bv} -> v:B.buffer a ->
   HST.ST unit
     (requires (fun h0 ->
-      bv_inv blen h0 bv /\ buffer_inv_liveness blen h0 v))
+      bv_inv blen h0 bv /\ buffer_inv_liveness blen h0 v /\
+      HH.disjoint (V.frameOf bv) (B.frameOf v)))
     (ensures (fun h0 _ h1 -> 
       modifies (buf_vector_rloc bv) h0 h1 /\
       bv_inv blen h1 bv))
 let assign_copy #a blen bv i v =
-  let iv = V.index bv i in
-  admit (); B.blit v 0ul iv 0ul blen
+  B.blit v 0ul (V.index bv i) 0ul blen
 
 val free_bufs:
   #a:Type0 -> blen:uint32_t{blen > 0ul} ->
   bv:buf_vector a ->
   idx:uint32_t{idx < V.size_of bv} ->
   HST.ST unit
-    (requires (fun h0 -> bv_inv blen h0 bv))
-    (ensures (fun h0 _ h1 -> modifies (buf_vector_rloc bv) h0 h1))
+    (requires (fun h0 -> 
+      V.live h0 bv /\
+      V.forall_ h0 bv 0ul (idx + 1ul) (buffer_inv_liveness blen h0) /\
+      V.forall_ h0 bv 0ul (idx + 1ul) 
+	(fun b -> HH.extends (B.frameOf b) (V.frameOf bv)) /\
+      V.forall2 h0 bv 0ul (idx + 1ul)
+	(fun b1 b2 -> HH.disjoint (B.frameOf b1) (B.frameOf b2))))
+    (ensures (fun h0 _ h1 ->
+      modifies (loc_buffers h0 bv 0 (U32.v idx + 1)) h0 h1))
 let rec free_bufs #a blen bv idx =
   admit ();
   B.free (V.index bv idx);
@@ -268,6 +320,12 @@ val free:
     (requires (fun h0 -> bv_inv blen h0 bv))
     (ensures (fun h0 _ h1 -> modifies (buf_vector_rloc bv) h0 h1))
 let free #a blen bv =
+  let hh0 = HST.get () in
   (if V.size_of bv = 0ul then () else free_bufs blen bv (V.size_of bv - 1ul));
-  admit (); V.free bv
+
+  buf_vector_rloc_includes_loc_buffers hh0 bv 0 (U32.v (V.size_of bv));
+  buf_vector_rloc_includes_loc_vector hh0 bv;
+  loc_vector_loc_buffers_disjoint hh0 bv 0 (U32.v (V.size_of bv));
+
+  V.free bv
 
