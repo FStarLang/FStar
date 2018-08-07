@@ -13,16 +13,29 @@ open LowStar.BufferOps
 open LowStar.Modifies
 
 
-type bref = b:B.buffer mint { B.length b = 1 } // XXX pointers already exist
 
-type lstate = bref * bref
+type lstate = pointer mint * pointer mint
 
 val well_formed : HS.mem -> lstate -> GTot Type0
-let well_formed h = fun (b1, b2) -> live h b1 /\ live h b2 /\ disjoint b1 b2
+let well_formed h = fun (r1, r2) -> live h r1 /\ live h r2 /\ disjoint r1 r2
 
+// To and from high- and low-level state
 val lstate_as_state : HS.mem -> lstate -> GTot state
 let lstate_as_state h  = fun (b1, b2) -> (B.get h b1 0, B.get h b2 0)
 
+
+val g_upd_preserves_well_formed : #a:Type -> h:HS.mem -> b1:pointer a{live h b1} -> b2:pointer a{live h b2} -> v:a ->
+   Lemma (let h' = g_upd b1 0 v h in modifies (loc_buffer b1) h h' /\ live h b1 /\ live h' b2)
+                                
+let g_upd_preserves_well_formed #a h b1 b2 v = 
+  let p = g_upd_seq_as_seq b1 (Seq.upd (as_seq h b1) 0 v) h in ()
+
+val state_as_lstate : h:HS.mem -> ls:lstate{well_formed h ls} -> state -> GTot HS.mem 
+let state_as_lstate h =
+  function (r1, r2) -> function (v1, v2) ->
+    let h' = g_upd r1 0 v1 h in
+    let p = g_upd_preserves_well_formed h r1 r2 v1 in
+    g_upd r2 0 v2 h'
 
 type lcomp 'a (c : comp 'a) =
     (ls:lstate) ->
@@ -30,11 +43,10 @@ type lcomp 'a (c : comp 'a) =
       (requires (fun h -> well_formed h ls))
       (ensures  (fun h r h' ->
                    well_formed h' ls /\
-                   modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
+                   //modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
                    (let s0 = lstate_as_state h ls in
-                    let (res : 'a * state) = c s0 in
-                    let s1 = lstate_as_state h' ls in
-                    snd res == s1 /\ fst res == r )))
+                    let (x, s1) = c s0 in
+                    h' == state_as_lstate h ls s1 /\ x == r )))
 
 
 let lcomp_wp (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
@@ -43,12 +55,12 @@ let lcomp_wp (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a
        (requires (fun h -> well_formed h ls))
        (ensures  (fun h r h' ->
                     well_formed h' ls /\
-                    modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
                     (let s0 = lstate_as_state h ls in
-                     wp s0 (fun _ -> True) /\
-                     (let res = c s0 in
-                      snd res == lstate_as_state h' ls /\ fst res == r))))
-
+                     wp s0 (fun _ -> True) /\ 
+                     (let tls = state_as_lstate h ls in // XXX fails otherwise
+                      let (x, s1) = c s0 in 
+                      h' == tls s1 /\ x == r ))))
+                    
 let lcomp_wp' (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
     (ls:lstate) ->
     Stack a
