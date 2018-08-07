@@ -15,8 +15,6 @@ RUN rm -f result.txt
 RUN rm -f status.txt
 RUN rm -f commitinfofilename.json
 
-WORKDIR ${MYHOME}/FStar
-
 # ADD SSH KEY
 RUN mkdir -p ${MYHOME}/.ssh
 RUN chown everest ${MYHOME}/.ssh
