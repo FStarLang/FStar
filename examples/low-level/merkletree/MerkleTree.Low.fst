@@ -249,35 +249,22 @@ val insert:
 	   merkle_tree_wf h0 mt /\
 	   not (V.is_full (MT?.values (B.get h0 mt 0)))))
 	 (ensures (fun h0 _ h1 -> merkle_tree_wf h1 mt))
-#set-options "--z3rlimit 40"
 let insert mt nv =
   let mtv = B.index mt 0ul in
   let values = MT?.values mtv in
   let nvalues = V.size_of values in
   let ivalues = insert_value values nv in
-
-  let hh0 = HST.get () in
-  assert (BV.bv_inv hash_size hh0 ivalues);
-
   let iroots = MT?.iroots mtv in
   insert_iroots iroots 0ul nvalues nv;
-
-  let hh1 = HST.get () in
-  assert (BV.bv_inv hash_size hh1 iroots);
   assert (loc_disjoint 
 	   (BV.buf_vector_rloc ivalues)
 	   (loc_union (loc_buffer nv) (buf_vector_rloc iroots)));
-  assert (BV.bv_inv hash_size hh1 ivalues);
 
   B.upd mt 0ul (MT ivalues iroots);
-
-  let hh2 = HST.get () in
   assert (loc_disjoint (BV.buf_vector_rloc ivalues)
 		       (loc_buffer mt));
-  assert (BV.bv_inv hash_size hh2 ivalues);
   assert (loc_disjoint (BV.buf_vector_rloc iroots)
-		       (loc_buffer mt));
-  assert (BV.bv_inv hash_size hh2 iroots)
+		       (loc_buffer mt))
 
 /// Getting the Merkle root
 
@@ -343,19 +330,10 @@ val free_merkle_tree:
 	 (ensures (fun h0 _ h1 -> modifies (merkle_tree_rloc mt) h0 h1))
 let free_merkle_tree mt =
   let mtv = B.index mt 0ul in
-
-  let hh0 = HST.get () in
-  assert (BV.bv_inv hash_size hh0 (MT?.values mtv));
-  assert (BV.bv_inv hash_size hh0 (MT?.iroots mtv));
-  
   BV.free hash_size (MT?.values mtv);
-
-  let hh1 = HST.get () in
   assert (loc_disjoint 
 	   (BV.buf_vector_rloc (MT?.values mtv))
 	   (BV.buf_vector_rloc (MT?.iroots mtv)));
-  assert (BV.bv_inv hash_size hh1 (MT?.iroots mtv));
-
   BV.free hash_size (MT?.iroots mtv);
   B.free mt
 

@@ -74,7 +74,21 @@ val buf_vector_rloc:
 let buf_vector_rloc #a bv =
   B.loc_all_regions_from false (V.frameOf bv)
 
+val loc_buffer:
+  #a:Type0 -> h:HS.mem -> bv:buf_vector a -> 
+  i:nat{i < U32.v (V.size_of bv)} -> GTot loc
+let loc_buffer #a h bv i =
+  B.loc_buffer (S.index (V.as_seq h bv) i)
+
 /// Facts related to the invariant
+
+val buf_vector_rloc_includes_loc_buffer:
+  #a:Type0 -> blen:uint32_t{blen > 0ul} ->
+  h:HS.mem -> bv:buf_vector a ->
+  Lemma (requires (bv_inv_region h bv))
+	(ensures (forall (i:nat{i < U32.v (V.size_of bv)}).
+	  loc_includes (buf_vector_rloc bv) (loc_buffer h bv i)))
+let buf_vector_rloc_includes_loc_buffer #a blen h bv = ()
 
 val bv_inv_preserved:
   #a:Type0 -> blen:uint32_t{blen > 0ul} ->
@@ -88,7 +102,19 @@ val bv_inv_preserved:
 	SMTPat (loc_disjoint (buf_vector_rloc bv) dloc);
 	SMTPat (modifies dloc h0 h1)]
 let bv_inv_preserved #a blen bv dloc h0 h1 =
-  admit ()
+  assert (loc_includes (buf_vector_rloc bv) (V.loc_vector bv));
+  buf_vector_rloc_includes_loc_buffer blen h0 bv;
+
+  // liveness
+  assert (forall (i:nat{i < (U32.v (V.size_of bv))}).
+  	 buffer_inv_liveness blen h1 (S.index (V.as_seq h1 bv) i));
+  assert (V.forall_all h1 bv (buffer_inv_liveness blen h1));
+
+  // region
+  V.forall_all_preserved 
+    bv (fun b -> HH.extends (B.frameOf b) (V.frameOf bv)) dloc h0 h1;
+  V.forall2_all_preserved
+    bv (fun b1 b2 -> HH.disjoint (B.frameOf b1) (B.frameOf b2)) dloc h0 h1
 
 /// Construction
 
@@ -128,7 +154,7 @@ private let rec create_ #a #blen ia bv cidx =
        // `V.forall_` properties for a single assignment is automatically
        // verified, but need to prove that such properties are preserved
        // after disjoint state transitions.
-       V.forall_disjoint_not_affected
+       V.forall_preserved
 	 bv (cidx - 1ul) cidx
 	 (fun b -> B.live hh1 b /\ B.len b = blen /\ B.freeable b /\
 		   HH.extends (B.frameOf b) (V.frameOf bv) /\ 

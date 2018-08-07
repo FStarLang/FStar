@@ -216,7 +216,7 @@ let insert #a vec v =
 
 val fold_left_seq:
   #a:Type -> #b:Type0 -> seq:S.seq a ->
-  f:(b -> a -> Tot b) -> ib:b -> 
+  f:(b -> a -> GTot b) -> ib:b -> 
   GTot b (decreases (S.length seq))
 let rec fold_left_seq #a #b seq f ib =
   if S.length seq = 0 then ib
@@ -306,7 +306,7 @@ let forall2_all #a h vec p =
 
 (*! Facts *)
 
-val forall_disjoint_not_affected:
+val forall_preserved:
   #a:Type -> vec:vector a ->
   i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
   p:(a -> Tot Type0) ->
@@ -316,8 +316,45 @@ val forall_disjoint_not_affected:
 		  forall_ h0 vec i j p /\
 		  modifies dloc h0 h1))
 	(ensures (forall_ h1 vec i j p))
-let forall_disjoint_not_affected #a vec i j p dloc h0 h1 =
+let forall_preserved #a vec i j p dloc h0 h1 =
   admit ()
+
+val forall_all_preserved:
+  #a:Type -> vec:vector a ->
+  p:(a -> Tot Type0) ->
+  dloc:loc -> h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (live h0 vec /\
+		  loc_disjoint (loc_vector vec) dloc /\
+		  forall_all h0 vec p /\
+		  modifies dloc h0 h1))
+	(ensures (forall_all h1 vec p))
+let forall_all_preserved #a vec p dloc h0 h1 =
+  forall_preserved vec 0ul (size_of vec) p dloc h0 h1
+
+val forall2_preserved:
+  #a:Type -> vec:vector a ->
+  i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
+  p:(a -> a -> Tot Type0) ->
+  dloc:loc -> h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (live h0 vec /\
+		  loc_disjoint (loc_vector_within vec i j) dloc /\
+		  forall2 h0 vec i j p /\
+		  modifies dloc h0 h1))
+	(ensures (forall2 h1 vec i j p))
+let forall2_preserved #a vec i j p dloc h0 h1 =
+  admit ()
+
+val forall2_all_preserved:
+  #a:Type -> vec:vector a ->
+  p:(a -> a -> Tot Type0) ->
+  dloc:loc -> h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (live h0 vec /\
+		  loc_disjoint (loc_vector vec) dloc /\
+		  forall2_all h0 vec p /\
+		  modifies dloc h0 h1))
+	(ensures (forall2_all h1 vec p))
+let forall2_all_preserved #a vec p dloc h0 h1 =
+  forall2_preserved vec 0ul (size_of vec) p dloc h0 h1
 
 val forall2_extend:
   #a:Type -> h:HS.mem -> vec:vector a ->
