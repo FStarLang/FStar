@@ -136,6 +136,19 @@ let rec loc_vector_loc_buffers_disjoint #a h bv i j =
 			    (loc_buffers h bv i (j - 1))
 			    (loc_buffer h bv (j - 1)))
 
+// val loc_buffer_loc_buffers_disjoint:
+//   #a:Type0 -> h:HS.mem -> bv:buf_vector a ->
+//   i:nat -> j:nat{i <= j && j <= U32.v (V.size_of bv)} ->
+//   k:nat{(k < i || j <= k) && k < U32.v (V.size_of bv)} ->
+//   Lemma (requires (bv_inv_region h bv))
+// 	(ensures (loc_disjoint (loc_buffer h bv k) (loc_buffers h bv i j)))
+// let rec loc_buffer_loc_buffers_disjoint #a h bv i j k =
+//   if i = j then ()
+//   else (loc_buffer_loc_buffers_disjoint h bv i (j - 1) k;
+//        loc_disjoint_union_r (loc_buffer h bv k)
+// 			    (loc_buffers h bv i (j - 1))
+// 			    (loc_buffer h bv (j - 1)))
+
 val bv_inv_preserved:
   #a:Type0 -> blen:uint32_t{blen > 0ul} ->
   bv:buf_vector a ->

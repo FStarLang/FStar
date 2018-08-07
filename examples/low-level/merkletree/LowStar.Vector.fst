@@ -289,7 +289,7 @@ val forall2_seq:
   i:nat -> j:nat{i <= j && j <= S.length seq} ->
   p:(a -> a -> GTot Type0) -> GTot Type0
 let forall2_seq #a seq i j p =
-  forall (k:nat{i <= k && k < j}) (l:nat{i <= l && l < j}).
+  forall (k:nat{i <= k && k < j}) (l:nat{i <= l && l < j && k <> l}).
     p (S.index seq k) (S.index seq l)
 
 val forall2_buffer:

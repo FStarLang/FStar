@@ -50,7 +50,7 @@ assume val hash_from_hashes:
 	   BV.buffer_inv_liveness hash_size h0 dst))
 	 (ensures (fun h0 _ h1 ->
 	   // memory safety
-	   modifies (loc_buffer dst) h0 h1 /\
+	   modifies (B.loc_buffer dst) h0 h1 /\
 	   // correctness
 	   High.hash_from_hashes (B.as_seq h1 src1) (B.as_seq h1 src2) = 
 	   B.as_seq h1 dst)) 
@@ -228,10 +228,10 @@ val insert_iroots:
   HST.ST unit
 	 (requires (fun h0 -> 
 	   BV.buffer_inv_liveness hash_size h0 acc /\
-	   loc_disjoint (BV.buf_vector_rloc irs) (loc_buffer acc) /\
+	   HH.disjoint (V.frameOf irs) (B.frameOf acc) /\
 	   BV.bv_inv hash_size h0 irs))
 	 (ensures (fun h0 _ h1 -> 
-	   modifies (loc_union (loc_buffer acc) 
+	   modifies (loc_union (B.loc_buffer acc) 
 			       (BV.buf_vector_rloc irs)) h0 h1 /\
 	   BV.bv_inv hash_size h1 irs))
 let rec insert_iroots irs cpos irps acc =
@@ -258,13 +258,13 @@ let insert mt nv =
   insert_iroots iroots 0ul nvalues nv;
   assert (loc_disjoint 
 	   (BV.buf_vector_rloc ivalues)
-	   (loc_union (loc_buffer nv) (buf_vector_rloc iroots)));
+	   (loc_union (B.loc_buffer nv) (buf_vector_rloc iroots)));
 
   B.upd mt 0ul (MT ivalues iroots);
   assert (loc_disjoint (BV.buf_vector_rloc ivalues)
-		       (loc_buffer mt));
+		       (B.loc_buffer mt));
   assert (loc_disjoint (BV.buf_vector_rloc iroots)
-		       (loc_buffer mt))
+		       (B.loc_buffer mt))
 
 /// Getting the Merkle root
 
@@ -276,7 +276,7 @@ val compress_or_init:
 	   BV.buffer_inv_liveness hash_size h0 nh /\
 	   HH.disjoint (B.frameOf nh) (B.frameOf acc)))
 	 (ensures (fun h0 _ h1 ->
-	   modifies (loc_buffer acc) h0 h1))
+	   modifies (B.loc_buffer acc) h0 h1))
 let compress_or_init actd acc nh =
   if actd
   then hash_from_hashes nh acc acc
@@ -293,7 +293,7 @@ val merkle_root_of_iroots:
 	   BV.bv_inv hash_size h0 irs /\
 	   HH.disjoint (V.frameOf irs) (B.frameOf acc)))
 	 (ensures (fun h0 _ h1 ->
-	   modifies (loc_buffer acc) h0 h1))
+	   modifies (B.loc_buffer acc) h0 h1))
 let rec merkle_root_of_iroots irs cpos irps acc actd =
   if cpos = 31ul 
   then compress_or_init actd acc (V.index irs cpos)
@@ -311,7 +311,7 @@ val get_root:
 	   merkle_tree_wf h0 mt /\
 	   HH.disjoint (B.frameOf mt) (B.frameOf rt)))
 	 (ensures (fun h0 _ h1 ->
-	   modifies (loc_buffer rt) h0 h1))
+	   modifies (B.loc_buffer rt) h0 h1))
 let get_root mt rt =
   let mtv = B.index mt 0ul in
   let values = MT?.values mtv in
