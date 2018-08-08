@@ -295,6 +295,7 @@ type freenames_l = list<bv>
 type formula = typ
 type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
+val new_id_set: unit -> set<ident>
 val new_fv_set: unit -> set<lident>
 val new_universe_names_set: unit -> set<univ_name>
 
