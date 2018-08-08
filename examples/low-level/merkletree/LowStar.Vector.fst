@@ -19,6 +19,24 @@ let max_uint32 = 4294967295ul // 2^32 - 1
 
 module U32 = FStar.UInt32
 
+/// Some helpers for `LowStar.Buffer`
+
+val get_as_seq_index:
+  #a:Type -> h:HS.mem -> buf:B.buffer a -> i:uint32_t{i < B.len buf} ->
+  Lemma (B.get h buf (U32.v i) == S.index (B.as_seq h (B.gsub buf i 1ul)) 0)
+let get_as_seq_index #a h buf i = ()
+
+val get_preserved_buffer:
+  #a:Type -> buf:B.buffer a ->
+  i:uint32_t -> len:uint32_t{U32.v i + U32.v len <= B.length buf} ->
+  k:uint32_t{(k < i || i + len <= k) && k < B.len buf} ->
+  h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (B.live h0 buf /\
+		  modifies (B.loc_buffer (B.gsub buf i len)) h0 h1))
+	(ensures (B.get h0 buf (U32.v k) == B.get h1 buf (U32.v k)))
+let get_preserved_buffer #a buf i len k h0 h1 =
+  get_as_seq_index h0 buf k; get_as_seq_index h1 buf k
+
 /// Abstract vector type
 
 noeq type vector_str a =
@@ -86,6 +104,34 @@ unfold val hmap_dom_eq: h0:HS.mem -> h1:HS.mem -> GTot Type0
 unfold let hmap_dom_eq h0 h1 =
   Set.equal (Map.domain (MHS.get_hmap h0))
 	    (Map.domain (MHS.get_hmap h1))
+
+val modifies_as_seq:
+  #a:Type -> vec:vector a -> dloc:loc ->
+  h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (live h0 vec /\ 
+		  loc_disjoint (loc_vector vec) dloc /\
+		  modifies dloc h0 h1))
+	(ensures (as_seq h0 vec == as_seq h1 vec))
+	[SMTPat (live h0 vec); 
+	SMTPat (loc_disjoint (loc_vector vec) dloc);
+	SMTPat (modifies dloc h0 h1)]
+let modifies_as_seq #a vec dloc h0 h1 =
+  B.modifies_buffer_elim (Vec?.vs vec) dloc h0 h1
+
+val modifies_as_seq_within:
+  #a:Type -> vec:vector a -> 
+  i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
+  dloc:loc -> h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (live h0 vec /\ 
+		  loc_disjoint (loc_vector_within vec i j) dloc /\
+		  modifies dloc h0 h1))
+	(ensures (S.slice (as_seq h0 vec) (U32.v i) (U32.v j) == 
+		 S.slice (as_seq h1 vec) (U32.v i) (U32.v j)))
+	[SMTPat (live h0 vec); 
+	SMTPat (loc_disjoint (loc_vector_within vec i j) dloc);
+	SMTPat (modifies dloc h0 h1)]
+let modifies_as_seq_within #a vec i j dloc h0 h1 =
+  B.modifies_buffer_elim (B.gsub (Vec?.vs vec) i (j - i)) dloc h0 h1
 
 /// Construction
 
@@ -169,6 +215,13 @@ val index:
 let index #a vec i =
   B.index (Vec?.vs vec) i
 
+val slice_append:
+  #a:Type -> s:S.seq a ->
+  i:nat -> j:nat{i <= j} -> k:nat{j <= k && k <= S.length s} ->
+  Lemma (S.equal (S.slice s i k)
+		 (S.append (S.slice s i j) (S.slice s j k)))
+let slice_append #a s i j k = ()
+
 val assign:
   #a:Type -> vec:vector a ->
   i:uint32_t -> v:a ->
@@ -179,9 +232,19 @@ val assign:
       modifies (loc_vector_within #a vec i (i + 1ul)) h0 h1 /\
       S.equal (as_seq h1 vec) (S.upd (as_seq h0 vec) (U32.v i) v)))
 let assign #a vec i v =
-  B.upd (Vec?.vs vec) i v;
-  // TODO: The `modifies` postcondition of `B.upd` is coarse-grained.
-  admit ()
+  let hh0 = HST.get () in
+  // NOTE: `B.upd (Vec?.vs vec) i v` makes more sense, 
+  //       but the `modifies` postcondition is coarse-grained.
+  B.upd (B.sub (Vec?.vs vec) i 1ul) 0ul v;
+  let hh1 = HST.get () in
+  modifies_as_seq_within 
+    vec 0ul i (loc_vector_within #a vec i (i + 1ul)) hh0 hh1;
+  modifies_as_seq_within 
+    vec (i + 1ul) (size_of vec) (loc_vector_within #a vec i (i + 1ul)) hh0 hh1;
+  slice_append (as_seq hh1 vec) 0 (U32.v i) (U32.v i + 1);
+  slice_append (as_seq hh1 vec) 0 (U32.v i + 1) (U32.v (size_of vec));
+  slice_append (S.upd (as_seq hh0 vec) (U32.v i) v) 0 (U32.v i) (U32.v i + 1);
+  slice_append (S.upd (as_seq hh0 vec) (U32.v i) v) 0 (U32.v i + 1) (U32.v (size_of vec))
 
 /// Operations
 
@@ -316,19 +379,6 @@ let forall2_all #a h vec p =
 
 (*! Facts *)
 
-val modifies_as_seq:
-  #a:Type -> vec:vector a -> dloc:loc ->
-  h0:HS.mem -> h1:HS.mem ->
-  Lemma (requires (live h0 vec /\ 
-		  loc_disjoint (loc_vector vec) dloc /\
-		  modifies dloc h0 h1))
-	(ensures (as_seq h0 vec == as_seq h1 vec))
-	[SMTPat (live h0 vec); 
-	SMTPat (loc_disjoint (loc_vector vec) dloc);
-	SMTPat (modifies dloc h0 h1)]
-let modifies_as_seq #a vec dloc h0 h1 =
-  B.modifies_buffer_elim (Vec?.vs vec) dloc h0 h1
-
 val forall_seq_ok:
   #a:Type -> seq:S.seq a -> 
   i:nat -> j:nat{i <= j && j <= S.length seq} ->
@@ -352,12 +402,27 @@ val get_preserved:
   i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
   k:uint32_t{(k < i || j <= k) && k < size_of vec} ->
   h0:HS.mem -> h1:HS.mem ->
-  Lemma (requires (modifies (loc_vector_within vec i j) h0 h1))
+  Lemma (requires (live h0 vec /\
+		  modifies (loc_vector_within vec i j) h0 h1))
 	(ensures (get h0 vec k == get h1 vec k))
-	[SMTPat (modifies (loc_vector_within vec i j) h0 h1);
+	[SMTPat (live h0 vec);
+	SMTPat (modifies (loc_vector_within vec i j) h0 h1);
 	SMTPat (get h0 vec k)]
 let get_preserved #a vec i j k h0 h1 =
-  admit ()
+  get_preserved_buffer (Vec?.vs vec) i (j - i) k h0 h1
+
+val forall_as_seq:
+  #a:Type -> s0:S.seq a -> s1:S.seq a{S.length s0 = S.length s1} ->
+  i:nat -> j:nat{i <= j && j <= S.length s0} ->
+  k:nat{i <= k && k < j} ->
+  p:(a -> Tot Type0) ->
+  Lemma (requires (p (S.index s0 k) /\ S.slice s0 i j == S.slice s1 i j))
+	(ensures (p (S.index s1 k)))
+	[SMTPat (p (S.index s0 k));
+	SMTPat (S.slice s0 i j == S.slice s1 i j)]
+let forall_as_seq #a s0 s1 i j k p =
+  assert (S.index (S.slice s0 i j) (k - i) ==
+	 S.index (S.slice s1 i j) (k - i))
 
 val forall_preserved:
   #a:Type -> vec:vector a ->
@@ -370,73 +435,17 @@ val forall_preserved:
 		  modifies dloc h0 h1))
 	(ensures (forall_ h1 vec i j p))
 let forall_preserved #a vec i j p dloc h0 h1 =
-  admit ()
-
-val forall_all_preserved:
-  #a:Type -> vec:vector a ->
-  p:(a -> Tot Type0) ->
-  dloc:loc -> h0:HS.mem -> h1:HS.mem ->
-  Lemma (requires (live h0 vec /\
-		  loc_disjoint (loc_vector vec) dloc /\
-		  forall_all h0 vec p /\
-		  modifies dloc h0 h1))
-	(ensures (forall_all h1 vec p))
-let forall_all_preserved #a vec p dloc h0 h1 =
-  forall_preserved vec 0ul (size_of vec) p dloc h0 h1
-
-val forall2_preserved:
-  #a:Type -> vec:vector a ->
-  i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
-  p:(a -> a -> Tot Type0) ->
-  dloc:loc -> h0:HS.mem -> h1:HS.mem ->
-  Lemma (requires (live h0 vec /\
-		  loc_disjoint (loc_vector_within vec i j) dloc /\
-		  forall2 h0 vec i j p /\
-		  modifies dloc h0 h1))
-	(ensures (forall2 h1 vec i j p))
-let forall2_preserved #a vec i j p dloc h0 h1 =
-  admit ()
-
-val forall2_all_preserved:
-  #a:Type -> vec:vector a ->
-  p:(a -> a -> Tot Type0) ->
-  dloc:loc -> h0:HS.mem -> h1:HS.mem ->
-  Lemma (requires (live h0 vec /\
-		  loc_disjoint (loc_vector vec) dloc /\
-		  forall2_all h0 vec p /\
-		  modifies dloc h0 h1))
-	(ensures (forall2_all h1 vec p))
-let forall2_all_preserved #a vec p dloc h0 h1 =
-  forall2_preserved vec 0ul (size_of vec) p dloc h0 h1
+  modifies_as_seq_within vec i j dloc h0 h1;
+  assert (S.slice (as_seq h0 vec) (U32.v i) (U32.v j) ==
+	 S.slice (as_seq h1 vec) (U32.v i) (U32.v j))
 
 val forall2_extend:
   #a:Type -> h:HS.mem -> vec:vector a ->
   i:uint32_t -> j:uint32_t{i <= j && j < size_of vec} ->
   p:(a -> a -> Tot Type0) ->
   Lemma (requires (forall2 h vec i j p /\
-		  forall_ h vec i j (fun a -> p a (get h vec j) /\
-					      p (get h vec j) a)))
+		  forall_ h vec i j 
+		    (fun a -> p a (get h vec j) /\ p (get h vec j) a)))
 	(ensures (forall2 h vec i (j + 1ul) p))
-let forall2_extend #a h vec i j p = 
-  admit ()
-
-// val forall_buffer_consistent:
-//   #a:Type -> h:HS.mem -> len:uint32_t{len > 0ul} ->
-//   buf:B.buffer a{B.len buf = len} ->
-//   vec:vector a ->
-//   p:(a -> Tot Type0) ->
-//   Lemma (requires (S.equal (as_seq h vec) (B.as_seq h buf) /\
-// 		  forall_buffer h buf p))
-// 	(ensures (forall_prop h vec p))
-// let forall_buffer_consistent #a h len buf vec p = ()
-
-// val forall2_buffer_consistent:
-//   #a:Type -> h:HS.mem -> len:uint32_t{len > 0ul} ->
-//   buf:B.buffer a{B.len buf = len} ->
-//   vec:vector a ->
-//   p:(a -> a -> Tot Type0) ->
-//   Lemma (requires (S.equal (as_seq h vec) (B.as_seq h buf) /\
-// 		  forall2_buffer h buf p))
-// 	(ensures (forall2 h vec p))
-// let forall2_buffer_consistent #a h len buf vec p = ()
+let forall2_extend #a h vec i j p = ()
 
