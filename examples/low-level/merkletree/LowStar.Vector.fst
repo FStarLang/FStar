@@ -314,6 +314,37 @@ let forall2_all #a h vec p =
 
 (*! Facts *)
 
+val modifies_as_seq:
+  #a:Type -> vec:vector a -> dloc:loc ->
+  h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (live h0 vec /\ 
+		  loc_disjoint (loc_vector vec) dloc /\
+		  modifies dloc h0 h1))
+	(ensures (as_seq h0 vec == as_seq h1 vec))
+	[SMTPat (live h0 vec); 
+	SMTPat (loc_disjoint (loc_vector vec) dloc);
+	SMTPat (modifies dloc h0 h1)]
+let modifies_as_seq #a vec dloc h0 h1 =
+  B.modifies_buffer_elim (Vec?.vs vec) dloc h0 h1
+
+val forall_seq_ok:
+  #a:Type -> seq:S.seq a -> 
+  i:nat -> j:nat{i <= j && j <= S.length seq} ->
+  k:nat{i <= k && k < j} ->
+  p:(a -> GTot Type0) ->
+  Lemma (requires (forall_seq seq i j p))
+	(ensures (p (S.index seq k)))
+let forall_seq_ok #a seq i j k p = ()
+
+val forall2_seq_ok:
+  #a:Type -> seq:S.seq a -> 
+  i:nat -> j:nat{i <= j && j <= S.length seq} ->
+  k:nat{i <= k && k < j} -> l:nat{i <= l && l < j && k <> l} ->
+  p:(a -> a -> GTot Type0) ->
+  Lemma (requires (forall2_seq seq i j p))
+	(ensures (p (S.index seq k) (S.index seq l)))
+let forall2_seq_ok #a seq i j k l p = ()
+
 val get_preserved:
   #a:Type -> vec:vector a ->
   i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
