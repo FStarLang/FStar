@@ -66,7 +66,7 @@ endif
 OCAMLPATH:="../../../bin/$(OCAMLPATH_SEP)$(OCAMLPATH)"
 
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
-OCAMLBUILD=cd ../ && OCAMLPATH="$(OCAMLPATH)" ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
+OCAMLBUILD=cd ../ && OCAMLPATH=$(OCAMLPATH) ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
 
 FSTARLIB_OCAMLBUILD=$(OCAMLBUILD) -build-dir ulib/ml/_build \
   -I ulib/ml \
