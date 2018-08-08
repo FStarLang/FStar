@@ -197,13 +197,15 @@ val insert:
   #a:Type -> vec:vector a -> v:a -> 
   HST.ST (vector a)
     (requires (fun h0 -> 
-      live h0 vec /\ not (is_full vec) /\
+      live h0 vec /\ freeable vec /\ not (is_full vec) /\
       HST.is_eternal_region (frameOf vec)))
     (ensures (fun h0 nvec h1 ->
+      frameOf vec = frameOf nvec /\
       hmap_dom_eq h0 h1 /\
-      live h1 vec /\
-      modifies (loc_union (loc_buffer (Vec?.vs vec)) 
-			  (loc_buffer (Vec?.vs nvec))) h0 h1 /\
+      live h1 nvec /\ freeable nvec /\
+      modifies (loc_union (loc_addr_of_vector vec) 
+      			  (loc_vector nvec)) h0 h1 /\
+      size_of nvec = size_of vec + 1ul /\
       S.equal (as_seq h1 nvec) (S.snoc (as_seq h0 vec) v)))
 let insert #a vec v =
   let sz = Vec?.sz vec in
@@ -214,7 +216,7 @@ let insert #a vec v =
        let nvs = B.malloc (B.frameOf vs) v ncap in
        B.blit vs 0ul nvs 0ul sz;
        B.upd nvs sz v;
-       // B.free vs; // TODO!
+       B.free vs;
        Vec (sz + 1ul) ncap nvs)
   else
     (B.upd vs sz v;

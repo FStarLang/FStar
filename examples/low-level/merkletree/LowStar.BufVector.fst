@@ -331,12 +331,13 @@ val insert_copy:
     (ensures (fun h0 ibv h1 -> 
       V.frameOf bv = V.frameOf ibv /\
       modifies (buf_vector_rloc bv) h0 h1 /\
-      bv_inv blen h1 ibv /\ buffer_inv_liveness blen h1 v))
+      bv_inv blen h1 ibv))
+#set-options "--z3rlimit 40"
 let insert_copy #a ia blen bv v =
   let nrid = new_region_ (V.frameOf bv) in
   let nv = B.malloc nrid ia blen in
   B.blit v 0ul nv 0ul blen;
-  admit (); V.insert bv nv
+  V.insert bv nv
 
 val assign_copy:
   #a:Type0 -> blen:uint32_t{blen > 0ul} ->
