@@ -115,6 +115,24 @@ assume T_hasEq_1129: forall a n. hasEq a ==> hasEq (t_1129 a n)
 type t2_1129:eqtype = t_1129 bool 0
 type t3_1129:eqtype = {r:t2_1129}
 
+(*
+ * #1124
+ *)
+open FStar.List.Tot
+
+type solve_1124 (#a:Type) (e1:a) (e2:a): Type =
+| By: t:unit{e1 == e2} -> solve_1124 e1 e2
+
+val nth_tot_1124: l:list 'a -> n:nat{n < length l} -> Tot 'a
+let rec nth_tot_1124 l n = 
+  match nth l n with
+  | None -> magic()
+  | Some x -> x
+
+#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+assume val calc_1124: #a:Type -> es:list ((e:(a*a)) & (solve_1124 (fst e) (snd e))){Cons? es} -> 
+  Lemma (normalize(fst (dfst (hd es)) == snd (dfst (nth_tot_1124 es ((length es) - 1)))))
+
 (* This gives error in reguaring ... try with printing phase 1 message, and with --ugly
 open FStar.All
 
