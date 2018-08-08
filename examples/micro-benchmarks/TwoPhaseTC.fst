@@ -133,6 +133,29 @@ let rec nth_tot_1124 l n =
 assume val calc_1124: #a:Type -> es:list ((e:(a*a)) & (solve_1124 (fst e) (snd e))){Cons? es} -> 
   Lemma (normalize(fst (dfst (hd es)) == snd (dfst (nth_tot_1124 es ((length es) - 1)))))
 
+(*
+ * #754
+ *)
+assume type good_754 : list nat -> Type0
+
+//Adding this line (i.e., moving to Type0), makes everything work fine
+//type eqtype = a:Type0{hasEq a}
+
+val copy'_754: #a:eqtype -> list a -> Tot (list a)
+let rec copy'_754 #a l = match l with
+  | [] -> []
+  | hd::tl -> hd :: copy'_754 tl
+
+unfold val copy_754:  #a:eqtype -> l:list a -> Tot (list a)
+let copy_754 (#a:eqtype) (l:list a) = normalize_term (copy'_754 l)
+
+val test2_754 : r1:nat -> Lemma
+  (requires good_754 (copy_754 [r1]))
+  (ensures True)
+//this blows up with a universe variable not found
+let test2_754 r1 = ()
+ 
+
 (* This gives error in reguaring ... try with printing phase 1 message, and with --ugly
 open FStar.All
 
