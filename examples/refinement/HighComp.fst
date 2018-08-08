@@ -69,7 +69,6 @@ let return_wp (x : 'a) : hwp 'a =  fun s0 post -> post (x, s0)
 // HIGH?._dm4f_HIGH_return_wp 
 // Got : "definition __proj__HIGH__item___dm4f_HIGH_return_wp not found"
 
-
 unfold
 let bind_wp (wp1 : state -> ('a * state -> Type) -> Type)
             (wp2 : 'a -> state -> ('b * state -> Type) -> Type) : state -> ('b * state -> Type) -> Type =
@@ -119,25 +118,35 @@ let hwrite' (i:nat) (v:mint) : comp_wp unit (write_wp i v) =
 
 
 // Commutation
-val h_eq' : (#a:Type) -> (wp1:hwp a) -> (wp2:hwp a) -> (comp_wp a wp1) -> (comp_wp a wp2) -> GTot Type0
-let h_eq' #a wp1 wp2 c1 c2 = 
+val h_eq : (#a:Type) -> (wp1:hwp a) -> (wp2:hwp a) -> (comp_wp a wp1) -> (comp_wp a wp2) -> GTot Type0
+let h_eq #a wp1 wp2 c1 c2 = 
     (forall s0. wp1 s0 (fun _ -> True) <==> wp2 s0 (fun _ -> True)) /\
-    (forall s0. wp1 s0 (fun _ -> True) ==> // suddenly stoped working... 
-           // wp2 s0 (fun _ -> True) ==> // even with this
-           (let r1 = c1 s0 in 
-            let r2 = c2 s0 in 
-            r2 == r2))
+    (forall s0. wp1 s0 (fun _ -> True) ==> wp2 s0 (fun _ -> True) /\ c1 s0 == c2 s0)
+           // (let r1 = c1 s0 in 
+           //  wp2 s0 (fun _ -> True) /\
+           //  (let r2 = c2 s0 in 
+           //   r1 == r2)))
 
-// Note : At some point the above was typechecked 
+// Equivalence with reified computations
+
+// let hreturn_eq (#a:Type) (x : a) :
+//   Lemma (h_eq (return_wp x) (return_wp x) (hreturn' x) (reify (HIGH?.return x))) = ()
+// ERROR : HighComp.__proj__HIGH__item__return not found
+
+let hwrite_eq (#a:Type) (i:nat) (v:mint) :
+   Lemma (h_eq (write_wp i v) (write_wp i v) (hwrite' i v) (reify (HIGH?.put i v))) = ()
+
+let hread_eq (#a:Type) (i:nat) :
+   Lemma (h_eq (read_wp i) (read_wp i) (hread' i) (reify (HIGH?.get i))) = ()
 
 
 // Confusion comes next :) 
 
 let hbind_commut (a:Type) (b:Type) (#wp1:hwp a) (#wp2:a -> hwp b) 
      (c1 : unit -> HIGH a wp1) (c2 : (x:a) -> HIGH b (wp2 x)) :
-     Lemma (h_eq' (bind_wp wp1 wp2) (bind_wp wp1 wp2)
-                  (reify (let x = c1 () in c2 x)) 
-                  (hbind' (reify (c1 ())) (fun x -> reify (c2 x)))) =
+     Lemma (h_eq (bind_wp wp1 wp2) (bind_wp wp1 wp2)
+                 (reify (let x = c1 () in c2 x)) 
+                 (hbind' (reify (c1 ())) (fun x -> reify (c2 x)))) =
      ()
 
 

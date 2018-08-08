@@ -92,7 +92,7 @@ let lcomp_wp' (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp 
       well_formed h' ls /\
       modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
       (let s0 = lstate_as_state h ls in
-       wp s0 (fun _ -> True) /\
+       wp s0 (fun _ -> True) ==>
        (let res = c s0 in
        snd res == lstate_as_state h' ls /\ fst res == r))))
 
@@ -154,8 +154,20 @@ let lbind (#a:Type) (#b:Type)
 
 
 // Versions of [lread] and [lwrite] with reif in spec
+
 val lwrite' : i:nat{ i < 2 } -> v:mint -> lcomp_wp unit (write_wp i v) (reify (HIGH?.put i v))
 let lwrite' i v = fun (b1, b2) -> if i = 0 then b1.(0ul) <- v else b2.(0ul) <- v
 
 val lread' : i:nat{ i < 2 } -> lcomp_wp mint (read_wp i) (reify (HIGH?.get i))
 let lread' i = fun (b1, b2) -> if i = 0 then b1.(0ul) else b2.(0ul)
+
+// 
+
+let lcomp_respects_h_eq (a : Type) (wp1 : hwp a) (wp2 : hwp a) (hc1 : comp_wp a wp1) (hc2 : comp_wp a wp2)  
+  (lc : lcomp_wp a wp1 hc1) (p : h_eq wp1 wp2 hc1 hc2) : lcomp_wp a wp2 hc2 =  
+   assert (forall s0. wp1 s0 (fun _ -> True) <==> wp2 s0 (fun _ -> True));
+   assert (forall s0. wp2 s0 (fun _ -> True) ==> 
+                 wp1 s0 (fun _ -> True) /\
+                 hc1 s0 == hc2 s0);      
+   lc 
+  
