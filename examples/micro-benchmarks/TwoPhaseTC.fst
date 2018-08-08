@@ -107,6 +107,14 @@ let bar_1451 (#a:Type) (l1:option _) (l2:option a) = ~ (l1 === l2)
 let foo_1451 () = assert (bar_1451 (Some 0) (Some true))
 
 
+(*
+ * #1129
+ *)
+assume type t_1129 (a:Type) : (n:nat) -> Type
+assume T_hasEq_1129: forall a n. hasEq a ==> hasEq (t_1129 a n)
+type t2_1129:eqtype = t_1129 bool 0
+type t3_1129:eqtype = {r:t2_1129}
+
 (* This gives error in reguaring ... try with printing phase 1 message, and with --ugly
 open FStar.All
 
