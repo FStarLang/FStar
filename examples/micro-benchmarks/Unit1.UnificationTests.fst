@@ -24,3 +24,13 @@ let g_calls_f (u v:t_inst_index) = f_with_implicit u v  //the implicit here is i
 
 (****** test for unfolding of delta equational symbols end ******)
 
+(*
+ * #923
+ *)
+assume val p_923: Type0
+let t_923 () : Tot Type0 = unit -> Tot p_923
+let f_923 (g: t_923 ()) : Tot p_923 = g ()
+
+let u_923 () : Pure Type0 (requires True) (ensures (fun y -> True)) = unit -> Tot p_923
+let h_923 (g: u_923 ()) : Tot p_923 =
+  let g' : (unit -> Tot p_923) = g in g' ()
