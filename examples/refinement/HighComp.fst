@@ -27,6 +27,8 @@ let comp_p (a:Type) (pre : state -> Type) (post : state -> a * state -> Type) : 
 unfold
 let return_wp (x : 'a) : hwp 'a = fun s0 post -> post (x, s0)
 
+
+// TODO use the provided HighComp._dm4f_HIGH_return_wp 
 unfold
 let bind_wp (wp1 : state -> ('a * state -> Type) -> Type)
             (wp2 : 'a -> state -> ('b * state -> Type) -> Type) : state -> ('b * state -> Type) -> Type =
@@ -38,13 +40,13 @@ unfold
 let trivial_pre = fun s0 -> True
 
 unfold
-let return_post (#a : Type) (x : a) = fun s0 r -> let (x1, s1) = r in x1 = x /\ s0 = s1
+let return_post (#a : Type) (x : a) = fun s0 r -> let (x1, s1) = r in x1 == x /\ s0 == s1
 
 unfold
-let bind_pre (#a : Type) (x : a) = fun s0 r -> let (x1, s1) = r in x1 = x /\ s0 = s1
+let bind_pre (#a : Type) (x : a) = fun s0 r -> let (x1, s1) = r in x1 == x /\ s0 == s1
 
 unfold
-let bind_post (#a : Type) (x : a) = fun s0 r -> let (x1, s1) = r in x1 = x /\ s0 = s1
+let bind_post (#a : Type) (x : a) = fun s0 r -> let (x1, s1) = r in x1 == x /\ s0 == s1
 
 // High-level DSL
 
@@ -103,3 +105,28 @@ total reifiable reflectable new_effect {
        ; get      = hread
        ; put      = hwrite
        }
+
+// Commutation
+val h_eq' : (#a:Type) -> (wp1:hwp a) -> (wp2:hwp a) -> (comp_wp a wp1) -> (comp_wp a wp2) -> GTot Type0
+let h_eq' #a wp1 wp2 c1 c2 = 
+    (forall s0. wp1 s0 (fun _ -> True) <==> wp2 s0 (fun _ -> True)) /\
+    (forall s0. wp1 s0 (fun _ -> True) ==> // suddenly stoped working... 
+           // wp2 s0 (fun _ -> True) ==> // even with this
+           (let r1 = c1 s0 in 
+            let r2 = c2 s0 in 
+            r2 == r2))
+
+// Note : At some point the above was typechecked 
+
+
+// Confusion comes next :) 
+
+let hbind_commut (a:Type) (b:Type) (#wp1:hwp a) (#wp2:a -> hwp b) 
+     (c1 : unit -> HIGH a wp1) (c2 : (x:a) -> HIGH b (wp2 x)) :
+     Lemma (h_eq' (bind_wp wp1 wp2) (bind_wp wp1 wp2)
+                  (reify (let x = c1 () in c2 x)) 
+                  (hbind' (reify (c1 ())) (fun x -> reify (c2 x)))) =
+     ()
+
+
+
