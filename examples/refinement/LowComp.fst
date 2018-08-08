@@ -164,10 +164,10 @@ let lread' i = fun (b1, b2) -> if i = 0 then b1.(0ul) else b2.(0ul)
 // 
 
 let lcomp_respects_h_eq (a : Type) (wp1 : hwp a) (wp2 : hwp a) (hc1 : comp_wp a wp1) (hc2 : comp_wp a wp2)  
-  (lc : lcomp_wp a wp1 hc1) (p : h_eq wp1 wp2 hc1 hc2) : lcomp_wp a wp2 hc2 =  
-   assert (forall s0. wp1 s0 (fun _ -> True) <==> wp2 s0 (fun _ -> True));
-   assert (forall s0. wp2 s0 (fun _ -> True) ==> 
-                 wp1 s0 (fun _ -> True) /\
-                 hc1 s0 == hc2 s0);      
+  (lc : lcomp_wp a wp1 hc1) (p : h_eq wp1 wp2 hc1 hc2) : lcomp_wp' a wp2 hc2 = //660 requires the lcomp_wp'
+   // assert (forall s0. wp1 s0 (fun _ -> True) <==> wp2 s0 (fun _ -> True));
+   // assert (forall s0. wp2 s0 (fun _ -> True) ==> 
+   //               wp1 s0 (fun _ -> True) /\
+   //               hc1 s0 == hc2 s0);      
    lc 
   

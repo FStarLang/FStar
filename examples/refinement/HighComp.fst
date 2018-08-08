@@ -141,6 +141,34 @@ let hread_eq (#a:Type) (i:nat) :
 
 
 // Confusion comes next :) 
+open FStar.Tactics
+
+#set-options "--z3rlimit 0 --debug HighComp --debug_level SMTQuery"
+let test (i:nat) (v:mint) (s0:_) = 
+  assert (FStar.Pervasives.norm [reify_] 
+           (reify (let _ = HIGH?.put i v in
+                   HIGH?.put i v) s0 == 
+                   hbind _ _ (reify (HIGH?.put i v)) (fun _ ->
+                             (reify (HIGH?.put i v))) s0))
+                             
+
+let trivial_wp  : #a:Type -> hwp a = fun #a s post -> forall x. post x
+
+let hbind_commut' (a:Type) (b:Type)
+     (c1 : unit -> HIGH a trivial_wp) (c2 : (x:a) -> HIGH b trivial_wp) :
+     Lemma (forall s. (reify (let x = c1 () in c2 x)) s == 
+                 hbind _ _ (reify (c1 ())) (fun x -> reify (c2 x)) s) = ()
+     // assert (FStar.FunctionalExtensionality.feq (reify (let x = c1 () in c2 x))
+     //                                            (hbind _ _ (reify (c1 ())) (fun x -> reify (c2 x))))
+
+let test2 (i:nat) (v:mint) (s0:_) = 
+  hbind_commut' _ _ (fun () -> HIGH?.put i v) (fun _ -> HIGH?.put i v);
+  assert (forall s0. (reify (let _ = HIGH?.put i v in
+                   HIGH?.put i v) s0 == 
+                   hbind _ _ (reify (HIGH?.put i v)) (fun _ ->
+                             (reify (HIGH?.put i v))) s0))
+
+
 
 let hbind_commut (a:Type) (b:Type) (#wp1:hwp a) (#wp2:a -> hwp b) 
      (c1 : unit -> HIGH a wp1) (c2 : (x:a) -> HIGH b (wp2 x)) :
