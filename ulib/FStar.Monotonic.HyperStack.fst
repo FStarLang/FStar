@@ -75,6 +75,17 @@ let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid) :Type0
 noeq abstract private type mem' =
   | HS :rid_ctr:int -> h:hmap -> tip:rid -> mem'
 
+abstract private let m_eq' (m1:mem') (m2:mem') =
+  match m1, m2 with 
+  | HS r1 h1 t1, HS r2 h2 t2 -> 
+    r1 == r2 /\ Map.equal h1 h2 /\ t1 == t2
+
+val m_eq'_extensional : m1:mem' -> m2:mem' ->
+    Lemma (requires True) (ensures (m_eq' m1 m2 <==> m1 == m2))
+          [SMTPat (m_eq' m1 m2)]
+
+let m_eq'_extensional m1 m2 = ()
+
 abstract private let mk_mem (rid_ctr:int) (h:hmap) (tip:rid) :mem'
   = HS rid_ctr h tip
 
@@ -93,6 +104,15 @@ private let lemma_mk_mem'_projectors (rid_ctr:int) (h:hmap) (tip:rid)
   = ()
 
 type mem :Type = m:mem'{is_wf_with_ctr_and_tip (get_hmap m) (get_rid_ctr m) (get_tip m) }
+
+let m_eq (m1:mem) (m2:mem) = m_eq' m1 m2
+
+val m_eq_extensional : m1:mem -> m2:mem ->
+    Lemma (requires True) (ensures (m_eq m1 m2 <==> m1 == m2))
+          [SMTPat (m_eq m1 m2)]
+
+let m_eq_extensional m1 m2 = ()
+
 
 private let lemma_mem_projectors_are_in_wf_relation (m:mem)
   :Lemma (is_wf_with_ctr_and_tip (get_hmap m) (get_rid_ctr m) (get_tip m))

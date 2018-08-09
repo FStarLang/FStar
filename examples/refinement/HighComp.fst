@@ -170,12 +170,12 @@ let test2 (i:nat) (v:mint) (s0:_) =
 
 
 
-let hbind_commut (a:Type) (b:Type) (#wp1:hwp a) (#wp2:a -> hwp b) 
-     (c1 : unit -> HIGH a wp1) (c2 : (x:a) -> HIGH b (wp2 x)) :
-     Lemma (h_eq (bind_wp wp1 wp2) (bind_wp wp1 wp2)
-                 (reify (let x = c1 () in c2 x)) 
-                 (hbind' (reify (c1 ())) (fun x -> reify (c2 x)))) =
-     ()
+// let hbind_commut (a:Type) (b:Type) (#wp1:hwp a) (#wp2:a -> hwp b) 
+//      (c1 : unit -> HIGH a wp1) (c2 : (x:a) -> HIGH b (wp2 x)) :
+//      Lemma (h_eq (bind_wp wp1 wp2) (bind_wp wp1 wp2)
+//                  (reify (let x = c1 () in c2 x)) 
+//                  (hbind' (reify (c1 ())) (fun x -> reify (c2 x)))) =
+//      ()
 
 
 
