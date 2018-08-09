@@ -115,16 +115,21 @@ let merkle_tree_rloc mt =
 val create_merkle_tree: unit -> 
   HST.ST mt_ptr
 	 (requires (fun _ -> true))
-	 (ensures (fun h0 mt h1 -> merkle_tree_safe h1 mt))
-	 //mt_ptr_lift h1 mt == High.create_merkle_tree 32))
-#set-options "--z3rlimit 10"
+	 (ensures (fun h0 mt h1 -> 
+	   merkle_tree_safe h1 mt /\
+	   mt_ptr_lift h1 mt == High.create_merkle_tree 32))
 let create_merkle_tree _ =
   let mt_region = BV.new_region_ root in
   let mt_values_region = BV.new_region_ mt_region in 
   let values = BV.create_reserve hash_size 1ul mt_values_region in
   let mt_iroots_region = BV.new_region_ mt_region in 
   let iroots = BV.create_rid 0uy hash_size 32ul mt_iroots_region in
-  B.malloc mt_region (MT values iroots) 1ul
+
+  let hh0 = HST.get () in
+  let mptr = B.malloc mt_region (MT values iroots) 1ul in
+  let hh1 = HST.get () in
+  as_seq_preserved hash_size iroots (B.loc_buffer mptr) hh0 hh1;
+  mptr
 
 /// Insertion
 

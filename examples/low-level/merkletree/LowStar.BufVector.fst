@@ -131,32 +131,30 @@ val buf_vector_rloc:
 let buf_vector_rloc #a bv =
   B.loc_all_regions_from false (V.frameOf bv)
 
-val loc_bv_buffer:
-  #a:Type0 -> h:HS.mem -> bv:buf_vector a -> 
-  i:nat{i < U32.v (V.size_of bv)} -> GTot loc
-let loc_bv_buffer #a h bv i =
-  B.loc_addr_of_buffer (S.index (V.as_seq h bv) i)
+val loc_bv_buf_seq:
+  #a:Type0 -> bs:S.seq (B.buffer a) ->
+  i:nat -> j:nat{i <= j && j <= S.length bs} -> 
+  GTot loc
+let rec loc_bv_buf_seq #a bs i j =
+  if i = j then loc_none
+  else loc_union (loc_bv_buf_seq bs i (j - 1))
+		 (B.loc_addr_of_buffer (S.index bs (j - 1)))
 
 val loc_bv_buffers:
   #a:Type0 -> h:HS.mem -> bv:buf_vector a -> 
   i:nat -> j:nat{i <= j && j <= U32.v (V.size_of bv)} -> 
   GTot loc
-let rec loc_bv_buffers #a h bv i j =
-  if i = j then loc_none
-  else loc_union (loc_bv_buffers h bv i (j - 1))
-		 (loc_bv_buffer h bv (j - 1))
+let loc_bv_buffers #a h bv i j =
+  loc_bv_buf_seq (V.as_seq h bv) i j
+
+val loc_bv_buffer:
+  #a:Type0 -> h:HS.mem -> bv:buf_vector a -> 
+  i:nat{i < U32.v (V.size_of bv)} ->
+  GTot loc
+let loc_bv_buffer #a h bv i =
+  B.loc_addr_of_buffer (S.index (V.as_seq h bv) i)
 
 /// Specification
-
-val as_buf_seq:
-  h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
-  bv:buf_vector a{bv_inv_liveness blen h bv} ->
-  GTot (s:S.seq (B.buffer a)
-		{S.length s = U32.v (V.size_of bv) /\
-		V.forall_seq s 0 (S.length s) 
-			     (fun hs -> B.len hs = blen)})
-let as_buf_seq h #a blen bv =
-  V.as_seq h bv
 
 val as_seq_seq:
   h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
@@ -167,8 +165,8 @@ val as_seq_seq:
        (decreases (S.length bs))
 let rec as_seq_seq h #a blen bs =
   if S.length bs = 0 then S.empty
-  else S.cons (B.as_seq h (S.head bs))
-	      (as_seq_seq h blen (S.tail bs))
+  else S.snoc (as_seq_seq h blen (S.slice bs 0 (S.length bs - 1)))
+	      (B.as_seq h (S.index bs (S.length bs - 1)))
 
 val as_seq:
   h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
@@ -176,18 +174,7 @@ val as_seq:
   GTot (s:S.seq (e:S.seq a{S.length e = U32.v blen})
        {S.length s = U32.v (V.size_of bv)})
 let as_seq h #a blen bv =
-  as_seq_seq h blen (as_buf_seq h blen bv)
-
-// val as_seq_seq_snoc:
-//   h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
-//   bs:S.seq (B.buffer a)
-//     {V.forall_seq bs 0 (S.length bs) (fun hs -> B.len hs = blen)} ->
-//   b:B.buffer a{B.len b = blen} ->
-//   Lemma (S.equal (as_seq_seq h blen (S.snoc bs b))
-// 		 (S.snoc (as_seq_seq h blen bs) (B.as_seq h b)))
-// 	[SMTPat (as_seq_seq h blen (S.snoc bs b))]
-// let rec as_seq_seq_snoc h #a blen bs b =
-//   admit ()
+  as_seq_seq h blen (V.as_seq h bv)
 
 /// Facts related to the invariant
 
@@ -317,6 +304,30 @@ val loc_bv_buffers_as_seq:
 let rec loc_bv_buffers_as_seq #a h0 h1 bv i j =
   if i = j then ()
   else loc_bv_buffers_as_seq h0 h1 bv i (j - 1)
+
+val as_seq_seq_preserved:
+  #a:Type -> blen:uint32_t{blen > 0ul} ->
+  bs:S.seq (B.buffer a){V.forall_seq bs 0 (S.length bs) 
+				     (fun hs -> B.len hs = blen)} ->
+  dloc:loc -> h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (loc_disjoint (loc_bv_buf_seq bs 0 (S.length bs)) dloc /\
+		  modifies dloc h0 h1))
+	(ensures (S.equal (as_seq_seq h0 blen bs) (as_seq_seq h1 blen bs)))
+let as_seq_seq_preserved #a blen bs dloc h0 h1 =
+  admit ()
+
+val as_seq_preserved:
+  #a:Type -> blen:uint32_t{blen > 0ul} ->
+  bv:buf_vector a ->
+  dloc:loc -> h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (bv_inv blen h0 bv /\ 
+		  loc_disjoint (buf_vector_rloc bv) dloc /\
+		  modifies dloc h0 h1))
+	(ensures (S.equal (as_seq h0 blen bv) (as_seq h1 blen bv)))
+let as_seq_preserved #a blen bv dloc h0 h1 =
+  buf_vector_rloc_includes_loc_vector h0 bv;
+  buf_vector_rloc_includes_loc_bv_buffers h0 bv 0 (U32.v (V.size_of bv));
+  as_seq_seq_preserved blen (V.as_seq h0 bv) dloc h0 h1
 
 /// Construction
 
