@@ -148,14 +148,46 @@ let rec loc_bv_buffers #a h bv i j =
 
 /// Specification
 
+val as_buf_seq:
+  h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
+  bv:buf_vector a{bv_inv_liveness blen h bv} ->
+  GTot (s:S.seq (B.buffer a)
+		{S.length s = U32.v (V.size_of bv) /\
+		V.forall_seq s 0 (S.length s) 
+			     (fun hs -> B.len hs = blen)})
+let as_buf_seq h #a blen bv =
+  V.as_seq h bv
+
+val as_seq_seq:
+  h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
+  bs:S.seq (B.buffer a)
+    {V.forall_seq bs 0 (S.length bs) (fun hs -> B.len hs = blen)} ->
+  GTot (s:S.seq (e:S.seq a{S.length e = U32.v blen})
+       {S.length s = S.length bs})
+       (decreases (S.length bs))
+let rec as_seq_seq h #a blen bs =
+  if S.length bs = 0 then S.empty
+  else S.cons (B.as_seq h (S.head bs))
+	      (as_seq_seq h blen (S.tail bs))
+
 val as_seq:
   h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
   bv:buf_vector a{bv_inv_liveness blen h bv} ->
   GTot (s:S.seq (e:S.seq a{S.length e = U32.v blen})
        {S.length s = U32.v (V.size_of bv)})
 let as_seq h #a blen bv =
-  admit ();
-  seq_map (fun b -> B.as_seq h b) (V.as_seq h bv)
+  as_seq_seq h blen (as_buf_seq h blen bv)
+
+// val as_seq_seq_snoc:
+//   h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
+//   bs:S.seq (B.buffer a)
+//     {V.forall_seq bs 0 (S.length bs) (fun hs -> B.len hs = blen)} ->
+//   b:B.buffer a{B.len b = blen} ->
+//   Lemma (S.equal (as_seq_seq h blen (S.snoc bs b))
+// 		 (S.snoc (as_seq_seq h blen bs) (B.as_seq h b)))
+// 	[SMTPat (as_seq_seq h blen (S.snoc bs b))]
+// let rec as_seq_seq_snoc h #a blen bs b =
+//   admit ()
 
 /// Facts related to the invariant
 
@@ -353,11 +385,28 @@ val create_rid:
       modifies (buf_vector_rloc bv) h0 h1 /\
       bv_inv blen h1 bv /\
       V.frameOf bv = rid /\
-      V.size_of bv = len))
+      V.size_of bv = len /\
+      S.equal (as_seq h1 blen bv) 
+	      (S.create (U32.v len) (S.create (U32.v blen) ia))))
 let create_rid #a ia blen len rid =
   let vec = V.create_rid len (B.null #a) rid in
   create_ #a blen ia vec len;
+  admit ();
   vec
+
+val create_reserve:
+  #a:Type0 -> blen:uint32_t{blen > 0ul} ->
+  len:uint32_t{len > 0ul} -> rid:erid ->
+  HST.ST (buf_vector a)
+    (requires (fun h0 -> true))
+    (ensures (fun h0 bv h1 ->
+      modifies (buf_vector_rloc bv) h0 h1 /\
+      bv_inv blen h1 bv /\
+      V.frameOf bv = rid /\
+      V.size_of bv = 0ul /\
+      S.equal (as_seq h1 blen bv) S.empty))
+let create_reserve #a blen len rid =
+  V.create_reserve len (B.null #a) rid
 
 val create:
   #a:Type0 -> ia:a -> blen:uint32_t{blen > 0ul} -> 
@@ -368,7 +417,9 @@ val create:
       modifies (buf_vector_rloc bv) h0 h1 /\
       bv_inv blen h1 bv /\
       MHS.fresh_region (V.frameOf bv) h0 h1 /\
-      V.size_of bv = len))
+      V.size_of bv = len /\
+      S.equal (as_seq h1 blen bv)
+	      (S.create (U32.v len) (S.create (U32.v blen) ia))))
 let create #a ia blen len =
   let nrid = new_region_ root in
   create_rid ia blen len nrid
@@ -383,13 +434,16 @@ val insert_copy:
     (ensures (fun h0 ibv h1 ->
       V.frameOf bv = V.frameOf ibv /\
       modifies (buf_vector_rloc bv) h0 h1 /\
-      bv_inv blen h1 ibv))
+      bv_inv blen h1 ibv /\
+      S.equal (as_seq h1 blen ibv) (S.snoc (as_seq h0 blen bv) (B.as_seq h0 v))))
 #set-options "--z3rlimit 40"
 let insert_copy #a ia blen bv v =
   let nrid = new_region_ (V.frameOf bv) in
   let nv = B.malloc nrid ia blen in
   B.blit v 0ul nv 0ul blen;
-  V.insert bv nv
+  let ibv = V.insert bv nv in
+  admit ();
+  ibv
 
 val assign_copy:
   #a:Type0 -> blen:uint32_t{blen > 0ul} ->
@@ -401,9 +455,12 @@ val assign_copy:
       HH.disjoint (V.frameOf bv) (B.frameOf v)))
     (ensures (fun h0 _ h1 -> 
       modifies (buf_vector_rloc bv) h0 h1 /\
-      bv_inv blen h1 bv))
+      bv_inv blen h1 bv /\
+      S.equal (as_seq h1 blen bv)
+	      (S.upd (as_seq h0 blen bv) (U32.v i) (B.as_seq h0 v))))
 let assign_copy #a blen bv i v =
-  B.blit v 0ul (V.index bv i) 0ul blen
+  B.blit v 0ul (V.index bv i) 0ul blen;
+  admit ()
 
 val free_bufs:
   #a:Type0 -> blen:uint32_t{blen > 0ul} ->
