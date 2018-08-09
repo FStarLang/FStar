@@ -6190,7 +6190,7 @@ let (tc_decl' :
                       FStar_Syntax_Syntax.Tm_let uu____11051  in
                     FStar_Syntax_Syntax.mk uu____11050  in
                   uu____11043 FStar_Pervasives_Native.None r  in
-                let env01 =
+                let env' =
                   let uu___405_11083 = env1  in
                   {
                     FStar_TypeChecker_Env.solver =
@@ -6277,7 +6277,7 @@ let (tc_decl' :
                 let e1 =
                   let uu____11085 =
                     (FStar_Options.use_two_phase_tc ()) &&
-                      (FStar_TypeChecker_Env.should_verify env01)
+                      (FStar_TypeChecker_Env.should_verify env')
                      in
                   if uu____11085
                   then
@@ -6345,7 +6345,7 @@ let (tc_decl' :
                         let uu____11153 =
                           let uu____11154 =
                             FStar_TypeChecker_TcTerm.tc_maybe_toplevel_term
-                              (let uu___408_11163 = env01  in
+                              (let uu___408_11163 = env'  in
                                {
                                  FStar_TypeChecker_Env.solver =
                                    (uu___408_11163.FStar_TypeChecker_Env.solver);
@@ -6436,7 +6436,7 @@ let (tc_decl' :
                            in
                         FStar_All.pipe_right uu____11153
                           (FStar_TypeChecker_Normalize.remove_uvar_solutions
-                             env01)
+                             env')
                          in
                       FStar_All.pipe_right uu____11152 drop_lbtyp  in
                     ((let uu____11185 =
@@ -6455,7 +6455,7 @@ let (tc_decl' :
                   else e  in
                 let uu____11189 =
                   let uu____11200 =
-                    FStar_TypeChecker_TcTerm.tc_maybe_toplevel_term env01 e1
+                    FStar_TypeChecker_TcTerm.tc_maybe_toplevel_term env' e1
                      in
                   match uu____11200 with
                   | ({
@@ -6552,7 +6552,7 @@ let (tc_decl' :
                             in
                          FStar_Util.print1 "%s\n" uu____11334
                        else ());
-                      ([se1], [], env01)))))
+                      ([se1], [], env0)))))
   
 let (tc_decl :
   FStar_TypeChecker_Env.env ->

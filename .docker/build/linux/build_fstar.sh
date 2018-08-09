@@ -5,6 +5,7 @@
 target=$1
 out_file=$2
 threads=$3
+branchname=$4
 
 function export_home() {
     if command -v cygpath >/dev/null 2>&1; then
@@ -40,6 +41,7 @@ function fetch_hacl() {
     local ref=$(if [ -f ../.hacl_version ]; then cat ../.hacl_version | tr -d '\r\n'; else echo origin/master; fi)
     echo Switching to HACL $ref
     git reset --hard $ref
+    git clean -fdx
     cd ..
     export_home HACL "$(pwd)/hacl-star"
     export_home EVERCRYPT "$(pwd)/hacl-star/providers"
@@ -73,6 +75,7 @@ function fetch_and_make_kremlin() {
 
     make -C kremlin -j $threads $localTarget ||
         (cd kremlin && git clean -fdx && make -j $threads $localTarget)
+    OTHERFLAGS='--admit_smt_queries true' make -C kremlin/kremlib -j $threads
     export PATH="$(pwd)/kremlin:$PATH"
 }
 
@@ -86,6 +89,7 @@ function fetch_mitls() {
     local ref=$(if [ -f ../.mitls_version ]; then cat ../.mitls_version | tr -d '\r\n'; else echo origin/master; fi)
     echo Switching to mitls-fstar $ref
     git reset --hard $ref
+    git clean -fdx
     cd ..
     export_home MITLS "$(pwd)/mitls-fstar"
 }
@@ -108,6 +112,10 @@ function refresh_hints() {
     local extra="$2"
     local msg="$3"
     local hints_dir="$4"
+
+    # Figure out the branch
+    CI_BRANCH=${branchname##refs/heads/}
+    echo "Current branch_name=$CI_BRANCH"
 
     # Add all the hints, even those not under version control
     find $hints_dir -iname '*.hints' -and -not -path '*/.*' -and -not -path '*/dependencies/*' | xargs git add
@@ -137,14 +145,16 @@ function refresh_hints() {
 
 function build_fstar() {
     local localTarget=$1
-    result_file="result.txt"
+    local timeout=960
+
+    result_file="../result.txt"
 
     # $status_file is the name of a file that contains true if and
     # only if the F* regression suite failed, false otherwise
-    status_file="status.txt"
+    status_file="../status.txt"
     echo false >$status_file
 
-    ORANGE_FILE="orange_file.txt"
+    ORANGE_FILE="../orange_file.txt"
     echo '' >$ORANGE_FILE
 
     if [[ -x /usr/bin/time ]]; then
@@ -158,7 +168,10 @@ function build_fstar() {
         return
     fi
 
-    if [[ $localTarget == "fstar-docs" ]]; then
+    if [[ $localTarget == "fstar-binary-build" ]]; then
+        fetch_kremlin
+        ./.scripts/process_build.sh && echo true >$status_file
+    elif [[ $localTarget == "fstar-docs" ]]; then
         # First - get fstar built
         # Second - run fstar with the --doc flag
         make -C src/ocaml-output clean && make -C src/ocaml-output -j $threads && .ci/fsdoc.sh && echo true >$status_file
@@ -205,13 +218,13 @@ function build_fstar() {
                 if [[ "$OS" == "Windows_NT" ]]; then
                     ## This hack for determining the success of a vale run is needed
                     ## because somehow scons is not returning the error code properly
-                    timeout 480 ./scons_cygwin.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output
+                    timeout $timeout ./scons_cygwin.sh -j $threads --FSTAR-MY-VERSION --MIN_TEST |& tee vale_output
 
                     ## adds "min-test (Vale)" to the ORANGE_FILE
                     ##      if this string vvvv is present in vale_output
                     ! grep -qi 'scons: building terminated because of errors.' vale_output || has_error="true"
                 else
-                    timeout 480 scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || has_error="true"
+                    timeout $timeout scons -j $threads --FSTAR-MY-VERSION --MIN_TEST || has_error="true"
                 fi
                 cd ..
 
@@ -222,15 +235,15 @@ function build_fstar() {
             } &
 
             {
-                OTHERFLAGS='--use_two_phase_tc false --warn_error -276 --use_hint_hashes' timeout 480 make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
+                OTHERFLAGS='--warn_error -276 --use_hint_hashes' timeout $timeout make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
                     {
-                        echo "Error - Hacl.Hash.SHA2_256.fst-verify (HACL*)"
-                        echo " - Hacl.Hash.SHA2_256.fst-verify (HACL*)" >>$ORANGE_FILE
+                        echo "Error - Hacl.Impl.SHA2_256.fst-verify (HACL*)"
+                        echo " - Hacl.Impl.SHA2_256.fst-verify (HACL*)" >>$ORANGE_FILE
                     }
             } &
 
             {
-                OTHERFLAGS='--use_hint_hashes' timeout 480 make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver ||
+                OTHERFLAGS='--use_hint_hashes' timeout $timeout make -C hacl-star/secure_api -f Makefile.old -j $threads aead/Crypto.AEAD.Encrypt.fst-ver ||
                     {
                         echo "Error - Crypto.AEAD.Encrypt.fst-ver (HACL*)"
                         echo " - Crypto.AEAD.Encrypt.fst-ver (HACL*)" >>$ORANGE_FILE
@@ -239,19 +252,19 @@ function build_fstar() {
 
             # We now run all (hardcoded) tests in mitls-fstar@master
             {
-                OTHERFLAGS=--use_hint_hashes timeout 480 make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
+                OTHERFLAGS=--use_hint_hashes timeout $timeout make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
                     {
                         echo "Error - StreamAE.fst-ver (mitls)"
                         echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
                     }
 
-                OTHERFLAGS=--use_hint_hashes timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+                OTHERFLAGS=--use_hint_hashes timeout $timeout make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
                     {
                         echo "Error - Pkg.fst-ver (mitls verify)"
                         echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
                     }
 
-                OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" timeout 240 make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+                OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" timeout $timeout make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
                     {
                         echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
                         echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >>$ORANGE_FILE
@@ -301,4 +314,6 @@ export OCAMLRUNPARAM=b
 export OTHERFLAGS="--print_z3_statistics --use_hints --query_stats"
 export MAKEFLAGS="$MAKEFLAGS -Otarget"
 
+cd FStar
 build_fstar $target
+cd ..

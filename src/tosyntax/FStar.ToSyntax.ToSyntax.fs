@@ -341,7 +341,7 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   | PatRecord guarded_pats -> gather_pattern_bound_vars_from_list (List.map snd guarded_pats)
   | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
 
-let gather_pattern_bound_vars =
+let gather_pattern_bound_vars : pattern -> set<Ident.ident> =
   let acc = new_set (fun id1 id2 -> if id1.idText = id2.idText then 0 else 1) in
   fun p -> gather_pattern_bound_vars_maybe_top acc p
 
@@ -560,7 +560,7 @@ let rec desugar_data_pat env p (is_mut:bool) : (env_t * bnd * list<annotated_pat
               let duplicate_bv = List.hd (BU.set_elements intersection) in
               raise_error ( Errors.Fatal_NonLinearPatternNotPermitted,
                             BU.format1
-                              "Non-linear patterns are not permitted. %s appears more than once in this pattern."
+                              "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
                                (duplicate_bv.ppname.idText) )
 
                           r
@@ -1030,6 +1030,29 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       end
 
     | Abs(binders, body) ->
+      (* First of all, forbid definitions such as `f x x = ...` *)
+      let bvss = List.map gather_pattern_bound_vars binders in
+      let check_disjoint (sets : list<set<ident>>) : option<ident> =
+        let rec aux acc sets =
+            match sets with
+            | [] -> None
+            | set::sets ->
+                let i = BU.set_intersect acc set in
+                if BU.set_is_empty i
+                then aux (BU.set_union acc set) sets
+                else Some (List.hd (BU.set_elements i))
+        in
+        aux (S.new_id_set ()) sets
+      in
+      begin match check_disjoint bvss with
+      | None -> ()
+      | Some id ->
+          raise_error (Errors.Fatal_NonLinearPatternNotPermitted,
+                       BU.format1
+                         "Non-linear patterns are not permitted: `%s` appears more than once in this function definition."
+                          (id.idText)) (range_of_id id)
+      end;
+
       let binders = binders |> List.map replace_unit_pattern in
       let _, ftv = List.fold_left (fun (env, ftvs) pat ->
         match pat.pat with
@@ -2018,7 +2041,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           | TyconAbbrev(id, binders, kopt, t) ->
             let env, _, se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
             env, Inr(se, binders, t, quals)::tcs
-          | _ -> failwith "Unrecognized mutual type definition" in
+          | _ -> raise_error (Errors.Fatal_NonInductiveInMutuallyDefinedType, ("Mutually defined type contains a non-inductive element")) rng in
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
       let docs_tps_sigelts = tcs |> List.collect (function
