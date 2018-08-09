@@ -2041,7 +2041,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           | TyconAbbrev(id, binders, kopt, t) ->
             let env, _, se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
             env, Inr(se, binders, t, quals)::tcs
-          | _ -> failwith "Unrecognized mutual type definition" in
+          | _ -> raise_error (Errors.Fatal_NonInductiveInMutuallyDefinedType, ("Mutually defined type contains a non-inductive element")) rng in
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
       let docs_tps_sigelts = tcs |> List.collect (function
