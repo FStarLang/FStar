@@ -61,11 +61,18 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let env, tps, k = Env.push_univ_vars env uvs, SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
          let tps, k = SS.open_term tps k in
          let tps, env_tps, guard_params, us = tc_binders env tps in
-         let indices, t = U.arrow_formals k in
-         let indices, env', guard_indices, us' = tc_binders env_tps indices in
-         let t, guard =
-             let t, _, g = tc_tot_or_gtot_term env' t in
-             t, Rel.discharge_guard env' (Env.conj_guard guard_params (Env.conj_guard guard_indices g)) in
+
+         (*
+          * AR: typecheck k and get the indices and t out
+          *     adding a very restricted normalization to unfold symbols that are marked unfold explicitly
+          *     note that t is opened with indices (by U.arrow_formals)
+          *)
+         let (indices, t), guard =
+           let k, _, g = tc_tot_or_gtot_term env_tps k in
+           let k = N.normalize [Exclude Iota; Exclude Zeta; Eager_unfolding; NoFullNorm; Exclude Beta] env_tps k in
+           U.arrow_formals k, Rel.discharge_guard env_tps (Env.conj_guard guard_params g)
+         in
+
          let k = U.arrow indices (S.mk_Total t) in
          let t_type, u = U.type_u() in
          if not (subtype_nosmt_force env t t_type) then
@@ -73,8 +80,9 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
                           (BU.format2 "Type annotation %s for inductive %s is not a subtype of Type"
                                                 (Print.term_to_string t)
                                                 (Ident.string_of_lid tc))) s.sigrng;
+
 (*close*)let usubst = SS.univ_var_closing uvs in
-         let guard = TcUtil.close_guard_implicits env (tps@indices) guard in
+         let guard = TcUtil.close_guard_implicits env tps guard in
          let t_tc = U.arrow ((tps |> SS.subst_binders usubst) @
                              (indices |> SS.subst_binders (SS.shift_subst (List.length tps) usubst)))
                             (S.mk_Total (t |> SS.subst (SS.shift_subst (List.length tps + List.length indices) usubst))) in
