@@ -322,3 +322,13 @@ let logic_test4 a = exists (x : a). True
 
 val logic_test5: a:Type -> Lemma (ensures ((logic_test4 a) <==> (exists (x : a). True)))
 let logic_test5 a = ()
+
+(*
+ * #1078
+ *)
+unfold let language_1078 = string -> GTot Type
+
+noeq type star_1078 (l: string -> GTot Type) : language_1078 =
+  | Star_nil : star_1078 l ""
+  | Star_append : s1:string -> s2:string ->
+      l s1 -> star_1078 l s2 -> star_1078 l s1
