@@ -5,6 +5,7 @@ ARG BUILDLOGFILE
 ARG MAXTHREADS
 ARG TARGET
 ARG BRANCHNAME
+ARG FSTARSOURCEVERSION
 
 # ADD SSH KEY
 RUN mkdir -p ${MYHOME}/.ssh
@@ -27,13 +28,14 @@ RUN rm ${MYHOME}/FStar/build.sh
 RUN rm ${MYHOME}/FStar/id_rsa
 RUN rm ${MYHOME}/FStar/commitinfofilename.json
 
-RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 COPY --chown=everest build_fstar.sh ${MYHOME}/build_fstar.sh
 RUN chmod +x build_fstar.sh
 COPY --chown=everest build.sh ${MYHOME}/build.sh
 RUN chmod +x build.sh
-RUN ./build.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} || true
 
+RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
+RUN echo "FStar source version: ${FSTARSOURCEVERSION}" >> ${BUILDLOGFILE}
+RUN ./build.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} || true
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 
 # Generate query-stats.
