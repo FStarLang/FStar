@@ -5707,7 +5707,10 @@ let rec (desugar_tycon :
                                 ((FStar_Util.Inr (se, binders, t, quals1)) ::
                                 tcs1)))
                      | uu____19846 ->
-                         failwith "Unrecognized mutual type definition")
+                         FStar_Errors.raise_error
+                           (FStar_Errors.Fatal_NonInductiveInMutuallyDefinedType,
+                             "Mutually defined type contains a non-inductive element")
+                           rng)
                  in
               let uu____19893 =
                 FStar_List.fold_left (collect_tcs quals) (env, []) tcs  in
