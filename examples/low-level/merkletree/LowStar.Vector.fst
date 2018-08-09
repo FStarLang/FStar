@@ -50,7 +50,9 @@ let vector a = vector_str a
 
 /// Specification
 
-val as_seq: HS.mem -> #a:Type -> vec:vector a -> GTot (S.seq a)
+val as_seq: 
+  HS.mem -> #a:Type -> vec:vector a -> 
+  GTot (s:S.seq a{S.length s = U32.v (Vec?.sz vec)})
 let as_seq h #a vec =
   B.as_seq h (B.gsub (Vec?.vs vec) 0ul (Vec?.sz vec))
 
@@ -376,6 +378,14 @@ val forall2_all:
   p:(a -> a -> GTot Type0) -> GTot Type0
 let forall2_all #a h vec p =
   forall2 h vec 0ul (size_of vec) p
+
+// val as_seq_p: 
+//   h:HS.mem -> #a:Type -> p:(a -> GTot Type0) -> 
+//   vec:vector a{forall_all h vec p} ->
+//   GTot (s:S.seq (e:a{p e}){S.length s = U32.v (Vec?.sz vec)})
+// let as_seq_p h #a p vec =
+//   assert (forall (i:uint32_t{i < size_of vec}). p (get h vec i));
+//   B.as_seq h (B.gsub (Vec?.vs vec) 0ul (Vec?.sz vec))
 
 (*! Facts *)
 

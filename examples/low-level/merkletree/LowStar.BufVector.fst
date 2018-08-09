@@ -40,6 +40,47 @@ type erid = rid:HH.rid{HST.is_eternal_region rid}
 val root: erid
 let root = HH.root
 
+/// Sequence mapping
+
+val seq_map:
+  #a:Type -> #b:Type -> f:(a -> GTot b) -> s:S.seq a -> 
+  GTot (fs:S.seq b{
+    S.length fs = S.length s /\
+    (forall (i:nat{i < S.length fs}). S.index fs i == f (S.index s i))})
+    (decreases (S.length s))
+let rec seq_map #a #b f s =
+  if S.length s = 0 then S.empty
+  else S.cons (f (S.head s)) (seq_map f (S.tail s))
+
+val seq_map_create:
+  #a:Type -> #b:Type -> f:(a -> GTot b) -> 
+  len:nat -> ia:a ->
+  Lemma (seq_map f (S.create len ia) ==
+	S.create len (f ia))
+	[SMTPat (seq_map f (S.create len ia))]
+let rec seq_map_create #a #b f len ia =
+  S.lemma_eq_intro (seq_map f (S.create len ia)) (S.create len (f ia))
+
+val seq_map_append:
+  #a:Type -> #b:Type -> f:(a -> GTot b) -> 
+  s1:S.seq a -> s2:S.seq a ->
+  Lemma (seq_map f (S.append s1 s2) ==
+	S.append (seq_map f s1) (seq_map f s2))
+	[SMTPat (seq_map f (S.append s1 s2))]
+let rec seq_map_append #a #b f s1 s2 =
+  S.lemma_eq_elim (seq_map f (S.append s1 s2)) 
+		  (S.append (seq_map f s1) (seq_map f s2))
+
+val seq_map_slice:
+  #a:Type -> #b:Type -> f:(a -> GTot b) -> 
+  s:S.seq a -> i:nat -> j:nat{i <= j && j <= S.length s} ->
+  Lemma (seq_map f (S.slice s i j) == S.slice (seq_map f s) i j)
+	[SMTPat (seq_map f (S.slice s i j)); 
+	SMTPat (S.slice (seq_map f s) i j)]
+let seq_map_slice #a #b f s i j =
+  S.lemma_eq_elim (seq_map f (S.slice s i j))
+		  (S.slice (seq_map f s) i j)
+
 /// The invariant
 
 val buffer_inv_liveness:
@@ -104,6 +145,17 @@ let rec loc_bv_buffers #a h bv i j =
   if i = j then loc_none
   else loc_union (loc_bv_buffers h bv i (j - 1))
 		 (loc_bv_buffer h bv (j - 1))
+
+/// Specification
+
+val as_seq:
+  h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
+  bv:buf_vector a{bv_inv_liveness blen h bv} ->
+  GTot (s:S.seq (e:S.seq a{S.length e = U32.v blen})
+       {S.length s = U32.v (V.size_of bv)})
+let as_seq h #a blen bv =
+  admit ();
+  seq_map (fun b -> B.as_seq h b) (V.as_seq h bv)
 
 /// Facts related to the invariant
 

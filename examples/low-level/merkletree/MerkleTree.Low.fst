@@ -11,7 +11,6 @@ open FStar.Seq
 open FStar.Integers
 open FStar.Ghost
 
-// TODO2: Connect high-level and low-level impls.
 open MerkleTree.High
 open LowStar.Vector
 open LowStar.BufVector
@@ -31,11 +30,6 @@ module High = MerkleTree.High
 
 module U32 = FStar.UInt32
 module U8 = FStar.UInt8
-type uint32_t = U32.t
-type uint8_t = U8.t
-
-val hash_size: uint32_t
-let hash_size = 32ul
 
 type hash = B.buffer uint8_t
 type hash_vec = BV.buf_vector uint8_t
@@ -55,47 +49,6 @@ assume val hash_from_hashes:
 	   High.hash_from_hashes (B.as_seq h1 src1) (B.as_seq h1 src2) = 
 	   B.as_seq h1 dst)) 
 
-/// Sequence mapping
-
-val seq_map:
-  #a:Type -> #b:Type -> f:(a -> GTot b) -> s:S.seq a -> 
-  GTot (fs:S.seq b{
-    S.length fs = S.length s /\
-    (forall (i:nat{i < S.length fs}). S.index fs i == f (S.index s i))})
-    (decreases (S.length s))
-let rec seq_map #a #b f s =
-  if S.length s = 0 then S.empty
-  else S.cons (f (S.head s)) (seq_map f (S.tail s))
-
-val seq_map_create:
-  #a:Type -> #b:Type -> f:(a -> GTot b) -> 
-  len:nat -> ia:a ->
-  Lemma (seq_map f (S.create len ia) ==
-	S.create len (f ia))
-	[SMTPat (seq_map f (S.create len ia))]
-let rec seq_map_create #a #b f len ia =
-  S.lemma_eq_intro (seq_map f (S.create len ia)) (S.create len (f ia))
-
-val seq_map_append:
-  #a:Type -> #b:Type -> f:(a -> GTot b) -> 
-  s1:S.seq a -> s2:S.seq a ->
-  Lemma (seq_map f (S.append s1 s2) ==
-	S.append (seq_map f s1) (seq_map f s2))
-	[SMTPat (seq_map f (S.append s1 s2))]
-let rec seq_map_append #a #b f s1 s2 =
-  S.lemma_eq_elim (seq_map f (S.append s1 s2)) 
-		  (S.append (seq_map f s1) (seq_map f s2))
-
-val seq_map_slice:
-  #a:Type -> #b:Type -> f:(a -> GTot b) -> 
-  s:S.seq a -> i:nat -> j:nat{i <= j && j <= length s} ->
-  Lemma (seq_map f (S.slice s i j) == S.slice (seq_map f s) i j)
-	[SMTPat (seq_map f (S.slice s i j)); 
-	SMTPat (S.slice (seq_map f s) i j)]
-let seq_map_slice #a #b f s i j =
-  S.lemma_eq_elim (seq_map f (S.slice s i j))
-		  (S.slice (seq_map f s) i j)
-
 /// Utilities
 
 val modifies_union_weakened_left:
@@ -114,55 +67,6 @@ val modifies_union_weakened_right:
 let modifies_union_weakened_right s1 s2 h1 h2 =
   loc_includes_union_l s1 s2 s2
 
-/// Power of 2
-
-// val uint32_pow2: 
-//   sz:uint32_t{sz < 32ul} -> Tot (p:uint32_t{U32.v p = pow2 (U32.v sz)})
-// let uint32_pow2 sz =
-//   Math.Lemmas.pow2_lt_compat U32.n (U32.v sz);
-//   UInt32.shift_left 1ul sz
-
-// val uint32_is_pow2: 
-//   n:uint32_t ->
-//   Tot (b:bool{b = is_pow2 (U32.v n)})
-//       (decreases (U32.v n))
-// let uint32_is_pow2 n =
-//   let b = n <> 0ul && UInt32.logand n (n - 1ul) = 0ul in
-//   assume (b = is_pow2 (U32.v n));
-//   b
-
-// val uint32_pow2_floor':
-//   sz:erased nat{reveal sz > 0 && reveal sz <= 32} ->
-//   n:uint32_t{n > 0ul && U32.v n < pow2 (reveal sz)} ->
-//   Tot (p:uint32_t{
-//     U32.v p < reveal sz && pow2 (U32.v p) <= U32.v n && 
-//     U32.v n < pow2 (U32.v p + 1)})
-//       (decreases (U32.v n))
-// let rec uint32_pow2_floor' sz n =
-//   if n = 1ul then 0ul
-//   else (1ul + uint32_pow2_floor' (hide (reveal sz - 1))
-//        	      			 (UInt32.shift_right n 1ul))
-
-// val uint32_pow2_floor:
-//   n:uint32_t{n > 0ul} ->
-//   Tot (p:uint32_t{ 
-//     p < 32ul && pow2 (U32.v p) <= U32.v n && 
-//     U32.v n < pow2 (U32.v p + 1)})
-//       (decreases (U32.v n))
-// let uint32_pow2_floor n =
-//   uint32_pow2_floor' (hide 32) n
-
-// val uint32_num_of_ones:
-//   sz:erased nat{reveal sz <= U32.n} -> 
-//   n:uint32_t{U32.v n < pow2 (reveal sz)} ->
-//   Tot (nirs:uint32_t{U32.v nirs <= reveal sz}) // /\ High.num_of_ones (U32.v n) = U32.v nirs})
-//       (decreases (U32.v n))
-// let rec uint32_num_of_ones sz n =
-//   if n = 0ul then 0ul
-//   else (let nones = n % 2ul + uint32_num_of_ones (hide (reveal sz - 1)) (n / 2ul) in
-//        // Later TODO: (High.num_of_ones (U32.v n) = U32.v nones);
-//        nones)
-
 /// Low-level Merkle tree data structure
 
 noeq type merkle_tree =
@@ -172,9 +76,26 @@ noeq type merkle_tree =
 
 let mt_ptr = B.pointer merkle_tree
 
-val merkle_tree_wf: HS.mem -> mt_ptr -> GTot Type0
-let merkle_tree_wf h mt =
-  // memory safety
+val mt_lift: 
+  h:HS.mem -> mt:merkle_tree{
+    BV.bv_inv_liveness hash_size h (MT?.values mt) /\
+    BV.bv_inv_liveness hash_size h (MT?.iroots mt)} ->
+  GTot High.merkle_tree
+let mt_lift h mt =
+  High.MT U32.n
+	  (BV.as_seq h hash_size (MT?.values mt))
+	  (BV.as_seq h hash_size (MT?.iroots mt))
+
+val mt_ptr_lift:
+  h:HS.mem -> mt:mt_ptr{
+    BV.bv_inv_liveness hash_size h (MT?.values (B.get h mt 0)) /\
+    BV.bv_inv_liveness hash_size h (MT?.iroots (B.get h mt 0))} ->
+  GTot High.merkle_tree
+let mt_ptr_lift h mt =
+  mt_lift h (B.get h mt 0)
+
+val merkle_tree_safe: HS.mem -> mt_ptr -> GTot Type0
+let merkle_tree_safe h mt =
   let mtv = B.get h mt 0 in
   let values = MT?.values mtv in
   let iroots = MT?.iroots mtv in
@@ -194,7 +115,9 @@ let merkle_tree_rloc mt =
 val create_merkle_tree: unit -> 
   HST.ST mt_ptr
 	 (requires (fun _ -> true))
-	 (ensures (fun h0 mt h1 -> merkle_tree_wf h1 mt))
+	 (ensures (fun h0 mt h1 -> 
+	   merkle_tree_safe h1 mt /\
+	   mt_ptr_lift h1 mt == High.create_merkle_tree 32))
 let create_merkle_tree _ =
   let mt_region = BV.new_region_ root in
   let mt_values_region = BV.new_region_ mt_region in 
@@ -247,9 +170,9 @@ val insert:
 	 (requires (fun h0 ->
 	   BV.buffer_inv_liveness hash_size h0 nv /\
 	   HH.disjoint (B.frameOf mt) (B.frameOf nv) /\
-	   merkle_tree_wf h0 mt /\
+	   merkle_tree_safe h0 mt /\
 	   not (V.is_full (MT?.values (B.get h0 mt 0)))))
-	 (ensures (fun h0 _ h1 -> merkle_tree_wf h1 mt))
+	 (ensures (fun h0 _ h1 -> merkle_tree_safe h1 mt))
 let insert mt nv =
   let mtv = B.index mt 0ul in
   let values = MT?.values mtv in
@@ -309,7 +232,7 @@ val get_root:
 	 (requires (fun h0 ->
 	   BV.buffer_inv_liveness hash_size h0 rt /\
 	   B.live h0 mt /\ B.freeable mt /\
-	   merkle_tree_wf h0 mt /\
+	   merkle_tree_safe h0 mt /\
 	   HH.disjoint (B.frameOf mt) (B.frameOf rt)))
 	 (ensures (fun h0 _ h1 ->
 	   modifies (B.loc_buffer rt) h0 h1))
@@ -327,7 +250,7 @@ val free_merkle_tree:
   HST.ST unit
 	 (requires (fun h0 -> 
 	   B.live h0 mt /\ B.freeable mt /\
-	   merkle_tree_wf h0 mt))
+	   merkle_tree_safe h0 mt))
 	 (ensures (fun h0 _ h1 -> modifies (merkle_tree_rloc mt) h0 h1))
 let free_merkle_tree mt =
   let mtv = B.index mt 0ul in
