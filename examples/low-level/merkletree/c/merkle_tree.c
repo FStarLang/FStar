@@ -34,6 +34,7 @@ int main()
     elt[31] = 1;
 
     insert(mt, elt);
+    free(elt);
   }
 
   hash_t root = (hash_t )malloc(32);

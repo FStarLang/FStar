@@ -328,7 +328,7 @@ val insert_copy:
   HST.ST (buf_vector a)
     (requires (fun h0 -> 
       bv_inv blen h0 bv /\ buffer_inv_liveness blen h0 v))
-    (ensures (fun h0 ibv h1 -> 
+    (ensures (fun h0 ibv h1 ->
       V.frameOf bv = V.frameOf ibv /\
       modifies (buf_vector_rloc bv) h0 h1 /\
       bv_inv blen h1 ibv))

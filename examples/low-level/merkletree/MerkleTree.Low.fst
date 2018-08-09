@@ -116,52 +116,52 @@ let modifies_union_weakened_right s1 s2 h1 h2 =
 
 /// Power of 2
 
-val uint32_pow2: 
-  sz:uint32_t{sz < 32ul} -> Tot (p:uint32_t{U32.v p = pow2 (U32.v sz)})
-let uint32_pow2 sz =
-  Math.Lemmas.pow2_lt_compat U32.n (U32.v sz);
-  UInt32.shift_left 1ul sz
+// val uint32_pow2: 
+//   sz:uint32_t{sz < 32ul} -> Tot (p:uint32_t{U32.v p = pow2 (U32.v sz)})
+// let uint32_pow2 sz =
+//   Math.Lemmas.pow2_lt_compat U32.n (U32.v sz);
+//   UInt32.shift_left 1ul sz
 
-val uint32_is_pow2: 
-  n:uint32_t ->
-  Tot (b:bool{b = is_pow2 (U32.v n)})
-      (decreases (U32.v n))
-let uint32_is_pow2 n =
-  let b = n <> 0ul && UInt32.logand n (n - 1ul) = 0ul in
-  assume (b = is_pow2 (U32.v n));
-  b
+// val uint32_is_pow2: 
+//   n:uint32_t ->
+//   Tot (b:bool{b = is_pow2 (U32.v n)})
+//       (decreases (U32.v n))
+// let uint32_is_pow2 n =
+//   let b = n <> 0ul && UInt32.logand n (n - 1ul) = 0ul in
+//   assume (b = is_pow2 (U32.v n));
+//   b
 
-val uint32_pow2_floor':
-  sz:erased nat{reveal sz > 0 && reveal sz <= 32} ->
-  n:uint32_t{n > 0ul && U32.v n < pow2 (reveal sz)} ->
-  Tot (p:uint32_t{
-    U32.v p < reveal sz && pow2 (U32.v p) <= U32.v n && 
-    U32.v n < pow2 (U32.v p + 1)})
-      (decreases (U32.v n))
-let rec uint32_pow2_floor' sz n =
-  if n = 1ul then 0ul
-  else (1ul + uint32_pow2_floor' (hide (reveal sz - 1))
-       	      			 (UInt32.shift_right n 1ul))
+// val uint32_pow2_floor':
+//   sz:erased nat{reveal sz > 0 && reveal sz <= 32} ->
+//   n:uint32_t{n > 0ul && U32.v n < pow2 (reveal sz)} ->
+//   Tot (p:uint32_t{
+//     U32.v p < reveal sz && pow2 (U32.v p) <= U32.v n && 
+//     U32.v n < pow2 (U32.v p + 1)})
+//       (decreases (U32.v n))
+// let rec uint32_pow2_floor' sz n =
+//   if n = 1ul then 0ul
+//   else (1ul + uint32_pow2_floor' (hide (reveal sz - 1))
+//        	      			 (UInt32.shift_right n 1ul))
 
-val uint32_pow2_floor:
-  n:uint32_t{n > 0ul} ->
-  Tot (p:uint32_t{ 
-    p < 32ul && pow2 (U32.v p) <= U32.v n && 
-    U32.v n < pow2 (U32.v p + 1)})
-      (decreases (U32.v n))
-let uint32_pow2_floor n =
-  uint32_pow2_floor' (hide 32) n
+// val uint32_pow2_floor:
+//   n:uint32_t{n > 0ul} ->
+//   Tot (p:uint32_t{ 
+//     p < 32ul && pow2 (U32.v p) <= U32.v n && 
+//     U32.v n < pow2 (U32.v p + 1)})
+//       (decreases (U32.v n))
+// let uint32_pow2_floor n =
+//   uint32_pow2_floor' (hide 32) n
 
-val uint32_num_of_ones:
-  sz:erased nat{reveal sz <= U32.n} -> 
-  n:uint32_t{U32.v n < pow2 (reveal sz)} ->
-  Tot (nirs:uint32_t{U32.v nirs <= reveal sz}) // /\ High.num_of_ones (U32.v n) = U32.v nirs})
-      (decreases (U32.v n))
-let rec uint32_num_of_ones sz n =
-  if n = 0ul then 0ul
-  else (let nones = n % 2ul + uint32_num_of_ones (hide (reveal sz - 1)) (n / 2ul) in
-       // Later TODO: (High.num_of_ones (U32.v n) = U32.v nones);
-       nones)
+// val uint32_num_of_ones:
+//   sz:erased nat{reveal sz <= U32.n} -> 
+//   n:uint32_t{U32.v n < pow2 (reveal sz)} ->
+//   Tot (nirs:uint32_t{U32.v nirs <= reveal sz}) // /\ High.num_of_ones (U32.v n) = U32.v nirs})
+//       (decreases (U32.v n))
+// let rec uint32_num_of_ones sz n =
+//   if n = 0ul then 0ul
+//   else (let nones = n % 2ul + uint32_num_of_ones (hide (reveal sz - 1)) (n / 2ul) in
+//        // Later TODO: (High.num_of_ones (U32.v n) = U32.v nones);
+//        nones)
 
 /// Low-level Merkle tree data structure
 
@@ -211,7 +211,8 @@ val insert_value:
   HST.ST (ivs:hash_vec)
 	 (requires (fun h0 -> 
 	   BV.buffer_inv_liveness hash_size h0 nv /\ 
-	   BV.bv_inv hash_size h0 vs))
+	   BV.bv_inv hash_size h0 vs /\
+	   HH.disjoint (V.frameOf vs) (B.frameOf nv)))
 	 (ensures (fun h0 ivs h1 -> 
 	   BV.buffer_inv_liveness hash_size h1 nv /\ 
 	   V.frameOf vs = V.frameOf ivs /\
