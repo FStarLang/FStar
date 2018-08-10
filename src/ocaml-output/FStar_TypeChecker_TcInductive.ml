@@ -319,8 +319,11 @@ let (tc_data :
                        | (env2,tps,u_tc) ->
                            let uu____772 =
                              let t2 =
-                               FStar_TypeChecker_Normalize.unfold_whnf env2
-                                 t1
+                               FStar_TypeChecker_Normalize.normalize
+                                 (FStar_List.append
+                                    FStar_TypeChecker_Normalize.whnf_steps
+                                    [FStar_TypeChecker_Env.AllowUnboundUniverses])
+                                 env2 t1
                                 in
                              let uu____788 =
                                let uu____789 = FStar_Syntax_Subst.compress t2
