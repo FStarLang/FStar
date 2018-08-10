@@ -23,19 +23,19 @@ WORKDIR ${MYHOME}
 
 # Remove extra files.
 RUN rm ${MYHOME}/FStar/Dockerfile
-RUN rm ${MYHOME}/FStar/build_fstar.sh
 RUN rm ${MYHOME}/FStar/build.sh
+RUN rm ${MYHOME}/FStar/build_helper.sh
 RUN rm ${MYHOME}/FStar/id_rsa
 RUN rm ${MYHOME}/FStar/commitinfofilename.json
 
-COPY --chown=everest build_fstar.sh ${MYHOME}/build_fstar.sh
-RUN chmod +x build_fstar.sh
 COPY --chown=everest build.sh ${MYHOME}/build.sh
 RUN chmod +x build.sh
+COPY --chown=everest build_helper.sh ${MYHOME}/build_helper.sh
+RUN chmod +x build_helper.sh
 
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 RUN echo "FStar source version: ${FSTARSOURCEVERSION}" >> ${BUILDLOGFILE}
-RUN ./build.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} || true
+RUN ./build_helper.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} || true
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 
 # Generate query-stats.
