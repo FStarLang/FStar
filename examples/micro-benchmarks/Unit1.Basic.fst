@@ -332,3 +332,10 @@ noeq type star_1078 (l: string -> GTot Type) : language_1078 =
   | Star_nil : star_1078 l ""
   | Star_append : s1:string -> s2:string ->
       l s1 -> star_1078 l s2 -> star_1078 l s1
+
+(*
+ * #1169
+ *)
+[@(expect_failure [189])]
+type boom_1169 =
+| B_1169 : forall (x: int). boom_1169
