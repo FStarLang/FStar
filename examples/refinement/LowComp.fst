@@ -6,7 +6,7 @@ open FStar.HyperStack.ST
 open LowStar.Buffer
 open LowStar.BufferOps
 open LowStar.Modifies
-
+open Mem_eq
 
 module H = FStar.Monotonic.Heap
 module B = LowStar.Buffer
@@ -131,7 +131,12 @@ let lcomp_r (a:Type) (wp:state -> (a * state -> Type) -> Type) (c : unit -> HIGH
 
 (* DSL for low computations *)
 
-let lreturn (#a:Type) (x:a) : lcomp_wp a (return_wp x) (hreturn' x) = fun ls -> x
+let lreturn (#a:Type) (x:a) : lcomp_wp1 a (return_wp x) (hreturn' x) = 
+  function (b1, b2) -> 
+    let h0 = ST.get () in 
+    let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
+    let p2 = get_upd_eq h0 b2 0 (get h0 b2 0) in
+    x
 
 val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp_wp unit (write_wp i v) (hwrite' i v)
 let lwrite i v = fun (b1, b2) -> if i = 0 then b1.(0ul) <- v else b2.(0ul) <- v
