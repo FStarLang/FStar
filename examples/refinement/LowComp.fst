@@ -138,11 +138,15 @@ let lreturn (#a:Type) (x:a) : lcomp_wp1 a (return_wp x) (hreturn' x) =
     let p2 = get_upd_eq h0 b2 0 (get h0 b2 0) in
     x
 
-val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp_wp unit (write_wp i v) (hwrite' i v)
+val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp_wp1 unit (write_wp i v) (hwrite' i v)
 let lwrite i v = fun (b1, b2) -> if i = 0 then b1.(0ul) <- v else b2.(0ul) <- v
 
-val lread : i:nat{ i < 2 } -> lcomp_wp mint (read_wp i) (hread' i)
-let lread i = fun (b1, b2) -> if i = 0 then b1.(0ul) else b2.(0ul)
+val lread : i:nat{ i < 2 } -> lcomp_wp1 mint (read_wp i) (hread' i)
+let lread i = fun (b1, b2) -> 
+  let h0 = ST.get () in 
+  let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
+  let p2 = get_upd_eq h0 b2 0 (get h0 b2 0) in
+  if i = 0 then b1.(0ul) else b2.(0ul)
 
 let monotonic (#a: Type) (wp: hwp a) = 
     forall (s: state) p1 p2. (forall x. p1 x ==> p2 x) ==> wp s p1 ==> wp s p2
