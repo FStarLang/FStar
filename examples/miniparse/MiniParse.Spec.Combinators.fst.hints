@@ -733,7 +733,7 @@
         "unit_typing"
       ],
       0,
-      "0738512854113b26985904b335c970da"
+      "934c3e64f4b59a407eff94e425af9c12"
     ],
     [
       "MiniParse.Spec.Combinators.seq_slice_append_r",
@@ -946,7 +946,7 @@
         "unit_typing"
       ],
       0,
-      "599ebc56127647fbf299d7694e500b7b"
+      "ff8035ae5a403504bcaf282283fd884d"
     ],
     [
       "MiniParse.Spec.Combinators.parse_synth'",
@@ -1751,7 +1751,7 @@
         "unit_typing"
       ],
       0,
-      "53d2b819eca151540a246a0d0218d6b0"
+      "2cbdfae9c8d561c2015b7529bd4025b7"
     ],
     [
       "MiniParse.Spec.Combinators.parse_synth'",
