@@ -1937,8 +1937,8 @@ val blit
 
 module L = FStar.List.Tot
 
-inline_for_extraction
-let rec assign_list #a (l: list a) (b: buffer a): HST.Stack unit
+unfold
+let assign_list_t #a (l: list a) = (b: buffer a) -> HST.Stack unit
   (requires (fun h0 ->
     live h0 b /\
     length b = L.length l))
@@ -1946,9 +1946,11 @@ let rec assign_list #a (l: list a) (b: buffer a): HST.Stack unit
     live h1 b /\
     (modifies (loc_buffer b) h0 h1) /\
     as_seq h1 b == Seq.seq_of_list l))
-=
+
+let rec assign_list #a (l: list a): assign_list_t l
+= fun b ->
   match l with
-  | [] -> 
+  | [] ->
       let h = HST.get () in
       assert (length b = 0);
       assert (Seq.length (as_seq h b) = 0);
@@ -1967,7 +1969,6 @@ let rec assign_list #a (l: list a) (b: buffer a): HST.Stack unit
       assert (as_seq h1 b_tl == Seq.seq_of_list tl);
       assert (Seq.equal (as_seq h1 b) (Seq.append (as_seq h1 b_hd) (as_seq h1 b_tl)));
       assert ((Seq.seq_of_list l) == (Seq.cons hd (Seq.seq_of_list tl)))
-
 #reset-options
 
 
