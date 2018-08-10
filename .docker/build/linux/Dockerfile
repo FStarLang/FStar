@@ -23,8 +23,8 @@ WORKDIR ${MYHOME}
 
 # Remove extra files.
 RUN rm ${MYHOME}/FStar/Dockerfile
-RUN rm ${MYHOME}/FStar/build_fstar.sh
 RUN rm ${MYHOME}/FStar/build.sh
+RUN rm ${MYHOME}/FStar/build_helper.sh
 RUN rm ${MYHOME}/FStar/id_rsa
 RUN rm ${MYHOME}/FStar/commitinfofilename.json
 
