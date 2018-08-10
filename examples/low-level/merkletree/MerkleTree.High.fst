@@ -196,7 +196,7 @@ assume val hash_from_hashes: hash -> hash -> Tot hash
 /// High-level Merkle tree data structure
 
 noeq type merkle_tree =
-| MT: sz:nat ->
+| MT: sz:nat{sz > 0} ->
       values:hash_seq{S.length values < pow2 sz} ->
       iroots:hash_seq{S.length iroots = sz} ->
       merkle_tree
@@ -206,7 +206,7 @@ noeq type merkle_tree =
 val hash_default: hash
 let hash_default = S.create (U32.v hash_size) 0uy
 
-val create_merkle_tree: nat -> Tot merkle_tree
+val create_merkle_tree: sz:nat{sz > 0} -> Tot merkle_tree
 let create_merkle_tree sz =
   MT sz S.empty (S.create sz hash_default)
 
@@ -242,41 +242,29 @@ let insert mt e =
 
 /// Getting the Merkle root
 
-// val merkle_root_of_hashes: 
-//   vs:hash_seq{S.length vs > 0} -> 
-//   GTot hash (decreases (S.length vs))
-// let rec merkle_root_of_hashes vs =
-//   if is_pow2 (S.length vs) then merkle_root_of_pow2 vs
-//   else (let lvs, rvs = S.split vs (pow2 (pow2_floor (S.length vs))) in
-//        hash_from_hashes (merkle_root_of_pow2 lvs)
-// 			(merkle_root_of_hashes rvs))
+val compress_or_init:
+  actd:bool -> acc:hash -> nh:hash -> Tot hash
+let compress_or_init actd acc nh =
+  if actd
+  then hash_from_hashes nh acc
+  else nh
 
 val merkle_root_of_iroots: 
-  irs:hash_seq{S.length irs > 0} -> 
-  GTot hash (decreases (S.length irs))
-let rec merkle_root_of_iroots irs =
-  if S.length irs = 1 then S.index irs 0
-  else hash_from_hashes (S.head irs) (merkle_root_of_iroots (S.tail irs))
+  irs:hash_seq ->
+  cpos:nat{cpos < S.length irs} ->
+  irps:nat{irps < pow2 (S.length irs - cpos)} ->
+  acc:hash -> actd:bool ->
+  Tot hash (decreases (S.length irs - cpos))
+let rec merkle_root_of_iroots irs cpos irps acc actd =
+  if cpos = S.length irs - 1
+  then compress_or_init actd acc (S.index irs cpos)
+  else (if irps % 2 = 0
+       then merkle_root_of_iroots irs (cpos + 1) (irps / 2) acc actd
+       else (let nacc = compress_or_init actd acc (S.index irs cpos) in
+	    merkle_root_of_iroots irs (cpos + 1) (irps / 2) nacc true))
 
-// val merkle_root_of_iroots_ok_hashes:
-//   vs:hash_seq{S.length vs > 0} ->
-//   irs:hash_seq{iroots_of_hashes vs = irs} ->
-//   Lemma (ensures (merkle_root_of_iroots irs = merkle_root_of_hashes vs))
-// 	(decreases (S.length vs))
-// let rec merkle_root_of_iroots_ok_hashes vs irs =
-//   if is_pow2 (S.length vs) then ()
-//   else (let lvs, rvs = S.split vs (pow2 (pow2_floor (S.length vs))) in
-//        iroots_of_hashes_head vs irs;
-//        iroots_of_hashes_tail vs irs;
-//        merkle_root_of_iroots_ok_hashes rvs (S.tail irs))
-
-// val merkle_root_of_iroots_ok:
-//   mt:merkle_tree ->
-//   Lemma (requires (S.length (MT?.iroots mt) > 0))
-// 	(ensures (merkle_root_of_iroots (MT?.iroots mt) = 
-// 		 merkle_root_of_hashes (MT?.values mt)))
-// let merkle_root_of_iroots_ok mt =
-//   merkle_root_of_iroots_ok_hashes
-//     (MT?.values mt)
-//     (MT?.iroots mt)
+val get_root:
+  mt:merkle_tree -> rt:hash -> Tot hash
+let get_root mt rt =
+  merkle_root_of_iroots (MT?.iroots mt) 0 (S.length (MT?.values mt)) rt false
 

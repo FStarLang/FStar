@@ -176,6 +176,25 @@ val as_seq:
 let as_seq h #a blen bv =
   as_seq_seq h blen (V.as_seq h bv)
 
+val as_seq_seq_get:
+  h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
+  bs:S.seq (B.buffer a)
+    {V.forall_seq bs 0 (S.length bs) (fun hs -> B.len hs = blen)} ->
+  i:nat{i < S.length bs} ->
+  Lemma (B.as_seq h (S.index bs i) == S.index (as_seq_seq h blen bs) i)
+let as_seq_seq_get h #a blen bs i =
+  admit ()
+
+val as_seq_get:
+  h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
+  bv:buf_vector a{bv_inv_liveness blen h bv} ->
+  i:uint32_t{i < V.size_of bv} ->
+  Lemma (B.as_seq h (V.get h bv i) == 
+	S.index (as_seq h blen bv) (U32.v i))
+	[SMTPat (S.index (as_seq h blen bv) (U32.v i))]
+let as_seq_get h #a blen bv i =
+  as_seq_seq_get h blen (V.as_seq h bv) (U32.v i)
+
 /// Facts related to the invariant
 
 val buf_vector_rloc_includes_loc_bv_buffer:
@@ -324,6 +343,9 @@ val as_seq_preserved:
 		  loc_disjoint (buf_vector_rloc bv) dloc /\
 		  modifies dloc h0 h1))
 	(ensures (S.equal (as_seq h0 blen bv) (as_seq h1 blen bv)))
+	[SMTPat (bv_inv blen h0 bv);
+	SMTPat (loc_disjoint (buf_vector_rloc bv) dloc);
+	SMTPat (modifies dloc h0 h1)]
 let as_seq_preserved #a blen bv dloc h0 h1 =
   buf_vector_rloc_includes_loc_vector h0 bv;
   buf_vector_rloc_includes_loc_bv_buffers h0 bv 0 (U32.v (V.size_of bv));

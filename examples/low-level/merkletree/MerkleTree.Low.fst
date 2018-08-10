@@ -1,6 +1,6 @@
 module MerkleTree.Low
 
-// TODO1: Use `EverCrypt.Hash` directly
+// TODO: Use `EverCrypt.Hash` directly
 // open EverCrypt.Hash
 
 open FStar.All
@@ -34,7 +34,7 @@ module U8 = FStar.UInt8
 type hash = B.buffer uint8_t
 type hash_vec = BV.buf_vector uint8_t
 
-// TODO1: When `EverCrypt.Hash` is connected if we define it.
+// TODO: When `EverCrypt.Hash` is connected if we define it.
 assume val hash_from_hashes: 
   src1:hash -> src2:hash -> dst:hash -> 
   HST.ST unit
@@ -46,8 +46,8 @@ assume val hash_from_hashes:
 	   // memory safety
 	   modifies (B.loc_buffer dst) h0 h1 /\
 	   // correctness
-	   High.hash_from_hashes (B.as_seq h1 src1) (B.as_seq h1 src2) = 
-	   B.as_seq h1 dst)) 
+	   B.as_seq h1 dst =
+	   High.hash_from_hashes (B.as_seq h0 src1) (B.as_seq h0 src2)))
 
 /// Utilities
 
@@ -116,7 +116,9 @@ val create_merkle_tree: unit ->
   HST.ST mt_ptr
 	 (requires (fun _ -> true))
 	 (ensures (fun h0 mt h1 -> 
+	   // memory safety
 	   merkle_tree_safe h1 mt /\
+	   // correctness
 	   mt_ptr_lift h1 mt == High.create_merkle_tree 32))
 let create_merkle_tree _ =
   let mt_region = BV.new_region_ root in
@@ -142,10 +144,15 @@ val insert_value:
 	   BV.bv_inv hash_size h0 vs /\
 	   HH.disjoint (V.frameOf vs) (B.frameOf nv)))
 	 (ensures (fun h0 ivs h1 -> 
+	   // memory safety
 	   BV.buffer_inv_liveness hash_size h1 nv /\ 
 	   V.frameOf vs = V.frameOf ivs /\
 	   modifies (BV.buf_vector_rloc ivs) h0 h1 /\
-	   BV.bv_inv hash_size h1 ivs))
+	   BV.bv_inv hash_size h1 ivs /\
+	   // correctness
+	   S.equal (BV.as_seq h1 hash_size ivs)
+		   (High.insert_values 32 (BV.as_seq h0 hash_size vs)
+				       (B.as_seq h0 nv))))
 let insert_value vs nv =
   BV.insert_copy 0uy hash_size vs nv
 
@@ -159,14 +166,24 @@ val insert_iroots:
 	   BV.buffer_inv_liveness hash_size h0 acc /\
 	   HH.disjoint (V.frameOf irs) (B.frameOf acc) /\
 	   BV.bv_inv hash_size h0 irs))
-	 (ensures (fun h0 _ h1 -> 
+	 (ensures (fun h0 _ h1 ->
+	   // memory safety
 	   modifies (loc_union (B.loc_buffer acc) 
 			       (BV.buf_vector_rloc irs)) h0 h1 /\
-	   BV.bv_inv hash_size h1 irs))
+	   BV.bv_inv hash_size h1 irs /\
+	   // correctness
+	   S.equal (BV.as_seq h1 hash_size irs)
+	   	   (High.insert_iroots (BV.as_seq h0 hash_size irs)
+	   			       (U32.v cpos) (U32.v irps)
+	   			       (B.as_seq h0 acc))))
+#set-options "--z3rlimit 40"
 let rec insert_iroots irs cpos irps acc =
   if irps % 2ul = 0ul
   then BV.assign_copy hash_size irs cpos acc
-  else (hash_from_hashes (V.index irs cpos) acc acc;
+  else (let hh0 = HST.get () in
+       hash_from_hashes (V.index irs cpos) acc acc;
+       let hh1 = HST.get () in
+       as_seq_preserved hash_size irs (B.loc_buffer acc) hh0 hh1;
        insert_iroots irs (cpos + 1ul) (irps / 2ul) acc)
 
 val insert:
@@ -177,7 +194,13 @@ val insert:
 	   HH.disjoint (B.frameOf mt) (B.frameOf nv) /\
 	   merkle_tree_safe h0 mt /\
 	   not (V.is_full (MT?.values (B.get h0 mt 0)))))
-	 (ensures (fun h0 _ h1 -> merkle_tree_safe h1 mt))
+	 (ensures (fun h0 _ h1 -> 
+	   // memory safety
+	   merkle_tree_safe h1 mt /\
+	   // correctness
+	   mt_ptr_lift h1 mt == 
+	   High.insert (mt_ptr_lift h0 mt) (B.as_seq h0 nv)))
+#set-options "--z3rlimit 40"
 let insert mt nv =
   let mtv = B.index mt 0ul in
   let values = MT?.values mtv in
@@ -188,7 +211,6 @@ let insert mt nv =
   assert (loc_disjoint 
 	   (BV.buf_vector_rloc ivalues)
 	   (loc_union (B.loc_buffer nv) (buf_vector_rloc iroots)));
-
   B.upd mt 0ul (MT ivalues iroots);
   assert (loc_disjoint (BV.buf_vector_rloc ivalues)
 		       (B.loc_buffer mt));
@@ -205,7 +227,11 @@ val compress_or_init:
 	   BV.buffer_inv_liveness hash_size h0 nh /\
 	   HH.disjoint (B.frameOf nh) (B.frameOf acc)))
 	 (ensures (fun h0 _ h1 ->
-	   modifies (B.loc_buffer acc) h0 h1))
+	   // memory safety
+	   modifies (B.loc_buffer acc) h0 h1 /\
+	   // correctness
+	   B.as_seq h1 acc ==
+	   High.compress_or_init actd (B.as_seq h0 acc) (B.as_seq h0 nh)))
 let compress_or_init actd acc nh =
   if actd
   then hash_from_hashes nh acc acc
@@ -222,13 +248,22 @@ val merkle_root_of_iroots:
 	   BV.bv_inv hash_size h0 irs /\
 	   HH.disjoint (V.frameOf irs) (B.frameOf acc)))
 	 (ensures (fun h0 _ h1 ->
-	   modifies (B.loc_buffer acc) h0 h1))
+	   // memory safety
+	   modifies (B.loc_buffer acc) h0 h1 /\
+	   // correctness
+	   B.as_seq h1 acc ==
+	   High.merkle_root_of_iroots 
+	     (BV.as_seq h0 hash_size irs) (U32.v cpos) (U32.v irps)
+	     (B.as_seq h0 acc) actd))
 let rec merkle_root_of_iroots irs cpos irps acc actd =
   if cpos = 31ul 
   then compress_or_init actd acc (V.index irs cpos)
   else (if irps % 2ul = 0ul
        then merkle_root_of_iroots irs (cpos + 1ul) (irps / 2ul) acc actd
-       else (compress_or_init actd acc (V.index irs cpos);
+       else (let hh0 = HST.get () in
+	    compress_or_init actd acc (V.index irs cpos);
+	    let hh1 = HST.get () in
+	    as_seq_preserved hash_size irs (B.loc_buffer acc) hh0 hh1;
   	    merkle_root_of_iroots irs (cpos + 1ul) (irps / 2ul) acc true))
 
 val get_root:
@@ -240,7 +275,11 @@ val get_root:
 	   merkle_tree_safe h0 mt /\
 	   HH.disjoint (B.frameOf mt) (B.frameOf rt)))
 	 (ensures (fun h0 _ h1 ->
-	   modifies (B.loc_buffer rt) h0 h1))
+	   // memory safety
+	   modifies (B.loc_buffer rt) h0 h1 /\
+	   // correctness
+	   B.as_seq h1 rt ==
+	   High.get_root (mt_ptr_lift h0 mt) (B.as_seq h0 rt)))
 let get_root mt rt =
   let mtv = B.index mt 0ul in
   let values = MT?.values mtv in
