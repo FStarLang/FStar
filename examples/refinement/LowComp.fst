@@ -28,15 +28,10 @@ val lstate_as_state : HS.mem -> lstate -> GTot state
 let lstate_as_state h  = fun (b1, b2) -> (B.get h b1 0, B.get h b2 0)
 
 
-val g_upd_preserves_live : #a:Type -> h:HS.mem -> b1:pointer a{live h b1} -> b2:pointer a{live h b2} -> v:a ->
-   Lemma (let h' = g_upd b1 0 v h in modifies (loc_buffer b1) h h' /\ live h b1 /\ live h' b2)
-                                
-let g_upd_preserves_live #a h b1 b2 v = 
-  let p = g_upd_seq_as_seq b1 (Seq.upd (as_seq h b1) 0 v) h in ()
 
 val state_as_lstate : h:HS.mem -> ls:lstate{well_formed h ls} -> state -> GTot HS.mem 
 let state_as_lstate h =
-  function (r1, r2) -> function (v1, v2) ->
+  fun (r1, r2) (v1, v2) ->
     let h' = g_upd r1 0 v1 h in
     let p = g_upd_preserves_live h r1 r2 v1 in
     g_upd r2 0 v2 h'
@@ -132,21 +127,34 @@ let lcomp_r (a:Type) (wp:state -> (a * state -> Type) -> Type) (c : unit -> HIGH
 (* DSL for low computations *)
 
 let lreturn (#a:Type) (x:a) : lcomp_wp1 a (return_wp x) (hreturn' x) = 
-  function (b1, b2) -> 
+  fun (b1, b2) -> 
     let h0 = ST.get () in 
     let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
     let p2 = get_upd_eq h0 b2 0 (get h0 b2 0) in
     x
 
 val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp_wp1 unit (write_wp i v) (hwrite' i v)
-let lwrite i v = fun (b1, b2) -> if i = 0 then b1.(0ul) <- v else b2.(0ul) <- v
+let lwrite i v = fun (b1, b2) -> 
+    if i = 0 then 
+      let h0 = ST.get () in
+      let h1 = g_upd b1 v h0 in
+      let p = get_upd_other h0 b2 b1 (get h0 b2 0) v in
+      let p2 = get_upd_eq (g_upd b1 0 v h0) b2 0 (get h0 b2 0) in
+      b1.(0ul) <- v 
+    else 
+      let h0 = ST.get () in 
+      let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
+      b2.(0ul) <- v
 
 val lread : i:nat{ i < 2 } -> lcomp_wp1 mint (read_wp i) (hread' i)
 let lread i = fun (b1, b2) -> 
   let h0 = ST.get () in 
   let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
   let p2 = get_upd_eq h0 b2 0 (get h0 b2 0) in
-  if i = 0 then b1.(0ul) else b2.(0ul)
+  if i = 0 then 
+     b1.(0ul) 
+  else 
+    b2.(0ul)
 
 let monotonic (#a: Type) (wp: hwp a) = 
     forall (s: state) p1 p2. (forall x. p1 x ==> p2 x) ==> wp s p1 ==> wp s p2
@@ -165,10 +173,22 @@ let lbind (#a:Type) (#b:Type)
 // Versions of [lread] and [lwrite] with reif in spec
 
 val lwrite' : i:nat{ i < 2 } -> v:mint -> lcomp_wp unit (write_wp i v) (reify (HIGH?.put i v))
-let lwrite' i v = fun (b1, b2) -> if i = 0 then b1.(0ul) <- v else b2.(0ul) <- v
+let lwrite' i v = fun (b1, b2) -> 
+  if i = 0 then 
+    let h0 = ST.get () in 
+    let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
+    let p2 = get_upd_eq h0 b2 0 (get h0 b2 0) in
+    b1.(0ul) <- v 
+  else 
+    
+    b2.(0ul) <- v
 
-val lread' : i:nat{ i < 2 } -> lcomp_wp mint (read_wp i) (reify (HIGH?.get i))
-let lread' i = fun (b1, b2) -> if i = 0 then b1.(0ul) else b2.(0ul)
+val lread' : i:nat{ i < 2 } -> lcomp_wp1 mint (read_wp i) (reify (HIGH?.get i))
+let lread' i = fun (b1, b2) -> 
+  let h0 = ST.get () in 
+  let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
+  let p2 = get_upd_eq h0 b2 0 (get h0 b2 0) in
+  if i = 0 then b1.(0ul) else b2.(0ul)
 
 // 
 
