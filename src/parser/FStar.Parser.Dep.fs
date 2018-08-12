@@ -849,7 +849,6 @@ let collect (all_cmd_line_files: list<file_name>)
     Options.add_verify_module m);
 
   let topological_dependences_of all_command_line_files =
-      let topologically_sorted = BU.mk_ref [] in
       let rec all_friend_deps_1
                 dep_graph
                 (cycle:list<file_name>)
@@ -1002,8 +1001,6 @@ let print_raw deps =
         This takes care of renaming A.B.C.fst to A_B_C.ml
   *)
 let print_full deps : unit =
-    print_raw deps;
-    print_endline "__________________________________________________";
     let (Mk (deps, file_system_map, all_cmd_line_files)) = deps in
     let sort_output_files (orig_output_file_map:BU.smap<string>) =
         let order : ref<(list<string>)> = BU.mk_ref [] in
