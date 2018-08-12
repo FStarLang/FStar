@@ -4836,7 +4836,7 @@
         "unit_typing"
       ],
       0,
-      "4fefdd59061eb62ce1f0f736a5108868"
+      "c15b3d4cdf3de635cd72f74dbfe4fe4f"
     ],
     [
       "FStar.Seq.Properties.seq_of_list_tl",
@@ -5075,7 +5075,7 @@
         "typing_FStar.Seq.Properties.sorted"
       ],
       0,
-      "3914e3d98a4115f56d45b8af2798f11f"
+      "2b6030889070ef3b1afb218dc05014ef"
     ],
     [
       "FStar.Seq.Properties.lemma_seq_sortwith_correctness",
