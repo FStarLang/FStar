@@ -3,6 +3,11 @@ DIRS=1 2
 
 all: verify-all
 
+all-dirs: $(addsuffix .ver, $(DIRS))
+
+%.ver:
+	$(MAKE) -C $* verify-all
+
 .depend:
 	$(FSTAR) --dep full $(wildcard *.fst *.fsti) > .depend
 
