@@ -899,7 +899,7 @@ let collect (all_cmd_line_files: list<file_name>)
       in
       let _, all_files =
           let (Deps dg) = dep_graph in
-          let dg' = BU.smap_create (BU.smap_size dg) in
+          let (Deps dg') = deps_empty() in
           BU.smap_fold dg (fun filename (dependences, color) () ->
               BU.smap_add dg' filename (widen_deps friends dependences, color)) ();
           all_friend_deps (Deps dg') [] ([], []) all_command_line_files
