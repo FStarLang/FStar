@@ -122,11 +122,12 @@ type deps =
      | Mk of dependence_graph      //dependences of the entire project, not just those reachable from the command line
            * files_for_module_name //an abstraction of the file system
            * list<file_name>       //all command-line files
+           * list<file_name>       //all files
 let deps_try_find (Deps m) k = BU.smap_try_find m k
 let deps_add_dep (Deps m) k v = BU.smap_add m k v
 let deps_keys (Deps m) = BU.smap_keys m
 let deps_empty () = Deps (BU.smap_create 41)
-let empty_deps = Mk (deps_empty (), BU.smap_create 0, [])
+let empty_deps = Mk (deps_empty (), BU.smap_create 0, [], [])
 
 let module_name_of_dep = function
     | UseInterface m
@@ -906,14 +907,15 @@ let collect (all_cmd_line_files: list<file_name>)
       in
       all_files
   in
-  topological_dependences_of all_cmd_line_files,
-  Mk (dep_graph, file_system_map, all_cmd_line_files)
+  let all_files = topological_dependences_of all_cmd_line_files in
+  all_files,
+  Mk (dep_graph, file_system_map, all_cmd_line_files, all_files)
 
-let deps_of (Mk (deps, file_system_map, all_cmd_line_files)) (f:file_name)
+let deps_of (Mk (deps, file_system_map, all_cmd_line_files, _)) (f:file_name)
     : list<file_name> =
     dependences_of file_system_map deps all_cmd_line_files f
 
-let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
+let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files, _)) fn =
     let fn =
         match FStar.Options.find_file fn with
         | Some fn -> fn
@@ -974,7 +976,7 @@ let print_digest (dig:list<(string * string)>) : string =
 
     Deprecated: this will print the dependences among the source files
   *)
-let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
+let print_make (Mk (deps, file_system_map, all_cmd_line_files, _)) : unit =
     let keys = deps_keys deps in
     keys |> List.iter
         (fun f ->
@@ -986,7 +988,7 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           Util.print2 "%s: %s\n\n" f (String.concat " " files))
 
 let print_raw deps =
-    let (Mk(Deps deps, _, _)) = deps in
+    let (Mk(Deps deps, _, _, _)) = deps in
       smap_fold deps (fun k (dep, _) out ->
         BU.format2 "%s -> [\n\t%s\n] " k (List.map dep_to_string dep |> String.concat ";\n\t") :: out) []
       |> String.concat ";;\n"
@@ -1001,7 +1003,7 @@ let print_raw deps =
         This takes care of renaming A.B.C.fst to A_B_C.ml
   *)
 let print_full deps : unit =
-    let (Mk (deps, file_system_map, all_cmd_line_files)) = deps in
+    let (Mk (deps, file_system_map, all_cmd_line_files, all_files)) = deps in
     let sort_output_files (orig_output_file_map:BU.smap<string>) =
         let order : ref<(list<string>)> = BU.mk_ref [] in
         let remaining_output_files = BU.smap_copy orig_output_file_map in
@@ -1112,7 +1114,7 @@ let print_full deps : unit =
             (norm_path (output_file ".exe" f),
               List.unique (already_there @ List.map
                 (fun x -> norm_path (output_file ".krml" x))
-                (deps_of (Mk (deps, file_system_map, all_cmd_line_files)) f)),
+                (deps_of (Mk (deps, file_system_map, all_cmd_line_files, all_files)) f)),
               false);
 
           //And, if this is not an interface, we also print out the dependences among the .ml files
@@ -1204,7 +1206,7 @@ let print deps =
   | Some "full" ->
       print_full deps
   | Some "graph" ->
-      let (Mk(deps, _, _)) = deps in
+      let (Mk(deps, _, _, _)) = deps in
       (* JP: this was broken by the change of the main map to contain filenames
        * instead of module names. *)
       print_graph deps
@@ -1223,5 +1225,11 @@ let print_fsmap fsmap =
                 k (BU.dflt "_" v0) (BU.dflt "_" v1))
         ""
 
-let module_has_interface (Mk (_, fsmap, _)) module_name =
+let module_has_interface (Mk (_, fsmap, _, _)) module_name =
     has_interface fsmap (String.lowercase (Ident.string_of_lid module_name))
+
+let deps_has_implementation (Mk (_, _, _, all_files)) module_name =
+    let m = String.lowercase (Ident.string_of_lid module_name) in
+    all_files |> BU.for_some (fun f ->
+        is_implementation f
+        && String.lowercase (module_name_of_file f) = m)

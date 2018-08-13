@@ -2501,6 +2501,9 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     else if not (FStar.Parser.Dep.module_has_interface (Env.dep_graph env) lid)
     then raise_error (Errors.Fatal_FriendInterface,
                       "'friend' declarations cannot refer to modules that lack interfaces") d.drange
+    else if not (FStar.Parser.Dep.deps_has_implementation (Env.dep_graph env) lid)
+    then raise_error (Errors.Fatal_FriendInterface,
+                      "'friend' module has not been loaded; recompute dependences (C-c C-r) if in interactive mode") d.drange
     else env, []
 
   | Include lid ->
