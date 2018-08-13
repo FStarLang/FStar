@@ -38,3 +38,4 @@ val hash_dependences: deps -> string -> option<(list<(string*string)>)>
 val print_digest: list<(string * string)> -> string
 val module_has_interface: deps -> module_name:Ident.lident -> bool
 val deps_has_implementation: deps -> module_name:Ident.lident -> bool
+val print_raw: deps -> unit
