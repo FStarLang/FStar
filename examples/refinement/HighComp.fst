@@ -3,7 +3,6 @@ module HighComp
 module U32 = FStar.UInt32
 
 
-
 type mint = U32.t
 type state = mint * mint
 

@@ -36,8 +36,7 @@ let state_as_lstate h =
 
 
 val state_as_lstate_inv : h:HS.mem -> ls:lstate{well_formed h ls} -> bs:state ->
-   Lemma (let h' = state_as_lstate h ls bs in 
-          lstate_as_state h' ls = bs)
+   Lemma (lstate_as_state (state_as_lstate h ls bs) ls = bs)
 let state_as_lstate_inv h ls bs = 
   let (b1, b2) = ls in 
   let (s1, s2) = bs in
@@ -201,22 +200,33 @@ let lbind (#a:Type) (#b:Type)
   (#c1:comp_wp a wp1) (#c2:(x:a -> comp_wp b (wp2 x)))
   (m: lcomp_wp a wp1 c1) (f: (x:a) -> lcomp_wp b (wp2 x) (c2 x)):
   lcomp_wp b (bind_wp wp1 wp2) (hbind' c1 c2) =
-  fun ls ->
+  fun (b1, b2) ->
     assume (monotonic wp1);
-    let h0 = ST.get () in 
-    let a = m ls in 
-    let h1 = ST.get () in
+    let h0 = ST.get () in  // Initial heap
+    let a = m (b1, b2) in 
+    let h1 = ST.get () in // Intermediate heap
+    assume (monotonic (wp2 a));
 
-    let p = 
-       let (r, s1) = c1 (lstate_as_state h0 ls) in
-       state_as_lstate_inv h0 ls s1 
-    in
+    let p1 =
+      let s1 = lstate_as_state h0 (b1, b2) in
+//      (wp1 s1 (fun _ -> True)) ==> 
+      (let (r, s2) = c1 s1 in
+       get_upd_eq h0 b1 0 (get h0 b1 0))
+    in 
+    
+    // let p = 
+    //    let (r, s2) = c1 (lstate_as_state h0 ls) in 
+    //    let h1' = state_as_lstate h0 ls s2 in 
+    //    assert (h1 == h1');
+    //    assert (r == a);
+    //    state_as_lstate_inv h0 ls (lstate_as_state h0 ls)
+    // in
     // assert (let s0 = lstate_as_state h0 ls in
     //         let (r, s1) = c1 s0 in
     //         let h1' = state_as_lstate h0 ls s1 in 
     //         lstate_as_state h1' ls == s1);
             
-    let r = f a ls in r
+    let r = f a (b1, b2) in r
 
 
 // Versions of [lread] and [lwrite] with reif in spec
