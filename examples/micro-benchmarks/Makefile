@@ -16,6 +16,7 @@ endif
 all: uall
 
 uall: all-pos
+	$(MAKE) -C friends all-dirs
 
 all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.Parser.uver \
 	 Unit1.RefinementInference.uver Unit1.WPsAndTriples_ST.uver Unit1.Projectors1.uver \
@@ -30,7 +31,7 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 NegativeTests.False.uver   NegativeTests.Set.uver   NegativeTests.Positivity.uver \
 	 NegativeTests.ZZImplicitFalse.uver StableErr.uver   ChrisCheck.uver PatCoerce.uver \
 	 OccursCheckOnArrows.uver Test.Integers.uver AnotType.uver Test.ReifyNBE.fst TestHasEq.uver \
-	 FriendProvider.uver FriendConsumer.uver PatAnnot.uver
+	 PatAnnot.uver
 
 basictests: $(VERFILES)
 	$(FSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^

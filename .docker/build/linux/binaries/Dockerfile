@@ -25,12 +25,7 @@ RUN eval $(ssh-agent)
 
 # Build FStar Binaries
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
-COPY --chown=everest build.sh ${MYHOME}/FStar/build.sh
-RUN chmod +x build.sh
-COPY --chown=everest build_helper.sh ${MYHOME}/FStar/build_helper.sh
-RUN chmod +x build_helper.sh
 RUN ./build_helper.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} || true
-
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 
 # Remove ssh identities.
