@@ -1138,10 +1138,30 @@ let (generalize_annotated_univs :
 let (is_special_effect_combinator : Prims.string -> Prims.bool) =
   fun uu___242_2994  ->
     match uu___242_2994 with
-    | "repr" -> true
-    | "post" -> true
-    | "pre" -> true
-    | "wp" -> true
+    | "lift1" -> false
+    | "lift2" -> false
+    | "pure" -> false
+    | "app" -> false
+    | "push" -> false
+    | "wp_if_then_else" -> false
+    | "wp_assert" -> false
+    | "wp_assume" -> false
+    | "wp_close" -> false
+    | "stronger" -> false
+    | "wp_ite" -> false
+    | "null_wp" -> false
+    | "wp_trivial" -> false
+    | "ctx" -> false
+    | "g_ctx" -> false
+    | "lift_from_pure" -> false
+    | "return_wp" -> false
+    | "return_elab" -> false
+    | "bind_wp" -> false
+    | "bind_elab" -> false
+    | "repr" -> false
+    | "post" -> false
+    | "pre" -> false
+    | "wp" -> false
     | uu____2995 -> false
   
 let rec (sum_to_universe :
