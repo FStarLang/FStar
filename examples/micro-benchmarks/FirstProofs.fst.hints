@@ -61,7 +61,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d4a65aa14742f88449ebc1fd345fb737"
+      "f7cfa7e96295717c0b28a5c562697b3d"
     ],
     [
       "FirstProofs.factorial_is_doubling",
@@ -85,7 +85,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d4e57c41d906ae5f4cc07c5ce31f486b"
+      "35ab2b86dd9fb658f3f4adf5cc0a1927"
     ],
     [
       "FirstProofs.fibonacci",

@@ -57,6 +57,7 @@ let () =
   Hashtbl.add keywords "exception"     EXCEPTION   ;
   Hashtbl.add keywords "exists"        EXISTS      ;
   Hashtbl.add keywords "false"         FALSE       ;
+  Hashtbl.add keywords "friend"        FRIEND      ;
   Hashtbl.add keywords "forall"        FORALL      ;
   Hashtbl.add keywords "fun"           FUN         ;
   Hashtbl.add keywords "λ"             FUN         ;

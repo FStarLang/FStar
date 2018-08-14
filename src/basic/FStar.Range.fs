@@ -106,10 +106,12 @@ let string_of_pos pos =
 let string_of_file_name f =
     if Options.ide()
     then begin
-        match FStar.Options.find_file (FStar.Util.basename f) with
-        | None -> f //couldn't find file; just return the relative path
-        | Some absolute_path ->
-            absolute_path
+        try
+            match FStar.Options.find_file (FStar.Util.basename f) with
+            | None -> f //couldn't find file; just return the relative path
+            | Some absolute_path ->
+                absolute_path
+        with _ -> f
     end
     else f
 let file_of_range r       =

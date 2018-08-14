@@ -102,6 +102,11 @@ type cfg = {
      reifying : bool;
 }
 
+(* Profiling primitive operators *)
+val primop_time_reset : unit -> unit
+val primop_time_count : string -> int -> unit
+val primop_time_report : unit -> string
+
 val cfg_env: cfg -> Env.env
 
 val cfg_to_string : cfg -> string

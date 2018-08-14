@@ -1448,9 +1448,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
 
     (* 3. Type-check the Tm_let and convert it back to Sig_let *)
-    let env0 = { env with top_level = true; generalize = should_generalize } in
+    let env' = { env with top_level = true; generalize = should_generalize } in
     let e =
-      if Options.use_two_phase_tc () && Env.should_verify env0 then begin
+      if Options.use_two_phase_tc () && Env.should_verify env' then begin
         let drop_lbtyp (e_lax:term) :term =
           match (SS.compress e_lax).n with
           | Tm_let ((false, [ lb ]), e2) ->
@@ -1466,14 +1466,14 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
             else e_lax
           | _ -> e_lax  //leave recursive lets as is
         in
-        let e = tc_maybe_toplevel_term ({ env0 with phase1 = true; lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env0 |> drop_lbtyp in
+        let e = tc_maybe_toplevel_term ({ env' with phase1 = true; lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env' |> drop_lbtyp in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Let binding after phase 1: %s\n" (Print.term_to_string e);
         e
       end
       else e
     in
 
-    let se, lbs = match tc_maybe_toplevel_term env0 e with
+    let se, lbs = match tc_maybe_toplevel_term env' e with
       | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in

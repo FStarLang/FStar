@@ -1879,7 +1879,6 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //    (Print.binders_to_string ", " bs_lhs)
         //    (Print.term_to_string t_res_lhs)
         //    (Print.term_to_string rhs);
-        let bs_lhs_args = List.map (fun (x, i) -> S.bv_to_name x, i) bs_lhs in
         let rhs_hd, args = U.head_and_args rhs in
         let args_rhs, last_arg_rhs = BU.prefix args in
         let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
@@ -2018,11 +2017,11 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                     ?u := (fun y1..ym -> ?w z1...zk)
                     ?v := (fun y1'..ym' -> ?w z1...zk)
                  *)
-                 let sub_prob, wl =
-                    //is it strictly necessary to add this sub problem?
-                    //we don't in other cases
-                      mk_t_problem wl [] orig t_res_lhs EQ t_res_rhs None "flex-flex typing"
-                 in
+                 //let sub_prob, wl =
+                 //   //is it strictly necessary to add this sub problem?
+                 //   //we don't in other cases
+                 //     mk_t_problem wl [] orig t_res_lhs EQ t_res_rhs None "flex-flex typing"
+                 //in
                  let ctx_w, (ctx_l, ctx_r) =
                     maximal_prefix u_lhs.ctx_uvar_binders
                                    u_rhs.ctx_uvar_binders
@@ -2058,7 +2057,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                      else let s2 = TERM(u_rhs, U.abs binders_rhs w_app (Some (U.residual_tot t_res_lhs))) in
                           [s1;s2]
                  in
-                 solve env (attempt [sub_prob] (solve_prob orig None sol wl))
+                 solve env (solve_prob orig None sol wl)
 
           | _ ->
             giveup_or_defer env orig wl "flex-flex: non-patterns"
@@ -2154,11 +2153,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let try_match_heuristic env orig wl s1 s2 t1t2_opt =
         let try_solve_branch scrutinee p =
             let (_t, uv, _args), wl = destruct_flex_t scrutinee wl  in
-            let tc_annot env t =
-                let t, _, g = env.type_of ({env with lax=true; use_bv_sorts=true}) t in
-                t, g
-            in
-            let xs, pat_term, _, _ = PatternUtils.pat_as_exp true env p tc_annot in
+            let xs, pat_term, _, _ = PatternUtils.pat_as_exp true env p in
             let subst, wl =
                 List.fold_left (fun (subst, wl) x ->
                     let t_x = SS.subst subst x.sort in
@@ -2945,26 +2940,26 @@ let with_guard_no_simp env prob dopt = match dopt with
       Some ({guard_f=(p_guard prob |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
 
 let try_teq smt_ok env t1 t2 : option<guard_t> =
- if debug env <| Options.Other "Rel"
- then BU.print2 "try_teq of %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
- let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
- let g = with_guard env prob <| solve_and_commit env (singleton wl prob smt_ok) (fun _ -> None) in
- g
+     if debug env <| Options.Other "Rel"
+     then BU.print2 "try_teq of %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+     let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
+     let g = with_guard env prob <| solve_and_commit env (singleton wl prob smt_ok) (fun _ -> None) in
+     g
 
 let teq env t1 t2 : guard_t =
- match try_teq true env t1 t2 with
+    match try_teq true env t1 t2 with
     | None ->
-      FStar.Errors.log_issue
+        FStar.Errors.log_issue
             (Env.get_range env)
             (Err.basic_type_error env None t2 t1);
-      trivial_guard
+        trivial_guard
     | Some g ->
-      if debug env <| Options.Other "Rel"
-      then BU.print3 "teq of %s and %s succeeded with guard %s\n"
+        if debug env <| Options.Other "Rel"
+        then BU.print3 "teq of %s and %s succeeded with guard %s\n"
                         (Print.term_to_string t1)
                         (Print.term_to_string t2)
                         (guard_to_string env g);
-      g
+        g
 
 let subtype_fail env e t1 t2 =
     Errors.log_issue (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)

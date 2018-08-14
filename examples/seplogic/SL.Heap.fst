@@ -145,6 +145,16 @@ let lemma_sep_unit m =
       assert (OS.equal m''.domain m'.domain);
       assert (equal_memories (m <*> emp) m)
 
+let lemma_sep_unit' m =
+  match m with
+  | None    -> ()
+  | Some m' ->
+      let (Some e) = emp in
+      assert (OS.equal (OS.intersect m'.domain e.domain) OS.empty);
+      let (Some m'') = emp <*> m in
+      assert (OS.equal m''.domain m'.domain);
+      assert (equal_memories (emp <*> m) m)
+
 let lemma_sep_comm m0 m1 =
   match (m0,m1) with
   | (Some m0', Some m1') -> 

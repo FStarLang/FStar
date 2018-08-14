@@ -193,7 +193,7 @@ let load_module_from_cache
         | Some (vnum, digest, tcmod, tcmod_iface_opt, mii) ->
             if vnum <> cache_version_number then Inl "Stale, because inconsistent cache version"
             else
-            match FStar.Parser.Dep.hash_dependences env.dep_graph source_file with
+            match FStar.Parser.Dep.hash_dependences (TcEnv.dep_graph env) source_file with
             | Some digest' ->
                 if digest=digest'
                 then Inr (tcmod, tcmod_iface_opt, mii)
@@ -257,7 +257,7 @@ let store_module_to_cache env fn (m:modul) (modul_iface_opt:option<modul>) (mii:
     && not (Options.cache_off())
     then begin
         let cache_file = FStar.Parser.Dep.cache_file_name fn in
-        let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
+        let digest = FStar.Parser.Dep.hash_dependences (TcEnv.dep_graph env) fn in
         match digest with
         | Some hashes ->
           //cache_version_number should always be the first field here

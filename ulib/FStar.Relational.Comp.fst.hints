@@ -1,1 +1,36 @@
-[ "©‘ùLıas\u001f{™Ç=\u0019˝1B", [] ]
+[
+  "©‘ùLıas\u001f{™Ç=\u0019˝1B",
+  [
+    [
+      "FStar.Relational.Comp.compose2_self",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Pervasives_interpretation_Tm_arrow_24dbc58008173456430189ae3ecf9a5f",
+        "FStar.Relational.Comp_interpretation_Tm_arrow_887d362c7e5b60b754c52c3c8f9daa5d",
+        "FStar.Relational.Comp_interpretation_Tm_arrow_a602c50fd99f772acf2249de5e34b368",
+        "FStar.Relational.Comp_interpretation_Tm_arrow_cb2ae88ce0bb2c909c024308a627c7cf",
+        "assumption_FStar.Relational.Comp.Monotone_comp",
+        "equation_FStar.Pervasives.st_post_h",
+        "equation_FStar.Pervasives.st_post_h_",
+        "equation_FStar.Relational.Comp.heap2",
+        "equation_FStar.Relational.Relational.double",
+        "equation_Prims.l_True", "equation_Prims.logical",
+        "fuel_guarded_inversion_FStar.Relational.Relational.rel",
+        "interpretation_FStar.Relational.Comp_Tm_abs_7d9beb6e6b87bd44c2df8f4642012b85",
+        "l_quant_interp__1541",
+        "proj_equation_FStar.Relational.Relational.R_l",
+        "proj_equation_FStar.Relational.Relational.R_r",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "true_interp",
+        "typing_FStar.Relational.Comp_Tm_abs_7d9beb6e6b87bd44c2df8f4642012b85",
+        "typing_FStar.Relational.Relational.__proj__R__item__l",
+        "typing_FStar.Relational.Relational.__proj__R__item__r"
+      ],
+      0,
+      "038f24715059add234b9a08c63b644b2"
+    ]
+  ]
+]

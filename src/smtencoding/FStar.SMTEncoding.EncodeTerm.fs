@@ -1102,7 +1102,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             mk_and_l (is_f::sub_term_guards)
     in
 
-        let rec mk_projections pat (scrutinee:term) =
+    let rec mk_projections pat (scrutinee:term) =
         match pat.v with
         | Pat_dot_term (x, _)
         | Pat_var x
@@ -1115,7 +1115,8 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             |> List.mapi (fun i (arg, _) ->
                 let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
                 mk_projections arg (mkApp(proj, [scrutinee]))) //arity ok, primitive projector (#1383)
-            |> List.flatten in
+            |> List.flatten
+    in
 
     let pat_term () = encode_term pat_term env in
 

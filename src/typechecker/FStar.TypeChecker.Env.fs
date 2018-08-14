@@ -173,7 +173,6 @@ type env = {
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                        (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;             (* The desugaring environment from the front-end *)
-  dep_graph      : FStar.Parser.Dep.deps;              (* The result of the dependency analysis *)
   nbe            : list<step> -> env -> term -> term; (* Callback to the NBE function *)
 }
 and solver_depth_t = int * int * int
@@ -224,8 +223,8 @@ let default_tc_hooks =
 let tc_hooks (env: env) = env.tc_hooks
 let set_tc_hooks env hooks = { env with tc_hooks = hooks }
 
-let set_dep_graph e g = {e with dep_graph=g}
-let dep_graph e = e.dep_graph
+let set_dep_graph e g = {e with dsenv=DsEnv.set_dep_graph e.dsenv g}
+let dep_graph e = DsEnv.dep_graph e.dsenv
 
 type env_t = env
 
@@ -288,8 +287,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
-    dsenv = FStar.Syntax.DsEnv.empty_env();
-    dep_graph = deps;
+    dsenv = FStar.Syntax.DsEnv.empty_env deps;
     nbe = nbe
   }
 
@@ -926,8 +924,10 @@ let is_type_constructor env lid =
 
 let num_inductive_ty_params env lid =
   match lookup_qname env lid with
-  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _) }, _), _) -> List.length tps
-  | _ -> raise_error (name_not_found lid) (range_of_lid lid)
+  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _) }, _), _) ->
+    Some (List.length tps)
+  | _ ->
+    None
 
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
@@ -1523,6 +1523,8 @@ let binop_guard f g1 g2 = {guard_f=f g1.guard_f g2.guard_f;
                            implicits=g1.implicits@g2.implicits}
 let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
 let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
+
+let conj_guards gs = List.fold_left conj_guard trivial_guard gs
 
 let close_guard_univs us bs g =
     match g.guard_f with
