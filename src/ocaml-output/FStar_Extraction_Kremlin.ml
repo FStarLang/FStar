@@ -2198,7 +2198,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
             ||
             (let uu____5657 = FStar_Extraction_ML_Syntax.string_of_mlpath p
                 in
-             uu____5657 = "LowStar.Buffer.upd")
+             uu____5657 = "LowStar.Buffer.upd'")
           ->
           let uu____5658 =
             let uu____5665 = translate_expr env e1  in
