@@ -750,7 +750,7 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
     when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Array_Assignment"
-    || string_of_mlpath p = "LowStar.Buffer.upd" ->
+    || string_of_mlpath p = "LowStar.Buffer.upd'" ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals" ->
