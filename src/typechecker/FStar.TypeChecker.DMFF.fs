@@ -1319,8 +1319,13 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       let bvs, binders = List.split (List.map (fun (bv, q) ->
         let h = bv.sort in
         if is_C h then
+          let q_f =
+            match q with
+            | None -> Some Equality
+            | _ -> q
+          in
           let w' = S.gen_bv (bv.ppname.idText ^ "__w'") None (star_type' env h) in
-          w', [ w', q; S.null_bv (trans_F_ env h (S.bv_to_name w')), q ]
+          w', [ w', q; S.null_bv (trans_F_ env h (S.bv_to_name w')), q_f ]
         else
           let x = S.gen_bv (bv.ppname.idText ^ "__x") None (star_type' env h) in
           x, [ x, q ]
