@@ -20,225 +20,259 @@ let hash_size = 32ul
 let hash = b:S.seq uint8_t{S.length b = U32.v hash_size}
 let hash_seq = S.seq hash
 
+val hash_default: hash
+let hash_default = S.create (U32.v hash_size) 0uy
+
 assume val hash_from_hashes: hash -> hash -> Tot hash
 
 /// About FStar.Seq.Base.seq
 
-// val lemma_split_append:
-//   #a:Type -> s1:S.seq a -> s2:S.seq a ->
-//   Lemma (S.split (S.append s1 s2) (S.length s1) == (s1, s2))
-// let lemma_split_append #a s1 s2 =
-//   S.lemma_eq_elim (fst (S.split (S.append s1 s2) (S.length s1))) s1;
-//   S.lemma_eq_elim (snd (S.split (S.append s1 s2) (S.length s1))) s2
+val lemma_split_append:
+  #a:Type -> s1:S.seq a -> s2:S.seq a ->
+  Lemma (S.split (S.append s1 s2) (S.length s1) == (s1, s2))
+let lemma_split_append #a s1 s2 =
+  S.lemma_eq_elim (fst (S.split (S.append s1 s2) (S.length s1))) s1;
+  S.lemma_eq_elim (snd (S.split (S.append s1 s2) (S.length s1))) s2
 
-// val seq_create_one_cons:
-//   #a:eqtype -> ia:a -> 
-//   Lemma (S.create 1 ia = S.cons ia S.empty)
-// 	[SMTPat (S.create 1 ia); SMTPat (S.cons ia S.empty)]
-// let seq_create_one_cons #a ia =
-//   S.lemma_eq_elim (S.create 1 ia) (S.cons ia S.empty)
+val snoc_slice:
+  #a:Type -> s:S.seq a -> v:a ->
+  Lemma (S.equal (S.slice (S.snoc s v) 0 (S.length s)) s)
+	[SMTPat (S.slice (S.snoc s v) 0 (S.length s))]
+let snoc_slice #a s v = ()
 
-/// Power of two
+val cons_slice:
+  #a:Type -> v:a -> s:S.seq a -> 
+  Lemma (S.equal (S.slice (S.cons v s) 1 (S.length s + 1)) s)
+	[SMTPat (S.slice (S.cons v s) 1 (S.length s + 1))]
+let cons_slice #a v s = ()
 
-// val is_pow2: nat -> Tot bool
-// let rec is_pow2 n =
-//   if n = 0 then false
-//   else if n = 1 then true
-//   else (n % 2 = 0 && is_pow2 (n / 2))
+/// Power of two / Division by two
 
-// val pow2_is_pow2:
-//   n:nat ->
-//   Lemma (is_pow2 (pow2 n))
-// 	[SMTPat (is_pow2 (pow2 n))]
-// let rec pow2_is_pow2 n =
-//   if n = 0 then ()
-//   else pow2_is_pow2 (n - 1)
+val is_pow2: nat -> Tot bool
+let rec is_pow2 n =
+  if n = 0 then false
+  else if n = 1 then true
+  else (n % 2 = 0 && is_pow2 (n / 2))
 
-// val pow2_lt_le:
-//   n:nat -> p:nat{p > 0} ->
-//   Lemma (requires (is_pow2 n && n < pow2 p))
-// 	(ensures (n <= pow2 (p - 1)))
-// let rec pow2_lt_le n p =
-//   if n = 1 then ()
-//   else pow2_lt_le (n / 2) (p - 1)
+val pow2_is_pow2:
+  n:nat ->
+  Lemma (is_pow2 (pow2 n))
+	[SMTPat (is_pow2 (pow2 n))]
+let rec pow2_is_pow2 n =
+  if n = 0 then ()
+  else pow2_is_pow2 (n - 1)
 
-// val pow2_floor: 
-//   n:nat{n > 0} -> GTot (p:nat{pow2 p <= n && n < pow2 (p + 1)})
-// let rec pow2_floor n =
-//   if n = 1 then 0 else 1 + pow2_floor (n / 2)
+val pow2_lt_le:
+  n:nat -> p:nat{p > 0} ->
+  Lemma (requires (is_pow2 n && n < pow2 p))
+	(ensures (n <= pow2 (p - 1)))
+let rec pow2_lt_le n p =
+  if n = 1 then ()
+  else pow2_lt_le (n / 2) (p - 1)
 
-// val pow2_ceil:
-//   n:nat{n > 0} -> 
-//   GTot (p:nat{
-//     if n = 1 then p = 0
-//     else (p > 0 && pow2 (p - 1) < n && n <= pow2 p)})
-// let rec pow2_ceil n =
-//   if n = 1 then 0
-//   else if n % 2 = 0 then 1 + pow2_ceil (n / 2)
-//   else 1 + pow2_ceil ((n + 1) / 2)
+val remainder_by_two_add_one_1:
+  n:nat ->
+  Lemma (requires (n % 2 = 0))
+	(ensures ((n + 1) % 2 <> 0))
+let remainder_by_two_add_one_1 n = ()
 
-// val pow2_floor_pow2:
-//   p:nat -> 
-//   Lemma (pow2_floor (pow2 p) = p)
-// 	[SMTPat (pow2_floor (pow2 p))]
-// let rec pow2_floor_pow2 p =
-//   if p = 0 then ()
-//   else pow2_floor_pow2 (p - 1)
+val remainder_by_two_add_one_2:
+  n:nat ->
+  Lemma (requires (n % 2 <> 0))
+	(ensures ((n + 1) % 2 = 0))
+let remainder_by_two_add_one_2 n = ()
 
-// val pow2_ceil_pow2:
-//   p:nat -> 
-//   Lemma (pow2_ceil (pow2 p) = p)
-// 	[SMTPat (pow2_ceil (pow2 p))]
-// let rec pow2_ceil_pow2 p =
-//   if p = 0 then ()
-//   else (assert (pow2 p / 2 = pow2 (p - 1));
-//        pow2_ceil_pow2 (p - 1))
+val remainder_by_two_sub_one_1:
+  n:nat{n > 0} ->
+  Lemma (requires (n % 2 = 0))
+	(ensures ((n - 1) % 2 <> 0))
+let remainder_by_two_sub_one_1 n = ()
 
-// val pow2_floor_is_pow2:
-//   n:nat ->
-//   Lemma (requires (is_pow2 n))
-// 	(ensures (n = pow2 (pow2_floor n)))
-// 	[SMTPat (is_pow2 n)]
-// let rec pow2_floor_is_pow2 n =
-//   if n = 1 then ()
-//   else pow2_floor_is_pow2 (n / 2)
+val remainder_by_two_sub_one_2:
+  n:nat ->
+  Lemma (requires (n % 2 <> 0))
+	(ensures ((n - 1) % 2 = 0))
+let remainder_by_two_sub_one_2 n = ()
 
-// val pow2_ceil_is_pow2:
-//   n:nat ->
-//   Lemma (requires (is_pow2 n))
-// 	(ensures (n = pow2 (pow2_ceil n)))
-// 	[SMTPat (is_pow2 n)]
-// let rec pow2_ceil_is_pow2 n =
-//   if n = 1 then ()
-//   else pow2_ceil_is_pow2 (n / 2)
+val div_by_two_same_odd:
+  n:nat ->
+  Lemma (requires (n % 2 <> 0))
+	(ensures (n / 2 = (n - 1) / 2))
+let div_by_two_same_odd n = ()
 
-// val pow2_interval_unique:
-//   n:nat -> p1:nat -> p2:nat ->
-//   Lemma (requires (pow2 p1 <= n && n < pow2 (p1 + 1) &&
-// 		  pow2 p2 <= n && n < pow2 (p2 + 1)))
-// 	(ensures (p1 = p2))
-// let pow2_interval_unique n p1 p2 =
-//   if p1 > p2 
-//   then Math.Lemmas.pow2_le_compat (p1 - 1) p2
-//   else if p1 < p2
-//   then Math.Lemmas.pow2_le_compat (p2 - 1) p1
-//   else ()
+/// The Merkle root of a full binary tree
 
-// val pow2_floor_inv:
-//   p:nat -> n:nat{pow2 p <= n && n < pow2 (p + 1)} ->
-//   Lemma (pow2_floor n = p)
-// let pow2_floor_inv p n =
-//   pow2_interval_unique n (pow2_floor n) p
+type hash_seq_pow2 = hs:hash_seq{is_pow2 (S.length hs)}
 
-// val pow2_floor_pow2_less:
-//   p:nat -> n:nat{n < pow2 p} ->
-//   Lemma (pow2_floor (pow2 p + n) = p)
-// let pow2_floor_pow2_less p n =
-//   pow2_floor_inv p (pow2 p + n)
+val merkle_root_of_pow2:
+  hs:hash_seq_pow2 -> GTot hash (decreases (S.length hs))
+let rec merkle_root_of_pow2 hs =
+  if S.length hs = 1 then S.index hs 0
+  else
+    let lhs, rhs = S.split hs (S.length hs / 2) in
+    let lrt = merkle_root_of_pow2 lhs in
+    let rrt = merkle_root_of_pow2 rhs in
+    hash_from_hashes lrt rrt
 
-// val pow2_floor_pow2_pow2:
-//   p:nat -> q:nat{p > q} ->
-//   Lemma (pow2_floor (pow2 p + pow2 q) = p)
-// let pow2_floor_pow2_pow2 p q =
-//   Math.Lemmas.pow2_lt_compat p q;
-//   pow2_floor_pow2_less p (pow2 q)
-
-// val pow2_lt_compat_inv:
-//   p:nat -> q:nat ->
-//   Lemma (requires (pow2 p < pow2 q))
-// 	(ensures (p < q))
-// let rec pow2_lt_compat_inv p q =
-//   if q <= p then Math.Lemmas.pow2_le_compat p q
-//   else ()
-
-// val pow2_le_compat_inv:
-//   p:nat -> q:nat ->
-//   Lemma (requires (pow2 p <= pow2 q))
-// 	(ensures (p <= q))
-// let rec pow2_le_compat_inv p q =
-//   if q < p then Math.Lemmas.pow2_lt_compat p q
-//   else ()
-
-// val not_pow2_floor_ceil:
-//   n:nat{n > 0 && not (is_pow2 n)} ->
-//   Lemma (pow2_floor n + 1 = pow2_ceil n)
-// let not_pow2_floor_ceil n =
-//   let fl = pow2_floor n in
-//   let cl = pow2_ceil n in
-//   pow2_le_compat_inv fl cl;
-//   pow2_lt_compat_inv (cl - 1) (fl + 1)
+val merkle_root_of_pow2_inv:
+  hs1:hash_seq_pow2{S.length hs1 > 0} -> 
+  hs2:hash_seq_pow2{S.length hs2 = S.length hs1} ->
+  Lemma (merkle_root_of_pow2 (S.append hs1 hs2) =
+	hash_from_hashes (merkle_root_of_pow2 hs1)
+			 (merkle_root_of_pow2 hs2))
+	[SMTPat (merkle_root_of_pow2 (S.append hs1 hs2))]
+let merkle_root_of_pow2_inv hs1 hs2 =
+  assert (S.length (S.append hs1 hs2) / 2 = S.length hs1);
+  lemma_split_append hs1 hs2
 
 /// Invariants between internal roots and values
 
-// type hash_seq_pow2 = hs:hash_seq{is_pow2 (S.length hs)}
+val num_iroots_of:
+  nvalues:nat -> GTot (nirs:nat)
+let rec num_iroots_of nvalues =
+  if nvalues = 0 then 0
+  else if nvalues % 2 = 0 then num_iroots_of (nvalues / 2)
+  else 1 + num_iroots_of (nvalues / 2)
 
-// val merkle_root_of_pow2:
-//   hs:hash_seq_pow2 -> GTot hash (decreases (S.length hs))
-// let rec merkle_root_of_pow2 hs =
-//   if S.length hs = 1 then S.index hs 0
-//   else
-//     let lhs, rhs = S.split hs (S.length hs / 2) in
-//     let lrt = merkle_root_of_pow2 lhs in
-//     let rrt = merkle_root_of_pow2 rhs in
-//     hash_from_hashes lrt rrt
+val compress_hashes_half:
+  hs:hash_seq{S.length hs % 2 = 0} -> 
+  GTot (chs:hash_seq{S.length chs = S.length hs / 2})
+       (decreases (S.length hs))
+let rec compress_hashes_half hs =
+  if S.length hs = 0 then S.empty
+  else S.snoc (compress_hashes_half (S.slice hs 0 (S.length hs - 2)))
+	      (hash_from_hashes (S.index hs (S.length hs - 2))
+				(S.index hs (S.length hs - 1)))
 
-// val merkle_root_of_pow2_inv:
-//   hs1:hash_seq_pow2{S.length hs1 > 0} -> 
-//   hs2:hash_seq_pow2{S.length hs2 = S.length hs1} ->
-//   Lemma (merkle_root_of_pow2 (S.append hs1 hs2) =
-// 	hash_from_hashes (merkle_root_of_pow2 hs1)
-// 			 (merkle_root_of_pow2 hs2))
-// 	[SMTPat (merkle_root_of_pow2 (S.append hs1 hs2))]
-// let merkle_root_of_pow2_inv hs1 hs2 =
-//   assert (S.length (S.append hs1 hs2) / 2 = S.length hs1);
-//   lemma_split_append hs1 hs2
+val iroots_of_hashes:
+  hs:hash_seq ->
+  GTot (iroots:hash_seq{S.length iroots = num_iroots_of (S.length hs)})
+       (decreases (S.length hs))
+let rec iroots_of_hashes hs =
+  if S.length hs = 0 then S.empty 
+  else if S.length hs % 2 = 0
+  then iroots_of_hashes (compress_hashes_half hs)
+  else S.cons (S.index hs (S.length hs - 1))
+	      (iroots_of_hashes (compress_hashes_half (S.slice hs 0 (S.length hs - 1))))
+
+val iroots_of_hashes_head:
+  hs:hash_seq ->
+  Lemma (requires (S.length hs % 2 <> 0))
+	(ensures (S.head (iroots_of_hashes hs) =
+		 S.index hs (S.length hs - 1)))
+let iroots_of_hashes_head hs = ()
+
+val iroots_of_hashes_tail:
+  hs:hash_seq ->
+  Lemma (requires (S.length hs % 2 <> 0))
+	(ensures (S.equal (S.tail (iroots_of_hashes hs))
+			  (iroots_of_hashes
+			    (compress_hashes_half 
+			      (S.slice hs 0 (S.length hs - 1))))))
+let iroots_of_hashes_tail hs = ()
 
 /// High-level Merkle tree data structure
 
 noeq type merkle_tree =
-| MT: sz:nat{sz > 0} ->
-      values:hash_seq{S.length values < pow2 sz} ->
-      iroots:hash_seq{S.length iroots = sz} ->
+| MT: values:hash_seq ->
+      iroots:hash_seq{iroots = iroots_of_hashes values} ->
       merkle_tree
 
 /// Creating a merkle tree instance
 
-val hash_default: hash
-let hash_default = S.create (U32.v hash_size) 0uy
-
-val create_merkle_tree: sz:nat{sz > 0} -> Tot merkle_tree
-let create_merkle_tree sz =
-  MT sz S.empty (S.create sz hash_default)
+val create_merkle_tree: unit -> Tot merkle_tree
+let create_merkle_tree _ = 
+  MT S.empty S.empty
 
 /// Insertion
 
 val insert_values: 
-  sz:nat -> hs:hash_seq{S.length hs < pow2 sz - 1} -> hash -> 
-  Tot (ihs:hash_seq{S.length ihs < pow2 sz})
-let insert_values sz vs nv = S.snoc vs nv
+  hs:hash_seq -> nv:hash -> 
+  Tot (ihs:hash_seq{S.length ihs = S.length hs + 1})
+let insert_values vs nv = S.snoc vs nv
 
 val insert_iroots:
-  irs:hash_seq ->
-  cpos:nat{cpos < S.length irs} ->
-  irps:nat{irps < pow2 (S.length irs - cpos) - 1} ->
+  irps:nat ->
+  irs:hash_seq{S.length irs = num_iroots_of irps} ->
   acc:hash ->
-  Tot (iirs:hash_seq{S.length iirs = S.length irs})
-      (decreases (S.length irs - cpos))
-let rec insert_iroots irs cpos irps acc =
+  Tot (iirs:hash_seq{S.length iirs = num_iroots_of (irps + 1)})
+      (decreases irps)
+let rec insert_iroots irps irs acc =
   if irps % 2 = 0
-  then S.upd irs cpos acc
-  else (let nacc = hash_from_hashes (S.index irs cpos) acc in
-       insert_iroots irs (cpos + 1) (irps / 2) nacc)
+  then S.cons acc irs
+  else (let nacc = hash_from_hashes (S.index irs 0) acc in
+       insert_iroots (irps / 2) (S.tail irs) nacc)
 
-val insert: 
-  mt:merkle_tree{S.length (MT?.values mt) < pow2 (MT?.sz mt) - 1} ->
-  e:hash -> Tot merkle_tree
+val insert_ok_case_odd_lhs:
+  values:hash_seq ->
+  iroots:hash_seq{iroots = iroots_of_hashes values} ->
+  e:hash ->
+  Lemma (requires (S.length values % 2 <> 0))
+	(ensures (insert_iroots (S.length values) iroots e =
+		 insert_iroots (S.length values / 2) 
+			       (S.tail iroots)
+			       (hash_from_hashes (S.head iroots) e)))
+let insert_ok_case_odd_lhs values iroots e = ()
+
+val compress_hashes_half_snoc:
+  values:hash_seq -> e:hash ->
+  Lemma (requires (S.length values % 2 <> 0))
+	(ensures (compress_hashes_half (S.snoc values e) =
+		 S.snoc (compress_hashes_half (S.slice values 0 (S.length values - 1)))
+			(hash_from_hashes (S.index values (S.length values - 1)) e)))
+let compress_hashes_half_snoc values e =
+  assert (S.length (S.snoc values e) <> 0);
+  assert (S.equal (S.slice (S.snoc values e) 0 (S.length (S.snoc values e) - 2))
+		  (S.slice values 0 (S.length values - 1)));
+  assert (S.index (S.snoc values e) (S.length (S.snoc values e) - 2) =
+	 S.index values (S.length values - 1));
+  assert (S.index (S.snoc values e) (S.length (S.snoc values e) - 1) = e)
+
+val insert_ok_case_odd_rhs:
+  values:hash_seq -> e:hash ->
+  Lemma (requires (S.length values % 2 <> 0))
+	(ensures (iroots_of_hashes (insert_values values e) =
+		 iroots_of_hashes
+		   (S.snoc (compress_hashes_half 
+			     (S.slice values 0 (S.length values - 1)))
+			   (hash_from_hashes
+			     (S.index values (S.length values - 1)) e))))
+#set-options "--z3rlimit 20"
+let insert_ok_case_odd_rhs values e =
+  compress_hashes_half_snoc values e
+
+val insert_ok:
+  values:hash_seq ->
+  iroots:hash_seq{iroots = iroots_of_hashes values} ->
+  e:hash ->
+  Lemma (requires True)
+	(ensures 
+	  (S.equal (insert_iroots (S.length values) iroots e)
+		   (iroots_of_hashes (S.snoc values e))))
+	(decreases (S.length iroots))
+#set-options "--z3rlimit 40"
+let rec insert_ok values iroots e =
+  if S.length values = 0 then ()
+  else if S.length values % 2 = 0 then ()
+  else (iroots_of_hashes_head values;
+       iroots_of_hashes_tail values;
+       insert_ok_case_odd_lhs values iroots e;
+       insert_ok_case_odd_rhs values e;
+       compress_hashes_half_snoc values e;
+       remainder_by_two_sub_one_2 (S.length values);
+       div_by_two_same_odd (S.length values);
+       insert_ok 
+	 (compress_hashes_half (S.slice values 0 (S.length values - 1)))
+	 (S.tail iroots)
+	 (hash_from_hashes (S.head iroots) e))
+
+val insert: mt:merkle_tree -> e:hash -> Tot merkle_tree
 let insert mt e =
-  let sz = MT?.sz mt in
   let values = MT?.values mt in
   let iroots = MT?.iroots mt in
-  MT sz (insert_values sz values e)
-     (insert_iroots iroots 0 (S.length values) e)
+  insert_ok values iroots e;
+  MT (insert_values values e)
+     (insert_iroots (S.length values) iroots e)
 
 /// Getting the Merkle root
 
@@ -249,22 +283,24 @@ let compress_or_init actd acc nh =
   then hash_from_hashes nh acc
   else nh
 
-val merkle_root_of_iroots: 
-  irs:hash_seq ->
-  cpos:nat{cpos < S.length irs} ->
-  irps:nat{irps < pow2 (S.length irs - cpos)} ->
+val merkle_root_of_iroots:
+  nvalues:nat{nvalues > 0} ->
+  irs:hash_seq{S.length irs = num_iroots_of nvalues} ->
   acc:hash -> actd:bool ->
-  Tot hash (decreases (S.length irs - cpos))
-let rec merkle_root_of_iroots irs cpos irps acc actd =
-  if cpos = S.length irs - 1
-  then compress_or_init actd acc (S.index irs cpos)
-  else (if irps % 2 = 0
-       then merkle_root_of_iroots irs (cpos + 1) (irps / 2) acc actd
-       else (let nacc = compress_or_init actd acc (S.index irs cpos) in
-	    merkle_root_of_iroots irs (cpos + 1) (irps / 2) nacc true))
+  Tot hash (decreases nvalues)
+let rec merkle_root_of_iroots nvalues irs acc actd =
+  if nvalues = 1 
+  then compress_or_init actd acc (S.index irs 0)
+  else (if nvalues % 2 = 0
+       then merkle_root_of_iroots (nvalues / 2) irs acc actd
+       else (let nacc = compress_or_init actd acc (S.index irs 0) in
+	    merkle_root_of_iroots (nvalues / 2) (S.tail irs) nacc true))
 
 val get_root:
-  mt:merkle_tree -> rt:hash -> Tot hash
+  mt:merkle_tree{S.length (MT?.values mt) > 0} -> rt:hash -> 
+  Tot hash
 let get_root mt rt =
-  merkle_root_of_iroots (MT?.iroots mt) 0 (S.length (MT?.values mt)) rt false
+  merkle_root_of_iroots
+    (S.length (MT?.values mt))
+    (MT?.iroots mt) rt false
 
