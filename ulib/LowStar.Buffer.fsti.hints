@@ -1,5 +1,5 @@
 [
-  "ô\u000bÚ­rÂ‰©˜(\u000f'j}×3",
+  "òú¶Ù*°žwFÇOQ_íÆ8",
   [
     [
       "LowStar.Buffer.live_is_null",
@@ -1115,6 +1115,21 @@
       "3f27114e077cf0bf7d9d6ed54e0c865f"
     ],
     [
+      "LowStar.Buffer.assign_list_t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
+        "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "b3c67142138f9c2fb22dc52a3661fe01"
+    ],
+    [
       "LowStar.Buffer.assign_list",
       1,
       2,
@@ -1129,8 +1144,7 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
         "bool_typing", "constructor_distinct_Prims.Cons",
-        "constructor_distinct_Prims.Nil", "constructor_distinct_Tm_unit",
-        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil",
         "equation_FStar.Monotonic.HyperStack.live_region",
         "equation_FStar.Monotonic.HyperStack.mem",
@@ -1143,10 +1157,8 @@
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.Seq.Properties.seq_of_list.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.UInt32.n",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "int_inversion", "int_typing",
-        "lemma_FStar.HyperStack.ST.lemma_equal_domains_trans",
+        "function_token_typing_FStar.UInt32.n", "int_inversion",
+        "int_typing", "lemma_FStar.HyperStack.ST.lemma_equal_domains_trans",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "lemma_FStar.Seq.Base.lemma_index_app1",
@@ -1202,7 +1214,7 @@
         "typing_LowStar.Buffer.loc_union", "unit_inversion", "unit_typing"
       ],
       0,
-      "c13a4f5e73b3f3f10792cbb016d39035"
+      "aa232a0306a3a6dc918acb6cddcb5672"
     ],
     [
       "LowStar.Buffer.cloc_of_loc_addresses",
@@ -1214,7 +1226,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "caf96ac4af717d0a43921a65d7b40d42"
+      "16b0fb2a909b7034ed673658b9758462"
     ]
   ]
 ]
