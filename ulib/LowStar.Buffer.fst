@@ -1020,8 +1020,6 @@ let g_upd' (#a:Type)
               (h:HS.mem{live h b})
   : GTot HS.mem
   = let n = length b in
-    if n = 0 then h
-    else
       let s0 = lseq_of_vec (HS.sel h (Buffer?.content b)) in
       let v = vec_of_lseq (Seq.upd s0 (U32.v (Buffer?.idx b) + i) v) in
       HS.upd h (Buffer?.content b) v
@@ -1034,6 +1032,7 @@ let g_upd'_as_seq (#a:Type)
                      (v:a)
                      (h:HS.mem{live h b})
   : Lemma (let h' = g_upd' b i v h in
+           (not (g_is_null b)) /\
            modifies (loc_buffer b) h h' /\
            live h' b /\
            as_seq h' b == Seq.upd (as_seq h b) i v)
@@ -1065,6 +1064,7 @@ let rec g_upd_seq_as_seq' (#a:Type)
                      (s:Seq.lseq a (length b))
                      (h:HS.mem{live h b})
   : Lemma (requires True) (ensures (let h' = g_upd_seq' b s h in
+           (Seq.length s > 0 ==> not (g_is_null b)) /\
            modifies (loc_buffer b) h h' /\
            live h' b /\
            as_seq h' b == s))
@@ -1085,19 +1085,68 @@ let rec g_upd_seq_as_seq' (#a:Type)
 
 let g_upd_seq_as_seq = g_upd_seq_as_seq'
 
-let upd #a b i v =
+let g_upd'_same_value (#a:Type)
+              (b:buffer a)
+              (i:nat{i < length b})
+              (v:a)
+              (h:HS.mem{live h b})
+: Lemma
+  (requires (Seq.index (as_seq h b) i == v))
+  (ensures (g_upd' b i v h == h))
+= let h' = g_upd' b i v h in
+  let v = HS.sel h (Buffer?.content b) in
+  let v' = HS.sel h' (Buffer?.content b) in
+  assert (lseq_of_vec v `Seq.equal` lseq_of_vec v');
+  HS.lemma_heap_equality_upd_with_sel h (Buffer?.content b)
+
+let rec g_upd_seq_same_value (#a:Type)
+                     (b:buffer a)
+                     (s:Seq.lseq a (length b))
+                     (h:HS.mem{live h b})
+: Lemma
+  (requires (as_seq h b == s))
+  (ensures (g_upd_seq b s h == h))
+  (decreases (Seq.length s))
+= if Seq.length s = 0
+  then ()
+  else begin
+    g_upd'_same_value b 0 (Seq.head s) h;
+    g_upd_seq_same_value (gsub b 1ul (len b `U32.sub` 1ul)) (Seq.slice s 1 (Seq.length s)) h
+  end
+
+#reset-options
+
+#set-options "--z3rlimit 32"
+
+let rec g_upd_eq (#a:Type)
+              (b:buffer a)
+              (i:nat{i < length b})
+              (v:a)
+              (h:HS.mem{live h b})
+: Lemma
+  (requires True)
+  (ensures (g_upd b i v h == g_upd' b i v h))
+  (decreases (length b))
+= if i = 0
+  then begin
+    let h' = g_upd' b 0 v h in
+    let b' = gsub b 1ul (len b `U32.sub` 1ul) in
+    g_upd_seq_same_value b' (Seq.slice (Seq.upd (as_seq h b) 0 v) 1 (length b)) h'
+  end
+  else begin
+    g_upd'_same_value b 0 (Seq.head (Seq.upd (as_seq h b) i v)) h;
+    g_upd_eq (gsub b 1ul (len b `U32.sub` 1ul)) (i - 1) v h
+  end
+
+#reset-options
+
+let upd' #a b i v =
   let open HST in
   let h0 = get () in
   let s0 = lseq_of_vec ! (Buffer?.content b) in
   let s = Seq.upd s0 (U32.v (Buffer?.idx b) + U32.v i) v in
   Buffer?.content b := vec_of_lseq s;
-  // prove modifies_1_preserves_ubuffers
-  Heap.lemma_distinct_addrs_distinct_preorders ();
-  Heap.lemma_distinct_addrs_distinct_mm ();
-  let h = HST.get () in
-  modifies_1_modifies b h0 h
-
-#reset-options
+  g_upd_eq b (U32.v i) v h0
 
 (* Recall *)
 
