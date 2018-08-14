@@ -483,6 +483,7 @@ let order_bv x y =
   then x.index - y.index
   else i
 
+let order_ident x y = String.compare x.idText y.idText
 let order_fv x y = String.compare x.str y.str
 
 let range_of_lbname (l:lbname) = match l with
@@ -511,6 +512,7 @@ let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv
+let new_id_set () : set<ident> = Util.new_set order_ident
 let new_fv_set () :set<lident> = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
 let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name

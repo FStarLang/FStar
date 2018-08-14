@@ -584,6 +584,8 @@ and p_rawDecl d = match d.d with
     group (str "open" ^/^ p_quident uid)
   | Include uid ->
     group (str "include" ^/^ p_quident uid)
+  | Friend uid ->
+    group (str "friend" ^/^ p_quident uid)
   | ModuleAbbrev (uid1, uid2) ->
     (str "module" ^^ space ^^ p_uident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2
   | TopLevelModule uid ->
@@ -851,8 +853,8 @@ and p_atomicPattern p = match p.pat with
        * aware that there are multiple callers to p_refinement and that
        * p_appTerm is probably the lower bound of all expected levels. *)
       soft_parens_with_nesting (p_refinement aqual (p_ident lid) t phi)
-    | PatWild, Refine({b = NoName t}, phi) ->
-      soft_parens_with_nesting (p_refinement None underscore t phi)
+    | PatWild aqual, Refine({b = NoName t}, phi) ->
+      soft_parens_with_nesting (p_refinement aqual underscore t phi)
     | _ ->
         (* TODO implement p_simpleArrow *)
         soft_parens_with_nesting (p_tuplePattern pat ^^ colon ^/^ p_tmEqNoRefinement t)
@@ -869,8 +871,8 @@ and p_atomicPattern p = match p.pat with
     p_tvar tv
   | PatOp op ->
     lparen ^^ space ^^ str (Ident.text_of_id op) ^^ space ^^ rparen
-  | PatWild ->
-    underscore
+  | PatWild aqual ->
+    optional p_aqual aqual ^^ underscore
   | PatConst c ->
     p_constant c
   | PatVar (lid, aqual) ->

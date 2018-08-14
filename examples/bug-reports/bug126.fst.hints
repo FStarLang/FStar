@@ -378,18 +378,17 @@
         "equality_tok_Bug126.TUnit@tok", "equation_Bug126.emp",
         "equation_Bug126.value", "equation_Bug126.var", "equation_Prims.nat",
         "fuel_guarded_inversion_Bug126.typing",
-        "interpretation_Bug126_Tm_abs_165407679e89313aa400c8e5750cda2a",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Bug126.ELam_body",
         "projection_inverse_Bug126.ELam_t",
         "refinement_interpretation_Bug126_Tm_refine_61d67275a15574eaf5de24d701c8e384",
         "refinement_interpretation_Bug126_Tm_refine_75276c261e8e18103e248f49ccb1ecac",
         "refinement_interpretation_Bug126_Tm_refine_82996e2fd8e55cc06b19627ffe4234dc",
-        "typing_Bug126.uu___is_TArr", "typing_Bug126.value",
-        "typing_tok_Bug126.TUnit@tok"
+        "token_correspondence_Bug126.emp", "typing_Bug126.uu___is_TArr",
+        "typing_Bug126.value", "typing_tok_Bug126.TUnit@tok"
       ],
       0,
-      "e998e2d696ea42b6ae08596e7cc2bb36"
+      "b33832a89cfdda6441c0772a727bb1bd"
     ],
     [
       "Bug126.invert_lam",
@@ -410,7 +409,6 @@
         "equality_tok_Bug126.TUnit@tok", "equation_Bug126.emp",
         "equation_Bug126.value", "equation_Bug126.var", "equation_Prims.nat",
         "fuel_guarded_inversion_Bug126.typing",
-        "interpretation_Bug126_Tm_abs_165407679e89313aa400c8e5750cda2a",
         "proj_equation_Bug126.ELam_body", "proj_equation_Bug126.TArr_arg",
         "proj_equation_Bug126.TArr_res", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Bug126.ELam_body",
@@ -420,11 +418,12 @@
         "refinement_interpretation_Bug126_Tm_refine_61d67275a15574eaf5de24d701c8e384",
         "refinement_interpretation_Bug126_Tm_refine_75276c261e8e18103e248f49ccb1ecac",
         "refinement_interpretation_Bug126_Tm_refine_82996e2fd8e55cc06b19627ffe4234dc",
-        "typing_Bug126.uu___is_ELam", "typing_Bug126.uu___is_TArr",
-        "typing_Bug126.value", "typing_tok_Bug126.TUnit@tok"
+        "token_correspondence_Bug126.emp", "typing_Bug126.uu___is_ELam",
+        "typing_Bug126.uu___is_TArr", "typing_Bug126.value",
+        "typing_tok_Bug126.TUnit@tok"
       ],
       0,
-      "b5c30e3f84d7b6ba7cd010172a189410"
+      "78120ddec0fe7990fb9d27d05011f10d"
     ]
   ]
 ]

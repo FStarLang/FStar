@@ -891,8 +891,8 @@ let abs bs t lopt =
   | [] -> t
   | _ ->
     let body = compress (Subst.close bs t) in
-    match body.n, lopt with
-        | Tm_abs(bs', t, lopt'), None ->
+    match body.n with
+        | Tm_abs(bs', t, lopt') ->  //AR: if the body is an Tm_abs, we can combine the binders and use lopt', ignoring lopt, since lopt will be Tot (non-informative anyway)
           mk (Tm_abs(close_binders bs@bs', t, close_lopt lopt')) None t.pos
         | _ ->
           mk (Tm_abs(close_binders bs, body, close_lopt lopt)) None t.pos
@@ -918,7 +918,11 @@ let flat_arrow bs c =
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) None (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
 
-
+(*
+ * AR: this function returns the binders and comp result type of an arrow type,
+ *     flattening arrows of the form t -> Tot (t1 -> C), so that it returns two binders in this example
+ *     the function also descends under the refinements (e.g. t -> Tot (f:(t1 -> C){phi}))
+ *)
 let rec arrow_formals_comp k =
     let k = Subst.compress k in
     match k.n with
@@ -928,7 +932,17 @@ let rec arrow_formals_comp k =
             then let bs', k = arrow_formals_comp (comp_result c) in
                  bs@bs', k
             else bs, c
-        | Tm_refine ({ sort = k }, _) -> arrow_formals_comp k
+        | Tm_refine ({ sort = s }, _) ->
+          (*
+           * AR: start descending into s, but if s does not turn out to be an arrow later, we want to return k itself
+           *)
+          let rec aux (s:term) (k:term) =
+            match (Subst.compress s).n with
+            | Tm_arrow _ -> arrow_formals_comp s  //found an arrow, go to the main function
+            | Tm_refine ({ sort = s }, _) -> aux s k  //another refinement, descend into it, but with the same def
+            | _ -> [], Syntax.mk_Total k  //return def
+          in
+          aux s k
         | _ -> [], Syntax.mk_Total k
 
 let rec arrow_formals k =

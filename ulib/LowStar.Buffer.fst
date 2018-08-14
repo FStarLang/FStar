@@ -14,7 +14,7 @@ noeq
 type buffer' (a: Type0) : Type0 =
 | Null
 | Buffer:
-  (max_length: U32.t { U32.v max_length > 0 } ) ->
+  (max_length: U32.t ) ->
   (content: HST.reference (vec a (U32.v max_length))) ->
   (idx: U32.t) ->
   (length: U32.t { U32.v idx + U32.v length <= U32.v max_length } ) ->
@@ -48,7 +48,7 @@ let live_not_unused_in #a h b = ()
 
 (* Regions and addresses, for allocation purposes *)
 
-let frameOf #a b = if g_is_null b then HS.root else HS.frameOf (Buffer?.content b)
+let frameOf #a b = if Null? b then HS.root else HS.frameOf (Buffer?.content b)
 
 let as_addr #a b = if g_is_null b then 0 else HS.as_addr (Buffer?.content b)
 
@@ -127,6 +127,12 @@ let live_gsub #a h b i len = ()
 let gsub_is_null #a b i len = ()
 
 let len_gsub #a b i len' = ()
+
+let frameOf_gsub #a b i len = ()
+
+let as_addr_gsub #a b i len = ()
+
+let gsub_inj #t b1 b2 i1 i2 len1 len2 = ()
 
 let gsub_gsub #a b i1 len1 i2 len2 = ()
 
@@ -712,15 +718,6 @@ let loc_disjoint_gsub_buffer #t b i1 len1 i2 len2 =
 
 let loc_disjoint_addresses = MG.loc_disjoint_addresses_intro #_ #cls
 
-let loc_disjoint_buffer_addresses #t p preserve_liveness r n =
-  MG.loc_disjoint_aloc_addresses_intro #_ #cls #(frameOf p) #(as_addr p) (ubuffer_of_buffer p) preserve_liveness r n
-
-let loc_disjoint_buffer_regions #t p preserve_liveness r =
-  MG.loc_disjoint_regions #_ #cls false preserve_liveness (Set.singleton (frameOf p)) r;
-  loc_includes_region_buffer false (Set.singleton (frameOf p)) p;
-  loc_includes_refl (loc_regions preserve_liveness r);
-  MG.loc_disjoint_includes (loc_regions false (Set.singleton (frameOf p))) (loc_regions preserve_liveness r) (loc_buffer p) (loc_regions preserve_liveness r)
-
 let loc_disjoint_regions = MG.loc_disjoint_regions #_ #cls
 
 let modifies = MG.modifies
@@ -791,6 +788,8 @@ let modifies_only_live_regions = MG.modifies_only_live_regions
 let no_upd_fresh_region = MG.no_upd_fresh_region
 
 let fresh_frame_modifies = MG.fresh_frame_modifies #_ cls
+
+let new_region_modifies = MG.new_region_modifies #_ cls
 
 let popped_modifies = MG.popped_modifies #_ cls
 
@@ -900,6 +899,8 @@ let loc_unused_in = MG.loc_unused_in _
 let loc_unused_in_not_unused_in_disjoint =
   MG.loc_unused_in_not_unused_in_disjoint cls
 
+let not_live_region_loc_not_unused_in_disjoint = MG.not_live_region_loc_not_unused_in_disjoint cls
+
 let live_loc_not_unused_in #t b h =
   unused_in_equiv b h;
   Classical.move_requires (MG.does_not_contain_addr_addr_unused_in h) (frameOf b, as_addr b);
@@ -915,11 +916,44 @@ let unused_in_loc_unused_in #t b h =
 let modifies_address_liveness_insensitive_unused_in =
   MG.modifies_address_liveness_insensitive_unused_in cls
 
+let modifies_only_not_unused_in = MG.modifies_only_not_unused_in
+
 let mreference_live_loc_not_unused_in =
   MG.mreference_live_loc_not_unused_in cls
 
 let mreference_unused_in_loc_unused_in =
   MG.mreference_unused_in_loc_unused_in cls
+
+let modifies_inert = modifies
+
+let modifies_inert_intro s h1 h2 = ()
+
+let modifies_inert_live_region = modifies_live_region
+
+let modifies_inert_mreference_elim = modifies_mreference_elim
+
+let modifies_inert_buffer_elim = modifies_buffer_elim
+
+let modifies_inert_liveness_insensitive_mreference_weak = modifies_liveness_insensitive_mreference_weak
+
+let modifies_inert_liveness_insensitive_buffer_weak = modifies_liveness_insensitive_buffer_weak
+
+let modifies_inert_liveness_insensitive_region_weak = modifies_liveness_insensitive_region_weak
+
+let modifies_inert_liveness_insensitive_region_mreference_weak = modifies_liveness_insensitive_region_mreference_weak
+
+
+let modifies_inert_liveness_insensitive_region_buffer_weak = modifies_liveness_insensitive_region_buffer_weak
+
+let fresh_frame_modifies_inert = fresh_frame_modifies
+
+let popped_modifies_inert = popped_modifies
+
+let modifies_inert_loc_unused_in l h1 h2 l' =
+  modifies_loc_includes address_liveness_insensitive_locs h1 h2 l;
+  modifies_address_liveness_insensitive_unused_in h1 h2;
+  loc_includes_trans (loc_unused_in h1) (loc_unused_in h2) l'
+
 
 let disjoint_neq #a1 #a2 b1 b2 =
   if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2
@@ -986,8 +1020,6 @@ let g_upd' (#a:Type)
               (h:HS.mem{live h b})
   : GTot HS.mem
   = let n = length b in
-    if n = 0 then h
-    else
       let s0 = lseq_of_vec (HS.sel h (Buffer?.content b)) in
       let v = vec_of_lseq (Seq.upd s0 (U32.v (Buffer?.idx b) + i) v) in
       HS.upd h (Buffer?.content b) v
@@ -1000,6 +1032,7 @@ let g_upd'_as_seq (#a:Type)
                      (v:a)
                      (h:HS.mem{live h b})
   : Lemma (let h' = g_upd' b i v h in
+           (not (g_is_null b)) /\
            modifies (loc_buffer b) h h' /\
            live h' b /\
            as_seq h' b == Seq.upd (as_seq h b) i v)
@@ -1031,6 +1064,7 @@ let rec g_upd_seq_as_seq' (#a:Type)
                      (s:Seq.lseq a (length b))
                      (h:HS.mem{live h b})
   : Lemma (requires True) (ensures (let h' = g_upd_seq' b s h in
+           (Seq.length s > 0 ==> not (g_is_null b)) /\
            modifies (loc_buffer b) h h' /\
            live h' b /\
            as_seq h' b == s))
@@ -1051,19 +1085,68 @@ let rec g_upd_seq_as_seq' (#a:Type)
 
 let g_upd_seq_as_seq = g_upd_seq_as_seq'
 
-let upd #a b i v =
+let g_upd'_same_value (#a:Type)
+              (b:buffer a)
+              (i:nat{i < length b})
+              (v:a)
+              (h:HS.mem{live h b})
+: Lemma
+  (requires (Seq.index (as_seq h b) i == v))
+  (ensures (g_upd' b i v h == h))
+= let h' = g_upd' b i v h in
+  let v = HS.sel h (Buffer?.content b) in
+  let v' = HS.sel h' (Buffer?.content b) in
+  assert (lseq_of_vec v `Seq.equal` lseq_of_vec v');
+  HS.lemma_heap_equality_upd_with_sel h (Buffer?.content b)
+
+let rec g_upd_seq_same_value (#a:Type)
+                     (b:buffer a)
+                     (s:Seq.lseq a (length b))
+                     (h:HS.mem{live h b})
+: Lemma
+  (requires (as_seq h b == s))
+  (ensures (g_upd_seq b s h == h))
+  (decreases (Seq.length s))
+= if Seq.length s = 0
+  then ()
+  else begin
+    g_upd'_same_value b 0 (Seq.head s) h;
+    g_upd_seq_same_value (gsub b 1ul (len b `U32.sub` 1ul)) (Seq.slice s 1 (Seq.length s)) h
+  end
+
+#reset-options
+
+#set-options "--z3rlimit 32"
+
+let rec g_upd_eq (#a:Type)
+              (b:buffer a)
+              (i:nat{i < length b})
+              (v:a)
+              (h:HS.mem{live h b})
+: Lemma
+  (requires True)
+  (ensures (g_upd b i v h == g_upd' b i v h))
+  (decreases (length b))
+= if i = 0
+  then begin
+    let h' = g_upd' b 0 v h in
+    let b' = gsub b 1ul (len b `U32.sub` 1ul) in
+    g_upd_seq_same_value b' (Seq.slice (Seq.upd (as_seq h b) 0 v) 1 (length b)) h'
+  end
+  else begin
+    g_upd'_same_value b 0 (Seq.head (Seq.upd (as_seq h b) i v)) h;
+    g_upd_eq (gsub b 1ul (len b `U32.sub` 1ul)) (i - 1) v h
+  end
+
+#reset-options
+
+let upd' #a b i v =
   let open HST in
   let h0 = get () in
   let s0 = lseq_of_vec ! (Buffer?.content b) in
   let s = Seq.upd s0 (U32.v (Buffer?.idx b) + U32.v i) v in
   Buffer?.content b := vec_of_lseq s;
-  // prove modifies_1_preserves_ubuffers
-  Heap.lemma_distinct_addrs_distinct_preorders ();
-  Heap.lemma_distinct_addrs_distinct_mm ();
-  let h = HST.get () in
-  modifies_1_modifies b h0 h
-
-#reset-options
+  g_upd_eq b (U32.v i) v h0
 
 (* Recall *)
 
@@ -1074,6 +1157,8 @@ let recallable' (#a: Type) (b: buffer a) : GTot Type0 =
   )
 
 let recallable = recallable'
+
+let recallable_null #a = ()
 
 let recallable_includes #a larger smaller =
   if Null? larger || Null? smaller
@@ -1093,6 +1178,7 @@ let freeable' (#a: Type) (b: buffer a) : GTot Type0 =
   (not (g_is_null b)) /\
   HS.is_mm (Buffer?.content b) /\
   HST.is_eternal_region (frameOf b) /\
+  U32.v (Buffer?.max_length b) > 0 /\
   Buffer?.idx b == 0ul /\
   Buffer?.length b == Buffer?.max_length b
 
@@ -1100,6 +1186,15 @@ let freeable = freeable'
 
 let free #a b =
   HST.rfree (Buffer?.content b)
+
+let freeable_length #a b = ()
+
+let freeable_disjoint #a1 #a2 b1 b2 =
+  if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2
+  then
+    MG.loc_disjoint_aloc_elim #_ #cls #(frameOf b1) #(as_addr b1) #(frameOf b2) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
+  else ()
+
 
 (* Allocation *)
 
@@ -1155,6 +1250,21 @@ let gcmalloc_of_list #a r init =
   in
   let b = Buffer len content 0ul len in
   b
+
+let rec blit #t src idx_src dst idx_dst len
+= let h0 = HST.get () in
+  if len = 0ul then ()
+  else begin
+    let len' = U32.(len -^ 1ul) in
+    blit #t src idx_src dst idx_dst len';
+    let z = U32.(index src (idx_src +^ len')) in
+    upd dst (U32.(idx_dst +^ len')) z;
+    let h1 = HST.get() in
+    Seq.snoc_slice_index (as_seq h1 dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len');
+    Seq.cons_head_tail (Seq.slice (as_seq h0 dst) (U32.v idx_dst + U32.v len') (length dst));
+    Seq.cons_head_tail (Seq.slice (as_seq h1 dst) (U32.v idx_dst + U32.v len') (length dst))
+  end
+
 
 
 (* type class *)

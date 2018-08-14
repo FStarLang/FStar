@@ -140,7 +140,6 @@ type env = {
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
-  dep_graph      : FStar.Parser.Dep.deps;         (* The result of the dependency analysis *)
   nbe            : list<step> -> env -> term -> term;  (* Callback to the NBE function *)
 }
 
@@ -255,12 +254,13 @@ val is_action              : env -> lident -> bool
 val is_interpreted         : (env -> term -> bool)
 val is_irreducible         : env -> lident -> bool
 val is_type_constructor    : env -> lident -> bool
-val num_inductive_ty_params: env -> lident -> int
+val num_inductive_ty_params: env -> lident -> option<int>
 
 (* Universe instantiation *)
 
 (* Construct a new universe unification variable *)
 val new_u_univ             : unit -> universe
+val inst_tscheme_with      : tscheme -> universes -> universes * term
 (* Instantiate the universe variables in a type scheme with new unification variables *)
 val inst_tscheme           : tscheme -> universes * term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
@@ -343,6 +343,7 @@ val trivial_guard             : guard_t
 val is_trivial                : guard_t -> bool
 val is_trivial_guard_formula  : guard_t -> bool
 val conj_guard                : guard_t -> guard_t -> guard_t
+val conj_guards               : list<guard_t> -> guard_t
 val abstract_guard            : binder -> guard_t -> guard_t
 val abstract_guard_n          : list<binder> -> guard_t -> guard_t
 val imp_guard                 : guard_t -> guard_t -> guard_t
