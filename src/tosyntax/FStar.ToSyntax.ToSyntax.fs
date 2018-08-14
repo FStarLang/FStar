@@ -472,7 +472,7 @@ let is_special_effect_combinator = function
   | "repr"
   | "post"
   | "pre"
-  | "wp"
+  | "wp" -> true
   | _ -> false
 
 let rec sum_to_universe u n =
