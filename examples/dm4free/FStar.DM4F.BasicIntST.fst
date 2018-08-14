@@ -1,10 +1,10 @@
 module FStar.DM4F.BasicIntST
 
 (**********************************************************
- * Dijkstra Monads for Free : Simple state
+ * A very simple example with a single integer as the state
  *
- * A minimal example of defining a state effect along
- * with actions, over an integer state type.
+ * The main interesting bit is proving some identities about
+ * reify/bind in various styles
  *
  **********************************************************)
 
@@ -39,13 +39,10 @@ total reifiable reflectable new_effect {
 open FStar.Tactics
 
 
-unfold let bind_elab
-  (#a #b: Type)
-  (#f_w: STATE?.wp a)
-  ($f: (s0: Prims.int -> Prims.PURE (a * Prims.int) (f_w s0)))
-  (#g_w: (y: a -> STATE?.wp b))
-  ($g: (y: a -> s0: Prims.int -> Prims.PURE (b * Prims.int) (g_w y s0))) =
-  STATE?.bind_elab a b f_w f g_w g
+//Re-define bind_elab with implicit parameters for easier use
+let bind_elab #a #b #f_w ($f:_) #g_w ($g:_) = STATE?.bind_elab a b f_w f g_w g
+assume val range0: range
+let bind_wp = STATE?.bind_wp range0
 
 let test1 (s0:int) (v:int) =
   assert ((reify (let _ = STATE?.put v in
@@ -59,3 +56,50 @@ let test2 (s0:int) (v:int) =
                    bind_elab (reify (STATE?.put v))
                              (fun _ -> reify (STATE?.put v)) s0))
       by (dump "start"; norm [reify_; delta_only [`%bind_elab; `%STATE?.bind_elab]]; trefl())
+
+let st_thunk a wp = unit -> STATE a wp
+
+let y = STATE?.bind_wp
+
+let monotonic #a (wp:STATE?.wp a) =
+  forall p1 p2 s. {:pattern wp s p1; wp s p2} (forall x. p1 x ==> p2 x) ==> wp s p1 ==> wp s p2
+
+let reify_bind_commutes
+          (#a #b : _)
+          (#wp1 : _) (c1:st_thunk a wp1)
+          (#wp2 : _) (c2: (x:a -> st_thunk b (wp2 x)))
+          (s0:_{(monotonic wp1 /\
+                (forall x. monotonic (wp2 x)) /\
+                bind_wp _ _ wp1 wp2 s0 (fun _ -> True))})
+     = reify (let x = c1 () in c2 x ()) s0 ==
+       bind_elab (reify (c1 ()))
+                 (fun x -> reify (c2 x ())) s0
+
+
+let commutation_lemma
+          (#a #b : _)
+          (#wp1 : _) (c1:st_thunk a wp1)
+          (#wp2 : _) (c2: (x:a -> st_thunk b (wp2 x))) (s0:_)
+    : Lemma
+         (requires (monotonic wp1 /\
+                    (forall x. monotonic (wp2 x)) /\
+                    STATE?.bind_wp range0 _ _ wp1 wp2 s0 (fun _ -> True)))
+         (ensures (reify_bind_commutes c1 c2 s0))
+    = assert (reify_bind_commutes c1 c2 s0)
+          by (dump "start";
+              norm [reify_; delta_only [`%bind_elab; `%STATE?.bind_elab; `%reify_bind_commutes]];
+              dump "after norm";
+              trefl())
+
+let commutation_lemma_alt
+          (#a #b : _)
+          (#wp1 : _) (c1:st_thunk a wp1)
+          (#wp2 : _) (c2: (x:a -> st_thunk b (wp2 x)))
+          (s0:_{(monotonic wp1 /\
+                (forall x. monotonic (wp2 x)) /\
+                STATE?.bind_wp range0 _ _ wp1 wp2 s0 (fun _ -> True))})
+    = assert (reify_bind_commutes c1 c2 s0) //inlining reify_bind_commutes here does not work
+          by (dump "start";
+              norm [reify_; delta_only [`%bind_elab; `%STATE?.bind_elab; `%reify_bind_commutes]];
+              dump "after norm";
+              trefl())
