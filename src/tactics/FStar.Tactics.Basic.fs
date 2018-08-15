@@ -837,8 +837,12 @@ let t_exact try_refine set_expected_typ tm : tac<unit> = wrap_err "exact" <|
         bind (catch (bind (norm [EMB.Delta]) (fun _ ->
                        bind (refine_intro ()) (fun _ ->
                        __exact_now set_expected_typ tm)))) (function
-              | Inr r -> ret r
-              | Inl _ -> fail e)))) // keep original error
+              | Inr r ->
+                  mlog (fun () -> BU.print_string "__exact_now: failed after refining too\n") (fun _ ->
+                  ret r)
+              | Inl _ ->
+                  mlog (fun () -> BU.print_string "__exact_now: was not a refinement\n") (fun _ ->
+                  fail e)))))
 
 let rec mapM (f : 'a -> tac<'b>) (l : list<'a>) : tac<list<'b>> =
     match l with
