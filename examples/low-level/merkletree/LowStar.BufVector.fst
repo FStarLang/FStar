@@ -40,46 +40,14 @@ type erid = rid:HH.rid{HST.is_eternal_region rid}
 val root: erid
 let root = HH.root
 
-/// Sequence mapping
+/// Lemmas for sequence
 
-val seq_map:
-  #a:Type -> #b:Type -> f:(a -> GTot b) -> s:S.seq a -> 
-  GTot (fs:S.seq b{
-    S.length fs = S.length s /\
-    (forall (i:nat{i < S.length fs}). S.index fs i == f (S.index s i))})
-    (decreases (S.length s))
-let rec seq_map #a #b f s =
-  if S.length s = 0 then S.empty
-  else S.cons (f (S.head s)) (seq_map f (S.tail s))
-
-val seq_map_create:
-  #a:Type -> #b:Type -> f:(a -> GTot b) -> 
-  len:nat -> ia:a ->
-  Lemma (seq_map f (S.create len ia) ==
-	S.create len (f ia))
-	[SMTPat (seq_map f (S.create len ia))]
-let rec seq_map_create #a #b f len ia =
-  S.lemma_eq_intro (seq_map f (S.create len ia)) (S.create len (f ia))
-
-val seq_map_append:
-  #a:Type -> #b:Type -> f:(a -> GTot b) -> 
-  s1:S.seq a -> s2:S.seq a ->
-  Lemma (seq_map f (S.append s1 s2) ==
-	S.append (seq_map f s1) (seq_map f s2))
-	[SMTPat (seq_map f (S.append s1 s2))]
-let rec seq_map_append #a #b f s1 s2 =
-  S.lemma_eq_elim (seq_map f (S.append s1 s2)) 
-		  (S.append (seq_map f s1) (seq_map f s2))
-
-val seq_map_slice:
-  #a:Type -> #b:Type -> f:(a -> GTot b) -> 
-  s:S.seq a -> i:nat -> j:nat{i <= j && j <= S.length s} ->
-  Lemma (seq_map f (S.slice s i j) == S.slice (seq_map f s) i j)
-	[SMTPat (seq_map f (S.slice s i j)); 
-	SMTPat (S.slice (seq_map f s) i j)]
-let seq_map_slice #a #b f s i j =
-  S.lemma_eq_elim (seq_map f (S.slice s i j))
-		  (S.slice (seq_map f s) i j)
+// val slice_index:
+//   #a:Type -> s:S.seq a ->
+//   i:nat -> j:nat{i <= j && j <= S.length s} ->
+//   k:nat{k < j - i} ->
+//   Lemma (S.index (S.slice s i j) k == S.index s (i + k))
+// let slice_index #a s i j k = ()
 
 /// The invariant
 
@@ -140,6 +108,20 @@ let rec loc_bv_buf_seq #a bs i j =
   else loc_union (loc_bv_buf_seq bs i (j - 1))
 		 (B.loc_addr_of_buffer (S.index bs (j - 1)))
 
+val loc_bv_buf_seq_slice_eq:
+  #a:Type0 -> bs1:S.seq (B.buffer a) -> 
+  bs2:S.seq (B.buffer a) ->
+  i:nat -> j:nat{i <= j && j <= S.length bs1 && j <= S.length bs2} -> 
+  Lemma (requires (S.equal (S.slice bs1 i j) (S.slice bs2 i j)))
+	(ensures (loc_bv_buf_seq bs1 i j == loc_bv_buf_seq bs2 i j))
+let rec loc_bv_buf_seq_slice_eq #a bs1 bs2 i j =
+  if i = j then ()
+  else (assert (S.equal (S.slice (S.slice bs1 i j) 0 (j - i - 1))
+			(S.slice (S.slice bs2 i j) 0 (j - i - 1)));
+       assert (S.index (S.slice bs1 i j) (j - i - 1) ==
+       	      S.index (S.slice bs2 i j) (j - i - 1));
+       loc_bv_buf_seq_slice_eq bs1 bs2 i (j - 1))
+
 val loc_bv_buffers:
   #a:Type0 -> h:HS.mem -> bv:buf_vector a -> 
   i:nat -> j:nat{i <= j && j <= U32.v (V.size_of bv)} -> 
@@ -158,15 +140,17 @@ let loc_bv_buffer #a h bv i =
 
 val as_seq_seq:
   h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
-  bs:S.seq (B.buffer a)
-    {V.forall_seq bs 0 (S.length bs) (fun hs -> B.len hs = blen)} ->
+  bslen:nat -> i:nat -> j:nat{i <= j && j <= bslen} ->
+  bs:S.seq (B.buffer a){
+    S.length bs = bslen /\
+    V.forall_seq bs i j (fun hs -> B.len hs = blen)} ->
   GTot (s:S.seq (e:S.seq a{S.length e = U32.v blen})
-       {S.length s = S.length bs})
-       (decreases (S.length bs))
-let rec as_seq_seq h #a blen bs =
-  if S.length bs = 0 then S.empty
-  else S.snoc (as_seq_seq h blen (S.slice bs 0 (S.length bs - 1)))
-	      (B.as_seq h (S.index bs (S.length bs - 1)))
+       {S.length s = j - i})
+       (decreases j)
+let rec as_seq_seq h #a blen bslen i j bs =
+  if i = j then S.empty
+  else S.snoc (as_seq_seq h blen bslen i (j - 1) bs)
+	      (B.as_seq h (S.index bs (j - 1)))
 
 val as_seq:
   h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
@@ -174,16 +158,49 @@ val as_seq:
   GTot (s:S.seq (e:S.seq a{S.length e = U32.v blen})
        {S.length s = U32.v (V.size_of bv)})
 let as_seq h #a blen bv =
-  as_seq_seq h blen (V.as_seq h bv)
+  as_seq_seq h blen (U32.v (V.size_of bv)) 0 (U32.v (V.size_of bv)) (V.as_seq h bv)
+
+val as_seq_seq_0:
+  h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
+  bs:S.seq (B.buffer a) -> i:nat{i <= S.length bs} ->
+  Lemma (as_seq_seq h blen (S.length bs) i i bs == S.empty)
+let as_seq_seq_0 h #a blen bs i = ()
+
+val as_seq_seq_rec:
+  h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
+  bslen:nat -> i:nat -> j:nat{i <= j && j <= bslen} ->
+  bs:S.seq (B.buffer a){
+    S.length bs = bslen /\
+    V.forall_seq bs i j (fun hs -> B.len hs = blen)} ->
+  Lemma (requires (i <> j))
+	(ensures (as_seq_seq h blen bslen i j bs ==
+		 S.snoc (as_seq_seq h blen bslen i (j - 1) bs)
+			(B.as_seq h (S.index bs (j - 1)))))
+let as_seq_seq_rec h #a blen bslen i j bs = ()
 
 val as_seq_seq_get:
   h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
-  bs:S.seq (B.buffer a)
-    {V.forall_seq bs 0 (S.length bs) (fun hs -> B.len hs = blen)} ->
-  i:nat{i < S.length bs} ->
-  Lemma (B.as_seq h (S.index bs i) == S.index (as_seq_seq h blen bs) i)
-let as_seq_seq_get h #a blen bs i =
-  admit ()
+  bslen:nat -> i:nat -> j:nat{i <= j && j <= bslen} ->
+  bs:S.seq (B.buffer a){
+    S.length bs = bslen /\
+    V.forall_seq bs i j (fun hs -> B.len hs = blen)} ->
+  k:nat{i <= k && k < j} ->
+  Lemma (requires True)
+	(ensures (B.as_seq h (S.index bs k) == 
+		 S.index (as_seq_seq h blen bslen i j bs) (k - i)))
+	(decreases j)
+let rec as_seq_seq_get h #a blen bslen i j bs k =
+  if i = j then ()
+  else if k = j - 1
+  then (as_seq_seq_rec h blen bslen i j bs;
+       assert (as_seq_seq h blen bslen i j bs ==
+       	      S.snoc (as_seq_seq h blen bslen i (j - 1) bs)
+       		     (B.as_seq h (S.index bs (j - 1)))))
+  else (as_seq_seq_rec h blen bslen i j bs;
+       assert (as_seq_seq h blen bslen i j bs ==
+    	      S.snoc (as_seq_seq h blen bslen i (j - 1) bs)
+    		     (B.as_seq h (S.index bs (j - 1))));
+       as_seq_seq_get h blen bslen i (j - 1) bs k)
 
 val as_seq_get:
   h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
@@ -193,7 +210,8 @@ val as_seq_get:
 	S.index (as_seq h blen bv) (U32.v i))
 	[SMTPat (S.index (as_seq h blen bv) (U32.v i))]
 let as_seq_get h #a blen bv i =
-  as_seq_seq_get h blen (V.as_seq h bv) (U32.v i)
+  as_seq_seq_get h blen (U32.v (V.size_of bv)) 0 (U32.v (V.size_of bv))
+		 (V.as_seq h bv) (U32.v i)
 
 /// Facts related to the invariant
 
@@ -326,14 +344,30 @@ let rec loc_bv_buffers_as_seq #a h0 h1 bv i j =
 
 val as_seq_seq_preserved:
   #a:Type -> blen:uint32_t{blen > 0ul} ->
-  bs:S.seq (B.buffer a){V.forall_seq bs 0 (S.length bs) 
-				     (fun hs -> B.len hs = blen)} ->
+  bslen:nat -> i:nat -> j:nat{i <= j && j <= bslen} ->
+  bs:S.seq (B.buffer a){
+    S.length bs = bslen /\
+    V.forall_seq bs i j (fun hs -> B.len hs = blen)} ->
   dloc:loc -> h0:HS.mem -> h1:HS.mem ->
-  Lemma (requires (loc_disjoint (loc_bv_buf_seq bs 0 (S.length bs)) dloc /\
+  Lemma (requires (V.forall_seq bs 0 (S.length bs) (fun hs -> B.live h0 hs) /\
+		  loc_disjoint (loc_bv_buf_seq bs i j) dloc /\
 		  modifies dloc h0 h1))
-	(ensures (S.equal (as_seq_seq h0 blen bs) (as_seq_seq h1 blen bs)))
-let as_seq_seq_preserved #a blen bs dloc h0 h1 =
-  admit ()
+	(ensures (S.equal (as_seq_seq h0 blen bslen i j bs)
+			  (as_seq_seq h1 blen bslen i j bs)))
+	(decreases j)
+let rec as_seq_seq_preserved #a blen bslen i j bs dloc h0 h1 =
+  if i = j
+  then (as_seq_seq_0 h0 blen bs i; as_seq_seq_0 h1 blen bs i)
+  else (as_seq_seq_preserved blen bslen i (j - 1) bs dloc h0 h1;
+       as_seq_seq_rec h0 blen bslen i j bs;
+       assert (as_seq_seq h0 blen bslen i j bs ==
+       	      S.snoc (as_seq_seq h0 blen bslen i (j - 1) bs)
+       		     (B.as_seq h0 (S.index bs (j - 1))));
+       as_seq_seq_rec h1 blen bslen i j bs;
+       assert (as_seq_seq h1 blen bslen i j bs ==
+       	      S.snoc (as_seq_seq h1 blen bslen i (j - 1) bs)
+       		     (B.as_seq h1 (S.index bs (j - 1))));
+       modifies_buffer_elim (S.index bs (j - 1)) dloc h0 h1)
 
 val as_seq_preserved:
   #a:Type -> blen:uint32_t{blen > 0ul} ->
@@ -349,7 +383,8 @@ val as_seq_preserved:
 let as_seq_preserved #a blen bv dloc h0 h1 =
   buf_vector_rloc_includes_loc_vector h0 bv;
   buf_vector_rloc_includes_loc_bv_buffers h0 bv 0 (U32.v (V.size_of bv));
-  as_seq_seq_preserved blen (V.as_seq h0 bv) dloc h0 h1
+  as_seq_seq_preserved blen (U32.v (V.size_of bv)) 
+		       0 (U32.v (V.size_of bv)) (V.as_seq h0 bv) dloc h0 h1
 
 /// Construction
 
@@ -363,18 +398,19 @@ private val create_:
       HST.is_eternal_region (V.frameOf bv)))
     (ensures (fun h0 _ h1 ->
       modifies (V.loc_vector_within bv 0ul cidx) h0 h1 /\
-
       // partial liveness
       V.live h0 bv /\ V.freeable bv /\
       buffers_inv_liveness blen h1 bv 0ul cidx /\
-
       // partial region
       HST.is_eternal_region (V.frameOf bv) /\
       buffers_inv_region h1 bv 0ul cidx /\
-
       // loop invariants for this function
       V.forall_ h1 bv 0ul cidx
-      	(fun b -> MHS.fresh_region (B.frameOf b) h0 h1)))
+      	(fun b -> MHS.fresh_region (B.frameOf b) h0 h1) /\
+      // correctness
+      S.equal (as_seq_seq h1 blen (U32.v (V.size_of bv)) 
+			  0 (U32.v cidx) (V.as_seq h1 bv))
+	      (S.create (U32.v cidx) (S.create (U32.v blen) ia))))
     (decreases (U32.v cidx))
 private let rec create_ #a blen ia bv cidx =
   if cidx = 0ul then ()
@@ -424,7 +460,6 @@ val create_rid:
 let create_rid #a ia blen len rid =
   let vec = V.create_rid len (B.null #a) rid in
   create_ #a blen ia vec len;
-  admit ();
   vec
 
 val create_reserve:
