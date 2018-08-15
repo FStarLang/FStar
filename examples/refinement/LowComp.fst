@@ -172,7 +172,7 @@ let test b v = admit (); b.(0ul) <- v
 val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp_wp1 unit (write_wp i v) (hwrite' i v)
 let lwrite i v = fun (b1, b2) -> 
     if i = 0 then 
-      (* ********************************************* *)
+      (* * ********************************************* *)
       let h0 = ST.get () in
       let p = 
         let p = g_upd_preserves_live h0 b1 b2 v in // Shows: live h1 b
@@ -185,14 +185,15 @@ let lwrite i v = fun (b1, b2) ->
 
       b1.(0ul) <- v;
 
-      (* ********************************************* *)
+      (* * ********************************************* *)
       let h1 = ST.get () in 
       let p' = test b1 v in assume (h1 == g_upd b1 0 v h0);
       assume (h1 == g_upd b2 0 (get h0 b2 0) (g_upd b1 0 v h0))
       (* ********************************************* *)
 
     else 
-      (* ********************************************* *)
+      (* * ********************************************* *)
+      let h0 = ST.get () in
       let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
       assert (g_upd b2 0 v (g_upd b1 0 (get h0 b1 0) h0) == g_upd b2 0 v h0);
       let p' = test b2 v in
@@ -200,7 +201,7 @@ let lwrite i v = fun (b1, b2) ->
 
       b2.(0ul) <- v;
 
-      (* ********************************************* *)
+      (* * ********************************************* *)
       let h1 = ST.get () in 
       let p' = test b2 v in assert (h1 == g_upd b2 0 v h0);
       assert (h1 == g_upd b2 0 v (g_upd b1 0 (get h0 b1 0) h0))
@@ -240,19 +241,28 @@ let lbind (#a:Type) (#b:Type)
     let h1 = ST.get () in // Intermediate heap
     assume (monotonic (wp2 a)); 
     assert (well_formed h0 (b1, b2)); // sanity check
-    assert (let s0 = lstate_as_state h0 (b1, b2) in 
-            wp1 s0 (fun _ -> True) /\
-            (let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
-             let h1' = state_as_lstate h0 (b1, b2) s1 in 
-             let s1' = lstate_as_state h1' (b1, b2) in 
-             let p = state_as_lstate_inv h0 (b1, b2) s1 in
-             a == r  /\ ///\ // results of high and low are the same);
-             h1 == h1' /\ // heaps are equal
-             // This is 
-             // lstate_as_state (state_as_lstate h0 (b1, b2) s1) (b1, b2) == s1 /\
-             wp2 a s1 (fun _ -> True)));
-             // let p = state_as_lstate_inv h0 (b1, b2) s1 in
-             // lstate_as_state (state_as_lstate h0 (b1, b2) s1) (b1, b2) == s1)));
+    assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True));
+    let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
+    
+    // let p = 
+    //   let s0 = lstate_as_state h0 (b1, b2) in // I cannot bind this at the toplevel because it's GTot
+    //   assert (wp1 s0 (fun _ -> True));
+    //   let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
+    //   let h1' = state_as_lstate h0 (b1, b2) s1 in 
+    //   let s1' = lstate_as_state h1' (b1, b2) in 
+    //   state_as_lstate_inv h0 (b1, b2) s1
+    // in
+    // assert (let s0 = lstate_as_state h0 (b1, b2) in 
+    //         wp1 s0 (fun _ -> True) /\
+    //         (let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
+    //          let h1' = state_as_lstate h0 (b1, b2) s1 in 
+    //          let s1' = lstate_as_state h1' (b1, b2) in 
+    //          let p = state_as_lstate_inv h0 (b1, b2) s1 in
+    //          a == r  /\   // results of high and low are the same);
+    //          h1 == h1' /\ // heaps are equal
+    //          // This is exactly p but cannot be proved /
+    //          // lstate_as_state (state_as_lstate h0 (b1, b2) s1) (b1, b2) == s1 /\
+    //          wp2 a s1 (fun _ -> True)));
 
     assume (wp2 a (lstate_as_state h1 (b1, b2)) (fun _ -> True));
     (* ********************************************* *)
