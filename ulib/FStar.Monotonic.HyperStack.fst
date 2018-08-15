@@ -78,10 +78,6 @@ noeq abstract private type mem' =
 abstract private let mk_mem (rid_ctr:int) (h:hmap) (tip:rid) :mem'
   = HS rid_ctr h tip
 
-// abstract let mem_eq' (m1:mem') (m2:mem') : Type0 = 
-//   match m1, m2 with 
-//   | HS r1 h1 t1, HS r2 h2 t2 ->
-//     r1 == r2 /\ Map.equal h1 h2 /\ t1 == t2
 
 abstract let get_hmap (m:mem') :hmap = m.h
 abstract let get_rid_ctr (m:mem') :int = m.rid_ctr

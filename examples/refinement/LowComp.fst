@@ -36,7 +36,7 @@ let state_as_lstate h =
 
 
 val state_as_lstate_inv : h:HS.mem -> ls:lstate{well_formed h ls} -> bs:state ->
-   Lemma (lstate_as_state (state_as_lstate h ls bs) ls = bs)
+   Lemma (lstate_as_state (state_as_lstate h ls bs) ls == bs)
 let state_as_lstate_inv h ls bs = 
   let (b1, b2) = ls in 
   let (s1, s2) = bs in
@@ -72,14 +72,13 @@ type lcomp 'a (c : comp 'a) =
 let lcomp_wp1 (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
      (ls:lstate) ->
      Stack a
-       (requires (fun h -> well_formed h ls))
+       (requires (fun h -> well_formed h ls /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
        (ensures  (fun h r h' ->
                     well_formed h' ls /\
                     (let s0 = lstate_as_state h ls in
-                     wp s0 (fun _ -> True) ==> 
-                     (let tls = state_as_lstate h ls in // XXX fails otherwise
-                      let (x, s1) = c s0 in 
-                      h' == tls s1 /\ x == r ))))
+                     let tls = state_as_lstate h ls in // XXX fails otherwise
+                     let (x, s1) = c s0 in 
+                     h' == tls s1 /\ x == r )))
 
 let lcomp_wp2 (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
      (ls:lstate) ->
@@ -163,7 +162,12 @@ let lreturn (#a:Type) (x:a) : lcomp_wp1 a (return_wp x) (hreturn' x) =
     x
 
 
+val test : b:pointer mint -> v:mint -> Stack unit (requires (fun h0 -> live h0 b)) (ensures (fun h0 _ h1 -> live h0 b /\ h1 == g_upd b 0 v h0))
+let test b v = admit (); b.(0ul) <- v 
+
+
 // Not sure why this doesn't verify. Result type should follow from the assertions
+// XXX I probably need help with that
 val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp_wp1 unit (write_wp i v) (hwrite' i v)
 let lwrite i v = fun (b1, b2) -> 
    let h0 = ST.get () in
@@ -175,11 +179,19 @@ let lwrite i v = fun (b1, b2) ->
         get_upd_eq (g_upd b1 0 v h0) b2 0 (get h0 b2 0) // Shows: g_upd b2 0 (get h0 b2 0) h1 == h1
       in
       assert (g_upd b2 0 (get h0 b2 0) (g_upd b1 0 v h0) == g_upd b1 0 v h0);
-      b1.(0ul) <- v 
+      b1.(0ul) <- v;
+      let h1 = ST.get () in 
+      let p' = test b1 v in assume (h1 == g_upd b1 0 v h0);
+      assume (h1 == g_upd b2 0 (get h0 b2 0) (g_upd b1 0 v h0))
     else 
       let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
       assert (g_upd b2 0 v (g_upd b1 0 (get h0 b1 0) h0) == g_upd b2 0 v h0);
-      b2.(0ul) <- v
+      let p' = test b2 v in
+      b2.(0ul) <- v;
+      let h1 = ST.get () in 
+      let p' = test b2 v in assert (h1 == g_upd b2 0 v h0);
+      assert (h1 == g_upd b2 0 v (g_upd b1 0 (get h0 b1 0) h0))
+
 
 val lread : i:nat{ i < 2 } -> lcomp_wp1 mint (read_wp i) (hread' i)
 let lread i = fun (b1, b2) -> 
@@ -198,21 +210,33 @@ let lbind (#a:Type) (#b:Type)
   (#wp1: state -> (a * state -> Type) -> Type)
   (#wp2: a -> state -> (b * state -> Type) -> Type)
   (#c1:comp_wp a wp1) (#c2:(x:a -> comp_wp b (wp2 x)))
-  (m: lcomp_wp a wp1 c1) (f: (x:a) -> lcomp_wp b (wp2 x) (c2 x)):
-  lcomp_wp b (bind_wp wp1 wp2) (hbind' c1 c2) =
+  (m: lcomp_wp1 a wp1 c1) (f: (x:a) -> lcomp_wp1 b (wp2 x) (c2 x)):
+  lcomp_wp1 b (bind_wp wp1 wp2) (hbind' c1 c2) =
   fun (b1, b2) ->
+    (* ********************************************* *)
     assume (monotonic wp1);
     let h0 = ST.get () in  // Initial heap
-    let a = m (b1, b2) in 
-    let h1 = ST.get () in // Intermediate heap
-    assume (monotonic (wp2 a));
+    assert (let s0 = lstate_as_state h0 (b1, b2) in wp1 s0 (function (x, s1) -> wp2 x s1 (fun _ -> True)));
+    assert (let s0 = lstate_as_state h0 (b1, b2) in wp1 s0 (fun _ -> True)); 
+    (* ********************************************* *)
 
-    let p1 =
-      let s1 = lstate_as_state h0 (b1, b2) in
-//      (wp1 s1 (fun _ -> True)) ==> 
-      (let (r, s2) = c1 s1 in
-       get_upd_eq h0 b1 0 (get h0 b1 0))
-    in 
+    let a = m (b1, b2) in 
+    
+    (* ********************************************* *)
+    let h1 = ST.get () in // Intermediate heap
+    assume (monotonic (wp2 a)); 
+    assert (let s0 = lstate_as_state h0 (b1, b2) in 
+            wp1 s0 (fun _ -> True) /\
+            (let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
+             let h1' = state_as_lstate h0 (b1, b2) s1 in 
+             let s1' = lstate_as_state h1' (b1, b2) in  
+             a == r /\ // results of high and low are the same);
+             h1 == h1' /\ // heaps are equal
+             wp2 a s1 (fun _ -> True) // /\
+             //(let p = state_as_lstate_inv h0 (b1, b2) s1 in 
+             // lstate_as_state (state_as_lstate h0 (b1, b2) s1) (b1, b2) == s1))
+             ));
+
     
     // let p = 
     //    let (r, s2) = c1 (lstate_as_state h0 ls) in 
@@ -227,6 +251,7 @@ let lbind (#a:Type) (#b:Type)
     //         lstate_as_state h1' ls == s1);
             
     let r = f a (b1, b2) in r
+
 
 
 // Versions of [lread] and [lwrite] with reif in spec
