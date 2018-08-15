@@ -147,7 +147,7 @@ let print (msg:string) : tac<unit> =
 
 let debugging () : tac<bool> =
     bind get (fun ps ->
-    ret (Options.debug_module (Ident.string_of_lid ps.main_context.curmodule)))
+    ret (Env.debug ps.main_context (Options.Other "Tac")))
 
 let dump_goal ps goal =
     tacprint (goal_to_string ps goal);
