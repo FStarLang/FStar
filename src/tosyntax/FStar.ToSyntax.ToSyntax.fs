@@ -1333,12 +1333,16 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       mk <| Tm_match(e, brs), join_aqs (aq::aqs)
 
     | Ascribed(e, t, tac_opt) ->
-      let annot = if is_comp_type env t
-                  then Inr (desugar_comp t.range env t)
-                  else Inl (desugar_term env t) in
+      let annot, aq0 =
+        if is_comp_type env t
+        then let comp = desugar_comp t.range env t in
+             (Inr comp, [])
+        else let tm, aq = desugar_term_aq env t in
+             (Inl tm, aq)
+      in
       let tac_opt = BU.map_opt tac_opt (desugar_term env) in
       let e, aq = desugar_term_aq env e in
-      mk <| Tm_ascribed(e, (annot, tac_opt), None), aq
+      mk <| Tm_ascribed(e, (annot, tac_opt), None), aq0@aq
 
     | Record(_, []) ->
       raise_error (Errors.Fatal_UnexpectedEmptyRecord, "Unexpected empty record") top.range
