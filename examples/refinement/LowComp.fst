@@ -72,13 +72,12 @@ type lcomp 'a (c : comp 'a) =
 let lcomp_wp1 (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
      (ls:lstate) ->
      Stack a
-       (requires (fun h -> well_formed h ls /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
+       (requires (fun h -> well_formed h ls /\ HighComp.monotonic wp /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
        (ensures  (fun h r h' ->
                     well_formed h' ls /\
                     (let s0 = lstate_as_state h ls in
-                     let tls = state_as_lstate h ls in // XXX fails otherwise
                      let (x, s1) = c s0 in 
-                     h' == tls s1 /\ x == r )))
+                     h' == state_as_lstate h ls s1 /\ x == r )))
 
 let lcomp_wp2 (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
      (ls:lstate) ->
@@ -154,7 +153,7 @@ let lcomp_r (a:Type) (wp:state -> (a * state -> Type) -> Type) (c : unit -> HIGH
 
 (* DSL for low computations *)
 
-let lreturn (#a:Type) (x:a) : lcomp_wp1 a (return_wp x) (hreturn' x) = 
+let lreturn (#a:Type) (x:a) : lcomp_wp1 a (return_wp x) (hreturn_elab x) = 
   fun (b1, b2) -> 
     let h0 = ST.get () in 
     let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
@@ -169,9 +168,23 @@ let test b v = admit (); b.(0ul) <- v
 
 // Not sure why this doesn't verify. Result type should follow from the assertions
 // XXX I probably need help with that
+
+
+let lcomp_wp_test (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
+     (ls:lstate) ->
+     Stack a
+       (requires (fun h -> well_formed h ls /\ HighComp.monotonic wp /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
+       (ensures  (fun h r h' ->
+                    well_formed h' ls)) 
+                    // (let s0 = lstate_as_state h ls in
+                    //  let (x, s1) = c s0 in 
+                    //  // h' == state_as_lstate h ls s1 /\ 
+                    // x == r )))
+                     
 val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp_wp1 unit (write_wp i v) (hwrite' i v)
-let lwrite i v = fun (b1, b2) -> 
-    if i = 0 then 
+let lwrite i v (ls:lstate) = // fun (ls:lstate) ->
+  let (b1, b2) = ls in
+  if i = 0 then 
       (* * ********************************************* *)
       let h0 = ST.get () in
       let p = 
@@ -182,16 +195,27 @@ let lwrite i v = fun (b1, b2) ->
       in
       assert (g_upd b2 0 (get h0 b2 0) (g_upd b1 0 v h0) == g_upd b1 0 v h0);
       (* ********************************************* *)
-
-      b1.(0ul) <- v;
-
+//      b1.(0ul) <- v;
       (* * ********************************************* *)
       let h1 = ST.get () in 
-      let p' = test b1 v in assume (h1 == g_upd b1 0 v h0);
-      assume (h1 == g_upd b2 0 (get h0 b2 0) (g_upd b1 0 v h0))
+      assert (well_formed h1 ls);
+      
+      let p' = test b1 v in
+      
+      let h1 = ST.get () in 
+      assert (well_formed h1 ls);
+
+      assume (h1 == g_upd b1 0 v h0);
+      assume (h1 == g_upd b2 0 (get h0 b2 0) (g_upd b1 0 v h0));
+      assume (well_formed h1 (b1, b2));
+      let x, s1 = hwrite' 0 v (lstate_as_state h0 (b1, b2)) in
+      assert (h1 == state_as_lstate h0 (b1, b2) s1);
+      assert (x == ());
+      assert (equal_domains h0 h1)
+//      admit()
       (* ********************************************* *)
 
-    else 
+    else      admit()
       (* * ********************************************* *)
       let h0 = ST.get () in
       let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
@@ -199,11 +223,12 @@ let lwrite i v = fun (b1, b2) ->
       let p' = test b2 v in
       (* ********************************************* *)
 
-      b2.(0ul) <- v;
+      // b2.(0ul) <- v;
 
       (* * ********************************************* *)
       let h1 = ST.get () in 
-      let p' = test b2 v in assert (h1 == g_upd b2 0 v h0);
+      // let p' = test b2 v in 
+      assert (h1 == g_upd b2 0 v h0);
       assert (h1 == g_upd b2 0 v (g_upd b1 0 (get h0 b1 0) h0))
       (* ********************************************* *)
 
