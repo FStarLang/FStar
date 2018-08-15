@@ -122,6 +122,7 @@ let string_of_decl' d =
   | TopLevelModule l -> "module " ^ l.str // SI: should never get here
   | Open l -> "open " ^ l.str
   | Include l -> "include " ^ l.str
+  | Friend l -> "friend " ^ l.str
   | ModuleAbbrev (i, l) -> "module " ^ i.idText ^ " = " ^ l.str
   | TopLevelLet(_, pats) ->
         let termty = List.map (fun (p,t) -> (pat_to_string p, term_to_string t)) pats in

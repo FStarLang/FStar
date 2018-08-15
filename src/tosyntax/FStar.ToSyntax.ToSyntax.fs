@@ -2495,6 +2495,21 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     let env = Env.push_namespace env lid in
     env, []
 
+  | Friend lid ->
+    if Env.iface env
+    then raise_error (Errors.Fatal_FriendInterface,
+                      "'friend' declarations are not allowed in interfaces") d.drange
+    else if not (FStar.Parser.Dep.module_has_interface (Env.dep_graph env) (Env.current_module env))
+    then raise_error (Errors.Fatal_FriendInterface,
+                      "'friend' declarations are not allowed in modules that lack interfaces") d.drange
+    else if not (FStar.Parser.Dep.module_has_interface (Env.dep_graph env) lid)
+    then raise_error (Errors.Fatal_FriendInterface,
+                      "'friend' declarations cannot refer to modules that lack interfaces") d.drange
+    else if not (FStar.Parser.Dep.deps_has_implementation (Env.dep_graph env) lid)
+    then raise_error (Errors.Fatal_FriendInterface,
+                      "'friend' module has not been loaded; recompute dependences (C-c C-r) if in interactive mode") d.drange
+    else env, []
+
   | Include lid ->
     let env = Env.push_include env lid in
     env, []

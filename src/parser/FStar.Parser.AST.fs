@@ -192,6 +192,7 @@ type pragma =
 type decl' =
   | TopLevelModule of lid
   | Open of lid
+  | Friend of lid
   | Include of lid
   | ModuleAbbrev of ident * lid
   | TopLevelLet of let_qualifier * list<(pattern * term)>
@@ -664,6 +665,7 @@ let id_of_tycon = function
 let decl_to_string (d:decl) = match d.d with
   | TopLevelModule l -> "module " ^ l.str
   | Open l -> "open " ^ l.str
+  | Friend l -> "friend " ^ l.str
   | Include l -> "include " ^ l.str
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
   | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")

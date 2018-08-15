@@ -1683,6 +1683,7 @@ val g_upd_seq_as_seq (#a:Type)
                      (s:Seq.lseq a (length b))
                      (h:HS.mem{live h b})
   : Lemma (let h' = g_upd_seq b s h in
+           (Seq.length s > 0 ==> not (g_is_null b)) /\
            modifies (loc_buffer b) h h' /\
            live h' b /\
            as_seq h' b == s)
@@ -1700,7 +1701,20 @@ let g_upd (#a:Type)
             
 /// ``upd b i v`` writes ``v`` to the memory, at offset ``i`` of
 /// buffer ``b``. KreMLin compiles it as ``b[i] = v``.
-val upd
+
+val upd'
+  (#a: Type)
+  (b: buffer a)
+  (i: U32.t)
+  (v: a)
+: HST.Stack unit
+  (requires (fun h -> live h b /\ U32.v i < length b))
+  (ensures (fun h _ h' ->
+    h' == g_upd b (U32.v i) v h
+  ))
+
+inline_for_extraction
+let upd
   (#a: Type)
   (b: buffer a)
   (i: U32.t)
@@ -1713,6 +1727,9 @@ val upd
     live h' b /\
     as_seq h' b == Seq.upd (as_seq h b) (U32.v i) v
   ))
+= let h = HST.get () in
+  upd' b i v;
+  g_upd_seq_as_seq b (Seq.upd (as_seq h b) (U32.v i) v) h
 
 (* FIXME: Comment on `recall` *)
 

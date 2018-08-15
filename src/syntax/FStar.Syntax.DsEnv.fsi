@@ -107,6 +107,8 @@ type foundname =
 val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
 
+val dep_graph: env -> FStar.Parser.Dep.deps
+val set_dep_graph: env -> FStar.Parser.Dep.deps -> env
 val ds_hooks : env -> dsenv_hooks
 val set_ds_hooks: env -> dsenv_hooks -> env
 val syntax_only: env -> bool
@@ -118,7 +120,7 @@ val set_admitted_iface: env -> bool -> env
 val admitted_iface: env -> bool
 val expect_typ: env -> bool
 val set_expect_typ: env -> bool -> env
-val empty_env: unit -> env
+val empty_env: FStar.Parser.Dep.deps -> env
 val current_module: env -> lident
 val set_current_module: env -> lident -> env
 val open_modules_and_namespaces: env -> list<lident>
