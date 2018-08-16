@@ -765,26 +765,35 @@ let delta_depth_of_qninfo lid (qn:qninfo) : option<delta_depth> =
       | Sig_inductive_typ _
       | Sig_bundle _
       | Sig_datacon _ -> Some (Delta_constant_at_level 0)
-      | Sig_declare_typ _ -> Some (Delta_abstract (Delta_equational_at_level 0))
+      | Sig_declare_typ _ -> Some (FStar.Syntax.DsEnv.delta_depth_of_declaration lid se.sigquals)
       | Sig_let ((_,lbs), _) ->
           BU.find_map lbs (fun lb ->
               let fv = right lb.lbname in
               if fv_eq_lid fv lid
               then Some fv.fv_delta
               else None)
+      | Sig_splice  _ -> Some (Delta_constant_at_level 1) //TODO: see try_lookup_name in dsenv: both are wrong
       | Sig_main   _
-      | Sig_assume _ -> None
+      | Sig_assume _
       | Sig_new_effect _
-      | Sig_new_effect_for_free _ -> Some (Delta_constant_at_level 0)
-      | Sig_sub_effect _ -> None
+      | Sig_new_effect_for_free _
+      | Sig_sub_effect _
       | Sig_effect_abbrev _ (* None? *)
-      | Sig_pragma  _
-      | Sig_splice  _ -> None
+      | Sig_pragma  _ -> None
 
 let delta_depth_of_fv env fv =
-    match delta_depth_of_qninfo fv.fv_name.v (lookup_qname env fv.fv_name.v) with
+    let lid = fv.fv_name.v in
+    if lid.nsstr = "Prims" then fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
+    else match delta_depth_of_qninfo fv.fv_name.v (lookup_qname env fv.fv_name.v) with
     | None -> failwith (BU.format1 "Delta depth not found for %s" (FStar.Syntax.Print.fv_to_string fv))
-    | Some d -> d
+    | Some d ->
+      if d<>fv.fv_delta
+      && Options.debug_any()
+      then BU.print3 "WARNING WARNING WARNING fv=%s, delta_depth=%s, env.delta_depth=%s\n"
+                    (Print.fv_to_string fv)
+                    (Print.delta_depth_to_string fv.fv_delta)
+                    (Print.delta_depth_to_string d);
+      d
 
 let quals_of_qninfo (qninfo : qninfo) : option<list<qualifier>> =
   match qninfo with
