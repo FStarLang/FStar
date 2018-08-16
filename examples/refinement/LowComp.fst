@@ -161,9 +161,10 @@ let lreturn (#a:Type) (x:a) : lcomp_wp1 a (return_wp x) (hreturn_elab x) =
     x
 
 
-val test : b:pointer mint -> v:mint -> 
+(* TODO prove this spec *)
+val upd : b:pointer mint -> v:mint -> 
            Stack unit (requires (fun h0 -> live h0 b)) (ensures (fun h0 _ h1 -> live h0 b /\ h1 == g_upd b 0 v h0))
-let test b v = admit (); b.(0ul) <- v 
+let upd b v = b.(0ul) <- v 
 
 
 // Not sure why this doesn't verify. Result type should follow from the assertions
@@ -195,41 +196,30 @@ let lwrite i v (ls:lstate) = // fun (ls:lstate) ->
       in
       assert (g_upd b2 0 (get h0 b2 0) (g_upd b1 0 v h0) == g_upd b1 0 v h0);
       (* ********************************************* *)
-//      b1.(0ul) <- v;
+      
+      b1.(0ul) <- v;
+      
       (* * ********************************************* *)
       let h1 = ST.get () in 
       assert (well_formed h1 ls);
-      
-      let p' = test b1 v in
-      
-      let h1 = ST.get () in 
-      assert (well_formed h1 ls);
-
-      assume (h1 == g_upd b1 0 v h0);
-      assume (h1 == g_upd b2 0 (get h0 b2 0) (g_upd b1 0 v h0));
-      assume (well_formed h1 (b1, b2));
+      assume (h1 == g_upd b1 0 v h0); // stronger type for get
       let x, s1 = hwrite' 0 v (lstate_as_state h0 (b1, b2)) in
       assert (h1 == state_as_lstate h0 (b1, b2) s1);
       assert (x == ());
       assert (equal_domains h0 h1)
-//      admit()
-      (* ********************************************* *)
 
-    else      admit()
+    else 
       (* * ********************************************* *)
       let h0 = ST.get () in
       let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
       assert (g_upd b2 0 v (g_upd b1 0 (get h0 b1 0) h0) == g_upd b2 0 v h0);
-      let p' = test b2 v in
       (* ********************************************* *)
 
-      // b2.(0ul) <- v;
+      b2.(0ul) <- v;
 
       (* * ********************************************* *)
       let h1 = ST.get () in 
-      // let p' = test b2 v in 
-      assert (h1 == g_upd b2 0 v h0);
-      assert (h1 == g_upd b2 0 v (g_upd b1 0 (get h0 b1 0) h0))
+      assume (h1 == g_upd b2 0 v h0) // stronger type for get
       (* ********************************************* *)
 
 
@@ -246,6 +236,7 @@ let lread i = fun (b1, b2) ->
 let monotonic (#a: Type) (wp: hwp a) = 
     forall (s: state) p1 p2. (forall x. p1 x ==> p2 x) ==> wp s p1 ==> wp s p2
 
+(* 
 let lbind (#a:Type) (#b:Type)
   (#wp1: state -> (a * state -> Type) -> Type)
   (#wp2: a -> state -> (b * state -> Type) -> Type)
@@ -295,7 +286,7 @@ let lbind (#a:Type) (#b:Type)
    
     let r = f a (b1, b2) in r
     
-
+*)
 
 
 // Versions of [lread] and [lwrite] with reif in spec
