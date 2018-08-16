@@ -164,23 +164,8 @@ let lreturn (#a:Type) (x:a) : lcomp_wp1 a (return_wp x) (hreturn_elab x) =
 (* TODO prove this spec *)
 val upd : b:pointer mint -> v:mint -> 
            Stack unit (requires (fun h0 -> live h0 b)) (ensures (fun h0 _ h1 -> live h0 b /\ h1 == g_upd b 0 v h0))
+[@expect_failure]
 let upd b v = b.(0ul) <- v 
-
-
-// Not sure why this doesn't verify. Result type should follow from the assertions
-// XXX I probably need help with that
-
-
-let lcomp_wp_test (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
-     (ls:lstate) ->
-     Stack a
-       (requires (fun h -> well_formed h ls /\ HighComp.monotonic wp /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
-       (ensures  (fun h r h' ->
-                    well_formed h' ls)) 
-                    // (let s0 = lstate_as_state h ls in
-                    //  let (x, s1) = c s0 in 
-                    //  // h' == state_as_lstate h ls s1 /\ 
-                    // x == r )))
                      
 val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp_wp1 unit (write_wp i v) (hwrite' i v)
 let lwrite i v (ls:lstate) = // fun (ls:lstate) ->
@@ -201,13 +186,13 @@ let lwrite i v (ls:lstate) = // fun (ls:lstate) ->
       
       (* * ********************************************* *)
       let h1 = ST.get () in 
-      assert (well_formed h1 ls);
-      assume (h1 == g_upd b1 0 v h0); // stronger type for get
+      // Just sanity
+      // XXX trying to bind something analogous in lbind doesn't work 
       let x, s1 = hwrite' 0 v (lstate_as_state h0 (b1, b2)) in
-      assert (h1 == state_as_lstate h0 (b1, b2) s1);
       assert (x == ());
-      assert (equal_domains h0 h1)
 
+      assume (h1 == g_upd b1 0 v h0) // TODO stronger type for get
+      (* ********************************************* *)
     else 
       (* * ********************************************* *)
       let h0 = ST.get () in
@@ -219,7 +204,7 @@ let lwrite i v (ls:lstate) = // fun (ls:lstate) ->
 
       (* * ********************************************* *)
       let h1 = ST.get () in 
-      assume (h1 == g_upd b2 0 v h0) // stronger type for get
+      assume (h1 == g_upd b2 0 v h0) // TODO stronger type for get
       (* ********************************************* *)
 
 
@@ -233,61 +218,64 @@ let lread i = fun (b1, b2) ->
   else 
     b2.(0ul)
 
-let monotonic (#a: Type) (wp: hwp a) = 
-    forall (s: state) p1 p2. (forall x. p1 x ==> p2 x) ==> wp s p1 ==> wp s p2
-
-(* 
 let lbind (#a:Type) (#b:Type)
   (#wp1: state -> (a * state -> Type) -> Type)
   (#wp2: a -> state -> (b * state -> Type) -> Type)
   (#c1:comp_wp a wp1) (#c2:(x:a -> comp_wp b (wp2 x)))
   (m: lcomp_wp1 a wp1 c1) (f: (x:a) -> lcomp_wp1 b (wp2 x) (c2 x)):
-  lcomp_wp1 b (bind_wp wp1 wp2) (hbind' c1 c2) =
+  lcomp_wp1 b (bind_wp a b wp1 wp2) (bind_elab c1 c2) =
   fun (b1, b2) ->
     (* ********************************************* *)
-    assume (monotonic wp1);
+    assume (HighComp.monotonic wp1);
+    
     let h0 = ST.get () in  // Initial heap
-    assert (let s0 = lstate_as_state h0 (b1, b2) in wp1 s0 (function (x, s1) -> wp2 x s1 (fun _ -> True)));
-    assert (let s0 = lstate_as_state h0 (b1, b2) in wp1 s0 (fun _ -> True)); 
+    assert (wp1 (lstate_as_state h0 (b1, b2)) (function (x, s1) -> wp2 x s1 (fun _ -> True)));
+    assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True)); 
     (* ********************************************* *)
 
     let a = m (b1, b2) in 
     
     (* ********************************************* *)
-    let h1 = ST.get () in // Intermediate heap
-    assume (monotonic (wp2 a)); 
-    assert (well_formed h0 (b1, b2)); // sanity check
-    assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True));
-    let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
+    assume (HighComp.monotonic (wp2 a));
     
+    let h1 = ST.get () in // Intermediate heap
+    
+    assert (well_formed h0 (b1, b2)); // sanity check
+    assert (well_formed h1 (b1, b2)); // sanity check
+    assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True));
+      
+    // Problem 1: This does not work, but something similar an lwrite does.
+    // What is the difference? Is it because of the unit result type in lwrite?
+    // Error: GHOST and STATE cannot be composed
+    // let r, s1 = c1 (lstate_as_state h0 (b1, b2)) in
+    // assert True;
+
+
+    assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True) /\
+            (let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
+             let h1' = state_as_lstate h0 (b1, b2) s1 in 
+             let s1' = lstate_as_state h1' (b1, b2) in 
+             let p = state_as_lstate_inv h0 (b1, b2) s1 in
+             a == r      // results of high and low are the same);
+             /\ h1 == h1' // heaps are equal           
+             // Problem 2 : This is exactly the type of p and yet it cannot be proved
+             // /\ lstate_as_state (state_as_lstate h0 (b1, b2) s1) (b1, b2) == s1 
+            ));
+
+
+    // Problem 3:  GHOST and STATE cannot be composed
     // let p = 
-    //   let s0 = lstate_as_state h0 (b1, b2) in // I cannot bind this at the toplevel because it's GTot
-    //   assert (wp1 s0 (fun _ -> True));
     //   let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
     //   let h1' = state_as_lstate h0 (b1, b2) s1 in 
     //   let s1' = lstate_as_state h1' (b1, b2) in 
     //   state_as_lstate_inv h0 (b1, b2) s1
     // in
-    // assert (let s0 = lstate_as_state h0 (b1, b2) in 
-    //         wp1 s0 (fun _ -> True) /\
-    //         (let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
-    //          let h1' = state_as_lstate h0 (b1, b2) s1 in 
-    //          let s1' = lstate_as_state h1' (b1, b2) in 
-    //          let p = state_as_lstate_inv h0 (b1, b2) s1 in
-    //          a == r  /\   // results of high and low are the same);
-    //          h1 == h1' /\ // heaps are equal
-    //          // This is exactly p but cannot be proved /
-    //          // lstate_as_state (state_as_lstate h0 (b1, b2) s1) (b1, b2) == s1 /\
-    //          wp2 a s1 (fun _ -> True)));
 
     assume (wp2 a (lstate_as_state h1 (b1, b2)) (fun _ -> True));
     (* ********************************************* *)
     // To run this we need [wp2 a (lstate_as_state h1 (b1, b2))]
    
     let r = f a (b1, b2) in r
-    
-*)
-
 
 // Versions of [lread] and [lwrite] with reif in spec
 

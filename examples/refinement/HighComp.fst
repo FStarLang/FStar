@@ -61,13 +61,6 @@ total reifiable reflectable new_effect {
 unfold
 let return_wp (x : 'a) : hwp 'a =  fun s0 post -> post (x, s0)
 
-// TODO use the provided HighComp._dm4f_HIGH_return_wp
-// Tried the following without success:
-// HighComp._dm4f_HIGH_return_wp (in a different module)
-// _dm4f_HIGH_return_wp
-// HIGH?._dm4f_HIGH_return_wp
-// Got : "definition __proj__HIGH__item___dm4f_HIGH_return_wp not found"
-
 //Re-define bind_elab with implicit parameters for easier use
 let bind_elab #a #b #f_w ($f:_) #g_w ($g:_) = HIGH?.bind_elab a b f_w f g_w g
 assume val range0: range
@@ -144,7 +137,6 @@ let hread_eq (#a:Type) (i:nat) :
    Lemma (h_eq (read_wp i) (read_wp i) (hread' i) (reify (HIGH?.get i))) = ()
 
 
-// Confusion comes next :)
 open FStar.Tactics
 
 let h_thunk a wp = unit -> HIGH a wp
