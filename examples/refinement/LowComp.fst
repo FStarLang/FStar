@@ -242,25 +242,45 @@ let lbind (#a:Type) (#b:Type)
     
     assert (well_formed h0 (b1, b2)); // sanity check
     assert (well_formed h1 (b1, b2)); // sanity check
+    assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True)); // required to run c1
+
+    // (1) XXX fails with assertion failed
+    let u : unit = 
+      assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True));
+      let r, s1 = c1 (lstate_as_state h0 (b1, b2)) in
+      assert True
+    in
+
+    // (2) XXX works 
+    assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True) /\
+            (let r, s1 = c1 (lstate_as_state h0 (b1, b2)) in
+             True));
+    
+    // (3) XXX fails with assertion failed 
     assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True));
+    assert (let r, c1 = c1 (lstate_as_state h0 (b1, b2)) in
+            True);
+
       
+
+  
     // Problem 1: This does not work, but something similar an lwrite does.
     // What is the difference? Is it because of the unit result type in lwrite?
     // Error: GHOST and STATE cannot be composed
     // let r, s1 = c1 (lstate_as_state h0 (b1, b2)) in
     // assert True;
 
-
-    assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True) /\
-            (let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
-             let h1' = state_as_lstate h0 (b1, b2) s1 in 
-             let s1' = lstate_as_state h1' (b1, b2) in 
-             let p = state_as_lstate_inv h0 (b1, b2) s1 in
-             a == r      // results of high and low are the same);
-             /\ h1 == h1' // heaps are equal           
-             // Problem 2 : This is exactly the type of p and yet it cannot be proved
-             // /\ lstate_as_state (state_as_lstate h0 (b1, b2) s1) (b1, b2) == s1 
-            ));
+    
+    // assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True) /\
+    //         (let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
+    //          let h1' = state_as_lstate h0 (b1, b2) s1 in 
+    //          let s1' = lstate_as_state h1' (b1, b2) in 
+    //          let p = state_as_lstate_inv h0 (b1, b2) s1 in
+    //          a == r      // results of high and low are the same);
+    //          /\ h1 == h1' // heaps are equal           
+    //          // Problem 2 : This is exactly the type of p and yet it cannot be proved
+    //          /\ lstate_as_state (state_as_lstate h0 (b1, b2) s1) (b1, b2) == s1 
+    //         ));
 
 
     // Problem 3:  GHOST and STATE cannot be composed
