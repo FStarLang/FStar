@@ -932,14 +932,7 @@ let includes_frameOf_as_addr #a larger smaller =
 let pointer_distinct_sel_disjoint #a b1 b2 h =
   if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2
   then begin
-    let t1 = Seq.lseq a (U32.v (Buffer?.max_length b1)) in
-    let t2 = Seq.lseq a (U32.v (Buffer?.max_length b2)) in
-    let r1 : HST.reference t1 = Buffer?.content b1 in
-    let r2' : HST.reference t2 = Buffer?.content b2 in
-    assert (Buffer?.max_length b1 == Buffer?.max_length b2);
-    assert (t1 == t2);
-    let r2 : HS.reference t1 = r2' in
-    HS.reference_distinct_sel_disjoint h (Buffer?.content b1) r2;
+    HS.reference_distinct_sel_disjoint h (Buffer?.content b1) (Buffer?.content b2);
     loc_disjoint_buffer b1 b2
   end
   else
