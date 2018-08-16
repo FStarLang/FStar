@@ -844,7 +844,9 @@ let head_match = function
 (*                      end *)
 (*     | FullMatch -> m2 () *)
 
-let fv_delta_depth env fv = match fv.fv_delta with
+let fv_delta_depth env fv =
+    let d = Env.delta_depth_of_fv env fv in
+    match d with
     | Delta_abstract d ->
       if env.curmodule.str = fv.fv_name.v.nsstr && not env.is_iface  //AR: TODO: this is to prevent unfolding of abstract symbols in the extracted interface
                                                                      //    a better way would be create new fvs with appripriate delta_depth at extraction time
@@ -853,7 +855,7 @@ let fv_delta_depth env fv = match fv.fv_delta with
     | Delta_constant_at_level i when i > 0 ->
       begin match Env.lookup_definition [Unfold delta_constant] env fv.fv_name.v with
             | None -> delta_constant //there's no definition to unfold, e.g., because it's marked irreducible
-            | _ -> fv.fv_delta
+            | _ -> d
       end
     | d ->
       d
@@ -2282,13 +2284,16 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 match (SS.compress head).n with
                 | Tm_name _
                 | Tm_match _ -> true
-                | Tm_fvar ({fv_delta=Delta_equational_at_level _}) ->
-                    true
-                | Tm_fvar ({fv_delta=Delta_abstract _}) ->
-                    //these may be relatable via a logical theory
-                    //which may provide **equations** among abstract symbols
-                    //Note, this is specifically not applicable for subtyping queries: see issue #1359
-                    problem.relation = EQ
+                | Tm_fvar fv ->
+                    (match Env.delta_depth_of_fv env fv with
+                     | Delta_equational_at_level _ ->
+                       true
+                     | Delta_abstract _ ->
+                        //these may be relatable via a logical theory
+                        //which may provide **equations** among abstract symbols
+                        //Note, this is specifically not applicable for subtyping queries: see issue #1359
+                       problem.relation = EQ
+                    | _ -> false)
                 | Tm_ascribed (t, _, _)
                 | Tm_uinst (t, _)
                 | Tm_meta (t, _) -> may_relate t

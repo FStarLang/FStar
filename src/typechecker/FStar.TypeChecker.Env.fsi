@@ -255,6 +255,8 @@ val is_interpreted         : (env -> term -> bool)
 val is_irreducible         : env -> lident -> bool
 val is_type_constructor    : env -> lident -> bool
 val num_inductive_ty_params: env -> lident -> option<int>
+val delta_depth_of_qninfo  : lident -> qninfo -> option<delta_depth>
+val delta_depth_of_fv      : env -> fv -> delta_depth
 
 (* Universe instantiation *)
 

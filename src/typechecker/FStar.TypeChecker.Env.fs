@@ -756,6 +756,36 @@ let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
 let lookup_definition delta_levels env lid =
     lookup_definition_qninfo delta_levels lid <| lookup_qname env lid
 
+let delta_depth_of_qninfo lid (qn:qninfo) : option<delta_depth> =
+    match qn with
+    | None
+    | Some (Inl _, _) -> None
+    | Some (Inr(se, _), _) ->
+      match se.sigel with
+      | Sig_inductive_typ _
+      | Sig_bundle _
+      | Sig_datacon _ -> Some (Delta_constant_at_level 0)
+      | Sig_declare_typ _ -> Some (Delta_abstract (Delta_equational_at_level 0))
+      | Sig_let ((_,lbs), _) ->
+          BU.find_map lbs (fun lb ->
+              let fv = right lb.lbname in
+              if fv_eq_lid fv lid
+              then Some fv.fv_delta
+              else None)
+      | Sig_main   _
+      | Sig_assume _ -> None
+      | Sig_new_effect _
+      | Sig_new_effect_for_free _ -> Some (Delta_constant_at_level 0)
+      | Sig_sub_effect _ -> None
+      | Sig_effect_abbrev _ (* None? *)
+      | Sig_pragma  _
+      | Sig_splice  _ -> None
+
+let delta_depth_of_fv env fv =
+    match delta_depth_of_qninfo fv.fv_name.v (lookup_qname env fv.fv_name.v) with
+    | None -> failwith (BU.format1 "Delta depth not found for %s" (FStar.Syntax.Print.fv_to_string fv))
+    | Some d -> d
+
 let quals_of_qninfo (qninfo : qninfo) : option<list<qualifier>> =
   match qninfo with
   | Some (Inr (se, _), _) -> Some se.sigquals
