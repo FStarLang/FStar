@@ -976,17 +976,6 @@ let tc_inductive env ses quals lids =
             we still need to check whether or not it supports equality
             and whether it is strictly positive
        *)
-    
-    (*
-     * AR: we now have typechecked inductive with properly generalized universes etc.
-     *     next we generate projectors, discriminators, and haseq
-     *     do them in the original env with typechecked sigelts
-     *     else caches play bad
-     *)
-    let env = Env.pop env "tc_inductive" in
-    let env = Env.push env "tc_inductive_ops_and_haseq" in
-
-    let env = push_sigelt env sig_bndle in
 
     (* Once the datacons are generalized we can construct the projectors with the right types *)
     let data_ops_ses = List.map (TcInductive.mk_data_operations quals env tcs) datas |> List.flatten in
@@ -1033,7 +1022,7 @@ let tc_inductive env ses quals lids =
               else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env
             in
             sig_bndle, ses@data_ops_ses in  //append hasEq axiom lids and data projectors and discriminators lids
-    ignore (Env.pop env "tc_inductive_ops_and_haseq"); // OK to ignore: caller will reuse original env
+    ignore (Env.pop env "tc_inductive"); // OK to ignore: caller will reuse original env
     res
 
 //when we process a reset-options pragma, we need to restart z3 etc.
