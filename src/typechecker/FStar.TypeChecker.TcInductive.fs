@@ -91,7 +91,9 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let tps, k = SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
          let fv_tc = S.lid_as_fv tc delta_constant None in
          let s = { s with sigel = Sig_inductive_typ(tc, uvs, tps, k, mutuals, data) } in
-         Env.push_sigelt env0 s,
+         let env = Env.push_sigelt env0 s in
+         env.solver.encode_sig env s;
+         env,
          s,
          u,
          guard
