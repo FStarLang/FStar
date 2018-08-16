@@ -759,7 +759,7 @@ let lookup_definition delta_levels env lid =
 let delta_depth_of_qninfo lid (qn:qninfo) : option<delta_depth> =
     match qn with
     | None
-    | Some (Inl _, _) -> None
+    | Some (Inl _, _) -> Some (Delta_constant_at_level 0)
     | Some (Inr(se, _), _) ->
       match se.sigel with
       | Sig_inductive_typ _

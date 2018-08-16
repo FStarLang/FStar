@@ -972,7 +972,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_lazy _
 
           //these three are just constructors; no delta steps can apply
-          | Tm_fvar({ fv_delta = Delta_constant_at_level 0 }) //NS: this seems to be necessary
           | Tm_fvar({ fv_qual = Some Data_ctor })
           | Tm_fvar({ fv_qual = Some (Record_ctor _) }) ->
             log_unfolding cfg (fun () -> BU.print1 ">>> Tm_fvar case 0 for %s\n" (Print.term_to_string t));
