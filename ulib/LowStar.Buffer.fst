@@ -6,16 +6,12 @@ module U32 = FStar.UInt32
 module G = FStar.Ghost
 module Seq = FStar.Seq
 
-type vec (a: Type0) : nat -> Type0 =
-  | VNil : vec a 0
-  | VCons : (#n: nat { n > 0 } ) -> (vec_hd: a) -> (vec_tl: vec a (n - 1)) -> vec a n
-
 noeq
 type buffer' (a: Type0) : Type0 =
 | Null
 | Buffer:
   (max_length: U32.t ) ->
-  (content: HST.reference (vec a (U32.v max_length))) ->
+  (content: HST.reference (Seq.lseq a (U32.v max_length))) ->
   (idx: U32.t) ->
   (length: U32.t { U32.v idx + U32.v length <= U32.v max_length } ) ->
   buffer' a
@@ -66,51 +62,11 @@ let len #a b =
 
 let len_null a = ()
 
-let lseq = Seq.lseq
-
-let rec lseq_of_vec (#a: Type0) (#n: nat) (l: vec a n) : Tot (lseq a n) =
-  if n = 0
-  then Seq.empty
-  else Seq.cons (VCons?.vec_hd l) (lseq_of_vec (VCons?.vec_tl l))
-
-let rec vec_of_lseq (#a: Type0) (#n: nat) (l: lseq a n) : Tot (vec a n) =
-  if n = 0
-  then VNil
-  else VCons (Seq.head l) (vec_of_lseq (Seq.tail l))
-
-val lseq_of_vec_of_lseq (#a: Type0) (#n: nat) (l: lseq a n) : Lemma
-  (requires True)
-  (ensures (Seq.equal (lseq_of_vec (vec_of_lseq l)) l))
-  [SMTPat (lseq_of_vec (vec_of_lseq l))]
-
-let rec lseq_of_vec_of_lseq #a #n l =
-  if n = 0
-  then ()
-  else begin
-    lseq_of_vec_of_lseq #_ #(n - 1) (Seq.tail l);
-    Seq.cons_head_tail (lseq_of_vec (vec_of_lseq l));
-    Seq.cons_head_tail l
-  end
-
-val vec_of_lseq_of_vec (#a: Type0) (#n: nat) (l: vec a n) : Lemma
-  (requires True)
-  (ensures (vec_of_lseq (lseq_of_vec l) == l))
-  [SMTPat (vec_of_lseq (lseq_of_vec l))]
-
-let rec vec_of_lseq_of_vec #a #n l =
-  if n = 0
-  then ()
-  else begin
-    Seq.cons_head_tail (lseq_of_vec l);
-    vec_of_lseq_of_vec #_ #(n - 1) (VCons?.vec_tl l);
-    Seq.lemma_tl (VCons?.vec_hd l) (lseq_of_vec (VCons?.vec_tl l))
-  end
-
 let as_seq #a h b =
   match b with
   | Null -> Seq.empty
   | Buffer max_len content idx len ->
-    Seq.slice (lseq_of_vec (HS.sel h content)) (U32.v idx) (U32.v idx + U32.v len)
+    Seq.slice (HS.sel h content) (U32.v idx) (U32.v idx + U32.v len)
 
 let length_as_seq #a h b = ()
 
@@ -142,7 +98,7 @@ let as_seq_gsub #a h b i len =
   match b with
   | Null -> ()
   | Buffer _ content idx len0 ->
-    Seq.slice_slice (lseq_of_vec (HS.sel h content)) (U32.v idx) (U32.v idx + U32.v len0) (U32.v i) (U32.v i + U32.v len)
+    Seq.slice_slice (HS.sel h content) (U32.v idx) (U32.v idx + U32.v len0) (U32.v i) (U32.v i + U32.v len)
 
 (* Untyped view of buffers, used only to implement the generic modifies clause. DO NOT USE in client code. *)
 
@@ -976,8 +932,8 @@ let includes_frameOf_as_addr #a larger smaller =
 let pointer_distinct_sel_disjoint #a b1 b2 h =
   if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2
   then begin
-    let t1 = vec a (U32.v (Buffer?.max_length b1)) in
-    let t2 = vec a (U32.v (Buffer?.max_length b2)) in
+    let t1 = Seq.lseq a (U32.v (Buffer?.max_length b1)) in
+    let t2 = Seq.lseq a (U32.v (Buffer?.max_length b2)) in
     let r1 : HST.reference t1 = Buffer?.content b1 in
     let r2' : HST.reference t2 = Buffer?.content b2 in
     assert (Buffer?.max_length b1 == Buffer?.max_length b2);
@@ -1009,7 +965,7 @@ let offset #a b i =
 let index #a b i =
   let open HST in
   let s = ! (Buffer?.content b) in
-  Seq.index (lseq_of_vec s) (U32.v (Buffer?.idx b) + U32.v i)
+  Seq.index s (U32.v (Buffer?.idx b) + U32.v i)
 
 (* Update *)
 
@@ -1020,8 +976,8 @@ let g_upd' (#a:Type)
               (h:HS.mem{live h b})
   : GTot HS.mem
   = let n = length b in
-      let s0 = lseq_of_vec (HS.sel h (Buffer?.content b)) in
-      let v = vec_of_lseq (Seq.upd s0 (U32.v (Buffer?.idx b) + i) v) in
+      let s0 = HS.sel h (Buffer?.content b) in
+      let v = Seq.upd s0 (U32.v (Buffer?.idx b) + i) v in
       HS.upd h (Buffer?.content b) v
 
 #set-options "--z3rlimit 32"
@@ -1041,6 +997,7 @@ let g_upd'_as_seq (#a:Type)
   // prove modifies_1_preserves_ubuffers
   Heap.lemma_distinct_addrs_distinct_preorders ();
   Heap.lemma_distinct_addrs_distinct_mm ();
+  Seq.lemma_equal_instances_implies_equal_types ();
   modifies_1_modifies b h h'
 
 #reset-options
@@ -1096,7 +1053,7 @@ let g_upd'_same_value (#a:Type)
 = let h' = g_upd' b i v h in
   let v = HS.sel h (Buffer?.content b) in
   let v' = HS.sel h' (Buffer?.content b) in
-  assert (lseq_of_vec v `Seq.equal` lseq_of_vec v');
+  assert (v `Seq.equal` v');
   HS.lemma_heap_equality_upd_with_sel h (Buffer?.content b)
 
 let rec g_upd_seq_same_value (#a:Type)
@@ -1143,9 +1100,9 @@ let rec g_upd_eq (#a:Type)
 let upd' #a b i v =
   let open HST in
   let h0 = get () in
-  let s0 = lseq_of_vec ! (Buffer?.content b) in
+  let s0 = !(Buffer?.content b) in
   let s = Seq.upd s0 (U32.v (Buffer?.idx b) + U32.v i) v in
-  Buffer?.content b := vec_of_lseq s;
+  Buffer?.content b := s;
   g_upd_eq b (U32.v i) v h0
 
 (* Recall *)
@@ -1213,8 +1170,8 @@ let alloc_common
     Buffer?.idx b == 0ul /\
     Buffer?.length b == Buffer?.max_length b
   ))
-= let s = vec_of_lseq (Seq.create (U32.v len) init) in
-  let content: HST.reference (vec a (U32.v len)) =
+= let s = Seq.create (U32.v len) init in
+  let content: HST.reference (Seq.lseq a (U32.v len)) =
     if mm then HST.ralloc_mm r s else HST.ralloc r s
   in
   let b = Buffer len content 0ul len in
@@ -1227,8 +1184,8 @@ let malloc #a r init len =
   alloc_common r init len true
 
 let alloca #a init len =
-  let content: HST.reference (vec a (U32.v len)) =
-    HST.salloc (vec_of_lseq (Seq.create (U32.v len) init))
+  let content: HST.reference (Seq.lseq a (U32.v len)) =
+    HST.salloc (Seq.create (U32.v len) init)
   in
   let b = Buffer len content 0ul len in
   b
@@ -1236,8 +1193,8 @@ let alloca #a init len =
 let alloca_of_list #a init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.seq_of_list init in
-  let content: HST.reference (vec a (U32.v len)) =
-    HST.salloc (vec_of_lseq s)
+  let content: HST.reference (Seq.lseq a (U32.v len)) =
+    HST.salloc s
   in
   let b = Buffer len content 0ul len in
   b
@@ -1245,8 +1202,8 @@ let alloca_of_list #a init =
 let gcmalloc_of_list #a r init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.seq_of_list init in
-  let content: HST.reference (vec a (U32.v len)) =
-    HST.ralloc r (vec_of_lseq s)
+  let content: HST.reference (Seq.lseq a (U32.v len)) =
+    HST.ralloc r s
   in
   let b = Buffer len content 0ul len in
   b
