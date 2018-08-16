@@ -2311,7 +2311,16 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard, wl = guard_of_prob env wl problem t1 t2 in
                     solve env (solve_prob orig (Some guard) [] wl)
-                else giveup env (BU.format2 "head mismatch (%s vs %s)" (Print.term_to_string head1) (Print.term_to_string head2)) orig
+                else giveup env (BU.format4 "head mismatch (%s (%s) vs %s (%s))"
+                                                  (Print.term_to_string head1)
+                                                  (BU.dflt ""
+                                                    (BU.bind_opt (delta_depth_of_term env head1)
+                                                                 (fun x -> Some (Print.delta_depth_to_string x))))
+                                                  (Print.term_to_string head2)
+                                                  (BU.dflt ""
+                                                    (BU.bind_opt (delta_depth_of_term env head2)
+                                                                (fun x -> Some (Print.delta_depth_to_string x))))
+                                                  ) orig
             end
 
         | (HeadMatch true, _) when problem.relation <> EQ ->
