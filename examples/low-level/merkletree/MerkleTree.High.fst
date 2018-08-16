@@ -134,6 +134,24 @@ let rec num_iroots_of nvalues =
   else if nvalues % 2 = 0 then num_iroots_of (nvalues / 2)
   else 1 + num_iroots_of (nvalues / 2)
 
+val iroots_compactify:
+  sz:nat -> irps:nat{irps < pow2 sz} ->
+  irs:hash_seq{S.length irs = sz}  ->
+  GTot (cirs:hash_seq{S.length cirs = num_iroots_of irps})
+       (decreases sz)
+let rec iroots_compactify sz irps irs =
+  if sz = 0 then S.empty
+  else if irps % 2 = 0 
+  then iroots_compactify (sz - 1) (irps / 2) (S.tail irs)
+  else S.cons (S.head irs) (iroots_compactify (sz - 1) (irps / 2) (S.tail irs))
+
+val iroots_compactify_0:
+  sz:nat -> irs:hash_seq{S.length irs = sz} ->
+  Lemma (iroots_compactify sz 0 irs = S.empty)
+let rec iroots_compactify_0 sz irs =
+  if sz = 0 then ()
+  else iroots_compactify_0 (sz - 1) (S.tail irs)
+
 val compress_hashes_half:
   hs:hash_seq{S.length hs % 2 = 0} -> 
   GTot (chs:hash_seq{S.length chs = S.length hs / 2})
@@ -175,12 +193,18 @@ let iroots_of_hashes_tail hs = ()
 
 noeq type merkle_tree =
 | MT: values:hash_seq ->
-      iroots:hash_seq{iroots = iroots_of_hashes values} ->
+      iroots:hash_seq ->
       merkle_tree
+
+val merkle_tree_ok: mt:merkle_tree -> GTot bool
+let merkle_tree_ok mt =
+  MT?.iroots mt = iroots_of_hashes (MT?.values mt)
+
+type good_merkle_tree = mt:merkle_tree{merkle_tree_ok mt}
 
 /// Creating a merkle tree instance
 
-val create_merkle_tree: unit -> Tot merkle_tree
+val create_merkle_tree: unit -> Tot good_merkle_tree
 let create_merkle_tree _ = 
   MT S.empty S.empty
 
@@ -266,7 +290,7 @@ let rec insert_ok values iroots e =
 	 (S.tail iroots)
 	 (hash_from_hashes (S.head iroots) e))
 
-val insert: mt:merkle_tree -> e:hash -> Tot merkle_tree
+val insert: mt:good_merkle_tree -> e:hash -> Tot good_merkle_tree
 let insert mt e =
   let values = MT?.values mt in
   let iroots = MT?.iroots mt in
@@ -297,7 +321,7 @@ let rec merkle_root_of_iroots nvalues irs acc actd =
 	    merkle_root_of_iroots (nvalues / 2) (S.tail irs) nacc true))
 
 val get_root:
-  mt:merkle_tree{S.length (MT?.values mt) > 0} -> rt:hash -> 
+  mt:good_merkle_tree{S.length (MT?.values mt) > 0} -> rt:hash -> 
   Tot hash
 let get_root mt rt =
   merkle_root_of_iroots
