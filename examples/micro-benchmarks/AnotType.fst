@@ -14,17 +14,19 @@ type tb : Type u#42 = | B
 [@(expect_failure [189])]
 let _ = ta == tb
 
-type td : eqtype = | D
+type td' : Type0 = | D
+type td :eqtype = td'
 
-type te : int -> eqtype = | Ea : te 1
-                          | Eb : te 1
-                          | Ec : te 8
-                          | Ed : te 99
-
+type te' :int -> Type0 =
+  | Ea : te' 1
+  | Eb : te' 1
+  | Ec : te' 8
+  | Ed : te' 99
+type te :int -> eqtype = fun x -> te' x
 
 (* This has to work without SMT, since `td` was annotated as an eqtype.
  * We need not unfold and see the relevant `hasEq`. *)
 #set-options "--no_smt"
 let f (x y : td) = x = y
 
-let _ = Ea = Eb
+let _ = (Ea <: te 1) = (Eb <: te 1)

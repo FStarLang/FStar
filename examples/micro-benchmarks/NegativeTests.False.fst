@@ -13,7 +13,3 @@ let f p1 p2 = ()
 val absurd : unit -> Lemma False
 [@expect_failure] // this raises 2 errors on 1-phase, and 4 on 2-phases
 let absurd () = f (Left #_ #True T) (Right #True #_ T) //adding implicits to get 2 typing errors
-
-[@expect_failure]
-type t :(_:Type0{False}) =
-  | C :t
