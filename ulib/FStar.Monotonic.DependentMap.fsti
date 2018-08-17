@@ -27,7 +27,7 @@ let empty_partial_dependent_map (#a:_) (#b:_)
 val map
     (a:eqtype)
     (b:(a -> Type u#b))
-  : Type u#(max a b)
+  : Type u#b
 
 /// `repr m`: A ghost function that reveals the internal `map` as a `DM.t`
 val repr (#a:_) (#b:_)
