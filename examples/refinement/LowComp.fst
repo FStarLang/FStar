@@ -83,13 +83,6 @@ let state_as_lstate_put_put h ls bs1 bs2 =
   let p3 = upd_upd_eq (g_upd b1 0 s1' h) b2 0 s2 s2' in
   let lv3 = g_upd_preserves_live (g_upd b1 0 s1' h) b2 b1 s2' in
   assert (h2' == g_upd b2 0 s2' (g_upd b1 0 s1' h));
-
-  let h3 = g_upd b1 0 s1' h in 
-  let l3 = g_upd_preserves_live h b1 b2 s1' in
-  let h4 = g_upd b2 0 s2' h3 in
-  let l4 = g_upd_preserves_live h3 b2 b1 s2' in
-
-  assert (h4 == h2');
   () 
 
 
