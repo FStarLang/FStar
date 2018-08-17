@@ -756,8 +756,10 @@ let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
 let lookup_definition delta_levels env lid =
     lookup_definition_qninfo delta_levels lid <| lookup_qname env lid
 
-let delta_depth_of_qninfo lid (qn:qninfo) : option<delta_depth> =
-    match qn with
+let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
+    let lid = fv.fv_name.v in
+    if lid.nsstr = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
+    else match qn with
     | None
     | Some (Inl _, _) -> Some (Delta_constant_at_level 0)
     | Some (Inr(se, _), _) ->
@@ -784,7 +786,7 @@ let delta_depth_of_qninfo lid (qn:qninfo) : option<delta_depth> =
 let delta_depth_of_fv env fv =
     let lid = fv.fv_name.v in
     if lid.nsstr = "Prims" then fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
-    else match delta_depth_of_qninfo fv.fv_name.v (lookup_qname env fv.fv_name.v) with
+    else match delta_depth_of_qninfo fv (lookup_qname env fv.fv_name.v) with
     | None -> failwith (BU.format1 "Delta depth not found for %s" (FStar.Syntax.Print.fv_to_string fv))
     | Some d ->
       if d<>fv.fv_delta
