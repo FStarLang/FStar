@@ -725,7 +725,7 @@ let decidable_eq (neg:bool) (args:args) : option<t> =
   let tru = embed e_bool bogus_cbs true in
   let fal = embed e_bool bogus_cbs false in
   match args with
-  | [(_univ, _); (_typ, _); (a1, _); (a2, _)] ->
+  | [(_typ, _); (a1, _); (a2, _)] ->
      //BU.print2 "Comparing %s and %s.\n" (t_to_string a1) (t_to_string a2);
      begin match eq_t a1 a2 with
      | U.Equal -> Some (if neg then fal else tru)
