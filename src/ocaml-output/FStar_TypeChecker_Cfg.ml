@@ -2728,7 +2728,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                               uu____6394 :: uu____6449  in
                                             (FStar_Parser_Const.op_notEq,
                                               (Prims.parse_int "3"),
-                                              (Prims.parse_int "1"),
+                                              (Prims.parse_int "0"),
                                               (decidable_eq1 true),
                                               (FStar_TypeChecker_NBETerm.decidable_eq
                                                  true))
@@ -2736,7 +2736,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                              in
                                           (FStar_Parser_Const.op_Eq,
                                             (Prims.parse_int "3"),
-                                            (Prims.parse_int "1"),
+                                            (Prims.parse_int "0"),
                                             (decidable_eq1 false),
                                             (FStar_TypeChecker_NBETerm.decidable_eq
                                                false))
