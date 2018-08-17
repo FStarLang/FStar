@@ -44,6 +44,21 @@ let bind_elab #a #b #f_w ($f:_) #g_w ($g:_) = STATE?.bind_elab a b f_w f g_w g
 assume val range0: range
 let bind_wp = STATE?.bind_wp range0
 
+let reified_st a (wp:STATE?.wp a) = s0:int -> PURE (a * int) (wp s0)
+
+let monotonic #a (wp:STATE?.wp a) =
+  forall p1 p2 s. {:pattern wp s p1; wp s p2} (forall x. p1 x ==> p2 x) ==> wp s p1 ==> wp s p2
+
+let test_bind_elab #a #b
+    #f_w (f:reified_st a f_w)
+    #g_w (g: (x:a -> reified_st b (g_w x)))
+    : reified_st b (bind_wp a b f_w g_w)
+    = fun s0 ->
+        assume (monotonic f_w);
+        let x, s1 = f s0 in
+        assume (monotonic (g_w x));
+        g x s1
+
 let test1 (s0:int) (v:int) =
   assert ((reify (let _ = STATE?.put v in
                    STATE?.put v) s0 ==
@@ -61,8 +76,6 @@ let st_thunk a wp = unit -> STATE a wp
 
 let y = STATE?.bind_wp
 
-let monotonic #a (wp:STATE?.wp a) =
-  forall p1 p2 s. {:pattern wp s p1; wp s p2} (forall x. p1 x ==> p2 x) ==> wp s p1 ==> wp s p2
 
 let reify_bind_commutes
           (#a #b : _)

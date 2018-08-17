@@ -218,84 +218,65 @@ let lread i = fun (b1, b2) ->
   else 
     b2.(0ul)
 
+let z = HIGH?.wp int
+
+//Rather than get into trouble with applying `c` directly in a context
+//where we have to think about the VC of the continuation, 
+//let's factor this into a `run`, which makes things a lot more predictable
+let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : (a * state) = c s0
+
 let lbind (#a:Type) (#b:Type)
-  (#wp1: state -> (a * state -> Type) -> Type)
-  (#wp2: a -> state -> (b * state -> Type) -> Type)
+  (#wp1: HIGH?.wp a)
+  (#wp2: a -> HIGH?.wp b)
   (#c1:comp_wp a wp1) (#c2:(x:a -> comp_wp b (wp2 x)))
   (m: lcomp_wp1 a wp1 c1) (f: (x:a) -> lcomp_wp1 b (wp2 x) (c2 x)):
   lcomp_wp1 b (bind_wp a b wp1 wp2) (bind_elab c1 c2) =
-  fun (b1, b2) ->
+  fun ls ->
+    let (b1, b2) = ls in
     (* ********************************************* *)
     assume (HighComp.monotonic wp1);
     
     let h0 = ST.get () in  // Initial heap
-    assert (wp1 (lstate_as_state h0 (b1, b2)) (function (x, s1) -> wp2 x s1 (fun _ -> True)));
-    assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True)); 
-    (* ********************************************* *)
 
-    let a = m (b1, b2) in 
-    
     (* ********************************************* *)
-    assume (HighComp.monotonic (wp2 a));
-    
+    let x_a = m ls in  //Run the first compuation
     let h1 = ST.get () in // Intermediate heap
+    (* ********************************************* *)
     
-    assert (well_formed h0 (b1, b2)); // sanity check
-    assert (well_formed h1 (b1, b2)); // sanity check
-    assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True)); // required to run c1
-
-    // (1) XXX fails with assertion failed
-    let u : unit = 
-      assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True));
-      let r, s1 = c1 (lstate_as_state h0 (b1, b2)) in
-      assert True
+    assume (HighComp.monotonic (wp2 x_a));
+    let high : Ghost.erased _ = 
+      //In this block, we run the high computation
+      //in ghost code and remember its intermediate states and result
+      let s0 = lstate_as_state h0 ls in
+      let x, s1 = run_high c1 s0 in
+      assert (x == x_a);
+      assert (h1 == state_as_lstate h0 ls s1);
+      state_as_lstate_inv h0 ls s1; //Get-Put: 1st lens law
+      assert (lstate_as_state h1 ls == s1); //this assertion is key to running `f x_a ls` below
+      let y, s2 = run_high (c2 x) s1 in
+      assert (s2 == snd (run_high #b #(bind_wp a b wp1 wp2) (bind_elab c1 c2) s0));
+      Ghost.hide (s0, (x, s1), (y, s2))
     in
 
-    // (2) XXX works 
-    assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True) /\
-            (let r, s1 = c1 (lstate_as_state h0 (b1, b2)) in
-             True));
-    
-    // (3) XXX fails with assertion failed 
-    assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True));
-    assert (let r, c1 = c1 (lstate_as_state h0 (b1, b2)) in
-            True);
-
-      
-
-  
-    // Problem 1: This does not work, but something similar an lwrite does.
-    // What is the difference? Is it because of the unit result type in lwrite?
-    // Error: GHOST and STATE cannot be composed
-    // let r, s1 = c1 (lstate_as_state h0 (b1, b2)) in
-    // assert True;
-
-    
-    // assert (wp1 (lstate_as_state h0 (b1, b2)) (fun _ -> True) /\
-    //         (let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
-    //          let h1' = state_as_lstate h0 (b1, b2) s1 in 
-    //          let s1' = lstate_as_state h1' (b1, b2) in 
-    //          let p = state_as_lstate_inv h0 (b1, b2) s1 in
-    //          a == r      // results of high and low are the same);
-    //          /\ h1 == h1' // heaps are equal           
-    //          // Problem 2 : This is exactly the type of p and yet it cannot be proved
-    //          /\ lstate_as_state (state_as_lstate h0 (b1, b2) s1) (b1, b2) == s1 
-    //         ));
-
-
-    // Problem 3:  GHOST and STATE cannot be composed
-    // let p = 
-    //   let (r, s1) = c1 (lstate_as_state h0 (b1, b2)) in
-    //   let h1' = state_as_lstate h0 (b1, b2) s1 in 
-    //   let s1' = lstate_as_state h1' (b1, b2) in 
-    //   state_as_lstate_inv h0 (b1, b2) s1
-    // in
-
-    assume (wp2 a (lstate_as_state h1 (b1, b2)) (fun _ -> True));
     (* ********************************************* *)
-    // To run this we need [wp2 a (lstate_as_state h1 (b1, b2))]
-   
-    let r = f a (b1, b2) in r
+    let y_b = f x_a ls in
+    let h2 = ST.get () in // final heap
+    (* ********************************************* *)
+
+    let _ : unit = 
+      //In this block, we unpack the memoized result from earlier
+      //and relate those values to the result and final heap
+      let s0, (x, s1), (y, s2) = Ghost.reveal high in
+      assert (x == x_a);
+      assert (y == y_b);
+      assert (h2 == state_as_lstate h1 ls s2);
+      assert (h1 == state_as_lstate h0 ls s1);
+      //TODO: need a lemma to show this next fact
+      //Basically, a lemma about redundant writes which is in fact Put-Put, the 3rd lens law
+      assume (state_as_lstate h0 ls s2 == state_as_lstate (state_as_lstate h0 ls s1) ls s2);
+      assert (state_as_lstate h0 ls s2 == state_as_lstate h1 ls s2) 
+    in
+    y_b
 
 // Versions of [lread] and [lwrite] with reif in spec
 
