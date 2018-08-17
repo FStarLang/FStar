@@ -2495,7 +2495,7 @@ let rec (norm :
                    cfg.FStar_TypeChecker_Cfg.tcenv lid
                   in
                let uu____8529 =
-                 FStar_TypeChecker_Env.delta_depth_of_qninfo lid qninfo  in
+                 FStar_TypeChecker_Env.delta_depth_of_qninfo fv qninfo  in
                (match uu____8529 with
                 | FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Delta_constant_at_level _0_17) when
