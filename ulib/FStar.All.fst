@@ -36,8 +36,9 @@ effect All (a:Type) (pre:all_pre) (post:(h:heap -> Tot (all_post' a (pre h)))) =
     (fun (p : all_post a) (h : heap) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1))
 effect ML (a:Type) = ALL a (all_null_wp heap a)
 
-assume val pipe_right : 'a -> ('a -> ML 'b) -> ML 'b
-assume val pipe_left : ('a -> ML 'b) -> 'a -> ML 'b
+let pipe_right (x : 'a) (f : ('a -> ML 'b)) : ML 'b = f x
+let pipe_left  (f : ('a -> ML 'b)) (x : 'a) : ML 'b = f x
+
 assume val exit : int -> ML 'a
 assume val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a
 

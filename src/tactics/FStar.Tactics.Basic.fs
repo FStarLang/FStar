@@ -837,8 +837,12 @@ let t_exact try_refine set_expected_typ tm : tac<unit> = wrap_err "exact" <|
         bind (catch (bind (norm [EMB.Delta]) (fun _ ->
                        bind (refine_intro ()) (fun _ ->
                        __exact_now set_expected_typ tm)))) (function
-              | Inr r -> ret r
-              | Inl _ -> fail e)))) // keep original error
+              | Inr r ->
+                  mlog (fun () -> BU.print_string "__exact_now: failed after refining too\n") (fun _ ->
+                  ret r)
+              | Inl _ ->
+                  mlog (fun () -> BU.print_string "__exact_now: was not a refinement\n") (fun _ ->
+                  fail e)))))
 
 let rec mapM (f : 'a -> tac<'b>) (l : list<'a>) : tac<list<'b>> =
     match l with
@@ -1120,7 +1124,10 @@ let binder_retype (b : binder) : tac<unit> = wrap_err "binder_retype" <|
     | None -> fail "binder is not present in environment"
     | Some (e0, bvs) ->
         let (ty, u) = U.type_u () in
-        bind (new_uvar "binder_retype" e0 ty) (fun (t', u_t') -> //NS: Question ... u_t' is dropped; why?
+        bind (new_uvar "binder_retype" e0 ty) (fun (t', u_t') ->
+        //NS: Question ... u_t' is dropped; why?
+        //GM: No need for it... we just use t' which is approx (Tm_uvar u_t').
+        //    The uvar is tracked in the proofstate too.
         let bv'' = {bv with sort = t'} in
         let s = [S.NT (bv, S.bv_to_name bv'')] in
         let bvs = List.map (fun b -> { b with sort = SS.subst s b.sort }) bvs in

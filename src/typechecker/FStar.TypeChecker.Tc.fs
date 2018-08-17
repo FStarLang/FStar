@@ -1346,6 +1346,11 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   | Sig_splice (lids, t) ->
     if Options.debug_any () then
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
+
+    // Check the tactic
+    let t, _, g = tc_tactic env t in
+    Rel.force_trivial_guard env g;
+
     let ses = env.splice env t in
     let lids' = List.collect U.lids_of_sigelt ses in
     List.iter (fun lid ->
