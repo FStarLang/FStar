@@ -180,6 +180,8 @@ val as_seq_seq_get:
 	(ensures (B.as_seq h (S.index bs k) == 
 		 S.index (as_seq_seq h blen bslen i j bs) (k - i)))
 	(decreases j)
+	[SMTPat (B.as_seq h (S.index bs k));
+	SMTPat (S.index (as_seq_seq h blen bslen i j bs) (k - i))]
 let rec as_seq_seq_get h #a blen bslen i j bs k =
   if i = j then ()
   else if k = j - 1
@@ -192,6 +194,90 @@ let rec as_seq_seq_get h #a blen bslen i j bs k =
     	      S.snoc (as_seq_seq h blen bslen i (j - 1) bs)
     		     (B.as_seq h (S.index bs (j - 1))));
        as_seq_seq_get h blen bslen i (j - 1) bs k)
+
+val as_seq_seq_slice:
+  h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
+  bslen:nat -> i:nat -> j:nat{i <= j && j <= bslen} ->
+  bs:S.seq (B.buffer a){
+    S.length bs = bslen /\
+    V.forall_seq bs i j (fun hs -> B.len hs = blen)} ->
+  Lemma (S.equal (as_seq_seq h blen bslen i j bs)
+		 (as_seq_seq h blen (j - i) 0 (j - i) (S.slice bs i j)))
+#set-options "--z3rlimit 20"
+let rec as_seq_seq_slice h #a blen bslen i j bs =
+  if i = j 
+  then (assert (S.equal (as_seq_seq h blen bslen i j bs) S.empty);
+       assert (S.equal (as_seq_seq h blen (j - i) 0 (j - i)
+				   (S.slice bs i j)) S.empty))
+  else (as_seq_seq_slice h blen bslen i (j - 1) bs;
+       as_seq_seq_rec h blen bslen i j bs;
+       as_seq_seq_rec h blen (j - i) 0 (j - i) (S.slice bs i j);
+       assert (S.equal (as_seq_seq h blen bslen i j bs)
+		       (S.snoc (as_seq_seq h blen bslen i (j - 1) bs)
+			       (B.as_seq h (S.index bs (j - 1)))));
+       assert (S.equal (as_seq_seq h blen (j - i) 0 (j - i) (S.slice bs i j))
+		       (S.snoc (as_seq_seq h blen (j - i) 
+					   0 (j - i - 1) (S.slice bs i j))
+			       (B.as_seq h (S.index (S.slice bs i j) (j - i - 1)))));
+       as_seq_seq_slice h blen (j - i) 0 (j - i - 1) (S.slice bs i j);
+       assert (S.equal (as_seq_seq h blen (j - i) 0 (j - i - 1) (S.slice bs i j))
+    		       (as_seq_seq h blen (j - 1 - i) 
+				   0 (j - 1 - i) (S.slice bs i (j - 1)))))
+
+val as_seq_seq_slice_eq:
+  h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
+  bslen1:nat -> i1:nat -> j1:nat{i1 <= j1 && j1 <= bslen1} ->
+  bs1:S.seq (B.buffer a){
+    S.length bs1 = bslen1 /\
+    V.forall_seq bs1 i1 j1 (fun hs -> B.len hs = blen)} ->
+  bslen2:nat -> i2:nat -> j2:nat{i2 <= j2 && j2 <= bslen2} ->
+  bs2:S.seq (B.buffer a){
+    S.length bs2 = bslen2 /\
+    V.forall_seq bs2 i2 j2 (fun hs -> B.len hs = blen)} ->
+  Lemma (requires (S.equal (S.slice bs1 i1 j1) (S.slice bs2 i2 j2)))
+	(ensures (S.equal (as_seq_seq h blen bslen1 i1 j1 bs1)
+			  (as_seq_seq h blen bslen2 i2 j2 bs2)))
+let as_seq_seq_slice_eq h #a blen bslen1 i1 j1 bs1 bslen2 i2 j2 bs2 =
+  as_seq_seq_slice h blen bslen1 i1 j1 bs1;
+  as_seq_seq_slice h blen bslen2 i2 j2 bs2
+
+val as_seq_seq_upd:
+  h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
+  bslen:nat -> i:nat -> j:nat{i <= j && j <= bslen} ->
+  bs:S.seq (B.buffer a){
+    S.length bs = bslen /\
+    V.forall_seq bs i j (fun hs -> B.len hs = blen)} ->
+  k:nat{i <= k && k < j} -> v:B.buffer a{B.len v = blen} ->
+  Lemma (S.equal (as_seq_seq h blen bslen i j (S.upd bs k v))
+		 (S.upd (as_seq_seq h blen bslen i j bs)
+			(k - i) (B.as_seq h v)))
+let rec as_seq_seq_upd h #a blen bslen i j bs k v =
+  if i = j then ()
+  else if k = j - 1 
+  then (as_seq_seq_rec h blen bslen i j (S.upd bs k v);
+       as_seq_seq_rec h blen bslen i j bs;
+       assert (S.equal (as_seq_seq h blen bslen i j (S.upd bs k v))
+       		       (S.snoc (as_seq_seq h blen bslen i (j - 1) (S.upd bs k v))
+       			       (B.as_seq h v)));
+       assert (S.equal (S.upd (as_seq_seq h blen bslen i j bs)
+       			      (k - i) (B.as_seq h v))
+       		       (S.upd (S.snoc (as_seq_seq h blen bslen i (j - 1) bs)
+       				      (B.as_seq h (S.index bs (j - 1))))
+       			      (k - i) (B.as_seq h v)));
+       as_seq_seq_slice_eq
+	 h blen bslen i (j - 1) (S.upd bs k v)
+	 bslen i (j - 1) bs)
+  else (as_seq_seq_rec h blen bslen i j (S.upd bs k v);
+       as_seq_seq_rec h blen bslen i j bs;
+       assert (S.equal (as_seq_seq h blen bslen i j (S.upd bs k v))
+		       (S.snoc (as_seq_seq h blen bslen i (j - 1) (S.upd bs k v))
+			       (B.as_seq h (S.index bs (j - 1)))));
+       assert (S.equal (S.upd (as_seq_seq h blen bslen i j bs)
+       			      (k - i) (B.as_seq h v))
+       		       (S.upd (S.snoc (as_seq_seq h blen bslen i (j - 1) bs)
+       				      (B.as_seq h (S.index bs (j - 1))))
+       			      (k - i) (B.as_seq h v)));
+       as_seq_seq_upd h blen bslen i (j - 1) bs k v)
 
 val as_seq_get:
   h:HS.mem -> #a:Type -> blen:uint32_t{blen > 0ul} ->
@@ -238,6 +324,21 @@ val loc_vector_loc_bv_buffer_disjoint:
 	  loc_disjoint (V.loc_addr_of_vector bv) (loc_bv_buffer h bv i)))
 let loc_vector_loc_bv_buffer_disjoint #a h bv = ()
 
+val region_loc_bv_buffers_disjoint:
+  #a:Type0 -> h:HS.mem -> drid:HH.rid -> bv:buf_vector a ->
+  i:uint32_t -> j:uint32_t{i <= j && j <= V.size_of bv} -> 
+  Lemma (requires (V.forall_ h bv i j
+		    (fun b -> HH.extends (B.frameOf b) drid)))
+	(ensures (loc_disjoint (B.loc_region_only false drid)
+			       (loc_bv_buffers h bv (U32.v i) (U32.v j))))
+	(decreases (U32.v j))
+let rec region_loc_bv_buffers_disjoint #a h drid bv i j =
+  if i = j then ()
+  else (region_loc_bv_buffers_disjoint h drid bv i (j - 1ul);
+       loc_disjoint_union_r (B.loc_region_only false drid)
+			    (loc_bv_buffers h bv (U32.v i) (U32.v j - 1))
+			    (loc_bv_buffer h bv (U32.v j - 1)))
+
 val loc_vector_loc_bv_buffers_disjoint:
   #a:Type0 -> h:HS.mem -> bv:buf_vector a ->
   i:nat -> j:nat{i <= j && j <= U32.v (V.size_of bv)} -> 
@@ -256,6 +357,7 @@ val loc_bv_buffer_disjoint:
   j:nat{j < U32.v (V.size_of bv) && i <> j} -> 
   Lemma (requires (bv_inv_region h bv))
 	(ensures (loc_disjoint (loc_bv_buffer h bv i) (loc_bv_buffer h bv j)))
+	[SMTPat (loc_disjoint (loc_bv_buffer h bv i) (loc_bv_buffer h bv j))]
 let loc_bv_buffer_disjoint #a h bv i j =
   V.forall2_seq_ok 
     (V.as_seq h bv) 0 (U32.v (V.size_of bv)) i j
@@ -584,10 +686,19 @@ let insert_ptr #a ia blen bv v =
   let hh0 = HST.get () in
   let ibv = V.insert bv v in
   let hh1 = HST.get () in
-  assert (S.equal (V.as_seq hh1 ibv)
-		  (S.snoc (V.as_seq hh0 bv) v));
-  assume (S.equal (as_seq hh1 blen ibv)
-		  (S.snoc (as_seq hh0 blen bv) (B.as_seq hh0 v)));
+  as_seq_seq_slice_eq hh1 blen 
+    (U32.v (V.size_of bv) + 1) 0 (U32.v (V.size_of bv)) 
+    (S.snoc (V.as_seq hh0 bv) v)
+    (U32.v (V.size_of bv)) 0 (U32.v (V.size_of bv))
+    (V.as_seq hh0 bv);
+  region_loc_bv_buffers_disjoint hh0 (V.frameOf ibv) bv 0ul (V.size_of bv);
+  loc_vector_loc_bv_buffers_disjoint hh0 bv 0 (U32.v (V.size_of bv));
+  as_seq_seq_preserved blen (U32.v (V.size_of bv))
+    0 (U32.v (V.size_of bv))
+    (V.as_seq hh0 bv)
+    (loc_union (V.loc_addr_of_vector bv)
+	       (V.loc_vector ibv))
+    hh0 hh1;
   ibv
 
 val insert_copy:
@@ -647,8 +758,17 @@ val assign_ptr:
       S.equal (as_seq h1 blen bv)
 	      (S.upd (as_seq h0 blen bv) (U32.v i) (B.as_seq h0 v))))
 let assign_ptr #a blen bv i v =
+  let hh0 = HST.get () in
   V.assign bv i v;
-  admit ()
+  let hh1 = HST.get () in
+  as_seq_seq_upd hh1 blen (U32.v (V.size_of bv))
+		 0 (U32.v (V.size_of bv)) (V.as_seq hh0 bv)
+		 (U32.v i) v;
+  loc_vector_loc_bv_buffers_disjoint hh0 bv 0 (U32.v (V.size_of bv));
+  as_seq_seq_preserved blen (U32.v (V.size_of bv))
+  		       0 (U32.v (V.size_of bv))
+  		       (V.as_seq hh0 bv)
+  		       (V.loc_vector bv) hh0 hh1
 
 val assign_copy:
   #a:Type0 -> blen:uint32_t{blen > 0ul} ->
@@ -664,8 +784,27 @@ val assign_copy:
       S.equal (as_seq h1 blen bv)
 	      (S.upd (as_seq h0 blen bv) (U32.v i) (B.as_seq h0 v))))
 let assign_copy #a blen bv i v =
+  let hh0 = HST.get () in
   B.blit v 0ul (V.index bv i) 0ul blen;
-  admit ()
+  let hh1 = HST.get () in
+  assert (forall (j:nat{j < U32.v (V.size_of bv)}).
+  	   j <> (U32.v i) ==>
+  	   S.index (as_seq_seq hh1 blen (U32.v (V.size_of bv))
+  			       0 (U32.v (V.size_of bv)) (V.as_seq hh0 bv)) 
+			       (j - 0) ==
+	   B.as_seq hh1 (S.index (V.as_seq hh0 bv) j));
+  assert (forall (j:nat{j < U32.v (V.size_of bv)}).
+  	   j <> (U32.v i) ==>
+  	   S.index (as_seq hh0 blen bv) j ==
+	   B.as_seq hh0 (S.index (V.as_seq hh0 bv) j));
+  assert (forall (j:nat{j < U32.v (V.size_of bv)}).
+  	   j <> (U32.v i) ==>
+	   loc_disjoint (loc_bv_buffer hh0 bv (U32.v i))
+			(loc_bv_buffer hh0 bv j));
+  assert (forall (j:nat{j < U32.v (V.size_of bv)}).
+  	   j <> (U32.v i) ==>
+	   B.as_seq hh1 (S.index (V.as_seq hh0 bv) j) ==
+	   B.as_seq hh0 (S.index (V.as_seq hh0 bv) j))
 
 val free_bufs:
   #a:Type0 -> blen:uint32_t{blen > 0ul} ->
