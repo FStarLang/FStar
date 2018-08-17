@@ -27,17 +27,20 @@ let well_formed h = fun (r1, r2) -> live h r1 /\ live h r2 /\ disjoint r1 r2
 val lstate_as_state : HS.mem -> lstate -> GTot state
 let lstate_as_state h  = fun (b1, b2) -> (B.get h b1 0, B.get h b2 0)
 
-val state_as_lstate : h:HS.mem -> ls:lstate{well_formed h ls} -> state -> GTot HS.mem 
+val state_as_lstate : h:HS.mem -> ls:lstate{well_formed h ls} -> state -> GTot (h':HS.mem{well_formed h' ls})
 let state_as_lstate h =
   fun (r1, r2) (v1, v2) ->
     let h' = g_upd r1 0 v1 h in
     let p = g_upd_preserves_live h r1 r2 v1 in
-    g_upd r2 0 v2 h'
+    let h'' = g_upd r2 0 v2 h' in 
+    let p' = g_upd_preserves_live h' r2 r1 v2 in
+    h''
 
+(** Lens lows *)
 
-val state_as_lstate_inv : h:HS.mem -> ls:lstate{well_formed h ls} -> bs:state ->
+val state_as_lstate_put_get : h:HS.mem -> ls:lstate{well_formed h ls} -> bs:state ->
    Lemma (lstate_as_state (state_as_lstate h ls bs) ls == bs)
-let state_as_lstate_inv h ls bs = 
+let state_as_lstate_put_get h ls bs = 
   let (b1, b2) = ls in 
   let (s1, s2) = bs in
   let h1 = g_upd b1 0 s1 h in 
@@ -52,6 +55,43 @@ let state_as_lstate_inv h ls bs =
   let p2 = get_upd_same h1 b2 s2 in
   assert (get h2 b2 0 == s2);
   ()
+
+
+val state_as_lstate_put_put : h:HS.mem -> ls:lstate{well_formed h ls} -> bs1:state -> bs2:state ->
+    Lemma (state_as_lstate h ls bs2 == state_as_lstate (state_as_lstate h ls bs1) ls bs2)
+let state_as_lstate_put_put h ls bs1 bs2 = 
+  let (b1, b2) = ls in 
+  let (s1, s2) = bs1 in
+  let (s1', s2') = bs2 in
+  
+  let h1 = g_upd b1 0 s1 h in 
+  let l1 = g_upd_preserves_live h b1 b2 s1 in
+  let h2 = g_upd b2 0 s2 h1 in
+  let l2 = g_upd_preserves_live h1 b2 b1 s2 in
+
+  let h1' = g_upd b1 0 s1' h2 in 
+  let l1' = g_upd_preserves_live h2 b1 b2 s1' in
+  let h2' = g_upd b2 0 s2' h1' in
+  let l2' = g_upd_preserves_live h1' b2 b1 s2' in
+
+  let p1 = upd_com h1 b1 b2 s1' s2 in
+  let lv1 = g_upd_preserves_live h1 b1 b2 s1' in
+  assert (h1' == g_upd b2 0 s2 (g_upd b1 0 s1' h1));
+  let p2 = upd_upd_eq h b1 0 s1 s1' in
+  let lv2 = g_upd_preserves_live h b1 b2 s1' in
+  assert (h1' == g_upd b2 0 s2 (g_upd b1 0 s1' h));
+  let p3 = upd_upd_eq (g_upd b1 0 s1' h) b2 0 s2 s2' in
+  let lv3 = g_upd_preserves_live (g_upd b1 0 s1' h) b2 b1 s2' in
+  assert (h2' == g_upd b2 0 s2' (g_upd b1 0 s1' h));
+
+  let h3 = g_upd b1 0 s1' h in 
+  let l3 = g_upd_preserves_live h b1 b2 s1' in
+  let h4 = g_upd b2 0 s2' h3 in
+  let l4 = g_upd_preserves_live h3 b2 b1 s2' in
+
+  assert (h4 == h2');
+  () 
+
 
 // Low type variations
 
@@ -80,78 +120,22 @@ let lcomp_wp1 (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp 
                      h' == state_as_lstate h ls s1 /\ x == r )))
 
 let lcomp_wp2 (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
-     (ls:lstate) ->
-     Stack a
-       (requires (fun h -> well_formed h ls))
-       (ensures  (fun h r h' ->
-                    well_formed h' ls /\
-                    (let s0 = lstate_as_state h ls in
-                      wp s0 (fun _ -> True) ==> 
-                      (let tls = state_as_lstate h ls in // XXX fails otherwise
-                       let (x, s1) = c s0 in 
-                       h' == tls s1 /\ x == r ))))
-
-
-// This is the variation currenlty used
-let lcomp_wp (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
-     (ls:lstate) ->
-     Stack a
-       (requires (fun h -> well_formed h ls))
-       (ensures  (fun h r h' ->
-                    well_formed h' ls /\
-                    modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
-                    (let s0 = lstate_as_state h ls in
-                     wp s0 (fun _ -> True) ==>
-                     (let res = c s0 in
-                      snd res == lstate_as_state h' ls /\ fst res == r))))
-
-
-let lcomp_wp' (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
-    (ls:lstate) ->
-    Stack a
-      (requires (fun h -> well_formed h ls))
-      (ensures  (fun h r h' ->
-      well_formed h' ls /\
-      modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
-      (let s0 = lstate_as_state h ls in
-       wp s0 (fun _ -> True) ==>
-       (let res = c s0 in
-       snd res == lstate_as_state h' ls /\ fst res == r))))
-
-
-let lcomp_p (a:Type) pre post (c : comp_p a pre post) =
-    (ls:lstate) ->
-    Stack a
-      (requires (fun h -> well_formed h ls))
-      (ensures  (fun h r h' ->
-                   well_formed h' ls /\
-                   modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
-
-                   (let s0 = lstate_as_state h ls in
-                     pre s0 /\
-                     (let res = c s0 in
-                     snd res == lstate_as_state h' ls /\ fst res == r))))
+  (ls:lstate) ->
+   Stack a
+    (requires (fun h -> well_formed h ls /\ HighComp.monotonic wp /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
+    (ensures  (fun h r h' ->
+                 well_formed h' ls /\
+                 (let s0 = lstate_as_state h ls in
+                  let (x, s1) = c s0 in 
+                  h' == state_as_lstate h ls s1 /\ x == r )))
 
 
 let reif (#a:Type) (wp:state -> (a * state -> Type) -> Type) (c : unit -> HIGH a wp) :
   comp_wp a wp = reify (c ())
 
 
-let lcomp_r (a:Type) (wp:state -> (a * state -> Type) -> Type) (c : unit -> HIGH a wp) =
-  (ls:lstate) ->
-  Stack a
-    (requires (fun h -> well_formed h ls))
-    (ensures  (fun h r h' ->
-                 well_formed h' ls /\
-                 modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
-                 (let s0 = lstate_as_state h ls in
-                  wp s0 (fun _ -> True) /\
-                  (let res = reif wp c s0 in
-                  // let res = reify (c ()) s0 in XXX using reify directly fails
-                  snd res == lstate_as_state h' ls /\ fst res == r))))
 
-
-(* DSL for low computations *)
+(** DSL for low computations *)
 
 let lreturn (#a:Type) (x:a) : lcomp_wp1 a (return_wp x) (hreturn_elab x) = 
   fun (b1, b2) -> 
@@ -159,7 +143,6 @@ let lreturn (#a:Type) (x:a) : lcomp_wp1 a (return_wp x) (hreturn_elab x) =
     let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
     let p2 = get_upd_eq h0 b2 0 (get h0 b2 0) in
     x
-
 
 (* TODO prove this spec *)
 val upd : b:pointer mint -> v:mint -> 
@@ -251,7 +234,7 @@ let lbind (#a:Type) (#b:Type)
       let x, s1 = run_high c1 s0 in
       assert (x == x_a);
       assert (h1 == state_as_lstate h0 ls s1);
-      state_as_lstate_inv h0 ls s1; //Get-Put: 1st lens law
+      state_as_lstate_put_get h0 ls s1; //Get-Put: 1st lens law
       assert (lstate_as_state h1 ls == s1); //this assertion is key to running `f x_a ls` below
       let y, s2 = run_high (c2 x) s1 in
       assert (s2 == snd (run_high #b #(bind_wp a b wp1 wp2) (bind_elab c1 c2) s0));
@@ -280,12 +263,12 @@ let lbind (#a:Type) (#b:Type)
 
 // Versions of [lread] and [lwrite] with reif in spec
 
-val lwrite' : i:nat{ i < 2 } -> v:mint -> lcomp_wp unit (write_wp i v) (reify (HIGH?.put i v))
-let lwrite' i v = fun (b1, b2) -> 
-  if i = 0 then 
-    b1.(0ul) <- v 
-  else     
-    b2.(0ul) <- v
+// val lwrite' : i:nat{ i < 2 } -> v:mint -> lcomp_wp unit (write_wp i v) (reify (HIGH?.put i v))
+// let lwrite' i v = fun (b1, b2) -> 
+//   if i = 0 then 
+//     b1.(0ul) <- v 
+//   else     
+//     b2.(0ul) <- v
 
 val lread' : i:nat{ i < 2 } -> lcomp_wp1 mint (read_wp i) (reify (HIGH?.get i))
 let lread' i = fun (b1, b2) -> 
@@ -296,6 +279,6 @@ let lread' i = fun (b1, b2) ->
 
 
 let lcomp_respects_h_eq (a : Type) (wp1 : hwp a) (wp2 : hwp a) (hc1 : comp_wp a wp1) (hc2 : comp_wp a wp2)  
-  (lc : lcomp_wp a wp1 hc1) (p : h_eq wp1 wp2 hc1 hc2) : lcomp_wp' a wp2 hc2 = // 660 requires the lcomp_wp'
-   lc 
+  (lc : lcomp_wp1 a wp1 hc1) (p : h_eq wp1 wp2 hc1 hc2) : lcomp_wp2 a wp2 hc2 = // 660 requires the lcomp_wp'
+  lc 
   

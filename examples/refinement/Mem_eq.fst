@@ -27,8 +27,15 @@ let get_upd_eq #a h i b v = admit ()
 val upd_upd_eq : #a:Type -> h:mem -> b:pointer a{live h b} -> i:nat{i < length b} -> v1:a -> v2:a ->
     Lemma (let h' = g_upd b i v1 h in
            let p = g_upd_preserves_live h b b v1 in
-           g_upd b i v2 h' == g_upd b i v1 h)
+           g_upd b i v2 h' == g_upd b i v2 h)
 let upd_upd_eq #a h i b v1 v2 = admit ()
+
+val upd_com : #a:Type -> h:mem -> b1:pointer a{live h b1} ->
+    b2:pointer a{live h b2 /\ disjoint b1 b2} -> v1:a -> v2:a ->
+    Lemma (let p = g_upd_preserves_live h b1 b2 v1 in
+           let q = g_upd_preserves_live h b2 b1 v2 in
+           g_upd b1 0 v1 (g_upd b2 0 v2 h) == g_upd b2 0 v2 (g_upd b1 0 v1 h))
+let upd_com #a h b1 b2 v1 v2 = admit ()
 
 
 val get_upd_same : #a:Type -> h:mem -> b1:pointer a{live h b1} -> v1:a ->
