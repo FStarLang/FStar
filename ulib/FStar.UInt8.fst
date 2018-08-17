@@ -15,10 +15,8 @@ open FStar.Mul
  * - some functions (e.g., add_underspec, etc.) are only defined here, not on signed integers
  *)
 
-abstract type t' :Type0 =
-  | Mk: v:uint_t n -> t'
-
-abstract type t :eqtype = t'
+abstract type t : eqtype =
+  | Mk: v:uint_t n -> t
 
 abstract
 let v (x:t) : Tot (uint_t n) = x.v

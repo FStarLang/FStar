@@ -86,7 +86,7 @@ let (tc_tycon :
                                     | (t_type,u) ->
                                         ((let uu____289 =
                                             let uu____290 =
-                                              FStar_TypeChecker_Rel.teq_nosmt_force
+                                              FStar_TypeChecker_Rel.subtype_nosmt_force
                                                 env1 t t_type
                                                in
                                             Prims.op_Negation uu____290  in
@@ -103,7 +103,7 @@ let (tc_tycon :
                                                     tc
                                                    in
                                                 FStar_Util.format2
-                                                  "Type annotation %s for inductive %s is not Type"
+                                                  "Type annotation %s for inductive %s is not a subtype of Type"
                                                   uu____297 uu____298
                                                  in
                                               (FStar_Errors.Error_InductiveAnnotNotAType,

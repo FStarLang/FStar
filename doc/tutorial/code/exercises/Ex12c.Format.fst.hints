@@ -6,13 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_FStar.UInt8.t",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "80384b6e75489713d0748e4b633088a6"
+      "e20d86baed89f2815a07976af2d02f3d"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -29,20 +25,16 @@
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "1294e6ba609d979a6bb1bad5d3f15967"
+      "73a46aa4b087a311301893832187c70a"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
       3,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "function_token_typing_FStar.UInt8.t",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
       0,
-      "ed973c58ea393863736fec8f78d14d1a"
+      "445f04cdb2bbb6b01d2800f5251203e1"
     ]
   ]
 ]

@@ -75,9 +75,9 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
 
          let k = U.arrow indices (S.mk_Total t) in
          let t_type, u = U.type_u() in
-         if not (teq_nosmt_force env t t_type) then
+         if not (subtype_nosmt_force env t t_type) then
              raise_error (Errors.Error_InductiveAnnotNotAType,
-                          (BU.format2 "Type annotation %s for inductive %s is not Type"
+                          (BU.format2 "Type annotation %s for inductive %s is not a subtype of Type"
                                                 (Print.term_to_string t)
                                                 (Ident.string_of_lid tc))) s.sigrng;
 
