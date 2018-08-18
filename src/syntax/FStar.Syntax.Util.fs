@@ -703,6 +703,11 @@ let rec is_unit t =
     | Tm_uinst (t, _) -> is_unit t
     | _ -> false
 
+let is_eqtype_no_unrefine (t:term) =
+  match (Subst.compress t).n with
+  | Tm_fvar fv -> fv_eq_lid fv PC.eqtype_lid
+  | _ -> false
+
 let rec non_informative t =
     match (unrefine t).n with
     | Tm_type _ -> true

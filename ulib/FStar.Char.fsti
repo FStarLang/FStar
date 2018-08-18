@@ -1,7 +1,7 @@
 module FStar.Char
 
 module U32 = FStar.UInt32
-new val char : eqtype u#0
+new val char : eqtype
 
 val lowercase: char -> Tot char
 val uppercase: char -> Tot char
