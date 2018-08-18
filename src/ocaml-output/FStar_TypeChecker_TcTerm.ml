@@ -65,6 +65,8 @@ let (instantiate_both :
         (uu___345_6.FStar_TypeChecker_Env.qtbl_name_and_index);
       FStar_TypeChecker_Env.normalized_eff_names =
         (uu___345_6.FStar_TypeChecker_Env.normalized_eff_names);
+      FStar_TypeChecker_Env.fv_delta_depths =
+        (uu___345_6.FStar_TypeChecker_Env.fv_delta_depths);
       FStar_TypeChecker_Env.proof_ns =
         (uu___345_6.FStar_TypeChecker_Env.proof_ns);
       FStar_TypeChecker_Env.synth_hook =
@@ -146,6 +148,8 @@ let (no_inst : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
         (uu___346_12.FStar_TypeChecker_Env.qtbl_name_and_index);
       FStar_TypeChecker_Env.normalized_eff_names =
         (uu___346_12.FStar_TypeChecker_Env.normalized_eff_names);
+      FStar_TypeChecker_Env.fv_delta_depths =
+        (uu___346_12.FStar_TypeChecker_Env.fv_delta_depths);
       FStar_TypeChecker_Env.proof_ns =
         (uu___346_12.FStar_TypeChecker_Env.proof_ns);
       FStar_TypeChecker_Env.synth_hook =
@@ -842,6 +846,8 @@ let (guard_letrecs :
                   (uu___347_1452.FStar_TypeChecker_Env.qtbl_name_and_index);
                 FStar_TypeChecker_Env.normalized_eff_names =
                   (uu___347_1452.FStar_TypeChecker_Env.normalized_eff_names);
+                FStar_TypeChecker_Env.fv_delta_depths =
+                  (uu___347_1452.FStar_TypeChecker_Env.fv_delta_depths);
                 FStar_TypeChecker_Env.proof_ns =
                   (uu___347_1452.FStar_TypeChecker_Env.proof_ns);
                 FStar_TypeChecker_Env.synth_hook =
@@ -1137,6 +1143,8 @@ let rec (tc_term :
                      (uu___349_2678.FStar_TypeChecker_Env.qtbl_name_and_index);
                    FStar_TypeChecker_Env.normalized_eff_names =
                      (uu___349_2678.FStar_TypeChecker_Env.normalized_eff_names);
+                   FStar_TypeChecker_Env.fv_delta_depths =
+                     (uu___349_2678.FStar_TypeChecker_Env.fv_delta_depths);
                    FStar_TypeChecker_Env.proof_ns =
                      (uu___349_2678.FStar_TypeChecker_Env.proof_ns);
                    FStar_TypeChecker_Env.synth_hook =
@@ -1450,6 +1458,8 @@ and (tc_maybe_toplevel_term :
                               (uu___352_3343.FStar_TypeChecker_Env.qtbl_name_and_index);
                             FStar_TypeChecker_Env.normalized_eff_names =
                               (uu___352_3343.FStar_TypeChecker_Env.normalized_eff_names);
+                            FStar_TypeChecker_Env.fv_delta_depths =
+                              (uu___352_3343.FStar_TypeChecker_Env.fv_delta_depths);
                             FStar_TypeChecker_Env.proof_ns =
                               (uu___352_3343.FStar_TypeChecker_Env.proof_ns);
                             FStar_TypeChecker_Env.synth_hook =
@@ -2946,6 +2956,8 @@ and (tc_tactic :
             (uu___356_8262.FStar_TypeChecker_Env.qtbl_name_and_index);
           FStar_TypeChecker_Env.normalized_eff_names =
             (uu___356_8262.FStar_TypeChecker_Env.normalized_eff_names);
+          FStar_TypeChecker_Env.fv_delta_depths =
+            (uu___356_8262.FStar_TypeChecker_Env.fv_delta_depths);
           FStar_TypeChecker_Env.proof_ns =
             (uu___356_8262.FStar_TypeChecker_Env.proof_ns);
           FStar_TypeChecker_Env.synth_hook =
@@ -4171,6 +4183,8 @@ and (tc_abs :
                                    (uu___363_11613.FStar_TypeChecker_Env.qtbl_name_and_index);
                                  FStar_TypeChecker_Env.normalized_eff_names =
                                    (uu___363_11613.FStar_TypeChecker_Env.normalized_eff_names);
+                                 FStar_TypeChecker_Env.fv_delta_depths =
+                                   (uu___363_11613.FStar_TypeChecker_Env.fv_delta_depths);
                                  FStar_TypeChecker_Env.proof_ns =
                                    (uu___363_11613.FStar_TypeChecker_Env.proof_ns);
                                  FStar_TypeChecker_Env.synth_hook =
@@ -4402,6 +4416,8 @@ and (tc_abs :
                                  (uu___365_12224.FStar_TypeChecker_Env.qtbl_name_and_index);
                                FStar_TypeChecker_Env.normalized_eff_names =
                                  (uu___365_12224.FStar_TypeChecker_Env.normalized_eff_names);
+                               FStar_TypeChecker_Env.fv_delta_depths =
+                                 (uu___365_12224.FStar_TypeChecker_Env.fv_delta_depths);
                                FStar_TypeChecker_Env.proof_ns =
                                  (uu___365_12224.FStar_TypeChecker_Env.proof_ns);
                                FStar_TypeChecker_Env.synth_hook =
@@ -4503,6 +4519,8 @@ and (tc_abs :
                                      FStar_TypeChecker_Env.normalized_eff_names
                                        =
                                        (uu___366_12264.FStar_TypeChecker_Env.normalized_eff_names);
+                                     FStar_TypeChecker_Env.fv_delta_depths =
+                                       (uu___366_12264.FStar_TypeChecker_Env.fv_delta_depths);
                                      FStar_TypeChecker_Env.proof_ns =
                                        (uu___366_12264.FStar_TypeChecker_Env.proof_ns);
                                      FStar_TypeChecker_Env.synth_hook =
@@ -5462,6 +5480,8 @@ and (check_application_args :
                                      FStar_TypeChecker_Env.normalized_eff_names
                                        =
                                        (uu___371_14478.FStar_TypeChecker_Env.normalized_eff_names);
+                                     FStar_TypeChecker_Env.fv_delta_depths =
+                                       (uu___371_14478.FStar_TypeChecker_Env.fv_delta_depths);
                                      FStar_TypeChecker_Env.proof_ns =
                                        (uu___371_14478.FStar_TypeChecker_Env.proof_ns);
                                      FStar_TypeChecker_Env.synth_hook =
@@ -6846,6 +6866,8 @@ and (tc_pat :
                  (uu___380_18703.FStar_TypeChecker_Env.qtbl_name_and_index);
                FStar_TypeChecker_Env.normalized_eff_names =
                  (uu___380_18703.FStar_TypeChecker_Env.normalized_eff_names);
+               FStar_TypeChecker_Env.fv_delta_depths =
+                 (uu___380_18703.FStar_TypeChecker_Env.fv_delta_depths);
                FStar_TypeChecker_Env.proof_ns =
                  (uu___380_18703.FStar_TypeChecker_Env.proof_ns);
                FStar_TypeChecker_Env.synth_hook =
@@ -7827,6 +7849,8 @@ and (check_inner_let :
                 (uu___381_20308.FStar_TypeChecker_Env.qtbl_name_and_index);
               FStar_TypeChecker_Env.normalized_eff_names =
                 (uu___381_20308.FStar_TypeChecker_Env.normalized_eff_names);
+              FStar_TypeChecker_Env.fv_delta_depths =
+                (uu___381_20308.FStar_TypeChecker_Env.fv_delta_depths);
               FStar_TypeChecker_Env.proof_ns =
                 (uu___381_20308.FStar_TypeChecker_Env.proof_ns);
               FStar_TypeChecker_Env.synth_hook =
@@ -8598,6 +8622,8 @@ and (build_let_rec_env :
                                       FStar_TypeChecker_Env.normalized_eff_names
                                         =
                                         (uu___388_21442.FStar_TypeChecker_Env.normalized_eff_names);
+                                      FStar_TypeChecker_Env.fv_delta_depths =
+                                        (uu___388_21442.FStar_TypeChecker_Env.fv_delta_depths);
                                       FStar_TypeChecker_Env.proof_ns =
                                         (uu___388_21442.FStar_TypeChecker_Env.proof_ns);
                                       FStar_TypeChecker_Env.synth_hook =
@@ -8717,6 +8743,8 @@ and (build_let_rec_env :
                                      FStar_TypeChecker_Env.normalized_eff_names
                                        =
                                        (uu___389_21476.FStar_TypeChecker_Env.normalized_eff_names);
+                                     FStar_TypeChecker_Env.fv_delta_depths =
+                                       (uu___389_21476.FStar_TypeChecker_Env.fv_delta_depths);
                                      FStar_TypeChecker_Env.proof_ns =
                                        (uu___389_21476.FStar_TypeChecker_Env.proof_ns);
                                      FStar_TypeChecker_Env.synth_hook =
@@ -8945,6 +8973,8 @@ and (check_let_bound_def :
                             (uu___392_21737.FStar_TypeChecker_Env.qtbl_name_and_index);
                           FStar_TypeChecker_Env.normalized_eff_names =
                             (uu___392_21737.FStar_TypeChecker_Env.normalized_eff_names);
+                          FStar_TypeChecker_Env.fv_delta_depths =
+                            (uu___392_21737.FStar_TypeChecker_Env.fv_delta_depths);
                           FStar_TypeChecker_Env.proof_ns =
                             (uu___392_21737.FStar_TypeChecker_Env.proof_ns);
                           FStar_TypeChecker_Env.synth_hook =
@@ -9413,6 +9443,8 @@ let (type_of_tot_term :
              (uu___394_22821.FStar_TypeChecker_Env.qtbl_name_and_index);
            FStar_TypeChecker_Env.normalized_eff_names =
              (uu___394_22821.FStar_TypeChecker_Env.normalized_eff_names);
+           FStar_TypeChecker_Env.fv_delta_depths =
+             (uu___394_22821.FStar_TypeChecker_Env.fv_delta_depths);
            FStar_TypeChecker_Env.proof_ns =
              (uu___394_22821.FStar_TypeChecker_Env.proof_ns);
            FStar_TypeChecker_Env.synth_hook =
@@ -9571,6 +9603,8 @@ let (level_of_type :
                            (uu___397_22984.FStar_TypeChecker_Env.qtbl_name_and_index);
                          FStar_TypeChecker_Env.normalized_eff_names =
                            (uu___397_22984.FStar_TypeChecker_Env.normalized_eff_names);
+                         FStar_TypeChecker_Env.fv_delta_depths =
+                           (uu___397_22984.FStar_TypeChecker_Env.fv_delta_depths);
                          FStar_TypeChecker_Env.proof_ns =
                            (uu___397_22984.FStar_TypeChecker_Env.proof_ns);
                          FStar_TypeChecker_Env.synth_hook =
@@ -9836,6 +9870,8 @@ let rec (universe_of_aux :
                            (uu___398_24028.FStar_TypeChecker_Env.qtbl_name_and_index);
                          FStar_TypeChecker_Env.normalized_eff_names =
                            (uu___398_24028.FStar_TypeChecker_Env.normalized_eff_names);
+                         FStar_TypeChecker_Env.fv_delta_depths =
+                           (uu___398_24028.FStar_TypeChecker_Env.fv_delta_depths);
                          FStar_TypeChecker_Env.proof_ns =
                            (uu___398_24028.FStar_TypeChecker_Env.proof_ns);
                          FStar_TypeChecker_Env.synth_hook =
@@ -10253,6 +10289,8 @@ let (check_type_of_well_typed_term' :
                 (uu___399_25580.FStar_TypeChecker_Env.qtbl_name_and_index);
               FStar_TypeChecker_Env.normalized_eff_names =
                 (uu___399_25580.FStar_TypeChecker_Env.normalized_eff_names);
+              FStar_TypeChecker_Env.fv_delta_depths =
+                (uu___399_25580.FStar_TypeChecker_Env.fv_delta_depths);
               FStar_TypeChecker_Env.proof_ns =
                 (uu___399_25580.FStar_TypeChecker_Env.proof_ns);
               FStar_TypeChecker_Env.synth_hook =
@@ -10400,6 +10438,8 @@ let (check_type_of_well_typed_term :
                 (uu___400_25653.FStar_TypeChecker_Env.qtbl_name_and_index);
               FStar_TypeChecker_Env.normalized_eff_names =
                 (uu___400_25653.FStar_TypeChecker_Env.normalized_eff_names);
+              FStar_TypeChecker_Env.fv_delta_depths =
+                (uu___400_25653.FStar_TypeChecker_Env.fv_delta_depths);
               FStar_TypeChecker_Env.proof_ns =
                 (uu___400_25653.FStar_TypeChecker_Env.proof_ns);
               FStar_TypeChecker_Env.synth_hook =

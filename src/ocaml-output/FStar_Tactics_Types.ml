@@ -102,6 +102,8 @@ let (goal_env : goal -> FStar_TypeChecker_Env.env) =
         (uu___251_62.FStar_TypeChecker_Env.qtbl_name_and_index);
       FStar_TypeChecker_Env.normalized_eff_names =
         (uu___251_62.FStar_TypeChecker_Env.normalized_eff_names);
+      FStar_TypeChecker_Env.fv_delta_depths =
+        (uu___251_62.FStar_TypeChecker_Env.fv_delta_depths);
       FStar_TypeChecker_Env.proof_ns =
         (uu___251_62.FStar_TypeChecker_Env.proof_ns);
       FStar_TypeChecker_Env.synth_hook =
