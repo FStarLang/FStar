@@ -694,10 +694,10 @@
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@query",
-        "LowParse.Spec.Base_interpretation_Tm_arrow_97bf16a3149921185c907fce1d10e541",
-        "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
-        "binder_x_3619a24b64600b669f2c920d1b0a5d4e_2",
-        "binder_x_63893f6163361bb7b4db46296cfdfc01_3", "bool_inversion",
+        "LowParse.Spec.Base_interpretation_Tm_arrow_89386f2c4d2fc5eff564b5fa6eec111e",
+        "binder_x_273c0cb114efbc10b99731f088b17ae0_0",
+        "binder_x_431d1d0757f2c95713fad6b6f3e263ab_1",
+        "binder_x_a7fb6faea5d851896150f3c74abbb25a_2", "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_FStar.Pervasives.Native.None",
@@ -706,9 +706,9 @@
         "equality_tok_Prims.LexTop@tok",
         "equation_LowParse.Spec.Base.default_parser_kind",
         "equation_LowParse.Spec.Base.is_weaker_than",
-        "equation_LowParse.Spec.Base.parser_kind", "equation_Prims.nat",
+        "equation_LowParse.Spec.Base.parser_kind", "equation_Prims.eqtype",
+        "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "fuel_guarded_inversion_LowParse.Spec.Base.parser_kind_",
         "fuel_guarded_inversion_Prims.list",
         "kinding_LowParse.Spec.Base.parser_subkind@tok",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Equality",
@@ -731,7 +731,7 @@
         "typing_LowParse.Spec.Base.glb"
       ],
       0,
-      "0f2f737113aac07352567e62467fbc03"
+      "34a7093b7fada60e87acb070be988d1d"
     ],
     [
       "LowParse.Spec.Base.glb_list",
@@ -1452,10 +1452,10 @@
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@query",
-        "LowParse.Spec.Base_interpretation_Tm_arrow_97bf16a3149921185c907fce1d10e541",
-        "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
-        "binder_x_3619a24b64600b669f2c920d1b0a5d4e_2",
-        "binder_x_63893f6163361bb7b4db46296cfdfc01_3", "bool_inversion",
+        "LowParse.Spec.Base_interpretation_Tm_arrow_89386f2c4d2fc5eff564b5fa6eec111e",
+        "binder_x_273c0cb114efbc10b99731f088b17ae0_0",
+        "binder_x_431d1d0757f2c95713fad6b6f3e263ab_1",
+        "binder_x_a7fb6faea5d851896150f3c74abbb25a_2", "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_FStar.Pervasives.Native.None",
@@ -1464,7 +1464,8 @@
         "equality_tok_Prims.LexTop@tok",
         "equation_LowParse.Spec.Base.default_parser_kind",
         "equation_LowParse.Spec.Base.is_weaker_than",
-        "equation_LowParse.Spec.Base.parser_kind", "equation_Prims.nat",
+        "equation_LowParse.Spec.Base.parser_kind", "equation_Prims.eqtype",
+        "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "fuel_guarded_inversion_LowParse.Spec.Base.parser_kind_",
         "fuel_guarded_inversion_Prims.list",
@@ -1489,7 +1490,7 @@
         "typing_LowParse.Spec.Base.glb"
       ],
       0,
-      "ab807132778418c26b52cfb45ae3dcab"
+      "b705aea0a266b146e8cd99502f6496e0"
     ],
     [
       "LowParse.Spec.Base.glb_list",
