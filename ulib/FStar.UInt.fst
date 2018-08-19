@@ -441,6 +441,11 @@ val lognot_definition: #n:pos -> a:uint_t n -> i:nat{i < n} ->
 	[SMTPat (nth (lognot a) i)]
 let lognot_definition #n a i = ()
 
+(* Two's complement unary minus *)
+inline_for_extraction
+val minus: #n:pos -> a:uint_t n -> Tot (uint_t n)
+let minus #n a = add_mod (lognot a) 1
+
 (* Bitwise operators lemmas *)
 (* TODO: lemmas about the relations between different operators *)
 (* Bitwise AND operator *)
@@ -529,6 +534,21 @@ let logxor_inv #n a b =
   cut (forall (i:nat). i < n ==> index (logxor_vec (logxor_vec va vb) vb) i = index va i);
   Seq.lemma_eq_intro (logxor_vec (logxor_vec va vb) vb) va;
   inverse_num_lemma a; inverse_num_lemma b
+
+val logxor_neq_nonzero: #n:pos -> a:uint_t n -> b:uint_t n -> Lemma
+   (a <> b ==> logxor a b <> 0)
+let logxor_neq_nonzero #n a b =
+  let va = to_vec a in
+  let vb = to_vec b in
+  if logxor a b = 0 then
+  begin
+    let open FStar.Seq in
+    let f (i:nat{i < n}) : Lemma (not (nth #n 0 i)) = zero_nth_lemma #n i in
+    Classical.forall_intro f;
+    assert (forall (i:nat{i < n}). index va i = index vb i);
+    lemma_eq_intro va vb;
+    assert (from_vec va = from_vec vb)
+  end
 
 (* Bitwise OR operators *)
 val logor_commutative: #n:pos -> a:uint_t n -> b:uint_t n ->
@@ -792,6 +812,33 @@ let shift_right_value_lemma #n a s =
   else if s = 0 then shift_right_value_aux_2 #n a
   else shift_right_value_aux_3 #n a s
 
+
+(* Lemmas about the most significant bit in various situations *)
+
+val msb: #n:pos -> a:uint_t n -> Tot bool
+let msb #n a = nth a 0
+
+#set-options "--initial_fuel 1 --max_fuel 1"
+val lemma_msb_pow2: #n:pos -> a:uint_t n ->
+  Lemma (msb a <==> a >= pow2 (n-1))
+let lemma_msb_pow2 #n a = if n = 1 then () else from_vec_propriety (to_vec a) 1
+
+#set-options "--z3rlimit 10 --initial_fuel 1 --max_fuel 1"
+val lemma_minus_zero: #n:pos -> a:uint_t n ->
+  Lemma (minus a = 0 ==> a = 0)
+let lemma_minus_zero #n a =
+  if minus a = 0 then
+  begin
+    lognot_self a;
+    logxor_self (ones n);
+    logxor_lemma_2 #n (ones n)
+  end
+
+val lemma_msb_gte: #n:pos{n > 1} -> a:uint_t n -> b:uint_t n ->
+  Lemma ((a >= b && not (msb a)) ==> not (msb b))
+let lemma_msb_gte #n a b =
+  from_vec_propriety (to_vec a) 1;
+  from_vec_propriety (to_vec b) 1
 
 (* val lemma_pow2_values: n:nat -> Lemma *)
 (*   (requires (n <= 64)) *)
