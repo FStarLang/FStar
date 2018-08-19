@@ -201,10 +201,8 @@ let z = HIGH?.wp int
 let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : (a * state) = c s0
 
 let lbind (#a:Type) (#b:Type)
-  (#wp1: HIGH?.wp a)
-  (#wp2: a -> HIGH?.wp b)
-  (#mwp1 :_{monotonic wp1}) 
-  (#mwp2 :_{forall x. monotonic (wp2 x)})
+  (#wp1: HIGH?.wp a{monotonic wp1})
+  (#wp2:(a -> HIGH?.wp b){forall x. monotonic (wp2 x)})
   (#c1:comp_wp a wp1) (#c2:(x:a -> comp_wp b (wp2 x)))
   (m: lcomp_wp1 a wp1 c1) (f: (x:a) -> lcomp_wp1 b (wp2 x) (c2 x)) :
   lcomp_wp1 b (bind_wp a b wp1 wp2) (bind_elab c1 c2) =

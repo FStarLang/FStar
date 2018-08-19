@@ -88,31 +88,42 @@ let return_wp_mon (#a:Type) (x : a) : Lemma (monotonic (return_wp x)) =
   in
   forall_intro_3 p'
 
-let write_wp_mon (i:nat) (v:mint) : Lemma (monotonic (write_wp i v)) = 
-  let p (p1 : unit * state -> Type) (p2 : unit * state -> Type) (s : state) 
-        (h: squash (forall y. p1 y ==> p2 y)) : GTot (squash (write_wp i v s p1 ==> write_wp i v s p2)) = 
-        ()
-  in
-  let p' p1 p2 s : Lemma ((forall y. p1 y ==> p2 y) ==> (write_wp i v s p1 ==> write_wp i v s p2)) = 
-    arrow_to_impl (p p1 p2 s)
-  in
-  forall_intro_3 p'
+let write_wp_mon (i:nat) (v:mint) : Lemma (monotonic (write_wp i v)) = ()
+  // Not necessary: 
+  // let p (p1 : unit * state -> Type) (p2 : unit * state -> Type) (s : state) 
+  //       (h: squash (forall y. p1 y ==> p2 y)) : GTot (squash (write_wp i v s p1 ==> write_wp i v s p2)) = 
+  //       ()
+  // in
+  // let p' p1 p2 s : Lemma ((forall y. p1 y ==> p2 y) ==> (write_wp i v s p1 ==> write_wp i v s p2)) = 
+  //   arrow_to_impl (p p1 p2 s)
+  // in
+  // forall_intro_3 p'
 
 
-let read_wp_mon (i:nat) : Lemma (monotonic (read_wp i)) =
-  let p (p1 : mint * state -> Type) (p2 : mint * state -> Type) (s : state) 
-        (h: squash (forall y. p1 y ==> p2 y)) : GTot (squash (read_wp i s p1 ==> read_wp i s p2)) = 
-        ()
-  in
-  let p' p1 p2 s : Lemma ((forall y. p1 y ==> p2 y) ==> (read_wp i s p1 ==> read_wp i s p2)) = 
-    arrow_to_impl (p p1 p2 s)
-  in
-  forall_intro_3 p'
+let read_wp_mon (i:nat) : Lemma (monotonic (read_wp i)) = ()
+  // Not necessary: 
+  // let p (p1 : mint * state -> Type) (p2 : mint * state -> Type) (s : state) 
+  //       (h: squash (forall y. p1 y ==> p2 y)) : GTot (squash (read_wp i s p1 ==> read_wp i s p2)) = 
+  //       ()
+  // in
+  // let p' p1 p2 s : Lemma ((forall y. p1 y ==> p2 y) ==> (read_wp i s p1 ==> read_wp i s p2)) = 
+  //   arrow_to_impl (p p1 p2 s)
+  // in
+  // forall_intro_3 p'
 
 
 let bind_wp_mon #a #b (wp1 : hwp a) (wp2 : a -> hwp b) :
-    Lemma (requires (monotonic wp1 /\ (forall a. monotonic (wp2 a))))
-          (ensures (monotonic (bind_wp a b wp1 wp2))) = admit ()
+    Lemma (requires (monotonic wp1 /\ (forall (x : a). monotonic (wp2 x))))
+          (ensures (monotonic (bind_wp a b wp1 wp2))) = ()
+     // Not necessary: 
+    // let m1 (p1 : a * state -> Type) (p2 : a * state -> Type) (s0 : state) 
+    //     (h: squash (forall y. p1 y ==> p2 y)) : (squash (wp1 s0 p1 ==> wp1 s0 p2)) = () in
+    // let m2 (x : a) (p1 : b * state -> Type) (p2 : b * state -> Type) (s0 : state) 
+    //     (h: squash (forall y. p1 y ==> p2 y)) : (squash (wp2 x s0 p1 ==> wp2 x s0 p2)) = () in
+    
+    // let m (p1 : a * state -> Type) (p2 : a * state -> Type) (s0 : state) 
+    //     (h: squash (forall y. p1 y ==> p2 y)) : (squash (bind_wp wp1 s0 p1 ==> wp1 s0 p2)) = () in 
+
 
 // Pre and postconditions
 
