@@ -101,7 +101,6 @@ type lcomp 'a (c : comp 'a) =
 
 
 
-// This type uses the coercion from high state to low state. Verification of DSL fails with a first try. 
 let lcomp_wp1 (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
      (ls:lstate) ->
      Stack a
@@ -112,7 +111,7 @@ let lcomp_wp1 (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp 
                      let (x, s1) = c s0 in 
                      h' == state_as_lstate h ls s1 /\ x == r )))
 
-let lcomp_wp2 (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
+let lcomp_wp2 (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) = // required by 660
   (ls:lstate) ->
    Stack a
     (requires (fun h -> well_formed h ls /\ HighComp.monotonic wp /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
@@ -144,7 +143,7 @@ val upd : b:pointer mint -> v:mint ->
 let upd b v = b.(0ul) <- v 
                      
 val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp_wp1 unit (write_wp i v) (hwrite' i v)
-let lwrite i v (ls:lstate) = // fun (ls:lstate) ->
+let lwrite i v (ls:lstate) =
   let (b1, b2) = ls in
   if i = 0 then 
       (* * ********************************************* *)
@@ -247,21 +246,53 @@ let lbind (#a:Type) (#b:Type)
       assert (y == y_b);
       assert (h2 == state_as_lstate h1 ls s2);
       assert (h1 == state_as_lstate h0 ls s1);
-      //TODO: need a lemma to show this next fact
-      //Basically, a lemma about redundant writes which is in fact Put-Put, the 3rd lens law
-      assume (state_as_lstate h0 ls s2 == state_as_lstate (state_as_lstate h0 ls s1) ls s2);
+      let p = state_as_lstate_put_put h0 ls s1 s2 in 
+      assert (state_as_lstate h0 ls s2 == state_as_lstate (state_as_lstate h0 ls s1) ls s2);
       assert (state_as_lstate h0 ls s2 == state_as_lstate h1 ls s2) 
     in
     y_b
 
 // Versions of [lread] and [lwrite] with reif in spec
 
-// val lwrite' : i:nat{ i < 2 } -> v:mint -> lcomp_wp unit (write_wp i v) (reify (HIGH?.put i v))
-// let lwrite' i v = fun (b1, b2) -> 
-//   if i = 0 then 
-//     b1.(0ul) <- v 
-//   else     
-//     b2.(0ul) <- v
+val lwrite' : i:nat{ i < 2 } -> v:mint -> lcomp_wp1 unit (write_wp i v) (reify (HIGH?.put i v))
+let lwrite' i v ls =
+  let (b1, b2) = ls in
+  if i = 0 then 
+     (* * ********************************************* *)
+     let h0 = ST.get () in
+     let p = 
+       let p = g_upd_preserves_live h0 b1 b2 v in // Shows: live h1 b
+       let g = get_upd_other h0 b1 b2 v (get h0 b2 0) in // Shows: get (g_upd b1 v h0) b2 = get h0 b2 
+       assert (get (g_upd b1 0 v h0) b2 0 == get h0 b2 0);
+        get_upd_eq (g_upd b1 0 v h0) b2 0 (get h0 b2 0) // Shows: g_upd b2 0 (get h0 b2 0) h1 == h1
+     in
+     assert (g_upd b2 0 (get h0 b2 0) (g_upd b1 0 v h0) == g_upd b1 0 v h0);
+     (* ********************************************* *)
+      
+     b1.(0ul) <- v;
+     
+     (* * ********************************************* *)
+     let h1 = ST.get () in 
+     // Just sanity
+     // XXX trying to bind something analogous in lbind doesn't work 
+     let x, s1 = hwrite' 0 v (lstate_as_state h0 (b1, b2)) in
+     assert (x == ());
+     
+     assume (h1 == g_upd b1 0 v h0) // TODO stronger type for get
+     (* ********************************************* *)
+   else 
+     (* * ********************************************* *)
+     let h0 = ST.get () in
+     let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
+     assert (g_upd b2 0 v (g_upd b1 0 (get h0 b1 0) h0) == g_upd b2 0 v h0);
+     (* ********************************************* *)
+     
+     b2.(0ul) <- v;
+     
+     (* * ********************************************* *)
+     let h1 = ST.get () in 
+     assume (h1 == g_upd b2 0 v h0) // TODO stronger type for get
+     (* ********************************************* *)
 
 val lread' : i:nat{ i < 2 } -> lcomp_wp1 mint (read_wp i) (reify (HIGH?.get i))
 let lread' i = fun (b1, b2) -> 
