@@ -58,24 +58,36 @@ total reifiable reflectable new_effect {
 
 // WPs
 
+let monotonic #a (wp:HIGH?.wp a) =
+  forall p1 p2 s. {:pattern wp s p1; wp s p2} (forall x. p1 x ==> p2 x) ==> wp s p1 ==> wp s p2
+
 unfold
 let return_wp (x : 'a) : hwp 'a =  fun s0 post -> post (x, s0)
 
 //Re-define bind_elab with implicit parameters for easier use
 let bind_elab #a #b #f_w ($f:_) #g_w ($g:_) = HIGH?.bind_elab a b f_w f g_w g
 assume val range0: range
-let bind_wp = HIGH?.bind_wp range0
 
-// unfold
-// let bind_wp (wp1 : state -> ('a * state -> Type) -> Type)
-//             (wp2 : 'a -> state -> ('b * state -> Type) -> Type) : state -> ('b * state -> Type) -> Type =
-//             fun s0 post -> wp1 s0 (function (x, s1) -> wp2 x s1 post)
+let bind_wp = HIGH?.bind_wp range0
 
 let read_wp (i:nat) : hwp mint = fun s0 post -> post (hread i s0)
 
 let write_wp (i:nat) (v:mint) : hwp unit = fun s0 post -> post (hwrite i v s0)
 
+let return_wp_mon (x : 'a) : Lemma (monotonic (return_wp 'a)) = admit ()
+  // let p (s : state) (p1 : 'a * state -> Type) (p2 : 'a * state -> Type) 
+  //     (h: ((y:'a*state) -> Lemma (p1 y ==> p2 y))) : (_:unit{return_wp x s p1 ==> return_wp x s p2}) = 
+  //   h (x, s)
+  // in 
+  // ()
 
+let write_wp_mon (i:nat) (v:mint) : Lemma (monotonic (write_wp i v)) = admit ()
+
+let read_wp_mon (i:nat) : Lemma (monotonic (read_wp i)) = admit ()
+
+let bind_wp_mon #a #b (wp1 : hwp a) (wp2 : a -> hwp b) :
+    Lemma (requires (monotonic wp1 /\ (forall a. monotonic (wp2 a))))
+          (ensures (monotonic (bind_wp a b wp1 wp2))) = admit ()
 
 // Pre and postconditions
 
@@ -93,7 +105,7 @@ let bind_post (#a : Type) (x : a) = fun s0 r -> let (x1, s1) = r in x1 == x /\ s
 
 // High-level DSL with WP indexing
 
-let hreturn_elab (#a:Type) (x : a) = HIGH?.return_elab a x
+let return_elab (#a:Type) (x : a) = HIGH?.return_elab a x
 
 // let hbind' (#a:Type) (#b:Type) (#wp1:hwp a) (#wp2:a -> hwp b)
 //   (m : comp_wp a wp1) (f : (x:a) -> comp_wp b (wp2 x)) :
@@ -113,8 +125,6 @@ let hwrite' (i:nat) (v:mint) : comp_wp unit (write_wp i v) =
 
 
 
-let monotonic #a (wp:HIGH?.wp a) =
-  forall p1 p2 s. {:pattern wp s p1; wp s p2} (forall x. p1 x ==> p2 x) ==> wp s p1 ==> wp s p2
 
 // Commutation
 val h_eq : (#a:Type) -> (wp1:hwp a) -> (wp2:hwp a) -> (comp_wp a wp1) -> (comp_wp a wp2) -> GTot Type0

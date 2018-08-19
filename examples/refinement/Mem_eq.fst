@@ -12,11 +12,6 @@ val g_upd_preserves_live : #a:Type -> h:mem -> b1:pointer a{live h b1} -> b2:poi
 let g_upd_preserves_live #a h b1 b2 v = 
     let p = g_upd_seq_as_seq b1 (Seq.upd (as_seq h b1) 0 v) h in ()
 
-// val g_upd_p : #a:Type -> h:mem -> b:pointer a{live h b} -> v:a -> GTot (h':mem{live h' b})
-// let g_upd_p #a b v h = 
-//     let p = g_upd_preserves_live h b b v in 
-//     g_upd b 0 v h
-
 
 val get_upd_eq : #a:Type -> h:mem -> b:pointer a{live h b} -> i:nat{i < length b} -> v:a ->
     Lemma (requires (get h b i == v))
@@ -49,6 +44,5 @@ val get_upd_other : #a:Type -> h:mem -> b1:pointer a{live h b1} -> b2:pointer a{
     Lemma (requires (get h b2 0 == v2 /\ disjoint b1 b2))
           (ensures (get (g_upd b1 0 v1 h) b2 0 == v2))
 let get_upd_other #a h b1 b2 v1 v2 = admit ()
-
 
 

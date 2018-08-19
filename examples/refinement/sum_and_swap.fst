@@ -3,6 +3,7 @@ module Sum_and_swap
 
 open LowComp
 open HighComp
+open FStar.Classical
 
 module B = LowStar.Buffer
 module ST = FStar.HyperStack.ST
@@ -22,6 +23,16 @@ let swap_and_sum () =
 unfold
 let sum_wp : hwp int  = fun s0 post -> let (r1, r2) = s0 in post (U32.v r1 + U32.v r2, (r2, r1))
 
+// Hardwritten for now but can be easily computed with a tactic (if there isn't support for this already)
+unfold 
+let sum_wp_full : hwp int = 
+  bind_wp mint int (read_wp 0) (fun x0 ->
+  bind_wp mint int (read_wp 1) (fun x1 ->
+  bind_wp unit int (write_wp 0 x1) (fun () ->
+  bind_wp unit int (write_wp 1 x0) (fun () ->
+  return_wp (U32.v x0 + U32.v x1)))))
+
+
 // Pre and Post 
 unfold 
 let sum_pre = fun s0 -> True
@@ -33,7 +44,6 @@ let sum_post = fun s0 res -> let (x, s1) = res in
                           x = U32.v r1 + U32.v r2 /\
                           r1 = r2' /\ r2 = r1'
 
-
 val hswap_and_sum : unit -> HIGH int sum_wp 
 let hswap_and_sum () = 
   let x0 = HIGH?.get 0 in 
@@ -44,21 +54,30 @@ let hswap_and_sum () =
 
 val swap_and_sum' : unit -> comp_wp' int sum_wp 
 let swap_and_sum' () =  
-  hbind' (hread' 0) (fun x0 -> 
-  hbind' (hread' 1) (fun x1 -> 
-  hbind' (hwrite' 0 x1) (fun () ->
-  hbind' (hwrite' 1 x0) (fun () ->
-  hreturn' (U32.v x0 + U32.v x1)))))
+  bind_elab (hread' 0) (fun x0 -> 
+  bind_elab (hread' 1) (fun x1 -> 
+  bind_elab (hwrite' 0 x1) (fun () ->
+  bind_elab (hwrite' 1 x0) (fun () ->
+  return_elab (U32.v x0 + U32.v x1)))))
 
-
-val lswap_and_sum : unit -> lcomp_wp' int sum_wp (reif sum_wp hswap_and_sum)
+val lswap_and_sum : unit -> lcomp_wp2 int sum_wp (reif sum_wp hswap_and_sum)
 let lswap_and_sum () =  
+  (* monotonicity *)
+  let mr1 = read_wp_mon 0 in
+  let mr1 = read_wp_mon 1 in
+  
   lbind (lread 0) (fun x0 -> 
   lbind (lread 1) (fun x1 -> 
-  lbind (lwrite 0 x1) (fun () -> 
+
+  (* monotonicity *)  
+  let mw1 = write_wp_mon 0 x1 in
+  let mw1 = write_wp_mon 1 x0 in     
+
+  lbind (lwrite 0 x1) (fun () ->
+
+  let mret (_ : unit) = return_wp_mon (U32.v x0 + U32.v x1) in
+  let p' = forall_intro mret in 
+  assert (forall (_:unit). monotonic (return_wp (U32.v x0 + U32.v x1)));
   lbind (lwrite 1 x0) (fun () ->
   lreturn (U32.v x0 + U32.v x1)))))
   
-// lemmas to comute reif and bind 
-// interm proof obligations remain provable in low comp
-// extend beyond seq composition with if and rec

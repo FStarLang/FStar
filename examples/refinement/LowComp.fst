@@ -129,7 +129,7 @@ let reif (#a:Type) (wp:state -> (a * state -> Type) -> Type) (c : unit -> HIGH a
 
 (** DSL for low computations *)
 
-let lreturn (#a:Type) (x:a) : lcomp_wp1 a (return_wp x) (hreturn_elab x) = 
+let lreturn (#a:Type) (x:a) : lcomp_wp1 a (return_wp x) (return_elab x) = 
   fun (b1, b2) -> 
     let h0 = ST.get () in 
     let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
@@ -203,13 +203,15 @@ let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : (a * state)
 let lbind (#a:Type) (#b:Type)
   (#wp1: HIGH?.wp a)
   (#wp2: a -> HIGH?.wp b)
+  (#mwp1 :_{monotonic wp1}) 
+  (#mwp2 :_{forall x. monotonic (wp2 x)})
   (#c1:comp_wp a wp1) (#c2:(x:a -> comp_wp b (wp2 x)))
-  (m: lcomp_wp1 a wp1 c1) (f: (x:a) -> lcomp_wp1 b (wp2 x) (c2 x)):
+  (m: lcomp_wp1 a wp1 c1) (f: (x:a) -> lcomp_wp1 b (wp2 x) (c2 x)) :
   lcomp_wp1 b (bind_wp a b wp1 wp2) (bind_elab c1 c2) =
   fun ls ->
     let (b1, b2) = ls in
     (* ********************************************* *)
-    assume (HighComp.monotonic wp1);
+    assert (HighComp.monotonic wp1);
     
     let h0 = ST.get () in  // Initial heap
 
@@ -218,7 +220,7 @@ let lbind (#a:Type) (#b:Type)
     let h1 = ST.get () in // Intermediate heap
     (* ********************************************* *)
     
-    assume (HighComp.monotonic (wp2 x_a));
+    assert (HighComp.monotonic (wp2 x_a));
     let high : Ghost.erased _ = 
       //In this block, we run the high computation
       //in ghost code and remember its intermediate states and result
@@ -252,7 +254,7 @@ let lbind (#a:Type) (#b:Type)
     in
     y_b
 
-// Versions of [lread] and [lwrite] with reif in spec
+// Versions of the DSL with reif in spec
 
 val lwrite' : i:nat{ i < 2 } -> v:mint -> lcomp_wp1 unit (write_wp i v) (reify (HIGH?.put i v))
 let lwrite' i v ls =
@@ -306,3 +308,5 @@ let lcomp_respects_h_eq (a : Type) (wp1 : hwp a) (wp2 : hwp a) (hc1 : comp_wp a 
   (lc : lcomp_wp1 a wp1 hc1) (p : h_eq wp1 wp2 hc1 hc2) : lcomp_wp2 a wp2 hc2 = // 660 requires the lcomp_wp'
   lc 
   
+
+
