@@ -34,3 +34,13 @@ assume type tp (t:Type0) : Type0
 
 type t2 (t:Type0{tp t}) =
   | Bad: t2 t
+
+(*
+ * hasEq (t3 a) depends on hasEq a, so the eqtype annotation fails
+ *)
+[@expect_failure]
+type t3 (a:Type0) :eqtype =
+  | C3: x:a -> t3 a
+
+type t4 (a:Type0) :eqtype =  //this succeeds, since independent of a, t4 hasEq
+  | C4 : x:nat -> t4 a
