@@ -76,6 +76,8 @@ let read_wp (i:nat) : hwp mint = fun s0 post -> post (hread i s0)
 
 let write_wp (i:nat) (v:mint) : hwp unit = fun s0 post -> post (hwrite i v s0)
 
+(** Monotonicity of WPs  *)
+
 let return_wp_mon (#a:Type) (x : a) : Lemma (monotonic (return_wp x)) =
   let p (p1 : a * state -> Type) (p2 : a * state -> Type) (s : state) 
         (h: squash (forall y. p1 y ==> p2 y)) : GTot (squash (return_wp x s p1 ==> return_wp x s p2)) = 
@@ -86,9 +88,27 @@ let return_wp_mon (#a:Type) (x : a) : Lemma (monotonic (return_wp x)) =
   in
   forall_intro_3 p'
 
-let write_wp_mon (i:nat) (v:mint) : Lemma (monotonic (write_wp i v)) = admit ()
+let write_wp_mon (i:nat) (v:mint) : Lemma (monotonic (write_wp i v)) = 
+  let p (p1 : unit * state -> Type) (p2 : unit * state -> Type) (s : state) 
+        (h: squash (forall y. p1 y ==> p2 y)) : GTot (squash (write_wp i v s p1 ==> write_wp i v s p2)) = 
+        ()
+  in
+  let p' p1 p2 s : Lemma ((forall y. p1 y ==> p2 y) ==> (write_wp i v s p1 ==> write_wp i v s p2)) = 
+    arrow_to_impl (p p1 p2 s)
+  in
+  forall_intro_3 p'
 
-let read_wp_mon (i:nat) : Lemma (monotonic (read_wp i)) = admit ()
+
+let read_wp_mon (i:nat) : Lemma (monotonic (read_wp i)) =
+  let p (p1 : mint * state -> Type) (p2 : mint * state -> Type) (s : state) 
+        (h: squash (forall y. p1 y ==> p2 y)) : GTot (squash (read_wp i s p1 ==> read_wp i s p2)) = 
+        ()
+  in
+  let p' p1 p2 s : Lemma ((forall y. p1 y ==> p2 y) ==> (read_wp i s p1 ==> read_wp i s p2)) = 
+    arrow_to_impl (p p1 p2 s)
+  in
+  forall_intro_3 p'
+
 
 let bind_wp_mon #a #b (wp1 : hwp a) (wp2 : a -> hwp b) :
     Lemma (requires (monotonic wp1 /\ (forall a. monotonic (wp2 a))))
