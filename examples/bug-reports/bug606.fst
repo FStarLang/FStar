@@ -1,17 +1,27 @@
 module Bug606
 
+////////////////////////////////////////////////////////////////////////////////
+//minimalistic
+////////////////////////////////////////////////////////////////////////////////
+let t (a:nat) = int
+let test (x:t 0) : t 1 = x
+
+
+////////////////////////////////////////////////////////////////////////////////
+//A slightly larger example
+////////////////////////////////////////////////////////////////////////////////
 open FStar.UInt
 
 #set-options "--print_universes --log_types"
 
 (*
-In FStar.UInt: 
-type uint_t (n:pos) = x:int{size x n}
+ In FStar.UInt: 
+ type uint_t (n:pos) = x:int{size x n}
 
-In FStar.UInt64:
-val v        : t -> Tot (uint_t n)
-val uint_to_t: uint_t n -> Pure t
-*)
+ In FStar.UInt64:
+ val v        : t -> Tot (uint_t n)
+ val uint_to_t: uint_t n -> Pure t
+ *)
 
 let n:pos = 32
 
