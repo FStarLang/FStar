@@ -322,28 +322,32 @@ let rec destruct_app_pattern env is_top_level p = match p.pat with
   | _ ->
     failwith "Not an app pattern"
 
-let rec gather_pattern_bound_vars_maybe_top acc p =
+let rec gather_pattern_bound_vars_maybe_top fail_on_patconst acc p =
   let gather_pattern_bound_vars_from_list =
-      List.fold_left gather_pattern_bound_vars_maybe_top acc
+      List.fold_left (gather_pattern_bound_vars_maybe_top fail_on_patconst) acc
   in
   match p.pat with
   | PatWild _
-  | PatConst _
   | PatVar (_, Some Implicit)
   | PatName _
   | PatTvar _
   | PatOp _ -> acc
+  | PatConst _ ->
+    if fail_on_patconst
+    then raise_error (Errors.Error_CannotRedefineConst, "Constants cannot be redefined") p.prange
+    else acc
+
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
   | PatVar (x, _) -> set_add x acc
   | PatList pats
   | PatTuple  (pats, _)
   | PatOr pats -> gather_pattern_bound_vars_from_list pats
   | PatRecord guarded_pats -> gather_pattern_bound_vars_from_list (List.map snd guarded_pats)
-  | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
+  | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top fail_on_patconst acc pat
 
-let gather_pattern_bound_vars : pattern -> set<Ident.ident> =
+let gather_pattern_bound_vars (fail_on_patconst : bool) (p : pattern) : set<Ident.ident> =
   let acc = new_set (fun id1 id2 -> if id1.idText = id2.idText then 0 else 1) in
-  fun p -> gather_pattern_bound_vars_maybe_top acc p
+  gather_pattern_bound_vars_maybe_top fail_on_patconst acc p
 
 type bnd =
   | LocalBinder of bv     * S.aqual
@@ -1065,7 +1069,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Abs(binders, body) ->
       (* First of all, forbid definitions such as `f x x = ...` *)
-      let bvss = List.map gather_pattern_bound_vars binders in
+      let bvss = List.map (gather_pattern_bound_vars false) binders in
       let check_disjoint (sets : list<set<ident>>) : option<ident> =
         let rec aux acc sets =
             match sets with
@@ -2698,7 +2702,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
         let env, ses' = desugar_decl env id_decl in
         env, ses @ ses'
       in
-      let bvs = gather_pattern_bound_vars pat |> set_elements in
+      let bvs = gather_pattern_bound_vars true pat |> set_elements in
       List.fold_left build_projection main_let bvs
 
   | Main t ->
