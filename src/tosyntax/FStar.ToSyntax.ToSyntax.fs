@@ -751,14 +751,23 @@ let rec desugar_data_pat env p (is_mut:bool) : (env_t * bnd * list<annotated_pat
   env, b, pats
 
 and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * list<annotated_pat>) =
-  let mklet x = env, LetBinder(qualify env x, (tun, None)), [] in
+  // GM: I seem to need the annotation here, or F* gets confused between tuple2 and tuple3
+  let mklet x ty (tacopt : option<S.term>) : (env_t * bnd * list<annotated_pat>)=
+    env, LetBinder(qualify env x, (ty, tacopt)), []
+  in
+  let op_to_ident x = mk_ident (compile_op 0 x.idText x.idRange, x.idRange) in
   if top
   then match p.pat with
-    | PatOp x -> mklet (mk_ident (compile_op 0 x.idText x.idRange, x.idRange))
-    | PatVar (x, _) -> mklet x
+    | PatOp x ->
+        mklet (op_to_ident x) tun None
+    | PatVar (x, _) ->
+        mklet x tun None
+    | PatAscribed({pat=PatOp x}, (t, tacopt)) ->
+        let tacopt = BU.map_opt tacopt (desugar_term env) in
+        mklet (op_to_ident x) (desugar_term env t) tacopt
     | PatAscribed({pat=PatVar (x, _)}, (t, tacopt)) ->
-      let tacopt = BU.map_opt tacopt (desugar_term env) in
-      (env, LetBinder(qualify env x, (desugar_term env t, tacopt)), [])
+        let tacopt = BU.map_opt tacopt (desugar_term env) in
+        mklet x (desugar_term env t) tacopt
     | _ -> raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern at the top-level") p.prange
   else
     let (env, binder, p) = desugar_data_pat env p is_mut in
@@ -2603,6 +2612,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       begin match lets with
         | [ { pat = PatOp _}, _ ]
         | [ { pat = PatVar _}, _ ]
+        | [ { pat = PatAscribed ({ pat = PatOp  _}, _) }, _ ]
         | [ { pat = PatAscribed ({ pat = PatVar _}, _) }, _ ] -> false
         | [ p, _ ] -> not (is_app_pattern p)
         | _ -> false
