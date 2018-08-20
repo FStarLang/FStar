@@ -258,8 +258,6 @@ let lite (#a:Type) (b:bool)
          (#wp2 : hwp_mon a) (#c2:comp_wp a wp2) (lc2: lcomp_wp1 a wp2 c2) : lcomp_wp1 a (ite_wp b wp1 wp2) (ite_elab b c1 c2) =
   fun ls -> if b then lc1 ls else lc2 ls
 
-
-
 // Versions of the DSL with reif in spec
 
 val lwrite' : i:nat{ i < 2 } -> v:mint -> lcomp_wp1 unit (write_wp i v) (reify (HIGH?.put i v))

@@ -22,6 +22,7 @@ type hwp_mon 'a = (wp:hwp 'a{monotonic wp})
   
 // [comp] type with wp
 type comp_wp 'a (wp : hwp_mon 'a) = s0:state -> PURE ('a * state) (wp s0)
+type comp_wp' 'a (wp : hwp_mon 'a) = s0:state -> PURE ('a * state) (wp s0)
 
 // [comp] type with pre- and postconditions
 let comp_p (a:Type) (pre : state -> Type) (post : state -> a * state -> Type) : GTot Type  =
