@@ -1248,7 +1248,7 @@ let (gen_wps_for_free :
                     let uu____3469 = mk_lid "stronger"  in
                     register env1 uu____3469 stronger  in
                   let stronger2 = mk_generic_app stronger1  in
-                  let wp_ite =
+                  let ite_wp =
                     let wp =
                       FStar_Syntax_Syntax.gen_bv "wp"
                         FStar_Pervasives_Native.None wp_a1
@@ -1351,10 +1351,10 @@ let (gen_wps_for_free :
                           FStar_List.append binders uu____3728  in
                         FStar_Syntax_Util.abs uu____3727 body ret_gtot_type
                      in
-                  let wp_ite1 =
-                    let uu____3744 = mk_lid "wp_ite"  in
-                    register env1 uu____3744 wp_ite  in
-                  let wp_ite2 = mk_generic_app wp_ite1  in
+                  let ite_wp1 =
+                    let uu____3744 = mk_lid "ite_wp"  in
+                    register env1 uu____3744 ite_wp  in
+                  let ite_wp2 = mk_generic_app ite_wp1  in
                   let null_wp =
                     let wp =
                       FStar_Syntax_Syntax.gen_bv "wp"
@@ -1452,7 +1452,7 @@ let (gen_wps_for_free :
                         let uu____4044 = c wp_if_then_else2  in
                         ([], uu____4044)  in
                       let uu____4051 =
-                        let uu____4052 = c wp_ite2  in ([], uu____4052)  in
+                        let uu____4052 = c ite_wp2  in ([], uu____4052)  in
                       let uu____4059 =
                         let uu____4060 = c stronger2  in ([], uu____4060)  in
                       let uu____4067 =

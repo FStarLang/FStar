@@ -322,28 +322,32 @@ let rec destruct_app_pattern env is_top_level p = match p.pat with
   | _ ->
     failwith "Not an app pattern"
 
-let rec gather_pattern_bound_vars_maybe_top acc p =
+let rec gather_pattern_bound_vars_maybe_top fail_on_patconst acc p =
   let gather_pattern_bound_vars_from_list =
-      List.fold_left gather_pattern_bound_vars_maybe_top acc
+      List.fold_left (gather_pattern_bound_vars_maybe_top fail_on_patconst) acc
   in
   match p.pat with
   | PatWild _
-  | PatConst _
   | PatVar (_, Some Implicit)
   | PatName _
   | PatTvar _
   | PatOp _ -> acc
+  | PatConst _ ->
+    if fail_on_patconst
+    then raise_error (Errors.Error_CannotRedefineConst, "Constants cannot be redefined") p.prange
+    else acc
+
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
   | PatVar (x, _) -> set_add x acc
   | PatList pats
   | PatTuple  (pats, _)
   | PatOr pats -> gather_pattern_bound_vars_from_list pats
   | PatRecord guarded_pats -> gather_pattern_bound_vars_from_list (List.map snd guarded_pats)
-  | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
+  | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top fail_on_patconst acc pat
 
-let gather_pattern_bound_vars : pattern -> set<Ident.ident> =
+let gather_pattern_bound_vars (fail_on_patconst : bool) (p : pattern) : set<Ident.ident> =
   let acc = new_set (fun id1 id2 -> if id1.idText = id2.idText then 0 else 1) in
-  fun p -> gather_pattern_bound_vars_maybe_top acc p
+  gather_pattern_bound_vars_maybe_top fail_on_patconst acc p
 
 type bnd =
   | LocalBinder of bv     * S.aqual
@@ -459,11 +463,11 @@ let is_special_effect_combinator = function
   | "wp_assume"
   | "wp_close"
   | "stronger"
-  | "wp_ite"
+  | "ite_wp"
   | "null_wp"
   | "wp_trivial"
   | "ctx"
-  | "g_ctx"
+  | "gctx"
   | "lift_from_pure"
   | "return_wp"
   | "return_elab"
@@ -751,14 +755,23 @@ let rec desugar_data_pat env p (is_mut:bool) : (env_t * bnd * list<annotated_pat
   env, b, pats
 
 and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * list<annotated_pat>) =
-  let mklet x = env, LetBinder(qualify env x, (tun, None)), [] in
+  // GM: I seem to need the annotation here, or F* gets confused between tuple2 and tuple3
+  let mklet x ty (tacopt : option<S.term>) : (env_t * bnd * list<annotated_pat>)=
+    env, LetBinder(qualify env x, (ty, tacopt)), []
+  in
+  let op_to_ident x = mk_ident (compile_op 0 x.idText x.idRange, x.idRange) in
   if top
   then match p.pat with
-    | PatOp x -> mklet (mk_ident (compile_op 0 x.idText x.idRange, x.idRange))
-    | PatVar (x, _) -> mklet x
+    | PatOp x ->
+        mklet (op_to_ident x) tun None
+    | PatVar (x, _) ->
+        mklet x tun None
+    | PatAscribed({pat=PatOp x}, (t, tacopt)) ->
+        let tacopt = BU.map_opt tacopt (desugar_term env) in
+        mklet (op_to_ident x) (desugar_term env t) tacopt
     | PatAscribed({pat=PatVar (x, _)}, (t, tacopt)) ->
-      let tacopt = BU.map_opt tacopt (desugar_term env) in
-      (env, LetBinder(qualify env x, (desugar_term env t, tacopt)), [])
+        let tacopt = BU.map_opt tacopt (desugar_term env) in
+        mklet x (desugar_term env t) tacopt
     | _ -> raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern at the top-level") p.prange
   else
     let (env, binder, p) = desugar_data_pat env p is_mut in
@@ -1056,7 +1069,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Abs(binders, body) ->
       (* First of all, forbid definitions such as `f x x = ...` *)
-      let bvss = List.map gather_pattern_bound_vars binders in
+      let bvss = List.map (gather_pattern_bound_vars false) binders in
       let check_disjoint (sets : list<set<ident>>) : option<ident> =
         let rec aux acc sets =
             match sets with
@@ -2603,6 +2616,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       begin match lets with
         | [ { pat = PatOp _}, _ ]
         | [ { pat = PatVar _}, _ ]
+        | [ { pat = PatAscribed ({ pat = PatOp  _}, _) }, _ ]
         | [ { pat = PatAscribed ({ pat = PatVar _}, _) }, _ ] -> false
         | [ p, _ ] -> not (is_app_pattern p)
         | _ -> false
@@ -2688,7 +2702,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
         let env, ses' = desugar_decl env id_decl in
         env, ses @ ses'
       in
-      let bvs = gather_pattern_bound_vars pat |> set_elements in
+      let bvs = gather_pattern_bound_vars true pat |> set_elements in
       List.fold_left build_projection main_let bvs
 
   | Main t ->
