@@ -763,6 +763,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
         in
        add_sub_mul_v
        @ div_mod_unsigned
+       @ bitwise
     in
     let strong_steps = List.map (as_primitive_step true)  (basic_ops@bounded_arith_ops) in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
