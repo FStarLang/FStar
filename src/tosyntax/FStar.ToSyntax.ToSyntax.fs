@@ -467,7 +467,7 @@ let is_special_effect_combinator = function
   | "null_wp"
   | "wp_trivial"
   | "ctx"
-  | "g_ctx"
+  | "gctx"
   | "lift_from_pure"
   | "return_wp"
   | "return_elab"
