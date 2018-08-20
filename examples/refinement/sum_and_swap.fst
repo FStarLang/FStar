@@ -50,7 +50,7 @@ let sum_post = fun s0 res -> let (x, s1) = res in
                           x = U32.v r1 + U32.v r2 /\
                           r1 = r2' /\ r2 = r1'
 
-val hswap_and_sum : unit -> HIGH int sum_wp_full 
+val hswap_and_sum : unit -> HIGH int sum_wp
 let hswap_and_sum () = 
   let x0 = HIGH?.get 0 in 
   let x1 = HIGH?.get 1 in 
