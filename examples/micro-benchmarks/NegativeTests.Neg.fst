@@ -42,3 +42,6 @@ assume type phi_1510 :Type0
 [@(expect_failure [309])]
 type t (a:Type) :(_:Type0{phi_1510})=
   | C: x:a -> t a
+
+[@(expect_failure [309])]
+type t2 : (_:Type{False}) = | C2

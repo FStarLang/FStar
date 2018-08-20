@@ -64,7 +64,8 @@ let qed () : Tac unit =
     | _ -> fail "qed: not done!"
 
 (** [debug str] is similar to [print str], but will only print the message
-if the [--debug] option was given for the current module. *)
+if the [--debug] option was given for the current module AND
+[--debug_level Tac] is on. *)
 let debug (m:string) : Tac unit =
     if debugging () then print m
 
@@ -248,6 +249,22 @@ let rec repeat (#a:Type) (t : unit -> Tac a) : Tac (list a) =
 
 let repeat1 (#a:Type) (t : unit -> Tac a) : Tac (list a) =
     t () :: repeat t
+
+let repeat' (f : unit -> Tac 'a) : Tac unit =
+    let _ = repeat f in ()
+
+(** Join all of the SMT goals into one. This helps when all of them are
+expected to be similar, and therefore easier to prove at once by the SMT
+solver. TODO: would be nice to try to join them in a more meaningful
+way, as the order can matter. *)
+let join_all_smt_goals () =
+  let gs, sgs = goals (), smt_goals () in
+  set_smt_goals [];
+  set_goals sgs;
+  repeat' join;
+  let sgs' = goals () in // should be a single one
+  set_goals gs;
+  set_smt_goals sgs'
 
 let discard (tau : unit -> Tac 'a) : unit -> Tac unit =
     fun () -> let _ = tau () in ()
