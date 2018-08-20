@@ -630,9 +630,9 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              mk_range,
              NBE.mk_range);
          (PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"],
-             1, 
-             0, 
-             prims_to_fstar_range_step, 
+             1,
+             0,
+             prims_to_fstar_range_step,
              NBE.prims_to_fstar_range_step);
         ]
     in
@@ -717,6 +717,48 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
                    (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.mod_big_int x y)))
+            ])
+        in
+        let bitwise =
+          bounded_unsigned_int_types
+          |> List.collect (fun m ->
+            [
+              PC.p2l ["FStar"; m; "logor"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.logor x y)),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.logor x y));
+              PC.p2l ["FStar"; m; "logand"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.logand x y)),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.logand x y));
+              PC.p2l ["FStar"; m; "logxor"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.logxor x y)),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.logxor x y));
+              PC.p2l ["FStar"; m; "lognot"],
+                 1,
+                 0,
+                 unary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x) -> int_as_bounded r int_to_t (Z.lognot x)),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x) -> NBETerm.int_as_bounded int_to_t (Z.lognot x));
             ])
         in
        add_sub_mul_v
