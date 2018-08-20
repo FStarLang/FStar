@@ -27,6 +27,11 @@ val lt_big_int : (bigint -> bigint -> bool)
 val ge_big_int : (bigint -> bigint -> bool)
 val gt_big_int : (bigint -> bigint -> bool)
 
+val logand_big_int: bigint -> bigint -> bigint
+val logor_big_int: bigint -> bigint -> bigint
+val logxor_big_int: bigint -> bigint -> bigint
+val lognot_big_int: bigint -> bigint
+
 val sqrt_big_int : (bigint -> bigint)
 
 val string_of_big_int : (bigint -> string)
