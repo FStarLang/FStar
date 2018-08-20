@@ -106,4 +106,10 @@ val by_tactic_seman : a:Type -> tau:(unit -> Tac a) -> phi:Type -> Lemma (with_t
                                                                          [SMTPat (with_tactic tau phi)]
 let by_tactic_seman a tau phi = ()
 
-private let tactic a = unit -> TacF a // we don't care if the tactic is satisfiable before running it
+(* One can always bypass the well-formedness of metaprograms. It does not matter
+ * as they are only run at typechecking time, and if they get stuck, the compiler
+ * will simply raise an error. *)
+val assume_safe : (#a:Type) -> (unit -> TacF a) -> Tac a
+let assume_safe #a tau = admit (); tau ()
+
+private let tactic a = unit -> Tac a
