@@ -591,12 +591,12 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
              NBETerm.binary_op NBETerm.arg_as_string NBETerm.string_compare');
          (PC.op_Eq,
              3,
-             1,
+             0,
              decidable_eq false,
              NBETerm.decidable_eq false);
          (PC.op_notEq,
              3,
-             1,
+             0,
              decidable_eq true,
              NBETerm.decidable_eq true);
          (PC.p2l ["FStar"; "String"; "list_of_string"],

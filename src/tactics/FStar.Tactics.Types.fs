@@ -4,6 +4,7 @@ module FStar.Tactics.Types
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
+module Env = FStar.TypeChecker.Env
 module Options = FStar.Options
 module SS = FStar.Syntax.Subst
 module Cfg = FStar.TypeChecker.Cfg
@@ -38,7 +39,7 @@ let goal_with_type g t =
     { g with goal_ctx_uvar = c' }
 let goal_with_env g env =
     let c = g.goal_ctx_uvar in
-    let c' = {c with ctx_uvar_gamma = env.gamma} in
+    let c' = {c with ctx_uvar_gamma = env.gamma ; ctx_uvar_binders = Env.all_binders env } in
     { g with goal_main_env=env; goal_ctx_uvar = c' }
 
 let mk_goal env u o b = {
@@ -50,7 +51,7 @@ let mk_goal env u o b = {
 let subst_goal subst goal =
     let g = goal.goal_ctx_uvar in
     let ctx_uvar = {
-        g with ctx_uvar_gamma=FStar.TypeChecker.Env.rename_gamma subst g.ctx_uvar_gamma;
+        g with ctx_uvar_gamma=Env.rename_gamma subst g.ctx_uvar_gamma;
                ctx_uvar_typ=SS.subst subst g.ctx_uvar_typ
     } in
     { goal with goal_ctx_uvar = ctx_uvar }

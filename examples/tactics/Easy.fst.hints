@@ -1,14 +1,17 @@
 [
-  "Å£\u0003k^Dª÷t_­žš<Ÿ!",
+  "Å¤¼[–$&HhhÞïÚ\\#Û",
   [
     [
       "Easy.lemma_from_squash",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
       0,
-      "f16c4856df09405bb7e313f58d178ffe"
+      "839f9214801f0e315d5eb74ba1bcb337"
     ],
     [
       "Easy.plus_assoc",
@@ -20,7 +23,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ec84cec175b6777fe49b59e1a934211a"
+      "25dff3cf02040d29e7aeaa48de30f5b2"
     ],
     [
       "Easy.plus_comm",
@@ -32,7 +35,7 @@
         "primitive_Prims.op_Addition"
       ],
       0,
-      "e2e7bfce9db9c043afb5bcf0cc8d6d10"
+      "f40580a57acab1d13db297cc07f49529"
     ],
     [
       "Easy.easy_fill",
@@ -53,7 +56,7 @@
         "typing_FStar.Tactics.Result.uu___is_Success"
       ],
       0,
-      "b8d34da3b0ea5b35dbb24a2c6d03f4a9"
+      "702e0bfadfc56c798ca3a480c12bf494"
     ]
   ]
 ]

@@ -449,7 +449,30 @@ let generalize_annotated_univs (s:sigelt) :sigelt =
   | _ -> s
 
 let is_special_effect_combinator = function
-  | "repr" | "post" | "pre" | "wp" -> true
+  | "lift1"
+  | "lift2"
+  | "pure"
+  | "app"
+  | "push"
+  | "wp_if_then_else"
+  | "wp_assert"
+  | "wp_assume"
+  | "wp_close"
+  | "stronger"
+  | "wp_ite"
+  | "null_wp"
+  | "wp_trivial"
+  | "ctx"
+  | "g_ctx"
+  | "lift_from_pure"
+  | "return_wp"
+  | "return_elab"
+  | "bind_wp"
+  | "bind_elab"
+  | "repr"
+  | "post"
+  | "pre"
+  | "wp" -> true
   | _ -> false
 
 let rec sum_to_universe u n =
@@ -2050,12 +2073,12 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let tcs = List.rev tcs in
       let docs_tps_sigelts = tcs |> List.collect (function
         | Inr ({ sigel = Sig_inductive_typ(id, uvs, tpars, k, _, _) }, binders, t, quals) -> //type abbrevs in mutual type definitions
-	      let t =
-	          let env, tpars = typars_of_binders env binders in
-	          let env_tps, tpars = push_tparams env tpars in
-	          let t = desugar_typ env_tps t in
-	          let tpars = Subst.close_binders tpars in
-	          Subst.close tpars t
+              let t =
+                  let env, tpars = typars_of_binders env binders in
+                  let env_tps, tpars = push_tparams env tpars in
+                  let t = desugar_typ env_tps t in
+                  let tpars = Subst.close_binders tpars in
+                  Subst.close tpars t
           in
           [((id, d.doc), [], mk_typ_abbrev id uvs tpars (Some k) t [id] quals rng)]
 
