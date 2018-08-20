@@ -1,6 +1,8 @@
 module HighComp
 
 open FStar.Classical
+open FStar.Tactics
+open FStar.Reflection
 
 module U32 = FStar.UInt32
 
@@ -15,12 +17,11 @@ type hwp 'a = state -> ('a * state -> Type) -> Type  // x:hwp a { monotonic x }
 
 let monotonic #a (wp:hwp a) =
   forall p1 p2 s. {:pattern wp s p1; wp s p2} (forall x. p1 x ==> p2 x) ==> wp s p1 ==> wp s p2
+
+type hwp_mon 'a = (wp:hwp 'a{monotonic wp}) 
   
 // [comp] type with wp
-type comp_wp 'a (wp : hwp 'a{monotonic wp}) = s0:state -> PURE ('a * state) (wp s0)
-
-// type comp_wp 'a (wp : hwp 'a) = 
-//    _:(comp_wp' 'a wp){monotonic wp}
+type comp_wp 'a (wp : hwp_mon 'a) = s0:state -> PURE ('a * state) (wp s0)
 
 // [comp] type with pre- and postconditions
 let comp_p (a:Type) (pre : state -> Type) (post : state -> a * state -> Type) : GTot Type  =
@@ -91,6 +92,9 @@ let read_wp (i:nat) : wp:hwp mint{monotonic wp} =
 let write_wp (i:nat) (v:mint) : wp:hwp unit{monotonic wp} = 
   fun s0 post -> post (hwrite i v s0)
 
+let ite_wp #a (b : bool) (wp1 : hwp a{monotonic wp1}) 
+  (wp2 : hwp a{monotonic wp2}) : wp:hwp a{monotonic wp} = 
+  HIGH?.wp_if_then_else a b wp1 wp2  
 
 // Pre and postconditions
 
@@ -139,7 +143,10 @@ let hread_eq (#a:Type) (i:nat) :
 
 open FStar.Tactics
 
-let h_thunk a (wp:hwp a{monotonic wp}) = unit -> HIGH a wp
+let h_thunk a (wp:hwp_mon a) = unit -> HIGH a wp
+
+let reif (#a:Type) wp (c : h_thunk a wp) :
+  comp_wp a wp = reify (c ())
 
 let reify_bind_commutes
           (#a #b : _)
@@ -149,6 +156,20 @@ let reify_bind_commutes
      = reify (let x = c1 () in c2 x ()) s0 ==
        bind_elab (reify (c1 ()))
                  (fun x -> reify (c2 x ())) s0
+
+
+let ite_elab (#a:Type) (b : bool) (#wp1 : hwp_mon a) (c1:comp_wp a wp1) 
+  (#wp2 : hwp_mon a) (c2:comp_wp a wp2) : comp_wp a (ite_wp b wp1 wp2) =
+  (fun s0 -> if b then c1 s0 else c2 s0)
+
+let ite_reif (#a:Type) (b : bool) (#wp1 : hwp_mon a) ($c1:h_thunk a wp1) 
+  (#wp2 : hwp_mon a) ($c2:h_thunk a wp2) : comp_wp a (ite_wp b wp1 wp2) = 
+  reify (if b then c1 () else c2 ())
+
+
+let reify_ite_commutes (#a:Type) (b : bool) (#wp1 : hwp_mon a) ($c1:h_thunk a wp1) 
+  (#wp2 : hwp_mon a) ($c2:h_thunk a wp2) (s0:_{ite_wp b wp1 wp2 s0 (fun _ -> True)}) =
+  ite_reif b c1 c2 s0 == ite_elab b (reif wp1 c1) (reif wp2 c2) s0
 
 [@expect_failure]
 let test (i:nat) (v:mint) (s0:_) =
@@ -176,7 +197,7 @@ let test2 (i:nat) (v:mint) (s0:_) =
         by (norm [reify_; delta_only [`%bind_elab; `%HIGH?.bind_elab; `%reify_bind_commutes]];
             trefl())
 
-let commutation_lemma
+let bind_commutes_lemma
           (#a #b : _)
           (#wp1 : _) (c1:h_thunk a wp1)
           (#wp2 : _) (c2: (x:a -> h_thunk b (wp2 x))) (s0:_)
@@ -188,3 +209,10 @@ let commutation_lemma
               norm [reify_; delta_only [`%bind_elab; `%HIGH?.bind_elab; `%reify_bind_commutes]];
               dump "after norm";
               trefl())
+
+let ite_commutes_lemma (#a #b : Type) (b : bool)
+      (#wp1 : hwp_mon a) ($c1:h_thunk a wp1) 
+      (#wp2 : hwp_mon a) ($c2:h_thunk a wp2) (s0:state) : 
+      Lemma (requires (ite_wp b wp1 wp2 s0 (fun _ -> True)))
+            (ensures (reify_ite_commutes b c1 c2 s0)) = ()
+            

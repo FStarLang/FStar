@@ -58,12 +58,36 @@ let hswap_and_sum () =
   let _  = HIGH?.put 1 x0 in
   U32.v x0 + U32.v x1
 
+
+
+
+let wp1 (x0 : mint) : (wp:hwp int{monotonic wp}) = 
+  bind_wp (read_wp 1) (fun x1 ->
+  bind_wp (write_wp 0 x1) (fun () ->
+  bind_wp (write_wp 1 x0) (fun () ->
+  return_wp (U32.v x0 + U32.v x1))))
+
+let wp2 (x0 x1 : mint) : (wp:hwp int{monotonic wp}) = 
+  bind_wp (write_wp 0 x1) (fun () ->
+  bind_wp (write_wp 1 x0) (fun () ->
+  return_wp (U32.v x0 + U32.v x1)))
+
+let wp3 (x0 x1 : mint) (u : unit) : (wp:hwp int{monotonic wp}) = 
+  bind_wp (write_wp 1 x0) (fun () ->
+  return_wp (U32.v x0 + U32.v x1))
+
+
+let wp4 (x0 x1 : mint) (u : unit) : (wp:hwp int{monotonic wp}) = 
+  return_wp (U32.v x0 + U32.v x1)
+
+
 val swap_and_sum' : unit -> comp_wp int sum_wp_full
 let swap_and_sum' () =  
-  bind_elab (hread' 0) (fun x0 -> 
-  bind_elab (hread' 1) (fun x1 -> 
-  bind_elab (hwrite' 0 x1) (fun () ->
-  bind_elab (hwrite' 1 x0) (fun () ->
+  admit ();
+  bind_elab #mint #int #(read_wp 0) (hread' 0) #wp1 (fun x0 -> 
+  bind_elab #mint #int #(read_wp 1) (hread' 1) #(wp2 x0) (fun x1 -> 
+  bind_elab #unit #int #(write_wp 0 x1) (hwrite' 0 x1) #(wp3 x0 x1) (fun () ->
+  bind_elab #unit #int #(write_wp 1 x0) (hwrite' 1 x0) #(wp4 x0 x1) (fun () ->
   return_elab (U32.v x0 + U32.v x1)))))
 
 val lswap_and_sum : unit -> lcomp_wp2 int sum_wp_full (reif sum_wp_full hswap_and_sum)
