@@ -459,7 +459,7 @@ let is_special_effect_combinator = function
   | "wp_assume"
   | "wp_close"
   | "stronger"
-  | "wp_ite"
+  | "ite_wp"
   | "null_wp"
   | "wp_trivial"
   | "ctx"
