@@ -756,7 +756,7 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                  unary_op
                    arg_as_bounded_int
                    (fun r (int_to_t, x) -> int_as_bounded r int_to_t (Z.lognot_big_int x)),
-                 NBETerm.binary_op
+                 NBETerm.unary_op
                    NBETerm.arg_as_bounded_int
                    (fun (int_to_t, x) -> NBETerm.int_as_bounded int_to_t (Z.lognot_big_int x));
             ])
