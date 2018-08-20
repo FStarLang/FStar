@@ -459,3 +459,408 @@ let as_seq_gsub #_ #_ #_ h b i len _ =
   | Null -> ()
   | Buffer _ content idx len0 _ ->
     Seq.slice_slice (HS.sel h content) (U32.v idx) (U32.v idx + U32.v len0) (U32.v i) (U32.v i + U32.v len)
+
+(* Untyped view of buffers, used only to implement the generic modifies clause. DO NOT USE in client code. *)
+
+noeq
+type ubuffer_
+: Type0
+= {
+  b_max_length: nat;
+  b_offset: nat;
+  b_length: nat;
+  b_is_mm: bool;
+}
+
+val ubuffer' (region: HS.rid) (addr: nat) : Tot Type0
+
+let ubuffer' region addr = (x: ubuffer_ { x.b_offset + x.b_length <= x.b_max_length } )
+
+let ubuffer (region: HS.rid) (addr: nat) : Tot Type0 = G.erased (ubuffer' region addr)
+
+let ubuffer_of_buffer' (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel)
+  :Tot (ubuffer (frameOf b) (as_addr b))
+  = if Null? b
+    then
+      Ghost.hide ({
+        b_max_length = 0;
+        b_offset = 0;
+        b_length = 0;
+        b_is_mm = false;
+      })
+    else
+      Ghost.hide ({
+        b_max_length = U32.v (Buffer?.max_length b);
+        b_offset = U32.v (Buffer?.idx b);
+        b_length = U32.v (Buffer?.length b);
+       b_is_mm = HS.is_mm (Buffer?.content b);
+    })
+
+let ubuffer_preserved' 
+  (#r: HS.rid)
+  (#a: nat)
+  (b: ubuffer r a)
+  (h h' : HS.mem)
+: GTot Type0
+= forall (t':Type0) (rrel rel:srel t') (b':mbuffer t' rrel rel) .
+  (frameOf b' == r /\ as_addr b' == a /\ ubuffer_of_buffer' b' == b /\ live h b') ==>
+  (live h' b' /\ Seq.equal (as_seq h' b') (as_seq h b'))
+
+val ubuffer_preserved (#r: HS.rid) (#a: nat) (b: ubuffer r a) (h h' : HS.mem) : GTot Type0
+
+let ubuffer_preserved = ubuffer_preserved'
+
+let ubuffer_preserved_intro
+  (#r:HS.rid)
+  (#a:nat)
+  (b:ubuffer r a)
+  (h h' :HS.mem)
+  (f: (
+    (t':Type0) ->
+    (rrel:srel t') -> (rel:srel t') ->
+    (b':mbuffer t' rrel rel) ->
+    Lemma
+    (requires (frameOf b' == r /\ as_addr b' == a /\ ubuffer_of_buffer' b' == b /\ live h b'))
+    (ensures (live h' b' /\ as_seq h' b' == as_seq h b'))
+  ))
+: Lemma
+  (ubuffer_preserved b h h')
+= let g'
+    (t':Type0) (rrel rel:srel t')
+    (b':mbuffer t' rrel rel)
+  : Lemma
+    ((
+      frameOf b' == r /\ as_addr b' == a /\ ubuffer_of_buffer' b' == b /\ live h b'
+    ) ==> (
+      live h' b' /\ as_seq h' b' == as_seq h b'
+    ))
+  = Classical.move_requires (f t' rrel rel) b'
+  in
+  Classical.forall_intro_4 g'
+
+val ubuffer_preserved_refl (#r: HS.rid) (#a: nat) (b: ubuffer r a) (h : HS.mem) : Lemma
+  (ubuffer_preserved b h h)
+
+let ubuffer_preserved_refl #r #a b h = ()
+
+val ubuffer_preserved_trans (#r: HS.rid) (#a: nat) (b: ubuffer r a) (h1 h2 h3 : HS.mem) : Lemma
+  (requires (ubuffer_preserved b h1 h2 /\ ubuffer_preserved b h2 h3))
+  (ensures (ubuffer_preserved b h1 h3))
+
+let ubuffer_preserved_trans #r #a b h1 h2 h3 = ()
+
+val same_mreference_ubuffer_preserved
+  (#r: HS.rid)
+  (#a: nat)
+  (b: ubuffer r a)
+  (h1 h2: HS.mem)
+  (f: (
+    (a' : Type) ->
+    (pre: Preorder.preorder a') ->
+    (r': HS.mreference a' pre) ->
+    Lemma
+    (requires (h1 `HS.contains` r' /\ r == HS.frameOf r' /\ a == HS.as_addr r'))
+    (ensures (h2 `HS.contains` r' /\ h1 `HS.sel` r' == h2 `HS.sel` r'))
+  ))
+: Lemma
+  (ubuffer_preserved b h1 h2)
+
+let same_mreference_ubuffer_preserved #r #a b h1 h2 f =
+  ubuffer_preserved_intro b h1 h2 (fun t' _ _ b' ->
+    if Null? b'
+    then ()
+    else
+      f _ _ (Buffer?.content b')
+  )
+
+val addr_unused_in_ubuffer_preserved
+  (#r: HS.rid)
+  (#a: nat)
+  (b: ubuffer r a)
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (HS.live_region h1 r ==> a `Heap.addr_unused_in` (Map.sel (HS.get_hmap h1) r)))
+  (ensures (ubuffer_preserved b h1 h2))
+
+let addr_unused_in_ubuffer_preserved #r #a b h1 h2 = ()
+
+val ubuffer_of_buffer (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) :Tot (ubuffer (frameOf b) (as_addr b))
+
+let ubuffer_of_buffer #_ #_ #_ b = ubuffer_of_buffer' b
+
+val ubuffer_preserved_elim (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h h':HS.mem)
+  :Lemma (requires (ubuffer_preserved #(frameOf b) #(as_addr b) (ubuffer_of_buffer b) h h' /\ live h b))
+         (ensures (live h' b /\ as_seq h b == as_seq h' b))
+
+let ubuffer_preserved_elim #_ #_ #_ _ _ _ = ()
+
+let unused_in_ubuffer_preserved (#a:Type0) (#rrel:srel a) (#rel:srel a)
+  (b:mbuffer a rrel rel) (h h':HS.mem)
+  : Lemma (requires (b `unused_in` h))
+          (ensures (ubuffer_preserved #(frameOf b) #(as_addr b) (ubuffer_of_buffer b) h h'))
+  = Classical.move_requires (fun b -> live_not_unused_in h b) b;
+    live_null a #rrel #rel h;
+    null_unique b;
+    unused_in_equiv b h;
+    addr_unused_in_ubuffer_preserved #(frameOf b) #(as_addr b) (ubuffer_of_buffer b) h h'
+
+let ubuffer_includes' (larger smaller: ubuffer_) : GTot Type0 =
+  larger.b_is_mm == smaller.b_is_mm /\
+  larger.b_max_length == smaller.b_max_length /\
+  larger.b_offset <= smaller.b_offset /\
+  smaller.b_offset + smaller.b_length <= larger.b_offset + larger.b_length
+
+val ubuffer_includes (#r: HS.rid) (#a: nat) (larger smaller: ubuffer r a) : GTot Type0
+
+let ubuffer_includes #r #a larger smaller =
+  ubuffer_includes' (G.reveal larger) (G.reveal smaller)
+
+val ubuffer_includes_refl (#r: HS.rid) (#a: nat) (b: ubuffer r a) : Lemma
+  (b `ubuffer_includes` b)
+
+let ubuffer_includes_refl #r #a b = ()
+
+val ubuffer_includes_trans (#r: HS.rid) (#a: nat) (b1 b2 b3: ubuffer r a) : Lemma
+  (requires (b1 `ubuffer_includes` b2 /\ b2 `ubuffer_includes` b3))
+  (ensures (b1 `ubuffer_includes` b3))
+
+let ubuffer_includes_trans #r #a b1 b2 b3 = ()
+
+(*
+ * TODO: not sure how to make this lemma work with preorders
+ *       it creates a bugger larger' in the proof
+ *       we need a compatible preorder for that
+ *       may be take that as an argument?
+ *)
+(*val ubuffer_includes_ubuffer_preserved (#r: HS.rid) (#a: nat) (larger smaller: ubuffer r a) (h1 h2: HS.mem) : Lemma
+  (requires (larger `ubuffer_includes` smaller /\ ubuffer_preserved larger h1 h2))
+  (ensures (ubuffer_preserved smaller h1 h2))
+let ubuffer_includes_ubuffer_preserved #r #a larger smaller h1 h2 =
+  ubuffer_preserved_intro smaller h1 h2 (fun t' b' ->
+    if Null? b'
+    then ()
+    else
+      let (Buffer max_len content idx' len') = b' in
+      let idx = U32.uint_to_t (G.reveal larger).b_offset in
+      let len = U32.uint_to_t (G.reveal larger).b_length in
+      let larger' = Buffer max_len content idx len in
+      assert (b' == gsub larger' (U32.sub idx' idx) len');
+      ubuffer_preserved_elim larger' h1 h2
+  )*)
+
+let ubuffer_disjoint' (x1 x2: ubuffer_) : GTot Type0 =
+  (x1.b_max_length == x2.b_max_length /\
+    (x1.b_offset + x1.b_length <= x2.b_offset \/
+     x2.b_offset + x2.b_length <= x1.b_offset))
+
+val ubuffer_disjoint (#r: HS.rid) (#a: nat) (b1 b2: ubuffer r a) : GTot Type0
+
+let ubuffer_disjoint #r #a b1 b2 =
+  ubuffer_disjoint' (G.reveal b1) (G.reveal b2)
+
+val ubuffer_disjoint_sym (#r: HS.rid) (#a: nat) (b1 b2: ubuffer r a) : Lemma
+  (ubuffer_disjoint b1 b2 <==> ubuffer_disjoint b2 b1)
+
+let ubuffer_disjoint_sym #r #a b1 b2 = ()
+
+val ubuffer_disjoint_includes (#r: HS.rid) (#a: nat) (larger1 larger2: ubuffer r a) (smaller1 smaller2: ubuffer r a) : Lemma
+  (requires (ubuffer_disjoint larger1 larger2 /\ larger1 `ubuffer_includes` smaller1 /\ larger2 `ubuffer_includes` smaller2))
+  (ensures (ubuffer_disjoint smaller1 smaller2))
+
+let ubuffer_disjoint_includes #r #a larger1 larger2 smaller1 smaller2 = ()
+
+val liveness_preservation_intro (#a:Type0) (#rrel:srel a) (#rel:srel a)
+  (h h':HS.mem) (b:mbuffer a rrel rel)
+  (f: (
+    (t':Type0) ->
+    (pre: Preorder.preorder t') ->
+    (r: HS.mreference t' pre) ->
+    Lemma
+    (requires (HS.frameOf r == frameOf b /\ HS.as_addr r == as_addr b /\ h `HS.contains` r))
+    (ensures (h' `HS.contains` r))
+  ))
+  :Lemma (requires (live h b)) (ensures (live h' b))
+
+let liveness_preservation_intro #_ #_ #_ _ _ b f =
+  if Null? b
+  then ()
+  else f _ _ (Buffer?.content b)
+
+(* Basic, non-compositional modifies clauses, used only to implement the generic modifies clause. DO NOT USE in client code *)
+
+let modifies_0_preserves_mreferences (h1 h2: HS.mem) : GTot Type0 =
+  forall (a: Type) (pre: Preorder.preorder a) (r: HS.mreference a pre) .
+  h1 `HS.contains` r ==> (h2 `HS.contains` r /\ HS.sel h1 r == HS.sel h2 r)
+
+let modifies_0_preserves_regions (h1 h2: HS.mem) : GTot Type0 =
+  forall (r: HS.rid) . HS.live_region h1 r ==> HS.live_region h2 r
+
+let modifies_0_preserves_not_unused_in (h1 h2: HS.mem) : GTot Type0 =
+  forall (r: HS.rid) (n: nat) . (
+    HS.live_region h1 r /\ HS.live_region h2 r /\
+    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)  
+  ) ==> (
+    n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)
+  )
+
+let modifies_0' (h1 h2: HS.mem) : GTot Type0 =
+  modifies_0_preserves_mreferences h1 h2 /\
+  modifies_0_preserves_regions h1 h2 /\
+  modifies_0_preserves_not_unused_in h1 h2
+
+val modifies_0 (h1 h2: HS.mem) : GTot Type0
+
+let modifies_0 = modifies_0'
+
+val modifies_0_live_region (h1 h2: HS.mem) (r: HS.rid) : Lemma
+  (requires (modifies_0 h1 h2 /\ HS.live_region h1 r))
+  (ensures (HS.live_region h2 r))
+
+let modifies_0_live_region h1 h2 r = ()
+
+val modifies_0_mreference (#a: Type) (#pre: Preorder.preorder a) (h1 h2: HS.mem) (r: HS.mreference a pre) : Lemma
+  (requires (modifies_0 h1 h2 /\ h1 `HS.contains` r))
+  (ensures (h2 `HS.contains` r /\ h1 `HS.sel` r == h2 `HS.sel` r))
+
+let modifies_0_mreference #a #pre h1 h2 r = ()
+
+let modifies_0_ubuffer
+  (#r: HS.rid)
+  (#a: nat)
+  (b: ubuffer r a)
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (modifies_0 h1 h2))
+  (ensures (ubuffer_preserved b h1 h2))
+= same_mreference_ubuffer_preserved b h1 h2 (fun a' pre r' -> modifies_0_mreference h1 h2 r')
+
+val modifies_0_unused_in
+  (h1 h2: HS.mem)
+  (r: HS.rid)
+  (n: nat)
+: Lemma
+  (requires (
+    modifies_0 h1 h2 /\
+    HS.live_region h1 r /\ HS.live_region h2 r /\
+    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)
+  ))
+  (ensures (n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)))
+
+let modifies_0_unused_in h1 h2 r n = ()
+
+let modifies_1_preserves_mreferences (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem)
+  :GTot Type0
+  = forall (a':Type) (pre:Preorder.preorder a') (r':HS.mreference  a' pre).
+      ((frameOf b <> HS.frameOf r' \/ as_addr b <> HS.as_addr r') /\ h1 `HS.contains` r') ==>
+      (h2 `HS.contains` r' /\ HS.sel h1 r' == HS.sel h2 r')
+
+let modifies_1_preserves_ubuffers (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem)
+  : GTot Type0
+  = forall (b':ubuffer (frameOf b) (as_addr b)).
+      (ubuffer_disjoint #(frameOf b) #(as_addr b) (ubuffer_of_buffer b) b') ==> ubuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2
+
+let modifies_1_preserves_livenesses (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem)
+  : GTot Type0
+  = forall (a':Type) (pre:Preorder.preorder a') (r':HS.mreference  a' pre). h1 `HS.contains` r' ==> h2 `HS.contains` r'
+
+let modifies_1' (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem)
+  : GTot Type0
+  = modifies_0_preserves_regions h1 h2 /\
+    modifies_1_preserves_mreferences b h1 h2 /\
+    modifies_1_preserves_livenesses b h1 h2 /\
+    modifies_0_preserves_not_unused_in h1 h2 /\
+    modifies_1_preserves_ubuffers b h1 h2
+
+val modifies_1 (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem) :GTot Type0
+
+let modifies_1 = modifies_1'
+
+val modifies_1_live_region (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem) (r:HS.rid)
+  :Lemma (requires (modifies_1 b h1 h2 /\ HS.live_region h1 r)) (ensures (HS.live_region h2 r))
+
+let modifies_1_live_region #_ #_ #_ _ _ _ _ = ()
+
+val modifies_1_liveness
+  (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem)
+  (#a':Type0) (#pre:Preorder.preorder a') (r':HS.mreference a' pre)
+  :Lemma (requires (modifies_1 b h1 h2 /\ h1 `HS.contains` r')) (ensures (h2 `HS.contains` r'))
+
+let modifies_1_liveness #_ #_ #_ _ _ _ #_ #_ _ = ()
+
+val modifies_1_unused_in (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem) (r:HS.rid) (n:nat)
+  :Lemma (requires (modifies_1 b h1 h2 /\
+                    HS.live_region h1 r /\ HS.live_region h2 r /\
+                    n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)))
+         (ensures (n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)))
+let modifies_1_unused_in #_ #_ #_ _ _ _ _ _ = ()
+
+val modifies_1_mreference
+  (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem)
+  (#a':Type0) (#pre:Preorder.preorder a') (r': HS.mreference a' pre)
+  : Lemma (requires (modifies_1 b h1 h2 /\ (frameOf b <> HS.frameOf r' \/ as_addr b <> HS.as_addr r') /\ h1 `HS.contains` r'))
+          (ensures (h2 `HS.contains` r' /\ h1 `HS.sel` r' == h2 `HS.sel` r'))
+let modifies_1_mreference #_ #_ #_ _ _ _ #_ #_ _ = ()
+
+val modifies_1_ubuffer (#a:Type0) (#rrel:srel a) (#rel:srel a)
+  (b:mbuffer a rrel rel) (h1 h2:HS.mem) (b':ubuffer (frameOf b) (as_addr b))
+  : Lemma (requires (modifies_1 b h1 h2 /\ ubuffer_disjoint #(frameOf b) #(as_addr b) (ubuffer_of_buffer b) b'))
+          (ensures  (ubuffer_preserved #(frameOf b) #(as_addr b) b' h1 h2))
+let modifies_1_ubuffer #_ #_ #_ _ _ _ _ = ()
+
+val modifies_1_null (#a:Type0) (#rrel:srel a) (#rel:srel a)
+  (b:mbuffer a rrel rel) (h1 h2:HS.mem)
+  : Lemma (requires (modifies_1 b h1 h2 /\ g_is_null b))
+          (ensures  (modifies_0 h1 h2))
+let modifies_1_null #_ #_ #_ _ _ _ = ()
+
+let modifies_addr_of_preserves_not_unused_in (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem)
+  :GTot Type0
+  = forall (r: HS.rid) (n: nat) .
+      ((r <> frameOf b \/ n <> as_addr b) /\
+       HS.live_region h1 r /\ HS.live_region h2 r /\
+       n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)) ==>
+      (n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r))
+
+let modifies_addr_of' (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem) :GTot Type0 =
+  modifies_0_preserves_regions h1 h2 /\
+  modifies_1_preserves_mreferences b h1 h2 /\
+  modifies_addr_of_preserves_not_unused_in b h1 h2
+
+val modifies_addr_of (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) (h1 h2:HS.mem) :GTot Type0
+let modifies_addr_of = modifies_addr_of'
+
+val modifies_addr_of_live_region (#a:Type0) (#rrel:srel a) (#rel:srel a)
+  (b:mbuffer a rrel rel) (h1 h2:HS.mem) (r:HS.rid)
+  :Lemma (requires (modifies_addr_of b h1 h2 /\ HS.live_region h1 r))
+         (ensures (HS.live_region h2 r))
+let modifies_addr_of_live_region #_ #_ #_ _ _ _ _ = ()
+
+val modifies_addr_of_mreference (#a:Type0) (#rrel:srel a) (#rel:srel a)
+  (b:mbuffer a rrel rel) (h1 h2:HS.mem)
+  (#a':Type0) (#pre:Preorder.preorder a') (r':HS.mreference a' pre)
+  : Lemma (requires (modifies_addr_of b h1 h2 /\ (frameOf b <> HS.frameOf r' \/ as_addr b <> HS.as_addr r') /\ h1 `HS.contains` r'))
+          (ensures (h2 `HS.contains` r' /\ h1 `HS.sel` r' == h2 `HS.sel` r'))
+let modifies_addr_of_mreference #_ #_ #_ _ _ _ #_ #_ _ = ()
+
+val modifies_addr_of_unused_in (#a:Type0) (#rrel:srel a) (#rel:srel a)
+  (b:mbuffer a rrel rel) (h1 h2:HS.mem) (r:HS.rid) (n:nat)
+  : Lemma (requires (modifies_addr_of b h1 h2 /\
+                     (r <> frameOf b \/ n <> as_addr b) /\
+                     HS.live_region h1 r /\ HS.live_region h2 r /\
+                     n `Heap.addr_unused_in` (HS.get_hmap h2 `Map.sel` r)))
+          (ensures (n `Heap.addr_unused_in` (HS.get_hmap h1 `Map.sel` r)))
+let modifies_addr_of_unused_in #_ #_ #_ _ _ _ _ _ = ()
+
+module MG = FStar.ModifiesGen
+
+let cls : MG.cls ubuffer = MG.Cls #ubuffer
+  ubuffer_includes
+  (fun #r #a x -> ubuffer_includes_refl x)
+  (fun #r #a x1 x2 x3 -> ubuffer_includes_trans x1 x2 x3)
+  ubuffer_disjoint
+  (fun #r #a x1 x2 -> ubuffer_disjoint_sym x1 x2)
+  (fun #r #a larger1 larger2 smaller1 smaller2 -> ubuffer_disjoint_includes larger1 larger2 smaller1 smaller2)
+  ubuffer_preserved
+  (fun #r #a x h -> ubuffer_preserved_refl x h)
+  (fun #r #a x h1 h2 h3 -> ubuffer_preserved_trans x h1 h2 h3)
+  (fun #r #a b h1 h2 f -> same_mreference_ubuffer_preserved b h1 h2 f)
