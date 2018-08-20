@@ -64,7 +64,7 @@
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "8089358389da1c1bff27498b5c721f76"
+      "f3521f2bec35535e15d34d0ced9ce053"
     ],
     [
       "FStar.Seq.Sorted.intro_sorted_pred",
@@ -171,7 +171,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "788be0231992ae0e466b96b987331701"
+      "caf0418eca554406447ed27ba584ca17"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_slice_lemma",
