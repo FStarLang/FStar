@@ -44,6 +44,11 @@ let lt_big_int = Z.lt_big_int
 let ge_big_int = Z.ge_big_int
 let gt_big_int = Z.gt_big_int
 
+let logand_big_int x y = System.Numerics.BigInteger.op_BitwiseAnd (x, y)
+let logor_big_int x y = System.Numerics.BigInteger.op_BitwiseOr (x, y)
+let logxor_big_int x y = System.Numerics.BigInteger.op_ExclusiveOr (x, y)
+let lognot_big_int x = System.Numerics.BigInteger.op_OnesComplement x
+
 let sqrt_big_int = Z.sqrt_big_int
 
 let string_of_big_int = Z.string_of_big_int
