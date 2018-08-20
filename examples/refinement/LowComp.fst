@@ -122,9 +122,6 @@ let lcomp_wp2 (a:Type) (wp : hwp a{monotonic wp}) (c : comp_wp a wp) =
                      h' == state_as_lstate h ls s1 /\ x == r )))
 
 
-let reif (#a:Type) (wp:hwp a{monotonic wp}) (c : unit -> HIGH a wp) :
-  comp_wp a wp = reify (c ())
-
 
 (** DSL for low computations *)
 
@@ -253,6 +250,15 @@ let lbind (#a:Type) (#b:Type)
       assert (state_as_lstate h0 ls s2 == state_as_lstate h1 ls s2)
     in
     y_b
+
+
+
+let lite (#a:Type) (b:bool)
+         (#wp1 : hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp1 a wp1 c1)
+         (#wp2 : hwp_mon a) (#c2:comp_wp a wp2) (lc2: lcomp_wp1 a wp2 c2) : lcomp_wp1 a (ite_wp b wp1 wp2) (ite_elab b c1 c2) =
+  fun ls -> if b then lc1 ls else lc2 ls
+
+
 
 // Versions of the DSL with reif in spec
 
