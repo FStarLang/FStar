@@ -57,10 +57,11 @@ type worklist = {
     attempting:   probs;
     wl_deferred:  list<(int * string * prob)>;  //flex-flex cases, non patterns, and subtyping constraints involving a unification variable,
     ctr:          int;                          //a counter incremented each time we extend subst, used to detect if we've made progress
-    defer_ok:     bool;                       //whether or not carrying constraints is ok---at the top-level, this flag is false
-    smt_ok:       bool;                       //whether or not falling back to the SMT solver is permitted
+    defer_ok:     bool;                         //whether or not carrying constraints is ok---at the top-level, this flag is false
+    smt_ok:       bool;                         //whether or not falling back to the SMT solver is permitted
+    umax_heuristic_ok: bool;                    //whether or not it's ok to apply a structural match on umax us = umax us'
     tcenv:        Env.env;
-    wl_implicits: implicits;                  //additional uvars introduced
+    wl_implicits: implicits;                    //additional uvars introduced
 }
 
 (* --------------------------------------------------------- *)
@@ -177,6 +178,7 @@ let empty_worklist env = {
     tcenv=env;
     defer_ok=true;
     smt_ok=true;
+    umax_heuristic_ok=true;
     wl_implicits=[]
 }
 let giveup env reason prob =
@@ -1162,6 +1164,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
     in
 
     let try_umax_components u1 u2 msg =
+        if not wl.umax_heuristic_ok then UFailed ("Unable to unify universe terms with umax") else
         match u1, u2 with
             | U_max us1, U_max us2 ->
               //filter out common universes in us1 and us2
@@ -1835,6 +1838,7 @@ and try_solve_without_smt_or_else
     : solution =
     let wl' = {wl with defer_ok=false;
                        smt_ok=false;
+                       umax_heuristic_ok=false;
                        attempting=[];
                        wl_deferred=[];
                        wl_implicits=[]} in
@@ -2098,6 +2102,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             (Print.term_to_string t2) (Print.tag_of_term t2);
         let head1, args1 = U.head_and_args t1 in
         let head2, args2 = U.head_and_args t2 in
+        let solve_head_then wl k =
+            if need_unif then k true wl
+            else match solve_maybe_uinsts env orig head1 head2 wl with
+            | USolved wl -> k true wl //(solve_prob orig None [] wl)
+            | UFailed msg -> giveup env msg orig
+            | UDeferred wl -> k false (defer "universe constraints" orig wl)
+        in
         let nargs = List.length args1 in
         if nargs <> List.length args2
         then giveup env (BU.format4 "unequal number of arguments: %s[%s] and %s[%s]"
@@ -2110,10 +2121,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         if nargs=0 || U.eq_args args1 args2=U.Equal //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
         then if need_unif
              then solve_t env ({problem with lhs=head1; rhs=head2}) wl
-             else match solve_maybe_uinsts env orig head1 head2 wl with
-                  | USolved wl -> solve env (solve_prob orig None [] wl)
-                  | UFailed msg -> giveup env msg orig
-                  | UDeferred wl -> solve env (defer "universe constraints" orig wl)
+             else solve_head_then wl (fun ok wl ->
+                    if ok then solve env (solve_prob orig None [] wl)
+                    else solve env wl)
         else//Given T t1 ..tn REL T s1..sn
             //  if T expands to a refinement, then normalize it and recurse
             //  This allows us to prove things like
@@ -2127,8 +2137,12 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             begin
             match refinement1, refinement2 with
             | None, None ->  //neither side is a refinement; reason extensionally
-              let argp = List.zip ((head1, None)::args1) ((head2, None)::args2) in
               let mk_sub_probs wl =
+                   let argp =
+                       if need_unif
+                       then List.zip ((head1, None)::args1) ((head2, None)::args2)
+                       else List.zip args1 args2
+                   in
                    let subprobs, wl =
                         List.fold_right
                             (fun ((a1, _), (a2, _)) (probs, wl) ->
@@ -2146,15 +2160,20 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                    subprobs, wl
               in
               let solve_sub_probs env wl =
-                  let subprobs, wl = mk_sub_probs wl in
-                  let formula = U.mk_conj_l (List.map (fun p -> p_guard p) subprobs) in
-                  let wl = solve_prob orig (Some formula) [] wl in
-                  solve env (attempt subprobs wl)
+                  solve_head_then wl (fun ok wl ->
+                      if not ok
+                      then solve env wl
+                      else let subprobs, wl = mk_sub_probs wl in
+                           let formula = U.mk_conj_l (List.map (fun p -> p_guard p) subprobs) in
+                           let wl = solve_prob orig (Some formula) [] wl in
+                           solve env (attempt subprobs wl))
               in
               let solve_sub_probs_no_smt env wl =
-                  let subprobs, wl = mk_sub_probs wl in
-                  let wl = solve_prob orig None [] wl in
-                  solve env (attempt subprobs wl)
+                  solve_head_then wl (fun ok wl ->
+                      assert ok; //defer not allowed
+                      let subprobs, wl = mk_sub_probs wl in
+                      let wl = solve_prob orig None [] wl in
+                      solve env (attempt subprobs wl))
               in
               let unfold_and_retry d env wl (prob, reason) =
                   if debug env <| Options.Other "Rel"
@@ -2190,53 +2209,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     (unfold_and_retry d)
 
               | _ -> //cannot be unfolded or no smt anyway; so just try to solve extensionally
-                if debug env <| Options.Other "Rel"
-                then BU.print3
-                    "Cannot unfold %s or %s since delta_depth=%s\n"
-                                (Print.term_to_string t1)
-                                (Print.term_to_string t2)
-                                (match d with | None -> "None" | Some d -> Print.delta_depth_to_string d);
+                //if debug env <| Options.Other "Rel"
+                //then BU.print3
+                //    "Cannot unfold %s or %s since delta_depth=%s\n"
+                //                (Print.term_to_string t1)
+                //                (Print.term_to_string t2)
+                //                (match d with | None -> "None" | Some d -> Print.delta_depth_to_string d);
                 solve_sub_probs env wl
 
               end
-
-
-
-
-              //if need_unif then
-              //    let argp = List.zip ((head1, None)::args1) ((head2, None)::args2) in
-              //    let subprobs, wl = List.fold_right (fun ((a1, _), (a2, _)) (probs, wl) ->
-              //                          let prob', wl = mk_problem wl (p_scope orig) orig a1 EQ a2 None "index" in
-              //                          (TProb prob')::probs, wl) argp ([], wl)
-              //    in
-              //    if debug env <| Options.Other "Rel" then
-              //        BU.print1 "Adding subproblems for arguments: %s" (Print.list_to_string (prob_to_string env) subprobs);
-              //    let formula = U.mk_conj_l (List.map (fun p -> p_guard p) subprobs) in
-              //    let wl = solve_prob orig (Some formula) [] wl in
-              //    solve env (attempt subprobs wl)
-              //else begin
-              //     match solve_maybe_uinsts env orig head1 head2 wl with
-              //     | UFailed msg -> giveup env msg orig
-              //     | UDeferred wl -> solve env (defer "universe constraints" orig wl)
-              //     | USolved wl ->
-              //       let subprobs, wl =
-              //         List.fold_right2
-              //           (fun (a, _) (a', _) (subprobs, wl) ->
-              //               let p, wl = mk_t_problem wl [] orig a EQ a' None "index" in
-              //               p::subprobs, wl)
-              //           args1
-              //           args2
-              //           ([], wl)
-              //       in
-              //       if debug env <| Options.Other "Rel"
-              //       then BU.print1 "Adding subproblems for arguments: %s\n"
-              //                      (Print.list_to_string (prob_to_string env) subprobs);
-
-              //       List.iter (def_check_prob "solve_t' subprobs") subprobs;
-              //       let formula = U.mk_conj_l (List.map p_guard subprobs) in
-              //       let wl = solve_prob orig (Some formula) [] wl in
-              //       solve env (attempt subprobs wl)
-              //     end
 
             | _ ->
               let lhs = force_refinement (base1, refinement1) in
