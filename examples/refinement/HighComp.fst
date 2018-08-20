@@ -13,10 +13,14 @@ let comp a = state -> M (a * state)
 
 type hwp 'a = state -> ('a * state -> Type) -> Type  // x:hwp a { monotonic x }
 
+let monotonic #a (wp:hwp a) =
+  forall p1 p2 s. {:pattern wp s p1; wp s p2} (forall x. p1 x ==> p2 x) ==> wp s p1 ==> wp s p2
+  
 // [comp] type with wp
-type comp_wp 'a (wp : hwp 'a) = s0:state -> PURE ('a * state) (wp s0)
+type comp_wp 'a (wp : hwp 'a{monotonic wp}) = s0:state -> PURE ('a * state) (wp s0)
 
-type comp_wp' 'a (wp : hwp 'a) = s0:state -> PURE ('a * state) (wp s0)
+// type comp_wp 'a (wp : hwp 'a) = 
+//    _:(comp_wp' 'a wp){monotonic wp}
 
 // [comp] type with pre- and postconditions
 let comp_p (a:Type) (pre : state -> Type) (post : state -> a * state -> Type) : GTot Type  =
@@ -58,71 +62,34 @@ total reifiable reflectable new_effect {
 }
 
 
-// WPs
-
-let monotonic #a (wp:HIGH?.wp a) =
-  forall p1 p2 s. {:pattern wp s p1; wp s p2} (forall x. p1 x ==> p2 x) ==> wp s p1 ==> wp s p2
+// WPs -- monotonic by construction 
 
 unfold
-let return_wp (x : 'a) : hwp 'a =  fun s0 post -> post (x, s0)
+let return_wp (#a:Type) (x : a) : wp:hwp a{monotonic wp} = 
+  let wpr = fun s0 post -> post (x, s0) in
+  let p : squash (monotonic wpr) = 
+      let p (p1 : a * state -> Type) (p2 : a * state -> Type) (s : state) 
+            (h: squash (forall y. p1 y ==> p2 y)) : GTot (squash (wpr s p1 ==> wpr s p2)) = 
+          ()
+      in
+      let p' p1 p2 s : Lemma ((forall y. p1 y ==> p2 y) ==> (wpr s p1 ==> wpr s p2)) = 
+      arrow_to_impl (p p1 p2 s)
+      in
+      forall_intro_3 p'
+  in 
+  assert (monotonic wpr);
+  wpr
 
-//Re-define bind_elab with implicit parameters for easier use
-let bind_elab #a #b #f_w ($f:_) #g_w ($g:_) = HIGH?.bind_elab a b f_w f g_w g
 assume val range0: range
 
-let bind_wp = HIGH?.bind_wp range0
+let bind_wp #a #b (wp1:hwp a{monotonic wp1}) (fwp2 : (a -> wp2:hwp b{monotonic wp2})) : (wp:hwp b{monotonic wp}) = 
+  HIGH?.bind_wp range0 a b wp1 fwp2
 
-let read_wp (i:nat) : hwp mint = fun s0 post -> post (hread i s0)
+let read_wp (i:nat) : wp:hwp mint{monotonic wp} = 
+  fun s0 post -> post (hread i s0)
 
-let write_wp (i:nat) (v:mint) : hwp unit = fun s0 post -> post (hwrite i v s0)
-
-(** Monotonicity of WPs  *)
-
-let return_wp_mon (#a:Type) (x : a) : Lemma (monotonic (return_wp x)) =
-  let p (p1 : a * state -> Type) (p2 : a * state -> Type) (s : state) 
-        (h: squash (forall y. p1 y ==> p2 y)) : GTot (squash (return_wp x s p1 ==> return_wp x s p2)) = 
-        ()
-  in
-  let p' p1 p2 s : Lemma ((forall y. p1 y ==> p2 y) ==> (return_wp x s p1 ==> return_wp x s p2)) = 
-    arrow_to_impl (p p1 p2 s)
-  in
-  forall_intro_3 p'
-
-let write_wp_mon (i:nat) (v:mint) : Lemma (monotonic (write_wp i v)) = ()
-  // Not necessary: 
-  // let p (p1 : unit * state -> Type) (p2 : unit * state -> Type) (s : state) 
-  //       (h: squash (forall y. p1 y ==> p2 y)) : GTot (squash (write_wp i v s p1 ==> write_wp i v s p2)) = 
-  //       ()
-  // in
-  // let p' p1 p2 s : Lemma ((forall y. p1 y ==> p2 y) ==> (write_wp i v s p1 ==> write_wp i v s p2)) = 
-  //   arrow_to_impl (p p1 p2 s)
-  // in
-  // forall_intro_3 p'
-
-
-let read_wp_mon (i:nat) : Lemma (monotonic (read_wp i)) = ()
-  // Not necessary: 
-  // let p (p1 : mint * state -> Type) (p2 : mint * state -> Type) (s : state) 
-  //       (h: squash (forall y. p1 y ==> p2 y)) : GTot (squash (read_wp i s p1 ==> read_wp i s p2)) = 
-  //       ()
-  // in
-  // let p' p1 p2 s : Lemma ((forall y. p1 y ==> p2 y) ==> (read_wp i s p1 ==> read_wp i s p2)) = 
-  //   arrow_to_impl (p p1 p2 s)
-  // in
-  // forall_intro_3 p'
-
-
-let bind_wp_mon #a #b (wp1 : hwp a) (wp2 : a -> hwp b) :
-    Lemma (requires (monotonic wp1 /\ (forall (x : a). monotonic (wp2 x))))
-          (ensures (monotonic (bind_wp a b wp1 wp2))) = ()
-     // Not necessary: 
-    // let m1 (p1 : a * state -> Type) (p2 : a * state -> Type) (s0 : state) 
-    //     (h: squash (forall y. p1 y ==> p2 y)) : (squash (wp1 s0 p1 ==> wp1 s0 p2)) = () in
-    // let m2 (x : a) (p1 : b * state -> Type) (p2 : b * state -> Type) (s0 : state) 
-    //     (h: squash (forall y. p1 y ==> p2 y)) : (squash (wp2 x s0 p1 ==> wp2 x s0 p2)) = () in
-    
-    // let m (p1 : a * state -> Type) (p2 : a * state -> Type) (s0 : state) 
-    //     (h: squash (forall y. p1 y ==> p2 y)) : (squash (bind_wp wp1 s0 p1 ==> wp1 s0 p2)) = () in 
+let write_wp (i:nat) (v:mint) : wp:hwp unit{monotonic wp} = 
+  fun s0 post -> post (hwrite i v s0)
 
 
 // Pre and postconditions
@@ -141,40 +108,27 @@ let bind_post (#a : Type) (x : a) = fun s0 r -> let (x1, s1) = r in x1 == x /\ s
 
 // High-level DSL with WP indexing
 
-let return_elab (#a:Type) (x : a) = HIGH?.return_elab a x
+let return_elab (#a:Type) (x : a) : comp_wp a (return_wp x) = 
+  HIGH?.return_elab a x
 
-// let hbind' (#a:Type) (#b:Type) (#wp1:hwp a) (#wp2:a -> hwp b)
-//   (m : comp_wp a wp1) (f : (x:a) -> comp_wp b (wp2 x)) :
-//   comp_wp b (bind_wp wp1 wp2) =
-//   fun s -> admit ();
-//         let (a, s1) = m s in f a s1
+let bind_elab #a #b #f_w ($f:_) #g_w ($g:_) : comp_wp b (bind_wp f_w g_w) = HIGH?.bind_elab a b f_w f g_w g
 
 val hread' : i:nat -> comp_wp mint (read_wp i)
 let hread' (i:nat) : comp_wp mint (read_wp i) =
-    fun s -> if i = 0 then (fst s, s)
-          else (snd s, s)
+  (fun s -> if i = 0 then (fst s, s) else (snd s, s))
 
 val hwrite' : i:nat -> v:mint -> comp_wp unit (write_wp i v)
 let hwrite' (i:nat) (v:mint) : comp_wp unit (write_wp i v) =
-    fun s -> if i = 0 then ((), (v, snd s))
-          else ((), (fst s, v))
-
-
-
+  fun s -> if i = 0 then ((), (v, snd s))
+        else ((), (fst s, v))
 
 // Commutation
-val h_eq : (#a:Type) -> (wp1:hwp a) -> (wp2:hwp a) -> (comp_wp a wp1) -> (comp_wp a wp2) -> GTot Type0
+val h_eq : (#a:Type) -> (wp1:hwp a{monotonic wp1}) -> (wp2:hwp a{monotonic wp2}) -> (comp_wp a wp1) -> (comp_wp a wp2) -> GTot Type0
 let h_eq #a wp1 wp2 c1 c2 =
-    monotonic wp1 /\
-    monotonic wp2 /\
     (forall s0. wp1 s0 (fun _ -> True) <==> wp2 s0 (fun _ -> True)) /\
     (forall s0. wp1 s0 (fun _ -> True) ==> wp2 s0 (fun _ -> True) /\ c1 s0 == c2 s0)
 
 // Equivalence with reified computations
-
-// let hreturn_eq (#a:Type) (x : a) :
-//   Lemma (h_eq (return_wp x) (return_wp x) (hreturn' x) (reify (HIGH?.return x))) = ()
-// ERROR : HighComp.__proj__HIGH__item__return not found
 
 let hwrite_eq (#a:Type) (i:nat) (v:mint) :
    Lemma (h_eq (write_wp i v) (write_wp i v) (hwrite' i v) (reify (HIGH?.put i v))) = ()
@@ -185,19 +139,18 @@ let hread_eq (#a:Type) (i:nat) :
 
 open FStar.Tactics
 
-let h_thunk a wp = unit -> HIGH a wp
+let h_thunk a (wp:hwp a{monotonic wp}) = unit -> HIGH a wp
 
 let reify_bind_commutes
           (#a #b : _)
           (#wp1 : _) ($c1:h_thunk a wp1)
           (#wp2 : _) ($c2: (x:a -> h_thunk b (wp2 x)))
-          (s0:_{(monotonic wp1 /\
-                (forall x. monotonic (wp2 x)) /\
-                bind_wp _ _ wp1 wp2 s0 (fun _ -> True))})
+          (s0:_{bind_wp wp1 wp2 s0 (fun _ -> True)})
      = reify (let x = c1 () in c2 x ()) s0 ==
        bind_elab (reify (c1 ()))
                  (fun x -> reify (c2 x ())) s0
 
+[@expect_failure]
 let test (i:nat) (v:mint) (s0:_) =
     assert (reify (let _ = HIGH?.put i v in
                    HIGH?.put i v) s0 ==
@@ -216,6 +169,7 @@ let test2_fails (i:nat) (v:mint) (s0:_) =
          by (tadmit())
 
 //using an abbreviation for the asserted property works though
+[@expect_failure]
 let test2 (i:nat) (v:mint) (s0:_) =
     assert (reify_bind_commutes (fun () -> HIGH?.put i v)
                                 (fun () () -> HIGH?.put i v) s0)
@@ -227,9 +181,7 @@ let commutation_lemma
           (#wp1 : _) (c1:h_thunk a wp1)
           (#wp2 : _) (c2: (x:a -> h_thunk b (wp2 x))) (s0:_)
     : Lemma
-         (requires (monotonic wp1 /\
-                    (forall x. monotonic (wp2 x)) /\
-                    HIGH?.bind_wp range0 _ _ wp1 wp2 s0 (fun _ -> True)))
+         (requires (HIGH?.bind_wp range0 _ _ wp1 wp2 s0 (fun _ -> True)))
          (ensures (reify_bind_commutes c1 c2 s0))
     = assert (reify_bind_commutes c1 c2 s0)
           by (dump "start";

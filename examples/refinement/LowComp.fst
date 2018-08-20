@@ -101,30 +101,29 @@ type lcomp 'a (c : comp 'a) =
 
 
 
-let lcomp_wp1 (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) =
-     (ls:lstate) ->
+let lcomp_wp1 (a:Type) (wp : hwp a{monotonic wp}) (c : comp_wp a wp) =
+     ls:lstate ->
      Stack a
-       (requires (fun h -> well_formed h ls /\ HighComp.monotonic wp /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
+       (requires (fun h -> well_formed h ls /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
        (ensures  (fun h r h' ->
                     well_formed h' ls /\
                     (let s0 = lstate_as_state h ls in
                      let (x, s1) = c s0 in 
                      h' == state_as_lstate h ls s1 /\ x == r )))
 
-let lcomp_wp2 (a:Type) (wp : state -> (a * state -> Type) -> Type) (c : comp_wp a wp) = // required by 660
-  (ls:lstate) ->
-   Stack a
-    (requires (fun h -> well_formed h ls /\ HighComp.monotonic wp /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
-    (ensures  (fun h r h' ->
-                 well_formed h' ls /\
-                 (let s0 = lstate_as_state h ls in
-                  let (x, s1) = c s0 in 
-                  h' == state_as_lstate h ls s1 /\ x == r )))
+let lcomp_wp2 (a:Type) (wp : hwp a{monotonic wp}) (c : comp_wp a wp) =
+   ls:lstate ->
+    Stack a
+      (requires (fun h -> well_formed h ls /\ (let s0 = lstate_as_state h ls in wp s0 (fun _ -> True))))
+      (ensures  (fun h r h' ->
+                   well_formed h' ls /\
+                   (let s0 = lstate_as_state h ls in
+                    let (x, s1) = c s0 in 
+                     h' == state_as_lstate h ls s1 /\ x == r )))
 
 
-let reif (#a:Type) (wp:state -> (a * state -> Type) -> Type) (c : unit -> HIGH a wp) :
+let reif (#a:Type) (wp:hwp a{monotonic wp}) (c : unit -> HIGH a wp) :
   comp_wp a wp = reify (c ())
-
 
 
 (** DSL for low computations *)
@@ -200,25 +199,29 @@ let z = HIGH?.wp int
 //let's factor this into a `run`, which makes things a lot more predictable
 let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : (a * state) = c s0
 
+
 let lbind (#a:Type) (#b:Type)
-  (#wp1: HIGH?.wp a{monotonic wp1})
-  (#wp2:(a -> HIGH?.wp b){forall x. monotonic (wp2 x)})
-  (#c1:comp_wp a wp1) (#c2:(x:a -> comp_wp b (wp2 x)))
-  (m: lcomp_wp1 a wp1 c1) (f: (x:a) -> lcomp_wp1 b (wp2 x) (c2 x)) :
-  lcomp_wp1 b (bind_wp a b wp1 wp2) (bind_elab c1 c2) =
+  (#wp1: hwp a{monotonic wp1}) (#fwp2 : (a -> (wp2:hwp b{monotonic wp2}))) 
+  (#c1:comp_wp a wp1) (#c2:(x:a -> comp_wp b (fwp2 x)))
+  (m: lcomp_wp1 a wp1 c1) (f: (x:a) -> lcomp_wp1 b (fwp2 x) (c2 x)) :
+  lcomp_wp1 b (bind_wp wp1 fwp2) (bind_elab c1 c2) =
   fun ls ->
     let (b1, b2) = ls in
-    (* ********************************************* *)
     assert (HighComp.monotonic wp1);
+    assert (forall x. HighComp.monotonic (fwp2 x));     
+    assert (monotonic (bind_wp wp1 fwp2));
+
+    (* ********************************************* *)
     
     let h0 = ST.get () in  // Initial heap
 
     (* ********************************************* *)
     let x_a = m ls in  //Run the first compuation
+ 
+    
     let h1 = ST.get () in // Intermediate heap
     (* ********************************************* *)
-    
-    assert (HighComp.monotonic (wp2 x_a));
+
     let high : Ghost.erased _ = 
       //In this block, we run the high computation
       //in ghost code and remember its intermediate states and result
@@ -229,7 +232,7 @@ let lbind (#a:Type) (#b:Type)
       state_as_lstate_put_get h0 ls s1; //Get-Put: 1st lens law
       assert (lstate_as_state h1 ls == s1); //this assertion is key to running `f x_a ls` below
       let y, s2 = run_high (c2 x) s1 in
-      assert (s2 == snd (run_high #b #(bind_wp a b wp1 wp2) (bind_elab c1 c2) s0));
+      assert (s2 == snd (run_high #b #(bind_wp wp1 fwp2) (bind_elab c1 c2) s0));
       Ghost.hide (s0, (x, s1), (y, s2))
     in
 
@@ -237,7 +240,6 @@ let lbind (#a:Type) (#b:Type)
     let y_b = f x_a ls in
     let h2 = ST.get () in // final heap
     (* ********************************************* *)
-
     let _ : unit = 
       //In this block, we unpack the memoized result from earlier
       //and relate those values to the result and final heap
@@ -248,7 +250,7 @@ let lbind (#a:Type) (#b:Type)
       assert (h1 == state_as_lstate h0 ls s1);
       let p = state_as_lstate_put_put h0 ls s1 s2 in 
       assert (state_as_lstate h0 ls s2 == state_as_lstate (state_as_lstate h0 ls s1) ls s2);
-      assert (state_as_lstate h0 ls s2 == state_as_lstate h1 ls s2) 
+      assert (state_as_lstate h0 ls s2 == state_as_lstate h1 ls s2)
     in
     y_b
 
@@ -294,6 +296,7 @@ let lwrite' i v ls =
      assume (h1 == g_upd b2 0 v h0) // TODO stronger type for get
      (* ********************************************* *)
 
+
 val lread' : i:nat{ i < 2 } -> lcomp_wp1 mint (read_wp i) (reify (HIGH?.get i))
 let lread' i = fun (b1, b2) -> 
   let h0 = ST.get () in 
@@ -302,7 +305,7 @@ let lread' i = fun (b1, b2) ->
   if i = 0 then b1.(0ul) else b2.(0ul)
 
 
-let lcomp_respects_h_eq (a : Type) (wp1 : hwp a) (wp2 : hwp a) (hc1 : comp_wp a wp1) (hc2 : comp_wp a wp2)  
+let lcomp_respects_h_eq (a : Type) (wp1 : hwp a{monotonic wp1}) (wp2 : hwp a{monotonic wp2}) (hc1 : comp_wp a wp1) (hc2 : comp_wp a wp2)  
   (lc : lcomp_wp1 a wp1 hc1) (p : h_eq wp1 wp2 hc1 hc2) : lcomp_wp2 a wp2 hc2 = // 660 requires the lcomp_wp'
   lc 
   
