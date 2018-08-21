@@ -2377,3 +2377,117 @@ let pointer_distinct_sel_disjoint #a #_ #_ #_ #_ b1 b2 h =
   else
     loc_disjoint_buffer b1 b2
 	 
+/// The following stateful operations on buffers do not change the
+/// memory, but, as required by the C standard, they all require the
+/// buffer in question to be live.
+
+/// The nullity test, ``is_null b``, which KreMLin compiles to C as ``b == NULL``.
+
+val is_null (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  :HST.Stack bool (requires (fun h -> live h b))
+                  (ensures  (fun h y h' -> h == h' /\ y == g_is_null b))
+let is_null #_ #_ #_ b = Null? b
+
+/// ``sub b i len`` constructs the sub-buffer of ``b`` starting from
+/// offset ``i`` with length ``len``. KreMLin extracts this operation as
+/// ``b + i`` (or, equivalently, ``&b[i]``.)
+
+val sub (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  (i:U32.t) (len:U32.t) (sub_rel:srel a)
+  :HST.Stack (mbuffer a rrel sub_rel)
+             (requires (fun h -> U32.v i + U32.v len <= length b /\ compatible_sub b i len sub_rel /\ live h b))
+             (ensures  (fun h y h' -> h == h' /\ y == gsub b i len sub_rel))
+let sub #a #rrel #rel b i len sub_rel =
+  match b with
+  | Null -> Null
+  | Buffer max_len content i0 len0 () ->
+    lemma_sub_compatibility_is_transitive (U32.v max_len) rrel (U32.v i0) (U32.v len0) rel (U32.v i) (U32.v len) sub_rel;
+    Buffer max_len content (U32.add i0 i) len ()
+
+/// ``offset b i`` construct the tail of the buffer ``b`` starting from
+/// offset ``i``, i.e. the sub-buffer of ``b`` starting from offset ``i``
+/// with length ``U32.sub (len b) i``. KreMLin compiles it as ``b + i`` or
+/// ``&b[i]``.
+///
+/// This stateful operation cannot be derived from ``sub``, because the
+/// length cannot be computed outside of proofs.
+
+val offset (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  (i:U32.t) (sub_rel:srel a)
+  :HST.Stack (mbuffer a rrel sub_rel)
+             (requires (fun h -> U32.v i <= length b /\ compatible_sub b i (U32.sub (len b) i) sub_rel /\ live h b))
+             (ensures  (fun h y h' -> h == h' /\ y == gsub b i (U32.sub (len b) i) sub_rel))
+let offset #a #rrel #rel b i sub_rel =
+  match b with
+  | Null -> Null
+  | Buffer max_len content i0 len () ->
+    lemma_sub_compatibility_is_transitive (U32.v max_len) rrel (U32.v i0) (U32.v len) rel (U32.v i) (U32.v (U32.sub len i)) sub_rel;
+    Buffer max_len content (U32.add i0 i) (U32.sub len i) ()
+
+/// ``index b i`` reads the value of ``b`` at offset ``i`` from memory and
+/// returns it. KreMLin compiles it as b[i].
+val index (#a:Type0)(#rrel #rel:srel a) (b:mbuffer a rrel rel) (i:U32.t)
+  :HST.Stack a (requires (fun h -> live h b /\ U32.v i < length b))
+               (ensures  (fun h y h' -> h == h' /\ y == Seq.index (as_seq h b) (U32.v i)))
+let index #_ #_ #_ b i =
+  let open HST in
+  let s = ! (Buffer?.content b) in
+  Seq.index s (U32.v (Buffer?.idx b) + U32.v i)
+
+/// The following stateful operations on buffers modify the memory,
+/// and, as usual, require the liveness of the buffer.
+
+/// ``g_upd_seq b s h`` updates the entire buffer `b`'s contents in
+/// heap `h` to correspond to the sequence `s`
+val g_upd_seq (#a:Type0) (#rrel #rel:srel a)
+              (b:mbuffer a rrel rel) (s:Seq.lseq a (length b)) (h:HS.mem{live h b})
+  :GTot HS.mem
+
+let g_upd' (#a:Type0) (#rrel #rel:srel a)
+           (b:mbuffer a rrel rel)
+           (i:nat{i < length b})
+           (v:a{rel () ()})
+           (h:HS.mem{live h b})
+  :GTot HS.mem
+  = let n = length b in
+    let s0 = HS.sel h (Buffer?.content b) in
+    let v = Seq.upd s0 (U32.v (Buffer?.idx b) + i) v in
+    HS.upd h (Buffer?.content b) v
+
+#set-options "--z3rlimit 32"
+
+let g_upd'_as_seq (#a:Type)
+                     (b:buffer a)
+                     (i:nat{i < length b})
+                     (v:a)
+                     (h:HS.mem{live h b})
+  : Lemma (let h' = g_upd' b i v h in
+           (not (g_is_null b)) /\
+           modifies (loc_buffer b) h h' /\
+           live h' b /\
+           as_seq h' b == Seq.upd (as_seq h b) i v)
+= let h' = g_upd' b i v h in
+  assert (as_seq h' b `Seq.equal` Seq.upd (as_seq h b) i v);
+  // prove modifies_1_preserves_ubuffers
+  Heap.lemma_distinct_addrs_distinct_preorders ();
+  Heap.lemma_distinct_addrs_distinct_mm ();
+  Seq.lemma_equal_instances_implies_equal_types ();
+  modifies_1_modifies b h h'
+
+#reset-options
+
+let rec g_upd_seq' (#a:Type)
+              (b:buffer a)
+              (s:Seq.lseq a (length b))
+              (h:HS.mem{live h b})
+  : GTot HS.mem
+    (decreases (Seq.length s))
+  = if Seq.length s = 0 then h else
+      let h1 = g_upd' b 0 (Seq.head s) h in
+      g_upd_seq' (gsub b 1ul (len b `U32.sub` 1ul)) (Seq.slice s 1 (Seq.length s)) h1
+
+let g_upd_seq = g_upd_seq'
+
+
+
+

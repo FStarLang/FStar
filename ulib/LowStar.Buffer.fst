@@ -571,7 +571,6 @@ let loc_union_assoc = MG.loc_union_assoc
 let loc_union_loc_none_l = MG.loc_union_loc_none_l
 
 let loc_union_loc_none_r = MG.loc_union_loc_none_r
-
 let loc_buffer #t b =
   if g_is_null b
   then
@@ -679,7 +678,6 @@ let loc_disjoint_regions = MG.loc_disjoint_regions #_ #cls
 let modifies = MG.modifies
 
 let modifies_live_region = MG.modifies_live_region
-
 let modifies_mreference_elim = MG.modifies_mreference_elim
 
 let modifies_buffer_elim #t1 b p h h' =
