@@ -2440,54 +2440,306 @@ let index #_ #_ #_ b i =
 /// ``g_upd_seq b s h`` updates the entire buffer `b`'s contents in
 /// heap `h` to correspond to the sequence `s`
 val g_upd_seq (#a:Type0) (#rrel #rel:srel a)
-              (b:mbuffer a rrel rel) (s:Seq.lseq a (length b)) (h:HS.mem{live h b})
+              (b:mbuffer a rrel rel) (s:Seq.lseq a (length b))
+	      (h:HS.mem{live h b /\ rel (as_seq h b) s})
   :GTot HS.mem
-
-let g_upd' (#a:Type0) (#rrel #rel:srel a)
-           (b:mbuffer a rrel rel)
-           (i:nat{i < length b})
-           (v:a{rel () ()})
-           (h:HS.mem{live h b})
-  :GTot HS.mem
-  = let n = length b in
+let g_upd_seq #_ #_ #_ b s h =
+  if Seq.length s = 0 then h
+  else
     let s0 = HS.sel h (Buffer?.content b) in
-    let v = Seq.upd s0 (U32.v (Buffer?.idx b) + i) v in
-    HS.upd h (Buffer?.content b) v
+    HS.upd h (Buffer?.content b) (replace_subseq s0 (U32.v (Buffer?.idx b)) (length b) s)
 
-#set-options "--z3rlimit 32"
-
-let g_upd'_as_seq (#a:Type)
-                     (b:buffer a)
-                     (i:nat{i < length b})
-                     (v:a)
-                     (h:HS.mem{live h b})
-  : Lemma (let h' = g_upd' b i v h in
-           (not (g_is_null b)) /\
+/// A lemma specifying `g_upd_seq` in terms of its effect on the
+/// buffer's underlying sequence
+val g_upd_seq_as_seq (#a:Type0) (#rrel #rel:srel a)
+                     (b:mbuffer a rrel rel)
+                     (s:Seq.lseq a (length b))
+                     (h:HS.mem{live h b /\ rel (as_seq h b) s})
+  : Lemma (let h' = g_upd_seq b s h in
+           (Seq.length s > 0 ==> not (g_is_null b)) /\
            modifies (loc_buffer b) h h' /\
            live h' b /\
-           as_seq h' b == Seq.upd (as_seq h b) i v)
-= let h' = g_upd' b i v h in
-  assert (as_seq h' b `Seq.equal` Seq.upd (as_seq h b) i v);
-  // prove modifies_1_preserves_ubuffers
-  Heap.lemma_distinct_addrs_distinct_preorders ();
-  Heap.lemma_distinct_addrs_distinct_mm ();
-  Seq.lemma_equal_instances_implies_equal_types ();
-  modifies_1_modifies b h h'
+           as_seq h' b == s)
+#push-options "--z3rlimit 32"
+let g_upd_seq_as_seq #_ #_ #_ b s h =
+  let h' = g_upd_seq b s h in
+  if g_is_null b then assert (Seq.equal s Seq.empty)
+  else begin
+    assert (Seq.equal (as_seq h' b) s);
+    // prove modifies_1_preserves_ubuffers
+    Heap.lemma_distinct_addrs_distinct_preorders ();
+    Heap.lemma_distinct_addrs_distinct_mm ();
+    Seq.lemma_equal_instances_implies_equal_types ();
+    modifies_1_modifies b h h'
+  end
+#pop-options
 
-#reset-options
 
-let rec g_upd_seq' (#a:Type)
-              (b:buffer a)
-              (s:Seq.lseq a (length b))
-              (h:HS.mem{live h b})
+/// ``g_upd b i v h`` updates the buffer `b` in heap `h` at location
+/// `i` writing ``v`` there. This is the spec analog of the stateful
+/// update `upd` below.
+let g_upd (#a:Type0) (#rrel #rel:srel a)
+          (b:mbuffer a rrel rel)
+          (i:nat{i < length b})
+          (v:a)
+          (h:HS.mem{live h b /\ rel (as_seq h b) (Seq.upd (as_seq h b) i v)})
   : GTot HS.mem
-    (decreases (Seq.length s))
-  = if Seq.length s = 0 then h else
-      let h1 = g_upd' b 0 (Seq.head s) h in
-      g_upd_seq' (gsub b 1ul (len b `U32.sub` 1ul)) (Seq.slice s 1 (Seq.length s)) h1
+  = g_upd_seq b (Seq.upd (as_seq h b) i v) h
 
-let g_upd_seq = g_upd_seq'
+/// ``upd b i v`` writes ``v`` to the memory, at offset ``i`` of
+/// buffer ``b``. KreMLin compiles it as ``b[i] = v``.
+
+val upd'
+  (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel)
+  (i:U32.t)
+  (v:a)
+  :HST.Stack unit (requires (fun h -> live h b /\ U32.v i < length b /\
+                                   rel (as_seq h b) (Seq.upd (as_seq h b) (U32.v i) v)))
+                  (ensures  (fun h _ h' -> h' == g_upd b (U32.v i) v h))
+let upd' #_ #_ #_ b i v =
+  let open HST in
+  let Buffer max_length content idx len () = b in
+  let s0 = !content in
+  let sb0 = Seq.slice s0 (U32.v idx) (U32.v idx + U32.v len) in
+  Buffer?.content b := replace_subseq s0 (U32.v idx) (U32.v len) (Seq.upd sb0 (U32.v i) v)
+
+inline_for_extraction
+let upd
+  (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel)
+  (i:U32.t)
+  (v:a)
+  : HST.Stack unit (requires (fun h -> live h b /\ U32.v i < length b /\ 
+                                    rel (as_seq h b) (Seq.upd (as_seq h b) (U32.v i) v)))
+                   (ensures (fun h _ h' -> (not (g_is_null b)) /\
+                                        modifies (loc_buffer b) h h' /\
+                                        live h' b /\
+                                        as_seq h' b == Seq.upd (as_seq h b) (U32.v i) v))
+  = let h = HST.get () in
+    upd' b i v;
+    g_upd_seq_as_seq b (Seq.upd (as_seq h b) (U32.v i) v) h
+
+val recallable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0
+let recallable' (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0 =
+  (not (g_is_null b)) ==> (
+    HST.is_eternal_region (frameOf b) /\
+    not (HS.is_mm (Buffer?.content b))
+  )
+
+let recallable = recallable'
+
+(* TODO: candidate for wrapper *)
+val recallable_null (#a:Type0) (#rrel #rel:srel a)
+  :Lemma (recallable (null #a #rrel #rel)) [SMTPat (recallable (null #a #rrel #rel))]
+let recallable_null #_ #_ #_ = ()
+
+val recallable_includes (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
+  (larger:mbuffer a1 rrel1 rel1) (smaller:mbuffer a2 rrel2 rel2)
+  :Lemma (requires (larger `includes` smaller))
+         (ensures (recallable larger <==> recallable smaller))
+         [SMTPatOr [
+             [SMTPat (recallable larger); SMTPat (recallable smaller);];
+             [SMTPat (larger `includes` smaller)];
+         ]]
+let recallable_includes #_ #_ #_ #_ #_ #_ larger smaller =
+  if Null? larger || Null? smaller then ()
+  else
+    MG.loc_includes_aloc_elim #_ #cls #(frameOf larger) #(frameOf smaller) #(as_addr larger) #(as_addr smaller) (ubuffer_of_buffer larger) (ubuffer_of_buffer smaller)
+
+val recall (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  :HST.Stack unit (requires (fun _ -> recallable b))
+                  (ensures  (fun m0 _ m1 -> m0 == m1 /\ live m1 b))
+let recall #_ #_ #_ b =
+  if Null? b then ()
+  else HST.recall (Buffer?.content b)
 
 
+/// Deallocation. A buffer that was allocated by ``malloc`` (see below)
+/// can be ``free`` d.
+
+val freeable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0
+let freeable' (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) =
+  (not (g_is_null b)) /\
+  HS.is_mm (Buffer?.content b) /\
+  HST.is_eternal_region (frameOf b) /\
+  U32.v (Buffer?.max_length b) > 0 /\
+  Buffer?.idx b == 0ul /\
+  Buffer?.length b == Buffer?.max_length b
+let freeable = freeable'
+
+val free (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  :HST.ST unit (requires (fun h0 -> live h0 b /\ freeable b))
+               (ensures  (fun h0 _ h1 -> (not (g_is_null b)) /\
+                                      Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\ 
+                                      (HS.get_tip h1) == (HS.get_tip h0) /\
+                                      modifies (loc_addr_of_buffer b) h0 h1 /\
+                                      HS.live_region h1 (frameOf b)))
+let free #_ #_ #_ b = HST.rfree (Buffer?.content b)
+
+val freeable_length (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  :Lemma (requires (freeable b)) (ensures (length b > 0))
+         [SMTPat (freeable b)]
+let freeable_length #_ #_ #_ b = ()
+
+val freeable_disjoint (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
+  (b1:mbuffer a1 rrel1 rel1) (b2:mbuffer a2 rrel2 rel2)
+  :Lemma (requires (freeable b1 /\ length b2 > 0 /\ disjoint b1 b2))
+         (ensures (frameOf b1 <> frameOf b2 \/ as_addr b1 <> as_addr b2))
+let freeable_disjoint #_ #_ #_ #_ #_ #_ b1 b2 =
+  if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2
+  then
+    MG.loc_disjoint_aloc_elim #_ #cls #(frameOf b1) #(as_addr b1) #(frameOf b2) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
+  else ()
+
+let freeable_disjoint' (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
+  (b1:mbuffer a1 rrel1 rel1) (b2:mbuffer a2 rrel2 rel2)
+  :Lemma (requires (freeable b1 /\ length b2 > 0 /\ disjoint b1 b2))
+         (ensures (loc_disjoint (loc_addr_of_buffer b1) (loc_addr_of_buffer b2)))
+         [SMTPat (freeable b1); SMTPat (disjoint b1 b2)]
+  = freeable_disjoint b1 b2
 
 
+/// Allocation. This is the common postcondition of all allocation
+/// operators, which tells that the resulting buffer is fresh, and
+/// specifies its initial contents.
+
+unfold
+let alloc_post_static (#a:Type0) (#rrel #rel:srel a)
+  (r:HS.rid) (len:nat) (b:mbuffer a rrel rel)
+  = (not (g_is_null b)) /\
+    frameOf b == r /\
+    length b == len
+
+unfold
+let alloc_post_common (#a:Type0) (#rrel #rel:srel a)
+  (r:HS.rid) (len:nat) (b:mbuffer a rrel rel) (h0 h1:HS.mem)
+  = alloc_post_static r len b /\
+    b `unused_in` h0 /\
+    live h1 b /\
+    Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\ 
+    (HS.get_tip h1) == (HS.get_tip h0) /\
+    modifies loc_none h0 h1
+
+let alloc_common (#a:Type0) (#rrel:srel a)
+  (r:HS.rid) (init:a) (len:U32.t) (mm:bool)
+  :HST.ST (mbuffer a rrel rrel)
+          (requires (fun h0 -> HST.is_eternal_region r /\ U32.v len > 0))
+          (ensures (fun h0 b h1 -> alloc_post_common r (U32.v len) b h0 h1 /\
+                                 as_seq h1 b == Seq.create (U32.v len) init /\
+                                 HS.is_mm (Buffer?.content b) == mm /\
+                                 Buffer?.idx b == 0ul /\
+                                 Buffer?.length b == Buffer?.max_length b))
+  = let s = Seq.create (U32.v len) init in
+    lemma_sub_compatilibity_is_reflexive (U32.v len) rrel;
+    let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
+      if mm then HST.ralloc_mm r s else HST.ralloc r s
+    in
+    let b = Buffer len content 0ul len () in
+    b
+
+/// ``gcmalloc r init len`` allocates a memory-managed buffer of some
+/// positive length ``len`` in an eternal region ``r``. Every cell of this
+/// buffer will have initial contents ``init``. Such a buffer cannot be
+/// freed. In fact, it is eternal: it cannot be deallocated at all.
+
+(* TODO: add a wrapper AND any reason that some post is in the refinement of the return type? *)
+val gcmalloc (#a:Type0) (#rrel:srel a)
+  (r:HS.rid) (init:a) (len:U32.t)
+  :HST.ST (b:mbuffer a rrel rrel{recallable b /\ alloc_post_static r (U32.v len) b})
+          (requires (fun h -> HST.is_eternal_region r /\ U32.v len > 0))
+          (ensures  (fun h b h' -> alloc_post_common r (U32.v len) b h h' /\
+                                 as_seq h' b == Seq.create (U32.v len) init))
+let gcmalloc #_ #_ r init len = alloc_common r init len false
+
+
+/// ``malloc r init len`` allocates a hand-managed buffer of some
+/// positive length ``len`` in an eternal region ``r``. Every cell of this
+/// buffer will have initial contents ``init``. Such a buffer can be
+/// freed using ``free`` above. Note that the ``freeable`` permission is
+/// only on the whole buffer ``b``, and is not inherited by any of its
+/// strict sub-buffers.
+
+val malloc (#a:Type0) (#rrel:srel a)
+  (r:HS.rid) (init:a) (len:U32.t)
+  :HST.ST (mbuffer a rrel rrel)
+          (requires (fun h -> HST.is_eternal_region r /\ U32.v len > 0))
+          (ensures (fun h b h' -> alloc_post_common r (U32.v len) b h h' /\
+                                as_seq h' b == Seq.create (U32.v len) init /\     
+                                freeable b))
+let malloc #_ #_ r init len = alloc_common r init len true
+
+
+/// ``alloca init len`` allocates a buffer of some positive length ``len``
+/// in the current stack frame. Every cell of this buffer will have
+/// initial contents ``init``. Such a buffer cannot be freed
+/// individually, but is automatically freed as soon as its stack
+/// frame is deallocated by ``HST.pop_frame``.
+
+val alloca (#a:Type0) (#rrel:srel a)
+  (init:a) (len:U32.t)
+  :HST.StackInline (mbuffer a rrel rrel)
+                   (requires (fun h -> U32.v len > 0))
+                   (ensures (fun h b h' -> alloc_post_common (HS.get_tip h) (U32.v len) b h h' /\
+                                         as_seq h' b == Seq.create (U32.v len) init))
+let alloca #a #rrel init len =
+  lemma_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
+    HST.salloc (Seq.create (U32.v len) init)
+  in
+  let b = Buffer len content 0ul len () in
+  b
+
+
+/// ``alloca_of_list init`` allocates a buffer in the current stack
+/// frame. The initial values of the cells of this buffer are
+/// specified by the ``init`` list, which must be nonempty, and of
+/// length representable as a machine integer.
+
+unfold let alloc_of_list_pre (#a:Type0) (init:list a) :GTot Type0 =
+  normalize (0 < FStar.List.Tot.length init) /\
+  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
+
+unfold let alloc_of_list_post (#a:Type0) (#rrel #rel:srel a) (len:nat) (buf:mbuffer a rrel rel) :GTot Type0 =
+  normalize (length buf == len)
+
+val alloca_of_list (#a:Type0) (#rrel:srel a) (init: list a)
+  :HST.StackInline (mbuffer a rrel rrel) (requires (fun h -> alloc_of_list_pre #a init))
+                                         (ensures (fun h b h' -> let len = FStar.List.Tot.length init in
+                                                               alloc_post_common (HS.get_tip h) len b h h' /\
+                                                               as_seq h' b == Seq.seq_of_list init /\
+                                                               alloc_of_list_post #a len b))
+let alloca_of_list #a #rrel init =
+  let len = U32.uint_to_t (FStar.List.Tot.length init) in
+  let s = Seq.seq_of_list init in
+  lemma_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
+    HST.salloc s
+  in
+  let b = Buffer len content 0ul len () in
+  b
+
+unfold let gcmalloc_of_list_pre (#a:Type0) (init:list a) :GTot Type0 =
+  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
+
+(* TODO: Why is some of the post on the refinement? *)
+val gcmalloc_of_list (#a:Type0) (#rrel:srel a) (r:HS.rid) (init:list a)
+  :HST.ST (b:mbuffer a rrel rrel {
+    let len = FStar.List.Tot.length init in
+    recallable b /\
+    alloc_post_static r len b /\
+    alloc_of_list_post len b
+  })
+          (requires (fun h -> HST.is_eternal_region r /\ gcmalloc_of_list_pre #a init))
+          (ensures  (fun h b h' -> let len = FStar.List.Tot.length init in
+                                 alloc_post_common r len b h h' /\
+                                 as_seq h' b == Seq.seq_of_list init))
+let gcmalloc_of_list #a #rrel r init =
+  let len = U32.uint_to_t (FStar.List.Tot.length init) in
+  let s = Seq.seq_of_list init in
+  lemma_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
+    HST.ralloc r s
+  in
+  let b = Buffer len content 0ul len () in
+  b
