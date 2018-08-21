@@ -2146,7 +2146,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                    let subprobs, wl =
                         List.fold_right
                             (fun ((a1, _), (a2, _)) (probs, wl) ->
-                               let prob', wl = mk_problem wl (p_scope orig) orig a1 EQ a2 None "index" in
+                               let prob', wl = mk_problem wl [] // (p_scope orig)
+    orig a1 EQ a2 None "index" in
                                (TProb prob')::probs, wl)
                              argp
                              ([], wl)
