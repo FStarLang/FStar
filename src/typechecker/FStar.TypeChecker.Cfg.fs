@@ -719,6 +719,14 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                    (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.mod_big_int x y)))
             ])
         in
+        let mask m =
+          match m with
+          | "UInt8" -> Z.of_hex "ff"
+          | "UInt16" -> Z.of_hex "ffff"
+          | "UInt32" -> Z.of_hex "ffffffff"
+          | "UInt64" -> Z.of_hex "ffffffffffffffff"
+          | "UInt128" -> Z.of_hex "ffffffffffffffffffffffffffffffff"
+        in
         let bitwise =
           bounded_unsigned_int_types
           |> List.collect (fun m ->
@@ -755,14 +763,15 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                  0,
                  unary_op
                    arg_as_bounded_int
-                   (fun r (int_to_t, x) -> int_as_bounded r int_to_t (Z.lognot_big_int x)),
+                   (fun r (int_to_t, x) -> int_as_bounded r int_to_t (Z.logand_big_int (Z.lognot_big_int x) (mask m))),
                  NBETerm.unary_op
                    NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x) -> NBETerm.int_as_bounded int_to_t (Z.lognot_big_int x));
+                   (fun (int_to_t, x) -> NBETerm.int_as_bounded int_to_t (Z.logand_big_int (Z.lognot_big_int x) (mask m)));
             ])
         in
        add_sub_mul_v
        @ div_mod_unsigned
+       @ bitwise
     in
     let strong_steps = List.map (as_primitive_step true)  (basic_ops@bounded_arith_ops) in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
