@@ -107,6 +107,26 @@ let lemma_sub_compatibility_is_transitive (#a:Type0)
 	 (ensures  (compatible_sub_preorder len pre (offset1 + offset2) len2 pre2))
   = Classical.forall_intro_2 (lemma_replace_subseq_slice a len offset1 len1 offset2 len2)
 
+private let lemma_replace_subseq_slice1
+  (a:Type0) (len offset1 len1 offset2 len2:nat)
+  (s:Seq.lseq a len) (s2:Seq.lseq a len2)
+  :Lemma ((offset1 + len1 <= len /\ offset2 + len2 <= len1) ==>
+          (Seq.equal (replace_subseq (mslice s offset1 len1) offset2 len2 s2)
+	             (mslice (replace_subseq s (offset1 + offset2) len2 s2) offset1 len1)))
+  = ()
+
+let lemma_sub_compatibility_is_transitive1 (#a:Type0)
+  (len:nat) (pre:srel a)
+  (offset1 len1:nat) (pre1:srel a)
+  (offset2 len2:nat) (pre2:srel a)
+  :Lemma (requires (offset1 + len1 <= len /\ offset1 <= offset2 /\ offset2 + len2 <= offset1 + len1 /\
+                    compatible_sub_preorder len pre offset1 len1 pre1 /\
+                    compatible_sub_preorder len pre offset2 len2 pre2))
+	 (ensures  (compatible_sub_preorder len1 pre1 (offset2 - offset1) len2 pre2))
+  = Classical.forall_intro_2 (lemma_replace_subseq_slice a len offset1 len1 (offset2 - offset1) len2);
+    Classical.forall_intro_2 (lemma_replace_subseq_slice1 a len offset1 len1 (offset2 - offset1) len2);
+    admit ()
+  
 (*
  * The type is indexed by two preorders:
  *   rrel: is the preorder of the underlying reference
@@ -610,10 +630,13 @@ let ubuffer_includes' (larger smaller: ubuffer_) : GTot Type0 =
   larger.b_offset <= smaller.b_offset /\
   smaller.b_offset + smaller.b_length <= larger.b_offset + larger.b_length
 
+let ubuffer_includes0 (#r1 #r2:HS.rid) (#a1 #a2:nat) (larger:ubuffer r1 a1) (smaller:ubuffer r2 a2) =
+  r1 == r2 /\ a1 == a2 /\ ubuffer_includes' (G.reveal larger) (G.reveal smaller)
+
 val ubuffer_includes (#r: HS.rid) (#a: nat) (larger smaller: ubuffer r a) : GTot Type0
 
-let ubuffer_includes #r #a larger smaller =
-  ubuffer_includes' (G.reveal larger) (G.reveal smaller)
+let ubuffer_includes #r #a larger smaller = ubuffer_includes0 larger smaller
+  
 
 val ubuffer_includes_refl (#r: HS.rid) (#a: nat) (b: ubuffer r a) : Lemma
   (b `ubuffer_includes` b)
@@ -628,7 +651,7 @@ let ubuffer_includes_trans #r #a b1 b2 b3 = ()
 
 (*
  * TODO: not sure how to make this lemma work with preorders
- *       it creates a bugger larger' in the proof
+ *       it creates a buffer larger' in the proof
  *       we need a compatible preorder for that
  *       may be take that as an argument?
  *)
@@ -653,15 +676,16 @@ let ubuffer_disjoint' (x1 x2: ubuffer_) : GTot Type0 =
     (x1.b_offset + x1.b_length <= x2.b_offset \/
      x2.b_offset + x2.b_length <= x1.b_offset))
 
-val ubuffer_disjoint (#r: HS.rid) (#a: nat) (b1 b2: ubuffer r a) : GTot Type0
-
-let ubuffer_disjoint #r #a b1 b2 =
+let ubuffer_disjoint0 (#r1 #r2:HS.rid) (#a1 #a2:nat) (b1:ubuffer r1 a1) (b2:ubuffer r2 a2) =
+  r1 == r2 /\ a1 == a2 /\
   ubuffer_disjoint' (G.reveal b1) (G.reveal b2)
 
-val ubuffer_disjoint_sym (#r: HS.rid) (#a: nat) (b1 b2: ubuffer r a) : Lemma
-  (ubuffer_disjoint b1 b2 <==> ubuffer_disjoint b2 b1)
+val ubuffer_disjoint (#r:HS.rid) (#a:nat) (b1 b2:ubuffer r a) :GTot Type0
+let ubuffer_disjoint #r #a b1 b2 = ubuffer_disjoint0 b1 b2
 
-let ubuffer_disjoint_sym #r #a b1 b2 = ()
+val ubuffer_disjoint_sym (#r:HS.rid) (#a: nat) (b1 b2:ubuffer r a)
+  :Lemma (ubuffer_disjoint b1 b2 <==> ubuffer_disjoint b2 b1)
+let ubuffer_disjoint_sym #_ #_ b1 b2 = ()
 
 val ubuffer_disjoint_includes (#r: HS.rid) (#a: nat) (larger1 larger2: ubuffer r a) (smaller1 smaller2: ubuffer r a) : Lemma
   (requires (ubuffer_disjoint larger1 larger2 /\ larger1 `ubuffer_includes` smaller1 /\ larger2 `ubuffer_includes` smaller2))
@@ -864,3 +888,1492 @@ let cls : MG.cls ubuffer = MG.Cls #ubuffer
   (fun #r #a x h -> ubuffer_preserved_refl x h)
   (fun #r #a x h1 h2 h3 -> ubuffer_preserved_trans x h1 h2 h3)
   (fun #r #a b h1 h2 f -> same_mreference_ubuffer_preserved b h1 h2 f)
+
+/// # The modifies clause
+///
+/// The modifies clause for regions, references and buffers.
+/// ==========================================================
+///
+/// This module presents the modifies clause, a way to track the set
+/// of memory locations modified by a stateful Low* (or even F*)
+/// program. The basic principle of modifies clauses is that any
+/// location that is disjoint from a set of memory locations modified
+/// by an operation is preserved by that operation.
+///
+/// We start by specifying a monoid of sets of memory locations. From
+/// a rough high-level view, ``loc`` is the type of sets of memory
+/// locations, equipped with an identity element ``loc_none``,
+/// representing the empty set, and an associative and commutative
+/// operator, ``loc_union``, representing the union of two sets of
+/// memory locations.
+///
+/// Moreover, ``loc_union`` is idempotent, which is useful to cut SMT
+/// matching loops with ``modifies_trans`` and ``modifies_refl`` below.
+
+abstract val loc :Type0
+let loc = MG.loc cls
+
+abstract val loc_none :loc
+let loc_none = MG.loc_none
+
+abstract val loc_union (s1 s2: loc) :GTot loc
+let loc_union = MG.loc_union
+
+abstract val loc_union_idem (s:loc) :Lemma (loc_union s s == s)
+                                           [SMTPat (loc_union s s)]
+let loc_union_idem = MG.loc_union_idem
+
+abstract val loc_union_comm (s1 s2:loc) :Lemma (loc_union s1 s2 == loc_union s2 s1)
+                                               [SMTPat (loc_union s1 s2)]
+let loc_union_comm = MG.loc_union_comm
+
+abstract val loc_union_assoc (s1 s2 s3:loc) :Lemma (loc_union s1 (loc_union s2 s3) == loc_union (loc_union s1 s2) s3)
+let loc_union_assoc = MG.loc_union_assoc
+
+let loc_union_idem_1 (s1 s2:loc)
+  :Lemma (loc_union s1 (loc_union s1 s2) == loc_union s1 s2)
+         [SMTPat (loc_union s1 (loc_union s1 s2) == loc_union s1 s2)]
+  = loc_union_assoc s1 s1 s2
+
+let loc_union_idem_2 (s1 s2:loc)
+  :Lemma (loc_union (loc_union s1 s2) s2 == loc_union s1 s2)
+         [SMTPat (loc_union (loc_union s1 s2) s2)]
+  = loc_union_assoc s1 s2 s2
+
+abstract val loc_union_loc_none_l (s:loc) :Lemma (loc_union loc_none s == s)
+                                                 [SMTPat (loc_union loc_none s)]
+let loc_union_loc_none_l = MG.loc_union_loc_none_l
+
+abstract val loc_union_loc_none_r (s:loc) :Lemma (loc_union s loc_none == s)
+                                                 [SMTPat (loc_union s loc_none)]
+let loc_union_loc_none_r = MG.loc_union_loc_none_r
+
+
+/// ``loc_buffer b`` is the set of memory locations associated to a buffer ``b``.
+
+abstract val loc_buffer (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) :GTot loc
+let loc_buffer #_ #_ #_ b =
+  if g_is_null b then MG.loc_none
+  else MG.loc_of_aloc #_ #_ #(frameOf b) #(as_addr b) (ubuffer_of_buffer b)
+
+abstract val loc_buffer_null (a:Type0) (rrel:srel a) (rel:srel a)  (* TODO: candidate for wrapper *)
+  :Lemma (loc_buffer (null #a #rrel #rel) == loc_none)
+         [SMTPat (loc_buffer (null #a #rrel #rel))]
+let loc_buffer_null _ _ _ = ()
+
+
+/// ``loc_addresses r n`` is the set of memory locations associated to a
+/// set of addresses ``n`` in a given region ``r``.
+
+abstract val loc_addresses (preserve_liveness:bool) (r:HS.rid) (n:Set.set nat) :GTot loc
+let loc_addresses = MG.loc_addresses
+
+unfold let loc_addr_of_buffer (#a:Type0) (#rrel:srel a) (#rel:srel a) (b:mbuffer a rrel rel) :GTot loc =
+  loc_addresses false (frameOf b) (Set.singleton (as_addr b))
+
+
+/// ``loc_regions r`` is the set of memory locations associated to a set
+/// ``r`` of regions.
+
+abstract val loc_regions (preserve_liveness:bool) (r:Set.set HS.rid) :GTot loc
+let loc_regions = MG.loc_regions
+
+
+/// ``loc_mreference b`` is the set of memory locations associated to a
+/// reference ``b``, which is actually the set of memory locations
+/// associated to the address of ``b``.
+
+unfold let loc_mreference (#a:Type0) (#p:Preorder.preorder a) (b:HS.mreference a p) :GTot loc
+  = loc_addresses true (HS.frameOf b) (Set.singleton (HS.as_addr b))
+
+unfold
+let loc_freed_mreference (#a:Type0) (#p:Preorder.preorder a) (b:HS.mreference a p) :GTot loc
+  = loc_addresses false (HS.frameOf b) (Set.singleton (HS.as_addr b))
+
+
+/// ``loc_region_only r`` is the set of memory locations associated to a
+/// region ``r`` but not any region ``r'`` that extends ``r`` (in the sense
+/// of ``FStar.HyperStack.extends``.)
+
+unfold
+let loc_region_only (preserve_liveness:bool) (r:HS.rid) :GTot loc
+  = loc_regions preserve_liveness (Set.singleton r)
+
+
+/// ``loc_all_regions_from r`` is the set of all memory locations
+/// associated to a region ``r`` and any region ``r'`` that transitively
+/// extends ``r`` (in the sense of ``FStar.HyperStack.extends``,
+/// e.g. nested stack frames.)
+
+unfold
+let loc_all_regions_from (preserve_liveness:bool) (r:HS.rid) :GTot loc
+  = loc_regions preserve_liveness (HS.mod_set (Set.singleton r))
+
+
+/// We equip the ``loc`` monoid of sets of memory locations with an
+/// inclusion relation, ``loc_includes``, which is a preorder compatible
+/// with ``loc_union``. Although we consider sets of memory locations,
+/// we do not specify them using any F* set library such as
+/// ``FStar.Set``, ``FStar.TSet`` or ``FStar.GSet``, because ``loc_includes``
+/// encompasses more than just set-theoretic inclusion.
+
+abstract val loc_includes (s1 s2:loc) :GTot Type0
+let loc_includes = MG.loc_includes
+
+abstract val loc_includes_refl (s:loc)
+  :Lemma (loc_includes s s)
+         [SMTPat (loc_includes s s)]
+let loc_includes_refl = MG.loc_includes_refl
+
+abstract val loc_includes_trans (s1 s2 s3:loc)
+  :Lemma (requires (loc_includes s1 s2 /\ loc_includes s2 s3))
+         (ensures (loc_includes s1 s3))
+let loc_includes_trans = MG.loc_includes_trans
+
+let loc_includes_trans_backwards (s1 s2 s3:loc)
+  :Lemma (requires (loc_includes s1 s2 /\ loc_includes s2 s3))
+         (ensures  (loc_includes s1 s3))
+  [SMTPat (loc_includes s1 s3); SMTPat (loc_includes s2 s3)]
+  = loc_includes_trans s1 s2 s3
+
+abstract val loc_includes_union_r (s s1 s2:loc)
+  :Lemma (requires (loc_includes s s1 /\ loc_includes s s2))
+         (ensures (loc_includes s (loc_union s1 s2)))
+let loc_includes_union_r = MG.loc_includes_union_r
+
+abstract val loc_includes_union_l (s1 s2 s:loc)
+  :Lemma (requires (loc_includes s1 s \/ loc_includes s2 s))
+         (ensures (loc_includes (loc_union s1 s2) s))
+let loc_includes_union_l = MG.loc_includes_union_l
+
+let loc_includes_union_r' (s s1 s2:loc)
+  :Lemma (loc_includes s (loc_union s1 s2) <==> (loc_includes s s1 /\ loc_includes s s2))
+         [SMTPat (loc_includes s (loc_union s1 s2))]
+  = Classical.move_requires (loc_includes_union_r s s1) s2;
+    Classical.move_requires (loc_includes_union_l s1 s2) s1;
+    Classical.move_requires (loc_includes_union_l s1 s2) s2;
+    Classical.move_requires (loc_includes_trans s (loc_union s1 s2)) s1;
+    Classical.move_requires (loc_includes_trans s (loc_union s1 s2)) s2
+
+abstract val loc_includes_none (s:loc)
+  :Lemma (loc_includes s loc_none)
+         [SMTPat (loc_includes s loc_none)]
+let loc_includes_none = MG.loc_includes_none
+
+private abstract val loc_includes_buffer (#a:Type0) (#rrel1:srel a) (#rrel2:srel a) (#rel1:srel a) (#rel2:srel a)
+  (b1:mbuffer a rrel1 rel1) (b2:mbuffer a rrel2 rel2)
+  :Lemma (requires (frameOf b1 == frameOf b2 /\ as_addr b1 == as_addr b2 /\
+                    ubuffer_includes0 #(frameOf b1) #(frameOf b2) #(as_addr b1) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)))
+         (ensures  (loc_includes (loc_buffer b1) (loc_buffer b2)))
+
+let loc_includes_buffer #t #_ #_ #_ #_ b1 b2 =
+  let t1 = ubuffer (frameOf b1) (as_addr b1) in
+  MG.loc_includes_aloc #_ #cls #(frameOf b1) #(as_addr b1) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2 <: t1)
+
+/// If a buffer ``b1`` includes a buffer ``b2`` in the sense of the buffer
+/// theory (see ``LowStar.Buffer.includes``), then so are their
+/// corresponding sets of memory locations.
+
+abstract val loc_includes_gsub_buffer_r
+  (l:loc)
+  (#a:Type0) (#rrel:srel a) (#rel:srel a)
+  (b:mbuffer a rrel rel) (i:UInt32.t) (len:UInt32.t) (sub_rel:srel a)
+: Lemma (requires (UInt32.v i + UInt32.v len <= (length b) /\
+                   compatible_sub b i len sub_rel /\
+                   loc_includes l (loc_buffer b)))
+        (ensures  (loc_includes l (loc_buffer (gsub b i len sub_rel))))
+        [SMTPat (loc_includes l (loc_buffer (gsub b i len sub_rel)))]
+let loc_includes_gsub_buffer_r l #_ #_ #_ b i len sub_rel =
+  let b' = gsub b i len sub_rel in
+  loc_includes_buffer b b';
+  loc_includes_trans l (loc_buffer b) (loc_buffer b')
+
+let loc_includes_gsub_buffer_r' (#a:Type0) (#rrel:srel a) (#rel:srel a)
+  (b:mbuffer a rrel rel) (i:UInt32.t) (len:UInt32.t) (sub_rel:srel a)
+  :Lemma (requires (UInt32.v i + UInt32.v len <= (length b) /\ compatible_sub b i len sub_rel))
+         (ensures  (loc_includes (loc_buffer b) (loc_buffer (gsub b i len sub_rel))))
+         [SMTPat (gsub b i len sub_rel)]
+  = ()
+
+val loc_includes_gsub_buffer_l (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  (i1:UInt32.t) (len1:UInt32.t) (sub_rel1:srel a)
+  (i2:UInt32.t) (len2:UInt32.t) (sub_rel2:srel a)
+  :Lemma (requires (UInt32.v i1 + UInt32.v len1 <= (length b) /\
+                    UInt32.v i1 <= UInt32.v i2 /\ UInt32.v i2 + UInt32.v len2 <= UInt32.v i1 + UInt32.v len1 /\
+		    compatible_sub b i1 len1 sub_rel1 /\ compatible_sub b i2 len2 sub_rel2))
+         (ensures  (loc_includes (loc_buffer (gsub b i1 len1 sub_rel1)) (loc_buffer (gsub b i2 len2 sub_rel2))))
+         [SMTPat (gsub b i1 len1 sub_rel1); SMTPat (gsub b i2 len2 sub_rel2)]
+let loc_includes_gsub_buffer_l #_ #_ #rel b i1 len1 sub_rel1 i2 len2 sub_rel2 =
+  let b1 = gsub b i1 len1 sub_rel1 in
+  lemma_sub_compatibility_is_transitive1 (length b) rel (U32.v i1) (U32.v len1) sub_rel1 (U32.v i2) (U32.v len2) sub_rel2;
+  let b2 = gsub b1 (U32.sub i2 i1) len2 sub_rel2 in
+  loc_includes_buffer b1 b2
+
+/// If the contents of a buffer are equal in two given heaps, then so
+/// are the contents of any of its sub-buffers.
+
+val loc_includes_as_seq (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
+  (h1 h2:HS.mem) (larger:mbuffer a rrel1 rel1) (smaller:mbuffer a rrel2 rel2)
+  :Lemma (requires (loc_includes (loc_buffer larger) (loc_buffer smaller) /\
+                    as_seq h1 larger == as_seq h2 larger /\
+		    (live h1 larger \/ live h1 smaller) /\ (live h2 larger \/ live h2 smaller)))
+         (ensures  (as_seq h1 smaller == as_seq h2 smaller))
+#push-options "--z3rlimit 20"
+let loc_includes_as_seq #_ #rrel1 #rrel2 #_ #_ h1 h2 larger smaller =
+  if Null? smaller then () else
+  if Null? larger then begin
+    MG.loc_includes_none_elim (loc_buffer smaller);
+    MG.loc_of_aloc_not_none #_ #cls #(frameOf smaller) #(as_addr smaller) (ubuffer_of_buffer smaller)
+  end else begin
+    MG.loc_includes_aloc_elim #_ #cls #(frameOf larger) #(frameOf smaller) #(as_addr larger) #(as_addr smaller) (ubuffer_of_buffer larger) (ubuffer_of_buffer smaller);
+    assume (rrel1 == rrel2);  //TODO: we should be able to prove this somehow in HS?
+    let ul = Ghost.reveal (ubuffer_of_buffer larger) in
+    let us = Ghost.reveal (ubuffer_of_buffer smaller) in
+    assert (as_seq h1 smaller == Seq.slice (as_seq h1 larger) (us.b_offset - ul.b_offset) (us.b_offset - ul.b_offset + length smaller));
+    assert (as_seq h2 smaller == Seq.slice (as_seq h2 larger) (us.b_offset - ul.b_offset) (us.b_offset - ul.b_offset + length smaller))
+  end
+#pop-options
+
+
+/// Given a buffer ``b``, if its address is in a set ``s`` of addresses in
+/// the region of ``b``, then the set of memory locations corresponding
+/// to ``b`` is included in the set of memory locations corresponding to
+/// the addresses in ``s`` in region ``r``.
+///
+/// In particular, the set of memory locations corresponding to a
+/// buffer is included in the set of memory locations corresponding to
+/// its region and address.
+
+val loc_includes_addresses_buffer (#a:Type0) (#rrel #rel:srel a)
+  (preserve_liveness:bool) (r:HS.rid) (s:Set.set nat) (p:mbuffer a rrel rel)
+  :Lemma (requires (frameOf p == r /\ Set.mem (as_addr p) s))
+         (ensures  (loc_includes (loc_addresses preserve_liveness r s) (loc_buffer p)))
+         [SMTPat (loc_includes (loc_addresses preserve_liveness r s) (loc_buffer p))]
+let loc_includes_addresses_buffer #_ #_ #_ preserve_liveness r s p =
+  MG.loc_includes_addresses_aloc #_ #cls preserve_liveness r s #(as_addr p) (ubuffer_of_buffer p)
+
+let loc_includes_addresses_buffer' (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  :Lemma (loc_includes (loc_addresses true (frameOf b) (Set.singleton (as_addr b))) (loc_buffer b))
+         [SMTPat (loc_buffer b)]
+  = ()
+
+/// The set of memory locations corresponding to a buffer is included
+/// in the set of memory locations corresponding to its region.
+
+val loc_includes_region_buffer (#a:Type0) (#rrel #rel:srel a)
+  (preserve_liveness:bool) (s:Set.set HS.rid) (b:mbuffer a rrel rel)
+  :Lemma (requires (Set.mem (frameOf b) s))
+         (ensures (loc_includes (loc_regions preserve_liveness s) (loc_buffer b)))
+         [SMTPat (loc_includes (loc_regions preserve_liveness s) (loc_buffer b))]
+let loc_includes_region_buffer #_ #_ #_ preserve_liveness s b =
+  MG.loc_includes_region_aloc #_ #cls preserve_liveness s #(frameOf b) #(as_addr b) (ubuffer_of_buffer b)
+
+let loc_includes_region_buffer' (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  :Lemma (loc_includes (loc_regions true (Set.singleton (frameOf b))) (loc_buffer b))
+         [SMTPat (loc_buffer b)]
+  = ()
+
+
+/// If a region ``r`` is in a set of regions ``s``, then the set of memory
+/// locations corresponding to a set of addresses ``a`` in ``r`` is
+/// included in the set of memory locations corresponding to the
+/// regions in ``s``.
+///
+/// In particular, the the set of memory locations corresponding to a
+/// set of addresses ``a`` in a given region ``r`` is included in the set
+/// of memory locations corresponding to region ``r``.
+
+val loc_includes_region_addresses
+  (preserve_liveness1: bool)
+  (preserve_liveness2: bool)
+  (s: Set.set HS.rid)
+  (r: HS.rid)
+  (a: Set.set nat)
+: Lemma
+  (requires (Set.mem r s))
+  (ensures (loc_includes (loc_regions preserve_liveness1 s) (loc_addresses preserve_liveness2 r a)))
+  [SMTPat (loc_includes (loc_regions preserve_liveness1 s) (loc_addresses preserve_liveness2 r a))]
+let loc_includes_region_addresses = MG.loc_includes_region_addresses #_ #cls
+
+let loc_includes_region_addresses'
+  (preserve_liveness: bool)
+  (r: HS.rid)
+  (a: Set.set nat)
+: Lemma
+  (loc_includes (loc_regions true (Set.singleton r)) (loc_addresses preserve_liveness r a))
+  [SMTPat (loc_addresses preserve_liveness r a)]
+= ()
+
+/// If a set of region identifiers ``s1`` includes a set of region
+/// identifiers ``s2``, then so are their corresponding sets of memory
+/// locations.
+
+val loc_includes_region_region
+  (preserve_liveness1: bool)
+  (preserve_liveness2: bool)
+  (s1 s2: Set.set HS.rid)
+: Lemma
+  (requires ((preserve_liveness1 ==> preserve_liveness2) /\ Set.subset s2 s1))
+  (ensures (loc_includes (loc_regions preserve_liveness1 s1) (loc_regions preserve_liveness2 s2)))
+  [SMTPat (loc_includes (loc_regions preserve_liveness1 s1) (loc_regions preserve_liveness2 s2))]
+let loc_includes_region_region = MG.loc_includes_region_region #_ #cls
+
+let loc_includes_region_region'
+  (preserve_liveness: bool)
+  (s: Set.set HS.rid)
+: Lemma
+  (loc_includes (loc_regions false s) (loc_regions preserve_liveness s))
+  [SMTPat (loc_regions preserve_liveness s)]
+= ()
+
+/// The following lemma can act as a cut when reasoning with sets of
+/// memory locations corresponding to sets of regions.
+
+val loc_includes_region_union_l
+  (preserve_liveness: bool)
+  (l: loc)
+  (s1 s2: Set.set HS.rid)
+: Lemma
+  (requires (loc_includes l (loc_regions preserve_liveness (Set.intersect s2 (Set.complement s1)))))
+  (ensures (loc_includes (loc_union (loc_regions preserve_liveness s1) l) (loc_regions preserve_liveness s2)))
+  [SMTPat (loc_includes (loc_union (loc_regions preserve_liveness s1) l) (loc_regions preserve_liveness s2))]
+let loc_includes_region_union_l = MG.loc_includes_region_union_l
+
+
+/// If a set of addresses ``s1`` includes a set of addresses ``s2``,
+/// then so are their corresponding memory locations
+val loc_includes_addresses_addresses
+  (preserve_liveness1 preserve_liveness2: bool)
+  (r: HS.rid)
+  (s1 s2: Set.set nat)
+: Lemma
+  (requires ((preserve_liveness1 ==> preserve_liveness2) /\ Set.subset s2 s1))
+  (ensures (loc_includes (loc_addresses preserve_liveness1 r s1) (loc_addresses preserve_liveness2 r s2)))
+let loc_includes_addresses_addresses = MG.loc_includes_addresses_addresses cls
+
+let loc_includes_addresses_addresses_1
+  (preserve_liveness1 preserve_liveness2: bool)
+  (r1 r2: HS.rid)
+  (s1 s2: Set.set nat)
+: Lemma
+  (requires (r1 == r2 /\ (preserve_liveness1 ==> preserve_liveness2) /\ Set.subset s2 s1))
+  (ensures (loc_includes (loc_addresses preserve_liveness1 r1 s1) (loc_addresses preserve_liveness2 r2 s2)))
+  [SMTPat (loc_includes (loc_addresses preserve_liveness1 r1 s1) (loc_addresses preserve_liveness2 r2 s2))]
+= loc_includes_addresses_addresses preserve_liveness1 preserve_liveness2 r1 s1 s2
+
+let loc_includes_addresses_addresses_2
+  (preserve_liveness: bool)
+  (r: HS.rid)
+  (s: Set.set nat)
+: Lemma
+  (loc_includes (loc_addresses false r s) (loc_addresses preserve_liveness r s))
+  [SMTPat (loc_addresses preserve_liveness r s)]
+= ()
+
+/// Patterns with loc_includes, union on the left
+
+let loc_includes_union_l_buffer
+  (s1 s2:loc)
+  (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel)
+  :Lemma (requires (loc_includes s1 (loc_buffer b) \/ loc_includes s2 (loc_buffer b)))
+         (ensures (loc_includes (loc_union s1 s2) (loc_buffer b)))
+         [SMTPat (loc_includes (loc_union s1 s2) (loc_buffer b))]
+  = loc_includes_union_l s1 s2 (loc_buffer b)
+
+let loc_includes_union_l_addresses
+  (s1 s2: loc)
+  (prf: bool)
+  (r: HS.rid)
+  (a: Set.set nat)
+: Lemma
+  (requires (loc_includes s1 (loc_addresses prf r a) \/ loc_includes s2 (loc_addresses prf r a)))
+  (ensures (loc_includes (loc_union s1 s2) (loc_addresses prf r a)))
+  [SMTPat (loc_includes (loc_union s1 s2) (loc_addresses prf r a))]
+= loc_includes_union_l s1 s2 (loc_addresses prf r a)
+
+let loc_includes_union_l_regions
+  (s1 s2: loc)
+  (prf: bool)
+  (r: Set.set HS.rid)
+: Lemma
+  (requires (loc_includes s1 (loc_regions prf r) \/ loc_includes s2 (loc_regions prf r)))
+  (ensures (loc_includes (loc_union s1 s2) (loc_regions prf r)))
+  [SMTPat (loc_includes (loc_union s1 s2) (loc_regions prf r))]
+= loc_includes_union_l s1 s2 (loc_regions prf r)
+
+/// Since inclusion encompasses more than just set-theoretic
+/// inclusion, we also need to specify disjointness accordingly, as a
+/// symmetric relation compatible with union.
+
+val loc_disjoint
+  (s1 s2: loc)
+: GTot Type0
+let loc_disjoint = MG.loc_disjoint
+
+[@"opaque_to_smt"]
+private let rec loc_disjoint_from_list (l:loc) (ls:list loc) :Type0 =
+  match ls with
+  | []    -> True
+  | hd::tl -> loc_disjoint l hd /\ loc_disjoint_from_list l tl
+
+[@"opaque_to_smt"]
+private let rec loc_pairwise_disjoint_aux (l:list loc) :Type0 =
+  match l with
+  | []    -> True
+  | hd::tl -> loc_disjoint_from_list hd tl /\ loc_pairwise_disjoint_aux tl
+
+(*
+ * Use this to state pairwise disjointness for the locations in l
+ * It is unfolded to conjunction of loc_disjoint for all pairs of locations in l
+ *)
+[@"opaque_to_smt"]
+unfold let loc_pairwise_disjoint (l:list loc) :Type0 =
+  norm [iota; zeta; delta; delta_only ["LowStar.Buffer.loc_disjoint_from_list";
+                                       "LowStar.Buffer.loc_pairwise_disjoint_aux"]] (loc_pairwise_disjoint_aux l)
+
+val loc_disjoint_sym
+  (s1 s2: loc)
+: Lemma
+  (requires (loc_disjoint s1 s2))
+  (ensures (loc_disjoint s2 s1))
+let loc_disjoint_sym = MG.loc_disjoint_sym
+
+let loc_disjoint_sym'
+  (s1 s2: loc)
+: Lemma
+  (loc_disjoint s1 s2 <==> loc_disjoint s2 s1)
+  [SMTPat (loc_disjoint s1 s2)]
+= Classical.move_requires (loc_disjoint_sym s1) s2;
+  Classical.move_requires (loc_disjoint_sym s2) s1
+
+val loc_disjoint_none_r
+  (s: loc)
+: Lemma
+  (ensures (loc_disjoint s loc_none))
+  [SMTPat (loc_disjoint s loc_none)]
+let loc_disjoint_none_r = MG.loc_disjoint_none_r
+
+val loc_disjoint_union_r
+  (s s1 s2: loc)
+: Lemma
+  (requires (loc_disjoint s s1 /\ loc_disjoint s s2))
+  (ensures (loc_disjoint s (loc_union s1 s2)))
+let loc_disjoint_union_r = MG.loc_disjoint_union_r
+
+
+/// If two sets of memory locations are disjoint, then so are any two
+/// included sets of memory locations.
+
+val loc_disjoint_includes
+  (p1 p2 p1' p2' : loc)
+: Lemma
+  (requires (loc_includes p1 p1' /\ loc_includes p2 p2' /\ loc_disjoint p1 p2))
+  (ensures (loc_disjoint p1' p2'))
+let loc_disjoint_includes = MG.loc_disjoint_includes
+
+let loc_disjoint_union_r'
+  (s s1 s2: loc)
+: Lemma
+  (ensures (loc_disjoint s (loc_union s1 s2) <==> (loc_disjoint s s1 /\ loc_disjoint s s2)))
+  [SMTPat (loc_disjoint s (loc_union s1 s2))]
+= Classical.move_requires (loc_disjoint_union_r s s1) s2;
+  loc_includes_union_l s1 s2 s1;
+  loc_includes_union_l s1 s2 s2;
+  Classical.move_requires (loc_disjoint_includes s (loc_union s1 s2) s) s1;
+  Classical.move_requires (loc_disjoint_includes s (loc_union s1 s2) s) s2
+
+let loc_disjoint_includes_r (b1 : loc) (b2 b2': loc) : Lemma
+  (requires (loc_includes b2 b2' /\ loc_disjoint b1 b2))
+  (ensures (loc_disjoint b1 b2'))
+  [SMTPat (loc_disjoint b1 b2'); SMTPat (loc_includes b2 b2')]
+= loc_disjoint_includes b1 b2 b1 b2'
+
+val loc_disjoint_buffer (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
+  (b1:mbuffer a1 rrel1 rel1) (b2:mbuffer a2 rrel2 rel2)
+  :Lemma (requires ((frameOf b1 == frameOf b2 /\ as_addr b1 == as_addr b2) ==>
+                    ubuffer_disjoint0 #(frameOf b1) #(frameOf b2) #(as_addr b1) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)))
+         (ensures (loc_disjoint (loc_buffer b1) (loc_buffer b2)))
+let loc_disjoint_buffer #_ #_ #_ #_ #_ #_ b1 b2 =
+  MG.loc_disjoint_aloc_intro #_ #cls #(frameOf b1) #(as_addr b1) #(frameOf b2) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
+
+val loc_disjoint_gsub_buffer (#a:Type0) (#rrel:srel a) (#rel:srel a)
+  (b:mbuffer a rrel rel)
+  (i1:UInt32.t) (len1:UInt32.t) (sub_rel1:srel a)
+  (i2:UInt32.t) (len2:UInt32.t) (sub_rel2:srel a)
+  :Lemma (requires (UInt32.v i1 + UInt32.v len1 <= (length b) /\
+                    UInt32.v i2 + UInt32.v len2 <= (length b) /\
+		    compatible_sub b i1 len1 sub_rel1 /\ compatible_sub b i2 len2 sub_rel2 /\
+		    (UInt32.v i1 + UInt32.v len1 <= UInt32.v i2 \/
+                     UInt32.v i2 + UInt32.v len2 <= UInt32.v i1)))
+         (ensures  (loc_disjoint (loc_buffer (gsub b i1 len1 sub_rel1)) (loc_buffer (gsub b i2 len2 sub_rel2))))
+         [SMTPat (gsub b i1 len1 sub_rel1); SMTPat (gsub b i2 len2 sub_rel2)]
+let loc_disjoint_gsub_buffer #_ #_ #_ b i1 len1 sub_rel1 i2 len2 sub_rel2 =
+  loc_disjoint_buffer (gsub b i1 len1 sub_rel1) (gsub b i2 len2 sub_rel2)
+
+
+/// If two sets of addresses correspond to different regions or are
+/// disjoint, then their corresponding sets of memory locations are
+/// disjoint.
+
+val loc_disjoint_addresses
+  (preserve_liveness1 preserve_liveness2: bool)
+  (r1 r2: HS.rid)
+  (n1 n2: Set.set nat)
+: Lemma
+  (requires (r1 <> r2 \/ Set.subset (Set.intersect n1 n2) Set.empty))
+  (ensures (loc_disjoint (loc_addresses preserve_liveness1 r1 n1) (loc_addresses preserve_liveness2 r2 n2)))
+  [SMTPat (loc_disjoint (loc_addresses preserve_liveness1 r1 n1) (loc_addresses preserve_liveness2 r2 n2))]
+let loc_disjoint_addresses = MG.loc_disjoint_addresses_intro #_ #cls
+
+
+/// If two sets of region identifiers are disjoint, then so are their
+/// corresponding sets of memory locations.
+
+val loc_disjoint_regions
+  (preserve_liveness1: bool)
+  (preserve_liveness2: bool)
+  (rs1 rs2: Set.set HS.rid)
+: Lemma
+  (requires (Set.subset (Set.intersect rs1 rs2) Set.empty))
+  (ensures (loc_disjoint (loc_regions preserve_liveness1 rs1) (loc_regions preserve_liveness2 rs2)))
+  [SMTPat (loc_disjoint (loc_regions preserve_liveness1 rs1) (loc_regions preserve_liveness2 rs2))]
+let loc_disjoint_regions = MG.loc_disjoint_regions #_ #cls
+
+/// The modifies clauses proper.
+///
+/// Let ``s`` be a set of memory locations, and ``h1`` and ``h2`` be two
+/// memory states. Then, ``s`` is modified from ``h1`` to ``h2`` only if,
+/// any memory location disjoint from ``s`` is preserved from ``h1`` into
+/// ``h2``. Elimination lemmas illustrating this principle follow.
+
+val modifies
+  (s: loc)
+  (h1 h2: HS.mem)
+: GTot Type0
+let modifies = MG.modifies
+
+
+/// If a region ``r`` is disjoint from a set ``s`` of memory locations
+/// which is modified, then its liveness is preserved.
+
+val modifies_live_region
+  (s: loc)
+  (h1 h2: HS.mem)
+  (r: HS.rid)
+: Lemma
+  (requires (modifies s h1 h2 /\ loc_disjoint s (loc_region_only false r) /\ HS.live_region h1 r))
+  (ensures (HS.live_region h2 r))
+let modifies_live_region = MG.modifies_live_region
+
+/// If a reference ``b`` is disjoint from a set ``p`` of memory locations
+/// which is modified, then its liveness and contents are preserved.
+
+val modifies_mreference_elim
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (b: HS.mreference t pre)
+  (p: loc)
+  (h h': HS.mem)
+: Lemma
+  (requires (
+    loc_disjoint (loc_mreference b) p /\
+    HS.contains h b /\
+    modifies p h h'
+  ))
+  (ensures (
+    HS.contains h' b /\
+    HS.sel h b == HS.sel h' b
+  ))
+let modifies_mreference_elim = MG.modifies_mreference_elim
+
+/// If a buffer ``b`` is disjoint from a set ``p`` of
+/// memory locations which is modified, then its liveness and contents
+/// are preserved.
+
+val modifies_buffer_elim (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel) (p:loc) (h h':HS.mem)
+  :Lemma (requires (loc_disjoint (loc_buffer b) p /\ live h b /\ modifies p h h'))
+         (ensures  (live h' b /\ (as_seq h b == as_seq h' b)))
+let modifies_buffer_elim #_ #_ #_ b p h h' =
+  if g_is_null b
+  then
+    assert (as_seq h b `Seq.equal` as_seq h' b)
+  else begin
+    MG.modifies_aloc_elim #_ #cls #(frameOf b) #(as_addr b) (ubuffer_of_buffer b) p h h' ;
+    ubuffer_preserved_elim b h h'
+  end
+
+/// If the memory state does not change, then any memory location is
+/// modified (and, in particular, the empty set, ``loc_none``.)
+
+val modifies_refl
+  (s: loc)
+  (h: HS.mem)
+: Lemma
+  (modifies s h h)
+  [SMTPat (modifies s h h)]
+let modifies_refl = MG.modifies_refl
+
+/// If a set ``s2`` of memory locations is modified, then so is any set
+/// ``s1`` that includes ``s2``. In other words, it is always possible to
+/// weaken a modifies clause by widening its set of memory locations.
+
+val modifies_loc_includes
+  (s1: loc)
+  (h h': HS.mem)
+  (s2: loc)
+: Lemma
+  (requires (modifies s2 h h' /\ loc_includes s1 s2))
+  (ensures (modifies s1 h h'))
+  [SMTPat (modifies s1 h h'); SMTPat (modifies s2 h h')]
+let modifies_loc_includes = MG.modifies_loc_includes
+
+/// Some memory locations are tagged as liveness-insensitive: the
+/// liveness preservation of a memory location only depends on its
+/// disjointness from the liveness-sensitive memory locations of a
+/// modifies clause.
+
+val address_liveness_insensitive_locs: loc
+let address_liveness_insensitive_locs = MG.address_liveness_insensitive_locs _
+
+val region_liveness_insensitive_locs: loc
+let region_liveness_insensitive_locs = MG.region_liveness_insensitive_locs _
+
+val address_liveness_insensitive_buffer (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  :Lemma (address_liveness_insensitive_locs `loc_includes` (loc_buffer b))
+         [SMTPat (address_liveness_insensitive_locs `loc_includes` (loc_buffer b))]
+let address_liveness_insensitive_buffer #_ #_ #_ b =
+  MG.loc_includes_address_liveness_insensitive_locs_aloc #_ #cls #(frameOf b) #(as_addr b) (ubuffer_of_buffer b)
+
+val address_liveness_insensitive_addresses (r: HS.rid) (a: Set.set nat) : Lemma
+  (address_liveness_insensitive_locs `loc_includes` (loc_addresses true r a))
+  [SMTPat (address_liveness_insensitive_locs `loc_includes` (loc_addresses true r a))]
+let address_liveness_insensitive_addresses =
+  MG.loc_includes_address_liveness_insensitive_locs_addresses cls
+
+val region_liveness_insensitive_buffer (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+  :Lemma (region_liveness_insensitive_locs `loc_includes` (loc_buffer b))
+         [SMTPat (region_liveness_insensitive_locs `loc_includes` (loc_buffer b))]
+let region_liveness_insensitive_buffer #_ #_ #_ b =
+  MG.loc_includes_region_liveness_insensitive_locs_loc_of_aloc #_ cls #(frameOf b) #(as_addr b) (ubuffer_of_buffer b)
+
+val region_liveness_insensitive_addresses (preserve_liveness: bool) (r: HS.rid) (a: Set.set nat) : Lemma
+  (region_liveness_insensitive_locs `loc_includes` (loc_addresses preserve_liveness r a))
+  [SMTPat (region_liveness_insensitive_locs `loc_includes` (loc_addresses preserve_liveness r a))]
+let region_liveness_insensitive_addresses =
+  MG.loc_includes_region_liveness_insensitive_locs_loc_addresses cls
+
+val region_liveness_insensitive_regions (rs: Set.set HS.rid) : Lemma
+  (region_liveness_insensitive_locs `loc_includes` (loc_regions true rs))
+  [SMTPat (region_liveness_insensitive_locs `loc_includes` (loc_regions true rs))]
+let region_liveness_insensitive_regions =
+  MG.loc_includes_region_liveness_insensitive_locs_loc_regions cls
+
+val region_liveness_insensitive_address_liveness_insensitive:
+  squash (region_liveness_insensitive_locs `loc_includes` address_liveness_insensitive_locs)
+let region_liveness_insensitive_address_liveness_insensitive =
+  MG.loc_includes_region_liveness_insensitive_locs_address_liveness_insensitive_locs cls
+
+val modifies_liveness_insensitive_mreference
+  (l1 l2 : loc)
+  (h h' : HS.mem)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (x: HS.mreference t pre)
+: Lemma
+  (requires (modifies (loc_union l1 l2) h h' /\ loc_disjoint l1 (loc_mreference x) /\ address_liveness_insensitive_locs `loc_includes` l2 /\ h `HS.contains` x))
+  (ensures (h' `HS.contains` x))
+  (* TODO: pattern *)
+let modifies_liveness_insensitive_mreference = MG.modifies_preserves_liveness
+
+val modifies_liveness_insensitive_buffer
+  (l1 l2:loc)
+  (h h':HS.mem)
+  (#a:Type0) (#rrel #rel:srel a)
+  (x:mbuffer a rrel rel)
+  :Lemma (requires (modifies (loc_union l1 l2) h h' /\ loc_disjoint l1 (loc_buffer x) /\ address_liveness_insensitive_locs `loc_includes` l2 /\ live h x))
+         (ensures  (live h' x))
+  (* TODO: pattern *)
+let modifies_liveness_insensitive_buffer l1 l2 h h' #_ #_ #_ x =
+  if g_is_null x
+  then ()
+  else
+    liveness_preservation_intro h h' x (fun t' pre r ->
+      MG.modifies_preserves_liveness_strong l1 l2 h h' r (ubuffer_of_buffer x)
+    )
+
+let modifies_liveness_insensitive_mreference_weak
+  (l : loc)
+  (h h' : HS.mem)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (x: HS.mreference t pre)
+: Lemma
+  (requires (modifies l h h' /\ address_liveness_insensitive_locs `loc_includes` l /\ h `HS.contains` x))
+  (ensures (h' `HS.contains` x))
+= modifies_liveness_insensitive_mreference loc_none l h h' x
+
+let modifies_liveness_insensitive_buffer_weak
+  (l:loc)
+  (h h':HS.mem)
+  (#a:Type0) (#rrel #rel:srel a)
+  (x:mbuffer a rrel rel)
+  :Lemma (requires (modifies l h h' /\ address_liveness_insensitive_locs `loc_includes` l /\ live h x))
+         (ensures  (live h' x))
+  = modifies_liveness_insensitive_buffer loc_none l h h' x
+
+val modifies_liveness_insensitive_region
+  (l1 l2 : loc)
+  (h h' : HS.mem)
+  (x: HS.rid)
+: Lemma
+  (requires (modifies (loc_union l1 l2) h h' /\ loc_disjoint l1 (loc_region_only false x) /\ region_liveness_insensitive_locs `loc_includes` l2 /\ HS.live_region h x))
+  (ensures (HS.live_region h' x))
+  (* TODO: pattern *)
+let modifies_liveness_insensitive_region = MG.modifies_preserves_region_liveness
+
+val modifies_liveness_insensitive_region_mreference
+  (l1 l2 : loc)
+  (h h' : HS.mem)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (x: HS.mreference t pre)
+: Lemma
+  (requires (modifies (loc_union l1 l2) h h' /\ loc_disjoint l1 (loc_mreference x) /\ region_liveness_insensitive_locs `loc_includes` l2 /\ HS.live_region h (HS.frameOf x)))
+  (ensures (HS.live_region h' (HS.frameOf x)))
+  (* TODO: pattern *)
+let modifies_liveness_insensitive_region_mreference = MG.modifies_preserves_region_liveness_reference
+
+val modifies_liveness_insensitive_region_buffer
+  (l1 l2:loc)
+  (h h':HS.mem)
+  (#a:Type0) (#rrel #rel:srel a)
+  (x:mbuffer a rrel rel)
+  :Lemma (requires (modifies (loc_union l1 l2) h h' /\ loc_disjoint l1 (loc_buffer x) /\ region_liveness_insensitive_locs `loc_includes` l2 /\ HS.live_region h (frameOf x)))
+         (ensures  (HS.live_region h' (frameOf x)))
+  (* TODO: pattern *)
+let modifies_liveness_insensitive_region_buffer l1 l2 h h' #_ #_ #_ x =
+  if g_is_null x
+  then ()
+  else
+    MG.modifies_preserves_region_liveness_aloc l1 l2 h h' #(frameOf x) #(as_addr x) (ubuffer_of_buffer x)
+
+let modifies_liveness_insensitive_region_weak
+  (l2 : loc)
+  (h h' : HS.mem)
+  (x: HS.rid)
+: Lemma
+  (requires (modifies l2 h h' /\ region_liveness_insensitive_locs `loc_includes` l2 /\ HS.live_region h x))
+  (ensures (HS.live_region h' x))
+= modifies_liveness_insensitive_region loc_none l2 h h' x
+
+let modifies_liveness_insensitive_region_mreference_weak
+  (l2 : loc)
+  (h h' : HS.mem)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (x: HS.mreference t pre)
+: Lemma
+  (requires (modifies l2 h h' /\ region_liveness_insensitive_locs `loc_includes` l2 /\ HS.live_region h (HS.frameOf x)))
+  (ensures (HS.live_region h' (HS.frameOf x)))
+= modifies_liveness_insensitive_region_mreference loc_none l2 h h' x
+
+let modifies_liveness_insensitive_region_buffer_weak
+  (l2:loc)
+  (h h':HS.mem)
+  (#a:Type0) (#rrel #rel:srel a)
+  (x:mbuffer a rrel rel)
+  :Lemma (requires (modifies l2 h h' /\ region_liveness_insensitive_locs `loc_includes` l2 /\ HS.live_region h (frameOf x)))
+         (ensures  (HS.live_region h' (frameOf x)))
+  = modifies_liveness_insensitive_region_buffer loc_none l2 h h' x
+
+
+/// Modifies clauses are transitive. This lemma is the most general
+/// one.
+
+val modifies_trans
+  (s12: loc)
+  (h1 h2: HS.mem)
+  (s23: loc)
+  (h3: HS.mem)
+: Lemma
+  (requires (modifies s12 h1 h2 /\ modifies s23 h2 h3))
+  (ensures (modifies (loc_union s12 s23) h1 h3))
+  [SMTPat (modifies s12 h1 h2); SMTPat (modifies s23 h2 h3)]
+let modifies_trans = MG.modifies_trans
+
+/// Regions that are not live can be removed from sets of memory
+/// locations that are modified.
+
+val modifies_only_live_regions
+  (rs: Set.set HS.rid)
+  (l: loc)
+  (h h' : HS.mem)
+: Lemma
+  (requires (
+    modifies (loc_union (loc_regions false rs) l) h h' /\
+    (forall r . Set.mem r rs ==> (~ (HS.live_region h r)))
+  ))
+  (ensures (modifies l h h'))
+let modifies_only_live_regions = MG.modifies_only_live_regions
+
+/// As a consequence, fresh regions can be removed from modifies
+/// clauses.
+
+val no_upd_fresh_region: r:HS.rid -> l:loc -> h0:HS.mem -> h1:HS.mem -> Lemma
+  (requires (HS.fresh_region r h0 h1 /\ modifies (loc_union (loc_all_regions_from false r) l) h0 h1))
+  (ensures  (modifies l h0 h1))
+  [SMTPat (HS.fresh_region r h0 h1); SMTPat (modifies l h0 h1)]
+let no_upd_fresh_region = MG.no_upd_fresh_region
+
+val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
+  (requires (HS.fresh_frame h0 h1))
+  (ensures (modifies loc_none h0 h1))
+let fresh_frame_modifies = MG.fresh_frame_modifies #_ cls
+
+val new_region_modifies (m0: HS.mem) (r0: HS.rid) (col: option int) : Lemma
+  (requires (HST.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_eternal_color (Some?.v col))))
+  (ensures (
+    let (_, m1) = HS.new_eternal_region m0 r0 col in
+    modifies loc_none m0 m1
+  ))
+  [SMTPat (HS.new_eternal_region m0 r0 col)]
+let new_region_modifies = MG.new_region_modifies #_ cls
+
+val popped_modifies (h0 h1: HS.mem) : Lemma
+  (requires (HS.popped h0 h1))
+  (ensures (modifies (loc_region_only false (HS.get_tip h0)) h0 h1))
+let popped_modifies = MG.popped_modifies #_ cls
+
+/// Stack discipline: any stack frame (and all its transitively
+/// extending regions) that is pushed, modified and popped can be
+/// removed from a modifies clause.
+
+val modifies_fresh_frame_popped
+  (h0 h1: HS.mem)
+  (s: loc)
+  (h2 h3: HS.mem)
+: Lemma
+  (requires (
+    HS.fresh_frame h0 h1 /\
+    modifies (loc_union (loc_all_regions_from false (HS.get_tip h1)) s) h1 h2 /\
+    (HS.get_tip h2) == (HS.get_tip h1) /\
+    HS.popped h2 h3
+  ))
+  (ensures (
+    modifies s h0 h3 /\
+    (HS.get_tip h3) == HS.get_tip h0
+  ))
+  [SMTPat (HS.fresh_frame h0 h1); SMTPat (HS.popped h2 h3); SMTPat (modifies s h0 h3)]
+let modifies_fresh_frame_popped = MG.modifies_fresh_frame_popped
+
+
+/// Compatibility lemmas to rescue modifies clauses specified in the
+/// standard F* HyperStack library.
+
+val modifies_loc_regions_intro
+  (rs: Set.set HS.rid)
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (HS.modifies rs h1 h2))
+  (ensures (modifies (loc_regions true rs) h1 h2))
+let modifies_loc_regions_intro = MG.modifies_loc_regions_intro #_ #cls
+
+val modifies_loc_addresses_intro
+  (r: HS.rid)
+  (a: Set.set nat)
+  (l: loc)
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (
+    HS.live_region h2 r /\
+    modifies (loc_union (loc_region_only false r) l) h1 h2 /\
+    HS.modifies_ref r a h1 h2
+  ))
+  (ensures (modifies (loc_union (loc_addresses true r a) l) h1 h2))
+let modifies_loc_addresses_intro = MG.modifies_loc_addresses_intro #_ #cls
+
+/// Modifies clauses for allocating a reference: nothing is
+/// modified. (In particular, a modifies clause does not track
+/// memory locations that are created.)
+
+val modifies_ralloc_post
+  (#a: Type)
+  (#rel: Preorder.preorder a)
+  (i: HS.rid)
+  (init: a)
+  (h: HS.mem)
+  (x: HST.mreference a rel { HST.is_eternal_region (HS.frameOf x) } )
+  (h' : HS.mem)
+: Lemma
+  (requires (HST.ralloc_post i init h x h'))
+  (ensures (modifies loc_none h h'))
+  [SMTPat (HST.ralloc_post i init h x h')]
+let modifies_ralloc_post = MG.modifies_ralloc_post #_ #cls
+
+val modifies_salloc_post
+  (#a: Type)
+  (#rel: Preorder.preorder a)
+  (init: a)
+  (h: HS.mem)
+  (x: HST.mreference a rel { HS.is_stack_region (HS.frameOf x) } )
+  (h' : HS.mem)
+: Lemma
+  (requires (HST.salloc_post init h x h'))
+  (ensures (modifies loc_none h h'))
+  [SMTPat (HST.salloc_post init h x h')]
+let modifies_salloc_post = MG.modifies_salloc_post #_ #cls
+
+/// Modifies clause for freeing a reference: the address is modified.
+
+val modifies_free
+  (#a: Type)
+  (#rel: Preorder.preorder a)
+  (r: HS.mreference a rel { HS.is_mm r } )
+  (m: HS.mem { m `HS.contains` r } )
+: Lemma
+  (modifies (loc_freed_mreference r) m (HS.free r m))
+  [SMTPat (HS.free r m)]
+let modifies_free = MG.modifies_free #_ #cls
+
+/// Another compatibility lemma
+
+val modifies_none_modifies
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (HST.modifies_none h1 h2))
+  (ensures (modifies loc_none h1 h2))
+  [SMTPat (HST.modifies_none h1 h2)]
+let modifies_none_modifies = MG.modifies_none_modifies #_ #cls
+
+/// Compatibility with HS.upd
+
+val modifies_upd
+  (#t: Type) (#pre: Preorder.preorder t)
+  (r: HS.mreference t pre)
+  (v: t)
+  (h: HS.mem)
+: Lemma
+  (requires (HS.contains h r))
+  (ensures (modifies (loc_mreference r) h (HS.upd h r v)))
+  [SMTPat (HS.upd h r v)]
+let modifies_upd = MG.modifies_upd #_ #cls
+
+val modifies_0_modifies
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (modifies_0 h1 h2))
+  (ensures (modifies loc_none h1 h2))
+
+let modifies_0_modifies h1 h2 =
+  MG.modifies_none_intro #_ #cls h1 h2
+    (fun r -> modifies_0_live_region h1 h2 r)
+    (fun t pre b -> modifies_0_mreference #t #pre h1 h2 b)
+    (fun r n -> modifies_0_unused_in h1 h2 r n)
+
+val modifies_1_modifies
+  (#a:Type0)(#rrel #rel:srel a)
+  (b:mbuffer a rrel rel) (h1 h2:HS.mem)
+  :Lemma (requires (modifies_1 b h1 h2))
+         (ensures  (modifies (loc_buffer b) h1 h2))
+let modifies_1_modifies #t #_ #_ b h1 h2 =
+  if g_is_null b
+  then begin
+    modifies_1_null b h1 h2;
+    modifies_0_modifies h1 h2
+  end else
+   MG.modifies_intro (loc_buffer b) h1 h2
+    (fun r -> modifies_1_live_region b h1 h2 r)
+    (fun t pre p ->
+      loc_disjoint_sym (loc_mreference p) (loc_buffer b);
+      MG.loc_disjoint_aloc_addresses_elim #_ #cls #(frameOf b) #(as_addr b) (ubuffer_of_buffer b) true (HS.frameOf p) (Set.singleton (HS.as_addr p));
+      modifies_1_mreference b h1 h2 p
+    )
+    (fun t pre p ->
+      modifies_1_liveness b h1 h2 p
+    )
+    (fun r n ->
+      modifies_1_unused_in b h1 h2 r n
+    )
+    (fun r' a' b' ->
+      loc_disjoint_sym (MG.loc_of_aloc b') (loc_buffer b);
+      MG.loc_disjoint_aloc_elim #_ #cls #(frameOf b) #(as_addr b)  #r' #a' (ubuffer_of_buffer b)  b';
+      if frameOf b = r' && as_addr b = a'
+      then
+        modifies_1_ubuffer #t b h1 h2 b'
+      else
+        same_mreference_ubuffer_preserved #r' #a' b' h1 h2
+          (fun a_ pre_ r_ -> modifies_1_mreference b h1 h2 r_)
+    )
+
+val modifies_addr_of_modifies
+  (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel) (h1 h2:HS.mem)
+  :Lemma (requires (modifies_addr_of b h1 h2))
+         (ensures  (modifies (loc_addr_of_buffer b) h1 h2))
+let modifies_addr_of_modifies #t #_ #_ b h1 h2 =
+  MG.modifies_address_intro #_ #cls (frameOf b) (as_addr b) h1 h2
+    (fun r -> modifies_addr_of_live_region b h1 h2 r)
+    (fun t pre p ->
+      modifies_addr_of_mreference b h1 h2 p
+    )
+    (fun r n ->
+      modifies_addr_of_unused_in b h1 h2 r n
+    )
+
+
+///  A memory ``h`` does not contain address ``a`` in region ``r``, denoted
+///  ``does_not_contain_addr h (r, a)``, only if, either region ``r`` is
+///  not live, or address ``a`` is unused in region ``r``.
+
+(* BEGIN TODO: move to FStar.Monotonic.HyperStack *)
+
+val does_not_contain_addr
+  (h: HS.mem)
+  (ra: HS.rid * nat)
+: GTot Type0
+let does_not_contain_addr = MG.does_not_contain_addr
+
+val not_live_region_does_not_contain_addr
+  (h: HS.mem)
+  (ra: HS.rid * nat)
+: Lemma
+  (requires (~ (HS.live_region h (fst ra))))
+  (ensures (h `does_not_contain_addr` ra))
+let not_live_region_does_not_contain_addr = MG.not_live_region_does_not_contain_addr
+
+val unused_in_does_not_contain_addr
+  (h: HS.mem)
+  (#a: Type)
+  (#rel: Preorder.preorder a)
+  (r: HS.mreference a rel)
+: Lemma
+  (requires (r `HS.unused_in` h))
+  (ensures (h `does_not_contain_addr` (HS.frameOf r, HS.as_addr r)))
+let unused_in_does_not_contain_addr = MG.unused_in_does_not_contain_addr
+
+val addr_unused_in_does_not_contain_addr
+  (h: HS.mem)
+  (ra: HS.rid * nat)
+: Lemma
+  (requires (HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (Map.sel (HS.get_hmap h) (fst ra))))
+  (ensures (h `does_not_contain_addr` ra))
+let addr_unused_in_does_not_contain_addr = MG.addr_unused_in_does_not_contain_addr
+
+val free_does_not_contain_addr
+  (#a: Type0)
+  (#rel: Preorder.preorder a)
+  (r: HS.mreference a rel)
+  (m: HS.mem)
+  (x: HS.rid * nat)
+: Lemma
+  (requires (
+    HS.is_mm r /\
+    m `HS.contains` r /\
+    fst x == HS.frameOf r /\
+    snd x == HS.as_addr r
+  ))
+  (ensures (
+    HS.free r m `does_not_contain_addr` x
+  ))
+  [SMTPat (HS.free r m `does_not_contain_addr` x)]
+let free_does_not_contain_addr = MG.free_does_not_contain_addr
+
+val does_not_contain_addr_elim
+  (#a: Type0)
+  (#rel: Preorder.preorder a)
+  (r: HS.mreference a rel)
+  (m: HS.mem)
+  (x: HS.rid * nat)
+: Lemma
+  (requires (
+    m `does_not_contain_addr` x /\
+    HS.frameOf r == fst x /\
+    HS.as_addr r == snd x
+  ))
+  (ensures (~ (m `HS.contains` r)))
+let does_not_contain_addr_elim = MG.does_not_contain_addr_elim
+
+(** END TODO *)
+
+/// Addresses that have not been allocated yet can be removed from
+/// modifies clauses.
+
+val modifies_only_live_addresses
+  (r: HS.rid)
+  (a: Set.set nat)
+  (l: loc)
+  (h h' : HS.mem)
+: Lemma
+  (requires (
+    modifies (loc_union (loc_addresses false r a) l) h h' /\
+    (forall x . Set.mem x a ==> h `does_not_contain_addr` (r, x))
+  ))
+  (ensures (modifies l h h'))
+let modifies_only_live_addresses = MG.modifies_only_live_addresses
+
+
+(* Generic way to ensure that a buffer just allocated is disjoint from
+   any other object, however the latter's liveness is defined. *)
+
+val loc_not_unused_in (h: HS.mem) : GTot loc
+let loc_not_unused_in = MG.loc_not_unused_in _
+
+val loc_unused_in (h: HS.mem) : GTot loc
+let loc_unused_in = MG.loc_unused_in _
+
+val loc_unused_in_not_unused_in_disjoint (h: HS.mem) : Lemma
+  (loc_disjoint (loc_unused_in h) (loc_not_unused_in h))
+let loc_unused_in_not_unused_in_disjoint =
+  MG.loc_unused_in_not_unused_in_disjoint cls
+
+val not_live_region_loc_not_unused_in_disjoint
+  (h0: HS.mem)
+  (r: HS.rid)
+: Lemma
+  (requires (~ (HS.live_region h0 r)))
+  (ensures (loc_disjoint (loc_region_only false r) (loc_not_unused_in h0)))
+let not_live_region_loc_not_unused_in_disjoint = MG.not_live_region_loc_not_unused_in_disjoint cls
+
+let fresh_frame_loc_not_unused_in_disjoint
+  (h0 h1: HS.mem)
+: Lemma
+  (requires (HS.fresh_frame h0 h1))
+  (ensures (loc_disjoint (loc_region_only false (HS.get_tip h1)) (loc_not_unused_in h0)))
+  [SMTPat (HS.fresh_frame h0 h1)]
+= not_live_region_loc_not_unused_in_disjoint h0 (HS.get_tip h1)
+
+val live_loc_not_unused_in (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h:HS.mem)
+  :Lemma (requires (live h b))
+         (ensures  (loc_not_unused_in h `loc_includes` loc_addr_of_buffer b))
+         [SMTPat (live h b)]
+let live_loc_not_unused_in #_ #_ #_ b h =
+  unused_in_equiv b h;
+  Classical.move_requires (MG.does_not_contain_addr_addr_unused_in h) (frameOf b, as_addr b);
+  MG.loc_addresses_not_unused_in cls (frameOf b) (Set.singleton (as_addr b)) h;
+  ()
+
+val unused_in_loc_unused_in (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h:HS.mem)
+  :Lemma (requires (unused_in b h))
+         (ensures  (loc_unused_in h `loc_includes` loc_addr_of_buffer b))
+         [SMTPat (unused_in b h)]
+let unused_in_loc_unused_in #_ #_ #_ b h =
+  unused_in_equiv b h;
+  Classical.move_requires (MG.addr_unused_in_does_not_contain_addr h) (frameOf b, as_addr b);
+  MG.loc_addresses_unused_in cls (frameOf b) (Set.singleton (as_addr b)) h;
+  ()
+
+val modifies_address_liveness_insensitive_unused_in
+  (h h' : HS.mem)
+: Lemma
+  (requires (modifies (address_liveness_insensitive_locs) h h'))
+  (ensures (loc_not_unused_in h' `loc_includes` loc_not_unused_in h /\ loc_unused_in h `loc_includes` loc_unused_in h'))
+let modifies_address_liveness_insensitive_unused_in =
+  MG.modifies_address_liveness_insensitive_unused_in cls
+
+/// Addresses that have not been allocated yet can be removed from
+/// modifies clauses.
+
+val modifies_only_not_unused_in
+  (l: loc)
+  (h h' : HS.mem)
+: Lemma
+  (requires (modifies (loc_union (loc_unused_in h) l) h h'))
+  (ensures (modifies l h h'))
+let modifies_only_not_unused_in = MG.modifies_only_not_unused_in
+
+val mreference_live_loc_not_unused_in
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (h: HS.mem)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (h `HS.contains` r))
+  (ensures (loc_not_unused_in h `loc_includes` loc_freed_mreference r /\ loc_not_unused_in h `loc_includes` loc_mreference r))
+  [SMTPat (HS.contains h r)]
+let mreference_live_loc_not_unused_in =
+  MG.mreference_live_loc_not_unused_in cls
+
+val mreference_unused_in_loc_unused_in
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (h: HS.mem)
+  (r: HS.mreference t pre)
+: Lemma
+  (requires (r `HS.unused_in` h))
+  (ensures (loc_unused_in h `loc_includes` loc_freed_mreference r /\ loc_unused_in h `loc_includes` loc_mreference r))
+  [SMTPat (HS.unused_in r h)]
+let mreference_unused_in_loc_unused_in =
+  MG.mreference_unused_in_loc_unused_in cls
+
+
+let unused_in_not_unused_in_disjoint_2
+  (l1 l2 l1' l2': loc)
+  (h: HS.mem)
+: Lemma
+  (requires (loc_unused_in h `loc_includes` l1 /\ loc_not_unused_in h `loc_includes` l2 /\ l1 `loc_includes` l1' /\ l2 `loc_includes` l2' ))
+  (ensures (loc_disjoint l1'  l2' ))
+  [SMTPat (loc_disjoint l1' l2'); SMTPat (loc_unused_in h `loc_includes` l1); SMTPat (loc_not_unused_in h `loc_includes` l2)]
+= loc_includes_trans (loc_unused_in h) l1 l1' ;
+  loc_includes_trans (loc_not_unused_in h) l2 l2'  ;
+  loc_unused_in_not_unused_in_disjoint h ;
+  loc_disjoint_includes (loc_unused_in h) (loc_not_unused_in h) l1' l2' 
+
+
+(* Duplicate the modifies clause to cope with cases that must not be used with transitivity *)
+
+val modifies_inert
+  (s: loc)
+  (h1 h2: HS.mem)
+: GTot Type0
+let modifies_inert = modifies
+
+val modifies_inert_intro
+  (s: loc)
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (modifies s h1 h2))
+  (ensures (modifies_inert s h1 h2))
+  [SMTPat (modifies s h1 h2)]
+let modifies_inert_intro s h1 h2 = ()
+
+val modifies_inert_live_region
+  (s: loc)
+  (h1 h2: HS.mem)
+  (r: HS.rid)
+: Lemma
+  (requires (modifies_inert s h1 h2 /\ loc_disjoint s (loc_region_only false r) /\ HS.live_region h1 r))
+  (ensures (HS.live_region h2 r))
+  [SMTPatOr [
+    [SMTPat (modifies_inert s h1 h2); SMTPat (HS.live_region h1 r)];
+    [SMTPat (modifies_inert s h1 h2); SMTPat (HS.live_region h2 r)];
+  ]]
+let modifies_inert_live_region = modifies_live_region
+
+val modifies_inert_mreference_elim
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (b: HS.mreference t pre)
+  (p: loc)
+  (h h': HS.mem)
+: Lemma
+  (requires (
+    loc_disjoint (loc_mreference b) p /\
+    HS.contains h b /\
+    modifies_inert p h h'
+  ))
+  (ensures (
+    HS.contains h' b /\
+    HS.sel h b == HS.sel h' b
+  ))
+  [SMTPatOr [
+    [ SMTPat (modifies_inert p h h'); SMTPat (HS.sel h b) ] ;
+    [ SMTPat (modifies_inert p h h'); SMTPat (HS.contains h b) ];
+    [ SMTPat (modifies_inert p h h'); SMTPat (HS.sel h' b) ] ;
+    [ SMTPat (modifies_inert p h h'); SMTPat (HS.contains h' b) ]
+  ] ]
+let modifies_inert_mreference_elim = modifies_mreference_elim
+
+val modifies_inert_buffer_elim (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel)
+  (p:loc)
+  (h h':HS.mem)
+  :Lemma (requires (loc_disjoint (loc_buffer b) p /\
+                    live h b /\
+                    modifies_inert p h h'))
+         (ensures  (live h' b /\ (as_seq h b == as_seq h' b)))
+         [SMTPatOr [
+             [ SMTPat (modifies_inert p h h'); SMTPat (as_seq h b) ] ;
+             [ SMTPat (modifies_inert p h h'); SMTPat (live h b) ];
+             [ SMTPat (modifies_inert p h h'); SMTPat (as_seq h' b) ] ;
+             [ SMTPat (modifies_inert p h h'); SMTPat (live h' b) ]
+         ] ]
+let modifies_inert_buffer_elim = modifies_buffer_elim
+
+val modifies_inert_liveness_insensitive_mreference_weak
+  (l : loc)
+  (h h' : HS.mem)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (x: HS.mreference t pre)
+: Lemma
+  (requires (modifies_inert l h h' /\ address_liveness_insensitive_locs `loc_includes` l /\ h `HS.contains` x))
+  (ensures (h' `HS.contains` x))
+  [SMTPatOr [
+    [SMTPat (h `HS.contains` x); SMTPat (modifies_inert l h h');];
+    [SMTPat (h' `HS.contains` x); SMTPat (modifies_inert l h h');];
+  ]]
+let modifies_inert_liveness_insensitive_mreference_weak = modifies_liveness_insensitive_mreference_weak
+
+val modifies_inert_liveness_insensitive_buffer_weak
+  (l:loc)
+  (h h':HS.mem)
+  (#a:Type0) (#rrel #rel:srel a)
+  (x:mbuffer a rrel rel)
+  :Lemma (requires (modifies_inert l h h' /\ address_liveness_insensitive_locs `loc_includes` l /\ live h x))
+         (ensures (live h' x))
+         [SMTPatOr [
+             [SMTPat (live h x); SMTPat (modifies_inert l h h');];
+             [SMTPat (live h' x); SMTPat (modifies_inert l h h');];
+         ]]
+let modifies_inert_liveness_insensitive_buffer_weak = modifies_liveness_insensitive_buffer_weak
+
+val modifies_inert_liveness_insensitive_region_weak
+  (l2 : loc)
+  (h h' : HS.mem)
+  (x: HS.rid)
+: Lemma
+  (requires (modifies_inert l2 h h' /\ region_liveness_insensitive_locs `loc_includes` l2 /\ HS.live_region h x))
+  (ensures (HS.live_region h' x))
+  [SMTPatOr [
+    [SMTPat (modifies_inert l2 h h'); SMTPat (HS.live_region h x)];
+    [SMTPat (modifies_inert l2 h h'); SMTPat (HS.live_region h' x)];
+  ]]
+let modifies_inert_liveness_insensitive_region_weak = modifies_liveness_insensitive_region_weak
+
+val modifies_inert_liveness_insensitive_region_mreference_weak
+  (l2 : loc)
+  (h h' : HS.mem)
+  (#t: Type)
+  (#pre: Preorder.preorder t)
+  (x: HS.mreference t pre)
+: Lemma
+  (requires (modifies_inert l2 h h' /\ region_liveness_insensitive_locs `loc_includes` l2 /\ HS.live_region h (HS.frameOf x)))
+  (ensures (HS.live_region h' (HS.frameOf x)))
+  [SMTPatOr [
+    [SMTPat (modifies_inert l2 h h'); SMTPat (HS.live_region h (HS.frameOf x))];
+    [SMTPat (modifies_inert l2 h h'); SMTPat (HS.live_region h' (HS.frameOf x))];
+  ]]
+let modifies_inert_liveness_insensitive_region_mreference_weak = modifies_liveness_insensitive_region_mreference_weak
+
+val modifies_inert_liveness_insensitive_region_buffer_weak
+  (l2:loc)
+  (h h':HS.mem)
+  (#a:Type0) (#rrel #rel:srel a)
+  (x:mbuffer a rrel rel)
+  :Lemma (requires (modifies_inert l2 h h' /\ region_liveness_insensitive_locs `loc_includes` l2 /\ HS.live_region h (frameOf x)))
+         (ensures  (HS.live_region h' (frameOf x)))
+         [SMTPatOr [
+             [SMTPat (modifies_inert l2 h h'); SMTPat (HS.live_region h (frameOf x))];
+             [SMTPat (modifies_inert l2 h h'); SMTPat (HS.live_region h' (frameOf x))];
+         ]]
+let modifies_inert_liveness_insensitive_region_buffer_weak = modifies_liveness_insensitive_region_buffer_weak
+
+val fresh_frame_modifies_inert
+  (h0 h1: HS.mem)
+: Lemma
+  (requires (HS.fresh_frame h0 h1))
+  (ensures (modifies_inert loc_none h0 h1))
+  [SMTPat (HS.fresh_frame h0 h1)]
+let fresh_frame_modifies_inert = fresh_frame_modifies
+
+val popped_modifies_inert
+  (h0 h1: HS.mem)
+: Lemma
+  (requires (HS.popped h0 h1))
+  (ensures (modifies_inert (loc_region_only false (HS.get_tip h0)) h0 h1))
+  [SMTPat (HS.popped h0 h1)]
+let popped_modifies_inert = popped_modifies
+
+val modifies_inert_loc_unused_in
+  (l: loc)
+  (h1 h2: HS.mem)
+  (l' : loc)
+: Lemma
+  (requires (
+    modifies_inert l h1 h2 /\
+    address_liveness_insensitive_locs `loc_includes` l /\
+    loc_unused_in h2 `loc_includes` l'
+  ))
+  (ensures (loc_unused_in h1 `loc_includes` l'))
+  [SMTPat (modifies_inert l h1 h2); SMTPat (loc_unused_in h2 `loc_includes` l')]
+let modifies_inert_loc_unused_in l h1 h2 l' =
+  modifies_loc_includes address_liveness_insensitive_locs h1 h2 l;
+  modifies_address_liveness_insensitive_unused_in h1 h2;
+  loc_includes_trans (loc_unused_in h1) (loc_unused_in h2) l'
+
+/// Legacy shorthands for disjointness and inclusion of buffers
+///
+let disjoint (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
+  (b1:mbuffer a1 rrel1 rel1) (b2:mbuffer a2 rrel2 rel2) :GTot Type0 =
+  loc_disjoint (loc_buffer b1) (loc_buffer b2)
+
+let includes (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
+  (b1:mbuffer a1 rrel1 rel1) (b2:mbuffer a2 rrel2 rel2) :GTot Type0 =
+  loc_includes (loc_buffer b1) (loc_buffer b2) /\
+  (g_is_null b1 <==> g_is_null b2)
+
+val disjoint_neq (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
+  (b1:mbuffer a1 rrel1 rel1) (b2:mbuffer a2 rrel2 rel2)
+  :Lemma (requires (disjoint b1 b2 /\ U32.v (len b1) > 0))
+         (ensures (~(b1 === b2)))
+let disjoint_neq #_ #_ #_ #_ #_ #_ b1 b2 =
+  if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2
+  then
+    MG.loc_disjoint_aloc_elim #_ #cls #(frameOf b1) #(as_addr b1) #(frameOf b2) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
+  else ()
+
+/// The liveness of a sub-buffer is exactly equivalent to the liveness
+/// of its enclosing buffer.
+
+val includes_live (#a:Type0) (#rrel #rel1 #rel2:srel a)
+  (h:HS.mem) (larger:mbuffer a rrel rel1) (smaller:mbuffer a rrel rel2)
+  :Lemma (requires (larger `includes` smaller))
+         (ensures  (live h larger <==> live h smaller))
+         [SMTPatOr [
+             [SMTPat (includes larger smaller); SMTPat (live h larger)];
+             [SMTPat (includes larger smaller); SMTPat (live h smaller)];
+         ]]
+let includes_live #a #rrel #rel1 #rel2 h larger smaller =
+  if Null? larger || Null? smaller
+  then ()
+  else
+    MG.loc_includes_aloc_elim #_ #cls #(frameOf larger) #(frameOf smaller) #(as_addr larger) #(as_addr smaller) (ubuffer_of_buffer larger) (ubuffer_of_buffer smaller)
+
+val includes_frameOf_as_addr (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
+  (larger:mbuffer a1 rrel1 rel1) (smaller:mbuffer a2 rrel2 rel2)
+  :Lemma (requires (larger `includes` smaller))
+         (ensures (g_is_null larger == g_is_null smaller /\ frameOf larger == frameOf smaller /\ as_addr larger == as_addr smaller))
+         [SMTPat (larger `includes` smaller)]
+let includes_frameOf_as_addr #_ #_ #_ #_ #_ #_ larger smaller =
+  if Null? larger || Null? smaller
+  then ()
+  else
+    MG.loc_includes_aloc_elim #_ #cls #(frameOf larger) #(frameOf smaller) #(as_addr larger) #(as_addr smaller) (ubuffer_of_buffer larger) (ubuffer_of_buffer smaller)
+
+
+/// 
+/// Useful shorthands for pointers, or maybe-null pointers
+
+inline_for_extraction
+type mpointer (a:Type0) (rrel:srel a) (rel:srel a)  =
+  b:mbuffer a rrel rel{length b == 1}
+
+inline_for_extraction
+type mpointer_or_null (a:Type0) (rrel:srel a) (rel:srel a) =
+  b:mbuffer a rrel rel{if g_is_null b then True else length b == 1}
+
+unfold
+let deref (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (x:mpointer a rrel rel) =
+  get h x 0
+
+/// Two pointers having different contents are disjoint. This is valid
+/// only for pointers, i.e. buffers of size 1.
+
+val pointer_distinct_sel_disjoint
+  (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
+  (b1:mpointer a rrel1 rel1)
+  (b2:mpointer a rrel2 rel2)
+  (h:HS.mem)
+  :Lemma (requires (live h b1 /\ live h b2 /\ get h b1 0 =!= get h b2 0))
+         (ensures  (disjoint b1 b2))
+let pointer_distinct_sel_disjoint #a #_ #_ #_ #_ b1 b2 h =
+  if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2
+  then begin
+    HS.mreference_distinct_sel_disjoint h (Buffer?.content b1) (Buffer?.content b2);
+    loc_disjoint_buffer b1 b2
+  end
+  else
+    loc_disjoint_buffer b1 b2
+	 
