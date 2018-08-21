@@ -1162,7 +1162,7 @@ let maybe_instantiate (env:Env.env) e t =
               let rec aux subst inst_n bs =
                   match inst_n, bs with
                   | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
-                  | _, (x, Some (Implicit dot))::rest ->
+                  | _, (x, Some (Implicit _))::rest ->
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
                       if Env.debug env Options.High then
@@ -1170,7 +1170,7 @@ let maybe_instantiate (env:Env.env) e t =
                                 (Print.term_to_string v);
                       let subst = NT(x, v)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some (Implicit dot))::args, bs, subst, Env.conj_guard g g'
+                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
 
                   | _, (x, Some (Meta tau))::rest ->
                       let t = SS.subst subst x.sort in

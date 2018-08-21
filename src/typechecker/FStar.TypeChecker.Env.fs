@@ -166,6 +166,7 @@ type env = {
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
   normalized_eff_names:BU.smap<lident>;              (* cache for normalized effect names, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
+  fv_delta_depths:BU.smap<delta_depth>;              (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth_hook          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
   splice         :env -> term -> list<sigelt>;       (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
@@ -281,6 +282,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     use_bv_sorts=false;
     qtbl_name_and_index=BU.smap_create 10, None;  //10?
     normalized_eff_names=BU.smap_create 20;  //20?
+    fv_delta_depths = BU.smap_create 50;
     proof_ns = Options.using_facts_from ();
     synth_hook = (fun e g tau -> failwith "no synthesizer available");
     splice = (fun e tau -> failwith "no splicer available");
@@ -324,7 +326,8 @@ let push_stack env =
               gamma_cache=BU.smap_copy (gamma_cache env);
               identifier_info=BU.mk_ref !env.identifier_info;
               qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd;
-              normalized_eff_names=BU.smap_copy env.normalized_eff_names}
+              normalized_eff_names=BU.smap_copy env.normalized_eff_names;
+              fv_delta_depths=BU.smap_copy env.fv_delta_depths}
 
 let pop_stack () =
     match !stack with
@@ -755,6 +758,53 @@ let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
 
 let lookup_definition delta_levels env lid =
     lookup_definition_qninfo delta_levels lid <| lookup_qname env lid
+
+let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
+    let lid = fv.fv_name.v in
+    if lid.nsstr = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
+    else match qn with
+    | None
+    | Some (Inl _, _) -> Some (Delta_constant_at_level 0)
+    | Some (Inr(se, _), _) ->
+      match se.sigel with
+      | Sig_inductive_typ _
+      | Sig_bundle _
+      | Sig_datacon _ -> Some (Delta_constant_at_level 0)
+      | Sig_declare_typ _ -> Some (FStar.Syntax.DsEnv.delta_depth_of_declaration lid se.sigquals)
+      | Sig_let ((_,lbs), _) ->
+          BU.find_map lbs (fun lb ->
+              let fv = right lb.lbname in
+              if fv_eq_lid fv lid
+              then Some fv.fv_delta
+              else None)
+      | Sig_splice  _ -> Some (Delta_constant_at_level 1) //TODO: see try_lookup_name in dsenv: both are wrong
+      | Sig_main   _
+      | Sig_assume _
+      | Sig_new_effect _
+      | Sig_new_effect_for_free _
+      | Sig_sub_effect _
+      | Sig_effect_abbrev _ (* None? *)
+      | Sig_pragma  _ -> None
+
+let delta_depth_of_fv env fv =
+  let lid = fv.fv_name.v in
+  if lid.nsstr = "Prims" then fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
+  else
+    //try cache
+    lid.str |> BU.smap_try_find env.fv_delta_depths |> (fun d_opt ->
+      if d_opt |> is_some then d_opt |> must
+      else
+        match delta_depth_of_qninfo fv (lookup_qname env fv.fv_name.v) with
+        | None -> failwith (BU.format1 "Delta depth not found for %s" (FStar.Syntax.Print.fv_to_string fv))
+        | Some d ->
+          if d<>fv.fv_delta
+          && Options.debug_any()
+          then BU.print3 "WARNING WARNING WARNING fv=%s, delta_depth=%s, env.delta_depth=%s\n"
+                         (Print.fv_to_string fv)
+                         (Print.delta_depth_to_string fv.fv_delta)
+                         (Print.delta_depth_to_string d);
+          BU.smap_add env.fv_delta_depths lid.str d;
+          d)
 
 let quals_of_qninfo (qninfo : qninfo) : option<list<qualifier>> =
   match qninfo with
