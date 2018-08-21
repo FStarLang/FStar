@@ -161,7 +161,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
           *     the following code unifies them with the annotated universes
           *)
          let g_uvs = match (SS.compress head).n with
-            | Tm_uinst ( { n = Tm_fvar fv }, tuvs) ->  //AR: in the second phase of 2-phases, this can be a Tm_uninst too
+            | Tm_uinst ( { n = Tm_fvar fv }, tuvs)  when S.fv_eq_lid fv tc_lid ->  //AR: in the second phase of 2-phases, this can be a Tm_uninst too
               if List.length _uvs = List.length tuvs then
                 List.fold_left2 (fun g u1 u2 ->
                   //unify the two
