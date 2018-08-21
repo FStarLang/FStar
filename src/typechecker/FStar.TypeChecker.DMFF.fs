@@ -440,7 +440,7 @@ let gen_wps_for_free
   let stronger = register env (mk_lid "stronger") stronger in
   let stronger = mk_generic_app stronger in
 
-  let wp_ite =
+  let ite_wp =
     let wp = S.gen_bv "wp" None wp_a in
     let wp_args, post = BU.prefix gamma in
     // forall k: post a
@@ -466,8 +466,8 @@ let gen_wps_for_free
     ) ret_gtot_type in
     U.abs (binders @ S.binders_of_list [ a; wp ]) body ret_gtot_type
   in
-  let wp_ite = register env (mk_lid "wp_ite") wp_ite in
-  let wp_ite = mk_generic_app wp_ite in
+  let ite_wp = register env (mk_lid "ite_wp") ite_wp in
+  let ite_wp = mk_generic_app ite_wp in
 
   let null_wp =
     let wp = S.gen_bv "wp" None wp_a in
@@ -504,7 +504,7 @@ let gen_wps_for_free
     close_wp     = ([], c wp_close);
     stronger     = ([], c stronger);
     trivial      = ([], c wp_trivial);
-    ite_wp       = ([], c wp_ite);
+    ite_wp       = ([], c ite_wp);
     null_wp      = ([], c null_wp)
   }
 
