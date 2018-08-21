@@ -917,23 +917,49 @@ let rec head_matches env t1 t2 : match_result =
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
 (* Does t1 head-match t2, after some delta steps? *)
-let head_matches_delta env t1 t2 : (match_result * option<(typ*typ)>) =
+let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let maybe_inline t =
         let head = U.head_of t in
         if Env.debug env <| Options.Other "RelDelta" then
             BU.print2 "Head of %s is %s\n" (Print.term_to_string t) (Print.term_to_string head);
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-          begin match Env.lookup_definition [Env.Unfold delta_constant; Env.Eager_unfolding_only] env fv.fv_name.v with
+          begin
+          match Env.lookup_definition
+                    [Env.Unfold delta_constant;
+                     Env.Eager_unfolding_only]
+                    env
+                    fv.fv_name.v
+          with
           | None ->
             if Env.debug env <| Options.Other "RelDelta" then
                 BU.print1 "No definition found for %s\n" (Print.term_to_string head);
             None
           | Some _ ->
-            let t' = N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t in
-            if Env.debug env <| Options.Other "RelDelta" then
-                BU.print2 "Inlined %s to %s\n" (Print.term_to_string t) (Print.term_to_string t');
-            Some t'
+            let basic_steps =
+                [Env.UnfoldUntil delta_constant;
+                 Env.Weak;
+                 Env.HNF;
+                 Env.Primops;
+                 Env.Beta;
+                 Env.Eager_unfolding;
+                 Env.Iota]
+            in
+            let steps =
+              if wl.smt_ok then basic_steps
+              else Env.Exclude Env.Zeta::basic_steps
+                   //NS: added this to prevent unifier looping
+                   //see bug606.fst
+                   //should we always disable Zeta here?
+            in
+            let t' = N.normalize steps env t in
+            if U.eq_tm t t' = U.Equal //if we didn't inline anything
+            then None
+            else let _ = if Env.debug env <| Options.Other "RelDelta"
+                         then BU.print2 "Inlined %s to %s\n"
+                                        (Print.term_to_string t)
+                                        (Print.term_to_string t') in
+                 Some t'
           end
         | _ -> None
     in
@@ -1467,7 +1493,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
         let pairwise t1 t2 wl =
             if Env.debug env <| Options.Other "Rel"
             then BU.print2 "[meet/join]: pairwise: %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
-            let mr, ts = head_matches_delta env t1 t2 in
+            let mr, ts = head_matches_delta env wl t1 t2 in
             match mr with
             | HeadMatch true
             | MisMatch _ ->
@@ -2146,8 +2172,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                    let subprobs, wl =
                         List.fold_right
                             (fun ((a1, _), (a2, _)) (probs, wl) ->
-                               let prob', wl = mk_problem wl [] // (p_scope orig)
-    orig a1 EQ a2 None "index" in
+                               let prob', wl = mk_problem wl [] orig a1 EQ a2 None "index" in
                                (TProb prob')::probs, wl)
                              argp
                              ([], wl)
@@ -2311,7 +2336,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             if pat_discriminates b
                             then
                               let (_, _, t') = SS.open_branch b in
-                              match head_matches_delta env s t' with
+                              match head_matches_delta env wl s t' with
                               | FullMatch, _
                               | HeadMatch _, _ ->
                                 true
@@ -2360,7 +2385,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                         (Print.tag_of_term t2)
                         (Print.term_to_string t1)
                         (Print.term_to_string t2);
-        let m, o = head_matches_delta env t1 t2 in
+        let m, o = head_matches_delta env wl t1 t2 in
         match m, o  with
         | (MisMatch _, _) -> //heads definitely do not match
             let rec may_relate head =
@@ -2554,7 +2579,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          * necessarily always correct.
          *)
         let x1, x2 =
-            match head_matches_delta env x1.sort x2.sort with
+            match head_matches_delta env wl x1.sort x2.sort with
             (* We allow (HeadMatch true) since we're gonna unify them again anyway via base_prob *)
             | FullMatch, Some (t1, t2)
             | HeadMatch _, Some (t1, t2) ->
