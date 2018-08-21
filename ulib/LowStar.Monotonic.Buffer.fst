@@ -23,10 +23,19 @@ module HST = FStar.HyperStack.ST
 (*
  * Replacing subsequence in s at (offset, offset + len) by sub
  *)
-private let replace_subseq (#a:Type0)
+let replace_subseq (#a:Type0)
   (s:Seq.seq a) (offset:nat) (len:nat{offset + len <= Seq.length s}) (sub:Seq.lseq a len)
   :Tot (Seq.seq a)
   = Seq.append (Seq.slice s 0 offset) (Seq.append sub (Seq.slice s (offset + len) (Seq.length s)))
+
+let lemma_replace_subseq_elim (#a:Type0)
+  (s:Seq.seq a) (offset:nat) (len:nat{offset + len <= Seq.length s}) (sub:Seq.lseq a len)
+  :Lemma (let s1 = replace_subseq s offset len sub in
+          Seq.length s1 == Seq.length s /\
+          Seq.equal (Seq.slice s1 0 offset) (Seq.slice s 0 offset) /\
+	  Seq.equal (Seq.slice s1 offset (offset + len)) sub /\
+	  Seq.equal (Seq.slice s1 (offset + len) (Seq.length s1)) (Seq.slice s (offset + len) (Seq.length s)))
+  = ()
 
 (*
  * Shorthand slice, that takes length as the second argument
@@ -2743,3 +2752,141 @@ let gcmalloc_of_list #a #rrel r init =
   in
   let b = Buffer len content 0ul len () in
   b
+
+/// Derived operations
+
+val blit (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
+  (src:mbuffer a rrel1 rel1)
+  (idx_src:U32.t)
+  (dst:mbuffer a rrel2 rel2)
+  (idx_dst:U32.t)
+  (len:U32.t)
+  :HST.Stack unit (requires (fun h -> live h src /\ live h dst /\ disjoint src dst /\
+                                    U32.v idx_src + U32.v len <= length src /\
+                                    U32.v idx_dst + U32.v len <= length dst /\
+				    rel2 (as_seq h dst)
+				         (replace_subseq (as_seq h dst) (U32.v idx_dst) (U32.v len)
+					                 (mslice (as_seq h src) (U32.v idx_src) (U32.v len)))))
+                  (ensures (fun h _ h' -> modifies (loc_buffer dst) h h' /\
+                                        live h' dst /\
+                                        Seq.slice (as_seq h' dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len) ==
+                                        Seq.slice (as_seq h src) (U32.v idx_src) (U32.v idx_src + U32.v len) /\
+                                        Seq.slice (as_seq h' dst) 0 (U32.v idx_dst) ==
+                                        Seq.slice (as_seq h dst) 0 (U32.v idx_dst) /\
+                                        Seq.slice (as_seq h' dst) (U32.v idx_dst + U32.v len) (length dst) ==
+                                        Seq.slice (as_seq h dst) (U32.v idx_dst + U32.v len) (length dst)))
+
+#push-options "--z3rlimit 10 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
+let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
+  let open HST in
+  if len = 0ul then ()
+  else
+    let h = get () in
+    let Buffer _ content1 idx1 length1 () = src in
+    let Buffer _ content2 idx2 length2 () = dst in
+    let s_full1 = !content1 in
+    let s_full2 = !content2 in
+    let s1 = mslice s_full1 (U32.v idx1) (U32.v length1) in
+    let s2 = mslice s_full2 (U32.v idx2) (U32.v length2) in
+    let s_sub_src = mslice s1 (U32.v idx_src) (U32.v len) in
+    let s2' = replace_subseq s2 (U32.v idx_dst) (U32.v len) s_sub_src in
+    let s_full2' = replace_subseq s_full2 (U32.v idx2) (U32.v length2) s2' in
+    content2 := s_full2';
+    g_upd_seq_as_seq dst s2' h;
+    lemma_replace_subseq_elim s2 (U32.v idx_dst) (U32.v len) s_sub_src
+#pop-options
+
+module L = FStar.List.Tot
+
+unfold
+let assign_list_t (#a:Type0) (#rrel #rel:srel a) (l:list a) =
+  (b:mbuffer a rrel rel) ->
+  HST.Stack unit (requires (fun h0 -> live h0 b /\
+                                    length b = L.length l /\
+				    rel (as_seq h0 b) (Seq.seq_of_list l)))
+                 (ensures (fun h0 _ h1 -> live h1 b /\
+                                        modifies (loc_buffer b) h0 h1 /\
+                                        as_seq h1 b == Seq.seq_of_list l))
+
+let assign_list (#a:Type0) (#rrel #rel:srel a) (l:list a) :assign_list_t #a #rrel #rel l
+  = fun b ->
+    let open HST in
+    if L.length l > 0 then
+      let h = get () in
+      let Buffer _ content id len () = b in
+      let s_full = !content in
+      let s_full = replace_subseq s_full (U32.v id) (U32.v len) (Seq.seq_of_list l) in
+      content := s_full;
+      g_upd_seq_as_seq b (Seq.seq_of_list l) h  //for modifies clause
+
+/// Type class instantiation for compositionality with other kinds of memory locations than regions, references or buffers (just in case).
+/// No usage pattern has been found yet.
+
+module MG = FStar.ModifiesGen
+
+val abuffer' (region: HS.rid) (addr: nat) : Tot Type0
+let abuffer' = ubuffer'
+
+inline_for_extraction
+let abuffer (region: HS.rid) (addr: nat) : Tot Type0 = G.erased (abuffer' region addr)
+
+let coerce (t2: Type) (#t1: Type) (x1: t1) : Pure t2 (requires (t1 == t2)) (ensures (fun y -> y == x1)) = x1
+
+val cloc_cls: MG.cls abuffer
+let cloc_cls =
+  assert_norm (MG.cls abuffer == MG.cls ubuffer);
+  coerce (MG.cls abuffer) cls
+
+val cloc_of_loc (l: loc) : Tot (MG.loc cloc_cls)
+let cloc_of_loc l =
+  assert_norm (MG.cls abuffer == MG.cls ubuffer);
+  coerce (MG.loc cloc_cls) l
+
+val loc_of_cloc (l: MG.loc cloc_cls) : Tot loc
+let loc_of_cloc l =
+  assert_norm (MG.cls abuffer == MG.cls ubuffer);
+  coerce loc l
+
+val loc_of_cloc_of_loc (l: loc) : Lemma
+  (loc_of_cloc (cloc_of_loc l) == l)
+  [SMTPat (loc_of_cloc (cloc_of_loc l))]
+let loc_of_cloc_of_loc l = ()
+
+val cloc_of_loc_of_cloc (l: MG.loc cloc_cls) : Lemma
+  (cloc_of_loc (loc_of_cloc l) == l)
+  [SMTPat (cloc_of_loc (loc_of_cloc l))]
+let cloc_of_loc_of_cloc l = ()
+
+val cloc_of_loc_none: unit -> Lemma (cloc_of_loc loc_none == MG.loc_none)
+let cloc_of_loc_none _ = ()
+
+val cloc_of_loc_union (l1 l2: loc) : Lemma
+  (cloc_of_loc (loc_union l1 l2) == MG.loc_union (cloc_of_loc l1) (cloc_of_loc l2))
+let cloc_of_loc_union _ _ = ()
+
+val cloc_of_loc_addresses
+  (preserve_liveness: bool)
+  (r: HS.rid)
+  (n: Set.set nat)
+: Lemma
+  (cloc_of_loc (loc_addresses preserve_liveness r n) == MG.loc_addresses preserve_liveness r n)
+let cloc_of_loc_addresses _ _ _ = ()
+
+val cloc_of_loc_regions
+  (preserve_liveness: bool)
+  (r: Set.set HS.rid)
+: Lemma
+  (cloc_of_loc (loc_regions preserve_liveness r) == MG.loc_regions preserve_liveness r)
+let cloc_of_loc_regions _ _ = ()
+
+val loc_includes_to_cloc (l1 l2: loc) : Lemma
+  (loc_includes l1 l2 <==> MG.loc_includes (cloc_of_loc l1) (cloc_of_loc l2))
+let loc_includes_to_cloc l1 l2 = ()
+
+val loc_disjoint_to_cloc (l1 l2: loc) : Lemma
+  (loc_disjoint l1 l2 <==> MG.loc_disjoint (cloc_of_loc l1) (cloc_of_loc l2))
+let loc_disjoint_to_cloc l1 l2 = ()
+
+val modifies_to_cloc (l: loc) (h1 h2: HS.mem) : Lemma
+  (modifies l h1 h2 <==> MG.modifies (cloc_of_loc l) h1 h2)
+let modifies_to_cloc l h1 h2 = ()
