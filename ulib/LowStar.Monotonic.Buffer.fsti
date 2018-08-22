@@ -752,8 +752,8 @@ private let rec loc_pairwise_disjoint_aux (l:list loc) :Type0 =
  *)
 [@"opaque_to_smt"]
 unfold let loc_pairwise_disjoint (l:list loc) :Type0 =
-  norm [iota; zeta; delta; delta_only ["LowStar.Buffer.loc_disjoint_from_list";
-                                       "LowStar.Buffer.loc_pairwise_disjoint_aux"]] (loc_pairwise_disjoint_aux l)
+  norm [iota; zeta; delta; delta_only [`%loc_disjoint_from_list;
+                                       `%loc_pairwise_disjoint_aux]] (loc_pairwise_disjoint_aux l)
 
 val loc_disjoint_sym
   (s1 s2: loc)
