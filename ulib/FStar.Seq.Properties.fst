@@ -904,7 +904,6 @@ let lemma_seq_of_list_induction (#a:Type) (l:list a)
 	           match l with
 	           | []    -> Seq.equal s empty
 		   | hd::tl -> head s == hd /\ tail s == seq_of_list tl))
-	 [SMTPat (seq_of_list l)]
   = if List.Tot.length l > 0 then lemma_tl (List.Tot.hd l) (seq_of_list (List.Tot.tl l))
 
 let rec lemma_seq_of_list_index (#a:Type) (l:list a) (i:nat{i < List.Tot.length l})
@@ -923,7 +922,9 @@ let seq_of_list_tl
   (l: list a { List.Tot.length l > 0 } )
 : Lemma
   (requires True)
-  (ensures (seq_of_list (List.Tot.tl l) == tail (seq_of_list l))) = ()
+  (ensures (seq_of_list (List.Tot.tl l) == tail (seq_of_list l))) =
+  lemma_seq_of_list_induction l;
+  ()
 
 let rec mem_seq_of_list
   (#a: eqtype)
@@ -943,6 +944,87 @@ let rec mem_seq_of_list
     in
     mem_seq_of_list x q
 
+(** Dealing efficiently with `seq_of_list` by meta-evaluating conjunctions over
+an entire list. *)
+#set-options "--max_fuel 1"
+
+let rec explode_and (#a: Type)
+  (i: nat)
+  (s: seq a { i <= length s })
+  (l: list a { List.Tot.length l + i = length s }):
+  Tot Type
+  (decreases (List.Tot.length l))
+=
+  match l with
+  | [] -> True
+  | hd :: tl ->
+      index s i == hd /\ explode_and (i + 1) s tl
+
+unfold
+let pointwise_and s l =
+  norm [ iota; zeta; primops; delta_only [ `%(explode_and) ] ] (explode_and 0 s l)
+
+val intro_of_list': #a:Type ->
+  i:nat ->
+  s:seq a ->
+  l:list a ->
+  Lemma
+    (requires (
+      List.Tot.length l + i = length s /\
+      i <= length s /\
+      explode_and i s l))
+    (ensures (
+      equal (seq_of_list l) (slice s i (length s))))
+    (decreases (
+      List.Tot.length l))
+
+let rec intro_of_list' #a i s l =
+  match l with
+  | [] -> ()
+  | hd :: tl ->
+      intro_of_list' (i + 1) s tl
+
+let intro_of_list (#a: Type) (s: seq a) (l: list a):
+  Lemma
+    (requires (
+      List.Tot.length l = length s /\
+      pointwise_and s l))
+    (ensures (
+      s == seq_of_list l))
+=
+  intro_of_list' 0 s l
+
+val elim_of_list': #a:Type ->
+  i:nat ->
+  s:seq a ->
+  l:list a ->
+  Lemma
+    (requires (
+      List.Tot.length l + i = length s /\
+      i <= length s /\
+      slice s i (length s) == seq_of_list l))
+    (ensures (
+      explode_and i s l))
+    (decreases (
+      List.Tot.length l))
+
+let rec elim_of_list' #a i s l =
+  match l with
+  | [] -> ()
+  | hd :: tl ->
+      lemma_seq_of_list_induction l;
+      elim_of_list' (i + 1) s tl
+
+let elim_of_list (#a: Type) (l: list a):
+  Lemma
+    (ensures (
+      let s = seq_of_list l in
+      pointwise_and s l))
+=
+  elim_of_list' 0 (seq_of_list l) l
+
+#reset-options
+
 (****** sortWith ******)
 let sortWith (#a:eqtype) (f:a -> a -> Tot int) (s:seq a) :seq a
   = seq_of_list (List.Tot.Base.sortWith f (seq_to_list s))
@@ -953,13 +1035,17 @@ let rec lemma_seq_to_list_permutation (#a:eqtype) (s:seq a)
 
 let rec lemma_seq_of_list_permutation (#a:eqtype) (l:list a)
   :Lemma (forall x. List.Tot.Base.count x l == count x (seq_of_list l))
-  = match l with
+  =
+    lemma_seq_of_list_induction l;
+    match l with
     | []   -> ()
     | _::tl -> lemma_seq_of_list_permutation tl
 
 let rec lemma_seq_of_list_sorted (#a:Type) (f:a -> a -> Tot bool) (l:list a)
   :Lemma (requires (List.Tot.Properties.sorted f l)) (ensures  (sorted f (seq_of_list l)))
-  = if length (seq_of_list l) > 1 then lemma_seq_of_list_sorted f (List.Tot.Base.tl l)
+  =
+    lemma_seq_of_list_induction l;
+    if length (seq_of_list l) > 1 then lemma_seq_of_list_sorted f (List.Tot.Base.tl l)
 
 let lemma_seq_sortwith_correctness (#a:eqtype) (f:a -> a -> Tot int) (s:seq a)
   :Lemma (requires (total_order a (List.Tot.Base.bool_of_compare f)))

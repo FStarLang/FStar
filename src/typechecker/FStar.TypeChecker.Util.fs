@@ -32,6 +32,8 @@ open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
 open FStar.Syntax
+open FStar.Syntax
+open FStar.Syntax
 
 type lcomp_with_binder = option<bv> * lcomp
 
@@ -958,7 +960,36 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
         )
     | Some g, apply_guard ->
       match guard_form g with
-        | Trivial -> e, Util.set_result_typ_lc lc t, g
+        | Trivial ->
+          (*
+           * AR: when the guard is trivial, simply setting the result type to t might lose some precision
+           *     e.g. when input lc has return type x:int{phi} and we are weakening it to int
+           *     so we should capture the precision before setting the comp type to t (see e.g. #1500, #1470)
+           *)
+          let strengthen_trivial () =
+            let c = lcomp_comp lc in
+            let res_t = Util.comp_result c in
+            (*
+             * AR: if the computation is pure/ghost then return already should take care of it (also enabling it for pure/ghost bloats the wp a lot)
+             *)
+            if c |> Util.comp_effect_name |> norm_eff_name env |> Util.is_pure_or_ghost_effect ||  //if pure or ghost
+               Util.eq_tm t res_t = Util.Equal then begin  //or res_t = t
+               if Env.debug env <| Options.Extreme
+               then BU.print3 "weaken_result_type::strengthen_trivial: Not inserting the return since either the comp c:%s is pure/ghost or res_t:%s is same as t:%s\n"
+                              (Print.lid_to_string (Util.comp_effect_name c)) (Print.term_to_string res_t) (Print.term_to_string t);
+               Util.set_result_typ c t  //set the result type in c
+            end
+            else
+              let x = S.new_bv (Some res_t.pos) res_t in
+              let cret = return_value env (comp_univ_opt c) res_t (S.bv_to_name x) in
+              let lc = bind e.pos env (Some e) (U.lcomp_of_comp c) (Some x, Util.lcomp_of_comp cret) in
+              if Env.debug env <| Options.Extreme
+              then BU.print4 "weaken_result_type::strengthen_trivial: Inserting a return for e: %s, c: %s, t: %s, and then post return lc: %s\n"
+                             (Print.term_to_string e) (Print.comp_to_string c) (Print.term_to_string t) (Print.lcomp_to_string lc);
+              Util.set_result_typ (lcomp_comp lc) t
+          in
+          let lc = S.mk_lcomp lc.eff_name t lc.cflags strengthen_trivial in
+          e, lc, g
 
         | NonTrivial f ->
           let g = {g with guard_f=Trivial} in
@@ -1131,7 +1162,7 @@ let maybe_instantiate (env:Env.env) e t =
               let rec aux subst inst_n bs =
                   match inst_n, bs with
                   | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
-                  | _, (x, Some (Implicit dot))::rest ->
+                  | _, (x, Some (Implicit _))::rest ->
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
                       if Env.debug env Options.High then
@@ -1139,7 +1170,7 @@ let maybe_instantiate (env:Env.env) e t =
                                 (Print.term_to_string v);
                       let subst = NT(x, v)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some (Implicit dot))::args, bs, subst, Env.conj_guard g g'
+                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
 
                   | _, (x, Some (Meta tau))::rest ->
                       let t = SS.subst subst x.sort in

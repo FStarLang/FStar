@@ -5,6 +5,7 @@
 target=$1
 out_file=$2
 threads=$3
+branchname=$4
 
 function export_home() {
     if command -v cygpath >/dev/null 2>&1; then
@@ -40,6 +41,7 @@ function fetch_hacl() {
     local ref=$(if [ -f ../.hacl_version ]; then cat ../.hacl_version | tr -d '\r\n'; else echo origin/master; fi)
     echo Switching to HACL $ref
     git reset --hard $ref
+    git clean -fdx
     cd ..
     export_home HACL "$(pwd)/hacl-star"
     export_home EVERCRYPT "$(pwd)/hacl-star/providers"
@@ -73,6 +75,7 @@ function fetch_and_make_kremlin() {
 
     make -C kremlin -j $threads $localTarget ||
         (cd kremlin && git clean -fdx && make -j $threads $localTarget)
+    OTHERFLAGS='--admit_smt_queries true' make -C kremlin/kremlib -j $threads
     export PATH="$(pwd)/kremlin:$PATH"
 }
 
@@ -86,6 +89,7 @@ function fetch_mitls() {
     local ref=$(if [ -f ../.mitls_version ]; then cat ../.mitls_version | tr -d '\r\n'; else echo origin/master; fi)
     echo Switching to mitls-fstar $ref
     git reset --hard $ref
+    git clean -fdx
     cd ..
     export_home MITLS "$(pwd)/mitls-fstar"
 }
@@ -108,6 +112,10 @@ function refresh_hints() {
     local extra="$2"
     local msg="$3"
     local hints_dir="$4"
+
+    # Figure out the branch
+    CI_BRANCH=${branchname##refs/heads/}
+    echo "Current branch_name=$CI_BRANCH"
 
     # Add all the hints, even those not under version control
     find $hints_dir -iname '*.hints' -and -not -path '*/.*' -and -not -path '*/dependencies/*' | xargs git add
@@ -139,14 +147,14 @@ function build_fstar() {
     local localTarget=$1
     local timeout=960
 
-    result_file="result.txt"
+    result_file="../result.txt"
 
     # $status_file is the name of a file that contains true if and
     # only if the F* regression suite failed, false otherwise
-    status_file="status.txt"
+    status_file="../status.txt"
     echo false >$status_file
 
-    ORANGE_FILE="orange_file.txt"
+    ORANGE_FILE="../orange_file.txt"
     echo '' >$ORANGE_FILE
 
     if [[ -x /usr/bin/time ]]; then
@@ -227,10 +235,10 @@ function build_fstar() {
             } &
 
             {
-                OTHERFLAGS='--use_two_phase_tc false --warn_error -276 --use_hint_hashes' timeout $timeout make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
+                OTHERFLAGS='--warn_error -276 --use_hint_hashes' timeout $timeout make -C hacl-star/code/hash/ -j $threads Hacl.Impl.SHA2_256.fst-verify ||
                     {
-                        echo "Error - Hacl.Hash.SHA2_256.fst-verify (HACL*)"
-                        echo " - Hacl.Hash.SHA2_256.fst-verify (HACL*)" >>$ORANGE_FILE
+                        echo "Error - Hacl.Impl.SHA2_256.fst-verify (HACL*)"
+                        echo " - Hacl.Impl.SHA2_256.fst-verify (HACL*)" >>$ORANGE_FILE
                     }
             } &
 
@@ -306,4 +314,6 @@ export OCAMLRUNPARAM=b
 export OTHERFLAGS="--print_z3_statistics --use_hints --query_stats"
 export MAKEFLAGS="$MAKEFLAGS -Otarget"
 
+cd FStar
 build_fstar $target
+cd ..

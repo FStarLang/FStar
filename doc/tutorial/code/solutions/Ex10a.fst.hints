@@ -74,7 +74,7 @@
       1,
       [ "@query" ],
       0,
-      "88616066484634a559538aaa816b1bbb"
+      "7232d389c5103887ebbdb4b2c6284b56"
     ],
     [
       "Ex10a.revoke",
@@ -108,7 +108,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "008b5657c3140257d593d1afa84fc2bf"
+      "f537e67a00462052d910f0ca430336d3"
     ],
     [
       "Ex10a.safe_delete",
@@ -130,7 +130,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "9e8943e80686e3e0ab4c976aec2fae93"
+      "315bdc128d63cd78b9586f29baf3f544"
     ],
     [
       "Ex10a.test_acls",

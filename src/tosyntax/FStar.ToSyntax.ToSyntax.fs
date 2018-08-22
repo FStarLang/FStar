@@ -322,28 +322,31 @@ let rec destruct_app_pattern env is_top_level p = match p.pat with
   | _ ->
     failwith "Not an app pattern"
 
-let rec gather_pattern_bound_vars_maybe_top acc p =
+let rec gather_pattern_bound_vars_maybe_top fail_on_patconst acc p =
   let gather_pattern_bound_vars_from_list =
-      List.fold_left gather_pattern_bound_vars_maybe_top acc
+      List.fold_left (gather_pattern_bound_vars_maybe_top fail_on_patconst) acc
   in
   match p.pat with
   | PatWild _
-  | PatConst _
-  | PatVar (_, Some Implicit)
   | PatName _
   | PatTvar _
   | PatOp _ -> acc
+  | PatConst _ ->
+    if fail_on_patconst
+    then raise_error (Errors.Error_CannotRedefineConst, "Constants cannot be redefined") p.prange
+    else acc
+
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
   | PatVar (x, _) -> set_add x acc
   | PatList pats
   | PatTuple  (pats, _)
   | PatOr pats -> gather_pattern_bound_vars_from_list pats
   | PatRecord guarded_pats -> gather_pattern_bound_vars_from_list (List.map snd guarded_pats)
-  | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
+  | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top fail_on_patconst acc pat
 
-let gather_pattern_bound_vars =
+let gather_pattern_bound_vars (fail_on_patconst : bool) (p : pattern) : set<Ident.ident> =
   let acc = new_set (fun id1 id2 -> if id1.idText = id2.idText then 0 else 1) in
-  fun p -> gather_pattern_bound_vars_maybe_top acc p
+  gather_pattern_bound_vars_maybe_top fail_on_patconst acc p
 
 type bnd =
   | LocalBinder of bv     * S.aqual
@@ -449,7 +452,30 @@ let generalize_annotated_univs (s:sigelt) :sigelt =
   | _ -> s
 
 let is_special_effect_combinator = function
-  | "repr" | "post" | "pre" | "wp" -> true
+  | "lift1"
+  | "lift2"
+  | "pure"
+  | "app"
+  | "push"
+  | "wp_if_then_else"
+  | "wp_assert"
+  | "wp_assume"
+  | "wp_close"
+  | "stronger"
+  | "ite_wp"
+  | "null_wp"
+  | "wp_trivial"
+  | "ctx"
+  | "gctx"
+  | "lift_from_pure"
+  | "return_wp"
+  | "return_elab"
+  | "bind_wp"
+  | "bind_elab"
+  | "repr"
+  | "post"
+  | "pre"
+  | "wp" -> true
   | _ -> false
 
 let rec sum_to_universe u n =
@@ -560,7 +586,7 @@ let rec desugar_data_pat env p (is_mut:bool) : (env_t * bnd * list<annotated_pat
               let duplicate_bv = List.hd (BU.set_elements intersection) in
               raise_error ( Errors.Fatal_NonLinearPatternNotPermitted,
                             BU.format1
-                              "Non-linear patterns are not permitted. %s appears more than once in this pattern."
+                              "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
                                (duplicate_bv.ppname.idText) )
 
                           r
@@ -728,14 +754,23 @@ let rec desugar_data_pat env p (is_mut:bool) : (env_t * bnd * list<annotated_pat
   env, b, pats
 
 and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * list<annotated_pat>) =
-  let mklet x = env, LetBinder(qualify env x, (tun, None)), [] in
+  // GM: I seem to need the annotation here, or F* gets confused between tuple2 and tuple3
+  let mklet x ty (tacopt : option<S.term>) : (env_t * bnd * list<annotated_pat>)=
+    env, LetBinder(qualify env x, (ty, tacopt)), []
+  in
+  let op_to_ident x = mk_ident (compile_op 0 x.idText x.idRange, x.idRange) in
   if top
   then match p.pat with
-    | PatOp x -> mklet (mk_ident (compile_op 0 x.idText x.idRange, x.idRange))
-    | PatVar (x, _) -> mklet x
+    | PatOp x ->
+        mklet (op_to_ident x) tun None
+    | PatVar (x, _) ->
+        mklet x tun None
+    | PatAscribed({pat=PatOp x}, (t, tacopt)) ->
+        let tacopt = BU.map_opt tacopt (desugar_term env) in
+        mklet (op_to_ident x) (desugar_term env t) tacopt
     | PatAscribed({pat=PatVar (x, _)}, (t, tacopt)) ->
-      let tacopt = BU.map_opt tacopt (desugar_term env) in
-      (env, LetBinder(qualify env x, (desugar_term env t, tacopt)), [])
+        let tacopt = BU.map_opt tacopt (desugar_term env) in
+        mklet x (desugar_term env t) tacopt
     | _ -> raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern at the top-level") p.prange
   else
     let (env, binder, p) = desugar_data_pat env p is_mut in
@@ -918,8 +953,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Name {str="Type"}   -> mk (Tm_type U_unknown), noaqs
     | Construct ({str="Type"}, [t, UnivApp]) -> mk (Tm_type (desugar_universe t)), noaqs
     | Name {str="Effect"} -> mk (Tm_constant Const_effect), noaqs
-    | Name {str="True"}   -> S.fvar (Ident.set_lid_range Const.true_lid top.range) delta_constant None, noaqs
-    | Name {str="False"}   -> S.fvar (Ident.set_lid_range Const.false_lid top.range) delta_constant None, noaqs
+    | Name {str="True"}   -> S.fvar (Ident.set_lid_range Const.true_lid top.range) delta_constant None, //NS delta: wrong, but maybe intentionally so
+                             noaqs
+    | Name {str="False"}   -> S.fvar (Ident.set_lid_range Const.false_lid top.range) delta_constant None, //NS delta: wrong, but maybe intentionally so
+                              noaqs
     | Projector (eff_name, {idText = txt})
       when is_special_effect_combinator txt && Env.is_effect_name env eff_name ->
       let _ = Env.fail_if_qualified_by_curmodule env eff_name in
@@ -1030,6 +1067,29 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       end
 
     | Abs(binders, body) ->
+      (* First of all, forbid definitions such as `f x x = ...` *)
+      let bvss = List.map (gather_pattern_bound_vars false) binders in
+      let check_disjoint (sets : list<set<ident>>) : option<ident> =
+        let rec aux acc sets =
+            match sets with
+            | [] -> None
+            | set::sets ->
+                let i = BU.set_intersect acc set in
+                if BU.set_is_empty i
+                then aux (BU.set_union acc set) sets
+                else Some (List.hd (BU.set_elements i))
+        in
+        aux (S.new_id_set ()) sets
+      in
+      begin match check_disjoint bvss with
+      | None -> ()
+      | Some id ->
+          raise_error (Errors.Fatal_NonLinearPatternNotPermitted,
+                       BU.format1
+                         "Non-linear patterns are not permitted: `%s` appears more than once in this function definition."
+                          (id.idText)) (range_of_id id)
+      end;
+
       let binders = binders |> List.map replace_unit_pattern in
       let _, ftv = List.fold_left (fun (env, ftvs) pat ->
         match pat.pat with
@@ -1310,12 +1370,16 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       mk <| Tm_match(e, brs), join_aqs (aq::aqs)
 
     | Ascribed(e, t, tac_opt) ->
-      let annot = if is_comp_type env t
-                  then Inr (desugar_comp t.range env t)
-                  else Inl (desugar_term env t) in
+      let annot, aq0 =
+        if is_comp_type env t
+        then let comp = desugar_comp t.range env t in
+             (Inr comp, [])
+        else let tm, aq = desugar_term_aq env t in
+             (Inl tm, aq)
+      in
       let tac_opt = BU.map_opt tac_opt (desugar_term env) in
       let e, aq = desugar_term_aq env e in
-      mk <| Tm_ascribed(e, (annot, tac_opt), None), aq
+      mk <| Tm_ascribed(e, (annot, tac_opt), None), aq0@aq
 
     | Record(_, []) ->
       raise_error (Errors.Fatal_UnexpectedEmptyRecord, "Unexpected empty record") top.range
@@ -1353,7 +1417,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let e, s = desugar_term_aq env recterm in
       begin match e.n with
         | Tm_app ({n=Tm_fvar fv}, args) ->
-          mk <| Tm_app(S.fvar (Ident.set_lid_range fv.fv_name.v e.pos) delta_constant
+          mk <| Tm_app(S.fvar (Ident.set_lid_range fv.fv_name.v e.pos) delta_constant //NS:ok, record constructor
                              (Some (Record_ctor(record.typename, record.fields |> List.map fst))),
                       args), s
         | _ -> e, s
@@ -1365,7 +1429,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let e, s = desugar_term_aq env e in
       let projname = mk_field_projector_name_from_ident constrname f.ident in
       let qual = if is_rec then Some (Record_projector (constrname, f.ident)) else None in
-      mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) (Delta_equational_at_level 1) qual, [as_arg e]), s
+      mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) (Delta_equational_at_level 1) qual, //NS delta: ok, projector
+                   [as_arg e]), s
 
     | NamedTyp(_, e) ->
         desugar_term_aq env e
@@ -1632,7 +1697,7 @@ and desugar_comp r env t =
               | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid ->
                 let nil = S.mk_Tm_uinst pat [U_zero] in
                 let pattern =
-                  S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) delta_constant None
+                  S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) delta_constant None //NS delta: incorrect, should be Delta_abstract (Delta_constant_at_level 1)?
                 in
                 S.mk_Tm_app nil [(pattern, Some S.imp_tag)] None pat.pos
               | _ -> pat
@@ -1670,7 +1735,8 @@ and desugar_formula env (f:term) : S.term =
           | [] -> body
           | _ -> mk (Tm_meta (body, Meta_pattern pats)) in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
-        mk <| Tm_app (S.fvar (set_lid_range q b.brange) (Delta_constant_at_level 1) None, [as_arg body])
+        mk <| Tm_app (S.fvar (set_lid_range q b.brange) (Delta_constant_at_level 1) None, //NS delta: wrong?  Delta_constant_at_level 2?
+                      [as_arg body])
 
       | _ -> failwith "impossible" in
 
@@ -2018,17 +2084,17 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           | TyconAbbrev(id, binders, kopt, t) ->
             let env, _, se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
             env, Inr(se, binders, t, quals)::tcs
-          | _ -> failwith "Unrecognized mutual type definition" in
+          | _ -> raise_error (Errors.Fatal_NonInductiveInMutuallyDefinedType, ("Mutually defined type contains a non-inductive element")) rng in
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
       let docs_tps_sigelts = tcs |> List.collect (function
         | Inr ({ sigel = Sig_inductive_typ(id, uvs, tpars, k, _, _) }, binders, t, quals) -> //type abbrevs in mutual type definitions
-	      let t =
-	          let env, tpars = typars_of_binders env binders in
-	          let env_tps, tpars = push_tparams env tpars in
-	          let t = desugar_typ env_tps t in
-	          let tpars = Subst.close_binders tpars in
-	          Subst.close tpars t
+              let t =
+                  let env, tpars = typars_of_binders env binders in
+                  let env_tps, tpars = push_tparams env tpars in
+                  let t = desugar_typ env_tps t in
+                  let tpars = Subst.close_binders tpars in
+                  Subst.close tpars t
           in
           [((id, d.doc), [], mk_typ_abbrev id uvs tpars (Some k) t [id] quals rng)]
 
@@ -2425,7 +2491,7 @@ and mk_comment_attr (d: decl) =
   let other = if other <> [] then String.concat "\n" other ^ "\n" else "" in
   let str = summary ^ pp ^ other ^ text in
   (* Building a fake term *)
-  let fv = S.fvar (lid_of_str "FStar.Pervasives.Comment") delta_constant None in
+  let fv = S.fvar (lid_of_str "FStar.Pervasives.Comment") delta_constant None in //NS delta: ok
   let arg = U.exp_string str in
   U.mk_app fv [ S.as_arg arg ]
 
@@ -2467,6 +2533,21 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   | Open lid ->
     let env = Env.push_namespace env lid in
     env, []
+
+  | Friend lid ->
+    if Env.iface env
+    then raise_error (Errors.Fatal_FriendInterface,
+                      "'friend' declarations are not allowed in interfaces") d.drange
+    else if not (FStar.Parser.Dep.module_has_interface (Env.dep_graph env) (Env.current_module env))
+    then raise_error (Errors.Fatal_FriendInterface,
+                      "'friend' declarations are not allowed in modules that lack interfaces") d.drange
+    else if not (FStar.Parser.Dep.module_has_interface (Env.dep_graph env) lid)
+    then raise_error (Errors.Fatal_FriendInterface,
+                      "'friend' declarations cannot refer to modules that lack interfaces") d.drange
+    else if not (FStar.Parser.Dep.deps_has_implementation (Env.dep_graph env) lid)
+    then raise_error (Errors.Fatal_FriendInterface,
+                      "'friend' module has not been loaded; recompute dependences (C-c C-r) if in interactive mode") d.drange
+    else env, []
 
   | Include lid ->
     let env = Env.push_include env lid in
@@ -2534,6 +2615,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       begin match lets with
         | [ { pat = PatOp _}, _ ]
         | [ { pat = PatVar _}, _ ]
+        | [ { pat = PatAscribed ({ pat = PatOp  _}, _) }, _ ]
         | [ { pat = PatAscribed ({ pat = PatVar _}, _) }, _ ] -> false
         | [ p, _ ] -> not (is_app_pattern p)
         | _ -> false
@@ -2619,7 +2701,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
         let env, ses' = desugar_decl env id_decl in
         env, ses @ ses'
       in
-      let bvs = gather_pattern_bound_vars pat |> set_elements in
+      let bvs = gather_pattern_bound_vars true pat |> set_elements in
       List.fold_left build_projection main_let bvs
 
   | Main t ->

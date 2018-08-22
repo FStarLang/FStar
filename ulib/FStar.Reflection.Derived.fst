@@ -98,7 +98,10 @@ let collect_abs t =
     let (bs, t') = collect_abs' [] t in
     (List.Tot.rev bs, t')
 
-let fv_to_string (fv:fv) : string = String.concat "." (inspect_fv fv)
+let explode_qn : string -> list string = String.split ['.']
+let implode_qn : list string -> string = String.concat "."
+
+let fv_to_string (fv:fv) : string = implode_qn (inspect_fv fv)
 
 let compare_fv (f1 f2 : fv) : order =
     compare_list (fun s1 s2 -> order_from_int (String.compare s1 s2)) (inspect_fv f1) (inspect_fv f2)

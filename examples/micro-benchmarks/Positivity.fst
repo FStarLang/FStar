@@ -27,3 +27,11 @@ open FStar.ST
 noeq
 type t =
   | MkT : ref t -> t //relies in assume_strictly_positive
+
+(*
+ * #868
+ *)
+let l_868: eqtype = (y: Seq.seq int {Seq.mem 2 y })
+type essai_868 = | T of list (l_868 * essai_868)
+
+

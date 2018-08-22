@@ -155,6 +155,7 @@ let keywords =
     ALWAYS, "exception"  ,EXCEPTION;
     ALWAYS, "exists"     ,EXISTS;
     ALWAYS, "false"      ,FALSE;
+    ALWAYS, "friend"     ,FRIEND;
     ALWAYS, "forall"     ,FORALL;
     ALWAYS, "fun"        ,FUN;
     ALWAYS, "function"   ,FUNCTION;

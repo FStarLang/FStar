@@ -10,18 +10,20 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
+        "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.result",
+        "function_token_typing_FStar.UInt32.n",
         "function_token_typing_Prims.int",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_5885c715bf599d471c43c6b7dcb2413b",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_TestSeq_Tm_refine_5885c715bf599d471c43c6b7dcb2413b",
         "typing_FStar.Seq.Base.length", "unit_typing"
       ],
       0,
-      "e9920f48785c76cc3d0f5c542c65d76c"
+      "b3d28a2bb77e95a387e1d6b9ae917035"
     ],
     [
       "TestSeq.main",
@@ -37,7 +39,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "d152dafb5f1c8e60415d269e80776d39"
+      "b4ac12b3c151a8eab9f9ee0594f47447"
     ]
   ]
 ]

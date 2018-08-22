@@ -78,7 +78,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "050a9d04379ecde01e4e3ea1ffbf2cc5"
+      "a1aaeb1a97cef02435ae4f3112e05135"
     ],
     [
       "Ex10a.test_acls",
@@ -108,7 +108,7 @@
         "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0,
-      "d13037775a0ecbaea84fa9ad247063e5"
+      "dc809934dcf525c97c8aa170d5291b12"
     ],
     [
       "Ex10a.entry",
@@ -178,7 +178,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "dc734224704c703af174202d3e5c7a22"
+      "d1d8584066c05ec3d2e928e654254bdf"
     ]
   ]
 ]

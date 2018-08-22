@@ -27,7 +27,8 @@ SHOULD_VERIFY_CLOSED=bug022.fst bug024.fst bug025.fst bug026.fst bug026b.fst bug
   bug1121.fst bug1341.fst bug1345.fst bug1345b.fst bug1345c.fst bug1346.fst bug1348.fst bug1362.fst \
   bug1347b.fst bug1206.fst bug1271.fst bug1305.fst bug1361.fst bug1383.fst bug1414.fst \
   unfold.fst bug1091.fst BugUnfoldAbstractEquational.fst Bug1449.fst Bug1427.fst Bug1423.fst Bug1352.fst Bug1123.fst ScopeOfBinderGuard.fst \
-  bug1319a.fst bug1319b.fst bug1319c.fst bug1319d.fst bug1319e.fst bug1319f.fst bug807a.fst bug807b.fst bug807c.fst
+  bug1319a.fst bug1319b.fst bug1319c.fst bug1319d.fst bug1319e.fst bug1319f.fst bug807a.fst bug807b.fst bug807c.fst Bug1502.fst \
+  Bug1488.fst bug607.fst bug466.fst bug400.fst bug1470.fst bug1481.fst Bug1506.fst bug606.fst bug543.fst
 SHOULD_VERIFY_INTERFACE_CLOSED=bug771.fsti bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=bug016.fst
 
@@ -36,14 +37,14 @@ SHOULD_VERIFY_AND_WARN_CLOSED=bug016.fst
 SHOULD_VERIFY_BROKEN=bug092.fst bug170b.fst bug192.fst bug210.fst bug210b.fst bug210c.fst bug312.fst\
   bug818.fst bug818b.fst
 SHOULD_VERIFY_OPEN=bug045.fst bug057.fst bug064.fst bug065.fst bug071.fst bug121.fst bug131.fst bug171.fst\
-  bug171b.fst bug171c.fst bug258.fst bug259.fst bug282.fst bug291.fst bug400.fst bug419.fst bug442.fst\
-  bug442b.fst bug466.fst bug484.fst bug542.fst bug543.fst bug554.fst bug575.fst bug604.fst bug606.fst\
+  bug171b.fst bug171c.fst bug258.fst bug259.fst bug282.fst bug291.fst bug419.fst bug442.fst\
+  bug442b.fst bug484.fst bug542.fst bug543.fst bug554.fst bug575.fst bug604.fst bug606.fst\
   bug626.fst bug682.fst bug715.fst bug739.fst bug815.fst bug815b.fst bug851.fst bug933.fst bug933b.fst\
   bug1038.fst bug1055b.fst bug1091.fst bug1390.fst bug807d.fst bug1486.fst bug1392.fst
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_VERIFY_CLOSED.
-SHOULD_VERIFY_MAYBE_CLOSE=bug121b.fst bug351.fst bug351b.fst bug607.fst bug812.fst bug853.fst bug1042.fst bug1360.fst
+SHOULD_VERIFY_MAYBE_CLOSE=bug121b.fst bug351.fst bug351b.fst bug812.fst bug853.fst bug1042.fst bug1360.fst
 
 # These examples cannot be verified with the current version of F* because of problems unrelated to those
 # described in their corresponding GitHub issue.
@@ -63,7 +64,7 @@ SHOULD_NOT_VERIFY_CLOSED=bug035.fst bug043.fst bug044.fst bug063.fst bug120.fst 
   bug319.fst bug320.fst bug362.fst bug379.fst bug406.fst bug446.fst bug612.fst bug623.fst bug655.fst\
   bug769.fst bug769b.fst bug769d.fst bug1017.fst bug1043.fst bug1043b.fst bug1106.fst bug1106b.fst bug174.fst\
   bug193.fst bug208.fst bug208.fst bug378.fst bug696.fst bug1090.fst bug1187.fst bug380_1.fst bug380_2.fst \
-  bug1404.fst bug367.fst bug1389a.fst bug1389b.fst bug1389c.fst Bug1441.fst
+  bug1404.fst bug367.fst bug1389a.fst bug1389b.fst bug1389c.fst Bug1441.fst bug1029.fst bug1029b.fst
 
 # These will not be checked, but the SHOULD_NOT_VERIFY_BROKEN examples are expected to work since their
 # corresponding GitHub issue is closed. Consider re-opening.
@@ -84,7 +85,7 @@ SHOULD_NOT_VERIFY_NOT_WORKING=bug186.fst bug397b.fst
 ####################
 
 # These will be checked as part of the F* regressions.
-SHOULD_EXTRACT_CLOSED=bug086.fst bug314.fst bug540.fst bug541.fst bug589.fst ExtractionBug2.fst bug1485.fst
+SHOULD_EXTRACT_CLOSED=bug086.fst bug314.fst bug540.fst bug541.fst bug589.fst ExtractionBug2.fst bug1101.fst bug1485.fst
 
 # bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
 

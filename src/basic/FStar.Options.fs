@@ -612,7 +612,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "dep",
-        EnumStr ["make"; "graph"; "full"],
+        EnumStr ["make"; "graph"; "full"; "raw"],
         "Output the transitive closure of the full dependency graph in three formats:\n\t \
          'graph': a format suitable the 'dot' tool from 'GraphViz'\n\t \
          'full': a format suitable for 'make', including dependences for producing .ml and .krml files\n\t \
@@ -1462,10 +1462,11 @@ let with_saved_options f =
   // TODO: This assumes `f` does not mess with the stack!
   if not (trace_error ()) then begin
       push ();
-      try let retv = f () in
-          pop ();
-          retv
-      with | ex -> pop (); raise ex
+      let r = try Inr (f ()) with | ex -> Inl ex in
+      pop ();
+      match r with
+      | Inr v  -> v
+      | Inl ex -> raise ex
   end else begin
       push ();
       let retv = f () in

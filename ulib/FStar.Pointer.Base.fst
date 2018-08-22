@@ -164,7 +164,7 @@ let buffer (t: typ): Tot Type0 = _buffer t
 *)
 
 let gtdata (* ghostly-tagged data *)
-  (key: eqtype u#0)
+  (key: eqtype)
   (value: (key -> Tot Type0))
 : Tot Type0
 = ( k: key & value k )

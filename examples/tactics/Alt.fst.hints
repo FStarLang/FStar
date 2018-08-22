@@ -11,7 +11,19 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
       ],
       0,
-      "5c48801b3031cbced39ec8a98a2d3468"
+      "c0c3c5c4e404b89366b120462cbbcced"
+    ],
+    [
+      "Alt.uu___62",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
+      ],
+      0,
+      "39e4acb5767d11a6108bf1b4bd12bee6"
     ]
   ]
 ]

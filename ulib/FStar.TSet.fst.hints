@@ -210,14 +210,23 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
         "equation_FStar.TSet.mem", "equation_FStar.TSet.tset_of_set",
-        "equation_Prims.prop",
+        "equation_Prims.eqtype", "equation_Prims.prop",
+        "equation_Prims.squash",
         "interpretation_FStar.TSet_Tm_abs_72d81c36c33d89af8ffb225fe76fa39e",
-        "refinement_interpretation_FStar.TSet_Tm_refine_a77d79782e60b55519df953e8dedd579"
+        "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
+        "refinement_interpretation_FStar.TSet_Tm_refine_a77d79782e60b55519df953e8dedd579",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
+        "typing_FStar.TSet.mem", "typing_FStar.TSet.tset_of_set",
+        "unit_typing"
       ],
       0,
-      "4a6e3fd32481398aba4756fa1e0424ee"
+      "a9521a626687547024058f17184ec980"
     ],
     [
       "FStar.TSet.lemma_mem_tset_of_set_r",

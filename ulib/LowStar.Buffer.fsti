@@ -1112,7 +1112,7 @@ val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
   (ensures (modifies loc_none h0 h1))
 
 val new_region_modifies (m0: HS.mem) (r0: HS.rid) (col: option int) : Lemma
-  (requires (HS.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_eternal_color (Some?.v col))))
+  (requires (HST.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_eternal_color (Some?.v col))))
   (ensures (
     let (_, m1) = HS.new_eternal_region m0 r0 col in
     modifies loc_none m0 m1
@@ -1683,6 +1683,7 @@ val g_upd_seq_as_seq (#a:Type)
                      (s:Seq.lseq a (length b))
                      (h:HS.mem{live h b})
   : Lemma (let h' = g_upd_seq b s h in
+           (Seq.length s > 0 ==> not (g_is_null b)) /\
            modifies (loc_buffer b) h h' /\
            live h' b /\
            as_seq h' b == s)
@@ -1700,7 +1701,20 @@ let g_upd (#a:Type)
             
 /// ``upd b i v`` writes ``v`` to the memory, at offset ``i`` of
 /// buffer ``b``. KreMLin compiles it as ``b[i] = v``.
-val upd
+
+val upd'
+  (#a: Type)
+  (b: buffer a)
+  (i: U32.t)
+  (v: a)
+: HST.Stack unit
+  (requires (fun h -> live h b /\ U32.v i < length b))
+  (ensures (fun h _ h' ->
+    h' == g_upd b (U32.v i) v h
+  ))
+
+inline_for_extraction
+let upd
   (#a: Type)
   (b: buffer a)
   (i: U32.t)
@@ -1713,6 +1727,9 @@ val upd
     live h' b /\
     as_seq h' b == Seq.upd (as_seq h b) (U32.v i) v
   ))
+= let h = HST.get () in
+  upd' b i v;
+  g_upd_seq_as_seq b (Seq.upd (as_seq h b) (U32.v i) v) h
 
 (* FIXME: Comment on `recall` *)
 
@@ -1937,8 +1954,8 @@ val blit
 
 module L = FStar.List.Tot
 
-inline_for_extraction
-let rec assign_list #a (l: list a) (b: buffer a): HST.Stack unit
+unfold
+let assign_list_t #a (l: list a) = (b: buffer a) -> HST.Stack unit
   (requires (fun h0 ->
     live h0 b /\
     length b = L.length l))
@@ -1946,9 +1963,11 @@ let rec assign_list #a (l: list a) (b: buffer a): HST.Stack unit
     live h1 b /\
     (modifies (loc_buffer b) h0 h1) /\
     as_seq h1 b == Seq.seq_of_list l))
-=
+
+let rec assign_list #a (l: list a): assign_list_t l
+= fun b ->
   match l with
-  | [] -> 
+  | [] ->
       let h = HST.get () in
       assert (length b = 0);
       assert (Seq.length (as_seq h b) = 0);
@@ -1967,7 +1986,6 @@ let rec assign_list #a (l: list a) (b: buffer a): HST.Stack unit
       assert (as_seq h1 b_tl == Seq.seq_of_list tl);
       assert (Seq.equal (as_seq h1 b) (Seq.append (as_seq h1 b_hd) (as_seq h1 b_tl)));
       assert ((Seq.seq_of_list l) == (Seq.cons hd (Seq.seq_of_list tl)))
-
 #reset-options
 
 
