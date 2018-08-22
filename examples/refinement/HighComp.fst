@@ -129,13 +129,31 @@ let bind_post (#a : Type) (x : a) = fun s0 r -> let (x1, s1) = r in x1 == x /\ s
 let return_elab (#a:Type) (x : a) : comp_wp a (return_wp x) = 
   HIGH?.return_elab a x
 
-let bind_elab #a #b #f_w ($f:_) #g_w ($g:_) : Tot (comp_wp b (bind_wp f_w g_w)) = HIGH?.bind_elab a b f_w f g_w g
+let bind_elab #a #b #f_w ($f:comp_wp a f_w) #g_w ($g:(x:a) -> comp_wp b (g_w x)) : 
+    Tot (comp_wp b (bind_wp f_w g_w)) = HIGH?.bind_elab a b f_w f g_w g
+
+
+let for_wp_unfold (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) : 
+    Lemma (requires (lo < hi))
+          (ensures (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi))) =
+    assert (~ (lo = hi)); 
+    assert ((if lo = hi then (return_wp ())
+             else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))) == 
+             bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi)); 
+    (* XXX Why does this fail??? *)
+    assume (for_wp wp lo hi == 
+            (if lo = hi then (return_wp ())
+             else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))))
 
 
 let rec for_elab (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp i)) : 
     Tot (comp_wp unit (for_wp wp lo hi)) (decreases (hi - lo)) =
   if lo = hi then (return_elab ())
-  else (bind_elab #unit #unit #(wp lo) (f lo) #(fun _ -> for_wp wp (lo+1) hi) (fun (_ : unit) -> for_elab #wp (lo + 1) hi f))
+  else (let (m : comp_wp unit (wp lo)) = f lo in 
+        let f (u:unit) : comp_wp (unit) (for_wp wp (lo+1) hi) = for_elab #wp (lo + 1) hi f in
+        let p = for_wp_unfold wp lo hi in 
+        assert (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi));
+        let b = bind_elab m f in b)
 
 
 val hread' : i:nat -> comp_wp mint (read_wp i)
