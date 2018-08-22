@@ -1029,7 +1029,7 @@ let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
     let s2' = replace_subseq s2 (U32.v idx_dst) (U32.v len) s_sub_src in
     let s_full2' = replace_subseq s_full2 (U32.v idx2) (U32.v length2) s2' in
     content2 := s_full2';
-    g_upd_seq_as_seq dst s2' h
+    g_upd_seq_as_seq dst s2' h  //for modifies clause
 #pop-options
 
 module MG = FStar.ModifiesGen
