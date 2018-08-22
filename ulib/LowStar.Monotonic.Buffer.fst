@@ -38,7 +38,7 @@ noeq type mbuffer (a:Type0) (rrel:srel a) (rel:srel a) :Type0 =
 
 let g_is_null #_ #_ #_ b = Null? b
 
-let null #_ #_ #_ = Null
+let mnull #_ #_ #_ = Null
 
 let null_unique #_ #_ #_ _ = ()
 
@@ -80,7 +80,7 @@ let as_seq #_ #_ #_ h b =
 
 let length_as_seq #_ #_ #_ _ _ = ()
 
-let gsub #a #rrel #rel b i len sub_rel =
+let mgsub #a #rrel #rel b i len sub_rel =
   match b with
   | Null -> Null
   | Buffer max_len content idx length () ->
@@ -99,7 +99,7 @@ let frameOf_gsub #_ #_ #_ _ _ _ _ = ()
 
 let as_addr_gsub #_ #_ #_ _ _ _ _ = ()
 
-let gsub_inj #_ #_ #_ _ _ _ _ _ _ _ _ = ()
+let mgsub_inj #_ #_ #_ _ _ _ _ _ _ _ _ = ()
 
 let gsub_gsub #_ #_ #rel b i1 len1 sub_rel1 i2 len2 sub_rel2 =
   Seq.lemma_seq_sub_compatibility_is_transitive (length b) rel (U32.v i1) (U32.v i1 + U32.v len1) sub_rel1
@@ -575,13 +575,13 @@ let loc_includes_buffer #t #_ #_ #_ #_ b1 b2 =
   MG.loc_includes_aloc #_ #cls #(frameOf b1) #(as_addr b1) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2 <: t1)
 
 let loc_includes_gsub_buffer_r l #_ #_ #_ b i len sub_rel =
-  let b' = gsub b i len sub_rel in
+  let b' = mgsub b i len sub_rel in
   loc_includes_buffer b b';
   loc_includes_trans l (loc_buffer b) (loc_buffer b')
 
 let loc_includes_gsub_buffer_l #_ #_ #rel b i1 len1 sub_rel1 i2 len2 sub_rel2 =
-  let b1 = gsub b i1 len1 sub_rel1 in
-  let b2 = gsub b i2 len2 sub_rel2 in
+  let b1 = mgsub b i1 len1 sub_rel1 in
+  let b2 = mgsub b i2 len2 sub_rel2 in
   loc_includes_buffer b1 b2
 
 #push-options "--z3rlimit 20"
@@ -633,7 +633,7 @@ let loc_disjoint_buffer #_ #_ #_ #_ #_ #_ b1 b2 =
   MG.loc_disjoint_aloc_intro #_ #cls #(frameOf b1) #(as_addr b1) #(frameOf b2) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
 
 let loc_disjoint_gsub_buffer #_ #_ #_ b i1 len1 sub_rel1 i2 len2 sub_rel2 =
-  loc_disjoint_buffer (gsub b i1 len1 sub_rel1) (gsub b i2 len2 sub_rel2)
+  loc_disjoint_buffer (mgsub b i1 len1 sub_rel1) (mgsub b i2 len2 sub_rel2)
 
 let loc_disjoint_addresses = MG.loc_disjoint_addresses_intro #_ #cls
 
@@ -887,7 +887,7 @@ let pointer_distinct_sel_disjoint #a #_ #_ #_ #_ b1 b2 h =
 	 
 let is_null #_ #_ #_ b = Null? b
 
-let sub #a #rrel #rel b i len sub_rel =
+let msub #a #rrel #rel b i len sub_rel =
   match b with
   | Null -> Null
   | Buffer max_len content i0 len0 () ->
@@ -895,7 +895,7 @@ let sub #a #rrel #rel b i len sub_rel =
                                                   (U32.v i) (U32.v i + U32.v len) sub_rel;
     Buffer max_len content (U32.add i0 i) len ()
 
-let offset #a #rrel #rel b i sub_rel =
+let moffset #a #rrel #rel b i sub_rel =
   match b with
   | Null -> Null
   | Buffer max_len content i0 len () ->
@@ -981,11 +981,11 @@ let alloc_common (#a:Type0) (#rrel:srel a)
     let b = Buffer len content 0ul len () in
     b
 
-let gcmalloc #_ #_ r init len = alloc_common r init len false
+let mgcmalloc #_ #_ r init len = alloc_common r init len false
 
-let malloc #_ #_ r init len = alloc_common r init len true
+let mmalloc #_ #_ r init len = alloc_common r init len true
 
-let alloca #a #rrel init len =
+let malloca #a #rrel init len =
   Seq.lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.salloc (Seq.create (U32.v len) init)
@@ -993,7 +993,7 @@ let alloca #a #rrel init len =
   let b = Buffer len content 0ul len () in
   b
 
-let alloca_of_list #a #rrel init =
+let malloca_of_list #a #rrel init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.seq_of_list init in
   Seq.lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
@@ -1003,7 +1003,7 @@ let alloca_of_list #a #rrel init =
   let b = Buffer len content 0ul len () in
   b
 
-let gcmalloc_of_list #a #rrel r init =
+let mgcmalloc_of_list #a #rrel r init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.seq_of_list init in
   Seq.lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
