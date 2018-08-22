@@ -37,3 +37,5 @@ let to_int = Z.to_int
 
 let of_int_fs x = x
 let to_int_fs x = x
+
+let of_hex x = Z.of_string ("0x" ^ x)

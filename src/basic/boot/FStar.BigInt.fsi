@@ -42,3 +42,5 @@ val to_int : (bigint -> int)
 
 val of_int_fs: (int -> bigint)
 val to_int_fs: (bigint -> int)
+
+val of_hex: string -> bigint

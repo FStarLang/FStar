@@ -467,6 +467,9 @@ let (tc_data :
                                                             = uu____1101;
                                                           FStar_Syntax_Syntax.vars
                                                             = uu____1102;_},tuvs)
+                                                       when
+                                                       FStar_Syntax_Syntax.fv_eq_lid
+                                                         fv tc_lid
                                                        ->
                                                        if
                                                          (FStar_List.length
@@ -509,8 +512,10 @@ let (tc_data :
                                                            FStar_TypeChecker_Env.trivial_guard
                                                            tuvs _uvs1
                                                        else
-                                                         failwith
-                                                           "Impossible: tc_datacon: length of annotated universes not same as instantiated ones"
+                                                         FStar_Errors.raise_error
+                                                           (FStar_Errors.Fatal_UnexpectedConstructorType,
+                                                             "Length of annotated universes does not match inferred universes")
+                                                           se.FStar_Syntax_Syntax.sigrng
                                                    | FStar_Syntax_Syntax.Tm_fvar
                                                        fv when
                                                        FStar_Syntax_Syntax.fv_eq_lid
