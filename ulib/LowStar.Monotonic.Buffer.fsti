@@ -1639,7 +1639,7 @@ val moffset (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
 /// ``index b i`` reads the value of ``b`` at offset ``i`` from memory and
 /// returns it. KreMLin compiles it as b[i].
 
-val index (#a:Type0)(#rrel #rel:srel a) (b:mbuffer a rrel rel) (i:U32.t)
+val index (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (i:U32.t)
   :HST.Stack a (requires (fun h -> live h b /\ U32.v i < length b))
                (ensures  (fun h y h' -> h == h' /\ y == Seq.index (as_seq h b) (U32.v i)))
 
