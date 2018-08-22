@@ -365,8 +365,8 @@ type seqn (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
          (seqn_val i log max) //never more than the length of the log
 	 increases //increasing
 
-let at_most_log_len_stable (#l:rid) (#a:Type) (x:nat) (l:log_t l a)
-  : Lemma (stable_on_t l (at_most_log_len x l))
+let at_most_log_len_stable (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
+  : Lemma (stable_on_t log (at_most_log_len x log))
   = ()
 
 let new_seqn (#a:Type) (#l:rid) (#max:nat)

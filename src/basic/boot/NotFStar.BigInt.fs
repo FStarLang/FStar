@@ -61,3 +61,6 @@ let to_int (x:bigint) = int32 x
 let of_int_fs (x:int) = bigint x
 // returns int32 in F#, bigint in OCaml.
 let to_int_fs (x:bigint) = int32 x
+
+let of_hex (x: string) =
+  System.Numerics.BigInteger.Parse (x, System.Globalization.NumberStyles.AllowHexSpecifier)

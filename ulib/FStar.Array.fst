@@ -35,15 +35,15 @@ abstract val contains: #a:Type -> heap -> array a -> GTot (bool)
 let contains #a h s =
   FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains h s)
 
-abstract let unused_in (#a:Type) (a:array a) (h:heap) :GTot bool
- = FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in a h)
+abstract let unused_in (#a:Type) (arr:array a) (h:heap) :GTot bool
+ = FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in arr h)
 
 abstract val heap_upd: #a:Type -> heap -> array a -> seq a -> GTot heap
 let heap_upd #a h r v = Heap.upd h r v
 
-abstract let addr_of (#a:Type) (a:array a) :GTot nat = addr_of a
+abstract let addr_of (#a:Type) (arr:array a) :GTot nat = addr_of arr
 
-let only (#a:Type) (a:array a) :GTot (Set.set nat) = Set.singleton (addr_of a)
+let only (#a:Type) (arr:array a) :GTot (Set.set nat) = Set.singleton (addr_of arr)
 
 abstract val op_At_Bar: #a:Type -> s1:array a -> s2:array a -> ST (array a)
   (requires (fun h -> contains h s1 /\ contains h s2))

@@ -23,7 +23,7 @@
         "typing_FStar.Reflection.Basic.lookup_typ"
       ],
       0,
-      "feb93f5fded46416e530d74cc276b58e"
+      "b97d0ae0212067884805c5b2c4a1a800"
     ],
     [
       "Normalization.uu___61",
@@ -36,7 +36,20 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
       ],
       0,
-      "8aa91269284e7d0d532835e007aec901"
+      "aff0bfc85d759f3c2370e617c3e7c0d7"
+    ],
+    [
+      "Normalization.uu___61",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Order.order__uu___haseq",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
+      ],
+      0,
+      "6d760a9ac1ec147c5d08576f9e488eac"
     ],
     [
       "Normalization.uu___62",
@@ -49,7 +62,20 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
       ],
       0,
-      "2f92a9da2a67862d8c74868f78283f60"
+      "750e420182b5b732770acf60b1c6a04f"
+    ],
+    [
+      "Normalization.uu___62",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Order.order__uu___haseq",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
+      ],
+      0,
+      "b8d8f210acfdc83ee5beed6f2bfdbfde"
     ],
     [
       "Normalization.uu___63",
@@ -64,7 +90,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "9631ca41a883ef0bd2cca7ec32a21e53"
+      "1d9fbfe57be00c983776fd9266ad758c"
     ],
     [
       "Normalization.uu___64",
@@ -77,7 +103,20 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
       ],
       0,
-      "d5108163f520e967cad68afd473d3fa6"
+      "cf9230ef899d73b395e0eaa101096452"
+    ],
+    [
+      "Normalization.uu___64",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Order.order__uu___haseq",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
+      ],
+      0,
+      "3e905f9647cb109e9ad0918d5767a8da"
     ],
     [
       "Normalization.def_of",
@@ -101,7 +140,7 @@
         "typing_FStar.Reflection.Basic.lookup_typ"
       ],
       0,
-      "911f6166f010d76424484a523ac27528"
+      "5d65b5ca72e1893347092adf0aa61608"
     ]
   ]
 ]

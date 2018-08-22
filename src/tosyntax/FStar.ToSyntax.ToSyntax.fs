@@ -328,7 +328,6 @@ let rec gather_pattern_bound_vars_maybe_top fail_on_patconst acc p =
   in
   match p.pat with
   | PatWild _
-  | PatVar (_, Some Implicit)
   | PatName _
   | PatTvar _
   | PatOp _ -> acc

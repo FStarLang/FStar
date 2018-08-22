@@ -1,0 +1,29 @@
+[
+  "ÃfU‰\u001bl‘Õø\u000e½¼q[€â",
+  [
+    [
+      "Bug1481.uu___6",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Bug1481.op_Plus", "primitive_Prims.op_BarBar",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "7afdf911253d4d24ac3173faa154797e"
+    ],
+    [
+      "Bug1481.uu___7",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Bug1481.op_Amp_Amp", "primitive_Prims.op_BarBar",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "245f93b679755a1677a8034c7f1c9f2a"
+    ]
+  ]
+]

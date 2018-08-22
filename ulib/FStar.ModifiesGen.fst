@@ -534,7 +534,7 @@ let loc_disjoint_includes #al #c p1 p2 p1' p2' =
   loc_aux_disjoint_loc_aux_includes l2' l1 l1';
   loc_aux_disjoint_sym l2' l1'
 
-let loc_disjoint_aloc_intro #al #c #r1 #a1 #r2 #b2 b1 b2 = ()
+let loc_disjoint_aloc_intro #al #c #r1 #a1 #r2 #a2 b1 b2 = ()
 
 let loc_disjoint_aloc_elim #al #c #r1 #a1 #r2 #a2 b1 b2 =
   // FIXME: WHY WHY WHY this assert?
