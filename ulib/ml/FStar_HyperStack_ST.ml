@@ -56,7 +56,7 @@ type erid = rid
 
 type 'a ref = 'a FStar_HyperStack.reference
 type ('a, 'b) mreference = 'a ref
-type 'a reference = 'a mreference
+type 'a reference = 'a ref
 let alloc = salloc
 type ('a, 'b) mref = 'a ref
 type ('a, 'b, 'c) m_rref = 'b ref
