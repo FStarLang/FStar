@@ -101,9 +101,6 @@ val for_wp : (int -> hwp_mon unit) -> (lo : int) -> (hi : int{hi >= lo}) -> Tot 
 let rec for_wp (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) : Tot (hwp_mon unit) (decreases (hi - lo)) = 
   if lo = hi then (return_wp ())
   else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))
-    // (fun s0 post -> 
-    //    wp lo s0 (fun ((), s1) ->
-    //    wp_for wp (lo + 1) hi s1 post))
   
 // for combinator
 let rec for (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> HIGH unit (wp i)) :
@@ -132,13 +129,13 @@ let bind_post (#a : Type) (x : a) = fun s0 r -> let (x1, s1) = r in x1 == x /\ s
 let return_elab (#a:Type) (x : a) : comp_wp a (return_wp x) = 
   HIGH?.return_elab a x
 
-let bind_elab #a #b #f_w ($f:_) #g_w ($g:_) : comp_wp b (bind_wp f_w g_w) = HIGH?.bind_elab a b f_w f g_w g
+let bind_elab #a #b #f_w ($f:_) #g_w ($g:_) : Tot (comp_wp b (bind_wp f_w g_w)) = HIGH?.bind_elab a b f_w f g_w g
 
 
-// let rec for_elab (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp i)) : 
-//     comp_wp unit (wp_for wp lo hi) (decreases (hi - lo)) =
-//   if lo = hi then (return_elab ())
-//   else (bind_elab (f lo) (fun (_ : unit) -> for_elab #wp (lo + 1) hi f))
+let rec for_elab (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp i)) : 
+    Tot (comp_wp unit (for_wp wp lo hi)) (decreases (hi - lo)) =
+  if lo = hi then (return_elab ())
+  else (bind_elab #unit #unit #(wp lo) (f lo) #(fun _ -> for_wp wp (lo+1) hi) (fun (_ : unit) -> for_elab #wp (lo + 1) hi f))
 
 
 val hread' : i:nat -> comp_wp mint (read_wp i)
@@ -165,7 +162,6 @@ let hread_eq (#a:Type) (i:nat) :
    Lemma (h_eq (read_wp i) (read_wp i) (hread' i) (reify (HIGH?.get i))) = ()
 
 
-open FStar.Tactics
 
 let h_thunk a (wp:hwp_mon a) = unit -> HIGH a wp
 
