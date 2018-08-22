@@ -258,6 +258,23 @@ let lite (#a:Type) (b:bool)
          (#wp2 : hwp_mon a) (#c2:comp_wp a wp2) (lc2: lcomp_wp1 a wp2 c2) : lcomp_wp1 a (ite_wp b wp1 wp2) (ite_elab b c1 c2) =
   fun ls -> if b then lc1 ls else lc2 ls
 
+
+
+let rec lfor (#wp : int -> hwp_mon unit) (#f : (i:int) -> comp_wp unit (wp i)) (lo : int) (hi : int{lo <= hi}) 
+    (c : (z:int) -> lcomp_wp1 unit (wp z) (f z)) : 
+    Tot (lcomp_wp1 unit (for_wp wp lo hi) (for_elab #wp lo hi f)) (decreases (hi - lo)) =
+  if lo = hi then (lreturn ())
+  else (let (m : lcomp_wp1 unit (wp lo) (f lo)) = c lo in 
+        let c (u:unit) : lcomp_wp1 (unit) (for_wp wp (lo+1) hi) (for_elab #wp (lo + 1) hi f) = 
+          lfor #wp #f (lo + 1) hi c
+        in
+        let p = for_wp_unfold wp lo hi in 
+        assert (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi));
+        assume (for_elab lo hi f === bind_elab (f lo) (fun _ -> for_elab (lo+1) hi f));
+        lbind m c)
+        //lbind #unit #unit #(wp lo) #_ #(f lo) #(for_elab (lo+1) hi f) m c)
+
+
 // Versions of the DSL with reif in spec
 
 val lwrite' : i:nat{ i < 2 } -> v:mint -> lcomp_wp1 unit (write_wp i v) (reify (HIGH?.put i v))
