@@ -97,6 +97,19 @@ let ite_wp #a (b : bool) (wp1 : hwp a{monotonic wp1})
   (wp2 : hwp a{monotonic wp2}) : wp:hwp a{monotonic wp} = 
   HIGH?.wp_if_then_else a b wp1 wp2  
 
+val wp_for : (int -> hwp_mon unit) -> (lo : int) -> (hi : int{hi >= lo}) -> Tot (hwp_mon unit) (decreases (hi - lo))
+let rec wp_for (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) : Tot (hwp_mon unit) (decreases (hi - lo)) = 
+  if lo = hi then (return_wp ())
+  else 
+    (fun s0 post -> 
+       wp lo s0 (fun ((), s1) ->
+       wp_for wp (lo + 1) hi s1 post))
+  
+// for combinator
+let rec for (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> HIGH unit (wp i)) : HIGH unit (wp_for wp lo hi) (decreases (hi - lo)) =
+  if lo = hi then ()
+  else f lo; for #wp (lo + 1) hi f   
+
 // Pre and postconditions
 
 unfold
