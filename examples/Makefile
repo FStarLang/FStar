@@ -29,7 +29,8 @@ seplogic \
 hello \
 native_tactics \
 extraction \
-demos
+demos \
+refinement
 
 # low-level \  ... NS: removing from CI for this branch
 

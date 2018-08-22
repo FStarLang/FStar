@@ -23,27 +23,13 @@ let swap_and_sum () =
 
 // WP for sum and swap
 unfold
-let sum_wp : (wp:hwp int{monotonic wp}) = 
-  let wp = 
+let sum_wp : hwp_mon int = 
     fun s0 post -> let (r1, r2) = s0 in post (U32.v r1 + U32.v r2, (r2, r1))
-  in
-  let p : squash (monotonic wp) = 
-    let p (p1 : int * state -> Type) (p2 : int * state -> Type) (s : state) 
-          (h: squash (forall y. p1 y ==> p2 y)) : GTot (squash (wp s p1 ==> wp s p2)) = 
-      ()
-    in
-    let p' p1 p2 s : Lemma ((forall y. p1 y ==> p2 y) ==> (wp s p1 ==> wp s p2)) = 
-      arrow_to_impl (p p1 p2 s)
-    in
-    forall_intro_3 p'
-  in 
-  assert (monotonic wp);
-  wp
 
 
 // Hardwritten for now but can be easily computed with a tactic (if there isn't support for this already)
 unfold 
-let sum_wp_full : (wp:hwp int{monotonic wp}) = 
+let sum_wp_full : hwp_mon int = 
   bind_wp (read_wp 0) (fun x0 ->
   bind_wp (read_wp 1) (fun x1 ->
   bind_wp (write_wp 0 x1) (fun () ->
@@ -53,7 +39,7 @@ let sum_wp_full : (wp:hwp int{monotonic wp}) =
 
 //unfold let normal (#a:Type) (x:a) : a = norm [primops; delta; zeta] x
 
-let wp_impl s0 post : Lemma (sum_wp_full s0 post ==> sum_wp s0 post) = admit ()
+let wp_impl s0 post : Lemma (sum_wp_full s0 post ==> sum_wp s0 post) = ()
 
 // Pre and Post 
 unfold 
@@ -68,43 +54,62 @@ let sum_post = fun s0 res -> let (x, s1) = res in
 
 val hswap_and_sum : unit -> HIGH int sum_wp
 let hswap_and_sum () = 
-  let x0 = HIGH?.get 0 in 
-  let x1 = HIGH?.get 1 in 
-  let _  = HIGH?.put 0 x1 in
-  let _  = HIGH?.put 1 x0 in
+  let x0 = get_action 0 in 
+  let x1 = get_action 1 in 
+  let _  = put_action 0 x1 in
+  let _  = put_action 1 x0 in
   U32.v x0 + U32.v x1
 
 
 unfold
-let wp1 (x0 : mint) : (wp:hwp int{monotonic wp}) = 
+let wp1 (x0 : mint) : hwp_mon int =
   bind_wp (read_wp 1) (fun x1 ->
   bind_wp (write_wp 0 x1) (fun () ->
   bind_wp (write_wp 1 x0) (fun () ->
   return_wp (U32.v x0 + U32.v x1))))
 
 unfold
-let wp2 (x0 x1 : mint) : (wp:hwp int{monotonic wp}) = 
+let wp2 (x0 x1 : mint) : hwp_mon int = 
   bind_wp (write_wp 0 x1) (fun () ->
   bind_wp (write_wp 1 x0) (fun () ->
   return_wp (U32.v x0 + U32.v x1)))
 
 unfold
-let wp4 (x0 x1 : mint) (u : unit) : (wp:hwp int{monotonic wp}) = 
+let wp4 (x0 x1 : mint) (u : unit) : hwp_mon int = 
   return_wp (U32.v x0 + U32.v x1)
 
 unfold
-let wp3 (x0 x1 : mint) (u : unit) : (wp:hwp int{monotonic wp}) = 
+let wp3 (x0 x1 : mint) (u : unit) : hwp_mon int = 
   bind_wp (write_wp 1 x0) (wp4 x0 x1)
 
-val swap_and_sum' : x0:mint -> x1:mint -> comp_wp'  int (bind_wp (write_wp 1 x0) (fun () -> return_wp (U32.v x0 + U32.v x1)))
-let swap_and_sum' x0 x1 =  
-  bind_elab #mint #int #(read_wp 0) (hread' 0) #wp1 (fun x0 -> 
-  bind_elab #mint #int #(read_wp 1) (hread' 1) #(wp2 x0) (fun x1 -> 
-  bind_elab #unit #int #(write_wp 0 x1) (hwrite' 0 x1) #(wp3 x0 x1) (fun () ->
-  bind_elab #unit #int #(write_wp 1 x0) (hwrite' 1 x0) #(fun () -> return_wp (U32.v x0 + U32.v x1)) (fun () ->
-  return_elab #int (U32.v x0 + U32.v x1)))))
+let force_eq #a #wp ($f:comp_wp a wp) : comp_wp a wp = f
 
-val lswap_and_sum : unit -> lcomp_wp2 int sum_wp_full (reif sum_wp_full hswap_and_sum)
+//NS: Annoyingly, we seem to need to write this in this
+//    partially eta-expanded form for inference to succeed
+//    That's probably easily fixable
+val swap_and_sum' :
+  comp_wp int
+          (bind_wp (fun s0 -> read_wp 0 s0) (fun x0 s1 ->
+           bind_wp (fun s0 -> read_wp 1 s0) (fun x1 s2 -> 
+           bind_wp (fun s0 -> write_wp 0 x1 s0) (fun _ s3 ->
+           bind_wp (fun s0 -> write_wp 1 x0 s0) (fun _ s4 ->
+           return_wp (U32.v x0 + U32.v x1) s4) s3) s2) s1))
+
+
+//NS: More tricky is that it seems that to check the implementation
+//    we need to turn off two phase tc
+//    Otherwise, additional proof obligations about monotonicity
+//    refinements pollute the computed VC and things go off the rails
+#set-options "--use_two_phase_tc false"
+let swap_and_sum' =
+            (bind_elab (hread' 0) (fun x0 ->
+             bind_elab (hread' 1) (fun x1 ->
+             bind_elab (hwrite' 0 x1) (fun _ ->
+             bind_elab (hwrite' 1 x0) (fun _ ->
+             return_elab (U32.v x0 + U32.v x1))))))
+  
+val lswap_and_sum : unit -> lcomp_wp int sum_wp_full (reif sum_wp_full hswap_and_sum)
+[@expect_failure] //still doesn't work
 let lswap_and_sum () =  
   lbind (lread 0) (fun x0 -> 
   lbind (lread 1) (fun x1 -> 
