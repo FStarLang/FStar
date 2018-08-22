@@ -90,3 +90,38 @@ let gcmalloc_of_list (#a:Type0) (r:HS.rid) (init:list a)
                                  alloc_post_common r len b h h' /\
                                  as_seq h' b == Seq.seq_of_list init))
   = mgcmalloc_of_list r init				 
+
+module L = FStar.List.Tot
+
+unfold
+let assign_list_t #a (l: list a) = (b: buffer a) -> HST.Stack unit
+  (requires (fun h0 ->
+    live h0 b /\
+    length b = L.length l))
+  (ensures (fun h0 _ h1 ->
+    live h1 b /\
+    (modifies (loc_buffer b) h0 h1) /\
+    as_seq h1 b == Seq.seq_of_list l))
+
+let rec assign_list #a (l: list a): assign_list_t l
+= fun b ->
+  match l with
+  | [] ->
+      let h = HST.get () in
+      assert (length b = 0);
+      assert (Seq.length (as_seq h b) = 0);
+      assert (Seq.equal (as_seq h b) (Seq.empty #a));
+      assert (Seq.seq_of_list [] `Seq.equal` Seq.empty #a)
+  | hd :: tl ->
+      let b_hd = sub b 0ul 1ul in
+      let b_tl = offset b 1ul in
+      let h = HST.get () in
+      upd b_hd 0ul hd;
+      let h0 = HST.get () in
+      assign_list tl b_tl;
+      let h1 = HST.get () in
+      assert (as_seq h1 b_hd == as_seq h0 b_hd);
+      assert (get h1 b_hd 0 == hd);
+      assert (as_seq h1 b_tl == Seq.seq_of_list tl);
+      assert (Seq.equal (as_seq h1 b) (Seq.append (as_seq h1 b_hd) (as_seq h1 b_tl)));
+      assert ((Seq.seq_of_list l) == (Seq.cons hd (Seq.seq_of_list tl)))
