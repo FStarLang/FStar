@@ -2693,7 +2693,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             let guard, wl = guard_of_prob env wl problem t1 t2 in
             solve env (solve_prob orig (Some guard) [] wl)
         in
-        let rec solve_branches wl brs1 brs2 : option<(list<prob> * worklist)> =
+        let rec solve_branches wl brs1 brs2 : option<(list<(binders * prob)> * worklist)> =
             match brs1, brs2 with
             | br1::rs1, br2::rs2 ->
                 let (p1, w1, _) = br1 in
@@ -2717,14 +2717,18 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     | None, None -> Some ([], wl)
                     | Some w1, Some w2 ->
                         let p, wl = mk_t_problem wl scope orig w1 EQ w2 None "when clause" in
-                        Some ([p], wl))
+                        Some ([scope, p], wl))
                 (fun (wprobs, wl) ->
 
                 (* Branch body *)
                 // GM: Could use problem.relation here instead of EQ?
                 let prob, wl = mk_t_problem wl scope orig e1 EQ e2 None "branch body" in
+                if Env.debug wl.tcenv <| Options.Other "Rel"
+                then BU.print2 "Created problem for branches %s with scope %s\n"
+                                        (prob_to_string env prob)
+                                        (Print.binders_to_string ", " scope);
                 BU.bind_opt (solve_branches wl rs1 rs2) (fun (r, wl) ->
-                Some (prob::(wprobs @ r), wl)))
+                Some ((scope, prob)::(wprobs @ r), wl)))
 
             | [], [] -> Some ([], wl)
             | _ -> None
@@ -2736,11 +2740,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             else giveup env "Tm_match branches don't match" orig
         | Some (sub_probs, wl) ->
             let sc_prob, wl = mk_t_problem wl [] orig s1 EQ s2 None "match scrutinee" in
-            let sub_probs = sc_prob::sub_probs in
-            let formula = U.mk_conj_l (List.map (fun p -> p_guard p) sub_probs) in
+            let sub_probs = ([], sc_prob)::sub_probs in
+            let formula = U.mk_conj_l (List.map (fun (scope, p) -> close_forall wl.tcenv scope (p_guard p)) sub_probs) in
             let tx = UF.new_transaction () in
             let wl = solve_prob orig (Some formula) [] wl in
-            begin match solve env (attempt sub_probs ({wl with smt_ok = false})) with
+            begin match solve env (attempt (List.map snd sub_probs) ({wl with smt_ok = false})) with
             | Success (ds, imp) ->
                 UF.commit tx;
                 Success (ds, imp)
