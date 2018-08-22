@@ -108,7 +108,8 @@ let rec wp_for (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) : Tot (h
 // for combinator
 let rec for (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> HIGH unit (wp i)) : HIGH unit (wp_for wp lo hi) (decreases (hi - lo)) =
   if lo = hi then ()
-  else f lo; for #wp (lo + 1) hi f   
+  else 
+    (f lo; for #wp (lo + 1) hi f)
 
 // Pre and postconditions
 
