@@ -102,6 +102,19 @@ let rec for_wp (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) : Tot (h
   if lo = hi then (return_wp ())
   else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))
   
+
+let for_wp_unfold (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) : 
+    Lemma (requires (lo < hi))
+          (ensures (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi))) =
+  assert (~ (lo = hi)); 
+  assert ((if lo = hi then (return_wp ())
+           else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))) == 
+           bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi)); 
+           assert_norm (for_wp wp lo hi == 
+                        (if lo = hi then (return_wp ())
+                         else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))))
+
+
 // for combinator
 let rec for (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> HIGH unit (wp i)) :
     HIGH unit (for_wp wp lo hi) (decreases (hi - lo)) =
@@ -133,18 +146,6 @@ let bind_elab #a #b #f_w ($f:comp_wp a f_w) #g_w ($g:(x:a) -> comp_wp b (g_w x))
     Tot (comp_wp b (bind_wp f_w g_w)) = HIGH?.bind_elab a b f_w f g_w g
 
 
-let for_wp_unfold (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) : 
-    Lemma (requires (lo < hi))
-          (ensures (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi))) =
-    assert (~ (lo = hi)); 
-    assert ((if lo = hi then (return_wp ())
-             else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))) == 
-             bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi)); 
-    (* XXX Why does this fail??? *)
-    assume (for_wp wp lo hi == 
-            (if lo = hi then (return_wp ())
-             else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))))
-
 
 let rec for_elab (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp i)) : 
     Tot (comp_wp unit (for_wp wp lo hi)) (decreases (hi - lo)) =
@@ -154,6 +155,24 @@ let rec for_elab (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f 
         let p = for_wp_unfold wp lo hi in 
         assert (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi));
         let b = bind_elab m f in b)
+
+
+let rec for_elab_unfold (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp i)) : 
+    Lemma (requires (lo < hi))
+          (ensures (for_elab #wp lo hi f == 
+                    (let (m : comp_wp unit (wp lo)) = f lo in 
+                     let cf (u:unit) : comp_wp (unit) (for_wp wp (lo+1) hi) = for_elab #wp (lo + 1) hi f in
+                     let p = for_wp_unfold wp lo hi in                    
+                     bind_elab m cf))) =
+  assert_norm (for_elab #wp lo hi f ==
+               (if lo = hi then (return_elab ())
+                else (let (m : comp_wp unit (wp lo)) = f lo in 
+                      let f (u:unit) : comp_wp (unit) (for_wp wp (lo+1) hi) = for_elab #wp (lo + 1) hi f in
+                      let p = for_wp_unfold wp lo hi in 
+                      assert (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi));
+                      bind_elab #unit #unit #(wp lo) m f)));
+               ()
+          
 
 
 val hread' : i:nat -> comp_wp mint (read_wp i)

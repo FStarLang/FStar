@@ -270,10 +270,13 @@ let rec lfor (#wp : int -> hwp_mon unit) (#f : (i:int) -> comp_wp unit (wp i)) (
         in
         let p = for_wp_unfold wp lo hi in 
         assert (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi));
-        assume (for_elab lo hi f === bind_elab (f lo) (fun _ -> for_elab (lo+1) hi f));
-        lbind m c)
-        //lbind #unit #unit #(wp lo) #_ #(f lo) #(for_elab (lo+1) hi f) m c)
-
+        let p' = for_elab_unfold #wp lo hi f in
+        assert (for_elab #wp lo hi f == 
+                (let (m : comp_wp unit (wp lo)) = f lo in 
+                 let cf (u:unit) : comp_wp (unit) (for_wp wp (lo+1) hi) = for_elab #wp (lo + 1) hi f in
+                 let p = for_wp_unfold wp lo hi in                    
+                 bind_elab m cf));
+       lbind m c)
 
 // Versions of the DSL with reif in spec
 
