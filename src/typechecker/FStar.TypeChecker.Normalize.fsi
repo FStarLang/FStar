@@ -66,4 +66,5 @@ val tr_norm_steps : list<FStar.Syntax.Embeddings.norm_step> -> list<step>
 
 val remove_uvar_solutions: Env.env -> term -> term
 
+val unfold_head_once: Env.env -> term -> option<term>
 val unembed_binder_knot : ref<option<FStar.Syntax.Embeddings.embedding<binder>>>

@@ -8665,3 +8665,49 @@ let (erase_universes :
         [FStar_TypeChecker_Env.EraseUniverses;
         FStar_TypeChecker_Env.AllowUnboundUniverses] env t
   
+let (unfold_head_once :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  =
+  fun env  ->
+    fun t  ->
+      let aux f us args =
+        let uu____27116 =
+          FStar_TypeChecker_Env.lookup_nonrec_definition
+            [FStar_TypeChecker_Env.Unfold FStar_Syntax_Syntax.delta_constant]
+            env (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+           in
+        match uu____27116 with
+        | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+        | FStar_Pervasives_Native.Some head_def_ts ->
+            let uu____27138 =
+              FStar_TypeChecker_Env.inst_tscheme_with head_def_ts us  in
+            (match uu____27138 with
+             | (uu____27145,head_def) ->
+                 let t' =
+                   FStar_Syntax_Syntax.mk_Tm_app head_def args
+                     FStar_Pervasives_Native.None t.FStar_Syntax_Syntax.pos
+                    in
+                 let t'1 =
+                   normalize
+                     [FStar_TypeChecker_Env.Beta; FStar_TypeChecker_Env.Iota]
+                     env t'
+                    in
+                 FStar_Pervasives_Native.Some t'1)
+         in
+      let uu____27151 = FStar_Syntax_Util.head_and_args t  in
+      match uu____27151 with
+      | (head1,args) ->
+          let uu____27196 =
+            let uu____27197 = FStar_Syntax_Subst.compress head1  in
+            uu____27197.FStar_Syntax_Syntax.n  in
+          (match uu____27196 with
+           | FStar_Syntax_Syntax.Tm_fvar fv -> aux fv [] args
+           | FStar_Syntax_Syntax.Tm_uinst
+               ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+                  FStar_Syntax_Syntax.pos = uu____27204;
+                  FStar_Syntax_Syntax.vars = uu____27205;_},us)
+               -> aux fv us args
+           | uu____27211 -> FStar_Pervasives_Native.None)
+  

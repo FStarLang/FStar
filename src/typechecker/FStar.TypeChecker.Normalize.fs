@@ -2787,3 +2787,19 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
 
 let erase_universes env t =
     normalize [EraseUniverses; AllowUnboundUniverses] env t
+
+let unfold_head_once env t =
+  let aux f us args =
+      match Env.lookup_nonrec_definition [Env.Unfold delta_constant] env f.fv_name.v with
+      | None -> None
+      | Some head_def_ts ->
+        let _, head_def = Env.inst_tscheme_with head_def_ts us in
+        let t' = S.mk_Tm_app head_def args None t.pos in
+        let t' = normalize [Env.Beta; Env.Iota] env t' in
+        Some t'
+  in
+  let head, args = U.head_and_args t in
+  match (SS.compress head).n with
+  | Tm_fvar fv -> aux fv [] args
+  | Tm_uinst({n=Tm_fvar fv}, us) -> aux fv us args
+  | _ -> None

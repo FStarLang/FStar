@@ -113,7 +113,7 @@
         "typing_FStar.Pointer.Base.loc_pointer"
       ],
       0,
-      "5593c8671f4e489bc01fb1048950be3f"
+      "9790c382d9175ac7c9cf978b0bc82059"
     ],
     [
       "Test.more_struct",
@@ -331,7 +331,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "8a93d95b50c2b2de8d92d9621b261d08"
+      "782eb7f8ed29fde4f41dcd0f28e4a695"
     ]
   ]
 ]

@@ -74,7 +74,7 @@
         "projection_inverse_EtM.MAC.Key_region"
       ],
       0,
-      "8e451aa067e466fdd3a175a79aa2fce7"
+      "61362e0ac3657215218d7d739f36ae1b"
     ],
     [
       "EtM.MAC.keygen",
@@ -365,7 +365,7 @@
         "projection_inverse_EtM.MAC.Key_region"
       ],
       0,
-      "02364553e1950d70f05218e88a6d1800"
+      "b2108b1536da1549a6da3fa32f70ee9f"
     ],
     [
       "EtM.MAC.verify",
