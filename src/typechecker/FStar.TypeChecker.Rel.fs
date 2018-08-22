@@ -2794,16 +2794,19 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          in
          if (Env.is_interpreted env head1 || Env.is_interpreted env head2) //we have something like (+ x1 x2) =?= (- y1 y2)
            && problem.relation = EQ
-           && wl.smt_ok // with SMT allowed
            && no_free_uvars t1 // and neither term has any free variables
            && no_free_uvars t2
-         then let guard, wl =
-                  if equal t1 t2
-                  then None, wl
-                  else let g, wl = mk_eq2 wl orig t1 t2 in
-                       Some g, wl
-              in
-              solve env (solve_prob orig guard [] wl)
+         then if not wl.smt_ok
+              then if equal t1 t2
+                   then solve env (solve_prob orig None [] wl)
+                   else rigid_rigid_delta env problem wl head1 head2 t1 t2
+              else let guard, wl =
+                       if equal t1 t2
+                       then None, wl
+                       else let g, wl = mk_eq2 wl orig t1 t2 in
+                            Some g, wl
+                   in
+                   solve env (solve_prob orig guard [] wl)
          else rigid_rigid_delta env problem wl head1 head2 t1 t2
 
       | Tm_let _, Tm_let _ ->
