@@ -35,6 +35,7 @@ let lemma_replace_subseq_elim (#a:Type0)
           Seq.equal (Seq.slice s1 0 offset) (Seq.slice s 0 offset) /\
 	  Seq.equal (Seq.slice s1 offset (offset + len)) sub /\
 	  Seq.equal (Seq.slice s1 (offset + len) (Seq.length s1)) (Seq.slice s (offset + len) (Seq.length s)))
+	 [SMTPat (replace_subseq s offset len sub)]
   = ()
 
 (*
@@ -43,32 +44,10 @@ let lemma_replace_subseq_elim (#a:Type0)
 private let mslice (#a:Type0) (s:Seq.seq a) (offset:nat) (len:nat{offset + len <= Seq.length s}) :Tot (Seq.seq a) =
   Seq.slice s offset (offset + len)
 
-(*
- * Key lemma to prove the transitivity of the compatibility relation (to come later)
- * The lemma says that replace_subseq commutes with slice
- * We can either
- *  (a) Replace a subsequence in s at (offset1 + offset2, offset1 + offset2 + len2) by s2, OR
- *  (b) Take the slice of s at (offset1, offset1 + len1),
-        replace subsequence in the slice at (offset2, offset2 + len2),
-	and then replace the subsequence in s at (offset1, offset1 + len1) with this updated slice
- * Both give us the same sequence
- *)
-private let lemma_replace_subseq_slice
-  (a:Type0) (len offset1 len1 offset2 len2:nat)
-  (s:Seq.lseq a len) (s2:Seq.lseq a len2)
-  :Lemma ((offset1 + len1 <= len /\ offset2 + len2 <= len1) ==>
-	  (Seq.equal (replace_subseq s (offset1 + offset2) len2 s2)
-	             (replace_subseq s offset1 len1 (replace_subseq (mslice s offset1 len1)
-						                    offset2 len2 s2))))
-  = ()
-
+(* Shorthand for preorder over sequences *)
 type srel (a:Type0) = P.preorder (Seq.seq a)
 
-(*
- * Abbreviation for preorders on l-sequences
- *)
-private type lsrel (a:Type0) (len:nat) = P.preorder (Seq.lseq a len)
-private let srel_to_lsrel (#a:Type0) (len:nat) (pre:srel a) :lsrel a len = fun s1 s2 -> pre s1 s2
+private let srel_to_lsrel (#a:Type0) (len:nat) (pre:srel a) :P.preorder (Seq.lseq a len) = fun s1 s2 -> pre s1 s2
 
 (*
  * Notion of compatibility for the preorders on subbuffers
@@ -114,33 +93,34 @@ let lemma_sub_compatibility_is_transitive (#a:Type0)
                     compatible_sub_preorder len pre offset1 len1 pre1 /\
                     compatible_sub_preorder len1 pre1 offset2 len2 pre2))
 	 (ensures  (compatible_sub_preorder len pre (offset1 + offset2) len2 pre2))
-  = Classical.forall_intro_2 (lemma_replace_subseq_slice a len offset1 len1 offset2 len2)
+  = admit () (*
+ * Key lemma to prove the transitivity of the compatibility relation (to come later)
+ * The lemma says that replace_subseq commutes with slice
+ * We can either
+ *  (a) Replace a subsequence in s at (offset1 + offset2, offset1 + offset2 + len2) by s2, OR
+ *  (b) Take the slice of s at (offset1, offset1 + len1),
+        replace subsequence in the slice at (offset2, offset2 + len2),
+	and then replace the subsequence in s at (offset1, offset1 + len1) with this updated slice
+ * Both give us the same sequence
+ *)
+// private let lemma_replace_subseq_slice
+//   (a:Type0) (len offset1 len1 offset2 len2:nat)
+//   (s:Seq.lseq a len) (s2:Seq.lseq a len2)
+//   :Lemma ((offset1 + len1 <= len /\ offset2 + len2 <= len1) ==>
+// 	  (Seq.equal (replace_subseq s (offset1 + offset2) len2 s2)
+// 	             (replace_subseq s offset1 len1 (replace_subseq (mslice s offset1 len1)
+// 						                    offset2 len2 s2))))
+//   = ()
 
-private let lemma_replace_subseq_slice1
-  (a:Type0) (len offset1 len1 offset2 len2:nat)
-  (s:Seq.lseq a len) (s2:Seq.lseq a len2)
-  :Lemma ((offset1 + len1 <= len /\ offset2 + len2 <= len1) ==>
-          (Seq.equal (replace_subseq (mslice s offset1 len1) offset2 len2 s2)
-	             (mslice (replace_subseq s (offset1 + offset2) len2 s2) offset1 len1)))
-  = ()
-
-let lemma_sub_compatibility_is_transitive1 (#a:Type0)
-  (len:nat) (pre:srel a)
-  (offset1 len1:nat) (pre1:srel a)
-  (offset2 len2:nat) (pre2:srel a)
-  :Lemma (requires (offset1 + len1 <= len /\ offset1 <= offset2 /\ offset2 + len2 <= offset1 + len1 /\
-                    compatible_sub_preorder len pre offset1 len1 pre1 /\
-                    compatible_sub_preorder len pre offset2 len2 pre2))
-	 (ensures  (compatible_sub_preorder len1 pre1 (offset2 - offset1) len2 pre2))
-  = Classical.forall_intro_2 (lemma_replace_subseq_slice a len offset1 len1 (offset2 - offset1) len2);
-    Classical.forall_intro_2 (lemma_replace_subseq_slice1 a len offset1 len1 (offset2 - offset1) len2);
-    admit ()
+ 
   
+//   Classical.forall_intro_2 (lemma_replace_subseq_slice a len offset1 len1 offset2 len2)
+
 (*
  * The type is indexed by two preorders:
  *   rrel: is the preorder of the underlying reference
  *   rel : is the preorder of the buffer itself
- * It is less than ideal to keep rrel in the index :(
+  * It is less than ideal to keep rrel in the index :(
  * But hiding it in the inductive bumps up the universe to Type u#1
  *   which means no buffers of buffers
  * Hopefully we can build libraries over it so that rarely will clients need to use mbuffer a rrel rel
@@ -1114,8 +1094,9 @@ val loc_includes_gsub_buffer_l (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel 
          [SMTPat (gsub b i1 len1 sub_rel1); SMTPat (gsub b i2 len2 sub_rel2)]
 let loc_includes_gsub_buffer_l #_ #_ #rel b i1 len1 sub_rel1 i2 len2 sub_rel2 =
   let b1 = gsub b i1 len1 sub_rel1 in
-  lemma_sub_compatibility_is_transitive1 (length b) rel (U32.v i1) (U32.v len1) sub_rel1 (U32.v i2) (U32.v len2) sub_rel2;
-  let b2 = gsub b1 (U32.sub i2 i1) len2 sub_rel2 in
+  let b2 = gsub b i2 len2 sub_rel2 in
+  //lemma_sub_compatibility_is_transitive1 (length b) rel (U32.v i1) (U32.v len1) sub_rel1 (U32.v i2) (U32.v len2) sub_rel2;
+  //let b2 = gsub b1 (U32.sub i2 i1) len2 sub_rel2 in
   loc_includes_buffer b1 b2
 
 /// If the contents of a buffer are equal in two given heaps, then so
