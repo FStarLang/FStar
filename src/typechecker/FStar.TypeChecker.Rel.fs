@@ -2202,25 +2202,37 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                       solve env (attempt subprobs wl))
               in
               let unfold_and_retry d env wl (prob, reason) =
-                  if debug env <| Options.Other "Rel"
-                  then BU.print2 "Failed to solve %s without SMT because %s"
+                   if debug env <| Options.Other "Rel"
+                   then BU.print3 "Failed to solve %s because sub-problem %s is not solvable without SMT because %s"
+                                (prob_to_string env orig)
                                 (prob_to_string env prob)
                                 reason;
-                   let t1' = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t1 in
-                   let t2' = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t2 in
-                   let head1', _ = U.head_and_args t1' in
-                   let head2', _ = U.head_and_args t2' in
-                   match U.eq_tm head1' head1, U.eq_tm head2' head2 with
-                   | U.Equal, U.Equal -> //unfolding didn't make progress
-                      if debug env <| Options.Other "Rel"
-                      then BU.print4
+                   match N.unfold_head_once env t1,
+                         N.unfold_head_once env t2
+                   with
+                   | Some t1', Some t2' ->
+                     let head1', _ = U.head_and_args t1' in
+                     let head2', _ = U.head_and_args t2' in
+                     begin
+                     match U.eq_tm head1' head1, U.eq_tm head2' head2 with
+                     | U.Equal, U.Equal -> //unfolding didn't make progress
+                       if debug env <| Options.Other "Rel"
+                       then BU.print4
                             "Unfolding didn't make progress ... got %s ~> %s;\nand %s ~> %s\n"
                                 (Print.term_to_string t1)
                                 (Print.term_to_string t1')
                                 (Print.term_to_string t2)
                                 (Print.term_to_string t2');
+                       solve_sub_probs env wl //fallback to trying to solve with SMT on
+                     | _ ->
+                       let torig' = {torig with lhs=t1'; rhs=t2'} in
+                       if debug env <| Options.Other "Rel"
+                       then BU.print1 "Unfolded and now trying %s\n"
+                                      (prob_to_string env (TProb torig'));
+                       solve_t env torig' wl
+                     end
+                   | _ ->
                      solve_sub_probs env wl //fallback to trying to solve with SMT on
-                   | _ -> solve_t env ({torig with lhs=t1'; rhs=t2'}) wl
               in
               let d =
                 match delta_depth_of_term env head1 with

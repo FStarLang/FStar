@@ -739,14 +739,16 @@ let typ_of_datacon env lid =
     | Some (Inr ({ sigel = Sig_datacon (_, _, _, l, _, _) }, _), _) -> l
     | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
-let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
+let lookup_definition_qninfo_aux rec_ok delta_levels lid (qninfo : qninfo) =
   let visible quals =
       delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
   in
   match qninfo with
   | Some (Inr (se, None), _) ->
     begin match se.sigel with
-      | Sig_let((_, lbs), _) when visible se.sigquals ->
+      | Sig_let((is_rec, lbs), _)
+        when visible se.sigquals
+          && (not is_rec || rec_ok) ->
           BU.find_map lbs (fun lb ->
               let fv = right lb.lbname in
               if fv_eq_lid fv lid
@@ -756,8 +758,14 @@ let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
     end
   | _ -> None
 
+let lookup_definition_qninfo delta_levels lid (qninfo : qninfo) =
+    lookup_definition_qninfo_aux true delta_levels lid qninfo
+
 let lookup_definition delta_levels env lid =
     lookup_definition_qninfo delta_levels lid <| lookup_qname env lid
+
+let lookup_nonrec_definition delta_levels env lid =
+    lookup_definition_qninfo_aux false delta_levels lid <| lookup_qname env lid
 
 let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
     let lid = fv.fv_name.v in
