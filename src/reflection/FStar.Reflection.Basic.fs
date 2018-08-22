@@ -228,7 +228,15 @@ let inspect_comp (c : comp) : comp_view =
 let pack_comp (cv : comp_view) : comp =
     match cv with
     | C_Total (t, _) -> mk_Total t
-    | _ -> failwith "sorry, can embed comp_views other than C_Total for now"
+    | C_Lemma (pre, post) ->
+        let ct = { comp_univs  = []
+                 ; effect_name = PC.effect_Lemma_lid
+                 ; result_typ  = S.t_unit
+                 ; effect_args = [S.as_arg pre; S.as_arg post]
+                 ; flags       = [] } in
+        S.mk_Comp ct
+
+    | _ -> failwith "cannot pack a C_Unknown"
 
 let pack_const (c:vconst) : sconst =
     match c with

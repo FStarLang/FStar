@@ -1471,10 +1471,11 @@ let with_saved_options f =
   // TODO: This assumes `f` does not mess with the stack!
   if not (trace_error ()) then begin
       push ();
-      try let retv = f () in
-          pop ();
-          retv
-      with | ex -> pop (); raise ex
+      let r = try Inr (f ()) with | ex -> Inl ex in
+      pop ();
+      match r with
+      | Inr v  -> v
+      | Inl ex -> raise ex
   end else begin
       push ();
       let retv = f () in

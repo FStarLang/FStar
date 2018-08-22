@@ -22,6 +22,11 @@ let lt_big_int = Z.lt
 let ge_big_int = Z.geq
 let gt_big_int = Z.gt
 
+let logand_big_int = Z.logand
+let logor_big_int = Z.logor
+let logxor_big_int = Z.logxor
+let lognot_big_int = Z.lognot
+
 let sqrt_big_int = Z.sqrt
 
 let string_of_big_int = Z.to_string
@@ -32,3 +37,5 @@ let to_int = Z.to_int
 
 let of_int_fs x = x
 let to_int_fs x = x
+
+let of_hex x = Z.of_string ("0x" ^ x)

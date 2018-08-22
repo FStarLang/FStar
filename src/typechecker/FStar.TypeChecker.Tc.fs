@@ -965,9 +965,7 @@ let tc_assume (env:env) (ts:tscheme) (r:Range.range) :tscheme =
   //AR: this might seem same as tc_declare_typ but come prop, this will change
   tc_type_common env ts (U.type_u () |> fst) r
 
-let tc_inductive env ses quals lids =
-    let env = Env.push env "tc_inductive" in
-
+let tc_inductive' env ses quals lids =
     if Env.debug env Options.Low then
         BU.print1 ">>>>>>>>>>>>>>tc_inductive %s\n" (FStar.Common.string_of_list Print.sigelt_to_string ses);
 
@@ -1022,15 +1020,19 @@ let tc_inductive env ses quals lids =
               else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env
             in
             sig_bndle, ses@data_ops_ses in  //append hasEq axiom lids and data projectors and discriminators lids
-    ignore (Env.pop env "tc_inductive"); // OK to ignore: caller will reuse original env
     res
+
+let tc_inductive env ses quals lids =
+  let env = Env.push env "tc_inductive" in
+  let pop () = ignore (Env.pop env "tc_inductive") in  //OK to ignore: caller will reuse original env
+  try tc_inductive' env ses quals lids |> (fun r -> pop (); r)
+  with e -> pop (); raise e 
 
 //when we process a reset-options pragma, we need to restart z3 etc.
 let z3_reset_options (en:env) :env =
   let env = Env.set_proof_ns (Options.using_facts_from ()) en in
   env.solver.refresh ();
   env
-
 
 let get_fail_se (se:sigelt) : option<(list<int> * bool)> =
     let comb f1 f2 =
@@ -1346,6 +1348,11 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   | Sig_splice (lids, t) ->
     if Options.debug_any () then
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
+
+    // Check the tactic
+    let t, _, g = tc_tactic env t in
+    Rel.force_trivial_guard env g;
+
     let ses = env.splice env t in
     let lids' = List.collect U.lids_of_sigelt ses in
     List.iter (fun lid ->

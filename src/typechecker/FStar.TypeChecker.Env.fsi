@@ -133,6 +133,7 @@ type env = {
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   normalized_eff_names:BU.smap<lident>;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
+  fv_delta_depths:BU.smap<delta_depth>;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   splice         :env -> term -> list<sigelt>;    (* hook for synthesizing terms via tactics, third arg is tactic term *)
@@ -236,6 +237,7 @@ val datacons_of_typ        : env -> lident -> (bool * list<lident>)
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition_qninfo : list<delta_level> -> lident -> qninfo -> option<(univ_names * term)>
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
+val lookup_nonrec_definition: list<delta_level> -> env -> lident -> option<(univ_names * term)>
 val quals_of_qninfo        : qninfo -> option<list<qualifier>>
 val attrs_of_qninfo        : qninfo -> option<list<attribute>>
 val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
@@ -255,6 +257,8 @@ val is_interpreted         : (env -> term -> bool)
 val is_irreducible         : env -> lident -> bool
 val is_type_constructor    : env -> lident -> bool
 val num_inductive_ty_params: env -> lident -> option<int>
+val delta_depth_of_qninfo  : fv -> qninfo -> option<delta_depth>
+val delta_depth_of_fv      : env -> fv -> delta_depth
 
 (* Universe instantiation *)
 

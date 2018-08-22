@@ -23,7 +23,7 @@ open FStar.Algebra.CommMonoid
 module CCM = CanonCommMonoid
 
 (* Only dump when debugging is on *)
-let dump m = if debugging () then dump m
+let ddump m = if debugging () then dump m
 
 irreducible let canon_attr = ()
 
@@ -248,7 +248,7 @@ let reification (b:Type) (f:term -> Tac b) (def:b) (#a:Type)
   let add = norm_term [delta] tadd in
   let mult = norm_term [delta] tmult in
   let ts = Tactics.Util.map (norm_term [delta]) ts in
-  //dump ("add = " ^ term_to_string add ^ "; mult = " ^ term_to_string mult);
+  //ddump ("add = " ^ term_to_string add ^ "; mult = " ^ term_to_string mult);
   let (es, _, vm) =
     Tactics.Util.fold_left
       (fun (es,vs,vm) t ->
@@ -304,43 +304,43 @@ let canon_semiring_aux
   match term_as_formula g with
   | Comp (Eq (Some t)) t1 t2 ->
     (
-      //dump ("t1 = " ^ term_to_string t1 ^ "; t2 = " ^ term_to_string t2);
+      //ddump ("t1 = " ^ term_to_string t1 ^ "; t2 = " ^ term_to_string t2);
       if term_eq t ta then
       (
         match reification b f def unquotea quotea tadd tmult munit [t1; t2] with
         | ([e1; e2], vm) ->
           (
             (*
-            dump (
+            ddump (
               "e1 = " ^ exp_to_string e1 ^
               "; e2 = " ^ exp_to_string e2);
-            dump ("vm = " ^ term_to_string (quote vm));
-            dump ("before = " ^ term_to_string (norm_term [delta; primops]
+            ddump ("vm = " ^ term_to_string (quote vm));
+            ddump ("before = " ^ term_to_string (norm_term [delta; primops]
               (quote (rdenote r vm e1 == rdenote r vm e2))));
-            dump ("expected after = " ^ term_to_string (norm_term [delta; primops]
+            ddump ("expected after = " ^ term_to_string (norm_term [delta; primops]
               (quote (
                 cdenote p r vm (exp_to_sum e1) ==
                 cdenote p r vm (exp_to_sum e2)))));
             *)
             // let q_app0 = quote (semiring_reflect #a #b p pc r vm e1 e2) in
-            // dump (term_to_string t1);
+            // ddump (term_to_string t1);
             let tvm = CCM.quote_vm ta tb quotea quoteb vm in
             let te1 = quote_exp e1 in
-            // dump (exp_to_string e1);
-            // dump (term_to_string te1);
+            // ddump (exp_to_string e1);
+            // ddump (term_to_string te1);
             let te2 = quote_exp e2 in
-            // dump (term_to_string te2);
+            // ddump (term_to_string te2);
             mapply (`(semiring_reflect #(`#ta) #(`#tb) (`#tp) (`#tpc) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
             unfold_def tp;
             canon_norm ();
             later ();
             canon_norm ();
-            //dump ("after norm-left");
+            //ddump ("after norm-left");
             trefl ();
             canon_norm ();
-            //dump ("after norm-right");
+            //ddump ("after norm-right");
             trefl ();
-            (* dump "done"; *)
+            (* ddump "done"; *)
             ()
           )
         | _ -> fail "Unexpected"

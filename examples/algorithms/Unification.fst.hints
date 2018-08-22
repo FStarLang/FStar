@@ -23,10 +23,10 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
-        "@query", "binder_x_63893f6163361bb7b4db46296cfdfc01_2",
+        "@query", "binder_x_a7fb6faea5d851896150f3c74abbb25a_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Unification.op_At",
+        "equation_Prims.eqtype", "equation_Unification.op_At",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_a",
@@ -37,7 +37,7 @@
         "token_correspondence_Unification.op_At"
       ],
       0,
-      "e99a88189044b95262bbf952bc172a8c"
+      "266f39f232900cb8915b12db58ec44d5"
     ],
     [
       "Unification.term",

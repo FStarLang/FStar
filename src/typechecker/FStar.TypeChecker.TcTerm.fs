@@ -778,17 +778,15 @@ and tc_synth head env args rng =
                   end
     in
 
-    let env', _ = Env.clear_expected_typ env in
-
     // Check the result type
-    let typ, _, g1 = tc_term env' typ in
-    Rel.force_trivial_guard env' g1;
+    let typ, _, g1 = tc_term (Env.set_expected_typ env (fst <| U.type_u ())) typ in
+    Rel.force_trivial_guard env g1;
 
     // Check the tactic
-    let tau, _, g2 = tc_tactic env' tau in
-    Rel.force_trivial_guard env' g2;
+    let tau, _, g2 = tc_tactic env tau in
+    Rel.force_trivial_guard env g2;
 
-    let t = env.synth_hook env' typ ({ tau with pos = rng }) in
+    let t = env.synth_hook env typ ({ tau with pos = rng }) in
     if Env.debug env <| Options.Other "Tac" then
         BU.print1 "Got %s\n" (Print.term_to_string t);
 

@@ -22,7 +22,7 @@ open FStar.Getopt
 open FStar.Ident
 module E = FStar.Errors
 
-let () = FStar.Version.dummy ()
+let _ = FStar.Version.dummy ()
 
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)

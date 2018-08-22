@@ -86,9 +86,15 @@ let debug_term (t : term) =
 let debug_sigmap (m : BU.smap<sigelt>) =
   BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
 
-let rec unlazy t =
+(* GM, Aug 19th 2018: This should not (at least always) be recursive.
+ * Forcing the thunk on an NBE term (Lazy i) triggers arbitrary
+ * computation, and it might very well turn out to normalize to another
+ * (Lazy i') (probably with i=i'). An example, from Meta-F*, is
+ * (pack_binder (pack_bv .., Q_Explicit)).
+ *)
+let unlazy t =
     match t with
-    | Lazy (_, t) -> unlazy (FStar.Common.force_thunk t)
+    | Lazy (_, t) -> FStar.Common.force_thunk t
     | t -> t
 
 let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t>)> =
@@ -99,8 +105,8 @@ let pickBranch cfg (scrut : t) (branches : list<branch>) : option<(term * list<t
         (* Inl ts: p matches t and ts are bindings for the branch *)
         (* Inr false: p definitely does not match t *)
         (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
+        debug cfg (fun () -> BU.print2 "matches_pat (%s, %s)\n" (t_to_string scrutinee0) (P.pat_to_string p));
         let scrutinee = unlazy scrutinee0 in
-        debug cfg (fun () -> BU.print2 "matches_pat (%s, %s)\n" (t_to_string scrutinee) (P.pat_to_string p));
         let r = match p.v with
         | Pat_var bv
         | Pat_wild bv ->
@@ -614,7 +620,12 @@ and translate (cfg:Cfg.cfg) (bs:list<t>) (e:term) : t =
       end
 
     | Tm_lazy li ->
-      Lazy (BU.Inl li, FStar.Common.mk_thunk (fun () -> translate cfg bs (U.unfold_lazy li)))
+      let f () =
+          let t = U.unfold_lazy li in
+          debug (fun () -> BU.print1 ">> Unfolding Tm_lazy to %s\n" (P.term_to_string t));
+          translate cfg bs t
+      in
+      Lazy (BU.Inl li, FStar.Common.mk_thunk f)
 
 and translate_comp cfg bs (c:S.comp) : comp =
   match c.n with
