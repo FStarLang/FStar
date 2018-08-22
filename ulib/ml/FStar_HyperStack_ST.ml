@@ -55,7 +55,7 @@ let witness_hsref _ _ = ()
 type erid = rid
 
 type 'a ref = 'a FStar_HyperStack.reference
-type 'a mreference = 'a ref
+type ('a, 'b) mreference = 'a ref
 type 'a reference = 'a mreference
 let alloc = salloc
 type ('a, 'b) mref = 'a ref
