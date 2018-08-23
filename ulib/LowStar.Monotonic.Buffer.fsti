@@ -1828,11 +1828,11 @@ val malloca (#a:Type0) (#rrel:srel a)
 /// specified by the ``init`` list, which must be nonempty, and of
 /// length representable as a machine integer.
 
-unfold let alloc_of_list_pre (#a:Type0) (init:list a) :GTot Type0 =
+unfold let alloc_of_list_pre (#a:Type0) (init:list a) =
   b2t ((norm [iota; zeta; delta; delta_only [`%FStar.List.Tot.length]] (0 < FStar.List.Tot.length init))) /\
   b2t ((norm [iota; zeta; delta; delta_only [`%FStar.List.Tot.length]] (FStar.List.Tot.length init <= UInt.max_int 32)))
 
-unfold let alloc_of_list_post (#a:Type0) (#rrel #rel:srel a) (len:nat) (buf:mbuffer a rrel rel) :GTot Type0 =
+unfold let alloc_of_list_post (#a:Type0) (#rrel #rel:srel a) (len:nat) (buf:mbuffer a rrel rel) =
   norm [iota; zeta; delta; delta_only [`%FStar.List.Tot.length]] (length buf == len)
 
 val malloca_of_list (#a:Type0) (#rrel:srel a) (init: list a)
@@ -1842,8 +1842,8 @@ val malloca_of_list (#a:Type0) (#rrel:srel a) (init: list a)
                                                                as_seq h' b == Seq.seq_of_list init /\
                                                                alloc_of_list_post #a len b))
 
-unfold let gcmalloc_of_list_pre (#a:Type0) (init:list a) :GTot Type0 =
-  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
+unfold let gcmalloc_of_list_pre (#a:Type0) (init:list a) =
+  norm [iota; zeta; delta; delta_only [`%FStar.List.Tot.length]] (FStar.List.Tot.length init <= UInt.max_int 32)
 
 (* TODO: Why is some of the post on the refinement? *)
 val mgcmalloc_of_list (#a:Type0) (#rrel:srel a) (r:HS.rid) (init:list a)
