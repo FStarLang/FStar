@@ -109,7 +109,6 @@ let swap_and_sum' =
              return_elab (U32.v x0 + U32.v x1))))))
   
 val lswap_and_sum : unit -> lcomp_wp int sum_wp_full (reif sum_wp_full hswap_and_sum)
-[@expect_failure] //still doesn't work
 let lswap_and_sum () =  
   lbind (lread 0) (fun x0 -> 
   lbind (lread 1) (fun x1 -> 
