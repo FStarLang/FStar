@@ -1829,11 +1829,11 @@ val malloca (#a:Type0) (#rrel:srel a)
 /// length representable as a machine integer.
 
 unfold let alloc_of_list_pre (#a:Type0) (init:list a) :GTot Type0 =
-  normalize (0 < FStar.List.Tot.length init) /\
-  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
+  b2t ((norm [iota; zeta; delta; delta_only [`%FStar.List.Tot.length]] (0 < FStar.List.Tot.length init))) /\
+  b2t ((norm [iota; zeta; delta; delta_only [`%FStar.List.Tot.length]] (FStar.List.Tot.length init <= UInt.max_int 32)))
 
 unfold let alloc_of_list_post (#a:Type0) (#rrel #rel:srel a) (len:nat) (buf:mbuffer a rrel rel) :GTot Type0 =
-  normalize (length buf == len)
+  norm [iota; zeta; delta; delta_only [`%FStar.List.Tot.length]] (length buf == len)
 
 val malloca_of_list (#a:Type0) (#rrel:srel a) (init: list a)
   :HST.StackInline (mbuffer a rrel rrel) (requires (fun h -> alloc_of_list_pre #a init))
