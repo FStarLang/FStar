@@ -241,6 +241,7 @@ val lookup_nonrec_definition: list<delta_level> -> env -> lident -> option<(univ
 val quals_of_qninfo        : qninfo -> option<list<qualifier>>
 val attrs_of_qninfo        : qninfo -> option<list<attribute>>
 val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
+val fv_has_attr            : env -> fv -> attr_lid:lid -> bool
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>

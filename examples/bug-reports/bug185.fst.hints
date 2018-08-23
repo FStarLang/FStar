@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Bug185.HasEq_data" ],
       0,
-      "57b28c0f6dd9c730d5d83a1337102449"
+      "6548842f2daf34c14446a384088253b3"
     ],
     [
       "Bug185.validate",
@@ -20,12 +20,12 @@
         "binder_x_ab406dde1f6cab92bf9b7aa3461e7323_0",
         "constructor_distinct_Bug185.certified",
         "constructor_distinct_Bug185.verified", "equation_Bug185.vk",
-        "equation_Bug185.vkey", "function_token_typing_Bug185.certified",
+        "equation_Bug185.vkey", "function_token_typing_Bug185.verified",
         "refinement_interpretation_Bug185_Tm_refine_47bb5e04350d529229da0ec9c09c0e4d",
-        "token_correspondence_Bug185.verified"
+        "token_correspondence_Bug185.certified"
       ],
       0,
-      "7449e9034e4e1a89eebbd46883ebf249"
+      "2324866bcaa5157ffdcf9b713a5fd1a0"
     ]
   ]
 ]

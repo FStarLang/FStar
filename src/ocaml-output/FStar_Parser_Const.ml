@@ -212,6 +212,8 @@ let (fail_lax_attr : FStar_Ident.lident) = psconst "expect_lax_failure"
 let (tcdecltime_attr : FStar_Ident.lident) = psconst "tcdecltime" 
 let (assume_strictly_positive_attr_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "assume_strictly_positive"] 
+let (unifier_hint_injective_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "unifier_hint_injective"] 
 let (gen_reset :
   (unit -> Prims.int,unit -> unit) FStar_Pervasives_Native.tuple2) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0")  in

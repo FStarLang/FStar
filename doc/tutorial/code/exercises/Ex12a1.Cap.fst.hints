@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "1c754891b9c4337e09500c7a02cfde61"
+      "851d65825dc9b1d6d274e600d42ca096"
     ],
     [
       "Ex12a1.Cap.capRead",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "a55c4dde6342480016f5ac9c12d333db"
+      "e63b2622ca1a756bb57e3ca030a46097"
     ]
   ]
 ]
