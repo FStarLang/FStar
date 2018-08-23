@@ -827,6 +827,17 @@ let attrs_of_qninfo (qninfo : qninfo) : option<list<attribute>> =
 let lookup_attrs_of_lid env lid : option<list<attribute>> =
   attrs_of_qninfo <| lookup_qname env lid
 
+let fv_has_attr env fv attr_lid : bool =
+    match lookup_attrs_of_lid env fv.fv_name.v with
+    | None
+    | Some [] ->
+      false
+    | Some attrs ->
+      attrs |> BU.for_some (fun tm ->
+         match (U.un_uinst tm).n with
+         | Tm_fvar fv -> S.fv_eq_lid fv attr_lid
+         | _ -> false)
+
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
     | Some (Inr (se, None), _) ->
