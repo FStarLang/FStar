@@ -2239,20 +2239,20 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 | None -> None
                 | Some d -> decr_delta_depth d
               in
+              let treat_as_injective =
+                match (U.un_uinst head1).n with
+                | Tm_fvar fv ->
+                  Env.fv_has_attr env fv Const.unifier_hint_injective_lid
+                | _ -> false
+              in
               begin
               match d with
-              | Some d when wl.smt_ok ->
+              | Some d when wl.smt_ok && not treat_as_injective ->
                 try_solve_without_smt_or_else env wl
                     solve_sub_probs_no_smt
                     (unfold_and_retry d)
 
               | _ -> //cannot be unfolded or no smt anyway; so just try to solve extensionally
-                //if debug env <| Options.Other "Rel"
-                //then BU.print3
-                //    "Cannot unfold %s or %s since delta_depth=%s\n"
-                //                (Print.term_to_string t1)
-                //                (Print.term_to_string t2)
-                //                (match d with | None -> "None" | Some d -> Print.delta_depth_to_string d);
                 solve_sub_probs env wl
 
               end

@@ -349,7 +349,7 @@ let rec head_and_args' t =
             in (head, args'@args)
         | _ -> t, []
 
- let un_uinst t =
+let un_uinst t =
     let t = Subst.compress t in
     match t.n with
         | Tm_uinst(t, _) -> Subst.compress t
