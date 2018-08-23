@@ -7721,7 +7721,10 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                        if
                                          (problem.FStar_TypeChecker_Common.relation
                                             = FStar_TypeChecker_Common.EQ)
-                                           || has_uvars
+                                           ||
+                                           ((Prims.op_Negation
+                                               env1.FStar_TypeChecker_Env.uvar_subtyping)
+                                              && has_uvars)
                                        then
                                          let uu____19843 =
                                            let uu____19848 =
