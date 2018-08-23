@@ -2,7 +2,7 @@ module FStar.Classical
 
 open FStar.Squash
 
-let give_witness #a x = return_squash #a x
+let give_witness #a x = return_squash x
 
 let give_witness_from_squash #a x = x
 
@@ -80,7 +80,7 @@ let impl_intro #p #q $f =
   give_witness #(p ==> q) (squash_double_arrow (return_squash (lemma_to_squash_gtot f)))
 
 let exists_elim goal #a #p have f =
-  bind_squash #_ #goal (join_squash have) (fun (| x, pf |) -> return_squash #(p x) pf; f x)
+  bind_squash #_ #goal (join_squash have) (fun (| x, pf |) -> return_squash pf; f x)
 
 let move_requires #a #p #q $f x =
       give_proof
