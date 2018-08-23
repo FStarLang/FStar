@@ -2635,7 +2635,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             || not (BU.set_is_empty (FStar.Syntax.Free.uvars phi2))
         in
         if problem.relation = EQ
-        ||  has_uvars
+        || (not env.uvar_subtyping && has_uvars)
         then let ref_prob, wl =
                   mk_t_problem wl [mk_binder x1] orig phi1 EQ phi2 None "refinement formula"
              in
