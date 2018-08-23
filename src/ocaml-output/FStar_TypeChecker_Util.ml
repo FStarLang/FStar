@@ -2810,7 +2810,8 @@ let (maybe_instantiate :
                            ([], bs2, subst1,
                              FStar_TypeChecker_Env.trivial_guard)
                        | (uu____5992,(x,FStar_Pervasives_Native.Some
-                                      (FStar_Syntax_Syntax.Implicit dot))::rest)
+                                      (FStar_Syntax_Syntax.Implicit
+                                      uu____5994))::rest)
                            ->
                            let t1 =
                              FStar_Syntax_Subst.subst subst1
@@ -2848,9 +2849,8 @@ let (maybe_instantiate :
                                          in
                                       (((v1,
                                           (FStar_Pervasives_Native.Some
-                                             (FStar_Syntax_Syntax.Implicit
-                                                dot))) :: args), bs3, subst3,
-                                        uu____6181))))
+                                             FStar_Syntax_Syntax.imp_tag)) ::
+                                        args), bs3, subst3, uu____6181))))
                        | (uu____6208,(x,FStar_Pervasives_Native.Some
                                       (FStar_Syntax_Syntax.Meta tau))::rest)
                            ->
@@ -3791,6 +3791,8 @@ let (check_and_ascribe :
                 (uu___363_8915.FStar_TypeChecker_Env.qtbl_name_and_index);
               FStar_TypeChecker_Env.normalized_eff_names =
                 (uu___363_8915.FStar_TypeChecker_Env.normalized_eff_names);
+              FStar_TypeChecker_Env.fv_delta_depths =
+                (uu___363_8915.FStar_TypeChecker_Env.fv_delta_depths);
               FStar_TypeChecker_Env.proof_ns =
                 (uu___363_8915.FStar_TypeChecker_Env.proof_ns);
               FStar_TypeChecker_Env.synth_hook =

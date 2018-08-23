@@ -14,7 +14,22 @@
         "function_token_typing_FStar.UInt32.n", "true_interp"
       ],
       0,
-      "058357549c8b6fce1e3c2ec172d9fe4a"
+      "d76a1c506d71da54c53cdb3ebb859215"
+    ],
+    [
+      "Fresh.uu___61",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.UInt32.n", "true_interp"
+      ],
+      0,
+      "4e1649e848e5a967513b781c678f4c34"
     ]
   ]
 ]

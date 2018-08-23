@@ -896,7 +896,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
              | NoDelta -> false
              | InliningDelta
              | Eager_unfolding_only -> true
-             | Unfold l -> Common.delta_depth_greater_than fv.fv_delta l))
+             | Unfold l -> Common.delta_depth_greater_than (Env.delta_depth_of_fv cfg.tcenv fv) l))
     in
     log_unfolding cfg (fun () -> BU.print3 "should_unfold: For %s (%s), unfolding res = %s\n"
                     (Print.fv_to_string fv)
@@ -973,17 +973,23 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_lazy _
 
           //these three are just constructors; no delta steps can apply
-          | Tm_fvar({ fv_delta = Delta_constant_at_level 0 })
           | Tm_fvar({ fv_qual = Some Data_ctor })
           | Tm_fvar({ fv_qual = Some (Record_ctor _) }) ->
             log_unfolding cfg (fun () -> BU.print1 ">>> Tm_fvar case 0 for %s\n" (Print.term_to_string t));
             rebuild cfg env stack t
 
           | Tm_fvar fv ->
-            let qninfo = Env.lookup_qname cfg.tcenv (S.lid_of_fv fv) in
-            begin match decide_unfolding cfg env stack t.pos fv qninfo with
-            | Some (cfg, stack) -> do_unfold_fv cfg env stack t qninfo fv
-            | None -> rebuild cfg env stack t
+            let lid = S.lid_of_fv fv in
+            let qninfo = Env.lookup_qname cfg.tcenv lid in
+            begin
+            match Env.delta_depth_of_qninfo fv qninfo with
+            | Some (Delta_constant_at_level 0) ->
+              log_unfolding cfg (fun () -> BU.print1 ">>> Tm_fvar case 0 for %s\n" (Print.term_to_string t));
+              rebuild cfg env stack t
+            | _ ->
+              match decide_unfolding cfg env stack t.pos fv qninfo with
+              | Some (cfg, stack) -> do_unfold_fv cfg env stack t qninfo fv
+              | None -> rebuild cfg env stack t
             end
 
           | Tm_quoted _ ->
@@ -2782,3 +2788,19 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
 
 let erase_universes env t =
     normalize [EraseUniverses; AllowUnboundUniverses] env t
+
+let unfold_head_once env t =
+  let aux f us args =
+      match Env.lookup_nonrec_definition [Env.Unfold delta_constant] env f.fv_name.v with
+      | None -> None
+      | Some head_def_ts ->
+        let _, head_def = Env.inst_tscheme_with head_def_ts us in
+        let t' = S.mk_Tm_app head_def args None t.pos in
+        let t' = normalize [Env.Beta; Env.Iota] env t' in
+        Some t'
+  in
+  let head, args = U.head_and_args t in
+  match (SS.compress head).n with
+  | Tm_fvar fv -> aux fv [] args
+  | Tm_uinst({n=Tm_fvar fv}, us) -> aux fv us args
+  | _ -> None

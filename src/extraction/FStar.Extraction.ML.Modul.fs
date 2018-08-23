@@ -45,7 +45,7 @@ module Env = FStar.TypeChecker.Env
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
-    mk (Tm_app(S.fvar PC.failwith_lid delta_constant None,
+    mk (Tm_app(S.fvar PC.failwith_lid delta_constant None, //NS delta: wrong
                [ S.iarg t
                ; S.as_arg <| mk (Tm_constant (Const_string ("Not yet implemented:"^(Print.lid_to_string lid), Range.dummyRange))) None Range.dummyRange]))
         None

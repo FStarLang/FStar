@@ -642,6 +642,13 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
             // TODO: traverse the types?
             comb1 (fun t -> Tm_ascribed (t, asc, ef)) (traverse f pol e t)
 
+        | Tm_match (sc, brs) ->
+            comb2 (fun sc brs -> Tm_match (sc, brs))
+                  (traverse f pol e sc)
+                  (comb_list (List.map (fun br -> let (pat, w, exp) = SS.open_branch br in
+                                                  let r = traverse f pol e exp in
+                                                  comb1 (fun exp -> SS.close_branch (pat, w, exp)) r) brs))
+
         | x ->
             tpure x in
     match r with

@@ -51,7 +51,7 @@ let sli (l:lident) : string =
 
 let lid_to_string (l:lid) = sli l
 
-//let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
+// let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
 let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ delta_depth_to_string fv.fv_delta ^ ")"
 let bv_to_string bv = bv.ppname.idText ^ "#" ^ (string_of_int bv.index)
 

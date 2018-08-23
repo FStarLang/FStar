@@ -24,7 +24,7 @@ assume val cps : attribute
    The type-checker emits axioms for hasEq for each inductive type *)
 assume type hasEq: Type -> GTot Type0
 
-type eqtype = a:Type{hasEq a}
+type eqtype = a:Type0{hasEq a}
 
 (* bool is a two element type with elements {'true', 'false'}
     we assume it is primitive, for convenient interop with other languages *)
