@@ -433,7 +433,8 @@ and ty_nested_positive_in_type (ty_lid:lident) (t:term') (ilid:lident) (num_ibs:
     debug_log env ("Checking nested positivity in an Tm_app node, which is expected to be the ilid itself");
     begin
     match try_get_fv t with
-    | None -> false
+    | None ->
+      Env.fv_has_attr env (S.lid_as_fv ilid delta_constant None) PC.assume_strictly_positive_attr_lid
     | Some (fv, _) ->
       if Ident.lid_equals fv.fv_name.v ilid then true  //TODO: in this case Coq manual says we should check for indexes
       else failwith "Impossible, expected the type to be ilid"
