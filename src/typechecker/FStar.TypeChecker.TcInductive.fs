@@ -300,7 +300,11 @@ let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfo
        //get the head node fv, try_get_fv would fail if it's not an fv
        begin
        match try_get_fv t with
-       | None -> false
+       | None -> 
+          Env.fv_has_attr env
+                     (S.lid_as_fv ty_lid delta_constant None) 
+                      FStar.Parser.Const.assume_strictly_positive_attr_lid
+
        | Some (fv, us) ->
          //if it's same as ty_lid, then check that ty_lid does not occur in the arguments
          if Ident.lid_equals fv.fv_name.v ty_lid then
