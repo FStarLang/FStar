@@ -60,47 +60,9 @@ let hswap_and_sum () =
   let _  = put_action 1 x0 in
   U32.v x0 + U32.v x1
 
-
-unfold
-let wp1 (x0 : mint) : hwp_mon int =
-  bind_wp (read_wp 1) (fun x1 ->
-  bind_wp (write_wp 0 x1) (fun () ->
-  bind_wp (write_wp 1 x0) (fun () ->
-  return_wp (U32.v x0 + U32.v x1))))
-
-unfold
-let wp2 (x0 x1 : mint) : hwp_mon int = 
-  bind_wp (write_wp 0 x1) (fun () ->
-  bind_wp (write_wp 1 x0) (fun () ->
-  return_wp (U32.v x0 + U32.v x1)))
-
-unfold
-let wp4 (x0 x1 : mint) (u : unit) : hwp_mon int = 
-  return_wp (U32.v x0 + U32.v x1)
-
-unfold
-let wp3 (x0 x1 : mint) (u : unit) : hwp_mon int = 
-  bind_wp (write_wp 1 x0) (wp4 x0 x1)
-
 let force_eq #a #wp ($f:comp_wp a wp) : comp_wp a wp = f
 
-//NS: Annoyingly, we seem to need to write this in this
-//    partially eta-expanded form for inference to succeed
-//    That's probably easily fixable
-val swap_and_sum' :
-  comp_wp int
-          (bind_wp (fun s0 -> read_wp 0 s0) (fun x0 s1 ->
-           bind_wp (fun s0 -> read_wp 1 s0) (fun x1 s2 -> 
-           bind_wp (fun s0 -> write_wp 0 x1 s0) (fun _ s3 ->
-           bind_wp (fun s0 -> write_wp 1 x0 s0) (fun _ s4 ->
-           return_wp (U32.v x0 + U32.v x1) s4) s3) s2) s1))
-
-
-//NS: More tricky is that it seems that to check the implementation
-//    we need to turn off two phase tc
-//    Otherwise, additional proof obligations about monotonicity
-//    refinements pollute the computed VC and things go off the rails
-#set-options "--use_two_phase_tc false"
+val swap_and_sum' : comp_wp int sum_wp_full
 let swap_and_sum' =
             (bind_elab (hread' 0) (fun x0 ->
              bind_elab (hread' 1) (fun x1 ->
@@ -115,4 +77,15 @@ let lswap_and_sum () =
   lbind (lwrite 0 x1) (fun () ->
   lbind (lwrite 1 x0) (fun () ->
   lreturn (U32.v x0 + U32.v x1)))))
+
+
+//NS: Annoyingly, we seem to need to write this in this
+//    partially eta-expanded form for inference to succeed
+//    That's probably easily fixable
+//NS: More tricky is that it seems that to check the implementation
+//    we need to turn off two phase tc
+//    Otherwise, additional proof obligations about monotonicity
+//    refinements pollute the computed VC and things go off the rails
+//#set-options "--use_two_phase_tc false"
+
   
