@@ -237,9 +237,11 @@ val datacons_of_typ        : env -> lident -> (bool * list<lident>)
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition_qninfo : list<delta_level> -> lident -> qninfo -> option<(univ_names * term)>
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
+val lookup_nonrec_definition: list<delta_level> -> env -> lident -> option<(univ_names * term)>
 val quals_of_qninfo        : qninfo -> option<list<qualifier>>
 val attrs_of_qninfo        : qninfo -> option<list<attribute>>
 val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
+val fv_has_attr            : env -> fv -> attr_lid:lid -> bool
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
