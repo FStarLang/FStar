@@ -87,7 +87,7 @@ endif
 	                    -e '/%type/s/[a-zA-Z0-9_]*\.//g' \
 	                    -e '/%token.*->.*/d' \
 	                    -e '/%type.*->.*/d' \
-	                    >> $@
+	              | cat -s >> $@
 
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
 fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
