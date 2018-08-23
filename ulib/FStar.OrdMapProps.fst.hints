@@ -39,7 +39,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "05a7b80e5ce964b12a17ec48708a8cbd"
+      "d456d6cec546f17247bccdb7913ac8b5"
     ],
     [
       "FStar.OrdMapProps.fold",
@@ -79,7 +79,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "54e17fa4b91a37aec6b1781bc1127ebe"
+      "01ec2d558a452e4238d4d3f485ebb206"
     ]
   ]
 ]
