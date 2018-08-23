@@ -2129,7 +2129,7 @@ let (resugar_tscheme'' :
 let (resugar_tscheme' :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.tscheme -> FStar_Parser_AST.decl)
-  = fun env  -> fun ts  -> resugar_tscheme'' env "tsheme" ts 
+  = fun env  -> fun ts  -> resugar_tscheme'' env "tscheme" ts 
 let (resugar_eff_decl' :
   FStar_Syntax_DsEnv.env ->
     Prims.bool ->
