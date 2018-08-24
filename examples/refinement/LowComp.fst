@@ -394,13 +394,43 @@ let lcomp_unique_inhabitant (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (lc1 : lco
   Lemma (requires (sat wp))
         (ensures (l_eq lc1 lc2)) = ()
 
+
+// Satisifability of WPs 
+
+let return_wp_sat (#a:Type) (x : a) : Lemma (sat (return_wp x)) = ()
+
+let write_wp_sat (i:nat) (v:mint) : Lemma (sat (write_wp i v)) = ()
+
+let read_wp_sat (i:nat) : Lemma (sat (read_wp i)) = ()
+
+
+let subsumes_sat #a (wp1 wp2 : hwp_mon a) : Lemma (requires (subsumes wp1 wp2 /\ sat wp2))
+                                                  (ensures (sat wp1)) = ()
+
+// let bind_wp_sat #a #b (wp1:hwp_mon a{sat wp1}) 
+//   (fwp2 : (x:a -> (wp:hwp_mon b{sat wp}))) : Lemma (sat (bind_wp wp1 fwp2)) = ()
+
+
 // Lifting lemma statements
 
-let lift_return #a (wp : hwp_mon a) (x : a) =
-  (subsumes (return_wp x) wp) -> 
-  l_eq #a
-   #wp #(cast wp (return_elab x)) (lift wp (cast wp (return_elab x)))
-   #wp #(cast wp (return_elab x)) (lreturn x)
+let lift_return #a (wp : hwp_mon a) (x : a) :
+    Lemma (requires (subsumes (return_wp x) wp /\ sat wp)) 
+          (ensures (l_eq #a
+                         #wp #(cast wp (return_elab x)) (lift wp (cast wp (return_elab x)))
+                         #wp #(cast wp (return_elab x)) (lreturn x))) = ()
+
+let lift_read (wp : hwp_mon mint) (i : nat{i < 2}) :
+  Lemma (requires (subsumes (read_wp i) wp /\ sat wp)) 
+        (ensures (l_eq #mint
+                       #wp #(cast wp (hread' i)) (lift wp (cast wp (hread' i)))
+                       #wp #(cast wp (hread' i)) (lread' i))) = ()
+
+let lift_write (wp : hwp_mon unit) (i : nat{i < 2}) (v : mint) :
+  Lemma (requires (subsumes (write_wp i v) wp /\ sat wp)) 
+        (ensures (l_eq #unit
+                        #wp #(cast wp (hwrite' i v)) (lift wp (cast wp (hwrite' i v)))
+                        #wp #(cast wp (hwrite' i v)) (lwrite' i v))) = ()
+
 
 let lift_bind #a #b (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
   (wp2 : a -> hwp_mon b) (c2 : (x:a) -> comp_wp b (wp2 x)) 
@@ -410,19 +440,6 @@ let lift_bind #a #b (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
     #wp #(cast wp (bind_elab c1 c2)) (lift wp (cast wp (bind_elab c1 c2))) 
     #wp #(cast wp (bind_elab c1 c2)) (lcast wp (bind_elab c1 c2)
                                             (lbind (lift wp1 c1) (fun x -> (lift (wp2 x) (c2 x)))))
-
-
-let lift_read (wp : hwp_mon mint) (i : nat{i < 2}) =
-  (subsumes (read_wp i) wp) -> 
-  l_eq #mint
-    #wp #(cast wp (hread' i)) (lift wp (cast wp (hread' i)))
-    #wp #(cast wp (hread' i)) (lread' i)
-
-let lift_write (wp : hwp_mon unit) (i : nat{i < 2}) (v : mint) =
-  (subsumes (write_wp i v) wp) -> 
-  l_eq #unit
-    #wp #(cast wp (hwrite' i v)) (lift wp (cast wp (hwrite' i v)))
-    #wp #(cast wp (hwrite' i v)) (lwrite' i v)
 
 
 let lcomp_respects_h_eq
