@@ -132,9 +132,10 @@ let as_lwp #a #wp (c:comp_wp a wp) : lwp a =
 
 // Not quite sure about that
 let precise #a (wp:lwp a) = 
-  forall ls h1 h2 post. 
-    wp ls h1 post -> wp ls h2 post ->
-    h1 == h2
+  forall h0 (ls:lstate{well_formed h0 ls}). 
+    wp ls h0 (fun (r1, h1) ->
+    wp ls h0 (fun (r2, h2) ->
+    r1 == r2 /\ h1 == h2))
 
 let lwp_eq #a (wp1:lwp a) (wp2:lwp a) =
   precise wp1 /\
@@ -143,8 +144,7 @@ let lwp_eq #a (wp1:lwp a) (wp2:lwp a) =
 
 let l_eq #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp a wp1 c1)
          (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2 : lcomp_wp a wp2 c2) = 
-  // Zoe : Not so sure about that. I'd rather use h_eq on the high computations
-  lwp_eq (as_lwp c1) (as_lwp c2)
+    lwp_eq (as_lwp c1) (as_lwp c2)
 
 // Lifting of high programs to low programs
 let lift (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c = 
@@ -372,6 +372,27 @@ let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a
 
 let lcast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) (l : lcomp_wp a wp1 c) : lcomp_wp a wp2 c = l
 
+let sat #a (wp:hwp a) : Type = forall (h:HS.mem) (ls:lstate{well_formed h ls}). wp (lstate_as_state h ls) (fun _ -> True)
+
+let as_lwp_precise (#a:Type) wp (c : comp_wp a wp) : 
+  Lemma
+    (requires (sat wp))
+    (ensures (precise (as_lwp #a #wp c))) = ()
+  
+let h_eq_implies_l_eq (#a:Type) (wp1:hwp_mon a) (c1:comp_wp a wp1) (lc1:lcomp_wp a wp1 c1) 
+    (wp2:hwp_mon a) (c2:comp_wp a wp2) (lc2:lcomp_wp a wp2 c2) :
+  Lemma (requires (h_eq wp1 wp2 c1 c2 /\ sat wp1 /\ sat wp2))
+        (ensures (l_eq lc1 lc2)) = ()
+
+let h_eq_refl (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : Lemma (h_eq wp wp c c) = ()
+
+let l_eq_refl (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (l : lcomp_wp a wp c) : 
+  Lemma (requires (sat wp)) 
+        (ensures (l_eq l l)) = ()
+
+let lcomp_unique_inhabitant (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (lc1 : lcomp_wp a wp c) (lc2 : lcomp_wp a wp c) : 
+  Lemma (requires (sat wp))
+        (ensures (l_eq lc1 lc2)) = ()
 
 // Lifting lemma statements
 
