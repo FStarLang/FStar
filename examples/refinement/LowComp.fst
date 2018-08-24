@@ -127,6 +127,23 @@ let as_lwp #a #wp (c:comp_wp a wp) : lwp a =
        (let (x, s1) = c s0 in
         let h1 = state_as_lstate h0 ls s1 in post (x, h1)))
 
+
+// Equality of low wps and programs
+
+let precise #a (wp:lwp a) = 
+  forall ls h1 h2 post. 
+    wp ls h1 post -> wp ls h2 post ->
+    h1 == h2
+
+let lwp_eq #a (wp1:lwp a) (wp2:lwp a) =
+  precise wp1 /\
+  precise wp2 /\
+  (forall ls h0 post. wp1 ls h0 post <==> wp2 ls h0 post) 
+
+let l_eq #a (#wp1:hwp_mon a) (c1:comp_wp a wp1) (#wp2:hwp_mon a) (c2:hwp_mon a wp2) = 
+  lwp_eq (as_lwp c1) (as_lwp c2)
+
+
 // Lifting of high programs to low programs
 let lift (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c = 
     fun (b1, b2) -> 
