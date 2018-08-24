@@ -157,7 +157,7 @@ let get_action = HIGH?.get
 // Commutation
 let h_eq (#a:Type) (wp1:hwp_mon a) (wp2:hwp_mon a) (c1:comp_wp a wp1) (c2:comp_wp a wp2) =
     (forall s0. wp1 s0 (fun _ -> True) <==> wp2 s0 (fun _ -> True)) /\
-    (forall s0. wp1 s0 (fun _ -> True) ==> wp2 s0 (fun _ -> True) /\ c1 s0 == c2 s0)
+    (forall s0. wp1 s0 (fun _ -> True) ==> c1 s0 == c2 s0)
 
 // Equivalence with reified computations
 

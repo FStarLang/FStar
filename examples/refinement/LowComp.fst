@@ -116,6 +116,17 @@ let lcomp_wp (a:Type) (wp : hwp_mon a) (c : comp_wp a wp) =
 //let's factor this into a `run`, which makes things a lot more predictable
 let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : (a * state) = c s0
 
+
+type lwp a = lstate -> (mem -> (a * mem -> Type) -> Type)
+
+let as_lwp #a #wp (c:comp_wp a wp) : lwp a =
+    fun ls h0 post ->
+      well_formed h0 ls /\
+      (let s0 = lstate_as_state h0 ls in
+       wp s0 (fun _ -> True) /\
+       (let (x, s1) = c s0 in
+        let h1 = state_as_lstate h0 ls s1 in post (x, h1)))
+
 // Lifting of high programs to low programs
 let lift (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c = 
     fun (b1, b2) -> 
