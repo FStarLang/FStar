@@ -1030,7 +1030,7 @@ let resugar_tscheme'' env name (ts:S.tscheme) =
   mk_decl typ.pos [] (A.Tycon(false, false, [(A.TyconAbbrev(name, [], None, resugar_term' env typ), None)]))
 
 let resugar_tscheme' env (ts:S.tscheme) =
-  resugar_tscheme'' env "tsheme" ts
+  resugar_tscheme'' env "tscheme" ts
 
 let resugar_eff_decl' env for_free r q ed =
   let resugar_action d for_free =

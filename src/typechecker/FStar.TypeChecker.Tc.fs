@@ -1536,13 +1536,14 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
     begin match errs, check_multi_contained errnos (List.concatMap (fun i -> list_of_option i.issue_number) errs) with
     | [], _ ->
         List.iter Errors.print_issue errs;
-        raise_error (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded") se.sigrng
+        Errors.log_issue se.sigrng (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded")
     | _, Some (e, n1, n2) ->
         List.iter Errors.print_issue errs;
-        raise_error (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
-                                                (string_of_int e) (string_of_int n1) (string_of_int n2)) se.sigrng
-    | _, None -> [], [], env
-    end
+        Errors.log_issue se.sigrng (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
+                                                (string_of_int e) (string_of_int n1) (string_of_int n2))
+    | _, None -> ()
+    end;
+    [], [], env
 
   | None ->
     tc_decl' env se
