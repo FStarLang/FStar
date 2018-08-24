@@ -98,6 +98,9 @@ fstar.exe: $(GENERATED_FILES)
 
 install-compiler-lib: fstar.exe
 	mkdir -p ../../bin/fstar-compiler-lib/
+	# VD: forcing the recompilation of modules in ulib/tactics_ml whenever the compiler is rebuilt
+	# in order to avoid inconsistent assumption errors between fstartaclib and compiler-lib
+	$(FIND) ../../ulib/tactics_ml \( -name '*.cmi' -or -name '*.cmx' \) -exec rm {} \;
 	$(FIND) . \( -name '*.cmi' -or -name '*.cmx' \) -exec cp {} ../../bin/fstar-compiler-lib/ \;
 
 FStar_Parser_Parse.ml: parse.mly
