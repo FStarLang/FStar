@@ -130,6 +130,7 @@ let as_lwp #a #wp (c:comp_wp a wp) : lwp a =
 
 // Equality of low wps and programs
 
+// Not quite sure about that
 let precise #a (wp:lwp a) = 
   forall ls h1 h2 post. 
     wp ls h1 post -> wp ls h2 post ->
@@ -140,9 +141,10 @@ let lwp_eq #a (wp1:lwp a) (wp2:lwp a) =
   precise wp2 /\
   (forall ls h0 post. wp1 ls h0 post <==> wp2 ls h0 post) 
 
-let l_eq #a (#wp1:hwp_mon a) (c1:comp_wp a wp1) (#wp2:hwp_mon a) (c2:hwp_mon a wp2) = 
+let l_eq #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp a wp1 c1)
+         (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2 : lcomp_wp a wp2 c2) = 
+  // Zoe : Not so sure about that. I'd rather use h_eq on the high computations
   lwp_eq (as_lwp c1) (as_lwp c2)
-
 
 // Lifting of high programs to low programs
 let lift (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c = 
@@ -228,9 +230,6 @@ let lread i = fun (b1, b2) ->
      b1.(0ul)
   else
     b2.(0ul)
-
-
-
 
 let lbind (#a:Type) (#b:Type)
   (#wp1: hwp_mon a) (#fwp2 : (a -> hwp_mon b))
@@ -362,6 +361,48 @@ let lread' i = fun (b1, b2) ->
   let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
   let p2 = get_upd_eq h0 b2 0 (get h0 b2 0) in
   if i = 0 then b1.(0ul) else b2.(0ul)
+
+
+(** ** Equality properties *)
+
+let subsumes #a (wp1 : hwp a) (wp2 : hwp a) = 
+  forall s0 post. wp2 s0 post ==> wp1 s0 post
+
+let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : comp_wp a wp2 = c 
+
+let lcast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) (l : lcomp_wp a wp1 c) : lcomp_wp a wp2 c = l
+
+
+// Lifting lemma statements
+
+let lift_return #a (wp : hwp_mon a) (x : a) =
+  (subsumes (return_wp x) wp) -> 
+  l_eq #a
+   #wp #(cast wp (return_elab x)) (lift wp (cast wp (return_elab x)))
+   #wp #(cast wp (return_elab x)) (lreturn x)
+
+let lift_bind #a #b (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
+  (wp2 : a -> hwp_mon b) (c2 : (x:a) -> comp_wp b (wp2 x)) 
+  (wp : hwp_mon b) = 
+  (subsumes (bind_wp wp1 wp2) wp) ->
+  l_eq #b 
+    #wp #(cast wp (bind_elab c1 c2)) (lift wp (cast wp (bind_elab c1 c2))) 
+    #wp #(cast wp (bind_elab c1 c2)) (lcast wp (bind_elab c1 c2)
+                                            (lbind (lift wp1 c1) (fun x -> (lift (wp2 x) (c2 x)))))
+
+
+let lift_read (wp : hwp_mon mint) (i : nat{i < 2}) =
+  (subsumes (read_wp i) wp) -> 
+  l_eq #mint
+    #wp #(cast wp (hread' i)) (lift wp (cast wp (hread' i)))
+    #wp #(cast wp (hread' i)) (lread' i)
+
+let lift_write (wp : hwp_mon unit) (i : nat{i < 2}) (v : mint) =
+  (subsumes (write_wp i v) wp) -> 
+  l_eq #unit
+    #wp #(cast wp (hwrite' i v)) (lift wp (cast wp (hwrite' i v)))
+    #wp #(cast wp (hwrite' i v)) (lwrite' i v)
+
 
 let lcomp_respects_h_eq
          (a : Type)
