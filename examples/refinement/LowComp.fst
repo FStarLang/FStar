@@ -111,6 +111,30 @@ let lcomp_wp (a:Type) (wp : hwp_mon a) (c : comp_wp a wp) =
                      let (x, s1) = c s0 in
                      h' == state_as_lstate h ls s1 /\ x == r )))
 
+//Rather than get into trouble with applying `c` directly in a context
+//where we have to think about the VC of the continuation,
+//let's factor this into a `run`, which makes things a lot more predictable
+let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : (a * state) = c s0
+
+// Lifting of high programs to low programs
+let lift (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c = 
+    fun (b1, b2) -> 
+      let s1 = b1.(0ul) in 
+      let s2 = b2.(0ul) in 
+      let h = ST.get () in 
+      assert (lstate_as_state h (b1, b2) == (s1, s2));
+      let (x, (s1', s2')) = run_high c (s1, s2) in
+      b1.(0ul) <- s1';
+      let h' = ST.get () in
+      let p = g_upd_preserves_live h b1 b2 s1' in 
+      assume (h' == g_upd b1 0 s1 h);
+      b2.(0ul) <- s2';
+      let h'' = ST.get () in 
+      let p = g_upd_preserves_live h' b2 b1 s2' in // Shows: live h1 b
+      assume (h'' == g_upd b2 0 s2' (g_upd b1 0 s1' h));
+      x
+
+
 (** DSL for low computations *)
 
 let lreturn (#a:Type) (x:a) : lcomp_wp a (return_wp x) (return_elab x) =
@@ -178,10 +202,6 @@ let lread i = fun (b1, b2) ->
     b2.(0ul)
 
 
-//Rather than get into trouble with applying `c` directly in a context
-//where we have to think about the VC of the continuation,
-//let's factor this into a `run`, which makes things a lot more predictable
-let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : (a * state) = c s0
 
 
 let lbind (#a:Type) (#b:Type)
