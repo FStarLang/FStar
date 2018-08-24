@@ -13,8 +13,22 @@ module HST = FStar.HyperStack.ST
  *)
 
 (* Shorthand for preorder over sequences *)
-unfold let srel (a:Type0) = Seq.seq_pre a
+type srel (a:Type0) = Preorder.preorder (Seq.seq a)
 
+(*
+ * A notion of compatibility for preorders on subsequences
+ *
+ * Consider a preorder rel on sequences of length len and a preorder sub_rel on subsequences at [i, j)
+ * The two preorders are compatible if:
+ *   (a) When two sequences s1 and s2 are related by rel, their [i, j) subsequences are related by sub_rel, and
+ *   (b) When subsequence [i, j) of s is related to s2 by sub_rel, s is related to (replace_subsequence s s2) by rel
+ *)
+let compatible_sub_preorder (#a:Type0)
+  (len:nat) (rel:srel a) (i:nat) (j:nat{i <= j /\ j <= len}) (sub_rel:srel a)
+  = (forall (s1 s2:Seq.seq a). (Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) ==>
+		          (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))) /\  //(a)
+    (forall (s s2:Seq.seq a). (Seq.length s == len /\ Seq.length s2 == j - i /\ sub_rel (Seq.slice s i j) s2) ==>
+  		         (rel s (Seq.replace_subseq s i j s2)))
 
 /// Low* buffers
 /// ==============
@@ -209,10 +223,10 @@ let get (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (p:mbuffer a rrel rel) (i:nat)
 /// The main idea is to ensure that any modifications to the parent buffer are compatible with the sub-buffer preorder
 /// and vice-versa
 
-let compatible_sub
+unfold let compatible_sub
   (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t{U32.v i + U32.v len <= length b}) (sub_rel:srel a)
-  = Seq.compatible_sub_preorder (length b) rel (U32.v i) (U32.v i + U32.v len) sub_rel
+  = compatible_sub_preorder (length b) rel (U32.v i) (U32.v i + U32.v len) sub_rel
 
 /// ``gsub`` is the way to carve a sub-buffer out of a given
 /// buffer. ``gsub b i len`` return the sub-buffer of ``b`` starting from

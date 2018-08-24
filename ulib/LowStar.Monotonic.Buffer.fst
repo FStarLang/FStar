@@ -32,8 +32,8 @@ noeq type mbuffer (a:Type0) (rrel:srel a) (rel:srel a) :Type0 =
     content:HST.mreference (Seq.lseq a (U32.v max_length)) (srel_to_lsrel (U32.v max_length) rrel) ->
     idx:U32.t ->
     length:U32.t{U32.v idx + U32.v length <= U32.v max_length} ->
-    compatible:squash (Seq.compatible_sub_preorder (U32.v max_length) rrel
-                                                    (U32.v idx) (U32.v idx + U32.v length) rel) ->  //proof of compatibility
+    compatible:squash (compatible_sub_preorder (U32.v max_length) rrel
+                                               (U32.v idx) (U32.v idx + U32.v length) rel) ->  //proof of compatibility
     mbuffer a rrel rel
 
 let g_is_null #_ #_ #_ b = Null? b
@@ -80,13 +80,39 @@ let as_seq #_ #_ #_ h b =
 
 let length_as_seq #_ #_ #_ _ _ = ()
 
+(*
+ * Reflexivity of the compatibility relation
+ *)
+let lemma_seq_sub_compatilibity_is_reflexive (#a:Type0) (len:nat) (rel:srel a)
+  :Lemma (compatible_sub_preorder len rel 0 len rel)
+  = assert (forall (s1 s2:Seq.seq a). Seq.length s1 == Seq.length s2 ==> Seq.equal (Seq.replace_subseq s1 0 (Seq.length s1) s2) s2)
+
+(*
+ * Transitivity of the compatibility relation
+ *
+ * i2 and j2 are offsets within [i1, j1) (i.e. assuming i1 = 0)
+ *)
+let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
+  (len:nat) (rel:srel a) (i1 j1:nat) (rel1:srel a) (i2 j2:nat) (rel2:srel a)
+  :Lemma (requires (i1 <= j1 /\ j1 <= len /\ i2 <= j2 /\ j2 <= j1 - i1 /\
+                    compatible_sub_preorder len rel i1 j1 rel1 /\
+                    compatible_sub_preorder (j1 - i1) rel1 i2 j2 rel2))
+	 (ensures  (compatible_sub_preorder len rel (i1 + i2) (i1 + j2) rel2))
+  = let aux (a:Type0) (len i1 j1 i2 j2:nat) (s:Seq.seq a) (s2:Seq.seq a)
+      :Lemma ((i1 <= j1 /\ j1 <= len /\ i2 <= j2 /\ j2 <= j1 - i1 /\ Seq.length s == len /\ Seq.length s2 == j2 - i2) ==>
+	      (Seq.equal (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2)
+	                 (Seq.replace_subseq s i1 j1 (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2))))
+      = ()
+    in
+    Classical.forall_intro_2 (aux a len i1 j1 i2 j2)
+
 let mgsub #a #rrel #rel b i len sub_rel =
   match b with
   | Null -> Null
   | Buffer max_len content idx length () ->
-    Seq.lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel
-                                                  (U32.v idx) (U32.v idx + U32.v length) rel
-		         			  (U32.v i) (U32.v i + U32.v len) sub_rel;
+    lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel
+                                              (U32.v idx) (U32.v idx + U32.v length) rel
+		         	              (U32.v i) (U32.v i + U32.v len) sub_rel;
     Buffer max_len content (U32.add idx i) len ()
 
 let live_gsub #_ #_ #_ _ _ _ _ _ = ()
@@ -102,14 +128,14 @@ let as_addr_gsub #_ #_ #_ _ _ _ _ = ()
 let mgsub_inj #_ #_ #_ _ _ _ _ _ _ _ _ = ()
 
 let gsub_gsub #_ #_ #rel b i1 len1 sub_rel1 i2 len2 sub_rel2 =
-  Seq.lemma_seq_sub_compatibility_is_transitive (length b) rel (U32.v i1) (U32.v i1 + U32.v len1) sub_rel1
-                                                (U32.v i2) (U32.v i2 + U32.v len2) sub_rel2
+  lemma_seq_sub_compatibility_is_transitive (length b) rel (U32.v i1) (U32.v i1 + U32.v len1) sub_rel1
+                                            (U32.v i2) (U32.v i2 + U32.v len2) sub_rel2
 
 
 /// A buffer ``b`` is equal to its "largest" sub-buffer, at index 0 and
 /// length ``len b``.
 
-let gsub_zero_length #_ #_ #rel b = Seq.lemma_seq_sub_compatilibity_is_reflexive (length b) rel
+let gsub_zero_length #_ #_ #rel b = lemma_seq_sub_compatilibity_is_reflexive (length b) rel
 
 let as_seq_gsub #_ #_ #_ h b i len _ =
   match b with
@@ -891,16 +917,16 @@ let msub #a #rrel #rel b i len sub_rel =
   match b with
   | Null -> Null
   | Buffer max_len content i0 len0 () ->
-    Seq.lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel (U32.v i0) (U32.v i0 + U32.v len0) rel
-                                                  (U32.v i) (U32.v i + U32.v len) sub_rel;
+    lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel (U32.v i0) (U32.v i0 + U32.v len0) rel
+                                              (U32.v i) (U32.v i + U32.v len) sub_rel;
     Buffer max_len content (U32.add i0 i) len ()
 
 let moffset #a #rrel #rel b i sub_rel =
   match b with
   | Null -> Null
   | Buffer max_len content i0 len () ->
-    Seq.lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel (U32.v i0) (U32.v i0 + U32.v len) rel
-                                                  (U32.v i) (U32.v i + U32.v (U32.sub len i)) sub_rel;
+    lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel (U32.v i0) (U32.v i0 + U32.v len) rel
+                                              (U32.v i) (U32.v i + U32.v (U32.sub len i)) sub_rel;
     Buffer max_len content (U32.add i0 i) (U32.sub len i) ()
 
 let index #_ #_ #_ b i =
@@ -974,7 +1000,7 @@ let alloc_common (#a:Type0) (#rrel:srel a)
                                  Buffer?.idx b == 0ul /\
                                  Buffer?.length b == Buffer?.max_length b))
   = let s = Seq.create (U32.v len) init in
-    Seq.lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
+    lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
     let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
       if mm then HST.ralloc_mm r s else HST.ralloc r s
     in
@@ -986,7 +1012,7 @@ let mgcmalloc #_ #_ r init len = alloc_common r init len false
 let mmalloc #_ #_ r init len = alloc_common r init len true
 
 let malloca #a #rrel init len =
-  Seq.lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.salloc (Seq.create (U32.v len) init)
   in
@@ -996,7 +1022,7 @@ let malloca #a #rrel init len =
 let malloca_of_list #a #rrel init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.seq_of_list init in
-  Seq.lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.salloc s
   in
@@ -1006,7 +1032,7 @@ let malloca_of_list #a #rrel init =
 let mgcmalloc_of_list #a #rrel r init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
   let s = Seq.seq_of_list init in
-  Seq.lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.ralloc r s
   in

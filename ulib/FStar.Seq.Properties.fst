@@ -1071,45 +1071,31 @@ let lemma_seq_sortwith_correctness (#a:eqtype) (f:a -> a -> Tot int) (s:seq a)
 
 (***** some functions and lemmas about preorders on sequences *****)
 
-type seq_pre (a:Type0) = Preorder.preorder (seq a)
+// type seq_pre (a:Type0) = Preorder.preorder (seq a)
 
-(*
- * A notion of compatibility for preorders on subsequences
- *
- * Consider a preorder rel on sequences of length len and a preorder sub_rel on subsequences at [i, j)
- * The two preorders are compatible if:
- *   (a) When two sequences s1 and s2 are related by rel, their [i, j) subsequences are related by sub_rel, and
- *   (b) When subsequence [i, j) of s is related to s2 by sub_rel, s is related to (replace_subsequence s s2) by rel
- *)
-let compatible_sub_preorder (#a:Type0)
-  (len:nat) (rel:seq_pre a) (i:nat) (j:nat{i <= j /\ j <= len}) (sub_rel:seq_pre a)
-  = (forall (s1 s2:Seq.seq a). (Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) ==>
-		          (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))) /\  //(a)
-    (forall (s s2:Seq.seq a). (Seq.length s == len /\ Seq.length s2 == j - i /\ sub_rel (Seq.slice s i j) s2) ==>
-  		         (rel s (replace_subseq s i j s2)))
 
-(*
- * Reflexivity of the compatibility relation
- *)
-let lemma_seq_sub_compatilibity_is_reflexive (#a:Type0) (len:nat) (rel:seq_pre a)
-  :Lemma (compatible_sub_preorder len rel 0 len rel)
-  = assert (forall (s1 s2:seq a). length s1 == length s2 ==> equal (replace_subseq s1 0 (length s1) s2) s2)
+// (*
+//  * Reflexivity of the compatibility relation
+//  *)
+// let lemma_seq_sub_compatilibity_is_reflexive (#a:Type0) (len:nat) (rel:seq_pre a)
+//   :Lemma (compatible_sub_preorder len rel 0 len rel)
+//   = assert (forall (s1 s2:seq a). length s1 == length s2 ==> equal (replace_subseq s1 0 (length s1) s2) s2)
 
-(*
- * Transitivity of the compatibility relation
- *
- * i2 and j2 are offsets within [i1, j1) (i.e. assuming i1 = 0)
- *)
-let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
-  (len:nat) (rel:seq_pre a) (i1 j1:nat) (rel1:seq_pre a) (i2 j2:nat) (rel2:seq_pre a)
-  :Lemma (requires (i1 <= j1 /\ j1 <= len /\ i2 <= j2 /\ j2 <= j1 - i1 /\
-                    compatible_sub_preorder len rel i1 j1 rel1 /\
-                    compatible_sub_preorder (j1 - i1) rel1 i2 j2 rel2))
-	 (ensures  (compatible_sub_preorder len rel (i1 + i2) (i1 + j2) rel2))
-  = let aux (a:Type0) (len i1 j1 i2 j2:nat) (s:seq a) (s2:seq a)
-      :Lemma ((i1 <= j1 /\ j1 <= len /\ i2 <= j2 /\ j2 <= j1 - i1 /\ length s == len /\ length s2 == j2 - i2) ==>
-	      (Seq.equal (replace_subseq s (i1 + i2) (i1 + j2) s2)
-	                 (replace_subseq s i1 j1 (replace_subseq (Seq.slice s i1 j1) i2 j2 s2))))
-      = ()
-    in
-    Classical.forall_intro_2 (aux a len i1 j1 i2 j2)
+// (*
+//  * Transitivity of the compatibility relation
+//  *
+//  * i2 and j2 are offsets within [i1, j1) (i.e. assuming i1 = 0)
+//  *)
+// let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
+//   (len:nat) (rel:seq_pre a) (i1 j1:nat) (rel1:seq_pre a) (i2 j2:nat) (rel2:seq_pre a)
+//   :Lemma (requires (i1 <= j1 /\ j1 <= len /\ i2 <= j2 /\ j2 <= j1 - i1 /\
+//                     compatible_sub_preorder len rel i1 j1 rel1 /\
+//                     compatible_sub_preorder (j1 - i1) rel1 i2 j2 rel2))
+// 	 (ensures  (compatible_sub_preorder len rel (i1 + i2) (i1 + j2) rel2))
+//   = let aux (a:Type0) (len i1 j1 i2 j2:nat) (s:seq a) (s2:seq a)
+//       :Lemma ((i1 <= j1 /\ j1 <= len /\ i2 <= j2 /\ j2 <= j1 - i1 /\ length s == len /\ length s2 == j2 - i2) ==>
+// 	      (Seq.equal (replace_subseq s (i1 + i2) (i1 + j2) s2)
+// 	                 (replace_subseq s i1 j1 (replace_subseq (Seq.slice s i1 j1) i2 j2 s2))))
+//       = ()
+//     in
+//     Classical.forall_intro_2 (aux a len i1 j1 i2 j2)
