@@ -35,11 +35,22 @@ module Const = FStar.Parser.Const
 // original lexical structure of the F* term), we ALSO keep the [mlsymbol], but
 // only for the purpose of resolving name collisions.
 // The boolean tells whether this is a recursive binding or not.
-type ty_or_exp_b = either<(mlident * mlty), (mlsymbol * mlexpr * mltyscheme * bool)>
+type ty_binding = {
+    ty_b_name: mlident;
+    ty_b_ty: mlty
+}
 
+type exp_binding = {
+    exp_b_name: mlident;
+    exp_b_expr: mlexpr;
+    exp_b_tscheme: mltyscheme;
+    exp_b_isrec: bool
+}
+
+type ty_or_exp_b = either<ty_binding, exp_binding>
 type binding =
     | Bv  of bv * ty_or_exp_b
-    | Fv  of fv * ty_or_exp_b
+    | Fv  of fv * exp_binding
 
 type env = {
     tcenv: TypeChecker.Env.env;
@@ -100,7 +111,7 @@ let bv_as_ml_termvar x =  removeTick (bv_as_mlident x)
 
 let rec lookup_ty_local (gamma:list<binding>) (b:bv) : mlty =
     match gamma with
-        | (Bv (b', Inl (mli, mlt))) :: tl -> if (bv_eq b b') then mlt else lookup_ty_local tl b
+        | (Bv (b', Inl ty_b)) :: tl -> if (bv_eq b b') then ty_b.ty_b_ty else lookup_ty_local tl b
         | (Bv (b', Inr _)) :: tl -> if (bv_eq b b') then failwith ("Type/Expr clash: "^(b.ppname.idText)) else lookup_ty_local tl b
         | _::tl -> lookup_ty_local tl b
         | [] -> failwith ("extraction: unbound type var "^(b.ppname.idText))
@@ -146,14 +157,15 @@ let lookup_fv_by_lid (g:env) (lid:lident) : ty_or_exp_b =
         | _ -> None) in
     match x with
         | None -> failwith (BU.format1 "free Variable %s not found\n" (lid.nsstr))
-        | Some y -> y
+        | Some y -> Inr y
 
 (*keep this in sync with lookup_fv_by_lid, or call it here. lid does not have position information*)
-let try_lookup_fv (g:env) (fv:fv) : option<ty_or_exp_b> =
+let try_lookup_fv (g:env) (fv:fv) : option<exp_binding> =
     BU.find_map g.gamma (function
         | Fv (fv', t) when fv_eq fv fv' -> Some t
         | _ -> None)
-let lookup_fv (g:env) (fv:fv) : ty_or_exp_b =
+
+let lookup_fv (g:env) (fv:fv) : exp_binding =
     match try_lookup_fv g fv with
     | None -> failwith (BU.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.fv_name.p) (Print.lid_to_string fv.fv_name.v))
     | Some y -> y
@@ -170,7 +182,7 @@ let lookup_bv (g:env) (bv:bv) : ty_or_exp_b =
 let lookup  (g:env) (x:either<bv,fv>) : ty_or_exp_b * option<fv_qual> =
     match x with
     | Inl x -> lookup_bv g x, None
-    | Inr x -> lookup_fv g x, x.fv_qual
+    | Inr x -> Inr (lookup_fv g x), x.fv_qual
 
 let lookup_term g (t:term) = match t.n with
     | Tm_name x -> lookup g (Inl x)
@@ -191,7 +203,7 @@ let extend_ty (g:env) (a:bv) (mapped_to:option<mlty>) : env =
     let mapped_to = match mapped_to with
         | None -> MLTY_Var ml_a
         | Some t -> t in
-    let gamma = Bv(a, Inl (ml_a, mapped_to))::g.gamma in
+    let gamma = Bv(a, Inl ({ty_b_name=ml_a; ty_b_ty=mapped_to}))::g.gamma in
     let tcenv = TypeChecker.Env.push_bv g.tcenv a in // push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
     {g with gamma=gamma; tcenv=tcenv}
 
@@ -212,10 +224,9 @@ let find_uniq gamma mlident =
     let suffix = if i = 0 then "" else string_of_int i in
     let target_mlident = mlident ^ suffix in
     let has_collision = List.existsb (function
-        | Bv (_, Inl (mlident', _))
-        | Fv (_, Inl (mlident', _)) -> target_mlident = mlident'
-        | Fv (_, Inr (mlident', _, _, _))
-        | Bv (_, Inr (mlident', _, _, _)) -> target_mlident = mlident'
+        | Bv (_, Inl ty_b) -> target_mlident = ty_b.ty_b_name
+        | Fv (_, exp_b)
+        | Bv (_, Inr exp_b) -> target_mlident = exp_b.exp_b_name
       ) gamma in
     if has_collision then
       find_uniq mlident (i + 1)
@@ -238,8 +249,8 @@ let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
               else if add_unit
               then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit])
               else with_ty ml_ty mlx in
-   let t_x = if add_unit then pop_unit t_x else t_x in
-    let gamma = Bv(x, Inr(mlident, mlx, t_x, is_rec))::g.gamma in
+    let t_x = if add_unit then pop_unit t_x else t_x in
+    let gamma = Bv(x, Inr({exp_b_name=mlident; exp_b_expr=mlx; exp_b_tscheme=t_x; exp_b_isrec=is_rec}))::g.gamma in
     let tcenv = TypeChecker.Env.push_binders g.tcenv (binders_of_list [x]) in
     {g with gamma=gamma; tcenv=tcenv}, mlident
 
@@ -275,7 +286,7 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
         let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
         let t_x = if add_unit then pop_unit t_x else t_x in
-        let gamma = Fv(x, Inr(mlsymbol, mly, t_x, is_rec))::g.gamma in
+        let gamma = Fv(x, ({exp_b_name=mlsymbol; exp_b_expr=mly; exp_b_tscheme=t_x; exp_b_isrec=is_rec}))::g.gamma in
         {g with gamma=gamma}, mlsymbol
     else failwith "freevars found"
 

@@ -440,7 +440,7 @@ let maybe_coerce pos (g:env) e ty (expect:mlty) : mlexpr  =
 (********************************************************************************************)
 let bv_as_mlty (g:env) (bv:bv) =
     match UEnv.lookup_bv g bv with
-        | Inl (_, t) -> t
+        | Inl ty_b -> ty_b.ty_b_ty
         | _ -> MLTY_Top
 
 
@@ -734,7 +734,7 @@ let rec extract_one_pat (imp : bool)
 
     | Pat_cons (f, pats) ->
         let d, tys = match lookup_fv g f with
-            | Inr(_, {expr=MLE_Name n}, ttys, _) -> n, ttys
+            | {exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys} -> n, ttys
             | _ -> failwith "Expected a constructor" in
         let nTyVars = List.length (fst tys) in
         let tysVarPats, restPats =  BU.first_N nTyVars pats in
@@ -907,7 +907,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           ml_unit, E_PURE, ml_unit_ty
 
         | Tm_quoted (qt, { qkind = Quote_dynamic }) ->
-          let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
+          let ({exp_b_expr=fw}) = UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
           with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Cannot evaluate open quotation at runtime")]),
           E_PURE,
           ml_int_ty
@@ -961,7 +961,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                 | Inl _, _ ->
                   ml_unit, E_PURE, ml_unit_ty
 
-                | Inr (_, x, mltys, _), qual ->
+                | Inr ({exp_b_expr=x; exp_b_tscheme=mltys}), qual ->
                   //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
                   begin match mltys with
                     | ([], t) when (t=ml_unit_ty) -> ml_unit, E_PURE, t //optimize (x:unit) to ()
@@ -979,10 +979,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                | None -> //it's been erased
                  ml_unit, E_PURE, MLTY_Erased
 
-               | Some (Inl _) ->
-                 ml_unit, E_PURE, ml_unit_ty
-
-               | Some (Inr (_, x, mltys, _)) ->
+               | Some {exp_b_expr=x; exp_b_tscheme=mltys} ->
                  //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
                  begin match mltys with
                     | ([], t) when (t=ml_unit_ty) -> ml_unit, E_PURE, t //optimize (x:unit) to ()
@@ -1100,7 +1097,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
                       let (head_ml, (vars, t), inst_ok), qual =
                         match lookup_term g head with
-                        | Inr (_, x1, x2, x3), q -> (x1, x2, x3), q
+                        | Inr exp_b, q -> (exp_b.exp_b_expr, exp_b.exp_b_tscheme, exp_b.exp_b_isrec), q
                         | _ -> failwith "FIXME Ty" in
 
                       let has_typ_apps = match args with
@@ -1217,7 +1214,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                     {lb with lbdef=lbdef})
             else lbs in
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
-          let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=t; lbdef=e}
+          let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef}
             : lbname //just lbname returned back
             * e_tag  //the ML version of the effect label lbeff
             * (typ   //just the source type lbtyp=t, after compression
@@ -1227,15 +1224,15 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             * term   //the term e, maybe after some type binders have been erased
             =
               let f_e = effect_as_etag g lbeff in
-              let t = SS.compress t in
+              let lbtyp = SS.compress lbtyp in
               let no_gen () =
-                  let expected_t = term_as_mlty g t in
-                  (lbname_, f_e, (t, ([], ([],expected_t))), false, e)
+                  let expected_t = term_as_mlty g lbtyp in
+                  (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, lbdef)
               in
-              if TcUtil.must_erase_for_extraction g.tcenv t
-              then (lbname_, f_e, (t, ([], ([], MLTY_Erased))), false, e)
+              if TcUtil.must_erase_for_extraction g.tcenv lbtyp
+              then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, lbdef)
               else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (Print.lbname_to_string lbname) (Print.typ_to_string t) f_e);
-                match t.n with
+                match lbtyp.n with
                 | Tm_arrow(bs, c) when (List.hd bs |> is_type_binder g) ->
                    let bs, c = SS.open_comp bs c in
                   //need to generalize, but will erase all the type abstractions;
@@ -1250,8 +1247,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                             | Some (bs, b, rest) -> bs, U.arrow (b::rest) c in
 
                    let n_tbinders = List.length tbinders in
-                   let e = normalize_abs e |> U.unmeta in
-                   begin match e.n with
+                   let lbdef = normalize_abs lbdef |> U.unmeta in
+                   begin match lbdef.n with
                       | Tm_abs(bs, body, copt) ->
                         let bs, body = SS.open_term bs body in
                         if n_tbinders <= List.length bs
@@ -1271,7 +1268,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                              let rest_args = if add_unit then (unit_binder::rest_args) else rest_args in
                              let polytype = if add_unit then push_unit polytype else polytype in
                              let body = U.abs rest_args body copt in
-                             (lbname_, f_e, (t, (targs, polytype)), add_unit, body)
+                             (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, body)
 
                         else (* fails to handle:
                                 let f : a:Type -> b:Type -> a -> b -> Tot (nat * a * b) =
@@ -1291,8 +1288,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                        let polytype = tbinders |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
                        //In this case, an eta expansion is safe
                        let args = tbinders |> List.map (fun (bv, _) -> S.bv_to_name bv |> as_arg) in
-                       let e = mk (Tm_app(e, args)) None e.pos in
-                       (lbname_, f_e, (t, (tbinders, polytype)), false, e)
+                       let e = mk (Tm_app(lbdef, args)) None lbdef.pos in
+                       (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, e)
 
                      | _ ->
                         //ETA-EXPANSION?
@@ -1307,7 +1304,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         // It may be better to hoist expensive_pure_comp again.
                         //NO GENERALIZATION:
                         //Another alternative could be to not generalize the type t, inserting MLTY_Top for the type variables
-                        err_value_restriction e
+                        err_value_restriction lbdef
                    end
 
                 | _ ->  no_gen()
@@ -1397,7 +1394,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                            with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in
              begin match mlbranches with
                 | [] ->
-                    let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
+                    let ({exp_b_expr=fw}) = UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
                     with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
                     ml_int_ty

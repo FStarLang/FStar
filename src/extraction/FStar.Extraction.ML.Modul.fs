@@ -325,7 +325,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             | Tm_uinst (tm, _) -> extract_fv tm
             | Tm_fvar fv ->
               let mlp = mlpath_of_lident fv.fv_name.v in
-              let _, _, tysc, _ = BU.right <| UEnv.lookup_fv g fv in
+              let ({exp_b_tscheme=tysc}) = UEnv.lookup_fv g fv in
               with_ty MLTY_Top <| MLE_Name mlp, tysc
             | _ -> failwith "Not an fv" in
 
