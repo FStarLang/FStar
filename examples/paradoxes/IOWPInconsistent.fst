@@ -2,13 +2,14 @@ module IOWPInconsistent
 
 (* Showing that the WP that would result from using DM4F on the IO monad transformer leads to inconsistency. *)
 (*                                                                                                           *)
-(* To simplify the proof, here we show that considering just unit-output already leads to inconsistency.     *)
+(* To simplify the proof, here we show that considering just unit-output already leads to inconsistency,     *)
+(* where by unit-output we mean the algebraic effect given by one unary operation symbol `out : 1`.          *)
 (*                                                                                                           *)
 (* Based on:                                                                                                 *)
-(*   - the unit-output monad transformer (aka the list monad transformer), if it exists, given by            *)
+(*   - the unit-output monad transformer, if it exists, given by                                             *)
 (*       Out_T T X = mu Z . T (Z + X)                                                                        *)
 (*                                                                                                           *)
-(*     this corresponds to the List monad transformer considered in Example 4.7 in                           *)
+(*     this is similar to the List monad transformer considered in Example 4.7 in                            *)
 (*       M. Jaskelioff. Lifting of Operations in Modular Monadic Semantics. PhD Thesis. 2009.                *)
 (*                                                                                                           *)
 (*   - the DM4F construction amounting to applying Out_T to the prop-valued continuation monad, resulting in *)
@@ -30,7 +31,7 @@ noeq type out_wp (a:Type) =          (* the non strictly positive WP type for ou
 
                                     (* The rest is simply the recreation of the paradoxes considered in the  *)
                                     (* notes above, but considering a free monad on a signature instead of   *)
-                                    (* only the initial algebra of the underlying (lists) signature functor. *)
+                                    (* only the initial algebra of the underlying signature functor.         *)
 let intro_injective (#a:Type) (p p': (either (out_wp a) a -> prop) -> prop) 
   : Lemma (Intro p == Intro p' ==> p == p) = 
   ()
