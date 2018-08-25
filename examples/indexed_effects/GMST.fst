@@ -80,7 +80,7 @@ new_effect {
 }
 
 (*
-   For some reason, DM4F didn't accept the representation
+   DA: For some reason, DM4F didn't accept the representation
 
      s -> M ((s -> s -> Type0) * a * s)
 
@@ -137,8 +137,8 @@ let app (#a:Type) (#b:Type)
 (* 
    In case the relations are the same, and moreover preorders, we ought to get the usual MST typing for app 
 
-   However, currently we don't get this result because of the lack of proper prop (one that would also support 
-   propositional extensionality). 
+   However, currently we don't get this result because of the lack of proper prop (one that would also soundly 
+   support propositional extensionality). 
 *)
 
 
@@ -172,14 +172,12 @@ let preorder_app' (#a:Type) (#b:Type)
   = g (f ())
 
 
-(* The usual typing of MST for preorders *)
+(* Deriving the usual typing of MST for preorders *)
 
 let transport_gmst_rel (#a:Type) (#rel1:relation state) (#rel2:relation state{rel1 == rel2})
                        (#wp:mst_wp state a rel1) 
                        (f:unit -> GMST a (rel1 >< wp)) : GMST a (rel2 >< wp)
   = f ()
-
-//#set-options "--z3rlimit 250 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 let preorder_app (#a:Type) (#b:Type)
                  (#rel:preorder state)
@@ -188,8 +186,8 @@ let preorder_app (#a:Type) (#b:Type)
                  (f:unit -> GMST a (rel >< wp1))
                  (g:(x:a -> GMST b (rel >< wp2 x)))
   : GMST b (rel @ rel >< (fun s0 p -> wp1 s0 (fun x s1 -> wp2 x s1 p)))
-  = assert (rel @ rel == rel); //due to the assumed propositional extensionality above
-    admit (); //not sure what's happening here, transport_gmst_rel below simply times out
+  = assert (rel @ rel == rel); //follows from the assumed propositional extensionality above
+    admit (); //DA: not sure what's happening here, transport_gmst_rel below simply times out
     transport_gmst_rel #b #(rel @ rel) #rel 
                        #(fun s0 p -> wp1 s0 (fun x s1 -> wp2 x s1 p)) 
                        (fun _ -> preorder_app' #a #b #rel #wp1 #wp2 f g) 
