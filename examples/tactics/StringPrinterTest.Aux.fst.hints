@@ -89,7 +89,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "83c769b42f301348ef2705873b04bea0"
+      "b0fdb218bb1940abd0fe9b58bf0f7f0b"
     ],
     [
       "StringPrinterTest.Aux.example_sz",
@@ -888,7 +888,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "8a89b4119541e7b358c0a6d9aa37e880"
+      "0d29427f34c7df6cea802ec0d793b097"
     ],
     [
       "StringPrinterTest.Aux.example_sz",

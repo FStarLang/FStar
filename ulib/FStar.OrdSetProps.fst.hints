@@ -101,7 +101,7 @@
       1,
       [ "@query", "equation_FStar.OrdSet.equal" ],
       0,
-      "fcd9bf838753df43c357bf139656141d"
+      "3bafc1f4304bc0aa183d85cff121df66"
     ],
     [
       "FStar.OrdSetProps.fold",

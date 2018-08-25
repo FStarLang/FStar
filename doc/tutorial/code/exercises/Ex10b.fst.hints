@@ -93,7 +93,7 @@
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.empty"
       ],
       0,
-      "c3787cf374395eeebd03e167de2d6b3a"
+      "ec717ec9f4e747548750478c32207dab"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -154,7 +154,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "0ecf224857ba3d4c0578bf1e9191c287"
+      "71aff107cd5671cc94ef1dcef55fd86d"
     ],
     [
       "Ex10b.point",

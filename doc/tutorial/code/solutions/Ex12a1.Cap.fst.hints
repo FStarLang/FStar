@@ -39,7 +39,7 @@
         "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
       0,
-      "ea591c2502491c573bbe7fa3a5c618d5"
+      "caf7c755b719219fccc880263acd4987"
     ],
     [
       "Ex12a1.Cap.redeem",
@@ -53,7 +53,7 @@
         "string_inversion"
       ],
       0,
-      "f0915e3317ebe67f1b59a6f051fc0f69"
+      "f39d6d3a9e9800e96bb56b7663365ce8"
     ],
     [
       "Ex12a1.Cap.capRead",

@@ -318,7 +318,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "c81dd225cf3c29f89a6e411d2ad61bfa"
+      "dcab04157b6114fbe60b18659469e4a0"
     ],
     [
       "Ex11a.new_arm",
@@ -395,7 +395,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "5badd1c4f6570e63f27825f6d4b937f6"
+      "97b592d561bd7d0891d6f5d0bbc2482b"
     ],
     [
       "Ex11a.new_robot",
@@ -472,7 +472,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "701b52e22d2fddb6a4ada539afdfe1d1"
+      "7a05766ea0054907ba4d2f15a3fecbba"
     ],
     [
       "Ex11a.walk_robot_to",
@@ -593,7 +593,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "392af19c66f9a573c16d17a4ee9ad874"
+      "1759f959db5d099a0d3f10b3790b56f4"
     ],
     [
       "Ex11a.fly",
@@ -709,7 +709,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "04283d8feac6ba6c9a6fb6385ba49356"
+      "ec51148af5a1a2519989ecbb579da919"
     ],
     [
       "Ex11a.fly_both",
@@ -799,7 +799,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "4d25275a15257b6bc6a19170d9bee6ae"
+      "26777275e728f4fa61765095f8d297dc"
     ],
     [
       "Ex11a.fly_one",
@@ -860,7 +860,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.mem"
       ],
       0,
-      "0b4c1a8932d6b6e99d7e390e8a0a846c"
+      "a9cb034f4eef143d9e3a2b34a5aa3981"
     ],
     [
       "Ex11a.__proj__Cons__item__rs",
@@ -992,7 +992,7 @@
         "typing_Ex11a.__proj__Bot__item__r"
       ],
       0,
-      "d05a883c196141eb0d1bc0b5f7eeade3"
+      "4c8df8bc77bf6bcd228e37d656e20c16"
     ],
     [
       "Ex11a.lemma_frame_robot_inv_and_flying",
@@ -1051,7 +1051,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.mem"
       ],
       0,
-      "8c3f9f996b3719fb64a33d1d7296e854"
+      "2c51721aadb05c7631528d4d2869395c"
     ],
     [
       "Ex11a.fly_robot_army",
@@ -1153,7 +1153,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "920af615c988004e754c0c3fcd89e867"
+      "cc7f4a579180d3fc4bcdaafda9d97352"
     ],
     [
       "Ex11a.main",
@@ -1245,7 +1245,7 @@
         "typing_FStar.Set.mem", "typing_FStar.Set.singleton"
       ],
       0,
-      "eb5f76711ec689e0d3db941c1df2cea2"
+      "e36d71854b4a5693df70d8ce1cf439cd"
     ],
     [
       "Ex11a.point",

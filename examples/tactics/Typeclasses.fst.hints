@@ -121,7 +121,7 @@
         "token_correspondence_Typeclasses.eq"
       ],
       0,
-      "8aed130421582e87b8d09003509d62de"
+      "450379d2bfe7d34fa1c249ff6688ba9a"
     ],
     [
       "Typeclasses.uu___76",
@@ -155,7 +155,7 @@
         "token_correspondence_Typeclasses.eq"
       ],
       0,
-      "acbded68f9e31727e29118cef00db6d0"
+      "22a66ca12dd05e435065cb24e1b5d840"
     ],
     [
       "Typeclasses.uu___78",
@@ -205,7 +205,7 @@
         "token_correspondence_Typeclasses.eqList"
       ],
       0,
-      "d8872afc90cd8283360ee49a3fa29e3b"
+      "2c717fc0263cc443219cb2ee7adee193"
     ],
     [
       "Typeclasses.__proj__Mkadditive__item__zero_l",
@@ -313,7 +313,7 @@
         "token_correspondence_Typeclasses.plus"
       ],
       0,
-      "c52da3531a1d54732c7cdad947afcc9b"
+      "2fd6d82feb0140e0b974121aa1b82159"
     ],
     [
       "Typeclasses.uu___81",
@@ -351,7 +351,7 @@
         "token_correspondence_Typeclasses.plus"
       ],
       0,
-      "03bc9c8aab4f3b505938aa4ed34451db"
+      "035047cea2d58dd4de007ba2557dbbe4"
     ],
     [
       "Typeclasses.uu___83",
@@ -377,7 +377,7 @@
         "token_correspondence_Typeclasses.plus"
       ],
       0,
-      "eca9bbb9794c0dbb7d19095981a84890"
+      "1afcb54aa87a120fd0a4b7cd5d02e371"
     ],
     [
       "Typeclasses.sum",
@@ -412,7 +412,7 @@
       1,
       [ "@query" ],
       0,
-      "0f96ebd00a36ded698cccff5ef85261e"
+      "e8ce509fdd9c4be199990ced4599757b"
     ],
     [
       "Typeclasses.test1",
