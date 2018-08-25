@@ -6,9 +6,9 @@ open FStar.Preorder
 
 module W = FStar.Monotonic.Witnessed
 
-(* The state-and-preorder indexed MST effect; defined explicitly due to the pi-types used in it *)
+(* The state-and-preorder indexed MST effect; defined explicitly rather than via DM4F due to the pi-types used in it *)
 
-//s is at universe level 0 because otherwise sub_effect complains about being too universe polymorphic
+//s is at a fixed universe level (here #u0) because because otherwise sub_effect complains about being too universe polymorphic
 
 let st_pre   (s:Type0) = s -> GTot Type0
 let st_post' (s:Type0) (a:Type) (pre:Type) = a -> (_:s{pre}) -> GTot Type0
