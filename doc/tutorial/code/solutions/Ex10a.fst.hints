@@ -130,7 +130,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "0b07e131bcfa838c6b1356623de6fe1a"
+      "28d83f9b2f89ab349d7f4ee0631c558e"
     ],
     [
       "Ex10a.test_acls",
@@ -159,7 +159,7 @@
         "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0,
-      "7dcd633926c5945c91363d04902af2c4"
+      "7b59d87ba491ada897b19e8b4bc2dba7"
     ],
     [
       "Ex10a.entry",

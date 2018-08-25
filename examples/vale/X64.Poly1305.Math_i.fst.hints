@@ -105,7 +105,7 @@
         "typing_X64.Poly1305.Math_i.heapletTo128"
       ],
       0,
-      "bf48e7848b10da05f354416a6069144f"
+      "5ebc102cc5edf610672ecb8de36d03cc"
     ],
     [
       "X64.Poly1305.Math_i.poly1305_heap_blocks'",
@@ -127,7 +127,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c61b8e02191c6e9cdae4871af8cc91e2"
+      "9ee4850ca86eefb72c04e1d6de249636"
     ],
     [
       "X64.Poly1305.Math_i.reveal_poly1305_heap_blocks",

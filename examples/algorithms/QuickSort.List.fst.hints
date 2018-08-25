@@ -287,7 +287,7 @@
         "typing_QuickSort.List.count"
       ],
       0,
-      "d937a286859c9d036ff495cbd6f656fd"
+      "8b2daecf8e8462e98ccb414a3c97aff4"
     ],
     [
       "QuickSort.List.quicksort",
@@ -343,7 +343,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "10d23f88d8ec90c27fd9968793afb2a7"
+      "2752df38845a8ebd4471e6291fe751da"
     ],
     [
       "QuickSort.List.sorted",
@@ -486,7 +486,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "dec6c7985d9e866d279543468b9f9fd2"
+      "75dad982d0c3766239a5559d11fc6ab1"
     ]
   ]
 ]

@@ -172,7 +172,7 @@
         "token_correspondence_StlcStrongDbParSubst.sub_inc"
       ],
       0,
-      "8dd66bc2b7819deb2b32cedaeb972045"
+      "0a47c72156825ef659d2079f54a60476"
     ],
     [
       "StlcStrongDbParSubst.subst",
@@ -230,7 +230,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d1ba27efae5b70263b7b0cdc0e4adb0a"
+      "ff9edbd5a0206fa48e1f696b690a1663"
     ],
     [
       "StlcStrongDbParSubst.sub_elam",
@@ -912,7 +912,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8ce509b4f43519857df254e7dd722c01"
+      "f3e356a0fed0572891a3b5504e988725"
     ],
     [
       "StlcStrongDbParSubst.substitution_beta",
@@ -940,7 +940,7 @@
         "token_correspondence_StlcStrongDbParSubst.sub_beta"
       ],
       0,
-      "8d62631c38d78bb590eda0f44083f621"
+      "7744e4e8675461a91ee72dc7e648bd73"
     ],
     [
       "StlcStrongDbParSubst.preservation",
@@ -1192,7 +1192,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b9f91f2457d543746ef2287852a2b6d4"
+      "5ed68932e2c4f3124a8f58a786becb24"
     ],
     [
       "StlcStrongDbParSubst.sub_elam",
@@ -1835,7 +1835,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c2a62cd61cccbfd55874c8f813644ecf"
+      "e10bf513438fcf752df8226a4a15b900"
     ],
     [
       "StlcStrongDbParSubst.substitution_beta",
@@ -1863,7 +1863,7 @@
         "token_correspondence_StlcStrongDbParSubst.sub_beta"
       ],
       0,
-      "4707657080d89c28249ddb5dfaf75cd6"
+      "03f0e122e848e07f624c0e0d0d1bb27e"
     ],
     [
       "StlcStrongDbParSubst.preservation",

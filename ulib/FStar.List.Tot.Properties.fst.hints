@@ -1312,7 +1312,7 @@
         "typing_FStar.List.Tot.Properties.sorted"
       ],
       0,
-      "40504f137dd738470c6bd645bdd40285"
+      "b9a78842c1297907fb86795debefc777"
     ],
     [
       "FStar.List.Tot.Properties.sortWith_sorted",
@@ -1387,7 +1387,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "9e287e583ba515fc13648a1523abc2fb"
+      "8160583b8c9b680d7a5b2ce81050feb8"
     ],
     [
       "FStar.List.Tot.Properties.mem_memP",
@@ -2393,7 +2393,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2"
       ],
       0,
-      "19745aafa9688eb1eaa31b7c95d5ade3"
+      "61ab3f5b4edad92e4a9acb369858c780"
     ],
     [
       "FStar.List.Tot.Properties.find_none",

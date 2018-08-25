@@ -47,7 +47,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "00cac04870cd32c073107715f28dc39f"
+      "47caa2350e36023028f0313f4b9e099d"
     ],
     [
       "Bug422.box'",
@@ -134,7 +134,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "26f132c9bbe28252046e60751187e19c"
+      "923bbf40a81e6a952128619caf80a701"
     ],
     [
       "Bug422.works",
@@ -171,7 +171,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "770fd4cfba9c0f576b0477f2af4ad973"
+      "917b3184c71601494dc8a95f6c0319c4"
     ]
   ]
 ]

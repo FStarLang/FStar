@@ -84,7 +84,7 @@
         "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "2545fa5e8188010cc8a1a40b68c274e6"
+      "9c5c562b3eb9ff6d2375c13f6b41d0ba"
     ],
     [
       "Benton2004.SmithVolpano.eval_equiv_def",
@@ -254,7 +254,7 @@
         "typing_tok_Benton2004.SmithVolpano.Low@tok"
       ],
       0,
-      "d2e037a30e1fe79e9ce744c581658d07"
+      "f3df66a1046125efac35b0b518625338"
     ],
     [
       "Benton2004.SmithVolpano.eval_equiv_const",
@@ -280,7 +280,7 @@
         "unit_typing"
       ],
       0,
-      "fb2cf36e009c9bb4054c86fdd0da1ed6"
+      "4b2dd59e41930fb7b3b99e39d57bd44a"
     ],
     [
       "Benton2004.SmithVolpano.op_abs_interp_seclevel",
@@ -297,7 +297,7 @@
         "lemma_Benton2004.DDCC.holds_ns_t"
       ],
       0,
-      "0935963f91bd5867e594e002ca14b6f6"
+      "29da30772f6280e56f26363aff28e2fe"
     ],
     [
       "Benton2004.SmithVolpano.eval_equiv_op",
@@ -473,7 +473,7 @@
         "typing_tok_Benton2004.SmithVolpano.Low@tok"
       ],
       0,
-      "54a337d16749fd63cd9c722862daa9a3"
+      "572bbd52f1be251dcec04669d57ad3f8"
     ],
     [
       "Benton2004.SmithVolpano.exec_equiv_high_to_low",
@@ -579,7 +579,7 @@
         "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "b9c418f58b785817ab3661c8be804723"
+      "5d242f7a21594a1c77d8278040645b66"
     ],
     [
       "Benton2004.SmithVolpano.exec_equiv_def",

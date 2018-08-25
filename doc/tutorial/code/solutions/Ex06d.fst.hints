@@ -272,7 +272,7 @@
         "typing_Ex06d.append", "typing_Ex06d.mem", "typing_Ex06d.sorted"
       ],
       0,
-      "1daa67ff976cd752fac1415c2aab5091"
+      "133ef34395110a5fc78896b542662e12"
     ],
     [
       "Ex06d.sort",
@@ -342,7 +342,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "0c0b75dacc940cc1f2499f5372b4cf2f"
+      "b369fa4d3cb765e4fd007b5d0fed7bca"
     ],
     [
       "Ex06d.count",
@@ -511,7 +511,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "7427ea34170711f5086b51b8d0721945"
+      "60bac8553c2bf84bea52e954ef6bca73"
     ]
   ]
 ]
