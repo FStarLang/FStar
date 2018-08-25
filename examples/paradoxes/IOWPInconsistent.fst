@@ -29,9 +29,8 @@ let prop = p:Type0{forall (x y:p). x == y}
 noeq type out_wp (a:Type) =          (* the non strictly positive WP type for output one would get from DM4F *)
   | Intro : ((either (out_wp a) a -> prop) -> prop) -> out_wp a
 
-                                    (* The rest is simply the recreation of the paradoxes considered in the  *)
-                                    (* notes above, but considering a free monad on a signature instead of   *)
-                                    (* only the initial algebra of the underlying signature functor.         *)
+                                              (* The rest is simply a recreation of the paradoxes considered *)
+                                              (* in the notes above, adapted to the case of unit-output.     *)
 let intro_injective (#a:Type) (p p': (either (out_wp a) a -> prop) -> prop) 
   : Lemma (Intro p == Intro p' ==> p == p) = 
   ()
