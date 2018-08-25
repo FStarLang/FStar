@@ -3,7 +3,7 @@ module IOWPInconsistent
 (* Showing that the WP that would result from using DM4F on the IO monad transformer leads to inconsistency.             *)
 (*                                                                                                                       *)
 (* To simplify the proof, here we show that considering just unit-output already leads to inconsistency,                 *)
-(* where by unit-output we mean the algebraic effect given by one unary operation symbol `out : 1`.                      *)
+(* where by unit-output we mean the algebraically given effect with one unary operation symbol `out : 1`.                *)
 (*                                                                                                                       *)
 (* Based on:                                                                                                             *)
 (*   - the unit-output monad transformer, if it exists, given by                                                         *)
@@ -77,4 +77,6 @@ let bad2 (a:Type)
 let out_wp_inconsistent (a:Type) 
   : Lemma False = 
   move_requires (fun _ -> bad1 a) ();                                                  (* giving us (p0 x0 ==> ~(p0 x0)) *)
-  move_requires (fun _ -> bad2 a) ()                                                   (* giving us (~(p0 x0) ==> p0 x0) *)
+  move_requires (fun _ -> bad2 a) ();                                                  (* giving us (~(p0 x0) ==> p0 x0) *)
+  assert (~(p0 (x0 #a)) /\ p0 (x0 #a));
+  assert (False)
