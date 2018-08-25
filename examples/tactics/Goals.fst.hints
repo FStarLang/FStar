@@ -1,0 +1,47 @@
+[
+  "`±¨ÑJÊ\\£D\u0000‚\u0019­wP-",
+  [
+    [
+      "Goals.intro_sq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "deb7c2959c3cdb4472ea90deed1719c8"
+    ],
+    [
+      "Goals.elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Goals_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
+      ],
+      0,
+      "da66ef3a5c72e81d1a3028fa7825967a"
+    ],
+    [
+      "Goals.intro_sq",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6fe9e7edae21c63b8e92aee175c25d4e"
+    ],
+    [
+      "Goals.elim",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Goals_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
+      ],
+      0,
+      "490a32e6b9387208b46c65adb8cd152f"
+    ]
+  ]
+]

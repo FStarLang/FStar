@@ -51,7 +51,7 @@ let sli (l:lident) : string =
 
 let lid_to_string (l:lid) = sli l
 
-//let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
+// let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
 let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ delta_depth_to_string fv.fv_delta ^ ")"
 let bv_to_string bv = bv.ppname.idText ^ "#" ^ (string_of_int bv.index)
 
@@ -266,16 +266,26 @@ and term_to_string x =
       | Tm_delayed _ ->   failwith "impossible"
       | Tm_app(_, []) ->  failwith "Empty args!"
 
+      // TODO: add an option to mark where this happens
+      | Tm_lazy ({blob=b; lkind=Lazy_embedding (_, thunk)}) ->
+        "[LAZYEMB:" ^
+        term_to_string (FStar.Common.force_thunk thunk) ^ "]"
       | Tm_lazy i ->
         "[lazy:" ^
         term_to_string (must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
         ^"]"
 
-      | Tm_quoted (tm, { qkind = Quote_static  }) ->
-        U.format1 "`(%s)" (term_to_string tm)
-
-      | Tm_quoted (tm, { qkind = Quote_dynamic }) ->
-        U.format1 "quote (%s)" (term_to_string tm)
+      | Tm_quoted (tm, qi) ->
+        begin match qi.qkind with
+        | Quote_static ->
+            let print_aq (bv, t) =
+              U.format2 "%s -> %s" (bv_to_string bv) (term_to_string t)
+            in
+            U.format2 "`(%s)%s" (term_to_string tm)
+                                (FStar.Common.string_of_list print_aq qi.antiquotes)
+        | Quote_dynamic ->
+            U.format1 "quote (%s)" (term_to_string tm)
+        end
 
       | Tm_meta(t, Meta_pattern ps) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
@@ -381,7 +391,10 @@ and pat_to_string x =
       then U.format2 "%s:%s" (bv_to_string x) (term_to_string x.sort)
       else bv_to_string x
     | Pat_constant c -> const_to_string c
-    | Pat_wild x -> if (Options.print_real_names()) then "Pat_wild " ^ (bv_to_string x) else "_"
+    | Pat_wild x ->
+      if Options.print_bound_var_types()
+      then U.format2 "_wild_%s:%s" (bv_to_string x) (term_to_string x.sort)
+      else bv_to_string x
 
 
 and lbs_to_string quals lbs =
@@ -782,3 +795,9 @@ let set_to_string f s =
             U.string_of_string_builder strb
 
 let bvs_to_string sep bvs = binders_to_string sep (List.map mk_binder bvs)
+
+let rec emb_typ_to_string = function
+    | ET_abstract -> "abstract"
+    | ET_app (h, []) -> h
+    | ET_app(h, args) -> "(" ^h^ " " ^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
+    | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b

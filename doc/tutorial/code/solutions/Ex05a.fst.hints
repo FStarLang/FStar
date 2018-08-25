@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "566f079887966d73c548ca83ab1423b3"
+      "49c6aa3e24d050eca825625625f384b0"
     ],
     [
       "Ex05a.reverse",
@@ -27,7 +27,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "92ef17fefb1142b45209b2fc3c71d7ba"
+      "1cb5bad869b82a4f860886b0cb4834ab"
     ],
     [
       "Ex05a.rev",
@@ -42,7 +42,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3553828ae6a0fb0cc6921ed1d936308d"
+      "40decae076b92e7dbf6c2f02af9c0587"
     ],
     [
       "Ex05a.append_assoc",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "89213181adb1ad535102f22b4745bc2a"
+      "6d202ede0e94ba6a8c02c446294cdf3c"
     ],
     [
       "Ex05a.rev_is_ok_aux",
@@ -93,7 +93,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ecd00f7e738c526b99e8b3b68e18b7e2"
+      "24ad4335f89a72a8b6e9d37389047388"
     ],
     [
       "Ex05a.append_nil",
@@ -113,7 +113,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "12ee6d0c6428140ce077d1a9db392a53"
+      "c707a4eec86a8786a6c79fd47509d09f"
     ],
     [
       "Ex05a.rev_is_ok",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "893c7a68028e0b4be4327fef4d7c6cb4"
+      "4b038c1bf9b3baae4421702de0aaa9bf"
     ],
     [
       "Ex05a.append",
@@ -136,7 +136,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7e9bf09889b05d1b38a95acc00b9e178"
+      "ad1a8f1a50cbd284adfa4445288db2bb"
     ],
     [
       "Ex05a.reverse",
@@ -150,7 +150,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "dff5e4925a148a35dd21c86c4068c471"
+      "14c5282ed5e7ba64394255bfee1cc16e"
     ],
     [
       "Ex05a.rev",
@@ -165,7 +165,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "970fef394680ab23ccfff9c45a956df8"
+      "0f8720f2688a2f8d337bb0887093924f"
     ]
   ]
 ]

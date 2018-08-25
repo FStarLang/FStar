@@ -89,13 +89,13 @@ let test_apply_ascription' (x:nat) (y:nat) =
 let test_apply_ascription (x:nat) (y:nat) =
   (assert (op_Multiply x y == op_Multiply y x))
   <: Tot unit
-  by idtac
+  by ()
 
 (* this fails, rightfully, since the top-level goal is not *)
 (* let test_apply_ascription_fail (x:nat) (y:nat) = *)
 (*   assert (op_Multiply x y == op_Multiply y x) *)
 (*   <: Tot unit *)
-(*   by (fun () -> apply_lemma (quote lemma_mul_comm)) *)
+(*   by (apply_lemma (quote lemma_mul_comm)) *)
 
 let test_inspect =
   assert_by_tactic True

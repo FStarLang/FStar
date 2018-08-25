@@ -15,16 +15,16 @@ module L = FStar.List.Tot
 
 inline_for_extraction
 unfold
-let op_Array_Access = B.index
+let op_Array_Access (#a:Type0) (#rrel #rel:Seq.seq_pre a) (b:B.mbuffer a rrel rel) (i:U32.t) = B.index b i
 
 inline_for_extraction
 unfold
-let op_Array_Assignment = B.upd
+let op_Array_Assignment (#a:Type0) (#rrel #rel:Seq.seq_pre a) (b:B.mbuffer a rrel rel) (i:U32.t) (v:a) = B.upd b i v
 
 (* NOTE: DO NOT mark ( !* ) as inline_for_extraction,
    because it is specially treated by KreMLin to extract as *p instead
    of p[0] *)
-let ( !* ) (#a: Type) (p: B.pointer a):
+let ( !* ) (#a:Type0) (#rrel #rel:Seq.seq_pre a) (p:B.mpointer a rrel rel):
   HST.Stack a
   (requires (fun h -> B.live h p))
   (ensures (fun h0 x h1 -> B.live h1 p /\ x == B.get h0 p 0 /\ h1 == h0)) =
@@ -33,8 +33,8 @@ let ( !* ) (#a: Type) (p: B.pointer a):
 (* NOTE: DO NOT mark ( *= ) as inline_for_extraction,
    because it is specially treated by KreMLin to extract as *p = v instead
    of p[0] = v *)
-let ( *= ) (#a: Type) (p: B.pointer a) (v: a) : HST.Stack unit
-  (requires (fun h -> B.live h p))
+let ( *= ) (#a:Type0) (#rrel #rel:Seq.seq_pre a) (p:B.mpointer a rrel rel) (v:a) : HST.Stack unit
+  (requires (fun h -> B.live h p /\ rel (B.as_seq h p) (Seq.upd (B.as_seq h p) 0 v)))
   (ensures (fun h0 _ h1 ->
     B.live h1 p /\
     B.as_seq h1 p `Seq.equal` Seq.create 1 v /\
@@ -43,5 +43,12 @@ let ( *= ) (#a: Type) (p: B.pointer a) (v: a) : HST.Stack unit
 = B.upd p 0ul v
 
 // TODO: remove
+
 inline_for_extraction
-let blit = B.blit
+let blit (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:Seq.seq_pre a)
+  (src:B.mbuffer a rrel1 rel1)
+  (idx_src:U32.t)
+  (dst:B.mbuffer a rrel2 rel2)
+  (idx_dst:U32.t)
+  (len:U32.t)
+  = B.blit src idx_src dst idx_dst len

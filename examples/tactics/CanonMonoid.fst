@@ -5,6 +5,9 @@ open FStar.List
 open FStar.Tactics
 open FStar.Reflection
 
+(* Only dump when debugging is on *)
+let dump m = if debugging () then dump m
+
 (* "A Monoid Expression Simplifier" ported from
    http://adam.chlipala.net/cpdt/html/Cpdt.Reflection.html *)
 

@@ -111,6 +111,7 @@ type token =
   | FUN
   | FSDOC_STANDALONE of (fsdoc)
   | FSDOC of (fsdoc)
+  | FRIEND
   | FORALL
   | FALSE
   | EXISTS
@@ -134,6 +135,7 @@ type token =
   | COLON_EQUALS
   | COLON_COLON
   | COLON
+  | CLASS
   | CHAR of (char)
   | BYTEARRAY of (bytes)
   | BY
@@ -261,6 +263,7 @@ type tokenId =
     | TOKEN_FUN
     | TOKEN_FSDOC_STANDALONE
     | TOKEN_FSDOC
+    | TOKEN_FRIEND
     | TOKEN_FORALL
     | TOKEN_FALSE
     | TOKEN_EXISTS
@@ -284,6 +287,7 @@ type tokenId =
     | TOKEN_COLON_EQUALS
     | TOKEN_COLON_COLON
     | TOKEN_COLON
+    | TOKEN_CLASS
     | TOKEN_CHAR
     | TOKEN_BYTEARRAY
     | TOKEN_BY
@@ -399,6 +403,9 @@ type nonTerminalId =
     | NONTERM_lident
     | NONTERM_uident
     | NONTERM_tvar
+    | NONTERM_thunk_atomicTerm_
+    | NONTERM_thunk_tmNoEq_
+    | NONTERM_thunk_typ_
     | NONTERM_ascribeTyp
     | NONTERM_ascribeKind
     | NONTERM_kind

@@ -370,6 +370,10 @@ let lemma_swap_permutes_slice #a s start i j len =
 val splice: #a:Type -> s1:seq a -> i:nat -> s2:seq a{length s1=length s2} -> j:nat{i <= j /\ j <= (length s2)} -> Tot (seq a)
 let splice #a s1 i s2 j = Seq.append (slice s1 0 i) (Seq.append (slice s2 i j) (slice s1 j (length s1)))
 
+(* replace with sub *)
+let replace_subseq (#a:Type0) (s:Seq.seq a) (i:nat) (j:nat{i <= j /\ j <= length s}) (sub:Seq.seq a{length sub == j - i}) :Tot (Seq.seq a)
+  = Seq.append (Seq.slice s 0 i) (Seq.append sub (Seq.slice s j (Seq.length s)))
+
 val splice_refl : #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s}
   -> Lemma
   (ensures (s == splice s i s j))
@@ -904,7 +908,6 @@ let lemma_seq_of_list_induction (#a:Type) (l:list a)
 	           match l with
 	           | []    -> Seq.equal s empty
 		   | hd::tl -> head s == hd /\ tail s == seq_of_list tl))
-	 [SMTPat (seq_of_list l)]
   = if List.Tot.length l > 0 then lemma_tl (List.Tot.hd l) (seq_of_list (List.Tot.tl l))
 
 let rec lemma_seq_of_list_index (#a:Type) (l:list a) (i:nat{i < List.Tot.length l})
@@ -923,7 +926,9 @@ let seq_of_list_tl
   (l: list a { List.Tot.length l > 0 } )
 : Lemma
   (requires True)
-  (ensures (seq_of_list (List.Tot.tl l) == tail (seq_of_list l))) = ()
+  (ensures (seq_of_list (List.Tot.tl l) == tail (seq_of_list l))) =
+  lemma_seq_of_list_induction l;
+  ()
 
 let rec mem_seq_of_list
   (#a: eqtype)
@@ -943,6 +948,87 @@ let rec mem_seq_of_list
     in
     mem_seq_of_list x q
 
+(** Dealing efficiently with `seq_of_list` by meta-evaluating conjunctions over
+an entire list. *)
+#set-options "--max_fuel 1"
+
+let rec explode_and (#a: Type)
+  (i: nat)
+  (s: seq a { i <= length s })
+  (l: list a { List.Tot.length l + i = length s }):
+  Tot Type
+  (decreases (List.Tot.length l))
+=
+  match l with
+  | [] -> True
+  | hd :: tl ->
+      index s i == hd /\ explode_and (i + 1) s tl
+
+unfold
+let pointwise_and s l =
+  norm [ iota; zeta; primops; delta_only [ `%(explode_and) ] ] (explode_and 0 s l)
+
+val intro_of_list': #a:Type ->
+  i:nat ->
+  s:seq a ->
+  l:list a ->
+  Lemma
+    (requires (
+      List.Tot.length l + i = length s /\
+      i <= length s /\
+      explode_and i s l))
+    (ensures (
+      equal (seq_of_list l) (slice s i (length s))))
+    (decreases (
+      List.Tot.length l))
+
+let rec intro_of_list' #a i s l =
+  match l with
+  | [] -> ()
+  | hd :: tl ->
+      intro_of_list' (i + 1) s tl
+
+let intro_of_list (#a: Type) (s: seq a) (l: list a):
+  Lemma
+    (requires (
+      List.Tot.length l = length s /\
+      pointwise_and s l))
+    (ensures (
+      s == seq_of_list l))
+=
+  intro_of_list' 0 s l
+
+val elim_of_list': #a:Type ->
+  i:nat ->
+  s:seq a ->
+  l:list a ->
+  Lemma
+    (requires (
+      List.Tot.length l + i = length s /\
+      i <= length s /\
+      slice s i (length s) == seq_of_list l))
+    (ensures (
+      explode_and i s l))
+    (decreases (
+      List.Tot.length l))
+
+let rec elim_of_list' #a i s l =
+  match l with
+  | [] -> ()
+  | hd :: tl ->
+      lemma_seq_of_list_induction l;
+      elim_of_list' (i + 1) s tl
+
+let elim_of_list (#a: Type) (l: list a):
+  Lemma
+    (ensures (
+      let s = seq_of_list l in
+      pointwise_and s l))
+=
+  elim_of_list' 0 (seq_of_list l) l
+
+#reset-options
+
 (****** sortWith ******)
 let sortWith (#a:eqtype) (f:a -> a -> Tot int) (s:seq a) :seq a
   = seq_of_list (List.Tot.Base.sortWith f (seq_to_list s))
@@ -953,13 +1039,17 @@ let rec lemma_seq_to_list_permutation (#a:eqtype) (s:seq a)
 
 let rec lemma_seq_of_list_permutation (#a:eqtype) (l:list a)
   :Lemma (forall x. List.Tot.Base.count x l == count x (seq_of_list l))
-  = match l with
+  =
+    lemma_seq_of_list_induction l;
+    match l with
     | []   -> ()
     | _::tl -> lemma_seq_of_list_permutation tl
 
 let rec lemma_seq_of_list_sorted (#a:Type) (f:a -> a -> Tot bool) (l:list a)
   :Lemma (requires (List.Tot.Properties.sorted f l)) (ensures  (sorted f (seq_of_list l)))
-  = if length (seq_of_list l) > 1 then lemma_seq_of_list_sorted f (List.Tot.Base.tl l)
+  =
+    lemma_seq_of_list_induction l;
+    if length (seq_of_list l) > 1 then lemma_seq_of_list_sorted f (List.Tot.Base.tl l)
 
 let lemma_seq_sortwith_correctness (#a:eqtype) (f:a -> a -> Tot int) (s:seq a)
   :Lemma (requires (total_order a (List.Tot.Base.bool_of_compare f)))
@@ -977,3 +1067,49 @@ let lemma_seq_sortwith_correctness (#a:eqtype) (f:a -> a -> Tot int) (s:seq a)
     lemma_seq_to_list_permutation s;  //seq_to_list is a permutation
     List.Tot.Properties.sortWith_permutation f l;  //List.sortWith is a permutation
     lemma_seq_of_list_permutation l'  //seq_of_list is a permutation
+
+
+(***** some functions and lemmas about preorders on sequences *****)
+
+type seq_pre (a:Type0) = Preorder.preorder (seq a)
+
+(*
+ * A notion of compatibility for preorders on subsequences
+ *
+ * Consider a preorder rel on sequences of length len and a preorder sub_rel on subsequences at [i, j)
+ * The two preorders are compatible if:
+ *   (a) When two sequences s1 and s2 are related by rel, their [i, j) subsequences are related by sub_rel, and
+ *   (b) When subsequence [i, j) of s is related to s2 by sub_rel, s is related to (replace_subsequence s s2) by rel
+ *)
+let compatible_sub_preorder (#a:Type0)
+  (len:nat) (rel:seq_pre a) (i:nat) (j:nat{i <= j /\ j <= len}) (sub_rel:seq_pre a)
+  = (forall (s1 s2:Seq.seq a). (Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) ==>
+		          (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))) /\  //(a)
+    (forall (s s2:Seq.seq a). (Seq.length s == len /\ Seq.length s2 == j - i /\ sub_rel (Seq.slice s i j) s2) ==>
+  		         (rel s (replace_subseq s i j s2)))
+
+(*
+ * Reflexivity of the compatibility relation
+ *)
+let lemma_seq_sub_compatilibity_is_reflexive (#a:Type0) (len:nat) (rel:seq_pre a)
+  :Lemma (compatible_sub_preorder len rel 0 len rel)
+  = assert (forall (s1 s2:seq a). length s1 == length s2 ==> equal (replace_subseq s1 0 (length s1) s2) s2)
+
+(*
+ * Transitivity of the compatibility relation
+ *
+ * i2 and j2 are offsets within [i1, j1) (i.e. assuming i1 = 0)
+ *)
+let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
+  (len:nat) (rel:seq_pre a) (i1 j1:nat) (rel1:seq_pre a) (i2 j2:nat) (rel2:seq_pre a)
+  :Lemma (requires (i1 <= j1 /\ j1 <= len /\ i2 <= j2 /\ j2 <= j1 - i1 /\
+                    compatible_sub_preorder len rel i1 j1 rel1 /\
+                    compatible_sub_preorder (j1 - i1) rel1 i2 j2 rel2))
+	 (ensures  (compatible_sub_preorder len rel (i1 + i2) (i1 + j2) rel2))
+  = let aux (a:Type0) (len i1 j1 i2 j2:nat) (s:seq a) (s2:seq a)
+      :Lemma ((i1 <= j1 /\ j1 <= len /\ i2 <= j2 /\ j2 <= j1 - i1 /\ length s == len /\ length s2 == j2 - i2) ==>
+	      (Seq.equal (replace_subseq s (i1 + i2) (i1 + j2) s2)
+	                 (replace_subseq s i1 j1 (replace_subseq (Seq.slice s i1 j1) i2 j2 s2))))
+      = ()
+    in
+    Classical.forall_intro_2 (aux a len i1 j1 i2 j2)

@@ -382,7 +382,11 @@ let compile_fvar
   let ins = T.inspect f in
   T.debug "after inspect";
   let test = T.Tv_FVar? ins in
-  tassert test;
+  // GM: If we use a semicolon, the refinement is lost!!
+  // Another option is to just use `guard`, which has a WP instead
+  // of a refinement on the result, and thus works fine.
+  let _ = tassert test in
+
   let (T.Tv_FVar v) = ins in
     let v' = unfold_fv v in
     let t' = T.mk_app v' ar in

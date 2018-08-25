@@ -1,7 +1,7 @@
 open Prims
 let (has_cygpath : Prims.bool) =
   try
-    (fun uu___63_3  ->
+    (fun uu___64_3  ->
        match () with
        | () ->
            let t_out =
@@ -9,7 +9,7 @@ let (has_cygpath : Prims.bool) =
                FStar_Pervasives_Native.None
               in
            (FStar_Util.trim_string t_out) = "/usr/bin/cygpath") ()
-  with | uu___62_6 -> false 
+  with | uu___63_6 -> false 
 let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
   let cache = FStar_Util.smap_create (Prims.parse_int "20")  in
   fun s  ->
@@ -100,9 +100,32 @@ let string_of_option :
       'Auu____349 FStar_Pervasives_Native.option -> Prims.string
   =
   fun f  ->
-    fun uu___61_364  ->
-      match uu___61_364 with
+    fun uu___62_364  ->
+      match uu___62_364 with
       | FStar_Pervasives_Native.None  -> "None"
       | FStar_Pervasives_Native.Some x ->
           let uu____370 = f x  in Prims.strcat "Some " uu____370
+  
+type 'a thunk = (unit -> 'a,'a) FStar_Util.either FStar_ST.ref
+let mk_thunk : 'a . (unit -> 'a) -> 'a thunk =
+  fun f  -> FStar_Util.mk_ref (FStar_Util.Inl f) 
+let force_thunk : 'a . 'a thunk -> 'a =
+  fun t  ->
+    let uu____505 = FStar_ST.op_Bang t  in
+    match uu____505 with
+    | FStar_Util.Inr a -> a
+    | FStar_Util.Inl f ->
+        let a = f ()  in (FStar_ST.op_Colon_Equals t (FStar_Util.Inr a); a)
+  
+let tabulate : 'a . Prims.int -> (Prims.int -> 'a) -> 'a Prims.list =
+  fun n1  ->
+    fun f  ->
+      let rec aux i =
+        if i < n1
+        then
+          let uu____709 = f i  in
+          let uu____710 = aux (i + (Prims.parse_int "1"))  in uu____709 ::
+            uu____710
+        else []  in
+      aux (Prims.parse_int "0")
   

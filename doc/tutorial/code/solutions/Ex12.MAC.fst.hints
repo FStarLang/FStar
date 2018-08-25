@@ -13,7 +13,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "665659cb149298cc4a03b08bb5a081d3"
+      "63781af9478f8f3e31bdd366487967dc"
     ],
     [
       "Ex12.MAC.unique_registry_order",
@@ -26,7 +26,7 @@
         "token_correspondence_Ex12.MAC.unique_registry_order_"
       ],
       0,
-      "0af9ca43085452f8e4396aaecc63d066"
+      "584b625fb148ae37ba80d8c540763771"
     ],
     [
       "Ex12.MAC.unicity",
@@ -44,7 +44,7 @@
         "token_correspondence_Ex12.MAC.unique_registry_order_"
       ],
       0,
-      "53160b7ca0c91bda520044b0d22eb31f"
+      "56ff9d952e1a9d250b9314fec6fba105"
     ],
     [
       "Ex12.MAC.key_log",
@@ -71,7 +71,7 @@
         "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47"
       ],
       0,
-      "094bb85eade0defb9dff72ae6cf06651"
+      "25daf4cee7ed5a1515aba00a8a2a4a4e"
     ],
     [
       "Ex12.MAC.associated_to",
@@ -93,7 +93,7 @@
         "token_correspondence_Ex12.MAC.unique_registry_order_"
       ],
       0,
-      "16789ac7a0aac2692efbb17c27024603"
+      "c482f4e7d120eefe460e413bd1ac1eb6"
     ],
     [
       "Ex12.MAC.pkey",
@@ -109,7 +109,7 @@
         "typing_Ex12.MAC.key_log"
       ],
       0,
-      "50e49930e510f1ceca3a1e310f95e79f"
+      "51bd048d6ac8b43d9b33581f0e8dc874"
     ],
     [
       "Ex12.MAC.key_prop",
@@ -125,7 +125,7 @@
         "typing_Ex12.MAC.key_log"
       ],
       0,
-      "1e7ac21895d7e3c14df16bc1371ad702"
+      "83a25a57f987225089337c68b21b6775"
     ],
     [
       "Ex12.MAC.spred_exists_stable'",
@@ -137,7 +137,7 @@
         "equation_FStar.Preorder.stable", "l_quant_interp__9291"
       ],
       0,
-      "ad1e7295a8bf178266addf3f24875b27"
+      "0bd36fc8bfa2fc558949fd294c7c50a4"
     ],
     [
       "Ex12.MAC.spred_exists_stable",
@@ -149,7 +149,7 @@
         "token_correspondence_Ex12.MAC.spred_exists_"
       ],
       0,
-      "26c91702d083e54d7a3a6e51b621975a"
+      "9dc5dd1f42c64aeb54f34da68411d83b"
     ],
     [
       "Ex12.MAC.spred_exists",
@@ -161,7 +161,7 @@
         "refinement_interpretation_Ex12.MAC_Tm_refine_499df21a3e2e72fe7a404297a783c82c"
       ],
       0,
-      "e5f9b5ab8144dc4aa83a5c4d259c9fb2"
+      "1579040e6a4fa6ed4979a605691d61e6"
     ],
     [
       "Ex12.MAC.spred_and",
@@ -178,7 +178,7 @@
         "token_correspondence_Ex12.MAC.spred_and_"
       ],
       0,
-      "6d72b57379064014f7140a1feae1a763"
+      "aac2c3dd193f354e35bbdcd73929efd9"
     ],
     [
       "Ex12.MAC.token_intro_and",
@@ -198,7 +198,7 @@
         "token_correspondence_Ex12.MAC.spred_and_"
       ],
       0,
-      "9627d9ca57c9c7891934d917dbc03327"
+      "c554fe51e958c8fabf95e81bb893c030"
     ],
     [
       "Ex12.MAC.mem_assoc_unique",
@@ -208,18 +208,17 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
-        "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.map.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "@query",
-        "Ex12.MAC_interpretation_Tm_arrow_ca2910690d56a220414e186daad3e4a8",
+        "Ex12.MAC_interpretation_Tm_arrow_02eefb8425732ff6ebbe05327144c3a5",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
-        "binder_x_273c0cb114efbc10b99731f088b17ae0_2",
-        "binder_x_3670906649fcd72a4d2378101f1ebb6a_5",
-        "binder_x_fe28d8bcde588226b4e538b35321de05_3", "bool_inversion",
+        "binder_x_07c04e67c7cab1ba5acd0cd207adcc61_4",
+        "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_2", "bool_inversion",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "eq2-interp",
         "equation_FStar.Pervasives.Native.fst", "equation_Prims.eqtype",
@@ -228,7 +227,7 @@
         "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Prims.list",
         "kinding_FStar.Pervasives.Native.tuple2@tok", "l_or-interp",
-        "partial_app_typing_2afb74e0e60a563874c18165cd2e13ce",
+        "partial_app_typing_44670155e121d84b7d496ea4f0011ed5",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Negation",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -246,7 +245,7 @@
         "unit_typing"
       ],
       0,
-      "320ad5b993b263dc296e40dfdfeba8d2"
+      "504bd73097997d36bb9b141188784a9e"
     ],
     [
       "Ex12.MAC.key_cipher_text_spred",
@@ -268,7 +267,7 @@
         "token_correspondence_Ex12.MAC.key_cipher_text"
       ],
       0,
-      "5158060f29a84e8286528c4508a1dac4"
+      "b7368117e7ab6f4066d35d5463eac232"
     ],
     [
       "Ex12.MAC.key_cipher_text_spred_unfold",
@@ -287,7 +286,7 @@
         "token_correspondence_Ex12.MAC.spred_exists_"
       ],
       0,
-      "b064b79f2787080fd230f703f4bf34fb"
+      "388bc4003f4531dd039727c4cc2d2acd"
     ],
     [
       "Ex12.MAC.key_prop_entails_key_cipher_text_token",
@@ -314,7 +313,7 @@
         "typing_Ex12.MAC.associated_to", "typing_Ex12.MAC.key_log"
       ],
       0,
-      "79c5597855a296ad1d5f909d2b452b1c"
+      "8e4342ada462b2fa009e2f5436b4b3d3"
     ],
     [
       "Ex12.MAC.key_prop_unicity",
@@ -342,7 +341,7 @@
         "token_correspondence_Ex12.MAC.spred_and_"
       ],
       0,
-      "226c2848de83aca8dd4d1e51dfac046d"
+      "6b3adb8967dff0a6d2dea44a2ccda1c1"
     ],
     [
       "Ex12.MAC.to_key_prop",
@@ -366,7 +365,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "fe1359aae5dffa35c6bc51359597b347"
+      "539a3a0fb7ffa4f3c93344bb3c4360f3"
     ],
     [
       "Ex12.MAC.from_key_prop",
@@ -384,27 +383,25 @@
         "equation_Ex12.MAC.pred_to_dec_ghost", "equation_Ex12.MAC.unicity",
         "equation_Ex12.MAC.unique_registry_order", "equation_Ex12.SHA1.key",
         "equation_Ex12.SHA1.text", "equation_FStar.MRef.stable",
-        "equation_FStar.Preorder.stable", "equation_FStar.ST.mref",
-        "equation_Platform.Bytes.bytes",
+        "equation_FStar.Preorder.stable", "equation_Platform.Bytes.bytes",
         "function_token_typing_Ex12.MAC.key_log",
         "function_token_typing_Ex12.MAC.pred_to_dec_ghost",
         "function_token_typing_Platform.Bytes.bytes",
         "interpretation_Ex12.MAC_Tm_abs_3593786c631b8bc0bddb34feb25b2a45",
         "interpretation_Ex12.MAC_Tm_abs_97c0e073b8cc174491198c8e97c1e166",
-        "refinement_interpretation_Ex12.MAC_Tm_refine_2d43983baff747ff66a1a164d32a8de0",
         "refinement_interpretation_Ex12.MAC_Tm_refine_427f20e5bcf1f6e1dae484d595b8800f",
         "refinement_interpretation_Ex12.MAC_Tm_refine_52ae29d7146572e001df2a5f36748c86",
         "refinement_interpretation_Ex12.MAC_Tm_refine_572b7c2b1bdf079fa791115963523fc8",
+        "refinement_interpretation_Ex12.MAC_Tm_refine_94612656aa7fede2789c406b8161f17f",
         "refinement_interpretation_Ex12.MAC_Tm_refine_f0bbfa010c2d36e950ee6d3821f571b9",
-        "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
-        "typing_Ex12.MAC.associated_to", "typing_Ex12.MAC.key_log",
-        "typing_Ex12.MAC.pred_to_dec_ghost", "typing_Ex12.MAC.unicity",
+        "typing_Ex12.MAC.associated_to", "typing_Ex12.MAC.pred_to_dec_ghost",
+        "typing_Ex12.MAC.unicity",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "unit_typing"
       ],
       0,
-      "e8c0f709b3bfedef2d940d47e01a0b73"
+      "dd39531d419157d2b134501f1dab8bf9"
     ],
     [
       "Ex12.MAC.__proj__Entry__item__t",
@@ -416,7 +413,7 @@
         "projection_inverse_Ex12.MAC.Entry_k"
       ],
       0,
-      "75601b25fbe84ec30f234419936c8d86"
+      "b8699de64c3c3da4f87cbc2cd7985d67"
     ],
     [
       "Ex12.MAC.mac",
@@ -428,7 +425,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b0b39a2e310ffeeae446dc932c2b8258"
+      "393beb1e5bac7dc17cd8860513410ba0"
     ],
     [
       "Ex12.MAC.verify",
@@ -440,7 +437,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c8ae6a27287550f33228038bea9d9013"
+      "fc93d6d897023c096497e57185f72012"
     ],
     [
       "Ex12.MAC.keygen",
@@ -497,7 +494,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "ab348b8a7c6f06c5f1e213bb509814cc"
+      "e0022a97c89f9a781334b0be8090208c"
     ],
     [
       "Ex12.MAC.mac",
@@ -517,7 +514,7 @@
         "true_interp", "typing_Ex12.SHA1.hmac_sha1"
       ],
       0,
-      "b9ec4605e02dc1bc0007f34dbe67c5c9"
+      "6031475d024316369dd8b8ad2e9f96a4"
     ],
     [
       "Ex12.MAC.verify",
@@ -548,7 +545,7 @@
         "typing_Platform.Bytes.equalBytes"
       ],
       0,
-      "3c33a7f607330842e905b08e14cb5459"
+      "a9c89360864ea3bcc3ec246e98a0ecae"
     ],
     [
       "Ex12.MAC.unique_registry_order",
@@ -561,7 +558,7 @@
         "token_correspondence_Ex12.MAC.unique_registry_order_"
       ],
       0,
-      "8047df6ab7db13bd798b475ab7bdf833"
+      "f70c0945639089910b4d2b4450067171"
     ],
     [
       "Ex12.MAC.unicity",
@@ -578,7 +575,7 @@
         "token_correspondence_Ex12.MAC.unique_registry_order_"
       ],
       0,
-      "94fcce9b9ca7fcc39eec4fcfc238b1a3"
+      "51712b2ae8e65e978a3ac3aa84117742"
     ],
     [
       "Ex12.MAC.key_log",
@@ -604,7 +601,7 @@
         "refinement_interpretation_FStar.ST_Tm_refine_e33ef751d600ad1c7f71142479103c47"
       ],
       0,
-      "38bffb53d239b9c124cbd44c56e7e9e1"
+      "2d68109352e8cec2a67222718304966b"
     ],
     [
       "Ex12.MAC.associated_to",
@@ -627,7 +624,7 @@
         "token_correspondence_Ex12.MAC.unique_registry_order_"
       ],
       0,
-      "3ebe37b5f696833ccb7b15774c279a4c"
+      "b2e4c5521595676efcc544cf874aab81"
     ],
     [
       "Ex12.MAC.pkey",
@@ -643,7 +640,7 @@
         "typing_Ex12.MAC.key_log"
       ],
       0,
-      "ebf29822ee03563fdbfef680e0d3033a"
+      "8f95cec7ea4d1ebe0b6330b9136a7218"
     ],
     [
       "Ex12.MAC.key_prop",
@@ -659,31 +656,7 @@
         "typing_Ex12.MAC.key_log"
       ],
       0,
-      "9323ee5dec50293d7a4e6aaf72385d38"
-    ],
-    [
-      "Ex12.MAC.spred_exists_stable'",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Ex12.MAC.spred_exists_",
-        "equation_FStar.Preorder.stable", "l_quant_interp__10337"
-      ],
-      0,
-      "e258fdaae0c82888bf235d17d00966b3"
-    ],
-    [
-      "Ex12.MAC.spred_exists_stable",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.stable",
-        "token_correspondence_Ex12.MAC.spred_exists_"
-      ],
-      0,
-      "0691497f00dac93cc422fa3762095984"
+      "69b6c6f10c0d272b157892af6d606297"
     ],
     [
       "Ex12.MAC.spred_exists",
@@ -695,7 +668,7 @@
         "refinement_interpretation_Ex12.MAC_Tm_refine_499df21a3e2e72fe7a404297a783c82c"
       ],
       0,
-      "df156d398b219536b630e5fe8e41ed76"
+      "20434e57fbc0c463d4d3417708e790d2"
     ],
     [
       "Ex12.MAC.spred_and",
@@ -712,7 +685,7 @@
         "token_correspondence_Ex12.MAC.spred_and_"
       ],
       0,
-      "39c6783249f2782c3211ab882d64d296"
+      "36b76661bc798c48727470d6d457ef21"
     ],
     [
       "Ex12.MAC.token_intro_and",
@@ -725,7 +698,7 @@
         "refinement_interpretation_FStar.MRef_Tm_refine_622e5d71d43c090771b195939447feeb"
       ],
       0,
-      "c6fe2bdde103b5dee1e3157b0148ade6"
+      "3da768684e743dbe91d6b4da8c31d521"
     ],
     [
       "Ex12.MAC.key_cipher_text_spred",
@@ -745,7 +718,7 @@
         "token_correspondence_Ex12.MAC.key_cipher_text"
       ],
       0,
-      "ec721ade770fa1daa51f1f78910bf123"
+      "f6325d85955f570a9d7cff19dc34a23b"
     ],
     [
       "Ex12.MAC.key_prop_entails_key_cipher_text_token",
@@ -761,7 +734,7 @@
         "typing_Ex12.MAC.key_log"
       ],
       0,
-      "9f780e465afd82e77767bb991c40d458"
+      "a02401f72828f29f7bfe20ae9bf16ecd"
     ],
     [
       "Ex12.MAC.__proj__Entry__item__t",
@@ -773,7 +746,7 @@
         "projection_inverse_Ex12.MAC.Entry_k"
       ],
       0,
-      "d36b2b6ecf48ddf5ecceee0c5ea15973"
+      "58a152805682dd5a7682c454dd62a4a0"
     ],
     [
       "Ex12.MAC.mac",
@@ -785,7 +758,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "24cfb866702f1efa6b8947038712a61d"
+      "afdcb7fcb370c125f814753e9d7a6425"
     ],
     [
       "Ex12.MAC.verify",
@@ -797,7 +770,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ce8f7483d887b5a076fd3a6d4deda0c4"
+      "42db9800c1793baf4f50e57c3898d4a2"
     ]
   ]
 ]

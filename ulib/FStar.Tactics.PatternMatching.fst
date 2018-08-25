@@ -8,9 +8,6 @@
 
 module FStar.Tactics.PatternMatching
 
-// JP: this file does not seem to type-check without this option.
-#set-options "--use_two_phase_tc true"
-
 /// Contents
 /// ========
 ///
@@ -86,7 +83,7 @@ let _ =
 /// .. code:: fstar
 ///
 ///    let fetch_eq_side' #a () : Tac (term * term) =
-///      gpm (fun (left right: a) (g: goal (squash (left == right))) ->
+///      gpm (fun (left right: a) (g: pm_goal (squash (left == right))) ->
 ///             (quote left, quote right) <: Tac (term * term))
 ///
 ///    let _ =
@@ -100,7 +97,7 @@ let _ =
 ///
 ///    let _ =
 ///      assert_by_tactic (1 + 1 == 2)
-///        (gpm (fun (left right: int) (g: goal (squash (left == right))) ->
+///        (gpm (fun (left right: int) (g: pm_goal (squash (left == right))) ->
 ///                let l, r = quote left, quote right in
 ///                print (term_to_string l ^ " / " ^ term_to_string r) <: Tac unit))
 
@@ -316,6 +313,9 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     | PQn qn -> interp_qn qn cur_bindings tm
     | PType -> interp_type cur_bindings tm
     | PApp p_hd p_arg -> interp_app p_hd p_arg cur_bindings tm
+    // GM: Jul 11 2018, sadly this is needed, seems this monad layered
+    // on top of Tac causesq queries to be hard on Z3
+    | _ -> fail "?"
 
 (** Match a pattern `pat` against a term.
 Returns a result in the exception monad. **)
@@ -540,7 +540,7 @@ let pattern_of_term tm : Tac pattern =
 /// We then introduce a DSL for matching problems, best explained on the
 /// following example::
 ///
-///    (fun (a b c: ①) (h1 h2 h3: hyp ②) (g: goal ③) → ④)
+/// (fun (a b c: ①) (h1 h2 h3: hyp ②) (g: pm_goal ③) → ④)
 ///
 /// This notation is intended to express a pattern-matching problems with three
 /// holes ``a``, ``b``, and ``c`` of type ①, matching hypotheses ``h1``, ``h2``,
@@ -559,10 +559,10 @@ let pattern_of_term tm : Tac pattern =
 
 // let var (a: Type) = a
 let hyp (a: Type) = binder
-let goal (a: Type) = unit
+let pm_goal (a: Type) = unit
 
 let hyp_qn  = `%hyp
-let goal_qn = `%goal
+let goal_qn = `%pm_goal
 
 noeq type abspat_binder_kind =
 | ABKVar of typ
@@ -804,7 +804,7 @@ open FStar.Tactics
 /// Here's the example from the intro, which we can now run!
 
 let fetch_eq_side' #a : Tac (term * term) =
-  gpm (fun (left right: a) (g: goal (squash (left == right))) ->
+  gpm (fun (left right: a) (g: pm_goal (squash (left == right))) ->
          (quote left, quote right)) ()
 
 // TODO: GM: The following definition breaks extraction with
@@ -824,7 +824,7 @@ ml type of head is (FStar_Reflection_Types.term * FStar_Reflection_Types.term)
 
 let _ =
   assert_by_tactic (1 + 1 == 2)
-    (gpm (fun (left right: int) (g: goal (squash (left == right))) ->
+    (gpm (fun (left right: int) (g: pm_goal (squash (left == right))) ->
             let l, r = quote left, quote right in
             print (term_to_string l ^ " / " ^ term_to_string r) <: Tac unit))
 
@@ -854,13 +854,13 @@ let example (#a:Type0) (#b:Type0) (#c:Type0) :unit =
     (fun () -> repeat' (fun () ->
                  gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
                               clear h <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a b: Type0) (g: goal (squash (a ==> b))) ->
+                 (fun () -> gpm #unit (fun (a b: Type0) (g: pm_goal (squash (a ==> b))) ->
                               implies_intro' () <: Tac unit) `or_else`
                  (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a /\ b)) ->
                               and_elim' h <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: goal (squash a)) ->
+                 (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: pm_goal (squash a)) ->
                               rewrite h <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: goal (squash a)) ->
+                 (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: pm_goal (squash a)) ->
                               exact_hyp a h <: Tac unit) ())))));
                qed ())
 

@@ -95,7 +95,8 @@ type env = {
   docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
   remaining_iface_decls:list<(lident*list<Parser.AST.decl>)>;  (* A map from interface names to their stil-to-be-processed top-level decls *)
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
-  ds_hooks:             dsenv_hooks                       (* hooks that the interactive more relies onto for symbol tracking *)
+  ds_hooks:             dsenv_hooks;                       (* hooks that the interactive more relies onto for symbol tracking *)
+  dep_graph:            FStar.Parser.Dep.deps
 }
 and dsenv_hooks =
   { ds_push_open_hook : env -> open_module_or_namespace -> unit;
@@ -156,7 +157,7 @@ let set_syntax_only env b = { env with syntax_only = b }
 let ds_hooks env = env.ds_hooks
 let set_ds_hooks env hooks = { env with ds_hooks = hooks }
 let new_sigmap () = BU.smap_create 100
-let empty_env () = {curmodule=None;
+let empty_env deps = {curmodule=None;
                     curmonad=None;
                     modules=[];
                     scope_mods=[];
@@ -171,8 +172,10 @@ let empty_env () = {curmodule=None;
                     docs=new_sigmap();
                     remaining_iface_decls=[];
                     syntax_only=false;
-                    ds_hooks=default_ds_hooks}
-
+                    ds_hooks=default_ds_hooks;
+                    dep_graph=deps}
+let dep_graph env = env.dep_graph
+let set_dep_graph env ds = {env with dep_graph=ds}
 let sigmap env = env.sigmap
 let has_all_in_scope env =
   List.existsb (fun (m, _) ->
@@ -190,7 +193,7 @@ let unmangleMap = [("op_ColonColon", "Cons", delta_constant, Some Data_ctor);
 let unmangleOpName (id:ident) : option<(term * bool)> =
   let t =
   find_map unmangleMap (fun (x,y,dd,dq) ->
-    if (id.idText = x) then Some (S.fvar (lid_of_path ["Prims"; y] id.idRange) dd dq)
+    if (id.idText = x) then Some (S.fvar (lid_of_path ["Prims"; y] id.idRange) dd dq) //NS delta ok
     else None)
   in
   match t with
@@ -532,6 +535,17 @@ let ns_of_lid_equals (lid: lident) (ns: lident) =
     List.length lid.ns = List.length (ids_of_lid ns) &&
     lid_equals (lid_of_ids lid.ns) ns
 
+let delta_depth_of_declaration (lid:lident) (quals:list<qualifier>) =
+    let dd = if U.is_primop_lid lid
+            || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+            then delta_equational
+            else delta_constant in
+    if quals |> BU.for_some (function Abstract -> true | _ -> false)
+    || (quals |> BU.for_some (function Assumption -> true | _ -> false)
+    && not (quals |> BU.for_some (function New -> true | _ -> false)))
+    then Delta_abstract dd
+    else dd
+
 let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> =
   let occurrence_range = Ident.range_of_lid lid in
 
@@ -539,8 +553,8 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       | (_, true) when exclude_interf -> None
       | (se, _) ->
         begin match se.sigel with
-          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid delta_constant None, false, se.sigattrs))
-          | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid delta_constant (fv_qual_of_se se), false, se.sigattrs))
+          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid delta_constant None, false, se.sigattrs)) //NS delta: ok
+          | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid delta_constant (fv_qual_of_se se), false, se.sigattrs)) //NS delta: ok
           | Sig_let((_, lbs), _) ->
             let fv = lb_fv lbs source_lid in
             Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false, se.sigattrs))
@@ -549,34 +563,26 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
             || quals |> BU.for_some (function Assumption -> true | _ -> false)
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
-                 let dd = if U.is_primop_lid lid
-                          || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
-                          then delta_equational
-                          else delta_constant in
-                 let dd = if quals |> BU.for_some (function Abstract -> true | _ -> false)
-                          || (quals |> BU.for_some (function Assumption -> true | _ -> false)
-                            && not (quals |> BU.for_some (function New -> true | _ -> false)))
-                          then Delta_abstract dd
-                          else dd in
+                 let dd = delta_depth_of_declaration lid quals in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
                         Some (Term_name (refl_const, false, se.sigattrs))
-                 | _ -> Some (Term_name(fvar lid dd (fv_qual_of_se se), false, se.sigattrs))
+                 | _ -> Some (Term_name(fvar lid dd (fv_qual_of_se se), false, se.sigattrs)) //NS delta: ok
                  end
             else None
             | Sig_new_effect_for_free (ne) | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
             | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
             | Sig_splice (lids, t) ->
                 // TODO: This depth is probably wrong
-                Some (Term_name (S.fvar source_lid (Delta_constant_at_level 1) None, false, []))
+                Some (Term_name (S.fvar source_lid (Delta_constant_at_level 1) None, false, [])) //NS delta: wrong
             | _ -> None
         end in
 
   let k_local_binding r = let (t, mut) = found_local_binding (range_of_lid lid) r in Some (Term_name (t, mut, []))
   in
 
-  let k_rec_binding (id, l, dd) = Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, false, []))
+  let k_rec_binding (id, l, dd) = Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, false, [])) //NS delta: ok
   in
 
   let found_unmangled = match lid.ns with
@@ -657,7 +663,7 @@ let try_lookup_let env (lid:lident) =
   let k_global_def lid = function
       | ({ sigel = Sig_let((_, lbs), _) }, _) ->
         let fv = lb_fv lbs lid in
-        Some (fvar lid fv.fv_delta fv.fv_qual)
+        Some (fvar lid fv.fv_delta fv.fv_qual) //NS delta: ok
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 

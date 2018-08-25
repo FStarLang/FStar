@@ -1,6 +1,6 @@
 #!/bin/sh
 
-sha="$(git log --pretty=format:%h -n 1)"
+sha="$(git log --pretty=format:%H -n 1)"
 git diff --exit-code HEAD > /dev/null
 clean=$?
 

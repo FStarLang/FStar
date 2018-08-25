@@ -965,9 +965,7 @@ let tc_assume (env:env) (ts:tscheme) (r:Range.range) :tscheme =
   //AR: this might seem same as tc_declare_typ but come prop, this will change
   tc_type_common env ts (U.type_u () |> fst) r
 
-let tc_inductive env ses quals lids =
-    let env = Env.push env "tc_inductive" in
-
+let tc_inductive' env ses quals lids =
     if Env.debug env Options.Low then
         BU.print1 ">>>>>>>>>>>>>>tc_inductive %s\n" (FStar.Common.string_of_list Print.sigelt_to_string ses);
 
@@ -1022,15 +1020,19 @@ let tc_inductive env ses quals lids =
               else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env
             in
             sig_bndle, ses@data_ops_ses in  //append hasEq axiom lids and data projectors and discriminators lids
-    ignore (Env.pop env "tc_inductive"); // OK to ignore: caller will reuse original env
     res
+
+let tc_inductive env ses quals lids =
+  let env = Env.push env "tc_inductive" in
+  let pop () = ignore (Env.pop env "tc_inductive") in  //OK to ignore: caller will reuse original env
+  try tc_inductive' env ses quals lids |> (fun r -> pop (); r)
+  with e -> pop (); raise e 
 
 //when we process a reset-options pragma, we need to restart z3 etc.
 let z3_reset_options (en:env) :env =
   let env = Env.set_proof_ns (Options.using_facts_from ()) en in
   env.solver.refresh ();
   env
-
 
 let get_fail_se (se:sigelt) : option<(list<int> * bool)> =
     let comb f1 f2 =
@@ -1166,15 +1168,13 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
     let expected_k  = U.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
     let repr_type eff_name a wp =
-      let no_reify l = raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) (Env.get_range env) in
+      if not (is_reifiable_effect env eff_name) then
+          raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" eff_name.str)) (Env.get_range env);
       match Env.effect_decl_opt env eff_name with
-      | None -> no_reify eff_name
+      | None -> failwith "internal error: reifiable effect has no decl?"
       | Some (ed, qualifiers) ->
           let repr = Env.inst_effect_fun_with [U_unknown] env ed ([], ed.repr) in
-          if not (qualifiers |> List.contains Reifiable) then
-            no_reify eff_name
-          else
-            mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
+          mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
     in
     let lift, lift_wp =
       match sub.lift, sub.lift_wp with
@@ -1348,6 +1348,11 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   | Sig_splice (lids, t) ->
     if Options.debug_any () then
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
+
+    // Check the tactic
+    let t, _, g = tc_tactic env t in
+    Rel.force_trivial_guard env g;
+
     let ses = env.splice env t in
     let lids' = List.collect U.lids_of_sigelt ses in
     List.iter (fun lid ->
@@ -1450,29 +1455,32 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
 
     (* 3. Type-check the Tm_let and convert it back to Sig_let *)
-    let env0 = { env with top_level = true; generalize = should_generalize } in
+    let env' = { env with top_level = true; generalize = should_generalize } in
     let e =
-      if Options.use_two_phase_tc () && Env.should_verify env0 then begin
+      if Options.use_two_phase_tc () && Env.should_verify env' then begin
         let drop_lbtyp (e_lax:term) :term =
           match (SS.compress e_lax).n with
           | Tm_let ((false, [ lb ]), e2) ->
             let lb_unannotated =
               match (SS.compress e).n with  //checking type annotation on e, the lb before phase 1, capturing e from above
-              | Tm_let ((_, [ lb ]), _) -> (SS.compress lb.lbtyp).n = Tm_unknown
+              | Tm_let ((_, [ lb ]), _) ->
+                (match (SS.compress lb.lbtyp).n with
+                 | Tm_unknown -> true
+                 | _ -> false)
               | _                       -> failwith "Impossible: first phase lb and second phase lb differ in structure!"
             in
             if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
             else e_lax
           | _ -> e_lax  //leave recursive lets as is
         in
-        let e = tc_maybe_toplevel_term ({ env0 with phase1 = true; lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env0 |> drop_lbtyp in
+        let e = tc_maybe_toplevel_term ({ env' with phase1 = true; lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env' |> drop_lbtyp in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print1 "Let binding after phase 1: %s\n" (Print.term_to_string e);
         e
       end
       else e
     in
 
-    let se, lbs = match tc_maybe_toplevel_term env0 e with
+    let se, lbs = match tc_maybe_toplevel_term env' e with
       | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
@@ -1519,7 +1527,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
     let env' = if lax then { env with lax = true } else env in
     if Env.debug env Options.Low then
         BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
-    let errs, _ = Errors.catch_errors (fun () -> tc_decl' env' se) in
+    let errs, _ = Errors.catch_errors (fun () -> Options.with_saved_options (fun () -> tc_decl' env' se)) in
     if Env.debug env Options.Low then begin
         BU.print_string ">> Got issues: [\n";
         List.iter Errors.print_issue errs;
@@ -1528,13 +1536,14 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
     begin match errs, check_multi_contained errnos (List.concatMap (fun i -> list_of_option i.issue_number) errs) with
     | [], _ ->
         List.iter Errors.print_issue errs;
-        raise_error (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded") se.sigrng
+        Errors.log_issue se.sigrng (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded")
     | _, Some (e, n1, n2) ->
         List.iter Errors.print_issue errs;
-        raise_error (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
-                                                (string_of_int e) (string_of_int n1) (string_of_int n2)) se.sigrng
-    | _, None -> [], [], env
-    end
+        Errors.log_issue se.sigrng (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
+                                                (string_of_int e) (string_of_int n1) (string_of_int n2))
+    | _, None -> ()
+    end;
+    [], [], env
 
   | None ->
     tc_decl' env se
@@ -1714,6 +1723,7 @@ let tc_decls env ses =
     let (_, _, env, _) = acc in
     let r, ms_elapsed = BU.record_time (fun () -> process_one_decl acc se) in
     if Env.debug env (Options.Other "TCDeclTime")
+     || BU.for_some (U.attr_eq U.tcdecltime_attr) se.sigattrs
     then BU.print2 "Checked %s in %s milliseconds\n" (Print.sigelt_to_string_short se) (string_of_int ms_elapsed);
     r
   in
@@ -1853,7 +1863,7 @@ let extract_interface (en:env) (m:modul) :modul =
       if is_unit t then Some (S.mk_Total t) else match (SS.compress t).n with | Tm_arrow (_, c) -> Some c | _ -> None
     in
 
-    c_opt = None ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
+    Option.isNone c_opt ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
     (let c = c_opt |> must in
      //if c is pure or ghost then keep it if the return type is not unit
      if is_pure_or_ghost_comp c then not (c |> comp_result |> is_unit)
@@ -1993,7 +2003,7 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
 
     //AR: the third flag 'true' is for iface_exists for the current file, since it's an iface already, pass true
     let modul_iface, must_be_none, env = tc_modul en0 modul_iface true in
-    if must_be_none <> None then failwith "Impossible! finish_partial_module: expected the second component to be None"
+    if Option.isSome must_be_none then failwith "Impossible! finish_partial_module: expected the second component to be None"
     else { m with exports = modul_iface.exports }, Some modul_iface, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
   else

@@ -16,9 +16,6 @@ let print_test () : Tac unit =
     print "not failing";
     assert False
 
-(* Metaprograms that succeed *)
-effect TacS (a:Type) = TAC a (fun _ p -> forall x ps. p (FStar.Tactics.Result.Success x ps))
-
 (* None of these succeed (as in: return Success within the monad) *)
 [@expect_failure]
 let s_fail_flow () : TacS unit =

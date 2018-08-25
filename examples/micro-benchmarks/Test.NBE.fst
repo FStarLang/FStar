@@ -1,5 +1,5 @@
 module Test.NBE
-// [iota; zeta; simplify; primops; delta_attr va_qattr; delta_only normal_steps]
+// [iota; zeta; simplify; primops; delta_attr [`%va_qattr]; delta_only normal_steps]
 unfold let normal (#a:Type) (x:a) : a = norm [primops; nbe] x
 val x : bool
 let x = normal (true && false)

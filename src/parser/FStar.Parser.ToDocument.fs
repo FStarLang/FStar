@@ -584,17 +584,20 @@ and p_rawDecl d = match d.d with
     group (str "open" ^/^ p_quident uid)
   | Include uid ->
     group (str "include" ^/^ p_quident uid)
+  | Friend uid ->
+    group (str "friend" ^/^ p_quident uid)
   | ModuleAbbrev (uid1, uid2) ->
     (str "module" ^^ space ^^ p_uident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2
   | TopLevelModule uid ->
     group(str "module" ^^ space ^^ p_quident uid)
-  | Tycon(true, [TyconAbbrev(uid, tpars, None, t), None]) ->
+  | Tycon(true, _, [TyconAbbrev(uid, tpars, None, t), None]) ->
     let effect_prefix_doc = str "effect" ^^ space ^^ p_uident uid in
     surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ false false t
-  | Tycon(false, tcdefs) ->
+  | Tycon(false, tc, tcdefs) ->
     (* TODO : needs some range information to be able to use this *)
     (* separate_map_with_comments (str "type" ^^ space) (str "and" ^^ space) p_fsdocTypeDeclPairs tcdefs *)
-    (p_fsdocTypeDeclPairs (str "type") (List.hd tcdefs)) ^^
+    let s = if tc then str "class" else str "type" in
+    (p_fsdocTypeDeclPairs s (List.hd tcdefs)) ^^
       (concat_map (fun x -> break1 ^^ p_fsdocTypeDeclPairs (str "and") x) <| List.tl tcdefs)
   | TopLevelLet(q, lbs) ->
     let let_doc = str "let" ^^ p_letqualifier q in
@@ -622,7 +625,7 @@ and p_rawDecl d = match d.d with
     p_fsdoc doc ^^ hardline (* needed so that the comment is treated as standalone *)
   | Main _ ->
     failwith "*Main declaration* : Is that really still in use ??"
-  | Tycon(true, _) ->
+  | Tycon(true, _, _) ->
     failwith "Effect abbreviation is expected to be defined by an abbreviation"
   | Splice (ids, t) ->
     str "%splice" ^^ p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
@@ -747,7 +750,7 @@ and p_effectDefinition uid bs t eff_decls =
     (str "with") ^^ hardline ^^ space ^^ space ^^ (separate_map_last (hardline ^^ semi ^^ space) p_effectDecl eff_decls))
 
 and p_effectDecl ps d = match d.d with
-  | Tycon(false, [TyconAbbrev(lid, [], None, e), None]) ->
+  | Tycon(false, _, [TyconAbbrev(lid, [], None, e), None]) ->
       prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps false e)
   | _ ->
       failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
@@ -850,8 +853,8 @@ and p_atomicPattern p = match p.pat with
        * aware that there are multiple callers to p_refinement and that
        * p_appTerm is probably the lower bound of all expected levels. *)
       soft_parens_with_nesting (p_refinement aqual (p_ident lid) t phi)
-    | PatWild, Refine({b = NoName t}, phi) ->
-      soft_parens_with_nesting (p_refinement None underscore t phi)
+    | PatWild aqual, Refine({b = NoName t}, phi) ->
+      soft_parens_with_nesting (p_refinement aqual underscore t phi)
     | _ ->
         (* TODO implement p_simpleArrow *)
         soft_parens_with_nesting (p_tuplePattern pat ^^ colon ^/^ p_tmEqNoRefinement t)
@@ -868,8 +871,8 @@ and p_atomicPattern p = match p.pat with
     p_tvar tv
   | PatOp op ->
     lparen ^^ space ^^ str (Ident.text_of_id op) ^^ space ^^ rparen
-  | PatWild ->
-    underscore
+  | PatWild aqual ->
+    optional p_aqual aqual ^^ underscore
   | PatConst c ->
     p_constant c
   | PatVar (lid, aqual) ->

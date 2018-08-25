@@ -561,7 +561,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         // They should be equivalent to a fully spelled out view.
         //
         // Actual encoding: `q ~> pack qv where qv is the view of q
-        let tv = EMB.embed RE.e_term_view t.pos (R.inspect_ln qt) in
+        let tv = EMB.embed RE.e_term_view (R.inspect_ln qt) t.pos None EMB.id_norm_cb in
         if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
             BU.print2 ">> Inspected (%s) ~> (%s)\n" (Print.term_to_string t0)
                                                     (Print.term_to_string tv);
@@ -957,12 +957,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               fallback ()
 
             | Some rc ->
-              if is_impure rc && not (is_reifiable env.tcenv rc)
+              if is_impure rc && not (is_reifiable_rc env.tcenv rc)
               then fallback() //we know it's not pure; so don't encode it precisely
               else
                 let cache_size = BU.smap_size env.cache in  //record the cache size before starting the encoding
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                let body = if is_reifiable env.tcenv rc
+                let body = if is_reifiable_rc env.tcenv rc
                            then TcUtil.reify_body env.tcenv body
                            else body
                 in
@@ -1102,7 +1102,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             mk_and_l (is_f::sub_term_guards)
     in
 
-        let rec mk_projections pat (scrutinee:term) =
+    let rec mk_projections pat (scrutinee:term) =
         match pat.v with
         | Pat_dot_term (x, _)
         | Pat_var x
@@ -1115,7 +1115,8 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             |> List.mapi (fun i (arg, _) ->
                 let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
                 mk_projections arg (mkApp(proj, [scrutinee]))) //arity ok, primitive projector (#1383)
-            |> List.flatten in
+            |> List.flatten
+    in
 
     let pat_term () = encode_term pat_term env in
 

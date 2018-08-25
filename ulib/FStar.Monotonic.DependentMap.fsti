@@ -25,9 +25,9 @@ let empty_partial_dependent_map (#a:_) (#b:_)
 ///    Which are proven to be in correspondence with the operations on DM.t
 ///    via the homomorphism `repr` below
 val map
-    (a:eqtype u#a)
+    (a:eqtype)
     (b:(a -> Type u#b))
-  : Type u#(max a b)
+  : Type u#b
 
 /// `repr m`: A ghost function that reveals the internal `map` as a `DM.t`
 val repr (#a:_) (#b:_)

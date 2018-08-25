@@ -255,8 +255,8 @@ abstract let fwrite (#a:Type0) (#n:nat) (arr:farray a n) (i:nat{i < n}) (x:a)
  * subarray
  *)
 abstract let sub (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n}) :t a len
-  = let A #m s_ref o = arr in
-    A #m s_ref (o + i)
+  = let A s_ref o = arr in
+    A s_ref (o + i)
 
 let suffix (#a:Type0) (#n:nat) (arr:t a n) (i:nat{i <= n}) = sub arr i (n - i)
 let prefix (#a:Type0) (#n:nat) (arr:t a n) (i:nat{i <= n}) = sub arr 0 i
@@ -352,7 +352,7 @@ abstract let recall_frozen (#a:Type0) (#n:nat) (arr:t a n) (es:erased (Seq.seq a
 abstract let recall_contains (#a:Type0) (#n:nat) (arr:t a n)
   :ST unit (requires (fun _       -> True))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ h0 `contains_array` arr))
-  = let A #_ #_ #_ s_ref _ = arr in
+  = let A s_ref _ = arr in
     ST.recall s_ref
 
 (* frozen implies init_at at all indices *)
@@ -433,7 +433,7 @@ abstract let read_subseq_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{j >=
       (ensures  (fun h0 s h1 -> h0 == h1                        /\
                              init_arr_in_heap_i_j arr h0 i j /\
                              s == as_initialized_subseq arr h0 i j))
-  = let A #_ #_ #_ s_ref off = arr in
+  = let A s_ref off = arr in
     let (s, _) = !s_ref in
     let s = Seq.slice s off (off + n) in
     recall_all_init_i_j arr i j;

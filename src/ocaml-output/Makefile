@@ -87,7 +87,7 @@ endif
 	                    -e '/%type/s/[a-zA-Z0-9_]*\.//g' \
 	                    -e '/%token.*->.*/d' \
 	                    -e '/%type.*->.*/d' \
-	                    >> $@
+	              | cat -s >> $@
 
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
 fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
@@ -124,6 +124,9 @@ FStar_Parser_Parse.ml: parse.mly
 	cat yac-log
 	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 7 ]; then \
 	  echo "shift-reduce conflicts have increased; please fix" && exit 255; \
+	fi
+	@if grep -q "reduce/reduce" yac-log ; then \
+	  echo "A reduce-reduce conflict was introduced; please fix" && exit 255; \
 	fi
 	cat parse.ml >> $@
 	rm parse.ml parse.mli

@@ -328,7 +328,7 @@ irreducible
 let inline_let : unit = ()
 
 irreducible
-let plugin : unit = ()
+let plugin (x:int) : unit = ()
 
 (* An attribute to mark things that the typechecker should *first*
  * elaborate and typecheck, but unfold before verification. *)
@@ -366,6 +366,10 @@ let expect_failure (errs : list int) : unit = ()
 irreducible
 let expect_lax_failure (errs : list int) : unit = ()
 
+(** Print the time it took to typecheck a top-level definition *)
+irreducible
+let tcdecltime : unit = ()
+
 (**
  * **THIS ATTRIBUTE IS AN ESCAPE HATCH AND CAN BREAK SOUNDNESS**
  * **USE WITH CARE**
@@ -381,3 +385,15 @@ let expect_lax_failure (errs : list int) : unit = ()
  *)
 irreducible
 let assume_strictly_positive : unit = ()
+
+(**
+ * This attribute is to be used as a hint for the unifier.
+ * A function-typed symbol `t` marked with this attribute
+ * will be treated as being injective in all its arguments
+ * by the unifier.
+ * That is, given a problem `t a1..an =?= t b1..bn`
+ * the unifier will solve it by proving `ai =?= bi` for
+ * all `i`, without trying to unfold the definition of `t`.
+ **)
+irreducible
+let unifier_hint_injective : unit = ()

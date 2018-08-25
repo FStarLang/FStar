@@ -492,7 +492,8 @@ let mod_pow2_div2 a m =
 // goes fine on Windows / CI with rlimit=40, but on Linux systems rlimit=400 is
 // needed. Leaving the high rlimit because it doesn't seem to deteriorate the
 // total verification time too much (I see ~40 seconds on my machine).
-#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr boxwrap --z3rlimit 20"
+// GM: Noticed the same, set it to 200
+#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr boxwrap --z3rlimit 200"
 
 (* Lemma: Divided by a product is equivalent to being divided one by one *)
 val division_multiplication_lemma: a:nat -> b:pos -> c:pos ->

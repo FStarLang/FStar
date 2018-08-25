@@ -9,7 +9,7 @@ open FStar.Mul
 
 let lem0 (x:int) =
     assert (op_Multiply 2 (x + 3) == 6 + (op_Multiply 3 x) - x)
-        by (fun () ->prune ""; addns "Prims")
+        by (prune ""; addns "Prims")
 
 // Can't locally define tactics
 let tau1 () : Tac unit =
@@ -25,7 +25,7 @@ let tau1 () : Tac unit =
 
 let lem1 (x:int) =
     assert (List.rev [1;2;3;4] == [4;3;2;1] /\ op_Multiply 2 (x + 3) == 6 + (op_Multiply 3 x) - x)
-        by tau1
+        by tau1 ()
 
 let lem2 (x:int) =
     assert_by_tactic (List.rev [1;2;3;4] == [4;3;2;1] /\ op_Multiply 2 (x + 3) == 6 + (op_Multiply 3 x) - x)

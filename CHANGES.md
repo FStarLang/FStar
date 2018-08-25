@@ -11,6 +11,17 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+# Version 0.9.7.0
+
+## Module system
+
+  * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
+
+## Core typechecker
+
+  * Revised typechecking of nested patterns and ascriptions on
+    patterns, fixing unsoundnesses (issue #238, for example)
+
 # Version 0.9.6.0
 
 ## Command line options

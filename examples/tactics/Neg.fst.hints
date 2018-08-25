@@ -1,5 +1,5 @@
 [
-  "„P\bÙqªó’\u00061‰Õ¯F¤“",
+  "K\u0012¯ñ+j\n\"\u0011‡‹’£˜ı",
   [
     [
       "Neg.c3",
@@ -13,7 +13,7 @@
         "true_interp"
       ],
       0,
-      "629cb9ca48c2444a0b75bd31f672a89a"
+      "c5ff477a7b5a0b92a273c6b3978b701a"
     ],
     [
       "Neg.c3",
@@ -26,16 +26,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "eb96dc2476449055af840f6e2b5feded"
-    ],
-    [
-      "Neg.c4",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "0b86594313ef1d2d507c2e79938fb4ee"
+      "0d98ff664b7300f862d8a140a3d13170"
     ]
   ]
 ]

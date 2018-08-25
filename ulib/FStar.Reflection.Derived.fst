@@ -98,7 +98,10 @@ let collect_abs t =
     let (bs, t') = collect_abs' [] t in
     (List.Tot.rev bs, t')
 
-let fv_to_string (fv:fv) : string = String.concat "." (inspect_fv fv)
+let explode_qn : string -> list string = String.split ['.']
+let implode_qn : list string -> string = String.concat "."
+
+let fv_to_string (fv:fv) : string = implode_qn (inspect_fv fv)
 
 let compare_fv (f1 f2 : fv) : order =
     compare_list (fun s1 s2 -> order_from_int (String.compare s1 s2)) (inspect_fv f1) (inspect_fv f2)
@@ -110,11 +113,13 @@ let rec compare_const (c1 c2 : vconst) : order =
     | C_True, C_True -> Eq
     | C_False, C_False -> Eq
     | C_String s1, C_String s2 -> order_from_int (String.compare s1 s2)
+    | C_Range r1, C_Range r2 -> Eq
     | C_Unit,  _ -> Lt    | _, C_Unit  -> Gt
     | C_Int _, _ -> Lt    | _, C_Int _ -> Gt
     | C_True,  _ -> Lt    | _, C_True  -> Gt
     | C_False, _ -> Lt    | _, C_False -> Gt
     | C_String _, _ -> Lt | _, C_String _ -> Gt
+    | C_Range _, _ -> Lt  | _, C_Range _ -> Gt
 
 let compare_binder (b1 b2 : binder) : order =
     let bv1, _ = inspect_binder b1 in
@@ -256,6 +261,20 @@ let mktuple_n (ts : list term) : term =
                     | 8 -> mktuple8_qn
            in mk_e_app (pack_ln (Tv_FVar (pack_fv qn))) ts
            end
+
+let destruct_tuple (t : term) : option (list term) =
+    let head, args = collect_app t in
+    match inspect_ln head with
+    | Tv_FVar fv ->
+        if List.Tot.mem
+                (inspect_fv fv) [mktuple2_qn; mktuple3_qn; mktuple4_qn; mktuple5_qn;
+                                 mktuple6_qn; mktuple7_qn; mktuple8_qn]
+        then Some (List.Tot.concatMap (fun (t, q) ->
+                                      match q with
+                                      | Q_Explicit -> [t]
+                                      | _ -> []) args)
+        else None
+    | _ -> None
 
 let mkpair (t1 t2 : term) : term =
     mktuple_n [t1;t2]

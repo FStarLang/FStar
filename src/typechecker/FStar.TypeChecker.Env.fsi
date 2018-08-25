@@ -37,7 +37,7 @@ type step =
   | UnfoldUntil of delta_depth
   | UnfoldOnly  of list<FStar.Ident.lid>
   | UnfoldFully of list<FStar.Ident.lid>
-  | UnfoldAttr of attribute
+  | UnfoldAttr  of list<FStar.Ident.lid>
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -51,6 +51,8 @@ type step =
   | Unascribe
   | NBE
 and steps = list<step>
+
+val eq_step : step -> step -> bool
 
 type sig_binding = list<lident> * sigelt
 
@@ -131,6 +133,7 @@ type env = {
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   normalized_eff_names:BU.smap<lident>;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
+  fv_delta_depths:BU.smap<delta_depth>;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   splice         :env -> term -> list<sigelt>;    (* hook for synthesizing terms via tactics, third arg is tactic term *)
@@ -138,7 +141,6 @@ type env = {
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
-  dep_graph      : FStar.Parser.Dep.deps;         (* The result of the dependency analysis *)
   nbe            : list<step> -> env -> term -> term;  (* Callback to the NBE function *)
 }
 
@@ -235,9 +237,11 @@ val datacons_of_typ        : env -> lident -> (bool * list<lident>)
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition_qninfo : list<delta_level> -> lident -> qninfo -> option<(univ_names * term)>
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
+val lookup_nonrec_definition: list<delta_level> -> env -> lident -> option<(univ_names * term)>
 val quals_of_qninfo        : qninfo -> option<list<qualifier>>
 val attrs_of_qninfo        : qninfo -> option<list<attribute>>
 val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
+val fv_has_attr            : env -> fv -> attr_lid:lid -> bool
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
@@ -253,12 +257,15 @@ val is_action              : env -> lident -> bool
 val is_interpreted         : (env -> term -> bool)
 val is_irreducible         : env -> lident -> bool
 val is_type_constructor    : env -> lident -> bool
-val num_inductive_ty_params: env -> lident -> int
+val num_inductive_ty_params: env -> lident -> option<int>
+val delta_depth_of_qninfo  : fv -> qninfo -> option<delta_depth>
+val delta_depth_of_fv      : env -> fv -> delta_depth
 
 (* Universe instantiation *)
 
 (* Construct a new universe unification variable *)
 val new_u_univ             : unit -> universe
+val inst_tscheme_with      : tscheme -> universes -> universes * term
 (* Instantiate the universe variables in a type scheme with new unification variables *)
 val inst_tscheme           : tscheme -> universes * term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
@@ -301,13 +308,18 @@ val comp_to_comp_typ    : env -> comp -> comp_typ
 val unfold_effect_abbrev: env -> comp -> comp_typ
 val effect_repr         : env -> comp -> universe -> option<term>
 val reify_comp          : env -> comp -> universe -> term
+
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)
-val is_reifiable_effect : env -> lident -> bool
-val is_reifiable : env -> residual_comp -> bool
-val is_reifiable_comp : env -> comp -> bool
-val is_reifiable_function : env -> term -> bool
+val is_reifiable_effect      : env -> lident -> bool
+val is_reifiable_rc          : env -> residual_comp -> bool
+val is_reifiable_comp        : env -> comp -> bool
+val is_reifiable_function    : env -> term -> bool
 
+(* [is_user_reifiable_* env x] is more restrictive, and only allows *)
+(* reifying effects marked with the `reifiable` keyword. (For instance, TAC *)
+(* is reifiable but not user-reifiable.) *)
+val is_user_reifiable_effect : env -> lident -> bool
 
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders
@@ -331,10 +343,12 @@ val close_guard_univs         : universes -> binders -> guard_t -> guard_t
 val close_guard               : env -> binders -> guard_t -> guard_t
 val apply_guard               : guard_t -> term -> guard_t
 val map_guard                 : guard_t -> (term -> term) -> guard_t
+val always_map_guard          : guard_t -> (term -> term) -> guard_t
 val trivial_guard             : guard_t
 val is_trivial                : guard_t -> bool
 val is_trivial_guard_formula  : guard_t -> bool
 val conj_guard                : guard_t -> guard_t -> guard_t
+val conj_guards               : list<guard_t> -> guard_t
 val abstract_guard            : binder -> guard_t -> guard_t
 val abstract_guard_n          : list<binder> -> guard_t -> guard_t
 val imp_guard                 : guard_t -> guard_t -> guard_t

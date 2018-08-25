@@ -21,16 +21,16 @@ let sub_1 (x:int) : int = x - 1
 let add (x:int) : int = x + x
 
 let test_1 (x:int) : int = synth_by_tactic
-  (fun () -> normalize [delta_attr myattr] (add (sub_1 (add_1 x))))
+  (fun () -> normalize [delta_attr [`%myattr]] (add (sub_1 (add_1 x))))
 
 let test_2 (x:int) : int = synth_by_tactic
-  (fun () -> normalize [delta_attr otherattr] (add (sub_1 (add_1 x))))
+  (fun () -> normalize [delta_attr [`%otherattr]] (add (sub_1 (add_1 x))))
 
 let test_3 (x:int) : int = synth_by_tactic
-  (fun () -> normalize [delta_attr myattr; delta_attr otherattr] (add (sub_1 (add_1 x))))
+  (fun () -> normalize [delta_attr [`%myattr; `%otherattr]] (add (sub_1 (add_1 x))))
 
 let test_4 (x:int) : int = synth_by_tactic
-  (fun () -> normalize [delta_attr myattr; delta_only [`%(add)]] (add (sub_1 (add_1 x))))
+  (fun () -> normalize [delta_attr [`%myattr]; delta_only [`%(add)]] (add (sub_1 (add_1 x))))
 
 // more than one delta_only specified
 let test_5 (x:int) : int = synth_by_tactic

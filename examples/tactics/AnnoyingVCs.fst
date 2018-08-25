@@ -14,21 +14,19 @@ assume val g : n:nat -> Lemma (p n)
 [@expect_failure]
 let test1 (i:int) =
     assume (i >= 0);
-    assert (True ==> p i) by
-           (fun () -> dump "1";
-                   let _ = implies_intro () in
-                   dump "2";
-                   apply_lemma (`f)
-                   )
+    assert (True ==> p i)
+        by (dump "1";
+            let _ = implies_intro () in
+            dump "2";
+            apply_lemma (`f))
 
 // This should work without a guard
 let test2 (i:int) =
     assume (i >= 0);
-    assert (True ==> p i) by
-           (fun () -> dump "1";
-                   let _ = implies_intro () in
-                   dump "2";
-                   apply_lemma (`g);
-                   dump "3";
-                   qed ()
-                   )
+    assert (True ==> p i)
+        by (dump "1";
+            let _ = implies_intro () in
+            dump "2";
+            apply_lemma (`g);
+            dump "3";
+            qed ())

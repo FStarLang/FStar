@@ -46,6 +46,7 @@ let logic_qualifier_deprecation_warning =
 %token BY
 %token <bytes> BYTEARRAY
 %token <char> CHAR
+%token CLASS
 %token COLON
 %token COLON_COLON
 %token COLON_EQUALS
@@ -69,6 +70,7 @@ let logic_qualifier_deprecation_warning =
 %token EXISTS
 %token FALSE
 %token FORALL
+%token FRIEND
 %token <fsdoc> FSDOC
 %token <fsdoc> FSDOC_STANDALONE
 %token FUN
@@ -233,36 +235,36 @@ in
 option___anonymous_5_:
   
     {    ( None )}
-| BY atomicTerm
+| BY thunk_atomicTerm_
     {let (_10, tactic0) = ((), $2) in
 let x =
   let tactic = tactic0 in
   let _1 = _10 in
-                                                                 (tactic)
+                                                                        (tactic)
 in
     ( Some x )}
 
 option___anonymous_6_:
   
     {    ( None )}
-| BY typ
+| BY thunk_typ_
     {let (_10, tactic0) = ((), $2) in
 let x =
   let tactic = tactic0 in
   let _1 = _10 in
-                                                              (tactic)
+                                                                     (tactic)
 in
     ( Some x )}
 
 option___anonymous_8_:
   
     {    ( None )}
-| BY typ
+| BY thunk_typ_
     {let (_10, tactic0) = ((), $2) in
 let x =
   let tactic = tactic0 in
   let _1 = _10 in
-                                                          (tactic)
+                                                                 (tactic)
 in
     ( Some x )}
 
@@ -750,6 +752,9 @@ rawDecl:
 | OPEN quident
     {let (_1, uid) = ((), $2) in
       ( Open uid )}
+| FRIEND quident
+    {let (_1, uid) = ((), $2) in
+      ( Friend uid )}
 | INCLUDE quident
     {let (_1, uid) = ((), $2) in
       ( Include uid )}
@@ -761,10 +766,13 @@ rawDecl:
       (  TopLevelModule uid )}
 | TYPE separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
     {let (_1, tcdefs) = ((), $2) in
-      ( Tycon (false, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
+      ( Tycon (false, false, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
+| CLASS separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
+    {let (_1, tcdefs) = ((), $2) in
+      ( Tycon (false, true, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
 | EFFECT uident typars EQUALS typ
     {let (_1, uid, tparams, _4, t) = ((), $2, $3, (), $5) in
-      ( Tycon(true, [(TyconAbbrev(uid, tparams, None, t), None)]) )}
+      ( Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t), None)]) )}
 | LET letqualifier separated_nonempty_list_AND_letbinding_
     {let (_1, q, lbs) = ($1, $2, $3) in
       (
@@ -782,7 +790,7 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       )}
-| SPLICE LBRACK loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__ RBRACK atomicTerm
+| SPLICE LBRACK loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__ RBRACK thunk_atomicTerm_
     {let (_1, _2, xs0, _4, t) = ((), (), $3, (), $5) in
 let ids =
   let xs = xs0 in
@@ -910,7 +918,7 @@ effectDefinition:
 effectDecl:
   lident binders EQUALS simpleTerm
     {let (lid, action_params, _3, t) = ($1, $2, (), $4) in
-    ( mk_decl (Tycon (false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] )}
+    ( mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
@@ -1086,9 +1094,9 @@ aqual:
                      ( q )}
 
 aqualUniverses:
-  HASH LBRACK tmNoEq RBRACK
+  HASH LBRACK thunk_tmNoEq_ RBRACK
     {let (_1, _2, t, _4) = ((), (), $3, ()) in
-                                ( Meta t )}
+                                       ( Meta t )}
 | HASH
     {let _1 = () in
               ( Implicit )}
@@ -1271,10 +1279,10 @@ in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | UNDERSCORE
     {let _1 = () in
-      ( mk_pattern PatWild (rhs parseState 1) )}
+      ( mk_pattern (PatWild None) (rhs parseState 1) )}
 | HASH UNDERSCORE
     {let (_1, _2) = ((), ()) in
-      ( mk_pattern (PatVar (gen (rhs2 parseState 1 2), Some Implicit)) (rhs parseState 1) )}
+      ( mk_pattern (PatWild (Some Implicit)) (rhs parseState 1) )}
 | constant
     {let c = $1 in
       ( mk_pattern (PatConst c) (rhs parseState 1) )}
@@ -1584,10 +1592,25 @@ tvar:
     {let tv = $1 in
             ( mk_ident(tv, rhs parseState 1) )}
 
+thunk_atomicTerm_:
+  atomicTerm
+    {let t = $1 in
+                ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+
+thunk_tmNoEq_:
+  tmNoEq
+    {let t = $1 in
+                ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+
+thunk_typ_:
+  typ
+    {let t = $1 in
+                ( mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr )}
+
 ascribeTyp:
   COLON tmArrow_tmNoEq_ option___anonymous_5_
     {let (_1, t, tacopt) = ((), $2, $3) in
-                                                                         ( t, tacopt )}
+                                                                                ( t, tacopt )}
 
 ascribeKind:
   COLON kind
@@ -1755,6 +1778,13 @@ in
           let a = set_lid_range assert_by_tactic_lid (rhs parseState 1) in
           mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e; tac] (rhs2 parseState 1 4)
       )}
+| UNDERSCORE BY thunk_atomicTerm_
+    {let (_1, _2, tactic) = ((), (), $3) in
+     (
+         let a = set_lid_range synth_lid (rhs parseState 1) in
+         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
+
+     )}
 | SYNTH atomicTerm
     {let (_1, tactic) = ((), $2) in
      (
@@ -2883,6 +2913,4 @@ in
    ( x :: xs )}
 
 %%
-
-
 
