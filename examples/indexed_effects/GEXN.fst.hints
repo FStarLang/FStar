@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "7bb0b8135483e09feedb7cf544c93f49"
+      "47678e0c47b8a2b303e0a0842c0711dd"
     ],
     [
       "GEXN.gex'",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "3932d09a80e46ccba7c5c377b029430f"
+      "99af44922bb01113e10993134b211425"
     ],
     [
       "GEXN.return_gex",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "98ba3e70f24ba52daf79833e466f13fd"
+      "2baae4a6d8136b89003c5898d4c6a7ed"
     ],
     [
       "GEXN.bind_gex",
@@ -40,7 +40,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either"
       ],
       0,
-      "d94d9f00ebce137d8218a435876b190f"
+      "0dd1cabacc615614fb4fd6e8fd36ebd5"
     ],
     [
       "GEXN.raise0",
@@ -49,7 +49,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "e9ecfcab2328c54d3b4b5e66254c11b7"
+      "f38d7a7841e3ecdf2f8cd720c359c9c6"
     ],
     [
       "GEXN._dm4f_GEXN_lift_from_pure",
@@ -58,7 +58,16 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "627b0827088d68bb10db4b79ca1c418c"
+      "6aecfe53a373e49d362501a2c9500c86"
+    ],
+    [
+      "GEXN._dm4f_GEXN_lift_from_pure",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "1404e77005a02cd0969c60aa1b52d386"
     ],
     [
       "GEXN._dm4f_GEXN_return_wp",
@@ -67,16 +76,25 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "e0e170e6dff517dca29c96db6cb74e43"
+      "32deedc488d5e17d0a140531ebb63c0f"
+    ],
+    [
+      "GEXN._dm4f_GEXN_return_wp",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "c407d4f5f33687ad2acc06d8d254346c"
     ],
     [
       "GEXN._dm4f_GEXN_bind_wp",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
+      [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "42b7f019621ac12ba602005899406c7c"
+      "5e3fc08826c8826c4490b4efc2d64ad6"
     ],
     [
       "GEXN._dm4f_GEXN_bind_wp",
@@ -90,7 +108,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either"
       ],
       0,
-      "915542817447eb222f5b43a2e6548f7b"
+      "6452db89fcb6537283fc927a526b8d66"
     ],
     [
       "GEXN._dm4f_GEXN___proj__GEXN__item__raise_elab",
@@ -99,7 +117,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "838f81f2169d4fdf9065d0c83d768c6f"
+      "d89450c3afbffdd4a840adbb80248e5e"
     ],
     [
       "GEXN._dm4f_GEXN___proj__GEXN__item__raise_complete_type",
@@ -108,7 +126,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "4467e4949ba8f2c615f831d1d91ab805"
+      "7196651f28493583b3d9152d52d4cbdd"
     ],
     [
       "GEXN._dm4f_GEXN_repr",
@@ -117,7 +135,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "5d4a1208b7ac9ac134f3c89e24ccf220"
+      "47e1196d093804ef02757d2a3911b5c0"
     ],
     [
       "GEXN._dm4f_GEXN_repr",
@@ -126,7 +144,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "a71b22d883045b607f98bb0aaf60f93b"
+      "01cf3b0360689e9bf528b357c5608921"
     ],
     [
       "GEXN._dm4f_GEXN_post",
@@ -135,7 +153,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "b9a059318390b75b37ce85aee5595f3e"
+      "a5e412c9f6e472597c88b4794a7342cb"
     ],
     [
       "GEXN._dm4f_GEXN_wp",
@@ -144,7 +162,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "46b5cc6b2f80b0ecdb01e2eb6ce5fbf6"
+      "d944b5331e4440e2e09535a0cc038667"
     ],
     [
       "GEXN._dm4f_GEXN_ctx",
@@ -153,7 +171,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "481d8bcd5dc5f611b0a7df6f77883d88"
+      "f7572e83b92f954eed50be1aed01e239"
     ],
     [
       "GEXN._dm4f_GEXN_gctx",
@@ -162,7 +180,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "d7d0dd5bd7bff29212c6b17b20f7c695"
+      "02a461c15f233f7b58514312aa42daae"
     ],
     [
       "GEXN._dm4f_GEXN_pure",
@@ -171,7 +189,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "8bc497dc113c8975fba2d0fd52e342ed"
+      "b87ce001e1bee8b9ad743250b6f154c7"
     ],
     [
       "GEXN._dm4f_GEXN_app",
@@ -180,7 +198,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "5596ed935c0421687557dba3649e8ae3"
+      "ee118cdf4a7384a56978546b000b0707"
     ],
     [
       "GEXN._dm4f_GEXN_push",
@@ -189,7 +207,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "5f7ce51c09f29c7103323b957a8e603c"
+      "2d13511712135c7935192a0e265d60cc"
     ],
     [
       "GEXN._dm4f_GEXN_wp_if_then_else",
@@ -198,7 +216,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "f588b8546fff82b170de70184baeced5"
+      "d5bf12b44230d559de3db59dd6afa27f"
     ],
     [
       "GEXN._dm4f_GEXN_wp_assert",
@@ -207,7 +225,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "37b9a9658f0b91538a863a54cae08252"
+      "e541eac75703cd136bda8f3ddde3378e"
     ],
     [
       "GEXN._dm4f_GEXN_wp_assume",
@@ -216,7 +234,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "5d19a1abcdf85bbb6c02b4bdda95b761"
+      "c72a289fb2b46e69c495aa4b6fee0723"
     ],
     [
       "GEXN._dm4f_GEXN_wp_close",
@@ -225,7 +243,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "86fabd6ff0a6a01895ffe58044c16471"
+      "18d5b71bf84998c9873abeed81c70883"
     ],
     [
       "GEXN._dm4f_GEXN_stronger",
@@ -234,7 +252,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "f4c77a237ce52d83c3e7183ebc68f1da"
+      "6cd1bb0ad2b207b37f79ac1d866748a3"
     ],
     [
       "GEXN._dm4f_GEXN_stronger",
@@ -243,43 +261,43 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "b362b6c7438774cfc590636af673207e"
+      "70098b0c64ecdb90483c31bee61f3b45"
     ],
     [
-      "GEXN._dm4f_GEXN_wp_ite",
+      "GEXN._dm4f_GEXN_ite_wp",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "3d89ef2dd9c7d360202dd1a3d1f31eb4"
+      "6d2ff7d1c33ca0b910a5b7a285a7f7c0"
     ],
     [
-      "GEXN._dm4f_GEXN_wp_ite",
+      "GEXN._dm4f_GEXN_ite_wp",
       2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "d8a9f3de096909b73b0f2c64a42b654e"
-    ],
-    [
-      "GEXN._dm4f_GEXN_null_wp",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0,
-      "353a9801290d6152717d2e0eae54d8f5"
+      "83a85f9522b5b27166755c034585c950"
     ],
     [
       "GEXN._dm4f_GEXN_null_wp",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "9ff0441a640f8c5fd96f548c902993e0"
+    ],
+    [
+      "GEXN._dm4f_GEXN_null_wp",
       2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "e641db1b31a762bb1ae3616a9538668c"
+      "1ccaa41724c4f86e2389ac7d397dbdc7"
     ],
     [
       "GEXN._dm4f_GEXN_wp_trivial",
@@ -288,7 +306,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "45c09f5a426cd03d81790c8912712cd3"
+      "3499243abaec5a305dd61dc1ec0eb503"
     ],
     [
       "GEXN.GEXN",
@@ -297,7 +315,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "6291597e2a506d2b7a5708f475b7a6ea"
+      "f49c510f071b79439457287f25fdabd7"
     ],
     [
       "GEXN.GEXN",
@@ -306,7 +324,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "996daabd09cc97e9d7e4053d6ab60daa"
+      "c1a72e13243db1365d2de0388bd49a5a"
     ],
     [
       "GEXN.GEXN",
@@ -315,7 +333,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "08bfe3d0981138a44fc3d8f711cd035b"
+      "87fab02687b0fd19f4e16c0075cd5681"
     ],
     [
       "GEXN.GEXN",
@@ -324,16 +342,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "b3d52115a296190c8f82e276bf8c7d90"
-    ],
-    [
-      "GEXN.GEXN",
-      5,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0,
-      "8ffa914b2db441f29bbeff58a3816cd1"
+      "f7afda8f8414afb1af74363ef935e0f7"
     ],
     [
       "GEXN.gexn_wp",
@@ -342,7 +351,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "9002a59a8b9a7c64d543b37f407639d5"
+      "e1576b225c5d4f7d45a9c25d3aae4a2e"
     ],
     [
       "GEXN.op_Greater_Less",
@@ -351,7 +360,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "58a78541298603ca8bdfe3c0fd99b4ca"
+      "5af33588888874be13fe53c1e19eb9aa"
     ],
     [
       "GEXN.op_Greater_Less",
@@ -360,7 +369,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "590ac76e7078be99fa5ef166ad062bb8"
+      "e591eadf85dc44166f7cb35e9e4d30e3"
     ],
     [
       "GEXN.raise",
@@ -369,7 +378,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "33ca49ff5f0fd53a937d62f014d04258"
+      "4ac0d1ab6176a9ea6b2d5bfe1975339b"
     ],
     [
       "GEXN.gex",
@@ -378,7 +387,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "7c03b8d511939befc0e641568601e180"
+      "1d340c6c3114cbda8cec32ed7b12d4cc"
     ],
     [
       "GEXN.gex'",
@@ -387,7 +396,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "4a85f94dd93a7b139009576b6810da95"
+      "7dc6a87836fbfb3a725c5ed1294f8795"
     ],
     [
       "GEXN.return_gex",
@@ -396,7 +405,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "75d2ba9e7826f4c56664f134662076ab"
+      "6cc1b4dedfb4ca4e06f06a08747a9669"
     ],
     [
       "GEXN.bind_gex",
@@ -410,7 +419,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either"
       ],
       0,
-      "c7c5780f0ff4a3c4ee218195f6f194c5"
+      "babb67f69073ab0616ac22506f41c53f"
     ],
     [
       "GEXN.raise0",
@@ -419,34 +428,52 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "db29a05c71ed4ad11bcb4339c6233564"
+      "6eeee04f98c105089a10c704b6d3d0a7"
     ],
     [
       "GEXN._dm4f_GEXN_lift_from_pure",
-      2,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "3fee8e823a4bb3cb1984cd3b7d522694"
+      "7d059f49eeb7cbf16bf9c25479ea68ef"
+    ],
+    [
+      "GEXN._dm4f_GEXN_lift_from_pure",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "1085f1daeb250eeeb0f920f0647cf59e"
     ],
     [
       "GEXN._dm4f_GEXN_return_wp",
-      2,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "70209ae6150c8dbc9a6c92df2296d65c"
+      "88f291b0189540e45ef5d2018aec30ef"
+    ],
+    [
+      "GEXN._dm4f_GEXN_return_wp",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "d123d54e3bd49aacd11208e6ded06e2b"
     ],
     [
       "GEXN._dm4f_GEXN_bind_wp",
       3,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
+      [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "15e76717a564f6411fbb6dcaa4aa4622"
+      "d77d73a6ab9dfdcd68becbbc87772ea3"
     ],
     [
       "GEXN._dm4f_GEXN_bind_wp",
@@ -460,7 +487,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either"
       ],
       0,
-      "8a6e9576a172f2e08f241351d6b4a247"
+      "504df5a0d2db97fd9647501250a723bf"
     ],
     [
       "GEXN._dm4f_GEXN___proj__GEXN__item__raise_elab",
@@ -469,7 +496,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "f57234653ecdcf390fb45cb46c7cdf7e"
+      "50f9605157e58c98e9a8760b2ba1ffe1"
     ],
     [
       "GEXN._dm4f_GEXN___proj__GEXN__item__raise_complete_type",
@@ -478,7 +505,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "9043c5fe7a0deb46c915a17f503f8263"
+      "d98dcdc3446b9b7bb09e93bf94ff994d"
     ],
     [
       "GEXN._dm4f_GEXN_repr",
@@ -487,7 +514,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "78cd896c5d65b89b61043504b863d5a5"
+      "ad4232b20b5528d05f654f791c3da111"
     ],
     [
       "GEXN._dm4f_GEXN_repr",
@@ -496,7 +523,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "8ec9465366f376748dc40a6ca5a49007"
+      "3562ee7cb9711576f0ca48c2e90eb9c6"
     ],
     [
       "GEXN._dm4f_GEXN_post",
@@ -505,7 +532,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "2a8b9dbe4b8f05d559827d5fbd0b9fc1"
+      "cc4e39b1d3ea656239a8c36657b9b392"
     ],
     [
       "GEXN._dm4f_GEXN_wp",
@@ -514,7 +541,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "14cbe3eaad6acc81274281eaebbfd968"
+      "09629a0abc9a10889ed0fd54aca7e6ad"
     ],
     [
       "GEXN._dm4f_GEXN_ctx",
@@ -523,7 +550,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "6078f3c29cb2460d76a4c61c8b1879bd"
+      "5068a48437b23bba71d86fb96c78e97d"
     ],
     [
       "GEXN._dm4f_GEXN_gctx",
@@ -532,7 +559,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "3ae4ac1b3c4ae73b6df94eb920701340"
+      "2db1ca1f317d9a29de4632f3c0361429"
     ],
     [
       "GEXN._dm4f_GEXN_pure",
@@ -541,7 +568,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "88f01fc71c5b6be193809b5d6ebb3364"
+      "4ff94de82987232a7d202414fb1e986f"
     ],
     [
       "GEXN._dm4f_GEXN_app",
@@ -550,7 +577,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "73cad3d8de50d811d016060de5fac902"
+      "7be0fa7e15ee379584a036331c893c02"
     ],
     [
       "GEXN._dm4f_GEXN_push",
@@ -559,7 +586,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "24d21e1b7e36fd68b1e321efdbf46568"
+      "5095866cc7f419b82bed4b60b2b9416f"
     ],
     [
       "GEXN._dm4f_GEXN_wp_if_then_else",
@@ -568,7 +595,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "b02bbc1c12191a1638949f3729c918f7"
+      "d9e40125d3930acdf9df4315559fee91"
     ],
     [
       "GEXN._dm4f_GEXN_wp_assert",
@@ -577,7 +604,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "aa427483e32efde55e465bf543594e08"
+      "64f91e6c0bae3a2024add10270b59c5e"
     ],
     [
       "GEXN._dm4f_GEXN_wp_assume",
@@ -586,7 +613,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "4623839c6ddf5f335b647f4e4e5a562e"
+      "9feecc742c1a8f78e36bc0c3bf89a48c"
     ],
     [
       "GEXN._dm4f_GEXN_wp_close",
@@ -595,7 +622,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "51aef3bd28a064c631a80557fad63e56"
+      "aa1180f658e71bb94109e32315ac6474"
     ],
     [
       "GEXN._dm4f_GEXN_stronger",
@@ -604,7 +631,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "4fb38b3d7846bb568ec5f014aa97c6a0"
+      "6679ed6b42d592c1406ead6d3a3b22f3"
     ],
     [
       "GEXN._dm4f_GEXN_stronger",
@@ -613,25 +640,25 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "e6b9c3e850f581477f37611987204b47"
+      "29d8f6ca8e487d5aae3bea40fe5857a9"
     ],
     [
-      "GEXN._dm4f_GEXN_wp_ite",
+      "GEXN._dm4f_GEXN_ite_wp",
       3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "e6856222165a5da84eb611135c1bd427"
+      "25852c193b46216dc5c3952d0bd2a0b5"
     ],
     [
-      "GEXN._dm4f_GEXN_wp_ite",
+      "GEXN._dm4f_GEXN_ite_wp",
       4,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "4f4bfcfd7088d2b87b32de2a60bb2827"
+      "08d4f9d300f7c933192080e154197657"
     ],
     [
       "GEXN._dm4f_GEXN_null_wp",
@@ -640,7 +667,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "40c186bdb496512aef4d8218001c724c"
+      "a0658d78214acfcfa30f454fc02e6f4e"
     ],
     [
       "GEXN._dm4f_GEXN_null_wp",
@@ -649,7 +676,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "39bb8a6671b57f8efe933d99eb929855"
+      "b301086322d505b51b67535366178065"
     ],
     [
       "GEXN._dm4f_GEXN_wp_trivial",
@@ -658,7 +685,16 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "3ef85875e6efdcea8ec6284611eb70fb"
+      "7cca32772b7e8476fe314aa99c6f580e"
+    ],
+    [
+      "GEXN.GEXN",
+      5,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "182072add4dc37df97104c9f08a11aca"
     ],
     [
       "GEXN.GEXN",
@@ -667,7 +703,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "9090399adef12f080f7c1f77166c1876"
+      "4ae437074c5afb33e0f93de98c6b99e9"
     ],
     [
       "GEXN.GEXN",
@@ -676,7 +712,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "443f89abb4563e8851f1a0de11858b81"
+      "aeeedc6ad49501581d3d63c37b862f35"
     ],
     [
       "GEXN.GEXN",
@@ -685,25 +721,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "159615b54c4c42340c8102525dd7a7ae"
-    ],
-    [
-      "GEXN.GEXN",
-      9,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0,
-      "4694cfcf46057a6697acbb572c7ef65e"
-    ],
-    [
-      "GEXN.GEXN",
-      10,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0,
-      "ead7f5da516709206e9dfc5bf51a0f1c"
+      "e1e579e6ddd958709566e14c80e3bbf5"
     ],
     [
       "GEXN.gexn_wp",
@@ -712,7 +730,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "939fac4ac76a2db10692740c8f867d6c"
+      "eee47441005a475bd926792a89490797"
     ],
     [
       "GEXN.op_Greater_Less",
@@ -721,7 +739,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "96cfe99e18c4e2362bfafb2648b88165"
+      "15c9dfb3e4f3c80841df900c62ffa1f5"
     ],
     [
       "GEXN.op_Greater_Less",
@@ -730,7 +748,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "f28f640e4062c89a157704d750a62843"
+      "827ca3466b2ff4e518f8c9ebe9d44c07"
     ],
     [
       "GEXN.raise",
@@ -739,7 +757,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
       0,
-      "12b0454c5013e84fb42df3fcaeeaa9e1"
+      "961387f8433d0f613a60a12091be6b8a"
     ]
   ]
 ]
