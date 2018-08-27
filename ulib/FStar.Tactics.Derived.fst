@@ -419,6 +419,15 @@ let grewrite' (t1 t2 eq : term) : Tac unit =
     | _ ->
         fail "impossible"
 
+(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities *)
+let l_to_r (lems:list term) : Tac unit =
+    let first_or_trefl () : Tac unit =
+        fold_left (fun k l () ->
+                    (fun () -> apply_lemma l)
+                    `or_else` k)
+                  trefl lems () in
+    pointwise first_or_trefl
+
 let mk_squash (t : term) : term =
     let sq : term = pack_ln (Tv_FVar (pack_fv squash_qn)) in
     mk_e_app sq [t]
