@@ -20,12 +20,12 @@
         "binder_x_ab406dde1f6cab92bf9b7aa3461e7323_0",
         "constructor_distinct_Bug185.certified",
         "constructor_distinct_Bug185.verified", "equation_Bug185.vk",
-        "equation_Bug185.vkey", "function_token_typing_Bug185.verified",
+        "equation_Bug185.vkey", "function_token_typing_Bug185.certified",
         "refinement_interpretation_Bug185_Tm_refine_47bb5e04350d529229da0ec9c09c0e4d",
-        "token_correspondence_Bug185.certified"
+        "token_correspondence_Bug185.verified"
       ],
       0,
-      "2324866bcaa5157ffdcf9b713a5fd1a0"
+      "0013ae919bd644973ecb63ce7fd890c2"
     ]
   ]
 ]

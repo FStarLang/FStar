@@ -2,22 +2,13 @@
   "˜˘ê†HÑ\\p1k·\u000f∞_[\f",
   [
     [
-      "MetaArgs.uu___61",
+      "MetaArgs.uu___62",
       1,
       2,
       1,
       [ "@query", "equation_MetaArgs.test1" ],
       0,
-      "266da617707f35f9ba628f839b29a1ad"
-    ],
-    [
-      "MetaArgs.uu___62",
-      1,
-      2,
-      1,
-      [ "@query", "equation_MetaArgs.diag" ],
-      0,
-      "653b0d346cd3a4418af4623479d2d8f2"
+      "2ff8f129d4f104b7e8dd96f17feceff9"
     ],
     [
       "MetaArgs.uu___63",
@@ -26,7 +17,16 @@
       1,
       [ "@query", "equation_MetaArgs.diag" ],
       0,
-      "f0e79eede0f2128b8aaeafa1301388d5"
+      "72b543f38de4cb0c6ada1b0906e6d29f"
+    ],
+    [
+      "MetaArgs.uu___64",
+      1,
+      2,
+      1,
+      [ "@query", "equation_MetaArgs.diag" ],
+      0,
+      "53d411c1c60aa0a9e3bd3982cc97b1a1"
     ],
     [
       "MetaArgs.same_as",
@@ -43,7 +43,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "46ee281e03e0a02232c12483c75e4598"
+      "540d68709800efe06968acf1a9cae34d"
     ]
   ]
 ]

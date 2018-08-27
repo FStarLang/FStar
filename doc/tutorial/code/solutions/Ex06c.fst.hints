@@ -297,7 +297,7 @@
         "typing_Ex06c.sorted", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "7c827613a21d8edaada9414dc6bdbfdb"
+      "609bc3d2fb96d8f8385f38caa016066f"
     ],
     [
       "Ex06c.sort",
@@ -379,7 +379,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "cd9cf5c9c14ec851b296fb1a341ecacc"
+      "022af2fd0ecf47c7a131f0be71bf7b19"
     ],
     [
       "Ex06c.mem",
@@ -570,7 +570,7 @@
         "typing_Ex06c.sorted", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "c79bbbed1b70750e5dfc0ced03f5698f"
+      "3166feb941ac408896feec0562159ba8"
     ],
     [
       "Ex06c.sort",

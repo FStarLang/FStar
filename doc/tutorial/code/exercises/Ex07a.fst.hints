@@ -490,7 +490,7 @@
         "typing_Ex07a.typing", "typing_tok_Ex07a.TBool@tok", "unit_typing"
       ],
       0,
-      "187253d812e54dbfb5978c928aa10d6d"
+      "7b42c6bf85c9789f3404983fc7b413df"
     ],
     [
       "Ex07a.typing_extensional",
@@ -499,7 +499,7 @@
       1,
       [ "@query", "equation_Ex07a.equal", "equation_Ex07a.equalE" ],
       0,
-      "5ae60347eea470628e43af75ee208664"
+      "13900a6c0595083e81a9099a037a77d6"
     ],
     [
       "Ex07a.substitution_preserves_typing",
@@ -571,7 +571,7 @@
         "typing_tok_Ex07a.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "9763f2a76de0c1c0debd5a2ead5cba41"
+      "6e4e2f8f95a2c6a74aeb8c102e54afcb"
     ],
     [
       "Ex07a.preservation",

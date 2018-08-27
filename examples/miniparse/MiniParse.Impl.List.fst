@@ -154,7 +154,7 @@ let parse_nlist_impl_body #t p0 pimpl n h0 b len rb rr i =
     assert (U32.v consumed <= U32.v (len `U32.sub` off));
     let off' = off `U32.add` consumed in
     assert (len `U32.sub` off' == B.len b' `U32.sub` consumed);
-    B.gsub_gsub b off (len `U32.sub` off) consumed (len `U32.sub` off');
+    //B.gsub_gsub b off (len `U32.sub` off) consumed (len `U32.sub` off');
     BO.op_Star_Equals rb off';
     let l1 = BO.op_Bang_Star rr in
     BO.op_Star_Equals rr (elem :: l1);

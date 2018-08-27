@@ -68,6 +68,10 @@ let forall_intro_3 #a #b #c #p #f
 let forall_intro_3_with_pat #a #b #c #d #p $pat $f
   = forall_intro_3 #a #b #c #p f
 
+let forall_intro_4 #a #b #c #d #p #f
+  = let g : x:a -> Lemma (forall (y:b x) (z:c x y) (w:d x y z). p x y z w) = fun x -> forall_intro_3 (f x) in
+    forall_intro g
+
 let exists_intro #a p witness = ()
 
 let forall_to_exists #a #p #r $f = forall_intro f
