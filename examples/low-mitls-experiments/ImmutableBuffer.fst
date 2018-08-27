@@ -97,7 +97,7 @@ let test_immutable_sub (b:tbuffer)
     let bb = tsub b in
     let _ = B.witness_p bb (cpred s) in  //witness the contents of the subbuffer
 
-    havoc bb;
+    havoc bb; havoc b;
     B.recall_p bb (cpred s);
     let h = HST.get () in
     assert (B.as_seq h bb == s)
