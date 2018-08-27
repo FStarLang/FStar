@@ -28,7 +28,7 @@ let compatible_sub_preorder (#a:Type0)
   = (forall (s1 s2:Seq.seq a). (Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) ==>
 		          (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))) /\  //(a)
     (forall (s s2:Seq.seq a). (Seq.length s == len /\ Seq.length s2 == j - i /\ sub_rel (Seq.slice s i j) s2) ==>
-  		         (rel s (Seq.replace_subseq s i j s2)))
+  		         (rel s (Seq.replace_subseq s i j s2)))  //(b)
 
 /// Low* buffers
 /// ==============
@@ -1741,6 +1741,26 @@ val recallable_includes (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:sre
 val recall (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
   :HST.Stack unit (requires (fun _ -> recallable b))
                   (ensures  (fun m0 _ m1 -> m0 == m1 /\ live m1 b))
+
+(* Begin: API for general witness and recall *)
+
+(* Shorthand for predicates of Seq.seq a *)
+type spred (a:Type0) = Seq.seq a -> Type0
+
+let stable_on (#a:Type0) (p:spred a) (rel:srel a) =
+  forall (s1 s2:Seq.seq a).{:pattern (p s1); rel s1 s2} (p s1 /\ rel s1 s2) ==> p s2
+
+val witnessed (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a) :Type0
+
+val witness_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
+  :HST.ST unit (requires (fun h0      -> recallable b /\ p (as_seq h0 b) /\ p `stable_on` rel))
+               (ensures  (fun h0 _ h1 -> h0 == h1 /\ b `witnessed` p))
+
+val recall_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
+  :HST.ST unit (requires (fun h0      -> b `witnessed` p))
+               (ensures  (fun h0 _ h1 -> h0 == h1 /\ p (as_seq h0 b)))
+
+(* End: API for general witness and recall *)
 
 
 /// Deallocation. A buffer that was allocated by ``malloc`` (see below)

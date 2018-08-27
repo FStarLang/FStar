@@ -92,6 +92,7 @@ let lemma_seq_sub_compatilibity_is_reflexive (#a:Type0) (len:nat) (rel:srel a)
  *
  * i2 and j2 are offsets within [i1, j1) (i.e. assuming i1 = 0)
  *)
+#push-options "--max_fuel 0 --max_ifuel 0"
 let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
   (len:nat) (rel:srel a) (i1 j1:nat) (rel1:srel a) (i2 j2:nat) (rel2:srel a)
   :Lemma (requires (i1 <= j1 /\ j1 <= len /\ i2 <= j2 /\ j2 <= j1 - i1 /\
@@ -105,6 +106,7 @@ let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
       = ()
     in
     Classical.forall_intro_2 (aux a len i1 j1 i2 j2)
+#pop-options
 
 let mgsub #a #rrel #rel b i len sub_rel =
   match b with
@@ -939,7 +941,7 @@ let g_upd_seq #_ #_ #_ b s h =
     let s0 = HS.sel h (Buffer?.content b) in
     HS.upd h (Buffer?.content b) (replace_subseq s0 (U32.v (Buffer?.idx b)) (length b) s)
 
-#push-options "--z3rlimit 32"
+#push-options "--z3rlimit 50 --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
 let g_upd_seq_as_seq #_ #_ #_ b s h =
   let h' = g_upd_seq b s h in
   if g_is_null b then assert (Seq.equal s Seq.empty)
@@ -973,6 +975,26 @@ let recallable_includes #_ #_ #_ #_ #_ #_ larger smaller =
     MG.loc_includes_aloc_elim #_ #cls #(frameOf larger) #(frameOf smaller) #(as_addr larger) #(as_addr smaller) (ubuffer_of_buffer larger) (ubuffer_of_buffer smaller)
 
 let recall #_ #_ #_ b = if Null? b then () else HST.recall (Buffer?.content b)
+
+private let spred_as_mempred (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
+  :HST.mem_predicate
+  = fun h -> p (as_seq h b)
+
+let witnessed #_ #_ #_ b p =
+  match b with
+  | Null -> p Seq.empty
+  | _    -> HST.witnessed (spred_as_mempred b p)
+
+let witness_p #_ #_ #_ b p =
+  match b with
+  | Null -> ()
+  | Buffer max_length content idx offset () ->
+    HST.mr_witness #(HS.frameOf content) #_ #_ content (spred_as_mempred b p)
+
+let recall_p #_ #_ #_ b p =
+  match b with
+  | Null -> ()
+  | Buffer max_length content idx offset () -> HST.testify (spred_as_mempred b p)
 
 let freeable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) =
   (not (g_is_null b)) /\
