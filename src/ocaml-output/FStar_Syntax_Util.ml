@@ -4249,7 +4249,7 @@ let (process_pragma :
       | FStar_Syntax_Syntax.ResetOptions sopt ->
           ((let uu____15797 = FStar_Options.restore_cmd_line_options false
                in
-            FStar_All.pipe_right uu____15797 (fun a235  -> ()));
+            FStar_All.pipe_right uu____15797 (fun a234  -> ()));
            (match sopt with
             | FStar_Pervasives_Native.None  -> ()
             | FStar_Pervasives_Native.Some s ->
