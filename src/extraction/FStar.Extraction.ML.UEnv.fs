@@ -237,8 +237,10 @@ let find_uniq gamma mlident =
   find_uniq mlident 0
 
 let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
-  (mk_unit:bool (*some pattern terms become unit while extracting*)) :
-  env * mlident=
+              (mk_unit:bool (*some pattern terms become unit while extracting*))
+    : env
+    * mlident
+    * exp_binding =
     let ml_ty = match t_x with
         | ([], t) -> t
         | _ -> MLTY_Top in
@@ -250,9 +252,10 @@ let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
               then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit])
               else with_ty ml_ty mlx in
     let t_x = if add_unit then pop_unit t_x else t_x in
-    let gamma = Bv(x, Inr({exp_b_name=mlident; exp_b_expr=mlx; exp_b_tscheme=t_x; exp_b_isrec=is_rec}))::g.gamma in
+    let exp_binding = {exp_b_name=mlident; exp_b_expr=mlx; exp_b_tscheme=t_x; exp_b_isrec=is_rec} in
+    let gamma = Bv(x, Inr exp_binding)::g.gamma in
     let tcenv = TypeChecker.Env.push_binders g.tcenv (binders_of_list [x]) in
-    {g with gamma=gamma; tcenv=tcenv}, mlident
+    {g with gamma=gamma; tcenv=tcenv}, mlident, exp_binding
 
 let rec mltyFvars (t: mlty) : list<mlident>  =
     match t with
@@ -271,7 +274,10 @@ let rec subsetMlidents (la : list<mlident>) (lb : list<mlident>)  : bool =
 let tySchemeIsClosed (tys : mltyscheme) : bool =
     subsetMlidents  (mltyFvars (snd tys)) (fst tys)
 
-let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env * mlident =
+let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
+    : env
+    * mlident
+    * exp_binding =
     if tySchemeIsClosed t_x
     then
         let ml_ty = match t_x with
@@ -286,11 +292,15 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
         let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
         let t_x = if add_unit then pop_unit t_x else t_x in
-        let gamma = Fv(x, ({exp_b_name=mlsymbol; exp_b_expr=mly; exp_b_tscheme=t_x; exp_b_isrec=is_rec}))::g.gamma in
-        {g with gamma=gamma}, mlsymbol
+        let exp_binding = {exp_b_name=mlsymbol; exp_b_expr=mly; exp_b_tscheme=t_x; exp_b_isrec=is_rec} in
+        let gamma = Fv(x, exp_binding)::g.gamma in
+        {g with gamma=gamma}, mlsymbol, exp_binding
     else failwith "freevars found"
 
-let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env * mlident =
+let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
+    : env
+    * mlident
+    * exp_binding =
     let mlp = mlpath_of_lident x.fv_name.v in
     // the mlpath cannot be determined here. it can be determined at use site, depending on the name of the module where it is used
     // so this conversion should be moved to lookup_fv
@@ -298,7 +308,10 @@ let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : en
     //let _ = printfn "(* old name  \n %A \n new name \n %A \n name in dependent module \n %A \n *) \n"  (Backends.ML.Syntax.mlpath_of_lident x.v) mlp (mlpath_of_lident ([],"SomeDepMod") x.v) in
     extend_fv' g x mlp t_x add_unit is_rec
 
-let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : (env * mlident) =
+let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
+    : env
+    * mlident
+    * exp_binding =
     match l with
     | Inl x ->
         // FIXME missing in lib; NS: what does ths mean??
@@ -326,7 +339,10 @@ let mkContext (e:TypeChecker.Env.env) : env =
    let env = { tcenv = e; gamma =[] ; tydefs =[]; type_names=[]; currentModule = emptyMlPath} in
    let a = "'a" in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
-   extend_lb env (Inr (lid_as_fv Const.failwith_lid delta_constant None)) tun failwith_ty false false |> fst
+   let g, _, _ =
+       extend_lb env (Inr (lid_as_fv Const.failwith_lid delta_constant None)) tun failwith_ty false false
+   in
+   g
 
 let monad_op_name (ed:Syntax.eff_decl) nm =
     (* Extract bind and return of effects as (unqualified) projectors of that effect, *)

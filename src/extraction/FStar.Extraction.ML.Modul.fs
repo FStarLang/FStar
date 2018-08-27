@@ -166,7 +166,10 @@ let print_ifamily i =
         (Print.term_to_string i.ityp)
         (i.idatas |> List.map (fun d -> Print.lid_to_string d.dname ^ " : " ^ Print.term_to_string d.dtyp) |> String.concat "\n\t\t")
 
-let bundle_as_inductive_families env ses quals attrs : UEnv.env * list<inductive_family> =
+let bundle_as_inductive_families env ses quals attrs
+    : UEnv.env
+    * (list<fv>
+    * list<inductive_family>) =
     let env, ifams =
         BU.fold_map
         (fun env se -> match se.sigel with
@@ -181,8 +184,10 @@ let bundle_as_inductive_families env ses quals attrs : UEnv.env * list<inductive
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
                 let metadata = extract_metadata (se.sigattrs @ attrs) @ List.choose flag_of_qual quals in
-                let env = UEnv.extend_type_name env (S.lid_as_fv l delta_constant None) in
-                env, [{   iname=l
+                let fv = S.lid_as_fv l delta_constant None in
+                let env = UEnv.extend_type_name env fv in
+                env, [fv, {
+                          iname=l
                         ; iparams=bs
                         ; ityp=t
                         ; idatas=datas
@@ -190,9 +195,81 @@ let bundle_as_inductive_families env ses quals attrs : UEnv.env * list<inductive
                         ; imetadata = metadata }]
             | _ -> env, [])
         env ses in
-    env, List.flatten ifams
+    env, List.flatten ifams |> List.unzip
 
 type env_t = UEnv.env
+
+type iface = {
+    iface_bindings: list<(fv * exp_binding)>;
+    iface_tydefs: list<(fv * list<mlsymbol> * mltydecl)>;
+    iface_type_names:list<fv>;
+}
+
+let iface_of_bindings fvs =
+    {
+        iface_bindings = fvs;
+        iface_tydefs = [];
+        iface_type_names = []
+    }
+
+let iface_union if1 if2 = {
+    iface_bindings = if1.iface_bindings @ if2.iface_bindings;
+    iface_tydefs = if1.iface_tydefs @ if2.iface_tydefs;
+    iface_type_names = if1.iface_type_names @ if2.iface_type_names
+}
+
+let extract_sigelt_iface (g:env) (se:sigelt) : env * iface =
+    match se.sigel with
+    | Sig_let (lbs, _) ->
+      let g, bindings = Term.extract_lb_iface g lbs in
+      g, iface_of_bindings bindings
+
+    | _ -> failwith "NYI"
+
+let extract_bundle_iface env se
+    : env_t * iface =
+    let extract_ctor (ml_tyvars:list<mlsymbol>) (env:env_t) (ctor: data_constructor)
+        :  env_t * (fv * exp_binding) =
+        let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
+        let tys = (ml_tyvars, mlt) in
+        let fvv = mkFvvar ctor.dname ctor.dtyp in
+        let env, _, b = extend_fv env fvv tys false false in
+        env, (fvv, b)
+    in
+
+    let extract_one_family env ind
+        : env_t * list<(fv * exp_binding)> =
+       let env, vars  = binders_as_mlty_binders env ind.iparams in
+       let env, ctors = ind.idatas |> BU.fold_map (extract_ctor vars) env in
+       env, ctors
+       //let indices, _ = U.arrow_formals ind.ityp in
+       //let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ BU.string_of_int i)) in
+       //let tbody =
+       //  match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
+       //  | Some (RecordType (ns, ids)) ->
+       //      // JP: why are the names in c_ty prefixed with ^fname^? Why do we
+       //      // have to do this voodoo dance to recover field names? Why don't
+       //      // we just drop the special ^fname^ prefix?
+       //      let _, c_ty = List.hd ctors in
+       //      assert (List.length ids = List.length c_ty);
+       //      let fields = List.map2 (fun id (_, ty) -> let lid = lid_of_ids (ns @ [id]) in (lident_as_mlsymbol lid), ty) ids c_ty in
+       //      MLTD_Record fields
+       //  | _ ->
+       //      MLTD_DType ctors in
+       // env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, ind.imetadata, Some tbody)
+    in
+
+    match se.sigel, se.sigquals with
+    | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->
+        let env, ctor = extract_ctor [] env ({dname=l; dtyp=t}) in
+        env, iface_of_bindings [ctor]
+
+    | Sig_bundle(ses, _), quals ->
+        let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
+        let env, td = BU.fold_map extract_one_family env ifams in
+        env, iface_of_bindings (List.flatten td)
+
+    | _ -> failwith "Unexpected signature element"
 
 let extract_bundle env se =
     let extract_ctor (ml_tyvars:list<mlsymbol>) (env:env_t) (ctor: data_constructor):
@@ -208,7 +285,8 @@ let extract_bundle env se =
         in
         let tys = (ml_tyvars, mlt) in
         let fvv = mkFvvar ctor.dname ctor.dtyp in
-        fst (extend_fv env fvv tys false false),
+        let env, _, _ = extend_fv env fvv tys false false in
+        env,
         (lident_as_mlsymbol ctor.dname, List.zip names (argTypes mlt)) in
 
     let extract_one_family env ind =
@@ -241,6 +319,8 @@ let extract_bundle env se =
           env, [MLM_Ty td]
 
         | _ -> failwith "Unexpected signature element"
+
+
 
 (* When extracting a plugin, each top-level definition marked with a `@plugin` attribute
    is extracted along with an invocation to FStar.Tactics.Native.register_tactic or register_plugin,
@@ -303,7 +383,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
         | Sig_new_effect ed when Env.is_reifiable_effect g.tcenv ed.mname ->
           let extend_env g lid ml_name tm tysc =
-            let g, mangled_name = extend_fv' g (S.lid_as_fv lid delta_equational None) ml_name tysc false false in
+            let g, mangled_name, _ = extend_fv' g (S.lid_as_fv lid delta_equational None) ml_name tysc false false in
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
             BU.print1 "Mangled name: %s\n" mangled_name;
             let lb = {
@@ -446,7 +526,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                             let g, ml_lb =
                                 if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
                                 then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
-                                     let env, _ =
+                                     let env, _, _ =
                                          UEnv.extend_fv'
                                                 env
                                                 (right lbname)
@@ -456,7 +536,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                                                 false
                                      in
                                      env, {ml_lb with mllb_name=snd mname }
-                                else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
+                                else let env, _, _ = UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
+                                     env, ml_lb in
                         g, ml_lb::ml_lbs)
                 (g, [])
                 bindings
@@ -520,8 +601,6 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_pragma (p) ->
          U.process_pragma p se.sigrng;
          g, []
-
-let extract_iface (g:env) (m:modul) =  BU.fold_map extract_sig g m.declarations |> fst
 
 let extract' (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();

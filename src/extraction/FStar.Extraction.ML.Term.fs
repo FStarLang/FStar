@@ -614,7 +614,7 @@ and binders_as_ml_binders (g:env) (bs:binders) : list<(mlident * mlty)> * env =
                     ml_b::ml_bs, env
             else let b = fst b in
                  let t = translate_term_to_mlty env b.sort in
-                 let env, b = extend_bv env b ([], t) false false false in
+                 let env, b, _ = extend_bv env b ([], t) false false false in
                  let ml_b = (removeTick b, t) in
                  ml_b::ml_bs, env)
     ([], g) in
@@ -726,7 +726,7 @@ let rec extract_one_pat (imp : bool)
         // JP,NS: Pat_wild turns into a binder in the internal syntax because
         // the types of other terms may depend on it
         let mlty = term_as_mlty g x.sort in
-        let g, x = extend_bv g x ([], mlty) false false imp in
+        let g, x, _ = extend_bv g x ([], mlty) false false imp in
         g, (if imp then None else Some (MLP_Var x, [])), ok mlty
 
     | Pat_dot_term _ ->
@@ -864,6 +864,117 @@ let maybe_promote_effect ml_e tag t =
     | E_PURE, MLTY_Erased -> ml_unit, E_PURE
     | _ -> ml_e, tag
 
+
+let extract_lb_sig (g:env) (lbs:letbindings) =
+    let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef}
+            : lbname //just lbname returned back
+            * e_tag  //the ML version of the effect label lbeff
+            * (typ   //just the source type lbtyp=t, after compression
+               * (S.binders //the erased type binders
+                  * mltyscheme)) //translation of the source type t as a ML type scheme
+            * bool   //whether or not to add a unit argument
+            * term   //the term e, maybe after some type binders have been erased
+            =
+              let f_e = effect_as_etag g lbeff in
+              let lbtyp = SS.compress lbtyp in
+              let no_gen () =
+                  let expected_t = term_as_mlty g lbtyp in
+                  (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, lbdef)
+              in
+              if TcUtil.must_erase_for_extraction g.tcenv lbtyp
+              then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, lbdef)
+              else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (Print.lbname_to_string lbname) (Print.typ_to_string t) f_e);
+                match lbtyp.n with
+                | Tm_arrow(bs, c) when (List.hd bs |> is_type_binder g) ->
+                   let bs, c = SS.open_comp bs c in
+                  //need to generalize, but will erase all the type abstractions;
+                  //If, after erasure, what remains is not a value, then add an extra unit arg. to preserve order of evaluation/generativity
+                  //and to circumvent the value restriction
+
+                  //TODO: ERASE ONLY THOSE THAT ABSTRACT OVER PURE FUNCTIONS in Type(i),
+                  //      NOT, e.g., (x:int -> St Type)
+                   let tbinders, tbody =
+                        match BU.prefix_until (fun x -> not (is_type_binder g x)) bs with
+                            | None -> bs, U.comp_result c
+                            | Some (bs, b, rest) -> bs, U.arrow (b::rest) c in
+
+                   let n_tbinders = List.length tbinders in
+                   let lbdef = normalize_abs lbdef |> U.unmeta in
+                   begin match lbdef.n with
+                      | Tm_abs(bs, body, copt) ->
+                        let bs, body = SS.open_term bs body in
+                        if n_tbinders <= List.length bs
+                        then let targs, rest_args = BU.first_N n_tbinders bs in
+                             let expected_source_ty =
+                                let s = List.map2 (fun (x, _) (y, _) -> S.NT(x, S.bv_to_name y)) tbinders targs in
+                                SS.subst s tbody in
+                             let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g targs in
+                             let expected_t = term_as_mlty env expected_source_ty in
+                             let polytype = targs |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
+                             let add_unit =
+                                match rest_args with
+                                | [] ->
+                                  not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
+                                  || not (U.is_pure_comp c)
+                                | _ -> false in
+                             let rest_args = if add_unit then (unit_binder::rest_args) else rest_args in
+                             let polytype = if add_unit then push_unit polytype else polytype in
+                             let body = U.abs rest_args body copt in
+                             (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, body)
+
+                        else (* fails to handle:
+                                let f : a:Type -> b:Type -> a -> b -> Tot (nat * a * b) =
+                                    fun (a:Type) ->
+                                      let x = 0 in
+                                      fun (b:Type) (y:a) (z:b) -> (x, y, z)
+
+                                Could eta-expand; but with effects this is problem; see ETA-EXPANSION and NO GENERALIZATION below
+                             *)
+                             failwith "Not enough type binders" //TODO: better error message
+
+                     | Tm_uinst _
+                     | Tm_fvar _
+                     | Tm_name _ ->
+                       let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g tbinders in
+                       let expected_t = term_as_mlty env tbody in
+                       let polytype = tbinders |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
+                       //In this case, an eta expansion is safe
+                       let args = tbinders |> List.map (fun (bv, _) -> S.bv_to_name bv |> as_arg) in
+                       let e = mk (Tm_app(lbdef, args)) None lbdef.pos in
+                       (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, e)
+
+                     | _ ->
+                        //ETA-EXPANSION?
+                        //An alternative here could be to eta expand the body, but with effects, that's quite dodgy
+                        // Consider:
+                        //    let f : ML ((a:Type) -> a -> Tot a) = x := 17; (fun (a:Type) (x:a) -> x)
+                        // Eta-expanding this would break the assignment; so, unless we hoist the assignment, we must reject this program
+                        // One possibility is to restrict F* so that the effect of f must be Pure
+                        // In that case, an eta-expansion would be semantically ok, but consider this:
+                        //    let g : Tot ((a:Type) -> a -> Tot (a * nat)) = let z = expensive_pure_comp x in fun (a:Type) (x:a) -> (x,z))
+                        // The eta expansion would cause the expensive_pure_comp to be run each time g is instantiated (this is what Coq does, FYI)
+                        // It may be better to hoist expensive_pure_comp again.
+                        //NO GENERALIZATION:
+                        //Another alternative could be to not generalize the type t, inserting MLTY_Top for the type variables
+                        err_value_restriction lbdef
+                   end
+
+                | _ ->  no_gen()
+    in
+    snd lbs |> List.map maybe_generalize
+
+let extract_lb_iface (g:env) (lbs:letbindings)
+    : env * list<(fv * exp_binding)> =
+    let is_rec = fst lbs in
+    let lbs = extract_lb_sig g lbs in
+    BU.fold_map (fun env
+                     (lbname, e_tag, (typ, (binders, mltyscheme)), add_unit, _body) ->
+                  let env, _, exp_binding =
+                      UEnv.extend_lb env lbname typ mltyscheme add_unit is_rec in
+                  env, (BU.right lbname, exp_binding))
+                g
+                lbs
+
 //The main extraction function
 let rec check_term_as_mlexpr (g:env) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
     debug g (fun () -> BU.print2 "Checking %s at type %s\n" (Print.term_to_string e) (Code.string_of_mlty g.currentModule ty));
@@ -886,6 +997,7 @@ and term_as_mlexpr g e =
     let e, f, t = term_as_mlexpr' g e in
     let e, f = maybe_promote_effect e f t in
     e, f, t
+
 
 and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
     (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
@@ -1213,103 +1325,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                                 tcenv lb.lbdef in
                     {lb with lbdef=lbdef})
             else lbs in
-            //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
-          let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef}
-            : lbname //just lbname returned back
-            * e_tag  //the ML version of the effect label lbeff
-            * (typ   //just the source type lbtyp=t, after compression
-               * (S.binders //the erased type binders
-                  * mltyscheme)) //translation of the source type t as a ML type scheme
-            * bool   //whether or not to add a unit argument
-            * term   //the term e, maybe after some type binders have been erased
-            =
-              let f_e = effect_as_etag g lbeff in
-              let lbtyp = SS.compress lbtyp in
-              let no_gen () =
-                  let expected_t = term_as_mlty g lbtyp in
-                  (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, lbdef)
-              in
-              if TcUtil.must_erase_for_extraction g.tcenv lbtyp
-              then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, lbdef)
-              else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (Print.lbname_to_string lbname) (Print.typ_to_string t) f_e);
-                match lbtyp.n with
-                | Tm_arrow(bs, c) when (List.hd bs |> is_type_binder g) ->
-                   let bs, c = SS.open_comp bs c in
-                  //need to generalize, but will erase all the type abstractions;
-                  //If, after erasure, what remains is not a value, then add an extra unit arg. to preserve order of evaluation/generativity
-                  //and to circumvent the value restriction
 
-                  //TODO: ERASE ONLY THOSE THAT ABSTRACT OVER PURE FUNCTIONS in Type(i),
-                  //      NOT, e.g., (x:int -> St Type)
-                   let tbinders, tbody =
-                        match BU.prefix_until (fun x -> not (is_type_binder g x)) bs with
-                            | None -> bs, U.comp_result c
-                            | Some (bs, b, rest) -> bs, U.arrow (b::rest) c in
-
-                   let n_tbinders = List.length tbinders in
-                   let lbdef = normalize_abs lbdef |> U.unmeta in
-                   begin match lbdef.n with
-                      | Tm_abs(bs, body, copt) ->
-                        let bs, body = SS.open_term bs body in
-                        if n_tbinders <= List.length bs
-                        then let targs, rest_args = BU.first_N n_tbinders bs in
-                             let expected_source_ty =
-                                let s = List.map2 (fun (x, _) (y, _) -> S.NT(x, S.bv_to_name y)) tbinders targs in
-                                SS.subst s tbody in
-                             let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g targs in
-                             let expected_t = term_as_mlty env expected_source_ty in
-                             let polytype = targs |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
-                             let add_unit =
-                                match rest_args with
-                                | [] ->
-                                  not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
-                                  || not (U.is_pure_comp c)
-                                | _ -> false in
-                             let rest_args = if add_unit then (unit_binder::rest_args) else rest_args in
-                             let polytype = if add_unit then push_unit polytype else polytype in
-                             let body = U.abs rest_args body copt in
-                             (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, body)
-
-                        else (* fails to handle:
-                                let f : a:Type -> b:Type -> a -> b -> Tot (nat * a * b) =
-                                    fun (a:Type) ->
-                                      let x = 0 in
-                                      fun (b:Type) (y:a) (z:b) -> (x, y, z)
-
-                                Could eta-expand; but with effects this is problem; see ETA-EXPANSION and NO GENERALIZATION below
-                             *)
-                             failwith "Not enough type binders" //TODO: better error message
-
-                     | Tm_uinst _
-                     | Tm_fvar _
-                     | Tm_name _ ->
-                       let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g tbinders in
-                       let expected_t = term_as_mlty env tbody in
-                       let polytype = tbinders |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
-                       //In this case, an eta expansion is safe
-                       let args = tbinders |> List.map (fun (bv, _) -> S.bv_to_name bv |> as_arg) in
-                       let e = mk (Tm_app(lbdef, args)) None lbdef.pos in
-                       (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, e)
-
-                     | _ ->
-                        //ETA-EXPANSION?
-                        //An alternative here could be to eta expand the body, but with effects, that's quite dodgy
-                        // Consider:
-                        //    let f : ML ((a:Type) -> a -> Tot a) = x := 17; (fun (a:Type) (x:a) -> x)
-                        // Eta-expanding this would break the assignment; so, unless we hoist the assignment, we must reject this program
-                        // One possibility is to restrict F* so that the effect of f must be Pure
-                        // In that case, an eta-expansion would be semantically ok, but consider this:
-                        //    let g : Tot ((a:Type) -> a -> Tot (a * nat)) = let z = expensive_pure_comp x in fun (a:Type) (x:a) -> (x,z))
-                        // The eta expansion would cause the expensive_pure_comp to be run each time g is instantiated (this is what Coq does, FYI)
-                        // It may be better to hoist expensive_pure_comp again.
-                        //NO GENERALIZATION:
-                        //Another alternative could be to not generalize the type t, inserting MLTY_Top for the type variables
-                        err_value_restriction lbdef
-                   end
-
-                | _ ->  no_gen()
-          in
-          let check_lb env (nm, (lbname, f, (t, (targs, polytype)), add_unit, e)) =
+          let check_lb env (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, e)) =
               let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) env targs in
               let expected_t = snd polytype in
               let e, ty = check_term_as_mlexpr env e f expected_t in
@@ -1323,12 +1340,11 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               f, {mllb_meta = meta; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
           in
 
-         (*after the above definitions, here is the main code for extracting let expressions*)
-          let lbs = lbs |> List.map maybe_generalize in
+          let lbs = extract_lb_sig g (is_rec, lbs) in
 
           let env_body, lbs = List.fold_right (fun lb (env, lbs) ->
               let (lbname, _, (t, (_, polytype)), add_unit, _) = lb in
-              let env, nm = UEnv.extend_lb env lbname t polytype add_unit true in
+              let env, nm, _ = UEnv.extend_lb env lbname t polytype add_unit true in
               env, (nm,lb)::lbs) lbs (g, []) in
 
           let env_def = if is_rec then env_body else g in
