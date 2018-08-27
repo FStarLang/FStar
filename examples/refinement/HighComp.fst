@@ -60,8 +60,6 @@ type hwp_mon 'a = (wp:hwp 'a{monotonic wp})
 // [comp] type with wp
 type comp_wp 'a (wp : hwp_mon 'a) = s0:state -> PURE ('a * state) (wp s0)
 
-let sat #a (wp:hwp a) : Type = forall (h:HS.mem) (ls:lstate{well_formed h ls}). wp (lstate_as_state h ls) (fun _ -> True)
-
 unfold
 let return_wp (#a:Type) (x : a) : hwp_mon a = HIGH?.return_wp a x
 

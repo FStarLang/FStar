@@ -130,13 +130,18 @@ let as_lwp #a #wp (c:comp_wp a wp) : lwp a =
 
 // Equality of low wps and programs
 
+let sat_as_lwp #a (wp:hwp a) : Type = forall (h:HS.mem) (ls:lstate{well_formed h ls}). wp (lstate_as_state h ls) (fun _ -> True)
+
+let sat #a (wp:lwp a) : Type = forall (h:HS.mem) (ls:lstate{well_formed h ls}). wp ls h (fun _ -> True)
+
 // Not quite sure about that
 let precise #a (wp:lwp a) = 
-  forall h0 (ls:lstate{well_formed h0 ls}). 
-    wp ls h0 (fun (r1, h1) ->
-    wp ls h0 (fun (r2, h2) ->
-    r1 == r2 /\ h1 == h2))
-
+  sat wp ==>
+  (forall h0 (ls:lstate{well_formed h0 ls}). 
+     wp ls h0 (fun (r1, h1) ->
+     wp ls h0 (fun (r2, h2) ->
+     r1 == r2 /\ h1 == h2)))
+  
 let lwp_eq #a (wp1:lwp a) (wp2:lwp a) =
   precise wp1 /\
   precise wp2 /\
@@ -372,40 +377,33 @@ let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a
 
 let lcast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) (l : lcomp_wp a wp1 c) : lcomp_wp a wp2 c = l
 
-let sat #a (wp:hwp a) : Type = forall (h:HS.mem) (ls:lstate{well_formed h ls}). wp (lstate_as_state h ls) (fun _ -> True)
-
 let as_lwp_precise (#a:Type) wp (c : comp_wp a wp) : 
   Lemma
-    (requires (sat wp))
-    (ensures (precise (as_lwp #a #wp c))) = ()
+  (precise (as_lwp #a #wp c)) = ()
   
 let h_eq_implies_l_eq (#a:Type) (wp1:hwp_mon a) (c1:comp_wp a wp1) (lc1:lcomp_wp a wp1 c1) 
     (wp2:hwp_mon a) (c2:comp_wp a wp2) (lc2:lcomp_wp a wp2 c2) :
-  Lemma (requires (h_eq wp1 wp2 c1 c2 /\ sat wp1 /\ sat wp2))
+  Lemma (requires (h_eq wp1 wp2 c1 c2))
         (ensures (l_eq lc1 lc2)) = ()
 
 let h_eq_refl (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : Lemma (h_eq wp wp c c) = ()
-
+ 
 let l_eq_refl (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (l : lcomp_wp a wp c) : 
-  Lemma (requires (sat wp)) 
-        (ensures (l_eq l l)) = ()
+  Lemma (l_eq l l) = ()
 
 let lcomp_unique_inhabitant (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (lc1 : lcomp_wp a wp c) (lc2 : lcomp_wp a wp c) : 
-  Lemma (requires (sat wp))
-        (ensures (l_eq lc1 lc2)) = ()
-
+  Lemma (l_eq lc1 lc2) = ()
 
 // Satisifability of WPs 
 
-let return_wp_sat (#a:Type) (x : a) : Lemma (sat (return_wp x)) = ()
+let return_wp_sat (#a:Type) (x : a) : Lemma (sat_as_lwp (return_wp x)) = ()
 
-let write_wp_sat (i:nat) (v:mint) : Lemma (sat (write_wp i v)) = ()
+let write_wp_sat (i:nat) (v:mint) : Lemma (sat_as_lwp (write_wp i v)) = ()
 
-let read_wp_sat (i:nat) : Lemma (sat (read_wp i)) = ()
+let read_wp_sat (i:nat) : Lemma (sat_as_lwp (read_wp i)) = ()
 
-
-let subsumes_sat #a (wp1 wp2 : hwp_mon a) : Lemma (requires (subsumes wp1 wp2 /\ sat wp2))
-                                                  (ensures (sat wp1)) = ()
+let subsumes_sat #a (wp1 wp2 : hwp_mon a) : Lemma (requires (subsumes wp1 wp2 /\ sat_as_lwp wp2))
+                                                  (ensures (sat_as_lwp wp1)) = ()
 
 // let bind_wp_sat #a #b (wp1:hwp_mon a{sat wp1}) 
 //   (fwp2 : (x:a -> (wp:hwp_mon b{sat wp}))) : Lemma (sat (bind_wp wp1 fwp2)) = ()
@@ -414,19 +412,19 @@ let subsumes_sat #a (wp1 wp2 : hwp_mon a) : Lemma (requires (subsumes wp1 wp2 /\
 // Lifting lemma statements
 
 let lift_return #a (wp : hwp_mon a) (x : a) :
-    Lemma (requires (subsumes (return_wp x) wp /\ sat wp)) 
+    Lemma (requires (subsumes (return_wp x) wp)) 
           (ensures (l_eq #a
                          #wp #(cast wp (return_elab x)) (lift wp (cast wp (return_elab x)))
                          #wp #(cast wp (return_elab x)) (lreturn x))) = ()
 
 let lift_read (wp : hwp_mon mint) (i : nat{i < 2}) :
-  Lemma (requires (subsumes (read_wp i) wp /\ sat wp)) 
+  Lemma (requires (subsumes (read_wp i) wp)) 
         (ensures (l_eq #mint
                        #wp #(cast wp (hread' i)) (lift wp (cast wp (hread' i)))
                        #wp #(cast wp (hread' i)) (lread' i))) = ()
 
 let lift_write (wp : hwp_mon unit) (i : nat{i < 2}) (v : mint) :
-  Lemma (requires (subsumes (write_wp i v) wp /\ sat wp)) 
+  Lemma (requires (subsumes (write_wp i v) wp))
         (ensures (l_eq #unit
                         #wp #(cast wp (hwrite' i v)) (lift wp (cast wp (hwrite' i v)))
                         #wp #(cast wp (hwrite' i v)) (lwrite' i v))) = ()
@@ -434,12 +432,13 @@ let lift_write (wp : hwp_mon unit) (i : nat{i < 2}) (v : mint) :
 
 let lift_bind #a #b (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
   (wp2 : a -> hwp_mon b) (c2 : (x:a) -> comp_wp b (wp2 x)) 
-  (wp : hwp_mon b) = 
-  (subsumes (bind_wp wp1 wp2) wp) ->
-  l_eq #b 
-    #wp #(cast wp (bind_elab c1 c2)) (lift wp (cast wp (bind_elab c1 c2))) 
-    #wp #(cast wp (bind_elab c1 c2)) (lcast wp (bind_elab c1 c2)
-                                            (lbind (lift wp1 c1) (fun x -> (lift (wp2 x) (c2 x)))))
+  (wp : hwp_mon b) :
+      Lemma 
+        (requires (subsumes (bind_wp wp1 wp2) wp))
+        (ensures (l_eq #b 
+                       #wp #(cast wp (bind_elab c1 c2)) (lift wp (cast wp (bind_elab c1 c2))) 
+                       #wp #(cast wp (bind_elab c1 c2)) (lcast wp (bind_elab c1 c2)
+                       (lbind (lift wp1 c1) (fun x -> (lift (wp2 x) (c2 x))))))) = ()
 
 
 let lcomp_respects_h_eq
