@@ -67,3 +67,37 @@ let test (l:list int{List.Tot.length l == 10}) :HST.St unit =
   recall_contents b ls;  
   let h = HST.get () in
   assert (B.as_seq h b == ls)
+
+
+(*
+ * An example of a two elements buffer
+ * The first element increases monotonically and the second element remains same
+ *)
+
+type immutable_sub_buffer (a:Type0) (rrel:B.srel a) = B.mbuffer a rrel (crel a)
+
+let trel :B.srel int =
+  fun s1 s2 -> Seq.length s1 == 2 ==> (Seq.length s2 == 2 /\ Seq.index s1 0 <= Seq.index s2 0 /\ Seq.index s2 1 == Seq.index s1 1)
+
+type tbuffer = b:B.mbuffer int trel trel{B.length b == 2}
+
+let tsub (b:tbuffer)
+  :HST.Stack (immutable_sub_buffer _ _)
+             (requires (fun h -> B.live h b))
+             (ensures  (fun h y h' -> h == h' /\ y == B.mgsub b 1ul 1ul (crel int)))
+  = B.msub b 1ul 1ul (crel int)
+
+let test_immutable_sub (b:tbuffer)
+  :HST.ST unit (requires (fun h0    -> B.recallable b /\ Seq.index (B.as_seq h0 b) 1 == 2))
+               (ensures  (fun _ _ _ -> True))
+  = B.recall b;
+
+    let s = Seq.create 1 2 in
+
+    let bb = tsub b in
+    let _ = B.witness_p bb (cpred s) in  //witness the contents of the subbuffer
+
+    havoc bb;
+    B.recall_p bb (cpred s);
+    let h = HST.get () in
+    assert (B.as_seq h bb == s)
