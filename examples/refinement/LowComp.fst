@@ -440,6 +440,24 @@ let lift_bind #a #b (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
                        #wp #(cast wp (bind_elab c1 c2)) (lcast wp (bind_elab c1 c2)
                        (lbind (lift wp1 c1) (fun x -> (lift (wp2 x) (c2 x))))))) = ()
 
+let lift_for (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp i)) :
+    Lemma 
+      (requires (subsumes (for_wp wp lo hi) wp))
+      (ensures (l_eq #a
+                     #wp #(cast wp (for_elab lo hi f)) (lift wp (cast wp (for_elab lo hi f))) 
+                     #wp #(cast wp (ite_elab b c1 c2)) (lcast wp (ite_elab b c1 c2)
+                         (lite b (lift wp1 c1) (lift wp2 c2))))) = ()
+
+let lift_ite #a (b : bool) (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
+  (wp2 : hwp_mon a) (c2 : comp_wp a wp2) 
+  (wp : hwp_mon a) :
+      Lemma 
+        (requires (subsumes (ite_wp b wp1 wp2) wp))
+        (ensures (l_eq #a
+                       #wp #(cast wp (ite_elab b c1 c2)) (lift wp (cast wp (ite_elab b c1 c2))) 
+                       #wp #(cast wp (ite_elab b c1 c2)) (lcast wp (ite_elab b c1 c2)
+                           (lite b (lift wp1 c1) (lift wp2 c2))))) = ()
+
 
 let lcomp_respects_h_eq
          (a : Type)
