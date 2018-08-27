@@ -3071,7 +3071,7 @@
         "typing_FStar.UInt.from_vec", "well-founded-ordering-on-nat"
       ],
       0,
-      "6c73edf24f751d0f01d0dd1e901ed143"
+      "a8ae56736beb7c116c272aced3d8aa3c"
     ],
     [
       "FStar.UInt.subset_vec_le_lemma",
@@ -3119,7 +3119,7 @@
         "typing_FStar.UInt.from_vec", "well-founded-ordering-on-nat"
       ],
       0,
-      "817197baeb2120b2e5e5f0d50420722c"
+      "15b7773c52309d35d6ad7c2cd3f490c0"
     ],
     [
       "FStar.UInt.logand_le",
@@ -3166,7 +3166,7 @@
         "typing_FStar.BitVector.logand_vec", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "88b4317fcb0a3f208f69b5da2dce743c"
+      "a607262447592a70671dc23a95fd77cc"
     ],
     [
       "FStar.UInt.logand_le",
@@ -3201,7 +3201,7 @@
         "typing_FStar.BitVector.logand_vec", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "9c7eb2b876bc2e33da11e4c32db963e9"
+      "efbfe139dd9748e1b83fe8f89d130e44"
     ],
     [
       "FStar.UInt.logxor_commutative",
@@ -3892,7 +3892,7 @@
         "typing_FStar.UInt.from_vec", "well-founded-ordering-on-nat"
       ],
       0,
-      "5b3bb646e4377f6742a765fdd614fc58"
+      "261f45d09071edef67b3cde0eba13238"
     ],
     [
       "FStar.UInt.superset_vec_ge_lemma",
@@ -3941,7 +3941,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "56c1ad444991afd5bd4372052a5721c5"
+      "5f880a6e4415217b3370bd9df7361ac0"
     ],
     [
       "FStar.UInt.logor_ge",
@@ -3989,7 +3989,7 @@
         "typing_FStar.BitVector.logor_vec", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "9785e4a7243bfa1730a23a08db21e740"
+      "ba0f3667c2fd290b1f4a4990b7431771"
     ],
     [
       "FStar.UInt.logor_ge",
@@ -4025,7 +4025,7 @@
         "typing_FStar.BitVector.logor_vec", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "4c2cbb1be588e4c1e0a196b07c1e5b73"
+      "7eda1c29a5ed2dd496a3961515196275"
     ],
     [
       "FStar.UInt.lognot_self",

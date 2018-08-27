@@ -1,0 +1,45 @@
+[
+  "\u0013c…È\u0004¢\u0010\u0018;\u0016‡™\n¡N—",
+  [
+    [
+      "IST.op_Greater_Less",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9de00db11064e7f4152f7c43e8acfea4"
+    ],
+    [
+      "IST.f",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
+      0,
+      "3105b4876408c13a6b1665df9294d88e"
+    ],
+    [
+      "IST.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat", "int_typing",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "d509ff16f1a45a78cfb628874009e75a"
+    ],
+    [
+      "IST.op_Greater_Less",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e1bd110c91afa1cb450423d4b5c0b7b9"
+    ]
+  ]
+]

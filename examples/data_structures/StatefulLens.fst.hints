@@ -374,7 +374,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_FStar.ST.ref"
       ],
       0,
-      "b4dca1e0144eef5bee4d37d615a62c58"
+      "9e403c9ec21da781c57d5e9415be7023"
     ],
     [
       "StatefulLens.test2",
@@ -396,7 +396,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_FStar.ST.ref"
       ],
       0,
-      "bbe4f9f8775dbd8b1a620ea40013cd8f"
+      "7946214d3f0c83eee07dc8d59ed9ad26"
     ],
     [
       "StatefulLens.test4",

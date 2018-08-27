@@ -469,7 +469,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip", "typing_FStar.UInt32.v"
       ],
       0,
-      "20ebc1afbcfbe6017d1910f238ba6c48"
+      "080558c81a9d0b209cd9d8ceefbe0fa1"
     ],
     [
       "FStar.Buffer.Quantifiers.lemma_offset_quantifiers",
@@ -507,7 +507,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip", "typing_FStar.UInt32.v"
       ],
       0,
-      "b1700604b18bb23f93025c60c0e525bc"
+      "6af269baa9f3d4ce3d2ce9aa6b626715"
     ],
     [
       "FStar.Buffer.Quantifiers.lemma_create_quantifiers",
@@ -607,7 +607,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip", "typing_FStar.UInt32.v"
       ],
       0,
-      "cf008547e9af57e994f47548e6618b71"
+      "499d858d76dab58cb8da3b546239d9e6"
     ],
     [
       "FStar.Buffer.Quantifiers.eq_lemma",

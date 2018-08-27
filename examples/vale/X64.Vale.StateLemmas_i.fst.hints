@@ -497,7 +497,7 @@
         "assumption_Prims.HasEq_int", "equation_FStar.Set.eqtype",
         "equation_FStar.UInt32.n", "equation_Prims.eqtype",
         "equation_X64.Machine_s.nat64", "equation_X64.Semantics_s.map",
-        "equation_X64.Semantics_s.uint64",
+        "equation_X64.Semantics_s.uint64", "equation_X64.Vale.Regs_i.t",
         "equation_X64.Vale.StateLemmas_i.state_of_S",
         "equation_X64.Vale.StateLemmas_i.state_to_S",
         "equation_X64.Vale.State_i.state_eq",
@@ -540,11 +540,12 @@
         "typing_X64.Vale.StateLemmas_i.state_of_S",
         "typing_X64.Vale.StateLemmas_i.state_to_S",
         "typing_X64.Vale.StateLemmas_i_Tm_abs_0a36e2d244d4939759300cfdbd1a3d89",
+        "typing_X64.Vale.StateLemmas_i_Tm_abs_54fc9dad5ca452b758099b240e69bc36",
         "typing_X64.Vale.State_i.__proj__Mkstate__item__mem",
         "typing_X64.Vale.State_i.__proj__Mkstate__item__regs"
       ],
       0,
-      "02c70fdb9e214f9e18f2f4ccca72f00f"
+      "f56f42269e33cbdb928dd8e8d2fc5a67"
     ],
     [
       "X64.Vale.StateLemmas_i.lemma_to_of",
@@ -621,7 +622,7 @@
         "typing_tok_X64.Machine_s.Rax@tok"
       ],
       0,
-      "9e221b78fd4f1c995741e76ace2e5d88"
+      "3d49c3c63d3d70f162c09173d14e6f43"
     ]
   ]
 ]
