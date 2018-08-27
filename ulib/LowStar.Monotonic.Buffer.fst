@@ -988,13 +988,13 @@ let witnessed #_ #_ #_ b p =
 let witness_p #_ #_ #_ b p =
   match b with
   | Null -> ()
-  | Buffer max_length content idx offset () ->
+  | Buffer _ content _ _ () ->
     HST.mr_witness #(HS.frameOf content) #_ #_ content (spred_as_mempred b p)
 
 let recall_p #_ #_ #_ b p =
   match b with
   | Null -> ()
-  | Buffer max_length content idx offset () -> HST.testify (spred_as_mempred b p)
+  | Buffer _ _ _ _ () -> HST.testify (spred_as_mempred b p)
 
 let freeable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) =
   (not (g_is_null b)) /\
