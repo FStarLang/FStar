@@ -3,6 +3,7 @@ module FStar.Tactics.Logic
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 open FStar.Tactics.Derived
+open FStar.Tactics.Util
 open FStar.Reflection
 open FStar.Reflection.Formula
 
