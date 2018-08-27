@@ -807,7 +807,6 @@ and p_qualifiers qs =
 
 and p_letqualifier = function
   | Rec -> space ^^ str "rec"
-  | Mutable -> space ^^ str "mutable"
   | NoLetQualifier -> empty
 
 and p_aqual = function
