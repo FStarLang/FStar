@@ -123,6 +123,8 @@ let (goal_env : goal -> FStar_TypeChecker_Env.env) =
         (uu___252_81.FStar_TypeChecker_Env.synth_hook);
       FStar_TypeChecker_Env.splice =
         (uu___252_81.FStar_TypeChecker_Env.splice);
+      FStar_TypeChecker_Env.postprocess =
+        (uu___252_81.FStar_TypeChecker_Env.postprocess);
       FStar_TypeChecker_Env.is_native_tactic =
         (uu___252_81.FStar_TypeChecker_Env.is_native_tactic);
       FStar_TypeChecker_Env.identifier_info =

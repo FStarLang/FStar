@@ -176,6 +176,8 @@ let (init_once : unit -> unit) =
                (uu___416_234.FStar_TypeChecker_Env.synth_hook);
              FStar_TypeChecker_Env.splice =
                (uu___416_234.FStar_TypeChecker_Env.splice);
+             FStar_TypeChecker_Env.postprocess =
+               (uu___416_234.FStar_TypeChecker_Env.postprocess);
              FStar_TypeChecker_Env.is_native_tactic =
                (uu___416_234.FStar_TypeChecker_Env.is_native_tactic);
              FStar_TypeChecker_Env.identifier_info =
@@ -267,6 +269,8 @@ let (init_once : unit -> unit) =
                     (uu___417_252.FStar_TypeChecker_Env.synth_hook);
                   FStar_TypeChecker_Env.splice =
                     (uu___417_252.FStar_TypeChecker_Env.splice);
+                  FStar_TypeChecker_Env.postprocess =
+                    (uu___417_252.FStar_TypeChecker_Env.postprocess);
                   FStar_TypeChecker_Env.is_native_tactic =
                     (uu___417_252.FStar_TypeChecker_Env.is_native_tactic);
                   FStar_TypeChecker_Env.identifier_info =
@@ -413,6 +417,8 @@ let (tc' :
           (uu___420_363.FStar_TypeChecker_Env.synth_hook);
         FStar_TypeChecker_Env.splice =
           (uu___420_363.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.postprocess =
+          (uu___420_363.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =
           (uu___420_363.FStar_TypeChecker_Env.is_native_tactic);
         FStar_TypeChecker_Env.identifier_info =
@@ -516,6 +522,8 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
           (uu___421_418.FStar_TypeChecker_Env.synth_hook);
         FStar_TypeChecker_Env.splice =
           (uu___421_418.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.postprocess =
+          (uu___421_418.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =
           (uu___421_418.FStar_TypeChecker_Env.is_native_tactic);
         FStar_TypeChecker_Env.identifier_info =
