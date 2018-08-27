@@ -1,0 +1,161 @@
+[
+  "±“M´\u0011ðÜÙ¾¼²Ûqƒ–Ò",
+  [
+    [
+      "Bug1521.path",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1f2447c68bb2834fa185323f94a769ff"
+    ],
+    [
+      "Bug1521.__proj__L__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug1521.L",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug1521_Tm_refine_2ee8b37671e156e8fc8e545cda428828"
+      ],
+      0,
+      "830c0277c6458fe423f00b441fbef9d6"
+    ],
+    [
+      "Bug1521.prefix_trans",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug1521.prefix" ],
+      0,
+      "306ff1cce101d33a49998fc6415d8275"
+    ],
+    [
+      "Bug1521.rtest0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug1521.heap_rel",
+        "equation_Bug1521.prefix", "fuel_guarded_inversion_Bug1521.heap",
+        "proj_equation_Bug1521.Mkheap_pos",
+        "refinement_interpretation_Bug1521_Tm_refine_b06658af9252b52dd0971abd33e68c35"
+      ],
+      0,
+      "771e1c4380f2646334de446bf6f113b7"
+    ],
+    [
+      "Bug1521.rtest1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug1521.heap_rel",
+        "equation_Bug1521.prefix", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "9578a4411753d84a4f547fd4f99d5543"
+    ],
+    [
+      "Bug1521.rtest2",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug1521.heap_rel", "equation_Bug1521.prefix" ],
+      0,
+      "5a5af7342efc700e537a9e2eee1eacf1"
+    ],
+    [
+      "Bug1521.rtest2'",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug1521.heap_rel", "equation_Bug1521.prefix" ],
+      0,
+      "d26dc3630d810d7a9a050cf70495fb8e"
+    ],
+    [
+      "Bug1521.rtest2''",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug1521.heap_rel", "equation_Bug1521.prefix" ],
+      0,
+      "36691266b871096dc7595d336d6fae95"
+    ],
+    [
+      "Bug1521.ptest1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug1521.prefix",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "096784261e4beda5ba7749d9e74dc046"
+    ],
+    [
+      "Bug1521.ptest2",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug1521.prefix" ],
+      0,
+      "4a77f8cc18fc1050181a47989d7a8b67"
+    ],
+    [
+      "Bug1521.sklem0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Bug1521_Tm_refine_d16de86ec5446f55c1622708945a0449"
+      ],
+      0,
+      "38f83610c990ac262ffe0587a7eb344a"
+    ],
+    [
+      "Bug1521.sklem1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Bug1521_Tm_refine_d16de86ec5446f55c1622708945a0449"
+      ],
+      0,
+      "4d76eee8c2b91349317e0b33517b445d"
+    ],
+    [
+      "Bug1521.sklem2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Bug1521_Tm_refine_d16de86ec5446f55c1622708945a0449"
+      ],
+      0,
+      "a01c3a614d55d931da1c5e741b7ccdd0"
+    ],
+    [
+      "Bug1521.sklem3'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug1521.id",
+        "equation_Prims.l_Exists", "equation_Prims.squash", "l_quant_interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "bb83d65f70aeb72786f0826bb651a077"
+    ]
+  ]
+]

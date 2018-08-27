@@ -54,6 +54,12 @@ val forall_intro_3_with_pat (#a:Type) (#b:(a -> Type)) (#c: (x:a -> y:b x -> Typ
   ($_: (x:a -> y:b x -> z:c x y -> Lemma (p x y z)))
   :Lemma (forall (x:a) (y:b x) (z:c x y).{:pattern (pat x y z)} p x y z)
 
+val forall_intro_4
+  (#a:Type) (#b:(a -> Type)) (#c:(x:a -> y:b x -> Type)) (#d:(x:a -> y:b x -> z:c x y -> Type))
+  (#p:(x:a -> y:b x -> z:c x y -> w:d x y z -> Type0))
+  ($_: (x:a -> y:b x -> z:c x y -> w:d x y z -> Lemma (p x y z w)))
+  : Lemma (forall (x:a) (y:b x) (z:c x y) (w:d x y z). p x y z w)
+
 val exists_intro (#a:Type) (p:(a -> Type)) (witness:a)
   :Lemma (requires (p witness)) (ensures (exists (x:a). p x))
 

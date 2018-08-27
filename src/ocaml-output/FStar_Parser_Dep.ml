@@ -80,8 +80,8 @@ let list_of_option :
   'Auu____168 .
     'Auu____168 FStar_Pervasives_Native.option -> 'Auu____168 Prims.list
   =
-  fun uu___110_177  ->
-    match uu___110_177 with
+  fun uu___111_177  ->
+    match uu___111_177 with
     | FStar_Pervasives_Native.Some x -> [x]
     | FStar_Pervasives_Native.None  -> []
   
@@ -161,8 +161,8 @@ let (uu___is_FriendImplementation : dependence -> Prims.bool) =
 let (__proj__FriendImplementation__item___0 : dependence -> module_name) =
   fun projectee  -> match projectee with | FriendImplementation _0 -> _0 
 let (dep_to_string : dependence -> Prims.string) =
-  fun uu___111_336  ->
-    match uu___111_336 with
+  fun uu___112_336  ->
+    match uu___112_336 with
     | UseInterface f -> Prims.strcat "UseInterface " f
     | PreferInterface f -> Prims.strcat "PreferInterface " f
     | UseImplementation f -> Prims.strcat "UseImplementation " f
@@ -223,8 +223,8 @@ let (empty_deps : deps) =
     (uu____569, uu____570, [], [])  in
   Mk uu____556 
 let (module_name_of_dep : dependence -> module_name) =
-  fun uu___112_587  ->
-    match uu___112_587 with
+  fun uu___113_587  ->
+    match uu___113_587 with
     | UseInterface m -> m
     | PreferInterface m -> m
     | UseImplementation m -> m
@@ -809,8 +809,8 @@ let (collect_one :
       let auto_open = hard_coded_dependencies filename  in
       FStar_List.iter record_open_module_or_namespace auto_open;
       (let num_of_toplevelmods = FStar_Util.mk_ref (Prims.parse_int "0")  in
-       let rec collect_module uu___113_2455 =
-         match uu___113_2455 with
+       let rec collect_module uu___114_2455 =
+         match uu___114_2455 with
          | FStar_Parser_AST.Module (lid,decls) ->
              (check_module_declaration_against_filename lid filename;
               if
@@ -842,8 +842,8 @@ let (collect_one :
               collect_decl x.FStar_Parser_AST.d;
               FStar_List.iter collect_term x.FStar_Parser_AST.attrs) decls
        
-       and collect_decl uu___114_2486 =
-         match uu___114_2486 with
+       and collect_decl uu___115_2486 =
+         match uu___115_2486 with
          | FStar_Parser_AST.Include lid -> record_open false lid
          | FStar_Parser_AST.Open lid -> record_open false lid
          | FStar_Parser_AST.Friend lid ->
@@ -918,8 +918,8 @@ let (collect_one :
                  FStar_Errors.raise_error uu____2749 uu____2756
                else ()))
        
-       and collect_tycon uu___115_2758 =
-         match uu___115_2758 with
+       and collect_tycon uu___116_2758 =
+         match uu___116_2758 with
          | FStar_Parser_AST.TyconAbstract (uu____2759,binders,k) ->
              (collect_binders binders; FStar_Util.iter_opt k collect_term)
          | FStar_Parser_AST.TyconAbbrev (uu____2771,binders,k,t) ->
@@ -942,8 +942,8 @@ let (collect_one :
                    | (uu____2919,t,uu____2921,uu____2922) ->
                        FStar_Util.iter_opt t collect_term) identterms)
        
-       and collect_effect_decl uu___116_2931 =
-         match uu___116_2931 with
+       and collect_effect_decl uu___117_2931 =
+         match uu___117_2931 with
          | FStar_Parser_AST.DefineEffect (uu____2932,binders,t,decls) ->
              (collect_binders binders; collect_term t; collect_decls decls)
          | FStar_Parser_AST.RedefineEffect (uu____2946,binders,t) ->
@@ -951,8 +951,8 @@ let (collect_one :
        
        and collect_binders binders = FStar_List.iter collect_binder binders
        
-       and collect_binder uu___117_2957 =
-         match uu___117_2957 with
+       and collect_binder uu___118_2957 =
+         match uu___118_2957 with
          | { FStar_Parser_AST.b = FStar_Parser_AST.Annotated (uu____2958,t);
              FStar_Parser_AST.brange = uu____2960;
              FStar_Parser_AST.blevel = uu____2961;
@@ -969,8 +969,8 @@ let (collect_one :
        
        and collect_term t = collect_term' t.FStar_Parser_AST.tm
        
-       and collect_constant uu___118_2980 =
-         match uu___118_2980 with
+       and collect_constant uu___119_2980 =
+         match uu___119_2980 with
          | FStar_Const.Const_int
              (uu____2981,FStar_Pervasives_Native.Some (signedness,width)) ->
              let u =
@@ -993,8 +993,8 @@ let (collect_one :
              add_dep deps (PreferInterface "fstar.float")
          | uu____3100 -> ()
        
-       and collect_term' uu___119_3101 =
-         match uu___119_3101 with
+       and collect_term' uu___120_3101 =
+         match uu___120_3101 with
          | FStar_Parser_AST.Wild  -> ()
          | FStar_Parser_AST.Const c -> collect_constant c
          | FStar_Parser_AST.Op (s,ts) ->
@@ -1098,8 +1098,8 @@ let (collect_one :
        
        and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat
        
-       and collect_pattern' uu___120_3445 =
-         match uu___120_3445 with
+       and collect_pattern' uu___121_3445 =
+         match uu___121_3445 with
          | FStar_Parser_AST.PatWild uu____3446 -> ()
          | FStar_Parser_AST.PatOp uu____3449 -> ()
          | FStar_Parser_AST.PatConst uu____3450 -> ()
@@ -1325,8 +1325,8 @@ let (collect :
                                (let uu____4428 =
                                   let uu____4431 =
                                     FStar_List.filter
-                                      (fun uu___121_4436  ->
-                                         match uu___121_4436 with
+                                      (fun uu___122_4436  ->
+                                         match uu___122_4436 with
                                          | FriendImplementation uu____4437 ->
                                              true
                                          | uu____4438 -> false) direct_deps
@@ -1456,8 +1456,8 @@ let (hash_dependences :
                    let uu____4780 = lowercase_module_name fn2  in
                    FStar_String.compare uu____4779 uu____4780) binary_deps
              in
-          let rec hash_deps out uu___122_4807 =
-            match uu___122_4807 with
+          let rec hash_deps out uu___123_4807 =
+            match uu___123_4807 with
             | [] ->
                 FStar_Pervasives_Native.Some
                   (FStar_List.append (("source", source_hash) ::
@@ -1608,8 +1608,8 @@ let (print_full : deps -> unit) =
                    in
                 FStar_ST.op_Colon_Equals order uu____5154
              in
-          let rec aux uu___123_5257 =
-            match uu___123_5257 with
+          let rec aux uu___124_5257 =
+            match uu___124_5257 with
             | [] -> ()
             | lc_module_name::modules_to_extract ->
                 let visit_file file_opt =
