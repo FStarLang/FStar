@@ -544,3 +544,9 @@ let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_
  *)
 let specialize (#a:Type) (f:a) (l:list string) :unit -> Tac unit
   = fun () -> solve_then (fun () -> exact (quote f)) (fun () -> norm [delta_only l; iota; zeta])
+
+let label (l:string) =
+    match goals () with
+    | [] -> fail "label: no goals"
+    | h::t ->
+        set_goals (set_label l h :: t)
