@@ -568,3 +568,10 @@ let tlabel (l:string) =
     | [] -> fail "tlabel: no goals"
     | h::t ->
         set_goals (set_label l h :: t)
+
+let tlabel' (l:string) =
+    match goals () with
+    | [] -> fail "tlabel': no goals"
+    | h::t ->
+        let h = set_label (l ^ get_label h) h in
+        set_goals (h :: t)
