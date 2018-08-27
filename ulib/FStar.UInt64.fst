@@ -167,6 +167,7 @@ let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 inline_for_extraction
 let minus (a:t) = add_mod (lognot a) (uint_to_t 1)
 
+inline_for_extraction
 let n_minus_one = UInt32.uint_to_t (n - 1)
 
 #set-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1"
