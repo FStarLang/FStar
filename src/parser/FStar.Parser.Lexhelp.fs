@@ -169,7 +169,6 @@ let keywords =
     ALWAYS, "logic"      ,LOGIC;
     ALWAYS, "match"      ,MATCH;
     ALWAYS, "module"     ,MODULE;
-    ALWAYS, "mutable"    ,MUTABLE;
     ALWAYS, "new"        ,NEW;
     ALWAYS, "new_effect" ,NEW_EFFECT;
     ALWAYS, "noextract",  NOEXTRACT;

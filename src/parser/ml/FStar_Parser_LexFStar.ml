@@ -73,7 +73,6 @@ let () =
   Hashtbl.add keywords "logic"         LOGIC       ;
   Hashtbl.add keywords "match"         MATCH       ;
   Hashtbl.add keywords "module"        MODULE      ;
-  Hashtbl.add keywords "mutable"       MUTABLE     ;
   Hashtbl.add keywords "new"           NEW         ;
   Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
   Hashtbl.add keywords "noextract"     NOEXTRACT   ;

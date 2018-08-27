@@ -32,11 +32,9 @@ open FStar.Const
  *)
 type level = | Un | Expr | Type_level | Kind | Formula
 
-// let rec mutable makes no sense, so just don't do it
 type let_qualifier =
   | NoLetQualifier
   | Rec
-  | Mutable
 
 type quote_kind =
   | Static
@@ -519,7 +517,6 @@ let string_of_fsdoc (comment,keywords) =
 let string_of_let_qualifier = function
   | NoLetQualifier -> ""
   | Rec -> "rec"
-  | Mutable -> "mutable"
 let to_string_l sep f l =
   String.concat sep (List.map f l)
 let imp_to_string = function

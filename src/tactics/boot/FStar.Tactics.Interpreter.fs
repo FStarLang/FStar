@@ -122,6 +122,12 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktot1' 0 "is_guard"      is_guard E.e_goal e_bool
                                 is_guard E.e_goal_nbe NBET.e_bool;
 
+      mktot1' 0 "get_label"     get_label E.e_goal e_string
+                                get_label E.e_goal_nbe NBET.e_string;
+
+      mktot2' 0 "set_label"     set_label e_string E.e_goal E.e_goal
+                                set_label NBET.e_string E.e_goal_nbe E.e_goal_nbe;
+
       mktot2 0 "push_binder"   (fun env b -> Env.push_binders env [b]) RE.e_env RE.e_binder RE.e_env
                                (fun env b -> Env.push_binders env [b]) NRE.e_env NRE.e_binder NRE.e_env;
 
@@ -697,7 +703,12 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
                  in
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (Print.term_to_string (goal_type g));
-                 let gt' = TcUtil.label ("Could not prove goal #" ^ string_of_int n) goal.pos phi in
+                 let label =
+                    if get_label g = ""
+                    then "Could not prove goal #" ^ string_of_int n
+                    else "Could not prove goal #" ^ string_of_int n ^ " (" ^ get_label g ^ ")"
+                 in
+                 let gt' = TcUtil.label label  goal.pos phi in
                  (n+1, (goal_env g, gt', g.opts)::gs)) s gs in
     let (_, gs) = s in
     // Use default opts for main goal

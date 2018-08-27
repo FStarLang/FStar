@@ -171,6 +171,15 @@ let rec mapAll (t : unit -> Tac unit) : Tac unit =
     | [] -> ()
     | _::_ -> let _ = divide 1 t (fun () -> mapAll t) in ()
 
+let mapAllSMT (t : unit -> Tac unit) : Tac unit =
+    let gs, sgs = goals (), smt_goals () in
+    set_goals sgs;
+    set_smt_goals [];
+    mapAll t;
+    let gs', sgs' = goals (), smt_goals () in
+    set_goals gs;
+    set_smt_goals (gs'@sgs')
+
 (** Runs tactic [t1] on the current goal, and then tactic [t2] on *each*
 subgoal produced by [t1]. Each invocation of [t2] runs on a proofstate
 with a single goal (they're "focused"). *)
@@ -544,3 +553,9 @@ let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_
  *)
 let specialize (#a:Type) (f:a) (l:list string) :unit -> Tac unit
   = fun () -> solve_then (fun () -> exact (quote f)) (fun () -> norm [delta_only l; iota; zeta])
+
+let label (l:string) =
+    match goals () with
+    | [] -> fail "label: no goals"
+    | h::t ->
+        set_goals (set_label l h :: t)
