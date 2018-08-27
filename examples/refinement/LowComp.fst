@@ -151,6 +151,10 @@ let l_eq #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp a wp1 c1)
          (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2 : lcomp_wp a wp2 c2) = 
     lwp_eq (as_lwp c1) (as_lwp c2)
 
+assume val l_eq_axiom : (#a:Type) -> (#wp1:hwp_mon a) -> (#c1:comp_wp a wp1) -> (lc1: lcomp_wp a wp1 c1) ->
+                        (#wp2:hwp_mon a) -> (#c2:comp_wp a wp2) -> (lc2 : lcomp_wp a wp2 c2) -> 
+                        Lemma (requires (lwp_eq (as_lwp c1) (as_lwp c2))) (ensures (lc1 === lc2))
+
 // Lifting of high programs to low programs
 let lift (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c = 
     fun (b1, b2) -> 
@@ -370,10 +374,6 @@ let lread' i = fun (b1, b2) ->
 
 (** ** Equality properties *)
 
-let subsumes #a (wp1 : hwp a) (wp2 : hwp a) = 
-  forall s0 post. wp2 s0 post ==> wp1 s0 post
-
-let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : comp_wp a wp2 = c 
 
 let lcast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) (l : lcomp_wp a wp1 c) : lcomp_wp a wp2 c = l
 
@@ -440,13 +440,14 @@ let lift_bind #a #b (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
                        #wp #(cast wp (bind_elab c1 c2)) (lcast wp (bind_elab c1 c2)
                        (lbind (lift wp1 c1) (fun x -> (lift (wp2 x) (c2 x))))))) = ()
 
-let lift_for (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp i)) :
+let lift_for (wp1 : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp1 i))
+  (wp : hwp_mon unit) :
     Lemma 
-      (requires (subsumes (for_wp wp lo hi) wp))
-      (ensures (l_eq #a
+      (requires (subsumes (for_wp wp1 lo hi) wp))
+      (ensures (l_eq #unit
                      #wp #(cast wp (for_elab lo hi f)) (lift wp (cast wp (for_elab lo hi f))) 
-                     #wp #(cast wp (ite_elab b c1 c2)) (lcast wp (ite_elab b c1 c2)
-                         (lite b (lift wp1 c1) (lift wp2 c2))))) = ()
+                     #wp #(cast wp (for_elab lo hi f)) (lcast wp (for_elab lo hi f) 
+                     (lfor lo hi (fun i -> lift (wp1 i) (f i)))))) = ()
 
 let lift_ite #a (b : bool) (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
   (wp2 : hwp_mon a) (c2 : comp_wp a wp2) 

@@ -155,6 +155,39 @@ let hwrite' (i:nat) (v:mint) : comp_wp unit (write_wp i v) =
 let put_action = HIGH?.put
 let get_action = HIGH?.get
 
+let ite_elab (#a:Type) (b : bool) (#wp1 : hwp_mon a) (c1:comp_wp a wp1)
+    (#wp2 : hwp_mon a) (c2:comp_wp a wp2) : comp_wp a (ite_wp b wp1 wp2) =
+    (fun s0 -> if b then c1 s0 else c2 s0)
+
+let subsumes #a (wp1 : hwp a) (wp2 : hwp a) = forall s0 post. wp2 s0 post ==> wp1 s0 post
+
+let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : comp_wp a wp2 = c 
+
+assume val return_inv (#a:Type) (#wp : hwp_mon a) (c : comp_wp a wp) (x:a): 
+  Lemma (requires (c === return_elab x)) (ensures (subsumes (return_wp x) wp))
+
+assume val write_inv (#wp : hwp_mon unit) (c : comp_wp unit wp) (i:nat) (v:mint) : 
+  Lemma (requires (c === hwrite' i v)) (ensures (subsumes (write_wp i v) wp))
+
+assume val read_inv (#wp : hwp_mon mint) (c : comp_wp mint wp) (i:nat) : 
+  Lemma (requires (c === hread' i)) (ensures (subsumes (read_wp i) wp))
+
+assume val bind_inv (#a:Type) (#b:Type) (#f_w : hwp_mon a) (f:comp_wp a f_w) 
+                    (#g_w: a -> hwp_mon b) (g:(x:a) -> comp_wp b (g_w x)) (#wp : hwp_mon b) (c:comp_wp b wp) :
+  Lemma (requires (c === bind_elab f g))
+        (ensures (subsumes (bind_wp f_w g_w) wp))
+
+assume val ite_inv (#a:Type) (b:bool) (#f_w:hwp_mon a) (f:comp_wp a f_w) 
+       (#g_w:hwp_mon a) (g:comp_wp a g_w) (#wp:hwp_mon a) (c:comp_wp a wp) :
+   Lemma (requires (c === ite_elab b f g))
+         (ensures (subsumes (ite_wp b f_w g_w) wp))
+
+assume val for_inv (#fwp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (fwp i))
+           (#wp:hwp_mon unit) (c:comp_wp unit wp) :
+   Lemma (requires (c === for_elab lo hi f))
+         (ensures (subsumes (for_wp fwp lo hi) wp))
+
+
 // Commutation
 let h_eq (#a:Type) (wp1:hwp_mon a) (wp2:hwp_mon a) (c1:comp_wp a wp1) (c2:comp_wp a wp2) =
     (forall s0. wp1 s0 (fun _ -> True) <==> wp2 s0 (fun _ -> True)) /\
@@ -183,9 +216,6 @@ let reify_bind_commutes
        bind_elab (reify (c1 ()))
                  (fun x -> reify (c2 x ())) s0
 
-let ite_elab (#a:Type) (b : bool) (#wp1 : hwp_mon a) (c1:comp_wp a wp1)
-  (#wp2 : hwp_mon a) (c2:comp_wp a wp2) : comp_wp a (ite_wp b wp1 wp2) =
-  (fun s0 -> if b then c1 s0 else c2 s0)
 
 let ite_reif (#a:Type) (b : bool) (#wp1 : hwp_mon a) ($c1:h_thunk a wp1)
   (#wp2 : hwp_mon a) ($c2:h_thunk a wp2) : comp_wp a (ite_wp b wp1 wp2) =
