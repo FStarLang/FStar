@@ -181,12 +181,10 @@ let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). p x)) (phi:Type0) :
 
 let sk_binder (b:binder) =
   focus (fun () ->
-    dump ("trying : " ^ term_to_string (quote b));
     let _ =
     trytac (fun () ->
       apply_lemma (`(sklem0 (`#(binder_to_term b))));
       if ngoals () <> 1 then fail "no";
-      dump "got one";
       let _ = forall_intro () in
       let _ = implies_intro () in
       ()
