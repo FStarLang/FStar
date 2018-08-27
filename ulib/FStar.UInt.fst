@@ -823,7 +823,7 @@ val lemma_msb_pow2: #n:pos -> a:uint_t n ->
   Lemma (msb a <==> a >= pow2 (n-1))
 let lemma_msb_pow2 #n a = if n = 1 then () else from_vec_propriety (to_vec a) 1
 
-#set-options "--z3rlimit 10 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1"
 val lemma_minus_zero: #n:pos -> a:uint_t n ->
   Lemma (minus a = 0 ==> a = 0)
 let lemma_minus_zero #n a =

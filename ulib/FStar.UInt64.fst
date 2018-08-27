@@ -15,7 +15,7 @@ open FStar.Mul
  * - some functions (e.g., add_underspec, etc.) are only defined here, not on signed integers
  *)
 
-abstract type t =
+abstract type t :Type0 =
   | Mk: v:uint_t n -> t
 
 abstract
@@ -167,7 +167,9 @@ let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 inline_for_extraction
 let minus (a:t) = add_mod (lognot a) (uint_to_t 1)
 
-#set-options "--z3rlimit 10 --initial_fuel 1 --max_fuel 1"
+let n_minus_one = UInt32.uint_to_t (n - 1)
+
+#set-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1"
 // With inspiration from https://git.zx2c4.com/WireGuard/commit/src/crypto/curve25519-hacl64.h?id=2e60bb395c1f589a398ec606d611132ef9ef764b
 let eq_mask (a:t) (b:t)
   : Pure t
@@ -177,15 +179,15 @@ let eq_mask (a:t) (b:t)
   = let x = logxor a b in
     let minus_x = minus x in
     let x_or_minus_x = logor x minus_x in
-    let xnx_63 = shift_right x_or_minus_x (UInt32.uint_to_t 63) in
-    let c = sub_mod xnx_63 (uint_to_t 1) in
+    let xnx = shift_right x_or_minus_x n_minus_one in
+    let c = sub_mod xnx (uint_to_t 1) in
     if a = b then
     begin
       logxor_self (v a);
       lognot_lemma_1 #n;
       logor_lemma_1 (v x);
       assert (v x = 0 /\ v minus_x = 0 /\
-              v x_or_minus_x = 0 /\ v xnx_63 = 0);
+              v x_or_minus_x = 0 /\ v xnx = 0);
       assert (v c = ones n)
     end
     else
@@ -218,8 +220,8 @@ let gte_mask (a:t) (b:t)
     let x_sub_y_xor_y = logxor x_sub_y y in
     let q = logor x_xor_y x_sub_y_xor_y in
     let x_xor_q = logxor x q in
-    let x_xor_q_63 = shift_right x_xor_q 63ul in
-    let c = sub_mod x_xor_q_63 (uint_to_t 1) in
+    let x_xor_q_ = shift_right x_xor_q n_minus_one in
+    let c = sub_mod x_xor_q_ (uint_to_t 1) in
     lemma_sub_msbs x y;
     lemma_msb_gte (v x) (v y);
     lemma_msb_gte (v y) (v x);
