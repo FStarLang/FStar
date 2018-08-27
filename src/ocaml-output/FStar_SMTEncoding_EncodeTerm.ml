@@ -802,7 +802,7 @@ and (encode_arith_term :
                in
             let add1 = mk_l FStar_SMTEncoding_Util.mkAdd binary  in
             let sub1 = mk_l FStar_SMTEncoding_Util.mkSub binary  in
-            let minus = mk_l FStar_SMTEncoding_Util.mkMinus unary  in
+            let minus1 = mk_l FStar_SMTEncoding_Util.mkMinus unary  in
             let mul1 = mk_nl "_mul" FStar_SMTEncoding_Util.mkMul  in
             let div1 = mk_nl "_div" FStar_SMTEncoding_Util.mkDiv  in
             let modulus = mk_nl "_mod" FStar_SMTEncoding_Util.mkMod  in
@@ -812,7 +812,7 @@ and (encode_arith_term :
               (FStar_Parser_Const.op_Multiply, mul1);
               (FStar_Parser_Const.op_Division, div1);
               (FStar_Parser_Const.op_Modulus, modulus);
-              (FStar_Parser_Const.op_Minus, minus)]  in
+              (FStar_Parser_Const.op_Minus, minus1)]  in
             let uu____2585 =
               let uu____2595 =
                 FStar_List.tryFind

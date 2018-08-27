@@ -9922,7 +9922,7 @@ let rec (universe_of_aux :
                                  env2 g
                                 in
                              FStar_All.pipe_right uu____24068
-                               (fun a236  -> ()));
+                               (fun a235  -> ()));
                             (t, args1)))))
              in
           let uu____24081 = type_of_head true hd1 args  in

@@ -767,6 +767,24 @@ let built_in_primitive_steps : BU.psmap<primitive_step> =
                  NBETerm.unary_op
                    NBETerm.arg_as_bounded_int
                    (fun (int_to_t, x) -> NBETerm.int_as_bounded int_to_t (Z.logand_big_int (Z.lognot_big_int x) (mask m)));
+              PC.p2l ["FStar"; m; "shift_left"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.logand_big_int (Z.shift_left_big_int x y) (mask m))),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.logand_big_int (Z.shift_left_big_int x y) (mask m)));
+              PC.p2l ["FStar"; m; "shift_right"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.shift_right_big_int x y)),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.shift_right_big_int x y));
             ])
         in
        add_sub_mul_v
