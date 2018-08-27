@@ -3,4 +3,4 @@ include ../Makefile.include
 
 all: uall
 
-uall: HSL.uver
+uall: HSL.uver ImmutableBuffer.uver
