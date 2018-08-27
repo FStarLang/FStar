@@ -400,6 +400,23 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let (lbs, _) ->
           let attrs = se.sigattrs in
           let quals = se.sigquals in
+          let post_tau =
+              BU.find_map se.sigattrs
+                          (fun attr ->
+                              let head, args = U.head_and_args attr in
+                              match (SS.compress head).n, args with
+                              | Tm_fvar fv, [(tau, None)] when S.fv_eq_lid fv PC.postprocess_extr_with -> Some tau
+                              | _ -> None)
+          in
+          let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
+              let lbdef = Env.postprocess g.tcenv tau lb.lbtyp lb.lbdef in
+              { lb with lbdef = lbdef }
+          in
+          let lbs = (fst lbs,
+                      (match post_tau with
+                       | Some tau -> List.map (postprocess_lb tau) (snd lbs)
+                       | None -> (snd lbs)))
+          in
           let ml_let, _, _ =
             Term.term_as_mlexpr
                     g

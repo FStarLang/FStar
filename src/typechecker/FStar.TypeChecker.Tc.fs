@@ -1480,10 +1480,29 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       else e
     in
 
+    let post_tau =
+        BU.find_map se.sigattrs
+                    (fun attr ->
+                        let head, args = U.head_and_args attr in
+                        match (SS.compress head).n, args with
+                        | Tm_fvar fv, [(tau, None)] when S.fv_eq_lid fv PC.postprocess_with -> Some tau
+                        | _ -> None)
+    in
+    let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
+        let lbdef = env.postprocess env tau lb.lbtyp lb.lbdef in
+        { lb with lbdef = lbdef }
+    in
     let se, lbs = match tc_maybe_toplevel_term env' e with
       | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
+
+        // Postprocess the letbindings with the tactic, if any
+        let lbs = (fst lbs,
+                    (match post_tau with
+                     | Some tau -> List.map (postprocess_lb tau) (snd lbs)
+                     | None -> (snd lbs)))
+        in
 
         //propagate the MaskedEffect tag to the qualifiers
         let quals = match e.n with
