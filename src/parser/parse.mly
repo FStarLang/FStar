@@ -59,7 +59,7 @@ let logic_qualifier_deprecation_warning =
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
-%token FRIEND OPEN REC MUTABLE THEN TRUE TRY TYPE CLASS EFFECT VAL
+%token FRIEND OPEN REC THEN TRUE TRY TYPE CLASS EFFECT VAL
 %token INCLUDE
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
@@ -342,7 +342,6 @@ maybeFocus:
 
 letqualifier:
   | REC         { Rec }
-  | MUTABLE     { Mutable }
   |             { NoLetQualifier }
 
  (* Remove with stratify *)

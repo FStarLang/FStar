@@ -930,9 +930,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               term_as_mlexpr g t
           end
 
-        | Tm_meta (t, Meta_desugared Mutable_alloc) ->
-            raise_err (Error_NoLetMutable, "let-mutable no longer supported")
-
         | Tm_meta(t, Meta_monadic (m, _)) ->
           let t = SS.compress t in
           begin match t.n with
