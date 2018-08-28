@@ -1050,13 +1050,9 @@ let list_of_option = function
     | None -> []
     | Some x -> [x]
 
-(* Checks that all of the elements of l1 appear in l2 in the exact
- * same amount. Returns None when everything is OK, and Some (e, n1, n2)
- * when `e` occurs `n1` times in `l1` but `n2` (<> n1) times in `l2`. *)
-let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
-    (* If there are no expected errors, we don't check anything *)
-    match l1 with | [] -> None | _ ->
-
+(* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2) *)
+(* Precondition: lists are sorted *)
+let check_multi_contained (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)> =
     let rec collect (l : list<'a>) : list<('a * int)> =
         match l with
         | [] -> []
@@ -1070,7 +1066,6 @@ let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
             end
     in
     let summ l =
-        let l = List.sortWith (fun x y -> x - y) l in
         collect l
     in
     let l1 = summ l1 in
@@ -1552,15 +1547,26 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
         List.iter Errors.print_issue errs;
         BU.print_string ">>]\n"
     end;
-    begin match errs, check_multi_contained errnos (List.concatMap (fun i -> list_of_option i.issue_number) errs) with
-    | [], _ ->
+    let sort = List.sortWith (fun x y -> x - y) in
+    let errnos = sort errnos in
+    let actual = sort (List.concatMap (fun i -> list_of_option i.issue_number) errs) in
+    begin match errs with
+    | [] ->
         List.iter Errors.print_issue errs;
         Errors.log_issue se.sigrng (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded")
-    | _, Some (e, n1, n2) ->
-        List.iter Errors.print_issue errs;
-        Errors.log_issue se.sigrng (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
-                                                (string_of_int e) (string_of_int n1) (string_of_int n2))
-    | _, None -> ()
+    | _ ->
+        if errnos <> [] && errnos <> actual then
+            let (e, n1, n2) = match check_multi_contained errnos actual with
+                              | Some r -> r
+                              | None -> (-1, -1, -1) // should be impossible
+            in
+            List.iter Errors.print_issue errs;
+            Errors.log_issue se.sigrng (Errors.Error_DidNotFail,
+                    BU.format5 "This top-level definition was expected to raise error codes %s, but it raised %s. Error #%s was raised %s times, instead of %s."
+                                    (FStar.Common.string_of_list string_of_int errnos)
+                                    (FStar.Common.string_of_list string_of_int actual)
+                                    (string_of_int e) (string_of_int n2) (string_of_int n1))
+        else ()
     end;
     [], [], env
 
