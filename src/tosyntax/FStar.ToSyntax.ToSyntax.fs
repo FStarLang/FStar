@@ -329,7 +329,6 @@ let rec gather_pattern_bound_vars_maybe_top fail_on_patconst acc p =
   match p.pat with
   | PatWild _
   | PatName _
-  | PatTvar _
   | PatOp _ -> acc
   | PatConst _ ->
     if fail_on_patconst
@@ -337,6 +336,7 @@ let rec gather_pattern_bound_vars_maybe_top fail_on_patconst acc p =
     else acc
 
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
+  | PatTvar (x, _)
   | PatVar (x, _) -> set_add x acc
   | PatList pats
   | PatTuple  (pats, _)
