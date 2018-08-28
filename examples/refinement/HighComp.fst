@@ -163,6 +163,8 @@ let subsumes #a (wp1 : hwp a) (wp2 : hwp a) = forall s0 post. wp2 s0 post ==> wp
 
 let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : comp_wp a wp2 = c 
 
+let cast_eq #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : Lemma (c === cast wp2 c) = ()
+
 assume val return_inv (#a:Type) (#wp : hwp_mon a) (c : comp_wp a wp) (x:a): 
   Lemma (requires (c === return_elab x)) (ensures (subsumes (return_wp x) wp))
 
@@ -179,14 +181,13 @@ assume val bind_inv (#a:Type) (#b:Type) (#f_w : hwp_mon a) (f:comp_wp a f_w)
 
 assume val ite_inv (#a:Type) (b:bool) (#f_w:hwp_mon a) (f:comp_wp a f_w) 
        (#g_w:hwp_mon a) (g:comp_wp a g_w) (#wp:hwp_mon a) (c:comp_wp a wp) :
-   Lemma (requires (c === ite_elab b f g))
-         (ensures (subsumes (ite_wp b f_w g_w) wp))
+  Lemma (requires (c === ite_elab b f g))
+        (ensures (subsumes (ite_wp b f_w g_w) wp))
 
 assume val for_inv (#fwp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (fwp i))
            (#wp:hwp_mon unit) (c:comp_wp unit wp) :
-   Lemma (requires (c === for_elab lo hi f))
-         (ensures (subsumes (for_wp fwp lo hi) wp))
-
+  Lemma (requires (c === for_elab lo hi f))
+        (ensures (subsumes (for_wp fwp lo hi) wp))
 
 // Commutation
 let h_eq (#a:Type) (wp1:hwp_mon a) (wp2:hwp_mon a) (c1:comp_wp a wp1) (c2:comp_wp a wp2) =

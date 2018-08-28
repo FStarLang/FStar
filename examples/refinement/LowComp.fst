@@ -426,55 +426,87 @@ let morph_return #a (wp : hwp_mon a) (c : comp_wp a wp) (x : a) :
   ()
 
 
-let morph_return #a (wp : hwp_mon a) (x : a) :
-    Lemma (requires (subsumes (return_elab x) wp) 
-          (ensures (l_eq #a
-                         #wp #(cast wp (return_elab x)) (morph wp (cast wp (return_elab x)))
-                         #wp #(cast wp (return_elab x)) (lreturn x))) = ()
+let morph_read (wp : hwp_mon mint) (c : comp_wp mint wp) (i : nat{i < 2}) :
+  Lemma 
+    (requires (c === hread' i))
+    (ensures (morph wp c ===  lread' i)) = 
+  let p = read_inv c i in 
+  assert (subsumes (read_wp i) wp);
+  assert (l_eq #mint
+               #wp #(cast wp (hread' i)) (morph wp (cast wp (hread' i)))
+               #wp #(cast wp (hread' i)) (lread' i));
+  let p' = l_eq_axiom #mint
+                      #wp #(cast wp (hread' i)) (morph wp c)
+                      #wp #(cast wp (hread' i)) (lread' i) in
+  ()
 
-let morph_read (wp : hwp_mon mint) (i : nat{i < 2}) :
-  Lemma (requires (subsumes (read_wp i) wp)) 
-        (ensures (l_eq #mint
-                       #wp #(cast wp (hread' i)) (morph wp (cast wp (hread' i)))
-                       #wp #(cast wp (hread' i)) (lread' i))) = ()
 
-let morph_write (wp : hwp_mon unit) (i : nat{i < 2}) (v : mint) :
-  Lemma (requires (subsumes (write_wp i v) wp))
-        (ensures (l_eq #unit
-                        #wp #(cast wp (hwrite' i v)) (morph wp (cast wp (hwrite' i v)))
-                        #wp #(cast wp (hwrite' i v)) (lwrite' i v))) = ()
-
+let morph_write (wp : hwp_mon unit) (c : comp_wp unit wp) (i : nat{i < 2}) (v : mint) :
+  Lemma 
+    (requires (c === hwrite' i v))
+    (ensures (morph wp c ===  lwrite' i v)) = 
+  let p = write_inv c i in 
+  assert (subsumes (write_wp i v) wp);
+  assert (l_eq #unit
+               #wp #(cast wp (hwrite' i v)) (morph wp (cast wp (hwrite' i v)))
+               #wp #(cast wp (hwrite' i v)) (lwrite' i v));
+  let p' = l_eq_axiom #unit
+                      #wp #(cast wp (hwrite' i v)) (morph wp c)
+                      #wp #(cast wp (hwrite' i v)) (lwrite' i v) in
+  ()
 
 let morph_bind #a #b (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
-  (wp2 : a -> hwp_mon b) (c2 : (x:a) -> comp_wp b (wp2 x)) 
-  (wp : hwp_mon b) :
-      Lemma 
-        (requires (subsumes (bind_wp wp1 wp2) wp))
-        (ensures (l_eq #b 
-                       #wp #(cast wp (bind_elab c1 c2)) (morph wp (cast wp (bind_elab c1 c2))) 
-                       #wp #(cast wp (bind_elab c1 c2)) (lcast wp (bind_elab c1 c2)
-                       (lbind (morph wp1 c1) (fun x -> (morph (wp2 x) (c2 x))))))) = ()
+    (wp2 : a -> hwp_mon b) (c2 : (x:a) -> comp_wp b (wp2 x)) 
+    (wp : hwp_mon b) (c : comp_wp b wp) :
+  Lemma (requires (c === bind_elab c1 c2))
+        (ensures (morph wp c === lbind (morph wp1 c1) (fun x -> (morph (wp2 x) (c2 x))))) = 
+  let p = bind_inv c1 c2 c in 
+  assert (subsumes (bind_wp wp1 wp2) wp);
+  assert (l_eq #b 
+               #wp #(cast wp (bind_elab c1 c2)) (morph wp (cast wp (bind_elab c1 c2))) 
+               #wp #(cast wp (bind_elab c1 c2)) (lcast wp (bind_elab c1 c2)
+               (lbind (morph wp1 c1) (fun x -> (morph (wp2 x) (c2 x))))));
+  let p' = l_eq_axiom #b 
+                      #wp #(cast wp (bind_elab c1 c2)) (morph wp (cast wp (bind_elab c1 c2))) 
+                      #wp #(cast wp (bind_elab c1 c2)) (lcast wp (bind_elab c1 c2)
+                      (lbind (morph wp1 c1) (fun x -> (morph (wp2 x) (c2 x))))) in
+  ()   
+
 
 let morph_for (wp1 : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp1 i))
-  (wp : hwp_mon unit) :
-    Lemma 
-      (requires (subsumes (for_wp wp1 lo hi) wp))
-      (ensures (l_eq #unit
-                     #wp #(cast wp (for_elab lo hi f)) (morph wp (cast wp (for_elab lo hi f))) 
-                     #wp #(cast wp (for_elab lo hi f)) (lcast wp (for_elab lo hi f) 
-                     (lfor lo hi (fun i -> morph (wp1 i) (f i)))))) = ()
+    (wp : hwp_mon unit) (c : comp_wp unit wp) :
+  Lemma (requires (c === for_elab lo hi f)) 
+        (ensures (morph wp c === lfor lo hi (fun i -> morph (wp1 i) (f i)))) = 
+  let p = for_inv lo hi f c in 
+  assert (subsumes (for_wp wp1 lo hi) wp);
+  assert (l_eq #unit
+               #wp #(cast wp (for_elab lo hi f)) (morph wp (cast wp (for_elab lo hi f))) 
+               #wp #(cast wp (for_elab lo hi f)) (lcast wp (for_elab lo hi f) 
+               (lfor lo hi (fun i -> morph (wp1 i) (f i))))); 
+  let p' = l_eq_axiom #unit
+                      #wp #(cast wp (for_elab lo hi f)) (morph wp (cast wp (for_elab lo hi f))) 
+                      #wp #(cast wp (for_elab lo hi f)) (lcast wp (for_elab lo hi f) 
+                      (lfor lo hi (fun i -> morph (wp1 i) (f i)))) in 
+
+  ()
 
 let morph_ite #a (b : bool) (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
-  (wp2 : hwp_mon a) (c2 : comp_wp a wp2) 
-  (wp : hwp_mon a) :
-      Lemma 
-        (requires (subsumes (ite_wp b wp1 wp2) wp))
-        (ensures (l_eq #a
-                       #wp #(cast wp (ite_elab b c1 c2)) (morph wp (cast wp (ite_elab b c1 c2))) 
-                       #wp #(cast wp (ite_elab b c1 c2)) (lcast wp (ite_elab b c1 c2)
-                           (lite b (morph wp1 c1) (morph wp2 c2))))) = ()
-
-
+    (wp2 : hwp_mon a) (c2 : comp_wp a wp2) 
+    (wp : hwp_mon a) (c : comp_wp a wp):
+  Lemma (requires (c === ite_elab b c1 c2))
+        (ensures (morph wp c === lite b (morph wp1 c1) (morph wp2 c2))) = 
+  let p = ite_inv b c1 c2 c in 
+  assert (subsumes (ite_wp b wp1 wp2) wp);
+  assert (l_eq #a
+               #wp #(cast wp (ite_elab b c1 c2)) (morph wp (cast wp (ite_elab b c1 c2))) 
+               #wp #(cast wp (ite_elab b c1 c2)) (lcast wp (ite_elab b c1 c2)
+               (lite b (morph wp1 c1) (morph wp2 c2)))); 
+  let p' = l_eq_axiom #a
+                      #wp #(cast wp (ite_elab b c1 c2)) (morph wp (cast wp (ite_elab b c1 c2))) 
+                      #wp #(cast wp (ite_elab b c1 c2)) (lcast wp (ite_elab b c1 c2)
+                      (lite b (morph wp1 c1) (morph wp2 c2))) in 
+  ()
+  
 let lcomp_respects_h_eq
          (a : Type)
          (wp1 : hwp_mon a)
