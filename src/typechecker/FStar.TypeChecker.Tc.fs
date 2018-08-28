@@ -1741,7 +1741,11 @@ let tc_decls env ses =
         List.fold_left accum_exports_hidden (exports, hidden) ses'
     in
 
-    let ses' = List.map (fun s -> { s with sigattrs = se.sigattrs }) ses' in
+    // GM: Aug 28 2018, pretty sure this is unneded as the only sigelt that can
+    // be present in ses' is the typechecked se (or none). I'm taking it out
+    // so I can make `postprocess_with` remove itself during typechecking
+    // (otherwise, it would run twice with extracted interfaces)
+    (* let ses' = List.map (fun s -> { s with sigattrs = se.sigattrs }) ses' in *)
 
     (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
   in
