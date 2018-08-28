@@ -37,9 +37,6 @@ let new_region_ r0 =
 
 type erid = rid:HH.rid{HST.is_eternal_region rid}
 
-val root: erid
-let root = HH.root
-
 /// The invariant
 
 val buffer_inv_live:
@@ -562,6 +559,14 @@ let bv_inv_live_alloc_disjoint #a1 blen bv #a2 r len b h0 h1 =
 
 /// Construction
 
+val create_empty:
+  a:Type0 ->
+  HST.ST (buf_vector a)
+    (requires (fun h0 -> true))
+    (ensures (fun h0 bv h1 -> h0 == h1 /\ V.size_of bv = 0ul))
+let create_empty a =
+  V.create_empty (B.buffer a)
+
 private val create_:
   #a:Type0 -> blen:uint32_t{blen > 0ul} ->
   ia:a -> bv:buf_vector a ->
@@ -663,7 +668,7 @@ val create:
       S.equal (as_seq h1 blen bv)
 	      (S.create (U32.v len) (S.create (U32.v blen) ia))))
 let create #a ia blen len =
-  let nrid = new_region_ root in
+  let nrid = new_region_ HH.root in
   create_rid ia blen len nrid
 
 val insert_ptr:

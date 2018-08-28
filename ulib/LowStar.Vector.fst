@@ -41,7 +41,7 @@ let get_preserved_buffer #a buf i len k h0 h1 =
 
 noeq type vector_str a =
 | Vec: sz:uint32_t ->
-       cap:uint32_t{cap > 0ul && cap >= sz} ->
+       cap:uint32_t{cap >= sz} ->
        vs:B.buffer a{B.len vs = cap} -> 
        vector_str a
 
@@ -137,6 +137,18 @@ let modifies_as_seq_within #a vec i j dloc h0 h1 =
 
 /// Construction
 
+val create_empty:
+  a:Type ->
+  HST.ST (vector a)
+	 (requires (fun h0 -> true))
+	 (ensures (fun h0 vec h1 -> 
+	   live h1 vec /\
+	   h0 == h1 /\
+	   size_of vec = 0ul /\
+	   S.equal (as_seq h1 vec) S.empty))
+let create_empty a =
+  Vec 0ul 0ul B.null
+
 val create_rid:
   #a:Type -> len:uint32_t{len > 0ul} -> v:a ->
   rid:HH.rid{HST.is_eternal_region rid} ->
@@ -216,6 +228,15 @@ val index:
       h0 == h1 /\ S.index (as_seq h1 vec) (U32.v i) == v))
 let index #a vec i =
   B.index (Vec?.vs vec) i
+
+val back:
+  #a:Type -> vec:vector a{size_of vec > 0ul} ->
+  HST.ST a
+    (requires (fun h0 -> live h0 vec))
+    (ensures (fun h0 v h1 -> 
+      h0 == h1 /\ S.index (as_seq h1 vec) (U32.v (size_of vec) - 1) == v))
+let back #a vec =
+  B.index (Vec?.vs vec) (size_of vec - 1ul)
 
 val slice_append:
   #a:Type -> s:S.seq a ->
