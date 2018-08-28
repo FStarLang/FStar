@@ -87,7 +87,7 @@ and case_analyze (lhs:term) : Tac unit =
     let ap l =
       onL (); apply_lemma l
     in
-    dump ("lhs= " ^ term_to_string lhs);
+    (* dump ("lhs= " ^ term_to_string lhs); *)
     match inspect lhs with
     | Tv_App _ _ ->
       let head, args = collect_app lhs in
@@ -108,9 +108,9 @@ and case_analyze (lhs:term) : Tac unit =
 
 let push_lifts () : Tac unit =
   unfold_def (`xx);
-  dump "before";
+  (* dump "before"; *)
   push_lifts' ();
-  dump "after";
+  (* dump "after"; *)
   ()
 
 
