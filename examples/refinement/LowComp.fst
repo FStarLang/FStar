@@ -153,10 +153,10 @@ let l_eq #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp a wp1 c1)
 
 assume val l_eq_axiom : (#a:Type) -> (#wp1:hwp_mon a) -> (#c1:comp_wp a wp1) -> (lc1: lcomp_wp a wp1 c1) ->
                         (#wp2:hwp_mon a) -> (#c2:comp_wp a wp2) -> (lc2 : lcomp_wp a wp2 c2) -> 
-                        Lemma (requires (lwp_eq (as_lwp c1) (as_lwp c2))) (ensures (lc1 === lc2))
+                        Lemma (requires (l_eq lc1 lc2)) (ensures (lc1 === lc2))
 
 // Lifting of high programs to low programs
-let lift (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c = 
+let morph (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c = 
     fun (b1, b2) -> 
       let s1 = b1.(0ul) in 
       let s2 = b2.(0ul) in 
@@ -411,53 +411,68 @@ let subsumes_sat #a (wp1 wp2 : hwp_mon a) : Lemma (requires (subsumes wp1 wp2 /\
 
 // Lifting lemma statements
 
-let lift_return #a (wp : hwp_mon a) (x : a) :
-    Lemma (requires (subsumes (return_wp x) wp)) 
+let morph_return #a (wp : hwp_mon a) (c : comp_wp a wp) (x : a) :
+  Lemma 
+    (requires (c === return_elab x))
+    (ensures (morph wp c === lreturn x)) = 
+  let p = return_inv c x in 
+  assert (subsumes (return_wp x) wp);
+  assert (l_eq #a
+               #wp #(cast wp (return_elab x)) (morph wp c)
+               #wp #(cast wp (return_elab x)) (lreturn x));
+  let p' = l_eq_axiom #a
+                      #wp #(cast wp (return_elab x)) (morph wp c)
+                      #wp #(cast wp (return_elab x)) (lreturn x) in
+  ()
+
+
+let morph_return #a (wp : hwp_mon a) (x : a) :
+    Lemma (requires (subsumes (return_elab x) wp) 
           (ensures (l_eq #a
-                         #wp #(cast wp (return_elab x)) (lift wp (cast wp (return_elab x)))
+                         #wp #(cast wp (return_elab x)) (morph wp (cast wp (return_elab x)))
                          #wp #(cast wp (return_elab x)) (lreturn x))) = ()
 
-let lift_read (wp : hwp_mon mint) (i : nat{i < 2}) :
+let morph_read (wp : hwp_mon mint) (i : nat{i < 2}) :
   Lemma (requires (subsumes (read_wp i) wp)) 
         (ensures (l_eq #mint
-                       #wp #(cast wp (hread' i)) (lift wp (cast wp (hread' i)))
+                       #wp #(cast wp (hread' i)) (morph wp (cast wp (hread' i)))
                        #wp #(cast wp (hread' i)) (lread' i))) = ()
 
-let lift_write (wp : hwp_mon unit) (i : nat{i < 2}) (v : mint) :
+let morph_write (wp : hwp_mon unit) (i : nat{i < 2}) (v : mint) :
   Lemma (requires (subsumes (write_wp i v) wp))
         (ensures (l_eq #unit
-                        #wp #(cast wp (hwrite' i v)) (lift wp (cast wp (hwrite' i v)))
+                        #wp #(cast wp (hwrite' i v)) (morph wp (cast wp (hwrite' i v)))
                         #wp #(cast wp (hwrite' i v)) (lwrite' i v))) = ()
 
 
-let lift_bind #a #b (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
+let morph_bind #a #b (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
   (wp2 : a -> hwp_mon b) (c2 : (x:a) -> comp_wp b (wp2 x)) 
   (wp : hwp_mon b) :
       Lemma 
         (requires (subsumes (bind_wp wp1 wp2) wp))
         (ensures (l_eq #b 
-                       #wp #(cast wp (bind_elab c1 c2)) (lift wp (cast wp (bind_elab c1 c2))) 
+                       #wp #(cast wp (bind_elab c1 c2)) (morph wp (cast wp (bind_elab c1 c2))) 
                        #wp #(cast wp (bind_elab c1 c2)) (lcast wp (bind_elab c1 c2)
-                       (lbind (lift wp1 c1) (fun x -> (lift (wp2 x) (c2 x))))))) = ()
+                       (lbind (morph wp1 c1) (fun x -> (morph (wp2 x) (c2 x))))))) = ()
 
-let lift_for (wp1 : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp1 i))
+let morph_for (wp1 : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp1 i))
   (wp : hwp_mon unit) :
     Lemma 
       (requires (subsumes (for_wp wp1 lo hi) wp))
       (ensures (l_eq #unit
-                     #wp #(cast wp (for_elab lo hi f)) (lift wp (cast wp (for_elab lo hi f))) 
+                     #wp #(cast wp (for_elab lo hi f)) (morph wp (cast wp (for_elab lo hi f))) 
                      #wp #(cast wp (for_elab lo hi f)) (lcast wp (for_elab lo hi f) 
-                     (lfor lo hi (fun i -> lift (wp1 i) (f i)))))) = ()
+                     (lfor lo hi (fun i -> morph (wp1 i) (f i)))))) = ()
 
-let lift_ite #a (b : bool) (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
+let morph_ite #a (b : bool) (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
   (wp2 : hwp_mon a) (c2 : comp_wp a wp2) 
   (wp : hwp_mon a) :
       Lemma 
         (requires (subsumes (ite_wp b wp1 wp2) wp))
         (ensures (l_eq #a
-                       #wp #(cast wp (ite_elab b c1 c2)) (lift wp (cast wp (ite_elab b c1 c2))) 
+                       #wp #(cast wp (ite_elab b c1 c2)) (morph wp (cast wp (ite_elab b c1 c2))) 
                        #wp #(cast wp (ite_elab b c1 c2)) (lcast wp (ite_elab b c1 c2)
-                           (lite b (lift wp1 c1) (lift wp2 c2))))) = ()
+                           (lite b (morph wp1 c1) (morph wp2 c2))))) = ()
 
 
 let lcomp_respects_h_eq
