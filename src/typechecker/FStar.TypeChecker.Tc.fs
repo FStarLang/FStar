@@ -1123,6 +1123,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       else ses
     in
     let sigbndle, projectors_ses = tc_inductive env ses se.sigquals lids in
+    let sigbndle = { sigbndle with sigattrs = se.sigattrs } in (* keep the attributes *)
     [ sigbndle ], projectors_ses, env0
 
   | Sig_pragma(p) ->  //no need for two-phase here
