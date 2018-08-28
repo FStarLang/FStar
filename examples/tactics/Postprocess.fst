@@ -60,6 +60,7 @@ let fext () = apply_lemma (`apply_feq_lem); dismiss (); ignore (forall_intros ()
 let _onL a b c (_ : squash (a == b)) (_ : squash (b == c)) : Lemma (a == c) = ()
 let onL () = apply_lemma (`_onL)
 
+// invariant: takes goals of shape squash (E == ?u) and solves them
 let rec push_lifts' (u:unit) : Tac unit =
   match term_as_formula (cur_goal ()) with
   | Comp (Eq _) lhs rhs ->
@@ -75,7 +76,6 @@ let rec push_lifts' (u:unit) : Tac unit =
       end
 
     | Tv_Abs _ _ ->
-      onL ();
       fext ();
       push_lifts' ()
       
@@ -93,7 +93,7 @@ and case_analyze (lhs:term) : Tac unit =
       let head, args = collect_app lhs in
       begin match inspect head with
       | Tv_FVar fv ->
-             if fv_to_string fv = `%A1 then (ap (`lemA); trefl ()) // no more to do
+             if fv_to_string fv = `%A1 then (ap (`lemA))
         else if fv_to_string fv = `%B1 then (ap (`lemB); apply_lemma (`congB); push_lifts' ())
         else if fv_to_string fv = `%C1 then (ap (`lemC); apply_lemma (`congC); push_lifts' ())
         else (tlabel "unknown fv"; trefl ())
@@ -108,11 +108,14 @@ and case_analyze (lhs:term) : Tac unit =
 
 let push_lifts () : Tac unit =
   unfold_def (`xx);
+  dump "before";
   push_lifts' ();
-  trefl ()
+  dump "after";
+  ()
 
-#set-options "--tactic_trace"
 
 [@(postprocess_with push_lifts)]
 let yy = lift xx
-  
+
+[@(postprocess_with push_lifts)]
+let zz = lift (C1 (fun y -> (C1 (fun x -> A1))))
