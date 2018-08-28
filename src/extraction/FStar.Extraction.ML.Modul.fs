@@ -400,13 +400,14 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let (lbs, _) ->
           let attrs = se.sigattrs in
           let quals = se.sigquals in
-          let post_tau =
-              BU.find_map se.sigattrs
-                          (fun attr ->
-                              let head, args = U.head_and_args attr in
-                              match (SS.compress head).n, args with
-                              | Tm_fvar fv, [(tau, None)] when S.fv_eq_lid fv PC.postprocess_extr_with -> Some tau
-                              | _ -> None)
+          let attrs, post_tau =
+              match U.extract_attr' PC.postprocess_extr_with attrs with
+              | None -> attrs, None
+              | Some (ats, (tau, None)::_) -> ats, Some tau
+              | Some (ats, args) ->
+                  Errors.log_issue se.sigrng (Errors.Warning_UnrecognizedAttribute,
+                                         ("Ill-formed application of `postprocess_for_extraction_with`"));
+                  attrs, None
           in
           let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
               let lbdef = Env.postprocess g.tcenv tau lb.lbtyp lb.lbdef in

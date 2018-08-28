@@ -1475,14 +1475,16 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       else e
     in
 
-    let post_tau =
-        BU.find_map se.sigattrs
-                    (fun attr ->
-                        let head, args = U.head_and_args attr in
-                        match (SS.compress head).n, args with
-                        | Tm_fvar fv, [(tau, None)] when S.fv_eq_lid fv PC.postprocess_with -> Some tau
-                        | _ -> None)
+    let attrs, post_tau =
+        match U.extract_attr' PC.postprocess_with se.sigattrs with
+        | None -> se.sigattrs, None
+        | Some (ats, [tau, None]) -> ats, Some tau
+        | Some (ats, args) ->
+            Errors.log_issue r (Errors.Warning_UnrecognizedAttribute,
+                                   ("Ill-formed application of `postprocess_with`"));
+            se.sigattrs, None
     in
+    let se = { se with sigattrs = attrs } in (* to remove the postprocess_with *)
     let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
         let lbdef = env.postprocess env tau lb.lbtyp lb.lbdef in
         { lb with lbdef = lbdef }
