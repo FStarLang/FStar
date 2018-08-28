@@ -13,7 +13,7 @@ type state = mint * mint
 // High-level specs live in [comp]
 let comp a = state -> M (a * state)
 
-// DSL combinators without WP indexing
+(** ** High Level DSL **)
 
 let hreturn (a:Type) (x : a) : comp a = fun s -> (x, s)
 
@@ -28,13 +28,7 @@ let hwrite (i:int) (v:mint) : comp unit =
     fun s -> if i = 0 then ((), (v, snd s))
           else ((), (fst s, v))
 
-
-
 // Effect definition
-
-// NOTE : ommiting type annotations from hread and hwrite defs
-// makes the effect definition fail
-
 total reifiable reflectable new_effect {
       HIGH : a:Type -> Effect
       with repr  = comp
@@ -45,7 +39,7 @@ total reifiable reflectable new_effect {
 }
 
 
-// WPs -- monotonic by construction
+(** ** High level WPs (monotonicby construction) **)
 
 type hwp a = HIGH?.wp a
 
@@ -86,7 +80,7 @@ let rec for_wp (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) : Tot (h
   if lo = hi then (return_wp ())
   else (bind_wp (wp lo) (fun (_:unit) -> for_wp wp (lo + 1) hi))
   
-
+// Unfolding lemma for the rec def
 let for_wp_unfold (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) : 
     Lemma (requires (lo < hi))
           (ensures (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi))) =
@@ -100,6 +94,7 @@ let for_wp_unfold (wp:int -> hwp_mon unit) (lo : int) (hi : int{hi >= lo}) :
 
 
 
+
 // for combinator
 let rec for (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> HIGH unit (wp i)) :
     HIGH unit (for_wp wp lo hi) (decreases (hi - lo)) =
@@ -108,7 +103,7 @@ let rec for (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:
   (f lo; for #wp (lo + 1) hi f)
 
 
-// High-level DSL with WP indexing
+(** ** Elaborated combinators for high DSL **)
 
 let return_elab (#a:Type) (x : a) : comp_wp a (return_wp x) =
   HIGH?.return_elab a x
@@ -127,7 +122,7 @@ let rec for_elab (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f 
         assert (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi));
         let b = bind_elab m f in b)
 
-
+// Unfolding lemma for the rec def
 let rec for_elab_unfold (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp i)) : 
     Lemma (requires (lo < hi))
           (ensures (for_elab #wp lo hi f == 
@@ -145,10 +140,10 @@ let rec for_elab_unfold (#wp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= h
                ()
           
 
-let hread' (i:nat) : comp_wp mint (read_wp i) =
+let hread_elab (i:nat) : comp_wp mint (read_wp i) =
   (fun s -> if i = 0 then (fst s, s) else (snd s, s))
 
-let hwrite' (i:nat) (v:mint) : comp_wp unit (write_wp i v) =
+let hwrite_elab (i:nat) (v:mint) : comp_wp unit (write_wp i v) =
   fun s -> if i = 0 then ((), (v, snd s))
         else ((), (fst s, v))
 
@@ -159,20 +154,19 @@ let ite_elab (#a:Type) (b : bool) (#wp1 : hwp_mon a) (c1:comp_wp a wp1)
     (#wp2 : hwp_mon a) (c2:comp_wp a wp2) : comp_wp a (ite_wp b wp1 wp2) =
     (fun s0 -> if b then c1 s0 else c2 s0)
 
+
+(** ** Typing inversion axioms **)
+
 let subsumes #a (wp1 : hwp a) (wp2 : hwp a) = forall s0 post. wp2 s0 post ==> wp1 s0 post
-
-let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : comp_wp a wp2 = c 
-
-let cast_eq #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : Lemma (c === cast wp2 c) = ()
 
 assume val return_inv (#a:Type) (#wp : hwp_mon a) (c : comp_wp a wp) (x:a): 
   Lemma (requires (c === return_elab x)) (ensures (subsumes (return_wp x) wp))
 
 assume val write_inv (#wp : hwp_mon unit) (c : comp_wp unit wp) (i:nat) (v:mint) : 
-  Lemma (requires (c === hwrite' i v)) (ensures (subsumes (write_wp i v) wp))
+  Lemma (requires (c === hwrite_elab i v)) (ensures (subsumes (write_wp i v) wp))
 
 assume val read_inv (#wp : hwp_mon mint) (c : comp_wp mint wp) (i:nat) : 
-  Lemma (requires (c === hread' i)) (ensures (subsumes (read_wp i) wp))
+  Lemma (requires (c === hread_elab i)) (ensures (subsumes (read_wp i) wp))
 
 assume val bind_inv (#a:Type) (#b:Type) (#f_w : hwp_mon a) (f:comp_wp a f_w) 
                     (#g_w: a -> hwp_mon b) (g:(x:a) -> comp_wp b (g_w x)) (#wp : hwp_mon b) (c:comp_wp b wp) :
@@ -189,18 +183,27 @@ assume val for_inv (#fwp : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) 
   Lemma (requires (c === for_elab lo hi f))
         (ensures (subsumes (for_wp fwp lo hi) wp))
 
-// Commutation
+
+(** ** Explicit casting to stronger WPs **)
+
+let cast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : comp_wp a wp2 = c 
+
+let cast_eq #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) : Lemma (c === cast wp2 c) = ()
+
+
+(** ** Equality on high computations **)
+
 let h_eq (#a:Type) (wp1:hwp_mon a) (wp2:hwp_mon a) (c1:comp_wp a wp1) (c2:comp_wp a wp2) =
     (forall s0. wp1 s0 (fun _ -> True) <==> wp2 s0 (fun _ -> True)) /\
     (forall s0. wp1 s0 (fun _ -> True) ==> c1 s0 == c2 s0)
 
-// Equivalence with reified computations
+(** ** Reify commutes **)
 
 let hwrite_eq (#a:Type) (i:nat) (v:mint) :
-   Lemma (h_eq (write_wp i v) (write_wp i v) (hwrite' i v) (reify (HIGH?.put i v))) = ()
+   Lemma (h_eq (write_wp i v) (write_wp i v) (hwrite_elab i v) (reify (HIGH?.put i v))) = ()
 
 let hread_eq (#a:Type) (i:nat) :
-   Lemma (h_eq (read_wp i) (read_wp i) (hread' i) (reify (HIGH?.get i))) = ()
+   Lemma (h_eq (read_wp i) (read_wp i) (hread_elab i) (reify (HIGH?.get i))) = ()
 
 
 let h_thunk a (wp:hwp_mon a) = unit -> HIGH a wp
@@ -264,3 +267,4 @@ let ite_commutes_lemma (#a : Type) (b : bool)
       (#wp2 : hwp_mon a) ($c2:h_thunk a wp2) (s0:state) :
       Lemma (requires (ite_wp b wp1 wp2 s0 (fun _ -> True)))
             (ensures (reify_ite_commutes b c1 c2 s0)) = ()
+
