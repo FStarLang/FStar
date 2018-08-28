@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ef852e1fb7dd55430ab2600c899fe840"
+      "72310707a2dea1e62b08b27fa7b9b08b"
     ],
     [
       "WeakVsHNF.guard",
@@ -26,7 +26,7 @@
         "typing_FStar.Tactics.Result.uu___is_Success"
       ],
       0,
-      "c8ef06dc41eddf66ad60e4efbf05a68f"
+      "d094a473abbd2f0f54c0701c2ad46c6f"
     ],
     [
       "WeakVsHNF.wint",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "07e2b302924abef7b37f7db3ab1c59b6"
+      "f7d0b342eeab4ec78fb139ae208d6925"
     ]
   ]
 ]
