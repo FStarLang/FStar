@@ -86,20 +86,7 @@ let state_as_lstate_put_put h ls bs1 bs2 =
   ()
 
 
-// Low type variations
-
-type lcomp 'a (c : comp 'a) =
-    (ls:lstate) ->
-    Stack 'a
-      (requires (fun h -> well_formed h ls))
-      (ensures  (fun h r h' ->
-                   well_formed h' ls /\
-                   //modifies (loc_union (loc_buffer (fst ls)) (loc_buffer (snd ls))) h h' /\
-                   (let s0 = lstate_as_state h ls in
-                    let (x, s1) = c s0 in
-                    Map.equal (get_hmap h') (get_hmap (state_as_lstate h ls s1)) /\ x == r )))
-
-
+(** ** Low computations and their WPs **)
 
 let lcomp_wp (a:Type) (wp : hwp_mon a) (c : comp_wp a wp) =
      ls:lstate ->
@@ -116,7 +103,6 @@ let lcomp_wp (a:Type) (wp : hwp_mon a) (c : comp_wp a wp) =
 //let's factor this into a `run`, which makes things a lot more predictable
 let run_high #a #wp (c:comp_wp a wp) (s0:_{wp s0 (fun _ -> True)}) : (a * state) = c s0
 
-
 type lwp a = lstate -> (mem -> (a * mem -> Type) -> Type)
 
 let as_lwp #a #wp (c:comp_wp a wp) : lwp a =
@@ -127,20 +113,19 @@ let as_lwp #a #wp (c:comp_wp a wp) : lwp a =
        (let (x, s1) = c s0 in
         let h1 = state_as_lstate h0 ls s1 in post (x, h1)))
 
-
-// Equality of low wps and programs
+let sat #a (wp:lwp a) : Type = forall (h:HS.mem) (ls:lstate{well_formed h ls}). wp ls h (fun _ -> True)
 
 let sat_as_lwp #a (wp:hwp a) : Type = forall (h:HS.mem) (ls:lstate{well_formed h ls}). wp (lstate_as_state h ls) (fun _ -> True)
 
-let sat #a (wp:lwp a) : Type = forall (h:HS.mem) (ls:lstate{well_formed h ls}). wp ls h (fun _ -> True)
-
-// Not quite sure about that
 let precise #a (wp:lwp a) = 
   sat wp ==>
   (forall h0 (ls:lstate{well_formed h0 ls}). 
      wp ls h0 (fun (r1, h1) ->
      wp ls h0 (fun (r2, h2) ->
      r1 == r2 /\ h1 == h2)))
+
+
+(** ** Equality of low computations **)
   
 let lwp_eq #a (wp1:lwp a) (wp2:lwp a) =
   precise wp1 /\
@@ -149,7 +134,7 @@ let lwp_eq #a (wp1:lwp a) (wp2:lwp a) =
 
 let l_eq #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp a wp1 c1)
          (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2 : lcomp_wp a wp2 c2) = 
-    lwp_eq (as_lwp c1) (as_lwp c2)
+  lwp_eq (as_lwp c1) (as_lwp c2)
 
 assume val l_eq_axiom : (#a:Type) -> (#wp1:hwp_mon a) -> (#c1:comp_wp a wp1) -> (lc1: lcomp_wp a wp1 c1) ->
                         (#wp2:hwp_mon a) -> (#c2:comp_wp a wp2) -> (lc2 : lcomp_wp a wp2 c2) -> 
@@ -174,7 +159,7 @@ let morph (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c =
       x
 
 
-(** DSL for low computations *)
+(** ** DSL for low computations **)
 
 let lreturn (#a:Type) (x:a) : lcomp_wp a (return_wp x) (return_elab x) =
   fun (b1, b2) ->
@@ -189,7 +174,7 @@ val upd : b:pointer mint -> v:mint ->
 [@expect_failure]
 let upd b v = b.(0ul) <- v
 
-val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp_wp unit (write_wp i v) (hwrite' i v)
+val lwrite : i:nat{ i < 2 } -> v:mint -> lcomp_wp unit (write_wp i v) (hwrite_elab i v)
 let lwrite i v (ls:lstate) =
   let (b1, b2) = ls in
   if i = 0 then
@@ -210,7 +195,7 @@ let lwrite i v (ls:lstate) =
       let h1 = ST.get () in
       // Just sanity
       // XXX trying to bind something analogous in lbind doesn't work
-      let x, s1 = hwrite' 0 v (lstate_as_state h0 (b1, b2)) in
+      let x, s1 = hwrite_elab 0 v (lstate_as_state h0 (b1, b2)) in
       assert (x == ());
 
       assume (h1 == g_upd b1 0 v h0) // TODO stronger type for get
@@ -230,7 +215,7 @@ let lwrite i v (ls:lstate) =
       (* ********************************************* *)
 
 
-val lread : i:nat{ i < 2 } -> lcomp_wp mint (read_wp i) (hread' i)
+val lread : i:nat{ i < 2 } -> lcomp_wp mint (read_wp i) (hread_elab i)
 let lread i = fun (b1, b2) ->
   let h0 = ST.get () in
   let p1 = get_upd_eq h0 b1 0 (get h0 b1 0) in
@@ -321,6 +306,7 @@ let rec lfor (#wp : int -> hwp_mon unit) (#f : (i:int) -> comp_wp unit (wp i)) (
                  bind_elab m cf));
        lbind m c)
 
+
 // Versions of the DSL with reif in spec
 
 val lwrite' : i:nat{ i < 2 } -> v:mint -> lcomp_wp unit (write_wp i v) (reify (HighComp.put_action i v))
@@ -344,7 +330,7 @@ let lwrite' i v ls =
      let h1 = ST.get () in
      // Just sanity
      // XXX trying to bind something analogous in lbind doesn't work
-     let x, s1 = hwrite' 0 v (lstate_as_state h0 (b1, b2)) in
+     let x, s1 = hwrite_elab 0 v (lstate_as_state h0 (b1, b2)) in
      assert (x == ());
 
      assume (h1 == g_upd b1 0 v h0) // TODO stronger type for get
@@ -394,6 +380,14 @@ let l_eq_refl (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (l : lcomp_wp a wp c) :
 let lcomp_unique_inhabitant (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (lc1 : lcomp_wp a wp c) (lc2 : lcomp_wp a wp c) : 
   Lemma (l_eq lc1 lc2) = ()
 
+let lcomp_respects_h_eq (a : Type)
+                        (wp1 : hwp_mon a)
+                        (wp2 : hwp_mon a)
+                        (hc1 : comp_wp a wp1)
+                        (hc2 : comp_wp a wp2)
+                        (lc : lcomp_wp a wp1 hc1)
+                        (p : squash (h_eq wp1 wp2 hc1 hc2)) : lcomp_wp a wp2 hc2 = lc
+
 // Satisifability of WPs 
 
 let return_wp_sat (#a:Type) (x : a) : Lemma (sat_as_lwp (return_wp x)) = ()
@@ -405,11 +399,7 @@ let read_wp_sat (i:nat) : Lemma (sat_as_lwp (read_wp i)) = ()
 let subsumes_sat #a (wp1 wp2 : hwp_mon a) : Lemma (requires (subsumes wp1 wp2 /\ sat_as_lwp wp2))
                                                   (ensures (sat_as_lwp wp1)) = ()
 
-// let bind_wp_sat #a #b (wp1:hwp_mon a{sat wp1}) 
-//   (fwp2 : (x:a -> (wp:hwp_mon b{sat wp}))) : Lemma (sat (bind_wp wp1 fwp2)) = ()
-
-
-// Lifting lemma statements
+(** ** Commutation of morphism **)
 
 let morph_return #a (wp : hwp_mon a) (c : comp_wp a wp) (x : a) :
   Lemma 
@@ -428,31 +418,31 @@ let morph_return #a (wp : hwp_mon a) (c : comp_wp a wp) (x : a) :
 
 let morph_read (wp : hwp_mon mint) (c : comp_wp mint wp) (i : nat{i < 2}) :
   Lemma 
-    (requires (c === hread' i))
+    (requires (c === hread_elab i))
     (ensures (morph wp c ===  lread' i)) = 
   let p = read_inv c i in 
   assert (subsumes (read_wp i) wp);
   assert (l_eq #mint
-               #wp #(cast wp (hread' i)) (morph wp (cast wp (hread' i)))
-               #wp #(cast wp (hread' i)) (lread' i));
+               #wp #(cast wp (hread_elab i)) (morph wp (cast wp (hread_elab i)))
+               #wp #(cast wp (hread_elab i)) (lread' i));
   let p' = l_eq_axiom #mint
-                      #wp #(cast wp (hread' i)) (morph wp c)
-                      #wp #(cast wp (hread' i)) (lread' i) in
+                      #wp #(cast wp (hread_elab i)) (morph wp c)
+                      #wp #(cast wp (hread_elab i)) (lread' i) in
   ()
 
 
 let morph_write (wp : hwp_mon unit) (c : comp_wp unit wp) (i : nat{i < 2}) (v : mint) :
   Lemma 
-    (requires (c === hwrite' i v))
+    (requires (c === hwrite_elab i v))
     (ensures (morph wp c ===  lwrite' i v)) = 
   let p = write_inv c i in 
   assert (subsumes (write_wp i v) wp);
   assert (l_eq #unit
-               #wp #(cast wp (hwrite' i v)) (morph wp (cast wp (hwrite' i v)))
-               #wp #(cast wp (hwrite' i v)) (lwrite' i v));
+               #wp #(cast wp (hwrite_elab i v)) (morph wp (cast wp (hwrite_elab i v)))
+               #wp #(cast wp (hwrite_elab i v)) (lwrite' i v));
   let p' = l_eq_axiom #unit
-                      #wp #(cast wp (hwrite' i v)) (morph wp c)
-                      #wp #(cast wp (hwrite' i v)) (lwrite' i v) in
+                      #wp #(cast wp (hwrite_elab i v)) (morph wp c)
+                      #wp #(cast wp (hwrite_elab i v)) (lwrite' i v) in
   ()
 
 let morph_bind #a #b (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
@@ -507,13 +497,3 @@ let morph_ite #a (b : bool) (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
                       (lite b (morph wp1 c1) (morph wp2 c2))) in 
   ()
   
-let lcomp_respects_h_eq
-         (a : Type)
-         (wp1 : hwp_mon a)
-         (wp2 : hwp_mon a)
-         (hc1 : comp_wp a wp1)
-         (hc2 : comp_wp a wp2)
-         (lc : lcomp_wp a wp1 hc1)
-         (p : squash (h_eq wp1 wp2 hc1 hc2))
-   : lcomp_wp a wp2 hc2
-   = lc
