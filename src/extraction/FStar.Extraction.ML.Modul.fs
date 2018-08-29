@@ -331,7 +331,7 @@ let extract_bundle_iface env se
 
     | _ -> failwith "Unexpected signature element"
 
-let extract_type_declaration (g:env) lid quals attrs t
+let extract_type_declaration (g:env) lid quals attrs univs t
     : env_t
     * iface
     * list<mlmodule1>
@@ -341,7 +341,7 @@ let extract_type_declaration (g:env) lid quals attrs t
            let fv = S.lid_as_fv lid delta_constant None in
            let lb = {
                lbname = BU.Inr fv;
-               lbunivs = [];
+               lbunivs = univs;
                lbtyp = t;
                lbeff = PC.effect_Tot_lid;
                lbdef = U.abs bs t_unit None;
@@ -438,9 +438,9 @@ let extract_sigelt_iface (g:env) (se:sigelt) : env * iface =
     | Sig_datacon _ ->
       extract_bundle_iface g se
 
-    | Sig_declare_typ(lid, _, t)  when Term.is_arity g t -> //lid is a type
+    | Sig_declare_typ(lid, univs, t)  when Term.is_arity g t -> //lid is a type
       let env, iface, _ =
-          extract_type_declaration g lid se.sigquals se.sigattrs t
+          extract_type_declaration g lid se.sigquals se.sigattrs univs t
       in
       env, iface
 
@@ -541,11 +541,17 @@ let extract_bundle env se =
     match se.sigel, se.sigquals with
     | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->
         let env, ctor = extract_ctor [] env ({dname=l; dtyp=t}) in
+        printfn "Extracted %s;\n\tEnv is %A"
+                           (Ident.string_of_lid l)
+                           env.gamma;
         env, [MLM_Exn ctor]
 
     | Sig_bundle(ses, _), quals ->
         let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
         let env, td = BU.fold_map extract_one_family env ifams in
+        printfn "Extracted %s;\n\tEnv is %A"
+                           (U.lids_of_sigelt se |> List.map Ident.string_of_lid |> String.concat ", ")
+                           env.gamma;
         env, [MLM_Ty td]
 
     | _ -> failwith "Unexpected signature element"
@@ -622,9 +628,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_new_effect _ ->
           g, []
 
-        | Sig_declare_typ(lid, _, t)  when Term.is_arity g t -> //lid is a type
+        | Sig_declare_typ(lid, univs, t)  when Term.is_arity g t -> //lid is a type
           //extracting `assume type t : k`
-          let env, _, impl = extract_type_declaration g lid se.sigquals se.sigattrs t in
+          let env, _, impl = extract_type_declaration g lid se.sigquals se.sigattrs univs t in
           env, impl
 
         | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
