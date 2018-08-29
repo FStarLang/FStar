@@ -197,8 +197,6 @@ and meta_source_info =
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
-  | Mutable_alloc
-  | Mutable_rval
 and fv_qual =
   | Data_ctor
   | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)

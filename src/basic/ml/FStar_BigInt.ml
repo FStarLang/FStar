@@ -27,6 +27,9 @@ let logor_big_int = Z.logor
 let logxor_big_int = Z.logxor
 let lognot_big_int = Z.lognot
 
+let shift_left_big_int x y = Z.shift_left x (Z.to_int y)
+let shift_right_big_int x y = Z.shift_right x (Z.to_int y)
+
 let sqrt_big_int = Z.sqrt
 
 let string_of_big_int = Z.to_string

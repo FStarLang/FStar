@@ -747,8 +747,9 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
     SU.lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =
-  U.format3 "module %s\nDeclarations:\n%s\nExports:\n%s\n" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
-                                                                        (List.map sigelt_to_string m.exports |> String.concat "\n")
+  U.format3 "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" (sli m.name)
+                                                                     (List.map sigelt_to_string m.declarations |> String.concat "\n")
+                                                                     (List.map sigelt_to_string m.exports |> String.concat "\n")
 
 
 let abs_ascription_to_string ascription =

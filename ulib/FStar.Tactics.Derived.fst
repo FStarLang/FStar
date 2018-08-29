@@ -171,6 +171,15 @@ let rec mapAll (t : unit -> Tac unit) : Tac unit =
     | [] -> ()
     | _::_ -> let _ = divide 1 t (fun () -> mapAll t) in ()
 
+let mapAllSMT (t : unit -> Tac unit) : Tac unit =
+    let gs, sgs = goals (), smt_goals () in
+    set_goals sgs;
+    set_smt_goals [];
+    mapAll t;
+    let gs', sgs' = goals (), smt_goals () in
+    set_goals gs;
+    set_smt_goals (gs'@sgs')
+
 (** Runs tactic [t1] on the current goal, and then tactic [t2] on *each*
 subgoal produced by [t1]. Each invocation of [t2] runs on a proofstate
 with a single goal (they're "focused"). *)
@@ -331,6 +340,9 @@ let pose_as (s:string) (t:term) : Tac binder =
     rename_to b s;
     b
 
+let for_each_binder (f : binder -> Tac 'a) : Tac (list 'a) =
+    map f (binders_of_env (cur_env ()))
+
 let rec revert_all (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
@@ -409,6 +421,15 @@ let grewrite' (t1 t2 eq : term) : Tac unit =
         else trefl ()
     | _ ->
         fail "impossible"
+
+(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities *)
+let l_to_r (lems:list term) : Tac unit =
+    let first_or_trefl () : Tac unit =
+        fold_left (fun k l () ->
+                    (fun () -> apply_lemma l)
+                    `or_else` k)
+                  trefl lems () in
+    pointwise first_or_trefl
 
 let mk_squash (t : term) : term =
     let sq : term = pack_ln (Tv_FVar (pack_fv squash_qn)) in
@@ -544,3 +565,16 @@ let binder_to_term (b : binder) : Tac term = let bv, _ = inspect_binder b in bv_
  *)
 let specialize (#a:Type) (f:a) (l:list string) :unit -> Tac unit
   = fun () -> solve_then (fun () -> exact (quote f)) (fun () -> norm [delta_only l; iota; zeta])
+
+let tlabel (l:string) =
+    match goals () with
+    | [] -> fail "tlabel: no goals"
+    | h::t ->
+        set_goals (set_label l h :: t)
+
+let tlabel' (l:string) =
+    match goals () with
+    | [] -> fail "tlabel': no goals"
+    | h::t ->
+        let h = set_label (l ^ get_label h) h in
+        set_goals (h :: t)

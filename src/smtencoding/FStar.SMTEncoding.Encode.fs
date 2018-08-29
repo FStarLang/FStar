@@ -686,7 +686,7 @@ let encode_top_level_let :
                   else U.ascribe body (BU.Inl t_body, None)
                 in
                 let app = mk_app (FStar.Syntax.Util.range_of_lbname lbn) curry fvb vars in
-                let app, (body, decls2) =
+                let pat, app, (body, decls2) =
                   let is_logical =
                     match (SS.compress t_body).n with
                     | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
@@ -694,14 +694,14 @@ let encode_top_level_let :
                   in
                   let is_prims = lbn |> FStar.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids lid.ns) Const.prims_lid) in
                   if not is_prims && (quals |> List.contains Logic || is_logical)
-                  then mk_Valid app, encode_formula body env'
-                  else app, encode_term body env'
+                  then app, mk_Valid app, encode_formula body env'
+                  else app, app, encode_term body env'
                 in
 
                 //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
                 //But the guard is unnecessary given the pattern
                 let eqn = Util.mkAssume(mkForall (U.range_of_lbname lbn)
-                                                 ([[app]], vars, mkEq(app,body)),
+                                                 ([[pat]], vars, mkEq(app,body)),
                                     Some (BU.format1 "Equation for %s" flid.str),
                                     ("equation_"^fvb.smt_id)) in
                 decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid fvb.smt_id app,

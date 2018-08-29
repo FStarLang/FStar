@@ -97,7 +97,7 @@ let sel_upd1 (#b:_) (vb:buffer b) (i:nat{i < length vb}) (x:b) (h:HS.mem{live h 
                          as'' suffix';
     assert (as' == as'')
 
-#set-options "--z3rlimit_factor 2"
+#set-options "--z3rlimit 20"
 let sel_upd2 (#b:_) (vb:buffer b)
              (i:nat{i < length vb})
              (j:nat{j < length vb /\ i<>j})

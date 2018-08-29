@@ -2835,7 +2835,7 @@ and (mk_op_app :
     fun w  ->
       fun op  ->
         fun args  ->
-          let uu____6886 =
-            let uu____6893 = FStar_List.map (translate_expr env) args  in
-            ((EOp (op, w)), uu____6893)  in
-          EApp uu____6886
+          let uu____6885 =
+            let uu____6892 = FStar_List.map (translate_expr env) args  in
+            ((EOp (op, w)), uu____6892)  in
+          EApp uu____6885

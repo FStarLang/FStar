@@ -913,7 +913,7 @@ let g_upd_seq #_ #_ #_ b s h =
     let s0 = HS.sel h (Buffer?.content b) in
     HS.upd h (Buffer?.content b) (replace_subseq s0 (U32.v (Buffer?.idx b)) (length b) s)
 
-#push-options "--z3rlimit 32"
+#push-options "--z3rlimit 48"
 let g_upd_seq_as_seq #_ #_ #_ b s h =
   let h' = g_upd_seq b s h in
   if g_is_null b then assert (Seq.equal s Seq.empty)
