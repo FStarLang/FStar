@@ -1644,8 +1644,9 @@ let rec (modul_to_string : FStar_Syntax_Syntax.modul -> Prims.string) =
       let uu____3142 =
         FStar_List.map sigelt_to_string m.FStar_Syntax_Syntax.exports  in
       FStar_All.pipe_right uu____3142 (FStar_String.concat "\n")  in
-    FStar_Util.format3 "module %s\nDeclarations:\n%s\nExports:\n%s\n"
-      uu____3134 uu____3135 uu____3141
+    FStar_Util.format3
+      "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" uu____3134
+      uu____3135 uu____3141
   
 let (abs_ascription_to_string :
   (FStar_Syntax_Syntax.lcomp,FStar_Ident.lident) FStar_Util.either
