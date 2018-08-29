@@ -23,6 +23,7 @@ open FStar.Ident
 open FStar.Extraction.ML.Syntax
 open FStar.Syntax
 open FStar.Syntax.Syntax
+open FStar.TypeChecker
 
 module U  = FStar.Syntax.Util
 module BU = FStar.Util
@@ -48,14 +49,23 @@ type exp_binding = {
 }
 
 type ty_or_exp_b = either<ty_binding, exp_binding>
+
 type binding =
     | Bv  of bv * ty_or_exp_b
     | Fv  of fv * exp_binding
 
+type tydef = {
+    tydef_fv:fv;
+    tydef_mlmodule_name:list<mlsymbol>;
+    tydef_name:mlsymbol;
+    tydef_mangled_name:option<mlsymbol>;
+    tydef_def:mltyscheme
+}
+
 type env = {
     tcenv: TypeChecker.Env.env;
     gamma:list<binding>;
-    tydefs:list<(fv * list<mlsymbol> * mltydecl)>;
+    tydefs:list<tydef>;
     type_names:list<fv>;
     currentModule: mlpath // needed to properly translate the definitions in the current file
 }
@@ -116,19 +126,17 @@ let rec lookup_ty_local (gamma:list<binding>) (b:bv) : mlty =
         | _::tl -> lookup_ty_local tl b
         | [] -> failwith ("extraction: unbound type var "^(b.ppname.idText))
 
-let tyscheme_of_td (_, _, _, vars, _, body_opt) : option<mltyscheme> = match body_opt with
+let tyscheme_of_td (_, _, _, vars, _, body_opt) : option<mltyscheme> =
+    match body_opt with
     | Some (MLTD_Abbrev t) -> Some (vars, t)
     | _ -> None
 
 //TODO: this two-level search is pretty inefficient: we should optimize it
 let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyscheme> =
-    BU.find_map env.tydefs  (fun (_, m, tds) ->
-        if module_name = m
-        then BU.find_map tds (fun td ->
-             let (_, n, _, _, _, _) = td in
-             if n=ty_name
-             then tyscheme_of_td td
-             else None)
+    BU.find_map env.tydefs  (fun tydef ->
+        if module_name = tydef.tydef_mlmodule_name
+        && ty_name = tydef.tydef_name
+        then Some tydef.tydef_def
         else None)
 
 let module_name_of_fv fv = fv.fv_name.v.ns |> List.map (fun (i:ident) -> i.idText)
@@ -136,18 +144,13 @@ let module_name_of_fv fv = fv.fv_name.v.ns |> List.map (fun (i:ident) -> i.idTex
 let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
     let mname = module_name_of_fv fv in
     let ty_name = fv.fv_name.v.ident.idText in
-    BU.find_map env.tydefs  (fun (_, m, tds) ->
-        BU.find_map tds (fun (_, n, mangle_opt, _, _, _) ->
-            if m = mname
-            then if n=ty_name
-                 then match mangle_opt with
-                      | None ->
-                        Some (m, n)
-                      | Some mangled ->
-                        let modul = m in
-                        Some (modul, mangled)
-                 else None
-            else None))
+    BU.find_map env.tydefs  (fun tydef ->
+        if tydef.tydef_mlmodule_name = mname
+        && tydef.tydef_name = ty_name
+        then match tydef.tydef_mangled_name with
+             | None -> Some (mname, ty_name)
+             | Some mangled -> Some (mname, mangled)
+        else None)
 
 let lookup_tyvar (g:env) (bt:bv) : mlty = lookup_ty_local g.gamma bt
 
@@ -320,9 +323,18 @@ let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_re
         let p, y = mlpath_of_lident f.fv_name.v in
         extend_fv' g f (p, y) t_x add_unit is_rec
 
-let extend_tydef (g:env) (fv:fv) (td:mltydecl) : env =
+let extend_tydef (g:env) (fv:fv) (td:one_mltydecl) : env * tydef =
     let m = module_name_of_fv fv in
-    {g with tydefs=(fv,m,td)::g.tydefs; type_names=fv::g.type_names}
+    let _assumed, name, mangled, vars, metadata, body_opt = td in
+    let tydef = {
+        tydef_fv = fv;
+        tydef_mlmodule_name=m;
+        tydef_name = name;
+        tydef_mangled_name = mangled;
+        tydef_def = Option.get (tyscheme_of_td td);
+    } in
+    {g with tydefs=tydef::g.tydefs; type_names=fv::g.type_names},
+    tydef
 
 let extend_type_name (g:env) (fv:fv) : env =
     {g with type_names=fv::g.type_names}
@@ -331,7 +343,7 @@ let is_type_name g fv = g.type_names |> BU.for_some (fv_eq fv)
 
 let is_fv_type g fv =
     is_type_name g fv ||
-    g.tydefs |> BU.for_some (fun (fv', _, _) -> fv_eq fv fv')
+    g.tydefs |> BU.for_some (fun tydef -> fv_eq fv tydef.tydef_fv)
 
 let emptyMlPath : mlpath = ([],"")
 
