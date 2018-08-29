@@ -166,16 +166,22 @@ let focus (t : unit -> Tac 'a) : Tac 'a =
         set_goals (goals () @ gs); set_smt_goals (smt_goals () @ sgs);
         x
 
-let rec mapAll (t : unit -> Tac unit) : Tac unit =
+let rec mapAll (t : unit -> Tac 'a) : Tac (list 'a) =
+    match goals () with
+    | [] -> []
+    | _::_ -> let (h, t) = divide 1 t (fun () -> mapAll t) in h::t
+
+let rec iterAll (t : unit -> Tac unit) : Tac unit =
+    (* Could use mapAll, but why even build that list *)
     match goals () with
     | [] -> ()
-    | _::_ -> let _ = divide 1 t (fun () -> mapAll t) in ()
+    | _::_ -> let _ = divide 1 t (fun () -> iterAll t) in ()
 
-let mapAllSMT (t : unit -> Tac unit) : Tac unit =
+let iterAllSMT (t : unit -> Tac unit) : Tac unit =
     let gs, sgs = goals (), smt_goals () in
     set_goals sgs;
     set_smt_goals [];
-    mapAll t;
+    iterAll t;
     let gs', sgs' = goals (), smt_goals () in
     set_goals gs;
     set_smt_goals (gs'@sgs')
@@ -184,7 +190,7 @@ let mapAllSMT (t : unit -> Tac unit) : Tac unit =
 subgoal produced by [t1]. Each invocation of [t2] runs on a proofstate
 with a single goal (they're "focused"). *)
 let rec seq (f : unit -> Tac unit) (g : unit -> Tac unit) : Tac unit =
-    focus (fun () -> f (); mapAll g)
+    focus (fun () -> f (); iterAll g)
 
 let exact_args (qs : list aqualv) (t : term) : Tac unit =
     focus (fun () ->
@@ -578,3 +584,7 @@ let tlabel' (l:string) =
     | h::t ->
         let h = set_label (l ^ get_label h) h in
         set_goals (h :: t)
+
+let focus_all () : Tac unit =
+    set_goals (goals () @ smt_goals ());
+    set_smt_goals []
