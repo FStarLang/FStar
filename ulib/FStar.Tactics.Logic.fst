@@ -69,8 +69,8 @@ let l_intros () = repeat l_intro
 
 let explode () : Tac unit =
     ignore (
-    repeat (fun () -> first [(fun () -> ignore (l_intro ()));
-                             (fun () -> ignore (split ()))]))
+    repeatseq (fun () -> first [(fun () -> ignore (l_intro ()));
+                               (fun () -> ignore (split ()))]))
 
 let rec visit (callback:unit -> Tac unit) : Tac unit =
     focus (fun () ->
