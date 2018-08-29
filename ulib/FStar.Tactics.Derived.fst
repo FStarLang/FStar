@@ -340,6 +340,9 @@ let pose_as (s:string) (t:term) : Tac binder =
     rename_to b s;
     b
 
+let for_each_binder (f : binder -> Tac 'a) : Tac (list 'a) =
+    map f (binders_of_env (cur_env ()))
+
 let rec revert_all (bs:binders) : Tac unit =
     match bs with
     | [] -> ()
