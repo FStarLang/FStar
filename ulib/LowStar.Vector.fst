@@ -137,15 +137,8 @@ let modifies_as_seq_within #a vec i j dloc h0 h1 =
 
 /// Construction
 
-val create_empty:
-  a:Type ->
-  HST.ST (vector a)
-	 (requires (fun h0 -> true))
-	 (ensures (fun h0 vec h1 -> 
-	   live h1 vec /\
-	   h0 == h1 /\
-	   size_of vec = 0ul /\
-	   S.equal (as_seq h1 vec) S.empty))
+val create_empty: 
+  a:Type -> Tot (vec:vector a{size_of vec = 0ul})
 let create_empty a =
   Vec 0ul 0ul B.null
 

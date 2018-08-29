@@ -19,6 +19,9 @@ module U32 = FStar.UInt32
 
 type erid = rid:HH.rid{HST.is_eternal_region rid}
 
+// `HST.new_region` does not guarantee `modifies loc_none h0 h1`, which is
+// a bit annoying. It can be proven by `B.modifies_none_modifies` and here
+// `new_region_` is exactly doing that.
 val new_region_:
   r0:HH.rid -> 
   HST.ST HH.rid
@@ -37,107 +40,123 @@ let new_region_ r0 =
   B.modifies_none_modifies hh0 hh1;
   r1
 
+// Motivation: we want to ensure that all stateful operations for a value of
+// type `a` are within the `region_of` the value.
 noeq type regional a =
 | Rgl:
     region_of: (a -> GTot HH.rid) ->
-    r_live: (HS.mem -> a -> GTot Type0) ->
-    r_live_preserved:
+
+    // A non-stateful chosen value of type `a`.
+    // Note that the value doesn't need to satisfy the stateful invariant.
+    cv: a ->
+
+    // A representation type of `a` and a corresponding function
+    repr: Type0 ->
+    r_repr: (HS.mem -> a -> GTot repr) ->
+
+    // An invariant we want to maintain for each operation.
+    // It may include `live` and `freeable` for related objects.
+    r_inv: (HS.mem -> a -> GTot Type0) ->
+
+    // A core separation lemma, saying that the invariant and represenation
+    // are preserved when an orthogonal state transition happens.
+    r_sep:
       (v:a -> p:loc -> h:HS.mem -> h':HS.mem ->
-      Lemma (requires (loc_disjoint (loc_region_only false (region_of v)) p /\
-		      r_live h v /\ modifies p h h'))
-	    (ensures (r_live h' v))) -> // /\ r_repr h v == r_repr h' v))) ->
-    r_freeable: (a -> GTot Type0) ->
-    r_create: (r:erid ->
+      Lemma (requires (r_inv h v /\
+		      loc_disjoint (loc_all_regions_from false (region_of v)) p /\
+		      modifies p h h'))
+	    (ensures (r_inv h' v /\ r_repr h v == r_repr h' v))) ->
+
+    r_init: (r:erid ->
       HST.ST a
 	(requires (fun h0 -> true))
 	(ensures (fun h0 v h1 -> 
 	  modifies loc_none h0 h1 /\
-	  r_live h1 v /\ r_freeable v /\
-	  region_of v = r))) ->
-    r_copy: (src:a -> dst:a ->
-      HST.ST unit
-	(requires (fun h0 -> true))
-	(ensures (fun h0 _ h1 ->
-	  modifies (loc_region_only false (region_of dst)) h0 h1 /\
-	  r_live h1 dst /\ r_freeable dst))) ->
-	  // /\ r_repr h1 cv == r_repr h0 v))
+	  r_inv h1 v /\ region_of v = r))) ->
     r_free: (v:a ->
       HST.ST unit
-	(requires (fun h0 -> r_live h0 v /\ r_freeable v))
+	(requires (fun h0 -> r_inv h0 v))
 	(ensures (fun h0 _ h1 ->
-	  modifies (loc_region_only false (region_of v)) h0 h1))) ->
+	  modifies (loc_all_regions_from false (region_of v)) h0 h1))) ->
     regional a
 
-val loc_region_rg: 
-  #a:Type -> rg:regional a -> v:a -> GTot loc
-let loc_region_rg #a rg v =
-  loc_region_only false (Rgl?.region_of rg v)
+noeq type copyable a (rg: regional a) =
+| Cpy:
+    copy: (src:a -> dst:a ->
+      HST.ST unit
+    	(requires (fun h0 ->
+    	  Rgl?.r_inv rg h0 src /\ Rgl?.r_inv rg h0 dst /\
+    	  HH.disjoint (Rgl?.region_of rg src)
+		      (Rgl?.region_of rg dst)))
+    	(ensures (fun h0 _ h1 ->
+    	  modifies (loc_all_regions_from 
+		     false (Rgl?.region_of rg dst)) h0 h1 /\
+    		   Rgl?.r_inv rg h1 dst /\
+    		   Rgl?.r_repr rg h1 dst == Rgl?.r_repr rg h0 src))) ->
+    copyable a rg
 
 type rvector #a (rg:regional a) = V.vector a
 
-/// Invariants about liveness and regional disjointness
+/// The invariant for each element
 
-// About liveness
-
-val elem_live:
-  #a:Type0 -> rg:regional a ->
-  h:HS.mem -> v:a -> GTot Type0
-let elem_live #a rg h v =
-  Rgl?.r_live rg h v /\ Rgl?.r_freeable rg v
-
-val elems_live:
+val elems_inv:
   #a:Type0 -> #rg:regional a ->
   h:HS.mem -> rv:rvector rg -> 
   i:uint32_t -> j:uint32_t{i <= j && j <= V.size_of rv} ->
   GTot Type0
-let elems_live #a #rg h rv i j =
-  V.forall_ h rv i j (elem_live rg h)
+let elems_inv #a #rg h rv i j =
+  V.forall_ h rv i j (Rgl?.r_inv rg h)
 
-val rv_live:
+val rv_elems_inv:
   #a:Type0 -> #rg:regional a ->
   h:HS.mem -> rv:rvector rg -> GTot Type0
-let rv_live #a #rg h rv =
-  V.live h rv /\ V.freeable rv /\
-  elems_live h rv 0ul (V.size_of rv)
+let rv_elems_inv #a #rg h rv =
+  elems_inv h rv 0ul (V.size_of rv)
 
-// About regional disjointness
-
-val elems_disj:
+val elems_reg:
   #a:Type0 -> #rg:regional a ->
   h:HS.mem -> rv:rvector rg ->
   i:uint32_t -> j:uint32_t{i <= j && j <= V.size_of rv} ->
   GTot Type0
-let elems_disj #a #rg h rv i j =
+let elems_reg #a #rg h rv i j =
   V.forall_ h rv i j
     (fun v -> HH.extends (Rgl?.region_of rg v) (V.frameOf rv)) /\
   V.forall2 h rv i j
     (fun v1 v2 -> HH.disjoint (Rgl?.region_of rg v1)
 			      (Rgl?.region_of rg v2))
 
-val rv_disj:
+val rv_elems_reg:
   #a:Type0 -> #rg:regional a ->
   h:HS.mem -> rv:rvector rg -> GTot Type0
-let rv_disj #a #rg h rv =
-  HST.is_eternal_region (V.frameOf rv) /\
-  elems_disj h rv 0ul (V.size_of rv)
+let rv_elems_reg #a #rg h rv =
+  elems_reg h rv 0ul (V.size_of rv)
 
 // The invariant of rvector
+
+val rv_itself_inv:
+  #a:Type0 -> #rg:regional a ->
+  h:HS.mem -> rv:rvector rg -> GTot Type0
+let rv_itself_inv #a #rg h rv =
+  V.live h rv /\ V.freeable rv /\
+  HST.is_eternal_region (V.frameOf rv)
 
 val rv_inv:
   #a:Type0 -> #rg:regional a ->
   h:HS.mem -> rv:rvector rg -> GTot Type0
 let rv_inv #a #rg h rv =
-  rv_live h rv /\ rv_disj #a #rg h rv
+  rv_elems_inv h rv /\
+  rv_elems_reg h rv /\
+  rv_itself_inv h rv
 
-val rv_loc_only:
-  #a:Type -> #rg:regional a -> rv:rvector rg -> GTot loc
-let rv_loc_only #a #rg rv =
-  B.loc_region_only false (V.frameOf rv)
+// val rv_loc_only:
+//   #a:Type -> #rg:regional a -> rv:rvector rg -> GTot loc
+// let rv_loc_only #a #rg rv =
+//   B.loc_region_only false (V.frameOf rv)
 
-val rv_loc_all:
-  #a:Type0 -> #rg:regional a -> rv:rvector rg -> GTot loc
-let rv_loc_all #a #rg rv =
-  B.loc_all_regions_from false (V.frameOf rv)
+// val rv_loc_all:
+//   #a:Type0 -> #rg:regional a -> rv:rvector rg -> GTot loc
+// let rv_loc_all #a #rg rv =
+//   B.loc_all_regions_from false (V.frameOf rv)
 
 val rv_loc_elem:
   #a:Type0 -> #rg:regional a ->
@@ -161,123 +180,117 @@ let rec rv_loc_elems #a #rg h rv i j =
 /// Construction
 
 val create_empty:
-  a:Type0 -> rg:regional a ->
+  #a:Type0 -> rg:regional a ->
   HST.ST (rvector rg)
     (requires (fun h0 -> true))
     (ensures (fun h0 bv h1 -> h0 == h1 /\ V.size_of bv = 0ul))
-let create_empty a rg =
+let create_empty #a rg =
   V.create_empty a
 
 private val create_:
   #a:Type0 -> #rg:regional a -> rv:rvector rg ->
   cidx:uint32_t{cidx <= V.size_of rv} -> 
   HST.ST unit
-    (requires (fun h0 -> 
-      V.live h0 rv /\ V.freeable rv /\
-      HST.is_eternal_region (V.frameOf rv)))
+    (requires (fun h0 -> rv_itself_inv h0 rv))
     (ensures (fun h0 _ h1 ->
       modifies (V.loc_vector_within rv 0ul cidx) h0 h1 /\
-      // partial live
-      V.live h0 rv /\ V.freeable rv /\
-      elems_live h1 rv 0ul cidx /\
-      // partial region
-      HST.is_eternal_region (V.frameOf rv) /\
-      elems_disj h1 rv 0ul cidx))
+      rv_itself_inv h1 rv /\
+      elems_inv h1 rv 0ul cidx /\
+      elems_reg h1 rv 0ul cidx))
     (decreases (U32.v cidx))
 private let rec create_ #a #rg rv cidx =
   admit ();
   if cidx = 0ul then ()
   else (let hh0 = HST.get () in
        let nrid = new_region_ (V.frameOf rv) in
-       let v = Rgl?.r_create rg nrid in
+       let v = Rgl?.r_init rg nrid in
        V.assign rv (cidx - 1ul) v;
        create_ rv (cidx - 1ul))
 
 val create_rid:
-  #a:Type0 -> rg:regional a -> ia:a ->
+  #a:Type0 -> rg:regional a ->
   len:uint32_t{len > 0ul} -> rid:erid ->
   HST.ST (rvector rg)
     (requires (fun h0 -> true))
     (ensures (fun h0 rv h1 ->
-      modifies (rv_loc_only rv) h0 h1 /\
+      modifies (V.loc_vector rv) h0 h1 /\
       rv_inv h1 rv /\
       V.frameOf rv = rid /\
       V.size_of rv = len))
       // S.equal (as_seq h1 blen bv) 
       // 	      (S.create (U32.v len) (S.create (U32.v blen) ia))))
-let create_rid #a rg ia len rid =
-  let vec = V.create_rid len ia rid in
+let create_rid #a rg len rid =
+  let vec = V.create_rid len (Rgl?.cv rg) rid in
   create_ #a #rg vec len;
   vec
 
 val create_reserve:
-  #a:Type0 -> rg:regional a -> ia:a ->
+  #a:Type0 -> rg:regional a ->
   len:uint32_t{len > 0ul} -> rid:erid ->
   HST.ST (rvector rg)
     (requires (fun h0 -> true))
     (ensures (fun h0 rv h1 ->
-      modifies (rv_loc_only rv) h0 h1 /\
+      modifies (V.loc_vector rv) h0 h1 /\
       rv_inv h1 rv /\
       V.frameOf rv = rid /\
       V.size_of rv = 0ul))
       // S.equal (as_seq h1 blen bv) S.empty))
-let create_reserve #a rg ia len rid =
-  V.create_reserve len ia rid
+let create_reserve #a rg len rid =
+  V.create_reserve len (Rgl?.cv rg) rid
 
 val create:
-  #a:Type0 -> rg:regional a -> ia:a ->
+  #a:Type0 -> rg:regional a ->
   len:uint32_t{len > 0ul} ->
   HST.ST (rvector rg)
     (requires (fun h0 -> true))
     (ensures (fun h0 rv h1 ->
-      modifies (rv_loc_only rv) h0 h1 /\
+      modifies (V.loc_vector rv) h0 h1 /\
       rv_inv h1 rv /\
       MHS.fresh_region (V.frameOf rv) h0 h1 /\
       V.size_of rv = len))
       // S.equal (as_seq h1 blen bv)
       // 	      (S.create (U32.v len) (S.create (U32.v blen) ia))))
-let create #a rg ia len =
+let create #a rg len =
   let nrid = new_region_ HH.root in
-  create_rid rg ia len nrid
+  create_rid rg len nrid
 
 val insert_ptr:
   #a:Type0 -> #rg:regional a ->
   rv:rvector rg{not (V.is_full rv)} -> v:a ->
   HST.ST (rvector rg)
-    (requires (fun h0 -> 
-      rv_inv h0 rv /\ elem_live rg h0 v /\
+    (requires (fun h0 ->
+      rv_inv h0 rv /\ Rgl?.r_inv rg h0 v /\
       HH.extends (Rgl?.region_of rg v) (V.frameOf rv) /\
       V.forall_all h0 rv
 	(fun b -> HH.disjoint (Rgl?.region_of rg b)
 			      (Rgl?.region_of rg v))))
     (ensures (fun h0 irv h1 ->
       V.frameOf rv = V.frameOf irv /\
-      modifies (rv_loc_only rv) h0 h1 /\
+      modifies (V.loc_vector rv) h0 h1 /\
       rv_inv h1 irv))
       // S.equal (as_seq h1 blen ibv)
       // 	      (S.snoc (as_seq h0 blen bv) (B.as_seq h0 v))))
-#set-options "--z3rlimit 40"
 let insert_ptr #a #rg rv v =
   admit ();
   V.insert rv v
 
 val insert_copy:
-  #a:Type0 -> #rg:regional a ->
+  #a:Type0 -> #rg:regional a -> #cp:copyable a rg ->
   rv:rvector rg{not (V.is_full rv)} -> v:a ->
   HST.ST (rvector rg)
-    (requires (fun h0 -> rv_inv h0 rv /\ elem_live rg h0 v))
+    (requires (fun h0 -> 
+      rv_inv h0 rv /\ Rgl?.r_inv rg h0 v))
     (ensures (fun h0 irv h1 ->
       V.frameOf rv = V.frameOf irv /\
-      modifies (rv_loc_all rv) h0 h1 /\
+      modifies (loc_all_regions_from false (V.frameOf rv)) h0 h1 /\
       rv_inv h1 irv))
       // S.equal (as_seq h1 blen ibv)
       // 	      (S.snoc (as_seq h0 blen bv) (B.as_seq h0 v))))
-#set-options "--z3rlimit 40"
-let insert_copy #a #rg rv v =
+let insert_copy #a #rg #cp rv v =
   admit ();
   let nrid = new_region_ (V.frameOf rv) in
-  let nv = Rgl?.r_create rg nrid in
-  Rgl?.r_copy rg v nv;
+  let nv = Rgl?.r_init rg nrid in
+  Cpy?.copy cp v nv;
   insert_ptr rv nv
 
 val assign_ptr:
@@ -285,13 +298,13 @@ val assign_ptr:
   i:uint32_t{i < V.size_of rv} -> v:a ->
   HST.ST unit
     (requires (fun h0 ->
-      rv_inv h0 rv /\ elem_live rg h0 v /\
+      rv_inv h0 rv /\ Rgl?.r_inv rg h0 v /\
       HH.extends (Rgl?.region_of rg v) (V.frameOf rv) /\
       V.forall_all h0 rv
 	(fun b -> HH.disjoint (Rgl?.region_of rg b)
 			      (Rgl?.region_of rg v))))
     (ensures (fun h0 _ h1 -> 
-      modifies (rv_loc_only rv) h0 h1 /\
+      modifies (V.loc_vector rv) h0 h1 /\
       rv_inv h1 rv))
       // S.equal (as_seq h1 blen bv)
       // 	      (S.upd (as_seq h0 blen bv) (U32.v i) (B.as_seq h0 v))))
@@ -300,18 +313,20 @@ let assign_ptr #a #rg rv i v =
   V.assign rv i v
 
 val assign_copy:
-  #a:Type0 -> #rg:regional a -> rv:rvector rg -> 
+  #a:Type0 -> #rg:regional a -> #cp:copyable a rg ->
+  rv:rvector rg -> 
   i:uint32_t{i < V.size_of rv} -> v:a ->
   HST.ST unit
-    (requires (fun h0 -> rv_inv h0 rv /\ elem_live rg h0 v))
+    (requires (fun h0 -> rv_inv h0 rv /\ Rgl?.r_inv rg h0 v))
     (ensures (fun h0 _ h1 -> 
-      modifies (loc_region_rg rg (V.get h0 rv i)) h0 h1 /\
+      modifies (loc_region_only 
+	         false (Rgl?.region_of rg (V.get h0 rv i))) h0 h1 /\
       rv_inv h1 rv))
       // S.equal (as_seq h1 blen bv)
       // 	      (S.upd (as_seq h0 blen bv) (U32.v i) (B.as_seq h0 v))))
-let assign_copy #a #rg rv i v =
+let assign_copy #a #rg #cp rv i v =
   admit ();
-  Rgl?.r_copy rg v (V.index rv i)
+  Cpy?.copy cp v (V.index rv i)
 
 val free_elems:
   #a:Type0 -> #rg:regional a -> rv:rvector rg -> 
@@ -319,8 +334,8 @@ val free_elems:
   HST.ST unit
     (requires (fun h0 -> 
       V.live h0 rv /\
-      elems_live h0 rv 0ul (idx + 1ul) /\
-      rv_disj h0 rv))
+      elems_inv h0 rv 0ul (idx + 1ul) /\
+      elems_reg h0 rv 0ul (idx + 1ul)))
     (ensures (fun h0 _ h1 ->
       modifies (rv_loc_elems h0 rv 0 (U32.v idx + 1)) h0 h1))
 let rec free_elems #a #rg rv idx =
@@ -333,7 +348,8 @@ val free:
   #a:Type0 -> #rg:regional a -> rv:rvector rg -> 
   HST.ST unit
     (requires (fun h0 -> rv_inv h0 rv))
-    (ensures (fun h0 _ h1 -> modifies (rv_loc_all rv) h0 h1))
+    (ensures (fun h0 _ h1 -> 
+      modifies (loc_all_regions_from false (V.frameOf rv)) h0 h1))
 let free #a #rg rv =
   admit ();
   (if V.size_of rv = 0ul then () 
