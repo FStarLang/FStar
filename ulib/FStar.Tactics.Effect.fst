@@ -113,3 +113,19 @@ val assume_safe : (#a:Type) -> (unit -> TacF a) -> Tac a
 let assume_safe #a tau = admit (); tau ()
 
 private let tactic a = unit -> Tac a
+
+(* A hook to postprocess a definition, after typechecking, and rewrite it
+ * into a (provably equal) shape chosen by the user. This can be used to implement
+ * custom transformations previous to extraction, such as selective inlining.
+ * When ran added to a definition [let x = E], the [tau] metaprogram
+ * is presented with a goal of the shape [E = ?u] for a fresh uvar [?u].
+ * The metaprogram should then both instantiate [?u] and prove the equivalence
+ * to [E]. *)
+irreducible
+let postprocess_with (tau : unit -> Tac unit) = ()
+
+(* Similar semantics to [postprocess_with], but the metaprogram only runs before
+ * extraction, and hence typechecking and the logical environment should not be
+ * affected at all. *)
+irreducible
+let postprocess_for_extraction_with (tau : unit -> Tac unit) = ()

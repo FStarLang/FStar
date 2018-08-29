@@ -274,6 +274,8 @@ let (copy_uvar :
                 (uu___347_455.FStar_TypeChecker_Env.synth_hook);
               FStar_TypeChecker_Env.splice =
                 (uu___347_455.FStar_TypeChecker_Env.splice);
+              FStar_TypeChecker_Env.postprocess =
+                (uu___347_455.FStar_TypeChecker_Env.postprocess);
               FStar_TypeChecker_Env.is_native_tactic =
                 (uu___347_455.FStar_TypeChecker_Env.is_native_tactic);
               FStar_TypeChecker_Env.identifier_info =
@@ -7184,6 +7186,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                 (uu___391_19152.FStar_TypeChecker_Env.synth_hook);
                               FStar_TypeChecker_Env.splice =
                                 (uu___391_19152.FStar_TypeChecker_Env.splice);
+                              FStar_TypeChecker_Env.postprocess =
+                                (uu___391_19152.FStar_TypeChecker_Env.postprocess);
                               FStar_TypeChecker_Env.is_native_tactic =
                                 (uu___391_19152.FStar_TypeChecker_Env.is_native_tactic);
                               FStar_TypeChecker_Env.identifier_info =
@@ -7415,6 +7419,8 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                 (uu___391_19429.FStar_TypeChecker_Env.synth_hook);
                               FStar_TypeChecker_Env.splice =
                                 (uu___391_19429.FStar_TypeChecker_Env.splice);
+                              FStar_TypeChecker_Env.postprocess =
+                                (uu___391_19429.FStar_TypeChecker_Env.postprocess);
                               FStar_TypeChecker_Env.is_native_tactic =
                                 (uu___391_19429.FStar_TypeChecker_Env.is_native_tactic);
                               FStar_TypeChecker_Env.identifier_info =
@@ -11050,7 +11056,7 @@ let (discharge_guard' :
                                         FStar_Options.set_options
                                           FStar_Options.Set "--no_tactics"
                                          in
-                                      FStar_All.pipe_left (fun a235  -> ())
+                                      FStar_All.pipe_left (fun a229  -> ())
                                         uu____26404);
                                      (let vcs =
                                         (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.preprocess
@@ -11351,6 +11357,8 @@ let (resolve_implicits' :
                                         (uu___411_26704.FStar_TypeChecker_Env.synth_hook);
                                       FStar_TypeChecker_Env.splice =
                                         (uu___411_26704.FStar_TypeChecker_Env.splice);
+                                      FStar_TypeChecker_Env.postprocess =
+                                        (uu___411_26704.FStar_TypeChecker_Env.postprocess);
                                       FStar_TypeChecker_Env.is_native_tactic
                                         =
                                         (uu___411_26704.FStar_TypeChecker_Env.is_native_tactic);
@@ -11450,6 +11458,8 @@ let (resolve_implicits' :
                                           (uu___412_26707.FStar_TypeChecker_Env.synth_hook);
                                         FStar_TypeChecker_Env.splice =
                                           (uu___412_26707.FStar_TypeChecker_Env.splice);
+                                        FStar_TypeChecker_Env.postprocess =
+                                          (uu___412_26707.FStar_TypeChecker_Env.postprocess);
                                         FStar_TypeChecker_Env.is_native_tactic
                                           =
                                           (uu___412_26707.FStar_TypeChecker_Env.is_native_tactic);
@@ -11609,7 +11619,7 @@ let (force_trivial_guard :
       match g1.FStar_TypeChecker_Env.implicits with
       | [] ->
           let uu____26812 = discharge_guard env g1  in
-          FStar_All.pipe_left (fun a236  -> ()) uu____26812
+          FStar_All.pipe_left (fun a230  -> ()) uu____26812
       | imp::uu____26814 ->
           let uu____26817 =
             let uu____26822 =

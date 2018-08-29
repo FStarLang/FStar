@@ -135,6 +135,8 @@ let (set_check_kind :
           (uu___452_163.FStar_TypeChecker_Env.synth_hook);
         FStar_TypeChecker_Env.splice =
           (uu___452_163.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.postprocess =
+          (uu___452_163.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =
           (uu___452_163.FStar_TypeChecker_Env.is_native_tactic);
         FStar_TypeChecker_Env.identifier_info =
@@ -983,7 +985,7 @@ let (run_repl_ld_transactions :
                progress_callback task;
                (let uu____2415 = FStar_Options.restore_cmd_line_options false
                    in
-                FStar_All.pipe_right uu____2415 (fun a235  -> ()));
+                FStar_All.pipe_right uu____2415 (fun a229  -> ()));
                (let timestamped_task = update_task_timestamps task  in
                 let push_kind =
                   let uu____2418 = FStar_Options.lax ()  in
@@ -2548,6 +2550,8 @@ let run_push_without_deps :
                  (uu___468_5684.FStar_TypeChecker_Env.synth_hook);
                FStar_TypeChecker_Env.splice =
                  (uu___468_5684.FStar_TypeChecker_Env.splice);
+               FStar_TypeChecker_Env.postprocess =
+                 (uu___468_5684.FStar_TypeChecker_Env.postprocess);
                FStar_TypeChecker_Env.is_native_tactic =
                  (uu___468_5684.FStar_TypeChecker_Env.is_native_tactic);
                FStar_TypeChecker_Env.identifier_info =
@@ -2694,7 +2698,7 @@ let run_push_with_deps :
        | FStar_Util.Inl (st1,deps) ->
            ((let uu____5936 = FStar_Options.restore_cmd_line_options false
                 in
-             FStar_All.pipe_right uu____5936 (fun a236  -> ()));
+             FStar_All.pipe_right uu____5936 (fun a230  -> ()));
             (let names1 =
                add_module_completions st1.repl_fname deps st1.repl_names  in
              run_push_without_deps

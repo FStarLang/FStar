@@ -131,6 +131,8 @@ let (push_with_kind :
                 (uu___416_268.FStar_TypeChecker_Env.synth_hook);
               FStar_TypeChecker_Env.splice =
                 (uu___416_268.FStar_TypeChecker_Env.splice);
+              FStar_TypeChecker_Env.postprocess =
+                (uu___416_268.FStar_TypeChecker_Env.postprocess);
               FStar_TypeChecker_Env.is_native_tactic =
                 (uu___416_268.FStar_TypeChecker_Env.is_native_tactic);
               FStar_TypeChecker_Env.identifier_info =
@@ -147,7 +149,7 @@ let (push_with_kind :
           if restore_cmd_line_options1
           then
             (let uu____272 = FStar_Options.restore_cmd_line_options false  in
-             FStar_All.pipe_right uu____272 (fun a235  -> ()))
+             FStar_All.pipe_right uu____272 (fun a229  -> ()))
           else ();
           res
   
@@ -194,7 +196,7 @@ let (check_frag :
 let (report_fail : unit -> unit) =
   fun uu____458  ->
     (let uu____460 = FStar_Errors.report_all ()  in
-     FStar_All.pipe_right uu____460 (fun a236  -> ()));
+     FStar_All.pipe_right uu____460 (fun a230  -> ()));
     FStar_Errors.clear ()
   
 type input_chunks =

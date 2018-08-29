@@ -4249,7 +4249,7 @@ let (process_pragma :
       | FStar_Syntax_Syntax.ResetOptions sopt ->
           ((let uu____15797 = FStar_Options.restore_cmd_line_options false
                in
-            FStar_All.pipe_right uu____15797 (fun a234  -> ()));
+            FStar_All.pipe_right uu____15797 (fun a228  -> ()));
            (match sopt with
             | FStar_Pervasives_Native.None  -> ()
             | FStar_Pervasives_Native.Some s ->
@@ -4443,3 +4443,58 @@ and (unbound_variables_comp :
             ct.FStar_Syntax_Syntax.effect_args
            in
         FStar_List.append uu____16553 uu____16556
+
+let (extract_attr' :
+  FStar_Ident.lid ->
+    FStar_Syntax_Syntax.term Prims.list ->
+      (FStar_Syntax_Syntax.term Prims.list,FStar_Syntax_Syntax.args)
+        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+  =
+  fun attr_lid  ->
+    fun attrs  ->
+      let rec aux acc attrs1 =
+        match attrs1 with
+        | [] -> FStar_Pervasives_Native.None
+        | h::t ->
+            let uu____16696 = head_and_args h  in
+            (match uu____16696 with
+             | (head1,args) ->
+                 let uu____16757 =
+                   let uu____16758 = FStar_Syntax_Subst.compress head1  in
+                   uu____16758.FStar_Syntax_Syntax.n  in
+                 (match uu____16757 with
+                  | FStar_Syntax_Syntax.Tm_fvar fv when
+                      FStar_Syntax_Syntax.fv_eq_lid fv attr_lid ->
+                      let attrs' = FStar_List.rev_acc acc t  in
+                      FStar_Pervasives_Native.Some (attrs', args)
+                  | uu____16811 -> aux (h :: acc) t))
+         in
+      aux [] attrs
+  
+let (extract_attr :
+  FStar_Ident.lid ->
+    FStar_Syntax_Syntax.sigelt ->
+      (FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.args)
+        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)
+  =
+  fun attr_lid  ->
+    fun se  ->
+      let uu____16834 =
+        extract_attr' attr_lid se.FStar_Syntax_Syntax.sigattrs  in
+      match uu____16834 with
+      | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+      | FStar_Pervasives_Native.Some (attrs',t) ->
+          FStar_Pervasives_Native.Some
+            ((let uu___130_16876 = se  in
+              {
+                FStar_Syntax_Syntax.sigel =
+                  (uu___130_16876.FStar_Syntax_Syntax.sigel);
+                FStar_Syntax_Syntax.sigrng =
+                  (uu___130_16876.FStar_Syntax_Syntax.sigrng);
+                FStar_Syntax_Syntax.sigquals =
+                  (uu___130_16876.FStar_Syntax_Syntax.sigquals);
+                FStar_Syntax_Syntax.sigmeta =
+                  (uu___130_16876.FStar_Syntax_Syntax.sigmeta);
+                FStar_Syntax_Syntax.sigattrs = attrs'
+              }), t)
+  

@@ -50,7 +50,7 @@ let add_errors env errs =
                         then e, msg, Env.get_range env
                         else let r' = Range.set_def_range r (Range.use_range r) in
                              if Range.file_of_range r' <> Range.file_of_range (Env.get_range env) //r points to another file
-                             then e, (msg ^ ("(Also see: " ^ (Range.string_of_use_range r) ^")")), Env.get_range env
+                             then e, (msg ^ (" (Also see: " ^ (Range.string_of_use_range r) ^")")), Env.get_range env
                              else e, msg, r) in
     FStar.Errors.add_errors errs
 
