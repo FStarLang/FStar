@@ -74,7 +74,6 @@ type token =
   | NEW_EFFECT
   | NEW
   | NAME of (string)
-  | MUTABLE
   | MODULE
   | MINUS
   | MATCH
@@ -226,7 +225,6 @@ type tokenId =
     | TOKEN_NEW_EFFECT
     | TOKEN_NEW
     | TOKEN_NAME
-    | TOKEN_MUTABLE
     | TOKEN_MODULE
     | TOKEN_MINUS
     | TOKEN_MATCH

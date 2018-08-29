@@ -119,7 +119,13 @@ let goal_to_string ps (g:goal) =
             | None -> "_"
             | Some t -> tts (goal_env g) t
         in
-        BU.format3 "%s |- %s : %s"
+        let maybe_label =
+            match g.label with
+            | "" -> ""
+            | l -> "Label: " ^ l ^ "\n"
+        in
+        BU.format4 "%s%s |- %s : %s"
+             maybe_label
              (Print.binders_to_string ", " g.goal_ctx_uvar.ctx_uvar_binders)
              w
              (tts (goal_env g) g.goal_ctx_uvar.ctx_uvar_typ)
@@ -189,7 +195,9 @@ let goal_to_json g =
     let g_binders = Env.all_binders (goal_env g) |> Print.binders_to_json (Env.dsenv (goal_env g)) in
     JsonAssoc [("hyps", g_binders);
                ("goal", JsonAssoc [("witness", JsonStr (tts (goal_env g) (goal_witness g)));
-                                   ("type", JsonStr (tts (goal_env g) (goal_type g)))])]
+                                   ("type", JsonStr (tts (goal_env g) (goal_type g)));
+                                   ("label", JsonStr g.label)
+                                  ])]
 
 let ps_to_json (msg, ps) =
     JsonAssoc ([("label", JsonStr msg);
@@ -503,10 +511,10 @@ let fresh () : tac<Z.t> =
     bind (set ps) (fun () ->
     ret (Z.of_int_fs n)))
 
-let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
+let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts label : tac<goal> =
     let typ = U.mk_squash (env.universe_of env phi) phi in
     bind (new_uvar reason env typ) (fun (_, ctx_uvar) ->
-    let goal = mk_goal env ctx_uvar opts false in
+    let goal = mk_goal env ctx_uvar opts false label in
     ret goal)
 
 (* Annoying duplication here *)
@@ -591,16 +599,19 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
             (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted guard <%s>\n\n"
                         (Rel.guard_to_string e g));
         ret ()
+
     | Goal ->
         mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        bind (mk_irrelevant_goal reason e f opts) (fun goal ->
+        bind (mk_irrelevant_goal reason e f opts "") (fun goal ->
         let goal = { goal with is_guard = true } in
         push_goals [goal]))
+
     | SMT ->
         mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        bind (mk_irrelevant_goal reason e f opts) (fun goal ->
+        bind (mk_irrelevant_goal reason e f opts "") (fun goal ->
         let goal = { goal with is_guard = true } in
         push_smt_goals [goal]))
+
     | Force ->
         mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
         try if not (Env.is_trivial <| Rel.discharge_guard_no_smt e g)
@@ -622,8 +633,8 @@ let tc (t : term) : tac<typ> = wrap_err "tc" <|
     ret typ
     ))
 
-let add_irrelevant_goal reason env phi opts : tac<unit> =
-    bind (mk_irrelevant_goal reason env phi opts) (fun goal ->
+let add_irrelevant_goal reason env phi opts label : tac<unit> =
+    bind (mk_irrelevant_goal reason env phi opts label) (fun goal ->
     add_goals [goal])
 
 let trivial () : tac<unit> =
@@ -632,14 +643,6 @@ let trivial () : tac<unit> =
     then solve' goal U.exp_unit
     else fail1 "Not a trivial goal: %s" (tts (goal_env goal) (goal_type goal))
     )
-
-let goal_from_guard (reason:string) (e:env) (g : guard_t) opts : tac<option<goal>> =
-    match (Rel.simplify_guard e g).guard_f with
-    | TcComm.Trivial -> ret None
-    | TcComm.NonTrivial f ->
-        if istrivial e f then ret None else
-        bind (mk_irrelevant_goal reason e f opts) (fun goal ->
-        ret (Some ({ goal with is_guard = true })))
 
 let divide (n:Z.t) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     bind get (fun p ->
@@ -735,7 +738,7 @@ let intro () : tac<binder> = wrap_err "intro" <|
                 I.e., this immediately destroys the nice shape of the next goal.
              *)
              bind (set_solution goal sol) (fun () ->
-             let g = mk_goal env' ctx_uvar goal.opts goal.is_guard in
+             let g = mk_goal env' ctx_uvar goal.opts goal.is_guard goal.label in
              bind (replace_cur (bnorm_goal g)) (fun _ ->
              ret b)))
     | None ->
@@ -802,7 +805,7 @@ let refine_intro () : tac<unit> = wrap_err "refine_intro" <|
                       | bvs, phi -> fst (List.hd bvs), phi
         in
         bind (mk_irrelevant_goal "refine_intro refinement" (goal_env g)
-                    (SS.subst [S.NT (bv, (goal_witness g))] phi) g.opts) (fun g2 ->
+                    (SS.subst [S.NT (bv, (goal_witness g))] phi) g.opts g.label) (fun g2 ->
         bind __dismiss (fun _ ->
         add_goals [g1;g2])))
 
@@ -1031,7 +1034,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
         let sub_goals = filter' (fun g goals -> not (checkone (goal_witness g) goals)) sub_goals in
         bind (proc_guard "apply_lemma guard" (goal_env goal) guard) (fun _ ->
         bind (if not (istrivial (goal_env goal) (U.mk_squash U_zero pre)) //lemma preconditions are in U_zero
-              then add_irrelevant_goal "apply_lemma precondition" (goal_env goal) pre goal.opts
+              then add_irrelevant_goal "apply_lemma precondition" (goal_env goal) pre goal.opts goal.label
               else ret ()) (fun _ ->
         add_goals sub_goals)))))
     ))))))
@@ -1140,7 +1143,7 @@ let binder_retype (b : binder) : tac<unit> = wrap_err "binder_retype" <|
         in
         bind (add_goals [new_goal]) (fun _ ->
               add_irrelevant_goal "binder_retype equation" e0
-                  (U.mk_eq2 (U_succ u) ty bv.sort t') goal.opts)))
+                  (U.mk_eq2 (U_succ u) ty bv.sort t') goal.opts goal.label)))
     )
 
 (* TODO: move to bv *)
@@ -1166,7 +1169,7 @@ let revert () : tac<unit> =
         let typ' = U.arrow [(x, None)] (mk_Total (goal_type goal)) in
         bind (new_uvar "revert" env' typ') (fun (r, u_r) ->
         bind (set_solution goal (S.mk_Tm_app r [S.as_arg (S.bv_to_name x)] None (goal_type goal).pos)) (fun () ->
-        let g = mk_goal env' u_r goal.opts goal.is_guard in
+        let g = mk_goal env' u_r goal.opts goal.is_guard goal.label in
         replace_cur g)))
 
 let free_in bv t =
@@ -1196,7 +1199,7 @@ let rec clear (b : binder) : tac<unit> =
         let env' = push_bvs e' bvs in
         bind (new_uvar "clear.witness" env' (goal_type goal)) (fun (ut, uvar_ut) ->
         bind (set_solution goal ut) (fun () ->
-        replace_cur (mk_goal env' uvar_ut goal.opts goal.is_guard))))))
+        replace_cur (mk_goal env' uvar_ut goal.opts goal.is_guard goal.label))))))
 
 let clear_top () : tac<unit> =
     bind (cur_goal ()) (fun goal ->
@@ -1302,7 +1305,7 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
  * calls apply_lemma to fully instantiate `u` and provide a proof of the equality.
  * If all that is successful, the term is rewritten.
  *)
-let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : term) : tac<term> =
+let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts label (env : Env.env) (t : term) : tac<term> =
     let t, lcomp, g = TcTerm.tc_term ({ env with lax = true }) t in
     if not (U.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
@@ -1316,7 +1319,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : 
                             (Print.term_to_string t)
                             (Print.term_to_string ut));
           bind (add_irrelevant_goal "pointwise_rec equation" env
-                                    (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut) opts) (fun _ ->
+                                    (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut) opts label) (fun _ ->
           focus (
                 bind tau (fun _ ->
                 // Try to get rid  of all the unification lambdas
@@ -1397,7 +1400,7 @@ and ctrl_tac_fold_args
 let rewrite_rec (ps : proofstate)
                 (ctrl:term -> ctrl_tac<rewrite_result>)
                 (rewriter: tac<unit>)
-                opts
+                opts label
                 (env : Env.env)
                 (t : term) : ctrl_tac<term> =
     let t = SS.compress t in
@@ -1408,7 +1411,8 @@ let rewrite_rec (ps : proofstate)
     bind (bind (add_irrelevant_goal "dummy"
                     env
                     U.t_true
-                    opts) (fun _ ->
+                    opts
+                    label) (fun _ ->
           bind (ctrl t) (fun res ->
           bind (trivial ()) (fun _ ->
           ret res)))) (fun (should_rewrite, ctrl) ->
@@ -1427,7 +1431,8 @@ let rewrite_rec (ps : proofstate)
                              "rewrite_rec equation"
                              env
                              (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut)
-                             opts) (fun _ ->
+                             opts
+                             label) (fun _ ->
            focus
             (bind rewriter (fun _ ->
              // Try to get rid of all the unification lambdas
@@ -1449,7 +1454,7 @@ let topdown_rewrite (ctrl:term -> ctrl_tac<rewrite_result>)
     log ps (fun () ->
         BU.print1 "Topdown_rewrite starting with %s\n" (Print.term_to_string gt));
     bind dismiss_all (fun _ ->
-    bind (ctrl_tac_fold (rewrite_rec ps ctrl rewriter g.opts) (goal_env g) keepGoing gt) (fun (gt', _) ->
+    bind (ctrl_tac_fold (rewrite_rec ps ctrl rewriter g.opts g.label) (goal_env g) keepGoing gt) (fun (gt', _) ->
     log ps (fun () ->
         BU.print1 "Topdown_rewrite seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
@@ -1466,7 +1471,7 @@ let pointwise (d : direction) (tau:tac<unit>) : tac<unit> = wrap_err "pointwise"
     log ps (fun () ->
         BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt));
     bind dismiss_all (fun _ ->
-    bind (tac_fold_env d (pointwise_rec ps tau g.opts) (goal_env g) gt) (fun gt' ->
+    bind (tac_fold_env d (pointwise_rec ps tau g.opts g.label) (goal_env g) gt) (fun gt' ->
     log ps (fun () ->
         BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
@@ -1503,7 +1508,7 @@ let dup () : tac<unit> =
     let g' = { g with goal_ctx_uvar = u_uvar } in
     bind __dismiss (fun _ ->
     bind (add_irrelevant_goal "dup equation" (goal_env g)
-               (U.mk_eq2 (TcTerm.universe_of (goal_env g) (goal_type g)) (goal_type g) u (goal_witness g)) g.opts) (fun _ ->
+               (U.mk_eq2 (TcTerm.universe_of (goal_env g) (goal_type g)) (goal_type g) u (goal_witness g)) g.opts g.label) (fun _ ->
     bind (add_goals [g']) (fun _ ->
     ret ())))))
 
@@ -1549,7 +1554,7 @@ let join_goals g1 g2 : tac<goal> =
     let nenv = { goal_env g1 with gamma = List.rev gamma
                                 ; gamma_cache = BU.smap_create 100 (* Paranoid? *)
                                 } in
-    bind (mk_irrelevant_goal "joined" nenv ng g1.opts) (fun goal ->
+    bind (mk_irrelevant_goal "joined" nenv ng g1.opts g1.label) (fun goal ->
     mlog (fun () -> BU.print3 "join_goals of\n(%s)\nand\n(%s)\n= (%s)\n"
                 (goal_to_string_verbose g1)
                 (goal_to_string_verbose g2)
@@ -1644,7 +1649,7 @@ let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
     match U.head_and_args t with
     | { n = Tm_uvar (ctx_uvar, _) }, _ ->
         let env = {env with gamma=ctx_uvar.ctx_uvar_gamma} in
-        let g = mk_goal env ctx_uvar opts false in
+        let g = mk_goal env ctx_uvar opts false "" in
         add_goals [bnorm_goal g]
     | _ -> fail "not a uvar")
 
@@ -1805,7 +1810,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
 
                         let nty = U.arrow bs (mk_Total cod) in
                         bind (new_uvar "destruct branch" env nty) (fun (uvt, uv) ->
-                        let g' = mk_goal env uv g.opts false in
+                        let g' = mk_goal env uv g.opts false g.label in
                         let brt = U.mk_app_binders uvt bs in
                         (* Provide the scrutinee equality, which is trivially provable *)
                         let brt = U.mk_app brt [S.as_arg U.exp_unit] in
@@ -2033,7 +2038,7 @@ let lset (_ty:term) (k:string) (t:term) : tac<unit> = wrap_err "lset" <|
 let goal_of_goal_ty env typ : goal * guard_t =
     let u, ctx_uvars, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
     let ctx_uvar, _ = List.hd ctx_uvars in
-    let g = mk_goal env ctx_uvar (FStar.Options.peek()) false in
+    let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
     g, g_u
 
 let proofstate_of_goal_ty rng env typ =

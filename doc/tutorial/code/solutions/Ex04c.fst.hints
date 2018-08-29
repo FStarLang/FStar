@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5827e44dcbbcc81a47b6c64c644efc64"
+      "c23cbf0949170cb98d88699f7d1ba966"
     ],
     [
       "Ex04c.mem",
@@ -28,7 +28,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3f47a1e62fe34f9b55ef0120f222fb0e"
+      "e8156b72618af8a04a48349738ee1ec5"
     ],
     [
       "Ex04c.append_mem",
@@ -61,7 +61,7 @@
         "typing_Ex04c.append", "typing_Ex04c.mem"
       ],
       0,
-      "5feb575164c0b884b7a40945cd839dc9"
+      "5d38eff706cdd78c0e4ebaba737ba9a9"
     ],
     [
       "Ex04c.append",
@@ -75,7 +75,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3e11befabd4debb46523cc67cb3a48e4"
+      "86b14d0dd3ee5ddeeb9be21fde69f2f7"
     ],
     [
       "Ex04c.mem",
@@ -90,7 +90,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f424e390fa8979951949321bdc17d72f"
+      "63f0acf5efed0fc988ac2a885199274c"
     ]
   ]
 ]
