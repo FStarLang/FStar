@@ -11,7 +11,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "5e1569b6a20f516a27bf32e42665c5d4"
+      "ebb05bc40b8ba2d48b1f8b50b7d25080"
     ],
     [
       "Alt.uu___63",
@@ -23,7 +23,31 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
       ],
       0,
-      "0047d61ec4f1001cc088b181a7237089"
+      "bf95ca3fb71b2d2132abb73e88330d77"
+    ],
+    [
+      "Alt.uu___63",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "fcc37d1e1c892b15a41dd8eabc248261"
+    ],
+    [
+      "Alt.uu___63",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result", "true_interp"
+      ],
+      0,
+      "c17c6e656d477884e1b53ffc4af81486"
     ]
   ]
 ]

@@ -180,6 +180,57 @@
       "27aff6ee76880e2aa6dbef6cdb072b16"
     ],
     [
+      "FStar.DM4F.MonadLaws.right_unit_st",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_6dd4b2d408ebb27b698bdc002d931e9e",
+        "equation_FStar.DM4F.MonadLaws.bind_st",
+        "equation_FStar.DM4F.MonadLaws.return_st",
+        "equation_FStar.DM4F.MonadLaws.st",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_f0ff2465114cebc3f8141782403605d7",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_f541716cfedab030d3e5d803d0c6034f",
+        "token_correspondence_FStar.DM4F.MonadLaws.return_st"
+      ],
+      0,
+      "90bcab66868d16419afa865426287f6d"
+    ],
+    [
+      "FStar.DM4F.MonadLaws.left_unit_st",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.DM4F.MonadLaws.bind_st",
+        "equation_FStar.DM4F.MonadLaws.return_st",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_f0ff2465114cebc3f8141782403605d7",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_f541716cfedab030d3e5d803d0c6034f",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "452f375bc206e778f38672856f9dd942"
+    ],
+    [
+      "FStar.DM4F.MonadLaws.assoc_st",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.DM4F.MonadLaws.bind_st",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_226c216e0ea460802b4491a711d5e8f3",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_f541716cfedab030d3e5d803d0c6034f"
+      ],
+      0,
+      "68ba9b6fe86941814d2fc8ea70c72cd6"
+    ],
+    [
       "FStar.DM4F.MonadLaws.bind_ifc",
       2,
       2,
@@ -200,7 +251,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "56cefbd38424ce3023bf1ee44ac13f61"
+      "a25e26599050f24a7b7715954fb2f54b"
     ]
   ]
 ]

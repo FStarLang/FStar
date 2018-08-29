@@ -12,7 +12,20 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "15d5d05c4585bf2006fe1cb284419e19"
+      "14626c3f26d49e22c1d178220043ec3f"
+    ],
+    [
+      "Unify.uu___62",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Unify.h",
+        "function_token_typing_Unify.h", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "060438a5ce8b324dbbf284333bc1030f"
     ]
   ]
 ]

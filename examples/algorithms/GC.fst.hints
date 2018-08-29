@@ -573,6 +573,48 @@
       "45bfe45d7ce2795777dbe17b419ea770"
     ],
     [
+      "GC.test1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_GC.is_mem_addr", "equation_GC.mem_addr",
+        "equation_GC.mutator_inv", "equation_GC.obj_inv",
+        "equation_GC.ptr_lifts", "equation_GC.sweep_aux_inv",
+        "fuel_guarded_inversion_GC.gc_state", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_GC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
+        "typing_GC.mem_hi"
+      ],
+      0,
+      "1f6ef6dba859ef40661bcd6ba086ba3a"
+    ],
+    [
+      "GC.test2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_GC.color__uu___haseq",
+        "b2t_def", "bool_inversion", "bool_typing",
+        "constructor_distinct_GC.Black", "constructor_distinct_GC.Unalloc",
+        "equality_tok_GC.Black@tok", "equality_tok_GC.Unalloc@tok",
+        "equation_GC.gc_inv", "equation_GC.is_mem_addr",
+        "equation_GC.mem_addr", "equation_GC.ptr_lifts",
+        "equation_GC.sweep_aux_inv", "equation_GC.valid",
+        "fuel_guarded_inversion_GC.gc_state", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_GC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
+        "typing_GC.is_mem_addr", "typing_GC.mem_lo"
+      ],
+      0,
+      "6ee557224447ea3796cac84500bb3a6f"
+    ],
+    [
       "GC.sweep",
       3,
       2,
@@ -629,7 +671,7 @@
         "typing_GC.valid"
       ],
       0,
-      "eb479cb1f47c20802f39c8b79ca5a7c0"
+      "f0dede678b5f5523e94868df9351ab93"
     ],
     [
       "GC.gc",
@@ -638,7 +680,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "10fe826f0926710211697fa23cd944fe"
+      "a666f46598a1ea7aa9a3d9ff5c1a6313"
     ],
     [
       "GC.try_alloc_invariant",
@@ -647,7 +689,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c4b7aff7685427f366583ecbb7db45eb"
+      "b96d20d9b364159235da96d8443c1c03"
     ],
     [
       "GC.alloc",
@@ -656,7 +698,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0a40bbd68fbc7a4ca644b450541ba6aa"
+      "e5f88c34d16357a5f56626c5bb2e9fa9"
     ]
   ]
 ]

@@ -23,7 +23,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "e5e8b90962b9811f12e3ba441cd30528"
+      "dbb2ea623e995ee4970a4369121edbff"
     ],
     [
       "Pruning.uu___69",
@@ -41,7 +41,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "55cb0e1699656a27ed60a96e4656a35b"
+      "bc5bd6de9c1b9d28411971f86946e8bb"
     ],
     [
       "Pruning.uu___70",
@@ -59,7 +59,52 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "d46f39851a4f275cb79c7df91ad0cae7"
+      "34b304929b7e61470723658af419f910"
+    ],
+    [
+      "Pruning.f",
+      2,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "a5c3e398ab757153639fe9fede257b19"
+    ],
+    [
+      "Pruning.uu___69",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "equation_FStar.List.Tot.Base.rev",
+        "equation_with_fuel_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
+      ],
+      0,
+      "19c6ff4ac1593e577ac4c765d18826dc"
+    ],
+    [
+      "Pruning.uu___70",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "equation_FStar.List.Tot.Base.rev",
+        "equation_with_fuel_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
+      ],
+      0,
+      "c294b9071719a268e35a8c6fd1c11065"
     ]
   ]
 ]
