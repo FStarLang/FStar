@@ -166,6 +166,9 @@ let focus (t : unit -> Tac 'a) : Tac 'a =
         set_goals (goals () @ gs); set_smt_goals (smt_goals () @ sgs);
         x
 
+(** Similar to [dump], but only dumping the current goal. *)
+let dump1 (m : string) = focus (fun () -> dump m)
+
 let rec mapAll (t : unit -> Tac 'a) : Tac (list 'a) =
     match goals () with
     | [] -> []

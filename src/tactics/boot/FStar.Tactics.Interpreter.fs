@@ -220,9 +220,6 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "dump"          print_proof_state e_string e_unit
                                print_proof_state NBET.e_string NBET.e_unit;
 
-      mktac1 0 "dump1"         print_proof_state1 e_string e_unit
-                               print_proof_state1 NBET.e_string NBET.e_unit;
-
       mktac2 0 "t_pointwise"   pointwise E.e_direction (e_tactic_thunk e_unit) e_unit
                                pointwise E.e_direction_nbe (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
 

@@ -155,20 +155,6 @@ let debugging () : tac<bool> =
     bind get (fun ps ->
     ret (Env.debug ps.main_context (Options.Other "Tac")))
 
-let dump_goal ps goal =
-    tacprint (goal_to_string ps goal);
-    ()
-
-let dump_cur ps msg =
-    match ps.goals with
-    | [] ->
-        tacprint1 "No more goals (%s)" msg
-    | h::_ ->
-        begin
-        tacprint1 "Current goal (%s):" msg;
-        dump_goal ps (List.hd ps.goals)
-        end
-
 (* Note: we use def ranges. In tactics we keep the position in there, while the
  * use range is the original position of the assertion / synth / splice. *)
 let ps_to_string (msg, ps) =
@@ -212,13 +198,6 @@ let dump_proofstate ps msg =
     Options.with_saved_options (fun () ->
         Options.set_option "print_effect_args" (Options.Bool true);
         print_generic "proof-state" ps_to_string ps_to_json (msg, ps))
-
-let print_proof_state1  (msg:string) : tac<unit> =
-    mk_tac (fun ps ->
-                   let psc = ps.psc in
-                   let subst = Cfg.psc_subst psc in
-                   dump_cur (subst_proof_state subst ps) msg;
-                   Success ((), ps))
 
 let print_proof_state (msg:string) : tac<unit> =
     mk_tac (fun ps ->
