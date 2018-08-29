@@ -545,7 +545,7 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
     (let report uu____441 =
        let uu____442 = FStar_Errors.report_all ()  in
-       FStar_All.pipe_right uu____442 (fun a235  -> ())  in
+       FStar_All.pipe_right uu____442 (fun a229  -> ())  in
      try
        (fun uu___423_450  ->
           match () with

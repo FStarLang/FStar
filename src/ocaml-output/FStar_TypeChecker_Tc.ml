@@ -2869,7 +2869,7 @@ let (cps_and_elaborate :
                                                                     in
                                                                  FStar_All.pipe_right
                                                                    uu____4536
-                                                                   (fun a235 
+                                                                   (fun a229 
                                                                     -> ()))));
                                                           (let wp =
                                                              let t2 =
@@ -7477,7 +7477,7 @@ let (check_exports :
                    in
                 let uu____13233 =
                   FStar_TypeChecker_TcTerm.tc_trivial_guard env2 t1  in
-                FStar_All.pipe_right uu____13233 (fun a236  -> ())))
+                FStar_All.pipe_right uu____13233 (fun a230  -> ())))
            in
         let check_term1 lid univs1 t =
           (let uu____13259 =
@@ -8367,7 +8367,7 @@ and (finish_partial_modul :
                   then
                     ((let uu____14811 =
                         FStar_Options.restore_cmd_line_options true  in
-                      FStar_All.pipe_right uu____14811 (fun a237  -> ()));
+                      FStar_All.pipe_right uu____14811 (fun a231  -> ()));
                      z3_reset_options en01)
                   else en01  in
                 let uu____14813 = tc_modul en0 modul_iface true  in
@@ -8440,7 +8440,7 @@ and (finish_partial_modul :
                     (Prims.strcat "Ending modul "
                        (modul.FStar_Syntax_Syntax.name).FStar_Ident.str)
                    in
-                FStar_All.pipe_right uu____14902 (fun a238  -> ()));
+                FStar_All.pipe_right uu____14902 (fun a232  -> ()));
                (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.encode_modul
                  env modul;
                (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
@@ -8452,7 +8452,7 @@ and (finish_partial_modul :
                 then
                   let uu____14908 =
                     FStar_Options.restore_cmd_line_options true  in
-                  FStar_All.pipe_right uu____14908 (fun a239  -> ())
+                  FStar_All.pipe_right uu____14908 (fun a233  -> ())
                 else ());
                (modul, FStar_Pervasives_Native.None, env))
 
