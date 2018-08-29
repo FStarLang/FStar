@@ -26,38 +26,38 @@ let _ = assert_by_tactic True
             (fun () -> let y = True in
                        let tm = `(False ==> `@y) in
                        debug ("tm = " ^ term_to_string tm);
-                       let _ = tc tm in ())
+                       ignore (tc tm))
 
 let _ = assert_by_tactic True
             (fun () -> let y = bool in
                        let tm = `(int * (`@y)) in
                        debug ("tm = " ^ term_to_string tm);
-                       let _ = tc tm in ())
+                       ignore (tc tm))
 
 let _ = assert_by_tactic True
             (fun () -> let y = 5 in
                        let tm = `((+) (`@y) 25) in
                        debug ("tm = " ^ term_to_string tm);
-                       let _ = tc tm in ())
+                       ignore (tc tm))
 
 
 let _ = assert_by_tactic True
             (fun () -> let y = 5 in
                        let tm = `(fun z -> z + (`@y)) in
                        debug ("tm = " ^ term_to_string tm);
-                       let _ = tc tm in ())
+                       ignore (tc tm))
 
 let _ = assert_by_tactic True
             (fun () -> let y = 5 in
                        let tm = `(if (`@y) = 22 then (`@y) - 1 else 1 - (`@y)) in
                        debug ("tm = " ^ term_to_string tm);
-                       let _ = tc tm in ())
+                       ignore (tc tm))
 
 let _ = assert_by_tactic True
             (fun () -> let y = 5 in
                        let tm = `(match (`@y) with | 4 -> 1 + (`@y) | _ -> 99) in
                        debug ("tm = " ^ term_to_string tm);
-                       let _ = tc tm in ())
+                       ignore (tc tm))
 
 // This one can extract, basically to mk_e_app (plus, [1; t])
 let f (t : term) = `(1 + (`#t))
