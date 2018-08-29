@@ -240,7 +240,7 @@ let rec to_vec_lemma_2 #n a b =
 val inverse_aux: #n:nat -> vec:bv_t n -> i:nat{i < n} ->
   Lemma (requires True) (ensures index vec i = index (to_vec (from_vec vec)) i)
         [SMTPat (index (to_vec (from_vec vec)) i)]
-let rec inverse_aux #n vec i = 
+let rec inverse_aux #n vec i =
   if i = n - 1 then assert((from_vec vec) % 2 = (if index vec (n - 1) then 1 else 0)) else inverse_aux #(n - 1) (slice vec 0 (n - 1)) i
 
 val inverse_vec_lemma: #n:nat -> vec:bv_t n ->
@@ -349,7 +349,7 @@ val pow2_to_vec_lemma: #n:pos -> p:nat{p < n} -> i:nat{i < n} ->
         (ensures index (to_vec (pow2_n #n p)) i = index (elem_vec #n (n - p - 1)) i)
 	[SMTPat (index (to_vec (pow2_n #n p)) i)]
 let rec pow2_to_vec_lemma #n p i =
-  if i = n - 1 then () 
+  if i = n - 1 then ()
   else if p = 0 then one_to_vec_lemma #n i
   else pow2_to_vec_lemma #(n - 1) (p - 1) i
 
@@ -458,15 +458,15 @@ val logand_associative: #n:pos -> a:uint_t n -> b:uint_t n -> c:uint_t n ->
 	(ensures (logand #n (logand #n a b) c = logand #n a (logand #n b c)))
 let logand_associative #n a b c = nth_lemma #n (logand #n (logand #n a b) c) (logand #n a (logand #n b c))
 
-val logand_self: #n:pos -> a:uint_t n -> 
+val logand_self: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logand #n a a = a))
 let logand_self #n a = nth_lemma #n (logand #n a a) a
 
-val logand_lemma_1: #n:pos -> a:uint_t n -> 
+val logand_lemma_1: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logand #n a (zero n) = zero n))
 let logand_lemma_1 #n a = nth_lemma #n (logand #n a (zero n)) (zero n)
 
-val logand_lemma_2: #n:pos -> a:uint_t n -> 
+val logand_lemma_2: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logand #n a (ones n) = a))
 let logand_lemma_2 #n a = nth_lemma #n (logand #n a (ones n)) a
 
@@ -502,11 +502,11 @@ val logxor_self: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logxor #n a a = zero n))
 let logxor_self #n a = nth_lemma #n (logxor #n a a) (zero n)
 
-val logxor_lemma_1: #n:pos -> a:uint_t n -> 
+val logxor_lemma_1: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logxor #n a (zero n) = a))
 let logxor_lemma_1 #n a = nth_lemma #n (logxor #n a (zero n)) a
 
-val logxor_lemma_2: #n:pos -> a:uint_t n -> 
+val logxor_lemma_2: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logxor #n a (ones n) = lognot #n a))
 let logxor_lemma_2 #n a = nth_lemma #n (logxor #n a (ones n)) (lognot #n a)
 
@@ -560,7 +560,7 @@ val logor_associative: #n:pos -> a:uint_t n -> b:uint_t n -> c:uint_t n ->
 	(ensures (logor #n (logor #n a b) c = logor #n a (logor #n b c)))
 let logor_associative #n a b c = nth_lemma #n (logor #n (logor #n a b) c) (logor #n a (logor #n b c))
 
-val logor_self: #n:pos -> a:uint_t n -> 
+val logor_self: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logor #n a a = a))
 let logor_self #n a = nth_lemma #n (logor #n a a) a
 
@@ -568,7 +568,7 @@ val logor_lemma_1: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logor #n a (zero n) = a))
 let logor_lemma_1 #n a = nth_lemma (logor #n a (zero n)) a
 
-val logor_lemma_2: #n:pos -> a:uint_t n -> 
+val logor_lemma_2: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logor #n a (ones n) = ones n))
 let logor_lemma_2 #n a = nth_lemma (logor #n a (ones n)) (ones n)
 
@@ -599,7 +599,7 @@ val lognot_self: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (lognot #n (lognot #n a) = a))
 let lognot_self #n a = nth_lemma (lognot #n (lognot #n a)) a
 
-val lognot_lemma_1: #n:pos -> 
+val lognot_lemma_1: #n:pos ->
   Lemma (requires True) (ensures (lognot #n (zero n) = ones n))
 let lognot_lemma_1 #n = nth_lemma (lognot #n (zero n)) (ones n)
 
@@ -763,14 +763,14 @@ let shift_left_value_aux_1 #n a s = pow2_multiplication_modulo_lemma_1 a n s
 val shift_left_value_aux_2: #n:pos -> a:uint_t n ->
   Lemma (requires True)
         (ensures shift_left #n a 0 = (a * pow2 0) % pow2 n)
-let shift_left_value_aux_2 #n a = 
+let shift_left_value_aux_2 #n a =
   assert_norm(a * pow2 0 = a);
   small_modulo_lemma_1 a (pow2 n)
 
 val shift_left_value_aux_3: #n:pos -> a:uint_t n -> s:pos{s < n} ->
   Lemma (requires True)
         (ensures shift_left #n a s = (a * pow2 s) % pow2 n)
-let shift_left_value_aux_3 #n a s = 
+let shift_left_value_aux_3 #n a s =
   append_lemma #(n - s) #s (slice (to_vec a) s n) (zero_vec #s);
   slice_right_lemma #n (to_vec a) (n - s);
   pow2_multiplication_modulo_lemma_2 a n s
@@ -799,7 +799,7 @@ let shift_right_value_aux_2 #n a = assert_norm (pow2 0 == 1)
 val shift_right_value_aux_3: #n:pos -> a:uint_t n -> s:pos{s < n} ->
   Lemma (requires True)
         (ensures shift_right #n a s = a / pow2 s)
-let shift_right_value_aux_3 #n a s = 
+let shift_right_value_aux_3 #n a s =
   append_lemma #s #(n - s) (zero_vec #s) (slice (to_vec a) 0 (n - s));
   slice_left_lemma #n (to_vec a) (n - s)
 
@@ -823,7 +823,7 @@ val lemma_msb_pow2: #n:pos -> a:uint_t n ->
   Lemma (msb a <==> a >= pow2 (n-1))
 let lemma_msb_pow2 #n a = if n = 1 then () else from_vec_propriety (to_vec a) 1
 
-#set-options "--z3rlimit 40 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 70 --initial_fuel 1 --max_fuel 1"
 val lemma_minus_zero: #n:pos -> a:uint_t n ->
   Lemma (minus a = 0 ==> a = 0)
 let lemma_minus_zero #n a =
