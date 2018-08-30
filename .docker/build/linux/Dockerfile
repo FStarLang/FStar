@@ -38,13 +38,12 @@ RUN echo "FStar source version: ${FSTARSOURCEVERSION}" >> ${BUILDLOGFILE}
 RUN ./build_helper.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} || true
 RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
 
+# Remove ssh key
+RUN rm .ssh/id_rsa
+
 # Generate query-stats.
 # List the hints that fail to replay.
 RUN bash -c "FStar/.scripts/query-stats.py -f ${BUILDLOGFILE} -F html -o log_no_replay.html -n all '--filter=fstar_usedhints=+' '--filter=fstar_tag=-' -g"
 
 # Worst offenders (longest times)
 RUN bash -c "FStar/.scripts/query-stats.py -f ${BUILDLOGFILE} -F html -o log_worst.html -c -g -n 10"
-
-# Remove ssh identities.
-RUN rm ${MYHOME}/.ssh/id_rsa
-RUN eval $(ssh-agent) && ssh-add -D
