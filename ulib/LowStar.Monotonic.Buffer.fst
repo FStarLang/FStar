@@ -25,6 +25,39 @@ private let lemma_replace_subseq_elim (#a:Type0)
 
 private let srel_to_lsrel (#a:Type0) (len:nat) (pre:srel a) :P.preorder (Seq.lseq a len) = fun s1 s2 -> pre s1 s2
 
+let compatible_sub_preorder (#a:Type0)
+  (len:nat) (rel:srel a) (i:nat) (j:nat{i <= j /\ j <= len}) (sub_rel:srel a)
+  = (forall (s1 s2:Seq.seq a). (Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) ==>
+		          (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))) /\  //(a)
+    (forall (s s2:Seq.seq a). (Seq.length s == len /\ Seq.length s2 == j - i /\ sub_rel (Seq.slice s i j) s2) ==>
+  		         (rel s (replace_subseq s i (j - i) s2)))
+
+(*
+ * Reflexivity of the compatibility relation
+ *)
+let lemma_seq_sub_compatilibity_is_reflexive (#a:Type0) (len:nat) (rel:srel a)
+  :Lemma (compatible_sub_preorder len rel 0 len rel)
+  = assert (forall (s1 s2:Seq.seq a). Seq.length s1 == Seq.length s2 ==> Seq.equal (replace_subseq s1 0 (Seq.length s1) s2) s2)
+
+(*
+ * Transitivity of the compatibility relation
+ *
+ * i2 and j2 are offsets within [i1, j1) (i.e. assuming i1 = 0)
+ *)
+let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
+  (len:nat) (rel:srel a) (i1 j1:nat) (rel1:srel a) (i2 j2:nat) (rel2:srel a)
+  :Lemma (requires (i1 <= j1 /\ j1 <= len /\ i2 <= j2 /\ j2 <= j1 - i1 /\
+                    compatible_sub_preorder len rel i1 j1 rel1 /\
+                    compatible_sub_preorder (j1 - i1) rel1 i2 j2 rel2))
+	 (ensures  (compatible_sub_preorder len rel (i1 + i2) (i1 + j2) rel2))
+  = let aux (a:Type0) (len i1 j1 i2 j2:nat) (s:Seq.seq a) (s2:Seq.seq a)
+      :Lemma ((i1 <= j1 /\ j1 <= len /\ i2 <= j2 /\ j2 <= j1 - i1 /\ Seq.length s == len /\ Seq.length s2 == j2 - i2) ==>
+	      (Seq.equal (replace_subseq s (i1 + i2) (j2 - i2) s2)
+	                 (replace_subseq s i1 (j1 - i1) (replace_subseq (Seq.slice s i1 j1) i2 (j2 - i2) s2))))
+      = ()
+    in
+    Classical.forall_intro_2 (aux a len i1 j1 i2 j2)
+
 noeq type mbuffer (a:Type0) (rrel:srel a) (rel:srel a) :Type0 =
   | Null
   | Buffer:
@@ -32,8 +65,8 @@ noeq type mbuffer (a:Type0) (rrel:srel a) (rel:srel a) :Type0 =
     content:HST.mreference (Seq.lseq a (U32.v max_length)) (srel_to_lsrel (U32.v max_length) rrel) ->
     idx:U32.t ->
     length:U32.t{U32.v idx + U32.v length <= U32.v max_length} ->
-    compatible:squash (Seq.compatible_sub_preorder (U32.v max_length) rrel
-                                                    (U32.v idx) (U32.v idx + U32.v length) rel) ->  //proof of compatibility
+    compatible:squash (compatible_sub_preorder (U32.v max_length) rrel
+                                               (U32.v idx) (U32.v idx + U32.v length) rel) ->  //proof of compatibility
     mbuffer a rrel rel
 
 let g_is_null #_ #_ #_ b = Null? b
@@ -84,9 +117,9 @@ let mgsub #a #rrel #rel b i len sub_rel =
   match b with
   | Null -> Null
   | Buffer max_len content idx length () ->
-    Seq.lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel
-                                                  (U32.v idx) (U32.v idx + U32.v length) rel
-		         			  (U32.v i) (U32.v i + U32.v len) sub_rel;
+    lemma_seq_sub_compatibility_is_transitive (U32.v max_len) rrel
+                                              (U32.v idx) (U32.v idx + U32.v length) rel
+		         	              (U32.v i) (U32.v i + U32.v len) sub_rel;
     Buffer max_len content (U32.add idx i) len ()
 
 let live_gsub #_ #_ #_ _ _ _ _ _ = ()
@@ -101,9 +134,10 @@ let as_addr_gsub #_ #_ #_ _ _ _ _ = ()
 
 let mgsub_inj #_ #_ #_ _ _ _ _ _ _ _ _ = ()
 
+#push-options "--z3rlimit 20"
 let gsub_gsub #_ #_ #rel b i1 len1 sub_rel1 i2 len2 sub_rel2 =
-  Seq.lemma_seq_sub_compatibility_is_transitive (length b) rel (U32.v i1) (U32.v i1 + U32.v len1) sub_rel1
-                                                (U32.v i2) (U32.v i2 + U32.v len2) sub_rel2
+  lemma_seq_sub_compatibility_is_transitive (length b) rel (U32.v i1) (U32.v i1 + U32.v len1) sub_rel1
+                                            (U32.v i2) (U32.v i2 + U32.v len2) sub_rel2
 
 
 /// A buffer ``b`` is equal to its "largest" sub-buffer, at index 0 and
