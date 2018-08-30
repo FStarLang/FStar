@@ -17,8 +17,8 @@ let eq_instance_of_eqtype (#a:eqtype) : deq a =
   Mkdeq (fun x y -> x = y) (fun x y -> ())
 
 (* Two concrete instances *)
-[@instance] let eq_int : deq int = eq_instance_of_eqtype
-[@instance] let eq_bool : deq bool = eq_instance_of_eqtype
+instance eq_int : deq int = eq_instance_of_eqtype
+instance eq_bool : deq bool = eq_instance_of_eqtype
 
 let rec eqList [|deq 'a|] (xs ys : list 'a) : Tot (b:bool{b <==> xs == ys}) =
   match xs, ys with
@@ -27,7 +27,7 @@ let rec eqList [|deq 'a|] (xs ys : list 'a) : Tot (b:bool{b <==> xs == ys}) =
   | _, _ -> false
 
 (* A parametric instance *)
-[@instance] let eq_list (eqA : deq 'a) : deq (list 'a) =
+instance eq_list (eqA : deq 'a) : deq (list 'a) =
   Mkdeq eqList (fun x y -> ())
 
 (* A few tests *)

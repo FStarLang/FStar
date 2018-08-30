@@ -33,14 +33,11 @@ let mkadd #a zero plus = Mkadditive zero plus (fun x -> ()) (fun x -> ()) (fun x
 (* [@tcnorm] let plus_assoc (#a:Type) [|d : additive a|] = d.plus_assoc *)
 
 (* Instances *)
-[@instance]
-let add_int : additive int = mkadd 0 (+)
+instance add_int : additive int = mkadd 0 (+)
 
-[@instance]
-let add_bool : additive bool = mkadd false ( || )
+instance add_bool : additive bool = mkadd false ( || )
 
-[@instance]
-let add_list #a : additive (list a) =
+instance add_list #a : additive (list a) =
   (* Couldn't use the smart mkadd here, oh well *)
   let open FStar.List.Tot in
   Mkadditive [] (@) append_nil_l append_l_nil append_assoc

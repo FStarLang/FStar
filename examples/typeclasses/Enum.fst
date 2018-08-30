@@ -23,7 +23,7 @@ class enum a = {
     inv2    : i:(bounded __fname__max) -> Lemma (__fname__toInt (__fname__fromInt i) == i);
 }
 
-[@instance] let enum_nat : enum nat =
+instance enum_nat : enum nat =
   { max = None;
     toInt = id;
     fromInt = id;
@@ -31,7 +31,7 @@ class enum a = {
     inv2 = easy;
   }
 
-[@instance] let enum_opt (i:enum 'a): enum (option 'a) =
+instance enum_opt (i:enum 'a): enum (option 'a) =
   { max = succ i.max;
     toInt = (function | None -> 0 | Some x -> 1 + i.toInt x);
     fromInt = (function | 0 -> None | x -> Some (i.fromInt (x-1)));

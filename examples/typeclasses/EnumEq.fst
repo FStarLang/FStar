@@ -5,8 +5,7 @@ open Eq
 open FStar.Tactics.Typeclasses
 
 (* Trying out a "class morphism", a post-facto relation between two existing classes. *)
-[@instance]
-let enum_eq (#a:Type) (d : enum a) : deq a = {
+instance enum_eq (#a:Type) (d : enum a) : deq a = {
     (* Why the #d annotation? A tricky dependency causes the meta-arg
      * annotation to vanish. First we solve that the type where this
      * comparison occurs is (Enum.bounded (Mkenum?.max #a ?u)), then

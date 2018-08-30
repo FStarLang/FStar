@@ -8,7 +8,7 @@ module T = FStar.Tactics
 
 (* The attribute that marks instances *)
 irreducible
-let instance : unit = ()
+let tcinstance : unit = ()
 
 let rec first (f : 'a -> Tac 'b) (l : list 'a) : Tac 'b =
     match l with
@@ -30,7 +30,7 @@ and local (seen:list term) (fuel:int) () : Tac unit =
     let bs = binders_of_env (cur_env ()) in
     first (fun b -> trywith seen fuel (pack (Tv_Var (bv_of_binder b)))) bs
 and global (seen:list term) (fuel:int) () : Tac unit =
-    let cands = lookup_attr (`instance) (cur_env ()) in
+    let cands = lookup_attr (`tcinstance) (cur_env ()) in
     first (fun fv -> trywith seen fuel (pack (Tv_FVar fv))) cands
 and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);

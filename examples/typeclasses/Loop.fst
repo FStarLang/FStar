@@ -8,8 +8,8 @@ open FStar.Tactics.Typeclasses
 class c a = { x : a }
 class d a = { y : a }
 
-[@instance] let cd (dict : c 'a) : d 'a = { y = dict.x }
-[@instance] let dc (dict : d 'a) : c 'a = { x = dict.y }
+instance cd (dict : c 'a) : d 'a = { y = dict.x }
+instance dc (dict : d 'a) : c 'a = { x = dict.y }
 
 (* This should fail... in finite time *)
 [@expect_failure]
