@@ -50,12 +50,13 @@ noeq type regional a =
     // Note that the value doesn't need to satisfy the stateful invariant.
     cv: a ->
 
-    // A representation type of `a` and a corresponding function
+    // A representation type of `a` and a corresponding conversion function
     repr: Type0 ->
     r_repr: (HS.mem -> a -> GTot repr) ->
 
     // An invariant we want to maintain for each operation.
-    // It may include `live` and `freeable` for related objects.
+    // For example, it may include `live` and `freeable` properties
+    // for related objects.
     r_inv: (HS.mem -> a -> GTot Type0) ->
 
     // A core separation lemma, saying that the invariant and represenation
@@ -63,16 +64,19 @@ noeq type regional a =
     r_sep:
       (v:a -> p:loc -> h:HS.mem -> h':HS.mem ->
       Lemma (requires (r_inv h v /\
-		      loc_disjoint (loc_all_regions_from false (region_of v)) p /\
+		      loc_disjoint 
+			(loc_all_regions_from false (region_of v)) p /\
 		      modifies p h h'))
 	    (ensures (r_inv h' v /\ r_repr h v == r_repr h' v))) ->
 
+    // Construction
     r_init: (r:erid ->
       HST.ST a
 	(requires (fun h0 -> true))
 	(ensures (fun h0 v h1 -> 
-	  modifies loc_none h0 h1 /\
-	  r_inv h1 v /\ region_of v = r))) ->
+	  modifies loc_none h0 h1 /\ r_inv h1 v /\ region_of v = r))) ->
+
+    // Destruction
     r_free: (v:a ->
       HST.ST unit
 	(requires (fun h0 -> r_inv h0 v))
@@ -80,6 +84,9 @@ noeq type regional a =
 	  modifies (loc_all_regions_from false (region_of v)) h0 h1))) ->
     regional a
 
+// A regional type `a` is also `copyable` when there exists a copy operator
+// that guarantees the same representation between `src` and `dst`.
+// For example, the `copy` operation for `B.buffer a` is `B.blit`.
 noeq type copyable a (rg: regional a) =
 | Cpy:
     copy: (src:a -> dst:a ->
@@ -91,8 +98,8 @@ noeq type copyable a (rg: regional a) =
     	(ensures (fun h0 _ h1 ->
     	  modifies (loc_all_regions_from 
 		     false (Rgl?.region_of rg dst)) h0 h1 /\
-    		   Rgl?.r_inv rg h1 dst /\
-    		   Rgl?.r_repr rg h1 dst == Rgl?.r_repr rg h0 src))) ->
+    	  Rgl?.r_inv rg h1 dst /\
+    	  Rgl?.r_repr rg h1 dst == Rgl?.r_repr rg h0 src))) ->
     copyable a rg
 
 type rvector #a (rg:regional a) = V.vector a
@@ -148,16 +155,6 @@ let rv_inv #a #rg h rv =
   rv_elems_reg h rv /\
   rv_itself_inv h rv
 
-// val rv_loc_only:
-//   #a:Type -> #rg:regional a -> rv:rvector rg -> GTot loc
-// let rv_loc_only #a #rg rv =
-//   B.loc_region_only false (V.frameOf rv)
-
-// val rv_loc_all:
-//   #a:Type0 -> #rg:regional a -> rv:rvector rg -> GTot loc
-// let rv_loc_all #a #rg rv =
-//   B.loc_all_regions_from false (V.frameOf rv)
-
 val rv_loc_elem:
   #a:Type0 -> #rg:regional a ->
   h:HS.mem -> rv:rvector rg ->
@@ -203,7 +200,8 @@ private let rec create_ #a #rg rv cidx =
   if cidx = 0ul then ()
   else (let hh0 = HST.get () in
        let nrid = new_region_ (V.frameOf rv) in
-       let v = Rgl?.r_init rg nrid in
+       let r_init = Rgl?.r_init rg in
+       let v = r_init nrid in
        V.assign rv (cidx - 1ul) v;
        create_ rv (cidx - 1ul))
 
@@ -254,7 +252,7 @@ let create #a rg len =
   let nrid = new_region_ HH.root in
   create_rid rg len nrid
 
-val insert_ptr:
+val insert:
   #a:Type0 -> #rg:regional a ->
   rv:rvector rg{not (V.is_full rv)} -> v:a ->
   HST.ST (rvector rg)
@@ -270,12 +268,12 @@ val insert_ptr:
       rv_inv h1 irv))
       // S.equal (as_seq h1 blen ibv)
       // 	      (S.snoc (as_seq h0 blen bv) (B.as_seq h0 v))))
-let insert_ptr #a #rg rv v =
+let insert #a #rg rv v =
   admit ();
   V.insert rv v
 
 val insert_copy:
-  #a:Type0 -> #rg:regional a -> #cp:copyable a rg ->
+  #a:Type0 -> #rg:regional a -> cp:copyable a rg ->
   rv:rvector rg{not (V.is_full rv)} -> v:a ->
   HST.ST (rvector rg)
     (requires (fun h0 -> 
@@ -286,14 +284,16 @@ val insert_copy:
       rv_inv h1 irv))
       // S.equal (as_seq h1 blen ibv)
       // 	      (S.snoc (as_seq h0 blen bv) (B.as_seq h0 v))))
-let insert_copy #a #rg #cp rv v =
+let insert_copy #a #rg cp rv v =
   admit ();
   let nrid = new_region_ (V.frameOf rv) in
-  let nv = Rgl?.r_init rg nrid in
-  Cpy?.copy cp v nv;
-  insert_ptr rv nv
+  let r_init = Rgl?.r_init rg in
+  let nv = r_init nrid in
+  let copy = Cpy?.copy cp in
+  copy v nv;
+  insert rv nv
 
-val assign_ptr:
+val assign:
   #a:Type0 -> #rg:regional a -> rv:rvector rg -> 
   i:uint32_t{i < V.size_of rv} -> v:a ->
   HST.ST unit
@@ -308,12 +308,12 @@ val assign_ptr:
       rv_inv h1 rv))
       // S.equal (as_seq h1 blen bv)
       // 	      (S.upd (as_seq h0 blen bv) (U32.v i) (B.as_seq h0 v))))
-let assign_ptr #a #rg rv i v =
+let assign #a #rg rv i v =
   admit ();
   V.assign rv i v
 
 val assign_copy:
-  #a:Type0 -> #rg:regional a -> #cp:copyable a rg ->
+  #a:Type0 -> #rg:regional a -> cp:copyable a rg ->
   rv:rvector rg -> 
   i:uint32_t{i < V.size_of rv} -> v:a ->
   HST.ST unit
@@ -324,9 +324,10 @@ val assign_copy:
       rv_inv h1 rv))
       // S.equal (as_seq h1 blen bv)
       // 	      (S.upd (as_seq h0 blen bv) (U32.v i) (B.as_seq h0 v))))
-let assign_copy #a #rg #cp rv i v =
+let assign_copy #a #rg cp rv i v =
   admit ();
-  Cpy?.copy cp v (V.index rv i)
+  let copy = Cpy?.copy cp in
+  copy v (V.index rv i)
 
 val free_elems:
   #a:Type0 -> #rg:regional a -> rv:rvector rg -> 
@@ -340,7 +341,8 @@ val free_elems:
       modifies (rv_loc_elems h0 rv 0 (U32.v idx + 1)) h0 h1))
 let rec free_elems #a #rg rv idx =
   admit ();
-  Rgl?.r_free rg (V.index rv idx);
+  let r_free = Rgl?.r_free rg in
+  r_free (V.index rv idx);
   if idx <> 0ul then
     free_elems rv (idx - 1ul)
 
