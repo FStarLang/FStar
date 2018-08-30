@@ -153,13 +153,40 @@
       "15351fb0a2f28240aa686e42f662a684"
     ],
     [
+      "OneTimePad.xor_properties",
+      2,
+      0,
+      4,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple4__uu___haseq",
+        "assumption_Prims.HasEq_bool", "bool_inversion", "bool_typing",
+        "data_elim_FStar.Pervasives.Native.Mktuple4",
+        "equation_OneTimePad.nib", "equation_OneTimePad.xor",
+        "equation_OneTimePad.xor_b",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple4",
+        "function_token_typing_Prims.bool", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__3",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple4__4",
+        "typing_OneTimePad.xor_b"
+      ],
+      0,
+      "5e46e60727ad7e2293bd96a66be48369"
+    ],
+    [
       "OneTimePad._dm4f_RANDOM___proj__RANDOM__item__rand_elab",
       2,
       0,
       4,
       [ "@query" ],
       0,
-      "c7fed49f2511cfaf3a8502d56fc9e6d7"
+      "6867a80511295604ce5f2c962a3ec08b"
     ],
     [
       "OneTimePad.RANDOM",
@@ -168,7 +195,7 @@
       4,
       [ "@query" ],
       0,
-      "b80548952e96ebf0e1a8faf36bc52b1e"
+      "8df3ff28e901efde354a267e0f14f8e8"
     ],
     [
       "OneTimePad.related_tape",
@@ -181,7 +208,7 @@
         "function_token_typing_Prims.bool"
       ],
       0,
-      "0a8e4ab3b9665aa8c4223b7196592b38"
+      "27c36f7c95c0894b06b38e1ff96b6f92"
     ],
     [
       "OneTimePad.xor_at",
@@ -212,7 +239,7 @@
         "token_correspondence_OneTimePad.xor"
       ],
       0,
-      "1742ea956148e7b7e81db1030aa5c5f0"
+      "9272b0fdb1190a4f3ecb59f221a9b0f5"
     ],
     [
       "OneTimePad.one_time_pad_ok",
@@ -225,7 +252,7 @@
         "function_token_typing_Prims.bool"
       ],
       0,
-      "6f9ad3ca403e11e0611d3ed43b0d9f18"
+      "a607e7f956b334fc431895415cca1295"
     ]
   ]
 ]

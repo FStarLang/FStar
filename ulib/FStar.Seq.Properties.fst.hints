@@ -2942,7 +2942,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "2a7517db7af5e12089ee80ed901e27fa"
+      "cf34f4a9de4a5d2f1834fe86f954a39f"
     ],
     [
       "FStar.Seq.Properties.lemma_mem_snoc",
@@ -3544,7 +3544,7 @@
         "unit_typing"
       ],
       0,
-      "9d3cf21f9b1c3f72af4fd8b47ec00f8d"
+      "91df0a2748bda75e799a31a351647c07"
     ],
     [
       "FStar.Seq.Properties.find_r",

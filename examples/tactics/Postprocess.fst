@@ -11,7 +11,7 @@ let x : int = 1
 [@(postprocess_for_extraction_with tau)]
 let y : int = 1
 
-//let _ = assert (x == 2)
+let _ = assert (x == 2)
 let _ = assert (y == 1) // but `2` in extracted code
 
 (* More hardcore transformations *)

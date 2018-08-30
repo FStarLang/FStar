@@ -67,6 +67,11 @@ let implies_intros () : Tac binders = repeat1 implies_intro
 let l_intro () = forall_intro `or_else` implies_intro
 let l_intros () = repeat l_intro
 
+let explode () : Tac unit =
+    ignore (
+    repeatseq (fun () -> first [(fun () -> ignore (l_intro ()));
+                               (fun () -> ignore (split ()))]))
+
 let rec visit (callback:unit -> Tac unit) : Tac unit =
     focus (fun () ->
             or_else callback
@@ -179,18 +184,24 @@ let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). p x)) (phi:Type0) :
   Lemma (requires (forall x. p x ==> phi))
         (ensures phi) = ()
 
-let sk_binder (b:binder) =
+private
+let rec sk_binder' (acc:binders) (b:binder) : Tac (binders * binder) =
   focus (fun () ->
-    let _ =
-    trytac (fun () ->
+    or_else (fun () ->
       apply_lemma (`(sklem0 (`#(binder_to_term b))));
       if ngoals () <> 1 then fail "no";
-      let _ = forall_intro () in
-      let _ = implies_intro () in
-      ()
-    ) in ()
+      clear b;
+      let bx = forall_intro () in
+      let b' = implies_intro () in
+      sk_binder' (bx::acc) b' (* We might have introduced a new existential, so possibly recurse *)
+    )
+    (fun () -> (acc, b)) (* If the above failed, just return *)
   )
+
+(* Skolemizes a given binder for an existential, returning the introduced new binders
+ * and the skolemizes formula. *)
+let sk_binder b = sk_binder' [] b
 
 let skolem () =
   let bs = binders_of_env (cur_env ()) in
-  iter sk_binder bs
+  map sk_binder bs

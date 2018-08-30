@@ -1895,12 +1895,15 @@ let extract_interface (en:env) (m:modul) :modul =
       if is_unit t then Some (S.mk_Total t) else match (SS.compress t).n with | Tm_arrow (_, c) -> Some c | _ -> None
     in
 
-    Option.isNone c_opt ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
-    (let c = c_opt |> must in
-     //if c is pure or ghost then keep it if the return type is not unit
-     if is_pure_or_ghost_comp c then not (c |> comp_result |> is_unit)
-     //else keep it if the effect is reifiable
-     else Env.is_reifiable_effect en (comp_effect_name c))
+    match c_opt with
+    | None -> true //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
+    | Some c ->
+        // discard lemmas, we don't need their bodies
+        if is_lemma_comp c
+        then false
+        else if is_pure_or_ghost_comp c // keep all pure functions
+        then true
+        else Env.is_reifiable_effect en (comp_effect_name c) //else only keep it if the effect is reifiable
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =

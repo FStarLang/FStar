@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_MetaArgs.test1" ],
       0,
-      "9eb0655c27c650aef86fb008a6d6194b"
+      "affb4296a6ddeb380135aaece7da34d9"
     ],
     [
       "MetaArgs.uu___63",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_MetaArgs.diag" ],
       0,
-      "f2f150fcdd4cee3831589d86bd762a91"
+      "12b30ed233412553db594aac39f17742"
     ],
     [
       "MetaArgs.uu___64",
@@ -26,7 +26,16 @@
       1,
       [ "@query", "equation_MetaArgs.diag" ],
       0,
-      "f5a98c0e5bce5f989ab22004aad02429"
+      "e363bf1e422ab9eef494336d00f363b5"
+    ],
+    [
+      "MetaArgs.uu___62",
+      2,
+      2,
+      1,
+      [ "@query", "equation_MetaArgs.test1" ],
+      0,
+      "c9aff6144bb9415c935529d738d243fe"
     ],
     [
       "MetaArgs.same_as",
@@ -43,7 +52,25 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "df3ae4c6b637325158679cfece6ad155"
+      "9d11c444ffc53f3893f591de84381bc3"
+    ],
+    [
+      "MetaArgs.uu___63",
+      2,
+      2,
+      1,
+      [ "@query", "equation_MetaArgs.diag" ],
+      0,
+      "52395203e73f1f1838c95c93b16e3871"
+    ],
+    [
+      "MetaArgs.uu___64",
+      2,
+      2,
+      1,
+      [ "@query", "equation_MetaArgs.diag" ],
+      0,
+      "dae4e5610cd662ed4652d5e79578428d"
     ]
   ]
 ]

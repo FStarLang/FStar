@@ -865,8 +865,9 @@ let rec (resugar_term' :
            | FStar_Pervasives_Native.Some ("try_with",uu____2814) ->
                resugar_as_app e args1
            | FStar_Pervasives_Native.Some (op,uu____2820) when
-               (((((op = "=") || (op = "==")) || (op = "===")) || (op = "@"))
-                  || (op = ":="))
+               ((((((op = "=") || (op = "==")) || (op = "===")) || (op = "@"))
+                   || (op = ":="))
+                  || (op = "|>"))
                  && (FStar_Options.print_implicits ())
                -> resugar_as_app e args1
            | FStar_Pervasives_Native.Some (op,uu____2826) when
