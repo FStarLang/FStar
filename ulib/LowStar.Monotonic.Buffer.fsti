@@ -752,8 +752,8 @@ private let rec loc_pairwise_disjoint_aux (l:list loc) :Type0 =
  *)
 [@"opaque_to_smt"]
 unfold let loc_pairwise_disjoint (l:list loc) :Type0 =
-  norm [iota; zeta; delta; delta_only [`%loc_disjoint_from_list;
-                                       `%loc_pairwise_disjoint_aux]] (loc_pairwise_disjoint_aux l)
+  norm [iota; zeta; delta_only [`%loc_disjoint_from_list;
+                                `%loc_pairwise_disjoint_aux]] (loc_pairwise_disjoint_aux l)
 
 val loc_disjoint_sym
   (s1 s2: loc)
@@ -1829,11 +1829,11 @@ val malloca (#a:Type0) (#rrel:srel a)
 /// length representable as a machine integer.
 
 unfold let alloc_of_list_pre (#a:Type0) (init:list a) =
-  b2t ((norm [iota; zeta; delta; delta_only [`%FStar.List.Tot.length]] (0 < FStar.List.Tot.length init))) /\
-  b2t ((norm [iota; zeta; delta; delta_only [`%FStar.List.Tot.length]] (FStar.List.Tot.length init <= UInt.max_int 32)))
+  normalize (0 < FStar.List.Tot.length init) /\
+  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
 unfold let alloc_of_list_post (#a:Type0) (#rrel #rel:srel a) (len:nat) (buf:mbuffer a rrel rel) =
-  norm [iota; zeta; delta; delta_only [`%FStar.List.Tot.length]] (length buf == len)
+  length buf == (norm [iota; zeta; delta; primops] len)
 
 val malloca_of_list (#a:Type0) (#rrel:srel a) (init: list a)
   :HST.StackInline (mbuffer a rrel rrel) (requires (fun h -> alloc_of_list_pre #a init))
@@ -1843,7 +1843,7 @@ val malloca_of_list (#a:Type0) (#rrel:srel a) (init: list a)
                                                                alloc_of_list_post #a len b))
 
 unfold let gcmalloc_of_list_pre (#a:Type0) (init:list a) =
-  norm [iota; zeta; delta; delta_only [`%FStar.List.Tot.length]] (FStar.List.Tot.length init <= UInt.max_int 32)
+  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
 (* TODO: Why is some of the post on the refinement? *)
 val mgcmalloc_of_list (#a:Type0) (#rrel:srel a) (r:HS.rid) (init:list a)
