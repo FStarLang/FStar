@@ -1,0 +1,34 @@
+[
+  "\bŸß\u000f\"÷¡z·œè¡s?\fb",
+  [
+    [
+      "Bug734.arg_type",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug734.Bool",
+        "disc_equation_Bug734.Fun", "disc_equation_Bug734.Int",
+        "fuel_guarded_inversion_Bug734.dir"
+      ],
+      0,
+      "a5409ca30dad730b92d13717a8f16640"
+    ],
+    [
+      "Bug734.def_value",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_typing",
+        "disc_equation_Bug734.Bool", "disc_equation_Bug734.Fun",
+        "disc_equation_Bug734.Int", "equation_Bug734.arg_type",
+        "fuel_guarded_inversion_Bug734.dir", "int_typing",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_Bug734_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da"
+      ],
+      0,
+      "65fb4c371eafd74ebbb936c0abe52a62"
+    ]
+  ]
+]
