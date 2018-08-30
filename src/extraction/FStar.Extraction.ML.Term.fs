@@ -45,7 +45,7 @@ module R  = FStar.Reflection.Basic
 module RD = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
 module RE = FStar.Reflection.Embeddings
-  module Env = FStar.TypeChecker.Env
+module Env = FStar.TypeChecker.Env
 
 exception Un_extractable
 
@@ -1072,6 +1072,17 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                           match t with
                           | MLTY_Erased -> //the head of the application has been erased; so the whole application should be too
                             ml_unit, E_PURE, t
+
+                          | MLTY_Top -> //cf. issue #734
+                            //Coerce to a function of the arity of restArgs
+                            let t = List.fold_right (fun t out -> MLTY_Fun(MLTY_Top, E_PURE, out)) restArgs MLTY_Top in
+                            let mlhead =
+                              let mlargs = List.rev mlargs_f |> List.map fst in
+                              let head = with_ty MLTY_Top <| MLE_App(mlhead, mlargs) in
+                              maybe_coerce top.pos g head MLTY_Top t
+                            in
+                            extract_app is_data (mlhead, []) (f, t) restArgs
+
                           | _ -> err_ill_typed_application g top restArgs t
                       end
               in
