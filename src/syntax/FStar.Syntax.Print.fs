@@ -119,7 +119,7 @@ let is_lex_top (f:exp) = is_prim_op [C.lextop_lid] f
 let is_inr = function Inl _ -> false | Inr _ -> true
 let filter_imp a =
    (* keep typeclass args *)
-   a |> List.filter (function | (_, Some (S.Meta t)) when U.is_fvar C.tcresolve_lid t -> true
+   a |> List.filter (function | (_, Some (Meta t)) when SU.is_fvar C.tcresolve_lid t -> true
                               | (_, Some (Implicit _))
                               | (_, Some (Meta _)) -> false
                               | _ -> true)
@@ -441,14 +441,18 @@ and lcomp_to_string lc =
 //       (kind_to_string k)
 //   else U.format1 "U%s"  (if (Options.hide_uvar_nums()) then "?" else U.string_of_int (Unionfind.uvar_id uv))
 
-and aqual_to_string = function
-  | Some (Implicit false) -> "#"
-  | Some (Implicit true) -> "#."
-  | Some Equality -> "$"
-  | _ -> ""
+and aqual_to_string' s = function
+  | Some (Implicit false) -> "#" ^ s
+  | Some (Implicit true) -> "#." ^ s
+  | Some Equality -> "$" ^ s
+  | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> "[|" ^ s ^ "|]"
+  | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
+  | None -> s
+
+and aqual_to_string aq = aqual_to_string' "" aq
 
 and imp_to_string s aq =
-    aqual_to_string aq ^ s
+    aqual_to_string' s aq
 
 and binder_to_string' is_arrow b =
   if not (Options.ugly()) then
