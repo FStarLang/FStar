@@ -117,7 +117,12 @@ let is_ite (t:typ)   = is_prim_op [C.ite_lid] t
 let is_lex_cons (f:exp) = is_prim_op [C.lexcons_lid] f
 let is_lex_top (f:exp) = is_prim_op [C.lextop_lid] f
 let is_inr = function Inl _ -> false | Inr _ -> true
-let filter_imp a = a |> List.filter (function (_, Some (Implicit _)) -> false | _ -> true)
+let filter_imp a =
+   (* keep typeclass args *)
+   a |> List.filter (function | (_, Some (S.Meta t)) when U.is_fvar C.tcresolve_lid t -> true
+                              | (_, Some (Implicit _))
+                              | (_, Some (Meta _)) -> false
+                              | _ -> true)
 let rec reconstruct_lex (e:exp) =
   match (compress e).n with
   | Tm_app (f, args) ->
