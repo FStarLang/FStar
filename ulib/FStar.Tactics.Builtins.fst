@@ -172,9 +172,6 @@ assume val debugging : unit -> Tac bool
 along with the message. *)
 assume val dump : string -> Tac unit
 
-(** Similar to [dump], but only dumping the current goal. *)
-assume val dump1 : string -> Tac unit
-
 (** Solves a goal [Gamma |= squash (l == r)] by attempting to unify
 [l] with [r]. This currently only exists because of some universe problems
 when trying to [apply] a reflexivity lemma. *)

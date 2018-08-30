@@ -45,6 +45,19 @@
       ],
       0,
       "7409df28062bc1a82c95afdc8b096a69"
+    ],
+    [
+      "DoNotation.uu___8",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_Prims.HasEq_int", "assumption_Prims.HasEq_unit",
+        "function_token_typing_Prims.int", "function_token_typing_Prims.unit"
+      ],
+      0,
+      "b341ff089121c1fc15f928caf5219a57"
     ]
   ]
 ]

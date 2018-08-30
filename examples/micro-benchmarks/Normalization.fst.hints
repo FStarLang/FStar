@@ -92,6 +92,19 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
       "4cbc7ef2b1de4668216f5145d124013e"
+    ],
+    [
+      "Normalization.test_sort",
+      2,
+      0,
+      0,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.list__uu___haseq",
+        "function_token_typing_Prims.int"
+      ],
+      0,
+      "decf378e2ad91a1c577a27ead22fe512"
     ]
   ]
 ]

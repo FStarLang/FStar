@@ -718,7 +718,7 @@
         "typing_FStar.Monotonic.HyperStack.is_stack_region"
       ],
       0,
-      "747021ec7d9ece7018dabd6f26e03bd9"
+      "40275f515c2834ea9f36385165593772"
     ],
     [
       "FStar.Monotonic.HyperStack.new_eternal_region",
@@ -2672,7 +2672,7 @@
         "typing_FStar.Monotonic.HyperStack.is_stack_region"
       ],
       0,
-      "42bf7b4fc1ff1d6884fea10bf9fc0928"
+      "4810042bb3ace0bf57036b8956c8d5c5"
     ],
     [
       "FStar.Monotonic.HyperStack.new_eternal_region",

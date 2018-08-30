@@ -157,6 +157,18 @@
       [ "@query" ],
       0,
       "efe4dfc223b58ab96a6f2d1ca06c719b"
+    ],
+    [
+      "FStar.Tactics.Effect.assert_by_tactic",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "4adf99434569026adf0febc883ff3dae"
     ]
   ]
 ]

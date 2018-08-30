@@ -395,13 +395,22 @@
       "b8cb30efad7ef9a0ac8e7b128518feec"
     ],
     [
+      "FStar.Pervasives.allow_inversion",
+      2,
+      2,
+      1,
+      [ "@query", "equation_FStar.Pervasives.inversion" ],
+      0,
+      "3038706e4d1b530f7dcf43796f41346e"
+    ],
+    [
       "FStar.Pervasives.either",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "5c00c36d62e8c84f8564ba5cd0437c05"
+      "266db0429d5eb12cc9d46e9c79f49e1b"
     ],
     [
       "FStar.Pervasives.__proj__Inl__item__v",
@@ -415,7 +424,7 @@
         "refinement_interpretation_FStar.Pervasives_Tm_refine_85e0cc884f8457202f90cd77f23733ba"
       ],
       0,
-      "66ce8dbb14d88a9831b4793ca5c1d296"
+      "eb3d12896bdf7e9d3a8caed9c4fcb6e9"
     ],
     [
       "FStar.Pervasives.__proj__Inr__item__v",
@@ -429,7 +438,7 @@
         "refinement_interpretation_FStar.Pervasives_Tm_refine_8f1f5f564dae90240db429de2eb41517"
       ],
       0,
-      "567b8f464974417bca708e4efc3c5061"
+      "cf0af42f21827db568cf77d741395372"
     ],
     [
       "FStar.Pervasives.__proj__Mkdtuple3__item___2",
@@ -441,7 +450,7 @@
         "projection_inverse_FStar.Pervasives.Mkdtuple3__1"
       ],
       0,
-      "a918253d4c8bcb007831760113c0655b"
+      "051a5405b1431808fe3e4305758282bd"
     ],
     [
       "FStar.Pervasives.__proj__Mkdtuple3__item___3",
@@ -455,7 +464,7 @@
         "projection_inverse_FStar.Pervasives.Mkdtuple3__2"
       ],
       0,
-      "34d375a002092491dff56a6ca38893cb"
+      "c1013e4a1088a2b82d7affda824c8342"
     ],
     [
       "FStar.Pervasives.__proj__Mkdtuple4__item___2",
@@ -467,7 +476,7 @@
         "projection_inverse_FStar.Pervasives.Mkdtuple4__1"
       ],
       0,
-      "83d042db89007e6aa0742fd96f940f84"
+      "0f97c6525806d8273e01c0fbbc32369f"
     ],
     [
       "FStar.Pervasives.__proj__Mkdtuple4__item___3",
@@ -481,7 +490,7 @@
         "projection_inverse_FStar.Pervasives.Mkdtuple4__2"
       ],
       0,
-      "3851f2899ade1731e58602edcf4fe850"
+      "54e0fce6bf2ebb42dd6fdfe0eb2ea1e4"
     ],
     [
       "FStar.Pervasives.__proj__Mkdtuple4__item___4",
@@ -497,7 +506,7 @@
         "projection_inverse_FStar.Pervasives.Mkdtuple4__3"
       ],
       0,
-      "4203f3b78f24053d2244456b97bb934b"
+      "b48f92ef54e4acf827eb6e4f489495c8"
     ],
     [
       "FStar.Pervasives.__internal_ocaml_attributes",
@@ -506,7 +515,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "6864e91c2c3eba9d45a3bc5b1974ff0a"
+      "5e8fbed3751f379c8cfc58393c232630"
     ],
     [
       "FStar.Pervasives.__proj__PpxDerivingShowConstant__item___0",
@@ -520,7 +529,7 @@
         "refinement_interpretation_FStar.Pervasives_Tm_refine_564db2f0aa0878b4d96c60508be3dd36"
       ],
       0,
-      "b7bb4b45ace5c5f2f6836e2ccc11d53a"
+      "510415b2b96acc6412f28f3c4d13a644"
     ],
     [
       "FStar.Pervasives.__proj__Comment__item___0",
@@ -534,7 +543,7 @@
         "refinement_interpretation_FStar.Pervasives_Tm_refine_c53089e2d20d1b0f5a267296ac8e45f0"
       ],
       0,
-      "192cf60dcddf6ca24654bc9a454ddbdc"
+      "5b4ab6c4e7fc239ad823eac65acce2da"
     ],
     [
       "FStar.Pervasives.__proj__CPrologue__item___0",
@@ -548,7 +557,7 @@
         "refinement_interpretation_FStar.Pervasives_Tm_refine_ac46c1a2a06ce46a180e0eda48004c47"
       ],
       0,
-      "fbf711d0c7c64a547ed0c50e312ec393"
+      "9f5d5e5dff8ac441fe0e9662ff0abaf5"
     ],
     [
       "FStar.Pervasives.__proj__CEpilogue__item___0",
@@ -562,7 +571,7 @@
         "refinement_interpretation_FStar.Pervasives_Tm_refine_47384bef739d1f0729fd782d351dc9a5"
       ],
       0,
-      "31b4b528beadd066cd395e4327d15a19"
+      "d83c078c9835038163bd924674666f2a"
     ],
     [
       "FStar.Pervasives.__proj__CConst__item___0",
@@ -576,7 +585,7 @@
         "refinement_interpretation_FStar.Pervasives_Tm_refine_5036c6b2983454bc3afeffcba3f00f50"
       ],
       0,
-      "0a0e5a597c26f7e7489c001a0cfb9010"
+      "3eebf86ccea674593adf3da5b41690bc"
     ],
     [
       "FStar.Pervasives.__proj__CCConv__item___0",
@@ -590,7 +599,7 @@
         "refinement_interpretation_FStar.Pervasives_Tm_refine_2c4510f48649a66c3dca1fc9e3a2d320"
       ],
       0,
-      "ae48f49ad42a7c94bbd5440e3da81199"
+      "705adf93d46432161ca5dc25c536ce4a"
     ]
   ]
 ]

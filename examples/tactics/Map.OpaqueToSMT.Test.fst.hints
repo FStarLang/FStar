@@ -81,6 +81,24 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
       "f2fb26ae49fb5c842f9f8c5ec3b82df3"
+    ],
+    [
+      "Map.OpaqueToSMT.Test.test1",
+      2,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "df4d8cdefe771b1d1276171204218b3b"
+    ],
+    [
+      "Map.OpaqueToSMT.Test.test2",
+      2,
+      0,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "b1f52515f31c24a46a43e15524e7f71c"
     ]
   ]
 ]

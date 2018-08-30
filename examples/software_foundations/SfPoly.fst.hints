@@ -1778,6 +1778,18 @@
       "71ae3b738aba1b907dcc4956a0acb960"
     ],
     [
+      "SfPoly.override_neq",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_SfPoly.my_override",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "78d8f49d1a81d3d2f5970561308c72c1"
+    ],
+    [
       "SfPoly.plus_one",
       2,
       2,
@@ -1788,7 +1800,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ebc98ead503fc428553e723afb4ee0a5"
+      "745b668c5299853c01fc8c08222a723c"
     ],
     [
       "SfPoly.fold_length_named_correct",
@@ -1800,7 +1812,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1743d9c3ea3582e2240641ebc26336e4"
+      "d6efb742e0f0fd5d446f90ba6f26de1f"
     ],
     [
       "SfPoly.fold_length",
@@ -1813,7 +1825,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "558183b69d77a9a75672abba1a315636"
+      "b8a147627ba72cab288ec57348bd0a86"
     ],
     [
       "SfPoly.fold_length_correct",
@@ -1825,7 +1837,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2b7a46fdee643168a9a1dc2cfec20c8a"
+      "e8853645a5c87e5fd99202246bdf8a4f"
     ]
   ]
 ]

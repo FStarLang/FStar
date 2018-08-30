@@ -63,6 +63,69 @@
       ],
       0,
       "c21211433c39262ccdd0d9f38d49b4d4"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___7",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Unit1.TopLevelPats.uu___6",
+        "equation_Unit1.TopLevelPats.x",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
+      ],
+      0,
+      "70a3946a992aea0850946e190f01c69b"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___8",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Unit1.TopLevelPats.uu___6",
+        "equation_Unit1.TopLevelPats.y",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "659a883a128fe312109440b7b3f31150"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___10",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Unit1.TopLevelPats.make",
+        "equation_Unit1.TopLevelPats.uu___6",
+        "equation_Unit1.TopLevelPats.uu___9",
+        "equation_Unit1.TopLevelPats.z",
+        "function_token_typing_Unit1.TopLevelPats.z", "int_inversion",
+        "primitive_Prims.op_Division", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "3e3e86cd9c145de291cdc86bdbc2784e"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___11",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Unit1.TopLevelPats.make",
+        "equation_Unit1.TopLevelPats.uu___6",
+        "equation_Unit1.TopLevelPats.uu___9",
+        "equation_Unit1.TopLevelPats.w",
+        "function_token_typing_Unit1.TopLevelPats.w", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "fc9d15f0c8a1d652a911f0c02e6ff6cf"
     ]
   ]
 ]

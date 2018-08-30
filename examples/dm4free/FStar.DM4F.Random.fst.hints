@@ -442,6 +442,36 @@
       "14707611f1404d7c456505c78893f494"
     ],
     [
+      "FStar.DM4F.Random.test_sample_some",
+      4,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0,
+      "2a1f2d487caf613f018af482ed7e67df"
+    ],
+    [
+      "FStar.DM4F.Random.test_sample_some",
+      5,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.DM4F.Heap.Random.size",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "6afac7d278ef9da069623adc41ff0b23"
+    ],
+    [
+      "FStar.DM4F.Random.test_sample_none",
+      2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0,
+      "c2061fa551c3f77f8209049dc9b0911d"
+    ],
+    [
       "FStar.DM4F.Random.__proj__Bijection__item__finv",
       2,
       2,
@@ -456,7 +486,7 @@
         "token_correspondence_FStar.DM4F.Random.__proj__Bijection__item__f"
       ],
       0,
-      "a73e1f8f049a335672abbcf8e040c06f"
+      "eca7a2e605ee813128e06bb82e4eebc6"
     ],
     [
       "FStar.DM4F.Random.inverse",
@@ -476,7 +506,7 @@
         "token_correspondence_FStar.DM4F.Random.__proj__Bijection__item__finv"
       ],
       0,
-      "f266ee70549685fb665505e951b71f7f"
+      "1d1ec5d1d02a2984db2902af4195e709"
     ],
     [
       "FStar.DM4F.Random.mass",
@@ -488,7 +518,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1e212d7323a98609be86c83708ebf79e"
+      "c64b09154b5eeeacf126a50d0de30cf3"
     ],
     [
       "FStar.DM4F.Random.point",
@@ -502,7 +532,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "414b7cf2bb0d3fa16fb7eccb45f22fb0"
+      "6b363adc9d11a180073cab2e4bd6559f"
     ],
     [
       "FStar.DM4F.Random.pr_leq",
@@ -514,7 +544,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "fed25ae34538388b6e55faacd2b71ee9"
+      "2e26a4ad7d7e705aa8e5e9d01353b8a0"
     ],
     [
       "FStar.DM4F.Random.pr_eq",
@@ -526,7 +556,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "6aed63e22b73771dce101289352951ee"
+      "47a8f5628dd449a1cc6c348b601f2251"
     ],
     [
       "FStar.DM4F.Random.cond",
@@ -538,7 +568,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "1ac75f0db136b0d209429acf685085b8"
+      "1a10d44b51e385294472f940daaae680"
     ]
   ]
 ]

@@ -8,7 +8,16 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "ae3031318b2e692f02a301983a55e186"
+      "022ddb406c050033a706ec1cfdf2798f"
+    ],
+    [
+      "Tautology.uu___66",
+      2,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "3e7c24a60fd3b5f59e8f611107988986"
     ]
   ]
 ]

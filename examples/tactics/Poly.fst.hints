@@ -12,7 +12,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "9b0f91e5f8ed6159dbf6554a51f7cdf8"
+      "18e591c406cacbd262750924f633b262"
     ],
     [
       "Poly.lemma_div_mod",
@@ -24,7 +24,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "803afa994ea8cbb68e6a5951539d532b"
+      "efe43ae07084c08bd96c09f18e9d6168"
     ],
     [
       "Poly.lemma_poly_multiply_canon",
@@ -37,7 +37,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "c1dca1df13a799c9e1c8e905fab57c56"
+      "49d9de0011e19cdd658fb45baed7ab6b"
     ],
     [
       "Poly.modulo_addition_lemma",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "e657dedd4c093efdad2d6725b4a150bf"
+      "01334411042d89598abc50aa32d2a17e"
     ],
     [
       "Poly.lemma_div_mod",
@@ -62,7 +62,20 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "ce7624cc5f3dcdef9461e1a40dd034ef"
+      "546b0d0b49844d7559118c3628834c93"
+    ],
+    [
+      "Poly.lemma_poly_multiply_canon",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "e8c5256e11222f2ea7c467ad310ca0bd"
     ]
   ]
 ]

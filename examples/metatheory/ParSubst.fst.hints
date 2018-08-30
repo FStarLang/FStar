@@ -420,6 +420,36 @@
       [ "@query", "assumption_ParSubst.exp__uu___haseq" ],
       0,
       "35df3454ac8629c26a6427105c0df587"
+    ],
+    [
+      "ParSubst.test_hoist",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_ParSubst.subst.fuel_instrumented",
+        "@fuel_irrelevance_ParSubst.subst.fuel_instrumented", "@query",
+        "ParSubst_interpretation_Tm_arrow_b42d65321775e43d5dcc18dbd5914b1f",
+        "ParSubst_interpretation_Tm_arrow_ffde041010018e98855f775572cc70ce",
+        "assumption_ParSubst.exp__uu___haseq",
+        "constructor_distinct_ParSubst.EAbs",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_ParSubst.sub", "equation_ParSubst.subst_eabs",
+        "equation_ParSubst.var", "equation_Prims.nat",
+        "equation_with_fuel_ParSubst.subst.fuel_instrumented",
+        "interpretation_ParSubst_Tm_abs_5de7c93e585c0cf6974fb8750043ad22",
+        "interpretation_ParSubst_Tm_abs_eb241f25cceea816d33b5447d83a48ac",
+        "lemma_ParSubst.subst_extensional",
+        "projection_inverse_ParSubst.EAbs__0",
+        "projection_inverse_ParSubst.EAbs__1",
+        "refinement_interpretation_ParSubst_Tm_refine_2a9d5c0d7ced78435ba0c3bb20d7f840",
+        "refinement_interpretation_ParSubst_Tm_refine_d4ba12e293918eb1d428c76033e258fe",
+        "typing_ParSubst.subst_eabs",
+        "typing_ParSubst_Tm_abs_5de7c93e585c0cf6974fb8750043ad22"
+      ],
+      0,
+      "b8e1b3aa118d6e60c449fb5d63e6f842"
     ]
   ]
 ]

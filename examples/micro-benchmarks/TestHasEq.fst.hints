@@ -281,6 +281,21 @@
       "2bc99624606ca6fc899976c93b331acd"
     ],
     [
+      "TestHasEq.test1",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_TestHasEq.mlist__uu___haseq",
+        "assumption_TestHasEq.nlist__uu___haseq", "equation_Prims.nat",
+        "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "3ed2045295e04bb82bd5d3e0b8564632"
+    ],
+    [
       "TestHasEq.__proj__C__item__y",
       2,
       2,
@@ -290,7 +305,27 @@
         "projection_inverse_TestHasEq.C_x"
       ],
       0,
-      "160a9e210e08a2a5a2b85dfc6f1a3762"
+      "f1e1499bf159b98f175d8ac7616624ee"
+    ],
+    [
+      "TestHasEq.test2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "assumption_TestHasEq.t__uu___haseq",
+        "equation_Prims.nat", "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "haseqTestHasEq_Tm_refine_8bc57b47ea1eb56e7fd13ac08bf9b683",
+        "int_inversion",
+        "interpretation_TestHasEq_Tm_abs_47683681bbd74e4a08ec94456402cc7a",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_TestHasEq_Tm_abs_47683681bbd74e4a08ec94456402cc7a"
+      ],
+      0,
+      "425c28dcb10c3242d18a266ef061617c"
     ],
     [
       "TestHasEq.t1",
@@ -299,7 +334,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "bacef4b16256e1130975ecd6553b5bbe"
+      "6967d274f9535190d7149cf1f20c7acb"
     ],
     [
       "TestHasEq.t1",
@@ -308,7 +343,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f8d5699111037dfbb34ef736a8224f06"
+      "3fe5a2ce8e01bb523d88e21ab896f752"
     ],
     [
       "TestHasEq.t1",
@@ -317,7 +352,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ae33bbf20c50ab6b8f19c09d9922f6c7"
+      "c99d18c194248c20f9114dfabbb53b9b"
     ],
     [
       "TestHasEq.t1",
@@ -334,7 +369,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "bce7399562bd9ac8c27770de591c059b"
+      "e2d682b9b3cc451dc7d76aa5f3024559"
     ],
     [
       "TestHasEq.__proj__C1__item__z",
@@ -343,7 +378,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "bbe22cf44524bdef60fd07ec18454143"
+      "45c79460c4387594e9bc24462787b88f"
     ],
     [
       "TestHasEq.__proj__C1__item__z",
@@ -355,7 +390,40 @@
         "proj_equation_TestHasEq.C1_y", "projection_inverse_TestHasEq.C1_y"
       ],
       0,
-      "ab3752a83ff1f24d7ec4e918fd4424c1"
+      "f56c85b1700cd688328e393b3c9ddd16"
+    ],
+    [
+      "TestHasEq.test3",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_TestHasEq.t1__uu___haseq",
+        "function_token_typing_Prims.bool"
+      ],
+      0,
+      "86a1f594708fd251911d0abe9181255a"
+    ],
+    [
+      "TestHasEq.test4",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "assumption_Prims.dtuple2__uu___haseq",
+        "equation_Prims.nat", "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "haseqTestHasEq_Tm_refine_8bc57b47ea1eb56e7fd13ac08bf9b683",
+        "int_inversion",
+        "interpretation_TestHasEq_Tm_abs_47683681bbd74e4a08ec94456402cc7a",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_TestHasEq_Tm_abs_47683681bbd74e4a08ec94456402cc7a"
+      ],
+      0,
+      "3989ed0ec99a3de8b871122a7e8fdb8f"
     ],
     [
       "TestHasEq.t4",
@@ -367,7 +435,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a1677fb4499fbe3194f990014d9c651c"
+      "e45993203c753fc5044c744e30e2dd4d"
     ]
   ]
 ]

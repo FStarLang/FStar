@@ -192,13 +192,40 @@
       "118822d9946bb6a1ba82cc524d41635a"
     ],
     [
+      "Prims._assert",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4f94bde9a1307356d062c949869b5103"
+    ],
+    [
+      "Prims.assert_spinoff",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5ac4a680c9b09ff2f22688242ce9602e"
+    ],
+    [
+      "Prims.cut",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e61d3c29ecef1c2d2338cf795354a363"
+    ],
+    [
       "Prims.nonzero",
       2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a31ec9553dd9149a47e99a257692adbc"
+      "332a325ac38d640aab26c63ff63de93d"
     ],
     [
       "Prims.pow2",
@@ -216,7 +243,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e261e887affbf197b6ded9b9de54d355"
+      "5dc4f6108a3b3406e371207213d6a164"
     ]
   ]
 ]

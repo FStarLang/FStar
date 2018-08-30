@@ -90,7 +90,6 @@ let apply_lemma             = from_tac_1 B.apply_lemma
 let print                   = from_tac_1 B.print
 let debugging               = from_tac_1 B.debugging
 let dump                    = from_tac_1 B.print_proof_state
-let dump1                   = from_tac_1 B.print_proof_state1
 let trefl                   = from_tac_1 B.trefl
 let dup                     = from_tac_1 B.dup
 let prune                   = from_tac_1 B.prune

@@ -23,7 +23,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "e5e8b90962b9811f12e3ba441cd30528"
+      "5ce103890f964b5b6c5336e672013bfc"
     ],
     [
       "Pruning.uu___69",
@@ -41,7 +41,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "55cb0e1699656a27ed60a96e4656a35b"
+      "7956617904aeaea4b9677e8758304b21"
     ],
     [
       "Pruning.uu___70",
@@ -59,7 +59,52 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "d46f39851a4f275cb79c7df91ad0cae7"
+      "9d89c7ec87c1929bcc4fd059bf400e78"
+    ],
+    [
+      "Pruning.f",
+      2,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "93d718723e360ec13b7f22dd4413f535"
+    ],
+    [
+      "Pruning.uu___69",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "equation_FStar.List.Tot.Base.rev",
+        "equation_with_fuel_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
+      ],
+      0,
+      "6a88aeab5f52ab4ca12c71fffbb9ba80"
+    ],
+    [
+      "Pruning.uu___70",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "equation_FStar.List.Tot.Base.rev",
+        "equation_with_fuel_FStar.List.Tot.Base.rev_acc.fuel_instrumented",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
+      ],
+      0,
+      "aa2b23481b31679deeba3703425fe0d3"
     ]
   ]
 ]

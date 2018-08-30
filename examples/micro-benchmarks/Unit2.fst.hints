@@ -108,6 +108,51 @@
       "280e1ed9702997c259153d06eca70d41"
     ],
     [
+      "Unit2.test1",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9d021691c23da70e3dd6fb020906feca"
+    ],
+    [
+      "Unit2.test2",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4152525a453991d9f35a64ae6685b430"
+    ],
+    [
+      "Unit2.test3",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Prims.nat" ],
+      0,
+      "168f1766c7270f1a5191a53c6fa76349"
+    ],
+    [
+      "Unit2.test5",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Prims.nat", "equation_Unit2.zat" ],
+      0,
+      "843c9ad4161ed52df30406622769be80"
+    ],
+    [
+      "Unit2.test6",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Prims.nat", "equation_Unit2.zat" ],
+      0,
+      "5fefb2aa578d1f1e7b5a2fa87fbf867b"
+    ],
+    [
       "Unit2.t",
       1,
       2,
@@ -116,7 +161,7 @@
         "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
       ],
       0,
-      "276f3e1fa96182724c5d30a8ff8f67c2"
+      "86fb3c6f30ae0d54bc874d3175d0f998"
     ],
     [
       "Unit2.__proj__Int__item__i",
@@ -129,7 +174,7 @@
         "refinement_interpretation_Unit2_Tm_refine_a80b1732c37b674c773643729bebf97c"
       ],
       0,
-      "eee363bc5942cb0b90c4b8c6c2a61e4b"
+      "def216acdb2b6b3b5c708e52b88189f0"
     ],
     [
       "Unit2.__proj__Bool__item__b",
@@ -142,7 +187,7 @@
         "refinement_interpretation_Unit2_Tm_refine_51f253259fbb75b1f44c4d01d8397ea7"
       ],
       0,
-      "ecc4e7280c17963d03d72d15f3e0db4e"
+      "63ed4135c4a350bbde8c258f68e701e4"
     ],
     [
       "Unit2.f",
@@ -157,7 +202,7 @@
         "primitive_Prims.op_Addition", "primitive_Prims.op_Negation"
       ],
       0,
-      "0f44d6e696b56f06dc73e6e3d7464414"
+      "dd1a765c82128d2b6ca91524e5724ee5"
     ],
     [
       "Unit2.f2",
@@ -166,7 +211,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9607f077988d79e3eaa61dd720fa4e6b"
+      "a20902722a59fff8b8e3f804ef71f057"
     ]
   ]
 ]
