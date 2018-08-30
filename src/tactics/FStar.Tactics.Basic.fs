@@ -109,7 +109,7 @@ let goal_to_string_verbose (g:goal) : string =
          | None -> ""
          | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (Print.term_to_string t))
 
-let goal_to_string ps (g:goal) =
+let goal_to_string (kind : string) (maybe_num : option<(int * int)>) (ps:proofstate) (g:goal) : string =
     if Options.print_implicits ()
        || ps.tac_verb_dbg
     then goal_to_string_verbose g
@@ -119,12 +119,18 @@ let goal_to_string ps (g:goal) =
             | None -> "_"
             | Some t -> tts (goal_env g) t
         in
+        let num = match maybe_num with
+                  | None -> ""
+                  | Some (i, n) -> BU.format2 " %s/%s" (string_of_int i) (string_of_int n)
+        in
         let maybe_label =
             match g.label with
             | "" -> ""
-            | l -> "Label: " ^ l ^ "\n"
+            | l -> " (" ^ l ^ ")"
         in
-        BU.format4 "%s%s |- %s : %s"
+        BU.format6 "%s%s%s:\n%s |- %s : %s\n\n"
+             kind
+             num
              maybe_label
              (Print.binders_to_string ", " g.goal_ctx_uvar.ctx_uvar_binders)
              w
@@ -161,21 +167,19 @@ let ps_to_string (msg, ps) =
     let p_imp imp =
         Print.uvar_to_string imp.imp_uvar.ctx_uvar_head
     in
+    let n_active = List.length ps.goals in
+    let n_smt    = List.length ps.smt_goals in
+    let n = n_active + n_smt in
     String.concat ""
-               [format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
+              ([format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
                 (if ps.entry_range <> Range.dummyRange
                  then format1 "Location: %s\n" (Range.string_of_def_range ps.entry_range)
                  else "");
                 (if Env.debug ps.main_context (Options.Other "Imp")
                  then format1 "Imps: %s\n" (FStar.Common.string_of_list p_imp ps.all_implicits)
-                 else "");
-                format2 "ACTIVE goals (%s):\n%s\n"
-                    (string_of_int (List.length ps.goals))
-                    (String.concat "\n" (List.map (goal_to_string ps) ps.goals));
-                format2 "SMT goals (%s):\n%s\n"
-                    (string_of_int (List.length ps.smt_goals))
-                    (String.concat "\n" (List.map (goal_to_string ps) ps.smt_goals));
-               ]
+                 else "")]
+                 @ (List.mapi (fun i g -> goal_to_string "Goal"     (Some (1 + i, n))            ps g) ps.goals)
+                 @ (List.mapi (fun i g -> goal_to_string "SMT Goal" (Some (1 + n_active + i, n)) ps g) ps.smt_goals))
 
 let goal_to_json g =
     let g_binders = Env.all_binders (goal_env g) |> Print.binders_to_json (Env.dsenv (goal_env g)) in
@@ -480,7 +484,7 @@ let tadmit_t (t:term) : tac<unit> = wrap_err "tadmit_t" <|
     // should somehow taint the state instead of just printing a warning
     Err.log_issue (goal_type g).pos
         (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
-                    (goal_to_string ps g));
+                    (goal_to_string "" None ps g));
     solve' g t))
 
 let fresh () : tac<Z.t> =
