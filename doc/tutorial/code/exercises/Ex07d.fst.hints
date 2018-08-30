@@ -1070,7 +1070,7 @@
         "typing_tok_Ex07d.TBool@tok", "unit_typing"
       ],
       0,
-      "85dbc85104758d5c2e006cd64d865da6"
+      "9fcc9c10a01ebde3bffe5aee8aec681b"
     ],
     [
       "Ex07d.preservation",
@@ -1130,7 +1130,7 @@
         "typing_tok_Ex07d.TBool@tok"
       ],
       0,
-      "cd663836a9da4ccbc409c52c675f0156"
+      "000c5d058fc2caa38a7ddd8de9ddf83c"
     ],
     [
       "Ex07d.typed_step",

@@ -1077,7 +1077,7 @@
         "typing_tok_Ex07b.TBool@tok", "unit_typing"
       ],
       0,
-      "61ba8b7601797c00277270880a6b67d3"
+      "0ca30d67e81eb6492dc9b1d40333f3a8"
     ],
     [
       "Ex07b.preservation",
@@ -1139,7 +1139,7 @@
         "typing_tok_Ex07b.TBool@tok"
       ],
       0,
-      "8051b4dd9ee21e223beddb8bb857565d"
+      "48da5f79fb113b1224846c1a3b39d1a0"
     ]
   ]
 ]

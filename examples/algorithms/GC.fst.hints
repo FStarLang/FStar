@@ -589,7 +589,7 @@
         "typing_GC.mem_hi"
       ],
       0,
-      "1f6ef6dba859ef40661bcd6ba086ba3a"
+      "e29193a1492e54c07d9e7bab3e6985e9"
     ],
     [
       "GC.test2",
@@ -612,7 +612,7 @@
         "typing_GC.is_mem_addr", "typing_GC.mem_lo"
       ],
       0,
-      "6ee557224447ea3796cac84500bb3a6f"
+      "3266c8c99939f342192f5212f6915f14"
     ],
     [
       "GC.sweep",

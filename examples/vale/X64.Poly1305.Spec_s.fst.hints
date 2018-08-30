@@ -127,7 +127,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b8cc7c0f3ceb3d42897e16cafe2f4b3a"
+      "cad407c74cce02e8b59ff211862780f3"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",

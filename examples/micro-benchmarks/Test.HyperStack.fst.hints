@@ -1855,7 +1855,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "892d3b784e864a19c7bd6bf549384b94"
+      "0b1731d22324ece7b1cc29d85c26d490"
     ],
     [
       "Test.HyperStack.test1",
@@ -1878,7 +1878,7 @@
         "typing_FStar.Monotonic.HyperStack.is_stack_region"
       ],
       0,
-      "6136242c7fe0efe9209d5ac0196f9f48"
+      "2092654b3f501273ef2c2355531e34ae"
     ],
     [
       "Test.HyperStack.test2",
@@ -1897,7 +1897,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "2b10568a6fae9de6def20ec364cdd1cd"
+      "6de2622e1fb6ec5a1343f9412916a07e"
     ],
     [
       "Test.HyperStack.dc_elim",
@@ -1918,7 +1918,7 @@
         "lemma_FStar.Monotonic.HyperStack.lemma_map_invariant"
       ],
       0,
-      "4f01935ab369a5efe1b768b7da923dcc"
+      "21447e6540157aed99b050bde2bcc7bf"
     ],
     [
       "Test.HyperStack.test5",
@@ -1974,7 +1974,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "0e6cbec92f5fe49bf3c5377b63a0973f"
+      "b88a09dbb17496e189b41c9b30b4c581"
     ],
     [
       "Test.HyperStack.test_do_something",

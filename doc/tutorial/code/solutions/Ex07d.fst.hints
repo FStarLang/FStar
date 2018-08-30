@@ -1166,7 +1166,7 @@
         "typing_tok_Ex07d.TBool@tok", "unit_typing"
       ],
       0,
-      "1d2c33d04928bb38072c85f3a658494b"
+      "f0a656f9f0e1a418020e75e66deb3f4a"
     ],
     [
       "Ex07d.preservation",
@@ -1226,7 +1226,7 @@
         "typing_tok_Ex07d.TBool@tok"
       ],
       0,
-      "a8df190e8b9529e7f47d82abdb4f356a"
+      "9e598d11b2ec2884ad705a708a39caa7"
     ],
     [
       "Ex07d.typed_step",

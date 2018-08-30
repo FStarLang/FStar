@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "867b93a115ce38b5bcb90214ad839723"
+      "afced144bcfd23db0c1755c01bfcbb12"
     ],
     [
       "Goals.elim",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Goals_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
       ],
       0,
-      "70514a9316c1ab88d38d572559519d7a"
+      "7f2f7c054f9299edaf3952a4249579f4"
     ],
     [
       "Goals.intro_sq",
@@ -29,7 +29,7 @@
       1,
       [ "@query" ],
       0,
-      "8b736c637fc4aee481f9c32f9e00cff8"
+      "f7418fd8ccdd95026131d4bf109e0da4"
     ],
     [
       "Goals.elim",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Goals_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
       ],
       0,
-      "4050804a1dc2adf86211e7285efac545"
+      "05c88bb57c1e0ea20ed27b09ac73635a"
     ]
   ]
 ]
