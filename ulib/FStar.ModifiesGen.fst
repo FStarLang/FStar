@@ -842,8 +842,7 @@ val modifies_intro_strong
 : Lemma
   (modifies l h h')
 
-#reset-options "--z3rlimit 32"
-
+#reset-options "--z3rlimit 100 --initial_fuel 1 --max_fuel 1"
 let modifies_intro_strong #al #c l h h' regions mrefs lives unused_ins alocs =
   Classical.forall_intro (Classical.move_requires regions);
   assert (modifies_preserves_regions l h h');
