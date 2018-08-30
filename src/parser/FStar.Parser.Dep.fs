@@ -556,13 +556,17 @@ let collect_one
   and collect_binders binders =
     List.iter collect_binder binders
 
-  and collect_binder = function
+  and collect_binder b =
+    collect_aqual b.aqual;
+    match b with
     | { b = Annotated (_, t) }
     | { b = TAnnotated (_, t) }
-    | { b = NoName t } ->
-        collect_term t
-    | _ ->
-        ()
+    | { b = NoName t } -> collect_term t
+    | _ -> ()
+
+  and collect_aqual = function
+    | Some (Meta t) -> collect_term t
+    | _ -> ()
 
   and collect_term t =
     collect_term' t.tm
@@ -675,16 +679,18 @@ let collect_one
     collect_pattern' p.pat
 
   and collect_pattern' = function
-    | PatWild _
+    | PatVar (_, aqual)
+    | PatTvar (_, aqual)
+    | PatWild aqual ->
+        collect_aqual aqual
+
     | PatOp _
     | PatConst _ ->
         ()
     | PatApp (p, ps) ->
         collect_pattern p;
         collect_patterns ps
-    | PatVar _
-    | PatName _
-    | PatTvar _ ->
+    | PatName _ ->
         ()
     | PatList ps
     | PatOr ps

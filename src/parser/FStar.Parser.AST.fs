@@ -95,12 +95,12 @@ and binder' =
 and binder = {b:binder'; brange:range; blevel:level; aqual:aqual}
 
 and pattern' =
-  | PatWild     of option<arg_qualifier>
+  | PatWild     of aqual
   | PatConst    of sconst
   | PatApp      of pattern * list<pattern>
-  | PatVar      of ident * option<arg_qualifier>
+  | PatVar      of ident * aqual
   | PatName     of lid
-  | PatTvar     of ident * option<arg_qualifier>
+  | PatTvar     of ident * aqual
   | PatList     of list<pattern>
   | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
   | PatRecord   of list<(lid * pattern)>
