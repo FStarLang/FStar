@@ -757,17 +757,20 @@ let extract' (g:env) (m:modul) : env * list<mllib> =
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with tcenv=FStar.TypeChecker.Env.set_current_module g.tcenv m.name;
                   currentModule = name} in
-  let g, sigs = BU.fold_map extract_sig g m.declarations in
-  let mlm : mlmodule = List.flatten sigs in
-  let is_kremlin = Options.codegen () = Some Options.Kremlin in
-  if m.name.str <> "Prims"
-  && (is_kremlin || not m.is_interface)
-  && Options.should_extract m.name.str then begin
-    BU.print1 "Extracted module %s\n" (Print.lid_to_string m.name);
-    g, [MLLib ([name, Some ([], mlm), (MLLib [])])]
-  end else begin
-    g, []
-  end
+  if not (Options.should_extract m.name.str)
+  then let g, _ = extract_iface g m.declarations in
+       g, []
+  else
+      let g, sigs = BU.fold_map extract_sig g m.declarations in
+      let mlm : mlmodule = List.flatten sigs in
+      let is_kremlin = Options.codegen () = Some Options.Kremlin in
+      if m.name.str <> "Prims"
+      && (is_kremlin || not m.is_interface)
+      then begin
+        BU.print1 "Extracted module %s\n" (Print.lid_to_string m.name);
+        g, [MLLib ([name, Some ([], mlm), (MLLib [])])]
+      end else
+        g, []
 
 let extract (g:env) (m:modul) =
   if Options.debug_any ()
