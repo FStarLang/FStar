@@ -66,11 +66,11 @@ let (uu___is_Unset : option_val -> Prims.bool) =
   fun projectee  ->
     match projectee with | Unset  -> true | uu____202 -> false
   
-let (mk_bool : Prims.bool -> option_val) = fun _0_4  -> Bool _0_4 
-let (mk_string : Prims.string -> option_val) = fun _0_5  -> String _0_5 
-let (mk_path : Prims.string -> option_val) = fun _0_6  -> Path _0_6 
-let (mk_int : Prims.int -> option_val) = fun _0_7  -> Int _0_7 
-let (mk_list : option_val Prims.list -> option_val) = fun _0_8  -> List _0_8 
+let (mk_bool : Prims.bool -> option_val) = fun _0_1  -> Bool _0_1 
+let (mk_string : Prims.string -> option_val) = fun _0_2  -> String _0_2 
+let (mk_path : Prims.string -> option_val) = fun _0_3  -> Path _0_3 
+let (mk_int : Prims.int -> option_val) = fun _0_4  -> Int _0_4 
+let (mk_list : option_val Prims.list -> option_val) = fun _0_5  -> List _0_5 
 type options =
   | Set 
   | Reset 

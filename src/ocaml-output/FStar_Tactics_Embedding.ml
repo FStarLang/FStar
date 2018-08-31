@@ -174,8 +174,8 @@ let (e_proofstate :
           FStar_Syntax_Syntax.rng = uu____316;_}
         ->
         let uu____319 = FStar_Dyn.undyn b  in
-        FStar_All.pipe_left
-          (fun _0_16  -> FStar_Pervasives_Native.Some _0_16) uu____319
+        FStar_All.pipe_left (fun _0_1  -> FStar_Pervasives_Native.Some _0_1)
+          uu____319
     | uu____322 ->
         (if w
          then
@@ -258,8 +258,8 @@ let (e_proofstate_nbe :
            FStar_Syntax_Syntax.rng = uu____513;_},uu____514)
         ->
         let uu____533 = FStar_Dyn.undyn b  in
-        FStar_All.pipe_left
-          (fun _0_17  -> FStar_Pervasives_Native.Some _0_17) uu____533
+        FStar_All.pipe_left (fun _0_2  -> FStar_Pervasives_Native.Some _0_2)
+          uu____533
     | uu____536 ->
         ((let uu____538 =
             let uu____543 =
@@ -296,8 +296,8 @@ let (e_goal : FStar_Tactics_Basic.goal FStar_Syntax_Embeddings.embedding) =
           FStar_Syntax_Syntax.rng = uu____587;_}
         ->
         let uu____590 = FStar_Dyn.undyn b  in
-        FStar_All.pipe_left
-          (fun _0_18  -> FStar_Pervasives_Native.Some _0_18) uu____590
+        FStar_All.pipe_left (fun _0_3  -> FStar_Pervasives_Native.Some _0_3)
+          uu____590
     | uu____593 ->
         (if w
          then
@@ -343,8 +343,8 @@ let (e_goal_nbe :
            FStar_Syntax_Syntax.rng = uu____699;_},uu____700)
         ->
         let uu____719 = FStar_Dyn.undyn b  in
-        FStar_All.pipe_left
-          (fun _0_19  -> FStar_Pervasives_Native.Some _0_19) uu____719
+        FStar_All.pipe_left (fun _0_4  -> FStar_Pervasives_Native.Some _0_4)
+          uu____719
     | uu____722 ->
         ((let uu____724 =
             let uu____729 =

@@ -415,7 +415,7 @@ let (norm_universe :
                | uu____1580 -> us1)
           | FStar_Syntax_Syntax.U_succ u3 ->
               let uu____1584 = aux u3  in
-              FStar_List.map (fun _0_16  -> FStar_Syntax_Syntax.U_succ _0_16)
+              FStar_List.map (fun _0_1  -> FStar_Syntax_Syntax.U_succ _0_1)
                 uu____1584
            in
         if
@@ -2498,8 +2498,8 @@ let rec (norm :
                  FStar_TypeChecker_Env.delta_depth_of_qninfo fv qninfo  in
                (match uu____8523 with
                 | FStar_Pervasives_Native.Some
-                    (FStar_Syntax_Syntax.Delta_constant_at_level _0_17) when
-                    _0_17 = (Prims.parse_int "0") ->
+                    (FStar_Syntax_Syntax.Delta_constant_at_level _0_2) when
+                    _0_2 = (Prims.parse_int "0") ->
                     (FStar_TypeChecker_Cfg.log_unfolding cfg
                        (fun uu____8529  ->
                           let uu____8530 =
@@ -5112,7 +5112,7 @@ and (norm_comp :
                | FStar_Pervasives_Native.Some u ->
                    let uu____14304 = norm_universe cfg env u  in
                    FStar_All.pipe_left
-                     (fun _0_18  -> FStar_Pervasives_Native.Some _0_18)
+                     (fun _0_3  -> FStar_Pervasives_Native.Some _0_3)
                      uu____14304
                | FStar_Pervasives_Native.None  ->
                    FStar_Pervasives_Native.None
@@ -5133,7 +5133,7 @@ and (norm_comp :
                | FStar_Pervasives_Native.Some u ->
                    let uu____14329 = norm_universe cfg env u  in
                    FStar_All.pipe_left
-                     (fun _0_19  -> FStar_Pervasives_Native.Some _0_19)
+                     (fun _0_4  -> FStar_Pervasives_Native.Some _0_4)
                      uu____14329
                | FStar_Pervasives_Native.None  ->
                    FStar_Pervasives_Native.None

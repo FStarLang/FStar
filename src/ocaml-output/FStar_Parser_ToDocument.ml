@@ -752,17 +752,17 @@ let handleable_op :
   fun op  ->
     fun args  ->
       match FStar_List.length args with
-      | _0_4 when _0_4 = (Prims.parse_int "0") -> true
-      | _0_5 when _0_5 = (Prims.parse_int "1") ->
+      | _0_1 when _0_1 = (Prims.parse_int "0") -> true
+      | _0_2 when _0_2 = (Prims.parse_int "1") ->
           (is_general_prefix_op op) ||
             (let uu____2007 = FStar_Ident.text_of_id op  in
              FStar_List.mem uu____2007 ["-"; "~"])
-      | _0_6 when _0_6 = (Prims.parse_int "2") ->
+      | _0_3 when _0_3 = (Prims.parse_int "2") ->
           ((is_operatorInfix0ad12 op) || (is_operatorInfix34 op)) ||
             (let uu____2009 = FStar_Ident.text_of_id op  in
              FStar_List.mem uu____2009
                ["<==>"; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"])
-      | _0_7 when _0_7 = (Prims.parse_int "3") ->
+      | _0_4 when _0_4 = (Prims.parse_int "3") ->
           let uu____2010 = FStar_Ident.text_of_id op  in
           FStar_List.mem uu____2010 [".()<-"; ".[]<-"]
       | uu____2011 -> false
@@ -2808,7 +2808,7 @@ and (p_tmArrow :
               FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.rarrow
             else FStar_Pprint.empty  in
           (match FStar_List.length terms with
-           | _0_8 when _0_8 = (Prims.parse_int "1") -> FStar_List.hd terms
+           | _0_5 when _0_5 = (Prims.parse_int "1") -> FStar_List.hd terms
            | uu____5581 ->
                let uu____5582 =
                  let uu____5583 =

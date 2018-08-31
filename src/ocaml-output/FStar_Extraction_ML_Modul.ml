@@ -1344,9 +1344,9 @@ let (maybe_register_plugin :
                        in
                     match uu____3891 with
                     | FStar_Pervasives_Native.Some
-                        (interp,nbe_interp,arity,plugin) ->
+                        (interp,nbe_interp,arity,plugin1) ->
                         let uu____3916 =
-                          if plugin
+                          if plugin1
                           then
                             ("FStar_Tactics_Native.register_plugin",
                               [interp; nbe_interp])
@@ -1798,36 +1798,44 @@ let (extract' :
            FStar_Extraction_ML_UEnv.currentModule = name
          }  in
        let uu____4701 =
-         FStar_Util.fold_map extract_sig g1
-           m.FStar_Syntax_Syntax.declarations
-          in
-       match uu____4701 with
-       | (g2,sigs) ->
-           let mlm = FStar_List.flatten sigs  in
-           let is_kremlin =
-             let uu____4730 = FStar_Options.codegen ()  in
-             uu____4730 =
-               (FStar_Pervasives_Native.Some FStar_Options.Kremlin)
-              in
-           let uu____4735 =
-             (((m.FStar_Syntax_Syntax.name).FStar_Ident.str <> "Prims") &&
-                (is_kremlin ||
-                   (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface)))
-               &&
-               (FStar_Options.should_extract
-                  (m.FStar_Syntax_Syntax.name).FStar_Ident.str)
-              in
-           if uu____4735
-           then
-             ((let uu____4743 =
-                 FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name
-                  in
-               FStar_Util.print1 "Extracted module %s\n" uu____4743);
-              (g2,
-                [FStar_Extraction_ML_Syntax.MLLib
-                   [(name, (FStar_Pervasives_Native.Some ([], mlm)),
-                      (FStar_Extraction_ML_Syntax.MLLib []))]]))
-           else (g2, []))
+         let uu____4702 =
+           FStar_Options.should_extract
+             (m.FStar_Syntax_Syntax.name).FStar_Ident.str
+            in
+         Prims.op_Negation uu____4702  in
+       if uu____4701
+       then
+         let uu____4709 = extract_iface g1 m.FStar_Syntax_Syntax.declarations
+            in
+         match uu____4709 with | (g2,uu____4721) -> (g2, [])
+       else
+         (let uu____4725 =
+            FStar_Util.fold_map extract_sig g1
+              m.FStar_Syntax_Syntax.declarations
+             in
+          match uu____4725 with
+          | (g2,sigs) ->
+              let mlm = FStar_List.flatten sigs  in
+              let is_kremlin =
+                let uu____4754 = FStar_Options.codegen ()  in
+                uu____4754 =
+                  (FStar_Pervasives_Native.Some FStar_Options.Kremlin)
+                 in
+              if
+                ((m.FStar_Syntax_Syntax.name).FStar_Ident.str <> "Prims") &&
+                  (is_kremlin ||
+                     (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface))
+              then
+                ((let uu____4766 =
+                    FStar_Syntax_Print.lid_to_string
+                      m.FStar_Syntax_Syntax.name
+                     in
+                  FStar_Util.print1 "Extracted module %s\n" uu____4766);
+                 (g2,
+                   [FStar_Extraction_ML_Syntax.MLLib
+                      [(name, (FStar_Pervasives_Native.Some ([], mlm)),
+                         (FStar_Extraction_ML_Syntax.MLLib []))]]))
+              else (g2, [])))
   
 let (extract :
   FStar_Extraction_ML_UEnv.env ->
@@ -1838,14 +1846,14 @@ let (extract :
   =
   fun g  ->
     fun m  ->
-      let uu____4811 = FStar_Options.debug_any ()  in
-      if uu____4811
+      let uu____4834 = FStar_Options.debug_any ()  in
+      if uu____4834
       then
         let msg =
-          let uu____4819 =
+          let uu____4842 =
             FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name  in
-          FStar_Util.format1 "Extracting module %s\n" uu____4819  in
+          FStar_Util.format1 "Extracting module %s\n" uu____4842  in
         FStar_Util.measure_execution_time msg
-          (fun uu____4827  -> extract' g m)
+          (fun uu____4850  -> extract' g m)
       else extract' g m
   

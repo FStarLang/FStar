@@ -1632,7 +1632,7 @@ and (resugar_bv_as_pat :
                  let uu____5963 =
                    FStar_Syntax_Subst.compress x.FStar_Syntax_Syntax.sort  in
                  FStar_All.pipe_left
-                   (fun _0_16  -> FStar_Pervasives_Native.Some _0_16)
+                   (fun _0_1  -> FStar_Pervasives_Native.Some _0_1)
                    uu____5963
                   in
                resugar_bv_as_pat' env x aqual body_bv uu____5958)

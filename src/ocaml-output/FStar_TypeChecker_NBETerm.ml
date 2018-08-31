@@ -1460,7 +1460,7 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         FStar_Util.bind_opt uu____5730
           (fun ss  ->
              FStar_All.pipe_left
-               (fun _0_16  -> FStar_Pervasives_Native.Some _0_16)
+               (fun _0_1  -> FStar_Pervasives_Native.Some _0_1)
                (FStar_Syntax_Embeddings.UnfoldOnly ss))
     | FV (fv,uu____5751,(l,uu____5753)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_unfoldfully
@@ -1470,7 +1470,7 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         FStar_Util.bind_opt uu____5772
           (fun ss  ->
              FStar_All.pipe_left
-               (fun _0_17  -> FStar_Pervasives_Native.Some _0_17)
+               (fun _0_2  -> FStar_Pervasives_Native.Some _0_2)
                (FStar_Syntax_Embeddings.UnfoldFully ss))
     | FV (fv,uu____5793,(l,uu____5795)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_unfoldattr
@@ -1480,7 +1480,7 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         FStar_Util.bind_opt uu____5814
           (fun ss  ->
              FStar_All.pipe_left
-               (fun _0_18  -> FStar_Pervasives_Native.Some _0_18)
+               (fun _0_3  -> FStar_Pervasives_Native.Some _0_3)
                (FStar_Syntax_Embeddings.UnfoldAttr ss))
     | uu____5834 ->
         ((let uu____5836 =

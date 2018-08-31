@@ -307,7 +307,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
              let uu____329 =
                let uu____330 =
                  FStar_All.pipe_left
-                   (fun _0_16  -> FStar_Parser_ParseIt.Fragment _0_16)
+                   (fun _0_1  -> FStar_Parser_ParseIt.Fragment _0_1)
                    (frag_of_text s)
                   in
                FStar_Parser_ParseIt.parse uu____330  in
@@ -537,7 +537,7 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
     (let report uu____441 =
        let uu____442 = FStar_Errors.report_all ()  in
-       FStar_All.pipe_right uu____442 (fun a236  -> ())  in
+       FStar_All.pipe_right uu____442 (fun a1  -> ())  in
      try
        (fun uu___423_450  ->
           match () with
