@@ -148,6 +148,7 @@ function build_fstar() {
     local timeout=960
 
     result_file="../result.txt"
+    echo Failure >$result_file
 
     # $status_file is the name of a file that contains true if and
     # only if the F* regression suite failed, false otherwise

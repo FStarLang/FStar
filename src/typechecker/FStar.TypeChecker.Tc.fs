@@ -1050,13 +1050,9 @@ let list_of_option = function
     | None -> []
     | Some x -> [x]
 
-(* Checks that all of the elements of l1 appear in l2 in the exact
- * same amount. Returns None when everything is OK, and Some (e, n1, n2)
- * when `e` occurs `n1` times in `l1` but `n2` (<> n1) times in `l2`. *)
-let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
-    (* If there are no expected errors, we don't check anything *)
-    match l1 with | [] -> None | _ ->
-
+(* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2) *)
+(* Precondition: lists are sorted *)
+let check_multi_contained (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)> =
     let rec collect (l : list<'a>) : list<('a * int)> =
         match l with
         | [] -> []
@@ -1070,7 +1066,6 @@ let check_multi_contained (l1 : list<int>) (l2 : list<int>) =
             end
     in
     let summ l =
-        let l = List.sortWith (fun x y -> x - y) l in
         collect l
     in
     let l1 = summ l1 in
@@ -1128,6 +1123,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       else ses
     in
     let sigbndle, projectors_ses = tc_inductive env ses se.sigquals lids in
+    let sigbndle = { sigbndle with sigattrs = se.sigattrs } in (* keep the attributes *)
     [ sigbndle ], projectors_ses, env0
 
   | Sig_pragma(p) ->  //no need for two-phase here
@@ -1480,10 +1476,31 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       else e
     in
 
+    let attrs, post_tau =
+        match U.extract_attr' PC.postprocess_with se.sigattrs with
+        | None -> se.sigattrs, None
+        | Some (ats, [tau, None]) -> ats, Some tau
+        | Some (ats, args) ->
+            Errors.log_issue r (Errors.Warning_UnrecognizedAttribute,
+                                   ("Ill-formed application of `postprocess_with`"));
+            se.sigattrs, None
+    in
+    let se = { se with sigattrs = attrs } in (* to remove the postprocess_with *)
+    let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
+        let lbdef = env.postprocess env tau lb.lbtyp lb.lbdef in
+        { lb with lbdef = lbdef }
+    in
     let se, lbs = match tc_maybe_toplevel_term env' e with
       | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
+
+        // Postprocess the letbindings with the tactic, if any
+        let lbs = (fst lbs,
+                    (match post_tau with
+                     | Some tau -> List.map (postprocess_lb tau) (snd lbs)
+                     | None -> (snd lbs)))
+        in
 
         //propagate the MaskedEffect tag to the qualifiers
         let quals = match e.n with
@@ -1533,15 +1550,26 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
         List.iter Errors.print_issue errs;
         BU.print_string ">>]\n"
     end;
-    begin match errs, check_multi_contained errnos (List.concatMap (fun i -> list_of_option i.issue_number) errs) with
-    | [], _ ->
+    let sort = List.sortWith (fun x y -> x - y) in
+    let errnos = sort errnos in
+    let actual = sort (List.concatMap (fun i -> list_of_option i.issue_number) errs) in
+    begin match errs with
+    | [] ->
         List.iter Errors.print_issue errs;
         Errors.log_issue se.sigrng (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded")
-    | _, Some (e, n1, n2) ->
-        List.iter Errors.print_issue errs;
-        Errors.log_issue se.sigrng (Errors.Error_DidNotFail, BU.format3 "This top-level definition was expected to raise Error #%s %s times, but it raised it %s times"
-                                                (string_of_int e) (string_of_int n1) (string_of_int n2))
-    | _, None -> ()
+    | _ ->
+        if errnos <> [] && errnos <> actual then
+            let (e, n1, n2) = match check_multi_contained errnos actual with
+                              | Some r -> r
+                              | None -> (-1, -1, -1) // should be impossible
+            in
+            List.iter Errors.print_issue errs;
+            Errors.log_issue se.sigrng (Errors.Error_DidNotFail,
+                    BU.format5 "This top-level definition was expected to raise error codes %s, but it raised %s. Error #%s was raised %s times, instead of %s."
+                                    (FStar.Common.string_of_list string_of_int errnos)
+                                    (FStar.Common.string_of_list string_of_int actual)
+                                    (string_of_int e) (string_of_int n2) (string_of_int n1))
+        else ()
     end;
     [], [], env
 
@@ -1714,7 +1742,11 @@ let tc_decls env ses =
         List.fold_left accum_exports_hidden (exports, hidden) ses'
     in
 
-    let ses' = List.map (fun s -> { s with sigattrs = se.sigattrs }) ses' in
+    // GM: Aug 28 2018, pretty sure this is unneded as the only sigelt that can
+    // be present in ses' is the typechecked se (or none). I'm taking it out
+    // so I can make `postprocess_with` remove itself during typechecking
+    // (otherwise, it would run twice with extracted interfaces)
+    (* let ses' = List.map (fun s -> { s with sigattrs = se.sigattrs }) ses' in *)
 
     (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
   in
@@ -1863,12 +1895,15 @@ let extract_interface (en:env) (m:modul) :modul =
       if is_unit t then Some (S.mk_Total t) else match (SS.compress t).n with | Tm_arrow (_, c) -> Some c | _ -> None
     in
 
-    Option.isNone c_opt ||  //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
-    (let c = c_opt |> must in
-     //if c is pure or ghost then keep it if the return type is not unit
-     if is_pure_or_ghost_comp c then not (c |> comp_result |> is_unit)
-     //else keep it if the effect is reifiable
-     else Env.is_reifiable_effect en (comp_effect_name c))
+    match c_opt with
+    | None -> true //we can't get the comp type for sure, e.g. t is not an arrow (say if..then..else), so keep the body
+    | Some c ->
+        // discard lemmas, we don't need their bodies
+        if is_lemma_comp c
+        then false
+        else if is_pure_or_ghost_comp c // keep all pure functions
+        then true
+        else Env.is_reifiable_effect en (comp_effect_name c) //else only keep it if the effect is reifiable
   in
 
   let extract_sigelt (s:sigelt) :list<sigelt> =

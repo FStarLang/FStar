@@ -176,6 +176,8 @@ let (init_once : unit -> unit) =
                (uu___416_234.FStar_TypeChecker_Env.synth_hook);
              FStar_TypeChecker_Env.splice =
                (uu___416_234.FStar_TypeChecker_Env.splice);
+             FStar_TypeChecker_Env.postprocess =
+               (uu___416_234.FStar_TypeChecker_Env.postprocess);
              FStar_TypeChecker_Env.is_native_tactic =
                (uu___416_234.FStar_TypeChecker_Env.is_native_tactic);
              FStar_TypeChecker_Env.identifier_info =
@@ -267,6 +269,8 @@ let (init_once : unit -> unit) =
                     (uu___417_252.FStar_TypeChecker_Env.synth_hook);
                   FStar_TypeChecker_Env.splice =
                     (uu___417_252.FStar_TypeChecker_Env.splice);
+                  FStar_TypeChecker_Env.postprocess =
+                    (uu___417_252.FStar_TypeChecker_Env.postprocess);
                   FStar_TypeChecker_Env.is_native_tactic =
                     (uu___417_252.FStar_TypeChecker_Env.is_native_tactic);
                   FStar_TypeChecker_Env.identifier_info =
@@ -307,7 +311,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
              let uu____329 =
                let uu____330 =
                  FStar_All.pipe_left
-                   (fun _0_1  -> FStar_Parser_ParseIt.Fragment _0_1)
+                   (fun _0_16  -> FStar_Parser_ParseIt.Fragment _0_16)
                    (frag_of_text s)
                   in
                FStar_Parser_ParseIt.parse uu____330  in
@@ -413,6 +417,8 @@ let (tc' :
           (uu___420_363.FStar_TypeChecker_Env.synth_hook);
         FStar_TypeChecker_Env.splice =
           (uu___420_363.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.postprocess =
+          (uu___420_363.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =
           (uu___420_363.FStar_TypeChecker_Env.is_native_tactic);
         FStar_TypeChecker_Env.identifier_info =
@@ -516,6 +522,8 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
           (uu___421_418.FStar_TypeChecker_Env.synth_hook);
         FStar_TypeChecker_Env.splice =
           (uu___421_418.FStar_TypeChecker_Env.splice);
+        FStar_TypeChecker_Env.postprocess =
+          (uu___421_418.FStar_TypeChecker_Env.postprocess);
         FStar_TypeChecker_Env.is_native_tactic =
           (uu___421_418.FStar_TypeChecker_Env.is_native_tactic);
         FStar_TypeChecker_Env.identifier_info =
@@ -537,7 +545,7 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
     (let report uu____441 =
        let uu____442 = FStar_Errors.report_all ()  in
-       FStar_All.pipe_right uu____442 (fun a1  -> ())  in
+       FStar_All.pipe_right uu____442 (fun a230  -> ())  in
      try
        (fun uu___423_450  ->
           match () with

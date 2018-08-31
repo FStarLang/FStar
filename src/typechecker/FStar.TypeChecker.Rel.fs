@@ -3345,6 +3345,8 @@ let resolve_implicits' env must_total forcelax g =
                | None ->
                     until_fixpoint (hd::out, changed) tl
                | Some (env, tau) ->
+                    if Env.debug env (Options.Other "Tac") then
+                        BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
                     let t = env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau in
                     // let the unifier handle setting the variable
                     let extra =
@@ -3353,7 +3355,7 @@ let resolve_implicits' env must_total forcelax g =
                         | Some g -> g.implicits
                     in
                     let hd = { hd with imp_meta = None } in
-                    until_fixpoint (out, changed) (hd :: (extra @ tl))
+                    until_fixpoint (out, true) (hd :: (extra @ tl))
                end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl

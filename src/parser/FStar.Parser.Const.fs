@@ -263,8 +263,10 @@ let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
 let fail_attr      = psconst "expect_failure"
 let fail_lax_attr  = psconst "expect_lax_failure"
 let tcdecltime_attr = psconst "tcdecltime"
-let assume_strictly_positive_attr_lid = p2l ["FStar"; "Pervasives"; "assume_strictly_positive"]
-let unifier_hint_injective_lid = p2l ["FStar"; "Pervasives"; "unifier_hint_injective"]
+let assume_strictly_positive_attr_lid = psconst "assume_strictly_positive"
+let unifier_hint_injective_lid = psconst "unifier_hint_injective"
+let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
+let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 
 let gen_reset =
     let x = U.mk_ref 0 in
@@ -360,7 +362,7 @@ let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
-let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "instance"]
+let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
 
 let effect_TAC_lid = fstar_tactics_lid' ["Effect"; "TAC"] // actual effect
 let effect_Tac_lid = fstar_tactics_lid' ["Effect"; "Tac"] // trivial variant

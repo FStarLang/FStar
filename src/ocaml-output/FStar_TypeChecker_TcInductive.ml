@@ -2951,14 +2951,10 @@ let (mk_discriminator_and_indexed_projectors :
                          FStar_Ident.lid_equals FStar_Parser_Const.prims_lid
                            uu____7810)
                           &&
-                          (((tc.FStar_Ident.ident).FStar_Ident.idText =
-                              "dtuple2")
-                             ||
-                             (FStar_List.existsb
-                                (fun s  ->
-                                   s =
-                                     (tc.FStar_Ident.ident).FStar_Ident.idText)
-                                early_prims_inductives))
+                          (FStar_List.existsb
+                             (fun s  ->
+                                s = (tc.FStar_Ident.ident).FStar_Ident.idText)
+                             early_prims_inductives)
                          in
                       let discriminator_ses =
                         if fvq <> FStar_Syntax_Syntax.Data_ctor

@@ -11,7 +11,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2aa8f6bafc5173c15a89fcc6e060adcc"
+      "4e0cce51c89b3ef34f2d3bbdadb4a063"
     ],
     [
       "MAC.key",
@@ -22,7 +22,7 @@
         "@query", "equation_MAC.keysize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b49d71ee95c7fbbc7beef95e1b8b2904"
+      "7c9b1964f5f3e90eee3ed7cfcb3c3a54"
     ],
     [
       "MAC.tag",
@@ -33,7 +33,16 @@
         "@query", "equation_MAC.macsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "84322b3c9309b71b3c5edbe913e7f6ec"
+      "03b38c58cb35e7e8d5208240fb9e7b5f"
+    ],
+    [
+      "MAC.sha1verify",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
+      0,
+      "6f4dac7b6ef734a48101a3f7c75d4d4a"
     ],
     [
       "MAC.__proj__Entry__item__t",
@@ -45,7 +54,7 @@
         "projection_inverse_MAC.Entry_k"
       ],
       0,
-      "486bd497e5a0ca55cf3ca8af70df8c52"
+      "e377f349df4041ea99927809bc1192d3"
     ],
     [
       "MAC.mac",
@@ -59,7 +68,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "fc7e9fed892b6ceea214636f3aad996a"
+      "58438b47da1e41af311dbabdff0adf64"
     ],
     [
       "MAC.verify",
@@ -89,7 +98,7 @@
         "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "fdf287e8ee31aacdf85323a012286c02"
+      "b8f9376dbfa0896cc56ca4dfe0485789"
     ],
     [
       "MAC.nbytes",
@@ -101,7 +110,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d97ac3123a751d34ef6cb9e78fb5eaf7"
+      "9bdd7b670f0536f270848088c3f0b1aa"
     ],
     [
       "MAC.key",
@@ -112,7 +121,7 @@
         "@query", "equation_MAC.keysize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "2fec110630aa50b0d142bf7874a3fa68"
+      "339723b478c16cab0a37b6843839a09c"
     ],
     [
       "MAC.tag",
@@ -123,7 +132,16 @@
         "@query", "equation_MAC.macsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b9cce6bc402f576fcd357583b3079fd1"
+      "4ec465954e9da8d3dc882fd323a361ed"
+    ],
+    [
+      "MAC.sha1verify",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_FStar.UInt8.t__uu___haseq" ],
+      0,
+      "aac65a8288cb4826c047839b5b9a75f6"
     ],
     [
       "MAC.__proj__Entry__item__t",
@@ -135,7 +153,7 @@
         "projection_inverse_MAC.Entry_k"
       ],
       0,
-      "f39673911b3509188b04119d7f14088a"
+      "5bc58fffdec60c3b86951e05b9316e6e"
     ]
   ]
 ]

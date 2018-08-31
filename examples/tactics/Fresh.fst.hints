@@ -14,7 +14,7 @@
         "function_token_typing_FStar.UInt32.n"
       ],
       0,
-      "3d634f4419631e53870feafe0ad633d9"
+      "3aa252a8f9c02b498ff327451667b9a1"
     ],
     [
       "Fresh.uu___62",
@@ -29,7 +29,37 @@
         "function_token_typing_FStar.UInt32.n", "true_interp"
       ],
       0,
-      "6482d46dffbfd7688112788e7f4ac871"
+      "3b6c5b42a1e11191013b114fdb98c7f8"
+    ],
+    [
+      "Fresh.uu___62",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.UInt32.n"
+      ],
+      0,
+      "bd70e1f04c8d598a46fb7edefeea970f"
+    ],
+    [
+      "Fresh.uu___62",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_FStar.UInt32.n", "true_interp"
+      ],
+      0,
+      "43b28386f68ea552e5bedfb86832c002"
     ]
   ]
 ]

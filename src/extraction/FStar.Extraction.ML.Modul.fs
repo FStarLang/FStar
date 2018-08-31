@@ -643,6 +643,24 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let (lbs, _) ->
           let attrs = se.sigattrs in
           let quals = se.sigquals in
+          let attrs, post_tau =
+              match U.extract_attr' PC.postprocess_extr_with attrs with
+              | None -> attrs, None
+              | Some (ats, (tau, None)::_) -> ats, Some tau
+              | Some (ats, args) ->
+                  Errors.log_issue se.sigrng (Errors.Warning_UnrecognizedAttribute,
+                                         ("Ill-formed application of `postprocess_for_extraction_with`"));
+                  attrs, None
+          in
+          let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
+              let lbdef = Env.postprocess g.tcenv tau lb.lbtyp lb.lbdef in
+              { lb with lbdef = lbdef }
+          in
+          let lbs = (fst lbs,
+                      (match post_tau with
+                       | Some tau -> List.map (postprocess_lb tau) (snd lbs)
+                       | None -> (snd lbs)))
+          in
           let ml_let, _, _ =
             Term.term_as_mlexpr
                     g

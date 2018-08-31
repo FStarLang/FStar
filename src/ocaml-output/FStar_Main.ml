@@ -75,7 +75,7 @@ let (report_errors :
   =
   fun fmods  ->
     (let uu____147 = FStar_Errors.report_all ()  in
-     FStar_All.pipe_right uu____147 (fun a1  -> ()));
+     FStar_All.pipe_right uu____147 (fun a234  -> ()));
     (let nerrs = FStar_Errors.get_err_count ()  in
      if nerrs > (Prims.parse_int "0")
      then
