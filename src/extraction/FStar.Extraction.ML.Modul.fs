@@ -287,9 +287,14 @@ let extract_typ_abbrev env quals attrs lb
     let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
     let td = assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, metadata, Some (MLTD_Abbrev body) in
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty [td]] in
-    let env, tydef = UEnv.extend_tydef env fv td in
+    let env, iface =
+        if quals |> BU.for_some (function Assumption | New -> true | _ -> false)
+        then UEnv.extend_type_name env fv, iface_of_type_names [fv]
+        else let env, tydef = UEnv.extend_tydef env fv td in
+             env, iface_of_tydefs [tydef]
+    in
     env,
-    iface_of_tydefs [tydef],
+    iface,
     def
 
 (* extract_bundle_iface:
@@ -541,17 +546,11 @@ let extract_bundle env se =
     match se.sigel, se.sigquals with
     | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->
         let env, ctor = extract_ctor [] env ({dname=l; dtyp=t}) in
-        printfn "Extracted %s;\n\tEnv is %A"
-                           (Ident.string_of_lid l)
-                           env.gamma;
         env, [MLM_Exn ctor]
 
     | Sig_bundle(ses, _), quals ->
         let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
         let env, td = BU.fold_map extract_one_family env ifams in
-        printfn "Extracted %s;\n\tEnv is %A"
-                           (U.lids_of_sigelt se |> List.map Ident.string_of_lid |> String.concat ", ")
-                           env.gamma;
         env, [MLM_Ty td]
 
     | _ -> failwith "Unexpected signature element"
