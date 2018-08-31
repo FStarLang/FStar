@@ -237,6 +237,14 @@ let catch (t : tac<'a>) : tac<either<string,'a>> =
                 let ps = { ps with freshness = q.freshness } in //propagate the freshness even on failures
                 Success (Inl m, ps)
            )
+
+let recover (t : tac<'a>) : tac<either<string,'a>> =
+    mk_tac (fun ps ->
+            match run t ps with
+            | Success (a, q) -> Success (Inr a, q)
+            | Failed (m, q)  -> Success (Inl m, q)
+           )
+
 let trytac (t : tac<'a>) : tac<option<'a>> =
     bind (catch t) (fun r ->
     match r with

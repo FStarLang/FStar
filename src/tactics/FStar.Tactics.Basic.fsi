@@ -54,6 +54,7 @@ val divide : Z.t -> tac<'a> -> tac<'b> -> tac<('a * 'b)>
 val seq : tac<unit> -> tac<unit> -> tac<unit>
 val focus : tac<'a> -> tac<'a>
 val catch : tac<'a> -> tac<BU.either<string,'a>>
+val recover : tac<'a> -> tac<BU.either<string,'a>>
 val intro : unit -> tac<binder>
 val intro_rec : unit -> tac<(binder * binder)>
 val norm : list<EMB.norm_step> -> tac<unit>
