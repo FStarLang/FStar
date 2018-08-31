@@ -1937,13 +1937,12 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->
       let constrName = mk_ident("Mk" ^ id.idText, id.idRange) in
-      (* it is necessary to mangle field names to avoid capture as they are turned into the formal parameters of the data constructor *)
-      let mfields = List.map (fun (x,t,_) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr None) fields in
+      let mfields = List.map (fun (x,t,_) -> mk_binder (Annotated(x,t)) x.idRange Expr None) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type_level) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type_level in
       //let _ = BU.print_string (BU.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in
       // FIXME: docs of individual fields are dropped
-      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, None, false)]), fields |> List.map (fun (x, _, _) -> unmangle_field_name x)
+      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, None, false)]), fields |> List.map (fun (x, _, _) -> x)
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
     | TyconAbstract(id, binders, kopt) ->
@@ -2575,7 +2574,6 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
         match get_fname se.sigquals with
         | None -> []
         | Some id ->
-            let id = U.unmangle_field_name id in
             [qualify env id]
     in
     let rec splice_decl meths se =

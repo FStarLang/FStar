@@ -41,7 +41,6 @@ let vargs args = List.filter (function (BU.Inl _, _) -> false | _ -> true) args
 (* Some operations on constants *)
 let escape (s:string) = BU.replace_char s '\'' '_'
 let mk_term_projector_name lid (a:bv) =
-    let a = {a with ppname=U.unmangle_field_name a.ppname} in
     escape <| BU.format2 "%s_%s" lid.str a.ppname.idText
 let primitive_projector_by_pos env lid i =
     let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (lid.str)) in
@@ -113,7 +112,6 @@ let varops =
      next_id=next_id;
      mk_unique=mk_unique}
 
- let unmangle (x:bv) : bv = {x with ppname=U.unmangle_field_name x.ppname}
 (* ---------------------------------------------------- *)
 (* <Environment> *)
 (* Each entry maps a Syntax variable to its encoding as a SMT2 term *)
@@ -213,11 +211,9 @@ let push_term_var (env:env_t) (x:bv) (t:term) =
 let lookup_term_var env a =
     match lookup_bvar_binding env a with
     | None ->
-        //AR: this is a temporary fix, use reserved u__ for mangling names
-        let a2 = unmangle a in
-        (match lookup_bvar_binding env a2 with
-            | None -> failwith (BU.format2 "Bound term variable not found (after unmangling): %s in environment: %s"
-                                          (Print.bv_to_string a2)
+        (match lookup_bvar_binding env a with
+            | None -> failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
+                                          (Print.bv_to_string a)
                                           (print_env env))
             | Some (b,t) -> t)
     | Some (b,t) -> t

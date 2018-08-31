@@ -978,7 +978,7 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
               (* Todo: resugar univs *)
               begin match (SS.compress term).n with
                 | Tm_arrow(bs, _) ->
-                  let mfields = bs |> List.map (fun (b, qual) -> (U.unmangle_field_name (bv_as_unique_ident b), resugar_term' env b.sort, None)) in
+                  let mfields = bs |> List.map (fun (b, qual) -> (bv_as_unique_ident b, resugar_term' env b.sort, None)) in
                   mfields@fields
                 | _ -> failwith "unexpected"
               end
