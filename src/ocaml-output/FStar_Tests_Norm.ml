@@ -1435,7 +1435,7 @@ let run_either :
            FStar_Util.print1 "%s: ... \n\n" uu____3413);
           (let tcenv = FStar_Tests_Pars.init ()  in
            (let uu____3416 = FStar_Main.process_args ()  in
-            FStar_All.pipe_right uu____3416 (fun a235  -> ()));
+            FStar_All.pipe_right uu____3416 (fun a236  -> ()));
            (let x1 = normalizer tcenv r  in
             FStar_Options.init ();
             FStar_Options.set_option "print_universes"

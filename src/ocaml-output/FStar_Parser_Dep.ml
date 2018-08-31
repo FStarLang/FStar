@@ -105,7 +105,7 @@ let (module_name_of_file : Prims.string -> Prims.string) =
     | FStar_Pervasives_Native.Some longname -> longname
     | FStar_Pervasives_Native.None  ->
         let uu____229 =
-          let uu____234 = FStar_Util.format1 "not a valid FStar file: %s\n" f
+          let uu____234 = FStar_Util.format1 "not a valid FStar file: %s" f
              in
           (FStar_Errors.Fatal_NotValidFStarFile, uu____234)  in
         FStar_Errors.raise_err uu____229
@@ -478,7 +478,7 @@ let (build_inclusion_candidates_list :
       FStar_Util.normalize_file_path uu____1096  in
     FStar_List.concatMap
       (fun d  ->
-         if FStar_Util.file_exists d
+         if FStar_Util.is_directory d
          then
            let files = FStar_Util.readdir d  in
            FStar_List.filter_map
