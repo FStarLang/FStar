@@ -300,12 +300,13 @@ val of_buffer: l:UInt32.t -> buf:lbuffer l -> Stack (b:bytes{length b = U32.v l}
   (requires (fun h0 -> B.live h0 buf))
   (ensures  (fun h0 b h1 -> M.(modifies loc_none h0 h1) /\ b = hide (B.as_seq h0 buf)))
 
-val store_bytes: l:UInt32.t -> buf:lbuffer l -> i:UInt32.t{U32.(i <=^ l)} -> b:bytes{length b = U32.v l} -> Stack unit
-  (requires (fun h0 -> B.live h0 buf))
-  (ensures  (fun h0 r h1 ->
-    B.live h1 buf /\
-    M.(modifies (loc_buffer buf) h0 h1) /\
-    reveal b = Seq.slice (B.as_seq h1 buf) 0 (U32.v i)))
+val store_bytes: src:bytes { length src <> 0 } ->
+  dst:lbuffer (len src) ->
+  Stack unit
+    (requires (fun h0 -> B.live h0 dst))
+    (ensures  (fun h0 r h1 ->
+      M.(modifies (loc_buffer dst) h0 h1) /\
+      Seq.equal (reveal src) (B.as_seq h1 dst)))
 
 (* JP: let's not add from_bytes here because we want to leave it up to the
 caller to allocate on the stack or on the heap *)
