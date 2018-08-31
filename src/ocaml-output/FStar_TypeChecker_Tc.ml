@@ -2869,7 +2869,7 @@ let (cps_and_elaborate :
                                                                     in
                                                                  FStar_All.pipe_right
                                                                    uu____4536
-                                                                   (fun a230 
+                                                                   (fun a1 
                                                                     -> ()))));
                                                           (let wp =
                                                              let t2 =
@@ -3930,7 +3930,7 @@ let tc_lex_t :
                                                                FStar_Syntax_Syntax.sigel
                                                                  =
                                                                  FStar_Syntax_Syntax.Sig_datacon
-                                                                 (lex_top1,uu____6549,_t_top,_lex_t_top,_0_16,uu____6552);
+                                                                 (lex_top1,uu____6549,_t_top,_lex_t_top,_0_1,uu____6552);
                                                                FStar_Syntax_Syntax.sigrng
                                                                  = r1;
                                                                FStar_Syntax_Syntax.sigquals
@@ -3941,14 +3941,14 @@ let tc_lex_t :
                                                                  = uu____6555;_}::
                {
                  FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-                   (lex_cons,uu____6557,_t_cons,_lex_t_cons,_0_17,uu____6560);
+                   (lex_cons,uu____6557,_t_cons,_lex_t_cons,_0_2,uu____6560);
                  FStar_Syntax_Syntax.sigrng = r2;
                  FStar_Syntax_Syntax.sigquals = [];
                  FStar_Syntax_Syntax.sigmeta = uu____6562;
                  FStar_Syntax_Syntax.sigattrs = uu____6563;_}::[]
                when
-               ((_0_16 = (Prims.parse_int "0")) &&
-                  (_0_17 = (Prims.parse_int "0")))
+               ((_0_1 = (Prims.parse_int "0")) &&
+                  (_0_2 = (Prims.parse_int "0")))
                  &&
                  (((FStar_Ident.lid_equals lex_t1
                       FStar_Parser_Const.lex_t_lid)
@@ -7477,7 +7477,7 @@ let (check_exports :
                    in
                 let uu____13233 =
                   FStar_TypeChecker_TcTerm.tc_trivial_guard env2 t1  in
-                FStar_All.pipe_right uu____13233 (fun a231  -> ())))
+                FStar_All.pipe_right uu____13233 (fun a2  -> ())))
            in
         let check_term1 lid univs1 t =
           (let uu____13259 =
@@ -8368,7 +8368,7 @@ and (finish_partial_modul :
                   then
                     ((let uu____14800 =
                         FStar_Options.restore_cmd_line_options true  in
-                      FStar_All.pipe_right uu____14800 (fun a232  -> ()));
+                      FStar_All.pipe_right uu____14800 (fun a3  -> ()));
                      z3_reset_options en01)
                   else en01  in
                 let uu____14802 = tc_modul en0 modul_iface true  in
@@ -8441,7 +8441,7 @@ and (finish_partial_modul :
                     (Prims.strcat "Ending modul "
                        (modul.FStar_Syntax_Syntax.name).FStar_Ident.str)
                    in
-                FStar_All.pipe_right uu____14891 (fun a233  -> ()));
+                FStar_All.pipe_right uu____14891 (fun a4  -> ()));
                (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.encode_modul
                  env modul;
                (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
@@ -8453,7 +8453,7 @@ and (finish_partial_modul :
                 then
                   let uu____14897 =
                     FStar_Options.restore_cmd_line_options true  in
-                  FStar_All.pipe_right uu____14897 (fun a234  -> ())
+                  FStar_All.pipe_right uu____14897 (fun a5  -> ())
                 else ());
                (modul, FStar_Pervasives_Native.None, env))
 
