@@ -1341,7 +1341,15 @@ in
       ( lid, mk_pattern (PatVar (lid.ident, None)) (rhs parseState 1) )}
 
 patternOrMultibinder:
-  LBRACK_BAR lident COLON simpleArrow BAR_RBRACK
+  LBRACK_BAR UNDERSCORE COLON simpleArrow BAR_RBRACK
+    {let (_1, _2, _3, t, _5) = ((), (), (), $4, ()) in
+      ( let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let w = mk_pattern (PatWild (Some (Meta mt)))
+                                 (rhs2 parseState 1 5) in
+        let asc = (t, None) in
+        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
+      )}
+| LBRACK_BAR lident COLON simpleArrow BAR_RBRACK
     {let (_1, i, _3, t, _5) = ((), $2, (), $4, ()) in
       ( let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         let w = mk_pattern (PatVar (i, Some (Meta mt)))

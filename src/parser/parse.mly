@@ -447,6 +447,14 @@ fieldPattern:
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
+  | LBRACK_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACK
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let w = mk_pattern (PatWild (Some (Meta mt)))
+                                 (rhs2 parseState 1 5) in
+        let asc = (t, None) in
+        [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
+      }
+
   | LBRACK_BAR i=lident COLON t=simpleArrow BAR_RBRACK
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         let w = mk_pattern (PatVar (i, Some (Meta mt)))
@@ -454,6 +462,7 @@ patternOrMultibinder:
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
       }
+
   | LBRACK_BAR t=simpleArrow BAR_RBRACK
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
         let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (Meta mt)))
