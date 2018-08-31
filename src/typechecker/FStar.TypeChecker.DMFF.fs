@@ -44,7 +44,7 @@ module PC = FStar.Parser.Const
 type env = {
   // The type-checking environment which we abuse to store our DMFF-style types
   // when entering a binder.
-  env: FStar.TypeChecker.Env.env;
+  tcenv: FStar.TypeChecker.Env.env;
   // The substitution from every [x: C] to its [x^w: C*].
   subst: list<subst_elt>;
   // Hack to avoid a dependency NS: env already has a type_of, so why not reuse that?
@@ -54,7 +54,7 @@ type env = {
 
 
 let empty env tc_const = {
-  env = env;
+  tcenv = env;
   subst = [];
   tc_const = tc_const
 }
@@ -512,8 +512,8 @@ let gen_wps_for_free
 // Some helpers for... --------------------------------------------------------
 type env_ = env
 
-let get_env env = env.env
-let set_env dmff_env env' = { dmff_env with env = env' }
+let get_env env = env.tcenv
+let set_env dmff_env env' = { dmff_env with tcenv = env' }
 
 type nm = | N of typ | M of typ
 
@@ -653,11 +653,11 @@ and star_type' env t =
         ) ->
             true
         | Tm_fvar fv ->
-             let (_, ty), _ = Env.lookup_lid env.env fv.fv_name.v in
+             let (_, ty), _ = Env.lookup_lid env.tcenv fv.fv_name.v in
              if is_non_dependent_arrow ty (List.length args)
              then
                // We need to check that the result of the application is a datatype
-                let res = N.normalize [Env.EraseUniverses; Env.Inlining ; Env.UnfoldUntil S.delta_constant] env.env t in
+                let res = N.normalize [Env.EraseUniverses; Env.Inlining ; Env.UnfoldUntil S.delta_constant] env.tcenv t in
                 begin match (SS.compress res).n with
                   | Tm_app _ -> true
                   | _ ->
@@ -690,7 +690,7 @@ and star_type' env t =
       // For parameterized data types... TODO: check that this only appears at
       // top-level
       let binders, repr = SS.open_term binders repr in
-      let env = { env with env = push_binders env.env binders } in
+      let env = { env with tcenv = push_binders env.tcenv binders } in
       let repr = star_type' env repr in
       U.abs binders repr something
 
@@ -820,7 +820,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
-      if not (is_unknown t2.n) && not (Env.is_trivial (Rel.teq env.env t1 t2)) then
+      if not (is_unknown t2.n) && not (Env.is_trivial (Rel.teq env.tcenv t1 t2)) then
         raise_err (Errors.Fatal_TypeMismatch, (BU.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
           (Print.term_to_string e) (Print.term_to_string t1) (Print.term_to_string t2)))
     in
@@ -905,7 +905,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 and infer (env: env) (e: term): nm * term * term =
   // BU.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
-  let normalize = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] env.env in
+  let normalize = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] env.tcenv in
   match (SS.compress e).n with
   | Tm_bvar bv ->
       failwith "I failed to open a binder... boo"
@@ -932,7 +932,7 @@ and infer (env: env) (e: term): nm * term * term =
       let subst = SS.opening_of_binders binders in
       let body = SS.subst subst body in
       let rc_opt = subst_rc_opt subst rc_opt in
-      let env = { env with env = push_binders env.env binders } in
+      let env = { env with tcenv = push_binders env.tcenv binders } in
 
       // For the *-translation, [x: t] becomes [x: t*].
       let s_binders = List.map (fun (bv, qual) ->
@@ -1011,7 +1011,7 @@ and infer (env: env) (e: term): nm * term * term =
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
-      let _, t = fst <| Env.lookup_lid env.env lid in
+      let _, t = fst <| Env.lookup_lid env.tcenv lid in
       // Need to erase universes here! This is an F* type that is fully annotated.
       N (normalize t), e, e
 
@@ -1159,7 +1159,7 @@ and mk_match env e0 branches f =
   let nms, branches = List.split (List.map (fun b ->
     match open_branch b with
     | pat, None, body ->
-        let env = { env with env = List.fold_left push_bv env.env (pat_bvs pat) } in
+        let env = { env with tcenv = List.fold_left push_bv env.tcenv (pat_bvs pat) } in
         let nm, s_body, u_body = f env body in
         nm, (pat, None, (s_body, u_body, body))
     | _ ->
@@ -1233,7 +1233,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
         else binding
       in
       // Piggyback on the environment to carry our own special terms
-      let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
+      let env = { env with tcenv = push_bv env.tcenv ({ x with sort = t1 }) } in
       // Simple case: just a regular let-binding. We defer checks to e2.
       let nm_rec, s_e2, u_e2 = proceed env e2 in
       let s_binding = { binding with lbtyp = star_type' env binding.lbtyp } in
@@ -1244,7 +1244,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
   | M t1, s_e1, u_e1 ->
       // BU.print1 "[debug] %s IS a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
       let u_binding = { binding with lbeff = PC.effect_PURE_lid ; lbtyp = t1 } in
-      let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
+      let env = { env with tcenv = push_bv env.tcenv ({ x with sort = t1 }) } in
       let t2, s_e2, u_e2 = ensure_m env e2 in
       // Now, generate the bind.
       // p: A* -> Type
@@ -1356,10 +1356,10 @@ let n = N.normalize [ Env.Beta; Env.UnfoldUntil delta_constant; Env.DoNotUnfoldP
 // Exported definitions -------------------------------------------------------
 
 let star_type env t =
-  star_type' env (n env.env t)
+  star_type' env (n env.tcenv t)
 
 let star_expr env t =
-  check_n env (n env.env t)
+  check_n env (n env.tcenv t)
 
 let trans_F (env: env_) (c: typ) (wp: term): term =
-  trans_F_ env (n env.env c) (n env.env wp)
+  trans_F_ env (n env.tcenv c) (n env.tcenv wp)
