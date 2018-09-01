@@ -89,11 +89,12 @@ let err_uninst env (t:term) (vars, ty) (app:term) =
                     (Code.string_of_mlty env.currentModule ty)
                     (Print.term_to_string app)))
 
-let err_ill_typed_application env (t : term) args (ty : mlty) =
-    fail t.pos (Fatal_IllTyped, (BU.format3 "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n"
+let err_ill_typed_application env (t : term) mlhead args (ty : mlty) =
+    fail t.pos (Fatal_IllTyped, (BU.format4 "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
                 (Print.term_to_string t)
-                (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " ")
-                (Code.string_of_mlty env.currentModule ty)))
+                (Code.string_of_mlexpr env.currentModule mlhead)
+                (Code.string_of_mlty env.currentModule ty)
+                (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " ")))
 
 let err_ill_typed_erasure env pos (ty : mlty) =
     fail pos (Fatal_IllTyped, (BU.format1 "Erased value found where a value of type %s was expected"
@@ -1144,7 +1145,16 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             | _ ->
 
               let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
-    //            Printf.printf "synth_app restArgs=%d, t=%A\n" (List.length restArgs) t;
+                let mk_head () =
+                    let mlargs = List.rev mlargs_f |> List.map fst in
+                    let head = with_ty MLTY_Top <| MLE_App(mlhead, mlargs) in
+                    maybe_coerce top.pos g head MLTY_Top t
+                in
+                debug g (fun () -> BU.print3 "extract_app ml_head=%s type of head = %s, next arg = %s\n"
+                                (Code.string_of_mlexpr g.currentModule (mk_head()))
+                                (Code.string_of_mlty g.currentModule t)
+                                (match restArgs with [] -> "none" | (hd, _)::_ -> Print.term_to_string hd));
+                                        //            Printf.printf "synth_app restArgs=%d, t=%A\n" (List.length restArgs) t;
                 match restArgs, t with
                     | [], _ ->
                         //1. If partially applied and head is a datacon, it needs to be eta-expanded
@@ -1192,7 +1202,13 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                             in
                             extract_app is_data (mlhead, []) (f, t) restArgs
 
-                          | _ -> err_ill_typed_application g top restArgs t
+                          | _ ->
+                            let mlhead =
+                              let mlargs = List.rev mlargs_f |> List.map fst in
+                              let head = with_ty MLTY_Top <| MLE_App(mlhead, mlargs) in
+                              maybe_coerce top.pos g head MLTY_Top t
+                            in
+                            err_ill_typed_application g top mlhead restArgs t
                       end
               in
 
