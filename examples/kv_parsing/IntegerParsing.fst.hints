@@ -2443,7 +2443,7 @@
         "typing_IntegerParsing.encode_u32"
       ],
       0,
-      "efe1683871ba99ce78c884577ce9cc43"
+      "92f3a0a820121032fe7cf49ebf99c4a0"
     ],
     [
       "IntegerParsing.u16_array",
@@ -3681,7 +3681,7 @@
         "typing_IntegerParsing.encode_u32"
       ],
       0,
-      "6ec7474d1b3c49c5e700c8ad6808b2b4"
+      "b186bbc38b6c47440cff8b543b09a7db"
     ],
     [
       "IntegerParsing.ser_u32_array",
