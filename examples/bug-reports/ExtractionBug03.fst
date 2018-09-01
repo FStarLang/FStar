@@ -1,8 +1,8 @@
-module ExtractionBug02
+module ExtractionBug03
 
 let rec type_of_nat (n:nat) = bool
 
-module D=ExtractionBug02Dep
+module D=ExtractionBug03Dep
 let test (x:int) = D.create #(type_of_nat 0) 0 true
 
 // type t =
