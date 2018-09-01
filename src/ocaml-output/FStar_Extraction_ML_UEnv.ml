@@ -22,14 +22,14 @@ type exp_binding =
   exp_b_name: FStar_Extraction_ML_Syntax.mlident ;
   exp_b_expr: FStar_Extraction_ML_Syntax.mlexpr ;
   exp_b_tscheme: FStar_Extraction_ML_Syntax.mltyscheme ;
-  exp_b_isrec: Prims.bool }
+  exp_b_inst_ok: Prims.bool }
 let (__proj__Mkexp_binding__item__exp_b_name :
   exp_binding -> FStar_Extraction_ML_Syntax.mlident) =
   fun projectee  ->
     match projectee with
     | { exp_b_name = __fname__exp_b_name; exp_b_expr = __fname__exp_b_expr;
         exp_b_tscheme = __fname__exp_b_tscheme;
-        exp_b_isrec = __fname__exp_b_isrec;_} -> __fname__exp_b_name
+        exp_b_inst_ok = __fname__exp_b_inst_ok;_} -> __fname__exp_b_name
   
 let (__proj__Mkexp_binding__item__exp_b_expr :
   exp_binding -> FStar_Extraction_ML_Syntax.mlexpr) =
@@ -37,7 +37,7 @@ let (__proj__Mkexp_binding__item__exp_b_expr :
     match projectee with
     | { exp_b_name = __fname__exp_b_name; exp_b_expr = __fname__exp_b_expr;
         exp_b_tscheme = __fname__exp_b_tscheme;
-        exp_b_isrec = __fname__exp_b_isrec;_} -> __fname__exp_b_expr
+        exp_b_inst_ok = __fname__exp_b_inst_ok;_} -> __fname__exp_b_expr
   
 let (__proj__Mkexp_binding__item__exp_b_tscheme :
   exp_binding -> FStar_Extraction_ML_Syntax.mltyscheme) =
@@ -45,14 +45,15 @@ let (__proj__Mkexp_binding__item__exp_b_tscheme :
     match projectee with
     | { exp_b_name = __fname__exp_b_name; exp_b_expr = __fname__exp_b_expr;
         exp_b_tscheme = __fname__exp_b_tscheme;
-        exp_b_isrec = __fname__exp_b_isrec;_} -> __fname__exp_b_tscheme
+        exp_b_inst_ok = __fname__exp_b_inst_ok;_} -> __fname__exp_b_tscheme
   
-let (__proj__Mkexp_binding__item__exp_b_isrec : exp_binding -> Prims.bool) =
+let (__proj__Mkexp_binding__item__exp_b_inst_ok : exp_binding -> Prims.bool)
+  =
   fun projectee  ->
     match projectee with
     | { exp_b_name = __fname__exp_b_name; exp_b_expr = __fname__exp_b_expr;
         exp_b_tscheme = __fname__exp_b_tscheme;
-        exp_b_isrec = __fname__exp_b_isrec;_} -> __fname__exp_b_isrec
+        exp_b_inst_ok = __fname__exp_b_inst_ok;_} -> __fname__exp_b_inst_ok
   
 type ty_or_exp_b = (ty_binding,exp_binding) FStar_Util.either
 type binding =
@@ -549,7 +550,7 @@ let (extend_bv :
                   exp_b_name = mlident;
                   exp_b_expr = mlx1;
                   exp_b_tscheme = t_x1;
-                  exp_b_isrec = is_rec
+                  exp_b_inst_ok = is_rec
                 }  in
               let gamma = (Bv (x, (FStar_Util.Inr exp_binding))) :: (g.gamma)
                  in
@@ -653,7 +654,7 @@ let (extend_fv' :
                         exp_b_name = mlsymbol;
                         exp_b_expr = mly1;
                         exp_b_tscheme = t_x1;
-                        exp_b_isrec = is_rec
+                        exp_b_inst_ok = is_rec
                       }  in
                     let gamma = (Fv (x, exp_binding)) :: (g.gamma)  in
                     ((let uu___236_1217 = g  in
