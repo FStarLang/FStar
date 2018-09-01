@@ -1458,7 +1458,7 @@
         "typing_IntegerParsing.encode_u32"
       ],
       0,
-      "006435e6e3b68e99122ba8680de92090"
+      "ce47808f34dfdce1e6b355829c573599"
     ],
     [
       "EnumParsing.encode_numbers_data",
@@ -1610,7 +1610,7 @@
         "typing_IntegerParsing.encode_u32"
       ],
       0,
-      "6c2eae83664ad50e61998d160b69040d"
+      "60264ec0e5068f558b8a2169aa75f3b2"
     ],
     [
       "EnumParsing.ser_TwoNums'",
@@ -2691,7 +2691,7 @@
         "typing_IntegerParsing.encode_u32"
       ],
       0,
-      "b5498b6116607f2172981242082d3a83"
+      "836f73c1487088818204dde3b6395046"
     ],
     [
       "EnumParsing.encode_numbers_data",
@@ -2748,7 +2748,7 @@
         "typing_IntegerParsing.encode_u32"
       ],
       0,
-      "1241aa763a430f71bd0ce1406f553fcf"
+      "6102668ffef1f71f45852139a5c5f0c8"
     ],
     [
       "EnumParsing.ser_TwoNums'",
