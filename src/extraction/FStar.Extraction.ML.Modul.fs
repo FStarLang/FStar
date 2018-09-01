@@ -200,42 +200,78 @@ let bundle_as_inductive_families env ses quals attrs
 (********************************************************************************************)
 
 type iface = {
+    iface_module_name: mlpath;
     iface_bindings: list<(fv * exp_binding)>;
     iface_tydefs: list<tydef>;
     iface_type_names:list<fv>;
 }
 
 let empty_iface = {
+    iface_module_name=[], "";
     iface_bindings = [];
     iface_tydefs = [];
     iface_type_names = []
 }
 
 let iface_of_bindings fvs = {
-    iface_bindings = fvs;
-    iface_tydefs = [];
-    iface_type_names = []
+    empty_iface with
+        iface_bindings = fvs;
 }
 
 let iface_of_tydefs tds = {
-    iface_bindings = [];
-    iface_tydefs = tds;
-    iface_type_names = []
+    empty_iface with
+        iface_tydefs = tds;
 }
 
 let iface_of_type_names fvs = {
-    iface_bindings = [];
-    iface_tydefs = [];
-    iface_type_names = fvs
+    empty_iface with
+        iface_type_names = fvs
 }
 
 let iface_union if1 if2 = {
+    iface_module_name =
+        (if if1.iface_module_name <> if1.iface_module_name
+         then failwith "Union not defined"
+         else if1.iface_module_name);
     iface_bindings = if1.iface_bindings @ if2.iface_bindings;
     iface_tydefs = if1.iface_tydefs @ if2.iface_tydefs;
     iface_type_names = if1.iface_type_names @ if2.iface_type_names
 }
 
 let iface_union_l ifs = List.fold_right iface_union ifs empty_iface
+
+let mlpath_to_string (p:mlpath) =
+    String.concat ". " (fst p @ [snd p])
+let tscheme_to_string cm ts =
+        (Code.string_of_mlty cm (snd ts))
+let print_exp_binding cm e =
+    BU.format4 "{\n\texp_b_name = %s\n\texp_b_expr = %s\n\texp_b_tscheme = %s\n\texp_b_is_rec = %s }"
+        e.exp_b_name
+        (Code.string_of_mlexpr cm e.exp_b_expr)
+        (tscheme_to_string cm e.exp_b_tscheme)
+        (BU.string_of_bool e.exp_b_inst_ok)
+let print_binding cm (fv, exp_binding) =
+    BU.format2 "(%s, %s)"
+            (Print.fv_to_string fv)
+            (print_exp_binding cm exp_binding)
+let print_tydef cm tydef =
+    BU.format2 "(%s, %s)"
+            (Print.fv_to_string tydef.tydef_fv)
+            (tscheme_to_string cm tydef.tydef_def)
+let iface_to_string iface =
+    let cm = iface.iface_module_name in
+    let print_type_name tn = Print.fv_to_string tn in
+    BU.format4 "Interface %s = {\niface_bindings=\n%s;\n\niface_tydefs=\n%s;\n\niface_type_names=%s;\n}"
+        (mlpath_to_string iface.iface_module_name)
+        (List.map (print_binding cm) iface.iface_bindings |> String.concat "\n")
+        (List.map (print_tydef cm) iface.iface_tydefs |> String.concat "\n")
+        (List.map print_type_name iface.iface_type_names |> String.concat "\n")
+let gamma_to_string env =
+    let cm = env.currentModule in
+    let gamma = List.collect (function Fv (b, e) -> [b, e] | _ -> []) env.gamma in
+    BU.format1 "Gamma = {\n %s }"
+        (List.map (print_binding cm) gamma |> String.concat "\n")
+
 
 (* Type abbreviations:
           //extracting `type t = e`
@@ -488,11 +524,12 @@ let extract_sigelt_iface (g:env) (se:sigelt) : env * iface =
            env, iface
       else g, empty_iface
 
-let extract_iface g modul =
+let extract_iface (g:env_t) modul =
+    let iface = {empty_iface with iface_module_name=g.currentModule} in
     List.fold_left (fun (g, iface) se ->
         let g, iface' = extract_sigelt_iface g se in
         g, iface_union iface iface')
-        (g, empty_iface)
+        (g, iface)
         modul
 
 (********************************************************************************************)
@@ -776,10 +813,12 @@ let extract' (g:env) (m:modul) : env * list<mllib> =
   let g = {g with tcenv=FStar.TypeChecker.Env.set_current_module g.tcenv m.name;
                   currentModule = name} in
   if not (Options.should_extract m.name.str)
-  then let g, _ = extract_iface g m.declarations in
+  then let g, iface = extract_iface g m.declarations in
+       debug g (fun () -> BU.print_string (iface_to_string iface));
        g, []
   else
       let g, sigs = BU.fold_map extract_sig g m.declarations in
+      debug g (fun () -> BU.print_string (gamma_to_string g));
       let mlm : mlmodule = List.flatten sigs in
       let is_kremlin = Options.codegen () = Some Options.Kremlin in
       if m.name.str <> "Prims"

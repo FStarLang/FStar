@@ -45,7 +45,7 @@ type exp_binding = {
     exp_b_name: mlident;
     exp_b_expr: mlexpr;
     exp_b_tscheme: mltyscheme;
-    exp_b_isrec: bool
+    exp_b_inst_ok: bool
 }
 
 type ty_or_exp_b = either<ty_binding, exp_binding>
@@ -255,7 +255,7 @@ let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
               then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit])
               else with_ty ml_ty mlx in
     let t_x = if add_unit then pop_unit t_x else t_x in
-    let exp_binding = {exp_b_name=mlident; exp_b_expr=mlx; exp_b_tscheme=t_x; exp_b_isrec=is_rec} in
+    let exp_binding = {exp_b_name=mlident; exp_b_expr=mlx; exp_b_tscheme=t_x; exp_b_inst_ok=is_rec} in
     let gamma = Bv(x, Inr exp_binding)::g.gamma in
     let tcenv = TypeChecker.Env.push_binders g.tcenv (binders_of_list [x]) in
     {g with gamma=gamma; tcenv=tcenv}, mlident, exp_binding
@@ -295,7 +295,7 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
         let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
         let t_x = if add_unit then pop_unit t_x else t_x in
-        let exp_binding = {exp_b_name=mlsymbol; exp_b_expr=mly; exp_b_tscheme=t_x; exp_b_isrec=is_rec} in
+        let exp_binding = {exp_b_name=mlsymbol; exp_b_expr=mly; exp_b_tscheme=t_x; exp_b_inst_ok=is_rec} in
         let gamma = Fv(x, exp_binding)::g.gamma in
         {g with gamma=gamma}, mlsymbol, exp_binding
     else failwith "freevars found"

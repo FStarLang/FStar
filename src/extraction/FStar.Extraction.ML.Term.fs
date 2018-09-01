@@ -966,7 +966,8 @@ let extract_lb_sig (g:env) (lbs:letbindings) =
 
 let extract_lb_iface (g:env) (lbs:letbindings)
     : env * list<(fv * exp_binding)> =
-    let is_rec = fst lbs in
+    let is_top = FStar.Syntax.Syntax.is_top_level (snd lbs) in
+    let is_rec = not is_top && fst lbs in
     let lbs = extract_lb_sig g lbs in
     BU.fold_map (fun env
                      (lbname, e_tag, (typ, (binders, mltyscheme)), add_unit, _body) ->
@@ -1233,7 +1234,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
                       let (head_ml, (vars, t), inst_ok), qual =
                         match lookup_term g head with
-                        | Inr exp_b, q -> (exp_b.exp_b_expr, exp_b.exp_b_tscheme, exp_b.exp_b_isrec), q
+                        | Inr exp_b, q -> (exp_b.exp_b_expr, exp_b.exp_b_tscheme, exp_b.exp_b_inst_ok), q
                         | _ -> failwith "FIXME Ty" in
 
                       let has_typ_apps = match args with
