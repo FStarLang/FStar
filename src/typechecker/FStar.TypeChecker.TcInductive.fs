@@ -1057,7 +1057,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let early_prims_inductive =
       lid_equals C.prims_lid  (Env.current_module env) &&
-      (tc.ident.idText = "dtuple2" || List.existsb (fun s -> s = tc.ident.idText) early_prims_inductives)
+      List.existsb (fun s -> s = tc.ident.idText) early_prims_inductives
     in
 
     let discriminator_ses =

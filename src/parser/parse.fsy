@@ -107,7 +107,6 @@ let logic_qualifier_deprecation_warning =
 %token MATCH
 %token MINUS
 %token MODULE
-%token MUTABLE
 %token <string> NAME
 %token NEW
 %token NEW_EFFECT
@@ -1078,9 +1077,6 @@ letqualifier:
   REC
     {let _1 = () in
                 ( Rec )}
-| MUTABLE
-    {let _1 = () in
-                ( Mutable )}
 | 
     {                ( NoLetQualifier )}
 
@@ -2913,6 +2909,4 @@ in
    ( x :: xs )}
 
 %%
-
-
 

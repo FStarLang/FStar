@@ -8,7 +8,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "ebcae9ea1378c1dbd10cd67bc3ebad7c"
+      "4e28d2529e96599fa484c5d49b692879"
     ],
     [
       "AnnoyingVCs.test2",
@@ -17,7 +17,16 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "e2c2cd25f62a46594596bfcaa5d3fea4"
+      "7b3be833faa801790748e22d2da963f6"
+    ],
+    [
+      "AnnoyingVCs.test2",
+      2,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "1cf2ae038b17bb645d6e19a7f2cfc168"
     ]
   ]
 ]

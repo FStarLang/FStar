@@ -12,7 +12,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "3289b5c204e5d92ebea15a46e19e7562"
+      "c456415470c6821aefcd241814fddbc8"
     ],
     [
       "Unit1.TopLevelPats.uu___8",
@@ -25,7 +25,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "28d06fd8781301f78127f460720b2624"
+      "3471823f1747b33cda85225ffe22751f"
     ],
     [
       "Unit1.TopLevelPats.uu___10",
@@ -43,7 +43,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "59c5a3ac03cb6283e554817988feffac"
+      "ad80bb1c137d8f8bfc9990036e509a1d"
     ],
     [
       "Unit1.TopLevelPats.uu___11",
@@ -62,7 +62,70 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "d5f5906f4660a897f9e828a934ec3f09"
+      "c21211433c39262ccdd0d9f38d49b4d4"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___7",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Unit1.TopLevelPats.uu___6",
+        "equation_Unit1.TopLevelPats.x",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
+      ],
+      0,
+      "70a3946a992aea0850946e190f01c69b"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___8",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Unit1.TopLevelPats.uu___6",
+        "equation_Unit1.TopLevelPats.y",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "659a883a128fe312109440b7b3f31150"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___10",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Unit1.TopLevelPats.make",
+        "equation_Unit1.TopLevelPats.uu___6",
+        "equation_Unit1.TopLevelPats.uu___9",
+        "equation_Unit1.TopLevelPats.z",
+        "function_token_typing_Unit1.TopLevelPats.z", "int_inversion",
+        "primitive_Prims.op_Division", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "3e3e86cd9c145de291cdc86bdbc2784e"
+    ],
+    [
+      "Unit1.TopLevelPats.uu___11",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Unit1.TopLevelPats.make",
+        "equation_Unit1.TopLevelPats.uu___6",
+        "equation_Unit1.TopLevelPats.uu___9",
+        "equation_Unit1.TopLevelPats.w",
+        "function_token_typing_Unit1.TopLevelPats.w", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "fc9d15f0c8a1d652a911f0c02e6ff6cf"
     ]
   ]
 ]

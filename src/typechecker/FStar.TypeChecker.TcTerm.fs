@@ -971,7 +971,6 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
       | Const_char _ ->
         FStar.Syntax.DsEnv.try_lookup_lid env.dsenv FStar.Parser.Const.char_lid
         |> BU.must
-        |> fst
 
       (* TODO (KM) : Try to change this to U.ktype1 *)
       (* (because that's the minimal universe level of the WP) *)
