@@ -247,6 +247,7 @@ val assign:
       hmap_dom_eq h0 h1 /\
       modifies (loc_vector_within #a vec i (i + 1ul)) h0 h1 /\
       S.equal (as_seq h1 vec) (S.upd (as_seq h0 vec) (U32.v i) v)))
+#reset-options "--z3rlimit 10"
 let assign #a vec i v =
   let hh0 = HST.get () in
   // NOTE: `B.upd (Vec?.vs vec) i v` makes more sense, 
@@ -286,6 +287,7 @@ val insert:
       			  (loc_vector nvec)) h0 h1 /\
       size_of nvec = size_of vec + 1ul /\
       S.equal (as_seq h1 nvec) (S.snoc (as_seq h0 vec) v)))
+#reset-options "--z3rlimit 10"
 let insert #a vec v =
   let sz = Vec?.sz vec in
   let cap = Vec?.cap vec in
