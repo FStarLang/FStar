@@ -85,7 +85,7 @@ SHOULD_NOT_VERIFY_NOT_WORKING=bug186.fst bug397b.fst
 ####################
 
 # These will be checked as part of the F* regressions.
-SHOULD_EXTRACT_CLOSED=bug086.fst bug314.fst bug540.fst bug541.fst bug589.fst ExtractionBug2.fst bug1101.fst bug1485.fst
+SHOULD_EXTRACT_CLOSED=bug086.fst bug314.fst bug540.fst bug541.fst bug589.fst ExtractionBug2.fst bug1101.fst bug1485.fst bug734.fst
 
 # bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
 
@@ -93,7 +93,7 @@ SHOULD_EXTRACT_CLOSED=bug086.fst bug314.fst bug540.fst bug541.fst bug589.fst Ext
 # These will not be checked, but the SHOULD_NOT_VERIFY_BROKEN examples are expected to work since their
 # corresponding GitHub issue is closed. Consider re-opening.
 SHOULD_EXTRACT_BROKEN=
-SHOULD_EXTRACT_OPEN=bug734.fst
+SHOULD_EXTRACT_OPEN=
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_EXTRACT_CLOSED.

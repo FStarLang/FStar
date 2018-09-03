@@ -246,6 +246,7 @@ val readdir: string -> list<string>
 
 open Prims
 val file_exists: string -> Tot<bool>
+val is_directory: string -> Tot<bool>
 
 val int_of_string: string -> int
 val safe_int_of_string: string -> option<int>

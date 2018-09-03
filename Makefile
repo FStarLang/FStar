@@ -31,6 +31,8 @@ clean:
 3:
 	$(MAKE) -C src ocaml-fstar-ocaml
 
-# Regenerate all hints for the regression test suite
+# Regenerate all hints for the standard library and regression test suite
 hints:
+	OTHERFLAGS=--record_hints $(MAKE) -C ulib/
+	OTHERFLAGS=--record_hints $(MAKE) -C ulib/ml
 	OTHERFLAGS=--record_hints $(MAKE) -C src/ uregressions

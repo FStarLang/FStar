@@ -2542,7 +2542,13 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
   | Tycon(is_effect, typeclass, tcs) ->
     let quals = d.quals in
     let quals = if is_effect then Effect_qual :: quals else quals in
-    let quals = if typeclass then Noeq        :: quals else quals in
+    let quals =
+        if typeclass then
+            match tcs with
+            | [(TyconRecord _, _)] -> Noeq :: quals
+            | _ -> raise_error (Errors.Error_BadClassDecl, "Ill-formed `class` declaration: definition must be a record type") d.drange
+        else quals
+    in
     let tcs = List.map (fun (x,_) -> x) tcs in
     let env, ses = desugar_tycon env d (List.map (trans_qual None) quals) tcs in
 

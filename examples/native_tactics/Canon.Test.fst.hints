@@ -12,7 +12,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "e467ea1ff2094cf9b41fa0d2aee7ab11"
+      "70ba78f799e66f898601d4425ff97d09"
     ],
     [
       "Canon.Test.lem8",
@@ -21,7 +21,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "35073d56fe9200381bfe2f66b20ffdc5"
+      "d4891825c888f25e80683d9814643ed8"
     ],
     [
       "Canon.Test.lem9",
@@ -30,7 +30,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7045940163db6cacd2a10abfefba49c9"
+      "b3741791a49fd53e9739fde5d6913c67"
     ],
     [
       "Canon.Test.lem10",
@@ -39,7 +39,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ec7c8341634191a51876704c04c192fc"
+      "f787e4cc40a1d67fd5427eee9feb382e"
     ]
   ]
 ]

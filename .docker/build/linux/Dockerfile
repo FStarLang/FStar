@@ -1,5 +1,5 @@
 # Fstar build container
-FROM everest_base_image:1
+FROM everest-base-linux:1
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS
@@ -15,7 +15,7 @@ COPY --chown=everest id_rsa ${MYHOME}/.ssh/id_rsa
 RUN chmod 600 ${MYHOME}/.ssh/id_rsa
 RUN eval $(ssh-agent)
 
-#BUILD FSTAR
+# Copy FSTAR source code.
 RUN mkdir ${MYHOME}/FStar
 COPY --chown=everest / ${MYHOME}/FStar/
 
@@ -33,18 +33,7 @@ RUN chmod +x build.sh
 COPY --chown=everest build_helper.sh ${MYHOME}/build_helper.sh
 RUN chmod +x build_helper.sh
 
-RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
-RUN echo "FStar source version: ${FSTARSOURCEVERSION}" >> ${BUILDLOGFILE}
-RUN ./build_helper.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} || true
-RUN echo $(date -u '+%Y-%m-%d %H:%M:%S') >> ${BUILDLOGFILE}
+RUN ./build_helper.sh ${TARGET} ${BUILDLOGFILE} ${MAXTHREADS} ${BRANCHNAME} ${FSTARSOURCEVERSION} || true
 
-# Generate query-stats.
-# List the hints that fail to replay.
-RUN bash -c "FStar/.scripts/query-stats.py -f ${BUILDLOGFILE} -F html -o log_no_replay.html -n all '--filter=fstar_usedhints=+' '--filter=fstar_tag=-' -g"
-
-# Worst offenders (longest times)
-RUN bash -c "FStar/.scripts/query-stats.py -f ${BUILDLOGFILE} -F html -o log_worst.html -c -g -n 10"
-
-# Remove ssh identities.
-RUN rm ${MYHOME}/.ssh/id_rsa
-RUN eval $(ssh-agent) && ssh-add -D
+# Remove ssh key
+RUN rm .ssh/id_rsa

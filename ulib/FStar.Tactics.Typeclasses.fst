@@ -8,25 +8,38 @@ module T = FStar.Tactics
 
 (* The attribute that marks instances *)
 irreducible
-let instance : unit = ()
+let tcinstance : unit = ()
 
 let rec first (f : 'a -> Tac 'b) (l : list 'a) : Tac 'b =
     match l with
     | [] -> fail "no cands"
     | x::xs -> (fun () -> f x) `or_else` (fun () -> first f xs)
 
-(* TODO: loop detection (and memoization?) *)
-let rec tcresolve () : Tac unit =
-    local `or_else` (fun () -> global `or_else` (fun () -> fail "Typeclass resolution failed"))
-and local () : Tac unit =
+(* TODO: memoization?. And better errors. *)
+private
+let rec tcresolve' (seen:list term) (fuel:int) : Tac unit =
+    if fuel < 0 then
+        fail "out of fuel";
+    debug ("fuel = " ^ string_of_int fuel);
+    let g = cur_goal () in
+    if FStar.List.Tot.Base.existsb (term_eq g) seen then
+      fail "loop";
+    let seen = g :: seen in
+    local seen fuel `or_else` (fun () -> global seen fuel `or_else` (fun () -> fail "could not solve constraint"))
+and local (seen:list term) (fuel:int) () : Tac unit =
     let bs = binders_of_env (cur_env ()) in
-    first (fun b -> trywith (pack (Tv_Var (bv_of_binder b)))) bs
-and global () : Tac unit =
-    let cands = lookup_attr (`instance) (cur_env ()) in
-    first (fun fv -> trywith (pack (Tv_FVar fv))) cands
-and trywith t : Tac unit =
+    first (fun b -> trywith seen fuel (pack (Tv_Var (bv_of_binder b)))) bs
+and global (seen:list term) (fuel:int) () : Tac unit =
+    let cands = lookup_attr (`tcinstance) (cur_env ()) in
+    first (fun fv -> trywith seen fuel (pack (Tv_FVar fv))) cands
+and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);
-    (fun () -> apply t) `seq` tcresolve
+    (fun () -> apply t) `seq` (fun () -> tcresolve' seen (fuel-1))
+
+let tcresolve () : Tac unit =
+    match catch (fun () -> tcresolve' [] 10) with
+    | Inl e -> fail ("Typeclass resolution failed: " ^ e)
+    | Inr v -> v
 
 (* Solve an explicit argument by typeclass resolution *)
 unfold let solve (#a:Type) (#[tcresolve ()] ev : a) : Tot a = ev

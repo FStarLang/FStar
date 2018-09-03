@@ -27,7 +27,7 @@
         "typing_KeyValue.__proj__EntrySt__item__val_st"
       ],
       0,
-      "71c9ab19ac9282c0337d16e62430aba1"
+      "2b212a21f1540c555c7752ca9da83c1b"
     ],
     [
       "Serializer.ser_entry",
@@ -67,7 +67,7 @@
         "typing_Serializer.entry_st_bufs"
       ],
       0,
-      "7569fbcf972dfffbf9d7d24c2dc46bd4"
+      "f9421223985916994f298fc1c0d58efb"
     ],
     [
       "Serializer.adjacent_entries_disjoint",
@@ -83,7 +83,7 @@
         "typing_FStar.Buffer.__proj__MkBuffer__item__max_length"
       ],
       0,
-      "e07ac4f719ec4e89502e93d2af12a11b"
+      "df3980964c72859679eae3426e6392ed"
     ],
     [
       "Serializer.writer_inv",
@@ -110,7 +110,7 @@
         "typing_Serializer.__proj__Mkwriter__item__num_entries_written"
       ],
       0,
-      "2360cd75084c721c6734e1f95725d896"
+      "e5545a8e56360c702a7bf893052823fd"
     ],
     [
       "Serializer.adjacent_advance",
@@ -172,7 +172,7 @@
         "typing_Slice.truncated_slice"
       ],
       0,
-      "3d5f713f7f8004763dd1fa302a041d04"
+      "f42e58525122476ccdff147439b606f2"
     ],
     [
       "Serializer.adjacent_truncate",
@@ -224,7 +224,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "7ea97a0f679fe19f60036a6839ddeee5"
+      "aeab046ee62d01a13655f05e111fb787"
     ],
     [
       "Serializer.adjacent_0len",
@@ -241,7 +241,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "e22c2132dee3f229fb7ef987046b148a"
+      "786f9684a0d52c5607b39190e0da5a12"
     ],
     [
       "Serializer.adjacent_0len",
@@ -298,7 +298,7 @@
         "typing_Slice.truncated_slice"
       ],
       0,
-      "a98730de6a8346ff87fff4c5532aad17"
+      "19dd6b03877e34fe486e9b09fb38f7a9"
     ],
     [
       "Serializer.writer_init",
@@ -401,7 +401,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "a212e0f7e3f06d44cdb4a54ad2e90b39"
+      "0572631bf012dd4b968c44e72c61373c"
     ],
     [
       "Serializer.writer_reinit",
@@ -410,7 +410,7 @@
       1,
       [ "@query" ],
       0,
-      "e5738a6350c580f76d5dbb75ec2ba6ca"
+      "c02a92bb1e076900738760fb895f3f5a"
     ],
     [
       "Serializer.writer_reinit",
@@ -436,10 +436,10 @@
         "equation_FStar.Kremlin.Endianness.bytes",
         "equation_FStar.Monotonic.HyperStack.mem",
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
-        "equation_IntegerParsing.encode_u32",
-        "equation_IntegerParsing.u32_array_bound", "equation_KeyValue.byte",
-        "equation_KeyValue.bytes", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_PureEncoder.encode_store",
+        "equation_FStar.UInt32.n_minus_one",
+        "equation_IntegerParsing.encode_u32", "equation_KeyValue.byte",
+        "equation_KeyValue.bytes", "equation_Prims.nat",
+        "equation_PureEncoder.encode_store",
         "equation_Serializer.writer_inv", "equation_Serializer.writer_valid",
         "equation_Slice.as_seq", "equation_Slice.bslice_split_at",
         "equation_Slice.buffer_split_at", "equation_Slice.buffers_adjacent",
@@ -449,8 +449,8 @@
         "fuel_guarded_inversion_KeyValue.store",
         "fuel_guarded_inversion_Slice.bslice",
         "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_FStar.UInt32.n_minus_one",
         "function_token_typing_FStar.UInt8.t",
-        "function_token_typing_IntegerParsing.u32_array_bound",
         "function_token_typing_KeyValue.__proj__Store__item__entries",
         "function_token_typing_PureEncoder.encode_entry", "int_inversion",
         "int_typing", "kinding_KeyValue.encoded_entry@tok",
@@ -482,10 +482,9 @@
         "refinement_interpretation_FStar.Buffer_Tm_refine_8ba095f5457984257bc763075993de75",
         "refinement_interpretation_FStar.Buffer_Tm_refine_ac61996218e7c5b51c85527152e93166",
         "refinement_interpretation_FStar.Ghost_Tm_refine_785b445c1ccb59eaa8c666ff5bddec28",
+        "refinement_interpretation_FStar.Kremlin.Endianness_Tm_refine_35748923fe3fdc58b29eade706e1b8ea",
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
-        "refinement_interpretation_IntegerParsing_Tm_refine_35748923fe3fdc58b29eade706e1b8ea",
         "refinement_interpretation_KeyValue_Tm_refine_15aeaee0fbd135ad20cef4125c051fdc",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Serializer_Tm_refine_1e275c3bdc6f11dfc6d6f0feb4abf304",
         "refinement_interpretation_Serializing_Tm_refine_e7f428a22d8554fbc54e9437c0d794c2",
@@ -503,7 +502,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "10e580e1f890015d80538de24efdd6f5"
+      "da0bec933c5d6e87b99b41a5445d7c2b"
     ],
     [
       "Serializer.join_slices",
@@ -569,7 +568,7 @@
         "typing_Slice.u32_add_overflows"
       ],
       0,
-      "c4970d8edbf8fb47a29f842aa45b391f"
+      "ccfac7a43f1a927fd5bdf37ba74fdf0b"
     ],
     [
       "Serializer.enc_one_more",
@@ -578,7 +577,7 @@
       1,
       [ "@query" ],
       0,
-      "fd9ac80e08802c2e9456cec012780ff5"
+      "cbb16f435828af698fe86e68e82d5d2c"
     ],
     [
       "Serializer.enc_one_more",
@@ -618,7 +617,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "1c51a7b5fe27476f3c34593f38a16e35"
+      "531ecbed290c3908e1b2faea1c14aa42"
     ],
     [
       "Serializer.max_entries_to_write",
@@ -638,7 +637,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4ca07ca260d8b76f95016f5e88a26b86"
+      "eb2909e82644ea72dcca9008ffa84bbc"
     ],
     [
       "Serializer.lt_max_entries",
@@ -655,7 +654,7 @@
         "refinement_interpretation_Serializer_Tm_refine_cbf5a4e73eb6850050f387d18311bd92"
       ],
       0,
-      "63618d9c0724138b08a5b83fef466b4e"
+      "47b57c9da9bbc0ad9a893563cb49b0e9"
     ],
     [
       "Serializer.join_adjacent_stable",
@@ -684,7 +683,7 @@
         "typing_Serializer.join_slices", "unit_typing"
       ],
       0,
-      "c97ad291f5b17a5289e367bd7dec71f8"
+      "788a7a5822ec36929a20482c108c46a0"
     ],
     [
       "Serializer.writer_append",
@@ -693,7 +692,7 @@
       1,
       [ "@query" ],
       0,
-      "09cef1507acd48b9a694cd776021d558"
+      "17837cf0b33ae8c1df596cc557dd7cb9"
     ],
     [
       "Serializer.writer_append",
@@ -888,7 +887,7 @@
         "typing_Slice.buffer_split_at", "typing_Slice.u32_add_overflows"
       ],
       0,
-      "35ac6541e7f2c542ec672808882f1427"
+      "61cbd3a13a3e28f255e111e78b2b2cbb"
     ],
     [
       "Serializer.join_is_concat",
@@ -902,7 +901,7 @@
         "typing_FStar.Buffer.__proj__MkBuffer__item__max_length"
       ],
       0,
-      "c56cedc94c3433194c52bea4a2a8ae45"
+      "64dcf8137d71a48ffb14d727655ca07d"
     ],
     [
       "Serializer.join_is_concat",
@@ -952,7 +951,7 @@
         "typing_FStar.UInt32.add", "typing_FStar.UInt32.v"
       ],
       0,
-      "20a2a0d08a3a434c3322f5112ea53c8f"
+      "fe3571b4a19b4a04f2da49e9c6c436f4"
     ],
     [
       "Serializer.writer_store_buf",
@@ -1006,7 +1005,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "4b922b0342299319749e431ed4ddf627"
+      "ae3e5eac2a424120a2a25bd45114d1a6"
     ],
     [
       "Serializer.writer_finish",
@@ -1108,7 +1107,7 @@
         "typing_Slice.buffer_split_at"
       ],
       0,
-      "c145d30ba69f95467c07401ae845faef"
+      "2c3329272a92a0349b6438c725af7700"
     ],
     [
       "Serializer.writer_finish",
@@ -1140,10 +1139,12 @@
         "equation_FStar.HyperStack.ST.reference",
         "equation_FStar.Kremlin.Endianness.bytes",
         "equation_FStar.Monotonic.HyperStack.contains",
-        "equation_FStar.Monotonic.HyperStack.mem", "equation_FStar.UInt32.n",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt32.n_minus_one",
         "equation_IntegerParsing.encode_u32",
-        "equation_IntegerParsing.u32_array_bound", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_PureEncoder.encode_store",
+        "equation_PureEncoder.encode_store",
         "equation_Serializer.writer_inv",
         "equation_Serializer.writer_store_buf",
         "equation_Serializer.writer_valid",
@@ -1163,14 +1164,14 @@
         "fuel_guarded_inversion_Slice.bslice",
         "function_token_typing_FStar.Kremlin.Endianness.bytes",
         "function_token_typing_FStar.UInt32.n",
-        "function_token_typing_FStar.UInt8.t",
-        "function_token_typing_IntegerParsing.u32_array_bound",
+        "function_token_typing_FStar.UInt32.n_minus_one",
+        "function_token_typing_FStar.UInt8.t", "int_inversion", "int_typing",
         "kinding_KeyValue.encoded_entry@tok", "kinding_Prims.list@tok",
         "kinding_Slice.bslice@tok", "l_and-interp",
         "lemma_FStar.Buffer.no_upd_lemma_1", "lemma_FStar.Ghost.reveal_hide",
         "lemma_FStar.Pervasives.invertOption", "lemma_FStar.TSet.mem_empty",
         "lemma_FStar.UInt32.uv_inv", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Buffer.MkBuffer_content",
         "proj_equation_FStar.Buffer.MkBuffer_idx",
         "proj_equation_FStar.Buffer.MkBuffer_length",
@@ -1198,27 +1199,27 @@
         "projection_inverse_Slice.BSlice_p",
         "refinement_interpretation_FStar.Buffer_Tm_refine_811063936efbc06568ec405d75452cb9",
         "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_003cbb363565c5358e7ed8a8d7dba6d4",
+        "refinement_interpretation_FStar.Kremlin.Endianness_Tm_refine_35748923fe3fdc58b29eade706e1b8ea",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_b913a3f691ca99086652e0a655e72f17",
-        "refinement_interpretation_IntegerParsing_Tm_refine_35748923fe3fdc58b29eade706e1b8ea",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_FStar.UInt32_Tm_refine_6c5b5bfca8736b34d6f700f752d1df10",
+        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87",
         "refinement_interpretation_Serializer_Tm_refine_87239a110817bd08faaa2b20eef3e59f",
         "refinement_interpretation_Serializer_Tm_refine_9cd90bfb9007e98cd620bf3fb107896d",
         "refinement_interpretation_Slice_Tm_refine_2cce8b21947d7cc0465fdc87c7a1f882",
         "refinement_interpretation_Slice_Tm_refine_481255d05c2774ac30bb6f6f38d094c9",
         "refinement_interpretation_Slice_Tm_refine_62174fdf8d6e1bbb55f291d4e7bbbe43",
         "refinement_interpretation_Slice_Tm_refine_b89bf9d8a6bca42f733fb835128df8e8",
+        "typing_FStar.Buffer.__proj__MkBuffer__item__content",
         "typing_FStar.Buffer.__proj__MkBuffer__item__idx",
         "typing_FStar.Buffer.__proj__MkBuffer__item__length",
         "typing_FStar.Buffer.__proj__MkBuffer__item__max_length",
-        "typing_FStar.Buffer.content", "typing_FStar.Buffer.lseq",
-        "typing_FStar.Buffer.max_length", "typing_FStar.Ghost.reveal",
-        "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.List.Tot.Base.length",
+        "typing_FStar.Buffer.lseq", "typing_FStar.Buffer.max_length",
+        "typing_FStar.Ghost.reveal", "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.HyperStack.contains",
         "typing_FStar.Pervasives.Native.uu___is_Some",
-        "typing_FStar.Seq.Base.createEmpty", "typing_FStar.TSet.empty",
-        "typing_FStar.TSet.set", "typing_IntegerParsing.encode_u32",
+        "typing_FStar.Seq.Base.empty", "typing_FStar.TSet.empty",
+        "typing_FStar.TSet.set", "typing_FStar.UInt32.sub",
+        "typing_FStar.UInt32.v", "typing_IntegerParsing.encode_u32",
         "typing_Serializer.__proj__Mkwriter__item__entries_scratch",
         "typing_Serializer.__proj__Mkwriter__item__entries_written_buf",
         "typing_Serializer.__proj__Mkwriter__item__entries_written_list",
@@ -1230,7 +1231,7 @@
         "typing_Slice.bslice_split_at"
       ],
       0,
-      "0e0382e5a624d4ba00b1233dc4fead34"
+      "2c9a01d53bf79c48c192fac6a725dab8"
     ],
     [
       "Serializer.enc_entry_st",
@@ -1258,7 +1259,7 @@
         "typing_KeyValue.__proj__EntrySt__item__val_st"
       ],
       0,
-      "5e43275fc7e8017e75a47f04d558c8b5"
+      "cb3263a394566ba6c7d8fc44fb7ef38d"
     ],
     [
       "Serializer.ser_entry",
@@ -1298,7 +1299,7 @@
         "typing_Serializer.entry_st_bufs"
       ],
       0,
-      "a868fe09aebe91d42b207350e394eede"
+      "4be2c1821904f25ea07b292a09fdb27f"
     ],
     [
       "Serializer.ser_entry",
@@ -1333,7 +1334,7 @@
         "typing_Serializer.entry_st_bufs"
       ],
       0,
-      "35fcb7c75f7ac96b9bba056fd1b75980"
+      "0ff246282a2c2eca6f11590f5f7f7013"
     ],
     [
       "Serializer.writer_inv",
@@ -1360,7 +1361,7 @@
         "typing_Serializer.__proj__Mkwriter__item__num_entries_written"
       ],
       0,
-      "a271a459e033cdfa1bd3b7a206411fc0"
+      "c78359bb251c5a48c3f99a1d01d9fc3e"
     ],
     [
       "Serializer.adjacent_0len",
@@ -1377,7 +1378,7 @@
         "typing_FStar.UInt32.v", "typing_Slice.__proj__BSlice__item__len"
       ],
       0,
-      "8dcb12e8bda3635f5da37543823c7310"
+      "e34bf00cb05d3412d0608b47a09912eb"
     ],
     [
       "Serializer.writer_init",
@@ -1386,7 +1387,7 @@
       1,
       [ "@query" ],
       0,
-      "45906e93362f129e00e02b26c2f44aa3"
+      "2add389a4910c5ef7c5cf8d3c3b92d6f"
     ],
     [
       "Serializer.writer_reinit",
@@ -1395,7 +1396,7 @@
       1,
       [ "@query" ],
       0,
-      "3220711800072736d4c0cec8a4aacde6"
+      "b5e2a218a448bc8278f9e085e024a070"
     ],
     [
       "Serializer.join_slices",
@@ -1463,7 +1464,7 @@
         "typing_Slice.u32_add_overflows"
       ],
       0,
-      "58161b23d2d80be84dca1cad4cf34ba5"
+      "5c1cbebcb5d5779075bef0429263d527"
     ],
     [
       "Serializer.join_slices",
@@ -1479,7 +1480,7 @@
         "refinement_interpretation_Serializer_Tm_refine_6189a2d1a8309b48981e73407c0aa96c"
       ],
       0,
-      "2b587ba124a9361c266ae216157e52c0"
+      "759617d8bb7d5327dc981ca060b42127"
     ],
     [
       "Serializer.enc_one_more",
@@ -1488,7 +1489,7 @@
       1,
       [ "@query" ],
       0,
-      "631f64e098b4726a18f005df2c74e877"
+      "c9105c961d4941f97558f96dbfae7ca4"
     ],
     [
       "Serializer.max_entries_to_write",
@@ -1507,7 +1508,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "e8760d293980f97f88b5fd015e54d223"
+      "773716c679db60a7fa9279f35baebcf2"
     ],
     [
       "Serializer.join_adjacent_stable",
@@ -1520,7 +1521,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "84b73e59281e73014c044d5a2c7f0b57"
+      "1fd75ed995ba0004a72f1d337faa427b"
     ],
     [
       "Serializer.writer_append",
@@ -1529,7 +1530,7 @@
       1,
       [ "@query" ],
       0,
-      "52bae4c24b3fab85637d4f5dc3d15bfe"
+      "5ed89299b2ef9a255d32cf93cb83bf2d"
     ],
     [
       "Serializer.join_is_concat",
@@ -1543,7 +1544,7 @@
         "typing_FStar.Buffer.__proj__MkBuffer__item__max_length"
       ],
       0,
-      "df5fd48e7bc0f46da91685c017f76ba3"
+      "e95b03ab77cb0395e0b94a44d6de3767"
     ],
     [
       "Serializer.writer_store_buf",
@@ -1597,7 +1598,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "8f9547762012d33b750765057ba7ac9a"
+      "81ffcde6da7e48f820485f0ca25d7192"
     ],
     [
       "Serializer.writer_finish",
@@ -1606,7 +1607,7 @@
       1,
       [ "@query" ],
       0,
-      "ed193aec512e0c1cd60970980d0702e3"
+      "0257977e237a7a3b467c27601436c118"
     ]
   ]
 ]

@@ -58,7 +58,9 @@ let bv_as_unique_ident (x:S.bv) : I.ident =
   I.mk_ident (unique_name, x.ppname.idRange)
 
 let filter_imp a =
-  a |> List.filter (function | (_, Some (S.Implicit _))
+  (* keep typeclass args *)
+  a |> List.filter (function | (_, Some (S.Meta t)) when U.is_fvar C.tcresolve_lid t -> true
+                             | (_, Some (S.Implicit _))
                              | (_, Some (S.Meta _)) -> false
                              | _ -> true)
 
