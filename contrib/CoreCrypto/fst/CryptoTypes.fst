@@ -13,23 +13,26 @@ type aead_cipher =
 
 // the key materials consist of an encryption key, a static IV, and an authentication key.
 
-let aeadKeySize = function
-  | AES_128_CCM       -> 16
-  | AES_128_CCM_8     -> 16
-  | AES_128_GCM       -> 16
-  | AES_256_CCM       -> 32
-  | AES_256_CCM_8     -> 32
-  | AES_256_GCM       -> 32
-  | CHACHA20_POLY1305 -> 32
+let aeadKeyLen = function
+  | AES_128_CCM       -> 16ul
+  | AES_128_CCM_8     -> 16ul
+  | AES_128_GCM       -> 16ul
+  | AES_256_CCM       -> 32ul
+  | AES_256_CCM_8     -> 32ul
+  | AES_256_GCM       -> 32ul
+  | CHACHA20_POLY1305 -> 32ul
+let aeadKeySize a = UInt32.v (aeadKeyLen a)
 
-let aeadRealIVSize (a:aead_cipher) = 12
+let aeadRealIVLen (a:aead_cipher) = 12ul
+let aeadRealIVSize a = UInt32.v (aeadRealIVLen a)
 
 // the ciphertext ends with an authentication tag
-let aeadTagSize = function
-  | AES_128_CCM_8     ->  8
-  | AES_256_CCM_8     ->  8
-  | AES_128_CCM       -> 16
-  | AES_256_CCM       -> 16
-  | AES_128_GCM       -> 16
-  | AES_256_GCM       -> 16
-  | CHACHA20_POLY1305 -> 16
+let aeadTagLen = function
+  | AES_128_CCM_8     ->  8ul
+  | AES_256_CCM_8     ->  8ul
+  | AES_128_CCM       -> 16ul
+  | AES_256_CCM       -> 16ul
+  | AES_128_GCM       -> 16ul
+  | AES_256_GCM       -> 16ul
+  | CHACHA20_POLY1305 -> 16ul
+let aeadTagSize a = UInt32.v (aeadTagLen a)
