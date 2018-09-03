@@ -213,12 +213,17 @@ let get (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (p:mbuffer a rrel rel) (i:nat)
 unfold let compatible_sub
   (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t{U32.v i + U32.v len <= length b}) (sub_rel:srel a)
-  = (forall (s1 s2:Seq.seq a). (Seq.length s1 == length b /\ Seq.length s2 == length b /\ rel s1 s2) ==>
-		          (sub_rel (Seq.slice s1 (U32.v i) (U32.v i + U32.v len))
-			           (Seq.slice s2 (U32.v i) (U32.v i + U32.v len)))) /\  //(a)
-    (forall (s s2:Seq.seq a). (Seq.length s == length b /\ Seq.length s2 == U32.v len /\
-                          sub_rel (Seq.slice s (U32.v i) (U32.v i + U32.v len)) s2) ==>
-  		         (rel s (Seq.replace_subseq s (U32.v i) (U32.v i + U32.v len) s2)))  //(b)
+  = (forall (s1 s2:Seq.seq a).{:pattern (rel s1 s2);
+                                   (sub_rel (Seq.slice s1 (U32.v i) (U32.v i + U32.v len))
+			                    (Seq.slice s2 (U32.v i) (U32.v i + U32.v len)))}
+                         (Seq.length s1 == length b /\ Seq.length s2 == length b /\ rel s1 s2) ==>
+		         (sub_rel (Seq.slice s1 (U32.v i) (U32.v i + U32.v len))
+			          (Seq.slice s2 (U32.v i) (U32.v i + U32.v len)))) /\  //(a)
+    (forall (s s2:Seq.seq a).{:pattern (sub_rel (Seq.slice s (U32.v i) (U32.v i + U32.v len)) s2);
+                                  (rel s (Seq.replace_subseq s (U32.v i) (U32.v i + U32.v len) s2))}
+                        (Seq.length s == length b /\ Seq.length s2 == U32.v len /\
+                         sub_rel (Seq.slice s (U32.v i) (U32.v i + U32.v len)) s2) ==>
+  		        (rel s (Seq.replace_subseq s (U32.v i) (U32.v i + U32.v len) s2)))  //(b)
 
 /// ``gsub`` is the way to carve a sub-buffer out of a given
 /// buffer. ``gsub b i len`` return the sub-buffer of ``b`` starting from
