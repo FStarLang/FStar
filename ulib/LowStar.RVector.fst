@@ -356,6 +356,29 @@ val as_seq_sub_as_seq:
 	[SMTPat (as_seq_sub h rv 0ul (V.size_of rv))]
 let as_seq_sub_as_seq #a #rg h rv = ()
 
+val as_seq_seq_upd:
+  #a:Type0 -> #rg:regional a -> 
+  h:HS.mem -> rs:S.seq a ->
+  i:nat -> j:nat{i <= j && j <= S.length rs} ->
+  k:nat{i <= k && k < j} -> v:a ->
+  Lemma (S.equal (as_seq_seq h (S.upd rs k v) i j)
+		 (S.upd (as_seq_seq h rs i j) (k - i) (Rgl?.r_repr rg h v)))
+let as_seq_seq_upd #a #rg h rs i j k v =
+  admit ()
+
+// Preservation based on disjointness
+
+// val as_seq_seq_preserved:
+//   #a:Type0 -> #rg:regional a -> 
+//   h:HS.mem -> rs:S.seq a ->
+//   i:nat -> j:nat{i <= j && j <= S.length rs} ->
+//   p:loc -> h0:HS.mem -> h1:HS.mem ->
+//   Lemma (requires (rv_loc_elems
+  // loc_disjoint p (loc_all_exts_from
+  // 		  modifies p h0 h1))
+  // 	(ensures (rv_loc_elem h0 rv i == rv_loc_elem h1 rv i))
+  
+
 // val vec_as_seq_eq_rv_inv:
 //   #a:Type0 -> #rg:regional a -> 
 //   h1:HS.mem -> h2:HS.mem ->
@@ -547,9 +570,38 @@ val assign:
       rv_inv h1 rv /\
       S.equal (as_seq h1 rv)
       	      (S.upd (as_seq h0 rv) (U32.v i) (Rgl?.r_repr rg h0 v))))
+#reset-options "--z3rlimit 10"
 let assign #a #rg rv i v =
-  admit ();
-  V.assign rv i v
+  let hh0 = HST.get () in
+  V.assign rv i v;
+
+  let hh1 = HST.get () in
+  rv_loc_elems_included hh0 rv 0ul i;
+  rv_loc_elems_included hh0 rv (i + 1ul) (V.size_of rv);
+
+  // `rv_inv` is preserved
+  // elems_inv_preserved
+  //   rv 0ul i (V.loc_vector_within rv i (i + 1ul)) hh0 hh1;
+  // elems_inv_preserved
+  //   rv (i + 1ul) (V.size_of rv) (V.loc_vector_within rv i (i + 1ul)) hh0 hh1;
+  Rgl?.r_sep rg (V.get hh1 rv i) (V.loc_vector_within rv i (i + 1ul)) hh0 hh1;
+  // assert (rv_inv hh1 rv);
+
+  // TODO: correctness
+
+  assert (S.equal (V.as_seq hh1 rv)
+		  (S.upd (V.as_seq hh0 rv) (U32.v i) v));
+  assert (S.equal (as_seq hh1 rv)
+		  (as_seq_seq hh1 (S.upd (V.as_seq hh0 rv) (U32.v i) v)
+			      0 (U32.v (V.size_of rv))));
+  as_seq_seq_upd #a #rg
+    hh1 (V.as_seq hh0 rv) 0 (U32.v (V.size_of rv))
+    (U32.v i) v;
+  assert (S.equal (as_seq hh1 rv)
+  		  (S.upd (as_seq_seq hh1 (V.as_seq hh0 rv)
+  				     0 (U32.v (V.size_of rv)))
+  			 (U32.v i) (Rgl?.r_repr rg hh0 v)));
+  admit ()
 
 val assign_copy:
   #a:Type0 -> #rg:regional a -> cp:copyable a rg ->
