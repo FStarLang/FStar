@@ -75,8 +75,8 @@ noeq type regional a =
       HST.ST a
 	(requires (fun h0 -> true))
 	(ensures (fun h0 v h1 ->
-	  Set.equal (Map.domain (HS.get_hmap h1))
-	  	    (Map.domain (HS.get_hmap h0)) /\
+	  Set.subset (Map.domain (HS.get_hmap h0))
+	  	     (Map.domain (HS.get_hmap h1)) /\
 	  modifies loc_none h0 h1 /\ 
 	  r_inv h1 v /\ region_of v = r /\
 	  r_repr h1 v == Ghost.reveal irepr))) ->
