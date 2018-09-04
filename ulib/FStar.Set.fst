@@ -123,7 +123,6 @@ let disjoint_not_in_both (a:eqtype) (s1:set a) (s2:set a) :
 
 (* Converting lists to sets *)
 #reset-options //restore fuel usage here
-type eqtype = a:Type0{hasEq a}
 
 val as_set': #a:eqtype -> list a -> Tot (set a)
 let rec as_set' #a l = match l with
