@@ -10,7 +10,7 @@ module Seq = FStar.Seq
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-let trivial_preorder (a:Type0) :Seq.seq_pre a = fun _ _ -> True
+let trivial_preorder (a:Type0) :srel a = fun _ _ -> True
 
 type buffer (a:Type0) = mbuffer a (trivial_preorder a) (trivial_preorder a)
 

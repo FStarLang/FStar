@@ -13,7 +13,7 @@ module HST = FStar.HyperStack.ST
  *)
 
 (* Shorthand for preorder over sequences *)
-unfold let srel (a:Type0) = Seq.seq_pre a
+unfold let srel (a:Type0) = Preorder.preorder (Seq.seq a)
 
 
 /// Low* buffers
@@ -209,10 +209,21 @@ let get (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (p:mbuffer a rrel rel) (i:nat)
 /// The main idea is to ensure that any modifications to the parent buffer are compatible with the sub-buffer preorder
 /// and vice-versa
 
-let compatible_sub
+[@"opaque_to_smt"]
+unfold let compatible_sub
   (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t{U32.v i + U32.v len <= length b}) (sub_rel:srel a)
-  = Seq.compatible_sub_preorder (length b) rel (U32.v i) (U32.v i + U32.v len) sub_rel
+  = (forall (s1 s2:Seq.seq a).{:pattern (rel s1 s2);
+                                   (sub_rel (Seq.slice s1 (U32.v i) (U32.v i + U32.v len))
+			                    (Seq.slice s2 (U32.v i) (U32.v i + U32.v len)))}
+                         (Seq.length s1 == length b /\ Seq.length s2 == length b /\ rel s1 s2) ==>
+		         (sub_rel (Seq.slice s1 (U32.v i) (U32.v i + U32.v len))
+			          (Seq.slice s2 (U32.v i) (U32.v i + U32.v len)))) /\  //(a)
+    (forall (s s2:Seq.seq a).{:pattern (sub_rel (Seq.slice s (U32.v i) (U32.v i + U32.v len)) s2);
+                                  (rel s (Seq.replace_subseq s (U32.v i) (U32.v i + U32.v len) s2))}
+                        (Seq.length s == length b /\ Seq.length s2 == U32.v len /\
+                         sub_rel (Seq.slice s (U32.v i) (U32.v i + U32.v len)) s2) ==>
+  		        (rel s (Seq.replace_subseq s (U32.v i) (U32.v i + U32.v len) s2)))  //(b)
 
 /// ``gsub`` is the way to carve a sub-buffer out of a given
 /// buffer. ``gsub b i len`` return the sub-buffer of ``b`` starting from
@@ -752,8 +763,8 @@ private let rec loc_pairwise_disjoint_aux (l:list loc) :Type0 =
  *)
 [@"opaque_to_smt"]
 unfold let loc_pairwise_disjoint (l:list loc) :Type0 =
-  norm [iota; zeta; delta; delta_only [`%loc_disjoint_from_list;
-                                       `%loc_pairwise_disjoint_aux]] (loc_pairwise_disjoint_aux l)
+  norm [iota; zeta; delta_only [`%loc_disjoint_from_list;
+                                `%loc_pairwise_disjoint_aux]] (loc_pairwise_disjoint_aux l)
 
 val loc_disjoint_sym
   (s1 s2: loc)
