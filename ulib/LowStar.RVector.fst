@@ -433,6 +433,60 @@ private val as_seq_sub_as_seq:
 	[SMTPat (as_seq_sub h rv 0ul (V.size_of rv))]
 private let as_seq_sub_as_seq #a #rg h rv = ()
 
+private val as_seq_seq_index:
+  #a:Type0 -> rg:regional a -> 
+  h:HS.mem -> rs:S.seq a ->
+  i:nat -> j:nat{i <= j && j <= S.length rs} ->
+  k:nat{k < j - i} ->
+  Lemma (requires true)
+	(ensures (S.index (as_seq_seq rg h rs i j) k ==
+		 Rgl?.r_repr rg h (S.index rs (i + k))))
+	(decreases j)
+	[SMTPat (S.index (as_seq_seq rg h rs i j) k)]
+private let rec as_seq_seq_index #a rg h rs i j k =
+  if i = j then ()
+  else if k = j - i - 1 then ()
+  else as_seq_seq_index rg h rs i (j - 1) k
+
+private val as_seq_seq_eq:
+  #a:Type0 -> rg:regional a -> 
+  h:HS.mem -> rs1:S.seq a -> rs2:S.seq a ->
+  i:nat -> j:nat{i <= j && j <= S.length rs1} ->
+  k:nat -> l:nat{k <= l && l <= S.length rs2} ->
+  Lemma (requires (S.equal (S.slice rs1 i j) (S.slice rs2 k l)))
+	(ensures (S.equal (as_seq_seq rg h rs1 i j)
+			  (as_seq_seq rg h rs2 k l)))
+private let as_seq_seq_eq #a rg h rs1 rs2 i j k l =
+  assert (forall (a:nat{a < j - i}). 
+	   S.index (as_seq_seq rg h rs1 i j) a ==
+	   Rgl?.r_repr rg h (S.index rs1 (i + a)));
+  assert (forall (a:nat{a < l - k}). 
+	   S.index (as_seq_seq rg h rs2 k l) a ==
+	   Rgl?.r_repr rg h (S.index rs2 (k + a)));
+  assert (S.length (S.slice rs1 i j) = j - i);
+  assert (S.length (S.slice rs2 k l) = l - k);
+  assert (forall (a:nat{a < j - i}).
+	   S.index (S.slice rs1 i j) a ==
+	   S.index (S.slice rs2 k l) a);
+  assert (forall (a:nat{a < j - i}).
+	   S.index rs1 (i + a) == S.index rs2 (k + a))
+
+private val as_seq_seq_slice:
+  #a:Type0 -> rg:regional a -> 
+  h:HS.mem -> rs:S.seq a ->
+  i:nat -> j:nat{i <= j && j <= S.length rs} ->
+  k:nat -> l:nat{k <= l && l <= j - i} ->
+  Lemma (S.equal (S.slice (as_seq_seq rg h rs i j) k l)
+		 (as_seq_seq rg h (S.slice rs (i + k) (i + l)) 0 (l - k)))
+private let rec as_seq_seq_slice #a rg h rs i j k l =
+  if k = l then ()
+  else (as_seq_seq_slice rg h rs i j k (l - 1);
+       as_seq_seq_index rg h rs i j (l - 1);
+       as_seq_seq_eq rg h
+	 (S.slice rs (i + k) (i + l - 1))
+	 (S.slice rs (i + k) (i + l))
+	 0 (l - k - 1) 0 (l - k - 1))
+
 // Preservation based on disjointness
 
 private val as_seq_seq_preserved:
@@ -601,6 +655,7 @@ val insert:
       rv_inv h1 irv /\
       S.equal (as_seq h1 irv)
       	      (S.snoc (as_seq h0 rv) (Rgl?.r_repr rg h0 v))))
+#reset-options "--z3rlimit 20"
 let insert #a #rg rv v =
   let hh0 = HST.get () in
   let irv = V.insert rv v in
@@ -616,26 +671,17 @@ let insert #a #rg rv v =
   Rgl?.r_sep rg v
     (loc_region_only false (V.frameOf rv))
     hh0 hh1;
-  assert (rv_inv #a #rg hh1 irv);
 
   // Correctness
-  assert (S.index (as_seq hh1 irv) (U32.v (V.size_of rv)) ==
-	 Rgl?.r_repr rg hh0 v);
   assert (S.equal (V.as_seq hh0 rv)
-		  (S.slice (V.as_seq hh1 irv) 0 (U32.v (V.size_of rv))));
-  assert (S.equal (as_seq hh0 rv)
-		  (as_seq_seq rg hh0 
-		    (S.slice (V.as_seq hh1 irv) 0 (U32.v (V.size_of rv)))
-		    0 (U32.v (V.size_of rv))));
+  		  (S.slice (V.as_seq hh1 irv) 0 (U32.v (V.size_of rv))));
   as_seq_seq_preserved
-    rg (S.slice (V.as_seq hh1 irv) 0 (U32.v (V.size_of rv)))
+    rg (V.as_seq hh0 rv)
     0 (U32.v (V.size_of rv))
     (loc_region_only false (V.frameOf rv)) hh0 hh1;
-  assert (S.equal (as_seq hh0 rv)
-		  (as_seq_seq rg hh1
-		    (S.slice (V.as_seq hh1 irv) 0 (U32.v (V.size_of rv)))
-		    0 (U32.v (V.size_of rv))));
-  admit ();
+  as_seq_seq_slice 
+    rg hh1 (V.as_seq hh1 irv) 0 (U32.v (V.size_of irv))
+    0 (U32.v (V.size_of rv));
   irv
 
 val insert_copy:
@@ -652,11 +698,22 @@ val insert_copy:
       	      (S.snoc (as_seq h0 rv) (Rgl?.r_repr rg h0 v))))
 let insert_copy #a #rg cp rv v =
   admit ();
+  let hh0 = HST.get () in
   let nrid = new_region_ (V.frameOf rv) in
   let r_init = Rgl?.r_init rg in
   let nv = r_init nrid in
+  let hh1 = HST.get () in
+  Rgl?.r_sep rg v loc_none hh0 hh1;
+  assume (HH.disjoint (Rgl?.region_of rg v)
+		      (Rgl?.region_of rg nv));
   let copy = Cpy?.copy cp in
   copy v nv;
+
+  let hh2 = HST.get () in
+  assume (rv_inv hh2 rv);
+  assume (V.forall_all hh2 rv
+	   (fun b -> HH.disjoint (Rgl?.region_of rg b)
+				 (Rgl?.region_of rg nv)));
   insert rv nv
 
 val assign:
