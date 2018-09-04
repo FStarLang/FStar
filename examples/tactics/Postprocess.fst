@@ -93,15 +93,18 @@ and case_analyze (lhs:term) : Tac unit =
       let head, args = collect_app lhs in
       begin match inspect head with
       | Tv_FVar fv ->
-             if fv_to_string fv = `%A1 then (ap (`lemA))
-        else if fv_to_string fv = `%B1 then (ap (`lemB); apply_lemma (`congB); push_lifts' ())
+             if fv_to_string fv = `%B1 then (ap (`lemB); apply_lemma (`congB); push_lifts' ())
         else if fv_to_string fv = `%C1 then (ap (`lemC); apply_lemma (`congC); push_lifts' ())
         else (tlabel "unknown fv"; trefl ())
       | _ -> 
         tlabel "head unk";
         trefl ()
       end
-             
+
+    | Tv_FVar fv ->
+        if fv_to_string fv = `%A1 then (apply_lemma (`lemA))
+        else (tlabel "ignoring"; trefl ())
+
     | _ ->
       tlabel "ignoring";
       trefl ()
