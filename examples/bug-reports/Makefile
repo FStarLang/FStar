@@ -85,7 +85,8 @@ SHOULD_NOT_VERIFY_NOT_WORKING=bug186.fst bug397b.fst
 ####################
 
 # These will be checked as part of the F* regressions.
-SHOULD_EXTRACT_CLOSED=bug086.fst bug314.fst bug540.fst bug541.fst bug589.fst ExtractionBug2.fst bug1101.fst bug1485.fst bug734.fst ExtractionBug03.fst
+SHOULD_EXTRACT_CLOSED=bug086.fst bug314.fst bug540.fst bug541.fst bug589.fst ExtractionBug2.fst bug1101.fst bug1485.fst bug734.fst
+#ExtractionBug03.fst
 
 # bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
 
@@ -128,7 +129,7 @@ not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
 
 %.extract: %.fst
 	mkdir -p out_$*
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen OCaml $^ --extract $(CAPPED)
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen OCaml $^
 	$(OCAMLOPT) out_$*/$(CAPPED).ml -o $(CAPPED).exe
 	./$(CAPPED).exe
 
