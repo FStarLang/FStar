@@ -93,6 +93,8 @@ let live_null _ _ _ _ = ()
 
 let live_not_unused_in #_ #_ #_ _ _ = ()
 
+let lemma_live_equal_mem_domains #_ #_ #_ _ _ _ = ()
+
 let frameOf #_ #_ #_ b = if Null? b then HS.root else HS.frameOf (Buffer?.content b)
 
 let as_addr #_ #_ #_  b = if g_is_null b then 0 else HS.as_addr (Buffer?.content b)

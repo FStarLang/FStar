@@ -91,6 +91,14 @@ val live_not_unused_in (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (b:mbuffer a rr
   :Lemma (requires (live h b /\ b `unused_in` h)) (ensures False)
 
 
+/// If two memories have equal domains, then liveness in one implies liveness in the other
+
+val lemma_live_equal_mem_domains (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h0 h1:HS.mem)
+  :Lemma (requires (HST.equal_domains h0 h1 /\ live h0 b))
+         (ensures  (live h1 b))
+	 [SMTPat (HST.equal_domains h0 h1); SMTPat (live h1 b)]
+
+
 (* FIXME: the following definition is necessary to isolate the pattern
    because of unification. In other words, if we attached the pattern
    to `live_not_unused_in`, then we would not be able to use
