@@ -405,7 +405,8 @@ let report_implicits rng (is : Env.implicits) : unit =
                              (Print.term_to_string imp.imp_uvar.ctx_uvar_typ)
                              imp.imp_reason,
                  rng)) is in
-    Err.add_errors errs
+    Err.add_errors errs;
+    Err.stop_if_err ()
 
 let run_tactic_on_typ
         (rng_tac : Range.range) (rng_goal : Range.range)
