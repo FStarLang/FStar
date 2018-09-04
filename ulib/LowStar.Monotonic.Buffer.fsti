@@ -13,7 +13,7 @@ module HST = FStar.HyperStack.ST
  *)
 
 (* Shorthand for preorder over sequences *)
-unfold let srel (a:Type0) = Seq.seq_pre a
+unfold let srel (a:Type0) = Preorder.preorder (Seq.seq a)
 
 
 /// Low* buffers
@@ -89,6 +89,14 @@ let live_is_null (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (b:mbuffer a rrel rel
 
 val live_not_unused_in (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (b:mbuffer a rrel rel)
   :Lemma (requires (live h b /\ b `unused_in` h)) (ensures False)
+
+
+/// If two memories have equal domains, then liveness in one implies liveness in the other
+
+val lemma_live_equal_mem_domains (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h0 h1:HS.mem)
+  :Lemma (requires (HST.equal_domains h0 h1 /\ live h0 b))
+         (ensures  (live h1 b))
+	 [SMTPat (HST.equal_domains h0 h1); SMTPat (live h1 b)]
 
 
 (* FIXME: the following definition is necessary to isolate the pattern
@@ -209,10 +217,21 @@ let get (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (p:mbuffer a rrel rel) (i:nat)
 /// The main idea is to ensure that any modifications to the parent buffer are compatible with the sub-buffer preorder
 /// and vice-versa
 
-let compatible_sub
+[@"opaque_to_smt"]
+unfold let compatible_sub
   (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t{U32.v i + U32.v len <= length b}) (sub_rel:srel a)
-  = Seq.compatible_sub_preorder (length b) rel (U32.v i) (U32.v i + U32.v len) sub_rel
+  = (forall (s1 s2:Seq.seq a).{:pattern (rel s1 s2);
+                                   (sub_rel (Seq.slice s1 (U32.v i) (U32.v i + U32.v len))
+			                    (Seq.slice s2 (U32.v i) (U32.v i + U32.v len)))}
+                         (Seq.length s1 == length b /\ Seq.length s2 == length b /\ rel s1 s2) ==>
+		         (sub_rel (Seq.slice s1 (U32.v i) (U32.v i + U32.v len))
+			          (Seq.slice s2 (U32.v i) (U32.v i + U32.v len)))) /\  //(a)
+    (forall (s s2:Seq.seq a).{:pattern (sub_rel (Seq.slice s (U32.v i) (U32.v i + U32.v len)) s2);
+                                  (rel s (Seq.replace_subseq s (U32.v i) (U32.v i + U32.v len) s2))}
+                        (Seq.length s == length b /\ Seq.length s2 == U32.v len /\
+                         sub_rel (Seq.slice s (U32.v i) (U32.v i + U32.v len)) s2) ==>
+  		        (rel s (Seq.replace_subseq s (U32.v i) (U32.v i + U32.v len) s2)))  //(b)
 
 /// ``gsub`` is the way to carve a sub-buffer out of a given
 /// buffer. ``gsub b i len`` return the sub-buffer of ``b`` starting from
@@ -752,8 +771,8 @@ private let rec loc_pairwise_disjoint_aux (l:list loc) :Type0 =
  *)
 [@"opaque_to_smt"]
 unfold let loc_pairwise_disjoint (l:list loc) :Type0 =
-  norm [iota; zeta; delta; delta_only [`%loc_disjoint_from_list;
-                                       `%loc_pairwise_disjoint_aux]] (loc_pairwise_disjoint_aux l)
+  norm [iota; zeta; delta_only [`%loc_disjoint_from_list;
+                                `%loc_pairwise_disjoint_aux]] (loc_pairwise_disjoint_aux l)
 
 val loc_disjoint_sym
   (s1 s2: loc)
@@ -1727,6 +1746,26 @@ val recallable_includes (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:sre
 val recall (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
   :HST.Stack unit (requires (fun _ -> recallable b))
                   (ensures  (fun m0 _ m1 -> m0 == m1 /\ live m1 b))
+
+(* Begin: API for general witness and recall *)
+
+(* Shorthand for predicates of Seq.seq a *)
+unfold let spred (a:Type0) = Seq.seq a -> Type0
+
+unfold let stable_on (#a:Type0) (p:spred a) (rel:srel a) =
+  forall (s1 s2:Seq.seq a).{:pattern (p s1); (rel s1 s2); (p s2)} (p s1 /\ rel s1 s2) ==> p s2
+
+val witnessed (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a) :Type0
+
+val witness_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
+  :HST.ST unit (requires (fun h0      -> recallable b /\ p (as_seq h0 b) /\ p `stable_on` rel))
+               (ensures  (fun h0 _ h1 -> h0 == h1 /\ b `witnessed` p))
+
+val recall_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
+  :HST.ST unit (requires (fun h0      -> b `witnessed` p))
+               (ensures  (fun h0 _ h1 -> h0 == h1 /\ p (as_seq h0 b)))
+
+(* End: API for general witness and recall *)
 
 
 /// Deallocation. A buffer that was allocated by ``malloc`` (see below)
