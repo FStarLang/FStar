@@ -15,11 +15,11 @@ module L = FStar.List.Tot
 
 inline_for_extraction
 unfold
-let op_Array_Access (#a:Type0) (#rrel #rel:B.srel a) (b:B.mbuffer a rrel rel) (i:U32.t) = B.index b i
+let op_Array_Access (#a:Type0) (#rrel #rel:B.srel a) = B.index #a #rrel #rel
 
 inline_for_extraction
 unfold
-let op_Array_Assignment (#a:Type0) (#rrel #rel:B.srel a) (b:B.mbuffer a rrel rel) (i:U32.t) (v:a) = B.upd b i v
+let op_Array_Assignment (#a:Type0) (#rrel #rel:B.srel a) = B.upd #a #rrel #rel
 
 (* NOTE: DO NOT mark ( !* ) as inline_for_extraction,
    because it is specially treated by KreMLin to extract as *p instead
@@ -45,10 +45,4 @@ let ( *= ) (#a:Type0) (#rrel #rel:B.srel a) (p:B.mpointer a rrel rel) (v:a) : HS
 // TODO: remove
 
 inline_for_extraction
-let blit (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:B.srel a)
-  (src:B.mbuffer a rrel1 rel1)
-  (idx_src:U32.t)
-  (dst:B.mbuffer a rrel2 rel2)
-  (idx_dst:U32.t)
-  (len:U32.t)
-  = B.blit src idx_src dst idx_dst len
+let blit (#a:Type0) (#rrel1 #rel1 #rrel2 #rel2:B.srel a) = B.blit #a #rrel1 #rel1 #rrel2 #rel2
