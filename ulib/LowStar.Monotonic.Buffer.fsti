@@ -1747,6 +1747,26 @@ val recall (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
   :HST.Stack unit (requires (fun _ -> recallable b))
                   (ensures  (fun m0 _ m1 -> m0 == m1 /\ live m1 b))
 
+(* Begin: API for general witness and recall *)
+
+(* Shorthand for predicates of Seq.seq a *)
+unfold let spred (a:Type0) = Seq.seq a -> Type0
+
+unfold let stable_on (#a:Type0) (p:spred a) (rel:srel a) =
+  forall (s1 s2:Seq.seq a).{:pattern (p s1); (rel s1 s2); (p s2)} (p s1 /\ rel s1 s2) ==> p s2
+
+val witnessed (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a) :Type0
+
+val witness_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
+  :HST.ST unit (requires (fun h0      -> recallable b /\ p (as_seq h0 b) /\ p `stable_on` rel))
+               (ensures  (fun h0 _ h1 -> h0 == h1 /\ b `witnessed` p))
+
+val recall_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
+  :HST.ST unit (requires (fun h0      -> b `witnessed` p))
+               (ensures  (fun h0 _ h1 -> h0 == h1 /\ p (as_seq h0 b)))
+
+(* End: API for general witness and recall *)
+
 
 /// Deallocation. A buffer that was allocated by ``malloc`` (see below)
 /// can be ``free`` d.

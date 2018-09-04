@@ -990,6 +990,40 @@ let recallable_includes #_ #_ #_ #_ #_ #_ larger smaller =
 
 let recall #_ #_ #_ b = if Null? b then () else HST.recall (Buffer?.content b)
 
+private let spred_as_mempred (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
+  :HST.mem_predicate
+  = fun h -> p (as_seq h b)
+
+let witnessed #_ #_ #_ b p =
+  match b with
+  | Null -> p Seq.empty
+  | _    -> HST.witnessed (spred_as_mempred b p)
+
+private let lemma_stable_on_rel_is_stable_on_rrel (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel) (p:spred a)
+  :Lemma (requires (Buffer? b /\ recallable b /\ stable_on p rel))
+         (ensures  (HST.stable_on_t #(frameOf b) #_ #_ (Buffer?.content b) (spred_as_mempred b p)))
+  = let Buffer _ content _ _ () = b in
+    let mp = spred_as_mempred b p in
+    let aux (h0 h1:HS.mem) :Lemma ((mp h0 /\ rrel (HS.sel h0 content) (HS.sel h1 content)) ==> mp h1)
+      = if FStar.StrongExcludedMiddle.strong_excluded_middle (mp h0 /\ rrel (HS.sel h0 content)
+                                                                           (HS.sel h1 content)) then
+	  assert (rel (as_seq h0 b) (as_seq h1 b))
+    in
+    Classical.forall_intro_2 aux
+
+let witness_p #_ #_ #_ b p =
+  match b with
+  | Null -> ()
+  | Buffer _ content _ _ () ->
+    lemma_stable_on_rel_is_stable_on_rrel b p;
+    HST.mr_witness #(HS.frameOf content) #_ #_ content (spred_as_mempred b p)
+
+let recall_p #_ #_ #_ b p =
+  match b with
+  | Null -> ()
+  | Buffer _ _ _ _ () -> HST.testify (spred_as_mempred b p)
+
 let freeable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) =
   (not (g_is_null b)) /\
   HS.is_mm (Buffer?.content b) /\
