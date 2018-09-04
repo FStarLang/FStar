@@ -122,6 +122,12 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktot1' 0 "is_guard"      is_guard E.e_goal e_bool
                                 is_guard E.e_goal_nbe NBET.e_bool;
 
+      mktot1' 0 "get_label"     get_label E.e_goal e_string
+                                get_label E.e_goal_nbe NBET.e_string;
+
+      mktot2' 0 "set_label"     set_label e_string E.e_goal E.e_goal
+                                set_label NBET.e_string E.e_goal_nbe E.e_goal_nbe;
+
       mktot2 0 "push_binder"   (fun env b -> Env.push_binders env [b]) RE.e_env RE.e_binder RE.e_env
                                (fun env b -> Env.push_binders env [b]) NRE.e_env NRE.e_binder NRE.e_env;
 
@@ -213,9 +219,6 @@ and primitive_steps () : list<Cfg.primitive_step> =
 
       mktac1 0 "dump"          print_proof_state e_string e_unit
                                print_proof_state NBET.e_string NBET.e_unit;
-
-      mktac1 0 "dump1"         print_proof_state1 e_string e_unit
-                               print_proof_state1 NBET.e_string NBET.e_unit;
 
       mktac2 0 "t_pointwise"   pointwise E.e_direction (e_tactic_thunk e_unit) e_unit
                                pointwise E.e_direction_nbe (e_tactic_nbe_thunk NBET.e_unit) NBET.e_unit;
@@ -392,7 +395,7 @@ and e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (pro
     mk_emb em un (FStar.Syntax.Embeddings.term_as_fv t_unit)
 
 
-let report_implicits rng ps (is : Env.implicits) : unit =
+let report_implicits rng (is : Env.implicits) : unit =
     let errs = List.map (fun imp ->
                 (Err.Error_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
@@ -469,7 +472,7 @@ let run_tactic_on_typ
                         (FStar.Common.string_of_list
                                 (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
                                 ps.all_implicits);
-        report_implicits rng_goal ps g.implicits;
+        report_implicits rng_goal g.implicits;
         // /implicits
 
         if !tacdbg then
@@ -646,6 +649,8 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
             comb2 (fun sc brs -> Tm_match (sc, brs))
                   (traverse f pol e sc)
                   (comb_list (List.map (fun br -> let (pat, w, exp) = SS.open_branch br in
+                                                  let bvs = S.pat_bvs pat in
+                                                  let e = Env.push_bvs e bvs in
                                                   let r = traverse f pol e exp in
                                                   comb1 (fun exp -> SS.close_branch (pat, w, exp)) r) brs))
 
@@ -695,7 +700,12 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
                  in
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (Print.term_to_string (goal_type g));
-                 let gt' = TcUtil.label ("Could not prove goal #" ^ string_of_int n) goal.pos phi in
+                 let label =
+                    if get_label g = ""
+                    then "Could not prove goal #" ^ string_of_int n
+                    else "Could not prove goal #" ^ string_of_int n ^ " (" ^ get_label g ^ ")"
+                 in
+                 let gt' = TcUtil.label label  goal.pos phi in
                  (n+1, (goal_env g, gt', g.opts)::gs)) s gs in
     let (_, gs) = s in
     // Use default opts for main goal
@@ -736,7 +746,9 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     let gs, w = run_tactic_on_typ tau.pos tau.pos tau env typ in
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
-    // TODO: Do not retypecheck and do just like `synth`
+    // TODO: Do not retypecheck and do just like `synth`. But that's hard.. what to do for inductives,
+    // for instance? We would need to reflect *all* of F* static semantics into Meta-F*, and
+    // that is a ton of work.
     if List.existsML (fun g -> not (Option.isSome (getprop (goal_env g) (goal_type g)))) gs
         then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") typ.pos;
 
@@ -751,4 +763,34 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
     match unembed (e_list RE.e_sigelt) w FStar.Syntax.Embeddings.id_norm_cb with
     | Some sigelts -> sigelts
     | None -> Err.raise_error (Err.Fatal_SpliceUnembedFail, "splice: failed to unembed sigelts") typ.pos
+    end
+
+let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
+    if env.nosynth then tm else begin
+    tacdbg := Env.debug env (Options.Other "Tac");
+    let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped in
+
+    let u = env.universe_of env typ in
+    let goal = U.mk_squash u (U.mk_eq2 u typ tm uvtm) in
+    let gs, w = run_tactic_on_typ tau.pos tm.pos tau env goal in
+    // see comment in`synthesize`
+    List.iter (fun g ->
+        match getprop (goal_env g) (goal_type g) with
+        | Some vc ->
+            begin
+            if !tacdbg then
+              BU.print1 "Postprocessing left a goal: %s\n" (Print.term_to_string vc);
+            let guard = { guard_f = FStar.TypeChecker.Common.NonTrivial vc
+                        ; deferred = []
+                        ; univ_ineqs = [], []
+                        ; implicits = [] } in
+            TcRel.force_trivial_guard (goal_env g) guard
+            end
+        | None ->
+            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "postprocessing left open goals") typ.pos) gs;
+    (* abort if the uvar was not solved *)
+    let g_imp = TcRel.resolve_implicits_tac env g_imp in
+    report_implicits tm.pos g_imp.implicits;
+
+    uvtm
     end

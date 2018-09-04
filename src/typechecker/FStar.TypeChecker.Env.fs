@@ -170,6 +170,7 @@ type env = {
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth_hook          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
   splice         :env -> term -> list<sigelt>;       (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
+  postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
   is_native_tactic: lid -> bool;                        (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                        (* hooks that the interactive more relies onto for symbol tracking *)
@@ -206,6 +207,8 @@ and implicit = {
 and implicits = list<implicit>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
+
+let postprocess env tau ty tm = env.postprocess env tau ty tm
 
 let rename_gamma subst gamma =
     gamma |> List.map (function
@@ -286,6 +289,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     proof_ns = Options.using_facts_from ();
     synth_hook = (fun e g tau -> failwith "no synthesizer available");
     splice = (fun e tau -> failwith "no splicer available");
+    postprocess = (fun e tau typ tm -> failwith "no postprocessor available");
     is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
@@ -826,6 +830,17 @@ let attrs_of_qninfo (qninfo : qninfo) : option<list<attribute>> =
 
 let lookup_attrs_of_lid env lid : option<list<attribute>> =
   attrs_of_qninfo <| lookup_qname env lid
+
+let fv_has_attr env fv attr_lid : bool =
+    match lookup_attrs_of_lid env fv.fv_name.v with
+    | None
+    | Some [] ->
+      false
+    | Some attrs ->
+      attrs |> BU.for_some (fun tm ->
+         match (U.un_uinst tm).n with
+         | Tm_fvar fv -> S.fv_eq_lid fv attr_lid
+         | _ -> false)
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with

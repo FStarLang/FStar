@@ -20,6 +20,7 @@ incl \
 struct \
 micro-benchmarks \
 tactics \
+typeclasses \
 miniparse \
 kv_parsing \
 lowparse \
@@ -30,7 +31,8 @@ hello \
 native_tactics \
 extraction \
 demos \
-refinement
+refinement \
+indexed_effects
 
 # low-level \  ... NS: removing from CI for this branch
 

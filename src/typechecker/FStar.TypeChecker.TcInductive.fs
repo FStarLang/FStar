@@ -360,22 +360,15 @@ and ty_nested_positive_in_inductive (ty_lid:lident) (ilid:lident) (us:universes)
   let b, idatas = datacons_of_typ env ilid in
   //if ilid is not an inductive, return false
   if not b then begin
-    match Env.lookup_attrs_of_lid env ilid with
-    | None
-    | Some [] ->
-      debug_log env ("Checking nested positivity, not an inductive, return false");
-      false
-    | Some attrs ->
-      if attrs |> BU.for_some (fun tm ->
-         match (SS.compress tm).n with
-         | Tm_fvar fv ->
-           S.fv_eq_lid fv FStar.Parser.Const.assume_strictly_positive_attr_lid
-         | _ -> false)
-      then (debug_log env (BU.format1 "Checking nested positivity, special case decorated with `assume_strictly_positive` %s; return true"
+    if Env.fv_has_attr 
+              env 
+              (S.lid_as_fv ilid delta_constant None)
+              FStar.Parser.Const.assume_strictly_positive_attr_lid
+    then (debug_log env (BU.format1 "Checking nested positivity, special case decorated with `assume_strictly_positive` %s; return true"
                                     (Ident.string_of_lid ilid));
-            true)
-      else (debug_log env ("Checking nested positivity, not an inductive, return false");
-           false)
+          true)
+    else (debug_log env ("Checking nested positivity, not an inductive, return false");
+          false)
   end
   //if ilid has already been unfolded with same arguments, return true
   else
@@ -1064,7 +1057,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let early_prims_inductive =
       lid_equals C.prims_lid  (Env.current_module env) &&
-      (tc.ident.idText = "dtuple2" || List.existsb (fun s -> s = tc.ident.idText) early_prims_inductives)
+      List.existsb (fun s -> s = tc.ident.idText) early_prims_inductives
     in
 
     let discriminator_ses =

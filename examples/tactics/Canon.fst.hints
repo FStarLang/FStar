@@ -11,7 +11,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "49ce6a1802b9455612cdc4b8c114247d"
+      "de078825c5c87c23801732a9aec180bd"
     ],
     [
       "Canon.lem8",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "a4dbe271d5d284d4d97b1afec8935eb2"
+      "1d0c3afdcd7903c6717ac8b6b154b9b7"
     ],
     [
       "Canon.lem9",
@@ -29,7 +29,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
       0,
-      "ea6d27040654e96e60f4d91a5cfe51e5"
+      "846ae902cc5e4f207562e7340d13d379"
     ],
     [
       "Canon.check_canon",
@@ -46,7 +46,37 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "08d7b34d7a94bbd07a2b69d312328d0e"
+      "86f909b6b2e600e9f729df1941094822"
+    ],
+    [
+      "Canon.lem1",
+      2,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "8eaff1cb57c2e55f09f015de3143eba4"
+    ],
+    [
+      "Canon.lem8",
+      2,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "cc18421bcb4a654316644279af5d3b25"
+    ],
+    [
+      "Canon.lem9",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
+      0,
+      "e5116b3169c7cb306d9057794aa8f354"
     ]
   ]
 ]

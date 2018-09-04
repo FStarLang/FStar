@@ -137,6 +137,7 @@ type env = {
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   splice         :env -> term -> list<sigelt>;    (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
   is_native_tactic: lid -> bool;                  (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
@@ -178,6 +179,7 @@ and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
 val tc_hooks : env -> tcenv_hooks
 val set_tc_hooks: env -> tcenv_hooks -> env
+val postprocess : env -> term -> typ -> term -> term
 
 type env_t = env
 val initial_env : FStar.Parser.Dep.deps ->
@@ -241,6 +243,7 @@ val lookup_nonrec_definition: list<delta_level> -> env -> lident -> option<(univ
 val quals_of_qninfo        : qninfo -> option<list<qualifier>>
 val attrs_of_qninfo        : qninfo -> option<list<attribute>>
 val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
+val fv_has_attr            : env -> fv -> attr_lid:lid -> bool
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>

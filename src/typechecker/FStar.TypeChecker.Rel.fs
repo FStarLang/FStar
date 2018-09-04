@@ -2239,20 +2239,20 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 | None -> None
                 | Some d -> decr_delta_depth d
               in
+              let treat_as_injective =
+                match (U.un_uinst head1).n with
+                | Tm_fvar fv ->
+                  Env.fv_has_attr env fv Const.unifier_hint_injective_lid
+                | _ -> false
+              in
               begin
               match d with
-              | Some d when wl.smt_ok ->
+              | Some d when wl.smt_ok && not treat_as_injective ->
                 try_solve_without_smt_or_else env wl
                     solve_sub_probs_no_smt
                     (unfold_and_retry d)
 
               | _ -> //cannot be unfolded or no smt anyway; so just try to solve extensionally
-                //if debug env <| Options.Other "Rel"
-                //then BU.print3
-                //    "Cannot unfold %s or %s since delta_depth=%s\n"
-                //                (Print.term_to_string t1)
-                //                (Print.term_to_string t2)
-                //                (match d with | None -> "None" | Some d -> Print.delta_depth_to_string d);
                 solve_sub_probs env wl
 
               end
@@ -2794,16 +2794,19 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          in
          if (Env.is_interpreted env head1 || Env.is_interpreted env head2) //we have something like (+ x1 x2) =?= (- y1 y2)
            && problem.relation = EQ
-           && wl.smt_ok // with SMT allowed
            && no_free_uvars t1 // and neither term has any free variables
            && no_free_uvars t2
-         then let guard, wl =
-                  if equal t1 t2
-                  then None, wl
-                  else let g, wl = mk_eq2 wl orig t1 t2 in
-                       Some g, wl
-              in
-              solve env (solve_prob orig guard [] wl)
+         then if not wl.smt_ok
+              then if equal t1 t2
+                   then solve env (solve_prob orig None [] wl)
+                   else rigid_rigid_delta env problem wl head1 head2 t1 t2
+              else let guard, wl =
+                       if equal t1 t2
+                       then None, wl
+                       else let g, wl = mk_eq2 wl orig t1 t2 in
+                            Some g, wl
+                   in
+                   solve env (solve_prob orig guard [] wl)
          else rigid_rigid_delta env problem wl head1 head2 t1 t2
 
       | Tm_let _, Tm_let _ ->
@@ -3342,6 +3345,8 @@ let resolve_implicits' env must_total forcelax g =
                | None ->
                     until_fixpoint (hd::out, changed) tl
                | Some (env, tau) ->
+                    if Env.debug env (Options.Other "Tac") then
+                        BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
                     let t = env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau in
                     // let the unifier handle setting the variable
                     let extra =
@@ -3350,7 +3355,7 @@ let resolve_implicits' env must_total forcelax g =
                         | Some g -> g.implicits
                     in
                     let hd = { hd with imp_meta = None } in
-                    until_fixpoint (out, changed) (hd :: (extra @ tl))
+                    until_fixpoint (out, true) (hd :: (extra @ tl))
                end
           else if ctx_u.ctx_uvar_should_check = Allow_untyped
           then until_fixpoint(out, true) tl

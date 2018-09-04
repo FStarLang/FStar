@@ -180,7 +180,9 @@ let synth_inverse_forall_tenum_solve () : T.Tac unit =
     if hd' `T.term_eq` (`synth_inverse)
     then match T.trytac synth_inverse_forall_tenum_solve' with
     | Some _ -> ()
-    | _ -> (T.dump "synth_inverse_forall_tenum_solve FAILED here:"; tfail "synth_inverse_forall_tenum_solve failed")
+    | _ -> (if T.debugging () then
+              T.dump "synth_inverse_forall_tenum_solve FAILED here:";
+            tfail "synth_inverse_forall_tenum_solve failed")
     else tfail "not a synth_inverse goal"
   | _ -> tfail "not enough arguments to squash"
   else tfail "not a squash"

@@ -370,6 +370,10 @@ let lemma_swap_permutes_slice #a s start i j len =
 val splice: #a:Type -> s1:seq a -> i:nat -> s2:seq a{length s1=length s2} -> j:nat{i <= j /\ j <= (length s2)} -> Tot (seq a)
 let splice #a s1 i s2 j = Seq.append (slice s1 0 i) (Seq.append (slice s2 i j) (slice s1 j (length s1)))
 
+(* replace with sub *)
+let replace_subseq (#a:Type0) (s:Seq.seq a) (i:nat) (j:nat{i <= j /\ j <= length s}) (sub:Seq.seq a{length sub == j - i}) :Tot (Seq.seq a)
+  = Seq.append (Seq.slice s 0 i) (Seq.append sub (Seq.slice s j (Seq.length s)))
+
 val splice_refl : #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s}
   -> Lemma
   (ensures (s == splice s i s j))

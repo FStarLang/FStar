@@ -70,6 +70,81 @@ type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
            -> _8:'h
            -> tuple8 'a 'b 'c 'd 'e 'f 'g 'h
 
+(* 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h * 'i *)
+type tuple9 'a 'b 'c 'd 'e 'f 'g 'h 'i =
+  | Mktuple9: _1:'a
+            -> _2:'b
+            -> _3:'c
+            -> _4:'d
+            -> _5:'e
+            -> _6:'f
+            -> _7:'g
+            -> _8:'h
+            -> _9:'i
+           -> tuple9 'a 'b 'c 'd 'e 'f 'g 'h 'i
+
+(* 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h * 'i * 'j *)
+type tuple10 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j =
+  | Mktuple10: _1:'a
+            -> _2:'b
+            -> _3:'c
+            -> _4:'d
+            -> _5:'e
+            -> _6:'f
+            -> _7:'g
+            -> _8:'h
+            -> _9:'i
+            -> _10:'j
+           -> tuple10 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j
+
+(* 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h * 'i * 'j * 'k *)
+type tuple11 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k =
+  | Mktuple11: _1:'a
+            -> _2:'b
+            -> _3:'c
+            -> _4:'d
+            -> _5:'e
+            -> _6:'f
+            -> _7:'g
+            -> _8:'h
+            -> _9:'i
+            -> _10:'j
+            -> _11:'k
+           -> tuple11 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k
+
+(* 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h * 'i * 'j * 'k * 'l *)
+type tuple12 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l =
+  | Mktuple12: _1:'a
+            -> _2:'b
+            -> _3:'c
+            -> _4:'d
+            -> _5:'e
+            -> _6:'f
+            -> _7:'g
+            -> _8:'h
+            -> _9:'i
+            -> _10:'j
+            -> _11:'k
+            -> _12:'l
+           -> tuple12 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l
+
+(* 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h * 'i * 'j * 'k * 'l * 'm *)
+type tuple13 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm =
+  | Mktuple13: _1:'a
+            -> _2:'b
+            -> _3:'c
+            -> _4:'d
+            -> _5:'e
+            -> _6:'f
+            -> _7:'g
+            -> _8:'h
+            -> _9:'i
+            -> _10:'j
+            -> _11:'k
+            -> _12:'l
+            -> _13:'m
+           -> tuple13 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm
+
 (* 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h * 'i * 'j * 'k * 'l * 'm * 'n *)
 type tuple14 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n =
   | Mktuple14: _1:'a
@@ -87,7 +162,6 @@ type tuple14 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n =
             -> _13:'m
             -> _14:'n
            -> tuple14 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n
-
 
 
 (*********************************************************************************)

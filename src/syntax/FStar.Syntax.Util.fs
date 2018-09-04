@@ -349,7 +349,7 @@ let rec head_and_args' t =
             in (head, args'@args)
         | _ -> t, []
 
- let un_uinst t =
+let un_uinst t =
     let t = Subst.compress t in
     match t.n with
         | Tm_uinst(t, _) -> Subst.compress t
@@ -1998,3 +1998,24 @@ and unbound_variables_comp c =
     | Comp ct ->
       unbound_variables ct.result_typ
       @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args
+
+let extract_attr' (attr_lid:lid) (attrs:list<term>) : option<(list<term> * args)> =
+    let rec aux acc attrs =
+        match attrs with
+        | [] -> None
+        | h::t ->
+            let head, args = head_and_args h in
+            begin match (compress head).n with
+            | Tm_fvar fv when fv_eq_lid fv attr_lid ->
+                let attrs' = List.rev_acc acc t in
+                Some (attrs', args)
+            | _ ->
+                aux (h::acc) t
+            end
+    in
+    aux [] attrs
+
+let extract_attr (attr_lid:lid) (se:sigelt) : option<(sigelt * args)> =
+    match extract_attr' attr_lid se.sigattrs with
+    | None -> None
+    | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)
