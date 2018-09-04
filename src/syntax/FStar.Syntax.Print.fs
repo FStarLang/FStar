@@ -51,7 +51,7 @@ let sli (l:lident) : string =
 
 let lid_to_string (l:lid) = sli l
 
-//let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
+// let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
 let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ delta_depth_to_string fv.fv_delta ^ ")"
 let bv_to_string bv = bv.ppname.idText ^ "#" ^ (string_of_int bv.index)
 
@@ -117,7 +117,12 @@ let is_ite (t:typ)   = is_prim_op [C.ite_lid] t
 let is_lex_cons (f:exp) = is_prim_op [C.lexcons_lid] f
 let is_lex_top (f:exp) = is_prim_op [C.lextop_lid] f
 let is_inr = function Inl _ -> false | Inr _ -> true
-let filter_imp a = a |> List.filter (function (_, Some (Implicit _)) -> false | _ -> true)
+let filter_imp a =
+   (* keep typeclass args *)
+   a |> List.filter (function | (_, Some (Meta t)) when SU.is_fvar C.tcresolve_lid t -> true
+                              | (_, Some (Implicit _))
+                              | (_, Some (Meta _)) -> false
+                              | _ -> true)
 let rec reconstruct_lex (e:exp) =
   match (compress e).n with
   | Tm_app (f, args) ->
@@ -266,16 +271,26 @@ and term_to_string x =
       | Tm_delayed _ ->   failwith "impossible"
       | Tm_app(_, []) ->  failwith "Empty args!"
 
+      // TODO: add an option to mark where this happens
+      | Tm_lazy ({blob=b; lkind=Lazy_embedding (_, thunk)}) ->
+        "[LAZYEMB:" ^
+        term_to_string (FStar.Common.force_thunk thunk) ^ "]"
       | Tm_lazy i ->
         "[lazy:" ^
         term_to_string (must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
         ^"]"
 
-      | Tm_quoted (tm, { qkind = Quote_static  }) ->
-        U.format1 "`(%s)" (term_to_string tm)
-
-      | Tm_quoted (tm, { qkind = Quote_dynamic }) ->
-        U.format1 "quote (%s)" (term_to_string tm)
+      | Tm_quoted (tm, qi) ->
+        begin match qi.qkind with
+        | Quote_static ->
+            let print_aq (bv, t) =
+              U.format2 "%s -> %s" (bv_to_string bv) (term_to_string t)
+            in
+            U.format2 "`(%s)%s" (term_to_string tm)
+                                (FStar.Common.string_of_list print_aq qi.antiquotes)
+        | Quote_dynamic ->
+            U.format1 "quote (%s)" (term_to_string tm)
+        end
 
       | Tm_meta(t, Meta_pattern ps) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
@@ -381,7 +396,10 @@ and pat_to_string x =
       then U.format2 "%s:%s" (bv_to_string x) (term_to_string x.sort)
       else bv_to_string x
     | Pat_constant c -> const_to_string c
-    | Pat_wild x -> if (Options.print_real_names()) then "Pat_wild " ^ (bv_to_string x) else "_"
+    | Pat_wild x ->
+      if Options.print_bound_var_types()
+      then U.format2 "_wild_%s:%s" (bv_to_string x) (term_to_string x.sort)
+      else bv_to_string x
 
 
 and lbs_to_string quals lbs =
@@ -423,14 +441,18 @@ and lcomp_to_string lc =
 //       (kind_to_string k)
 //   else U.format1 "U%s"  (if (Options.hide_uvar_nums()) then "?" else U.string_of_int (Unionfind.uvar_id uv))
 
-and aqual_to_string = function
-  | Some (Implicit false) -> "#"
-  | Some (Implicit true) -> "#."
-  | Some Equality -> "$"
-  | _ -> ""
+and aqual_to_string' s = function
+  | Some (Implicit false) -> "#" ^ s
+  | Some (Implicit true) -> "#." ^ s
+  | Some Equality -> "$" ^ s
+  | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> "[|" ^ s ^ "|]"
+  | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
+  | None -> s
+
+and aqual_to_string aq = aqual_to_string' "" aq
 
 and imp_to_string s aq =
-    aqual_to_string aq ^ s
+    aqual_to_string' s aq
 
 and binder_to_string' is_arrow b =
   if not (Options.ugly()) then
@@ -734,8 +756,9 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
     SU.lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =
-  U.format3 "module %s\nDeclarations:\n%s\nExports:\n%s\n" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
-                                                                        (List.map sigelt_to_string m.exports |> String.concat "\n")
+  U.format3 "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" (sli m.name)
+                                                                     (List.map sigelt_to_string m.declarations |> String.concat "\n")
+                                                                     (List.map sigelt_to_string m.exports |> String.concat "\n")
 
 
 let abs_ascription_to_string ascription =
@@ -782,3 +805,9 @@ let set_to_string f s =
             U.string_of_string_builder strb
 
 let bvs_to_string sep bvs = binders_to_string sep (List.map mk_binder bvs)
+
+let rec emb_typ_to_string = function
+    | ET_abstract -> "abstract"
+    | ET_app (h, []) -> h
+    | ET_app(h, args) -> "(" ^h^ " " ^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
+    | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b

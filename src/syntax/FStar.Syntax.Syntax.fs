@@ -55,6 +55,14 @@ type pragma =
 // IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]
 type memo<'a> = ref<option<'a>>
 
+(* Simple types used in native compilation
+ * to record the types of lazily embedded terms
+ *)
+type emb_typ =
+  | ET_abstract
+  | ET_fun  of emb_typ * emb_typ
+  | ET_app  of string * list<emb_typ>
+
 //versioning for unification variables
 // IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type version = {
@@ -101,28 +109,11 @@ type delta_depth =
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
 // IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
-// Different kinds of lazy terms. These are used to decide the unfolding
-// function, instead of keeping the closure inside the lazy node, since
-// that means we cannot have equality on terms (not serious) nor call
-// output_value on them (serious).
-type lazy_kind =
-  | BadLazy
-  | Lazy_bv
-  | Lazy_binder
-  | Lazy_fvar
-  | Lazy_comp
-  | Lazy_env
-  | Lazy_proofstate
-  | Lazy_sigelt
-  | Lazy_uvar
-
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type should_check_uvar =
   | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
   | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
   | Strict                (* Everything else is strict *)
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
@@ -223,8 +214,6 @@ and meta_source_info =
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
-  | Mutable_alloc
-  | Mutable_rval
 and fv_qual =
   | Data_ctor
   | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
@@ -274,9 +263,26 @@ and attribute = term
 and lazyinfo = {
     blob  : dyn;
     lkind : lazy_kind;
-    typ   : typ;
+    ltyp  : typ;
     rng   : Range.range;
 }
+// Different kinds of lazy terms. These are used to decide the unfolding
+// function, instead of keeping the closure inside the lazy node, since
+// that means we cannot have equality on terms (not serious) nor call
+// output_value on them (serious).
+and lazy_kind =
+  | BadLazy
+  | Lazy_bv
+  | Lazy_binder
+  | Lazy_fvar
+  | Lazy_comp
+  | Lazy_env
+  | Lazy_proofstate
+  | Lazy_goal
+  | Lazy_sigelt
+  | Lazy_uvar
+  | Lazy_embedding of emb_typ * FStar.Common.thunk<term>
+
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * tscheme
@@ -475,6 +481,7 @@ let order_bv x y =
   then x.index - y.index
   else i
 
+let order_ident x y = String.compare x.idText y.idText
 let order_fv x y = String.compare x.str y.str
 
 let range_of_lbname (l:lbname) = match l with
@@ -503,6 +510,7 @@ let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv
+let new_id_set () : set<ident> = Util.new_set order_ident
 let new_fv_set () :set<lident> = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
 let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name
@@ -681,7 +689,8 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
 ///////////////////////////////////////////////////////////////////////
 let delta_constant = Delta_constant_at_level 0
 let delta_equational = Delta_equational_at_level 0
-let tconst l = mk (Tm_fvar(lid_as_fv l delta_constant None)) None Range.dummyRange
+let fvconst l = lid_as_fv l delta_constant None
+let tconst l = mk (Tm_fvar (fvconst l)) None Range.dummyRange
 let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_constant_at_level 1) None)) None Range.dummyRange
 let tdataconstr l = fv_to_tm (lid_as_fv l delta_constant (Some Data_ctor))
 let t_unit      = tconst PC.unit_lid
@@ -700,7 +709,6 @@ let t_bv        = tconst PC.bv_lid
 let t_fv        = tconst PC.fv_lid
 let t_norm_step = tconst PC.norm_step_lid
 let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
-let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev PC.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange

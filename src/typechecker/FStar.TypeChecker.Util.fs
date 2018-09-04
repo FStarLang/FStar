@@ -32,6 +32,8 @@ open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
 open FStar.Syntax
+open FStar.Syntax
+open FStar.Syntax
 
 type lcomp_with_binder = option<bv> * lcomp
 
@@ -146,74 +148,74 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 (* Utilities on patterns  *)
 (************************************************************************)
 
-let decorate_pattern env p exp =
-    let qq = p in
-    let rec aux p e : pat  =
-        let pkg q = withinfo q p.p in
-        let e = U.unmeta e in
-        match p.v, e.n with
-            | _, Tm_uinst(e, _) -> aux p e
+//let decorate_pattern env p exp =
+//    let qq = p in
+//    let rec aux p e : pat  =
+//        let pkg q = withinfo q p.p in
+//        let e = U.unmeta e in
+//        match p.v, e.n with
+//            | _, Tm_uinst(e, _) -> aux p e
 
-            | Pat_constant _, _ ->
-              pkg p.v
+//            | Pat_constant _, _ ->
+//              pkg p.v
 
-            | Pat_var x, Tm_name y ->
-              if not (bv_eq x y)
-              then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
-              if Env.debug env <| Options.Other "Pat"
-              then BU.print2 "Pattern variable %s introduced at type %s\n" (Print.bv_to_string x) (Normalize.term_to_string env y.sort);
-              let s = Normalize.normalize [Env.Beta] env y.sort in
-              let x = {x with sort=s} in
-              pkg (Pat_var x)
+//            | Pat_var x, Tm_name y ->
+//              if not (bv_eq x y)
+//              then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
+//              if Env.debug env <| Options.Other "Pat"
+//              then BU.print2 "Pattern variable %s introduced at type %s\n" (Print.bv_to_string x) (Normalize.term_to_string env y.sort);
+//              let s = Normalize.normalize [Env.Beta] env y.sort in
+//              let x = {x with sort=s} in
+//              pkg (Pat_var x)
 
-            | Pat_wild x, Tm_name y ->
-              if bv_eq x y |> not
-              then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
-              let s = Normalize.normalize [Env.Beta] env y.sort in
-              let x = {x with sort=s} in
-              pkg (Pat_wild x)
+//            | Pat_wild x, Tm_name y ->
+//              if bv_eq x y |> not
+//              then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
+//              let s = Normalize.normalize [Env.Beta] env y.sort in
+//              let x = {x with sort=s} in
+//              pkg (Pat_wild x)
 
-            | Pat_dot_term(x, _), _ ->
-              pkg (Pat_dot_term(x, e))
+//            | Pat_dot_term(x, _), _ ->
+//              pkg (Pat_dot_term(x, e))
 
-            | Pat_cons(fv, []), Tm_fvar fv' ->
-              if not (Syntax.fv_eq fv fv')
-              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
-              pkg (Pat_cons(fv', []))
+//            | Pat_cons(fv, []), Tm_fvar fv' ->
+//              if not (Syntax.fv_eq fv fv')
+//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
+//              pkg (Pat_cons(fv', []))
 
-            | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args)
-            | Pat_cons(fv, argpats), Tm_app({n=Tm_uinst({n=Tm_fvar(fv')}, _)}, args) ->
+//            | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args)
+//            | Pat_cons(fv, argpats), Tm_app({n=Tm_uinst({n=Tm_fvar(fv')}, _)}, args) ->
 
-              if fv_eq fv fv' |> not
-              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
+//              if fv_eq fv fv' |> not
+//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
 
-              let fv = fv' in
-              let rec match_args matched_pats args argpats = match args, argpats with
-                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats))
-                | arg::args, (argpat, _)::argpats ->
-                  begin match arg, argpat.v with
-                        | (e, Some (Implicit true)), Pat_dot_term _ ->
-                          let x = Syntax.new_bv (Some p.p) S.tun in
-                          let q = withinfo (Pat_dot_term(x, e)) p.p in
-                          match_args ((q, true)::matched_pats) args argpats
+//              let fv = fv' in
+//              let rec match_args matched_pats args argpats = match args, argpats with
+//                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats))
+//                | arg::args, (argpat, _)::argpats ->
+//                  begin match arg, argpat.v with
+//                        | (e, Some (Implicit true)), Pat_dot_term _ ->
+//                          let x = Syntax.new_bv (Some p.p) S.tun in
+//                          let q = withinfo (Pat_dot_term(x, e)) p.p in
+//                          match_args ((q, true)::matched_pats) args argpats
 
-                        | (e, imp), _ ->
-                          let pat = aux argpat e, S.is_implicit imp in
-                          match_args (pat::matched_pats) args argpats
-                 end
+//                        | (e, imp), _ ->
+//                          let pat = aux argpat e, S.is_implicit imp in
+//                          match_args (pat::matched_pats) args argpats
+//                 end
 
-                | _ -> failwith (BU.format2 "Unexpected number of pattern arguments: \n\t%s\n\t%s\n" (Print.pat_to_string p) (Print.term_to_string e)) in
+//                | _ -> failwith (BU.format2 "Unexpected number of pattern arguments: \n\t%s\n\t%s\n" (Print.pat_to_string p) (Print.term_to_string e)) in
 
-              match_args [] args argpats
+//              match_args [] args argpats
 
-           | _ ->
-            failwith (BU.format3
-                            "(%s) Impossible: pattern to decorate is %s; expression is %s\n"
-                            (Range.string_of_range qq.p)
-                            (Print.pat_to_string qq)
-                            (Print.term_to_string exp))
-    in
-    aux p exp
+//           | _ ->
+//            failwith (BU.format3
+//                            "(%s) Impossible: pattern to decorate is %s; expression is %s\n"
+//                            (Range.string_of_range qq.p)
+//                            (Print.pat_to_string qq)
+//                            (Print.term_to_string exp))
+//    in
+//    aux p exp
 
  let rec decorated_pattern_as_term (pat:pat) : list<bv> * term =
     let mk f : term = mk f None pat.p in
@@ -586,14 +588,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             | _ -> aux()
           in
           let try_simplify () =
-            let rec maybe_close t x c =
-                match (N.unfold_whnf env t).n with
-                | Tm_refine(y, _) ->
-                  maybe_close y.sort x c
-                | Tm_fvar fv
-                    when S.fv_eq_lid fv C.unit_lid ->
-                  close_comp env [x] c
-                | _ -> c
+            let maybe_close t x c =
+              let t = N.normalize_refinement N.whnf_steps env t in
+              match t.n with
+              | Tm_refine ({ sort = { n = Tm_fvar fv } }, _) when S.fv_eq_lid fv C.unit_lid -> close_comp env [x] c
+              | _ -> c
             in
             if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
             then if U.is_tot_or_gtot_comp c1
@@ -961,7 +960,36 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
         )
     | Some g, apply_guard ->
       match guard_form g with
-        | Trivial -> e, Util.set_result_typ_lc lc t, g
+        | Trivial ->
+          (*
+           * AR: when the guard is trivial, simply setting the result type to t might lose some precision
+           *     e.g. when input lc has return type x:int{phi} and we are weakening it to int
+           *     so we should capture the precision before setting the comp type to t (see e.g. #1500, #1470)
+           *)
+          let strengthen_trivial () =
+            let c = lcomp_comp lc in
+            let res_t = Util.comp_result c in
+            (*
+             * AR: if the computation is pure/ghost then return already should take care of it (also enabling it for pure/ghost bloats the wp a lot)
+             *)
+            if c |> Util.comp_effect_name |> norm_eff_name env |> Util.is_pure_or_ghost_effect ||  //if pure or ghost
+               Util.eq_tm t res_t = Util.Equal then begin  //or res_t = t
+               if Env.debug env <| Options.Extreme
+               then BU.print3 "weaken_result_type::strengthen_trivial: Not inserting the return since either the comp c:%s is pure/ghost or res_t:%s is same as t:%s\n"
+                              (Print.lid_to_string (Util.comp_effect_name c)) (Print.term_to_string res_t) (Print.term_to_string t);
+               Util.set_result_typ c t  //set the result type in c
+            end
+            else
+              let x = S.new_bv (Some res_t.pos) res_t in
+              let cret = return_value env (comp_univ_opt c) res_t (S.bv_to_name x) in
+              let lc = bind e.pos env (Some e) (U.lcomp_of_comp c) (Some x, Util.lcomp_of_comp cret) in
+              if Env.debug env <| Options.Extreme
+              then BU.print4 "weaken_result_type::strengthen_trivial: Inserting a return for e: %s, c: %s, t: %s, and then post return lc: %s\n"
+                             (Print.term_to_string e) (Print.comp_to_string c) (Print.term_to_string t) (Print.lcomp_to_string lc);
+              Util.set_result_typ (lcomp_comp lc) t
+          in
+          let lc = S.mk_lcomp lc.eff_name t lc.cflags strengthen_trivial in
+          e, lc, g
 
         | NonTrivial f ->
           let g = {g with guard_f=Trivial} in
@@ -1098,12 +1126,12 @@ let maybe_instantiate (env:Env.env) e t =
   then e, torig, Env.trivial_guard
   else begin
        if Env.debug env Options.High then
-         BU.print2 "maybe_instantiate: starting check for (%s) of type (%s)\n"
-                 (Print.term_to_string e) (Print.term_to_string t);
+         BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
+                 (Print.term_to_string e) (Print.term_to_string t) (FStar.Common.string_of_option Print.term_to_string (Env.expected_typ env));
        let number_of_implicits t =
             let formals, _ = U.arrow_formals t in
             let n_implicits =
-            match formals |> BU.prefix_until (fun (_, imp) -> imp=None || imp=Some Equality) with
+            match formals |> BU.prefix_until (fun (_, imp) -> Option.isNone imp || U.eq_aqual imp (Some Equality) = U.Equal) with
                 | None -> List.length formals
                 | Some (implicits, _first_explicit, _rest) -> List.length implicits in
             n_implicits
@@ -1134,7 +1162,7 @@ let maybe_instantiate (env:Env.env) e t =
               let rec aux subst inst_n bs =
                   match inst_n, bs with
                   | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
-                  | _, (x, Some (Implicit dot))::rest ->
+                  | _, (x, Some (Implicit _))::rest ->
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
                       if Env.debug env Options.High then
@@ -1142,7 +1170,7 @@ let maybe_instantiate (env:Env.env) e t =
                                 (Print.term_to_string v);
                       let subst = NT(x, v)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some (Implicit dot))::args, bs, subst, Env.conj_guard g g'
+                      (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
 
                   | _, (x, Some (Meta tau))::rest ->
                       let t = SS.subst subst x.sort in

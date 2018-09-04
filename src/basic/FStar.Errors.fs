@@ -317,6 +317,9 @@ type raw_error =
   | Warning_logicqualifier
   | Fatal_CyclicDependence
   | Error_InductiveAnnotNotAType
+  | Fatal_FriendInterface
+  | Error_CannotRedefineConst
+  | Error_BadClassDecl
 
 type flag =
   | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
@@ -642,6 +645,9 @@ let default_flags =
   (Warning_logicqualifier                            , CWarning);
   (Fatal_CyclicDependence                            , CFatal);
   (Error_InductiveAnnotNotAType                      , CError);
+  (Fatal_FriendInterface                             , CFatal);
+  (Error_CannotRedefineConst                         , CError);
+  (Error_BadClassDecl                                , CError);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]

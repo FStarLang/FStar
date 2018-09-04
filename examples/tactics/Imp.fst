@@ -185,17 +185,18 @@ let _ = assert_norm (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 
 #set-options "--max_fuel 0"
 // --tactic_trace"
 let _ = assert (forall x. poly5 x `equiv` poly5' x)
-          by (fun () -> let _ = forall_intros () in
-		     compute ();
-		     dump "after norm";
-		     canon_semiring int_cr;
-		     dump "final")
+            by (let _ = forall_intros () in
+                compute ();
+                (* dump "after norm"; *)
+                canon_semiring int_cr;
+                (* dump "final"; *)
+                ())
 
 // Takes long.. try again later
 //let _ = assert (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
-//          by (fun () -> let _ = forall_intros () in
-//		     compute ();
-//		     dump "after norm";
-//		     canon_semiring int_cr;
-//		     dump "final")
+//          by (let _ = forall_intros () in
+//           compute ();
+//           dump "after norm";
+//           canon_semiring int_cr;
+//           dump "final")
 //    

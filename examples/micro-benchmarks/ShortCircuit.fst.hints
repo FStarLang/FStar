@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "f18189f2566b8ff69d0e324ac107eaaf"
+      "7c83863f13a551f2e84df28ace114ec6"
     ],
     [
       "ShortCircuit.test2",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "d349ac504a15ffce03cb3eb76503cf3c"
+      "1e4112ebb37c0c50a0a4e45eeced35ee"
     ],
     [
       "ShortCircuit.test3",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "ac1f49c0a147446753efea15e1741f88"
+      "53052a437f47dad053f4535a74cddb2c"
     ],
     [
       "ShortCircuit.test4",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "4deeee0dbca743178d6a9e44e51d683e"
+      "69ce84979029d58d98b957a8fad0713d"
     ],
     [
       "ShortCircuit.test1'",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "f350e006d46a62a8c43beadab61f31ac"
+      "7ab09408d42e6506fc76aa0a2eda31be"
     ],
     [
       "ShortCircuit.test2'",
@@ -53,7 +53,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "cbd3e7993db4a877235d936cf39a2f13"
+      "9477491a931fb9e6256ed01ba83b2630"
     ],
     [
       "ShortCircuit.test3'",
@@ -62,7 +62,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "5de59059bd413a5cc6e5878206cc902a"
+      "87183c89f79e15748b19f9dbd6834213"
     ],
     [
       "ShortCircuit.test4'",
@@ -71,7 +71,79 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "b3ff9b9a536ae13fa804d0eeb50bad51"
+      "27a80d8b3ed0e2aaea872dc58c1f1b4a"
+    ],
+    [
+      "ShortCircuit.test1",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "f0c508aafec32d8c476aed68ec940f6d"
+    ],
+    [
+      "ShortCircuit.test2",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "8abad6173f0287c00d0c1db77e0e97cd"
+    ],
+    [
+      "ShortCircuit.test3",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "4691dea3fdf5c649c6f1ff9d1b07d1df"
+    ],
+    [
+      "ShortCircuit.test4",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "fdf6195639e20de4d9ecbb864f9d23e5"
+    ],
+    [
+      "ShortCircuit.test1'",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "66fe36a24711ca22658098ec768647df"
+    ],
+    [
+      "ShortCircuit.test2'",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "d827bddf8ddb0a30aa7239bd97bdc2c0"
+    ],
+    [
+      "ShortCircuit.test3'",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "2ae3b398987874f69f858e5f7916760e"
+    ],
+    [
+      "ShortCircuit.test4'",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "888d0bbd97243a1c3a243effe4fc4651"
     ]
   ]
 ]

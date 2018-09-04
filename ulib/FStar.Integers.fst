@@ -6,7 +6,7 @@ irreducible
 let mark_for_norm = ()
 
 unfold
-let norm (#a:Type) (x:a) = norm [iota; delta_attr mark_for_norm] x
+let norm (#a:Type) (x:a) = norm [iota; delta_attr [`%mark_for_norm]] x
 
 type width =
   | W8

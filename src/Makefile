@@ -138,6 +138,11 @@ clean-ocaml: clean_boot
 clean_extracted:
 	rm -f ocaml-output/FStar_*.ml
 
+rebuild:
+	$(MAKE) ocaml
+	$(MAKE) -C ../ulib clean_ocaml
+	$(MAKE) -C ocaml-output
+	$(MAKE) -C ../ulib install-fstarlib install-fstar-tactics
 # --------------------------------------------------------------------
 # Testing
 # --------------------------------------------------------------------

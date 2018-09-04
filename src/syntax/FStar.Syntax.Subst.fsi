@@ -28,6 +28,7 @@ val shift_subst:        int -> subst_t -> subst_t
 val subst:              list<subst_elt> -> term -> term
 val subst':           subst_ts -> term -> term
 val subst_comp:         list<subst_elt> -> comp -> comp
+val subst_imp:          list<subst_elt> -> aqual -> aqual
 val subst_binders:      list<subst_elt> -> binders -> binders
 val compress:           term -> term
 val compress_univ:      universe -> universe

@@ -29,7 +29,7 @@ let formula =
  /\ phi /\ phi /\ phi /\ phi /\ phi /\ phi
  /\ phi /\ phi /\ phi /\ phi /\ phi /\ phi )
 
-let tau b () =
+let tau b =
     norm [delta];
     repeatseq (fun () -> first [split; implies_intro'; (fun () -> apply_lemma (`lem))]);
     if b then

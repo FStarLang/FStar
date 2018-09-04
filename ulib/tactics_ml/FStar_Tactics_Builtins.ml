@@ -27,8 +27,9 @@ let tr_repr_steps =
               | Iota          -> EMB.Iota
               | NBE           -> EMB.NBE
               | Reify         -> EMB.Reify
-              | UnfoldOnly ss -> EMB.UnfoldOnly ss
+              | UnfoldOnly  ss -> EMB.UnfoldOnly ss
               | UnfoldFully ss -> EMB.UnfoldFully ss
+              | UnfoldAttr  ss -> EMB.UnfoldAttr  ss
     in List.map tr1
 
 let to_tac_0 (t: 'a __tac): 'a B.tac =
@@ -61,15 +62,12 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
           interpret_tac m ps
 
 (* Pointing to the internal primitives *)
+let get                     = from_tac_1 (fun () -> B.get) (* silly.. *)
+let set_goals               = from_tac_1 B.set_goals
+let set_smt_goals           = from_tac_1 B.set_smt_goals
 let fail                    = from_tac_1 B.fail
 let top_env                 = from_tac_1 B.top_env
-let cur_env                 = from_tac_1 B.cur_env
-let cur_goal                = from_tac_1 B.cur_goal'
-let cur_witness             = from_tac_1 B.cur_witness
 let fresh                   = from_tac_1 B.fresh
-let ngoals                  = from_tac_1 B.ngoals
-let ngoals_smt              = from_tac_1 B.ngoals_smt
-let is_guard                = from_tac_1 B.is_guard
 let refine_intro            = from_tac_1 B.refine_intro
 let tc                      = from_tac_1 B.tc
 let unshelve                = from_tac_1 B.unshelve
@@ -86,19 +84,14 @@ let binder_retype           = from_tac_1 B.binder_retype
 let clear_top               = from_tac_1 B.clear_top
 let clear                   = from_tac_1 B.clear
 let rewrite                 = from_tac_1 B.rewrite
-let smt                     = from_tac_1 B.smt
 let t_exact                 = from_tac_3 B.t_exact
 let t_apply                 = from_tac_2 B.t_apply
 let apply_lemma             = from_tac_1 B.apply_lemma
 let print                   = from_tac_1 B.print
-let debug                   = from_tac_1 B.debug
+let debugging               = from_tac_1 B.debugging
 let dump                    = from_tac_1 B.print_proof_state
-let dump1                   = from_tac_1 B.print_proof_state1
 let trefl                   = from_tac_1 B.trefl
-let later                   = from_tac_1 B.later
 let dup                     = from_tac_1 B.dup
-let flip                    = from_tac_1 B.flip
-let qed                     = from_tac_1 B.qed
 let prune                   = from_tac_1 B.prune
 let addns                   = from_tac_1 B.addns
 let cases                   = from_tac_1 B.cases
@@ -112,8 +105,8 @@ let change                  = from_tac_1 B.change
 let get_guard_policy        = from_tac_1 B.get_guard_policy
 let set_guard_policy        = from_tac_1 B.set_guard_policy
 let lax_on                  = from_tac_1 B.lax_on
-let dismiss                 = from_tac_1 B.dismiss
-let tadmit                  = from_tac_1 B.tadmit
+let tadmit_t                = from_tac_1 B.tadmit_t
+let join                    = from_tac_1 B.join
 let inspect                 = from_tac_1 B.inspect
 let pack                    = from_tac_1 B.pack
 
@@ -129,24 +122,12 @@ let fmap f r =
     | Success (a, ps) -> Success (f a, ps)
     | Failed (msg, ps) -> Failed (msg, ps)
 
-(* Those that need some reification. Maybe we can do this somewhere else
+(* Those that need some translations. Maybe we can do this somewhere else
  * or automatically, but keep it for now *)
-let __catch (t: 'a __tac): ((string, 'a) FStar_Pervasives.either) __tac =
-        fun ps -> fmap fix_either (from_tac_1 B.catch (to_tac_0 t) ps)
-let catch: (unit -> 'a __tac) -> ((string, 'a) FStar_Pervasives.either) __tac = fun t -> __catch (E.reify_tactic t)
+let catch (t: unit -> 'a __tac): ((string, 'a) FStar_Pervasives.either) __tac =
+        fun ps -> fmap fix_either (from_tac_1 B.catch (to_tac_0 (t ())) ps)
 
-let __divide (n:int) (f: 'a __tac) (g: 'b __tac): ('a * 'b) __tac = from_tac_3 B.divide n (to_tac_0 f) (to_tac_0 g)
-let divide: int -> (unit -> 'a __tac) -> (unit -> 'b __tac) -> ('a * 'b) __tac =
-    fun n f g -> __divide n (f ()) (g ())
+let t_pointwise (d : direction) (t: unit -> unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 (t ()))
 
-let __seq (t1: unit __tac) (t2: unit __tac): unit __tac = from_tac_2 B.seq (to_tac_0 t1) (to_tac_0 t2)
-let seq: (unit -> unit __tac) -> (unit -> unit __tac) -> unit __tac = fun f -> fun g -> __seq (f ()) (g ())
-
-let __pointwise (d : direction) (t: unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 t)
-let pointwise:  (unit -> unit __tac) -> unit __tac = fun tau -> __pointwise BottomUp (E.reify_tactic tau)
-let pointwise': (unit -> unit __tac) -> unit __tac = fun tau -> __pointwise TopDown  (E.reify_tactic tau)
-
-let __topdown_rewrite (t1 : RT.term -> (bool * int) __tac) (t2 : unit __tac) : unit __tac =
-        from_tac_2 B.topdown_rewrite (to_tac_1 t1) (to_tac_0 t2)
-let topdown_rewrite : (RT.term -> (bool * int) __tac) -> (unit -> unit __tac) -> unit __tac =
-        fun t1 t2 -> __topdown_rewrite t1 (E.reify_tactic t2)
+let topdown_rewrite (t1 : RT.term -> (bool * int) __tac) (t2 : unit -> unit __tac) : unit __tac =
+        from_tac_2 B.topdown_rewrite (to_tac_1 t1) (to_tac_0 (t2 ()))

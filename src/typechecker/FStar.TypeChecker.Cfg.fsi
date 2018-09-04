@@ -35,9 +35,9 @@ type fsteps = {
      primops : bool;
      do_not_unfold_pure_lets : bool;
      unfold_until : option<S.delta_depth>;
-     unfold_only : option<list<I.lid>>;
+     unfold_only  : option<list<I.lid>>;
      unfold_fully : option<list<I.lid>>;
-     unfold_attr : option<list<attribute>>;
+     unfold_attr  : option<list<I.lid>>;
      unfold_tac : bool;
      pure_subterms_within_computations : bool;
      simplify : bool;
@@ -74,8 +74,8 @@ type primitive_step = {
     auto_reflect:option<int>;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
-    interpretation:(psc -> args -> option<term>);
-    interpretation_nbe:(NBE.args -> option<NBE.t>)
+    interpretation:(psc -> FStar.Syntax.Embeddings.norm_cb -> args -> option<term>);
+    interpretation_nbe:(NBE.nbe_cbs -> NBE.args -> option<NBE.t>)
 }
 
 type debug_switches = {
@@ -102,6 +102,11 @@ type cfg = {
      reifying : bool;
 }
 
+(* Profiling primitive operators *)
+val primop_time_reset : unit -> unit
+val primop_time_count : string -> int -> unit
+val primop_time_report : unit -> string
+
 val cfg_env: cfg -> Env.env
 
 val cfg_to_string : cfg -> string
@@ -116,6 +121,8 @@ val log_nbe : cfg -> (unit -> unit) -> unit
 val is_prim_step: cfg -> fv -> bool
 val find_prim_step: cfg -> fv -> option<primitive_step>
 
+val embed_simple: EMB.embedding<'a> -> Range.range -> 'a -> term
+val try_unembed_simple: EMB.embedding<'a> -> term -> option<'a>
 val built_in_primitive_steps : BU.psmap<primitive_step>
 val equality_ops : BU.psmap<primitive_step>
 

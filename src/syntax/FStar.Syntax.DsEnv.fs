@@ -35,7 +35,7 @@ module U = FStar.Syntax.Util
 module BU = FStar.Util
 module Const = FStar.Parser.Const
 
-type local_binding = (ident * bv * bool)                  (* local name binding for name resolution, paired with an env-generated unique name and a boolean that is true when the variable has been introduced with let-mutable *)
+type local_binding = (ident * bv)                         (* local name binding for name resolution, paired with an env-generated unique name *)
 type rec_binding   = (ident * lid * delta_depth)          (* name bound by recursive type and top-level let-bindings definitions only *)
 type module_abbrev = (ident * lident)                     (* module X = A.B.C, where A.B.C is fully qualified and already resolved *)
 
@@ -95,7 +95,8 @@ type env = {
   docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
   remaining_iface_decls:list<(lident*list<Parser.AST.decl>)>;  (* A map from interface names to their stil-to-be-processed top-level decls *)
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
-  ds_hooks:             dsenv_hooks                       (* hooks that the interactive more relies onto for symbol tracking *)
+  ds_hooks:             dsenv_hooks;                       (* hooks that the interactive more relies onto for symbol tracking *)
+  dep_graph:            FStar.Parser.Dep.deps
 }
 and dsenv_hooks =
   { ds_push_open_hook : env -> open_module_or_namespace -> unit;
@@ -110,7 +111,7 @@ let default_ds_hooks =
     ds_push_module_abbrev_hook = (fun _ _ _ -> ()) }
 
 type foundname =
-  | Term_name of typ * bool * list<attribute> // bool indicates if mutable
+  | Term_name of typ * list<attribute>
   | Eff_name  of sigelt * lident
 
 let set_iface env b = {env with iface=b}
@@ -156,7 +157,7 @@ let set_syntax_only env b = { env with syntax_only = b }
 let ds_hooks env = env.ds_hooks
 let set_ds_hooks env hooks = { env with ds_hooks = hooks }
 let new_sigmap () = BU.smap_create 100
-let empty_env () = {curmodule=None;
+let empty_env deps = {curmodule=None;
                     curmonad=None;
                     modules=[];
                     scope_mods=[];
@@ -171,8 +172,10 @@ let empty_env () = {curmodule=None;
                     docs=new_sigmap();
                     remaining_iface_decls=[];
                     syntax_only=false;
-                    ds_hooks=default_ds_hooks}
-
+                    ds_hooks=default_ds_hooks;
+                    dep_graph=deps}
+let dep_graph env = env.dep_graph
+let set_dep_graph env ds = {env with dep_graph=ds}
 let sigmap env = env.sigmap
 let has_all_in_scope env =
   List.existsb (fun (m, _) ->
@@ -187,15 +190,10 @@ let bv_to_name bv r = bv_to_name (set_bv_range bv r)
 let unmangleMap = [("op_ColonColon", "Cons", delta_constant, Some Data_ctor);
                    ("not", "op_Negation", delta_equational, None)]
 
-let unmangleOpName (id:ident) : option<(term * bool)> =
-  let t =
+let unmangleOpName (id:ident) : option<term> =
   find_map unmangleMap (fun (x,y,dd,dq) ->
-    if (id.idText = x) then Some (S.fvar (lid_of_path ["Prims"; y] id.idRange) dd dq)
+    if (id.idText = x) then Some (S.fvar (lid_of_path ["Prims"; y] id.idRange) dd dq) //NS delta ok
     else None)
-  in
-  match t with
-  | Some v -> Some (v, false)
-  | None -> None
 
 type cont_t<'a> =
     | Cont_ok of 'a  (* found *)
@@ -284,10 +282,10 @@ let try_lookup_id''
   (k_rec_binding:   rec_binding   -> cont_t<'a>)
   (k_record: (record_or_dc) -> cont_t<'a>)
   (find_in_module: lident -> cont_t<'a>)
-  (lookup_default_id: cont_t<'a> -> ident -> cont_t<'a>)
+  (lookup_default_id: cont_t<'a> -> ident -> cont_t<'a>) : option<'a>
   =
     let check_local_binding_id : local_binding -> bool = function
-      (id', _, _) -> id'.idText=id.idText
+      (id', _) -> id'.idText=id.idText
     in
     let check_rec_binding_id : rec_binding -> bool = function
       (id', _, _) -> id'.idText=id.idText
@@ -333,8 +331,8 @@ let try_lookup_id''
 
     in aux env.scope_mods
 
-let found_local_binding r (id', x, mut) =
-    (bv_to_name x r, mut)
+let found_local_binding r (id', x) =
+    (bv_to_name x r)
 
 let find_in_module env lid k_global_def k_not_found =
     begin match BU.smap_try_find (sigmap env) lid.str with
@@ -342,7 +340,7 @@ let find_in_module env lid k_global_def k_not_found =
         | None -> k_not_found
     end
 
-let try_lookup_id env (id:ident) =
+let try_lookup_id env (id:ident) : option<term> =
   match unmangleOpName id with
   | Some f -> Some f
   | _ ->
@@ -532,6 +530,17 @@ let ns_of_lid_equals (lid: lident) (ns: lident) =
     List.length lid.ns = List.length (ids_of_lid ns) &&
     lid_equals (lid_of_ids lid.ns) ns
 
+let delta_depth_of_declaration (lid:lident) (quals:list<qualifier>) =
+    let dd = if U.is_primop_lid lid
+            || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+            then delta_equational
+            else delta_constant in
+    if quals |> BU.for_some (function Abstract -> true | _ -> false)
+    || (quals |> BU.for_some (function Assumption -> true | _ -> false)
+    && not (quals |> BU.for_some (function New -> true | _ -> false)))
+    then Delta_abstract dd
+    else dd
+
 let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> =
   let occurrence_range = Ident.range_of_lid lid in
 
@@ -539,50 +548,42 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       | (_, true) when exclude_interf -> None
       | (se, _) ->
         begin match se.sigel with
-          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid delta_constant None, false, se.sigattrs))
-          | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid delta_constant (fv_qual_of_se se), false, se.sigattrs))
+          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid delta_constant None, se.sigattrs)) //NS delta: ok
+          | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid delta_constant (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
           | Sig_let((_, lbs), _) ->
             let fv = lb_fv lbs source_lid in
-            Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false, se.sigattrs))
+            Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, se.sigattrs))
           | Sig_declare_typ(lid, _, _) ->
             let quals = se.sigquals in
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
             || quals |> BU.for_some (function Assumption -> true | _ -> false)
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
-                 let dd = if U.is_primop_lid lid
-                          || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
-                          then delta_equational
-                          else delta_constant in
-                 let dd = if quals |> BU.for_some (function Abstract -> true | _ -> false)
-                          || (quals |> BU.for_some (function Assumption -> true | _ -> false)
-                            && not (quals |> BU.for_some (function New -> true | _ -> false)))
-                          then Delta_abstract dd
-                          else dd in
+                 let dd = delta_depth_of_declaration lid quals in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
-                        Some (Term_name (refl_const, false, se.sigattrs))
-                 | _ -> Some (Term_name(fvar lid dd (fv_qual_of_se se), false, se.sigattrs))
+                        Some (Term_name (refl_const, se.sigattrs))
+                 | _ -> Some (Term_name(fvar lid dd (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
                  end
             else None
             | Sig_new_effect_for_free (ne) | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
             | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
             | Sig_splice (lids, t) ->
                 // TODO: This depth is probably wrong
-                Some (Term_name (S.fvar source_lid (Delta_constant_at_level 1) None, false, []))
+                Some (Term_name (S.fvar source_lid (Delta_constant_at_level 1) None, [])) //NS delta: wrong
             | _ -> None
         end in
 
-  let k_local_binding r = let (t, mut) = found_local_binding (range_of_lid lid) r in Some (Term_name (t, mut, []))
+  let k_local_binding r = let t = found_local_binding (range_of_lid lid) r in Some (Term_name (t, []))
   in
 
-  let k_rec_binding (id, l, dd) = Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, false, []))
+  let k_rec_binding (id, l, dd) = Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, [])) //NS delta: ok
   in
 
   let found_unmangled = match lid.ns with
   | [] ->
     begin match unmangleOpName lid.ident with
-    | Some (t, mut) -> Some (Term_name (t, mut, []))
+    | Some t -> Some (Term_name (t, []))
     | _ -> None
     end
   | _ -> None
@@ -657,7 +658,7 @@ let try_lookup_let env (lid:lident) =
   let k_global_def lid = function
       | ({ sigel = Sig_let((_, lbs), _) }, _) ->
         let fv = lb_fv lbs lid in
-        Some (fvar lid fv.fv_delta fv.fv_qual)
+        Some (fvar lid fv.fv_delta fv.fv_qual) //NS delta: ok
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
@@ -676,22 +677,22 @@ let try_lookup_definition env (lid:lident) =
 let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
 let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
 
-let try_lookup_lid' any_val exclude_interface env (lid:lident) : option<(term * bool * list<attribute>)> =
+let try_lookup_lid' any_val exclude_interface env (lid:lident) : option<(term * list<attribute>)> =
   match try_lookup_name any_val exclude_interface env lid with
-    | Some (Term_name (e, mut, attrs)) -> Some (e, mut, attrs)
+    | Some (Term_name (e, attrs)) -> Some (e, attrs)
     | _ -> None
 
-let drop_attributes (x:option<(term * bool * list<attribute>)>) :option<(term * bool)> =
+let drop_attributes (x:option<(term * list<attribute>)>) :option<(term)> =
   match x with
-  | Some (t, mut, _) -> Some (t, mut)
-  | None             -> None
+  | Some (t, _) -> Some t
+  | None        -> None
 
-let try_lookup_lid_with_attributes (env:env) (l:lident) :(option<(term * bool * list<attribute>)>) = try_lookup_lid' env.iface false env l
+let try_lookup_lid_with_attributes (env:env) (l:lident) :(option<(term * list<attribute>)>) = try_lookup_lid' env.iface false env l
 let try_lookup_lid (env:env) l = try_lookup_lid_with_attributes env l |> drop_attributes
 let resolve_to_fully_qualified_name (env:env) (l:lident) =
     match try_lookup_lid env l with
     | None -> None
-    | Some (e, _) ->
+    | Some e ->
       match (Subst.compress e).n with
       | Tm_fvar fv -> Some fv.fv_name.v
       | _ -> None
@@ -710,12 +711,12 @@ let shorten_lid env lid =
     | Some lid' when lid'.str = lid.str -> lid_without_ns
     | _ -> shorten_lid' env lid
 
-let try_lookup_lid_with_attributes_no_resolve (env: env) l :option<(term * bool * list<attribute>)> =
+let try_lookup_lid_with_attributes_no_resolve (env: env) l :option<(term * list<attribute>)> =
   let env' = {env with scope_mods = [] ; exported_ids=empty_exported_id_smap; includes=empty_include_smap }
   in
   try_lookup_lid_with_attributes env' l
 
-let try_lookup_lid_no_resolve (env: env) l :option<(term * bool)> = try_lookup_lid_with_attributes_no_resolve env l |> drop_attributes
+let try_lookup_lid_no_resolve (env: env) l :option<term> = try_lookup_lid_with_attributes_no_resolve env l |> drop_attributes
 
 let try_lookup_doc (env: env) (l:lid) =
   BU.smap_try_find env.docs l.str
@@ -891,15 +892,9 @@ let unique any_val exclude_interface env lid =
 let push_scope_mod env scope_mod =
  {env with scope_mods = scope_mod :: env.scope_mods}
 
-let push_bv' env (x:ident) is_mutable =
+let push_bv env (x:ident) =
   let bv = S.gen_bv x.idText (Some x.idRange) tun in
-  push_scope_mod env (Local_binding (x, bv, is_mutable)), bv
-
-let push_bv_mutable env x =
-  push_bv' env x true
-
-let push_bv env x =
-  push_bv' env x false
+  push_scope_mod env (Local_binding (x, bv)), bv
 
 let push_top_level_rec_binding env (x:ident) dd =
   let l = qualify env x in

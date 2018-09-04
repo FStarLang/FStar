@@ -13,8 +13,8 @@ let f n = n
 
 val g: rint u -> rint r
 
-//This fails
+//This fails: (NS: not any more)
 let g n = n
 
-//This works
-let g n = let m:int = n in m
+//This also works
+let g' n = let m:int = n in m

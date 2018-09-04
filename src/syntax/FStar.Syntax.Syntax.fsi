@@ -51,6 +51,14 @@ type pragma =
 
 type memo<'a> = ref<option<'a>>
 
+(* Simple types used in native compilation
+ * to record the types of lazily embedded terms
+ *)
+type emb_typ =
+  | ET_abstract
+  | ET_fun  of emb_typ * emb_typ
+  | ET_app  of string * list<emb_typ>
+
 //versioning for unification variables
 type version = {
     major:int;
@@ -83,22 +91,6 @@ type delta_depth =
   | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
   | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
-
-///[@ PpxDerivingYoJson PpxDerivingShow ]
-// Different kinds of lazy terms. These are used to decide the unfolding
-// function, instead of keeping the closure inside the lazy node, since
-// that means we cannot have equality on terms (not serious) nor call
-// output_value on them (serious).
-type lazy_kind =
-  | BadLazy
-  | Lazy_bv
-  | Lazy_binder
-  | Lazy_fvar
-  | Lazy_comp
-  | Lazy_env
-  | Lazy_proofstate
-  | Lazy_sigelt
-  | Lazy_uvar
 
 type should_check_uvar =
   | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
@@ -205,8 +197,6 @@ and meta_source_info =
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
-  | Mutable_alloc
-  | Mutable_rval
 and fv_qual =
   | Data_ctor
   | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
@@ -256,9 +246,25 @@ and attribute = term
 and lazyinfo = {
     blob  : dyn;
     lkind : lazy_kind;
-    typ   : typ;
+    ltyp  : typ;
     rng   : Range.range;
 }
+// Different kinds of lazy terms. These are used to decide the unfolding
+// function, instead of keeping the closure inside the lazy node, since
+// that means we cannot have equality on terms (not serious) nor call
+// output_value on them (serious).
+and lazy_kind =
+  | BadLazy
+  | Lazy_bv
+  | Lazy_binder
+  | Lazy_fvar
+  | Lazy_comp
+  | Lazy_env
+  | Lazy_proofstate
+  | Lazy_goal
+  | Lazy_sigelt
+  | Lazy_uvar
+  | Lazy_embedding of emb_typ * FStar.Common.thunk<term>
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * tscheme
@@ -287,6 +293,7 @@ type freenames_l = list<bv>
 type formula = typ
 type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
+val new_id_set: unit -> set<ident>
 val new_fv_set: unit -> set<lident>
 val new_universe_names_set: unit -> set<univ_name>
 
@@ -547,6 +554,7 @@ val eq_pat : pat -> pat -> bool
 module C = FStar.Parser.Const
 val delta_constant  : delta_depth
 val delta_equational: delta_depth
+val fvconst         : lident -> fv
 val tconst          : lident -> term
 val tabbrev         : lident -> term
 val tdataconstr     : lident -> term
@@ -564,7 +572,6 @@ val t_decls         : term
 val t_binder        : term
 val t_bv            : term
 val t_tactic_unit   : term
-val t_tac_unit      : term
 val t_list_of       : term -> term
 val t_option_of     : term -> term
 val t_tuple2_of     : term -> term -> term

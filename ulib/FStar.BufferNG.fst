@@ -162,7 +162,7 @@ val createL
      length b == len /\
      frameOf b == (HS.get_tip h0) /\
      P.modifies_0 h0 h1 /\
-     as_seq h1 b == Seq.of_list init /\
+     as_seq h1 b == Seq.seq_of_list init /\
      q #a len b
    ))
  
@@ -171,7 +171,7 @@ val createL
 
 let createL #a init =
   let len : P.array_length_t = UInt32.uint_to_t (List.Tot.length init) in
-  let s = Seq.of_list init in
+  let s = Seq.seq_of_list init in
   let content = P.screate (P.TArray len a) (Some s) in
   P.buffer_of_array_pointer content
 

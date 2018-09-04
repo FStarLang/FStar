@@ -44,6 +44,7 @@ let bytes_lid       = pconst "bytes"
 let int_lid         = pconst "int"
 let exn_lid         = pconst "exn"
 let list_lid        = pconst "list"
+let eqtype_lid      = pconst "eqtype"
 let option_lid      = psnconst "option"
 let either_lid      = psconst "either"
 let pattern_lid     = pconst "pattern"
@@ -261,7 +262,11 @@ let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
 let fail_attr      = psconst "expect_failure"
 let fail_lax_attr  = psconst "expect_lax_failure"
-let assume_strictly_positive_attr_lid = p2l ["FStar"; "Pervasives"; "assume_strictly_positive"]
+let tcdecltime_attr = psconst "tcdecltime"
+let assume_strictly_positive_attr_lid = psconst "assume_strictly_positive"
+let unifier_hint_injective_lid = psconst "unifier_hint_injective"
+let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
+let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 
 let gen_reset =
     let x = U.mk_ref 0 in
@@ -354,18 +359,17 @@ let is_name (lid:lident) =
 let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStar.Range.dummyRange
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
-let u_tac_lid = fstar_tactics_lid' ["Effect"; "__tac"]
 
+let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
-let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "instance"]
+let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
 
 let effect_TAC_lid = fstar_tactics_lid' ["Effect"; "TAC"] // actual effect
 let effect_Tac_lid = fstar_tactics_lid' ["Effect"; "Tac"] // trivial variant
 
-let by_tactic_lid = fstar_tactics_lid' ["Effect"; "__by_tactic"]
+let by_tactic_lid = fstar_tactics_lid' ["Effect"; "with_tactic"]
 let synth_lid = fstar_tactics_lid' ["Effect"; "synth_by_tactic"]
 let assert_by_tactic_lid = fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
-let reify_tactic_lid = fstar_tactics_lid' ["Effect"; "reify_tactic"]
 let fstar_syntax_syntax_term = FStar.Ident.lid_of_str "FStar.Syntax.Syntax.term"
 let binder_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binder"]) FStar.Range.dummyRange
 let binders_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binders"]) FStar.Range.dummyRange

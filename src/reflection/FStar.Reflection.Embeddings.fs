@@ -19,7 +19,10 @@ module Print = FStar.Syntax.Print
 module Env = FStar.TypeChecker.Env
 module Err = FStar.Errors
 module Z = FStar.BigInt
+module EMB = FStar.Syntax.Embeddings
 open FStar.Reflection.Basic //needed for inspect_fv, but that feels wrong
+module NBETerm = FStar.TypeChecker.NBETerm
+module PC = FStar.Parser.Const
 
 open FStar.Dyn
 
@@ -31,6 +34,12 @@ open FStar.Dyn
 (* -------------------------------------------------------------------------------------- *)
 (* ------------------------------------- EMBEDDINGS ------------------------------------- *)
 (* -------------------------------------------------------------------------------------- *)
+let mk_emb f g t =
+    mk_emb (fun x r _topt _norm -> f r x)
+           (fun x w _norm -> g w x)
+           (EMB.term_as_fv t)
+let embed e r x = embed e x r None id_norm_cb
+let unembed' w e x = unembed e x w id_norm_cb
 
 let e_bv =
     let embed_bv (rng:Range.range) (bv:bv) : term =
@@ -38,8 +47,8 @@ let e_bv =
     in
     let unembed_bv w (t:term) : option<bv> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_bv ->
-            Some (undyn i.blob)
+        | Tm_lazy {blob=b; lkind=Lazy_bv} ->
+            Some (undyn b)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv: %s" (Print.term_to_string t)));
@@ -53,8 +62,8 @@ let e_binder =
     in
     let unembed_binder w (t:term) : option<binder> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_binder ->
-            Some (undyn i.blob)
+        | Tm_lazy {blob=b; lkind=Lazy_binder} ->
+            Some (undyn b)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded binder: %s" (Print.term_to_string t)));
@@ -81,6 +90,7 @@ let e_term_aq aq =
                                    aq) (fun s ->
             Some (SS.subst s t))
         in
+        let t = U.unmeta t in
         match (SS.compress t).n with
         | Tm_quoted (tm, qi) ->
             apply_antiquotes tm qi.antiquotes
@@ -129,8 +139,8 @@ let e_fv =
     in
     let unembed_fv w (t:term) : option<fv> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_fvar ->
-            Some (undyn i.blob)
+        | Tm_lazy {blob=b; lkind=Lazy_fvar} ->
+            Some (undyn b)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded fvar: %s" (Print.term_to_string t)));
@@ -144,8 +154,8 @@ let e_comp =
     in
     let unembed_comp w (t:term) : option<comp> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_comp ->
-            Some (undyn i.blob)
+        | Tm_lazy {blob=b; lkind=Lazy_comp} ->
+            Some (undyn b)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded comp: %s" (Print.term_to_string t)));
@@ -159,8 +169,8 @@ let e_env =
     in
     let unembed_env w (t:term) : option<Env.env> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_env ->
-            Some (undyn i.blob)
+        | Tm_lazy {blob=b; lkind=Lazy_env} ->
+            Some (undyn b)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded env: %s" (Print.term_to_string t)));
@@ -181,6 +191,10 @@ let e_const =
                         None Range.dummyRange
         | C_String s ->
             S.mk_Tm_app ref_C_String.t [S.as_arg (embed e_string rng s)]
+                        None Range.dummyRange
+
+        | C_Range r ->
+            S.mk_Tm_app ref_C_Range.t [S.as_arg (embed e_range rng r)]
                         None Range.dummyRange
         in { r with pos = rng }
     in
@@ -204,6 +218,10 @@ let e_const =
         | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv ref_C_String.lid ->
             BU.bind_opt (unembed' w e_string s) (fun s ->
             Some <| C_String s)
+
+        | Tm_fvar fv, [(r, _)] when S.fv_eq_lid fv ref_C_Range.lid ->
+            BU.bind_opt (unembed' w e_range r) (fun r ->
+            Some <| C_Range r)
 
         | _ ->
             if w then
@@ -523,8 +541,8 @@ let e_sigelt =
     in
     let unembed_sigelt w (t:term) : option<sigelt> =
         match (SS.compress t).n with
-        | Tm_lazy i when i.lkind = Lazy_sigelt ->
-            Some (undyn i.blob)
+        | Tm_lazy {blob=b; lkind=Lazy_sigelt} ->
+            Some (undyn b)
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt: %s" (Print.term_to_string t)));
@@ -537,17 +555,20 @@ let e_sigelt =
 // so we don't write these things
 let e_ident : embedding<I.ident> =
     let repr = e_tuple2 e_range e_string in
-    let embed_ident (rng:Range.range) (i:I.ident) : term =
+    let embed_ident (i:I.ident) (rng:Range.range)  _ _ : term =
         embed repr rng (I.range_of_id i, I.text_of_id i)
     in
-    let unembed_ident w (t:term) : option<I.ident> =
+    let unembed_ident (t:term) w _ : option<I.ident> =
         match unembed' w repr t with
         | Some (rng, s) -> Some (I.mk_ident (s, rng))
         | None -> None
     in
-    mk_emb embed_ident unembed_ident (S.t_tuple2_of S.t_range S.t_string)
-    // TODO: again a delta depth issue, should be this
-    (* fstar_refl_ident *)
+    mk_emb_full
+      embed_ident
+      unembed_ident
+      (S.t_tuple2_of S.t_range S.t_string)
+      FStar.Ident.text_of_id
+      (emb_typ_of repr)
 
 let e_univ_name =
     (* TODO: Should be this, but there's a delta depth issue *)

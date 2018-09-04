@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
       0,
-      "c6f9304af3c1127c8d9fbef5295e1e21"
+      "b1fc0dfea8a1ad5b8e7bcb7117ff5cc5"
     ],
     [
       "Setopts.mult_ass",
@@ -20,7 +20,28 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d488ede42bb4850dea2516db3af5a44a"
+      "74ba92bbd0e355bbee8b853c513fca9f"
+    ],
+    [
+      "Setopts.mult_ass",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
+      0,
+      "d33793915d372e04881cd6807ce01c6e"
+    ],
+    [
+      "Setopts.mult_ass",
+      4,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "92fd1fe4883746b06be2e82e94ece64b"
     ]
   ]
 ]

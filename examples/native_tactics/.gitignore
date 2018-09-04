@@ -1,2 +1,4 @@
 *.cmxs
 *.test
+Bench.*
+LOG

@@ -8,28 +8,41 @@ module T = FStar.Tactics
 
 (* The attribute that marks instances *)
 irreducible
-let instance : unit = ()
+let tcinstance : unit = ()
 
 let rec first (f : 'a -> Tac 'b) (l : list 'a) : Tac 'b =
     match l with
     | [] -> fail "no cands"
     | x::xs -> (fun () -> f x) `or_else` (fun () -> first f xs)
 
-(* TODO: loop detection (and memoization?) *)
-let rec tcresolve () : Tac unit =
-    local `or_else` (fun () -> global `or_else` (fun () -> fail "Typeclass resolution failed"))
-and local () : Tac unit =
+(* TODO: memoization?. And better errors. *)
+private
+let rec tcresolve' (seen:list term) (fuel:int) : Tac unit =
+    if fuel < 0 then
+        fail "out of fuel";
+    debug ("fuel = " ^ string_of_int fuel);
+    let g = cur_goal () in
+    if FStar.List.Tot.Base.existsb (term_eq g) seen then
+      fail "loop";
+    let seen = g :: seen in
+    local seen fuel `or_else` (fun () -> global seen fuel `or_else` (fun () -> fail "could not solve constraint"))
+and local (seen:list term) (fuel:int) () : Tac unit =
     let bs = binders_of_env (cur_env ()) in
-    first (fun b -> trywith (pack (Tv_Var (bv_of_binder b)))) bs
-and global () : Tac unit =
-    let cands = lookup_attr (`instance) (cur_env ()) in
-    first (fun fv -> trywith (pack (Tv_FVar fv))) cands
-and trywith t : Tac unit =
+    first (fun b -> trywith seen fuel (pack (Tv_Var (bv_of_binder b)))) bs
+and global (seen:list term) (fuel:int) () : Tac unit =
+    let cands = lookup_attr (`tcinstance) (cur_env ()) in
+    first (fun fv -> trywith seen fuel (pack (Tv_FVar fv))) cands
+and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);
-    (fun () -> apply t) `seq` tcresolve
+    (fun () -> apply t) `seq` (fun () -> tcresolve' seen (fuel-1))
+
+let tcresolve () : Tac unit =
+    match catch (fun () -> tcresolve' [] 10) with
+    | Inl e -> fail ("Typeclass resolution failed: " ^ e)
+    | Inr v -> v
 
 (* Solve an explicit argument by typeclass resolution *)
-unfold let solve (#a:Type) (#[tcresolve] ev : a) : Tot a = ev
+unfold let solve (#a:Type) (#[tcresolve ()] ev : a) : Tot a = ev
 
 (**** Generating methods from a class ****)
 
@@ -43,9 +56,6 @@ let remove s1 s2 =
   (* FIXME, should check that s1 is a prefix of s2 *)
   String.substring s2 (String.strlen s1) (String.strlen s2 - String.strlen s1)
 let _ = assert_norm (remove "a" "abc" == "bc")
-
-(* TODO: remove the assumes, and simply fail if they do not hold *)
-(* That is not as trivial as it seems *)
 
 let rec mk_abs (bs : list binder) (body : term) : Tac term (decreases bs) =
     match bs with
@@ -62,31 +72,31 @@ let rec last (l : list 'a) : Tac 'a =
   | [x] -> x
   | _::xs -> last xs
 
-let mk_class (nm:string) () : Tac unit =
+let mk_class (nm:string) : Tac unit =
     (* sigh *)
     let ns = String.split ['.'] nm in
     let r = lookup_typ (cur_env ()) ns in
-    assume (Some? r);
+    guard (Some? r);
     let Some se = r in
     let sv = inspect_sigelt se in
-    assume (Sg_Inductive? sv);
+    guard (Sg_Inductive? sv);
     let Sg_Inductive name us params ty ctors = sv in
     (* dump ("got it, name = " ^ String.concat "." name); *)
     (* dump ("got it, ty = " ^ term_to_string ty); *)
     let ctor_name = last name in
     // Must have a single constructor
-    assume (List.length ctors = 1);
+    guard (List.length ctors = 1);
     let [ctor] = ctors in
     let r = lookup_typ (cur_env ()) ctor in
-    assume (Some? r);
+    guard (Some? r);
     let res = Some?.v r in
     let r = inspect_sigelt res in
-    assume (Sg_Constructor? r);
+    guard (Sg_Constructor? r);
     let Sg_Constructor _ ty = r in
     (* dump ("got ctor " ^ String.concat "." ctor ^ " of type " ^ term_to_string ty); *)
     let bs, cod = collect_arr_bs ty in
     let r = inspect_comp cod in
-    assume (C_Total? r);
+    guard (C_Total? r);
     let C_Total cod _ = r in (* must be total *)
     (* The constructor of course takes the parameters of the record
      * as arguments, but we should ignore them here *)

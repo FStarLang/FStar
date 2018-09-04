@@ -774,7 +774,7 @@ let copy_file input_name output_name =
   (* see https://ocaml.github.io/ocamlunix/ocamlunix.html#sec33 *)
   let open Unix in
   let buffer_size = 8192 in
-  let buffer = String.create buffer_size in
+  let buffer = Bytes.create buffer_size in
   let fd_in = openfile input_name [O_RDONLY] 0 in
   let fd_out = openfile output_name [O_WRONLY; O_CREAT; O_TRUNC] 0o666 in
   let rec copy_loop () =
@@ -913,6 +913,10 @@ let getcwd = Sys.getcwd
 let readdir dir = "." :: ".." :: Array.to_list (Sys.readdir dir)
 
 let file_exists = Sys.file_exists
+(* Sys.is_directory raises Sys_error if the path does not exist *)
+let is_directory f = Sys.file_exists f && Sys.is_directory f
+
+
 let basename = Filename.basename
 let dirname = Filename.dirname
 let print_endline = print_endline

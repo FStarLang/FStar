@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="FStar.Extraction.ML.Syntax.fs" />
     <Compile Include="FStar.Extraction.ML.UEnv.fs" />
+    <Compile Include="FStar.Extraction.ML.Util.fsi" />
     <Compile Include="FStar.Extraction.ML.Util.fs" />
     <Compile Include="FStar.Extraction.ML.Code.fsi" />
     <Compile Include="FStar.Extraction.ML.Code.fs" />

@@ -1,5 +1,5 @@
 [
-  "ÌkÖº7QÂ»²ºp6¾‚·\\",
+  "”Ð4\u0018yÖ\u0012ÈpQ‰y\u0002„ÈY",
   [
     [
       "MiniParse.Spec.Base.no_lookahead_weak_on",
@@ -22,7 +22,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "1e9cf1ac68ddc8d1c821f3de60c2a096"
+      "aeebd99ed4026b328958e92f93ee3d4c"
     ],
     [
       "MiniParse.Spec.Base.no_lookahead_weak_on_ext",
@@ -31,7 +31,7 @@
       1,
       [ "@query", "equation_MiniParse.Spec.Base.no_lookahead_weak_on" ],
       0,
-      "87de602edae562337f23da474e03aba6"
+      "1a1cadb1ceeadb55888a65a934e3d9b6"
     ],
     [
       "MiniParse.Spec.Base.no_lookahead_weak_ext",
@@ -40,7 +40,7 @@
       1,
       [ "@query", "equation_MiniParse.Spec.Base.no_lookahead_weak" ],
       0,
-      "0f54a106bc43900b723ee0b2b3daf96f"
+      "5ea92e87525d3facc4b5f680bd0d0b38"
     ],
     [
       "MiniParse.Spec.Base.injective_precond",
@@ -56,7 +56,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "5a6be50d237428562b9ab64c658d1a08"
+      "655a67df8d7af5412368d161d639511d"
     ],
     [
       "MiniParse.Spec.Base.injective_precond_ext",
@@ -65,7 +65,7 @@
       1,
       [ "@query", "equation_MiniParse.Spec.Base.injective_precond" ],
       0,
-      "1334195403d1b3e301144566187a3c72"
+      "875650c24ec7def6a97730d55efa9f44"
     ],
     [
       "MiniParse.Spec.Base.injective_postcond",
@@ -89,7 +89,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "47e0baf5ddbd71f2fc34dedd8fdf6a19"
+      "456f13d0e4cd0cb357cc8647cf815ad7"
     ],
     [
       "MiniParse.Spec.Base.injective_postcond_ext",
@@ -98,7 +98,7 @@
       1,
       [ "@query", "equation_MiniParse.Spec.Base.injective_postcond" ],
       0,
-      "49d1ec21056c4d559e6b91a308db09e7"
+      "f3a8bad2ccdf049cdf19544c50101cd9"
     ],
     [
       "MiniParse.Spec.Base.injective_ext",
@@ -107,7 +107,7 @@
       1,
       [ "@query", "equation_MiniParse.Spec.Base.injective" ],
       0,
-      "b2c16ec865cbeb29a7877181e09d0429"
+      "97c2e27cedc3d8c5f35bf28439a825ba"
     ],
     [
       "MiniParse.Spec.Base.no_lookahead_on_precond",
@@ -130,7 +130,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "7dbbf51e0d97d521ca912b5dc2af819f"
+      "6f9e9324afb595d76dbaea3f23d96437"
     ],
     [
       "MiniParse.Spec.Base.no_lookahead_on_postcond",
@@ -145,7 +145,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "15e1ecb74ad844837715a5d296d854b2"
+      "9f8b81cd940d24097a9d92fbf8287f50"
     ],
     [
       "MiniParse.Spec.Base.no_lookahead_on_ext",
@@ -165,7 +165,7 @@
         "typing_MiniParse.Spec.Base.bparse"
       ],
       0,
-      "20e76eaad8acae4593306ffbd45e71be"
+      "1b5c29124b0d3c82214beee48ff34545"
     ],
     [
       "MiniParse.Spec.Base.no_lookahead_ext",
@@ -174,7 +174,7 @@
       1,
       [ "@query", "equation_MiniParse.Spec.Base.no_lookahead" ],
       0,
-      "1d4fd7b1bbd51743883b7607f4f54164"
+      "dc990180aacc641f72d7bbc661cb10fa"
     ],
     [
       "MiniParse.Spec.Base.coerce",
@@ -183,7 +183,7 @@
       1,
       [ "@query" ],
       0,
-      "813d64a514bb29c1a329c6d1b5695918"
+      "b0261b6b6de3b9b4096bbfb01e6b58a0"
     ],
     [
       "MiniParse.Spec.Base.coerce_parser",
@@ -192,7 +192,7 @@
       1,
       [ "@query" ],
       0,
-      "42e621cdc0b6feb9afc3b2bd92fa4e4c"
+      "876e907abf7d8b91b742a3ba56dcd467"
     ],
     [
       "MiniParse.Spec.Base.serializer_correct",
@@ -201,7 +201,7 @@
       1,
       [ "@query" ],
       0,
-      "589af79f869409c6c99d791e107c4503"
+      "16e8fae90977094d5d246ba615a25616"
     ],
     [
       "MiniParse.Spec.Base.serializer_correct_ext",
@@ -221,7 +221,7 @@
         "unit_typing"
       ],
       0,
-      "46ef716e29bc7ae6a9744442bca4a127"
+      "411d28b45921acfaf9d95c4d5ec9c5e9"
     ],
     [
       "MiniParse.Spec.Base.serializer_complete",
@@ -244,7 +244,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "76702b4903f5a4732797858a3d0d3877"
+      "2f0af2051104d465557802442ce8624a"
     ],
     [
       "MiniParse.Spec.Base.serializer_correct_implies_complete",
@@ -271,7 +271,7 @@
         "equation_MiniParse.Spec.Base.serializer_complete",
         "equation_MiniParse.Spec.Base.serializer_correct",
         "equation_Prims.eqtype", "equation_Prims.nat",
-        "fuel_guarded_inversion_MiniParse.Spec.Base.parser",
+        "fuel_guarded_inversion_MiniParse.Spec.Base.parser_spec",
         "function_token_typing_FStar.UInt32.n",
         "function_token_typing_FStar.UInt8.t",
         "lemma_FStar.Seq.Properties.slice_length",
@@ -288,7 +288,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "81d599c28505d22fe560335796f775ca"
+      "964cdea828bc39ea6671cb38d8efa88b"
     ],
     [
       "MiniParse.Spec.Base.coerce_serializer",
@@ -296,11 +296,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_MiniParse.Spec.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d"
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "00602c7393ad785eb38d1b6523f049e2"
+      "c0e10a8f36443fe2b76851dec46b7305"
     ],
     [
       "MiniParse.Spec.Base.serialize_ext",
@@ -310,12 +311,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "data_elim_MiniParse.Spec.Base.Serializer",
-        "fuel_guarded_inversion_MiniParse.Spec.Base.serializer",
+        "fuel_guarded_inversion_MiniParse.Spec.Base.serializer_spec",
         "proj_equation_MiniParse.Spec.Base.Serializer_f",
         "refinement_interpretation_MiniParse.Spec.Base_Tm_refine_8da27fc70f74cdb01995c74e5b0aab3a"
       ],
       0,
-      "ce9b70d34a9011423817e2d81815c9d9"
+      "33ceb4e50cdfe0983eb5e837e2c97467"
     ],
     [
       "MiniParse.Spec.Base.serialize_ext'",
@@ -324,7 +325,7 @@
       1,
       [ "@query" ],
       0,
-      "f057a502da8e7055431cd19a06579d08"
+      "aa5268b1a03de3de2d78fea8f544ea67"
     ],
     [
       "MiniParse.Spec.Base.serializer_unique",
@@ -344,7 +345,7 @@
         "equation_MiniParse.Spec.Base.serializer_complete",
         "equation_MiniParse.Spec.Base.serializer_correct",
         "equation_Prims.eqtype",
-        "fuel_guarded_inversion_MiniParse.Spec.Base.serializer",
+        "fuel_guarded_inversion_MiniParse.Spec.Base.serializer_spec",
         "function_token_typing_FStar.UInt8.t",
         "function_token_typing_MiniParse.Spec.Base.__proj__Serializer__item__f",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
@@ -363,7 +364,7 @@
         "typing_MiniParse.Spec.Base.serialize"
       ],
       0,
-      "15e037404ca1d73715c6a3be9a01e440"
+      "8490d59047672bd4a906b3dfabf6513b"
     ],
     [
       "MiniParse.Spec.Base.serializer_injective",
@@ -375,7 +376,7 @@
         "data_elim_MiniParse.Spec.Base.Serializer",
         "equation_MiniParse.Spec.Base.serialize",
         "equation_MiniParse.Spec.Base.serializer_correct",
-        "fuel_guarded_inversion_MiniParse.Spec.Base.serializer",
+        "fuel_guarded_inversion_MiniParse.Spec.Base.serializer_spec",
         "proj_equation_MiniParse.Spec.Base.Serializer_f",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
@@ -383,7 +384,7 @@
         "token_correspondence_MiniParse.Spec.Base.__proj__Serializer__item__f"
       ],
       0,
-      "62186c5e20cb571061f86cc6e1eefb5f"
+      "2b3abc1c8bed5c6809a201ef51fb718f"
     ],
     [
       "MiniParse.Spec.Base.serializer_parser_unique'",
@@ -441,7 +442,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "c39da38334aa254238580883700d738b"
+      "3f74330e0c0cccb649edee2731662941"
     ],
     [
       "MiniParse.Spec.Base.serializer_parser_unique",
@@ -462,7 +463,7 @@
         "typing_MiniParse.Spec.Base.parse", "unit_inversion", "unit_typing"
       ],
       0,
-      "46e18deb0ff58ecc894644b69eedc6ab"
+      "d4cfb5319d9689f664671c00267484a9"
     ],
     [
       "MiniParse.Spec.Base.no_lookahead_weak_on",
@@ -485,7 +486,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "629bc1c55ac7466346805398c3c41688"
+      "1a880abae4eb38cf3bf62024c281a111"
     ],
     [
       "MiniParse.Spec.Base.injective_precond",
@@ -501,7 +502,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "266b13402881e333bdbd921548097a7b"
+      "3946eb5ae1aed24248a01d08b4f705ac"
     ],
     [
       "MiniParse.Spec.Base.injective_postcond",
@@ -525,7 +526,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "915507b45f559141587c1fbb37310b5e"
+      "4b2e4e672716d13768ea252e9db5979c"
     ],
     [
       "MiniParse.Spec.Base.no_lookahead_on_precond",
@@ -548,7 +549,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "a18fff8180c5708c8f4f71481cd50e71"
+      "67d974f60fc0e75f8335d7cc59ea0aa0"
     ],
     [
       "MiniParse.Spec.Base.no_lookahead_on_postcond",
@@ -563,7 +564,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "95234ace551d0742c27480e3b65b946f"
+      "e53babbd54006733a4d99625574ca501"
     ],
     [
       "MiniParse.Spec.Base.coerce",
@@ -572,7 +573,7 @@
       1,
       [ "@query" ],
       0,
-      "78fb1560b8a36ddb49e94a1e8e5098a6"
+      "b2ddcfd8dd5402836b81ffdd6094411c"
     ],
     [
       "MiniParse.Spec.Base.coerce_parser",
@@ -584,7 +585,7 @@
         "fuel_guarded_inversion_MiniParse.Spec.Base.parser"
       ],
       0,
-      "8685b31863b223842513b675b6176b7e"
+      "7878a7b49ce5ba1ff4b1c5d2820e7a6b"
     ],
     [
       "MiniParse.Spec.Base.serializer_correct",
@@ -593,7 +594,7 @@
       1,
       [ "@query" ],
       0,
-      "e1466a7a492a3a9c75f683ef3567785b"
+      "70812022cd550644319988a43345d38d"
     ],
     [
       "MiniParse.Spec.Base.serializer_correct_ext",
@@ -609,7 +610,7 @@
         "unit_typing"
       ],
       0,
-      "4d0d5b979c6b554f5cbf53dbbc74dbf6"
+      "241736ec4a87d15ea99b92fb7c7df4ed"
     ],
     [
       "MiniParse.Spec.Base.serializer_complete",
@@ -632,7 +633,7 @@
         "typing_MiniParse.Spec.Base.consumed_length"
       ],
       0,
-      "bceca91572a3d61b2afceec6bd32f09c"
+      "cb067b9bb848a847b86a28e4f038e06a"
     ],
     [
       "MiniParse.Spec.Base.coerce_serializer",
@@ -640,11 +641,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_MiniParse.Spec.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d"
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "42a3e479482390f15548c1a3d5a01ddd"
+      "345292428f50f13e3ea36049a7ccb744"
     ],
     [
       "MiniParse.Spec.Base.coerce_serializer",
@@ -652,11 +654,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_MiniParse.Spec.Base_Tm_refine_8002c79ae42ff92c4edc4d769192262d"
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "a041ec0c46ba3a974ef1610192d47ebf"
+      "9026a7392c5946da38fcb4e81a94ce98"
     ],
     [
       "MiniParse.Spec.Base.serialize_ext",
@@ -666,12 +669,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "data_elim_MiniParse.Spec.Base.Serializer",
-        "fuel_guarded_inversion_MiniParse.Spec.Base.serializer",
+        "fuel_guarded_inversion_MiniParse.Spec.Base.serializer_spec",
         "proj_equation_MiniParse.Spec.Base.Serializer_f",
         "refinement_interpretation_MiniParse.Spec.Base_Tm_refine_8da27fc70f74cdb01995c74e5b0aab3a"
       ],
       0,
-      "14fde2aa801c07ccf7b7fa4581911a21"
+      "c35b3a58480fd7c7016c3267a1cc2119"
     ],
     [
       "MiniParse.Spec.Base.serialize_ext",
@@ -680,7 +683,7 @@
       1,
       [ "@query" ],
       0,
-      "af5a7c1efd29712bac13ad6e860bf519"
+      "040beda8749611c24dc35a52ca4b8d93"
     ],
     [
       "MiniParse.Spec.Base.serialize_ext'",
@@ -689,7 +692,7 @@
       1,
       [ "@query" ],
       0,
-      "aacf7bf8f23c3c7bc0c77e16e148afe2"
+      "d663e5ea0a6b65f38af34768a22da802"
     ],
     [
       "MiniParse.Spec.Base.serialize_ext'",
@@ -698,7 +701,7 @@
       1,
       [ "@query" ],
       0,
-      "60859c7bce8b1c94cb62e0e2af8c48af"
+      "217f0d119267eecdf4d1869da4672cd9"
     ]
   ]
 ]
