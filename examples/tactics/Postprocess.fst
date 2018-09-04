@@ -54,7 +54,7 @@ let apply_feq_lem #a #b ($f $g : a -> b) : Lemma (requires (forall x. f x == g x
                                               (ensures (f == g)) =
     assert (feq f g);
     ()
-    
+
 let fext () = apply_lemma (`apply_feq_lem); dismiss (); ignore (forall_intros ())
 
 let _onL a b c (_ : squash (a == b)) (_ : squash (b == c)) : Lemma (a == c) = ()
@@ -78,7 +78,7 @@ let rec push_lifts' (u:unit) : Tac unit =
     | Tv_Abs _ _ ->
       fext ();
       push_lifts' ()
-      
+
     | _ -> fail "not a lift (3)"
     end
   | _ ->
@@ -88,23 +88,17 @@ and case_analyze (lhs:term) : Tac unit =
       onL (); apply_lemma l
     in
     (* dump ("lhs= " ^ term_to_string lhs); *)
-    match inspect lhs with
-    | Tv_App _ _ ->
-      let head, args = collect_app lhs in
-      begin match inspect head with
-      | Tv_FVar fv ->
-             if fv_to_string fv = `%A1 then (ap (`lemA))
-        else if fv_to_string fv = `%B1 then (ap (`lemB); apply_lemma (`congB); push_lifts' ())
-        else if fv_to_string fv = `%C1 then (ap (`lemC); apply_lemma (`congC); push_lifts' ())
-        else (tlabel "unknown fv"; trefl ())
-      | _ -> 
-        tlabel "head unk";
-        trefl ()
-      end
-             
+    let head, args = collect_app lhs in
+    begin match inspect head with
+    | Tv_FVar fv ->
+           if fv_to_string fv = `%A1 then (apply_lemma (`lemA))
+      else if fv_to_string fv = `%B1 then (ap (`lemB); apply_lemma (`congB); push_lifts' ())
+      else if fv_to_string fv = `%C1 then (ap (`lemC); apply_lemma (`congC); push_lifts' ())
+      else (tlabel "unknown fv"; trefl ())
     | _ ->
-      tlabel "ignoring";
+      tlabel "head unk";
       trefl ()
+    end
 
 let push_lifts () : Tac unit =
   unfold_def (`xx);
