@@ -835,7 +835,10 @@ and p_letqualifier = function
 and p_aqual = function
   | Implicit -> str "#"
   | Equality -> str "$"
-  | Meta t -> str "#[" ^^ p_term false false t ^^ str "]"
+  | Meta t ->
+      (match t.tm with
+       | Abs (_ ,e) -> str "#[" ^^ p_term false false e ^^ str "]" ^^ break1
+       | _ -> failwith "Invalid term for typeclass")
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -913,6 +916,11 @@ and is_typ_tuple e = match e.tm with
   | Op({idText = "*"}, _) -> true
   | _ -> false
 
+and is_meta_qualifier aq =
+  match aq with
+  | Some (Meta _) -> true
+  | _ -> false
+
 (* is_atomic is true if the binder must be parsed atomically *)
 and p_binder is_atomic b = match b.b with
   | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid
@@ -929,7 +937,7 @@ and p_binder is_atomic b = match b.b with
           in
           optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^/^ t'
       in
-      if is_atomic
+      if is_atomic || (is_meta_qualifier b.aqual)
       then group (lparen ^^ doc ^^ rparen)
       else group doc
   | TAnnotated _ -> failwith "Is this still used ?"
