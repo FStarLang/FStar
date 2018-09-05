@@ -1044,9 +1044,8 @@ private let alloc_heap_common (#a:Type0) (#rrel:srel a)
   (r:HST.erid) (init:a) (len:U32.t{U32.v len > 0}) (mm:bool)
   :HST.ST (lmbuffer a rrel rrel (U32.v len))
           (requires (fun _      -> True))
-          (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 /\
+          (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init) /\
 	                        frameOf b == r /\
-                                as_seq h1 b == Seq.create (U32.v len) init /\
                                 HS.is_mm (Buffer?.content b) == mm /\
                                 Buffer?.idx b == 0ul /\
                                 Buffer?.length b == Buffer?.max_length b))
