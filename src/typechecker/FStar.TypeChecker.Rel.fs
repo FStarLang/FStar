@@ -1988,7 +1988,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           else if is_arrow rhs
           then imitate_arrow orig env wl lhs bs_lhs t_res_lhs EQ rhs
           else giveup_or_defer env orig wl
-                               (BU.format1 "first_order heursitic cannot solve %s; \
+                               (BU.format1 "first_order heuristic cannot solve %s; \
                                             rhs not an app or arrow"
                                             (prob_to_string env orig))
     in
@@ -2476,9 +2476,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     def_check_closed_in (p_loc orig) "ref.t2" (List.map fst (p_scope orig)) t2;
     let _ =
         if debug env (Options.Other "Rel")
-        then BU.print3 "Attempting %s (%s vs %s)\n" (string_of_int problem.pid)
+        then BU.print4 "Attempting %s (%s vs %s); rel = (%s)\n" (string_of_int problem.pid)
                             (Print.tag_of_term t1 ^ "::" ^ Print.term_to_string t1)
                             (Print.tag_of_term t2 ^ "::" ^ Print.term_to_string t2)
+                            (rel_to_string problem.relation)
                             in
     let r = Env.get_range env in
     match t1.n, t2.n with
