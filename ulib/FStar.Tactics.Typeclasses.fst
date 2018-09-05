@@ -18,7 +18,7 @@ let rec first (f : 'a -> Tac 'b) (l : list 'a) : Tac 'b =
 (* TODO: memoization?. And better errors. *)
 private
 let rec tcresolve' (seen:list term) (fuel:int) : Tac unit =
-    if fuel < 0 then
+    if fuel <= 0 then
         fail "out of fuel";
     debug ("fuel = " ^ string_of_int fuel);
     let g = cur_goal () in
