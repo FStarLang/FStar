@@ -36,6 +36,7 @@ and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);
     (fun () -> apply t) `seq` (fun () -> tcresolve' seen (fuel-1))
 
+[@plugin]
 let tcresolve () : Tac unit =
     match catch (fun () -> tcresolve' [] 10) with
     | Inl e -> fail ("Typeclass resolution failed: " ^ e)
