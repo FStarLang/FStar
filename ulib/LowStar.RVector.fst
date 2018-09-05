@@ -550,6 +550,19 @@ private let rec as_seq_seq_slice #a rg h rs i j k l =
 	 (S.slice rs (i + k) (i + l))
 	 0 (l - k - 1) 0 (l - k - 1))
 
+private val as_seq_seq_upd:
+  #a:Type0 -> rg:regional a -> 
+  h:HS.mem -> rs:S.seq a ->
+  i:nat -> j:nat{i <= j && j <= S.length rs} ->
+  k:nat{i <= k && k < j} -> v:a ->
+  Lemma (S.equal (as_seq_seq rg h (S.upd rs k v) i j)
+		 (S.upd (as_seq_seq rg h rs i j) (k - i) 
+			(Rgl?.r_repr rg h v)))
+private let rec as_seq_seq_upd #a rg h rs i j k v =
+  if i = j then ()
+  else if k = j - 1 then ()
+  else as_seq_seq_upd rg h rs i (j - 1) k v
+
 // Preservation based on disjointness
 
 private val as_seq_seq_preserved:
@@ -640,6 +653,7 @@ private val create_:
       Set.subset (Map.domain (MHS.get_hmap h0))
 		 (Map.domain (MHS.get_hmap h1))))
     (decreases (U32.v cidx))
+#reset-options "--z3rlimit 10"
 private let rec create_ #a #rg rv cidx =
   let hh0 = HST.get () in
   if cidx = 0ul then ()
@@ -813,8 +827,28 @@ val assign:
       	      (S.upd (as_seq h0 rv) (U32.v i) (Rgl?.r_repr rg h0 v))))
 // #reset-options "--z3rlimit 10"
 let assign #a #rg rv i v =
-  admit ();
-  V.assign rv i v
+  let hh0 = HST.get () in
+  V.assign rv i v;
+  let hh1 = HST.get () in
+
+  // Safety
+  rs_loc_elems_parent_disj
+    rg (V.as_seq hh0 rv) (V.frameOf rv) 0 (U32.v (V.size_of rv));
+  rs_elems_inv_preserved
+    rg (V.as_seq hh0 rv) 0 (U32.v (V.size_of rv))
+    (V.loc_vector rv)
+    hh0 hh1;
+  Rgl?.r_sep rg v (V.loc_vector rv) hh0 hh1;
+
+  // Correctness
+  rs_loc_elems_parent_disj
+    rg (V.as_seq hh1 rv) (V.frameOf rv) 0 (U32.v (V.size_of rv));
+  as_seq_seq_preserved
+    rg (V.as_seq hh1 rv)
+    0 (U32.v (V.size_of rv))
+    (V.loc_vector rv) hh0 hh1;
+  as_seq_seq_upd
+    rg hh0 (V.as_seq hh0 rv) 0 (U32.v (V.size_of rv)) (U32.v i) v
 
 val assign_copy:
   #a:Type0 -> #rg:regional a -> cp:copyable a rg ->
@@ -823,7 +857,7 @@ val assign_copy:
   HST.ST unit
     (requires (fun h0 -> rv_inv h0 rv /\ Rgl?.r_inv rg h0 v))
     (ensures (fun h0 _ h1 -> 
-      modifies (loc_region_only 
+      modifies (loc_region_only
 	         false (Rgl?.region_of rg (V.get h0 rv i))) h0 h1 /\
       rv_inv h1 rv /\
       S.equal (as_seq h1 rv)
