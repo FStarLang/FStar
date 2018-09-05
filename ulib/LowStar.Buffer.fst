@@ -48,48 +48,43 @@ let offset (#a:Type0) (b:buffer a) (i:U32.t)
              (ensures  (fun h y h' -> h == h' /\ y == gsub b i (U32.sub (len b) i)))
   = moffset b i (trivial_preorder a)
 
-let gcmalloc (#a:Type0) (r:HS.rid) (init:a) (len:U32.t)
-  :HST.ST (b:buffer a{recallable b /\ alloc_post_static r (U32.v len) b})
-          (requires (fun h -> HST.is_eternal_region r /\ U32.v len > 0))
-          (ensures  (fun h b h' -> alloc_post_common r (U32.v len) b h h' /\
-                                 as_seq h' b == Seq.create (U32.v len) init))
+
+unfold let lbuffer (a:Type0) (len:nat)
+  = b:buffer a{length b == len /\ not (g_is_null b)}
+
+let gcmalloc (#a:Type0) (r:HST.erid) (init:a) (len:U32.t{U32.v len > 0})
+  :HST.ST (b:lbuffer a (U32.v len){frameOf b == r /\ recallable b})
+          (requires (fun _       -> True))
+          (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
   = mgcmalloc r init len
 
-let malloc (#a:Type0) (r:HS.rid) (init:a) (len:U32.t)
-  :HST.ST (buffer a)
-          (requires (fun h -> HST.is_eternal_region r /\ U32.v len > 0))
-          (ensures (fun h b h' -> alloc_post_common r (U32.v len) b h h' /\
-                                as_seq h' b == Seq.create (U32.v len) init /\     
-                                freeable b))
+let malloc (#a:Type0) (r:HST.erid) (init:a) (len:U32.t{U32.v len > 0})
+  :HST.ST (b:lbuffer a (U32.v len){frameOf b == r /\ freeable b})
+          (requires (fun _       -> True))
+          (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
   = mmalloc r init len
 
-let alloca (#a:Type0) (init:a) (len:U32.t)
-  :HST.StackInline (buffer a)
-                   (requires (fun h -> U32.v len > 0))
-                   (ensures (fun h b h' -> alloc_post_common (HS.get_tip h) (U32.v len) b h h' /\
-                                         as_seq h' b == Seq.create (U32.v len) init))
+let alloca (#a:Type0) (init:a) (len:U32.t{U32.v len > 0})
+  :HST.StackInline (lbuffer a (U32.v len))
+                   (requires (fun _       -> True))
+                   (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init) /\
+		                          frameOf b == HS.get_tip h0))
   = malloca init len
 
-let alloca_of_list (#a:Type0) (init: list a)
-  :HST.StackInline (buffer a) (requires (fun h -> alloc_of_list_pre #a init))
-                              (ensures (fun h b h' -> let len = FStar.List.Tot.length init in
-                                                   alloc_post_common (HS.get_tip h) len b h h' /\
-                                                   as_seq h' b == Seq.seq_of_list init /\
-                                                   alloc_of_list_post #a len b))
+let alloca_of_list (#a:Type0) (init: list a{alloca_of_list_pre init})
+  :HST.StackInline (lbuffer a (normalize_term (List.Tot.length init)))
+                   (requires (fun _      -> True))
+                   (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init) /\
+		                         frameOf b == HS.get_tip h0))
   = malloca_of_list init
 
-let gcmalloc_of_list (#a:Type0) (r:HS.rid) (init:list a)
-  :HST.ST (b:buffer a {
-    let len = FStar.List.Tot.length init in
-    recallable b /\
-    alloc_post_static r len b /\
-    alloc_of_list_post len b
-  })
-          (requires (fun h -> HST.is_eternal_region r /\ gcmalloc_of_list_pre #a init))
-          (ensures  (fun h b h' -> let len = FStar.List.Tot.length init in
-                                 alloc_post_common r len b h h' /\
-                                 as_seq h' b == Seq.seq_of_list init))
-  = mgcmalloc_of_list r init				 
+let gcmalloc_of_list (#a:Type0) (r:HST.erid) (init:list a{gcmalloc_of_list_pre init})
+  :HST.ST (b:lbuffer a (normalize_term (List.Tot.length init)){
+    frameOf b == r /\ 
+    recallable b})
+          (requires (fun _       -> True))
+          (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init)))
+  = mgcmalloc_of_list r init
 
 module L = FStar.List.Tot
 
