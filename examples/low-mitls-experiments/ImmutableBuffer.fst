@@ -109,8 +109,9 @@ module U32 = FStar.UInt32
 [@"opaque_to_smt"]
 let l :list int = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10]
 
-let pre () = assert (B.gcmalloc_of_list_pre l)
-
 let test2 () :HST.St unit =
   let b = B.gcmalloc_of_list HS.root l in
-  assert (B.length b == 10)
+  assert (B.length b == 10);
+  let h = HST.get () in
+  assert (B.as_seq h b == Seq.seq_of_list l);
+  assert (B.length b == List.Tot.length l)
