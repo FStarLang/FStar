@@ -13,6 +13,7 @@ type s =
 assume val x : s
 assume val y : s
 assume val ff : int -> int
+assume val wp : int -> (int -> Type) -> Type
 
 type unat = | Z : unat | S : unat -> unat
 let rec nat2unary (n: nat) : Tot unat = if n = 0 then Z else S (nat2unary (n - 1))
