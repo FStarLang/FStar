@@ -58,6 +58,10 @@ noeq type regional a =
     // For example, it may include `live` and `freeable` properties
     // for related objects.
     r_inv: (HS.mem -> a -> GTot Type0) ->
+    r_inv_reg:
+      (h:HS.mem -> v:a ->
+      Lemma (requires (r_inv h v))
+	    (ensures (MHS.live_region h (region_of v)))) ->
 
     // A core separation lemma, saying that the invariant and represenation
     // are preserved when an orthogonal state transition happens.
@@ -182,6 +186,28 @@ let rv_inv #a #rg h rv =
   elems_inv h rv /\
   elems_reg h rv /\
   rv_itself_inv h rv
+
+private val rs_elems_inv_live_region:
+  #a:Type0 -> rg:regional a ->
+  h:HS.mem -> rs:S.seq a -> 
+  i:nat -> j:nat{i <= j && j <= S.length rs} ->
+  Lemma (requires (rs_elems_inv rg h rs i j))
+	(ensures (V.forall_seq rs i j
+		   (fun r -> MHS.live_region h (Rgl?.region_of rg r))))
+private let rec rs_elems_inv_live_region #a rg h rs i j =
+  if i = j then ()
+  else (Rgl?.r_inv_reg rg h (S.index rs (j - 1));
+       rs_elems_inv_live_region rg h rs i (j - 1))
+
+private val rv_elems_inv_live_region:
+  #a:Type0 -> #rg:regional a ->
+  h:HS.mem -> rv:rvector rg -> 
+  i:uint32_t -> j:uint32_t{i <= j && j <= V.size_of rv} ->
+  Lemma (requires (rv_elems_inv h rv i j))
+	(ensures (V.forall_ h rv i j
+		   (fun r -> MHS.live_region h (Rgl?.region_of rg r))))
+private let rv_elems_inv_live_region #a #rg h rv i j =
+  rs_elems_inv_live_region rg h (V.as_seq h rv) (U32.v i) (U32.v j)
 
 /// Fine-grained control of regions (frames)
 
@@ -748,20 +774,23 @@ val insert_copy:
       	      (S.snoc (as_seq h0 rv) (Rgl?.r_repr rg h0 v))))
 let insert_copy #a #rg cp rv v =
   let hh0 = HST.get () in
+  rv_elems_inv_live_region hh0 rv 0ul (V.size_of rv);
   let nrid = new_region_ (V.frameOf rv) in
   let r_init = Rgl?.r_init rg in
   let nv = r_init nrid in
+
   let hh1 = HST.get () in
   Rgl?.r_sep rg v loc_none hh0 hh1;
   rv_inv_preserved rv loc_none hh0 hh1;
   as_seq_preserved rv loc_none hh0 hh1;
+  // assert (V.forall_all hh1 rv
+  // 	   (fun b -> HH.disjoint (Rgl?.region_of rg b) nrid));
   let copy = Cpy?.copy cp in
   copy v nv;
 
   let hh2 = HST.get () in
-  // assert (loc_disjoint (loc_all_regions_from false nrid) (loc_vector rv));
-  assume (V.forall_all hh2 rv
-	   (fun b -> HH.disjoint (Rgl?.region_of rg b) nrid));
+  // assert (V.forall_all hh2 rv
+  // 	   (fun b -> HH.disjoint (Rgl?.region_of rg b) nrid));
   rv_loc_elems_each_disj hh2 rv 0ul (V.size_of rv) nrid;
   rv_inv_preserved_ rv (loc_all_regions_from false nrid) hh1 hh2;
   as_seq_preserved_ rv (loc_all_regions_from false nrid) hh1 hh2;
