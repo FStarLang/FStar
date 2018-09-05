@@ -1,6 +1,6 @@
 # Fstar binaries container used to build fstar binaries.
 # Binaries should always use the latest fstar image available.
-FROM fstar:latest
+FROM fstar-linux:latest
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS
