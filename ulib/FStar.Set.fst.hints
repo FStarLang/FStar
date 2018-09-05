@@ -1,5 +1,5 @@
 [
-  "6ì¢M\u001a(Í`ÊÚ&ú+y–ë",
+  "*-\n[\u0006\u0018DüçéÂ\u0003N\u0012Ö’",
   [
     [
       "FStar.Set.mem_singleton",
@@ -191,13 +191,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_fab13fd67c8daa3709cd969786a732ec_1",
+        "binder_x_a7fb6faea5d851896150f3c74abbb25a_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fcd0c84f5604ffe456fde77a40663513"
+      "49c4c7fe0849759667dcb336bee2edf6"
     ],
     [
       "FStar.Set.mem_singleton",
@@ -251,13 +251,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_fab13fd67c8daa3709cd969786a732ec_1",
+        "binder_x_a7fb6faea5d851896150f3c74abbb25a_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_FStar.Set.eqtype",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ef6d7fa3b914d1d1a190180a558b36d5"
+      "6faafaf15c7d49aad552637b00ae11ed"
     ]
   ]
 ]
