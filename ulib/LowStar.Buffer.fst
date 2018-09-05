@@ -52,37 +52,37 @@ let offset (#a:Type0) (b:buffer a) (i:U32.t)
 unfold let lbuffer (a:Type0) (len:nat)
   = b:buffer a{length b == len /\ not (g_is_null b)}
 
-let gcmalloc (#a:Type0) (r:HS.rid) (init:a) (len:U32.t{U32.v len > 0})
+let gcmalloc (#a:Type0) (r:HS.rid) (init:a) (len:U32.t)
   :HST.ST (b:lbuffer a (U32.v len){frameOf b == r /\ recallable b})
-          (requires (fun _       -> HST.is_eternal_region r))
+          (requires (fun _       -> HST.is_eternal_region r /\ U32.v len > 0))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
   = mgcmalloc r init len
 
-let malloc (#a:Type0) (r:HS.rid) (init:a) (len:U32.t{U32.v len > 0})
+let malloc (#a:Type0) (r:HS.rid) (init:a) (len:U32.t)
   :HST.ST (b:lbuffer a (U32.v len){frameOf b == r /\ freeable b})
-          (requires (fun _       -> HST.is_eternal_region r))
+          (requires (fun _       -> HST.is_eternal_region r /\ U32.v len > 0))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
   = mmalloc r init len
 
-let alloca (#a:Type0) (init:a) (len:U32.t{U32.v len > 0})
+let alloca (#a:Type0) (init:a) (len:U32.t)
   :HST.StackInline (lbuffer a (U32.v len))
-                   (requires (fun _       -> True))
+                   (requires (fun _       -> U32.v len > 0))
                    (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init) /\
 		                          frameOf b == HS.get_tip h0))
   = malloca init len
 
-let alloca_of_list (#a:Type0) (init: list a{alloca_of_list_pre init})
+let alloca_of_list (#a:Type0) (init: list a)
   :HST.StackInline (lbuffer a (normalize_term (List.Tot.length init)))
-                   (requires (fun _      -> True))
+                   (requires (fun _      -> alloca_of_list_pre init))
                    (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init) /\
 		                         frameOf b == HS.get_tip h0))
   = malloca_of_list init
 
-let gcmalloc_of_list (#a:Type0) (r:HS.rid) (init:list a{gcmalloc_of_list_pre init})
+let gcmalloc_of_list (#a:Type0) (r:HS.rid) (init:list a)
   :HST.ST (b:lbuffer a (normalize_term (List.Tot.length init)){
     frameOf b == r /\ 
     recallable b})
-          (requires (fun _       -> HST.is_eternal_region r))
+          (requires (fun _       -> HST.is_eternal_region r /\ gcmalloc_of_list_pre init))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init)))
   = mgcmalloc_of_list r init
 
