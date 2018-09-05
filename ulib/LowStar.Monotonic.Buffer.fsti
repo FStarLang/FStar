@@ -1821,9 +1821,9 @@ let alloc_post_mem_common (#a:Type0) (#rrel #rel:srel a)
 /// freed. In fact, it is eternal: it cannot be deallocated at all.
 
 val mgcmalloc (#a:Type0) (#rrel:srel a)
-  (r:HST.erid) (init:a) (len:U32.t{U32.v len > 0})
+  (r:HS.rid) (init:a) (len:U32.t{U32.v len > 0})
   :HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == r /\ recallable b})
-          (requires (fun _       -> True))
+          (requires (fun _       -> HST.is_eternal_region r))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
 
 
@@ -1835,9 +1835,9 @@ val mgcmalloc (#a:Type0) (#rrel:srel a)
 /// strict sub-buffers.
 
 val mmalloc (#a:Type0) (#rrel:srel a)
-  (r:HST.erid) (init:a) (len:U32.t{U32.v len > 0})
+  (r:HS.rid) (init:a) (len:U32.t{U32.v len > 0})
   :HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == r /\ freeable b})
-          (requires (fun _       -> True))
+          (requires (fun _       -> HST.is_eternal_region r))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
 
 /// ``alloca init len`` allocates a buffer of some positive length ``len``
@@ -1872,9 +1872,9 @@ val malloca_of_list (#a:Type0) (#rrel:srel a) (init: list a{alloca_of_list_pre i
 unfold let gcmalloc_of_list_pre (#a:Type0) (init:list a) =
   normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
-val mgcmalloc_of_list (#a:Type0) (#rrel:srel a) (r:HST.erid) (init:list a{gcmalloc_of_list_pre init})
+val mgcmalloc_of_list (#a:Type0) (#rrel:srel a) (r:HS.rid) (init:list a{gcmalloc_of_list_pre init})
   :HST.ST (b:lmbuffer a rrel rrel (normalize_term (List.Tot.length init)){frameOf b == r /\ recallable b})
-          (requires (fun _       -> True))
+          (requires (fun _       -> HST.is_eternal_region r))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init)))
 
 
