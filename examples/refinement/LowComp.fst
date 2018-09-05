@@ -117,43 +117,43 @@ let sat #a (wp:lwp a) : Type = forall (h:HS.mem) (ls:lstate{well_formed h ls}). 
 
 let sat_as_lwp #a (wp:hwp a) : Type = forall (h:HS.mem) (ls:lstate{well_formed h ls}). wp (lstate_as_state h ls) (fun _ -> True)
 
-let precise #a (wp:lwp a) = 
+let precise #a (wp:lwp a) =
   sat wp ==>
-  (forall h0 (ls:lstate{well_formed h0 ls}). 
+  (forall h0 (ls:lstate{well_formed h0 ls}).
      wp ls h0 (fun (r1, h1) ->
      wp ls h0 (fun (r2, h2) ->
      r1 == r2 /\ h1 == h2)))
 
 
 (** ** Equality of low computations **)
-  
+
 let lwp_eq #a (wp1:lwp a) (wp2:lwp a) =
   precise wp1 /\
   precise wp2 /\
-  (forall ls h0 post. wp1 ls h0 post <==> wp2 ls h0 post) 
+  (forall ls h0 post. wp1 ls h0 post <==> wp2 ls h0 post)
 
 let l_eq #a (#wp1:hwp_mon a) (#c1:comp_wp a wp1) (lc1: lcomp_wp a wp1 c1)
-         (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2 : lcomp_wp a wp2 c2) = 
+         (#wp2:hwp_mon a) (#c2:comp_wp a wp2) (lc2 : lcomp_wp a wp2 c2) =
   lwp_eq (as_lwp c1) (as_lwp c2)
 
 assume val l_eq_axiom : (#a:Type) -> (#wp1:hwp_mon a) -> (#c1:comp_wp a wp1) -> (lc1: lcomp_wp a wp1 c1) ->
-                        (#wp2:hwp_mon a) -> (#c2:comp_wp a wp2) -> (lc2 : lcomp_wp a wp2 c2) -> 
+                        (#wp2:hwp_mon a) -> (#c2:comp_wp a wp2) -> (lc2 : lcomp_wp a wp2 c2) ->
                         Lemma (requires (l_eq lc1 lc2)) (ensures (lc1 === lc2))
 
 // Lifting of high programs to low programs
-let morph (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c = 
-    fun (b1, b2) -> 
-      let s1 = b1.(0ul) in 
-      let s2 = b2.(0ul) in 
-      let h = ST.get () in 
+let morph (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : lcomp_wp a wp c =
+    fun (b1, b2) ->
+      let s1 = b1.(0ul) in
+      let s2 = b2.(0ul) in
+      let h = ST.get () in
       assert (lstate_as_state h (b1, b2) == (s1, s2));
       let (x, (s1', s2')) = run_high c (s1, s2) in
       b1.(0ul) <- s1';
       let h' = ST.get () in
-      let p = g_upd_preserves_live h b1 b2 s1' in 
+      let p = g_upd_preserves_live h b1 b2 s1' in
       assume (h' == g_upd b1 0 s1 h);
       b2.(0ul) <- s2';
-      let h'' = ST.get () in 
+      let h'' = ST.get () in
       let p = g_upd_preserves_live h' b2 b1 s2' in // Shows: live h1 b
       assume (h'' == g_upd b2 0 s2' (g_upd b1 0 s1' h));
       x
@@ -288,21 +288,21 @@ let lite (#a:Type) (b:bool)
 
 
 
-let rec lfor (#wp : int -> hwp_mon unit) (#f : (i:int) -> comp_wp unit (wp i)) (lo : int) (hi : int{lo <= hi}) 
-    (c : (z:int) -> lcomp_wp unit (wp z) (f z)) : 
+let rec lfor (#wp : int -> hwp_mon unit) (#f : (i:int) -> comp_wp unit (wp i)) (lo : int) (hi : int{lo <= hi})
+    (c : (z:int) -> lcomp_wp unit (wp z) (f z)) :
     Tot (lcomp_wp unit (for_wp wp lo hi) (for_elab #wp lo hi f)) (decreases (hi - lo)) =
   if lo = hi then (lreturn ())
-  else (let (m : lcomp_wp unit (wp lo) (f lo)) = c lo in 
-        let c (u:unit) : lcomp_wp (unit) (for_wp wp (lo+1) hi) (for_elab #wp (lo + 1) hi f) = 
+  else (let (m : lcomp_wp unit (wp lo) (f lo)) = c lo in
+        let c (u:unit) : lcomp_wp (unit) (for_wp wp (lo+1) hi) (for_elab #wp (lo + 1) hi f) =
           lfor #wp #f (lo + 1) hi c
         in
-        let p = for_wp_unfold wp lo hi in 
+        let p = for_wp_unfold wp lo hi in
         assert (for_wp wp lo hi == bind_wp (wp lo) (fun _ -> for_wp wp (lo + 1) hi));
         let p' = for_elab_unfold #wp lo hi f in
-        assert (for_elab #wp lo hi f == 
-                (let (m : comp_wp unit (wp lo)) = f lo in 
+        assert (for_elab #wp lo hi f ==
+                (let (m : comp_wp unit (wp lo)) = f lo in
                  let cf (u:unit) : comp_wp (unit) (for_wp wp (lo+1) hi) = for_elab #wp (lo + 1) hi f in
-                 let p = for_wp_unfold wp lo hi in                    
+                 let p = for_wp_unfold wp lo hi in
                  bind_elab m cf));
        lbind m c)
 
@@ -363,21 +363,21 @@ let lread' i = fun (b1, b2) ->
 
 let lcast #a (#wp1 : hwp_mon a) (wp2: hwp_mon a{subsumes wp1 wp2}) (c : comp_wp a wp1) (l : lcomp_wp a wp1 c) : lcomp_wp a wp2 c = l
 
-let as_lwp_precise (#a:Type) wp (c : comp_wp a wp) : 
+let as_lwp_precise (#a:Type) wp (c : comp_wp a wp) :
   Lemma
   (precise (as_lwp #a #wp c)) = ()
-  
-let h_eq_implies_l_eq (#a:Type) (wp1:hwp_mon a) (c1:comp_wp a wp1) (lc1:lcomp_wp a wp1 c1) 
+
+let h_eq_implies_l_eq (#a:Type) (wp1:hwp_mon a) (c1:comp_wp a wp1) (lc1:lcomp_wp a wp1 c1)
     (wp2:hwp_mon a) (c2:comp_wp a wp2) (lc2:lcomp_wp a wp2 c2) :
   Lemma (requires (h_eq wp1 wp2 c1 c2))
         (ensures (l_eq lc1 lc2)) = ()
 
 let h_eq_refl (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) : Lemma (h_eq wp wp c c) = ()
- 
-let l_eq_refl (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (l : lcomp_wp a wp c) : 
+
+let l_eq_refl (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (l : lcomp_wp a wp c) :
   Lemma (l_eq l l) = ()
 
-let lcomp_unique_inhabitant (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (lc1 : lcomp_wp a wp c) (lc2 : lcomp_wp a wp c) : 
+let lcomp_unique_inhabitant (#a:Type) (wp:hwp_mon a) (c:comp_wp a wp) (lc1 : lcomp_wp a wp c) (lc2 : lcomp_wp a wp c) :
   Lemma (l_eq lc1 lc2) = ()
 
 let lcomp_respects_h_eq (a : Type)
@@ -388,7 +388,7 @@ let lcomp_respects_h_eq (a : Type)
                         (lc : lcomp_wp a wp1 hc1)
                         (p : squash (h_eq wp1 wp2 hc1 hc2)) : lcomp_wp a wp2 hc2 = lc
 
-// Satisifability of WPs 
+// Satisifability of WPs
 
 let return_wp_sat (#a:Type) (x : a) : Lemma (sat_as_lwp (return_wp x)) = ()
 
@@ -402,10 +402,11 @@ let subsumes_sat #a (wp1 wp2 : hwp_mon a) : Lemma (requires (subsumes wp1 wp2 /\
 (** ** Commutation of morphism **)
 
 let morph_return #a (wp : hwp_mon a) (c : comp_wp a wp) (x : a) :
-  Lemma 
+  Lemma
     (requires (c === return_elab x))
-    (ensures (morph wp c === lreturn x)) = 
-  let p = return_inv c x in 
+    (ensures (return_inv c x;
+              morph wp c == lreturn x)) =
+  let p = return_inv c x in
   assert (subsumes (return_wp x) wp);
   assert (l_eq #a
                #wp #(cast wp (return_elab x)) (morph wp c)
@@ -417,10 +418,11 @@ let morph_return #a (wp : hwp_mon a) (c : comp_wp a wp) (x : a) :
 
 
 let morph_read (wp : hwp_mon mint) (c : comp_wp mint wp) (i : nat{i < 2}) :
-  Lemma 
+  Lemma
     (requires (c === hread_elab i))
-    (ensures (morph wp c ===  lread' i)) = 
-  let p = read_inv c i in 
+    (ensures (read_inv c i;
+              morph wp c == lread' i)) =
+  let p = read_inv c i in
   assert (subsumes (read_wp i) wp);
   assert (l_eq #mint
                #wp #(cast wp (hread_elab i)) (morph wp (cast wp (hread_elab i)))
@@ -432,10 +434,11 @@ let morph_read (wp : hwp_mon mint) (c : comp_wp mint wp) (i : nat{i < 2}) :
 
 
 let morph_write (wp : hwp_mon unit) (c : comp_wp unit wp) (i : nat{i < 2}) (v : mint) :
-  Lemma 
+  Lemma
     (requires (c === hwrite_elab i v))
-    (ensures (morph wp c ===  lwrite' i v)) = 
-  let p = write_inv c i in 
+    (ensures (write_inv c i v;
+              morph wp c == lwrite' i v)) =
+  let p = write_inv c i in
   assert (subsumes (write_wp i v) wp);
   assert (l_eq #unit
                #wp #(cast wp (hwrite_elab i v)) (morph wp (cast wp (hwrite_elab i v)))
@@ -446,54 +449,56 @@ let morph_write (wp : hwp_mon unit) (c : comp_wp unit wp) (i : nat{i < 2}) (v : 
   ()
 
 let morph_bind #a #b (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
-    (wp2 : a -> hwp_mon b) (c2 : (x:a) -> comp_wp b (wp2 x)) 
+    (wp2 : a -> hwp_mon b) (c2 : (x:a) -> comp_wp b (wp2 x))
     (wp : hwp_mon b) (c : comp_wp b wp) :
   Lemma (requires (c === bind_elab c1 c2))
-        (ensures (morph wp c === lbind (morph wp1 c1) (fun x -> (morph (wp2 x) (c2 x))))) = 
-  let p = bind_inv c1 c2 c in 
+        (ensures (bind_inv c1 c2 c;
+                  morph wp c == lbind (morph wp1 c1) (fun x -> (morph (wp2 x) (c2 x))))) =
+  let p = bind_inv c1 c2 c in
   assert (subsumes (bind_wp wp1 wp2) wp);
-  assert (l_eq #b 
-               #wp #(cast wp (bind_elab c1 c2)) (morph wp (cast wp (bind_elab c1 c2))) 
+  assert (l_eq #b
+               #wp #(cast wp (bind_elab c1 c2)) (morph wp (cast wp (bind_elab c1 c2)))
                #wp #(cast wp (bind_elab c1 c2)) (lcast wp (bind_elab c1 c2)
                (lbind (morph wp1 c1) (fun x -> (morph (wp2 x) (c2 x))))));
-  let p' = l_eq_axiom #b 
-                      #wp #(cast wp (bind_elab c1 c2)) (morph wp (cast wp (bind_elab c1 c2))) 
+  let p' = l_eq_axiom #b
+                      #wp #(cast wp (bind_elab c1 c2)) (morph wp (cast wp (bind_elab c1 c2)))
                       #wp #(cast wp (bind_elab c1 c2)) (lcast wp (bind_elab c1 c2)
                       (lbind (morph wp1 c1) (fun x -> (morph (wp2 x) (c2 x))))) in
-  ()   
+  ()
 
 
 let morph_for (wp1 : int -> hwp_mon unit) (lo : int) (hi : int{lo <= hi}) (f : (i:int) -> comp_wp unit (wp1 i))
     (wp : hwp_mon unit) (c : comp_wp unit wp) :
-  Lemma (requires (c === for_elab lo hi f)) 
-        (ensures (morph wp c === lfor lo hi (fun i -> morph (wp1 i) (f i)))) = 
-  let p = for_inv lo hi f c in 
+  Lemma (requires (c === for_elab lo hi f))
+        (ensures (for_inv lo hi f c;
+                  morph wp c == lfor lo hi (fun i -> morph (wp1 i) (f i)))) =
+  let p = for_inv lo hi f c in
   assert (subsumes (for_wp wp1 lo hi) wp);
   assert (l_eq #unit
-               #wp #(cast wp (for_elab lo hi f)) (morph wp (cast wp (for_elab lo hi f))) 
-               #wp #(cast wp (for_elab lo hi f)) (lcast wp (for_elab lo hi f) 
-               (lfor lo hi (fun i -> morph (wp1 i) (f i))))); 
+               #wp #(cast wp (for_elab lo hi f)) (morph wp (cast wp (for_elab lo hi f)))
+               #wp #(cast wp (for_elab lo hi f)) (lcast wp (for_elab lo hi f)
+               (lfor lo hi (fun i -> morph (wp1 i) (f i)))));
   let p' = l_eq_axiom #unit
-                      #wp #(cast wp (for_elab lo hi f)) (morph wp (cast wp (for_elab lo hi f))) 
-                      #wp #(cast wp (for_elab lo hi f)) (lcast wp (for_elab lo hi f) 
-                      (lfor lo hi (fun i -> morph (wp1 i) (f i)))) in 
+                      #wp #(cast wp (for_elab lo hi f)) (morph wp (cast wp (for_elab lo hi f)))
+                      #wp #(cast wp (for_elab lo hi f)) (lcast wp (for_elab lo hi f)
+                      (lfor lo hi (fun i -> morph (wp1 i) (f i)))) in
 
   ()
 
 let morph_ite #a (b : bool) (wp1 : hwp_mon a) (c1 : comp_wp a wp1)
-    (wp2 : hwp_mon a) (c2 : comp_wp a wp2) 
+    (wp2 : hwp_mon a) (c2 : comp_wp a wp2)
     (wp : hwp_mon a) (c : comp_wp a wp):
   Lemma (requires (c === ite_elab b c1 c2))
-        (ensures (morph wp c === lite b (morph wp1 c1) (morph wp2 c2))) = 
-  let p = ite_inv b c1 c2 c in 
+        (ensures (ite_inv b c1 c2 c;
+                  morph wp c == lite b (morph wp1 c1) (morph wp2 c2))) =
+  let p = ite_inv b c1 c2 c in
   assert (subsumes (ite_wp b wp1 wp2) wp);
   assert (l_eq #a
-               #wp #(cast wp (ite_elab b c1 c2)) (morph wp (cast wp (ite_elab b c1 c2))) 
+               #wp #(cast wp (ite_elab b c1 c2)) (morph wp (cast wp (ite_elab b c1 c2)))
                #wp #(cast wp (ite_elab b c1 c2)) (lcast wp (ite_elab b c1 c2)
-               (lite b (morph wp1 c1) (morph wp2 c2)))); 
+               (lite b (morph wp1 c1) (morph wp2 c2))));
   let p' = l_eq_axiom #a
-                      #wp #(cast wp (ite_elab b c1 c2)) (morph wp (cast wp (ite_elab b c1 c2))) 
+                      #wp #(cast wp (ite_elab b c1 c2)) (morph wp (cast wp (ite_elab b c1 c2)))
                       #wp #(cast wp (ite_elab b c1 c2)) (lcast wp (ite_elab b c1 c2)
-                      (lite b (morph wp1 c1) (morph wp2 c2))) in 
+                      (lite b (morph wp1 c1) (morph wp2 c2))) in
   ()
-  
