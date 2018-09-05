@@ -109,9 +109,23 @@ module U32 = FStar.UInt32
 [@"opaque_to_smt"]
 let l :list int = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10]
 
-let test2 () :HST.St unit =
+let test2 (lll:list int{List.Tot.length lll > 0 /\
+                      List.Tot.length lll <= UInt.max_int 32})
+  :HST.ST unit (fun h0 -> HS.is_stack_region (HS.get_tip h0)) (fun _ _ _ -> True)=
   let b = B.gcmalloc_of_list HS.root l in
   assert (B.length b == 10);
   let h = HST.get () in
   assert (B.as_seq h b == Seq.seq_of_list l);
-  assert (B.length b == List.Tot.length l)
+  assert (B.length b == List.Tot.length l);
+  let ll = [1;2;3;4;5;6;7;8;9;10;11] in
+  HST.push_frame ();
+  let b = B.alloca_of_list ll in
+  assert (B.length b == 11);
+  let h = HST.get () in
+  assert (B.as_seq h b == Seq.seq_of_list ll);
+  assert (B.length b == List.Tot.length ll);
+  let b = B.alloca_of_list lll in
+  let h = HST.get () in
+  assert (B.as_seq h b == Seq.seq_of_list lll);
+  assert (B.length b == List.Tot.length lll);
+  HST.pop_frame ()
