@@ -283,14 +283,14 @@ let attempt probs wl             =
     List.iter (def_check_prob "attempt") probs;
     {wl with attempting=probs@wl.attempting}
 
-let mk_eq2 wl prob t1 t2 : term * worklist =
+let mk_eq2 wl env prob t1 t2 : term * worklist =
     (* NS: Rather than introducing a new variable, it would be much preferable
             to simply compute the type of t1 here.
             Sadly, it seems to be way too expensive to call env.type_of here.
     *)
     let t_type, u = U.type_u () in
-    let binders = Env.all_binders wl.tcenv in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos wl.tcenv.gamma binders t_type Allow_unresolved in
+    let binders = Env.all_binders env in
+    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type Allow_unresolved in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -1313,7 +1313,7 @@ let guard_of_prob (env:Env.env) (wl:worklist) (problem:tprob) (t1 : term) (t2 : 
             U.mk_forall u_x x (U.mk_has_type t1 (S.bv_to_name x) t2)
     in
     match problem.relation with
-    | EQ     -> mk_eq2 wl (TProb problem) t1 t2
+    | EQ     -> mk_eq2 wl env (TProb problem) t1 t2
     | SUB    -> has_type_guard t1 t2, wl
     | SUBINV -> has_type_guard t2 t1, wl
 
@@ -2822,7 +2822,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               else let guard, wl =
                        if equal t1 t2
                        then None, wl
-                       else let g, wl = mk_eq2 wl orig t1 t2 in
+                       else let g, wl = mk_eq2 wl env orig t1 t2 in
                             Some g, wl
                    in
                    solve env (solve_prob orig guard [] wl)
