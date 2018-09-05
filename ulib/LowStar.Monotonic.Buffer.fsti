@@ -1802,22 +1802,18 @@ let freeable_disjoint' (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel
 /// operators, which tells that the resulting buffer is fresh, and
 /// specifies its initial contents.
 
-unfold
-let alloc_post_static (#a:Type0) (#rrel #rel:srel a)
-  (r:HS.rid) (len:nat) (b:mbuffer a rrel rel)
-  = (not (g_is_null b)) /\
-    frameOf b == r /\
-    length b == len
+unfold let lmbuffer (a:Type0) (rrel rel:srel a) (len:nat)
+  = b:mbuffer a rrel rel{length b == len /\ not (g_is_null b)}
 
 unfold
-let alloc_post_common (#a:Type0) (#rrel #rel:srel a)
-  (r:HS.rid) (len:nat) (b:mbuffer a rrel rel) (h0 h1:HS.mem)
-  = alloc_post_static r len b /\
-    b `unused_in` h0 /\
+let alloc_post_mem_common (#a:Type0) (#rrel #rel:srel a)
+  (b:mbuffer a rrel rel) (h0 h1:HS.mem) (s:Seq.seq a)
+  = b `unused_in` h0 /\
     live h1 b /\
     Map.domain (HS.get_hmap h1) `Set.equal` Map.domain (HS.get_hmap h0) /\ 
     (HS.get_tip h1) == (HS.get_tip h0) /\
-    modifies loc_none h0 h1
+    modifies loc_none h0 h1 /\
+    as_seq h1 b == s
 
 /// ``gcmalloc r init len`` allocates a memory-managed buffer of some
 /// positive length ``len`` in an eternal region ``r``. Every cell of this
@@ -1825,11 +1821,10 @@ let alloc_post_common (#a:Type0) (#rrel #rel:srel a)
 /// freed. In fact, it is eternal: it cannot be deallocated at all.
 
 val mgcmalloc (#a:Type0) (#rrel:srel a)
-  (r:HS.rid) (init:a) (len:U32.t)
-  :HST.ST (b:mbuffer a rrel rrel{recallable b /\ alloc_post_static r (U32.v len) b})
-          (requires (fun h -> HST.is_eternal_region r /\ U32.v len > 0))
-          (ensures  (fun h b h' -> alloc_post_common r (U32.v len) b h h' /\
-                                 as_seq h' b == Seq.create (U32.v len) init))
+  (r:HST.erid) (init:a) (len:U32.t{U32.v len > 0})
+  :HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == r /\ recallable b})
+          (requires (fun _       -> True))
+          (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
 
 
 /// ``malloc r init len`` allocates a hand-managed buffer of some
@@ -1840,13 +1835,10 @@ val mgcmalloc (#a:Type0) (#rrel:srel a)
 /// strict sub-buffers.
 
 val mmalloc (#a:Type0) (#rrel:srel a)
-  (r:HS.rid) (init:a) (len:U32.t)
-  :HST.ST (mbuffer a rrel rrel)
-          (requires (fun h -> HST.is_eternal_region r /\ U32.v len > 0))
-          (ensures (fun h b h' -> alloc_post_common r (U32.v len) b h h' /\
-                                as_seq h' b == Seq.create (U32.v len) init /\     
-                                freeable b))
-
+  (r:HST.erid) (init:a) (len:U32.t{U32.v len > 0})
+  :HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == r /\ freeable b})
+          (requires (fun _       -> True))
+          (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
 
 /// ``alloca init len`` allocates a buffer of some positive length ``len``
 /// in the current stack frame. Every cell of this buffer will have
@@ -1855,11 +1847,11 @@ val mmalloc (#a:Type0) (#rrel:srel a)
 /// frame is deallocated by ``HST.pop_frame``.
 
 val malloca (#a:Type0) (#rrel:srel a)
-  (init:a) (len:U32.t)
-  :HST.StackInline (mbuffer a rrel rrel)
-                   (requires (fun h -> U32.v len > 0))
-                   (ensures (fun h b h' -> alloc_post_common (HS.get_tip h) (U32.v len) b h h' /\
-                                         as_seq h' b == Seq.create (U32.v len) init))
+  (init:a) (len:U32.t{U32.v len > 0})
+  :HST.StackInline (lmbuffer a rrel rrel (U32.v len))
+                   (requires (fun _       -> True))
+                   (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init) /\
+		                          frameOf b == HS.get_tip h0))
 
 
 /// ``alloca_of_list init`` allocates a buffer in the current stack
@@ -1867,35 +1859,23 @@ val malloca (#a:Type0) (#rrel:srel a)
 /// specified by the ``init`` list, which must be nonempty, and of
 /// length representable as a machine integer.
 
-unfold let alloc_of_list_pre (#a:Type0) (init:list a) =
+unfold let alloca_of_list_pre (#a:Type0) (init:list a) =
   normalize (0 < FStar.List.Tot.length init) /\
   normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
-unfold let alloc_of_list_post (#a:Type0) (#rrel #rel:srel a) (len:nat) (buf:mbuffer a rrel rel) =
-  length buf == normalize_term len
-
-val malloca_of_list (#a:Type0) (#rrel:srel a) (init: list a)
-  :HST.StackInline (mbuffer a rrel rrel) (requires (fun h -> alloc_of_list_pre #a init))
-                                         (ensures (fun h b h' -> let len = FStar.List.Tot.length init in
-                                                               alloc_post_common (HS.get_tip h) len b h h' /\
-                                                               as_seq h' b == Seq.seq_of_list init /\
-                                                               alloc_of_list_post #a len b))
+val malloca_of_list (#a:Type0) (#rrel:srel a) (init: list a{alloca_of_list_pre init})
+  :HST.StackInline (lmbuffer a rrel rrel (normalize_term (List.Tot.length init)))
+                   (requires (fun _      -> True))
+                   (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init) /\
+		                         frameOf b == HS.get_tip h0))
 
 unfold let gcmalloc_of_list_pre (#a:Type0) (init:list a) =
   normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
-(* TODO: Why is some of the post on the refinement? *)
-val mgcmalloc_of_list (#a:Type0) (#rrel:srel a) (r:HS.rid) (init:list a)
-  :HST.ST (b:mbuffer a rrel rrel {
-    let len = FStar.List.Tot.length init in
-    recallable b /\
-    alloc_post_static r len b /\
-    alloc_of_list_post len b
-  })
-          (requires (fun h -> HST.is_eternal_region r /\ gcmalloc_of_list_pre #a init))
-          (ensures  (fun h b h' -> let len = FStar.List.Tot.length init in
-                                 alloc_post_common r len b h h' /\
-                                 as_seq h' b == Seq.seq_of_list init))
+val mgcmalloc_of_list (#a:Type0) (#rrel:srel a) (r:HST.erid) (init:list a{gcmalloc_of_list_pre init})
+  :HST.ST (b:lmbuffer a rrel rrel (normalize_term (List.Tot.length init)){frameOf b == r /\ recallable b})
+          (requires (fun _       -> True))
+          (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init)))
 
 
 /// Derived operations
