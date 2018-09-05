@@ -1040,15 +1040,16 @@ let freeable_disjoint #_ #_ #_ #_ #_ #_ b1 b2 =
   if frameOf b1 = frameOf b2 && as_addr b1 = as_addr b2 then
     MG.loc_disjoint_aloc_elim #_ #cls #(frameOf b1) #(as_addr b1) #(frameOf b2) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
 
-let alloc_common (#a:Type0) (#rrel:srel a)
-  (r:HS.rid) (init:a) (len:U32.t) (mm:bool)
-  :HST.ST (mbuffer a rrel rrel)
-          (requires (fun h0 -> HST.is_eternal_region r /\ U32.v len > 0))
-          (ensures (fun h0 b h1 -> alloc_post_common r (U32.v len) b h0 h1 /\
-                                 as_seq h1 b == Seq.create (U32.v len) init /\
-                                 HS.is_mm (Buffer?.content b) == mm /\
-                                 Buffer?.idx b == 0ul /\
-                                 Buffer?.length b == Buffer?.max_length b))
+private let alloc_heap_common (#a:Type0) (#rrel:srel a)
+  (r:HST.erid) (init:a) (len:U32.t{U32.v len > 0}) (mm:bool)
+  :HST.ST (lmbuffer a rrel rrel (U32.v len))
+          (requires (fun _      -> True))
+          (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 /\
+	                        frameOf b == r /\
+                                as_seq h1 b == Seq.create (U32.v len) init /\
+                                HS.is_mm (Buffer?.content b) == mm /\
+                                Buffer?.idx b == 0ul /\
+                                Buffer?.length b == Buffer?.max_length b))
   = let s = Seq.create (U32.v len) init in
     lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
     let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
@@ -1057,9 +1058,9 @@ let alloc_common (#a:Type0) (#rrel:srel a)
     let b = Buffer len content 0ul len () in
     b
 
-let mgcmalloc #_ #_ r init len = alloc_common r init len false
+let mgcmalloc #_ #_ r init len = alloc_heap_common r init len false
 
-let mmalloc #_ #_ r init len = alloc_common r init len true
+let mmalloc #_ #_ r init len = alloc_heap_common r init len true
 
 let malloca #a #rrel init len =
   lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
