@@ -148,7 +148,7 @@
         "typing_tok_X64.Machine_s.R8@tok"
       ],
       0,
-      "65d7fe0fc4af76f6c5f7b7ae4d863aa1"
+      "9c77dfc2e8dffac31fe86d3da018dc82"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_reduce",
@@ -270,7 +270,7 @@
         "typing_X64.Vale.State_i_Tm_abs_c13f5ac4d0679321550e1b89bf974331"
       ],
       0,
-      "8b08d4899b3cd738c287f424068e1ba8"
+      "b2aa5042b4f0787606990afd28fa3692"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_reduce",
@@ -425,7 +425,7 @@
         "typing_tok_X64.Machine_s.Rbx@tok"
       ],
       0,
-      "8612d0fcb9b8974f7beaae4f7bf243af"
+      "fa8dfccae853c918e9b133996651800b"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_reduce_regs",
@@ -596,7 +596,7 @@
         "typing_tok_X64.Machine_s.Rbx@tok"
       ],
       0,
-      "99aaede3e605b9ba882dea2c2308e91f"
+      "68abc0369e468ddfe58be8c6aeeb07e8"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_reduce_regs_fast_block",
@@ -708,7 +708,7 @@
         "typing_X64.Vale.State_i_Tm_abs_c13f5ac4d0679321550e1b89bf974331"
       ],
       0,
-      "4a7f7aa3d4185555ec55fed81d4292ba"
+      "0e00259cb3a7cf8e856d8c3c672cf2c3"
     ],
     [
       "X64.Poly1305.va_transparent_code_poly1305_blocks",
@@ -997,7 +997,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "b20634f96295d694f221904851762cd2"
+      "1e75ad98a910adeed9cfa499e9f199aa"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1219,7 +1219,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "0d1b10ee58673ca64011037359d88398"
+      "4268c7ba62e7e9d244e15dff3d40c774"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_last_block",
@@ -1384,7 +1384,7 @@
         "typing_tok_X64.Machine_s.Rax@tok"
       ],
       0,
-      "6e6f66d8d64bdfefed3feae418a2370b"
+      "622a311958f61e052f6732269ec23929"
     ],
     [
       "X64.Poly1305.va_irreducible_lemma_poly1305_add_key_s",
@@ -1466,7 +1466,7 @@
         "typing_X64.Vale.State_i.__proj__Mkstate__item__regs"
       ],
       0,
-      "36d4a32641a8a02ae935056079e70813"
+      "5eab197aa89006e8577aea3239889a40"
     ],
     [
       "X64.Poly1305.modp_0",

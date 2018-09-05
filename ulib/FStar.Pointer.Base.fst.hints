@@ -5575,7 +5575,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "51388ef05fa76a89c239b079a6483b76"
+      "e60bb95c7a867dad786170f4411122dd"
     ],
     [
       "FStar.Pointer.Base.disjoint_roots_intro_reference_vs_pointer",
@@ -14225,7 +14225,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "4cbb01d05123502e8f677173a6449dee"
+      "f4d735e2136e87b5b71f9a798d536b72"
     ],
     [
       "FStar.Pointer.Base.domain_upd",
@@ -14406,7 +14406,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "17851b4d6f4837088e5ebbc464e7a1b7"
+      "b4a66cdeb3590efde95c4555c11b4871"
     ],
     [
       "FStar.Pointer.Base.field",
