@@ -2557,8 +2557,27 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         in
         let force_eta t =
             if is_abs t then t
-            else let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
-                 N.eta_expand_with_type env t (N.unfold_whnf env ty)
+            else begin
+                let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
+                (* Find the WHNF ignoring refinements. Otherwise consider
+                 *
+                 * let myty1 = a -> Tot b
+                 * let myty2 = f:myty1{whatever f}
+                 *
+                 * The WHNF of myty2 is not an arrow, and we would fail to eta-expand. *)
+                let ty =
+                    let rec aux ty =
+                        let ty = N.unfold_whnf env ty in
+                        match (SS.compress ty).n with
+                        | Tm_refine _ -> aux (U.unrefine ty)
+                        | _ -> ty
+                    in aux ty
+                in
+                let r = N.eta_expand_with_type env t ty in
+                if Env.debug wl.tcenv <| Options.Other "Rel" then
+                  BU.print3 "force_eta of (%s) at type (%s) = %s\n" (Print.term_to_string t) (Print.term_to_string (N.unfold_whnf env ty)) (Print.term_to_string r);
+                r
+            end
         in
         begin
             match maybe_eta t1, maybe_eta t2 with
