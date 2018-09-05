@@ -1821,9 +1821,9 @@ let alloc_post_mem_common (#a:Type0) (#rrel #rel:srel a)
 /// freed. In fact, it is eternal: it cannot be deallocated at all.
 
 val mgcmalloc (#a:Type0) (#rrel:srel a)
-  (r:HS.rid) (init:a) (len:U32.t{U32.v len > 0})
+  (r:HS.rid) (init:a) (len:U32.t)
   :HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == r /\ recallable b})
-          (requires (fun _       -> HST.is_eternal_region r))
+          (requires (fun _       -> HST.is_eternal_region r /\ U32.v len > 0))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
 
 
@@ -1835,9 +1835,9 @@ val mgcmalloc (#a:Type0) (#rrel:srel a)
 /// strict sub-buffers.
 
 val mmalloc (#a:Type0) (#rrel:srel a)
-  (r:HS.rid) (init:a) (len:U32.t{U32.v len > 0})
+  (r:HS.rid) (init:a) (len:U32.t)
   :HST.ST (b:lmbuffer a rrel rrel (U32.v len){frameOf b == r /\ freeable b})
-          (requires (fun _       -> HST.is_eternal_region r))
+          (requires (fun _       -> HST.is_eternal_region r /\ U32.v len > 0))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
 
 /// ``alloca init len`` allocates a buffer of some positive length ``len``
@@ -1847,9 +1847,9 @@ val mmalloc (#a:Type0) (#rrel:srel a)
 /// frame is deallocated by ``HST.pop_frame``.
 
 val malloca (#a:Type0) (#rrel:srel a)
-  (init:a) (len:U32.t{U32.v len > 0})
+  (init:a) (len:U32.t)
   :HST.StackInline (lmbuffer a rrel rrel (U32.v len))
-                   (requires (fun _       -> True))
+                   (requires (fun _       -> U32.v len > 0))
                    (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init) /\
 		                          frameOf b == HS.get_tip h0))
 
@@ -1863,18 +1863,18 @@ unfold let alloca_of_list_pre (#a:Type0) (init:list a) =
   normalize (0 < FStar.List.Tot.length init) /\
   normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
-val malloca_of_list (#a:Type0) (#rrel:srel a) (init: list a{alloca_of_list_pre init})
+val malloca_of_list (#a:Type0) (#rrel:srel a) (init: list a)
   :HST.StackInline (lmbuffer a rrel rrel (normalize_term (List.Tot.length init)))
-                   (requires (fun _      -> True))
+                   (requires (fun _      -> alloca_of_list_pre init))
                    (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init) /\
 		                         frameOf b == HS.get_tip h0))
 
 unfold let gcmalloc_of_list_pre (#a:Type0) (init:list a) =
   normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
-val mgcmalloc_of_list (#a:Type0) (#rrel:srel a) (r:HS.rid) (init:list a{gcmalloc_of_list_pre init})
+val mgcmalloc_of_list (#a:Type0) (#rrel:srel a) (r:HS.rid) (init:list a)
   :HST.ST (b:lmbuffer a rrel rrel (normalize_term (List.Tot.length init)){frameOf b == r /\ recallable b})
-          (requires (fun _       -> HST.is_eternal_region r))
+          (requires (fun _       -> HST.is_eternal_region r /\ gcmalloc_of_list_pre init))
           (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init)))
 
 
