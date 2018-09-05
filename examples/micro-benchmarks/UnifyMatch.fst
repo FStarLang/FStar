@@ -18,6 +18,13 @@ type unat = | Z : unat | S : unat -> unat
 let rec nat2unary (n: nat) : Tot unat = if n = 0 then Z else S (nat2unary (n - 1))
 type even : unat -> Type = | Even_Z : even Z | Even_SS : #n: unat -> even n -> even (S (S n))
 
+let test1 tb  : Tac unit =
+    let (t1, t2, b) = tb in
+    debug ("testing: " ^ term_to_string (quote tb));
+    if unify t1 t2 <> b
+    then fail ("test failed: " ^ term_to_string (quote tb))
+    else ()
+
 let tests () : Tac (list (term * term * bool)) = [
   // These tests do not go through now, since we fail to
   // typecheck the when-clauses
@@ -61,21 +68,21 @@ let tests () : Tac (list (term * term * bool)) = [
    norm_term [delta] (`(ff (x.f 2))),
    false);
 
-  (* (`(nat2unary 10), *)
-  (*  `(S (nat2unary 9)), *)
-  (*  true); *)
+  (`(nat2unary 10),
+   `(S (nat2unary 9)),
+   true);
 
-  (* (`(nat2unary 9), *)
-  (*  `(S (nat2unary 9)), *)
-  (*  false); *)
+  (`(nat2unary 9),
+   `(S (nat2unary 9)),
+   false);
 
-  (* (`(nat2unary 10), *)
-  (*  norm_term [delta;zeta;primops] (`(nat2unary 10)), *)
-  (*  true); *)
+  (`(nat2unary 10),
+   norm_term [delta;zeta;primops] (`(nat2unary 10)),
+   true);
 
-  (* (`(nat2unary 11), *)
-  (*  norm_term [delta;zeta;primops] (`(nat2unary 10)), *)
-  (*  false); *)
+  (`(nat2unary 11),
+   norm_term [delta;zeta;primops] (`(nat2unary 10)),
+   false);
 
   (`((match D (fun x -> x) with D f -> f) 5),
    `5,
@@ -88,14 +95,16 @@ let tests () : Tac (list (term * term * bool)) = [
   (`((match D (match D (fun x -> x) with D f -> f) with | D g -> g) 5),
    `5,
    true);
-  ]
 
-let test1 tb  : Tac unit =
-    let (t1, t2, b) = tb in
-    debug ("testing: " ^ term_to_string (quote tb));
-    if unify t1 t2 <> b
-    then fail ("test failed: " ^ term_to_string (quote tb))
-    else ()
+  (* Not about matches, just reusing the file *)
+  (`(x:int -> PURE int (wp x)),
+   `(x:int -> PURE int (wp x)),
+   true);
+
+  (`(x:int -> PURE int (wp ((1 + 1) + x))),
+   `(x:int -> PURE int (wp (2 + x))),
+   true);
+  ]
 
 let _ = assert_by_tactic True
         (fun () -> let _ = Tactics.Util.map test1 (tests ()) in
