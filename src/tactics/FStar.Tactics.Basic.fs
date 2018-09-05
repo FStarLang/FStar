@@ -103,38 +103,37 @@ let get_uvar_solved uv =
 let check_goal_solved goal = get_uvar_solved goal.goal_ctx_uvar
 
 let goal_to_string_verbose (g:goal) : string =
-    BU.format2 "%s%s"
+    BU.format2 "%s%s\n"
         (Print.ctx_uvar_to_string g.goal_ctx_uvar)
         (match check_goal_solved g with
          | None -> ""
          | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (Print.term_to_string t))
 
 let goal_to_string (kind : string) (maybe_num : option<(int * int)>) (ps:proofstate) (g:goal) : string =
-    if Options.print_implicits ()
-       || ps.tac_verb_dbg
-    then goal_to_string_verbose g
-    else
-        let w =
-            match get_uvar_solved g.goal_ctx_uvar with
-            | None -> "_"
-            | Some t -> tts (goal_env g) t
-        in
-        let num = match maybe_num with
-                  | None -> ""
-                  | Some (i, n) -> BU.format2 " %s/%s" (string_of_int i) (string_of_int n)
-        in
-        let maybe_label =
-            match g.label with
-            | "" -> ""
-            | l -> " (" ^ l ^ ")"
-        in
-        BU.format6 "%s%s%s:\n%s |- %s : %s\n\n"
-             kind
-             num
-             maybe_label
-             (Print.binders_to_string ", " g.goal_ctx_uvar.ctx_uvar_binders)
-             w
-             (tts (goal_env g) g.goal_ctx_uvar.ctx_uvar_typ)
+    let w =
+        if Options.print_implicits ()
+        then tts (goal_env g) (goal_witness g)
+        else match get_uvar_solved g.goal_ctx_uvar with
+             | None -> "_"
+             | Some t -> tts (goal_env g) (goal_witness g) (* shouldn't really happen that we print a solved goal *)
+    in
+    let num = match maybe_num with
+              | None -> ""
+              | Some (i, n) -> BU.format2 " %s/%s" (string_of_int i) (string_of_int n)
+    in
+    let maybe_label =
+        match g.label with
+        | "" -> ""
+        | l -> " (" ^ l ^ ")"
+    in
+    let actual_goal =
+        if ps.tac_verb_dbg
+        then goal_to_string_verbose g
+        else BU.format3 "%s |- %s : %s\n" (Print.binders_to_string ", " g.goal_ctx_uvar.ctx_uvar_binders)
+                                          w
+                                          (tts (goal_env g) g.goal_ctx_uvar.ctx_uvar_typ)
+    in
+    BU.format4 "%s%s%s:\n%s\n" kind num maybe_label actual_goal
 
 let tacprint  (s:string)       = BU.print1 "TAC>> %s\n" s
 let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
