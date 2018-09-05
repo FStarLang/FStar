@@ -1,6 +1,6 @@
 # Fstar docs container used to build fstar documentation.
 # Docs should always use the latest fstar image available.
-FROM fstar:latest
+FROM fstar-linux:latest
 
 ARG BUILDLOGFILE
 ARG MAXTHREADS
