@@ -1251,17 +1251,24 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
             [] l in
         ({f phis with rng=r}, decls) in
 
-    // This gets called for eq2, eq3, equals and h_equals. They have types:
+    // This gets called for
     // eq2 : #a:Type -> a -> a -> Type
-    // eq3 : #a:Type -> #b:Type -> a -> b -> Type
-    // equals : #a:Type -> a -> a -> Type
-    // h_equals : #a:Type -> a -> #b:Type -> b -> Type
-    // So, to properly cover all cases, extract the two non-implicit arguments and state their equality
     let eq_op r args : (term * decls_t) =
         let rf = List.filter (fun (a,q) -> match q with | Some (Implicit _) -> false | _ -> true) args in
         if List.length rf <> 2
         then failwith (BU.format1 "eq_op: got %s non-implicit arguments instead of 2?" (string_of_int (List.length rf)))
         else enc (bin_op mkEq) r rf
+    in
+
+    // eq3 : #a:Type -> #b:Type -> a -> b -> Type
+    let eq3_op r args : (term * decls_t) =
+        let n = List.length args
+        if n=4
+        then enc (fun terms ->
+                   match terms with
+                   | [t0; v0; t1; v1] -> mkAnd (mkEq t0 t1) (mkEq v0 v1)
+                   | _ -> failwith "Impossible") r args
+        else failwith (BU.format1 "eq3_op: got %s non-implicit arguments instead of 4?" (string_of_int n))
     in
 
     let mk_imp r : Tot<(args -> (term * decls_t))> = function
@@ -1294,7 +1301,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         (Const.ite_lid,   mk_ite);
         (Const.not_lid,   enc_prop_c (un_op mkNot));
         (Const.eq2_lid,   eq_op);
-        (Const.eq3_lid,   eq_op);
+        (Const.eq3_lid,   eq3_op);
         (Const.true_lid,  const_op Term.mkTrue);
         (Const.false_lid, const_op Term.mkFalse);
     ] in

@@ -516,6 +516,14 @@ let injectives =
      "FStar.UInt32.__uint_to_t";
      "FStar.UInt64.__uint_to_t"]
 
+let eq_inj f g =
+     match f, g with
+     | Equal, Equal -> Equal
+     | NotEqual, _
+     | _, NotEqual -> NotEqual
+     | Unknown, _
+     | _, Unknown -> Unknown
+
 (* Precondition: terms are well-typed in a common environment, or this can return false positives *)
 let rec eq_tm (t1:term) (t2:term) : eq_result =
     let t1 = canon_app t1 in
@@ -532,14 +540,6 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       match f with
       | Equal -> g()
       | _ -> Unknown
-    in
-    let eq_inj f g =
-      match f, g with
-      | Equal, Equal -> Equal
-      | NotEqual, _
-      | _, NotEqual -> NotEqual
-      | Unknown, _
-      | _, Unknown -> Unknown
     in
     let equal_data f1 (args1:Syntax.args) f2 (args2:Syntax.args) =
         // we got constructors! we know they are injective and disjoint, so we can do some
