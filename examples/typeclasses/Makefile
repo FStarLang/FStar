@@ -14,7 +14,7 @@ include ../Makefile.common
 verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
 
 native_bench1:
-	$(FSTAR) --debug Loop2 --debug_level TCDeclTime Loop2.fst
+	$(FSTAR) Loop2.fst --timing
 
 native_bench2:
 	rm -f FStar_Tactics_Typeclasses.*

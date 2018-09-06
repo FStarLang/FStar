@@ -38,7 +38,7 @@ and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
 
 [@plugin]
 let tcresolve () : Tac unit =
-    match catch (fun () -> tcresolve' [] 10) with
+    match catch (fun () -> tcresolve' [] 16) with
     | Inl e -> fail ("Typeclass resolution failed: " ^ e)
     | Inr v -> v
 
@@ -58,14 +58,11 @@ let remove s1 s2 =
   String.substring s2 (String.strlen s1) (String.strlen s2 - String.strlen s1)
 let _ = assert_norm (remove "a" "abc" == "bc")
 
+(* In TAC, not Tot *)
 let rec mk_abs (bs : list binder) (body : term) : Tac term (decreases bs) =
     match bs with
     | [] -> body
     | b::bs -> pack (Tv_Abs b (mk_abs bs body))
-
-let binder_to_term (b : binder) : Tac term =
-  let bv, _ = inspect_binder b in
-  pack (Tv_Var bv)
 
 let rec last (l : list 'a) : Tac 'a =
   match l with
@@ -119,16 +116,18 @@ let mk_class (nm:string) : Tac unit =
                   let tcr = (`tcresolve) in
                   let tcdict = pack_binder dbv (Q_Meta tcr) in
                   let bs = ps @ [tcdict] in
-                  (* let ty = mk_tot_arr bs (type_of_binder b) in *)
                   let ty = pack Tv_Unknown in (* Just leave it to inference *)
                   let proj = pack (Tv_FVar (pack_fv (cur_module () @ [base ^ s]))) in
                   let def : term = mk_abs bs (mk_e_app proj [binder_to_term tcdict]) in
+                  //dump ("def = " ^ term_to_string def);
+                  //dump ("ty  = " ^ term_to_string ty);
+
                   let ty : term = ty in
                   let def : term = def in
                   let sfv : fv = sfv in
                   let se = pack_sigelt (Sg_Let false sfv us ty def) in
                   //let se = set_sigelt_attrs [`tcnorm] se in
-                  (* print ("trying to return : " ^ term_to_string (quote se)); *)
+                  dump ("trying to return : " ^ term_to_string (quote se));
                   add_elem (fun () -> exact (quote se));
                   ()
     ) bs;
