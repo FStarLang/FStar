@@ -242,8 +242,6 @@ let destruct_and (b:binder) : Tac (binder * binder) =
   let b2 = implies_intro () in
   (b1, b2)
 
-// let _ = assert ((True /\ True) ==> False) by (dump "1"; let _ = destruct_and (implies_intro()) in dump "2")
-
 let canon_binder_mem_eq (b:binder) : Tac unit =
     ddump "canon_binder_mem_eq before";
     norm_binder_type [delta_only [`%mem_eq]] b;
@@ -342,9 +340,7 @@ let find_frame (refs : list term) (small : term) (big : term) : Tac (term * bind
     let eq = `((`#small <*> `#frame) == `#big) in
 
     //cut
-    ddump "GG 0";
     apply_lemma (mk_e_app (`__tcut) [eq]);
-    ddump "GG 1 with new goal:";
 
     //flip so that the current goal is the equality of memory expressions
     flip ();
@@ -409,11 +405,8 @@ let rec sl (i:int) : Tac unit =
     tlabel "mem_eq";
     unfold_first_occurrence (`%mem_eq);
     norm [delta_only [`%dfst; `%dsnd]];
-    ddump "GG 1";
     canon_monoid_sl' ();
-    ddump "GG 2";
     trefl ();
-    ddump "GG 3";
     ()
 
   | Bind ->
@@ -534,21 +527,15 @@ let rec sl (i:int) : Tac unit =
 
     let (frame, eq_hyp) = find_frame fp h th0 in
 
-    ddump "GG 0";
 
     witness (`(`#h_a <*> `#frame));
-    ddump "GG 0.1";
     witness h_b;
-    ddump "GG 0.2";
 
     apply_lemma (`(par_wp'_lemma));
-    ddump "GG 1";
 
     canon_monoid_sl fp;
-    ddump "GG 3";
     trefl ();
 
-    ddump "GG 4";
     sl (i + 1)
 
   | _ -> fail "impossible.. coverage"
@@ -626,8 +613,8 @@ let prelude' () : Tac unit =
   ignore (implies_intro ())
 
 let sl_auto () : Tac unit =
-   prelude'();
+   prelude' ();
    ddump "after prelude";
-   sl(0);
+   sl 0;
    ddump "after sl";
    ()

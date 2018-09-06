@@ -60,11 +60,6 @@ new_effect {
 
 let (<|) f x = f x
 
-type sref = (a:Type & ref a)
-let refs = list sref
-
-let tosref #a (r : ref a) : sref = Mkdtuple2 a r
-
 let with_fp (fp : refs) (x:'a) : 'a = x
 
 let by_smt (x:Type0) : Type0 = x

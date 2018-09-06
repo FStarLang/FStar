@@ -172,3 +172,41 @@ val em_invert (#a:Type) (r:ref a) (v1 v2 : a) (m1 m2 : memory)
   : Lemma (requires (defined (r |> v1 <*> m1) /\ (r |> v1 <*> m1) == (r |> v2 <*> m2)))
           (ensures (v1 == v2 /\ m1 == m2))
           [SMTPat (r |> v1 <*> m1); SMTPat (r |> v2 <*> m2)]
+
+type sref = (a:Type & ref a)
+let refs = list sref
+let ii #a (r : ref a) : sref = Mkdtuple2 a r
+
+(* Does there exist a memory with domain fp such that pred? *)
+let dom_exists (fp:list sref) (pred:memory -> Type0) : Type0 =
+  let rec aux acc fp : Tot Type0 (decreases fp) =
+    match fp with
+    | [] -> pred acc
+    (* this case prevents spurious `emp <*>` which actually matter (the pattern doesn't kick in?) *)
+    (* the pattern was wrong, so not realy needed now, but we might as well keep it I guess *)
+    | [h] ->
+      let ty = dfst h in
+      let r : ref ty = dsnd #Type #ref h in
+      exists (v:ty). pred (acc <*> r |> v)
+    | h :: t -> (* Note, if we match on the sigma pair here, we might prevent reduction *)
+      let ty = dfst h in
+      let r : ref ty = dsnd #Type #ref h in
+      exists (v:ty). aux (acc <*> r |> v) t
+  in aux emp fp
+
+(* Do all memories with domain fp satisfy pred? *)
+let dom_forall (fp:list sref) (pred:memory -> Type0) : Type0 =
+  let rec aux acc fp : Tot Type0 (decreases fp) =
+    match fp with
+    | [] -> pred acc
+    (* this case prevents spurious `emp <*>` which actually matter (the pattern doesn't kick in?) *)
+    (* the pattern was wrong, so not realy needed now, but we might as well keep it I guess *)
+    | [h] ->
+      let ty = dfst h in
+      let r : ref ty = dsnd #Type #ref h in
+      forall (v:ty). pred (acc <*> r |> v)
+    | h :: t -> (* Note, if we match on the sigma pair here, we might prevent reduction *)
+      let ty = dfst h in
+      let r : ref ty = dsnd #Type #ref h in
+      forall (v:ty). aux (acc <*> r |> v) t
+  in aux emp fp
