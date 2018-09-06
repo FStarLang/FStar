@@ -10,14 +10,20 @@ module HST = FStar.HyperStack.ST
 
 private let srel_to_lsrel (#a:Type0) (len:nat) (pre:srel a) :P.preorder (Seq.lseq a len) = fun s1 s2 -> pre s1 s2
 
+(*
+ * Counterpart of compatible_sub from the fsti but using sequences
+ *
+ * The patterns are guarded tightly, the proof of transitivity gets quite flaky otherwise
+ * The cost is that we have to additional asserts as triggers
+ *)
 let compatible_sub_preorder (#a:Type0)
   (len:nat) (rel:srel a) (i:nat) (j:nat{i <= j /\ j <= len}) (sub_rel:srel a)
   = (forall (s1 s2:Seq.seq a). {:pattern (rel s1 s2); (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))}
                          (Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) ==>
-		         (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))) /\  //(a)
+		         (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))) /\
     (forall (s s2:Seq.seq a). {:pattern (sub_rel (Seq.slice s i j) s2); (rel s (Seq.replace_subseq s i j s2))}
                         (Seq.length s == len /\ Seq.length s2 == j - i /\ sub_rel (Seq.slice s i j) s2) ==>
-  		        (rel s (Seq.replace_subseq s i j s2)))  //(b)
+  		        (rel s (Seq.replace_subseq s i j s2)))
 
 (*
  * Reflexivity of the compatibility relation
@@ -30,7 +36,7 @@ let lemma_seq_sub_compatilibity_is_reflexive (#a:Type0) (len:nat) (rel:srel a)
 (*
  * Transitivity of the compatibility relation
  *
- * i2 and j2 are offsets within [i1, j1) (i.e. assuming i1 = 0)
+ * i2 and j2 are relative offsets within [i1, j1) (i.e. assuming i1 = 0)
  *)
 let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
   (len:nat) (rel:srel a) (i1 j1:nat) (rel1:srel a) (i2 j2:nat) (rel2:srel a)
@@ -119,7 +125,7 @@ let as_seq #_ #_ #_ h b =
 
 let length_as_seq #_ #_ #_ _ _ = ()
 
-let mgsub #a #rrel #rel b i len sub_rel =
+let mgsub #a #rrel #rel sub_rel b i len =
   match b with
   | Null -> Null
   | Buffer max_len content idx length () ->
@@ -615,13 +621,13 @@ let loc_includes_buffer #t #_ #_ #_ #_ b1 b2 =
   MG.loc_includes_aloc #_ #cls #(frameOf b1) #(as_addr b1) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2 <: t1)
 
 let loc_includes_gsub_buffer_r l #_ #_ #_ b i len sub_rel =
-  let b' = mgsub b i len sub_rel in
+  let b' = mgsub sub_rel b i len in
   loc_includes_buffer b b';
   loc_includes_trans l (loc_buffer b) (loc_buffer b')
 
 let loc_includes_gsub_buffer_l #_ #_ #rel b i1 len1 sub_rel1 i2 len2 sub_rel2 =
-  let b1 = mgsub b i1 len1 sub_rel1 in
-  let b2 = mgsub b i2 len2 sub_rel2 in
+  let b1 = mgsub sub_rel1 b i1 len1 in
+  let b2 = mgsub sub_rel2 b i2 len2 in
   loc_includes_buffer b1 b2
 
 #push-options "--z3rlimit 20"
@@ -673,7 +679,7 @@ let loc_disjoint_buffer #_ #_ #_ #_ #_ #_ b1 b2 =
   MG.loc_disjoint_aloc_intro #_ #cls #(frameOf b1) #(as_addr b1) #(frameOf b2) #(as_addr b2) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
 
 let loc_disjoint_gsub_buffer #_ #_ #_ b i1 len1 sub_rel1 i2 len2 sub_rel2 =
-  loc_disjoint_buffer (mgsub b i1 len1 sub_rel1) (mgsub b i2 len2 sub_rel2)
+  loc_disjoint_buffer (mgsub sub_rel1 b i1 len1) (mgsub sub_rel2 b i2 len2)
 
 let loc_disjoint_addresses = MG.loc_disjoint_addresses_intro #_ #cls
 
@@ -927,7 +933,7 @@ let pointer_distinct_sel_disjoint #a #_ #_ #_ #_ b1 b2 h =
 	 
 let is_null #_ #_ #_ b = Null? b
 
-let msub #a #rrel #rel b i len sub_rel =
+let msub #a #rrel #rel sub_rel b i len =
   match b with
   | Null -> Null
   | Buffer max_len content i0 len0 () ->
@@ -935,7 +941,7 @@ let msub #a #rrel #rel b i len sub_rel =
                                               (U32.v i) (U32.v i + U32.v len) sub_rel;
     Buffer max_len content (U32.add i0 i) len ()
 
-let moffset #a #rrel #rel b i sub_rel =
+let moffset #a #rrel #rel sub_rel b i =
   match b with
   | Null -> Null
   | Buffer max_len content i0 len () ->
