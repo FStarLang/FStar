@@ -748,7 +748,7 @@ let interp_prop_eq2 (args:args) : option<t> =
 
 let interp_prop_eq3 (args:args) : option<t> =
     match args with
-    | [(_u, _); (_v, _); (t1, _); (a1, _); (t2, _); (a2, _)] ->  //eq3
+    | [(_u, _); (_v, _); (t1, _); (t2, _); (a1, _); (a2, _)] ->  //eq3
       begin match U.eq_inj (eq_t t1 t2) (eq_t a1 a2) with
       | U.Equal -> Some (embed e_bool bogus_cbs true)
       | U.NotEqual -> Some (embed e_bool bogus_cbs false)

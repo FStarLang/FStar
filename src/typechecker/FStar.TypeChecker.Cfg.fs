@@ -811,7 +811,7 @@ let equality_ops : BU.psmap<primitive_step> =
     let interp_prop_eq3 (psc:psc) _norm_cb (args:args) : option<term> =
         let r = psc.psc_range in
         match args with
-        | [(t1, _); (a1, _); (t2; _); (a2, _)] ->    //eq3       
+        | [(t1, _); (t2, _); (a1, _); (a2, _)] ->    //eq3       
             (match U.eq_inj (U.eq_tm t1 t2) (U.eq_tm a1 a2) with
             | U.Equal -> Some ({U.t_true with pos=r})
             | U.NotEqual -> Some ({U.t_false with pos=r})

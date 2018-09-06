@@ -1262,11 +1262,11 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
 
     // eq3 : #a:Type -> #b:Type -> a -> b -> Type
     let eq3_op r args : (term * decls_t) =
-        let n = List.length args
+        let n = List.length args in
         if n=4
         then enc (fun terms ->
                    match terms with
-                   | [t0; v0; t1; v1] -> mkAnd (mkEq t0 t1) (mkEq v0 v1)
+                   | [t0; t1; v0; v1] -> mkAnd (mkEq(t0, t1), mkEq(v0, v1))
                    | _ -> failwith "Impossible") r args
         else failwith (BU.format1 "eq3_op: got %s non-implicit arguments instead of 4?" (string_of_int n))
     in
