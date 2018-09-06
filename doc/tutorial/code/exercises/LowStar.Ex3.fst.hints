@@ -1,5 +1,5 @@
 [
-  "„\u0001Õ\u0019ùs‰òŒ8#Ò&\u0014Œß",
+  "˜\u0015Ð½C@·\u0001í‡Š”3\u000f£u",
   [
     [
       "LowStar.Ex3.ok",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "4c73e6da6e89db63acfdb8a0b1411ac1"
+      "209ded4da9963707ffc25555492545b2"
     ],
     [
       "LowStar.Ex3.repr",
@@ -46,7 +46,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "6331829b15b7e7b0f54a39cb1f639aac"
+      "2ec270d87b92a72e527ac34177702e0b"
     ],
     [
       "LowStar.Ex3.pop",
@@ -75,7 +75,7 @@
         "typing_LowStar.Buffer.get"
       ],
       0,
-      "97ea4b2d5071231241278e90faa854c0"
+      "c696247fc0cc16cdb857da7ee8d05c87"
     ],
     [
       "LowStar.Ex3.ok",
@@ -84,7 +84,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t__uu___haseq" ],
       0,
-      "c5550cd10320233dde6fe7cf2bbc476e"
+      "e59f78d12882a8d45a3cd4a828e52260"
     ],
     [
       "LowStar.Ex3.repr",
@@ -122,7 +122,7 @@
         "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "f2cd0b17f9e8f5c0ddf9092f09b4a595"
+      "ca417d89865e013835b649d554aedf79"
     ],
     [
       "LowStar.Ex3.pop",
@@ -151,7 +151,7 @@
         "typing_LowStar.Buffer.get"
       ],
       0,
-      "2e7fbd5d31e9b63bb0f2e78e694985a7"
+      "1308ce0880ffbf0bd2d4e36fb26855e8"
     ],
     [
       "LowStar.Ex3.malloc",
@@ -159,12 +159,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "b2t_def",
         "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_LowStar.Ex3_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
       ],
       0,
-      "bf37849409079795a26608f9c374cfb8"
+      "fccd4dddda64854fbcd980ec7595c927"
     ]
   ]
 ]

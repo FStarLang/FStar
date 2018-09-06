@@ -1,5 +1,5 @@
 [
-  ".\u0000S9mˇÅRàì\u0013ß÷\bêÃ",
+  "©GÆÌ ó4µ8œ¸•zåúÈ",
   [
     [
       "LowStar.Monotonic.Buffer.live_is_null",
@@ -1180,7 +1180,7 @@
         "refinement_interpretation_LowStar.Monotonic.Buffer_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
       ],
       0,
-      "d505c02df6942bfe6ff296c293dd5d73"
+      "b2ba69aa7e452504ecedabb354134c2b"
     ],
     [
       "LowStar.Monotonic.Buffer.mmalloc",
@@ -1188,12 +1188,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Monotonic.HyperStack.mem",
-        "refinement_interpretation_LowStar.Monotonic.Buffer_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55"
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "132648c72b5c413648fdeb8daf2cd241"
+      "22b46c771d49ad7a590307b2979c8002"
     ],
     [
       "LowStar.Monotonic.Buffer.malloca",
@@ -1202,11 +1203,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Monotonic.HyperStack.mem",
-        "refinement_interpretation_LowStar.Monotonic.Buffer_Tm_refine_9b063033f9f8b075fbdcde91a96a63d9"
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt32.n",
+        "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "dcbf7573fcce84f8e4994fa206e5a77b"
+      "7322df24c2fe0908162c95eea34d3aac"
     ],
     [
       "LowStar.Monotonic.Buffer.blit",
@@ -1239,7 +1245,7 @@
         "typing_FStar.UInt32.v", "typing_LowStar.Monotonic.Buffer.frameOf"
       ],
       0,
-      "b837f386d0e1a9d391031e2c3c8b3a01"
+      "bd011d7aa6e7464524d1b09d5118db8d"
     ],
     [
       "LowStar.Monotonic.Buffer.cloc_of_loc_addresses",
@@ -1251,7 +1257,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "394ca2389ba01cb224cbc18518948320"
+      "d5360f04def47b3b2af840ad058e8ea4"
     ]
   ]
 ]
