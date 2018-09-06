@@ -1,4 +1,4 @@
-module SL.ConcurrentExamples
+module SL.ExamplesLocks2
 
 open SL.Base
 open SL.AutoTactic
