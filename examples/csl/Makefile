@@ -1,18 +1,14 @@
 FSTAR_HOME=../..
-include ../Makefile.include
+# KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
+INCLUDE_PATHS=../tactics
+EXCLUDED_FSTAR_FILES=
+FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
-OTHERFLAGS+=--include ../tactics
+all: verify-all
 
-all: SepLogic.Heap.uver Shallow.uver SL.Heap.uver SL.Effect.uver	\
-	SL.Shallow.uver Examples.uver		\
-	SL.ExamplesAuto.custom SL.ConcurrentExamples.custom
+$(CACHE_DIR):
+	mkdir -p $@
 
-SL.ExamplesAuto.custom: OTHERFLAGS+=--cache_off
-SL.ConcurrentExamples.custom: OTHERFLAGS+=--cache_off
+include ../Makefile.common
 
-#Excludes extracted interfaces for these examples
-%.custom: %.fst
-	$(FSTAR) --use_extracted_interfaces false $^
-
-%.fst-in:
-	@echo $(OTHERFLAGS)
+verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
