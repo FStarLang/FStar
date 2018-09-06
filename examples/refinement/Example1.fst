@@ -1,6 +1,6 @@
 module Example1
 open FStar.Integers
-module H=HighComp
+module H = HighComp
 module L = LowComp
 
 effect HighMon (a:Type) (wp:H.hwp_mon a) = H.HIGH a wp
