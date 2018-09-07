@@ -3301,28 +3301,28 @@ let (destruct_typ_as_formula :
                          FStar_Parser_Const.c_eq2_lid)
                     ->
                     FStar_Pervasives_Native.Some
-                      (BaseConn (FStar_Parser_Const.eq2_lid, args))
+                      (BaseConn (FStar_Parser_Const.c_eq2_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_0_9) when
                     (_0_9 = (Prims.parse_int "3")) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_eq2_lid)
                     ->
                     FStar_Pervasives_Native.Some
-                      (BaseConn (FStar_Parser_Const.eq2_lid, args))
+                      (BaseConn (FStar_Parser_Const.c_eq2_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_0_10) when
                     (_0_10 = (Prims.parse_int "2")) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_eq3_lid)
                     ->
                     FStar_Pervasives_Native.Some
-                      (BaseConn (FStar_Parser_Const.eq3_lid, args))
+                      (BaseConn (FStar_Parser_Const.c_eq3_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_0_11) when
                     (_0_11 = (Prims.parse_int "4")) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_eq3_lid)
                     ->
                     FStar_Pervasives_Native.Some
-                      (BaseConn (FStar_Parser_Const.eq3_lid, args))
+                      (BaseConn (FStar_Parser_Const.c_eq3_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_0_12) when
                     (_0_12 = (Prims.parse_int "0")) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv

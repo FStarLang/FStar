@@ -3616,8 +3616,9 @@ let (destruct_eq' :
     match uu____5688 with
     | FStar_Pervasives_Native.Some (FStar_Syntax_Util.BaseConn
         (l,uu____5698::(e1,uu____5700)::(e2,uu____5702)::[])) when
-        FStar_Ident.lid_equals l FStar_Parser_Const.eq2_lid ->
-        FStar_Pervasives_Native.Some (e1, e2)
+        (FStar_Ident.lid_equals l FStar_Parser_Const.eq2_lid) ||
+          (FStar_Ident.lid_equals l FStar_Parser_Const.c_eq2_lid)
+        -> FStar_Pervasives_Native.Some (e1, e2)
     | uu____5763 -> FStar_Pervasives_Native.None
   
 let (destruct_eq :
