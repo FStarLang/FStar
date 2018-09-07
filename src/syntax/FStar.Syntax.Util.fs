@@ -1458,18 +1458,18 @@ let destruct_typ_as_formula f : option<connective> =
         // eq2 can have 2 args or 3
         | Tm_fvar fv, 2
             when fv_eq_lid fv PC.c_eq2_lid ->
-                Some (BaseConn (PC.eq2_lid, args))
+                Some (BaseConn (PC.c_eq2_lid, args))
         | Tm_fvar fv, 3
             when fv_eq_lid fv PC.c_eq2_lid ->
-                Some (BaseConn (PC.eq2_lid, args))
+                Some (BaseConn (PC.c_eq2_lid, args))
 
         // eq3 can have 2 args or 4
         | Tm_fvar fv, 2
             when fv_eq_lid fv PC.c_eq3_lid ->
-                Some (BaseConn (PC.eq3_lid, args))
+                Some (BaseConn (PC.c_eq3_lid, args))
         | Tm_fvar fv, 4
             when fv_eq_lid fv PC.c_eq3_lid ->
-                Some (BaseConn (PC.eq3_lid, args))
+                Some (BaseConn (PC.c_eq3_lid, args))
 
         | Tm_fvar fv, 0
             when fv_eq_lid fv PC.c_true_lid ->
