@@ -52,14 +52,12 @@ let igcmalloc_of_list (#a:Type0) (r:HS.rid) (init:list a)
     witness_p b (cpred (Seq.seq_of_list init));
     b
 
-inline_for_extraction let witness_contents (#a:Type0)
-  :b:ibuffer a -> s:Seq.seq a
-   -> HST.ST unit (requires (fun h0      -> recallable b /\ Seq.equal (as_seq h0 b) s))
+let witness_contents (#a:Type0) (b:ibuffer a) (s:Seq.seq a)
+  :HST.ST unit (requires (fun h0      -> recallable b /\ Seq.equal (as_seq h0 b) s))
                  (ensures  (fun h0 _ h1 -> h0 == h1 /\ witnessed b (cpred s)))
-  = fun b s -> witness_p b (cpred s)
+  = witness_p b (cpred s)
 
-inline_for_extraction let recall_contents (#a:Type0)
-  :b:ibuffer a -> s:Seq.seq a
-   -> HST.ST unit (requires (fun _       -> recallable b /\ witnessed b (cpred s)))
-                 (ensures  (fun h0 _ h1 -> h0 == h1 /\ live h0 b /\ as_seq h0 b == s))
-  = fun b s -> recall b; recall_p b (cpred s)
+let recall_contents (#a:Type0) (b:ibuffer a) (s:Seq.seq a)
+  :HST.ST unit (requires (fun _       -> recallable b /\ witnessed b (cpred s)))
+               (ensures  (fun h0 _ h1 -> h0 == h1 /\ live h0 b /\ as_seq h0 b == s))
+  = recall b; recall_p b (cpred s)
