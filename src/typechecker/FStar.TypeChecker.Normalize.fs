@@ -656,10 +656,15 @@ let reduce_equality norm_cb cfg tm =
 (* Main normalization function of the abstract machine                                                              *)
 (********************************************************************************************************************)
 
+(*
+ * AR: norm requests can some times have additional arguments since we flatten the arguments sometimes in the typechecker
+ *     so, a request may look like: normalize_term [a; b; c; d]
+ *     in such cases, we rejig the request to be (normalize_term a) [b; c; d]
+ *)
 type norm_request_t =
-  | Norm_request_none
-  | Norm_request_ready
-  | Norm_request_requires_rejig
+  | Norm_request_none  //not a norm request
+  | Norm_request_ready  //in the form that can be reduced immediately
+  | Norm_request_requires_rejig  //needs rejig
 
 let is_norm_request (hd:term) (args:args) :norm_request_t =
   let aux (min_args:int) :norm_request_t = args |> List.length |> (fun n -> if n < min_args then Norm_request_none
