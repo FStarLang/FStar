@@ -427,8 +427,13 @@ let handleable_op op args =
 
 let comment_stack : ref<(list<(string*range)>)>= BU.mk_ref []
 
-(* some meta-information that informs the placement of comments around a declaration *)
-type decl_meta = {r: range; has_qs: bool; has_attrs: bool; has_fsdoc: bool; is_fsdoc: bool}
+(* some meta-information that informs spacing and the placement of comments around a declaration *)
+type decl_meta =
+    {r: range;
+     has_qs: bool; //has quantifiers
+     has_attrs: bool; //has attributes
+     has_fsdoc: bool;
+     is_fsdoc: bool} //is a standalone fsdoc
 let dummy_meta = {r = dummyRange; has_qs = false; has_attrs = false; has_fsdoc = false; is_fsdoc = false}
 
 let with_comment printer tm tmrange =
@@ -456,49 +461,60 @@ let with_comment printer tm tmrange =
   in
   group (comments ^^ printed_e)
 
-(* [place_comments_until_pos k lbegin pos doc] appends to doc all the comments present in *)
+(* [place_comments_until_pos k lbegin pos doc r init] appends to doc all the comments present in *)
 (* [comment_stack] whose range is before pos and separate each comments by as many lines *)
 (* as indicated by the range information (at least [k]) using [lbegin] as the last line of *)
 (* [doc] in the original document. Between 2 comments [k] is set to [1] *)
-let rec place_comments_until_pos k lbegin pos_end meta_decl doc r (init: bool) =
+(* r is true if this is a recursive call (i.e. a comment has been placed) *)
+(* init is true when placing the initial comment *)
+let rec place_comments_until_pos (k: int) (lbegin: int) pos meta_decl doc (r: bool) (init: bool) =
   match !comment_stack with
-  | (comment, crange) :: cs when range_before_pos crange pos_end ->
+  | (comment, crange) :: cs when range_before_pos crange pos ->
     comment_stack := cs ;
     let lnum = max k (line_of_pos (start_of_range crange) - lbegin) in
     let lnum = min 2 lnum in
-    // let doc = doc ^^ repeat lnum (str "\\n2" ^^ hardline)^^ str comment ^^ (str <| string_of_int lbegin) ^^ (str "^") ^^ (str <| string_of_int (line_of_pos pos_end)) in
     let doc = doc ^^ repeat lnum hardline ^^ str comment in
-    place_comments_until_pos 1 (line_of_pos (end_of_range crange)) pos_end meta_decl doc true init
+    place_comments_until_pos 1 (line_of_pos (end_of_range crange)) pos meta_decl doc true init
   | _ ->
     if doc = empty then
       empty
     else
-      let end_correction = if meta_decl.has_qs then 1 else 0 in
-      let fsdoc_correction = if meta_decl.has_fsdoc then 1 else 0 in
-      let lnum = line_of_pos pos_end - lbegin in
+      // lnum is initially (approximately) the number of newlines between the end of the previous declaration
+      // and the beginning of the one currently being printed, in the original source file (which may change
+      // during prettypriting), not accounting for fsdocs, qualifiers and attributes; as a consequence,
+      // we have to massage this number in the following steps in order to achieve some sensible spacing and
+      // to keep prettyprinting idempotent
+      let lnum = line_of_pos pos - lbegin in
 
-      // let lnum = if lnum >= 2 then lnum - end_correction else lnum in //make up for incorrect range information in declarations with qualifiers
-      // let lnum = min 2 lnum in //puts a limit of at most one empty line between decls
-      // let lnum = if lnum = 2 then lnum - fsdoc_correction else lnum in
+      // limit the number of newlines between declarations to 3 (2 empty lines in between)
       let lnum = min 3 lnum in
-      // let lnum = max k lnum in
+
+      // range information does not include qualifiers or attributes (the start position is at "let"),
+      // so we need to account for (at least) one extra line
       let lnum = if meta_decl.has_qs || meta_decl.has_attrs then lnum - 1 else lnum in
+
+      // make sure lnum is not smaller than k
       let lnum = max k lnum in
 
-      // if a declaration has both attributes and qualifiers, insert 2 spaces between the comment and the declaration
-      // this is not ideal but, given that the number of lines of the declaration unpredictably changes after the prettypriting,
-      // depending on the original positioning of the attributes and qualifiers, it makes sure that neither (1) the attributes are on the same
-      // line as the last line of the comment nor (2) idempotence of prettyprinting is broken
-      let lnum = if meta_decl.has_qs && meta_decl.has_attrs then 3 else lnum in //revise this
+      // if the declaration has both qualifiers and attributes (which each go on a separate line)
+      // force exactly 2 spaces; this compromise will mean that the following declaration is always
+      // separated by exactly 1 empty line
+      let lnum = if meta_decl.has_qs && meta_decl.has_attrs then 2 else lnum in
+
+      // since fsdocs are not accounted for in the range information (the range of the decl preceeding
+      // the one which has an fsdoc will extend all the way to the beginning of the latter declaration)
+      // we need to make sure we don't insert unecessary spaces
       let lnum = if (not r) && meta_decl.has_fsdoc then (min 2 lnum) else lnum in
+
+      // if a comment is placed before an fsdoc, force exactly 1 newline between the comment and the fsdoc
       let lnum = if r && (meta_decl.is_fsdoc || meta_decl.has_fsdoc) then 1 else lnum in
+
+      // if the module begins with a comment, force exactly 2 newlines between it and the following declaration
       let lnum = if init then 2 else lnum in
 
       doc ^^ repeat lnum hardline
-      // str "{" ^^ doc ^^ str "}" ^^ repeat lnum (str "\\n" ^^ hardline) ^^ (if init then str "$I$" else empty) ^^(str <| string_of_int lbegin) ^^ (str "*") ^^ (str <| string_of_int (line_of_pos pos_end)) ^^ (str "+") ^^ (str <| string_of_int (end_correction)) ^^ (str "+") ^^ (str <| string_of_int (fsdoc_correction))
-      // doc ^^ (if meta_decl.has_fsdoc then str "FSDOC" else empty) ^^ repeat lnum (str "\\n" ^^ hardline)
 
-(* [separate_map_with_comments prefix sep f xs extract_range] is the document *)
+(* [separate_map_with_comments prefix sep f xs extract_meta] is the document *)
 (*                                                                            *)
 (*   prefix (f xs[0]) *)
 (*   comments[0] *)
@@ -508,7 +524,7 @@ let rec place_comments_until_pos k lbegin pos_end meta_decl doc r (init: bool) =
 (*   sep (f xs[n]) *)
 (*                                                                            *)
 (* where comments[_] are obtained by successive calls to [place_comments_until_pos] *)
-(* using the range informations provided by [extract_range] and the comments in *)
+(* using the range and metainformation provided by [extract_meta] and the comments in *)
 (* [comment_stack]. [xs] must contain at least one element. There is no break *)
 (* inserted after [prefix] and [sep]. *)
 let separate_map_with_comments prefix sep f xs extract_meta =
@@ -525,7 +541,7 @@ let separate_map_with_comments prefix sep f xs extract_meta =
   in
   snd (List.fold_left fold_fun init xs)
 
-(* [separate_map_with_comments_kw prefix sep f xs extract_range] is the same  *)
+(* [separate_map_with_comments_kw prefix sep f xs extract_meta] is the same  *)
 (* as separate_map_with_comments but the keyword is also passed as an         *)
 (* argument to f, resulting in                                                *)
 (*                                                                            *)
@@ -566,7 +582,7 @@ let rec p_decl (d: decl): document =
         p_qualifiers d.quals
     | _ -> p_qualifiers d.quals
   in
-  optional (fun d -> (*hardline ^^ (str "!1") ^^*) p_fsdoc d) d.doc ^^
+  optional (fun d -> p_fsdoc d) d.doc ^^
   p_attributes d.attrs ^^
   qualifiers ^^
   p_rawDecl d
@@ -587,9 +603,7 @@ and p_fsdoc (doc, kwd_args) =
         in
         separate_map hardline process_kwd_arg kwd_args ^^ hardline
   in
-  (* TODO : these newlines should not always be there *)
-  lparen ^^ star ^^ star ^^ str doc ^^ kwd_args_doc ^^ star ^^ rparen ^^ hardline // ^^ str "!2"
-
+  lparen ^^ star ^^ star ^^ str doc ^^ kwd_args_doc ^^ star ^^ rparen ^^ hardline
 
 and p_justSig d = match d.d with
   | Val (lid, t) ->
@@ -655,7 +669,7 @@ and p_rawDecl d = match d.d with
   | Pragma p ->
     p_pragma p
   | Fsdoc doc ->
-    p_fsdoc doc // ^^ (str "!3") // ^^ hardline (* needed so that the comment is treated as standalone *)
+    p_fsdoc doc
   | Main _ ->
     failwith "*Main declaration* : Is that really still in use ??"
   | Tycon(true, _, _) ->
@@ -1674,5 +1688,3 @@ let modul_with_comments_to_document (m:modul) comments =
   comment_stack := [] ;
   should_print_fs_typ_app := false ;
   (initial_comment ^^ doc, comments)
-
-
