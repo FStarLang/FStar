@@ -713,9 +713,9 @@ and translate_expr env e: expr =
     when (string_of_mlpath p = "FStar.Buffer.createL" || string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca_of_list") ->
       EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; e2 ])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _erid; e2 ])
     when string_of_mlpath p = "LowStar.Monotonic.Buffer.mgcmalloc_of_list" ||
-         string_of_mlpath p = "LowStar.Buffer.gcmalloc_of_list" ->
+         string_of_mlpath p = "LowStar.ImmutableBuffer.igcmalloc_of_list" ->
       EBufCreateL (Eternal, List.map (translate_expr env) (list_elements e2))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
@@ -723,7 +723,8 @@ and translate_expr env e: expr =
       EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.rcreate" || string_of_mlpath p = "LowStar.Monotonic.Buffer.mgcmalloc") ->
+    when (string_of_mlpath p = "FStar.Buffer.rcreate" || string_of_mlpath p = "LowStar.Monotonic.Buffer.mgcmalloc" ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.igcmalloc") ->
       EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
@@ -780,6 +781,13 @@ and translate_expr env e: expr =
       // (void*)0 so that it can get rid of ghost calls to HST.get at the
       // beginning of functions, which is needed to enforce the push/pop
       // structure.
+      EUnit
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ebuf; _eseq ])
+    when (string_of_mlpath p = "LowStar.Monotonic.Buffer.witness_p" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.recall_p" ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.witness_contents" ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.recall_contents") ->
       EUnit
 
   | MLE_App ({ expr = MLE_Name p }, [ e ]) when string_of_mlpath p = "Obj.repr" ->

@@ -19,7 +19,7 @@ private let trivial_preorder (a:Type0) :srel a = fun _ _ -> True
 
 type buffer (a:Type0) = mbuffer a (trivial_preorder a) (trivial_preorder a)
 
-let null (#a:Type0) :buffer a = mnull #a #(trivial_preorder a) #(trivial_preorder a)
+unfold let null (#a:Type0) :buffer a = mnull #a #(trivial_preorder a) #(trivial_preorder a)
 
 unfold let gsub (#a:Type0) = mgsub #a #(trivial_preorder a) #(trivial_preorder a) (trivial_preorder a)
 
