@@ -231,12 +231,14 @@ val back:
 let back #a vec =
   B.index (Vec?.vs vec) (size_of vec - 1ul)
 
-val slice_append:
+/// Operations
+
+private val slice_append:
   #a:Type -> s:S.seq a ->
   i:nat -> j:nat{i <= j} -> k:nat{j <= k && k <= S.length s} ->
   Lemma (S.equal (S.slice s i k)
 		 (S.append (S.slice s i j) (S.slice s j k)))
-let slice_append #a s i j k = ()
+private let slice_append #a s i j k = ()
 
 val assign:
   #a:Type -> vec:vector a ->
@@ -262,8 +264,6 @@ let assign #a vec i v =
   slice_append (as_seq hh1 vec) 0 (U32.v i + 1) (U32.v (size_of vec));
   slice_append (S.upd (as_seq hh0 vec) (U32.v i) v) 0 (U32.v i) (U32.v i + 1);
   slice_append (S.upd (as_seq hh0 vec) (U32.v i) v) 0 (U32.v i + 1) (U32.v (size_of vec))
-
-/// Operations
 
 private val resize_ratio: uint32_t
 private let resize_ratio = 2ul
@@ -302,6 +302,30 @@ let insert #a vec v =
   else
     (B.upd vs sz v;
     Vec (sz + 1ul) cap vs)
+
+val flush:
+  #a:Type -> vec:vector a -> ia:a ->
+  i:uint32_t{i < size_of vec} ->
+  HST.ST (vector a)
+    (requires (fun h0 ->
+      live h0 vec /\ freeable vec /\
+      HST.is_eternal_region (frameOf vec)))
+    (ensures (fun h0 fvec h1 ->
+      frameOf vec = frameOf fvec /\
+      hmap_dom_eq h0 h1 /\
+      live h1 fvec /\ freeable fvec /\
+      modifies (loc_union (loc_addr_of_vector vec) 
+      			  (loc_vector fvec)) h0 h1 /\
+      size_of fvec = size_of vec - i /\
+      S.equal (as_seq h1 fvec) 
+	      (S.slice (as_seq h0 vec) (U32.v i) (U32.v (size_of vec)))))
+let flush #a vec ia i =
+  let fsz = Vec?.sz vec - i in
+  let vs = Vec?.vs vec in
+  let fvs = B.malloc (B.frameOf vs) ia fsz in
+  B.blit vs i fvs 0ul fsz;
+  B.free vs;
+  Vec fsz fsz fvs
 
 /// Iteration
 

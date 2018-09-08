@@ -94,6 +94,21 @@ noeq type regional a =
 	  modifies (loc_all_regions_from false (region_of v)) h0 h1))) ->
     regional a
 
+// A small utility
+
+private val r_sep_forall:
+  #a:Type0 -> rg:regional a ->
+  p:loc -> h0:HS.mem -> h1:HS.mem ->
+  v:a ->
+  Lemma (requires (Rgl?.r_inv rg h0 v /\
+		  loc_disjoint (loc_all_regions_from
+			         false (Rgl?.region_of rg v)) p /\
+		  modifies p h0 h1))
+	(ensures (Rgl?.r_inv rg h1 v /\ 
+		 Rgl?.r_repr rg h0 v == Rgl?.r_repr rg h1 v))
+private let r_sep_forall #a rg p h0 h1 v =
+  Rgl?.r_sep rg v p h0 h1
+
 // A regional type `a` is also `copyable` when there exists a copy operator
 // that guarantees the same representation between `src` and `dst`.
 // For example, the `copy` operation for `B.buffer a` is `B.blit`.
@@ -860,19 +875,6 @@ let assign #a #rg rv i v =
   as_seq_seq_upd
     rg hh0 (V.as_seq hh0 rv) 0 (U32.v (V.size_of rv)) (U32.v i) v
 
-val r_sep_forall:
-  #a:Type0 -> rg:regional a ->
-  p:loc -> h0:HS.mem -> h1:HS.mem ->
-  v:a ->
-  Lemma (requires (Rgl?.r_inv rg h0 v /\
-		  loc_disjoint (loc_all_regions_from
-			         false (Rgl?.region_of rg v)) p /\
-		  modifies p h0 h1))
-	(ensures (Rgl?.r_inv rg h1 v /\ 
-		 Rgl?.r_repr rg h0 v == Rgl?.r_repr rg h1 v))
-let r_sep_forall #a rg p h0 h1 v =
-  Rgl?.r_sep rg v p h0 h1
-
 val assign_copy:
   #a:Type0 -> #rg:regional a -> cp:copyable a rg ->
   rv:rvector rg -> 
@@ -967,6 +969,22 @@ let rec free_elems #a #rg rv idx =
 
   if idx <> 0ul then
     free_elems rv (idx - 1ul)
+
+val flush:
+  #a:Type0 -> #rg:regional a ->
+  rv:rvector rg -> i:uint32_t{i < V.size_of rv} ->
+  HST.ST (rvector rg)
+    (requires (fun h0 -> rv_inv h0 rv))
+    (ensures (fun h0 frv h1 ->
+      modifies (loc_union (V.loc_addr_of_vector rv)
+			  (V.loc_vector frv)) h0 h1 /\
+      rv_inv h1 frv /\
+      S.equal (as_seq h1 frv)
+      	      (S.slice (as_seq h0 rv) (U32.v i) (U32.v (V.size_of rv)))))
+let flush #a #rg rv i =
+  admit ();
+  (if i = 0ul then () else free_elems rv i);
+  V.flush rv (Rgl?.cv rg) i
 
 val free:
   #a:Type0 -> #rg:regional a -> rv:rvector rg -> 
