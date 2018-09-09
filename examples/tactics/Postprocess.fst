@@ -87,7 +87,7 @@ and case_analyze (lhs:term) : Tac unit =
     let ap l =
       onL (); apply_lemma l
     in
-    (* dump ("lhs= " ^ term_to_string lhs); *)
+    let lhs = norm_term [weak;hnf;primops;delta] lhs in
     let head, args = collect_app lhs in
     begin match inspect head with
     | Tv_FVar fv ->
@@ -101,15 +101,15 @@ and case_analyze (lhs:term) : Tac unit =
     end
 
 let push_lifts () : Tac unit =
-  unfold_def (`xx);
-  (* dump "before"; *)
   push_lifts' ();
   (* dump "after"; *)
   ()
-
 
 [@(postprocess_with push_lifts)]
 let yy = lift xx
 
 [@(postprocess_with push_lifts)]
-let zz = lift (C1 (fun y -> (C1 (fun x -> A1))))
+let zz1 = lift (C1 (fun y -> (C1 (fun x -> A1))))
+
+[@(postprocess_for_extraction_with push_lifts)]
+let zz2 = lift (C1 (fun y -> (C1 (fun x -> A1))))
