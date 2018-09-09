@@ -65,3 +65,26 @@ let test23 () : ST unit (fun p m -> m == emp /\ (forall m'. p () m')) [] by (sl_
   let u = !s in
   assert (v == u); (* Requires destructing a heap equality in the context *)
   ()
+
+let incr_both_swap (r s : ref int) : ST unit (fun p m -> exists v u. m == (r |> v <*> s |> u) /\ p () (r |> (u+1) <*> s |> (v+1))) [ii r; ii s]
+				    by (sl_auto ()) =
+  let v1, v2 = !r, !s in
+  r := v2 + 1;
+  s := v1 + 1
+
+let acq_step (#r #s : ref int) (l : lock [ii r; ii s] (fun m -> exists v u. mem_eq (m == (r |> u <*> s |> v)) /\ v == u)) () :
+		      ST unit (fun p m -> m == emp /\ p () emp) [] by (sl_auto ()) =
+  acquire l;
+  incr_both_swap r s;
+  release l
+
+let test24 () : ST unit (fun p m -> m == emp /\ (forall m'. p () m')) [] by (sl_auto ()) =
+  let r = alloc 1 in
+  let s = alloc 1 in
+  let l = mklock #(fun m -> exists v u. mem_eq (m == (r |> u <*> s |> v)) /\ v == u)  [ii r; ii s] in
+  let _ = par (acq_step l) (acq_step l) in
+  acquire l;
+  let v = !r in
+  let u = !s in
+  assert (v == u); (* Requires destructing a heap equality in the context *)
+  ()
