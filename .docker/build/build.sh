@@ -293,7 +293,8 @@ function build_fstar() {
                 { echo " - snapshot-diff (F*)" >>$ORANGE_FILE; }
             fi
 
-            if [[ $localTarget == "uregressions-ulong" ]]; then
+            # We should not generate hints when building on Windows
+            if [[ $localTarget == "uregressions-ulong" ] && [ "$OS" != "Windows_NT" ]]; then
                 refresh_fstar_hints
             fi
         fi
