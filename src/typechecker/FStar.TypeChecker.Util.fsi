@@ -51,10 +51,12 @@ val generalize_universes: env -> term -> tscheme
 (* most operations on computations are lazy *)
 type lcomp_with_binder = option<bv> * lcomp
 val subst_lcomp: subst_t -> lcomp -> lcomp
+val lcomp_univ_opt: lcomp -> option<universe>
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool
 val should_not_inline_lc: lcomp -> bool
-//val return_value: env -> typ -> term -> comp
+val should_return: env -> option<term> -> lcomp -> bool
+val return_value: env -> option<universe> -> typ -> term -> comp
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
 val bind_cases: env -> typ -> list<(typ * lident * list<cflags> * (bool -> lcomp))> -> lcomp
