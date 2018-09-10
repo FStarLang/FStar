@@ -1468,8 +1468,8 @@ and p_atomicTerm e = match e.tm with
 
 and p_atomicTermNotQUident e = match e.tm with
   | Wild -> underscore
-  | Var lid when lid_equals lid C.assert_lid ->
-    str "assert"
+  | Var lid when lid_equals lid C.assert_lid -> str "assert"
+  | Var lid when lid_equals lid C.assume_lid -> str "assume"
   | Tvar tv -> p_tvar tv
   | Const c ->
     begin match c with
