@@ -1,4 +1,4 @@
- (*
+(*
       Copyright 2008-2017 Microsoft Research
 
       Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +13,13 @@
       See the License for the specific language governing permissions and
       limitations under the License.
 *)
+
 module FStar.Vector.Base
 module U32 = FStar.UInt32
 module S = FStar.Seq
 
 /// The raw vector type: the main type provided by this module
-let raw a l = s:S.seq a{S.length s = U32.v l}
+let raw a l = s: S.seq a {S.length s = U32.v l}
 
 /// Abstractly, a `raw a l` is just a sequence whose length is `U32.v l`.
 /// `reveal` and `hide` build an isomorphism establishing this
@@ -69,8 +70,7 @@ let reveal_sub #a #l v i j = ()
 /// Dynamically sized vectors
 ////////////////////////////////////////////////////////////////////////////////
 
-let t a = (l:len_t & raw a l)
-
+let t a = (l: len_t & raw a l)
 
 /// Unlike raw vectors, t-vectors support decidable equality
 let t_has_eq a = ()
@@ -79,7 +79,7 @@ let t_has_eq a = ()
 let len #a (| l , _ |) = l
 
 /// Access the underlying raw vector
-let as_raw #a (|_, v|) = v
+let as_raw #a (| _ , v |) = v
 
 /// Promote a raw vector
 let from_raw #a #l v = (| l, v |)
@@ -89,3 +89,4 @@ let as_raw_from_raw #a #l v = ()
 let from_raw_as_raw #a x = ()
 
 let dummy = ()
+

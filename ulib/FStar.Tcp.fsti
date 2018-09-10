@@ -2,9 +2,10 @@ module FStar.Tcp
 
 open FStar.Bytes
 open FStar.Error
-
-new val networkStream: eqtype
-new val tcpListener: Type0
+new
+val networkStream: eqtype
+new
+val tcpListener: Type0
 
 val set_nonblock: networkStream -> unit
 val clear_nonblock: networkStream -> unit
@@ -26,18 +27,16 @@ val connect: string -> nat -> EXT networkStream
 // adding support for (potentially) non-blocking I/O
 // NB for now, send *fails* on partial writes, and *loops* on EAGAIN/EWOULDBLOCK.
 
-type recv_result (max:nat) = 
+type recv_result (max: nat) =
   | RecvWouldBlock
   | RecvError of string
-  | Received of b:bytes {length b <= max}
-val recv_async: networkStream -> max:nat -> EXT (recv_result max)
+  | Received of b: bytes{length b <= max}
+val recv_async: networkStream -> max: nat -> EXT (recv_result max)
 
-val recv: networkStream -> max:nat -> EXT (optResult string (b:bytes {length b <= max}))
+val recv: networkStream -> max: nat -> EXT (optResult string (b: bytes{length b <= max}))
 val send: networkStream -> bytes -> EXT (optResult string unit)
 val close: networkStream -> EXT unit
 
 (* Create a network stream from a given stream.
    Only used by the application interface TLSharp. *)
 (* assume val create: System.IO.Stream -> NetworkStream*)
-
- 
