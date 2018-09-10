@@ -49,7 +49,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "19dbe81cf94158a3f82d538ec7ffbe5a"
+      "615e190b8267fc3185289ce9cf2c28fe"
     ],
     [
       "LowStar.ImmutableBuffer.igcmalloc_of_list",
@@ -81,7 +81,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "505492d151680d7defe405b58396db67"
+      "998cca085aeb256dfa225da4e8ae5d31"
     ],
     [
       "LowStar.ImmutableBuffer.witness_contents",

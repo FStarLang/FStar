@@ -29,7 +29,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
       0,
-      "cbb84386630d90b57e34b3276ff36b04"
+      "009743c752e3a621165b44af413b6343"
     ],
     [
       "Canon.check_canon",
@@ -76,7 +76,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
       0,
-      "a328eef9c2e0cd41eaa01f7c912b77b5"
+      "888edeba847f3605ee10f72286b4533e"
     ]
   ]
 ]
