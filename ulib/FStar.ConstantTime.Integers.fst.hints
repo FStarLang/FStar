@@ -333,7 +333,7 @@
         "refinement_interpretation_FStar.Integers_Tm_refine_d12d61266a2f2128b6a00b00566f8446"
       ],
       0,
-      "48d979a84b5a98315274465eb921db07"
+      "9fea1ce12b310975aa8d14c8c44bbc8d"
     ],
     [
       "FStar.ConstantTime.Integers.addition_mod",
@@ -516,7 +516,7 @@
         "typing_FStar.UInt8.add_mod"
       ],
       0,
-      "400d9e8ea2c83a419f43251c121a289c"
+      "2a641c08269f20ef440d117fa9063b73"
     ],
     [
       "FStar.ConstantTime.Integers.__proj__Secret__item__sl",
@@ -665,7 +665,7 @@
         "typing_FStar.Integers.width_of_sw"
       ],
       0,
-      "1e9d9a79f6c532818e5ceee09a1ca40a"
+      "35ac49dfd6e97844d01c71744516d1f0"
     ],
     [
       "FStar.ConstantTime.Integers.as_secret",
@@ -725,7 +725,7 @@
         "refinement_interpretation_FStar.ConstantTime.Integers_Tm_refine_cd2592ec940f2fd0d396db6a705be2eb"
       ],
       0,
-      "32b73963fa66494abfe8f854585d5011"
+      "f47f6d357d033ca3d11bf794bf4aca0b"
     ],
     [
       "FStar.ConstantTime.Integers.op_Plus_Percent",
@@ -780,7 +780,7 @@
         "refinement_interpretation_FStar.ConstantTime.Integers_Tm_refine_c4143e90309307eaf17156a5cc6d7525"
       ],
       0,
-      "b24357d0be58d6db4b4911485c39acac"
+      "0febd957fd65e8a20c24c9238bb571bd"
     ],
     [
       "FStar.ConstantTime.Integers.two_point_lattice",

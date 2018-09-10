@@ -9,11 +9,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_LowStar.Buffer.buffer",
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_2f4c4317c33d464b36cc12cfcbde1c55",
         "refinement_interpretation_LowStar.BufferCompat_Tm_refine_c91c357d8b481b71bcfe70f0ece722d9"
       ],
       0,
-      "8350a5ddcce596b11f15633088a29d1e"
+      "a610b8d74058c8d81d4232756c1e89f4"
     ],
     [
       "LowStar.BufferCompat.rcreate_mm",

@@ -283,7 +283,7 @@
         "subterm_ordering_Ex07b.EPair", "subterm_ordering_Ex07b.ESnd"
       ],
       0,
-      "ebde3ffed55515ea4fa78149436e3fe5"
+      "b597a7f98dd4d5081406e1b62dedddd0"
     ],
     [
       "Ex07b.step",
@@ -305,7 +305,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "d287948986fb062d3d245c8413c9d570"
+      "db677510dd1257b070c60ef9dfe85f6b"
     ],
     [
       "Ex07b.extend",
@@ -343,7 +343,7 @@
         "typing_tok_Ex07b.TBool@tok"
       ],
       0,
-      "76c6023a0c3721fe8892f83e56be3fb4"
+      "60afa8d8afc05cf91039d1d1b8caa1c2"
     ],
     [
       "Ex07b.progress",
@@ -420,7 +420,7 @@
         "typing_tok_Ex07b.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "c6991844ee45f905784937479207ec8e"
+      "46087d90a80db99ac06d4f11af938152"
     ],
     [
       "Ex07b.appears_free_in",
@@ -533,7 +533,7 @@
         "typing_tok_Ex07b.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "8379ffa5ce6861eb2e8db2c9774cce93"
+      "8d6e3e8ca585cc7f93a08ea9a287f498"
     ],
     [
       "Ex07b.typable_empty_closed",
@@ -640,7 +640,7 @@
         "typing_Ex07b.typing", "typing_tok_Ex07b.TBool@tok", "unit_typing"
       ],
       0,
-      "4a8b0776a744d1a276cbda2ecb7ef4dd"
+      "1e8ad134fae01ee6cedcc24e920e8769"
     ],
     [
       "Ex07b.typing_extensional",
@@ -749,7 +749,7 @@
         "typing_tok_Ex07b.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "fbaef61c0d6ed97ef5d5a7133be65fc1"
+      "63f33600154ae9c3d68b6f59887f0564"
     ],
     [
       "Ex07b.preservation",
@@ -839,7 +839,7 @@
         "typing_tok_Ex07b.TBool@tok"
       ],
       0,
-      "ba49c824ae5e9db8581df15e7a3c6397"
+      "b0a6f270408efdd1c9531319e4a8e280"
     ],
     [
       "Ex07b.ty",
@@ -1116,7 +1116,7 @@
         "subterm_ordering_Ex07b.EPair", "subterm_ordering_Ex07b.ESnd"
       ],
       0,
-      "f8864443413d4d6d7b029e4ef05b6eda"
+      "c6ded0f74d6d52d097d202f5b2fe103c"
     ],
     [
       "Ex07b.step",
@@ -1138,7 +1138,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "8041c2a528a79024c4ceb02b129d19ee"
+      "f4b6558069e82cb9a4e0b01520d5e68d"
     ],
     [
       "Ex07b.extend",
@@ -1176,7 +1176,7 @@
         "typing_tok_Ex07b.TBool@tok"
       ],
       0,
-      "c1ed72f8e1d34a585706d371323de112"
+      "269c4bf4f55da4f085605a982d857c83"
     ],
     [
       "Ex07b.appears_free_in",
@@ -1311,7 +1311,7 @@
         "typing_tok_Ex07b.TBool@tok", "unit_typing"
       ],
       0,
-      "9192b2ef12ee9ff052dc7af6bd6204e3"
+      "448d1590d53bb0deb9a37a96eedcc477"
     ],
     [
       "Ex07b.preservation",
@@ -1389,7 +1389,7 @@
         "typing_tok_Ex07b.TBool@tok"
       ],
       0,
-      "2afe8ebf18072969e539120cc9c63d06"
+      "3b6aa4dd849a48a5ccd2dfda09a31ddc"
     ]
   ]
 ]

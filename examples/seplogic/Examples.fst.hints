@@ -40,7 +40,7 @@
         "typing_FStar.SL.Heap.trivial_preorder"
       ],
       0,
-      "4afc3e3e5981d9a3a40b526ae3ddc68d"
+      "7b416bf569e9b1116b456db68effd1ff"
     ],
     [
       "Examples.increment_ok",
@@ -104,7 +104,7 @@
         "typing_FStar.SL.Heap.trivial_preorder"
       ],
       0,
-      "af1f7e06e9a233b4427938ec50605201"
+      "3dc74b75525c236439aacc70068cd2ac"
     ],
     [
       "Examples.swap_ok",
@@ -135,7 +135,7 @@
         "typing_FStar.SL.Heap.trivial_preorder"
       ],
       0,
-      "1f2ab55f2abf245b332fd3cc86ad2d42"
+      "3f2e4cb4c3386eb621ead9a68b22efa8"
     ],
     [
       "Examples.swap_ok",
@@ -161,7 +161,7 @@
         "typing_FStar.SL.Monotonic.Heap.sel"
       ],
       0,
-      "88e9d3dc8fd4d8174c247166c68ea18b"
+      "bdd0b7be8a92e8b7f9ba8b13c3ea356e"
     ],
     [
       "Examples.swap_ok",
@@ -252,7 +252,7 @@
         "typing_FStar.SL.Heap.trivial_preorder"
       ],
       0,
-      "f5c33c44556031c6c1027eeefcf8a5be"
+      "bf06b9b8461e5c45f743f028e077fae9"
     ],
     [
       "Examples.double_increment_ok",
@@ -270,7 +270,7 @@
         "typing_FStar.SL.Monotonic.Heap.get_next_addr"
       ],
       0,
-      "009c15986bfd9ff3884e453192576884"
+      "ecc7ba5732267bf7d7dac6b7bd562d42"
     ],
     [
       "Examples.double_increment_ok",
@@ -289,7 +289,7 @@
         "typing_FStar.SL.Monotonic.Heap.get_next_addr"
       ],
       0,
-      "7090bc3369ec8c58636e0562b282f7b9"
+      "4f73a0158caf0ab9e9d5e206cb65c5ca"
     ],
     [
       "Examples.double_increment_ok",
@@ -456,7 +456,7 @@
         "typing_FStar.SL.Heap.trivial_preorder"
       ],
       0,
-      "ae6bbce0b477a712c7758f301efa3fd8"
+      "9d03dfa6be827b55bdbce0987e4cfda5"
     ],
     [
       "Examples.copy_ok",
@@ -570,7 +570,7 @@
         "typing_FStar.SL.Heap.trivial_preorder"
       ],
       0,
-      "37f3e362280b0833cd823f897cf485e0"
+      "7ed7dcdeb6cc77d23e127e870aeb668a"
     ],
     [
       "Examples.increment_ok",
@@ -631,7 +631,7 @@
         "typing_FStar.SL.Heap.trivial_preorder"
       ],
       0,
-      "ed281f4208e09172831fc87fdb5e8eda"
+      "31187e9d05f8adefc062e9b4937e3dbb"
     ],
     [
       "Examples.swap_ok",
@@ -662,7 +662,7 @@
         "typing_FStar.SL.Heap.trivial_preorder"
       ],
       0,
-      "a9ab2582817ae4b4f52624e5c587d459"
+      "50024ae0fae8034c0145d98b5cb5d6c0"
     ],
     [
       "Examples.swap_ok",
@@ -688,7 +688,7 @@
         "typing_FStar.SL.Monotonic.Heap.sel"
       ],
       0,
-      "d16f8a415c3d0cad5e74df84ddea2ca0"
+      "be4682791e441dcaf374a508f40d187d"
     ],
     [
       "Examples.swap_ok",
@@ -773,7 +773,7 @@
         "typing_FStar.SL.Heap.trivial_preorder"
       ],
       0,
-      "fb36305d0c19e4acc412a1be3e8e3771"
+      "18a0422cc47b1f0c2d148c5ab35a23b3"
     ],
     [
       "Examples.double_increment_ok",
@@ -791,7 +791,7 @@
         "typing_FStar.SL.Monotonic.Heap.get_next_addr"
       ],
       0,
-      "a66368437028012075754e1c96d87e46"
+      "dd60669c172b62184a1a354508084987"
     ],
     [
       "Examples.double_increment_ok",
@@ -810,7 +810,7 @@
         "typing_FStar.SL.Monotonic.Heap.get_next_addr"
       ],
       0,
-      "eb16488fd71f096561fc6f1c818f55a3"
+      "6cd2c4e7a1e733a6026acfbf2cfcc670"
     ],
     [
       "Examples.double_increment_ok",
@@ -971,7 +971,7 @@
         "typing_FStar.SL.Heap.trivial_preorder"
       ],
       0,
-      "0755db6590a8adaddb08e66d8822d5ac"
+      "6e7ee20fd9aba5c1d1ac5ed98728ad7b"
     ],
     [
       "Examples.copy_ok",
