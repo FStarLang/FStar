@@ -294,7 +294,7 @@ function build_fstar() {
             fi
 
             # We should not generate hints when building on Windows
-            if [[ $localTarget == "uregressions-ulong" ] && [ "$OS" != "Windows_NT" ]]; then
+            if [[ $localTarget == "uregressions-ulong" && "$OS" != "Windows_NT" ]]; then
                 refresh_fstar_hints
             fi
         fi
