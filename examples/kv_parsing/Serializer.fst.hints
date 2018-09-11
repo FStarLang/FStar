@@ -502,7 +502,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "876d5e2d5a666aba04bedb04a388a24f"
+      "7f5153e5f4f857c9e1dd7f6a5c68f9fe"
     ],
     [
       "Serializer.join_slices",
@@ -1231,7 +1231,7 @@
         "typing_Slice.bslice_split_at"
       ],
       0,
-      "a71f10f05127dd75cd4ca6c62668579b"
+      "e9ccc62acfdc93291341b4d995886105"
     ],
     [
       "Serializer.enc_entry_st",
