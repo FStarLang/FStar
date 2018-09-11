@@ -198,7 +198,7 @@
         "token_correspondence_Ex12.MAC.spred_and_"
       ],
       0,
-      "db9b5f7b8dd51aff877aee2bcbbdca2b"
+      "d7e69e60f3726864d77f9fdd274ea17b"
     ],
     [
       "Ex12.MAC.mem_assoc_unique",
@@ -245,7 +245,7 @@
         "unit_typing"
       ],
       0,
-      "4307fc4bfb24f248f992b41419270e5c"
+      "f72aecfc31f848fb89e53899e6690732"
     ],
     [
       "Ex12.MAC.key_cipher_text_spred",
@@ -494,7 +494,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "024e77defe8b849f6b5231f5ff66c18c"
+      "9d417cbb84dc3b36cc16925e359c1586"
     ],
     [
       "Ex12.MAC.mac",
@@ -514,7 +514,7 @@
         "true_interp", "typing_Ex12.SHA1.hmac_sha1"
       ],
       0,
-      "46c96e0c9774bfa8815bc77379f2526a"
+      "12613c52e682bb84a7f1910eea85e938"
     ],
     [
       "Ex12.MAC.verify",
@@ -545,7 +545,7 @@
         "typing_Platform.Bytes.equalBytes"
       ],
       0,
-      "f590f71424a81dc34779e285cd00bd2d"
+      "e92ce89593cc16674aed9943ce9734a4"
     ],
     [
       "Ex12.MAC.unique_registry_order",

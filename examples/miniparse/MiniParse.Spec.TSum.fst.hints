@@ -170,7 +170,7 @@
         "unit_typing"
       ],
       0,
-      "9b5604d5da33e028344052022f5bf33f"
+      "a30e101ebae8ec145b4f44932b81ea16"
     ],
     [
       "MiniParse.Spec.TSum.serialize_tagged_union",
@@ -416,7 +416,7 @@
         "typing_FStar.UInt16.uint_to_t", "typing_FStar.UInt16.v"
       ],
       0,
-      "309e56d518e56443d1495a03c703548d"
+      "da23d3d93ec9c9ee68705d496a46aee2"
     ],
     [
       "MiniParse.Spec.TSum.parse_tagged_union",
@@ -739,7 +739,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "a3097cf27253145112cdeba70675d66f"
+      "48d93c0e1a64d4093848b84123a4ffb8"
     ],
     [
       "MiniParse.Spec.TSum.bounded_u16_match_t_aux_cons",
@@ -781,7 +781,7 @@
         "typing_FStar.UInt16.uint_to_t", "typing_FStar.UInt16.v"
       ],
       0,
-      "894596b52789d28b62a09aa86979de76"
+      "28008a1c7d833299cb211b5503f5f400"
     ],
     [
       "MiniParse.Spec.TSum.bounded_u16_match_t_aux_cons",

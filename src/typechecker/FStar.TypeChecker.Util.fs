@@ -252,6 +252,8 @@ let comp_univ_opt c =
       | [] -> None
       | hd::_ -> Some hd
 
+let lcomp_univ_opt lc = lc |> lcomp_comp |> comp_univ_opt
+
 let destruct_comp c : (universe * typ * typ) =
   let wp = match c.effect_args with
     | [(wp, _)] -> wp
@@ -366,7 +368,7 @@ let should_not_inline_lc (lc:lcomp) =
  * (c) Its head symbol is not marked irreducible (in this case inlining is not going to help, it is equivalent to having a bound variable)
  * (d) It's not a let rec, as determined by the absence of the SHOULD_NOT_INLINE flag---see issue #1362. Would be better to just encode inner let recs to the SMT solver properly
  *)
-let should_return env (eopt:option<term>) (lc:lcomp) : bool =
+let should_return env eopt lc =
     match eopt with
     | None -> false //no term to return
     | Some e ->
@@ -376,7 +378,7 @@ let should_return env (eopt:option<term>) (lc:lcomp) : bool =
        match (U.un_uinst head).n with
        | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv)) //condition (c)
        | _ -> true)                              &&
-     not (should_not_inline_lc lc)                      //condition (d)
+     not (should_not_inline_lc lc)                   //condition (d)
 
 let return_value env u_t_opt t v =
   let c =
@@ -462,7 +464,7 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
 let strengthen_precondition
             (reason:option<(unit -> string)>)
             env
-            (e_for_debug_only:term)
+            (e_for_debugging_only:term)
             (lc:lcomp)
             (g0:guard_t)
     : lcomp * guard_t =
@@ -494,7 +496,7 @@ let strengthen_precondition
                  | NonTrivial f ->
                    if Env.debug env <| Options.Extreme
                    then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
-                                    (N.term_to_string env e_for_debug_only)
+                                    (N.term_to_string env e_for_debugging_only)
                                     (N.term_to_string env f);
                     strengthen_comp env reason c f flags
          in
@@ -1027,7 +1029,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                           let eq_ret, _trivial_so_ok_to_discard =
                               strengthen_precondition (Some <| Err.subtyping_failed env lc.res_typ t)
                                                       (Env.set_range env e.pos)
-                                                      e //for debugging only
+                                                      e  //use e for debugging only
                                                       (U.lcomp_of_comp cret)
                                                       (guard_of_guard_formula <| NonTrivial guard)
                           in

@@ -127,7 +127,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "93e369e17d2d16a1e2147a6a9fb0e5d6"
+      "2d92ad3c8195436aea9443e9b8bc181d"
     ],
     [
       "BinarySearchTreeFirst.contains",
@@ -151,7 +151,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Some"
       ],
       0,
-      "7cd1dad7e4c70b4792eae8ee486db7aa"
+      "6019e99bc114c188650205f9ae2e8bc4"
     ],
     [
       "BinarySearchTreeFirst.in_order_opt",
@@ -174,7 +174,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "35506dd0d5202bacb4eab383b25204c4"
+      "6e00a1d32daee35daddb6e90d50690b6"
     ],
     [
       "BinarySearchTreeFirst.index_is_max",
@@ -319,7 +319,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "7dba1b5eceb9936241f362dc82ff18de"
+      "e6815d45c54a9f55d91b9e557552286f"
     ],
     [
       "BinarySearchTreeFirst.contains",
@@ -343,7 +343,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Some"
       ],
       0,
-      "974fabfd8a456a37eb1a66219486e162"
+      "a35c513c08862a65d8322624cfd456c4"
     ],
     [
       "BinarySearchTreeFirst.in_order_opt",
@@ -366,7 +366,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "7a58b81d0c32277bba2420f057270127"
+      "6b1db5df4f96ed865074ba18826269ed"
     ],
     [
       "BinarySearchTreeFirst.index_is_max",

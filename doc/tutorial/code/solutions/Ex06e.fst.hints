@@ -69,7 +69,7 @@
         "typing_Ex06e.mem", "unit_inversion", "unit_typing"
       ],
       0,
-      "87d253f5b0ff81abc43db656a61562fe"
+      "33292a39772fe5c21bbdd55e92572e2a"
     ],
     [
       "Ex06e.insert",
@@ -106,7 +106,7 @@
         "typing_Ex06e.mem", "typing_Ex06e.sorted"
       ],
       0,
-      "ab9fa737c5383da7f64612b9f17950e1"
+      "0bad6fe55f7cd71e4ff7ee30b860482b"
     ],
     [
       "Ex06e.sort",
@@ -139,7 +139,7 @@
         "typing_Ex06e.mem", "typing_Ex06e.sorted"
       ],
       0,
-      "15568bf56e2fc754e1102e24ef37f444"
+      "ea94a92be98945b406c400606058a880"
     ],
     [
       "Ex06e.sorted",
@@ -216,7 +216,7 @@
         "typing_Ex06e.insert", "typing_Ex06e.mem", "typing_Ex06e.sorted"
       ],
       0,
-      "b484ba7ba51d560c69ca4362f2c87601"
+      "b790bb2662a402c9736ee30e718f547c"
     ],
     [
       "Ex06e.sort",
@@ -247,7 +247,7 @@
         "typing_Ex06e.mem"
       ],
       0,
-      "d8beb64f8883092fd868d5f51118a00d"
+      "0a399403ef65aa93863ea7f1b2660990"
     ]
   ]
 ]

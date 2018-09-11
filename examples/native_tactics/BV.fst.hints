@@ -175,7 +175,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "c8a8cf0f00bb5dc729f21f83c2b8feb5"
+      "67655ddb9e37b517bf03ba160eb0e8e6"
     ],
     [
       "BV.cong_bvshl",
@@ -217,7 +217,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "1ac7ec6fee581ae17f34a4443515fb4f"
+      "bd4d9e54661e31b3bc5c27b3c1d730e8"
     ],
     [
       "BV.cong_bvshr",
@@ -605,7 +605,7 @@
       1,
       [ "@query", "lemma_FStar.UInt64.uv_inv" ],
       0,
-      "c0bf486277d64aac6c4b10422ea7c823"
+      "fce6ee24ccfa4a49ac2596b85219b5ca"
     ],
     [
       "BV.unfold_logand64",
@@ -619,7 +619,7 @@
         "typing_FStar.UInt64.logand"
       ],
       0,
-      "88ee076c3510284fef67a4fe8f2d6ecf"
+      "97bbab83469293cf52438aed962ebd11"
     ],
     [
       "BV.unfold_logor64",
@@ -633,7 +633,7 @@
         "typing_FStar.UInt64.logor"
       ],
       0,
-      "e02dce9dd003d24378abf78c48ab1c4b"
+      "3374931501d729a2162b8178d5887baf"
     ],
     [
       "BV.unfold_logxor64",
@@ -647,7 +647,7 @@
         "typing_FStar.UInt64.logxor"
       ],
       0,
-      "ed7cef41455a22939c34a02b9d65c3fe"
+      "0928d9b8beb108c965be5a1e20545b41"
     ]
   ]
 ]

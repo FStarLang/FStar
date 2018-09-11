@@ -143,7 +143,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "ef0aff406fe0bcd5aa469f5a57644951"
+      "ea5849548bb7d0dc916df66b51d5a66e"
     ],
     [
       "Ex12b.RPC.req",
@@ -189,7 +189,7 @@
         "equation_FStar.MRef.stable"
       ],
       0,
-      "5e23e9ee8a047613ff532126cfa05148"
+      "5482f22c1c020b351260fbeaf255c89a"
     ],
     [
       "Ex12b.RPC.pResponse",
@@ -201,7 +201,7 @@
         "equation_FStar.MRef.stable"
       ],
       0,
-      "33a2050731f48e95244e831c73146f4a"
+      "d249e1e5e5c7d2f8310ebd0181425a1e"
     ],
     [
       "Ex12b.RPC.reqresp",
@@ -251,7 +251,7 @@
         "unit_typing"
       ],
       0,
-      "be742f4ad7550ef7826606d4d86ab18c"
+      "d98a903675a94b7201abb2f6844b21a9"
     ],
     [
       "Ex12b.RPC.client_recv",
@@ -295,7 +295,7 @@
         "typing_Ex12b2.Format.response", "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "ce81005b5c3b9d2faf140987760c13c6"
+      "04e87004a33308168d3065fd9fe886d9"
     ],
     [
       "Ex12b.RPC.server",
@@ -369,7 +369,7 @@
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
       0,
-      "c2652b81dfc01129ebc34f2806f57bb7"
+      "46cfb164c4c68d89c2c04d6753ae9f36"
     ],
     [
       "Ex12b.RPC.test",
@@ -394,7 +394,7 @@
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
       0,
-      "c2431454bb15133a00efaa6e1aac3dcf"
+      "884ad3a34c326cec4b3b7158da191a46"
     ],
     [
       "Ex12b.RPC.log_entry",
@@ -482,7 +482,7 @@
       1,
       [ "@query", "assumption_Ex12b.RPC.log_entry__uu___haseq" ],
       0,
-      "1107256ab3d146bc6186be694b82c60d"
+      "a785ae3d6fe447e86bbd0e07a29067bf"
     ],
     [
       "Ex12b.RPC.req",
@@ -546,7 +546,7 @@
         "equation_FStar.MRef.stable"
       ],
       0,
-      "f1a5b40593f21d07736f34dfe2ed35ee"
+      "abe9d7d4cf7a5eda6be3e13033c80d0d"
     ],
     [
       "Ex12b.RPC.pResponse",
@@ -558,7 +558,7 @@
         "equation_FStar.MRef.stable"
       ],
       0,
-      "5a1ca1ac93d2e464a00ee4ff742527a4"
+      "2645724a4e96f34d71fa8d885e069343"
     ],
     [
       "Ex12b.RPC.reqresp",
