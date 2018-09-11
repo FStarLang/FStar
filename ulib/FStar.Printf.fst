@@ -1,12 +1,12 @@
 module FStar.Printf
-
 (** A variable arity C-style printf **)
 open FStar.Char
 open FStar.String
 module I = FStar.Integers
 
 noeq
-type extension = | MkExtension : #a: Type0 -> $f: (a -> Tot string) -> extension
+type extension =
+  | MkExtension : #a:Type0 -> $f:(a -> Tot string) -> extension
 
 /// `arg`: The format specifiers supported
 ///      %b : bool
@@ -38,37 +38,37 @@ type arg =
   | Extension of extension
 
 /// `arg_type`: Interpreting a `arg` tag as a type
-let arg_type (a: arg) : Tot Type0 =
+let arg_type (a:arg) : Tot Type0 =
   match a with
-  | Bool -> bool
-  | Int -> int
-  | Char -> char
+  | Bool   -> bool
+  | Int    -> int
+  | Char   -> char
   | String -> string
-  | U8 -> FStar.UInt8.t
-  | U16 -> FStar.UInt16.t
-  | U32 -> FStar.UInt32.t
-  | U64 -> FStar.UInt64.t
-  | I8 -> FStar.Int8.t
-  | I16 -> FStar.Int16.t
-  | I32 -> FStar.Int32.t
-  | I64 -> FStar.Int64.t
-  | Extension (MkExtension #t _) -> t
+  | U8     -> FStar.UInt8.t
+  | U16    -> FStar.UInt16.t
+  | U32    -> FStar.UInt32.t
+  | U64    -> FStar.UInt64.t
+  | I8     -> FStar.Int8.t
+  | I16    -> FStar.Int16.t
+  | I32    -> FStar.Int32.t
+  | I64    -> FStar.Int64.t
+  | Extension (MkExtension #t _)  -> t
 
-let string_of_arg (#a: arg) (x: arg_type a) : string =
-  match a with
-  | Bool -> string_of_bool x
-  | Int -> string_of_int x
-  | Char -> string_of_char x
-  | String -> x
-  | U8 -> FStar.UInt8.to_string x
-  | U16 -> FStar.UInt16.to_string x
-  | U32 -> FStar.UInt32.to_string x
-  | U64 -> FStar.UInt64.to_string x
-  | I8 -> FStar.Int8.to_string x
-  | I16 -> FStar.Int16.to_string x
-  | I32 -> FStar.Int32.to_string x
-  | I64 -> FStar.Int64.to_string x
-  | Extension (MkExtension f) -> f x
+let string_of_arg (#a:arg) (x:arg_type a) : string =
+    match a with
+    | Bool   -> string_of_bool x
+    | Int    -> string_of_int x
+    | Char   -> string_of_char x
+    | String -> x
+    | U8     -> FStar.UInt8.to_string x
+    | U16    -> FStar.UInt16.to_string x
+    | U32    -> FStar.UInt32.to_string x
+    | U64    -> FStar.UInt64.to_string x
+    | I8     -> FStar.Int8.to_string x
+    | I16    -> FStar.Int16.to_string x
+    | I32    -> FStar.Int32.to_string x
+    | I64    -> FStar.Int64.to_string x
+    | Extension (MkExtension f) -> f x
 
 /// `dir`: Internal to this module
 ///        A 'directive"; used when parsing a format specifier
@@ -78,7 +78,7 @@ type dir =
   | Arg of arg
 
 /// `dir_type ds`: Interpreting a list directives as a pure function type
-let rec dir_type (ds: list dir) : Tot Type0 =
+let rec dir_type (ds:list dir) : Tot Type0 =
   match ds with
   | [] -> string
   | Lit c :: ds' -> dir_type ds'
@@ -87,60 +87,81 @@ let rec dir_type (ds: list dir) : Tot Type0 =
 /// `string_of_dirs ds`:
 ///       Interpreting a list of directives as its function,
 ///       in a continuation-passing style
-let rec string_of_dirs (ds: list dir) (k: (string -> string)) : dir_type ds =
-  match ds with
-  | [] -> k ""
-  | Lit c :: ds' ->
-    string_of_dirs ds' (fun res -> k (string_of_char c ^ res)) <: normalize_term (dir_type ds')
-  | Arg a :: ds' ->
-    fun (x: arg_type a) -> string_of_dirs ds' (fun res -> ((k "") ^ string_of_arg x ^ res))
+let rec string_of_dirs
+        (ds:list dir)
+        (k:string -> string)
+  : dir_type ds
+  = match ds with
+    | [] -> k ""
+    | Lit c :: ds' ->
+      string_of_dirs ds' (fun res -> k (string_of_char c ^ res))
+      <: normalize_term (dir_type ds')
+    | Arg a :: ds' ->
+      fun (x : arg_type a) ->
+        string_of_dirs ds' (fun res -> ((k "")
+                                     ^ string_of_arg x
+                                     ^ res))
 
-type extension_parser = i: list char -> option (extension * o: list char {o << i})
+type extension_parser = i:list char -> option (extension * o:list char{o << i})
 
 /// `parse_format s`:
 ///     Parses a list of characters into a list of directives
 ///     Or None, in case the format string is invalid
-let rec parse_format (s: list char) (parse_ext: extension_parser) : option (list dir) =
-  let add_dir (d: dir) (ods: option (list dir)) : option (list dir) =
-    match ods with
-    | None -> None
-    | Some ds -> Some (d :: ds)
-  in
-  match s with
-  | [] -> Some []
-  | ['%'] -> None
-  | '%' :: 'u' :: s' ->
-    //Unsigned integers beging with '%u'
-    (match s' with
-      | 'y' :: s'' -> add_dir (Arg U8) (parse_format s'' parse_ext)
-      | 's' :: s'' -> add_dir (Arg U16) (parse_format s'' parse_ext)
-      | 'l' :: s'' -> add_dir (Arg U32) (parse_format s'' parse_ext)
-      | 'L' :: s'' -> add_dir (Arg U64) (parse_format s'' parse_ext)
-      | _ -> None)
-  | '%' :: 'X' :: s' ->
-    //User extensions begin with '%X'
-    (match parse_ext s' with
-      | Some (ext, rest) -> add_dir (Arg (Extension ext)) (parse_format rest parse_ext)
-      | _ -> None)
-  | '%' :: c :: s' ->
-    (match c with
-      | '%' -> add_dir (Lit '%') (parse_format s' parse_ext)
-      | 'b' -> add_dir (Arg Bool) (parse_format s' parse_ext)
-      | 'd' -> add_dir (Arg Int) (parse_format s' parse_ext)
-      | 'c' -> add_dir (Arg Char) (parse_format s' parse_ext)
-      | 's' -> add_dir (Arg String) (parse_format s' parse_ext)
-      | 'y' -> add_dir (Arg I8) (parse_format s' parse_ext)
-      | 'i' -> add_dir (Arg I16) (parse_format s' parse_ext)
-      | 'l' -> add_dir (Arg I32) (parse_format s' parse_ext)
-      | 'L' -> add_dir (Arg I64) (parse_format s' parse_ext)
-      | _ -> None)
-  | c :: s' -> add_dir (Lit c) (parse_format s' parse_ext)
+let rec parse_format
+      (s:list char)
+      (parse_ext: extension_parser)
+    : option (list dir)
+    = let add_dir (d:dir) (ods : option (list dir))
+        : option (list dir)
+        = match ods with
+          | None -> None
+          | Some ds -> Some (d::ds)
+      in
+      match s with
+      | [] -> Some []
+      | ['%'] -> None
+
+      //Unsigned integers beging with '%u'
+      | '%' :: 'u' :: s' -> begin
+        match s' with
+        | 'y' :: s'' -> add_dir (Arg U8) (parse_format s'' parse_ext)
+        | 's' :: s'' -> add_dir (Arg U16) (parse_format s'' parse_ext)
+        | 'l' :: s'' -> add_dir (Arg U32) (parse_format s'' parse_ext)
+        | 'L' :: s'' -> add_dir (Arg U64) (parse_format s'' parse_ext)
+        | _ -> None
+        end
+
+      //User extensions begin with '%X'
+      | '%' :: 'X' :: s' -> begin
+        match parse_ext s' with
+        | Some (ext, rest) -> add_dir (Arg (Extension ext)) (parse_format rest parse_ext)
+        | _ -> None
+       end
+
+      | '%' :: c :: s' -> begin
+        match c with
+        | '%' -> add_dir (Lit '%')    (parse_format s' parse_ext)
+        | 'b' -> add_dir (Arg Bool)   (parse_format s' parse_ext)
+        | 'd' -> add_dir (Arg Int)    (parse_format s' parse_ext)
+        | 'c' -> add_dir (Arg Char)   (parse_format s' parse_ext)
+        | 's' -> add_dir (Arg String) (parse_format s' parse_ext)
+        | 'y' -> add_dir (Arg I8)     (parse_format s' parse_ext)
+        | 'i' -> add_dir (Arg I16)    (parse_format s' parse_ext)
+        | 'l' -> add_dir (Arg I32)    (parse_format s' parse_ext)
+        | 'L' -> add_dir (Arg I64)    (parse_format s' parse_ext)
+        | _   -> None
+        end
+      | c :: s' ->
+        add_dir (Lit c) (parse_format s' parse_ext)
 
 /// `parse_format_string`: parses a format `string` into a list of directives
-let parse_format_string (s: string) (parse_ext: extension_parser) : option (list dir) =
-  parse_format (list_of_string s) parse_ext
+let parse_format_string
+    (s:string)
+    (parse_ext:extension_parser)
+  : option (list dir)
+  = parse_format (list_of_string s) parse_ext
 
-let no_extensions: extension_parser = fun s -> None
+let no_extensions : extension_parser = fun s -> None
 
 /// `sprintf`: The main function of this module
 ///     A variable arity string formatter
@@ -152,19 +173,21 @@ let no_extensions: extension_parser = fun s -> None
 ///     `sprintf "Hello %s" "world"`
 ///      will just extract to `"Hello " ^ "world"`
 inline_for_extraction
-let sprintf (s: string{normalize_term (b2t (Some? (parse_format_string s no_extensions)))})
-  : normalize_term (dir_type (Some?.v (parse_format_string s no_extensions))) =
-  normalize_term (string_of_dirs (Some?.v (parse_format_string s no_extensions)) (fun s -> s))
+let sprintf
+    (s:string{normalize_term (b2t (Some? (parse_format_string s no_extensions)))})
+    : normalize_term (dir_type (Some?.v (parse_format_string s no_extensions)))
+    = normalize_term (string_of_dirs (Some?.v (parse_format_string s no_extensions)) (fun s -> s))
 
 let test () = sprintf "%d: Hello %s, sprintf %s %ul" 0 "#fstar-hackery" "works!" 0ul
+
 
 /// `ext_sprintf`: An extensible version of sprintf
 inline_for_extraction
 let ext_sprintf
-  (parse_ext: extension_parser)
-  (s: string{normalize_term (b2t (Some? (parse_format_string s parse_ext)))})
-  : normalize_term (dir_type (Some?.v (parse_format_string s parse_ext))) =
-  normalize_term (string_of_dirs (Some?.v (parse_format_string s parse_ext)) (fun s -> s))
+    (parse_ext: extension_parser)
+    (s:string{normalize_term (b2t (Some? (parse_format_string s parse_ext)))})
+    : normalize_term (dir_type (Some?.v (parse_format_string s parse_ext)))
+    = normalize_term (string_of_dirs (Some?.v (parse_format_string s parse_ext)) (fun s -> s))
 
 type something =
   | This
@@ -172,23 +195,16 @@ type something =
 
 let something_to_string =
   function
-  | This -> "this"
-  | That -> "that"
+    | This -> "this"
+    | That -> "that"
 
-let parse_something: extension_parser =
+let parse_something : extension_parser =
   function
-  | 'S' :: rest -> Some (MkExtension something_to_string, rest)
-  | _ -> None
+    | 'S' :: rest -> Some (MkExtension something_to_string, rest)
+    | _ -> None
 
 inline_for_extraction
 let my_sprintf = ext_sprintf parse_something
 
-let test_ext () =
-  my_sprintf "%d: Hello %s, sprintf %s %ul, with %XS or %XS extensions"
-    0
-    "#fstar-hackery"
-    "works!"
-    0ul
-    This
-    That
-
+let test_ext () = my_sprintf "%d: Hello %s, sprintf %s %ul, with %XS or %XS extensions"
+                              0 "#fstar-hackery" "works!" 0ul This That

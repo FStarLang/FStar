@@ -38,55 +38,57 @@
    freely as long as we produce an erased type.
    
 *)
-
 module FStar.Ghost
-val erased: Type u#a -> Type u#a
-val reveal: #a: Type u#a -> erased a -> GTot a
-val hide: #a: Type u#a -> a -> Tot (erased a)
+val erased : Type u#a -> Type u#a
+val reveal : #a:Type u#a -> erased a -> GTot a
+val hide   : #a:Type u#a -> a -> Tot (erased a)
 
-val hide_reveal: #a: Type -> x: erased a ->
-  Lemma (ensures (hide (reveal x) == x)) [SMTPat (reveal x)]
+val hide_reveal : #a:Type
+                -> x:erased a
+                -> Lemma (ensures (hide (reveal x) == x))
+                        [SMTPat (reveal x)]
 
-val reveal_hide: #a: Type -> x: a -> Lemma (ensures (reveal (hide x) == x)) [SMTPat (hide x)]
+val reveal_hide : #a:Type
+                -> x:a
+                -> Lemma (ensures (reveal (hide x) == x))
+                        [SMTPat (hide x)]
 
-val elift1: #a: Type -> #b: Type -> f: (a -> GTot b) -> x: erased a ->
-  Tot (y: erased b {reveal y == f (reveal x)})
+val elift1   : #a:Type
+             -> #b:Type
+             -> f:(a -> GTot b)
+             -> x:erased a
+             -> Tot (y:erased b{reveal y == f (reveal x)})
 
-val elift2: 
-  #a: Type ->
-  #b: Type ->
-  #c: Type ->
-  f: (a -> c -> GTot b) ->
-  ga: erased a ->
-  gc: erased c ->
-  Tot (e: erased b {reveal e == f (reveal ga) (reveal gc)})
+val elift2   : #a:Type
+             -> #b:Type
+             -> #c:Type
+             -> f:(a -> c -> GTot b)
+             -> ga:erased a
+             -> gc:erased c
+             -> Tot (e:erased b{reveal e == f (reveal ga) (reveal gc)})
 
-val elift3: 
-  #a: Type ->
-  #b: Type ->
-  #c: Type ->
-  #d: Type ->
-  f: (a -> c -> d -> GTot b) ->
-  ga: erased a ->
-  gc: erased c ->
-  gd: erased d ->
-  Tot (e: erased b {reveal e == f (reveal ga) (reveal gc) (reveal gd)})
+val elift3   : #a:Type
+             -> #b:Type
+             -> #c:Type
+             -> #d:Type
+             -> f:(a -> c -> d -> GTot b)
+             -> ga:erased a
+             -> gc:erased c
+             -> gd:erased d
+             -> Tot (e:erased b{reveal e == f (reveal ga) (reveal gc) (reveal gd)})
 
-val elift1_p: 
-  #a: Type ->
-  #b: Type ->
-  #p: (a -> Type) ->
-  $f: (x: a{p x} -> GTot b) ->
-  r: erased a {p (reveal r)} ->
-  Tot (z: erased b {reveal z == f (reveal r)})
+val elift1_p : #a:Type
+             -> #b:Type
+             -> #p:(a -> Type)
+             -> $f:(x:a{p x} -> GTot b)
+             -> r:erased a{p (reveal r)}
+             -> Tot (z:erased b{reveal z == f (reveal r)})
 
-val elift2_p: 
-  #a: Type ->
-  #c: Type ->
-  #p: (a -> c -> Type) ->
-  #b: Type ->
-  $f: (xa: a -> xc: c{p xa xc} -> GTot b) ->
-  ra: erased a ->
-  rc: erased c {p (reveal ra) (reveal rc)} ->
-  Tot (x: erased b {reveal x == f (reveal ra) (reveal rc)})
-
+val elift2_p : #a:Type
+             -> #c:Type
+             -> #p: (a -> c -> Type)
+             -> #b:Type
+             -> $f:(xa:a -> xc:c{p xa xc} -> GTot b)
+             -> ra:erased a
+             -> rc:erased c{p (reveal ra) (reveal rc)}
+             -> Tot (x:erased b{reveal x == f (reveal ra) (reveal rc)})

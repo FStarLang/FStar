@@ -17,22 +17,19 @@
 module FStar.FunctionalExtensionality
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-type efun (a: Type) (b: Type) = a -> Tot b
+type efun (a:Type) (b:Type) = a -> Tot b
 
-type feq (#a: Type) (#b: Type) (f: efun a b) (g: efun a b) =
-  (forall x. {:pattern (f x)\/(g x)} f x == g x)
+type feq (#a:Type) (#b:Type) (f:efun a b) (g:efun a b) =
+  (forall x.{:pattern (f x) \/ (g x)} f x == g x)
 
-assume Extensionality: forall (a: Type) (b: Type) (f: efun a b) (g: efun a b).
-  {:pattern feq #a #b f g}
-  feq #a #b f g <==> f == g
+assume Extensionality : forall (a:Type) (b:Type) (f: efun a b) (g: efun a b).
+                        {:pattern feq #a #b f g} feq #a #b f g <==> f==g
 
 (** Ghost functional extensionality **)
-type gfun (a: Type) (b: Type) = a -> GTot b
+type gfun (a:Type) (b:Type) = a -> GTot b
 
-type gfeq (#a: Type) (#b: Type) (f: gfun a b) (g: gfun a b) =
-  (forall x. {:pattern (f x)\/(g x)} f x == g x)
+type gfeq (#a:Type) (#b:Type) (f:gfun a b) (g:gfun a b) =
+    (forall x.{:pattern (f x) \/ (g x)} f x == g x)
 
-assume GhostExtensionality: forall (a: Type) (b: Type) (f: gfun a b) (g: gfun a b).
-  {:pattern gfeq #a #b f g}
-  gfeq #a #b f g <==> f == g
-
+assume GhostExtensionality : forall (a:Type) (b:Type) (f: gfun a b) (g: gfun a b).
+                        {:pattern gfeq #a #b f g} gfeq #a #b f g <==> f==g

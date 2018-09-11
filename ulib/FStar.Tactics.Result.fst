@@ -7,19 +7,15 @@ module FStar.Tactics.Result
 // This refers to FStar.Tactics.Types.fsti in ulib, which just has an abstract
 // definition of proofstate.
 open FStar.Tactics.Types
-noeq
-type __result a =
-  | Success : v: a -> ps: proofstate -> __result a
-  (* Error message *)
-  | Failed : 
-    msg: string ->
-    ps:
-    (* The proofstate at time of failure *)
-    proofstate ->
-    __result a
+
+noeq type __result a =
+    | Success : v:a -> ps:proofstate -> __result a
+    | Failed  : msg:string      (* Error message *)
+              -> ps:proofstate  (* The proofstate at time of failure *)
+              -> __result a
 
 (* A bit of help for the SMT, unsure if still needed *)
-val result_split: #a: Type -> r: (__result a) ->
-  Lemma (Success? r \/ Failed? r) [SMTPat (Success? r); SMTPat (Failed? r)]
+val result_split : #a:Type -> r:(__result a) ->
+                        Lemma (Success? r \/ Failed? r) [SMTPat (Success? r);
+                                                         SMTPat (Failed? r)]
 let result_split #a r = ()
-
