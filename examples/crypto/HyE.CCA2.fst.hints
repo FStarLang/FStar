@@ -43,7 +43,7 @@
         "typing_FStar.Monotonic.HyperStack.get_hmap"
       ],
       0,
-      "fa43927773d027d49d167f8349b8a56c"
+      "98aafa4c71c1219242e509e8ba7f4183"
     ],
     [
       "HyE.CCA2.encrypt",
@@ -55,16 +55,29 @@
         "assumption_FStar.Pervasives.Native.option__uu___haseq",
         "assumption_Platform.Bytes.HasEq_bytes", "bool_inversion",
         "data_typing_intro_FStar.Pervasives.V@tok",
-        "equation_HyE.Ideal.conf", "equation_HyE.RSA.cipher",
-        "equation_HyE.RSA.plain", "equation_HyE.RSA.plainsize",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_FStar.Monotonic.HyperHeap.hmap",
+        "equation_FStar.Monotonic.HyperStack.is_tip",
+        "equation_FStar.Monotonic.HyperStack.is_wf_with_ctr_and_tip",
+        "equation_FStar.Monotonic.HyperStack.mem", "equation_HyE.Ideal.conf",
+        "equation_HyE.RSA.cipher", "equation_HyE.RSA.plain",
+        "equation_HyE.RSA.plainsize", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_HyE.CCA2.pkey",
+        "function_token_typing_FStar.Monotonic.Heap.heap",
+        "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_HyE.Ideal.ind_cca",
         "function_token_typing_HyE.RSA.cipher",
         "function_token_typing_HyE.RSA.plain",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
+        "lemma_FStar.Map.lemma_ContainsDom",
+        "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_9a74d818566e70513bc032cc3b65a144",
+        "refinement_interpretation_HyE.CCA2_Tm_refine_6e5e30b8a35b3df5111e4e25b1b2bf65",
+        "typing_FStar.Map.contains",
+        "typing_FStar.Monotonic.HyperStack.get_hmap",
+        "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "fac18886a32c50d6ed4313f862dc7529"
+      "95f8f5ada90e722448a9fa54c5a97f2b"
     ],
     [
       "HyE.CCA2.decrypt",

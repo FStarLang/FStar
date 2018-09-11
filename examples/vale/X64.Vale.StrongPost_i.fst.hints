@@ -418,7 +418,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "eb8ecf26b611b99030ba07f90c883a2e"
+      "20e9130d092d9c77ef813c4ce3abab8f"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_regs_match_self",
@@ -443,7 +443,7 @@
         "subterm_ordering_Prims.Cons", "true_interp"
       ],
       0,
-      "14a95c90d954a4a248901f51230b0ea8"
+      "8c95ceadc31fff1367e8b69677474bba"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_update_reg_equal",
@@ -672,7 +672,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "1a4e510fe9186998c601f7d97e1c341e"
+      "cfd88aecec125af7f9dfaea657539df1"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_weakest_pre_norm'",

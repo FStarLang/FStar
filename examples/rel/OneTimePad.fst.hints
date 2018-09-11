@@ -97,7 +97,7 @@
         "token_correspondence_OneTimePad.xor"
       ],
       0,
-      "6428f57b34e691905f4348677dace7ec"
+      "d81b26c0dc44ac36e4ba02ea3693a0f5"
     ],
     [
       "OneTimePad.one_time_pad_ok",
@@ -239,7 +239,7 @@
         "token_correspondence_OneTimePad.xor"
       ],
       0,
-      "b6dd18dde27715c7fd2a34780e43d239"
+      "d5c86635a6a451edc17d52a6af8cb3c0"
     ],
     [
       "OneTimePad.one_time_pad_ok",

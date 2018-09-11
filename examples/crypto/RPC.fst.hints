@@ -141,7 +141,7 @@
         "typing_RPC.k", "typing_RPC_Tm_abs_78ded2d57c0408c5cabaa71188db9347"
       ],
       0,
-      "66d717230c6a8162e0091fb98ef82462"
+      "388d23a01eb0c8b18085d2afe35d61c8"
     ],
     [
       "RPC.server",
@@ -217,7 +217,7 @@
         "typing_RPC_Tm_abs_2dc517e712b80eafdac9ab0acceb6395", "unit_typing"
       ],
       0,
-      "e0dd29122683ebc9cee286bfce5b3b3d"
+      "b9fd3a4fd6e6c2eedf0edee1da1073dc"
     ],
     [
       "RPC.test",
@@ -241,7 +241,7 @@
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
       0,
-      "7f004eb1b4fb3d2d03d544242cdb553b"
+      "0a759f83ba8fd4cb1ea829b8f0bdd286"
     ]
   ]
 ]

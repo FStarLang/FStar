@@ -278,7 +278,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "83a73127eb672749046cbf58fe26e211"
+      "4cf931cd763aed746268724678e6d058"
     ],
     [
       "LowStar.BufferView.length_eq",
@@ -341,7 +341,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0ca8e3d4c74a6b001c07d32a55b5372f"
+      "4fd133efea5e71d5264539b2d85303fb"
     ],
     [
       "LowStar.BufferView.split_at_i",
@@ -414,7 +414,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "90e80564fa6b23369707b3d38434f1c8"
+      "2042905ec124822779ec844388807f14"
     ],
     [
       "LowStar.BufferView.sel",
@@ -479,7 +479,7 @@
         "typing_LowStar.BufferView.get_view"
       ],
       0,
-      "81bd4760b2c1cf0657a5f23926f367c3"
+      "ec401b873f8abf7216c4d7cb11b17732"
     ],
     [
       "LowStar.BufferView.sel_upd1",
@@ -488,7 +488,6 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "LowStar.Buffer_interpretation_Tm_arrow_de0c4f31815b3388cd3c10eda9861253",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
         "data_elim_FStar.Pervasives.Native.Mktuple3",
         "data_elim_LowStar.BufferView.View", "data_elim_Prims.Mkdtuple2",
@@ -508,7 +507,8 @@
         "equation_LowStar.BufferView.length",
         "equation_LowStar.BufferView.sel",
         "equation_LowStar.BufferView.split_at_i",
-        "equation_LowStar.BufferView.upd", "equation_Prims.eqtype",
+        "equation_LowStar.BufferView.upd",
+        "equation_LowStar.Monotonic.Buffer.length", "equation_Prims.eqtype",
         "equation_Prims.l_True", "equation_Prims.logical",
         "equation_Prims.nat", "equation_Prims.pos",
         "fuel_guarded_inversion_LowStar.BufferView.view",
@@ -527,9 +527,9 @@
         "lemma_FStar.Seq.Base.lemma_len_append",
         "lemma_FStar.Seq.Base.lemma_len_slice",
         "lemma_LowStar.Monotonic.Buffer.length_as_seq",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Division",
-        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Modulus",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Division", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction",
         "proj_equation_LowStar.BufferView.View_get",
         "proj_equation_LowStar.BufferView.View_n",
         "proj_equation_LowStar.BufferView.View_put",
@@ -555,6 +555,7 @@
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_FStar.Pervasives.dsnd", "typing_FStar.Seq.Base.append",
+        "typing_LowStar.Buffer.trivial_preorder",
         "typing_LowStar.BufferView.__proj__BufferView__item__v",
         "typing_LowStar.BufferView.as_buffer",
         "typing_LowStar.BufferView.get_view",
@@ -562,7 +563,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "fdcf05147cc0d5ed0918dc90ac094999"
+      "a2359decb181a32fb890f8528ef7d54f"
     ],
     [
       "LowStar.BufferView.sel_upd2",
@@ -754,7 +755,7 @@
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "7983b8841f6240a4978e93ee19d902e5"
+      "63158debf4f4a8ddfe8413284f37e466"
     ],
     [
       "LowStar.BufferView.sel_upd",
@@ -772,7 +773,7 @@
         "refinement_interpretation_LowStar.BufferView_Tm_refine_e00ebf011276c18c2a3282d5327992dd"
       ],
       0,
-      "285ae7cb56e15a83412edda690e7c557"
+      "81ece0ac5a5969810b2075e19e0a0700"
     ],
     [
       "LowStar.BufferView.sel_upd",
@@ -809,7 +810,7 @@
         "typing_LowStar.BufferView.get_view"
       ],
       0,
-      "1ced0289af0aa993cdc7c9c1e32322ec"
+      "bc85dfed4a5b64d147d6126a6ffa1655"
     ],
     [
       "LowStar.BufferView.upd_modifies",
@@ -859,7 +860,7 @@
         "typing_LowStar.BufferView.get_view"
       ],
       0,
-      "7839527d31b3b4b3c24a4e03b72d2d14"
+      "ef24ceb3fbbdb8fafd0b9800ec697752"
     ],
     [
       "LowStar.BufferView.as_seq'",
@@ -914,7 +915,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "65144af8027e251db93f05c2a9089824"
+      "ea804d4e4d0482741f343719e991feec"
     ],
     [
       "LowStar.BufferView.as_seq",
@@ -937,7 +938,7 @@
         "typing_LowStar.BufferView.length"
       ],
       0,
-      "64f451c1bf2682e946e6b63d14d0c874"
+      "bfd72c45f028c153db5f81cff3c7e27f"
     ],
     [
       "LowStar.BufferView.as_seq_sel",
@@ -1024,7 +1025,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c5bb06e22679c794fdebd234ad65bb0e"
+      "6e6d85a9042e177c28135cb71932cb59"
     ],
     [
       "LowStar.BufferView.get_sel",

@@ -356,7 +356,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.index"
       ],
       0,
-      "3a6fe9625c447e81784de0985a13e25c"
+      "73f5674e9e21d87a8a44b769a76a6c83"
     ],
     [
       "ProgramOptimizations.b_exp_denotation",
@@ -395,7 +395,7 @@
         "subterm_ordering_ProgramOptimizations.Not"
       ],
       0,
-      "f76d8c0b0be289e3512274e4eb872aa9"
+      "b73c437a217fef4c4770d1fb2804b506"
     ],
     [
       "ProgramOptimizations.com_denotation",
@@ -427,7 +427,7 @@
         "unit_typing"
       ],
       0,
-      "1e1ce6e870dbd58f8b9361b89e252206"
+      "7f6ad8140b512dd1400cf80365f84b21"
     ],
     [
       "ProgramOptimizations.g_exp",
@@ -658,7 +658,7 @@
         "subterm_ordering_ProgramOptimizations.GIOp"
       ],
       0,
-      "1cbb609f1b27d4bb54055fb0b18eeaa8"
+      "1c9468b74d345a1b31632c0c923aaafd"
     ],
     [
       "ProgramOptimizations.rel_exp_denotation",
@@ -685,7 +685,7 @@
         "subterm_ordering_ProgramOptimizations.RNot"
       ],
       0,
-      "0161e04ec532845a4ea41727a4f189f5"
+      "de1d317f1e550aeea9898d5cb7d861c7"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization1",
@@ -1515,7 +1515,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.index"
       ],
       0,
-      "b2380c5ccf6a3c9f27320d26381e21a9"
+      "597a787dda5977e7d5f3e2ee5a3fd31a"
     ],
     [
       "ProgramOptimizations.b_exp_denotation",
@@ -1554,7 +1554,7 @@
         "subterm_ordering_ProgramOptimizations.Not"
       ],
       0,
-      "08a11dd6088b1aaa5026f8e144ffc6a9"
+      "796dcf24a9f1b8769a36bafcc4387df3"
     ],
     [
       "ProgramOptimizations.com_denotation",
@@ -1586,7 +1586,7 @@
         "unit_typing"
       ],
       0,
-      "26a5ca9edde8b6cc36c6a69cf0d09452"
+      "295fa7a2c7c41cae1017e698af2d20a3"
     ],
     [
       "ProgramOptimizations.g_exp",
@@ -1817,7 +1817,7 @@
         "subterm_ordering_ProgramOptimizations.GIOp"
       ],
       0,
-      "71579a911daac05a1782944124ffbf71"
+      "9ccac5083a573befe655afff0425f943"
     ],
     [
       "ProgramOptimizations.rel_exp_denotation",
@@ -1844,7 +1844,7 @@
         "subterm_ordering_ProgramOptimizations.RNot"
       ],
       0,
-      "03dd401e3662bdc12e5640570e295437"
+      "2a865e80cf9c0ddf485aa932af42d4aa"
     ]
   ]
 ]
