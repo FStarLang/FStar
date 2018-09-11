@@ -2142,7 +2142,9 @@ and tc_eqn scrutinee env branch
       else (* 6 (a) *)
           let rec build_branch_guard scrutinee_tm pat_exp : list<typ> =
             let discriminate scrutinee_tm f =
-                if List.length (snd (Env.datacons_of_typ env (Env.typ_of_datacon env f.v))) > 1
+                let is_induc, datacons = Env.datacons_of_typ env (Env.typ_of_datacon env f.v) in
+                (* Why the `not is_induc`? We may be checking an exception pattern. See issue #1535. *)
+                if not is_induc || List.length datacons > 1
                 then
                     let discriminator = U.mk_discriminator f.v in
                     match Env.try_lookup_lid env discriminator with
