@@ -427,6 +427,9 @@ let handleable_op op args =
 
 let comment_stack : ref<(list<(string*range)>)>= BU.mk_ref []
 
+// let string_of_pos pos =
+//     format2 "%s,%s" (string_of_int (line_of_pos pos)) (string_of_int (col_of_pos pos))
+
 (* some meta-information that informs spacing and the placement of comments around a declaration *)
 type decl_meta =
     {r: range;
@@ -436,15 +439,18 @@ type decl_meta =
      is_fsdoc: bool} //is a standalone fsdoc
 let dummy_meta = {r = dummyRange; has_qs = false; has_attrs = false; has_fsdoc = false; is_fsdoc = false}
 
-let with_comment printer tm tmrange =
+// TODO: rewrite in terms of with_comment_tuple
+let with_comment printer tm tmrange origin =
   let rec comments_before_pos acc print_pos lookahead_pos =
     match !comment_stack with
     | [] -> acc, false
-    | (comment, crange) :: cs ->
+    | (c, crange) :: cs ->
+      let comment = if BU.starts_with c "//" then str c ^^ hardline  else str c ^^ hardline in //revise this
       if range_before_pos crange print_pos
       then begin
         comment_stack := cs ;
-        comments_before_pos (acc ^^ str comment ^^ hardline) print_pos lookahead_pos
+        comments_before_pos (acc ^^ comment) print_pos lookahead_pos
+        // comments_before_pos acc ^^ str origin ^^ comment (* ^^ str (string_of_pos print_pos) ^^ str " " ^^ str (string_of_pos lookahead) *) print_pos lookahead_pos
       end
       else acc, range_before_pos crange lookahead_pos
   in
@@ -459,7 +465,40 @@ let with_comment printer tm tmrange =
         fst (comments_before_pos comments pos pos)
       else comments
   in
-  group (comments ^^ printed_e)
+  if comments = empty then
+    printed_e
+  else
+    // group (str "{" ^^ str origin ^^ comments ^^ str "~~" ^^ printed_e ^^ str "}")
+    group (comments ^^ printed_e)
+
+let with_comment_tuple printer tm tmrange origin =
+  let rec comments_before_pos acc print_pos lookahead_pos =
+    match !comment_stack with
+    | [] -> acc, false
+    | (c, crange) :: cs ->
+      // let comment = if BU.starts_with c "//" then str c ^^ hardline  else str c ^^ hardline in //revise this
+      let comment = str c in
+      if range_before_pos crange print_pos
+      then begin
+        comment_stack := cs ;
+        comments_before_pos (if acc = empty then comment else acc ^^ hardline ^^ comment) print_pos lookahead_pos
+        // comments_before_pos acc ^^ str origin ^^ comment (* ^^ str (string_of_pos print_pos) ^^ str " " ^^ str (string_of_pos lookahead) *) print_pos lookahead_pos
+      end
+      else acc, range_before_pos crange lookahead_pos
+  in
+  let comments, has_lookahead =
+      comments_before_pos empty (end_of_line ( start_of_range tmrange)) (end_of_range tmrange)
+  in
+  let printed_e = printer tm in
+  let comments =
+      if has_lookahead
+      then
+        let pos = end_of_range tmrange in
+        fst (comments_before_pos comments pos pos)
+      else comments
+  in
+  comments, printed_e
+
 
 (* [place_comments_until_pos k lbegin pos doc r init] appends to doc all the comments present in *)
 (* [comment_stack] whose range is before pos and separate each comments by as many lines *)
@@ -703,7 +742,7 @@ and p_typeDecl pre = function
     p_typeDeclPrefix pre true lid bs typ_opt, f
   | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
     let p_recordFieldAndComments ps (lid, t, doc_opt) =
-      with_comment (p_recordFieldDecl ps) (lid, t, doc_opt) (extend_to_end_of_line t.range)
+      with_comment (p_recordFieldDecl ps) (lid, t, doc_opt) (extend_to_end_of_line t.range) "!1"
     in
     let p_fields () =
         space ^^ braces_with_nesting (
@@ -713,7 +752,11 @@ and p_typeDecl pre = function
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
     let p_constructorBranchAndComments (uid, t_opt, doc_opt, use_of) =
         let range = extend_to_end_of_line (dflt uid.idRange (map_opt t_opt (fun t -> t.range))) in
-        with_comment p_constructorBranch (uid, t_opt, doc_opt, use_of) range
+        let comm, ctor = with_comment_tuple p_constructorBranch (uid, t_opt, doc_opt, use_of) range "!2" in
+        if comm = empty then
+          ctor
+        else
+          group <| ifflat (group (ctor ^^ break1 ^^ comm)) (comm ^^ hardline ^^ ctor)
     in
     (* Beware of side effects with comments printing *)
     let datacon_doc () =
@@ -1080,7 +1123,7 @@ and p_term (ps:bool) (pb:bool) (e:term) = match e.tm with
   | _ ->
       group (p_noSeqTerm ps pb e)
 
-and p_noSeqTerm ps pb e = with_comment (p_noSeqTerm' ps pb) e e.range
+and p_noSeqTerm ps pb e = with_comment (p_noSeqTerm' ps pb) e e.range "!3"
 
 and p_noSeqTerm' ps pb e = match e.tm with
   | Ascribed (e, t, None) ->
@@ -1189,7 +1232,7 @@ and p_attrs_opt = function
   | Some terms ->
     group (str "[@" ^/^ (separate_map break1 p_atomicTerm terms) ^/^ str "]")
 
-and p_typ ps pb e = with_comment (p_typ' ps pb) e e.range
+and p_typ ps pb e = with_comment (p_typ' ps pb) e e.range "!4"
 
 and p_typ' ps pb e = match e.tm with
   | QForall (bs, trigger, e1)
@@ -1306,7 +1349,7 @@ and p_tmConjunction e = match e.tm with
       (p_tmConjunction e1) @ [p_tmTuple e2]
   | _ -> [p_tmTuple e]
 
-and p_tmTuple e = with_comment p_tmTuple' e e.range
+and p_tmTuple e = with_comment p_tmTuple' e e.range "!5"
 
 and p_tmTuple' e = match e.tm with
   | Construct (lid, args) when is_tuple_constructor lid ->
