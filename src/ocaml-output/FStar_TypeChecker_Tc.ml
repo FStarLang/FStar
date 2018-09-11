@@ -7319,13 +7319,14 @@ let (tc_decls :
             (match uu____12986 with
              | (r,ms_elapsed) ->
                  ((let uu____13096 =
-                     (FStar_TypeChecker_Env.debug env1
-                        (FStar_Options.Other "TCDeclTime"))
-                       ||
-                       (FStar_Util.for_some
-                          (FStar_Syntax_Util.attr_eq
-                             FStar_Syntax_Util.tcdecltime_attr)
-                          se.FStar_Syntax_Syntax.sigattrs)
+                     ((FStar_TypeChecker_Env.debug env1
+                         (FStar_Options.Other "TCDeclTime"))
+                        ||
+                        (FStar_Util.for_some
+                           (FStar_Syntax_Util.attr_eq
+                              FStar_Syntax_Util.tcdecltime_attr)
+                           se.FStar_Syntax_Syntax.sigattrs))
+                       || (FStar_Options.timing ())
                       in
                    if uu____13096
                    then

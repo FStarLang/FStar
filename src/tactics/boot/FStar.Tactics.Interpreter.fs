@@ -147,6 +147,9 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac2 1 "catch"         (fun _ -> catch) e_any (e_tactic_thunk e_any) (e_either e_string e_any)
                                (fun _ -> catch) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either NBET.e_string NBET.e_any);
 
+      mktac2 1 "recover"       (fun _ -> recover) e_any (e_tactic_thunk e_any) (e_either e_string e_any)
+                               (fun _ -> recover) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either NBET.e_string NBET.e_any);
+
       mktac1 0 "intro"         intro e_unit RE.e_binder
                                intro NBET.e_unit NRE.e_binder;
 
@@ -402,7 +405,8 @@ let report_implicits rng (is : Env.implicits) : unit =
                              (Print.term_to_string imp.imp_uvar.ctx_uvar_typ)
                              imp.imp_reason,
                  rng)) is in
-    Err.add_errors errs
+    Err.add_errors errs;
+    Err.stop_if_err ()
 
 let run_tactic_on_typ
         (rng_tac : Range.range) (rng_goal : Range.range)

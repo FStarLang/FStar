@@ -3334,6 +3334,7 @@ let run_compute :
                    FStar_Syntax_Syntax.delta_constant])
             [FStar_TypeChecker_Env.Inlining;
             FStar_TypeChecker_Env.Eager_unfolding;
+            FStar_TypeChecker_Env.UnfoldTac;
             FStar_TypeChecker_Env.Primops]
            in
         let normalize_term1 tcenv rules2 t =

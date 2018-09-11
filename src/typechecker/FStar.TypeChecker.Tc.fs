@@ -1756,6 +1756,7 @@ let tc_decls env ses =
     let r, ms_elapsed = BU.record_time (fun () -> process_one_decl acc se) in
     if Env.debug env (Options.Other "TCDeclTime")
      || BU.for_some (U.attr_eq U.tcdecltime_attr) se.sigattrs
+     || Options.timing ()
     then BU.print2 "Checked %s in %s milliseconds\n" (Print.sigelt_to_string_short se) (string_of_int ms_elapsed);
     r
   in
