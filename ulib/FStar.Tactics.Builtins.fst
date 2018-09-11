@@ -63,6 +63,8 @@ On failure, it returns [Inl msg], where [msg] is the error [t]
 raised. See also [or_else].  *)
 assume val catch : #a:Type -> (unit -> Tac a) -> TacS (either string a)
 
+assume val recover : #a:Type -> (unit -> Tac a) -> TacS (either string a)
+
 (** [trivial] will discharge the goal if it's exactly [True] after
 doing normalization and simplification of it. *)
 assume val trivial  : unit -> Tac unit

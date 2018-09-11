@@ -47,7 +47,7 @@
         "subterm_ordering_Bug579.TyEqu"
       ],
       0,
-      "412d46e4c6cca9d6c699a2963ecad384"
+      "abbe7a2256bae6f9bd4cb1cdfcecc460"
     ],
     [
       "Bug579.progress",
@@ -63,7 +63,7 @@
         "projection_inverse_Bug579.TyEqu_t1", "subterm_ordering_Bug579.TyEqu"
       ],
       0,
-      "423855f227db418377f4acb6ddcbebef"
+      "51df44b0af620ceecc875d12c8d879dc"
     ]
   ]
 ]

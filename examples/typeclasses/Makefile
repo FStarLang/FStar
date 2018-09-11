@@ -12,3 +12,11 @@ $(CACHE_DIR):
 include ../Makefile.common
 
 verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
+
+native_bench1:
+	$(FSTAR) Loop2.fst --timing
+
+native_bench2:
+	rm -f FStar_Tactics_Typeclasses.*
+	$(FSTAR) $(FSTAR_HOME)/ulib/FStar.Tactics.Typeclasses.fst --extract FStar.Tactics.Typeclasses --codegen Plugin
+	$(FSTAR) Loop2.fst --timing --load FStar.Tactics.Typeclasses

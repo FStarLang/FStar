@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3089c8c57be1de7d148193381cd4936c"
+      "f7ef087cb4957326f2a0bafff792739f"
     ],
     [
       "Recursive.fac_mon",
@@ -43,7 +43,7 @@
         "typing_Recursive.fac", "well-founded-ordering-on-nat"
       ],
       0,
-      "5fb368ae00f63ba853db818747f7ae41"
+      "e9e624fae5043c4f18b53f73a82f1ca9"
     ],
     [
       "Recursive.fac_sum",
@@ -89,7 +89,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c9f31b62788628eda107292c9c55257a"
+      "1081e128112e48d052fa122a9d764d97"
     ],
     [
       "Recursive.fac_sum",

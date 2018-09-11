@@ -41,3 +41,23 @@ let compare x y =
   else if y < x then 0-1
   else 0
 let test_sort = assert_norm (FStar.List.Tot.sortWith compare [10; 9; 8; 7; 6; 5; 4; 3; 2; 1] = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10])
+
+
+(*
+ * Cf. #1529
+ *)
+[@"opaque_to_smt"]
+let f_1529 (x:int) = 5
+
+let f_1529_1 () =
+  let f_local = normalize_term f_1529 in
+  assert (f_local 2 == 5)
+
+let f_1529_2 () =
+  let f_local = norm [delta] f_1529 in
+  assert (f_local 2 == 5)
+
+
+
+
+

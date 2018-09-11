@@ -126,6 +126,8 @@ let fmap f r =
  * or automatically, but keep it for now *)
 let catch (t: unit -> 'a __tac): ((string, 'a) FStar_Pervasives.either) __tac =
         fun ps -> fmap fix_either (from_tac_1 B.catch (to_tac_0 (t ())) ps)
+let recover (t: unit -> 'a __tac): ((string, 'a) FStar_Pervasives.either) __tac =
+        fun ps -> fmap fix_either (from_tac_1 B.recover (to_tac_0 (t ())) ps)
 
 let t_pointwise (d : direction) (t: unit -> unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 (t ()))
 

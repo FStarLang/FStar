@@ -124,6 +124,10 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
      let msg = if Env.is_trivial_guard_formula g then None else Some <| Err.subtyping_failed env t t' in
      let g = Env.conj_guard g guard in
      (* adding a guard for confirming that the computed type t is a subtype of the expected type t' *)
+     let lc =
+       if tlc |> is_left && TcUtil.should_return env (Some e) lc then TcUtil.return_value env (TcUtil.lcomp_univ_opt lc) t e |> U.lcomp_of_comp
+       else lc
+     in
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in
      memo_tk e t', set_lcomp_result lc t', g
   in
@@ -2877,7 +2881,8 @@ let tc_tparams env (tps:binders) : (binders * Env.env * universes) =
 *)
 let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
   let mk_tm_type u = S.mk (Tm_type u) None t.pos in
-  match (SS.compress t).n with
+  let t = SS.compress t in
+  match t.n with
   | Tm_delayed _
   | Tm_bvar _ -> failwith "Impossible"
 
@@ -2894,6 +2899,10 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
   | Tm_uinst({n=Tm_fvar fv}, us) ->
     bind_opt (Env.try_lookup_and_inst_lid env us fv.fv_name.v) (fun (t, _) ->
     Some t)
+
+  (* Can't (easily) do this one efficiently, just return None *)
+  | Tm_constant Const_reify
+  | Tm_constant (Const_reflect _) -> None
 
   | Tm_constant sc ->
     Some (tc_constant env t.pos sc)
@@ -2933,6 +2942,33 @@ let rec type_of_well_typed_term (env:env) (t:term) : option<typ> =
   | Tm_refine(x, _) ->
     bind_opt (universe_of_well_typed_term env x.sort) (fun u_x ->
     Some (mk_tm_type u_x))
+
+  (* Not doing anything smart with these, so we don't even associate
+   * them appropriately. *)
+  (* | Tm_app({n=Tm_constant Const_reify}, a::hd::rest) *)
+  (* | Tm_app({n=Tm_constant (Const_reflect _)}, a::hd::rest) *)
+
+  (* Unary operators. Explicitly curry extra arguments *)
+  | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest) ->
+    let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
+    let unary_op, _ = U.head_and_args t in
+    let head = mk (Tm_app(unary_op, [a])) None (Range.union_ranges unary_op.pos (fst a).pos) in
+    let t = mk (Tm_app(head, rest)) None t.pos in
+    type_of_well_typed_term env t
+
+  (* Binary operators *)
+  | Tm_app({n=Tm_constant Const_set_range_of}, a1::a2::hd::rest) ->
+    let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
+    let unary_op, _ = U.head_and_args t in
+    let head = mk (Tm_app(unary_op, [a1; a2])) None (Range.union_ranges unary_op.pos (fst a1).pos) in
+    let t = mk (Tm_app(head, rest)) None t.pos in
+    type_of_well_typed_term env t
+
+  | Tm_app({n=Tm_constant Const_range_of}, [_]) ->
+    Some (t_range)
+
+  | Tm_app({n=Tm_constant Const_set_range_of}, [(t, _); _]) ->
+    type_of_well_typed_term env t
 
   | Tm_app(hd, args) ->
     let t_hd = type_of_well_typed_term env hd in

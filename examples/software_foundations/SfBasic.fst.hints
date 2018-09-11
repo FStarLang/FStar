@@ -635,7 +635,7 @@
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
       ],
       0,
-      "35bcb55af752e948459185962bef332a"
+      "559f69ea20d9a73d097e4d2b4f4fd053"
     ],
     [
       "SfBasic.plus_n_Sm",
@@ -664,7 +664,7 @@
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
       ],
       0,
-      "083944a62e71d0fb71ab5ffc4ba7ed00"
+      "e00688e817a1cf4add3a4d27459947ab"
     ],
     [
       "SfBasic.plus_comm",
@@ -693,7 +693,7 @@
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
       ],
       0,
-      "e2002d88be914d4c6d576e8d4ab42a10"
+      "e66b219812bb30d010fd91e4abb49a97"
     ],
     [
       "SfBasic.plus_rearrange",

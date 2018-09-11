@@ -381,6 +381,19 @@ let destruct_equality_implication (t:term) : Tac (option (formula * term)) =
         end
     | _ -> None
 
+private
+let __eq_sym #t (a b : t) : Lemma ((a == b) == (b == a)) =
+  FStar.PropositionalExtensionality.axiom ()
+
+(** Like [rewrite], but works with equalities [v == e] and [e == v] *)
+let rewrite' (b:binder) : Tac unit =
+    ((fun () -> rewrite b)
+     <|> (fun () -> binder_retype b;
+                    apply_lemma (`__eq_sym);
+                    rewrite b)
+     <|> (fun () -> fail "rewrite' failed"))
+    ()
+
 let rec try_rewrite_equality (x:term) (bs:binders) : Tac unit =
     match bs with
     | [] -> ()

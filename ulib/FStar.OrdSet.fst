@@ -79,6 +79,8 @@ let rec intersect #a #f s1 s2 = match s1 with
     else
       intersect #_ #f tl s2
 
+let disjoint #a #f (s1 s2 : ordset a f) : bool = intersect s1 s2 = empty
+
 let choose #a #f s = match s with
   | []   -> None
   | x::_ -> Some x
@@ -414,6 +416,16 @@ let lemma_intersect_union_empty' (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ords
    [SMTPat (intersect (union s1 s2) s3)]
   = admit ()
 
+let union_comm (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f)
+  :Lemma (union s1 s2 == union s2 s1)
+         [SMTPat (union s1 s2)]
+  = admit ()
+
+let union_of_disj (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f)
+ :Lemma (requires (disjoint s1 s2))
+        (ensures (minus (union s1 s2) s1 == s2))
+        [SMTPat (union s1 s2); SMTPat (disjoint s1 s2)]
+ = admit ()
 
 (* Conversion from OrdSet to Set *)
 

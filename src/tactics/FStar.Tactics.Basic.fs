@@ -103,38 +103,37 @@ let get_uvar_solved uv =
 let check_goal_solved goal = get_uvar_solved goal.goal_ctx_uvar
 
 let goal_to_string_verbose (g:goal) : string =
-    BU.format2 "%s%s"
+    BU.format2 "%s%s\n"
         (Print.ctx_uvar_to_string g.goal_ctx_uvar)
         (match check_goal_solved g with
          | None -> ""
          | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (Print.term_to_string t))
 
 let goal_to_string (kind : string) (maybe_num : option<(int * int)>) (ps:proofstate) (g:goal) : string =
-    if Options.print_implicits ()
-       || ps.tac_verb_dbg
-    then goal_to_string_verbose g
-    else
-        let w =
-            match get_uvar_solved g.goal_ctx_uvar with
-            | None -> "_"
-            | Some t -> tts (goal_env g) t
-        in
-        let num = match maybe_num with
-                  | None -> ""
-                  | Some (i, n) -> BU.format2 " %s/%s" (string_of_int i) (string_of_int n)
-        in
-        let maybe_label =
-            match g.label with
-            | "" -> ""
-            | l -> " (" ^ l ^ ")"
-        in
-        BU.format6 "%s%s%s:\n%s |- %s : %s\n\n"
-             kind
-             num
-             maybe_label
-             (Print.binders_to_string ", " g.goal_ctx_uvar.ctx_uvar_binders)
-             w
-             (tts (goal_env g) g.goal_ctx_uvar.ctx_uvar_typ)
+    let w =
+        if Options.print_implicits ()
+        then tts (goal_env g) (goal_witness g)
+        else match get_uvar_solved g.goal_ctx_uvar with
+             | None -> "_"
+             | Some t -> tts (goal_env g) (goal_witness g) (* shouldn't really happen that we print a solved goal *)
+    in
+    let num = match maybe_num with
+              | None -> ""
+              | Some (i, n) -> BU.format2 " %s/%s" (string_of_int i) (string_of_int n)
+    in
+    let maybe_label =
+        match g.label with
+        | "" -> ""
+        | l -> " (" ^ l ^ ")"
+    in
+    let actual_goal =
+        if ps.tac_verb_dbg
+        then goal_to_string_verbose g
+        else BU.format3 "%s |- %s : %s\n" (Print.binders_to_string ", " g.goal_ctx_uvar.ctx_uvar_binders)
+                                          w
+                                          (tts (goal_env g) g.goal_ctx_uvar.ctx_uvar_typ)
+    in
+    BU.format4 "%s%s%s:\n%s\n" kind num maybe_label actual_goal
 
 let tacprint  (s:string)       = BU.print1 "TAC>> %s\n" s
 let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
@@ -237,6 +236,14 @@ let catch (t : tac<'a>) : tac<either<string,'a>> =
                 let ps = { ps with freshness = q.freshness } in //propagate the freshness even on failures
                 Success (Inl m, ps)
            )
+
+let recover (t : tac<'a>) : tac<either<string,'a>> =
+    mk_tac (fun ps ->
+            match run t ps with
+            | Success (a, q) -> Success (Inr a, q)
+            | Failed (m, q)  -> Success (Inl m, q)
+           )
+
 let trytac (t : tac<'a>) : tac<option<'a>> =
     bind (catch t) (fun r ->
     match r with
@@ -1024,7 +1031,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
-    | Some (U.BaseConn(l, [_; (e1, _); (e2, _)])) when Ident.lid_equals l PC.eq2_lid ->
+    | Some (U.BaseConn(l, [_; (e1, _); (e2, _)]))
+      when Ident.lid_equals l PC.eq2_lid
+      ||    Ident.lid_equals l PC.c_eq2_lid ->
         Some (e1, e2)
     | _ ->
         None
@@ -1039,22 +1048,22 @@ let destruct_eq (typ : typ) : option<(term * term)> =
         | None -> None
         end
 
-let split_env (bvar : bv) (e : env) : option<(env * list<bv>)> =
+let split_env (bvar : bv) (e : env) : option<(env * bv * list<bv>)> =
     let rec aux e =
         match Env.pop_bv e with
         | None -> None
         | Some (bv', e') ->
             if S.bv_eq bvar bv'
-            then Some (e', [])
-            else map_opt (aux e') (fun (e'', bvs) -> (e'', bv'::bvs ))
+            then Some (e', bv', [])
+            else map_opt (aux e') (fun (e'', bv, bvs) -> (e'', bv, bv'::bvs ))
     in
-    map_opt (aux e) (fun (e', bvs) -> (e', List.rev bvs))
+    map_opt (aux e) (fun (e', bv, bvs) -> (e', bv, List.rev bvs))
 
 let push_bvs e bvs =
     List.fold_left (fun e b -> Env.push_bv e b) e bvs
 
 let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : option<goal> =
-    map_opt (split_env b1 (goal_env g)) (fun (e0, bvs) ->
+    map_opt (split_env b1 (goal_env g)) (fun (e0, b1, bvs) ->
         let s1 bv = { bv with sort = SS.subst s bv.sort } in
         let bvs = List.map s1 bvs in
         let new_env = push_bvs e0 (b2::bvs) in
@@ -1073,7 +1082,7 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
     mlog (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (Print.term_to_string bv.sort)) (fun _ ->
     match split_env bv (goal_env goal) with
     | None -> fail "binder not found in environment"
-    | Some (e0, bvs) -> begin
+    | Some (e0, bv, bvs) -> begin
         match destruct_eq bv.sort with
         | Some (x, e) ->
         (match (SS.compress x).n with
@@ -1108,7 +1117,7 @@ let binder_retype (b : binder) : tac<unit> = wrap_err "binder_retype" <|
     let bv, _ = b in
     match split_env bv (goal_env goal) with
     | None -> fail "binder is not present in environment"
-    | Some (e0, bvs) ->
+    | Some (e0, bv, bvs) ->
         let (ty, u) = U.type_u () in
         bind (new_uvar "binder_retype" e0 ty) (fun (t', u_t') ->
         //NS: Question ... u_t' is dropped; why?
@@ -1135,7 +1144,7 @@ let norm_binder_type (s : list<EMB.norm_step>) (b : binder) : tac<unit> = wrap_e
     let bv, _ = b in
     match split_env bv (goal_env goal) with
     | None -> fail "binder is not present in environment"
-    | Some (e0, bvs) -> begin
+    | Some (e0, bv, bvs) -> begin
         let steps = [Env.Reify; Env.UnfoldTac]@(N.tr_norm_steps s) in
         let sort' = normalize steps e0 bv.sort in
         let bv' = { bv with sort = sort' } in
@@ -1166,7 +1175,7 @@ let rec clear (b : binder) : tac<unit> =
                         (Env.all_binders (goal_env goal) |> List.length |> string_of_int)) (fun () ->
     match split_env bv (goal_env goal) with
     | None -> fail "Cannot clear; binder not in environment"
-    | Some (e', bvs) ->
+    | Some (e', bv, bvs) ->
         let rec check bvs =
             match bvs with
             | [] -> ret ()
