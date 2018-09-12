@@ -820,7 +820,13 @@ and p_letlhs kw (pat, _) =
 
 and p_letbinding kw (pat, e) =
   let doc_pat = p_letlhs kw (pat, e) in
-  let doc_expr = p_term false false e in
+  let comm, doc_expr = p_term_sep false false e "$5" in
+  let doc_expr =
+    if comm = empty then
+      group doc_expr
+    else
+      group <| ifflat (group (doc_expr ^^ break1 ^^ comm)) (comm ^^ hardline ^^ doc_expr)
+  in
   ifflat (doc_pat ^/^ equals ^/^ doc_expr) (doc_pat ^^ space ^^ group (equals ^^ jump2 doc_expr))
 
 (* ****************************************************************************)
@@ -1034,7 +1040,8 @@ and p_refinement aqual_opt binder t phi =
     | Op _ -> false
     | _ -> true
     in
-  let phi = p_noSeqTerm false false phi in
+  let comm, phi = p_noSeqTerm false false phi in
+  let phi = if comm = empty then phi else comm ^^ hardline ^^ phi in
   (* If t is atomic, don't put a space between t and phi
    * If t can be displayed on a single line, tightly surround it with braces,
    * otherwise pad with a space. *)
@@ -1121,14 +1128,37 @@ and p_term (ps:bool) (pb:bool) (e:term) = match e.tm with
       (* Don't swallow semicolons on the left-hand side of a semicolon! Note:
        * the `false` for pb is kind of useless because there is no construct
        * that swallows branches but not semicolons (meaning ps implies pb). *)
-      group (p_noSeqTerm true false e1 ^^ semi) ^/^ p_term ps pb e2
+      group (p_noSeqTermAndComment true false e1 ^^ semi) ^^ hardline ^^ p_term ps pb e2
   | Bind(x, e1, e2) ->
       group ((p_lident x ^^ space ^^ long_left_arrow) ^/+^
-      (p_noSeqTerm true false e1 ^^ space ^^ semi)) ^/^ p_term ps pb e2
+      (p_noSeqTermAndComment true false e1 ^^ space ^^ semi)) ^/^ p_term ps pb e2
   | _ ->
-      group (p_noSeqTerm ps pb e)
+      group (p_noSeqTermAndComment ps pb e)
 
-and p_noSeqTerm ps pb e = with_comment (p_noSeqTerm' ps pb) e e.range "!3"
+and p_term_sep (ps:bool) (pb:bool) (e:term) flag = match e.tm with
+  | Seq (e1, e2) ->
+      (* Don't swallow semicolons on the left-hand side of a semicolon! Note:
+       * the `false` for pb is kind of useless because there is no construct
+       * that swallows branches but not semicolons (meaning ps implies pb). *)
+      let comm, t1 = p_noSeqTerm true false e1 in
+      // let t1 = show_comm_temp comm t1 "$2" in
+      comm, group (t1 ^^ semi) ^^ hardline ^^ p_term ps pb e2
+  | Bind(x, e1, e2) ->
+      empty, group ((p_lident x ^^ space ^^ long_left_arrow) ^/+^
+      (p_noSeqTermAndComment true false e1 ^^ space ^^ semi)) ^/^ p_term ps pb e2
+  | _ ->
+     p_noSeqTerm ps pb e
+     // let comm, t1 = p_noSeqTerm ps pb e in
+     // if comm = empty then
+     //   group t1
+     // else
+     //   let comm = str flag ^^ comm in
+     //   group <| ifflat (group (t1 ^^ break1 ^^ comm)) (comm ^^ hardline ^^ t1)
+
+
+and p_noSeqTerm ps pb e = with_comment_sep (p_noSeqTerm' ps pb) e e.range "!3"
+
+and p_noSeqTermAndComment ps pb e = with_comment (p_noSeqTerm' ps pb) e e.range "!3"
 
 and p_noSeqTerm' ps pb e = match e.tm with
   | Ascribed (e, t, None) ->
@@ -1138,11 +1168,11 @@ and p_noSeqTerm' ps pb e = match e.tm with
   | Op ({idText = ".()<-"}, [ e1; e2; e3 ]) ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term false false e2)
-          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTerm ps pb e3))
+          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
   | Op ({idText = ".[]<-"}, [ e1; e2; e3 ]) ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_with_nesting (p_term false false e2)
-          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTerm ps pb e3))
+          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
   | Requires (e, wtf) ->
       assert (wtf = None);
       group (str "requires" ^/^ p_typ ps pb e)
@@ -1157,26 +1187,26 @@ and p_noSeqTerm' ps pb e = match e.tm with
        * semicolons. We forward our caller's [ps] parameter, though, because
        * something in [e2] may swallow. *)
       if is_unit e3
-      then group ((str "if" ^/+^ p_noSeqTerm false false e1) ^/^ (str "then" ^/+^ p_noSeqTerm ps pb e2))
+      then group ((str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^ (str "then" ^/+^ p_noSeqTermAndComment ps pb e2))
       else
            let e2_doc =
               match e2.tm with
                   (* Not protecting, since an ELSE follows. *)
                   | If (_,_,e3) when is_unit e3 ->
                       (* Dangling else *)
-                      soft_parens_with_nesting (p_noSeqTerm false false e2)
-                  | _ -> p_noSeqTerm false false e2
+                      soft_parens_with_nesting (p_noSeqTermAndComment false false e2)
+                  | _ -> p_noSeqTermAndComment false false e2
           in group (
-              (str "if" ^/+^ p_noSeqTerm false false e1) ^/^
+              (str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^
               (str "then" ^/+^ e2_doc) ^/^
-              (str "else" ^/+^ p_noSeqTerm ps pb e3))
+              (str "else" ^/+^ p_noSeqTermAndComment ps pb e3))
   | TryWith(e, branches) ->
       paren_if (ps || pb) (
-        group (prefix2 (str "try") (p_noSeqTerm false false e) ^/^ str "with" ^/^
+          group (prefix2 (str "try") (p_noSeqTermAndComment false false e) ^/^ str "with" ^/^
               separate_map_last hardline p_patternBranch branches))
   | Match (e, branches) ->
       paren_if (ps || pb) (
-        group (surround 2 1 (str "match") (p_noSeqTerm false false e) (str "with") ^/^
+        group (surround 2 1 (str "match") (p_noSeqTermAndComment false false e) (str "with") ^/^
         separate_map_last hardline p_patternBranch branches)
       )
   | LetOpen (uid, e) ->
@@ -1200,7 +1230,13 @@ and p_noSeqTerm' ps pb e = match e.tm with
         | _ -> str "and"
       in
       let doc_pat = p_letlhs doc_let_or_and (pat, e) in
-      let doc_expr = p_term false false e in
+      let comm, doc_expr = p_term_sep false false e "" in
+     let doc_expr =
+       if comm = empty then
+         group doc_expr
+     else
+         group <| ifflat (group (doc_expr ^^ break1 ^^ comm)) (comm ^^ hardline ^^ doc_expr)
+     in
       attrs ^^
       (if is_last then
        surround 2 1 (flow break1 [doc_pat; equals]) doc_expr (str "in")
@@ -1221,15 +1257,15 @@ and p_noSeqTerm' ps pb e = match e.tm with
     paren_if (ps || pb) (
       group (str "function" ^/^ separate_map_last hardline p_patternBranch branches))
   | Quote (e, Dynamic) ->
-    group (str "quote" ^/^ p_noSeqTerm ps pb e)
+    group (str "quote" ^/^ p_noSeqTermAndComment ps pb e)
   | Quote (e, Static) ->
-    group (str "`" ^^ p_noSeqTerm ps pb e)
+    group (str "`" ^^ p_noSeqTermAndComment ps pb e)
   | VQuote e ->
-    group (str "`%" ^^ p_noSeqTerm ps pb e)
+    group (str "`%" ^^ p_noSeqTermAndComment ps pb e)
   | Antiquote ({ tm = Quote (e, Dynamic) }) ->
-    group (str "`@" ^^ p_noSeqTerm ps pb e)
+    group (str "`@" ^^ p_noSeqTermAndComment ps pb e)
   | Antiquote e ->
-    group (str "`#" ^^ p_noSeqTerm ps pb e)
+    group (str "`#" ^^ p_noSeqTermAndComment ps pb e)
   | _ -> p_typ ps pb e
 
 and p_attrs_opt = function
@@ -1243,7 +1279,7 @@ and p_typ' ps pb e = match e.tm with
   | QForall (bs, trigger, e1)
   | QExists (bs, trigger, e1) ->
       let binders_doc = p_binders true bs in
-      let term_doc = p_noSeqTerm ps pb e1 in
+      let term_doc = p_noSeqTermAndComment ps pb e1 in
       //VD: We could dispense with this pattern matching if we removed trailing whitespace after the fact
       (match trigger with
        | [] ->
@@ -1450,7 +1486,7 @@ and p_refinedBinder b phi =
 
 (* A simple def can be followed by a ';'. Protect except for the last one. *)
 and p_simpleDef ps (lid, e) =
-  group (p_qlident lid ^/^ equals ^/^ p_noSeqTerm ps false e)
+  group (p_qlident lid ^/^ equals ^/^ p_noSeqTermAndComment ps false e)
 
 and p_appTerm e = match e.tm with
   | App _ when is_general_application e ->
@@ -1555,11 +1591,11 @@ and p_projectionLHS e = match e.tm with
     soft_parens_with_nesting (p_term false false e)
   | _ when is_array e ->
     let es = extract_from_list e in
-    surround 2 0 (lbracket ^^ bar) (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTerm ps false) es) (bar ^^ rbracket)
+    surround 2 0 (lbracket ^^ bar) (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) es) (bar ^^ rbracket)
   | _ when is_list e ->
-    surround 2 0 lbracket (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTerm ps false) (extract_from_list e)) rbracket
+    surround 2 0 lbracket (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) (extract_from_list e)) rbracket
   | _ when is_lex_list e ->
-    surround 2 1 (percent ^^ lbracket) (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTerm ps false) (extract_from_list e)) rbracket
+    surround 2 1 (percent ^^ lbracket) (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) (extract_from_list e)) rbracket
   | _ when is_ref_set e ->
     let es = extract_from_ref_set e in
     surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
