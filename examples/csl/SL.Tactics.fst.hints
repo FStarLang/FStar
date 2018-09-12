@@ -1,61 +1,195 @@
 [
-  "\u0005Ó†c\u0018Z’¥æ\u0016K\u001fÍ\u001b˙\u0016",
+  "MèrùˇI8Îm}¸›{†òò",
   [
+    [
+      "SL.Tactics.lemma_read_write",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.SL.Heap.ref",
+        "equation_Lang.addr", "equation_Lang.t",
+        "function_token_typing_FStar.UInt64.t",
+        "lemma_FStar.SL.Monotonic.Heap.equal_extensional",
+        "lemma_FStar.SL.Monotonic.Heap.lemma_join_tot_restrict_minus",
+        "lemma_FStar.SL.Monotonic.Heap.lemma_restrict_eq_points_to",
+        "refinement_interpretation_FStar.SL.Monotonic.Heap_Tm_refine_b665c5d9d02615543412d6d1fdaeb68b",
+        "refinement_interpretation_SL.Tactics_Tm_refine_3bcf4b7474eb7f3eaa30f4c958188cd5",
+        "typing_FStar.SL.Heap.trivial_preorder",
+        "typing_FStar.SL.Monotonic.Heap.minus",
+        "typing_FStar.SL.Monotonic.Heap.points_to",
+        "typing_FStar.SL.Monotonic.Heap.restrict",
+        "typing_FStar.SL.Monotonic.Heap.sel"
+      ],
+      0,
+      "7e435ae293cd817bfec0073b85b7b9bd"
+    ],
+    [
+      "SL.Tactics.lemma_alloc_return",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion",
+        "lemma_FStar.SL.Monotonic.Heap.lemma_is_emp_emp_with_next_addr",
+        "lemma_FStar.SL.Monotonic.Heap.lemma_join_tot_emp_with_next_addr_h",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.SL.Monotonic.Heap.emp_with_next_addr",
+        "typing_FStar.SL.Monotonic.Heap.get_next_addr"
+      ],
+      0,
+      "413a45337e95c8bff189334ce69bc7cc"
+    ],
+    [
+      "SL.Tactics.lemma_bind",
+      1,
+      2,
+      1,
+      [
+        "@query",
+        "lemma_FStar.SL.Monotonic.Heap.lemma_join_tot_h_emp_with_next_addr",
+        "typing_FStar.SL.Monotonic.Heap.emp_with_next_addr",
+        "typing_FStar.SL.Monotonic.Heap.get_next_addr"
+      ],
+      0,
+      "03578736d744cbc8fd77e452d99272bb"
+    ],
+    [
+      "SL.Tactics.lemma_eq_implies_intro",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d76b4a56233fd81b00c9ca1ddc420683"
+    ],
+    [
+      "SL.Tactics.lemma_eq_implies_intro'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e11712782f9447851fd9fd26de9077b4"
+    ],
+    [
+      "SL.Tactics.lemma_addr_not_eq_refl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Reflection.Data.var", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "function_token_typing_FStar.Reflection.Data.var",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "92587c9fcf6fb017886000dbcde732e8"
+    ],
+    [
+      "SL.Tactics.lemma_impl_l_cong",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
+        "equation_Prims.l_imp", "equation_Prims.squash", "l_and-interp",
+        "l_imp-interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "9476104a0875473703cd8bc67b312fd5"
+    ],
+    [
+      "SL.Tactics.lemma_eq_l_cong",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.l_imp", "equation_Prims.squash", "l_imp-interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "a832bc517ba50478f1307989091f49bf"
+    ],
+    [
+      "SL.Tactics.lemma_eq_cong",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Lang.t",
+        "equation_Prims.eq2", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "5b097506030e3c0a543e5542ad6cc1d4"
+    ],
     [
       "SL.Tactics.repeat_step_select",
       1,
       2,
-      2,
+      1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
-        "bool_typing", "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "data_elim_FStar.Tactics.Result.Failed",
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
         "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "equation_FStar.Reflection.Types.typ",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate",
-        "function_token_typing_Prims.unit",
-        "lemma_FStar.Pervasives.invertOption", "unit_inversion",
-        "unit_typing"
+        "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "cd6bcc565526a3804cd17c38b7b4231e"
+      "73870bb77b4e49c70070382429610f44"
+    ],
+    [
+      "SL.Tactics.lemma_read_write",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Lang.t",
+        "refinement_interpretation_SL.Tactics_Tm_refine_3bcf4b7474eb7f3eaa30f4c958188cd5"
+      ],
+      0,
+      "7cd80b4b3e13334393dc7d40ba058ec1"
+    ],
+    [
+      "SL.Tactics.lemma_addr_not_eq_refl",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Reflection.Data.var", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "function_token_typing_FStar.Reflection.Data.var",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "0de411d2aa7be9563f333d324ca77e11"
     ],
     [
       "SL.Tactics.repeat_step_select",
       2,
       2,
-      2,
+      1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
-        "bool_typing", "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "data_elim_FStar.Tactics.Result.Failed",
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
         "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "equation_FStar.Reflection.Types.typ",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate",
-        "function_token_typing_Prims.unit",
-        "lemma_FStar.Pervasives.invertOption", "unit_inversion",
-        "unit_typing"
+        "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "48a520f6794858ba3330ebf3714a1330"
+      "62371e093a6d6bbef4c19edfaeeeeb08"
     ]
   ]
 ]
