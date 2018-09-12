@@ -765,7 +765,9 @@ let is_reify_head = function
 let firstn k l = if List.length l < k then l,[] else first_N k l
 let should_reify cfg stack =
     let rec drop_irrel = function
-        | MemoLazy _ :: s -> drop_irrel s
+        | MemoLazy _ :: s
+        | UnivArgs _ :: s ->
+            drop_irrel s
         | s -> s
     in
     match drop_irrel stack with
@@ -969,9 +971,16 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     | Should_unfold_reify ->
         // Reifying, adding a reflect on the stack to cancel the reify
         // NB: The fv in the Const_reflect is bogus, it'll be ignored anyway
+        let rec push e s =
+            match s with
+            | [] -> [e]
+            | UnivArgs us :: t -> UnivArgs us :: (push e t)
+            | h :: t -> e :: h :: t
+        in
         let ref = S.mk (Tm_constant (Const_reflect (S.lid_of_fv fv)))
                        None Range.dummyRange in
-        Some (cfg, App (env, ref, None, Range.dummyRange) :: stack)
+        let stack = push (App (env, ref, None, Range.dummyRange)) stack in
+        Some (cfg, stack)
 
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
