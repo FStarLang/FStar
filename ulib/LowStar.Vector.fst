@@ -157,6 +157,8 @@ val create_rid:
 	   frameOf vec = rid /\ 
 	   live h1 vec /\ freeable vec /\
 	   modifies loc_none h0 h1 /\
+	   Set.equal (Map.domain (MHS.get_hmap h0))
+                     (Map.domain (MHS.get_hmap h1)) /\
 	   size_of vec = len /\
 	   S.equal (as_seq h1 vec) (S.create (U32.v len) v)))
 let create_rid #a len v rid =
@@ -170,6 +172,8 @@ val create:
 	   frameOf vec = HH.root /\
 	   live h1 vec /\ freeable vec /\
 	   modifies loc_none h0 h1 /\
+	   Set.equal (Map.domain (MHS.get_hmap h0))
+                     (Map.domain (MHS.get_hmap h1)) /\
 	   size_of vec = len /\
 	   S.equal (as_seq h1 vec) (S.create (U32.v len) v)))
 let create #a len v =
@@ -183,6 +187,8 @@ val create_reserve:
 	 (ensures (fun h0 vec h1 -> 
 	   frameOf vec = rid /\ live h1 vec /\ freeable vec /\
 	   modifies loc_none h0 h1 /\
+	   Set.equal (Map.domain (MHS.get_hmap h0))
+                     (Map.domain (MHS.get_hmap h1)) /\
 	   size_of vec = 0ul /\
 	   S.equal (as_seq h1 vec) S.empty))
 let create_reserve #a len ia rid =
