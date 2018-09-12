@@ -34,3 +34,5 @@ type guard_policy =
     | Goal
     | Force
     | Drop // unsound! careful!
+
+exception TacticFailure of string

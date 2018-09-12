@@ -38,9 +38,10 @@ and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
 
 [@plugin]
 let tcresolve () : Tac unit =
-    match catch (fun () -> tcresolve' [] 16) with
-    | Inl e -> fail ("Typeclass resolution failed: " ^ e)
-    | Inr v -> v
+    try tcresolve' [] 16
+    with
+    | TacticFailure s -> fail ("Typeclass resolution failed: " ^ s)
+    | e -> raise e
 
 (* Solve an explicit argument by typeclass resolution *)
 unfold let solve (#a:Type) (#[tcresolve ()] ev : a) : Tot a = ev

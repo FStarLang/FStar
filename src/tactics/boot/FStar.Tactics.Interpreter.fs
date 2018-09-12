@@ -131,10 +131,6 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktot2 0 "push_binder"   (fun env b -> Env.push_binders env [b]) RE.e_env RE.e_binder RE.e_env
                                (fun env b -> Env.push_binders env [b]) NRE.e_env NRE.e_binder NRE.e_env;
 
-      //nb: the e_any embedding is never used
-      mktac2 1 "fail"          (fun _ -> fail) e_any e_string e_any
-                               (fun _ -> fail) NBET.e_any NBET.e_string NBET.e_any;
-
       mktac1 0 "set_goals"     set_goals (e_list E.e_goal) e_unit
                                set_goals (NBET.e_list E.e_goal_nbe) (NBET.e_unit);
 
@@ -144,11 +140,11 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktac1 0 "trivial"       trivial e_unit e_unit
                                trivial NBET.e_unit NBET.e_unit;
 
-      mktac2 1 "catch"         (fun _ -> catch) e_any (e_tactic_thunk e_any) (e_either e_string e_any)
-                               (fun _ -> catch) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either NBET.e_string NBET.e_any);
+      mktac2 1 "catch"         (fun _ -> catch) e_any (e_tactic_thunk e_any) (e_either E.e_exn e_any)
+                               (fun _ -> catch) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either E.e_exn_nbe NBET.e_any);
 
-      mktac2 1 "recover"       (fun _ -> recover) e_any (e_tactic_thunk e_any) (e_either e_string e_any)
-                               (fun _ -> recover) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either NBET.e_string NBET.e_any);
+      mktac2 1 "recover"       (fun _ -> recover) e_any (e_tactic_thunk e_any) (e_either E.e_exn e_any)
+                               (fun _ -> recover) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either E.e_exn_nbe NBET.e_any);
 
       mktac1 0 "intro"         intro e_unit RE.e_binder
                                intro NBET.e_unit NRE.e_binder;
@@ -342,8 +338,8 @@ and unembed_tactic_0<'b> (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) 
     | Some (Success (b, ps)) ->
         bind (set ps) (fun _ -> ret b)
 
-    | Some (Failed (msg, ps)) ->
-        bind (set ps) (fun _ -> fail msg)
+    | Some (Failed (e, ps)) ->
+        bind (set ps) (fun _ -> traise e)
 
     | None ->
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
@@ -371,8 +367,8 @@ and unembed_tactic_nbe_0<'b> (eb:NBET.embedding<'b>) (cb:NBET.nbe_cbs) (embedded
     | Some (Success (b, ps)) ->
         bind (set ps) (fun _ -> ret b)
 
-    | Some (Failed (msg, ps)) ->
-        bind (set ps) (fun _ -> fail msg)
+    | Some (Failed (e, ps)) ->
+        bind (set ps) (fun _ -> traise e)
 
     | None ->
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck (in NBE)! Please file a bug report with a minimal reproduction of this issue.\n%s" (NBET.t_to_string result))) proof_state.main_context.range
@@ -483,9 +479,20 @@ let run_tactic_on_typ
             dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the finish line";
         (ps.goals@ps.smt_goals, w)
 
-    | Failed (s, ps) ->
+    | Failed (e, ps) ->
         dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the time of failure";
-        Err.raise_error (Err.Fatal_UserTacticFailure, (BU.format1 "user tactic failed: %s" s)) ps.entry_range
+        let texn_to_string e =
+            match e with
+            | TacticFailure s ->
+                s
+            | EExn t ->
+                "uncaught exception: " ^ (Print.term_to_string t)
+            | _ ->
+                "uncaught internal exception: " ^ (BU.message_of_exn e)
+        in
+        Err.raise_error (Err.Fatal_UserTacticFailure,
+                            BU.format1 "user tactic failed: %s" (texn_to_string e))
+                          ps.entry_range
 
 // Polarity
 type pol =

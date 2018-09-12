@@ -6,10 +6,6 @@ let fail_flow () : Tac unit =
     fail "failing";
     assert False
 
-let fail_flow' () : Tac unit =
-    fail_act "failing";
-    assert False
-
 (* This fails to typecheck, since the assert is definitely reachable *)
 [@expect_failure]
 let print_test () : Tac unit =
@@ -20,11 +16,6 @@ let print_test () : Tac unit =
 [@expect_failure]
 let s_fail_flow () : TacS unit =
     fail "failing";
-    assert False
-
-[@expect_failure]
-let s_fail_flow' () : TacS unit =
-    fail_act "failing";
     assert False
 
 [@expect_failure]

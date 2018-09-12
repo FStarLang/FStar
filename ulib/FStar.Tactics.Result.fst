@@ -10,7 +10,7 @@ open FStar.Tactics.Types
 
 noeq type __result a =
     | Success : v:a -> ps:proofstate -> __result a
-    | Failed  : msg:string      (* Error message *)
+    | Failed  : exn:exn         (* Error *)
               -> ps:proofstate  (* The proofstate at time of failure *)
               -> __result a
 

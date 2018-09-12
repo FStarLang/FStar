@@ -30,7 +30,7 @@ let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __ta
 (* Actions *)
 let __get () : __tac proofstate = fun s0 -> Success s0 s0
 
-let __fail (a:Type0) (msg:string) : __tac a = fun (ps:proofstate) -> Failed #a msg ps
+let __raise (a:Type0) (e:exn) : __tac a = fun (ps:proofstate) -> Failed #a e ps
 
 let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
 
@@ -60,7 +60,7 @@ new_effect {
   with repr     = __tac
      ; bind     = __bind
      ; return   = __ret
-     ; __fail   = __fail
+     ; __raise  = __raise
      ; __get    = __get
 }
 
@@ -84,7 +84,7 @@ let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
 sub_effect DIV ~> TAC = lift_div_tac
 
 let get = TAC?.__get
-let fail_act (#a:Type) (msg:string) = TAC?.__fail a msg
+let raise (#a:Type) (e:exn) = TAC?.__raise a e
 
 abstract
 let with_tactic (t : unit -> Tac 'a) (p:Type) : Type = p

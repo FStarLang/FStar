@@ -70,6 +70,14 @@ let fstar_tactics_Goal_fv  = lid_as_data_fv fstar_tactics_Goal_lid
 let fstar_tactics_Drop_fv  = lid_as_data_fv fstar_tactics_Drop_lid
 let fstar_tactics_Force_fv = lid_as_data_fv fstar_tactics_Force_lid
 
+let fstar_tactics_TacticFailure_lid = fstar_tactics_lid' ["Types"; "TacticFailure"]
+let fstar_tactics_EExn_lid          = fstar_tactics_lid' ["Types"; "EExn"]
+
+let fstar_tactics_TacticFailure_tm = lid_as_data_tm fstar_tactics_TacticFailure_lid
+let fstar_tactics_EExn_tm          = lid_as_data_tm fstar_tactics_EExn_lid
+let fstar_tactics_TacticFailure_fv = lid_as_data_fv fstar_tactics_TacticFailure_lid
+let fstar_tactics_EExn_fv          = lid_as_data_fv fstar_tactics_EExn_lid
+
 let t_proofstate    = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
 let fv_proofstate   = S.fvconst (fstar_tactics_lid' ["Types"; "proofstate"])
 let t_goal          = S.tconst (fstar_tactics_lid' ["Types"; "goal"])
@@ -91,6 +99,11 @@ let mk_emb (em: Range.range -> 'a -> term)
            (FStar.Syntax.Embeddings.term_as_fv t)
 let embed e r x = FStar.Syntax.Embeddings.embed e x r None id_norm_cb
 let unembed' w e x = FStar.Syntax.Embeddings.unembed e x w id_norm_cb
+
+let hd'_and_args tm =
+  let tm = U.unascribe tm in
+  let hd, args = U.head_and_args tm in
+  (U.un_uinst hd).n, args
 
 let e_proofstate =
     let embed_proofstate (rng:Range.range) (ps:proofstate) : term =
@@ -183,6 +196,64 @@ let e_goal_nbe =
     ; NBETerm.typ = mkFV fv_goal [] []
     ; NBETerm.emb_typ = fv_as_emb_typ fv_goal }
 
+let e_exn : embedding<exn> =
+    let embed_exn (e:exn) (rng:Range.range) _ _ : term =
+        match e with
+        | TacticFailure s ->
+            S.mk_Tm_app fstar_tactics_TacticFailure_tm
+                [S.as_arg (embed e_string rng s)]
+                None rng
+        | EExn t ->
+            { t with pos = rng }
+        | e ->
+            let s = BU.message_of_exn e in
+            S.mk_Tm_app fstar_tactics_TacticFailure_tm
+                [S.as_arg (embed e_string rng s)]
+                None rng
+    in
+    let unembed_exn (t:term) w _ : option<exn> =
+        match hd'_and_args t with
+        | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv fstar_tactics_TacticFailure_lid ->
+            BU.bind_opt (unembed' w e_string s) (fun s ->
+            Some (TacticFailure s))
+
+        | _ ->
+            (* Anything else, we just pass-through *)
+            Some (EExn t)
+    in
+    mk_emb_full
+        embed_exn
+        unembed_exn
+        t_exn
+        (fun _ -> "(exn)")
+        (ET_app (PC.exn_lid |> Ident.string_of_lid, []))
+
+let e_exn_nbe =
+    let embed_exn cb (e:exn) : NBET.t =
+        match e with
+        | TacticFailure s ->
+            mkConstruct fstar_tactics_TacticFailure_fv
+              []
+              [ NBETerm.as_arg (NBETerm.embed NBETerm.e_string cb s) ]
+
+        | _ ->
+            failwith (BU.format1 "cannot embed exn (NBE) : %s" (BU.message_of_exn e))
+    in
+    let unembed_exn cb (t:NBET.t) : option<exn> =
+        match t with
+        | NBETerm.Construct (fv, _, [(s, _)]) when S.fv_eq_lid fv fstar_tactics_TacticFailure_lid ->
+            BU.bind_opt (NBETerm.unembed NBETerm.e_string cb s) (fun s ->
+            Some (TacticFailure s))
+
+        | _ ->
+            None
+    in
+    let fv_exn = S.fvconst PC.exn_lid in
+    { NBETerm.em = embed_exn
+    ; NBETerm.un = unembed_exn
+    ; NBETerm.typ = mkFV fv_exn [] []
+    ; NBETerm.emb_typ = fv_as_emb_typ fv_exn }
+
 let e_result (ea : embedding<'a>)  =
     let embed_result (res:__result<'a>) (rng:Range.range) _ _ : term =
         match res with
@@ -192,29 +263,24 @@ let e_result (ea : embedding<'a>)  =
                   S.as_arg (embed ea rng a);
                   S.as_arg (embed e_proofstate rng ps)]
                  None rng
-        | Failed (msg, ps) ->
+        | Failed (e, ps) ->
           S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed_tm [U_zero])
                  [S.iarg (type_of ea);
-                  S.as_arg (embed e_string rng msg);
+                  S.as_arg (embed e_exn rng e);
                   S.as_arg (embed e_proofstate rng ps)]
                  None rng
     in
     let unembed_result (t:term) w _ : option<__result<'a>> =
-        let hd'_and_args tm =
-          let tm = U.unascribe tm in
-          let hd, args = U.head_and_args tm in
-          (U.un_uinst hd).n, args in
-
         match hd'_and_args t with
         | Tm_fvar fv, [_t; (a, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Success_lid ->
             BU.bind_opt (unembed' w ea a) (fun a ->
             BU.bind_opt (unembed' w e_proofstate ps) (fun ps ->
             Some (Success (a, ps))))
 
-        | Tm_fvar fv, [_t; (msg, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
-            BU.bind_opt (unembed' w e_string msg) (fun msg ->
+        | Tm_fvar fv, [_t; (e, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
+            BU.bind_opt (unembed' w e_exn e) (fun e ->
             BU.bind_opt (unembed' w e_proofstate ps) (fun ps ->
-            Some (Failed (msg, ps))))
+            Some (Failed (e, ps))))
 
         | _ ->
             if w then
@@ -231,11 +297,11 @@ let e_result (ea : embedding<'a>)  =
 let e_result_nbe (ea : NBET.embedding<'a>)  =
     let embed_result cb (res:__result<'a>) : NBET.t =
         match res with
-        | Failed (msg, ps) ->
+        | Failed (e, ps) ->
             mkConstruct fstar_tactics_Failed_fv
               [U_zero]
               [ NBETerm.as_iarg (NBETerm.type_of ea)
-              ; NBETerm.as_arg (NBETerm.embed NBETerm.e_string cb msg)
+              ; NBETerm.as_arg (NBETerm.embed e_exn_nbe cb e)
               ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe cb ps) ]
         | Success (a, ps) ->
             mkConstruct fstar_tactics_Success_fv
@@ -251,10 +317,10 @@ let e_result_nbe (ea : NBET.embedding<'a>)  =
             BU.bind_opt (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
             Some (Success (a, ps))))
 
-        | NBETerm.Construct (fv, _, [(ps, _); (msg, _); _t]) when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
-            BU.bind_opt (NBETerm.unembed NBETerm.e_string cb msg) (fun msg ->
+        | NBETerm.Construct (fv, _, [(ps, _); (e, _); _t]) when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
+            BU.bind_opt (NBETerm.unembed e_exn_nbe cb e) (fun e ->
             BU.bind_opt (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
-            Some (Failed (msg, ps))))
+            Some (Failed (e, ps))))
         | _ ->
             None
     in
