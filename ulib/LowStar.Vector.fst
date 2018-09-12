@@ -142,6 +142,12 @@ val create_empty:
 let create_empty a =
   Vec 0ul 0ul B.null
 
+val create_empty_as_seq_empty:
+  a:Type -> h:HS.mem ->
+  Lemma (S.equal (as_seq h (create_empty a)) S.empty)
+	[SMTPat (as_seq h (create_empty a))]
+let create_empty_as_seq_empty a h = ()
+
 val create_rid:
   #a:Type -> len:uint32_t{len > 0ul} -> v:a ->
   rid:HH.rid{HST.is_eternal_region rid} ->
@@ -232,6 +238,18 @@ let back #a vec =
   B.index (Vec?.vs vec) (size_of vec - 1ul)
 
 /// Operations
+
+val clear:
+  #a:Type -> vec:vector a ->
+  Tot (cvec:vector a{size_of cvec = 0ul})
+let clear #a vec =
+  Vec 0ul (Vec?.cap vec) (Vec?.vs vec)
+
+val clear_as_seq_empty:
+  #a:Type -> h:HS.mem -> vec:vector a ->
+  Lemma (S.equal (as_seq h (clear vec)) S.empty)
+	[SMTPat (as_seq h (clear vec))]
+let clear_as_seq_empty #a h vec = ()
 
 private val slice_append:
   #a:Type -> s:S.seq a ->
