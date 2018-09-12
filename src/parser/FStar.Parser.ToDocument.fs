@@ -439,7 +439,7 @@ type decl_meta =
      is_fsdoc: bool} //is a standalone fsdoc
 let dummy_meta = {r = dummyRange; has_qs = false; has_attrs = false; has_fsdoc = false; is_fsdoc = false}
 
-// TODO: rewrite in terms of with_comment_tuple
+// TODO: rewrite in terms of with_comment_sep
 let with_comment printer tm tmrange origin =
   let rec comments_before_pos acc print_pos lookahead_pos =
     match !comment_stack with
@@ -471,7 +471,7 @@ let with_comment printer tm tmrange origin =
     // group (str "{" ^^ str origin ^^ comments ^^ str "~~" ^^ printed_e ^^ str "}")
     group (comments ^^ printed_e)
 
-let with_comment_tuple printer tm tmrange origin =
+let with_comment_sep printer tm tmrange origin =
   let rec comments_before_pos acc print_pos lookahead_pos =
     match !comment_stack with
     | [] -> acc, false
@@ -741,18 +741,23 @@ and p_typeDecl pre = function
     let f () = jump2 (p_typ false false t) in
     p_typeDeclPrefix pre true lid bs typ_opt, f
   | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
-    let p_recordFieldAndComments ps (lid, t, doc_opt) =
-      with_comment (p_recordFieldDecl ps) (lid, t, doc_opt) (extend_to_end_of_line t.range) "!1"
+    let p_recordFieldAndComments (ps: bool) (lid, t, doc_opt) =
+      let comm, field = with_comment_sep (p_recordFieldDecl ps) (lid, t, doc_opt) (extend_to_end_of_line t.range) "!1" in
+      let sep = if ps then semi else empty in
+      if comm = empty then
+        field ^^ sep
+      else
+        group <| ifflat (group (field ^^ sep ^^ break1 ^^ comm)) (comm ^^ hardline ^^ field ^^ sep)
     in
     let p_fields () =
         space ^^ braces_with_nesting (
-          separate_map_last (semi ^^ break1) p_recordFieldAndComments record_field_decls)
+          separate_map_last hardline p_recordFieldAndComments record_field_decls)
     in
     p_typeDeclPrefix pre true lid bs typ_opt, p_fields
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
     let p_constructorBranchAndComments (uid, t_opt, doc_opt, use_of) =
         let range = extend_to_end_of_line (dflt uid.idRange (map_opt t_opt (fun t -> t.range))) in
-        let comm, ctor = with_comment_tuple p_constructorBranch (uid, t_opt, doc_opt, use_of) range "!2" in
+        let comm, ctor = with_comment_sep p_constructorBranch (uid, t_opt, doc_opt, use_of) range "!2" in
         if comm = empty then
           ctor
         else
