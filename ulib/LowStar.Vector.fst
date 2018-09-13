@@ -473,6 +473,18 @@ let forall2_seq_ok #a seq i j k l p = ()
 
 val get_preserved:
   #a:Type -> vec:vector a ->
+  i:uint32_t{i < size_of vec} ->
+  p:loc -> h0:HS.mem -> h1:HS.mem ->
+  Lemma (requires (live h0 vec /\ 
+		  loc_disjoint p (loc_vector_within vec i (i + 1ul)) /\
+		  modifies p h0 h1))
+	(ensures (get h0 vec i == get h1 vec i))
+let get_preserved #a vec i p h0 h1 =
+  get_as_seq_index h0 (Vec?.vs vec) i;
+  get_as_seq_index h1 (Vec?.vs vec) i
+
+private val get_preserved_within:
+  #a:Type -> vec:vector a ->
   i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
   k:uint32_t{(k < i || j <= k) && k < size_of vec} ->
   h0:HS.mem -> h1:HS.mem ->
@@ -482,7 +494,7 @@ val get_preserved:
 	[SMTPat (live h0 vec);
 	SMTPat (modifies (loc_vector_within vec i j) h0 h1);
 	SMTPat (get h0 vec k)]
-let get_preserved #a vec i j k h0 h1 =
+let get_preserved_within #a vec i j k h0 h1 =
   get_preserved_buffer (Vec?.vs vec) i (j - i) k h0 h1
 
 val forall_as_seq:

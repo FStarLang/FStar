@@ -843,9 +843,12 @@ val assign:
     (requires (fun h0 ->
       rv_inv h0 rv /\ Rgl?.r_inv rg h0 v /\
       HH.extends (Rgl?.region_of rg v) (V.frameOf rv) /\
-      V.forall_all h0 rv
+      V.forall_ h0 rv 0ul i
 	(fun b -> HH.disjoint (Rgl?.region_of rg b)
-			      (Rgl?.region_of rg v))))
+			      (Rgl?.region_of rg v)) /\
+      V.forall_ h0 rv (i + 1ul) (V.size_of rv)
+      	(fun b -> HH.disjoint (Rgl?.region_of rg b)
+      			      (Rgl?.region_of rg v))))
     (ensures (fun h0 _ h1 -> 
       modifies (V.loc_vector rv) h0 h1 /\
       rv_inv h1 rv /\
