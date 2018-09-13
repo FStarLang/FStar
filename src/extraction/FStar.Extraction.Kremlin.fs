@@ -122,6 +122,7 @@ and expr =
   | EFun of list<binder> * expr * typ
   | EAbortS of string
   | EBufFree of expr
+  | EBufCreateNoInit of lifetime * expr
 
 
 and op =
@@ -587,6 +588,8 @@ and translate_type env t: typ =
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ||
     Syntax.string_of_mlpath p = "LowStar.Buffer.buffer" ||
+    Syntax.string_of_mlpath p = "LowStar.ImmutableBuffer.ibuffer" ||
+    Syntax.string_of_mlpath p = "LowStar.UninitializedBuffer.ubuffer" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.reference" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.stackref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ref" ||
@@ -692,7 +695,8 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
-      || string_of_mlpath p = "LowStar.Monotonic.Buffer.index" ->
+      || string_of_mlpath p = "LowStar.Monotonic.Buffer.index"
+      || string_of_mlpath p = "LowStar.UninitializedBuffer.uindex" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
@@ -727,6 +731,10 @@ and translate_expr env e: expr =
           string_of_mlpath p = "LowStar.ImmutableBuffer.igcmalloc") ->
       EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _erid; elen ])
+    when string_of_mlpath p = "LowStar.UninitializedBuffer.ugcmalloc" ->
+      EBufCreateNoInit (Eternal, translate_expr env elen)
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ])
     when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc_mm") ->
       EBufCreate (ManuallyManaged, translate_expr env init, EConstant (UInt32, "1"))
@@ -760,7 +768,8 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
     when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Array_Assignment"
-    || string_of_mlpath p = "LowStar.Monotonic.Buffer.upd'" ->
+    || string_of_mlpath p = "LowStar.Monotonic.Buffer.upd'"
+    || string_of_mlpath p = "LowStar.UninitializedBuffer.uupd" ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals" ->
@@ -771,7 +780,8 @@ and translate_expr env e: expr =
       EPopFrame
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3; e4; e5 ]) when (
       string_of_mlpath p = "FStar.Buffer.blit" ||
-      string_of_mlpath p = "LowStar.Monotonic.Buffer.blit"
+      string_of_mlpath p = "LowStar.Monotonic.Buffer.blit" ||
+      string_of_mlpath p = "LowStar.UninitializedBuffer.ublit"
     ) ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.fill") ->
