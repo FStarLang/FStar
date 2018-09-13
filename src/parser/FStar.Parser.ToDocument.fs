@@ -814,7 +814,7 @@ and p_letlhs kw (pat, _) =
 
 and p_letbinding kw (pat, e) =
   let doc_pat = p_letlhs kw (pat, e) in
-  let comm, doc_expr = p_term_sep false false e "$5" in
+  let comm, doc_expr = p_term_sep false false e in
   let doc_expr = inline_comment_or_above comm doc_expr empty in
   ifflat (doc_pat ^/^ equals ^/^ doc_expr) (doc_pat ^^ space ^^ group (equals ^^ jump2 doc_expr))
 
@@ -1132,7 +1132,7 @@ and p_term (ps:bool) (pb:bool) (e:term) = match e.tm with
   | _ ->
       group (p_noSeqTermAndComment ps pb e)
 
-and p_term_sep (ps:bool) (pb:bool) (e:term) flag = match e.tm with
+and p_term_sep (ps:bool) (pb:bool) (e:term) = match e.tm with
   | Seq (e1, e2) ->
       (* Don't swallow semicolons on the left-hand side of a semicolon! Note:
        * the `false` for pb is kind of useless because there is no construct
@@ -1196,8 +1196,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
   | Match (e, branches) ->
       paren_if (ps || pb) (
         group (surround 2 1 (str "match") (p_noSeqTermAndComment false false e) (str "with") ^/^
-        separate_map_last hardline p_patternBranch branches)
-      )
+        separate_map_last hardline p_patternBranch branches))
   | LetOpen (uid, e) ->
       paren_if ps (
         group (surround 2 1 (str "let open") (p_quident uid) (str "in") ^/^ p_term false pb e)
@@ -1219,7 +1218,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
         | _ -> str "and"
       in
       let doc_pat = p_letlhs doc_let_or_and (pat, e) in
-      let comm, doc_expr = p_term_sep false false e "" in
+      let comm, doc_expr = p_term_sep false false e in
      let doc_expr = inline_comment_or_above comm doc_expr empty in
      attrs ^^
       (if is_last then
@@ -1235,7 +1234,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
         group (p_lb None lb (i = l - 1))
     ) lbs in
     let lbs_doc = group (separate break1 lbs_docs) in
-    paren_if ps (group (lbs_doc ^^ hardline ^^ p_term false pb e))
+    paren_if ps (group (lbs_doc ^^ hardline ^^ p_term false pb e)) //OK
 
   | Abs([{pat=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
     paren_if (ps || pb) (
@@ -1293,9 +1292,12 @@ and p_conjunctivePats pats =
 
 and p_simpleTerm ps pb e = match e.tm with
     | Abs(pats, e) ->
-        paren_if ps (
-          (str "fun" ^/+^ separate_map break1 p_atomicPattern pats ^/^ rarrow) ^/+^ p_term false pb e
-        )
+        let comm, doc = p_term_sep false pb e in //OK
+        let doc =
+          paren_if ps (
+            (str "fun" ^/+^ separate_map break1 p_atomicPattern pats ^/^ rarrow) ^/+^ doc)
+        in
+        inline_comment_or_above comm doc empty
     | _ -> p_tmIff e
 
 and p_maybeFocusArrow b =
@@ -1316,7 +1318,15 @@ and p_patternBranch pb (pat, when_opt, e) =
         hang 2 (bar ^^ space ^^ (group ((p_tuplePattern p) ^/^ (str "when"))) ^/^
          (flow break1 [(p_tmFormula f); rarrow]))
     in
-    group (branch ^/+^ p_term false pb e)
+    let comm, doc = p_term_sep false pb e in
+    // we need to be careful here because an inlined comment on the last branch could eat
+    // any following parenthesis; to prevent this, we never inline a comment on the last branch
+    // (Nit:  we could float the decision even higher to `if_paren` if we really wanted to avoid this
+    // and push the paren on a new line instead but that would add even more complexity)
+    if pb then
+      inline_comment_or_above comm (branch ^/+^ doc) empty
+    else
+      comm ^^ (if comm <> empty then hardline else empty) ^^ (branch ^/+^ doc)
   in
   match pat.pat with
   | PatOr pats ->
