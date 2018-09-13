@@ -974,7 +974,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
         let rec push e s =
             match s with
             | [] -> [e]
-            | UnivArgs us :: t -> UnivArgs us :: (push e t)
+            | UnivArgs (us, r) :: t -> UnivArgs (us, r) :: (push e t)
             | h :: t -> e :: h :: t
         in
         let ref = S.mk (Tm_constant (Const_reflect (S.lid_of_fv fv)))
