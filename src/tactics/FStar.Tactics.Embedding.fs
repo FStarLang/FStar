@@ -206,7 +206,7 @@ let e_exn : embedding<exn> =
         | EExn t ->
             { t with pos = rng }
         | e ->
-            let s = BU.message_of_exn e in
+            let s = "uncaught exception: " ^ (BU.message_of_exn e) in
             S.mk_Tm_app fstar_tactics_TacticFailure_tm
                 [S.as_arg (embed e_string rng s)]
                 None rng
