@@ -511,6 +511,12 @@ let check_positivity (ty:sigelt) (env:env_t) :bool =
 
   List.for_all (fun d -> ty_positive_in_datacon ty_lid d ty_bs (List.map (fun s -> U_name s) ty_us) unfolded_inductives env) (snd (datacons_of_typ env ty_lid))
 
+(* Special-casing the check for exceptions, the single open inductive type we handle. *)
+let check_exn_positivity (data_ctor_lid:lid) (env:env_t) : bool =
+  //memo table, memoizes the Tm_app nodes for inductives that we have already unfolded
+  let unfolded_inductives = BU.mk_ref [] in
+  ty_positive_in_datacon C.exn_lid data_ctor_lid [] []  unfolded_inductives env
+
 let datacon_typ (data:sigelt) :term =
   match data.sigel with
   | Sig_datacon (_, _, t, _, _, _) -> t

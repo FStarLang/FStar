@@ -655,18 +655,45 @@ let reduce_equality norm_cb cfg tm =
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
 (********************************************************************************************************************)
-let is_norm_request hd args =
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [_; _] ->
-      S.fv_eq_lid fv PC.normalize_term
 
-    | Tm_fvar fv, [_] ->
-      S.fv_eq_lid fv PC.normalize
+(*
+ * AR: norm requests can some times have additional arguments since we flatten the arguments sometimes in the typechecker
+ *     so, a request may look like: normalize_term [a; b; c; d]
+ *     in such cases, we rejig the request to be (normalize_term a) [b; c; d]
+ *)
+type norm_request_t =
+  | Norm_request_none  //not a norm request
+  | Norm_request_ready  //in the form that can be reduced immediately
+  | Norm_request_requires_rejig  //needs rejig
 
-    | Tm_fvar fv, [steps; _; _] ->
-      S.fv_eq_lid fv PC.norm
+let is_norm_request (hd:term) (args:args) :norm_request_t =
+  let aux (min_args:int) :norm_request_t = args |> List.length |> (fun n -> if n < min_args then Norm_request_none
+                                                                            else if n = min_args then Norm_request_ready
+                                                                            else Norm_request_requires_rejig)
+  in
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv when S.fv_eq_lid fv PC.normalize_term -> aux 2
+  | Tm_fvar fv when S.fv_eq_lid fv PC.normalize -> aux 1
+  | Tm_fvar fv when S.fv_eq_lid fv PC.norm -> aux 3
+  | _ -> Norm_request_none
 
-    | _ -> false
+let should_consider_norm_requests cfg = (not (cfg.steps.no_full_norm)) && (not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid))
+
+let rejig_norm_request (hd:term) (args:args) :term =
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv when S.fv_eq_lid fv PC.normalize_term ->
+    (match args with
+     | t1::t2::rest when List.length rest > 0 -> mk_app (mk_app hd [t1; t2]) rest
+     | _ -> failwith "Impossible! invalid rejig_norm_request for normalize_term")
+  | Tm_fvar fv when S.fv_eq_lid fv PC.normalize ->
+    (match args with
+     | t::rest when List.length rest > 0 -> mk_app (mk_app hd [t]) rest
+     | _ -> failwith "Impossible! invalid rejig_norm_request for normalize")
+  | Tm_fvar fv when S.fv_eq_lid fv PC.norm ->
+    (match args with
+     | t1::t2::t3::rest when List.length rest > 0 -> mk_app (mk_app hd [t1; t2; t3]) rest
+     | _ -> failwith "Impossible! invalid rejig_norm_request for norm")
+  | _ -> failwith ("Impossible! invalid rejig_norm_request for: %s" ^ (Print.term_to_string hd))
 
 let is_nbe_request s = BU.for_some (eq_step NBE) s
 
@@ -738,7 +765,9 @@ let is_reify_head = function
 let firstn k l = if List.length l < k then l,[] else first_N k l
 let should_reify cfg stack =
     let rec drop_irrel = function
-        | MemoLazy _ :: s -> drop_irrel s
+        | MemoLazy _ :: s
+        | UnivArgs _ :: s ->
+            drop_irrel s
         | s -> s
     in
     match drop_irrel stack with
@@ -942,9 +971,16 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     | Should_unfold_reify ->
         // Reifying, adding a reflect on the stack to cancel the reify
         // NB: The fv in the Const_reflect is bogus, it'll be ignored anyway
+        let rec push e s =
+            match s with
+            | [] -> [e]
+            | UnivArgs (us, r) :: t -> UnivArgs (us, r) :: (push e t)
+            | h :: t -> e :: h :: t
+        in
         let ref = S.mk (Tm_constant (Const_reflect (S.lid_of_fv fv)))
                        None Range.dummyRange in
-        Some (cfg, App (env, ref, None, Range.dummyRange) :: stack)
+        let stack = push (App (env, ref, None, Range.dummyRange)) stack in
+        Some (cfg, stack)
 
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
@@ -995,9 +1031,15 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack (closure_as_term cfg env t)
 
           | Tm_app(hd, args)
-            when not (cfg.steps.no_full_norm)
-              && is_norm_request hd args
-              && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
+            when should_consider_norm_requests cfg &&
+                 is_norm_request hd args = Norm_request_requires_rejig ->
+            if cfg.debug.print_normalized
+            then BU.print_string "Rejigging norm request ... \n";
+            norm cfg env stack (rejig_norm_request hd args)
+
+          | Tm_app(hd, args)
+            when should_consider_norm_requests cfg &&
+                 is_norm_request hd args = Norm_request_ready ->
             if cfg.debug.print_normalized
             then BU.print_string "Potential norm request ... \n";
             let cfg' = { cfg with steps = { cfg.steps with unfold_only = None

@@ -12,6 +12,8 @@ module L = FStar.List.Tot
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
+let fail (m:string) = raise (TacticFailure m)
+
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
 let _cur_goal () : Tac goal =
     match goals () with
@@ -242,15 +244,19 @@ let guard (b : bool) : TacH unit (requires (fun _ -> True))
     if not b then
         fail "guard failed"
 
+let try_with (f : unit -> Tac 'a) (h : exn -> Tac 'a) : Tac 'a =
+    match catch f with
+    | Inl e -> h e
+    | Inr x -> x
+
 let trytac (t : unit -> Tac 'a) : Tac (option 'a) =
-    match catch t with
-    | Inl _ -> None
-    | Inr x -> Some x
+    try Some (t ())
+    with
+    | _ -> None
 
 let or_else (#a:Type) (t1 : unit -> Tac a) (t2 : unit -> Tac a) : Tac a =
-    match trytac t1 with
-    | Some x -> x
-    | None -> t2 ()
+    try t1 ()
+    with | _ -> t2 ()
 
 val (<|>) : (unit -> Tac 'a) ->
             (unit -> Tac 'a) ->
@@ -380,6 +386,19 @@ let destruct_equality_implication (t:term) : Tac (option (formula * term)) =
         | _ -> None
         end
     | _ -> None
+
+private
+let __eq_sym #t (a b : t) : Lemma ((a == b) == (b == a)) =
+  FStar.PropositionalExtensionality.axiom ()
+
+(** Like [rewrite], but works with equalities [v == e] and [e == v] *)
+let rewrite' (b:binder) : Tac unit =
+    ((fun () -> rewrite b)
+     <|> (fun () -> binder_retype b;
+                    apply_lemma (`__eq_sym);
+                    rewrite b)
+     <|> (fun () -> fail "rewrite' failed"))
+    ()
 
 let rec try_rewrite_equality (x:term) (bs:binders) : Tac unit =
     match bs with

@@ -374,6 +374,10 @@ let canon_monoid_aux
                             "FStar.List.Tot.Base.op_At";
                             "FStar.List.Tot.Base.append";
             (* TODO: the rest is a super brittle stop-gap, know thy instances *)
+                            "SL.AutoTactic.compare_b";
+                            "SL.AutoTactic.compare_v";
+                            "FStar.Order.int_of_order";
+                            "FStar.Reflection.Derived.compare_term";
                             "FStar.List.Tot.Base.sortWith";
                             "FStar.List.Tot.Base.partition";
                             "FStar.List.Tot.Base.bool_of_compare";

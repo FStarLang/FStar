@@ -2674,6 +2674,7 @@ let (t_unit : term) = tconst FStar_Parser_Const.unit_lid
 let (t_bool : term) = tconst FStar_Parser_Const.bool_lid 
 let (t_int : term) = tconst FStar_Parser_Const.int_lid 
 let (t_string : term) = tconst FStar_Parser_Const.string_lid 
+let (t_exn : term) = tconst FStar_Parser_Const.exn_lid 
 let (t_float : term) = tconst FStar_Parser_Const.float_lid 
 let (t_char : term) = tabbrev FStar_Parser_Const.char_lid 
 let (t_range : term) = tconst FStar_Parser_Const.range_lid 

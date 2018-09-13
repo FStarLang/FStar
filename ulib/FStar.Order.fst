@@ -36,6 +36,12 @@ let order_from_int i =
     else if i = 0 then Eq
     else Gt
 
+val int_of_order : order -> int
+let int_of_order = function
+    | Lt -> (-1)
+    | Eq -> 0
+    | Gt -> 1
+
 val compare_int : int -> int -> order
 let compare_int i j = order_from_int (i - j)
 

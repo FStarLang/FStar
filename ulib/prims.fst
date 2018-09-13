@@ -141,7 +141,7 @@ type has_type : #a:Type -> a -> Type -> Type0
 type l_Forall (#a:Type) (p:a -> GTot Type0) :logical = squash (x:a -> GTot (p x))
 
 (* The type of squashed types *)
-type prop = a:Type0{ forall (x:a). x === () }
+type prop = a:Type0{ forall (x y:a). x == y }
 
 (* range is a type for the internal representations of source ranges
          The functions that follow below allow manipulating ranges
