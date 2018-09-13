@@ -1123,12 +1123,20 @@ and paren_if b =
   else
     fun x -> x
 
+and inline_comment_or_above comm doc sep =
+    if comm = empty then
+      group (doc ^^ sep)
+    else
+      group <| ifflat (group (doc ^^ sep ^^ break1 ^^ comm)) (comm ^^ hardline ^^ doc ^^ sep)
+
 and p_term (ps:bool) (pb:bool) (e:term) = match e.tm with
   | Seq (e1, e2) ->
       (* Don't swallow semicolons on the left-hand side of a semicolon! Note:
        * the `false` for pb is kind of useless because there is no construct
        * that swallows branches but not semicolons (meaning ps implies pb). *)
-      group (p_noSeqTermAndComment true false e1 ^^ semi) ^^ hardline ^^ p_term ps pb e2
+      let comm, t1 = p_noSeqTerm true false e1 in
+      (inline_comment_or_above comm t1 semi) ^^ hardline ^^ p_term ps pb e2
+
   | Bind(x, e1, e2) ->
       group ((p_lident x ^^ space ^^ long_left_arrow) ^/+^
       (p_noSeqTermAndComment true false e1 ^^ space ^^ semi)) ^/^ p_term ps pb e2
@@ -1141,20 +1149,12 @@ and p_term_sep (ps:bool) (pb:bool) (e:term) flag = match e.tm with
        * the `false` for pb is kind of useless because there is no construct
        * that swallows branches but not semicolons (meaning ps implies pb). *)
       let comm, t1 = p_noSeqTerm true false e1 in
-      // let t1 = show_comm_temp comm t1 "$2" in
       comm, group (t1 ^^ semi) ^^ hardline ^^ p_term ps pb e2
   | Bind(x, e1, e2) ->
       empty, group ((p_lident x ^^ space ^^ long_left_arrow) ^/+^
       (p_noSeqTermAndComment true false e1 ^^ space ^^ semi)) ^/^ p_term ps pb e2
   | _ ->
      p_noSeqTerm ps pb e
-     // let comm, t1 = p_noSeqTerm ps pb e in
-     // if comm = empty then
-     //   group t1
-     // else
-     //   let comm = str flag ^^ comm in
-     //   group <| ifflat (group (t1 ^^ break1 ^^ comm)) (comm ^^ hardline ^^ t1)
-
 
 and p_noSeqTerm ps pb e = with_comment_sep (p_noSeqTerm' ps pb) e e.range "!3"
 
