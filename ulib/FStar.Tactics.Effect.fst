@@ -25,7 +25,7 @@ let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __ta
             begin match tracepoint ps' with
             | () -> t2 a (decr_depth ps')
             end
-        | Failed msg ps' -> Failed msg ps'
+        | Failed e ps' -> Failed e ps'
 
 (* Actions *)
 let __get () : __tac proofstate = fun s0 -> Success s0 s0
@@ -46,7 +46,7 @@ let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
 unfold let g_bind (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) = fun ps post ->
     wp ps (fun m' -> match m' with
                      | Success a q -> f a q post
-                     | Failed msg q -> post (Failed msg q))
+                     | Failed e q -> post (Failed e q))
 
 unfold let g_compact (a:Type) (wp:__tac_wp a) : __tac_wp a =
     fun ps post -> forall k. (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
