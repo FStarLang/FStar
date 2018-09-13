@@ -329,7 +329,7 @@
         "typing_NatHeap.upd"
       ],
       0,
-      "4827063b3d951cec1d58af2cc46510a7"
+      "f6d88d913ceb79f7553f99aa296f63b0"
     ],
     [
       "NatHeap.contains_emp",
@@ -376,7 +376,7 @@
         "typing_NatHeap.upd"
       ],
       0,
-      "48b848509a86797297807c68c4aa5ceb"
+      "bf10977e8feaf37a240caad1367d5d87"
     ],
     [
       "NatHeap.sel_upd2",
@@ -402,7 +402,7 @@
         "typing_NatHeap.upd"
       ],
       0,
-      "d6e741589c227003f65b2b2bc534428d"
+      "754df0ccd9068a73b58ad9c8a794e70d"
     ],
     [
       "NatHeap.upd_sel",
