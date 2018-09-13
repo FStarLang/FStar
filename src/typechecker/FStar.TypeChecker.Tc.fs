@@ -1003,13 +1003,10 @@ let tc_inductive' env ses quals lids =
             | Sig_datacon (data_lid, _, _, ty_lid, _, _) -> data_lid, ty_lid
             | _ -> failwith "Impossible"
          in
-         if lid_equals ty_lid PC.exn_lid then
-         let b = TcInductive.check_exn_positivity data_lid env in
-         if not b then
-           Errors.log_issue d.sigrng
-                    (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-                       ("Exception " ^ data_lid.str ^ " does not satisfy the positivity condition"))
-         else ()
+         if lid_equals ty_lid PC.exn_lid && not (TcInductive.check_exn_positivity data_lid env) then
+            Errors.log_issue d.sigrng
+                     (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                        ("Exception " ^ data_lid.str ^ " does not satisfy the positivity condition"))
        ) datas
     end;
 
