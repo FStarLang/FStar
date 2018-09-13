@@ -736,11 +736,20 @@ let decidable_eq (neg:bool) (args:args) : option<t> =
    failwith "Unexpected number of arguments"
 
 
-let interp_prop (args:args) : option<t> =
+let interp_prop_eq2 (args:args) : option<t> =
     match args with
     | [(_u, _); (_typ, _); (a1, _); (a2, _)] ->  //eq2
-    //| [(_typ, _); _; (a1, _); (a2, _)] ->     //eq3
       begin match eq_t a1 a2 with
+      | U.Equal -> Some (embed e_bool bogus_cbs true)
+      | U.NotEqual -> Some (embed e_bool bogus_cbs false)
+      | U.Unknown -> None
+      end
+   | _ -> failwith "Unexpected number of arguments"
+
+let interp_prop_eq3 (args:args) : option<t> =
+    match args with
+    | [(_u, _); (_v, _); (t1, _); (t2, _); (a1, _); (a2, _)] ->  //eq3
+      begin match U.eq_inj (eq_t t1 t2) (eq_t a1 a2) with
       | U.Equal -> Some (embed e_bool bogus_cbs true)
       | U.NotEqual -> Some (embed e_bool bogus_cbs false)
       | U.Unknown -> None

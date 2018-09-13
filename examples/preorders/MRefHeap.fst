@@ -85,11 +85,10 @@ abstract val upd : #a:Type ->
 			  contains h0 m'
 			  ==>
 			  contains h1 m') /\
-		       (forall b r' (m':mref b r'{contains h0 m'}) y .
-		          ~(m' === m) /\
-			  sel h0 m' == y
-			  ==>
-			  sel h1 m' == y)})
+		       (forall b r' (m':mref b r'{contains h0 m'}).{:pattern (sel h0 m') \/ (sel h1 m')}
+		          ((addr_of m' <> addr_of m) \/
+                           ~(m === m')) ==>
+			  sel h0 m' == sel h1 m')})
 let upd #a #r h0 m x =
   (fst h0 , (fun m' -> if m = m' then Some (| a , (x , r) |)
                                  else snd h0 m'))

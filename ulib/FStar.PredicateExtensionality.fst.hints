@@ -8,17 +8,20 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
-        "assumption_FStar.FunctionalExtensionality.Extensionality",
-        "equation_FStar.FunctionalExtensionality.efun",
-        "equation_FStar.FunctionalExtensionality.feq",
-        "equation_FStar.PredicateExtensionality.peq",
-        "equation_FStar.PredicateExtensionality.predicate",
-        "equation_Prims.prop",
-        "refinement_kinding_Prims_Tm_refine_8c9ebed3095a60bf2b256a37e40b13f4"
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_Prims.T", "constructor_distinct_Tm_unit",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.logical", "equation_Prims.prop",
+        "equation_Prims.squash", "fuel_guarded_inversion_Prims.c_True",
+        "function_token_typing_Prims.l_True", "kinding_Prims.c_True@tok",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_a5a4b976760c8ff6c395fec345e05f6d",
+        "true_interp", "typing_tok_Prims.T@tok", "unit_inversion",
+        "unit_typing"
       ],
       0,
-      "96447ad82bd1780b5e4b173eee27e498"
+      "e85ea107b428ddd15fdf322ba899bd3b"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "120e0964fe2d932755c3412f5c8064c2"
+      "244e0b3b0e1e811b08fcbe84a6ecd44a"
     ],
     [
       "Benton2004.RHL.Examples2.proof",
@@ -109,7 +109,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "109b14d7ce9e1d0024e4a0debfc177d6"
+      "71f1db0893226b1a76172055cc0ebfcd"
     ],
     [
       "Benton2004.RHL.Examples2.phi",
@@ -118,7 +118,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "61faf4b8738ad13084ef6594ec20ce25"
+      "4b3369b4dfc94127a68e7329fb2365cd"
     ]
   ]
 ]

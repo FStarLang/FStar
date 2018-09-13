@@ -65,7 +65,6 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
 let get                     = from_tac_1 (fun () -> B.get) (* silly.. *)
 let set_goals               = from_tac_1 B.set_goals
 let set_smt_goals           = from_tac_1 B.set_smt_goals
-let fail                    = from_tac_1 B.fail
 let top_env                 = from_tac_1 B.top_env
 let fresh                   = from_tac_1 B.fresh
 let refine_intro            = from_tac_1 B.refine_intro
@@ -124,8 +123,10 @@ let fmap f r =
 
 (* Those that need some translations. Maybe we can do this somewhere else
  * or automatically, but keep it for now *)
-let catch (t: unit -> 'a __tac): ((string, 'a) FStar_Pervasives.either) __tac =
+let catch (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
         fun ps -> fmap fix_either (from_tac_1 B.catch (to_tac_0 (t ())) ps)
+let recover (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
+        fun ps -> fmap fix_either (from_tac_1 B.recover (to_tac_0 (t ())) ps)
 
 let t_pointwise (d : direction) (t: unit -> unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 (t ()))
 

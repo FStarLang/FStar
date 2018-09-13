@@ -979,10 +979,11 @@ let tc_inductive' env ses quals lids =
     let data_ops_ses = List.map (TcInductive.mk_data_operations quals env tcs) datas |> List.flatten in
 
     //strict positivity check
-    (if Options.no_positivity () || (not (Env.should_verify env))  then ()  //skipping positivity check if lax mode
-     else
+    if Options.no_positivity () || (not (Env.should_verify env)) then ()  //skipping positivity check if lax mode
+    else begin
        let env = push_sigelt env sig_bndle in
-       let b = List.iter (fun ty ->
+       (* Check positivity of the inductives within the Sig_bundle *)
+       List.iter (fun ty ->
          let b = TcInductive.check_positivity ty env in
          if not b then
            let lid, r =
@@ -992,8 +993,22 @@ let tc_inductive' env ses quals lids =
            in
            Errors.log_issue r (Errors.Error_InductiveTypeNotSatisfyPositivityCondition, ("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition"))
          else ()
-       ) tcs in
-       ());
+       ) tcs;
+
+       (* Separately, if any of the data constructors in the Sig_bundle are
+        * exceptions, check their positivity separately. See issue #1535 *)
+       List.iter (fun d ->
+         let data_lid, ty_lid =
+            match d.sigel with
+            | Sig_datacon (data_lid, _, _, ty_lid, _, _) -> data_lid, ty_lid
+            | _ -> failwith "Impossible"
+         in
+         if lid_equals ty_lid PC.exn_lid && not (TcInductive.check_exn_positivity data_lid env) then
+            Errors.log_issue d.sigrng
+                     (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+                        ("Exception " ^ data_lid.str ^ " does not satisfy the positivity condition"))
+       ) datas
+    end;
 
     //generate hasEq predicate for this inductive
     //skip logical connectives types in prims, tcs is bound to the inductive type, caller ensures its length is > 0
@@ -1756,6 +1771,7 @@ let tc_decls env ses =
     let r, ms_elapsed = BU.record_time (fun () -> process_one_decl acc se) in
     if Env.debug env (Options.Other "TCDeclTime")
      || BU.for_some (U.attr_eq U.tcdecltime_attr) se.sigattrs
+     || Options.timing ()
     then BU.print2 "Checked %s in %s milliseconds\n" (Print.sigelt_to_string_short se) (string_of_int ms_elapsed);
     r
   in

@@ -1,0 +1,65 @@
+[
+  "\\ƒ¥Ä\u0012Kb\u001e<´\u007f¡ìð'Ù",
+  [
+    [
+      "Labels.uu___63",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Tactics.Result.Success", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "19ac4a4c4cb058dc80da5c7f21822875"
+    ],
+    [
+      "Labels.uu___63",
+      2,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Tactics.Result.Success", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list", "true_interp"
+      ],
+      0,
+      "54a8bba362615e9d0d6563ae1a9bd147"
+    ],
+    [
+      "Labels.uu___63",
+      3,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Tactics.Result.Success", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "ddd69de50801e309bc1ac3fec8ac48f5"
+    ],
+    [
+      "Labels.uu___63",
+      4,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Tactics.Result.Success", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.list", "true_interp"
+      ],
+      0,
+      "6b463a7c0a98722058452a7a0634a09c"
+    ]
+  ]
+]

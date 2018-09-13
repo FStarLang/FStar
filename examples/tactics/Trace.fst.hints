@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "f98b1057fa1d4cfc1729a97f987be9b9"
+      "2e43c06802501eb158f9f2bb7955c132"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Trace_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "a610c71dc4de2683d4b8db27cbb063fe"
+      "4fb6946e19c070b06c39b57904652a2b"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "106ef928d7c5d7b0e02367257fb5db0c"
+      "3d55d529e82525c7f0075bd3bac5fbf2"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6b7cd8c99bedb8307f6e4e382fa11daf"
+      "7826fea07d7c21cc8f3505de355230d4"
     ],
     [
       "Trace.fall",
@@ -63,10 +63,10 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "151331f5b5db3221eb827db1a87f2f3d"
+      "ce0daf3e4fe54539326d9cc2b7a55438"
     ],
     [
-      "Trace.uu___62",
+      "Trace.uu___63",
       1,
       4,
       2,
@@ -79,7 +79,7 @@
         "projection_inverse_Trace.S__0"
       ],
       0,
-      "8d6d0c469334e5197ad7dfed0eecde5f"
+      "c69a98048b7a34892f7c69ad32b46b03"
     ],
     [
       "Trace.fact_aux",
@@ -97,10 +97,10 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "279e6f20dc8875ae9be79393f95d8469"
+      "986109161a92c92d8af8dd7c7b662dc8"
     ],
     [
-      "Trace.uu___63",
+      "Trace.uu___64",
       1,
       8,
       2,
@@ -117,34 +117,37 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "db8a9fc3987b07b59e39effcaa22ee01"
+      "31c5bd00cac5cf29f2dc13a20847063c"
     ],
     [
-      "Trace.uu___64",
+      "Trace.uu___65",
       1,
       8,
       2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_correspondence_Trace.fact_.fuel_instrumented",
         "@fuel_correspondence_Trace.fact_aux.fuel_instrumented",
-        "@fuel_irrelevance_Trace.fact_.fuel_instrumented", "@query",
-        "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "data_typing_intro_Prims.Nil@tok", "equation_Prims.nat",
+        "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
+        "b2t_def", "bool_inversion", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt32.n",
+        "equation_Prims.nat",
         "equation_with_fuel_Trace.fact_.fuel_instrumented",
         "equation_with_fuel_Trace.fact_aux.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Prims.nat", "int_inversion", "int_typing",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
+        "function_token_typing_FStar.UInt32.n", "int_inversion",
+        "int_typing", "lemma_FStar.UInt.pow2_values",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_Trace.fact_.fuel_instrumented"
+        "typing_FStar.UInt.fits"
       ],
       0,
-      "4d35d4e2f1b96b3bf1d634154ab90f2f"
+      "48d582cbd5d40d3f742007e60a20aa00"
     ],
     [
       "Trace.mynat",
@@ -153,7 +156,7 @@
       1,
       [ "@query" ],
       0,
-      "8a4713d623b15e0bc69ed6bf2e353bd8"
+      "2ef1c6fa93da3fd55981d0ed0c9ef78a"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -166,7 +169,7 @@
         "refinement_interpretation_Trace_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "560a0c048391fa2d46b7fab7f1d590b6"
+      "7fc1e67d5b80b7f37cdd5f2307a95923"
     ],
     [
       "Trace.tick_last",
@@ -180,7 +183,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "621098bf126ed5965216fa800e9d5d4b"
+      "7c1fd5333e452ae5a3e01205e3226a41"
     ],
     [
       "Trace.term_is_fv",
@@ -197,7 +200,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "15261282c252e8f6802b07d95e210824"
+      "c69d70bc9459cea22dd98fd92b568ef6"
     ],
     [
       "Trace.cutlast",
@@ -211,7 +214,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "75be4c2b52398a1768b5ed38804b15b7"
+      "14e83a254e97fddb33c1e57c94e93723"
     ],
     [
       "Trace.fall",
@@ -225,10 +228,10 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "f3ce03b14b3b7a5e5ea22679da7a2ed8"
+      "a4a2191b40b0d6ed0afd6ad06498b699"
     ],
     [
-      "Trace.uu___62",
+      "Trace.uu___63",
       2,
       4,
       2,
@@ -241,7 +244,7 @@
         "projection_inverse_Trace.S__0"
       ],
       0,
-      "48f1bbce97b281179c1865b00223dff2"
+      "0696fa46653023e2f2eede3fafb71c84"
     ],
     [
       "Trace.fact_aux",
@@ -259,10 +262,10 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "405c0f00e28ce5ca503ea3c666371e35"
+      "ffdfb0fa6801f3396bf46981512de768"
     ],
     [
-      "Trace.uu___63",
+      "Trace.uu___64",
       2,
       8,
       2,
@@ -279,10 +282,10 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "93d45ee01341018d1ec7f47d29a14fed"
+      "07cbc1e375a4b0a69bda42f791a96d7a"
     ],
     [
-      "Trace.uu___64",
+      "Trace.uu___65",
       2,
       8,
       2,
@@ -309,7 +312,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "3e19d9da74633ed1b05d8bdf39483267"
+      "cfbdb6c239383e4ed629f007a3abc7b4"
     ]
   ]
 ]

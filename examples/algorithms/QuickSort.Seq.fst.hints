@@ -8,7 +8,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a827c9168ee0480a6047056d2fc46ca4"
+      "7495b8e973dc1fde4d4d561dccdd8cc5"
     ],
     [
       "QuickSort.Seq.partition",
@@ -80,7 +80,7 @@
         "typing_FStar.Seq.Properties.mem", "well-founded-ordering-on-nat"
       ],
       0,
-      "f5386e3cb68e12b61bfc2ec532d2d7b8"
+      "cbbc8ff7c805829bd51a2760baec5d33"
     ],
     [
       "QuickSort.Seq.sort",
@@ -141,7 +141,7 @@
         "typing_FStar.Seq.Properties.mem", "well-founded-ordering-on-nat"
       ],
       0,
-      "0024bb6814756384e19aaa2dc9d0a2e3"
+      "98737ffb89dfc6872103dd50eb500489"
     ],
     [
       "QuickSort.Seq.partition",
@@ -213,7 +213,7 @@
         "typing_FStar.Seq.Properties.mem", "well-founded-ordering-on-nat"
       ],
       0,
-      "f249119206a969541faa6cfe1852ea74"
+      "77c60eb0f1f97a03e3401eb54b59ff61"
     ],
     [
       "QuickSort.Seq.sort",
@@ -274,7 +274,7 @@
         "typing_FStar.Seq.Properties.mem", "well-founded-ordering-on-nat"
       ],
       0,
-      "13ec989128cdc6add83082e8ee72a0f7"
+      "c7c43b8037fbc072e9baee22a16256b2"
     ]
   ]
 ]

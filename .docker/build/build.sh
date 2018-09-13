@@ -188,6 +188,8 @@ function build_fstar() {
             echo Warm-up failed
             echo Failure >$result_file
         else
+            export_home FSTAR "$(pwd)"
+
             fetch_vale &
             fetch_hacl &
             fetch_and_make_kremlin &
@@ -204,7 +206,6 @@ function build_fstar() {
             # propagated to the current shell. Re-do.
             export_home HACL "$(pwd)/hacl-star"
             export_home KREMLIN "$(pwd)/kremlin"
-            export_home FSTAR "$(pwd)"
 
             # Once F* is built, run its main regression suite, along with more relevant
             # tests.
@@ -292,7 +293,8 @@ function build_fstar() {
                 { echo " - snapshot-diff (F*)" >>$ORANGE_FILE; }
             fi
 
-            if [[ $localTarget == "uregressions-ulong" ]]; then
+            # We should not generate hints when building on Windows
+            if [[ $localTarget == "uregressions-ulong" && "$OS" != "Windows_NT" ]]; then
                 refresh_fstar_hints
             fi
         fi
