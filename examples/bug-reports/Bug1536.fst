@@ -1,4 +1,4 @@
-module Bug
+module Bug1536
 
 let ex (a:Type) = unit -> M (either a exn)
 
