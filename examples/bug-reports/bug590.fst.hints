@@ -11,7 +11,7 @@
         "refinement_interpretation_Bug590_Tm_refine_de9aeb070296eed20d879692d0254af0"
       ],
       0,
-      "fe62abec8ba6cc9ceed587b8ec335ce6"
+      "2feea914180fe3115764c2cbfd545d30"
     ],
     [
       "Bug590.coerce",
@@ -30,7 +30,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "73a0027b8a155c618158111a5f6e55ef"
+      "f52ae86a6e9de72c90b7c73c17045345"
     ],
     [
       "Bug590.blah2",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "a88a96b3125269f05192d7715282cfa6"
+      "67a91977e3a430ad9ffd7bf0ca6b06bb"
     ],
     [
       "Bug590.flatten_lemma",
@@ -55,17 +55,20 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Bug590.coerce.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.flatten.fuel_instrumented",
+        "@fuel_irrelevance_Bug590.coerce.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.flatten.fuel_instrumented",
         "@query", "disc_equation_Prims.Cons",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Bug590_Tm_refine_a18ab84bb2945892b0a6776b4135d511",
-        "refinement_interpretation_Bug590_Tm_refine_e12869c17cd8d9b449828a1133d89973",
+        "refinement_interpretation_Bug590_Tm_refine_d1ecb3423aa4790b11c05f1ec7a4cc9c",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "token_correspondence_Bug590.coerce.fuel_instrumented",
-        "typing_Bug590.coerce", "typing_FStar.List.Tot.Base.flatten"
+        "token_correspondence_FStar.List.Tot.Base.flatten.fuel_instrumented",
+        "typing_Bug590.coerce"
       ],
       0,
-      "3a10116f7c91563d64cdc660c8853b9f"
+      "44111912e38a0bca4a9619763151aec6"
     ]
   ]
 ]

@@ -228,7 +228,8 @@ val string_split' : args -> option<t>
 val list_of_string' : (string -> t)
 
 val decidable_eq : bool -> args -> option<t>
-val interp_prop : args -> option<t>
+val interp_prop_eq2 : args -> option<t>
+val interp_prop_eq3 : args -> option<t>
 
 val mixed_binary_op : (arg -> option<'a>) -> (arg -> option<'b>) -> ('c -> t) ->
                       ('a -> 'b -> 'c) -> args -> option<t>

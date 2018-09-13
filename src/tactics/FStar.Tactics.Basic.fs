@@ -1032,7 +1032,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
-    | Some (U.BaseConn(l, [_; (e1, _); (e2, _)])) when Ident.lid_equals l PC.eq2_lid ->
+    | Some (U.BaseConn(l, [_; (e1, _); (e2, _)]))
+      when Ident.lid_equals l PC.eq2_lid
+      ||    Ident.lid_equals l PC.c_eq2_lid ->
         Some (e1, e2)
     | _ ->
         None
