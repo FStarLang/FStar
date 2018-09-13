@@ -58,7 +58,22 @@ let test (l:list int{List.Tot.length l == 10}) :HST.St unit =
   assert (B.as_seq h sb = Seq.slice ls 0 2)
 
 
+(***** Tests for uninitialized buffers *****)
+module UB = LowStar.UninitializedBuffer
 
+[@expect_failure]
+let test_index_ub (b:UB.ubuffer int) :HST.ST unit (requires (fun h0 -> UB.live h0 b /\ UB.length b == 10)) (ensures (fun _ _ _ -> True))
+  = ignore (UB.uindex b 0)
+
+let test_ub () :HST.St unit =
+  let b = UB.ugcmalloc #int HS.root 10ul in
+  UB.uupd b 3ul 0;
+  let j = UB.uindex b 3ul in
+  //let j = UB.uindex b 4ul in --> this fails since the index 4ul is not initialized
+  let b1 = B.gcmalloc HS.root 0 10ul in
+  UB.ublit b1 2ul b 2ul 3ul;
+  let j = UB.uindex b 4ul in  //but now it is
+  ()
 
 // (*
 //  * An example of a two elements buffer
