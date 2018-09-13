@@ -83,3 +83,6 @@ val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> string -> g
 type direction =
     | TopDown
     | BottomUp
+
+exception TacticFailure of string
+exception EExn of term

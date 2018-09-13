@@ -236,7 +236,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "5906eea15fffd11c466c240b11b90822"
+      "cf8fa91197fd8817bb21603d62e1e0b2"
     ],
     [
       "FStar.OrdSet.choose",
@@ -1476,7 +1476,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "f4b9440bd1440ce5aa35dfcbf148a42a"
+      "5c2f4af4a22311e1ee14b65440edf8df"
     ],
     [
       "FStar.OrdSet.remove'",

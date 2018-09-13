@@ -601,3 +601,21 @@ let (uu___is_BottomUp : direction -> Prims.bool) =
   fun projectee  ->
     match projectee with | BottomUp  -> true | uu____827 -> false
   
+exception TacticFailure of Prims.string 
+let (uu___is_TacticFailure : Prims.exn -> Prims.bool) =
+  fun projectee  ->
+    match projectee with
+    | TacticFailure uu____837 -> true
+    | uu____838 -> false
+  
+let (__proj__TacticFailure__item__uu___ : Prims.exn -> Prims.string) =
+  fun projectee  ->
+    match projectee with | TacticFailure uu____845 -> uu____845
+  
+exception EExn of FStar_Syntax_Syntax.term 
+let (uu___is_EExn : Prims.exn -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | EExn uu____855 -> true | uu____856 -> false
+  
+let (__proj__EExn__item__uu___ : Prims.exn -> FStar_Syntax_Syntax.term) =
+  fun projectee  -> match projectee with | EExn uu____863 -> uu____863 

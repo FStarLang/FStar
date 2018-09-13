@@ -31,9 +31,8 @@ module Z = FStar.BigInt
 module Env = FStar.TypeChecker.Env
 open FStar.Reflection.Data
 open FStar.Reflection.Basic
-
-// working around #1374
-type goal = FStar.Tactics.Types.goal
+open FStar.Tactics.Result
+open FStar.Tactics.Types
 
 type name = bv
 type env = Env.env
@@ -47,8 +46,6 @@ let bnorm e t = normalize [] e t
  * For debug messages, just use plain term_to_string, we don't want to cause normalization with debug flags. *)
 let tts = N.term_to_string
 
-open FStar.Tactics.Types
-open FStar.Tactics.Result
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
 
 (* The main monad for tactics.
@@ -69,9 +66,7 @@ let run_safe t p =
     if Options.tactics_failhard ()
     then run t p
     else try run t p
-         with | Errors.Err (_, msg)
-              | Errors.Error (_, msg, _) -> Failed (msg, p)
-              | e -> Failed (BU.message_of_exn e, p)
+         with | e -> Failed (e, p)
 
 let rec log ps (f : unit -> unit) : unit =
     if ps.tac_verb_dbg
@@ -212,11 +207,14 @@ let print_proof_state (msg:string) : tac<unit> =
 let mlog f (cont : unit -> tac<'a>) : tac<'a> =
     bind get (fun ps -> log ps f; cont ())
 
+let traise e =
+    mk_tac (fun ps -> Failed (e, ps))
+
 let fail (msg:string) =
     mk_tac (fun ps ->
         if Env.debug ps.main_context (Options.Other "TacFail")
         then dump_proofstate ps ("TACTIC FAILING: " ^ msg);
-        Failed (msg, ps)
+        Failed (TacticFailure msg, ps)
     )
 
 let fail1 msg x     = fail (BU.format1 msg x)
@@ -224,7 +222,7 @@ let fail2 msg x y   = fail (BU.format2 msg x y)
 let fail3 msg x y z = fail (BU.format3 msg x y z)
 let fail4 msg x y z w = fail (BU.format4 msg x y z w)
 
-let catch (t : tac<'a>) : tac<either<string,'a>> =
+let catch (t : tac<'a>) : tac<either<exn,'a>> =
     mk_tac (fun ps ->
             let tx = UF.new_transaction () in
             match run t ps with
@@ -237,7 +235,7 @@ let catch (t : tac<'a>) : tac<either<string,'a>> =
                 Success (Inl m, ps)
            )
 
-let recover (t : tac<'a>) : tac<either<string,'a>> =
+let recover (t : tac<'a>) : tac<either<exn,'a>> =
     mk_tac (fun ps ->
             match run t ps with
             | Success (a, q) -> Success (Inr a, q)
@@ -258,14 +256,17 @@ let trytac_exn (t : tac<'a>) : tac<option<'a>> =
            log ps (fun () -> BU.print1 "trytac_exn error: (%s)" msg);
            Success (None, ps))
 
-// This is relying on the fact that errors are strings
 let wrap_err (pref:string) (t : tac<'a>) : tac<'a> =
     mk_tac (fun ps ->
             match run t ps with
             | Success (a, q) ->
                 Success (a, q)
-            | Failed (msg, q) ->
-                Failed (pref ^ ": " ^ msg, q)
+
+            | Failed (TacticFailure msg, q) ->
+                Failed (TacticFailure (pref ^ ": " ^ msg), q)
+
+            | Failed (e, q) ->
+                Failed (e, q)
            )
 
 ////////////////////////////////////////////////////////////////////
@@ -824,7 +825,7 @@ let t_exact try_refine set_expected_typ tm : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "t_exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind (catch (__exact_now set_expected_typ tm)) (function
     | Inr r -> ret r
-    | Inl e when not (try_refine) -> fail e
+    | Inl e when not (try_refine) -> traise e
     | Inl e ->
         mlog (fun () -> BU.print_string "__exact_now failed, trying refine...\n") (fun _ ->
         bind (catch (bind (norm [EMB.Delta]) (fun _ ->
@@ -835,7 +836,7 @@ let t_exact try_refine set_expected_typ tm : tac<unit> = wrap_err "exact" <|
                   ret r)
               | Inl _ ->
                   mlog (fun () -> BU.print_string "__exact_now: was not a refinement\n") (fun _ ->
-                  fail e)))))
+                  traise e)))))
 
 let rec mapM (f : 'a -> tac<'b>) (l : list<'a>) : tac<list<'b>> =
     match l with
@@ -1325,8 +1326,9 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts label (env : Env.env)
        in
        bind (catch rewrite_eq) (fun x ->
        match x with
-       | Inl "SKIP" -> ret t
-       | Inl e -> fail e
+       // TODO: Share a `Skip` exception to userspace
+       | Inl (TacticFailure "SKIP") -> ret t
+       | Inl e -> traise e
        | Inr x -> ret x)
 
 (*
