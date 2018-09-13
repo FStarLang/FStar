@@ -67,13 +67,21 @@ let test_index_ub (b:UB.ubuffer int) :HST.ST unit (requires (fun h0 -> UB.live h
 
 let test_ub () :HST.St unit =
   let b = UB.ugcmalloc #int HS.root 10ul in
-  UB.uupd b 3ul 0;
-  let j = UB.uindex b 3ul in
+  UB.uupd b 1ul 2;
+  let j = UB.uindex b 1ul in
+  assert (j == 2);
   //let j = UB.uindex b 4ul in --> this fails since the index 4ul is not initialized
   let b1 = B.gcmalloc HS.root 0 10ul in
+  let j = UB.uindex b 1ul in
+  assert (j == 2);
+  let h0 = HST.get () in
   UB.ublit b1 2ul b 2ul 3ul;
+  let h1 = HST.get () in
   let j = UB.uindex b 4ul in  //but now it is
-  ()
+  assert (j == 0);
+  let j = UB.uindex b 1ul in  //1ul remains initialized and has the same value as before
+  assert (Seq.index (UB.as_seq h0 b) 1 == Seq.index (Seq.slice (UB.as_seq h0 b) 0 2) 1);
+  assert (j == 2)
 
 // (*
 //  * An example of a two elements buffer
