@@ -65,7 +65,6 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
 let get                     = from_tac_1 (fun () -> B.get) (* silly.. *)
 let set_goals               = from_tac_1 B.set_goals
 let set_smt_goals           = from_tac_1 B.set_smt_goals
-let raise                   = from_tac_1 B.traise
 let top_env                 = from_tac_1 B.top_env
 let fresh                   = from_tac_1 B.fresh
 let refine_intro            = from_tac_1 B.refine_intro
