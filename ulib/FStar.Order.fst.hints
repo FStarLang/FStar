@@ -98,7 +98,7 @@
         "fuel_guarded_inversion_FStar.Order.order"
       ],
       0,
-      "0d4b520bc899708352d04ed874023128"
+      "17489cfaacdf89b67da321c8fdae36ea"
     ],
     [
       "FStar.Order.compare_list",
@@ -230,7 +230,7 @@
         "fuel_guarded_inversion_FStar.Order.order"
       ],
       0,
-      "2847093dd9052615610f57c1f7635cc4"
+      "71ac7e51d395061ca766cb77d569ff37"
     ],
     [
       "FStar.Order.compare_list",
