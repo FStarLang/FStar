@@ -744,24 +744,18 @@ and p_typeDecl pre = function
     let p_recordFieldAndComments (ps: bool) (lid, t, doc_opt) =
       let comm, field = with_comment_sep (p_recordFieldDecl ps) (lid, t, doc_opt) (extend_to_end_of_line t.range) "!1" in
       let sep = if ps then semi else empty in
-      if comm = empty then
-        field ^^ sep
-      else
-        group <| ifflat (group (field ^^ sep ^^ break1 ^^ comm)) (comm ^^ hardline ^^ field ^^ sep)
+      inline_comment_or_above comm field sep
     in
     let p_fields () =
-        space ^^ braces_with_nesting (
-          separate_map_last hardline p_recordFieldAndComments record_field_decls)
+      space ^^ braces_with_nesting (
+        separate_map_last hardline p_recordFieldAndComments record_field_decls)
     in
     p_typeDeclPrefix pre true lid bs typ_opt, p_fields
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
     let p_constructorBranchAndComments (uid, t_opt, doc_opt, use_of) =
         let range = extend_to_end_of_line (dflt uid.idRange (map_opt t_opt (fun t -> t.range))) in
         let comm, ctor = with_comment_sep p_constructorBranch (uid, t_opt, doc_opt, use_of) range "!2" in
-        if comm = empty then
-          ctor
-        else
-          group <| ifflat (group (ctor ^^ break1 ^^ comm)) (comm ^^ hardline ^^ ctor)
+        inline_comment_or_above comm ctor empty
     in
     (* Beware of side effects with comments printing *)
     let datacon_doc () =
@@ -821,12 +815,7 @@ and p_letlhs kw (pat, _) =
 and p_letbinding kw (pat, e) =
   let doc_pat = p_letlhs kw (pat, e) in
   let comm, doc_expr = p_term_sep false false e "$5" in
-  let doc_expr =
-    if comm = empty then
-      group doc_expr
-    else
-      group <| ifflat (group (doc_expr ^^ break1 ^^ comm)) (comm ^^ hardline ^^ doc_expr)
-  in
+  let doc_expr = inline_comment_or_above comm doc_expr empty in
   ifflat (doc_pat ^/^ equals ^/^ doc_expr) (doc_pat ^^ space ^^ group (equals ^^ jump2 doc_expr))
 
 (* ****************************************************************************)
@@ -1231,13 +1220,8 @@ and p_noSeqTerm' ps pb e = match e.tm with
       in
       let doc_pat = p_letlhs doc_let_or_and (pat, e) in
       let comm, doc_expr = p_term_sep false false e "" in
-     let doc_expr =
-       if comm = empty then
-         group doc_expr
-     else
-         group <| ifflat (group (doc_expr ^^ break1 ^^ comm)) (comm ^^ hardline ^^ doc_expr)
-     in
-      attrs ^^
+     let doc_expr = inline_comment_or_above comm doc_expr empty in
+     attrs ^^
       (if is_last then
        surround 2 1 (flow break1 [doc_pat; equals]) doc_expr (str "in")
       else
