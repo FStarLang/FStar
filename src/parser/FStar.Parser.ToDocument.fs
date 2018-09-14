@@ -1292,12 +1292,14 @@ and p_conjunctivePats pats =
 
 and p_simpleTerm ps pb e = match e.tm with
     | Abs(pats, e) ->
-        let comm, doc = p_term_sep false pb e in //OK
-        let doc =
-          paren_if ps (
-            (str "fun" ^/+^ separate_map break1 p_atomicPattern pats ^/^ rarrow) ^/+^ doc)
-        in
-        inline_comment_or_above comm doc empty
+        let comm, doc = p_term_sep false pb e in
+        let prefix = str "fun" ^/+^ separate_map break1 p_atomicPattern pats ^/^ rarrow in
+        paren_if ps (
+          if comm <> empty then
+            prefix ^^ hardline ^^ comm ^^ hardline ^^ doc
+          else
+            group (prefix ^/+^ doc)
+        )
     | _ -> p_tmIff e
 
 and p_maybeFocusArrow b =
@@ -1321,12 +1323,19 @@ and p_patternBranch pb (pat, when_opt, e) =
     let comm, doc = p_term_sep false pb e in
     // we need to be careful here because an inlined comment on the last branch could eat
     // any following parenthesis; to prevent this, we never inline a comment on the last branch
-    // (Nit:  we could float the decision even higher to `if_paren` if we really wanted to avoid this
-    // and push the paren on a new line instead but that would add even more complexity)
     if pb then
-      inline_comment_or_above comm (branch ^/+^ doc) empty
+      if comm = empty then
+        group (branch ^/+^ doc)
+      else
+        group (
+          ifflat
+            (group (branch ^/+^ doc ^^ break1 ^^ comm))
+            (branch ^^ jump2 (inline_comment_or_above comm doc empty))
+          )
     else
-      comm ^^ (if comm <> empty then hardline else empty) ^^ (branch ^/+^ doc)
+      if comm <> empty then
+        branch ^/+^ (comm ^^ hardline ^^ doc)
+      else branch ^/+^ doc
   in
   match pat.pat with
   | PatOr pats ->
