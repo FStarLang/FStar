@@ -20,4 +20,6 @@ open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
+type iface
+val extract_iface: env -> modul -> env * iface
 val extract : env -> modul -> env * list<mllib>

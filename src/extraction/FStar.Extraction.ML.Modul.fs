@@ -525,12 +525,13 @@ let extract_sigelt_iface (g:env) (se:sigelt) : env * iface =
       else g, empty_iface
 
 let extract_iface (g:env_t) modul =
+    let decls = modul.declarations in
     let iface = {empty_iface with iface_module_name=g.currentModule} in
     List.fold_left (fun (g, iface) se ->
         let g, iface' = extract_sigelt_iface g se in
         g, iface_union iface iface')
         (g, iface)
-        modul
+        decls
 
 (********************************************************************************************)
 (* Extract Implementations *)
@@ -813,7 +814,7 @@ let extract' (g:env) (m:modul) : env * list<mllib> =
   let g = {g with tcenv=FStar.TypeChecker.Env.set_current_module g.tcenv m.name;
                   currentModule = name} in
   if not (Options.should_extract m.name.str)
-  then let g, iface = extract_iface g m.declarations in
+  then let g, iface = extract_iface g m in
        debug g (fun () -> BU.print_string (iface_to_string iface));
        g, []
   else

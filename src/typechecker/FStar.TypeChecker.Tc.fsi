@@ -22,7 +22,7 @@ open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 
 
-val check_module: env -> modul -> bool -> modul * option<modul> * env
+val check_module: env -> modul -> bool -> (modul * option<modul>) * env
 val load_checked_module: env -> modul -> env
 
 val pop_context: env -> string -> env

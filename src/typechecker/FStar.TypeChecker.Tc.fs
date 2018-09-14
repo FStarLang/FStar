@@ -1041,7 +1041,7 @@ let tc_inductive env ses quals lids =
   let env = Env.push env "tc_inductive" in
   let pop () = ignore (Env.pop env "tc_inductive") in  //OK to ignore: caller will reuse original env
   try tc_inductive' env ses quals lids |> (fun r -> pop (); r)
-  with e -> pop (); raise e 
+  with e -> pop (); raise e
 
 //when we process a reset-options pragma, we need to restart z3 etc.
 let z3_reset_options (en:env) :env =
@@ -2129,4 +2129,4 @@ let check_module env m b =
     BU.print1 "%s\n" (Print.modul_to_string normalized_module)
   end;
 
-  m, m_iface_opt, env
+  (m, m_iface_opt), env

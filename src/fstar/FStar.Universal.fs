@@ -29,6 +29,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.Dependencies
+open FStar.Syntax.DsEnv
 
 (* Module abbreviations for the universal type-checker  *)
 module DsEnv   = FStar.Syntax.DsEnv
@@ -50,16 +51,26 @@ let cache_version_number = 4
 
 let module_or_interface_name m = m.is_interface, m.name
 
-let with_tcenv (env:TcEnv.env) (f:DsEnv.withenv<'a>) =
-    let a, dsenv = f env.dsenv in
-    a, ({ env with dsenv=dsenv })
+type env = FStar.Extraction.ML.UEnv.env
+
+let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv<'a>) =
+    let a, dsenv = f tcenv.dsenv in
+    a, ({tcenv with dsenv = dsenv})
+
+let with_tcenv_of_env (env:env) (f:TcEnv.env -> 'a * TcEnv.env) : 'a * env =
+    let a, tcenv = f env.tcenv in
+    a, {env with tcenv=tcenv}
+
+let with_dsenv_of_env (env:env) (f:DsEnv.withenv<'a>) =
+    let a, tcenv = with_dsenv_of_tcenv env.tcenv f in
+    a, ({env with tcenv=tcenv})
 
 (***********************************************************************)
 (* Parse and desugar a file                                            *)
 (***********************************************************************)
-let parse (env:TcEnv.env) (pre_fn: option<string>) (fn:string)
+let parse (env:env) (pre_fn: option<string>) (fn:string)
   : Syntax.modul
-  * TcEnv.env =
+  * env =
   let ast, _ = Parser.Driver.parse_file fn in
   let ast, env = match pre_fn with
     | None ->
@@ -69,12 +80,14 @@ let parse (env:TcEnv.env) (pre_fn: option<string>) (fn:string)
         match pre_ast, ast with
         | Parser.AST.Interface (lid1, decls1, _), Parser.AST.Module (lid2, decls2)
           when Ident.lid_equals lid1 lid2 ->
-          let _, env = with_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface lid1 decls1 in
-          with_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast true
+          let _, env =
+            with_dsenv_of_env env (FStar.ToSyntax.Interleave.initialize_interface lid1 decls1)
+          in
+          with_dsenv_of_env env (FStar.ToSyntax.Interleave.interleave_module ast true)
         | _ ->
             Errors.raise_err (Errors.Fatal_PreModuleMismatch, "mismatch between pre-module and module\n")
   in
-  with_tcenv env <| Desugar.ast_modul_to_modul ast
+  with_dsenv_of_env env (Desugar.ast_modul_to_modul ast)
 
 (***********************************************************************)
 (* Initialize a clean environment                                      *)
@@ -130,9 +143,9 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
        Actually, this is an abuse, and just means that we're type-checking the
        first chunk. *)
     let ast_modul, env =
-      with_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast_modul false in
+      with_dsenv_of_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast_modul false in
     let modul, env =
-      with_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
+      with_dsenv_of_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
     if not (acceptable_mod_name modul) then
     begin
        let msg : string =
@@ -155,13 +168,13 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
           BU.fold_map
               (fun env a_decl ->
                   let decls, env =
-                      with_tcenv env <|
+                      with_dsenv_of_tcenv env <|
                       FStar.ToSyntax.Interleave.prefix_with_interface_decls a_decl
                   in
                   env, decls)
               env
               ast_decls in
-      let sigelts, env = with_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
+      let sigelts, env = with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
       let modul, _, env  = if DsEnv.syntax_only env.dsenv then (modul, [], env)
                            else Tc.tc_more_partial_modul env modul sigelts in
       (Some modul, env)
@@ -170,7 +183,7 @@ let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
   let r = Pars.parse (Pars.Filename interface_file_name) in
   match r with
   | Pars.ASTFragment (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
-    snd (with_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)
+    snd (with_dsenv_of_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)
   | Pars.ASTFragment _ ->
     Errors.raise_err (FStar.Errors.Fatal_ParseErrors, (BU.format1 "Unexpected result from parsing %s; expected a single interface"
                              interface_file_name))
@@ -184,7 +197,9 @@ let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
 (* Loading and storing cache files                                     *)
 (***********************************************************************)
 let load_module_from_cache
-    : env -> string -> option<(Syntax.modul * option<Syntax.modul> * DsEnv.module_inclusion_info)> =
+    : env
+    -> string
+    -> option<(Syntax.modul * option<Syntax.modul> * DsEnv.module_inclusion_info)> =
     let some_cache_invalid = BU.mk_ref None in
     let invalidate_cache fn = some_cache_invalid := Some fn in
     let load env source_file cache_file =
@@ -283,47 +298,93 @@ let extend_delta_env (f:delta_env) (g:env->env) =
     match f with
     | None -> Some g
     | Some f -> Some (fun e -> g (f e))
-let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and its elapsed checking time
-                                    * TcEnv.env
-                                    * delta_env =
+
+
+type tc_result = {
+  checked_module: Syntax.modul; //persisted
+  checked_module_iface_opt: option<Syntax.modul>; //persisted
+  tc_time:int;
+
+  extracted_iface: Extraction.ML.Modul.iface; //persisted
+  extracted_defs: option<(list<Extraction.ML.Syntax.mllib>)>;
+  extraction_time: int;
+
+  mii:module_inclusion_info; //persisted
+}
+
+let tc_one_file
+        (env:env)
+        (delta:delta_env)
+        (pre_fn:option<string>) //interface file name
+        (fn:string) //file name
+    : tc_result
+    * env
+    * delta_env =
   Syntax.reset_gensym();
   let tc_source_file () =
       let env = apply_delta_env env delta in
       let fmod, env = parse env pre_fn fn in
+      let mii = FStar.Syntax.DsEnv.inclusion_info env.tcenv.dsenv fmod.name in
       let check_mod () =
-          let (tcmod, tcmod_iface_opt, env), time =
-            FStar.Util.record_time (fun () -> Tc.check_module env fmod (is_some pre_fn)) in
-          (tcmod, time), tcmod_iface_opt, env
+          let ((tcmod, tcmod_iface_opt), env), tc_time =
+            FStar.Util.record_time (fun () ->
+               with_tcenv_of_env env (fun tcenv ->
+                 Tc.check_module tcenv fmod (is_some pre_fn)))
+          in
+          let extracted_defs, extract_time =
+            if not (Options.should_extract tcmod.name.str)
+            then None, 0
+            else FStar.Util.record_time (fun () ->
+                    let _, defs = FStar.Extraction.ML.Modul.extract env tcmod in
+                    Some defs)
+          in
+          let (env, extracted_iface), iface_extract_time =
+            FStar.Util.record_time (fun () ->
+                FStar.Extraction.ML.Modul.extract_iface env tcmod)
+          in
+          {
+            checked_module=tcmod;
+            checked_module_iface_opt=tcmod_iface_opt;
+            tc_time=tc_time;
+
+            extracted_iface = extracted_iface;
+            extracted_defs = extracted_defs;
+            extraction_time = iface_extract_time + extract_time;
+
+            mii = mii
+          },
+          env
       in
-      let tcmod, tcmod_iface_opt, env =
-        if (Options.should_verify fmod.name.str //if we're verifying this module
+      if (Options.should_verify fmod.name.str //if we're verifying this module
             && (FStar.Options.record_hints() //and if we're recording or using hints
                 || FStar.Options.use_hints()))
-        then SMT.with_hints_db (Pars.find_file fn) check_mod
-        else check_mod () //don't add a hints file for modules that are not actually verified
-      in
-      let mii = FStar.Syntax.DsEnv.inclusion_info env.dsenv (fst tcmod).name in
-      tcmod, tcmod_iface_opt, mii, env
+      then SMT.with_hints_db (Pars.find_file fn) check_mod
+      else check_mod () //don't add a hints file for modules that are not actually verified
   in
   if not (Options.cache_off()) then
       match load_module_from_cache env fn with
       | None ->
-            let tcmod, tcmod_iface_opt, mii, env = tc_source_file () in
-            if FStar.Errors.get_err_count() = 0
-            && (Options.lax()  //we'll write out a .checked.lax file
-                || Options.should_verify (fst tcmod).name.str) //we'll write out a .checked file
-            //but we will not write out a .checked file for an unverified dependence
-            //of some file that should be checked
-            then store_module_to_cache env fn (fst tcmod) tcmod_iface_opt mii;
-            tcmod, env, None
+        let tcmod, tcmod_iface_opt, mii, env = tc_source_file () in
+        if FStar.Errors.get_err_count() = 0
+        && (Options.lax()  //we'll write out a .checked.lax file
+            || Options.should_verify (fst tcmod).name.str) //we'll write out a .checked file
+        //but we will not write out a .checked file for an unverified dependence
+        //of some file that should be checked
+        then store_module_to_cache env fn (fst tcmod) tcmod_iface_opt mii;
+        tcmod, env, None
+
       | Some (tcmod, tcmod_iface_opt, mii) ->
             if Options.dump_module tcmod.name.str
             then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
             let tcmod =
             if tcmod.is_interface then tcmod
             else
-                let use_interface_from_the_cache = Options.use_extracted_interfaces () && pre_fn = None &&
-                                                (not (Options.expose_interfaces ()  && Options.should_verify tcmod.name.str)) in
+                let use_interface_from_the_cache =
+                  Options.use_extracted_interfaces ()
+                  && pre_fn = None
+                  && not (Options.expose_interfaces ()
+                          && Options.should_verify tcmod.name.str)
+                in
                 if use_interface_from_the_cache then
                 if Option.isNone tcmod_iface_opt then
                 begin
@@ -341,7 +402,7 @@ let tc_one_file env delta pre_fn fn : (Syntax.modul * int) //checked module and 
             in
             let delta_env env =
                 let _, env =
-                with_tcenv env <|
+                with_dsenv_of_tcenv env <|
                 FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii (FStar.TypeChecker.Normalize.erase_universes env)
                 in
                 FStar.TypeChecker.Tc.load_checked_module env tcmod

@@ -162,32 +162,58 @@ let go _ =
         load_native_tactics ();
         init_warn_error();
 
-        if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
+        (* --dep: Just compute and print the transitive dependency graph;
+                  don't verify anything *)
+        if Options.dep() <> None
         then let _, deps = Parser.Dep.collect filenames in
              Parser.Dep.print deps
-        else if Options.use_extracted_interfaces () && (not (Options.expose_interfaces ())) && List.length filenames > 1 then
+
+        (* Input validation: should this go to process_args? *)
+                  don't verify anything *)
+        else if Options.use_extracted_interfaces ()
+             && (not (Options.expose_interfaces ()))
+             && List.length filenames > 1
+        then
           Errors.raise_error (Errors.Error_TooManyFiles,
-                              "Only one command line file is allowed if --use_extracted_interfaces is set, found %s" ^ (string_of_int (List.length filenames)))
+                              "Only one command line file is allowed if \
+                               --use_extracted_interfaces is set, \
+                               found %s" ^ (string_of_int (List.length filenames)))
                              Range.dummyRange
+
+        (* --ide: Interactive mode *)
         else if Options.interactive () then begin
           match filenames with
-          | [] ->
-            Errors. log_issue Range.dummyRange (Errors.Error_MissingFileName, "--ide: Name of current file missing in command line invocation\n"); exit 1
-          | _ :: _ :: _ ->
-            Errors. log_issue Range.dummyRange (Errors.Error_TooManyFiles, "--ide: Too many files in command line invocation\n"); exit 1
+          | [] -> (* input validation: move to process args? *)
+            Errors.log_issue
+              Range.dummyRange
+              (Errors.Error_MissingFileName,
+                "--ide: Name of current file missing in command line invocation\n");
+            exit 1
+          | _ :: _ :: _ -> (* input validation: move to process args? *)
+            Errors.log_issue
+              Range.dummyRange
+              (Errors.Error_TooManyFiles,
+                "--ide: Too many files in command line invocation\n");
+            exit 1
           | [filename] ->
             if Options.legacy_interactive () then
               FStar.Interactive.Legacy.interactive_mode filename
             else
               FStar.Interactive.Ide.interactive_mode filename
           end
-        else if Options.doc() then // --doc Generate Markdown documentation files
+
+        (* --fsdoc: Generate Markdown documentation files *)
+        else if Options.doc() then
           FStar.Fsdoc.Generator.generate filenames
+
+        (* --print: Emit files in canonical source syntax *)
         else if Options.indent () then
           if FStar.Platform.is_fstar_compiler_using_ocaml
           then FStar.Indent.generate filenames
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \
                          reindenting is not known to work yet with this version"
+
+        (*** Normal, batch mode compiler ***)
         else if List.length filenames >= 1 then begin //normal batch mode
           let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames in
           let fmods, env, delta_env = Universal.batch_mode_tc filenames dep_graph in
@@ -196,7 +222,8 @@ let go _ =
           codegen (fmods |> List.map fst, env, delta_env);
           report_errors module_names_and_times; //codegen errors
           finished_message module_names_and_times 0
-        end //end normal batch mode
+        end //end batch mode
+
         else
           Errors.raise_error (Errors.Error_MissingFileName, "No file provided") Range.dummyRange
 

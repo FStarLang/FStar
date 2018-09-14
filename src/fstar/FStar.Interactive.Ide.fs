@@ -268,7 +268,7 @@ let fresh_name_tracking_hooks () =
 let track_name_changes (env: env_t)
     : env_t * (env_t -> env_t * list<name_tracking_event>) =
   let set_hooks dshooks tchooks env =
-    let (), tcenv' = with_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
+    let (), tcenv' = with_dsenv_of_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
     TcEnv.set_tc_hooks tcenv' tchooks in
 
   let old_dshooks, old_tchooks = DsEnv.ds_hooks env.dsenv, TcEnv.tc_hooks env in
