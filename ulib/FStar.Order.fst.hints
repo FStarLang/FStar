@@ -120,7 +120,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "756dd714342472b0c5ad2ad40b62fcb0"
+      "5e0b6bcb9e63749dbde7bf7e71f40832"
     ],
     [
       "FStar.Order.compare_option",
@@ -250,7 +250,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9bb12be844181858c14fa68ae7d51489"
+      "5e71ce466204ee4bbfa3072f34349185"
     ],
     [
       "FStar.Order.compare_option",

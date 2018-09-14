@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "119128aa621c5bd54da8960e175199d0"
+      "e82513efc45e644b87153b95ef00e167"
     ],
     [
       "Ex05b.fib",
@@ -37,7 +37,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f7f1d31925eda0efd4bf3a09d3ea3efa"
+      "a0519c2f42fff1155377c627f20a84dc"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -86,7 +86,7 @@
         "typing_Ex05b.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "60ff5ef5298b4fbe27c49552b52d8526"
+      "d3e8bdf3a8f9c8b9336bb891167a5a75"
     ],
     [
       "Ex05b.fib_is_ok",
@@ -135,7 +135,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "931a9ed28522450bd94396f9d4071e70"
+      "d619cd2df2a0d22728b95dabbf2222d3"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -173,7 +173,7 @@
         "typing_Ex05b.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "d7964212ea2e801b01128ee283e22d6f"
+      "d3a94304e2f71839eb1228b177b31603"
     ],
     [
       "Ex05b.fibonacci",
@@ -191,7 +191,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "665c1d1b3502e220e905e850dd420d05"
+      "a1b40816e1a8ad1cd22c92a1579d6cdd"
     ],
     [
       "Ex05b.fib",
@@ -211,7 +211,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "afb1ed616247425d0760b64608f99f66"
+      "4d1c03c7a232ea8a6bcfa4ab200f0345"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -242,7 +242,7 @@
         "typing_Ex05b.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "4be6c5121b13c53fbbc9aa2bda902d94"
+      "66408137acf5134bfc4ef672c7d4526a"
     ],
     [
       "Ex05b.fib_is_ok",
@@ -271,7 +271,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8f4fb76926401e5cc3630dcfceeed1ef"
+      "ce2b0ee1c2e192a7e97eb69f5bd6c1bb"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -297,7 +297,7 @@
         "typing_Ex05b.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "e84aec29e49e54c0bbd735fd322444a9"
+      "732dbb2f7a863213ffcb029d225b689f"
     ],
     [
       "Ex05b.fib_inner_aux_2",

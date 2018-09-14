@@ -560,7 +560,7 @@
         "typing_Prims.pow2", "well-founded-ordering-on-nat"
       ],
       0,
-      "7f76ee7a98e71b21d999a65e67aa5234"
+      "d4edb70ad22add4d7449c35a1845d5df"
     ],
     [
       "FStar.Math.Lemmas.pow2_le_compat",

@@ -52,7 +52,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "3bea516fb205be0ba6858aa2c282b785"
+      "315489c062a67228457ee4673f86f89a"
     ],
     [
       "SfLists.repeat",
@@ -71,7 +71,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f075af583d73ce55b8e8bc3171f50fd3"
+      "fc2b8576e21a777837a25eafadec7083"
     ],
     [
       "SfLists.app",
@@ -86,7 +86,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "6f1349a2856e89329bebeb8818bd9c8b"
+      "85b399f516b4375b394a0df17b5ed96e"
     ],
     [
       "SfLists.test_app1",
@@ -433,7 +433,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "e1d494c080eaebb56c8073c39bf352ab"
+      "4ce0251a51cf1114d3cc41d6afdac66f"
     ],
     [
       "SfLists.rev",
@@ -448,7 +448,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "cf7de0b507ddba3bbe66628fe748708f"
+      "0af6355463d5ec359fc6782b744a6b12"
     ],
     [
       "SfLists.length_snoc",
@@ -590,7 +590,7 @@
         "typing_SfLists.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "29c63f14f3659a2d2cca48156503ecd8"
+      "77fb5ae746d87e33891a2fbc738aa57b"
     ],
     [
       "SfLists.foo3",
@@ -630,7 +630,7 @@
         "subterm_ordering_SfLists.Cons", "typing_tok_SfLists.Nil@tok"
       ],
       0,
-      "a2b442ff04883ec41a3d226da0a6998b"
+      "e59b8f3b8538cce68fa12f60a7bbf2f9"
     ],
     [
       "SfLists.foo4",
@@ -834,7 +834,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "05304bdf2ed8dc845cbf6375db3da455"
+      "8e72753d59d60e081eefaf2cb48ff57e"
     ],
     [
       "SfLists.app_cons",
@@ -962,7 +962,7 @@
         "subterm_ordering_SfLists.Cons", "typing_tok_SfLists.Nil@tok"
       ],
       0,
-      "2c06f508272d3cd53f221a2c7b89750a"
+      "f23fe939105bc3cd55d12c2f5636f1e3"
     ],
     [
       "SfLists.forallb",
@@ -977,7 +977,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "6f734019eac1d0f25c26930c3e665fad"
+      "3b46eae71f7d4b3d25263f4955fbb14d"
     ],
     [
       "SfLists.existsb",
@@ -992,7 +992,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "4efa0b541ff022c0202dab4a8727ffeb"
+      "36e9f6477fa466b9de6e80417b8e2eee"
     ],
     [
       "SfLists.existsb_existsb'",
@@ -1086,7 +1086,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "6cef2008fab48a1a5f61962035e8278f"
+      "5ceea63746b1acb2206f0a7ac2018bbd"
     ],
     [
       "SfLists.repeat",
@@ -1104,7 +1104,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8480ba5a18b62a47e0f7e27b5905aa82"
+      "f53848b0adc6ead2e7cc13a748b53cca"
     ],
     [
       "SfLists.app",
@@ -1119,7 +1119,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "0f32f2185a11f48289e352baf65f60c6"
+      "6fe058520cb16f657b1bd0c87e23fc64"
     ],
     [
       "SfLists.test_app1",
@@ -1264,7 +1264,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "5f85b3d665e0b7bd6ed9f6d771884714"
+      "0eaa8448a0698e71401e04e1665e1ff8"
     ],
     [
       "SfLists.rev",
@@ -1279,7 +1279,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "2757424110a8a868bdd8b2d68f2b5849"
+      "e261477ca03775522399fb3bb468b3d9"
     ],
     [
       "SfLists.length_snoc",
@@ -1358,7 +1358,7 @@
         "typing_SfLists.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "c0f90043de867f668b0f5894b8ecec8f"
+      "6761a4f68f2f1c5cdf3c81630e2d0dfa"
     ],
     [
       "SfLists.foo3",
@@ -1386,7 +1386,7 @@
         "subterm_ordering_SfLists.Cons", "typing_tok_SfLists.Nil@tok"
       ],
       0,
-      "6e80d399abb90e1b3299991dd8142a75"
+      "3c280d6eec1d0f98286cf7e2524daf66"
     ],
     [
       "SfLists.foo4",
@@ -1476,7 +1476,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "85cfec85782b2f252465a809569d06ad"
+      "e05af28ea432ff784d812bcb0edf7d28"
     ],
     [
       "SfLists.app_cons",
@@ -1527,7 +1527,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "0f268631c181e19a6e6d80982ba596ca"
+      "01a9b5dcbef2c388b2e51efb72ac97f9"
     ],
     [
       "SfLists.existsb",
@@ -1542,7 +1542,7 @@
         "subterm_ordering_SfLists.Cons"
       ],
       0,
-      "19720633b0af6d14f24ac3ea82a3e998"
+      "b7d1321707580a9a83a1468c8d69dce1"
     ],
     [
       "SfLists.existsb_existsb'",

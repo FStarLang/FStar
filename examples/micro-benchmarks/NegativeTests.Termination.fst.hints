@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6380aacd586fe7083238eec168b02575"
+      "4bbb07639eb23f1c7c0fbd46bf1f9f85"
     ],
     [
       "NegativeTests.Termination.snat",
@@ -56,7 +56,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "706c917638143d70efedd6959fd4cf0a"
+      "d5592c0b26124e694c38d9b4779c53cc"
     ],
     [
       "NegativeTests.Termination.snat",
