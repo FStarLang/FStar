@@ -919,7 +919,7 @@
         "subterm_ordering_Ex11a.Cons"
       ],
       0,
-      "1e8aad52c685464c7094651fa06fd963"
+      "ab5f42f446164bcb021818544508937c"
     ],
     [
       "Ex11a.lemma_mem_rid",
@@ -1373,7 +1373,7 @@
         "subterm_ordering_Ex11a.Cons"
       ],
       0,
-      "4836912d752681592062b3a1e0d93c35"
+      "638036cb02a8b0c84c13cfeb5c90b9c3"
     ],
     [
       "Ex11a.lemma_bots_tl_disjoint",

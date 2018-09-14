@@ -25,7 +25,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "57679fc7b06294d6b8447b2cc646cefb"
+      "011c63ea336c63c6b62581f64bfb90f9"
     ],
     [
       "Normalization.test2",
@@ -82,7 +82,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "95759195b1557ced6b69638dd274f30c"
+      "f5eedf8f69d119f5f1ad4acc0ea08f62"
     ],
     [
       "Normalization.pow2_values",

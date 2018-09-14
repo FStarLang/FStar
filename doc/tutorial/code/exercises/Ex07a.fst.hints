@@ -193,7 +193,7 @@
         "subterm_ordering_Ex07a.EIf"
       ],
       0,
-      "a0cc790757619071dcdf4963262d51d8"
+      "261b3a5152fa224e2a5ffcd55abbbe9c"
     ],
     [
       "Ex07a.step",
@@ -213,7 +213,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "e1c90ca1d6083c5903bcaacfea40424f"
+      "e8e76e2b0bb70552cc952660a5a22783"
     ],
     [
       "Ex07a.extend",
@@ -248,7 +248,7 @@
         "typing_tok_Ex07a.TBool@tok"
       ],
       0,
-      "c5181f3c89df5d82f62a65463afc3bba"
+      "9a1e1ac6cca98b93201a82212e556752"
     ],
     [
       "Ex07a.progress",
@@ -329,7 +329,7 @@
         "subterm_ordering_Ex07a.EApp", "subterm_ordering_Ex07a.EIf"
       ],
       0,
-      "074e6de73cb96ac7980d92228a83d3f2"
+      "434fc1161c9303a749b5bc975eee68cf"
     ],
     [
       "Ex07a.free_in_context",
@@ -394,7 +394,7 @@
         "typing_tok_Ex07a.TBool@tok"
       ],
       0,
-      "f75db1287ae0bef52f47201997cb3cb9"
+      "ebb788d8ea72d3355a74d7badaee19a6"
     ],
     [
       "Ex07a.typable_empty_closed",
@@ -490,7 +490,7 @@
         "typing_Ex07a.typing", "typing_tok_Ex07a.TBool@tok", "unit_typing"
       ],
       0,
-      "5a956b80cc6857dd23061637eeb7a37d"
+      "fc1d10bbbe8237b5e784d81c60eceda9"
     ],
     [
       "Ex07a.typing_extensional",
@@ -827,7 +827,7 @@
         "subterm_ordering_Ex07a.EApp", "subterm_ordering_Ex07a.EIf"
       ],
       0,
-      "e9aa2a1e7cbd9143f7a9695c9ae872c7"
+      "146ee7030b8cfc32265ee46fd2d7e141"
     ],
     [
       "Ex07a.step",
@@ -847,7 +847,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "0ea6c00bcd0fb943f0ac5547d3b304fe"
+      "c5c3c0d2909d392158aa48f9ac070707"
     ],
     [
       "Ex07a.extend",
@@ -882,7 +882,7 @@
         "typing_tok_Ex07a.TBool@tok"
       ],
       0,
-      "8a4542abd0385155bacd8f88efc0ad7a"
+      "98b607506577b3eee92701f91fa400a0"
     ],
     [
       "Ex07a.appears_free_in",
@@ -901,7 +901,7 @@
         "subterm_ordering_Ex07a.EApp", "subterm_ordering_Ex07a.EIf"
       ],
       0,
-      "835939097132c681be99523ccb9ed6b2"
+      "247d88439ddbf42e45f5b1b6201c9ecb"
     ],
     [
       "Ex07a.equal",

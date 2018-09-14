@@ -40,7 +40,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "32263e03d873bb69c5de856301aeea6e"
+      "afec08c144cd802cb2499375687d90e7"
     ],
     [
       "UnionFind.Forest.uf_forest",
@@ -156,7 +156,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3a7765837176f263d6321fe0077fc0cc"
+      "935373f2907045492a8f09d6f86c99d5"
     ],
     [
       "UnionFind.Forest.uf_forest",

@@ -229,7 +229,7 @@
         "subterm_ordering_SfBasic.S", "typing_SfBasic.__proj__S__item___0"
       ],
       0,
-      "deb7c6532ff56eaf381e73f0f47d9dfe"
+      "8d0b17e00b9b60dd491bb9ac2d81e7c7"
     ],
     [
       "SfBasic.test_oddb1",
@@ -301,7 +301,7 @@
         "fuel_guarded_inversion_SfBasic.nat", "subterm_ordering_SfBasic.S"
       ],
       0,
-      "01a58ecd4189dbd44baed2990aa51b31"
+      "b2bb140f5cb44dbafacbbc48c4e19396"
     ],
     [
       "SfBasic.mult",
@@ -315,7 +315,7 @@
         "fuel_guarded_inversion_SfBasic.nat", "subterm_ordering_SfBasic.S"
       ],
       0,
-      "4230a9c7c231e4c945ddd03f9935b0b5"
+      "52ca2387a34ca7ab81a08a1f6c6dbbbb"
     ],
     [
       "SfBasic.test_mult1",
@@ -364,7 +364,7 @@
         "subterm_ordering_SfBasic.S", "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "7a6777beead01839d544a0118ef97594"
+      "a39adae0e7c05f793996e83fbfd57c23"
     ],
     [
       "SfBasic.beq_nat",
@@ -381,7 +381,7 @@
         "subterm_ordering_SfBasic.S", "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "5ee0308533fcd6bd40e1a6eae4945af6"
+      "50ba1a96576455fdb31eaafc029e9596"
     ],
     [
       "SfBasic.ble_nat",
@@ -402,7 +402,7 @@
         "subterm_ordering_SfBasic.S", "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "1604773cfce5e6980d86191fddc05492"
+      "29150f2cdf5e8c432b92be639d6865e2"
     ],
     [
       "SfBasic.test_ble_nat1",
@@ -874,7 +874,7 @@
         "subterm_ordering_SfBasic.S", "typing_SfBasic.__proj__S__item___0"
       ],
       0,
-      "2465560e9a341daafcaa97fcc0a882b3"
+      "a5ff3ef464d81c4e37eab69f8bd16953"
     ],
     [
       "SfBasic.test_oddb1",
@@ -906,7 +906,7 @@
         "fuel_guarded_inversion_SfBasic.nat", "subterm_ordering_SfBasic.S"
       ],
       0,
-      "9b3269731fe21ff04a3a18457cfbd0d5"
+      "8e5e5bc868c82e387e031a4e0213781f"
     ],
     [
       "SfBasic.mult",
@@ -920,7 +920,7 @@
         "fuel_guarded_inversion_SfBasic.nat", "subterm_ordering_SfBasic.S"
       ],
       0,
-      "43d0ec7e34690806020d3c7f19b3a666"
+      "b83fd4f52b52c613ea6ec704cc17b15c"
     ],
     [
       "SfBasic.test_mult1",
@@ -951,7 +951,7 @@
         "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "a351d0de11f0a3ca0876963fb65472d4"
+      "bfe608bafa18e8a05501d840e83ca8b7"
     ],
     [
       "SfBasic.beq_nat",
@@ -967,7 +967,7 @@
         "subterm_ordering_SfBasic.S", "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "01cca037cc56cb64420bb36a027f480e"
+      "84eb1506ab920908a6de91996956322d"
     ],
     [
       "SfBasic.ble_nat",
@@ -989,7 +989,7 @@
         "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "b832c3a3dc24d3b4796528a2bf50dd7d"
+      "2adc244eeef837b2493125ce39ffe499"
     ],
     [
       "SfBasic.test_ble_nat1",
