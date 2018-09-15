@@ -1083,8 +1083,7 @@ let (try_lookup_free_var :
                                fuel
                               in
                            FStar_All.pipe_left
-                             (fun _0_16  ->
-                                FStar_Pervasives_Native.Some _0_16)
+                             (fun _0_1  -> FStar_Pervasives_Native.Some _0_1)
                              uu____3526
                          else FStar_Pervasives_Native.Some t
                      | uu____3531 -> FStar_Pervasives_Native.Some t)

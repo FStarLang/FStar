@@ -2385,7 +2385,7 @@ and (readback :
                       let uu____7225 = readback cfg x1  in (uu____7225, q))
                args
               in
-           let apply tm =
+           let apply1 tm =
              match args1 with
              | [] -> tm
              | uu____7244 -> FStar_Syntax_Util.mk_app tm args1  in
@@ -2399,13 +2399,13 @@ and (readback :
                   FStar_Syntax_Syntax.mk_Tm_uinst uu____7258
                     (FStar_List.rev us)
                    in
-                apply uu____7255
+                apply1 uu____7255
             | [] ->
                 let uu____7259 =
                   FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar fv)
                     FStar_Pervasives_Native.None FStar_Range.dummyRange
                    in
-                apply uu____7259)
+                apply1 uu____7259)
        | FStar_TypeChecker_NBETerm.FV (fv,us,args) ->
            let args1 =
              map_rev
@@ -2415,7 +2415,7 @@ and (readback :
                       let uu____7311 = readback cfg x1  in (uu____7311, q))
                args
               in
-           let apply tm =
+           let apply1 tm =
              match args1 with
              | [] -> tm
              | uu____7330 -> FStar_Syntax_Util.mk_app tm args1  in
@@ -2429,13 +2429,13 @@ and (readback :
                   FStar_Syntax_Syntax.mk_Tm_uinst uu____7344
                     (FStar_List.rev us)
                    in
-                apply uu____7341
+                apply1 uu____7341
             | [] ->
                 let uu____7345 =
                   FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar fv)
                     FStar_Pervasives_Native.None FStar_Range.dummyRange
                    in
-                apply uu____7345)
+                apply1 uu____7345)
        | FStar_TypeChecker_NBETerm.Accu (FStar_TypeChecker_NBETerm.Var bv,[])
            -> FStar_Syntax_Syntax.bv_to_name bv
        | FStar_TypeChecker_NBETerm.Accu (FStar_TypeChecker_NBETerm.Var bv,ts)

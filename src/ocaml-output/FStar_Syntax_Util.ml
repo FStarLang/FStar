@@ -2068,7 +2068,7 @@ let (close_univs_and_mk_letbinding :
                         let universes =
                           FStar_All.pipe_right univ_vars
                             (FStar_List.map
-                               (fun _0_4  -> FStar_Syntax_Syntax.U_name _0_4))
+                               (fun _0_1  -> FStar_Syntax_Syntax.U_name _0_1))
                            in
                         let inst1 =
                           FStar_All.pipe_right fvs
@@ -2235,7 +2235,7 @@ let (type_u :
   fun uu____7682  ->
     let u =
       let uu____7688 = FStar_Syntax_Unionfind.univ_fresh ()  in
-      FStar_All.pipe_left (fun _0_5  -> FStar_Syntax_Syntax.U_unif _0_5)
+      FStar_All.pipe_left (fun _0_2  -> FStar_Syntax_Syntax.U_unif _0_2)
         uu____7688
        in
     let uu____7705 =
@@ -3281,57 +3281,57 @@ let (destruct_typ_as_formula :
                    uu____12037.FStar_Syntax_Syntax.n  in
                  (uu____12036, (FStar_List.length args))  in
                (match uu____12031 with
-                | (FStar_Syntax_Syntax.Tm_fvar fv,_0_6) when
-                    (_0_6 = (Prims.parse_int "2")) &&
+                | (FStar_Syntax_Syntax.Tm_fvar fv,_0_3) when
+                    (_0_3 = (Prims.parse_int "2")) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_and_lid)
                     ->
                     FStar_Pervasives_Native.Some
                       (BaseConn (FStar_Parser_Const.and_lid, args))
-                | (FStar_Syntax_Syntax.Tm_fvar fv,_0_7) when
-                    (_0_7 = (Prims.parse_int "2")) &&
+                | (FStar_Syntax_Syntax.Tm_fvar fv,_0_4) when
+                    (_0_4 = (Prims.parse_int "2")) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_or_lid)
                     ->
                     FStar_Pervasives_Native.Some
                       (BaseConn (FStar_Parser_Const.or_lid, args))
+                | (FStar_Syntax_Syntax.Tm_fvar fv,_0_5) when
+                    (_0_5 = (Prims.parse_int "2")) &&
+                      (FStar_Syntax_Syntax.fv_eq_lid fv
+                         FStar_Parser_Const.c_eq2_lid)
+                    ->
+                    FStar_Pervasives_Native.Some
+                      (BaseConn (FStar_Parser_Const.c_eq2_lid, args))
+                | (FStar_Syntax_Syntax.Tm_fvar fv,_0_6) when
+                    (_0_6 = (Prims.parse_int "3")) &&
+                      (FStar_Syntax_Syntax.fv_eq_lid fv
+                         FStar_Parser_Const.c_eq2_lid)
+                    ->
+                    FStar_Pervasives_Native.Some
+                      (BaseConn (FStar_Parser_Const.c_eq2_lid, args))
+                | (FStar_Syntax_Syntax.Tm_fvar fv,_0_7) when
+                    (_0_7 = (Prims.parse_int "2")) &&
+                      (FStar_Syntax_Syntax.fv_eq_lid fv
+                         FStar_Parser_Const.c_eq3_lid)
+                    ->
+                    FStar_Pervasives_Native.Some
+                      (BaseConn (FStar_Parser_Const.c_eq3_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_0_8) when
-                    (_0_8 = (Prims.parse_int "2")) &&
+                    (_0_8 = (Prims.parse_int "4")) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
-                         FStar_Parser_Const.c_eq2_lid)
+                         FStar_Parser_Const.c_eq3_lid)
                     ->
                     FStar_Pervasives_Native.Some
-                      (BaseConn (FStar_Parser_Const.c_eq2_lid, args))
+                      (BaseConn (FStar_Parser_Const.c_eq3_lid, args))
                 | (FStar_Syntax_Syntax.Tm_fvar fv,_0_9) when
-                    (_0_9 = (Prims.parse_int "3")) &&
-                      (FStar_Syntax_Syntax.fv_eq_lid fv
-                         FStar_Parser_Const.c_eq2_lid)
-                    ->
-                    FStar_Pervasives_Native.Some
-                      (BaseConn (FStar_Parser_Const.c_eq2_lid, args))
-                | (FStar_Syntax_Syntax.Tm_fvar fv,_0_10) when
-                    (_0_10 = (Prims.parse_int "2")) &&
-                      (FStar_Syntax_Syntax.fv_eq_lid fv
-                         FStar_Parser_Const.c_eq3_lid)
-                    ->
-                    FStar_Pervasives_Native.Some
-                      (BaseConn (FStar_Parser_Const.c_eq3_lid, args))
-                | (FStar_Syntax_Syntax.Tm_fvar fv,_0_11) when
-                    (_0_11 = (Prims.parse_int "4")) &&
-                      (FStar_Syntax_Syntax.fv_eq_lid fv
-                         FStar_Parser_Const.c_eq3_lid)
-                    ->
-                    FStar_Pervasives_Native.Some
-                      (BaseConn (FStar_Parser_Const.c_eq3_lid, args))
-                | (FStar_Syntax_Syntax.Tm_fvar fv,_0_12) when
-                    (_0_12 = (Prims.parse_int "0")) &&
+                    (_0_9 = (Prims.parse_int "0")) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_true_lid)
                     ->
                     FStar_Pervasives_Native.Some
                       (BaseConn (FStar_Parser_Const.true_lid, args))
-                | (FStar_Syntax_Syntax.Tm_fvar fv,_0_13) when
-                    (_0_13 = (Prims.parse_int "0")) &&
+                | (FStar_Syntax_Syntax.Tm_fvar fv,_0_10) when
+                    (_0_10 = (Prims.parse_int "0")) &&
                       (FStar_Syntax_Syntax.fv_eq_lid fv
                          FStar_Parser_Const.c_false_lid)
                     ->
@@ -3430,7 +3430,7 @@ let (destruct_typ_as_formula :
           (match uu____12607 with
            | FStar_Pervasives_Native.Some (QAll (bs',pats',psi)) ->
                FStar_All.pipe_left
-                 (fun _0_14  -> FStar_Pervasives_Native.Some _0_14)
+                 (fun _0_11  -> FStar_Pervasives_Native.Some _0_11)
                  (QAll
                     ((FStar_List.append bs bs'),
                       (FStar_List.append pats pats'), psi))
@@ -3440,7 +3440,7 @@ let (destruct_typ_as_formula :
           (match uu____12629 with
            | FStar_Pervasives_Native.Some (QEx (bs',pats',psi)) ->
                FStar_All.pipe_left
-                 (fun _0_15  -> FStar_Pervasives_Native.Some _0_15)
+                 (fun _0_12  -> FStar_Pervasives_Native.Some _0_12)
                  (QEx
                     ((FStar_List.append bs bs'),
                       (FStar_List.append pats pats'), psi))
@@ -4252,7 +4252,7 @@ let (process_pragma :
       | FStar_Syntax_Syntax.ResetOptions sopt ->
           ((let uu____15796 = FStar_Options.restore_cmd_line_options false
                in
-            FStar_All.pipe_right uu____15796 (fun a229  -> ()));
+            FStar_All.pipe_right uu____15796 (fun a1  -> ()));
            (match sopt with
             | FStar_Pervasives_Native.None  -> ()
             | FStar_Pervasives_Native.Some s ->

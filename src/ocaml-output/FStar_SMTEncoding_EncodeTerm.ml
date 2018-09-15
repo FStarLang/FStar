@@ -3172,7 +3172,7 @@ and (encode_function_type_as_formula :
          in
       let lemma_pats p =
         let elts = list_elements1 p  in
-        let smt_pat_or t1 =
+        let smt_pat_or1 t1 =
           let uu____8139 =
             let uu____8156 = FStar_Syntax_Util.unmeta t1  in
             FStar_All.pipe_right uu____8156 FStar_Syntax_Util.head_and_args
@@ -3193,7 +3193,7 @@ and (encode_function_type_as_formula :
            in
         match elts with
         | t1::[] ->
-            let uu____8305 = smt_pat_or t1  in
+            let uu____8305 = smt_pat_or1 t1  in
             (match uu____8305 with
              | FStar_Pervasives_Native.Some e ->
                  let uu____8327 = list_elements1 e  in
