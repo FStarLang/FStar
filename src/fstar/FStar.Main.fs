@@ -59,59 +59,6 @@ let report_errors fmods =
     exit 1
   end
 
-(* Extraction to OCaml, F# or Kremlin *)
-let codegen (umods, env, delta) =
-  let opt = Options.codegen () in
-  if opt <> None then
-    let env = Universal.apply_delta_env env delta in
-    let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
-    let mllibs = List.flatten mllibs in
-    let ext = match opt with
-      | Some Options.FSharp -> ".fs"
-      | Some Options.OCaml
-      | Some Options.Plugin -> ".ml"
-      | Some Options.Kremlin -> ".krml"
-      | _ -> failwith "Unrecognized option"
-    in
-    match opt with
-    | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin ->
-        (* When bootstrapped in F#, this will use the old printer in
-           FStar.Extraction.ML.Code for both OCaml and F# extraction.
-           When bootstarpped in OCaml, this will use the old printer
-           for F# extraction and the new printer for OCaml extraction. *)
-        let outdir = Options.output_dir() in
-        List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
-    | Some Options.Kremlin ->
-        let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
-        let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
-        begin match programs with
-        | [ name, _ ] ->
-            save_value_to_file (Options.prepend_output_dir (name ^ ext)) bin
-        | _ ->
-            save_value_to_file (Options.prepend_output_dir "out.krml") bin
-        end
-   | _ -> failwith "Unrecognized option"
-
-//let gen_plugins (umods, env) =
-//    (* Extract module and its dependencies to OCaml *)
-//    let out_dir = match Options.output_dir() with
-//                  | None -> "."
-//                  | Some d -> d
-//    in
-//    let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
-//    let mllibs = List.flatten mllibs in
-//    List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;
-//
-//    (* Compile the modules which contain tactics into dynamically-linkable OCaml plugins *)
-//    let user_plugin_modules =
-//        umods |> List.collect (fun u ->
-//        let mname = FStar.Syntax.Syntax.mod_name u in
-//        if Options.should_extract (Ident.string_of_lid mname)
-//        then [FStar.Extraction.ML.Util.mlpath_of_lid mname |> FStar.Extraction.ML.Util.flatten_mlpath]
-//        else [])
-//    in
-//    Tactics.Load.compile_modules out_dir user_plugin_modules
-
 let load_native_tactics () =
     let modules_to_load = Options.load() |> List.map Ident.lid_of_str in
     let ml_module_name m =
@@ -169,7 +116,7 @@ let go _ =
              Parser.Dep.print deps
 
         (* Input validation: should this go to process_args? *)
-                  don't verify anything *)
+        (*          don't verify anything *)
         else if Options.use_extracted_interfaces ()
              && (not (Options.expose_interfaces ()))
              && List.length filenames > 1
@@ -216,11 +163,14 @@ let go _ =
         (*** Normal, batch mode compiler ***)
         else if List.length filenames >= 1 then begin //normal batch mode
           let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames in
-          let fmods, env, delta_env = Universal.batch_mode_tc filenames dep_graph in
-          let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
+          let tcrs, env, delta_env = Universal.batch_mode_tc filenames dep_graph in
+          let module_names_and_times =
+            tcrs
+            |> List.map (fun tcr ->
+               Universal.module_or_interface_name tcr.checked_module,
+               tcr.tc_time)
+          in
           report_errors module_names_and_times;
-          codegen (fmods |> List.map fst, env, delta_env);
-          report_errors module_names_and_times; //codegen errors
           finished_message module_names_and_times 0
         end //end batch mode
 

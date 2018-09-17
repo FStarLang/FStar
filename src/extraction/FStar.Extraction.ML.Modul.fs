@@ -525,6 +525,7 @@ let extract_sigelt_iface (g:env) (se:sigelt) : env * iface =
       else g, empty_iface
 
 let extract_iface (g:env_t) modul =
+    if Options.interactive() then g, empty_iface else
     let decls = modul.declarations in
     let iface = {empty_iface with iface_module_name=g.currentModule} in
     List.fold_left (fun (g, iface) se ->
@@ -532,6 +533,12 @@ let extract_iface (g:env_t) modul =
         g, iface_union iface iface')
         (g, iface)
         decls
+
+let extend_with_iface (g:env_t) (iface:iface) =
+     { g with
+         gamma=List.map Fv iface.iface_bindings@g.gamma;
+         tydefs=iface.iface_tydefs@g.tydefs;
+         type_names=iface.iface_type_names@g.type_names}
 
 (********************************************************************************************)
 (* Extract Implementations *)
@@ -831,6 +838,7 @@ let extract' (g:env) (m:modul) : env * list<mllib> =
         g, []
 
 let extract (g:env) (m:modul) =
+  if Options.interactive() then g, [] else
   if Options.debug_any ()
   then let msg = BU.format1 "Extracting module %s\n" (Print.lid_to_string m.name) in
        BU.measure_execution_time msg (fun () -> extract' g m)

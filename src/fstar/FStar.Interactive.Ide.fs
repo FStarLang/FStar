@@ -294,9 +294,8 @@ let string_of_repl_task = function
   | Noop -> "Noop {}"
 
 (** Like ``tc_one_file``, but only return the new environment **)
-let tc_one env intf_opt modf =
-  let _, env, delta = tc_one_file env None intf_opt modf in
-  let env = Universal.apply_delta_env env delta in
+let tc_one (env:env_t) intf_opt modf =
+  let _, env = tc_one_file_for_ide env intf_opt modf in
   env
 
 (** Load the file or files described by `task`.
