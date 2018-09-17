@@ -715,7 +715,7 @@ abstract let mm_token (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_p
   = witnessed (mm_m_predicate r p)
 
 let mm_witness (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
-  :ST unit (fun h0      -> HS.is_mm r /\ p h0 /\ stable_on_t_common r p)
+  :ST unit (fun h0      -> HS.is_mm r /\ p h0 /\ stable_on_t_base r p)
            (fun h0 _ h1 -> h0 == h1 /\ mm_token r p)
   = gst_recall (ref_contains_pred r);
     HS.lemma_rid_ctr_pred ();
