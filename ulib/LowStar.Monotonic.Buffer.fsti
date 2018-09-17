@@ -1787,7 +1787,7 @@ val witness_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
 
 val recall_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
   :HST.ST unit (requires (fun h0      -> (recallable b \/ live h0 b) /\ b `witnessed` p))
-               (ensures  (fun h0 _ h1 -> h0 == h1 /\ p (as_seq h0 b)))
+               (ensures  (fun h0 _ h1 -> h0 == h1 /\ live h0 b /\ p (as_seq h0 b)))
 
 (* End: API for general witness and recall *)
 
