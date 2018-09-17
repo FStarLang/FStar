@@ -1,6 +1,6 @@
 module Bug686
 
-type bidule (a:Type) : a -> Tot Type =
+type bidule : (a:Type) -> a -> Tot Type =
 | Chose : bidule unit ()
 
 // everything works fine if we ask for unification on f ($f)
