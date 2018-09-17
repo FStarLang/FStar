@@ -638,7 +638,7 @@ and (encode_binders :
       fun env  ->
         (let uu____1818 =
            FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
-             FStar_Options.Low
+             FStar_Options.Medium
             in
          if uu____1818
          then
@@ -2983,7 +2983,7 @@ and (encode_pat :
     fun pat  ->
       (let uu____7204 =
          FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
-           FStar_Options.Low
+           FStar_Options.Medium
           in
        if uu____7204
        then
