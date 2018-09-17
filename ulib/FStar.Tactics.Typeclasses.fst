@@ -109,7 +109,6 @@ let mk_class (nm:string) : Tac unit =
     T.iter (fun b ->
                   (* dump ("b = " ^ term_to_string (type_of_binder b)); *)
                   let s = name_of_binder b in
-                  let s = remove "__fname__" s in (* unmangle *)
                   (* dump ("b = " ^ s); *)
                   let ns = cur_module () in
                   let sfv = pack_fv (ns @ [s]) in
