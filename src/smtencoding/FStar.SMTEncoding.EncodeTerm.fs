@@ -316,7 +316,7 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                             * decls_t                       (* top-level decls to be emitted *)
                             * list<bv>)                     (* unmangled names *) =
 
-    if Env.debug env.tcenv Options.Low then BU.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
+    if Env.debug env.tcenv Options.Medium then BU.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
 
     let vars, guards, env, decls, names = bs |> List.fold_left (fun (vars, guards, env, decls, names) b ->
         let v, g, env, decls', n =
@@ -1073,7 +1073,7 @@ and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t
     mkLet' ([(scrsym,Term_sort), scr], match_tm) Range.dummyRange, decls
 
 and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
-    if Env.debug env.tcenv Options.Low then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
+    if Env.debug env.tcenv Options.Medium then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
     let vars, pat_term = FStar.TypeChecker.Util.decorated_pattern_as_term pat in
 
     let env, vars = vars |> List.fold_left (fun (env, vars) v ->
