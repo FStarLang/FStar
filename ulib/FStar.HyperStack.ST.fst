@@ -57,7 +57,7 @@ private abstract let next_ref_addr_in_a_region_pred (m1 m2:mem) :Type0
 (* Predicate that an unused ref whose addr is less than the next addr remains unallocated *)
 private abstract let unused_ref_next_addr_pred (m1 m2:mem) :Type0
   = forall (rid:HS.rid).{:pattern (m1 `contains_region` rid); (m1 `contains_region` rid)}
-                   (m1 `contains_region` rid /\ m2 `contains_region` rid) ==>
+                   (m1 `contains_region` rid) ==>
 		   (let h1 = Map.sel (HS.get_hmap m1) rid in
 		    (forall (a:Type0) (rel:preorder a) (r:HS.mreference a rel).{:pattern (r `HS.unused_in` m1)}
 		       (HS.frameOf r == rid /\ r `HS.unused_in` m1 /\ HS.as_addr r < Heap.next_addr h1) ==>
@@ -70,8 +70,8 @@ private abstract let mm_refs_pred (m1 m2:mem) :Type0
       if not (is_mm r) then True
       else
         if m1 `HS.contains` r then
-	  if m2 `HS.contains` r then rel (HS.sel m1 r) (HS.sel m2 r)
-	  else r `HS.unused_in` m2
+	  (m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)) \/
+	  (r `HS.unused_in` m2)
 	else True
 
 (* The preorder is the conjunction of above predicates *)
@@ -91,8 +91,13 @@ abstract let region_contains_pred (r:HS.rid) :mem_predicate
   = fun m -> (not (HS.is_eternal_color (color r))) \/ m `contains_region` r
 
 abstract let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :mem_predicate
-  = fun m -> rid_last_component (HS.frameOf r) < get_rid_ctr m /\
-          (HS.is_mm r \/ (not (m `contains_region` (HS.frameOf r)) \/ m `HS.contains` r))
+  = fun m ->
+    let rid = HS.frameOf r in
+    rid_last_component rid < get_rid_ctr m /\
+    (m `contains_region` rid ==> (
+     (HS.as_addr r < Heap.next_addr (Map.sel (HS.get_hmap m) rid)) /\
+     (HS.is_mm r ==> (m `HS.contains` r \/ r `HS.unused_in` m)) /\
+     ((not (HS.is_mm r)) ==> m `HS.contains` r)))
 
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
 
@@ -628,6 +633,7 @@ let witness_hsref (#a:Type) (#rel:preorder a) (r:HS.mreference a rel)
   :ST unit (fun h0      -> h0 `HS.contains` r)
            (fun h0 _ h1 -> h0 == h1 /\ witnessed (ref_contains_pred r))
   = HS.lemma_rid_ctr_pred ();
+    HS.lemma_next_addr_contained_refs_addr ();
     gst_witness (ref_contains_pred r)
 
 (** MR witness etc. **)
@@ -638,8 +644,6 @@ let witness_hsref (#a:Type) (#rel:preorder a) (r:HS.mreference a rel)
 type erid = r:rid{is_eternal_region r}
 
 type m_rref (r:erid) (a:Type) (b:preorder a) = x:mref a b{HS.frameOf x = r}
-
-unfold type stable_on_t_common (#a:Type0)
 
 unfold type stable_on_t (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
   = forall (h0 h1:mem).{:pattern (p h0); rel (HS.sel h0 r) (HS.sel h1 r)}
@@ -687,8 +691,19 @@ let testify_forall_region_contains_pred (#c:Type) (#p:(c -> rid))
     let s:squash (forall (x:c). witnessed (p' x)) = () in
     testify_forall s
 
+abstract private let mm_m_predicate (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
+  :mem_predicate
+  = fun m -> (m `HS.contains` r /\ p m) \/ r `HS.unused_in` m
 
+abstract let mm_token (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
+  = witnessed (mm_m_predicate r p)
 
+let mm_witness (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
+  :ST unit (fun h0      -> HS.is_mm r /\ h0 `HS.contains` r /\ p h0 /\ stable_on_t r p)
+           (fun h0 _ h1 -> h0 == h1 /\ mm_token r p)
+  = gst_recall (ref_contains_pred r);
+    
+    gst_witness (mm_m_predicate r p)
 
 type ex_rid = erid
 
