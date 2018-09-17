@@ -1246,7 +1246,7 @@ and (tc_maybe_toplevel_term :
         else FStar_TypeChecker_Env.set_range env e.FStar_Syntax_Syntax.pos
          in
       let top = FStar_Syntax_Subst.compress e  in
-      (let uu____2748 = FStar_TypeChecker_Env.debug env1 FStar_Options.Low
+      (let uu____2748 = FStar_TypeChecker_Env.debug env1 FStar_Options.Medium
           in
        if uu____2748
        then

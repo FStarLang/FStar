@@ -308,33 +308,21 @@ type prefix_match =
 let (__proj__Mkprefix_match__item__prefix :
   prefix_match -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee  ->
-    match projectee with
-    | { prefix = __fname__prefix; completion = __fname__completion;_} ->
-        __fname__prefix
+    match projectee with | { prefix = prefix1; completion;_} -> prefix1
   
 let (__proj__Mkprefix_match__item__completion : prefix_match -> Prims.string)
   =
   fun projectee  ->
-    match projectee with
-    | { prefix = __fname__prefix; completion = __fname__completion;_} ->
-        __fname__completion
+    match projectee with | { prefix = prefix1; completion;_} -> completion
   
 type path_elem = {
   imports: Prims.string Prims.list ;
   segment: prefix_match }
 let (__proj__Mkpath_elem__item__imports :
   path_elem -> Prims.string Prims.list) =
-  fun projectee  ->
-    match projectee with
-    | { imports = __fname__imports; segment = __fname__segment;_} ->
-        __fname__imports
-  
+  fun projectee  -> match projectee with | { imports; segment;_} -> imports 
 let (__proj__Mkpath_elem__item__segment : path_elem -> prefix_match) =
-  fun projectee  ->
-    match projectee with
-    | { imports = __fname__imports; segment = __fname__segment;_} ->
-        __fname__segment
-  
+  fun projectee  -> match projectee with | { imports; segment;_} -> segment 
 let (matched_prefix_of_path_elem :
   path_elem -> Prims.string FStar_Pervasives_Native.option) =
   fun elem  -> (elem.segment).prefix 
@@ -416,15 +404,11 @@ type 'a trie = {
   namespaces: 'a trie names }
 let __proj__Mktrie__item__bindings : 'a . 'a trie -> 'a names =
   fun projectee  ->
-    match projectee with
-    | { bindings = __fname__bindings; namespaces = __fname__namespaces;_} ->
-        __fname__bindings
+    match projectee with | { bindings; namespaces;_} -> bindings
   
 let __proj__Mktrie__item__namespaces : 'a . 'a trie -> 'a trie names =
   fun projectee  ->
-    match projectee with
-    | { bindings = __fname__bindings; namespaces = __fname__namespaces;_} ->
-        __fname__namespaces
+    match projectee with | { bindings; namespaces;_} -> namespaces
   
 let trie_empty : 'Auu____2230 . unit -> 'Auu____2230 trie =
   fun uu____2233  -> { bindings = []; namespaces = [] } 
@@ -765,16 +749,10 @@ type ns_info = {
   ns_name: Prims.string ;
   ns_loaded: Prims.bool }
 let (__proj__Mkns_info__item__ns_name : ns_info -> Prims.string) =
-  fun projectee  ->
-    match projectee with
-    | { ns_name = __fname__ns_name; ns_loaded = __fname__ns_loaded;_} ->
-        __fname__ns_name
-  
+  fun projectee  -> match projectee with | { ns_name; ns_loaded;_} -> ns_name 
 let (__proj__Mkns_info__item__ns_loaded : ns_info -> Prims.bool) =
   fun projectee  ->
-    match projectee with
-    | { ns_name = __fname__ns_name; ns_loaded = __fname__ns_loaded;_} ->
-        __fname__ns_loaded
+    match projectee with | { ns_name; ns_loaded;_} -> ns_loaded
   
 type mod_info =
   {
@@ -783,21 +761,15 @@ type mod_info =
   mod_loaded: Prims.bool }
 let (__proj__Mkmod_info__item__mod_name : mod_info -> Prims.string) =
   fun projectee  ->
-    match projectee with
-    | { mod_name = __fname__mod_name; mod_path = __fname__mod_path;
-        mod_loaded = __fname__mod_loaded;_} -> __fname__mod_name
+    match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_name
   
 let (__proj__Mkmod_info__item__mod_path : mod_info -> Prims.string) =
   fun projectee  ->
-    match projectee with
-    | { mod_name = __fname__mod_name; mod_path = __fname__mod_path;
-        mod_loaded = __fname__mod_loaded;_} -> __fname__mod_path
+    match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_path
   
 let (__proj__Mkmod_info__item__mod_loaded : mod_info -> Prims.bool) =
   fun projectee  ->
-    match projectee with
-    | { mod_name = __fname__mod_name; mod_path = __fname__mod_path;
-        mod_loaded = __fname__mod_loaded;_} -> __fname__mod_loaded
+    match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_loaded
   
 let (mod_name : mod_info -> Prims.string) = fun md  -> md.mod_name 
 type mod_symbol =
@@ -836,15 +808,11 @@ type table = {
   tbl_mods: mod_symbol trie }
 let (__proj__Mktable__item__tbl_lids : table -> lid_symbol trie) =
   fun projectee  ->
-    match projectee with
-    | { tbl_lids = __fname__tbl_lids; tbl_mods = __fname__tbl_mods;_} ->
-        __fname__tbl_lids
+    match projectee with | { tbl_lids; tbl_mods;_} -> tbl_lids
   
 let (__proj__Mktable__item__tbl_mods : table -> mod_symbol trie) =
   fun projectee  ->
-    match projectee with
-    | { tbl_lids = __fname__tbl_lids; tbl_mods = __fname__tbl_mods;_} ->
-        __fname__tbl_mods
+    match projectee with | { tbl_lids; tbl_mods;_} -> tbl_mods
   
 let (empty : table) =
   { tbl_lids = (trie_empty ()); tbl_mods = (trie_empty ()) } 
@@ -1005,28 +973,22 @@ let (__proj__Mkcompletion_result__item__completion_match_length :
   completion_result -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { completion_match_length = __fname__completion_match_length;
-        completion_candidate = __fname__completion_candidate;
-        completion_annotation = __fname__completion_annotation;_} ->
-        __fname__completion_match_length
+    | { completion_match_length; completion_candidate;
+        completion_annotation;_} -> completion_match_length
   
 let (__proj__Mkcompletion_result__item__completion_candidate :
   completion_result -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { completion_match_length = __fname__completion_match_length;
-        completion_candidate = __fname__completion_candidate;
-        completion_annotation = __fname__completion_annotation;_} ->
-        __fname__completion_candidate
+    | { completion_match_length; completion_candidate;
+        completion_annotation;_} -> completion_candidate
   
 let (__proj__Mkcompletion_result__item__completion_annotation :
   completion_result -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { completion_match_length = __fname__completion_match_length;
-        completion_candidate = __fname__completion_candidate;
-        completion_annotation = __fname__completion_annotation;_} ->
-        __fname__completion_annotation
+    | { completion_match_length; completion_candidate;
+        completion_annotation;_} -> completion_annotation
   
 let (json_of_completion_result : completion_result -> FStar_Util.json) =
   fun result  ->

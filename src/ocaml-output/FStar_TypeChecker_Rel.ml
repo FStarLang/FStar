@@ -41,12 +41,8 @@ let (__proj__Mkworklist__item__attempting :
   worklist -> FStar_TypeChecker_Common.probs) =
   fun projectee  ->
     match projectee with
-    | { attempting = __fname__attempting; wl_deferred = __fname__wl_deferred;
-        ctr = __fname__ctr; defer_ok = __fname__defer_ok;
-        smt_ok = __fname__smt_ok;
-        umax_heuristic_ok = __fname__umax_heuristic_ok;
-        tcenv = __fname__tcenv; wl_implicits = __fname__wl_implicits;_} ->
-        __fname__attempting
+    | { attempting; wl_deferred; ctr; defer_ok; smt_ok; umax_heuristic_ok;
+        tcenv; wl_implicits;_} -> attempting
   
 let (__proj__Mkworklist__item__wl_deferred :
   worklist ->
@@ -55,74 +51,46 @@ let (__proj__Mkworklist__item__wl_deferred :
   =
   fun projectee  ->
     match projectee with
-    | { attempting = __fname__attempting; wl_deferred = __fname__wl_deferred;
-        ctr = __fname__ctr; defer_ok = __fname__defer_ok;
-        smt_ok = __fname__smt_ok;
-        umax_heuristic_ok = __fname__umax_heuristic_ok;
-        tcenv = __fname__tcenv; wl_implicits = __fname__wl_implicits;_} ->
-        __fname__wl_deferred
+    | { attempting; wl_deferred; ctr; defer_ok; smt_ok; umax_heuristic_ok;
+        tcenv; wl_implicits;_} -> wl_deferred
   
 let (__proj__Mkworklist__item__ctr : worklist -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { attempting = __fname__attempting; wl_deferred = __fname__wl_deferred;
-        ctr = __fname__ctr; defer_ok = __fname__defer_ok;
-        smt_ok = __fname__smt_ok;
-        umax_heuristic_ok = __fname__umax_heuristic_ok;
-        tcenv = __fname__tcenv; wl_implicits = __fname__wl_implicits;_} ->
-        __fname__ctr
+    | { attempting; wl_deferred; ctr; defer_ok; smt_ok; umax_heuristic_ok;
+        tcenv; wl_implicits;_} -> ctr
   
 let (__proj__Mkworklist__item__defer_ok : worklist -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { attempting = __fname__attempting; wl_deferred = __fname__wl_deferred;
-        ctr = __fname__ctr; defer_ok = __fname__defer_ok;
-        smt_ok = __fname__smt_ok;
-        umax_heuristic_ok = __fname__umax_heuristic_ok;
-        tcenv = __fname__tcenv; wl_implicits = __fname__wl_implicits;_} ->
-        __fname__defer_ok
+    | { attempting; wl_deferred; ctr; defer_ok; smt_ok; umax_heuristic_ok;
+        tcenv; wl_implicits;_} -> defer_ok
   
 let (__proj__Mkworklist__item__smt_ok : worklist -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { attempting = __fname__attempting; wl_deferred = __fname__wl_deferred;
-        ctr = __fname__ctr; defer_ok = __fname__defer_ok;
-        smt_ok = __fname__smt_ok;
-        umax_heuristic_ok = __fname__umax_heuristic_ok;
-        tcenv = __fname__tcenv; wl_implicits = __fname__wl_implicits;_} ->
-        __fname__smt_ok
+    | { attempting; wl_deferred; ctr; defer_ok; smt_ok; umax_heuristic_ok;
+        tcenv; wl_implicits;_} -> smt_ok
   
 let (__proj__Mkworklist__item__umax_heuristic_ok : worklist -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { attempting = __fname__attempting; wl_deferred = __fname__wl_deferred;
-        ctr = __fname__ctr; defer_ok = __fname__defer_ok;
-        smt_ok = __fname__smt_ok;
-        umax_heuristic_ok = __fname__umax_heuristic_ok;
-        tcenv = __fname__tcenv; wl_implicits = __fname__wl_implicits;_} ->
-        __fname__umax_heuristic_ok
+    | { attempting; wl_deferred; ctr; defer_ok; smt_ok; umax_heuristic_ok;
+        tcenv; wl_implicits;_} -> umax_heuristic_ok
   
 let (__proj__Mkworklist__item__tcenv : worklist -> FStar_TypeChecker_Env.env)
   =
   fun projectee  ->
     match projectee with
-    | { attempting = __fname__attempting; wl_deferred = __fname__wl_deferred;
-        ctr = __fname__ctr; defer_ok = __fname__defer_ok;
-        smt_ok = __fname__smt_ok;
-        umax_heuristic_ok = __fname__umax_heuristic_ok;
-        tcenv = __fname__tcenv; wl_implicits = __fname__wl_implicits;_} ->
-        __fname__tcenv
+    | { attempting; wl_deferred; ctr; defer_ok; smt_ok; umax_heuristic_ok;
+        tcenv; wl_implicits;_} -> tcenv
   
 let (__proj__Mkworklist__item__wl_implicits :
   worklist -> FStar_TypeChecker_Env.implicits) =
   fun projectee  ->
     match projectee with
-    | { attempting = __fname__attempting; wl_deferred = __fname__wl_deferred;
-        ctr = __fname__ctr; defer_ok = __fname__defer_ok;
-        smt_ok = __fname__smt_ok;
-        umax_heuristic_ok = __fname__umax_heuristic_ok;
-        tcenv = __fname__tcenv; wl_implicits = __fname__wl_implicits;_} ->
-        __fname__wl_implicits
+    | { attempting; wl_deferred; ctr; defer_ok; smt_ok; umax_heuristic_ok;
+        tcenv; wl_implicits;_} -> wl_implicits
   
 let (new_uvar :
   Prims.string ->

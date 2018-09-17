@@ -1,33 +1,27 @@
 open Prims
 type env =
   {
-  env: FStar_TypeChecker_Env.env ;
+  tcenv: FStar_TypeChecker_Env.env ;
   subst: FStar_Syntax_Syntax.subst_elt Prims.list ;
   tc_const: FStar_Const.sconst -> FStar_Syntax_Syntax.typ }
-let (__proj__Mkenv__item__env : env -> FStar_TypeChecker_Env.env) =
+let (__proj__Mkenv__item__tcenv : env -> FStar_TypeChecker_Env.env) =
   fun projectee  ->
-    match projectee with
-    | { env = __fname__env; subst = __fname__subst;
-        tc_const = __fname__tc_const;_} -> __fname__env
+    match projectee with | { tcenv; subst = subst1; tc_const;_} -> tcenv
   
 let (__proj__Mkenv__item__subst :
   env -> FStar_Syntax_Syntax.subst_elt Prims.list) =
   fun projectee  ->
-    match projectee with
-    | { env = __fname__env; subst = __fname__subst;
-        tc_const = __fname__tc_const;_} -> __fname__subst
+    match projectee with | { tcenv; subst = subst1; tc_const;_} -> subst1
   
 let (__proj__Mkenv__item__tc_const :
   env -> FStar_Const.sconst -> FStar_Syntax_Syntax.typ) =
   fun projectee  ->
-    match projectee with
-    | { env = __fname__env; subst = __fname__subst;
-        tc_const = __fname__tc_const;_} -> __fname__tc_const
+    match projectee with | { tcenv; subst = subst1; tc_const;_} -> tc_const
   
 let (empty :
   FStar_TypeChecker_Env.env ->
     (FStar_Const.sconst -> FStar_Syntax_Syntax.typ) -> env)
-  = fun env  -> fun tc_const  -> { env; subst = []; tc_const } 
+  = fun env  -> fun tc_const  -> { tcenv = env; subst = []; tc_const } 
 let (gen_wps_for_free :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->
@@ -1505,13 +1499,13 @@ let (gen_wps_for_free :
                     (uu____3992, uu____4041)))))
   
 type env_ = env
-let (get_env : env -> FStar_TypeChecker_Env.env) = fun env  -> env.env 
+let (get_env : env -> FStar_TypeChecker_Env.env) = fun env  -> env.tcenv 
 let (set_env : env -> FStar_TypeChecker_Env.env -> env) =
   fun dmff_env  ->
     fun env'  ->
       let uu___359_4122 = dmff_env  in
       {
-        env = env';
+        tcenv = env';
         subst = (uu___359_4122.subst);
         tc_const = (uu___359_4122.tc_const)
       }
@@ -1823,7 +1817,7 @@ and (star_type' :
                 -> true
             | FStar_Syntax_Syntax.Tm_fvar fv ->
                 let uu____4941 =
-                  FStar_TypeChecker_Env.lookup_lid env.env
+                  FStar_TypeChecker_Env.lookup_lid env.tcenv
                     (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                    in
                 (match uu____4941 with
@@ -1837,7 +1831,7 @@ and (star_type' :
                            [FStar_TypeChecker_Env.EraseUniverses;
                            FStar_TypeChecker_Env.Inlining;
                            FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant] env.env t1
+                             FStar_Syntax_Syntax.delta_constant] env.tcenv t1
                           in
                        let uu____4967 =
                          let uu____4968 = FStar_Syntax_Subst.compress res  in
@@ -1903,9 +1897,9 @@ and (star_type' :
                let env1 =
                  let uu___363_5142 = env  in
                  let uu____5143 =
-                   FStar_TypeChecker_Env.push_binders env.env binders1  in
+                   FStar_TypeChecker_Env.push_binders env.tcenv binders1  in
                  {
-                   env = uu____5143;
+                   tcenv = uu____5143;
                    subst = (uu___363_5142.subst);
                    tc_const = (uu___363_5142.tc_const)
                  }  in
@@ -2186,7 +2180,7 @@ let rec (check :
                     &&
                     (let uu____6307 =
                        let uu____6308 =
-                         FStar_TypeChecker_Rel.teq env.env t1 t2  in
+                         FStar_TypeChecker_Rel.teq env.tcenv t1 t2  in
                        FStar_TypeChecker_Env.is_trivial uu____6308  in
                      Prims.op_Negation uu____6307)
                    in
@@ -2330,7 +2324,7 @@ and (infer :
           FStar_TypeChecker_Env.Eager_unfolding;
           FStar_TypeChecker_Env.UnfoldUntil
             FStar_Syntax_Syntax.delta_constant;
-          FStar_TypeChecker_Env.EraseUniverses] env.env
+          FStar_TypeChecker_Env.EraseUniverses] env.tcenv
          in
       let uu____6825 =
         let uu____6826 = FStar_Syntax_Subst.compress e  in
@@ -2379,9 +2373,9 @@ and (infer :
           let env1 =
             let uu___366_6924 = env  in
             let uu____6925 =
-              FStar_TypeChecker_Env.push_binders env.env binders1  in
+              FStar_TypeChecker_Env.push_binders env.tcenv binders1  in
             {
-              env = uu____6925;
+              tcenv = uu____6925;
               subst = (uu___366_6924.subst);
               tc_const = (uu___366_6924.tc_const)
             }  in
@@ -2443,7 +2437,7 @@ and (infer :
                                FStar_Syntax_Syntax.NT uu____7086  in
                              uu____7085 :: (env2.subst)  in
                            {
-                             env = (uu___369_7081.env);
+                             tcenv = (uu___369_7081.tcenv);
                              subst = uu____7082;
                              tc_const = (uu___369_7081.tc_const)
                            }  in
@@ -2634,7 +2628,8 @@ and (infer :
             FStar_Syntax_Syntax.fv_qual = uu____7428;_}
           ->
           let uu____7431 =
-            let uu____7436 = FStar_TypeChecker_Env.lookup_lid env.env lid  in
+            let uu____7436 = FStar_TypeChecker_Env.lookup_lid env.tcenv lid
+               in
             FStar_All.pipe_left FStar_Pervasives_Native.fst uu____7436  in
           (match uu____7431 with
            | (uu____7467,t) ->
@@ -3046,11 +3041,11 @@ and (mk_match :
                                let uu____10189 =
                                  FStar_Syntax_Syntax.pat_bvs pat  in
                                FStar_List.fold_left
-                                 FStar_TypeChecker_Env.push_bv env.env
+                                 FStar_TypeChecker_Env.push_bv env.tcenv
                                  uu____10189
                                 in
                              {
-                               env = uu____10188;
+                               tcenv = uu____10188;
                                subst = (uu___372_10187.subst);
                                tc_const = (uu___372_10187.tc_const)
                              }  in
@@ -3292,7 +3287,7 @@ and (mk_let :
                      let env1 =
                        let uu___374_11609 = env  in
                        let uu____11610 =
-                         FStar_TypeChecker_Env.push_bv env.env
+                         FStar_TypeChecker_Env.push_bv env.tcenv
                            (let uu___375_11612 = x  in
                             {
                               FStar_Syntax_Syntax.ppname =
@@ -3303,7 +3298,7 @@ and (mk_let :
                             })
                           in
                        {
-                         env = uu____11610;
+                         tcenv = uu____11610;
                          subst = (uu___374_11609.subst);
                          tc_const = (uu___374_11609.tc_const)
                        }  in
@@ -3405,7 +3400,7 @@ and (mk_let :
                      let env1 =
                        let uu___380_11700 = env  in
                        let uu____11701 =
-                         FStar_TypeChecker_Env.push_bv env.env
+                         FStar_TypeChecker_Env.push_bv env.tcenv
                            (let uu___381_11703 = x  in
                             {
                               FStar_Syntax_Syntax.ppname =
@@ -3416,7 +3411,7 @@ and (mk_let :
                             })
                           in
                        {
-                         env = uu____11701;
+                         tcenv = uu____11701;
                          subst = (uu___380_11700.subst);
                          tc_const = (uu___380_11700.tc_const)
                        }  in
@@ -3780,7 +3775,7 @@ let (n :
   
 let (star_type : env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) =
   fun env  ->
-    fun t  -> let uu____12738 = n env.env t  in star_type' env uu____12738
+    fun t  -> let uu____12738 = n env.tcenv t  in star_type' env uu____12738
   
 let (star_expr :
   env ->
@@ -3789,7 +3784,7 @@ let (star_expr :
         FStar_Pervasives_Native.tuple3)
   =
   fun env  ->
-    fun t  -> let uu____12757 = n env.env t  in check_n env uu____12757
+    fun t  -> let uu____12757 = n env.tcenv t  in check_n env uu____12757
   
 let (trans_F :
   env ->
@@ -3799,7 +3794,7 @@ let (trans_F :
   fun env  ->
     fun c  ->
       fun wp  ->
-        let uu____12773 = n env.env c  in
-        let uu____12774 = n env.env wp  in
+        let uu____12773 = n env.tcenv c  in
+        let uu____12774 = n env.tcenv wp  in
         trans_F_ env uu____12773 uu____12774
   

@@ -235,35 +235,27 @@ type errors =
 let (__proj__Mkerrors__item__error_reason : errors -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { error_reason = __fname__error_reason;
-        error_fuel = __fname__error_fuel; error_ifuel = __fname__error_ifuel;
-        error_hint = __fname__error_hint;
-        error_messages = __fname__error_messages;_} -> __fname__error_reason
+    | { error_reason; error_fuel; error_ifuel; error_hint; error_messages;_}
+        -> error_reason
   
 let (__proj__Mkerrors__item__error_fuel : errors -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { error_reason = __fname__error_reason;
-        error_fuel = __fname__error_fuel; error_ifuel = __fname__error_ifuel;
-        error_hint = __fname__error_hint;
-        error_messages = __fname__error_messages;_} -> __fname__error_fuel
+    | { error_reason; error_fuel; error_ifuel; error_hint; error_messages;_}
+        -> error_fuel
   
 let (__proj__Mkerrors__item__error_ifuel : errors -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { error_reason = __fname__error_reason;
-        error_fuel = __fname__error_fuel; error_ifuel = __fname__error_ifuel;
-        error_hint = __fname__error_hint;
-        error_messages = __fname__error_messages;_} -> __fname__error_ifuel
+    | { error_reason; error_fuel; error_ifuel; error_hint; error_messages;_}
+        -> error_ifuel
   
 let (__proj__Mkerrors__item__error_hint :
   errors -> Prims.string Prims.list FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { error_reason = __fname__error_reason;
-        error_fuel = __fname__error_fuel; error_ifuel = __fname__error_ifuel;
-        error_hint = __fname__error_hint;
-        error_messages = __fname__error_messages;_} -> __fname__error_hint
+    | { error_reason; error_fuel; error_ifuel; error_hint; error_messages;_}
+        -> error_hint
   
 let (__proj__Mkerrors__item__error_messages :
   errors ->
@@ -272,11 +264,8 @@ let (__proj__Mkerrors__item__error_messages :
   =
   fun projectee  ->
     match projectee with
-    | { error_reason = __fname__error_reason;
-        error_fuel = __fname__error_fuel; error_ifuel = __fname__error_ifuel;
-        error_hint = __fname__error_hint;
-        error_messages = __fname__error_messages;_} ->
-        __fname__error_messages
+    | { error_reason; error_fuel; error_ifuel; error_hint; error_messages;_}
+        -> error_messages
   
 let (error_to_short_string : errors -> Prims.string) =
   fun err  ->
@@ -305,196 +294,105 @@ let (__proj__Mkquery_settings__item__query_env :
   query_settings -> FStar_TypeChecker_Env.env) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_env
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_env
   
 let (__proj__Mkquery_settings__item__query_decl :
   query_settings -> FStar_SMTEncoding_Term.decl) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_decl
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_decl
   
 let (__proj__Mkquery_settings__item__query_name :
   query_settings -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_name
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_name
   
 let (__proj__Mkquery_settings__item__query_index :
   query_settings -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_index
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_index
   
 let (__proj__Mkquery_settings__item__query_range :
   query_settings -> FStar_Range.range) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_range
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_range
   
 let (__proj__Mkquery_settings__item__query_fuel :
   query_settings -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_fuel
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_fuel
   
 let (__proj__Mkquery_settings__item__query_ifuel :
   query_settings -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_ifuel
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_ifuel
   
 let (__proj__Mkquery_settings__item__query_rlimit :
   query_settings -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_rlimit
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_rlimit
   
 let (__proj__Mkquery_settings__item__query_hint :
   query_settings -> FStar_SMTEncoding_Z3.unsat_core) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_hint
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_hint
   
 let (__proj__Mkquery_settings__item__query_errors :
   query_settings -> errors Prims.list) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_errors
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_errors
   
 let (__proj__Mkquery_settings__item__query_all_labels :
   query_settings -> FStar_SMTEncoding_Term.error_labels) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_all_labels
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_all_labels
   
 let (__proj__Mkquery_settings__item__query_suffix :
   query_settings -> FStar_SMTEncoding_Term.decl Prims.list) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_suffix
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_suffix
   
 let (__proj__Mkquery_settings__item__query_hash :
   query_settings -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { query_env = __fname__query_env; query_decl = __fname__query_decl;
-        query_name = __fname__query_name; query_index = __fname__query_index;
-        query_range = __fname__query_range; query_fuel = __fname__query_fuel;
-        query_ifuel = __fname__query_ifuel;
-        query_rlimit = __fname__query_rlimit;
-        query_hint = __fname__query_hint;
-        query_errors = __fname__query_errors;
-        query_all_labels = __fname__query_all_labels;
-        query_suffix = __fname__query_suffix;
-        query_hash = __fname__query_hash;_} -> __fname__query_hash
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;_} -> query_hash
   
 let (with_fuel_and_diagnostics :
   query_settings ->

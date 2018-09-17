@@ -260,34 +260,26 @@ type interactive_state =
 let (__proj__Mkinteractive_state__item__chunk :
   interactive_state -> FStar_Util.string_builder) =
   fun projectee  ->
-    match projectee with
-    | { chunk = __fname__chunk; stdin = __fname__stdin;
-        buffer = __fname__buffer; log = __fname__log;_} -> __fname__chunk
+    match projectee with | { chunk; stdin; buffer; log = log1;_} -> chunk
   
 let (__proj__Mkinteractive_state__item__stdin :
   interactive_state ->
     FStar_Util.stream_reader FStar_Pervasives_Native.option FStar_ST.ref)
   =
   fun projectee  ->
-    match projectee with
-    | { chunk = __fname__chunk; stdin = __fname__stdin;
-        buffer = __fname__buffer; log = __fname__log;_} -> __fname__stdin
+    match projectee with | { chunk; stdin; buffer; log = log1;_} -> stdin
   
 let (__proj__Mkinteractive_state__item__buffer :
   interactive_state -> input_chunks Prims.list FStar_ST.ref) =
   fun projectee  ->
-    match projectee with
-    | { chunk = __fname__chunk; stdin = __fname__stdin;
-        buffer = __fname__buffer; log = __fname__log;_} -> __fname__buffer
+    match projectee with | { chunk; stdin; buffer; log = log1;_} -> buffer
   
 let (__proj__Mkinteractive_state__item__log :
   interactive_state ->
     FStar_Util.file_handle FStar_Pervasives_Native.option FStar_ST.ref)
   =
   fun projectee  ->
-    match projectee with
-    | { chunk = __fname__chunk; stdin = __fname__stdin;
-        buffer = __fname__buffer; log = __fname__log;_} -> __fname__log
+    match projectee with | { chunk; stdin; buffer; log = log1;_} -> log1
   
 let (the_interactive_state : interactive_state) =
   let uu____1002 = FStar_Util.new_string_builder ()  in

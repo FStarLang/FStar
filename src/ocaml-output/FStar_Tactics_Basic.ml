@@ -35,10 +35,7 @@ let __proj__Mktac__item__tac_f :
   'a .
     'a tac ->
       FStar_Tactics_Types.proofstate -> 'a FStar_Tactics_Result.__result
-  =
-  fun projectee  ->
-    match projectee with | { tac_f = __fname__tac_f;_} -> __fname__tac_f
-  
+  = fun projectee  -> match projectee with | { tac_f;_} -> tac_f 
 let mk_tac :
   'a .
     (FStar_Tactics_Types.proofstate -> 'a FStar_Tactics_Result.__result) ->
