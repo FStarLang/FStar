@@ -725,7 +725,6 @@ let witness_p (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate
            (fun h0 _ h1 -> h0 == h1 /\ token_p r p)
   = gst_recall (ref_contains_pred r);
     gst_recall (region_contains_pred (HS.frameOf r));
-    HS.lemma_rid_ctr_pred ();
     HS.lemma_next_addr_contained_refs_addr ();
     gst_witness (mem_rel_predicate r p)
 
