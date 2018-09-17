@@ -449,7 +449,7 @@ let with_comment printer tm tmrange origin =
       if range_before_pos crange print_pos
       then begin
         comment_stack := cs ;
-        comments_before_pos (acc ^^ comment) print_pos lookahead_pos
+        comments_before_pos (acc ^^ comment (* ^^ str origin*)) print_pos lookahead_pos
         // comments_before_pos acc ^^ str origin ^^ comment (* ^^ str (string_of_pos print_pos) ^^ str " " ^^ str (string_of_pos lookahead) *) print_pos lookahead_pos
       end
       else acc, range_before_pos crange lookahead_pos
@@ -730,27 +730,34 @@ and p_pragma = function
 and p_typars (bs: list<binder>): document = p_binders true bs
 
 and p_fsdocTypeDeclPairs kw (typedecl, fsdoc_opt) =
-  let decl, body = p_typeDecl (kw, fsdoc_opt) typedecl in
-  decl ^^ (body ())
+  let comm, decl, body, pre = p_typeDecl (kw, fsdoc_opt) typedecl in
+  if comm = empty then
+    decl ^^ pre body
+  else
+    group <| ifflat
+      (decl ^^ pre body ^/^ comm)
+      (decl ^^ nest 2 (hardline ^^ comm ^^ hardline ^^ body))
 
+(* [p_typeDecl pre decl] takes a prefix and a declaration and returns a comment associated with the *)
+(* declaration, the formatted declaration, its body, and a spacing function which should be applied to *)
+(* the body in order to correctly space it from the declaration if there is no comment present or if *)
+(* the comment can be inlined after the body *)
 and p_typeDecl pre = function
   | TyconAbstract (lid, bs, typ_opt) ->
-    let empty' : unit -> document = fun () -> empty in
-    p_typeDeclPrefix pre false lid bs typ_opt, empty'
+    empty, p_typeDeclPrefix pre false lid bs typ_opt, empty, id
   | TyconAbbrev (lid, bs, typ_opt, t) ->
-    let f () = jump2 (p_typ false false t) in
-    p_typeDeclPrefix pre true lid bs typ_opt, f
+    let comm, doc = p_typ_sep false false t in
+    comm, p_typeDeclPrefix pre true lid bs typ_opt, doc, jump2
   | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
     let p_recordFieldAndComments (ps: bool) (lid, t, doc_opt) =
       let comm, field = with_comment_sep (p_recordFieldDecl ps) (lid, t, doc_opt) (extend_to_end_of_line t.range) "!1" in
       let sep = if ps then semi else empty in
       inline_comment_or_above comm field sep
     in
-    let p_fields () =
-      space ^^ braces_with_nesting (
+    let p_fields = braces_with_nesting (
         separate_map_last hardline p_recordFieldAndComments record_field_decls)
     in
-    p_typeDeclPrefix pre true lid bs typ_opt, p_fields
+    empty, p_typeDeclPrefix pre true lid bs typ_opt, p_fields, (fun d -> space ^^ d)
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
     let p_constructorBranchAndComments (uid, t_opt, doc_opt, use_of) =
         let range = extend_to_end_of_line (dflt uid.idRange (map_opt t_opt (fun t -> t.range))) in
@@ -758,10 +765,10 @@ and p_typeDecl pre = function
         inline_comment_or_above comm ctor empty
     in
     (* Beware of side effects with comments printing *)
-    let datacon_doc () =
+    let datacon_doc =
         separate_map hardline p_constructorBranchAndComments ct_decls
     in
-    p_typeDeclPrefix pre true lid bs typ_opt, (fun () -> jump2 (datacon_doc ()))
+    empty, p_typeDeclPrefix pre true lid bs typ_opt, datacon_doc, jump2
 
 and p_typeDeclPrefix (kw, fsdoc_opt) eq lid bs typ_opt =
   let maybe_with_fsdoc cont =
@@ -1117,6 +1124,7 @@ and inline_comment_or_above comm doc sep =
       group (doc ^^ sep)
     else
       group <| ifflat (group (doc ^^ sep ^^ break1 ^^ comm)) (comm ^^ hardline ^^ doc ^^ sep)
+      // group <| ifflat (group (str "<* " ^^ doc ^^ sep ^^ break1 ^^ comm ^^ str " *>")) (str "<* " ^^comm ^^ hardline ^^ doc ^^ sep ^^ str " *>")
 
 and p_term (ps:bool) (pb:bool) (e:term) = match e.tm with
   | Seq (e1, e2) ->
@@ -1257,6 +1265,8 @@ and p_attrs_opt = function
     group (str "[@" ^/^ (separate_map break1 p_atomicTerm terms) ^/^ str "]")
 
 and p_typ ps pb e = with_comment (p_typ' ps pb) e e.range "!4"
+
+and p_typ_sep ps pb e = with_comment_sep (p_typ' ps pb) e e.range "!4"
 
 and p_typ' ps pb e = match e.tm with
   | QForall (bs, trigger, e1)
@@ -1591,7 +1601,12 @@ and p_projectionLHS e = match e.tm with
   | Paren e ->
     (* Adding required parentheses for tuple disambiguation in ToSyntax.fs --
      * see comment in parse.mly *)
-    soft_parens_with_nesting (p_term false false e)
+    let comm, t = p_term_sep false false e in
+    let doc = soft_parens_with_nesting t in
+    if comm = empty then
+      doc
+    else
+      comm ^^ hardline ^^ doc
   | _ when is_array e ->
     let es = extract_from_list e in
     surround 2 0 (lbracket ^^ bar) (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) es) (bar ^^ rbracket)
