@@ -642,21 +642,24 @@ let witness_hsref (#a:Type) (#rel:preorder a) (r:HS.mreference a rel)
 
 (** MR witness etc. **)
 
-(* states that p is preserved by any valid updates on r; note that h0 and h1 may differ arbitrarily elsewhere, hence proving stability usually requires that p depends only on r's content. 
- *)
-
 type erid = r:rid{is_eternal_region r}
 
 type m_rref (r:erid) (a:Type) (b:preorder a) = x:mref a b{HS.frameOf x = r}
 
-unfold type stable_on_t_base (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
+(* states that p is preserved by any valid updates on r; note that h0 and h1 may differ arbitrarily elsewhere, hence proving stability usually requires that p depends only on r's content. 
+ *)
+unfold type stable_on (#a:Type0) (#rel:preorder a) (p:mem_predicate) (r:mreference a rel)
   = forall (h0 h1:mem).{:pattern (p h0); rel (HS.sel h0 r) (HS.sel h1 r)}
                   (p h0 /\ rel (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
 
+[@(deprecated "FStar.HyperStack.ST.stable_on")]
 unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
                         (r:m_rref i a b) (p:mem_predicate)
-  = stable_on_t_base r p
+  = stable_on p r
 
+(*
+ * NOTE: If possible, consider using witness_p and recall_p below
+ *)
 let mr_witness (#r:erid) (#a:Type) (#b:preorder a)
                (m:m_rref r a b) (p:mem_predicate)
   :ST unit (requires (fun h0      -> p h0   /\ stable_on_t m p))
@@ -699,10 +702,13 @@ let testify_forall_region_contains_pred (#c:Type) (#p:(c -> rid))
     let s:squash (forall (x:c). witnessed (p' x)) = () in
     testify_forall s
 
+
+(****** Begin: preferred API for witnessing and recalling predicates ******)
+
 (*
  * Given a state predicate p, that is stable_on_t for r, this is the predicate that we witness w.r.t. mem_rel
  *)
-abstract private let mm_m_predicate (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
+abstract private let mem_rel_predicate (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
   :mem_predicate
   = let rid = HS.frameOf r in
     fun m ->
@@ -711,21 +717,27 @@ abstract private let mm_m_predicate (#a:Type0) (#rel:preorder a) (r:mreference a
       (m `contains_region` rid /\ not (m `HS.contains_ref_in_its_region` r) /\ HS.as_addr r < Heap.next_addr (HS.get_hmap m `Map.sel` rid) /\ r `HS.unused_in` m) \/  //the ref is deallocated, but its region is contained and next_addr > addr_of ref
       (not (m `contains_region` rid)))  //the region itself is not there
 
-abstract let mm_token (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
-  = witnessed (mm_m_predicate r p)
+abstract let token_p (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
+  = witnessed (mem_rel_predicate r p)
 
-let mm_witness (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
-  :ST unit (fun h0      -> HS.is_mm r /\ p h0 /\ stable_on_t_base r p)
-           (fun h0 _ h1 -> h0 == h1 /\ mm_token r p)
+let witness_p (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
+  :ST unit (fun h0      -> p h0 /\ p `stable_on` r)
+           (fun h0 _ h1 -> h0 == h1 /\ token_p r p)
   = gst_recall (ref_contains_pred r);
+    gst_recall (region_contains_pred (HS.frameOf r));
     HS.lemma_rid_ctr_pred ();
     HS.lemma_next_addr_contained_refs_addr ();
-    gst_witness (mm_m_predicate r p)
+    gst_witness (mem_rel_predicate r p)
 
-let mm_recall (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
-  :ST unit (fun h0      -> HS.is_mm r /\ h0 `HS.contains` r /\ mm_token r p)  //can't recall p unless ref is live
-           (fun h0 _ h1 -> h0 == h1 /\ p h0)
-  = gst_recall (mm_m_predicate r p)
+let recall_p (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
+  :ST unit (fun h0      -> ((is_eternal_region (HS.frameOf r) /\ not (HS.is_mm r)) \/ h0 `HS.contains` r) /\ token_p r p)
+           (fun h0 _ h1 -> h0 == h1 /\ h0 `HS.contains` r /\ p h0)
+  = gst_recall (ref_contains_pred r);
+    gst_recall (region_contains_pred (HS.frameOf r));
+    gst_recall (mem_rel_predicate r p)
+
+(****** End: preferred API for witnessing and recalling predicates ******)
+
 
 type ex_rid = erid
 
