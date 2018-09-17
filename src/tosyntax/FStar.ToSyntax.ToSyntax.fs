@@ -1789,6 +1789,17 @@ and trans_aqual env = function
   | Some (AST.Meta t) -> Some (S.Meta (desugar_term env t))
   | None -> None
 
+let binder_ident (b:binder) : option<ident> =
+  match b.b with
+  | TAnnotated (x, _)
+  | Annotated (x, _)
+  | TVariable x
+  | Variable x -> Some x
+  | NoName _ -> None
+
+let binder_idents (bs:list<binder>) : list<ident> =
+  List.collect (fun b -> FStar.Common.list_of_option (binder_ident b)) bs
+
 // FIXME: Would be nice to add auto-generated docs to these
 let mk_data_discriminators quals env datas =
     let quals = quals |> List.filter (function
@@ -1941,6 +1952,14 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type_level) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type_level in
       //let _ = BU.print_string (BU.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in
+
+      let names = id :: binder_idents parms in
+      List.iter (fun (f, _, _) ->
+          if BU.for_some (fun i -> ident_equals f i) names then
+              raise_error (Errors.Error_FieldShadow,
+                              BU.format1 "Field %s shadows the record's name or a parameter of it, please rename it" (string_of_ident f)) f.idRange)
+          fields;
+
       // FIXME: docs of individual fields are dropped
       TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, None, false)]), fields |> List.map (fun (x, _, _) -> x)
     | _ -> failwith "impossible" in
