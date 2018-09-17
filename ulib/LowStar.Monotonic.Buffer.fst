@@ -1023,6 +1023,7 @@ let witness_p #a #rrel #rel b p =
   | Null -> ()
   | Buffer _ content _ _ () ->
     lemma_stable_on_rel_is_stable_on_rrel b p;
+    //AR: TODO: the proof doesn't go through without this assertion, which should follow directly from the lemma call
     assert (HST.stable_on #(Seq.lseq a (U32.v (Buffer?.max_length b))) #(srel_to_lsrel (U32.v (Buffer?.max_length b)) rrel) (spred_as_mempred b p) (Buffer?.content b));
     HST.witness_p content (spred_as_mempred b p)
 
