@@ -649,9 +649,13 @@ type erid = r:rid{is_eternal_region r}
 
 type m_rref (r:erid) (a:Type) (b:preorder a) = x:mref a b{HS.frameOf x = r}
 
-unfold type stable_on_t (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
+unfold type stable_on_t_base (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
   = forall (h0 h1:mem).{:pattern (p h0); rel (HS.sel h0 r) (HS.sel h1 r)}
                   (p h0 /\ rel (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
+
+unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
+                        (r:m_rref i a b) (p:mem_predicate)
+  = stable_on_t_base r p
 
 let mr_witness (#r:erid) (#a:Type) (#b:preorder a)
                (m:m_rref r a b) (p:mem_predicate)
@@ -711,7 +715,7 @@ abstract let mm_token (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_p
   = witnessed (mm_m_predicate r p)
 
 let mm_witness (#a:Type0) (#rel:preorder a) (r:mreference a rel) (p:mem_predicate)
-  :ST unit (fun h0      -> HS.is_mm r /\ p h0 /\ stable_on_t r p)
+  :ST unit (fun h0      -> HS.is_mm r /\ p h0 /\ stable_on_t_common r p)
            (fun h0 _ h1 -> h0 == h1 /\ mm_token r p)
   = gst_recall (ref_contains_pred r);
     HS.lemma_rid_ctr_pred ();
