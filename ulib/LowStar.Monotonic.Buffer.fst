@@ -1003,12 +1003,12 @@ private let spred_as_mempred (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel re
 let witnessed #_ #_ #_ b p =
   match b with
   | Null -> p Seq.empty
-  | _    -> HST.witnessed (spred_as_mempred b p)
+  | Buffer _ content _ _ () -> HST.token_p content (spred_as_mempred b p)
 
 private let lemma_stable_on_rel_is_stable_on_rrel (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (p:spred a)
-  :Lemma (requires (Buffer? b /\ recallable b /\ stable_on p rel))
-         (ensures  (HST.stable_on_t #(frameOf b) #_ #_ (Buffer?.content b) (spred_as_mempred b p)))
+  :Lemma (requires (Buffer? b /\ stable_on p rel))
+         (ensures  (HST.stable_on (spred_as_mempred b p) (Buffer?.content b)))
   = let Buffer _ content _ _ () = b in
     let mp = spred_as_mempred b p in
     let aux (h0 h1:HS.mem) :Lemma ((mp h0 /\ rrel (HS.sel h0 content) (HS.sel h1 content)) ==> mp h1)
@@ -1018,17 +1018,18 @@ private let lemma_stable_on_rel_is_stable_on_rrel (#a:Type0) (#rrel #rel:srel a)
     in
     Classical.forall_intro_2 aux
 
-let witness_p #_ #_ #_ b p =
+let witness_p #a #rrel #rel b p =
   match b with
   | Null -> ()
   | Buffer _ content _ _ () ->
     lemma_stable_on_rel_is_stable_on_rrel b p;
-    HST.mr_witness #(HS.frameOf content) #_ #_ content (spred_as_mempred b p)
+    assert (HST.stable_on #(Seq.lseq a (U32.v (Buffer?.max_length b))) #(srel_to_lsrel (U32.v (Buffer?.max_length b)) rrel) (spred_as_mempred b p) (Buffer?.content b));
+    HST.witness_p content (spred_as_mempred b p)
 
 let recall_p #_ #_ #_ b p =
   match b with
   | Null -> ()
-  | Buffer _ _ _ _ () -> HST.testify (spred_as_mempred b p)
+  | Buffer _ content _ _ () -> HST.recall_p content (spred_as_mempred b p)
 
 let freeable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) =
   (not (g_is_null b)) /\

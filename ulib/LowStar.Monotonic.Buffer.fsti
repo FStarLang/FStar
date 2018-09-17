@@ -1782,11 +1782,11 @@ val witnessed (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a) 
  * This is not a fundamental limitation, but needs some tweaks to the underlying state model
  *)
 val witness_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
-  :HST.ST unit (requires (fun h0      -> recallable b /\ p (as_seq h0 b) /\ p `stable_on` rel))
+  :HST.ST unit (requires (fun h0      -> p (as_seq h0 b) /\ p `stable_on` rel))
                (ensures  (fun h0 _ h1 -> h0 == h1 /\ b `witnessed` p))
 
 val recall_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
-  :HST.ST unit (requires (fun h0      -> b `witnessed` p))
+  :HST.ST unit (requires (fun h0      -> (recallable b \/ live h0 b) /\ b `witnessed` p))
                (ensures  (fun h0 _ h1 -> h0 == h1 /\ p (as_seq h0 b)))
 
 (* End: API for general witness and recall *)
