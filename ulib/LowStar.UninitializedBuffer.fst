@@ -70,7 +70,7 @@ let uupd (#a:Type0) (b:ubuffer a) (i:U32.t) (v:a)
   = upd b i (Some v);
     witness_p b (ipred (U32.v i))
 
-unfold let lubuffer (a:Type0) (len:nat) = lmbuffer (option a) (initialization_preorder a) (initialization_preorder a) len
+unfold let lubuffer (a:Type0) (len:nat) = b:ubuffer a{length b == len}
 
 (*
  * No initializer
