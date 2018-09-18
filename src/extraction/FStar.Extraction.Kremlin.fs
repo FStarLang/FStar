@@ -706,7 +706,10 @@ and translate_expr env e: expr =
   (* All the distinguished combinators that correspond to allocation, either on
    * the stack, on the heap (GC'd or manually-managed). *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ e1; e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.create" || string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca") ->
+    when (string_of_mlpath p = "FStar.Buffer.create" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca" ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.ialloca" ||
+          string_of_mlpath p = "LowStar.UninitializedBuffer.ualloca") ->
       EBufCreate (Stack, translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
@@ -740,7 +743,11 @@ and translate_expr env e: expr =
       EBufCreate (ManuallyManaged, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.rcreate_mm" || string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc") ->
+    when (string_of_mlpath p = "FStar.Buffer.rcreate_mm" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.imalloc" ||
+          string_of_mlpath p = "LowStar.UninitializedBuffer.umalloc") ->
       EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
 
   (* Only manually-managed references and buffers can be freed. *)
