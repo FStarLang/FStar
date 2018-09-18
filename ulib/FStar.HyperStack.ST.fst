@@ -657,9 +657,7 @@ unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
                         (r:m_rref i a b) (p:mem_predicate)
   = stable_on p r
 
-(*
- * NOTE: If possible, consider using witness_p and recall_p below
- *)
+[@(deprecated "FStar.HyperStack.ST.witness_p")]
 let mr_witness (#r:erid) (#a:Type) (#b:preorder a)
                (m:m_rref r a b) (p:mem_predicate)
   :ST unit (requires (fun h0      -> p h0   /\ stable_on_t m p))
