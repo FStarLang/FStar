@@ -1,0 +1,41 @@
+[
+  "¿,¬óûÚjKs™Òî>ú\u0015",
+  [
+    [
+      "Bug1534.ok",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "1c6c445997cd68efd898cebfe9209766"
+    ],
+    [
+      "Bug1534.ok2",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "c5b940bfee37cc77a224a5f41361b83f"
+    ],
+    [
+      "Bug1534.ok3",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "f670655b9cc2d9a2a4c0a9abe0e0056a"
+    ],
+    [
+      "Bug1534.eq'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0b2cda9f5d75df95105ffb32bb822a06"
+    ]
+  ]
+]
