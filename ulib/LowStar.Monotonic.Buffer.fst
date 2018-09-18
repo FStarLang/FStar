@@ -961,6 +961,15 @@ let g_upd_seq #_ #_ #_ b s h =
     let Buffer _ content idx length () = b in
     HS.upd h (Buffer?.content b) (Seq.replace_subseq s0 (U32.v idx) (U32.v idx + U32.v length) s)
 
+let lemma_g_upd_with_same_seq #_ #_ #_ b h =
+  if Null? b then ()
+  else
+    let open FStar.UInt32 in
+    let Buffer _ content idx length () = b in
+    let s = HS.sel h content in
+    assert (Seq.equal (Seq.replace_subseq s (v idx) (v idx + v length) (Seq.slice s (v idx) (v idx + v length))) s);
+    HS.lemma_heap_equality_upd_with_sel h (Buffer?.content b)
+
 #push-options "--z3rlimit 48"
 let g_upd_seq_as_seq #_ #_ #_ b s h =
   let h' = g_upd_seq b s h in

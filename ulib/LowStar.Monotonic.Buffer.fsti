@@ -1709,6 +1709,9 @@ val g_upd_seq (#a:Type0) (#rrel #rel:srel a)
 	      (h:HS.mem{live h b /\ rel (as_seq h b) s})  (* TODO: we should not need this rel precondition *)
   :GTot HS.mem
 
+val lemma_g_upd_with_same_seq (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h:HS.mem)
+  :Lemma (requires (live h b)) (ensures (g_upd_seq b (as_seq h b) h == h))
+
 /// A lemma specifying `g_upd_seq` in terms of its effect on the
 /// buffer's underlying sequence
 

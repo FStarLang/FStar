@@ -148,6 +148,14 @@ let sel_upd (#b:_)
     if i=j then sel_upd1 vb i x h
     else sel_upd2 vb i j x h
 
+let lemma_upd_with_sel #b vb i h =
+  let v = get_view vb in
+  let prefix, as, suffix = split_at_i vb i h in
+  let s0 = B.as_seq h (as_buffer vb) in
+  let s1 = prefix `Seq.append` (View?.put v (View?.get v as) `Seq.append` suffix) in
+  assert (Seq.equal s0 s1);
+  B.lemma_g_upd_with_same_seq (as_buffer vb) h
+
 let upd_modifies #b h vb i x
   = let open FStar.Mul in
     let v = get_view vb in
