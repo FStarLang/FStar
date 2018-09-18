@@ -971,7 +971,7 @@
         "typing_Benton2004.while", "well-founded-ordering-on-nat"
       ],
       0,
-      "c04570f916d3e17da3092eae5968258a"
+      "ac10169e93bd84a3095e7670a07fe6b4"
     ],
     [
       "Benton2004.DDCC.d_whl",
@@ -1030,7 +1030,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "86930311d29ba2edf66eabe0cf7dd025"
+      "3ff0945d8b451f682d74a5b5d162ac7f"
     ],
     [
       "Benton2004.DDCC.d_su1",
@@ -1530,7 +1530,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "7e047551b605946922b4528d62975a9e"
+      "5673ad1a93c55b66cfae96c4259b74f1"
     ],
     [
       "Benton2004.DDCC.ns_f",

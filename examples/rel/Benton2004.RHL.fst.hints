@@ -792,7 +792,7 @@
         "typing_tok_Benton2004.RHL.Right@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "295eb296e9a0d3d1a86ed82f272f9e98"
+      "484407a43b422f749efa49a1a198b62c"
     ],
     [
       "Benton2004.RHL.holds_interp_flip",
@@ -958,7 +958,7 @@
         "typing_tok_Benton2004.RHL.Right@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "c3ff97c74ef0590d0a2949f9d3d6096e"
+      "6bfb50886ddc011066e22adb2d02b7eb"
     ],
     [
       "Benton2004.RHL.r_while",

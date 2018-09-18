@@ -3,12 +3,12 @@ let main : 'Auu____7 'Auu____8 . 'Auu____7 -> 'Auu____8 =
   fun argv  ->
     FStar_Util.print_string "Initializing ...\n";
     (try
-       (fun uu___472_20  ->
+       (fun uu___473_20  ->
           match () with
           | () ->
               (FStar_Main.setup_hooks ();
                (let uu____23 = FStar_Tests_Pars.init ()  in
-                FStar_All.pipe_right uu____23 (fun a239  -> ()));
+                FStar_All.pipe_right uu____23 (fun a1  -> ()));
                FStar_Tests_Norm.run_all ();
                (let uu____26 = FStar_Tests_Unif.run_all ()  in
                 if uu____26 then () else FStar_All.exit (Prims.parse_int "1"));

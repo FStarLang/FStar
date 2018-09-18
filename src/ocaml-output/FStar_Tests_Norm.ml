@@ -154,13 +154,13 @@ let (pred_nat :
       let uu____416 =
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_bvar
-             (let uu___472_421 = FStar_Tests_Util.x  in
+             (let uu___473_421 = FStar_Tests_Util.x  in
               {
                 FStar_Syntax_Syntax.ppname =
-                  (uu___472_421.FStar_Syntax_Syntax.ppname);
+                  (uu___473_421.FStar_Syntax_Syntax.ppname);
                 FStar_Syntax_Syntax.index = (Prims.parse_int "0");
                 FStar_Syntax_Syntax.sort =
-                  (uu___472_421.FStar_Syntax_Syntax.sort)
+                  (uu___473_421.FStar_Syntax_Syntax.sort)
               })) FStar_Pervasives_Native.None FStar_Range.dummyRange
          in
       (uu____358, FStar_Pervasives_Native.None, uu____416)  in
@@ -1435,7 +1435,7 @@ let run_either :
            FStar_Util.print1 "%s: ... \n\n" uu____3413);
           (let tcenv = FStar_Tests_Pars.init ()  in
            (let uu____3416 = FStar_Main.process_args ()  in
-            FStar_All.pipe_right uu____3416 (fun a236  -> ()));
+            FStar_All.pipe_right uu____3416 (fun a1  -> ()));
            (let x1 = normalizer tcenv r  in
             FStar_Options.init ();
             FStar_Options.set_option "print_universes"
@@ -1516,8 +1516,8 @@ let run_tests :
     FStar_Options.__set_unit_tests ();
     (let l =
        FStar_List.map
-         (fun uu___471_3598  ->
-            match uu___471_3598 with | (no,test,res) -> run1 no test res)
+         (fun uu___472_3598  ->
+            match uu___472_3598 with | (no,test,res) -> run1 no test res)
          tests
         in
      FStar_Options.__clear_unit_tests (); l)

@@ -320,6 +320,7 @@ type raw_error =
   | Fatal_FriendInterface
   | Error_CannotRedefineConst
   | Error_BadClassDecl
+  | Error_BadInductiveParam
 
 type flag =
   | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
@@ -648,6 +649,7 @@ let default_flags =
   (Fatal_FriendInterface                             , CFatal);
   (Error_CannotRedefineConst                         , CError);
   (Error_BadClassDecl                                , CError);
+  (Error_BadInductiveParam                           , CFatal);
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
   ]

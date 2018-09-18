@@ -4924,7 +4924,7 @@ let (build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env) =
                 if uu____19705
                 then
                   FStar_All.pipe_right (id_edge i)
-                    (fun _0_16  -> FStar_Pervasives_Native.Some _0_16)
+                    (fun _0_1  -> FStar_Pervasives_Native.Some _0_1)
                 else
                   FStar_All.pipe_right order1
                     (FStar_Util.find_opt
@@ -6322,7 +6322,7 @@ let (apply_guard : guard_t -> FStar_Syntax_Syntax.term -> guard_t) =
                 f.FStar_Syntax_Syntax.pos
                in
             FStar_All.pipe_left
-              (fun _0_17  -> FStar_TypeChecker_Common.NonTrivial _0_17)
+              (fun _0_2  -> FStar_TypeChecker_Common.NonTrivial _0_2)
               uu____22096
              in
           {

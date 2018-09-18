@@ -72,10 +72,10 @@ let fetch_eq_side () : Tac (term * term) =
 
 /// …and here's how you could use it:
 
-let _ =
-  assert_by_tactic (1 + 1 == 2)
-    (fun () -> let l, r = fetch_eq_side () in
-               print (term_to_string l ^ " / " ^ term_to_string r))
+(* let _ = *)
+(*   assert_by_tactic (1 + 1 == 2) *)
+(*     (fun () -> let l, r = fetch_eq_side () in *)
+(*                print (term_to_string l ^ " / " ^ term_to_string r)) *)
 
 /// This file defines pattern-matching primitives that let you write the same
 /// thing like this…
@@ -139,9 +139,6 @@ let exact_hyp (a: Type0) (h: binder) : Tac unit =
 (** Use a hypothesis h (of type a) to satisfy a goal at type a *)
 let exact_hyp' (h: binder): Tac unit =
   exact (pack (Tv_Var (bv_of_binder h)))
-
-let print_binder (b: binder) : Tac unit =
-  print (term_to_string (type_of_binder b))
 
 /// Pattern types
 /// =============
@@ -822,11 +819,11 @@ ml type of head is (FStar_Reflection_Types.term * FStar_Reflection_Types.term)
 (*     (fun () -> let l, r = fetch_eq_side' #int in *)
 (*                print (term_to_string l ^ " / " ^ term_to_string r)) *)
 
-let _ =
-  assert_by_tactic (1 + 1 == 2)
-    (gpm (fun (left right: int) (g: pm_goal (squash (left == right))) ->
-            let l, r = quote left, quote right in
-            print (term_to_string l ^ " / " ^ term_to_string r) <: Tac unit))
+(* let _ = *)
+(*   assert_by_tactic (1 + 1 == 2) *)
+(*     (gpm (fun (left right: int) (g: pm_goal (squash (left == right))) -> *)
+(*             let l, r = quote left, quote right in *)
+(*             print (term_to_string l ^ " / " ^ term_to_string r) <: Tac unit)) *)
 
 /// Commenting out the following example and comparing ``pm`` and ``gpm`` can be
 /// instructive:

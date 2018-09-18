@@ -22,7 +22,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "826799ecf856bcce2e48aba962e3636d"
+      "cd4eee23454431040a9ddcd3bffb8c4e"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_shr2",
@@ -48,7 +48,7 @@
         "true_interp"
       ],
       0,
-      "5a0f5542a6acc1abb5e4d6d294d3c323"
+      "df42c7b8ad2029728b2dcdd7bd1caf5b"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_shr2",
@@ -57,7 +57,7 @@
       0,
       [ "@query" ],
       0,
-      "dbd6cf6af44d37b739bb36ad04901011"
+      "498d5f53e4fe721fdbc2aceaec6cae17"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_shr4",
@@ -80,7 +80,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "986adfee7782ecbf8f62a5e093edb1fd"
+      "46c996214b8da7d853bd887d10e69ece"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_shr4",
@@ -106,7 +106,7 @@
         "true_interp"
       ],
       0,
-      "b32ed9e6e34c5720f56de2fa233def21"
+      "5a1e9b401601f074d1867969e67422eb"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_shr4",
@@ -115,7 +115,7 @@
       0,
       [ "@query" ],
       0,
-      "5021aad7d30dc1e3974a4ef836591e86"
+      "7239779f55578c1db6a406202eb5e70a"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_and_mod_n",
@@ -141,7 +141,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "8f1d264c804ae5cef1752fa6e13b30d7"
+      "7499bb4ebdad35ce26c972f2a58f0209"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_and_mod_n",
@@ -167,7 +167,7 @@
         "true_interp", "typing_FStar.UInt.fits"
       ],
       0,
-      "81eaf4d55c19d1e4b4735a2df0ba1762"
+      "884118f4314664ab8bd8af3bf69fec07"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_and_mod_n",
@@ -194,7 +194,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "92ada7afc64557adba91324a238779a2"
+      "a63c3a7ba7ff0f8e994edf7df6bd522f"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_and_mod_n",
@@ -223,7 +223,7 @@
         "token_correspondence_Prims.pow2.fuel_instrumented"
       ],
       0,
-      "4cbef4804360256075f345540ed7bdf5"
+      "89e62729a3c8b17949bf7688e99b4bc4"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_clear_lower_2",
@@ -249,7 +249,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "2010c7adea0deb2a1af29b16b7340fa1"
+      "3f9c1a2096876b968dbdaf9b3218eea3"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_clear_lower_2",
@@ -275,7 +275,7 @@
         "true_interp", "typing_FStar.UInt.fits"
       ],
       0,
-      "1a33dfbfa7c072f70bfc044ed3e7ad7f"
+      "e37b7462dc7a91e1790c64495e6a17d9"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_clear_lower_2",
@@ -304,7 +304,7 @@
         "refinement_interpretation_X64.Poly1305.Bitvectors_i_Tm_refine_d144b2a1ea1b55028b11139ffc12a372"
       ],
       0,
-      "8eb21a41b258a4bfe0a077648fda9c3f"
+      "6d837f82b3901d990320c6f971e4b340"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_and_constants",
@@ -328,7 +328,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "1a2e92dbcaa986b6982212e26266025a"
+      "0e8df67aff2d1b324874f98aee4b2886"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_and_constants",
@@ -358,7 +358,7 @@
         "true_interp", "typing_FStar.UInt.to_vec"
       ],
       0,
-      "e31f9e94ca0ed40c33133d690af4c57c"
+      "a3cb1f9c97d1349c063c110c385f1809"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_and_constants",
@@ -381,7 +381,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "72eab3ebc9f1631d503b7c9d54fa348b"
+      "e6fce8f638f9b5698f62211aa1c06a80"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_and_constants",
@@ -399,7 +399,7 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
       0,
-      "5da96608270838d20aba2f8bcf9142a5"
+      "b5faa445c23602d92ed94583afd5db11"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_poly_constants",
@@ -424,7 +424,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "e16ba21a86bfc4ffd944c357983082ea"
+      "295c8ed6b37ce6eb7d86ef613f84ec9c"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_poly_constants",
@@ -450,7 +450,7 @@
         "true_interp", "typing_FStar.UInt.fits"
       ],
       0,
-      "0957077fde85a5152fde61691459ba12"
+      "561eb7d1f5ff278af8fdc143306a62cd"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_poly_constants",
@@ -480,7 +480,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "8984210f8d5c87e7efe5fb5db6456654"
+      "3c79d836930c535b3c3aa32bebed9068"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_poly_constants",
@@ -507,7 +507,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "43a935237e75dab13222d59d445f56f1"
+      "88b4cc2b29f859ac88cd2f784f29bc6a"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_poly_constants",
@@ -516,7 +516,7 @@
       0,
       [ "@query" ],
       0,
-      "a56c997ecc0207217130c277890a0015"
+      "30331123bb3a085a5e3339e69c1b15aa"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_and_commutes",
@@ -525,7 +525,7 @@
       0,
       [ "@query", "true_interp" ],
       0,
-      "d06133d8fbc62b779c81644153ec316f"
+      "b19c3d5a350a89762cb911d91e18b9d9"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_and_commutes",
@@ -534,7 +534,7 @@
       0,
       [ "@query" ],
       0,
-      "971a8b598b7c2cf45105a0abc402252f"
+      "2c87e36563402f81da6ad76a71aeedd9"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants0",
@@ -561,7 +561,7 @@
         "typing_FStar.UInt.fits", "typing_Prims.pow2"
       ],
       0,
-      "d3167d0569503a6df809b72114ad8df4"
+      "4d6290250cc6ebe3dc6cf55ab191f9d6"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants0",
@@ -587,7 +587,7 @@
         "token_correspondence_Prims.pow2.fuel_instrumented", "true_interp"
       ],
       0,
-      "ce4e9c0f1b27a0a4d6cde4251590d14f"
+      "9df2e93e983cfe4e8a95bf1c7779a57d"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants0",
@@ -596,7 +596,7 @@
       0,
       [ "@query" ],
       0,
-      "a2bb73c1017b5cebe9ffd21341a376e4"
+      "f305a60ebfd123cf3c8162625d451310"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants0",
@@ -605,7 +605,7 @@
       0,
       [ "@query" ],
       0,
-      "3a1ca46243f23d80c45796eacf8b1478"
+      "470b50158b6bd76bdb7dad48165976e7"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants1",
@@ -630,7 +630,7 @@
         "token_correspondence_Prims.pow2.fuel_instrumented"
       ],
       0,
-      "9b2c176d608feceb8572dbd331df4c08"
+      "e4ee94276c1288a962a75fa9e116e3b3"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants1",
@@ -662,7 +662,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "064f555590a23a8d4182ee4c2914f0e4"
+      "25e4a762dddb6c00e240ae30db7f7c3c"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants1",
@@ -671,7 +671,7 @@
       0,
       [ "@query" ],
       0,
-      "11ab864532dd2cd7104addfe9888691b"
+      "195f2d46ae5af67ab72c13d7ef14eab4"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants1",
@@ -680,7 +680,7 @@
       0,
       [ "@query" ],
       0,
-      "45dab2a0830d6d2f74d2325dab52696b"
+      "dca87569a8f490e65e6003aab3847eab"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants2",
@@ -703,7 +703,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "8509b0d7d2cf22eacedb3aa3d80d9f98"
+      "a73c29b4dd88007de3ae6d611501c6b2"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants2",
@@ -727,7 +727,7 @@
         "true_interp", "typing_FStar.UInt.fits"
       ],
       0,
-      "b3bc11dd290b95e04a2f52eb8d07d23b"
+      "21350f3053dc0f272cc764c364413a85"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants2",
@@ -736,7 +736,7 @@
       0,
       [ "@query" ],
       0,
-      "ff5d1a8166049de5c1d5928dbe20ea75"
+      "f64d89cce8c557e8df5a3a17808249b7"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants2",
@@ -745,7 +745,7 @@
       0,
       [ "@query" ],
       0,
-      "ad9ec78248692511c35fda196a9102e5"
+      "148cae854c3b1f034b2843d129809e29"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants3",
@@ -768,7 +768,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "8a2a2652c9af004e4e638f68d2336432"
+      "621e9cbf85f398560dff28b929c373cd"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants3",
@@ -794,7 +794,7 @@
         "true_interp", "typing_FStar.UInt.fits"
       ],
       0,
-      "80a7346e1c825344532ba29499f1551d"
+      "8bd18b2a427e0a1f2cf8cd42c1d26d17"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants3",
@@ -803,7 +803,7 @@
       0,
       [ "@query" ],
       0,
-      "618d86ef66c37361cb30c0079926c885"
+      "6b2fc5be4ba30eb99522ac90f719adc6"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants3",
@@ -812,7 +812,7 @@
       0,
       [ "@query" ],
       0,
-      "3ac710ee0052f4dde568b820cff18c12"
+      "b9166147126d3dde8df85ff1c917f020"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants4",
@@ -835,7 +835,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "1837b914d5f5edd4c08e20ca2e9e2b9e"
+      "32d010043f532e9d1d24783049cb3e62"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants4",
@@ -859,7 +859,7 @@
         "true_interp", "typing_FStar.UInt.fits"
       ],
       0,
-      "3e3b9e9dbe8d689a79dfd7b970bbf211"
+      "a3a5175d0828b3a5fca58e7efe4c6276"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants4",
@@ -868,7 +868,7 @@
       0,
       [ "@query" ],
       0,
-      "e80583d6635c66cbb10e086fd04c8c67"
+      "6e649c65731315522e8bd37ed1b73cb6"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants4",
@@ -877,7 +877,7 @@
       0,
       [ "@query" ],
       0,
-      "213b4ae79f6fd6c3cbba1e716cafbb02"
+      "22e34b214b1f718543d12bef561f661e"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants5",
@@ -901,7 +901,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "54cc9ce1f527fc8af49ff83d2189bd13"
+      "b3ffe58d25c47ed00ae8613ade49c837"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants5",
@@ -927,7 +927,7 @@
         "true_interp", "typing_FStar.UInt.fits"
       ],
       0,
-      "516513b487429abc3ba333e5a4d33813"
+      "d98fc305d563159bb8dccf98547007d2"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants5",
@@ -936,7 +936,7 @@
       0,
       [ "@query" ],
       0,
-      "1f58cd580d9bfb21e8f475f4acc76850"
+      "be2e704273334d1626dc08ca572c5640"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants5",
@@ -945,7 +945,7 @@
       0,
       [ "@query" ],
       0,
-      "3bf2573e49cdbadd8501fbb7921ccde6"
+      "2c74d1d1513cd5dcdd094c8eed2ab128"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants6",
@@ -969,7 +969,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "0cda3c4ab43632258012dec1ce175112"
+      "743fd49c3944dfc58668c5f3ed366fa8"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants6",
@@ -995,7 +995,7 @@
         "true_interp", "typing_FStar.UInt.fits"
       ],
       0,
-      "d04d6dba2e2b979b0a165d47f1c6dbdc"
+      "123ecc6a2b91b6fe572d9b7c961548b1"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants6",
@@ -1004,7 +1004,7 @@
       0,
       [ "@query" ],
       0,
-      "4bd1a4af009c8e2244a4c21ba2dbc0b9"
+      "fc2e00fe27e5bfca6018cc0ab696fa08"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants6",
@@ -1013,7 +1013,7 @@
       0,
       [ "@query" ],
       0,
-      "756340f33eeae95dafcbb70b00daa3df"
+      "71b49c8b4501575261fa2d97a88d8bc7"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants7",
@@ -1037,7 +1037,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "9e94eb7afc6b971253231ceb428f353a"
+      "95e487c768d250434df7fd72f5e9a985"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants7",
@@ -1063,7 +1063,7 @@
         "true_interp", "typing_FStar.UInt.fits"
       ],
       0,
-      "d6f2bc19c72517012db9bcc3785fb561"
+      "2be0e06df3adac38a5bba13ef340b446"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants7",
@@ -1072,7 +1072,7 @@
       0,
       [ "@query" ],
       0,
-      "0522eb2094e57c6a885f396b450e6511"
+      "1d9759aa2c73071d26c2e74e3cb58936"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_constants7",
@@ -1081,7 +1081,7 @@
       0,
       [ "@query" ],
       0,
-      "48728c59b9b13baf13685542648865b7"
+      "6c4abd155bfa899f983fd0e3e82e4e3e"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod0",
@@ -1101,7 +1101,7 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
       0,
-      "1d3d90a0a3818b2d9cbec3496d397dcf"
+      "0874c5e7070f5b81b8917119a091b91c"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod0",
@@ -1123,7 +1123,7 @@
         "true_interp"
       ],
       0,
-      "c04fb6b7d8fe35e5389ed3e8cb64f0b2"
+      "c47b1cb8e1eeb3a6250e7de9052034da"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod0",
@@ -1132,7 +1132,7 @@
       0,
       [ "@query" ],
       0,
-      "e866f7473620b41dd8eb7d1b6cec21fd"
+      "a17190a2fd11262583bf4efcfad7670c"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod1",
@@ -1157,7 +1157,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "9201c65dd5e2166ec50e9ad8bb651a33"
+      "d115bf90f81fc3629a03f0ebad00990f"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod1",
@@ -1183,7 +1183,7 @@
         "true_interp"
       ],
       0,
-      "631e9936527adb86b301bcf5185fb176"
+      "8c842c72c0f1dbabc21ec002ca854c15"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod1",
@@ -1192,7 +1192,7 @@
       0,
       [ "@query" ],
       0,
-      "f870a2dd539b2374b0adae4e27b6de53"
+      "7f866b36a13d395a3da99c1d28d0f5df"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod2",
@@ -1217,7 +1217,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "05765fb0b89c7f6b0674b98b02db6b11"
+      "6065b8995ac9d5182636feb49501a4c0"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod2",
@@ -1243,7 +1243,7 @@
         "true_interp"
       ],
       0,
-      "c18e9ec3b0fffead81dca92000bdc5cb"
+      "8881d0392a0c909e186def9d8638b2c6"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod2",
@@ -1252,7 +1252,7 @@
       0,
       [ "@query" ],
       0,
-      "764bfaac8e00f84c32cb85d969f6eac3"
+      "24f82b8ae64bdb8f89128277894d6bad"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod3",
@@ -1277,7 +1277,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "058294bdddc967017a53e994984cd7cc"
+      "c7a2ba47614783aced033f0bf8e68291"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod3",
@@ -1303,7 +1303,7 @@
         "true_interp"
       ],
       0,
-      "b00fba351de4a41ab460342ce1bda3da"
+      "976314acc2ba63e0ebfa0daa85321f3b"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod3",
@@ -1312,7 +1312,7 @@
       0,
       [ "@query" ],
       0,
-      "3c99f2c3dd6c2578900444715410de32"
+      "6ac37cccce67fa34da263cd855381dbf"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod4",
@@ -1337,7 +1337,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "5a5afa2b5fbede64be6e19bc380dbd2c"
+      "acbf568b5b12ed8146aa2453352f4d69"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod4",
@@ -1363,7 +1363,7 @@
         "true_interp"
       ],
       0,
-      "bbd1a7776ff3f500b225d232c4543848"
+      "a04fcafd29008893a3665abfab8b15bf"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod4",
@@ -1372,7 +1372,7 @@
       0,
       [ "@query" ],
       0,
-      "1918d2d17683c146f525d0dc6469bd87"
+      "7ba26f88f35b724fc71596b9bdb0c3dd"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod5",
@@ -1397,7 +1397,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "b95f7544386a46b8449938d54cb3b508"
+      "d5b8091991ff97a83b6bc391ce9aced2"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod5",
@@ -1423,7 +1423,7 @@
         "true_interp"
       ],
       0,
-      "5d3ad41e7804a106261a52f015e83a41"
+      "b15a9fb598b415e4af0c95ab0bd729d3"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod5",
@@ -1432,7 +1432,7 @@
       0,
       [ "@query" ],
       0,
-      "a6ee7453cafd6abe8d321cd1bea1acec"
+      "46282aeaf9481368a4a2e5332b933efc"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod6",
@@ -1457,7 +1457,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "2dcdf536d87ce50935ba60780ffc60e0"
+      "c232e256bc21200d5d7e911546b3555f"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod6",
@@ -1483,7 +1483,7 @@
         "true_interp"
       ],
       0,
-      "c8d2edd57abe7da45c210dd6b007817b"
+      "a6fcb0ed29e7a102ec475538710da179"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod6",
@@ -1492,7 +1492,7 @@
       0,
       [ "@query" ],
       0,
-      "4169c152b7f3437435096c3dc9dc8056"
+      "80fcbe4ac70e3272e56eac077d2af4f2"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod7",
@@ -1517,7 +1517,7 @@
         "refinement_interpretation_Prims_Tm_refine_a4038d5aed1633b5ecbb4e499b1c66ad"
       ],
       0,
-      "683501302ec442b338183829dfeadf1c"
+      "34a4d37458c566adee2cc6ba488aec7f"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod7",
@@ -1543,7 +1543,7 @@
         "true_interp"
       ],
       0,
-      "62c1a5494a49bbfbe716dacb4eaff6d9"
+      "e6ea28755baae6a017178052e8d5128e"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod7",
@@ -1552,7 +1552,7 @@
       0,
       [ "@query" ],
       0,
-      "3f5020baa019f837ce53dbe18d27e75f"
+      "2c8ee41313633f6225b1efc04ab9b381"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod",
@@ -1585,7 +1585,7 @@
         "typing_FStar.UInt.shift_left"
       ],
       0,
-      "378846175fc6e1155197b9401c61b604"
+      "50a899e472d171b6e2fa4724335c5a75"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_and_mod",
@@ -1620,7 +1620,7 @@
         "typing_FStar.UInt.shift_left"
       ],
       0,
-      "0b8db62d1ddd89a87ed07cd412c6daec"
+      "d51f9266c4010d86b442f9973ab97a76"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_power2",
@@ -1629,7 +1629,7 @@
       0,
       [ "@query" ],
       0,
-      "e91d144e63c970b12c4229e8d0daee1f"
+      "a9777c1415a0bf7ee85f1f4979b41dd9"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_power2",
@@ -1660,7 +1660,7 @@
         "token_correspondence_Prims.pow2.fuel_instrumented"
       ],
       0,
-      "b651860ae3e89194f48a09b6d60b0ff5"
+      "98f2936d3b78a893004a0c52d8237d9b"
     ],
     [
       "X64.Poly1305.Bitvectors_i.lemma_bytes_shift_power2",
@@ -1678,7 +1678,7 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
       0,
-      "2e92545cacaa499c83583dbbe478c1b5"
+      "e5516a8271cfb157f7ba235dcbc0c12f"
     ]
   ]
 ]

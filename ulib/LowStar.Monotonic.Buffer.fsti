@@ -1383,7 +1383,11 @@ val mreference_live_loc_not_unused_in
 : Lemma
   (requires (h `HS.contains` r))
   (ensures (loc_not_unused_in h `loc_includes` loc_freed_mreference r /\ loc_not_unused_in h `loc_includes` loc_mreference r))
-  [SMTPat (HS.contains h r)]
+  [SMTPatOr [
+    [SMTPat (HS.contains h r)];
+    [SMTPat (loc_not_unused_in h `loc_includes` loc_mreference r)];
+    [SMTPat (loc_not_unused_in h `loc_includes` loc_freed_mreference r)];
+  ]]
 
 val mreference_unused_in_loc_unused_in
   (#t: Type)
@@ -1393,8 +1397,11 @@ val mreference_unused_in_loc_unused_in
 : Lemma
   (requires (r `HS.unused_in` h))
   (ensures (loc_unused_in h `loc_includes` loc_freed_mreference r /\ loc_unused_in h `loc_includes` loc_mreference r))
-  [SMTPat (HS.unused_in r h)]
-
+  [SMTPatOr [
+    [SMTPat (HS.unused_in r h)];
+    [SMTPat (loc_unused_in h `loc_includes` loc_mreference r)];
+    [SMTPat (loc_unused_in h `loc_includes` loc_freed_mreference r)];
+  ]]
 
 let unused_in_not_unused_in_disjoint_2
   (l1 l2 l1' l2': loc)
@@ -1563,7 +1570,24 @@ val modifies_inert_loc_unused_in
     loc_unused_in h2 `loc_includes` l'
   ))
   (ensures (loc_unused_in h1 `loc_includes` l'))
-  [SMTPat (modifies_inert l h1 h2); SMTPat (loc_unused_in h2 `loc_includes` l')]
+  [SMTPatOr [
+    [SMTPat (modifies_inert l h1 h2); SMTPat (loc_unused_in h2 `loc_includes` l')];
+    [SMTPat (modifies_inert l h1 h2); SMTPat (loc_unused_in h1 `loc_includes` l')];
+  ]]
+
+/// Shorthand: freshness
+
+let fresh_loc (l: loc) (h h' : HS.mem) : GTot Type0 =
+  loc_unused_in h `loc_includes` l /\
+  loc_not_unused_in h' `loc_includes` l
+
+let ralloc_post_fresh_loc (#a:Type) (#rel:Preorder.preorder a) (i: HS.rid) (init:a) (m0: HS.mem)
+                       (x: HST.mreference a rel{HS.is_eternal_region (HS.frameOf x)}) (m1: HS.mem) : Lemma
+    (requires (HST.ralloc_post i init m0 x m1))
+    (ensures (fresh_loc (loc_freed_mreference x) m0 m1))
+    [SMTPat (HST.ralloc_post i init m0 x m1)]
+=  ()
+
 
 /// Legacy shorthands for disjointness and inclusion of buffers
 ///

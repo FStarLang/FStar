@@ -301,6 +301,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
         (*open*)  let formals, c = SS.open_comp formals c in
                   let dec = decreases_clause formals c in
                   let precedes = mk_Tm_app precedes [as_arg dec; as_arg previous_dec] None r in
+                  let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
                   let bs, (last, imp) = BU.prefix formals in
                   let last = {last with sort=U.refine last precedes} in
                   let refined_formals = bs@[(last,imp)] in
@@ -350,7 +351,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                                         * guard_t =             (* well-formedness condition                           *)
   let env = if e.pos=Range.dummyRange then env else Env.set_range env e.pos in
   let top = SS.compress e in
-  if debug env Options.Low then
+  if debug env Options.Medium then
     BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term top) (Print.term_to_string top);
   match top.n with
   | Tm_delayed _ -> failwith "Impossible"

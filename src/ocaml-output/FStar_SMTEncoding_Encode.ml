@@ -1627,9 +1627,9 @@ let (encode_free_var :
                                                              FStar_SMTEncoding_Term.Term_sort)
                                                           in
                                                        FStar_All.pipe_left
-                                                         (fun _0_17  ->
+                                                         (fun _0_1  ->
                                                             FStar_Pervasives_Native.Some
-                                                              _0_17)
+                                                              _0_1)
                                                          uu____5251
                                                         in
                                                      FStar_SMTEncoding_Env.push_free_var
@@ -2754,9 +2754,9 @@ let (encode_top_level_let :
                                                        (g, [fuel_tm])
                                                       in
                                                    FStar_All.pipe_left
-                                                     (fun _0_18  ->
+                                                     (fun _0_2  ->
                                                         FStar_Pervasives_Native.Some
-                                                          _0_18) uu____8517
+                                                          _0_2) uu____8517
                                                     in
                                                  FStar_SMTEncoding_Env.push_free_var
                                                    env3 flid
@@ -4321,9 +4321,9 @@ and (encode_sigelt' :
                                               (tname, [])
                                              in
                                           FStar_All.pipe_left
-                                            (fun _0_19  ->
+                                            (fun _0_3  ->
                                                FStar_Pervasives_Native.Some
-                                                 _0_19) uu____11572
+                                                 _0_3) uu____11572
                                            in
                                         FStar_SMTEncoding_Env.push_free_var
                                           env1 t arity tname uu____11569
@@ -5950,7 +5950,7 @@ let encode_labels :
               | (l,uu____13894,uu____13895) ->
                   let uu____13904 =
                     FStar_All.pipe_left
-                      (fun _0_20  -> FStar_SMTEncoding_Term.Echo _0_20)
+                      (fun _0_4  -> FStar_SMTEncoding_Term.Echo _0_4)
                       (FStar_Pervasives_Native.fst l)
                      in
                   let uu____13905 =

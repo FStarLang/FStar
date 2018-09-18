@@ -321,7 +321,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "2323dcc336d90833307938041f6edccd"
+      "3a35e7debb2d149abf9b6bc6099f6275"
     ],
     [
       "Bug173.step",
@@ -350,7 +350,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "e41f81ab86ddfc55ef42bd0ddc3eca4c"
+      "e4dd85861c53253ff2a37195c012d26f"
     ],
     [
       "Bug173.op_type",
@@ -394,7 +394,7 @@
         "subterm_ordering_Bug173.Op"
       ],
       0,
-      "fc28db0fca1b15a72e8480ead4a67db4"
+      "e9745f3d8f9fcf04cc4b949371e27fa3"
     ],
     [
       "Bug173.typing",
@@ -421,7 +421,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "61e4bb817608762031ce4a2794f2a5bb"
+      "401a7d47915a193ce14d74fd5d28bcec"
     ],
     [
       "Bug173.typed_heap",

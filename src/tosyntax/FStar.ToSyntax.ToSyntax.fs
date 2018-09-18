@@ -2732,30 +2732,14 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     let env = push_doc env lid d.doc in
     env, [se]
 
-  | Exception(id, None) ->
-    let t = fail_or env (try_lookup_lid env) C.exn_lid in
-    let l = qualify env id in
-    let qual = [ExceptionConstructor] in
-    let se = { sigel = Sig_datacon(l, [], t, C.exn_lid, 0, [C.exn_lid]);
-               sigquals = qual;
-               sigrng = d.drange;
-               sigmeta = default_sigmeta  ;
-               sigattrs = [] } in
-    let se' = { sigel = Sig_bundle([se], [l]);
-                sigquals = qual;
-                sigrng = d.drange;
-                sigmeta = default_sigmeta  ;
-                sigattrs = [] } in
-    let env = push_sigelt env se' in
-    let env = push_doc env l d.doc in
-    let data_ops = mk_data_projector_names [] env se in
-    let discs = mk_data_discriminators [] env [l] in
-    let env = List.fold_left push_sigelt env (discs@data_ops) in
-    env, se'::discs@data_ops
-
-  | Exception(id, Some term) ->
-    let t = desugar_term env term in
-    let t = U.arrow ([null_binder t]) (mk_Total <| fail_or env (try_lookup_lid env) C.exn_lid) in
+  | Exception(id, t_opt) ->
+    let t =
+        match t_opt with
+        | None -> fail_or env (try_lookup_lid env) C.exn_lid
+        | Some term ->
+            let t = desugar_term env term in
+            U.arrow ([null_binder t]) (mk_Total <| fail_or env (try_lookup_lid env) C.exn_lid)
+    in
     let l = qualify env id in
     let qual = [ExceptionConstructor] in
     let se = { sigel = Sig_datacon(l, [], t, C.exn_lid, 0, [C.exn_lid]);
