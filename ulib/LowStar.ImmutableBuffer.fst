@@ -61,6 +61,15 @@ let ialloca (#a:Type0) (init:a) (len:U32.t)
     witness_p b (cpred (Seq.create (U32.v len) init));
     b
 
+let ialloca_of_list (#a:Type0) (init: list a)
+  :HST.StackInline (b:libuffer a (normalize_term (List.Tot.length init)){witnessed b (cpred (Seq.seq_of_list init))})
+                   (requires (fun _      -> alloca_of_list_pre init))
+                   (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init) /\
+		                         frameOf b == HS.get_tip h0))
+  = let b = malloca_of_list init in
+    witness_p b (cpred (Seq.seq_of_list init));
+    b
+
 let igcmalloc_of_list (#a:Type0) (r:HS.rid) (init:list a)
   :HST.ST (b:libuffer a (normalize_term (List.Tot.length init)){frameOf b == r /\ recallable b /\
                                                                 witnessed b (cpred (Seq.seq_of_list init))})
