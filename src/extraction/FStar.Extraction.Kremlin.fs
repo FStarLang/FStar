@@ -717,7 +717,9 @@ and translate_expr env e: expr =
       EBufCreate (Stack, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.createL" || string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca_of_list") ->
+    when (string_of_mlpath p = "FStar.Buffer.createL" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca_of_list" ||
+          string_of_mlpath p = "LowStar.ImmutableBuffer.ialloca_of_list") ->
       EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _erid; e2 ])
