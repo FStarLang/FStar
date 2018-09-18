@@ -52,6 +52,11 @@ module BU = FStar.Util
 (* should wrap them in [with_fs_typ_app] *)
 let should_print_fs_typ_app = BU.mk_ref false
 
+let all_explicit (args:list<(term*imp)>) : bool =
+    BU.for_all (function
+                | (_, Nothing) -> true
+                | _ -> false) args
+
 (* Tuples which come from a resugared AST, via term_to_document are already flattened *)
 (* This reference is set to false in term_to_document and checked in p_tmNoEqWith'    *)
 let unfold_tuples = BU.mk_ref true
@@ -1253,7 +1258,7 @@ and p_tmConjunction e = match e.tm with
 and p_tmTuple e = with_comment p_tmTuple' e e.range
 
 and p_tmTuple' e = match e.tm with
-  | Construct (lid, args) when is_tuple_constructor lid ->
+  | Construct (lid, args) when is_tuple_constructor lid && all_explicit args ->
       separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args
   | _ -> p_tmEq e
 
@@ -1430,7 +1435,18 @@ and p_atomicTermNotQUident e = match e.tm with
   | Op(op, []) ->
     lparen ^^ space ^^ str (Ident.text_of_id op) ^^ space ^^ rparen
   | Construct (lid, args) when is_dtuple_constructor lid ->
-    surround 2 1 (lparen ^^ bar) (separate_map (comma ^^ break1) p_tmEq (List.map fst args)) (bar ^^ rparen)
+    if all_explicit args
+    then surround 2 1 (lparen ^^ bar) (separate_map (comma ^^ break1) p_tmEq (List.map fst args)) (bar ^^ rparen)
+    else
+    begin match args with
+      | [] -> p_quident lid
+      | [arg] -> group (p_quident lid ^/^ p_argTerm arg)
+      | hd::tl ->
+          group (
+              group (prefix2 (p_quident lid) (p_argTerm hd)) ^^
+                    jump2 (separate_map break1 p_argTerm tl))
+    end
+
   | Project (e, lid) ->
     group (prefix 2 0 (p_atomicTermNotQUident e)  (dot ^^ p_qlident lid))
   | _ ->

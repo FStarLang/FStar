@@ -566,14 +566,13 @@ let e_ident : embedding<I.ident> =
     mk_emb_full
       embed_ident
       unembed_ident
-      (S.t_tuple2_of S.t_range S.t_string)
+      fstar_refl_ident
       FStar.Ident.text_of_id
       (emb_typ_of repr)
 
 let e_univ_name =
     (* TODO: Should be this, but there's a delta depth issue *)
-    (* set_type fstar_refl_univ_name e_ident *)
-    e_ident
+    set_type fstar_refl_univ_name e_ident
 
 let e_univ_names = e_list e_univ_name
 

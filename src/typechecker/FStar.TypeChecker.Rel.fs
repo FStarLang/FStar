@@ -1979,7 +1979,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         match quasi_pattern env lhs with
         | None ->
            giveup_or_defer env orig wl
-              (BU.format1 "first_order heursitic cannot solve %s; lhs not a quasi-pattern"
+              (BU.format1 "first_order heuristic cannot solve %s; lhs not a quasi-pattern"
                           (prob_to_string env orig))
 
         | Some (bs_lhs, t_res_lhs) ->
