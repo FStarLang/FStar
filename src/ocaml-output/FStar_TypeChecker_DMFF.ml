@@ -6,17 +6,23 @@ type env =
   tc_const: FStar_Const.sconst -> FStar_Syntax_Syntax.typ }
 let (__proj__Mkenv__item__tcenv : env -> FStar_TypeChecker_Env.env) =
   fun projectee  ->
-    match projectee with | { tcenv; subst = subst1; tc_const;_} -> tcenv
+    match projectee with
+    | { tcenv = __fname__tcenv; subst = __fname__subst;
+        tc_const = __fname__tc_const;_} -> __fname__tcenv
   
 let (__proj__Mkenv__item__subst :
   env -> FStar_Syntax_Syntax.subst_elt Prims.list) =
   fun projectee  ->
-    match projectee with | { tcenv; subst = subst1; tc_const;_} -> subst1
+    match projectee with
+    | { tcenv = __fname__tcenv; subst = __fname__subst;
+        tc_const = __fname__tc_const;_} -> __fname__subst
   
 let (__proj__Mkenv__item__tc_const :
   env -> FStar_Const.sconst -> FStar_Syntax_Syntax.typ) =
   fun projectee  ->
-    match projectee with | { tcenv; subst = subst1; tc_const;_} -> tc_const
+    match projectee with
+    | { tcenv = __fname__tcenv; subst = __fname__subst;
+        tc_const = __fname__tc_const;_} -> __fname__tc_const
   
 let (empty :
   FStar_TypeChecker_Env.env ->

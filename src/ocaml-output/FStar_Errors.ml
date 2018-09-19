@@ -2580,28 +2580,36 @@ type issue =
 let (__proj__Mkissue__item__issue_message : issue -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { issue_message; issue_level; issue_range; issue_number;_} ->
-        issue_message
+    | { issue_message = __fname__issue_message;
+        issue_level = __fname__issue_level;
+        issue_range = __fname__issue_range;
+        issue_number = __fname__issue_number;_} -> __fname__issue_message
   
 let (__proj__Mkissue__item__issue_level : issue -> issue_level) =
   fun projectee  ->
     match projectee with
-    | { issue_message; issue_level; issue_range; issue_number;_} ->
-        issue_level
+    | { issue_message = __fname__issue_message;
+        issue_level = __fname__issue_level;
+        issue_range = __fname__issue_range;
+        issue_number = __fname__issue_number;_} -> __fname__issue_level
   
 let (__proj__Mkissue__item__issue_range :
   issue -> FStar_Range.range FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { issue_message; issue_level; issue_range; issue_number;_} ->
-        issue_range
+    | { issue_message = __fname__issue_message;
+        issue_level = __fname__issue_level;
+        issue_range = __fname__issue_range;
+        issue_number = __fname__issue_number;_} -> __fname__issue_range
   
 let (__proj__Mkissue__item__issue_number :
   issue -> Prims.int FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { issue_message; issue_level; issue_range; issue_number;_} ->
-        issue_number
+    | { issue_message = __fname__issue_message;
+        issue_level = __fname__issue_level;
+        issue_range = __fname__issue_range;
+        issue_number = __fname__issue_number;_} -> __fname__issue_number
   
 type error_handler =
   {
@@ -2613,26 +2621,37 @@ let (__proj__Mkerror_handler__item__eh_add_one :
   error_handler -> issue -> unit) =
   fun projectee  ->
     match projectee with
-    | { eh_add_one; eh_count_errors; eh_report; eh_clear;_} -> eh_add_one
+    | { eh_add_one = __fname__eh_add_one;
+        eh_count_errors = __fname__eh_count_errors;
+        eh_report = __fname__eh_report; eh_clear = __fname__eh_clear;_} ->
+        __fname__eh_add_one
   
 let (__proj__Mkerror_handler__item__eh_count_errors :
   error_handler -> unit -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { eh_add_one; eh_count_errors; eh_report; eh_clear;_} ->
-        eh_count_errors
+    | { eh_add_one = __fname__eh_add_one;
+        eh_count_errors = __fname__eh_count_errors;
+        eh_report = __fname__eh_report; eh_clear = __fname__eh_clear;_} ->
+        __fname__eh_count_errors
   
 let (__proj__Mkerror_handler__item__eh_report :
   error_handler -> unit -> issue Prims.list) =
   fun projectee  ->
     match projectee with
-    | { eh_add_one; eh_count_errors; eh_report; eh_clear;_} -> eh_report
+    | { eh_add_one = __fname__eh_add_one;
+        eh_count_errors = __fname__eh_count_errors;
+        eh_report = __fname__eh_report; eh_clear = __fname__eh_clear;_} ->
+        __fname__eh_report
   
 let (__proj__Mkerror_handler__item__eh_clear : error_handler -> unit -> unit)
   =
   fun projectee  ->
     match projectee with
-    | { eh_add_one; eh_count_errors; eh_report; eh_clear;_} -> eh_clear
+    | { eh_add_one = __fname__eh_add_one;
+        eh_count_errors = __fname__eh_count_errors;
+        eh_report = __fname__eh_report; eh_clear = __fname__eh_clear;_} ->
+        __fname__eh_clear
   
 let (format_issue : issue -> Prims.string) =
   fun issue  ->
@@ -2813,19 +2832,25 @@ let (__proj__Mkerror_message_prefix__item__set_prefix :
   error_message_prefix -> Prims.string -> unit) =
   fun projectee  ->
     match projectee with
-    | { set_prefix; append_prefix; clear_prefix;_} -> set_prefix
+    | { set_prefix = __fname__set_prefix;
+        append_prefix = __fname__append_prefix;
+        clear_prefix = __fname__clear_prefix;_} -> __fname__set_prefix
   
 let (__proj__Mkerror_message_prefix__item__append_prefix :
   error_message_prefix -> Prims.string -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { set_prefix; append_prefix; clear_prefix;_} -> append_prefix
+    | { set_prefix = __fname__set_prefix;
+        append_prefix = __fname__append_prefix;
+        clear_prefix = __fname__clear_prefix;_} -> __fname__append_prefix
   
 let (__proj__Mkerror_message_prefix__item__clear_prefix :
   error_message_prefix -> unit -> unit) =
   fun projectee  ->
     match projectee with
-    | { set_prefix; append_prefix; clear_prefix;_} -> clear_prefix
+    | { set_prefix = __fname__set_prefix;
+        append_prefix = __fname__append_prefix;
+        clear_prefix = __fname__clear_prefix;_} -> __fname__clear_prefix
   
 let (message_prefix : error_message_prefix) =
   let pfx = FStar_Util.mk_ref FStar_Pervasives_Native.None  in

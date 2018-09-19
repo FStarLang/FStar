@@ -247,10 +247,16 @@ type data_constructor =
   dtyp: FStar_Syntax_Syntax.typ }
 let (__proj__Mkdata_constructor__item__dname :
   data_constructor -> FStar_Ident.lident) =
-  fun projectee  -> match projectee with | { dname; dtyp;_} -> dname 
+  fun projectee  ->
+    match projectee with
+    | { dname = __fname__dname; dtyp = __fname__dtyp;_} -> __fname__dname
+  
 let (__proj__Mkdata_constructor__item__dtyp :
   data_constructor -> FStar_Syntax_Syntax.typ) =
-  fun projectee  -> match projectee with | { dname; dtyp;_} -> dtyp 
+  fun projectee  ->
+    match projectee with
+    | { dname = __fname__dname; dtyp = __fname__dtyp;_} -> __fname__dtyp
+  
 type inductive_family =
   {
   ifv: FStar_Syntax_Syntax.fv ;
@@ -264,43 +270,64 @@ let (__proj__Mkinductive_family__item__ifv :
   inductive_family -> FStar_Syntax_Syntax.fv) =
   fun projectee  ->
     match projectee with
-    | { ifv; iname; iparams; ityp; idatas; iquals; imetadata;_} -> ifv
+    | { ifv = __fname__ifv; iname = __fname__iname;
+        iparams = __fname__iparams; ityp = __fname__ityp;
+        idatas = __fname__idatas; iquals = __fname__iquals;
+        imetadata = __fname__imetadata;_} -> __fname__ifv
   
 let (__proj__Mkinductive_family__item__iname :
   inductive_family -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
-    | { ifv; iname; iparams; ityp; idatas; iquals; imetadata;_} -> iname
+    | { ifv = __fname__ifv; iname = __fname__iname;
+        iparams = __fname__iparams; ityp = __fname__ityp;
+        idatas = __fname__idatas; iquals = __fname__iquals;
+        imetadata = __fname__imetadata;_} -> __fname__iname
   
 let (__proj__Mkinductive_family__item__iparams :
   inductive_family -> FStar_Syntax_Syntax.binders) =
   fun projectee  ->
     match projectee with
-    | { ifv; iname; iparams; ityp; idatas; iquals; imetadata;_} -> iparams
+    | { ifv = __fname__ifv; iname = __fname__iname;
+        iparams = __fname__iparams; ityp = __fname__ityp;
+        idatas = __fname__idatas; iquals = __fname__iquals;
+        imetadata = __fname__imetadata;_} -> __fname__iparams
   
 let (__proj__Mkinductive_family__item__ityp :
   inductive_family -> FStar_Syntax_Syntax.term) =
   fun projectee  ->
     match projectee with
-    | { ifv; iname; iparams; ityp; idatas; iquals; imetadata;_} -> ityp
+    | { ifv = __fname__ifv; iname = __fname__iname;
+        iparams = __fname__iparams; ityp = __fname__ityp;
+        idatas = __fname__idatas; iquals = __fname__iquals;
+        imetadata = __fname__imetadata;_} -> __fname__ityp
   
 let (__proj__Mkinductive_family__item__idatas :
   inductive_family -> data_constructor Prims.list) =
   fun projectee  ->
     match projectee with
-    | { ifv; iname; iparams; ityp; idatas; iquals; imetadata;_} -> idatas
+    | { ifv = __fname__ifv; iname = __fname__iname;
+        iparams = __fname__iparams; ityp = __fname__ityp;
+        idatas = __fname__idatas; iquals = __fname__iquals;
+        imetadata = __fname__imetadata;_} -> __fname__idatas
   
 let (__proj__Mkinductive_family__item__iquals :
   inductive_family -> FStar_Syntax_Syntax.qualifier Prims.list) =
   fun projectee  ->
     match projectee with
-    | { ifv; iname; iparams; ityp; idatas; iquals; imetadata;_} -> iquals
+    | { ifv = __fname__ifv; iname = __fname__iname;
+        iparams = __fname__iparams; ityp = __fname__ityp;
+        idatas = __fname__idatas; iquals = __fname__iquals;
+        imetadata = __fname__imetadata;_} -> __fname__iquals
   
 let (__proj__Mkinductive_family__item__imetadata :
   inductive_family -> FStar_Extraction_ML_Syntax.metadata) =
   fun projectee  ->
     match projectee with
-    | { ifv; iname; iparams; ityp; idatas; iquals; imetadata;_} -> imetadata
+    | { ifv = __fname__ifv; iname = __fname__iname;
+        iparams = __fname__iparams; ityp = __fname__ityp;
+        idatas = __fname__idatas; iquals = __fname__iquals;
+        imetadata = __fname__imetadata;_} -> __fname__imetadata
   
 let (print_ifamily : inductive_family -> unit) =
   fun i  ->
@@ -453,8 +480,11 @@ let (__proj__Mkiface__item__iface_module_name :
   iface -> FStar_Extraction_ML_Syntax.mlpath) =
   fun projectee  ->
     match projectee with
-    | { iface_module_name; iface_bindings; iface_tydefs; iface_type_names;_}
-        -> iface_module_name
+    | { iface_module_name = __fname__iface_module_name;
+        iface_bindings = __fname__iface_bindings;
+        iface_tydefs = __fname__iface_tydefs;
+        iface_type_names = __fname__iface_type_names;_} ->
+        __fname__iface_module_name
   
 let (__proj__Mkiface__item__iface_bindings :
   iface ->
@@ -463,22 +493,31 @@ let (__proj__Mkiface__item__iface_bindings :
   =
   fun projectee  ->
     match projectee with
-    | { iface_module_name; iface_bindings; iface_tydefs; iface_type_names;_}
-        -> iface_bindings
+    | { iface_module_name = __fname__iface_module_name;
+        iface_bindings = __fname__iface_bindings;
+        iface_tydefs = __fname__iface_tydefs;
+        iface_type_names = __fname__iface_type_names;_} ->
+        __fname__iface_bindings
   
 let (__proj__Mkiface__item__iface_tydefs :
   iface -> FStar_Extraction_ML_UEnv.tydef Prims.list) =
   fun projectee  ->
     match projectee with
-    | { iface_module_name; iface_bindings; iface_tydefs; iface_type_names;_}
-        -> iface_tydefs
+    | { iface_module_name = __fname__iface_module_name;
+        iface_bindings = __fname__iface_bindings;
+        iface_tydefs = __fname__iface_tydefs;
+        iface_type_names = __fname__iface_type_names;_} ->
+        __fname__iface_tydefs
   
 let (__proj__Mkiface__item__iface_type_names :
   iface -> FStar_Syntax_Syntax.fv Prims.list) =
   fun projectee  ->
     match projectee with
-    | { iface_module_name; iface_bindings; iface_tydefs; iface_type_names;_}
-        -> iface_type_names
+    | { iface_module_name = __fname__iface_module_name;
+        iface_bindings = __fname__iface_bindings;
+        iface_tydefs = __fname__iface_tydefs;
+        iface_type_names = __fname__iface_type_names;_} ->
+        __fname__iface_type_names
   
 let (empty_iface : iface) =
   {

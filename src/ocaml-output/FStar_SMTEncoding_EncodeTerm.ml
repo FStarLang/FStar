@@ -394,7 +394,9 @@ let (__proj__Mkpattern__item__pat_vars :
   =
   fun projectee  ->
     match projectee with
-    | { pat_vars; pat_term; guard; projections;_} -> pat_vars
+    | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
+        guard = __fname__guard; projections = __fname__projections;_} ->
+        __fname__pat_vars
   
 let (__proj__Mkpattern__item__pat_term :
   pattern ->
@@ -404,13 +406,17 @@ let (__proj__Mkpattern__item__pat_term :
   =
   fun projectee  ->
     match projectee with
-    | { pat_vars; pat_term; guard; projections;_} -> pat_term
+    | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
+        guard = __fname__guard; projections = __fname__projections;_} ->
+        __fname__pat_term
   
 let (__proj__Mkpattern__item__guard :
   pattern -> FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) =
   fun projectee  ->
     match projectee with
-    | { pat_vars; pat_term; guard; projections;_} -> guard
+    | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
+        guard = __fname__guard; projections = __fname__projections;_} ->
+        __fname__guard
   
 let (__proj__Mkpattern__item__projections :
   pattern ->
@@ -420,7 +426,9 @@ let (__proj__Mkpattern__item__projections :
   =
   fun projectee  ->
     match projectee with
-    | { pat_vars; pat_term; guard; projections;_} -> projections
+    | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
+        guard = __fname__guard; projections = __fname__projections;_} ->
+        __fname__projections
   
 let (as_function_typ :
   FStar_SMTEncoding_Env.env_t ->

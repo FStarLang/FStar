@@ -6,11 +6,17 @@ type ty_binding =
 let (__proj__Mkty_binding__item__ty_b_name :
   ty_binding -> FStar_Extraction_ML_Syntax.mlident) =
   fun projectee  ->
-    match projectee with | { ty_b_name; ty_b_ty;_} -> ty_b_name
+    match projectee with
+    | { ty_b_name = __fname__ty_b_name; ty_b_ty = __fname__ty_b_ty;_} ->
+        __fname__ty_b_name
   
 let (__proj__Mkty_binding__item__ty_b_ty :
   ty_binding -> FStar_Extraction_ML_Syntax.mlty) =
-  fun projectee  -> match projectee with | { ty_b_name; ty_b_ty;_} -> ty_b_ty 
+  fun projectee  ->
+    match projectee with
+    | { ty_b_name = __fname__ty_b_name; ty_b_ty = __fname__ty_b_ty;_} ->
+        __fname__ty_b_ty
+  
 type exp_binding =
   {
   exp_b_name: FStar_Extraction_ML_Syntax.mlident ;
@@ -21,27 +27,33 @@ let (__proj__Mkexp_binding__item__exp_b_name :
   exp_binding -> FStar_Extraction_ML_Syntax.mlident) =
   fun projectee  ->
     match projectee with
-    | { exp_b_name; exp_b_expr; exp_b_tscheme; exp_b_inst_ok;_} -> exp_b_name
+    | { exp_b_name = __fname__exp_b_name; exp_b_expr = __fname__exp_b_expr;
+        exp_b_tscheme = __fname__exp_b_tscheme;
+        exp_b_inst_ok = __fname__exp_b_inst_ok;_} -> __fname__exp_b_name
   
 let (__proj__Mkexp_binding__item__exp_b_expr :
   exp_binding -> FStar_Extraction_ML_Syntax.mlexpr) =
   fun projectee  ->
     match projectee with
-    | { exp_b_name; exp_b_expr; exp_b_tscheme; exp_b_inst_ok;_} -> exp_b_expr
+    | { exp_b_name = __fname__exp_b_name; exp_b_expr = __fname__exp_b_expr;
+        exp_b_tscheme = __fname__exp_b_tscheme;
+        exp_b_inst_ok = __fname__exp_b_inst_ok;_} -> __fname__exp_b_expr
   
 let (__proj__Mkexp_binding__item__exp_b_tscheme :
   exp_binding -> FStar_Extraction_ML_Syntax.mltyscheme) =
   fun projectee  ->
     match projectee with
-    | { exp_b_name; exp_b_expr; exp_b_tscheme; exp_b_inst_ok;_} ->
-        exp_b_tscheme
+    | { exp_b_name = __fname__exp_b_name; exp_b_expr = __fname__exp_b_expr;
+        exp_b_tscheme = __fname__exp_b_tscheme;
+        exp_b_inst_ok = __fname__exp_b_inst_ok;_} -> __fname__exp_b_tscheme
   
 let (__proj__Mkexp_binding__item__exp_b_inst_ok : exp_binding -> Prims.bool)
   =
   fun projectee  ->
     match projectee with
-    | { exp_b_name; exp_b_expr; exp_b_tscheme; exp_b_inst_ok;_} ->
-        exp_b_inst_ok
+    | { exp_b_name = __fname__exp_b_name; exp_b_expr = __fname__exp_b_expr;
+        exp_b_tscheme = __fname__exp_b_tscheme;
+        exp_b_inst_ok = __fname__exp_b_inst_ok;_} -> __fname__exp_b_inst_ok
   
 type ty_or_exp_b = (ty_binding,exp_binding) FStar_Util.either
 type binding =
@@ -71,37 +83,52 @@ type tydef =
 let (__proj__Mktydef__item__tydef_fv : tydef -> FStar_Syntax_Syntax.fv) =
   fun projectee  ->
     match projectee with
-    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_mangled_name;
-        tydef_def;_} -> tydef_fv
+    | { tydef_fv = __fname__tydef_fv;
+        tydef_mlmodule_name = __fname__tydef_mlmodule_name;
+        tydef_name = __fname__tydef_name;
+        tydef_mangled_name = __fname__tydef_mangled_name;
+        tydef_def = __fname__tydef_def;_} -> __fname__tydef_fv
   
 let (__proj__Mktydef__item__tydef_mlmodule_name :
   tydef -> FStar_Extraction_ML_Syntax.mlsymbol Prims.list) =
   fun projectee  ->
     match projectee with
-    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_mangled_name;
-        tydef_def;_} -> tydef_mlmodule_name
+    | { tydef_fv = __fname__tydef_fv;
+        tydef_mlmodule_name = __fname__tydef_mlmodule_name;
+        tydef_name = __fname__tydef_name;
+        tydef_mangled_name = __fname__tydef_mangled_name;
+        tydef_def = __fname__tydef_def;_} -> __fname__tydef_mlmodule_name
   
 let (__proj__Mktydef__item__tydef_name :
   tydef -> FStar_Extraction_ML_Syntax.mlsymbol) =
   fun projectee  ->
     match projectee with
-    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_mangled_name;
-        tydef_def;_} -> tydef_name
+    | { tydef_fv = __fname__tydef_fv;
+        tydef_mlmodule_name = __fname__tydef_mlmodule_name;
+        tydef_name = __fname__tydef_name;
+        tydef_mangled_name = __fname__tydef_mangled_name;
+        tydef_def = __fname__tydef_def;_} -> __fname__tydef_name
   
 let (__proj__Mktydef__item__tydef_mangled_name :
   tydef -> FStar_Extraction_ML_Syntax.mlsymbol FStar_Pervasives_Native.option)
   =
   fun projectee  ->
     match projectee with
-    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_mangled_name;
-        tydef_def;_} -> tydef_mangled_name
+    | { tydef_fv = __fname__tydef_fv;
+        tydef_mlmodule_name = __fname__tydef_mlmodule_name;
+        tydef_name = __fname__tydef_name;
+        tydef_mangled_name = __fname__tydef_mangled_name;
+        tydef_def = __fname__tydef_def;_} -> __fname__tydef_mangled_name
   
 let (__proj__Mktydef__item__tydef_def :
   tydef -> FStar_Extraction_ML_Syntax.mltyscheme) =
   fun projectee  ->
     match projectee with
-    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_mangled_name;
-        tydef_def;_} -> tydef_def
+    | { tydef_fv = __fname__tydef_fv;
+        tydef_mlmodule_name = __fname__tydef_mlmodule_name;
+        tydef_name = __fname__tydef_name;
+        tydef_mangled_name = __fname__tydef_mangled_name;
+        tydef_def = __fname__tydef_def;_} -> __fname__tydef_def
   
 type env =
   {
@@ -113,29 +140,39 @@ type env =
 let (__proj__Mkenv__item__tcenv : env -> FStar_TypeChecker_Env.env) =
   fun projectee  ->
     match projectee with
-    | { tcenv; gamma; tydefs; type_names; currentModule;_} -> tcenv
+    | { tcenv = __fname__tcenv; gamma = __fname__gamma;
+        tydefs = __fname__tydefs; type_names = __fname__type_names;
+        currentModule = __fname__currentModule;_} -> __fname__tcenv
   
 let (__proj__Mkenv__item__gamma : env -> binding Prims.list) =
   fun projectee  ->
     match projectee with
-    | { tcenv; gamma; tydefs; type_names; currentModule;_} -> gamma
+    | { tcenv = __fname__tcenv; gamma = __fname__gamma;
+        tydefs = __fname__tydefs; type_names = __fname__type_names;
+        currentModule = __fname__currentModule;_} -> __fname__gamma
   
 let (__proj__Mkenv__item__tydefs : env -> tydef Prims.list) =
   fun projectee  ->
     match projectee with
-    | { tcenv; gamma; tydefs; type_names; currentModule;_} -> tydefs
+    | { tcenv = __fname__tcenv; gamma = __fname__gamma;
+        tydefs = __fname__tydefs; type_names = __fname__type_names;
+        currentModule = __fname__currentModule;_} -> __fname__tydefs
   
 let (__proj__Mkenv__item__type_names :
   env -> FStar_Syntax_Syntax.fv Prims.list) =
   fun projectee  ->
     match projectee with
-    | { tcenv; gamma; tydefs; type_names; currentModule;_} -> type_names
+    | { tcenv = __fname__tcenv; gamma = __fname__gamma;
+        tydefs = __fname__tydefs; type_names = __fname__type_names;
+        currentModule = __fname__currentModule;_} -> __fname__type_names
   
 let (__proj__Mkenv__item__currentModule :
   env -> FStar_Extraction_ML_Syntax.mlpath) =
   fun projectee  ->
     match projectee with
-    | { tcenv; gamma; tydefs; type_names; currentModule;_} -> currentModule
+    | { tcenv = __fname__tcenv; gamma = __fname__gamma;
+        tydefs = __fname__tydefs; type_names = __fname__type_names;
+        currentModule = __fname__currentModule;_} -> __fname__currentModule
   
 let (debug : env -> (unit -> unit) -> unit) =
   fun g  ->

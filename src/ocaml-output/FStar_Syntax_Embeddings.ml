@@ -56,28 +56,38 @@ type 'a embedding =
   emb_typ: FStar_Syntax_Syntax.emb_typ }
 let __proj__Mkembedding__item__em : 'a . 'a embedding -> 'a -> embed_t =
   fun projectee  ->
-    match projectee with | { em; un; typ; print = print7; emb_typ;_} -> em
+    match projectee with
+    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
+        print = __fname__print; emb_typ = __fname__emb_typ;_} -> __fname__em
   
 let __proj__Mkembedding__item__un :
   'a . 'a embedding -> FStar_Syntax_Syntax.term -> 'a unembed_t =
   fun projectee  ->
-    match projectee with | { em; un; typ; print = print7; emb_typ;_} -> un
+    match projectee with
+    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
+        print = __fname__print; emb_typ = __fname__emb_typ;_} -> __fname__un
   
 let __proj__Mkembedding__item__typ :
   'a . 'a embedding -> FStar_Syntax_Syntax.typ =
   fun projectee  ->
-    match projectee with | { em; un; typ; print = print7; emb_typ;_} -> typ
+    match projectee with
+    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
+        print = __fname__print; emb_typ = __fname__emb_typ;_} -> __fname__typ
   
 let __proj__Mkembedding__item__print : 'a . 'a embedding -> 'a printer =
   fun projectee  ->
     match projectee with
-    | { em; un; typ; print = print7; emb_typ;_} -> print7
+    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
+        print = __fname__print; emb_typ = __fname__emb_typ;_} ->
+        __fname__print
   
 let __proj__Mkembedding__item__emb_typ :
   'a . 'a embedding -> FStar_Syntax_Syntax.emb_typ =
   fun projectee  ->
     match projectee with
-    | { em; un; typ; print = print7; emb_typ;_} -> emb_typ
+    | { em = __fname__em; un = __fname__un; typ = __fname__typ;
+        print = __fname__print; emb_typ = __fname__emb_typ;_} ->
+        __fname__emb_typ
   
 let emb_typ_of : 'a . 'a embedding -> FStar_Syntax_Syntax.emb_typ =
   fun e  -> e.emb_typ 

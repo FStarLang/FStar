@@ -415,11 +415,23 @@ let (uu___is_VQuote : term' -> Prims.bool) =
 let (__proj__VQuote__item___0 : term' -> term) =
   fun projectee  -> match projectee with | VQuote _0 -> _0 
 let (__proj__Mkterm__item__tm : term -> term') =
-  fun projectee  -> match projectee with | { tm; range; level;_} -> tm 
+  fun projectee  ->
+    match projectee with
+    | { tm = __fname__tm; range = __fname__range; level = __fname__level;_}
+        -> __fname__tm
+  
 let (__proj__Mkterm__item__range : term -> FStar_Range.range) =
-  fun projectee  -> match projectee with | { tm; range; level;_} -> range 
+  fun projectee  ->
+    match projectee with
+    | { tm = __fname__tm; range = __fname__range; level = __fname__level;_}
+        -> __fname__range
+  
 let (__proj__Mkterm__item__level : term -> level) =
-  fun projectee  -> match projectee with | { tm; range; level;_} -> level 
+  fun projectee  ->
+    match projectee with
+    | { tm = __fname__tm; range = __fname__range; level = __fname__level;_}
+        -> __fname__level
+  
 let (uu___is_Variable : binder' -> Prims.bool) =
   fun projectee  ->
     match projectee with | Variable _0 -> true | uu____1912 -> false
@@ -453,19 +465,29 @@ let (uu___is_NoName : binder' -> Prims.bool) =
 let (__proj__NoName__item___0 : binder' -> term) =
   fun projectee  -> match projectee with | NoName _0 -> _0 
 let (__proj__Mkbinder__item__b : binder -> binder') =
-  fun projectee  -> match projectee with | { b; brange; blevel; aqual;_} -> b 
+  fun projectee  ->
+    match projectee with
+    | { b = __fname__b; brange = __fname__brange; blevel = __fname__blevel;
+        aqual = __fname__aqual;_} -> __fname__b
+  
 let (__proj__Mkbinder__item__brange : binder -> FStar_Range.range) =
   fun projectee  ->
-    match projectee with | { b; brange; blevel; aqual;_} -> brange
+    match projectee with
+    | { b = __fname__b; brange = __fname__brange; blevel = __fname__blevel;
+        aqual = __fname__aqual;_} -> __fname__brange
   
 let (__proj__Mkbinder__item__blevel : binder -> level) =
   fun projectee  ->
-    match projectee with | { b; brange; blevel; aqual;_} -> blevel
+    match projectee with
+    | { b = __fname__b; brange = __fname__brange; blevel = __fname__blevel;
+        aqual = __fname__aqual;_} -> __fname__blevel
   
 let (__proj__Mkbinder__item__aqual :
   binder -> arg_qualifier FStar_Pervasives_Native.option) =
   fun projectee  ->
-    match projectee with | { b; brange; blevel; aqual;_} -> aqual
+    match projectee with
+    | { b = __fname__b; brange = __fname__brange; blevel = __fname__blevel;
+        aqual = __fname__aqual;_} -> __fname__aqual
   
 let (uu___is_PatWild : pattern' -> Prims.bool) =
   fun projectee  ->
@@ -555,9 +577,15 @@ let (uu___is_PatOp : pattern' -> Prims.bool) =
 let (__proj__PatOp__item___0 : pattern' -> FStar_Ident.ident) =
   fun projectee  -> match projectee with | PatOp _0 -> _0 
 let (__proj__Mkpattern__item__pat : pattern -> pattern') =
-  fun projectee  -> match projectee with | { pat; prange;_} -> pat 
+  fun projectee  ->
+    match projectee with
+    | { pat = __fname__pat; prange = __fname__prange;_} -> __fname__pat
+  
 let (__proj__Mkpattern__item__prange : pattern -> FStar_Range.range) =
-  fun projectee  -> match projectee with | { pat; prange;_} -> prange 
+  fun projectee  ->
+    match projectee with
+    | { pat = __fname__pat; prange = __fname__prange;_} -> __fname__prange
+  
 let (uu___is_Implicit : arg_qualifier -> Prims.bool) =
   fun projectee  ->
     match projectee with | Implicit  -> true | uu____2427 -> false
@@ -816,15 +844,21 @@ type lift =
   lift_op: lift_op }
 let (__proj__Mklift__item__msource : lift -> FStar_Ident.lid) =
   fun projectee  ->
-    match projectee with | { msource; mdest; lift_op;_} -> msource
+    match projectee with
+    | { msource = __fname__msource; mdest = __fname__mdest;
+        lift_op = __fname__lift_op;_} -> __fname__msource
   
 let (__proj__Mklift__item__mdest : lift -> FStar_Ident.lid) =
   fun projectee  ->
-    match projectee with | { msource; mdest; lift_op;_} -> mdest
+    match projectee with
+    | { msource = __fname__msource; mdest = __fname__mdest;
+        lift_op = __fname__lift_op;_} -> __fname__mdest
   
 let (__proj__Mklift__item__lift_op : lift -> lift_op) =
   fun projectee  ->
-    match projectee with | { msource; mdest; lift_op;_} -> lift_op
+    match projectee with
+    | { msource = __fname__msource; mdest = __fname__mdest;
+        lift_op = __fname__lift_op;_} -> __fname__lift_op
   
 type pragma =
   | SetOptions of Prims.string 
@@ -1010,24 +1044,34 @@ let (__proj__Splice__item___0 :
   = fun projectee  -> match projectee with | Splice _0 -> _0 
 let (__proj__Mkdecl__item__d : decl -> decl') =
   fun projectee  ->
-    match projectee with | { d; drange; doc = doc1; quals; attrs;_} -> d
+    match projectee with
+    | { d = __fname__d; drange = __fname__drange; doc = __fname__doc;
+        quals = __fname__quals; attrs = __fname__attrs;_} -> __fname__d
   
 let (__proj__Mkdecl__item__drange : decl -> FStar_Range.range) =
   fun projectee  ->
-    match projectee with | { d; drange; doc = doc1; quals; attrs;_} -> drange
+    match projectee with
+    | { d = __fname__d; drange = __fname__drange; doc = __fname__doc;
+        quals = __fname__quals; attrs = __fname__attrs;_} -> __fname__drange
   
 let (__proj__Mkdecl__item__doc :
   decl -> fsdoc FStar_Pervasives_Native.option) =
   fun projectee  ->
-    match projectee with | { d; drange; doc = doc1; quals; attrs;_} -> doc1
+    match projectee with
+    | { d = __fname__d; drange = __fname__drange; doc = __fname__doc;
+        quals = __fname__quals; attrs = __fname__attrs;_} -> __fname__doc
   
 let (__proj__Mkdecl__item__quals : decl -> qualifiers) =
   fun projectee  ->
-    match projectee with | { d; drange; doc = doc1; quals; attrs;_} -> quals
+    match projectee with
+    | { d = __fname__d; drange = __fname__drange; doc = __fname__doc;
+        quals = __fname__quals; attrs = __fname__attrs;_} -> __fname__quals
   
 let (__proj__Mkdecl__item__attrs : decl -> attributes_) =
   fun projectee  ->
-    match projectee with | { d; drange; doc = doc1; quals; attrs;_} -> attrs
+    match projectee with
+    | { d = __fname__d; drange = __fname__drange; doc = __fname__doc;
+        quals = __fname__quals; attrs = __fname__attrs;_} -> __fname__attrs
   
 let (uu___is_DefineEffect : effect_decl -> Prims.bool) =
   fun projectee  ->
