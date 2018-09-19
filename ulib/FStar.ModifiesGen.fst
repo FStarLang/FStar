@@ -846,15 +846,22 @@ val modifies_intro_strong
 let modifies_intro_strong #al #c l h h' regions mrefs lives unused_ins alocs =
   Classical.forall_intro (Classical.move_requires regions);
   assert (modifies_preserves_regions l h h');
-  modifies_preserves_mreferences_intro l h h' (fun t pre p ->
+
+  let aux (t:Type) (pre:Preorder.preorder t) (p:HS.mreference t pre)
+    :Lemma (requires (HS.contains h p /\
+                      (Set.mem (HS.frameOf p) (regions_of_loc l) ==> ~ (GSet.mem (HS.as_addr p) (addrs_of_loc l (HS.frameOf p))))))
+           (ensures  (HS.contains h' p /\ HS.sel h' p == HS.sel h p))
+    = 
     assert_norm (Loc?.region_liveness_tags (loc_mreference #_ #c p) == Ghost.hide Set.empty);
     assert (loc_disjoint_region_liveness_tags (loc_mreference p) l);
     // FIXME: WHY WHY WHY is this assert necessary?
     assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_mreference p))) (Ghost.reveal (Loc?.aux l)));
     // FIXME: Now this one is too :)
-    assert ((loc_disjoint (loc_mreference p) l) /\ HS.contains h p);
+    assert ((loc_disjoint (loc_mreference p) l));
     mrefs t pre p
-  );
+  in
+
+  modifies_preserves_mreferences_intro l h h' aux;
   Classical.forall_intro_3 (fun t pre p -> Classical.move_requires (lives t pre) p);
   modifies_preserves_not_unused_in_intro l h h' (fun r n ->
     unused_ins r n

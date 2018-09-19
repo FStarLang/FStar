@@ -66,7 +66,9 @@ let run_safe t p =
     if Options.tactics_failhard ()
     then run t p
     else try run t p
-         with | e -> Failed (e, p)
+    with | Errors.Err (_, msg)
+         | Errors.Error (_, msg, _) -> Failed (TacticFailure msg, p)
+         | e -> Failed (e, p)
 
 let rec log ps (f : unit -> unit) : unit =
     if ps.tac_verb_dbg

@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5969c2df90d119cc3d4b3a5eeb5a2949"
+      "64ab935fa2d2dd5c687928b4c044c6b2"
     ],
     [
       "Lens.circle",
@@ -21,7 +21,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "81ad1ff81814be0fcf37552b686e6d7f"
+      "46c325578407e3d52852582f63698dec"
     ],
     [
       "Lens.rgb",
@@ -33,7 +33,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f1b18abb3eff208f099e91c069c49f3b"
+      "d4aca4831437ee29181505e49f926d79"
     ],
     [
       "Lens.colored",
@@ -42,7 +42,7 @@
       1,
       [ "@query", "assumption_Lens.rgb__uu___haseq" ],
       0,
-      "d0425666179b191e0888e5fbcceaed5d"
+      "d214a340ef252a3274106240860453a0"
     ],
     [
       "Lens.stlens",
@@ -62,7 +62,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "470f68593a822d3af5b103b0e349f83e"
+      "50d8985a9e82dea23285a1b0807b025a"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -82,7 +82,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "818792f0979148abc0197230712e8d8d"
+      "6f73114bbf1292fed525d43e41bd5e34"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -100,7 +100,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "348d311aaf64c70ae26e09e4bfef739d"
+      "25d4885cdad0895d423779e28532c0f5"
     ],
     [
       "Lens.st",
@@ -118,7 +118,7 @@
         "typing_FStar.Ref.addr_of", "typing_FStar.Ref.only"
       ],
       0,
-      "e4c7a3ea306d77adb7f75d1f88bcdd76"
+      "c7bed0b4aea192589a2b42b9f8f50f90"
     ],
     [
       "Lens.op_Bar_Colon_Dot_Dot",
@@ -143,7 +143,7 @@
         "token_correspondence_Lens.op_Bar_Colon_Equals"
       ],
       0,
-      "869f828f4cb14b4b8fdbb6c20fdd9e75"
+      "8eeed1bd9376ede5a27342e299ba300f"
     ],
     [
       "Lens.point",
@@ -152,7 +152,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d46f968eb366b6720a625356e1a073a7"
+      "67e9cc1ae54e42487b18eca76114fc40"
     ],
     [
       "Lens.circle",
@@ -165,7 +165,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "6146d2665bfce0bb47a0d15caa0cd83b"
+      "fbc40c40b1dcd7c807950af35698b80b"
     ],
     [
       "Lens.rgb",
@@ -177,7 +177,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "eb727aeb07448dd11c5ef69279260cec"
+      "88c955f857a95da88475b4e455711c70"
     ],
     [
       "Lens.colored",
@@ -186,7 +186,7 @@
       1,
       [ "@query", "assumption_Lens.rgb__uu___haseq" ],
       0,
-      "1958396e85971638899cbe66a505b9a4"
+      "57ab2788154f32e4a01d2c2af1d8dfd7"
     ],
     [
       "Lens.stlens",
@@ -206,7 +206,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "6c404bb8cda6a12500c663fc4d65a4a4"
+      "0039beea0d1c00d60c00b83d2dbc1d47"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -226,7 +226,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "d407404a352a60197be1d0e27eb4fc9a"
+      "4bc7d74e031bb7ee81e23e6934dc393b"
     ],
     [
       "Lens.__proj__Mkstlens__item__st_put",
@@ -244,7 +244,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "7931ec49d5341f9bc26a764703fa3a2e"
+      "f2985acdfd04aab93cdedecb193c96fd"
     ],
     [
       "Lens.st",
@@ -262,7 +262,7 @@
         "typing_FStar.Ref.addr_of", "typing_FStar.Ref.only"
       ],
       0,
-      "405e312e7460f1d3e210f8bdf048855d"
+      "ba106fc67eeced448980f6d41edb37e6"
     ],
     [
       "Lens.op_Bar_Colon_Dot_Dot",
@@ -287,7 +287,7 @@
         "token_correspondence_Lens.op_Bar_Colon_Equals"
       ],
       0,
-      "ba258883db83564fa152809bbcd30f5a"
+      "ffcb3727cc67c89d25cbe9e310359745"
     ],
     [
       "Lens.op_Bar_Colon_Colon_Equals",
@@ -307,7 +307,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "ff8d50411a98cf359bd3b1cd1e063e33"
+      "35f340d6e357dd0785cc8365f3575342"
     ],
     [
       "Lens.op_Array_Assignment",
@@ -327,7 +327,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "e2232e2eb1a1ad3a79fac28b0faa7144"
+      "f5d7cbeb065204a902c7ec67e0a058fb"
     ],
     [
       "Lens.mutate",
@@ -347,7 +347,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "2ae9856f454dfbfebc5e8f7c3722efc1"
+      "2af0a5463e4c332f8a6716e880f85e1b"
     ],
     [
       "Lens.mutate2",
@@ -367,7 +367,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_FStar.ST.ref"
       ],
       0,
-      "558caafaadbaa1563e746dcf2b6202b2"
+      "16b75451834df9842700c46ca65c2e38"
     ],
     [
       "Lens.mutate3",
@@ -387,7 +387,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "2f501ba60d9811d237a7dd58353e5438"
+      "78e814e41ad499371b85a1242e6870a9"
     ]
   ]
 ]
