@@ -20,6 +20,7 @@ open FStar.All
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
+open FStar.Universal
 module E = FStar.Errors
 
 let _ = FStar.Version.dummy ()
@@ -160,7 +161,7 @@ let go _ =
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \
                          reindenting is not known to work yet with this version"
 
-        (*** Normal, batch mode compiler ***)
+        (* Normal, batch mode compiler *)
         else if List.length filenames >= 1 then begin //normal batch mode
           let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames in
           let tcrs, env, delta_env = Universal.batch_mode_tc filenames dep_graph in

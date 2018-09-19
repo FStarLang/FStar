@@ -27,9 +27,11 @@ open FStar.Getopt
 open FStar.Ident
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
-open FStar.TypeChecker.Env
 open FStar.Dependencies
+open FStar.Extraction.ML.UEnv
+open FStar.TypeChecker.Env
 open FStar.Syntax.DsEnv
+
 
 (* Module abbreviations for the universal type-checker  *)
 module DsEnv   = FStar.Syntax.DsEnv
@@ -51,7 +53,7 @@ let cache_version_number = 5
 
 let module_or_interface_name m = m.is_interface, m.name
 
-type env = FStar.Extraction.ML.UEnv.env
+type uenv = FStar.Extraction.ML.UEnv.uenv
 
 type tc_result = {
   checked_module: Syntax.modul; //persisted
@@ -63,27 +65,27 @@ type tc_result = {
   extraction_time: int;
 }
 
-let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv<'a>) =
+let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv<'a>) : 'a * TcEnv.env =
     let a, dsenv = f tcenv.dsenv in
     a, ({tcenv with dsenv = dsenv})
 
-let with_tcenv_of_env (env:env) (f:TcEnv.env -> 'a * TcEnv.env) : 'a * env =
-    let a, tcenv = f env.tcenv in
-    a, {env with tcenv=tcenv}
+let with_tcenv_of_env (e:uenv) (f:TcEnv.env -> 'a * TcEnv.env) : 'a * uenv =
+     let a, t' = f e.env_tcenv in
+     a, ({e with env_tcenv=t'})
 
-let with_dsenv_of_env (env:env) (f:DsEnv.withenv<'a>) =
-    let a, tcenv = with_dsenv_of_tcenv env.tcenv f in
-    a, ({env with tcenv=tcenv})
+let with_dsenv_of_env (e:uenv) (f:DsEnv.withenv<'a>) : 'a * uenv =
+     let a, tcenv = with_dsenv_of_tcenv e.env_tcenv f in
+     a, ({e with env_tcenv=tcenv})
 
-let push_env (env:env) =
+let push_env (env:uenv) =
     snd (with_tcenv_of_env env (fun tcenv ->
-            (), FStar.TypeChecker.Env.push env.tcenv "top-level: push_env"))
+            (), FStar.TypeChecker.Env.push env.env_tcenv "top-level: push_env"))
 
-let pop_env (env:env) =
+let pop_env (env:uenv) =
     snd (with_tcenv_of_env env (fun tcenv ->
             (), FStar.TypeChecker.Env.pop tcenv "top-level: pop_env"))
 
-let with_env env (f:env -> 'a) : 'a =
+let with_env env (f:uenv -> 'a) : 'a =
     let env = push_env env in
     let res = f env in
     let _ = pop_env env in
@@ -95,9 +97,9 @@ let env_of_tcenv (env:TcEnv.env) =
 (***********************************************************************)
 (* Parse and desugar a file                                            *)
 (***********************************************************************)
-let parse (env:env) (pre_fn: option<string>) (fn:string)
+let parse (env:uenv) (pre_fn: option<string>) (fn:string)
   : Syntax.modul
-  * env =
+  * uenv =
   let ast, _ = Parser.Driver.parse_file fn in
   let ast, env = match pre_fn with
     | None ->
@@ -227,7 +229,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
 (* Loading and storing cache files                                     *)
 (***********************************************************************)
 let load_module_from_cache
-    : env
+    : uenv
     -> string
     -> option<tc_result> =
     let some_cache_invalid = BU.mk_ref None in
@@ -281,14 +283,14 @@ let load_module_from_cache
         | Some _ -> None
         | _ ->
           if BU.file_exists cache_file then
-            match load env.tcenv fn cache_file with
+            match load env.env_tcenv fn cache_file with
             | Inl msg -> fail msg true cache_file
             | Inr res -> Some res
           else
             match FStar.Options.find_file (FStar.Util.basename cache_file) with
             | None -> fail "Absent" false cache_file //do not warn if the file was not found
             | Some alt_cache_file ->
-              match load env.tcenv fn alt_cache_file with
+              match load env.env_tcenv fn alt_cache_file with
               | Inl msg -> fail msg true alt_cache_file
               | Inr res ->
                 //found a valid .checked file somewhere else in the include path
@@ -298,12 +300,12 @@ let load_module_from_cache
                 Some res
 
 
-let store_module_to_cache (env:env) fn (tc_result:tc_result) =
+let store_module_to_cache (env:uenv) fn (tc_result:tc_result) =
     if Options.cache_checked_modules()
     && not (Options.cache_off())
     then begin
         let cache_file = FStar.Parser.Dep.cache_file_name fn in
-        let digest = FStar.Parser.Dep.hash_dependences (TcEnv.dep_graph env.tcenv) fn in
+        let digest = FStar.Parser.Dep.hash_dependences (TcEnv.dep_graph env.env_tcenv) fn in
         match digest with
         | Some hashes ->
           //cache_version_number should always be the first field here
@@ -325,12 +327,12 @@ let store_module_to_cache (env:env) fn (tc_result:tc_result) =
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
-type delta_env = option<(env -> env)>
+type delta_env = option<(uenv -> uenv)>
 let apply_delta_env env (f:delta_env) =
     match f with
     | None -> env
     | Some f -> f env
-let extend_delta_env (f:delta_env) (g:env->env) =
+let extend_delta_env (f:delta_env) (g:uenv->uenv) =
     match f with
     | None -> Some g
     | Some f -> Some (fun e -> g (f e))
@@ -366,12 +368,12 @@ let emit (mllibs:list<FStar.Extraction.ML.Syntax.mllib>) =
    | _ -> failwith "Unrecognized option"
 
 let tc_one_file
-        (env:env)
+        (env:uenv)
         (delta:delta_env)
         (pre_fn:option<string>) //interface file name
         (fn:string) //file name
     : tc_result
-    * env
+    * uenv
     * delta_env =
   Syntax.reset_gensym();
   let maybe_extract_mldefs tcmod env =
@@ -386,7 +388,7 @@ let tc_one_file
   let tc_source_file () =
       let env = apply_delta_env env delta in
       let fmod, env = parse env pre_fn fn in
-      let mii = FStar.Syntax.DsEnv.inclusion_info env.tcenv.dsenv fmod.name in
+      let mii = FStar.Syntax.DsEnv.inclusion_info env.env_tcenv.dsenv fmod.name in
       let check_mod () =
           let ((tcmod, tcmod_iface_opt), env), tc_time =
             FStar.Util.record_time (fun () ->
@@ -503,7 +505,7 @@ let tc_one_file_for_ide
     =
     let env = env_of_tcenv env in
     let tc_result, env, delta = tc_one_file env None pre_fn fn in
-    tc_result, (apply_delta_env env delta).tcenv
+    tc_result, (apply_delta_env env delta).env_tcenv
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)
@@ -515,7 +517,7 @@ let needs_interleaving intf impl =
   List.mem (FStar.Util.get_file_extension intf) ["fsti"; "fsi"] &&
   List.mem (FStar.Util.get_file_extension impl) ["fst"; "fs"]
 
-let tc_one_file_from_remaining (remaining:list<string>) (env:env) (delta_env:delta_env) =
+let tc_one_file_from_remaining (remaining:list<string>) (env:uenv) (delta_env:delta_env) =
   let remaining, (nmods, env, delta_env) =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
@@ -528,7 +530,7 @@ let tc_one_file_from_remaining (remaining:list<string>) (env:env) (delta_env:del
   in
   remaining, nmods, env, delta_env
 
-let rec tc_fold_interleave (acc:list<tc_result> * env * delta_env) (remaining:list<string>) =
+let rec tc_fold_interleave (acc:list<tc_result> * uenv * delta_env) (remaining:list<string>) =
   match remaining with
     | [] -> acc
     | _  ->

@@ -209,7 +209,7 @@ let (subst :
       | FStar_Pervasives_Native.Some t -> t
   
 let (udelta_unfold :
-  FStar_Extraction_ML_UEnv.env ->
+  FStar_Extraction_ML_UEnv.uenv ->
     FStar_Extraction_ML_Syntax.mlty ->
       FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option)
   =
