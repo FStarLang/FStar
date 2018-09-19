@@ -4,6 +4,8 @@ open FStar.ST
 
 open FStar.Preorder
 
+module I = FStar.IMST
+
 let stable = FStar.Preorder.stable
 
 private let p_pred (#a:Type) (#b:preorder a) (r:mref a b) (p:(a -> Type))
@@ -16,13 +18,13 @@ abstract val witness_token: #a:Type -> #b:preorder a -> m:mref a b -> p:(a -> Ty
                          -> ST unit (requires (fun h0 -> p (sel h0 m)))
                                    (ensures (fun h0 _ h1 -> h0==h1 /\ token m p))
 let witness_token #a #b m p =
-  gst_recall (contains_pred m);
-  gst_witness (p_pred m p)
+  I.recall #heap #heap_rel (contains_pred m);
+  I.witness #heap #heap_rel (p_pred m p)
 
 abstract val recall_token: #a:Type -> #b:preorder a -> m:mref a b -> p:(a -> Type){stable p b}
                            -> ST unit (requires (fun _ ->  token m p))
                                      (ensures (fun h0 _ h1 -> h0==h1 /\ p (sel h1 m)))
-let recall_token #a #b m p = gst_recall (p_pred m p)
+let recall_token #a #b m p = I.recall #heap #heap_rel (p_pred m p)
 
 let spred (#a:Type) (rel:preorder a) = p:(a -> Type){Preorder.stable p rel}
 let lemma_functoriality (#a:Type) (#rel:preorder a) (r:mref a rel) (p q:spred rel)
@@ -36,10 +38,10 @@ abstract val recall: p:(heap -> Type){ST.stable p} ->
   ST unit
     (requires (fun _ ->  witnessed p))
     (ensures (fun h0 _ h1 -> h0 == h1 /\ p h1))
-let recall p = gst_recall p
+let recall p = I.recall #heap #heap_rel p
 
 abstract val witness: p:(heap -> Type){ST.stable p} ->
   ST unit
     (requires (fun h0 -> p h0))
     (ensures (fun h0 _ h1 -> h0==h1 /\ witnessed p))
-let witness p = gst_witness p
+let witness p = I.witness #heap #heap_rel p

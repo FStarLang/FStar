@@ -14,7 +14,11 @@
    limitations under the License.
 *)
 module FStar.All
+
 open FStar.Heap
+
+module I = FStar.IMST
+
 include FStar.ST
 include FStar.Exn
 
@@ -24,8 +28,8 @@ let all_post (a : Type) = all_post_h heap a
 let all_wp (a : Type) = all_wp_h heap a
 new_effect ALL  = ALL_h heap
 
-unfold let lift_state_all (a : Type) (wp : st_wp a) (p : all_post a) = wp (fun a -> p (V a))
-sub_effect STATE ~> ALL { lift_wp = lift_state_all }
+unfold let lift_state_all (a : Type) (wp : I.st_wp a) (p : all_post a) = wp heap heap_rel (fun a -> p (V a))
+sub_effect I.IMST ~> ALL { lift_wp = lift_state_all }
 
 unfold
 let lift_exn_all (a : Type) (wp : ex_wp a) (p : all_post a) (h : heap) = wp (fun ra -> p ra h)
