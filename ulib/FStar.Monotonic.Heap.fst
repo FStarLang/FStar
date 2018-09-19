@@ -4,8 +4,8 @@ open FStar.Preorder
 open FStar.Classical
 
 private noeq type heap_rec = {
-  next_addr: (x: nat { x > 0 } );
-  memory   : (x: nat { x > 0 } ) -> Tot (option (a:Type0 & rel:(option (preorder a)) & b:bool & a))  //type, preorder, mm flag, and value
+  next_addr: pos;
+  memory   : (x:pos) -> Tot (option (a:Type0 & rel:(option (preorder a)) & b:bool & a))  //type, preorder, mm flag, and value
 }
 
 let heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
@@ -22,6 +22,8 @@ let emp = {
   memory    = (fun (r:nat) -> None)
 }
 
+let next_addr h = h.next_addr
+
 private noeq type mref' (a:Type0) (rel:preorder a) :Type0 = {
   addr: (x: nat { x > 0 } );
   init: a;
@@ -33,8 +35,6 @@ let mref a rel = mref' a rel
 let addr_of #a #rel r = r.addr
 
 let is_mm #a #rel r = r.mm
-
-let compare_addrs #a #b #rel1 #rel2 r1 r2 = r1.addr = r2.addr
 
 let contains #a #rel h r =
   let _ = () in
@@ -207,6 +207,12 @@ let lemma_heap_equality_commute_distinct_upds #a #b #rel_a #rel_b h r1 r2 x y =
   let h0 = upd (upd h r1 x) r2 y in
   let h1 = upd (upd h r2 y) r1 x in
   assert (equal h0 h1)
+
+let lemma_next_addr_upd_tot #_ #_ _ _ _ = ()
+let lemma_next_addr_upd #_ #_ _ _ _ = ()
+let lemma_next_addr_alloc #_ _ _ _ _ = ()
+let lemma_next_addr_free_mm #_ #_ _ _ = ()
+let lemma_next_addr_contained_refs_addr #_ #_ _ _ = ()
 
 (*** Untyped views of references *)
 

@@ -545,6 +545,15 @@ let lemma_heap_equality_commute_distinct_upds
     if frameOf r1 = frameOf r2 then Heap.lemma_heap_equality_commute_distinct_upds (Map.sel h.h (frameOf r1)) (as_ref r1) (as_ref r2) x y;
     assert (Map.equal h0.h h1.h)
 
+let lemma_next_addr_contained_refs_addr ()
+  :Lemma (forall (a:Type0) (rel:preorder a) (r:mreference a rel) (m:mem).
+            m `contains` r ==> as_addr r < Heap.next_addr (get_hmap m `Map.sel` frameOf r))
+  = let aux (a:Type0) (rel:preorder a) (r:mreference a rel) (m:mem)
+      :Lemma (m `contains` r ==> as_addr r < Heap.next_addr (get_hmap m `Map.sel` frameOf r))
+      = Heap.lemma_next_addr_contained_refs_addr (get_hmap m `Map.sel` frameOf r) (as_ref r)
+    in
+    Classical.forall_intro_4 aux
+
 (*** Untyped views of references *)
 
 (* Definition and ghost decidable equality *)

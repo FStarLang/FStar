@@ -20,7 +20,7 @@ private let initialization_preorder (a:Type0) :srel (option a) =
             (forall (i:nat).{:pattern (Seq.index s2 i)} i < Seq.length s1 ==> Some? (Seq.index s1 i) ==> Some? (Seq.index s2 i))
 
 type ubuffer (a:Type0) =
-  b:mbuffer (option a) (initialization_preorder a) (initialization_preorder a){recallable b}
+  b:mbuffer (option a) (initialization_preorder a) (initialization_preorder a)
 
 unfold let unull (#a:Type0) :ubuffer a = mnull #(option a) #(initialization_preorder a) #(initialization_preorder a)
 
@@ -70,13 +70,29 @@ let uupd (#a:Type0) (b:ubuffer a) (i:U32.t) (v:a)
   = upd b i (Some v);
     witness_p b (ipred (U32.v i))
 
+unfold let lubuffer (a:Type0) (len:nat) = b:ubuffer a{length b == len}
+
 (*
  * No initializer
  *)
 let ugcmalloc (#a:Type0) (r:HS.rid) (len:U32.t)
-  :HST.ST (b:ubuffer a{frameOf b == r}) (requires (fun h0      -> malloc_pre r len))
-                                        (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) None)))
+  :HST.ST (b:lubuffer a (U32.v len){frameOf b == r /\ recallable b})
+          (requires (fun h0      -> malloc_pre r len))
+          (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) None)))
   = mgcmalloc r None len
+
+let umalloc (#a:Type0) (r:HS.rid) (len:U32.t)
+  :HST.ST (b:lubuffer a (U32.v len){frameOf b == r /\ freeable b})
+          (requires (fun _       -> malloc_pre r len))
+          (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) None)))
+  = mmalloc r None len
+
+let ualloca (#a:Type0) (len:U32.t)
+  :HST.StackInline (lubuffer a (U32.v len))
+                   (requires (fun _       -> alloca_pre len))
+                   (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) None) /\
+		                          frameOf b == HS.get_tip h0))
+  = malloca None len
 
 (*
  * blit functionality, where src is a regular buffer
@@ -131,6 +147,6 @@ let witness_initialized (#a:Type0) (b:ubuffer a) (i:nat)
   = witness_p b (ipred i)
 
 let recall_initialized (#a:Type0) (b:ubuffer a) (i:nat)
-  :HST.ST unit (fun h0      -> b `initialized_at` i)
-               (fun h0 _ h1 -> h0 == h1 /\ (i < length b ==> Some? (Seq.index (as_seq h0 b) i)))
+  :HST.ST unit (fun h0      -> (recallable b \/ live h0 b) /\ b `initialized_at` i)
+               (fun h0 _ h1 -> h0 == h1 /\ live h0 b /\ (i < length b ==> Some? (Seq.index (as_seq h0 b) i)))
   = recall_p b (ipred i)

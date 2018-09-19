@@ -43,6 +43,33 @@ let igcmalloc (#a:Type0) (r:HS.rid) (init:a) (len:U32.t)
     witness_p b (cpred (Seq.create (U32.v len) init));
     b
 
+let imalloc (#a:Type0) (r:HS.rid) (init:a) (len:U32.t)
+  :HST.ST (b:libuffer a (U32.v len){frameOf b == r /\ freeable b /\
+                                    witnessed b (cpred (Seq.create (U32.v len) init))})
+          (requires (fun _       -> malloc_pre r len))
+          (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init)))
+  = let b = mmalloc r init len in
+    witness_p b (cpred (Seq.create (U32.v len) init));
+    b
+
+let ialloca (#a:Type0) (init:a) (len:U32.t)
+  :HST.StackInline (b:libuffer a (U32.v len){witnessed b (cpred (Seq.create (U32.v len) init))})
+                   (requires (fun _       -> alloca_pre len))
+                   (ensures  (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.create (U32.v len) init) /\
+		                          frameOf b == HS.get_tip h0))
+  = let b = malloca init len in
+    witness_p b (cpred (Seq.create (U32.v len) init));
+    b
+
+let ialloca_of_list (#a:Type0) (init: list a)
+  :HST.StackInline (b:libuffer a (normalize_term (List.Tot.length init)){witnessed b (cpred (Seq.seq_of_list init))})
+                   (requires (fun _      -> alloca_of_list_pre init))
+                   (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init) /\
+		                         frameOf b == HS.get_tip h0))
+  = let b = malloca_of_list init in
+    witness_p b (cpred (Seq.seq_of_list init));
+    b
+
 let igcmalloc_of_list (#a:Type0) (r:HS.rid) (init:list a)
   :HST.ST (b:libuffer a (normalize_term (List.Tot.length init)){frameOf b == r /\ recallable b /\
                                                                 witnessed b (cpred (Seq.seq_of_list init))})
@@ -53,11 +80,11 @@ let igcmalloc_of_list (#a:Type0) (r:HS.rid) (init:list a)
     b
 
 let witness_contents (#a:Type0) (b:ibuffer a) (s:Seq.seq a)
-  :HST.ST unit (requires (fun h0      -> recallable b /\ Seq.equal (as_seq h0 b) s))
+  :HST.ST unit (requires (fun h0        -> Seq.equal (as_seq h0 b) s))
                  (ensures  (fun h0 _ h1 -> h0 == h1 /\ witnessed b (cpred s)))
   = witness_p b (cpred s)
 
 let recall_contents (#a:Type0) (b:ibuffer a) (s:Seq.seq a)
-  :HST.ST unit (requires (fun _       -> recallable b /\ witnessed b (cpred s)))
+  :HST.ST unit (requires (fun h0      -> (recallable b \/ live h0 b) /\ witnessed b (cpred s)))
                (ensures  (fun h0 _ h1 -> h0 == h1 /\ live h0 b /\ as_seq h0 b == s))
-  = recall b; recall_p b (cpred s)
+  = recall_p b (cpred s)

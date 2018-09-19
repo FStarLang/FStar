@@ -1709,6 +1709,9 @@ val g_upd_seq (#a:Type0) (#rrel #rel:srel a)
 	      (h:HS.mem{live h b /\ rel (as_seq h b) s})  (* TODO: we should not need this rel precondition *)
   :GTot HS.mem
 
+val lemma_g_upd_with_same_seq (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h:HS.mem)
+  :Lemma (requires (live h b)) (ensures (g_upd_seq b (as_seq h b) h == h))
+
 /// A lemma specifying `g_upd_seq` in terms of its effect on the
 /// buffer's underlying sequence
 
@@ -1806,12 +1809,12 @@ val witnessed (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a) 
  * This is not a fundamental limitation, but needs some tweaks to the underlying state model
  *)
 val witness_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
-  :HST.ST unit (requires (fun h0      -> recallable b /\ p (as_seq h0 b) /\ p `stable_on` rel))
+  :HST.ST unit (requires (fun h0      -> p (as_seq h0 b) /\ p `stable_on` rel))
                (ensures  (fun h0 _ h1 -> h0 == h1 /\ b `witnessed` p))
 
 val recall_p (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (p:spred a)
-  :HST.ST unit (requires (fun h0      -> b `witnessed` p))
-               (ensures  (fun h0 _ h1 -> h0 == h1 /\ p (as_seq h0 b)))
+  :HST.ST unit (requires (fun h0      -> (recallable b \/ live h0 b) /\ b `witnessed` p))
+               (ensures  (fun h0 _ h1 -> h0 == h1 /\ live h0 b /\ p (as_seq h0 b)))
 
 (* End: API for general witness and recall *)
 
