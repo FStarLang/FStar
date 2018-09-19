@@ -1368,9 +1368,11 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let lids' = List.collect U.lids_of_sigelt ses in
     List.iter (fun lid ->
         match List.tryFind (Ident.lid_equals lid) lids' with
-        | Some _ -> ()
-        | None ->
+        (* If env.nosynth is on, nothing will be generated, so don't raise an error
+         * so flycheck does spuriously not mark the line red *)
+        | None when not env.nosynth ->
             raise_error (Errors.Fatal_SplicedUndef, BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" (string_of_lid lid) (String.concat ", " <| List.map string_of_lid lids')) r
+        | _ -> ()
     ) lids;
     let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
     let env = { env with dsenv = dsenv } in
