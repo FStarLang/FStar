@@ -448,16 +448,17 @@ let tc_one_file
         in
         (* If we have to extract this module, then do it first *)
         let _ =
-            if Options.should_extract tcmod.name.str
+            if Options.codegen()<>None
+            && Options.should_extract tcmod.name.str
             && not tcmod.is_interface
-            then let extract_defs tcmod env =
-                     let _, env = with_tcenv_of_env env (delta_tcenv tcmod) in
-                     maybe_extract_mldefs tcmod env
-                 in
-                 let extracted_defs, extraction_time =
-                     with_env env (extract_defs tcmod)
-                 in
-                 ()
+            then with_env env (fun env ->
+                     let env = apply_delta_env env delta in
+                     let extract_defs tcmod env =
+                         let _, env = with_tcenv_of_env env (delta_tcenv tcmod) in
+                         maybe_extract_mldefs tcmod env
+                     in
+                     let extracted_defs, extraction_time = extract_defs tcmod env in
+                     ())
         in
 
         let delta_env env =
