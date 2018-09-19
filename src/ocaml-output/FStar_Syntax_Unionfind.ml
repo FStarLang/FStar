@@ -6,16 +6,12 @@ type vops_t =
 let (__proj__Mkvops_t__item__next_major :
   vops_t -> unit -> FStar_Syntax_Syntax.version) =
   fun projectee  ->
-    match projectee with
-    | { next_major = __fname__next_major; next_minor = __fname__next_minor;_}
-        -> __fname__next_major
+    match projectee with | { next_major; next_minor;_} -> next_major
   
 let (__proj__Mkvops_t__item__next_minor :
   vops_t -> unit -> FStar_Syntax_Syntax.version) =
   fun projectee  ->
-    match projectee with
-    | { next_major = __fname__next_major; next_minor = __fname__next_minor;_}
-        -> __fname__next_minor
+    match projectee with | { next_major; next_minor;_} -> next_minor
   
 let (vops : vops_t) =
   let major = FStar_Util.mk_ref (Prims.parse_int "0")  in
@@ -48,21 +44,15 @@ type uf =
   version: FStar_Syntax_Syntax.version }
 let (__proj__Mkuf__item__term_graph : uf -> tgraph) =
   fun projectee  ->
-    match projectee with
-    | { term_graph = __fname__term_graph; univ_graph = __fname__univ_graph;
-        version = __fname__version;_} -> __fname__term_graph
+    match projectee with | { term_graph; univ_graph; version;_} -> term_graph
   
 let (__proj__Mkuf__item__univ_graph : uf -> ugraph) =
   fun projectee  ->
-    match projectee with
-    | { term_graph = __fname__term_graph; univ_graph = __fname__univ_graph;
-        version = __fname__version;_} -> __fname__univ_graph
+    match projectee with | { term_graph; univ_graph; version;_} -> univ_graph
   
 let (__proj__Mkuf__item__version : uf -> FStar_Syntax_Syntax.version) =
   fun projectee  ->
-    match projectee with
-    | { term_graph = __fname__term_graph; univ_graph = __fname__univ_graph;
-        version = __fname__version;_} -> __fname__version
+    match projectee with | { term_graph; univ_graph; version;_} -> version
   
 let (empty : FStar_Syntax_Syntax.version -> uf) =
   fun v1  ->

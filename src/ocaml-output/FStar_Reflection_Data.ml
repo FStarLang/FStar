@@ -255,21 +255,15 @@ type bv_view =
   bv_sort: typ }
 let (__proj__Mkbv_view__item__bv_ppname : bv_view -> Prims.string) =
   fun projectee  ->
-    match projectee with
-    | { bv_ppname = __fname__bv_ppname; bv_index = __fname__bv_index;
-        bv_sort = __fname__bv_sort;_} -> __fname__bv_ppname
+    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_ppname
   
 let (__proj__Mkbv_view__item__bv_index : bv_view -> FStar_BigInt.t) =
   fun projectee  ->
-    match projectee with
-    | { bv_ppname = __fname__bv_ppname; bv_index = __fname__bv_index;
-        bv_sort = __fname__bv_sort;_} -> __fname__bv_index
+    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_index
   
 let (__proj__Mkbv_view__item__bv_sort : bv_view -> typ) =
   fun projectee  ->
-    match projectee with
-    | { bv_ppname = __fname__bv_ppname; bv_index = __fname__bv_index;
-        bv_sort = __fname__bv_sort;_} -> __fname__bv_sort
+    match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_sort
   
 type binder_view =
   (FStar_Syntax_Syntax.bv,aqualv) FStar_Pervasives_Native.tuple2
@@ -370,24 +364,13 @@ type refl_constant =
   fv: FStar_Syntax_Syntax.fv ;
   t: FStar_Syntax_Syntax.term }
 let (__proj__Mkrefl_constant__item__lid : refl_constant -> FStar_Ident.lid) =
-  fun projectee  ->
-    match projectee with
-    | { lid = __fname__lid; fv = __fname__fv; t = __fname__t;_} ->
-        __fname__lid
-  
+  fun projectee  -> match projectee with | { lid; fv; t;_} -> lid 
 let (__proj__Mkrefl_constant__item__fv :
   refl_constant -> FStar_Syntax_Syntax.fv) =
-  fun projectee  ->
-    match projectee with
-    | { lid = __fname__lid; fv = __fname__fv; t = __fname__t;_} ->
-        __fname__fv
-  
+  fun projectee  -> match projectee with | { lid; fv; t;_} -> fv 
 let (__proj__Mkrefl_constant__item__t :
   refl_constant -> FStar_Syntax_Syntax.term) =
-  fun projectee  ->
-    match projectee with
-    | { lid = __fname__lid; fv = __fname__fv; t = __fname__t;_} -> __fname__t
-  
+  fun projectee  -> match projectee with | { lid; fv; t;_} -> t 
 let (refl_constant_lid : refl_constant -> FStar_Ident.lid) =
   fun rc  -> rc.lid 
 let (refl_constant_term : refl_constant -> FStar_Syntax_Syntax.term) =

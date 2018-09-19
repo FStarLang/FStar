@@ -6,10 +6,10 @@ open FStar.Tactics.Typeclasses
 class additive a = {
   zero       : a;
   plus       : a -> a -> a;
-  zero_l     : ((x : a) -> Lemma (__fname__plus __fname__zero x == x));
-  zero_r     : ((x : a) -> Lemma (__fname__plus x __fname__zero == x));
+  zero_l     : ((x : a) -> Lemma (plus zero x == x));
+  zero_r     : ((x : a) -> Lemma (plus x zero == x));
   plus_assoc : ((x : a) -> (y : a) -> (z : a)
-                  -> Lemma (__fname__plus (__fname__plus x y) z == __fname__plus x (__fname__plus y z)));
+                  -> Lemma (plus (plus x y) z == plus x (plus y z)));
 }
 
 (*

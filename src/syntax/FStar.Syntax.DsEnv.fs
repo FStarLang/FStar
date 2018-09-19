@@ -795,7 +795,7 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match
                         then []
                         else [(x,q)] )
                 in
-                let fields' = formals' |> List.map (fun (x,q) -> ((if is_rec then U.unmangle_field_name x.ppname else x.ppname), x.sort))
+                let fields' = formals' |> List.map (fun (x,q) -> (x.ppname, x.sort))
                 in
                 let fields = fields'
                 in

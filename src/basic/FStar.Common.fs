@@ -74,6 +74,11 @@ let runtime_assert b msg =
 let string_of_list (f : 'a -> string) (l : list<'a>) : string =
   "[" ^ String.concat ", " (List.map f l) ^ "]"
 
+let list_of_option (o:option<'a>) : list<'a> =
+    match o with
+    | None -> []
+    | Some x -> [x]
+
 let string_of_option f = function
   | None -> "None"
   | Some x -> "Some " ^ f x
