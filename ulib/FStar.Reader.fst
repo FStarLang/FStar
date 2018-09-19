@@ -1,4 +1,9 @@
 module FStar.Reader
+
+open FStar.Preorder
+
+module I = FStar.IMST
+
 let reader_pre_h  (heap:Type)          = heap -> GTot Type0
 let reader_post_h (a:Type)             = a -> GTot Type0
 let reader_wp_h   (heap:Type) (a:Type) = reader_post_h a -> Tot (reader_pre_h heap)
@@ -74,8 +79,8 @@ assume val read:  #a:Type -> r:ref a -> STRead a
 					 (requires (fun h -> True))
 					 (ensures (fun h x -> x == sel h r))
 
-unfold let lift_reader_state (a:Type) (wp:reader_wp_h heap a) (p:st_post a) (h:heap) = wp (fun a -> p a h) h
-sub_effect READER ~> STATE = lift_reader_state
+unfold let lift_reader_state (a:Type) (wp:reader_wp_h heap a) (s:Type u#1) (rel:preorder s) (p:I.st_post s a) (h:s) = s == heap /\ (forall x y . rel x y <==> heap_rel x y) ==> wp (fun a -> p a h) h
+sub_effect READER ~> I.IMST = lift_reader_state
 unfold let lift_div_reader (a:Type) (wp:pure_wp a) (p:reader_post_h a) (h:heap) = wp p
 sub_effect DIV ~> READER = lift_div_reader
 
@@ -93,3 +98,4 @@ let g (r:ref int) (s:ref int) : ST unit
   = let x = f r in
     let y = f s in
     r := x + y
+
