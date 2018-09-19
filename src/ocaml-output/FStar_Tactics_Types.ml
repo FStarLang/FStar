@@ -10,43 +10,30 @@ let (__proj__Mkgoal__item__goal_main_env : goal -> FStar_TypeChecker_Env.env)
   =
   fun projectee  ->
     match projectee with
-    | { goal_main_env = __fname__goal_main_env;
-        goal_ctx_uvar = __fname__goal_ctx_uvar; opts = __fname__opts;
-        is_guard = __fname__is_guard; label = __fname__label;_} ->
-        __fname__goal_main_env
+    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} ->
+        goal_main_env
   
 let (__proj__Mkgoal__item__goal_ctx_uvar :
   goal -> FStar_Syntax_Syntax.ctx_uvar) =
   fun projectee  ->
     match projectee with
-    | { goal_main_env = __fname__goal_main_env;
-        goal_ctx_uvar = __fname__goal_ctx_uvar; opts = __fname__opts;
-        is_guard = __fname__is_guard; label = __fname__label;_} ->
-        __fname__goal_ctx_uvar
+    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} ->
+        goal_ctx_uvar
   
 let (__proj__Mkgoal__item__opts : goal -> FStar_Options.optionstate) =
   fun projectee  ->
     match projectee with
-    | { goal_main_env = __fname__goal_main_env;
-        goal_ctx_uvar = __fname__goal_ctx_uvar; opts = __fname__opts;
-        is_guard = __fname__is_guard; label = __fname__label;_} ->
-        __fname__opts
+    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} -> opts
   
 let (__proj__Mkgoal__item__is_guard : goal -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { goal_main_env = __fname__goal_main_env;
-        goal_ctx_uvar = __fname__goal_ctx_uvar; opts = __fname__opts;
-        is_guard = __fname__is_guard; label = __fname__label;_} ->
-        __fname__is_guard
+    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} -> is_guard
   
 let (__proj__Mkgoal__item__label : goal -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { goal_main_env = __fname__goal_main_env;
-        goal_ctx_uvar = __fname__goal_ctx_uvar; opts = __fname__opts;
-        is_guard = __fname__is_guard; label = __fname__label;_} ->
-        __fname__label
+    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} -> label
   
 let (goal_env : goal -> FStar_TypeChecker_Env.env) =
   fun g  ->
@@ -293,163 +280,98 @@ let (__proj__Mkproofstate__item__main_context :
   proofstate -> FStar_TypeChecker_Env.env) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname__main_context
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> main_context
   
 let (__proj__Mkproofstate__item__main_goal : proofstate -> goal) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname__main_goal
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> main_goal
   
 let (__proj__Mkproofstate__item__all_implicits :
   proofstate -> FStar_TypeChecker_Env.implicits) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname__all_implicits
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> all_implicits
   
 let (__proj__Mkproofstate__item__goals : proofstate -> goal Prims.list) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname__goals
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> goals
   
 let (__proj__Mkproofstate__item__smt_goals : proofstate -> goal Prims.list) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname__smt_goals
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> smt_goals
   
 let (__proj__Mkproofstate__item__depth : proofstate -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname__depth
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> depth
   
 let (__proj__Mkproofstate__item____dump :
   proofstate -> proofstate -> Prims.string -> unit) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname____dump
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> __dump
   
 let (__proj__Mkproofstate__item__psc :
   proofstate -> FStar_TypeChecker_Cfg.psc) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname__psc
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> psc
   
 let (__proj__Mkproofstate__item__entry_range :
   proofstate -> FStar_Range.range) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname__entry_range
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> entry_range
   
 let (__proj__Mkproofstate__item__guard_policy : proofstate -> guard_policy) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname__guard_policy
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> guard_policy
   
 let (__proj__Mkproofstate__item__freshness : proofstate -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname__freshness
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> freshness
   
 let (__proj__Mkproofstate__item__tac_verb_dbg : proofstate -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname__tac_verb_dbg
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> tac_verb_dbg
   
 let (__proj__Mkproofstate__item__local_state :
   proofstate -> FStar_Syntax_Syntax.term FStar_Util.psmap) =
   fun projectee  ->
     match projectee with
-    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
-        all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals; depth = __fname__depth;
-        __dump = __fname____dump; psc = __fname__psc;
-        entry_range = __fname__entry_range;
-        guard_policy = __fname__guard_policy; freshness = __fname__freshness;
-        tac_verb_dbg = __fname__tac_verb_dbg;
-        local_state = __fname__local_state;_} -> __fname__local_state
+    | { main_context; main_goal; all_implicits; goals; smt_goals; depth;
+        __dump; psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> local_state
   
 let (subst_proof_state :
   FStar_Syntax_Syntax.subst_t -> proofstate -> proofstate) =

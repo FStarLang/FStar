@@ -242,22 +242,14 @@ type bgproc =
   refresh: unit -> unit ;
   restart: unit -> unit }
 let (__proj__Mkbgproc__item__ask : bgproc -> Prims.string -> Prims.string) =
-  fun projectee  ->
-    match projectee with
-    | { ask = __fname__ask; refresh = __fname__refresh;
-        restart = __fname__restart;_} -> __fname__ask
-  
+  fun projectee  -> match projectee with | { ask; refresh; restart;_} -> ask 
 let (__proj__Mkbgproc__item__refresh : bgproc -> unit -> unit) =
   fun projectee  ->
-    match projectee with
-    | { ask = __fname__ask; refresh = __fname__refresh;
-        restart = __fname__restart;_} -> __fname__refresh
+    match projectee with | { ask; refresh; restart;_} -> refresh
   
 let (__proj__Mkbgproc__item__restart : bgproc -> unit -> unit) =
   fun projectee  ->
-    match projectee with
-    | { ask = __fname__ask; refresh = __fname__refresh;
-        restart = __fname__restart;_} -> __fname__restart
+    match projectee with | { ask; refresh; restart;_} -> restart
   
 type query_log =
   {
@@ -270,45 +262,35 @@ let (__proj__Mkquery_log__item__get_module_name :
   query_log -> unit -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { get_module_name = __fname__get_module_name;
-        set_module_name = __fname__set_module_name;
-        write_to_log = __fname__write_to_log; close_log = __fname__close_log;
-        log_file_name = __fname__log_file_name;_} -> __fname__get_module_name
+    | { get_module_name; set_module_name; write_to_log; close_log;
+        log_file_name;_} -> get_module_name
   
 let (__proj__Mkquery_log__item__set_module_name :
   query_log -> Prims.string -> unit) =
   fun projectee  ->
     match projectee with
-    | { get_module_name = __fname__get_module_name;
-        set_module_name = __fname__set_module_name;
-        write_to_log = __fname__write_to_log; close_log = __fname__close_log;
-        log_file_name = __fname__log_file_name;_} -> __fname__set_module_name
+    | { get_module_name; set_module_name; write_to_log; close_log;
+        log_file_name;_} -> set_module_name
   
 let (__proj__Mkquery_log__item__write_to_log :
   query_log -> Prims.string -> unit) =
   fun projectee  ->
     match projectee with
-    | { get_module_name = __fname__get_module_name;
-        set_module_name = __fname__set_module_name;
-        write_to_log = __fname__write_to_log; close_log = __fname__close_log;
-        log_file_name = __fname__log_file_name;_} -> __fname__write_to_log
+    | { get_module_name; set_module_name; write_to_log; close_log;
+        log_file_name;_} -> write_to_log
   
 let (__proj__Mkquery_log__item__close_log : query_log -> unit -> unit) =
   fun projectee  ->
     match projectee with
-    | { get_module_name = __fname__get_module_name;
-        set_module_name = __fname__set_module_name;
-        write_to_log = __fname__write_to_log; close_log = __fname__close_log;
-        log_file_name = __fname__log_file_name;_} -> __fname__close_log
+    | { get_module_name; set_module_name; write_to_log; close_log;
+        log_file_name;_} -> close_log
   
 let (__proj__Mkquery_log__item__log_file_name :
   query_log -> unit -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { get_module_name = __fname__get_module_name;
-        set_module_name = __fname__set_module_name;
-        write_to_log = __fname__write_to_log; close_log = __fname__close_log;
-        log_file_name = __fname__log_file_name;_} -> __fname__log_file_name
+    | { get_module_name; set_module_name; write_to_log; close_log;
+        log_file_name;_} -> log_file_name
   
 let (query_logging : query_log) =
   let query_number = FStar_Util.mk_ref (Prims.parse_int "0")  in
@@ -497,51 +479,36 @@ let (__proj__Mksmt_output__item__smt_result :
   smt_output -> smt_output_section) =
   fun projectee  ->
     match projectee with
-    | { smt_result = __fname__smt_result;
-        smt_reason_unknown = __fname__smt_reason_unknown;
-        smt_unsat_core = __fname__smt_unsat_core;
-        smt_statistics = __fname__smt_statistics;
-        smt_labels = __fname__smt_labels;_} -> __fname__smt_result
+    | { smt_result; smt_reason_unknown; smt_unsat_core; smt_statistics;
+        smt_labels;_} -> smt_result
   
 let (__proj__Mksmt_output__item__smt_reason_unknown :
   smt_output -> smt_output_section FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { smt_result = __fname__smt_result;
-        smt_reason_unknown = __fname__smt_reason_unknown;
-        smt_unsat_core = __fname__smt_unsat_core;
-        smt_statistics = __fname__smt_statistics;
-        smt_labels = __fname__smt_labels;_} -> __fname__smt_reason_unknown
+    | { smt_result; smt_reason_unknown; smt_unsat_core; smt_statistics;
+        smt_labels;_} -> smt_reason_unknown
   
 let (__proj__Mksmt_output__item__smt_unsat_core :
   smt_output -> smt_output_section FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { smt_result = __fname__smt_result;
-        smt_reason_unknown = __fname__smt_reason_unknown;
-        smt_unsat_core = __fname__smt_unsat_core;
-        smt_statistics = __fname__smt_statistics;
-        smt_labels = __fname__smt_labels;_} -> __fname__smt_unsat_core
+    | { smt_result; smt_reason_unknown; smt_unsat_core; smt_statistics;
+        smt_labels;_} -> smt_unsat_core
   
 let (__proj__Mksmt_output__item__smt_statistics :
   smt_output -> smt_output_section FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { smt_result = __fname__smt_result;
-        smt_reason_unknown = __fname__smt_reason_unknown;
-        smt_unsat_core = __fname__smt_unsat_core;
-        smt_statistics = __fname__smt_statistics;
-        smt_labels = __fname__smt_labels;_} -> __fname__smt_statistics
+    | { smt_result; smt_reason_unknown; smt_unsat_core; smt_statistics;
+        smt_labels;_} -> smt_statistics
   
 let (__proj__Mksmt_output__item__smt_labels :
   smt_output -> smt_output_section FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { smt_result = __fname__smt_result;
-        smt_reason_unknown = __fname__smt_reason_unknown;
-        smt_unsat_core = __fname__smt_unsat_core;
-        smt_statistics = __fname__smt_statistics;
-        smt_labels = __fname__smt_labels;_} -> __fname__smt_labels
+    | { smt_result; smt_reason_unknown; smt_unsat_core; smt_statistics;
+        smt_labels;_} -> smt_labels
   
 let (smt_output_sections :
   FStar_Range.range -> Prims.string Prims.list -> smt_output) =
@@ -809,16 +776,9 @@ type 'a job_t = {
   job: unit -> 'a ;
   callback: 'a -> unit }
 let __proj__Mkjob_t__item__job : 'a . 'a job_t -> unit -> 'a =
-  fun projectee  ->
-    match projectee with
-    | { job = __fname__job; callback = __fname__callback;_} -> __fname__job
-  
+  fun projectee  -> match projectee with | { job; callback;_} -> job 
 let __proj__Mkjob_t__item__callback : 'a . 'a job_t -> 'a -> unit =
-  fun projectee  ->
-    match projectee with
-    | { job = __fname__job; callback = __fname__callback;_} ->
-        __fname__callback
-  
+  fun projectee  -> match projectee with | { job; callback;_} -> callback 
 type z3result =
   {
   z3result_status: z3status ;
@@ -828,40 +788,28 @@ type z3result =
 let (__proj__Mkz3result__item__z3result_status : z3result -> z3status) =
   fun projectee  ->
     match projectee with
-    | { z3result_status = __fname__z3result_status;
-        z3result_time = __fname__z3result_time;
-        z3result_statistics = __fname__z3result_statistics;
-        z3result_query_hash = __fname__z3result_query_hash;_} ->
-        __fname__z3result_status
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash;_} -> z3result_status
   
 let (__proj__Mkz3result__item__z3result_time : z3result -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { z3result_status = __fname__z3result_status;
-        z3result_time = __fname__z3result_time;
-        z3result_statistics = __fname__z3result_statistics;
-        z3result_query_hash = __fname__z3result_query_hash;_} ->
-        __fname__z3result_time
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash;_} -> z3result_time
   
 let (__proj__Mkz3result__item__z3result_statistics :
   z3result -> z3statistics) =
   fun projectee  ->
     match projectee with
-    | { z3result_status = __fname__z3result_status;
-        z3result_time = __fname__z3result_time;
-        z3result_statistics = __fname__z3result_statistics;
-        z3result_query_hash = __fname__z3result_query_hash;_} ->
-        __fname__z3result_statistics
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash;_} -> z3result_statistics
   
 let (__proj__Mkz3result__item__z3result_query_hash :
   z3result -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { z3result_status = __fname__z3result_status;
-        z3result_time = __fname__z3result_time;
-        z3result_statistics = __fname__z3result_statistics;
-        z3result_query_hash = __fname__z3result_query_hash;_} ->
-        __fname__z3result_query_hash
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash;_} -> z3result_query_hash
   
 type z3job = z3result job_t
 let (job_queue : z3job Prims.list FStar_ST.ref) = FStar_Util.mk_ref [] 

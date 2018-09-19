@@ -703,23 +703,11 @@ let (uu___is_CInt : width -> Prims.bool) =
     match projectee with | CInt  -> true | uu____2820 -> false
   
 let (__proj__Mkbinder__item__name : binder -> Prims.string) =
-  fun projectee  ->
-    match projectee with
-    | { name = __fname__name; typ = __fname__typ; mut = __fname__mut;_} ->
-        __fname__name
-  
+  fun projectee  -> match projectee with | { name; typ; mut;_} -> name 
 let (__proj__Mkbinder__item__typ : binder -> typ) =
-  fun projectee  ->
-    match projectee with
-    | { name = __fname__name; typ = __fname__typ; mut = __fname__mut;_} ->
-        __fname__typ
-  
+  fun projectee  -> match projectee with | { name; typ; mut;_} -> typ 
 let (__proj__Mkbinder__item__mut : binder -> Prims.bool) =
-  fun projectee  ->
-    match projectee with
-    | { name = __fname__name; typ = __fname__typ; mut = __fname__mut;_} ->
-        __fname__mut
-  
+  fun projectee  -> match projectee with | { name; typ; mut;_} -> mut 
 let (uu___is_TInt : typ -> Prims.bool) =
   fun projectee  ->
     match projectee with | TInt _0 -> true | uu____2851 -> false
@@ -899,26 +887,18 @@ and name = {
   pretty: Prims.string }
 let (__proj__Mkenv__item__names : env -> name Prims.list) =
   fun projectee  ->
-    match projectee with
-    | { names = __fname__names; names_t = __fname__names_t;
-        module_name = __fname__module_name;_} -> __fname__names
+    match projectee with | { names; names_t; module_name;_} -> names
   
 let (__proj__Mkenv__item__names_t : env -> Prims.string Prims.list) =
   fun projectee  ->
-    match projectee with
-    | { names = __fname__names; names_t = __fname__names_t;
-        module_name = __fname__module_name;_} -> __fname__names_t
+    match projectee with | { names; names_t; module_name;_} -> names_t
   
 let (__proj__Mkenv__item__module_name : env -> Prims.string Prims.list) =
   fun projectee  ->
-    match projectee with
-    | { names = __fname__names; names_t = __fname__names_t;
-        module_name = __fname__module_name;_} -> __fname__module_name
+    match projectee with | { names; names_t; module_name;_} -> module_name
   
 let (__proj__Mkname__item__pretty : name -> Prims.string) =
-  fun projectee  ->
-    match projectee with | { pretty = __fname__pretty;_} -> __fname__pretty
-  
+  fun projectee  -> match projectee with | { pretty = pretty1;_} -> pretty1 
 let (empty : Prims.string Prims.list -> env) =
   fun module_name  -> { names = []; names_t = []; module_name } 
 let (extend : env -> Prims.string -> env) =

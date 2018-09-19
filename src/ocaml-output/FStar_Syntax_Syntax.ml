@@ -3,13 +3,9 @@ type 'a withinfo_t = {
   v: 'a ;
   p: FStar_Range.range }[@@deriving yojson,show]
 let __proj__Mkwithinfo_t__item__v : 'a . 'a withinfo_t -> 'a =
-  fun projectee  ->
-    match projectee with | { v = __fname__v; p = __fname__p;_} -> __fname__v
-  
+  fun projectee  -> match projectee with | { v = v1; p;_} -> v1 
 let __proj__Mkwithinfo_t__item__p : 'a . 'a withinfo_t -> FStar_Range.range =
-  fun projectee  ->
-    match projectee with | { v = __fname__v; p = __fname__p;_} -> __fname__p
-  
+  fun projectee  -> match projectee with | { v = v1; p;_} -> p 
 type var = FStar_Ident.lident withinfo_t[@@deriving yojson,show]
 type sconst = FStar_Const.sconst[@@deriving yojson,show]
 type pragma =
@@ -80,15 +76,9 @@ type version = {
   major: Prims.int ;
   minor: Prims.int }[@@deriving yojson,show]
 let (__proj__Mkversion__item__major : version -> Prims.int) =
-  fun projectee  ->
-    match projectee with
-    | { major = __fname__major; minor = __fname__minor;_} -> __fname__major
-  
+  fun projectee  -> match projectee with | { major; minor;_} -> major 
 let (__proj__Mkversion__item__minor : version -> Prims.int) =
-  fun projectee  ->
-    match projectee with
-    | { major = __fname__major; minor = __fname__minor;_} -> __fname__minor
-  
+  fun projectee  -> match projectee with | { major; minor;_} -> minor 
 type universe =
   | U_zero 
   | U_succ of universe 
@@ -568,26 +558,17 @@ let (__proj__Mkctx_uvar__item__ctx_uvar_head :
   =
   fun projectee  ->
     match projectee with
-    | { ctx_uvar_head = __fname__ctx_uvar_head;
-        ctx_uvar_gamma = __fname__ctx_uvar_gamma;
-        ctx_uvar_binders = __fname__ctx_uvar_binders;
-        ctx_uvar_typ = __fname__ctx_uvar_typ;
-        ctx_uvar_reason = __fname__ctx_uvar_reason;
-        ctx_uvar_should_check = __fname__ctx_uvar_should_check;
-        ctx_uvar_range = __fname__ctx_uvar_range;_} -> __fname__ctx_uvar_head
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
+        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;_} ->
+        ctx_uvar_head
   
 let (__proj__Mkctx_uvar__item__ctx_uvar_gamma :
   ctx_uvar -> binding Prims.list) =
   fun projectee  ->
     match projectee with
-    | { ctx_uvar_head = __fname__ctx_uvar_head;
-        ctx_uvar_gamma = __fname__ctx_uvar_gamma;
-        ctx_uvar_binders = __fname__ctx_uvar_binders;
-        ctx_uvar_typ = __fname__ctx_uvar_typ;
-        ctx_uvar_reason = __fname__ctx_uvar_reason;
-        ctx_uvar_should_check = __fname__ctx_uvar_should_check;
-        ctx_uvar_range = __fname__ctx_uvar_range;_} ->
-        __fname__ctx_uvar_gamma
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
+        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;_} ->
+        ctx_uvar_gamma
   
 let (__proj__Mkctx_uvar__item__ctx_uvar_binders :
   ctx_uvar ->
@@ -596,63 +577,39 @@ let (__proj__Mkctx_uvar__item__ctx_uvar_binders :
   =
   fun projectee  ->
     match projectee with
-    | { ctx_uvar_head = __fname__ctx_uvar_head;
-        ctx_uvar_gamma = __fname__ctx_uvar_gamma;
-        ctx_uvar_binders = __fname__ctx_uvar_binders;
-        ctx_uvar_typ = __fname__ctx_uvar_typ;
-        ctx_uvar_reason = __fname__ctx_uvar_reason;
-        ctx_uvar_should_check = __fname__ctx_uvar_should_check;
-        ctx_uvar_range = __fname__ctx_uvar_range;_} ->
-        __fname__ctx_uvar_binders
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
+        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;_} ->
+        ctx_uvar_binders
   
 let (__proj__Mkctx_uvar__item__ctx_uvar_typ : ctx_uvar -> term' syntax) =
   fun projectee  ->
     match projectee with
-    | { ctx_uvar_head = __fname__ctx_uvar_head;
-        ctx_uvar_gamma = __fname__ctx_uvar_gamma;
-        ctx_uvar_binders = __fname__ctx_uvar_binders;
-        ctx_uvar_typ = __fname__ctx_uvar_typ;
-        ctx_uvar_reason = __fname__ctx_uvar_reason;
-        ctx_uvar_should_check = __fname__ctx_uvar_should_check;
-        ctx_uvar_range = __fname__ctx_uvar_range;_} -> __fname__ctx_uvar_typ
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
+        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;_} ->
+        ctx_uvar_typ
   
 let (__proj__Mkctx_uvar__item__ctx_uvar_reason : ctx_uvar -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { ctx_uvar_head = __fname__ctx_uvar_head;
-        ctx_uvar_gamma = __fname__ctx_uvar_gamma;
-        ctx_uvar_binders = __fname__ctx_uvar_binders;
-        ctx_uvar_typ = __fname__ctx_uvar_typ;
-        ctx_uvar_reason = __fname__ctx_uvar_reason;
-        ctx_uvar_should_check = __fname__ctx_uvar_should_check;
-        ctx_uvar_range = __fname__ctx_uvar_range;_} ->
-        __fname__ctx_uvar_reason
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
+        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;_} ->
+        ctx_uvar_reason
   
 let (__proj__Mkctx_uvar__item__ctx_uvar_should_check :
   ctx_uvar -> should_check_uvar) =
   fun projectee  ->
     match projectee with
-    | { ctx_uvar_head = __fname__ctx_uvar_head;
-        ctx_uvar_gamma = __fname__ctx_uvar_gamma;
-        ctx_uvar_binders = __fname__ctx_uvar_binders;
-        ctx_uvar_typ = __fname__ctx_uvar_typ;
-        ctx_uvar_reason = __fname__ctx_uvar_reason;
-        ctx_uvar_should_check = __fname__ctx_uvar_should_check;
-        ctx_uvar_range = __fname__ctx_uvar_range;_} ->
-        __fname__ctx_uvar_should_check
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
+        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;_} ->
+        ctx_uvar_should_check
   
 let (__proj__Mkctx_uvar__item__ctx_uvar_range :
   ctx_uvar -> FStar_Range.range) =
   fun projectee  ->
     match projectee with
-    | { ctx_uvar_head = __fname__ctx_uvar_head;
-        ctx_uvar_gamma = __fname__ctx_uvar_gamma;
-        ctx_uvar_binders = __fname__ctx_uvar_binders;
-        ctx_uvar_typ = __fname__ctx_uvar_typ;
-        ctx_uvar_reason = __fname__ctx_uvar_reason;
-        ctx_uvar_should_check = __fname__ctx_uvar_should_check;
-        ctx_uvar_range = __fname__ctx_uvar_range;_} ->
-        __fname__ctx_uvar_range
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
+        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;_} ->
+        ctx_uvar_range
   
 let (uu___is_Pat_constant : pat' -> Prims.bool) =
   fun projectee  ->
@@ -693,95 +650,65 @@ let (__proj__Mkletbinding__item__lbname :
   letbinding -> (bv,fv) FStar_Util.either) =
   fun projectee  ->
     match projectee with
-    | { lbname = __fname__lbname; lbunivs = __fname__lbunivs;
-        lbtyp = __fname__lbtyp; lbeff = __fname__lbeff;
-        lbdef = __fname__lbdef; lbattrs = __fname__lbattrs;
-        lbpos = __fname__lbpos;_} -> __fname__lbname
+    | { lbname; lbunivs; lbtyp; lbeff; lbdef; lbattrs; lbpos;_} -> lbname
   
 let (__proj__Mkletbinding__item__lbunivs :
   letbinding -> univ_name Prims.list) =
   fun projectee  ->
     match projectee with
-    | { lbname = __fname__lbname; lbunivs = __fname__lbunivs;
-        lbtyp = __fname__lbtyp; lbeff = __fname__lbeff;
-        lbdef = __fname__lbdef; lbattrs = __fname__lbattrs;
-        lbpos = __fname__lbpos;_} -> __fname__lbunivs
+    | { lbname; lbunivs; lbtyp; lbeff; lbdef; lbattrs; lbpos;_} -> lbunivs
   
 let (__proj__Mkletbinding__item__lbtyp : letbinding -> term' syntax) =
   fun projectee  ->
     match projectee with
-    | { lbname = __fname__lbname; lbunivs = __fname__lbunivs;
-        lbtyp = __fname__lbtyp; lbeff = __fname__lbeff;
-        lbdef = __fname__lbdef; lbattrs = __fname__lbattrs;
-        lbpos = __fname__lbpos;_} -> __fname__lbtyp
+    | { lbname; lbunivs; lbtyp; lbeff; lbdef; lbattrs; lbpos;_} -> lbtyp
   
 let (__proj__Mkletbinding__item__lbeff : letbinding -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
-    | { lbname = __fname__lbname; lbunivs = __fname__lbunivs;
-        lbtyp = __fname__lbtyp; lbeff = __fname__lbeff;
-        lbdef = __fname__lbdef; lbattrs = __fname__lbattrs;
-        lbpos = __fname__lbpos;_} -> __fname__lbeff
+    | { lbname; lbunivs; lbtyp; lbeff; lbdef; lbattrs; lbpos;_} -> lbeff
   
 let (__proj__Mkletbinding__item__lbdef : letbinding -> term' syntax) =
   fun projectee  ->
     match projectee with
-    | { lbname = __fname__lbname; lbunivs = __fname__lbunivs;
-        lbtyp = __fname__lbtyp; lbeff = __fname__lbeff;
-        lbdef = __fname__lbdef; lbattrs = __fname__lbattrs;
-        lbpos = __fname__lbpos;_} -> __fname__lbdef
+    | { lbname; lbunivs; lbtyp; lbeff; lbdef; lbattrs; lbpos;_} -> lbdef
   
 let (__proj__Mkletbinding__item__lbattrs :
   letbinding -> term' syntax Prims.list) =
   fun projectee  ->
     match projectee with
-    | { lbname = __fname__lbname; lbunivs = __fname__lbunivs;
-        lbtyp = __fname__lbtyp; lbeff = __fname__lbeff;
-        lbdef = __fname__lbdef; lbattrs = __fname__lbattrs;
-        lbpos = __fname__lbpos;_} -> __fname__lbattrs
+    | { lbname; lbunivs; lbtyp; lbeff; lbdef; lbattrs; lbpos;_} -> lbattrs
   
 let (__proj__Mkletbinding__item__lbpos : letbinding -> FStar_Range.range) =
   fun projectee  ->
     match projectee with
-    | { lbname = __fname__lbname; lbunivs = __fname__lbunivs;
-        lbtyp = __fname__lbtyp; lbeff = __fname__lbeff;
-        lbdef = __fname__lbdef; lbattrs = __fname__lbattrs;
-        lbpos = __fname__lbpos;_} -> __fname__lbpos
+    | { lbname; lbunivs; lbtyp; lbeff; lbdef; lbattrs; lbpos;_} -> lbpos
   
 let (__proj__Mkquoteinfo__item__qkind : quoteinfo -> quote_kind) =
-  fun projectee  ->
-    match projectee with
-    | { qkind = __fname__qkind; antiquotes = __fname__antiquotes;_} ->
-        __fname__qkind
-  
+  fun projectee  -> match projectee with | { qkind; antiquotes;_} -> qkind 
 let (__proj__Mkquoteinfo__item__antiquotes :
   quoteinfo -> (bv,term' syntax) FStar_Pervasives_Native.tuple2 Prims.list) =
   fun projectee  ->
-    match projectee with
-    | { qkind = __fname__qkind; antiquotes = __fname__antiquotes;_} ->
-        __fname__antiquotes
+    match projectee with | { qkind; antiquotes;_} -> antiquotes
   
 let (__proj__Mkcomp_typ__item__comp_univs : comp_typ -> universes) =
   fun projectee  ->
     match projectee with
-    | { comp_univs = __fname__comp_univs; effect_name = __fname__effect_name;
-        result_typ = __fname__result_typ; effect_args = __fname__effect_args;
-        flags = __fname__flags;_} -> __fname__comp_univs
+    | { comp_univs; effect_name; result_typ; effect_args; flags;_} ->
+        comp_univs
   
 let (__proj__Mkcomp_typ__item__effect_name : comp_typ -> FStar_Ident.lident)
   =
   fun projectee  ->
     match projectee with
-    | { comp_univs = __fname__comp_univs; effect_name = __fname__effect_name;
-        result_typ = __fname__result_typ; effect_args = __fname__effect_args;
-        flags = __fname__flags;_} -> __fname__effect_name
+    | { comp_univs; effect_name; result_typ; effect_args; flags;_} ->
+        effect_name
   
 let (__proj__Mkcomp_typ__item__result_typ : comp_typ -> term' syntax) =
   fun projectee  ->
     match projectee with
-    | { comp_univs = __fname__comp_univs; effect_name = __fname__effect_name;
-        result_typ = __fname__result_typ; effect_args = __fname__effect_args;
-        flags = __fname__flags;_} -> __fname__result_typ
+    | { comp_univs; effect_name; result_typ; effect_args; flags;_} ->
+        result_typ
   
 let (__proj__Mkcomp_typ__item__effect_args :
   comp_typ ->
@@ -790,16 +717,13 @@ let (__proj__Mkcomp_typ__item__effect_args :
   =
   fun projectee  ->
     match projectee with
-    | { comp_univs = __fname__comp_univs; effect_name = __fname__effect_name;
-        result_typ = __fname__result_typ; effect_args = __fname__effect_args;
-        flags = __fname__flags;_} -> __fname__effect_args
+    | { comp_univs; effect_name; result_typ; effect_args; flags;_} ->
+        effect_args
   
 let (__proj__Mkcomp_typ__item__flags : comp_typ -> cflags Prims.list) =
   fun projectee  ->
     match projectee with
-    | { comp_univs = __fname__comp_univs; effect_name = __fname__effect_name;
-        result_typ = __fname__result_typ; effect_args = __fname__effect_args;
-        flags = __fname__flags;_} -> __fname__flags
+    | { comp_univs; effect_name; result_typ; effect_args; flags;_} -> flags
   
 let (uu___is_Total : comp' -> Prims.bool) =
   fun projectee  ->
@@ -985,142 +909,92 @@ let (__proj__UD__item___0 :
   subst_elt -> (univ_name,Prims.int) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | UD _0 -> _0 
 let __proj__Mksyntax__item__n : 'a . 'a syntax -> 'a =
-  fun projectee  ->
-    match projectee with
-    | { n = __fname__n; pos = __fname__pos; vars = __fname__vars;_} ->
-        __fname__n
-  
+  fun projectee  -> match projectee with | { n = n1; pos; vars;_} -> n1 
 let __proj__Mksyntax__item__pos : 'a . 'a syntax -> FStar_Range.range =
-  fun projectee  ->
-    match projectee with
-    | { n = __fname__n; pos = __fname__pos; vars = __fname__vars;_} ->
-        __fname__pos
-  
+  fun projectee  -> match projectee with | { n = n1; pos; vars;_} -> pos 
 let __proj__Mksyntax__item__vars : 'a . 'a syntax -> free_vars memo =
-  fun projectee  ->
-    match projectee with
-    | { n = __fname__n; pos = __fname__pos; vars = __fname__vars;_} ->
-        __fname__vars
-  
+  fun projectee  -> match projectee with | { n = n1; pos; vars;_} -> vars 
 let (__proj__Mkbv__item__ppname : bv -> FStar_Ident.ident) =
   fun projectee  ->
-    match projectee with
-    | { ppname = __fname__ppname; index = __fname__index;
-        sort = __fname__sort;_} -> __fname__ppname
+    match projectee with | { ppname; index = index1; sort;_} -> ppname
   
 let (__proj__Mkbv__item__index : bv -> Prims.int) =
   fun projectee  ->
-    match projectee with
-    | { ppname = __fname__ppname; index = __fname__index;
-        sort = __fname__sort;_} -> __fname__index
+    match projectee with | { ppname; index = index1; sort;_} -> index1
   
 let (__proj__Mkbv__item__sort : bv -> term' syntax) =
   fun projectee  ->
-    match projectee with
-    | { ppname = __fname__ppname; index = __fname__index;
-        sort = __fname__sort;_} -> __fname__sort
+    match projectee with | { ppname; index = index1; sort;_} -> sort
   
 let (__proj__Mkfv__item__fv_name : fv -> var) =
   fun projectee  ->
-    match projectee with
-    | { fv_name = __fname__fv_name; fv_delta = __fname__fv_delta;
-        fv_qual = __fname__fv_qual;_} -> __fname__fv_name
+    match projectee with | { fv_name; fv_delta; fv_qual;_} -> fv_name
   
 let (__proj__Mkfv__item__fv_delta : fv -> delta_depth) =
   fun projectee  ->
-    match projectee with
-    | { fv_name = __fname__fv_name; fv_delta = __fname__fv_delta;
-        fv_qual = __fname__fv_qual;_} -> __fname__fv_delta
+    match projectee with | { fv_name; fv_delta; fv_qual;_} -> fv_delta
   
 let (__proj__Mkfv__item__fv_qual :
   fv -> fv_qual FStar_Pervasives_Native.option) =
   fun projectee  ->
-    match projectee with
-    | { fv_name = __fname__fv_name; fv_delta = __fname__fv_delta;
-        fv_qual = __fname__fv_qual;_} -> __fname__fv_qual
+    match projectee with | { fv_name; fv_delta; fv_qual;_} -> fv_qual
   
 let (__proj__Mkfree_vars__item__free_names : free_vars -> bv Prims.list) =
   fun projectee  ->
     match projectee with
-    | { free_names = __fname__free_names; free_uvars = __fname__free_uvars;
-        free_univs = __fname__free_univs;
-        free_univ_names = __fname__free_univ_names;_} -> __fname__free_names
+    | { free_names; free_uvars; free_univs; free_univ_names;_} -> free_names
   
 let (__proj__Mkfree_vars__item__free_uvars :
   free_vars -> ctx_uvar Prims.list) =
   fun projectee  ->
     match projectee with
-    | { free_names = __fname__free_names; free_uvars = __fname__free_uvars;
-        free_univs = __fname__free_univs;
-        free_univ_names = __fname__free_univ_names;_} -> __fname__free_uvars
+    | { free_names; free_uvars; free_univs; free_univ_names;_} -> free_uvars
   
 let (__proj__Mkfree_vars__item__free_univs :
   free_vars -> universe_uvar Prims.list) =
   fun projectee  ->
     match projectee with
-    | { free_names = __fname__free_names; free_uvars = __fname__free_uvars;
-        free_univs = __fname__free_univs;
-        free_univ_names = __fname__free_univ_names;_} -> __fname__free_univs
+    | { free_names; free_uvars; free_univs; free_univ_names;_} -> free_univs
   
 let (__proj__Mkfree_vars__item__free_univ_names :
   free_vars -> univ_name Prims.list) =
   fun projectee  ->
     match projectee with
-    | { free_names = __fname__free_names; free_uvars = __fname__free_uvars;
-        free_univs = __fname__free_univs;
-        free_univ_names = __fname__free_univ_names;_} ->
-        __fname__free_univ_names
+    | { free_names; free_uvars; free_univs; free_univ_names;_} ->
+        free_univ_names
   
 let (__proj__Mkresidual_comp__item__residual_effect :
   residual_comp -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
-    | { residual_effect = __fname__residual_effect;
-        residual_typ = __fname__residual_typ;
-        residual_flags = __fname__residual_flags;_} ->
-        __fname__residual_effect
+    | { residual_effect; residual_typ; residual_flags;_} -> residual_effect
   
 let (__proj__Mkresidual_comp__item__residual_typ :
   residual_comp -> term' syntax FStar_Pervasives_Native.option) =
   fun projectee  ->
     match projectee with
-    | { residual_effect = __fname__residual_effect;
-        residual_typ = __fname__residual_typ;
-        residual_flags = __fname__residual_flags;_} -> __fname__residual_typ
+    | { residual_effect; residual_typ; residual_flags;_} -> residual_typ
   
 let (__proj__Mkresidual_comp__item__residual_flags :
   residual_comp -> cflags Prims.list) =
   fun projectee  ->
     match projectee with
-    | { residual_effect = __fname__residual_effect;
-        residual_typ = __fname__residual_typ;
-        residual_flags = __fname__residual_flags;_} ->
-        __fname__residual_flags
+    | { residual_effect; residual_typ; residual_flags;_} -> residual_flags
   
 let (__proj__Mklazyinfo__item__blob : lazyinfo -> FStar_Dyn.dyn) =
   fun projectee  ->
-    match projectee with
-    | { blob = __fname__blob; lkind = __fname__lkind; ltyp = __fname__ltyp;
-        rng = __fname__rng;_} -> __fname__blob
+    match projectee with | { blob; lkind; ltyp; rng;_} -> blob
   
 let (__proj__Mklazyinfo__item__lkind : lazyinfo -> lazy_kind) =
   fun projectee  ->
-    match projectee with
-    | { blob = __fname__blob; lkind = __fname__lkind; ltyp = __fname__ltyp;
-        rng = __fname__rng;_} -> __fname__lkind
+    match projectee with | { blob; lkind; ltyp; rng;_} -> lkind
   
 let (__proj__Mklazyinfo__item__ltyp : lazyinfo -> term' syntax) =
   fun projectee  ->
-    match projectee with
-    | { blob = __fname__blob; lkind = __fname__lkind; ltyp = __fname__ltyp;
-        rng = __fname__rng;_} -> __fname__ltyp
+    match projectee with | { blob; lkind; ltyp; rng;_} -> ltyp
   
 let (__proj__Mklazyinfo__item__rng : lazyinfo -> FStar_Range.range) =
-  fun projectee  ->
-    match projectee with
-    | { blob = __fname__blob; lkind = __fname__lkind; ltyp = __fname__ltyp;
-        rng = __fname__rng;_} -> __fname__rng
-  
+  fun projectee  -> match projectee with | { blob; lkind; ltyp; rng;_} -> rng 
 let (uu___is_BadLazy : lazy_kind -> Prims.bool) =
   fun projectee  ->
     match projectee with | BadLazy  -> true | uu____4153 -> false
@@ -1261,31 +1135,23 @@ type lcomp =
 let (__proj__Mklcomp__item__eff_name : lcomp -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
-    | { eff_name = __fname__eff_name; res_typ = __fname__res_typ;
-        cflags = __fname__cflags; comp_thunk = __fname__comp_thunk;_} ->
-        __fname__eff_name
+    | { eff_name; res_typ; cflags; comp_thunk;_} -> eff_name
   
 let (__proj__Mklcomp__item__res_typ : lcomp -> typ) =
   fun projectee  ->
     match projectee with
-    | { eff_name = __fname__eff_name; res_typ = __fname__res_typ;
-        cflags = __fname__cflags; comp_thunk = __fname__comp_thunk;_} ->
-        __fname__res_typ
+    | { eff_name; res_typ; cflags; comp_thunk;_} -> res_typ
   
 let (__proj__Mklcomp__item__cflags : lcomp -> cflags Prims.list) =
   fun projectee  ->
     match projectee with
-    | { eff_name = __fname__eff_name; res_typ = __fname__res_typ;
-        cflags = __fname__cflags; comp_thunk = __fname__comp_thunk;_} ->
-        __fname__cflags
+    | { eff_name; res_typ; cflags; comp_thunk;_} -> cflags
   
 let (__proj__Mklcomp__item__comp_thunk :
   lcomp -> (unit -> comp,comp) FStar_Util.either FStar_ST.ref) =
   fun projectee  ->
     match projectee with
-    | { eff_name = __fname__eff_name; res_typ = __fname__res_typ;
-        cflags = __fname__cflags; comp_thunk = __fname__comp_thunk;_} ->
-        __fname__comp_thunk
+    | { eff_name; res_typ; cflags; comp_thunk;_} -> comp_thunk
   
 let (lazy_chooser :
   (lazy_kind -> lazyinfo -> term) FStar_Pervasives_Native.option FStar_ST.ref)
@@ -1469,22 +1335,12 @@ type monad_abbrev = {
 let (__proj__Mkmonad_abbrev__item__mabbrev :
   monad_abbrev -> FStar_Ident.lident) =
   fun projectee  ->
-    match projectee with
-    | { mabbrev = __fname__mabbrev; parms = __fname__parms;
-        def = __fname__def;_} -> __fname__mabbrev
+    match projectee with | { mabbrev; parms; def;_} -> mabbrev
   
 let (__proj__Mkmonad_abbrev__item__parms : monad_abbrev -> binders) =
-  fun projectee  ->
-    match projectee with
-    | { mabbrev = __fname__mabbrev; parms = __fname__parms;
-        def = __fname__def;_} -> __fname__parms
-  
+  fun projectee  -> match projectee with | { mabbrev; parms; def;_} -> parms 
 let (__proj__Mkmonad_abbrev__item__def : monad_abbrev -> typ) =
-  fun projectee  ->
-    match projectee with
-    | { mabbrev = __fname__mabbrev; parms = __fname__parms;
-        def = __fname__def;_} -> __fname__def
-  
+  fun projectee  -> match projectee with | { mabbrev; parms; def;_} -> def 
 type sub_eff =
   {
   source: FStar_Ident.lident ;
@@ -1493,32 +1349,21 @@ type sub_eff =
   lift: tscheme FStar_Pervasives_Native.option }
 let (__proj__Mksub_eff__item__source : sub_eff -> FStar_Ident.lident) =
   fun projectee  ->
-    match projectee with
-    | { source = __fname__source; target = __fname__target;
-        lift_wp = __fname__lift_wp; lift = __fname__lift;_} ->
-        __fname__source
+    match projectee with | { source; target; lift_wp; lift;_} -> source
   
 let (__proj__Mksub_eff__item__target : sub_eff -> FStar_Ident.lident) =
   fun projectee  ->
-    match projectee with
-    | { source = __fname__source; target = __fname__target;
-        lift_wp = __fname__lift_wp; lift = __fname__lift;_} ->
-        __fname__target
+    match projectee with | { source; target; lift_wp; lift;_} -> target
   
 let (__proj__Mksub_eff__item__lift_wp :
   sub_eff -> tscheme FStar_Pervasives_Native.option) =
   fun projectee  ->
-    match projectee with
-    | { source = __fname__source; target = __fname__target;
-        lift_wp = __fname__lift_wp; lift = __fname__lift;_} ->
-        __fname__lift_wp
+    match projectee with | { source; target; lift_wp; lift;_} -> lift_wp
   
 let (__proj__Mksub_eff__item__lift :
   sub_eff -> tscheme FStar_Pervasives_Native.option) =
   fun projectee  ->
-    match projectee with
-    | { source = __fname__source; target = __fname__target;
-        lift_wp = __fname__lift_wp; lift = __fname__lift;_} -> __fname__lift
+    match projectee with | { source; target; lift_wp; lift;_} -> lift
   
 type action =
   {
@@ -1531,64 +1376,39 @@ type action =
 let (__proj__Mkaction__item__action_name : action -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
-    | { action_name = __fname__action_name;
-        action_unqualified_name = __fname__action_unqualified_name;
-        action_univs = __fname__action_univs;
-        action_params = __fname__action_params;
-        action_defn = __fname__action_defn;
-        action_typ = __fname__action_typ;_} -> __fname__action_name
+    | { action_name; action_unqualified_name; action_univs; action_params;
+        action_defn; action_typ;_} -> action_name
   
 let (__proj__Mkaction__item__action_unqualified_name :
   action -> FStar_Ident.ident) =
   fun projectee  ->
     match projectee with
-    | { action_name = __fname__action_name;
-        action_unqualified_name = __fname__action_unqualified_name;
-        action_univs = __fname__action_univs;
-        action_params = __fname__action_params;
-        action_defn = __fname__action_defn;
-        action_typ = __fname__action_typ;_} ->
-        __fname__action_unqualified_name
+    | { action_name; action_unqualified_name; action_univs; action_params;
+        action_defn; action_typ;_} -> action_unqualified_name
   
 let (__proj__Mkaction__item__action_univs : action -> univ_names) =
   fun projectee  ->
     match projectee with
-    | { action_name = __fname__action_name;
-        action_unqualified_name = __fname__action_unqualified_name;
-        action_univs = __fname__action_univs;
-        action_params = __fname__action_params;
-        action_defn = __fname__action_defn;
-        action_typ = __fname__action_typ;_} -> __fname__action_univs
+    | { action_name; action_unqualified_name; action_univs; action_params;
+        action_defn; action_typ;_} -> action_univs
   
 let (__proj__Mkaction__item__action_params : action -> binders) =
   fun projectee  ->
     match projectee with
-    | { action_name = __fname__action_name;
-        action_unqualified_name = __fname__action_unqualified_name;
-        action_univs = __fname__action_univs;
-        action_params = __fname__action_params;
-        action_defn = __fname__action_defn;
-        action_typ = __fname__action_typ;_} -> __fname__action_params
+    | { action_name; action_unqualified_name; action_univs; action_params;
+        action_defn; action_typ;_} -> action_params
   
 let (__proj__Mkaction__item__action_defn : action -> term) =
   fun projectee  ->
     match projectee with
-    | { action_name = __fname__action_name;
-        action_unqualified_name = __fname__action_unqualified_name;
-        action_univs = __fname__action_univs;
-        action_params = __fname__action_params;
-        action_defn = __fname__action_defn;
-        action_typ = __fname__action_typ;_} -> __fname__action_defn
+    | { action_name; action_unqualified_name; action_univs; action_params;
+        action_defn; action_typ;_} -> action_defn
   
 let (__proj__Mkaction__item__action_typ : action -> typ) =
   fun projectee  ->
     match projectee with
-    | { action_name = __fname__action_name;
-        action_unqualified_name = __fname__action_unqualified_name;
-        action_univs = __fname__action_univs;
-        action_params = __fname__action_params;
-        action_defn = __fname__action_defn;
-        action_typ = __fname__action_typ;_} -> __fname__action_typ
+    | { action_name; action_unqualified_name; action_univs; action_params;
+        action_defn; action_typ;_} -> action_typ
   
 type eff_decl =
   {
@@ -1615,303 +1435,163 @@ type eff_decl =
 let (__proj__Mkeff_decl__item__cattributes : eff_decl -> cflags Prims.list) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__cattributes
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> cattributes
   
 let (__proj__Mkeff_decl__item__mname : eff_decl -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__mname
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> mname
   
 let (__proj__Mkeff_decl__item__univs : eff_decl -> univ_names) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__univs
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> univs
   
 let (__proj__Mkeff_decl__item__binders : eff_decl -> binders) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__binders
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> binders
   
 let (__proj__Mkeff_decl__item__signature : eff_decl -> term) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__signature
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> signature
   
 let (__proj__Mkeff_decl__item__ret_wp : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__ret_wp
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> ret_wp
   
 let (__proj__Mkeff_decl__item__bind_wp : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__bind_wp
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> bind_wp
   
 let (__proj__Mkeff_decl__item__if_then_else : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__if_then_else
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> if_then_else
   
 let (__proj__Mkeff_decl__item__ite_wp : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__ite_wp
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> ite_wp
   
 let (__proj__Mkeff_decl__item__stronger : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__stronger
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> stronger
   
 let (__proj__Mkeff_decl__item__close_wp : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__close_wp
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> close_wp
   
 let (__proj__Mkeff_decl__item__assert_p : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__assert_p
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> assert_p
   
 let (__proj__Mkeff_decl__item__assume_p : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__assume_p
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> assume_p
   
 let (__proj__Mkeff_decl__item__null_wp : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__null_wp
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> null_wp
   
 let (__proj__Mkeff_decl__item__trivial : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__trivial
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> trivial
   
 let (__proj__Mkeff_decl__item__repr : eff_decl -> term) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__repr
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> repr
   
 let (__proj__Mkeff_decl__item__return_repr : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__return_repr
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> return_repr
   
 let (__proj__Mkeff_decl__item__bind_repr : eff_decl -> tscheme) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__bind_repr
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> bind_repr
   
 let (__proj__Mkeff_decl__item__actions : eff_decl -> action Prims.list) =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__actions
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> actions
   
 let (__proj__Mkeff_decl__item__eff_attrs : eff_decl -> attribute Prims.list)
   =
   fun projectee  ->
     match projectee with
-    | { cattributes = __fname__cattributes; mname = __fname__mname;
-        univs = __fname__univs; binders = __fname__binders;
-        signature = __fname__signature; ret_wp = __fname__ret_wp;
-        bind_wp = __fname__bind_wp; if_then_else = __fname__if_then_else;
-        ite_wp = __fname__ite_wp; stronger = __fname__stronger;
-        close_wp = __fname__close_wp; assert_p = __fname__assert_p;
-        assume_p = __fname__assume_p; null_wp = __fname__null_wp;
-        trivial = __fname__trivial; repr = __fname__repr;
-        return_repr = __fname__return_repr; bind_repr = __fname__bind_repr;
-        actions = __fname__actions; eff_attrs = __fname__eff_attrs;_} ->
-        __fname__eff_attrs
+    | { cattributes; mname; univs; binders; signature; ret_wp; bind_wp;
+        if_then_else; ite_wp; stronger; close_wp; assert_p; assume_p;
+        null_wp; trivial; repr; return_repr; bind_repr; actions; eff_attrs;_}
+        -> eff_attrs
   
 type sig_metadata =
   {
@@ -1921,17 +1601,13 @@ let (__proj__Mksig_metadata__item__sigmeta_active :
   sig_metadata -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { sigmeta_active = __fname__sigmeta_active;
-        sigmeta_fact_db_ids = __fname__sigmeta_fact_db_ids;_} ->
-        __fname__sigmeta_active
+    | { sigmeta_active; sigmeta_fact_db_ids;_} -> sigmeta_active
   
 let (__proj__Mksig_metadata__item__sigmeta_fact_db_ids :
   sig_metadata -> Prims.string Prims.list) =
   fun projectee  ->
     match projectee with
-    | { sigmeta_active = __fname__sigmeta_active;
-        sigmeta_fact_db_ids = __fname__sigmeta_fact_db_ids;_} ->
-        __fname__sigmeta_fact_db_ids
+    | { sigmeta_active; sigmeta_fact_db_ids;_} -> sigmeta_fact_db_ids
   
 type sigelt' =
   | Sig_inductive_typ of
@@ -2071,37 +1747,27 @@ let (__proj__Sig_splice__item___0 :
 let (__proj__Mksigelt__item__sigel : sigelt -> sigelt') =
   fun projectee  ->
     match projectee with
-    | { sigel = __fname__sigel; sigrng = __fname__sigrng;
-        sigquals = __fname__sigquals; sigmeta = __fname__sigmeta;
-        sigattrs = __fname__sigattrs;_} -> __fname__sigel
+    | { sigel; sigrng; sigquals; sigmeta; sigattrs;_} -> sigel
   
 let (__proj__Mksigelt__item__sigrng : sigelt -> FStar_Range.range) =
   fun projectee  ->
     match projectee with
-    | { sigel = __fname__sigel; sigrng = __fname__sigrng;
-        sigquals = __fname__sigquals; sigmeta = __fname__sigmeta;
-        sigattrs = __fname__sigattrs;_} -> __fname__sigrng
+    | { sigel; sigrng; sigquals; sigmeta; sigattrs;_} -> sigrng
   
 let (__proj__Mksigelt__item__sigquals : sigelt -> qualifier Prims.list) =
   fun projectee  ->
     match projectee with
-    | { sigel = __fname__sigel; sigrng = __fname__sigrng;
-        sigquals = __fname__sigquals; sigmeta = __fname__sigmeta;
-        sigattrs = __fname__sigattrs;_} -> __fname__sigquals
+    | { sigel; sigrng; sigquals; sigmeta; sigattrs;_} -> sigquals
   
 let (__proj__Mksigelt__item__sigmeta : sigelt -> sig_metadata) =
   fun projectee  ->
     match projectee with
-    | { sigel = __fname__sigel; sigrng = __fname__sigrng;
-        sigquals = __fname__sigquals; sigmeta = __fname__sigmeta;
-        sigattrs = __fname__sigattrs;_} -> __fname__sigmeta
+    | { sigel; sigrng; sigquals; sigmeta; sigattrs;_} -> sigmeta
   
 let (__proj__Mksigelt__item__sigattrs : sigelt -> attribute Prims.list) =
   fun projectee  ->
     match projectee with
-    | { sigel = __fname__sigel; sigrng = __fname__sigrng;
-        sigquals = __fname__sigquals; sigmeta = __fname__sigmeta;
-        sigattrs = __fname__sigattrs;_} -> __fname__sigattrs
+    | { sigel; sigrng; sigquals; sigmeta; sigattrs;_} -> sigattrs
   
 type sigelts = sigelt Prims.list
 type modul =
@@ -2113,30 +1779,22 @@ type modul =
 let (__proj__Mkmodul__item__name : modul -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
-    | { name = __fname__name; declarations = __fname__declarations;
-        exports = __fname__exports; is_interface = __fname__is_interface;_}
-        -> __fname__name
+    | { name; declarations; exports; is_interface;_} -> name
   
 let (__proj__Mkmodul__item__declarations : modul -> sigelts) =
   fun projectee  ->
     match projectee with
-    | { name = __fname__name; declarations = __fname__declarations;
-        exports = __fname__exports; is_interface = __fname__is_interface;_}
-        -> __fname__declarations
+    | { name; declarations; exports; is_interface;_} -> declarations
   
 let (__proj__Mkmodul__item__exports : modul -> sigelts) =
   fun projectee  ->
     match projectee with
-    | { name = __fname__name; declarations = __fname__declarations;
-        exports = __fname__exports; is_interface = __fname__is_interface;_}
-        -> __fname__exports
+    | { name; declarations; exports; is_interface;_} -> exports
   
 let (__proj__Mkmodul__item__is_interface : modul -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { name = __fname__name; declarations = __fname__declarations;
-        exports = __fname__exports; is_interface = __fname__is_interface;_}
-        -> __fname__is_interface
+    | { name; declarations; exports; is_interface;_} -> is_interface
   
 let (mod_name : modul -> FStar_Ident.lident) = fun m  -> m.name 
 type path = Prims.string Prims.list

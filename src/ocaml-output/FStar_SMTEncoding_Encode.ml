@@ -16,17 +16,10 @@ let (__proj__Mkprims_t__item__mk :
         (FStar_SMTEncoding_Term.term,Prims.int,FStar_SMTEncoding_Term.decl
                                                  Prims.list)
           FStar_Pervasives_Native.tuple3)
-  =
-  fun projectee  ->
-    match projectee with
-    | { mk = __fname__mk; is = __fname__is;_} -> __fname__mk
-  
+  = fun projectee  -> match projectee with | { mk = mk1; is;_} -> mk1 
 let (__proj__Mkprims_t__item__is :
   prims_t -> FStar_Ident.lident -> Prims.bool) =
-  fun projectee  ->
-    match projectee with
-    | { mk = __fname__mk; is = __fname__is;_} -> __fname__is
-  
+  fun projectee  -> match projectee with | { mk = mk1; is;_} -> is 
 let (prims : prims_t) =
   let uu____119 =
     FStar_SMTEncoding_Env.fresh_fvar "a" FStar_SMTEncoding_Term.Term_sort  in
