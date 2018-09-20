@@ -1,5 +1,5 @@
 open Prims
-let (cache_version_number : Prims.int) = (Prims.parse_int "4") 
+let (cache_version_number : Prims.int) = (Prims.parse_int "5") 
 let (module_or_interface_name :
   FStar_Syntax_Syntax.modul ->
     (Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2)
