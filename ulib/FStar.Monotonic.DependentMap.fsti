@@ -132,7 +132,7 @@ val contains_stable
     (t:t r a b inv)
     (x:a)
     (y:b x)
-  : Lemma (ensures (HST.stable_on_t t (contains t x y)))
+  : Lemma (ensures (contains t x y `HST.stable_on` t))
 
 /// `defined_stable`: The `defined` predicate is stable with respect to `grows`
 ///    - this is easily derivable from the previous lemma
@@ -144,7 +144,7 @@ val defined_stable
     (#r:HST.erid)
     (t:t r a b inv)
     (x:a)
-  : Lemma (ensures (HST.stable_on_t t (defined t x)))
+  : Lemma (ensures (defined t x `HST.stable_on` t))
 
 ////////////////////////////////////////////////////////////////////////////////
 // Interface of stateful operations
@@ -154,9 +154,8 @@ val defined_stable
 val alloc (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:HST.erid)
     (_:unit{inv (repr empty)})
   : ST (t r a b inv)
-       (requires (fun h -> HyperStack.ST.witnessed (region_contains_pred r)))
-       (ensures (fun h0 x h1 ->
-         ralloc_post r empty h0 x h1))
+       (requires (fun _ -> True))
+       (ensures (fun h0 x h1 -> ralloc_post r empty h0 x h1))
 
 /// `extend t x y`: Extending `t` with (x -> y)
 ///     Requires: - proving that the `t` does not already define `x`
@@ -183,7 +182,7 @@ val extend
          HS.modifies (Set.singleton r) h0 h1 /\
          HS.modifies_ref r (Set.singleton (HS.as_addr t)) h0 h1 /\
          HS.sel h1 t == upd cur x y /\
-         witnessed (contains t x y)))
+         token_p t (contains t x y)))
 
 /// `lookup t x`: Querying the map `t` at point `x`
 ///      Ensures: - The state does not change
@@ -204,7 +203,7 @@ val lookup
           | None -> ~(defined t x h1)
           | Some v ->
             contains t x v h1 /\
-            witnessed (contains t x v))))
+            token_p t (contains t x v))))
  
 let forall_t (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:HST.erid)
              (t:t r a b inv) (h:HS.mem) (pred: (x:a) -> b x -> Type0)
@@ -225,7 +224,5 @@ val map_f (#a:eqtype) (#b #c:a -> Type)
 	  (#r #r':HST.erid)
           (m:t r a b inv) (f: (x:a) -> b x -> c x)
 	  :ST (t r' a c inv')
-	      (requires (fun h0 -> inv' (DM.map (f_opt f) (repr (HS.sel h0 m))) /\ witnessed (region_contains_pred r')))
-	      (ensures  (fun h0 m' h1 ->
-	                 inv' (DM.map (f_opt f) (repr (HS.sel h0 m))) /\  //AR: surprised that even after the fix for #57, we need this repetetion from the requires clause
-	                 ralloc_post r' (mmap_f (HS.sel h0 m) f) h0 m' h1))
+	      (requires (fun h0 -> inv' (DM.map (f_opt f) (repr (HS.sel h0 m)))))
+	      (ensures  (fun h0 m' h1 -> ralloc_post r' (mmap_f (HS.sel h0 m) f) h0 m' h1))

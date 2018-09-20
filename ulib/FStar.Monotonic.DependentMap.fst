@@ -50,7 +50,7 @@ let extend #a #b #inv #r t x y =
     recall t;
     let cur = !t in
     t := upd cur x y;
-    mr_witness t (contains t x y)
+    witness_p t (contains t x y)
 
 let lookup #a #b #inv #r t x =
     let m = !t in
@@ -58,7 +58,7 @@ let lookup #a #b #inv #r t x =
     match y with
     | None -> y
     | Some b ->
-      mr_witness t (contains t x b);
+      witness_p t (contains t x b);
       y
 
 let rec mmap_f #a #b #c m f =

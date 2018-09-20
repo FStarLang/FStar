@@ -42,7 +42,7 @@ let lemma_snoc_extends (s:seq 'a) (x:'a)
 
 let alloc_mref_seq (#a:Type) (r:rid) (init:seq a)
   : ST (m_rref r (seq a) grows)
-       (requires (fun _ -> HST.witnessed (region_contains_pred r)))
+       (requires (fun _ -> True))
        (ensures (fun h0 m h1 ->
 	 HS.contains h1 m /\
 	 HS.sel h1 m == init /\
@@ -57,7 +57,7 @@ let at_least (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grows) (h:mem)
   /\ Seq.index (HS.sel h r) n == x
 
 let at_least_is_stable (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grows)
-  : Lemma (ensures stable_on_t r (at_least n x r))
+  : Lemma (ensures (at_least n x r `HST.stable_on` r))
   = ()
 
 (** extending a stored sequence, witnessing its new entry for convenience. *)
@@ -69,7 +69,7 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
 		     /\ modifies_one i h0 h1
 		     /\ modifies_ref i (Set.singleton (HS.as_addr r)) h0 h1
 		     /\ HS.sel h1 r == Seq.snoc (HS.sel h0 r) x
-		     /\ witnessed (at_least (Seq.length (HS.sel h0 r)) x r)))
+		     /\ HST.token_p r (at_least (Seq.length (HS.sel h0 r)) x r)))
   =
     recall r;
     let s0 = !r in
@@ -77,7 +77,7 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
     r := Seq.snoc s0 x;
     at_least_is_stable n x r;
     Seq.contains_snoc s0 x;
-    mr_witness r (at_least n x r)
+    witness_p r (at_least n x r)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Monotone sequences with a (stateless) invariant of the whole sequence
@@ -90,8 +90,7 @@ let i_seq (r:rid) (a:Type) (p:seq a -> Type) = m_rref r (s:seq a{p s}) (grows_p 
 
 let alloc_mref_iseq (#a:Type) (p:seq a -> Type) (r:rid) (init:seq a{p init})
   : ST (i_seq r a p)
-       (requires (fun _ -> HST.witnessed (region_contains_pred r)))
-       (ensures (fun h0 m h1 -> HST.ralloc_post r init h0 m h1))
+       (requires (fun _ -> True)) (ensures (fun h0 m h1 -> HST.ralloc_post r init h0 m h1))
   = ralloc r init
 
 let i_at_least (#r:rid) (#a:Type) (#p:(seq a -> Type)) (n:nat) (x:a) (m:i_seq r a p) (h:mem) =
@@ -99,14 +98,14 @@ let i_at_least (#r:rid) (#a:Type) (#p:(seq a -> Type)) (n:nat) (x:a) (m:i_seq r 
       /\ Seq.index (HS.sel h m) n == x
 
 let i_at_least_is_stable (#r:rid) (#a:Type) (#p:seq a -> Type) (n:nat) (x:a) (m:i_seq r a p)
-  : Lemma (ensures stable_on_t m (i_at_least n x m))
+  : Lemma (ensures (i_at_least n x m `HST.stable_on` m))
   = ()
 
 let int_at_most #r #a #p (x:int) (is:i_seq r a p) (h:mem) : Type0 =
   x < Seq.length (HS.sel h is)
 
 let int_at_most_is_stable (#r:rid) (#a:Type) (#p:seq a -> Type) (is:i_seq r a p) (k:int)
-  : Lemma (ensures stable_on_t is (int_at_most k is))
+  : Lemma (ensures (int_at_most k is `HST.stable_on` is))
   = ()
 
 let i_sel (#r:rid) (#a:Type) (#p:seq a -> Type) (h:mem) (m:i_seq r a p)
@@ -131,7 +130,7 @@ let i_write_at_end (#a:Type) (#p:seq a -> Type) (#rgn:rid) (r:i_seq rgn a p) (x:
 		     /\ modifies_one rgn h0 h1
 		     /\ modifies_ref rgn (Set.singleton (HS.as_addr r)) h0 h1
 		     /\ i_sel h1 r == Seq.snoc (i_sel h0 r) x
-		     /\ witnessed (i_at_least (Seq.length (i_sel h0 r)) x r)))
+		     /\ HST.token_p r (i_at_least (Seq.length (i_sel h0 r)) x r)))
   =
     recall r;
     let s0 = !r in
@@ -139,7 +138,7 @@ let i_write_at_end (#a:Type) (#p:seq a -> Type) (#rgn:rid) (r:i_seq rgn a p) (x:
     r := Seq.snoc s0 x;
     i_at_least_is_stable n x r;
     contains_snoc s0 x;
-    mr_witness r (i_at_least n x r)
+    witness_p r (i_at_least n x r)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Testing invariant sequences
@@ -157,7 +156,7 @@ let test0 r a k =
     let s = HS.sel h0 a in 
     at_least_is_stable k (Seq.index (HS.sel h0 a) k) a;
     Seq.contains_intro s k (Seq.index s k) in
-  mr_witness a (at_least k (Seq.index (HS.sel h0 a) k) a)
+  witness_p a (at_least k (Seq.index (HS.sel h0 a) k) a)
   
 private val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
   (requires (fun h -> k < Seq.length (i_sel h a)))
@@ -165,10 +164,10 @@ private val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
 let itest r a k =
   let h0 = HST.get() in
   i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
-  mr_witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
+  witness_p a (i_at_least k (Seq.index (i_sel h0 a) k) a)
 
 private let test_alloc (#a:Type0) (p:seq a -> Type) (r:rid) (init:seq a{p init})
-               : ST unit (requires (fun _ -> HST.witnessed (region_contains_pred r))) (ensures (fun _ _ _ -> True)) =
+               : ST unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True)) =
   let is = alloc_mref_iseq p r init in
   let h = get () in
   assert (i_sel h is == init)
@@ -256,7 +255,7 @@ let map_prefix (#a:Type) (#b:Type) (#i:rid)
 
 //17-01-05  this applies to log_t's defined below. 
 let map_prefix_stable (#a:Type) (#b:Type) (#i:rid) (r:m_rref i (seq a) grows) (f:a -> Tot b) (bs:seq b)
-  :Lemma (stable_on_t r (map_prefix r f bs))
+  :Lemma (map_prefix r f bs `HST.stable_on` r)
   = ()
 
 let map_has_at_index (#a:Type) (#b:Type) (#i:rid)
@@ -270,7 +269,7 @@ let map_has_at_index (#a:Type) (#b:Type) (#i:rid)
 let map_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 			    (r:m_rref i (seq a) grows)
 			    (f:a -> Tot b) (n:nat) (v:b)
-  : Lemma (stable_on_t r (map_has_at_index r f n v))
+  : Lemma (map_has_at_index r f n v `HST.stable_on` r)
   = ()
 		     
 
@@ -317,7 +316,7 @@ let collect_prefix (#a:Type) (#b:Type) (#i:rid)
   grows bs (collect f (HS.sel h r))
 
 let collect_prefix_stable (#a:Type) (#b:Type) (#i:rid) (r:m_rref i (seq a) grows) (f:a -> Tot (seq b)) (bs:seq b)
-  : Lemma (stable_on_t r (collect_prefix r f bs))
+  : Lemma (collect_prefix r f bs `HST.stable_on` r)
   = let aux : h0:mem -> h1:mem -> Lemma
       (collect_prefix r f bs h0
        /\ grows (HS.sel h0 r) (HS.sel h1 r)
@@ -340,7 +339,7 @@ let collect_has_at_index (#a:Type) (#b:Type) (#i:rid)
 let collect_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 				(r:m_rref i (seq a) grows)
 				(f:a -> Tot (seq b)) (n:nat) (v:b)
-  : Lemma (stable_on_t r (collect_has_at_index r f n v))
+  : Lemma (collect_has_at_index r f n v `HST.stable_on` r)
   = Classical.forall_intro_2 (collect_grows f)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -358,7 +357,7 @@ let at_most_log_len (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
 //Note: we may want int seqn, instead of nat seqn
 //because the handshake uses an initial value of -1
 type seqn_val (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
-     (x:nat{x <= max /\ witnessed (at_most_log_len x log)}) //never more than the length of the log
+     (x:nat{x <= max /\ token_p log (at_most_log_len x log)}) //never more than the length of the log
 	 
 type seqn (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
   m_rref i  //counter in region i
@@ -366,16 +365,13 @@ type seqn (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
 	 increases //increasing
 
 let at_most_log_len_stable (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
-  : Lemma (stable_on_t log (at_most_log_len x log))
+  : Lemma (at_most_log_len x log `HST.stable_on` log)
   = ()
 
 let new_seqn (#a:Type) (#l:rid) (#max:nat)
   	     (i:rid) (init:nat) (log:log_t l a)
   : ST (seqn i log max)
-       (requires (fun h ->
-           HST.witnessed (region_contains_pred i) /\
-	   init <= max /\
-	   init <= Seq.length (HS.sel h log)))
+       (requires (fun h -> init <= max /\ init <= Seq.length (HS.sel h log)))
        (ensures (fun h0 c h1 -> //17-01-05 unify with ralloc_post? 
 		   modifies_one i h0 h1 /\
 		   modifies_ref i Set.empty h0 h1 /\
@@ -383,7 +379,7 @@ let new_seqn (#a:Type) (#l:rid) (#max:nat)
 		   HS.sel h1 c = init /\
 		   FStar.Map.contains (HS.get_hmap h1) i))
   = recall log; recall_region i;
-    mr_witness log (at_most_log_len init log);
+    witness_p log (at_most_log_len init log);
     ralloc i init
 
 let increment_seqn (#a:Type) (#l:rid) (#max:nat)
@@ -400,7 +396,7 @@ let increment_seqn (#a:Type) (#l:rid) (#max:nat)
 	  HS.sel h1 c = HS.sel h0 c + 1))
   = recall c; recall log;
     let n = !c + 1 in
-    mr_witness log (at_most_log_len n log);
+    witness_p log (at_most_log_len n log);
     c := n
 
 let testify_seqn (#a:Type0) (#i:rid) (#l:rid) (#log:log_t l a) (#max:nat) (ctr:seqn i log max)
@@ -410,7 +406,7 @@ let testify_seqn (#a:Type0) (#i:rid) (#l:rid) (#log:log_t l a) (#max:nat) (ctr:s
 	   h0==h1 /\
 	   at_most_log_len (HS.sel h1 ctr) log h1))
   = let n = !ctr in
-    testify (at_most_log_len n log)
+    recall_p log (at_most_log_len n log)
 
 private let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
          (r:seqn i log 8) (h:mem)

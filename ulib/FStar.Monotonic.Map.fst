@@ -39,10 +39,9 @@ type rid = HST.erid
 
 let alloc (#r:rid) #a #b #inv
   : ST (t r a b inv)
-       (requires (fun h -> inv (empty_map a b) /\ witnessed (region_contains_pred r)))
-       (ensures (fun h0 x h1 ->
-    inv (empty_map a b) /\
-    ralloc_post r (empty_map a b) h0 x h1))
+       (requires (fun h -> inv (empty_map a b)))
+       (ensures (fun h0 x h1 -> inv (empty_map a b) /\
+                             ralloc_post r (empty_map a b) h0 x h1))
   = ralloc r (empty_map a b)
 
 let defined #r #a #b #inv (m:t r a b inv) (x:a) (h:HS.mem)
@@ -62,7 +61,7 @@ let fresh #r #a #b #inv (m:t r a b inv) (x:a) (h:HS.mem)
   = None? (sel (HS.sel h m) x)
 
 let contains_stable #r #a #b #inv (m:t r a b inv) (x:a) (y:b x)
-  : Lemma (ensures (stable_on_t m (contains m x y)))
+  : Lemma (ensures (contains m x y `HST.stable_on` m))
   = ()
 
 let extend (#r:rid) (#a:eqtype) (#b:a -> Type) (#inv:(map' a b -> Type0)) (m:t r a b inv) (x:a) (y:b x)
@@ -75,14 +74,14 @@ let extend (#r:rid) (#a:eqtype) (#b:a -> Type) (#inv:(map' a b -> Type0)) (m:t r
             /\ modifies (Set.singleton r) h0 h1
             /\ modifies_ref r (Set.singleton (HS.as_addr hsref)) h0 h1
             /\ HS.sel h1 m == upd cur x y
-            /\ HST.witnessed (defined m x)
-            /\ HST.witnessed (contains m x y)))
+            /\ HST.token_p  m (defined m x)
+            /\ HST.token_p m (contains m x y)))
   = recall m;
     let cur = !m in
     m := upd cur x y;
     contains_stable m x y;
-    mr_witness m (defined m x);
-    mr_witness m (contains m x y)
+    witness_p m (defined m x);
+    witness_p m (contains m x y)
 
 let lookup #r #a #b #inv (m:t r a b inv) (x:a)
   : ST (option (b x))
@@ -94,14 +93,14 @@ let lookup #r #a #b #inv (m:t r a b inv) (x:a)
        (Some? y ==>
          defined m x h1 /\
          contains m x (Some?.v y) h1 /\
-         HST.witnessed (defined m x) /\
-         HST.witnessed (contains m x (Some?.v y)))))
+         HST.token_p m (defined m x) /\
+         HST.token_p m (contains m x (Some?.v y)))))
 =
   let y = sel !m x in
   match y with
     | None -> y
     | Some b ->
         contains_stable m x b;
-        mr_witness m (defined m x);
-        mr_witness m (contains m x b);
+        witness_p m (defined m x);
+        witness_p m (contains m x b);
         y
