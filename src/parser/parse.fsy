@@ -2276,7 +2276,7 @@ tmNoEqWith_appTerm_:
               mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
 
             | _ ->
-              mk_term (Op(mk_ident("*", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un
+              mk_term (Op(mk_ident("_*&", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un
       )}
 | tmNoEqWith_appTerm_ OPINFIX3 tmNoEqWith_appTerm_
     {let (e1, op, e2) = ($1, $2, $3) in
@@ -2317,7 +2317,7 @@ tmNoEqWith_tmRefinement_:
               mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
 
             | _ ->
-              mk_term (Op(mk_ident("*", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un
+              mk_term (Op(mk_ident("_*&", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un
       )}
 | tmNoEqWith_tmRefinement_ OPINFIX3 tmNoEqWith_tmRefinement_
     {let (e1, op, e2) = ($1, $2, $3) in
@@ -2958,4 +2958,6 @@ in
    ( x :: xs )}
 
 %%
+
+
 
