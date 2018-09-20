@@ -519,16 +519,15 @@ type nm = | N of typ | M of typ
 
 type nm_ = nm
 
-let nm_of_comp = function
+let nm_of_comp c = match c.n with
   | Total (t, _) ->
       N t
   | Comp c when c.flags |> BU.for_some (function CPS -> true | _ -> false) ->
                 //lid_equals c.effect_name PC.monadic_lid ->
       M c.result_typ
-  | Comp c ->
-      failwith (BU.format1 "[nm_of_comp]: impossible (%s)" (Print.comp_to_string <| mk_Comp c))
-  | GTotal _ ->
-      failwith "[nm_of_comp]: impossible (GTot)"
+  | _ ->
+      raise_error (Error_UnexpectedDM4FType,
+                     BU.format1 "[nm_of_comp]: unexpected computation type %s" (Print.comp_to_string c)) c.pos
 
 let string_of_nm = function
   | N t -> BU.format1 "N[%s]" (Print.term_to_string t)
@@ -536,13 +535,13 @@ let string_of_nm = function
 
 let is_monadic_arrow n =
   match n with
-  | Tm_arrow (_, { n = n}) ->
-      nm_of_comp n
+  | Tm_arrow (_, c) ->
+      nm_of_comp c
   | _ ->
       failwith "unexpected_argument: [is_monadic_arrow]"
 
 let is_monadic_comp c =
-  match nm_of_comp c.n with
+  match nm_of_comp c with
   | M _ -> true
   | N _ -> false
 
@@ -777,7 +776,7 @@ let rec is_C (t: typ): bool =
         false
       end
   | Tm_arrow (binders, comp) ->
-      begin match nm_of_comp comp.n with
+      begin match nm_of_comp comp with
       | M t ->
           if (is_C t) then
             failwith "not a C (C -> C)";
@@ -1083,7 +1082,7 @@ and infer (env: env) (e: term): nm * term * term =
       let rec final_type subst (binders, comp) args =
         match binders, args with
         | [], [] ->
-            nm_of_comp (SS.subst_comp subst comp).n
+            nm_of_comp (SS.subst_comp subst comp)
         | binders, [] ->
             begin match (SS.compress (SS.subst subst (mk (Tm_arrow (binders, comp))))).n with
             | Tm_arrow (binders, comp) -> N (mk (Tm_arrow (binders, close_comp binders comp)))
