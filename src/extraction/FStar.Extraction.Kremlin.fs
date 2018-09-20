@@ -431,13 +431,19 @@ and translate_let env flavor lb: option<decl> =
           | MLTY_Fun (_, eff, t) when i > 0 ->
               find_return_type eff (i - 1) t
           | t ->
-              eff, t
+              i, eff, t
         in
-        let eff, t = find_return_type E_PURE (List.length args) t0 in
+        let name = env.module_name, name in
+        let i, eff, t = find_return_type E_PURE (List.length args) t0 in
+        if i > 0 then begin
+          let msg = "function type annotation has less arrows than the \
+            number of arguments; please mark the return type abbreviation as \
+            inline_for_extraction" in
+          BU.print2_warning "Not extracting %s to KreMLin (%s)\n" (Syntax.string_of_mlpath name) msg
+        end;
         let t = translate_type env t in
         let binders = translate_binders env args in
         let env = add_binders env args in
-        let name = env.module_name, name in
         let cc = translate_cc meta in
         let meta = match eff, t with
           | E_GHOST, _

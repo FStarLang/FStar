@@ -393,7 +393,7 @@ let z3_options = BU.mk_ref
 let set_z3_options opts =
     z3_options := opts
 
-type job<'a> = {
+type job_t<'a> = {
     job:unit -> 'a;
     callback: 'a -> unit
 }
@@ -405,7 +405,7 @@ type z3result = {
       z3result_query_hash  : option<string>
 }
 
-type z3job = job<z3result>
+type z3job = job_t<z3result>
 
 let job_queue : ref<list<z3job>> = BU.mk_ref []
 

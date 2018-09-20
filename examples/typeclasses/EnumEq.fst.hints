@@ -19,27 +19,7 @@
         "token_correspondence_Enum.toInt"
       ],
       0,
-      "9b7a2a66c28212d5138ef7541f44b68b"
-    ],
-    [
-      "EnumEq.enum_eq",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Enum.bounded",
-        "equation_Enum.toInt", "equation_FStar.Reflection.Data.var",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "fuel_guarded_inversion_Enum.enum",
-        "function_token_typing_FStar.Reflection.Data.var",
-        "haseqEnum_Tm_refine_fe0c31abb81157bfda9367dd860602f6",
-        "proj_equation_Enum.Mkenum_max",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "token_correspondence_Enum.__proj__Mkenum__item__toInt",
-        "token_correspondence_Enum.toInt"
-      ],
-      0,
-      "732466bc8b21b14a89fff90cf3e89112"
+      "4b324c08bb5b7fde459ee268976f86da"
     ]
   ]
 ]

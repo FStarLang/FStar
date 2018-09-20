@@ -6,11 +6,11 @@ open FStar.Tactics.Typeclasses
 // noeq type monad (m:Type0 -> Type0) : Type = {
 //   return : #a:_ -> a -> m a;
 //   bind   : #a:_ -> #b:_ -> m a -> (a -> m b) -> m b;
-//   idL    : #a:_ -> #b:_ -> x:a -> f:(a -> m b) -> Lemma (__fname__bind (__fname__return x) f == f x);
-//   idR    : #a:_ -> x:m a -> Lemma (__fname__bind x __fname__return == x);
+//   idL    : #a:_ -> #b:_ -> x:a -> f:(a -> m b) -> Lemma (bind (return x) f == f x);
+//   idR    : #a:_ -> x:m a -> Lemma (bind x return == x);
 //   assoc  : #a:_ -> #b:_ -> #c:_ -> x:m a -> f:(a -> m b) -> g:(b -> m c) ->
-// 			 Lemma (__fname__bind (__fname__bind x f) g ==
-// 			        __fname__bind x (fun y -> __fname__bind (f y) g));
+// 			 Lemma (bind (bind x f) g ==
+// 			        bind x (fun y -> bind (f y) g));
 // }
 
 noeq
@@ -25,7 +25,7 @@ type monad_laws (m:Type0 -> Type0) (return : (#a:_ -> a -> m a)) (bind : (#a:_ -
 class monad (m : Type0 -> Type0) = {
   return : #a:_ -> a -> m a;
   bind   : #a:_ -> #b:_ -> m a -> (a -> m b) -> m b;
-  laws   : monad_laws m __fname__return __fname__bind;
+  laws   : monad_laws m return bind;
 }
 
 

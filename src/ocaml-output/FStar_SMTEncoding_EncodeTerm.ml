@@ -394,9 +394,7 @@ let (__proj__Mkpattern__item__pat_vars :
   =
   fun projectee  ->
     match projectee with
-    | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
-        guard = __fname__guard; projections = __fname__projections;_} ->
-        __fname__pat_vars
+    | { pat_vars; pat_term; guard; projections;_} -> pat_vars
   
 let (__proj__Mkpattern__item__pat_term :
   pattern ->
@@ -406,17 +404,13 @@ let (__proj__Mkpattern__item__pat_term :
   =
   fun projectee  ->
     match projectee with
-    | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
-        guard = __fname__guard; projections = __fname__projections;_} ->
-        __fname__pat_term
+    | { pat_vars; pat_term; guard; projections;_} -> pat_term
   
 let (__proj__Mkpattern__item__guard :
   pattern -> FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) =
   fun projectee  ->
     match projectee with
-    | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
-        guard = __fname__guard; projections = __fname__projections;_} ->
-        __fname__guard
+    | { pat_vars; pat_term; guard; projections;_} -> guard
   
 let (__proj__Mkpattern__item__projections :
   pattern ->
@@ -426,9 +420,7 @@ let (__proj__Mkpattern__item__projections :
   =
   fun projectee  ->
     match projectee with
-    | { pat_vars = __fname__pat_vars; pat_term = __fname__pat_term;
-        guard = __fname__guard; projections = __fname__projections;_} ->
-        __fname__projections
+    | { pat_vars; pat_term; guard; projections;_} -> projections
   
 let (as_function_typ :
   FStar_SMTEncoding_Env.env_t ->
@@ -653,10 +645,7 @@ and (encode_binders :
                      match uu____1915 with
                      | (vars,guards,env1,decls,names1) ->
                          let uu____1996 =
-                           let x =
-                             FStar_SMTEncoding_Env.unmangle
-                               (FStar_Pervasives_Native.fst b)
-                              in
+                           let x = FStar_Pervasives_Native.fst b  in
                            let uu____2016 =
                              FStar_SMTEncoding_Env.gen_term_var env1 x  in
                            match uu____2016 with

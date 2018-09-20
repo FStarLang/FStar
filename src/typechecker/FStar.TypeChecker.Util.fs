@@ -1156,7 +1156,8 @@ let maybe_instantiate (env:Env.env) e t =
                 | None -> None
                 | Some i -> Some (i - 1)
         in
-        begin match torig.n with
+        let t = N.unfold_whnf env t in
+        begin match t.n with
             | Tm_arrow(bs, c) ->
               let bs, c = SS.open_comp bs c in
               //instantiate at most inst_n implicit binders, when inst_n = Some n
@@ -1210,7 +1211,7 @@ let maybe_instantiate (env:Env.env) e t =
                   e, t, guard
               end
 
-            | _ -> e, t, Env.trivial_guard
+            | _ -> e, torig, Env.trivial_guard
        end
   end
 
