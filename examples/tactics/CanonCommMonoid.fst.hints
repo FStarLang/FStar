@@ -597,7 +597,7 @@
         "typing_CanonCommMonoid.select_extra"
       ],
       0,
-      "c661e8838732c385a40f6d5c2d582450"
+      "f8495c4e44e59c111b6b1b05bcda74c7"
     ],
     [
       "CanonCommMonoid.lem1",
@@ -615,7 +615,7 @@
         "token_correspondence_CanonCommMonoid.sortWith", "true_interp"
       ],
       0,
-      "34f0846984f420d76847d01285fc2abf"
+      "4c1181945da82225eabefca4f9babb8c"
     ],
     [
       "CanonCommMonoid.lem1",
@@ -633,7 +633,7 @@
         "token_correspondence_CanonCommMonoid.sortWith", "true_interp"
       ],
       0,
-      "d56de301ea8b5d05f01fa2107b103665"
+      "da0642dca5908ef070c594605b761b8d"
     ],
     [
       "CanonCommMonoid.lem1",
@@ -651,7 +651,7 @@
         "token_correspondence_CanonCommMonoid.sortWith"
       ],
       0,
-      "d64acf00fad6383391fe8f09961ff7d0"
+      "c6845ac1a42f97b0bc63732cb2f37a84"
     ],
     [
       "CanonCommMonoid.special_compare",
@@ -674,7 +674,7 @@
         "typing_CanonCommMonoid.select_extra"
       ],
       0,
-      "e3334def9e6adc021e60b07c63c3f1c7"
+      "04298af6901373d3741ebcf894e5d6b7"
     ],
     [
       "CanonCommMonoid.special_first_correct",
@@ -692,7 +692,7 @@
         "token_correspondence_CanonCommMonoid.sortWith"
       ],
       0,
-      "fe588353a81d06c120f557b032717d1a"
+      "783e5a72f01d56d32a72f151255c41a0"
     ],
     [
       "CanonCommMonoid.dump",
@@ -1025,7 +1025,7 @@
         "typing_CanonCommMonoid.select_extra"
       ],
       0,
-      "af66077b46bf8701440e8d48094a1ce6"
+      "f8874e8cebd50e4bf745ee88db8389ed"
     ],
     [
       "CanonCommMonoid.lem1",
@@ -1043,7 +1043,7 @@
         "token_correspondence_CanonCommMonoid.sortWith"
       ],
       0,
-      "35e9cc6925c0f6714f047c6ab4fdacfa"
+      "6d168d3f5312070b1694e1a898c9d89e"
     ],
     [
       "CanonCommMonoid.lem1",
@@ -1061,7 +1061,7 @@
         "token_correspondence_CanonCommMonoid.sortWith", "true_interp"
       ],
       0,
-      "55b901b2acdf0839c0f2296348c8748c"
+      "5907f4a0be10ed6fbca906b3673a356e"
     ],
     [
       "CanonCommMonoid.lem1",
@@ -1079,7 +1079,7 @@
         "token_correspondence_CanonCommMonoid.sortWith"
       ],
       0,
-      "177ba2d5c4ac8ede6383e8cd685c2cec"
+      "3fbf96305adc9b5b44355b1f73151781"
     ],
     [
       "CanonCommMonoid.special_compare",
@@ -1102,7 +1102,7 @@
         "typing_CanonCommMonoid.select_extra"
       ],
       0,
-      "683939887a140777789e948cd4df794d"
+      "69c664975f78da46dd03f1b392c69321"
     ]
   ]
 ]
