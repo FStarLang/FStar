@@ -99,15 +99,16 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ opam install ocamlfind batteries stdint zarith ppx_deriving ppx_deriving_yojson ocaml-migrate-parsetree process
 
-4. You can verify all the examples, keeping in mind that this might
-   take a long time.
+4. You can verify the F* library and all the examples,
+   keeping in mind that this might take a long time.
 
+        $ make -j6 -C ulib
         $ make -j6 -C examples
         $ echo $?    # non-zero means build failed! scroll up for error message!
 
-   Note: This step currently requires having OCaml installed (as for step 3 above).
+   Note: Some of the examples currently require having OCaml installed (as for step 3 above).
 
-   Note: This step currently requires having [KreMLin](https://github.com/FStarLang/kremlin)
+   Note: Some of the examples currently require having [KreMLin](https://github.com/FStarLang/kremlin)
          installed and the `KREMLIN_HOME` variable pointing to its location.
          
    Note: On Linux if you get a file descriptor exhaustion error that looks
