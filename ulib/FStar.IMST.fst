@@ -97,7 +97,7 @@ let st_wp' (a:Type) (s:Type u#1)
 
 unfold
 let index (#a:Type) (s:Type u#1) (rel: preorder s) (wp:st_wp' a s) : st_wp a
-  = fun s' rel post s0 -> s' == s /\ (forall x y . rel x y <==> rel x y) /\ wp post s0
+  = fun s' rel' post s0 -> s' == s /\ (forall x y . rel x y <==> rel' x y) /\ wp post s0
 
 
 (* Standard, but now state-and-preorder indexed get, put, witness, and recall actions *)

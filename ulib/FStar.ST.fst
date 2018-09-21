@@ -43,7 +43,7 @@ let lemma_functoriality p q = W.lemma_witnessed_weakening heap_rel p q
 
 (***** Intatiating FStar.IMST to a heap-specific ST effect *****)
 
-//new_effect IST = I.IMST (* intermediate step to generate a "fresh" copy of IMST, and hide global state operations *)
+//new_effect IST = I.IMST
 
 //unfold let lift_imst_ist (a:Type) (wp:I.st_wp a) = wp
 //sub_effect I.IMST ~> IST = lift_imst_ist
@@ -53,7 +53,17 @@ let st_post' (a:Type) (pre:Type) = st_post_h' heap a pre
 let st_post  (a:Type) = st_post_h heap a
 let st_wp (a:Type)    = st_wp_h heap a
 
-effect STATE a (wp:st_wp a) = I.IMST a (I.index heap heap_rel wp)
+effect STATE a (wp:st_wp a) = I.IMST a (I.index heap heap_rel wp) 
+
+(* 
+   But now STATE inherits all actions of IMST. In the copy-paste GST prelude this was taken 
+   care by marking GST actions as private, which we can't do as IMST is in a module of its own. 
+
+   Even if we were to define an intermediate new_effect (as above), we would still need to 
+   state that IMST ~> this intermediate effect to be able to use IMST's actions.
+
+   Would it be acceptable to make the actions of IMST private and use Friends to access them?
+*)
 
 effect State (a:Type) (wp:st_wp a) = STATE a wp
 
@@ -121,8 +131,3 @@ abstract let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
 type ref (a:Type0) = mref a (trivial_preorder a)
 
 let modifies_none (h0:heap) (h1:heap) = modifies !{} h0 h1
-
-
-
-
-
