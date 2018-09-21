@@ -32,6 +32,29 @@
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
       "405f47a8bd71c28dd82942e1b5285491"
+    ],
+    [
+      "Cert.ACLs.canRead",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "d0682c7822b2907581d836270fefa73f"
+    ],
+    [
+      "Cert.ACLs.test",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Cert.ACLs.canRead",
+        "equation_Cert.ACLs.canWrite", "equation_Cert.ACLs.publicFile",
+        "equation_Cert.ACLs.readme", "equation_Cert.ACLs.tmp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "779107b0c9d491d3ab6f7fdf78ae9fc0"
     ]
   ]
 ]

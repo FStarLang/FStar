@@ -11,7 +11,7 @@
         "equation_Cap.byte", "equation_Platform.Bytes.bytes"
       ],
       0,
-      "e14afd65a43445cf7d9b218eacf7ed64"
+      "1a81d8196ff275fb57ee21f32bc2c74a"
     ],
     [
       "Cap.main",
@@ -41,7 +41,28 @@
         "typing_Platform.Bytes.equalBytes", "unit_typing"
       ],
       0,
-      "f7d8c292261879c50bbcf75582eecd88"
+      "44b787b6d1ccd7192bf67fefcabd377b"
+    ],
+    [
+      "Cap.capRead",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_Cap.byte", "equation_Platform.Bytes.bytes"
+      ],
+      0,
+      "751ebb6bc1b521cd5324d743e40dc9ba"
+    ],
+    [
+      "Cap.issue",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6293f9df2b7987414e8ed51b2d50706e"
     ]
   ]
 ]
