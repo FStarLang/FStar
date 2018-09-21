@@ -519,7 +519,7 @@ let encode_top_level_let :
     env_t -> (bool * list<letbinding>) -> list<qualifier> -> list<decl> * env_t =
     fun env (is_rec, bindings) quals ->
 
-    let eta_expand binders formals body t =
+    let eta_expand binders formals body =
       let nbinders = List.length binders in
       let formals, extra_formals = BU.first_N nbinders formals in
       let subst = List.map2 (fun (formal, _) (binder, _) -> NT(formal, S.bv_to_name binder)) formals binders in
@@ -560,7 +560,7 @@ let encode_top_level_let :
                       let body = U.abs rest body lopt in
                       (bs0, body, bs0, get_result_type c), false
               else if nformals > nbinders (* eta-expand before translating it *)
-              then let binders, body = eta_expand binders formals body tres in
+              then let binders, body = eta_expand binders formals body in
                       (binders, body, formals, tres), false
               else (binders, body, formals, tres), false
 
@@ -586,7 +586,7 @@ let encode_top_level_let :
               | Tm_arrow(formals, c) ->
                 let formals, c = SS.open_comp formals c in
                 let tres = get_result_type c in
-                let binders, body = eta_expand [] formals e tres in
+                let binders, body = eta_expand [] formals e in
                 (binders, body, formals, tres), false
               | Tm_refine (bv, _) -> aux' bv.sort
               | _ -> ([], e, [], t_norm), false
