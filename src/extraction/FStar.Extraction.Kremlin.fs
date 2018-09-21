@@ -714,9 +714,12 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ e1; e2 ])
     when (string_of_mlpath p = "FStar.Buffer.create" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca" ||
-          string_of_mlpath p = "LowStar.ImmutableBuffer.ialloca" ||
-          string_of_mlpath p = "LowStar.UninitializedBuffer.ualloca") ->
+          string_of_mlpath p = "LowStar.ImmutableBuffer.ialloca") ->
       EBufCreate (Stack, translate_expr env e1, translate_expr env e2)
+  
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ elen ])
+    when string_of_mlpath p = "LowStar.UninitializedBuffer.ualloca" ->
+      EBufCreateNoInit (Stack, translate_expr env elen)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
     when (string_of_mlpath p = "FStar.HyperStack.ST.salloc") ->
@@ -754,9 +757,12 @@ and translate_expr env e: expr =
     when (string_of_mlpath p = "FStar.Buffer.rcreate_mm" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
-          string_of_mlpath p = "LowStar.ImmutableBuffer.imalloc" ||
-          string_of_mlpath p = "LowStar.UninitializedBuffer.umalloc") ->
+          string_of_mlpath p = "LowStar.ImmutableBuffer.imalloc") ->
       EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _erid; elen ])
+    when string_of_mlpath p = "LowStar.UninitializedBuffer.umalloc" ->
+      EBufCreateNoInit (ManuallyManaged, translate_expr env elen)
 
   (* Only manually-managed references and buffers can be freed. *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.HyperStack.ST.rfree") ->
