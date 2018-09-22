@@ -1299,7 +1299,11 @@ and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
   | Sum(binders, res) ->
       let op = "&" in
       let left, mine, right = levels op in
-      let p_dsumfst b = p_binder false b ^^ space ^^ str op ^^ break1 in
+      let p_dsumfst bt =
+        match bt with
+        | Inl b -> p_binder false b ^^ space ^^ str op ^^ break1
+        | Inr t -> p_tmNoEqWith' false p_X left t ^^ space ^^ str op ^^ break1
+      in
       paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEqWith' false p_X right res)
   | Op({idText = "*"}, [e1; e2]) when !unfold_tuples ->
       let op = "*" in

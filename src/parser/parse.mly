@@ -793,17 +793,21 @@ tmNoEqWith(X):
       { consTerm (rhs parseState 2) e1 e2 }
   | e1=tmNoEqWith(X) AMP e2=tmNoEqWith(X)
       {
-            match extract_named_refinement e1 with
-            | Some (x, t, f) ->
-              let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
-              let tail = e2 in
-              let dom, res = match tail.tm with
+            let dom =
+               match extract_named_refinement e1 with
+               | Some (x, t, f) ->
+                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
+                 Inl dom
+               | _ ->
+                 Inr e1
+            in
+            let tail = e2 in
+            let dom, res =
+                match tail.tm with
                 | Sum(dom', res) -> dom::dom', res
-                | _ -> [dom], tail in
-              mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
-
-            | _ ->
-              mk_term (Op(mk_ident("_*&", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un
+                | _ -> [dom], tail
+            in
+            mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       }
   | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
