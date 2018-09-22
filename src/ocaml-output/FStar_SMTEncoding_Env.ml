@@ -26,8 +26,8 @@ let vargs :
   =
   fun args  ->
     FStar_List.filter
-      (fun uu___263_130  ->
-         match uu___263_130 with
+      (fun uu___265_130  ->
+         match uu___265_130 with
          | (FStar_Util.Inl uu____139,uu____140) -> false
          | uu____145 -> true) args
   
@@ -140,79 +140,109 @@ type varops_t =
 let (__proj__Mkvarops_t__item__push : varops_t -> unit -> unit) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; string_const; next_id = next_id1;
-        mk_unique;_} -> push1
+    | { push = __fname__push; pop = __fname__pop;
+        snapshot = __fname__snapshot; rollback = __fname__rollback;
+        new_var = __fname__new_var; new_fvar = __fname__new_fvar;
+        fresh = __fname__fresh; string_const = __fname__string_const;
+        next_id = __fname__next_id; mk_unique = __fname__mk_unique;_} ->
+        __fname__push
   
 let (__proj__Mkvarops_t__item__pop : varops_t -> unit -> unit) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; string_const; next_id = next_id1;
-        mk_unique;_} -> pop1
+    | { push = __fname__push; pop = __fname__pop;
+        snapshot = __fname__snapshot; rollback = __fname__rollback;
+        new_var = __fname__new_var; new_fvar = __fname__new_fvar;
+        fresh = __fname__fresh; string_const = __fname__string_const;
+        next_id = __fname__next_id; mk_unique = __fname__mk_unique;_} ->
+        __fname__pop
   
 let (__proj__Mkvarops_t__item__snapshot :
   varops_t -> unit -> (Prims.int,unit) FStar_Pervasives_Native.tuple2) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; string_const; next_id = next_id1;
-        mk_unique;_} -> snapshot1
+    | { push = __fname__push; pop = __fname__pop;
+        snapshot = __fname__snapshot; rollback = __fname__rollback;
+        new_var = __fname__new_var; new_fvar = __fname__new_fvar;
+        fresh = __fname__fresh; string_const = __fname__string_const;
+        next_id = __fname__next_id; mk_unique = __fname__mk_unique;_} ->
+        __fname__snapshot
   
 let (__proj__Mkvarops_t__item__rollback :
   varops_t -> Prims.int FStar_Pervasives_Native.option -> unit) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; string_const; next_id = next_id1;
-        mk_unique;_} -> rollback1
+    | { push = __fname__push; pop = __fname__pop;
+        snapshot = __fname__snapshot; rollback = __fname__rollback;
+        new_var = __fname__new_var; new_fvar = __fname__new_fvar;
+        fresh = __fname__fresh; string_const = __fname__string_const;
+        next_id = __fname__next_id; mk_unique = __fname__mk_unique;_} ->
+        __fname__rollback
   
 let (__proj__Mkvarops_t__item__new_var :
   varops_t -> FStar_Ident.ident -> Prims.int -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; string_const; next_id = next_id1;
-        mk_unique;_} -> new_var
+    | { push = __fname__push; pop = __fname__pop;
+        snapshot = __fname__snapshot; rollback = __fname__rollback;
+        new_var = __fname__new_var; new_fvar = __fname__new_fvar;
+        fresh = __fname__fresh; string_const = __fname__string_const;
+        next_id = __fname__next_id; mk_unique = __fname__mk_unique;_} ->
+        __fname__new_var
   
 let (__proj__Mkvarops_t__item__new_fvar :
   varops_t -> FStar_Ident.lident -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; string_const; next_id = next_id1;
-        mk_unique;_} -> new_fvar
+    | { push = __fname__push; pop = __fname__pop;
+        snapshot = __fname__snapshot; rollback = __fname__rollback;
+        new_var = __fname__new_var; new_fvar = __fname__new_fvar;
+        fresh = __fname__fresh; string_const = __fname__string_const;
+        next_id = __fname__next_id; mk_unique = __fname__mk_unique;_} ->
+        __fname__new_fvar
   
 let (__proj__Mkvarops_t__item__fresh :
   varops_t -> Prims.string -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; string_const; next_id = next_id1;
-        mk_unique;_} -> fresh1
+    | { push = __fname__push; pop = __fname__pop;
+        snapshot = __fname__snapshot; rollback = __fname__rollback;
+        new_var = __fname__new_var; new_fvar = __fname__new_fvar;
+        fresh = __fname__fresh; string_const = __fname__string_const;
+        next_id = __fname__next_id; mk_unique = __fname__mk_unique;_} ->
+        __fname__fresh
   
 let (__proj__Mkvarops_t__item__string_const :
   varops_t -> Prims.string -> FStar_SMTEncoding_Term.term) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; string_const; next_id = next_id1;
-        mk_unique;_} -> string_const
+    | { push = __fname__push; pop = __fname__pop;
+        snapshot = __fname__snapshot; rollback = __fname__rollback;
+        new_var = __fname__new_var; new_fvar = __fname__new_fvar;
+        fresh = __fname__fresh; string_const = __fname__string_const;
+        next_id = __fname__next_id; mk_unique = __fname__mk_unique;_} ->
+        __fname__string_const
   
 let (__proj__Mkvarops_t__item__next_id : varops_t -> unit -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; string_const; next_id = next_id1;
-        mk_unique;_} -> next_id1
+    | { push = __fname__push; pop = __fname__pop;
+        snapshot = __fname__snapshot; rollback = __fname__rollback;
+        new_var = __fname__new_var; new_fvar = __fname__new_fvar;
+        fresh = __fname__fresh; string_const = __fname__string_const;
+        next_id = __fname__next_id; mk_unique = __fname__mk_unique;_} ->
+        __fname__next_id
   
 let (__proj__Mkvarops_t__item__mk_unique :
   varops_t -> Prims.string -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; string_const; next_id = next_id1;
-        mk_unique;_} -> mk_unique
+    | { push = __fname__push; pop = __fname__pop;
+        snapshot = __fname__snapshot; rollback = __fname__rollback;
+        new_var = __fname__new_var; new_fvar = __fname__new_fvar;
+        fresh = __fname__fresh; string_const = __fname__string_const;
+        next_id = __fname__next_id; mk_unique = __fname__mk_unique;_} ->
+        __fname__mk_unique
   
 let (varops : varops_t) =
   let initial_ctr = (Prims.parse_int "100")  in
@@ -322,36 +352,46 @@ let (__proj__Mkfvar_binding__item__fvar_lid :
   fvar_binding -> FStar_Ident.lident) =
   fun projectee  ->
     match projectee with
-    | { fvar_lid; smt_arity; smt_id; smt_token; smt_fuel_partial_app;_} ->
-        fvar_lid
+    | { fvar_lid = __fname__fvar_lid; smt_arity = __fname__smt_arity;
+        smt_id = __fname__smt_id; smt_token = __fname__smt_token;
+        smt_fuel_partial_app = __fname__smt_fuel_partial_app;_} ->
+        __fname__fvar_lid
   
 let (__proj__Mkfvar_binding__item__smt_arity : fvar_binding -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { fvar_lid; smt_arity; smt_id; smt_token; smt_fuel_partial_app;_} ->
-        smt_arity
+    | { fvar_lid = __fname__fvar_lid; smt_arity = __fname__smt_arity;
+        smt_id = __fname__smt_id; smt_token = __fname__smt_token;
+        smt_fuel_partial_app = __fname__smt_fuel_partial_app;_} ->
+        __fname__smt_arity
   
 let (__proj__Mkfvar_binding__item__smt_id : fvar_binding -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { fvar_lid; smt_arity; smt_id; smt_token; smt_fuel_partial_app;_} ->
-        smt_id
+    | { fvar_lid = __fname__fvar_lid; smt_arity = __fname__smt_arity;
+        smt_id = __fname__smt_id; smt_token = __fname__smt_token;
+        smt_fuel_partial_app = __fname__smt_fuel_partial_app;_} ->
+        __fname__smt_id
   
 let (__proj__Mkfvar_binding__item__smt_token :
   fvar_binding -> FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option)
   =
   fun projectee  ->
     match projectee with
-    | { fvar_lid; smt_arity; smt_id; smt_token; smt_fuel_partial_app;_} ->
-        smt_token
+    | { fvar_lid = __fname__fvar_lid; smt_arity = __fname__smt_arity;
+        smt_id = __fname__smt_id; smt_token = __fname__smt_token;
+        smt_fuel_partial_app = __fname__smt_fuel_partial_app;_} ->
+        __fname__smt_token
   
 let (__proj__Mkfvar_binding__item__smt_fuel_partial_app :
   fvar_binding -> FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option)
   =
   fun projectee  ->
     match projectee with
-    | { fvar_lid; smt_arity; smt_id; smt_token; smt_fuel_partial_app;_} ->
-        smt_fuel_partial_app
+    | { fvar_lid = __fname__fvar_lid; smt_arity = __fname__smt_arity;
+        smt_id = __fname__smt_id; smt_token = __fname__smt_token;
+        smt_fuel_partial_app = __fname__smt_fuel_partial_app;_} ->
+        __fname__smt_fuel_partial_app
   
 let binder_of_eithervar :
   'Auu____2300 'Auu____2301 .
@@ -369,29 +409,45 @@ let (__proj__Mkcache_entry__item__cache_symbol_name :
   cache_entry -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { cache_symbol_name; cache_symbol_arg_sorts; cache_symbol_decls;
-        cache_symbol_assumption_names;_} -> cache_symbol_name
+    | { cache_symbol_name = __fname__cache_symbol_name;
+        cache_symbol_arg_sorts = __fname__cache_symbol_arg_sorts;
+        cache_symbol_decls = __fname__cache_symbol_decls;
+        cache_symbol_assumption_names =
+          __fname__cache_symbol_assumption_names;_}
+        -> __fname__cache_symbol_name
   
 let (__proj__Mkcache_entry__item__cache_symbol_arg_sorts :
   cache_entry -> FStar_SMTEncoding_Term.sort Prims.list) =
   fun projectee  ->
     match projectee with
-    | { cache_symbol_name; cache_symbol_arg_sorts; cache_symbol_decls;
-        cache_symbol_assumption_names;_} -> cache_symbol_arg_sorts
+    | { cache_symbol_name = __fname__cache_symbol_name;
+        cache_symbol_arg_sorts = __fname__cache_symbol_arg_sorts;
+        cache_symbol_decls = __fname__cache_symbol_decls;
+        cache_symbol_assumption_names =
+          __fname__cache_symbol_assumption_names;_}
+        -> __fname__cache_symbol_arg_sorts
   
 let (__proj__Mkcache_entry__item__cache_symbol_decls :
   cache_entry -> FStar_SMTEncoding_Term.decl Prims.list) =
   fun projectee  ->
     match projectee with
-    | { cache_symbol_name; cache_symbol_arg_sorts; cache_symbol_decls;
-        cache_symbol_assumption_names;_} -> cache_symbol_decls
+    | { cache_symbol_name = __fname__cache_symbol_name;
+        cache_symbol_arg_sorts = __fname__cache_symbol_arg_sorts;
+        cache_symbol_decls = __fname__cache_symbol_decls;
+        cache_symbol_assumption_names =
+          __fname__cache_symbol_assumption_names;_}
+        -> __fname__cache_symbol_decls
   
 let (__proj__Mkcache_entry__item__cache_symbol_assumption_names :
   cache_entry -> Prims.string Prims.list) =
   fun projectee  ->
     match projectee with
-    | { cache_symbol_name; cache_symbol_arg_sorts; cache_symbol_decls;
-        cache_symbol_assumption_names;_} -> cache_symbol_assumption_names
+    | { cache_symbol_name = __fname__cache_symbol_name;
+        cache_symbol_arg_sorts = __fname__cache_symbol_arg_sorts;
+        cache_symbol_decls = __fname__cache_symbol_decls;
+        cache_symbol_assumption_names =
+          __fname__cache_symbol_assumption_names;_}
+        -> __fname__cache_symbol_assumption_names
   
 type env_t =
   {
@@ -416,81 +472,158 @@ let (__proj__Mkenv_t__item__bvar_bindings :
   =
   fun projectee  ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; cache; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier;_} -> bvar_bindings
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__bvar_bindings
   
 let (__proj__Mkenv_t__item__fvar_bindings :
   env_t -> fvar_binding FStar_Util.psmap) =
   fun projectee  ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; cache; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier;_} -> fvar_bindings
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__fvar_bindings
   
 let (__proj__Mkenv_t__item__depth : env_t -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; cache; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier;_} -> depth
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__depth
   
 let (__proj__Mkenv_t__item__tcenv : env_t -> FStar_TypeChecker_Env.env) =
   fun projectee  ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; cache; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier;_} -> tcenv
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__tcenv
   
 let (__proj__Mkenv_t__item__warn : env_t -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; cache; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier;_} -> warn
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__warn
   
 let (__proj__Mkenv_t__item__cache : env_t -> cache_entry FStar_Util.smap) =
   fun projectee  ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; cache; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier;_} -> cache
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__cache
   
 let (__proj__Mkenv_t__item__nolabels : env_t -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; cache; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier;_} -> nolabels
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__nolabels
   
 let (__proj__Mkenv_t__item__use_zfuel_name : env_t -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; cache; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier;_} -> use_zfuel_name
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__use_zfuel_name
   
 let (__proj__Mkenv_t__item__encode_non_total_function_typ :
   env_t -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; cache; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier;_} -> encode_non_total_function_typ
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__encode_non_total_function_typ
   
 let (__proj__Mkenv_t__item__current_module_name : env_t -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; cache; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier;_} -> current_module_name
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__current_module_name
   
 let (__proj__Mkenv_t__item__encoding_quantifier : env_t -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; cache; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier;_} -> encoding_quantifier
+    | { bvar_bindings = __fname__bvar_bindings;
+        fvar_bindings = __fname__fvar_bindings; depth = __fname__depth;
+        tcenv = __fname__tcenv; warn = __fname__warn; cache = __fname__cache;
+        nolabels = __fname__nolabels;
+        use_zfuel_name = __fname__use_zfuel_name;
+        encode_non_total_function_typ =
+          __fname__encode_non_total_function_typ;
+        current_module_name = __fname__current_module_name;
+        encoding_quantifier = __fname__encoding_quantifier;_} ->
+        __fname__encoding_quantifier
   
 let mk_cache_entry :
   'Auu____2822 .
@@ -506,8 +639,8 @@ let mk_cache_entry :
           let names1 =
             FStar_All.pipe_right t_decls1
               (FStar_List.collect
-                 (fun uu___264_2860  ->
-                    match uu___264_2860 with
+                 (fun uu___266_2860  ->
+                    match uu___266_2860 with
                     | FStar_SMTEncoding_Term.Assume a ->
                         [a.FStar_SMTEncoding_Term.assumption_name]
                     | uu____2864 -> []))
@@ -631,21 +764,21 @@ let (gen_term_var :
           (ysym, FStar_SMTEncoding_Term.Term_sort)
          in
       let uu____3167 =
-        let uu___265_3168 = env  in
+        let uu___267_3168 = env  in
         let uu____3169 = add_bvar_binding (x, y) env.bvar_bindings  in
         {
           bvar_bindings = uu____3169;
-          fvar_bindings = (uu___265_3168.fvar_bindings);
+          fvar_bindings = (uu___267_3168.fvar_bindings);
           depth = (env.depth + (Prims.parse_int "1"));
-          tcenv = (uu___265_3168.tcenv);
-          warn = (uu___265_3168.warn);
-          cache = (uu___265_3168.cache);
-          nolabels = (uu___265_3168.nolabels);
-          use_zfuel_name = (uu___265_3168.use_zfuel_name);
+          tcenv = (uu___267_3168.tcenv);
+          warn = (uu___267_3168.warn);
+          cache = (uu___267_3168.cache);
+          nolabels = (uu___267_3168.nolabels);
+          use_zfuel_name = (uu___267_3168.use_zfuel_name);
           encode_non_total_function_typ =
-            (uu___265_3168.encode_non_total_function_typ);
-          current_module_name = (uu___265_3168.current_module_name);
-          encoding_quantifier = (uu___265_3168.encoding_quantifier)
+            (uu___267_3168.encode_non_total_function_typ);
+          current_module_name = (uu___267_3168.current_module_name);
+          encoding_quantifier = (uu___267_3168.encoding_quantifier)
         }  in
       (ysym, y, uu____3167)
   
@@ -663,21 +796,21 @@ let (new_term_constant :
          in
       let y = FStar_SMTEncoding_Util.mkApp (ysym, [])  in
       let uu____3198 =
-        let uu___266_3199 = env  in
+        let uu___268_3199 = env  in
         let uu____3200 = add_bvar_binding (x, y) env.bvar_bindings  in
         {
           bvar_bindings = uu____3200;
-          fvar_bindings = (uu___266_3199.fvar_bindings);
-          depth = (uu___266_3199.depth);
-          tcenv = (uu___266_3199.tcenv);
-          warn = (uu___266_3199.warn);
-          cache = (uu___266_3199.cache);
-          nolabels = (uu___266_3199.nolabels);
-          use_zfuel_name = (uu___266_3199.use_zfuel_name);
+          fvar_bindings = (uu___268_3199.fvar_bindings);
+          depth = (uu___268_3199.depth);
+          tcenv = (uu___268_3199.tcenv);
+          warn = (uu___268_3199.warn);
+          cache = (uu___268_3199.cache);
+          nolabels = (uu___268_3199.nolabels);
+          use_zfuel_name = (uu___268_3199.use_zfuel_name);
           encode_non_total_function_typ =
-            (uu___266_3199.encode_non_total_function_typ);
-          current_module_name = (uu___266_3199.current_module_name);
-          encoding_quantifier = (uu___266_3199.encoding_quantifier)
+            (uu___268_3199.encode_non_total_function_typ);
+          current_module_name = (uu___268_3199.current_module_name);
+          encoding_quantifier = (uu___268_3199.encoding_quantifier)
         }  in
       (ysym, y, uu____3198)
   
@@ -694,21 +827,21 @@ let (new_term_constant_from_string :
         let ysym = varops.mk_unique str  in
         let y = FStar_SMTEncoding_Util.mkApp (ysym, [])  in
         let uu____3234 =
-          let uu___267_3235 = env  in
+          let uu___269_3235 = env  in
           let uu____3236 = add_bvar_binding (x, y) env.bvar_bindings  in
           {
             bvar_bindings = uu____3236;
-            fvar_bindings = (uu___267_3235.fvar_bindings);
-            depth = (uu___267_3235.depth);
-            tcenv = (uu___267_3235.tcenv);
-            warn = (uu___267_3235.warn);
-            cache = (uu___267_3235.cache);
-            nolabels = (uu___267_3235.nolabels);
-            use_zfuel_name = (uu___267_3235.use_zfuel_name);
+            fvar_bindings = (uu___269_3235.fvar_bindings);
+            depth = (uu___269_3235.depth);
+            tcenv = (uu___269_3235.tcenv);
+            warn = (uu___269_3235.warn);
+            cache = (uu___269_3235.cache);
+            nolabels = (uu___269_3235.nolabels);
+            use_zfuel_name = (uu___269_3235.use_zfuel_name);
             encode_non_total_function_typ =
-              (uu___267_3235.encode_non_total_function_typ);
-            current_module_name = (uu___267_3235.current_module_name);
-            encoding_quantifier = (uu___267_3235.encoding_quantifier)
+              (uu___269_3235.encode_non_total_function_typ);
+            current_module_name = (uu___269_3235.current_module_name);
+            encoding_quantifier = (uu___269_3235.encoding_quantifier)
           }  in
         (ysym, y, uu____3234)
   
@@ -717,21 +850,21 @@ let (push_term_var :
   fun env  ->
     fun x  ->
       fun t  ->
-        let uu___268_3260 = env  in
+        let uu___270_3260 = env  in
         let uu____3261 = add_bvar_binding (x, t) env.bvar_bindings  in
         {
           bvar_bindings = uu____3261;
-          fvar_bindings = (uu___268_3260.fvar_bindings);
-          depth = (uu___268_3260.depth);
-          tcenv = (uu___268_3260.tcenv);
-          warn = (uu___268_3260.warn);
-          cache = (uu___268_3260.cache);
-          nolabels = (uu___268_3260.nolabels);
-          use_zfuel_name = (uu___268_3260.use_zfuel_name);
+          fvar_bindings = (uu___270_3260.fvar_bindings);
+          depth = (uu___270_3260.depth);
+          tcenv = (uu___270_3260.tcenv);
+          warn = (uu___270_3260.warn);
+          cache = (uu___270_3260.cache);
+          nolabels = (uu___270_3260.nolabels);
+          use_zfuel_name = (uu___270_3260.use_zfuel_name);
           encode_non_total_function_typ =
-            (uu___268_3260.encode_non_total_function_typ);
-          current_module_name = (uu___268_3260.current_module_name);
-          encoding_quantifier = (uu___268_3260.encoding_quantifier)
+            (uu___270_3260.encode_non_total_function_typ);
+          current_module_name = (uu___270_3260.current_module_name);
+          encoding_quantifier = (uu___270_3260.encoding_quantifier)
         }
   
 let (lookup_term_var :
@@ -793,21 +926,21 @@ let (new_term_constant_and_tok_from_lid :
             FStar_Pervasives_Native.None
            in
         let uu____3377 =
-          let uu___269_3378 = env  in
+          let uu___271_3378 = env  in
           let uu____3379 = add_fvar_binding fvb env.fvar_bindings  in
           {
-            bvar_bindings = (uu___269_3378.bvar_bindings);
+            bvar_bindings = (uu___271_3378.bvar_bindings);
             fvar_bindings = uu____3379;
-            depth = (uu___269_3378.depth);
-            tcenv = (uu___269_3378.tcenv);
-            warn = (uu___269_3378.warn);
-            cache = (uu___269_3378.cache);
-            nolabels = (uu___269_3378.nolabels);
-            use_zfuel_name = (uu___269_3378.use_zfuel_name);
+            depth = (uu___271_3378.depth);
+            tcenv = (uu___271_3378.tcenv);
+            warn = (uu___271_3378.warn);
+            cache = (uu___271_3378.cache);
+            nolabels = (uu___271_3378.nolabels);
+            use_zfuel_name = (uu___271_3378.use_zfuel_name);
             encode_non_total_function_typ =
-              (uu___269_3378.encode_non_total_function_typ);
-            current_module_name = (uu___269_3378.current_module_name);
-            encoding_quantifier = (uu___269_3378.encoding_quantifier)
+              (uu___271_3378.encode_non_total_function_typ);
+            current_module_name = (uu___271_3378.current_module_name);
+            encoding_quantifier = (uu___271_3378.encoding_quantifier)
           }  in
         (fname, ftok_name, uu____3377)
   
@@ -837,21 +970,21 @@ let (push_free_var :
           fun ftok  ->
             let fvb = mk_fvb x fname arity ftok FStar_Pervasives_Native.None
                in
-            let uu___270_3428 = env  in
+            let uu___272_3428 = env  in
             let uu____3429 = add_fvar_binding fvb env.fvar_bindings  in
             {
-              bvar_bindings = (uu___270_3428.bvar_bindings);
+              bvar_bindings = (uu___272_3428.bvar_bindings);
               fvar_bindings = uu____3429;
-              depth = (uu___270_3428.depth);
-              tcenv = (uu___270_3428.tcenv);
-              warn = (uu___270_3428.warn);
-              cache = (uu___270_3428.cache);
-              nolabels = (uu___270_3428.nolabels);
-              use_zfuel_name = (uu___270_3428.use_zfuel_name);
+              depth = (uu___272_3428.depth);
+              tcenv = (uu___272_3428.tcenv);
+              warn = (uu___272_3428.warn);
+              cache = (uu___272_3428.cache);
+              nolabels = (uu___272_3428.nolabels);
+              use_zfuel_name = (uu___272_3428.use_zfuel_name);
               encode_non_total_function_typ =
-                (uu___270_3428.encode_non_total_function_typ);
-              current_module_name = (uu___270_3428.current_module_name);
-              encoding_quantifier = (uu___270_3428.encoding_quantifier)
+                (uu___272_3428.encode_non_total_function_typ);
+              current_module_name = (uu___272_3428.current_module_name);
+              encoding_quantifier = (uu___272_3428.encoding_quantifier)
             }
   
 let (push_zfuel_name : env_t -> FStar_Ident.lident -> Prims.string -> env_t)
@@ -871,21 +1004,21 @@ let (push_zfuel_name : env_t -> FStar_Ident.lident -> Prims.string -> env_t)
           mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token
             (FStar_Pervasives_Native.Some t3)
            in
-        let uu___271_3465 = env  in
+        let uu___273_3465 = env  in
         let uu____3466 = add_fvar_binding fvb1 env.fvar_bindings  in
         {
-          bvar_bindings = (uu___271_3465.bvar_bindings);
+          bvar_bindings = (uu___273_3465.bvar_bindings);
           fvar_bindings = uu____3466;
-          depth = (uu___271_3465.depth);
-          tcenv = (uu___271_3465.tcenv);
-          warn = (uu___271_3465.warn);
-          cache = (uu___271_3465.cache);
-          nolabels = (uu___271_3465.nolabels);
-          use_zfuel_name = (uu___271_3465.use_zfuel_name);
+          depth = (uu___273_3465.depth);
+          tcenv = (uu___273_3465.tcenv);
+          warn = (uu___273_3465.warn);
+          cache = (uu___273_3465.cache);
+          nolabels = (uu___273_3465.nolabels);
+          use_zfuel_name = (uu___273_3465.use_zfuel_name);
           encode_non_total_function_typ =
-            (uu___271_3465.encode_non_total_function_typ);
-          current_module_name = (uu___271_3465.current_module_name);
-          encoding_quantifier = (uu___271_3465.encoding_quantifier)
+            (uu___273_3465.encode_non_total_function_typ);
+          current_module_name = (uu___273_3465.current_module_name);
+          encoding_quantifier = (uu___273_3465.encoding_quantifier)
         }
   
 let (try_lookup_free_var :
@@ -927,7 +1060,8 @@ let (try_lookup_free_var :
                                fuel
                               in
                            FStar_All.pipe_left
-                             (fun _0_1  -> FStar_Pervasives_Native.Some _0_1)
+                             (fun _0_16  ->
+                                FStar_Pervasives_Native.Some _0_16)
                              uu____3515
                          else FStar_Pervasives_Native.Some t
                      | uu____3520 -> FStar_Pervasives_Native.Some t)

@@ -204,8 +204,8 @@ let (e_proofstate :
           FStar_Syntax_Syntax.rng = uu____407;_}
         ->
         let uu____410 = FStar_Dyn.undyn b  in
-        FStar_All.pipe_left (fun _0_1  -> FStar_Pervasives_Native.Some _0_1)
-          uu____410
+        FStar_All.pipe_left
+          (fun _0_16  -> FStar_Pervasives_Native.Some _0_16) uu____410
     | uu____413 ->
         (if w
          then
@@ -288,8 +288,8 @@ let (e_proofstate_nbe :
            FStar_Syntax_Syntax.rng = uu____604;_},uu____605)
         ->
         let uu____624 = FStar_Dyn.undyn b  in
-        FStar_All.pipe_left (fun _0_2  -> FStar_Pervasives_Native.Some _0_2)
-          uu____624
+        FStar_All.pipe_left
+          (fun _0_17  -> FStar_Pervasives_Native.Some _0_17) uu____624
     | uu____627 ->
         ((let uu____629 =
             let uu____634 =
@@ -326,8 +326,8 @@ let (e_goal : FStar_Tactics_Types.goal FStar_Syntax_Embeddings.embedding) =
           FStar_Syntax_Syntax.rng = uu____678;_}
         ->
         let uu____681 = FStar_Dyn.undyn b  in
-        FStar_All.pipe_left (fun _0_3  -> FStar_Pervasives_Native.Some _0_3)
-          uu____681
+        FStar_All.pipe_left
+          (fun _0_18  -> FStar_Pervasives_Native.Some _0_18) uu____681
     | uu____684 ->
         (if w
          then
@@ -373,8 +373,8 @@ let (e_goal_nbe :
            FStar_Syntax_Syntax.rng = uu____790;_},uu____791)
         ->
         let uu____810 = FStar_Dyn.undyn b  in
-        FStar_All.pipe_left (fun _0_4  -> FStar_Pervasives_Native.Some _0_4)
-          uu____810
+        FStar_All.pipe_left
+          (fun _0_19  -> FStar_Pervasives_Native.Some _0_19) uu____810
     | uu____813 ->
         ((let uu____815 =
             let uu____820 =
@@ -408,11 +408,11 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings.embedding) =
            in
         uu____896 FStar_Pervasives_Native.None rng
     | FStar_Tactics_Types.EExn t ->
-        let uu___353_931 = t  in
+        let uu___357_931 = t  in
         {
-          FStar_Syntax_Syntax.n = (uu___353_931.FStar_Syntax_Syntax.n);
+          FStar_Syntax_Syntax.n = (uu___357_931.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = rng;
-          FStar_Syntax_Syntax.vars = (uu___353_931.FStar_Syntax_Syntax.vars)
+          FStar_Syntax_Syntax.vars = (uu___357_931.FStar_Syntax_Syntax.vars)
         }
     | e1 ->
         let s =

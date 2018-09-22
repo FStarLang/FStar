@@ -310,15 +310,27 @@ let (__proj__LblPos__item___0 :
   term' -> (term,Prims.string) FStar_Pervasives_Native.tuple2) =
   fun projectee  -> match projectee with | LblPos _0 -> _0 
 let (__proj__Mkterm__item__tm : term -> term') =
-  fun projectee  -> match projectee with | { tm; freevars; rng;_} -> tm 
+  fun projectee  ->
+    match projectee with
+    | { tm = __fname__tm; freevars = __fname__freevars; rng = __fname__rng;_}
+        -> __fname__tm
+  
 let (__proj__Mkterm__item__freevars :
   term ->
     (Prims.string,sort) FStar_Pervasives_Native.tuple2 Prims.list
       FStar_Syntax_Syntax.memo)
   =
-  fun projectee  -> match projectee with | { tm; freevars; rng;_} -> freevars 
+  fun projectee  ->
+    match projectee with
+    | { tm = __fname__tm; freevars = __fname__freevars; rng = __fname__rng;_}
+        -> __fname__freevars
+  
 let (__proj__Mkterm__item__rng : term -> FStar_Range.range) =
-  fun projectee  -> match projectee with | { tm; freevars; rng;_} -> rng 
+  fun projectee  ->
+    match projectee with
+    | { tm = __fname__tm; freevars = __fname__freevars; rng = __fname__rng;_}
+        -> __fname__rng
+  
 type pat = term
 type fv = (Prims.string,sort) FStar_Pervasives_Native.tuple2
 type fvs = (Prims.string,sort) FStar_Pervasives_Native.tuple2 Prims.list
@@ -361,29 +373,41 @@ type assumption =
 let (__proj__Mkassumption__item__assumption_term : assumption -> term) =
   fun projectee  ->
     match projectee with
-    | { assumption_term; assumption_caption; assumption_name;
-        assumption_fact_ids;_} -> assumption_term
+    | { assumption_term = __fname__assumption_term;
+        assumption_caption = __fname__assumption_caption;
+        assumption_name = __fname__assumption_name;
+        assumption_fact_ids = __fname__assumption_fact_ids;_} ->
+        __fname__assumption_term
   
 let (__proj__Mkassumption__item__assumption_caption : assumption -> caption)
   =
   fun projectee  ->
     match projectee with
-    | { assumption_term; assumption_caption; assumption_name;
-        assumption_fact_ids;_} -> assumption_caption
+    | { assumption_term = __fname__assumption_term;
+        assumption_caption = __fname__assumption_caption;
+        assumption_name = __fname__assumption_name;
+        assumption_fact_ids = __fname__assumption_fact_ids;_} ->
+        __fname__assumption_caption
   
 let (__proj__Mkassumption__item__assumption_name :
   assumption -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { assumption_term; assumption_caption; assumption_name;
-        assumption_fact_ids;_} -> assumption_name
+    | { assumption_term = __fname__assumption_term;
+        assumption_caption = __fname__assumption_caption;
+        assumption_name = __fname__assumption_name;
+        assumption_fact_ids = __fname__assumption_fact_ids;_} ->
+        __fname__assumption_name
   
 let (__proj__Mkassumption__item__assumption_fact_ids :
   assumption -> fact_db_id Prims.list) =
   fun projectee  ->
     match projectee with
-    | { assumption_term; assumption_caption; assumption_name;
-        assumption_fact_ids;_} -> assumption_fact_ids
+    | { assumption_term = __fname__assumption_term;
+        assumption_caption = __fname__assumption_caption;
+        assumption_name = __fname__assumption_name;
+        assumption_fact_ids = __fname__assumption_fact_ids;_} ->
+        __fname__assumption_fact_ids
   
 type decl =
   | DefPrelude 

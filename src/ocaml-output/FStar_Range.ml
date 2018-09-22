@@ -4,9 +4,15 @@ type pos = {
   line: Prims.int ;
   col: Prims.int }[@@deriving yojson,show]
 let (__proj__Mkpos__item__line : pos -> Prims.int) =
-  fun projectee  -> match projectee with | { line; col;_} -> line 
+  fun projectee  ->
+    match projectee with
+    | { line = __fname__line; col = __fname__col;_} -> __fname__line
+  
 let (__proj__Mkpos__item__col : pos -> Prims.int) =
-  fun projectee  -> match projectee with | { line; col;_} -> col 
+  fun projectee  ->
+    match projectee with
+    | { line = __fname__line; col = __fname__col;_} -> __fname__col
+  
 let (max : Prims.int -> Prims.int -> Prims.int) =
   fun i  -> fun j  -> if i < j then j else i 
 let (pos_geq : pos -> pos -> Prims.bool) =
@@ -20,26 +26,36 @@ type rng = {
   end_pos: pos }[@@deriving yojson,show]
 let (__proj__Mkrng__item__file_name : rng -> file_name) =
   fun projectee  ->
-    match projectee with | { file_name; start_pos; end_pos;_} -> file_name
+    match projectee with
+    | { file_name = __fname__file_name; start_pos = __fname__start_pos;
+        end_pos = __fname__end_pos;_} -> __fname__file_name
   
 let (__proj__Mkrng__item__start_pos : rng -> pos) =
   fun projectee  ->
-    match projectee with | { file_name; start_pos; end_pos;_} -> start_pos
+    match projectee with
+    | { file_name = __fname__file_name; start_pos = __fname__start_pos;
+        end_pos = __fname__end_pos;_} -> __fname__start_pos
   
 let (__proj__Mkrng__item__end_pos : rng -> pos) =
   fun projectee  ->
-    match projectee with | { file_name; start_pos; end_pos;_} -> end_pos
+    match projectee with
+    | { file_name = __fname__file_name; start_pos = __fname__start_pos;
+        end_pos = __fname__end_pos;_} -> __fname__end_pos
   
 type range = {
   def_range: rng ;
   use_range: rng }[@@deriving yojson,show]
 let (__proj__Mkrange__item__def_range : range -> rng) =
   fun projectee  ->
-    match projectee with | { def_range; use_range;_} -> def_range
+    match projectee with
+    | { def_range = __fname__def_range; use_range = __fname__use_range;_} ->
+        __fname__def_range
   
 let (__proj__Mkrange__item__use_range : range -> rng) =
   fun projectee  ->
-    match projectee with | { def_range; use_range;_} -> use_range
+    match projectee with
+    | { def_range = __fname__def_range; use_range = __fname__use_range;_} ->
+        __fname__use_range
   
 let (dummy_pos : pos) =
   { line = (Prims.parse_int "0"); col = (Prims.parse_int "0") } 
