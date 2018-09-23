@@ -4481,37 +4481,3 @@ let (extract_attr :
                 FStar_Syntax_Syntax.sigattrs = attrs'
               }), t)
   
-let (eta_expand :
-  FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term)
-  =
-  fun body  ->
-    fun t  ->
-      let ascribe1 c t1 =
-        ascribe t1 ((FStar_Util.Inr c), FStar_Pervasives_Native.None)  in
-      let uu____16899 = arrow_formals_comp t  in
-      match uu____16899 with
-      | (bs,c) ->
-          if (FStar_List.length bs) = (Prims.parse_int "0")
-          then body
-          else
-            (let body1 =
-               let uu____16940 =
-                 let uu____16941 =
-                   let uu____16942 =
-                     let uu____16953 =
-                       FStar_All.pipe_right bs args_of_binders  in
-                     FStar_All.pipe_right uu____16953
-                       FStar_Pervasives_Native.snd
-                      in
-                   FStar_All.pipe_right uu____16942 (mk_app body)  in
-                 FStar_All.pipe_right uu____16941 (ascribe1 c)  in
-               FStar_All.pipe_right uu____16940 (FStar_Syntax_Subst.close bs)
-                in
-             let bs1 = FStar_Syntax_Subst.close_binders bs  in
-             FStar_Syntax_Syntax.mk
-               (FStar_Syntax_Syntax.Tm_abs
-                  (bs1, body1,
-                    (FStar_Pervasives_Native.Some (residual_comp_of_comp c))))
-               FStar_Pervasives_Native.None FStar_Range.dummyRange)
-  
