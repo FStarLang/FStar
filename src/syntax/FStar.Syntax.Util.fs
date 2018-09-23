@@ -2011,13 +2011,3 @@ let extract_attr (attr_lid:lid) (se:sigelt) : option<(sigelt * args)> =
     match extract_attr' attr_lid se.sigattrs with
     | None -> None
     | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)
-
-    
-let eta_expand (body:term) (t:typ) :term =
-  let ascribe (c:comp) (t:term) = ascribe t (Inr c, None) in
-  let bs, c = arrow_formals_comp t in
-  if List.length bs = 0 then body
-  else
-    let body = bs |> args_of_binders |> snd |> mk_app body |> ascribe c |> Subst.close bs in
-    let bs = Subst.close_binders bs in
-    mk (Tm_abs (bs, body, Some (residual_comp_of_comp c))) None Range.dummyRange
