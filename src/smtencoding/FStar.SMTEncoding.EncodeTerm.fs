@@ -553,14 +553,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_ascribed(t, (k,_), _) ->
         if (match k with BU.Inl t -> U.is_unit t | _ -> false)
         then Term.mk_Term_unit, []
-        else
-          let t =
-            if k |> BU.is_left then
-              let t = k |> BU.left |> U.eta_expand t |> N.normalize [ Exclude Iota; Exclude Zeta; NoFullNorm; DoNotUnfoldPureLets ] env.tcenv in
-              t
-            else t
-          in
-          encode_term t env
+        else encode_term t env
 
       | Tm_quoted (qt, _) ->
         // Inspect the term and encode its view, recursively.

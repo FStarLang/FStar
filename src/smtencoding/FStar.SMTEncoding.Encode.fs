@@ -547,8 +547,8 @@ let encode_top_level_let :
         match binders with
         | _::_ -> begin
             match (U.unascribe <| SS.compress t_norm).n with
-            | Tm_arrow(formals, c) ->
-              let formals, c = SS.open_comp formals c in
+            | Tm_arrow _ ->
+              let formals, c = U.arrow_formals_comp t_norm in  //AR: arrow_formals_comp opens the comp already
               let nformals = List.length formals in
               let nbinders = List.length binders in
               let tres = get_result_type c in
