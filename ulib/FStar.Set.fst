@@ -18,47 +18,45 @@
 module FStar.Set
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.FunctionalExtensionality
+module F = FStar.FunctionalExtensionality
 
-abstract type set (a:Type u#a{hasEq a}) :Type u#a = f:(a -> Tot bool){exists g. on_domain a g == f}
-abstract type equal (#a:eqtype) (s1:set a) (s2:set a) = feq s1 s2
+abstract 
+type set (a:Type u#a{hasEq a}) 
+  : Type u#a 
+  = F.restricted_t a (fun _ -> bool)
+
+abstract 
+type equal (#a:eqtype) (s1:set a) (s2:set a) =
+  F.feq s1 s2
 
 (* destructors *)
 
-abstract val mem : #a:eqtype -> a -> set a -> Tot bool
+abstract
+val mem : #a:eqtype -> a -> set a -> Tot bool
 let mem #a x s = s x
 
 (* constructors *)
-abstract val empty      : #a:eqtype -> Tot (set a)
-abstract val singleton  : #a:eqtype -> a -> Tot (set a)
-abstract val union      : #a:eqtype -> set a -> set a -> Tot (set a)
-abstract val intersect  : #a:eqtype -> set a -> set a -> Tot (set a)
-abstract val complement : #a:eqtype -> set a -> Tot (set a)
+abstract 
+val empty      : #a:eqtype -> Tot (set a)
+abstract 
+val singleton  : #a:eqtype -> a -> Tot (set a)
+abstract 
+val union      : #a:eqtype -> set a -> set a -> Tot (set a)
+abstract 
+val intersect  : #a:eqtype -> set a -> set a -> Tot (set a)
+abstract 
+val complement : #a:eqtype -> set a -> Tot (set a)
 
-let empty #a =
-  let f = on_domain a (fun x -> false) in
-  assert (on_domain a f == on_domain a (fun x -> false));
-  f
+let empty #a = F.on_dom a (fun x -> false)
 
-let singleton #a x =
-  let f = on_domain a (fun y -> y = x) in
-  assert (on_domain a f == on_domain a (fun y -> y = x));
-  f
+let singleton #a x = F.on_dom a (fun y -> y = x)
 
-let union #a s1 s2 =
-  let f = on_domain a (fun x -> s1 x || s2 x) in
-  assert (on_domain a f == on_domain a (fun x -> s1 x || s2 x));
-  f
+let union #a s1 s2 = F.on_dom a (fun x -> s1 x || s2 x)
 
-let intersect #a s1 s2 =
-  let f = on_domain a (fun x -> s1 x && s2 x) in
-  assert (on_domain a f == on_domain a (fun x -> s1 x && s2 x));
-  f
+let intersect #a s1 s2 = F.on_dom a (fun x -> s1 x && s2 x)
 
-let complement #a s =
-  let f = on_domain a (fun x -> not (s x)) in
-  assert (on_domain a f == on_domain a (fun x -> not (s x)));
-  f
-  
+let complement #a s = F.on_dom a (fun x -> not (s x))
+
 (* a property about sets *)
 let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
   equal (intersect s1 s2) empty
@@ -150,6 +148,7 @@ let rec as_set' #a l = match l with
 unfold val as_set:  #a:eqtype -> l:list a -> Tot (set a)
 let as_set (#a:eqtype) (l:list a) = normalize_term (as_set' l)
 
-assume val lemma_disjoint_subset (#a:eqtype) (s1:set a) (s2:set a) (s3:set a)
-  :Lemma (requires (disjoint s1 s2 /\ subset s3 s1))
-         (ensures  (disjoint s3 s2))
+let lemma_disjoint_subset (#a:eqtype) (s1:set a) (s2:set a) (s3:set a)
+  : Lemma (requires (disjoint s1 s2 /\ subset s3 s1))
+          (ensures  (disjoint s3 s2))
+  = ()       
