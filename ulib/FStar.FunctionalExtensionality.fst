@@ -17,19 +17,44 @@
 module FStar.FunctionalExtensionality
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-type efun (a:Type) (b:Type) = a -> Tot b
+type efun (a:Type) (b:a -> Type) = x:a -> Tot (b x)
 
-type feq (#a:Type) (#b:Type) (f:efun a b) (g:efun a b) =
+type feq (#a:Type) (#b:a -> Type) (f:efun a b) (g:efun a b) =
   (forall x.{:pattern (f x) \/ (g x)} f x == g x)
 
-assume Extensionality : forall (a:Type) (b:Type) (f: efun a b) (g: efun a b).
-                        {:pattern feq #a #b f g} feq #a #b f g <==> f==g
+abstract let on_domain (a:Type) (#b:a -> Type) (f:efun a b) :efun a b = fun (x:a) -> f x
 
-(** Ghost functional extensionality **)
-type gfun (a:Type) (b:Type) = a -> GTot b
+let lemma_on_domain_interpretation (#a:Type) (#b:a -> Type) (f:efun a b)
+  :Lemma (feq (on_domain a f) f)
+	 [SMTPat (on_domain a f)]
+  = ()
 
-type gfeq (#a:Type) (#b:Type) (f:gfun a b) (g:gfun a b) =
-    (forall x.{:pattern (f x) \/ (g x)} f x == g x)
+assume Extensionality : forall (a:Type) (b:a -> Type) (f:efun a b) (g:efun a b).
+                        {:pattern feq #a #b f g} feq #a #b f g <==> (on_domain a f == on_domain a g)
 
-assume GhostExtensionality : forall (a:Type) (b:Type) (f: gfun a b) (g: gfun a b).
-                        {:pattern gfeq #a #b f g} gfeq #a #b f g <==> f==g
+let lemma_on_domain_is_idempotent (#a:Type) (#b:a -> Type) (f:efun a b)
+  :Lemma (on_domain a (on_domain a f) == on_domain a f)
+         [SMTPat (on_domain a (on_domain a f))]
+  = ()
+
+(****** GTot version ******)
+
+type efun_g (a:Type) (b:a -> Type) = x:a -> GTot (b x)
+
+type feq_g (#a:Type) (#b:a -> Type) (f:efun_g a b) (g:efun_g a b) =
+  (forall x.{:pattern (f x) \/ (g x)} f x == g x)
+
+abstract let on_domain_g (a:Type) (#b:a -> Type) (f:efun_g a b) :efun_g a b = fun (x:a) -> f x
+
+let lemma_on_domain_interpretation_g (#a:Type) (#b:a -> Type) (f:efun_g a b)
+  :Lemma (feq_g (on_domain_g a f) f)
+	 [SMTPat (on_domain_g a f)]
+  = ()
+
+assume GhostExtensionality : forall (a:Type) (b:a -> Type) (f:efun a b) (g:efun a b).
+                             {:pattern feq_g #a #b f g} feq_g #a #b f g <==> (on_domain_g a f == on_domain_g a g)
+
+let lemma_on_domain_is_idempotent_g (#a:Type) (#b:a -> Type) (f:efun_g a b)
+  :Lemma (on_domain_g a (on_domain_g a f) == on_domain_g a f)
+         [SMTPat (on_domain_g a (on_domain_g a f))]
+  = ()
