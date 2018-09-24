@@ -1750,7 +1750,7 @@ let tc_decls env ses =
     List.iter (fun se -> env.solver.encode_sig env se) ses';
 
     let exports, hidden =
-      if Options.use_extracted_interfaces () then [], []
+      if Options.use_extracted_interfaces () then List.rev_append ses' exports, []
       else
         let accum_exports_hidden (exports, hidden) se =
           let se_exported, hidden = for_export hidden se in
@@ -2060,14 +2060,13 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     else { m with exports = modul_iface.exports }, Some modul_iface, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
   else
-    let modul = if Options.use_extracted_interfaces () then { m with exports = m.declarations } else { m with exports=exports } in
+    let modul = { m with exports = exports } in
     let env = Env.finish_module en modul in
 
     //we can clear the lid to query index table
     env.qtbl_name_and_index |> fst |> BU.smap_clear;
 
-    if not (Options.lax()) && (not (Options.use_extracted_interfaces ()))
-    && (not loading_from_cache)
+    if (not (Options.lax())) && (not loading_from_cache) && (not (Options.use_extracted_interfaces ()))
     then check_exports env modul exports;
 
     //pop BUT ignore the old env

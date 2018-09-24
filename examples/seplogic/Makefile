@@ -11,7 +11,7 @@ SL.ExamplesAuto.custom: OTHERFLAGS+=--cache_off
 
 #Excludes extracted interfaces for these examples
 %.custom: %.fst
-	$(FSTAR) --use_extracted_interfaces false $^
+	$(FSTAR) --use_extracted_interfaces true $^
 
 %.fst-in:
 	@echo $(OTHERFLAGS)

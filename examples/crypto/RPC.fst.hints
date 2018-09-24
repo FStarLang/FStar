@@ -14,7 +14,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "c6ced779db4b25c2cf989ffdcbd9fd1e"
+      "e7e56039f1c8e07867deb21ab41dc219"
     ],
     [
       "RPC.recv",
@@ -30,7 +30,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "8049faad2f05f1b4907b2bfc58db327c"
+      "61b8175262b1b113f49cb88c6029cffc"
     ],
     [
       "RPC.reqresp",
@@ -42,7 +42,7 @@
         "equation_Formatting.message"
       ],
       0,
-      "d6448111a30266f1b8d0948754682934"
+      "a53b4f590a32d170d72236169b330615"
     ],
     [
       "RPC.k",
@@ -58,7 +58,7 @@
         "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "9c41a4d40c4954648774f94d3a49d6b9"
+      "3219a5e52786ed1ab77739c737213032"
     ],
     [
       "RPC.client_send",
@@ -78,7 +78,7 @@
         "unit_typing"
       ],
       0,
-      "852a4fed18fb38ebf16a7bcf984bba3a"
+      "531acaffd71589642749ebca80947c9d"
     ],
     [
       "RPC.client_recv",
@@ -141,7 +141,7 @@
         "typing_RPC.k", "typing_RPC_Tm_abs_78ded2d57c0408c5cabaa71188db9347"
       ],
       0,
-      "a676a226e290a0c8eaa3e8ca7d7a30b4"
+      "fc5a4ff570ae0d095af1d1736176ceae"
     ],
     [
       "RPC.server",
@@ -217,7 +217,7 @@
         "typing_RPC_Tm_abs_2dc517e712b80eafdac9ab0acceb6395", "unit_typing"
       ],
       0,
-      "08267c6c855bdd8cb9e7f69d46b52f2e"
+      "35f86630a3bcaab5aa2d505d0b55dca5"
     ],
     [
       "RPC.test",
@@ -241,7 +241,31 @@
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
       0,
-      "17d4ce6c02d49cb192f6564692cb6a7f"
+      "e0e6bf07fef8c366d2969e9475b7afb0"
+    ],
+    [
+      "RPC.reqresp",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_Formatting.message"
+      ],
+      0,
+      "686403b9570287bd390e3f10f257a197"
+    ],
+    [
+      "RPC.k",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
+      ],
+      0,
+      "bf62057cd664ff6af8fbda7713fa93e4"
     ]
   ]
 ]
