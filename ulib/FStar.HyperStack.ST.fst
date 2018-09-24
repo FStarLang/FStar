@@ -745,11 +745,13 @@ let lemma_witnessed_constant (p:Type0)
   :Lemma (witnessed (fun (m:mem) -> p) <==> p)
   = W.lemma_witnessed_constant mem_rel p
 
+open FStar.Tactics
+
 let lemma_witnessed_nested (p:mem_predicate)
-  :Lemma (witnessed (fun (m:mem) -> witnessed p) <==> witnessed p)
-  = W.lemma_witnessed_nested mem_rel p;
-    assert (FStar.FunctionalExtensionality.feq (fun (m:mem) -> witnessed p) (fun (m:mem) -> W.witnessed mem_rel p));
-    assume ((fun (m:mem) -> witnessed p) == (fun (m:mem) -> W.witnessed mem_rel p))
+  : Lemma (witnessed (fun (m:mem) -> witnessed p) <==> witnessed p)
+  = assert (witnessed (fun (m:mem) -> witnessed p) <==> witnessed p)
+        by (norm [delta_only [`%witnessed]];
+            mapply (`W.lemma_witnessed_nested))
 
 let lemma_witnessed_and (p q:mem_predicate)
   :Lemma (witnessed (fun s -> p s /\ q s) <==> (witnessed p /\ witnessed q))
