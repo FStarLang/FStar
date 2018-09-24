@@ -13,19 +13,38 @@ type aloc (#al: aloc_t) (c: cls al) = | ALoc:
 let aloc_domain (#al: aloc_t) (c: cls al) (regions: Ghost.erased (Set.set HS.rid)) (addrs: ((r: HS.rid { Set.mem r (Ghost.reveal regions) } ) -> GTot (GSet.set nat))) : GTot (GSet.set (aloc c)) =
   GSet.comprehend (fun a -> Set.mem a.region (Ghost.reveal regions) && GSet.mem a.addr (addrs a.region))
 
+module F = FStar.FunctionalExtensionality
+
+
+let addrs_dom regions =
+	  (r: HS.rid { Set.mem r (Ghost.reveal regions) } )
+let non_live_addrs_codom
+      (regions: Ghost.erased (Set.set HS.rid))
+      (region_liveness_tags: Ghost.erased (Set.set HS.rid) { Ghost.reveal region_liveness_tags `Set.subset` Ghost.reveal regions } )
+      (r:addrs_dom regions) =
+      (y: GSet.set nat { r `Set.mem` (Ghost.reveal region_liveness_tags) ==> GSet.subset (GSet.complement GSet.empty) y })
+let live_addrs_codom 
+      (regions: Ghost.erased (Set.set HS.rid))
+      (region_liveness_tags: Ghost.erased (Set.set HS.rid) { Ghost.reveal region_liveness_tags `Set.subset` Ghost.reveal regions } )
+      (non_live_addrs:
+        F.restricted_g_t 
+	  (addrs_dom regions)
+	  (non_live_addrs_codom regions region_liveness_tags))
+      (r:addrs_dom regions) = (y: GSet.set nat { GSet.subset (non_live_addrs r) y } )
+
 noeq
 type loc' (#al: aloc_t u#x) (c: cls al) : Type u#x =
   | Loc:
       (regions: Ghost.erased (Set.set HS.rid)) ->
       (region_liveness_tags: Ghost.erased (Set.set HS.rid) { Ghost.reveal region_liveness_tags `Set.subset` Ghost.reveal regions } ) ->
-      (non_live_addrs: (
-	(r: HS.rid { Set.mem r (Ghost.reveal regions) } ) ->
-	GTot (y: GSet.set nat { r `Set.mem` (Ghost.reveal region_liveness_tags) ==> GSet.subset (GSet.complement GSet.empty) y } )
-      )) ->
-      (live_addrs: (
-	(r: HS.rid { Set.mem r (Ghost.reveal regions) } ) ->
-	GTot (y: GSet.set nat { GSet.subset (non_live_addrs r) y } )
-      )) ->
+      (non_live_addrs: 
+        F.restricted_g_t 
+	  (addrs_dom regions)
+	  (non_live_addrs_codom regions region_liveness_tags)) ->
+      (live_addrs:
+        F.restricted_g_t
+	  (addrs_dom regions)
+          (live_addrs_codom regions region_liveness_tags non_live_addrs)) ->
       (aux: Ghost.erased (GSet.set (aloc c)) {
         aloc_domain c regions live_addrs `GSet.subset` Ghost.reveal aux /\
 	Ghost.reveal aux `GSet.subset` (aloc_domain c regions (fun _ -> GSet.complement GSet.empty))
@@ -34,12 +53,21 @@ type loc' (#al: aloc_t u#x) (c: cls al) : Type u#x =
 
 let loc = loc'
 
-let loc_none #a #c = Loc
-  (Ghost.hide (Set.empty))
-  (Ghost.hide (Set.empty))
-  (fun _ -> GSet.empty)
-  (fun _ -> GSet.empty)
-  (Ghost.hide GSet.empty)
+let loc_none #a #c = 
+  let regions =   (Ghost.hide (Set.empty)) in
+  let region_liveness_tags = (Ghost.hide (Set.empty)) in
+  let non_live_addrs = F.on_dom_g (addrs_dom regions)
+                                  #(non_live_addrs_codom regions region_liveness_tags)
+                                  (fun _ -> GSet.empty) in
+  let live_addrs = F.on_dom_g (addrs_dom regions)
+                             #(live_addrs_codom regions region_liveness_tags non_live_addrs)
+                             (fun _ -> GSet.empty) in
+  Loc 
+    regions
+    region_liveness_tags
+    non_live_addrs
+    live_addrs
+    (Ghost.hide GSet.empty)
 
 let regions_of_loc
   (#al: aloc_t) (#c: cls al)
@@ -108,19 +136,20 @@ let loc_union #al #c s1 s2 =
   let regions2 = Ghost.reveal (Loc?.regions s2) in
   let regions = Set.union regions1 regions2 in
   let region_liveness_tags : Ghost.erased (Set.set HS.rid) = (Ghost.hide (Set.union (Ghost.reveal (Loc?.region_liveness_tags s1)) (Ghost.reveal (Loc?.region_liveness_tags s2)))) in
-  let non_live_addrs
-    (r: HS.rid { Set.mem r regions } )
-  : GTot (y: GSet.set nat { r `Set.mem` (Ghost.reveal region_liveness_tags) ==> GSet.subset (GSet.complement GSet.empty) y })
-  = GSet.union
+  let gregions = Ghost.hide regions in
+  let non_live_addrs =
+    F.on_dom_g (addrs_dom gregions) #(non_live_addrs_codom gregions region_liveness_tags) 
+    (fun r ->
+    GSet.union
       (if Set.mem r regions1 then Loc?.non_live_addrs s1 r else GSet.empty)
-      (if Set.mem r regions2 then Loc?.non_live_addrs s2 r else GSet.empty)
+      (if Set.mem r regions2 then Loc?.non_live_addrs s2 r else GSet.empty))
   in
-  let live_addrs
-    (r: HS.rid { Set.mem r regions } )
-  : GTot (y: GSet.set nat { GSet.subset (non_live_addrs r) y } )
-  = GSet.union
-      (if Set.mem r regions1 then addrs_of_loc_weak s1 r else GSet.empty)
-      (if Set.mem r regions2 then addrs_of_loc_weak s2 r else GSet.empty)
+  let live_addrs =
+    F.on_dom_g (addrs_dom gregions) #(live_addrs_codom gregions region_liveness_tags non_live_addrs)
+      (fun r ->
+        GSet.union
+          (if Set.mem r regions1 then addrs_of_loc_weak s1 r else GSet.empty)
+          (if Set.mem r regions2 then addrs_of_loc_weak s2 r else GSet.empty))
   in
   let aux = Ghost.hide
       (Ghost.reveal (Loc?.aux s1) `GSet.union` Ghost.reveal (Loc?.aux s2))
@@ -132,14 +161,14 @@ let loc_union #al #c s1 s2 =
     live_addrs
     aux
 
-let fun_set_equal (#t: Type) (#t': Type) (f1 f2: (t -> GTot (GSet.set t'))) : GTot Type0 =
+let fun_set_equal (#t: Type) (#t': (t -> Type)) (f1 f2: F.restricted_g_t t (fun x -> GSet.set (t' x))):Tot Type0 =
   forall (x: t) . {:pattern (f1 x) \/ (f2 x) } f1 x `GSet.equal` f2 x
 
-let fun_set_equal_elim (#t: Type) (#t' : Type) (f1 f2: (t -> GTot (GSet.set t'))) : Lemma
+let fun_set_equal_elim (#t: Type) (#t' : (t -> Type)) (f1 f2: F.restricted_g_t t (fun x -> GSet.set (t' x))) : Lemma
   (requires (fun_set_equal f1 f2))
   (ensures (f1 == f2))
   [SMTPat (fun_set_equal f1 f2)]
-= assert (f1 `FunctionalExtensionality.feq_g` f2); assume (f1 == f2)
+= assert (f1 `FunctionalExtensionality.feq_g` f2)
 
 let loc_equal (#al: aloc_t) (#c: cls al) (s1 s2: loc c) : GTot Type0 =
   let Loc regions1 region_liveness_tags1 _ _ aux1 = s1 in
